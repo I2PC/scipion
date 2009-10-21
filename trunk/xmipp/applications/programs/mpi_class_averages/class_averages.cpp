@@ -473,7 +473,7 @@ void VQProjection::lookForNeighbours(const std::vector<VQProjection *> listP,
 void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     double _PminSize, std::vector< Matrix2D<double> > _codes0, int _Ncodes0,
     bool _noMirror, bool _corrSplit, bool _useCorrelation,
-    bool _fast, int rank)
+    bool _classicalMultiref, bool _alignImages, bool _fast, int rank)
 {
     // Only "parent" worker prints
     if( rank == 0 )
@@ -487,6 +487,8 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     noMirror=_noMirror;
     corrSplit=_corrSplit;
     useCorrelation=_useCorrelation;
+    classicalMultiref=_classicalMultiref;
+    alignImages=_alignImages;
     fast=_fast;
     int Ydim, Xdim;
     int mpi_size;
@@ -509,6 +511,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
         P[q]->Pupdate.initZeros(Ydim,Xdim);
         P[q]->Pupdate.setXmippOrigin();
         P[q]->useCorrelation=useCorrelation;
+        P[q]->classicalMultiref=classicalMultiref;
     }	
 	
     sigma = 0;
@@ -731,7 +734,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
 
 /* VQ write --------------------------------------------------------- */
 //#define DEBUG
-void VQ::write(const FileName &fnRoot) const
+void VQ::write(const FileName &fnRoot, bool final) const
 {
     int Q=P.size();
     int Nimg=SFv.size();
@@ -762,18 +765,27 @@ void VQ::write(const FileName &fnRoot) const
     DFout.write(fnRoot+".doc");
     
     // Make the selfiles of each class
-    std::vector<SelFile> SFclass;
     for (int q=0; q<Q; q++)
     {
-        SelFile dummy;
-        SFclass.push_back(dummy);
+        SelFile SFq;
+        SFq.clear();
+        int imax=P[q]->currentListImg.size();
+        for (int i=0; i<imax; i++)
+        {
+            if (alignImages && final)
+            {
+                ImageXmipp I;
+                I.read(SFv[P[q]->currentListImg[i]]);
+                I().setXmippOrigin();
+                
+                double corrCode, likelihood;
+                P[q]->fit(I(), sigma, noMirror, corrCode, likelihood);
+                I.write();
+            }
+            SFq.insert(SFv[P[q]->currentListImg[i]]);
+        }
+        SFq.write(fnRoot+integerToString(q,6)+".sel");
     }
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(currentAssignment)
-        if (currentAssignment(i)!=-1)
-            SFclass[currentAssignment(i)].insert(SFv[i]);
-
-    for (int q=0; q<Q; q++)
-        SFclass[q].write(fnRoot+integerToString(q,6)+".sel");
 }
 #undef DEBUG
 
@@ -827,9 +839,11 @@ void VQ::lookNode(Matrix2D<double> &I, int idx, int oldnode,
             Matrix2D<double> Iaux=I;
             double likelihood;
 	    P[q]->fit(Iaux,sigma,noMirror,corrCodeList(q),likelihood);
-            if ((likelihood>ABS(bestLikelihood)) ||
-                (ABS(likelihood)>ABS(bestLikelihood) && bestLikelihood<0) ||
-                bestCorrCode<0)
+            if ((!classicalMultiref &&
+                    ((likelihood>ABS(bestLikelihood)) ||
+                    (ABS(likelihood)>ABS(bestLikelihood) && bestLikelihood<0)))
+                || (classicalMultiref && corrCodeList(q)>bestCorrCode)
+                || bestCorrCode<0)
             {
                 if (neighbour)
                 {
@@ -1131,6 +1145,8 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                 VQProjection *node2=new VQProjection;
                 node1->useCorrelation=useCorrelation;
                 node2->useCorrelation=useCorrelation;
+                node1->classicalMultiref=classicalMultiref;
+                node2->classicalMultiref=classicalMultiref;
                 #ifdef DEBUG
                     if (rank==0) {
                         std::cout << "Node1 address: " << node1 << std::endl;
@@ -1186,9 +1202,12 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                 	P[smallNode]->fit(Iaux2, sigma, noMirror,
                             corrCode2, likelihood2);
 
-                	if (likelihood1>likelihood2 && likelihood1>0 ||
-                            likelihood1<0 && likelihood2<0 &&
-                               ABS(likelihood1)>ABS(likelihood2))
+                	if ((!classicalMultiref &&
+                                (likelihood1>likelihood2 && likelihood1>0 ||
+                                likelihood1<0 && likelihood2<0 &&
+                                   ABS(likelihood1)>ABS(likelihood2)))
+                             || (classicalMultiref && corrCode1>corrCode2)
+                            )
                 	{
                             P[largestNode]->updateProjection(Iaux1,
                                 corrCode1,toReassign[i]);
@@ -1380,9 +1399,11 @@ void VQ::splitNode(VQProjection *node,
                             if (rank==0 && false) std::cout << "Previously Assigned to " << newAssignment(i) << std::endl;
                         #endif
 
-                	if (likelihood1>likelihood2 && likelihood1>0 ||
-                            likelihood1<0 && likelihood2<0 &&
-                               ABS(likelihood1)>ABS(likelihood2))
+                	if ((!classicalMultiref &&
+                                (likelihood1>likelihood2 && likelihood1>0 ||
+                                likelihood1<0 && likelihood2<0 &&
+                                   ABS(likelihood1)>ABS(likelihood2)))
+                            || (classicalMultiref && corrCode1>corrCode2))
                 	{
                             node1->updateProjection(Iaux1,corrCode1,node->currentListImg[i]);
                             newAssignment(i)=1;
@@ -1604,10 +1625,12 @@ void VQ::splitNode(VQProjection *node,
             if (node1!=node) delete node1;
             node1=new VQProjection();
             node1->useCorrelation=useCorrelation;
+            node1->classicalMultiref=classicalMultiref;
             toDelete.push_back(node2);
             node=node2;
             node2=new VQProjection();
             node2->useCorrelation=useCorrelation;
+            node2->classicalMultiref=classicalMultiref;
             #ifdef DEBUG
                 if (rank==0)
                     std::cout << "New node1= " << node1 << std::endl
@@ -1626,10 +1649,12 @@ void VQ::splitNode(VQProjection *node,
             if (node2!=node) delete node2;
             node2=new VQProjection();
             node2->useCorrelation=useCorrelation;
+            node2->classicalMultiref=classicalMultiref;
             toDelete.push_back(node1);
             node=node1;
             node1=new VQProjection();
             node1->useCorrelation=useCorrelation;
+            node1->classicalMultiref=classicalMultiref;
             #ifdef DEBUG
                 if (rank==0)
                     std::cout << "New node2= " << node2 << std::endl
@@ -1661,7 +1686,9 @@ void VQ::splitFirstNode(int rank) {
     P.push_back(new VQProjection());
     P.push_back(new VQProjection());
     P[Q]->useCorrelation=useCorrelation;
+    P[Q]->classicalMultiref=classicalMultiref;
     P[Q+1]->useCorrelation=useCorrelation;
+    P[Q+1]->classicalMultiref=classicalMultiref;
     std::vector<int> finalAssignment;
     splitNode(P[0],P[Q],P[Q+1],rank, finalAssignment);
     delete P[0];
@@ -1684,22 +1711,26 @@ void Prog_VQ_prm::read(int argc, char** argv)
     corrSplit=checkParameter(argc,argv,"-corr_split");
     fast=checkParameter(argc,argv,"-fast");
     useCorrelation=checkParameter(argc,argv,"-useCorrelation");
+    classicalMultiref=checkParameter(argc,argv,"-classicalMultiref");
+    alignImages=checkParameter(argc,argv,"-alignImages");
 }
 
 void Prog_VQ_prm::show() const
 {
-    std::cout << "Input images:      " << fnSel          << std::endl
-              << "Output images:     " << fnOut          << std::endl
-              << "Iterations:        " << Niter          << std::endl
-              << "CodesSel0:         " << fnCodes0       << std::endl
-              << "Codes0:            " << Ncodes0        << std::endl
-              << "Codes:             " << Ncodes         << std::endl
-              << "Neighbours:        " << Nneighbours    << std::endl
-              << "Minimum node size: " << PminSize       << std::endl
-              << "No mirror:         " << noMirror       << std::endl
-              << "Corr Split:        " << corrSplit      << std::endl
-              << "Fast:              " << fast           << std::endl
-              << "Use Correlation:   " << useCorrelation << std::endl;
+    std::cout << "Input images:      " << fnSel             << std::endl
+              << "Output images:     " << fnOut             << std::endl
+              << "Iterations:        " << Niter             << std::endl
+              << "CodesSel0:         " << fnCodes0          << std::endl
+              << "Codes0:            " << Ncodes0           << std::endl
+              << "Codes:             " << Ncodes            << std::endl
+              << "Neighbours:        " << Nneighbours       << std::endl
+              << "Minimum node size: " << PminSize          << std::endl
+              << "No mirror:         " << noMirror          << std::endl
+              << "Corr Split:        " << corrSplit         << std::endl
+              << "Fast:              " << fast              << std::endl
+              << "Use Correlation:   " << useCorrelation    << std::endl
+              << "Classical Multiref:" << classicalMultiref << std::endl
+              << "Align images:      " << alignImages       << std::endl;
 }
     
 void Prog_VQ_prm::usage() const
@@ -1718,6 +1749,8 @@ void Prog_VQ_prm::usage() const
               << "   [-corr_split]         : Correlation split\n"
               << "   [-fast]               : Fast calculations, suboptimal\n"
               << "   [-useCorrelation]     : Instead of correntropy\n"
+              << "   [-classicalMultiref]  : Instead of enhanced clustering\n"
+              << "   [-alignImages]        : Align the original images at the end\n"
     ;
 }
     
@@ -1739,7 +1772,7 @@ void Prog_VQ_prm::produce_side_info(int rank)
     }
     vq.initialize(SF,Niter,Nneighbours,PminSize,
         codes0,Ncodes0,noMirror,corrSplit,useCorrelation,
-        fast,rank);
+        classicalMultiref,alignImages,fast,rank);
 }
 
 void Prog_VQ_prm::run(int rank)
@@ -1767,7 +1800,7 @@ void Prog_VQ_prm::run(int rank)
     if (rank==0)
     {
 	std::sort(vq.P.begin(),vq.P.end(),SDescendingClusterSort());
-    	vq.write(fnOut);
+    	vq.write(fnOut,true);
     }
 }
 
