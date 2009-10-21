@@ -173,7 +173,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
     {
         int max_dim = XMIPP_MAX(CEIL(ZZ(limit) * 2 / Ts) + 5, CEIL(YY(limit) * 2 / Ts) + 5);
         max_dim = XMIPP_MAX(max_dim, CEIL(XX(limit) * 2 / Ts) + 5);
-        if (useBlobs || usePoorGaussian)
+        if (useBlobs)
             output_dim = (int)NEXT_POWER_OF_2(max_dim);
         else 
             output_dim = max_dim+10;
@@ -184,9 +184,12 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
 void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
 {
     // Create an empty volume to hold the protein
-    Vhigh().initZeros((int)NEXT_POWER_OF_2(output_dim / highTs),
-                      (int)NEXT_POWER_OF_2(output_dim / highTs),
-                      (int)NEXT_POWER_OF_2(output_dim / highTs));
+    int finalDim;
+    if (highTs!=Ts)
+        finalDim=(int)NEXT_POWER_OF_2(output_dim / (highTs/Ts));
+    else
+        finalDim=output_dim;
+    Vhigh().initZeros(finalDim,finalDim,finalDim);
     Vhigh().setXmippOrigin();
     std::cout << "The highly sampled volume is of size " << XSIZE(Vhigh())
               << std::endl;
