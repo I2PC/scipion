@@ -206,34 +206,39 @@ void VQProjection::transferUpdate()
         std::sort(nextListImg.begin(),nextListImg.end() );
 	currentListImg=nextListImg;
         nextListImg.clear();
+    
+        Matrix1D<double> classCorr, nonClassCorr;
+        classCorr.initZeros(nextClassCorr.size());
+        nonClassCorr.initZeros(nextNonClassCorr.size());
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(classCorr)
+            classCorr(i)=nextClassCorr[i];
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(nonClassCorr)
+            nonClassCorr(i)=nextNonClassCorr[i];
+        nextClassCorr.clear();
+        nextNonClassCorr.clear();
+        double minC, maxC; classCorr.computeDoubleMinMax(minC,maxC);
+        double minN, maxN; nonClassCorr.computeDoubleMinMax(minN,maxN);
+        double c0=XMIPP_MIN(minC,minN);
+        double cF=XMIPP_MAX(maxC,maxN);
+        compute_hist(classCorr,histClass,c0,cF,200);
+        compute_hist(nonClassCorr,histNonClass,c0,cF,200);
+        histClass+=1; // Laplace correction
+        histNonClass+=1;
+        histClass/=histClass.sum();
+        histNonClass/=histNonClass.sum();
+
+        #ifdef DEBUG
+            histClass.write("PPPclass.txt");
+            histNonClass.write("PPPnonClass.txt");
+            std::cout << "Histograms have been written. Press any key\n";
+            char c; std::cin >> c;
+        #endif
     }
-    
-    Matrix1D<double> classCorr, nonClassCorr;
-    classCorr.initZeros(nextClassCorr.size());
-    nonClassCorr.initZeros(nextNonClassCorr.size());
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(classCorr)
-        classCorr(i)=nextClassCorr[i];
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(nonClassCorr)
-        nonClassCorr(i)=nextNonClassCorr[i];
-    nextClassCorr.clear();
-    nextNonClassCorr.clear();
-    double minC, maxC; classCorr.computeDoubleMinMax(minC,maxC);
-    double minN, maxN; nonClassCorr.computeDoubleMinMax(minN,maxN);
-    double c0=XMIPP_MIN(minC,minN);
-    double cF=XMIPP_MAX(maxC,maxN);
-    compute_hist(classCorr,histClass,c0,cF,200);
-    compute_hist(nonClassCorr,histNonClass,c0,cF,200);
-    histClass+=1; // Laplace correction
-    histNonClass+=1;
-    histClass/=histClass.sum();
-    histNonClass/=histNonClass.sum();
-    
-    #ifdef DEBUG
-        histClass.write("PPPclass.txt");
-        histNonClass.write("PPPnonClass.txt");
-        std::cout << "Histograms have been written. Press any key\n";
-        char c; std::cin >> c;
-    #endif
+    else
+    {
+        currentListImg.clear();
+        P.initZeros();
+    }
 }
 #undef DEBUG
 
@@ -1169,14 +1174,14 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                 for (int i=0; i<toReassign.size(); i++)
                 {
 		    newAssignment(toReassign[i]) = -1;
-		    
+
 		    for( int j=0; j<finalAssignment.size(); j+=2)
 		    {
 		    	if( finalAssignment[j] == toReassign[i])
 			{
 			     if (finalAssignment[j+1]==1)
 			         newAssignment(toReassign[i])=largestNode;
-			     else 
+			     else
 			         newAssignment(toReassign[i])=smallNode;
 			     break;
 			}
