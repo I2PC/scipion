@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+import glob, os, sys
+
+if __name__=="__main__":
+    argv     = os.sys.argv
+    if not len(argv)==3:
+        print "Purpose: Convert EMAN classification into Xmipp selfiles"
+        print "Usage: convert_lst2sel"
+        print "  <selfile>        : with the original images"
+        print "  <directory>      : directory with the cls*.lst files"
+        sys.exit(1)
+    
+    fn_sel=argv[1]
+    sellines=open(fn_sel,'r').read().splitlines()
+
+    fn_dir=argv[2]
+    for fn_lst in glob.glob(fn_dir+"/cls*.lst"):
+        print "Processing "+fn_lst
+        fn_out=fn_lst[:-4]+".sel"
+        fh_out=open(fn_out,'w')
+
+        listlines=open(fn_lst,'r').read().splitlines()
+        for line in listlines:
+            tokens=line.split("\t")
+            if len(tokens)==2:
+                print >>fh_out,sellines[int(tokens[0])]
+        fh_out.close()
