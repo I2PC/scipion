@@ -69,6 +69,7 @@ public:
 #define GAUSSIAN      8
 #define CONE          9
 #define CTFPOS       10
+#define BFACTOR      11
     /** Pass band. LOWPASS, HIGHPASS, BANDPASS, STOPBAND, CTF, CTFPOS,
        WEDGE, CONE, GAUSSIAN, FROM_FILE */
     int FilterBand;

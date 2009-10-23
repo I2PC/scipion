@@ -129,6 +129,17 @@ void FourierMask::read(int argc, char **argv)
         ctf.Produce_Side_Info();
         correctPhase=true;
     }
+    else if (strcmp(argv[i+1], "bfactor") == 0)
+    {
+        if (i + 2 >= argc)
+            REPORT_ERROR(3000, "FourierMask: Bfactor needs a Bfactor in Ang^2");
+        FilterShape = FilterBand = BFACTOR;
+        w1 = textToFloat(argv[i+2]);
+        if (!checkParameter(argc, argv, "-sampling"))
+            REPORT_ERROR(3000, "FourierMask: Bfactor needs a -sampling argument");
+        w2 = textToFloat(getParameter(argc, argv, "-sampling"));
+    }
+
     else
         REPORT_ERROR(3000, "FourierMask: Unknown filter type");
 
@@ -155,7 +166,8 @@ void FourierMask::read(int argc, char **argv)
             REPORT_ERROR(3000, "FourierMask: Not enough parameters after -stop_band");
         FilterBand = STOPBAND;
     }
-    if (checkParameter(argc, argv, "-sampling"))
+
+    if (!(FilterBand == BFACTOR) && checkParameter(argc, argv, "-sampling"))
     {
         double sampling_rate = textToFloat(getParameter(argc, argv, "-sampling"));
         if (w1 != 0)       w1 = sampling_rate / w1;
@@ -197,6 +209,9 @@ void FourierMask::show()
         case CTFPOS:
             std::cout << "CTFPOS\n";
             break;
+        case BFACTOR:
+            std::cout << "Bfactor "<< w1 <<std::endl;
+            break;
         }
         std::cout << "Filter Shape: ";
         switch (FilterShape)
@@ -212,6 +227,7 @@ void FourierMask::show()
         case CTFPOS:
             std::cout << "CTF\n" << ctf;
             break;
+
         }
     }
 }
@@ -230,8 +246,8 @@ void FourierMask::usage()
               << "   -fourier_mask ctf                 : Provide a .ctfparam file\n"
               << "   -fourier_mask ctfpos              : Provide a .ctfparam file\n"
               << "                                       The CTF phase will be corrected before applying\n"
-              << "  [-sampling <sampling_rate>]        : If provided pass frequencies\n"
-              << "                                       are taken in Angstroms\n"
+              << "   -fourier_mask bfactor <B>         : Exponential filter (positive values for decay) \n"
+              << "  [-sampling <sampling_rate>]        : If provided pass frequencies are taken in Ang \n"
     ;
 }
 
@@ -303,6 +319,10 @@ double FourierMask::maskValue(const Matrix1D<double> &w)
             break;
         case CTFPOS:
             return ABS(ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm));
+            break;
+        case BFACTOR:
+            double R = absw / w2;
+            return exp( - (w1 / 4.)  * R * R);
             break;
     }
 }
