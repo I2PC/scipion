@@ -82,7 +82,7 @@ def make_backup_of_script_file(script_file_name,
     #check is temporal name, i.e. ends with _ddddd.py
     #where d is a digit 
     in_file_name=script_file_name
-    script_file_name=re.sub('_\d\d\d\d\d\d.py$','.py',in_file_name)
+    script_file_name=re.sub('_\d\d\d\d\d.py$','.py',in_file_name)
 
     protocol_name=str(os.path.basename(script_file_name)).replace('.py','')
     out_file_name=absolute_path_to_working_dir +\
