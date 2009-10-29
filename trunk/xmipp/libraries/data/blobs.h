@@ -27,9 +27,8 @@
 #define _BLOBS_HH
 
 #include "grids.h"
-
-#include <data/image.h>
-#include <data/volume.h>
+#include "image.h"
+#include "volume.h"
 #include <pthread.h>
 
 // Thread declaration

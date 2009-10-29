@@ -31,7 +31,7 @@
 
 #include "symmetries.h"
 #include "projection.h"
-#include "grids.h"
+#include <data/grids.h>
 #include "basic_art.h"
 
 #endif

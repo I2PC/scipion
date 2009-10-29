@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/blobs.h>
-#include <reconstruction/grids.h>
+#include <data/blobs.h>
+#include <data/grids.h>
 
 void Usage();
 

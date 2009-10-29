@@ -32,7 +32,7 @@
 #include <data/funcs.h>
 #include <data/volume.h>
 #include <data/args.h>
-#include <reconstruction/grids.h>
+#include <data/grids.h>
 
 /**@defgroup SymmetryLists Symmetry handling
    @ingroup ReconsLibrary 

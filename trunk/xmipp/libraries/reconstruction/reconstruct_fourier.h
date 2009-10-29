@@ -36,11 +36,11 @@
 #include <data/image.h>
 #include <data/projection.h>
 #include <data/threads.h>
+#include <data/blobs.h>
 
 #include <reconstruction/projection.h>
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
-#include <reconstruction/blobs.h>
 #define BLOB_TABLE_SIZE 5000
 #define MINIMUMWEIGHT 0.001
 #define ACCURACY 0.001

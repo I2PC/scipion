@@ -37,11 +37,11 @@
 #include <data/mask.h>
 #include <data/morphology.h>
 #include <data/volume_segment.h>
+#include <data/grids.h>
+#include <data/blobs.h>
 
-#include "grids.h"
 #include "symmetries.h"
 #include "sampling.h"
-#include "blobs.h"
 #include "projection.h"
 #include "directions.h"
 #include "reconstruct_art.h"

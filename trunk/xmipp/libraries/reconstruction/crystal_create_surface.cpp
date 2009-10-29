@@ -26,14 +26,13 @@
 
 #include "crystal_create_surface.h"
 #include "fourier_filter.h"
-#include "blobs.h"
-
 #include <data/args.h>
 #include <data/fft.h>
 #include <data/funcs.h>
 #include <data/docfile.h>
 #include <data/integration.h>
 #include <data/error.h>
+#include <data/blobs.h>
 
 #include <fstream>
 

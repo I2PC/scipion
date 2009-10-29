@@ -34,7 +34,7 @@
 #include <data/image.h>
 #include <data/volume.h>
 
-#include "blobs.h"
+#include <data/blobs.h>
 #include "projection.h"
 
 /**@defgroup Phantoms Phantoms

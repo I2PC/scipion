@@ -28,8 +28,8 @@
 #include <data/image.h>
 #include <data/projection.h>
 #include <data/threads.h>
-#include "grids.h"
-#include "basis.h"
+#include <data/grids.h>
+#include <data/basis.h>
 
 // These two structures are needed when projecting and backprojecting using
 // threads. They make mutual exclusion and synchronization possible.

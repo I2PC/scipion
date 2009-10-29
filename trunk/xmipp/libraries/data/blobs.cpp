@@ -29,8 +29,8 @@
 
 #include "blobs.h"
 
-#include <data/funcs.h>
-#include <data/geometry.h>
+#include "funcs.h"
+#include "geometry.h"
 
 pthread_mutex_t blobs_conv_mutex = PTHREAD_MUTEX_INITIALIZER;
 

@@ -28,8 +28,7 @@
 
 #include "blobs.h"
 #include "splines.h"
-
-#include <data/image.h>
+#include "image.h"
 
 const int BLOB_SUBSAMPLING = 10;
 const int PIXEL_SUBSAMPLING = 1;

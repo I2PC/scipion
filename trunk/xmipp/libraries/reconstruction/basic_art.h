@@ -31,9 +31,9 @@
 #include <data/selfile.h>
 
 #include "refinement.h"
-#include "grids.h"
+#include <data/grids.h>
 #include "symmetries.h"
-#include "basis.h"
+#include <data/basis.h>
 #include "projection.h"
 #include "fourier_filter.h"
 

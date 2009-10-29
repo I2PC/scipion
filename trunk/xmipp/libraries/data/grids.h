@@ -31,9 +31,9 @@
 
 #include <vector>
 
-#include <data/volume.h>
-#include <data/geometry.h>
-#include <data/args.h>
+#include "volume.h"
+#include "geometry.h"
+#include "args.h"
 
 /* Forward declariations --------------------------------------------------- */
 template <class T> class GridVolumeT;

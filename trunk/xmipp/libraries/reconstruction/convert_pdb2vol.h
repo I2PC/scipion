@@ -25,7 +25,7 @@
 #ifndef _PROG_PDBPHANTOM_HH
 #  define _PROG_PDBPHANTOM_HH
 
-#include "blobs.h"
+#include <data/blobs.h>
 #include <interface/pdb.h>
 
 /**@defgroup PDBPhantom convert_pdb2vol (PDB Phantom program)
