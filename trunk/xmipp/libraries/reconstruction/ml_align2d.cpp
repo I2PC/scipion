@@ -1119,7 +1119,7 @@ void Prog_MLalign2D_prm::preselectFastSignificant(
 
     Matrix2D<double> Maux, Maux2, Mrefl, Mdsig(n_ref, nr_psi*nr_flip);
     double ropt, sigma_noise2, aux, weight, diff, pdf, fracpdf;
-    double Xi2, A2_plus_Xi2, dfsigma2, CC;
+    double Xi2, A2_plus_Xi2, dfsigma2, crosscorr;
     double mindiff = 99.e99;
     double maxweight = -99.e99;
     int irot, irefmir;
@@ -1176,15 +1176,15 @@ void Prog_MLalign2D_prm::preselectFastSignificant(
                     {
                         irot = iflip * nr_psi + ipsi;
                         dMij(Msignificant, refno, irot) = 0;
-                        CC = A2_plus_Xi2;
+                        crosscorr = A2_plus_Xi2;
                         if (save_mem1) Mrefl = Mrot[ipsi];
                         else Mrefl = mref[refno*nr_psi + ipsi];
                         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux2)
                         {
-                            CC -= dMij(Maux2, i, j) * dMij(Mrefl, i, j);
+                            crosscorr -= dMij(Maux2, i, j) * dMij(Mrefl, i, j);
                         }
-                        dMij(Mdsig, refno, irot) = CC;
-                        if (CC < mindiff) mindiff = CC;
+                        dMij(Mdsig, refno, irot) = crosscorr;
+                        if (crosscorr < mindiff) mindiff = crosscorr;
                     }
                 }
             }
