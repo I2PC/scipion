@@ -1543,6 +1543,7 @@ void get_subset_docfile(DocFile& DFin, SelFile& SF, DocFile& DFout)
     while (!SF.eof())
     {
 	fn_tmp = SF.NextImg();
+        if (fn_tmp=="") continue;
 	if (DFin.search_comment(fn_tmp))
 	{
             DFout.append_comment(fn_tmp);
