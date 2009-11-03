@@ -632,15 +632,23 @@ double bessi1_5(double x)
 }
 double bessi2(double x)
 {
-    return (x == 0) ? 0 : bessi0(x) - (2*1) / x*bessi1(x);
+    return (x == 0) ? 0 : bessi0(x) - ((2*1) / x) * bessi1(x);
 }
 double bessi2_5(double x)
 {
-    return (x == 0) ? 0 : bessi0_5(x) - (2*1.5) / x*bessi1_5(x);
+    return (x == 0) ? 0 : bessi0_5(x) - ((2*1.5) / x) * bessi1_5(x);
+}
+double bessi3(double x)
+{
+    return (x == 0) ? 0 : bessi1(x) - ((2*2) / x) * bessi2(x);
 }
 double bessi3_5(double x)
 {
-    return (x == 0) ? 0 : bessi1_5(x) - (2*2.5) / x*bessi2_5(x);
+    return (x == 0) ? 0 : bessi1_5(x) - ((2*2.5) / x) * bessi2_5(x);
+}
+double bessi4(double x)
+{
+    return (x == 0) ? 0 : bessi2(x) - ((2*3) / x) * bessi3(x);
 }
 double bessj1_5(double x)
 {

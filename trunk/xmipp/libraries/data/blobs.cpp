@@ -53,23 +53,30 @@ double kaiser_value(double r, double a, double alpha, int m)
         }
         else if (m == 1)
         {
-            if (alpha == 0.0)
-                w = 1.0 - rdas;
-            else
-                w = sqrt(1.0 - rdas) * bessi1(arg) / bessi1(alpha);
-            std::cout << "\narg/alpha " << arg/alpha
-                      << " besi1(arg) " << bessi1(arg)
-                      << " bessi1(alpha) " << bessi1(alpha)
-                      << "to " << (arg/alpha) * bessi1(arg) / bessi1(alpha)
-                      << std::endl
-                      ;    
+            w = sqrt (1.0 - rdas);
+            if (alpha != 0.0)
+                w *= bessi1(arg) / bessi1(alpha);
         }
         else if (m == 2)
         {
-            if (alpha == 0.0)
-                w = (1.0 - rdas) * (1.0 - rdas);
-            else
-                w = (1.0 - rdas) * bessi2(arg) / bessi2(alpha);
+            w = sqrt (1.0 - rdas);
+            w = w * w;
+            if (alpha != 0.0)
+                w *= bessi2(arg) / bessi2(alpha);
+        }
+        else if (m == 3)
+        {
+            w = sqrt (1.0 - rdas);
+            w = w * w * w;
+            if (alpha != 0.0)
+                w *= bessi3(arg) / bessi3(alpha);
+        }
+        else if (m == 4)
+        {
+            w = sqrt (1.0 - rdas);
+            w = w * w * w *w;
+            if (alpha != 0.0)
+                w *= bessi4(arg) / bessi4(alpha);
         }
         else REPORT_ERROR(1, "m out of range in kaiser_value()");
 
