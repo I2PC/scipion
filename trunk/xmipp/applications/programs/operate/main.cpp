@@ -788,7 +788,7 @@ void extract_column(int operand_type1, int operand_type2, const FileName &fn_1,
             {
                 out(i, 0) = Op1(i, number2);
                 // For 1D output: also write in text format to screen
-                std::cout <<i<<" "<<Op1(i, number2)<<std::endl;
+                std::cout <<i+FIRST_XMIPP_INDEX(Op1().colNumber())<<" "<<Op1(i, number2)<<std::endl;
             }
             // Save
             out.write(fn_out);
@@ -835,7 +835,7 @@ void extract_row(int operand_type1, int operand_type2, const FileName &fn_1,
             {
                 out(0, j) = Op1(number2, j);
                 // For 1D output: also write in text format to screen
-                std::cout <<j<<" "<<Op1(number2,j)<<std::endl;
+                std::cout <<j+FIRST_XMIPP_INDEX(Op1().rowNumber())<<" "<<Op1(number2,j)<<std::endl;
             }
             // Save
             out.write(fn_out);
