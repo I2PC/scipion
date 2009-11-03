@@ -153,6 +153,9 @@ public:
     /// No mirror
     bool noMirror;
 
+    /// Verbose
+    bool verbose;
+
     /// Corr split
     bool corrSplit;
 
@@ -188,7 +191,7 @@ public:
     /// Initialize
     void initialize(SelFile &_SF, int _Niter,  int _Nneighbours,
         double _PminSize, std::vector< Matrix2D<double> > _codes0,
-        int _Ncodes0, bool _noMirror, bool _corrSplit, 
+        int _Ncodes0, bool _noMirror, bool verbose, bool _corrSplit, 
         bool _useCorrelation, bool _classicalMultiref, 
         bool _alignImages, bool _fast, int rank);
     
@@ -267,6 +270,9 @@ public:
     
     /// No mirror
     bool noMirror;
+
+    /// Verbose
+    bool verbose;
 
     /// Read
     void read(int argc, char** argv);

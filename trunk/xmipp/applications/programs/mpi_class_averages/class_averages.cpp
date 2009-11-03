@@ -35,7 +35,8 @@ void VQProjection::updateProjection(const Matrix2D<double> &I,
 {
     Pupdate+=I;
     nextListImg.push_back(idx);
-    nextClassCorr.push_back(corrCode);
+    if (!classicalMultiref)
+        nextClassCorr.push_back(corrCode);
 }
 
 int VQProjection::sendMPI(int d_rank)
@@ -207,25 +208,28 @@ void VQProjection::transferUpdate()
 	currentListImg=nextListImg;
         nextListImg.clear();
     
-        Matrix1D<double> classCorr, nonClassCorr;
-        classCorr.initZeros(nextClassCorr.size());
-        nonClassCorr.initZeros(nextNonClassCorr.size());
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(classCorr)
-            classCorr(i)=nextClassCorr[i];
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(nonClassCorr)
-            nonClassCorr(i)=nextNonClassCorr[i];
-        nextClassCorr.clear();
-        nextNonClassCorr.clear();
-        double minC, maxC; classCorr.computeDoubleMinMax(minC,maxC);
-        double minN, maxN; nonClassCorr.computeDoubleMinMax(minN,maxN);
-        double c0=XMIPP_MIN(minC,minN);
-        double cF=XMIPP_MAX(maxC,maxN);
-        compute_hist(classCorr,histClass,c0,cF,200);
-        compute_hist(nonClassCorr,histNonClass,c0,cF,200);
-        histClass+=1; // Laplace correction
-        histNonClass+=1;
-        histClass/=histClass.sum();
-        histNonClass/=histNonClass.sum();
+        if (!classicalMultiref)
+        {
+            Matrix1D<double> classCorr, nonClassCorr;
+            classCorr.initZeros(nextClassCorr.size());
+            nonClassCorr.initZeros(nextNonClassCorr.size());
+            FOR_ALL_ELEMENTS_IN_MATRIX1D(classCorr)
+                classCorr(i)=nextClassCorr[i];
+            FOR_ALL_ELEMENTS_IN_MATRIX1D(nonClassCorr)
+                nonClassCorr(i)=nextNonClassCorr[i];
+            nextClassCorr.clear();
+            nextNonClassCorr.clear();
+            double minC, maxC; classCorr.computeDoubleMinMax(minC,maxC);
+            double minN, maxN; nonClassCorr.computeDoubleMinMax(minN,maxN);
+            double c0=XMIPP_MIN(minC,minN);
+            double cF=XMIPP_MAX(maxC,maxN);
+            compute_hist(classCorr,histClass,c0,cF,200);
+            compute_hist(nonClassCorr,histNonClass,c0,cF,200);
+            histClass+=1; // Laplace correction
+            histNonClass+=1;
+            histClass/=histClass.sum();
+            histNonClass/=histNonClass.sum();
+        }
 
         #ifdef DEBUG
             histClass.write("PPPclass.txt");
@@ -413,18 +417,21 @@ void VQProjection::fit(Matrix2D<double> &I,
     I=bestImg;
     corrCode=bestCorrCode;
 
-    // Find the likelihood
     likelihood=0;
-    int idx;
-    histClass.val2index(corrCode,idx);
-    if (idx<0) return;
-    double likelihoodClass=0;
-    for (int i=0; i<=idx; i++) likelihoodClass+=histClass(i);
-    histNonClass.val2index(corrCode,idx);
-    if (idx<0) return;
-    double likelihoodNonClass=0;
-    for (int i=0; i<=idx; i++) likelihoodNonClass+=histNonClass(i);
-    likelihood=likelihoodClass*likelihoodNonClass;
+    if (!classicalMultiref)
+    {
+        // Find the likelihood
+        int idx;
+        histClass.val2index(corrCode,idx);
+        if (idx<0) return;
+        double likelihoodClass=0;
+        for (int i=0; i<=idx; i++) likelihoodClass+=histClass(i);
+        histNonClass.val2index(corrCode,idx);
+        if (idx<0) return;
+        double likelihoodNonClass=0;
+        for (int i=0; i<=idx; i++) likelihoodNonClass+=histNonClass(i);
+        likelihood=likelihoodClass*likelihoodNonClass;
+    }
 }
 
 /* Look for K neighbours in a list ----------------------------------------- */
@@ -477,7 +484,7 @@ void VQProjection::lookForNeighbours(const std::vector<VQProjection *> listP,
 //#define DEBUG
 void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     double _PminSize, std::vector< Matrix2D<double> > _codes0, int _Ncodes0,
-    bool _noMirror, bool _corrSplit, bool _useCorrelation,
+    bool _noMirror, bool _verbose, bool _corrSplit, bool _useCorrelation,
     bool _classicalMultiref, bool _alignImages, bool _fast, int rank)
 {
     // Only "parent" worker prints
@@ -490,6 +497,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     Nneighbours=_Nneighbours;
     PminSize=_PminSize;
     noMirror=_noMirror;
+    verbose=_verbose;
     corrSplit=_corrSplit;
     useCorrelation=_useCorrelation;
     classicalMultiref=_classicalMultiref;
@@ -513,12 +521,21 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
         P[q]->gaussianInterpolator=&gaussianInterpolator;
         P[q]->plans=NULL;
         P[q]->mask=&mask;
-        P[q]->Pupdate.initZeros(Ydim,Xdim);
-        P[q]->Pupdate.setXmippOrigin();
         P[q]->useCorrelation=useCorrelation;
         P[q]->classicalMultiref=classicalMultiref;
+	if (_codes0.size()!=0)
+        {
+            P[q]->Pupdate=_codes0[q];
+            P[q]->nextListImg.push_back(-1);
+        } else            
+            P[q]->Pupdate.initZeros(Ydim,Xdim);
+        P[q]->Pupdate.setXmippOrigin();
+        if (_codes0.size()!=0)
+            P[q]->transferUpdate();
     }	
 	
+    // Estimate sigma and if no previous classes have been given,
+    // assign randomly
     sigma = 0;
     int N=SF->ImgNo();
     std::vector<int> initNodeAssign( N, -1 );
@@ -534,39 +551,88 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
 			
     	if( n % mpi_size == rank )
 	{
-		I.read( auxFN );
-		I().setXmippOrigin();
-		I().statisticsAdjust(0,1);
-	
-		// Measure the variance of the signal outside a circular mask
-            	double min_val, max_val, avg, stddev;
-            	computeStats_within_binary_mask(mask,I(),
-            	min_val, max_val, avg, stddev);
-            	sigma+=stddev;
+	    I.read( auxFN );
+	    I().setXmippOrigin();
+	    I().statisticsAdjust(0,1);
 
-            	// Put it randomly in one of the classes
-            	// int q=ROUND(rnd_unif(0,_Ncodes0-1));
-              	int q = n%_Ncodes0;
-	    
+	    // Measure the variance of the signal outside a circular mask
+            double min_val, max_val, avg, stddev;
+            computeStats_within_binary_mask(mask,I(),
+                min_val, max_val, avg, stddev);
+            sigma+=stddev;
+
+            // Put it randomly in one of the classes
+	    if (_codes0.size()==0)
+            {
+            	int q=ROUND(rnd_unif(0,_Ncodes0-1));
+              	// int q = n%_Ncodes0;
+
 	        initNodeAssign[n] = q;
-	    
-	    	if (_codes0.size()!=0)
-            	    P[q]->updateProjection(_codes0[q],0,n);
-            	else
-            	    P[q]->updateProjection(I(),0,n);
-            
-            	if (n%100==0 && rank==0) 
-		    progress_bar(n);
+            	P[q]->updateProjection(I(),0,n);
+            }
+
+            if (n%100==0 && rank==0) 
+		progress_bar(n);
 	}
     }
+    if( rank == 0 )
+    	progress_bar(N);
 
-    // Put things in common
+    // Put sigma in common
+    double sigmaAux=0;
+    MPI_Allreduce( &sigma, &sigmaAux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	
+    sigma=sigmaAux;	
+    sigma/=N;
+    sigma*=sqrt(2.0);
+
+    // Really make the assignment if some initial images were given
+    if (_codes0.size()!=0)
+    {
+        // Really make the assignment once sigma is known
+        if( rank == 0 )
+        {
+    	    std::cout << "Making assignment ...\n";
+            init_progress_bar(N);
+        }
+        for( int n=0; n < N ; n++ )
+        {
+    	    if( n % mpi_size == rank )
+	    {
+    	        ImageXmipp I;
+		I.read( SFv[n] );
+		I().setXmippOrigin();
+		I().statisticsAdjust(0,1);
+
+                double bestCorr=-2;
+                int q;
+                for (int qp=0; qp<_Ncodes0; qp++)
+                {
+   	            Matrix2D<double> Iaux;
+	            double corrCode, likelihood;
+                    Iaux=I();
+                    P[qp]->fit(Iaux, sigma, noMirror, corrCode, likelihood);
+                    if (corrCode>bestCorr)
+                    {
+                        bestCorr=corrCode;
+                        q=qp;
+                    }
+                }
+
+	        initNodeAssign[n] = q;
+            	P[q]->updateProjection(I(),0,n);
+	    }
+            if (n%100==0 && rank==0) 
+		progress_bar(n);
+        }
+        if( rank == 0 )
+    	    progress_bar(N);
+    }
+
+    // Put assignment in common
     std::vector<int> auxNodeAssign( N, -1);
     MPI_Allreduce( &(initNodeAssign[0]), &(auxNodeAssign[0]), N, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
     initNodeAssign = auxNodeAssign;
-
-    if( rank == 0 )
-    	progress_bar(N);
 
     // Update for next iteration
     // Matrix2D<double> Pupdate;
@@ -621,119 +687,113 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     	 }
     }
 			
-    double sigmaAux=0;
-    MPI_Allreduce( &sigma, &sigmaAux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-	
-    sigma=sigmaAux;	
-    sigma/=N;
-    sigma*=sqrt(2.0);
-
     for (int q=0; q<_Ncodes0; q++)
     	P[q]->transferUpdate();
 		
     // Now compute the histogram of corr values
-    if( rank == 0 )
-    	init_progress_bar(N);
-    
-    for (int n=0; n<N; n++)
-    {
-    	ImageXmipp I;
-    	if( n % mpi_size == rank )
-	{
-	    I.read( SFv[n] );
-	    I().setXmippOrigin();
-	    I().statisticsAdjust(0,1);
+    if (!classicalMultiref) {
+        if( rank == 0 )
+    	    init_progress_bar(N);
 
-   	    Matrix2D<double> Iaux;
-
-	    int q=initNodeAssign[n];
-
-	    double corrCode, likelihood;
-            Iaux=I();
-            P[q]->fit(Iaux, sigma, noMirror, corrCode, likelihood);
-            P[q]->updateProjection(Iaux,corrCode,n);
-            updateNonCode(I(),q);
-
-	    for (int qp=0; qp<_Ncodes0; qp++)
+        for (int n=0; n<N; n++)
+        {
+    	    ImageXmipp I;
+    	    if( n % mpi_size == rank )
 	    {
-        	if (q==qp) continue;
-        	Matrix2D<double> Iaux=I();
-		double corrNonCode, nonCodeLikelihood;
-		P[qp]->fit(Iaux,sigma,noMirror,corrNonCode,nonCodeLikelihood);
-		P[qp]->updateNonProjection(corrNonCode);
-	    }
-            if( rank == 0 )
-		if (n%100==0) progress_bar(n);
-    	}
+	        I.read( SFv[n] );
+	        I().setXmippOrigin();
+	        I().statisticsAdjust(0,1);
+
+   	        Matrix2D<double> Iaux;
+
+	        int q=initNodeAssign[n];
+
+	        double corrCode, likelihood;
+                Iaux=I();
+                P[q]->fit(Iaux, sigma, noMirror, corrCode, likelihood);
+                P[q]->updateProjection(Iaux,corrCode,n);
+                updateNonCode(I(),q);
+
+	        for (int qp=0; qp<_Ncodes0; qp++)
+	        {
+        	    if (q==qp) continue;
+        	    Matrix2D<double> Iaux=I();
+		    double corrNonCode, nonCodeLikelihood;
+		    P[qp]->fit(Iaux,sigma,noMirror,corrNonCode,nonCodeLikelihood);
+		    P[qp]->updateNonProjection(corrNonCode);
+	        }
+                if( rank == 0 )
+		    if (n%100==0) progress_bar(n);
+    	    }
+        }
+
+        if( rank == 0 )
+    	    progress_bar(N);
+    
+        for (int q=0; q<_Ncodes0; q++)
+        {
+    	    PupdateAux.initZeros();
+            MPI_Allreduce( P[q]->Pupdate.data, PupdateAux.data, P[q]->Pupdate.yxdim, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+            P[q]->Pupdate = PupdateAux;
+
+    	    // Share nextClassCorr and nextNonClassCorr
+    	    int oldSizeClassCorr =  P[q]->nextClassCorr.size();
+    	    int oldSizeNextListImg = P[q]->nextListImg.size();
+	    int oldSizeNextNonClassCorr = P[q]->nextNonClassCorr.size();
+
+    	    std::vector<double> oldListClassCorr = P[q]->nextClassCorr;
+    	    std::vector<int> oldListNextListImg = P[q]->nextListImg;
+	    std::vector<double> oldListNextNonClassCorr = P[q]->nextNonClassCorr;    
+
+    	    for( int ranks = 0 ; ranks < mpi_size ; ranks ++ )
+    	    {
+    	        if( ranks == rank )
+	        {
+		    MPI_Bcast( &oldSizeClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		    MPI_Bcast( &(oldListClassCorr[0]), oldSizeClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
+
+		    MPI_Bcast( &oldSizeNextListImg, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		    MPI_Bcast( &(oldListNextListImg[0]),oldSizeNextListImg, MPI_INT, rank, MPI_COMM_WORLD );
+
+		    MPI_Bcast( &oldSizeNextNonClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		    MPI_Bcast( &(oldListNextNonClassCorr[0]), oldSizeNextNonClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );   
+	        }
+	        else
+	        {
+	    	    int size;
+		    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+		    std::vector<double> aux(size, 0);
+		    MPI_Bcast( &(aux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
+
+		    for( int element = 0; element < size; element ++ )
+		    {
+	                P[q]->nextClassCorr.push_back(aux[element]);
+		    }
+
+    	    	    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+	    	    std::vector<int> aux2(size, 0);
+	    	    MPI_Bcast( &(aux2[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
+
+	    	    for( int element = 0; element < size; element ++ )
+	    	    {
+                        P[q]->nextListImg.push_back(aux2[element]);
+	    	    }
+
+		    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+	    	    std::vector<double> aux3(size, 0);
+	    	    MPI_Bcast( &(aux3[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
+
+	    	    for( int element = 0; element < size; element ++ )
+	    	    {
+                        P[q]->nextNonClassCorr.push_back(aux3[element]);
+	    	    }
+	        }
+    	     }
+        }
+
+        for (int q=0; q<_Ncodes0; q++)
+    	    P[q]->transferUpdate();
     }
-    
-    if( rank == 0 )
-    	progress_bar(N);
-    
-    for (int q=0; q<_Ncodes0; q++)
-    {
-    	PupdateAux.initZeros();
-        MPI_Allreduce( P[q]->Pupdate.data, PupdateAux.data, P[q]->Pupdate.yxdim, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-        P[q]->Pupdate = PupdateAux;
-
-    	// Share nextClassCorr and nextNonClassCorr
-    	int oldSizeClassCorr =  P[q]->nextClassCorr.size();
-    	int oldSizeNextListImg = P[q]->nextListImg.size();
-	int oldSizeNextNonClassCorr = P[q]->nextNonClassCorr.size();
-
-    	std::vector<double> oldListClassCorr = P[q]->nextClassCorr;
-    	std::vector<int> oldListNextListImg = P[q]->nextListImg;
-	std::vector<double> oldListNextNonClassCorr = P[q]->nextNonClassCorr;    
-	    
-    	for( int ranks = 0 ; ranks < mpi_size ; ranks ++ )
-    	{
-    	    if( ranks == rank )
-	    {
-		MPI_Bcast( &oldSizeClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
-		MPI_Bcast( &(oldListClassCorr[0]), oldSizeClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
-
-		MPI_Bcast( &oldSizeNextListImg, 1, MPI_INT, rank, MPI_COMM_WORLD );
-		MPI_Bcast( &(oldListNextListImg[0]),oldSizeNextListImg, MPI_INT, rank, MPI_COMM_WORLD );
-
-		MPI_Bcast( &oldSizeNextNonClassCorr, 1, MPI_INT, rank, MPI_COMM_WORLD );
-		MPI_Bcast( &(oldListNextNonClassCorr[0]), oldSizeNextNonClassCorr, MPI_DOUBLE, rank, MPI_COMM_WORLD );   
-	    }
-	    else
-	    {
-	    	int size;
-		MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-		std::vector<double> aux(size, 0);
-		MPI_Bcast( &(aux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-		for( int element = 0; element < size; element ++ )
-		{
-	            P[q]->nextClassCorr.push_back(aux[element]);
-		}
-
-    	    	MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-	    	std::vector<int> aux2(size, 0);
-	    	MPI_Bcast( &(aux2[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
-
-	    	for( int element = 0; element < size; element ++ )
-	    	{
-                    P[q]->nextListImg.push_back(aux2[element]);
-	    	}
-
-		MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-	    	std::vector<double> aux3(size, 0);
-	    	MPI_Bcast( &(aux3[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-
-	    	for( int element = 0; element < size; element ++ )
-	    	{
-                    P[q]->nextNonClassCorr.push_back(aux3[element]);
-	    	}
-	    }
-    	 }
-    }
-
-    for (int q=0; q<_Ncodes0; q++)
-    	P[q]->transferUpdate();
-
 }
 #undef DEBUG
 
@@ -869,9 +929,10 @@ void VQ::lookNode(Matrix2D<double> &I, int idx, int oldnode,
     // Assign it to the new node and remove it from the rest
     // of nodes if it was among the best
     P[newnode]->updateProjection(I,corrCode,idx);
-    for (int q=0; q<Q; q++)
-    	if (q!=newnode && corrCodeList(q)>0)
-	    P[q]->updateNonProjection(corrCodeList(q));
+    if (!classicalMultiref)
+        for (int q=0; q<Q; q++)
+    	    if (q!=newnode && corrCodeList(q)>0)
+	        P[q]->updateNonProjection(corrCodeList(q));
 }
 
 void VQ::transferUpdates()
@@ -929,16 +990,15 @@ void VQ::run(const FileName &fnOut, int level, int rank)
     while (goOn)
     {
         if( rank == 0 )
-	{
-		std::cout << "Iteration " << n << " ...\n";
-		std::cerr << "Iteration " << n << " ...\n";
+{
+	    std::cout << "Iteration " << n << " ...\n";
+	    std::cerr << "Iteration " << n << " ...\n";
+            if (verbose)
         	for (int q=0; q<Q; q++)
         	    std::cout << "Before q=" << q
                               << " Nq=" << P[q]->currentListImg.size()
                               << std::endl;
-       		#ifndef DEBUG
-            		init_progress_bar(N);
-        	#endif
+            init_progress_bar(N);
         }
         
 	SF->go_first_ACTIVE();
@@ -972,17 +1032,10 @@ void VQ::run(const FileName &fnOut, int level, int rank)
         	newAssignment(i)=node;
                 corrCodeSum+=corrCode;
             
-	    	if( rank == 0 )
-	        {
-            	    #ifndef DEBUG
-            	        if (i%progressStep==0) progress_bar(i);
-            	    #endif
-            	}
+	    	if( rank == 0 && (i%progressStep==0)) progress_bar(i);
 	    }
-	    else
-	    {
+            else
 	    	SF->NextImg();
-	    }
 	    
 	    i++;
         }
@@ -1064,9 +1117,7 @@ void VQ::run(const FileName &fnOut, int level, int rank)
 	
 	if( rank == 0 )
 	{
-            #ifndef DEBUG
-                progress_bar(N);
-            #endif
+            progress_bar(N);
             std::cout << "\nAverage correlation with input vectors="
                       << corrCodeSum/N << std::endl;
 	}
@@ -1090,15 +1141,13 @@ void VQ::run(const FileName &fnOut, int level, int rank)
 
         transferUpdates();
 	
-	if( rank == 0 )
-	{
-        	for (int q=0; q<Q; q++)
-                {
-        	    std::cout << "After q=" << q << " Nq="
-                              << P[q]->currentListImg.size()
-                              << std::endl;
-                }
-	}
+	if (rank == 0 && verbose)
+            for (int q=0; q<Q; q++)
+            {
+        	std::cout << "After q=" << q << " Nq="
+                          << P[q]->currentListImg.size()
+                          << std::endl;
+            }
 	
         // Check if there are empty nodes
         bool smallNodes;
@@ -1122,7 +1171,7 @@ void VQ::run(const FileName &fnOut, int level, int rank)
             }
             if (sizeSmallestNode<PminSize*N/Q*0.01 )
             {
-                if (rank==0)
+                if (rank==0 && verbose)
                     std::cout << "Splitting node " << largestNode
                               << " by overwriting " << smallNode << std::endl;
                 smallNodes=true;
@@ -1139,13 +1188,13 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                 }
                 
                 // Now split the largest node
-                if (rank==0)
-                {
-                    #ifdef DEBUG
+                #ifdef DEBUG
+                    if (rank==0)
+                    {
                         std::cout << "Largest node address: " << P[largestNode] << std::endl;
                         std::cout << "Small node address: " << P[smallNode] << std::endl;
-                    #endif
-                }
+                    }
+                #endif
                 VQProjection *node1=new VQProjection;
                 VQProjection *node2=new VQProjection;
                 node1->useCorrelation=useCorrelation;
@@ -1217,14 +1266,16 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                             P[largestNode]->updateProjection(Iaux1,
                                 corrCode1,toReassign[i]);
                             newAssignment(toReassign[i])=largestNode;
-                            P[smallNode]->updateNonProjection(corrCode2);
+                            if (!classicalMultiref)
+                                P[smallNode]->updateNonProjection(corrCode2);
                 	}
                 	else
                 	{
                             P[smallNode]->updateProjection(Iaux2,corrCode2,
                                 toReassign[i]);
                             newAssignment(toReassign[i])=smallNode;
-                            P[largestNode]->updateNonProjection(corrCode1);
+                            if (!classicalMultiref)
+                                P[largestNode]->updateNonProjection(corrCode1);
                 	}
                     }
 		}
@@ -1264,14 +1315,6 @@ int VQ::cleanEmptyNodes()
 void VQ::splitNode(VQProjection *node,
     VQProjection *&node1, VQProjection *&node2, int rank, std::vector<int> &finalAssignment) const
 {
-    #ifdef DEBUG
-        if (rank==0) {
-            std::cout << "Node to split= " << node << std::endl;
-            std::cout << "Node1= " << node1 << std::endl;
-            std::cout << "Node2= " << node2 << std::endl;
-        }
-    #endif
-
     bool finish=true;
     std::vector<VQProjection *> toDelete; 
     Matrix1D<int> newAssignment;
@@ -1359,14 +1402,16 @@ void VQ::splitNode(VQProjection *node,
                             node1->updateProjection(I(),corrCode,
                         	node->currentListImg[i]);
                             newAssignment(i)=1;
-                            node2->updateNonProjection(corrCode);
+                            if (!classicalMultiref)
+                                node2->updateNonProjection(corrCode);
                 	}
                 	else
                 	{
                             node2->updateProjection(I(),corrCode,
                         	node->currentListImg[i]);
                             newAssignment(i)=2;
-                            node1->updateNonProjection(corrCode);
+                            if (!classicalMultiref)
+                                node1->updateNonProjection(corrCode);
                 	}
                     }
                     else if (it==1 && corrSplit)
@@ -1378,14 +1423,16 @@ void VQ::splitNode(VQProjection *node,
                             node1->updateProjection(I(),corrCode,
                         	node->currentListImg[i]);
                             newAssignment(i)=1;
-                            node2->updateNonProjection(corrCode);
+                            if (!classicalMultiref)
+                                node2->updateNonProjection(corrCode);
                 	}
                 	else
                 	{
                             node2->updateProjection(I(),corrCode,
                         	node->currentListImg[i]);
                             newAssignment(i)=2;
-                            node1->updateNonProjection(corrCode);
+                            if (!classicalMultiref)
+                                node1->updateNonProjection(corrCode);
                 	}
                     }
                     else
@@ -1412,13 +1459,15 @@ void VQ::splitNode(VQProjection *node,
                 	{
                             node1->updateProjection(Iaux1,corrCode1,node->currentListImg[i]);
                             newAssignment(i)=1;
-                            node2->updateNonProjection(corrCode2);
+                            if (!classicalMultiref)
+                                node2->updateNonProjection(corrCode2);
                 	}
                 	else
                 	{
                             node2->updateProjection(Iaux2,corrCode2,node->currentListImg[i]);
                             newAssignment(i)=2;
-                            node1->updateNonProjection(corrCode1);
+                            if (!classicalMultiref)
+                                node1->updateNonProjection(corrCode1);
                 	}
 
                         #ifdef DEBUG
@@ -1578,22 +1627,18 @@ void VQ::splitNode(VQProjection *node,
                 node1->transferUpdate();
                 node2->transferUpdate();
 
-                #ifdef DEBUG
-                    if( rank == 0 )
-                    {
-	                std::cout
-                            << "  Split iteration " << it << std::endl
-                            << "  node1 Nq=" << node1->currentListImg.size()
-                            << std::endl
-                            << "  node2 Nq=" << node2->currentListImg.size()
-                            << std::endl;
-                        // std::cout << "Node1\n"; node1->show();
-                        // std::cout << "Node2\n"; node2->show();
-                        ImageXmipp save;
-                        save()=node1->P; save.write("PPPnode1.xmp");
-                        save()=node2->P; save.write("PPPnode2.xmp");
-                    }
-                #endif
+                if( rank == 0 && verbose)
+                {
+	            std::cout
+                        << "  Split iteration " << it << std::endl
+                        << "  node1 Nq=" << node1->currentListImg.size()
+                        << std::endl
+                        << "  node2 Nq=" << node2->currentListImg.size()
+                        << std::endl;
+                    ImageXmipp save;
+                    save()=node1->P; save.write("PPPnode1.xmp");
+                    save()=node2->P; save.write("PPPnode2.xmp");
+                }
 
                 if (it>=2 || (!corrSplit && it>=1))
                 {
@@ -1601,11 +1646,8 @@ void VQ::splitNode(VQProjection *node,
                     FOR_ALL_ELEMENTS_IN_MATRIX1D(newAssignment)
                         if (newAssignment(i)!=oldAssignment(i))
                             Nchanges++;
-                    if( rank == 0 )
-                    {
-	    	        std::cout
-                            << "Number of assignment split changes=" << Nchanges << std::endl;
-                    }
+                    if( rank == 0 && verbose)
+	    	        std::cout << "Number of assignment split changes=" << Nchanges << std::endl;
                 }
 
                 // Check if one of the nodes is too small
@@ -1620,13 +1662,10 @@ void VQ::splitNode(VQProjection *node,
 
         if (node1->currentListImg.size()<(PminSize*0.01*imax/2))
         {
-            #ifdef DEBUG
-	        if( rank == 0 )
-            	    std::cout << "Removing node1, it's too small "
-                              << node1->currentListImg.size() << " "
-                              << PminSize*0.01*imax/2 << "...\n"
-                              << "Deleted node1= " << node1 << std::endl;
-            #endif
+	    if( rank == 0 && verbose)
+            	std::cout << "Removing node1, it's too small "
+                          << node1->currentListImg.size() << " "
+                          << PminSize*0.01*imax/2 << "...\n";
             if (node1!=node) delete node1;
             node1=new VQProjection();
             node1->useCorrelation=useCorrelation;
@@ -1636,21 +1675,14 @@ void VQ::splitNode(VQProjection *node,
             node2=new VQProjection();
             node2->useCorrelation=useCorrelation;
             node2->classicalMultiref=classicalMultiref;
-            #ifdef DEBUG
-                if (rank==0)
-                    std::cout << "New node1= " << node1 << std::endl
-                              << "New node2= " << node2 << std::endl;
-            #endif
             finish=false;
         }
         else if (node2->currentListImg.size()<(PminSize*0.01*imax/2))
         {
-            #ifdef DEBUG
+	    if( rank == 0 && verbose)
             	std::cout << "Removing node2, it's too small "
                           << node2->currentListImg.size() << " "
-                          << PminSize*0.01*imax/2 << "...\n"
-                          << "Deleted node2= " << node2 << std::endl;
-            #endif
+                          << PminSize*0.01*imax/2 << "...\n";
             if (node2!=node) delete node2;
             node2=new VQProjection();
             node2->useCorrelation=useCorrelation;
@@ -1660,22 +1692,11 @@ void VQ::splitNode(VQProjection *node,
             node1=new VQProjection();
             node1->useCorrelation=useCorrelation;
             node1->classicalMultiref=classicalMultiref;
-            #ifdef DEBUG
-                if (rank==0)
-                    std::cout << "New node2= " << node2 << std::endl
-                              << "New node1= " << node1 << std::endl;
-            #endif
             finish=false;
         }
     } while (!finish);
     for (int i=0; i<toDelete.size(); i++)
-    {
-        #ifdef DEBUG
-            if (rank==0)
-                std::cout << "Deleting from list= " << toDelete[i] << std::endl;
-        #endif
         if (toDelete[i]!=node) delete toDelete[i];
-    }
    
     for (int i=0; i<node->currentListImg.size(); i++)
     {
@@ -1713,6 +1734,7 @@ void Prog_VQ_prm::read(int argc, char** argv)
     Ncodes=textToInteger(getParameter(argc,argv,"-codes","16"));
     PminSize=textToFloat(getParameter(argc,argv,"-minsize","20"));
     noMirror=checkParameter(argc,argv,"-no_mirror");
+    verbose=checkParameter(argc,argv,"-verbose");
     corrSplit=checkParameter(argc,argv,"-corr_split");
     fast=checkParameter(argc,argv,"-fast");
     useCorrelation=checkParameter(argc,argv,"-useCorrelation");
@@ -1731,6 +1753,7 @@ void Prog_VQ_prm::show() const
               << "Neighbours:        " << Nneighbours       << std::endl
               << "Minimum node size: " << PminSize          << std::endl
               << "No mirror:         " << noMirror          << std::endl
+              << "Verbose:           " << verbose           << std::endl
               << "Corr Split:        " << corrSplit         << std::endl
               << "Fast:              " << fast              << std::endl
               << "Use Correlation:   " << useCorrelation    << std::endl
@@ -1751,6 +1774,7 @@ void Prog_VQ_prm::usage() const
               << "                         : Set -1 for all\n"
               << "   [-minsize <N=20>]     : Percentage minimum node size\n"
               << "   [-no_mirror]          : Do not check mirrors\n"
+              << "   [-verbose]            : Verbose\n"
               << "   [-corr_split]         : Correlation split\n"
               << "   [-fast]               : Fast calculations, suboptimal\n"
               << "   [-useCorrelation]     : Instead of correntropy\n"
@@ -1776,7 +1800,7 @@ void Prog_VQ_prm::produce_side_info(int rank)
         Ncodes0=codes0.size();
     }
     vq.initialize(SF,Niter,Nneighbours,PminSize,
-        codes0,Ncodes0,noMirror,corrSplit,useCorrelation,
+        codes0,Ncodes0,noMirror,verbose,corrSplit,useCorrelation,
         classicalMultiref,alignImages,fast,rank);
 }
 
