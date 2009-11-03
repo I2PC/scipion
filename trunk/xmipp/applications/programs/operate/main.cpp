@@ -785,7 +785,11 @@ void extract_column(int operand_type1, int operand_type2, const FileName &fn_1,
             out().resize(Op1().rowNumber(), 1);
             // Copy
             for (int i = STARTINGY(Op1());i <= FINISHINGY(Op1());i++)
+            {
                 out(i, 0) = Op1(i, number2);
+                // For 1D output: also write in text format to screen
+                std::cout <<i<<" "<<Op1(i, number2)<<std::endl;
+            }
             // Save
             out.write(fn_out);
         }
@@ -828,7 +832,11 @@ void extract_row(int operand_type1, int operand_type2, const FileName &fn_1,
             out().resize(1, Op1().colNumber());
             // Copy
             for (int j = STARTINGX(Op1());j <= FINISHINGX(Op1());j++)
+            {
                 out(0, j) = Op1(number2, j);
+                // For 1D output: also write in text format to screen
+                std::cout <<j<<" "<<Op1(number2,j)<<std::endl;
+            }
             // Save
             out.write(fn_out);
         }
@@ -864,7 +872,7 @@ void radial_avg(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         VolumeXmipp input;
         input.read(fn_1);
         input().setXmippOrigin();
-        Matrix1D<int> center(2);
+        Matrix1D<int> center(3);
         center.initZeros();
         Matrix1D<double> radial_mean;
         Matrix1D<int> radial_count;
