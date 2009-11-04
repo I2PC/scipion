@@ -1313,14 +1313,14 @@ int VQ::cleanEmptyNodes()
 /* Split ------------------------------------------------------------------- */
 //#define DEBUG
 void VQ::splitNode(VQProjection *node,
-    VQProjection *&node1, VQProjection *&node2, int rank, std::vector<int> &finalAssignment) const
+    VQProjection *&node1, VQProjection *&node2, int rank,
+    std::vector<int> &finalAssignment) const
 {
     bool finish=true;
     std::vector<VQProjection *> toDelete; 
     Matrix1D<int> newAssignment;
 
     int mpi_size;
-	
     MPI_Comm_size( MPI_COMM_WORLD, &mpi_size );
 	
     do
@@ -1335,6 +1335,7 @@ void VQ::splitNode(VQProjection *node,
         node1->Pupdate.setXmippOrigin();
         node1->neighboursIdx=node->neighboursIdx;
         node1->P=node->P;
+        node1->classicalMultiref=false;
 
         node2->gaussianInterpolator=&gaussianInterpolator;
         node2->plans=NULL;
@@ -1344,6 +1345,7 @@ void VQ::splitNode(VQProjection *node,
         node2->Pupdate.setXmippOrigin();
         node2->neighboursIdx=node->neighboursIdx;
         node2->P=node->P;
+        node2->classicalMultiref=false;
 
         int imax=node->currentListImg.size();
 
@@ -1402,16 +1404,14 @@ void VQ::splitNode(VQProjection *node,
                             node1->updateProjection(I(),corrCode,
                         	node->currentListImg[i]);
                             newAssignment(i)=1;
-                            if (!classicalMultiref)
-                                node2->updateNonProjection(corrCode);
+                            node2->updateNonProjection(corrCode);
                 	}
                 	else
                 	{
                             node2->updateProjection(I(),corrCode,
                         	node->currentListImg[i]);
                             newAssignment(i)=2;
-                            if (!classicalMultiref)
-                                node1->updateNonProjection(corrCode);
+                            node1->updateNonProjection(corrCode);
                 	}
                     }
                     else if (it==1 && corrSplit)
@@ -1423,16 +1423,14 @@ void VQ::splitNode(VQProjection *node,
                             node1->updateProjection(I(),corrCode,
                         	node->currentListImg[i]);
                             newAssignment(i)=1;
-                            if (!classicalMultiref)
-                                node2->updateNonProjection(corrCode);
+                            node2->updateNonProjection(corrCode);
                 	}
                 	else
                 	{
                             node2->updateProjection(I(),corrCode,
                         	node->currentListImg[i]);
                             newAssignment(i)=2;
-                            if (!classicalMultiref)
-                                node1->updateNonProjection(corrCode);
+                            node1->updateNonProjection(corrCode);
                 	}
                     }
                     else
@@ -1451,23 +1449,19 @@ void VQ::splitNode(VQProjection *node,
                             if (rank==0 && false) std::cout << "Previously Assigned to " << newAssignment(i) << std::endl;
                         #endif
 
-                	if ((!classicalMultiref &&
-                                (likelihood1>likelihood2 && likelihood1>0 ||
+                	if (likelihood1>likelihood2 && likelihood1>0 ||
                                 likelihood1<0 && likelihood2<0 &&
-                                   ABS(likelihood1)>ABS(likelihood2)))
-                            || (classicalMultiref && corrCode1>corrCode2))
+                                   ABS(likelihood1)>ABS(likelihood2))
                 	{
                             node1->updateProjection(Iaux1,corrCode1,node->currentListImg[i]);
                             newAssignment(i)=1;
-                            if (!classicalMultiref)
-                                node2->updateNonProjection(corrCode2);
+                            node2->updateNonProjection(corrCode2);
                 	}
                 	else
                 	{
                             node2->updateProjection(Iaux2,corrCode2,node->currentListImg[i]);
                             newAssignment(i)=2;
-                            if (!classicalMultiref)
-                                node1->updateNonProjection(corrCode1);
+                            node1->updateNonProjection(corrCode1);
                 	}
 
                         #ifdef DEBUG
@@ -1535,86 +1529,74 @@ void VQ::splitNode(VQProjection *node,
 	    {
 	    	if( ranks == rank ) 
 	     	{
-			MPI_Bcast( &oldSizeNonClassCorr1, 1, MPI_INT, rank, MPI_COMM_WORLD );
-			MPI_Bcast( &(oldListNonClassCorr1[0]), oldSizeNonClassCorr1, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
-			
-			MPI_Bcast( &oldSizeNonClassCorr2, 1, MPI_INT, rank, MPI_COMM_WORLD );
-			MPI_Bcast( &(oldListNonClassCorr2[0]), oldSizeNonClassCorr2, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
-		
-			MPI_Bcast( &oldSizeClassCorr1, 1, MPI_INT, rank, MPI_COMM_WORLD );
-			MPI_Bcast( &(oldListClassCorr1[0]), oldSizeClassCorr1, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
-			
-			MPI_Bcast( &oldSizeClassCorr2, 1, MPI_INT, rank, MPI_COMM_WORLD );
-			MPI_Bcast( &(oldListClassCorr2[0]), oldSizeClassCorr2, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
-		
-			MPI_Bcast( &oldSizeNextListImg1, 1, MPI_INT, rank, MPI_COMM_WORLD );
-			MPI_Bcast( &(oldListNextListImg1[0]), oldSizeNextListImg1, MPI_INT, rank, MPI_COMM_WORLD );    
-			
-			MPI_Bcast( &oldSizeNextListImg2, 1, MPI_INT, rank, MPI_COMM_WORLD );
-			MPI_Bcast( &(oldListNextListImg2[0]), oldSizeNextListImg2, MPI_INT, rank, MPI_COMM_WORLD );    
+		    MPI_Bcast( &oldSizeNonClassCorr1, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		    MPI_Bcast( &(oldListNonClassCorr1[0]), oldSizeNonClassCorr1, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
+
+		    MPI_Bcast( &oldSizeNonClassCorr2, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		    MPI_Bcast( &(oldListNonClassCorr2[0]), oldSizeNonClassCorr2, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
+
+		    MPI_Bcast( &oldSizeClassCorr1, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		    MPI_Bcast( &(oldListClassCorr1[0]), oldSizeClassCorr1, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
+
+		    MPI_Bcast( &oldSizeClassCorr2, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		    MPI_Bcast( &(oldListClassCorr2[0]), oldSizeClassCorr2, MPI_DOUBLE, rank, MPI_COMM_WORLD );    
+
+		    MPI_Bcast( &oldSizeNextListImg1, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		    MPI_Bcast( &(oldListNextListImg1[0]), oldSizeNextListImg1, MPI_INT, rank, MPI_COMM_WORLD );    
+
+		    MPI_Bcast( &oldSizeNextListImg2, 1, MPI_INT, rank, MPI_COMM_WORLD );
+		    MPI_Bcast( &(oldListNextListImg2[0]), oldSizeNextListImg2, MPI_INT, rank, MPI_COMM_WORLD );    
 		}
 		else
 		{
-			int size, element;
-			std::vector<double> daux;
-			std::vector<int> iaux;
-			
-			// Receive and gather nextNonClassCorr values
-			MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-			daux.resize(size, 0);
-			MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-			
-			for( element = 0; element < size; element ++ )
-			{
-                                node1->nextNonClassCorr.push_back(daux[element]);
-			}			
-			
-			MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-			daux.resize(size, 0);
-			MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-			
-			for( element = 0; element < size; element ++ )
-			{
-                                node2->nextNonClassCorr.push_back(daux[element]);
-			}	
-			
-			// Receive and gather nextClassCorr values
-			MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-			daux.resize(size, 0);
-			MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-			
-			for( element = 0; element < size; element ++ )
-			{
-                                node1->nextClassCorr.push_back(daux[element]);
-			}			
-			
-			MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-			daux.resize(size, 0);
-			MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
-			
-			for( element = 0; element < size; element ++ )
-			{
-                                node2->nextClassCorr.push_back(daux[element]);
-			}	
-			
-			// Receive and gather nextListImg values
-			MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-			iaux.resize(size, 0);
-			MPI_Bcast( &(iaux[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
-			
-			for( element = 0; element < size; element ++ )
-			{
-                                node1->nextListImg.push_back(iaux[element]);
-			}			
-			
-			MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
-			iaux.resize(size, 0);
-			MPI_Bcast( &(iaux[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
-			
-			for( element = 0; element < size; element ++ )
-			{
-                                node2->nextListImg.push_back(iaux[element]);
-			}			
+		    int size, element;
+		    std::vector<double> daux;
+		    std::vector<int> iaux;
+
+		    // Receive and gather nextNonClassCorr values
+		    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+		    daux.resize(size, 0);
+		    MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
+
+		    for( element = 0; element < size; element ++ )
+                        node1->nextNonClassCorr.push_back(daux[element]);
+
+		    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+		    daux.resize(size, 0);
+		    MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
+
+		    for( element = 0; element < size; element ++ )
+                        node2->nextNonClassCorr.push_back(daux[element]);
+
+		    // Receive and gather nextClassCorr values
+		    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+		    daux.resize(size, 0);
+		    MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
+
+		    for( element = 0; element < size; element ++ )
+                        node1->nextClassCorr.push_back(daux[element]);
+
+		    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+		    daux.resize(size, 0);
+		    MPI_Bcast( &(daux[0]), size, MPI_DOUBLE, ranks, MPI_COMM_WORLD );
+
+		    for( element = 0; element < size; element ++ )
+                        node2->nextClassCorr.push_back(daux[element]);
+
+		    // Receive and gather nextListImg values
+		    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+		    iaux.resize(size, 0);
+		    MPI_Bcast( &(iaux[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
+
+		    for( element = 0; element < size; element ++ )
+                        node1->nextListImg.push_back(iaux[element]);
+
+		    MPI_Bcast( &size, 1, MPI_INT ,ranks, MPI_COMM_WORLD );
+		    iaux.resize(size, 0);
+		    MPI_Bcast( &(iaux[0]), size, MPI_INT, ranks, MPI_COMM_WORLD );
+
+		    for( element = 0; element < size; element ++ )
+                        node2->nextListImg.push_back(iaux[element]);
 		}
 	    }
 	   
@@ -1669,12 +1651,12 @@ void VQ::splitNode(VQProjection *node,
             if (node1!=node) delete node1;
             node1=new VQProjection();
             node1->useCorrelation=useCorrelation;
-            node1->classicalMultiref=classicalMultiref;
+            node1->classicalMultiref=false;
             toDelete.push_back(node2);
             node=node2;
             node2=new VQProjection();
             node2->useCorrelation=useCorrelation;
-            node2->classicalMultiref=classicalMultiref;
+            node2->classicalMultiref=false;
             finish=false;
         }
         else if (node2->currentListImg.size()<(PminSize*0.01*imax/2))
@@ -1686,12 +1668,12 @@ void VQ::splitNode(VQProjection *node,
             if (node2!=node) delete node2;
             node2=new VQProjection();
             node2->useCorrelation=useCorrelation;
-            node2->classicalMultiref=classicalMultiref;
+            node2->classicalMultiref=false;
             toDelete.push_back(node1);
             node=node1;
             node1=new VQProjection();
             node1->useCorrelation=useCorrelation;
-            node1->classicalMultiref=classicalMultiref;
+            node1->classicalMultiref=false;
             finish=false;
         }
     } while (!finish);
@@ -1703,6 +1685,8 @@ void VQ::splitNode(VQProjection *node,
         finalAssignment.push_back( node->currentListImg[i] ); 
 	finalAssignment.push_back( newAssignment(i) );
     }    
+    node1->classicalMultiref=classicalMultiref;
+    node2->classicalMultiref=classicalMultiref;
 }
 #undef DEBUG
 
