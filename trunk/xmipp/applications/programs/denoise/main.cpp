@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/denoise.h>
+#include <reconstruction/denoise.h>
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {

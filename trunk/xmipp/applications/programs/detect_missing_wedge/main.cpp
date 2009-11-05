@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/detect_missing_wedge.h>
+#include <reconstruction/detect_missing_wedge.h>
 
 int main(int argc, char **argv)
 {

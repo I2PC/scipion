@@ -24,9 +24,9 @@
  ***************************************************************************/
 
 #include "detect_missing_wedge.h"
-#include "args.h"
-#include "fftw.h"
-#include "de_solver.h"
+#include <data/args.h>
+#include <data/fftw.h>
+#include <data/de_solver.h>
 
 // Evaluate plane ----------------------------------------------------------
 double evaluatePlane(double rot, double tilt, 
@@ -155,7 +155,8 @@ public:
    double tiltPos;
 };
 
-double wrapperFitness(double *p, void* extraArgs)
+//// Sjors wrapperFitness also exists in nma_alignment
+double wrapperFitnessDetectMissingWedge(double *p, void* extraArgs)
 {
     bool dummy;
     WedgeSolver *wegde_solver=(WedgeSolver *) extraArgs;
@@ -192,7 +193,7 @@ void lookForPlane(const Matrix3D<double> &V, const Matrix3D<double> &Vmag,
     steps.initConstant(1);
     x(0)=bestSolution[0];
     x(1)=bestSolution[1];
-    powellOptimizer(x,1,2,&wrapperFitness,&solver,0.01,fitness,
+    powellOptimizer(x,1,2,&wrapperFitnessDetectMissingWedge,&solver,0.01,fitness,
         iter,steps,true);
     rot=x(0);
     tilt=x(1);
@@ -222,35 +223,6 @@ void drawWedge(double rotPos, double tiltPos, double rotNeg, double tiltNeg,
         if (ZZ(freqPos)<0 || ZZ(freqNeg)>0)
             Vdraw(k,i,j)+=1;
     }
-}
-
-// Remove wedge ------------------------------------------------------------
-void MissingWedge::removeWedge(Matrix3D<double> &V) const
-{
-    Matrix2D<double> Epos, Eneg;
-    Euler_angles2matrix(rotPos,tiltPos,0,Epos);
-    Euler_angles2matrix(rotNeg,tiltNeg,0,Eneg);
-    
-    Matrix1D<double> freq(3), freqPos, freqNeg;
-    Matrix1D<int> idx(3);
-
-    XmippFftw transformer;
-    Matrix3D< std::complex<double> > Vfft;
-    transformer.FourierTransform(V,Vfft,false);
-
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(Vfft)
-    {
-        // Frequency in the coordinate system of the volume
-        VECTOR_R3(idx,j,i,k);
-        FFT_idx2digfreq(V,idx,freq);
-
-        // Frequency in the coordinate system of the plane
-        freqPos=Epos*freq;
-        freqNeg=Eneg*freq;
-        if (ZZ(freqPos)<0 || ZZ(freqNeg)>0)
-            Vfft(k,i,j)=0;
-    }
-    transformer.inverseFourierTransform();
 }
 
 // Read from command line --------------------------------------------------

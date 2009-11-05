@@ -24,10 +24,10 @@
  ***************************************************************************/
 
 #include "reconstruct_art.h"
+#include "denoise.h"
 #include "fourier_filter.h"
 
 #include <data/wavelet.h>
-#include <data/denoise.h>
 
 /* ------------------------------------------------------------------------- */
 /* Plain ART Parameters                                                      */

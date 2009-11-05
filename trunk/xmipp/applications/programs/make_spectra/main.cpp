@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/make_spectra.h>
+#include <reconstruction/make_spectra.h>
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {

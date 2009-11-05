@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "make_spectra.h"
-#include "args.h"
+#include <data/args.h>
 
 // Empty constructor -------------------------------------------------------
 Prog_make_spectra_prm::Prog_make_spectra_prm(): Prog_parameters()

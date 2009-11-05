@@ -375,6 +375,9 @@ ReconsSources = [
     'ctf_correct_phase.cpp',
     'ctf_estimate_from_micrograph.cpp',
     'ctf_group.cpp',
+    'denoise.cpp',
+    'detect_missing_wedge.cpp',
+    'detect_structures.cpp',
     'directions.cpp',
     'draw_surface.cpp',
     'euler.cpp',
@@ -382,7 +385,9 @@ ReconsSources = [
     'filter_projections.cpp',
     'foms_evaluate.cpp',
     'fourier_filter.cpp',
+    'make_spectra.cpp',
     'micrograph_phase_flipping.cpp',
+    'micrograph_downsample.cpp',
     'ml_align2d.cpp',
 #    'ml_align3d.cpp',
     'mlf_align2d.cpp',
@@ -405,6 +410,7 @@ ReconsSources = [
     'reconstruct_fourier.cpp',
     'refinement.cpp',
     'resolution_ssnr.cpp',
+    'series_remove_fluctuations.cpp',
     'spar.cpp',
     'sparma.cpp',
     'surface.cpp',
@@ -519,12 +525,12 @@ AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
 AddXmippProgram('ctf_correct_phase', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
-AddXmippProgram('ctf_profile', ['XmippRecons'])
+AddXmippProgram('ctf_profile')
 AddXmippProgram('ctf_group', ['XmippRecons'])
 AddXmippProgram('common_lines', ['XmippRecons'])
-AddXmippProgram('denoise')
-AddXmippProgram('detect_missing_wedge')
-AddXmippProgram('detect_structures')
+AddXmippProgram('denoise', ['XmippRecons'])
+AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
+AddXmippProgram('detect_structures', ['XmippRecons'])
 AddXmippProgram('docfile_append')
 AddXmippProgram('docfile_select_subset')
 AddXmippProgram('docfile_histogram')
@@ -539,10 +545,10 @@ AddXmippProgram('header_extract')
 AddXmippProgram('header_print')
 AddXmippProgram('header_reset')
 AddXmippProgram('histogram')
-AddXmippProgram('make_spectra')
+AddXmippProgram('make_spectra', ['XmippRecons'])
 AddXmippProgram('mask')
-AddXmippProgram('micrograph_denoise')
-AddXmippProgram('micrograph_downsample')
+AddXmippProgram('micrograph_denoise', ['XmippRecons'])
+AddXmippProgram('micrograph_downsample', ['XmippRecons'])
 AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 AddXmippProgram('micrograph_scissor')
 AddXmippProgram('micrograph_window')
@@ -591,7 +597,7 @@ AddXmippProgram('selfile_select')
 AddXmippProgram('selfile_split')
 AddXmippProgram('selfile_statistics')
 AddXmippProgram('separate_objects')
-AddXmippProgram('series_remove_fluctuations')
+AddXmippProgram('series_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('shift')
 AddXmippProgram('sort_by_statistics')
 AddXmippProgram('statistics')

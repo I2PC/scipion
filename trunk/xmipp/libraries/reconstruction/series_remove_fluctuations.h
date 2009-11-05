@@ -26,11 +26,11 @@
 #ifndef SERIES_REMOVE_FLUCTUATIONS_H
 #define SERIES_REMOVE_FLUCTUATIONS_H
 
-#include "matrix3d.h"
-#include "selfile.h"
+#include <data/matrix3d.h>
+#include <data/selfile.h>
 
 /// @defgroup RemoveFluctuations Remove fluctuations in tilt series
-/// @ingroup DataLibraryPrograms
+/// @ingroup ReconsLibraryPrograms
 
 /// Parameters for the program removing the fluctuations
 /// @ingroup RemoveFluctuations

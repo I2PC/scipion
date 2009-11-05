@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.uam.es'                                  
  ***************************************************************************/
 
-#include <data/adjust_ctf.h>
 #include <data/args.h>
+#include <reconstruction/adjust_ctf.h>
 
 int main (int argc,char *argv[]) {
    Adjust_CTF_Parameters      prog_prm;

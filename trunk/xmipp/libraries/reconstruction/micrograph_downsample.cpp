@@ -24,8 +24,8 @@
  ***************************************************************************/
 
 #include "micrograph_downsample.h"
-#include "args.h"
-#include "mask.h"
+#include <data/args.h>
+#include <data/mask.h>
 
 // Read --------------------------------------------------------------------
 void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)

@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/micrograph_downsample.h>
+#include <reconstruction/micrograph_downsample.h>
 #include <data/args.h>
 #include <data/xvsmooth.h>
 

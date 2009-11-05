@@ -28,12 +28,41 @@
 #define STEERABLE_H
 
 #include "matrix3d.h"
-#include "detect_missing_wedge.h"
 #include <vector>
+
+/// @defgroup MissingWedge Missing wedge
+/// @ingroup DataLibrary
+///@{
+class MissingWedge
+{
+public:
+    /// Rot of the positive plane
+    double rotPos;
+    /// Tilt of the positive plane
+    double tiltPos;
+    /// Rot of the negative plane
+    double rotNeg;
+    /// Tilt of the negative plane
+    double tiltNeg;
+public:
+
+    /// Empty constructor
+    MissingWedge()
+    {
+        rotPos = 0.;
+        tiltPos = 0.;
+        rotNeg = 0.;
+        tiltNeg = 0.;
+    }
+
+    /// Remove wedge
+    void removeWedge(Matrix3D<double> &V) const;
+};
+///@}
 
 /// @defgroup Steerable Steerable filters
 /// @ingroup DataLibrary
-//@{
+///@{
 
 /** Class for performing steerable filters */
 class Steerable
@@ -74,61 +103,6 @@ public:
     void singleFilter(const Matrix3D<double>& Vin,
         const Matrix1D<double> &hx, const Matrix1D<double> &hy, 
         const Matrix1D<double> &hz, Matrix3D<double> &Vout);
-};
-
-/** Class with the parameters for detect structures */
-class Prog_Detect_Structures_Param {
-public:
-    /// Volume to filter
-    FileName fnIn;
-    
-    /// Volume to filter
-    FileName fnOut;
-    
-    /// Filter type
-    std::string filterType;
-    
-    /// Initial width
-    double sigma0;
-    
-    /// Final width
-    double sigmaF;
-    
-    /// Width step
-    double sigmaStep;
-    
-    /// Angular step
-    double angStep;
-
-    /// Remove background
-    bool removeBackground;
-    
-    /// Remove missing wedge
-    bool removeMissingWedge;
-
-    /// Plane 1 rot
-    double rot1;
-
-    /// Plane 1 tilt
-    double tilt1;
-
-    /// Plane 2 rot
-    double rot2;
-
-    /// Plane 2 tilt
-    double tilt2;
-public:
-    /// Read parameters from command line
-    void read(int argc, char **argv);
-    
-    /// Show parameters
-    void show() const;
-    
-    /// Usage
-    void usage() const;
-    
-    /// Run
-    void run();
 };
 ///@}
 #endif

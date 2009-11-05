@@ -26,14 +26,14 @@
 #ifndef MAKESPECTRA_H
 #define MAKESPECTRA_H
 
-#include "rotational_spectrum.h"
-#include "progs.h"
-#include "image.h"
+#include <data/rotational_spectrum.h>
+#include <data/progs.h>
+#include <data/image.h>
 
 #include <vector>
 
 /// @defgroup MakeSpectra Make spectra
-/// @ingroup DataLibraryPrograms
+/// @ingroup ReconsLibraryPrograms
 
 /** Make spectra parameters.
  * @ingroup MakeSpectra

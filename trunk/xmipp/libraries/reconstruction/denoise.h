@@ -28,7 +28,7 @@
 
 #include <string>
 
-#include "progs.h"
+#include <data/progs.h>
 
 /// @defgroup Denoise Image denoising
 /// @ingroup DataLibraryPrograms

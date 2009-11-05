@@ -24,8 +24,8 @@
  ***************************************************************************/
 
 #include "series_remove_fluctuations.h"
-#include "args.h"
-#include "fftw.h"
+#include <data/args.h>
+#include <data/fftw.h>
 
 // Read from command line --------------------------------------------------
 void Series_remove_fluctuations_parameters::read(int argc, char **argv)

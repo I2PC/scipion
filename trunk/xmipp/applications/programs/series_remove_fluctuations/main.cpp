@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/series_remove_fluctuations.h>
+#include <reconstruction/series_remove_fluctuations.h>
 
 int main(int argc, char **argv)
 {

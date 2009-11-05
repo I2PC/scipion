@@ -26,11 +26,11 @@
 #ifndef _DOWNSAMPLE
 #define _DOWNSAMPLE
 
-#include "funcs.h"
-#include "micrograph.h"
+#include <data/funcs.h>
+#include <data/micrograph.h>
 
 ///@defgroup MicrographDownsample Micrograph Downsample
-/// @ingroup DataLibraryPrograms
+/// @ingroup ReconsLibraryPrograms
 //@{
 /** Downsample parameters. */
 class Prog_downsample_prm

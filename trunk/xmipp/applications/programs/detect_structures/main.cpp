@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <data/steerable.h>
+#include <reconstruction/detect_structures.h>
 
 int main(int argc, char **argv)
 {

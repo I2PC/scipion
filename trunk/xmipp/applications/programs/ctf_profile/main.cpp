@@ -25,7 +25,6 @@
 
 #include <data/args.h>
 #include <data/ctf.h>
-#include <reconstruction/adjust_ctf.h>
 
 void Usage();
 

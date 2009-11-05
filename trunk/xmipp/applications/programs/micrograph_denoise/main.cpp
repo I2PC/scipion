@@ -25,7 +25,7 @@
 
 #include <data/args.h>
 #include <data/micrograph.h>
-#include <data/denoise.h>
+#include <reconstruction/denoise.h>
 
 void Usage();
 
