@@ -26,7 +26,7 @@
 #  define _PROG_SURFACE_HH
 
 #include <data/funcs.h>
-#include <reconstruction/phantom.h>
+#include <data/phantom.h>
 
 /**@defgroup SurfaceProgram surface (Create a surface from a phantom)
    @ingroup ReconsLibraryPrograms */

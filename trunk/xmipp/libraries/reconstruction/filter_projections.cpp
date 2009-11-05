@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "filter_projections.h"
-#include "projection.h"
+#include <data/projection.h>
 #include <data/args.h>
 #include <data/filters.h>
 #include <data/histogram.h>

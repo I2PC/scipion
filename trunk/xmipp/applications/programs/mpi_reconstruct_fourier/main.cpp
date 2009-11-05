@@ -27,7 +27,7 @@
 #include <data/args.h>
 #include <reconstruction/reconstruct_fourier.h>
 #include <data/header.h>
-#include <reconstruction/projection.h>
+#include <data/projection.h>
 #include <cstring>
 #include <cstdlib>
 #include <data/funcs.h>

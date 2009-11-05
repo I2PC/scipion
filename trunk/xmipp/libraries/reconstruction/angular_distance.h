@@ -28,7 +28,7 @@
 #include <data/funcs.h>
 #include <data/docfile.h>
 
-#include "symmetries.h"
+#include <data/symmetries.h>
 
 /**@defgroup AngularDistance angular_distance (Distance between two angular assignments)
    @ingroup ReconsLibraryPrograms */

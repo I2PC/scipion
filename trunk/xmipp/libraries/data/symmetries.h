@@ -28,14 +28,14 @@
 #ifndef _SYMMETRIES_HH
 #define _SYMMETRIES_HH
 
-#include <data/matrix2d.h>
-#include <data/funcs.h>
-#include <data/volume.h>
-#include <data/args.h>
-#include <data/grids.h>
+#include "matrix2d.h"
+#include "funcs.h"
+#include "volume.h"
+#include "args.h"
+#include "grids.h"
 
 /**@defgroup SymmetryLists Symmetry handling
-   @ingroup ReconsLibrary 
+   @ingroup DataLibrary 
     The symmetry lists are, simply, lists of 2D matrices. It's the way of
     taking symmetry into account in the reconstruction programs. The
     symmetry list must contain matrices which express equivalent views to

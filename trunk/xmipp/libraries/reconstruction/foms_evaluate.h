@@ -28,7 +28,7 @@
 #include <data/funcs.h>
 #include <data/volume.h>
 
-#include "phantom.h"
+#include <data/phantom.h>
 
 /**@defgroup EvaluateFOMS foms_evaluate (FOMs evaluation program)
    @ingroup ReconsLibraryPrograms */

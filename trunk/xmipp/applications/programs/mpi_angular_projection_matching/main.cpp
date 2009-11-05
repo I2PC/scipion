@@ -37,8 +37,8 @@
 #include <data/args.h>
 #include <reconstruction/angular_projection_matching.h>
 #include <data/header.h>
-#include <reconstruction/sampling.h>
-#include <reconstruction/symmetries.h>
+#include <data/sampling.h>
+#include <data/symmetries.h>
 
 #define TAG_WORKFORWORKER   0
 #define TAG_STOP   1

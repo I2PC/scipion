@@ -38,7 +38,6 @@
 #include <data/threads.h>
 #include <data/blobs.h>
 
-#include <reconstruction/projection.h>
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
 #define BLOB_TABLE_SIZE 5000

@@ -29,7 +29,7 @@
 
 #include <data/funcs.h>
 
-#include "phantom.h"
+#include <data/phantom.h>
 
 /**@defgroup RandomPhantom phantom_create_random (Generate phantoms randomly)
    @ingroup ReconsLibraryPrograms */

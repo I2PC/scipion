@@ -23,8 +23,9 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/ctf.h>
 #include <data/args.h>
+#include <data/ctf.h>
+#include <reconstruction/adjust_ctf.h>
 
 void Usage();
 

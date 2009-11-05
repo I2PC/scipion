@@ -32,7 +32,6 @@
 #include <data/projection.h>
 #include <data/filters.h>
 
-#include <reconstruction/projection.h>
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
 

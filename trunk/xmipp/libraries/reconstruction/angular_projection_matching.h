@@ -39,10 +39,10 @@
 #include <data/threads.h>
 #include <pthread.h>
 
-#include "projection.h"
-#include "symmetries.h"
-#include "sampling.h"
-#include "ctf.h"
+#include <data/projection.h>
+#include <data/symmetries.h>
+#include <data/sampling.h>
+#include <data/ctf.h>
 
 #define MY_OUPUT_SIZE 9
 

@@ -29,7 +29,7 @@
 #include <data/funcs.h>
 #include <data/docfile.h>
 
-#include "symmetries.h"
+#include <data/symmetries.h>
 
 /**@defgroup Directions Operations for projection directions
    @ingroup ReconsLibrary */

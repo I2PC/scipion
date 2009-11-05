@@ -25,8 +25,8 @@
 #ifndef _PRECOMPUTE_SAMPLING_H
 #define _PRECOMPUTE_SAMPLING_H
 
-#include "sampling.h"
-#include <reconstruction/symmetries.h>
+#include <data/sampling.h>
+#include <data/symmetries.h>
 #include <data/args.h>
 #include <fstream>
 #include <iostream>

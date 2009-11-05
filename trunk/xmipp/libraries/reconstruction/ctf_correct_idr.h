@@ -25,7 +25,7 @@
 #ifndef _PROG_IDR_ART_HH
 #  define _PROG_IDR_ART_HH
 
-#include "ctf.h"
+#include <data/ctf.h>
 #include "fourier_filter.h"
 #include <data/volume.h>
 

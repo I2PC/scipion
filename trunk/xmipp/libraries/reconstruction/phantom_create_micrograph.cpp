@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "phantom_create_micrograph.h"
-#include "projection.h"
+#include <data/projection.h>
 
 #include <data/args.h>
 #include <data/docfile.h>

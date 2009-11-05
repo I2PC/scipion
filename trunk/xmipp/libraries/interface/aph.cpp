@@ -27,7 +27,7 @@
 
 #include "aph.h"
 
-#include <reconstruction/symmetries.h>
+#include <data/symmetries.h>
 #include <data/gcc_version.h>
 #include <data/args.h>
 #include <data/image.h>

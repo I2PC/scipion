@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "adjust_volume_grey_levels.h"
-#include "projection.h"
+#include <data/projection.h>
 
 #include <data/args.h>
 

@@ -30,8 +30,7 @@
 #include <stdio.h>
 
 #include "phantom.h"
-
-#include <data/geometry.h>
+#include "geometry.h"
 
 /* ######################################################################### */
 /* Features                                                                  */

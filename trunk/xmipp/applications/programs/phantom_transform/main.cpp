@@ -26,7 +26,7 @@
 #include <data/progs.h>
 #include <data/args.h>
 #include <data/geometry.h>
-#include <reconstruction/phantom.h>
+#include <data/phantom.h>
 #include <interface/pdb.h>
 
 class Phantom_transform_parameters

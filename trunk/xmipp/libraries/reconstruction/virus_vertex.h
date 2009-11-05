@@ -33,7 +33,7 @@
 #include <data/args.h>
 #include <data/volume.h>
 #include <data/image.h>
-#include <reconstruction/symmetries.h>
+#include <data/symmetries.h>
 #include <data/projection.h>
 
 //@{

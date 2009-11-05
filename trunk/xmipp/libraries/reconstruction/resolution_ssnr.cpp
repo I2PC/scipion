@@ -29,8 +29,6 @@
 #include <data/projection.h>
 #include <data/fftw.h>
 
-#include <reconstruction/projection.h>
-
 // Read parameters from command line ---------------------------------------
 void Prog_SSNR_prm::read(int argc, char **argv)
 {

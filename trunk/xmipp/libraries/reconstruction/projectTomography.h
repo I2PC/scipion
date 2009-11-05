@@ -30,8 +30,6 @@
 #include <data/selfile.h>
 #include <data/projection.h>
 
-#include "projection.h"
-
 /**@defgroup ProjectionTomographyProgram projectTomograpy (project for tilt series)
    @ingroup ReconsLibraryPrograms */
 //@{

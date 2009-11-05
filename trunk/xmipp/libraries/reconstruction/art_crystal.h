@@ -31,7 +31,7 @@
 #include <data/image.h>
 
 #include "reconstruct_art.h"
-#include "symmetries.h"
+#include <data/symmetries.h>
 
 /**@defgroup ARTCrystal art_crystal (ART for crystals)
    @ingroup ReconsLibraryPrograms */

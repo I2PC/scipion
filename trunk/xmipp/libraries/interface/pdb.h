@@ -31,7 +31,7 @@
 
 #include <string>
 #include <data/matrix1d.h>
-#include <reconstruction/projection.h>
+#include <data/projection.h>
 
 /**@defgroup PDBinterface PDB
    @ingroup InterfaceLibrary */

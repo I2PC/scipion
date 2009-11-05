@@ -32,8 +32,8 @@
 #include <data/filters.h>
 #include <data/mask.h>
 
-#include "symmetries.h"
-#include "projection.h"
+#include <data/symmetries.h>
+#include <data/projection.h>
 #include "directions.h"
 #include "reconstruct_wbp.h"
 #include "symmetrize.h"

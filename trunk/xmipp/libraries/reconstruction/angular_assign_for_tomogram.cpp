@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "angular_assign_for_tomogram.h"
-#include "projection.h"
+#include <data/projection.h>
 
 #include <data/args.h>
 #include <data/docfile.h>

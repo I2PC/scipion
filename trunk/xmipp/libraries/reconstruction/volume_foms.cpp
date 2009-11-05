@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "volume_foms.h"
-#include "phantom.h"
+#include <data/phantom.h>
 
 #include <data/histogram.h>
 #include <data/docfile.h>

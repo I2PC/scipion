@@ -24,9 +24,8 @@
  ***************************************************************************/
 
 #include "ctf.h"
-
-#include <data/args.h>
-#include <data/fft.h>
+#include "args.h"
+#include "fft.h"
 
 /* Read -------------------------------------------------------------------- */
 void XmippCTF::read(const FileName &fn, bool disable_if_not_K)

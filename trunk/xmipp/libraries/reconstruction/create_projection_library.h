@@ -25,14 +25,14 @@
 #ifndef _PROG_PDBPHANTOM_HH
 #define _PROG_PDBPHANTOM_HH
 
-#include "sampling.h"
-#include <reconstruction/symmetries.h>
+#include <data/sampling.h>
+#include <data/symmetries.h>
 #include <data/args.h>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <data/projection.h>
-#include <reconstruction/projection.h>
+#include <data/projection.h>
 #include <data/volume.h>
 #include <data/funcs.h>
 /**@name PDB Phantom program */

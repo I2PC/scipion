@@ -36,7 +36,7 @@
 #include <data/geometry.h>
 #include <data/filters.h>
 #include <data/mask.h>
-#include "ctf.h"
+#include <data/ctf.h>
 #include <pthread.h>
 #include <vector>
 

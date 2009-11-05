@@ -45,7 +45,7 @@ template <class T>
 std::ostream& operator << (std::ostream &o, const GridVolumeT<T> &GV);
 
 /**@defgroup Grids Grids
-   @ingroup ReconsLibrary
+   @ingroup DataLibrary
     The grids are one of the most basic things in the reconstruction
     process, since the reconstructed volumes are expressed as a linear
     combination of a volume basis function weighted and shifted to all

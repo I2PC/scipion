@@ -32,9 +32,9 @@
 
 #include "refinement.h"
 #include <data/grids.h>
-#include "symmetries.h"
+#include <data/symmetries.h>
 #include <data/basis.h>
-#include "projection.h"
+#include <data/projection.h>
 #include "fourier_filter.h"
 
 struct Recons_info;

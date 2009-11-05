@@ -32,7 +32,7 @@
 #include <data/matrix2d.h>
 #include <data/fftw.h>
 
-#include "projection.h"
+#include <data/projection.h>
 
 /**@defgroup ShiftRefinement refinement (Shift refinement)
    @ingroup ReconsLibraryPrograms */

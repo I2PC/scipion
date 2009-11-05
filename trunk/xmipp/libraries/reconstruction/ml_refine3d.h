@@ -40,9 +40,9 @@
 #include <data/grids.h>
 #include <data/blobs.h>
 
-#include "symmetries.h"
-#include "sampling.h"
-#include "projection.h"
+#include <data/symmetries.h>
+#include <data/sampling.h>
+#include <data/projection.h>
 #include "directions.h"
 #include "reconstruct_art.h"
 #include "reconstruct_wbp.h"

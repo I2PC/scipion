@@ -31,7 +31,7 @@
 #include <data/docfile.h>
 #include <data/filters.h>
 #include "fourier_filter.h"
-#include "ctf.h"
+#include <data/ctf.h>
 
 /**@defgroup CTFGroup ctf_group
    @ingroup ReconsLibraryPrograms */

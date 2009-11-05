@@ -27,16 +27,18 @@
 #ifndef _SAMPLING1_HH
 #define _SAMPLING1_HH
 #include <vector>
-#include <data/docfile.h>
-#include <data/macros.h>
-#include <data/matrix1d.h>
-#include <reconstruction/symmetries.h>
-#include <data/geometry.h>
 #include <iterator>
+
+#include "docfile.h"
+#include "macros.h"
+#include "matrix1d.h"
+#include "symmetries.h"
+#include "geometry.h"
+
 
 #define cte_w 1.107149
 /**@defgroup SphereSampling sampling (Sampling the projection sphere)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup DataLibrary */
 //@{
 /** Routines with sampling the direction Sphere
        A triangular grid based on an icosahedron was first introduced in a

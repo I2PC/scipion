@@ -27,7 +27,7 @@
 #include <data/args.h>
 #include <data/selfile.h>
 #include <data/docfile.h>
-#include <reconstruction/ctf.h>
+#include <data/ctf.h>
 
 int main(int argc, char **argv)
 {

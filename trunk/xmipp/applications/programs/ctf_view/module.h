@@ -37,7 +37,7 @@
 
 #include <graphics/show_plotter.h>
 #include <graphics/show_2d.h>
-#include <reconstruction/ctf.h>
+#include <data/ctf.h>
 
 #include <qcombobox.h>
 #include <qlabel.h>

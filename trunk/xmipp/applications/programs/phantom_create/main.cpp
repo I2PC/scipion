@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include <reconstruction/phantom.h>
+#include <data/phantom.h>
 
 void Usage(char *argv[]);
 

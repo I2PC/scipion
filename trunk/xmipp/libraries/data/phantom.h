@@ -31,14 +31,13 @@
 
 #include <vector>
 
-#include <data/image.h>
-#include <data/volume.h>
-
-#include <data/blobs.h>
+#include "image.h"
+#include "volume.h"
+#include "blobs.h"
 #include "projection.h"
 
 /**@defgroup Phantoms Phantoms
- * @ingroup ReconsLibrary
+ * @ingroup DataLibrary
  *  Phantoms are mathematical description of volumes such that in the
  *  reconstruction process, we can know exactly which was the original
  *  volume in a mathematical way. In this package phantoms are considered

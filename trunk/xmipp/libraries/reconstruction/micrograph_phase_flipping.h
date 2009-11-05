@@ -28,7 +28,7 @@
 #include <data/args.h>
 #include <data/micrograph.h>
 #include <data/fftw.h>
-#include <reconstruction/ctf.h>
+#include <data/ctf.h>
 #include <data/fft.h>
 
 /**@defgroup Micrograph_phase_Flipp (phase flipping)

@@ -29,8 +29,8 @@
 #include <data/funcs.h>
 #include <data/selfile.h>
 
-#include "symmetries.h"
-#include "projection.h"
+#include <data/symmetries.h>
+#include <data/projection.h>
 #include <data/grids.h>
 #include "basic_art.h"
 

@@ -29,7 +29,7 @@
 #include <data/volume.h>
 #include <data/mask.h>
 
-#include "symmetries.h"
+#include <data/symmetries.h>
 
 /**@defgroup SymmetrizeProgram symmetrize (Symmetrize a volume)
    @ingroup ReconsLibraryPrograms */

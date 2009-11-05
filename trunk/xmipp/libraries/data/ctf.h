@@ -26,12 +26,12 @@
 #ifndef _CTF_HH
 #define _CTF_HH
 
-#include <data/image.h>
-#include <data/selfile.h>
+#include "image.h"
+#include "selfile.h"
 #include <map>
 
 /**@defgroup CTFSupport CTF support classes
-   @ingroup ReconsLibrary */
+   @ingroup DataLibrary */
 //@{
 /** CTF class.
     Here goes how to compute the radial average of a parametric CTF:

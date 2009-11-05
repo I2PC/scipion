@@ -68,7 +68,7 @@ typedef struct{
 /* BLOBS                                                                     */
 /* ========================================================================= */
 /**@defgroup Blobs Blobs
-   @ingroup ReconsLibrary */
+   @ingroup DataLibrary */
 //@{
 // Blob structure ----------------------------------------------------------
 /** Blob definition.

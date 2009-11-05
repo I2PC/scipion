@@ -36,9 +36,9 @@
 #include <data/geometry.h>
 #include <data/filters.h>
 #include <data/mask.h>
-#include "ctf.h"
-#include "sampling.h"
-#include "symmetries.h"
+#include <data/ctf.h>
+#include <data/sampling.h>
+#include <data/symmetries.h>
 #include "symmetrize.h"
 #include <pthread.h>
 #include <vector>

@@ -29,7 +29,7 @@
 #include <data/volume.h>
 #include <data/selfile.h>
 
-#include "phantom.h"
+#include <data/phantom.h>
 
 /**@defgroup EvaluateFSCs evaluate_fscs (Evaluation FSCs program)
    @ingroup ReconsLibraryPrograms */

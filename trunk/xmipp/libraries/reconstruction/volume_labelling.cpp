@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-#include "phantom.h"
+#include <data/phantom.h>
 #include "volume_labelling.h"
 
 /* Label a volume from a description file ---------------------------------- */

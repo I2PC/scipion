@@ -31,7 +31,7 @@
 #include <classification/pca.h>
 
 #include "angular_distance.h"
-#include "symmetries.h"
+#include <data/symmetries.h>
 
 #include <map>
 #include <algorithm>

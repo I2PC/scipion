@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "ctf_correct_idr.h"
-#include "projection.h"
+#include <data/projection.h>
 
 Prog_IDR_ART_Parameters::Prog_IDR_ART_Parameters()
 {

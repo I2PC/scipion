@@ -31,8 +31,7 @@
 #include <data/projection.h>
 #include <interface/pdb.h>
 
-#include "phantom.h"
-#include "projection.h"
+#include <data/phantom.h>
 #include "project_crystal.h"
 
 /**@defgroup ProjectionProgram project (Generate projections from a volume)

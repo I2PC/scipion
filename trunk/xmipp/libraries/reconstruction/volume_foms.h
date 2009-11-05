@@ -28,7 +28,7 @@
 #include <data/volume.h>
 #include <data/image.h>
 
-#include "phantom.h"
+#include <data/phantom.h>
 
 /**@defgroup FiguresOfMerit Figures of Merit
    @ingroup ReconsLibrary

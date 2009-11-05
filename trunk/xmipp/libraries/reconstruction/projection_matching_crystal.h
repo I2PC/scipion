@@ -35,9 +35,9 @@
 #include <data/filters.h>
 #include <data/mask.h>
 
-#include <reconstruction/projection.h>
+#include <data/projection.h>
 #include <reconstruction/directions.h>
-#include <reconstruction/symmetries.h>
+#include <data/symmetries.h>
 
 #include <malloc.h>
 

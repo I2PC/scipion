@@ -32,7 +32,7 @@
 #include <data/de_solver.h>
 #include <data/matrix2d.h>
 #include <vector>
-#include "symmetries.h"
+#include <data/symmetries.h>
 
 /**@defgroup AngularCommonLines angular_common_lines
     (angular assignment through common lines)

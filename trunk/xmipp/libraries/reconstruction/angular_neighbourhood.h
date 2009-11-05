@@ -29,7 +29,7 @@
 #include <data/docfile.h>
 #include <data/selfile.h>
 
-#include "symmetries.h"
+#include <data/symmetries.h>
 
 /**@defgroup ProjectionNeighbourhood angular_neighbourhood (Projection neighbourhood)
    @ingroup ReconsLibraryPrograms */

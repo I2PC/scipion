@@ -26,7 +26,7 @@
 #ifndef _FOURIER_FILTER_HH
 #define _FOURIER_FILTER_HH
 
-#include "ctf.h"
+#include <data/ctf.h>
 
 #include <data/matrix3d.h>
 #include <data/fftw.h>

@@ -32,7 +32,7 @@
 #include <data/funcs.h>
 #include <data/matrix3d.h>
 #include <data/geometry.h>
-#include <reconstruction/symmetries.h>
+#include <data/symmetries.h>
 
 #include <vector>
 #include <iostream>
