@@ -107,6 +107,9 @@ int main(int argc, char **argv)
         mask_prm.read(argc, argv);
         str_subs_val = getParameter(argc, argv, "-substitute", "0");
 
+        mask_prm.blob_order= textToFloat(getParameter(argc, argv, "-m", "2."));
+        mask_prm.blob_alpha= textToFloat(getParameter(argc, argv, "-a", "10.4"));
+
         count = count_below || count_above;
     }
     catch (Xmipp_error XE)
@@ -119,6 +122,7 @@ int main(int argc, char **argv)
 
     try
     {
+        mask_prm.show();
         // Mask a single image ---------------------------------------------------
         if (Is_ImageXmipp(fn_input))
         {

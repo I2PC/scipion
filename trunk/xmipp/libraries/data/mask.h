@@ -29,6 +29,7 @@
 #include "matrix2d.h"
 #include "matrix3d.h"
 #include "histogram.h"
+#include "blobs.h"
 
 void apply_geo_binary_2D_mask(Matrix2D< int > &mask,
                               const Matrix2D< double >& A);
@@ -402,6 +403,15 @@ void GaussianMask(Matrix3D< double >& mask,
                   double sigma, int mode = INNER_MASK, double x0 = 0, double y0 = 0,
                   double z0 = 0);
 
+
+void BlobCircularMask(Matrix3D<double> &mask,
+                      double r1, blobtype blob,
+                      int mode, double x0, double y0, double z0);
+
+void BlobCrownMask(Matrix3D<double> &mask,
+                   double r1, double r2, blobtype blob,
+                   int mode, double x0, double y0, double z0);
+
 /** Creates a 3D RaisedCosine mask for already sized masks
  * @ingroup Masks3D
  *
@@ -563,13 +573,16 @@ public:
 #define BINARY_DWT_CIRCULAR_MASK 12
 #define BINARY_CONE_MASK         13
 #define BINARY_WEDGE_MASK        14
+#define BLOB_CIRCULAR_MASK       15
+#define BLOB_CROWN_MASK          16
 
     /** Mask Type
      *
      * The only valid types are BINARY_CIRCULAR_MASK, BINARY_CROWN_MASK,
      * BINARY_CYLINDER_MASK, BINARY_FRAME_MASK, GAUSSIAN_MASK,
      * RAISED_COSINE_MASK, BLACKMAN_MASK, SINC_MASK, SINC_BLACKMAN_MASK,
-     * READ_MASK, RAISED_CROWN_MASK, BINARY_CONE_MASK, BINARY_WEDGE_MASK
+     * READ_MASK, RAISED_CROWN_MASK, BINARY_CONE_MASK, BINARY_WEDGE_MASK,
+     * BLOB_CIRCULAR_MASK, BLOB_CROWN_MASK
      */
     int type;
 
@@ -593,6 +606,11 @@ public:
      * For raised crowns.
      */
     double pix_width;
+
+    /** Blob parameters
+     * For blob_circular and blob_crown masks.
+     */
+    double blob_order, blob_radius, blob_alpha;
 
     /** Height
      * Height for cylinders.
@@ -734,7 +752,8 @@ public:
         else if (type == GAUSSIAN_MASK || type == RAISED_COSINE_MASK ||
                  type == SINC_MASK || type == SINC_BLACKMAN_MASK ||
                  type == BLACKMAN_MASK || type == RAISED_CROWN_MASK ||
-                 type == BINARY_WEDGE_MASK)
+                 type == BINARY_WEDGE_MASK || type == BLOB_CIRCULAR_MASK ||
+                 type == BLOB_CROWN_MASK)
             return DOUBLE_MASK;
 
         return 0;

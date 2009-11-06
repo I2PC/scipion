@@ -625,6 +625,61 @@ void RaisedCrownMask(Matrix3D<double> &mask,
     }
 }
 
+void BlobCircularMask(Matrix3D<double> &mask,
+                      double r1, blobtype blob,
+                      int mode, double x0, double y0, double z0)
+{
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
+    {
+        double r = sqrt((k - z0) * (k - z0) + (i - y0) * (i - y0) + (j - x0) * (j - x0));
+        if (mode == INNER_MASK)
+        {
+            if (r <= r1)
+                VOL_ELEM(mask, k, i, j) = 1;
+            else
+                VOL_ELEM(mask, k, i, j) = blob_val(r-r1, blob);
+        }
+        else
+        {
+            if (r >= r1)
+                VOL_ELEM(mask, k, i, j) = 1;
+            else
+                VOL_ELEM(mask, k, i, j) = blob_val(r1-r, blob);
+        }
+    }
+
+}
+void BlobCrownMask(Matrix3D<double> &mask,
+                   double r1, double r2, blobtype blob,
+                   int mode, double x0, double y0, double z0)
+{
+    Matrix3D<double> aux;
+    aux.resize(mask);
+    if (mode == INNER_MASK)
+    {
+        BlobCircularMask(mask, r1, blob,
+                         OUTSIDE_MASK, x0, y0, z0);
+        BlobCircularMask(aux, r2, blob, 
+                         INNER_MASK, x0, y0, z0);
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
+        {
+            VOL_ELEM(mask, k, i, j) *= VOL_ELEM(aux, k, i, j);
+        }
+    }
+    else
+    {
+        BlobCircularMask(mask, r1, blob,
+                         INNER_MASK, x0, y0, z0);
+        BlobCircularMask(aux, r2, blob, 
+                         OUTSIDE_MASK, x0, y0, z0);
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
+        {
+            VOL_ELEM(mask, k, i, j) += VOL_ELEM(aux, k, i, j);
+        }
+    }
+
+}
+
 void BlackmanMask(Matrix3D<double> &mask, int mode, double x0, double y0,
                   double z0)
 {
@@ -1002,6 +1057,48 @@ void Mask_Params::read(int argc, char **argv)
         else
             REPORT_ERROR(3000, "Mask_Params: cannot determine mode for raised_cosine");
         type = RAISED_CROWN_MASK;
+        // Blob circular mask ....................................................
+    }
+    else if (strcmp(argv[i+1], "blob_circular") == 0)
+    {
+        if (i + 3 >= argc)
+            REPORT_ERROR(3000, "Mask_Params: raised_cosine mask needs one radius and a width");
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(3000, "Mask_Params: continuous masks are not allowed");
+        R1 = textToFloat(argv[i+2]);
+        blob_radius= textToFloat(argv[i+3]);
+        if (R1 < 0)
+        {
+            mode = INNER_MASK;
+            R1 = ABS(R1);
+        }
+        else if (R1 > 0)
+            mode = OUTSIDE_MASK;
+        else
+            REPORT_ERROR(3000, "Mask_Params: cannot determine mode for blob_circular");
+        type = BLOB_CIRCULAR_MASK;
+        // Raised crown mask ....................................................
+    }
+     else if (strcmp(argv[i+1], "blob_crown") == 0)
+    {
+        if (i + 4 >= argc)
+            REPORT_ERROR(3000, "Mask_Params: blob_crown mask needs two radii and a with");
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(3000, "Mask_Params: continuous masks are not allowed");
+        R1 = textToFloat(argv[i+2]);
+        R2 = textToFloat(argv[i+3]);
+        blob_radius= textToFloat(argv[i+4]);
+        if (R1 < 0 && R2 < 0)
+        {
+            mode = INNER_MASK;
+            R1 = ABS(R1);
+            R2 = ABS(R2);
+        }
+        else if (R1 > 0 && R2 > 0)
+            mode = OUTSIDE_MASK;
+        else
+            REPORT_ERROR(3000, "Mask_Params: cannot determine mode for blob_crown");
+        type = BLOB_CROWN_MASK;
         // Blackman mask ........................................................
     }
     else if (strcmp(argv[i+1], "blackman") == 0)
@@ -1100,6 +1197,25 @@ void Mask_Params::show() const
         SHOW_MODE;
         SHOW_CENTER;
         break;
+    case BLOB_CIRCULAR_MASK:
+        std::cout << "Mask type: Blob circular\n"
+        << "   R1=" << R1 << std::endl
+        << "   blob radius=" << blob_radius << std::endl
+        << "   blob order="  << blob_order  << std::endl
+        << "   blob alpha="  << blob_alpha  << std::endl;
+        SHOW_MODE;
+        SHOW_CENTER;
+        break;
+    case BLOB_CROWN_MASK:
+        std::cout << "Mask type: Blob crown\n"
+        << "   R1=" << R1 << std::endl
+        << "   R2=" << R2 << std::endl
+        << "   blob radius=" << blob_radius << std::endl
+        << "   blob order="  << blob_order  << std::endl
+        << "   blob alpha="  << blob_alpha  << std::endl;
+        SHOW_MODE;
+        SHOW_CENTER;
+        break;
     case BLACKMAN_MASK:
         std::cout << "Mask type: Blackman\n";
         SHOW_MODE;
@@ -1157,6 +1273,14 @@ void Mask_Params::usage() const
         << "   |-mask raised_crown <R1> <R2> <pixwidth>: 2D or 3D raised_crown\n"
         << "                               if R1,R2 > 0 => outside sphere\n"
         << "                               if R1,R2 < 0 => inside sphere\n"
+        << "   |-mask blob_circular <R1> <blob_radius>: 2D or 3D blob circular\n"
+        << "                               if R1 > 0 => outside sphere\n"
+        << "                               if R1 < 0 => inside sphere\n"
+        << "   |-mask blob_crown <R1> <R2> <blob_radius>: 2D or 3D blob_crown\n"
+        << "                               if R1,R2 > 0 => outside sphere\n"
+        << "                               if R1,R2 < 0 => inside sphere\n"
+        << "   [ -m <blob_order=2>       : Order of blob\n"
+        << "   [ -a <blob_alpha=10>      : Alpha of blob\n"
         << "   |-mask blackman           : 2D or 3D Blackman mask\n"
         << "                               always inside blackman\n"
         << "   |-mask sinc <w>]          : 2D or 3D sincs\n"
@@ -1286,6 +1410,13 @@ void Mask_Params::generate_3Dmask()
 {
     VolumeXmipp V;
     Matrix2D<double> AA(4, 4);
+    blobtype blob;
+    if (type==BLOB_CIRCULAR_MASK || type==BLOB_CROWN_MASK)
+    {
+        blob.radius = blob_radius; 
+        blob.order = blob_order; 
+        blob.alpha = blob_alpha;
+    }
     AA.initIdentity();
     switch (type)
     {
@@ -1321,6 +1452,12 @@ void Mask_Params::generate_3Dmask()
         break;
     case RAISED_CROWN_MASK:
         RaisedCrownMask(dmask3D, R1, R2, pix_width, mode, x0, y0, z0);
+        break;
+    case BLOB_CIRCULAR_MASK:
+        BlobCircularMask(dmask3D, R1, blob, mode, x0, y0, z0);
+        break;
+    case BLOB_CROWN_MASK:
+        BlobCrownMask(dmask3D, R1, R2, blob, mode, x0, y0, z0);
         break;
     case BLACKMAN_MASK:
         BlackmanMask(dmask3D, mode, x0, y0, z0);
