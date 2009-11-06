@@ -422,3 +422,74 @@ void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem)
  }
 
 
+void getSpectrum(Matrix3D<double> &Min, 
+                 Matrix1D<double> &spectrum,
+                 bool only_amplitudes)
+{
+    Matrix3D<std::complex<double> > Faux;
+    int xsize = XSIZE(Min);
+    Matrix1D<double> f(3), count(xsize);
+    XmippFftw transformer;
+
+    spectrum.initZeros(xsize);
+    count.initZeros();
+    transformer.FourierTransform(Min, Faux, false);
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+    {
+        FFT_IDX2DIGFREQ(j,xsize,XX(f));
+        FFT_IDX2DIGFREQ(i,YSIZE(Faux),YY(f));
+        FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
+        double R=f.module();
+        if (R>0.5) continue;
+        int idx=ROUND(R*xsize);
+        if (only_amplitudes)
+            spectrum(idx) += abs(dVkij(Faux, k, i, j));
+        else
+            spectrum(idx) += abs(dVkij(Faux, k, i, j)) * abs(dVkij(Faux, k, i, j));
+        count(idx) += 1.;
+    }
+    for (int i = 0; i < xsize; i++)
+        if (count(i) > 0.)
+            spectrum(i) /= count(i);
+}
+
+void divideBySpectrum(Matrix3D<double> &Min, 
+                      Matrix1D<double> &spectrum,
+                      bool leave_origin_intact)
+{
+    Matrix3D<std::complex<double> > Faux;
+    Matrix1D<double> f(3);
+    XmippFftw transformer;
+    double dim3 = XSIZE(Min)*YSIZE(Min)*ZSIZE(Min);
+
+    transformer.FourierTransform(Min, Faux, false);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+    {
+        FFT_IDX2DIGFREQ(j,XSIZE(Min), XX(f));
+        FFT_IDX2DIGFREQ(i,YSIZE(Faux),YY(f));
+        FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
+        double R=f.module();
+        if (R > 0.5) continue;
+        if (leave_origin_intact && R < XMIPP_EQUAL_ACCURACY) continue;
+        int idx=ROUND(R*XSIZE(Min));
+        if (spectrum(idx) > 0.)
+            dVkij(Faux, k, i, j) /=  spectrum(idx) * dim3;
+    }
+    transformer.inverseFourierTransform();
+
+}
+
+
+void whitenSpectrum(Matrix3D<double> &Min, 
+                    Matrix3D<double> &Mout, 
+                    bool only_amplitudes,
+                    bool leave_origin_intact)
+{
+
+    Matrix1D<double> spectrum;
+    getSpectrum(Min,spectrum,only_amplitudes);
+    Mout=Min;
+    divideBySpectrum(Mout,spectrum,leave_origin_intact);
+
+}

@@ -441,14 +441,37 @@ void frc_dpr(Matrix3D< double > & m1,
              Matrix1D< double >& frc_noise,
              Matrix1D< double >& dpr,
              bool skipdpr=false);
-/**
+/** 
  * Scale matrix using Fourier transform
- * 
+ *  
  * @param Ydim output size
  * @param Xdim output size
  * @param Mpmem matrix to scale
- */
+ */ 
 void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem);
+
+
+/** Get the radial average of the power spectrum of the map in Fourier space
+    If only_amplitudes==true, the amplitude rather than the power spectrum will be output
+*/
+void getSpectrum(Matrix3D<double> &Min, 
+                 Matrix1D<double> &spectrum,
+                 bool only_amplitudes=false);
+
+/** Divide the input map in Fourier-space by the (radial average) spectrum provided.
+    If leave_origin_intact==true, the origin pixel will remain untouched
+*/
+void divideBySpectrum(Matrix3D<double> &Min, 
+                      Matrix1D<double> &spectrum,
+                      bool leave_origin_intact=false);
+
+/** Perform a whitening of the power spectrum of a 3D map 
+    If only_amplitudes==true, the amplitude rather than the power spectrum will be equalized
+*/
+void whitenSpectrum(Matrix3D<double> &Min, 
+                    Matrix3D<double> &Mout, 
+                    bool only_amplitudes=false,
+                    bool leave_origin_intact=false);
 
 
 #endif
