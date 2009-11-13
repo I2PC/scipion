@@ -347,8 +347,11 @@ void VQProjection::fitBasic(Matrix2D<double> &I,
         applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
     }
     
-    applyGeometryBSpline(IauxRS,ARS,I,3,IS_NOT_INV,WRAP);
-    applyGeometryBSpline(IauxSR,ASR,I,3,IS_NOT_INV,WRAP);
+    //applyGeometryBSpline(IauxRS,ARS,I,3,IS_NOT_INV,WRAP);
+    //applyGeometryBSpline(IauxSR,ASR,I,3,IS_NOT_INV,WRAP);
+
+    applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
+    applyGeometry(IauxSR,ASR,I,IS_NOT_INV,WRAP);
 
     // Compute the correntropy
     double corrCodeRS, corrCodeSR;
@@ -359,7 +362,8 @@ void VQProjection::fitBasic(Matrix2D<double> &I,
     }
     else
     {
-        double sigmaPI=sigma*sqrt(1+1.0/currentListImg.size());
+        double sigmaPI=sigma;
+        if (useFixedCorrentropy) sigmaPI*=sqrt(1+1.0/currentListImg.size());
         corrCodeRS=fastCorrentropy(P,IauxRS,sigmaPI,
             *gaussianInterpolator,*mask);
         corrCodeSR=fastCorrentropy(P,IauxSR,sigmaPI,
@@ -485,7 +489,8 @@ void VQProjection::lookForNeighbours(const std::vector<VQProjection *> listP,
 void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     double _PminSize, std::vector< Matrix2D<double> > _codes0, int _Ncodes0,
     bool _noMirror, bool _verbose, bool _corrSplit, bool _useCorrelation,
-    bool _classicalMultiref, bool _alignImages, bool _fast, int rank)
+    bool _useFixedCorrentropy, bool _classicalMultiref, bool _alignImages,
+    bool _fast, int rank)
 {
     // Only "parent" worker prints
     if( rank == 0 )
@@ -500,6 +505,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
     verbose=_verbose;
     corrSplit=_corrSplit;
     useCorrelation=_useCorrelation;
+    useFixedCorrentropy=_useFixedCorrentropy;
     classicalMultiref=_classicalMultiref;
     alignImages=_alignImages;
     fast=_fast;
@@ -522,6 +528,7 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
         P[q]->plans=NULL;
         P[q]->mask=&mask;
         P[q]->useCorrelation=useCorrelation;
+        P[q]->useFixedCorrentropy=useFixedCorrentropy;
         P[q]->classicalMultiref=classicalMultiref;
 	if (_codes0.size()!=0)
         {
@@ -1199,6 +1206,8 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                 VQProjection *node2=new VQProjection;
                 node1->useCorrelation=useCorrelation;
                 node2->useCorrelation=useCorrelation;
+                node1->useFixedCorrentropy=useFixedCorrentropy;
+                node2->useFixedCorrentropy=useFixedCorrentropy;
                 node1->classicalMultiref=classicalMultiref;
                 node2->classicalMultiref=classicalMultiref;
                 #ifdef DEBUG
@@ -1322,6 +1331,8 @@ void VQ::splitNode(VQProjection *node,
 
     int mpi_size;
     MPI_Comm_size( MPI_COMM_WORLD, &mpi_size );
+    
+    int Ninitial=node->currentListImg.size();
 	
     do
     {
@@ -1370,7 +1381,7 @@ void VQ::splitNode(VQProjection *node,
             }
 	    
 	    double corrThreshold;
-            if (it==1 && corrSplit)
+            if (it==1 && (corrSplit || imax<0.5*Ninitial))
             {
                 histogram1D hist;
                 compute_hist(corrList,hist,100);
@@ -1414,7 +1425,7 @@ void VQ::splitNode(VQProjection *node,
                             node1->updateNonProjection(corrCode);
                 	}
                     }
-                    else if (it==1 && corrSplit)
+                    else if (it==1 && (corrSplit || imax<0.5*Ninitial))
                     {
                 	double corrCode, likelihood;
                 	node->fit(I(), sigma, noMirror, corrCode, likelihood);
@@ -1603,6 +1614,8 @@ void VQ::splitNode(VQProjection *node,
 	    if( rank == 0 )
 	    	progress_bar(imax);
 	    
+            if (imax<0.5*Ninitial && it==1) break;
+            
 	    int Nchanges;
             if (it>=1 || !corrSplit)
             {
@@ -1651,11 +1664,13 @@ void VQ::splitNode(VQProjection *node,
             if (node1!=node) delete node1;
             node1=new VQProjection();
             node1->useCorrelation=useCorrelation;
+            node1->useFixedCorrentropy=useFixedCorrentropy;
             node1->classicalMultiref=false;
             toDelete.push_back(node2);
             node=node2;
             node2=new VQProjection();
             node2->useCorrelation=useCorrelation;
+            node2->useFixedCorrentropy=useFixedCorrentropy;
             node2->classicalMultiref=false;
             finish=false;
         }
@@ -1668,11 +1683,13 @@ void VQ::splitNode(VQProjection *node,
             if (node2!=node) delete node2;
             node2=new VQProjection();
             node2->useCorrelation=useCorrelation;
+            node2->useFixedCorrentropy=useFixedCorrentropy;
             node2->classicalMultiref=false;
             toDelete.push_back(node1);
             node=node1;
             node1=new VQProjection();
             node1->useCorrelation=useCorrelation;
+            node1->useFixedCorrentropy=useFixedCorrentropy;
             node1->classicalMultiref=false;
             finish=false;
         }
@@ -1696,8 +1713,10 @@ void VQ::splitFirstNode(int rank) {
     P.push_back(new VQProjection());
     P.push_back(new VQProjection());
     P[Q]->useCorrelation=useCorrelation;
+    P[Q]->useFixedCorrentropy=useFixedCorrentropy;
     P[Q]->classicalMultiref=classicalMultiref;
     P[Q+1]->useCorrelation=useCorrelation;
+    P[Q+1]->useFixedCorrentropy=useFixedCorrentropy;
     P[Q+1]->classicalMultiref=classicalMultiref;
     std::vector<int> finalAssignment;
     splitNode(P[0],P[Q],P[Q+1],rank, finalAssignment);
@@ -1722,27 +1741,29 @@ void Prog_VQ_prm::read(int argc, char** argv)
     corrSplit=checkParameter(argc,argv,"-corr_split");
     fast=checkParameter(argc,argv,"-fast");
     useCorrelation=checkParameter(argc,argv,"-useCorrelation");
+    useFixedCorrentropy=checkParameter(argc,argv,"-useFixedCorrentropy");
     classicalMultiref=checkParameter(argc,argv,"-classicalMultiref");
     alignImages=checkParameter(argc,argv,"-alignImages");
 }
 
 void Prog_VQ_prm::show() const
 {
-    std::cout << "Input images:      " << fnSel             << std::endl
-              << "Output images:     " << fnOut             << std::endl
-              << "Iterations:        " << Niter             << std::endl
-              << "CodesSel0:         " << fnCodes0          << std::endl
-              << "Codes0:            " << Ncodes0           << std::endl
-              << "Codes:             " << Ncodes            << std::endl
-              << "Neighbours:        " << Nneighbours       << std::endl
-              << "Minimum node size: " << PminSize          << std::endl
-              << "No mirror:         " << noMirror          << std::endl
-              << "Verbose:           " << verbose           << std::endl
-              << "Corr Split:        " << corrSplit         << std::endl
-              << "Fast:              " << fast              << std::endl
-              << "Use Correlation:   " << useCorrelation    << std::endl
-              << "Classical Multiref:" << classicalMultiref << std::endl
-              << "Align images:      " << alignImages       << std::endl;
+    std::cout << "Input images:            " << fnSel               << std::endl
+              << "Output images:           " << fnOut               << std::endl
+              << "Iterations:              " << Niter               << std::endl
+              << "CodesSel0:               " << fnCodes0            << std::endl
+              << "Codes0:                  " << Ncodes0             << std::endl
+              << "Codes:                   " << Ncodes              << std::endl
+              << "Neighbours:              " << Nneighbours         << std::endl
+              << "Minimum node size:       " << PminSize            << std::endl
+              << "No mirror:               " << noMirror            << std::endl
+              << "Verbose:                 " << verbose             << std::endl
+              << "Corr Split:              " << corrSplit           << std::endl
+              << "Fast:                    " << fast                << std::endl
+              << "Use Correlation:         " << useCorrelation      << std::endl
+              << "Use Fixed Correntropy:   " << useFixedCorrentropy << std::endl
+              << "Classical Multiref:      " << classicalMultiref   << std::endl
+              << "Align images:            " << alignImages         << std::endl;
 }
     
 void Prog_VQ_prm::usage() const
@@ -1762,6 +1783,7 @@ void Prog_VQ_prm::usage() const
               << "   [-corr_split]         : Correlation split\n"
               << "   [-fast]               : Fast calculations, suboptimal\n"
               << "   [-useCorrelation]     : Instead of correntropy\n"
+              << "   [-useFixedCorrentropy]: Instead of correntropy\n"
               << "   [-classicalMultiref]  : Instead of enhanced clustering\n"
               << "   [-alignImages]        : Align the original images at the end\n"
     ;
@@ -1785,7 +1807,7 @@ void Prog_VQ_prm::produce_side_info(int rank)
     }
     vq.initialize(SF,Niter,Nneighbours,PminSize,
         codes0,Ncodes0,noMirror,verbose,corrSplit,useCorrelation,
-        classicalMultiref,alignImages,fast,rank);
+        useFixedCorrentropy,classicalMultiref,alignImages,fast,rank);
 }
 
 void Prog_VQ_prm::run(int rank)
