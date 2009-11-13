@@ -41,6 +41,9 @@ public:
     // Use correlation instead of correntropy
     bool useCorrelation;
 
+    // Use fixed correntropy
+    bool useFixedCorrentropy;
+
     // Classical Multiref
     bool classicalMultiref;
     
@@ -165,6 +168,9 @@ public:
     /// Use correlation instead of correntropy
     bool useCorrelation;
 
+    /// Use fixed correntropy
+    bool useFixedCorrentropy;
+
     /// Classical Multiref
     bool classicalMultiref;
     
@@ -192,8 +198,8 @@ public:
     void initialize(SelFile &_SF, int _Niter,  int _Nneighbours,
         double _PminSize, std::vector< Matrix2D<double> > _codes0,
         int _Ncodes0, bool _noMirror, bool verbose, bool _corrSplit, 
-        bool _useCorrelation, bool _classicalMultiref, 
-        bool _alignImages, bool _fast, int rank);
+        bool _useCorrelation, bool _useFixedCorrentropy, 
+        bool _classicalMultiref, bool _alignImages, bool _fast, int rank);
     
     /// Write the nodes
     void write(const FileName &fnRoot, bool final=false) const;
@@ -255,6 +261,9 @@ public:
     
     /// Use Correlation instead of Correntropy
     bool useCorrelation;
+
+    /// Use fixed correntropy
+    bool useFixedCorrentropy;
 
     /// Classical Multiref
     bool classicalMultiref;
