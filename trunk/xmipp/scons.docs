@@ -1,5 +1,5 @@
 #!/bin/sh
-
+#edit file Doxyfile and update PROJECT_NUMBER
 echo "** Use scons.compile --help to show a help message"
 
 # Call local SCONS to compile
