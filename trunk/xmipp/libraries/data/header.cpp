@@ -106,6 +106,7 @@ std::ostream& operator << (std::ostream& o, const headerXmipp &I)
     o << "Title        : " << I.get_title() << std::endl;
     o << "Header size  : " << I.get_header_size() << std::endl;
     o << "Weight  : " << I.Weight() << std::endl;
+    o << "Flip    : " << I.Flip() << std::endl;
     return o;
 }
 
