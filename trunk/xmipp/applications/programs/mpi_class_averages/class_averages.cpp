@@ -571,8 +571,8 @@ void VQ::initialize(SelFile &_SF, int _Niter, int _Nneighbours,
             // Put it randomly in one of the classes
 	    if (_codes0.size()==0)
             {
-            	int q=ROUND(rnd_unif(0,_Ncodes0-1));
-              	// int q = n%_Ncodes0;
+            	//int q=ROUND(rnd_unif(0,_Ncodes0-1));
+              	int q = n%_Ncodes0;
 
 	        initNodeAssign[n] = q;
             	P[q]->updateProjection(I(),0,n);
@@ -997,7 +997,7 @@ void VQ::run(const FileName &fnOut, int level, int rank)
     while (goOn)
     {
         if( rank == 0 )
-{
+        {
 	    std::cout << "Iteration " << n << " ...\n";
 	    std::cerr << "Iteration " << n << " ...\n";
             if (verbose)
