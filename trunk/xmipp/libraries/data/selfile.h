@@ -857,6 +857,14 @@ public:
      */
     SelFile randomize();
 
+    /** Random subset.
+     * @ingroup SelFilesHelpful
+     *
+     * A new selection file is created with the number of images specified in
+     * subsetN. The new subset can be created with or without replacement.
+     */
+    SelFile randomSubset(int subsetN, bool withReplacement=true);
+
     /** Discard randomly N images.
      * @ingroup SelFilesHelpful
      *

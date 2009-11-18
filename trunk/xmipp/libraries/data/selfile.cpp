@@ -979,6 +979,40 @@ SelFile SelFile::randomize()
     return result;
 }
 
+/* Random subset ----------------------------------------------------------- */
+SelFile SelFile::randomSubset(int subsetN, bool withReplacement)
+{
+    SelFile result;
+    int N=ImgNo();
+    if (N==0) return result;
+    
+    // Generate the set of random indexes
+    Matrix1D<int> idx;
+    if (withReplacement)
+    {
+        idx.initZeros(N);
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
+            idx(i)=ROUND(rnd_unif(0,N-1));
+    }
+    else
+        randomPermutation(N,idx);
+    
+    // Generate the random subset
+    int i=0;
+    while (i<subsetN)
+    {
+        // Adjust to the next active image in the selfile
+        int ii=idx(i);
+        while (!text_line[ii].Is_data() &&
+               !text_line[ii].get_label()==SelLine::ACTIVE)
+            ii=(ii+1)%N;
+        
+        // Insert the image
+        result.insert(text_line[ii].get_text());
+        i++;
+    }
+}
+
 /* Discard randomly a set of images ---------------------------------------- */
 SelFile SelFile::random_discard(int N)
 {
