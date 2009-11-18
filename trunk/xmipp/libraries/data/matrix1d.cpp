@@ -55,6 +55,17 @@ Matrix1D<int> vectorR3(int x, int y, int z)
     return result;
 }
 
+/* Random permutation ------------------------------------------------------ */
+void randomPermutation(int N, Matrix1D<int>& result)
+{
+    Matrix1D<double> aux;
+    aux.resize(N);
+    aux.initRandom(0,1);
+    
+    result=aux.indexSort();
+    result-=1;
+}
+
 /* Powell's optimizer ------------------------------------------------------ */
 void powellOptimizer(Matrix1D<double> &p, int i0, int n,
                       double(*f)(double *x, void *), void * prm,

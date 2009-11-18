@@ -1670,6 +1670,13 @@ void sortTwoVectors(Matrix1D<T>& v1, Matrix1D<T>& v2)
     }
 }
 
+/** Generate random permutation
+ * @ingroup VectorsMiscellaneous
+ *
+ * Generate a random permutation of the numbers between 0 and N-1
+ */
+void randomPermutation(int N, Matrix1D<int>& result);
+
 /** Optimize using Powell's method.
   * @ingroup VectorsMiscellaneous
   *
