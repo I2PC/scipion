@@ -12,9 +12,18 @@ if __name__=="__main__":
         sys.exit(1)
     
     fn_sel=argv[1]
+    fn_dir=argv[2]
+
+    # Read original selfile
     sellines=open(fn_sel,'r').read().splitlines()
 
-    fn_dir=argv[2]
+    # Read ptcl 2 orig
+    ptcl2orig=[]
+    for line in open(fn_dir+"/ptcl2orig.lst",'r').read().splitlines()[1:]:
+        tokens=line.split('\t')
+        ptcl2orig.append(int(tokens[0]))
+
+    # Read each cls*.lst
     for fn_lst in glob.glob(fn_dir+"/cls*.lst"):
         print "Processing "+fn_lst
         fn_out=fn_lst[:-4]+".sel"
@@ -24,5 +33,7 @@ if __name__=="__main__":
         for line in listlines:
             tokens=line.split("\t")
             if len(tokens)==2:
-                print >>fh_out,sellines[int(tokens[0])]
+                ptclIdx=int(tokens[0])
+                selIdx=int(ptcl2orig[ptclIdx])
+                print >>fh_out,sellines[selIdx]
         fh_out.close()
