@@ -273,6 +273,7 @@ int main(int argc, char **argv)
 	    powellOptimizer(x,1,8,&wrapperFitness,NULL,
                 0.01,fitness,iter,steps,true);
 	    best_align=x;
+            first=false;
 	}
 
         if (!first)
