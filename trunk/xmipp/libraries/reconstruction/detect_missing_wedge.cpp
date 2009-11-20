@@ -28,6 +28,7 @@
 #include <data/fftw.h>
 #include <data/de_solver.h>
 
+
 // Evaluate plane ----------------------------------------------------------
 double evaluatePlane(double rot, double tilt, 
     const Matrix3D<double> *V, const Matrix3D<double> *Vmag,
@@ -94,14 +95,14 @@ double evaluatePlane(double rot, double tilt,
                     sumNeg+=(*Vmag)(idx);
                     Nneg++;
                     if (Vdraw!=NULL)
-                        (*Vdraw)(idx) = 2 * direction * (*Vmag)(idx);
+                        (*Vdraw)(idx)=2*direction*(*Vmag)(idx);
                 }
                 else
                 {
                     sumPos+=(*Vmag)(idx);
                     Npos++;
                     if (Vdraw!=NULL)
-                        (*Vdraw)(idx) = 1.0 / 2.0 * direction * (*Vmag)(idx);
+                        (*Vdraw)(idx)=1.0/2.0*direction*(*Vmag)(idx);
                 }
             }
         }
@@ -131,13 +132,13 @@ public:
             direction=_direction;
             setPos=false;
         }
-	
+    
     ~WedgeSolver()
     {
     	V = NULL;
 	Vmag = NULL;
     }
-    	
+    
     double EnergyFunction(double trial[],bool &bAtSolution) {
         double result=evaluatePlane(trial[0],trial[1],V,Vmag,
             maxFreq, planeWidth, direction, NULL, setPos, rotPos, tiltPos);
@@ -178,23 +179,24 @@ void lookForPlane(const Matrix3D<double> *V, const Matrix3D<double> *Vmag,
     // Optimize with DE
     int length=2;
     int Npop=50;
-    
-    WedgeSolver * solver = new WedgeSolver(length,length*Npop,V,Vmag,maxFreq,planeWidth,direction);
-    
+
     double min_allowed[] = {0,-90};
     double max_allowed[] = {360,90};
-     
+            
+    WedgeSolver * solver = new WedgeSolver(length,length*Npop,V,Vmag,maxFreq,planeWidth,direction);
     solver->Setup( min_allowed, max_allowed, stBest2Bin, 0.5, 0.8);
-
+        
     if (setPos)
     {
         solver->setPos=true;
         solver->rotPos=rotPos;
         solver->tiltPos=tiltPos;
     }
+    
     solver->Solve(50);
-    double* bestSolution=solver->Solution();
-
+    
+    double * bestSolution = solver->Solution();
+    
     // Refine with Powell
     Matrix1D<double> x(2), steps(2);
     double fitness;
@@ -205,7 +207,7 @@ void lookForPlane(const Matrix3D<double> *V, const Matrix3D<double> *Vmag,
     powellOptimizer(x,1,2,&wrapperFitnessDetectMissingWedge,solver,0.01,fitness,iter,steps,true);
     rot=x(0);
     tilt=x(1);
-    
+
     delete solver;
     
     solver = NULL;
@@ -251,12 +253,11 @@ void DetectMissingWedge_parameters::read(int argc, char **argv)
 void DetectMissingWedge_parameters::produceSideInfo()
 {
     V = new VolumeXmipp();
-    Vmag = new Matrix3D<double>();
-    
     V->read(fn_vol);
     XmippFftw transformer;
     Matrix3D< std::complex<double> > Vfft;
     transformer.FourierTransform((*V)(),Vfft,false);
+    Vmag = new Matrix3D<double>();
     Vmag->resize(Vfft);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(*Vmag)
         (*Vmag)(k,i,j)=20*log10(abs(Vfft(k,i,j)));
@@ -291,25 +292,28 @@ void DetectMissingWedge_parameters::usage() const
 // Run ---------------------------------------------------------------------
 void DetectMissingWedge_parameters::run()
 {
-    VolumeXmipp * Vdraw = new VolumeXmipp();
-    
-    FileName fn_root = V->name().without_extension();
+    FileName fn_root=V->name().without_extension();
 
     // Detect one of the planes
     lookForPlane(&(*V)(), Vmag, maxFreq, planeWidth, 1, rotPos, tiltPos);
     
+    VolumeXmipp * Vdraw = new VolumeXmipp();
+    
     if (saveMarks)
     {
-        (*Vdraw)() = (*Vmag);
-        evaluatePlane(rotPos, tiltPos, &(*V)(), Vmag, maxFreq, planeWidth, 1, &(*Vdraw)());
+        (*Vdraw)()=(*Vmag);
+        
+	evaluatePlane(rotPos, tiltPos, &(*V)(), Vmag, maxFreq, planeWidth,
+            1, &(*Vdraw)());
     }
 
     // Detect the other plane
     lookForPlane(&(*V)(), Vmag, maxFreq, planeWidth, -1, rotNeg, tiltNeg, true, rotPos, tiltPos);
-    
+
     if (saveMarks)
     {
-        evaluatePlane(rotNeg, tiltNeg, &(*V)(), Vmag, maxFreq, planeWidth, -1, &(*Vdraw)());
+        evaluatePlane(rotNeg, tiltNeg, &(*V)(), Vmag, maxFreq, planeWidth,
+            -1, &(*Vdraw)());
         Vdraw->write(fn_root+"_marks.vol");
     }
 
