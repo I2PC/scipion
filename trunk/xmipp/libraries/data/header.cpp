@@ -569,7 +569,8 @@ char* headerXmipp::get_title() const
 
 void headerXmipp::set_title(FileName newName)
 {
-    strcpy(header.szITit, newName.c_str()); // Set title of image in the header
+    strncpy(header.szITit, newName.c_str(),159); // Set title of image in the header
+    header.szITit[159]='\0';
 }
 
 void headerXmipp::set_originOffsets(float Xoff, float Yoff)

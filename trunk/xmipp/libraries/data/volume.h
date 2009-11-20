@@ -1080,7 +1080,7 @@ public:
         header.Slices() = ZSIZE(VolumeT< T >::img);
         header.set_time();
         header.set_date();
-        header.set_title(VolumeT< T >::fn_img);
+        //header.set_title(VolumeT< T >::fn_img);
         header.set_header();
     }
 
@@ -1099,7 +1099,7 @@ public:
     void rename(FileName newName)
     {
         VolumeT< T >::rename(newName);
-        header.set_title(newName);
+        //header.set_title(newName);
     }
 
     /** Reversed status.

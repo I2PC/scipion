@@ -960,7 +960,7 @@ public:
         header.Slices() = 1; // Sets header Slices
         header.set_time(); // Set time and date
         header.set_date();
-        header.set_title(ImageT< T >::fn_img); // Set title
+        //header.set_title(ImageT< T >::fn_img); // Set title
         header.set_header(); // Initialize header
     }
 
@@ -973,7 +973,7 @@ public:
     void rename(const FileName& newName)
     {
         ImageT< T >::rename(newName);
-        header.set_title(newName);
+        //header.set_title(newName);
     }
 
     /** Reversed status
