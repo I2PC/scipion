@@ -37,10 +37,10 @@ DESolver::~DESolver(void)
     return;
 }
 
-void DESolver::Setup(double *min, double *max,
+void DESolver::Setup(double min[], double max[],
                      int deStrategy, double diffScale, double crossoverProb)
 {
-    int i;
+    int i,j;
 
     strategy = deStrategy;
     scale  = diffScale;
@@ -49,9 +49,12 @@ void DESolver::Setup(double *min, double *max,
 
     for (i = 0; i < nPop; i++)
     {
-        for (int j = 0; j < nDim; j++)
-            Element(population, i, j) = RandomUniform(min[j], max[j]);
-
+        for (j = 0; j < nDim; j++)
+	{
+		population[i*nDim+j] = RandomUniform(min[j], max[j]);
+		//Element(population, i, j) = RandomUniform(min[j], max[j]);
+	}
+	
         popEnergy[i] = 1.0E20;
     }
 
@@ -461,7 +464,7 @@ double DESolver::RandomUniform(double minValue, double maxValue)
     iy = iv[j] - idum2;
     iv[j] = idum;
 
-    if (iy < 1)
+    if ( iy < 1)
         iy += IMM1;
 
     double result = AM * iy;
