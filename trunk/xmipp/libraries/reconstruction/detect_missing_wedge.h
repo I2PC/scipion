@@ -53,10 +53,10 @@ public:
     bool saveMask;
 public:
     // Input volume
-    VolumeXmipp V;
+    VolumeXmipp *V;
 
     // Magnitude of the input volume
-    Matrix3D<double> Vmag;
+    Matrix3D<double> *Vmag;
     
     // Angles of the first plane
     double rotPos, tiltPos;
