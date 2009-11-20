@@ -79,8 +79,8 @@ public:
     ~DESolver(void);
 
     /// Setup() must be called before solve to set min, max, strategy etc.
-    void Setup(double *min,
-               double *max,
+    void Setup(double min[],
+               double max[],
                int deStrategy,
                double diffScale,
                double crossoverProb);
