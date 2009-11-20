@@ -25,15 +25,15 @@ DESolver::DESolver(int dim, int popSize) :
 DESolver::~DESolver(void)
 {
     if (trialSolution)
-        delete trialSolution;
+        delete [] trialSolution;
     if (bestSolution)
-        delete bestSolution;
+        delete [] bestSolution;
     if (popEnergy)
-        delete popEnergy;
+        delete [] popEnergy;
     if (population)
-        delete population;
+        delete [] population;
 
-    trialSolution = bestSolution = popEnergy = population = 0;
+    trialSolution = bestSolution = popEnergy = population = NULL;
     return;
 }
 
