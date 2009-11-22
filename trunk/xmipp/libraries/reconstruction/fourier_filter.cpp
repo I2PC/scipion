@@ -224,8 +224,10 @@ void FourierMask::show()
             std::cout << "Gaussian\n";
             break;
         case CTF:
-        case CTFPOS:
             std::cout << "CTF\n" << ctf;
+            break;
+        case CTFPOS:
+            std::cout << "CTFPOS\n" << ctf;
             break;
 
         }
