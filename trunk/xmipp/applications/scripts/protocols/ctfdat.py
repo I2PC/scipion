@@ -1,11 +1,13 @@
 class ctfdat:
    """ handle ctfdat files
        Authors: Carlos Oscar Sanchez Sorzano
+                Roberto Marabini ( dictionary) Nov 2009
        May 2007
    """
 
    def __init__(self):
        self.lines=[]
+       self.CTFDictionary={}
 
    # Append a ctf
    def append(self,fnProjection,fnCTF):
@@ -54,6 +56,21 @@ class ctfdat:
 	   if not fnCTF in CTFList:
 	      CTFList+=[fnCTF]
        return CTFList
+
+   # Produce a dictionary with the ctfs and images
+   # Produce a list with the ctfs and images
+   def produceCTFDictionary(self,removepath=False):
+       import os
+       for line in self.lines:
+           args=line.split()
+           if not len(args)==2:
+	       continue
+	   if(removepath):
+	       fnIMG=os.path.basename(args[0])
+	   else:
+	       fnIMG=args[0]
+	   fnCTF=args[1]
+	   self.CTFDictionary[fnIMG] = fnCTF
 
    # Reads ctfdat from disk
    def read(self,filename):
