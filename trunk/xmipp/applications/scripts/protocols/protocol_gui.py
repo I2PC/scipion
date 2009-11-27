@@ -42,6 +42,7 @@ Obligatory:
     * A {list}|option A|option B|option C| label on the comment line (#) marks 
       the option as a radio-list button. The selected variable should be one of the options indicated.
       The number of different options is not limited.
+    * A {hidden} label on the comment line (#) marks the option as -hidden-
 
 Optional:
 
@@ -217,6 +218,7 @@ class automated_gui_class:
             if (self.script_header_lines[j][0]=='#'):
                 found_comment=True
                 comment=self.script_header_lines[j][1:]
+
                 # Check setup or expert options
                 if not comment.find("{expert}")==-1:
                     isexpert="expert"
@@ -232,6 +234,7 @@ class automated_gui_class:
                     comment=comment.replace ('{setup-3d}', '' )
                 else:
                     isexpert="normal"
+
                 # Check browse options
                 if not comment.find("{file}")==-1:
                     browse="file"
@@ -241,12 +244,19 @@ class automated_gui_class:
                     comment=comment.replace ('{dir}', '' )
                 else:
                     browse="none"
+
                 # Check radio options
                 if not comment.find("{list}")==-1:
                     comment=comment.replace ('{file}', '' )
                     words=comment.split('|')
                     comment=words[len(words)-1]
                     radiooptions=words[1:-1]
+
+                # Check hidden options
+                if not comment.find("{hidden}")==-1:
+                    ishidden=True
+                else:
+                    ishidden=False
 
         # Checkout more help
         if (i-j>1):
@@ -256,7 +266,7 @@ class automated_gui_class:
 
         morehelp=string.join(morehelp,'')
         morehelp=morehelp.replace('\"\"\"','')
-        return comment,isexpert,morehelp,browse,radiooptions
+        return comment,isexpert,morehelp,browse,radiooptions,ishidden
         
     def Is_a_number(self,string):
         try:
@@ -316,7 +326,8 @@ class automated_gui_class:
                     newvar=StringVar()
                     self.variables[args[0]].append(newvar)
             
-                comment,isexpert,morehelp,browse,radiooptions=self.ScriptParseComments(i)
+                comment,isexpert,morehelp,browse,radiooptions,ishidden=\
+                    self.ScriptParseComments(i)
                 if (len(radiooptions)>0):
                     self.variables[args[0]][1]="Radio"
                 if (browse=="file"):
@@ -327,6 +338,7 @@ class automated_gui_class:
                 self.variables[args[0]].append(isexpert)
                 self.variables[args[0]].append(morehelp)
                 self.variables[args[0]].append(radiooptions)
+                self.variables[args[0]].append(ishidden)
                 row=0
                 self.variables[args[0]].append(row)
 
@@ -387,6 +399,14 @@ class automated_gui_class:
         # Add all the variables in the script header
         self.widgetexpertlist=[]
         for var in self.vfields:
+            print var
+            print self.variables[var]
+            print len(self.variables[var])
+            if len(self.variables[var])>=8:
+                print self.variables[var][7]
+            if len(self.variables[var])>=9 and self.variables[var][7]:
+                # Is hidden?
+                continue
             if (self.variables[var][1]=="Section"):
                 self.GuiAddSection(self.variables[var][0])
             elif (self.variables[var][1]=="File" or
