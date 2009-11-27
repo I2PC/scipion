@@ -398,14 +398,6 @@ DisplayReconstruction=False
 
 # {list}|fourier|art|wbp| Reconstruction method
 """ Choose between wbp, art or fourier
-    You must specify this option for each iteration. 
-    This can be done by a sequence of numbers (for instance, "wbp wbp wbp art " 
-    specifies 4 iterations, the first three set the value to wbp (no restriction)
-    and the last  to art. An alternative compact notation 
-    is ("3xwbp 1xart", i.e.,
-    3 iterations with wbp, and 1 with art).
-    Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
 """
 ReconstructionMethod='fourier'
 
