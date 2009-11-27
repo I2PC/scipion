@@ -8,7 +8,6 @@
 #  - 2D image analysis by classification of rotational spectra
 #  - 3D classification by ml3D
 #  - 3D projection matching refinement
-#  - 3D multi-resolution refinement
 #
 # Example use:
 # ./setup_protocols.py
@@ -39,8 +38,6 @@ SetupRCT=False
 SetupML3D=False
 # {setup-3d} Projection matching refinement
 SetupProjMatch=False
-# {setup-3d} Multi-resolution refinement
-SetupMultiRes3d=False
 #------------------------------------------------------------------------
 # {section} Global Parameters
 #------------------------------------------------------------------------
@@ -70,7 +67,6 @@ class setup_protocols_class:
                      SetupRCT,
                      SetupML3D,
                      SetupProjMatch,
-                     SetupMultiRes3d,
                      ProjectDir,
                      SystemFlavour,
                      LogDir,
@@ -87,7 +83,6 @@ class setup_protocols_class:
             self.SetupRCT=SetupRCT
             self.SetupML3D=SetupML3D
             self.SetupProjMatch=SetupProjMatch
-            self.SetupMultiRes3d=SetupMultiRes3d
 
             self.ProjectDir=ProjectDir
             self.SystemFlavour=SystemFlavour
@@ -122,8 +117,6 @@ class setup_protocols_class:
                                         ['xmipp_protocol_ml3d.py','visualize_ml3d.py']]
             self.library['SetupProjMatch']=[self.SetupProjMatch,
                                         ['xmipp_protocol_projmatch.py','visualize_projmatch.py']]
-            self.library['SetupMultiRes3d']=[self.SetupMultiRes3d,
-                                        ['xmipp_protocol_multires.py','visualize_multires.py']]
 
             # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
@@ -231,7 +224,6 @@ if __name__ == '__main__':
                                 SetupRCT,
                                 SetupML3D,
                                 SetupProjMatch,
-                                SetupMultiRes3d,
                                 ProjectDir,
                                 SystemFlavour,
                                 LogDir,
