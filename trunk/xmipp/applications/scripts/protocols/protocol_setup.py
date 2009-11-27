@@ -4,7 +4,7 @@
 #  - Preprocessing of micrographs
 #  - Manual particle picking
 #  - Preprocessing of extracted particles
-#  - 2D image alignment and classification (by ML2D & kerdenSOM)
+#  - 2D image alignment and classification (by ML2D, CL2D & kerdenSOM)
 #  - 2D image analysis by classification of rotational spectra
 #  - 3D classification by ml3D
 #  - 3D projection matching refinement
@@ -25,6 +25,8 @@ SetupPreProcessMicrographs=False
 SetupParticlePick=False
 # {setup-pre} Preprocess particles
 SetupPreProcessParticles=False
+# {setup-2d} CL2D classification
+SetupCL2D=False
 # {setup-2d} ML2D classification
 SetupML2D=False
 # {setup-2d} kerdenSOM classification 
@@ -61,6 +63,7 @@ class setup_protocols_class:
                      SetupPreProcessMicrographs,
                      SetupParticlePick,
                      SetupPreProcessParticles,
+                     SetupCL2D,
                      SetupML2D,
                      SetupKerdensom,
                      SetupRotSpectra,
@@ -77,6 +80,7 @@ class setup_protocols_class:
             self.SetupPreProcessMicrographs=SetupPreProcessMicrographs
             self.SetupParticlePick=SetupParticlePick
             self.SetupPreProcessParticles=SetupPreProcessParticles
+            self.SetupCL2D=SetupCL2D
             self.SetupML2D=SetupML2D
             self.SetupKerdensom=SetupKerdensom
             self.SetupRotSpectra=SetupRotSpectra
@@ -104,6 +108,8 @@ class setup_protocols_class:
             self.library['SetupPreProcessParticles']=[self.SetupPreProcessParticles,
                                                 ['xmipp_protocol_preprocess_particles.py',
                                                  'visualize_preprocess_particles.py']]
+            self.library['SetupCL2D']=[self.SetupCL2D,
+                                         ['xmipp_protocol_cl2d.py','visualize_cl2d.py']]
             self.library['SetupML2D']=[self.SetupML2D,
                                          ['xmipp_protocol_ml2d.py','visualize_ml2d.py']]
             self.library['SetupKerdensom']=[self.SetupKerdensom,
@@ -218,6 +224,7 @@ if __name__ == '__main__':
     setup=setup_protocols_class(SetupPreProcessMicrographs,
                                 SetupParticlePick,
                                 SetupPreProcessParticles,
+                                SetupCL2D,
                                 SetupML2D,
                                 SetupKerdensom,
                                 SetupRotSpectra,
