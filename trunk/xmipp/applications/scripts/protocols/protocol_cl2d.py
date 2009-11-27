@@ -26,11 +26,11 @@ DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/gpfs/fs1/home/bioinfo/coss/temp/Small_TAG_normalized'
+ProjectDir="/gpfs/fs1/home/bioinfo/coss/temp/Small_TAG_normalized"
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored here
 """
-LogDir='Logs'
+LogDir="Logs"
 
 #------------------------------------------------------------------------------------------------
 # {section} Preprocessing parameters
@@ -97,6 +97,8 @@ NumberOfMpiProcesses=8
     Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. 
 """
 SystemFlavour='TORQUE-OPENMPI'
+
+# {hidden} This protocol only works in parallel
 DoParallel=True
 
 #------------------------------------------------------------------------------------------------
