@@ -7,15 +7,15 @@
 #
 # This script requires that protocol_cl2d.py is in the current directory
 #
-# Author: Carlos Oscar Sánchez Sorzano
+# Author: Carlos Oscar Sanchez Sorzano
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Visualize the class averages of all iterations in matrix-view?
-DoShowAllIter=True
+DoShowAllIter=False
 # Separately visualize class averages of the last iteration?
-DoShowLastIter=False
+DoShowLastIter=True
 # Open files with the number of images assigned?
 DoShowFractions=True
 
