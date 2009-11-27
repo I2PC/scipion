@@ -14,11 +14,11 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-InSelFile='new.sel'
+InSelFile='all_images.sel'
 # Working subdirectory:
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir='CL2D/classes32filt'
+WorkingDir='CL2D/classes4'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
@@ -26,7 +26,7 @@ DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/gpfs/fs1/home/bioinfo/coss/Rafa'
+ProjectDir='/gpfs/fs1/home/bioinfo/coss/temp/Small_TAG_normalized'
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored here
 """
@@ -51,7 +51,7 @@ Lowpass =0.4
 # {section} Class averages parameters
 #------------------------------------------------------------------------------------------------
 # Number of references (or classes) to be used:
-NumberOfReferences=32
+NumberOfReferences=8
 
 # {expert} Number of initial references
 """ Initial number of initial models
@@ -63,7 +63,7 @@ NumberOfReferences0=4
 """
 NumberOfIterations=20
 
-# Also include mirror transformation in the alignment?
+# {expert} Also include mirror transformation in the alignment?
 """  Including the mirror transformation is useful if your particles have a handedness and may fall either face-up or face-down on the grid.
  Note that when you want to use this CL2D run for later RCT reconstruction, you can NOT include the mirror transformation here.
 """
@@ -72,8 +72,16 @@ DoMirror=True
 # {expert} Use the fast version of this algorithm?
 DoFast=True
 
+# {expert}{list}|correntropy|correlation| Comparison method
+""" Use correlation or correntropy """
+ComparisonMethod='correlation'
+
+# {expert}{list}|classical|robust| Clustering criterion
+""" Use the classical clustering criterion or the robust clustering criterion """
+ClusteringMethod='classical'
+
 # {expert} Additional parameters for class_averages
-""" -minsize <N>, -codes0 <N>
+""" -verbose, -alignImages, -corr_split, ...
 """
 AdditionalParameters=''
 
@@ -81,7 +89,7 @@ AdditionalParameters=''
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Number of MPI processes to use:
-NumberOfMpiProcesses=64
+NumberOfMpiProcesses=8
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -121,6 +129,8 @@ class CL2D_class:
                  NumberOfIterations,
                  DoMirror,
                  DoFast,
+                 ComparisonMethod,
+                 ClusteringMethod,
                  AdditionalParameters,
                  NumberOfMpiProcesses,
                  SystemFlavour):
@@ -139,6 +149,8 @@ class CL2D_class:
         self.NumberOfIterations=NumberOfIterations
         self.DoMirror=DoMirror
         self.DoFast=DoFast
+        self.ComparisonMethod=ComparisonMethod
+        self.ClusteringMethod=ClusteringMethod
         self.AdditionalParameters=AdditionalParameters
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
         self.SystemFlavour=SystemFlavour
@@ -211,6 +223,8 @@ class CL2D_class:
 
         print '*********************************************************************'
         print '*  Executing class_averages program :' 
+        if (self.NumberOfReferences0>self.NumberOfReferences):
+            self.NumberOfReferences0=self.NumberOfReferences
         params= '-i '+str(self.InSelFile)+' -o '+WorkingDir+'/class '+\
                 ' -codes '+str(self.NumberOfReferences)+\
                 ' -codes0 '+str(self.NumberOfReferences0)+\
@@ -220,6 +234,10 @@ class CL2D_class:
             params+= ' -fast '
         if (not self.DoMirror):
             params+= ' -no_mirror '
+        if (self.ComparisonMethod=='correlation'):
+            params+= ' -useCorrelation '
+        if (self.ClusteringMethod=='classical'):
+            params+= ' -classicalMultiref '
 
         launch_job.launch_job("xmipp_class_averages",
                               params,
@@ -251,6 +269,8 @@ if __name__ == '__main__':
                     NumberOfIterations,
                     DoMirror,
                     DoFast,
+                    ComparisonMethod,
+                    ClusteringMethod,
                     AdditionalParameters,
                     NumberOfMpiProcesses,
                     SystemFlavour)
