@@ -166,8 +166,16 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
     else
 	REPORT_ERROR(1,"BUG: no comment in DFexp where expected....");
     img.read(fn_img);
-    
     dim = XSIZE(img());
+    
+    // Check that the reference and the experimental images are of the same
+    // size
+    FileName fnt;
+    fnt.compose(fn_ref,1,"xmp");
+    ImageXmipp imgRef(fnt);
+    imgRef().setXmippOrigin();
+    if (!imgRef().sameShape(img()))
+        REPORT_ERROR(1,"Check that the reference volume and the experimental images are of the same size");
     
     // Set padding dimension
     paddim=ROUND(pad*dim);
