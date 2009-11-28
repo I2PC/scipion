@@ -646,7 +646,7 @@ void Micrograph::move_last_coord_to(int x, int y)
 /* Downsample -------------------------------------------------------------- */
 void downsample(const Micrograph &M, int Xstep, int Ystep,
                 const Matrix2D<double> &kernel, Micrograph &Mp,
-                bool do_fourier)
+                bool do_fourier, int nThreads)
 {
     // Find first and last indexes in each direction
     // it is assumed that (0,0) is within the kernel
@@ -677,12 +677,14 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
 
         // Perform the Fourier transform
         XmippFftw transformerM;
+        transformerM.setThreadsNumber(nThreads);
         transformerM.FourierTransform(Mmem, MmemFourier, false);
 
         // Create space for the downsampled image and its Fourier transform
         Matrix2D<double> Mpmem(Ypdim,Xpdim);
         Matrix2D<std::complex<double> > MpmemFourier;
         XmippFftw transformerMp;
+        transformerMp.setThreadsNumber(nThreads);
         transformerMp.setReal(Mpmem);
         transformerMp.getFourierAlias(MpmemFourier);
 
