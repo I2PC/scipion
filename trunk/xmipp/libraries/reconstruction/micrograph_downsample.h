@@ -74,7 +74,8 @@ public:
     
     /// fourier interpolation
     bool do_fourier;
-
+    /// number of Threads used in the Fourier TRansform
+    int nThreads;
     /// Rectangular X size
     int      Xrect;
     /// Rectangular Y size
