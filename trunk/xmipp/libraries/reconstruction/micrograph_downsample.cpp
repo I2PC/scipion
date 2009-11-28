@@ -38,6 +38,7 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
     bitsMp         = textToInteger(getParameter(argc, argv, "-output_bits", "32"));
     if (bitsMp != 8 && bitsMp != 16 && bitsMp != 32)
         REPORT_ERROR(1, "Downsample: you must specify 8, 16 or 32 bits only");
+    nThreads   = textToInteger(getParameter(argc, argv, "-thr", "1"));
 
     if (checkParameter(argc, argv, "-fourier"))
     {
@@ -124,6 +125,7 @@ void Prog_downsample_prm::usage() const
               << "   -Xstep <xstep>            : Look at the documentation\n"
               << "  [-Ystep <ystep=xstep>]\n"
               << "  [-fourier <factor=0.3333>] : work in fourier space, factor < 1\n"
+              << "  [-thr <number_of_threads>]: Number of threads used in the Fourier transform\n"
               << "  [-kernel rectangle <Ydim> <Xdim>]\n"
               << "  [-kernel circle    <r>]\n"
               << "  [-kernel gaussian  <r> <sigma>]\n"
@@ -264,6 +266,6 @@ void Prog_downsample_prm::Downsample() const
 {
     Micrograph Mp;
     Mp.open_micrograph(fn_downsampled, reversed);
-    downsample(M, Xstep, Ystep, kernel, Mp,do_fourier);
+    downsample(M, Xstep, Ystep, kernel, Mp,do_fourier,nThreads);
     Mp.close_micrograph();
 }
