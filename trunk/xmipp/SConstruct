@@ -65,7 +65,7 @@ opts.Add(BoolVariable('matlab', 'Build the Matlab bindings?', 'no'))
 opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
 
 opts.Add(BoolVariable('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
-opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '')
+opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
 
 opts.Update(env)
 
@@ -244,7 +244,7 @@ if (ARGUMENTS['mode'] == 'configure'):
     # It is ugly to call configure from scons, but I do not know how to do it otherwise
     # create configuration file for fftw
     if int(env['verbose_fftw']):
-        print "* Configuring FFTW ... "
+        print "* Configuring FFTW ... " 
         os.system("cd external/fftw-3.1.2;./configure " + env['FFTWFLAGS'])
     else:
         print "* Configuring FFTW (see build/fftw_configure.log for details) ... "

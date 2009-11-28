@@ -318,11 +318,12 @@ def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
 BilibSources = Glob('external/bilib/sources', '*.cc', [])
 
 # Fftw
-FftwSources = Glob('external/fftw-3.1.2/kernel', '*.c',[]) + \
-              Glob('external/fftw-3.1.2/dft', '*.c',[])    + \
-              Glob('external/fftw-3.1.2/rdft', '*.c',[])   + \
-              Glob('external/fftw-3.1.2/api', '*.c',[])    + \
-              Glob('external/fftw-3.1.2/reodft', '*.c',[])
+FftwSources = Glob('external/fftw-3.1.2/kernel', '*.c',[])  + \
+              Glob('external/fftw-3.1.2/dft', '*.c',[])     + \
+              Glob('external/fftw-3.1.2/rdft', '*.c',[])    + \
+              Glob('external/fftw-3.1.2/threads', '*.c',[]) + \
+              Glob('external/fftw-3.1.2/reodft', '*.c',[])  + \
+              Glob('external/fftw-3.1.2/api', '*.c',[])   
 
 # INRIA
 INRIASources = Glob('external/inria', '*.cc', [])
