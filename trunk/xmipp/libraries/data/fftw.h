@@ -68,6 +68,13 @@ public:
 
     /* fftw Backward plan */
     fftw_plan fPlanBackward;
+
+    /* number of threads*/
+    int nthreads;
+
+    /* Threads has been used in this program*/
+    bool threadsSetOn;
+
 // Public methods
 public:
     /** Default constructor */
@@ -76,6 +83,60 @@ public:
     /** Destructor */
     ~XmippFftw();
 
+    /** Set Number of threads
+     * This function, which should be called once, performs any
+     * one-time initialization required to use threads on your
+     * system. 
+     * 
+     *  The nthreads argument indicates the number of threads you
+     *  want FFTW to use (or actually, the maximum number). All
+     *  plans subsequently created with any planner routine will use
+     *  that many threads. You can call fftw_plan_with_nthreads,
+     *  create some plans, call fftw_plan_with_nthreads again with a
+     *  different argument, and create some more plans for a new
+     *  number of threads. Plans already created before a call to
+     *  fftw_plan_with_nthreads are unaffected. If you pass an
+     *  nthreads argument of 1 (the default), threads are
+     *  disabled for subsequent plans. */
+    void setThreadsNumber(int tNumber)
+    {
+        if (tNumber!=1)
+        {
+            threadsSetOn=true;
+            nthreads = tNumber;
+            if(fftw_init_threads()==0)
+                REPORT_ERROR(3008, (std::string)"FFTW cannot init threads (setThreadsNumber)");
+            fftw_plan_with_nthreads(nthreads);
+        }
+    }
+    /** change Number of threads
+    *        * 
+     *  The nthreads argument indicates the number of threads you want FFTW to use
+     *  (or actually, the maximum number). All plans subsequently
+     *  created with any planner routine will use that many
+     *  threads. You can call fftw_plan_with_nthreads, create
+     *  some plans, call fftw_plan_with_nthreads again with a
+     *  different argument, and create some more plans for a new
+     *  number of threads. Plans already created before a call to
+     *  fftw_plan_with_nthreads are unaffected. If you pass an
+     *  nthreads argument of 1 (the default), threads are
+     *  disabled for subsequent plans. */
+    void changeThreadsNumber(int tNumber)
+    {
+        nthreads = tNumber;
+        fftw_plan_with_nthreads(nthreads);
+    }
+    /** Destroy Threads. Do not execute any previously created
+     *  plans after calling this function   */
+    void destroyThreads(void )
+    {
+        nthreads = 1;
+        if(threadsSetOn)
+            fftw_cleanup_threads();
+
+        threadsSetOn=false;
+    }
+    
     /** Compute the Fourier transform of a Matrix1D, 2D and 3D.
         If getCopy is false, an alias to the transformed data is returned.
         This is a faster option since a copy of all the data is avoided,
@@ -447,8 +508,9 @@ void frc_dpr(Matrix3D< double > & m1,
  * @param Ydim output size
  * @param Xdim output size
  * @param Mpmem matrix to scale
+ * @param nThreads number of threads
  */ 
-void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem);
+void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem, int nthreads=1);
 
 
 /** Get the radial average of the power spectrum of the map in Fourier space

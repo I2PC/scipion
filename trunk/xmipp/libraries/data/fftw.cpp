@@ -37,6 +37,8 @@ XmippFftw::XmippFftw()
     fPlanBackward=NULL;
     fReal=NULL;
     dataPtr=NULL;
+    nthreads=1;
+    threadsSetOn=false;
 }
 
 void XmippFftw::clear()
@@ -386,13 +388,14 @@ void frc_dpr(Matrix3D< double > & m1,
             dpr(i)/=radial_count(i);
     }
 }
-void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem) 
+void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem,int nThreads) 
  {
      //Mmem = *this
      //memory for fourier transform output
      Matrix2D<std::complex<double> > MmemFourier;
      // Perform the Fourier transform
      XmippFftw transformerM;
+     transformerM.setThreadsNumber(nThreads);
      transformerM.FourierTransform(Mpmem, MmemFourier, false);
 
      // Create space for the downsampled image and its Fourier transform
