@@ -44,6 +44,7 @@ int main(int argc, char **argv)
     bool            gridding;
     bool            linear;
     bool            fourier;
+    int             nThreads;
     Matrix2D< double > A(3, 3), B(4, 4);
     A.initIdentity();
     B.initIdentity();
@@ -74,7 +75,7 @@ int main(int argc, char **argv)
 
         if (ydim == 0) ydim = xdim;
         if (zdim == 0) zdim = xdim;
-
+        nThreads=textToInteger(getParameter(argc, argv, "-thr", "1"));
     }
     catch (Xmipp_error XE)
     {
@@ -106,7 +107,7 @@ int main(int argc, char **argv)
 	    //}
             if (fourier)
             {
-                selfScaleToSizeFourier(ydim,xdim,image());
+                selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
             }
             else if (linear)
             {
@@ -179,7 +180,7 @@ int main(int argc, char **argv)
                     }
         	    if (fourier)
         	    {
-                	selfScaleToSizeFourier(ydim,xdim,image());
+                	selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
         	    }
 		    /*if (gridding)
 		    {
@@ -264,6 +265,7 @@ void Usage()
     << "  [-factor <scale factor>]\n"
     //<< "  [-gridding]       : Use reverse gridding for interpolation\n"
     << "  [-linear]         : Use bilinear/trilinear interpolation\n"
-    << "  [-fourier]        : Use padding/windowing in Fourier Space (only for 2D)\n";
+    << "  [-fourier]        : Use padding/windowing in Fourier Space (only for 2D)\n"
+    << "  [-thr n]          : Use n threads, only implemented for fourier interpolation\n";
     
 }
