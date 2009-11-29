@@ -50,6 +50,8 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
                                              "-max_resolution",".5"));
     numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
     thrWidth = textToInteger(getParameter(argc,argv, "-thr_width", "-1"));
+
+
 }
 
 // Show ====================================================================
@@ -147,8 +149,12 @@ void Prog_RecFourier_prm::produce_Side_info()
     imgSize=Xdim;
      volPadSizeX = volPadSizeY = volPadSizeZ=Xdim*padding_factor_vol;
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
+
+    //use threads for volume inverse fourier transform, plan is created in setReal()
+    transformerVol.setThreadsNumber(numThreads);
     transformerVol.setReal(Vout());
-     Vout().clear(); // Free the memory so that it is available for FourierWeights
+
+    Vout().clear(); // Free the memory so that it is available for FourierWeights
     transformerVol.getFourierAlias(VoutFourier);
     FourierWeights.initZeros(VoutFourier);
    
@@ -390,9 +396,9 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                 // the extra dimension added
                 // and padding differences
 
-                for (int k=threadParams->myThreadID; k<=FINISHINGZ(parent->FourierWeights); k+=parent->numThreads)
-                    for (int i=STARTINGY(parent->FourierWeights); i<=FINISHINGY(parent->FourierWeights); i++)
-                        for (int j=STARTINGX(parent->FourierWeights); j<=FINISHINGX(parent->FourierWeights); j++)
+                for (size_t k=threadParams->myThreadID; k<=FINISHINGZ(parent->FourierWeights); k+=parent->numThreads)
+                    for (size_t i=STARTINGY(parent->FourierWeights); i<=FINISHINGY(parent->FourierWeights); i++)
+                        for (size_t j=STARTINGX(parent->FourierWeights); j<=FINISHINGX(parent->FourierWeights); j++)
                         {
                             if (parent->FourierWeights(k,i,j)>ACCURACY)
                             {
@@ -972,6 +978,7 @@ void Prog_RecFourier_prm::finishComputations( FileName out_name )
                   LAST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize));
     double pad_relation= ((double)padding_factor_proj/padding_factor_vol);
     pad_relation = (pad_relation * pad_relation * pad_relation);
+    //THIS IS WRONG CHANGE int by size_t
     FOR_ALL_ELEMENTS_IN_MATRIX3D(Vout())
     {
         double factor = Fourier_blob_table(ROUND(sqrt((double)(k*k+i*i+j*j))

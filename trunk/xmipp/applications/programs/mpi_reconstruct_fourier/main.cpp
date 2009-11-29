@@ -135,6 +135,10 @@ public:
         //only one node will write in the console
         if (rank == 1 )
         {
+            //use threads for volume inverse fourier transform, plan is created in setReal()
+            //only rank=1 makes inverse Fourier trnasform
+            transformerVol.setThreadsNumber(numThreads);
+
             //#define DEBUG
 #ifdef DEBUG
             std::cerr << "SF.ImgNo() mpi_job_size " 
@@ -419,6 +423,7 @@ public:
                              finishComputations(FileName((std::string) fn_fsc + "_split_1.vol"));
 
                              Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
+
                              transformerVol.setReal(Vout());
                              Vout().clear();
                              transformerVol.getFourierAlias(VoutFourier);
@@ -443,7 +448,7 @@ public:
                              transformerVol.getFourierAlias(VoutFourier);
                              FourierWeights.initZeros(VoutFourier);
                              VoutFourier.initZeros();
-	                 }
+	                     }
                      }
                      else if (status.MPI_TAG == TAG_TRANSFER)
                      {
