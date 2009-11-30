@@ -173,7 +173,6 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
     FileName fnt;
     fnt.compose(fn_ref,1,"xmp");
     ImageXmipp imgRef(fnt);
-    imgRef().setXmippOrigin();
     if (!imgRef().sameShape(img()))
         REPORT_ERROR(1,"Check that the reference volume and the experimental images are of the same size");
     
