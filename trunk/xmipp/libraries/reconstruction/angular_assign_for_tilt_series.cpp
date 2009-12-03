@@ -39,7 +39,7 @@
 
 /* Generate mask ----------------------------------------------------------- */
 //#define DEBUG
-void generateMask(const Matrix2D<double> &I, Matrix2D<int> &mask,
+void generateMask(const Matrix2D<double> &I, Matrix2D<unsigned char> &mask,
     int patchSize)
 {
     Matrix2D<double> dmask;
@@ -536,8 +536,9 @@ void * threadComputeTransform( void * args )
 	    pthread_mutex_lock( &printingMutex );
             affineTransformations[jj_1][jj]=Aij;
             affineTransformations[jj][jj_1]=Aji;
-            parent->writeTransformations(
-                parent->fnRoot+"_transformations.txt");
+            if (cost<1)
+                parent->writeTransformations(
+                    parent->fnRoot+"_transformations.txt");
 	    std::cout << "Cost for [" << jj_1 << "] - ["
                       << jj << "] = " << cost << std::endl;
 	    pthread_mutex_unlock( &printingMutex );
@@ -560,6 +561,7 @@ void * threadComputeTransform( void * args )
 	    std::cout << "Cost for [" << jj_1 << "] - ["
                       << jj << "] = " << cost << std::endl;
 	    pthread_mutex_unlock( &printingMutex );
+            delete fitness;
         }
     }
 	
@@ -603,7 +605,7 @@ void Prog_tomograph_alignment::produceSideInfo() {
           
           if (!useCriticalPoints)
           {
-              Matrix2D<int>* mask_i=new Matrix2D<int>;
+              Matrix2D<unsigned char>* mask_i=new Matrix2D<unsigned char>;
               generateMask(*img_i,*mask_i,
                 XMIPP_MAX(ROUND(localSize*XSIZE(*img_i))/2,5));
               maskImg.push_back(mask_i);
@@ -1146,7 +1148,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
         if (parent->isOutlier(ii)) continue;
     
         // Generate mask
-        Matrix2D<int> largeMask;
+        Matrix2D<unsigned char> largeMask;
         generateMask(*(parent->img[ii]),largeMask,
             XMIPP_MAX(ROUND(parent->localSize*XSIZE(*(parent->img[ii])))/2,5));
 
