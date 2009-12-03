@@ -28,7 +28,8 @@ opts.Add('CXX', 'The C++ compiler', 'g++')
 opts.Add('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
 
 # FIXME With ARGUMENTS these should be read... right?
-#opts.Add('CCFLAGS', 'The C compiler flags', None)
+#hope is OK roberto
+opts.Add('CCFLAGS', 'The C compiler flags', None)
 opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
 
 opts.Add(BoolVariable('debug', 'Build debug version?', 'no'))
@@ -65,7 +66,7 @@ opts.Add(BoolVariable('matlab', 'Build the Matlab bindings?', 'no'))
 opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
 
 opts.Add(BoolVariable('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
-opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
+opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', ' --enable-threads')
 
 opts.Update(env)
 
@@ -264,15 +265,19 @@ elif (ARGUMENTS['mode'] == 'compile'):
     if int(env['debug']):
         env.Append(CXXFLAGS = ['-g'])
         env.Append(CXXFLAGS = ['-pg'])
+        env.Append(CCFLAGS = ['-g'])
+        env.Append(CCFLAGS = ['-pg'])
         env.Append(LINKFLAGS = ['-pg'])
     else:
         # "safe" optimization
         env.Append(CXXFLAGS = ['-O2'])
+        env.Append(CCFLAGS = ['-O2'])
         env.Append(LINKFLAGS = ['-s'])
 
     # Add threads
     env.Append(LINKFLAGS = ['-pthread'])
-    env.Append(CXXFLAGS = ['-pthread'])
+    env.Append(CXXFLAGS  = ['-pthread'])
+    env.Append(CCFLAGS   = ['-pthread'])
 
     # warnings?
     if int(env['warn']):
