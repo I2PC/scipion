@@ -140,6 +140,9 @@ public:
     /// Identify outlier micrographs
     int identifyOutliers;
 
+    /// Pyramid
+    int pyramidLevel;
+
     /// Read parameters from argument line
     void read(int argc, char **argv);
 
@@ -427,6 +430,7 @@ public:
 double computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
-    double thresholdAffine, bool localAffine, bool isMirror);
+    double thresholdAffine, bool localAffine, bool isMirror,
+    int pyramidLevel);
 //@}
 #endif

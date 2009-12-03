@@ -68,10 +68,10 @@ class AffineFitness
 public:
     Matrix1D<double> minAllowed;
     Matrix1D<double> maxAllowed;
-    Matrix2D<double> I1;
-    Matrix2D<double> I2;
-    Matrix2D<double> Mask1;
-    Matrix2D<double> Mask2;
+    std::vector< Matrix2D<double> *> I1;
+    std::vector< Matrix2D<double> *> I2;
+    std::vector< Matrix2D<double> *> Mask1;
+    std::vector< Matrix2D<double> *> Mask2;
     bool showMode;
     bool checkRotation;
 
@@ -81,8 +81,17 @@ public:
         checkRotation=true;
     }
 	
+    ~AffineFitness()
+    {
+        for (int i=0; i<I1.size();    i++) delete I1[i];
+        for (int i=0; i<I2.size();    i++) delete I2[i];
+        for (int i=0; i<Mask1.size(); i++) delete Mask1[i];
+        for (int i=0; i<Mask2.size(); i++) delete Mask2[i];
+    }
+	
     double affine_fitness_individual(double *p)
     {
+
        // Check limits
        if (!showMode)
            FOR_ALL_ELEMENTS_IN_MATRIX1D(minAllowed)
@@ -129,48 +138,63 @@ public:
            if (abs(c)>0.05)                    return 1e20*ABS(abs(c));
        }
 
-       // Produce the transformed images
-       Matrix2D<double> transformedI1, transformedI2;
-       applyGeometry(transformedI1,A12,I1,IS_NOT_INV,DONT_WRAP);
-       applyGeometry(transformedI2,A21,I2,IS_NOT_INV,DONT_WRAP);
-       
-       // Produce masks for the comparison
-       Matrix2D<int> maskInTheSpaceOf1, maskInTheSpaceOf2;
-       Matrix2D<double> maskAux;
-       applyGeometry(maskAux,A12,Mask1,IS_NOT_INV,DONT_WRAP);
-       maskInTheSpaceOf2.initZeros(YSIZE(maskAux),XSIZE(maskAux));
-       maskInTheSpaceOf2.setXmippOrigin();
-       FOR_ALL_ELEMENTS_IN_MATRIX2D(maskAux)
-            maskInTheSpaceOf2(i,j)=ROUND(maskAux(i,j))*Mask2(i,j);
-       maskAux.initZeros();
-       applyGeometry(maskAux,A21,Mask2,IS_NOT_INV,DONT_WRAP);
-       maskInTheSpaceOf1.initZeros(YSIZE(maskAux),XSIZE(maskAux));
-       maskInTheSpaceOf1.setXmippOrigin();
-       FOR_ALL_ELEMENTS_IN_MATRIX2D(maskAux)
-            maskInTheSpaceOf1(i,j)=ROUND(maskAux(i,j))*Mask1(i,j);
-       
-       // Compare the two images
-       double dist=0.5*(1-correlation_index(transformedI1,I2,&maskInTheSpaceOf2)+
-                        1-correlation_index(transformedI2,I1,&maskInTheSpaceOf1));
+       // For each pyramid level
+       double dist=0;
+       Matrix2D<double> A12level=A12;
+       Matrix2D<double> A21level=A21;
+       for (int level=0; level<I1.size(); level++)
+       {
+           // Produce the transformed images
+           Matrix2D<double> transformedI1, transformedI2;
+           applyGeometry(transformedI1,A12level,*(I1[level]),IS_NOT_INV,DONT_WRAP);
+           applyGeometry(transformedI2,A21level,*(I2[level]),IS_NOT_INV,DONT_WRAP);
 
-       if (showMode) {
-          ImageXmipp save;
-          save()=I1; save.write("PPPimg1.xmp");
-          save()=I2; save.write("PPPimg2.xmp");
-          save()=Mask1; save.write("PPPmask1.xmp");
-          save()=Mask2; save.write("PPPmask2.xmp");
-          save()=transformedI1; save.write("PPPTransformedImg1.xmp");
-          save()=transformedI2; save.write("PPPTransformedImg2.xmp");
-          typeCast(maskInTheSpaceOf1,save()); save.write("PPPmaskInTheSpaceOf1.xmp");
-          typeCast(maskInTheSpaceOf2,save()); save.write("PPPmaskInTheSpaceOf2.xmp");
-          save()=I1-transformedI2; save.write("PPPDiffImg1.xmp");
-          save()=I2-transformedI1; save.write("PPPDiffImg2.xmp");
-          std::cout << "A12=\n" << A12 << "A21=\n" << A21 << std::endl;
-	      std::cout << "dist=" << dist << std::endl;
-          std::cout << "Do you like the alignment? (y/n)\n";
-	  char c; std::cin >> c;
-          if (c=='n') dist=-1;
+           // Produce masks for the comparison
+           Matrix2D<int> maskInTheSpaceOf1, maskInTheSpaceOf2;
+           Matrix2D<double> maskAux;
+           applyGeometry(maskAux,A12level,*(Mask1[level]),IS_NOT_INV,DONT_WRAP);
+           maskInTheSpaceOf2.initZeros(YSIZE(maskAux),XSIZE(maskAux));
+           maskInTheSpaceOf2.setXmippOrigin();
+           FOR_ALL_ELEMENTS_IN_MATRIX2D(maskAux)
+                maskInTheSpaceOf2(i,j)=ROUND(maskAux(i,j))*(*(Mask2[level]))(i,j);
+           maskAux.initZeros();
+           applyGeometry(maskAux,A21level,*(Mask2[level]),IS_NOT_INV,DONT_WRAP);
+           maskInTheSpaceOf1.initZeros(YSIZE(maskAux),XSIZE(maskAux));
+           maskInTheSpaceOf1.setXmippOrigin();
+           FOR_ALL_ELEMENTS_IN_MATRIX2D(maskAux)
+                maskInTheSpaceOf1(i,j)=ROUND(maskAux(i,j))*(*(Mask1[level]))(i,j);
+
+           // Compare the two images
+           double distLevel=0.5*(
+              1-correlation_index(transformedI1,*(I2[level]),&maskInTheSpaceOf2)+
+              1-correlation_index(transformedI2,*(I1[level]),&maskInTheSpaceOf1));
+
+           if (showMode) {
+              ImageXmipp save;
+              save()=*(I1[level]); save.write("PPPimg1.xmp");
+              save()=*(I2[level]); save.write("PPPimg2.xmp");
+              save()=*(Mask1[level]); save.write("PPPmask1.xmp");
+              save()=*(Mask2[level]); save.write("PPPmask2.xmp");
+              save()=transformedI1; save.write("PPPTransformedImg1.xmp");
+              save()=transformedI2; save.write("PPPTransformedImg2.xmp");
+              typeCast(maskInTheSpaceOf1,save()); save.write("PPPmaskInTheSpaceOf1.xmp");
+              typeCast(maskInTheSpaceOf2,save()); save.write("PPPmaskInTheSpaceOf2.xmp");
+              save()=*(I1[level])-transformedI2; save.write("PPPDiffImg1.xmp");
+              save()=*(I2[level])-transformedI1; save.write("PPPDiffImg2.xmp");
+              std::cout << "Level=" << level << "\nA12level=\n" << A12level << "A21level=\n" << A21level << std::endl;
+	          std::cout << "distLevel=" << distLevel << std::endl;
+              std::cout << "Do you like the alignment? (y/n)\n";
+	      char c; std::cin >> c;
+              if (c=='n') {dist=-1; break;}
+           }
+           dist+=distLevel;
+           
+           A12level(0,2)/=2;
+           A12level(1,2)/=2;
+           A21level(0,2)/=2;
+           A21level(1,2)/=2;
        }
+       dist/=I1.size();
 
        return dist;
     }
@@ -204,48 +228,74 @@ private:
 };
 #undef DEBUG
 
-void setupAffineFitness(AffineFitness &fitness, const Matrix2D<double> &I1,
+void setupAffineFitness(AffineFitness *fitness, const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, bool isMirror,
-    bool checkRotation)
+    bool checkRotation, int pyramidLevel)
 {
-    fitness.checkRotation=checkRotation;
+    fitness->checkRotation=checkRotation;
 
     // Set images
-    fitness.I1=I1;
-    fitness.I1.setXmippOrigin();
-    fitness.I2=I2;
-    fitness.I2.setXmippOrigin();
-
-    fitness.Mask1=fitness.I1;
+    int level=0;
+    Matrix2D<double> I1aux=I1;
+    Matrix2D<double> I2aux=I2;
+    Matrix2D<double> Mask1=I1aux;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I1)
-    	if (I1(i,j)!=0) fitness.Mask1(i,j)=1;
+    	if (I1(i,j)!=0) Mask1(i,j)=1;
 
-    fitness.Mask2=fitness.I2;
+    Matrix2D<double> Mask2=I2aux;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I2)
-    	if (I2(i,j)!=0) fitness.Mask2(i,j)=1;
+    	if (I2(i,j)!=0) Mask2(i,j)=1;
+
+    do {
+        // Push back the current images
+        I1aux.setXmippOrigin();
+        I2aux.setXmippOrigin();
+        Mask1.setXmippOrigin();
+        Mask2.setXmippOrigin();
+        
+        Matrix2D<double> *dummy=NULL;
+        dummy=new Matrix2D<double>; *dummy=I1aux; fitness->I1.push_back(dummy);
+        dummy=new Matrix2D<double>; *dummy=I2aux; fitness->I2.push_back(dummy);
+        dummy=new Matrix2D<double>; *dummy=Mask1; fitness->Mask1.push_back(dummy);
+        dummy=new Matrix2D<double>; *dummy=Mask2; fitness->Mask2.push_back(dummy);
+        
+        // Prepare for next level
+        level++;
+        if (pyramidLevel>=level)
+        {
+            I1aux.selfScaleToSize(YSIZE(I1aux)/2,XSIZE(I1aux)/2);
+            I2aux.selfScaleToSize(YSIZE(I2aux)/2,XSIZE(I2aux)/2);
+            Mask1.selfScaleToSize(YSIZE(Mask1)/2,XSIZE(Mask1)/2);
+            Mask2.selfScaleToSize(YSIZE(Mask2)/2,XSIZE(Mask2)/2);
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(Mask1)
+                Mask1(i,j)=(Mask1(i,j)>0.5)? 1:0;
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(Mask2)
+                Mask2(i,j)=(Mask2(i,j)>0.5)? 1:0;
+        }
+    } while (level<=pyramidLevel);
 
     // Set limits for the affine matrices
     // Order: 1->2: 4 affine params+2 translations
     // Order: 2->1: 4 affine params+2 translations
-    fitness.minAllowed.resize(6);
-    fitness.maxAllowed.resize(6);
+    fitness->minAllowed.resize(6);
+    fitness->maxAllowed.resize(6);
 
     // Scale factors
-    fitness.minAllowed(0)=fitness.minAllowed(3)=0.9;
-    fitness.maxAllowed(0)=fitness.maxAllowed(3)=1.1;
+    fitness->minAllowed(0)=fitness->minAllowed(3)=0.9;
+    fitness->maxAllowed(0)=fitness->maxAllowed(3)=1.1;
     if (isMirror)
     {
-        fitness.minAllowed(3)=-1.1;
-        fitness.maxAllowed(3)=-0.9;
+        fitness->minAllowed(3)=-1.1;
+        fitness->maxAllowed(3)=-0.9;
     }
 
     // Rotation factors
-    fitness.minAllowed(1)=fitness.minAllowed(2)=-0.2;
-    fitness.maxAllowed(1)=fitness.maxAllowed(2)= 0.2;
+    fitness->minAllowed(1)=fitness->minAllowed(2)=-0.2;
+    fitness->maxAllowed(1)=fitness->maxAllowed(2)= 0.2;
 
     // Shifts
-    fitness.minAllowed(4)=fitness.minAllowed(5)=-maxShift;
-    fitness.maxAllowed(4)=fitness.maxAllowed(5)= maxShift;
+    fitness->minAllowed(4)=fitness->minAllowed(5)=-maxShift;
+    fitness->maxAllowed(4)=fitness->maxAllowed(5)= maxShift;
 }
 
 static pthread_mutex_t localAffineMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -253,11 +303,12 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, int maxShift, int maxIterDE,
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
     double thresholdAffine, bool localAffine, bool isMirror,
-    bool checkRotation)
+    bool checkRotation, int pyramidLevel)
 {
     try {
-        AffineFitness fitness;
-        setupAffineFitness(fitness, I1, I2, maxShift, isMirror, checkRotation);
+        AffineFitness *fitness=new AffineFitness;
+        setupAffineFitness(fitness, I1, I2, maxShift, isMirror, checkRotation,
+            pyramidLevel);
 
         // Return result
         double cost;
@@ -272,19 +323,20 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
                 int n=0;
                 do
                 {
-                    AffineSolver solver(&fitness,6,6*10);
-                    solver.Setup(MULTIDIM_ARRAY(fitness.minAllowed),
-                                 MULTIDIM_ARRAY(fitness.maxAllowed),
-		                 stBest2Bin, 0.5, 0.8);
-                    solver.Solve(maxIterDE);
-                    energy=solver.Energy();
+                    AffineSolver *solver=new AffineSolver(fitness,6,6*10);
+                    solver->Setup(MULTIDIM_ARRAY(fitness->minAllowed),
+                                  MULTIDIM_ARRAY(fitness->maxAllowed),
+		                  stBest2Bin, 0.5, 0.8);
+                    solver->Solve(maxIterDE);
+                    energy=solver->Energy();
                     if (n==0 || bestEnergy>energy)
                     {
                         FOR_ALL_ELEMENTS_IN_MATRIX1D(A)
-                           A(i)=solver.Solution()[i];
+                           A(i)=solver->Solution()[i];
                         bestEnergy=energy;
                     }
                     n++;
+                    delete solver;
                 } while ((n<3 || (n>=3 && n<10 && bestEnergy>1-thresholdAffine))
                          && bestEnergy>=0.07);
             }
@@ -315,8 +367,8 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
             steps.initConstant(1);
             int iter;
             powellOptimizer(A, 1, XSIZE(A),
-                AffineFitness::Powell_affine_fitness_individual, &fitness, 0.005,
-                cost, iter, steps, false);
+                AffineFitness::Powell_affine_fitness_individual, fitness, 0.005,
+                cost, iter, steps, true);
 
             // Separate solution
             A12.initIdentity(3);
@@ -328,14 +380,15 @@ double computeAffineTransformation(const Matrix2D<double> &I1,
 
         if (show)
         {
-    	    fitness.showMode=true;
+    	    fitness->showMode=true;
             Matrix1D<double> p(6);
             p(0)=A12(0,0); p(1)=A12(0,1); p(4)=A12(0,2);
             p(2)=A12(1,0); p(3)=A12(1,1); p(5)=A12(1,2);
-            cost = fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
-    	    fitness.showMode=false;
+            cost = fitness->affine_fitness_individual(MULTIDIM_ARRAY(p));
+    	    fitness->showMode=false;
         }
 
+        delete fitness;
         return cost;
     } catch (Xmipp_error XE) {std::cout << XE; exit(1);}
 }
@@ -368,6 +421,7 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    showAffine=checkParameter(argc,argv,"-showAffine");
    thresholdAffine=textToFloat(getParameter(argc,argv,"-thresholdAffine","0.85"));
    identifyOutliers = textToInteger(getParameter(argc, argv, "-identifyOutliers","-1"));
+   pyramidLevel = textToInteger(getParameter(argc, argv, "-pyramid","0"));
    numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
    if (numThreads<1) numThreads = 1;
 }
@@ -394,6 +448,7 @@ void Prog_tomograph_alignment::show() {
              << "Show Affine:        " << showAffine         << std::endl
              << "Threshold Affine:   " << thresholdAffine    << std::endl
              << "Identify outliers:  " << identifyOutliers   << std::endl
+             << "Pyramid level:      " << pyramidLevel       << std::endl
              << "Threads to use:     " << numThreads         << std::endl
    ;
 }
@@ -423,6 +478,7 @@ void Prog_tomograph_alignment::usage() const {
              << "  [-showAffine]                   : Show affine transformations as PPP*\n"
              << "  [-thresholdAffine <th=0.85>]    : Threshold affine\n"
              << "  [-identifyOutliers <z=-1>]      : Z-score to be an outlier\n"
+             << "  [-pyramid <level=0>]            : Multiresolution for affine transformations\n"
              << "  [-thr <num=1>]                  : Parallel processing using \"num\" threads\n"
    ;
 }
@@ -474,7 +530,7 @@ void * threadComputeTransform( void * args )
             cost = computeAffineTransformation(img_i, img_j, maxShift,
                 maxIterDE, Aij, Aji,
                 showAffine, thresholdAffine, localAffine,
-                isMirror,true);
+                isMirror,true, parent->pyramidLevel);
             parent->correlationList[jj]=1-cost;
         
 	    pthread_mutex_lock( &printingMutex );
@@ -491,12 +547,13 @@ void * threadComputeTransform( void * args )
             Matrix2D<double> Aij;
             Aij=affineTransformations[jj_1][jj];
 
-            AffineFitness fitness;
-            setupAffineFitness(fitness, img_i, img_j, maxShift, isMirror, false);
+            AffineFitness *fitness=new AffineFitness();
+            setupAffineFitness(fitness, img_i, img_j, maxShift, isMirror, false,
+                parent->pyramidLevel);
             Matrix1D<double> p(6);
             p(0)=Aij(0,0); p(1)=Aij(0,1); p(4)=Aij(0,2);
             p(2)=Aij(1,0); p(3)=Aij(1,1); p(5)=Aij(1,2);
-            cost = fitness.affine_fitness_individual(MULTIDIM_ARRAY(p));
+            cost = fitness->affine_fitness_individual(MULTIDIM_ARRAY(p));
             parent->correlationList[jj]=1-cost;
         
 	    pthread_mutex_lock( &printingMutex );
@@ -644,7 +701,7 @@ void Prog_tomograph_alignment::produceSideInfo() {
                     double cost = computeAffineTransformation(img_i, img_j,
                         maxShift, maxIterDE, Aij, Aji,
                         showAffine, thresholdAffine, localAffine,
-                        isMirror,true);
+                        isMirror,true, pyramidLevel);
                     if (cost<0)
                     {
                         affineTransformations[i][i+1].clear();
