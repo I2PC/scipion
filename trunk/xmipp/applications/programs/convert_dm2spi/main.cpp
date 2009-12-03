@@ -28,17 +28,15 @@
 #include <data/image.h>
 
 void Usage(char **argv);
-void md2spi(const FileName &, const FileName &, bool);
+void dm2spi(const FileName &, const FileName &, bool);
 
 
-struct image_data {
+struct image_data{
 	 int Xdim, Ydim, header, dataType;
-	 bool isImage;
  };
 
- void endian_swap2(unsigned short& x);
- void endian_swap(unsigned int& x);
- int readTagDM3(FILE *fh_in, bool bigEndian, int depLevel, int index[], image_data* &imData, int &imIndex);
+
+ int readTagDM3(FILE *fh_in, bool bigEndian, int depLevel, int index[], image_data* &imData, int &imCount);
  void FREADTagValue(void *fieldValue, int numberType, int n, FILE* fh_in, bool bigEndian);
  char* sprintfTagValue(void *value, int numberType);
 
@@ -103,7 +101,7 @@ int main(int argc, char *argv[])
                 FileName in_name = SF.NextImg();
                 FileName out_name = in_name.without_extension()+"."+fn_oext;
                 SF_out.insert(out_name);
-                md2spi(in_name, out_name, reverse_endian);
+                dm2spi(in_name, out_name, reverse_endian);
                 progress_bar(i++);
             }
             progress_bar(SF.ImgNo());
@@ -112,7 +110,7 @@ int main(int argc, char *argv[])
 
         /* input/output are single files */
         else if (fn_in!="" && fn_out!="")
-            md2spi(fn_in, fn_out, reverse_endian);
+            dm2spi(fn_in, fn_out, reverse_endian);
     }
     catch (Xmipp_error XE)
     {
@@ -143,20 +141,19 @@ void Usage(char **argv)
         , argv[0]);
 }
 
-void md2spi(const FileName &fn_in,
-		      const FileName &fn_out,
-              bool reverse_endian)
+void dm2spi(const FileName &fn_in,
+		const FileName &fn_out,
+		bool reverse_endian)
 {
 
+	unsigned int  fileVersion, dummy, byteOrder, nrTags;
+	FILE *fh_in, *fh_out;
 
-    unsigned int  fileVersion, dummy, byteOrder, nrtags;
-    FILE *fh_in, *fh_out;
 
+	if ( ( fh_in = fopen(fn_in.c_str(), "r") ) == NULL )
+		REPORT_ERROR(6001, "Cannot open file (md2spi).");
 
-    if ( ( fh_in = fopen(fn_in.c_str(), "r") ) == NULL )
-    	REPORT_ERROR(6001, "Cannot open file (md2spi).");
-
-    /* See
+	/* See
 	/* Header ============================================================== */
 
 	FREAD(&fileVersion,sizeof(int),1,fh_in,1);
@@ -164,107 +161,125 @@ void md2spi(const FileName &fn_in,
 	FREAD(&byteOrder,sizeof(int)  ,1,fh_in,1); //byte order, 0 = big endian (Mac) order,1 = little endian (PC) order
 	bool bigEndian;
 	if(byteOrder)
-	    bigEndian = false;
+		bigEndian = false;
 	else
 		bigEndian = true;
 
 	/* Root tag directory ===================================================== */
 
 	FREAD(&dummy,1,2,fh_in,0); // skip sorted and open
-	FREAD(&nrtags,sizeof(int),1,fh_in,1); //  number of tags in root directory (12h = 18)
+	FREAD(&nrTags,sizeof(int),1,fh_in,1); //  number of tags in root directory (12h = 18)
 
- printf( "fileVersion: %d\n", fileVersion);
- printf( "littleEndian: %d\n", byteOrder);
- printf( "Number of tags: %d\n\n", nrtags);
+	printf( "fileVersion: %d\n", fileVersion);
+	printf( "littleEndian: %d\n", byteOrder);
+	printf( "Number of tags: %d\n\n", nrTags);
 
 
-	/* Reading of the root tags ===================================================== */
+	/* Read of the root tags ===================================================== */
 
-	int depLevel=0, imIndex=0;
+	int depLevel=0, imCount=0, imCountF=0;
 	image_data* imData;
 
-	for (int n=1;n<=nrtags;n++)
-		readTagDM3(fh_in,bigEndian, depLevel, &n, imData, imIndex);
-
-	if (imIndex>2)
-		 REPORT_ERROR(6001, "More than one image in file, this option is not implemented.");
-
-	 for (int n=0;n<imIndex;n++){
+	for (int n=1;n<=nrTags;n++)
+		readTagDM3(fh_in,bigEndian, depLevel, &n, imData, imCount);
 
 
+	/* Select the located images =================================================== */
 
-		 printf("\nDataType = %d; Xdim = %d; Ydim = %d; Header = %d \n",(imData+n)->dataType,(imData+n)->Xdim,(imData+n)->Ydim,(imData+n)->header);
+//	if (imCount>2)
+//		REPORT_ERROR(6001, "More than one image in file, this option is not implemented.");
 
-		 if ((imData+n)->dataType==7){//
+	int imIndex[imCount];
 
+	for (int n=0;n<imCount;n++) {			// Select all images except thumbnails
 
+//		printf("%d		%d		%d		%d \n",(imData+n)->dataType,(imData+n)->Xdim,(imData+n)->Ydim,(imData+n)->header );
+		if ((imData+n)->dataType==7){ // (thumbnail=23 / image=7)
+			imIndex[imCountF] = n;
+			imCountF++;
+		}
+	}
 
-			 if ( ( fh_out = fopen(fn_out.c_str(), "wb") ) == NULL )
-			    	REPORT_ERROR(6001, "Cannot create out file (md2spi).");
+	/* Save the located images =================================================== */
 
+	FileName fn_outF;
 
-	/*
-			 unsigned int  bytesLeft, bufsize = 1024*1024, imbuffer[bufsize],end_header=(4*(imData+n)->Xdim*(imData+n)->Ydim)+(imData+n)->header;
-			 float   * floatBufSize =(4*(imData+n)->Xdim*(imData+n)->Ydim)+(imData+n)->header;
-	*/
-			 #define BUFFSIZE 1024*1024
-			 int * imBuffer;
-			 float * imFloatBuffer;
-			 imBuffer = (int *) malloc (BUFFSIZE * sizeof(int));
-			 imFloatBuffer = (float *) malloc (BUFFSIZE * sizeof(float));
+#define BUFFSIZE 1024*1024
 
-			 fseek(fh_in,(imData+n)->header,SEEK_SET);
-			 std::cout << ftell(fh_in) << "\n\n";
-             unsigned int bytesLeft;
-             unsigned int end_header=(sizeof(int)*(imData+n)->Xdim*(imData+n)->Ydim)+(imData+n)->header;
-			 bytesLeft = end_header - ftell(fh_in);
+	for (int n=0;n<imCountF;n++)
+	{
+		if (imCountF==1)
+			fn_outF = fn_out;
+		else
+			fn_outF.compose(fn_out.without_extension(),n+1,fn_out.get_extension());
 
-			 while (bytesLeft > BUFFSIZE*4){
+		/* Write image to file ==================================*/
 
-				 std::cout << ftell(fh_in) << "\n\n";
+		if ( ( fh_out = fopen(fn_outF.c_str(), "wb") ) == NULL )
+					REPORT_ERROR(6001, "Cannot create out file (md2spi).");
 
-				 FREAD(imBuffer, sizeof(int),BUFFSIZE, fh_in, bigEndian);
-				 for( int l=0 ; l < BUFFSIZE; l++)
-					 imFloatBuffer[l]=(float) imBuffer[l];
-				 FWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, bigEndian);
+		int * imBuffer;
+		float * imFloatBuffer;
+		imBuffer = (int *) malloc (BUFFSIZE * sizeof(int));
+		imFloatBuffer = (float *) malloc (BUFFSIZE * sizeof(float));
 
-				 bytesLeft = end_header - ftell(fh_in);
-
-				 std::cout << ftell(fh_in) << "\n\n";
-
-			 }
-
-			 if (bytesLeft > 0 ){
-
-			 std::cout << ftell(fh_in) << "\n\n";
-			 FREAD(imBuffer, sizeof(int),bytesLeft/sizeof(int), fh_in, bigEndian);
-			 for( int l=0 ; l < bytesLeft/sizeof(int); l++)
-				 imFloatBuffer[l]=(float) imBuffer[l];
-			 FWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/sizeof(int), fh_out, bigEndian);
-
-			 std::cout << ftell(fh_in) << "\n\n";
-
-			 //	ImageXmipp Ix;
-			 //	Image *I = &Ix; // This is a trick for the compiler
-			 //	I->read(fn_in, 0, (imData+n)->Ydim, (imData+n)->Xdim, !bigEndian, I16, (imData+n)->header-1);
-			 //	Ix.write(fn_out);
-			 }
-
-		 }
-	 }
+		fseek(fh_in,(imData+imIndex[n])->header,SEEK_SET);
 
 
+		unsigned int bytesLeft;
+		unsigned int end_header=(sizeof(int)*(imData+imIndex[n])->Xdim*(imData+imIndex[n])->Ydim)+(imData+imIndex[n])->header;
+		bytesLeft = end_header - ftell(fh_in);
+
+//		init_progress_bar(bytesLeft);
+
+		while (bytesLeft > BUFFSIZE*4)
+		{
+			FREAD(imBuffer, sizeof(int),BUFFSIZE, fh_in, bigEndian);
+			for( int l=0 ; l < BUFFSIZE; l++)
+				imFloatBuffer[l]=(float) imBuffer[l];
+			FWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, bigEndian);
+			bytesLeft = end_header - ftell(fh_in);
+
+//			progress_bar(ftell(fh_in)-(imData+imIndex[n])->header);
+		}
+		if (bytesLeft > 0)
+		{
+			FREAD(imBuffer, sizeof(int),bytesLeft/sizeof(int), fh_in, reverse_endian);
+			for( int l=0 ; l < bytesLeft/sizeof(int); l++)
+				imFloatBuffer[l]=(float) imBuffer[l];
+			FWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/sizeof(int), fh_out, false);
+
+//			progress_bar(ftell(fh_in)-(imData+imIndex[n])->header);
+
+			if (fclose(fh_out)!=0)
+				REPORT_ERROR(6001, "Error creating OUT file (md2spi).");
 
 
-// End of file 8 blank bytes
- 
- 
- 
- 
+			/* Write INF file ==================================*/
 
+			fn_outF=fn_outF.add_extension("inf");
+			if ( ( fh_out = fopen(fn_outF.c_str(), "w") ) == NULL )
+								REPORT_ERROR(6001, "Cannot create INF file (md2spi).");
 
+			fprintf(fh_out,"# Bits per sample\n");
+			fprintf(fh_out,"bitspersample= %d\n",sizeof(int)*8);
+			fprintf(fh_out,"# Samples per pixel\n");
+			fprintf(fh_out,"samplesperpixel= 1\n");
+			fprintf(fh_out,"# Image width\n");
+			fprintf(fh_out,"Xdim= %d\n",(imData+imIndex[n])->Xdim);
+			fprintf(fh_out,"# Image length\n");
+			fprintf(fh_out,"Ydim= %d\n",(imData+imIndex[n])->Ydim);
+			fprintf(fh_out,"# offset in bytes (zero by default)\n");
+			fprintf(fh_out,"offset= 0\n");
+			fprintf(fh_out,"# Is a signed or Unsigned int (by default true)\n");
+			fprintf(fh_out,"is_signed = true\n");
 
-;}
+			if (fclose(fh_out)!=0)
+							REPORT_ERROR(6001, "Error creating INF file (md2spi).");
+
+		}
+	}
+}
 
 
 
@@ -273,121 +288,110 @@ int readTagDM3(FILE *fh_in,
 		         int depLevel,
 		         int index[],
 		         image_data * & imData, ////////////////////////////////////////////
-		         int &imIndex)
+		         int &imCount)
 {
 	depLevel++;
 
-	fprintf(stderr,"begin readTagDM3\n ");
-
-
 	/* Header Tag ============================================================== */
 	
-	unsigned char cdtag;
-	unsigned int  idtag;
-	unsigned short int ltname;
-	FREAD(&cdtag,sizeof (unsigned char),1,fh_in,0); // Identification tag: 20 = tag dir,  21 = tag
-	FREAD(&ltname,sizeof(unsigned short int), 1,fh_in,1); // Length of the tag name
-	idtag = int(cdtag);
+	unsigned char cdTag;
+	unsigned int  idTag;
+	unsigned short int ltName;
+	FREAD(&cdTag,sizeof (unsigned char),1,fh_in,false); // Identification tag: 20 = tag dir,  21 = tag
+	FREAD(&ltName,sizeof(unsigned short int), 1,fh_in,true); // Length of the tag name
+	idTag = int(cdTag);
 
-	char * tagname;
-	tagname =  new char[ltname+1];
-	FREAD(tagname,ltname,1,fh_in,0); // Tag name
-	tagname[ltname] = '\0';
-	fprintf(stderr,"tagname=%s, depLevel=%d idtag=%d %c\n ",tagname,depLevel,idtag,cdtag);
+	char * tagName;
+	tagName =  new char[ltName+1];
+	FREAD(tagName,ltName,1,fh_in,false); // Tag name
+	tagName[ltName] = '\0';
 
 	for (int n=1;n<=depLevel;n++)
-		fprintf(stderr,"%d.",index[n-1]);
-	
-	fprintf(stderr,	"1\n");
-	/* Reading tags */
-	if (idtag == 20){ // Tag directory
-		fprintf(stderr,	"2\n");
+		printf("%d.",index[n-1]);
 
+
+	/* Reading tags ===================================================================*/
+	if (idTag == 20)		// Tag directory
+	{
+		printf("- Dir: %s\n",tagName);
 		unsigned char dummy;
-		unsigned int ntags;
+		unsigned int nTags;
 		FREAD(&dummy,sizeof(unsigned char),1,fh_in,false); // 1 = sorted (normally = 1)
 		FREAD(&dummy,sizeof(unsigned char),1,fh_in,false); //  0 = closed, 1 = open (normally = 0)
-		FREAD(&ntags,sizeof(int),1,fh_in,true);             //  number of tags in tag directory
+		FREAD(&nTags,sizeof(int),1,fh_in,true);             //  number of tags in tag directory
 	
-
-		
-		int * newindex;
-		newindex = new int[depLevel+1];
+		int * newIndex;
+		newIndex = new int[depLevel+1];
 		for (int k=0;k<depLevel;k++)
-			newindex[k]=index[k];
+			newIndex[k]=index[k];
 
-		if (strcmp(tagname,"ImageList")==0){ // Number of images
-			imData = new image_data[ntags];
+		if (strcmp(tagName,"ImageList")==0)    // Number of images
+		{
+			imData = new image_data[nTags];
+		}
+		else if (strcmp(tagName,"Dimensions")==0)
+		{
+			newIndex[depLevel] = 1;
+			(imData+imCount)->Ydim = readTagDM3(fh_in, bigEndian, depLevel,newIndex,imData,imCount);
 
-		} else if (strcmp(tagname,"Dimensions")==0){
-			newindex[depLevel] = 1;
-			(imData+imIndex)->Ydim = readTagDM3(fh_in, bigEndian, depLevel,newindex,imData,imIndex);
+			newIndex[depLevel] = 2;
+			(imData+imCount)->Xdim = readTagDM3(fh_in, bigEndian, depLevel,newIndex,imData,imCount);
 
-			newindex[depLevel] = 2;
-			(imData+imIndex)->Xdim = readTagDM3(fh_in, bigEndian, depLevel,newindex,imData,imIndex);
-
-			imIndex++;
+			imCount++;
 
 			return 0;
 		 }
 
 		
-		for (int n=1;n<=ntags;n++){
-			newindex[depLevel] = n;
-			readTagDM3(fh_in, bigEndian, depLevel,newindex,imData,imIndex);
+		for (int n=1;n<=nTags;n++)
+		{
+			newIndex[depLevel] = n;
+			readTagDM3(fh_in, bigEndian, depLevel,newIndex,imData,imCount);
 		}
 
 		return 0;
 	}
-	else if (idtag == 21){ // Tag
-		fprintf(stderr,	"2\n");
+	else if (idTag == 21)    // Tag
+	{
+		printf("- Tag: %s ",tagName);
 
-		fprintf(stderr,"- Tag: %s ",tagname);
+
 		unsigned int nnum;
 		char	buf[4]; // to read %%%% symbols
 
 		FREAD(&buf,1,4,fh_in,false); // To read %%%% symbols
 		FREAD(&nnum,sizeof(unsigned int),1,fh_in,true); // Size of info array
-		fprintf(stderr,	"3 nnum=%d\n",nnum);
+
 		unsigned int * info;
 		info = new unsigned int[nnum];
-		FREAD(info,sizeof(unsigned int),nnum,fh_in,1); // Reading of Info
-		fprintf(stderr,	"4\n");
-	//	for(int n=0;n<nnum;n++)std::cout << info[n] << "  ";
-	//	std::cout << "\n";
-
-
+		FREAD(info,sizeof(unsigned int),nnum,fh_in,true); // Reading of Info
 
 
 		/* Tag classification  =======================================*/
 
-		if (nnum == 1){ // Single entry tag
+		if (nnum == 1)   // Single entry tag
+		{
 			int tagValue=0;
-			fprintf(stderr,	"5 info[0]=%d\n",info[0]);
 
 			FREADTagValue(&tagValue,info[0],1,fh_in,bigEndian);
-			fprintf(stderr, " = %s\n", sprintfTagValue(&tagValue,info[0]));
+			printf(" = %s\n", sprintfTagValue(&tagValue,info[0]));
 
-			if (strcmp(tagname,"DataType")==0){
-				(imData+imIndex)->dataType = tagValue;
+			if (strcmp(tagName,"DataType")==0)
+			{
+				(imData+imCount)->dataType = tagValue;
 			}
 
 			return tagValue;
+		}
+		else if(nnum == 3 && info[0]==20)			// Tag array
+		{ 										  /*nnum = 3
+													info(0) = 20
+													info(1) = number type for all values
+													info(2) = info(nnum) = size of array*/
 
-
-		} else if(nnum == 3 && info[0]==20){ // Tag array
-			/*nnum = 3
-			info(0) = 20
-			info(1) = number type for all values
-			info(2) = info(nnum) = size of array*/
-
-
-
-			if (strcmp(tagname,"Data")==0){ // Locating the image data
-
-				(imData+imIndex)->header = ftell(fh_in);
-
-				printf("\naqui esta la IMAGEN!!\n\n");
+			if (strcmp(tagName,"Data")==0)    // Locating the image data
+			{
+				(imData+imCount)->header = ftell(fh_in);
 			}
 
 				// Jump the array values
@@ -397,8 +401,10 @@ int readTagDM3(FILE *fh_in,
 				else if(info[1] == 10 ) k = 1;
 
 	//			printf("Position before array = %d \n ", ftell(fh_in));
-				printf("(Array size = %d) \n", info[nnum-1]*k);
+//				printf("(Array size = %d) \n", info[nnum-1]*k);
+
 				fseek( fh_in, ftell(fh_in)+(info[nnum-1])*k , SEEK_SET );
+
 	//			printf("Position = %d \n ", ftell(fh_in));
 	//		}else{
 	//			int arrayValue[info[2]];
@@ -410,109 +416,124 @@ int readTagDM3(FILE *fh_in,
 
 				return 0;
 		
-		} else if (info[0]==20 && info[1] == 15){ // Tag Group array
-			/*nnum = size of array
-			info(0) = 20 (array)
-			info(1) = 15 (group)
-			info(2) = 0 (always 0)
-			info(3) = number of values in group
-			info(2*i+3) = number type for value i
-			info(nnum) = size of info array*/
+		}
+		else if (info[0]==20 && info[1] == 15)    // Tag Group array
+		{
+													/*nnum = size of array
+													info(0) = 20 (array)
+													info(1) = 15 (group)
+													info(2) = 0 (always 0)
+													info(3) = number of values in group
+													info(2*i+3) = number type for value i
+													info(nnum) = size of info array*/
 
-			printf(" = (");
-			for (int n=1;n<=info[3];n++){
-						int fieldValue=0;
-						FREADTagValue(&fieldValue,info[3+2*n],1,fh_in,bigEndian);
-						printf( "%s", sprintfTagValue(&fieldValue,info[3+2*n]));
-						if(n<info[3]) printf(","); else printf(")\n");
-	//
-	//					printf("Length fieldname %d = %d   -   ",n,info[2+2*n]);
-	//					printf("Field %d value  = %d\n",n,fieldValue);
+//			printf(" = (");
+
+			int nBytes=0, k, fieldValue;
+
+
+			for (int n=1;n<=info[3];n++)
+			{
+				fieldValue=0;
+
+				FREADTagValue(&fieldValue,info[3+2*n],1,fh_in,bigEndian);
+
+				if(info[3+2*n] == 2 || info[3+2*n] == 4) k = 2;
+				else if(info[3+2*n] == 3 || info[3+2*n] == 5) k = 4;
+				else if(info[3+2*n] == 10 ) k = 1;
+				nBytes+=k;
+//				printf( "%s", sprintfTagValue(&fieldValue,info[3+2*n]));
+//				if(n<info[3]) printf(","); else printf(")\n");
 			}
 
 			// Jump the array values
-			printf("Reading of array values\n");
+
+//			printf("Reading of array values\n");
 	//		printf("Position = %d \n ", ftell(fh_in));
-			fseek( fh_in, ftell(fh_in)+(info[nnum-1]-1)*6 , SEEK_SET );
-	//		printf("Position = %d \n ", ftell(fh_in));
 
-
-			return 0;
-		} else if (info[0] == 15){ // Tag Group  (struct)
-			/* info[1] = length group name (always =0)
-			   info[2] = number of entries in group */
-
-			printf(" = [");
-					for (int n=1;n<=info[2];n++){
-								int fieldValue=0;
-								FREADTagValue(&fieldValue,info[2+2*n],1,fh_in,bigEndian);
-								printf( "%s", sprintfTagValue(&fieldValue,info[2+2*n]));
-								if(n<info[2]) printf(","); else printf("]\n");
-			//
-			//					printf("Length fieldname %d = %d   -   ",n,info[2+2*n]);
-			//					printf("Field %d value  = %d\n",n,fieldValue);
-					}
-
-		
-	//		std::cout << "\n\n";
+			fseek( fh_in, ftell(fh_in)+(info[nnum-1]-1)*nBytes , SEEK_SET );
 			return 0;
 		}
-		
-	}
-	fprintf(stderr,	"3\n");
+		else if (info[0] == 15)    // Tag Group  (struct)
+		{
+									/* info[1] = length group name (always =0)
+									   info[2] = number of entries in group */
+			/*nnum = size of info array
+			info(1) = 0fh
+			info(3) = number of values in group
+			info(2*i+3) = number type for value i
+			Other info entries are always zero*/
 
+			printf(" = [");
+
+			for (int n=1;n<=info[2];n++)
+			{
+				int fieldValue=0;
+				FREADTagValue(&fieldValue,info[2+2*n],1,fh_in,bigEndian);
+
+				printf( "%s", sprintfTagValue(&fieldValue,info[2+2*n]));
+				if(n<info[2]) printf(","); else printf("]\n");
+			}
+//					printf("Position = %d \n ", ftell(fh_in));
+
+			return 0;
+		}
+	}
 }
 
 
-
-
-
-
-//  06h =  6  f4*           (float)
-//  07h =  7  f8*           (double)
-//  08h =  8  i1            (boolean)
-//  09h =  9  a1            (char)
-//  0ah = 10  i1
-
-
-void FREADTagValue(void *fieldValue, int numberType, int n, FILE* fh_in, bool bigEndian)
+void FREADTagValue(void *fieldValue,
+					  int numberType,
+					  int n, FILE* fh_in,
+					  bool bigEndian)
 {
 
-	if (numberType==2){										// (02h =  2  i2* signed    (short)
-		short* tempValue; tempValue = (short*)fieldValue;
-		//	FREAD(tempValue,sizeof(short),n,fh_in,bigEndian);
-		memset(fieldValue,0,sizeof(fieldValue));
-		FREAD(fieldValue,sizeof(short),n,fh_in,bigEndian);
-	} else if (numberType==3){								  // 03h =  3  i4* signed    (long)
-		int* tempValue; tempValue = (int*)fieldValue;
-		FREAD(tempValue,sizeof(int),n,fh_in,bigEndian);
-	} else if (numberType==4){								//  04h =  4  i2* unsigned  (ushort) or unicode string
-		short* tempValue; tempValue = (short*) fieldValue;
-		FREAD(tempValue,sizeof(short),n,fh_in,bigEndian);
-	} else if (numberType==5){								//  04h =  4  i2* unsigned  (ushort) or unicode string
-		unsigned int* tempValue; tempValue = (unsigned int*) fieldValue;
-		FREAD(tempValue,sizeof(unsigned int),n,fh_in,bigEndian);
-	} else if (numberType==6){
-		float* tempValue; tempValue = (float *) fieldValue; // memset(tempValue,0,sizeof(tempValue));
-		FREAD(tempValue,sizeof(float),n,fh_in,bigEndian);
-		//	printf("tempvalue = %4.2e",*tempValue);
-		//	fieldValue = &tempValue;
-	} else if (numberType==7){
-		double* tempValue;tempValue = (double*) fieldValue; // memset(tempValue,0,sizeof(tempValue));
-		FREAD(tempValue,sizeof(double),n,fh_in,bigEndian);
-		//	printf("tempvalue = %4.2e",*tempValue);
-		//	fieldValue = &tempValue;
-	} else if (numberType==8){
-		bool* tempValue;tempValue = (bool*) fieldValue; // memset(tempValue,0,sizeof(tempValue));
-		FREAD(tempValue,sizeof(bool),n,fh_in,bigEndian);
-		//	printf("tempvalue = %d",*tempValue);
-		//	fieldValue = &tempValue;
-	} else if (numberType==10){
-		char* tempValue; tempValue = (char*) fieldValue; // memset(tempValue,0,sizeof(tempValue));
-		FREAD(tempValue,sizeof(char),n,fh_in,bigEndian);
-		//	printf("tempvalue = %s ",*tempValue);
-		//	fieldValue = &tempValue;
+	switch(numberType)
+	{
+		case 2:						// (02h =  2  i2* signed    (short)
+			short* shortValue;
+			shortValue = (short*)fieldValue;
+			FREAD(shortValue,sizeof(short),n,fh_in,bigEndian);
+			break;
+		case 3:								  // 03h =  3  i4* signed    (long)
+	//		int* intValue[n];
+	//		*intValue = (int*) malloc(sizeof(intValue));
+	//		FREAD(intValue,sizeof(int),n,fh_in,bigEndian);
+	//		fieldValue = (int*)intValue;
+			FREAD(fieldValue,sizeof(int),n,fh_in,bigEndian);
+			break;
+		case 4:							//  04h =  4  i2* unsigned  (ushort) or unicode string
+			unsigned short* uShortValue;
+			uShortValue = (unsigned short*)fieldValue;
+			FREAD(shortValue,sizeof(unsigned short),n,fh_in,bigEndian);
+			break;
+		case 5:								//  05h =  5  i4* unsigned  (ulong)
+			unsigned int* uIntValue;
+			uIntValue = (unsigned int*)fieldValue;
+			FREAD(uIntValue,sizeof(unsigned int),n,fh_in,bigEndian);
+			break;
+		case 6:								//  06h =  6  f4*           (float)
+			float* floatValue;
+			floatValue = (float *) fieldValue;
+			FREAD(floatValue,sizeof(float),n,fh_in,bigEndian);
+			break;
+		case 7:								//  07h =  7  f8*           (double)
+			double* doubValue;
+			doubValue = (double*) fieldValue;
+			FREAD(doubValue,sizeof(double),n,fh_in,bigEndian);
+			break;
+		case 8:								//  08h =  8  i1            (boolean)
+			bool* boolValue;
+			boolValue = (bool*) fieldValue;
+			FREAD(boolValue,sizeof(bool),n,fh_in,bigEndian);
+			break;
+		case 10:								//  0ah = 10  i1
+			char* cValue;
+			cValue = (char*) fieldValue;
+			FREAD(cValue,sizeof(char),n,fh_in,bigEndian);
+			break;
 	}
+
 }
 
 
@@ -566,25 +587,6 @@ out[len]='\0';
 return out;
 
 }
-
-		
-
-
-
-void endian_swap2(unsigned short& x)
-{
-	x = (x>>8) | 
-			(x<<8);
-}
-
- void endian_swap(unsigned int& x)
-{
-	x = (x>>24) | 
-			((x<<8) & 0x00FF0000) |
-			((x>>8) & 0x0000FF00) |
-			(x<<24);
-}
-
 
 
 
