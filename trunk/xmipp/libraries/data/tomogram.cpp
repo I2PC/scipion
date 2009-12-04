@@ -228,7 +228,7 @@ void Tomogram::close_tomogram()
 
 /* Get piece --------------------------------------------------------------- */
 void Tomogram::get_piece(Matrix1D<int> &r0, Matrix1D<int> &length,
-                         Matrix3D<double> &piece)
+                         Matrix3D<double> &piece) const
 {
     Matrix1D<int> rF = r0 + length - 1;
     std::cout << r0.transpose() << std::endl;
@@ -261,4 +261,26 @@ void Tomogram::set_piece(Matrix1D<int> &r0, Matrix1D<int> &length,
         for (ip = YY(r0), i = 0; i < YSIZE(piece); i++, ip++)
             for (jp = XX(r0), j = 0; j < XSIZE(piece); j++, jp++)
                 set_val(jp, ip, kp, DIRECT_VOL_ELEM(piece, k, i, j));
+}
+
+/* Compute stats ----------------------------------------------------------- */
+void Tomogram::computeStats(float &minval, float &maxval, float &avg, float &stddev)
+    const
+{
+    minval=(*this)(0,0,0);
+    maxval=minval;
+    double sum=0, sum2=0;
+    for (int k=0; k<Zdim; k++)
+        for (int i=0; i<Ydim; i++)
+            for (int j=0; j<Xdim; j++)
+            {
+                float f = (*this)(j,i,k);
+                minval=XMIPP_MIN(minval,f);
+                maxval=XMIPP_MAX(maxval,f);
+                sum+=f;
+                sum2+=f*f;
+            }
+    avg=sum/(Zdim*Ydim*Xdim);
+    sum2/=(Zdim*Ydim*Xdim);
+    stddev=sqrt(sum2-avg*avg);
 }

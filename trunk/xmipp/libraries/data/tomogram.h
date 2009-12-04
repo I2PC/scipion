@@ -229,7 +229,7 @@ public:
      */
     void get_piece(Matrix1D< int >& r0,
                    Matrix1D< int >& length,
-                   Matrix3D< double >& piece);
+                   Matrix3D< double >& piece) const;
 
     /** Set piece in tomogram.
      *
@@ -240,6 +240,10 @@ public:
     void set_piece(Matrix1D< int >& r0,
                    Matrix1D< int >& length,
                    Matrix3D< double >& piece);
+    
+    /** Compute statistics */
+    void computeStats(float &minval, float &maxval, float &avg, float &stddev)
+        const;
 };
 
 #endif
