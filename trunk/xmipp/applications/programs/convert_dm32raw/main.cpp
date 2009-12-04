@@ -28,7 +28,7 @@
 #include <data/image.h>
 
 void Usage(char **argv);
-void dm2spi(const FileName &, const FileName &, bool);
+void dm32raw(const FileName &, const FileName &, bool);
 
 
 struct image_data{
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     bool           reverse_endian;
 
     if( IsBigEndian())
-    	EXIT_ERROR(1, "md2spi: This program only works for little endian boxes");
+    	EXIT_ERROR(1, "dm32raw: This program only works for little endian boxes");
 
     /* Parameters ============================================================== */
     try
@@ -61,20 +61,20 @@ int main(int argc, char *argv[])
         {
             fn_in = getParameter(argc, argv, "-i");
             if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
-                EXIT_ERROR(1, "md2spi: -i option is not compatible with -sel or -oext");
+                EXIT_ERROR(1, "dm32raw: -i option is not compatible with -sel or -oext");
         }
         if (checkParameter(argc, argv, "-o"))
         {
             fn_out = getParameter(argc, argv, "-o");
             if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
-                EXIT_ERROR(1, "md2spi: -o option is not compatible with -sel or -oext");
+                EXIT_ERROR(1, "dm32raw: -o option is not compatible with -sel or -oext");
         }
         if (checkParameter(argc, argv, "-sel"))
         {
             fn_sel = getParameter(argc, argv, "-sel");
-            fn_oext  = getParameter(argc, argv, "-oext", "xmp");
+            fn_oext  = getParameter(argc, argv, "-oext", "raw");
             if (checkParameter(argc, argv, "-i") || checkParameter(argc, argv, "-o"))
-                EXIT_ERROR(1, "md2spi: -sel option is not compatible with -i or -o");
+                EXIT_ERROR(1, "dm32raw: -sel option is not compatible with -i or -o");
         }
 
         reverse_endian = checkParameter(argc, argv, "-reverse_endian");
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
         if (fn_sel!="")
         {
             SelFile SF(fn_sel), SF_out;
-            std::cerr << "Converting from MD to SPI ...\n";
+            std::cerr << "Converting from DM3 to RAW ...\n";
             init_progress_bar(SF.ImgNo());
             int i=0;
             while (!SF.eof())
@@ -101,16 +101,22 @@ int main(int argc, char *argv[])
                 FileName in_name = SF.NextImg();
                 FileName out_name = in_name.without_extension()+"."+fn_oext;
                 SF_out.insert(out_name);
-                dm2spi(in_name, out_name, reverse_endian);
+                dm32raw(in_name, out_name, reverse_endian);
                 progress_bar(i++);
             }
             progress_bar(SF.ImgNo());
-            SF_out.write(fn_sel.without_extension()+"_spider.sel");
+            SF_out.write(fn_sel.without_extension()+"_raw.sel");
         }
 
         /* input/output are single files */
-        else if (fn_in!="" && fn_out!="")
-            dm2spi(fn_in, fn_out, reverse_endian);
+        else if (fn_in!="")
+        {
+        	if (fn_out=="")
+        		dm32raw(fn_in, fn_in.without_extension()+".raw", reverse_endian);
+        	else
+        		dm32raw(fn_in, fn_out, reverse_endian);
+        }
+
     }
     catch (Xmipp_error XE)
     {
@@ -127,7 +133,7 @@ void Usage(char **argv)
 {
     printf(
         "Usage: %s [Purpose and Parameters]"
-        "\nPurpose: Convert from MD to Spider format "
+        "\nPurpose: Convert from Digital Micrograph 3 (dm3) images to raw format"
         "\nParameter Values: (note space before value)"
         "\nESPECIFIC PARAMETERS FOR SINGLE-FILE CONVERSION"
         "\n    -i    file_in        input md file"
@@ -141,7 +147,7 @@ void Usage(char **argv)
         , argv[0]);
 }
 
-void dm2spi(const FileName &fn_in,
+void dm32raw(const FileName &fn_in,
 		const FileName &fn_out,
 		bool reverse_endian)
 {
@@ -151,13 +157,13 @@ void dm2spi(const FileName &fn_in,
 
 
 	if ( ( fh_in = fopen(fn_in.c_str(), "r") ) == NULL )
-		REPORT_ERROR(6001, "Cannot open file (md2spi).");
+		REPORT_ERROR(6001, "Cannot open file (dm32raw).");
 
 	/* See
 	/* Header ============================================================== */
 
 	FREAD(&fileVersion,sizeof(int),1,fh_in,1);
-	FREAD(&dummy,sizeof(int) ,1,fh_in,1); //file length - 16 = size of root tag directory
+	FREAD(&dummy,sizeof(int) ,1,fh_in,1); //file length
 	FREAD(&byteOrder,sizeof(int)  ,1,fh_in,1); //byte order, 0 = big endian (Mac) order,1 = little endian (PC) order
 	bool bigEndian;
 	if(byteOrder)
@@ -166,7 +172,7 @@ void dm2spi(const FileName &fn_in,
 		bigEndian = true;
 
 	if ( fileVersion!=3 )
-		REPORT_ERROR(6001, "Input file is not Digital Micrograph 3 format (md2spi).");
+		REPORT_ERROR(6001, "Input file is not Digital Micrograph 3 format (dm32raw).");
 
 	/* Root tag directory ===================================================== */
 
@@ -218,7 +224,7 @@ void dm2spi(const FileName &fn_in,
 		/* Write image to file ==================================*/
 
 		if ( ( fh_out = fopen(fn_outF.c_str(), "wb") ) == NULL )
-					REPORT_ERROR(6001, "Cannot create output file (md2spi).");
+					REPORT_ERROR(6001, "Cannot create output file (dm32raw).");
 
 		int * imBuffer;
 		float * imFloatBuffer;
@@ -237,26 +243,26 @@ void dm2spi(const FileName &fn_in,
 			FREAD(imBuffer, sizeof(int),BUFFSIZE, fh_in, bigEndian);
 			for( int l=0 ; l < BUFFSIZE; l++)
 				imFloatBuffer[l]=(float) imBuffer[l];
-			FWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, bigEndian);
+			FWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, reverse_endian);
 			bytesLeft = end_header - ftell(fh_in);
 
 		}
 		if (bytesLeft > 0)
 		{
-			FREAD(imBuffer, sizeof(int),bytesLeft/sizeof(int), fh_in, reverse_endian);
+			FREAD(imBuffer, sizeof(int),bytesLeft/sizeof(int), fh_in, bigEndian);
 			for( int l=0 ; l < bytesLeft/sizeof(int); l++)
 				imFloatBuffer[l]=(float) imBuffer[l];
-			FWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/sizeof(int), fh_out, false);
+			FWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/sizeof(int), fh_out, reverse_endian);
 
 			if (fclose(fh_out)!=0)
-				REPORT_ERROR(6001, "Error creating output file (md2spi).");
+				REPORT_ERROR(6001, "Error creating output file (dm32raw).");
 
 
 			/* Write INF file ==================================*/
 
 			fn_outF=fn_outF.add_extension("inf");
 			if ( ( fh_out = fopen(fn_outF.c_str(), "w") ) == NULL )
-								REPORT_ERROR(6001, "Cannot create INF file (md2spi).");
+								REPORT_ERROR(6001, "Cannot create output info file (dm32raw).");
 
 			fprintf(fh_out,"# Bits per sample\n");
 			fprintf(fh_out,"bitspersample= %d\n",sizeof(int)*8);
@@ -272,7 +278,7 @@ void dm2spi(const FileName &fn_in,
 			fprintf(fh_out,"is_signed = true\n");
 
 			if (fclose(fh_out)!=0)
-							REPORT_ERROR(6001, "Error creating INF file (md2spi).");
+							REPORT_ERROR(6001, "Error creating output info file (dm32raw).");
 		}
 	}
 }
@@ -302,13 +308,14 @@ int readTagDM3(FILE *fh_in,
 	tagName[ltName] = '\0';
 
 	for (int n=1;n<=depLevel;n++)
-		printf("%d.",index[n-1]);
+
+//		printf("%d.",index[n-1]);
 
 
 	/* Reading tags ===================================================================*/
 	if (idTag == 20)		// Tag directory
 	{
-		printf("- Dir: %s\n",tagName);
+//		printf("- Dir: %s\n",tagName);
 		unsigned char dummy;
 		unsigned int nTags;
 		FREAD(&dummy,sizeof(unsigned char),1,fh_in,false); // 1 = sorted (normally = 1)
@@ -345,8 +352,7 @@ int readTagDM3(FILE *fh_in,
 	}
 	else if (idTag == 21)    // Tag
 	{
-		printf("- Tag: %s ",tagName);
-
+//		printf("- Tag: %s ",tagName);
 
 		unsigned int nnum;
 		char	buf[4]; // to read %%%% symbols
@@ -366,7 +372,7 @@ int readTagDM3(FILE *fh_in,
 			int tagValue=0;
 
 			FREADTagValue(&tagValue,info[0],1,fh_in,bigEndian);
-			printf(" = %s\n", sprintfTagValue(&tagValue,info[0]));
+//			printf(" = %s\n", sprintfTagValue(&tagValue,info[0]));
 
 			if (strcmp(tagName,"DataType")==0)
 			{
@@ -456,15 +462,15 @@ int readTagDM3(FILE *fh_in,
 			info(2*i+3) = number type for value i
 			Other info entries are always zero*/
 
-			printf(" = [");
+//			printf(" = [");
 
 			for (int n=1;n<=info[2];n++)
 			{
 				int fieldValue=0;
 				FREADTagValue(&fieldValue,info[2+2*n],1,fh_in,bigEndian);
 
-				printf( "%s", sprintfTagValue(&fieldValue,info[2+2*n]));
-				if(n<info[2]) printf(","); else printf("]\n");
+//				printf( "%s", sprintfTagValue(&fieldValue,info[2+2*n]));
+//				if(n<info[2]) printf(","); else printf("]\n");
 			}
 //					printf("Position = %d \n ", ftell(fh_in));
 
@@ -537,47 +543,52 @@ char* sprintfTagValue(void *fieldValue, int numberType)
 	char str[10];
 	int len;
 
-	if (numberType==2){
+	if (numberType==2)
+	{
 		short* tempValue; tempValue = (short*)fieldValue;
 		len = sprintf(str,"%d",*tempValue);
-
-	} else if (numberType==3){
+	}
+	else if (numberType==3)
+	{
 		int* tempValue; tempValue = (int*)fieldValue;
 		len = sprintf(str,"%d",*tempValue);
-		
-	} else if (numberType==4){
+	}
+	else if (numberType==4)
+	{
 		short* tempValue; tempValue = (short*) fieldValue;
 		len = sprintf(str,"%d",*tempValue);
-	
-	} else if (numberType==5){
+	}
+	else if (numberType==5)
+	{
 		unsigned int* tempValue; tempValue = (unsigned int*) fieldValue;
 		len = sprintf(str,"%u",*tempValue);
-
-	} else if (numberType==6){
+	}
+	else if (numberType==6)
+	{
 		float* tempValue; tempValue = (float *) fieldValue;
 		len = sprintf(str,"%4.3e",*tempValue);
-
-	} else if (numberType==7){
+	}
+	else if (numberType==7)
+	{
 		double* tempValue;tempValue = (double*) fieldValue;
 		len = sprintf(str,"%4.3e",*tempValue);
-
-	} else if (numberType==8){
+	}
+	else if (numberType==8)
+	{
 		bool* tempValue;tempValue = (bool*) fieldValue;
 		len = sprintf(str,"%d",*tempValue);
-
-	} else if (numberType==10){
+	}
+	else if (numberType==10)
+	{
 		char* tempValue; tempValue = (char*) fieldValue; ;
 		len = sprintf(str,"%s",*tempValue);
-	}	
+	}
 
+	char out[len+1];
 
-char out[len+1];
-
-for (int k=0;k<len;k++) out[k]=str[k];
-out[len]='\0';
-
-return out;
-
+	for (int k=0;k<len;k++) out[k]=str[k];
+	out[len]='\0';
+	return out;
 }
 
 
