@@ -101,12 +101,18 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 // Compute the normalized Polar Fourier transform --------------------------
 void normalizedPolarFourierTransform(const Matrix2D<double> &in,
     Polar< std::complex<double> > &out, bool flag,
-    int first_ring, int last_ring, Polar_fftw_plans *&plans)
+    int first_ring, int last_ring, Polar_fftw_plans *&plans,
+    int BsplineOrder)
 {
-    Matrix2D<double> Maux;
-    in.produceSplineCoefficients(Maux,3);
     Polar<double> polarIn;
-    polarIn.getPolarFromCartesianBSpline(Maux,first_ring,last_ring);
+    if (BsplineOrder==1)
+        polarIn.getPolarFromCartesianBSpline(in,first_ring,last_ring);
+    else
+    {
+        Matrix2D<double> Maux;
+        in.produceSplineCoefficients(Maux,3);
+        polarIn.getPolarFromCartesianBSpline(Maux,first_ring,last_ring);
+    }
     double mean = polarIn.computeSum(true);
     double stddev = polarIn.computeSum2(true);
     stddev = sqrt(stddev - mean * mean);

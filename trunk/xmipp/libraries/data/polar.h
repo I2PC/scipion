@@ -684,7 +684,7 @@ public:
      *
      */
     void getPolarFromCartesianBSpline(const Matrix2D<T> &M1, 
-				     int first_ring, int last_ring, 
+				     int first_ring, int last_ring, int BsplineOrder=3,
 				     double xoff = 0., double yoff = 0.,
 				     double oversample1 = 1., int mode1 = FULL_CIRCLES)
     {
@@ -742,7 +742,10 @@ public:
                     yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
 
 		// Perform the convolution interpolation
-		Mring(iphi) = (T) M1.interpolatedElementBSpline(xp,yp,3);
+                if (BsplineOrder==1)
+                    Mring(iphi) = (T) M1.interpolatedElement(xp,yp);
+                else
+                    Mring(iphi) = (T) M1.interpolatedElementBSpline(xp,yp,BsplineOrder);
 	    }
 	    rings.push_back(Mring);
 	    ring_radius.push_back(radius);
@@ -854,7 +857,8 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
     If plans is NULL, they are computed and returned. */
 void normalizedPolarFourierTransform(const Matrix2D<double> &in,
     Polar< std::complex<double> > &out, bool flag,
-    int first_ring, int last_ring, Polar_fftw_plans *&plans);
+    int first_ring, int last_ring, Polar_fftw_plans *&plans,
+    int BsplineOrder=3);
 
 /** Best rotation between two normalized polar Fourier transforms. */
 double best_rotation(const Polar< std::complex<double> > &I1,
