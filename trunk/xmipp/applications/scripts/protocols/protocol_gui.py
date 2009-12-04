@@ -399,9 +399,6 @@ class automated_gui_class:
         # Add all the variables in the script header
         self.widgetexpertlist=[]
         for var in self.vfields:
-            print var
-            print self.variables[var]
-            print len(self.variables[var])
             if len(self.variables[var])>=8:
                 print self.variables[var][7]
             if len(self.variables[var])>=9 and self.variables[var][7]:
