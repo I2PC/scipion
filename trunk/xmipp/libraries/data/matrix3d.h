@@ -44,12 +44,12 @@
 template<typename T> class Matrix3D;
 
 template<typename T>
-void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
+void applyGeometry(Matrix3D<T>& V2, const Matrix2D< double > &A,
     const Matrix3D<T>& V1, bool inv, bool wrap,
     T outside = 0);
 
 template<typename T>
-void applyGeometryBSpline(Matrix3D<T>& V2, Matrix2D< double > A,
+void applyGeometryBSpline(Matrix3D<T>& V2, const Matrix2D< double > &A,
     const Matrix3D<T>& V1, int Splinedegree, bool inv, bool wrap,
     T outside = 0);
 #endif
@@ -1304,13 +1304,13 @@ public:
      * applyGeometry(V2, A, V1);
      * @endcode
      */
-    friend void applyGeometry<>(Matrix3D<T>& V2, Matrix2D< double > A,
+    friend void applyGeometry<>(Matrix3D<T>& V2, const Matrix2D< double > &A,
                              const Matrix3D<T>& V1, bool inv, bool wrap, T outside);
 
     /** Apply geom with B-spline interpolation.
      * @ingroup VolumesGeometrical
      */
-    friend void applyGeometryBSpline<>(Matrix3D<T>& V2, Matrix2D< double > A,
+    friend void applyGeometryBSpline<>(Matrix3D<T>& V2, const Matrix2D< double > &A,
                                      const Matrix3D<T>& V1, int Splinedegree,
                                      bool inv, bool wrap, T outside);
 
@@ -1319,7 +1319,7 @@ public:
      *
      * As apply geometry, but the result is kept in this object
      */
-    void selfApplyGeometry(Matrix2D< double > A, bool inv, bool wrap, T outside = 0)
+    void selfApplyGeometry(const Matrix2D< double > &A, bool inv, bool wrap, T outside = 0)
     {
         Matrix3D<T> aux;
         applyGeometry(aux, A, *this, inv, wrap, outside);
@@ -1329,7 +1329,7 @@ public:
     /** Self apply geom Bspline.
      * @ingroup VolumesGeometrical
      */
-    void selfApplyGeometryBSpline(Matrix2D< double > A, int SplineDegree,
+    void selfApplyGeometryBSpline(const Matrix2D< double > &A, int SplineDegree,
                                  bool inv, bool wrap, T outside = 0)
     {
         Matrix3D<T> aux;
@@ -1953,7 +1953,7 @@ std::ostream& operator<<(std::ostream& ostrm,
 
 //#define DEBUG
 template<typename T>
-void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
+void applyGeometry(Matrix3D<T>& V2, const Matrix2D< double > &A,
     const Matrix3D<T>& V1, bool inv, bool wrap, T outside)
 {
     int m1, n1, o1, m2, n2, o2;
@@ -1980,8 +1980,14 @@ void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
         return;
     }
 
+    Matrix2D<double> Ainv;
+    const Matrix2D<double> * Aptr=&A;
     if (!inv)
-        A = A.inv();
+    {
+        Ainv = A.inv();
+        Aptr=&Ainv;
+    }
+    const Matrix2D<double> &Aref=*Aptr;
 
     if (XSIZE(V2) == 0)
         V2.resize(V1);
@@ -2036,12 +2042,12 @@ void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
             // Calculate this position in the input image according to the
             // geometrical transformation they are related by
             // coords_output(=x,y) = A * coords_input (=xp,yp)
-            xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + z * dMij(A, 0, 2)
-                 + dMij(A, 0, 3);
-            yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + z * dMij(A, 1, 2)
-                 + dMij(A, 1, 3);
-            zp = x * dMij(A, 2, 0) + y * dMij(A, 2, 1) + z * dMij(A, 2, 2)
-                 + dMij(A, 2, 3);
+            xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + z * dMij(Aref, 0, 2)
+                 + dMij(Aref, 0, 3);
+            yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + z * dMij(Aref, 1, 2)
+                 + dMij(Aref, 1, 3);
+            zp = x * dMij(Aref, 2, 0) + y * dMij(Aref, 2, 1) + z * dMij(Aref, 2, 2)
+                 + dMij(Aref, 2, 3);
 
             for (int j = 0; j < V2.xdim; j++)
             {
@@ -2200,9 +2206,9 @@ void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
 
 
                 // Compute new point inside input image
-                xp += dMij(A, 0, 0);
-                yp += dMij(A, 1, 0);
-                zp += dMij(A, 2, 0);
+                xp += dMij(Aref, 0, 0);
+                yp += dMij(Aref, 1, 0);
+                zp += dMij(Aref, 2, 0);
             }
         }
 }
@@ -2210,7 +2216,7 @@ void applyGeometry(Matrix3D<T>& V2, Matrix2D< double > A,
 
 //#define DEBUG
 template<typename T>
-void applyGeometryBSpline(Matrix3D<T>& V2, Matrix2D< double > A,
+void applyGeometryBSpline(Matrix3D<T>& V2, const Matrix2D< double > &A,
     const Matrix3D<T>& V1, int Splinedegree, bool inv, bool wrap, T outside)
 {
     int m1, n1, o1, m2, n2, o2;
@@ -2233,8 +2239,14 @@ void applyGeometryBSpline(Matrix3D<T>& V2, Matrix2D< double > A,
         return;
     }
 
+    Matrix2D<double> Ainv;
+    const Matrix2D<double> * Aptr=&A;
     if (!inv)
-        A = A.inv();
+    {
+        Ainv = A.inv();
+        Aptr=&Ainv;
+    }
+    const Matrix2D<double> &Aref=*Aptr;
 
     if (XSIZE(V2) == 0)
         V2.resize(V1);
@@ -2295,12 +2307,12 @@ void applyGeometryBSpline(Matrix3D<T>& V2, Matrix2D< double > A,
             // Calculate this position in the input image according to the
             // geometrical transformation they are related by
             // coords_output(=x,y) = A * coords_input (=xp,yp)
-            xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + z * dMij(A, 0, 2)
-                 + dMij(A, 0, 3);
-            yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + z * dMij(A, 1, 2)
-                 + dMij(A, 1, 3);
-            zp = x * dMij(A, 2, 0) + y * dMij(A, 2, 1) + z * dMij(A, 2, 2)
-                 + dMij(A, 2, 3);
+            xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + z * dMij(Aref, 0, 2)
+                 + dMij(Aref, 0, 3);
+            yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + z * dMij(Aref, 1, 2)
+                 + dMij(Aref, 1, 3);
+            zp = x * dMij(Aref, 2, 0) + y * dMij(Aref, 2, 1) + z * dMij(Aref, 2, 2)
+                 + dMij(Aref, 2, 3);
 
             for (int j = 0; j < V2.xdim; j++)
             {
@@ -2362,9 +2374,9 @@ void applyGeometryBSpline(Matrix3D<T>& V2, Matrix2D< double > A,
                     dVkij(V2, k, i, j) = outside;
 
                 // Compute new point inside input image
-                xp += dMij(A, 0, 0);
-                yp += dMij(A, 1, 0);
-                zp += dMij(A, 2, 0);
+                xp += dMij(Aref, 0, 0);
+                yp += dMij(Aref, 1, 0);
+                zp += dMij(Aref, 2, 0);
             }
         }
 }

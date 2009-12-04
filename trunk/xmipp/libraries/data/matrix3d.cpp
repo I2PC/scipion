@@ -65,7 +65,7 @@ std::complex<double> Matrix3D< std::complex<double> >::interpolatedElement(
 // Apply geom --------------------------------------------------------------
 template <>
 void applyGeometryBSpline(Matrix3D< std::complex<double> > &M2,
-                        Matrix2D<double> A, const Matrix3D< std::complex<double> > &M1,
+                        const Matrix2D<double> &A, const Matrix3D< std::complex<double> > &M1,
                         int Splinedegree, bool inv, bool wrap, std::complex<double> outside)
 {
     REPORT_ERROR(1, "applyGeometryBSpline: Not yet implemented for complex matrices\n");
