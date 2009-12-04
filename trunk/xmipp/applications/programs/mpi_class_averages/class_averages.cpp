@@ -128,7 +128,7 @@ int VQProjection::receiveMPI(int s_rank)
     MPI_Recv( rotationalCorr.data, size, MPI_DOUBLE, s_rank, 0, MPI_COMM_WORLD, NULL );
 
     // local_transformer depends on rotationalCorr
-    normalizedPolarFourierTransform(P,polarFourierP,false,XSIZE(P)/5,XSIZE(P)/2,plans);
+    normalizedPolarFourierTransform(P,polarFourierP,false,XSIZE(P)/5,XSIZE(P)/2,plans,1);
     local_transformer.setReal(rotationalCorr);
 
     // List of images assigned
@@ -253,7 +253,7 @@ void VQProjection::computeTransforms()
 
     // Compute the polar Fourier transform of the full image
     normalizedPolarFourierTransform(P,polarFourierP,false,
-        XSIZE(P)/5,XSIZE(P)/2,plans);
+        XSIZE(P)/5,XSIZE(P)/2,plans,1);
     rotationalCorr.resize(2*polarFourierP.getSampleNoOuterRing()-1);
     local_transformer.setReal(rotationalCorr);
 }
@@ -319,7 +319,8 @@ void VQProjection::fitBasic(Matrix2D<double> &I,
 		true,
                 XSIZE(P)/5,
 		XSIZE(P)/2,
-                plans);
+                plans,
+                1);
         
         double bestRot = best_rotation(polarFourierP,polarFourierI,
             local_transformer);
@@ -334,7 +335,8 @@ void VQProjection::fitBasic(Matrix2D<double> &I,
 		true,
                 XSIZE(P)/5,
 		XSIZE(P)/2,
-                plans);
+                plans,
+                1);
         bestRot = best_rotation(polarFourierP,polarFourierI,
             local_transformer);
 	R=rotation2DMatrix(-bestRot);
