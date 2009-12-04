@@ -88,7 +88,7 @@ void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
 // Special case for complex numbers
 template <>
 void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
-                        Matrix2D<double> A, const Matrix2D< std::complex<double> > &M1,
+                        const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
                         int Splinedegree, bool inv, bool wrap, std::complex<double> outside)
 {
     Matrix2D<double> re, im, rotre, rotim;

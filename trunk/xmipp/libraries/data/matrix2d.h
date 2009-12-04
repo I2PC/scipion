@@ -76,7 +76,7 @@ void svbksb(Matrix2D< double >& u,
 
 template<typename T>
 void applyGeometry(Matrix2D<T>& m2,
-                Matrix2D< double > A,
+                const Matrix2D< double > &A,
                 const Matrix2D<T>& m1,
                 bool inv,
                 bool wrap,
@@ -84,7 +84,7 @@ void applyGeometry(Matrix2D<T>& m2,
 
 template<typename T>
 void applyGeometryBSpline(Matrix2D<T>& m2,
-                        Matrix2D< double > A,
+                        const Matrix2D< double > &A,
                         const Matrix2D<T>& m1,
                         int Splinedegree,
                         bool inv,
@@ -381,6 +381,26 @@ int bestPrecision(float F, int _width);
         dMij(Ainv, 1, 0) = -dMij(A, 1, 0); \
         dMij(Ainv, 1, 1) =  dMij(A, 0, 0); \
         M2x2_BY_CT(Ainv, Ainv, spduptmp0); }
+
+/** Inverse of a matrix (3x3)
+ * @ingroup MatricesArithmetic
+ *
+ * Input and output matrix cannot be the same one. The output is supposed to be
+ * already resized.
+ */
+#define M3x3_INV(Ainv, A) { \
+        dMij(Ainv, 0, 0) =   dMij(A, 2, 2)*dMij(A, 1, 1)-dMij(A, 2, 1)*dMij(A, 1, 2); \
+        dMij(Ainv, 0, 1) = -(dMij(A, 2, 2)*dMij(A, 0, 1)-dMij(A, 2, 1)*dMij(A, 0, 2)); \
+        dMij(Ainv, 0, 2) =   dMij(A, 1, 2)*dMij(A, 0, 1)-dMij(A, 1, 1)*dMij(A, 0, 2); \
+        dMij(Ainv, 1, 0) = -(dMij(A, 2, 2)*dMij(A, 1, 0)-dMij(A, 2, 0)*dMij(A, 1, 2)); \
+        dMij(Ainv, 1, 1) =   dMij(A, 2, 2)*dMij(A, 0, 0)-dMij(A, 2, 0)*dMij(A, 0, 2); \
+        dMij(Ainv, 1, 2) = -(dMij(A, 1, 2)*dMij(A, 0, 0)-dMij(A, 1, 0)*dMij(A, 0, 2)); \
+        dMij(Ainv, 2, 0) =   dMij(A, 2, 1)*dMij(A, 1, 0)-dMij(A, 2, 0)*dMij(A, 1, 1); \
+        dMij(Ainv, 2, 1) = -(dMij(A, 2, 1)*dMij(A, 0, 0)-dMij(A, 2, 0)*dMij(A, 0, 1)); \
+        dMij(Ainv, 2, 2) =   dMij(A, 1, 1)*dMij(A, 0, 0)-dMij(A, 1, 0)*dMij(A, 0, 1); \
+        spduptmp0 = 1.0 / (dMij(A, 0, 0)*dMij(Ainv, 0, 0)+dMij(A, 1, 0)*dMij(Ainv, 0, 1)+\
+            dMij(A, 2, 0)*dMij(Ainv, 0, 2)); \
+        M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
 //@}
 
 /// Template class for Xmipp matrices
@@ -1936,14 +1956,14 @@ public:
      * applyGeometry(m2, A, m1);
      * @endcode
      */
-    friend void applyGeometry<>(Matrix2D<T>& m2, Matrix2D< double > A,
+    friend void applyGeometry<>(Matrix2D<T>& m2, const Matrix2D< double > &A,
                              const Matrix2D<T>& m1, bool inv, bool wrap,
                              T outside);
 
     /** Apply geom with B-spline interpolation
      * @ingroup MatricesGeometrical
      */
-    friend void applyGeometryBSpline<>(Matrix2D<T>& m2, Matrix2D< double > A,
+    friend void applyGeometryBSpline<>(Matrix2D<T>& m2, const Matrix2D< double > &A,
                                      const Matrix2D<T>& m1, int Splinedegree,
                                      bool inv, bool wrap, T outside);
 
@@ -1952,7 +1972,7 @@ public:
      *
      * Same as the previous one, but the result is kept in this object
      */
-    void selfApplyGeometry(Matrix2D< double > A, bool inv, bool wrap,
+    void selfApplyGeometry(const Matrix2D< double > &A, bool inv, bool wrap,
                          T outside = (T) 0)
     {
         Matrix2D<T> aux;
@@ -1964,7 +1984,7 @@ public:
     /** Self apply geom with Bspline interpolation
      *@ingroup MatricesGeometrical
      */
-    void selfApplyGeometryBSpline(Matrix2D< double > A, int SplineDegree,
+    void selfApplyGeometryBSpline(const Matrix2D< double > &A, int SplineDegree,
                                  bool inv, bool wrap, T outside = (T) 0)
     {
         Matrix2D<T> aux;
@@ -3016,7 +3036,7 @@ void svdcmp(const Matrix2D< T >& a,
 // TODO Document
 //#define DEBUG_APPLYGEO
 template<typename T>
-void applyGeometry(Matrix2D<T>& M2, Matrix2D< double > A, const Matrix2D<T>& M1, bool inv,
+void applyGeometry(Matrix2D<T>& M2, const Matrix2D< double > &A, const Matrix2D<T>& M1, bool inv,
                 bool wrap, T outside)
 {
     int m1, n1, m2, n2;
@@ -3040,8 +3060,16 @@ void applyGeometry(Matrix2D<T>& M2, Matrix2D< double > A, const Matrix2D<T>& M1,
         return;
     }
 
+    Matrix2D<double> Ainv;
+    const Matrix2D<double> * Aptr=&A;
     if (!inv)
-        A = A.inv();
+    {
+        Ainv.resize(3,3);
+        SPEED_UP_temps;
+        M3x3_INV(Ainv, A);
+        Aptr=&Ainv;
+    }
+    const Matrix2D<double> &Aref=*Aptr;
 
     // For scalings the output matrix is resized outside to the final
     // size instead of being resized inside the routine with the
@@ -3076,7 +3104,7 @@ void applyGeometry(Matrix2D<T>& M2, Matrix2D< double > A, const Matrix2D<T>& M1,
     // at the output pixel
     //#define DEBUG_APPLYGEO
 #ifdef DEBUG_APPLYGEO
-    std::cout << "A\n" << A << std::endl
+    std::cout << "A\n" << Aref << std::endl
               << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
               << "(cen_xp,cen_yp)=(" << cen_xp << "," << cen_yp << ")\n"
               << "(min_xp,min_yp)=(" << minxp  << "," << minyp  << ")\n"
@@ -3098,8 +3126,8 @@ void applyGeometry(Matrix2D<T>& M2, Matrix2D< double > A, const Matrix2D<T>& M1,
         // geometrical transformation
         // they are related by
         // coords_output(=x,y) = A * coords_input (=xp,yp)
-        xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + dMij(A, 0, 2);
-        yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + dMij(A, 1, 2);
+        xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + dMij(Aref, 0, 2);
+        yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + dMij(Aref, 1, 2);
 
         for (int j = 0; j < XSIZE(M2); j++)
         {
@@ -3200,8 +3228,8 @@ void applyGeometry(Matrix2D<T>& M2, Matrix2D< double > A, const Matrix2D<T>& M1,
             }
 
             // Compute new point inside input image
-            xp += dMij(A, 0, 0);
-            yp += dMij(A, 1, 0);
+            xp += dMij(Aref, 0, 0);
+            yp += dMij(Aref, 1, 0);
         }
     }
 }
@@ -3211,12 +3239,12 @@ void applyGeometry(Matrix2D<T>& M2, Matrix2D< double > A, const Matrix2D<T>& M1,
 // Special case for complex numbers
 template <>
 void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
-    Matrix2D<double> A, const Matrix2D< std::complex<double> > &M1,
+    const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
     int Splinedegree, bool inv, bool wrap, std::complex<double> outside);
 
 //#define DEBUG
 template<typename T>
-void applyGeometryBSpline(Matrix2D<T>& M2, Matrix2D< double > A,
+void applyGeometryBSpline(Matrix2D<T>& M2, const Matrix2D< double > &A,
     const Matrix2D<T>& M1, int Splinedegree, bool inv, bool wrap, T outside)
 {
     int m1, n1, m2, n2;
@@ -3239,8 +3267,16 @@ void applyGeometryBSpline(Matrix2D<T>& M2, Matrix2D< double > A,
         return;
     }
 
+    Matrix2D<double> Ainv;
+    const Matrix2D<double> * Aptr=&A;
     if (!inv)
-        A = A.inv();
+    {
+        Ainv.resize(3,3);
+        SPEED_UP_temps;
+        M3x3_INV(Ainv, A);
+        Aptr=&Ainv;
+    }
+    const Matrix2D<double> &Aref=*Aptr;
 
     // For scalings the output matrix is resized outside to the final
     // size instead of being resized inside the routine with the
@@ -3284,8 +3320,8 @@ void applyGeometryBSpline(Matrix2D<T>& M2, Matrix2D< double > A,
         // geometrical transformation
         // they are related by
         // coords_output(=x,y) = A * coords_input (=xp,yp)
-        xp = x * dMij(A, 0, 0) + y * dMij(A, 0, 1) + dMij(A, 0, 2);
-        yp = x * dMij(A, 1, 0) + y * dMij(A, 1, 1) + dMij(A, 1, 2);
+        xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + dMij(Aref, 0, 2);
+        yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + dMij(Aref, 1, 2);
 
         for (int j = 0; j < XSIZE(M2); j++)
         {
@@ -3342,8 +3378,8 @@ void applyGeometryBSpline(Matrix2D<T>& M2, Matrix2D< double > A,
             }
 
             // Compute new point inside input image
-            xp += dMij(A, 0, 0);
-            yp += dMij(A, 1, 0);
+            xp += dMij(Aref, 0, 0);
+            yp += dMij(Aref, 1, 0);
         }
     }
 }
