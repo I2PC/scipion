@@ -962,7 +962,7 @@ public:
      *
      * Bilinear interpolation. (x,y) are in logical coordinates.
      */
-    T interpolatedElement(double x, double y, T outside_value = (T) 0) const
+    inline T interpolatedElement(double x, double y, T outside_value = (T) 0) const
     {
         int x0 = FLOOR(x);
         double fx = x - x0;
@@ -998,7 +998,7 @@ public:
      * 0.5,3);
      * @endcode
      */
-    T interpolatedElementBSpline(double x, double y, int SplineDegree = 3) const
+    inline T interpolatedElementBSpline(double x, double y, int SplineDegree = 3) const
     {
         int SplineDegree_1 = SplineDegree - 1;
 
