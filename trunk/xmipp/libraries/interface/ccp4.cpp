@@ -118,7 +118,7 @@ void CCP4::write(const FileName &fn_out, SelFile &SF, bool reversed,
         I.read(SF.NextImg());
         tiltAngles(k)=I.tilt();
         double minvali, maxvali, avgi, stddevi;
-        I().computeStats(minvali, maxvali, avgi, stddevi);
+        I().computeStats(avgi, stddevi, minvali, maxvali);
 
         if (k==0)
         {
@@ -139,13 +139,12 @@ void CCP4::write(const FileName &fn_out, SelFile &SF, bool reversed,
 
     // Now write
 
-    FILE *fp;
-
     //fill mrc header and reverse if needed
     fill_header3D(Xdim, Ydim, Zdim, minval, maxval, avg,
         reversed, x_length, y_length, z_length, true);
 
     //open file
+    FILE *fp;
     if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
         REPORT_ERROR(1503, "CCP4::write: File " + fn_out + " cannot be saved");
 
@@ -164,7 +163,10 @@ void CCP4::write(const FileName &fn_out, SelFile &SF, bool reversed,
         ImageXmipp I;
         I.read(SF.NextImg());
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
-            FWRITE(&(I(i, j)), sizeof(float), 1, fp, reversed);
+        {
+            float f=(float)I(i,j);
+            FWRITE(&f, sizeof(float), 1, fp, reversed);
+        }
     }
     fclose(fp);
 }
