@@ -71,48 +71,35 @@ int main(int argc, char *argv[])
         Usage();
         exit(1);
     }
-    ImageXmipp   I;
-    VolumeXmipp  V;
 
     try
     {
         if (Is_ImageXmipp(fn_in))
         {//is this a spider image?
+            ImageXmipp I;
             I.read(fn_in);
             mrcimage.write(fn_out, I, reverse_endian, x_length, y_length, z_length);
         }
         else if (Is_VolumeXmipp(fn_in))
         {//is this a spider volume?
-            V.read(fn_in);
-            mrcimage.write(fn_out, V, reverse_endian, x_length, y_length, z_length);
+            Tomogram tomogram;
+            tomogram.open_tomogram(fn_in,reverse_endian);
+            mrcimage.write(fn_out, tomogram, reverse_endian,
+                x_length, y_length, z_length);
         }
         else if (fn_in.get_extension()=="sel")
         {// is this a selfile?
             SelFile SF;
             SF.read(fn_in);
-            int Zdim, Ydim, Xdim;
-            SF.ImgSize(Ydim,Xdim);
-            Zdim=SF.ImgNo();
-            V().initZeros(Zdim,Ydim,Xdim);
-            int k=0;
-            Matrix1D<double> tiltAngles;
-            tiltAngles.resize(Zdim);
-            while (!SF.eof())
-            {
-                I.read(SF.NextImg());
-                V().setSlice(k,I());
-                tiltAngles(k)=I.tilt();
-                k++;
-            }
-            mrcimage.write(fn_out, V, reverse_endian, Xdim, Ydim, Zdim, true);
-            if (fn_tilt!="")
-                tiltAngles.write(fn_tilt);
+            mrcimage.write(fn_out, SF, reverse_endian,
+                x_length, y_length, z_length, fn_tilt);
         }
         else
         {
             mrcimage.read_header_from_file(fn_in, reverse_endian);
             if (mrcimage.my_mrc_header.nz > 1)
             {
+                VolumeXmipp V;
                 mrcimage.read(fn_in, V, reverse_endian);
                 if (fn_tilt!="")
                 {
@@ -144,6 +131,7 @@ int main(int argc, char *argv[])
             }
             else
             {
+                ImageXmipp I;
                 mrcimage.read(fn_in, I, reverse_endian);
                 I.write(fn_out);
             }
