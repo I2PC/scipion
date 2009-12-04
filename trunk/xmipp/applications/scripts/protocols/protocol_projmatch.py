@@ -975,7 +975,8 @@ class projection_matching_class:
                                     self._SymmetryGroup,
                                     self._ReconstructedVolume[_iteration_number],
                                     self._DoComputeResolution,
-                                    self._DoSplitReferenceImages
+                                    self._DoSplitReferenceImages,
+				    self._PaddingFactor
                                     )
           else:
              self._mylog.info("Skipped Reconstruction") 
@@ -1000,7 +1001,8 @@ class projection_matching_class:
                                                   self._ReconstructedVolume[_iteration_number],
                                                   self._ARTLambda,
                                                   self._OuterRadius,
-						  self._DoSplitReferenceImages
+						  self._DoSplitReferenceImages,
+						  self._PaddingFactor
                                                   )
           else:
 	     filter_frequence=0
@@ -1288,14 +1290,7 @@ def execute_projection_matching(_mylog,
       else:
          outputname   = ProjMatchRootName
          inputdocfile = _InputDocFileName
-      #THERE ARE PROBLEM WIT_H THREADAS AND projection matching
-      #I DISABLE IT TEMPORALY
-      _MyNumberOfMpiProcesses *= _MyNumberOfThreads
-      _MyNumberOfThreads = 1
-      #####################
-      ####################
-      ##################
-      ####################
+
       print '*********************************************************************'
       print '* Perform projection matching'
       parameters= ' -i '              + inputdocfile + \
@@ -1456,7 +1451,8 @@ def execute_reconstruction(_mylog,
                            _SymmetryGroup,
                            _ReconstructedandfilteredVolume,
                            _DoComputeResolution,
-                           _DoSplitReferenceImages):
+                           _DoSplitReferenceImages,
+			   _PaddingFactor):
 
    _mylog.debug("execute_reconstruction")
 
@@ -1499,7 +1495,9 @@ def execute_reconstruction(_mylog,
                  ' -sym '  + _SymmetryGroup + \
                  ' -thr '  + str(_MyNumberOfThreads) + \
                  ' -weight ' + \
-                 ' -max_resolution ' + str(_FourierMaxFrequencyOfInterest)
+                 ' -max_resolution ' + str(_FourierMaxFrequencyOfInterest) +\
+		 ' -pad_proj ' + str(_PaddingFactor) +\
+		 ' -pad_vol ' + str(_PaddingFactor)
       if (_DoParallel):
          parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
       if (_DoComputeResolution and not _DoSplitReferenceImages):
@@ -1553,7 +1551,8 @@ def  execute_resolution(_mylog,
                         _ReconstructedVolume,
                         _ARTLambda,
                         _OuterRadius,
-			_DoSplitReferenceImages):
+			_DoSplitReferenceImages,
+			_PaddingFactor):
 
     import os,shutil,math
 
@@ -1601,7 +1600,9 @@ def  execute_resolution(_mylog,
                      ' -sym '  + _SymmetryGroup + \
 		     ' -thr '  + str(_MyNumberOfThreads) + \
                      ' -weight ' + \
-                     ' -max_resolution ' + str(_FourierMaxFrequencyOfInterest)
+                     ' -max_resolution ' + str(_FourierMaxFrequencyOfInterest) +\
+		     ' -pad_proj ' + str(_PaddingFactor) +\
+		     ' -pad_vol ' + str(_PaddingFactor)
           if (_DoParallel):
              parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
           if ( not _DoSplitReferenceImages):
