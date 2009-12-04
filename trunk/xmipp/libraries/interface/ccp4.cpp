@@ -28,7 +28,6 @@
 #include "ccp4.h"
 
 #include <data/args.h>
-#include <data/image.h>
 
 #include <fstream>
 #include <iomanip>
@@ -66,33 +65,107 @@ void CCP4::write(const FileName &fn_out, const ImageXmipp &I, bool reversed,
     fclose(fp);
 }
 
-void CCP4::write(const FileName &fn_out, const VolumeXmipp &V, bool reversed,
+void CCP4::write(const FileName &fn_out, const Tomogram &V, bool reversed,
     double x_length, double y_length, double z_length, bool isStack)
 {
     FILE *fp;
 
     //fill mrc header and reverse if needed
-    fill_header_from_xmippvolume(V, reversed, x_length, y_length, z_length,
-        isStack);
+    int Xdim, Ydim, Zdim;
+    V.size(Xdim, Ydim, Zdim);
+    float minval, maxval, avg, stddev;
+    V.computeStats(minval, maxval, avg, stddev);
+    fill_header3D(Xdim, Ydim, Zdim, minval, maxval, avg,
+        reversed, x_length, y_length, z_length, isStack);
 
     //open file
     if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
         REPORT_ERROR(1503, "CCP4::write: File " + fn_out + " cannot be saved");
 
     //write header. note that FWRITE can not be used because
-    //floats and longs are invoved
+    //floats and longs are involved
     if (fwrite(&my_mrc_header, sizeof(char), SIZEOF_MRC_HEADER, fp) !=
         SIZEOF_MRC_HEADER)
         REPORT_ERROR(1503, "CCP4::write: Header of file " + fn_out + " cannot be saved");
 
     //data,
-    float f; //only float are suported
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
-    {
-        f = (float) VOL_ELEM(V(), k, i, j);
-        FWRITE(&f, sizeof(float), 1, fp, reversed);
-    }
+    for (int k=0; k<Zdim; k++)
+        for (int i=0; i<Ydim; i++)
+            for (int j=0; j<Xdim; j++)
+            {
+                float f = V(j,i,k);
+                FWRITE(&f, sizeof(float), 1, fp, reversed);
+            }
 
+    fclose(fp);
+}
+
+void CCP4::write(const FileName &fn_out, SelFile &SF, bool reversed,
+    double x_length, double y_length, double z_length,
+    const FileName &fn_tilt)
+{
+    // Get angles and stack min, max, avg
+    int Zdim, Ydim, Xdim;
+    SF.ImgSize(Ydim,Xdim);
+    Zdim=SF.ImgNo();
+    int k=0;
+    Matrix1D<double> tiltAngles;
+    tiltAngles.resize(Zdim);
+    double minval, maxval, avg;
+    while (!SF.eof())
+    {
+        ImageXmipp I;
+        I.read(SF.NextImg());
+        tiltAngles(k)=I.tilt();
+        double minvali, maxvali, avgi, stddevi;
+        I().computeStats(minvali, maxvali, avgi, stddevi);
+
+        if (k==0)
+        {
+            minval=minvali;
+            maxval=maxvali;
+            avg=avgi;
+        }
+        minval=XMIPP_MIN(minval,minvali);
+        maxval=XMIPP_MAX(maxval,maxvali);
+        avg+=avgi;
+
+        k++;
+    }
+    avg/=Zdim;
+
+    if (fn_tilt!="")
+        tiltAngles.write(fn_tilt);
+
+    // Now write
+
+    FILE *fp;
+
+    //fill mrc header and reverse if needed
+    fill_header3D(Xdim, Ydim, Zdim, minval, maxval, avg,
+        reversed, x_length, y_length, z_length, true);
+
+    //open file
+    if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
+        REPORT_ERROR(1503, "CCP4::write: File " + fn_out + " cannot be saved");
+
+    //write header. note that FWRITE can not be used because
+    //floats and longs are involved
+    if (fwrite(&my_mrc_header, sizeof(char), SIZEOF_MRC_HEADER, fp) !=
+        SIZEOF_MRC_HEADER)
+        REPORT_ERROR(1503, "CCP4::write: Header of file " + fn_out + " cannot be saved");
+
+    // Write the data
+    SF.go_first_ACTIVE();
+
+    //data,
+    while (!SF.eof())
+    {
+        ImageXmipp I;
+        I.read(SF.NextImg());
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
+            FWRITE(&(I(i, j)), sizeof(float), 1, fp, reversed);
+    }
     fclose(fp);
 }
 
@@ -261,7 +334,7 @@ void CCP4::clear()
 
 /* ------------------------------------------------------------------------- */
 /** Fill mrc header from xmipp image. */
-void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed,
+void CCP4::fill_header_from_xmippimage(const ImageXmipp &I, bool reversed,
     double x_length, double y_length, double z_length)
 {
     clear();
@@ -362,8 +435,9 @@ void CCP4::fill_header_from_xmippimage(ImageXmipp I, bool reversed,
 }
 
 /* ------------------------------------------------------------------------- */
-/** Fill mrc header from xmipp image. */
-void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
+/** Fill mrc header from tomogram. */
+void CCP4::fill_header3D(int Xdim, int Ydim, int Zdim,
+    float minval, float maxval, float avg, bool reversed,
     double x_length, double y_length, double z_length, bool isStack)
 {
     clear();
@@ -371,11 +445,12 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
     (my_mrc_header.map)[1] = 'A';
     (my_mrc_header.map)[2] = 'P';
     (my_mrc_header.map)[3] = ' ';
+
     if (reversed == false)
     {
-        my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = V().colNumber();
-        my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = V().rowNumber();
-        my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = V().sliceNumber();
+        my_mrc_header.xlen = my_mrc_header.nx = my_mrc_header.mx = Xdim;
+        my_mrc_header.ylen = my_mrc_header.ny = my_mrc_header.my = Ydim;
+        my_mrc_header.zlen = my_mrc_header.nz = my_mrc_header.mz = Zdim;
         if (isStack) my_mrc_header.mz = 1;
         if (x_length != 0) my_mrc_header.xlen = x_length;
         if (y_length != 0) my_mrc_header.ylen = y_length;
@@ -398,9 +473,9 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
             my_mrc_header.nystart = -1 * int(my_mrc_header.ny / 2);
             my_mrc_header.nzstart = -1 * int(my_mrc_header.nz / 2);
         }
-        my_mrc_header.amin  = (float)(V().computeMin());
-        my_mrc_header.amax  = (float)(V().computeMax());
-        my_mrc_header.amean = (float)(V().computeAvg());
+        my_mrc_header.amin  = minval;
+        my_mrc_header.amax  = maxval;
+        my_mrc_header.amean = avg;
         if (IsLittleEndian())
         {
             (my_mrc_header.machst)[0]  = 0x4 << 4;
@@ -418,15 +493,15 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
     }
     else
     {
-        my_mrc_header.nx    = V().colNumber();
+        my_mrc_header.nx    = Xdim;
         little22bigendian(my_mrc_header.nx);
         my_mrc_header.xlen = my_mrc_header.mx = my_mrc_header.nx;
 
-        my_mrc_header.ny    = V().rowNumber();
+        my_mrc_header.ny    = Ydim;
         little22bigendian(my_mrc_header.ny);
         my_mrc_header.ylen = my_mrc_header.my = my_mrc_header.ny;
 
-        my_mrc_header.nz = V().sliceNumber();
+        my_mrc_header.nz = Zdim;
         little22bigendian(my_mrc_header.nz);
         my_mrc_header.zlen = my_mrc_header.mz = my_mrc_header.nz;
 
@@ -470,11 +545,11 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
         little22bigendian(my_mrc_header.beta);
         little22bigendian(my_mrc_header.gamma);
 
-        my_mrc_header.amin = V().computeMin();
+        my_mrc_header.amin = minval;
         little22bigendian(my_mrc_header.amin);
-        my_mrc_header.amax = V().computeMax();
+        my_mrc_header.amax = maxval;
         little22bigendian(my_mrc_header.amax);
-        my_mrc_header.amean = V().computeAvg();
+        my_mrc_header.amean = avg;
         little22bigendian(my_mrc_header.amean);
 
         if (IsLittleEndian())
@@ -494,7 +569,6 @@ void CCP4::fill_header_from_xmippvolume(VolumeXmipp V, bool reversed,
 
     }
 }
-
 
 /* ------------------------------------------------------------------------- */
 /** Fill mrc header from mrc file. */

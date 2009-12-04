@@ -35,7 +35,9 @@
 #include <data/matrix3d.h>
 #include <data/geometry.h>
 #include <data/image.h>
+#include <data/selfile.h>
 #include <data/volume.h>
+#include <data/tomogram.h>
 
 #include <sys/stat.h>
 
@@ -169,9 +171,14 @@ public:
                double x_length = 0., double y_length = 0., double z_length = 0.);
 
     /** write a ccp4 3D file*/
-    void write(const FileName &fn_out, const VolumeXmipp &I, bool reversed = false,
+    void write(const FileName &fn_out, const Tomogram &I, bool reversed = false,
                double x_length = 0., double y_length = 0., double z_length = 0.,
                bool isStack=false);
+
+    /** write a ccp4 stack from a selfile */
+    void write(const FileName &fn_out, SelFile &SF, bool reversed,
+        double x_length, double y_length, double z_length,
+        const FileName &fn_tilt);
 
     /** read  a ccp4 2D file*/
     void read(const FileName &fn_out,  ImageXmipp &I, bool reversed = false);
@@ -183,13 +190,15 @@ public:
     void clear();
 
     /** Fill mrc header from 2D xmipp image. */
-    void fill_header_from_xmippimage(ImageXmipp I, bool reversed = false,
+    void fill_header_from_xmippimage(const ImageXmipp &I, bool reversed = false,
                                      double x_length = 0., double y_length = 0., double z_length = 0.);
 
     /** Fill mrc header from 3D xmipp image. */
-    void fill_header_from_xmippvolume(VolumeXmipp V, bool reversed = false,
-                                      double x_length = 0., double y_length = 0., double z_length = 0.,
-                                      bool isStack=false);
+    void fill_header3D(int Xdim, int Ydim, int Zdim,
+                       float minval, float maxval, float avg,
+                       bool reversed = false, double x_length = 0.,
+                       double y_length = 0., double z_length = 0.,
+                       bool isStack=false);
 
     /** Fill mrc header from mrc file.
         Returns tre is either reversed is true or the native endianess is
