@@ -20,7 +20,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 /****************************************************************************/
@@ -31,7 +31,7 @@
 /****************************************************************************/
 /* Created a wrapper to fit NewXmipp          */
 /* Alberto Pascual, October 2001          */
-/* pascual@cnb.uam.es                */
+/* pascual@cnb.csic.es                */
 /****************************************************************************/
 
 /********************** Include's and macro definitions *********************/
