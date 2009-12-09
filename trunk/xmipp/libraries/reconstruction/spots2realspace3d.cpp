@@ -12,7 +12,7 @@
  * restricted by a compilation copyright.
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  *
  *****************************************************************************/
 

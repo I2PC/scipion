@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Sjors Scheres           scheres@cnb.uam.es (2007)
+ * Authors:    Sjors Scheres           scheres@cnb.csic.es (2007)
  *
  * Unidad de Bioinformatica del Centro Nacional de Biotecnologia , CSIC
  *
@@ -20,7 +20,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "ml_align2d.h"
 //#define DEBUG

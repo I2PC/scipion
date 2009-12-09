@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Carlos Oscar            coss@cnb.uam.es (2006)
+ * Authors:    Carlos Oscar            coss@cnb.csic.es (2006)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -20,7 +20,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #ifndef _PROG_ANGULAR_PREDICT_TOMOGRAPHY
 #define _PROG_ANGULAR_PREDICT_TOMOGRPAHY

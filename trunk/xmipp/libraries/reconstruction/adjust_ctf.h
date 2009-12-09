@@ -1,7 +1,7 @@
 /***************************************************************************
  *
- * Authors:      Javier Angel Velazquez Muriel    javi@cnb.uam.es
- *               Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ * Authors:      Javier Angel Velazquez Muriel    javi@cnb.csic.es
+ *               Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -21,7 +21,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #ifndef _ADJUST_CTF_HH
