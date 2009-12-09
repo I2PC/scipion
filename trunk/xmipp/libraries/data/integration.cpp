@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Javier Rodriguez Falces (jrodriguez@cnb.uam.es)
+ * Authors:     Javier Rodriguez Falces (jrodriguez@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -20,7 +20,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #include "integration.h"

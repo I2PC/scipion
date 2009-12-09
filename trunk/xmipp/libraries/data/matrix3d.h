@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -20,7 +20,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #ifndef MATRIX3D_H
@@ -89,9 +89,9 @@ void applyGeometryBSpline(Matrix3D<T>& V2, const Matrix2D< double > &A,
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX3D(V) \
-    for (int k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
-        for (int i=STARTINGY(V); i<=FINISHINGY(V); i++) \
-            for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
+    for (size_t k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
+        for (size_t i=STARTINGY(V); i<=FINISHINGY(V); i++) \
+            for (size_t j=STARTINGX(V); j<=FINISHINGX(V); j++)
 
 /** For all elements in the array between corners.
  * @ingroup VolumesSizeShape

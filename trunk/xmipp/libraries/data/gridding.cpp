@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors: Sjors H.W. Scheres (scheres@cnb.uam.es)
+ * Authors: Sjors H.W. Scheres (scheres@cnb.csic.es)
  *
  *  This code is strongly based on ideas by Pawel Penczek & Zhengfan
  *  Yang as implemented in SPARX at the University of Texas - Houston 
@@ -27,7 +27,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "gridding.h"
 

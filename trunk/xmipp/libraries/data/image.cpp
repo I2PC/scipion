@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors: Pedro Antonio de Alarc�n (pedro@cnb.uam.es)
+ * Authors: Pedro Antonio de Alarc�n (pedro@cnb.csic.es)
  *          Carlos Oscar S. Sorzano
  *          Alberto Pascual Montano
  *
@@ -26,7 +26,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #include "image.h"
