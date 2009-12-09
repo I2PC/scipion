@@ -44,7 +44,7 @@ LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 # Perform micrograph conversion? 
 DoConversion=True
-# {list}|Tif2Raw|Mrc2Raw|Spi2Raw|Raw2Raw|Ser2Raw| Which conversion to perform?
+# {list}|Tif2Raw|Mrc2Raw|Spi2Raw|Raw2Raw|Ser2Raw|Dm32Raw| Which conversion to perform?
 """ Some TIF formats are not recognized. In that case, save your micrographs 
     as spider, mrc or raw and try to convert those. Note that raw2raw 
     assumes the raw files have an Xmipp-like raw.info file with the 
@@ -326,6 +326,8 @@ class preprocess_A_class:
                     self.perform_raw2raw(fh_mpi)
                 elif (self.ConversionTask=='Ser2Raw'):
                     self.perform_ser2raw(fh_mpi,self.Stddev)
+                elif (self.ConversionTask=='Dm32Raw'):
+                    self.perform_dm32raw(fh_mpi)
                 else:
                     message="Unrecognized ConversionTask: choose from list options"
                     print '*',message
@@ -491,6 +493,16 @@ class preprocess_A_class:
         os.write(fh_mpi,"echo '*********************************************************************';\n")
         os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
         command ='xmipp_convert_tia2raw -i '+self.filename+' -o '+oname + ' -s ' + str(_Stddev)
+
+        os.write(fh_mpi,command +"\n");
+        
+    def perform_dm32raw(self,fh_mpi):
+        import os
+        import launch_job
+        oname=self.shortname+'/'+self.shortname+'.raw'
+        os.write(fh_mpi,"echo '*********************************************************************';\n")
+        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
+        command ='xmipp_convert_dm32raw -i '+self.filename+' -o '+oname ;
 
         os.write(fh_mpi,command +"\n");
         
