@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *              Roberto Marabini (roberto@mipg.upenn.edu)
  *
  *
@@ -22,7 +22,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #include "jdl.h"
