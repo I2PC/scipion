@@ -871,6 +871,20 @@ void Euler_rotate(const Matrix3D< double >& V,
                   double psi,
                   Matrix3D< double >& result);
 
+/** Compute circle around Euler matrix
+ * @ingroup EulerOperations
+ *
+ * Given an input Euler matrix, this function returns a set of Euler
+ * angles such that they sample a circle around the original projection
+ * direction (a sample every angStep). The projection directions in the
+ * circle are separated by angCircle.
+ *
+ * The output is in outputEulerAngles whose structure is
+ * (newrot1,newtilt1,newpsi1,newrot2,newtilt2,newpsi2,...)
+ */
+void computeCircleAroundE(const Matrix2D<double> &E,
+    double angCircle, double angStep, std::vector<double> &outputEulerAngles);
+
 /// @defgroup Intersections Intersections
 /// @ingroup Geometry
 

@@ -912,6 +912,45 @@ Matrix3D<double> Euler_rotate(const Matrix3D<double> &V,
     return aux;
 }
 
+void computeCircleAroundE(const Matrix2D<double> &E,
+    double angCircle, double angStep, std::vector<double> &outputEulerAngles)
+{
+    outputEulerAngles.clear();
+
+    // Get the projection direction and a perpendicular direction
+    Matrix1D<double> projectionDirection, perpendicular;
+    E.getRow(1,perpendicular);
+    E.getRow(2,projectionDirection);
+    Matrix2D<double> newEt;
+    newEt=E.transpose();
+    Matrix2D<double> rotStep=rotation3DMatrix(angCircle,perpendicular);
+    Matrix2D<double> sampling=rotation3DMatrix(angStep,projectionDirection);
+    rotStep.resize(3,3);
+    sampling.resize(3,3);
+    
+    // Now rotate
+    newEt=rotStep*newEt;
+    for (double i=0; i<360; i+=angStep)
+    {
+        newEt=sampling*newEt;
+        
+        // Normalize
+        for (int c=0; c<3; c++)
+        {
+            Matrix1D<double> aux;
+            newEt.getCol(c,aux);
+            aux/=aux.module();
+            newEt.setCol(c,aux);
+        }
+        Matrix2D<double> newE=newEt.transpose();
+        
+        double newrot, newtilt, newpsi;
+        Euler_matrix2angles(newE,newrot,newtilt,newpsi);
+        outputEulerAngles.push_back(newrot);
+        outputEulerAngles.push_back(newtilt);
+        outputEulerAngles.push_back(newpsi);
+    }
+}
 
 /* ######################################################################### */
 /* Intersections                                                             */
