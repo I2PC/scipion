@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -20,7 +20,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #include <reconstruction/micrograph_downsample.h>
@@ -58,13 +58,17 @@ int main(int argc, char **argv)
         prm.create_empty_output_file();
         if (smooth)
         {
+std::cerr << " 1 smooth " << std::endl;
             Micrograph Mp;
             Mp.open_micrograph(prm.fn_downsampled, reversed);
+std::cerr << " 2 smooth " << std::endl;
             byte rgb[256];
             for (int i = 0; i < 256; i++) rgb[i] = i;
             byte *result = SmoothResize((byte *)(prm.M.array8()),
                                         prm.Xdim, prm.Ydim, prm.Xpdim, prm.Ypdim,
                                         rgb, rgb, rgb, rgb, rgb, rgb, 256);
+std::cerr << " 3 smooth " << std::endl;
+
             for (int i = 0; i < prm.Ypdim; i++)
                 for (int j = 0; j < prm.Xpdim; j++)
                     Mp.set_val(j, i, result[i*prm.Xpdim+j]);

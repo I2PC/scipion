@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Javier Rodriguez Fernandez (javrodri@gmail.com)
- *              Carlos Oscar S. Sorzano (coss@cnb.uam.es)
+ *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Universidad San Pablo CEU (Monteprincipe, Madrid)
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -22,7 +22,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #include "module.h"

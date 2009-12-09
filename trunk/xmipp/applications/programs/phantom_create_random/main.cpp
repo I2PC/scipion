@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Carlos Oscar S�nchez Sorzano      coss@cnb.uam.es
+ * Authors:    Carlos Oscar S�nchez Sorzano      coss@cnb.csic.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -20,7 +20,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 //Sun Nov 14 22:07:48 EST 1999: added discrete option (R. Marabini)
 

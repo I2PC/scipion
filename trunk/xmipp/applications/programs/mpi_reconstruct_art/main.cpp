@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Jose Roman Bilbao Castro (jrbcast@cnb.uam.es)
+ * Authors:     Jose Roman Bilbao Castro (jrbcast@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -20,7 +20,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #include <sys/time.h>

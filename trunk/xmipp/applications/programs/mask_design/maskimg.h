@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Alberto Pascual Montano (pascual@cnb.uam.es)
+ * Authors:     Alberto Pascual Montano (pascual@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -12,7 +12,7 @@
  * restricted by a compilation copyright.
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  *
  *****************************************************************************/
 
@@ -1571,7 +1571,7 @@ public:
     virtual bool move(int _cx, int _cy)
     {
         if (list_of_points.size() == 0) return true;
-        std::cout << "Is this ever called? Contact coss@cnb.uam.es\n";
+        std::cout << "Is this ever called? Contact coss@cnb.csic.es\n";
     };
 
     /** Moves the figure to the left one pixel

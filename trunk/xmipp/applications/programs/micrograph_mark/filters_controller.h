@@ -1,7 +1,7 @@
 /***************************************************************************
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.uam.es)
- *              Carlos Manzanares       (cmanzana@cnb.uam.es)
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+ *              Carlos Manzanares       (cmanzana@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -13,7 +13,7 @@
  * restricted by a compilation copyright.
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.uam.es'
+ *  e-mail address 'xmipp@cnb.csic.es'
  *
  *****************************************************************************/
 
