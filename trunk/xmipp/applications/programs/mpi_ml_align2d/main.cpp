@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     Prog_MLalign2D_prm prm;
 
     int c, nn, imgno, opt_refno, iaux;
-    double LL, sumw_allrefs, convv, sumcorr, new_resol;
+    double LL, sumw_allrefs, convv, sumcorr;
     std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
     std::vector<Matrix2D<double > > wsum_Mref;
@@ -143,33 +143,13 @@ int main(int argc, char **argv)
             wsum_sigma_offset = aux;
             for (int refno = 0; refno < prm.n_ref; refno++)
             {
-                if (prm.do_frc)
-                {
-                    MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[2*refno]), MULTIDIM_ARRAY(Maux),
-                                  MULTIDIM_SIZE(wsum_Mref[2*refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    wsum_Mref[2*refno] = Maux;
-                    MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[2*refno+1]), MULTIDIM_ARRAY(Maux),
-                                  MULTIDIM_SIZE(wsum_Mref[2*refno+1]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    wsum_Mref[2*refno+1] = Maux;
-                    MPI_Allreduce(&sumw[2*refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    sumw[2*refno] = aux;
-                    MPI_Allreduce(&sumw[2*refno+1], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    sumw[2*refno+1] = aux;
-                    MPI_Allreduce(&sumwsc2[2*refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    sumwsc2[2*refno] = aux;
-                    MPI_Allreduce(&sumwsc2[2*refno+1], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    sumwsc2[2*refno+1] = aux;
-                }
-                else
-                {
-                    MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
-                                  MULTIDIM_SIZE(wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    wsum_Mref[refno] = Maux;
-                    MPI_Allreduce(&sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    sumw[refno] = aux;
-                    MPI_Allreduce(&sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    sumwsc2[refno] = aux;
-                }
+                MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
+                              MULTIDIM_SIZE(wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                wsum_Mref[refno] = Maux;
+                MPI_Allreduce(&sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                sumw[refno] = aux;
+                MPI_Allreduce(&sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                sumwsc2[refno] = aux;
                 MPI_Allreduce(&sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw_mirror[refno] = aux;
                 MPI_Allreduce(&sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -185,13 +165,6 @@ int main(int argc, char **argv)
 
             // Check convergence
             converged = prm.checkConvergence(conv);
-
-            // Calculate resolution (and update)
-            if (prm.do_frc)
-                new_resol = prm.calculateResolution(iter);
-            if (prm.do_multires)
-                if (prm.changeCurrentResolution(new_resol))
-                    converged = false;
 
             // Write intermediate files 
             if (rank != 0)

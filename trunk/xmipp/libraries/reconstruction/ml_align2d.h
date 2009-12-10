@@ -104,14 +104,6 @@ public:
     /** dimension of the images */
     int oridim, dim, dim2, hdim;
     double ddim2;
-    /** Maximum resolution (dig.freq.) */
-    double ini_resol, max_resol, step_resol, curr_resol, scale_factor;
-    /** Calculate FRC curves for all references? */
-    bool do_frc;
-    /** Perform a multi-resolution optimization?*/
-    bool do_multires;
-    /** For FRC calculation */
-    int nr_random;
     /** Number of steps to sample in-plane rotation in 90 degrees */
     int nr_psi;
     /** Number of operations in "flip-array" (depending on do_mirror) */
@@ -134,17 +126,12 @@ public:
     int verb;
     /** Stopping criterium */
     double eps;
-    /** Write out document file with orientations & models that give
-        max. probability for each image */
-    bool write_docfile;
-    /** Write out selection files according to model assignments */
-    bool write_selfiles;
-    /** SelFile images (working, test and reference set) */
+    /** SelFiles with experimental and reference images */
     SelFile SF, SFr;
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
     std::vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
-    std::vector < ImageXmippT<double> > Iref, Iref_split1, Iref_split2, Iold;
+    std::vector < ImageXmippT<double> > Iref, Iold;
     /** Matrices for calculating PDF of (in-plane) translations */
     Matrix2D<double> P_phi, Mr2;
     /** Fast mode */
@@ -165,14 +152,10 @@ public:
     bool save_mem1, save_mem2, save_mem3;
     /** Vectors to store old phi and theta for all images */
     std::vector<float> imgs_oldphi, imgs_oldtheta;
-    /** Number of subdirectories to keep for unique offsets filenames */
-    int offsets_keepdir;
     /** Flag for using ML3D */
     bool do_ML3D;
     /** Flag for generation of initial models from random subsets */
     bool do_generate_refs;
-    /** Flag whether to write offsets to disc */
-    bool do_write_offsets;
     /** Vector to store optimal origin offsets (if not written to disc) */
     std::vector<std::vector<double> > imgs_offsets;
     /** For initial guess of mindiff */
@@ -218,23 +201,12 @@ public:
     /// Setup lots of stuff
     void produceSideInfo();
 
-    /// Set current resolution (image size)
-    void setCurrentResolution(double &resol);
-
-    /// Rescale image from dim to oridim and vice versa
-    void reScaleImage(Matrix2D<double> &Min, bool down_scale);
-
     /// Generate initial references from random subset averages
     void generateInitialReferences();
 
     /** Read reference images in memory & set offset vectors
         (This produce_side_info is Selfile-dependent!) */
     void produceSideInfo2(int nr_vols = 1);
-
-    /** Read and write optimal translations to disc
-        (not to store them all in memory) */
-    void writeOffsets(FileName fn, std::vector<double> &data);
-    bool readOffsets(FileName fn, std::vector<double> &data);
 
     /// Calculate probability density distribution for in-plane transformations
     void calculatePdfInplane();
@@ -262,7 +234,7 @@ public:
                                   std::vector<double > &pdf_directions);
 
     /// ML-integration over all (or -fast) translations
-    void expectationSingleImage(Matrix2D<double> &Mimg, int irandom,
+    void expectationSingleImage(Matrix2D<double> &Mimg,
                                 std::vector<Matrix2D<std::complex<double> > > &fref,
                                 std::vector<Matrix2D<std::complex<double> > > &wsumimgs,
                                 Matrix2D<int> &Msignificant,
@@ -292,13 +264,6 @@ public:
                       std::vector<double> &sumw_mirror,
                       double &sumfracweight, double &sumw_allrefs, int refs_per_class=1);
 
-
-    /// Calculate FRC for all references
-    double calculateResolution(const int iter);
-
-    /// Update resolution
-    bool changeCurrentResolution(double new_resol);
-    
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);
 

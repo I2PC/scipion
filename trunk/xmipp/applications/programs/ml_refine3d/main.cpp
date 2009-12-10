@@ -59,8 +59,6 @@ int main(int argc, char **argv)
         ML2D_prm.fast_mode = true;
         ML2D_prm.do_mirror = true;
         ML2D_prm.save_mem2 = true;
-        ML2D_prm.write_docfile = true;
-        ML2D_prm.write_selfiles = true;
         ML2D_prm.fn_ref = prm.fn_root + "_lib.sel";
         // Project volume and read lots of stuff into memory
         prm.project_reference_volume(ML2D_prm.SFr);
