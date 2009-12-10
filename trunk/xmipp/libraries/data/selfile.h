@@ -428,6 +428,22 @@ public:
         adjust_to_label(SelLine::ACTIVE);
     }
 
+    /** Get the line i in the file
+     * @ingroup SelFilesPointer
+     *
+     * Get the line i in the file for reading. If it is a comment
+     * the comment text is returned. If it is an image, the image filename.
+     * The first line in the file is number 0.
+     *
+     * @code
+     * std::cout << sel(0) << std::endl;
+     * @endcode
+     */
+    const std::string& operator()(int i)
+    {
+        return text_line[i].text;
+    }
+
     /** Returns the name of the next image with a certain label.
      * @ingroup SelFilesPointer
      *
