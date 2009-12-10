@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Joaquin Oton (joton@cnb.csic.es)
+ * Authors:     Joaquin Oton (joton@cnb.csic.es) 
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
