@@ -82,7 +82,7 @@ convert  *.ser-files to raw.  Data format is described at
         stddev = math.sqrt(stddev);
 	print "\nstd, avg:",stddev,avg
         low  = int(avg - 5 * stddev)
-	high = int(avg + 5 * stddev)
+	high = int(avg + 5 * stddev)#poner la std que se le pasa
 	count = 0
 	while(count < size):
 	    temp = binvalues[count]
