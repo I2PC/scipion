@@ -427,7 +427,7 @@ void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem,int nThre
 
 void getSpectrum(Matrix3D<double> &Min, 
                  Matrix1D<double> &spectrum,
-                 bool only_amplitudes)
+                 int spectrum_type)
 {
     Matrix3D<std::complex<double> > Faux;
     int xsize = XSIZE(Min);
@@ -437,16 +437,15 @@ void getSpectrum(Matrix3D<double> &Min,
     spectrum.initZeros(xsize);
     count.initZeros();
     transformer.FourierTransform(Min, Faux, false);
-
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
     {
         FFT_IDX2DIGFREQ(j,xsize,XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(Faux),YY(f));
         FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
         double R=f.module();
-        if (R>0.5) continue;
+        //if (R>0.5) continue;
         int idx=ROUND(R*xsize);
-        if (only_amplitudes)
+        if (spectrum_type == AMPLITUDE_SPECTRUM)
             spectrum(idx) += abs(dVkij(Faux, k, i, j));
         else
             spectrum(idx) += abs(dVkij(Faux, k, i, j)) * abs(dVkij(Faux, k, i, j));
@@ -461,23 +460,40 @@ void divideBySpectrum(Matrix3D<double> &Min,
                       Matrix1D<double> &spectrum,
                       bool leave_origin_intact)
 {
+    
+    Matrix1D<double> div_spec(spectrum);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(spectrum)
+    {
+        if (ABS(dVi(spectrum,i)) > 0.)
+            dVi(div_spec,i) = 1./dVi(spectrum,i);
+        else
+            dVi(div_spec,i) = 1.;
+    }
+    multiplyBySpectrum(Min,div_spec,leave_origin_intact);
+}
+
+void multiplyBySpectrum(Matrix3D<double> &Min, 
+                        Matrix1D<double> &spectrum,
+                        bool leave_origin_intact)
+{
     Matrix3D<std::complex<double> > Faux;
-    Matrix1D<double> f(3);
+    Matrix1D<double> f(3), lspectrum;
     XmippFftw transformer;
     double dim3 = XSIZE(Min)*YSIZE(Min)*ZSIZE(Min);
 
     transformer.FourierTransform(Min, Faux, false);
+    lspectrum=spectrum;
+    if (leave_origin_intact)
+        lspectrum(0)=1.;
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
     {
         FFT_IDX2DIGFREQ(j,XSIZE(Min), XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(Faux),YY(f));
         FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
         double R=f.module();
-        if (R > 0.5) continue;
-        if (leave_origin_intact && R < XMIPP_EQUAL_ACCURACY) continue;
+        //if (R > 0.5) continue;
         int idx=ROUND(R*XSIZE(Min));
-        if (spectrum(idx) > 0.)
-            dVkij(Faux, k, i, j) /=  spectrum(idx) * dim3;
+        dVkij(Faux, k, i, j) *=  lspectrum(idx) * dim3;
     }
     transformer.inverseFourierTransform();
 
@@ -486,13 +502,34 @@ void divideBySpectrum(Matrix3D<double> &Min,
 
 void whitenSpectrum(Matrix3D<double> &Min, 
                     Matrix3D<double> &Mout, 
-                    bool only_amplitudes,
+                    int spectrum_type,
                     bool leave_origin_intact)
 {
 
     Matrix1D<double> spectrum;
-    getSpectrum(Min,spectrum,only_amplitudes);
+    getSpectrum(Min,spectrum,spectrum_type);
     Mout=Min;
     divideBySpectrum(Mout,spectrum,leave_origin_intact);
+
+}
+
+void adaptSpectrum(Matrix3D<double> &Min, 
+                   Matrix3D<double> &Mout,
+                   const Matrix1D<double> spectrum_ref,
+                   int spectrum_type,
+                   bool leave_origin_intact)
+{
+    
+    Matrix1D<double> spectrum;
+    getSpectrum(Min,spectrum,spectrum_type);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(spectrum)
+    {
+        if (spectrum(i) > 0.)
+            spectrum(i) = spectrum_ref(i)/spectrum(i);
+        else
+            spectrum(i) = 1.;
+    }
+    Mout=Min;
+    multiplyBySpectrum(Mout,spectrum,leave_origin_intact);
 
 }

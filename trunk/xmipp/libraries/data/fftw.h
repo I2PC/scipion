@@ -513,27 +513,46 @@ void frc_dpr(Matrix3D< double > & m1,
 void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem, int nthreads=1);
 
 
-/** Get the radial average of the power spectrum of the map in Fourier space
-    If only_amplitudes==true, the amplitude rather than the power spectrum will be output
+/** Get the amplitude or power spectrum of the map in Fourier space
+    i.e. the radial average of the (squared) amplitudes of all Fourier components
 */
+#define POWER_SPECTRUM 0
+#define AMPLITUDE_SPECTRUM 1
+
 void getSpectrum(Matrix3D<double> &Min, 
                  Matrix1D<double> &spectrum,
-                 bool only_amplitudes=false);
+                 int spectrum_type=AMPLITUDE_SPECTRUM);
 
-/** Divide the input map in Fourier-space by the (radial average) spectrum provided.
+/** Divide the input map in Fourier-space by the spectrum provided.
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
 void divideBySpectrum(Matrix3D<double> &Min, 
                       Matrix1D<double> &spectrum,
                       bool leave_origin_intact=false);
 
-/** Perform a whitening of the power spectrum of a 3D map 
-    If only_amplitudes==true, the amplitude rather than the power spectrum will be equalized
+/** Multiply the input map in Fourier-space by the spectrum provided.
+    If leave_origin_intact==true, the origin pixel will remain untouched
+*/
+void multiplyBySpectrum(Matrix3D<double> &Min, 
+                        Matrix1D<double> &spectrum,
+                        bool leave_origin_intact=false);
+
+/** Perform a whitening of the amplitude/power spectrum of a 3D map 
+    If leave_origin_intact==true, the origin pixel will remain untouched
 */
 void whitenSpectrum(Matrix3D<double> &Min, 
                     Matrix3D<double> &Mout, 
-                    bool only_amplitudes=false,
+                    int spectrum_type=AMPLITUDE_SPECTRUM,
                     bool leave_origin_intact=false);
+
+/** Adapts Min to have the same spectrum as spectrum_ref
+    If only_amplitudes==true, the amplitude rather than the power spectrum will be equalized
+*/
+void adaptSpectrum(Matrix3D<double> &Min, 
+                   Matrix3D<double> &Mout,
+                   const Matrix1D<double> spectrum_ref,
+                   int spectrum_type=AMPLITUDE_SPECTRUM,
+                   bool leave_origin_intact=false);
 
 
 #endif
