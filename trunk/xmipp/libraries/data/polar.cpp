@@ -149,3 +149,30 @@ double best_rotation(const Polar< std::complex<double> > &I1,
     // Return the corresponding angle
     return angles(imax);
 }
+
+// Align rotationally ------------------------------------------------------
+void alignRotationally(Matrix2D<double> &I1, Matrix2D<double> &I2,
+    int splineOrder, int wrap)
+{
+    I1.setXmippOrigin();
+    I2.setXmippOrigin();
+
+    Polar_fftw_plans *plans=NULL;
+    Polar< std::complex<double> > polarFourierI2, polarFourierI1;
+    normalizedPolarFourierTransform(I1,polarFourierI1,false,XSIZE(I1)/5,
+        XSIZE(I1)/2,plans);
+    normalizedPolarFourierTransform(I2, polarFourierI2, true, XSIZE(I2)/5,
+        XSIZE(I2)/2,plans);
+
+    XmippFftw local_transformer;
+    Matrix1D<double> rotationalCorr;
+    rotationalCorr.resize(2*polarFourierI2.getSampleNoOuterRing()-1);
+    local_transformer.setReal(rotationalCorr);
+    double bestRot = best_rotation(polarFourierI1,polarFourierI2,
+        local_transformer);
+
+    if (splineOrder==1)
+        I2.selfRotate(-bestRot,wrap);
+    else
+        I2.selfRotateBSpline(3,-bestRot,wrap);
+}

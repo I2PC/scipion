@@ -864,5 +864,9 @@ void normalizedPolarFourierTransform(const Matrix2D<double> &in,
 double best_rotation(const Polar< std::complex<double> > &I1,
     const Polar< std::complex<double> > &I2, XmippFftw &local_transformer);
 
+/** Align I2 rotationally to I1 */
+void alignRotationally(Matrix2D<double> &I1, Matrix2D<double> &I2,
+    int splineOrder=1, int wrap=WRAP);
+
 //@}
 #endif
