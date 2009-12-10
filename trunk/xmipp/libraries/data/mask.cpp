@@ -1062,21 +1062,22 @@ void Mask_Params::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "blob_circular") == 0)
     {
         if (i + 3 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: raised_cosine mask needs one radius and a width");
+            REPORT_ERROR(3000, "Mask_Params: blob_circular mask needs one radius and a width");
         if (!(allowed_data_types & INT_MASK))
             REPORT_ERROR(3000, "Mask_Params: continuous masks are not allowed");
         R1 = textToFloat(argv[i+2]);
-        blob_radius= textToFloat(argv[i+3]);
-        if (R1 < 0)
-        {
+        double aux = textToFloat(argv[i+3]);
+        blob_radius= ABS(aux);
+        if (aux < 0)
             mode = INNER_MASK;
-            R1 = ABS(R1);
-        }
-        else if (R1 > 0)
+        else if (aux > 0)
             mode = OUTSIDE_MASK;
         else
             REPORT_ERROR(3000, "Mask_Params: cannot determine mode for blob_circular");
         type = BLOB_CIRCULAR_MASK;
+        blob_order= textToFloat(getParameter(argc, argv, "-m", "2."));
+        blob_alpha= textToFloat(getParameter(argc, argv, "-a", "10.4"));
+
         // Raised crown mask ....................................................
     }
      else if (strcmp(argv[i+1], "blob_crown") == 0)
@@ -1087,18 +1088,18 @@ void Mask_Params::read(int argc, char **argv)
             REPORT_ERROR(3000, "Mask_Params: continuous masks are not allowed");
         R1 = textToFloat(argv[i+2]);
         R2 = textToFloat(argv[i+3]);
-        blob_radius= textToFloat(argv[i+4]);
-        if (R1 < 0 && R2 < 0)
-        {
+        double aux = textToFloat(argv[i+4]);
+        blob_radius= ABS(aux);
+        if (aux < 0)
             mode = INNER_MASK;
-            R1 = ABS(R1);
-            R2 = ABS(R2);
-        }
-        else if (R1 > 0 && R2 > 0)
+        else if (aux > 0)
             mode = OUTSIDE_MASK;
         else
             REPORT_ERROR(3000, "Mask_Params: cannot determine mode for blob_crown");
         type = BLOB_CROWN_MASK;
+        blob_order= textToFloat(getParameter(argc, argv, "-m", "2."));
+        blob_alpha= textToFloat(getParameter(argc, argv, "-a", "10.4"));
+
         // Blackman mask ........................................................
     }
     else if (strcmp(argv[i+1], "blackman") == 0)
@@ -1274,13 +1275,13 @@ void Mask_Params::usage() const
         << "                               if R1,R2 > 0 => outside sphere\n"
         << "                               if R1,R2 < 0 => inside sphere\n"
         << "   |-mask blob_circular <R1> <blob_radius>: 2D or 3D blob circular\n"
-        << "                               if R1 > 0 => outside sphere\n"
-        << "                               if R1 < 0 => inside sphere\n"
+        << "                               if blob_radius > 0 => outside sphere\n"
+        << "                               if blob_radius < 0 => inside sphere\n"
         << "   |-mask blob_crown <R1> <R2> <blob_radius>: 2D or 3D blob_crown\n"
-        << "                               if R1,R2 > 0 => outside sphere\n"
-        << "                               if R1,R2 < 0 => inside sphere\n"
+        << "                               if blob_radius > 0 => outside sphere\n"
+        << "                               if blob_radius < 0 => inside sphere\n"
         << "   [ -m <blob_order=2>       : Order of blob\n"
-        << "   [ -a <blob_alpha=10>      : Alpha of blob\n"
+        << "   [ -a <blob_alpha=10.4>    : Alpha of blob\n"
         << "   |-mask blackman           : 2D or 3D Blackman mask\n"
         << "                               always inside blackman\n"
         << "   |-mask sinc <w>]          : 2D or 3D sincs\n"
