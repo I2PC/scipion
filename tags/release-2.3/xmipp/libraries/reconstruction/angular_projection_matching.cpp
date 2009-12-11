@@ -202,6 +202,15 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
     search5d_xoff.clear();
     search5d_yoff.clear();
     // Make sure origin is included
+    if(search5d_step == 0)
+        {
+          printf("***********************************************************\n");
+          printf("*   ERROR: search step should be different from 0\n");
+          printf("*   search step set to 1 \n");
+          printf("***********************************************************\n");
+
+          search5d_step = 1;
+       }
     int myfinal=search5d_shift + search5d_shift%search5d_step;
     for (int xoff = -myfinal; xoff <= myfinal; xoff+= search5d_step)
     {
