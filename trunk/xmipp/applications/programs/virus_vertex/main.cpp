@@ -1,5 +1,5 @@
 /***************************************************************************
- *
+ * 
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
  * 
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
