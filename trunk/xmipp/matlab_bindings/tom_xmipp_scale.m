@@ -1,6 +1,6 @@
 function img_out = tom_xmipp_scale(img,outsize,gridding)
 %TOM_XMIPP_SCALE is a wrapper for xmipp_scale
-%
+% 
 %   img_out = tom_xmipp_scale(img,outsize,gridding);
 %
 %PARAMETERS
