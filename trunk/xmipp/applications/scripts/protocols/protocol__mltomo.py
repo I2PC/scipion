@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # Protocol for Xmipp-based ML-refinement of subtomograms or RCT reconstructions, according to:
-# {please cite} Scheres et al. (2009) submitted
+# {please cite} Scheres et al. (2009) Structure, 17, 1563-1572
 #
 # Example use:
 # ./xmipp_protocol_mltomo.py
