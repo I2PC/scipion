@@ -190,6 +190,8 @@ class setup_protocols_class:
                 if os.path.exists(dst):
                    src=dst
                    print "* File "+dst+" already existed (now updated)"
+                elif (not os.path.exists(src)):
+                   src=str(self.SYSTEMSCRIPTDIR)+"/not_implemented.py"
 
                 text=self.modify_script_header(src)
                 fh=open(dst,'w')
