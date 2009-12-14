@@ -106,12 +106,12 @@ void normalizedPolarFourierTransform(const Matrix2D<double> &in,
 {
     Polar<double> polarIn;
     if (BsplineOrder==1)
-        polarIn.getPolarFromCartesianBSpline(in,first_ring,last_ring);
+        polarIn.getPolarFromCartesianBSpline(in,first_ring,last_ring,1);
     else
     {
         Matrix2D<double> Maux;
         in.produceSplineCoefficients(Maux,3);
-        polarIn.getPolarFromCartesianBSpline(Maux,first_ring,last_ring);
+        polarIn.getPolarFromCartesianBSpline(Maux,first_ring,last_ring,BsplineOrder);
     }
     double mean = polarIn.computeSum(true);
     double stddev = polarIn.computeSum2(true);
