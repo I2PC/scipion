@@ -715,10 +715,10 @@ class automated_gui_class:
 
         import xmipp_config
         self.bGet = Button(self.frame, text="Additional Protocols", command=self.OpenAdditionalWindow,
-                           underline=1, bg=ButtonBackgroundColour,
+                           underline=3, bg=ButtonBackgroundColour,
                            activebackground=ButtonActiveBackgroundColour)
         self.bGet.grid(row=self.buttonrow,column=1)
-        self.master.bind('<Alt_L><d>', self.OpenAdditionalWindow)
+        self.master.bind('<Alt_L><i>', self.OpenAdditionalWindow)
 
         self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,
                            underline=0, bg=ButtonBackgroundColour,
