@@ -399,8 +399,6 @@ class automated_gui_class:
         # Add all the variables in the script header
         self.widgetexpertlist=[]
         for var in self.vfields:
-            if len(self.variables[var])>=8:
-                print self.variables[var][7]
             if len(self.variables[var])>=9 and self.variables[var][7]:
                 # Is hidden?
                 continue
@@ -457,7 +455,7 @@ class automated_gui_class:
         self.morehelp=StringVar()
       
         # Script title
-        titletext = 'Xmipp protocols (v2.3)'
+        titletext = 'Xmipp protocols (v2.4)'
         self.master.title(titletext)
 
         # Reference
@@ -716,12 +714,11 @@ class automated_gui_class:
         self.master.bind('<Alt_L><c>', self.GuiClose)
 
         import xmipp_config
-        if (xmipp_config.HaveBackupSystem):
-            self.bGet = Button(self.frame, text="Backup Snapshot", command=self.OpenBackupWindow,
-                               underline=0, bg=ButtonBackgroundColour,
-                               activebackground=ButtonActiveBackgroundColour)
-            self.bGet.grid(row=self.buttonrow,column=1)
-            self.master.bind('<Alt_L><b>', self.OpenBackupWindow)
+        self.bGet = Button(self.frame, text="Additional Protocols", command=self.OpenAdditionalWindow,
+                           underline=1, bg=ButtonBackgroundColour,
+                           activebackground=ButtonActiveBackgroundColour)
+        self.bGet.grid(row=self.buttonrow,column=1)
+        self.master.bind('<Alt_L><d>', self.OpenAdditionalWindow)
 
         self.bGet = Button(self.frame, text="Analyse Results", command=self.AnalyseResults,
                            underline=0, bg=ButtonBackgroundColour,
@@ -791,15 +788,41 @@ class automated_gui_class:
                         columnspan=2,sticky=W+E)
         self.master.update()
 
-    def OpenBackupWindow(self,event=""):
+    def OpenAdditionalWindow(self,event=""):
         import os, shutil
-        script="xmipp_protocol_backup.py"
-        if (not os.path.exists(script)):
-            # make a local copy
-            shutil.copy(str(self.SYSTEMSCRIPTDIR)+'/'+script,script)
-        command='python '+str(self.SYSTEMSCRIPTDIR)+'/xmipp_protocol_gui.py '+script+' &'
-        print command
-        os.system(command)
+        import tkFileDialog
+
+        newsyspath=['']
+        for item in sys.path:
+            newsyspath.append(item)
+        oldsyspath=sys.path
+        sys.path=newsyspath
+        import xmipp_protocol_setup
+        
+        fileformats = [('All Files ','xmipp_protocol__*.py')]
+        fname = tkFileDialog.askopenfilename(title='Choose File',
+                                             initialdir=self.SYSTEMSCRIPTDIR,
+                                             filetypes=fileformats)
+        
+        xmipp_protocol_setup.ProjectDir=str(os.getcwd())
+        setup=xmipp_protocol_setup.setup_protocols_class(xmipp_protocol_setup.SetupPreProcessMicrographs,
+                                                         xmipp_protocol_setup.SetupParticlePick,
+                                                         xmipp_protocol_setup.SetupPreProcessParticles,
+                                                         xmipp_protocol_setup.SetupCL2D,
+                                                         xmipp_protocol_setup.SetupML2D,
+                                                         xmipp_protocol_setup.SetupKerdensom,
+                                                         xmipp_protocol_setup.SetupRotSpectra,
+                                                         xmipp_protocol_setup.SetupRCT,
+                                                         xmipp_protocol_setup.SetupML3D,
+                                                         xmipp_protocol_setup.SetupProjMatch,
+                                                         xmipp_protocol_setup.ProjectDir,
+                                                         xmipp_protocol_setup.SystemFlavour,
+                                                         xmipp_protocol_setup.LogDir,
+                                                         '')
+        
+        setup.AutoLaunch="xx"
+        setup.setup_protocol(os.path.basename(fname))
+        sys.path=oldsyspath
 
     def AnalyseResults(self,event=""):
         import os

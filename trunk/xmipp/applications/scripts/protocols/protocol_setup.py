@@ -96,27 +96,25 @@ class setup_protocols_class:
             # Which scripts and which directories to use
             self.library={}
             self.library['SetupPreProcessMicrographs']=[self.SetupPreProcessMicrographs,
-                                                        ['xmipp_protocol_preprocess_micrographs.py',
-                                                         'visualize_preprocess_micrographs.py']]
+                                                        'xmipp_protocol_preprocess_micrographs.py']
             self.library['SetupParticlePick']=[self.SetupParticlePick,
-                                                ['xmipp_protocol_particle_pick.py']]
+                                                'xmipp_protocol_particle_pick.py']
             self.library['SetupPreProcessParticles']=[self.SetupPreProcessParticles,
-                                                ['xmipp_protocol_preprocess_particles.py',
-                                                 'visualize_preprocess_particles.py']]
+                                                'xmipp_protocol_preprocess_particles.py']
             self.library['SetupCL2D']=[self.SetupCL2D,
-                                         ['xmipp_protocol_cl2d.py','visualize_cl2d.py']]
+                                         'xmipp_protocol_cl2d.py']
             self.library['SetupML2D']=[self.SetupML2D,
-                                         ['xmipp_protocol_ml2d.py','visualize_ml2d.py']]
+                                         'xmipp_protocol_ml2d.py']
             self.library['SetupKerdensom']=[self.SetupKerdensom,
-                                              ['xmipp_protocol_kerdensom.py','visualize_kerdensom.py']]
+                                              'xmipp_protocol_kerdensom.py']
             self.library['SetupRotSpectra']=[self.SetupRotSpectra,
-                                               ['xmipp_protocol_rotspectra.py','visualize_rotspectra.py']]
+                                               'xmipp_protocol_rotspectra.py']
             self.library['SetupRCT']=[self.SetupRCT,
-                                        ['xmipp_protocol_rct.py','visualize_rct.py']]
+                                        'xmipp_protocol_rct.py']
             self.library['SetupML3D']=[self.SetupML3D,
-                                        ['xmipp_protocol_ml3d.py','visualize_ml3d.py']]
+                                        'xmipp_protocol_ml3d.py']
             self.library['SetupProjMatch']=[self.SetupProjMatch,
-                                        ['xmipp_protocol_projmatch.py','visualize_projmatch.py']]
+                                        'xmipp_protocol_projmatch.py']
 
             # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
@@ -177,18 +175,21 @@ class setup_protocols_class:
                     header_lines=newheader_lines
             return header_lines+body_lines
 
-        def setup_protocol(self,scripts):
+        def setup_protocol(self,protocol):
             import os
             import shutil
 
             os.chdir(self.ProjectDir)
                 
-            for script in scripts:
+            visualize=protocol.replace('xmipp_protocol','visualize')
+            myscripts=[protocol, visualize]
+
+            for script in myscripts:
                 src=str(self.SYSTEMSCRIPTDIR)+"/"+str(script)
                 dst=str(script)
                 if os.path.exists(dst):
-                    src=dst
-                    print "* File "+dst+" already existed (now updated)"
+                   src=dst
+                   print "* File "+dst+" already existed (now updated)"
 
                 text=self.modify_script_header(src)
                 fh=open(dst,'w')
@@ -197,9 +198,8 @@ class setup_protocols_class:
                 os.chmod(dst,0755)
 
             # Only auto-launch the first script
-            script=scripts[0]
             if (self.AutoLaunch!=""):
-                command='python '+str(self.SYSTEMSCRIPTDIR)+'/xmipp_protocol_gui.py '+str(script)+' &'
+                command='python '+str(self.SYSTEMSCRIPTDIR)+'/xmipp_protocol_gui.py '+str(protocol)+' &'
                 os.system(command)
 
 
