@@ -28,7 +28,7 @@
 #define __XmippFFTW_H
 
 #include <complex>
-#include "../../external/fftw-3.1.2/api/fftw3.h"
+#include "../../external/fftw-3.2.2/api/fftw3.h"
 #include "matrix3d.h"
 #include "fft.h"
 
