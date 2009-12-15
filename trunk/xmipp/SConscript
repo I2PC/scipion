@@ -305,8 +305,15 @@ def AddFFTWLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
     numJobs=env.GetOption('num_jobs')
 
-    name1='libfftw3.so'
-    name2='libfftw3_threads.so'
+    name1='libfftw3'
+    name2='libfftw3_threads'
+    if int(env['static']):
+        name1+=".a"
+        name2+=".a"
+    else:
+        name1+=".so"
+        name2+=".so"
+        
     toBuild=[FFTWDir+'/.libs/'+name1, FFTWDir+'/threads/.libs/'+name2]
 
     lib1 = env.Command(toBuild, '',"cd "+FFTWDir+" ; make -j "+str(numJobs)+" > ../../build/fftw_make.log ")
