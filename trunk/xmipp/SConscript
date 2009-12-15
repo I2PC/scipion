@@ -303,12 +303,13 @@ def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
 
 def AddFFTWLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
+    numJobs=env.GetOption('num_jobs')
 
     name1='libfftw3.so'
     name2='libfftw3_threads.so'
     toBuild=[FFTWDir+'/.libs/'+name1, FFTWDir+'/threads/.libs/'+name2]
 
-    lib1 = env.Command(toBuild, '',"cd "+FFTWDir+" ; make > /dev/null ")
+    lib1 = env.Command(toBuild, '',"cd "+FFTWDir+" ; make -j "+str(numJobs)+" > ../../build/fftw_make.log ")
     alias = env.Alias([name1, name2], lib1)
     install = env.Install(libprefix, source=toBuild)
     env.Alias([name1, name2], install)
