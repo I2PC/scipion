@@ -303,7 +303,7 @@ void Prog_angular_class_average_prm::getPolar(Matrix2D<double> &img, Polar<std::
 
     // Calculate FTs of polar rings and its stddev
     img.produceSplineCoefficients(Maux,3);
-    P.getPolarFromCartesianBSpline(Maux,Ri,Ro,xoff,yoff);
+    P.getPolarFromCartesianBSpline(Maux,Ri,Ro,3,xoff,yoff);
     fourierTransformRings(P,fP,global_plans,conjugated);
 
 }

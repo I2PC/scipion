@@ -561,7 +561,7 @@ void Prog_MLPalign2D_prm::calculateFtRingsAllTransImg(const ImageXmippT<double> 
     fPm_trans.clear();
     for (int itrans = 0; itrans < nr_trans; itrans++)
     {
-	P.getPolarFromCartesian(Maux,kb,first,last,Vxtrans[itrans],Vytrans[itrans]);
+	P.getPolarFromCartesian(Maux,kb,first,last,3,Vxtrans[itrans],Vytrans[itrans]);
 	fP = P.fourierTransformRings(false);
 	fP_trans.push_back(fP);
 	if (ABS(Vxtrans[itrans]) < XMIPP_EQUAL_ACCURACY &&
