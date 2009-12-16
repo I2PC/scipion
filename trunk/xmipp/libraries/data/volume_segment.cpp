@@ -40,6 +40,7 @@ void Prog_segment_prm::read(int argc, char **argv)
     en_threshold = checkParameter(argc, argv, "-threshold");
     if (en_threshold)
         threshold = textToFloat(getParameter(argc, argv, "-threshold"));
+    otsu=checkParameter(argc,argv,"-otsu");
 
     //Sjors
     wang_radius = textToInteger(getParameter(argc, argv, "-wang", "3."));
@@ -58,6 +59,7 @@ std::ostream & operator << (std::ostream &out, const Prog_segment_prm &prm)
         << "Output mask  : " << prm.fn_mask       << std::endl
         << "Enable thres.: " << prm.en_threshold  << std::endl
         << "Threshold    : " << prm.threshold     << std::endl
+        << "Otsu         : " << prm.otsu          << std::endl
         << "Wang radius  : " << prm.wang_radius   << std::endl
         << "Probabilistic: " << prm.do_prob       << std::endl
     ;
@@ -73,6 +75,8 @@ void Prog_segment_prm::usage() const
     << "    -aa_mass     <mass>]   : Mass in aminoacids\n"
     << "   -sampling_rate <Tm>]    : Sampling rate (A/pix)\n"
     << "  [-o <output mask=\"\">]    : Output mask\n"
+    << "  [-threshold <th=-1>]     : Thresholding method\n"
+    << "  [-otsu]                  : Otsu's method segmentation\n"
     << "  [-wang <rad=3>]          : Radius [pix] for B.C. Wang cone\n"
     << "  [-prob]                  : Calculate probabilistic solvent mask\n"
     ;
@@ -83,7 +87,7 @@ void Prog_segment_prm::produce_side_info()
 {
     V.read(fn_vol);
     double sampling_rate3 = sampling_rate * sampling_rate * sampling_rate;
-    if (voxel_mass == -1 && !en_threshold)
+    if (voxel_mass == -1 && !en_threshold && !otsu)
     {
         if ((dalton_mass == -1 && aa_mass == -1) || sampling_rate == -1)
             REPORT_ERROR(1, "Prog_segment_prm: No way to compute voxel mass");
@@ -110,7 +114,6 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
     (*V_out)().binarize(threshold);
 
 #ifdef DEBUG
-
     std::cout << threshold << std::endl;
     VolumeXmipp save;
     save() = (*V_in)();
@@ -126,7 +129,6 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
         opening3D((*V_out)(), aux(), 18, 0, 1);
         closing3D(aux(), (*V_out)(), 18, 0, 1);
 #ifdef DEBUG
-
         save() = (*V_out)();
         save.write("PPP2.vol");
 #endif
@@ -140,7 +142,6 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
     count((int)aux(k, i, j))++;
 
 #ifdef DEBUG
-
     std::cout << count << std::endl << std::endl;
     std::cout << "Press any key\n";
     char c;
@@ -272,43 +273,52 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
     double mass_max = 1;
 
     bool ok = false;
-    if (!en_threshold)
+    if (!otsu)
     {
-        // Perform a bracketing search until the mass is
-        // within a 0.1% of the desired mass
-        do
+        if (!en_threshold)
         {
-            double th_med = (th_min + th_max) * 0.5;
-            double mass_med = segment_threshold(&V, &mask, th_med, do_prob);
-            std::cout << "Threshold= " << th_med
-            << " mass of the main piece= " << mass_med << std::endl;
-            if (ABS(mass_med - voxel_mass) / voxel_mass < 0.001)
+            // Perform a bracketing search until the mass is
+            // within a 0.1% of the desired mass
+            do
             {
-                ok = true;
-                break;
+                double th_med = (th_min + th_max) * 0.5;
+                double mass_med = segment_threshold(&V, &mask, th_med, do_prob);
+                std::cout << "Threshold= " << th_med
+                << " mass of the main piece= " << mass_med << std::endl;
+                if (ABS(mass_med - voxel_mass) / voxel_mass < 0.001)
+                {
+                    ok = true;
+                    break;
+                }
+                if ((th_max - th_min) / (val_max - val_min) < 0.0001)
+                    break;
+                if (mass_med < voxel_mass)
+                {
+                    th_max = th_med;
+                    mass_max = mass_med;
+                }
+                else
+                {
+                    th_min = th_med;
+                    mass_min = mass_med;
+                }
             }
-            if ((th_max - th_min) / (val_max - val_min) < 0.0001)
-                break;
-            if (mass_med < voxel_mass)
-            {
-                th_max = th_med;
-                mass_max = mass_med;
-            }
-            else
-            {
-                th_min = th_med;
-                mass_min = mass_med;
-            }
+            while (true);
         }
-        while (true);
+        else
+        {
+            // Perform a single thresholding
+            double mass_med = segment_threshold(&V, &mask, threshold, do_prob);
+            std::cout << "Threshold= " << threshold
+            << " mass of the main piece= " << mass_med << std::endl;
+            ok = true;
+        }
     }
-    else
+
+    if (otsu)
     {
-        // Perform a single thresholding
-        double mass_med = segment_threshold(&V, &mask, threshold, do_prob);
-        std::cout << "Threshold= " << threshold
-        << " mass of the main piece= " << mass_med << std::endl;
-        ok = true;
+        mask()=V();
+        EntropyOtsuSegmentation(mask());
     }
 
     if (do_prob)
@@ -323,7 +333,7 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
         // Terwilliger-like calculation of P(solv|x) through P(x|solv) & P(x|prot)
         probabilistic_solvent(&V, &mask);
     }
-
+    
     // Save mask if necessary
     if (fn_mask != "" && (ok || do_prob))
         mask.write(fn_mask);

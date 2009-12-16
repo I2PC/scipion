@@ -52,6 +52,8 @@ public:
     bool     en_threshold;
     /// Threshold
     double   threshold;
+    /// Use Otse
+    bool otsu;
 
     /// From here on by Sjors
     // Create probabilistic solvent mask
