@@ -5,8 +5,8 @@ Import('env')
 # Required for custom functions
 import os
 
-FFTWLibs=['fftw3','fftw3_threads']
 FFTWDir="external/fftw-3.2.2"
+FFTWLibs=['fftw3','fftw3_threads']
 
 def AddMatchingFiles((pattern, blacklist, sources), directory, files):
     ''' Callback, adds all matching files in dir '''
@@ -307,6 +307,8 @@ def AddFFTWLibrary():
 
     name1='libfftw3'
     name2='libfftw3_threads'
+    name1la='libfftw3.la'
+    name2la='libfftw3_threads.la'
     if int(env['static']):
         name1+=".a"
         name2+=".a"
@@ -314,12 +316,18 @@ def AddFFTWLibrary():
         name1+=".so"
         name2+=".so"
         
-    toBuild=[FFTWDir+'/.libs/'+name1, FFTWDir+'/threads/.libs/'+name2]
+    toBuild=[FFTWDir+'/.libs/'+name1, FFTWDir+'/.libs/'+name1la,
+             FFTWDir+'/threads/.libs/'+name2, FFTWDir+'/threads/.libs/'+name2la]
+    toCopy=[name1, name2, name1la, name2la]
+    if not int(env['static']):
+        toBuild+=[FFTWDir+'/.libs/'+name1+".3",
+                  FFTWDir+'/threads/.libs/'+name2+".3"]
+        toCopy+=[name1+".3",name2+".3"]
 
     lib1 = env.Command(toBuild, '',"cd "+FFTWDir+" ; make -j "+str(numJobs)+" > ../../build/fftw_make.log ")
-    alias = env.Alias([name1, name2], lib1)
+    alias = env.Alias(toCopy, lib1)
     install = env.Install(libprefix, source=toBuild)
-    env.Alias([name1, name2], install)
+    env.Alias(toCopy, install)
     env.Default(alias)
 
 # --- Libraries
