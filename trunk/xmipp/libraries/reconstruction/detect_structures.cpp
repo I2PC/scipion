@@ -137,6 +137,15 @@ void Prog_Detect_Structures_Param::run()
             }
         delete filter;
     }
+    
+    // Limit the maximum energy (<99.5%)
+    histogram1D hist;
+    hist.clear();
+    compute_hist(Vout(),hist,1000);
+    double threshold=hist.percentil(99.5);
+    Vout().threshold("above",threshold,threshold);
+
+    // Write the energy
     Vout.write(fnOut+"_energy.vol");
 
     if (removeBackground)
