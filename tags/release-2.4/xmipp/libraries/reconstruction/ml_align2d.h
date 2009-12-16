@@ -102,7 +102,7 @@ public:
     /** Number of iterations to be performed */
     int Niter;
     /** dimension of the images */
-    int oridim, dim, dim2, hdim;
+    int dim, dim2, hdim;
     double ddim2;
     /** Number of steps to sample in-plane rotation in 90 degrees */
     int nr_psi;
@@ -138,8 +138,6 @@ public:
     bool fast_mode;
     /** Fast mode */
     double C_fast;
-    /** Maximum shift to be trusted */
-    double max_shift;
     /** Offsets for limited translations */
     std::vector<Matrix1D<double> > Vtrans;
     /** Start all optimal offsets from zero values */
