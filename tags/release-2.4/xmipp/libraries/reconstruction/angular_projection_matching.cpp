@@ -415,7 +415,7 @@ void * threadRotationallyAlignOneImage( void * data )
     myincr = thread_num;
     for (int itrans = myinit; itrans < prm->nr_trans; itrans+=myincr)
     {
-        P.getPolarFromCartesianBSpline(Maux,prm->Ri,prm->Ro,3.,
+        P.getPolarFromCartesianBSpline(Maux,prm->Ri,prm->Ro,3,
                                        (double)prm->search5d_xoff[itrans],
                                        (double)prm->search5d_yoff[itrans]);
 	mean = P.computeSum(true);
