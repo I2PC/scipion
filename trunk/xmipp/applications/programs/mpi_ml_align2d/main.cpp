@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 
     try
     {
-        Maux.resize(prm.oridim, prm.oridim);
+        Maux.resize(prm.dim, prm.dim);
         Maux.setXmippOrigin();
 
         // Loop over all iterations
