@@ -535,11 +535,11 @@ void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
     // Sort HSigma2B and take a given percentage of it
     Matrix1D<double> HSigma2Bsorted=HSigma2B.sort();
     int iTh=ROUND(XSIZE(HSigma2B)*percentil);
-    double thhreshold=HSigma2Bsorted(iTh);
+    double threshold=HSigma2Bsorted(iTh);
     
     // Find the first value within HSigma2B falling below this threshold
     iTh=0;
-    while (HSigma2B(iTh)>thhreshold) iTh++;
+    while (HSigma2B(iTh)>threshold) iTh++;
     iTh--;
     
     hist.index2val(iTh,x);
