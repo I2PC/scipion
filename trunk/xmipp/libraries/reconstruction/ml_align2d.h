@@ -138,8 +138,6 @@ public:
     bool fast_mode;
     /** Fast mode */
     double C_fast;
-    /** Maximum shift to be trusted */
-    double max_shift;
     /** Offsets for limited translations */
     std::vector<Matrix1D<double> > Vtrans;
     /** Start all optimal offsets from zero values */

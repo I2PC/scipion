@@ -125,7 +125,6 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
     fast_mode = checkParameter(argc2, argv2, "-fast");
     C_fast = textToFloat(getParameter(argc2, argv2, "-C", "1e-12"));
-    max_shift = textToFloat(getParameter(argc2, argv2, "-max_shift", "-1"));
     save_mem1 = checkParameter(argc2, argv2, "-save_memA");
     save_mem2 = checkParameter(argc2, argv2, "-save_memB");
     fn_doc = getParameter(argc2, argv2, "-doc", "");
@@ -262,7 +261,6 @@ void Prog_MLalign2D_prm::extendedUsage(bool ML3D)
     std::cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
     std::cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
     std::cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
-    std::cerr << " [ -max_shift <float=dim/4>]   : Dont trust shifts larger than max_shift \n";
     std::cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
     std::cerr << " [ -student ]                  : Use t-distributed instead of Gaussian model for the noise \n";
     std::cerr << " [ -df <int=6> ]               : Degrees of freedom for the t-distribution \n";
