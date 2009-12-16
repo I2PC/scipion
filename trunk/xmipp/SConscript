@@ -324,7 +324,9 @@ def AddFFTWLibrary():
                   FFTWDir+'/threads/.libs/'+name2+".3"]
         toCopy+=[name1+".3",name2+".3"]
 
-    lib1 = env.Command(toBuild, '',"cd "+FFTWDir+" ; make -j "+str(numJobs)+" > ../../build/fftw_make.log ")
+    lib1 = env.Command(toBuild, FFTWDir+"/kernel/assert.c",
+        "cd "+FFTWDir+" ; make clean > /dev/null ; make -j "+str(numJobs)+\
+        " > ../../build/fftw_make.log ")
     alias = env.Alias(toCopy, lib1)
     install = env.Install(libprefix, source=toBuild)
     env.Alias(toCopy, install)
