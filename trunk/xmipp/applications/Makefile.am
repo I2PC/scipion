@@ -1,1 +1,0 @@
-SUBDIRS = legacy programs scripts
