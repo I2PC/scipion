@@ -36,8 +36,8 @@
 //@{
 
 /** Compute the affine transformation between two images. */
-double computeAffineTransformation(const Matrix2D<double> &I1,
-    const Matrix2D<double> &I2, int maxShift, int maxIterDE,
+double computeAffineTransformation(const Matrix2D<unsigned char> &I1,
+    const Matrix2D<unsigned char> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine, 
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
     double thresholdAffine, bool localAffine, bool isMirror,
@@ -138,7 +138,10 @@ public:
     double thresholdAffine;
     
     /// Identify outlier micrographs
-    int identifyOutliers;
+    double identifyOutliersZ;
+
+    /// Do not identify outlier micrographs
+    bool doNotIdentifyOutliers;
 
     /// Pyramid
     int pyramidLevel;
@@ -154,6 +157,12 @@ public:
 
     /// Produce side info
     void produceSideInfo();
+
+    /// Compute affine transformations
+    void computeAffineTransformations(bool localAffineToUse);
+
+    /// Identify outliers
+    void identifyOutliers(bool mark);
 
     /// Produce information from landmarks
     void produceInformationFromLandmarks();
@@ -207,7 +216,7 @@ public:
     SelFile SForig;
 
     // List of image pointers
-    std::vector < Matrix2D<double> *> img;
+    std::vector < Matrix2D<unsigned char> *> img;
 
     // List of mask pointers
     std::vector < Matrix2D<unsigned char> *> maskImg;
