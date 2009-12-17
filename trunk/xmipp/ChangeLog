@@ -6,6 +6,8 @@
 - Speed up of xmipp_mpi_class_averages
 - Better estimations of energy in xmipp_detect_structures
 - Bug fix in xmipp_detect_missing_wedge
+- Differential Evolution (de_solver in /data) now uses Xmipp's own Random
+generator, seems to solve a problem with heap corruption.
 
 2.4
 
