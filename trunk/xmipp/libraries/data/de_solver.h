@@ -135,10 +135,6 @@ protected:
                        int* r4 = 0,
                        int* r5 = 0);
 
-    #define NTAB 32
-    long idum, idum2, iy, iv[NTAB];
-    double RandomUniform(double min, double max);
-
     int nDim;
     int nPop;
     int generations;
