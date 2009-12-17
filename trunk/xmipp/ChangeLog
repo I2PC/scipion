@@ -1,3 +1,16 @@
+2.5
+
+- FFTW updated to 3.2.2
+- Added Entropy Otsu segmentation to xmipp_volume_segment
+- Added -min, -max, -which_min, -which_max to xmipp_operate
+- Speed up of xmipp_mpi_class_averages
+- Better estimations of energy in xmipp_detect_structures
+- Bug fix in xmipp_detect_missing_wedge
+
+2.4
+
+...
+
 1.1
 
 - New program: xmipp_MLrefine3D
