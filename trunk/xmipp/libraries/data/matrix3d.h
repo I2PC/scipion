@@ -89,9 +89,9 @@ void applyGeometryBSpline(Matrix3D<T>& V2, const Matrix2D< double > &A,
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX3D(V) \
-    for (size_t k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
-        for (size_t i=STARTINGY(V); i<=FINISHINGY(V); i++) \
-            for (size_t j=STARTINGX(V); j<=FINISHINGX(V); j++)
+    for (int k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
+        for (int i=STARTINGY(V); i<=FINISHINGY(V); i++) \
+            for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
 
 /** For all elements in the array between corners.
  * @ingroup VolumesSizeShape
