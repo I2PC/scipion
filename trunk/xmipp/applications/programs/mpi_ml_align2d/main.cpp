@@ -34,15 +34,10 @@ int main(int argc, char **argv)
     Prog_MLalign2D_prm prm;
 
     int c, nn, imgno, opt_refno, iaux;
-    double LL, sumw_allrefs, convv, sumcorr;
-    std::vector<double> conv;
-    double aux, wsum_sigma_noise, wsum_sigma_offset;
-    std::vector<Matrix2D<double > > wsum_Mref;
-    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
+    double aux, convv;
     Matrix2D<double> Maux;
     Matrix1D<double> Vaux;
     FileName fn_img;
-    DocFile DFo;
     // For parallelization
     int rank, size, num_img_tot;
     bool converged;
@@ -127,51 +122,46 @@ int main(int argc, char **argv)
             for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
 
             // Integrate over all images
-            prm.expectation(prm.SF, prm.Iref, iter,
-                            LL, sumcorr, DFo, wsum_Mref,
-                            wsum_sigma_noise, wsum_sigma_offset, 
-                            sumw,  sumw2, sumwsc, sumwsc2, sumw_mirror);
+            prm.expectation(iter);
 
-            // Here MPI_allreduce of all wsums,LL and sumcorr !!!
-            MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            LL = aux;
-            MPI_Allreduce(&sumcorr, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            sumcorr = aux;
-            MPI_Allreduce(&wsum_sigma_noise, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            wsum_sigma_noise = aux;
-            MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            wsum_sigma_offset = aux;
+            // Here MPI_allreduce of all wsums,LL and sumfracweight !!!
+            MPI_Allreduce(&prm.LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            prm.LL = aux;
+            MPI_Allreduce(&prm.sumfracweight, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            prm.sumfracweight = aux;
+            MPI_Allreduce(&prm.wsum_sigma_noise, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            prm.wsum_sigma_noise = aux;
+            MPI_Allreduce(&prm.wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            prm.wsum_sigma_offset = aux;
             for (int refno = 0; refno < prm.n_ref; refno++)
             {
-                MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
-                              MULTIDIM_SIZE(wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                wsum_Mref[refno] = Maux;
-                MPI_Allreduce(&sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                sumw[refno] = aux;
-                MPI_Allreduce(&sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                sumwsc2[refno] = aux;
-                MPI_Allreduce(&sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                sumw_mirror[refno] = aux;
-                MPI_Allreduce(&sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                sumw2[refno] = aux;
-                MPI_Allreduce(&sumwsc[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                sumwsc[refno] = aux;
+                MPI_Allreduce(MULTIDIM_ARRAY(prm.wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
+                              MULTIDIM_SIZE(prm.wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.wsum_Mref[refno] = Maux;
+                MPI_Allreduce(&prm.sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.sumw[refno] = aux;
+                MPI_Allreduce(&prm.sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.sumwsc2[refno] = aux;
+                MPI_Allreduce(&prm.sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.sumw_mirror[refno] = aux;
+                MPI_Allreduce(&prm.sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.sumw2[refno] = aux;
+                MPI_Allreduce(&prm.sumwsc[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.sumwsc[refno] = aux;
             }
 
             // Update model parameters
-            prm.maximization(wsum_Mref, wsum_sigma_noise, wsum_sigma_offset, 
-                             sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
-                             sumcorr, sumw_allrefs);
+            prm.maximization();
 
             // Check convergence
-            converged = prm.checkConvergence(conv);
+            converged = prm.checkConvergence();
 
             // Write intermediate files 
             if (rank != 0)
             {
                 // All slaves send docfile to the master
                 std::ostringstream doc;
-                doc << DFo;
+                doc << prm.DFo;
                 int s_size=  doc.str().size();
                 char results[s_size];
                 strncpy(results,doc.str().c_str(),s_size);
@@ -189,7 +179,7 @@ int main(int argc, char **argv)
                 myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)\n";
 
                 // Master's own contribution
-                myDocFile << DFo;
+                myDocFile << prm.DFo;
                 int docCounter=1;
                 while (docCounter < size)
                 {
@@ -205,12 +195,12 @@ int main(int argc, char **argv)
 
                 //save doc_file and renumber it
                 myDocFile.close();
-                DFo.clear();
-                DFo.read(fn_tmp);
-                DFo.renum();
+                prm.DFo.clear();
+                prm.DFo.read(fn_tmp);
+                prm.DFo.renum();
 
                 // Output all intermediate files
-                prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+                prm.writeOutputFiles(iter);
             }
             MPI_Barrier(MPI_COMM_WORLD);
             
@@ -222,13 +212,13 @@ int main(int argc, char **argv)
             else
             {
                 // reset DFo
-                DFo.clear();
+            	prm.DFo.clear();
             }
             MPI_Barrier(MPI_COMM_WORLD);
 
         } // end loop iterations
 	if (rank == 0)  
-	    prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+	    prm.writeOutputFiles(-1);
 
     }
     catch (Xmipp_error XE)

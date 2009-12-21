@@ -25,9 +25,6 @@
 #include "ml_align2d.h"
 //#define DEBUG
 
-// For blocking of threads
-pthread_mutex_t weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Read arguments ==========================================================
 void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
@@ -616,10 +613,7 @@ void Prog_MLalign2D_prm::calculatePdfInplane()
 }
 
 // Rotate reference for all models and rotations and fill Fref vectors =============
-void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Iref,
-                                         bool fill_real_space, 
-                                         std::vector<Matrix2D<double> > &mref,
-                                         std::vector<Matrix2D<std::complex<double> > > &fref)
+void Prog_MLalign2D_prm::rotateReference(bool fill_real_space)
 {
 
 #ifdef DEBUG
@@ -684,9 +678,7 @@ void Prog_MLalign2D_prm::rotateReference(std::vector< ImageXmippT<double> > &Ire
 }
 
 // Collect all rotations and sum to update Iref() for all models ==========
-void Prog_MLalign2D_prm::reverseRotateReference(
-    std::vector<Matrix2D<std::complex<double> > > &fnew, 
-    std::vector<Matrix2D<double > > &Mnew)
+void Prog_MLalign2D_prm::reverseRotateReference()
 {
 
 #ifdef DEBUG
@@ -703,7 +695,7 @@ void Prog_MLalign2D_prm::reverseRotateReference(
     Maux2.setXmippOrigin();
     Maux3.setXmippOrigin();
     
-    Mnew.clear();
+    wsum_Mref.clear();
     mask.resize(dim, dim);
     mask.setXmippOrigin();
     BinaryCircularMask(mask, hdim, INNER_MASK);
@@ -714,7 +706,7 @@ void Prog_MLalign2D_prm::reverseRotateReference(
     for (int refno = 0; refno < n_ref; refno++)
     {
         Maux.initZeros();
-        Mnew.push_back(Maux);
+        wsum_Mref.push_back(Maux);
         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
             // Add arbitrary number to avoid 0-degree rotation without interpolation effects
@@ -723,14 +715,14 @@ void Prog_MLalign2D_prm::reverseRotateReference(
             // Do the backward FFT
             // The construction with Faux and Maux3 should perhaps not be necessary, 
             // but I am having irreproducible segmentation faults for the iFFT
-            Faux = fnew[refnoipsi];
+            Faux = wsumimgs[refnoipsi];
             local_transformer.inverseFourierTransform(Faux, Maux);
             Maux3 = Maux;
             CenterFFT(Maux3, true);
             computeStats_within_binary_mask(omask, Maux3, dum, dum, avg, dum);
             Maux3.rotateBSpline(3, -psi, Maux2, WRAP);
             apply_binary_mask(mask, Maux2, Maux2, avg);
-            Mnew[refno] += Maux2;
+            wsum_Mref[refno] += Maux2;
         }
     }
 
@@ -776,7 +768,6 @@ void Prog_MLalign2D_prm::preselectLimitedDirections(float &phi, float &theta,
 // Pre-selection of significant refno and ipsi, based on current optimal translation =======
 void Prog_MLalign2D_prm::preselectFastSignificant(
     Matrix2D<double> &Mimg, std::vector<double > &offsets,
-    std::vector<Matrix2D<double> > &mref,
     Matrix2D<int> &Msignificant,
     std::vector<double> &pdf_directions)
 {
@@ -922,14 +913,9 @@ void Prog_MLalign2D_prm::preselectFastSignificant(
 // Integration over all translation, given  model and in-plane rotation
 void Prog_MLalign2D_prm::expectationSingleImage(
     Matrix2D<double> &Mimg,
-    std::vector<Matrix2D<std::complex<double> > > &fref,
-    std::vector<Matrix2D<std::complex<double> > > &wsumimgs,
     Matrix2D<int> &Msignificant,
-    double &wsum_sigma_noise, double &wsum_sigma_offset,
-    std::vector<double> &sumw, std::vector<double> &sumw2, 
-    std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
-    double &LL, double &dLL, double &fracweight, double &sumfracweight, 
-    double &maxweight2, double &opt_scale, double &bgmean, double &trymindiff, 
+    double &dLL, double &fracweight,
+    double &maxweight2, double &opt_scale, double &bgmean,
     int &opt_refno, double &opt_psi, int &iopt_psi, int &iopt_flip, Matrix1D<double> &opt_offsets,
     std::vector<double> &opt_offsets_ref, std::vector<double> &pdf_directions)
 {
@@ -1238,9 +1224,6 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         opt_scale = wsum_sc / wsum_sc2;
     }
 
-    // From here on lock threads
-    pthread_mutex_lock( &weightedsum_update_mutex );
-
     // Update all global weighted sums after division by sum_refw
     wsum_sigma_noise += (2 * wsum_corr / sum_refw);
     wsum_sigma_offset += (wsum_offset / sum_refw);
@@ -1293,192 +1276,26 @@ void Prog_MLalign2D_prm::expectationSingleImage(
             + gammln(-df2) - gammln(df/2.);
     LL += dLL;
 
-    pthread_mutex_unlock(  &weightedsum_update_mutex );
-
 }
 
 
-
-void * threadExpectationSingleImage( void * data )
+void Prog_MLalign2D_prm::expectation(int iter)
 {
-    structThreadExpectationSingleImage * thread_data = (structThreadExpectationSingleImage *) data;
 
-    // Variables from above
-    int thread_id = thread_data->thread_id;
-    int thread_num = thread_data->thread_num;
-    Prog_MLalign2D_prm *prm = thread_data->prm;
-    SelFile *SF = thread_data->SF;
-    int *iter = thread_data->iter;
-    double *wsum_sigma_noise = thread_data->wsum_sigma_noise;
-    double *wsum_sigma_offset = thread_data->wsum_sigma_offset;
-    double *sumfracweight = thread_data->sumfracweight;
-    double *LL = thread_data->LL;
-    std::vector<Matrix2D<std::complex<double > > > *wsumimgs = thread_data->wsumimgs;
-    std::vector<Matrix2D<std::complex<double > > > *fref = thread_data->fref; 
-    std::vector<Matrix2D<double > > *mref = thread_data->mref;
-    std::vector<Matrix1D<double > > *docfiledata = thread_data->docfiledata;
-    std::vector<double> *sumw = thread_data->sumw;
-    std::vector<double> *sumw2 = thread_data->sumw2;
-    std::vector<double> *sumwsc = thread_data->sumwsc;
-    std::vector<double> *sumwsc2 = thread_data->sumwsc2;
-    std::vector<double> *sumw_mirror = thread_data->sumw_mirror;
-
-    // Local variables
     ImageXmipp img;
     FileName fn_img, fn_trans;
-    std::vector<double> allref_offsets, pdf_directions(prm->n_ref);
+    std::vector<double> allref_offsets, pdf_directions(n_ref);
     Matrix2D<int> Msignificant;
-    Msignificant.resize(prm->n_ref, prm->nr_psi*prm->nr_flip);
+    Msignificant.resize(n_ref, nr_psi*nr_flip);
     Matrix1D<double> opt_offsets(2);
     float old_phi = -999., old_theta = -999.;
     double opt_psi, opt_flip, fracweight, maxweight2, trymindiff, dLL;
     double opt_xoff, opt_yoff, opt_scale = 1., bgmean = 0.;
     int opt_refno, iopt_psi, iopt_flip;
-
-    // Calculate myFirst and myLast image for this thread
-    int nn = (*SF).ImgNo();
-    int remaining = nn % thread_num;
-    int Npart = (int)(nn - remaining) / thread_num;
-    int myFirst, myLast, myNum;
-    if (thread_id < remaining)
-    {
-        myFirst = thread_id * (Npart + 1);
-        myLast = myFirst + Npart;
-    }
-    else
-    {
-        myFirst = thread_id * Npart + remaining;
-        myLast = myFirst + Npart - 1;
-    }
-    myNum = myLast - myFirst + 1;
-
-    if (prm->verb > 0 && thread_id==0) init_progress_bar(myNum);
-
-    // Loop over all images
-    int c = XMIPP_MAX(1, myNum / 60);
-    for (int imgno = myFirst; imgno <= myLast; imgno++)
-    {
-        pthread_mutex_lock(  &selfile_access_mutex );
-        (*SF).go_beginning();
-        (*SF).jump(imgno, SelLine::ACTIVE);
-        fn_img = (*SF).get_current_file();
-        pthread_mutex_unlock(  &selfile_access_mutex );
-
-        img.read(fn_img, false, false, false, false);
-        img().setXmippOrigin();
-
-        // These two parameters speed up expectationSingleImage
-        trymindiff = prm->imgs_trymindiff[imgno];
-        opt_refno = prm->imgs_optrefno[imgno];
-
-        if (prm->do_norm)
-        {
-            bgmean=prm->imgs_bgmean[imgno];
-            opt_scale = prm->imgs_scale[imgno];
-        }
-            
-        // Get optimal offsets for all references
-        if (prm->fast_mode)
-        {
-            allref_offsets = prm->imgs_offsets[imgno];
-        }
-            
-        // Read optimal orientations from memory
-        if (prm->limit_rot)
-        {
-            old_phi = prm->imgs_oldphi[imgno];
-            old_theta = prm->imgs_oldtheta[imgno];
-        }
-        
-        // For limited orientational search: preselect relevant directions
-        (*prm).preselectLimitedDirections(old_phi, old_theta, pdf_directions);
-        
-        // Use a maximum-likelihood target function in real space
-        // with complete or reduced-space translational searches (-fast)
-        
-        if (prm->fast_mode) (*prm).preselectFastSignificant(img(), allref_offsets, *mref,
-                                                            Msignificant, pdf_directions);
-        else Msignificant.initConstant(1);
-        (*prm).expectationSingleImage(img(), *fref, *wsumimgs, Msignificant,
-                                      *wsum_sigma_noise, *wsum_sigma_offset, 
-                                      *sumw, *sumw2, *sumwsc, *sumwsc2, 
-                                      *sumw_mirror, *LL, dLL, fracweight, *sumfracweight, 
-                                      maxweight2, opt_scale, bgmean, trymindiff, opt_refno, opt_psi,
-                                      iopt_psi, iopt_flip, opt_offsets, allref_offsets, pdf_directions);
-            
-        // Write optimal offsets for all references to disc
-        if (prm->fast_mode)
-        {
-            prm->imgs_offsets[imgno] = allref_offsets;
-        }
-            
-        // Store mindiff for next iteration
-        prm->imgs_trymindiff[imgno] = trymindiff;
-        // Store opt_refno for next iteration
-        prm->imgs_optrefno[imgno] = opt_refno;
-
-        // Store optimal phi and theta in memory
-        if (prm->limit_rot)
-        {
-            prm->imgs_oldphi[imgno] = prm->Iref[opt_refno].Phi();
-            prm->imgs_oldtheta[imgno] = prm->Iref[opt_refno].Theta();
-        }
-            
-        // Store optimal normalization parameters in memory
-        if (prm->do_norm)
-        {
-            prm->imgs_scale[imgno] = opt_scale;
-            prm->imgs_bgmean[imgno]  = bgmean;
-        }
-        
-        // Output docfile
-        opt_flip = 0.;
-        if (-opt_psi > 360.)
-        {
-            opt_psi += 360.;
-            opt_flip = 1.;
-        }
-        (*docfiledata)[imgno](0) = prm->Iref[opt_refno].Phi();     // rot
-        (*docfiledata)[imgno](1) = prm->Iref[opt_refno].Theta();   // tilt
-        (*docfiledata)[imgno](2) = opt_psi + 360.;            // psi
-        (*docfiledata)[imgno](3) = opt_offsets(0);            // Xoff
-        (*docfiledata)[imgno](4) = opt_offsets(1);            // Yoff
-        (*docfiledata)[imgno](5) = (double)(opt_refno + 1);   // Ref
-        (*docfiledata)[imgno](6) = opt_flip;                  // Mirror
-        (*docfiledata)[imgno](7) = fracweight;                // P_max/P_tot
-        (*docfiledata)[imgno](8) = dLL;                       // log-likelihood
-        if (prm->do_norm)
-        {
-            (*docfiledata)[imgno](9)  = bgmean;               // background mean
-            (*docfiledata)[imgno](10) = opt_scale;            // image scale 
-        }
-        if (prm->do_student)
-        {
-            (*docfiledata)[imgno](11) = maxweight2;           // Robustness weight
-        }
-            
-        if (prm->verb > 0 && thread_id==0) if (imgno % c == 0) progress_bar(imgno);
-    }
-    if (prm->verb > 0 && thread_id==0) progress_bar(myNum);
-
-}
-
-void Prog_MLalign2D_prm::expectation(
-        SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
-        double &LL, double &sumfracweight, DocFile &DFo,
-        std::vector<Matrix2D<double> > &wsum_Mref,
-        double &wsum_sigma_noise, double &wsum_sigma_offset, 
-	std::vector<double> &sumw, std::vector<double> &sumw2, 
-        std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror)
-{
-
     Matrix1D<double> dataline(DATALINELENGTH);
-    Matrix2D<std::complex<double> > Fdzero(dim,hdim+1); 
-    std::vector<Matrix2D<double> > mref;
-    std::vector<Matrix2D<std::complex<double> > > fref, wsumimgs;
-    std::vector<Matrix1D<double> > docfiledata;
+    Matrix2D<std::complex<double> > Fdzero(dim,hdim+1);
     bool fill_real_space;
-    int num_img_tot;
+    int num_img_tot = SF.ImgNo();
 
 #ifdef DEBUG
     std::cerr<<"entering expectation"<<std::endl;
@@ -1489,7 +1306,7 @@ void Prog_MLalign2D_prm::expectation(
         fill_real_space = true;
     else
         fill_real_space = false;
-    rotateReference(Iref, fill_real_space, mref, fref);
+    rotateReference(fill_real_space);
 
     // Pre-calculate pdf of all in-plane transformations
     calculatePdfInplane();
@@ -1505,8 +1322,6 @@ void Prog_MLalign2D_prm::expectation(
     wsum_sigma_offset = 0.;
     sumfracweight = 0.;
     dataline.initZeros();
-    for (int i = 0; i < SF.ImgNo(); i++)
-        docfiledata.push_back(dataline);
     Fdzero.initZeros();
     for (int i = 0; i <n_ref*nr_psi; i++)
     {
@@ -1521,52 +1336,116 @@ void Prog_MLalign2D_prm::expectation(
         sumwsc2.push_back(0.);
     }
 
-    // Call threads to calculate the expectation of each image in the selfile
-    pthread_t * th_ids = new pthread_t[threads];
-    structThreadExpectationSingleImage * threads_d = new structThreadExpectationSingleImage[threads];
-    for( int c = 0 ; c < threads ; c++ )
-    {
-        threads_d[c].thread_id = c;
-        threads_d[c].thread_num = threads;
-        threads_d[c].prm = this;
-        threads_d[c].SF=&SF;
-        threads_d[c].iter=&iter;
-        threads_d[c].wsum_sigma_noise=&wsum_sigma_noise;
-        threads_d[c].wsum_sigma_offset=&wsum_sigma_offset;
-        threads_d[c].sumfracweight=&sumfracweight;
-        threads_d[c].LL=&LL;
-        threads_d[c].wsumimgs=&wsumimgs;
-        threads_d[c].fref=&fref;
-        threads_d[c].mref=&mref;
-        threads_d[c].docfiledata=&docfiledata;
-        threads_d[c].sumw=&sumw;
-        threads_d[c].sumw2=&sumw2;
-        threads_d[c].sumwsc=&sumwsc;
-        threads_d[c].sumwsc2=&sumwsc2;
-        threads_d[c].sumw_mirror=&sumw_mirror;
-        pthread_create( (th_ids+c), NULL, threadExpectationSingleImage, (void *)(threads_d+c) );
-    }
+    // Initialize time barch
+    int c = XMIPP_MAX(1, num_img_tot / 60);
+    if (verb > 0) init_progress_bar(num_img_tot);
 
-    // Wait for threads to finish and get joined DocFile
-    for( int c = 0 ; c < threads ; c++ )
-    {
-        pthread_join(*(th_ids+c),NULL);
-    }
+    // Loop over all images
+    int imgno = 0;
+  	SF.go_beginning();
+  	while ((!SF.eof()))
+  	{
+  		fn_img = SF.NextImg();
+  		if (fn_img=="") break;
+        img.read(fn_img, false, false, false, false);
+        img().setXmippOrigin();
 
-    // Thread structures are not needed any more
-    delete [] th_ids;
-    delete [] threads_d;
+        // These two parameters speed up expectationSingleImage
+        trymindiff = imgs_trymindiff[imgno];
+        opt_refno = imgs_optrefno[imgno];
+
+        if (do_norm)
+        {
+            bgmean=imgs_bgmean[imgno];
+            opt_scale = imgs_scale[imgno];
+        }
+            
+        // Get optimal offsets for all references
+        if (fast_mode)
+        {
+            allref_offsets = imgs_offsets[imgno];
+        }
+            
+        // Read optimal orientations from memory
+        if (limit_rot)
+        {
+            old_phi = imgs_oldphi[imgno];
+            old_theta = imgs_oldtheta[imgno];
+        }
+        
+        // For limited orientational search: preselect relevant directions
+        preselectLimitedDirections(old_phi, old_theta, pdf_directions);
+        
+        // Use a maximum-likelihood target function in real space
+        // with complete or reduced-space translational searches (-fast)
+        
+        if (fast_mode) preselectFastSignificant(img(), allref_offsets, Msignificant, pdf_directions);
+        else Msignificant.initConstant(1);
+        expectationSingleImage(img(), Msignificant,
+								dLL, fracweight,
+								maxweight2, opt_scale, bgmean, opt_refno, opt_psi,
+								iopt_psi, iopt_flip, opt_offsets, allref_offsets, pdf_directions);
+            
+        // Write optimal offsets for all references to disc
+        if (fast_mode)
+        {
+            imgs_offsets[imgno] = allref_offsets;
+        }
+            
+        // Store mindiff for next iteration
+        imgs_trymindiff[imgno] = trymindiff;
+        // Store opt_refno for next iteration
+        imgs_optrefno[imgno] = opt_refno;
+
+        // Store optimal phi and theta in memory
+        if (limit_rot)
+        {
+            imgs_oldphi[imgno] = Iref[opt_refno].Phi();
+            imgs_oldtheta[imgno] = Iref[opt_refno].Theta();
+        }
+            
+        // Store optimal normalization parameters in memory
+        if (do_norm)
+        {
+            imgs_scale[imgno] = opt_scale;
+            imgs_bgmean[imgno]  = bgmean;
+        }
+        
+        // Output docfile
+        opt_flip = 0.;
+        if (-opt_psi > 360.)
+        {
+            opt_psi += 360.;
+            opt_flip = 1.;
+        }
+        dataline(0) = Iref[opt_refno].Phi();     // rot
+        dataline(1) = Iref[opt_refno].Theta();   // tilt
+        dataline(2) = opt_psi + 360.;            // psi
+        dataline(3) = opt_offsets(0);            // Xoff
+        dataline(4) = opt_offsets(1);            // Yoff
+        dataline(5) = (double)(opt_refno + 1);   // Ref
+        dataline(6) = opt_flip;                  // Mirror
+        dataline(7) = fracweight;                // P_max/P_tot
+        dataline(8) = dLL;                       // log-likelihood
+        if (do_norm)
+        {
+            dataline(9)  = bgmean;               // background mean
+            dataline(10) = opt_scale;            // image scale
+        }
+        if (do_student)
+        {
+            dataline(11) = maxweight2;           // Robustness weight
+        }
+        DFo.append_comment(fn_img);
+        DFo.append_data_line(dataline);
+
+        if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
+        imgno++;
+    }
+    if (verb > 0) progress_bar(num_img_tot);
 
     // Rotate back and calculate weighted sums
-    reverseRotateReference(wsumimgs, wsum_Mref);
-
-    // Send back output in the form of a DocFile
-    SF.go_beginning();
-    for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
-    {
-        DFo.append_comment(SF.NextImg());
-        DFo.append_data_line(docfiledata[imgno]);
-    }
+    reverseRotateReference();
 
 #ifdef DEBUG
     std::cerr<<"leaving expectation"<<std::endl;
@@ -1575,11 +1454,7 @@ void Prog_MLalign2D_prm::expectation(
 }
 
 // Update all model parameters
-void Prog_MLalign2D_prm::maximization(std::vector<Matrix2D<double> > &wsum_Mref,
-        double &wsum_sigma_noise, double &wsum_sigma_offset,
-        std::vector<double> &sumw, std::vector<double> &sumw2, 
-        std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror,
-        double &sumfracweight, double &sumw_allrefs, int refs_per_class)
+void Prog_MLalign2D_prm::maximization(int refs_per_class)
 {
 
 #ifdef DEBUG
@@ -1696,7 +1571,7 @@ void Prog_MLalign2D_prm::maximization(std::vector<Matrix2D<double> > &wsum_Mref,
 }
 
 // Check convergence
-bool Prog_MLalign2D_prm::checkConvergence(std::vector<double> &conv)
+bool Prog_MLalign2D_prm::checkConvergence()
 {
 
 #ifdef DEBUG
@@ -1735,9 +1610,7 @@ bool Prog_MLalign2D_prm::checkConvergence(std::vector<double> &conv)
     return converged;
 }
 
-void Prog_MLalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
-                                          double &sumw_allrefs, double &LL, double &avefracweight, 
-                                          std::vector<double> &conv)
+void Prog_MLalign2D_prm::writeOutputFiles(const int iter)
 {
 
     FileName          fn_tmp, fn_base, fn_tmp2;
@@ -1783,7 +1656,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
 
     DFl.go_beginning();
     comment = "MLalign2D-logfile: Number of images= " + floatToString(sumw_allrefs);
-    comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(avefracweight, 10, 5);
+    comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= " + floatToString(sumfracweight, 10, 5);
     if (do_norm)
         comment+= " <scale>= " + floatToString(average_scale, 10, 5);
     DFl.insert_comment(comment);

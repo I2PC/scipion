@@ -45,31 +45,6 @@
 #define DATALINELENGTH 12
 class Prog_MLalign2D_prm;
 
-// Thread declaration
-void * threadExpectationSingleImage( void * data );
-
-// This structure is needed to pass parameters to threadExpectationSingleImage
-typedef struct{
-    int thread_id;
-    int thread_num;
-    Prog_MLalign2D_prm *prm;
-    SelFile *SF;
-    int *iter;
-    double *wsum_sigma_noise;
-    double *wsum_sigma_offset;
-    double *sumfracweight;
-    double *LL;
-    std::vector<Matrix2D<std::complex<double> > > *wsumimgs;
-    std::vector<Matrix2D<std::complex<double> > > *fref;
-    std::vector<Matrix2D<double> > *mref;
-    std::vector<Matrix1D<double> > *docfiledata;
-    std::vector<double> *sumw;
-    std::vector<double> *sumw2;
-    std::vector<double> *sumwsc;
-    std::vector<double> *sumwsc2;
-    std::vector<double> *sumw_mirror;
-} structThreadExpectationSingleImage ;
-
 /**@defgroup MLalign2D ml_align2d (Maximum likelihood in 2D)
    @ingroup ReconsLibraryPrograms */
 //@{
@@ -158,6 +133,21 @@ public:
     std::vector<std::vector<double> > imgs_offsets;
     /** For initial guess of mindiff */
     double trymindiff_factor;
+    /** Log Likelihood */
+    double LL;
+    /** weighted sums and sum of weights */
+    double sumw_allrefs, sumfracweight, wsum_sigma_noise, wsum_sigma_offset;
+    std::vector<Matrix2D<double > > wsum_Mref;
+    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
+    /** Output document file with output optimal assignments*/
+    DocFile DFo;
+    /** Convergence values */
+    std::vector<double> conv;
+
+    //for new threads
+    std::vector<Matrix2D<double> > mref;
+    std::vector<Matrix2D<std::complex<double> > > fref, wsumimgs;
+    double trymindiff;
 
     /// Students t-distribution
     /** Use t-student distribution instead of normal one */
@@ -210,14 +200,10 @@ public:
     void calculatePdfInplane();
 
     /// Fill vector of matrices with all rotations of reference
-    void rotateReference(std::vector< ImageXmippT<double> > &Iref,
-                         bool fill_real_space, 
-                         std::vector<Matrix2D<double> > &mref, 
-                         std::vector<Matrix2D<std::complex<double > > > &fref);
+    void rotateReference(bool fill_real_space);
 
     /// Apply reverse rotations to all matrices in vector and fill new matrix with their sum
-    void reverseRotateReference(std::vector<Matrix2D<std::complex<double > > > &fnew, 
-                                std::vector<Matrix2D<double> > &Mref);
+    void reverseRotateReference();
 
     /** Calculate which references have projection directions close to
         phi and theta */
@@ -227,48 +213,29 @@ public:
     /** Pre-calculate which model and phi have significant probabilities
        without taking translations into account! */
     void preselectFastSignificant(Matrix2D<double> &Mimg, std::vector<double> &offsets,
-                                  std::vector<Matrix2D<double> > &mref,
                                   Matrix2D<int> &Msignificant,
                                   std::vector<double > &pdf_directions);
 
     /// ML-integration over all (or -fast) translations
     void expectationSingleImage(Matrix2D<double> &Mimg,
-                                std::vector<Matrix2D<std::complex<double> > > &fref,
-                                std::vector<Matrix2D<std::complex<double> > > &wsumimgs,
                                 Matrix2D<int> &Msignificant,
-                                double &wsum_sigma_noise, double &wsum_sigma_offset,
-                                std::vector<double> &sumw, std::vector<double> &sumw2,
-                                std::vector<double> &sumwsc, std::vector<double> &sumwsc2, 
-                                std::vector<double> &sumw_mirror,
-                                double &LL, double &dLL, double &fracweight, double &sumfracweight, 
-                                double &maxweight2, double &opt_scale, double &bgmean, double &trymindiff,
+                                double &dLL, double &fracweight,
+                                double &maxweight2, double &opt_scale, double &bgmean,
                                 int &opt_refno, double &opt_psi, int &iopt_psi, int &iopt_flip, 
                                 Matrix1D<double> &opt_offsets, std::vector<double> &opt_offsets_ref,
                                 std::vector<double > &pdf_directions);
 
     /// Integrate over all experimental images
-    void expectation(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
-                     double &LL, double &sumfracweight, DocFile &DFo,
-                     std::vector<Matrix2D<double> > &wsum_Mref,
-                     double &wsum_sigma_noise, double &wsum_sigma_offset,
-                     std::vector<double> &sumw, std::vector<double> &sum2, 
-                     std::vector<double> &sumwsc, std::vector<double> &sumwsc2, std::vector<double> &sumw_mirror);
+    void expectation(int iter);
 
     /// Update all model parameters
-    void maximization(std::vector<Matrix2D<double> > &wsum_Mref,
-                      double &wsum_sigma_noise, double &wsum_sigma_offset, 
-                      std::vector<double> &sumw, std::vector<double> &sumw2, 
-                      std::vector<double> &sumwsc, std::vector<double> &sumwsc2, 
-                      std::vector<double> &sumw_mirror,
-                      double &sumfracweight, double &sumw_allrefs, int refs_per_class=1);
+    void maximization(int refs_per_class=1);
 
     /// check convergence
-    bool checkConvergence(std::vector<double> &conv);
+    bool checkConvergence();
 
     /// Write out reference images, selfile and logfile
-    void writeOutputFiles(const int iter, DocFile &DFo,
-                          double &sumw_allrefs, double &LL, double &avefracweight,
-                          std::vector<double> &conv);
+    void writeOutputFiles(const int iter);
 
 };
 //@}

@@ -28,16 +28,10 @@
 int main(int argc, char **argv)
 {
     int c, nn, imgno, opt_refno;
-    double LL, sumw_allrefs, convv, sumcorr;
     bool converged;
-    std::vector<double> conv;
-    double aux, wsum_sigma_noise, wsum_sigma_offset;
-    std::vector<Matrix2D<double > > wsum_Mref;
-    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
-    Matrix2D<double> P_phi, Mr2, Maux;
+    double aux;
+    Matrix2D<double> Maux;
     FileName fn_img, fn_tmp;
-    Matrix1D<double> oneline(0);
-    DocFile DFo;
 
     Prog_MLalign2D_prm prm;
 
@@ -81,26 +75,20 @@ int main(int argc, char **argv)
 
             for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
 
-            DFo.clear();
-            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
+            prm.DFo.clear();
+            prm.DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
 
             // Integrate over all images
-            prm.expectation(prm.SF, prm.Iref, iter,
-                            LL, sumcorr, DFo, wsum_Mref,
-                            wsum_sigma_noise, wsum_sigma_offset, 
-                            sumw, sumw2, sumwsc, sumwsc2, sumw_mirror);
+            prm.expectation(iter);
 
             // Update model parameters
-            prm.maximization(wsum_Mref, 
-                             wsum_sigma_noise, wsum_sigma_offset, 
-                             sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, 
-                             sumcorr, sumw_allrefs);
+            prm.maximization();
 
             // Check convergence
-            converged = prm.checkConvergence(conv);
+            converged = prm.checkConvergence();
 
             // Write output files
-            prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+            prm.writeOutputFiles(iter);
 
             if (converged)
             {
@@ -109,7 +97,7 @@ int main(int argc, char **argv)
             }
 
         } // end loop iterations
-        prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+        prm.writeOutputFiles(-1);
 
     }
     catch (Xmipp_error XE)
