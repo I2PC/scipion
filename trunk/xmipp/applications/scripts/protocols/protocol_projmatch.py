@@ -480,7 +480,7 @@ ResolSam=2.8
 DisplayResolution=False
 
 #-----------------------------------------------------------------------------
-# {section} Low-pass filtering
+# {section} Postprocessing
 #-----------------------------------------------------------------------------
 # Low-pass filter the reference?
 DoLowPassFilter=True
@@ -515,6 +515,10 @@ UseFscForFilter=True
     Note: if there are more values than iterations the extra value are ignored
 """
 ConstantToAddToFiltration='0.1'
+
+# {expert} Center volume
+""" Center volume after each iteration """
+DoCenterVolume=True
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -644,7 +648,8 @@ class projection_matching_class:
 		_OnlyWinner,
                 _DoLowPassFilter,
                 _UseFscForFilter,
-                _ConstantToAddToFiltration
+                _ConstantToAddToFiltration,
+                _DoCenterVolume
                 ):
        # Import libraries and add Xmipp libs to default search path
        import os,sys,shutil
@@ -1023,6 +1028,12 @@ class projection_matching_class:
                                      self._ReconstructedandfilteredVolume[1+_iteration_number],
                                      self._MySystemFlavour
                                      )
+
+          # Center the volume if necessary
+          if (_DoCenterVolume):
+            execute_center_volume(self._mylog,
+                self._ReconstructedandfilteredVolume[1+_iteration_number],
+                self._MySystemFlavour)
 
           # Remove all class averages and reference projections
           if (self._CleanUpFiles):
@@ -1745,7 +1756,35 @@ def filter_at_given_resolution(_DoLowPassFilter,
 
 
 #------------------------------------------------------------------------
-#create_working directory
+# Recenter volume
+#------------------------------------------------------------------------
+def execute_center_volume(_mylog,
+                          _volume,
+                          _MySystemFlavour):
+    import launch_job
+    _mylog.info("Centering "+_volume)
+    
+    # Symmetrize input volume
+    command = "-i "+_volume+".vol -o tmp.vol -sym i3"
+    launch_job.launch_job("xmipp_symmetrize",
+                         command,
+                         _mylog,
+                         False,1,1,_MySystemFlavour)
+    
+    # Align input volume
+    command = "-i1 tmp.vol -i2 "+_volume+".vol -local -onlyShift -apply"
+    launch_job.launch_job("xmipp_align_volumes",
+                         command,
+                         _mylog,
+                         False,1,1,_MySystemFlavour)
+
+    launch_job.launch_job("rm",
+                         "tmp.vol",
+                         _mylog,
+                         False,1,1,_MySystemFlavour)
+
+#------------------------------------------------------------------------
+#clean working directory
 #------------------------------------------------------------------------
 def execute_cleanup(_mylog,
                     _DeleteClassAverages,
