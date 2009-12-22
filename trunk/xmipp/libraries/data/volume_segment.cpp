@@ -319,6 +319,7 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
     {
         mask()=V();
         EntropyOtsuSegmentation(mask());
+        ok=true;
     }
 
     if (do_prob)
