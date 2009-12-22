@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     int      tell;
     bool     apply;
     bool     mask_enabled, mean_in_mask;
-    bool     usePowell;
+    bool     usePowell, onlyShift;
     Mask_Params mask(INT_MASK);
 
     // Get parameters =======================================================
@@ -133,6 +133,7 @@ int main(int argc, char **argv)
             mask.read(argc, argv);
 
 	usePowell = checkParameter(argc, argv, "-local");
+        onlyShift = checkParameter(argc, argv, "-onlyShift");
 
         if (step_rot   == 0) step_rot	= 1;
         if (step_tilt  == 0) step_tilt  = 1;
@@ -261,6 +262,8 @@ int main(int argc, char **argv)
 	    double fitness;
 	    int iter;
 	    steps.initConstant(1);
+            if (onlyShift)
+                steps(0)=steps(1)=steps(2)=steps(3)=steps(4)=0;
 	    x(0)=(grey_scale0+grey_scaleF)/2;
 	    x(1)=(rot0+rotF)/2;
 	    x(2)=(tilt0+tiltF)/2;
@@ -323,6 +326,7 @@ void Usage(const Mask_Params &m)
 	      << "  [-least_squares]			     : LS fitness criterion\n"
 	      << "  [-local]                                 : Use local optimizer instead of\n"
 	      << "                                             exhaustive search\n"
+              << "  [-onlyShift]                             : Only shift\n"
     ;
     m.usage();
     std::cout << std::endl;
