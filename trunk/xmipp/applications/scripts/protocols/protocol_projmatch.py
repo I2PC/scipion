@@ -1901,5 +1901,6 @@ if __name__ == '__main__':
                 OnlyWinner,
                 DoLowPassFilter,
                 UseFscForFilter,
-                ConstantToAddToFiltration
+                ConstantToAddToFiltration,
+                DoCenterVolume
                 )
