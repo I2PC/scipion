@@ -158,10 +158,11 @@ void QtFileMenu::slotLoadCoords()
             fn = (char*)coordFileDialog.selectedFile().ascii();
             fn = fn.without_extension();
             FileName familyName;
-            int i=fn.find(m->micrograph_name()+".");
+            FileName micrographName=m->micrograph_name().remove_directories();
+            int i=fn.find(micrographName+".");
             if (i!=-1)
-                familyName=fn.substr(i+m->micrograph_name().length()+1,
-                    fn.length()-(i+m->micrograph_name().length()+1));
+                familyName=fn.substr(i+micrographName.length()+1,
+                    fn.length()-(i+micrographName.length()+1));
             else familyName=fn.get_extension().c_str();
             emit signalAddFamily(familyName.c_str());
 
