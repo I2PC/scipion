@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Pedro A. de Alarcï¿½n (pedro@cnb.csic.es)
+ *              Pedro A. de Alarcón (pedro@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -34,12 +34,15 @@ public:
 #define DILATION     1
 #define EROSION      2
 #define OPENING      3
-#define CLOSING        4
+#define CLOSING      4
+#define SHARPENING   5
     int operation;
 
     int size;
     int count;
     int neig;
+    double width;
+    double strength;
 public:
     void read(int argc, char **argv)
     {
@@ -48,6 +51,15 @@ public:
         if (checkParameter(argc, argv, "-ero"))      operation = EROSION;
         if (checkParameter(argc, argv, "-clo"))      operation = CLOSING;
         if (checkParameter(argc, argv, "-ope"))      operation = OPENING;
+        if (checkParameter(argc, argv, "-sharp"))
+        {
+            operation = SHARPENING;
+            int i = paremeterPosition(argc, argv, "-sharp");
+            if (i+2>=argc)
+                REPORT_ERROR(1,"Not enough parameters after -sharp");
+            width=textToFloat(argv[i+1]);
+            strength=textToFloat(argv[i+2]);
+        }
 
         size = textToInteger(getParameter(argc, argv, "-size", "1"));
         neig = textToInteger(getParameter(argc, argv, "-neig", "-1"));
@@ -60,36 +72,43 @@ public:
         std::cout << "Performing a ";
         switch (operation)
         {
-        case DILATION       :
-            std::cout << "Dilation\n";
-            break;
-        case EROSION       :
-            std::cout << "Erosion\n";
-            break;
-        case OPENING       :
-            std::cout << "Opening\n";
-            break;
-        case CLOSING       :
-            std::cout << "Closing\n";
-            break;
+            case DILATION       :
+                std::cout << "Dilation\n";
+                break;
+            case EROSION       :
+                std::cout << "Erosion\n";
+                break;
+            case OPENING       :
+                std::cout << "Opening\n";
+                break;
+            case CLOSING       :
+                std::cout << "Closing\n";
+                break;
+            case SHARPENING    :
+                std::cout << "Sharpening\n"
+                          << "Width = " << width << std::endl
+                          << "Strength = " << strength << std::endl;
         }
-        std::cout << "Size=" << size << std::endl
-        << "Neighbourhood=" << neig << std::endl
-        << "Count=" << count << std::endl;
+        if (operation!=SHARPENING)
+            std::cout << "Size=" << size << std::endl
+                      << "Neighbourhood=" << neig << std::endl
+                      << "Count=" << count << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
         std::cerr << "  [-dil]             : Apply dilation\n"
-        << "  [-ero]             : Apply erosion\n"
-        << "  [-clo]             : Apply closing\n"
-        << "  [-ope]             : Apply opening\n"
-        << "  [-neig <n=8 | 18>]  : Neighborhood considered \n"
-        << "                        (2D:4,8 3D:6,18,26)\n"
-        << "  [-size <s=1>]       : Size of the Strutural element\n"
-        << "  [-count <c=0>]      : Minimum required neighbors with \n"
-        << "                        distinct value\n"
+                  << "  [-ero]             : Apply erosion\n"
+                  << "  [-clo]             : Apply closing\n"
+                  << "  [-ope]             : Apply opening\n"
+                  << "  [-neig <n=8 | 18>] : Neighborhood considered \n"
+                  << "                       (2D:4,8 3D:6,18,26)\n"
+                  << "  [-size <s=1>]      : Size of the Strutural element\n"
+                  << "  [-count <c=0>]     : Minimum required neighbors with \n"
+                  << "                       distinct value\n"
+                  << "  [-sharp <w> <s>]   : Sharpening with width (suggested 1 or 2)\n"
+                  << "                       and strength (suggested 0.1-1.0)\n"
         ;
     }
 };
@@ -102,21 +121,25 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     ImageXmipp retval;
     retval() = img();
 
-    std::cout << "Initially the image has " << img().sum() << " pixels set to 1\n";
+    if (eprm->operation!=SHARPENING)
+        std::cout << "Initially the image has " << img().sum()
+                  << " pixels set to 1\n";
     switch (eprm->operation)
     {
-    case DILATION:
-        dilate2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
-    case EROSION:
-        erode2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
-    case OPENING:
-        opening2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
-    case CLOSING:
-        closing2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
+        case DILATION:
+            dilate2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+            break;
+        case EROSION:
+            erode2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+            break;
+        case OPENING:
+            opening2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+            break;
+        case CLOSING:
+            closing2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+            break;
+        case SHARPENING:
+            REPORT_ERROR(1,"Sharpening has not been implemented for images");
     }
 
     img() = retval();
@@ -131,25 +154,31 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     VolumeXmipp retval;
     retval() = vol();
 
-    std::cout << "Initially the volume has " << vol().sum() << " voxels set to 1\n";
+    if (eprm->operation!=SHARPENING)
+        std::cout << "Initially the volume has " << vol().sum()
+                  << " voxels set to 1\n";
     switch (eprm->operation)
     {
-    case DILATION:
-        dilate3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
-    case EROSION:
-        erode3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
-    case OPENING:
-        opening3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
-    case CLOSING:
-        closing3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
+        case DILATION:
+            dilate3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
+            break;
+        case EROSION:
+            erode3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
+            break;
+        case OPENING:
+            opening3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
+            break;
+        case CLOSING:
+            closing3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
+            break;
+        case SHARPENING:
+            sharpening(vol(),eprm->width, eprm->strength, retval());
     }
 
     vol() = retval();
-    std::cout << "Finally the volume has " << vol().sum() << " voxels set to 1\n";
+    if (eprm->operation!=SHARPENING)
+        std::cout << "Finally the volume has " << vol().sum()
+                  << " voxels set to 1\n";
     return true;
 }
 
@@ -158,53 +187,3 @@ int main(int argc, char **argv)
     Morphology_parameters prm;
     SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
-
-/* Menus =================================================================== */
-/*Colimate:
-   PROGRAM Morphology {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Morphology/Help/morphology.html";
-      help="Apply morphology filters to binary images and volumes";
-      OPEN MENU menu_morphology;
-      COMMAND LINES {
- + usual: xmipp_morphology
-               #include "prog_line.mnu"
-          $OP [-neig $NEIG $NEIG_LIST] [-size $SIZE] [-count $COUNT]
-      }
-      PARAMETER DEFINITIONS {
-         #include "prog_vars.mnu"
-         $OP {
-     label="Filter type";
-     type=exclusion {
-        "Dilation" {-dil}
-        "Erosion"  {-ero}
-        "Opening"  {-ope}
-        "Closing"  {-clo}
-     };
-  }
-  $NEIG {shown=no; type=natural;}
-  $NEIG_LIST {
-     label="Neighbourhood";
-     type=list {
-         "4" {$NEIG=4;}
-         "8" {$NEIG=8;}
-         "6" {$NEIG=6;}
-        "18" {$NEIG=18;}
-        "26" {$NEIG=26;}
-     };
-
-  }
-  $SIZE {type=float; label="Structuring box size"; by default=1;}
-  $COUNT {type=natural;
-     label="Minimum no. of neighbours to be considered different";
-     by default=0;}
-      }
-   }
-
-   MENU menu_morphology {
-      #include "prog_menu.mnu"
-      $OP
-      OPT($NEIG)
-      OPT($SIZE)
-      OPT($COUNT)
-   }
-*/
