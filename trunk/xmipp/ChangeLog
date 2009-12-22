@@ -9,6 +9,8 @@
 - Differential Evolution (de_solver in /data) now uses Xmipp's own Random
 generator, seems to solve a problem with heap corruption.
 - Bug fix when reading the family name of the position file in xmipp_micrograph_mark
+- Recenter volume optionally in xmipp_protocol_projection_matching
+- Now xmipp_align_volumes can align only by translational alignment
 
 2.4
 
