@@ -11,6 +11,7 @@ generator, seems to solve a problem with heap corruption.
 - Bug fix when reading the family name of the position file in xmipp_micrograph_mark
 - Recenter volume optionally in xmipp_protocol_projection_matching
 - Now xmipp_align_volumes can align only by translational alignment
+- 3D Morphological sharpening added to xmipp_morphology
 
 2.4
 
