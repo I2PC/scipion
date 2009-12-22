@@ -1289,7 +1289,7 @@ void Prog_MLalign2D_prm::expectation(int iter)
     Msignificant.resize(n_ref, nr_psi*nr_flip);
     Matrix1D<double> opt_offsets(2);
     float old_phi = -999., old_theta = -999.;
-    double opt_psi, opt_flip, fracweight, maxweight2, trymindiff, dLL;
+    double opt_psi, opt_flip, fracweight, maxweight2, dLL;
     double opt_xoff, opt_yoff, opt_scale = 1., bgmean = 0.;
     int opt_refno, iopt_psi, iopt_flip;
     Matrix1D<double> dataline(DATALINELENGTH);
