@@ -96,19 +96,40 @@ void random_convex_hull(const Matrix2D<double> &img, Matrix2D<double> &hull,
 
     The output image must be already resized to the desired shape*/
 //@{
-/** Dilate.
+/** Binary Dilate.
     See the group documentation for the parameter meanings */
 void dilate3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
               int count, int size);
-/** Erode.
+/** Binary Erode.
     See the group documentation for the parameter meanings */
 void erode3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
              int count, int size);
-/** Closing=Dilation+Erosion */
+/** Binary Closing=Dilation+Erosion */
 void closing3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                int count, int size);
-/** Opening=Erosion+Dilation */
+/** Binary Opening=Erosion+Dilation */
 void opening3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                int count, int size);
+
+/** Gray dilation.
+    The structuring element must be centered at 0. */
+void dilate3D(const Matrix3D<double> &in,
+              const Matrix3D<double> &structuringElement,
+              Matrix3D<double> &out);
+
+/** Gray erosion.
+    The structuring element must be centered at 0. */
+void erode3D(const Matrix3D<double> &in,
+              const Matrix3D<double> &structuringElement,
+              Matrix3D<double> &out);
+
+/** Sharpening.
+    Width (radius in pixels), strength (as a percentange of the input range).
+    
+    Implemented according to JGM Schavemaker, MJT Reinders, JJ Gerbrands,
+    E Backer. Image sharpening by morphological filtering. Pattern Recognition
+    33: 997-1012 (2000). */
+void sharpening(const Matrix3D<double> &in, double width, double strength,
+              Matrix3D<double> &out);
 //@}
 #endif

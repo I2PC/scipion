@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Pedro A. de Alarcï¿½n     (pedro@cnb.csic.es)
+ *              Pedro A. de Alarcón     (pedro@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -455,5 +455,108 @@ void opening3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
     { //dilate
         dilate3D_step(tmp, out, neig, count);
         tmp = out;
+    }
+}
+
+// Grey operations ---------------------------------------------------------
+void dilate3D(const Matrix3D<double> &in,
+              const Matrix3D<double> &structuringElement,
+              Matrix3D<double> &out)
+{
+    out.initZeros(in);
+    double maxval=in.computeMax();
+    for (int kk=0; kk<ZSIZE(out); kk++)
+        for (int ii=0; ii<YSIZE(out); ii++)
+            for (int jj=0; jj<XSIZE(out); jj++)
+            {
+                double maxLocal=DIRECT_VOL_ELEM(in,kk,ii,jj)+
+                    VOL_ELEM(structuringElement,0,0,0);
+                int k0=XMIPP_MAX(0,kk+STARTINGZ(structuringElement))-kk;
+                int kF=XMIPP_MIN(ZSIZE(out)-1,kk+FINISHINGZ(structuringElement))-kk;
+                int i0=XMIPP_MAX(0,ii+STARTINGY(structuringElement))-ii;
+                int iF=XMIPP_MIN(YSIZE(out)-1,ii+FINISHINGY(structuringElement))-ii;
+                int j0=XMIPP_MAX(0,jj+STARTINGX(structuringElement))-jj;
+                int jF=XMIPP_MIN(XSIZE(out)-1,jj+FINISHINGX(structuringElement))-jj;
+                for (int k=k0; k<=kF; k++)
+                    for (int i=i0; i<=iF; i++)
+                        for (int j=j0; j<=jF; j++)
+                        {
+                            double val=DIRECT_VOL_ELEM(in,kk+k,ii+i,jj+j)+
+                                VOL_ELEM(structuringElement,k,i,j);
+                            maxLocal=XMIPP_MAX(maxLocal,val);
+                        }
+                maxLocal=XMIPP_MIN(maxLocal,maxval);
+                DIRECT_VOL_ELEM(out,kk,ii,jj)=maxLocal;
+            }
+}
+
+void erode3D(const Matrix3D<double> &in,
+              const Matrix3D<double> &structuringElement,
+              Matrix3D<double> &out)
+{
+    out.initZeros(in);
+    double minval=in.computeMin();
+    for (int kk=0; kk<ZSIZE(out); kk++)
+        for (int ii=0; ii<YSIZE(out); ii++)
+            for (int jj=0; jj<XSIZE(out); jj++)
+            {
+                double minLocal=DIRECT_VOL_ELEM(in,kk,ii,jj)-
+                    VOL_ELEM(structuringElement,0,0,0);
+                int k0=XMIPP_MAX(0,kk+STARTINGZ(structuringElement))-kk;
+                int kF=XMIPP_MIN(ZSIZE(out)-1,kk+FINISHINGZ(structuringElement))-kk;
+                int i0=XMIPP_MAX(0,ii+STARTINGY(structuringElement))-ii;
+                int iF=XMIPP_MIN(YSIZE(out)-1,ii+FINISHINGY(structuringElement))-ii;
+                int j0=XMIPP_MAX(0,jj+STARTINGX(structuringElement))-jj;
+                int jF=XMIPP_MIN(XSIZE(out)-1,jj+FINISHINGX(structuringElement))-jj;
+                for (int k=k0; k<=kF; k++)
+                    for (int i=i0; i<=iF; i++)
+                        for (int j=j0; j<=jF; j++)
+                        {
+                            double val=DIRECT_VOL_ELEM(in,kk+k,ii+i,jj+j)-
+                                VOL_ELEM(structuringElement,k,i,j);
+                            minLocal=XMIPP_MIN(minLocal,val);
+                        }
+                minLocal=XMIPP_MAX(minLocal,minval);
+                DIRECT_VOL_ELEM(out,kk,ii,jj)=minLocal;
+            }
+}
+
+/* Sharpening -------------------------------------------------------------- */
+void sharpening(const Matrix3D<double> &in, double width, double strength,
+    Matrix3D<double> &out)
+{
+    // Build the quadratic kernel
+    int diameter=(int)(2*width+1);
+    Matrix3D<double> kernel(diameter,diameter,diameter);
+    kernel.setXmippOrigin();
+    
+    double width2=width*width;
+    double minval, maxval;
+    in.computeDoubleMinMax(minval,maxval);
+    double c=minval+(maxval-minval)*strength/100;
+    double a=(minval-c)/width2;
+
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(kernel)
+    {
+        double r2=k*k+i*i+j*j;
+        kernel(k,i,j)=a*r2+c;
+    }
+    
+    // Create the dilated and eroded versions
+    Matrix3D<double> dilated, eroded;
+    dilate3D(in,kernel,dilated);
+    erode3D(in,kernel,eroded);
+    VolumeXmipp save;
+    save()=dilated; save.write("PPPdilated.vol");
+    save()=eroded; save.write("PPPeroded.vol");
+    
+    // Sharpen
+    out=in;
+    double eps=(maxval-minval)*0.01;
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(in)
+    {
+        double threshold=0.5*(dilated(k,i,j)+eroded(k,i,j));
+        if      (in(k,i,j)>threshold+eps)  out(k,i,j)=dilated(k,i,j);
+        else if (in(k,i,j)<threshold-eps)  out(k,i,j)=eroded(k,i,j);
     }
 }
