@@ -110,7 +110,7 @@ void Prog_angular_project_library_Parameters::usage()
     << "                                 dnh, t, td, th, o, oh, i1 (default MDB), i2, i3, i4, ih\n"
     << "                                 i1h (default MDB), i2h, i3h, i4h\n"
     << "  [-sym_neigh cn]              : symmetry used to define neighbourhs, by default"
-    << "                                 same as sym"
+    << "                                 same as sym\n"
     << "  [-sampling_rate 5]           : Distance in degrees between sampling points\n"
     << "  [-psi_sampling 360]          : sampling in psi, 360 -> no sampling in psi\n"
     << "  [-max_tilt_angle  91]        : maximum tilt angle in degrees\n"
