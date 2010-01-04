@@ -82,7 +82,7 @@ void Prog_angular_distance_prm::produce_side_info()
     std::cout << #rot  << "=" << rot << " " \
     << #tilt << "=" << tilt << " " \
     << #psi  << "=" << psi << " ";
-#define DEBUG
+//#define DEBUG
 double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
         double psi1, double &rot2, double &tilt2, double &psi2,
         bool projdir_mode)
@@ -194,8 +194,8 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
     psi2 = best_psi2;
     return best_ang_dist;
 }
-#define DEBUG
 
+//#define DEBUG
 // Compute distance --------------------------------------------------------
 void Prog_angular_distance_prm::compute_distance(double &angular_distance,
     double &shift_distance)
