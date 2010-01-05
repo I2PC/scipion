@@ -1313,6 +1313,7 @@ void Prog_MLalign2D_prm::expectation(int iter)
 
     // Initialize weighted sums
     LL = 0.;
+    wsumimgs.clear();
     sumw.clear();
     sumw2.clear();
     sumwsc.clear();
