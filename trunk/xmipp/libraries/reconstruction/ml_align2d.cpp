@@ -294,6 +294,15 @@ void Prog_MLalign2D_prm::produceSideInfo()
         dfsigma2 = df * sigma_noise2;
     }
 
+
+    // prepare masks for rotated references
+    mask.resize(dim, dim);
+    mask.setXmippOrigin();
+    BinaryCircularMask(mask, hdim, INNER_MASK);
+    omask.resize(dim, dim);
+    omask.setXmippOrigin();
+    BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
+    
     // Get number of references
     if (do_ML3D)
     {
@@ -362,18 +371,36 @@ void Prog_MLalign2D_prm::produceSideInfo()
     // Set limit_rot
     limit_rot = (search_rot < 180.);
 
+    // Set sigdim, i.e. the number of pixels that will be considered in the translations
+    if (save_mem2)
+    	sigdim = 2 * CEIL(sigma_offset * 3);
+    else
+    	sigdim = 2 * CEIL(sigma_offset * 6);
+    sigdim++; // (to get uneven number)
+    sigdim = XMIPP_MIN(dim, sigdim);
+
     //Some vectors and matrixes initialization
     refw.resize(n_ref);
     refw2.resize(n_ref);
     refwsc2.resize(n_ref);
     refw_mirror.resize(n_ref);
     sumw_refpsi.resize(n_ref*nr_psi);
-
     A2.resize(n_ref);
     fref.resize(n_ref * nr_psi);
     mref.resize(n_ref * nr_psi);
-
     wsum_Mref.resize(n_ref);
+    if (fast_mode)
+    {
+    	imax = n_ref * nr_flip / nr_nomirror_flips;
+        ioptx_ref.resize(imax);
+        iopty_ref.resize(imax);
+        ioptflip_ref.resize(imax);
+        maxw_ref.resize(imax);
+    }
+    else
+    {
+        imax = 0;
+    }
 
 }
 
@@ -846,43 +873,10 @@ void Prog_MLalign2D_prm::expectationSingleImage(
 
     Matrix2D<double> Maux, Mweight;
     Matrix2D<std::complex<double> > Faux, Fzero(dim, hdim + 1);
-
     double scale_dim2_sumw, my_mindiff;
-
-    ioptx = iopty = imax = 0;
     bool is_ok_trymindiff = false;
-
-    //FIXME: I think that imax could be calculed only once
-    // 		and not in every expectation single image
-    //		also arrays *_ref could be create only once.
-    if (fast_mode)
-    	imax = n_ref * nr_flip / nr_nomirror_flips;
-
-    ioptx_ref.resize(imax);
-    iopty_ref.resize(imax);
-    ioptflip_ref.resize(imax);
-    maxw_ref.resize(imax);
-
     XmippFftw local_transformer;
-
-    //FIXME: This can be done only once
-    // Now is done in createThreads
-    //refw.resize(n_ref);
-    //refw2.resize(n_ref);
-    //refwsc2.resize(n_ref);
-    //refw_mirror.resize(n_ref);
-    //sumw_refpsi.resize(n_ref*nr_psi);
-
-    //FIXME: This is done more than need
-    //		since sigma_offset only changes in maximizations
-    // Only translations smaller than 6 sigma_offset (save_mem2: 3) are considered!
-    if (save_mem2)
-    	sigdim = 2 * CEIL(sigma_offset * 3);
-    else
-    	sigdim = 2 * CEIL(sigma_offset * 6);
-
-    sigdim++; // (to get uneven number)
-    sigdim = XMIPP_MIN(dim, sigdim);
+    ioptx = iopty = 0;
 
     // Setup matrices
     Maux.resize(dim, dim);
@@ -893,12 +887,6 @@ void Prog_MLalign2D_prm::expectationSingleImage(
 
     if (!do_norm) 
         opt_scale =1.;
-
-    // Originally, I used the true mindiff to avoid numerical problems, 
-    // but it takes less memory to use a trymindiff instead.
-    if (trymindiff < 0.)
-        // 90% of Xi2 may be a good idea (factor half because 0.5*diff is calculated)
-        trymindiff = trymindiff_factor * 0.5 * Xi2; 
 
     // precalculate all flipped versions of the image
     Fimg_flip.clear();
@@ -1187,19 +1175,10 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno(bool fill_real_space)
     double AA, stdAA, psi, dum, avg;
     Matrix2D<double> Maux(dim,dim);
     Matrix2D<std::complex<double> > Faux;
-    Matrix2D<int> mask, omask;
     XmippFftw local_transformer;
     int refnoipsi;
     
     Maux.setXmippOrigin();
-    
-    // prepare masks
-    mask.resize(dim, dim);
-    mask.setXmippOrigin();
-    BinaryCircularMask(mask, hdim, INNER_MASK);
-    omask.resize(dim, dim);
-    omask.setXmippOrigin();
-    BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
     
     pthread_mutex_lock(&work_mutex);
     int refno = getThreadRefnoJob();
@@ -1256,19 +1235,11 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
     double psi, dum, avg, ang;
     Matrix2D<double> Maux(dim, dim), Maux2(dim, dim), Maux3(dim, dim);
     Matrix2D<std::complex<double> > Faux;
-    Matrix2D<int> mask, omask;
     XmippFftw local_transformer;
 
     Maux.setXmippOrigin();
     Maux2.setXmippOrigin();
     Maux3.setXmippOrigin();
-
-    mask.resize(dim, dim);
-    mask.setXmippOrigin();
-    BinaryCircularMask(mask, hdim, INNER_MASK);
-    omask.resize(dim, dim);
-    omask.setXmippOrigin();
-    BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
 
     pthread_mutex_lock(&work_mutex);
     int refno = getThreadRefnoJob();
@@ -1579,7 +1550,7 @@ void Prog_MLalign2D_prm::expectation(int iter)
     
     Matrix1D<double> opt_offsets(2);
     float old_phi = -999., old_theta = -999.;
-    double opt_flip; //FIXME: Why double, int doesn't work?
+    double opt_flip;
     
     //Some initializations
     opt_scale = 1., bgmean = 0.;
@@ -1606,8 +1577,11 @@ void Prog_MLalign2D_prm::expectation(int iter)
         Xi2 = img().sum2();
         
         // These two parameters speed up expectationSingleImage
-        trymindiff = imgs_trymindiff[imgno];
         opt_refno = imgs_optrefno[imgno];
+        trymindiff = imgs_trymindiff[imgno];
+        if (trymindiff < 0.)
+            // 90% of Xi2 may be a good idea (factor half because 0.5*diff is calculated)
+            trymindiff = trymindiff_factor * 0.5 * Xi2; 
         
         if (do_norm)
         {
@@ -1747,7 +1721,7 @@ void Prog_MLalign2D_prm::maximization(int refs_per_class)
             sumw_allrefs += sumw[refno];
         }
  	else if (do_student && sumw2[refno] > 0.)
-	{
+        {
 	    Iref[refno]() = wsum_Mref[refno];
 	    Iref[refno]() /= sumwsc2[refno];
 	    Iref[refno].set_weight(sumw2[refno]);
@@ -1819,6 +1793,14 @@ void Prog_MLalign2D_prm::maximization(int refs_per_class)
         sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
         // Dont allow sigma_offset to drop below one pixel
         sigma_offset = XMIPP_MAX(1. , sigma_offset);
+
+        // Update sigdim, i.e. the number of pixels that will be considered in the translations
+        if (save_mem2)
+            sigdim = 2 * CEIL(sigma_offset * 3);
+        else
+            sigdim = 2 * CEIL(sigma_offset * 6);
+        sigdim++; // (to get uneven number)
+        sigdim = XMIPP_MIN(dim, sigdim);
     }
 
     // Update the noise parameters
