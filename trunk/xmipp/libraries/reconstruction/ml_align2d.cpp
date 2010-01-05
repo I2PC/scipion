@@ -730,138 +730,154 @@ void Prog_MLalign2D_prm::preselectFastSignificant(
     Matrix2D<double> &Mimg, std::vector<double > &offsets)
 {
 
-    Matrix2D<double> Maux, Maux2, Mrefl, Mdsig(n_ref, nr_psi*nr_flip);
-    double ropt, aux, weight, diff, pdf, fracpdf;
-    double A2_plus_Xi2, crosscorr;
+    Matrix2D<double> Maux;
+    double ropt, aux, diff, pdf, fracpdf;
+    double A2_plus_Xi2;
     double mindiff = 99.e99;
-    double maxweight = -99.e99;
+    double maxweight, maxweight_mirror, maxweight_compare;
     int irot, irefmir;
-    std::vector<double> maxw_ref(2*n_ref);
     Matrix1D<double> trans(2);
-    std::vector<Matrix2D<double> > Mrot;
+    Matrix1D<double> weight(nr_psi*nr_flip);
+    // This function uses a local_trymindiff, the global one is not changed...
+    double local_trymindiff = trymindiff;
+    bool is_ok_local_trymindiff = false, used_local_trymindiff= false;
 
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
-    Maux2.resize(dim, dim);
-    Maux2.setXmippOrigin();
-    Msignificant.initZeros();
 
-
-    // Flip images and calculate correlations and maximum correlation
-    for (int refno = 0; refno < n_ref; refno++)
+    // Loop over all references, rotations and translations
+    int redo_counter = 0;
+    while (!is_ok_local_trymindiff)
     {
-        if (!limit_rot || pdf_directions[refno] > 0.)
+        // Initialize mindiff, weighted sums and maxweights
+        mindiff = 99.e99;
+
+        for (int refno = 0; refno < n_ref; refno++)
         {
-            A2_plus_Xi2 = 0.5 * (A2[refno] + Xi2);
-            if (save_mem1)
+            if (!limit_rot || pdf_directions[refno] > 0.)
             {
-                Mrot.clear();
-                for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                A2_plus_Xi2 = 0.5 * (A2[refno] + Xi2);
+                maxweight = maxweight_mirror = -99.e99;
+                for (int iflip = 0; iflip < nr_flip; iflip++)
                 {
-                    double psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
-                    Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
-                    Mrot.push_back(Maux);
-                }
-            }
-            for (int iflip = 0; iflip < nr_flip; iflip++)
-            {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
-                // Do not trust optimal offsets if they are larger than 3*sigma_offset:
-                ropt = sqrt(offsets[2*irefmir] * offsets[2*irefmir] + offsets[2*irefmir+1] * offsets[2*irefmir+1]);
-                if (ropt > 3 * sigma_offset)
-                {
-                    for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                    // Get optimal offsets for this irefmir
+                    irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
+                    ropt = sqrt(offsets[2*irefmir] * offsets[2*irefmir] + 
+                                offsets[2*irefmir+1] * offsets[2*irefmir+1]);
+                    if (ropt > 3 * sigma_offset)
                     {
-                        irot = iflip * nr_psi + ipsi;
-                        dMij(Msignificant, refno, irot) = 1;
-                    }
-                }
-                else
-                {
-                    trans(0) = (double)offsets[2*irefmir];
-                    trans(1) = (double)offsets[2*irefmir+1];
-                    Mimg.translate(trans, Maux, true);
-                    applyGeometry(Maux2, F[iflip], Maux, IS_INV, WRAP);
-                    for (int ipsi = 0; ipsi < nr_psi; ipsi++)
-                    {
-                        irot = iflip * nr_psi + ipsi;
-                        dMij(Msignificant, refno, irot) = 0;
-                        crosscorr = A2_plus_Xi2;
-                        if (save_mem1) Mrefl = Mrot[ipsi];
-                        else Mrefl = mref[refno*nr_psi + ipsi];
-                        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux2)
+                        // Do not trust optimal offsets if they are larger than 3*sigma_offset:
+                        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
                         {
-                            crosscorr -= dMij(Maux2, i, j) * dMij(Mrefl, i, j);
+                            irot = iflip * nr_psi + ipsi;
+                            dMij(Msignificant, refno, irot) = 1;
                         }
-                        dMij(Mdsig, refno, irot) = crosscorr;
-                        if (crosscorr < mindiff) mindiff = crosscorr;
+                    }
+                    else
+                    {
+                        // Once inside here we will use local_trymindiff and 
+                        // therefore we will have to check its validity later one
+                        used_local_trymindiff = true;
+
+                        // Set priors
+                        if (iflip < nr_nomirror_flips) 
+                            fracpdf = alpha_k[refno] * (1. - mirror_fraction[refno]);
+                        else 
+                            fracpdf = alpha_k[refno] * mirror_fraction[refno];
+                        pdf = fracpdf * MAT_ELEM(P_phi, 
+                                                 (int)(offsets[2*irefmir+1]), 
+                                                 (int)(offsets[2*irefmir]));
+
+                        // Translate image and calculate probabilities for every rotation
+                        trans(0) = (double)offsets[2*irefmir];
+                        trans(1) = (double)offsets[2*irefmir+1];
+                        Mimg.translate(trans, Maux, true);
+                        Maux.selfApplyGeometry(F[iflip], IS_INV, WRAP);
+                        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                        {
+                            irot = iflip * nr_psi + ipsi;
+                            diff = A2_plus_Xi2;
+                            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
+                            {
+                                diff -= dMij(Maux, i, j) * dMij(mref[refno*nr_psi + ipsi], i, j);
+                            }
+                            // keep track of real mindiff
+                            if (diff < mindiff)
+                                mindiff = diff;
+                            if (!do_student)
+                            {
+                                // normal distribution
+                                aux = (diff - local_trymindiff) / sigma_noise2;
+                                // next line because of numerical precision of exp-function
+                                if (aux > 1000.) weight(irot) = 0.;
+                                else weight(irot) = exp(-aux) * pdf;
+                            }
+                            else
+                            {
+                                // t-student distribution
+                                aux = (dfsigma2 + 2. * diff) / (dfsigma2 + 2. * local_trymindiff);
+                                weight(irot) = pow(aux, df2) * pdf;
+                            }
+
+                            // There is a different maxweight for each refno and its mirrored version...
+                            if (iflip < nr_nomirror_flips) 
+                            {
+                                if (weight(irot) > maxweight)
+                                    maxweight = weight(irot);
+                            }
+                            else
+                            {
+                                if (weight(irot) > maxweight_mirror) 
+                                    maxweight_mirror = weight(irot);
+                            }
+                        } // close ipsi
+                    } // close iflip
+                    // Now that we know all weights for these 360degrees rotations, set Msignificant
+                    for (int iflip = 0; iflip < nr_flip; iflip++)
+                    {
+                        if (iflip < nr_nomirror_flips)
+                            maxweight_compare = C_fast * maxweight;
+                        else
+                            maxweight_compare = C_fast * maxweight_mirror;
+                        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                        {
+                            irot = iflip * nr_psi + ipsi;
+                            if (weight(irot) > maxweight_compare)
+                                dMij(Msignificant, refno, irot) = 1; 
+                            else
+                                dMij(Msignificant, refno, irot) = 0; 
+                        }
                     }
                 }
             }
         }
-    }
   
-
-    // Now that we have mindiff calculate the weighting matrices and maxweight
-    for (int refno=0;refno<n_ref; refno++)
-    {
-        if (!limit_rot || pdf_directions[refno] > 0.)
+        // If we have used trymindiff, now check whether it was OK.
+        // The limit of the exp-function lies around 
+        // exp(700)=1.01423e+304, exp(800)=inf; exp(-700) = 9.85968e-305; exp(-88) = 0
+        // Use 500 to be on the save side?
+        if (used_local_trymindiff && 
+            ABS((mindiff - local_trymindiff) / sigma_noise2) > 500. )
         {
-            for (int iflip = 0; iflip < nr_flip; iflip++)
+//#define DEBUG_TRYMINDIFF
+#ifdef DEBUG_TRYMINDIFF
+            std::cerr<<"preselectFast: trymindiff= "<<local_trymindiff<<" mindiff= "<<mindiff<<" sigma_noise2= "<<sigma_noise2<<std::endl;
+#endif
+            // Re-do whole calculation now with the real mindiff
+            local_trymindiff = mindiff;
+            redo_counter++;
+            // Never re-do more than once!
+            if (redo_counter>1)
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
-                for (int ipsi = 0; ipsi < nr_psi; ipsi++)
-                {
-                    irot = iflip * nr_psi + ipsi;
-                    if (!dMij(Msignificant, refno, irot))
-                    {
-                        if (iflip < nr_nomirror_flips) fracpdf = alpha_k[refno] * (1. - mirror_fraction[refno]);
-                        else fracpdf = alpha_k[refno] * mirror_fraction[refno];
-			diff = dMij(Mdsig, refno, irot);
-			pdf = fracpdf * MAT_ELEM(P_phi, (int)(offsets[2*irefmir+1]), (int)(offsets[2*irefmir]));
-			if (!do_student)
-			{
-			    // normal distribution
-			    aux = (diff - mindiff) / sigma_noise2;
-			    // next line because of numerical precision of exp-function
-			    if (aux > 1000.) weight = 0.;
-			    else weight = exp(-aux) * pdf;
-			}
-			else
-			{
-			    // t-student distribution
-			    aux = (dfsigma2 + 2. * diff) / (dfsigma2 + 2. * mindiff);
-			    weight = pow(aux, df2) * pdf;
-			}
-                        dMij(Mdsig, refno, irot) = weight;
-                        if (weight > maxw_ref[irefmir]) maxw_ref[irefmir] = weight;
-                    }
-                }
+                std::cerr<<"ml_align2d BUG% redo_counter > 1"<<std::endl;
+                exit(1);
             }
         }
-    }
-
-    // Now that we have maxweight calculate which weighting matrices are significant
-    for (int refno=0;refno<n_ref; refno++)
-    {
-        if (!limit_rot || pdf_directions[refno] > 0.)
+        else
         {
-            for (int iflip = 0; iflip < nr_flip; iflip++)
-            {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
-                for (int ipsi = 0; ipsi < nr_psi; ipsi++)
-                {
-                    irot = iflip * nr_psi + ipsi;
-                    if (!dMij(Msignificant, refno, irot))
-                    {
-                        if (dMij(Mdsig, refno, irot) >= C_fast*maxw_ref[irefmir]) dMij(Msignificant, refno, irot) = 1;
-                        else dMij(Msignificant, refno, irot) = 0;
-                    }
-                }
-            }
+            is_ok_local_trymindiff = true;
         }
     }
-
 }
 
 // Maximum Likelihood calculation for one image ============================================
