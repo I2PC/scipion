@@ -94,6 +94,7 @@ int main(int argc, char **argv)
 
         // And produce selfile-specific side-info
         prm.produceSideInfo2();
+        prm.createThreads();
         MPI_Barrier(MPI_COMM_WORLD);
 
     }
@@ -217,8 +218,9 @@ int main(int argc, char **argv)
             MPI_Barrier(MPI_COMM_WORLD);
 
         } // end loop iterations
-	if (rank == 0)  
+        if (rank == 0)  
 	    prm.writeOutputFiles(-1);
+	prm.destroyThreads();
 
     }
     catch (Xmipp_error XE)

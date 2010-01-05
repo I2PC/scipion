@@ -37,13 +37,30 @@
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/ctf.h>
+#include <data/threads.h>
 #include <pthread.h>
 #include <vector>
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLANGLE 1.75
 #define DATALINELENGTH 12
+
+
 class Prog_MLalign2D_prm;
+
+//threadTask constants
+#define THREAD_EXIT 0
+#define THREAD_EXPECTATION_SINGLE_IMAGE_REFNO 1
+#define THREAD_ROTATE_REFERENCE_REFNO 2
+#define THREAD_REVERSE_ROTATE_REFERENCE_REFNO 3
+
+// This structure is needed to pass parameters to the threads
+typedef struct{
+    int thread_id;
+    Prog_MLalign2D_prm * prm;
+} structThreadTasks;
+
+void * doThreadsTasks(void * data);
 
 /**@defgroup MLalign2D ml_align2d (Maximum likelihood in 2D)
    @ingroup ReconsLibraryPrograms */
@@ -57,7 +74,7 @@ public:
     /** Command line */
     std::string cline;
     /** Sigma value for expected pixel noise */
-    double sigma_noise;
+    double sigma_noise, sigma_noise2;
     /** sigma-value for origin offsets */
     double sigma_offset;
     /** Vector containing estimated fraction for each model */
@@ -95,6 +112,8 @@ public:
     int nr_exp_images;
     /** Sum of squared amplitudes of the references */
     std::vector<double> A2;
+    /** Sum of squared amplitudes of the experimental image */
+    double Xi2;
     /** Verbose level:
         1: gives progress bar (=default)
         0: gives no output to screen at all */
@@ -123,6 +142,8 @@ public:
     double search_rot;
     /** Save memory options */
     bool save_mem1, save_mem2, save_mem3;
+    /** Output document file with output optimal assignments*/
+    DocFile DFo;
     /** Vectors to store old phi and theta for all images */
     std::vector<float> imgs_oldphi, imgs_oldtheta;
     /** Flag for using ML3D */
@@ -133,27 +154,12 @@ public:
     std::vector<std::vector<double> > imgs_offsets;
     /** For initial guess of mindiff */
     double trymindiff_factor;
-    /** Log Likelihood */
-    double LL;
-    /** weighted sums and sum of weights */
-    double sumw_allrefs, sumfracweight, wsum_sigma_noise, wsum_sigma_offset;
-    std::vector<Matrix2D<double > > wsum_Mref;
-    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
-    /** Output document file with output optimal assignments*/
-    DocFile DFo;
-    /** Convergence values */
-    std::vector<double> conv;
-
-    //for new threads
-    std::vector<Matrix2D<double> > mref;
-    std::vector<Matrix2D<std::complex<double> > > fref, wsumimgs;
-    double trymindiff;
 
     /// Students t-distribution
     /** Use t-student distribution instead of normal one */
     bool do_student;
     /** Degrees of freedom for the t-student distribution */
-    double df, df2;
+    double df, df2, dfsigma2;
     /** Do sigma-division trick in student-t*/
     bool do_student_sigma_trick;
 
@@ -166,12 +172,43 @@ public:
     std::vector<int> imgs_optrefno;
     /** Overall average scale (to be forced to one)*/
     double average_scale;
-
-    /** Threads */
-    int threads;
+ 
+    /** Thread stuff */
+    int threads, threadTask;
+    barrier_t barrier, barrier2;
+    pthread_t * th_ids;
+    structThreadTasks * threads_d;
 
     /** debug flag */
     int debug;
+
+    /** New class variables */
+    double LL, sumfracweight;
+    double wsum_sigma_noise, wsum_sigma_offset, sumw_allrefs;
+    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
+    std::vector<Matrix2D<double > > wsum_Mref;
+    std::vector<double> conv;
+    Matrix2D<int> Msignificant;
+    std::vector<double> pdf_directions;
+    std::vector<Matrix2D<double> > mref;
+    std::vector<Matrix2D<std::complex<double> > > fref;
+    std::vector<Matrix2D<std::complex<double > > > wsumimgs;
+    int opt_refno, iopt_psi, iopt_flip;
+    double trymindiff, opt_scale, bgmean, opt_psi;
+    double fracweight, maxweight2, dLL;
+
+    /** From expectationSingleImage */
+    std::vector<Matrix2D<std::complex<double> > > Fimg_flip, mysumimgs;
+    std::vector<double> refw, refw2, refwsc2, refw_mirror, sumw_refpsi;
+    double wsum_corr, sum_refw, sum_refw2, maxweight;
+    double wsum_sc, wsum_sc2, wsum_offset, old_bgmean;
+    double mindiff;
+    int sigdim;
+    int ioptx, iopty, imax;
+    std::vector<int> ioptx_ref, iopty_ref, ioptflip_ref;
+    std::vector<double> maxw_ref;
+    //These are for refno work assigns to threads
+    int refno_index, refno_count;
 
 public:
     /// Read arguments from command line
@@ -207,23 +244,38 @@ public:
 
     /** Calculate which references have projection directions close to
         phi and theta */
-    void preselectLimitedDirections(float &phi, float &theta,
-                                    std::vector<double> &pdf_directions);
+    void preselectLimitedDirections(float &phi, float &theta);
 
     /** Pre-calculate which model and phi have significant probabilities
        without taking translations into account! */
-    void preselectFastSignificant(Matrix2D<double> &Mimg, std::vector<double> &offsets,
-                                  Matrix2D<int> &Msignificant,
-                                  std::vector<double > &pdf_directions);
+    void preselectFastSignificant(Matrix2D<double> &Mimg, std::vector<double> &offsets);
 
     /// ML-integration over all (or -fast) translations
     void expectationSingleImage(Matrix2D<double> &Mimg,
-                                Matrix2D<int> &Msignificant,
-                                double &dLL, double &fracweight,
-                                double &maxweight2, double &opt_scale, double &bgmean,
-                                int &opt_refno, double &opt_psi, int &iopt_psi, int &iopt_flip, 
-                                Matrix1D<double> &opt_offsets, std::vector<double> &opt_offsets_ref,
-                                std::vector<double > &pdf_directions);
+                                Matrix1D<double> &opt_offsets, std::vector<double> &opt_offsets_ref);
+
+    /*** Threads functions */
+    /// Create working threads
+    void createThreads();
+
+    /// Exit threads and free memory
+    void destroyThreads();
+
+    /// Assign refno jobs to threads
+    int getThreadRefnoJob();
+
+    /// Awake threads for different tasks
+    void awakeThreads(int task, int start_refno);
+
+    /// Thread code to parallelize refno loop in rotateReference
+    void doThreadRotateReferenceRefno(bool fill_real_space);
+
+    ///Thread code to parallelize refno loop in reverseRotateReference
+    void doThreadReverseRotateReferenceRefno();
+
+    /// Thread code to parallelize refno loop in expectationSingleImage
+    void doThreadExpectationSingleImageRefno();
+
 
     /// Integrate over all experimental images
     void expectation(int iter);

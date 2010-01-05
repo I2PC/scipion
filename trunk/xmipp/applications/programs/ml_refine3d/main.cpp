@@ -62,6 +62,7 @@ int main(int argc, char **argv)
 
         // Initialize some stuff
         ML2D_prm.Iold.clear(); // To save memory
+        ML2D_prm.createThreads();
 
     }
     catch (Xmipp_error XE)
@@ -140,6 +141,7 @@ int main(int argc, char **argv)
 
 	// Write out converged doc and logfiles
 	ML2D_prm.writeOutputFiles(-1);
+        ML2D_prm.destroyThreads();
 
         if (!converged && prm.verb > 0) std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }

@@ -99,6 +99,7 @@ int main(int argc, char **argv)
         // All nodes read node-specific side-info into memory
         ML2D_prm.produceSideInfo2(prm.Nvols);
         ML2D_prm.Iold.clear(); // To save memory
+        ML2D_prm.createThreads();
 
         // Some output to screen
         if (rank == 0) ML2D_prm.show(true);
@@ -273,6 +274,8 @@ int main(int argc, char **argv)
 
         if (!converged && prm.verb > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
+
+        ML2D_prm.destroyThreads();
 
     }
     catch (Xmipp_error XE)

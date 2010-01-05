@@ -53,6 +53,7 @@ int main(int argc, char **argv)
             }
         }
         prm.produceSideInfo2();
+        prm.createThreads();
 
     }
     catch (Xmipp_error XE)
@@ -98,6 +99,7 @@ int main(int argc, char **argv)
 
         } // end loop iterations
         prm.writeOutputFiles(-1);
+        prm.destroyThreads();
 
     }
     catch (Xmipp_error XE)
