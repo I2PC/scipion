@@ -363,11 +363,11 @@ void Prog_MLalign2D_prm::produceSideInfo()
     limit_rot = (search_rot < 180.);
 
     //Some vectors and matrixes initialization
-	refw.resize(n_ref);
-	refw2.resize(n_ref);
-	refwsc2.resize(n_ref);
-	refw_mirror.resize(n_ref);
-	sumw_refpsi.resize(n_ref*nr_psi);
+    refw.resize(n_ref);
+    refw2.resize(n_ref);
+    refwsc2.resize(n_ref);
+    refw_mirror.resize(n_ref);
+    sumw_refpsi.resize(n_ref*nr_psi);
 
     A2.resize(n_ref);
     fref.resize(n_ref * nr_psi);
@@ -1158,99 +1158,97 @@ void * doThreadsTasks(void * data)
 /// return -1 when all jobs are done
 int Prog_MLalign2D_prm::getThreadRefnoJob()
 {
-	int refno = -1;
+    int refno = -1;
 
-	if (refno_count < n_ref)
-	{
-		refno = refno_index;
-		refno_index = (refno_index + 1) % n_ref;
-		refno_count++;
-	}
+    if (refno_count < n_ref)
+    {
+        refno = refno_index;
+        refno_index = (refno_index + 1) % n_ref;
+        refno_count++;
+    }
 
-	return refno;
+    return refno;
 }//close function getThreadRefnoJob
 
 ///Function for awake threads for different tasks
 void Prog_MLalign2D_prm::awakeThreads(int task, int start_refno)
 {
-	threadTask = task;
-	refno_index = start_refno;
-	refno_count = 0;
-	barrier_wait(&barrier);
+    threadTask = task;
+    refno_index = start_refno;
+    refno_count = 0;
+    barrier_wait(&barrier);
     //Wait until done
-	barrier_wait(&barrier2);
+    barrier_wait(&barrier2);
 }//close function awakeThreads
 
 
 void Prog_MLalign2D_prm::doThreadRotateReferenceRefno(bool fill_real_space)
 {
-	 double AA, stdAA, psi, dum, avg;
-	    Matrix2D<double> Maux(dim,dim);
-	    Matrix2D<std::complex<double> > Faux;
-	    Matrix2D<int> mask, omask;
-	    XmippFftw local_transformer;
-	    int refnoipsi;
-
-	    Maux.setXmippOrigin();
-
-	    // prepare masks
-	    mask.resize(dim, dim);
-	    mask.setXmippOrigin();
-	    BinaryCircularMask(mask, hdim, INNER_MASK);
-	    omask.resize(dim, dim);
-	    omask.setXmippOrigin();
-	    BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
-
-	   pthread_mutex_lock(&work_mutex);
-	   int refno = getThreadRefnoJob();
-	   pthread_mutex_unlock(&work_mutex);
-
-	   while (refno != -1)
-	    {
-	        computeStats_within_binary_mask(omask, Iref[refno](), dum, dum, avg, dum);
-	        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
-	        {
-	        	refnoipsi = refno*nr_psi + ipsi;
-	            // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
-	            psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
-	            Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
-	            apply_binary_mask(mask, Maux, Maux, avg);
-	            // Normalize the magnitude of the rotated references to 1st rot of that ref
-	            // This is necessary because interpolation due to rotation can lead to lower overall Fref
-	            // This would result in lower probabilities for those rotations
-	            AA = Maux.sum2();
-
-	            if (ipsi == 0)
-	            {
-	                stdAA = AA;
-	                //A2.push_back(AA);
-	                A2[refno] = AA;
-	            }
-
-	            if (AA > 0)
-	            	Maux *= sqrt(stdAA / AA);
-
-	            if (fill_real_space)
-	                //mref.push_back(Maux);
-	            	mref[refnoipsi] = Maux;
-	            // Do the forward FFT
-	            local_transformer.FourierTransform(Maux,Faux,false);
-	            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
-	            {
-	                dMij(Faux, i, j) = conj(dMij(Faux, i, j));
-	            }
-
-	            fref[refnoipsi] = Faux;
-	        }
-	        // If we dont use save_mem1 Iref[refno] is useless from here on
-	        if (!save_mem1)
-	        	Iref[refno]().resize(0, 0);
-
-	        pthread_mutex_lock(&work_mutex);
-		    refno = getThreadRefnoJob();
-	        pthread_mutex_unlock(&work_mutex);
-	    }//close while
-
+    double AA, stdAA, psi, dum, avg;
+    Matrix2D<double> Maux(dim,dim);
+    Matrix2D<std::complex<double> > Faux;
+    Matrix2D<int> mask, omask;
+    XmippFftw local_transformer;
+    int refnoipsi;
+    
+    Maux.setXmippOrigin();
+    
+    // prepare masks
+    mask.resize(dim, dim);
+    mask.setXmippOrigin();
+    BinaryCircularMask(mask, hdim, INNER_MASK);
+    omask.resize(dim, dim);
+    omask.setXmippOrigin();
+    BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
+    
+    pthread_mutex_lock(&work_mutex);
+    int refno = getThreadRefnoJob();
+    pthread_mutex_unlock(&work_mutex);
+    
+    while (refno != -1)
+    {
+        computeStats_within_binary_mask(omask, Iref[refno](), dum, dum, avg, dum);
+        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+        {
+            refnoipsi = refno*nr_psi + ipsi;
+            // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
+            psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
+            Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
+            apply_binary_mask(mask, Maux, Maux, avg);
+            // Normalize the magnitude of the rotated references to 1st rot of that ref
+            // This is necessary because interpolation due to rotation can lead to lower overall Fref
+            // This would result in lower probabilities for those rotations
+            AA = Maux.sum2();
+            
+            if (ipsi == 0)
+            {
+                stdAA = AA;
+                A2[refno] = AA;
+            }
+            
+            if (AA > 0)
+                Maux *= sqrt(stdAA / AA);
+            
+            if (fill_real_space)
+                mref[refnoipsi] = Maux;
+            // Do the forward FFT
+            local_transformer.FourierTransform(Maux,Faux,false);
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
+            {
+                dMij(Faux, i, j) = conj(dMij(Faux, i, j));
+            }
+            
+            fref[refnoipsi] = Faux;
+        }
+        // If we dont use save_mem1 Iref[refno] is useless from here on
+        if (!save_mem1)
+            Iref[refno]().resize(0, 0);
+        
+        pthread_mutex_lock(&work_mutex);
+        refno = getThreadRefnoJob();
+        pthread_mutex_unlock(&work_mutex);
+    }//close while
+    
 }//close function doThreadRotateReferenceRefno
 
 void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
@@ -1273,14 +1271,14 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
     BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
 
     pthread_mutex_lock(&work_mutex);
-   int refno = getThreadRefnoJob();
-   pthread_mutex_unlock(&work_mutex);
-
-   while (refno != -1)
-	{
+    int refno = getThreadRefnoJob();
+    pthread_mutex_unlock(&work_mutex);
+    
+    while (refno != -1)
+    {
         Maux.initZeros();
         wsum_Mref[refno] = Maux;
-
+        
         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
             // Add arbitrary number to avoid 0-degree rotation without interpolation effects
@@ -1299,53 +1297,49 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
             wsum_Mref[refno] += Maux2;
         }
 
-	  pthread_mutex_lock(&work_mutex);
-	  refno = getThreadRefnoJob();
-	  pthread_mutex_unlock(&work_mutex);
+        pthread_mutex_lock(&work_mutex);
+        refno = getThreadRefnoJob();
+        pthread_mutex_unlock(&work_mutex);
     }//close while refno
 }//close function doThreadReverseRotateReference
 
 void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 {
-	double diff;
-	int old_optrefno = opt_refno;
-	double XiA, aux, pdf, fracpdf, A2_plus_Xi2;
-	double weight, stored_weight, weight1, weight2, my_maxweight;
-	double my_sumweight, my_sumstoredweight, ref_scale = 1.;
-	int irot, irefmir, refnoipsi;
-	//Some local variables to store partial sums of global sums variables
-	double local_mindiff, local_wsum_corr, local_wsum_offset;
-	double local_wsum_sc, local_wsum_sc2, local_maxweight;
-	int local_iopty, local_ioptx, local_iopt_psi, local_iopt_flip;
-
-	//FIXME: this will not be here
-	Matrix2D<double> Maux, Mweight;
+    double diff;
+    int old_optrefno = opt_refno;
+    double XiA, aux, pdf, fracpdf, A2_plus_Xi2;
+    double weight, stored_weight, weight1, weight2, my_maxweight;
+    double my_sumweight, my_sumstoredweight, ref_scale = 1.;
+    int irot, irefmir, refnoipsi;
+    //Some local variables to store partial sums of global sums variables
+    double local_mindiff, local_wsum_corr, local_wsum_offset;
+    double local_wsum_sc, local_wsum_sc2, local_maxweight;
+    int local_iopty, local_ioptx, local_iopt_psi, local_iopt_flip;
+    
+    //FIXME: this will not be here
+    Matrix2D<double> Maux, Mweight;
     Matrix2D<std::complex<double> > Faux, Fzero(dim, hdim + 1);
     XmippFftw local_transformer;
 
     // Setup matrices
-   Maux.resize(dim, dim);
-   Maux.setXmippOrigin();
-   Mweight.initZeros(sigdim, sigdim);
-   Mweight.setXmippOrigin();
-   Fzero.initZeros();
-   local_transformer.setReal(Maux);
-   local_transformer.getFourierAlias(Faux);
-
+    Maux.resize(dim, dim);
+    Maux.setXmippOrigin();
+    Mweight.initZeros(sigdim, sigdim);
+    Mweight.setXmippOrigin();
+    Fzero.initZeros();
+    local_transformer.setReal(Maux);
+    local_transformer.getFourierAlias(Faux);
+    
     // Start the loop over all refno at old_optrefno (=opt_refno from the previous iteration).
     // This will speed-up things because we will find Pmax probably right away,
     // and this will make the if-statement that checks SIGNIFICANT_WEIGHT_LOW
     // effective right from the start
-   pthread_mutex_lock(&work_mutex);
-   int refno = getThreadRefnoJob();
-   pthread_mutex_unlock(&work_mutex);
-
-   while (refno != -1)
-   // for (int rr = old_optrefno; rr < old_optrefno+n_ref; rr++)
+    pthread_mutex_lock(&work_mutex);
+    int refno = getThreadRefnoJob();
+    pthread_mutex_unlock(&work_mutex);
+    
+    while (refno != -1)
     {
-        //int refno = rr;
-        //if (refno >= n_ref) refno-= n_ref;
-
         refw[refno] = refw_mirror[refno] = 0.;
         local_mindiff = 99.e99;
         local_wsum_sc = local_wsum_sc2 = local_wsum_corr = local_wsum_offset = 0;
@@ -1396,9 +1390,9 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                                 aux = (diff - trymindiff) / sigma_noise2;
                                 // next line because of numerical precision of exp-function
                                 if (aux > 1000.)
-                                	weight = 0.;
+                                    weight = 0.;
                                 else
-                                	weight = exp(-aux) * pdf;
+                                    weight = exp(-aux) * pdf;
                                 // store weight
                                 stored_weight = weight;
                                 MAT_ELEM(Mweight, i, j) = stored_weight;
@@ -1510,8 +1504,8 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 
         if (do_norm)
         {
-			wsum_sc += local_wsum_sc;
-			wsum_sc2 += local_wsum_sc2;
+            wsum_sc += local_wsum_sc;
+            wsum_sc2 += local_wsum_sc2;
         }
 
         //Ask for next job
@@ -1578,137 +1572,136 @@ void Prog_MLalign2D_prm::expectation(int iter)
         sumwsc2.push_back(0.);
     }
 
-        // Local variables of old threadExpectationSingleImage
-        ImageXmipp img;
-        FileName fn_img, fn_trans;
-        std::vector<double> allref_offsets;
+    // Local variables of old threadExpectationSingleImage
+    ImageXmipp img;
+    FileName fn_img, fn_trans;
+    std::vector<double> allref_offsets;
+    
+    Matrix1D<double> opt_offsets(2);
+    float old_phi = -999., old_theta = -999.;
+    double opt_flip; //FIXME: Why double, int doesn't work?
+    
+    //Some initializations
+    opt_scale = 1., bgmean = 0.;
+    Msignificant.resize(n_ref, nr_psi * nr_flip);
+    
+    // Calculate myFirst and myLast image for this thread
+    int nn = SF.ImgNo();
+    int myNum = nn;
 
-        Matrix1D<double> opt_offsets(2);
-        float old_phi = -999., old_theta = -999.;
-        double opt_flip; //FIXME: Why double, int doesn't work?
+    if (verb > 0)
+        init_progress_bar(myNum);
 
-        //Some initializations
-        opt_scale = 1., bgmean = 0.;
-        Msignificant.resize(n_ref, nr_psi * nr_flip);
-
-        // Calculate myFirst and myLast image for this thread
-        int nn = SF.ImgNo();
-
-        int myNum = nn;
-
-        if (verb > 0)
-        	init_progress_bar(myNum);
-
-        // Loop over all images
-        int c = XMIPP_MAX(1, myNum / 60);
-
-        for (int imgno = 0; imgno < nn; imgno++)
+    // Loop over all images
+    int c = XMIPP_MAX(1, myNum / 60);
+    
+    for (int imgno = 0; imgno < nn; imgno++)
+    {
+        SF.go_beginning();
+        SF.jump(imgno, SelLine::ACTIVE);
+        fn_img = SF.get_current_file();
+        
+        img.read(fn_img, false, false, false, false);
+        img().setXmippOrigin();
+        Xi2 = img().sum2();
+        
+        // These two parameters speed up expectationSingleImage
+        trymindiff = imgs_trymindiff[imgno];
+        opt_refno = imgs_optrefno[imgno];
+        
+        if (do_norm)
         {
-            SF.go_beginning();
-            SF.jump(imgno, SelLine::ACTIVE);
-            fn_img = SF.get_current_file();
-
-            img.read(fn_img, false, false, false, false);
-            img().setXmippOrigin();
-            Xi2 = img().sum2();
-
-            // These two parameters speed up expectationSingleImage
-            trymindiff = imgs_trymindiff[imgno];
-            opt_refno = imgs_optrefno[imgno];
-
-            if (do_norm)
-            {
-                bgmean = imgs_bgmean[imgno];
-                opt_scale = imgs_scale[imgno];
-            }
-
-            // Get optimal offsets for all references
-            if (fast_mode)
-            {
-                allref_offsets = imgs_offsets[imgno];
-            }
-
-            // Read optimal orientations from memory
-            if (limit_rot)
-            {
-                old_phi = imgs_oldphi[imgno];
-                old_theta = imgs_oldtheta[imgno];
-            }
-
-            // For limited orientational search: preselect relevant directions
-            preselectLimitedDirections(old_phi, old_theta);
-
-            // Use a maximum-likelihood target function in real space
-            // with complete or reduced-space translational searches (-fast)
-            if (fast_mode)
-            	preselectFastSignificant(img(), allref_offsets);
-            else
-            	Msignificant.initConstant(1);
-
-            expectationSingleImage(img(), opt_offsets, allref_offsets);
-
-            // Write optimal offsets for all references to disc
-            if (fast_mode)
-            {
-                imgs_offsets[imgno] = allref_offsets;
-            }
-
-            // Store mindiff for next iteration
-            imgs_trymindiff[imgno] = trymindiff;
-            // Store opt_refno for next iteration
-            imgs_optrefno[imgno] = opt_refno;
-
-            // Store optimal phi and theta in memory
-            if (limit_rot)
-            {
-                imgs_oldphi[imgno] = Iref[opt_refno].Phi();
-                imgs_oldtheta[imgno] = Iref[opt_refno].Theta();
-            }
-
-            // Store optimal normalization parameters in memory
-            if (do_norm)
-            {
-                imgs_scale[imgno] = opt_scale;
-                imgs_bgmean[imgno]  = bgmean;
-            }
-
-            // Output docfile
-            opt_flip = 0.;
-
-            if (-opt_psi > 360.)
-            {
-                opt_psi += 360.;
-                opt_flip = 1.;
-            }
-
-            docfiledata[imgno](0) = Iref[opt_refno].Phi();     // rot
-            docfiledata[imgno](1) = Iref[opt_refno].Theta();
-            docfiledata[imgno](2) = opt_psi + 360.;            // psi
-            docfiledata[imgno](3) = opt_offsets(0);            // Xoff
-            docfiledata[imgno](4) = opt_offsets(1);            // Yoff
-            docfiledata[imgno](5) = (double)(opt_refno + 1);   // Ref
-            docfiledata[imgno](6) = opt_flip;                  // Mirror
-            docfiledata[imgno](7) = fracweight;                // P_max/P_tot
-            docfiledata[imgno](8) = dLL;                       // log-likelihood
-
-            if (do_norm)
-            {
-                docfiledata[imgno](9)  = bgmean;               // background mean
-                docfiledata[imgno](10) = opt_scale;            // image scale
-            }
-
-            if (do_student)
-            {
-                docfiledata[imgno](11) = maxweight2;           // Robustness weight
-            }
-
-            if (verb > 0 && imgno % c == 0)
-            	progress_bar(imgno);
+            bgmean = imgs_bgmean[imgno];
+            opt_scale = imgs_scale[imgno];
         }
-
-        if (verb > 0)
-        	progress_bar(myNum);
-
+        
+        // Get optimal offsets for all references
+        if (fast_mode)
+        {
+            allref_offsets = imgs_offsets[imgno];
+        }
+        
+        // Read optimal orientations from memory
+        if (limit_rot)
+        {
+            old_phi = imgs_oldphi[imgno];
+            old_theta = imgs_oldtheta[imgno];
+        }
+        
+        // For limited orientational search: preselect relevant directions
+        preselectLimitedDirections(old_phi, old_theta);
+        
+        // Use a maximum-likelihood target function in real space
+        // with complete or reduced-space translational searches (-fast)
+        if (fast_mode)
+            preselectFastSignificant(img(), allref_offsets);
+        else
+            Msignificant.initConstant(1);
+        
+        expectationSingleImage(img(), opt_offsets, allref_offsets);
+        
+        // Write optimal offsets for all references to disc
+        if (fast_mode)
+        {
+            imgs_offsets[imgno] = allref_offsets;
+        }
+        
+        // Store mindiff for next iteration
+        imgs_trymindiff[imgno] = trymindiff;
+        // Store opt_refno for next iteration
+        imgs_optrefno[imgno] = opt_refno;
+        
+        // Store optimal phi and theta in memory
+        if (limit_rot)
+        {
+            imgs_oldphi[imgno] = Iref[opt_refno].Phi();
+            imgs_oldtheta[imgno] = Iref[opt_refno].Theta();
+        }
+        
+        // Store optimal normalization parameters in memory
+        if (do_norm)
+        {
+            imgs_scale[imgno] = opt_scale;
+            imgs_bgmean[imgno]  = bgmean;
+        }
+        
+        // Output docfile
+        opt_flip = 0.;
+        
+        if (-opt_psi > 360.)
+        {
+            opt_psi += 360.;
+            opt_flip = 1.;
+        }
+        
+        docfiledata[imgno](0) = Iref[opt_refno].Phi();     // rot
+        docfiledata[imgno](1) = Iref[opt_refno].Theta();
+        docfiledata[imgno](2) = opt_psi + 360.;            // psi
+        docfiledata[imgno](3) = opt_offsets(0);            // Xoff
+        docfiledata[imgno](4) = opt_offsets(1);            // Yoff
+        docfiledata[imgno](5) = (double)(opt_refno + 1);   // Ref
+        docfiledata[imgno](6) = opt_flip;                  // Mirror
+        docfiledata[imgno](7) = fracweight;                // P_max/P_tot
+        docfiledata[imgno](8) = dLL;                       // log-likelihood
+        
+        if (do_norm)
+        {
+            docfiledata[imgno](9)  = bgmean;               // background mean
+            docfiledata[imgno](10) = opt_scale;            // image scale
+        }
+        
+        if (do_student)
+        {
+            docfiledata[imgno](11) = maxweight2;           // Robustness weight
+        }
+        
+        if (verb > 0 && imgno % c == 0)
+            progress_bar(imgno);
+    }
+    
+    if (verb > 0)
+        progress_bar(myNum);
+    
     // Rotate back and calculate weighted sums
     reverseRotateReference();
 
@@ -1753,7 +1746,8 @@ void Prog_MLalign2D_prm::maximization(int refs_per_class)
             Iref[refno].set_weight(sumw[refno]);
             sumw_allrefs += sumw[refno];
         }
- 	else if (do_student && sumw2[refno] > 0.)	{
+ 	else if (do_student && sumw2[refno] > 0.)
+	{
 	    Iref[refno]() = wsum_Mref[refno];
 	    Iref[refno]() /= sumwsc2[refno];
 	    Iref[refno].set_weight(sumw2[refno]);
