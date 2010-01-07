@@ -1036,12 +1036,14 @@ int Prog_MLalign2D_prm::getThreadRefnoJob()
 {
     int refno = -1;
 
+    pthread_mutex_lock(&refno_mutex);
     if (refno_count < n_ref)
     {
         refno = refno_index;
         refno_index = (refno_index + 1) % n_ref;
         refno_count++;
     }
+    pthread_mutex_unlock(&refno_mutex);
 
     return refno;
 }//close function getThreadRefnoJob
@@ -1068,9 +1070,7 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
     
     Maux.setXmippOrigin();
     
-    pthread_mutex_lock(&refno_mutex);
     int refno = getThreadRefnoJob();
-    pthread_mutex_unlock(&refno_mutex);
     
     while (refno != -1)
     {
@@ -1111,9 +1111,7 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
         if (!save_mem1)
             Iref[refno]().resize(0, 0);
         
-        pthread_mutex_lock(&refno_mutex);
         refno = getThreadRefnoJob();
-        pthread_mutex_unlock(&refno_mutex);
     }//close while
     
 }//close function doThreadRotateReferenceRefno
@@ -1129,9 +1127,7 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
     Maux2.setXmippOrigin();
     Maux3.setXmippOrigin();
 
-    pthread_mutex_lock(&refno_mutex);
     int refno = getThreadRefnoJob();
-    pthread_mutex_unlock(&refno_mutex);
     
     while (refno != -1)
     {
@@ -1156,9 +1152,7 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
             wsum_Mref[refno] += Maux2;
         }
 
-        pthread_mutex_lock(&refno_mutex);
         refno = getThreadRefnoJob();
-        pthread_mutex_unlock(&refno_mutex);
     }//close while refno
 }//close function doThreadReverseRotateReference
 
@@ -1181,9 +1175,7 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
     Mflip.resize(dim, dim);
     Mflip.setXmippOrigin();
 
-    pthread_mutex_lock(&refno_mutex);
     int refno = getThreadRefnoJob();
-    pthread_mutex_unlock(&refno_mutex);
     
     while (refno != -1)
     {
@@ -1286,9 +1278,7 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
                 } //endif ropt<3*sigma_offset
             } //end loop imirror
         } //endif limit_rot and pdf_directions
-        pthread_mutex_lock(&refno_mutex);
         refno = getThreadRefnoJob();
-        pthread_mutex_unlock(&refno_mutex);
     }//close while refno
 
 }//close function doThreadPreselectFastSignificantRefno
@@ -1324,9 +1314,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     // This will speed-up things because we will find Pmax probably right away,
     // and this will make the if-statement that checks SIGNIFICANT_WEIGHT_LOW
     // effective right from the start
-    pthread_mutex_lock(&refno_mutex);
     int refno = getThreadRefnoJob();
-    pthread_mutex_unlock(&refno_mutex);
     
     while (refno != -1)
     {
@@ -1429,10 +1417,9 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 
                             //FIXME: This is only for test and obtaining same result
                             //		as sequential code for comparison
+                            pthread_mutex_lock(&maxweight_mutex);
                             if (weight > maxweight)
                             {
-                                pthread_mutex_lock(&maxweight_mutex);
-
                                 maxweight = weight;
                                 if (do_student)
                                 	maxweight2 = weight2;
@@ -1441,9 +1428,8 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                                 iopt_psi = ipsi;
                                 iopt_flip = iflip;
                                 opt_refno = refno;
-
-                                pthread_mutex_unlock(&maxweight_mutex);
                             }
+                            pthread_mutex_unlock(&maxweight_mutex);
 
                             if (fast_mode && weight > maxw_ref[irefmir])
                             {
@@ -1502,9 +1488,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
         pthread_mutex_unlock(&results_mutex);
 
         //Ask for next job
-        pthread_mutex_lock(&refno_mutex);
         refno = getThreadRefnoJob();
-        pthread_mutex_unlock(&refno_mutex);
     } // close while refno
 
 }//close function doThreadExpectationSingleImage
