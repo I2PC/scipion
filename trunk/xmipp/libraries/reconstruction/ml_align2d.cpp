@@ -28,7 +28,11 @@
 //Mutex for each thread update sums
 pthread_mutex_t update_mutex = PTHREAD_MUTEX_INITIALIZER;
 //Mutex for each thread get next work
-pthread_mutex_t work_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t refno_mutex = PTHREAD_MUTEX_INITIALIZER;
+//Mutex for each thread to set results
+pthread_mutex_t results_mutex = PTHREAD_MUTEX_INITIALIZER;
+//Mutex for each thread to set maxweight
+pthread_mutex_t maxweight_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Read arguments ==========================================================
 void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
@@ -1064,9 +1068,9 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
     
     Maux.setXmippOrigin();
     
-    pthread_mutex_lock(&work_mutex);
+    pthread_mutex_lock(&refno_mutex);
     int refno = getThreadRefnoJob();
-    pthread_mutex_unlock(&work_mutex);
+    pthread_mutex_unlock(&refno_mutex);
     
     while (refno != -1)
     {
@@ -1107,9 +1111,9 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
         if (!save_mem1)
             Iref[refno]().resize(0, 0);
         
-        pthread_mutex_lock(&work_mutex);
+        pthread_mutex_lock(&refno_mutex);
         refno = getThreadRefnoJob();
-        pthread_mutex_unlock(&work_mutex);
+        pthread_mutex_unlock(&refno_mutex);
     }//close while
     
 }//close function doThreadRotateReferenceRefno
@@ -1125,9 +1129,9 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
     Maux2.setXmippOrigin();
     Maux3.setXmippOrigin();
 
-    pthread_mutex_lock(&work_mutex);
+    pthread_mutex_lock(&refno_mutex);
     int refno = getThreadRefnoJob();
-    pthread_mutex_unlock(&work_mutex);
+    pthread_mutex_unlock(&refno_mutex);
     
     while (refno != -1)
     {
@@ -1152,9 +1156,9 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
             wsum_Mref[refno] += Maux2;
         }
 
-        pthread_mutex_lock(&work_mutex);
+        pthread_mutex_lock(&refno_mutex);
         refno = getThreadRefnoJob();
-        pthread_mutex_unlock(&work_mutex);
+        pthread_mutex_unlock(&refno_mutex);
     }//close while refno
 }//close function doThreadReverseRotateReference
 
@@ -1177,9 +1181,9 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
     Mflip.resize(dim, dim);
     Mflip.setXmippOrigin();
 
-    pthread_mutex_lock(&work_mutex);
+    pthread_mutex_lock(&refno_mutex);
     int refno = getThreadRefnoJob();
-    pthread_mutex_unlock(&work_mutex);
+    pthread_mutex_unlock(&refno_mutex);
     
     while (refno != -1)
     {
@@ -1282,9 +1286,9 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
                 } //endif ropt<3*sigma_offset
             } //end loop imirror
         } //endif limit_rot and pdf_directions
-        pthread_mutex_lock(&work_mutex);
+        pthread_mutex_lock(&refno_mutex);
         refno = getThreadRefnoJob();
-        pthread_mutex_unlock(&work_mutex);
+        pthread_mutex_unlock(&refno_mutex);
     }//close while refno
 
 }//close function doThreadPreselectFastSignificantRefno
@@ -1320,9 +1324,9 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     // This will speed-up things because we will find Pmax probably right away,
     // and this will make the if-statement that checks SIGNIFICANT_WEIGHT_LOW
     // effective right from the start
-    pthread_mutex_lock(&work_mutex);
+    pthread_mutex_lock(&refno_mutex);
     int refno = getThreadRefnoJob();
-    pthread_mutex_unlock(&work_mutex);
+    pthread_mutex_unlock(&refno_mutex);
     
     while (refno != -1)
     {
@@ -1425,9 +1429,10 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 
                             //FIXME: This is only for test and obtaining same result
                             //		as sequential code for comparison
-                            pthread_mutex_lock(&work_mutex);
                             if (weight > maxweight)
                             {
+                                pthread_mutex_lock(&maxweight_mutex);
+
                                 maxweight = weight;
                                 if (do_student)
                                 	maxweight2 = weight2;
@@ -1436,8 +1441,9 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                                 iopt_psi = ipsi;
                                 iopt_flip = iflip;
                                 opt_refno = refno;
+
+                                pthread_mutex_unlock(&maxweight_mutex);
                             }
-                            pthread_mutex_unlock(&work_mutex);
 
                             if (fast_mode && weight > maxw_ref[irefmir])
                             {
@@ -1480,7 +1486,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
             } // close for iflip
         } // close if pdf_directions
 
-        pthread_mutex_lock(&work_mutex);
+        pthread_mutex_lock(&results_mutex);
 
         //Update sums
         sum_refw += refw[refno] + refw_mirror[refno];
@@ -1493,11 +1499,12 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
             wsum_sc += local_wsum_sc;
             wsum_sc2 += local_wsum_sc2;
         }
+        pthread_mutex_unlock(&results_mutex);
 
         //Ask for next job
+        pthread_mutex_lock(&refno_mutex);
         refno = getThreadRefnoJob();
-
-        pthread_mutex_unlock(&work_mutex);
+        pthread_mutex_unlock(&refno_mutex);
     } // close while refno
 
 }//close function doThreadExpectationSingleImage
