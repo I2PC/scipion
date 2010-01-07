@@ -192,6 +192,8 @@ public:
     std::vector<Matrix2D<double > > wsum_Mref;
     std::vector<double> conv;
     Matrix2D<int> Msignificant;
+    Matrix2D<double> Mimg;
+    std::vector<double> allref_offsets;
     std::vector<double> pdf_directions;
     std::vector<Matrix2D<double> > mref;
     std::vector<Matrix2D<std::complex<double> > > fref;
@@ -240,7 +242,7 @@ public:
     void calculatePdfInplane();
 
     /// Fill vector of matrices with all rotations of reference
-    void rotateReference(bool fill_real_space);
+    void rotateReference();
 
     /// Apply reverse rotations to all matrices in vector and fill new matrix with their sum
     void reverseRotateReference();
@@ -251,11 +253,10 @@ public:
 
     /** Pre-calculate which model and phi have significant probabilities
        without taking translations into account! */
-    void preselectFastSignificant(Matrix2D<double> &Mimg, std::vector<double> &offsets);
+    void preselectFastSignificant();
 
     /// ML-integration over all (or -fast) translations
-    void expectationSingleImage(Matrix2D<double> &Mimg,
-                                Matrix1D<double> &opt_offsets, std::vector<double> &opt_offsets_ref);
+    void expectationSingleImage(Matrix1D<double> &opt_offsets);
 
     /*** Threads functions */
     /// Create working threads
@@ -271,7 +272,7 @@ public:
     void awakeThreads(int task, int start_refno);
 
     /// Thread code to parallelize refno loop in rotateReference
-    void doThreadRotateReferenceRefno(bool fill_real_space);
+    void doThreadRotateReferenceRefno();
 
     ///Thread code to parallelize refno loop in reverseRotateReference
     void doThreadReverseRotateReferenceRefno();
@@ -281,7 +282,6 @@ public:
 
     /// Thread code to parallelize refno loop in expectationSingleImage
     void doThreadExpectationSingleImageRefno();
-
 
     /// Integrate over all experimental images
     void expectation(int iter);
