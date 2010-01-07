@@ -27,12 +27,8 @@
 
 //Mutex for each thread update sums
 pthread_mutex_t update_mutex = PTHREAD_MUTEX_INITIALIZER;
-//Mutex for each thread get next work
+//Mutex for each thread get next refno
 pthread_mutex_t refno_mutex = PTHREAD_MUTEX_INITIALIZER;
-//Mutex for each thread to set results
-pthread_mutex_t results_mutex = PTHREAD_MUTEX_INITIALIZER;
-//Mutex for each thread to set maxweight
-pthread_mutex_t maxweight_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Read arguments ==========================================================
 void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
@@ -796,6 +792,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         mysumimgs.clear();
         for (int i = 0; i < n_ref*nr_psi; i++)
         {
+            // TODO: check whether push_back is slower than initZeros()...
             mysumimgs.push_back(Fzero); 
             sumw_refpsi[i] = 0.;
         }
@@ -1293,8 +1290,8 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     int irot, irefmir, refnoipsi;
     //Some local variables to store partial sums of global sums variables
     double local_mindiff, local_wsum_corr, local_wsum_offset;
-    double local_wsum_sc, local_wsum_sc2, local_maxweight;
-    int local_iopty, local_ioptx, local_iopt_psi, local_iopt_flip;
+    double local_wsum_sc, local_wsum_sc2, local_maxweight, local_maxweight2;
+    int local_iopty, local_ioptx, local_iopt_psi, local_iopt_flip, local_opt_refno;
     
     //FIXME: this will not be here
     Matrix2D<double> Maux, Mweight;
@@ -1304,9 +1301,10 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     // Setup matrices
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
-    Mweight.initZeros(sigdim, sigdim);
+    Mweight.resize(sigdim, sigdim);
     Mweight.setXmippOrigin();
     Fzero.initZeros();
+    // FIXME: recalculating plan each time is a waste! 
     local_transformer.setReal(Maux);
     local_transformer.getFourierAlias(Faux);
     
@@ -1319,6 +1317,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     while (refno != -1)
     {
         refw[refno] = refw_mirror[refno] = 0.;
+        local_maxweight = -99.e99;
         local_mindiff = 99.e99;
         local_wsum_sc = local_wsum_sc2 = local_wsum_corr = local_wsum_offset = 0;
         // This if is for limited rotation options
@@ -1415,21 +1414,17 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                             // keep track of optimal parameters
                             my_maxweight = XMIPP_MAX(my_maxweight, weight);
 
-                            //FIXME: This is only for test and obtaining same result
-                            //		as sequential code for comparison
-                            pthread_mutex_lock(&maxweight_mutex);
-                            if (weight > maxweight)
+                            if (weight > local_maxweight)
                             {
-                                maxweight = weight;
+                                local_maxweight = weight;
                                 if (do_student)
-                                	maxweight2 = weight2;
-                                iopty = i;
-                                ioptx = j;
-                                iopt_psi = ipsi;
-                                iopt_flip = iflip;
-                                opt_refno = refno;
+                                	local_maxweight2 = weight2;
+                                local_iopty = i;
+                                local_ioptx = j;
+                                local_iopt_psi = ipsi;
+                                local_iopt_flip = iflip;
+                                local_opt_refno = refno;
                             }
-                            pthread_mutex_unlock(&maxweight_mutex);
 
                             if (fast_mode && weight > maxw_ref[irefmir])
                             {
@@ -1472,7 +1467,20 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
             } // close for iflip
         } // close if pdf_directions
 
-        pthread_mutex_lock(&results_mutex);
+        pthread_mutex_lock(&update_mutex);
+
+        //Update maxweight
+        if (local_maxweight > maxweight)
+        {
+            maxweight = local_maxweight;
+            if (do_student)
+                maxweight2 = local_maxweight2;
+            iopty = local_iopty;
+            ioptx = local_ioptx;
+            iopt_psi = local_iopt_psi;
+            iopt_flip = local_iopt_flip;
+            opt_refno = local_opt_refno;
+        }
 
         //Update sums
         sum_refw += refw[refno] + refw_mirror[refno];
@@ -1485,7 +1493,8 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
             wsum_sc += local_wsum_sc;
             wsum_sc2 += local_wsum_sc2;
         }
-        pthread_mutex_unlock(&results_mutex);
+
+        pthread_mutex_unlock(&update_mutex);
 
         //Ask for next job
         refno = getThreadRefnoJob();
