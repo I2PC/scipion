@@ -53,6 +53,7 @@ class Prog_MLalign2D_prm;
 #define THREAD_EXPECTATION_SINGLE_IMAGE_REFNO 1
 #define THREAD_ROTATE_REFERENCE_REFNO 2
 #define THREAD_REVERSE_ROTATE_REFERENCE_REFNO 3
+#define THREAD_PRESELECT_FAST_SIGNIFICANT_REFNO 4
 
 // This structure is needed to pass parameters to the threads
 typedef struct{
@@ -128,6 +129,8 @@ public:
     std::vector < ImageXmippT<double> > Iref, Iold;
     /** Matrices for calculating PDF of (in-plane) translations */
     Matrix2D<double> P_phi, Mr2;
+    /** Masks for rotated references */
+    Matrix2D<int> mask, omask;
     /** Fast mode */
     bool fast_mode;
     /** Fast mode */
@@ -272,6 +275,9 @@ public:
 
     ///Thread code to parallelize refno loop in reverseRotateReference
     void doThreadReverseRotateReferenceRefno();
+
+    /// Thread code to parallelize refno loop in preselectFastSignificant
+    void doThreadPreselectFastSignificantRefno();
 
     /// Thread code to parallelize refno loop in expectationSingleImage
     void doThreadExpectationSingleImageRefno();
