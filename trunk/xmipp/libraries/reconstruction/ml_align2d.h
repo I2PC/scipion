@@ -40,13 +40,57 @@
 #include <data/threads.h>
 #include <pthread.h>
 #include <vector>
+#include <sys/time.h>
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLANGLE 1.75
 #define DATALINELENGTH 12
-
+#define TIMING
 
 class Prog_MLalign2D_prm;
+
+#ifdef TIMING
+//testing time...
+class JMTimer
+{
+public:
+    ///Some timing stuff
+    std::vector<timeval> start_times;
+    std::vector<std::string> tags;
+    timeval start_time;
+    timeval end_time;
+
+    JMTimer()
+    {
+        start_times.resize(25);
+        tags.resize(25);
+    }
+
+    void tic(std::string tag)
+    {
+        gettimeofday(&start_time, NULL);
+        start_times.push_back(start_time);
+        tags.push_back(tag);
+    }
+
+    int toc()
+    {
+        gettimeofday(&end_time, NULL);
+        start_time = start_times.back();
+        start_times.pop_back();
+
+        int n = tags.size();
+        for (int i = 0; i < n; i++)
+            std::cout << tags[i];
+
+        tags.pop_back();
+        int elapsed = (end_time.tv_sec-start_time.tv_sec) * 1000000 +
+                       (end_time.tv_usec-start_time.tv_usec);
+        std::cout << " took: " << elapsed << " microseconds" << std::endl;
+
+    }
+};
+#endif
 
 //threadTask constants
 #define THREAD_EXIT 0
@@ -215,6 +259,10 @@ public:
     //These are for refno work assigns to threads
     int refno_index, refno_count;
 
+#ifdef TIMING
+    JMTimer timer;
+#endif
+
 public:
     /// Read arguments from command line
     void read(int argc, char **argv, bool ML3D = false);
@@ -296,5 +344,8 @@ public:
     void writeOutputFiles(const int iter);
 
 };
+
+
+
 //@}
 #endif
