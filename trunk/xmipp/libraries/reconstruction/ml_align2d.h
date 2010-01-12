@@ -51,43 +51,57 @@ class Prog_MLalign2D_prm;
 
 #ifdef TIMING
 //testing time...
+#define TB_TOTAL 13
+typedef enum TimingBlocks { E, E_RR, E_1, E_FOR, E_RRR, E_OUT, FOR_1, FOR_PFS, FOR_ESI, FOR_2, ESI_1, ESI_TH, ESI_2 } TimingBlocks;
+
 class JMTimer
 {
 public:
     ///Some timing stuff
-    std::vector<timeval> start_times;
-    std::vector<std::string> tags;
-    timeval start_time;
+    timeval start_times[TB_TOTAL];
+    int counts[TB_TOTAL];
+    int times[TB_TOTAL];
+    char * tags[];
+    //timeval start_time;
     timeval end_time;
 
     JMTimer()
     {
-        start_times.resize(25);
-        tags.resize(25);
+        clear();
     }
 
-    void tic(std::string tag)
+    void clear()
     {
-        gettimeofday(&start_time, NULL);
-        start_times.push_back(start_time);
-        tags.push_back(tag);
+        for (int i = 0; i < 25; i++)
+            counts[i] = times[i] = 0;
     }
 
-    int toc()
+    void tic(TimingBlocks tb)
     {
+        int i = (int)tb;
+        gettimeofday(start_times + i, NULL);
+        counts[i]++;
+    }
+
+    int toc(TimingBlocks tb)
+    {
+        int i = (int)tb;
         gettimeofday(&end_time, NULL);
-        start_time = start_times.back();
-        start_times.pop_back();
+        times[i] += (end_time.tv_sec - start_times[i].tv_sec) * 1000000 +
+                       (end_time.tv_usec - start_times[i].tv_usec);
+    }
 
-        int n = tags.size();
-        for (int i = 0; i < n; i++)
-            std::cout << tags[i];
+    void printTimes(bool doClear)
+    {
+        char * tags[] = { "E", "E_RR", "E_1", "E_FOR", "E_RRR", "E_OUT", "FOR_1", "FOR_PFS", "FOR_ESI", "FOR_2", "ESI_1", "ESI_TH", "ESI_2"};
 
-        tags.pop_back();
-        int elapsed = (end_time.tv_sec-start_time.tv_sec) * 1000000 +
-                       (end_time.tv_usec-start_time.tv_usec);
-        std::cout << " took: " << elapsed << " microseconds" << std::endl;
+        for (int i = 0; i < TB_TOTAL; i++)
+        {
+            std::cout << tags[i] << " took: " << times[i] / counts[i] << " microseconds" << std::endl;
+        }
 
+        if (doClear)
+            clear();
     }
 };
 #endif

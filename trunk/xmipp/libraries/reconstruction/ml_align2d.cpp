@@ -704,6 +704,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
                             imgs_offsets[imgno][2*refno] = DF(3);
                             imgs_offsets[imgno][2*refno+1] = DF(4);
                         }
+
                     }
 
                     if (do_norm)
@@ -809,19 +810,12 @@ void Prog_MLalign2D_prm::calculatePdfInplane()
 // Rotate reference for all models and rotations and fill Fref vectors =============
 void Prog_MLalign2D_prm::rotateReference()
 {
-//testing time
 #ifdef DEBUG
     std::cerr<<"entering rotateReference"<<std::endl;
-#endif
-#ifdef TIMING
-    timer.tic("RR_");
 #endif
 
     awakeThreads(THREAD_ROTATE_REFERENCE_REFNO, 0);
 
-#ifdef TIMING
-    timer.toc();
-#endif
 #ifdef DEBUG
 
     std::cerr<<"leaving rotateReference"<<std::endl;
@@ -836,16 +830,7 @@ void Prog_MLalign2D_prm::reverseRotateReference()
     std::cerr<<"entering reverseRotateReference"<<std::endl;
 #endif
 
-#ifdef TIMING
-
-    timer.tic("RRR_");
-#endif
-
     awakeThreads(THREAD_REVERSE_ROTATE_REFERENCE_REFNO, 0);
-
-#ifdef TIMING
-    timer.toc();
-#endif
 
 #ifdef DEBUG
 
@@ -918,8 +903,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     Matrix1D<double> &opt_offsets)
 {
 #ifdef TIMING
-    timer.tic("ESI_");
-    timer.tic("1_");
+    timer.tic(ESI_1);
 #endif
 
     Matrix2D<double> Maux, Mweight;
@@ -958,14 +942,14 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     int redo_counter = 0;
 
 #ifdef TIMING
-    timer.toc();
-    timer.tic("WHILE_");
+    timer.toc(ESI_1);
+    //timer.tic("WHILE_");
 #endif
 
     while (!is_ok_trymindiff)
     {
 #ifdef TIMING
-        timer.tic("1_");
+        //timer.tic("");
 #endif
         // Initialize mindiff, weighted sums and maxweights
         mindiff = 99.e99;
@@ -995,13 +979,13 @@ void Prog_MLalign2D_prm::expectationSingleImage(
             }
         }
 #ifdef TIMING
-        timer.toc();
-        timer.tic("TH");
+        //timer.toc();
+        timer.tic(ESI_TH);
 #endif
         awakeThreads(THREAD_EXPECTATION_SINGLE_IMAGE_REFNO, opt_refno);
 #ifdef TIMING
-        timer.toc();
-        timer.tic("2_");
+        timer.toc(ESI_TH);
+        //timer.tic(ESI_2);
 #endif
         // Now check whether our trymindiff was OK.
         // The limit of the exp-function lies around
@@ -1028,13 +1012,13 @@ void Prog_MLalign2D_prm::expectationSingleImage(
             trymindiff = mindiff;
         }
 #ifdef TIMING
-        timer.toc();
+        //timer.toc(ESI_2);
 #endif
     }//close while
 
 #ifdef TIMING
-    timer.toc();
-    timer.tic("3_");
+    //timer.toc();
+    timer.tic(ESI_2);
 #endif
 
     fracweight = maxweight / sum_refw;
@@ -1158,9 +1142,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     LL += dLL;
 
 #ifdef TIMING
-    timer.toc();
-
-    timer.toc();
+    timer.toc(ESI_2);
 #endif
 }//close function expectationSingleImage
 
@@ -1792,7 +1774,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 void Prog_MLalign2D_prm::expectation(int iter)
 {
 #ifdef TIMING
-    timer.tic("E_");
+    timer.tic(E);
 #endif
 
     Matrix1D<double> dataline(DATALINELENGTH);
@@ -1801,13 +1783,16 @@ void Prog_MLalign2D_prm::expectation(int iter)
     int num_img_tot;
 
 #ifdef DEBUG
-
     std::cerr<<"entering expectation"<<std::endl;
 #endif
 
+#ifdef TIMING
+    timer.tic(E_RR);
+#endif
     rotateReference();
 #ifdef TIMING
-    timer.tic("1_");
+    timer.toc(E_RR);
+    timer.tic(E_1);
 #endif
     // Pre-calculate pdf of all in-plane transformations
     calculatePdfInplane();
@@ -1872,14 +1857,14 @@ void Prog_MLalign2D_prm::expectation(int iter)
     int c = XMIPP_MAX(1, myNum / 60);
 
 #ifdef TIMING
-    timer.toc();
-    timer.tic("FOR_");
+    timer.toc(E_1);
+    timer.tic(E_FOR);
 #endif
 
     for (int imgno = 0; imgno < nn; imgno++)
     {
 #ifdef TIMING
-        timer.tic("1_");
+        timer.tic(FOR_1);
 #endif
         SF.go_beginning();
         SF.jump(imgno, SelLine::ACTIVE);
@@ -1916,7 +1901,10 @@ void Prog_MLalign2D_prm::expectation(int iter)
             old_phi = imgs_oldphi[imgno];
             old_theta = imgs_oldtheta[imgno];
         }
-
+#ifdef TIMING
+        timer.toc(FOR_1);
+        timer.tic(FOR_PFS);
+#endif
         // For limited orientational search: preselect relevant directions
         preselectLimitedDirections(old_phi, old_theta);
 
@@ -1927,12 +1915,14 @@ void Prog_MLalign2D_prm::expectation(int iter)
         else
             Msignificant.initConstant(1);
 #ifdef TIMING
-        timer.toc();
+        timer.toc(FOR_PFS);
+        timer.tic(FOR_ESI);
 #endif
 
         expectationSingleImage(opt_offsets);
 #ifdef TIMING
-        timer.tic("3_");
+        timer.toc(FOR_ESI);
+        timer.tic(FOR_2);
 #endif
         // Write optimal offsets for all references to disc
         if (fast_mode)
@@ -1995,19 +1985,27 @@ void Prog_MLalign2D_prm::expectation(int iter)
         if (verb > 0 && imgno % c == 0)
             progress_bar(imgno);
 #ifdef TIMING
-        timer.toc();
+        timer.toc(FOR_2);
 #endif
     }
 
+
 #ifdef TIMING
-    timer.toc();
+    timer.toc(E_FOR);
 #endif
 
     if (verb > 0)
         progress_bar(myNum);
 
+#ifdef TIMING
+    timer.tic(E_RRR);
+#endif
     // Rotate back and calculate weighted sums
     reverseRotateReference();
+#ifdef TIMING
+    timer.toc(E_RRR);
+    timer.tic(E_OUT);
+#endif
 
     // Send back output in the form of a DocFile
     SF.go_beginning();
@@ -2023,7 +2021,10 @@ void Prog_MLalign2D_prm::expectation(int iter)
 
 #endif
 #ifdef TIMING
-    timer.toc();
+    timer.toc(E_OUT);
+    timer.toc(E);
+    std::cout << "-------------------- ITER: " << iter << " ----------------------" << std::endl;
+    timer.printTimes(true);
 #endif
 }
 
