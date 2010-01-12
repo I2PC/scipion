@@ -463,11 +463,19 @@ public:
         }
 
         // Ask for memory
-        unsigned long int YXdim=Ydim*Xdim;
-        unsigned long int ZYXdim=Zdim*YXdim;
-        T* new_data = new T [ZYXdim];
-        if (new_data == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left");
+        size_t YXdim=Ydim*Xdim;
+        size_t ZYXdim=Zdim*YXdim;
+	
+	T * new_data;
+	
+	try
+	{	
+		new_data = new T [ZYXdim];
+	}
+	catch (std::bad_alloc &)
+	{
+		REPORT_ERROR(1001, "Allocate: No space left");
+	}
 
         // Copy needed elements, fill with 0 if necessary
         for (int k = 0; k < Zdim; k++)
