@@ -225,7 +225,7 @@ void tia2raw(const FileName &fn_in, const FileName &fn_out, float dStddev)
 
     /* Print Header ===================================================== */
 
-    //    printHeader(Header);
+    // printHeader(Header);
 
 
     /* Loop through the images  ===================================================== */
@@ -268,7 +268,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
     FREAD(&DataH.IMAGE_WIDTH, sizeof(int), 1, fh_in, false);
     FREAD(&DataH.IMAGE_HEIGHT, sizeof(int), 1, fh_in, false);
 
-   // setDataType(DataH);
+    setDataType(DataH);
 
     /* Save Raw Image ===============================================================*/
 
@@ -276,13 +276,11 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
 
     int size = DataH.IMAGE_HEIGHT * DataH.IMAGE_WIDTH, low, high;
     int valuesLeft = size;
-    float avg=0, stddev=0, temp=0;
+    double avg=0, stddev=0, temp=0;
 
     short int * imBuffer;
-    float * imFloatBuffer;
 
     imBuffer = (short int *) malloc(BUFFSIZE * sizeof(short int));
-    imFloatBuffer = (float *) malloc(BUFFSIZE * sizeof(float));
 
 
     while (valuesLeft > BUFFSIZE)
@@ -291,7 +289,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
 
         for (int n=0;n<BUFFSIZE;n++)
         {
-            temp = (float) imBuffer[n];
+            temp = (double) imBuffer[n];
             avg += temp;
             stddev += temp * temp;
         }
@@ -303,7 +301,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
 
         for (int n=0;n<valuesLeft;n++)
         {
-            temp = float(imBuffer[n]);
+            temp = (double) imBuffer[n];
             avg += temp;
             stddev += temp * temp;
         }
@@ -320,7 +318,6 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
     high = int(avg + dStddev * stddev);
 
     fseek(fh_in, Position+50, SEEK_SET);
-
 
 
     if ((fh_out = fopen(fn_out.c_str(), "wb")) == NULL)
@@ -340,10 +337,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
                 imBuffer[n]=high;
         }
 
-        //        *imFloatBuffer = (float) *imBuffer;
-        //        FWRITE((void *) imFloatBuffer, sizeof(float),BUFFSIZE, fh_out, false);
         FWRITE(imBuffer, sizeof(short int),BUFFSIZE, fh_out, false);
-
 
         valuesLeft -= BUFFSIZE;
     }
@@ -359,10 +353,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
                 imBuffer[n]=high;
         }
 
-        //        *imFloatBuffer = (float) *imBuffer;
-        //        FWRITE((void *) imFloatBuffer, sizeof(float),valuesLeft, fh_out, false);
         FWRITE(imBuffer, sizeof(short int),valuesLeft, fh_out, false);
-
     }
 
     if (fclose(fh_out) != 0)
@@ -371,38 +362,38 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
 
     /* Write INF file ============================================================== */
 
-//    fn_out = fn_out.add_extension("inf");
-//    if ((fh_out = fopen(fn_out.c_str(), "w")) == NULL)
-//        REPORT_ERROR(6001, "Cannot create output info file (tia2raw).");
-//
-//    fprintf(fh_out, "# Bits per sample\n");
-//    fprintf(fh_out, "bitspersample= %d\n", DataH.DATA_TYPE_SIZE * 8);
-//    fprintf(fh_out, "# Samples per pixel\n");
-//    fprintf(fh_out, "samplesperpixel= 1\n");
-//    fprintf(fh_out, "# Image width\n");
-//    fprintf(fh_out, "Xdim= %d\n", DataH.IMAGE_WIDTH);
-//    fprintf(fh_out, "# Image length\n");
-//    fprintf(fh_out, "Ydim= %d\n", DataH.IMAGE_HEIGHT);
-//    fprintf(fh_out, "# offset in bytes (Optional, zero by default)\n");
-//    fprintf(fh_out, "offset= 0\n");
-//    fprintf(fh_out, "# Is a signed or Unsigned int (Optional, by default true)\n");
-//    if (DataH.isSigned)
-//        fprintf(fh_out, "is_signed = true\n");
-//    else
-//        fprintf(fh_out, "is_signed = false\n");
-//    fprintf(fh_out, "CalibrationOffsetX %d\n", DataH.CalibrationOffsetX);
-//    fprintf(fh_out, "PIXEL_WIDTH %d\n",DataH.PIXEL_WIDTH);
-//    fprintf(fh_out, "CalibrationElementX %d\n", DataH.CalibrationElementX);
-//    fprintf(fh_out, "CalibrationOffsetY %d\n", DataH.CalibrationOffsetY);
-//    fprintf(fh_out, "PIXEL_HEIGHT %d\n",DataH.PIXEL_HEIGHT);
-//    fprintf(fh_out, "CalibrationElementY %d\n", DataH.CalibrationElementX);
-//    fprintf(fh_out, "DATA_TYPE %d\n",DataH.DATA_TYPE_SIZE_STRING);
-//    fprintf(fh_out, "IMAGE_WIDTH %d\n",DataH.IMAGE_WIDTH);
-//    fprintf(fh_out, "IMAGE_HEIGHT %d\n",DataH.IMAGE_HEIGHT);
-//    fprintf(fh_out, "IMAGE_DATA_TYPE_SIZE %d\n",DataH.DATA_TYPE_SIZE);
-//
-//    if (fclose(fh_out) != 0)
-//        REPORT_ERROR(6001, "Error creating output info file (tia2raw).");
+    fn_out = fn_out.add_extension("inf");
+    if ((fh_out = fopen(fn_out.c_str(), "w")) == NULL)
+        REPORT_ERROR(6001, "Cannot create output info file (tia2raw).");
+
+    fprintf(fh_out, "# Bits per sample\n");
+    fprintf(fh_out, "bitspersample= %d\n", DataH.DATA_TYPE_SIZE * 8);
+    fprintf(fh_out, "# Samples per pixel\n");
+    fprintf(fh_out, "samplesperpixel= 1\n");
+    fprintf(fh_out, "# Image width\n");
+    fprintf(fh_out, "Xdim= %d\n", DataH.IMAGE_WIDTH);
+    fprintf(fh_out, "# Image length\n");
+    fprintf(fh_out, "Ydim= %d\n", DataH.IMAGE_HEIGHT);
+    fprintf(fh_out, "# offset in bytes (Optional, zero by default)\n");
+    fprintf(fh_out, "offset= 0\n");
+    fprintf(fh_out, "# Is a signed or Unsigned int (Optional, by default true)\n");
+    if (DataH.isSigned)
+        fprintf(fh_out, "is_signed = true\n");
+    else
+        fprintf(fh_out, "is_signed = false\n");
+    fprintf(fh_out, "CalibrationOffsetX %5.3e\n", DataH.CalibrationOffsetX);
+    fprintf(fh_out, "PIXEL_WIDTH %5.3e\n",DataH.PIXEL_WIDTH);
+    fprintf(fh_out, "CalibrationElementX %d\n", DataH.CalibrationElementX);
+    fprintf(fh_out, "CalibrationOffsetY %5.3e\n", DataH.CalibrationOffsetY);
+    fprintf(fh_out, "PIXEL_HEIGHT %5.3e\n",DataH.PIXEL_HEIGHT);
+    fprintf(fh_out, "CalibrationElementY %d\n", DataH.CalibrationElementX);
+    fprintf(fh_out, "DATA_TYPE %s\n",DataH.DATA_TYPE_SIZE_STRING.c_str());
+    fprintf(fh_out, "IMAGE_WIDTH %d\n",DataH.IMAGE_WIDTH);
+    fprintf(fh_out, "IMAGE_HEIGHT %d\n",DataH.IMAGE_HEIGHT);
+    fprintf(fh_out, "IMAGE_DATA_TYPE_SIZE %d\n",DataH.DATA_TYPE_SIZE);
+
+    if (fclose(fh_out) != 0)
+        REPORT_ERROR(6001, "Error creating output info file (tia2raw).");
 }
 
 
@@ -424,55 +415,55 @@ void printHeader(DataHeader Header)
 }
 
 
-//void setDataType(ImDataHeader & DataH)
-//{
-//    string auxString;
-//    int dataType;
-//
-//    DataH.isSigned = 0;
-//
-//    if(DataH.DATA_TYPE==1)
-//    {
-//        auxString = "GRAY8";
-//        dataType =8;
-//    }
-//    else if (DataH.DATA_TYPE==2)
-//    {
-//        auxString = "GRAY16_UNSIGNED";
-//        dataType =16;
-//    }
-//    else if(DataH.DATA_TYPE==3)
-//    {
-//        auxString = "GRAY32_UNSIGNED";
-//        dataType =32;
-//    }
-//    else if(DataH.DATA_TYPE==4)
-//    {
-//        auxString = "GRAY8";
-//        dataType =8;
-//    }
-//    else if(DataH.DATA_TYPE==5)
-//    {
-//        auxString = "GRAY16_SIGNED";
-//        dataType =16;
-//        DataH.isSigned=1;
-//    }
-//    else if(DataH.DATA_TYPE==6)
-//    {
-//        auxString = "GRAY32_INT";
-//        dataType =32;
-//    }
-//    else if(DataH.DATA_TYPE==7)
-//    {
-//        auxString = "GRAY32_FLOAT";
-//        dataType =32;
-//    }
-//    else if(DataH.DATA_TYPE==8)
-//    {
-//        auxString = "GRAY64_DOUBLE";
-//        dataType =64;
-//    }
-//    DataH.DATA_TYPE_SIZE = dataType/8;
-//    DataH.DATA_TYPE_SIZE_STRING = auxString;
-//}
+void setDataType(ImDataHeader & DataH)
+{
+    string auxString;
+    short int dataType=0;
+
+    DataH.isSigned = 0;
+
+    if(DataH.DATA_TYPE==1)
+    {
+        auxString = "GRAY8";
+        dataType =8;
+    }
+    else if (DataH.DATA_TYPE==2)
+    {
+        auxString = "GRAY16_UNSIGNED";
+        dataType =16;
+    }
+    else if(DataH.DATA_TYPE==3)
+    {
+        auxString = "GRAY32_UNSIGNED";
+        dataType =32;
+    }
+    else if(DataH.DATA_TYPE==4)
+    {
+        auxString = "GRAY8";
+        dataType =8;
+    }
+    else if(DataH.DATA_TYPE==5)
+    {
+        auxString = "GRAY16_SIGNED";
+        dataType =16;
+        DataH.isSigned=1;
+    }
+    else if(DataH.DATA_TYPE==6)
+    {
+        auxString = "GRAY32_INT";
+        dataType =32;
+    }
+    else if(DataH.DATA_TYPE==7)
+    {
+        auxString = "GRAY32_FLOAT";
+        dataType =32;
+    }
+    else if(DataH.DATA_TYPE==8)
+    {
+        auxString = "GRAY64_DOUBLE";
+        dataType =64;
+    }
+    DataH.DATA_TYPE_SIZE = dataType/8;
+    DataH.DATA_TYPE_SIZE_STRING = auxString;
+}
 
