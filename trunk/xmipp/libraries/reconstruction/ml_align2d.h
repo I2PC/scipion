@@ -51,6 +51,7 @@ class Prog_MLalign2D_prm;
 
 #ifdef TIMING
 //testing time...
+
 #define TB_TOTAL 18
 typedef enum TimingBlocks { ITER, ITER_E, ITER_M, E_RR, E_PRE, E_FOR, E_RRR, E_OUT, FOR_F1, FOR_PFS, FOR_ESI, FOR_F2, ESI_E1, ESI_E2TH, ESI_E3, ESI_E4, ESI_E5, ESI_E6TH } TimingBlocks;
 

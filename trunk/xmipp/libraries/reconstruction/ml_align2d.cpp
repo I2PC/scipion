@@ -381,45 +381,28 @@ void Prog_MLalign2D_prm::produceSideInfo()
 
     // Construct matrices for 0, 90, 180 & 270 degree flipping and mirrors
     psi_max = 90.;
-
     nr_psi = CEIL(psi_max / psi_step);
-
     psi_step = psi_max / nr_psi;
-
     nr_flip = nr_nomirror_flips = 4;
-
     A.initIdentity();
-
     F.push_back(A);
 
     A(0, 0) = 0.;
-
     A(1, 1) = 0.;
-
     A(1, 0) = 1.;
-
     A(0, 1) = -1;
-
     F.push_back(A);
 
     A(0, 0) = -1.;
-
     A(1, 1) = -1.;
-
     A(1, 0) = 0.;
-
     A(0, 1) = 0;
-
     F.push_back(A);
 
     A(0, 0) = 0.;
-
     A(1, 1) = 0.;
-
     A(1, 0) = -1.;
-
     A(0, 1) = 1;
-
     F.push_back(A);
 
     if (do_mirror)
@@ -428,16 +411,19 @@ void Prog_MLalign2D_prm::produceSideInfo()
         A.initIdentity();
         A(0, 0) = -1;
         F.push_back(A);
+
         A(0, 0) = 0.;
         A(1, 1) = 0.;
         A(1, 0) = 1.;
         A(0, 1) = 1;
         F.push_back(A);
+
         A(0, 0) = 1.;
         A(1, 1) = -1.;
         A(1, 0) = 0.;
         A(0, 1) = 0;
         F.push_back(A);
+
         A(0, 0) = 0.;
         A(1, 1) = 0.;
         A(1, 0) = -1.;
