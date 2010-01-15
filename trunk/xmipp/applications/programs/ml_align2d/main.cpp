@@ -36,11 +36,13 @@ int main(int argc, char **argv)
     Prog_MLalign2D_prm prm;
 
     // Get input parameters
+
     try
     {
         prm.read(argc, argv);
         prm.produceSideInfo();
         prm.show();
+
         if (prm.fn_ref == "")
         {
             if (prm.n_ref != 0)
@@ -52,6 +54,7 @@ int main(int argc, char **argv)
                 REPORT_ERROR(1, "Please provide -ref or -nref");
             }
         }
+
         prm.produceSideInfo2();
         prm.createThreads();
 
@@ -69,21 +72,35 @@ int main(int argc, char **argv)
         Maux.setXmippOrigin();
 
         // Loop over all iterations
+
         for (int iter = prm.istart; iter <= prm.Niter; iter++)
         {
+#ifdef TIMING
+            prm.timer.tic(ITER);
+#endif
+            if (prm.verb > 0)
+                std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
-            if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
-
-            for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
+            for (int refno = 0;refno < prm.n_ref; refno++)
+                prm.Iold[refno]() = prm.Iref[refno]();
 
             prm.DFo.clear();
-            prm.DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
 
+            prm.DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
+#ifdef TIMING
+            prm.timer.tic(ITER_E);
+#endif
             // Integrate over all images
             prm.expectation(iter);
-
+#ifdef TIMING
+            prm.timer.toc(ITER_E);
+            prm.timer.tic(ITER_M);
+#endif
             // Update model parameters
             prm.maximization();
+#ifdef TIMING
+            prm.timer.toc(ITER_M);
+#endif
 
             // Check convergence
             converged = prm.checkConvergence();
@@ -93,12 +110,23 @@ int main(int argc, char **argv)
 
             if (converged)
             {
-                if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
+                if (prm.verb > 0)
+                    std::cerr << " Optimization converged!" << std::endl;
+
                 break;
             }
 
+#ifdef TIMING
+            std::cout << "-------------------- ITER: " << iter << " ----------------------" << std::endl;
+            prm.timer.toc(ITER);
+            prm.timer.printTimes(true);
+
+#endif
+
         } // end loop iterations
+
         prm.writeOutputFiles(-1);
+
         prm.destroyThreads();
 
     }
