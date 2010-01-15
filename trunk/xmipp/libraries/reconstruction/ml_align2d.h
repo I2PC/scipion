@@ -51,8 +51,8 @@ class Prog_MLalign2D_prm;
 
 #ifdef TIMING
 //testing time...
-#define TB_TOTAL 13
-typedef enum TimingBlocks { E, E_RR, E_1, E_FOR, E_RRR, E_OUT, FOR_1, FOR_PFS, FOR_ESI, FOR_2, ESI_1, ESI_TH, ESI_2 } TimingBlocks;
+#define TB_TOTAL 18
+typedef enum TimingBlocks { ITER, ITER_E, ITER_M, E_RR, E_PRE, E_FOR, E_RRR, E_OUT, FOR_F1, FOR_PFS, FOR_ESI, FOR_F2, ESI_E1, ESI_E2TH, ESI_E3, ESI_E4, ESI_E5, ESI_E6TH } TimingBlocks;
 
 class JMTimer
 {
@@ -60,7 +60,7 @@ public:
     ///Some timing stuff
     timeval start_times[TB_TOTAL];
     int counts[TB_TOTAL];
-    int times[TB_TOTAL];
+    long int times[TB_TOTAL];
     char * tags[];
     //timeval start_time;
     timeval end_time;
@@ -93,7 +93,7 @@ public:
 
     void printTimes(bool doClear)
     {
-        char * tags[] = { "E", "E_RR", "E_1", "E_FOR", "E_RRR", "E_OUT", "FOR_1", "FOR_PFS", "FOR_ESI", "FOR_2", "ESI_1", "ESI_TH", "ESI_2"};
+        char * tags[] = { "ITER", "ITER_E", "ITER_M", "E_RR", "E_PRE", "E_FOR", "E_RRR", "E_OUT", "FOR_F1", "FOR_PFS", "FOR_ESI", "FOR_F2", "ESI_E1", "ESI_E2TH", "ESI_E3", "ESI_E4", "ESI_E5", "ESI_E6TH"};
 
         for (int i = 0; i < TB_TOTAL; i++)
         {
@@ -107,11 +107,13 @@ public:
 #endif
 
 //threadTask constants
-#define THREAD_EXIT 0
-#define THREAD_EXPECTATION_SINGLE_IMAGE_REFNO 1
-#define THREAD_ROTATE_REFERENCE_REFNO 2
-#define THREAD_REVERSE_ROTATE_REFERENCE_REFNO 3
-#define THREAD_PRESELECT_FAST_SIGNIFICANT_REFNO 4
+#define TH_EXIT 0
+#define TH_ESI_REFNO 1
+#define TH_ESI_UPDATE_REFNO 2
+#define TH_RR_REFNO 3
+#define TH_RRR_REFNO 4
+#define TH_PFS_REFNO 5
+
 
 // This structure is needed to pass parameters to the threads
 typedef struct{
@@ -267,7 +269,7 @@ public:
     double wsum_sc, wsum_sc2, wsum_offset, old_bgmean;
     double mindiff;
     int sigdim;
-    int ioptx, iopty, imax;
+    int ioptx, iopty;
     std::vector<int> ioptx_ref, iopty_ref, ioptflip_ref;
     std::vector<double> maxw_ref;
     //These are for refno work assigns to threads
@@ -344,6 +346,9 @@ public:
 
     /// Thread code to parallelize refno loop in expectationSingleImage
     void doThreadExpectationSingleImageRefno();
+
+    /// Thread code to parallelize update loop in ESI
+    void doThreadESIUpdateRefno();
 
     /// Integrate over all experimental images
     void expectation(int iter);

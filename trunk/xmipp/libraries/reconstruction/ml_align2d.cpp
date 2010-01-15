@@ -467,7 +467,7 @@ void Prog_MLalign2D_prm::produceSideInfo()
 
     refw_mirror.resize(n_ref);
 
-    sumw_refpsi.resize(n_ref*nr_psi);
+    sumw_refpsi.resize(n_ref * nr_psi);
 
     A2.resize(n_ref);
 
@@ -477,18 +477,17 @@ void Prog_MLalign2D_prm::produceSideInfo()
 
     wsum_Mref.resize(n_ref);
 
+    mysumimgs.resize(n_ref * nr_psi);
 
     if (fast_mode)
     {
-        imax = n_ref * nr_flip / nr_nomirror_flips;
-        ioptx_ref.resize(imax);
-        iopty_ref.resize(imax);
-        ioptflip_ref.resize(imax);
-        maxw_ref.resize(imax);
-    }
-    else
-    {
-        imax = 0;
+        int mysize = n_ref * (do_mirror ? 2 : 1);
+        //if (do_mirror)
+        //    mysize *= 2;
+        ioptx_ref.resize(mysize);
+        iopty_ref.resize(mysize);
+        ioptflip_ref.resize(mysize);
+        maxw_ref.resize(mysize);
     }
 
 }
@@ -814,7 +813,7 @@ void Prog_MLalign2D_prm::rotateReference()
     std::cerr<<"entering rotateReference"<<std::endl;
 #endif
 
-    awakeThreads(THREAD_ROTATE_REFERENCE_REFNO, 0);
+    awakeThreads(TH_RR_REFNO, 0);
 
 #ifdef DEBUG
 
@@ -830,7 +829,7 @@ void Prog_MLalign2D_prm::reverseRotateReference()
     std::cerr<<"entering reverseRotateReference"<<std::endl;
 #endif
 
-    awakeThreads(THREAD_REVERSE_ROTATE_REFERENCE_REFNO, 0);
+    awakeThreads(TH_RRR_REFNO, 0);
 
 #ifdef DEBUG
 
@@ -887,7 +886,7 @@ void Prog_MLalign2D_prm::preselectFastSignificant()
     // Initialize Msignificant to all zeros
     // TODO: check whether this is strictly necessary? Probably not...
     Msignificant.initZeros();
-    awakeThreads(THREAD_PRESELECT_FAST_SIGNIFICANT_REFNO, 0);
+    awakeThreads(TH_PFS_REFNO, 0);
 
 #ifdef DEBUG
 
@@ -903,12 +902,12 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     Matrix1D<double> &opt_offsets)
 {
 #ifdef TIMING
-    timer.tic(ESI_1);
+    timer.tic(ESI_E1);
 #endif
 
     Matrix2D<double> Maux, Mweight;
-    Matrix2D<std::complex<double> > Faux, Fzero(dim, hdim + 1);
-    double scale_dim2_sumw, my_mindiff;
+    Matrix2D<std::complex<double> > Faux;
+    double my_mindiff;
     bool is_ok_trymindiff = false;
     XmippFftw local_transformer;
     ioptx = iopty = 0;
@@ -918,7 +917,6 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     Maux.setXmippOrigin();
     Mweight.initZeros(sigdim, sigdim);
     Mweight.setXmippOrigin();
-    Fzero.initZeros();
 
     if (!do_norm)
         opt_scale = 1.;
@@ -942,50 +940,31 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     int redo_counter = 0;
 
 #ifdef TIMING
-    timer.toc(ESI_1);
+
+    timer.toc(ESI_E1);
+
     //timer.tic("WHILE_");
 #endif
 
     while (!is_ok_trymindiff)
     {
-#ifdef TIMING
-        //timer.tic("");
-#endif
         // Initialize mindiff, weighted sums and maxweights
         mindiff = 99.e99;
         wsum_corr = wsum_offset = wsum_sc = wsum_sc2 = 0.;
         maxweight = maxweight2 = sum_refw = sum_refw2 = 0.;
 
-        mysumimgs.clear();
-
-        for (int i = 0; i < n_ref*nr_psi; i++)
-        {
-            // TODO: check whether push_back is slower than initZeros()...
-            mysumimgs.push_back(Fzero);
-            sumw_refpsi[i] = 0.;
-        }
-
-        for (int i = 0; i < n_ref; i++)
-            refw[i] = refw2[i] = refw_mirror[i] = 0.;
-
-        if (fast_mode)
-        {
-            for (int i = 0; i < imax; i++)
-            {
-                maxw_ref[i] = -99.e99;
-                ioptx_ref[i] = 0;
-                iopty_ref[i] = 0;
-                ioptflip_ref[i] = 0;
-            }
-        }
+        // TODO initialize mysumimgs (in producesideinfo?)
 #ifdef TIMING
-        //timer.toc();
-        timer.tic(ESI_TH);
+
+        timer.tic(ESI_E2TH);
 #endif
-        awakeThreads(THREAD_EXPECTATION_SINGLE_IMAGE_REFNO, opt_refno);
+
+        awakeThreads(TH_ESI_REFNO, opt_refno);
+
 #ifdef TIMING
-        timer.toc(ESI_TH);
-        //timer.tic(ESI_2);
+
+        timer.toc(ESI_E2TH);
+        timer.tic(ESI_E3);
 #endif
         // Now check whether our trymindiff was OK.
         // The limit of the exp-function lies around
@@ -1011,14 +990,18 @@ void Prog_MLalign2D_prm::expectationSingleImage(
             my_mindiff = trymindiff;
             trymindiff = mindiff;
         }
+
 #ifdef TIMING
-        //timer.toc(ESI_2);
+        timer.toc(ESI_E3);
+
 #endif
+
     }//close while
 
 #ifdef TIMING
     //timer.toc();
-    timer.tic(ESI_2);
+    timer.tic(ESI_E4);
+
 #endif
 
     fracweight = maxweight / sum_refw;
@@ -1030,20 +1013,19 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     // Calculate optimal transformation parameters
     opt_psi = -psi_step * (iopt_flip * nr_psi + iopt_psi) - SMALLANGLE;
 
-    if (fast_mode)
-        for (int i = 0; i < imax;i++)
-        {
-            allref_offsets[2*i] = -(double)ioptx_ref[i] * DIRECT_MAT_ELEM(F[ioptflip_ref[i]], 0, 0) -
-                                  (double)iopty_ref[i] * DIRECT_MAT_ELEM(F[ioptflip_ref[i]], 0, 1);
-            allref_offsets[2*i+1] = -(double)ioptx_ref[i] * DIRECT_MAT_ELEM(F[ioptflip_ref[i]], 1, 0) -
-                                    (double)iopty_ref[i] * DIRECT_MAT_ELEM(F[ioptflip_ref[i]], 1, 1);
-        }
-
     opt_offsets(0) = -(double)ioptx * DIRECT_MAT_ELEM(F[iopt_flip], 0, 0) -
                      (double)iopty * DIRECT_MAT_ELEM(F[iopt_flip], 0, 1);
+
     opt_offsets(1) = -(double)ioptx * DIRECT_MAT_ELEM(F[iopt_flip], 1, 0) -
                      (double)iopty * DIRECT_MAT_ELEM(F[iopt_flip], 1, 1);
 
+#ifdef TIMING
+
+    timer.toc(ESI_E4);
+
+    timer.tic(ESI_E5);
+
+#endif
     // Update normalization parameters
 
     if (do_norm)
@@ -1080,6 +1062,12 @@ void Prog_MLalign2D_prm::expectationSingleImage(
         opt_scale = wsum_sc / wsum_sc2;
     }
 
+#ifdef TIMING
+    timer.toc(ESI_E5);
+
+    timer.tic(ESI_E6TH);
+
+#endif
     // Update all global weighted sums after division by sum_refw
     wsum_sigma_noise += (2 * wsum_corr / sum_refw);
 
@@ -1087,40 +1075,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(
 
     sumfracweight += fracweight;
 
-    scale_dim2_sumw = (opt_scale * ddim2) / sum_refw;
-
-    for (int refno = 0; refno < n_ref; refno++)
-    {
-        if (!limit_rot || pdf_directions[refno] > 0.)
-        {
-            sumw[refno] += (refw[refno] + refw_mirror[refno]) / sum_refw;
-            sumw2[refno] += refw2[refno] / sum_refw;
-            sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
-
-            if (do_student)
-            {
-                sumwsc[refno] += refw2[refno] * (opt_scale) / sum_refw;
-                sumwsc2[refno] += refw2[refno] * (opt_scale * opt_scale) / sum_refw;
-            }
-            else
-            {
-                sumwsc[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale) / sum_refw;
-                sumwsc2[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale * opt_scale) / sum_refw;
-            }
-
-            for (int ipsi = 0; ipsi < nr_psi; ipsi++)
-            {
-                int refnoipsi = refno*nr_psi + ipsi;
-                // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
-
-                if (do_norm)
-                    dMij(mysumimgs[refnoipsi],0,0) -= sumw_refpsi[refnoipsi] * (bgmean - old_bgmean) / ddim2;
-
-                // Sum mysumimgs to the global weighted sum
-                wsumimgs[refnoipsi] += (scale_dim2_sumw * mysumimgs[refnoipsi]);
-            }
-        }
-    }
+    awakeThreads(TH_ESI_UPDATE_REFNO, 0);
 
     if (!do_student)
         // 1st term: log(refw_i)
@@ -1142,7 +1097,9 @@ void Prog_MLalign2D_prm::expectationSingleImage(
     LL += dLL;
 
 #ifdef TIMING
-    timer.toc(ESI_2);
+
+    timer.toc(ESI_E6TH);
+
 #endif
 }//close function expectationSingleImage
 
@@ -1176,7 +1133,7 @@ void Prog_MLalign2D_prm::createThreads()
 /** Free threads memory and exit */
 void Prog_MLalign2D_prm::destroyThreads()
 {
-    threadTask = THREAD_EXIT;
+    threadTask = TH_EXIT;
     barrier_wait(&barrier);
     delete [] th_ids;
     delete [] threads_d;
@@ -1193,7 +1150,7 @@ void * doThreadsTasks(void * data)
     barrier_t & barrier = prm->barrier;
     barrier_t & barrier2 = prm->barrier2;
 
-    //Loop until the threadTask become THREAD_EXIT
+    //Loop until the threadTask become TH_EXIT
 
     do
     {
@@ -1206,23 +1163,26 @@ void * doThreadsTasks(void * data)
         switch (prm->threadTask)
         {
 
-        case THREAD_PRESELECT_FAST_SIGNIFICANT_REFNO:
+        case TH_PFS_REFNO:
             prm->doThreadPreselectFastSignificantRefno();
             break;
 
-        case THREAD_EXPECTATION_SINGLE_IMAGE_REFNO:
+        case TH_ESI_REFNO:
             prm->doThreadExpectationSingleImageRefno();
             break;
 
-        case THREAD_ROTATE_REFERENCE_REFNO:
+        case TH_ESI_UPDATE_REFNO:
+            prm->doThreadESIUpdateRefno();
+
+        case TH_RR_REFNO:
             prm->doThreadRotateReferenceRefno();
             break;
 
-        case THREAD_REVERSE_ROTATE_REFERENCE_REFNO:
+        case TH_RRR_REFNO:
             prm->doThreadReverseRotateReferenceRefno();
             break;
 
-        case THREAD_EXIT:
+        case TH_EXIT:
             pthread_exit(NULL);
             break;
 
@@ -1552,12 +1512,29 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 
     while (refno != -1)
     {
-        refw[refno] = refw_mirror[refno] = 0.;
+        refw[refno] = refw2[refno] = refw_mirror[refno] = 0.;
         local_maxweight = -99.e99;
         local_mindiff = 99.e99;
         local_wsum_sc = local_wsum_sc2 = local_wsum_corr = local_wsum_offset = 0;
-        // This if is for limited rotation options
+        // Initialize my weighted sums
 
+        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+        {
+            refnoipsi = refno*nr_psi + ipsi;
+            mysumimgs[refnoipsi] = Fzero;
+            sumw_refpsi[refnoipsi] = 0.;
+        }
+
+        if (fast_mode)
+        {
+            maxw_ref[refno] = -99.e99;
+            if (do_mirror)
+            {
+                maxw_ref[n_ref + refno] = -99.e99;
+            }
+        }
+
+        // This if is for limited rotation options
         if (!limit_rot || pdf_directions[refno] > 0.)
         {
             if (do_norm)
@@ -1770,29 +1747,91 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 
 }//close function doThreadExpectationSingleImage
 
+void Prog_MLalign2D_prm::doThreadESIUpdateRefno()
+{
+    double scale_dim2_sumw = (opt_scale * ddim2) / sum_refw;
+    //for (int refno = 0; refno < n_ref; refno++)
+    int refno = getThreadRefnoJob();
+
+    while (refno != -1)
+    {
+
+        if (fast_mode)
+        {
+            // Update optimal offsets for refno (and its mirror)
+            allref_offsets[2*refno] = -(double)ioptx_ref[refno] * DIRECT_MAT_ELEM(F[ioptflip_ref[refno]], 0, 0) -
+                                      (double)iopty_ref[refno] * DIRECT_MAT_ELEM(F[ioptflip_ref[refno]], 0, 1);
+            allref_offsets[2*refno+1] = -(double)ioptx_ref[refno] * DIRECT_MAT_ELEM(F[ioptflip_ref[refno]], 1, 0) -
+                                        (double)iopty_ref[refno] * DIRECT_MAT_ELEM(F[ioptflip_ref[refno]], 1, 1);
+
+            if (do_mirror)
+            {
+                allref_offsets[2*(n_ref+refno)] = -(double)ioptx_ref[n_ref+refno] * DIRECT_MAT_ELEM(F[ioptflip_ref[n_ref+refno]], 0, 0) -
+                                                  (double)iopty_ref[n_ref+refno] * DIRECT_MAT_ELEM(F[ioptflip_ref[n_ref+refno]], 0, 1);
+                allref_offsets[2*(n_ref+refno)+1] = -(double)ioptx_ref[n_ref+refno] * DIRECT_MAT_ELEM(F[ioptflip_ref[n_ref+refno]], 1, 0) -
+                                                    (double)iopty_ref[n_ref+refno] * DIRECT_MAT_ELEM(F[ioptflip_ref[n_ref+refno]], 1, 1);
+            }
+        }
+
+        if (!limit_rot || pdf_directions[refno] > 0.)
+        {
+            sumw[refno] += (refw[refno] + refw_mirror[refno]) / sum_refw;
+            sumw2[refno] += refw2[refno] / sum_refw;
+            sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
+
+            if (do_student)
+            {
+                sumwsc[refno] += refw2[refno] * (opt_scale) / sum_refw;
+                sumwsc2[refno] += refw2[refno] * (opt_scale * opt_scale) / sum_refw;
+            }
+            else
+            {
+                sumwsc[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale) / sum_refw;
+                sumwsc2[refno] += (refw[refno] + refw_mirror[refno]) * (opt_scale * opt_scale) / sum_refw;
+            }
+
+            for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+            {
+                int refnoipsi = refno*nr_psi + ipsi;
+                // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
+
+                if (do_norm)
+                    dMij(mysumimgs[refnoipsi],0,0) -= sumw_refpsi[refnoipsi] * (bgmean - old_bgmean) / ddim2;
+
+                // Sum mysumimgs to the global weighted sum
+                wsumimgs[refnoipsi] += (scale_dim2_sumw * mysumimgs[refnoipsi]);
+            }
+        }
+
+        refno = getThreadRefnoJob();
+    }//close while refno
+
+}//close function doThreadESIUpdateRefno
+
+
 
 void Prog_MLalign2D_prm::expectation(int iter)
 {
-#ifdef TIMING
-    timer.tic(E);
-#endif
-
     Matrix1D<double> dataline(DATALINELENGTH);
     Matrix2D<std::complex<double> > Fdzero(dim,hdim+1);
     std::vector<Matrix1D<double> > docfiledata;
     int num_img_tot;
 
 #ifdef DEBUG
+
     std::cerr<<"entering expectation"<<std::endl;
 #endif
 
 #ifdef TIMING
+
     timer.tic(E_RR);
 #endif
+
     rotateReference();
 #ifdef TIMING
+
     timer.toc(E_RR);
-    timer.tic(E_1);
+    timer.tic(E_PRE);
 #endif
     // Pre-calculate pdf of all in-plane transformations
     calculatePdfInplane();
@@ -1857,15 +1896,19 @@ void Prog_MLalign2D_prm::expectation(int iter)
     int c = XMIPP_MAX(1, myNum / 60);
 
 #ifdef TIMING
-    timer.toc(E_1);
+
+    timer.toc(E_PRE);
+
     timer.tic(E_FOR);
+
 #endif
 
     for (int imgno = 0; imgno < nn; imgno++)
     {
 #ifdef TIMING
-        timer.tic(FOR_1);
+        timer.tic(FOR_F1);
 #endif
+
         SF.go_beginning();
         SF.jump(imgno, SelLine::ACTIVE);
         fn_img = SF.get_current_file();
@@ -1901,9 +1944,12 @@ void Prog_MLalign2D_prm::expectation(int iter)
             old_phi = imgs_oldphi[imgno];
             old_theta = imgs_oldtheta[imgno];
         }
+
 #ifdef TIMING
-        timer.toc(FOR_1);
+        timer.toc(FOR_F1);
+
         timer.tic(FOR_PFS);
+
 #endif
         // For limited orientational search: preselect relevant directions
         preselectLimitedDirections(old_phi, old_theta);
@@ -1914,15 +1960,23 @@ void Prog_MLalign2D_prm::expectation(int iter)
             preselectFastSignificant();
         else
             Msignificant.initConstant(1);
+
 #ifdef TIMING
+
         timer.toc(FOR_PFS);
+
         timer.tic(FOR_ESI);
+
 #endif
 
         expectationSingleImage(opt_offsets);
+
 #ifdef TIMING
+
         timer.toc(FOR_ESI);
-        timer.tic(FOR_2);
+
+        timer.tic(FOR_F2);
+
 #endif
         // Write optimal offsets for all references to disc
         if (fast_mode)
@@ -1984,27 +2038,38 @@ void Prog_MLalign2D_prm::expectation(int iter)
 
         if (verb > 0 && imgno % c == 0)
             progress_bar(imgno);
+
 #ifdef TIMING
-        timer.toc(FOR_2);
+
+        timer.toc(FOR_F2);
+
 #endif
+
     }
 
 
 #ifdef TIMING
     timer.toc(E_FOR);
+
 #endif
 
     if (verb > 0)
         progress_bar(myNum);
 
 #ifdef TIMING
+
     timer.tic(E_RRR);
+
 #endif
     // Rotate back and calculate weighted sums
     reverseRotateReference();
+
 #ifdef TIMING
+
     timer.toc(E_RRR);
+
     timer.tic(E_OUT);
+
 #endif
 
     // Send back output in the form of a DocFile
@@ -2021,10 +2086,9 @@ void Prog_MLalign2D_prm::expectation(int iter)
 
 #endif
 #ifdef TIMING
+
     timer.toc(E_OUT);
-    timer.toc(E);
-    std::cout << "-------------------- ITER: " << iter << " ----------------------" << std::endl;
-    timer.printTimes(true);
+
 #endif
 }
 
