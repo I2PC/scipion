@@ -107,6 +107,27 @@ void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
                      MULTIDIM_ARRAY(M2), MULTIDIM_SIZE(re));
 }
 
+// Linear interpolation ----------------------------------------------------
+template<>
+std::complex< double > Matrix2D< std::complex< double > >::interpolatedElement(
+    double x, double y, std::complex< double > outside_value) const
+{
+    int x0 = FLOOR(x);
+    double fx = x - x0;
+    int x1 = x0 + 1;
+    int y0 = FLOOR(y);
+    double fy = y - y0;
+    int y1 = y0 + 1;
+
+    std::complex< double > d00 = outside(y0, x0) ? outside_value : MAT_ELEM(*this, y0, x0);
+    std::complex< double > d10 = outside(y1, x0) ? outside_value : MAT_ELEM(*this, y1, x0);
+    std::complex< double > d11 = outside(y1, x1) ? outside_value : MAT_ELEM(*this, y1, x1);
+    std::complex< double > d01 = outside(y0, x1) ? outside_value : MAT_ELEM(*this, y0, x1);
+
+    std::complex< double > d0 = LIN_INTERP(fx, d00, d01);
+    std::complex< double > d1 = LIN_INTERP(fx, d10, d11);
+    return LIN_INTERP(fy, d0, d1);
+}
 
 /* Is diagonal ------------------------------------------------------------- */
 template <>
@@ -159,7 +180,7 @@ Matrix2D<double> rotation2DMatrix(double ang)
 }
 
 /* Translation 2D ---------------------------------------------------------- */
-Matrix2D<double> translation2DMatrix(Matrix1D<double> v)
+Matrix2D<double> translation2DMatrix(const Matrix1D<double> &v)
 {
     if (XSIZE(v) != 2)
         REPORT_ERROR(1002, "Translation2D_matrix: vector is not in R2");

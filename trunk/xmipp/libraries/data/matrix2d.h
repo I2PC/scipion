@@ -93,7 +93,7 @@ void applyGeometryBSpline(Matrix2D<T>& m2,
 
 Matrix2D< double > rotation2DMatrix(double ang);
 
-Matrix2D< double > translation2DMatrix(const Matrix1D< double > v);
+Matrix2D< double > translation2DMatrix(const Matrix1D< double > &v);
 
 int bestPrecision(float F, int _width);
 #endif
@@ -2554,7 +2554,7 @@ Matrix2D< double > rotation2DMatrix(double ang);
  * m = translation2DMatrix(vectorR2(1, 0));
  * @endcode
  */
-Matrix2D< double > translation2DMatrix(const Matrix1D< double > v);
+Matrix2D< double > translation2DMatrix(const Matrix1D< double > &v);
 
 /** Creates a rotational matrix (4x4) for volumes around system axis
  * @ingroup MatricesGeometry
