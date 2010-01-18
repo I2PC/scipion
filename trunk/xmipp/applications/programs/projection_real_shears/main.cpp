@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Slavica JONIC (slavica.jonic@impmc.jussieu.fr, slavica.jonic@a3.epfl.ch)
- *		Jean-Noël PIOCHE (jnp95@hotmail.com) 
+ *		Jean-Noel PIOCHE (jnp95@hotmail.com) 
  *		
  * Biomedical Imaging Group, EPFL (Lausanne, Suisse).
  * Structures des Assemblages Macromoléculaires, IMPMC UMR 7590 (Paris, France).
@@ -37,12 +37,12 @@ int main(int argc, char *argv[])
 // Check the command line
     try
     {
-        projRS.prog_param.read(argc, argv);
+        projRS.read(argc, argv);
     }
     catch (Xmipp_error &XE)
     {
         std::cout << XE;
-        projRS.prog_param.usage();
+        projRS.usage();
         exit(1);
     }
 
