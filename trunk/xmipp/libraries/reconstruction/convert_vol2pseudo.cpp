@@ -26,7 +26,7 @@
 #include "convert_vol2pseudo.h"
 #include "fourier_filter.h"
 #include <algorithm>
-#include <fstream>
+#include <stdio.h>
 
 /* Pseudo atoms ------------------------------------------------------------ */
 PseudoAtom::PseudoAtom()
@@ -545,26 +545,23 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     double maxIntensity=intensities.computeMax();
     double a=1.000/(maxIntensity-minIntensity);
     
-    std::ofstream fhOut;
-    fhOut.open((fnOut+".pdb").c_str());
+    FILE *fhOut=NULL;
+    fhOut=fopen((fnOut+".pdb").c_str(),"w");
     if (!fhOut)
         REPORT_ERROR(1,(std::string)"Cannot open "+fnOut+".pdb for output");
     int nmax=atoms.size();
     for (int n=0; n<nmax; n++)
     {
-        fhOut << "ATOM " << integerToString(n,6,' ')
-              << " DENS DENS    1    "
-              << floatToString(atoms[n].location(0),8) 
-              << floatToString(atoms[n].location(1),8) 
-              << floatToString(atoms[n].location(2),8) << " " ;
+        double intensity=1.0;
         if (allowIntensity)
-            fhOut << floatToString(
-                ROUND(1000*a*(atoms[n].intensity-minIntensity))/1000.0,5,4);
-        else
-            fhOut << " 1.00";
-        fhOut << "  0.00   0  DENS\n";
+            intensity=ROUND(100*a*(atoms[n].intensity-minIntensity))/100.0;
+        fprintf(fhOut,
+            "ATOM  %5d DENS DENS    1    %8.3f%8.3f%8.3f%6.2f     1      DENS\n",
+            n,
+            (float)atoms[n].location(0),(float)atoms[n].location(1),
+            (float)atoms[n].location(2),(float)intensity);
     }
-    fhOut.close();
+    fclose(fhOut);
 }
 
 /* Run --------------------------------------------------------------------- */
