@@ -12,6 +12,9 @@ generator, seems to solve a problem with heap corruption.
 - Recenter volume optionally in xmipp_protocol_projection_matching
 - Now xmipp_align_volumes can align only by translational alignment
 - 3D Morphological sharpening added to xmipp_morphology
+- xmipp_angular_assign_for_tilt_series is more robust and faster
+- xmipp_fourier_filter accepts now Gaussians defined in real space
+- xmipp_convert_vol2pseudo now works with a different algorithm more precise
 
 2.4
 
