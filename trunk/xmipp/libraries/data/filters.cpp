@@ -59,6 +59,103 @@ void substract_background_plane(Matrix2D<double> &I)
         MAT_ELEM(I, i, j) -= x(0) * i + x(1) * j + x(2);
 }
 
+/* Substract background ---------------------------------------------------- */
+void substract_background_rolling_ball(Matrix2D<double> &I, int radius)
+{
+    // Build the ball
+    int arcTrimPer;
+    int shrinkFactor;
+    if (radius<=10) {
+        shrinkFactor = 1;
+        arcTrimPer = 24; // trim 24% in x and y
+    } else if (radius<=30) {
+        shrinkFactor = 2;
+        arcTrimPer = 24; // trim 24% in x and y
+    } else if (radius<=100) {
+        shrinkFactor = 4;
+        arcTrimPer = 32; // trim 32% in x and y
+    } else {
+        shrinkFactor = 8;
+        arcTrimPer = 40; // trim 40% in x and y
+    }
+    
+    double smallballradius = radius/shrinkFactor;
+    if (smallballradius<1) smallballradius = 1;
+    double r2 = smallballradius*smallballradius;
+    int xtrim = (int)(arcTrimPer*smallballradius)/100; // only use a patch of the rolling ball
+    int halfWidth = ROUND(smallballradius - xtrim);
+    int ballWidth = 2*halfWidth+1;
+    Matrix2D<double> ball(ballWidth,ballWidth);
+    ball.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(ball)
+    {
+        double temp=r2-i*i-j*j;
+        ball(i,j)=temp>0. ? sqrt(temp):0.;
+    }
+
+    // Shrink the image: each point in the shrinked image is the
+    // minimum of its neighbourhood
+    int sXdim = (XSIZE(I)+shrinkFactor-1)/shrinkFactor;
+    int sYdim = (YSIZE(I)+shrinkFactor-1)/shrinkFactor;
+    Matrix2D<double> shrinkI(sYdim,sXdim);
+    shrinkI.setXmippOrigin();
+    for (int ySmall=0; ySmall<sYdim; ySmall++) {
+        for (int xSmall=0; xSmall<sXdim; xSmall++) {
+            double minVal = 1e38;
+            for (int j=0, y=shrinkFactor*ySmall; j<shrinkFactor&&y<YSIZE(I); j++, y++)
+                for (int k=0, x=shrinkFactor*xSmall; k<shrinkFactor&&x<XSIZE(I); k++, x++) {
+                    double thispixel = DIRECT_MAT_ELEM(I,y,x);
+                    if (thispixel<minVal)
+                        minVal = thispixel;
+                }
+            DIRECT_MAT_ELEM(shrinkI,ySmall,xSmall) = minVal;
+        }
+    }
+    
+    // Now roll the ball
+    radius=ballWidth/2;
+    Matrix2D<double> Irolled;
+    Irolled.resize(shrinkI);
+    Irolled.initConstant(-500);
+    for (int yb=-radius; yb<YSIZE(shrinkI)+radius; yb++) {
+        // Limits of the ball
+        int y0 = yb-radius;
+        if (y0 < 0) y0 = 0;
+        int y0b = y0-yb+radius; //y coordinate in the ball corresponding to y0
+        int yF = yb+radius;
+        if (yF>=YSIZE(shrinkI)) yF = YSIZE(shrinkI)-1;
+
+        for (int xb=-radius; xb<XSIZE(shrinkI)+radius; xb++) {
+            // Limits of the ball
+            int x0 = xb-radius;
+            if (x0 < 0) x0 = 0;
+            int x0b = x0-xb+radius;
+            int xF = xb+radius;
+            if (xF>=XSIZE(shrinkI)) xF = XSIZE(shrinkI)-1;
+
+            double z = 1e38;
+            for (int yp=y0, ybp=y0b; yp<=yF; yp++,ybp++)
+                for (int xp=x0, xbp=x0b; xp<=xF; xp++, xbp++) {
+                    double zReduced=DIRECT_MAT_ELEM(shrinkI,yp,xp) -
+                        DIRECT_MAT_ELEM(ball,ybp,xbp);
+                    if (z > zReduced) z = zReduced;
+                }
+            for (int yp=y0, ybp=y0b; yp<=yF; yp++,ybp++)
+                for (int xp=x0, xbp=x0b; xp<=xF; xp++, xbp++) {
+                    double zMin = z + DIRECT_MAT_ELEM(ball,ybp,xbp);
+                    if (DIRECT_MAT_ELEM(Irolled,yp,xp) < zMin)
+                        DIRECT_MAT_ELEM(Irolled,yp,xp) = zMin;
+                }
+        }
+    }
+    
+    // Now rescale the background
+    Matrix2D<double> bgEnlarged;
+    Irolled.scaleToSize(YSIZE(I),XSIZE(I),bgEnlarged);
+    bgEnlarged.copyShape(I);
+    I-=bgEnlarged;
+}
+
 /* Contranst enhancement --------------------------------------------------- */
 void contrast_enhancement(Image *I)
 {
@@ -687,6 +784,93 @@ void best_nonwrapping_shift(const Matrix2D<double> &I1,
     shiftY=finalY;
 }
 #undef DEBUG
+
+/* Align two images -------------------------------------------------------- */
+void alignImages(const Matrix2D< double >& Iref, Matrix2D< double >& I,
+    Matrix2D< double >&M)
+{
+    Matrix2D<double> ARS, ASR, R;
+    ARS.initIdentity(3);
+    ASR.initIdentity(3);
+    Matrix2D<double> IauxSR=I, IauxRS=I;
+
+    Polar_fftw_plans *plans=NULL;
+    Polar< std::complex<double> > polarFourierIref;
+    normalizedPolarFourierTransform(
+	    Iref,
+	    polarFourierIref,
+	    false,
+            XSIZE(Iref)/5,
+	    XSIZE(Iref)/2,
+            plans,
+            1);
+
+    XmippFftw local_transformer;
+    Matrix1D<double> rotationalCorr;
+    rotationalCorr.resize(2*polarFourierIref.getSampleNoOuterRing()-1);
+    local_transformer.setReal(rotationalCorr);
+
+    // Align the image with the reference
+    for (int i=0; i<2; i++)
+    {
+        double shiftX, shiftY;
+	
+        // Shift then rotate	
+        best_nonwrapping_shift(I,IauxSR,shiftX,shiftY);
+        ASR(0,2)+=shiftX;
+        ASR(1,2)+=shiftY;
+        applyGeometry(IauxSR,ASR,I,IS_NOT_INV,WRAP);
+        
+        Polar< std::complex<double> > polarFourierI;
+	normalizedPolarFourierTransform(
+		IauxSR,
+		polarFourierI,
+		true,
+                XSIZE(Iref)/5,
+		XSIZE(Iref)/2,
+                plans,
+                1);
+        
+        double bestRot = best_rotation(polarFourierIref,polarFourierI,
+            local_transformer);
+	R=rotation2DMatrix(-bestRot);
+        ASR=R*ASR;
+        applyGeometry(IauxSR,ASR,I,IS_NOT_INV,WRAP);
+
+        // Rotate then shift
+	normalizedPolarFourierTransform(
+		IauxRS,
+		polarFourierI,
+		true,
+                XSIZE(Iref)/5,
+		XSIZE(Iref)/2,
+                plans,
+                1);
+        bestRot = best_rotation(polarFourierIref,polarFourierI,
+            local_transformer);
+	R=rotation2DMatrix(-bestRot);
+        ARS=R*ARS;
+        applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
+
+        best_nonwrapping_shift(Iref,IauxRS,shiftX,shiftY);
+        ARS(0,2)+=shiftX;
+        ARS(1,2)+=shiftY;
+        applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
+    }
+    
+    double corrRS=correlation_index(IauxRS,Iref);
+    double corrSR=correlation_index(IauxSR,Iref);
+    if (corrRS>corrSR)
+    {
+        I=IauxRS;
+        M=ARS;
+    }
+    else
+    {
+        I=IauxSR;
+        M=ASR;
+    }
+}
 
 /* Estimate 2D Gaussian ---------------------------------------------------- */
 /* See Brandle, Chen, Bischof, Lapp. Robust parametric and semi-parametric

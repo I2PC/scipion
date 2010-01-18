@@ -43,6 +43,17 @@
  */
 void substract_background_plane(Matrix2D<double> &I);
 
+/** Substract background
+ * @ingroup Filters
+ *
+ * The background is computed as a rolling ball operation with a ball
+ * with this radius. The radius is typically Xdim/10.
+ *
+ * This code has been implemented after the one of "Subtract background" in
+ * ImageJ.
+ */
+void substract_background_rolling_ball(Matrix2D<double> &I, int radius);
+
 /** Constrast enhancement
  * @ingroup Filters
  *
@@ -580,6 +591,17 @@ void best_nonwrapping_shift(const Matrix2D< double >& I1,
                 const Matrix2D< double >& I2,
                 double& shiftX,
                 double& shiftY);
+
+/** Align two images
+* @ingroup Filters
+ *
+ * This function modifies I2 to be aligned with I1. Translational and
+ * rotational alignments are both considered. The matrix transforming I2
+ * into I1 is returned.
+ */
+void alignImages(const Matrix2D< double >& Iref,
+                 Matrix2D< double >& I,
+                 Matrix2D< double >&M);
 
 /** Unnormalized 2D gaussian value using covariance
  * @ingroup NumericalFunctions
