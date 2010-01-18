@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Slavica JONIC (slavica.jonic@impmc.jussieu.fr, slavica.jonic@a3.epfl.ch)
- *		      Jean-Noël PIOCHE (jnp95@hotmail.com) 
+ *		      Jean-Noel PIOCHE (jnp95@hotmail.com) 
  *		
  * Biomedical Imaging Group, EPFL (Lausanne, Suisse).
  * Structures des Assemblages Macromoléculaires, IMPMC UMR 7590 (Paris, France).
@@ -31,7 +31,7 @@
 #include "projection_real_shears.h"
 
 ///Parameters reading. Note that all parameters are required.
-void Prog_Project_Parameters_2::read(int argc, char **argv)
+void Projection_real_shears::read(int argc, char **argv)
 {
 	fn_proj_param = getParameter(argc, argv, "-i");
 	fn_sel_file   = getParameter(argc, argv, "-o", "");
@@ -39,7 +39,7 @@ void Prog_Project_Parameters_2::read(int argc, char **argv)
 }
 
 ///Description of the projection_real_shears function.
-void Prog_Project_Parameters_2::usage()
+void Projection_real_shears::usage()
 {
 	printf("\nUsage:\n\n");
     	printf("projection_real_shears -i <Parameters File> \n"
@@ -56,16 +56,15 @@ void Prog_Project_Parameters_2::usage()
 //-----------------------------------------------------------------------------------------------
 ///Reads the projection parameters of the input file and inserts it into Projection_Parameters fields.\n
 ///This is an "overloaded" function in order to use translation parameters.
-void Projection_Parameters_withShift::read_withShift(const FileName &fn_proj_param)
+void Projection_real_shears::read(const FileName &fn_proj_param)
 {
 	FILE    *fh_param;
     	char    line[201];
     	int     lineNo = 0;
-    	char    *auxstr;
 
     	if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
         	REPORT_ERROR(3005,
-                (std::string)"Projection_Parameters_withShift::read: There is a problem "
+                (std::string)"Projection_real_shears::read: There is a problem "
                  "opening the file " + fn_proj_param);
 
     	while (fgets(line, 200, fh_param) != NULL)
@@ -78,32 +77,34 @@ void Projection_Parameters_withShift::read_withShift(const FileName &fn_proj_par
         		case 0: //***** Line 1 *****
 				//Volume file
             			fnPhantom = firstWord(line, 3007,
-                                    "Projection_Parameters_withShift::read: Phantom name not found");
+                                    "Projection_real_shears::read: Phantom name not found");
 
 				if (!exists(fnPhantom))
-                			REPORT_ERROR(3007, (std::string)"Projection_Parameters_withShift::read: "
+                			REPORT_ERROR(3007, (std::string)"Projection_real_shears::read: "
                              			"file " + fnPhantom + " doesn't exist");
 
             			lineNo = 1;
             			break;
        		 	case 1: //***** Line 2 *****
             			fnProjectionSeed = firstWord(line, 3007,
-                           	     "Projection_Parameters_withShift::read: Error in Projection seed");
+                           	     "Projection_real_shears::read: Error in Projection seed");
+
+					char    *auxstr;
 
             			auxstr = nextToken();
             			if (auxstr != NULL) starting =
                     			textToInteger(auxstr, 3007,
-                         		"Projection_Parameters_withShift::read: Error in First "
+                         		"Projection_real_shears::read: Error in First "
                          		"projection number");
 
-            			fn_projection_extension = nextWord(3007, (std::string)"Projection_Parameters_withShift::read: "
+            			fn_projection_extension = nextWord(3007, (std::string)"Projection_real_shears::read: "
                              					"Error in Projection extension");
 				
             			lineNo = 2;
             			break;
         		case 2: //***** Line 3 *****
             			proj_Xdim = textToInteger(firstToken(line), 3007,
-                             		"Projection_Parameters_withShift::read: Error in projection dimension");
+                             		"Projection_real_shears::read: Error in projection dimension");
             			proj_Zdim = proj_Ydim = proj_Xdim ;
 
             			lineNo = 3;
@@ -111,10 +112,10 @@ void Projection_Parameters_withShift::read_withShift(const FileName &fn_proj_par
         		case 3: //***** Line 4 *****
             			// Angle file
             			fn_angle = firstWord(line, 3007,
-                                    "Projection_Parameters_withShift::read: Angle file name not found");
+                                    "Projection_real_shears::read: Angle file name not found");
 
             			if (!exists(fn_angle))
-                			REPORT_ERROR(3007, (std::string)"Projection_Parameters_withShift::read: "
+                			REPORT_ERROR(3007, (std::string)"Projection_real_shears::read: "
                              			"file " + fn_angle + " doesn't exist");
 					
             			lineNo = 4;
@@ -125,7 +126,7 @@ void Projection_Parameters_withShift::read_withShift(const FileName &fn_proj_par
     } // while end
 
     if (lineNo != 4) //If all parameters was not read
-        REPORT_ERROR(3007, (std::string)"Projection_Parameters_withShift::read: I "
+        REPORT_ERROR(3007, (std::string)"Projection_real_shears::read: I "
                      "couldn't read all parameters from file " + fn_proj_param);
     fclose(fh_param);
 }
@@ -739,7 +740,7 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 	double	lambda; 
 	double	*Parameters; 
 	double	*hlp, *Av, *As, *Ac, *Acinv, *RightOperHlp, *B;	 
-	double	*Projection, *VolumeCoef, *InputVolume, *InputVolumePlane; 
+	double	*VolumeCoef, *InputVolume, *InputVolumePlane;
 	double	*InputVolumeRow, *Coef_x, *Coef_y, *Coef_z; 
 		 
 	Nx = Data2.nx_Volume; 
@@ -1046,9 +1047,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 	FreeVolumeDouble(&InputVolumePlane); 
 	FreeVolumeDouble(&InputVolumeRow);	 
  
- 
-	 
-	AllocateVolumeDouble( &Projection, *(Data2.Proj_dims), *(Data2.Proj_dims + (ptrdiff_t) 1L), 1L, &Status); 
 	if (Status == ERROR){  
 		REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
 					 "ERROR - Not enough memory for Projection"); 
@@ -1065,7 +1063,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		return(ERROR); 
 	} 
 		 
@@ -1075,7 +1072,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Av); 
 		return(ERROR); 
 	} 
@@ -1094,7 +1090,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Av); 
 		return(ERROR); 
 	} 
@@ -1105,7 +1100,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Av); 
 		free(As); 
 		return(ERROR); 
@@ -1125,7 +1119,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Av); 
 		free(As); 
 		return(ERROR); 
@@ -1137,7 +1130,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Av); 
 		free(As); 
 		free(Ac); 
@@ -1158,7 +1150,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Av); 
 		free(As); 
 		free(Ac); 
@@ -1171,7 +1162,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Av); 
 		free(As); 
 		free(Ac); 
@@ -1186,7 +1176,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Av); 
 		free(As); 
 		free(Ac); 
@@ -1200,7 +1189,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Av); 
 		free(As); 
 		free(Ac); 
@@ -1220,7 +1208,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Ac); 
 		free(RightOperHlp); 
 		return(ERROR); 
@@ -1240,7 +1227,6 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Ac); 
 		free(RightOperHlp); 
 		free(Parameters); 
@@ -1251,22 +1237,18 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 							Data2.Identity_orientN, Data2.Identity_orientV, Data2.Identity_orientW,  
 							Data2.IdentityOrigin, &Data2.PeriodOfSamplingInVDirection, 
 							&Data2.PeriodOfSamplingInWDirection, RightOperHlp, Ac,  
-							Projection, B) == ERROR){  
+							Data2.Output, B) == ERROR){
 		REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
 					 "Error returned by Compute_projection"); 
 		FreeVolumeDouble(&Coef_x); 
 		FreeVolumeDouble(&Coef_y); 
 		FreeVolumeDouble(&Coef_z); 
-		FreeVolumeDouble(&Projection); 
 		free(Ac); 
 		free(RightOperHlp); 
 		free(Parameters); 
 		free(B); 
 		return(ERROR); 
 	}
-
-	//Copy of the result pointer (Projection is a dynamic allocation)
-	Data2.Output = Projection;
 
 	free(Parameters);
 	free(Ac);
@@ -1534,6 +1516,7 @@ int Projection_real_shears::angles_transcription(double *angles, double *Lambda1
 	for(int i=0; i<4; i++)
 		for(int j=0; j<4; j++)
 			Bem[i][j] = Bem_1D[i*4+j];
+
 	free(Bem_1D);
 
 	double A00 = Bem[0][0];
@@ -1598,6 +1581,8 @@ void Projection_real_shears::allocAndInit_VolumeStruct(VolumeStruct &Data2)
 {
 	Data2.Volume = (double*) malloc((size_t)(Data2.nx_Volume * Data2.ny_Volume * Data2.nz_Volume) * sizeof(double));
 
+	Data2.Output = (double*) malloc((size_t) Data2.nx_Volume * Data2.ny_Volume * sizeof(double));
+
 	Data2.Proj_dims = (short*) malloc((size_t)2L * sizeof(short));
 	Data2.Proj_dims[0] = Data2.nx_Volume;
 	Data2.Proj_dims[1] = Data2.ny_Volume;
@@ -1611,6 +1596,7 @@ void Projection_real_shears::allocAndInit_VolumeStruct(VolumeStruct &Data2)
 	Data2.Identity_orientV[0] = 1.;
 	Data2.Identity_orientV[1] = 0.;
 	Data2.Identity_orientV[2] = 0.;  
+
 	Data2.Identity_orientW = (double*) malloc((size_t)3L * sizeof(double));
 	Data2.Identity_orientW[0] = 0.;
 	Data2.Identity_orientW[1] = 1.;
@@ -1649,6 +1635,7 @@ void Projection_real_shears::allocAndInit_VolumeStruct(VolumeStruct &Data2)
 void Projection_real_shears::del_VolumeStruct(VolumeStruct &Data2)
 {
 	free(Data2.Volume); 
+	free(Data2.Output);
 	free(Data2.Proj_dims); 
 	free(Data2.Identity_orientN); 
 	free(Data2.Identity_orientV);
@@ -1677,12 +1664,14 @@ int Projection_real_shears::write_projection_file(int numFile)
 
 	//Composition of the projection name
 	FileName fn_proj;
-     fn_proj.compose(prm.fnProjectionSeed, numFile, prm.fn_projection_extension);
+     fn_proj.compose(fnProjectionSeed, numFile, fn_projection_extension);
 
 	//Projection save
 	proj.write(fn_proj);
 
      SF.insert(fn_proj, SelLine::ACTIVE);
+
+	if(display) progress_bar(numFile);
 
 	return(!ERROR);
 }
@@ -1754,15 +1743,20 @@ int Projection_real_shears::do_oneProjection(VolumeStruct &Data2)
 ///Does start instructions. Returns possibles errors.
 int Projection_real_shears::start_to_process()
 {
-	if(prog_param.display) cout<<endl;
+	read(fn_proj_param);
 
-	prm.read_withShift(prog_param.fn_proj_param);
+	DF = DocFile(fn_angle);  // Reads the fn_angle file
 
-	DF = DocFile(prm.fn_angle);  // Reads the fn_angle file
+	//Configure the time for the progress bar
+	if(display)
+	{
+		time_config();
+		init_progress_bar(DF.dataLineNo());
+	}
 
 	//Reads the reference volume
 	VolumeXmipp V;
-	V.read(prm.fnPhantom);
+	V.read(fnPhantom);
 	V().setXmippOrigin();
 	Matrix3D <double> Volume = V();
 
@@ -1779,7 +1773,7 @@ int Projection_real_shears::start_to_process()
 		return (ERROR);
 	}
 
-	if(Data.nx_Volume!=prm.proj_Xdim || Data.ny_Volume!=prm.proj_Ydim || Data.nz_Volume!=prm.proj_Zdim)
+	if(Data.nx_Volume!=proj_Xdim || Data.ny_Volume!=proj_Ydim || Data.nz_Volume!=proj_Zdim)
 	{
 		cout<<"\n\tWarning : the dimension specified in the input file is different to the volume dimension.";
 		cout<<"\n\tThe program will only keep the volume dimensions.\n"<<endl;
@@ -1798,7 +1792,7 @@ int Projection_real_shears::start_to_process()
 	SF.clear();
 	SF.reserve(DF.dataLineNo());
 
-	num_file = prm.starting;
+	num_file = starting;
 	DF.go_first_data_line();
 
 	return (!ERROR);
@@ -1811,28 +1805,23 @@ int Projection_real_shears::finish_to_process()
 	del_VolumeStruct(Data);
 
 	//SelFile save
-	if(prog_param.display)
+	if(display)
 	{
-		if (prog_param.fn_sel_file == "") //If the name of the output file is not specified
-		{
-			prog_param.fn_sel_file = "sel"+prm.fnProjectionSeed+".sel";
-			cout<<"\n\tOutput file : "+prog_param.fn_sel_file<<endl;
-		}
+		progress_bar(DF.dataLineNo());
 
-		cout<<endl;
-		cout<<"\t**************\n";
-		cout<<"\tSelFile save :"<<endl;
-		SF.write(prog_param.fn_sel_file);
-		cout<<"\t     OK"<<endl;
-		cout<<"\t**************\n"<<endl;
+		if (fn_sel_file == "") //If the name of the output file is not specified
+		{
+			fn_sel_file = "sel"+fnProjectionSeed+".sel";
+			cout<<"Output file : "+fn_sel_file<<endl;
+		}
 	}
 	else
 	{
-		if (prog_param.fn_sel_file == "") //If the name of the output file is not specified
-			prog_param.fn_sel_file = "sel"+prm.fnProjectionSeed+".sel";
-
-		SF.write(prog_param.fn_sel_file);
+		if (fn_sel_file == "") //If the name of the output file is not specified
+			fn_sel_file = "sel"+fnProjectionSeed+".sel";
 	}
+
+	SF.write(fn_sel_file);
 
 	return (!ERROR);
 }
@@ -1842,22 +1831,30 @@ int Projection_real_shears::finish_to_process()
 int Projection_real_shears::ROUT_project_real_shears()
 {
 	if(start_to_process() == ERROR)
+	{
+		del_VolumeStruct(Data);
 		return (ERROR);
+	}
 
 	while(!DF.eof())
 	{
-		if(prog_param.display) cout<<"\tProjection "<<num_file<<"..."<<endl;
-
 		if(read_a_DocLine() == ERROR)
+		{
+			del_VolumeStruct(Data);
 			return (ERROR);
+		}
 		
 		if(do_oneProjection(Data) == ERROR)
+		{
+			del_VolumeStruct(Data);
 			return (ERROR);
+		}
 
 		if(write_projection_file(num_file) == ERROR)
+		{
+			del_VolumeStruct(Data);			
 			return (ERROR);
-
-		FreeVolumeDouble(&Data.Output);
+		}
 
 		num_file++;
 		DF.next_data_line();
