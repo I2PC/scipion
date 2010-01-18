@@ -216,12 +216,21 @@ void setupAffineFitness(AffineFitness &fitness, const Matrix2D<double> &I1,
     int level=0;
     Matrix2D<double> I1aux=I1;
     Matrix2D<double> I2aux=I2;
+    
+    // Remove the borders
+    int borderY=CEIL(0.1*YSIZE(I1));
+    int borderX=CEIL(0.1*XSIZE(I1));
+    I1aux.window(STARTINGY(I1)+borderY,STARTINGX(I1)+borderX,
+        FINISHINGY(I1)-borderY,FINISHINGX(I1)-borderX);
+    I2aux.window(STARTINGY(I1)+borderY,STARTINGX(I1)+borderX,
+        FINISHINGY(I1)-borderY,FINISHINGX(I1)-borderX);
+    
     Matrix2D<double> Mask1=I1aux;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I1)
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I1aux)
     	if (I1(i,j)!=0) Mask1(i,j)=1;
 
     Matrix2D<double> Mask2=I2aux;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I2)
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(I2aux)
     	if (I2(i,j)!=0) Mask2(i,j)=1;
 
     do {
@@ -320,8 +329,6 @@ double computeAffineTransformation(const Matrix2D<unsigned char> &I1,
                             bestCost=cost;
                         }
                     }
-                A(4)=bestShiftX;
-                A(5)=bestShiftY;
             }
             else
             {
@@ -395,6 +402,8 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
    localSize=textToFloat(getParameter(argc,argv,"-localSize","0.04"));
    optimizeTiltAngle=checkParameter(argc,argv,"-optimizeTiltAngle");
    isCapillar=checkParameter(argc,argv,"-isCapillar");
+   dontNormalize=checkParameter(argc,argv,"-dontNormalize");
+   difficult=checkParameter(argc,argv,"-difficult");
    corrThreshold=textToFloat(getParameter(argc,argv,"-threshold","-1"));
    maxShiftPercentage=textToFloat(getParameter(argc,argv,"-maxShiftPercentage","0.2"));
    maxIterDE=textToInteger(getParameter(argc,argv,"-maxIterDE","30"));
@@ -408,30 +417,32 @@ void Prog_tomograph_alignment::read(int argc, char **argv) {
 }
 
 void Prog_tomograph_alignment::show() {
-   std::cout << "Input images:       " << fnSel                 << std::endl
-             << "Original images:    " << fnSelOrig             << std::endl
-             << "Output rootname:    " << fnRoot                << std::endl
-             << "Local affine:       " << localAffine           << std::endl
-             << "Use critical points:" << useCriticalPoints     << std::endl
-             << "Num critical points:" << Ncritical             << std::endl
-             << "SeqLength:          " << seqLength             << std::endl
-             << "BlindSeqLength:     " << blindSeqLength        << std::endl
-             << "MaxStep:            " << maxStep               << std::endl
-             << "Grid samples:       " << gridSamples           << std::endl
-             << "Maximum psi:        " << psiMax                << std::endl
-             << "Delta rot:          " << deltaRot              << std::endl
-             << "Local size:         " << localSize             << std::endl
-             << "Optimize tilt angle:" << optimizeTiltAngle     << std::endl
-             << "isCapillar:         " << isCapillar            << std::endl
-             << "Threshold:          " << corrThreshold         << std::endl
-             << "MaxShift Percentage:" << maxShiftPercentage    << std::endl
-             << "MaxIterDE:          " << maxIterDE             << std::endl
-             << "Show Affine:        " << showAffine            << std::endl
-             << "Threshold Affine:   " << thresholdAffine       << std::endl
+   std::cout << "Input images:       " << fnSel              << std::endl
+             << "Original images:    " << fnSelOrig          << std::endl
+             << "Output rootname:    " << fnRoot             << std::endl
+             << "Local affine:       " << localAffine        << std::endl
+             << "Use critical points:" << useCriticalPoints  << std::endl
+             << "Num critical points:" << Ncritical          << std::endl
+             << "SeqLength:          " << seqLength          << std::endl
+             << "BlindSeqLength:     " << blindSeqLength     << std::endl
+             << "MaxStep:            " << maxStep            << std::endl
+             << "Grid samples:       " << gridSamples        << std::endl
+             << "Maximum psi:        " << psiMax             << std::endl
+             << "Delta rot:          " << deltaRot           << std::endl
+             << "Local size:         " << localSize          << std::endl
+             << "Optimize tilt angle:" << optimizeTiltAngle  << std::endl
+             << "isCapillar:         " << isCapillar         << std::endl
+             << "DontNormalize:      " << dontNormalize      << std::endl
+             << "Difficult:          " << difficult          << std::endl
+             << "Threshold:          " << corrThreshold      << std::endl
+             << "MaxShift Percentage:" << maxShiftPercentage << std::endl
+             << "MaxIterDE:          " << maxIterDE          << std::endl
+             << "Show Affine:        " << showAffine         << std::endl
+             << "Threshold Affine:   " << thresholdAffine    << std::endl
              << "Identify outliers Z:" << identifyOutliersZ     << std::endl
              << "No outliers:        " << doNotIdentifyOutliers << std::endl
-             << "Pyramid level:      " << pyramidLevel          << std::endl
-             << "Threads to use:     " << numThreads            << std::endl
+             << "Pyramid level:      " << pyramidLevel       << std::endl
+             << "Threads to use:     " << numThreads         << std::endl
    ;
 }
 
@@ -454,6 +465,8 @@ void Prog_tomograph_alignment::usage() const {
              << "  [-localSize <size=0.04>]        : In percentage\n"
              << "  [-optimizeTiltAngle]            : Optimize tilt angle\n"
              << "  [-isCapillar]                   : Set this flag if the tilt series is of a capillar\n"
+             << "  [-dontNormalize]                : Don't normalize\n"
+             << "  [-difficult]                    : Don't normalize\n"
              << "  [-threshold <th=-1>]            : threshold\n"
              << "  [-maxShiftPercentage <p=0.2>]   : Maximum shift as percentage of image size\n"
              << "  [-maxIterDE <n=30>]             : Maximum number of iteration in Differential Evolution\n"
@@ -621,6 +634,14 @@ void Prog_tomograph_alignment::identifyOutliers(bool mark)
 }
 
 void Prog_tomograph_alignment::produceSideInfo() {
+   // Difficult images?
+   if (difficult)
+   {
+       if (pyramidLevel==0) pyramidLevel=2;
+       if (localSize<0.05) localSize=0.08;
+       if (seqLength==5) seqLength=11;
+   }
+
    bestPreviousAlignment=new Alignment(this);
    // Read input data
    SF.read(fnSel);
@@ -650,6 +671,41 @@ void Prog_tomograph_alignment::produceSideInfo() {
           FileName fn=SF.NextImg();
           if (fn=="") break;
           ImageXmipp imgaux(fn);
+          if (difficult)
+          {
+               //ImageXmipp save;
+               //save()=imgaux(); save.write("PPPoriginal.xmp");
+
+               Matrix2D<double> Ifiltered;
+               Ifiltered=imgaux();
+               Ifiltered.setXmippOrigin();
+
+               // Reject outliers
+               reject_outliers(Ifiltered,0.5);
+
+               // Substract background plane
+               substract_background_plane(Ifiltered);
+               
+               // Substract the background (rolling ball)
+               substract_background_rolling_ball(Ifiltered,
+                  XSIZE(Ifiltered)/10);
+               
+               // Bandpass the image
+               FourierMask FilterBP;
+               FilterBP.FilterBand=BANDPASS;
+               FilterBP.w1=1.0/XSIZE(Ifiltered);
+               FilterBP.w2=100.0/XSIZE(Ifiltered);
+               FilterBP.raised_w=1.0/XSIZE(Ifiltered);
+               FilterBP.generate_mask(Ifiltered);
+               FilterBP.apply_mask_Space(Ifiltered);
+               
+               // Equalize histogram
+               //histogram_equalization(Ifiltered,8);
+               imgaux()=Ifiltered;
+               //save()=Ifiltered; save.write("PPPpreprocessed.xmp");
+               //std::cout << "Press\n";
+               //char c; std::cin >> c;
+          }
           
           if (!useCriticalPoints)
           {
@@ -803,7 +859,7 @@ void Prog_tomograph_alignment::produceSideInfo() {
                         XX(rii)=rnd_unif(X0,XF);
                         YY(rii)=rnd_unif(Y0,YF);
                         rjj=affineTransformations[ii][ii+1]*rii;
-                        refineLandmark(ii,ii+1,rii,rjj,corrList(i));
+                        refineLandmark(ii,ii+1,rii,rjj,corrList(i),false);
                     } while (corrList(i)<-0.99);
                 }
                 avgForwardPatchCorr(ii)=corrList.computeAvg();
@@ -820,7 +876,7 @@ void Prog_tomograph_alignment::produceSideInfo() {
                         XX(rii)=rnd_unif(X0,XF);
                         YY(rii)=rnd_unif(Y0,YF);
                         rjj=affineTransformations[ii][ii-1]*rii;
-                        refineLandmark(ii,ii-1,rii,rjj,corrList(i));
+                        refineLandmark(ii,ii-1,rii,rjj,corrList(i),false);
                     } while (corrList(i)<-0.99);
                 }
                 avgBackwardPatchCorr(ii)=corrList.computeAvg();
@@ -918,7 +974,7 @@ void * threadgenerateLandmarkSetGrid( void * args )
                     rjj=Aji*rcurrent;
                     double corr;
                     acceptLandmark=parent->refineLandmark(jj_1,jj,rcurrent,rjj,
-                        corr);
+                        corr,true);
                     if (acceptLandmark)
                     {
                         l.x=XX(rjj);
@@ -951,7 +1007,7 @@ void * threadgenerateLandmarkSetGrid( void * args )
                     rjj=Aij*rcurrent;
                     double corr;
                     acceptLandmark=parent->refineLandmark(jj_1,jj,rcurrent,rjj,
-                        corr);
+                        corr,true);
                     if (acceptLandmark)
                     {
                         l.x=XX(rjj);
@@ -1183,22 +1239,16 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
 
         // Filter the image
         Matrix2D<double> Ifiltered;
-        FourierMask FilterHP;
-        FilterHP.FilterBand=HIGHPASS;
-        FilterHP.w1=0.004;
-        FilterHP.raised_w=0.002;
         Ifiltered=I();
         Ifiltered.setXmippOrigin();
-        FilterHP.generate_mask(Ifiltered);
-        FilterHP.apply_mask_Space(Ifiltered);
+        FourierMask FilterBP;
+        FilterBP.FilterBand=BANDPASS;
+        FilterBP.w1=2.0/XSIZE(Ifiltered);
+        FilterBP.w2=128.0/XSIZE(Ifiltered);
+        FilterBP.raised_w=1.0/XSIZE(Ifiltered);;
+        FilterBP.generate_mask(Ifiltered);
+        FilterBP.apply_mask_Space(Ifiltered);
 
-        FourierMask FilterLP;
-        FilterLP.FilterBand=LOWPASS;
-        FilterLP.w1=0.25;
-        FilterLP.raised_w=0.02;
-        FilterLP.generate_mask(Ifiltered);
-        FilterLP.apply_mask_Space(Ifiltered);
-        
         // Identify low valued points and perform dilation
         Matrix2D<double> Iaux=Ifiltered;
         Iaux.window(
@@ -1230,6 +1280,31 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
                 if (localMinimum)
                     Q.push_back(vectorR2(x0,y0));
             }
+        
+        // Check that the list is not too long
+        if (Q.size()>10*parent->Ncritical)
+        {
+            int qmax=Q.size();
+            Matrix1D<double> minDistance;
+            minDistance.resize(qmax);
+            minDistance.initConstant(1e20);
+            for (int q1=0; q1<qmax; q1++)
+                for (int q2=q1+1; q2< qmax; q2++)
+                {
+                    double diffX=XX(Q[q1])-XX(Q[q2]);
+                    double diffY=YY(Q[q1])-YY(Q[q2]);
+                    double d12=diffX*diffX+diffY*diffY;
+                    if (d12<minDistance(q1)) minDistance(q1)=d12;
+                    if (d12<minDistance(q2)) minDistance(q2)=d12;
+                }
+            Matrix1D<int> idxDistanceSort=minDistance.indexSort();
+            std::vector< Matrix1D<double> > Qaux;
+            int qlimit=XMIPP_MIN(10*(parent->Ncritical),qmax);
+            for (int q=0; q<qlimit; q++)
+                Qaux.push_back(Q[idxDistanceSort(qmax-1-q)-1]);
+            Q.clear();
+            Q=Qaux;
+        }
         
         int qmax=Q.size();
         Matrix1D<double> rii(3), rjj(3);
@@ -1266,7 +1341,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
 	        Aji=affineTransformations[jj_1][jj];
                 rjj=Aji*rcurrent;
                 double corr;
-                parent->refineLandmark(jj_1,jj,rcurrent,rjj, corr);
+                parent->refineLandmark(jj_1,jj,rcurrent,rjj, corr,true);
                 l.x=XX(rjj);
                 l.y=YY(rjj);
                 l.imgIdx=jj;
@@ -1288,7 +1363,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
 	        Aji=affineTransformations[jj][jj_1];
                 rjj=Aij*rcurrent;
                 double corr;
-                parent->refineLandmark(jj_1,jj,rcurrent,rjj,corr);
+                parent->refineLandmark(jj_1,jj,rcurrent,rjj,corr,true);
                 l.x=XX(rjj);
                 l.y=YY(rjj);
                 l.imgIdx=jj;
@@ -1449,7 +1524,8 @@ void Prog_tomograph_alignment::generateLandmarkSet() {
 
 /* Refine landmark --------------------------------------------------------- */
 bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
-    const Matrix1D<double> &rii, Matrix1D<double> &rjj, double &maxCorr) const
+    const Matrix1D<double> &rii, Matrix1D<double> &rjj, double &maxCorr,
+    bool tryFourier) const
 {
     maxCorr=-1;
     int halfSize=XMIPP_MAX(ROUND(localSize*XSIZE(*img[ii]))/2,5);
@@ -1493,6 +1569,66 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
     if (showRefinement)
         std::cout << "actualCorrThreshold=" << actualCorrThreshold << std::endl;
     
+    // Try Fourier
+    if (tryFourier)
+    {
+        const Matrix2D<unsigned char> &Ijj=(*img[jj]);
+        if (XX(rjj)-halfSize>=STARTINGX(Ijj) &&
+            XX(rjj)+halfSize<=FINISHINGX(Ijj) &&
+            YY(rjj)-halfSize>=STARTINGY(Ijj) &&
+            YY(rjj)+halfSize<=FINISHINGY(Ijj))
+        {
+            // Take the piece at jj
+            Matrix2D<double> piecejj(2*halfSize+1,2*halfSize+1);
+            piecejj.setXmippOrigin();
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(piecejj)
+                MAT_ELEM(piecejj,i,j)=MAT_ELEM(Ijj,
+                   (int)(YY(rjj)+i),(int)(XX(rjj)+j));
+
+            // Compute its correlation with pieceii
+            double corrOriginal=correlation_index(pieceii,piecejj);
+            if (showRefinement)
+            {
+                ImageXmipp save;
+                save()=piecejj; save.write("PPPpiecejjOriginal.xmp");
+                std::cout << "Corr original=" << corrOriginal << std::endl;
+            }
+
+            // Now try with the best shift
+            double shiftX,shiftY;
+            best_nonwrapping_shift(pieceii,piecejj,shiftX,shiftY);
+            Matrix1D<double> fftShift(2);
+            VECTOR_R2(fftShift,shiftX,shiftY);
+            piecejj.selfTranslate(fftShift,WRAP);
+            double corrFFT=correlation_index(pieceii,piecejj);
+            if (corrFFT>corrOriginal)
+            {
+                XX(rjj)-=shiftX;
+                YY(rjj)-=shiftY;
+            }
+
+            if (showRefinement)
+            {
+                ImageXmipp save;
+                save()=piecejj; save.write("PPPpiecejjFFT.xmp");
+                std::cout << "FFT shift=" << fftShift.transpose() << std::endl;
+                std::cout << "Corr FFT=" << corrFFT << std::endl;
+                if (corrFFT>corrOriginal) {
+                    if (XX(rjj)-halfSize>=STARTINGX(Ijj) &&
+                        XX(rjj)+halfSize<=FINISHINGX(Ijj) &&
+                        YY(rjj)-halfSize>=STARTINGY(Ijj) &&
+                        YY(rjj)+halfSize<=FINISHINGY(Ijj))
+                    {
+                        FOR_ALL_ELEMENTS_IN_MATRIX2D(piecejj)
+                            MAT_ELEM(piecejj,i,j)=MAT_ELEM(Ijj,
+                               (int)(YY(rjj)+i),(int)(XX(rjj)+j));
+                        save()=piecejj; save.write("PPPpiecejjNew.xmp");
+                    }
+                }
+            }
+        }
+    }
+
     return refineLandmark(pieceii,jj,rjj,actualCorrThreshold,
         reversed,maxCorr);
 }
@@ -1713,7 +1849,7 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain,
                     VECTOR_R2(rjj,chain[i+step].x,chain[i+step].y);
                     newrjj=rjj;
                     double corr;
-                    bool accepted=refineLandmark(ii,jj,rii,newrjj,corr);
+                    bool accepted=refineLandmark(ii,jj,rii,newrjj,corr,false);
                     if (((newrjj-rjj).module()<4 && accepted) || useCriticalPoints)
                     {
                         chain[i+step].x=XX(newrjj);
@@ -1737,7 +1873,7 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain,
                     VECTOR_R2(rjj,chain[i-1].x,chain[i-1].y);
                     newrjj=rjj;
                     double corr;
-                    bool accepted=refineLandmark(ii,jj,rii,newrjj,corr);
+                    bool accepted=refineLandmark(ii,jj,rii,newrjj,corr,false);
                     corrChain=XMIPP_MIN(corrChain,corr);
                     if (((newrjj-rjj).module()<4 && accepted) || useCriticalPoints)
                     {
@@ -1921,12 +2057,12 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
          mask.initZeros(I());
          FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
              if (I(i,j)!=0) mask(i,j)=1;
-         I().selfTranslate(-(alignment.di[i]+alignment.diaxis[i]),DONT_WRAP);
-         I().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-         I().selfTranslate(vectorR2(-z0*sin(DEG2RAD(tiltList[i])),0),DONT_WRAP);
-         mask.selfTranslate(-(alignment.di[i]+alignment.diaxis[i]),DONT_WRAP);
-         mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-         mask.selfTranslate(vectorR2(-z0*sin(DEG2RAD(tiltList[i])),0),DONT_WRAP);
+         Matrix2D<double> M=
+            translation2DMatrix(vectorR2(-z0*sin(DEG2RAD(tiltList[i])),0))*
+            rotation2DMatrix(90-alignment.rot+alignment.psi(i))*
+            translation2DMatrix(-(alignment.di[i]+alignment.diaxis[i]));
+         I().selfApplyGeometryBSpline(M,3,IS_NOT_INV,DONT_WRAP);
+         mask.selfApplyGeometry(M,IS_NOT_INV,DONT_WRAP);
          mask.binarize(0.5);
          Matrix2D<int> iMask;
          typeCast(mask,iMask);
@@ -1934,7 +2070,7 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
          computeStats_within_binary_mask(iMask,I(),minval, maxval, avg, stddev);
          FOR_ALL_ELEMENTS_IN_MATRIX2D(iMask)
              if (iMask(i,j)==0) I(i,j)=0;
-             else I(i,j)=(I(i,j)-avg)/stddev;
+             else if (!dontNormalize) I(i,j)-=avg;
          double rot=0;
          double tilt=tiltList[i];
          double psi=0;
@@ -1950,19 +2086,21 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
              mask.initZeros(Iorig());
              FOR_ALL_ELEMENTS_IN_MATRIX2D(Iorig())
                  if (Iorig(i,j)!=0) mask(i,j)=1;
-             Iorig().selfTranslate(-(alignment.di[i]+alignment.diaxis[i])*XSIZE(Iorig())/XSIZE(I()),
-                 DONT_WRAP);
-             Iorig().selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
-             mask.selfTranslate(-(alignment.di[i]+alignment.diaxis[i])*XSIZE(Iorig())/XSIZE(I()),
-                 DONT_WRAP);
-             mask.selfRotate(90-alignment.rot+alignment.psi(i),DONT_WRAP);
+             Matrix2D<double> M=
+                translation2DMatrix(vectorR2(-z0*sin(DEG2RAD(tiltList[i]))*
+                    (((double)XSIZE(Iorig()))/XSIZE(I())),0))*
+                rotation2DMatrix(90-alignment.rot+alignment.psi(i))*
+                translation2DMatrix(-(alignment.di[i]+alignment.diaxis[i])*
+                    (((double)XSIZE(Iorig()))/XSIZE(I())));
+             Iorig().selfApplyGeometryBSpline(M,3,IS_NOT_INV,DONT_WRAP);
+             mask.selfApplyGeometry(M,IS_NOT_INV,DONT_WRAP);
              mask.binarize(0.5);
              typeCast(mask,iMask);
              computeStats_within_binary_mask(iMask,Iorig(),minval, maxval,
                  avg, stddev);
              FOR_ALL_ELEMENTS_IN_MATRIX2D(iMask)
                  if (iMask(i,j)==0) Iorig(i,j)=0;
-                 else Iorig(i,j)=(Iorig(i,j)-avg)/stddev;
+                 else if (!dontNormalize) Iorig(i,j)-=avg;
              Iorig.set_eulerAngles(rot, tilt, psi);
              fn_corrected=fnRoot+"_corrected_originalsize_"+integerToString(i,3)+".xmp";
              Iorig.write(fn_corrected);

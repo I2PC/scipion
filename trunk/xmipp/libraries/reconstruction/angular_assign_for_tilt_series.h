@@ -128,6 +128,12 @@ public:
     /// This tilt series comes from a capillar
     bool isCapillar;
 
+    /// Don't normalize the corrected images
+    bool dontNormalize;
+
+    /// Difficult
+    bool difficult;
+
     /// Correlation threshold for a good landmark
     double corrThreshold;
     
@@ -174,7 +180,7 @@ public:
         
         The function returns whether the landmark is accepted or not. */
     bool refineLandmark(int ii, int jj, const Matrix1D<double> &rii,
-        Matrix1D<double> &rjj, double &maxCorr) const;
+        Matrix1D<double> &rjj, double &maxCorr, bool tryFourier) const;
 
 
     /** Refine landmark.
