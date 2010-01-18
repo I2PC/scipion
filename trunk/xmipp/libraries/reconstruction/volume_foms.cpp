@@ -1161,7 +1161,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
     fh_resol.open("superfeo2.vol.frc");
     if (!fh_resol)
         REPORT_ERROR(1,
-                     "compute_FSC: Cannot open results file from xmipp_resolution");
+                     "compute_FSC: Cannot open results file from xmipp_resolution_fsc");
     try
     {
         std::string line;
