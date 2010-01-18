@@ -379,6 +379,7 @@ ReconsSources = [
     'basic_art.cpp',
     'break_symmetry.cpp',
     'common_lines.cpp',
+    'convert_vol2pseudo.cpp',
     'correct_bfactor.cpp',
     'create_projection_library.cpp',
     'crystal_create_surface.cpp',
@@ -520,7 +521,7 @@ AddXmippProgram('convert_dm32raw')
 AddXmippProgram('convert_spi22em', ['XmippInterface'])
 AddXmippProgram('convert_spi22ccp4', ['XmippInterface'])
 AddXmippProgram('convert_vol2data')
-AddXmippProgram('convert_vol2pseudo')
+AddXmippProgram('convert_vol2pseudo', ['XmippRecons'])
 AddXmippProgram('convert_voxels22blobs', ['XmippRecons'])
 AddXmippProgram('convert_tia2raw')
 AddXmippProgram('correct_bfactor', ['XmippRecons'])
