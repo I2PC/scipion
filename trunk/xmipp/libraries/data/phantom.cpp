@@ -983,9 +983,8 @@ double Gaussian::intersection(
     Matrix1D<double> &u) const
 {
     double rmod=point_line_distance_3D(Center, passing_point, direction);
-    const double norm=1.0/sqrt(2.0*PI);
     double sigma2=sigma*sigma;
-    return norm/sigma2*exp(-0.5*rmod*rmod/sigma2);
+    return 1.0/sigma2*exp(-0.5*rmod*rmod/sigma2);
 }
 
 //#define DEBUG
