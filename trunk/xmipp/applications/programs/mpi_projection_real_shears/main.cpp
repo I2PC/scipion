@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Slavica JONIC (slavica.jonic@impmc.jussieu.fr, slavica.jonic@a3.epfl.ch)
- *			 Jean-Noël PIOCHE (jnp95@hotmail.com) 
+ *			 Jean-Noel PIOCHE (jnp95@hotmail.com) 
  *		
  * Biomedical Imaging Group, EPFL (Lausanne, Suisse).
  * Structures des Assemblages Macromoléculaires, IMPMC UMR 7590 (Paris, France).
@@ -48,7 +48,10 @@ class MPI_projection_real_shears : public Projection_real_shears
 			MPI_Status status;
 
 			if(start_to_process() == ERROR)
+			{
+				del_VolumeStruct(Data);
 				return (ERROR);
+			}
 
 			long sizeVolume = Data.nx_Volume * Data.ny_Volume * Data.nz_Volume;
 			long sizeResult = (Data.nx_Volume * Data.ny_Volume) +1 ; 
@@ -59,8 +62,7 @@ class MPI_projection_real_shears : public Projection_real_shears
 			n_Volume[1] = Data.ny_Volume;
 			n_Volume[2] = Data.nz_Volume;
 			
-			//Data.Output = new double[Data.nx_Volume * Data.ny_Volume];
-			Data.Output = (double*) malloc((size_t) Data.nx_Volume * Data.ny_Volume * sizeof(double));
+			//Data.Output = (double*) malloc((size_t) Data.nx_Volume * Data.ny_Volume * sizeof(double)); MODIF
 
 			//Sends all fixed parameters of Data (VolumeStruct)
 			for(int rank = 1; rank < nTasks; ++rank)
@@ -86,10 +88,10 @@ class MPI_projection_real_shears : public Projection_real_shears
 			for (int rank = 1; rank < nTasks; ++rank) 
 			{
 				if(next_work() == ERROR)
-					return (ERROR);			
-
-				if(prog_param.display)
-					cout<<"\tProjection "<<num_file<<"..."<<endl;
+				{
+					del_VolumeStruct(Data);
+					return (ERROR);
+				}			
 
 				// Send it to each rank 
 				MPI_Send(work_toSlave,     // message buffer 
@@ -116,14 +118,17 @@ class MPI_projection_real_shears : public Projection_real_shears
 					    &status);          // info about the received message 
 					
 				if(write_projection_file((int)Data.Output[sizeResult-1]) == ERROR)
+				{
+					del_VolumeStruct(Data);
 					return (ERROR);
+				}
 
 				// Get the next unit of work to be done
 				if(next_work() == ERROR)
-					return (ERROR);	
-			
-				if(prog_param.display)
-					cout<<"\tProjection "<<num_file<<"..."<<endl;
+				{
+					del_VolumeStruct(Data);
+					return (ERROR);
+				}	
 
 		    		// Send the slave a new work unit 
 		    		MPI_Send(work_toSlave,       // message buffer 
@@ -151,7 +156,10 @@ class MPI_projection_real_shears : public Projection_real_shears
 					    &status);          // info about the received message
 
 				if(write_projection_file((int)Data.Output[sizeResult-1]) == ERROR)
+				{
+					del_VolumeStruct(Data);
 					return (ERROR);
+				}
 		  	}
 
 			SF = SF.sort_by_filenames();
@@ -159,7 +167,7 @@ class MPI_projection_real_shears : public Projection_real_shears
 			if(finish_to_process() == ERROR)
 				return (ERROR);
 
-			free(Data.Output);
+			//free(Data.Output);  MODIF
 			EndTasks();
 
 			return (!ERROR);
@@ -244,7 +252,7 @@ class MPI_projection_real_shears : public Projection_real_shears
 		    		// Send the result back 
 		    		MPI_Send(result, sizeProj+1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
 
-				free(Data2.Output);
+				//free(Data2.Output);  MODIF
 		  	}
 		}
 
@@ -302,12 +310,12 @@ int main(int argc, char *argv[])
 		// Check the command line
     		try
     		{
-        		mpi_proj.prog_param.read(argc, argv);
+        		mpi_proj.read(argc, argv);
     		}
     		catch (Xmipp_error &XE)
     		{
         		cout << XE <<endl;
-        		mpi_proj.prog_param.usage();
+        		mpi_proj.usage();
 			mpi_proj.EndTasks();
         		MPI_Finalize();
 			return 1;
