@@ -25,7 +25,7 @@
  * 02111-1307  USA
  *
  *  All comments concerning this program package may be sent to the
- *  e-mail address 'xmipp@cnb.csic.es'
+ *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
 
@@ -43,7 +43,7 @@
 #include <float.h> 
 #include <string.h>
 #include <iostream>
-using namespace std; //For ouput display 
+using namespace std; //For ouput display and string 
  
 /***************************************************************************** 
  *	Toolbox defines 
@@ -63,7 +63,10 @@ using namespace std; //For ouput display
 /***************************************************************************** 
  *	New toolbox includes 
  ****************************************************************************/
-#include "project.h"
+#include <data/docfile.h>
+#include <data/selfile.h>
+#include <data/projection.h>
+#include <data/volume.h>
 
 
 #ifndef DBL_EPSILON
@@ -90,9 +93,10 @@ typedef struct
 	double  PeriodOfSamplingInWDirection; 
 } VolumeStruct;
 
-///Prog_Project_Parameters_2 is just a light code of the Prog_Project_Parameters class reference
-class Prog_Project_Parameters_2
+///Main class of this program
+class Projection_real_shears
 {
+	//--------------- Fields ---------------
 	public :
 		/// Filename of the projection parameters file (input).
 	    	FileName fn_proj_param;
@@ -102,42 +106,41 @@ class Prog_Project_Parameters_2
 		///Tell if the displaying is active
 		bool display;
 
-	public :
-		///Read input and output file parameters only
-		void read(int argc, char **argv);
-		/// Usage message. This function shows the way of introducing this parameters.
-    		void usage();
-};
-
-///Projection_Parameters_withShift is an extension of Projection_Parameters, which includes shifts parameters.
-class Projection_Parameters_withShift : public Projection_Parameters
-{
-	public :
 		///X Translation parameter
 		double shiftX;
 		///Y Translation parameter
 		double shiftY;
 
+		///Projection Xdim
+		int proj_Xdim;
+		///Projection Ydim
+		int proj_Ydim;
 		///Projection Zdim
 		int proj_Zdim;
-	
-	public :
-		///"Overloaded" function in order to use translation parameters
-		void read_withShift(const FileName &fn_proj_param);		
-};
 
-///Main class of this program
-class Projection_real_shears
-{
-	public :
-		Prog_Project_Parameters_2 prog_param;
-		Projection_Parameters_withShift prm;
-		Projection proj;
-		SelFile SF;
-		DocFile DF;
-		VolumeStruct Data;
+		///Volume file
+		FileName fnPhantom;
+		///Seed name of the projections files
+		string fnProjectionSeed;
+		///Starting number for the projections files
+		int starting;
+		///Current number of the projection file to save
 		int num_file;
+		///Extension name of the projections files
+		string fn_projection_extension;
+		///Angular file
+		FileName fn_angle;
+		
+		///Projection to save
+		Projection proj;
+		///Selection file to fill and save
+		SelFile SF;
+		///Content of the angle file
+		DocFile DF;
+		///Basics Data for projections
+		VolumeStruct Data;
 
+	//------------------ Functions -------------------
 	public :
 		///Main function
 		int ROUT_project_real_shears();
@@ -152,6 +155,14 @@ class Projection_real_shears
 		int write_projection_file(int numFile);
 		///Does finish instructions
 		int finish_to_process();
+
+		///Read input and output file parameters only
+		void read(int argc, char **argv);
+		/// Usage message. This function shows the way of introducing this parameters.
+    		void usage();
+
+		///"Overloaded" function in order to use translation parameters
+		void read(const FileName &fn_proj_param); //read_withShift [...]
 
 		///Desallocates VolumeStruct fields
 		void del_VolumeStruct(VolumeStruct &Data2);
