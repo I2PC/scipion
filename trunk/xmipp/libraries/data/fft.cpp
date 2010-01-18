@@ -89,6 +89,17 @@ void Half2Whole(const Matrix2D<std::complex<double> > &in, Matrix2D<std::complex
     }
 }
 
+/** Convert complex -> real,imag Fourier transforms 2D. -- */
+void Complex2RealImag(const Matrix2D< std::complex< double > > & in,
+                      Matrix2D< double > & real,
+                      Matrix2D< double > & imag)
+{
+    real.resize(in);
+    imag.resize(in);
+    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(real),
+        MULTIDIM_ARRAY(imag), MULTIDIM_SIZE(in));
+}
+
 /** Convert complex -> real,imag Fourier transforms 3D. -- */
 void Complex2RealImag(const Matrix3D< std::complex< double > > & in,
                       Matrix3D< double > & real,

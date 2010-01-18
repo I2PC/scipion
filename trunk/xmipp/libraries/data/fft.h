@@ -180,6 +180,13 @@ void Complex2RealImag(const Matrix3D< std::complex < double > > & in,
                       Matrix3D< double > & real,
                       Matrix3D< double > & imag);
 
+/** Conversion from complex -> real,imag 2D
+ * @ingroup FourierFormat
+ */
+void Complex2RealImag(const Matrix2D< std::complex < double > > & in,
+                      Matrix2D< double > & real,
+                      Matrix2D< double > & imag);
+
 /** Conversion from real,imag -> complex 3D
  * @ingroup FourierFormat
  */
