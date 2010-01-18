@@ -110,6 +110,11 @@ void FourierMask::read(int argc, char **argv)
         FilterShape = GAUSSIAN;
         FilterBand = LOWPASS;
     }
+    else if (strcmp(argv[i+1], "real_gaussian") == 0)
+    {
+        FilterShape = REALGAUSSIAN;
+        FilterBand = LOWPASS;
+    }
     else if (strcmp(argv[i+1], "ctf") == 0)
     {
         if (i + 2 >= argc)
@@ -223,6 +228,9 @@ void FourierMask::show()
         case GAUSSIAN:
             std::cout << "Gaussian\n";
             break;
+        case REALGAUSSIAN:
+            std::cout << "Real Gaussian\n";
+            break;
         case CTF:
             std::cout << "CTF\n" << ctf;
             break;
@@ -245,6 +253,7 @@ void FourierMask::usage()
               << "   -fourier_mask wedge <th0> <thF>   : Missing wedge (along y) for data between th0-thF \n"
               << "   -fourier_mask cone <th0>          : Missing cone for tilt angles up to th0 \n"
               << "   -fourier_mask gaussian            : sigma=<w1>\n"
+              << "   -fourier_mask real_gaussian       : convolution with a Gaussian in real-space with sigma=<w1>\n"
               << "   -fourier_mask ctf                 : Provide a .ctfparam file\n"
               << "   -fourier_mask ctfpos              : Provide a .ctfparam file\n"
               << "                                       The CTF phase will be corrected before applying\n"
@@ -273,6 +282,9 @@ double FourierMask::maskValue(const Matrix1D<double> &w)
                     break;
                 case GAUSSIAN:
                     return 1/sqrt(2*PI*w1)*exp(-0.5*absw*absw/(w1*w1));
+                    break;
+                case REALGAUSSIAN:
+                    return exp(-PI*PI*absw*absw*w1*w1);
                     break;
             }
             break;
