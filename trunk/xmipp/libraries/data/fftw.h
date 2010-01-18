@@ -109,8 +109,8 @@ public:
             fftw_plan_with_nthreads(nthreads);
         }
     }
-    /** change Number of threads
-    *        * 
+    /** Change Number of threads.
+     *
      *  The nthreads argument indicates the number of threads you want FFTW to use
      *  (or actually, the maximum number). All plans subsequently
      *  created with any planner routine will use that many
@@ -126,6 +126,7 @@ public:
         nthreads = tNumber;
         fftw_plan_with_nthreads(nthreads);
     }
+
     /** Destroy Threads. Do not execute any previously created
      *  plans after calling this function   */
     void destroyThreads(void )
