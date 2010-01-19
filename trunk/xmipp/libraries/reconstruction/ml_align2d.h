@@ -49,6 +49,11 @@
 
 class Prog_MLalign2D_prm;
 
+#define FOR_ALL_THREAD_REFNO() \
+int refno, load; \
+while ((load = getThreadRefnoJob(refno)) > 0) \
+    for (int i = 0; i < load; i++, refno = (refno + 1) % n_ref)
+
 #ifdef TIMING
 //testing time...
 
@@ -274,7 +279,7 @@ public:
     std::vector<int> ioptx_ref, iopty_ref, ioptflip_ref;
     std::vector<double> maxw_ref;
     //These are for refno work assigns to threads
-    int refno_index, refno_count;
+    int refno_index, refno_count, refno_load, refno_load_param;
 
 #ifdef TIMING
     JMTimer timer;
@@ -331,10 +336,10 @@ public:
     void destroyThreads();
 
     /// Assign refno jobs to threads
-    int getThreadRefnoJob();
+    int getThreadRefnoJob(int &refno);
 
     /// Awake threads for different tasks
-    void awakeThreads(int task, int start_refno);
+    void awakeThreads(int task, int start_refno, int load = 1);
 
     /// Thread code to parallelize refno loop in rotateReference
     void doThreadRotateReferenceRefno();
