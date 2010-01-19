@@ -352,8 +352,8 @@ void VQProjection::fitBasic(Matrix2D<double> &I,
     //applyGeometryBSpline(IauxRS,ARS,I,3,IS_NOT_INV,WRAP);
     //applyGeometryBSpline(IauxSR,ASR,I,3,IS_NOT_INV,WRAP);
 
-    applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
-    applyGeometry(IauxSR,ASR,I,IS_NOT_INV,WRAP);
+    //applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
+    //applyGeometry(IauxSR,ASR,I,IS_NOT_INV,WRAP);
 
     // Compute the correntropy
     double corrCodeRS, corrCodeSR;
