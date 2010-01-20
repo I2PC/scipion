@@ -60,19 +60,21 @@ void Prog_Convert_Vol2Pseudo::read(int argc, char **argv)
     growSeeds = textToFloat(getParameter(argc,argv,"-growSeeds","30"));
     allowMovement = !checkParameter(argc,argv,"-dontAllowMovement");
     allowIntensity = !checkParameter(argc,argv,"-dontAllowIntensity");
+    intensityColumn = getParameter(argc,argv,"-intensityColumn","occupancy");
 }
 
 void Prog_Convert_Vol2Pseudo::show() const
 {
-    std::cout << "Input volume:   " << fnVol          << std::endl
-              << "Output volume:  " << fnOut          << std::endl
-              << "Sigma:          " << sigma          << std::endl
-              << "Initial seeds:  " << initialSeeds   << std::endl
-              << "Grow seeds:     " << growSeeds      << std::endl
-              << "Target error:   " << targetError    << std::endl
-              << "Stop:           " << stop           << std::endl
-              << "AllowMovement:  " << allowMovement  << std::endl
-              << "AllowIntensity: " << allowIntensity << std::endl
+    std::cout << "Input volume:   " << fnVol           << std::endl
+              << "Output volume:  " << fnOut           << std::endl
+              << "Sigma:          " << sigma           << std::endl
+              << "Initial seeds:  " << initialSeeds    << std::endl
+              << "Grow seeds:     " << growSeeds       << std::endl
+              << "Target error:   " << targetError     << std::endl
+              << "Stop:           " << stop            << std::endl
+              << "AllowMovement:  " << allowMovement   << std::endl
+              << "AllowIntensity: " << allowIntensity  << std::endl
+              << "Intensity Col:  " << intensityColumn << std::endl
     ;    
     if (useMask) mask_prm.show();
     else std::cout << "No mask\n";
@@ -81,22 +83,27 @@ void Prog_Convert_Vol2Pseudo::show() const
 void Prog_Convert_Vol2Pseudo::usage() const
 {
     std::cout << "Approximation algorithm:\n"
-              << "   -i <volume>            : Input volume\n"
-              << "  [-o <rootname>]         : Output rootname\n"
-              << "  [-sigma <s=1.5>]        : Sigma of gaussians\n"
-              << "  [-initialSeeds <N=300>] : Initial number of gaussians\n"
-              << "  [-growSeeds <%=30>]     : Percentage of growth\n"
-              << "  [-stop <p=0.001>]       : Stop criterion (0<p<1) for inner iterations\n"
-              << "  [-targetError <e=0.02>] : Finish when the average representation\n"
-              << "                            error is below this threshold\n"
-              << "  [-dontAllowMovement]    : Don't allow Gaussians to move\n"
-              << "  [-dontAllowIntensity]   : Don't allow Gaussians to change intensity\n"
+              << "   -i <volume>                     : Input volume\n"
+              << "  [-o <rootname>]                  : Output rootname\n"
+              << "  [-sigma <s=1.5>]                 : Sigma of gaussians\n"
+              << "  [-initialSeeds <N=300>]          : Initial number of gaussians\n"
+              << "  [-growSeeds <%=30>]              : Percentage of growth\n"
+              << "  [-stop <p=0.001>]                : Stop criterion (0<p<1) for inner iterations\n"
+              << "  [-targetError <e=0.02>]          : Finish when the average representation\n"
+              << "                                     error is below this threshold\n"
+              << "  [-dontAllowMovement]             : Don't allow Gaussians to move\n"
+              << "  [-dontAllowIntensity]            : Don't allow Gaussians to change intensity\n"
+              << "  [-intensityColumn <s=occupancy>] : Where to write the intensity in the PDB file\n"
+              << "                                     Valid values: occupancy, Bfactor\n"
     ;
     mask_prm.usage();
 }
 
 void Prog_Convert_Vol2Pseudo::produceSideInfo()
 {
+    if (intensityColumn!="occupancy" && intensityColumn!="Bfactor")
+        REPORT_ERROR(1,(std::string)"Unknown column: "+intensityColumn);
+
     Vin.read(fnVol);
     Vin().setXmippOrigin();
     
@@ -550,16 +557,25 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     if (!fhOut)
         REPORT_ERROR(1,(std::string)"Cannot open "+fnOut+".pdb for output");
     int nmax=atoms.size();
+    int col=1;
+    if (intensityColumn=="Bfactor") col=2;
     for (int n=0; n<nmax; n++)
     {
         double intensity=1.0;
         if (allowIntensity)
             intensity=ROUND(100*a*(atoms[n].intensity-minIntensity))/100.0;
-        fprintf(fhOut,
-            "ATOM  %5d DENS DENS    1    %8.3f%8.3f%8.3f%6.2f     1      DENS\n",
-            n,
-            (float)atoms[n].location(0),(float)atoms[n].location(1),
-            (float)atoms[n].location(2),(float)intensity);
+        if (col==1)
+            fprintf(fhOut,
+                "ATOM  %5d DENS DENS    1    %8.3f%8.3f%8.3f%6.2f     1      DENS\n",
+                n,
+                (float)atoms[n].location(0),(float)atoms[n].location(1),
+                (float)atoms[n].location(2),(float)intensity);
+        else
+            fprintf(fhOut,
+                "ATOM  %5d DENS DENS    1    %8.3f%8.3f%8.3f     1%6.2f      DENS\n",
+                n,
+                (float)atoms[n].location(0),(float)atoms[n].location(1),
+                (float)atoms[n].location(2),(float)intensity);
     }
     fclose(fhOut);
 }

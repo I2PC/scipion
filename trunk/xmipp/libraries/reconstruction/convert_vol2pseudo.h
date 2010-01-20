@@ -89,6 +89,9 @@ public:
     
     /// Allow gaussians to vary intensity
     bool allowIntensity;
+
+    /// Column for the intensity (if any)
+    std::string intensityColumn;
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);
