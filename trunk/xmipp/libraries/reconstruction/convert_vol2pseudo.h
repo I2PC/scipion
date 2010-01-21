@@ -117,6 +117,9 @@ public:
     /// Remove seeds
     void removeSeeds(int Nseeds);
 
+    /// Remove too close seeds
+    void removeTooCloseSeeds();
+
     /// Compute average of a volume
     double computeAverage(int k, int i, int j, Matrix3D<double> &V);
 

@@ -288,6 +288,11 @@ void Prog_Convert_Vol2Pseudo::removeSeeds(int Nseeds)
         }
     }
     
+    removeTooCloseSeeds();
+}
+
+void Prog_Convert_Vol2Pseudo::removeTooCloseSeeds()
+{
     // Remove atoms that are too close to each other
     if (minDistance>0)
     {
@@ -659,5 +664,6 @@ void Prog_Convert_Vol2Pseudo::run()
         writeResults();
         iter++;
     } while (percentageDiff>targetError);
+    removeTooCloseSeeds();
     writeResults();
 }
