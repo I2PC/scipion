@@ -57,6 +57,12 @@ public:
     /** Use poor Gaussian instead of scattering factors */
     bool usePoorGaussian;
     
+    /** Use fixed Gaussian instead of scattering factors */
+    bool useFixedGaussian;
+    
+    /** Fixed Gaussian standard deviation */
+    double sigmaGaussian;
+
     /** Do not report anything */
     bool quiet;
 public:

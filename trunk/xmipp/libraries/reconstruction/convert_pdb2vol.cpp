@@ -42,6 +42,7 @@ Prog_PDBPhantom_Parameters::Prog_PDBPhantom_Parameters()
     highTs = 1.0/12.0;
     useBlobs=false;
     usePoorGaussian=false;
+    useFixedGaussian=false;
 
     // Periodic table for the blobs
     periodicTable.resize(7, 2);
@@ -69,7 +70,7 @@ Prog_PDBPhantom_Parameters::Prog_PDBPhantom_Parameters()
 
 /* Produce Side Info ------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::produceSideInfo() {
-    if (!useBlobs && !usePoorGaussian) {
+    if (!useBlobs && !usePoorGaussian && !useFixedGaussian) {
 	// Compute the downsampling factor
 	M=(int)ROUND(Ts/highTs);
 
@@ -126,6 +127,9 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
     output_dim = textToInteger(getParameter(argc, argv, "-size", "-1"));
     useBlobs = checkParameter(argc, argv, "-blobs");
     usePoorGaussian = checkParameter(argc, argv, "-poor_Gaussian");
+    useFixedGaussian = checkParameter(argc, argv, "-fixed_Gaussian");
+    if (useFixedGaussian)
+        sigmaGaussian=textToFloat(getParameter(argc,argv,"-fixed_Gaussian"));
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -138,7 +142,9 @@ void Prog_PDBPhantom_Parameters::usage()
 	      << "  [-high_sampling_rate <highTs=1/12>]: Sampling rate before downsampling\n"
 	      << "  [-size <output_dim>]	       : Final size in pixels (must be a power of 2, if blobs are used)\n"
 	      << "  [-blobs]                           : Use blobs instead of scattering factors\n"
-              << "  [-poor_Gaussian]                   : Use a simple Gaussian\n"
+              << "  [-poor_Gaussian]                   : Use a simple Gaussian adapted to each atom\n"
+              << "  [-fixed_Gaussian <std>]            : Use a fixed Gausian for each atom with\n"
+              << "                                       this standard deviation\n"
 	      << "\n"
 	      << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
 	      << "   xmipp_convert_pdb2vol -i 1o7d.pdb -sampling_rate 1.6\n"
@@ -149,13 +155,16 @@ void Prog_PDBPhantom_Parameters::usage()
 /* Show -------------------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::show()
 {
-    std::cout << "PDB file:           " << fn_pdb          << std::endl
-              << "Sampling rate:      " << Ts              << std::endl
-              << "High sampling rate: " << highTs          << std::endl
-              << "Size:               " << output_dim      << std::endl
-	      << "Use blobs:          " << useBlobs        << std::endl
-	      << "Use poor Gaussian:  " << usePoorGaussian << std::endl
+    std::cout << "PDB file:           " << fn_pdb           << std::endl
+              << "Sampling rate:      " << Ts               << std::endl
+              << "High sampling rate: " << highTs           << std::endl
+              << "Size:               " << output_dim       << std::endl
+	      << "Use blobs:          " << useBlobs         << std::endl
+	      << "Use poor Gaussian:  " << usePoorGaussian  << std::endl
+	      << "Use fixed Gaussian: " << useFixedGaussian << std::endl
     ;
+    if (useFixedGaussian)
+        std::cout << "Sigma:              " << sigmaGaussian  << std::endl;
 }
 
 /* Compute protein geometry ------------------------------------------------ */
@@ -163,6 +172,8 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
 {
     Matrix1D<double> limit0(3), limitF(3);
     computePDBgeometry(fn_pdb, centerOfMass, limit0, limitF);
+    std::cout << limit0.transpose() << std::endl;
+    std::cout << limitF.transpose() << std::endl;
     limit.resize(3);
     XX(limit) = XMIPP_MAX(ABS(XX(limit0)), ABS(XX(limitF)));
     YY(limit) = XMIPP_MAX(ABS(YY(limit0)), ABS(YY(limitF)));
@@ -227,10 +238,22 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
 
         // Characterize atom
         double weight, radius;
-        atomBlobDescription(atom_type, weight, radius);
+        if (!useFixedGaussian)
+        {
+            atomBlobDescription(atom_type, weight, radius);
+        }
+        else
+        {
+            radius=4.5*sigmaGaussian;
+            double weight1=textToFloat(line.substr(54,6));
+            double weight2=textToFloat(line.substr(60,6));
+            weight=XMIPP_MIN(weight1,weight2);
+        }
         blob.radius = radius;
         if (usePoorGaussian) radius=XMIPP_MAX(radius/Ts,4.5);
         double GaussianSigma2=(radius/(3*sqrt(2.0)));
+        if (useFixedGaussian)
+            GaussianSigma2=sigmaGaussian;
         GaussianSigma2*=GaussianSigma2;
         double GaussianNormalization = 1.0/pow(2*PI*GaussianSigma2,1.5);
 
@@ -252,7 +275,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
                     rdiff*=highTs;
                     if (useBlobs)
                        Vhigh(k, i, j) += weight * blob_val(rdiff.module(), blob);
-                    else if (usePoorGaussian)
+                    else if (usePoorGaussian || useFixedGaussian)
                        Vhigh(k, i, j) += weight * 
                           exp(-rdiff.module()*rdiff.module()/(2*GaussianSigma2))*
                           GaussianNormalization;
@@ -263,7 +286,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
     fh_pdb.close();
 }
 
-/* Create protein at a high sampling rate ---------------------------------- */
+/* Create protein at a low sampling rate ----------------------------------- */
 void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
 {
     // Compute the integer downsapling factor
@@ -386,7 +409,7 @@ void Prog_PDBPhantom_Parameters::run()
 	create_protein_at_high_sampling_rate();
 	create_protein_at_low_sampling_rate();
 	blob_properties();
-    } else if (usePoorGaussian) {
+    } else if (usePoorGaussian || useFixedGaussian) {
         highTs=Ts;
 	create_protein_at_high_sampling_rate();
         Vlow=Vhigh;
