@@ -61,6 +61,7 @@ void Prog_Convert_Vol2Pseudo::read(int argc, char **argv)
     allowMovement = !checkParameter(argc,argv,"-dontAllowMovement");
     allowIntensity = !checkParameter(argc,argv,"-dontAllowIntensity");
     intensityColumn = getParameter(argc,argv,"-intensityColumn","occupancy");
+    minDistance = textToFloat(getParameter(argc,argv,"-growSeeds","0.001"));
 }
 
 void Prog_Convert_Vol2Pseudo::show() const
@@ -75,6 +76,7 @@ void Prog_Convert_Vol2Pseudo::show() const
               << "AllowMovement:  " << allowMovement   << std::endl
               << "AllowIntensity: " << allowIntensity  << std::endl
               << "Intensity Col:  " << intensityColumn << std::endl
+              << "Min. Distance:  " << minDistance     << std::endl
     ;    
     if (useMask) mask_prm.show();
     else std::cout << "No mask\n";
@@ -95,6 +97,8 @@ void Prog_Convert_Vol2Pseudo::usage() const
               << "  [-dontAllowIntensity]            : Don't allow Gaussians to change intensity\n"
               << "  [-intensityColumn <s=occupancy>] : Where to write the intensity in the PDB file\n"
               << "                                     Valid values: occupancy, Bfactor\n"
+              << "  [-minDistance <d=0.001>]         : Minimum distance between two atoms\n"
+              << "                                     Set it to -1 to disable\n"
     ;
     mask_prm.usage();
 }
@@ -282,6 +286,55 @@ void Prog_Convert_Vol2Pseudo::removeSeeds(int Nseeds)
             } while (oldListSize>atoms.size() && alreadyRemoved<fromNegative);
             if (alreadyRemoved==fromNegative) break;
         }
+    }
+    
+    // Remove atoms that are too close to each other
+    if (minDistance>0)
+    {
+        std::vector<int> toRemove;
+        int nmax=atoms.size();
+        double minDistance2=minDistance*minDistance;
+        for (int n1=0; n1<nmax; n1++)
+        {
+            bool found=false;
+            int nn=0, nnmax=toRemove.size();
+            while (nn<nnmax)
+            {
+                if (toRemove[nn]==n1) {found=true; break;}
+                else if (toRemove[nn]>n1) break;
+                nn++;
+            }
+            if (found) continue;
+            for (int n2=n1+1; n2<nmax; n2++)
+            {
+                nn=0;
+                found=false;
+                while (nn<nnmax)
+                {
+                    if (toRemove[nn]==n2) {found=true; break;}
+                    else if (toRemove[nn]>n2) break;
+                    nn++;
+                }
+                if (found) continue;
+                double diffZ=atoms[n1].location(0)-atoms[n2].location(0);
+                double diffY=atoms[n1].location(1)-atoms[n2].location(1);
+                double diffX=atoms[n1].location(2)-atoms[n2].location(2);
+                double d2=diffZ*diffZ+diffY*diffY+diffX*diffX;
+                if (d2<minDistance2)
+                {
+                    if (atoms[n1].intensity<atoms[n2].intensity)
+                    {
+                        toRemove.push_back(n1);
+                        break;
+                    }
+                    else
+                        toRemove.push_back(n2);
+                    std::sort(toRemove.begin(),toRemove.end());
+                }
+            }
+        }
+        for (int n=toRemove.size()-1; n>=0; n--)
+            atoms.erase(atoms.begin()+toRemove[n]);
     }
 }
 
@@ -550,7 +603,7 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     // Write the PDB
     double minIntensity=intensities.computeMin();
     double maxIntensity=intensities.computeMax();
-    double a=1.000/(maxIntensity-minIntensity);
+    double a=0.99/(maxIntensity-minIntensity);
     
     FILE *fhOut=NULL;
     fhOut=fopen((fnOut+".pdb").c_str(),"w");
@@ -563,19 +616,19 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     {
         double intensity=1.0;
         if (allowIntensity)
-            intensity=ROUND(100*a*(atoms[n].intensity-minIntensity))/100.0;
+            intensity=0.01+ROUND(100*a*(atoms[n].intensity-minIntensity))/100.0;
         if (col==1)
             fprintf(fhOut,
-                "ATOM  %5d DENS DENS    1    %8.3f%8.3f%8.3f%6.2f     1      DENS\n",
-                n,
-                (float)atoms[n].location(0),(float)atoms[n].location(1),
-                (float)atoms[n].location(2),(float)intensity);
+                "ATOM  %5d DENS DENS%5d    %8.3f%8.3f%8.3f%6.2f     1      DENS\n",
+                n+1,n+1,
+                (float)atoms[n].location(2),(float)atoms[n].location(1),
+                (float)atoms[n].location(0),(float)intensity);
         else
             fprintf(fhOut,
-                "ATOM  %5d DENS DENS    1    %8.3f%8.3f%8.3f     1%6.2f      DENS\n",
-                n,
-                (float)atoms[n].location(0),(float)atoms[n].location(1),
-                (float)atoms[n].location(2),(float)intensity);
+                "ATOM  %5d DENS DENS%5d    %8.3f%8.3f%8.3f     1%6.2f      DENS\n",
+                n+1,n+1,
+                (float)atoms[n].location(2),(float)atoms[n].location(1),
+                (float)atoms[n].location(0),(float)intensity);
     }
     fclose(fhOut);
 }

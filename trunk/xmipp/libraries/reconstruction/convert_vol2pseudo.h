@@ -92,6 +92,9 @@ public:
 
     /// Column for the intensity (if any)
     std::string intensityColumn;
+    
+    /// Mindistance
+    double minDistance;
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);
