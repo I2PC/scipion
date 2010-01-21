@@ -138,7 +138,14 @@ void computePDBgeometry(const std::string &fnPDB,
         else if (y > YY(limitF)) YY(limitF) = y;
         if (z < ZZ(limit0)) ZZ(limit0) = z;
         else if (z > ZZ(limitF)) ZZ(limitF) = z;
-        int weight=atomCharge(atom_type);
+        double weight;
+        if (atom_type=="EN")
+        {
+            double weight1=textToFloat(line.substr(54,6));
+            double weight2=textToFloat(line.substr(60,6));
+            weight=XMIPP_MIN(weight1,weight2);
+        }
+        else atomCharge(atom_type);
         total_mass += weight;
         XX(centerOfMass) += weight * x;
         YY(centerOfMass) += weight * y;
