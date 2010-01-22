@@ -42,26 +42,26 @@ void Symmetrize_Parameters::read(int argc, char **argv)
 void Symmetrize_Parameters::usage()
 {
     std::cout
-        << "Usage: symmetrize [Purpose and Parameters]\n"
-        << "Purpose: Symmetrize a 3D volume\n"
-        << "Parameter Values: (notice space before value)\n"
-        << "    -i <file_in>        : input 3D Xmipp file\n"
-        << "   [-o <file_out>]      : if no name is given then the input file is\n"
-        << "                          rewritten\n"
-        << "    -sym <sym_file>     : symmetry file (see the manual)\n"
-        << "   [-no_group]          : do not generate symmetry subgroup\n"
-        << "   [-dont_wrap]         : by default, the volume is wrapped\n"
-        << "   [-splines]           : by default, trilinear interpolation\n";
+    << "Usage: symmetrize [Purpose and Parameters]\n"
+    << "Purpose: Symmetrize a 3D volume\n"
+    << "Parameter Values: (notice space before value)\n"
+    << "    -i <file_in>        : input 3D Xmipp file\n"
+    << "   [-o <file_out>]      : if no name is given then the input file is\n"
+    << "                          rewritten\n"
+    << "    -sym <sym_file>     : symmetry file (see the manual)\n"
+    << "   [-no_group]          : do not generate symmetry subgroup\n"
+    << "   [-dont_wrap]         : by default, the volume is wrapped\n"
+    << "   [-splines]           : by default, trilinear interpolation\n";
 }
 
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters &prm)
 {
     out << "File in:       " << prm.fn_in  << std::endl
-        << "File out:      " << prm.fn_out << std::endl
-        << "Symmetry file: " << prm.fn_sym << std::endl
-        << "Generate group:" << !prm.do_not_generate_subgroup << std::endl
-        << "Wrapping:      " << prm.wrap   << std::endl;
+    << "File out:      " << prm.fn_out << std::endl
+    << "Symmetry file: " << prm.fn_sym << std::endl
+    << "Generate group:" << !prm.do_not_generate_subgroup << std::endl
+    << "Wrapping:      " << prm.wrap   << std::endl;
     out << "Splines:       " << prm.useBsplines << std::endl;
     return out;
 }
@@ -84,6 +84,7 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
     for (int i = 0; i < SL.SymsNo(); i++)
     {
         SL.get_matrices(i, L, R);
+        SL.
 
         SL.get_shift(i, sh);
         R(3, 0) = sh(0) * V_aux().colNumber();
@@ -94,6 +95,7 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
            to reuse V_in !!!, this is very memory wasting */
         applyGeometry(V_aux(), R.transpose(), V_in(), IS_NOT_INV, wrap);
 #ifdef DEBUG
+
         V_aux.write((std::string)"PPPsym_" + integerToString(i) + ".vol");
 #endif
 
@@ -101,9 +103,11 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
            seems to work */
         // applyGeometry(V_aux2(),L,V_aux(),IS_NOT_INV,prm.wrap);
         arrayByArray(V_out(), V_aux(), V_out(), '+');
-        if (show_progress) progress_bar(i);
+        if (show_progress)
+            progress_bar(i);
     }
-    if (show_progress) progress_bar(SL.SymsNo());
+    if (show_progress)
+        progress_bar(SL.SymsNo());
     arrayByScalar(V_out(), SL.SymsNo() + 1.0f, V_out(), '/');
 }
 #undef DEBUG
@@ -146,6 +150,7 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
         arrayByArray(V_out(), V_aux(), V_out(), '+');
 
 #ifdef DEBUG
+
         V_aux.write((std::string)"PPPsym_" + integerToString(i) + ".vol");
 #endif
 
@@ -173,7 +178,9 @@ void ROUT_symmetrize(const Symmetrize_Parameters &prm)
         symmetrize(SL, V_in, V_out, prm.wrap, true);
     else
         symmetrize_Bspline(SL, V_in, V_out, 3, prm.wrap, true);
-    if (prm.fn_out == "") fn_out = V_in.name();
-    else fn_out = prm.fn_out;
+    if (prm.fn_out == "")
+        fn_out = V_in.name();
+    else
+        fn_out = prm.fn_out;
     V_out.write(fn_out);
 }
