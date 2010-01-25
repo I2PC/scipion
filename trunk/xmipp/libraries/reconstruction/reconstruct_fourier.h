@@ -176,9 +176,6 @@ public: // Internal members
     // Volume of Fourier weights convolved with the kernel
     Matrix3D<double> FourierWeightsConvolved;
 
-    // Kernel used in Fourier
-    Matrix3D<double> kernel;
-
     // Padded image
     Matrix2D<double> paddedImg;
 

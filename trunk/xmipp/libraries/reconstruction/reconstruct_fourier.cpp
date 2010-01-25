@@ -188,17 +188,6 @@ void Prog_RecFourier_prm::produce_Side_info()
     iDelta=1/delta;
     iDeltaFourier=1/deltaFourier;
 
-    // Kernel for the weight correction
-    int L=CEIL(blob.radius);
-    kernel.resize(2*L+1,2*L+1,2*L+1);
-    kernel.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(kernel)
-    {
-        double r=sqrt((double)(k*k+i*i+j*j));
-        if (r>=blob.radius) kernel(k,i,j)=0;
-        else kernel(k,i,j)=blob_table(ROUND(r*iDelta));
-    }
-
     // Get symmetries
     Matrix2D<double>  Identity(3,3);
     Identity.initIdentity();
