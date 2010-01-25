@@ -84,7 +84,6 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
     for (int i = 0; i < SL.SymsNo(); i++)
     {
         SL.get_matrices(i, L, R);
-        SL.
 
         SL.get_shift(i, sh);
         R(3, 0) = sh(0) * V_aux().colNumber();
