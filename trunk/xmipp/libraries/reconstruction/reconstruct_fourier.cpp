@@ -542,6 +542,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                                                             YY(gcurrent) * YY(gcurrent) +
                                                             ZZ(gcurrent) * ZZ(gcurrent));
                                             if (d > parent->blob.radius) continue;
+                                            // COSS: *** AVOID THE SQUARE ROOTS
                                             double w = parent->blob_table(ROUND(gcurrent.module()*parent->iDelta));
                                             //if(w<MINIMUMWEIGHT)
                                             //   continue;
