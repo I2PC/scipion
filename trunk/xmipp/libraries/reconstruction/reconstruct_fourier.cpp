@@ -971,6 +971,7 @@ void Prog_RecFourier_prm::finishComputations( FileName out_name )
     //THIS IS WRONG CHANGE int by size_t
     FOR_ALL_ELEMENTS_IN_MATRIX3D(Vout())
     {
+        // COSS: *** Avoid the square root
         double factor = Fourier_blob_table(ROUND(sqrt((double)(k*k+i*i+j*j))
                                                  *iDeltaFourier));
         Vout(k,i,j) /= (factor/pad_relation);
