@@ -164,29 +164,47 @@ void Prog_RecFourier_prm::produce_Side_info()
     transformerImg.setReal(paddedImg);
 
     // Build a table of blob values
-    blob_table.resize(BLOB_TABLE_SIZE);
-    Fourier_blob_table.resize(BLOB_TABLE_SIZE);
+    blobTableSqrt.resize(BLOB_TABLE_SIZE_SQRT);
+    fourierBlobTableSqrt.resize(BLOB_TABLE_SIZE_SQRT);
+    Fourier_blob_table.resize(BLOB_TABLE_SIZE_SQRT);
 
     struct blobtype blobFourier,blobnormalized;
     blobFourier=blob;
     blobFourier.radius/=(padding_factor_proj*Xdim);
     blobnormalized=blob;
     blobnormalized.radius/=((double)padding_factor_proj/padding_factor_vol);
-    double delta = blob.radius/(BLOB_TABLE_SIZE-1);
-    double deltaFourier = (sqrt(3.)*Xdim/2.)/(BLOB_TABLE_SIZE-1);
+    double deltaSqrt     = (blob.radius*blob.radius) /(BLOB_TABLE_SIZE_SQRT-1);
+    double deltaFourier  = (sqrt(3.)*Xdim/2.)/(BLOB_TABLE_SIZE_SQRT-1);
 
     // The interpolation kernel must integrate to 1
     double iw0 = 1.0 / blob_Fourier_val(0.0, blobnormalized);
     double padXdim3 = padding_factor_proj * Xdim;
     padXdim3 = padXdim3 * padXdim3 * padXdim3;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(blob_table)
+    double blobTableSize = blob.radius*sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
+    //***
+    //Following commented line seems to be the right thing but I do not understand it
+    //double fourierBlobTableSize = (sqrt(3.)*Xdim*Xdim/2.)*blobFourier.radius *sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(blobTableSqrt)
     {
-        DIRECT_VEC_ELEM(blob_table,i) = blob_val(delta*i, blob)  *iw0;
+    	//use a r*r sample instead of r
+    	//DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
+        DIRECT_VEC_ELEM(blobTableSqrt,i)    = blob_val(blobTableSize*sqrt(i), blob)  *iw0;
+        //***
+        //DIRECT_VEC_ELEM(fourierBlobTableSqrt,i) =
+        //     blob_Fourier_val(fourierBlobTableSize*sqrt(i), blobFourier)*padXdim3  *iw0;
         DIRECT_VEC_ELEM(Fourier_blob_table,i) =
-        blob_Fourier_val(deltaFourier*i, blobFourier)*padXdim3  *iw0;
+             blob_Fourier_val(deltaFourier*i, blobFourier)*padXdim3  *iw0;
+		//#define DEBUG
+		#ifdef DEBUG
+			std::cout << DIRECT_VEC_ELEM(Fourier_blob_table,i)
+					  << " " << DIRECT_VEC_ELEM(fourierBlobTableSqrt,i)
+					  << std::endl;
+        #endif
+		#undef DEBUG
     }
-    iDelta=1/delta;
-    iDeltaFourier=1/deltaFourier;
+    //iDelta        = 1/delta;
+    iDeltaSqrt    = 1/deltaSqrt;
+    iDeltaFourier = 1/deltaFourier;
 
     // Get symmetries
     Matrix2D<double>  Identity(3,3);
@@ -528,6 +546,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                                 // Loop within the box
 
                                 double *ptrIn =(double *)&((*paddedFourier)(i,j));
+                                double blobRadiusSquared = parent->blob.radius * parent->blob.radius;
                                 for (int intz = ZZ(corner1); intz <= ZZ(corner2); intz++)
                                 {
                                     for (int inty = YY(corner1); inty <= YY(corner2); inty++)
@@ -538,12 +557,13 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                                             // Compute blob value at that distance
                                             VECTOR_R3(gcurrent, intx, inty, intz);
                                             V3_MINUS_V3(gcurrent, real_position, gcurrent);
-                                            double d = sqrt(XX(gcurrent) * XX(gcurrent) +
-                                                            YY(gcurrent) * YY(gcurrent) +
-                                                            ZZ(gcurrent) * ZZ(gcurrent));
-                                            if (d > parent->blob.radius) continue;
+                                            double d = (XX(gcurrent) * XX(gcurrent) +
+                                                        YY(gcurrent) * YY(gcurrent) +
+                                                        ZZ(gcurrent) * ZZ(gcurrent));
+                                            if (d > blobRadiusSquared) continue;
                                             // COSS: *** AVOID THE SQUARE ROOTS
-                                            double w = parent->blob_table(ROUND(gcurrent.module()*parent->iDelta));
+                                            double w = parent->blobTableSqrt(ROUND(d*parent->iDeltaSqrt));
+                                            //double w = parent->blob_table(ROUND(gcurrent.module()*parent->iDelta));
                                             //if(w<MINIMUMWEIGHT)
                                             //   continue;
                                             // Look for the location of this logical index
