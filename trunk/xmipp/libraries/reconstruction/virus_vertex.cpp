@@ -91,20 +91,25 @@ void VirusVertex::loadIcosahedronVertex()
     if (symmetry  == pg_I || symmetry  == pg_I2)
     {
         Euler_angles2matrix(0,-31.7174745559,0, A);
-    } else if (symmetry  == pg_I1)
+    }
+    else if (symmetry  == pg_I1)
     {//OK
         Euler_angles2matrix(0,-31.7174745559+90.,0, A);
-    } else if (symmetry  == pg_I3)
+    }
+    else if (symmetry  == pg_I3)
     {//OK
         A.initIdentity();
-    } else if (symmetry  == pg_I4)
+    }
+    else if (symmetry  == pg_I4)
     {//OK
         Euler_angles2matrix(0,-31.7174745559 *2.0,0, A);
-    } else if (symmetry  == pg_I5)
+    }
+    else if (symmetry  == pg_I5)
     {//OK
         std::cerr << "ERROR: Symmetry pg_I5 not implemented" << std::endl;
         exit(0);
-    } else
+    }
+    else
     {//OK
         std::cerr << "Unknown symmetry" << std::endl;
         exit(0);
@@ -113,7 +118,7 @@ void VirusVertex::loadIcosahedronVertex()
     {
         vertices_vectors[i]=A*vertices_vectors[i];
     }// for i
-    #define CHIMERA
+#define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr;
     filestr.open ("sym.bild");
@@ -130,7 +135,7 @@ void VirusVertex::loadIcosahedronVertex()
         ;
     }
     filestr.close();
-    #endif
+#endif
     #undef CHIMERA
 }
 
@@ -145,7 +150,7 @@ void VirusVertex::processAngles()
     SelFile SFout;
     DocFile DFout;
     DFout.append_comment("Headerinfo columns: rot (1) , tilt (2),\
- psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)");
+                         psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)");
     Matrix1D<double> docline;
     docline.initZeros(7);
     int repaint = ceil((double)SF.ImgNo()/60);
@@ -156,9 +161,11 @@ void VirusVertex::processAngles()
     while (!SF.eof())
     {
         FileName fn_img = SF.NextImg();
-        if (imgno++%repaint==0) progress_bar(imgno);
-        if (fn_img=="") break;
-        proj.read(fn_img, false); //true means apply shifts 
+        if (imgno++%repaint==0)
+            progress_bar(imgno);
+        if (fn_img=="")
+            break;
+        proj.read(fn_img, false); //true means apply shifts
         if (fn_doc == "")
         {
             rot  = proj.rot();
@@ -168,7 +175,8 @@ void VirusVertex::processAngles()
             yoff = proj.Yoff();
             flip = proj.flip();
             weight = proj.weight();
-        } else
+        }
+        else
         {
             get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
             proj.set_rot(rot);
@@ -180,8 +188,8 @@ void VirusVertex::processAngles()
             proj.set_weight(weight);
         }
         Matrix2D<double> A;
-        Matrix1D<double> projected_point(3); 
-        Matrix1D<double> projected_point_2D(2); 
+        Matrix1D<double> projected_point(3);
+        Matrix1D<double> projected_point_2D(2);
         std::vector <Matrix1D<double> > proj_vectors;
         for (int i = 0; i < 12; i++)
         {
@@ -199,7 +207,7 @@ void VirusVertex::processAngles()
             {
                 for (int j = 0; j < 12; j++)
                 {
-                    if(i==j) 
+                    if(i==j)
                         continue;
                     if((proj_vectors[i]-proj_vectors[j]).module()*virusRadius < dim)
                     {
@@ -214,7 +222,7 @@ void VirusVertex::processAngles()
             }
             int radius = proj_vectors[i].module()*virusRadius;
             if (radius > minVirusRadius)
-            {            
+            {
                 proj_aux=proj;
                 FileName fn_tmp;
                 proj_aux.set_Xoff(xoff + XX(proj_vectors[i])*virusRadius);
@@ -233,7 +241,7 @@ void VirusVertex::processAngles()
                 irandom=rnd_unif(0, 4);
                 Matrix2D<double> euler(3, 3), temp;
                 Euler_angles2matrix(rot, tilt, psi, euler);
-                temp = euler * 
+                temp = euler *
                        R_repository[symmetryMatrixVertex(i,irandom)].inv();
                 //temp = euler;
                 Euler_matrix2angles(temp, rotp, tiltp, psip);
@@ -251,7 +259,7 @@ void VirusVertex::processAngles()
                 docline(6) = flip;
                 DFout.append_comment(fn_tmp);
                 DFout.append_data_line(docline);
-           }
+            }
         }
     }
     progress_bar(SF.ImgNo());
@@ -259,11 +267,12 @@ void VirusVertex::processAngles()
     fn_tmp1= fn_sel.without_extension()+"_out.sel";
     SFout.write(fn_tmp1);
     fn_tmp1= fn_doc.without_extension()+"_out.doc";
-    DFout.write(fn_tmp1);}
+    DFout.write(fn_tmp1);
+}
 
 void VirusVertex::get_angles_for_image(const FileName &fn, double &rot,
-    double &tilt, double &psi, double &xoff, double &yoff, double &flip,
-    double &weight)
+                                       double &tilt, double &psi, double &xoff, double &yoff, double &flip,
+                                       double &weight)
 {
     if (DFangles.search_comment(fn))
     {
@@ -285,7 +294,7 @@ void VirusVertex::get_angles_for_image(const FileName &fn, double &rot,
     {
         REPORT_ERROR(1, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
     }
-    
+
 }
 void VirusVertex::assignSymmetryMatricesToVertex()
 {
@@ -305,21 +314,21 @@ void VirusVertex::assignSymmetryMatricesToVertex()
         //std::cerr << R << std::endl;
     }
     //#define CREATEICOSAHEDRALPHANTOM
-    #ifdef CREATEICOSAHEDRALPHANTOM
+#ifdef CREATEICOSAHEDRALPHANTOM
     std::ofstream filestr;
     double alpha, beta, gamma;
     filestr.open ("ico.feat");
-    filestr    
-     << "# Phantom description file, (generated with phantom help)\n"
-     << "# General Volume Parameters:\n"
-     << "#      Xdim      Ydim      Zdim   Background_Density Scale\n"
-     << "      2    2    2    0  128\n" 
-     << "# Feature Parameters: \n";
+    filestr
+    << "# Phantom description file, (generated with phantom help)\n"
+    << "# General Volume Parameters:\n"
+    << "#      Xdim      Ydim      Zdim   Background_Density Scale\n"
+    << "      2    2    2    0  128\n"
+    << "# Feature Parameters: \n";
 
     for (int i = 0; i < 12; i++)
     {
         Euler_direction2angles(vertices_vectors[i], alpha, beta, gamma);
-        filestr    
+        filestr
         << "cyl + 1 "
         << XX(vertices_vectors[i])*0.8 << " "
         << YY(vertices_vectors[i])*0.8 << " "
@@ -330,14 +339,14 @@ void VirusVertex::assignSymmetryMatricesToVertex()
         << gamma << " "
         << std::endl
         ;
-        // cyl  <+/=> <den>    <x0>     <y0>     <z0>    <xradius> <yradius> <height>               <rot> <tilt> <psi> 
+        // cyl  <+/=> <den>    <x0>     <y0>     <z0>    <xradius> <yradius> <height>               <rot> <tilt> <psi>
         // cyl + 1 15   0  0  5  5 15    0 90  0    ; Cylinder  in X
     }
     Matrix1D<double>  myvector(3);
     for (int j = 0; j < R_repository.size(); j++)
     {
         myvector = vectorR3(0., 0.15, 0.9).transpose() * R_repository[j];
-        filestr    
+        filestr
         << "sph + 1 "
         << XX(myvector)*0.9 << " "
         << YY(myvector)*0.9 << " "
@@ -348,8 +357,8 @@ void VirusVertex::assignSymmetryMatricesToVertex()
 
 
     filestr.close();
-    
-    #endif
+
+#endif
 
     Matrix1D<double> r(3);
     int k,sixty;
@@ -383,13 +392,13 @@ void VirusVertex::run()
     //read doc and sel files file
     if (fn_doc != "")
         DFangles.read(fn_doc);
-        col_rot    = DFangles.getColNumberFromHeader("rot")  - 1;
-        col_tilt   = DFangles.getColNumberFromHeader("tilt") - 1;
-        col_psi    = DFangles.getColNumberFromHeader("psi")  - 1;
-        col_xoff   = DFangles.getColNumberFromHeader("Xoff") - 1;
-        col_yoff   = DFangles.getColNumberFromHeader("Yoff") - 1;
-        col_flip   = DFangles.getColNumberFromHeader("Flip") - 1;
-        col_weight = DFangles.getColNumberFromHeader("Weight") - 1;
+    col_rot    = DFangles.getColNumberFromHeader("rot")  - 1;
+    col_tilt   = DFangles.getColNumberFromHeader("tilt") - 1;
+    col_psi    = DFangles.getColNumberFromHeader("psi")  - 1;
+    col_xoff   = DFangles.getColNumberFromHeader("Xoff") - 1;
+    col_yoff   = DFangles.getColNumberFromHeader("Yoff") - 1;
+    col_flip   = DFangles.getColNumberFromHeader("Flip") - 1;
+    col_weight = DFangles.getColNumberFromHeader("Weight") - 1;
 
     SF.read(fn_sel);
     //load icosahedron vertex
