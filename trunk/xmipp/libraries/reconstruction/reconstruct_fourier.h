@@ -41,6 +41,8 @@
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
 #define BLOB_TABLE_SIZE 5000
+#define BLOB_TABLE_SIZE_SQRT 10000
+
 #define MINIMUMWEIGHT 0.001
 #define ACCURACY 0.001
 
@@ -146,11 +148,15 @@ public: // Internal members
     // Column numbers in the docfile
     int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;
 
-    // Table with blob values
-    Matrix1D<double> blob_table, Fourier_blob_table;
+    // Table with blob values, lineal sampling
+    Matrix1D<double>  Fourier_blob_table;
+
+    // Table with blob values, squared samplinf
+     Matrix1D<double> blobTableSqrt, fourierBlobTableSqrt;
 
     // Inverse of the delta and deltaFourier used in the tables
-    double iDelta, iDeltaFourier;
+    //double iDelta,
+    double iDeltaFourier, iDeltaSqrt;
 
     // Maximum interesting resolution squared
     double maxResolution2;
