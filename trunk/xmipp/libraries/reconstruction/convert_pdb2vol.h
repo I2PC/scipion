@@ -65,6 +65,9 @@ public:
 
     /** Do not report anything */
     bool quiet;
+
+    /// Column for the intensity (if any). Only valid for fixed_gaussians
+    std::string intensityColumn;
 public:
     /** Empty constructor */
     Prog_PDBPhantom_Parameters();

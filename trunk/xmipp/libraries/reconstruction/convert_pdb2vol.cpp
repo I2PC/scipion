@@ -130,6 +130,7 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
     useFixedGaussian = checkParameter(argc, argv, "-fixed_Gaussian");
     if (useFixedGaussian)
         sigmaGaussian=textToFloat(getParameter(argc,argv,"-fixed_Gaussian"));
+    intensityColumn = getParameter(argc,argv,"-intensityColumn","occupancy");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -145,6 +146,8 @@ void Prog_PDBPhantom_Parameters::usage()
               << "  [-poor_Gaussian]                   : Use a simple Gaussian adapted to each atom\n"
               << "  [-fixed_Gaussian <std>]            : Use a fixed Gausian for each atom with\n"
               << "                                       this standard deviation\n"
+              << "  [-intensityColumn <s=occupancy>]   : Where to write the intensity in the PDB file\n"
+              << "                                       Valid values: occupancy, Bfactor\n"
 	      << "\n"
 	      << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
 	      << "   xmipp_convert_pdb2vol -i 1o7d.pdb -sampling_rate 1.6\n"
@@ -162,6 +165,7 @@ void Prog_PDBPhantom_Parameters::show()
 	      << "Use blobs:          " << useBlobs         << std::endl
 	      << "Use poor Gaussian:  " << usePoorGaussian  << std::endl
 	      << "Use fixed Gaussian: " << useFixedGaussian << std::endl
+              << "Intensity Col:      " << intensityColumn  << std::endl
     ;
     if (useFixedGaussian)
         std::cout << "Sigma:              " << sigmaGaussian  << std::endl;
@@ -213,6 +217,8 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
                      "Cannot open " + fn_pdb + " for reading");
 
     // Process all lines of the file
+    int col=1;
+    if (intensityColumn=="Bfactor") col=2;
     while (!fh_pdb.eof())
     {
         // Read an ATOM line
@@ -248,9 +254,10 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         else
         {
             radius=4.5*sigmaGaussian;
-            double weight1=textToFloat(line.substr(54,6));
-            double weight2=textToFloat(line.substr(60,6));
-            weight=XMIPP_MIN(weight1,weight2);
+            if (col==1)
+                weight=textToFloat(line.substr(54,6));
+            else
+                weight=textToFloat(line.substr(60,6));
         }
         blob.radius = radius;
         if (usePoorGaussian) radius=XMIPP_MAX(radius/Ts,4.5);
