@@ -233,8 +233,11 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         // Correct position
         Matrix1D<double> r(3);
         VECTOR_R3(r, x, y, z);
-        r -= centerOfMass;
-        r /= highTs;
+        if (!useFixedGaussian)
+        {
+            r -= centerOfMass;
+            r /= highTs;
+        }
 
         // Characterize atom
         double weight, radius;
