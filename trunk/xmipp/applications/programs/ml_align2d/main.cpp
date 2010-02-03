@@ -36,7 +36,6 @@ int main(int argc, char **argv)
     Prog_MLalign2D_prm prm;
 
     // Get input parameters
-
     try
     {
         prm.read(argc, argv);
@@ -45,7 +44,7 @@ int main(int argc, char **argv)
 
         if (prm.fn_ref == "")
         {
-            if (prm.n_ref != 0)
+            if (prm.model.n_ref != 0)
             {
                 prm.generateInitialReferences();
             }
@@ -57,6 +56,7 @@ int main(int argc, char **argv)
 
         prm.produceSideInfo2();
         prm.createThreads();
+
 
     }
     catch (Xmipp_error XE)
@@ -72,41 +72,81 @@ int main(int argc, char **argv)
         Maux.setXmippOrigin();
 
         // Loop over all iterations
-
-        for (int iter = prm.istart; iter <= prm.Niter; iter++)
+        for (prm.iter = prm.istart; prm.iter <= prm.Niter; prm.iter++)
         {
 #ifdef TIMING
             prm.timer.tic(ITER);
 #endif
             if (prm.verb > 0)
-                std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
+                std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
 
-            for (int refno = 0;refno < prm.n_ref; refno++)
-                prm.Iold[refno]() = prm.Iref[refno]();
+            for (int refno = 0;refno < prm.model.n_ref; refno++)
+                prm.Iold[refno]() = prm.model.Iref[refno]();
 
-            prm.DFo.clear();
+            Model_MLalign2D tmp_model(prm.model.n_ref);
 
-            prm.DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
+            for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
+            {
 #ifdef TIMING
             prm.timer.tic(ITER_E);
 #endif
+            std::cout << "------- ITER: " << prm.iter << " ------ BLOCK: " << prm.current_block << "-------------" << std::endl;
             // Integrate over all images
-            prm.expectation(iter);
+            prm.expectation();
 #ifdef TIMING
             prm.timer.toc(ITER_E);
             prm.timer.tic(ITER_M);
 #endif
-            // Update model parameters
-            prm.maximization();
+            if (prm.blocks == 1) //ie not IEM
+            {
+                prm.maximization(prm.model);
+            }
+            else //do IEM
+            {
+                Model_MLalign2D block_model(prm.model.n_ref);
+                prm.maximization(block_model);
+                if (prm.current_block == 0)
+                    tmp_model = block_model;
+                else
+                    tmp_model.addModel(block_model);
+            }
+
 #ifdef TIMING
             prm.timer.toc(ITER_M);
 #endif
+
+            }//close for blocks
+
+            if (prm.blocks > 1)
+                prm.model = tmp_model;
+
+            if (prm.do_norm)
+                prm.correctScaleAverage();
+
+            std::cout << "------- AFTER ITER: " << prm.iter << " ------" << std::endl;
+            std::cerr << "sumw_allrefs: " << prm.model.sumw_allrefs << std::endl;
+               std::cerr << "wsum_sigma_offset: " << prm.model.get_wsum_sigma_offset() << std::endl;
+               std::cerr << "wsum_sigma_noise: " << prm.model.get_wsum_sigma_noise() << std::endl;
+               std::cerr << "sigma_offset: " << prm.model.sigma_offset << std::endl;
+               std::cerr << "sigma_noise: " << prm.model.sigma_noise << std::endl;
+
+               for (int refno = 0; refno < prm.model.n_ref; refno++)
+               {
+                   std::cerr << "refno:       " << refno << std::endl;
+                   std::cerr << "sumw:        " << prm.model.get_sumw(refno) << std::endl;
+                   std::cerr << "sumw_mirror: " << prm.model.get_sumw_mirror(refno) << std::endl;
+                   std::cerr << "alpha_k:        " << prm.model.alpha_k[refno] << std::endl;
+                  std::cerr << "mirror_fraction: " << prm.model.mirror_fraction[refno] << std::endl;
+
+               }
 
             // Check convergence
             converged = prm.checkConvergence();
 
             // Write output files
-            prm.writeOutputFiles(iter);
+            FileName fn_base = prm.getBaseName("_it", prm.iter);
+            prm.writeDocfile(fn_base);
+            prm.writeModel(prm.model, fn_base);
 
             if (converged)
             {
@@ -117,7 +157,7 @@ int main(int argc, char **argv)
             }
 
 #ifdef TIMING
-            std::cout << "-------------------- ITER: " << iter << " ----------------------" << std::endl;
+            std::cout << "-------------------- ITER: " << prm.iter << " ----------------------" << std::endl;
             prm.timer.toc(ITER);
             prm.timer.printTimes(true);
 
@@ -125,8 +165,9 @@ int main(int argc, char **argv)
 
         } // end loop iterations
 
-        prm.writeOutputFiles(-1);
-
+        //Write final output files
+        prm.writeDocfile(prm.fn_root);
+        prm.writeModel(prm.model, prm.fn_root);
         prm.destroyThreads();
 
     }

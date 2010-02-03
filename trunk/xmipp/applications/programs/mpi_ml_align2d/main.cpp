@@ -69,7 +69,7 @@ int main(int argc, char **argv)
         // Create references from random subset averages, or read them from selfile
         if (prm.fn_ref == "")
         {
-            if (prm.n_ref != 0)
+            if (prm.model.n_ref != 0)
             {
                 if (rank == 0)
                 {
@@ -115,15 +115,15 @@ int main(int argc, char **argv)
         Maux.setXmippOrigin();
 
         // Loop over all iterations
-        for (int iter = prm.istart; iter <= prm.Niter; iter++)
+        for (prm.iter = prm.istart; prm.iter <= prm.Niter; prm.iter++)
         {
-            if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
+            if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
 
             // Save old reference images
-            for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
+            for (int refno = 0;refno < prm.model.n_ref; refno++) prm.Iold[refno]() = prm.model.Iref[refno]();
 
             // Integrate over all images
-            prm.expectation(iter);
+            prm.expectation();
 
             // Here MPI_allreduce of all wsums,LL and sumfracweight !!!
             MPI_Allreduce(&prm.LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
             prm.wsum_sigma_noise = aux;
             MPI_Allreduce(&prm.wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             prm.wsum_sigma_offset = aux;
-            for (int refno = 0; refno < prm.n_ref; refno++)
+            for (int refno = 0; refno < prm.model.n_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(prm.wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
                               MULTIDIM_SIZE(prm.wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
             }
 
             // Update model parameters
-            prm.maximization();
+            prm.maximization(prm.model);
 
             // Check convergence
             converged = prm.checkConvergence();
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
                 // Master fills docfile 
                 std::ofstream myDocFile;
                 FileName fn_tmp;
-                fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
+                fn_tmp.compose(prm.fn_root + "_it",prm.iter,"doc");
                 myDocFile.open (fn_tmp.c_str());
                 myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)\n";
 
@@ -201,7 +201,9 @@ int main(int argc, char **argv)
                 prm.DFo.renum();
 
                 // Output all intermediate files
-                prm.writeOutputFiles(iter);
+                FileName fn_base = prm.getBaseName("_it", prm.iter);
+                prm.writeDocfile(fn_base);
+                prm.writeModel(prm.model, fn_base);
             }
             MPI_Barrier(MPI_COMM_WORLD);
             
@@ -218,9 +220,14 @@ int main(int argc, char **argv)
             MPI_Barrier(MPI_COMM_WORLD);
 
         } // end loop iterations
-        if (rank == 0)  
-	    prm.writeOutputFiles(-1);
-	prm.destroyThreads();
+
+        if (rank == 0)
+        {
+            //Write final output files
+            prm.writeDocfile(prm.fn_root);
+            prm.writeModel(prm.model, prm.fn_root);
+        }
+        prm.destroyThreads();
 
     }
     catch (Xmipp_error XE)

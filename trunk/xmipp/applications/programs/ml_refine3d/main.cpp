@@ -27,7 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    int                         c, iter, volno, converged = 0, argc2 = 0;
+    int                         c, volno, converged = 0, argc2 = 0;
     char                        **argv2=NULL;
     Prog_Refine3d_prm           prm;
     Prog_MLalign2D_prm          ML2D_prm;
@@ -76,28 +76,30 @@ int main(int argc, char **argv)
     {
 
         // Loop over all iterations
-        iter = prm.istart;
-        while (!converged && iter <= prm.Niter)
+        ML2D_prm.iter = prm.istart;
+        while (!converged && ML2D_prm.iter <= prm.Niter)
         {
 
             if (prm.verb > 0)
             {
-                std::cerr        << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
-                prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
+                std::cerr        << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
+                prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
             }
 
             ML2D_prm.DFo.clear();
             ML2D_prm.DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
 
             // Integrate over all images
-            ML2D_prm.expectation(iter);
+            ML2D_prm.expectation();
 
             // Update model parameters
-            ML2D_prm.maximization(prm.eachvol_end[0]+1);
+            ML2D_prm.maximization(ML2D_prm.model, prm.eachvol_end[0]+1);
 
             // Write intermediate output files
-            ML2D_prm.writeOutputFiles(iter);
-            prm.concatenate_selfiles(iter);
+            FileName fn_base = ML2D_prm.getBaseName("_it", ML2D_prm.iter);
+            ML2D_prm.writeDocfile(fn_base);
+            ML2D_prm.writeModel(ML2D_prm.model, fn_base);
+            prm.concatenate_selfiles(ML2D_prm.iter);
 
 	    // Jump out before 3D reconstruction 
 	    // (Useful for some parallelization protocols)
@@ -106,23 +108,23 @@ int main(int argc, char **argv)
 
             // Reconstruct new volumes from the reference images
             for (volno = 0; volno < prm.Nvols; volno++)
-                prm.reconstruction(argc2, argv2, iter, volno, 0);
+                prm.reconstruction(argc2, argv2, ML2D_prm.iter, volno, 0);
 
             // Update the reference volume selection file
             // and post-process the volumes (for -FS also the noise volumes!)
-            prm.remake_SFvol(iter, false, false);
+            prm.remake_SFvol(ML2D_prm.iter, false, false);
             prm.post_process_volumes(argc2, argv2);
-            prm.remake_SFvol(iter, false, false);
+            prm.remake_SFvol(ML2D_prm.iter, false, false);
 
             // Check convergence
-            if (prm.check_convergence(iter))
+            if (prm.check_convergence(ML2D_prm.iter))
             {
                 converged = 1;
                 if (prm.verb > 0) std::cerr << "--> Optimization converged!" << std::endl;
             }
 
             // Re-project volumes
-            if (!converged && iter + 1 <= prm.Niter)
+            if (!converged && ML2D_prm.iter + 1 <= prm.Niter)
             {
                 prm.project_reference_volume(ML2D_prm.SFr);
                 // Read new references from disc (I could just as well keep them in memory, maybe...)
@@ -130,18 +132,19 @@ int main(int argc, char **argv)
                 c = 0;
                 while (!ML2D_prm.SFr.eof())
                 {
-                    ML2D_prm.Iref[c].read(ML2D_prm.SFr.NextImg(), false, false, false, false);
-                    ML2D_prm.Iref[c]().setXmippOrigin();
+                    ML2D_prm.model.Iref[c].read(ML2D_prm.SFr.NextImg(), false, false, false, false);
+                    ML2D_prm.model.Iref[c]().setXmippOrigin();
                     c++;
                 }
             }
 
-            iter++;
+            ML2D_prm.iter++;
         } // end loop iterations
 
 	// Write out converged doc and logfiles
-	ML2D_prm.writeOutputFiles(-1);
-        ML2D_prm.destroyThreads();
+    ML2D_prm.writeDocfile(ML2D_prm.fn_root);
+    ML2D_prm.writeModel(ML2D_prm.model, ML2D_prm.fn_root);
+    ML2D_prm.destroyThreads();
 
         if (!converged && prm.verb > 0) std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }

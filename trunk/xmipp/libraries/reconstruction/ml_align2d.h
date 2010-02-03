@@ -45,14 +45,13 @@
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLANGLE 1.75
 #define DATALINELENGTH 12
-#define TIMING
 
 class Prog_MLalign2D_prm;
 
 #define FOR_ALL_THREAD_REFNO() \
 int refno, load; \
 while ((load = getThreadRefnoJob(refno)) > 0) \
-    for (int i = 0; i < load; i++, refno = (refno + 1) % n_ref)
+    for (int i = 0; i < load; i++, refno = (refno + 1) % model.n_ref)
 
 #ifdef TIMING
 //testing time...
@@ -129,6 +128,56 @@ typedef struct{
 
 void * doThreadsTasks(void * data);
 
+class Model_MLalign2D
+{
+public:
+    /** Number of reference images */
+    int n_ref;
+    /** References images */
+    std::vector < ImageXmippT<double> > Iref;
+    /** Sigma value for expected pixel noise */
+    double sigma_noise;
+    /** sigma-value for origin offsets */
+    double sigma_offset;
+    /** Vector containing estimated fraction for each model */
+    std::vector<double> alpha_k;
+    /** Vector containing estimated fraction for mirror of each model */
+    std::vector<double> mirror_fraction;
+    /** Average scales for each refno from do_norm */
+    std::vector<double> scale;
+    /** Sums of weights */
+    double sumw_allrefs, sumw_allrefs2;
+    /** Average height of the probability distribution at its maximum */
+    double avePmax;
+    /** the Log Likelihood */
+    double LL;
+
+    /** Dimension of images */
+    int dim;
+    /** Algorithmic variants */
+    bool do_student, do_student_sigma_trick, do_norm;
+
+    Model_MLalign2D();
+    Model_MLalign2D(int n_ref);
+
+    void initData();
+    void setSize();
+    void addModel(Model_MLalign2D model);
+    void substractModel(Model_MLalign2D model);
+
+    double get_sumw(int refno);
+    double get_sumw_mirror(int refno);
+    double get_sumwsc(int refno);
+    Matrix2D<double> get_wsum_Mref(int refno);
+    double get_sumw_allrefs();
+    double get_wsum_sigma_offset();
+    double get_wsum_sigma_noise();
+    double get_sumfracweight();
+    void updateSigmaOffset(double wsum_sigma_offset);
+    void updateSigmaNoise(double wsum_sigma_noise);
+
+};//close class Model_MLalign2D
+
 /**@defgroup MLalign2D ml_align2d (Maximum likelihood in 2D)
    @ingroup ReconsLibraryPrograms */
 //@{
@@ -140,14 +189,7 @@ public:
     FileName fn_sel, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_oext, fn_scratch, fn_control;
     /** Command line */
     std::string cline;
-    /** Sigma value for expected pixel noise */
-    double sigma_noise, sigma_noise2;
-    /** sigma-value for origin offsets */
-    double sigma_offset;
-    /** Vector containing estimated fraction for each model */
-    std::vector<double> alpha_k;
-    /** Vector containing estimated fraction for mirror of each model */
-    std::vector<double> mirror_fraction;
+    double sigma_noise2;
     /** Flag for checking mirror images of all references */
     bool do_mirror;
     /** Flag whether to fix estimates for model fractions */
@@ -158,6 +200,8 @@ public:
     bool fix_sigma_noise;
     /** Starting iteration */
     int istart;
+    /** Current iteration */
+    int iter;
     /** Number of iterations to be performed */
     int Niter;
     /** dimension of the images */
@@ -173,8 +217,6 @@ public:
     double psi_max;
     /** Total number of no-mirror rotations in FOR_ALL_FLIPS */
     int nr_nomirror_flips;
-    /** Number of reference images */
-    int n_ref;
     /** Total number of experimental images */
     int nr_exp_images;
     /** Sum of squared amplitudes of the references */
@@ -192,7 +234,7 @@ public:
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
     std::vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
-    std::vector < ImageXmippT<double> > Iref, Iold;
+    std::vector < ImageXmippT<double> > Iold;
     /** Matrices for calculating PDF of (in-plane) translations */
     Matrix2D<double> P_phi, Mr2;
     /** Masks for rotated references */
@@ -236,7 +278,7 @@ public:
     /** Flag to refine normalization of each experimental image */
     bool do_norm;
     /** Grey-scale correction values */
-    std::vector<double> imgs_scale, imgs_bgmean, imgs_trymindiff, refs_avgscale;
+    std::vector<double> imgs_scale, imgs_bgmean, imgs_trymindiff;
     /** Optimal refno from previous iteration */
     std::vector<int> imgs_optrefno;
     /** Overall average scale (to be forced to one)*/
@@ -267,6 +309,7 @@ public:
     int opt_refno, iopt_psi, iopt_flip;
     double trymindiff, opt_scale, bgmean, opt_psi;
     double fracweight, maxweight2, dLL;
+    std::vector<Matrix1D<double> > docfiledata;
 
     /** From expectationSingleImage */
     std::vector<Matrix2D<std::complex<double> > > Fimg_flip, mysumimgs;
@@ -280,6 +323,15 @@ public:
     std::vector<double> maxw_ref;
     //These are for refno work assigns to threads
     int refno_index, refno_count, refno_load, refno_load_param;
+
+    //Some incremental stuff
+    /** Model */
+    Model_MLalign2D model, *current_model;
+    std::vector<int> img_blocks;
+    //Number of blocks for IEM
+    int blocks;
+    //Current processing block
+    int current_block;
 
 #ifdef TIMING
     JMTimer timer;
@@ -357,16 +409,25 @@ public:
     void doThreadESIUpdateRefno();
 
     /// Integrate over all experimental images
-    void expectation(int iter);
+    void expectation();
 
     /// Update all model parameters
-    void maximization(int refs_per_class=1);
+    void maximization(Model_MLalign2D &model, int refs_per_class=1);
+
+    /// Correct references scale
+    void correctScaleAverage(int refs_per_class=1);
 
     /// check convergence
     bool checkConvergence();
 
-    /// Write out reference images, selfile and logfile
-    void writeOutputFiles(const int iter);
+    /// Write Docfile
+    void writeDocfile(FileName fn_base);
+
+    /// Write model parameters
+    void writeModel(Model_MLalign2D model, FileName fn_base);
+
+    /// Get base name based on fn_root and some number
+    FileName getBaseName(std::string suffix = "", int number = -1);
 
 };
 

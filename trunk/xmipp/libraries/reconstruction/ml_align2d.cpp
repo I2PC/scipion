@@ -123,15 +123,15 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
         extendedUsage();
     }
 
-    n_ref = textToInteger(getParameter(argc2, argv2, "-nref", "0"));
+    model.n_ref = textToInteger(getParameter(argc2, argv2, "-nref", "0"));
     fn_ref = getParameter(argc2, argv2, "-ref", "");
     fn_sel = getParameter(argc2, argv2, "-i");
     fn_root = getParameter(argc2, argv2, "-o", "ml2d");
     psi_step = textToFloat(getParameter(argc2, argv2, "-psi_step", "5"));
     Niter = textToInteger(getParameter(argc2, argv2, "-iter", "100"));
     istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
-    sigma_noise = textToFloat(getParameter(argc2, argv2, "-noise", "1"));
-    sigma_offset = textToFloat(getParameter(argc2, argv2, "-offset", "3"));
+    model.sigma_noise = textToFloat(getParameter(argc2, argv2, "-noise", "1"));
+    model.sigma_offset = textToFloat(getParameter(argc2, argv2, "-offset", "3"));
     do_mirror = checkParameter(argc2, argv2, "-mirror");
     eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
     fn_frac = getParameter(argc2, argv2, "-frac", "");
@@ -145,7 +145,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     save_mem2 = checkParameter(argc2, argv2, "-save_memB");
     fn_doc = getParameter(argc2, argv2, "-doc", "");
     zero_offsets = checkParameter(argc2, argv2, "-zero_offsets");
-    do_student = checkParameter(argc2, argv2, "-student");
+    model.do_student = checkParameter(argc2, argv2, "-student");
     df = (double) textToInteger(getParameter(argc2, argv2, "-df", "6"));
     do_norm = checkParameter(argc2, argv2, "-norm");
     do_ML3D = ML3D;
@@ -155,19 +155,18 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     //testing the thread load in refno
     refno_load_param = textToInteger(getParameter(argc2, argv2, "-load", "1"));
 
-    //FIXME: only for test now, should be removed
-    std::cerr << "refno load: " << refno_load_param;
-
     // Hidden arguments
     fn_scratch = getParameter(argc2, argv2, "-scratch", "");
     debug = textToInteger(getParameter(argc2, argv2, "-debug", "0"));
-    do_student_sigma_trick = !checkParameter(argc2, argv2, "-no_sigma_trick");
+    model.do_student_sigma_trick = !checkParameter(argc2, argv2, "-no_sigma_trick");
     trymindiff_factor = textToFloat(getParameter(argc2, argv2,
             "-trymindiff_factor", "0.9"));
 
     // Only for interaction with refine3d:
     search_rot = textToFloat(getParameter(argc2, argv2, "-search_rot", "999."));
 
+    //IEM stuff
+    blocks = textToInteger(getParameter(argc2, argv2, "-iem", "1"));
 }
 
 // Show ====================================================================
@@ -212,15 +211,15 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         if (fn_ref != "")
             std::cerr << "  Reference image(s)      : " << fn_ref << std::endl;
         else
-            std::cerr << "  Number of references:   : " << n_ref << std::endl;
+            std::cerr << "  Number of references:   : " << model.n_ref << std::endl;
 
         std::cerr << "  Output rootname         : " << fn_root << std::endl;
 
         std::cerr << "  Stopping criterium      : " << eps << std::endl;
 
-        std::cerr << "  initial sigma noise     : " << sigma_noise << std::endl;
+        std::cerr << "  initial sigma noise     : " << model.sigma_noise << std::endl;
 
-        std::cerr << "  initial sigma offset    : " << sigma_offset
+        std::cerr << "  initial sigma offset    : " << model.sigma_offset
                 << std::endl;
 
         std::cerr << "  Psi sampling interval   : " << psi_step << std::endl;
@@ -273,12 +272,12 @@ void Prog_MLalign2D_prm::show(bool ML3D)
                     << std::endl;
         }
 
-        if (do_student)
+        if (model.do_student)
         {
             std::cerr << "  -> Use t-student distribution with df = " << df
                     << std::endl;
 
-            if (do_student_sigma_trick)
+            if (model.do_student_sigma_trick)
             {
                 std::cerr << "  -> Use sigma-trick for t-student distributions"
                         << std::endl;
@@ -384,7 +383,6 @@ void Prog_MLalign2D_prm::extendedUsage(bool ML3D)
 // all processors! (in contrast to produce_Side_info2)
 void Prog_MLalign2D_prm::produceSideInfo()
 {
-
     Matrix2D<double> A(3, 3);
 
     // Read selfile with experimental images
@@ -396,9 +394,9 @@ void Prog_MLalign2D_prm::produceSideInfo()
     hdim = dim / 2;
     dim2 = dim * dim;
     ddim2 = (double) dim2;
-    sigma_noise2 = sigma_noise * sigma_noise;
+    sigma_noise2 = model.sigma_noise * model.sigma_noise;
 
-    if (do_student)
+    if (model.do_student)
     {
         df2 = -(df + ddim2) / 2.;
         dfsigma2 = df * sigma_noise2;
@@ -427,17 +425,21 @@ void Prog_MLalign2D_prm::produceSideInfo()
         do_generate_refs = false;
 
         if (Is_ImageXmipp(fn_ref))
-            n_ref = 1;
+            model.n_ref = 1;
         else
         {
             SFr.read(fn_ref);
-            n_ref = SFr.ImgNo();
+            model.n_ref = SFr.ImgNo();
         }
     }
     else
     {
         do_generate_refs = true;
     }
+
+    model.setSize();
+    model.dim = dim;
+    Iold.resize(model.n_ref);
 
     // Construct matrices for 0, 90, 180 & 270 degree flipping and mirrors
     psi_max = 90.;
@@ -496,38 +498,38 @@ void Prog_MLalign2D_prm::produceSideInfo()
 
     // Set sigdim, i.e. the number of pixels that will be considered in the translations
     if (save_mem2)
-        sigdim = 2 * CEIL(sigma_offset * 3);
+        sigdim = 2 * CEIL(model.sigma_offset * 3);
     else
-        sigdim = 2 * CEIL(sigma_offset * 6);
+        sigdim = 2 * CEIL(model.sigma_offset * 6);
 
     sigdim++; // (to get uneven number)
 
     sigdim = XMIPP_MIN(dim, sigdim);
 
     //Some vectors and matrixes initialization
-    refw.resize(n_ref);
+    refw.resize(model.n_ref);
 
-    refw2.resize(n_ref);
+    refw2.resize(model.n_ref);
 
-    refwsc2.resize(n_ref);
+    refwsc2.resize(model.n_ref);
 
-    refw_mirror.resize(n_ref);
+    refw_mirror.resize(model.n_ref);
 
-    sumw_refpsi.resize(n_ref * nr_psi);
+    sumw_refpsi.resize(model.n_ref * nr_psi);
 
-    A2.resize(n_ref);
+    A2.resize(model.n_ref);
 
-    fref.resize(n_ref * nr_psi);
+    fref.resize(model.n_ref * nr_psi);
 
-    mref.resize(n_ref * nr_psi);
+    mref.resize(model.n_ref * nr_psi);
 
-    wsum_Mref.resize(n_ref);
+    wsum_Mref.resize(model.n_ref);
 
-    mysumimgs.resize(n_ref * nr_psi);
+    mysumimgs.resize(model.n_ref * nr_psi);
 
     if (fast_mode)
     {
-        int mysize = n_ref * (do_mirror ? 2 : 1);
+        int mysize = model.n_ref * (do_mirror ? 2 : 1);
         //if (do_mirror)
         //    mysize *= 2;
         ioptx_ref.resize(mysize);
@@ -536,7 +538,40 @@ void Prog_MLalign2D_prm::produceSideInfo()
         maxw_ref.resize(mysize);
     }
 
-}
+    //Set image blocks vector
+    img_blocks.resize(nr_exp_images, 0);
+
+    int img_per_block = nr_exp_images / blocks;
+    int img_rest = nr_exp_images % blocks;
+    int first_img, last_img;
+
+    if (blocks > 1)
+    {
+        for (int b = 0; b < blocks; b++)
+        {
+            if (b < img_rest)
+            {
+                first_img = b * (img_per_block + 1);
+                last_img = first_img + img_per_block;
+            }
+            else
+            {
+                first_img = b * img_per_block + img_rest;
+                last_img = first_img + img_per_block - 1;
+            }
+
+            for (int i = first_img; i <= last_img; i++)
+                img_blocks[i] = b;
+        }
+    }//close if blocks
+
+    /// Initialize docfiledata
+    Matrix1D<double> dataline(DATALINELENGTH);
+    dataline.initZeros();
+
+    for (int i = 0; i < SF.ImgNo(); i++)
+        docfiledata.push_back(dataline);
+}//close function produceSideInfo
 
 // Generate initial references =============================================
 void Prog_MLalign2D_prm::generateInitialReferences()
@@ -552,22 +587,22 @@ void Prog_MLalign2D_prm::generateInitialReferences()
         std::cerr
                 << "  Generating initial references by averaging over random subsets"
                 << std::endl;
-        init_progress_bar(n_ref);
+        init_progress_bar(model.n_ref);
     }
 
     // Make random subsets and calculate average images
     SFtmp = SF.randomize();
 
-    int Nsub = ROUND((double)SFtmp.ImgNo() / n_ref);
+    int Nsub = ROUND((double)SFtmp.ImgNo() / model.n_ref);
 
-    for (int refno = 0; refno < n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
         SFout.clear();
         SFout.reserve(Nsub);
         SFtmp.go_beginning();
         SFtmp.jump_lines(Nsub * refno);
 
-        if (refno == n_ref - 1) Nsub = SFtmp.ImgNo() - refno * Nsub;
+        if (refno == model.n_ref - 1) Nsub = SFtmp.ImgNo() - refno * Nsub;
 
         for (int nn = 0; nn < Nsub; nn++)
         {
@@ -587,7 +622,7 @@ void Prog_MLalign2D_prm::generateInitialReferences()
         if (verb > 0) progress_bar(refno);
     }
 
-    if (verb > 0) progress_bar(n_ref);
+    if (verb > 0) progress_bar(model.n_ref);
 
     fn_ref = fn_root + "_it";
 
@@ -623,28 +658,21 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         SFr.read(fn_ref);
     }
 
-    n_ref = 0;
     SFr.go_beginning();
-
     while ((!SFr.eof()))
     {
         fn_tmp = SFr.NextImg();
         img.read(fn_tmp, false, false, true, false);
         img().setXmippOrigin();
-        Iref.push_back(img);
-        Iold.push_back(img);
+        model.Iref[refno] = img;
+        //FIXME: I think isn't need to set Iold here
+        //      because it is setted on main loop
+        //Iold.push_back(img);
         // Default start is all equal model fractions
-        alpha_k.push_back((double) 1 / SFr.ImgNo());
-        Iref[refno].set_weight(alpha_k[refno] * (double) nr_exp_images);
+        model.alpha_k[refno] = (double) 1 / SFr.ImgNo();
+        model.Iref[refno].set_weight(model.alpha_k[refno] * (double) nr_exp_images);
         // Default start is half-half mirrored images
-
-        if (do_mirror)
-            mirror_fraction.push_back(0.5);
-        else
-            mirror_fraction.push_back(0.);
-
-        n_ref++;
-
+        model.mirror_fraction[refno] = ( do_mirror ? 0.5 : 0.);
         refno++;
     }
 
@@ -671,24 +699,17 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         }
 
         average_scale = 1.;
-        refs_avgscale.clear();
-
-        for (int refno = 0; refno < n_ref; refno++)
+        model.scale.clear();
+        for (int refno = 0; refno < model.n_ref; refno++)
         {
-            refs_avgscale.push_back(1.);
+            model.scale.push_back(1.);
         }
     }
 
     // Initialize imgs_offsets vectors
-    if (zero_offsets)
-        offx = 0.;
-    else
-        offx = -999.;
+    offx = (zero_offsets ? 0. : -999);
 
-    if (do_mirror)
-        idum = 4 * n_ref;
-    else
-        idum = 2 * n_ref;
+    idum = (do_mirror ? 4 : 2) * model.n_ref;
 
     for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
     {
@@ -737,10 +758,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
 
                     if (zero_offsets)
                     {
-                        if (do_mirror)
-                            idum = 2 * n_ref;
-                        else
-                            idum = n_ref;
+                        idum = (do_mirror ? 2 : 1) * model.n_ref;
 
                         for (int refno = 0; refno < idum; refno++)
                         {
@@ -774,24 +792,24 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         DF.read(fn_frac);
         DF.go_first_data_line();
 
-        for (refno = 0; refno < n_ref; refno++)
+        for (refno = 0; refno < model.n_ref; refno++)
         {
             DL = DF.get_current_line();
-            alpha_k[refno] = DL[0];
+            model.alpha_k[refno] = DL[0];
 
             if (do_mirror)
             {
                 if (DL[1] > 1. || DL[1] < 0.) REPORT_ERROR(1, "Prog_MLalign2D_prm: Mirror fraction (2nd column) should be [0,1]!");
 
-                mirror_fraction[refno] = DL[1];
+                model.mirror_fraction[refno] = DL[1];
             }
 
             if (do_norm)
             {
-                refs_avgscale[refno] = DL[3];
+                model.scale[refno] = DL[3];
             }
 
-            sumfrac += alpha_k[refno];
+            sumfrac += model.alpha_k[refno];
             DF.next_data_line();
         }
 
@@ -799,13 +817,13 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
                 << " ->WARNING: Sum of all expected model fractions ("
                 << sumfrac << ") is not one!" << std::endl;
 
-        for (refno = 0; refno < n_ref; refno++)
+        for (refno = 0; refno < model.n_ref; refno++)
         {
-            alpha_k[refno] /= sumfrac;
+            model.alpha_k[refno] /= sumfrac;
         }
     }
 
-}
+}//close function produceSideInfo2
 
 // Calculate probability density function of all in-plane transformations phi
 void Prog_MLalign2D_prm::calculatePdfInplane()
@@ -825,10 +843,10 @@ void Prog_MLalign2D_prm::calculatePdfInplane()
             y = (double) i;
             r2 = x * x + y * y;
 
-            if (sigma_offset > 0.)
+            if (model.sigma_offset > 0.)
             {
-                pdfpix = exp(-r2 / (2 * sigma_offset * sigma_offset));
-                pdfpix /= 2 * PI * sigma_offset * sigma_offset * nr_psi
+                pdfpix = exp(-r2 / (2 * model.sigma_offset * model.sigma_offset));
+                pdfpix /= 2 * PI * model.sigma_offset * model.sigma_offset * nr_psi
                         * nr_nomirror_flips;
             }
             else
@@ -888,16 +906,16 @@ void Prog_MLalign2D_prm::preselectLimitedDirections(float &phi, float &theta)
     Matrix1D<double> u, v;
 
     pdf_directions.clear();
-    pdf_directions.resize(n_ref);
+    pdf_directions.resize(model.n_ref);
 
-    for (int refno = 0; refno < n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
         if (!limit_rot || (phi == -999. && theta == -999.))
             pdf_directions[refno] = 1.;
         else
         {
-            phi_ref = Iref[refno].Phi();
-            theta_ref = Iref[refno].Theta();
+            phi_ref = model.Iref[refno].Phi();
+            theta_ref = model.Iref[refno].Theta();
             Euler_direction(phi, theta, 0., u);
             Euler_direction(phi_ref, theta_ref, 0., v);
             u.selfNormalize();
@@ -952,6 +970,11 @@ void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
     bool is_ok_trymindiff = false;
     XmippFftw local_transformer;
     ioptx = iopty = 0;
+
+    // Update sigdim, i.e. the number of pixels that will be considered in the translations
+    sigdim = 2 * CEIL(XMIPP_MAX(1,model.sigma_offset) * (save_mem2 ? 3 : 6));
+    sigdim++; // (to get uneven number)
+    sigdim = XMIPP_MIN(dim, sigdim);
 
     // Setup matrices
     Maux.resize(dim, dim);
@@ -1118,7 +1141,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
 
     awakeThreads(TH_ESI_UPDATE_REFNO, 0, refno_load_param);
 
-    if (!do_student)
+    if (!model.do_student)
         // 1st term: log(refw_i)
         // 2nd term: for subtracting mindiff
         // 3rd term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
@@ -1244,11 +1267,11 @@ int Prog_MLalign2D_prm::getThreadRefnoJob(int &refno)
 
     pthread_mutex_lock(&refno_mutex);
 
-    if (refno_count < n_ref)
+    if (refno_count < model.n_ref)
     {
-        load = XMIPP_MIN(refno_load, n_ref - refno_count);
+        load = XMIPP_MIN(refno_load, model.n_ref - refno_count);
         refno = refno_index;
-        refno_index = (refno_index + load) % n_ref;
+        refno_index = (refno_index + load) % model.n_ref;
         refno_count += load;
     }
 
@@ -1272,6 +1295,10 @@ void Prog_MLalign2D_prm::awakeThreads(int task, int start_refno, int load)
 
 void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
 {
+#ifdef DEBUG
+    std::cerr << "entering doThreadRotateReference " << std::endl;
+#endif
+
     double AA, stdAA, psi, dum, avg;
     Matrix2D<double> Maux(dim, dim);
     Matrix2D<std::complex<double> > Faux;
@@ -1281,47 +1308,47 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
     Maux.setXmippOrigin();
 
     FOR_ALL_THREAD_REFNO()
+    {
+        computeStats_within_binary_mask(omask, model.Iref[refno](), dum, dum, avg, dum);
+
+        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
-            computeStats_within_binary_mask(omask, Iref[refno](), dum, dum,
-                    avg, dum);
+            refnoipsi = refno * nr_psi + ipsi;
+            // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
+            psi = (double) (ipsi * psi_max / nr_psi) + SMALLANGLE;
+            model.Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
+            apply_binary_mask(mask, Maux, Maux, avg);
+            // Normalize the magnitude of the rotated references to 1st rot of that ref
+            // This is necessary because interpolation due to rotation can lead to lower overall Fref
+            // This would result in lower probabilities for those rotations
+            AA = Maux.sum2();
 
-            for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+            if (ipsi == 0)
             {
-                refnoipsi = refno * nr_psi + ipsi;
-                // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
-                psi = (double) (ipsi * psi_max / nr_psi) + SMALLANGLE;
-                Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
-                apply_binary_mask(mask, Maux, Maux, avg);
-                // Normalize the magnitude of the rotated references to 1st rot of that ref
-                // This is necessary because interpolation due to rotation can lead to lower overall Fref
-                // This would result in lower probabilities for those rotations
-                AA = Maux.sum2();
-
-                if (ipsi == 0)
-                {
-                    stdAA = AA;
-                    A2[refno] = AA;
-                }
-
-                if (AA > 0) Maux *= sqrt(stdAA / AA);
-
-                if (fast_mode) mref[refnoipsi] = Maux;
-
-                // Do the forward FFT
-                local_transformer.FourierTransform(Maux, Faux, false);
-
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
-                    {
-                        dMij(Faux, i, j) = conj(dMij(Faux, i, j));
-                    }
-
-                fref[refnoipsi] = Faux;
+                stdAA = AA;
+                A2[refno] = AA;
             }
 
-            // If we dont use save_mem1 Iref[refno] is useless from here on
-            if (!save_mem1) Iref[refno]().resize(0, 0);
+            if (AA > 0) Maux *= sqrt(stdAA / AA);
 
-        }//close while
+            if (fast_mode) mref[refnoipsi] = Maux;
+
+            // Do the forward FFT
+            local_transformer.FourierTransform(Maux, Faux, false);
+
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
+                {
+                    dMij(Faux, i, j) = conj(dMij(Faux, i, j));
+                }
+
+            fref[refnoipsi] = Faux;
+        }
+
+        // If we dont use save_mem1 Iref[refno] is useless from here on
+        //FIXME: Commented for models stuff, check later
+        //if (!save_mem1) model.Iref[refno]().resize(0, 0);
+
+    }//close while
 
 }//close function doThreadRotateReferenceRefno
 
@@ -1394,14 +1421,14 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
             {
                 local_maxweight = -99.e99;
                 local_mindiff = 99.e99;
-                irefmir = imirror * n_ref + refno;
+                irefmir = imirror * model.n_ref + refno;
                 // Get optimal offsets
                 trans(0) = (double) allref_offsets[2 * irefmir];
                 trans(1) = (double) allref_offsets[2 * irefmir + 1];
                 ropt = sqrt(trans(0) * trans(0) + trans(1) * trans(1));
                 // Do not trust optimal offsets if they are larger than 3*sigma_offset:
 
-                if (ropt > 3 * sigma_offset)
+                if (ropt > 3 * model.sigma_offset)
                 {
                     for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
                     {
@@ -1419,10 +1446,10 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
                     // Set priors
 
                     if (imirror == 0)
-                        fracpdf = alpha_k[refno] * (1.
-                                - mirror_fraction[refno]);
+                        fracpdf = model.alpha_k[refno] * (1.
+                                - model.mirror_fraction[refno]);
                     else
-                        fracpdf = alpha_k[refno] * mirror_fraction[refno];
+                        fracpdf = model.alpha_k[refno] * model.mirror_fraction[refno];
 
                     pdf = fracpdf * MAT_ELEM(P_phi,
                             (int)trans(1),
@@ -1464,7 +1491,7 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
                             irot = iiflip * nr_psi + ipsi;
                             diff = weight(irot);
 
-                            if (!do_student)
+                            if (!model.do_student)
                             {
                                 // normal distribution
                                 aux = (diff - local_mindiff) / sigma_noise2;
@@ -1565,14 +1592,14 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
             maxw_ref[refno] = -99.e99;
             if (do_mirror)
             {
-                maxw_ref[n_ref + refno] = -99.e99;
+                maxw_ref[model.n_ref + refno] = -99.e99;
             }
         }
 
         // This if is for limited rotation options
         if (!limit_rot || pdf_directions[refno] > 0.)
         {
-            if (do_norm) ref_scale = opt_scale / refs_avgscale[refno];
+            if (do_norm) ref_scale = opt_scale / model.scale[refno];
 
             A2_plus_Xi2 = 0.5 * (ref_scale * ref_scale * A2[refno] + Xi2);
 
@@ -1582,18 +1609,18 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                 {
                     refnoipsi = refno * nr_psi + ipsi;
                     irot = iflip * nr_psi + ipsi;
-                    irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref
+                    irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref
                             + refno;
                     // This if is the speed-up caused by the -fast options
 
                     if (dMij(Msignificant, refno, irot))
                     {
                         if (iflip < nr_nomirror_flips)
-                            fracpdf = alpha_k[refno] * (1.
-                                    - mirror_fraction[refno]);
+                            fracpdf = model.alpha_k[refno] * (1.
+                                    - model.mirror_fraction[refno]);
                         else
-                            fracpdf = alpha_k[refno]
-                                    * mirror_fraction[refno];
+                            fracpdf = model.alpha_k[refno]
+                                    * model.mirror_fraction[refno];
 
                         // A. Backward FFT to calculate weights in real-space
                         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
@@ -1620,7 +1647,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                                         = XMIPP_MIN(local_mindiff, diff);
                                 pdf = fracpdf * MAT_ELEM(P_phi, i, j);
 
-                                if (!do_student)
+                                if (!model.do_student)
                                 {
                                     // Normal distribution
                                     aux = (diff - trymindiff)
@@ -1692,7 +1719,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                                 {
                                     local_maxweight = weight;
 
-                                    if (do_student) local_maxweight2
+                                    if (model.do_student) local_maxweight2
                                             = weight2;
 
                                     local_iopty = i;
@@ -1761,7 +1788,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
         {
             maxweight = local_maxweight;
 
-            if (do_student) maxweight2 = local_maxweight2;
+            if (model.do_student) maxweight2 = local_maxweight2;
 
             iopty = local_iopty;
 
@@ -1816,16 +1843,16 @@ void Prog_MLalign2D_prm::doThreadESIUpdateRefno()
 
             if (do_mirror)
             {
-                allref_offsets[2 * (n_ref + refno)]
-                        = -(double) ioptx_ref[n_ref + refno]
-                                * DIRECT_MAT_ELEM(F[ioptflip_ref[n_ref+refno]], 0, 0)
-                                - (double) iopty_ref[n_ref + refno]
-                                        * DIRECT_MAT_ELEM(F[ioptflip_ref[n_ref+refno]], 0, 1);
-                allref_offsets[2 * (n_ref + refno) + 1]
-                        = -(double) ioptx_ref[n_ref + refno]
-                                * DIRECT_MAT_ELEM(F[ioptflip_ref[n_ref+refno]], 1, 0)
-                                - (double) iopty_ref[n_ref + refno]
-                                        * DIRECT_MAT_ELEM(F[ioptflip_ref[n_ref+refno]], 1, 1);
+                allref_offsets[2 * (model.n_ref + refno)]
+                        = -(double) ioptx_ref[model.n_ref + refno]
+                                * DIRECT_MAT_ELEM(F[ioptflip_ref[model.n_ref+refno]], 0, 0)
+                                - (double) iopty_ref[model.n_ref + refno]
+                                        * DIRECT_MAT_ELEM(F[ioptflip_ref[model.n_ref+refno]], 0, 1);
+                allref_offsets[2 * (model.n_ref + refno) + 1]
+                        = -(double) ioptx_ref[model.n_ref + refno]
+                                * DIRECT_MAT_ELEM(F[ioptflip_ref[model.n_ref+refno]], 1, 0)
+                                - (double) iopty_ref[model.n_ref + refno]
+                                        * DIRECT_MAT_ELEM(F[ioptflip_ref[model.n_ref+refno]], 1, 1);
             }
         }
 
@@ -1835,7 +1862,7 @@ void Prog_MLalign2D_prm::doThreadESIUpdateRefno()
             sumw2[refno] += refw2[refno] / sum_refw;
             sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
 
-            if (do_student)
+            if (model.do_student)
             {
                 sumwsc[refno] += refw2[refno] * (opt_scale) / sum_refw;
                 sumwsc2[refno] += refw2[refno] * (opt_scale * opt_scale)
@@ -1869,11 +1896,9 @@ void Prog_MLalign2D_prm::doThreadESIUpdateRefno()
 }//close function doThreadESIUpdateRefno
 
 
-void Prog_MLalign2D_prm::expectation(int iter)
+void Prog_MLalign2D_prm::expectation()
 {
-    Matrix1D<double> dataline(DATALINELENGTH);
     Matrix2D<std::complex<double> > Fdzero(dim, hdim + 1);
-    std::vector<Matrix1D<double> > docfiledata;
     int num_img_tot;
 
 #ifdef DEBUG
@@ -1906,19 +1931,15 @@ void Prog_MLalign2D_prm::expectation(int iter)
     wsum_sigma_noise = 0.;
     wsum_sigma_offset = 0.;
     sumfracweight = 0.;
-    dataline.initZeros();
-
-    for (int i = 0; i < SF.ImgNo(); i++)
-        docfiledata.push_back(dataline);
 
     Fdzero.initZeros();
 
-    for (int i = 0; i < n_ref * nr_psi; i++)
+    for (int i = 0; i < model.n_ref * nr_psi; i++)
     {
         wsumimgs.push_back(Fdzero);
     }
 
-    for (int refno = 0; refno < n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
         sumw.push_back(0.);
         sumw2.push_back(0.);
@@ -1941,17 +1962,15 @@ void Prog_MLalign2D_prm::expectation(int iter)
     //Some initializations
     opt_scale = 1., bgmean = 0.;
 
-    Msignificant.resize(n_ref, nr_psi * nr_flip);
+    Msignificant.resize(model.n_ref, nr_psi * nr_flip);
 
     // Calculate myFirst and myLast image for this thread
     int nn = SF.ImgNo();
 
-    int myNum = nn;
+    if (verb > 0)
+        init_progress_bar(nn);
 
-    if (verb > 0) init_progress_bar(myNum);
-
-    // Loop over all images
-    int c = XMIPP_MAX(1, myNum / 60);
+    int c = XMIPP_MAX(1, nn / 60);
 
 #ifdef TIMING
 
@@ -1960,8 +1979,9 @@ void Prog_MLalign2D_prm::expectation(int iter)
     timer.tic(E_FOR);
 
 #endif
-
+    // Loop over all images
     for (int imgno = 0; imgno < nn; imgno++)
+    if (img_blocks[imgno] == current_block)
     {
 #ifdef TIMING
         timer.tic(FOR_F1);
@@ -2050,8 +2070,8 @@ void Prog_MLalign2D_prm::expectation(int iter)
         // Store optimal phi and theta in memory
         if (limit_rot)
         {
-            imgs_oldphi[imgno] = Iref[opt_refno].Phi();
-            imgs_oldtheta[imgno] = Iref[opt_refno].Theta();
+            imgs_oldphi[imgno] = model.Iref[opt_refno].Phi();
+            imgs_oldtheta[imgno] = model.Iref[opt_refno].Theta();
         }
 
         // Store optimal normalization parameters in memory
@@ -2072,8 +2092,8 @@ void Prog_MLalign2D_prm::expectation(int iter)
             opt_flip = 0.;
         }
 
-        docfiledata[imgno](0) = Iref[opt_refno].Phi(); // rot
-        docfiledata[imgno](1) = Iref[opt_refno].Theta(); // tilt
+        docfiledata[imgno](0) = model.Iref[opt_refno].Phi(); // rot
+        docfiledata[imgno](1) = model.Iref[opt_refno].Theta(); // tilt
         docfiledata[imgno](2) = opt_psi + 360.; // psi
         docfiledata[imgno](3) = opt_offsets(0); // Xoff
         docfiledata[imgno](4) = opt_offsets(1); // Yoff
@@ -2088,12 +2108,13 @@ void Prog_MLalign2D_prm::expectation(int iter)
             docfiledata[imgno](10) = opt_scale; // image scale
         }
 
-        if (do_student)
+        if (model.do_student)
         {
             docfiledata[imgno](11) = maxweight2; // Robustness weight
         }
 
-        if (verb > 0 && imgno % c == 0) progress_bar(imgno);
+        if (verb > 0 && imgno % c == 0)
+            progress_bar(imgno);
 
 #ifdef TIMING
 
@@ -2108,7 +2129,8 @@ void Prog_MLalign2D_prm::expectation(int iter)
 
 #endif
 
-    if (verb > 0) progress_bar(myNum);
+    if (verb > 0)
+        progress_bar(nn);
 
 #ifdef TIMING
 
@@ -2126,15 +2148,6 @@ void Prog_MLalign2D_prm::expectation(int iter)
 
 #endif
 
-    // Send back output in the form of a DocFile
-    SF.go_beginning();
-
-    for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
-    {
-        DFo.append_comment(SF.NextImg());
-        DFo.append_data_line(docfiledata[imgno]);
-    }
-
 #ifdef DEBUG
     std::cerr<<"leaving expectation"<<std::endl;
 
@@ -2147,7 +2160,7 @@ void Prog_MLalign2D_prm::expectation(int iter)
 }
 
 // Update all model parameters
-void Prog_MLalign2D_prm::maximization(int refs_per_class)
+void Prog_MLalign2D_prm::maximization(Model_MLalign2D &model, int refs_per_class)
 {
 
 #ifdef DEBUG
@@ -2163,85 +2176,61 @@ void Prog_MLalign2D_prm::maximization(int refs_per_class)
     int c;
 
     // Update the reference images
-    sumw_allrefs = 0.;
+    model.sumw_allrefs = 0.;
+    model.dim = dim;
 
-    for (int refno = 0; refno < n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
-        if (!do_student && sumw[refno] > 0.)
+        if (!model.do_student && sumw[refno] > 0.)
         {
-            Iref[refno]() = wsum_Mref[refno];
-            Iref[refno]() /= sumwsc2[refno];
-            Iref[refno].set_weight(sumw[refno]);
-            sumw_allrefs += sumw[refno];
+            model.Iref[refno]() = wsum_Mref[refno];
+            model.Iref[refno]() /= sumwsc2[refno];
+            model.Iref[refno].set_weight(sumw[refno]);
+            model.sumw_allrefs += sumw[refno];
         }
-        else if (do_student && sumw2[refno] > 0.)
+        else if (model.do_student && sumw2[refno] > 0.)
         {
-            Iref[refno]() = wsum_Mref[refno];
-            Iref[refno]() /= sumwsc2[refno];
-            Iref[refno].set_weight(sumw2[refno]);
-            sumw_allrefs += sumw[refno];
-            sumw_allrefs2 += sumw2[refno];
+            model.Iref[refno]() = wsum_Mref[refno];
+            model.Iref[refno]() /= sumwsc2[refno];
+            model.Iref[refno].set_weight(sumw2[refno]);
+            model.sumw_allrefs += sumw[refno];
+            model.sumw_allrefs2 += sumw2[refno];
         }
         else
         {
-            Iref[refno].set_weight(0.);
-            Iref[refno]().initZeros(dim, dim);
+            std::cerr << "Setting zeroes in MAXIMIZATION...." << std::endl;
+            model.Iref[refno].set_weight(0.);
+            model.Iref[refno]().initZeros(dim, dim);
+            //FIXME: Check why this is happens
+            model.Iref[refno]().setXmippOrigin();
         }
     }
 
-    // Adjust average scale (nr_classes will be smaller than n_ref for the 3D case!)
+    // Adjust average scale (nr_classes will be smaller than model.n_ref for the 3D case!)
+
     if (do_norm)
     {
-        int iclass, nr_classes = ROUND(n_ref / refs_per_class);
-        std::vector<double> wsum_scale(nr_classes), sumw_scale(nr_classes);
-        ldiv_t temp;
-        average_scale = 0.;
-
-        for (int refno = 0; refno < n_ref; refno++)
-        {
-            average_scale += sumwsc[refno];
-            temp = ldiv(refno, refs_per_class);
-            iclass = ROUND(temp.quot);
-            wsum_scale[iclass] += sumwsc[refno];
-            sumw_scale[iclass] += sumw[refno];
-        }
-
-        for (int refno = 0; refno < n_ref; refno++)
-        {
-            temp = ldiv(refno, refs_per_class);
-            iclass = ROUND(temp.quot);
-
-            if (sumw_scale[iclass] > 0.)
-            {
-                refs_avgscale[refno] = wsum_scale[iclass] / sumw_scale[iclass];
-                Iref[refno]() *= refs_avgscale[refno];
-            }
-            else
-            {
-                refs_avgscale[refno] = 1.;
-            }
-        }
-
-        average_scale /= sumw_allrefs;
+        for (int refno = 0; refno < model.n_ref; refno++)
+             model.scale[refno] = sumwsc[refno] / sumw[refno];
     }
 
-    // Average fracweight
-    sumfracweight /= sumw_allrefs;
+    // Average height of the probability distribution at its maximum
+    model.avePmax = sumfracweight / model.sumw_allrefs;
 
     // Update the model fractions
     if (!fix_fractions)
     {
-        for (int refno = 0; refno < n_ref; refno++)
+        for (int refno = 0; refno < model.n_ref; refno++)
         {
             if (sumw[refno] > 0.)
             {
-                alpha_k[refno] = sumw[refno] / sumw_allrefs;
-                mirror_fraction[refno] = sumw_mirror[refno] / sumw[refno];
+                model.alpha_k[refno] = sumw[refno] / model.sumw_allrefs;
+                model.mirror_fraction[refno] = sumw_mirror[refno] / sumw[refno];
             }
             else
             {
-                alpha_k[refno] = 0.;
-                mirror_fraction[refno] = 0.;
+                model.alpha_k[refno] = 0.;
+                model.mirror_fraction[refno] = 0.;
             }
         }
     }
@@ -2249,43 +2238,71 @@ void Prog_MLalign2D_prm::maximization(int refs_per_class)
     // Update sigma of the origin offsets
     if (!fix_sigma_offset)
     {
-        sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
-        // Dont allow sigma_offset to drop below one pixel
-        sigma_offset = XMIPP_MAX(1. , sigma_offset);
-
-        // Update sigdim, i.e. the number of pixels that will be considered in the translations
-
-        if (save_mem2)
-            sigdim = 2 * CEIL(sigma_offset * 3);
-        else
-            sigdim = 2 * CEIL(sigma_offset * 6);
-
-        sigdim++; // (to get uneven number)
-
-        sigdim = XMIPP_MIN(dim, sigdim);
+        //model.sigma_offset = sqrt(wsum_sigma_offset / (2. * model.sumw_allrefs));
+        model.updateSigmaOffset(wsum_sigma_offset);
     }
 
     // Update the noise parameters
     if (!fix_sigma_noise)
     {
-        //      The following converges faster according to McLachlan&Peel (2000)
-        //	Finite Mixture Models, Wiley p. 228!
-
-        if (do_student && do_student_sigma_trick)
-            sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs2 * dim * dim));
-        else
-            sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * dim * dim));
-
-        sigma_noise2 = sigma_noise * sigma_noise;
-
-        if (do_student) dfsigma2 = df * sigma_noise2;
+        model.updateSigmaNoise(wsum_sigma_noise);
     }
+
+    model.LL = LL;
+/*
+    std::cerr << "sumw_allrefs: " << model.sumw_allrefs << std::endl;
+    std::cerr << "wsum_sigma_offset: " << model.get_wsum_sigma_offset() << std::endl;
+    std::cerr << "wsum_sigma_noise: " << model.get_wsum_sigma_noise() << std::endl;
+    std::cerr << "sigma_offset: " << model.sigma_offset << std::endl;
+    std::cerr << "sigma_noise: " << model.sigma_noise << std::endl;
+
+    for (int refno = 0; refno < model.n_ref; refno++)
+    {
+        std::cerr << "refno:       " << refno << std::endl;
+        std::cerr << "sumw:        " << model.get_sumw(refno) << std::endl;
+        std::cerr << "sumw_mirror: " << model.get_sumw_mirror(refno) << std::endl;
+        std::cerr << "alpha_k:        " << model.alpha_k[refno] << std::endl;
+       std::cerr << "mirror_fraction: " << model.mirror_fraction[refno] << std::endl;
+
+    }*/
 
 #ifdef DEBUG
     std::cerr<<"leaving maximization"<<std::endl;
 
 #endif
-}
+}//close function maximization
+
+void Prog_MLalign2D_prm::correctScaleAverage(int refs_per_class)
+{
+
+    int iclass, nr_classes = ROUND(model.n_ref / refs_per_class);
+    std::vector<double> wsum_scale(nr_classes), sumw_scale(nr_classes);
+    ldiv_t temp;
+    average_scale = 0.;
+    for (int refno = 0; refno < model.n_ref; refno++)
+    {
+        average_scale += sumwsc[refno];
+        temp = ldiv(refno, refs_per_class);
+        iclass = ROUND(temp.quot);
+        wsum_scale[iclass] += sumwsc[refno];
+        sumw_scale[iclass] += sumw[refno];
+    }
+    for (int refno = 0; refno < model.n_ref; refno++)
+    {
+        temp = ldiv(refno, refs_per_class);
+        iclass = ROUND(temp.quot);
+        if (sumw_scale[iclass] > 0.)
+        {
+            model.scale[refno] = wsum_scale[iclass] / sumw_scale[iclass];
+            model.Iref[refno]() *= model.scale[refno];
+        }
+        else
+        {
+            model.scale[refno] = 1.;
+        }
+    }
+    average_scale /= model.sumw_allrefs;
+}//close function correctScaleAverage
 
 // Check convergence
 bool Prog_MLalign2D_prm::checkConvergence()
@@ -2304,13 +2321,13 @@ bool Prog_MLalign2D_prm::checkConvergence()
 
     conv.clear();
 
-    for (int refno = 0; refno < n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
-        if (Iref[refno].weight() > 0.)
+        if (model.Iref[refno].weight() > 0.)
         {
             multiplyElements(Iold[refno](), Iold[refno](), Maux);
             convv = 1. / (Maux.computeAvg());
-            Maux = Iold[refno]() - Iref[refno]();
+            Maux = Iold[refno]() - model.Iref[refno]();
             multiplyElements(Maux, Maux, Maux);
             convv *= Maux.computeAvg();
             conv.push_back(convv);
@@ -2329,12 +2346,53 @@ bool Prog_MLalign2D_prm::checkConvergence()
 #endif
 
     return converged;
-}
+}//close function checkConvergence
 
-void Prog_MLalign2D_prm::writeOutputFiles(const int iter)
+void Prog_MLalign2D_prm::writeDocfile(FileName fn_base)
+{
+    FileName fn_tmp;
+    DocFile DFout;
+    fn_base += ".doc";
+
+     DFout.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
+     SF.go_beginning();
+
+      for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
+      {
+          DFout.append_comment(SF.NextImg());
+          DFout.append_data_line(docfiledata[imgno]);
+      }
+      DFout.write(fn_base);
+
+      // Also write out selfiles of all experimental images,
+      // classified according to optimal reference image
+      SelFile SFo;
+      for (int refno = 0; refno < model.n_ref; refno++)
+      {
+          DFout.go_beginning();
+          SFo.clear();
+
+          for (int n = 0; n < DFout.dataLineNo(); n++)
+          {
+              DFout.next();
+              fn_tmp = ((DFout.get_current_line()).get_text()).erase(0, 3);
+              DFout.adjust_to_data_line();
+
+              if ((refno + 1) == (int) DFout(5))
+                  SFo.insert(fn_tmp, SelLine::ACTIVE);
+          }
+
+          fn_tmp = fn_root + "_ref";
+          fn_tmp.compose(fn_tmp, refno + 1, "sel");
+          SFo.write(fn_tmp);
+      }
+
+}//close function writeDocfile
+
+void Prog_MLalign2D_prm::writeModel(Model_MLalign2D model, FileName fn_base)
 {
 
-    FileName fn_tmp, fn_base, fn_tmp2;
+    FileName fn_tmp, fn_tmp2;
     ImageXmipp Itmp;
     Matrix1D<double> fracline(3);
     SelFile SFo, SFc;
@@ -2346,62 +2404,51 @@ void Prog_MLalign2D_prm::writeOutputFiles(const int iter)
     SFo.clear();
     SFc.clear();
 
-    fn_base = fn_root;
-
-    if (iter >= 0)
-    {
-        fn_base += "_it";
-        fn_base.compose(fn_base, iter, "");
-    }
-
-    if (do_norm) fracline.resize(4);
+    if (do_norm)
+        fracline.resize(4);
 
     // Write out current reference images and fill sel & log-file
-    for (int refno = 0; refno < n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
         fn_tmp = fn_base + "_ref";
-        fn_tmp.compose(fn_tmp, refno + 1, "");
-        fn_tmp = fn_tmp + ".xmp";
-        Itmp = Iref[refno];
+        fn_tmp.compose(fn_tmp, refno + 1, "xmp");
+        //fn_tmp = fn_tmp + ".xmp";
+        Itmp = model.Iref[refno];
         Itmp.write(fn_tmp);
         SFo.insert(fn_tmp, SelLine::ACTIVE);
-        fracline(0) = alpha_k[refno];
-        fracline(1) = mirror_fraction[refno];
+        fracline(0) = model.alpha_k[refno];
+        fracline(1) = model.mirror_fraction[refno];
         fracline(2) = 1000 * conv[refno]; // Output 1000x the change for precision
 
-        if (do_norm) fracline(3) = refs_avgscale[refno];
+        if (model.do_norm)
+            fracline(3) = model.scale[refno];
 
         DFl.insert_comment(fn_tmp);
-
         DFl.insert_data_line(fracline);
     }
 
     // Write out sel & log-file
     fn_tmp = fn_base + ".sel";
-
     SFo.write(fn_tmp);
-
     DFl.go_beginning();
+    comment = "MLalign2D-logfile: Number of images= " + floatToString(model.sumw_allrefs);
 
-    comment = "MLalign2D-logfile: Number of images= " + floatToString(
-            sumw_allrefs);
-
-    comment += " LL= " + floatToString(LL, 15, 10) + " <Pmax/sumP>= "
+    comment += " LL= " + floatToString(model.LL, 15, 10) + " <Pmax/sumP>= "
             + floatToString(sumfracweight, 10, 5);
 
-    if (do_norm) comment += " <scale>= " + floatToString(average_scale, 10, 5);
+    if (model.do_norm)
+        comment += " <scale>= " + floatToString(average_scale, 10, 5);
 
     DFl.insert_comment(comment);
 
-    comment = "-noise " + floatToString(sigma_noise, 15, 12) + " -offset "
-            + floatToString(sigma_offset, 15, 12) + " -istart "
+    comment = "-noise " + floatToString(model.sigma_noise, 15, 12) + " -offset "
+            + floatToString(model.sigma_offset, 15, 12) + " -istart "
             + integerToString(iter + 1) + " -doc " + fn_base + ".doc";
 
     DFl.insert_comment(comment);
-
     DFl.insert_comment(cline);
 
-    if (do_norm)
+    if (model.do_norm)
         DFl.insert_comment(
                 "columns: model fraction (1); mirror fraction (2); 1000x signal change (3); avg scale (4)");
     else
@@ -2409,34 +2456,143 @@ void Prog_MLalign2D_prm::writeOutputFiles(const int iter)
                 "columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
 
     fn_tmp = fn_base + ".log";
-
     DFl.write(fn_tmp);
 
-    // Write out docfile with optimal transformation & references
-    fn_tmp = fn_base + ".doc";
+}//close function writeModel
 
-    DFo.write(fn_tmp);
 
-    // Also write out selfiles of all experimental images,
-    // classified according to optimal reference image
-    for (int refno = 0; refno < n_ref; refno++)
-    {
-        DFo.go_beginning();
-        SFo.clear();
-
-        for (int n = 0; n < DFo.dataLineNo(); n++)
-        {
-            DFo.next();
-            fn_tmp = ((DFo.get_current_line()).get_text()).erase(0, 3);
-            DFo.adjust_to_data_line();
-
-            if ((refno + 1) == (int) DFo(5)) SFo.insert(fn_tmp, SelLine::ACTIVE);
-        }
-
-        fn_tmp = fn_root + "_ref";
-        fn_tmp.compose(fn_tmp, refno + 1, "sel");
-        SFo.write(fn_tmp);
-    }
-
+FileName Prog_MLalign2D_prm::getBaseName(std::string suffix, int number)
+{
+    FileName fn_base = fn_root + suffix;
+    if (number >= 0)
+        fn_base.compose(fn_base, number, "");
+    return fn_base;
 }
 
+///////////// Model_MLalign2D Implementation ////////////
+Model_MLalign2D::Model_MLalign2D()
+{
+    initData();
+
+}//close default constructor
+
+Model_MLalign2D::Model_MLalign2D(int n_ref)
+{
+    initData();
+    this->n_ref = n_ref;
+    setSize();
+}//close constructor
+
+void Model_MLalign2D::initData()
+{
+    do_student = do_norm = false;
+    do_student_sigma_trick = true;
+    sigma_noise = sigma_offset = LL = 0;
+    dim = 0;
+}//close function initData
+
+/** Before call this function model.n_ref should
+ * be properly setted. */
+void Model_MLalign2D::setSize()
+{
+    Iref.resize(n_ref);
+    alpha_k.resize(n_ref, 0.);
+    mirror_fraction.resize(n_ref, 0.);
+    scale.resize(n_ref, 1.);
+
+}//close function setSize
+
+void Model_MLalign2D::addModel(Model_MLalign2D model)
+{
+    if (n_ref != model.n_ref)
+    {
+        REPORT_ERROR(5000, "Can not add models with diferent 'n_ref'");
+        exit(1);
+    }
+
+    double sumw, sumw_mirror, sumwsc, sumweight;
+    double wsum_sigma_offset = get_wsum_sigma_offset() + model.get_wsum_sigma_offset();
+    double wsum_sigma_noise = get_wsum_sigma_noise() + model.get_wsum_sigma_noise();
+    double local_sumw_allrefs =  sumw_allrefs + model.sumw_allrefs;
+
+    for (int refno = 0; refno < n_ref; refno++)
+    {
+        sumweight = Iref[refno].weight() + model.Iref[refno].weight();
+        Iref[refno]() = (get_wsum_Mref(refno) + model.get_wsum_Mref(refno)) / sumweight;
+        Iref[refno].set_weight(sumweight);
+
+        //Get all sums first, because function call will change
+        //after updating model parameters.
+        sumw = get_sumw(refno) + model.get_sumw(refno);
+        sumw_mirror = get_sumw_mirror(refno) + model.get_sumw_mirror(refno);
+        sumwsc = get_sumwsc(refno) + model.get_sumwsc(refno);
+
+        //Update parameters
+        alpha_k[refno] = sumw / local_sumw_allrefs;
+        mirror_fraction[refno] = sumw_mirror / sumw;
+        scale[refno] = sumwsc / sumw;
+    }
+
+    sumw_allrefs = local_sumw_allrefs;
+    sumw_allrefs2 += model.sumw_allrefs2;
+
+    updateSigmaNoise(wsum_sigma_noise);
+    updateSigmaOffset(wsum_sigma_offset);
+    LL += model.LL;
+
+}//close function addModel
+
+void Model_MLalign2D::substractModel(Model_MLalign2D model)
+{
+
+}//close function substractModel
+
+double Model_MLalign2D::get_sumw(int refno)
+{
+    return alpha_k[refno] * sumw_allrefs;
+}//close function sumw
+
+double Model_MLalign2D::get_sumw_mirror(int refno)
+{
+    return get_sumw(refno) * mirror_fraction[refno];
+}//close function sumw_mirror
+
+double Model_MLalign2D::get_sumwsc(int refno)
+{
+    return scale[refno] * get_sumw(refno);
+}//close function get_sumwsc
+
+Matrix2D<double> Model_MLalign2D::get_wsum_Mref(int refno)
+{
+    return Iref[refno]() * Iref[refno].weight();
+}//close function get_wsum_Mref
+
+double Model_MLalign2D::get_wsum_sigma_offset()
+{
+    return sigma_offset * sigma_offset * 2 * sumw_allrefs;
+}//close function get_wsum_sigma_offset
+
+double Model_MLalign2D::get_wsum_sigma_noise()
+{
+    double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2 : sumw_allrefs;
+    return sigma_noise * sigma_noise * dim * dim * sum;
+}//close function get_wsum_sigma_noise
+
+double Model_MLalign2D::get_sumfracweight()
+{
+    return avePmax * sumw_allrefs;
+}//close function get_sumfracweight
+
+void Model_MLalign2D::updateSigmaOffset(double wsum_sigma_offset)
+{
+    sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
+}//close function updateSigmaOffset
+
+void Model_MLalign2D::updateSigmaNoise(double wsum_sigma_noise)
+{
+    // The following converges faster according to McLachlan&Peel (2000)
+    // Finite Mixture Models, Wiley p. 228!
+    double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2 : sumw_allrefs;
+    double sigma_noise2 = wsum_sigma_noise / (sum * dim * dim);
+    sigma_noise = sqrt(sigma_noise2);
+}//close function updateSigmaNoise
