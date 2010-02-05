@@ -105,8 +105,18 @@ int main(int argc, char **argv)
             }
             else //do IEM
             {
+                if (prm.iter > 1)
+                {
+                    prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
+                    block_model.print();
+                    prm.model.substractModel(block_model);
+                }
                 prm.maximization(block_model);
                 prm.writeOutputFiles(block_model, OUT_BLOCK);
+                if (prm.iter > 1)
+                {
+                   prm.model.addModel(block_model);
+                }
             }
 
 #ifdef TIMING
@@ -115,7 +125,7 @@ int main(int argc, char **argv)
 
             }//close for blocks
 
-            if (prm.blocks > 1)
+            if (prm.blocks > 1 && prm.iter == 1)
             {
                 for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
                 {
