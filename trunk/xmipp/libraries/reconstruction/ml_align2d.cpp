@@ -2181,90 +2181,48 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &model, int refs_per_class
 
     for (int refno = 0; refno < model.n_ref; refno++)
     {
-        if (!model.do_student && sumw[refno] > 0.)
+        if (sumw[refno] > 0.)
         {
+            double weight = sumw[refno];
+            if (model.do_student)
+            {
+                weight = sumw2[refno];
+                model.sumw_allrefs2 += sumw2[refno];
+            }
             model.Iref[refno]() = wsum_Mref[refno];
             model.Iref[refno]() /= sumwsc2[refno];
-            model.Iref[refno].set_weight(sumw[refno]);
             model.sumw_allrefs += sumw[refno];
-        }
-        else if (model.do_student && sumw2[refno] > 0.)
-        {
-            model.Iref[refno]() = wsum_Mref[refno];
-            model.Iref[refno]() /= sumwsc2[refno];
-            model.Iref[refno].set_weight(sumw2[refno]);
-            model.sumw_allrefs += sumw[refno];
-            model.sumw_allrefs2 += sumw2[refno];
+            model.Iref[refno].set_weight(weight);
         }
         else
         {
+            //FIXME: Check why this is happens
             std::cerr << "Setting zeroes in MAXIMIZATION...." << std::endl;
             model.Iref[refno].set_weight(0.);
             model.Iref[refno]().initZeros(dim, dim);
-            //FIXME: Check why this is happens
             model.Iref[refno]().setXmippOrigin();
         }
-    }
 
-    // Adjust average scale (nr_classes will be smaller than model.n_ref for the 3D case!)
+        // Adjust average scale (nr_classes will be smaller than model.n_ref for the 3D case!)
+        model.updateScale(refno, sumwsc[refno], sumw[refno]);
 
-    if (do_norm)
-    {
-        for (int refno = 0; refno < model.n_ref; refno++)
-             model.scale[refno] = sumwsc[refno] / sumw[refno];
+        // Update the model fractions
+        if (!fix_fractions)
+            model.updateFractions(refno, sumw[refno], sumw_mirror[refno], model.sumw_allrefs);
     }
 
     // Average height of the probability distribution at its maximum
-    model.avePmax = sumfracweight / model.sumw_allrefs;
-
-    // Update the model fractions
-    if (!fix_fractions)
-    {
-        for (int refno = 0; refno < model.n_ref; refno++)
-        {
-            if (sumw[refno] > 0.)
-            {
-                model.alpha_k[refno] = sumw[refno] / model.sumw_allrefs;
-                model.mirror_fraction[refno] = sumw_mirror[refno] / sumw[refno];
-            }
-            else
-            {
-                model.alpha_k[refno] = 0.;
-                model.mirror_fraction[refno] = 0.;
-            }
-        }
-    }
+    model.updateAvePmax(sumfracweight);
 
     // Update sigma of the origin offsets
     if (!fix_sigma_offset)
-    {
-        //model.sigma_offset = sqrt(wsum_sigma_offset / (2. * model.sumw_allrefs));
         model.updateSigmaOffset(wsum_sigma_offset);
-    }
 
     // Update the noise parameters
     if (!fix_sigma_noise)
-    {
         model.updateSigmaNoise(wsum_sigma_noise);
-    }
 
     model.LL = LL;
-/*
-    std::cerr << "sumw_allrefs: " << model.sumw_allrefs << std::endl;
-    std::cerr << "wsum_sigma_offset: " << model.get_wsum_sigma_offset() << std::endl;
-    std::cerr << "wsum_sigma_noise: " << model.get_wsum_sigma_noise() << std::endl;
-    std::cerr << "sigma_offset: " << model.sigma_offset << std::endl;
-    std::cerr << "sigma_noise: " << model.sigma_noise << std::endl;
-
-    for (int refno = 0; refno < model.n_ref; refno++)
-    {
-        std::cerr << "refno:       " << refno << std::endl;
-        std::cerr << "sumw:        " << model.get_sumw(refno) << std::endl;
-        std::cerr << "sumw_mirror: " << model.get_sumw_mirror(refno) << std::endl;
-        std::cerr << "alpha_k:        " << model.alpha_k[refno] << std::endl;
-       std::cerr << "mirror_fraction: " << model.mirror_fraction[refno] << std::endl;
-
-    }*/
 
 #ifdef DEBUG
     std::cerr<<"leaving maximization"<<std::endl;
@@ -2389,22 +2347,41 @@ void Prog_MLalign2D_prm::writeDocfile(FileName fn_base)
 
 }//close function writeDocfile
 
-void Prog_MLalign2D_prm::writeModel(Model_MLalign2D model, FileName fn_base)
+void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
 {
-
+    FileName fn_base;
     FileName fn_tmp, fn_tmp2;
     ImageXmipp Itmp;
-    Matrix1D<double> fracline(3);
+    Matrix1D<double> fracline(2);
     SelFile SFo, SFc;
     DocFile DFl;
     std::string comment;
     std::ofstream fh;
 
+    switch (outputType)
+    {
+        case OUT_BLOCK:
+            fn_base = getBaseName("_block", current_block + 1);
+            break;
+        case OUT_ITER:
+            fn_base = getBaseName("_it", iter);
+            break;
+        case OUT_FINAL:
+            fn_base = fn_root;
+            break;
+    }
+
     DFl.clear();
     SFo.clear();
     SFc.clear();
 
-    if (do_norm)
+    bool no_block = outputType != OUT_BLOCK;
+    bool write_norm = model.do_norm && no_block;
+
+    //FIXME: do this better
+    if (no_block)
+        fracline.resize(3);
+    if (write_norm)
         fracline.resize(4);
 
     // Write out current reference images and fill sel & log-file
@@ -2418,9 +2395,11 @@ void Prog_MLalign2D_prm::writeModel(Model_MLalign2D model, FileName fn_base)
         SFo.insert(fn_tmp, SelLine::ACTIVE);
         fracline(0) = model.alpha_k[refno];
         fracline(1) = model.mirror_fraction[refno];
-        fracline(2) = 1000 * conv[refno]; // Output 1000x the change for precision
 
-        if (model.do_norm)
+        if (no_block)
+            fracline(2) = 1000 * conv[refno]; // Output 1000x the change for precision
+
+        if (write_norm)
             fracline(3) = model.scale[refno];
 
         DFl.insert_comment(fn_tmp);
@@ -2432,34 +2411,78 @@ void Prog_MLalign2D_prm::writeModel(Model_MLalign2D model, FileName fn_base)
     SFo.write(fn_tmp);
     DFl.go_beginning();
     comment = "MLalign2D-logfile: Number of images= " + floatToString(model.sumw_allrefs);
+    comment += " LL= " + floatToString(model.LL, 15, 10) + " <Pmax/sumP>= "+ floatToString(model.avePmax, 10, 5);
 
-    comment += " LL= " + floatToString(model.LL, 15, 10) + " <Pmax/sumP>= "
-            + floatToString(sumfracweight, 10, 5);
-
-    if (model.do_norm)
+    if (write_norm)
         comment += " <scale>= " + floatToString(average_scale, 10, 5);
 
     DFl.insert_comment(comment);
 
-    comment = "-noise " + floatToString(model.sigma_noise, 15, 12) + " -offset "
-            + floatToString(model.sigma_offset, 15, 12) + " -istart "
-            + integerToString(iter + 1) + " -doc " + fn_base + ".doc";
-
+    comment = "-noise " + floatToString(model.sigma_noise, 15, 12) + " -offset " + floatToString(model.sigma_offset, 15, 12);
+     if (no_block)
+         comment += " -istart " + integerToString(iter + 1) + " -doc " + fn_base + ".doc";
     DFl.insert_comment(comment);
-    DFl.insert_comment(cline);
-
-    if (model.do_norm)
-        DFl.insert_comment(
-                "columns: model fraction (1); mirror fraction (2); 1000x signal change (3); avg scale (4)");
-    else
-        DFl.insert_comment(
-                "columns: model fraction (1); mirror fraction (2); 1000x signal change (3)");
-
+    if (no_block)
+        DFl.insert_comment(cline);
+    comment = "columns: model fraction (1); mirror fraction (2); ";
+    if (no_block)
+        comment += "1000x signal change (3); ";
+    if (write_norm)
+        comment += "avg scale (4)";
+    DFl.insert_comment(comment);
     fn_tmp = fn_base + ".log";
     DFl.write(fn_tmp);
 
+    //Write docfile, except when writing blocks only
+    if (no_block)
+        writeDocfile(fn_base);
+
 }//close function writeModel
 
+void Prog_MLalign2D_prm::readModel(Model_MLalign2D &model, FileName fn_base)
+{
+    DocFile DF;
+    DF.read(fn_base + ".log");
+    DF.go_beginning();
+    std::string comment;
+
+    int argcp;
+    char** argvp;
+    char* copy;
+     copy = NULL;
+     argvp = NULL;
+     model.dim = dim;
+     //Read first line and generate command line
+     comment = (DF.get_current_line()).get_text();
+     generateCommandLine(comment, argcp, argvp, copy);
+     model.sumw_allrefs = textToDouble(getParameter(argcp, argvp, "images="));
+     model.LL = textToDouble(getParameter(argcp, argvp, "LL="));
+     model.avePmax = textToDouble(getParameter(argcp, argvp, "<Pmax/sumP>="));
+     DF.next();
+     //Read second line
+     comment = (DF.get_current_line()).get_text();
+     //std::cerr << "second line: '" << comment << "'" << std::endl;
+     generateCommandLine(comment, argcp, argvp, copy);
+     model.sigma_noise = textToDouble(getParameter(argcp, argvp, "-noise"));
+     model.sigma_offset = textToDouble(getParameter(argcp, argvp, "-offset"));
+     DF.next();
+     //Skip follow comment line
+     DF.next();
+     for (int refno = 0; refno < model.n_ref; refno++)
+     {
+         FileName fn_img = DF.get_current_line().get_text().erase(0, 3);
+         ImageXmipp img;
+         img.read(fn_img, false, false, true, false);
+         img().setXmippOrigin();
+         model.Iref[refno] = img;
+         DF.next();
+         DocLine dl = DF.get_current_line();
+         model.alpha_k[refno] = dl[0];
+         model.mirror_fraction[refno] = dl[1];
+         DF.next();
+     }
+
+}//close function readModel
 
 FileName Prog_MLalign2D_prm::getBaseName(std::string suffix, int number)
 {
@@ -2502,7 +2525,7 @@ void Model_MLalign2D::setSize()
 
 }//close function setSize
 
-void Model_MLalign2D::addModel(Model_MLalign2D model)
+void Model_MLalign2D::combineModel(Model_MLalign2D model, int sign)
 {
     if (n_ref != model.n_ref)
     {
@@ -2511,40 +2534,48 @@ void Model_MLalign2D::addModel(Model_MLalign2D model)
     }
 
     double sumw, sumw_mirror, sumwsc, sumweight;
-    double wsum_sigma_offset = get_wsum_sigma_offset() + model.get_wsum_sigma_offset();
-    double wsum_sigma_noise = get_wsum_sigma_noise() + model.get_wsum_sigma_noise();
-    double local_sumw_allrefs =  sumw_allrefs + model.sumw_allrefs;
+    double wsum_sigma_offset = get_wsum_sigma_offset() + sign * model.get_wsum_sigma_offset();
+    double wsum_sigma_noise = get_wsum_sigma_noise() + sign * model.get_wsum_sigma_noise();
+    double local_sumw_allrefs =  sumw_allrefs + sign * model.sumw_allrefs;
+    double sumfracweight = get_sumfracweight() + sign * model.get_sumfracweight();
 
     for (int refno = 0; refno < n_ref; refno++)
     {
-        sumweight = Iref[refno].weight() + model.Iref[refno].weight();
-        Iref[refno]() = (get_wsum_Mref(refno) + model.get_wsum_Mref(refno)) / sumweight;
+        sumweight = Iref[refno].weight() + sign * model.Iref[refno].weight();
+        Iref[refno]() = (get_wsum_Mref(refno) + sign * model.get_wsum_Mref(refno)) / sumweight;
         Iref[refno].set_weight(sumweight);
 
         //Get all sums first, because function call will change
         //after updating model parameters.
-        sumw = get_sumw(refno) + model.get_sumw(refno);
-        sumw_mirror = get_sumw_mirror(refno) + model.get_sumw_mirror(refno);
-        sumwsc = get_sumwsc(refno) + model.get_sumwsc(refno);
+        sumw = get_sumw(refno) +sign *  model.get_sumw(refno);
+        sumw_mirror = get_sumw_mirror(refno) + sign * model.get_sumw_mirror(refno);
+        sumwsc = get_sumwsc(refno) + sign * model.get_sumwsc(refno);
 
         //Update parameters
-        alpha_k[refno] = sumw / local_sumw_allrefs;
-        mirror_fraction[refno] = sumw_mirror / sumw;
-        scale[refno] = sumwsc / sumw;
+        //alpha_k[refno] = sumw / local_sumw_allrefs;
+        //mirror_fraction[refno] = sumw_mirror / sumw;
+        updateFractions(refno, sumw, sumw_mirror, local_sumw_allrefs);
+        //scale[refno] = sumwsc / sumw;
+        updateScale(refno, sumwsc, sumw);
     }
 
     sumw_allrefs = local_sumw_allrefs;
-    sumw_allrefs2 += model.sumw_allrefs2;
+    sumw_allrefs2 += sign * model.sumw_allrefs2;
 
     updateSigmaNoise(wsum_sigma_noise);
     updateSigmaOffset(wsum_sigma_offset);
-    LL += model.LL;
+    updateAvePmax(sumfracweight);
+    LL += sign * model.LL;
 
+}//close function addModel
+void Model_MLalign2D::addModel(Model_MLalign2D model)
+{
+    combineModel(model, 1);
 }//close function addModel
 
 void Model_MLalign2D::substractModel(Model_MLalign2D model)
 {
-
+    combineModel(model, -1);
 }//close function substractModel
 
 double Model_MLalign2D::get_sumw(int refno)
@@ -2596,3 +2627,49 @@ void Model_MLalign2D::updateSigmaNoise(double wsum_sigma_noise)
     double sigma_noise2 = wsum_sigma_noise / (sum * dim * dim);
     sigma_noise = sqrt(sigma_noise2);
 }//close function updateSigmaNoise
+
+void Model_MLalign2D::updateAvePmax(double sumfracweight)
+{
+    avePmax = sumfracweight / sumw_allrefs;
+}//close function updateAvePmax
+
+void Model_MLalign2D::updateFractions(int refno, double sumw, double sumw_mirror, double sumw_allrefs)
+{
+    if (sumw > 0.)
+    {
+        alpha_k[refno] = sumw / sumw_allrefs;
+        mirror_fraction[refno] = sumw_mirror / sumw;
+    }
+    else
+    {
+        alpha_k[refno] = 0.;
+        mirror_fraction[refno] = 0.;
+    }
+}//close updateFractions
+
+void Model_MLalign2D::updateScale(int refno, double sumwsc, double sumw)
+{
+    if (do_norm)
+        scale[refno] = (sumw > 0) ? sumwsc / sumw : 1;
+
+}//close function updateScale
+
+void  Model_MLalign2D::print()
+{
+    std::cerr << "sumw_allrefs: " << sumw_allrefs << std::endl;
+       std::cerr << "wsum_sigma_offset: " << get_wsum_sigma_offset() << std::endl;
+       std::cerr << "wsum_sigma_noise: " << get_wsum_sigma_noise() << std::endl;
+       std::cerr << "sigma_offset: " << sigma_offset << std::endl;
+       std::cerr << "sigma_noise: " << sigma_noise << std::endl;
+
+       for (int refno = 0; refno < n_ref; refno++)
+       {
+           std::cerr << "refno:       " << refno << std::endl;
+           std::cerr << "sumw:        " << get_sumw(refno) << std::endl;
+           std::cerr << "sumw_mirror: " << get_sumw_mirror(refno) << std::endl;
+           std::cerr << "alpha_k:        " << alpha_k[refno] << std::endl;
+          std::cerr << "mirror_fraction: " << mirror_fraction[refno] << std::endl;
+
+       }
+
+}//close function print

@@ -96,9 +96,7 @@ int main(int argc, char **argv)
             ML2D_prm.maximization(ML2D_prm.model, prm.eachvol_end[0]+1);
 
             // Write intermediate output files
-            FileName fn_base = ML2D_prm.getBaseName("_it", ML2D_prm.iter);
-            ML2D_prm.writeDocfile(fn_base);
-            ML2D_prm.writeModel(ML2D_prm.model, fn_base);
+            ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_ITER);
             prm.concatenate_selfiles(ML2D_prm.iter);
 
 	    // Jump out before 3D reconstruction 
@@ -142,8 +140,7 @@ int main(int argc, char **argv)
         } // end loop iterations
 
 	// Write out converged doc and logfiles
-    ML2D_prm.writeDocfile(ML2D_prm.fn_root);
-    ML2D_prm.writeModel(ML2D_prm.model, ML2D_prm.fn_root);
+        ML2D_prm.writeOutputFiles(ML2D_prm.model);
     ML2D_prm.destroyThreads();
 
         if (!converged && prm.verb > 0) std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;

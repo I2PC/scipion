@@ -215,9 +215,7 @@ int main(int argc, char **argv)
                 ML2D_prm.DFo.renum();
 
                 // Output all intermediate files
-                FileName fn_base = ML2D_prm.getBaseName("_it", ML2D_prm.iter);
-                ML2D_prm.writeDocfile(fn_base);
-                ML2D_prm.writeModel(ML2D_prm.model, fn_base);
+                ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_ITER);
                 prm.concatenate_selfiles(ML2D_prm.iter);
             }
             MPI_Barrier(MPI_COMM_WORLD);
@@ -273,8 +271,7 @@ int main(int argc, char **argv)
 
 	if (rank == 0)
 	{
-	    ML2D_prm.writeDocfile(ML2D_prm.fn_root);
-	    ML2D_prm.writeModel(ML2D_prm.model, ML2D_prm.fn_root);
+	    ML2D_prm.writeOutputFiles(ML2D_prm.model);
 	}
 
         if (!converged && prm.verb > 0)

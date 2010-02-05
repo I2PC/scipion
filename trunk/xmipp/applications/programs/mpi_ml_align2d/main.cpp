@@ -201,9 +201,7 @@ int main(int argc, char **argv)
                 prm.DFo.renum();
 
                 // Output all intermediate files
-                FileName fn_base = prm.getBaseName("_it", prm.iter);
-                prm.writeDocfile(fn_base);
-                prm.writeModel(prm.model, fn_base);
+               prm.writeOutputFiles(prm.model, OUT_ITER);
             }
             MPI_Barrier(MPI_COMM_WORLD);
             
@@ -224,8 +222,7 @@ int main(int argc, char **argv)
         if (rank == 0)
         {
             //Write final output files
-            prm.writeDocfile(prm.fn_root);
-            prm.writeModel(prm.model, prm.fn_root);
+            prm.writeOutputFiles(prm.model);
         }
         prm.destroyThreads();
 

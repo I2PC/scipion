@@ -119,6 +119,11 @@ public:
 #define TH_RRR_REFNO 4
 #define TH_PFS_REFNO 5
 
+//output types constants
+#define OUT_BLOCK 0
+#define OUT_ITER  1
+#define OUT_FINAL 2
+
 
 // This structure is needed to pass parameters to the threads
 typedef struct{
@@ -162,6 +167,7 @@ public:
 
     void initData();
     void setSize();
+    void combineModel(Model_MLalign2D model, int sign);
     void addModel(Model_MLalign2D model);
     void substractModel(Model_MLalign2D model);
 
@@ -175,7 +181,11 @@ public:
     double get_sumfracweight();
     void updateSigmaOffset(double wsum_sigma_offset);
     void updateSigmaNoise(double wsum_sigma_noise);
-
+    void updateAvePmax(double sumfracweight);
+    void updateFractions(int refno, double sumw, double sumw_mirror, double sumw_allrefs);
+    void updateScale(int refno, double sumwsc, double sumw);
+    ///Just for debugging now
+    void print();
 };//close class Model_MLalign2D
 
 /**@defgroup MLalign2D ml_align2d (Maximum likelihood in 2D)
@@ -424,7 +434,10 @@ public:
     void writeDocfile(FileName fn_base);
 
     /// Write model parameters
-    void writeModel(Model_MLalign2D model, FileName fn_base);
+    void writeOutputFiles(Model_MLalign2D model, int outputType = OUT_FINAL);
+
+    /// Read model from file
+    void readModel(Model_MLalign2D &model, FileName fn_base);
 
     /// Get base name based on fn_root and some number
     FileName getBaseName(std::string suffix = "", int number = -1);

@@ -71,6 +71,8 @@ int main(int argc, char **argv)
         Maux.resize(prm.dim, prm.dim);
         Maux.setXmippOrigin();
 
+        Model_MLalign2D block_model(prm.model.n_ref);
+
         // Loop over all iterations
         for (prm.iter = prm.istart; prm.iter <= prm.Niter; prm.iter++)
         {
@@ -103,12 +105,8 @@ int main(int argc, char **argv)
             }
             else //do IEM
             {
-                Model_MLalign2D block_model(prm.model.n_ref);
                 prm.maximization(block_model);
-                if (prm.current_block == 0)
-                    tmp_model = block_model;
-                else
-                    tmp_model.addModel(block_model);
+                prm.writeOutputFiles(block_model, OUT_BLOCK);
             }
 
 #ifdef TIMING
@@ -118,35 +116,29 @@ int main(int argc, char **argv)
             }//close for blocks
 
             if (prm.blocks > 1)
-                prm.model = tmp_model;
+            {
+                for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
+                {
+                    prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
+
+                    if (prm.current_block == 0)
+                        prm.model = block_model;
+                    else
+                        prm.model.addModel(block_model);
+                }
+            }
 
             if (prm.do_norm)
                 prm.correctScaleAverage();
 
             std::cout << "------- AFTER ITER: " << prm.iter << " ------" << std::endl;
-            std::cerr << "sumw_allrefs: " << prm.model.sumw_allrefs << std::endl;
-               std::cerr << "wsum_sigma_offset: " << prm.model.get_wsum_sigma_offset() << std::endl;
-               std::cerr << "wsum_sigma_noise: " << prm.model.get_wsum_sigma_noise() << std::endl;
-               std::cerr << "sigma_offset: " << prm.model.sigma_offset << std::endl;
-               std::cerr << "sigma_noise: " << prm.model.sigma_noise << std::endl;
-
-               for (int refno = 0; refno < prm.model.n_ref; refno++)
-               {
-                   std::cerr << "refno:       " << refno << std::endl;
-                   std::cerr << "sumw:        " << prm.model.get_sumw(refno) << std::endl;
-                   std::cerr << "sumw_mirror: " << prm.model.get_sumw_mirror(refno) << std::endl;
-                   std::cerr << "alpha_k:        " << prm.model.alpha_k[refno] << std::endl;
-                  std::cerr << "mirror_fraction: " << prm.model.mirror_fraction[refno] << std::endl;
-
-               }
+            prm.model.print();
 
             // Check convergence
             converged = prm.checkConvergence();
 
             // Write output files
-            FileName fn_base = prm.getBaseName("_it", prm.iter);
-            prm.writeDocfile(fn_base);
-            prm.writeModel(prm.model, fn_base);
+            prm.writeOutputFiles(prm.model, OUT_ITER);
 
             if (converged)
             {
@@ -165,9 +157,7 @@ int main(int argc, char **argv)
 
         } // end loop iterations
 
-        //Write final output files
-        prm.writeDocfile(prm.fn_root);
-        prm.writeModel(prm.model, prm.fn_root);
+        prm.writeOutputFiles(prm.model);
         prm.destroyThreads();
 
     }
