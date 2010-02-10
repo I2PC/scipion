@@ -429,6 +429,7 @@ ReconsSources = [
     'sparma.cpp',
     'surface.cpp',
     'symmetrize.cpp',
+#   'virus_vertex',
     'volume_foms.cpp',
     'volume_labelling.cpp']
 
@@ -622,6 +623,7 @@ AddXmippProgram('convert_stack22images')
 AddXmippProgram('symmetrize', ['XmippRecons'])
 AddXmippProgram('threshold')
 AddXmippProgram('try_symmetry')
+#AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment')
 AddXmippProgram('window')
 
