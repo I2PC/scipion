@@ -145,7 +145,7 @@ void computePDBgeometry(const std::string &fnPDB,
             double weight2=textToFloat(line.substr(60,6));
             weight=XMIPP_MIN(weight1,weight2);
         }
-        else atomCharge(atom_type);
+        else weight=(double) atomCharge(atom_type);
         total_mass += weight;
         XX(centerOfMass) += weight * x;
         YY(centerOfMass) += weight * y;
