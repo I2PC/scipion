@@ -53,17 +53,22 @@ double atomRadius(const std::string &atom);
     The limits are referred to the center of mass, i.e., the
     extension of the PDB goes from centerOfMass-limit0 to
     centerOfMass+limitF.
+    The intensity column is used only for the pseudoatoms. It specifies
+    from which column we should read the intensity. Valid columns are
+    Bfactor or occupancy.
 */
 void computePDBgeometry(const std::string &fnPDB,
    Matrix1D<double> &centerOfMass,
-   Matrix1D<double> &limit0, Matrix1D<double> &limitF);
+   Matrix1D<double> &limit0, Matrix1D<double> &limitF,
+   const std::string &intensityColumn);
 
 /** Apply geometry transformation to an input PDB.
     The result is written in the output PDB. Set centerPDB if you
     want to compute the center of mass first and apply the transformation
     after centering the PDB. */
 void applyGeometry(const std::string &fn_in, const std::string &fn_out,
-    const Matrix2D<double> &A, bool centerPDB=true);
+    const Matrix2D<double> &A, bool centerPDB=true,
+    const std::string &intensityColumn="occupancy");
 
 /** Atom class. */
 class Atom

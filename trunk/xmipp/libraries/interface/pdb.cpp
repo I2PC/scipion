@@ -96,7 +96,8 @@ double atomRadius(const std::string &atom)
 /* Compute geometry -------------------------------------------------------- */
 void computePDBgeometry(const std::string &fnPDB,
    Matrix1D<double> &centerOfMass,
-   Matrix1D<double> &limit0, Matrix1D<double> &limitF)
+   Matrix1D<double> &limit0, Matrix1D<double> &limitF,
+   const std::string &intensityColumn)
 {
     // Initialization
     centerOfMass.initZeros(3);
@@ -114,6 +115,8 @@ void computePDBgeometry(const std::string &fnPDB,
                      "Cannot open " + fnPDB + " for reading");
 
     // Process all lines of the file
+    int col=1;
+    if (intensityColumn=="Bfactor") col=2;
     while (!fh_pdb.eof())
     {
         // Read a ATOM line
@@ -141,9 +144,8 @@ void computePDBgeometry(const std::string &fnPDB,
         double weight;
         if (atom_type=="EN")
         {
-            double weight1=textToFloat(line.substr(54,6));
-            double weight2=textToFloat(line.substr(60,6));
-            weight=XMIPP_MIN(weight1,weight2);
+            if      (col==1) weight=textToFloat(line.substr(54,6));
+            else if (col==2) weight=textToFloat(line.substr(60,6));
         }
         else weight=(double) atomCharge(atom_type);
         total_mass += weight;
@@ -163,11 +165,13 @@ void computePDBgeometry(const std::string &fnPDB,
 
 /* Apply geometry ---------------------------------------------------------- */
 void applyGeometry(const std::string &fn_in, const std::string &fn_out,
-    const Matrix2D<double> &A, bool centerPDB)
+    const Matrix2D<double> &A, bool centerPDB,
+    const std::string &intensityColumn)
 {
     Matrix1D<double> centerOfMass, limit0, limitF;
     if (centerPDB)
-    	computePDBgeometry(fn_in, centerOfMass,limit0, limitF);
+    	computePDBgeometry(fn_in, centerOfMass,limit0, limitF,
+            intensityColumn);
 
     // Open files
     std::ifstream fh_in;

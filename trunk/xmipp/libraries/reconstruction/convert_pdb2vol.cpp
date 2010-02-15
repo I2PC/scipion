@@ -175,7 +175,7 @@ void Prog_PDBPhantom_Parameters::show()
 void Prog_PDBPhantom_Parameters::compute_protein_geometry()
 {
     Matrix1D<double> limit0(3), limitF(3);
-    computePDBgeometry(fn_pdb, centerOfMass, limit0, limitF);
+    computePDBgeometry(fn_pdb, centerOfMass, limit0, limitF, intensityColumn);
     std::cout << limit0.transpose() << std::endl;
     std::cout << limitF.transpose() << std::endl;
     limit.resize(3);
