@@ -72,6 +72,7 @@ void Prog_angular_project_library_Parameters::read(int argc, char **argv)
             FnexperimentalImages = getParameter(argc, argv, "-experimental_images","");
     }
     quiet = checkParameter(argc, argv,"-quiet");
+    shears = checkParameter(argc, argv,"-shears");
     //NOTE perturb in computed after the even sampling is computes
     //     and max tilt min tilt applied
     perturb_projection_vector=textToFloat(getParameter(argc,argv,"-perturb","0"));       
@@ -120,6 +121,7 @@ void Prog_angular_project_library_Parameters::usage()
     << "  [-closer_sampling_points]    : create doc file with closest sampling points\n"
     << "  [-compute_neighbors]         : create doc file with sampling point neighbors\n"
     << "  [-quiet]                     : do not show messages\n"
+    << "  [-shears]                    : use projection shears to generate projections\n"
     << "  [-near_exp_data]             : remove points far away from experimental data\n"
     << "  [-perturb 0.0]               : gaussian noise projection unit vectors \n"
     << "			         a value=sin(sampling_rate)/4  \n"
@@ -149,6 +151,7 @@ void Prog_angular_project_library_Parameters::show()
               << "compute_neighbors:         " << compute_neighbors_bool << std::endl
               << "only_winner:               " << only_winner << std::endl
               << "quiet:                     " << quiet << std::endl
+              << "shears:                    " << shears << std::endl
     ;
     if (angular_distance_bool)
         std::cout << "angular_distance:          " << angular_distance << std::endl;
@@ -180,6 +183,12 @@ Prog_angular_project_library_Parameters::project_angle_vector(
        for (int i=0;i<my_init;i++)
          myCounter++;
         
+    if (shears)
+    {
+        prepareStructVolume(inputVol(),VShears);
+        inputVol.clear();
+    }
+
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
        for (int i=my_init;i<=my_end;i++)
@@ -190,7 +199,10 @@ Prog_angular_project_library_Parameters::project_angle_vector(
            tilt=      YY(mysampling.no_redundant_sampling_points_angles[i]);
            rot=       XX(mysampling.no_redundant_sampling_points_angles[i]);
 
-           project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
+           if (shears)
+               project_Volume(VShears, P, Ydim, Xdim,rot,tilt,psi);
+           else
+               project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
 
            fn_proj.compose(output_file_root, ++myCounter,"xmp");
            P.write(fn_proj);

@@ -34,10 +34,12 @@
 #include <data/projection.h>
 #include <data/volume.h>
 #include <data/funcs.h>
-/**@name PDB Phantom program */
+#include "projection_real_shears.h"
+
+/**@name Projection library program */
 //@{
 /* PDB Phantom Program Parameters ------------------------------------------ */
-/** Parameter class for the PDB Phantom program */
+/** Parameter class for the projection library program */
 class Prog_angular_project_library_Parameters
 {
 public:
@@ -67,6 +69,10 @@ public:
 
     /** Quiet */
     bool quiet;
+
+    /** Shears.
+        Use projection shears as projection method. */
+    bool shears;
 #ifdef NEVERDEFINED
     /** vector with valid proyection directions after looking for 
         directions close to experimental data. 
@@ -121,6 +127,9 @@ public:
     /** If true there will be only one neighbour per sampling
      *  point, the closest */
     bool only_winner;
+
+    /* Volume for shear projection */
+    VolumeStruct VShears;
 
     /** fil vector with symmetry axis */
     // std::vector <Matrix1D<double> > symmetry_vectors;
