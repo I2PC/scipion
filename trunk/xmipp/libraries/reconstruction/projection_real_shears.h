@@ -28,7 +28,6 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
-
 #ifndef __PROJECTION_REAL_SHEARS_H__
 #define __PROJECTION_REAL_SHEARS_H__
 
@@ -71,6 +70,9 @@
 #define DBL_EPSILON 2.2204460492503130808472633361816000000000e-16
 #endif
 
+/**@name ProjRealShears Projection library program using Real-Shears */
+//@{
+/// Structure for holding a volume
 typedef struct 
 { 
     double *Volume; 
@@ -89,6 +91,12 @@ typedef struct
     double PeriodOfSamplingInVDirection; 
     double PeriodOfSamplingInWDirection; 
 } VolumeStruct;
+
+/// Prepare a volume to be projected
+void prepareStructVolume(const Matrix3D<double> &V, VolumeStruct &Data);
+
+/// Allocates and fixes some VolumeStruct fields 
+void allocAndInit_VolumeStruct(VolumeStruct &Data2);
 
 ///Main class of this program
 class Projection_real_shears
@@ -172,9 +180,6 @@ class Projection_real_shears
         ///Desallocates VolumeStruct fields
         void del_VolumeStruct(VolumeStruct &Data2);
 
-        ///Allocates and fixes some VolumeStruct fields 
-        void allocAndInit_VolumeStruct(VolumeStruct &Data2);
-
         ///Transforms angles from (Ry, Rz, Ry) to (Rx, Ry, Rz) system. Returns possible error.
         int angles_transcription(double *angles, double *Lambda123);
 
@@ -225,5 +230,5 @@ class Projection_real_shears
             long    mmax, 
             double *Projection);
 };
+//@}
 #endif
-

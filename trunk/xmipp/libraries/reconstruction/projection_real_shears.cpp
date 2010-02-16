@@ -1560,61 +1560,6 @@ int Projection_real_shears::angles_transcription(double *angles, double *Lambda1
     return (!ERROR);
 }
 
-///Allocates and fixes some VolumeStruct fields
-void Projection_real_shears::allocAndInit_VolumeStruct(VolumeStruct &Data2)
-{
-    Data2.Volume = (double*) malloc((size_t)(Data2.nx_Volume * Data2.ny_Volume * Data2.nz_Volume) * sizeof(double));
-
-    Data2.Output = (double*) malloc((size_t) Data2.nx_Volume * Data2.ny_Volume * sizeof(double));
-
-    Data2.Proj_dims = (short*) malloc((size_t)2L * sizeof(short));
-    Data2.Proj_dims[0] = Data2.nx_Volume;
-    Data2.Proj_dims[1] = Data2.ny_Volume;
-
-    Data2.Identity_orientN = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.Identity_orientN[0] = 0.;
-    Data2.Identity_orientN[1] = 0.;
-    Data2.Identity_orientN[2] = 1.;
- 
-    Data2.Identity_orientV = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.Identity_orientV[0] = 1.;
-    Data2.Identity_orientV[1] = 0.;
-    Data2.Identity_orientV[2] = 0.;  
-
-    Data2.Identity_orientW = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.Identity_orientW[0] = 0.;
-    Data2.Identity_orientW[1] = 1.;
-    Data2.Identity_orientW[2] = 0.; 
- 
-    Data2.IdentityOrigin = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.IdentityOrigin[0] = 0.;
-    Data2.IdentityOrigin[1] = 0.;
-    Data2.IdentityOrigin[2] = 0.;
-
-    Data2.K123 = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.K123[0] = 0.;
-    Data2.K123[1] = 0.;
-    Data2.K123[2] = 0.;
-
-    Data2.Lambda123 = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.Lambda123[0] = 1.;
-    Data2.Lambda123[1] = 1.;
-    Data2.Lambda123[2] = 1.;
-
-    Data2.Gama123 = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.Gama123[0] = Data2.nx_Volume/2.;
-    Data2.Gama123[1] = Data2.Gama123[0];
-    Data2.Gama123[2] = Data2.Gama123[0];
-
-    Data2.InitDelta123 = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.InitDelta123[2] = 0.;
-
-    Data2.InitPsiThetaPhi = (double*) malloc((size_t)3L * sizeof(double)); 
-
-    Data2.PeriodOfSamplingInVDirection = 1.;
-    Data2.PeriodOfSamplingInWDirection = 1.;
-}
-
 ///Desallocates VolumeStruct fields
 void Projection_real_shears::del_VolumeStruct(VolumeStruct &Data2)
 {
@@ -1722,7 +1667,79 @@ int Projection_real_shears::do_oneProjection(VolumeStruct &Data2)
     return (!ERROR);
 }
 //////////////////////////////////////////////////////////////////////////////////
+///Allocates and fixes some VolumeStruct fields
+void allocAndInit_VolumeStruct(VolumeStruct &Data2)
+{
+    Data2.Volume = (double*) malloc((size_t)(Data2.nx_Volume * Data2.ny_Volume * Data2.nz_Volume) * sizeof(double));
 
+    Data2.Output = (double*) malloc((size_t) Data2.nx_Volume * Data2.ny_Volume * sizeof(double));
+
+    Data2.Proj_dims = (short*) malloc((size_t)2L * sizeof(short));
+    Data2.Proj_dims[0] = Data2.nx_Volume;
+    Data2.Proj_dims[1] = Data2.ny_Volume;
+
+    Data2.Identity_orientN = (double*) malloc((size_t)3L * sizeof(double));
+    Data2.Identity_orientN[0] = 0.;
+    Data2.Identity_orientN[1] = 0.;
+    Data2.Identity_orientN[2] = 1.;
+ 
+    Data2.Identity_orientV = (double*) malloc((size_t)3L * sizeof(double));
+    Data2.Identity_orientV[0] = 1.;
+    Data2.Identity_orientV[1] = 0.;
+    Data2.Identity_orientV[2] = 0.;  
+
+    Data2.Identity_orientW = (double*) malloc((size_t)3L * sizeof(double));
+    Data2.Identity_orientW[0] = 0.;
+    Data2.Identity_orientW[1] = 1.;
+    Data2.Identity_orientW[2] = 0.; 
+ 
+    Data2.IdentityOrigin = (double*) malloc((size_t)3L * sizeof(double));
+    Data2.IdentityOrigin[0] = 0.;
+    Data2.IdentityOrigin[1] = 0.;
+    Data2.IdentityOrigin[2] = 0.;
+
+    Data2.K123 = (double*) malloc((size_t)3L * sizeof(double));
+    Data2.K123[0] = 0.;
+    Data2.K123[1] = 0.;
+    Data2.K123[2] = 0.;
+
+    Data2.Lambda123 = (double*) malloc((size_t)3L * sizeof(double));
+    Data2.Lambda123[0] = 1.;
+    Data2.Lambda123[1] = 1.;
+    Data2.Lambda123[2] = 1.;
+
+    Data2.Gama123 = (double*) malloc((size_t)3L * sizeof(double));
+    Data2.Gama123[0] = Data2.nx_Volume/2.;
+    Data2.Gama123[1] = Data2.Gama123[0];
+    Data2.Gama123[2] = Data2.Gama123[0];
+
+    Data2.InitDelta123 = (double*) malloc((size_t)3L * sizeof(double));
+    Data2.InitDelta123[2] = 0.;
+
+    Data2.InitPsiThetaPhi = (double*) malloc((size_t)3L * sizeof(double)); 
+
+    Data2.PeriodOfSamplingInVDirection = 1.;
+    Data2.PeriodOfSamplingInWDirection = 1.;
+}
+
+/// Prepare a volume to be projected
+void prepareStructVolume(const Matrix3D<double> &V, VolumeStruct &Data)
+{
+    int z, y, x;
+    V.getDimension(z, y, x);
+    Data.nx_Volume = x;
+    Data.ny_Volume = y;
+    Data.nz_Volume = z;
+    if (x<=0 || y<=0 || z<=0 || x!=y || y!=z)
+        REPORT_ERROR(1, "Projection_real_shears::ROUT_project_real_shears: "
+                     "Error returned by ROUT_project_real_shears : the dimensions of the volume specified are not correct");
+
+    //Does dynamics allocations and sets values
+    allocAndInit_VolumeStruct(Data);
+
+    //Filling of the Data Volume field :
+    memcpy(Data.Volume,MULTIDIM_ARRAY(V),MULTIDIM_SIZE(V)*sizeof(double));
+}
 
 ///Does start instructions. Returns possibles errors.
 int Projection_real_shears::start_to_process()
@@ -1741,37 +1758,13 @@ int Projection_real_shears::start_to_process()
     //Reads the reference volume
     VolumeXmipp V;
     V.read(fnPhantom);
-    V().setXmippOrigin();
-    Matrix3D <double> Volume = V();
-
-    int z, y, x;
-    Volume.getDimension(z, y, x);
-    Data.nx_Volume = x;
-    Data.ny_Volume = y;
-    Data.nz_Volume = z;
-    if(Data.nx_Volume<=0 || Data.ny_Volume<=0 || Data.nz_Volume<=0
-        || Data.nx_Volume!=Data.ny_Volume || Data.ny_Volume!=Data.nz_Volume)
-    {
-        REPORT_ERROR(1, "Projection_real_shears::ROUT_project_real_shears: "
-                     "Error returned by ROUT_project_real_shears : the dimensions of the volume specified are not correct");
-        return (ERROR);
-    }
+    prepareStructVolume(V(),Data);
 
     if(Data.nx_Volume!=proj_Xdim || Data.ny_Volume!=proj_Ydim || Data.nz_Volume!=proj_Zdim)
     {
         std::cout<<"\n\tWarning : the dimension specified in the input file is different to the volume dimension.";
         std::cout<<"\n\tThe program will only keep the volume dimensions.\n"<<std::endl;
     }
-
-    //Does dynamics allocations and sets values
-    allocAndInit_VolumeStruct(Data);
-
-    //Filling of the Data Volume field :
-    double *temp = MULTIDIM_ARRAY(Volume);
-    int arraySize = x*y*z;
-    for(int i=0; i<arraySize; i++)
-        Data.Volume[i] = temp[i]; 
-
 
     SF.clear();
     SF.reserve(DF.dataLineNo());
@@ -1815,30 +1808,18 @@ int Projection_real_shears::finish_to_process()
 int Projection_real_shears::ROUT_project_real_shears()
 {
     if(start_to_process() == ERROR)
-    {
-        del_VolumeStruct(Data);
         return (ERROR);
-    }
 
     while(!DF.eof())
     {
         if(read_a_DocLine() == ERROR)
-        {
-            del_VolumeStruct(Data);
             return (ERROR);
-        }
         
         if(do_oneProjection(Data) == ERROR)
-        {
-            del_VolumeStruct(Data);
             return (ERROR);
-        }
 
         if(write_projection_file(num_file) == ERROR)
-        {
-            del_VolumeStruct(Data);            
             return (ERROR);
-        }
 
         num_file++;
         DF.next_data_line();
