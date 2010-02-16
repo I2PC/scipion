@@ -29,6 +29,56 @@
  ***************************************************************************/
 
 #include "projection_real_shears.h"
+/// Transforms angles from (Ry, Rz, Ry) to (Rx, Ry, Rz) system. Returns possible error.
+int angles_transcription(double *angles, double *Lambda123);
+
+///Returns a pointer of the multiplication of the 5 matrices.
+double *MatrixBem(double phi, double theta, double psi, double x0, double y0, double scale_x, double scale_y, double scale_z);
+
+///Main compute function.
+int ROUT_project_execute(VolumeStruct &Data2);
+
+///Computes projection
+int Compute_projection(
+    double *Parameters, 
+    double *Coef_x, 
+    double *Coef_y, 
+    double *Coef_z, 
+    long    Nx, 
+    long    Ny, 
+    long    Nz, 
+    short  *Proj_dims, 
+    double *Identity_orientN, 
+    double *Identity_orientV, 
+    double *Identity_orientW, 
+    double *IdentityOrigin, 
+    double *PeriodOfSamplingInVDirection, 
+    double *PeriodOfSamplingInWDirection, 
+    double *RightOperHlp, 
+    double *Ac, 
+    double *Projection, 
+    double *B);
+
+///Computes one iteration of the projection
+int do_compute_projection(
+    double *VWOrigin, 
+    long    Ndv, 
+    long    Ndw, 
+    double *Identity_orientV, 
+    double *Identity_orientW, 
+    double  dv, 
+    double  dw, 
+    double *CoefVolume, 
+    double  absscale, 
+    double *Binv, 
+    double *BinvCscaled, 
+    long    ksimax, 
+    int    *arr, 
+    long    CoefVolumeNx, 
+    long    CoefVolumeNy, 
+    long    lmax, 
+    long    mmax, 
+    double *Projection);
 
 ///Parameters reading. Note that all parameters are required.
 void Projection_real_shears::read(int argc, char **argv)
@@ -134,26 +184,24 @@ void Projection_real_shears::read(const FileName &fn_proj_param)
 //-----------------------------------------------------------------------------------------------
 ///Computes one iteration of the projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-int Projection_real_shears::do_compute_projection    (double *VWOrigin, 
-                                         long   Ndv, 
-                                         long Ndw, 
-                                         double *Identity_orientV, 
-                                         double *Identity_orientW, 
-                                         double dv, 
-                                         double dw, 
-                                         double *CoefVolume, 
-                                         double absscale, 
-                                         double *Binv, 
-                                         double *BinvCscaled, 
-                                         long ksimax,  
-                                         int *arr, 
-                                         long CoefVolumeNx, 
-                                         long CoefVolumeNy, 
-                                         long lmax, 
-                                         long mmax, 
-                                         double *Projection){  
- 
- 
+int do_compute_projection    (double *VWOrigin, 
+    long   Ndv, 
+    long Ndw, 
+    double *Identity_orientV, 
+    double *Identity_orientW, 
+    double dv, 
+    double dw, 
+    double *CoefVolume, 
+    double absscale, 
+    double *Binv, 
+    double *BinvCscaled, 
+    long ksimax,  
+    int *arr, 
+    long CoefVolumeNx, 
+    long CoefVolumeNy, 
+    long lmax, 
+    long mmax, 
+    double *Projection){ 
 int        Status = !ERROR; 
 long    i, n, l, l1, l2, m, m1, m2, ksi, CC1, CC2, CC3, row, column, index; 
 double    CVinc[4], CWinc[4], Operhlp[4], X[4], K[4], ToAdd[4], Arg[4], idw, ndv; 
@@ -242,24 +290,24 @@ return(!ERROR);
 //-----------------------------------------------------------------------------------------------
 ///Computes projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
-int Projection_real_shears::Compute_projection(double *Parameters, 
-                                             double *Coef_x, 
-                                      double *Coef_y, 
-                                      double *Coef_z, 
-                                      long Nx, 
-                                      long Ny, 
-                                      long Nz, 
-                                      short *Proj_dims, 
-                                      double *Identity_orientN, 
-                                      double *Identity_orientV, 
-                                      double *Identity_orientW, 
-                                      double *IdentityOrigin, 
-                                      double *PeriodOfSamplingInVDirection, 
-                                      double *PeriodOfSamplingInWDirection, 
-                                      double *RightOperHlp, 
-                                      double *Ac, 
-                                      double *Projection, 
-                                      double *B                ) { 
+int Compute_projection(double *Parameters, 
+    double *Coef_x, 
+    double *Coef_y, 
+    double *Coef_z, 
+    long Nx, 
+    long Ny, 
+    long Nz, 
+    short *Proj_dims, 
+    double *Identity_orientN, 
+    double *Identity_orientV, 
+    double *Identity_orientW, 
+    double *IdentityOrigin, 
+    double *PeriodOfSamplingInVDirection, 
+    double *PeriodOfSamplingInWDirection, 
+    double *RightOperHlp, 
+    double *Ac, 
+    double *Projection, 
+    double *B                ) { 
  
 int    Status = !ERROR, arr[3]; 
 long    Ndv, Ndw; 
@@ -732,7 +780,7 @@ return(!ERROR);
 }/* End of Compute_projection */
 
 ///Main compute function. Returns possible error.
-int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
+int ROUT_project_execute(VolumeStruct &Data2)
 {
     int    Status = !ERROR; 
     long    DesProjSize; 
@@ -750,77 +798,42 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
     InputVolume = Data2.Volume;
 
     AllocateVolumeDouble( &Coef_x, Ny, Nz, Nx, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for Coef_x"); 
-        return(ERROR); 
-    } 
  
     AllocateVolumeDouble( &Coef_y, Nx, Nz, Ny, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for Coef_y"); 
-        FreeVolumeDouble(&Coef_x); 
-        return(ERROR); 
-    } 
  
     AllocateVolumeDouble( &Coef_z, Nx, Ny, Nz, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for Coef_z"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        return(ERROR); 
-    } 
  
      
     AllocateVolumeDouble( &VolumeCoef, Ny, Nz, 1L, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for VolumeCoef"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        return(ERROR); 
-    } 
      
     AllocateVolumeDouble( &InputVolumePlane, Ny, Nz, 1L, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for InputVolumePlane"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        FreeVolumeDouble(&VolumeCoef); 
-        return(ERROR); 
-    } 
      
     AllocateVolumeDouble( &InputVolumeRow, 1L, Ny, 1L, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for InputVolumePlane"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        FreeVolumeDouble(&VolumeCoef); 
-        FreeVolumeDouble(&InputVolumePlane); 
-        return(ERROR); 
-    } 
  
     for (l = 0L; l < Nx; l++){
          
         for (m = 0L; m < Nz; m++){  
-            if (CopyDoubleToDouble(InputVolume, Nx, Ny, Nz, l,    0L,    m,    InputVolumeRow, 1L, Ny, 1L, 0L, 0L, 0L, 1L, Ny, 1L) == ERROR){ 
+            if (CopyDoubleToDouble(InputVolume, Nx, Ny, Nz, l,    0L,    m,    InputVolumeRow, 1L, Ny, 1L, 0L, 0L, 0L, 1L, Ny, 1L) == ERROR)
                 REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by CopyDoubleToDouble");  
-                FreeVolumeDouble(&Coef_x); 
-                FreeVolumeDouble(&Coef_y); 
-                FreeVolumeDouble(&Coef_z); 
-                FreeVolumeDouble(&VolumeCoef); 
-                FreeVolumeDouble(&InputVolumePlane); 
-                FreeVolumeDouble(&InputVolumeRow); 
-                return(ERROR); 
-            } 
             for (i = 0L; i < Ny; i++){ 
                 InputVolumePlane[Ny * m + i] = InputVolumeRow[i]; 
             } 
@@ -828,30 +841,13 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
          
         ChangeBasisVolume(InputVolumePlane, VolumeCoef, Ny, Nz, 1L, CardinalSpline, 
                     BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status); 
-        if (Status == ERROR){  
+        if (Status == ERROR)
             REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR"); 
-            FreeVolumeDouble(&Coef_x); 
-            FreeVolumeDouble(&Coef_y); 
-            FreeVolumeDouble(&Coef_z); 
-            FreeVolumeDouble(&VolumeCoef); 
-            FreeVolumeDouble(&InputVolumePlane); 
-            FreeVolumeDouble(&InputVolumeRow); 
-            return(ERROR); 
-        } 
          
-        if (CopyDoubleToDouble(VolumeCoef, Ny, Nz, 1L, 0L,    0L,    0L,    Coef_x, Ny, Nz, Nx, 0L, 0L, l, Ny, Nz, 1L) == ERROR){ 
+        if (CopyDoubleToDouble(VolumeCoef, Ny, Nz, 1L, 0L,    0L,    0L,    Coef_x, Ny, Nz, Nx, 0L, 0L, l, Ny, Nz, 1L) == ERROR)
             REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by CopyDoubleToDouble");  
-            FreeVolumeDouble(&Coef_x); 
-            FreeVolumeDouble(&Coef_y); 
-            FreeVolumeDouble(&Coef_z); 
-            FreeVolumeDouble(&VolumeCoef); 
-            FreeVolumeDouble(&InputVolumePlane); 
-            FreeVolumeDouble(&InputVolumeRow); 
-            return(ERROR); 
-        } 
-         
     } 
      
     FreeVolumeDouble(&VolumeCoef);  
@@ -859,92 +855,41 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
     FreeVolumeDouble(&InputVolumeRow);
      
     AllocateVolumeDouble( &VolumeCoef, Nx, Nz, 1L, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for VolumeCoef"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        return(ERROR); 
-    } 
      
     AllocateVolumeDouble( &InputVolumePlane, Nx, Nz, 1L, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for InputVolumePlane"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        FreeVolumeDouble(&VolumeCoef); 
-        return(ERROR); 
-    } 
      
     AllocateVolumeDouble( &InputVolumeRow, Nx, 1L, 1L, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for InputVolumePlane"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        FreeVolumeDouble(&VolumeCoef); 
-        FreeVolumeDouble(&InputVolumePlane); 
-        return(ERROR); 
-    } 
  
     for (l = 0L; l < Ny; l++){ 
         for (m = 0L; m < Nz; m++){  
-            if (CopyDoubleToDouble(InputVolume, Nx, Ny, Nz, 0L, l,    m, InputVolumeRow, Nx, 1L, 1L, 0L, 0L, 0L, Nx, 1L, 1L) == ERROR){ 
+            if (CopyDoubleToDouble(InputVolume, Nx, Ny, Nz, 0L, l,    m, InputVolumeRow, Nx, 1L, 1L, 0L, 0L, 0L, Nx, 1L, 1L) == ERROR)
                 REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by CopyDoubleToDouble");  
-                FreeVolumeDouble(&Coef_x); 
-                FreeVolumeDouble(&Coef_y); 
-                FreeVolumeDouble(&Coef_z); 
-                FreeVolumeDouble(&VolumeCoef); 
-                FreeVolumeDouble(&InputVolumePlane); 
-                FreeVolumeDouble(&InputVolumeRow); 
-                return(ERROR); 
-            } 
              
-            if (CopyDoubleToDouble(InputVolumeRow, Nx, 1L, 1L, 0L,    0L,    0L,    InputVolumePlane, Nx, Nz, 1L, 0L, m, 0L, Nx, 1L, 1L) == ERROR){ 
+            if (CopyDoubleToDouble(InputVolumeRow, Nx, 1L, 1L, 0L,    0L,    0L,    InputVolumePlane, Nx, Nz, 1L, 0L, m, 0L, Nx, 1L, 1L) == ERROR)
                 REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by CopyDoubleToDouble");  
-                FreeVolumeDouble(&Coef_x); 
-                FreeVolumeDouble(&Coef_y); 
-                FreeVolumeDouble(&Coef_z); 
-                FreeVolumeDouble(&VolumeCoef); 
-                FreeVolumeDouble(&InputVolumePlane); 
-                FreeVolumeDouble(&InputVolumeRow); 
-                return(ERROR); 
-            } 
              
         } 
      
         ChangeBasisVolume((double*)InputVolumePlane, (double*)VolumeCoef, Nx, Nz, 1L, CardinalSpline, 
                     BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status); 
-        if (Status == ERROR){  
+        if (Status == ERROR)
             REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR"); 
-            FreeVolumeDouble(&Coef_x); 
-            FreeVolumeDouble(&Coef_y); 
-            FreeVolumeDouble(&Coef_z); 
-            FreeVolumeDouble(&VolumeCoef); 
-            FreeVolumeDouble(&InputVolumePlane); 
-            FreeVolumeDouble(&InputVolumeRow); 
-            return(ERROR); 
-        } 
          
-        if (CopyDoubleToDouble(VolumeCoef, Nx, Nz, 1L, 0L,    0L,    0L,    Coef_y, Nx, Nz, Ny, 0L, 0L, l, Nx, Nz, 1L) == ERROR){ 
+        if (CopyDoubleToDouble(VolumeCoef, Nx, Nz, 1L, 0L,    0L,    0L,    Coef_y, Nx, Nz, Ny, 0L, 0L, l, Nx, Nz, 1L) == ERROR)
             REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by CopyDoubleToDouble");  
-            FreeVolumeDouble(&Coef_x); 
-            FreeVolumeDouble(&Coef_y); 
-            FreeVolumeDouble(&Coef_z); 
-            FreeVolumeDouble(&VolumeCoef); 
-            FreeVolumeDouble(&InputVolumePlane); 
-            FreeVolumeDouble(&InputVolumeRow); 
-            return(ERROR); 
-        } 
-     
     } 
      
     FreeVolumeDouble(&VolumeCoef); 
@@ -952,126 +897,58 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
     FreeVolumeDouble(&InputVolumeRow);     
      
     AllocateVolumeDouble( &VolumeCoef, Nx, Ny, 1L, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for VolumeCoef"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        return(ERROR); 
-    } 
      
     AllocateVolumeDouble( &InputVolumePlane, Nx, Ny, 1L, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for InputVolumePlane"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        FreeVolumeDouble(&VolumeCoef); 
-        return(ERROR); 
-    } 
      
     AllocateVolumeDouble( &InputVolumeRow, Nx, 1L, 1L, &Status); 
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for InputVolumePlane"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        FreeVolumeDouble(&VolumeCoef); 
-        FreeVolumeDouble(&InputVolumePlane); 
-        return(ERROR); 
-    } 
  
     for (l = 0L; l < Nz; l++){ 
         for (m = 0L; m < Ny; m++){  
-            if (CopyDoubleToDouble(InputVolume, Nx, Ny, Nz, 0L, m,    l, InputVolumeRow, Nx, 1L, 1L, 0L, 0L, 0L, Nx, 1L, 1L) == ERROR){ 
+            if (CopyDoubleToDouble(InputVolume, Nx, Ny, Nz, 0L, m,    l, InputVolumeRow, Nx, 1L, 1L, 0L, 0L, 0L, Nx, 1L, 1L) == ERROR)
                 REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by CopyDoubleToDouble");  
-                FreeVolumeDouble(&Coef_x); 
-                FreeVolumeDouble(&Coef_y); 
-                FreeVolumeDouble(&Coef_z); 
-                FreeVolumeDouble(&VolumeCoef); 
-                FreeVolumeDouble(&InputVolumePlane); 
-                FreeVolumeDouble(&InputVolumeRow); 
-                return(ERROR); 
-            } 
              
-            if (CopyDoubleToDouble(InputVolumeRow, Nx, 1L, 1L, 0L,    0L,    0L,    InputVolumePlane, Nx, Ny, 1L, 0L, m, 0L, Nx, 1L, 1L) == ERROR){ 
+            if (CopyDoubleToDouble(InputVolumeRow, Nx, 1L, 1L, 0L,    0L,    0L,    InputVolumePlane, Nx, Ny, 1L, 0L, m, 0L, Nx, 1L, 1L) == ERROR)
                 REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by CopyDoubleToDouble");  
-                FreeVolumeDouble(&Coef_x); 
-                FreeVolumeDouble(&Coef_y); 
-                FreeVolumeDouble(&Coef_z); 
-                FreeVolumeDouble(&VolumeCoef); 
-                FreeVolumeDouble(&InputVolumePlane); 
-                FreeVolumeDouble(&InputVolumeRow); 
-                return(ERROR); 
-            } 
-             
         } 
      
         ChangeBasisVolume(InputVolumePlane, VolumeCoef, Nx, Ny, 1L, CardinalSpline, 
                     BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status); 
-        if (Status == ERROR){  
+        if (Status == ERROR)
             REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR"); 
-            FreeVolumeDouble(&Coef_x); 
-            FreeVolumeDouble(&Coef_y); 
-            FreeVolumeDouble(&Coef_z); 
-            FreeVolumeDouble(&VolumeCoef); 
-            FreeVolumeDouble(&InputVolumePlane); 
-            FreeVolumeDouble(&InputVolumeRow); 
-            return(ERROR); 
-        } 
          
-        if (CopyDoubleToDouble(VolumeCoef, Nx, Ny, 1L, 0L,    0L,    0L,    Coef_z, Nx, Ny, Nz, 0L, 0L, l, Nx, Ny, 1L) == ERROR){ 
+        if (CopyDoubleToDouble(VolumeCoef, Nx, Ny, 1L, 0L,    0L,    0L,    Coef_z, Nx, Ny, Nz, 0L, 0L, l, Nx, Ny, 1L) == ERROR)
             REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by CopyDoubleToDouble");  
-            FreeVolumeDouble(&Coef_x); 
-            FreeVolumeDouble(&Coef_y); 
-            FreeVolumeDouble(&Coef_z); 
-            FreeVolumeDouble(&VolumeCoef); 
-            FreeVolumeDouble(&InputVolumePlane); 
-            FreeVolumeDouble(&InputVolumeRow); 
-            return(ERROR); 
-        } 
-     
     } 
      
     FreeVolumeDouble(&VolumeCoef); 
     FreeVolumeDouble(&InputVolumePlane); 
     FreeVolumeDouble(&InputVolumeRow);     
  
-    if (Status == ERROR){  
+    if (Status == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for Projection"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        return(ERROR); 
-    } 
      
     Av = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (Av == (double *)NULL){  
+    if (Av == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for Av"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        return(ERROR); 
-    } 
          
-    if (GetIdentitySquareMatrix(Av, 4L) == ERROR){  
+    if (GetIdentitySquareMatrix(Av, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by GetIdentitySquareMatrix"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Av); 
-        return(ERROR); 
-    } 
  
     hlp = Av + (ptrdiff_t)3L; 
     *hlp = (double) Data2.K123[0]; 
@@ -1081,26 +958,13 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
     *hlp = (double) Data2.K123[2]; 
      
     As = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (As == (double *)NULL){  
+    if (As == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for As"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Av); 
-        return(ERROR); 
-    } 
      
-    if (GetIdentitySquareMatrix(As, 4L) == ERROR){  
+    if (GetIdentitySquareMatrix(As, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by GetIdentitySquareMatrix"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Av); 
-        free(As); 
-        return(ERROR); 
-    } 
      
     hlp = As; 
     *hlp = (double) Data2.Lambda123[0]; 
@@ -1110,28 +974,13 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
     *hlp = (double) Data2.Lambda123[2]; 
      
     Ac = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (Ac == (double *)NULL){  
+    if (Ac == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for Ac"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Av); 
-        free(As); 
-        return(ERROR); 
-    } 
      
-    if (GetIdentitySquareMatrix(Ac, 4L) == ERROR){  
+    if (GetIdentitySquareMatrix(Ac, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by GetIdentitySquareMatrix"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Av); 
-        free(As); 
-        free(Ac); 
-        return(ERROR); 
-    } 
      
     hlp = Ac + (ptrdiff_t)3L; 
     *hlp = (double) Data2.Gama123[0]; 
@@ -1141,74 +990,31 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
     *hlp = (double) Data2.Gama123[2]; 
      
     Acinv = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (Acinv == (double *)NULL){  
+    if (Acinv == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for Acinv"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Av); 
-        free(As); 
-        free(Ac); 
-        return(ERROR); 
-    } 
      
-    if (SquareMatrixInvertGauss(Ac, Acinv, 4L, DBL_EPSILON, &Status) == ERROR){  
+    if (SquareMatrixInvertGauss(Ac, Acinv, 4L, DBL_EPSILON, &Status) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by SquareMatrixInvertGauss"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Av); 
-        free(As); 
-        free(Ac); 
-        free(Acinv); 
-        return(ERROR); 
-    } 
      
     RightOperHlp = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (RightOperHlp == (double *)NULL){  
+    if (RightOperHlp == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for RightOperHlp"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Av); 
-        free(As); 
-        free(Ac); 
-        free(Acinv); 
-        return(ERROR); 
-    } 
          
-    if (multiply_3Matrices(Acinv, As, Av, RightOperHlp, 4L, 4L, 4L, 4L) == ERROR){  
+    if (multiply_3Matrices(Acinv, As, Av, RightOperHlp, 4L, 4L, 4L, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by multiply_3Matrices"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Av); 
-        free(As); 
-        free(Ac); 
-        free(Acinv); 
-        free(RightOperHlp); 
-        return(ERROR); 
-    } 
      
     free(Av); 
     free(As); 
     free(Acinv); 
      
     Parameters = (double *)malloc((size_t) 6L * sizeof(double)); 
-    if (Parameters == (double *)NULL){  
+    if (Parameters == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for Parameters"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Ac); 
-        free(RightOperHlp); 
-        return(ERROR); 
-    } 
                          
     Parameters[2] = Data2.InitPsiThetaPhi[0];     
     Parameters[1] = Data2.InitPsiThetaPhi[1]; 
@@ -1218,34 +1024,17 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
     Parameters[5] = Data2.InitDelta123[2]; 
      
     B = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (B == (double *)NULL){  
+    if (B == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for B"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Ac); 
-        free(RightOperHlp); 
-        free(Parameters); 
-        return(ERROR); 
-    } 
      
     if (Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Nx, Ny, Nz, Data2.Proj_dims,  
                             Data2.Identity_orientN, Data2.Identity_orientV, Data2.Identity_orientW,  
                             Data2.IdentityOrigin, &Data2.PeriodOfSamplingInVDirection, 
                             &Data2.PeriodOfSamplingInWDirection, RightOperHlp, Ac,  
-                            Data2.Output, B) == ERROR){
+                            Data2.Output, B) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "Error returned by Compute_projection"); 
-        FreeVolumeDouble(&Coef_x); 
-        FreeVolumeDouble(&Coef_y); 
-        FreeVolumeDouble(&Coef_z); 
-        free(Ac); 
-        free(RightOperHlp); 
-        free(Parameters); 
-        free(B); 
-        return(ERROR); 
-    }
 
     free(Parameters);
     free(Ac);
@@ -1260,7 +1049,7 @@ int Projection_real_shears::ROUT_project_execute(VolumeStruct &Data2)
 
 ///Returns a pointer of the multiplication of the 5 matrices built with identity matrices and the parameters.\n
 ///It returns NULL if there is an error.
-double *Projection_real_shears::MatrixBem(double phi, double theta, double psi, double x0, double y0, double scale_x, double scale_y, double scale_z)
+double *MatrixBem(double phi, double theta, double psi, double x0, double y0, double scale_x, double scale_y, double scale_z)
 {
     double *pointer;
  
@@ -1482,7 +1271,7 @@ double *Projection_real_shears::MatrixBem(double phi, double theta, double psi, 
 }
 
 ///Transforms angles from (Ry, Rz, Ry) to (Rx, Ry, Rz) system. Returns possible error.
-int Projection_real_shears::angles_transcription(double *angles, double *Lambda123)
+int angles_transcription(double *angles, double *Lambda123)
 {    
     double phi = angles[0];
     double theta = angles[1];
@@ -1577,19 +1366,23 @@ void Projection_real_shears::del_VolumeStruct(VolumeStruct &Data2)
     free(Data2.InitPsiThetaPhi);
 }
 
-///Writes the projection file obtained. Returns possibles errors.
-int Projection_real_shears::write_projection_file(int numFile)
+/// Extract projection
+void extractProjection(const VolumeStruct &Data, Projection &P)
 {
-    proj.clear();
-    proj.reset(Data.nx_Volume, Data.ny_Volume);
+    P.clear();
+    P.reset(Data.nx_Volume, Data.ny_Volume);
 
     int indexX_start = -Data.nx_Volume / 2L; 
     int indexY_start = -Data.ny_Volume / 2L;
 
     //Projection object filling
-    for(int i=0, k=indexY_start; i<Data.ny_Volume; i++, k++)
-        for(int j=0, l=indexX_start; j<Data.nx_Volume; j++, l++)
-            proj.setPixel(k, l, Data.Output[i*Data.nx_Volume+j]);
+    memcpy(MULTIDIM_ARRAY(P()),Data.Output,MULTIDIM_SIZE(P())*sizeof(double));
+}
+
+///Writes the projection file obtained. Returns possibles errors.
+int Projection_real_shears::write_projection_file(int numFile)
+{
+    extractProjection(Data, proj);
 
     //Composition of the projection name
     FileName fn_proj;
@@ -1656,7 +1449,7 @@ int Projection_real_shears::read_a_DocLine()
 
 ///////////////////////// MAIN INSTRUCTION FOR MPI ////////////////////////////////    
 ///Execute instructions for one projection
-int Projection_real_shears::do_oneProjection(VolumeStruct &Data2)
+int do_oneProjection(VolumeStruct &Data2)
 {        
         //Transcription of the angles
         if(angles_transcription(Data2.InitPsiThetaPhi, Data2.Lambda123)==ERROR) return (ERROR);
@@ -1666,6 +1459,25 @@ int Projection_real_shears::do_oneProjection(VolumeStruct &Data2)
 
     return (!ERROR);
 }
+
+void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
+    double rot, double tilt, double psi)
+{
+    // Prepare Data Structure
+    Data.InitPsiThetaPhi[2] = -DEG2RAD(rot);
+    Data.InitPsiThetaPhi[1] = -DEG2RAD(tilt);
+    Data.InitPsiThetaPhi[0] = -DEG2RAD(psi);
+
+    Data.InitDelta123[0] = 0;
+    Data.InitDelta123[1] = 0;
+
+    do_oneProjection(Data);
+    extractProjection(Data, P);
+    P().setXmippOrigin();
+    P().window(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
+        LAST_XMIPP_INDEX(Ydim),LAST_XMIPP_INDEX(Xdim));
+}
+
 //////////////////////////////////////////////////////////////////////////////////
 ///Allocates and fixes some VolumeStruct fields
 void allocAndInit_VolumeStruct(VolumeStruct &Data2)
