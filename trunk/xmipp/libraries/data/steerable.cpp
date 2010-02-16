@@ -60,6 +60,7 @@ void MissingWedge::removeWedge(Matrix3D<double> &V) const
     transformer.inverseFourierTransform();
 }
 
+s
 // Constructor -------------------------------------------------------------
 Steerable::Steerable(double sigma, Matrix3D<double> &Vtomograph, 
     double deltaAng, const std::string &filterType, const MissingWedge *_MW) 
