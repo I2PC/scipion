@@ -1034,6 +1034,8 @@ void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
         // Use 500 to be on the save side?
 
         if (ABS((mindiff - trymindiff) / sigma_noise2) > 500.)
+        //TODO: if (redo_counter==0)
+        //force always redo to use real mindiff for check about LL problem
         {
             // Re-do whole calculation now with the real mindiff
             trymindiff = mindiff;
@@ -1968,7 +1970,7 @@ void Prog_MLalign2D_prm::expectation()
     int nn = SF.ImgNo();
 
     if (verb > 0)
-        init_progress_bar(nn);
+        init_progress_bar(nn / blocks);
 
     int c = XMIPP_MAX(1, nn / 60);
 
@@ -2206,10 +2208,13 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &model, int refs_per_class
         // Adjust average scale (nr_classes will be smaller than model.n_ref for the 3D case!)
         model.updateScale(refno, sumwsc[refno], sumw[refno]);
 
-        // Update the model fractions
-        if (!fix_fractions)
-            model.updateFractions(refno, sumw[refno], sumw_mirror[refno], model.sumw_allrefs);
+
     }
+
+    // Update the model fractions
+    if (!fix_fractions)
+        for (int refno = 0; refno < model.n_ref; refno++)
+            model.updateFractions(refno, sumw[refno], sumw_mirror[refno], model.sumw_allrefs);
 
     // Average height of the probability distribution at its maximum
     model.updateAvePmax(sumfracweight);

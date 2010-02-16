@@ -108,7 +108,7 @@ int main(int argc, char **argv)
                 if (prm.iter > 1)
                 {
                     prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
-                    block_model.print();
+                    //block_model.print();
                     prm.model.substractModel(block_model);
                 }
                 prm.maximization(block_model);
@@ -141,8 +141,8 @@ int main(int argc, char **argv)
             if (prm.do_norm)
                 prm.correctScaleAverage();
 
-            std::cout << "------- AFTER ITER: " << prm.iter << " ------" << std::endl;
-            prm.model.print();
+            //std::cout << "------- AFTER ITER: " << prm.iter << " ------" << std::endl;
+            //prm.model.print();
 
             // Check convergence
             converged = prm.checkConvergence();
