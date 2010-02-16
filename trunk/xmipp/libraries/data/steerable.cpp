@@ -25,7 +25,6 @@
  ***************************************************************************/
 
 #include "steerable.h"
-#include "fft.h"
 #include "fftw.h"
 #include "volume.h"
 #include "histogram.h"
@@ -140,7 +139,7 @@ void Steerable::buildBasis(const Matrix3D<double> &Vtomograph, double sigma)
 }        
 
 void Steerable::singleFilter(const Matrix3D<double>& Vin,
-    const Matrix1D<double> &hx, const Matrix1D<double> &hy, const Matrix1D<double> &hz,
+    Matrix1D<double> &hx, Matrix1D<double> &hy, Matrix1D<double> &hz,
     Matrix3D<double> &Vout){
 
     Matrix1D< std::complex<double> > H, Aux;
@@ -148,66 +147,80 @@ void Steerable::singleFilter(const Matrix3D<double>& Vin,
 
     // Filter in X
     #define MINUS_ONE_POWER(n) (((n)%2==0)? 1:-1)
-    FourierTransform(hx,H);    
+    XmippFftw transformer;
+    transformer.FourierTransform(hx,H);
+    
     FOR_ALL_ELEMENTS_IN_MATRIX1D(H)
-       if (i<(XSIZE(H)/2))
           H(i)*= MINUS_ONE_POWER(i);
-       else
-          H(i)*= MINUS_ONE_POWER(XSIZE(H)-i);
 
-    Matrix1D<double> aux(XSIZE(Vin));    
+    XmippFftw transformer2;
+    
+    Matrix1D<double> aux(XSIZE(Vin));
+        	   
+    transformer2.setReal(aux);		   
+		   
     for (int k=0; k<ZSIZE(Vin); k++)
         for (int i=0; i<YSIZE(Vin); i++)
         {
             for (int j=0; j<XSIZE(Vin); j++)
                 DIRECT_VEC_ELEM(aux,j)=DIRECT_VOL_ELEM(Vin,k,i,j);
-            FourierTransform(aux,Aux);
-            Aux*=H;
-            InverseFourierTransform(Aux,aux);
-            for (int j=0; j<XSIZE(Vin); j++)
-                DIRECT_VOL_ELEM(Vout,k,i,j)=XSIZE(Aux)*DIRECT_VEC_ELEM(aux,j);
+			    
+	    transformer2.FourierTransform( );	    
+	    transformer2.getFourierAlias( Aux );
+	    Aux*=H;
+	    transformer2.inverseFourierTransform( );
+            	    
+	    for (int j=0; j<XSIZE(Vin); j++)
+                DIRECT_VOL_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_VEC_ELEM(aux,j);
         }
 
     // Filter in Y
-    FourierTransform(hy,H);
+    transformer.FourierTransform(hy,H);
+    
     FOR_ALL_ELEMENTS_IN_MATRIX1D(H)
-       if (i<(XSIZE(H)/2))
           H(i)*= MINUS_ONE_POWER(i);
-       else
-          H(i)*= MINUS_ONE_POWER(XSIZE(H)-i);
 
     aux.initZeros(YSIZE(Vin));
+    transformer2.setReal(aux);		   
+    
     for (int k=0; k<ZSIZE(Vin); k++)
         for (int j=0; j<XSIZE(Vin); j++)
         {
             for (int i=0; i<YSIZE(Vin); i++)
                 DIRECT_VEC_ELEM(aux,i)=DIRECT_VOL_ELEM(Vout,k,i,j);
-            FourierTransform(aux,Aux);
-            Aux*=H;
-            InverseFourierTransform(Aux,aux);
-            for (int i=0; i<YSIZE(Vin); i++)
-                DIRECT_VOL_ELEM(Vout,k,i,j)=XSIZE(Aux)*DIRECT_VEC_ELEM(aux,i);
+
+	    transformer2.FourierTransform( );	    
+	    transformer2.getFourierAlias( Aux );
+	    Aux*=H;
+	    transformer2.inverseFourierTransform( );
+            
+	    for (int i=0; i<YSIZE(Vin); i++)
+                DIRECT_VOL_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_VEC_ELEM(aux,i);
         }
 
     // Filter in Z
-    FourierTransform(hz,H);
+
+    transformer.FourierTransform(hz,H);
+
     FOR_ALL_ELEMENTS_IN_MATRIX1D(H)
-       if (i<(XSIZE(H)/2))
           H(i)*= MINUS_ONE_POWER(i);
-       else
-          H(i)*= MINUS_ONE_POWER(XSIZE(H)-i);
 
     aux.initZeros(ZSIZE(Vin));    
+    transformer2.setReal(aux);		   
+
     for (int i=0; i<YSIZE(Vin); i++)
         for (int j=0; j<XSIZE(Vin); j++)
         {
             for (int k=0; k<ZSIZE(Vin); k++)
                 DIRECT_VEC_ELEM(aux,k)=DIRECT_VOL_ELEM(Vout,k,i,j);
-            FourierTransform(aux,Aux);
-            Aux*=H;
-            InverseFourierTransform(Aux,aux);
+
+	    transformer2.FourierTransform( );	    
+	    transformer2.getFourierAlias( Aux );
+	    Aux*=H;
+	    transformer2.inverseFourierTransform( );
+
             for (int k=0; k<ZSIZE(Vin); k++)
-                DIRECT_VOL_ELEM(Vout,k,i,j)=XSIZE(Aux)*DIRECT_VEC_ELEM(aux,k);
+                DIRECT_VOL_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_VEC_ELEM(aux,k);
         }
     
     // If Missing wedge
