@@ -101,8 +101,8 @@ public:
 
     /** Internal function for filtering */
     void singleFilter(const Matrix3D<double>& Vin,
-        const Matrix1D<double> &hx, const Matrix1D<double> &hy, 
-        const Matrix1D<double> &hz, Matrix3D<double> &Vout);
+        Matrix1D<double> &hx, Matrix1D<double> &hy, 
+        Matrix1D<double> &hz, Matrix3D<double> &Vout);
 };
 ///@}
 #endif
