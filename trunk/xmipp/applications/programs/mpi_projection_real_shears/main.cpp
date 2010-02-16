@@ -4,8 +4,8 @@
  *			 Jean-Noel PIOCHE (jnp95@hotmail.com) 
  *		
  * Biomedical Imaging Group, EPFL (Lausanne, Suisse).
- * Structures des Assemblages Macromoléculaires, IMPMC UMR 7590 (Paris, France).
- * IUT de Reims-Châlons-Charleville (Reims, France).
+ * Structures des Assemblages Macromoleculaires, IMPMC UMR 7590 (Paris, France).
+ * IUT de Reims-Chlons-Charleville (Reims, France).
  *
  * Last modifications by JNP the 27/05/2009 15:53:04 
  *
@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
 		//This MPI program doesn't allow to work with only one task
 		if (mpi_proj.nTasks<2)
     		{
-			cout<<"\n\tERROR : Impossible to launch this MPI program with only one task !"<<endl<<endl;
+			std::cout<<"\n\tERROR : Impossible to launch this MPI program with only one task !"<<std::endl<<std::endl;
 			mpi_proj.EndTasks();
 			exit(EXIT_FAILURE);
     		}
@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
     		}
     		catch (Xmipp_error &XE)
     		{
-        		cout << XE <<endl;
+        		std::cout << XE <<std::endl;
         		mpi_proj.usage();
 			mpi_proj.EndTasks();
         		MPI_Finalize();
@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
 		}
 		catch(Xmipp_error &XE)
 		{
-			cout << XE <<endl;
+			std::cout << XE <<std::endl;
 			mpi_proj.EndTasks();
         		MPI_Finalize();
 			return 1;
@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
 		}
 		catch(Xmipp_error &XE)
 		{
-			cout << XE <<endl;
+			std::cout << XE <<std::endl;
 			mpi_proj.EndTasks();
         		MPI_Finalize();
 			return 1;
