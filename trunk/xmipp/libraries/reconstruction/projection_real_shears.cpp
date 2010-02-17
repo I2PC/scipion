@@ -283,49 +283,36 @@ int do_compute_projection    (double *VWOrigin,
     long lmax, 
     long mmax, 
     double *Projection){
-int     Status = !ERROR; 
 long    i, n, l, l1, l2, m, m1, m2, ksi, CC1, CC2, CC3, row, column, index; 
-double  CVinc[4], CWinc[4], Operhlp[4], X[4], K[4], ToAdd[4], Arg[4], idw, ndv; 
+double  Operhlp[4], X[4], K[4], Arg[4], idw, ndv; 
 double  Proj, sc, g, h, rows, columns, Coeff, Difference; 
 double  gminusl, hminusm; 
  
 CC1 = CoefVolumeNx * CoefVolumeNy; 
  
 for (i = 0L; i < Ndw; i++){ 
-    idw = (double) i * dw; 
-    if (VectorScale(Identity_orientW, CWinc, idw, 4L) == ERROR)
-        REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
-                     "Error returned by VectorScale");
-    if (VectorAdd(VWOrigin, CWinc, Operhlp, 4L) == ERROR)
-        REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
-                     "Error returned by VectorAdd"); 
+    idw = (double) i * dw;
+    for (int ii=0; ii<4; ++ii)
+        Operhlp[ii]=Identity_orientW[ii]*idw+VWOrigin[ii];
     for (n = 0L; n < Ndv; n++){         
         ndv = (double) n * dv; 
-        if (VectorScale(Identity_orientV, CVinc, ndv, 4L) == ERROR)
-            REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
-                          "Error returned by VectorScale"); 
-        if (VectorAdd(Operhlp, CVinc, X, 4L) == ERROR)
-            REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
-                          "Error returned by VectorAdd"); 
-        if (MatrixTimesVector(Binv, X, K, 4L, 4L) == ERROR)
-            REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
-                          "Error returned by MatrixTimesVector"); 
+        for (int ii=0; ii<4; ++ii)
+            X[ii]=Identity_orientV[ii]*ndv+Operhlp[ii];
+        MatrixTimesVector(Binv, X, K, 4L, 4L);
         Proj = 0.0; 
         for (ksi = 0L; ksi < ksimax; ksi++){ 
             CC2 = CC1 * ksi; 
             sc = (double) ksi - K[arr[0]]; 
-            if (VectorScale(BinvCscaled, ToAdd, sc, 4L) == ERROR)
-                REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
-                              "Error returned by VectorScale"); 
-            if (VectorAdd(K, ToAdd, Arg, 4L) == ERROR)
-                REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
-                              "Error returned by VectorAdd"); 
+            for (int ii=0; ii<4; ++ii)
+                Arg[ii]=BinvCscaled[ii]*sc+K[ii];
             g = Arg[arr[1]]; 
             h = Arg[arr[2]]; 
-                     
-            l1 = (long) ceil (g - 2.0); 
+            
+            double aux=g-2.0;
+            l1 = CEIL(aux); 
             l2 = l1 + 3L; 
-            m1 = (long) ceil (h - 2.0); 
+            aux=h-2.0;
+            m1 = CEIL(aux);
             m2 = m1 + 3L; 
             columns = 0.0; 
             for (m = m1; m <= m2; m++){ 
@@ -335,12 +322,14 @@ for (i = 0L; i < Ndw; i++){
                     for (l = l1; l <= l2; l++){ 
                         if ((l < lmax && l > -1L)) { 
                             gminusl = g - (double) l; 
+                            double aux; BSPLINE03(gminusl,aux);
                             Coeff = (double) CoefVolume[CC3 + l]; 
-                            rows += Coeff * Bspline03(gminusl); 
+                            rows += Coeff * aux; 
                         } 
                     } 
                     hminusm = h - (double) m; 
-                    columns +=  rows * Bspline03(hminusm); 
+                    double aux; BSPLINE03(hminusm,aux);
+                    columns +=  rows * aux; 
                 } 
             } 
             Proj += columns; 
@@ -376,15 +365,15 @@ int Compute_projection(double *Parameters,
     double *Projection, 
     double *B                ) { 
  
-int    Status = !ERROR, arr[3]; 
+int     Status=!ERROR, arr[3]; 
 long    Ndv, Ndw; 
 long    CoefVolumeNx, CoefVolumeNy, lmax, mmax, ksimax; 
-double    dv, dw, psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta; 
-double    scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm; 
-double    *hlp, *R, *At; 
-double    *Help1, *Help2, *Help3, *Help4, *Binv; 
-double    *C1, *C2, *C3, *VWOrigin, *BinvC, *BinvCscaled; 
-double    *Coef_xyz, *Pr; 
+double  dv, dw, psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta; 
+double  scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm; 
+double  *hlp, *R, *At; 
+double  *Help1, *Help2, *Help3, *Help4, *Binv; 
+double  *C1, *C2, *C3, *VWOrigin, *BinvC, *BinvCscaled; 
+double  *Coef_xyz, *Pr; 
  
 Pr = Projection; 
      
@@ -639,11 +628,9 @@ free(At);
     *hlp++ = (double) IdentityOrigin[2]; 
     *hlp = 1.0; 
      
-    if (do_compute_projection(VWOrigin, Ndv, Ndw, C2, C3, 
+    do_compute_projection(VWOrigin, Ndv, Ndw, C2, C3, 
         dv, dw, Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr, CoefVolumeNx, 
-        CoefVolumeNy, lmax, mmax, Pr) == ERROR)
-        REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
-                     "Error returned by do_compute_projection"); 
+        CoefVolumeNy, lmax, mmax, Pr);
      
     free(BinvCscaled); 
     free(C2); 
@@ -906,13 +893,11 @@ int ROUT_project_execute(VolumeStruct &Data2)
         REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for B"); 
      
-    if (Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Nx, Ny, Nz, Data2.Proj_dims,  
-                            Data2.Identity_orientN, Data2.Identity_orientV, Data2.Identity_orientW,  
-                            Data2.IdentityOrigin, &Data2.PeriodOfSamplingInVDirection, 
-                            &Data2.PeriodOfSamplingInWDirection, RightOperHlp, Ac,  
-                            Data2.Output, B) == ERROR)
-        REPORT_ERROR(1, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by Compute_projection"); 
+    Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Nx, Ny, Nz, Data2.Proj_dims,  
+                        Data2.Identity_orientN, Data2.Identity_orientV, Data2.Identity_orientW,  
+                        Data2.IdentityOrigin, &Data2.PeriodOfSamplingInVDirection, 
+                        &Data2.PeriodOfSamplingInWDirection, RightOperHlp, Ac,  
+                        Data2.Output, B);
 
     free(Parameters);
     free(Ac);
