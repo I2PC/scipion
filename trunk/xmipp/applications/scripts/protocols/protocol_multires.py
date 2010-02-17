@@ -526,7 +526,8 @@ class MultiResClass:
                   "-ref ref.sel "+\
                   "-oang "+self.getDiscreteAnglesFilename(_iteration)+" "+\
                   "-psi_step "+self.getAngularSteps(_iteration)+" "+\
-		  "-max_shift_change "+str(self.particleWorkingRadius/5*factor)
+		  "-max_shift_change "+str(self.particleWorkingRadius/5*factor)+" "+\
+                  "-shears"
           if (_iteration==1):
              params+=" -5D -shift_step 2"
           if not self.symmetryGroup=="c1":

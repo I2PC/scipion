@@ -380,7 +380,7 @@ class ML3D_class:
                     ' -o '                   + dirname + refname + \
                     ' -sampling_rate '       + str(self.ProjMatchSampling)  + \
                     ' -sym '                 + self.Symmetry + 'h' + \
-                    ' -compute_neighbors -angular_distance -1 '
+                    ' -compute_neighbors -angular_distance -1 -shears'
 
         launch_job.launch_job("xmipp_angular_project_library",
                               parameters,
