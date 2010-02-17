@@ -29,156 +29,299 @@
  ***************************************************************************/
 
 #include "projection_real_shears.h"
+
+///Returns a pointer of the multiplication of the 5 matrices built with identity matrices and the parameters.\n
+///It returns NULL if there is an error.
+double *MatrixBem(double phi, double theta, double psi, double x0, double y0, double scale_x, double scale_y, double scale_z)
+{
+    double *pointer;
+ 
+    double ss = sin(phi); 
+    double cc = cos(phi);
+
+    //------------------------------------------------ 
+    /*Rz1 [4][4] = {{ cc,  ss, 0.0, 0.0}, 
+            {-ss,  cc, 0.0, 0.0}, 
+            {0.0, 0.0, 1.0, 0.0}, 
+            {0.0, 0.0, 0.0, 1.0}};*/
+    //------------------------------------------------
+
+    double *Rz1 = (double *)malloc((size_t) 16L * sizeof(double)); 
+    if (Rz1 == (double *)NULL){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "ERROR - Not enough memory for Rz1"); 
+        free(Rz1); 
+        return(NULL); 
+    } 
+ 
+    if (GetIdentitySquareMatrix(Rz1, 4L) == ERROR){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "Error returned by GetIdentitySquareMatrix"); 
+        free(Rz1); 
+        return(NULL); 
+    } 
+     
+    pointer = Rz1; 
+    *pointer = cc; 
+    pointer += (ptrdiff_t)1L; 
+    *pointer = ss; 
+    pointer += (ptrdiff_t)3L; 
+    *pointer = - ss; 
+    pointer += (ptrdiff_t)1L; 
+    *pointer = cc;
+ 
+ 
+    ss = sin(theta); 
+    cc = cos(theta);
+
+    //------------------------------------------------ 
+    /*Ry [4][4] = {{ cc, 0.0, -ss, 0.0}, 
+               {0.0, 1.0, 0.0, 0.0}, 
+               { ss, 0.0,  cc, 0.0}, 
+               {0.0, 0.0, 0.0, 1.0}};*/
+    //------------------------------------------------ 
+
+    double *Ry = (double *)malloc((size_t) 16L * sizeof(double)); 
+    if (Ry == (double *)NULL){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "ERROR - Not enough memory for Ry"); 
+        free(Rz1);
+        free(Ry); 
+        return(NULL); 
+    } 
+ 
+    if (GetIdentitySquareMatrix(Ry, 4L) == ERROR){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "Error returned by GetIdentitySquareMatrix"); 
+        free(Rz1);
+        free(Ry); 
+        return(NULL); 
+    } 
+     
+    pointer = Ry; 
+    *pointer = cc; 
+    pointer += (ptrdiff_t)2L; 
+    *pointer = -ss; 
+    pointer += (ptrdiff_t)6L; 
+    *pointer = ss; 
+    pointer += (ptrdiff_t)2L; 
+    *pointer = cc;
+
+
+ 
+    ss = sin(psi); 
+    cc = cos(psi);
+
+//------------------------------------------------ 
+    /*Rz2 [4][4] = {{ cc,  ss, 0.0, 0.0}, 
+            {-ss,  cc, 0.0, 0.0}, 
+            {0.0, 0.0, 1.0, 0.0}, 
+            {0.0, 0.0, 0.0, 1.0}};*/
+//------------------------------------------------
+
+    double *Rz2 = (double *)malloc((size_t) 16L * sizeof(double)); 
+    if (Rz2 == (double *)NULL){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "ERROR - Not enough memory for Rz2"); 
+        free(Rz1);
+        free(Ry);
+        free(Rz2); 
+        return(NULL); 
+    } 
+ 
+    if (GetIdentitySquareMatrix(Rz2, 4L) == ERROR){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "Error returned by GetIdentitySquareMatrix"); 
+        free(Rz1);
+        free(Ry);
+        free(Rz2); 
+        return(NULL); 
+    } 
+     
+    pointer = Rz2; 
+    *pointer = cc; 
+    pointer += (ptrdiff_t)1L; 
+    *pointer = ss; 
+    pointer += (ptrdiff_t)3L; 
+    *pointer = -ss; 
+    pointer += (ptrdiff_t)1L; 
+    *pointer = cc;
+
+    //(Identity Matrix)
+    //------------------------------------------------ 
+    /*At [4][4] = {{1., 0., 0., 0.},
+               {0., 1., 0., 0.},
+               {0., 0., 1., 0.},
+               {x0, y0, 0., 1.}};*/
+    //------------------------------------------------
+
+    double *At = (double *)malloc((size_t) 16L * sizeof(double)); 
+    if (At == (double *)NULL){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "ERROR - Not enough memory for At"); 
+        free(Rz1);
+        free(Ry);
+        free(Rz2);
+        free(At); 
+        return(NULL); 
+    } 
+ 
+    if (GetIdentitySquareMatrix(At, 4L) == ERROR){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "Error returned by GetIdentitySquareMatrix"); 
+        free(Rz1);
+        free(Ry);
+        free(Rz2);
+        free(At); 
+        return(NULL); 
+    } 
+     
+    pointer = At; 
+    pointer += (ptrdiff_t)8L; 
+    *pointer = x0; 
+    pointer += (ptrdiff_t)1L; 
+    *pointer = y0;
+
+    //(Identity Matrix)
+    //------------------------------------------------ 
+    /*As [4][4] = {{scale_x,      0.,      0., 0.},
+               {     0., scale_y,      0., 0.},
+               {     0.,      0., scale_z, 0.},
+               {     0.,      0.,      0., 1.}};*/
+    //------------------------------------------------
+
+    double *As = (double *)malloc((size_t) 16L * sizeof(double)); 
+    if (As == (double *)NULL){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "ERROR - Not enough memory for As"); 
+        free(Rz1);
+        free(Ry);
+        free(Rz2);
+        free(At);
+        free(As); 
+        return(NULL); 
+    } 
+ 
+    if (GetIdentitySquareMatrix(As, 4L) == ERROR){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "Error returned by GetIdentitySquareMatrix"); 
+        free(Rz1);
+        free(Ry);
+        free(Rz2);
+        free(At);
+        free(As); 
+        return(NULL); 
+    } 
+     
+    pointer = As;
+    *pointer = scale_x; 
+    pointer += (ptrdiff_t)5L; 
+    *pointer = scale_y; 
+    pointer += (ptrdiff_t)5L; 
+    *pointer = scale_z;
+
+//------------------------------------------------
+    double *matrB = (double *)malloc((size_t) 16L * sizeof(double)); 
+    if (matrB == (double *)NULL){  
+        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
+                     "ERROR - Not enough memory for matrB"); 
+        free(Rz1);
+        free(Ry);
+        free(Rz2);
+        free(At);
+        free(As);
+        free(matrB); 
+        return(NULL); 
+    }
+
+    multiply_5Matrices(At, As, Rz2, Ry, Rz1, matrB, 4L, 4L, 4L, 4L, 4L, 4L);
+
+    free(Rz1);
+    free(Ry);
+    free(Rz2);
+    free(At);
+    free(As); 
+ 
+    return matrB;
+}
+
 /// Transforms angles from (Ry, Rz, Ry) to (Rx, Ry, Rz) system. Returns possible error.
-int angles_transcription(double *angles, double *Lambda123);
-
-///Returns a pointer of the multiplication of the 5 matrices.
-double *MatrixBem(double phi, double theta, double psi, double x0, double y0, double scale_x, double scale_y, double scale_z);
-
-///Main compute function.
-int ROUT_project_execute(VolumeStruct &Data2);
-
-///Computes projection
-int Compute_projection(
-    double *Parameters, 
-    double *Coef_x, 
-    double *Coef_y, 
-    double *Coef_z, 
-    long    Nx, 
-    long    Ny, 
-    long    Nz, 
-    short  *Proj_dims, 
-    double *Identity_orientN, 
-    double *Identity_orientV, 
-    double *Identity_orientW, 
-    double *IdentityOrigin, 
-    double *PeriodOfSamplingInVDirection, 
-    double *PeriodOfSamplingInWDirection, 
-    double *RightOperHlp, 
-    double *Ac, 
-    double *Projection, 
-    double *B);
-
-///Computes one iteration of the projection
-int do_compute_projection(
-    double *VWOrigin, 
-    long    Ndv, 
-    long    Ndw, 
-    double *Identity_orientV, 
-    double *Identity_orientW, 
-    double  dv, 
-    double  dw, 
-    double *CoefVolume, 
-    double  absscale, 
-    double *Binv, 
-    double *BinvCscaled, 
-    long    ksimax, 
-    int    *arr, 
-    long    CoefVolumeNx, 
-    long    CoefVolumeNy, 
-    long    lmax, 
-    long    mmax, 
-    double *Projection);
-
-///Parameters reading. Note that all parameters are required.
-void Projection_real_shears::read(int argc, char **argv)
+int angles_transcription(double *angles, double *Lambda123)
 {
-    fn_proj_param = getParameter(argc, argv, "-i");
-    fn_sel_file   = getParameter(argc, argv, "-o", "");
-    display = !checkParameter(argc, argv, "-quiet");
-}
+    double phi = angles[0];
+    double theta = angles[1];
+    double psi = angles[2];
+    double x0 = 0.;
+    double y0 = 0.;
+    double scale_x = Lambda123[0];
+    double scale_y = Lambda123[1];
+    double scale_z = Lambda123[2];
+    
+    double *Bem_1D = MatrixBem(phi, theta, psi, x0, y0, scale_x, scale_y, scale_z);
+    if(Bem_1D==NULL) return (ERROR);
 
-///Description of the projection_real_shears function.
-void Projection_real_shears::usage()
-{
-    printf("\nUsage:\n\n");
-    printf("projection_real_shears -i <Parameters File> \n"
-           "                      [-o <sel_file>]\n"
-           "                      [-quiet]\n");
-    printf("\tWhere:\n"
-           "\t<Parameters File>:  File containing projection parameters\n"
-           "\t                    Note that only the top-four parameters lines are read\n"
-           "\t                    Check the manual for a description of the parameters\n"
-           "\t<sel_file>:         This is a selection file with all the generated\n"
-           "\t                    projections.\n");
-}
+    double Bem [4][4];
+    for(int i=0; i<4; i++)
+        for(int j=0; j<4; j++)
+            Bem[i][j] = Bem_1D[i*4+j];
 
-//-----------------------------------------------------------------------------------------------
-///Reads the projection parameters of the input file and inserts it into Projection_Parameters fields.\n
-///This is an "overloaded" function in order to use translation parameters.
-void Projection_real_shears::read(const FileName &fn_proj_param)
-{
-    FILE    *fh_param;
-        char    line[201];
-        int     lineNo = 0;
+    free(Bem_1D);
 
-        if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
-            REPORT_ERROR(3005,
-                (std::string)"Projection_real_shears::read: There is a problem "
-                 "opening the file " + fn_proj_param);
+    double A00 = Bem[0][0];
+    double A10 = Bem[1][0];
+    double A20 = Bem[2][0];
+    double A21 = Bem[2][1];
+    double A22 = Bem[2][2];
+    double A12 = Bem[1][2];
+    double A02 = Bem[0][2];
+    
 
-        while (fgets(line, 200, fh_param) != NULL)
+    double abs_cosay = sqrt(A22*A22+A21*A21);
+
+    //Results angles
+    double ax, ay, az;
+
+    if(abs_cosay > 0.0)
+    {
+        double sign_cosay;
+
+        ax = atan2(-A21, A22);
+             az = atan2(-A10, A00);
+
+         if(abs(cos(ax)) == 0.0)
+             sign_cosay = SGN(-A21/sin(ax));
+         else
         {
-            if (line[0] == 0)    continue;
-            if (line[0] == '#')  continue;
-            if (line[0] == '\n') continue;
-            switch (lineNo)
-            {
-                case 0: //***** Line 1 *****
-                //Volume file
-                        fnPhantom = firstWord(line, 3007,
-                                    "Projection_real_shears::read: Phantom name not found");
+            if (cos(ax) > 0.0) 
+                sign_cosay = SGN(A22);
+            else
+                sign_cosay = -SGN(A22);
+        }
 
-                if (!exists(fnPhantom))
-                            REPORT_ERROR(3007, (std::string)"Projection_real_shears::read: "
-                                         "file " + fnPhantom + " doesn't exist");
+        ay  = atan2(A20, sign_cosay * abs_cosay);
+    }
+    else
+    {
+        //Let's consider the matrix as a rotation around Z
+        if (SGN(A20) > 0.0)
+        {
+            ax = 0.0;
+            ay  = PI/2.0;
+            az = atan2(A12, -A02);
+        }
+        else
+        {
+            ax = 0.0;
+            ay  = -PI/2.0;
+            az = atan2(-A12, A02);
+        }
+    }
 
-                        lineNo = 1;
-                        break;
-                    case 1: //***** Line 2 *****
-                        fnProjectionSeed = firstWord(line, 3007,
-                                    "Projection_real_shears::read: Error in Projection seed");
+    angles[0] = ax;
+    angles[1] = ay;
+    angles[2] = az;
 
-                    char    *auxstr;
-
-                        auxstr = nextToken();
-                        if (auxstr != NULL) starting =
-                                textToInteger(auxstr, 3007,
-                                 "Projection_real_shears::read: Error in First "
-                                 "projection number");
-
-                        fn_projection_extension = nextWord(3007, (std::string)"Projection_real_shears::read: "
-                                                 "Error in Projection extension");
-                
-                        lineNo = 2;
-                        break;
-                case 2: //***** Line 3 *****
-                        proj_Xdim = textToInteger(firstToken(line), 3007,
-                                     "Projection_real_shears::read: Error in projection dimension");
-                        proj_Zdim = proj_Ydim = proj_Xdim ;
-
-                        lineNo = 3;
-                        break;
-                case 3: //***** Line 4 *****
-                        // Angle file
-                        fn_angle = firstWord(line, 3007,
-                                    "Projection_real_shears::read: Angle file name not found");
-
-                        if (!exists(fn_angle))
-                            REPORT_ERROR(3007, (std::string)"Projection_real_shears::read: "
-                                         "file " + fn_angle + " doesn't exist");
-                    
-                        lineNo = 4;
-                        break;
-                default:
-                break;
-            } // switch end
-    } // while end
-
-    if (lineNo != 4) //If all parameters was not read
-        REPORT_ERROR(3007, (std::string)"Projection_real_shears::read: I "
-                     "couldn't read all parameters from file " + fn_proj_param);
-    fclose(fh_param);
+    return (!ERROR);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -1045,312 +1188,111 @@ int ROUT_project_execute(VolumeStruct &Data2)
     FreeVolumeDouble(&Coef_z); 
 
     return(!ERROR);
- }
-
-///Returns a pointer of the multiplication of the 5 matrices built with identity matrices and the parameters.\n
-///It returns NULL if there is an error.
-double *MatrixBem(double phi, double theta, double psi, double x0, double y0, double scale_x, double scale_y, double scale_z)
-{
-    double *pointer;
- 
-    double ss = sin(phi); 
-    double cc = cos(phi);
-
-//------------------------------------------------ 
-    /*Rz1 [4][4] = {{ cc,  ss, 0.0, 0.0}, 
-            {-ss,  cc, 0.0, 0.0}, 
-            {0.0, 0.0, 1.0, 0.0}, 
-            {0.0, 0.0, 0.0, 1.0}};*/
-//------------------------------------------------
-
-    double *Rz1 = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (Rz1 == (double *)NULL){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for Rz1"); 
-        free(Rz1); 
-        return(NULL); 
-    } 
- 
-    if (GetIdentitySquareMatrix(Rz1, 4L) == ERROR){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "Error returned by GetIdentitySquareMatrix"); 
-        free(Rz1); 
-        return(NULL); 
-    } 
-     
-    pointer = Rz1; 
-    *pointer = cc; 
-    pointer += (ptrdiff_t)1L; 
-    *pointer = ss; 
-    pointer += (ptrdiff_t)3L; 
-    *pointer = - ss; 
-    pointer += (ptrdiff_t)1L; 
-    *pointer = cc;
- 
- 
-    ss = sin(theta); 
-    cc = cos(theta);
-
-//------------------------------------------------ 
-    /*Ry [4][4] = {{ cc, 0.0, -ss, 0.0}, 
-               {0.0, 1.0, 0.0, 0.0}, 
-               { ss, 0.0,  cc, 0.0}, 
-               {0.0, 0.0, 0.0, 1.0}};*/
-//------------------------------------------------ 
-
-    double *Ry = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (Ry == (double *)NULL){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for Ry"); 
-        free(Rz1);
-        free(Ry); 
-        return(NULL); 
-    } 
- 
-    if (GetIdentitySquareMatrix(Ry, 4L) == ERROR){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "Error returned by GetIdentitySquareMatrix"); 
-        free(Rz1);
-        free(Ry); 
-        return(NULL); 
-    } 
-     
-    pointer = Ry; 
-    *pointer = cc; 
-    pointer += (ptrdiff_t)2L; 
-    *pointer = -ss; 
-    pointer += (ptrdiff_t)6L; 
-    *pointer = ss; 
-    pointer += (ptrdiff_t)2L; 
-    *pointer = cc;
-
-
- 
-    ss = sin(psi); 
-    cc = cos(psi);
-
-//------------------------------------------------ 
-    /*Rz2 [4][4] = {{ cc,  ss, 0.0, 0.0}, 
-            {-ss,  cc, 0.0, 0.0}, 
-            {0.0, 0.0, 1.0, 0.0}, 
-            {0.0, 0.0, 0.0, 1.0}};*/
-//------------------------------------------------
-
-    double *Rz2 = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (Rz2 == (double *)NULL){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for Rz2"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2); 
-        return(NULL); 
-    } 
- 
-    if (GetIdentitySquareMatrix(Rz2, 4L) == ERROR){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "Error returned by GetIdentitySquareMatrix"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2); 
-        return(NULL); 
-    } 
-     
-    pointer = Rz2; 
-    *pointer = cc; 
-    pointer += (ptrdiff_t)1L; 
-    *pointer = ss; 
-    pointer += (ptrdiff_t)3L; 
-    *pointer = -ss; 
-    pointer += (ptrdiff_t)1L; 
-    *pointer = cc;
-
-
-
-    //(Identity Matrix)
-//------------------------------------------------ 
-    /*At [4][4] = {{1., 0., 0., 0.},
-               {0., 1., 0., 0.},
-               {0., 0., 1., 0.},
-               {x0, y0, 0., 1.}};*/
-//------------------------------------------------
-
-    double *At = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (At == (double *)NULL){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for At"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2);
-        free(At); 
-        return(NULL); 
-    } 
- 
-    if (GetIdentitySquareMatrix(At, 4L) == ERROR){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "Error returned by GetIdentitySquareMatrix"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2);
-        free(At); 
-        return(NULL); 
-    } 
-     
-    pointer = At; 
-    pointer += (ptrdiff_t)8L; 
-    *pointer = x0; 
-    pointer += (ptrdiff_t)1L; 
-    *pointer = y0;
-
-
-
-
-    //(Identity Matrix)
-//------------------------------------------------ 
-    /*As [4][4] = {{scale_x,      0.,      0., 0.},
-               {     0., scale_y,      0., 0.},
-               {     0.,      0., scale_z, 0.},
-               {     0.,      0.,      0., 1.}};*/
-//------------------------------------------------
-
-    double *As = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (As == (double *)NULL){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for As"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2);
-        free(At);
-        free(As); 
-        return(NULL); 
-    } 
- 
-    if (GetIdentitySquareMatrix(As, 4L) == ERROR){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "Error returned by GetIdentitySquareMatrix"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2);
-        free(At);
-        free(As); 
-        return(NULL); 
-    } 
-     
-    pointer = As;
-    *pointer = scale_x; 
-    pointer += (ptrdiff_t)5L; 
-    *pointer = scale_y; 
-    pointer += (ptrdiff_t)5L; 
-    *pointer = scale_z;
-
-
-
-//------------------------------------------------
-    double *matrB = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (matrB == (double *)NULL){  
-        REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
-                     "ERROR - Not enough memory for matrB"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2);
-        free(At);
-        free(As);
-        free(matrB); 
-        return(NULL); 
-    }
-
-
-    multiply_5Matrices(At, As, Rz2, Ry, Rz1, matrB, 4L, 4L, 4L, 4L, 4L, 4L);
-
-    free(Rz1);
-    free(Ry);
-    free(Rz2);
-    free(At);
-    free(As); 
- 
-    return matrB;
 }
 
-///Transforms angles from (Ry, Rz, Ry) to (Rx, Ry, Rz) system. Returns possible error.
-int angles_transcription(double *angles, double *Lambda123)
-{    
-    double phi = angles[0];
-    double theta = angles[1];
-    double psi = angles[2];
-    double x0 = 0.;
-    double y0 = 0.;
-    double scale_x = Lambda123[0];
-    double scale_y = Lambda123[1];
-    double scale_z = Lambda123[2];
-    
-    double *Bem_1D = MatrixBem(phi, theta, psi, x0, y0, scale_x, scale_y, scale_z);
-    if(Bem_1D==NULL) return (ERROR);
+///Parameters reading. Note that all parameters are required.
+void Projection_real_shears::read(int argc, char **argv)
+{
+    fn_proj_param = getParameter(argc, argv, "-i");
+    fn_sel_file   = getParameter(argc, argv, "-o", "");
+    display = !checkParameter(argc, argv, "-quiet");
+}
 
-    double Bem [4][4];
-    for(int i=0; i<4; i++)
-        for(int j=0; j<4; j++)
-            Bem[i][j] = Bem_1D[i*4+j];
+///Description of the projection_real_shears function.
+void Projection_real_shears::usage()
+{
+    printf("\nUsage:\n\n");
+    printf("projection_real_shears -i <Parameters File> \n"
+           "                      [-o <sel_file>]\n"
+           "                      [-quiet]\n");
+    printf("\tWhere:\n"
+           "\t<Parameters File>:  File containing projection parameters\n"
+           "\t                    Note that only the top-four parameters lines are read\n"
+           "\t                    Check the manual for a description of the parameters\n"
+           "\t<sel_file>:         This is a selection file with all the generated\n"
+           "\t                    projections.\n");
+}
 
-    free(Bem_1D);
+//-----------------------------------------------------------------------------------------------
+///Reads the projection parameters of the input file and inserts it into Projection_Parameters fields.\n
+///This is an "overloaded" function in order to use translation parameters.
+void Projection_real_shears::read(const FileName &fn_proj_param)
+{
+    FILE    *fh_param;
+        char    line[201];
+        int     lineNo = 0;
 
-    double A00 = Bem[0][0];
-    double A10 = Bem[1][0];
-    double A20 = Bem[2][0];
-    double A21 = Bem[2][1];
-    double A22 = Bem[2][2];
-    double A12 = Bem[1][2];
-    double A02 = Bem[0][2];
-    
+        if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
+            REPORT_ERROR(3005,
+                (std::string)"Projection_real_shears::read: There is a problem "
+                 "opening the file " + fn_proj_param);
 
-    double abs_cosay = sqrt(A22*A22+A21*A21);
-
-    //Results angles
-    double ax, ay, az;
-
-    if(abs_cosay > 0.0)
-    {
-        double sign_cosay;
-
-        ax = atan2(-A21, A22);
-             az = atan2(-A10, A00);
-
-         if(abs(cos(ax)) == 0.0)
-             sign_cosay = SGN(-A21/sin(ax));
-         else
+        while (fgets(line, 200, fh_param) != NULL)
         {
-            if (cos(ax) > 0.0) 
-                sign_cosay = SGN(A22);
-            else
-                sign_cosay = -SGN(A22);
-        }
+            if (line[0] == 0)    continue;
+            if (line[0] == '#')  continue;
+            if (line[0] == '\n') continue;
+            switch (lineNo)
+            {
+                case 0: //***** Line 1 *****
+                //Volume file
+                        fnPhantom = firstWord(line, 3007,
+                                    "Projection_real_shears::read: Phantom name not found");
 
-        ay  = atan2(A20, sign_cosay * abs_cosay);
-    }
-    else
-    {
-        //Let's consider the matrix as a rotation around Z
-        if (SGN(A20) > 0.0)
-        {
-            ax = 0.0;
-            ay  = PI/2.0;
-            az = atan2(A12, -A02);
-        }
-        else
-        {
-            ax = 0.0;
-            ay  = -PI/2.0;
-            az = atan2(-A12, A02);
-        }
-    }
+                if (!exists(fnPhantom))
+                            REPORT_ERROR(3007, (std::string)"Projection_real_shears::read: "
+                                         "file " + fnPhantom + " doesn't exist");
 
-    angles[0] = ax;
-    angles[1] = ay;
-    angles[2] = az;
+                        lineNo = 1;
+                        break;
+                    case 1: //***** Line 2 *****
+                        fnProjectionSeed = firstWord(line, 3007,
+                                    "Projection_real_shears::read: Error in Projection seed");
 
-    return (!ERROR);
+                    char    *auxstr;
+
+                        auxstr = nextToken();
+                        if (auxstr != NULL) starting =
+                                textToInteger(auxstr, 3007,
+                                 "Projection_real_shears::read: Error in First "
+                                 "projection number");
+
+                        fn_projection_extension = nextWord(3007, (std::string)"Projection_real_shears::read: "
+                                                 "Error in Projection extension");
+                
+                        lineNo = 2;
+                        break;
+                case 2: //***** Line 3 *****
+                        proj_Xdim = textToInteger(firstToken(line), 3007,
+                                     "Projection_real_shears::read: Error in projection dimension");
+                        proj_Zdim = proj_Ydim = proj_Xdim ;
+
+                        lineNo = 3;
+                        break;
+                case 3: //***** Line 4 *****
+                        // Angle file
+                        fn_angle = firstWord(line, 3007,
+                                    "Projection_real_shears::read: Angle file name not found");
+
+                        if (!exists(fn_angle))
+                            REPORT_ERROR(3007, (std::string)"Projection_real_shears::read: "
+                                         "file " + fn_angle + " doesn't exist");
+                    
+                        lineNo = 4;
+                        break;
+                default:
+                break;
+            } // switch end
+    } // while end
+
+    if (lineNo != 4) //If all parameters was not read
+        REPORT_ERROR(3007, (std::string)"Projection_real_shears::read: I "
+                     "couldn't read all parameters from file " + fn_proj_param);
+    fclose(fh_param);
 }
 
 ///Desallocates VolumeStruct fields
-void Projection_real_shears::del_VolumeStruct(VolumeStruct &Data2)
+void del_VolumeStruct(VolumeStruct &Data2)
 {
     free(Data2.Volume); 
     free(Data2.Output);

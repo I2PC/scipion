@@ -102,6 +102,9 @@ void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
 /// Allocates and fixes some VolumeStruct fields 
 void allocAndInit_VolumeStruct(VolumeStruct &Data2);
 
+/// Deallocate VolumeStruct
+void del_VolumeStruct(VolumeStruct &Data2);
+
 ///Executes instructions for one projection
 int do_oneProjection(VolumeStruct &Data2);
 
@@ -180,9 +183,6 @@ class Projection_real_shears
 
         ///"Overloaded" function in order to use translation parameters
         void read(const FileName &fn_proj_param); //read_withShift [...]
-
-        ///Desallocates VolumeStruct fields
-        void del_VolumeStruct(VolumeStruct &Data2);
 };
 //@}
 #endif
