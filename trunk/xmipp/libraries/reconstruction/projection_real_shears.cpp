@@ -47,19 +47,13 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
     //------------------------------------------------
 
     double *Rz1 = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (Rz1 == (double *)NULL){  
+    if (Rz1 == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "ERROR - Not enough memory for Rz1"); 
-        free(Rz1); 
-        return(NULL); 
-    } 
  
-    if (GetIdentitySquareMatrix(Rz1, 4L) == ERROR){  
+    if (GetIdentitySquareMatrix(Rz1, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "Error returned by GetIdentitySquareMatrix"); 
-        free(Rz1); 
-        return(NULL); 
-    } 
      
     pointer = Rz1; 
     *pointer = cc; 
@@ -69,7 +63,6 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
     *pointer = - ss; 
     pointer += (ptrdiff_t)1L; 
     *pointer = cc;
- 
  
     ss = sin(theta); 
     cc = cos(theta);
@@ -82,21 +75,13 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
     //------------------------------------------------ 
 
     double *Ry = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (Ry == (double *)NULL){  
+    if (Ry == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "ERROR - Not enough memory for Ry"); 
-        free(Rz1);
-        free(Ry); 
-        return(NULL); 
-    } 
  
-    if (GetIdentitySquareMatrix(Ry, 4L) == ERROR){  
+    if (GetIdentitySquareMatrix(Ry, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "Error returned by GetIdentitySquareMatrix"); 
-        free(Rz1);
-        free(Ry); 
-        return(NULL); 
-    } 
      
     pointer = Ry; 
     *pointer = cc; 
@@ -107,36 +92,24 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
     pointer += (ptrdiff_t)2L; 
     *pointer = cc;
 
-
- 
     ss = sin(psi); 
     cc = cos(psi);
 
-//------------------------------------------------ 
+    //------------------------------------------------ 
     /*Rz2 [4][4] = {{ cc,  ss, 0.0, 0.0}, 
             {-ss,  cc, 0.0, 0.0}, 
             {0.0, 0.0, 1.0, 0.0}, 
             {0.0, 0.0, 0.0, 1.0}};*/
-//------------------------------------------------
+    //------------------------------------------------
 
     double *Rz2 = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (Rz2 == (double *)NULL){  
+    if (Rz2 == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "ERROR - Not enough memory for Rz2"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2); 
-        return(NULL); 
-    } 
  
-    if (GetIdentitySquareMatrix(Rz2, 4L) == ERROR){  
+    if (GetIdentitySquareMatrix(Rz2, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "Error returned by GetIdentitySquareMatrix"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2); 
-        return(NULL); 
-    } 
      
     pointer = Rz2; 
     *pointer = cc; 
@@ -156,25 +129,13 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
     //------------------------------------------------
 
     double *At = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (At == (double *)NULL){  
+    if (At == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "ERROR - Not enough memory for At"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2);
-        free(At); 
-        return(NULL); 
-    } 
  
-    if (GetIdentitySquareMatrix(At, 4L) == ERROR){  
+    if (GetIdentitySquareMatrix(At, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "Error returned by GetIdentitySquareMatrix"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2);
-        free(At); 
-        return(NULL); 
-    } 
      
     pointer = At; 
     pointer += (ptrdiff_t)8L; 
@@ -191,27 +152,13 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
     //------------------------------------------------
 
     double *As = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (As == (double *)NULL){  
+    if (As == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "ERROR - Not enough memory for As"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2);
-        free(At);
-        free(As); 
-        return(NULL); 
-    } 
  
-    if (GetIdentitySquareMatrix(As, 4L) == ERROR){  
+    if (GetIdentitySquareMatrix(As, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "Error returned by GetIdentitySquareMatrix"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2);
-        free(At);
-        free(As); 
-        return(NULL); 
-    } 
      
     pointer = As;
     *pointer = scale_x; 
@@ -220,19 +167,11 @@ double *MatrixBem(double phi, double theta, double psi, double x0, double y0, do
     pointer += (ptrdiff_t)5L; 
     *pointer = scale_z;
 
-//------------------------------------------------
+    //------------------------------------------------
     double *matrB = (double *)malloc((size_t) 16L * sizeof(double)); 
-    if (matrB == (double *)NULL){  
+    if (matrB == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::MatrixBem: "
                      "ERROR - Not enough memory for matrB"); 
-        free(Rz1);
-        free(Ry);
-        free(Rz2);
-        free(At);
-        free(As);
-        free(matrB); 
-        return(NULL); 
-    }
 
     multiply_5Matrices(At, As, Rz2, Ry, Rz1, matrB, 4L, 4L, 4L, 4L, 4L, 4L);
 
@@ -275,7 +214,6 @@ int angles_transcription(double *angles, double *Lambda123)
     double A12 = Bem[1][2];
     double A02 = Bem[0][2];
     
-
     double abs_cosay = sqrt(A22*A22+A21*A21);
 
     //Results angles
@@ -345,57 +283,43 @@ int do_compute_projection    (double *VWOrigin,
     long lmax, 
     long mmax, 
     double *Projection){ 
-int        Status = !ERROR; 
+int     Status = !ERROR; 
 long    i, n, l, l1, l2, m, m1, m2, ksi, CC1, CC2, CC3, row, column, index; 
-double    CVinc[4], CWinc[4], Operhlp[4], X[4], K[4], ToAdd[4], Arg[4], idw, ndv; 
-double    Proj, sc, g, h, rows, columns, Coeff, Difference; 
-double    gminusl, hminusm; 
+double  CVinc[4], CWinc[4], Operhlp[4], X[4], K[4], ToAdd[4], Arg[4], idw, ndv; 
+double  Proj, sc, g, h, rows, columns, Coeff, Difference; 
+double  gminusl, hminusm; 
  
 CC1 = CoefVolumeNx * CoefVolumeNy; 
  
 for (i = 0L; i < Ndw; i++){ 
     idw = (double) i * dw; 
-    if (VectorScale(Identity_orientW, CWinc, idw, 4L) == ERROR){  
+    if (VectorScale(Identity_orientW, CWinc, idw, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
                      "Error returned by VectorScale");
-        return(ERROR); 
-    } 
-    if (VectorAdd(VWOrigin, CWinc, Operhlp, 4L) == ERROR){  
+    if (VectorAdd(VWOrigin, CWinc, Operhlp, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
                      "Error returned by VectorAdd"); 
-        return(ERROR); 
-    } 
     for (n = 0L; n < Ndv; n++){         
         ndv = (double) n * dv; 
-        if (VectorScale(Identity_orientV, CVinc, ndv, 4L) == ERROR){  
+        if (VectorScale(Identity_orientV, CVinc, ndv, 4L) == ERROR)
             REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
                           "Error returned by VectorScale"); 
-            return(ERROR); 
-        } 
-        if (VectorAdd(Operhlp, CVinc, X, 4L) == ERROR){  
+        if (VectorAdd(Operhlp, CVinc, X, 4L) == ERROR)
             REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
                           "Error returned by VectorAdd"); 
-            return(ERROR); 
-        } 
-        if (MatrixTimesVector(Binv, X, K, 4L, 4L) == ERROR){  
+        if (MatrixTimesVector(Binv, X, K, 4L, 4L) == ERROR)
             REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
                           "Error returned by MatrixTimesVector"); 
-            return(ERROR); 
-        } 
         Proj = 0.0; 
         for (ksi = 0L; ksi < ksimax; ksi++){ 
             CC2 = CC1 * ksi; 
             sc = (double) ksi - K[arr[0]]; 
-            if (VectorScale(BinvCscaled, ToAdd, sc, 4L) == ERROR){  
+            if (VectorScale(BinvCscaled, ToAdd, sc, 4L) == ERROR)
                 REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
                               "Error returned by VectorScale"); 
-                return(ERROR); 
-            } 
-            if (VectorAdd(K, ToAdd, Arg, 4L) == ERROR){  
+            if (VectorAdd(K, ToAdd, Arg, 4L) == ERROR)
                 REPORT_ERROR(1, "Projection_real_shears::do_compute_projection: "
                               "Error returned by VectorAdd"); 
-                return(ERROR); 
-            } 
             g = Arg[arr[1]]; 
             h = Arg[arr[2]]; 
                      
@@ -482,18 +406,13 @@ Sintheta = sin(theta);
 Costheta = cos(theta); 
  
 At = (double *)malloc((size_t) 16L * sizeof(double)); 
-if (At == (double *)NULL){  
+if (At == (double *)NULL)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for At"); 
-    return(ERROR); 
-} 
  
-if (GetIdentitySquareMatrix(At, 4L) == ERROR){  
+if (GetIdentitySquareMatrix(At, 4L) == ERROR)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix"); 
-    free(At); 
-    return(ERROR); 
-} 
      
 hlp = At + (ptrdiff_t)3L; 
 *hlp = Parameters[3]; 
@@ -503,38 +422,22 @@ hlp += (ptrdiff_t)4L;
 *hlp = Parameters[5]; 
  
 Help1 = (double *)malloc((size_t) 16L * sizeof(double)); 
-if (Help1 == (double *)NULL){  
+if (Help1 == (double *)NULL)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help1"); 
-    free(At); 
-    return(ERROR); 
-} 
  
-if (MatrixMultiply(At, Ac, Help1, 4L, 4L, 4L) == ERROR){  
+if (MatrixMultiply(At, Ac, Help1, 4L, 4L, 4L) == ERROR)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply"); 
-    free(At); 
-    free(Help1); 
-    return(ERROR); 
-} 
  
 Rx = (double *)malloc((size_t) 16L * sizeof(double)); 
-if (Rx == (double *)NULL){  
+if (Rx == (double *)NULL)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Rx"); 
-    free(At); 
-    free(Help1); 
-    return(ERROR); 
-} 
      
-if (GetIdentitySquareMatrix(Rx, 4L) == ERROR){  
+if (GetIdentitySquareMatrix(Rx, 4L) == ERROR)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix"); 
-    free(At); 
-    free(Help1); 
-    free(Rx); 
-    return(ERROR); 
-} 
      
 hlp = Rx; 
 hlp += (ptrdiff_t)5L; 
@@ -545,46 +448,23 @@ hlp += (ptrdiff_t)3L;
 *hlp = Cosphi; 
  
 Help2 = (double *)malloc((size_t) 16L * sizeof(double)); 
-if (Help2 == (double *)NULL){  
+if (Help2 == (double *)NULL)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help2"); 
-    free(At); 
-    free(Help1); 
-    free(Rx); 
-    return(ERROR); 
-} 
  
-if (MatrixMultiply(Help1, Rx, Help2, 4L, 4L, 4L) == ERROR){  
+if (MatrixMultiply(Help1, Rx, Help2, 4L, 4L, 4L) == ERROR)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply"); 
-    free(At); 
-    free(Help1); 
-    free(Rx); 
-    free(Help2); 
-    return(ERROR); 
-} 
- 
 free(Rx); 
  
 Ry = (double *)malloc((size_t) 16L * sizeof(double)); 
-if (Ry == (double *)NULL){  
+if (Ry == (double *)NULL)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Ry"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    return(ERROR); 
-} 
  
-if (GetIdentitySquareMatrix(Ry, 4L) == ERROR){  
+if (GetIdentitySquareMatrix(Ry, 4L) == ERROR)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    free(Ry); 
-    return(ERROR); 
-} 
      
 hlp = Ry; 
 *hlp = Costheta; 
@@ -596,50 +476,22 @@ hlp += (ptrdiff_t)2L;
 *hlp = Costheta; 
  
 Help3 = (double *)malloc((size_t) 16L * sizeof(double)); 
-if (Help3 == (double *)NULL){  
+if (Help3 == (double *)NULL)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help3"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    free(Ry); 
-    return(ERROR); 
-} 
  
-if (MatrixMultiply(Help2, Ry, Help3, 4L, 4L, 4L) == ERROR){  
+if (MatrixMultiply(Help2, Ry, Help3, 4L, 4L, 4L) == ERROR)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    free(Ry); 
-    free(Help3); 
-    return(ERROR); 
-} 
  
 Rz = (double *)malloc((size_t) 16L * sizeof(double)); 
-if (Rz == (double *)NULL){  
+if (Rz == (double *)NULL)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Rz"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    free(Ry); 
-    free(Help3); 
-    return(ERROR); 
-} 
  
-if (GetIdentitySquareMatrix(Rz, 4L) == ERROR){ 
+if (GetIdentitySquareMatrix(Rz, 4L) == ERROR)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    free(Ry); 
-    free(Help3); 
-    free(Rz); 
-    return(ERROR); 
-} 
      
 hlp = Rz; 
 *hlp++ = Cospsi; 
@@ -649,85 +501,35 @@ hlp += (ptrdiff_t)3L;
 *hlp = Cospsi; 
  
 Help4 = (double *)malloc((size_t) 16L * sizeof(double)); 
-if (Help4 == (double *)NULL){  
+if (Help4 == (double *)NULL)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help4"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    free(Ry); 
-    free(Help3); 
-    free(Rz); 
-    return(ERROR); 
-} 
  
-if (MatrixMultiply(Help3, Rz, Help4, 4L, 4L, 4L) == ERROR){  
+if (MatrixMultiply(Help3, Rz, Help4, 4L, 4L, 4L) == ERROR)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    free(Ry); 
-    free(Help3); 
-    free(Rz); 
-    free(Help4); 
-    return(ERROR); 
-} 
  
- 
-if (MatrixMultiply(Help4, RightOperHlp, B, 4L, 4L, 4L) == ERROR){  
+if (MatrixMultiply(Help4, RightOperHlp, B, 4L, 4L, 4L) == ERROR)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    free(Ry); 
-    free(Help3); 
-    free(Rz); 
-    free(Help4); 
-    return(ERROR); 
-} 
- 
 free(Help4); 
  
 Binv = (double *)malloc((size_t) 16L * sizeof(double)); 
-if (Binv == (double *)NULL){  
+if (Binv == (double *)NULL)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Binv"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    free(Ry); 
-    free(Help3); 
-    free(Rz); 
-    return(ERROR); 
-} 
  
-if (SquareMatrixInvertGauss(B, Binv, 4L, DBL_EPSILON, &Status) == ERROR){  
+if (SquareMatrixInvertGauss(B, Binv, 4L, DBL_EPSILON, &Status) == ERROR)
     REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by SquareMatrixInvertGauss"); 
-    free(At); 
-    free(Help1); 
-    free(Help2); 
-    free(Ry); 
-    free(Help3); 
-    free(Rz); 
-    free(Binv); 
-    return(ERROR); 
-} 
- 
 free(Rz); 
 free(Ry); 
 free(At); 
  
- 
     C1 = (double *)malloc((size_t) 4L * sizeof(double)); 
-    if (C1 == (double *)NULL){  
+    if (C1 == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for C1"); 
-        free(Binv); 
-        return(ERROR); 
-    } 
  
     hlp = C1; 
     *hlp++ = (double) Identity_orientN[0]; 
@@ -736,22 +538,13 @@ free(At);
     *hlp = 0.0; 
      
     BinvC = (double *)malloc((size_t) 4L * sizeof(double)); 
-    if (BinvC == (double *)NULL){  
+    if (BinvC == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for BinvC"); 
-        free(Binv); 
-        free(C1); 
-        return(ERROR); 
-    } 
      
-    if (MatrixTimesVector(Binv, C1, BinvC, 4L, 4L) == ERROR){  
+    if (MatrixTimesVector(Binv, C1, BinvC, 4L, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixTimesVector"); 
-        free(Binv); 
-        free(C1); 
-        free(BinvC); 
-        return(ERROR); 
-    }
  
     if (BinvC[0] != 0.0) 
         scale_x = 1.0 / BinvC[0]; 
@@ -773,26 +566,15 @@ free(At);
     m_z = fabs(scale_z); 
      
     BinvCscaled = (double *)malloc((size_t) 4L * sizeof(double)); 
-    if (BinvCscaled == (double *)NULL){  
+    if (BinvCscaled == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for BinvCscaled"); 
-        free(Binv); 
-        free(C1); 
-        free(BinvC); 
-        return(ERROR); 
-    } 
  
     minm = m_x; 
     scale = scale_x; 
-    if (VectorScale(BinvC, BinvCscaled, scale_x, 4L) == ERROR){  
+    if (VectorScale(BinvC, BinvCscaled, scale_x, 4L) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by VectorScale"); 
-        free(Binv); 
-        free(C1); 
-        free(BinvC); 
-        free(BinvCscaled); 
-        return(ERROR); 
-    } 
     ksimax = Nx; 
     arr[0] = 0; 
     arr[1] = 1; 
@@ -805,15 +587,9 @@ free(At);
     if (m_y < minm) { 
         minm = m_y; 
         scale = scale_y; 
-        if (VectorScale(BinvC, BinvCscaled, scale_y, 4L) == ERROR){  
+        if (VectorScale(BinvC, BinvCscaled, scale_y, 4L) == ERROR)
             REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by VectorScale"); 
-            free(Binv); 
-            free(C1); 
-            free(BinvC); 
-            free(BinvCscaled); 
-            return(ERROR); 
-        } 
         ksimax = Ny; 
         arr[0] = 1; 
         arr[1] = 0; 
@@ -827,13 +603,7 @@ free(At);
     if (m_z < minm) { 
         minm = m_z; 
         scale = scale_z; 
-        if (VectorScale(BinvC, BinvCscaled, scale_z, 4L) == ERROR){ 
-            free(Binv); 
-            free(C1); 
-            free(BinvC); 
-            free(BinvCscaled);  
-            return(ERROR); 
-        } 
+        if (VectorScale(BinvC, BinvCscaled, scale_z, 4L) == ERROR)
         ksimax = Nz; 
         arr[0] = 2; 
         arr[1] = 0; 
@@ -844,40 +614,24 @@ free(At);
         mmax = Ny; 
         Coef_xyz = Coef_z; 
     } 
- 
-     
+
     free(BinvC);     
     free(C1); 
      
     C2 = (double *)malloc((size_t) 4L * sizeof(double)); 
-    if (C2 == (double *)NULL){  
+    if (C2 == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for C2"); 
-        free(Binv); 
-        free(BinvCscaled); 
-        return(ERROR); 
-    } 
  
     C3 = (double *)malloc((size_t) 4L * sizeof(double)); 
-    if (C3 == (double *)NULL){  
+    if (C3 == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for C3"); 
-        free(Binv); 
-        free(BinvCscaled); 
-        free(C2); 
-        return(ERROR); 
-    } 
      
     VWOrigin = (double *)malloc((size_t) 4L * sizeof(double)); 
-    if (VWOrigin == (double *)NULL){  
+    if (VWOrigin == (double *)NULL)
         REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for VWOrigin"); 
-        free(Binv); 
-        free(BinvCscaled); 
-        free(C2); 
-        free(C3); 
-        return(ERROR); 
-    } 
      
     hlp = C2; 
     *hlp++ = (double) Identity_orientV[0]; 
@@ -899,27 +653,20 @@ free(At);
      
     if (do_compute_projection(VWOrigin, Ndv, Ndw, C2, C3, 
         dv, dw, Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr, CoefVolumeNx, 
-        CoefVolumeNy, lmax, mmax, Pr) == ERROR){  
+        CoefVolumeNy, lmax, mmax, Pr) == ERROR)
         REPORT_ERROR(1, "Projection_real_shears::Compute_projection: "
                      "Error returned by do_compute_projection"); 
-        free(Binv); 
-        free(BinvCscaled); 
-        free(C2); 
-        free(C3); 
-        free(VWOrigin); 
-        return(ERROR); 
-    } 
      
-free(BinvCscaled); 
-free(C2); 
-free(C3); 
-free(VWOrigin);     
-free(Binv);
-free(Help1);
-free(Help2);
-free(Help3); 
-             
-return(!ERROR); 
+    free(BinvCscaled); 
+    free(C2); 
+    free(C3); 
+    free(VWOrigin);     
+    free(Binv);
+    free(Help1);
+    free(Help2);
+    free(Help3); 
+
+    return(!ERROR); 
 }/* End of Compute_projection */
 
 ///Main compute function. Returns possible error.
@@ -1394,10 +1141,10 @@ int Projection_real_shears::read_a_DocLine()
 int do_oneProjection(VolumeStruct &Data2)
 {        
         //Transcription of the angles
-        if(angles_transcription(Data2.InitPsiThetaPhi, Data2.Lambda123)==ERROR) return (ERROR);
+        if (angles_transcription(Data2.InitPsiThetaPhi, Data2.Lambda123)==ERROR) return (ERROR);
 
         //Calls the compute function
-        if(ROUT_project_execute(Data2) == ERROR) return(ERROR);
+        if (ROUT_project_execute(Data2) == ERROR) return(ERROR);
 
     return (!ERROR);
 }
