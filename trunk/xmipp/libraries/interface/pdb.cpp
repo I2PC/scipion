@@ -124,7 +124,7 @@ void computePDBgeometry(const std::string &fnPDB,
         getline(fh_pdb, line);
         if (line == "") continue;
         std::string kind = line.substr(0,4);
-        if (kind != "ATOM") continue;
+        if (kind != "ATOM" && kind!="HETA") continue;
 
         // Extract atom type and position
         // Typical line:
@@ -147,7 +147,11 @@ void computePDBgeometry(const std::string &fnPDB,
             if      (col==1) weight=textToFloat(line.substr(54,6));
             else if (col==2) weight=textToFloat(line.substr(60,6));
         }
-        else weight=(double) atomCharge(atom_type);
+        else 
+        {
+            if (kind=="HETA") continue;
+            weight=(double) atomCharge(atom_type);
+        }
         total_mass += weight;
         XX(centerOfMass) += weight * x;
         YY(centerOfMass) += weight * y;
@@ -197,7 +201,7 @@ void applyGeometry(const std::string &fn_in, const std::string &fn_out,
 	    continue;
 	}
         std::string kind = line.substr(0,4);
-        if (kind != "ATOM") 
+        if (kind != "ATOM" && kind != "HETA") 
 	{
 	    fh_out << line << std::endl;
 	    continue;
@@ -257,10 +261,8 @@ void PDBPhantom::read(const FileName &fnPDB)
 	    continue;
 	}
         std::string kind = line.substr(0,4);
-        if (kind != "ATOM") 
-	{
+        if (kind != "ATOM" && kind != "HETA") 
 	    continue;
-	}
 
         // Extract atom type and position
         // Typical line:

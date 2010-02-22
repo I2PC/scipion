@@ -226,7 +226,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         getline(fh_pdb, line);
         if (line == "") continue;
         std::string kind = line.substr(0,4);
-        if (kind != "ATOM") continue;
+        if (kind != "ATOM" && kind !="HETA") continue;
 
         // Extract atom type and position
         // Typical line:
@@ -249,6 +249,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         double weight, radius;
         if (!useFixedGaussian)
         {
+            if (atom_type=="HETA") continue;
             atomBlobDescription(atom_type, weight, radius);
         }
         else
