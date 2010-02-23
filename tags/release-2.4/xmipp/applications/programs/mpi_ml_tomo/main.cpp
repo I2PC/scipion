@@ -192,7 +192,7 @@ int main(int argc, char **argv)
                 FileName fn_tmp;
                 fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
                 myDocFile.open (fn_tmp.c_str());
-                myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), Ref (7), Wedge (8), Pmax/sumP (9), LL (10), bgmean (11), scale (12)\n";
+                myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), Ref (7), Wedge (8), Pmax/sumP (9), LL (10)\n";
 
                 // Master's own contribution
                 myDocFile << DFo;
