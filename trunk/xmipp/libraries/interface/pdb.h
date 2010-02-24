@@ -50,9 +50,6 @@ int atomCharge(const std::string &atom);
 double atomRadius(const std::string &atom);
 
 /** Compute the center of mass and limits of a PDB file.
-    The limits are referred to the center of mass, i.e., the
-    extension of the PDB goes from centerOfMass-limit0 to
-    centerOfMass+limitF.
     The intensity column is used only for the pseudoatoms. It specifies
     from which column we should read the intensity. Valid columns are
     Bfactor or occupancy.

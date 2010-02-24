@@ -133,7 +133,7 @@ void computePDBgeometry(const std::string &fnPDB,
         double x = textToFloat(line.substr(30,8));
         double y = textToFloat(line.substr(38,8));
         double z = textToFloat(line.substr(46,8));
-
+        
         // Update center of mass and limits
         if (x < XX(limit0)) XX(limit0) = x;
         else if (x > XX(limitF)) XX(limitF) = x;
@@ -160,8 +160,6 @@ void computePDBgeometry(const std::string &fnPDB,
 
     // Finish calculations
     centerOfMass /= total_mass;
-    limit0 -= centerOfMass;
-    limitF -= centerOfMass;
 
     // Close file
     fh_pdb.close();
@@ -173,9 +171,12 @@ void applyGeometry(const std::string &fn_in, const std::string &fn_out,
     const std::string &intensityColumn)
 {
     Matrix1D<double> centerOfMass, limit0, limitF;
-    if (centerPDB)
+    if (centerPDB) {
     	computePDBgeometry(fn_in, centerOfMass,limit0, limitF,
             intensityColumn);
+        limit0 -= centerOfMass;
+        limitF -= centerOfMass;
+    }
 
     // Open files
     std::ifstream fh_in;
