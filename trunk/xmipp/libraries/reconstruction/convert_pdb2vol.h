@@ -60,6 +60,9 @@ public:
     /** Use fixed Gaussian instead of scattering factors */
     bool useFixedGaussian;
     
+    /** Center the PDB */
+    bool doCenter;
+
     /** Fixed Gaussian standard deviation */
     double sigmaGaussian;
 

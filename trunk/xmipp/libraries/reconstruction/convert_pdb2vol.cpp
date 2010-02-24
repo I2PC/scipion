@@ -43,6 +43,7 @@ Prog_PDBPhantom_Parameters::Prog_PDBPhantom_Parameters()
     useBlobs=false;
     usePoorGaussian=false;
     useFixedGaussian=false;
+    doCenter=false;
 
     // Periodic table for the blobs
     periodicTable.resize(7, 2);
@@ -130,6 +131,7 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
     useFixedGaussian = checkParameter(argc, argv, "-fixed_Gaussian");
     if (useFixedGaussian)
         sigmaGaussian=textToFloat(getParameter(argc,argv,"-fixed_Gaussian"));
+    doCenter = checkParameter(argc, argv, "-centerPDB");
     intensityColumn = getParameter(argc,argv,"-intensityColumn","occupancy");
 }
 
@@ -142,6 +144,7 @@ void Prog_PDBPhantom_Parameters::usage()
 	      << "  [-sampling_rate <Ts=1>]	       : Sampling rate (Angstroms/pixel)\n"
 	      << "  [-high_sampling_rate <highTs=1/12>]: Sampling rate before downsampling\n"
 	      << "  [-size <output_dim>]	       : Final size in pixels (must be a power of 2, if blobs are used)\n"
+              << "  [-centerPDB]                       : Center PDB with the center of mass\n"
 	      << "  [-blobs]                           : Use blobs instead of scattering factors\n"
               << "  [-poor_Gaussian]                   : Use a simple Gaussian adapted to each atom\n"
               << "  [-fixed_Gaussian <std>]            : Use a fixed Gausian for each atom with\n"
@@ -162,6 +165,7 @@ void Prog_PDBPhantom_Parameters::show()
               << "Sampling rate:      " << Ts               << std::endl
               << "High sampling rate: " << highTs           << std::endl
               << "Size:               " << output_dim       << std::endl
+              << "Center PDB:         " << doCenter         << std::endl
 	      << "Use blobs:          " << useBlobs         << std::endl
 	      << "Use poor Gaussian:  " << usePoorGaussian  << std::endl
 	      << "Use fixed Gaussian: " << useFixedGaussian << std::endl
@@ -176,8 +180,11 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
 {
     Matrix1D<double> limit0(3), limitF(3);
     computePDBgeometry(fn_pdb, centerOfMass, limit0, limitF, intensityColumn);
-    std::cout << limit0.transpose() << std::endl;
-    std::cout << limitF.transpose() << std::endl;
+    if (doCenter)
+    {
+        limit0-=centerOfMass;
+        limitF-=centerOfMass;
+    }
     limit.resize(3);
     XX(limit) = XMIPP_MAX(ABS(XX(limit0)), ABS(XX(limitF)));
     YY(limit) = XMIPP_MAX(ABS(YY(limit0)), ABS(YY(limitF)));
@@ -239,11 +246,9 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         // Correct position
         Matrix1D<double> r(3);
         VECTOR_R3(r, x, y, z);
-        if (!useFixedGaussian)
-        {
+        if (doCenter)
             r -= centerOfMass;
-            r /= highTs;
-        }
+        r /= highTs;
 
         // Characterize atom
         double weight, radius;
