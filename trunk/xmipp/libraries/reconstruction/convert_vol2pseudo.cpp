@@ -62,6 +62,8 @@ void Prog_Convert_Vol2Pseudo::read(int argc, char **argv)
     allowIntensity = !checkParameter(argc,argv,"-dontAllowIntensity");
     intensityColumn = getParameter(argc,argv,"-intensityColumn","occupancy");
     minDistance = textToFloat(getParameter(argc,argv,"-growSeeds","0.001"));
+    penalty = textToFloat(getParameter(argc,argv,"-penalty","10"));
+    numThreads = textToInteger(getParameter(argc,argv,"-thr","1"));
 }
 
 void Prog_Convert_Vol2Pseudo::show() const
@@ -77,6 +79,8 @@ void Prog_Convert_Vol2Pseudo::show() const
               << "AllowIntensity: " << allowIntensity  << std::endl
               << "Intensity Col:  " << intensityColumn << std::endl
               << "Min. Distance:  " << minDistance     << std::endl
+              << "Penalty:        " << penalty         << std::endl
+              << "Threads:        " << numThreads      << std::endl
     ;    
     if (useMask) mask_prm.show();
     else std::cout << "No mask\n";
@@ -99,6 +103,8 @@ void Prog_Convert_Vol2Pseudo::usage() const
               << "                                     Valid values: occupancy, Bfactor\n"
               << "  [-minDistance <d=0.001>]         : Minimum distance between two atoms\n"
               << "                                     Set it to -1 to disable\n"
+              << "  [-penalty <p=10>]                : Penalty for overshooting\n"
+              << "  [-thr <n=1>]                     : Number of threads\n"
     ;
     mask_prm.usage();
 }
@@ -110,6 +116,9 @@ void Prog_Convert_Vol2Pseudo::produceSideInfo()
 
     Vin.read(fnVol);
     Vin().setXmippOrigin();
+    
+    if (fnOut=="")
+        fnOut=fnVol.without_extension();
     
     Vcurrent().initZeros(Vin());
     mask_prm.generate_3Dmask(Vin());
@@ -144,6 +153,19 @@ void Prog_Convert_Vol2Pseudo::produceSideInfo()
         percentil1=maxval/500;
     range=hist.percentil(99)-percentil1;
     smallAtom=(range*targetError)/2;
+    
+    // Create threads
+    barrier_init(&barrier,numThreads+1);
+    threadIds=(pthread_t *)malloc(numThreads*sizeof(pthread_t));
+    threadArgs=(Prog_Convert_Vol2Pseudo_ThreadParams *)
+        malloc(numThreads*sizeof(Prog_Convert_Vol2Pseudo_ThreadParams));
+    for (int i=0; i<numThreads; i++)
+    {
+        threadArgs[i].myThreadID=i;
+        threadArgs[i].parent=this;
+        pthread_create( (threadIds+i), NULL, optimizeCurrentAtomsThread,
+            (void *) (threadArgs+i));
+    }
 }
 
 //#define DEBUG
@@ -452,7 +474,7 @@ double Prog_Convert_Vol2Pseudo::evaluateRegion(const Matrix3D<double> &region)
         if (Vinv<=0) continue;
         if (useMask && mask_prm.imask3D(k,i,j)==0) continue;
         double vdiff=region(k,i,j)-Vinv;
-        double vperc=ABS(vdiff);
+        double vperc=(vdiff<0)?-vdiff:penalty*vdiff;
         avgDiff+=vperc;
         N++;
     }
@@ -466,23 +488,37 @@ void Prog_Convert_Vol2Pseudo::insertRegion(const Matrix3D<double> &region)
 }
 
 /* Optimize ---------------------------------------------------------------- */
-void Prog_Convert_Vol2Pseudo::optimizeCurrentAtoms()
+static pthread_mutex_t mutexUpdateVolume=PTHREAD_MUTEX_INITIALIZER;
+
+void* Prog_Convert_Vol2Pseudo::optimizeCurrentAtomsThread(
+    void * threadArgs)
 {
-    if (!allowIntensity && !allowMovement) return;
-    bool finished=false;
-    int iter=0;
+    Prog_Convert_Vol2Pseudo_ThreadParams *myArgs=
+        (Prog_Convert_Vol2Pseudo_ThreadParams *) threadArgs;
+    Prog_Convert_Vol2Pseudo *parent=myArgs->parent;
+    std::vector< PseudoAtom > &atoms=parent->atoms;
+    bool allowIntensity=parent->allowIntensity;
+    bool allowMovement=parent->allowMovement;
     Matrix3D<double> region, regionBackup;
+    
+    barrier_t *barrier=&(parent->barrier);
     do
     {
-        double oldError=percentageDiff;
-        int Nintensity=0;
-        int Nmovement=0;
+        barrier_wait( barrier );
+        if (parent->threadOpCode==KILLTHREAD)
+            return NULL;
+
+        myArgs->Nintensity=0;
+        myArgs->Nmovement=0;
         int nmax=atoms.size();
         for (int n=0; n<nmax; n++)
         {
-            extractRegion(n,region,true);
-            double currentRegionEval=evaluateRegion(region);
-            drawGaussian(atoms[n].location(0), atoms[n].location(1),
+            if ((n+1)%parent->numThreads!=myArgs->myThreadID)
+                continue;
+        
+            parent->extractRegion(n,region,true);
+            double currentRegionEval=parent->evaluateRegion(region);
+            parent->drawGaussian(atoms[n].location(0), atoms[n].location(1),
                 atoms[n].location(2),region,-atoms[n].intensity);
             regionBackup=region;
 
@@ -496,10 +532,10 @@ void Prog_Convert_Vol2Pseudo::optimizeCurrentAtoms()
                 for (int t=0; t<5; t++)
                 {
                     region=regionBackup;
-                    drawGaussian(atoms[n].location(0), atoms[n].location(1),
-                        atoms[n].location(2),region,
+                    parent->drawGaussian(atoms[n].location(0),
+                        atoms[n].location(1), atoms[n].location(2),region,
                         tryCoeffs[t]*atoms[n].intensity);
-                    double trialRegionEval=evaluateRegion(region);
+                    double trialRegionEval=parent->evaluateRegion(region);
                     double reduction=trialRegionEval-currentRegionEval;
                     if (reduction<bestRed)
                     {
@@ -511,14 +547,17 @@ void Prog_Convert_Vol2Pseudo::optimizeCurrentAtoms()
                 {
                     atoms[n].intensity*=tryCoeffs[bestT];
                     region=regionBackup;
-                    drawGaussian(atoms[n].location(0), atoms[n].location(1),
+                    parent->drawGaussian(atoms[n].location(0), atoms[n].location(1),
                         atoms[n].location(2),region,atoms[n].intensity);
-                    insertRegion(region);
-                    currentRegionEval=evaluateRegion(region);
-                    drawGaussian(atoms[n].location(0), atoms[n].location(1),
-                        atoms[n].location(2),region,-atoms[n].intensity);
+                    pthread_mutex_lock(&mutexUpdateVolume);
+                        parent->insertRegion(region);
+                    pthread_mutex_unlock(&mutexUpdateVolume);
+                    currentRegionEval=parent->evaluateRegion(region);
+                    parent->drawGaussian(atoms[n].location(0),
+                        atoms[n].location(1), atoms[n].location(2),region,
+                        -atoms[n].intensity);
                     regionBackup=region;
-                    Nintensity++;
+                    myArgs->Nintensity++;
                 }
             }
             
@@ -533,11 +572,11 @@ void Prog_Convert_Vol2Pseudo::optimizeCurrentAtoms()
                 for (int t=0; t<6; t++)
                 {
                     region=regionBackup;
-                    drawGaussian(atoms[n].location(0)+tryZ[t],
+                    parent->drawGaussian(atoms[n].location(0)+tryZ[t],
                         atoms[n].location(1)+tryY[t],
                         atoms[n].location(2)+tryX[t],
                         region,atoms[n].intensity);
-                    double trialRegionEval=evaluateRegion(region);
+                    double trialRegionEval=parent->evaluateRegion(region);
                     double reduction=trialRegionEval-currentRegionEval;
                     if (reduction<bestRed)
                     {
@@ -551,16 +590,47 @@ void Prog_Convert_Vol2Pseudo::optimizeCurrentAtoms()
                     atoms[n].location(1)+=tryY[bestT];
                     atoms[n].location(2)+=tryX[bestT];
                     region=regionBackup;
-                    drawGaussian(atoms[n].location(0), atoms[n].location(1),
-                        atoms[n].location(2),region,atoms[n].intensity);
-                    insertRegion(region);
-                    currentRegionEval=evaluateRegion(region);
-                    Nmovement++;
+                    parent->drawGaussian(atoms[n].location(0),
+                        atoms[n].location(1), atoms[n].location(2),region,
+                        atoms[n].intensity);
+                    pthread_mutex_lock(&mutexUpdateVolume);
+                        parent->insertRegion(region);
+                    pthread_mutex_unlock(&mutexUpdateVolume);
+                    myArgs->Nmovement++;
                 }
             }
         }
+
+        barrier_wait( barrier );
+    } while (true);
+}
+
+void Prog_Convert_Vol2Pseudo::optimizeCurrentAtoms()
+{
+    if (!allowIntensity && !allowMovement) return;
+    bool finished=false;
+    int iter=0;
+    do
+    {
+        double oldError=percentageDiff;
+        
+        threadOpCode=WORKTHREAD;
+        // Launch workers
+        barrier_wait(&barrier);
+        // Wait for workers to finish
+        barrier_wait(&barrier);
+        
+        // Retrieve results
+        int Nintensity=0;
+        int Nmovement=0;
+        for (int i=0; i<numThreads; i++)
+        {
+            Nintensity+=threadArgs[i].Nintensity;
+            Nmovement+=threadArgs[i].Nmovement;
+        }
         
         // Remove all the removed atoms
+        int nmax=atoms.size();
         for (int n=nmax-1; n>=0; n--)
             if (atoms[n].intensity==0)
                 atoms.erase(atoms.begin()+n);
@@ -581,8 +651,7 @@ void Prog_Convert_Vol2Pseudo::optimizeCurrentAtoms()
 /* Write ------------------------------------------------------------------- */
 void Prog_Convert_Vol2Pseudo::writeResults()
 {
-    if (fnOut!="")
-        Vcurrent.write(fnOut+".vol");
+    Vcurrent.write(fnOut+"_approximation.vol");
 
     // Compute the histogram of intensities
     Matrix1D<double> intensities;
@@ -591,7 +660,7 @@ void Prog_Convert_Vol2Pseudo::writeResults()
         intensities(i)=atoms[i].intensity;
     histogram1D hist;
     compute_hist(intensities, hist, 100);
-    hist.write(fnOut+".hist");
+    hist.write(fnOut+"_approximation.hist");
 
     // Save the difference
     VolumeXmipp Vdiff;
@@ -642,6 +711,7 @@ void Prog_Convert_Vol2Pseudo::writeResults()
 void Prog_Convert_Vol2Pseudo::run()
 {
     int iter=0;
+    double previousNAtoms=0;
     do
     {
         // Place seeds
@@ -663,7 +733,23 @@ void Prog_Convert_Vol2Pseudo::run()
                   << percentageDiff << std::endl;
         writeResults();
         iter++;
+        
+        if (ABS(previousNAtoms-atoms.size())/atoms.size()<0.01)
+        {
+            std::cout << "The required precision cannot be attained\n"
+                      << "Suggestion: Reduce sigma and/or minDistance\n"
+                      << "Writing best approximation with current parameters\n";
+            
+            break;
+        }
+        previousNAtoms=atoms.size();
     } while (percentageDiff>targetError);
     removeTooCloseSeeds();
     writeResults();
+    
+    // Kill threads
+    threadOpCode=KILLTHREAD;
+    barrier_wait(&barrier);
+    free(threadIds);
+    free(threadArgs);
 }

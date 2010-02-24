@@ -29,7 +29,10 @@
 
 #include <data/volume.h>
 #include <data/mask.h>
+#include <data/threads.h>
 #include <vector>
+
+class Prog_Convert_Vol2Pseudo;
 
 /**@defgroup ConvertVol2Pseudo ConvertVol2Pseudo
    @ingroup ReconsLibraryPrograms */
@@ -53,6 +56,15 @@ public:
 
 /// Comparison between pseudo atoms
 bool operator <(const PseudoAtom &a, const PseudoAtom &b);
+
+// Thread parameters
+struct Prog_Convert_Vol2Pseudo_ThreadParams
+{
+    int myThreadID;
+    Prog_Convert_Vol2Pseudo *parent;
+    int Nintensity;
+    int Nmovement;
+};
 
 class Prog_Convert_Vol2Pseudo
 {
@@ -95,6 +107,12 @@ public:
     
     /// Mindistance
     double minDistance;
+
+    /// Penalization
+    double penalty;
+    
+    /// Number of threads
+    int numThreads;
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);
@@ -143,6 +161,9 @@ public:
     /// Optimize current atoms
     void optimizeCurrentAtoms();
     
+    /// Optimize current atoms (thread)
+    static void* optimizeCurrentAtomsThread(void * threadArgs);
+    
     /// Write results
     void writeResults();
 public:
@@ -178,6 +199,20 @@ public:
 
     // Gaussian table
     Matrix1D<double> gaussianTable;
+    
+    // Barrier
+    barrier_t barrier;
+    
+#define KILLTHREAD -1
+#define WORKTHREAD  0
+    // Thread operation code
+    int threadOpCode;
+    
+    // Pointer to thread arguments
+    Prog_Convert_Vol2Pseudo_ThreadParams *threadArgs;
+    
+    // Pointer to threads
+    pthread_t *threadIds;
 };
 //@}
 #endif
