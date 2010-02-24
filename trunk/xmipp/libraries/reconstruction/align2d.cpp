@@ -702,13 +702,14 @@ void Prog_align2d_prm::align2d()
     }
 
     // Filter if necessary
-    if (do_filter)
+    if (do_filter && n_images>0)
     {
         FourierMask fmask;
         fmask.w1 = sam / resol;
         fmask.raised_w = 0.1;
         fmask.FilterShape = RAISED_COSINE;
         fmask.FilterBand = LOWPASS;
+        fmask.generate_mask(images[0]());
         for (int imgno = 0;imgno < n_images;imgno++)
             fmask.apply_mask_Space(images[imgno]());
     }
