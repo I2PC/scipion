@@ -256,7 +256,7 @@ double Vector::LnftyDistance(Vector v)
 {
     double *xp1=d->p, *xp2=v.d->p, sum=-1.0;
     int ni=sz();
-    while (ni--) sum=::mmax(sum, condorabs(*(xp1++)-*(xp2++)));
+    while (ni--) sum=::mmax(sum, abs(*(xp1++)-*(xp2++)));
     return sum;
 }
 
@@ -264,7 +264,7 @@ double Vector::LnftyNorm()
 {
     double *xp1=d->p, sum=-1.0;
     int ni=sz();
-    while (ni--) sum=::mmax(sum, condorabs(*(xp1++)));
+    while (ni--) sum=::mmax(sum, abs(*(xp1++)));
     return sum;
 }
 
