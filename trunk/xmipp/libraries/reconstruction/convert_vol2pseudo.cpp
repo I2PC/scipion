@@ -64,6 +64,7 @@ void Prog_Convert_Vol2Pseudo::read(int argc, char **argv)
     minDistance = textToFloat(getParameter(argc,argv,"-growSeeds","0.001"));
     penalty = textToFloat(getParameter(argc,argv,"-penalty","10"));
     numThreads = textToInteger(getParameter(argc,argv,"-thr","1"));
+    sampling = textToFloat(getParameter(argc,argv,"-sampling_rate","1"));
 }
 
 void Prog_Convert_Vol2Pseudo::show() const
@@ -81,6 +82,7 @@ void Prog_Convert_Vol2Pseudo::show() const
               << "Min. Distance:  " << minDistance     << std::endl
               << "Penalty:        " << penalty         << std::endl
               << "Threads:        " << numThreads      << std::endl
+              << "Sampling Rate:  " << sampling        << std::endl
     ;    
     if (useMask) mask_prm.show();
     else std::cout << "No mask\n";
@@ -104,6 +106,7 @@ void Prog_Convert_Vol2Pseudo::usage() const
               << "  [-minDistance <d=0.001>]         : Minimum distance between two atoms\n"
               << "                                     Set it to -1 to disable\n"
               << "  [-penalty <p=10>]                : Penalty for overshooting\n"
+              << "  [-sampling_rate <Ts=1>]          : Sampling rate Angstroms/pixel\n"
               << "  [-thr <n=1>]                     : Number of threads\n"
     ;
     mask_prm.usage();
@@ -695,14 +698,18 @@ void Prog_Convert_Vol2Pseudo::writeResults()
             fprintf(fhOut,
                 "ATOM  %5d DENS DENS%5d    %8.3f%8.3f%8.3f%6.2f     1      DENS\n",
                 n+1,n+1,
-                (float)atoms[n].location(2),(float)atoms[n].location(1),
-                (float)atoms[n].location(0),(float)intensity);
+                (float)(atoms[n].location(2)*sampling),
+                (float)(atoms[n].location(1)*sampling),
+                (float)(atoms[n].location(0)*sampling),
+                (float)intensity);
         else
             fprintf(fhOut,
                 "ATOM  %5d DENS DENS%5d    %8.3f%8.3f%8.3f     1%6.2f      DENS\n",
                 n+1,n+1,
-                (float)atoms[n].location(2),(float)atoms[n].location(1),
-                (float)atoms[n].location(0),(float)intensity);
+                (float)(atoms[n].location(2)*sampling),
+                (float)(atoms[n].location(1)*sampling),
+                (float)(atoms[n].location(0)*sampling),
+                (float)intensity);
     }
     fclose(fhOut);
 }

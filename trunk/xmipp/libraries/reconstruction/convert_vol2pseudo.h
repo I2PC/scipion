@@ -113,6 +113,9 @@ public:
     
     /// Number of threads
     int numThreads;
+    
+    /// Sampling rate
+    double sampling;
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);
