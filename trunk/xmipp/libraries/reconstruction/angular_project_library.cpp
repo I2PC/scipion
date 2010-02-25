@@ -183,7 +183,7 @@ Prog_angular_project_library_Parameters::project_angle_vector(
        for (int i=0;i<my_init;i++)
          myCounter++;
         
-    if (shears)
+    if (shears && XSIZE(inputVol())!=0)
     {
         prepareStructVolume(inputVol(),VShears);
         inputVol.clear();
