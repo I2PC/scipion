@@ -199,7 +199,7 @@ void Prog_ml_tomo_prm::show()
         else
             std::cerr << "  Number of references:   : " << nr_ref << std::endl;
         std::cerr << "  Output rootname         : " << fn_root << std::endl;
-        if (!(dont_align||do_only_average))
+        if (!(dont_align || do_only_average))
         {
              std::cerr << "  Angular sampling rate   : " << angular_sampling<< " degrees"<<std::endl;
             if (ang_search > 0.)
@@ -488,6 +488,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
         nr_ref=refnos.computeMax();
         Niter=1;
         do_impute=false;
+        do_ml=false;
     }
     else
     {
@@ -858,7 +859,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         for (int nn = 0; nn < Nsub; nn++)
         {
             fn_tmp=SFtmp.NextImg();
-            if (do_keep_angles || do_missing || dont_align || do_only_average)
+            if (do_keep_angles || do_missing || dont_align)
             {
                 // Going through the docfile again here is a bit dirty coding...
                 // Now do nothing, leave DF pointer at relevant position and read below
@@ -871,7 +872,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             Itmp.read(fn_tmp);
             Itmp().setXmippOrigin();
             reScaleVolume(Itmp(),true);
-            if (do_keep_angles || dont_align || do_only_average)
+            if (do_keep_angles || dont_align)
             {
                 // angles from docfile
                 my_rot = DF(0);
@@ -1113,7 +1114,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                 myinfo.rot = rot;
                 myinfo.tilt = tilt;
                 myinfo.psi = psi;
-                myinfo.A = Euler_rotation3DMatrix(rot, tilt, psi);
+                myinfo.A = Euler_rotation3DMatrix(myinfo.rot, myinfo.tilt, myinfo.psi);
                 myinfo.direction = i;
                 all_angle_info.push_back(myinfo);
                 nr_ang ++;
@@ -1790,22 +1791,17 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     int irot, irefmir, sigdim, xmax, ymax;
     int ioptpsi = 0, ioptlib = 0, ioptx = 0, iopty = 0, ioptz = 0, imax = 0;
     bool is_ok_trymindiff = false;
-    int my_nr_ang, my_nr_ref, old_optangno = opt_angno, old_optrefno = opt_refno;
+    int my_nr_ang, old_optangno = opt_angno, old_optrefno = opt_refno;
     std::vector<double> all_Xi2;
     Matrix2D<double> A_rot(4,4), I(4,4), A_rot_inv(4,4);
     bool is_a_neighbor, is_within_psirange=true;
     XmippFftw local_transformer;
 
-    if (dont_align || do_only_average)
+    if (dont_align)
         my_nr_ang=1;
     else
         my_nr_ang=nr_ang;
 
-    if (do_only_average)
-        my_nr_ref=1;
-    else
-        my_nr_ref=nr_ref;
-        
     // Only translations smaller than 6 sigma_offset are considered!
     // TODO: perhaps 3 sigma??
     I.initIdentity();
@@ -1817,7 +1813,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     Maux2.resize(dim, dim, dim);
     Maux.setXmippOrigin();
     Maux2.setXmippOrigin();
-    if (dont_align || do_only_average)
+    if (dont_align)
         Mweight.initZeros(1,1,1);
     else
         Mweight.initZeros(sigdim, sigdim, sigdim);
@@ -1940,7 +1936,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 // This will speed-up things because we will find Pmax probably right away,
                 // and this will make the if-statement that checks SIGNIFICANT_WEIGHT_LOW
                 // effective right from the start
-                for (int rr = old_optrefno; rr < old_optrefno+my_nr_ref; rr++)
+                for (int rr = old_optrefno; rr < old_optrefno+nr_ref; rr++)
                 {
                     int refno = rr;
                     if (refno >= nr_ref) refno-= nr_ref;
@@ -2176,18 +2172,13 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     bool is_a_neighbor;
     double img_stddev, ref_stddev, corr, maxcorr=-9999.;
     int ioptx,iopty,ioptz;
-    int my_nr_ang, my_nr_ref, old_optangno = opt_angno, old_optrefno = opt_refno;
+    int my_nr_ang, old_optangno = opt_angno, old_optrefno = opt_refno;
     bool is_within_psirange=true;
 
-    if (dont_align || do_only_average)
+    if (dont_align)
         my_nr_ang=1;
     else
         my_nr_ang=nr_ang;
-    if (do_only_average)
-        my_nr_ref=1;
-    else
-        my_nr_ref=nr_ref;
-        
 
     I.initIdentity();
     Maux.resize(dim, dim, dim);
@@ -2206,7 +2197,6 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
         Maux *= Mmask; 
     }
     // Calculate the unrotated Fourier transform with enforced wedge of Mimg (store in Fimg0)
-    // also calculate myXi2;
     // Note that from here on local_transformer will act on Maux <-> Faux
     local_transformer.FourierTransform(Maux, Faux, false);
     if (do_missing)
@@ -2228,115 +2218,127 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
         Fimg0 = Faux;
     Mimg0 = Maux;
     
-    // Calculate stddev of (wedge-inforced) image
-    img_stddev = Mimg0.computeStddev();
-
-    // Loop over all orientations
-    for (int aa = old_optangno; aa < old_optangno+my_nr_ang; aa++)
+    if (do_only_average)
     {
-        int angno = aa;
-        if (angno >= nr_ang) angno -= nr_ang;
+        maxcorr = 1.;
+        ioptz = 0;
+        iopty = 0;
+        ioptx = 0;
+        opt_angno = old_optangno;
+        opt_refno = old_optrefno;
+    }
+    else
+    {
 
-        // See whether this image is in the neighborhoood for this imgno
-        if (ang_search > 0.)
+        // Calculate stddev of (wedge-inforced) image
+        img_stddev = Mimg0.computeStddev();
+        // Loop over all orientations
+        for (int aa = old_optangno; aa < old_optangno+my_nr_ang; aa++)
         {
-            is_a_neighbor = false;
-            if (do_limit_psirange)
+            int angno = aa;
+            if (angno >= nr_ang) angno -= nr_ang;
+            
+            // See whether this image is in the neighborhoood for this imgno
+            if (ang_search > 0.)
             {
-                // also restrict psi-angle search
-                if (ABS(realWRAP(old_psi - (all_angle_info[angno]).psi,-180.,180.)) <= ang_search)
-                    is_within_psirange=true;
-                else
-                    is_within_psirange=false;
-            }
-
-            if (!do_limit_psirange || is_within_psirange)
-            {
-                for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
+                is_a_neighbor = false;
+                if (do_limit_psirange)
                 {
-                    if (mysampling.my_neighbors[imgno][i] == (all_angle_info[angno]).direction)
+                    // also restrict psi-angle search
+                    if (ABS(realWRAP(old_psi - (all_angle_info[angno]).psi,-180.,180.)) <= ang_search)
+                        is_within_psirange=true;
+                    else
+                        is_within_psirange=false;
+                }
+                
+                if (!do_limit_psirange || is_within_psirange)
+                {
+                    for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
                     {
-                        is_a_neighbor = true;
-                        break;
+                        if (mysampling.my_neighbors[imgno][i] == (all_angle_info[angno]).direction)
+                        {
+                            is_a_neighbor = true;
+                            break;
+                        }
                     }
                 }
             }
-        }
-        else
-        {
-            is_a_neighbor = true;
-        }
-        
-        // If it is in the neighborhoood: proceed
-        if (is_a_neighbor)
-        {
-            A_rot = (all_angle_info[angno]).A;
-            A_rot_inv = A_rot.inv();
-
-            // Loop over all references
-            for (int rr = old_optrefno; rr < old_optrefno+my_nr_ref; rr++)
+            else
             {
-                int refno = rr;
-                if (refno >= nr_ref) refno-= nr_ref;
-
-                // Now (inverse) rotate the reference and calculate its Fourier transform
-                // Use DONT_WRAP because the reference has been omasked
-                applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV, 
-                              DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
-                local_transformer.FourierTransform();
-                if (do_missing)
+                is_a_neighbor = true;
+            }
+            
+            // If it is in the neighborhoood: proceed
+            if (is_a_neighbor)
+            {
+                A_rot = (all_angle_info[angno]).A;
+                A_rot_inv = A_rot.inv();
+                
+                // Loop over all references
+                for (int rr = old_optrefno; rr < old_optrefno+nr_ref; rr++)
                 {
-                    // Enforce wedge on the reference
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
+                    int refno = rr;
+                    if (refno >= nr_ref) refno-= nr_ref;
+                    
+                    // Now (inverse) rotate the reference and calculate its Fourier transform
+                    // Use DONT_WRAP because the reference has been omasked
+                    applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV, 
+                                  DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
+                    local_transformer.FourierTransform();
+                    if (do_missing)
                     {
-                        DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
+                        // Enforce wedge on the reference
+                        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
+                        {
+                            DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
+                        }
+                        // BE CAREFUL! inverseFourierTransform messes up Faux
+                        Fref = Faux;
+                        local_transformer.inverseFourierTransform();
                     }
-                    // BE CAREFUL! inverseFourierTransform messes up Faux
-                    Fref = Faux;
+                    else
+                        Fref = Faux;
+                    // Calculate stddev of (wedge-inforced) reference
+                    Mref = Maux;
+                    ref_stddev = Mref.computeStddev();
+                    
+                    // Calculate correlation matrix via backward FFT
+                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+                    {
+                        dVkij(Faux,k,i,j) = 
+                            dVkij(Fimg0,k,i,j) * 
+                            conj(dVkij(Fref,k,i,j));
+                    }
                     local_transformer.inverseFourierTransform();
-                }
-                else
-                    Fref = Faux;
-                // Calculate stddev of (wedge-inforced) reference
-                Mref = Maux;
-                ref_stddev = Mref.computeStddev();
-
-                // Calculate correlation matrix via backward FFT
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
-                {
-                    dVkij(Faux,k,i,j) = 
-                        dVkij(Fimg0,k,i,j) * 
-                        conj(dVkij(Fref,k,i,j));
-                }
-                local_transformer.inverseFourierTransform();
-                CenterFFT(Maux, true);
-
-                if (dont_align || do_only_average)
-                {
-                    corr = VOL_ELEM(Maux,0,0,0) / (img_stddev * ref_stddev);
-                    if (corr > maxcorr)
+                    CenterFFT(Maux, true);
+                    
+                    if (dont_align)
                     {
-                        maxcorr = corr;
-                        ioptz = 0;
-                        iopty = 0;
-                        ioptx = 0;
-                        opt_angno = angno;
-                        opt_refno = refno;
-                    }
-                }
-                else
-                {
-                    FOR_ALL_ELEMENTS_IN_MATRIX3D(Maux)
-                    {
-                        corr = VOL_ELEM(Maux,k,i,j) / (img_stddev * ref_stddev);
+                        corr = VOL_ELEM(Maux,0,0,0) / (img_stddev * ref_stddev);
                         if (corr > maxcorr)
                         {
                             maxcorr = corr;
-                            ioptz = k;
-                            iopty = i;
-                            ioptx = j;
+                            ioptz = 0;
+                            iopty = 0;
+                            ioptx = 0;
                             opt_angno = angno;
                             opt_refno = refno;
+                        }
+                    }
+                    else
+                    {
+                        FOR_ALL_ELEMENTS_IN_MATRIX3D(Maux)
+                        {
+                            corr = VOL_ELEM(Maux,k,i,j) / (img_stddev * ref_stddev);
+                            if (corr > maxcorr)
+                            {
+                                maxcorr = corr;
+                                ioptz = k;
+                                iopty = i;
+                                ioptx = j;
+                                opt_angno = angno;
+                                opt_refno = refno;
+                            }
                         }
                     }
                 }
@@ -2350,7 +2352,6 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     ZZ(opt_offsets) = -(double)ioptz;
     Mimg0.selfTranslate(opt_offsets, DONT_WRAP);
     A_rot = (all_angle_info[opt_angno]).A;
-
     maskSphericalAverageOutside(Mimg0);
     Mimg0.selfApplyGeometry(A_rot, IS_NOT_INV, 
                             DONT_WRAP, DIRECT_MULTIDIM_ELEM(Mimg0,0));
@@ -2490,7 +2491,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
         opt_refno = prm->imgs_optrefno[imgno];
         opt_angno = prm->imgs_optangno[imgno];
         old_psi = prm->imgs_optpsi[imgno];
-            
+
         if (prm->do_ml)
         {
             // A. Use maximum likelihood approach
