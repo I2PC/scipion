@@ -80,7 +80,7 @@ Magnification=50000
 # Scanned pixel size (in um)
 ScannedPixelSize=7
 # Amplitude Contrast
-AmplitudeContrast=0.1
+AmplitudeContrast=0.07
 # {expert} Only perform power spectral density estimation?
 """ Skip the CTF estimation part, and only estimate the PSD
 """
