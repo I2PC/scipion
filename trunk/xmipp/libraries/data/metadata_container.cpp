@@ -22,24 +22,24 @@
 *  All comments concerning this program package may be sent to the
 *  e-mail address 'xmipp@cnb.csic.es'
 ***************************************************************************/
-#include "container.h"
+#include "metadata_container.h"
 
-xmpContainer::xmpContainer(){};
-xmpContainer::~xmpContainer(){};
+metaDataContainer::metaDataContainer(){};
+metaDataContainer::~metaDataContainer(){};
 
-int xmpContainer::addValue( std::string name, int value )
+int metaDataContainer::addValue( std::string name, int value )
 {
 	void * newValue = (void *)(new int(value));
 	return insertVoidPtr( name, newValue );
 }
 
-int xmpContainer::addValue( std::string name, double value )
+int metaDataContainer::addValue( std::string name, double value )
 {
 	void * newValue = (void *)(new double(value));
 	return insertVoidPtr( name, newValue );
 }
 
-int xmpContainer::insertVoidPtr( std::string name, void * value )
+int metaDataContainer::insertVoidPtr( std::string name, void * value )
 {
 	// Return value for "insert" call
 	std::pair<std::map<std::string, void *>::iterator,bool> ret;
@@ -56,7 +56,7 @@ int xmpContainer::insertVoidPtr( std::string name, void * value )
 	}
 }
 
-void * xmpContainer::getValue( std::string name )
+void * metaDataContainer::getValue( std::string name )
 {	
 	std::map<std::string, void *>::iterator element; 
 
@@ -72,7 +72,7 @@ void * xmpContainer::getValue( std::string name )
 	}
 }
 
-bool xmpContainer::valueExists( std::string name )
+bool metaDataContainer::valueExists( std::string name )
 {
 	if( values.find( name ) == values.end( ) )
 	{
@@ -84,7 +84,7 @@ bool xmpContainer::valueExists( std::string name )
 	}
 }
 
-void xmpContainer::deleteValue( std::string name )
+void metaDataContainer::deleteValue( std::string name )
 {
 	values.erase( name );
 }
@@ -92,7 +92,7 @@ void xmpContainer::deleteValue( std::string name )
 // Testing	
 /*int main( )
 {
-	xmpContainer * params = new xmpContainer( );
+	metaDataContainer * params = new metaDataContainer( );
 
 	params->addValue( std::string("rot"), 5.);
 	params->addValue( std::string("tilt"), 2.3);

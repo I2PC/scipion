@@ -23,8 +23,8 @@
 *  e-mail address 'xmipp@cnb.csic.es'
 ***************************************************************************/
 
-#ifndef CONTAINER_H
-#define CONTAINER_H
+#ifndef METADATACONTAINER_H
+#define METADATACONTAINER_H
 
 #include <map>
 #include <string>
@@ -36,7 +36,7 @@
 #define tilt(object) *((angle_t*)(object->getValue(std::string("tilt"))))
 #define psi(object) *((angle_t*)(object->getValue(std::string("psi"))))
 
-class xmpContainer
+class metaDataContainer
 {
 	/** Container for pairs "name" and value. Note that void * allows to use
 	    mixed types */
@@ -47,10 +47,10 @@ class xmpContainer
 	public:
 	
 	/** Constructor */
-	xmpContainer();
+	metaDataContainer();
 	
 	/** Destructor */
-	~xmpContainer();
+	~metaDataContainer();
 	
 	/** Create a new pair name-value of integer type */
 	int addValue( std::string name, int value );
@@ -63,5 +63,4 @@ class xmpContainer
 	void deleteValue( std::string name );
 };
 
-//@}
 #endif
