@@ -30,12 +30,6 @@
 #include <string>
 #include <iostream>
 
-#define angle_t double
-
-#define rot(object) *((angle_t*)(object->getValue(std::string("rot"))))
-#define tilt(object) *((angle_t*)(object->getValue(std::string("tilt"))))
-#define psi(object) *((angle_t*)(object->getValue(std::string("psi"))))
-
 class metaDataContainer
 {
 	/** Container for pairs "name" and value. Note that void * allows to use
