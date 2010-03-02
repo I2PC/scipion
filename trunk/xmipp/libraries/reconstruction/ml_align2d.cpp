@@ -665,9 +665,6 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         img.read(fn_tmp, false, false, true, false);
         img().setXmippOrigin();
         model.Iref[refno] = img;
-        //FIXME: I think isn't need to set Iold here
-        //      because it is setted on main loop
-        //Iold.push_back(img);
         // Default start is all equal model fractions
         model.alpha_k[refno] = (double) 1 / SFr.ImgNo();
         model.Iref[refno].set_weight(model.alpha_k[refno] * (double) nr_exp_images);
@@ -1034,8 +1031,8 @@ void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
         // Use 500 to be on the save side?
 
         if (ABS((mindiff - trymindiff) / sigma_noise2) > 500.)
-        //TODO: if (redo_counter==0)
         //force always redo to use real mindiff for check about LL problem
+        //if (redo_counter==0)
         {
             // Re-do whole calculation now with the real mindiff
             trymindiff = mindiff;
@@ -1101,10 +1098,10 @@ void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
         // 2. Calculate optimal setting of Mref
         int refnoipsi = opt_refno * nr_psi + iopt_psi;
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
-            {
-                dMij(Faux,i,j) = conj(dMij(fref[refnoipsi],i,j));
-                dMij(Faux,i,j) *= opt_scale;
-            }
+        {
+            dMij(Faux,i,j) = conj(dMij(fref[refnoipsi],i,j));
+            dMij(Faux,i,j) *= opt_scale;
+        }
 
         // Still take input from Faux and leave output in Maux
         local_transformer.inverseFourierTransform();
@@ -1347,8 +1344,9 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
         }
 
         // If we dont use save_mem1 Iref[refno] is useless from here on
-        //FIXME: Commented for models stuff, check later
-        //if (!save_mem1) model.Iref[refno]().resize(0, 0);
+        //FIXME: Segmentation fault with blocks
+        //if (!save_mem1)
+        //    model.Iref[refno]().resize(0, 0);
 
     }//close while
 
@@ -1498,7 +1496,6 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
                                 // normal distribution
                                 aux = (diff - local_mindiff) / sigma_noise2;
                                 // next line because of numerical precision of exp-function
-
                                 if (aux > 1000.)
                                     weight(irot) = 0.;
                                 else
@@ -1554,7 +1551,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     int local_iopty, local_ioptx, local_iopt_psi, local_iopt_flip,
             local_opt_refno;
 
-    //FIXME: this will not be here
+    //TODO: this will not be here
     Matrix2D<double> Maux, Mweight;
     Matrix2D<std::complex<double> > Faux, Fzero(dim, hdim + 1);
     XmippFftw local_transformer;
@@ -1626,11 +1623,11 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 
                         // A. Backward FFT to calculate weights in real-space
                         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
-                            {
-                                dMij(Faux,i,j)
-                                        = dMij(Fimg_flip[iflip],i,j)
-                                                * dMij(fref[refnoipsi],i,j);
-                            }
+                        {
+                            dMij(Faux,i,j)
+                                    = dMij(Fimg_flip[iflip],i,j)
+                                            * dMij(fref[refnoipsi],i,j);
+                        }
 
                         // Takes the input from Faux, and leaves the output in Maux
                         local_transformer.inverseFourierTransform();
@@ -1642,108 +1639,108 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                                 = 0.;
 
                         FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight)
+                        {
+                            diff = A2_plus_Xi2 - ref_scale
+                                    * MAT_ELEM(Maux, i, j) * ddim2;
+                            local_mindiff
+                                    = XMIPP_MIN(local_mindiff, diff);
+                            pdf = fracpdf * MAT_ELEM(P_phi, i, j);
+
+                            if (!model.do_student)
                             {
-                                diff = A2_plus_Xi2 - ref_scale
-                                        * MAT_ELEM(Maux, i, j) * ddim2;
-                                local_mindiff
-                                        = XMIPP_MIN(local_mindiff, diff);
-                                pdf = fracpdf * MAT_ELEM(P_phi, i, j);
+                                // Normal distribution
+                                aux = (diff - trymindiff)
+                                        / sigma_noise2;
+                                // next line because of numerical precision of exp-function
 
-                                if (!model.do_student)
-                                {
-                                    // Normal distribution
-                                    aux = (diff - trymindiff)
-                                            / sigma_noise2;
-                                    // next line because of numerical precision of exp-function
-
-                                    if (aux > 1000.)
-                                        weight = 0.;
-                                    else
-                                        weight = exp(-aux) * pdf;
-
-                                    // store weight
-                                    stored_weight = weight;
-
-                                    MAT_ELEM(Mweight, i, j) = stored_weight;
-
-                                    // calculate weighted sum of (X-A)^2 for sigma_noise update
-                                    local_wsum_corr += weight * diff;
-                                }
+                                if (aux > 1000.)
+                                    weight = 0.;
                                 else
-                                {
-                                    // t-student distribution
-                                    // pdf = (1 + diff2/sigma2*df)^df2
-                                    // Correcting for mindiff:
-                                    // pdfc = (1 + diff2/sigma2*df)^df2 / (1 + mindiff/sigma2*df)^df2
-                                    //      = ( (1 + diff2/sigma2*df)/(1 + mindiff/sigma2*df) )^df2
-                                    //      = ( (sigma2*df + diff2) / (sigma2*df + mindiff) )^df2
-                                    // Extra factor two because we saved 0.5*diff2!!
-                                    aux = (dfsigma2 + 2. * diff)
-                                            / (dfsigma2 + 2. * trymindiff);
-                                    weight = pow(aux, df2) * pdf;
-                                    // Calculate extra weight acc. to Eq (10) Wang et al.
-                                    // Patt. Recognition Lett. 25, 701-710 (2004)
-                                    weight2 = (df + ddim2) / (df + (2.
-                                            * diff / sigma_noise2));
-                                    // Store probability weights
-                                    stored_weight = weight * weight2;
-                                    MAT_ELEM(Mweight, i, j) = stored_weight;
-                                    // calculate weighted sum of (X-A)^2 for sigma_noise update
-                                    local_wsum_corr += stored_weight * diff;
-                                    refw2[refno] += stored_weight;
-                                }
+                                    weight = exp(-aux) * pdf;
 
-                                // Accumulate sum weights for this (my) matrix
-                                my_sumweight += weight;
+                                // store weight
+                                stored_weight = weight;
 
-                                my_sumstoredweight += stored_weight;
+                                MAT_ELEM(Mweight, i, j) = stored_weight;
 
-                                // calculated weighted sum of offsets as well
-                                local_wsum_offset += weight
-                                        * MAT_ELEM(Mr2, i, j);
+                                // calculate weighted sum of (X-A)^2 for sigma_noise update
+                                local_wsum_corr += weight * diff;
+                            }
+                            else
+                            {
+                                // t-student distribution
+                                // pdf = (1 + diff2/sigma2*df)^df2
+                                // Correcting for mindiff:
+                                // pdfc = (1 + diff2/sigma2*df)^df2 / (1 + mindiff/sigma2*df)^df2
+                                //      = ( (1 + diff2/sigma2*df)/(1 + mindiff/sigma2*df) )^df2
+                                //      = ( (sigma2*df + diff2) / (sigma2*df + mindiff) )^df2
+                                // Extra factor two because we saved 0.5*diff2!!
+                                aux = (dfsigma2 + 2. * diff)
+                                        / (dfsigma2 + 2. * trymindiff);
+                                weight = pow(aux, df2) * pdf;
+                                // Calculate extra weight acc. to Eq (10) Wang et al.
+                                // Patt. Recognition Lett. 25, 701-710 (2004)
+                                weight2 = (df + ddim2) / (df + (2.
+                                        * diff / sigma_noise2));
+                                // Store probability weights
+                                stored_weight = weight * weight2;
+                                MAT_ELEM(Mweight, i, j) = stored_weight;
+                                // calculate weighted sum of (X-A)^2 for sigma_noise update
+                                local_wsum_corr += stored_weight * diff;
+                                refw2[refno] += stored_weight;
+                            }
 
-                                if (do_norm)
-                                {
-                                    // weighted sum of Sum_j ( X_ij*A_kj )
-                                    local_wsum_sc += stored_weight
-                                            * (A2_plus_Xi2 - diff)
-                                            / ref_scale;
-                                    // weighted sum of Sum_j ( A_kj*A_kj )
-                                    local_wsum_sc2 += stored_weight
-                                            * A2[refno];
-                                }
+                            // Accumulate sum weights for this (my) matrix
+                            my_sumweight += weight;
 
-                                // keep track of optimal parameters
-                                my_maxweight
-                                        = XMIPP_MAX(my_maxweight, weight);
+                            my_sumstoredweight += stored_weight;
 
-                                if (weight > local_maxweight)
-                                {
-                                    local_maxweight = weight;
+                            // calculated weighted sum of offsets as well
+                            local_wsum_offset += weight
+                                    * MAT_ELEM(Mr2, i, j);
 
-                                    if (model.do_student) local_maxweight2
-                                            = weight2;
+                            if (do_norm)
+                            {
+                                // weighted sum of Sum_j ( X_ij*A_kj )
+                                local_wsum_sc += stored_weight
+                                        * (A2_plus_Xi2 - diff)
+                                        / ref_scale;
+                                // weighted sum of Sum_j ( A_kj*A_kj )
+                                local_wsum_sc2 += stored_weight
+                                        * A2[refno];
+                            }
 
-                                    local_iopty = i;
+                            // keep track of optimal parameters
+                            my_maxweight
+                                    = XMIPP_MAX(my_maxweight, weight);
 
-                                    local_ioptx = j;
+                            if (weight > local_maxweight)
+                            {
+                                local_maxweight = weight;
 
-                                    local_iopt_psi = ipsi;
+                                if (model.do_student) local_maxweight2
+                                        = weight2;
 
-                                    local_iopt_flip = iflip;
+                                local_iopty = i;
 
-                                    local_opt_refno = refno;
-                                }
+                                local_ioptx = j;
 
-                                if (fast_mode && weight > maxw_ref[irefmir])
-                                {
-                                    maxw_ref[irefmir] = weight;
-                                    iopty_ref[irefmir] = i;
-                                    ioptx_ref[irefmir] = j;
-                                    ioptflip_ref[irefmir] = iflip;
-                                }
+                                local_iopt_psi = ipsi;
 
-                            } // close for over all elements in Mweight
+                                local_iopt_flip = iflip;
+
+                                local_opt_refno = refno;
+                            }
+
+                            if (fast_mode && weight > maxw_ref[irefmir])
+                            {
+                                maxw_ref[irefmir] = weight;
+                                iopty_ref[irefmir] = i;
+                                ioptx_ref[irefmir] = j;
+                                ioptflip_ref[irefmir] = iflip;
+                            }
+
+                        } // close for over all elements in Mweight
 
                         // C. only for signifcant settings, store weighted sums
                         if (my_maxweight > SIGNIFICANT_WEIGHT_LOW
@@ -1966,13 +1963,13 @@ void Prog_MLalign2D_prm::expectation()
 
     Msignificant.resize(model.n_ref, nr_psi * nr_flip);
 
-    // Calculate myFirst and myLast image for this thread
     int nn = SF.ImgNo();
+    int ni = nn / blocks;
 
     if (verb > 0)
-        init_progress_bar(nn / blocks);
+        init_progress_bar(ni);
 
-    int c = XMIPP_MAX(1, nn / 60);
+    int c = XMIPP_MAX(1, ni / 60);
 
 #ifdef TIMING
 
@@ -1982,7 +1979,7 @@ void Prog_MLalign2D_prm::expectation()
 
 #endif
     // Loop over all images
-    for (int imgno = 0; imgno < nn; imgno++)
+    for (int imgno = 0, img_done = 0; imgno < nn; imgno++)
     if (img_blocks[imgno] == current_block)
     {
 #ifdef TIMING
@@ -2115,8 +2112,9 @@ void Prog_MLalign2D_prm::expectation()
             docfiledata[imgno](11) = maxweight2; // Robustness weight
         }
 
-        if (verb > 0 && imgno % c == 0)
-            progress_bar(imgno);
+        if (verb > 0 && img_done % c == 0)
+            progress_bar(img_done);
+        img_done++;
 
 #ifdef TIMING
 
@@ -2132,7 +2130,7 @@ void Prog_MLalign2D_prm::expectation()
 #endif
 
     if (verb > 0)
-        progress_bar(nn);
+        progress_bar(ni);
 
 #ifdef TIMING
 
@@ -2198,8 +2196,6 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &model, int refs_per_class
         }
         else
         {
-            //FIXME: Check why this is happens
-            std::cerr << "Setting zeroes in MAXIMIZATION...." << std::endl;
             model.Iref[refno].set_weight(0.);
             model.Iref[refno]().initZeros(dim, dim);
             model.Iref[refno]().setXmippOrigin();

@@ -85,14 +85,12 @@ int main(int argc, char **argv)
             for (int refno = 0;refno < prm.model.n_ref; refno++)
                 prm.Iold[refno]() = prm.model.Iref[refno]();
 
-            Model_MLalign2D tmp_model(prm.model.n_ref);
-
             for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
             {
 #ifdef TIMING
             prm.timer.tic(ITER_E);
 #endif
-            std::cout << "------- ITER: " << prm.iter << " ------ BLOCK: " << prm.current_block << "-------------" << std::endl;
+            std::cout << "------- ITER: " << prm.iter << " ------ BLOCK: " << prm.current_block + 1 << "-------------" << std::endl;
             // Integrate over all images
             prm.expectation();
 #ifdef TIMING
@@ -140,13 +138,8 @@ int main(int argc, char **argv)
 
             if (prm.do_norm)
                 prm.correctScaleAverage();
-
-            //std::cout << "------- AFTER ITER: " << prm.iter << " ------" << std::endl;
-            //prm.model.print();
-
             // Check convergence
             converged = prm.checkConvergence();
-
             // Write output files
             prm.writeOutputFiles(prm.model, OUT_ITER);
 
