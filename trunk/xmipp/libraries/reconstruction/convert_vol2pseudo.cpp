@@ -93,7 +93,7 @@ void Prog_Convert_Vol2Pseudo::usage() const
     std::cout << "Approximation algorithm:\n"
               << "   -i <volume>                     : Input volume\n"
               << "  [-o <rootname>]                  : Output rootname\n"
-              << "  [-sigma <s=1.5>]                 : Sigma of gaussians\n"
+              << "  [-sigma <s=1.5>]                 : Sigma of gaussians (in Angstroms)\n"
               << "  [-initialSeeds <N=300>]          : Initial number of gaussians\n"
               << "  [-growSeeds <%=30>]              : Percentage of growth\n"
               << "  [-stop <p=0.001>]                : Stop criterion (0<p<1) for inner iterations\n"
@@ -114,6 +114,8 @@ void Prog_Convert_Vol2Pseudo::usage() const
 
 void Prog_Convert_Vol2Pseudo::produceSideInfo()
 {
+    sigma/=sampling;
+
     if (intensityColumn!="occupancy" && intensityColumn!="Bfactor")
         REPORT_ERROR(1,(std::string)"Unknown column: "+intensityColumn);
 
