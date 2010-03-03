@@ -184,19 +184,24 @@ class automated_gui_class:
                 self.script_header_lines[i][0]!="\t"):
                 args=self.script_header_lines[i].split("=")
                 # Add "" for strings
-                if (self.variables[args[0]][1]=="String" or
-                    self.variables[args[0]][1]=="File" or
-                    self.variables[args[0]][1]=="Radio" or
-                    self.variables[args[0]][1]=="Directory"):
-                    lineb=str(args[0])+'=\''+str(self.variables[args[0]][2].get())+"\'\n"
-                # Write Boolean as True/False (for old python < 2.3)
-                elif (self.variables[args[0]][1]=="Boolean"):
-                    if (self.variables[args[0]][2].get()):
-                        lineb=str(args[0])+'=True\n'
-                    else: 
-                        lineb=str(args[0])+'=False\n'
+                if (self.variables[args[0]][7]):
+                    # Hidden
+                    lineb=self.script_header_lines[i]
                 else:
-                    lineb=str(args[0])+'='+str(self.variables[args[0]][2].get())+"\n"
+                    # Not hidden
+                    if (self.variables[args[0]][1]=="String" or
+                        self.variables[args[0]][1]=="File" or
+                        self.variables[args[0]][1]=="Radio" or
+                        self.variables[args[0]][1]=="Directory"):
+                        lineb=str(args[0])+'=\''+str(self.variables[args[0]][2].get())+"\'\n"
+                    # Write Boolean as True/False (for old python < 2.3)
+                    elif (self.variables[args[0]][1]=="Boolean"):
+                        if (self.variables[args[0]][2].get()):
+                            lineb=str(args[0])+'=True\n'
+                        else: 
+                            lineb=str(args[0])+'=False\n'
+                    else:
+                        lineb=str(args[0])+'='+str(self.variables[args[0]][2].get())+"\n"
             else:
                 lineb=self.script_header_lines[i]
             linesb.append(lineb)
