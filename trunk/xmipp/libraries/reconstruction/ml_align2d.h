@@ -342,6 +342,8 @@ public:
     int blocks;
     //Current processing block
     int current_block;
+    //Dont randomize for tests
+    bool randomize;
 
 #ifdef TIMING
     JMTimer timer;

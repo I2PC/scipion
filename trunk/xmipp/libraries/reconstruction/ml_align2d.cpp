@@ -161,6 +161,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     model.do_student_sigma_trick = !checkParameter(argc2, argv2, "-no_sigma_trick");
     trymindiff_factor = textToFloat(getParameter(argc2, argv2,
             "-trymindiff_factor", "0.9"));
+    randomize = !checkParameter(argc2, argv2, "-no_rand");
 
     // Only for interaction with refine3d:
     search_rot = textToFloat(getParameter(argc2, argv2, "-search_rot", "999."));
@@ -562,6 +563,12 @@ void Prog_MLalign2D_prm::produceSideInfo()
 
             for (int i = first_img; i <= last_img; i++)
                 img_blocks[i] = b;
+        }
+        //randomize elements
+        if (randomize)
+        {
+            std::cerr << "Randomizing....." << std::endl;
+            std::random_shuffle(img_blocks.begin(), img_blocks.end());
         }
     }//close if blocks
 
@@ -1979,12 +1986,14 @@ void Prog_MLalign2D_prm::expectation()
 
 #endif
     // Loop over all images
+    std::cerr << "block" << current_block << ": ";
     for (int imgno = 0, img_done = 0; imgno < nn; imgno++)
     if (img_blocks[imgno] == current_block)
     {
 #ifdef TIMING
         timer.tic(FOR_F1);
 #endif
+        std::cerr << imgno << " ";
         SF.go_beginning();
         SF.jump(imgno, SelLine::ACTIVE);
         fn_img = SF.get_current_file();
@@ -2122,7 +2131,8 @@ void Prog_MLalign2D_prm::expectation()
 
 #endif
 
-    }
+    }//close if current_block
+    std::cerr << std::endl;
 
 #ifdef TIMING
     timer.toc(E_FOR);
