@@ -566,10 +566,7 @@ void Prog_MLalign2D_prm::produceSideInfo()
         }
         //randomize elements
         if (randomize)
-        {
-            std::cerr << "Randomizing....." << std::endl;
             std::random_shuffle(img_blocks.begin(), img_blocks.end());
-        }
     }//close if blocks
 
     /// Initialize docfiledata
@@ -1986,14 +1983,12 @@ void Prog_MLalign2D_prm::expectation()
 
 #endif
     // Loop over all images
-    std::cerr << "block" << current_block << ": ";
     for (int imgno = 0, img_done = 0; imgno < nn; imgno++)
     if (img_blocks[imgno] == current_block)
     {
 #ifdef TIMING
         timer.tic(FOR_F1);
 #endif
-        std::cerr << imgno << " ";
         SF.go_beginning();
         SF.jump(imgno, SelLine::ACTIVE);
         fn_img = SF.get_current_file();
@@ -2131,8 +2126,7 @@ void Prog_MLalign2D_prm::expectation()
 
 #endif
 
-    }//close if current_block
-    std::cerr << std::endl;
+    }//close if current_block, also close of for all images
 
 #ifdef TIMING
     timer.toc(E_FOR);
