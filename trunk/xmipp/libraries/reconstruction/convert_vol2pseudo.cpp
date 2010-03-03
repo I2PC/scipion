@@ -61,7 +61,7 @@ void Prog_Convert_Vol2Pseudo::read(int argc, char **argv)
     allowMovement = !checkParameter(argc,argv,"-dontAllowMovement");
     allowIntensity = !checkParameter(argc,argv,"-dontAllowIntensity");
     intensityColumn = getParameter(argc,argv,"-intensityColumn","occupancy");
-    minDistance = textToFloat(getParameter(argc,argv,"-growSeeds","0.001"));
+    minDistance = textToFloat(getParameter(argc,argv,"-minDistance","0.001"));
     penalty = textToFloat(getParameter(argc,argv,"-penalty","10"));
     numThreads = textToInteger(getParameter(argc,argv,"-thr","1"));
     sampling = textToFloat(getParameter(argc,argv,"-sampling_rate","1"));
