@@ -1,13 +1,13 @@
 /***************************************************************************
  *
- * Authors: Pedro Antonio de Alarc�n (pedro@cnb.csic.es)
+ * Authors: Pedro Antonio de Alarcon (pedro@cnb.csic.es)
  *          Carlos Oscar S. Sorzano
  *          Alberto Pascual Montano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
- * Dept. Physiology of the David Geffen School of Medistd::cine
+ * Dept. Physiology of the David Geffen School of Medicine
  * Univ. of California, Los Angeles.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -127,7 +127,8 @@ void FourierImageXmipp_to_ImageXmipp(FourierImageXmipp &F, ImageXmipp &I)
 
 // Read stack from stack file ----------------------------------------------
 bool ImageXmippStack::readFromStack(const FileName& name,
-    bool reversed, bool apply_geo, bool only_apply_shifts)
+    bool reversed, bool apply_geo, bool only_apply_shifts,
+    bool skipHeaders)
 {
     headerXmipp header;
     FILE* fp;
@@ -152,20 +153,36 @@ bool ImageXmippStack::readFromStack(const FileName& name,
 
     // Read all images
     fseek(fp,headerSize,SEEK_SET);
+    std::cout << "Reading " << name << std::endl;
+    init_progress_bar(Nimgs);
+    int istep=CEIL(Nimgs/60);
     for (int i=0; i<Nimgs; i++) 
     {
         ImageXmipp I;
-        if (!I.getHeader().read(fp, true, reversed, true))
-            REPORT_ERROR(1502,
-                (std::string)"ImageXmippStack::readFromStack: Cannot read image "+
-                integerToString(i));
+        if (skipHeaders)
+        {
+            I.getHeader().fIform()=1;
+            I.getHeader().Ydim()=header.Ydim();
+            I.getHeader().Xdim()=header.Xdim();
+            I.getHeader().reversed()=header.reversed();
+            fseek(fp,header.get_header_size(),SEEK_CUR);
+	}
+	else
+	{
+            if (!I.getHeader().read(fp, true, reversed, true))
+                REPORT_ERROR(1502,
+                    (std::string)"ImageXmippStack::readFromStack: Cannot read image "+
+                    integerToString(i));
+        }
         if (!I.readImageContent(fp, apply_geo, only_apply_shifts))
             REPORT_ERROR(1502,
                 (std::string)"ImageXmippStack::readFromStack: Cannot read (2) image "
                 +integerToString(i));
         I.rename(name.insert_before_extension(integerToString(i,5)));
         stack.push_back(I);
+        if (i%istep==0) progress_bar(i);
     }
+    progress_bar(Nimgs);
 
     // Close file
     fclose(fp);
@@ -207,13 +224,18 @@ void ImageXmippStack::writeAsSelFile(const FileName& rootname,
     bool force_reversed)
 {
     SelFile SF;
+    std::cout << "Writing " << rootname << std::endl;
+    init_progress_bar(ImgNo());
+    int istep=CEIL(ImgNo()/60);
     for (int i=0; i<ImgNo(); i++)
     {
         ImageXmipp I=getImage(i);
         I.rename(rootname+integerToString(i+1,5)+".xmp");
         I.write();
         SF.insert(I.name());
+        if (i%istep==0) progress_bar(i);
     }
+    progress_bar(ImgNo());
     SF.write(rootname+".sel");
 }
 

@@ -5,7 +5,7 @@
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * Part of this module has been developed by Lorenzo Zampighi and Nelson Tang
- * Dept. Physiology of the David Geffen School of Medistd::cine
+ * Dept. Physiology of the David Geffen School of Medicine
  * Univ. of California, Los Angeles.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1572,7 +1572,8 @@ public:
      */
     bool readFromStack(const FileName& name,
               bool reversed = false, bool apply_geo = false,
-              bool only_apply_shifts = false);
+              bool only_apply_shifts = false,
+              bool skipHeaders = false);
     
     /** Number of images in the stack. */
     int ImgNo() const {return stack.size();}
