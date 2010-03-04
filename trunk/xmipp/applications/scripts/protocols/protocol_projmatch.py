@@ -1237,8 +1237,7 @@ def execute_projection_matching(_mylog,
               ' -o '                   + ProjectLibraryRootName + \
               ' -sampling_rate '       + _AngSamplingRateDeg  + \
               ' -sym '                 + _SymmetryGroup + 'h' + \
-              ' -compute_neighbors'+\
-              ' -shears'
+              ' -compute_neighbors'
 
    if ( string.atof(_MaxChangeInAngles) < 181.):
       parameters+= \
