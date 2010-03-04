@@ -174,6 +174,7 @@ class CL2D_class:
         mysel=selfile.selfile()
         mysel.read(InSelFile)
         newsel=mysel.make_abspath()
+        InSelFile=InSelFile.rsplit("/")[-1]
         self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
         newsel.write(self.InSelFile)
 
