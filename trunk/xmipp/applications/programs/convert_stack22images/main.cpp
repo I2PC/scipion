@@ -33,7 +33,7 @@ void Usage();
 int main(int argc, char **argv)
 {
     FileName fn_stack, fn_sel, fn_vol;
-    bool reversed;
+    bool reversed, skipHeaders;
 
     // Read arguments --------------------------------------------------------
     try
@@ -42,6 +42,7 @@ int main(int argc, char **argv)
         fn_sel   = getParameter(argc,argv,"-sel","");
         fn_vol   = getParameter(argc,argv,"-vol","");
         reversed = checkParameter(argc,argv,"-reverse");
+        skipHeaders = checkParameter(argc,argv,"-skipHeaders");
         
         if (fn_sel=="" && fn_vol=="" || fn_stack=="" && fn_vol=="" ||
             fn_sel=="" && fn_stack=="")
@@ -64,7 +65,7 @@ int main(int argc, char **argv)
         // From stack to selfile or volume .................................
         if (exists(fn_stack))
         {
-            stack.readFromStack(fn_stack,reversed,false,false);
+            stack.readFromStack(fn_stack,reversed,false,false,skipHeaders);
 
             // From stack to selfile
             if (fn_sel!="")
