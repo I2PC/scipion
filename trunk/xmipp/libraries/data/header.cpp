@@ -358,6 +358,11 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
     //  header.fLabrec = (float) ceil((float) 256/header.fNcol);
     tmpSize = (int)(header.fNcol * header.fLabrec * 4); //Size of whole header
     tmpSize -= sizeof(headerXmipp::SpiderHeader);             //Decrease the real header
+#ifdef DEBUG
+    std::cout << "fnCol=" << header.fNcol << std::endl;
+    std::cout << "fLabrec=" << header.fLabrec << std::endl;
+    std::cout << "Empty space: " << tmpSize << std::endl;
+#endif
     for (unsigned i = 0; i < tmpSize / 4; i++)
         FREAD(&tmp, sizeof(float), 1, fp, __reversed);
     return true;
