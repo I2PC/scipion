@@ -474,7 +474,7 @@ class particle_pick_class:
                 else:
                     l.grid(row=row, column=4)
             else:
-                l.grid(row=row, column=3)
+                l.grid(row=row, column=2)
         return total
         
     def LaunchSingleMark(self):
