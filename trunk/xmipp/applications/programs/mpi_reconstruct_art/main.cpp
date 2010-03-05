@@ -543,11 +543,19 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    vol_basis.write(art_prm.fn_root + ".vol");
+    int Xoutput_volume_size=(art_prm.Xoutput_volume_size==0) ?
+       art_prm.projXdim:art_prm.Xoutput_volume_size;
+    int Youtput_volume_size=(art_prm.Youtput_volume_size==0) ?
+       art_prm.projYdim:art_prm.Youtput_volume_size;
+    int Zoutput_volume_size=(art_prm.Zoutput_volume_size==0) ?
+       art_prm.projXdim:art_prm.Zoutput_volume_size;
+    art_prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
+        Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+    vol_voxels.write(art_prm.fn_root+".vol");
 
     if (art_prm.tell&TELL_SAVE_BASIS)
-
-        art_prm.fh_hist->close();
+        vol_basis.write(art_prm.fn_root + ".vol");
+    art_prm.fh_hist->close();
 
     uswtime(&recons_t);
     std::cout << "\n\n------ FINAL STATISTICS ------" << std::endl;
