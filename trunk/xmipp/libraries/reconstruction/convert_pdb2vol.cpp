@@ -71,6 +71,31 @@ Prog_PDBPhantom_Parameters::Prog_PDBPhantom_Parameters()
 
 /* Produce Side Info ------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::produceSideInfo() {
+    // Check if it is a pseudodensity volume
+    std::ifstream fh_pdb;
+    fh_pdb.open(fn_pdb.c_str());
+    if (!fh_pdb)
+        REPORT_ERROR(1, (std::string)"ProduceSideInfo:"
+                     "Cannot open " + fn_pdb + " for reading");
+    while (!fh_pdb.eof())
+    {
+        // Read an ATOM line
+        std::string line;
+        getline(fh_pdb, line);
+        if (line == "") continue;
+        std::string kind = line.substr(0,6);
+        if (kind!="REMARK") continue;
+        std::vector< std::string > results;
+        splitString(line," ",results);
+        if (results[1]=="xmipp_convert_vol2pseudo")
+            useFixedGaussian=true;
+        if (useFixedGaussian && results[1]=="fixedGaussian")
+            sigmaGaussian=textToFloat(results[2]);
+        if (useFixedGaussian && results[1]=="intensityColumn")
+            intensityColumn=results[2];
+    }
+    fh_pdb.close();
+
     if (!useBlobs && !usePoorGaussian && !useFixedGaussian) {
 	// Compute the downsampling factor
 	M=(int)ROUND(Ts/highTs);
@@ -128,11 +153,7 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
     output_dim = textToInteger(getParameter(argc, argv, "-size", "-1"));
     useBlobs = checkParameter(argc, argv, "-blobs");
     usePoorGaussian = checkParameter(argc, argv, "-poor_Gaussian");
-    useFixedGaussian = checkParameter(argc, argv, "-fixed_Gaussian");
-    if (useFixedGaussian)
-        sigmaGaussian=textToFloat(getParameter(argc,argv,"-fixed_Gaussian"));
     doCenter = checkParameter(argc, argv, "-centerPDB");
-    intensityColumn = getParameter(argc,argv,"-intensityColumn","occupancy");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -147,10 +168,6 @@ void Prog_PDBPhantom_Parameters::usage()
               << "  [-centerPDB]                       : Center PDB with the center of mass\n"
 	      << "  [-blobs]                           : Use blobs instead of scattering factors\n"
               << "  [-poor_Gaussian]                   : Use a simple Gaussian adapted to each atom\n"
-              << "  [-fixed_Gaussian <std>]            : Use a fixed Gausian for each atom with\n"
-              << "                                       this standard deviation\n"
-              << "  [-intensityColumn <s=occupancy>]   : Where to write the intensity in the PDB file\n"
-              << "                                       Valid values: occupancy, Bfactor\n"
 	      << "\n"
 	      << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
 	      << "   xmipp_convert_pdb2vol -i 1o7d.pdb -sampling_rate 1.6\n"
@@ -169,10 +186,10 @@ void Prog_PDBPhantom_Parameters::show()
 	      << "Use blobs:          " << useBlobs         << std::endl
 	      << "Use poor Gaussian:  " << usePoorGaussian  << std::endl
 	      << "Use fixed Gaussian: " << useFixedGaussian << std::endl
-              << "Intensity Col:      " << intensityColumn  << std::endl
     ;
     if (useFixedGaussian)
-        std::cout << "Sigma:              " << sigmaGaussian  << std::endl;
+        std::cout << "Intensity Col:      " << intensityColumn  << std::endl
+                  << "Sigma:              " << sigmaGaussian  << std::endl;
 }
 
 /* Compute protein geometry ------------------------------------------------ */
@@ -419,7 +436,6 @@ void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles() {
 /* Run --------------------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::run()
 {
-    produceSideInfo();
     compute_protein_geometry();
     if (useBlobs) {
 	create_protein_at_high_sampling_rate();
