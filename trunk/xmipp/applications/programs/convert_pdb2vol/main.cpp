@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
 
     try
     {
+        prm.produceSideInfo();
         prm.show();
         prm.run();
     }
