@@ -88,34 +88,34 @@ int main(int argc, char **argv)
             for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
             {
 #ifdef TIMING
-            prm.timer.tic(ITER_E);
+                prm.timer.tic(ITER_E);
 #endif
-            std::cout << "------- ITER: " << prm.iter << " ------ BLOCK: " << prm.current_block + 1 << "-------------" << std::endl;
-            // Integrate over all images
-            prm.expectation();
+                std::cout << "------- ITER: " << prm.iter << " ------ BLOCK: " << prm.current_block + 1 << "-------------" << std::endl;
+                // Integrate over all images
+                prm.expectation();
 #ifdef TIMING
-            prm.timer.toc(ITER_E);
-            prm.timer.tic(ITER_M);
+                prm.timer.toc(ITER_E);
+                prm.timer.tic(ITER_M);
 #endif
-            if (prm.blocks == 1) //ie not IEM
-            {
-                prm.maximization(prm.model);
-            }
-            else //do IEM
-            {
-                if (prm.iter > 1)
+                if (prm.blocks == 1) //ie not IEM
                 {
-                    prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
-                    //block_model.print();
-                    prm.model.substractModel(block_model);
+                    prm.maximization(prm.model);
                 }
-                prm.maximization(block_model);
-                prm.writeOutputFiles(block_model, OUT_BLOCK);
-                if (prm.iter > 1)
+                else //do IEM
                 {
-                   prm.model.addModel(block_model);
+                    if (prm.iter > 1)
+                    {
+                        prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
+                        //block_model.print();
+                        prm.model.substractModel(block_model);
+                    }
+                    prm.maximization(block_model);
+                    prm.writeOutputFiles(block_model, OUT_BLOCK);
+                    if (prm.iter > 1)
+                    {
+                        prm.model.addModel(block_model);
+                    }
                 }
-            }
 
 #ifdef TIMING
             prm.timer.toc(ITER_M);

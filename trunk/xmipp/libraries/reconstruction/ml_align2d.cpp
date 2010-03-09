@@ -539,35 +539,6 @@ void Prog_MLalign2D_prm::produceSideInfo()
         maxw_ref.resize(mysize);
     }
 
-    //Set image blocks vector
-    img_blocks.resize(nr_exp_images, 0);
-
-    int img_per_block = nr_exp_images / blocks;
-    int img_rest = nr_exp_images % blocks;
-    int first_img, last_img;
-
-    if (blocks > 1)
-    {
-        for (int b = 0; b < blocks; b++)
-        {
-            if (b < img_rest)
-            {
-                first_img = b * (img_per_block + 1);
-                last_img = first_img + img_per_block;
-            }
-            else
-            {
-                first_img = b * img_per_block + img_rest;
-                last_img = first_img + img_per_block - 1;
-            }
-
-            for (int i = first_img; i <= last_img; i++)
-                img_blocks[i] = b;
-        }
-        //randomize elements
-        if (randomize)
-            std::random_shuffle(img_blocks.begin(), img_blocks.end());
-    }//close if blocks
 
     /// Initialize docfiledata
     Matrix1D<double> dataline(DATALINELENGTH);
@@ -823,6 +794,36 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
             model.alpha_k[refno] /= sumfrac;
         }
     }
+
+    //--------Setup for BLOCKS------------
+    //Set image blocks vector
+    img_blocks.resize(nr_exp_images, 0);
+    int img_per_block = nr_exp_images / blocks;
+    int img_rest = nr_exp_images % blocks;
+    int first_img, last_img;
+
+    if (blocks > 1)
+    {
+        for (int b = 0; b < blocks; b++)
+        {
+            if (b < img_rest)
+            {
+                first_img = b * (img_per_block + 1);
+                last_img = first_img + img_per_block;
+            }
+            else
+            {
+                first_img = b * img_per_block + img_rest;
+                last_img = first_img + img_per_block - 1;
+            }
+
+            for (int i = first_img; i <= last_img; i++)
+                img_blocks[i] = b;
+        }
+        //randomize elements
+        if (randomize)
+            std::random_shuffle(img_blocks.begin(), img_blocks.end());
+    }//close if blocks
 
 }//close function produceSideInfo2
 

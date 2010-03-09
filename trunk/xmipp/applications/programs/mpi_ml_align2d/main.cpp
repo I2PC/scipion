@@ -51,20 +51,23 @@ int main(int argc, char **argv)
     // Get input parameters
     try
     {
-
         // Read subsequently to avoid problems in restart procedure
         for (int proc = 0; proc < size; proc++)
         {
-            if (proc == rank) prm.read(argc, argv);
+            if (proc == rank)
+                prm.read(argc, argv);
             MPI_Barrier(MPI_COMM_WORLD);
         }
-        if (rank != 0) prm.verb = 0;
+
+        if (rank != 0)
+            prm.verb = 0;
 
         // All nodes produce general side-info
         prm.produceSideInfo();
 
         // Some output to screen
-        if (rank == 0) prm.show();
+        if (rank == 0)
+            prm.show();
 
         // Create references from random subset averages, or read them from selfile
         if (prm.fn_ref == "")
@@ -113,47 +116,89 @@ int main(int argc, char **argv)
     {
         Maux.resize(prm.dim, prm.dim);
         Maux.setXmippOrigin();
+        Model_MLalign2D block_model(prm.model.n_ref);
+
 
         // Loop over all iterations
         for (prm.iter = prm.istart; prm.iter <= prm.Niter; prm.iter++)
         {
-            if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
+            if (prm.verb > 0)
+                std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
 
             // Save old reference images
-            for (int refno = 0;refno < prm.model.n_ref; refno++) prm.Iold[refno]() = prm.model.Iref[refno]();
+            for (int refno = 0;refno < prm.model.n_ref; refno++)
+                prm.Iold[refno]() = prm.model.Iref[refno]();
 
-            // Integrate over all images
-            prm.expectation();
-
-            // Here MPI_allreduce of all wsums,LL and sumfracweight !!!
-            MPI_Allreduce(&prm.LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            prm.LL = aux;
-            MPI_Allreduce(&prm.sumfracweight, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            prm.sumfracweight = aux;
-            MPI_Allreduce(&prm.wsum_sigma_noise, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            prm.wsum_sigma_noise = aux;
-            MPI_Allreduce(&prm.wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-            prm.wsum_sigma_offset = aux;
-            for (int refno = 0; refno < prm.model.n_ref; refno++)
+            for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
             {
-                MPI_Allreduce(MULTIDIM_ARRAY(prm.wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
-                              MULTIDIM_SIZE(prm.wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                prm.wsum_Mref[refno] = Maux;
-                MPI_Allreduce(&prm.sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                prm.sumw[refno] = aux;
-                MPI_Allreduce(&prm.sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                prm.sumwsc2[refno] = aux;
-                MPI_Allreduce(&prm.sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                prm.sumw_mirror[refno] = aux;
-                MPI_Allreduce(&prm.sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                prm.sumw2[refno] = aux;
-                MPI_Allreduce(&prm.sumwsc[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                prm.sumwsc[refno] = aux;
+               // Integrate over all images
+                prm.expectation();
+
+                // Here MPI_allreduce of all wsums,LL and sumfracweight !!!
+                MPI_Allreduce(&prm.LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.LL = aux;
+                MPI_Allreduce(&prm.sumfracweight, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.sumfracweight = aux;
+                MPI_Allreduce(&prm.wsum_sigma_noise, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.wsum_sigma_noise = aux;
+                MPI_Allreduce(&prm.wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                prm.wsum_sigma_offset = aux;
+                for (int refno = 0; refno < prm.model.n_ref; refno++)
+                {
+                    MPI_Allreduce(MULTIDIM_ARRAY(prm.wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
+                                  MULTIDIM_SIZE(prm.wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    prm.wsum_Mref[refno] = Maux;
+                    MPI_Allreduce(&prm.sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    prm.sumw[refno] = aux;
+                    MPI_Allreduce(&prm.sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    prm.sumwsc2[refno] = aux;
+                    MPI_Allreduce(&prm.sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    prm.sumw_mirror[refno] = aux;
+                    MPI_Allreduce(&prm.sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    prm.sumw2[refno] = aux;
+                    MPI_Allreduce(&prm.sumwsc[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    prm.sumwsc[refno] = aux;
+                }
+
+                if (prm.blocks == 1) //ie not IEM
+                {
+                    prm.maximization(prm.model);
+                }
+                else //do IEM
+                {
+                    if (prm.iter > 1)
+                    {
+                        prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
+                        //block_model.print();
+                        prm.model.substractModel(block_model);
+                    }
+                    prm.maximization(block_model);
+
+                    if (rank == 0)
+                        prm.writeOutputFiles(block_model, OUT_BLOCK);
+
+                    if (prm.iter > 1)
+                    {
+                        prm.model.addModel(block_model);
+                    }
+                }
+            }//close for blocks
+
+            if (prm.blocks > 1 && prm.iter == 1)
+            {
+                for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
+                {
+                    prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
+
+                    if (prm.current_block == 0)
+                        prm.model = block_model;
+                    else
+                        prm.model.addModel(block_model);
+                }
             }
 
-            // Update model parameters
-            prm.maximization(prm.model);
-
+            if (prm.do_norm)
+                prm.correctScaleAverage();
             // Check convergence
             converged = prm.checkConvergence();
 
@@ -207,7 +252,8 @@ int main(int argc, char **argv)
             
             if (converged)
             {
-                if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
+                if (prm.verb > 0)
+                    std::cerr << " Optimization converged!" << std::endl;
                 break;
             }
             else
