@@ -7,6 +7,8 @@ import os
 
 FFTWDir="external/fftw-3.2.2"
 FFTWLibs=['fftw3','fftw3_threads']
+SQliteDir="external/sqlite-3.6.23"
+SQLiteLibs=['libsqlite3']
 
 def AddMatchingFiles((pattern, blacklist, sources), directory, files):
     ''' Callback, adds all matching files in dir '''
@@ -300,6 +302,30 @@ def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
                 basedirswig + name + ".py"])
     env.Alias(name, install)
     env.Default(alias)
+    
+def AddSQLiteLibrary():
+    libprefix = os.path.join(env['prefix'], 'lib')
+    numJobs=env.GetOption('num_jobs')
+
+    name1='libsqlite3'
+    name1la='libsqlite3.la'
+    if int(env['static']):
+        name1+=".a"
+    else:
+        name1+=".so"
+        
+    toBuild=[SQliteDir+'/.libs/'+name1, SQliteDir+'/.libs/'+name1la]
+    toCopy=[name1, name1la]
+    if not int(env['static']):
+        toBuild+=[SQliteDir+'/.libs/'+name1+".0"]
+        toCopy+=[name1+".0"]
+    lib1 = env.Command(toBuild, SQliteDir+"/sqlite3.c",
+        "cd "+SQliteDir+" ; make clean > /dev/null ; make -j "+str(numJobs)+\
+        " > ../../build/sqlite_make.log ")
+    alias = env.Alias(toCopy, lib1)
+    install = env.Install(libprefix, source=toBuild)
+    env.Alias(toCopy, install)
+    env.Default(alias)    
 
 def AddFFTWLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -332,7 +358,13 @@ def AddFFTWLibrary():
     env.Alias(toCopy, install)
     env.Default(alias)
 
+
+
+
 # --- Libraries
+
+# SQLite
+AddSQLiteLibrary()
 
 # FFTW
 AddFFTWLibrary()
@@ -846,3 +878,4 @@ if int(env['matlab']):
 if env.GetOption('clean'):
     print '* Cleaning  ...'
     os.system("( cd external/fftw-3.2.2 ; make clean >& /dev/null )");
+    os.system("( cd external/sqlite-3.6.23 ; make clean >& /dev/null )");

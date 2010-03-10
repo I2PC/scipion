@@ -68,6 +68,9 @@ opts.Add('MATLAB_DIR', 'Matlab installation dir', '/usr/local/matlab')
 opts.Add(BoolVariable('verbose_fftw', 'Verbose configuring of FFTW libraries?', 'no'))
 opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
 
+opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
+opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', ' ')
+
 opts.Update(env)
 
 # generate help for options
@@ -241,6 +244,21 @@ if (ARGUMENTS['mode'] == 'configure'):
         else:
             print 'yes'
          
+    # SQLite
+    # It is ugly to call configure from scons, but I do not know how to do it otherwise
+    # create configuration file for fftw
+    finalSQLiteFlags= env['SQLITEFLAGS']
+    #if not int(env['static']):
+    #    finalFFTWFlags+=" --enable-shared"
+    if int(env['verbose_sqlite']):
+        print "* Configuring FFTW ... " 
+        os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags)
+    else:
+        print "* Configuring SQLite (see build/sqlite_configure.log for details) ... "
+        print "cd external/sqlite-3.6.23;./configure "  + finalSQLiteFlags
+        os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags + " > ../../build/sqlite_configure.log ")
+ 
+ 
     # FFTW
     # It is ugly to call configure from scons, but I do not know how to do it otherwise
     # create configuration file for fftw
