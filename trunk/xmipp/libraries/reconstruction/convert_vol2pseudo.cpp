@@ -692,7 +692,7 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     int col=1;
     if (intensityColumn=="Bfactor") col=2;
     fprintf(fhOut,"REMARK xmipp_convert_vol2pseudo\n");
-    fprintf(fhOut,"REMARK fixedGaussian %f\n",sigma);
+    fprintf(fhOut,"REMARK fixedGaussian %f\n",sigma*sampling);
     fprintf(fhOut,"REMARK intensityColumn %s\n",intensityColumn.c_str());
     for (int n=0; n<nmax; n++)
     {
