@@ -30,7 +30,7 @@
 #include <string>
 #include <iostream>
 #include <external/sqlite-3.6.23/sqlite3.h>
-
+#include "funcs.h"
 class metaDataContainer
 {
     private:
@@ -50,13 +50,18 @@ class metaDataContainer
 	    #define SQLITE_OPEN_SHAREDCACHE      0x00020000   Ok
 	    #define SQLITE_OPEN_PRIVATECACHE     0x00040000   Ok
 	    */
-	    metaDataContainer::metaDataContainer(FileName fileName,
+
+	    metaDataContainer(FileName fileName,\
 				          int flag=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)
 		{
 			open(fileName,flag);
 		}
-	    void metaDataContainer::open(const FileName fileName,int flag);
 
+        /** open metaContainer DataBase for readind/writing ...  */
+	    void open(const FileName fileName,int flag);
+
+	    /** Destructor */
+		~metaDataContainer();
 #ifdef NEVER
 	/** Container for pairs "name" and value. Note that void * allows to use
 	    mixed types */
@@ -69,8 +74,7 @@ class metaDataContainer
 	/** Constructor open data base*/
 	metaDataContainer(FileName fileName);
 	
-	/** Destructor */
-	~metaDataContainer();
+
 	
 	/** Create a new pair name-value of integer type */
 	int addValue( std::string name, int value );
