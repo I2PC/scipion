@@ -147,14 +147,14 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
 def AddXmippProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries','#']
-    finalLibs = libs + ['XmippData', 'XmippExternal']+FFTWLibs
+    finalLibs = libs + ['XmippData', 'XmippExternal']+FFTWLibs+SQLiteLibs
     AddProgram(name, 'applications/programs/' + name, '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 
 def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries','#']
-    finalLibs = libs + ['XmippData', 'XmippExternal']+FFTWLibs
+    finalLibs = libs + ['XmippData', 'XmippExternal']+FFTWLibs+SQLiteLibs
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
@@ -384,7 +384,7 @@ AddLibrary('XmippExternal', 'external',
 
 # XmippData
 DataSources = Glob('libraries/data','*.cpp',[])
-AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal']+FFTWLibs)
+AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal']+FFTWLibs+SQLiteLibs)
 SwigDataSources = ['libraries/data/swig/swigXmippData.i'] 	 
 AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
     [], ['XmippData'])
@@ -508,7 +508,7 @@ AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 # FindSCenter
 AddProgram('find_center2d', 'applications/legacy/find_center2d', '*.cpp', [],
     ['libraries', '#'], ['lib'],
-    ['XmippData', 'OldXmipp', 'XmippExternal']+FFTWLibs, [], [])
+    ['XmippData', 'OldXmipp', 'XmippExternal']+FFTWLibs+SQLiteLibs, [], [])
 
 # Src (apps)
 
@@ -655,6 +655,7 @@ AddXmippProgram('convert_stack22images')
 AddXmippProgram('symmetrize', ['XmippRecons'])
 AddXmippProgram('threshold')
 AddXmippProgram('try_symmetry')
+#AddXmippProgram('test_sql', ['XmippRecons'])
 #AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment')
 AddXmippProgram('window')
@@ -842,7 +843,7 @@ if int(env['gui']):
         finalLibPath = ['lib']
         finalIncludePath = ['libraries','#']
         finalLibs = ['XmippData', 'XmippExternal','XmippGraphics',
-            'XmippRecons', 'XmippClassif']+FFTWLibs+libs
+            'XmippRecons', 'XmippClassif']+FFTWLibs+SQLiteLibs+libs
         for i in range(len(libs)):
            if libs[i] == 'XmippInterface':
     	      finalLibPath += ['libraries/interface']
