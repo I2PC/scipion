@@ -29,9 +29,35 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <external/sqlite-3.6.23/sqlite3.h>
 
 class metaDataContainer
 {
+    private:
+		sqlite3* mpDB;      //database pointer
+		sqlite3_stmt* mpVM; //prepared statment
+	    int mnBusyTimeoutMs; //lock time
+    public:
+		/** Constructor open data base
+
+	    valid flags
+
+	    #define SQLITE_OPEN_READONLY         0x00000001   Ok
+	    #define SQLITE_OPEN_READWRITE        0x00000002   Ok
+	    #define SQLITE_OPEN_CREATE           0x00000004   Ok
+	    #define SQLITE_OPEN_NOMUTEX          0x00008000   Ok
+	    #define SQLITE_OPEN_FULLMUTEX        0x00010000   Ok
+	    #define SQLITE_OPEN_SHAREDCACHE      0x00020000   Ok
+	    #define SQLITE_OPEN_PRIVATECACHE     0x00040000   Ok
+	    */
+	    metaDataContainer::metaDataContainer(FileName fileName,
+				          int flag=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)
+		{
+			open(fileName,flag);
+		}
+	    void metaDataContainer::open(const FileName fileName,int flag);
+
+#ifdef NEVER
 	/** Container for pairs "name" and value. Note that void * allows to use
 	    mixed types */
 	std::map<std::string, void *> values;
@@ -40,8 +66,8 @@ class metaDataContainer
 
 	public:
 	
-	/** Constructor */
-	metaDataContainer();
+	/** Constructor open data base*/
+	metaDataContainer(FileName fileName);
 	
 	/** Destructor */
 	~metaDataContainer();
@@ -55,6 +81,7 @@ class metaDataContainer
 	void * getValue( std::string name );
 	bool valueExists( std::string name );
 	void deleteValue( std::string name );
+#endif
 };
 
 #endif
