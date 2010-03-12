@@ -37,6 +37,13 @@ class metaDataContainer
 		sqlite3* mpDB;      //database pointer
 		sqlite3_stmt* mpVM; //prepared statment
 	    int mnBusyTimeoutMs; //lock time
+
+        /** open metaContainer DataBase for readind/writing ...  */
+	    void open(const FileName fileName,int flag);
+
+        /** close metaContainer DataBase */
+	    void close();
+
     public:
 		/** Constructor open data base
 
@@ -52,16 +59,23 @@ class metaDataContainer
 	    */
 
 	    metaDataContainer(FileName fileName,\
-				          int flag=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)
-		{
-			open(fileName,flag);
-		}
-
-        /** open metaContainer DataBase for readind/writing ...  */
-	    void open(const FileName fileName,int flag);
+				          int flag=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
 
 	    /** Destructor */
 		~metaDataContainer();
+
+		/** 	set maximum waiting time
+		Suppose you are trying to perform a select, but there's an update
+		currently in progress. Without sqlite3_busy_timeout or explicit busy
+		handler, your operation will fail immediately with SQLITE_BUSY. But if
+		you set up sqlite3_busy_timeout, SQLite will automatically retry your
+		operation several times before erroring out. Hopefully the writing
+		transaction completes before the timeout has expired, and your select is
+		allowed to proceed.
+	    */
+		void setBusyTimeout(int nMillisecs);
+
+
 #ifdef NEVER
 	/** Container for pairs "name" and value. Note that void * allows to use
 	    mixed types */
