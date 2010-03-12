@@ -664,10 +664,12 @@ AddXmippProgram('window')
 # Batches (apps)
 # NOTE PDBsidechain is in the only one in perl
 AddBatch('selfile_create', 'applications/scripts/selfile_create')
+AddBatch('convert_img2jpg','applications/scripts/convert_img2jpg')
 AddBatch('convert_lst2sel', 'applications/scripts/convert_lst2sel')
 AddBatch('convert_pdb2descr', 'applications/scripts/convert_pdb2descr')
 AddBatch('extract_sidechain_from_pdb',
     'applications/scripts/extract_sidechain_from_pdb', '.pl')
+AddBatch('convert_vol2jpg','applications/scripts/convert_vol2jpg')
 AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
 AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
