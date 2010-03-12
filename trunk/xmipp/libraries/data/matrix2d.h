@@ -881,6 +881,7 @@ public:
      * This functions allows you to access to the matrix elements.
      */
 
+    //#define DEBUG
     /** Matrix element access via index
      * @ingroup MatricesMemory
      *
@@ -897,16 +898,19 @@ public:
      */
     T& operator()(int i, int j) const
     {
-        if (i < STARTINGY(*this) || i > FINISHINGY(*this))
-            REPORT_ERROR(1103, static_cast< std::string >
-	       ("Matrix subscript (i) out of range i=")+integerToString(i));
+        #ifdef DEBUG
+            if (i < STARTINGY(*this) || i > FINISHINGY(*this))
+                REPORT_ERROR(1103, static_cast< std::string >
+	           ("Matrix subscript (i) out of range i=")+integerToString(i));
 
-        if (j < STARTINGX(*this) || j > FINISHINGX(*this))
-            REPORT_ERROR(1103, static_cast< std::string >
-	    	("Matrix subscript (j) out of range j=")+integerToString(j));
+            if (j < STARTINGX(*this) || j > FINISHINGX(*this))
+                REPORT_ERROR(1103, static_cast< std::string >
+	    	    ("Matrix subscript (j) out of range j=")+integerToString(j));
+        #endif
 
         return MAT_ELEM(*this, i, j);
     }
+    #undef DEBUG
 
     /** Get the pixel at (i, j)
      * @ingroup MatricesMemory
@@ -2542,6 +2546,18 @@ std::complex< double > Matrix2D< std::complex< double > >::interpolatedElement(
  * @endcode
  */
 Matrix2D< double > rotation2DMatrix(double ang);
+
+/** Creates a rotational matrix (3x3) for images
+ * @ingroup MatricesGeometry
+ *
+ * The rotation angle is in degrees.
+ * m must have been already resized to 3x3
+ *
+ * @code
+ *  rotation2DMatrix(60,m);
+ * @endcode
+ */
+void rotation2DMatrix(double ang, Matrix2D< double > &m);
 
 /** Creates a translational matrix (3x3) for images
  * @ingroup MatricesGeometry

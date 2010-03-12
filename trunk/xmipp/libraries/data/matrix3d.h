@@ -440,6 +440,7 @@ public:
      * This functions allows you to access to the matrix elements.
      */
 
+    //#define DEBUG
     /** Volume element access via index.
      * @ingroup VolumesMemory
      *
@@ -455,22 +456,25 @@ public:
      */
     T& operator()(int k, int i, int j) const
     {
-        if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
-            REPORT_ERROR(1203,static_cast< std::string > (
-                         "Matrix3D::operator (): Matrix3D subscript (k) out of range k=")+
-                         integerToString(k));
+        #ifdef DEBUG
+            if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
+                REPORT_ERROR(1203,static_cast< std::string > (
+                             "Matrix3D::operator (): Matrix3D subscript (k) out of range k=")+
+                             integerToString(k));
 
-        if (i < STARTINGY(*this) || i > FINISHINGY(*this))
-            REPORT_ERROR(1203,static_cast< std::string > (
-                         "Matrix3D::operator (): Matrix3D subscript (i) out of range i=")+
-                         integerToString(i));
-        if (j < STARTINGX(*this) || j > FINISHINGX(*this))
-            REPORT_ERROR(1203,static_cast< std::string > (
-                         "Matrix3D::operator (): Matrix3D subscript (j) out of range j=")+
-                         integerToString(j));
+            if (i < STARTINGY(*this) || i > FINISHINGY(*this))
+                REPORT_ERROR(1203,static_cast< std::string > (
+                             "Matrix3D::operator (): Matrix3D subscript (i) out of range i=")+
+                             integerToString(i));
+            if (j < STARTINGX(*this) || j > FINISHINGX(*this))
+                REPORT_ERROR(1203,static_cast< std::string > (
+                             "Matrix3D::operator (): Matrix3D subscript (j) out of range j=")+
+                             integerToString(j));
+        #endif
 
         return VOL_ELEM(*this, k, i, j);
     }
+    #undef DEBUG
 
     /** Get the voxel at (k,i,j) (logical access).
      * @ingroup VolumesMemory

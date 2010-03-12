@@ -698,6 +698,7 @@ public:
     /// @defgroup VectorsMemory Memory access
     /// @ingroup Vectors
 
+    //#define DEBUG
     /** Vector element access
      * @ingroup VectorsMemory
      *
@@ -713,13 +714,16 @@ public:
      */
     T& operator()(int i) const
     {
-        if (i > FINISHINGX(*this) || i < STARTINGX(*this))
-            REPORT_ERROR(1003, static_cast< std::string >
-	       ("Vector subscript not defined for this vector i=")+
-	       integerToString(i));
+        #ifdef DEBUG
+            if (i > FINISHINGX(*this) || i < STARTINGX(*this))
+                REPORT_ERROR(1003, static_cast< std::string >
+	           ("Vector subscript not defined for this vector i=")+
+	           integerToString(i));
+        #endif
 
         return VEC_ELEM(*this, i);
     }
+    #undef DEBUG
 
     /** Interpolates the value of the 1D vector M at the point (x) knowing
      * that this vector is a set of B-spline coefficients
