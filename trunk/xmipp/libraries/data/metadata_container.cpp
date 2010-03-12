@@ -32,15 +32,7 @@ void metaDataContainer::open(const FileName fileName,int flag)
 	{
 		REPORT_ERROR(1,sqlite3_errmsg(mpDB));
 	}
-	/*
-	> Suppose you are trying to perform a select, but there's an update
-	> currently in progress. Without sqlite3_busy_timeout or explicit busy
-	> handler, your operation will fail immediately with SQLITE_BUSY. But if
-	> you set up sqlite3_busy_timeout, SQLite will automatically retry your
-	> operation several times before erroring out. Hopefully the writing
-	> transaction completes before the timeout has expired, and your select is
-	> allowed to proceed.
-	 */
+
 	setBusyTimeout(mnBusyTimeoutMs);
 	char *errmsg;
 	//some optimization, do not look to efective
@@ -49,14 +41,30 @@ void metaDataContainer::open(const FileName fileName,int flag)
 	sqlite3_exec (mpDB, "PRAGMA count_changes=OFF",NULL, NULL, &errmsg);
 	sqlite3_exec (mpDB, "PRAGMA page_size=4092",NULL, NULL, &errmsg);
 }
-
-metaDataContainer::metaDataContainer(FileName fileName)
+void metaDataContainer::close()
+{
+	if (mpDB)
+	{
+		sqlite3_close(mpDB);
+		mpDB = 0;
+	}
+}
+metaDataContainer::metaDataContainer(FileName fileName,int flag)
 {
 	mpDB = 0;
-	mnBusyTimeoutMs = 1000; // 1 second
+	mnBusyTimeoutMs = 10000; // 10 second
+	open(fileName,flag);
 }
-metaDataContainer::~metaDataContainer(){};
+metaDataContainer::~metaDataContainer()
+{
+	close();
+}
 
+void metaDataContainer::setBusyTimeout(int nMillisecs)
+{
+	mnBusyTimeoutMs = nMillisecs;
+	sqlite3_busy_timeout(mpDB, mnBusyTimeoutMs);
+}
 
 #ifdef NEVER
 int CppSQLite3Query::getIntField(int nField, int nNullValue/*=0*/)
