@@ -158,6 +158,12 @@ bool Matrix2D< std::complex<double> >::isScalar() const
 Matrix2D<double> rotation2DMatrix(double ang)
 {
     Matrix2D<double> result(3, 3);
+    rotation2DMatrix(ang, result);
+    return result;
+}
+
+void rotation2DMatrix(double ang, Matrix2D< double > &result)
+{
     double cosine, sine;
 
     ang = DEG2RAD(ang);
@@ -175,8 +181,6 @@ Matrix2D<double> rotation2DMatrix(double ang)
     DIRECT_MAT_ELEM(result, 2, 0) = 0;
     DIRECT_MAT_ELEM(result, 2, 1) = 0;
     DIRECT_MAT_ELEM(result, 2, 2) = 1;
-
-    return result;
 }
 
 /* Translation 2D ---------------------------------------------------------- */
