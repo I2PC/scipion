@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+import Image
+import math
+import sys
+from array import array
+
+def open_volume(filename):
+    fid = open(filename,'rb')
+    header=array('f');
+    header.fromfile(fid,256)
+    fNsam=header[11];
+    fLabrec=header[12];
+    header_size=fNsam*fLabrec;
+    
+    # calculate the true header size
+    if not header_size==256:
+        fid.seek(0,0);
+        header.fromfile(fid, header_size);
+    
+    nslice=header[0]; #number of slices
+    ncol=header[11];  #number of pixels per row
+    nrow=header[1];   #number of rows
+    
+    V=array('f')
+    V.fromfile(fid, int(nslice*nrow*ncol));
+    fid.close()
+    return (V,int(nslice),int(nrow),int(ncol))
+
+def fillImage(V,Zdim,Ydim,Xdim,width):
+    minval=min(V);
+    maxval=max(V);
+    a=255/(maxval-minval)
+    b=minval
+    
+    if width==-1:
+        Nx=int(math.floor(math.sqrt(Zdim)))
+    else:
+        Nx=width
+    Ny=int(math.ceil(float(Zdim)/Nx))
+    im=Image.new("L",(Nx*Xdim,Ny*Ydim),0)
+    
+    ptr=0;
+    for k in range(Zdim):
+        top=(k/Nx)*Ydim
+        left=(k%Nx)*Xdim
+        for i in range(Ydim):
+            for j in range(Xdim):
+                im.putpixel((left+j,top+i),a*(V[ptr]-b))
+                ptr=ptr+1
+    return im
+
+# --------------------------------------------------------------------
+if __name__ == "__main__":
+
+    if not sys.argv[1:]:
+        print "Usage: xmipp_vol2jpg <volume.vol> <image.jpg>"
+        print "Usage: xmipp_vol2jpg <volume.vol> <image.jpg> <width>"
+        sys.exit()
+    args = sys.argv[1:]
+
+    if (len(args)>=2):
+        fnVol=sys.argv[1];
+        fnJpg=sys.argv[2];
+    if (len(args)>=3):
+        width=int(sys.argv[3]);
+    else:
+        width=-1;
+
+    (V,Zdim,Ydim,Xdim)=open_volume(fnVol)
+    im=fillImage(V,Zdim,Ydim,Xdim,width)
+    im.save(fnJpg,format="JPEG")
