@@ -296,7 +296,7 @@ double fastCorrentropy(const Matrix2D<double> &x, const Matrix2D<double> &y,
 void VQProjection::fitBasic(Matrix2D<double> &I,
     double sigma, double &corrCode)
 {
-    Matrix2D<double> ARS, ASR, R;
+    Matrix2D<double> ARS, ASR, R(3,3);
     ARS.initIdentity(3);
     ASR.initIdentity(3);
     Matrix2D<double> IauxSR=I, IauxRS=I;
@@ -324,8 +324,9 @@ void VQProjection::fitBasic(Matrix2D<double> &I,
         
         double bestRot = best_rotation(polarFourierP,polarFourierI,
             local_transformer);
-	R=rotation2DMatrix(-bestRot);
-        ASR=R*ASR;
+	rotation2DMatrix(-bestRot,R);
+        SPEED_UP_temps;
+	M3x3_BY_M3x3(ASR,R,ASR);
         applyGeometry(IauxSR,ASR,I,IS_NOT_INV,WRAP);
 
         // Rotate then shift
@@ -339,8 +340,8 @@ void VQProjection::fitBasic(Matrix2D<double> &I,
                 1);
         bestRot = best_rotation(polarFourierP,polarFourierI,
             local_transformer);
-	R=rotation2DMatrix(-bestRot);
-        ARS=R*ARS;
+	rotation2DMatrix(-bestRot,R);
+        M3x3_BY_M3x3(ARS,R,ARS);
         applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
 
         best_shift(P,IauxRS,shiftX,shiftY);
@@ -349,12 +350,6 @@ void VQProjection::fitBasic(Matrix2D<double> &I,
         applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
     }
     
-    //applyGeometryBSpline(IauxRS,ARS,I,3,IS_NOT_INV,WRAP);
-    //applyGeometryBSpline(IauxSR,ASR,I,3,IS_NOT_INV,WRAP);
-
-    //applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
-    //applyGeometry(IauxSR,ASR,I,IS_NOT_INV,WRAP);
-
     // Compute the correntropy
     double corrCodeRS, corrCodeSR;
     if (useCorrelation)
