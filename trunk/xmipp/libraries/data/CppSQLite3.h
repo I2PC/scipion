@@ -28,7 +28,8 @@
 #ifndef _CppSQLite3_H_
 #define _CppSQLite3_H_
 
-#include "sqlite3.h"
+//#include "../../external/sqlite-3.6.23/sqlite3ext.h"
+#include "../../external/sqlite-3.6.23/sqlite3.h"
 #include <cstdio>
 #include <cstring>
 
