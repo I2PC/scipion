@@ -636,7 +636,7 @@ public:
                     if (swap) swapPage(page, readsize_n, swap);
 
                     // cast to T per page
-                    castPage2T(page, data + haveread_n, readsize_n);
+                    castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, readsize_n);
 
                     haveread_n += readsize_n;
                }

@@ -188,7 +188,7 @@ int  readSPIDER(int img_select)
             if ( swap ) 
                 for ( b = (char *) header; b<hend; b+=4 ) 
                     swapbytes(b, 4);
-            j = ( pNSIZE(data) > 1 )? j = i: 0;
+            j = ( NSIZE(data) > 1 )? j = i: 0;
             image[j].xoff = header->xoff;
             image[j].yoff = header->yoff;
             image[j].zoff = header->zoff;
