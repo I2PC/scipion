@@ -1629,8 +1629,9 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
         }
     }
 
-    return refineLandmark(pieceii,jj,rjj,actualCorrThreshold,
+    bool retval=refineLandmark(pieceii,jj,rjj,actualCorrThreshold,
         reversed,maxCorr);
+    return retval;
 }
 
 bool Prog_tomograph_alignment::refineLandmark(const Matrix2D<double> &pieceii,
@@ -1678,6 +1679,11 @@ bool Prog_tomograph_alignment::refineLandmark(const Matrix2D<double> &pieceii,
             // Select piece in image jj, compute its statistics and normalize
             double mean_jj=0, stddev_jj=0;
             const Matrix2D<unsigned char> &Ijj=(*img[jj]);
+            if (XX(rjj)+shiftx+STARTINGX(piecejj)<STARTINGX(Ijj) ||
+                YY(rjj)+shifty+STARTINGY(piecejj)<STARTINGY(Ijj) ||
+                XX(rjj)+shiftx+FINISHINGX(piecejj)>FINISHINGX(Ijj) ||
+                YY(rjj)+shifty+FINISHINGY(piecejj)>FINISHINGY(Ijj))
+                continue;
             FOR_ALL_ELEMENTS_IN_MATRIX2D(piecejj)
             {
                 MAT_ELEM(piecejj,i,j)=MAT_ELEM(Ijj,
