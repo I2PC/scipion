@@ -1,6 +1,7 @@
 /***************************************************************************
 * 
 * Authors:     J.R. Bilbao-Castro (jrbcast@ace.ual.es)
+*              R. Marabini        (roberto@cnb.csic.es)
 *
 * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 *
@@ -24,37 +25,215 @@
 ***************************************************************************/
 #include "metadata_container.h"
 //called by creator
-void metaDataContainer::open(const FileName fileName,int flag)
+void metaDataContainer::open(const FileName baseFileName,int flag)
 {
-	int nRet = sqlite3_open_v2(fileName.c_str(), &mpDB,flag, NULL);
+	int nRet = sqlite3_open_v2(baseFileName.c_str(), &dB,flag, NULL);
+//#define DEBUG_OPEN
+#ifdef DEBUG_OPEN
+    std::cerr<< "open database " <<  baseFileName
+    		 << "with flags    " << flag
+    		 << "result is     " << nRet
+    		 << std::endl;
 
+#endif
 	if (nRet != SQLITE_OK)
 	{
-		REPORT_ERROR(1,sqlite3_errmsg(mpDB));
+		REPORT_ERROR(1,sqlite3_errmsg(dB));
 	}
 
 	setBusyTimeout(mnBusyTimeoutMs);
 	char *errmsg;
-	//some optimization, do not look to efective
-	sqlite3_exec (mpDB, "PRAGMA temp_store=MEMORY",NULL, NULL, &errmsg);
-	sqlite3_exec (mpDB, "PRAGMA synchronous=OFF",NULL, NULL, &errmsg);
-	sqlite3_exec (mpDB, "PRAGMA count_changes=OFF",NULL, NULL, &errmsg);
-	sqlite3_exec (mpDB, "PRAGMA page_size=4092",NULL, NULL, &errmsg);
+	//some optimization, no too effetctive
+	sqlite3_exec (dB, "PRAGMA temp_store=MEMORY",NULL, NULL, &errmsg);
+	sqlite3_exec (dB, "PRAGMA synchronous=OFF",NULL, NULL, &errmsg);
+	sqlite3_exec (dB, "PRAGMA count_changes=OFF",NULL, NULL, &errmsg);
+	sqlite3_exec (dB, "PRAGMA page_size=4092",NULL, NULL, &errmsg);
 }
+
 void metaDataContainer::close()
 {
-	if (mpDB)
+	if (dB)
 	{
-		sqlite3_close(mpDB);
-		mpDB = 0;
+		sqlite3_close(dB);
+		dB = 0;
 	}
 }
-metaDataContainer::metaDataContainer(FileName fileName,int flag)
+
+void metaDataContainer::init(const FileName baseFileName,int flag)
 {
-	mpDB = 0;
-	mnBusyTimeoutMs = 10000; // 10 second
-	open(fileName,flag);
+	dB = 0;
+	mnBusyTimeoutMs = 60000; // 60 second
+	open(baseFileName,flag);
+
+	//Valid types and kind of variable
+    //Angles
+	validAttributes.insert(std::make_pair("angleRot" ,metaDataReal));
+	validAttributes.insert(std::make_pair("angleTilt",metaDataReal));
+	validAttributes.insert(std::make_pair("anglePsi" ,metaDataReal));
+	//shifts
+	validAttributes.insert(std::make_pair("shiftX"   ,metaDataReal));
+	validAttributes.insert(std::make_pair("shiftY"   ,metaDataReal));
+	validAttributes.insert(std::make_pair("shiftZ"   ,metaDataReal));
+	//origin
+	validAttributes.insert(std::make_pair("originX"  ,metaDataReal));
+	validAttributes.insert(std::make_pair("originY"  ,metaDataReal));
+	validAttributes.insert(std::make_pair("originZ"  ,metaDataReal));
+	//filename
+	validAttributes.insert(std::make_pair("fileName" ,metaDataString));
+	//label (unique key) can work as primary key but it is not compulsory
+	validAttributes.insert(std::make_pair("label",    metaDataStringUnique));
+	//primary key, this is handled by the class not by the program
+	//validAttributes.insert(std::make_pair("entryId",  metaDataPK));
+	//belong to class
+	validAttributes.insert(std::make_pair("belongToClass",metaDataInteger));
+	//format
+	validAttributes.insert(std::make_pair("formatId",metaDataInteger));
 }
+
+//import data from file, only attributeNames fields
+metaDataContainer::metaDataContainer(FileName fileNameBase,
+		                             std::string tableName,
+		                             std::vector<std::string> &attributeNames,
+		                             int flag)
+{
+	//part common for all creators
+	init(fileNameBase,flag);
+	//create table
+	createTable(tableName);
+    std::string invalidAttribute;
+	//if read-only check if all asked attributes exist
+	//otherwise create them if they di nit exists
+	if(flag|SQLITE_OPEN_READONLY)
+		if(checkAttributes(tableName,attributeNames,invalidAttribute)!=0)
+			REPORT_ERROR(1,"Attribute \"" +invalidAttribute + "\" does not "
+					+ "exist and data base open for reading only");
+#ifdef NEVER
+	else
+		addAttributes(tableName,attributeNames);
+#endif
+}
+#ifdef NEVER
+
+//open database from program with attributeNames
+metaDataContainer::metaDataContainer(FileName fileNameBase,
+		                             std::vector<std::string> &attributeNames,
+		                             int flag)
+{
+	//part common for all creators
+	init(const FileName baseFileName,,flag);
+	//TO BE DONE
+	//create table (only one per file)
+	//readCVSFile()
+	//createTable()
+	//addAttribute()
+}
+#endif
+
+void metaDataContainer::createTable(const std::string tableName)
+{
+
+    /** 1. Create table if it does not exist **/
+	std::string sqlCommand;
+	sqlCommand = (std::string)"CREATE TABLE IF NOT EXISTS " +\
+			     tableName +\
+			     (std::string) "( entryId integer PRIMARY KEY AUTOINCREMENT) "
+				 ;
+	// Execute the query for   table creation
+	if(sqlite3_exec(dB,sqlCommand.c_str(),0,0,0))
+	{
+    	REPORT_ERROR(1,sqlite3_errmsg(dB));
+	}
+}
+
+
+int metaDataContainer::checkAttributes(const std::string tableName,
+		                              std::vector<std::string> &attributeNames,
+		                              std::string &invalidAttribute
+		                              )
+{
+	//table should exist
+	if(!tableExists(tableName))
+    	REPORT_ERROR(1,sqlite3_errmsg(dB));
+
+	std::vector<std::string>::iterator attributeNamesIterator;
+    const char *datatype;
+    const char *colseq;
+    int    NotNull,PrimaryKey,Autoinc;
+    int    numberColDoNOTexist=0;
+
+    for(attributeNamesIterator =attributeNames.begin();
+		attributeNamesIterator != attributeNames.end();
+		attributeNamesIterator++)
+	{
+    	if(sqlite3_table_column_metadata(dB,
+    			                        NULL,
+    			                        tableName.c_str(),
+    			                        (*attributeNamesIterator).c_str(),
+    			                        &datatype,
+    			                        &colseq,
+    			                        &NotNull,
+    			                        &PrimaryKey,
+    			                        &Autoinc)!=SQLITE_OK)
+    	{
+    		numberColDoNOTexist++;
+    		invalidAttribute = (*attributeNamesIterator);
+    		break;
+    	}
+	}
+
+//    int sqlite3_table_column_metadata(
+//      sqlite3 *db,                /* Connection handle */
+//      const char *zDbName,        /* Database name or NULL */
+//      const char *zTableName,     /* Table name */
+//      const char *zColumnName,    /* Column name */
+//      char const **pzDataType,    /* OUTPUT: Declared data type */
+//      char const **pzCollSeq,     /* OUTPUT: Collation sequence name */
+//      int *pNotNull,              /* OUTPUT: True if NOT NULL constraint exists */
+//      int *pPrimaryKey,           /* OUTPUT: True if column part of PK */
+//      int *pAutoinc               /* OUTPUT: True if column is auto-increment */
+
+    return (numberColDoNOTexist != 0);
+}
+
+#ifdef NEVER
+
+void metaDataContainer::addAttributes(const std::string tableName,
+		                              std::vector<std::string> &attributeNames
+		                              )
+{
+	//table should exist
+	if(!tableExists(tableName))
+    	REPORT_ERROR(1,sqlite3_errmsg(dB));
+    // get number of columns
+	int nCols = sqlite3_column_count(statement);
+	std::vector<std::string>::iterator attributeNamesIterator;
+	std::string sqlCommand;
+	//add all column, if there are already there they will fail
+    for(attributeNamesIterator =attributeNames.begin();
+		attributeNamesIterator != attributeNames.end();
+		attributeNamesIterator++)
+	{
+    	sqlCommand = (std::string)"ALTER TABLE " +\
+    			     tableName +\
+    			     " ADD COLUMN " +\
+    			     *attributeNamesIterator + \
+    			     (std::string)" " +validAttributes[*attributeNamesIterator]\
+    			     ;
+    	if(sqlite3_exec(dB,sqlCommand,0,0,0))
+    	{
+    		std::string error = sqlite3_errmsg(dB);
+            if(errot.find((std::string)"duplicate"))
+            	std::cerr << "column "
+            	          << *attributeNamesIterator
+            	          << " already exist "
+            	          << std::endl;
+            else
+            	REPORT_ERROR(1,sqlite3_errmsg(dB));
+    	}
+	}
+}
+#endif
+
 metaDataContainer::~metaDataContainer()
 {
 	close();
@@ -63,10 +242,98 @@ metaDataContainer::~metaDataContainer()
 void metaDataContainer::setBusyTimeout(int nMillisecs)
 {
 	mnBusyTimeoutMs = nMillisecs;
-	sqlite3_busy_timeout(mpDB, mnBusyTimeoutMs);
+	sqlite3_busy_timeout(dB, mnBusyTimeoutMs);
 }
 
-#ifdef NEVER
+bool metaDataContainer::tableExists(const std::string tableName)
+{
+	std::string sqlCommand;
+	sqlCommand = (std::string)"select count(*) from sqlite_master where type='table' and name=?";
+    if(sqlite3_prepare_v2(dB, sqlCommand.c_str(), -1, &statement, 0) != SQLITE_OK)
+    	REPORT_ERROR(1,sqlite3_errmsg(dB));
+	if(sqlite3_bind_text(statement, 1, tableName.c_str(),-1, SQLITE_TRANSIENT)!= SQLITE_OK)
+    	REPORT_ERROR(1,sqlite3_errmsg(dB));
+    int result = sqlite3_step(statement);
+    if(result != SQLITE_ROW)
+    	REPORT_ERROR(1,sqlite3_errmsg(dB));
+    int numberAnswers = sqlite3_column_int(statement, 0);
+	//sqlite3_reset(statement);
+	sqlite3_finalize(statement);
+    return (numberAnswers > 0);
+}
+
+
+
+//make prepared query and iterate trough results
+//read cvs, skip #, process first colum in a different awya
+//write cvs
+
+//if statement open close it
+//start_reading_data
+//bind
+//next
+//end_reading_data
+
+//if statement open close it
+//start_writing_data
+//bind
+//next
+//end_writing_data
+//begin_transaction
+//insert row
+
+
+//executeSQLcommand
+#ifdef NEVEREVER
+bool metaDataContainer::tableTypeCompatible(const std::string tableName,
+		                  std::vector<std::string> &attributeNames,
+		                  std::vector<int> &attributeTypes)
+{
+    //if new, table is compatible
+	if(!tableExists(tableName))
+		return (1);
+	std::string sqlCommand;
+	sqlCommand = (std::string)"select * from " + tableName;
+	if(sqlite3_prepare_v2(dB, sqlCommand.c_str(), -1, &statement, 0) != SQLITE_OK)
+		REPORT_ERROR(1,sqlite3_errmsg(dB));
+    int result = sqlite3_step(statement);
+	int nCols = sqlite3_column_count(statement);
+	std::vector<int>::iterator attributeTypesIterator;
+	std::vector<std::string>::iterator attributeNamesIterator;
+	bool returnValue=0;
+	for(attributeTypesIterator = attributeTypes.begin(),
+		attributeNamesIterator =attributeNames.begin();
+		attributeTypesIterator != attributeTypes.end();
+		attributeTypesIterator++,attributeNamesIterator++)
+	{
+		for (int nField = 0; nField < nCols; nField++)
+		{
+			const char* szTemp = sqlite3_column_name(statement, nField);
+			int iType = sqlite3_column_type(statement, nField);
+			std::string Temp=szTemp;
+			if((*attributeNamesIterator).size() != Temp.size())
+			 {
+				continue;
+			 }
+			if((*attributeNamesIterator).compare(Temp)==0)
+			{
+				if(iType==(*attributeTypesIterator))
+			    {
+					returnValue=1;
+					std::cout << " column name " << szTemp << "with type " << iType << "is a " << (*attributeTypesIterator) <<std::endl;
+					break;
+			    }
+				else
+					returnValue=0;
+			}
+		}
+		if(returnValue==0)
+			break;
+	}
+	sqlite3_finalize(statement);
+    return (returnValue > 0);
+}//FALTA CASO NO HAY DATOS y devuelve NULL, entonces borrar tabla y recrearla
+
 int CppSQLite3Query::getIntField(int nField, int nNullValue/*=0*/)
 {
 	if (fieldDataType(nField) == SQLITE_NULL)
