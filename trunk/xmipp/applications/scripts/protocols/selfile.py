@@ -19,6 +19,10 @@ class selfile:
            args=line.split()
            if (len(args)>1):
                filename=(args[0].split('/'))[-1]
+               if filename=="#":
+                    continue
+               if filename==";":
+                    continue
                if filename in imgNames:
                     raise RuntimeError, """ There are two images with the same
                        filename, although they may be in different directories.
