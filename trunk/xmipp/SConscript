@@ -880,5 +880,5 @@ if int(env['matlab']):
 # Configuration or cleaning
 if env.GetOption('clean'):
     print '* Cleaning  ...'
-    os.system("( cd external/fftw-3.2.2 ; make clean >& /dev/null )");
+    os.system("( cd external/fftw-3.2.2    ; make clean >& /dev/null )");
     os.system("( cd external/sqlite-3.6.23 ; make clean >& /dev/null )");
