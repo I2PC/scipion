@@ -1399,7 +1399,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
 
         #ifdef DEBUG
             ImageXmipp save;
-            save()=*(parent->img[ii]); save.write("PPPoriginal.xmp");
+            typeCast(*(parent->img[ii]),save()); save.write("PPPoriginal.xmp");
             save()=Ifiltered; save.write("PPPfiltered.xmp");
             double minval=Ifiltered.computeMin();
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Ifiltered)
