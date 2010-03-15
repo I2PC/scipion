@@ -1,0 +1,10 @@
+#!/usr/bin/env csh
+set scriptdir=`which xmipp_protocols | sed "s|/bin/xmipp_protocols|/protocols|"`
+if (!( $# == 1 )) then 
+ echo " Usage: xmipp_gui <you_protocol.py>"
+else
+ python ${scriptdir}/xmipp_protocol_gui.py $1
+endif
+echo " + Launching GUI ... " 
+
+
