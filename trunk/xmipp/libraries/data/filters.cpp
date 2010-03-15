@@ -715,8 +715,16 @@ void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
                 sumcorr += MAT_ELEM(Mcorr, i_actual, j_actual);
             }
         }
-    shiftX = xmax / sumcorr;
-    shiftY = ymax / sumcorr;
+    if (ABS(sumcorr)>XMIPP_EQUAL_ACCURACY)
+    {
+        shiftX = xmax / sumcorr;
+        shiftY = ymax / sumcorr;
+    }
+    else
+    {
+        shiftX=imax;
+        shiftY=jmax;
+    }
 }
 
 /* Best non-wrapping shift ------------------------------------------------- */
