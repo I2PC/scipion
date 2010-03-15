@@ -466,7 +466,7 @@ void Prog_tomograph_alignment::usage() const {
              << "  [-optimizeTiltAngle]            : Optimize tilt angle\n"
              << "  [-isCapillar]                   : Set this flag if the tilt series is of a capillar\n"
              << "  [-dontNormalize]                : Don't normalize\n"
-             << "  [-difficult]                    : Don't normalize\n"
+             << "  [-difficult]                    : Apply some filters before affine alignment\n"
              << "  [-threshold <th=-1>]            : threshold\n"
              << "  [-maxShiftPercentage <p=0.2>]   : Maximum shift as percentage of image size\n"
              << "  [-maxIterDE <n=30>]             : Maximum number of iteration in Differential Evolution\n"
