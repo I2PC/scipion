@@ -38,59 +38,6 @@
 #include "bsoft_utils.h"
 
 
-/** Access to X dimension (size)
- * @ingroup ImageSizeShape
- */
-#define IMGXSIZE(v) ((v).x)
-
-/** Access to N (number of images)
- * @ingroup ImageSizeShape
- */
-#define IMGNSIZE(v) ((v).n)
-
-/** Access to Y dimension (size)
- * @ingroup ImageSizeShape
- */
-#define IMGYSIZE(v) ((v).y)
-
-/** Access to Z dimension (size)
- * @ingroup ImageSizeShape
- */
-#define IMGZSIZE(v) ((v).z)
-
-/** Access to XY dimension (Ysize*Xsize)
- * @ingroup ImageSizeShape
- */
-#define IMGYXSIZE(v) ((v).x*(v).y)
-
-/** Access to ZYX dimension (Zsize*Ysize*Xsize)
- * @ingroup ImageSizeShape
- */
-#define IMGZYXSIZE(v) ((v).z*IMGYXSIZE(v))
-
-/** Access to ZYX dimension (Zsize*Ysize*Xsize)
- * @ingroup ImageSizeShape
- */
-#define NZYXSIZE(v) ((v).n*IMGZYXSIZE(v))
-
-/** Access to a direct element.
- * @ingroup ImageSizeShape.
- * v is the array, l is the number, k is the slice (Z), i is the Y index and j is the X index.
- * i and j) within the slice.
- */
-#define DIRECT_IMAGE_ELEM(v,l,k,i,j) ((v).data[(l)*IMGZYXSIZE(v)+(k)*IMGYXSIZE(v)+(i)*IMGXSIZE(v)+(j)])
-
-/** Image element: Logical access.
- * @ingroup VolumesMemory
- *
- * @code
- * IMAGE_ELEM(V, 3, -1, -2, 1) = 1;
- * val = IMAGE_ELEM(V, 3, -1, -2, 1);
- * @endcode
- */
-#define IMAGE_ELEM(V,l,k,i,j) \
-    DIRECT_IMAGE_ELEM((V), (l), (k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
-
 /** Template class for subimage header information
  * @ingroup Images
  *
@@ -158,7 +105,9 @@ public:
 
     unsigned int        dataflag;	// Flag to force reading of the data
     FileName            filename;       // File name
-    unsigned long	i;		// Image number (may be > data.ndim)
+    /// FIXME having x,y,z also here (and not only in multidimarray may lead to conflicts....)
+    unsigned long	x, y, z;        // Image dimensions in X, Y and Z
+    unsigned long	n, i;		// Number of images and image number (may be > n)
     unsigned long	px, py, pz; 	// Page dimensions
     unsigned long	offset; 	// Data offset
     DataType		datatype;	// Data type
@@ -187,6 +136,7 @@ public:
      */
     NewImage()
     {
+        image = NULL;
         clear();
     }
 
@@ -201,6 +151,7 @@ public:
      */
     NewImage(DataType type, int Xdim, int Ydim, int Zdim=1, int Ndim=1)
     {
+        image = NULL;
         clear();
         datatype = type;
         data.resize(Ndim, Zdim, Ydim, Xdim);
@@ -216,6 +167,7 @@ public:
     {
         data.clear();
         datatype = Unknown_Type;
+        x = y = z = n = 0;
         px = py = pz = 0;
         filename = "";
         offset = 0;
@@ -372,6 +324,7 @@ public:
          case Unknown_Type:
              REPORT_ERROR(12,"ERROR: datatype is Unknown_Type");
          case UChar:
+         {
              if (typeid(T) == typeid(unsigned char))
              {
                  memcpy(ptrDest, page, pageSize*sizeof(T));
@@ -382,7 +335,9 @@ public:
                  for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
              }
              break;
+         }
          case SChar:
+         {
              if (typeid(T) == typeid(signed char))
              {
                  memcpy(ptrDest, page, pageSize*sizeof(T));
@@ -393,7 +348,9 @@ public:
                  for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
              }
              break;
+         }
          case UShort:
+         {
              if (typeid(T) == typeid(unsigned short))
              {
                  memcpy(ptrDest, page, pageSize*sizeof(T));
@@ -404,7 +361,9 @@ public:
                  for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
              }
              break;
+         }
          case Short:
+         {
              if (typeid(T) == typeid(short))
              {
                  memcpy(ptrDest, page, pageSize*sizeof(T));
@@ -415,7 +374,9 @@ public:
                  for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
              }
              break;
+         }
          case Int:
+         {
              if (typeid(T) == typeid(int))
              {
                  memcpy(ptrDest, page, pageSize*sizeof(T));
@@ -426,7 +387,9 @@ public:
                  for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
              }
              break;
+         }
          case Long:
+         {
              if (typeid(T) == typeid(long))
              {
                  memcpy(ptrDest, page, pageSize*sizeof(T));
@@ -437,7 +400,9 @@ public:
                  for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
              }
              break;
+         }
          case Float:
+         {
              if (typeid(T) == typeid(float))
              {
                  memcpy(ptrDest, page, pageSize*sizeof(T));
@@ -448,7 +413,9 @@ public:
                  for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
              }
              break;
+         }
          case Double:
+         {
              if (typeid(T) == typeid(double))
              {
                  memcpy(ptrDest, page, pageSize*sizeof(T));
@@ -459,50 +426,13 @@ public:
                  for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
              }
              break;
-         case ComplexShort:
-             if (typeid(T) == typeid(std::complex<short>))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 std::complex<short> * ptr = (std::complex<short> *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
+         }
+         default:
+         {
+             std::cerr<<"Datatype= "<<datatype<<std::endl;
+             REPORT_ERROR(16," ERROR: cannot cast datatype to T");
              break;
-         case ComplexInt:
-             if (typeid(T) == typeid(std::complex<int>))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 std::complex<int> * ptr = (std::complex<int> *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
-         case ComplexFloat:
-             if (typeid(T) == typeid(std::complex<float>))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 std::complex<float> * ptr = (std::complex<float> *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
-         case ComplexDouble:
-             if (typeid(T) == typeid(std::complex<double>))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 std::complex<double> * ptr = (std::complex<double> *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
+         }
          }    
          
      }
@@ -572,15 +502,15 @@ public:
 #endif
         if ( dataflag < 1 ) return;
 	
-	if ( px < 1 ) px = XSIZE(data);
-	if ( py < 1 ) py = YSIZE(data);
-	if ( pz < 1 ) pz = ZSIZE(data);
+	if ( px < 1 ) px = x;
+	if ( py < 1 ) py = y;
+	if ( pz < 1 ) pz = z;
 	
 	// If only half of a transform is stored, it need to be handled
-	unsigned long xstore = XSIZE(data);
+	unsigned long xstore = x;
 	unsigned long xpage = px;
 	if (transform == Hermitian || transform == CentHerm ) {
-            xstore = XSIZE(data)/2 + 1;
+            xstore = x/2 + 1;
 		if ( px > xstore ) xpage = xstore;
 	}
 	
@@ -598,10 +528,11 @@ public:
  	char*	page = NULL;
 	char*	padpage = NULL;
 
-        // Allocate memory for the actual image data
-        data.resize(NSIZE(data),ZSIZE(data),YSIZE(data),XSIZE(data));
+        // Allocate memory for image data
+        data.resize(n, z, y, xstore);
 
 #ifdef DEBUG
+        data.printShape(); std::cerr<<std::endl;
         printf("DEBUG img_read_data: Data size: %ld %ld %ld %ld\n", XSIZE(data), YSIZE(data), ZSIZE(data), NSIZE(data));
         printf("DEBUG img_read_data: Page size: %ld %ld %ld (%ld)\n", px, py, pz, pagesize);
         printf("DEBUG img_read_data: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
@@ -612,6 +543,7 @@ public:
 #ifdef DEBUG
             std::cerr<<"DEBUG img_read_data: Reading 3D blocks: myoffset = "
                      <<myoffset<<" select_img= "<<select_img<<" pagesize= "<<pagesize<<" offset= "<<offset<<std::endl;
+            std::cerr<<"devel3"<<std::endl;
 #endif
             if (pagesize > pagemax)
                 page = (char *) balloc(pagemax*sizeof(char));
@@ -620,24 +552,41 @@ public:
 
             if ( pad > 0) padpage = (char *) balloc(pad*sizeof(char));
             fseek( fimg, myoffset, SEEK_SET );
+            std::cerr<<"NSIZE(data)= "<<NSIZE(data)<<std::endl;
             for ( size_t myn=0; myn<NSIZE(data); myn++ ) 
             {
                 for (size_t myj=0; myj<pagesize; myj+=pagemax ) 
                 {
+                    std::cerr<<"myn= "<<myn<<" myj= "<<myj<<" pagesize= "<<pagesize<<std::endl;
+
                     // Read next page. Divide pages larger than pagemax 
                     readsize = pagesize - myj;
                     if ( readsize > pagemax ) readsize = pagemax;
                     readsize_n = readsize/datatypesize;
-
-                    //fread( data + n*pagesize + j, readsize, 1, fimg );
+                    std::cerr<<"readsize_n= "<<readsize_n <<" readsize= "<<readsize<<" datatypesize= "<<datatypesize<<std::endl;
+               
+                    //Read page from disc
                     fread( page, readsize, 1, fimg );
+                    std::cerr<<"after fread"<<std::endl;
+#ifdef DEBUG
+                    float* tt;
+                    tt=(float*)page;
+                    std::cerr<<"page="<<tt[0]<<std::endl;
+ #endif
 
                     //swap per page
                     if (swap) swapPage(page, readsize_n, swap);
+                    std::cerr<<"after swap haveread_n= "<<haveread_n<<std::endl;
 
                     // cast to T per page
                     castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, readsize_n);
+                    std::cerr<<"after cast"<<std::endl;
 
+#ifdef DEBUG
+                    T* ttt;
+                    ttt=(T*)(MULTIDIM_ARRAY(data) + haveread_n);
+                    std::cerr<<"data="<<ttt[0]<<std::endl;
+#endif
                     haveread_n += readsize_n;
                }
                if ( pad > 0 ) fread( padpage, pad, 1, fimg);
@@ -655,13 +604,34 @@ public:
 #endif
 
         return;
-}
+     }
 
-
-
-
-
+    /** Data access
+     *
+     * This operator can be used to access the data multidimarray. 
+     * In this way we could resize an image just by
+     * resizing its associated matrix or we could add two images by adding their
+     * matrices.
+     *
+     * @code
+     * I().resize(128, 128);
+     * I2() = I1() + I2();
+     * @endcode
+     */
+    MultidimArray<T>& operator()()
+    {
+        return data;
+    }
+    const MultidimArray<T>& operator()() const
+    {
+        return data;
+    }
 
 };
 
+// Special case for complex numbers
+template<>
+void NewImage< std::complex< double > >::castPage2T(char * page, 
+                                                    std::complex<double> * ptrDest, 
+                                                    size_t pageSize);
 #endif

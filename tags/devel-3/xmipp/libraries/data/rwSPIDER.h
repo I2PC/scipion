@@ -130,16 +130,17 @@ int  readSPIDER(int img_select)
     }
     
     // Map the parameters
-    XSIZE(data) = px = (int) header->nsam;
-    YSIZE(data) = py = (int) header->nrow;
-    ZSIZE(data) = pz = (int) header->nslice;
+    x = px = (int) header->nsam;
+    y = py = (int) header->nrow;
+    z = pz = (int) header->nslice;
+    n = 1;
     datatype = Float;
     transform = NoTransform;
     if ( header->iform < 0 ) 
     {
         transform = Hermitian;
         datatype = ComplexFloat;
-        XSIZE(data) -= 2;
+        n -= 2;
     }
     offset = (int) header->labbyt;
     min = header->fmin;
@@ -149,27 +150,27 @@ int  readSPIDER(int img_select)
     ux = uy = uz = header->scale;
 		
     size_t header_size = offset;
-    size_t image_size = header_size + XSIZE(data)*YSIZE(data)*ZSIZE(data)*sizeof(float);
+    size_t image_size = header_size + x*y*z*sizeof(float);
     size_t pad = offset;
     
     if ( header->istack > 0 ) 
-        NSIZE(data) = (int) header->maxim;
+        n = (int) header->maxim;
 
     unsigned long 		imgstart = 0;
-    unsigned long 		imgend = NSIZE(data);
+    unsigned long 		imgend = n;
     char*			hend;
 
     if ( img_select > -1 ) 
     {
-        if ( img_select >= (long)NSIZE(data) ) 
-            img_select = NSIZE(data) - 1;
+        if ( img_select >= (long)n ) 
+            img_select = n - 1;
         imgstart = img_select;
         imgend = img_select + 1;
-        NSIZE(data) = 1;
+        n = 1;
         i = img_select;
     }
 	
-    image = new SubImage [NSIZE(data)];
+    image = new SubImage [n];
     image->xoff = header->xoff;
     image->yoff = header->yoff;
     image->zoff = header->zoff;
@@ -188,7 +189,7 @@ int  readSPIDER(int img_select)
             if ( swap ) 
                 for ( b = (char *) header; b<hend; b+=4 ) 
                     swapbytes(b, 4);
-            j = ( NSIZE(data) > 1 )? j = i: 0;
+            j = ( n > 1 )? j = i: 0;
             image[j].xoff = header->xoff;
             image[j].yoff = header->yoff;
             image[j].zoff = header->zoff;
@@ -204,7 +205,7 @@ int  readSPIDER(int img_select)
 	
 #ifdef DEBUG
     std::cerr<<"DEBUG readSPIDER: header_size = "<<header_size<<" image_size = "<<image_size<<std::endl;
-    std::cerr<<"DEBUG readSPIDER: img_select= "<<img_select<<" n= "<<NSIZE(data)<<" pad = "<<pad<<std::endl;
+    std::cerr<<"DEBUG readSPIDER: img_select= "<<img_select<<" n= "<<n<<" pad = "<<pad<<std::endl;
 #endif
 	
     readData(fimg, img_select, swap, pad );

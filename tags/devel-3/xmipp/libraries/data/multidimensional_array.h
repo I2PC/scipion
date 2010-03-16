@@ -169,7 +169,7 @@ extern std::string integerToString(int I, int _width, char fill_with);
 
  */
 #define NZYX_ELEM(v, l, k, i, j)  \
-    DIRECT_MULTIDIM_ELEM((V), (l), (k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
+    DIRECT_NZYX_ELEM((V), (l), (k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
 
 /** Access to a direct element.
  * @ingroup MultidimArraysSizeShape.
@@ -394,6 +394,7 @@ public:
     {
         zdim=ydim=xdim=yxdim=zyxdim=nzyxdim=0;
         zinit=yinit=xinit=0;
+        ndim=1;
         data=NULL;
         destroyData=true;
     }
@@ -516,6 +517,7 @@ public:
      * V1.resize(3, 3, 2);
      * @endcode
      */
+#define FORCE_RESIZE true
     void resize(int Ndim, int Zdim, int Ydim, int Xdim)
     {
         if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
@@ -574,6 +576,7 @@ public:
         yxdim = Ydim * Xdim;
         zyxdim = Zdim * yxdim;
         nzyxdim = Ndim * zyxdim;
+
     }
 
     /** Get size.

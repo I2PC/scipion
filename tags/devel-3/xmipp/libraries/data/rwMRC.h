@@ -105,9 +105,10 @@ int readMRC()
         REPORT_ERROR(1,"readMRC: VAX floating point conversion unsupported");
 
     // Map the parameters
-    XSIZE(data) = header->nx;
-    YSIZE(data) = header->ny;
-    ZSIZE(data) = header->nz;
+    x = header->nx;
+    y = header->ny;
+    z = header->nz;
+    n = 1;
     switch ( header->mode%5 ) {
         case 0: datatype = SChar; break;
         case 1: datatype = Short; break;
@@ -120,9 +121,9 @@ int readMRC()
     if ( header->mode%5 > 2 && header->mode%5 < 5 ) {
         transform = CentHerm;
         fseek(fimg, 0, SEEK_END);
-        if ( ftell(fimg) > offset + 0.8*XSIZE(data)*YSIZE(data)*ZSIZE(data)*gettypesize(datatype) )
-            XSIZE(data) = 2*(XSIZE(data) - 1);
-        if ( header->mx%2 == 1 ) XSIZE(data) += 1;     // Quick fix for odd x-size maps
+        if ( ftell(fimg) > offset + 0.8*n*y*z*gettypesize(datatype) )
+            n = 2*(n - 1);
+        if ( header->mx%2 == 1 ) n += 1;     // Quick fix for odd x-size maps
     }
 
     min = header->amin;
