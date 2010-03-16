@@ -1520,7 +1520,7 @@ public:
      */
     void initZeros(int Zdim, int Ydim, int Xdim)
     {
-        resize(Zdim,Ydim,Xdim);
+        resize(1, Zdim,Ydim,Xdim);
         initConstant(static_cast< T >(0));
     }
 
