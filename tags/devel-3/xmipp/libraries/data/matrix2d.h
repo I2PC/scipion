@@ -713,7 +713,7 @@ public:
      */
     void resize(int Ydim, int Xdim)
     {
-    	MultidimArray<T>::resize(1, Ydim, Xdim);
+    	MultidimArray<T>::resize(1, 1, Ydim, Xdim);
     }
 
     /** Resize taking the shape from another matrix
