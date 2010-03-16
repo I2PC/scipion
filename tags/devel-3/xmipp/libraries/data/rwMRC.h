@@ -162,127 +162,139 @@ int readMRC()
 
     return(0);
 }
-/*
-int     writeMRC(Bimage* p)
+int writeMRC()
 {
-        img_RGB2gray(p);
+    /*
+        if ( transform != NoTransform )
+            img_convert_fourier(p, CentHerm);
+    */
+    MRChead*        header = (MRChead *) balloc(sizeof(MRChead));
 
-    switch ( p->datatype ) {
-        case UChar: img_to_signed_byte(p); break;
-//      case SChar: img_to_byte(p); break;
-        case UShort: img_to_short(p); break;
-        case Int: img_to_float(p); break;
-        case ComplexInt: img_to_complex_float(p); break;
-        default: break;
+    // Map the parameters
+    strncpy(header->map, "MAP ", 4);
+    set_CCP4_machine_stamp(header->machst);
+    header->nx = x;
+    header->ny = y;
+    header->nz = z;
+    if ( transform == CentHerm ) 
+        header->nx = x/2 + 1;        // If a transform, physical storage is nx/2 + 1
+    switch ( datatype ) 
+    {
+        case UChar:        header->mode = 0; break;
+        case SChar:        header->mode = 0; break;
+        case UShort:       header->mode = 1; break;
+        case Short:        header->mode = 1; break;
+        case Int:          header->mode = 2; break;
+        case Float:        header->mode = 2; break;
+        case ComplexShort: header->mode = 3; break;
+        case ComplexInt:   header->mode = 4; break;
+        case ComplexFloat: header->mode = 4; break;
+        default:           header->mode = 0; break;
+    }
+    header->nxStart = (int) (-image->xoff - 0.5);
+    header->nyStart = (int) (-image->yoff - 0.5);
+    header->nzStart = (int) (-image->zoff - 0.5);
+    header->mx = (int) (ua/ux + 0.5);
+    header->my = (int) (ub/uy + 0.5);
+    header->mz = (int) (uc/uz + 0.5);
+    header->mapc = 1;
+    header->mapr = 2;
+    header->maps = 3;
+    header->amin = min;
+    header->amax = max;
+    header->amean = avg;
+    header->arms = std;
+    header->a = ua;
+    header->b = ub;
+    header->c = uc;
+    header->xOrigin = -image->xoff*ux;
+    header->yOrigin = -image->yoff*uy;
+    header->zOrigin = -image->zoff*uz;
+
+    // This is a band-aid to overcome the limitations of the image format
+    if ( fabs(ua - ux*header->mx) > 0.001 || 
+         fabs(ub - uy*header->my) > 0.001 ||
+         fabs(uc - uz*header->mz) > 0.001 ) 
+    {
+        header->a = ux*header->mx;
+        header->b = uy*header->my;
+        header->c = uz*header->mz;
+#ifdef DEBUG
+            fprintf(stderr, "Warning: Resetting the unit cell to: %g %g %g A\n", 
+                    header->a, header->b, header->c );
+#endif
     }
 
-        if ( p->transform != NoTransform )
-                img_convert_fourier(p, CentHerm);
+    header->alpha = alf*180/M_PI;
+    header->beta =  bet*180/M_PI;
+    header->gamma = gam*180/M_PI;
+    header->ispg =  spacegroup;
 
-        MRChead*        header = (MRChead *) balloc(sizeof(MRChead));
+    header->nsymbt = 0;
 
-        // Map the parameters
-        strncpy(header->map, "MAP ", 4);
-        set_CCP4_machine_stamp(header->machst);
-        header->nx = p->x;
-        header->ny = p->y;
-        header->nz = p->z;
-        if ( p->transform == CentHerm ) header->nx = p->x/2 + 1;        // If a transform, physical storag
-e is nx/2 + 1
-        switch ( p->datatype ) {
-                case UChar:
-                case SChar: header->mode = 0; break;
-                case Short: header->mode = 1; break;
-                case Float: header->mode = 2; break;
-                case ComplexShort: header->mode = 3; break;
-                case ComplexFloat: header->mode = 4; break;
-                default: header->mode = 0; break;
-        }
-        header->nxStart = (int) (-p->image->ox - 0.5);
-        header->nyStart = (int) (-p->image->oy - 0.5);
-        header->nzStart = (int) (-p->image->oz - 0.5);
-        header->mx = (int) (p->ua/p->ux + 0.5);
-        header->my = (int) (p->ub/p->uy + 0.5);
-        header->mz = (int) (p->uc/p->uz + 0.5);
-        header->mapc = 1;
-        header->mapr = 2;
-        header->maps = 3;
-        header->amin = p->min;
-        header->amax = p->max;
-        header->amean = p->avg;
-        header->arms = p->std;
-        header->a = p->ua;
-        header->b = p->ub;
-        header->c = p->uc;
-//      header->xOrigin = p->image->ox;
-//      header->yOrigin = p->image->oy;
-//      header->zOrigin = p->image->oz;
-        header->xOrigin = -p->image->ox*p->ux;
-        header->yOrigin = -p->image->oy*p->uy;
-        header->zOrigin = -p->image->oz*p->uz;
+    long                    i;
+    
+    header->nlabl = 10; // or zero?
+    //strncpy(header->labels, p->label.c_str(), 799);
 
-        // This is a band-aid to overcome the limitations of the image format
-        if ( fabs(p->ua - p->ux*header->mx) > 0.001 || fabs(p->ub - p->uy*header->my) > 0.001 ||
-                        fabs(p->uc - p->uz*header->mz) > 0.001 ) {
-                header->a = p->ux*header->mx;
-                header->b = p->uy*header->my;
-                header->c = p->uz*header->mz;
-                if ( verbose )
-                        fprintf(stderr, "Warning: Resetting the unit cell to: %g %g %g A\n", header->a, he
-ader->b, header->c );
-        }
+    offset = MRCSIZE + header->nsymbt;
 
-       header->alpha = p->alf*180/M_PI;
-        header->beta = p->bet*180/M_PI;
-        header->gamma = p->gam*180/M_PI;
-        header->ispg = p->spacegroup;
+    size_t datatypesize = gettypesize(datatype);
+    size_t datasize_n = (size_t) header->nx*header->ny*header->nz;
+    size_t datasize = (size_t) datasize_n * datatypesize;
 
-        int                     nsym = 0;
-        Bstring         temp;
-        char*           symop = NULL;
-
-#ifndef NOSYMOP
-        if ( p->spacegroup > 0 ) symop = read_symop(temp, p->spacegroup, &nsym);
+#ifdef DEBUG
+    printf("DEBUG rwMRC: Offset = %ld,  Typesize = %ld,  Datasize = %ld\n",
+           offset, datatypesize, datasize);
 #endif
 
-        header->nsymbt = nsym*80;
-
-        if ( verbose & VERB_DEBUG )
-                printf("DEBUG rwMRC: Nsymbt = %d\n", header->nsymbt);
-
-        long                    i;
-
-        header->nlabl = 10;
-        strncpy(header->labels, p->label.c_str(), 799);
-
-        if ( verbose & VERB_DEBUG ) {
-                printf("DEBUG rwMRC: Nlabels = %d\n", header->nlabl);
-                for ( i=0; i<header->nlabl; i++ )
-                        if ( header->labels[i*80] ) printf("%-80s\n", &header->labels[i*80]);
-        }
-
-        p->offset = MRCSIZE + header->nsymbt;
-
-       long                    datatypesize = gettypesize(p->datatype);
-        unsigned long   datasize = (unsigned long) header->nx*header->ny*header->nz*datatypesize;
-
-        if ( verbose & VERB_DEBUG )
-                printf("DEBUG rwMRC: Offset = %ld,  Typesize = %ld,  Datasize = %ld\n",
-                                p->offset, datatypesize, datasize);
-
     FILE        *fimg;
-    if ( ( fimg = fopen(p->filename.c_str(), "w") ) == NULL ) return(-1);
+    if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL ) return(-1);
 
-        fwrite( header, MRCSIZE, 1, fimg );
-        if ( header->nsymbt ) fwrite( symop, header->nsymbt, 1, fimg );
-        if ( p->dataflag ) fwrite( p->data, datasize, 1, fimg );
+    fwrite( header, MRCSIZE, 1, fimg );
+    if ( dataflag )
+    {
+        char* fdata = (char *) balloc(datasize);
+        switch (datatype)
+        {
+        case UChar: 
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, SChar, datasize_n);
+            break;
+        case SChar: 
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, SChar, datasize_n);
+            break;
+        case UShort:
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Short, datasize_n);
+            break;
+        case Short: 
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Short, datasize_n);
+            break;
+        case Int:
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
+            break;
+        case Float:
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
+            break;
+        case ComplexShort:
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexShort, datasize_n);
+            break;
+        case ComplexInt:
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
+            break;
+        case ComplexFloat:
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
+            break;
+        default: 
+            std::cerr<<"datatype= "<<datatype<<std::endl;
+            REPORT_ERROR(22,"Error: invalid datatype in writeMRC");
+        }
+        fwrite( fdata, datasize, 1, fimg );
+        bfree(fdata, datasize);
+    }
 
-        fclose(fimg);
+    fclose(fimg);
+    bfree(header, sizeof(MRChead));
 
-        if ( symop ) bfree(symop, header->nsymbt*sizeof(char));
-        bfree(header, sizeof(MRChead));
-
-        return(0);
+    return(0);
 }
-*/
 #endif

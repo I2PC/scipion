@@ -106,6 +106,7 @@ public:
     unsigned int        dataflag;	// Flag to force reading of the data
     FileName            filename;       // File name
     /// FIXME having x,y,z also here (and not only in multidimarray may lead to conflicts....)
+    /// THIS MAY NEED SOME FURTHER TWEEKING IN I/O....
     unsigned long	x, y, z;        // Image dimensions in X, Y and Z
     unsigned long	n, i;		// Number of images and image number (may be > n)
     unsigned long	px, py, pz; 	// Page dimensions
@@ -288,20 +289,20 @@ public:
 
     /** General write function
      */
-     void write(const FileName name, int select_img=-1)
+     void write(const FileName name)
      {
          int err = 0;
          FileName basename, extension;
          
          filename = name;
 
-         /*
+         // PERHAPS HERE CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
+
          if (filename.get_extension()=="mrc")
-             
+             //REPORT_ERROR(22,"writeMRC NOT IMPLEMENTED YET");
              err = writeMRC();
          else
              err = writeSPIDER();
-         */
 
          if ( err < 0 ) {
              std::cerr<<" Filename = "<<filename<<" Extension= "<<extension<<std::endl;
@@ -441,14 +442,14 @@ public:
  * @ingroup LittleBigEndian
  *    input pointer  char *
  */
-
-     int castPage2Datatype(T * srcPtr, char * page, DataType outputDataType, size_t pageSize )
+     void castPage2Datatype(T * srcPtr, char * page, DataType outputDataType, size_t pageSize )
 
      {
 
          switch (outputDataType)
          {
          case Float:
+         {
              if (typeid(T) == typeid(float))
              {
                  memcpy(page, srcPtr, pageSize*sizeof(T));
@@ -459,7 +460,9 @@ public:
                  for(int i=0; i<pageSize;i++) ptr[i] = (float)srcPtr[i];
              }
              break;
+         }
          case Double:
+         {
              if (typeid(T) == typeid(double))
              {
                  memcpy(page, srcPtr, pageSize*sizeof(T));
@@ -471,6 +474,13 @@ public:
              }
              break;
          }    
+         default:
+         {
+             std::cerr<<"Datatype= "<<datatype<<std::endl;
+             REPORT_ERROR(16," ERROR: cannot cast datatype to T");
+             break;
+         }
+         }
      }
 
      void swapPage(char * page, size_t pageNrElements, int swap)
@@ -612,6 +622,9 @@ public:
      * In this way we could resize an image just by
      * resizing its associated matrix or we could add two images by adding their
      * matrices.
+
+     ********* FIXME!!! withx,y,z also being part of newimage class this resizing would be DANGEROUS!!!
+     
      *
      * @code
      * I().resize(128, 128);
@@ -634,4 +647,10 @@ template<>
 void NewImage< std::complex< double > >::castPage2T(char * page, 
                                                     std::complex<double> * ptrDest, 
                                                     size_t pageSize);
+template<>
+void NewImage< std::complex< double > >::castPage2Datatype(std::complex< double > * srcPtr, 
+                                                           char * page, 
+                                                           DataType outputDataType, 
+                                                           size_t pageSize);
+
 #endif

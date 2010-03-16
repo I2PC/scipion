@@ -226,30 +226,16 @@ int  readSPIDER(int img_select)
 @Returns:
 	int					error code (<0 means failure).
 **************************************************************************/
-/*
 int 	writeSPIDER()
 {
-    if (typeid(T) == typeid(double))
-    {
-        float* fdata = (float *) balloc(datasize*sizeof(float));
-        cast2Datatype
-    }
-    else if (typeid(T) == typeid(std::complex<double>))
-    {
-
-    }
-
-	if ( datatype < ComplexShort ) img_to_float(p);
-	else img_to_complex_float(p);
-	
-	if ( transform != NoTransform )
-            img_convert_fourier(p, Hermitian);
-
-
-	
 #ifdef DEBUG
         printf("DEBUG writeSPIDER: Writing Spider file\n");
 #endif            
+
+    /*
+      if ( transform != NoTransform )
+          img_convert_fourier(p, Hermitian);
+    */
 
     float		lenbyt = sizeof(float)*x;		// Record length (in bytes)
     float		labrec = floor(SPIDERSIZE/lenbyt);	// # header records
@@ -270,7 +256,7 @@ int 	writeSPIDER()
     header->nslice = z;
 
     // If a transform, then the physical storage in x is only half+1
-    unsigned long		xstore = x;
+    size_t xstore = x;
     if ( transform == Hermitian ) {
         xstore = x/2 + 1;
         header->nsam = 2*xstore;
@@ -279,6 +265,7 @@ int 	writeSPIDER()
 #ifdef DEBUG
     printf("DEBUG writeSPIDER: Size: %g %g %g\n", header->nsam, header->nrow, header->nslice);
 #endif
+
     if ( z < 2 ) 
     {
         if ( transform == NoTransform )
@@ -306,18 +293,29 @@ int 	writeSPIDER()
         header->maxim = n;
     }
 	
-    header->xoff = 0.;
-    header->yoff = 0.;
-    header->zoff = 0.;
-    header->phi = 0.;
-    header->theta = 0.;
-    header->gamma = 0.;
+    header->xoff = image->xoff;
+    header->yoff = image->yoff;
+    header->zoff = image->zoff;
+    header->phi = image->rot;
+    header->theta = image->tilt;
+    header->gamma = image->psi;
 
-    unsigned long datatypesize = gettypesize(datatype);
-    unsigned long datasize = xstore*y*z*datatypesize;
-    unsigned long datasize_n = xstore*y*z;
+    // Set time and date
+    time_t timer;
+    time ( &timer );
+    tm* t = localtime(&timer);
+    while ( t->tm_year > 100 ) t->tm_year -= 100;
+    sprintf(header->ctim, "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
+    sprintf(header->cdat, "%02d-%02d-%02d", t->tm_mday, t->tm_mon, t->tm_year);
+    //strncpy(header->ctit, "Created by Xmipppppp", 160);
+
+    size_t datatypesize = gettypesize(datatype);
+    size_t datasize = xstore*y*z*datatypesize;
+    size_t datasize_n = xstore*y*z;
 	
 #ifdef DEBUG
+    printf("DEBUG writeSPIDER: Date and time: %s %s\n", header->cdat, header->ctim);
+    printf("DEBUG writeSPIDER: Text label: %s\n", header->ctit);
     printf("DEBUG writeSPIDER: Header size: %g\n", header->labbyt);
     printf("DEBUG writeSPIDER: Header records and record length: %g %g\n", header->labrec, header->lenbyt);
     printf("DEBUG writeSPIDER: Data type size: %ld\n", datatypesize);
@@ -329,15 +327,16 @@ int 	writeSPIDER()
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL ) return(-1);
     fwrite( header, offset, 1, fimg );
-	
-    if ( verbose & VERB_DEBUG )
-        printf("DEBUG writeSPIDER: File header written\n");
-	
-    float* fdata = (float *) balloc(datasize);
-    if ( n == 1 ) {
+
+    char* fdata = (char *) balloc(datasize);
+    if ( n == 1 ) 
+    {
         if ( dataflag ) 
         {
-            castPage2Datatype(data, fdata, Float, datasize_n);
+            if (datatype < ComplexShort)
+                castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
+            else
+                castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
             fwrite( fdata, datasize, 1, fimg );
         }
     } else {
@@ -347,14 +346,17 @@ int 	writeSPIDER()
         for ( size_t i=0; i<n; i++ ) 
         {
             header->imgnum = i + 1;
-            header->xoff = 0.;
-            header->yoff = 0.;
-            header->zoff = 0.;
-            header->phi = 0.;
-            header->theta = 0.;
-            header->gamma = 0.;
+            header->xoff = image[i].xoff;
+            header->yoff = image[i].yoff;
+            header->zoff = image[i].zoff;
+            header->phi  = image[i].rot;
+            header->theta = image[i].tilt;
+            header->gamma = image[i].psi;
             fwrite( header, offset, 1, fimg );
-            castPage2Datatype(data + i*datasize, fdata, Float, datasize_n);
+            if (datatype < ComplexShort)
+                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
+            else
+                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
             fwrite( fdata, datasize, 1, fimg );
         }
     }
@@ -365,6 +367,5 @@ int 	writeSPIDER()
 	
     return(0);
 }
-*/
 #endif
 
