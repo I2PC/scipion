@@ -26,172 +26,43 @@
 #ifndef METADATACONTAINER_H
 #define METADATACONTAINER_H
 
-#include <external/sqlite-3.6.23/sqlite3.h>
-#include "funcs.h"
-#include <iostream>
 #include <map>
 #include <string>
-
-/** valid data types
- *
- */
-#define metaDataInteger "INTEGER"
-#define metaDataReal    "FLOAT"
-#define metaDataString  "TEXT"
-//primary key integer
-#define metaDataPK                "PRIMARY KEY AUTOINCREMENT"
-#define metaDataStringUnique      "TEXT UNIQUE"
-
-/** Some other variables that may be of interest
- *
- */
-#define metaDataBlob  SQLITE_BLOB
-#define metaDataNull  SQLITE_NULL
-
-
-/**
- * Valid image formats // check Sjors,...
- */
-
-#define CCP4      1
-#define MRC       2
-#define PIF       3
-#define EM        4
-#define IMAGIC    5
-#define SPIDER    6
-#define SUPRIM    7
-#define TIFF      8
-#define PNG       9
-#define JPEG     10
-
-/**
- * Whenever make sense follow this naming convention
- * Images
- */
+#include <iostream>
 
 class metaDataContainer
 {
-    private:
-		/** database handler
-		 *
-		 */
-	    sqlite3* dB;
-	    /** prepared statement for database
-	     *
-	     */
-		sqlite3_stmt* statement;
-		/**lock time for database (see function setBusyTimeout)
-		 *
-		 */
-	    int mnBusyTimeoutMs; //lock time
-	    /**
-	     * valid attribute names are in map
-	     */
-	    std::map<std::string, std::string> validAttributes;
-
-	    /** iterator for validAttributes
-	    *
-	    */
-	    std::map<std::string, std::string>::iterator validAttributesIterator;
-
-        /** open metaContainer DataBase for readind/writing ...  */
-	    void open(const FileName fileName,int flag);
-
-        /** close metaContainer DataBase */
-	    void close();
-
-	    /** Check if table exists */
-	    bool tableExists(const std::string tableName);
-		/** Block common for all creators
-		 *
-		 */
-	    void init(const FileName baseFileName,  int flag);
-
-	    /** check if attributes exits
-	     *
-	     */
-	    int checkAttributes(const std::string tableName,
-	    		              std::vector<std::string> &attributeNames,
-                              std::string &invalidAttribute
-	    		              );
-
-    public:
-
-	    /** Check if types are compatible */
-	    bool tableTypeCompatible(const std::string tableName,
-	    		                  std::vector<std::string> &attributeNames,
-	    		                  std::vector<int> &attributeTypes);
-
-    public:
-		/** Constructor open data base
-            vector has column names that should be retrieved
-            from table tablename
-	    valid flags
-
-	    #define SQLITE_OPEN_READONLY         0x00000001
-	    #define SQLITE_OPEN_READWRITE        0x00000002
-	    #define SQLITE_OPEN_CREATE           0x00000004
-	    #define SQLITE_OPEN_NOMUTEX          0x00008000
-	    #define SQLITE_OPEN_FULLMUTEX        0x00010000
-	    #define SQLITE_OPEN_SHAREDCACHE      0x00020000
-	    #define SQLITE_OPEN_PRIVATECACHE     0x00040000
-	    */
-        /** Read metaData from file
-         *  check open for flags (read(write by default)
-         */
-	    metaDataContainer(FileName fileNameBase,\
-	    		          std::string tableName,\
-	    		          std::vector<std::string> &attributeNames,\
-	    		          int flag=(SQLITE_OPEN_READONLY|SQLITE_OPEN_SHAREDCACHE));
-
-	    /**
-	     * check open for flags (read only by default)
-	     */
-	    metaDataContainer(FileName fileNameBase,\
-	    		          std::vector<std::string> &attributeNames,\
-	    		          int flag=SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-	    /** Destructor */
-		~metaDataContainer();
-
-		/** 	set maximum waiting time
-		Suppose you are trying to perform a select, but there's an update
-		currently in progress. Without sqlite3_busy_timeout or explicit busy
-		handler, your operation will fail immediately with SQLITE_BUSY. But if
-		you set up sqlite3_busy_timeout, SQLite will automatically retry your
-		operation several times before erroring out. Hopefully the writing
-		transaction completes before the timeout has expired, and your select is
-		allowed to proceed.
-	    */
-		void setBusyTimeout(int nMillisecs);
-		/** Create table
-		 * create (if needed) table with primary key
-		 */
-		void createTable(const std::string tableName);
-
-#ifdef NEVER
 	/** Container for pairs "name" and value. Note that void * allows to use
 	    mixed types */
 	std::map<std::string, void *> values;
 	
-	int insertVoidPtr( std::string name, void * value );
+	void insertVoidPtr( std::string name, void * value );
 
 	public:
 	
-	/** Constructor open data base*/
-	metaDataContainer(FileName fileName);
+	/** Constructor */
+	metaDataContainer();
 	
-
+	/** Destructor */
+	~metaDataContainer();
 	
 	/** Create a new pair name-value of integer type */
-	int addValue( std::string name, int value );
-	
-	/** Create a new pair name-value of double type */
-	int addValue( std::string name, double value );
+	void addValue( std::string name, double value );
+	void addValue( std::string name, float value );
+	void addValue( std::string name, int value );
+	void addValue( std::string name, bool value );
+	void addValue( std::string name, std::string value );
 	
 	void * getValue( std::string name );
 	bool valueExists( std::string name );
+	
+	bool pairExists( std::string name, double value );
+	bool pairExists( std::string name, float value );
+	bool pairExists( std::string name, int value );
+	bool pairExists( std::string name, bool value );
+	bool pairExists( std::string name, std::string value );
+	
 	void deleteValue( std::string name );
-#endif
 };
 
 #endif
