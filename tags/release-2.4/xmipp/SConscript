@@ -510,6 +510,7 @@ AddXmippProgram('convert_spi22ccp4', ['XmippInterface'])
 AddXmippProgram('convert_vol2data')
 AddXmippProgram('convert_vol2pseudo')
 AddXmippProgram('convert_voxels22blobs', ['XmippRecons'])
+AddXmippProgram('convert_tia2raw')
 AddXmippProgram('correct_bfactor', ['XmippRecons'])
 AddXmippProgram('correlation')
 AddXmippProgram('crystal_angular_projection_matching',	['XmippRecons'])
@@ -623,7 +624,7 @@ AddBatch('extract_sidechain_from_pdb',
 AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
 AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
-AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
+# AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
 
 # Protocols
 AddProtocol('arg.py', 'applications/scripts/protocols')
