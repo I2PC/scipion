@@ -172,7 +172,8 @@ int writeMRC()
 
     // Map the parameters
     strncpy(header->map, "MAP ", 4);
-    set_CCP4_machine_stamp(header->machst);
+    // FIXME TO BE DONE WITH rwCCP4!!
+    //set_CCP4_machine_stamp(header->machst);
     header->nx = x;
     header->ny = y;
     header->nz = z;
