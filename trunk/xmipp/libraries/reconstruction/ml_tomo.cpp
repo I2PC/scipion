@@ -1484,7 +1484,7 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
     std::cerr<<"start calculatePdfTranslations"<<std::endl;
 #endif
 
-    double r2, pdfpix, maxshift2=999999.;
+    double r2, pdfpix, maxshift2;
     P_phi.resize(dim, dim, dim);
     P_phi.setXmippOrigin();
     Mr2.resize(dim, dim, dim);
@@ -1496,7 +1496,7 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
         r2 = (double)(j * j + i * i + k * k);
         VOL_ELEM(Mr2, k, i, j) = (float)r2;
 
-        if (limit_trans > 0 && r2 > maxshift2)
+        if (limit_trans >= 0. && r2 > maxshift2)
             VOL_ELEM(P_phi, k, i, j) = 0.;
         else
         {
@@ -1514,7 +1514,7 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
         }
     }
 
-    if (limit_trans > 0)
+    if (limit_trans >= 0.)
     {
         // Re-normalize
         double sum = P_phi.sum();
