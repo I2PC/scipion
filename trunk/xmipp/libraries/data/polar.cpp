@@ -93,6 +93,7 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
     // The local_transformer should already have corr as setReal!!
     local_transformer.inverseFourierTransform();
 
+    /// FIXME: the getReal should be getComplex for complex fourier transforms....
     angles.resize(XSIZE(local_transformer.getReal()));
     for (int i = 0; i < XSIZE(angles); i++)
 	angles(i)=(double)i*360./XSIZE(angles);
