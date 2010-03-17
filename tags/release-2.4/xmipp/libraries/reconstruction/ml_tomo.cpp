@@ -1925,8 +1925,15 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 is_a_neighbor = false;
                 if (do_limit_rotrange)
                 {
-                    // also restrict psi-angle search; Image psi is Reference -rot 
-                    if (ABS(realWRAP(old_rot - (all_angle_info[angno]).rot,-180.,180.)) <= ang_search)
+
+                    // Only restrict rot range for directions away from the poles...
+                    // Otherwise the is_a_neighbour construction may give errors:
+                    // -150 0 150 and -100 0 150 would be considered as equal, since
+                    // the distance between (-150,0) and (-100,0) is zero AND
+                    // the distance between 150 and 150 is also zero... 
+                    if (ABS(realWRAP(all_angle_info[angno].tilt, -90., 90.)) < 1.1 * ang_search)
+                        is_within_rotrange=true;
+                    else if (ABS(realWRAP(old_rot - (all_angle_info[angno]).rot,-180.,180.)) <= ang_search)
                         is_within_rotrange=true;
                     else
                         is_within_rotrange=false;
@@ -2267,8 +2274,14 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
                 is_a_neighbor = false;
                 if (do_limit_rotrange)
                 {
-                    // also restrict psi-angle search; Image psi is Reference -rot 
-                    if (ABS(realWRAP(old_rot - (all_angle_info[angno]).rot,-180.,180.)) <= ang_search)
+                    // Only restrict rot range for directions away from the poles...
+                    // Otherwise the is_a_neighbour construction may give errors:
+                    // -150 0 150 and -100 0 150 would be considered as equal, since
+                    // the distance between (-150,0) and (-100,0) is zero AND
+                    // the distance between 150 and 150 is also zero... 
+                    if (ABS(realWRAP(all_angle_info[angno].tilt, -90., 90.)) < 1.1 * ang_search)
+                        is_within_rotrange=true;
+                    else if (ABS(realWRAP(old_rot - (all_angle_info[angno]).rot,-180.,180.)) <= ang_search)
                         is_within_rotrange=true;
                     else
                         is_within_rotrange=false;
