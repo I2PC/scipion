@@ -1,0 +1,41 @@
+2.5
+
+- FFTW updated to 3.2.2
+- Added Entropy Otsu segmentation to xmipp_volume_segment
+- Added -min, -max, -which_min, -which_max to xmipp_operate
+- Speed up of xmipp_mpi_class_averages
+- Better estimations of energy in xmipp_detect_structures
+- Bug fix in xmipp_detect_missing_wedge
+- Differential Evolution (de_solver in /data) now uses Xmipp's own Random
+generator, seems to solve a problem with heap corruption.
+- Bug fix when reading the family name of the position file in xmipp_micrograph_mark
+- Bug fix when using -filter in xmipp_align2d
+- Recenter volume optionally in xmipp_protocol_projection_matching
+- Now xmipp_align_volumes can align only by translational alignment
+- 3D Morphological sharpening added to xmipp_morphology
+- xmipp_angular_assign_for_tilt_series is more robust and faster
+- xmipp_fourier_filter accepts now Gaussians defined in real space
+- xmipp_convert_vol2pseudo now works with a different algorithm more precise
+
+2.4
+
+...
+
+1.1
+
+- New program: xmipp_MLrefine3D
+- New program: xmipp_sort_junk
+- New building system based on SCons (under testing)
+- Improved xmipp_split_selfile
+- Added remove_dust option in normalize
+- Cleaned up CVS hierarchy
+- Added .cvsignore file
+- Cleaned auto.sh
+- ...
+
+0.9.1
+
+- corrected template specialization bug
+- corected xmippError includes
+- correct compilation in PGI compilers
+- ...
