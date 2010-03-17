@@ -159,7 +159,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     tilt_range0 = textToFloat(getParameter(argc2, argv2, "-tilt0", "-91."));
     tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "91."));
     ang_search = textToFloat(getParameter(argc2, argv2, "-ang_search", "-1."));
-    do_limit_psirange = !checkParameter(argc2, argv2, "-dont_limit_psirange");
+    do_limit_rotrange = !checkParameter(argc2, argv2, "-dont_limit_rotrange");
 
     // Skip alignment (and classification)
     dont_align = checkParameter(argc2, argv2, "-dont_align");
@@ -205,6 +205,8 @@ void Prog_ml_tomo_prm::show()
             if (ang_search > 0.)
             {
                 std::cerr << "  Local angular searches  : "<<ang_search<<" degrees"<<std::endl;
+                if (!do_limit_rotrange)
+                    std::cerr << "                          : but with complete rot searches"<<std::endl;
             }
         }
         std::cerr << "  Symmetry group          : " << fn_sym<<std::endl;
@@ -287,6 +289,7 @@ void Prog_ml_tomo_prm::usage()
     std::cerr << " [ -ang <float=10> ]           : Angular sampling rate (in degrees)\n";
     std::cerr << " [ -ang_search <float> ]       : Angular search range around orientations from docfile \n";
     std::cerr << "                                    (by default, exhaustive searches are performed)\n";
+    std::cerr << " [ -dont_limit_rotrange ]      : Keep rot angle searches exhaustive (when using -ang_search)\n";
     std::cerr << " [ -reg0 <float=0.> ]          : Initial regularization parameters (in N/K^2) \n";
     std::cerr << " [ -regF <float=0.> ]          : Final regularization parameters (in N/K^2) \n";
     std::cerr << " [ -reg_steps <int=5> ]        : Number of iterations in which the regularization is changed from reg0 to regF\n";
@@ -999,14 +1002,14 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     imgs_optangno.clear();
     imgs_trymindiff.clear();
     imgs_optoffsets.clear();
-    imgs_optpsi.clear();
+    imgs_optrot.clear();
 
     for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
     {
         Matrix1D<double> dum(3);
         imgs_optrefno.push_back(0);
         imgs_optangno.push_back(0);
-        imgs_optpsi.push_back(0.);
+        imgs_optrot.push_back(0.);
         imgs_trymindiff.push_back(-1.);
         if (do_missing)
             imgs_missno.push_back(-1);
@@ -1038,7 +1041,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                     DFsub.append_comment(fn_tmp);
                     DL=DF.get_current_line();
                     DFsub.append_line(DL);
-                    imgs_optpsi[imgno]=DL[2]; // for limited psi searches
+                    imgs_optrot[imgno]=DL[0]; // for limited psi searches Take img_rot, because that is -ref_psi
                     if (dont_align || do_only_average) 
                     {
                         imgs_optangno[imgno]=DFsub.dataLineNo()-1;
@@ -1098,7 +1101,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     else
     {
         int nr_psi = CEIL(360. / psi_sampling);
-        double rot, tilt, psi, psip=0.;
+        double rot, tilt, psi;
         angle_info myinfo;
         all_angle_info.clear();
         nr_ang = 0;
@@ -1111,9 +1114,11 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                 psi = (double)(ipsi * 360. / nr_psi);
                 if (!no_SMALLANGLE)
                     psi += SMALLANGLE;
-                myinfo.rot = rot;
-                myinfo.tilt = tilt;
-                myinfo.psi = psi;
+                // Inverse rotation because A_rot is being applied to the reference
+                // and rot, tilt and psi apply to the experimental subtomogram!
+                myinfo.rot = -psi;
+                myinfo.tilt = -tilt;
+                myinfo.psi = -rot;
                 myinfo.A = Euler_rotation3DMatrix(myinfo.rot, myinfo.tilt, myinfo.psi);
                 myinfo.direction = i;
                 all_angle_info.push_back(myinfo);
@@ -1760,7 +1765,7 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
 // Maximum Likelihood calculation for one image ============================================
 // Integration over all translation, given  model and in-plane rotation
 void Prog_ml_tomo_prm::expectationSingleImage(
-    Matrix3D<double> &Mimg, int imgno, int missno, double old_psi,
+    Matrix3D<double> &Mimg, int imgno, int missno, double old_rot,
     std::vector< VolumeXmippT<double> > &Iref,
     std::vector<Matrix3D<double> > &wsumimgs,
     std::vector<Matrix3D<double> > &wsumweds,
@@ -1794,7 +1799,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     int my_nr_ang, old_optangno = opt_angno, old_optrefno = opt_refno;
     std::vector<double> all_Xi2;
     Matrix2D<double> A_rot(4,4), I(4,4), A_rot_inv(4,4);
-    bool is_a_neighbor, is_within_psirange=true;
+    bool is_a_neighbor, is_within_rotrange=true;
     XmippFftw local_transformer;
 
     if (dont_align)
@@ -1900,16 +1905,16 @@ void Prog_ml_tomo_prm::expectationSingleImage(
             if (ang_search > 0.)
             {
                 is_a_neighbor = false;
-                if (do_limit_psirange)
+                if (do_limit_rotrange)
                 {
-                    // also restrict psi-angle search
-                    if (ABS(realWRAP(old_psi - (all_angle_info[angno]).psi,-180.,180.)) <= ang_search)
-                        is_within_psirange=true;
+                    // also restrict psi-angle search; Image psi is Reference -rot 
+                    if (ABS(realWRAP(old_rot - (all_angle_info[angno]).rot,-180.,180.)) <= ang_search)
+                        is_within_rotrange=true;
                     else
-                        is_within_psirange=false;
+                        is_within_rotrange=false;
                 }
 
-                if (!do_limit_psirange || is_within_psirange)
+                if (!do_limit_rotrange || is_within_rotrange)
                 {
                     for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
                     {
@@ -2150,7 +2155,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
 
 
 void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
-    Matrix3D<double> &Mimg, int imgno, int missno, double old_psi,
+    Matrix3D<double> &Mimg, int imgno, int missno, double old_rot,
     std::vector<VolumeXmippT<double> > &Iref,
     std::vector<Matrix3D<double> > &wsumimgs,
     std::vector<Matrix3D<double> > &wsumweds,
@@ -2173,7 +2178,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     double img_stddev, ref_stddev, corr, maxcorr=-9999.;
     int ioptx,iopty,ioptz;
     int my_nr_ang, old_optangno = opt_angno, old_optrefno = opt_refno;
-    bool is_within_psirange=true;
+    bool is_within_rotrange=true;
 
     if (dont_align)
         my_nr_ang=1;
@@ -2242,16 +2247,16 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
             if (ang_search > 0.)
             {
                 is_a_neighbor = false;
-                if (do_limit_psirange)
+                if (do_limit_rotrange)
                 {
-                    // also restrict psi-angle search
-                    if (ABS(realWRAP(old_psi - (all_angle_info[angno]).psi,-180.,180.)) <= ang_search)
-                        is_within_psirange=true;
+                    // also restrict psi-angle search; Image psi is Reference -rot 
+                    if (ABS(realWRAP(old_rot - (all_angle_info[angno]).rot,-180.,180.)) <= ang_search)
+                        is_within_rotrange=true;
                     else
-                        is_within_psirange=false;
+                        is_within_rotrange=false;
                 }
                 
-                if (!do_limit_psirange || is_within_psirange)
+                if (!do_limit_rotrange || is_within_rotrange)
                 {
                     for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
                     {
@@ -2424,7 +2429,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
     FileName fn_img, fn_trans;
     std::vector<Matrix1D<double> > allref_offsets;
     Matrix1D<double> opt_offsets(3);
-    float old_phi = -999., old_theta = -999., old_psi = -999.;
+    float old_phi = -999., old_theta = -999., old_rot = -999.;
     double fracweight, maxweight2, trymindiff, dLL;
     int opt_refno, opt_angno, missno;
 
@@ -2490,12 +2495,12 @@ void * threadMLTomoExpectationSingleImage( void * data )
         trymindiff = prm->imgs_trymindiff[imgno];
         opt_refno = prm->imgs_optrefno[imgno];
         opt_angno = prm->imgs_optangno[imgno];
-        old_psi = prm->imgs_optpsi[imgno];
+        old_rot = prm->imgs_optrot[imgno];
 
         if (prm->do_ml)
         {
             // A. Use maximum likelihood approach
-            (*prm).expectationSingleImage(img(), imgno, missno, old_psi, *Iref, *wsumimgs, *wsumweds, 
+            (*prm).expectationSingleImage(img(), imgno, missno, old_rot, *Iref, *wsumimgs, *wsumweds, 
                                           *wsum_sigma_noise, *wsum_sigma_offset, 
                                           *sumw, *LL, dLL, fracweight, *sumfracweight, 
                                           trymindiff, opt_refno, opt_angno, opt_offsets);
@@ -2503,7 +2508,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
         else
         {
             // B. Use constrained correlation coefficient approach
-            (*prm).maxConstrainedCorrSingleImage(img(), imgno, missno, old_psi, *Iref, 
+            (*prm).maxConstrainedCorrSingleImage(img(), imgno, missno, old_rot, *Iref, 
                                                  *wsumimgs, *wsumweds, *sumw, fracweight, *sumfracweight, 
                                                  opt_refno, opt_angno, opt_offsets);
         }
