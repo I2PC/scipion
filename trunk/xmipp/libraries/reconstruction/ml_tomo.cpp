@@ -160,6 +160,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "91."));
     ang_search = textToFloat(getParameter(argc2, argv2, "-ang_search", "-1."));
     do_limit_rotrange = !checkParameter(argc2, argv2, "-dont_limit_rotrange");
+    limit_trans = textToFloat(getParameter(argc2, argv2, "-limit_trans", "-1."));
 
     // Skip alignment (and classification)
     dont_align = checkParameter(argc2, argv2, "-dont_align");
@@ -208,6 +209,8 @@ void Prog_ml_tomo_prm::show()
                 if (!do_limit_rotrange)
                     std::cerr << "                          : but with complete rot searches"<<std::endl;
             }
+            if (limit_trans >= 0.) 
+                std::cerr << "  Maximum allowed shifts  : "<<limit_trans<<" pixels"<<std::endl;
         }
         std::cerr << "  Symmetry group          : " << fn_sym<<std::endl;
         std::cerr << "  Stopping criterium      : " << eps << std::endl;
@@ -290,6 +293,7 @@ void Prog_ml_tomo_prm::usage()
     std::cerr << " [ -ang_search <float> ]       : Angular search range around orientations from docfile \n";
     std::cerr << "                                    (by default, exhaustive searches are performed)\n";
     std::cerr << " [ -dont_limit_rotrange ]      : Keep rot angle searches exhaustive (when using -ang_search)\n";
+    std::cerr << " [ -limit_trans <float=-1.> ]  : Maximum allowed shifts (negative value means no restriction)\n";
     std::cerr << " [ -reg0 <float=0.> ]          : Initial regularization parameters (in N/K^2) \n";
     std::cerr << " [ -regF <float=0.> ]          : Final regularization parameters (in N/K^2) \n";
     std::cerr << " [ -reg_steps <int=5> ]        : Number of iterations in which the regularization is changed from reg0 to regF\n";
@@ -1480,27 +1484,41 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
     std::cerr<<"start calculatePdfTranslations"<<std::endl;
 #endif
 
-    double r2, pdfpix;
+    double r2, pdfpix, maxshift2=999999.;
     P_phi.resize(dim, dim, dim);
     P_phi.setXmippOrigin();
     Mr2.resize(dim, dim, dim);
     Mr2.setXmippOrigin();
+    maxshift2 = limit_trans * limit_trans;
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D(P_phi)
     {
         r2 = (double)(j * j + i * i + k * k);
-        if (sigma_offset > XMIPP_EQUAL_ACCURACY)
-        {
-            pdfpix = exp(- r2 / (2. * sigma_offset * sigma_offset));
-            pdfpix *= pow(2. * PI * sigma_offset * sigma_offset, -3./2.);
-        }
+        VOL_ELEM(Mr2, k, i, j) = (float)r2;
+
+        if (limit_trans > 0 && r2 > maxshift2)
+            VOL_ELEM(P_phi, k, i, j) = 0.;
         else
         {
-            if (k== 0 && i == 0 && j == 0) pdfpix = 1.;
-            else pdfpix = 0.;
+            if (sigma_offset > XMIPP_EQUAL_ACCURACY)
+            {
+                pdfpix = exp(- r2 / (2. * sigma_offset * sigma_offset));
+                pdfpix *= pow(2. * PI * sigma_offset * sigma_offset, -3./2.);
+            }
+            else
+            {
+                if (k== 0 && i == 0 && j == 0) pdfpix = 1.;
+                else pdfpix = 0.;
+            }
+            VOL_ELEM(P_phi, k, i, j) = pdfpix;
         }
-        VOL_ELEM(P_phi, k, i, j) = pdfpix;
-        VOL_ELEM(Mr2, k, i, j) = (float)r2;
+    }
+
+    if (limit_trans > 0)
+    {
+        // Re-normalize
+        double sum = P_phi.sum();
+        P_phi /= sum;
     }
 
 //#define  DEBUG_PDF_SHIFT
