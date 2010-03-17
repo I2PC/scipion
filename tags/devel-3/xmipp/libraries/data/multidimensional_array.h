@@ -142,23 +142,6 @@ extern std::string integerToString(int I, int _width, char fill_with);
 
 /** Access to a direct element.
  * @ingroup MultidimArraysSizeShape.
- * v is the array, k is the slice (Z), i is the Y index and j is the X index.
- */
-#define DIRECT_VOL_ELEM(v,k,i,j) ((v).data[(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
-
-/** Volume element: Logical access.
- * @ingroup VolumesMemory
- *
- * @code
- * VOL_ELEM(V, -1, -2, 1) = 1;
- * val = VOL_ELEM(V, -1, -2, 1);
- * @endcode
- */
-#define VOL_ELEM(V, k, i, j) \
-    DIRECT_VOL_ELEM((V),(k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
-
-/** Access to a direct element.
- * @ingroup MultidimArraysSizeShape.
  * v is the array, l is the image, k is the slice, i is the Y index and j is the X index.
  * i and j) within the slice.
  */
@@ -177,66 +160,6 @@ extern std::string integerToString(int I, int _width, char fill_with);
  * i and j) within the slice.
  */
 #define DIRECT_MULTIDIM_ELEM(v,n) ((v).data[(n)])
-
-/** Access to a direct element of a matrix.
- * @ingroup MultidimArraysSizeShape.
- * v is the array, i and j define the element v_ij.
- *
- * Be careful because this is physical access, usually matrices follow the C
- * convention of starting index==0 (X and Y). This function should not be used
- * as it goes against the vector library philosophy unless you explicitly want
- * to access directly to any value in the matrix without taking into account its
- * logical position
- *
- * @code
- * DIRECT_MAT_ELEM(m, 0, 0) = 1;
- * val = DIRECT_MAT_ELEM(m, 0, 0);
- * @endcode
-
- */
-#define DIRECT_MAT_ELEM(v,i,j) ((v).data[(i)*(v).xdim+(j)])
-
-/** Short alias for DIRECT_MAT_ELEM
- * @ingroup MultidimArraysSizeShape
- */
-#define dMij(M, i, j) DIRECT_MAT_ELEM(M, i, j)
-
-/** Matrix element: Logical access
- * @ingroup MatricesMemory
- *
- * @code
- * MAT_ELEM(m, -2, 1) = 1;
- * val = MAT_ELEM(m, -2, 1);
- * @endcode
- */
-#define MAT_ELEM(v, i, j) \
-    DIRECT_MAT_ELEM(v, (i) - STARTINGY(v), (j) - STARTINGX(v))
-
-/** Vector element: Physical access
- * @ingroup MultidimArraysSizeShape
- *
- * Be careful because this is physical access, usually vectors follow the C
- * convention of starting index==0. This function should not be used as it goes
- * against the vector library philosophy unless you explicitly want to access
- * directly to any value in the vector without taking into account its logical
- * position.
- *
- * @code
- * DIRECT_VEC_ELEM(v, 0) = 1;
- * val = DIRECT_VEC_ELEM(v, 0);
- * @endcode
- */
-#define DIRECT_VEC_ELEM(v, i) ((v).data[(i)])
-
-/** Vector element: Logical access
- * @ingroup MultidimArraysSizeShape
- *
- * @code
- * VEC_ELEM(v, -2) = 1;
- * val = VEC_ELEM(v, -2);
- * @endcode
- */
-#define VEC_ELEM(v, i) DIRECT_VEC_ELEM(v, (i) - ((v).xinit))
 
 /** For all direct elements in the array
  * @ingroup MultidimArraysSizeShape
@@ -275,6 +198,397 @@ extern std::string integerToString(int I, int _width, char fill_with);
 #define FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr) \
     for ((n)=0, (ptr)=(v).data; (n)<NZYXSIZE(v); ++(n), ++(ptr))
 
+
+
+/// @defgroup VolumesSizeShape 3D matrices size and shape (assume ndim=1)
+/// @ingroup MultidimArraysSpeedUp
+
+/** Access to a direct element.
+ * @ingroup VolumesSizeShape
+ * v is the array, k is the slice (Z), i is the Y index and j is the X index.
+ */
+#define DIRECT_VOL_ELEM(v,k,i,j) ((v).data[(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
+
+/** A short alias for the previous function.
+ * @ingroup VolumesSizeShape
+ *
+ */
+#define dVkij(V, k, i, j) DIRECT_VOL_ELEM(V, k, i, j)
+
+/** Volume element: Logical access.
+ * @ingroup VolumesSizeShape
+ *
+ * @code
+ * VOL_ELEM(V, -1, -2, 1) = 1;
+ * val = VOL_ELEM(V, -1, -2, 1);
+ * @endcode
+ */
+#define VOL_ELEM(V, k, i, j) \
+    DIRECT_VOL_ELEM((V),(k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
+
+/** For all elements in the array.
+ * @ingroup VolumesSizeShape
+ *
+ * This macro is used to generate loops for the volume in an easy way. It
+ * defines internal indexes 'k','i' and 'j' which ranges the volume using its
+ * mathematical definition (ie, logical access).
+ *
+ * @code
+ * FOR_ALL_ELEMENTS_IN_MATRIX3D(V)
+ * {
+ *     std::cout << V(k, i, j) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_MATRIX3D(V) \
+    for (int k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
+        for (int i=STARTINGY(V); i<=FINISHINGY(V); i++) \
+            for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
+
+/** For all elements in the array between corners.
+ * @ingroup VolumesSizeShape
+ *
+ * This macro is used to generate loops for a volume in an easy manner. Then
+ *  ZZ(r), YY(r) and XX(r) range from
+ *
+ * (int) ZZ(corner1) to (int)ZZ(corner2),
+ * (int) YY(corner1) to (int)YY(corner2),
+ * (int) XX(corner1) to (int) XX(corner2) (included limits) respectively.
+ *
+ * Notice that corner1 and corner2 need only be Matrix1D.
+ *
+ * @code
+ * Matrix1D< double > corner1(3), corner2(3), r(3);
+ * XX(corner1) = -1; XX(corner2) = 1;
+ * YY(corner1) = -2; YY(corner2) = 2;
+ * ZZ(corner1) = -3; ZZ(corner2) = 3;
+ *
+ * FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
+ * {
+ *     std::cout << v(r) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2) \
+    for (ZZ(r)=ZZ((corner1)); ZZ(r)<=ZZ((corner2)); ZZ(r)++) \
+        for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
+            for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
+
+/** For all elements in common.
+ * @ingroup VolumesSizeShape
+ *
+ * This macro is used to generate loops for all the elements logically in common
+ * between two volumes in an easy manner. Then k, i and j (locally defined)
+ * range from
+ *
+ * MAX(STARTINGZ(V1),STARTINGZ(V2)) to MIN(FINISHINGZ(V1),FINISHINGZ(V2)),
+ * MAX(STARTINGY(V1),STARTINGY(V2)) to MIN(FINISHINGY(V1),FINISHINGY(V2)),
+ * MAX(STARTINGX(V1),STARTINGX(V2)) to MIN(FINISHINGX(V1),FINISHINGX(V2))
+ *
+ * (included limits) respectively. You need to define SPEED_UP_temps.
+ *
+ * @code
+ * SPEED_UP_temps; 
+ * Matrix3D< double > V1(10, 10, 10), V2(20, 20, 20);
+ * V1.setXmippOrigin();
+ * V2.setXmippOrigin();
+ *
+ * FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(V1, V2)
+ * {
+ *    // ...
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(V1, V2) \
+    ispduptmp0 = XMIPP_MAX(STARTINGZ(V1), STARTINGZ(V2)); \
+    ispduptmp1 = XMIPP_MIN(FINISHINGZ(V1),FINISHINGZ(V2)); \
+    ispduptmp2 = XMIPP_MAX(STARTINGY(V1), STARTINGY(V2)); \
+    ispduptmp3 = XMIPP_MIN(FINISHINGY(V1),FINISHINGY(V2)); \
+    ispduptmp4 = XMIPP_MAX(STARTINGX(V1), STARTINGX(V2)); \
+    ispduptmp5 = XMIPP_MIN(FINISHINGX(V1),FINISHINGX(V2)); \
+    for (int k=ispduptmp0; k<=ispduptmp1; k++) \
+        for (int i=ispduptmp2; i<=ispduptmp3; i++) \
+            for (int j=ispduptmp4; j<=ispduptmp5; j++)
+
+/** For all direct elements in the array.
+ * @ingroup VolumeSizeShape
+ *
+ * This macro is used to generate loops for the volume in an easy way. It
+ * defines internal indexes 'k','i' and 'j' which ranges the volume using its
+ * physical definition.
+ *
+ * @code
+ * FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V)
+ * {
+ *     std::cout << DIRECT_VOL_ELEM(m, k, i, j) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V) \
+    for (int k=0; k<ZSIZE(V); k++) \
+        for (int i=0; i<YSIZE(V); i++) \
+            for (int j=0; j<XSIZE(V); j++)
+
+
+/// @defgroup MatricesSizeShape 2D Matrices size and shape
+/// @ingroup MultidimArraysSpeedUp
+
+/** Access to a direct element of a matrix.
+ * @ingroup MatricesSizeShape
+ * v is the array, i and j define the element v_ij.
+ *
+ * Be careful because this is physical access, usually matrices follow the C
+ * convention of starting index==0 (X and Y). This function should not be used
+ * as it goes against the vector library philosophy unless you explicitly want
+ * to access directly to any value in the matrix without taking into account its
+ * logical position
+ *
+ * @code
+ * DIRECT_MAT_ELEM(m, 0, 0) = 1;
+ * val = DIRECT_MAT_ELEM(m, 0, 0);
+ * @endcode
+
+ */
+#define DIRECT_MAT_ELEM(v,i,j) ((v).data[(i)*(v).xdim+(j)])
+
+/** Short alias for DIRECT_MAT_ELEM
+ * @ingroup MatricesSizeShape
+ */
+#define dMij(M, i, j) DIRECT_MAT_ELEM(M, i, j)
+
+/** Matrix element: Logical access
+ * @ingroup MatricesSizeShape
+ *
+ * @code
+ * MAT_ELEM(m, -2, 1) = 1;
+ * val = MAT_ELEM(m, -2, 1);
+ * @endcode
+ */
+#define MAT_ELEM(v, i, j) \
+    DIRECT_MAT_ELEM(v, (i) - STARTINGY(v), (j) - STARTINGX(v))
+
+/** TRUE if both arrays have the same shape
+ * @ingroup MatricesSizeShape
+ *
+ * Two arrays have the same shape if they have the same size and the same
+ * starting point. Be aware that this is a macro which simplifies to a boolean.
+ */
+#define SAME_SHAPE2D(v1, v2) \
+    (XSIZE(v1) == XSIZE(v2) && \
+     YSIZE(v1) == YSIZE(v2) && \
+     STARTINGX(v1) == STARTINGX(v2) && \
+     STARTINGY(v1) == STARTINGY(v2))
+
+/** For all elements in the array
+ * @ingroup MatricesSizeShape
+ *
+ * This macro is used to generate loops for the matrix in an easy way. It
+ * defines internal indexes 'i' and 'j' which ranges the matrix using its
+ * mathematical definition (ie, logical access).
+ *
+ * @code
+ * FOR_ALL_ELEMENTS_IN_MATRIX2D(m)
+ * {
+ *     std::cout << m(i, j) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_MATRIX2D(m) \
+    for (int i=STARTINGY(m); i<=FINISHINGY(m); i++) \
+        for (int j=STARTINGX(m); j<=FINISHINGX(m); j++)
+
+/** For all elements in the array between corners
+ * @ingroup MatricesSizeShape
+ *
+ * This macro is used to generate loops for a matrix in an easy manner. It needs
+ * an externally defined Matrix1D< double > r(2). Then YY(r) and XX(r) range
+ * from (int) YY(corner1) to (int)YY(corner2), (int) XX(corner1) to (int)
+ * XX(corner2) (included limits) respectively. Notice that corner1 and corner2
+ * need only be Matrix1D.
+ *
+ * @code
+ * Matrix1D< double > corner1(2), corner2(2);
+ * Matrix1D< int > r(2);
+ * XX(corner1) = -1;
+ * XX(corner2) = 1;
+ * YY(corner1) = -2;
+ * YY(corner2) = 2;
+ *
+ * FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+ * {
+ *     std::cout << v(r) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2) \
+    for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
+        for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
+
+/** For all elements in common
+ * @ingroup MatricesSizeShape
+ *
+ * This macro is used to generate loops for all the elements logically in common
+ * between two images in an easy manner. Then i and j (locally defined) range
+ * from MAX(STARTINGY(V1), STARTINGY(V2)) to MIN(FINISHINGY(V1),
+ * FINISHINGY(V2)), MAX(STARTINGX(V1), STARTINGX(V2)) to MIN(FINISHINGX(V1),
+ * FINISHINGX(V2)) (included limits) respectively. You need to define
+ * SPEED_UP_temps.
+ *
+ * @code
+ * Matrix2D< double > m1(10, 10), m2(20, 20);
+ * m1.setXmippOrigin();
+ * m2.setXmippOrigin();
+ *
+ * FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(m1, m2)
+ * {
+ *     ...
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(m1, m2) \
+    ispduptmp2 = XMIPP_MAX(STARTINGY(m1), STARTINGY(m2)); \
+    ispduptmp3 = XMIPP_MIN(FINISHINGY(m1), FINISHINGY(m2)); \
+    ispduptmp4 = XMIPP_MAX(STARTINGX(m1), STARTINGX(m2)); \
+    ispduptmp5 = XMIPP_MIN(FINISHINGX(m1), FINISHINGX(m2)); \
+    for (int i=ispduptmp2; i<=ispduptmp3; i++) \
+        for (int j=ispduptmp4; j<=ispduptmp5; j++)
+
+/** For all elements in the array, accessed physically
+ * @ingroup MatricesSizeShape
+ *
+ * This macro is used to generate loops for the matrix in an easy way using
+ * physical indexes. It defines internal indexes 'i' and 'j' which ranges the
+ * matrix using its physical definition.
+ *
+ * @code
+ * FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(m)
+ * {
+ *     std::cout << DIRECT_MAT_ELEM(m, i, j) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(m) \
+    for (int i=0; i<YSIZE(m); i++) \
+        for (int j=0; j<XSIZE(m); j++)
+
+/// @defgroup VectorsSizeShape 1D Matrices size and shape
+/// @ingroup MultidimArraysSpeedUp
+
+/** Vector element: Physical access
+ * @ingroup VectorsSizeShape
+ *
+ * Be careful because this is physical access, usually vectors follow the C
+ * convention of starting index==0. This function should not be used as it goes
+ * against the vector library philosophy unless you explicitly want to access
+ * directly to any value in the vector without taking into account its logical
+ * position.
+ *
+ * @code
+ * DIRECT_VEC_ELEM(v, 0) = 1;
+ * val = DIRECT_VEC_ELEM(v, 0);
+ * @endcode
+ */
+#define DIRECT_VEC_ELEM(v, i) ((v).data[(i)])
+
+/** A short alias to previous function
+ * @ingroup VectorsSizeShape
+ */
+#define dVi(v, i) DIRECT_VEC_ELEM(v, i)
+
+/** Vector element: Logical access
+ * @ingroup VectorsSizeShape
+ *
+ * @code
+ * VEC_ELEM(v, -2) = 1;
+ * val = VEC_ELEM(v, -2);
+ * @endcode
+ */
+#define VEC_ELEM(v, i) DIRECT_VEC_ELEM(v, (i) - ((v).xinit))
+
+/** For all elements in the array
+ * @ingroup VectorsSizeShape
+ *
+ * This macro is used to generate loops for the vector in an easy manner. It
+ * defines an internal index 'i' which ranges the vector using its mathematical
+ * definition (ie, logical access).
+ *
+ * @code
+ * FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
+ * {
+ *     std::cout << v(i) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_MATRIX1D(v) \
+    for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
+
+/** For all elements in the array between corners
+ * @ingroup VectorsSizeShape
+ *
+ * This macro is used to generate loops for a vector in an easy manner. It needs
+ * an externally defined Matrix1D< double > r(1). Then XX(r) ranges from
+ * (int) XX(corner1) to (int) XX(corner2) (included limits) (notice that corner1
+ * and corner2 need only to be Matrix1D).
+ *
+ * @code
+ * Matrix1D< double > corner1(1), corner2(1), r(1);
+ * XX(corner1) = -1;
+ * XX(corner2) = 1;
+ * FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
+ * {
+ *     std::cout << v(XX(r)) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2) \
+    for (XX(r)=(int) XX((corner1)); XX(r)<=(int) XX((corner2)); XX(r)++)
+
+/** For all elements in common
+ * @ingroup VectorsSizeShape
+ *
+ * This macro is used to generate loops for all the elements logically in common
+ * between two vectors in an easy manner. Then i (locally defined) ranges from
+ * MAX(STARTINGX(V1), STARTINGX(V2)) to MIN(FINISHINGX(V1), FINISHINGX(V2))
+ * (included limits) respectively. You need to define SPEED_UP_temps.
+ *
+ * @code
+ * Matrix2D< double > v1(10), v2(20);
+ * v1.setXmippOrigin();
+ * v2.setXmippOrigin();
+ *
+ * FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(v1, v2)
+ * {
+ *     ...
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(v1, v2) \
+    ispduptmp4 = XMIPP_MAX(STARTINGX(v1), STARTINGX(v2)); \
+    ispduptmp5 = XMIPP_MIN(FINISHINGX(v1), FINISHINGX(v2)); \
+    for (int i=ispduptmp4; i<=ispduptmp5; i++)
+
+/** For all elements in the array, accessed physically
+ * @ingroup VectorsSizeShape
+ *
+ * This macro is used to generate loops for the vector in an easy way using
+ * physical indexes. It defines internal the index 'i' which ranges the vector
+ * using its physical definition.
+ *
+ * @code
+ * FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
+ * {
+ *     std::cout << DIRECT_MAT_ELEM(v, i) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v) \
+    for (int i=0; i<v.xdim; i++)
+
+
+
+
+
+
 // Forward declarations ====================================================
 template<typename T> class MultidimArray;
 template<typename T> class Matrix1D;
@@ -310,7 +624,7 @@ public:
     bool destroyData;
 
     // Number of images
-    int ndim;
+    unsigned long int ndim;
 
     // Number of elements in Z
     int zdim;
@@ -402,7 +716,7 @@ public:
     /** Core allocate.
      * @ingroup MultidimArrayCore
      */
-    void coreAllocate(int _ndim, int _zdim, int _ydim, int _xdim)
+    void coreAllocate(unsigned long int _ndim, int _zdim, int _ydim, int _xdim)
     {
         if (_ndim <= 0 || _zdim <= 0 || _ydim<=0 || _xdim<=0)
         {
@@ -436,6 +750,7 @@ public:
 
     /// @defgroup MultidimSize Size
     /// @ingroup MultidimensionalArrays
+
     /** Copy the shape parameters
      * @ingroup MultidimSize
      *
@@ -454,56 +769,20 @@ public:
         xinit=m.xinit;
     }
 
-    /** Resize according to a pattern.
+    /** Alias a multidimarray.
      * @ingroup MultidimSize
      *
-     * This function resize the actual array to the same size and origin
-     * as the input pattern. If the actual array is larger than the pattern
-     * then the trailing values are lost, if it is smaller then 0's are
-     * added at the end
-     *
-     * @code
-     * v2.resize(v1);
-     * // v2 has got now the same structure as v1
-     * @endcode
+     * Treat the multidimarray as if it were a volume. The data is not copied
+     * into new memory, but a pointer to the multidimarray is copied.
+     * You should not make any operation on this volume such that the
+     * memory locations are changed
      */
-    template<typename T1>
-    void resize(const MultidimArray<T1> &v)
-    {
-        if (NSIZE(*this) != NSIZE(v) || XSIZE(*this) != XSIZE(v) || 
-            YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v))
-            resize(NSIZE(v), ZSIZE(v), YSIZE(v), XSIZE(v));
-
-        STARTINGX(*this) = STARTINGX(v);
-        STARTINGY(*this) = STARTINGY(v);
-        STARTINGZ(*this) = STARTINGZ(v);
-    }
-
-    /** Resize a single 2D image
-     * @ingroup MultidimSize
-     *
-     * This function assumes n and z are 1
-     * @code
-     * V1.resize(3, 2);
-     * @endcode
-     */
-    void resize(int Ydim, int Xdim)
-    {
-        resize(1, 1, Ydim, Xdim);
-    }
-
-    /** Resize a single 3D image
-     * @ingroup MultidimSize
-     *
-     * This function assumes n is 1
-     * @code
-     * V1.resize(3, 3, 2);
-     * @endcode
-     */
-    void resize(int Zdim, int Ydim, int Xdim)
-    {
-        resize(1, Zdim, Ydim, Xdim);
-    }
+     void alias(const MultidimArray<T> &m)
+     {
+         copyShape(m);
+         this->data=m.data;
+         this->destroyData=false;
+     }
 
     /** Resize to a given size
      * @ingroup MultidimSize
@@ -517,8 +796,7 @@ public:
      * V1.resize(3, 3, 2);
      * @endcode
      */
-#define FORCE_RESIZE true
-    void resize(int Ndim, int Zdim, int Ydim, int Xdim)
+    void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
         if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
             Zdim == ZSIZE(*this) && Ndim == NSIZE(*this) )
@@ -547,7 +825,7 @@ public:
 	}
 
         // Copy needed elements, fill with 0 if necessary
-        for (int l = 0; l < Ndim; l++)
+        for (unsigned long int l = 0; l < Ndim; l++)
             for (int k = 0; k < Zdim; k++)
                 for (int i = 0; i < Ydim; i++)
                     for (int j = 0; j < Xdim; j++)
@@ -577,6 +855,74 @@ public:
         zyxdim = Zdim * yxdim;
         nzyxdim = Ndim * zyxdim;
 
+    }
+
+    /** Resize a single 3D image
+     * @ingroup MultidimSize
+     *
+     * This function assumes n is 1
+     * @code
+     * V1.resize(3, 3, 2);
+     * @endcode
+     */
+    void resize(int Zdim, int Ydim, int Xdim)
+    {
+        resize(1, Zdim, Ydim, Xdim);
+    }
+
+    /** Resize a single 2D image
+     * @ingroup MultidimSize
+     *
+     * This function assumes n and z are 1
+     * @code
+     * V1.resize(3, 2);
+     * @endcode
+     */
+    void resize(int Ydim, int Xdim)
+    {
+        resize(1, 1, Ydim, Xdim);
+    }
+
+    /** Resize according to a pattern.
+     * @ingroup MultidimSize
+     *
+     * This function resize the actual array to the same size and origin
+     * as the input pattern. If the actual array is larger than the pattern
+     * then the trailing values are lost, if it is smaller then 0's are
+     * added at the end
+     *
+     * @code
+     * v2.resize(v1);
+     * // v2 has got now the same structure as v1
+     * @endcode
+     */
+    template<typename T1>
+    void resize(const MultidimArray<T1> &v)
+    {
+        if (NSIZE(*this) != NSIZE(v) || XSIZE(*this) != XSIZE(v) || 
+            YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v))
+            resize(NSIZE(v), ZSIZE(v), YSIZE(v), XSIZE(v));
+
+        STARTINGX(*this) = STARTINGX(v);
+        STARTINGY(*this) = STARTINGY(v);
+        STARTINGZ(*this) = STARTINGZ(v);
+    }
+
+    /** Returns the multidimArray dimension.
+     * @ingroup MultidimSize
+     *
+     * Pay attention to the dimension order (N,Z,Y,X).
+     *
+     * @code
+     * V.getDimension(Ndim, Zdim, Ydim, Xdim);
+     * @endcode
+     */
+    void getDimension(unsigned long int &Ndim, int& Zdim, int& Ydim, int& Xdim) const
+    {
+        Xdim = XSIZE(*this);
+        Ydim = YSIZE(*this);
+        Zdim = ZSIZE(*this);
+        Ndim = NSIZE(*this);
     }
 
     /** Get size.
@@ -637,6 +983,588 @@ public:
                 STARTINGX(*this) == STARTINGX(op) &&
                 STARTINGY(*this) == STARTINGY(op) &&
                 STARTINGZ(*this) == STARTINGZ(op));
+    }
+
+
+    /** Outside for 3D matrices
+     * @ingroup MultidimSize
+     *
+     * TRUE if the logical index given is outside the definition region of this
+     * array.
+     */
+    bool outside(int k, int i, int j) const
+    {
+        return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
+                i < STARTINGY(*this) || i > FINISHINGY(*this) ||
+                k < STARTINGZ(*this) || k > FINISHINGZ(*this));
+    }
+
+    /** Outside for 2D matrices
+     * @ingroup MultidimSize
+     *
+     * TRUE if the logical index given is outside the definition region of this
+     * array.
+     */
+    bool outside(int i, int j) const
+    {
+        return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
+                i < STARTINGY(*this) || i > FINISHINGY(*this));
+    }
+
+    /** Outside for 1D matrices
+     * @ingroup MultidimSize
+     *
+     * TRUE if the logical index given is outside the definition region of this
+     * array.
+     */
+    bool outside(int i) const
+    {
+        return (i < STARTINGX(*this) || i > FINISHINGX(*this));
+    }
+
+    /** Outside
+     * @ingroup VolumesSizeShape
+     *
+     * TRUE if the logical index given is outside the definition region of this
+     * array.
+     */
+    bool outside(const Matrix1D<double> &r) const
+    {
+        if (XSIZE(r) < 1)
+        {
+            REPORT_ERROR(1, "Outside: index vector has not got enough components");
+        }
+        else if (XSIZE==1)
+        {    
+            return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this));
+        }
+        else if (XSIZE==2)
+        {
+            return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
+                    YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this));
+        }
+        else if (XSIZE==3)
+        {
+            return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
+                    YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this) ||
+                    ZZ(r) < STARTINGZ(*this) || ZZ(r) > FINISHINGZ(*this));
+        }
+        else
+            REPORT_ERROR(2,"Outside: index vector has too many components");
+    }
+
+
+
+    ///defgroup MultidimMemory Access to the pixel values
+    /** Volume element access via index.
+     * @ingroup MultidimMemory
+     *
+     * Returns the value of a matrix logical position. In our example we could
+     * access from v(0,-2,-1) to v(1,2,1). The elements can be used either by
+     * value or by reference. An exception is thrown if the index is outside
+     * the logical range. Be careful that the argument order is (Z,Y,X).
+     *
+     * @code
+     * V(0, -2, 1) = 1;
+     * val = V(0, -2, 1);
+     * @endcode
+     */
+    T& operator()(int k, int i, int j) const
+    {
+        return VOL_ELEM(*this, k, i, j);
+    }
+    #undef DEBUG
+
+    /** Volume element access via double vector.
+     * @ingroup MultidimMemory
+     *
+     * Returns the value of a matrix logical position, but this time the
+     * element position is determined by a R3 vector. The elements can be used
+     * either by value or by reference. An exception is thrown if the index is
+     * outside the logical range. Pay attention in the following example that
+     * we are accessing the same element as in the previous function but, now
+     * we have to give first the X position because we are building first a
+     * vector of the form (x,y,z).
+     *
+     * @code
+     * V(vectorR3(1, -2, 0)) = 1;
+     * val = V(vectorR3(1, -2, 0));
+     * @endcode
+     */
+    T& operator()(const Matrix1D< double >& v) const
+    {
+        return VOL_ELEM((*this), ROUND(ZZ(v)), ROUND(YY(v)), ROUND(XX(v)));
+    }
+
+    /** Volume element access via integer vector.
+     * @ingroup MultidimMemory
+     */
+    T& operator()(const Matrix1D< int >& v) const
+    {
+        return VOL_ELEM((*this), ZZ(v), YY(v), XX(v));
+    }
+
+    /** Matrix element access via index
+     * @ingroup MultidimMemory
+     *
+     * Returns the value of a matrix logical position. In our example we could
+     * access from v(-2,-1) to v(2,1). The elements can be used either by value
+     * or by reference. An exception is thrown if the index is outside the
+     * logical range. The first argument is the Y position and the second the X
+     * position.
+     *
+     * @code
+     * m(-2, 1) = 1;
+     * val = m(-2, 1);
+     * @endcode
+     */
+    T& operator()(int i, int j) const
+    {
+        return MAT_ELEM(*this, i, j);
+    }
+
+    /** Matrix element access via double vector
+     * @ingroup MultidimMemory
+     *
+     * Returns the value of a matrix logical position, but this time the element
+     * position is determined by a R2 vector. The elements can be used either by
+     * value or by reference. An exception is thrown if the index is outside the
+     * logical range. Pay attention in the following example that we are
+     * accessing the same element as in the previous function but, now we have
+     * to give first the X position instead of the Y one because we are building
+     * first a vector of the form (x,y).
+     *
+     * @code
+     * m(vectorR2(1, -2)) = 1;
+     * val = m(vectorR2(1, -2));
+     * @endcode
+     */
+    T& operator()(const Matrix1D< double >& v) const
+    {
+        return MAT_ELEM(*this, ROUND(YY(v)), ROUND(XX(v)));
+    }
+
+    /** Matrix element access via intger vector
+     * @ingroup MultidimMemory
+     */
+    T& operator()(const Matrix1D< int >& v) const
+    {
+        return MAT_ELEM(*this, YY(v), XX(v));
+    }
+
+    /** Vector element access
+     * @ingroup MultidimMemory
+     *
+     * Returns the value of a vector logical position. In our example we could
+     * access from v(-2) to v(2). The elements can be used either by value or by
+     * reference. An exception is thrown if the index is outside the logical
+     * range.
+     *
+     * @code
+     * v(-2) = 1;
+     * val = v(-2);
+     * @endcode
+     */
+    T& operator()(int i) const
+    {
+       return VEC_ELEM(*this, i);
+    }
+
+
+    /** Interpolates the value of the nth 3D matrix M at the point (x,y,z).
+     * @ingroup MultidimMemory
+     *
+     * (x,y,z) are in logical coordinates.
+     */
+    T interpolatedElement3D(double x, double y, double z, T outside_value = (T) 0, int n = 0)
+    {
+        int x0 = FLOOR(x);
+        double fx = x - x0;
+        int x1 = x0 + 1;
+
+        int y0 = FLOOR(y);
+        double fy = y - y0;
+        int y1 = y0 + 1;
+
+        int z0 = FLOOR(z);
+        double fz = z - z0;
+        int z1 = z0 + 1;
+
+        T d000 = (outside(z0, y0, x0)) ? outside_value : NZYX_ELEM(*this, n, z0, y0, x0);
+        T d001 = (outside(z0, y0, x1)) ? outside_value : NZYX_ELEM(*this, n, z0, y0, x1);
+        T d010 = (outside(z0, y1, x0)) ? outside_value : NZYX_ELEM(*this, n, z0, y1, x0);
+        T d011 = (outside(z0, y1, x1)) ? outside_value : NZYX_ELEM(*this, n, z0, y1, x1);
+        T d100 = (outside(z1, y0, x0)) ? outside_value : NZYX_ELEM(*this, n, z1, y0, x0);
+        T d101 = (outside(z1, y0, x1)) ? outside_value : NZYX_ELEM(*this, n, z1, y0, x1);
+        T d110 = (outside(z1, y1, x0)) ? outside_value : NZYX_ELEM(*this, n, z1, y1, x0);
+        T d111 = (outside(z1, y1, x1)) ? outside_value : NZYX_ELEM(*this, n, z1, y1, x1);
+
+        double dx00 = LIN_INTERP(fx, (double) d000, (double) d001);
+        double dx01 = LIN_INTERP(fx, (double) d100, (double) d101);
+        double dx10 = LIN_INTERP(fx, (double) d010, (double) d011);
+        double dx11 = LIN_INTERP(fx, (double) d110, (double) d111);
+        double dxy0 = LIN_INTERP(fy, (double) dx00, (double) dx10);
+        double dxy1 = LIN_INTERP(fy, (double) dx01, (double) dx11);
+
+        return (T) LIN_INTERP(fz, dxy0, dxy1);
+    }
+
+    /** Interpolates the value of the nth 2D matrix M at the point (x,y)
+     * @ingroup MultidimMemory
+     *
+     * Bilinear interpolation. (x,y) are in logical coordinates.
+     */
+    inline T interpolatedElement2D(double x, double y, T outside_value = (T) 0, int n = 0) const
+    {
+        int x0 = FLOOR(x);
+        double fx = x - x0;
+        int x1 = x0 + 1;
+        int y0 = FLOOR(y);
+        double fy = y - y0;
+        int y1 = y0 + 1;
+
+        T d00 = outside(y0, x0) ? outside_value : NZYX_ELEM(*this, n, 0, y0, x0);
+        T d10 = outside(y1, x0) ? outside_value : NZYX_ELEM(*this, n, 0, y1, x0);
+        T d11 = outside(y1, x1) ? outside_value : NZYX_ELEM(*this, n, 0, y1, x1);
+        T d01 = outside(y0, x1) ? outside_value : NZYX_ELEM(*this, n, 0, y0, x1);
+
+        double d0 = (T) LIN_INTERP(fx, (double) d00, (double) d01);
+        double d1 = (T) LIN_INTERP(fx, (double) d10, (double) d11);
+        return (T) LIN_INTERP(fy, d0, d1);
+    }
+
+    /** Interpolates the value of the nth 3D matrix M at the point (x,y,z) knowing
+     * that this image is a set of B-spline coefficients.
+     * @ingroup MultidimMemory
+     *
+     * (x,y,z) are in logical coordinates.
+     */
+    T interpolatedElementBSpline3D(double x, double y, double z, int SplineDegree = 3, n = 0)
+    {
+        int SplineDegree_1 = SplineDegree - 1;
+
+        // Logical to physical
+        z -= STARTINGZ(*this);
+        y -= STARTINGY(*this);
+        x -= STARTINGX(*this);
+
+        int lmax = XSIZE(*this);
+        int mmax = YSIZE(*this);
+        int nmax = ZSIZE(*this);
+
+        int l1 = CEIL(x - SplineDegree_1);
+        int l2 = l1 + SplineDegree;
+
+        int m1 = CEIL(y - SplineDegree_1);
+        int m2 = m1 + SplineDegree;
+
+        int n1 = CEIL(z - SplineDegree_1);
+        int n2 = n1 + SplineDegree;
+
+        double zyxsum = 0.0;
+        for (int n = n1; n <= n2; n++) {
+	    int equivalent_n=n;
+	    if      (n<0)             equivalent_n=-n-1;
+	    else if (n>=ZSIZE(*this)) equivalent_n=2*ZSIZE(*this)-n-1;
+            double yxsum = 0.0;
+            for (int m = m1; m <= m2; m++) {
+		int equivalent_m=m;
+		if      (m<0)             equivalent_m=-m-1;
+		else if (m>=YSIZE(*this)) equivalent_m=2*YSIZE(*this)-m-1;
+                double xsum = 0.0;
+                for (int l = l1; l <= l2; l++)
+                {
+                    double xminusl = x - (double) l;
+		    int equivalent_l=l;
+		    if      (l<0)             equivalent_l=-l-1;
+		    else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
+                    double Coeff = (double) DIRECT_NZYX_ELEM(*this, n, 
+                        equivalent_n,equivalent_m,equivalent_l);
+                    switch (SplineDegree)
+                    {
+                    case 2:
+                        xsum += Coeff * Bspline02(xminusl);
+                        break;
+                    case 3:
+                        xsum += Coeff * Bspline03(xminusl);
+                        break;
+                    case 4:
+                        xsum += Coeff * Bspline04(xminusl);
+                        break;
+                    case 5:
+                        xsum += Coeff * Bspline05(xminusl);
+                        break;
+                    case 6:
+                        xsum += Coeff * Bspline06(xminusl);
+                        break;
+                    case 7:
+                        xsum += Coeff * Bspline07(xminusl);
+                        break;
+                    case 8:
+                        xsum += Coeff * Bspline08(xminusl);
+                        break;
+                    case 9:
+                        xsum += Coeff * Bspline09(xminusl);
+                        break;
+                    }
+                }
+
+                double yminusm = y - (double) m;
+                switch (SplineDegree)
+                {
+                case 2:
+                    yxsum += xsum * Bspline02(yminusm);
+                    break;
+                case 3:
+                    yxsum += xsum * Bspline03(yminusm);
+                    break;
+                case 4:
+                    yxsum += xsum * Bspline04(yminusm);
+                    break;
+                case 5:
+                    yxsum += xsum * Bspline05(yminusm);
+                    break;
+                case 6:
+                    yxsum += xsum * Bspline06(yminusm);
+                    break;
+                case 7:
+                    yxsum += xsum * Bspline07(yminusm);
+                    break;
+                case 8:
+                    yxsum += xsum * Bspline08(yminusm);
+                    break;
+                case 9:
+                    yxsum += xsum * Bspline09(yminusm);
+                    break;
+                }
+	    }
+
+            double zminusn = z - (double) n;
+            switch (SplineDegree)
+            {
+            case 2:
+                zyxsum += yxsum * Bspline02(zminusn);
+                break;
+            case 3:
+                zyxsum += yxsum * Bspline03(zminusn);
+                break;
+            case 4:
+                zyxsum += yxsum * Bspline04(zminusn);
+                break;
+            case 5:
+                zyxsum += yxsum * Bspline05(zminusn);
+                break;
+            case 6:
+                zyxsum += yxsum * Bspline06(zminusn);
+                break;
+            case 7:
+                zyxsum += yxsum * Bspline07(zminusn);
+                break;
+            case 8:
+                zyxsum += yxsum * Bspline08(zminusn);
+                break;
+            case 9:
+                zyxsum += yxsum * Bspline09(zminusn);
+                break;
+            }
+	}
+
+        return (T) zyxsum;
+    }
+
+    /** Interpolates the value of the nth 2D matrix M at the point (x,y) knowing
+     * that this image is a set of B-spline coefficients
+     * @ingroup MultidimMemory
+     *
+     * (x,y) are in logical coordinates
+     *
+     * To interpolate using splines you must first produce the Bspline
+     * coefficients. An example to interpolate an image at (0.5,0.5) using
+     * splines would be:
+     *
+     * @code
+     * Matrix2D< double > Bspline_coeffs;
+     * myImage.produceSplineCoefficients(Bspline_coeffs, 3);
+     * interpolated_value = Bspline_coeffs.interpolatedElementBSpline(0.5,
+     * 0.5,3);
+     * @endcode
+     */
+    inline T interpolatedElementBSpline2D(double x, double y, int SplineDegree = 3, n = 0) const
+    {
+        int SplineDegree_1 = SplineDegree - 1;
+
+        // Logical to physical
+        y -= STARTINGY(*this);
+        x -= STARTINGX(*this);
+
+        int lmax = XSIZE(*this);
+        int mmax = YSIZE(*this);
+        int l1 = CEIL(x - SplineDegree_1);
+        int l2 = l1 + SplineDegree;
+        int m1 = CEIL(y - SplineDegree_1);
+        int m2 = m1 + SplineDegree;
+
+        double columns = 0.0;
+        for (int m = m1; m <= m2; m++)
+        {
+	    int equivalent_m=m;
+	    if      (m<0)             equivalent_m=-m-1;
+	    else if (m>=YSIZE(*this)) equivalent_m=2*YSIZE(*this)-m-1;
+            int row_m = XSIZE(*this) * equivalent_m;
+            double rows = 0.0;
+            for (int l = l1; l <= l2; l++)
+            {
+                double xminusl = x - (double) l;
+		int equivalent_l=l;
+		if      (l<0)             equivalent_l=-l-1;
+		else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
+                double Coeff = (double) DIRECT_NZYX_ELEM(*this, n, 0, equivalent_m,equivalent_l);
+                switch (SplineDegree)
+                {
+                case 2:
+                    rows += Coeff * Bspline02(xminusl);
+                    break;
+
+                case 3:
+                    rows += Coeff * Bspline03(xminusl);
+                    break;
+
+                case 4:
+                    rows += Coeff * Bspline04(xminusl);
+                    break;
+
+                case 5:
+                    rows += Coeff * Bspline05(xminusl);
+                    break;
+
+                case 6:
+                    rows += Coeff * Bspline06(xminusl);
+                    break;
+
+                case 7:
+                    rows += Coeff * Bspline07(xminusl);
+                    break;
+
+                case 8:
+                    rows += Coeff * Bspline08(xminusl);
+                    break;
+
+                case 9:
+                    rows += Coeff * Bspline09(xminusl);
+                    break;
+                }
+            }
+
+            double yminusm = y - (double) m;
+            switch (SplineDegree)
+            {
+            case 2:
+                columns += rows * Bspline02(yminusm);
+                break;
+
+            case 3:
+                columns += rows * Bspline03(yminusm);
+                break;
+
+            case 4:
+                columns += rows * Bspline04(yminusm);
+                break;
+
+            case 5:
+                columns += rows * Bspline05(yminusm);
+                break;
+
+            case 6:
+                columns += rows * Bspline06(yminusm);
+                break;
+
+            case 7:
+                columns += rows * Bspline07(yminusm);
+                break;
+
+            case 8:
+                columns += rows * Bspline08(yminusm);
+                break;
+
+            case 9:
+                columns += rows * Bspline09(yminusm);
+                break;
+            }
+        }
+        return (T) columns;
+    }
+
+    /** Interpolates the value of the nth 1D vector M at the point (x) knowing
+     * that this vector is a set of B-spline coefficients
+     * @ingroup VectorsMemory
+     *
+     * (x) is in logical coordinates
+     *
+     * To interpolate using splines you must first produce the Bspline
+     * coefficients. An example to interpolate a vector at (0.5) using
+     * splines would be:
+     *
+     * @code
+     * Matrix1D< double > Bspline_coeffs;
+     * myVector.produceSplineCoefficients(Bspline_coeffs, 3);
+     * interpolated_value = Bspline_coeffs.interpolatedElementBSpline(0.5,3);
+     * @endcode
+     */
+    T interpolatedElementBSpline1D(double x, int SplineDegree = 3, n = 0) const
+    {
+        int SplineDegree_1 = SplineDegree - 1;
+
+        // Logical to physical
+        x -= STARTINGX(*this);
+
+        int lmax = XSIZE(*this);
+        int l1 = CEIL(x - SplineDegree_1);
+        int l2 = l1 + SplineDegree;
+
+        double sum = 0.0;
+        for (int l = l1; l <= l2; l++)
+        {
+            double xminusl = x - (double) l;
+	    int equivalent_l=l;
+	    if      (l<0)             equivalent_l=-l-1;
+	    else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
+            double Coeff = (double) DIRECT_NZYX_ELEM(*this, n, 0, 0, equivalent_l);
+            switch (SplineDegree)
+            {
+            case 2:
+                sum += Coeff * Bspline02(xminusl);
+                break;
+
+            case 3:
+                sum += Coeff * Bspline03(xminusl);
+                break;
+
+            case 4:
+                sum += Coeff * Bspline04(xminusl);
+                break;
+
+            case 5:
+                sum += Coeff * Bspline05(xminusl);
+                break;
+
+            case 6:
+                sum += Coeff * Bspline06(xminusl);
+                break;
+
+            case 7:
+                sum += Coeff * Bspline07(xminusl);
+                break;
+
+            case 8:
+                sum += Coeff * Bspline08(xminusl);
+                break;
+
+            case 9:
+                sum += Coeff * Bspline09(xminusl);
+                break;
+            }
+        }
+        return (T) sum;
     }
 
     /** Set logical origin in Xmipp fashion.
@@ -1518,20 +2446,28 @@ public:
     /** Initialize to zeros with a given size.
      * @ingroup Initialization
      */
-    void initZeros(int Zdim, int Ydim, int Xdim)
+    void initZeros(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
-        resize(1, Zdim,Ydim,Xdim);
-        initConstant(static_cast< T >(0));
+        resize(Ndim, Zdim,Ydim,Xdim);
+        initZeros();
     }
 
     /** Initialize to zeros with a given size.
      * @ingroup Initialization
      */
-    void initZeros(int Ndim, int Zdim, int Ydim, int Xdim)
+    void initZeros(int Ydim, int Xdim)
     {
-        resize(Ndim, Zdim,Ydim,Xdim);
-        initConstant(static_cast< T >(0));
+        initZeros(1, 1, Ydim, Xdim);
     }
+
+    /** Initialize to zeros with a given size.
+     * @ingroup Initialization
+     */
+    void initZeros(int Zdim, int Ydim, int Xdim)
+    {
+        initZeros(1, Zdim, Ydim, Xdim);
+    }
+
 
     /** Initialize with random values.
      * @ingroup Initialization

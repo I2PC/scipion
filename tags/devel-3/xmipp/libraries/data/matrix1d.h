@@ -51,93 +51,6 @@ template <typename T> class Matrix2D;
  * the copy constructor and in the creation/destruction of temporary vectors.
  */
 
-/** For all elements in the array
- * @ingroup VectorsSizeShape
- *
- * This macro is used to generate loops for the vector in an easy manner. It
- * defines an internal index 'i' which ranges the vector using its mathematical
- * definition (ie, logical access).
- *
- * @code
- * FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
- * {
- *     std::cout << v(i) << " ";
- * }
- * @endcode
- */
-#define FOR_ALL_ELEMENTS_IN_MATRIX1D(v) \
-    for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
-
-/** For all elements in the array between corners
- * @ingroup VectorsSizeShape
- *
- * This macro is used to generate loops for a vector in an easy manner. It needs
- * an externally defined Matrix1D< double > r(1). Then XX(r) ranges from
- * (int) XX(corner1) to (int) XX(corner2) (included limits) (notice that corner1
- * and corner2 need only to be Matrix1D).
- *
- * @code
- * Matrix1D< double > corner1(1), corner2(1), r(1);
- * XX(corner1) = -1;
- * XX(corner2) = 1;
- * FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
- * {
- *     std::cout << v(XX(r)) << " ";
- * }
- * @endcode
- */
-#define FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2) \
-    for (XX(r)=(int) XX((corner1)); XX(r)<=(int) XX((corner2)); XX(r)++)
-
-/** For all elements in common
- * @ingroup VectorsSizeShape
- *
- * This macro is used to generate loops for all the elements logically in common
- * between two vectors in an easy manner. Then i (locally defined) ranges from
- * MAX(STARTINGX(V1), STARTINGX(V2)) to MIN(FINISHINGX(V1), FINISHINGX(V2))
- * (included limits) respectively. You need to define SPEED_UP_temps.
- *
- * @code
- * Matrix2D< double > v1(10), v2(20);
- * v1.setXmippOrigin();
- * v2.setXmippOrigin();
- *
- * FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(v1, v2)
- * {
- *     ...
- * }
- * @endcode
- */
-#define FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(v1, v2) \
-    ispduptmp4 = XMIPP_MAX(STARTINGX(v1), STARTINGX(v2)); \
-    ispduptmp5 = XMIPP_MIN(FINISHINGX(v1), FINISHINGX(v2)); \
-    for (int i=ispduptmp4; i<=ispduptmp5; i++)
-
-/** For all elements in the array, accessed physically
- * @ingroup VectorsSizeShape
- *
- * This macro is used to generate loops for the vector in an easy way using
- * physical indexes. It defines internal the index 'i' which ranges the vector
- * using its physical definition.
- *
- * @code
- * FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
- * {
- *     std::cout << DIRECT_MAT_ELEM(v, i) << " ";
- * }
- * @endcode
- */
-#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v) \
-    for (int i=0; i<v.xdim; i++)
-
-/// @defgroup VectorsMemory Memory access
-/// @ingroup VectorsSpeedUp
-
-/** A short alias to previous function
- * @ingroup VectorsMemory
- */
-#define dVi(v, i) DIRECT_VEC_ELEM(v, i)
-
 /** Access to X component
  * @ingroup VectorsMemory
  *
@@ -559,38 +472,11 @@ public:
             << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
     }
 
-    /** Resize to a given size
-     * @ingroup VectorsSize
-     *
-     * This function resize the actual array to the given size. The origin is
-     * not modified. If the actual array is larger than the pattern then the
-     * trailing values are lost, if it is smaller then 0's are added at the end.
-     * An exception is thrown if there is no memory.
-     *
-     * @code
-     * v1.resize(3);
-     * @endcode
-     */
-    void resize(int Xdim)
-    {
-        MultidimArray<T>::resize(1,1,Xdim);
-    }
-
     /** Resize taking the shape from another vector
      * @ingroup VectorsSize
      */
     template <typename T1>
     void resize(const Matrix1D<T1> &M)
-    {
-    	MultidimArray<T>::resize(M);
-    }
-
-    /** Resize taking the shape from another vector which
-        is given as a MultidimArray
-     * @ingroup VectorsSize
-     */
-    template <typename T1>
-    void resize(const MultidimArray<T1> &M)
     {
     	MultidimArray<T>::resize(M);
     }
@@ -619,31 +505,6 @@ public:
      */
     void killAdaptationForNumericalRecipes(T* m) const
         {}
-
-    /** Outside
-     * @ingroup VectorsSize
-     *
-     * TRUE if the logical index given is outside the definition region of this
-     * array.
-     */
-    bool outside(int i) const
-    {
-        return (i < STARTINGX(*this) || i > FINISHINGX(*this));
-    }
-
-    /** Outside
-     * @ingroup VectorsSize
-     *
-     * TRUE if the logical index given is outside the definition region of this
-     * array.
-     */
-    bool outside(const Matrix1D<double> &r) const
-    {
-        if (XSIZE(r) < 1)
-            REPORT_ERROR(1, "Outside: index vector has not got enough components");
-    
-        return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this));
-    }
 
     /** True if vector is a row.
      * @ingroup VectorsSize
@@ -695,145 +556,7 @@ public:
         row = false;
     }
 
-    /// @defgroup VectorsMemory Memory access
-    /// @ingroup Vectors
-
-    //#define DEBUG
-    /** Vector element access
-     * @ingroup VectorsMemory
-     *
-     * Returns the value of a vector logical position. In our example we could
-     * access from v(-2) to v(2). The elements can be used either by value or by
-     * reference. An exception is thrown if the index is outside the logical
-     * range.
-     *
-     * @code
-     * v(-2) = 1;
-     * val = v(-2);
-     * @endcode
-     */
-    T& operator()(int i) const
-    {
-        #ifdef DEBUG
-            if (i > FINISHINGX(*this) || i < STARTINGX(*this))
-                REPORT_ERROR(1003, static_cast< std::string >
-	           ("Vector subscript not defined for this vector i=")+
-	           integerToString(i));
-        #endif
-
-        return VEC_ELEM(*this, i);
-    }
-    #undef DEBUG
-
-    /** Interpolates the value of the 1D vector M at the point (x) knowing
-     * that this vector is a set of B-spline coefficients
-     * @ingroup VectorsMemory
-     *
-     * (x) is in logical coordinates
-     *
-     * To interpolate using splines you must first produce the Bspline
-     * coefficients. An example to interpolate a vector at (0.5) using
-     * splines would be:
-     *
-     * @code
-     * Matrix1D< double > Bspline_coeffs;
-     * myVector.produceSplineCoefficients(Bspline_coeffs, 3);
-     * interpolated_value = Bspline_coeffs.interpolatedElementBSpline(0.5,3);
-     * @endcode
-     */
-    T interpolatedElementBSpline(double x, int SplineDegree = 3) const
-    {
-        int SplineDegree_1 = SplineDegree - 1;
-
-        // Logical to physical
-        x -= STARTINGX(*this);
-
-        int lmax = XSIZE(*this);
-        int l1 = CEIL(x - SplineDegree_1);
-        int l2 = l1 + SplineDegree;
-
-        double sum = 0.0;
-        for (int l = l1; l <= l2; l++)
-        {
-            double xminusl = x - (double) l;
-	    int equivalent_l=l;
-	    if      (l<0)             equivalent_l=-l-1;
-	    else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
-            double Coeff = (double) DIRECT_VEC_ELEM(*this,equivalent_l);
-            switch (SplineDegree)
-            {
-            case 2:
-                sum += Coeff * Bspline02(xminusl);
-                break;
-
-            case 3:
-                sum += Coeff * Bspline03(xminusl);
-                break;
-
-            case 4:
-                sum += Coeff * Bspline04(xminusl);
-                break;
-
-            case 5:
-                sum += Coeff * Bspline05(xminusl);
-                break;
-
-            case 6:
-                sum += Coeff * Bspline06(xminusl);
-                break;
-
-            case 7:
-                sum += Coeff * Bspline07(xminusl);
-                break;
-
-            case 8:
-                sum += Coeff * Bspline08(xminusl);
-                break;
-
-            case 9:
-                sum += Coeff * Bspline09(xminusl);
-                break;
-            }
-        }
-        return (T) sum;
-    }
-
-    /** Get element at i (logical access)
-     * @ingroup VectorsMemory
-     */
-    T getElement(int i) const
-    {
-        return (*this)(i);
-    }
-
-    /** Set element at i (logical access)
-     * @ingroup VectorsMemory
-     */
-    void setElement(int i, T val)
-    {
-        (*this)(i) = val;
-    }
-
-    /** Matrix element access via double vector
-     * @ingroup VectorsMemory
-     *
-     * Returns the value of a matrix logical position, but this time the element
-     * position is determined by a R1 vector. The elements can be used either by
-     * value or by reference. No check is done on the validity of the vector.
-     */
-    T& operator()(const Matrix1D< double >& v) const
-    {
-        return VEC_ELEM(*this, ROUND(XX(v)));
-    }
-
-    /** Matrix element access via integer vector
-     * @ingroup VectorsMemory
-     */
-    T& operator()(const Matrix1D< int >& v) const
-    {
-        return VEC_ELEM(*this, XX(v));
-    }
-
+ 
     /** Access to X component
      * @ingroup VectorsMemory
      *
