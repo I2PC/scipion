@@ -134,6 +134,8 @@ public:
     double ang_search;
     /** Also limit rot search (rot in experimental images is psi in references) */
     bool do_limit_rotrange;
+    /** Prohibit translations larger than this value */
+    double limit_trans;
     /** Perturb angular sampling */
     bool do_perturb;
     /** Low-pass filter at FSC=0.5 resolution in each step */
