@@ -100,15 +100,15 @@ $result=PyInt_FromLong((long)*$1);
 
 // All interfaces being ported
 %include swigfuncs.i
-%include swigdenoise.i
 %include swigdocfile.i
 %include swigargs.i
-%include swigmultidimensional_array.i
-%include swigmatrix1d.i
-%include swigmatrix2d.i
-%include swigmatrix3d.i
-%include swigimage.i
-%include swiggeometry.i
-%include swigmicrograph.i
+%include swigsqllite.i
+//%include swigmultidimensional_array.i
+//%include swigmatrix1d.i
+//%include swigmatrix2d.i
+//%include swigmatrix3d.i
+//%include swigimage.i
+//%include swiggeometry.i
+//%include swigmicrograph.i
 
 // rm libraries/data/swig/libXmippDataSwig.so libraries/data/swig/XmippData.py libraries/data/swig/swigXmippData_wrap.os libraries/data/swig/swigXmippData_wrap.cc ; ./scons.compile
