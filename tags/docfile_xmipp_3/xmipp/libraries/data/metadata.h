@@ -30,6 +30,8 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <sstream>
+#include "funcs.h"
 
 #include "metadata_container.h"
 
@@ -37,25 +39,17 @@
 #define NO_OBJECTS_STORED	-1
 #define NO_MORE_OBJECTS		-2
 
-// Types that can be stored as metaData
-#define UNDEFINED_TYPE		0
-#define IMAGE_TYPE			1
-#define MICROGRAPH_TYPE		2
-#define VOLUME_TYPE			3
-
 class metaData
 	{
 		std::map< long int, metaDataContainer *> objects;
 		std::map< long int, metaDataContainer *>::iterator objectsIterator;
 		
-		std::string programName;
 		std::string path;
-		unsigned int objectsType;
 		
 	public:
 		
 		metaData();
-		metaData( std::string fileName, std::string type, std::vector<std::string> * labelsVector = NULL );
+		metaData( std::string fileName, std::vector<label> * labelsVector = NULL );
 		~metaData();
 		
 		bool isEmpty( );
@@ -69,31 +63,29 @@ class metaData
 		
 		// Set a new pair/value for an specified object. If no objectID is given, that
 		// pointed by the class iterator is used 
-		bool setValue( std::string label, double value, long int objectID = -1 );
-		bool setValue( std::string label, float value, long int objectID = -1 );
-		bool setValue( std::string label, int value, long int objectID = -1 );
-		bool setValue( std::string label, bool, long int objectID = -1 );
-		bool setValue( std::string label, std::string value, long int objectID = -1 );
+		bool setValue( label name, double value, long int objectID = -1 );
+		bool setValue( label name, float value, long int objectID = -1 );
+		bool setValue( label name, int value, long int objectID = -1 );
+		bool setValue( label name, bool, long int objectID = -1 );
+		bool setValue( label name, std::string value, long int objectID = -1 );
+		
+		bool setValue( std::string name, std::string value, long int objectID = -1 );
 		
 		// Get the collection of objects whose pair label/value is given
-		std::vector<long int> findObjects( std::string label, double value );
-		std::vector<long int> findObjects( std::string label, float value );
-		std::vector<long int> findObjects( std::string label, int value );
-		std::vector<long int> findObjects( std::string label, bool value );
-		std::vector<long int> findObjects( std::string label, std::string value );
+		std::vector<long int> findObjects( label name, double value );
+		std::vector<long int> findObjects( label name, float value );
+		std::vector<long int> findObjects( label name, int value );
+		std::vector<long int> findObjects( label name, bool value );
+		std::vector<long int> findObjects( label name, std::string value );
 		
 		// Xmipp-specific, for new parameters add here.
-		void setProgram( std::string newProgName );		
-		void setPath( std::string newPath );	
-		void setType( unsigned int newObjectsType );
+		void setPath( std::string newPath = "" );	
 		
-		std::string getProgram( );
 		std::string getPath( );
-		unsigned int getType( );
 		
-		double rot( long int objectID );
-		double tilt( long int objectID );
-		double psi( long int objectID );
+		double angleRot( long int objectID );
+		double angleTilt( long int objectID );
+		double anglePsi( long int objectID );
 		double shiftX( long int objectID );
 		double shiftY( long int objectID );
 		double shiftZ( long int objectID );
@@ -101,7 +93,9 @@ class metaData
 		double originY( long int objectID );
 		double originZ( long int objectID );
 		bool enabled( long int objectID );
-		std::string fileName( long int objectID );
+		std::string CTFModel( long int objectID );
+		std::string image( long int objectID );
+		std::string micrograph( long int objectID );
 
 	};
 

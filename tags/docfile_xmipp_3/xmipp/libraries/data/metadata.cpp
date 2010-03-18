@@ -27,17 +27,83 @@
 
 metaData::metaData()
 {
-	programName = std::string("");
 	path = std::string("");
-	objectsType = UNDEFINED_TYPE;
 	objects.clear( );	
 }
 
-metaData::metaData( std::string fileName, std::string newObjectsType, std::vector<std::string> * labelsVector )
+metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 {
-	programName = std::string("");
 	path = std::string("");
-	objectsType = newObjectsType;
+
+	// Open file
+	std::ifstream infile ( fileName.data(), std::ios_base::in );
+	std::string line;
+	
+	// Search for Headerinfo, if present we are processing an old-styled docfile
+	// else we are processing a new Xmipp metadata file
+	getline(infile, line, '\n');
+	
+	if( line.find( "Headerinfo" ) != std::string::npos )
+	{
+		while ( getline( infile, line, '\n') )
+		{
+		}
+	}
+	else
+	{
+		int pos = line.rfind( "*" );
+		
+		if( pos == std::string::npos )
+		{
+			REPORT_ERROR( 200, "End of string reached" );
+		}
+		else
+		{
+			std::string temp;
+			
+			for( unsigned int i = 0 ; i < line.length() ; i++ )
+				if ( line[ i ] != ' ' ) 
+					temp += line[ i ];
+			
+			line = temp;
+		}
+		
+		setPath( line );
+		
+		// Get Labels line
+		getline( infile, line, '\n');
+		
+		// Remove ';'
+		line = line.substr( 1 );
+		
+		// Parse labels
+		std::stringstream os( line );          
+		std::string label;                 
+		
+		std::vector<std::string> labelsVector;
+		
+		while ( os >> label )
+		{
+			labelsVector.push_back( label );
+		}
+		
+		// Read data and fill structures accordingly
+		while ( getline( infile, line, '\n') )
+		{
+			long int objectID = addObject( );
+			
+			// Parse labels
+			std::stringstream os2( line );          
+			std::string value;
+			
+			int counter = 0;
+			while ( os2 >> value )
+			{
+				setValue( labelsVector[counter], value );
+				counter++;
+			}
+		}
+	}
 }
 
 metaData::~metaData()
@@ -52,40 +118,25 @@ bool metaData::isEmpty( )
 
 void metaData::clear( )
 {
-	programName = std::string("");
 	path = std::string("");
-	objectsType = UNDEFINED_TYPE;
 	objects.clear( );		
-}
-
-void metaData::setProgram( std::string newProgName )
-{
-	programName = newProgName;
 }
 
 void metaData::setPath( std::string newPath )
 {
-	path = newPath;
-}
-
-void metaData::setType( unsigned int newObjectsType )
-{
-	objectsType = newObjectsType;
-}
-
-std::string metaData::getProgram( )
-{
-	return programName;
+	if( newPath == "" )
+	{  
+		path = std::string( getcwd( NULL, 0 ) );
+	}
+	else
+	{
+		path = newPath;
+	}
 }
 
 std::string metaData::getPath( )
 {
 	return path;
-}
-
-unsigned int metaData::getType( )
-{
-	return objectsType;
 }
 
 long int metaData::addObject( )
@@ -107,7 +158,7 @@ long int metaData::addObject( )
 	return result;
 }
 
-size_t metaData::firstObject( ) 
+long int metaData::firstObject( ) 
 { 
 	size_t result = 0;
 	
@@ -124,7 +175,7 @@ size_t metaData::firstObject( )
 	return result;
 };
 
-size_t metaData::nextObject( ) 
+long int metaData::nextObject( ) 
 { 
 	size_t result = 0;
 	
@@ -168,7 +219,7 @@ long int metaData::lastObject( )
 	return result;
 };
 
-bool metaData::setValue( std::string label, double value, long int objectID )
+bool metaData::setValue( label name, double value, long int objectID )
 {
 	long int auxID;
 	
@@ -185,7 +236,7 @@ bool metaData::setValue( std::string label, double value, long int objectID )
 		
 		metaDataContainer * aux = objects[auxID];
 		
-		aux->setValue( label, value );
+		aux->addValue( name, value );
 		
 		return true;
 	}	
@@ -195,7 +246,7 @@ bool metaData::setValue( std::string label, double value, long int objectID )
 	}
 }
 
-bool metaData::setValue( std::string label, float value, long int objectID )
+bool metaData::setValue( label name, float value, long int objectID )
 {
 	long int auxID;
 	
@@ -212,7 +263,7 @@ bool metaData::setValue( std::string label, float value, long int objectID )
 		
 		metaDataContainer * aux = objects[auxID];
 		
-		aux->setValue( label, value );
+		aux->addValue( name, value );
 
 		return true;
 	}	
@@ -222,7 +273,7 @@ bool metaData::setValue( std::string label, float value, long int objectID )
 	}	
 }
 
-bool metaData::setValue( std::string label, int value, long int objectID )
+bool metaData::setValue( label name, int value, long int objectID )
 {
 	long int auxID;
 	
@@ -239,7 +290,7 @@ bool metaData::setValue( std::string label, int value, long int objectID )
 		
 		metaDataContainer * aux = objects[auxID];
 		
-		aux->setValue( label, value );
+		aux->addValue( name, value );
 
 		return true;
 	}	
@@ -249,7 +300,7 @@ bool metaData::setValue( std::string label, int value, long int objectID )
 	}	
 }
 
-bool metaData::setValue( std::string label, std::string value, long int objectID )
+bool metaData::setValue( label name, std::string value, long int objectID )
 {
 	long int auxID;
 	
@@ -266,7 +317,7 @@ bool metaData::setValue( std::string label, std::string value, long int objectID
 		
 		metaDataContainer * aux = objects[auxID];
 		
-		aux->setValue( label, value );
+		aux->addValue( name, value );
 		
 		return true;
 	}	
@@ -276,7 +327,34 @@ bool metaData::setValue( std::string label, std::string value, long int objectID
 	}	
 }
 
-std::vector<long int> metaData::findObjects( std::string label, double value )
+bool metaData::setValue( std::string name, std::string value, long int objectID )
+{
+	long int auxID;
+	
+	if( !objects.empty( ))
+	{
+		if( objectID == -1 )
+		{
+			auxID = objectsIterator->first;
+		}
+		else
+		{
+			auxID = objectID;
+		}
+		
+		metaDataContainer * aux = objects[auxID];
+		
+		aux->addValue( name, value );
+		
+		return true;
+	}	
+	else
+	{
+		return false;
+	}	
+}
+
+std::vector<long int> metaData::findObjects( label name, double value )
 {
 	std::vector<long int> result;
 	
@@ -291,14 +369,14 @@ std::vector<long int> metaData::findObjects( std::string label, double value )
 	{
 		aux = It->second;
 		
-		if( aux->pairExists( label, value ) )
-			result.push_back( It->first ):
+		if( aux->pairExists( name, value ) )
+			result.push_back( It->first );
 	}
 	
 	return result;
 }
 
-std::vector<long int> metaData::findObjects( std::string label, float value )
+std::vector<long int> metaData::findObjects( label name, float value )
 {
 	std::vector<long int> result;
 	
@@ -313,14 +391,14 @@ std::vector<long int> metaData::findObjects( std::string label, float value )
 	{
 		aux = It->second;
 		
-		if( aux->pairExists( label, value ) )
-			result.push_back( It->first ):
+		if( aux->pairExists( name, value ) )
+			result.push_back( It->first );
 	}
 	
 	return result;
 }
 
-std::vector<long int> metaData::findObjects( std::string label, int value )
+std::vector<long int> metaData::findObjects( label name, int value )
 {
 	std::vector<long int> result;
 	
@@ -335,14 +413,14 @@ std::vector<long int> metaData::findObjects( std::string label, int value )
 	{
 		aux = It->second;
 		
-		if( aux->pairExists( label, value ) )
-			result.push_back( It->first ):
+		if( aux->pairExists( name, value ) )
+			result.push_back( It->first );
 	}
 	
 	return result;
 }
 
-std::vector<long int> metaData::findObjects( std::string label, bool value )
+std::vector<long int> metaData::findObjects( label name, bool value )
 {
 	std::vector<long int> result;
 	
@@ -357,14 +435,14 @@ std::vector<long int> metaData::findObjects( std::string label, bool value )
 	{
 		aux = It->second;
 		
-		if( aux->pairExists( label, value ) )
-			result.push_back( It->first ):
+		if( aux->pairExists( name, value ) )
+			result.push_back( It->first );
 	}
 	
 	return result;
 }
 
-std::vector<long int> metaData::findObjects( std::string label, std::string value )
+std::vector<long int> metaData::findObjects( label name, std::string value )
 {
 	std::vector<long int> result;
 	
@@ -379,14 +457,14 @@ std::vector<long int> metaData::findObjects( std::string label, std::string valu
 	{
 		aux = It->second;
 		
-		if( aux->pairExists( label, value ) )
-			result.push_back( It->first ):
+		if( aux->pairExists( name, value ) )
+			result.push_back( It->first );
 			}
 	
 	return result;
 }
 
-double metadata::rot( long int objectID )
+double metaData::angleRot( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -396,7 +474,7 @@ double metadata::rot( long int objectID )
 	else
 	{
 		metaDataContainer * aux = objects[ objectID ];
-		double * result = aux->getValue( std::string("angleRot") );
+		double * result = (double *)aux->getValue( ANGLEROT );
 		
 		if( result == NULL )
 		{
@@ -409,7 +487,7 @@ double metadata::rot( long int objectID )
 	}
 }
 
-double metadata::tilt( long int objectID )
+double metaData::angleTilt( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -419,7 +497,7 @@ double metadata::tilt( long int objectID )
 	else
 	{
 		metaDataContainer * aux = objects[ objectID ];
-		double * result = aux->getValue( std::string("angleTilt") );
+		double * result = (double *)aux->getValue( ANGLETILT );
 		
 		if( result == NULL )
 		{
@@ -432,7 +510,7 @@ double metadata::tilt( long int objectID )
 	}
 }
 
-double metadata::psi( long int objectID )
+double metaData::anglePsi( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -442,7 +520,7 @@ double metadata::psi( long int objectID )
 	else
 	{
 		metaDataContainer * aux = objects[ objectID ];
-		double * result = aux->getValue( std::string("anglePsi") );
+		double * result = (double *)aux->getValue( ANGLEPSI );
 		
 		if( result == NULL )
 		{
@@ -455,7 +533,7 @@ double metadata::psi( long int objectID )
 	}
 }
 
-bool metadata::enabled( long int objectID )
+bool metaData::enabled( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -465,7 +543,7 @@ bool metadata::enabled( long int objectID )
 	else
 	{
 		metaDataContainer * aux = objects[ objectID ];
-		bool * result = aux->getValue( std::string("enabled") );
+		bool * result = (bool *)aux->getValue( ENABLED );
 		
 		if( result == NULL )
 		{
@@ -478,7 +556,7 @@ bool metadata::enabled( long int objectID )
 	}
 }
 
-std::string metadata::fileName( long int objectID )
+double metaData::shiftX( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -488,30 +566,7 @@ std::string metadata::fileName( long int objectID )
 	else
 	{
 		metaDataContainer * aux = objects[ objectID ];
-		std::string * result = aux->getValue( std::string("fileName") );
-		
-		if( result == NULL )
-		{
-			std::cerr << "No 'fileName' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
-	}
-}
-
-double metadata::shiftX( long int objectID )
-{
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		metaDataContainer * aux = objects[ objectID ];
-		double * result = aux->getValue( std::string("shiftX") );
+		double * result = (double *)aux->getValue( SHIFTX );
 		
 		if( result == NULL )
 		{
@@ -524,7 +579,7 @@ double metadata::shiftX( long int objectID )
 	}
 }
 
-double metadata::shiftY( long int objectID )
+double metaData::shiftY( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -534,7 +589,7 @@ double metadata::shiftY( long int objectID )
 	else
 	{
 		metaDataContainer * aux = objects[ objectID ];
-		double * result = aux->getValue( std::string("shiftY") );
+		double * result = (double *)aux->getValue( SHIFTY );
 		
 		if( result == NULL )
 		{
@@ -547,7 +602,7 @@ double metadata::shiftY( long int objectID )
 	}
 }
 
-double metadata::shiftZ( long int objectID )
+double metaData::shiftZ( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -557,7 +612,7 @@ double metadata::shiftZ( long int objectID )
 	else
 	{
 		metaDataContainer * aux = objects[ objectID ];
-		double * result = aux->getValue( std::string("shiftZ") );
+		double * result = (double *)aux->getValue( SHIFTZ );
 		
 		if( result == NULL )
 		{
@@ -570,7 +625,7 @@ double metadata::shiftZ( long int objectID )
 	}
 }
 
-double metadata::originX( long int objectID )
+double metaData::originX( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -580,7 +635,7 @@ double metadata::originX( long int objectID )
 	else
 	{
 		metaDataContainer * aux = objects[ objectID ];
-		double * result = aux->getValue( std::string("originX") );
+		double * result = (double *)aux->getValue( ORIGINX );
 		
 		if( result == NULL )
 		{
@@ -593,7 +648,7 @@ double metadata::originX( long int objectID )
 	}
 }
 
-double metadata::originY( long int objectID )
+double metaData::originY( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -603,7 +658,7 @@ double metadata::originY( long int objectID )
 	else
 	{
 		metaDataContainer * aux = objects[ objectID ];
-		double * result = aux->getValue( std::string("originY") );
+		double * result = (double *)aux->getValue( ORIGINY );
 		
 		if( result == NULL )
 		{
@@ -616,7 +671,7 @@ double metadata::originY( long int objectID )
 	}
 }
 
-double metadata::originZ( long int objectID )
+double metaData::originZ( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -626,11 +681,80 @@ double metadata::originZ( long int objectID )
 	else
 	{
 		metaDataContainer * aux = objects[ objectID ];
-		double * result = aux->getValue( std::string("originZ") );
+		double * result = (double *)aux->getValue( ORIGINZ );
 		
 		if( result == NULL )
 		{
 			std::cerr << "No 'originZ' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
+std::string metaData::image( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		metaDataContainer * aux = objects[ objectID ];
+		std::string * result = (std::string *)aux->getValue( IMAGE );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'fileName' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
+std::string metaData::CTFModel( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		metaDataContainer * aux = objects[ objectID ];
+		std::string * result = (std::string *)aux->getValue( CTFMODEL );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'fileName' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
+std::string metaData::micrograph( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		metaDataContainer * aux = objects[ objectID ];
+		std::string * result = (std::string *)aux->getValue( MICROGRAPH );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'fileName' label found for objectID = " << objectID << " . Exiting... " << std::endl;
 		}
 		else
 		{

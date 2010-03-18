@@ -29,14 +29,32 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <sstream>
+
+enum label 
+{ 
+	ANGLEROT, 
+	ANGLETILT, 
+	ANGLEPSI,
+	IMAGE,
+	MICROGRAPH,
+	CTFMODEL,
+	SHIFTX, 
+	SHIFTY, 
+	SHIFTZ, 
+	ENABLED, 
+	ORIGINX, 
+	ORIGINY, 
+	ORIGINZ 
+};
 
 class metaDataContainer
 {
 	/** Container for pairs "name" and value. Note that void * allows to use
 	    mixed types */
-	std::map<std::string, void *> values;
+	std::map<label, void *> values;
 	
-	void insertVoidPtr( std::string name, void * value );
+	void insertVoidPtr( label name, void * value );
 
 	public:
 	
@@ -47,22 +65,26 @@ class metaDataContainer
 	~metaDataContainer();
 	
 	/** Create a new pair name-value of integer type */
-	void addValue( std::string name, double value );
-	void addValue( std::string name, float value );
-	void addValue( std::string name, int value );
-	void addValue( std::string name, bool value );
+	void addValue( label name, double value );
+	void addValue( label name, float value );
+	void addValue( label name, int value );
+	void addValue( label name, bool value );
+	void addValue( label name, std::string value );
 	void addValue( std::string name, std::string value );
 	
-	void * getValue( std::string name );
-	bool valueExists( std::string name );
+	void * getValue( label name );
+	bool valueExists( label name );
 	
-	bool pairExists( std::string name, double value );
-	bool pairExists( std::string name, float value );
-	bool pairExists( std::string name, int value );
-	bool pairExists( std::string name, bool value );
-	bool pairExists( std::string name, std::string value );
+	bool pairExists( label name, double value );
+	bool pairExists( label name, float value );
+	bool pairExists( label name, int value );
+	bool pairExists( label name, bool value );
+	bool pairExists( label name, std::string value );
 	
-	void deleteValue( std::string name );
+	void deleteValue( label name );
+	
+	static label codifyLabel( std::string strLabel );
+	static std::string decodeLabel( label inputLabel );
 };
 
 #endif
