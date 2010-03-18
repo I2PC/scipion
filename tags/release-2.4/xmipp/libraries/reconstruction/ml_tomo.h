@@ -124,7 +124,7 @@ public:
 
     /** Optimal refno and angno from previous iteration */
     std::vector<int> imgs_optrefno, imgs_optangno;
-    std::vector<double> imgs_trymindiff, miss_nr_pixels, imgs_optrot;
+    std::vector<double> imgs_trymindiff, miss_nr_pixels, imgs_optpsi;
     std::vector<Matrix1D<double> > imgs_optoffsets;
     /** Number for missing data structure group */
     std::vector<int> imgs_missno;
@@ -132,14 +132,16 @@ public:
     double trymindiff_factor;
     /** Local search angular distance */
     double ang_search;
-    /** Also limit rot search (rot in experimental images is psi in references) */
-    bool do_limit_rotrange;
+    /** Also limit psi search range */
+    bool do_limit_psirange;
     /** Prohibit translations larger than this value */
     double limit_trans;
     /** Perturb angular sampling */
     bool do_perturb;
     /** Low-pass filter at FSC=0.5 resolution in each step */
     bool do_filter, do_ini_filter;
+    /** Flag is true if symmetry > c1 */
+    bool do_sym;
 
     /// Internally store all missing wedges or re-compute on the fly?
 
@@ -159,6 +161,9 @@ public:
 
     /** Do not search any rotation/translation, only classify */
     bool dont_align;
+    /** Do not search any rotation, only search translations and classify */
+    bool dont_rotate;
+
     /** Classify only in defined mask */
     bool do_mask;
     /** Volume with the mask */
