@@ -139,6 +139,35 @@ template <class T> void free_Tvolume(T *** &m, int nsl, int nsh,
         m = NULL;
     }
 }
+
+
+/** Allocates memory.
+ * Adapted from Bsofts bfree 
+ *
+ * It is called exactly like malloc, with the following enhancements:
+ *
+ * - If allocation of zero bytes are requested it notifies the user.
+ * - NO LONGER TRUE: Successfully allocated memory is zeroed
+ * - Allocation is attempted and an error message is printed on failure.
+ * - All failures return a NULL pointer to allow error handling from
+ *    calling functions.
+ *
+ * returns char* : a pointer to the memory (NULL on failure)
+ */
+char* askMemory(unsigned long size); 
+
+/** Frees allocated memory.
+ * Adapted from Bsofts bfree 
+ *
+ * It is called exactly like free, with the following enhancements:
+ *  - If freeing fails an error message is printed.
+ *  - the pointer is reset to NULL
+ *
+ * returns int: 0 = success, -1 = failure.
+*/
+int freeMemory(void* ptr, unsigned long memsize);
+
+
 //@}
 #endif
 
