@@ -2440,7 +2440,7 @@ public:
         imax = STARTINGY(*this);
         jmax = STARTINGX(*this);
         lmax = 0;
-        T maxval = VOL_ELEM(*this, lmax, kmax, imax, jmax);
+        T maxval = NZYX_ELEM(*this, lmax, kmax, imax, jmax);
 
         FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
             if (NZYX_ELEM(*this, l, k, i, j) > maxval)
@@ -4326,14 +4326,551 @@ void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
     V2.window(z0, y0, x0, zF, yF, xF);
 }
 
+
+/** Does a radial average of a 2D image / 3D volume, around the voxel where is the origin.
+ * @ingroup VolumesMisc
+ *
+ * A vector radial_mean is returned where:
+ * - the first element is the mean of the voxels whose
+ *   distance to the origin is (0-1),
+ * - the second element is the mean of the voxels
+ *   whose distance to the origin is (1-2)
+ * - and so on.
+ *
+ * A second vector radial_count is returned containing the number of voxels
+ * over which each radial average was calculated.
+ *
+ * Sjors nov2003: if rounding=true, element=round(distance);
+ * - so the first element is the mean of the voxels whose distance to the
+ *   origin is (0.5-1.5),
+ * - the second element is the mean of the voxels whose distance to the origin
+ *   is (1.5-2.5)
+ * - and so on.
+ */
+template<typename T>
+void radialAverage(const MultidimArray< T >& m,
+                   const Matrix1D< int >& center_of_rot,
+                   MultidimArray< T >& radial_mean,
+                   MultidimArray< int >& radial_count,
+                   const bool& rounding = false,
+                   unsigned long n = 0)
+{
+    Matrix1D< double > idx(3);
+
+    // If center_of_rot was written for 2D image
+    if (XSIZE(center_of_rot) < 3)
+        center_of_rot.resize(3);
+
+    // First determine the maximum distance that one should expect, to set the
+    // dimension of the radial average vector
+    Matrix1D< int > distances(8);
+
+    double z = STARTINGZ(m) - ZZ(center_of_rot);
+    double y = STARTINGY(m) - YY(center_of_rot);
+    double x = STARTINGX(m) - XX(center_of_rot);
+
+    distances(0) = (int) floor(sqrt(x * x + y * y + z * z));
+    x = FINISHINGX(m) - XX(center_of_rot);
+
+    distances(1) = (int) floor(sqrt(x * x + y * y + z * z));
+    y = FINISHINGY(m) - YY(center_of_rot);
+
+    distances(2) = (int) floor(sqrt(x * x + y * y + z * z));
+    x = STARTINGX(m) - XX(center_of_rot);
+
+    distances(3) = (int) floor(sqrt(x * x + y * y + z * z));
+    z = FINISHINGZ(m) - ZZ(center_of_rot);
+
+    distances(4) = (int) floor(sqrt(x * x + y * y + z * z));
+    x = FINISHINGX(m) - XX(center_of_rot);
+
+    distances(5) = (int) floor(sqrt(x * x + y * y + z * z));
+    y = STARTINGY(m) - YY(center_of_rot);
+
+    distances(6) = (int) floor(sqrt(x * x + y * y + z * z));
+    x = STARTINGX(m) - XX(center_of_rot);
+
+    distances(7) = (int) floor(sqrt(x * x + y * y + z * z));
+
+    int dim = (int) CEIL(distances.computeMax()) + 1;
+    if (rounding)
+        dim++;
+
+    // Define the vectors
+    radial_mean.resize(dim);
+    radial_mean.initZeros();
+    radial_count.resize(dim);
+    radial_count.initZeros();
+
+    // Perform the radial sum and count pixels that contribute to every
+    // distance
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(m)
+    {
+        ZZ(idx) = k - ZZ(center_of_rot);
+        YY(idx) = i - YY(center_of_rot);
+        XX(idx) = j - XX(center_of_rot);
+
+        // Determine distance to the center
+        int distance;
+        if (rounding)
+            distance = (int) ROUND(idx.module());
+        else
+            distance = (int) floor(idx.module());
+
+        // Sum te value to the pixels with the same distance
+        radial_mean(distance) += NZYX_ELEM(m, n, k, i, j);
+
+        // Count the pixel
+        radial_count(distance)++;
+    }
+
+    // Perform the mean
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)
+        radial_mean(i) /= (T) radial_count(i);
+}
+
 template<>
 inline void MultidimArray< std::complex< double > >::produceSplineCoefficients(
-    MultidimArray< double >& coeffs, int SplineDegree) const
+    MultidimArray< double >& coeffs, int SplineDegree, unsigned long n = 0) const
 {
     // TODO Implement
     std::cerr << "Spline coefficients of a complex matrix is not implemented\n";
 }
 
+
+template<typename T>
+void applyGeometry3D(MultidimArray<T>& V2, const Matrix2D< double > &A,
+                     const MultidimArray<T>& V1, bool inv, bool wrap, T outside,
+                     unsigned long n = 0)
+{
+    int m1, n1, o1, m2, n2, o2;
+    double x, y, z, xp, yp, zp;
+    double minxp, minyp, maxxp, maxyp, minzp, maxzp;
+    int cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
+
+    // Weights in X,Y,Z directions for bilinear interpolation
+    double wx, wy, wz;
+
+    if ((XSIZE(A) != 4) || (YSIZE(A) != 4))
+        REPORT_ERROR(1102,
+                     "Apply_geom3D: geometrical transformation is not 4x4");
+
+    if (A.isIdentity())
+    {
+        V2 = V1;
+        return;
+    }
+
+    if (XSIZE(V1) == 0)
+    {
+        V2.clear();
+        return;
+    }
+
+    Matrix2D<double> Ainv;
+    const Matrix2D<double> * Aptr=&A;
+    if (!inv)
+    {
+        Ainv = A.inv();
+        Aptr=&Ainv;
+    }
+    const Matrix2D<double> &Aref=*Aptr;
+
+    // For scalings the output matrix is resized outside to the final
+    // size instead of being resized inside the routine with the
+    // same size as the input matrix
+    if (XSIZE(V2) == 0)
+        V2.resize(1, ZSIZE(V1), YSIZE(V1), XSIZE(V1));
+
+    // Find center of Matrix3D
+    cen_z = (int)(V2.zdim / 2);
+    cen_y = (int)(V2.ydim / 2);
+    cen_x = (int)(V2.xdim / 2);
+    cen_zp = (int)(V1.zdim / 2);
+    cen_yp = (int)(V1.ydim / 2);
+    cen_xp = (int)(V1.xdim / 2);
+    minxp = -cen_xp;
+    minyp = -cen_yp;
+    minzp = -cen_zp;
+    maxxp = V1.xdim - cen_xp - 1;
+    maxyp = V1.ydim - cen_yp - 1;
+    maxzp = V1.zdim - cen_zp - 1;
+
+#ifdef DEBUG
+    std::cout << "Geometry 2 center=("
+              << cen_z  << "," << cen_y  << "," << cen_x  << ")\n"
+              << "Geometry 1 center=("
+              << cen_zp << "," << cen_yp << "," << cen_xp << ")\n"
+              << "           min=("
+              << minzp  << "," << minyp  << "," << minxp  << ")\n"
+              << "           max=("
+              << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
+    ;
+#endif
+
+    // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
+    // voxel in the output Matrix3D we calculate which are the corresponding
+    // ones in the original Matrix3D, make an interpolation with them and put
+    // this value at the output voxel
+
+    // V2 is not initialised to 0 because all its pixels are rewritten
+    for (int k = 0; k < V2.zdim; k++)
+        for (int i = 0; i < V2.ydim; i++)
+        {
+            // Calculate position of the beginning of the row in the output
+            // Matrix3D
+            x = -cen_x;
+            y = i - cen_y;
+            z = k - cen_z;
+
+            // Calculate this position in the input image according to the
+            // geometrical transformation they are related by
+            // coords_output(=x,y) = A * coords_input (=xp,yp)
+            xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + z * dMij(Aref, 0, 2)
+                 + dMij(Aref, 0, 3);
+            yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + z * dMij(Aref, 1, 2)
+                 + dMij(Aref, 1, 3);
+            zp = x * dMij(Aref, 2, 0) + y * dMij(Aref, 2, 1) + z * dMij(Aref, 2, 2)
+                 + dMij(Aref, 2, 3);
+
+            for (int j = 0; j < V2.xdim; j++)
+            {
+                bool interp;
+                T tmp;
+
+#ifdef DEBUG
+                bool show_debug = false;
+                if ((i == 0 && j == 0 && k == 0) ||
+                    (i == V2.ydim - 1 && j == V2.xdim - 1 && k == V2.zdim - 1))
+                    show_debug = true;
+
+                if (show_debug)
+                    std::cout << "(x,y,z)-->(xp,yp,zp)= "
+                    << "(" << x  << "," << y  << "," << z  << ") "
+                    << "(" << xp << "," << yp << "," << zp << ")\n";
+#endif
+
+                // If the point is outside the volume, apply a periodic
+                // extension of the volume, what exits by one side enters by
+                // the other
+                interp  = true;
+                if (wrap)
+                {
+                    if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
+
+                    if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
+
+                    if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
+                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        zp = realWRAP(zp, minzp - 0.5, maxzp + 0.5);
+                }
+                else
+                {
+                    if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        interp = false;
+
+                    if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        interp = false;
+
+                    if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
+                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        interp = false;
+                }
+
+                if (interp)
+                {
+                    // Calculate the integer position in input volume, be
+                    // careful that it is not the nearest but the one at the
+                    // top left corner of the interpolation square. Ie,
+                    // (0.7,0.7) would give (0,0)
+                    // Calculate also weights for point m1+1,n1+1
+                    wx = xp + cen_xp;
+                    m1 = (int) wx;
+                    wx = wx - m1;
+                    m2 = m1 + 1;
+                    wy = yp + cen_yp;
+                    n1 = (int) wy;
+                    wy = wy - n1;
+                    n2 = n1 + 1;
+                    wz = zp + cen_zp;
+                    o1 = (int) wz;
+                    wz = wz - o1;
+                    o2 = o1 + 1;
+
+#ifdef DEBUG
+                    if (show_debug)
+                    {
+                        std::cout << "After wrapping(xp,yp,zp)= "
+                                  << "(" << xp << "," << yp << "," << zp << ")\n";
+                        std::cout << "(m1,n1,o1)-->(m2,n2,o2)="
+                                  << "(" << m1 << "," << n1 << "," << o1 << ") "
+                                  << "(" << m2 << "," << n2 << "," << o2 << ")\n";
+                        std::cout << "(wx,wy,wz)="
+                                  << "(" << wx << "," << wy << "," << wz << ")\n";
+                    }
+#endif
+
+                    // Perform interpolation
+                    // if wx == 0 means that the rightest point is useless for
+                    // this interpolation, and even it might not be defined if
+                    // m1=xdim-1
+                    // The same can be said for wy.
+                    tmp  = (T)((1 - wz) * (1 - wy) * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, o1, n1,
+                               m1));
+
+                    if (wx != 0 && m2 < V1.xdim)
+                        tmp += (T)((1 - wz) * (1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, o1, n1,
+                                   m2));
+
+                    if (wy != 0 && n2 < V1.ydim)
+                    {
+                        tmp += (T)((1 - wz) * wy * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, o1, n2,
+                                   m1));
+                        if (wx != 0 && m2 < V1.xdim)
+                            tmp += (T)((1 - wz) * wy * wx * DIRECT_NZYX_ELEM(V1, n, o1, n2,
+                                                                  m2));
+                    }
+
+                    if (wz != 0 && o2 < V1.zdim)
+                    {
+                        tmp += (T)(wz * (1 - wy) * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, o2, n1,
+                                   m1));
+                        if (wx != 0 && m2 < V1.xdim)
+                            tmp += (T)(wz * (1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, o2, n1,
+                                                                  m2));
+                        if (wy != 0 && n2 < V1.ydim)
+                        {
+                            tmp += (T)(wz * wy * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, o2, n2,
+                                                                  m1));
+                            if (wx != 0 && m2 < V1.xdim)
+                                tmp += (T)(wz * wy * wx * DIRECT_NZYX_ELEM(V1, n, o2, n2,
+                                                                m2));
+                        }
+                    }
+
+                    dVkij(V2 , k, i, j) = tmp;
+#ifdef DEBUG
+                    if (show_debug)
+                        std::cout <<
+                        "tmp1=" << DIRECT_NZYX_ELEM(V1, n, o1, n1, m1) << " " << (T)((1 - wz)
+                                *(1 - wy) *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o1, n1, m1)) <<
+                        std::endl <<
+                        "tmp2=" << DIRECT_NZYX_ELEM(V1, n, o1, n1, m2) << " " << (T)((1 - wz)
+                                *(1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, o1, n1, m2)) <<
+                        std::endl <<
+                        "tmp3=" << DIRECT_NZYX_ELEM(V1, n, o1, n2, m1) << " " << (T)((1 - wz)
+                                * wy *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o1, n2, m1)) <<
+                        std::endl <<
+                        "tmp4=" << DIRECT_NZYX_ELEM(V1, n, o1, n2, m2) << " " << (T)((1 - wz)
+                                * wy * wx * DIRECT_NZYX_ELEM(V1, n, o1, n2, m2)) <<
+                        std::endl <<
+                        "tmp5=" << DIRECT_NZYX_ELEM(V1, n, o2, n1, m1) << " " << (T)(wz *
+                                (1 - wy) *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o2, n1, m1))
+                        << std::endl <<
+                        "tmp6=" << DIRECT_NZYX_ELEM(V1, n, o2, n1, m2) << " " << (T)(wz *
+                                (1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, o2, n1, m2)) <<
+                        std::endl <<
+                        "tmp7=" << DIRECT_NZYX_ELEM(V1, n, o2, n2, m1) << " " << (T)(wz *
+                                wy *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o2, n2, m1)) <<
+                        std::endl <<
+                        "tmp8=" << DIRECT_NZYX_ELEM(V1, n, o2, n2, m2) << " " << (T)(wz *
+                                wy * wx * DIRECT_NZYX_ELEM(V1, n, o2, n2, m2)) <<
+                        std::endl <<
+                        "tmp= " << tmp << std::endl;
+#endif
+                }
+                else
+                    dVkij(V2, k, i, j) = outside;
+
+
+                // Compute new point inside input image
+                xp += dMij(Aref, 0, 0);
+                yp += dMij(Aref, 1, 0);
+                zp += dMij(Aref, 2, 0);
+            }
+        }
+}
+#undef DEBUG
+
+//#define DEBUG
+template<typename T>
+void applyGeometryBSpline3D(MultidimArray<T>& V2, const Matrix2D< double > &A,
+    const MultidimArray<T>& V1, int Splinedegree, bool inv, bool wrap, T outside)
+{
+    int m1, n1, o1, m2, n2, o2;
+    double x, y, z, xp, yp, zp;
+    double minxp, minyp, maxxp, maxyp, minzp, maxzp;
+    int   cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
+
+    if ((XSIZE(A) != 4) || (YSIZE(A) != 4))
+        REPORT_ERROR(1102, "Apply_geom3D: geometrical transformation is not 4x4");
+
+    if (A.isIdentity())
+    {
+        V2 = V1;
+        return;
+    }
+
+    if (XSIZE(V1) == 0)
+    {
+        V2.clear();
+        return;
+    }
+
+    Matrix2D<double> Ainv;
+    const Matrix2D<double> * Aptr=&A;
+    if (!inv)
+    {
+        Ainv = A.inv();
+        Aptr=&Ainv;
+    }
+    const Matrix2D<double> &Aref=*Aptr;
+
+    // For scalings the output matrix is resized outside to the final
+    // size instead of being resized inside the routine with the
+    // same size as the input matrix
+    if (XSIZE(V2) == 0)
+        V2.resize(1, ZSIZE(V1), YSIZE(V1), XSIZE(V1));
+
+    // Find center of Matrix3D
+    cen_z = (int)(V2.zdim / 2);
+    cen_y = (int)(V2.ydim / 2);
+    cen_x = (int)(V2.xdim / 2);
+    cen_zp = (int)(V1.zdim / 2);
+    cen_yp = (int)(V1.ydim / 2);
+    cen_xp = (int)(V1.xdim / 2);
+    minxp = -cen_xp;
+    minyp = -cen_yp;
+    minzp = -cen_zp;
+    maxxp = V1.xdim - cen_xp - 1;
+    maxyp = V1.ydim - cen_yp - 1;
+    maxzp = V1.zdim - cen_zp - 1;
+#ifdef DEBUG
+    std::cout << "Geometry 2 center=("
+              << cen_z  << "," << cen_y  << "," << cen_x  << ")\n"
+              << "Geometry 1 center=("
+              << cen_zp << "," << cen_yp << "," << cen_xp << ")\n"
+              << "           min=("
+              << minzp  << "," << minyp  << "," << minxp  << ")\n"
+              << "           max=("
+              << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
+    ;
+#endif
+
+    // Build the B-spline coefficients
+    Matrix3D< double > Bcoeffs;
+    V1.produceSplineCoefficients(Bcoeffs, Splinedegree, n); //Bcoeffs is a single image
+    STARTINGX(Bcoeffs) = (int) minxp;
+    STARTINGY(Bcoeffs) = (int) minyp;
+    STARTINGZ(Bcoeffs) = (int) minzp;
+
+    // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
+    // voxel in the output Matrix3D we calculate which are the corresponding
+    // ones in the original Matrix3D, make an interpolation with them and put
+    // this value at the output voxel
+
+    // V2 is not initialised to 0 because all its pixels are rewritten
+    for (int k = 0; k < V2.zdim; k++)
+        for (int i = 0; i < V2.ydim; i++)
+        {
+            // Calculate position of the beginning of the row in the output
+            // Matrix3D
+            x = -cen_x;
+            y = i - cen_y;
+            z = k - cen_z;
+
+            // Calculate this position in the input image according to the
+            // geometrical transformation they are related by
+            // coords_output(=x,y) = A * coords_input (=xp,yp)
+            xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + z * dMij(Aref, 0, 2)
+                 + dMij(Aref, 0, 3);
+            yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + z * dMij(Aref, 1, 2)
+                 + dMij(Aref, 1, 3);
+            zp = x * dMij(Aref, 2, 0) + y * dMij(Aref, 2, 1) + z * dMij(Aref, 2, 2)
+                 + dMij(Aref, 2, 3);
+
+            for (int j = 0; j < V2.xdim; j++)
+            {
+                bool interp;
+                T tmp;
+
+#ifdef DEBUG
+                bool show_debug = false;
+                if ((i == 0 && j == 0 && k == 0) ||
+                    (i == V2.ydim - 1 && j == V2.xdim - 1 && k == V2.zdim - 1))
+                    show_debug = true;
+
+                if (show_debug)
+                    std::cout << "(x,y,z)-->(xp,yp,zp)= "
+                    << "(" << x  << "," << y  << "," << z  << ") "
+                    << "(" << xp << "," << yp << "," << zp << ")\n";
+#endif
+
+                // If the point is outside the volume, apply a periodic
+                // extension of the volume, what exits by one side enters by
+                // the other
+                interp = true;
+                if (wrap)
+                {
+                    if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
+
+                    if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
+
+                    if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
+                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        zp = realWRAP(zp, minzp - 0.5, maxzp + 0.5);
+                }
+                else
+                {
+                    if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                        xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                        interp = false;
+
+                    if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                        yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                        interp = false;
+
+                    if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
+                        zp > maxzp + XMIPP_EQUAL_ACCURACY)
+                        interp = false;
+                }
+
+                if (interp)
+                {
+                    dVkij(V2, k, i, j) =
+                        (T) Bcoeffs.interpolatedElementBSpline(xp, yp, zp,
+                                Splinedegree);
+                }
+                else
+                    dVkij(V2, k, i, j) = outside;
+
+                // Compute new point inside input image
+                xp += dMij(Aref, 0, 0);
+                yp += dMij(Aref, 1, 0);
+                zp += dMij(Aref, 2, 0);
+            }
+        }
+}
+
+// Apply geom --------------------------------------------------------------
+template <>
+void applyGeometryBSpline(Matrix3D< std::complex<double> > &M2,
+                          const Matrix2D<double> &A, const Matrix3D< std::complex<double> > &M1,
+                          int Splinedegree, bool inv, bool wrap, std::complex<double> outside,
+                          unsigned long n = 0)
+{
+    REPORT_ERROR(1, "applyGeometryBSpline: Not yet implemented for complex matrices\n");
+}
 
 template<typename T>
 std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
@@ -4381,10 +4918,368 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
     return ostrm;
 }
 
+// TODO Document
+template<typename T>
+void applyGeometry2D(MultidimArray<T>& M2, const Matrix2D< double > &A, const MultidimArray<T>& M1, bool inv,
+                     bool wrap, T outside, unsigned long n)
+{
+    int m1, n1, m2, n2;
+    double x, y, xp, yp;
+    double minxp, minyp, maxxp, maxyp;
+    int cen_x, cen_y, cen_xp, cen_yp;
+    double wx, wy; // Weights in X,Y directions for bilinear interpolation
+    int Xdim, Ydim;
+
+    if ((XSIZE(A) != 3) || (YSIZE(A) != 3))
+        REPORT_ERROR(1102, "Apply_geom: geometrical transformation is not 3x3");
+
+    if (A.isIdentity())
+    {
+        M2 = M1;
+        return;
+    }
+    if (XSIZE(M1) == 0)
+    {
+        M2.clear();
+        return;
+    }
+
+    Matrix2D<double> Ainv;
+    const Matrix2D<double> * Aptr=&A;
+    if (!inv)
+    {
+        Ainv.resize(3,3);
+        SPEED_UP_temps;
+        M3x3_INV(Ainv, A);
+        Aptr=&Ainv;
+    }
+    const Matrix2D<double> &Aref=*Aptr;
+
+    // For scalings the output matrix is resized outside to the final
+    // size instead of being resized inside the routine with the
+    // same size as the input matrix
+    if (XSIZE(M2) == 0)
+        M2.resize(1,1,YSIZE(M1),XSIZE(M1));
+
+    if (outside != 0.)
+    {
+        // Initialise output matrix with value=outside
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M2)
+        {
+            DIRECT_MAT_ELEM(M2, i, j) = outside;
+        }
+    }
+
+    // Find center and limits of image
+    cen_y  = (int)(YSIZE(M2) / 2);
+    cen_x  = (int)(XSIZE(M2) / 2);
+    cen_yp = (int)(YSIZE(M1) / 2);
+    cen_xp = (int)(XSIZE(M1) / 2);
+    minxp  = -cen_xp;
+    minyp  = -cen_yp;
+    maxxp  = XSIZE(M1) - cen_xp - 1;
+    maxyp  = YSIZE(M1) - cen_yp - 1;
+    Xdim   = XSIZE(M1);
+    Ydim   = YSIZE(M1);
+
+    // Now we go from the output image to the input image, ie, for any pixel
+    // in the output image we calculate which are the corresponding ones in
+    // the original image, make an interpolation with them and put this value
+    // at the output pixel
+    //#define DEBUG_APPLYGEO
+#ifdef DEBUG_APPLYGEO
+    std::cout << "A\n" << Aref << std::endl
+              << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
+              << "(cen_xp,cen_yp)=(" << cen_xp << "," << cen_yp << ")\n"
+              << "(min_xp,min_yp)=(" << minxp  << "," << minyp  << ")\n"
+              << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n";
+#endif
+    //#undef DEBUG_APPLYGEO
+
+    for (int i = 0; i < YSIZE(M2); i++)
+    {
+        // Calculate position of the beginning of the row in the output image
+        x = -cen_x;
+        y = i - cen_y;
+
+        // For OldXmipp origins with even XSIZE & YSIZE:
+        //      x= -cen_x+0.5;
+        //      y=i-cen_y+0.5;
+
+        // Calculate this position in the input image according to the
+        // geometrical transformation
+        // they are related by
+        // coords_output(=x,y) = A * coords_input (=xp,yp)
+        xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + dMij(Aref, 0, 2);
+        yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + dMij(Aref, 1, 2);
+
+        for (int j = 0; j < XSIZE(M2); j++)
+        {
+            bool interp;
+            T tmp;
+
+#ifdef DEBUG_APPLYGEO
+            std::cout << "Computing (" << i << "," << j << ")\n";
+            std::cout << "   (y, x) =(" << y << "," << x << ")\n"
+                      << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
+                      << std::endl;
+#endif
+            // If the point is outside the image, apply a periodic extension
+            // of the image, what exits by one side enters by the other
+            interp = true;
+            if (wrap)
+            {
+                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                    xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
+
+                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
+
+                    yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
+            }
+            else
+            {
+                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                    interp = false;
+
+                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                    interp = false;
+            }
+
+#ifdef DEBUG_APPLYGEO
+            std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
+                      << std::endl;
+            std::cout << "   Interp = " << interp << std::endl;
+            x++;
+#endif
+
+            if (interp)
+            {
+                // Calculate the integer position in input image, be careful
+                // that it is not the nearest but the one at the top left corner
+                // of the interpolation square. Ie, (0.7,0.7) would give (0,0)
+                // Calculate also weights for point m1+1,n1+1
+                wx = xp + cen_xp;
+                m1 = (int) wx;
+                wx = wx - m1;
+                m2 = m1 + 1;
+                wy = yp + cen_yp;
+                n1 = (int) wy;
+                wy = wy - n1;
+                n2 = n1 + 1;
+
+                // m2 and n2 can be out by 1 so wrap must be check here
+                if (wrap)
+                {
+                    if (m2 >= Xdim)
+                        m2 = 0;
+                    if (n2 >= Ydim)
+                        n2 = 0;
+                }
+
+#ifdef DEBUG_APPLYGEO
+                std::cout << "   From (" << n1 << "," << m1 << ") and ("
+                          << n2 << "," << m2 << ")\n";
+                std::cout << "   wx= " << wx << " wy= " << wy << std::endl;
+#endif
+
+                // Perform interpolation
+                // if wx == 0 means that the rightest point is useless for this
+                // interpolation, and even it might not be defined if m1=xdim-1
+                // The same can be said for wy.
+                tmp  = (T)((1 - wy) * (1 - wx) * DIRECT_NZYX_ELEM(M1, n, 0, n1, m1));
+
+                if (wx != 0 && m2 < M1.xdim)
+                    tmp += (T)((1 - wy) * wx * DIRECT_NZYX_ELEM(M1, n, 0, n1, m2));
+
+                if (wy != 0 && n2 < M1.ydim)
+                {
+                    tmp += (T)(wy * (1 - wx) * DIRECT_NZYX_ELEM(M1, n, 0, n2, m1));
+
+                    if (wx != 0 && m2 < M1.xdim)
+                        tmp += (T)(wy * wx * DIRECT_NZYX_ELEM(M1, n, 0, n2, m2));
+                }
+
+                dMij(M2, i, j) = tmp;
+
+#ifdef DEBUG_APPYGEO
+                std::cout << "   val= " << tmp << std::endl;
+#endif
+
+            }
+
+            // Compute new point inside input image
+            xp += dMij(Aref, 0, 0);
+            yp += dMij(Aref, 1, 0);
+        }
+    }
+}
+
+#undef DEBUG_APPLYGEO
+
+
+//#define DEBUG
+template<typename T>
+void applyGeometryBSpline2D(MultidimArray<T>& M2, const Matrix2D< double > &A,
+    const MultidimArray<T>& M1, int Splinedegree, bool inv, bool wrap, T outside)
+{
+    int m1, n1, m2, n2;
+    double x, y, xp, yp;
+    double minxp, minyp, maxxp, maxyp;
+    int cen_x, cen_y, cen_xp, cen_yp;
+
+    if ((XSIZE(A) != 3) || (YSIZE(A) != 3))
+        REPORT_ERROR(1102, "Apply_geom: geometrical transformation is not 3x3");
+
+    if (A.isIdentity())
+    {
+        M2 = M1;
+        return;
+    }
+
+    if (XSIZE(M1) == 0)
+    {
+        M2.clear();
+        return;
+    }
+
+    Matrix2D<double> Ainv;
+    const Matrix2D<double> * Aptr=&A;
+    if (!inv)
+    {
+        Ainv.resize(3,3);
+        SPEED_UP_temps;
+        M3x3_INV(Ainv, A);
+        Aptr=&Ainv;
+    }
+    const Matrix2D<double> &Aref=*Aptr;
+
+    // For scalings the output matrix is resized outside to the final
+    // size instead of being resized inside the routine with the
+    // same size as the input matrix
+    if (XSIZE(M2) == 0)
+        M2.resize(1,1,YSIZE(M1),XSIZE(M1));
+
+    // Initialise output matrix with value=outside
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M2)
+    {
+        DIRECT_MAT_ELEM(M2, i, j) = outside;
+    }
+
+    // Find center and limits of image
+    cen_y  = (int)(YSIZE(M2) / 2);
+    cen_x  = (int)(XSIZE(M2) / 2);
+    cen_yp = (int)(YSIZE(M1) / 2);
+    cen_xp = (int)(XSIZE(M1) / 2);
+    minxp  = -cen_xp;
+    minyp  = -cen_yp;
+    maxxp  = XSIZE(M1) - cen_xp - 1;
+    maxyp  = YSIZE(M1) - cen_yp - 1;
+
+    // Build the B-spline coefficients
+    Matrix2D< double > Bcoeffs;
+    M1.produceSplineCoefficients(Bcoeffs, Splinedegree, n); // Bcoeffs is a single image
+    STARTINGX(Bcoeffs) = (int) minxp;
+    STARTINGY(Bcoeffs) = (int) minyp;
+
+    // Now we go from the output image to the input image, ie, for any pixel
+    // in the output image we calculate which are the corresponding ones in
+    // the original image, make an interpolation with them and put this value
+    // at the output pixel
+    for (int i = 0; i < YSIZE(M2); i++)
+    {
+        // Calculate position of the beginning of the row in the output image
+        x = -cen_x;
+        y = i - cen_y;
+
+        // Calculate this position in the input image according to the
+        // geometrical transformation
+        // they are related by
+        // coords_output(=x,y) = A * coords_input (=xp,yp)
+        xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + dMij(Aref, 0, 2);
+        yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + dMij(Aref, 1, 2);
+
+        for (int j = 0; j < XSIZE(M2); j++)
+        {
+            bool interp;
+            T tmp;
+
+#ifdef DEBUG_APPLYGEO
+            std::cout << "Computing (" << i << "," << j << ")\n";
+            std::cout << "   (y, x) =(" << y << "," << x << ")\n"
+                      << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
+                      << std::endl;
+#endif
+
+            // If the point is outside the image, apply a periodic extension
+            // of the image, what exits by one side enters by the other
+            interp = true;
+            if (wrap)
+            {
+                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                    xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
+
+                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                    yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
+            }
+            else
+            {
+                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
+                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
+                    interp = false;
+
+                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
+                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
+                    interp = false;
+            }
+
+#ifdef DEBUG_APPLYGEO
+            std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
+                      << std::endl;
+            std::cout << "   Interp = " << interp << std::endl;
+            x++;
+#endif
+
+            if (interp)
+            {
+                dMij(M2, i, j) = (T) Bcoeffs.interpolatedElementBSpline(
+                                     xp, yp, Splinedegree);
+
+#ifdef DEBUG_APPLYGEO
+                std::cout << "   val= " << dMij(M2, i, j) << std::endl;
+#endif
+
+            }
+
+            // Compute new point inside input image
+            xp += dMij(Aref, 0, 0);
+            yp += dMij(Aref, 1, 0);
+        }
+    }
+}
+
 // Specializations case for complex numbers
+template <>
+std::ostream& operator<<(std::ostream& ostrm,
+    const MultidimArray< std::complex<double> >& v)
+
 template <>
 void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
                           const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
                           int Splinedegree, bool inv, bool wrap, std::complex<double> outside, 
                           unsigned long n = 0);
+
+// TODO Document
+template<>
+void MultidimArray< std::complex< double > >::scaleToSizeBSpline2D(
+    int Splinedegree, int Ydim, int Xdim,
+    MultidimArray< std::complex< double > > & result, 
+    unsigned long n = 0) const;
+
+
 #endif
