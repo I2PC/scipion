@@ -16,6 +16,9 @@ generator, seems to solve a problem with heap corruption.
 - xmipp_angular_assign_for_tilt_series is more robust and faster
 - xmipp_fourier_filter accepts now Gaussians defined in real space
 - xmipp_convert_vol2pseudo now works with a different algorithm more precise
+- Bug fix in preprocess_micrographs protocol when downsampling=1
+- xmipp_sort_images added
+- xmipp_analyze_cluster added
 
 2.4
 
