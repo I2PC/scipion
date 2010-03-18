@@ -29,12 +29,12 @@
 
 // Special case for complex numbers
 template <>
-void applyGeometryBSpline2D(Matrix2D< std::complex<double> > &M2,
-                            const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
+void applyGeometryBSpline2D(MultidimArray< std::complex<double> > &M2,
+                            const Matrix2D<double> &A, const MultidimArray< std::complex<double> > &M1,
                             int Splinedegree, bool inv, bool wrap, std::complex<double> outside,
                             unsigned long n)
 {
-    Matrix2D<double> re, im, rotre, rotim;
+    MultidimArray<double> re, im, rotre, rotim;
     MultidimArray<std::complex<double> > oneImg;
     double outre, outim;
     re.resize(YSIZE(M1), XSIZE(M1));
@@ -52,3 +52,56 @@ void applyGeometryBSpline2D(Matrix2D< std::complex<double> > &M2,
                      MULTIDIM_ARRAY(M2), MULTIDIM_SIZE(re));
 }
 
+// Special case for complex numbers
+template<>
+void MultidimArray< std::complex< double > >::scaleToSizeBSpline2D(int Splinedegree, 
+                                                                   int Ydim, int Xdim,
+                                                                   MultidimArray< std::complex< double > > & result, 
+                                                                   unsigned long n = 0) const
+{
+    MultidimArray< double > re, im, scre, scim;
+    MultidimArray<std::complex<double> > oneImg;
+
+    re.resize(YSIZE(*this), XSIZE(*this));
+    im.resize(YSIZE(*this), XSIZE(*this));
+
+    M1.getImage(n, oneImg);
+    Complex2RealImag(MULTIDIM_ARRAY(oneImg),
+                     MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
+                     MULTIDIM_SIZE(oneImg));
+
+    re.scaleToSizeBSpline(Splinedegree, Ydim, Xdim, scre);
+    im.scaleToSizeBSpline(Splinedegree, Ydim, Xdim, scim);
+
+    result.resize(Ydim, Xdim);
+
+    RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
+                     MULTIDIM_ARRAY(result), MULTIDIM_SIZE(re));
+}
+
+// Show a complex array ---------------------------------------------------
+std::ostream& operator<<(std::ostream& ostrm,
+    const MultidimArray< std::complex<double> >& v)
+{
+    if (v.xdim == 0)
+        ostrm << "NULL Matrix3D\n";
+    else
+        ostrm << std::endl;
+
+    for (int l = 0; l < NSIZE(v); l++)
+    {
+        if (NSIZE(v)>1) ostrm << "Image No. " << l << std::endl;
+        for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
+        {
+            if (ZSIZE(v)>1) ostrm << "Slice No. " << k << std::endl;
+            for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
+            {
+                for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
+                    ostrm << VOL_ELEM(v, k, i, j) << ' ';
+                ostrm << std::endl;
+            }
+        }
+    }
+
+    return ostrm;
+}
