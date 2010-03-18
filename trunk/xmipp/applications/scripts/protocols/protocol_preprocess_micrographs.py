@@ -543,8 +543,7 @@ class preprocess_A_class:
         os.write(fh_mpi,"echo '*********************************************************************';")
         os.write(fh_mpi,"echo '*  Downsampling micrograph: '"+iname+";")
 	if(self.Down==1):
-	   command='mv ' + iname + ' ' + oname 
-	   command='mv ' + iname + '.inf ' + oname + '.inf' 
+	   command='mv ' + iname + ' ' + oname + ' ; mv ' + iname + '.inf ' + oname + '.inf' 
         elif (self.DownKernel=='Fourier'):
             scale = 1./self.Down
             command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
