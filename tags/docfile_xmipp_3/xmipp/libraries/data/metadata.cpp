@@ -28,7 +28,9 @@
 metaData::metaData()
 {
 	path = std::string("");
-	objects.clear( );	
+	objects.clear( );
+	
+	fastStringSearchLabel = UNDEFINED;	
 }
 
 std::string metaData::eraseChar( std::string origStr, char character )
@@ -45,6 +47,7 @@ std::string metaData::eraseChar( std::string origStr, char character )
 metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 {
 	path = std::string("");
+	fastStringSearchLabel = UNDEFINED;	
 
 	// Open file
 	std::ifstream infile ( fileName.data(), std::ios_base::in );
@@ -215,7 +218,7 @@ long int metaData::addObject( )
 		result++;
 	}
 
-	objects.insert( newPair( result, NULL ) );
+	objects.insert( newPair( result, new metaDataContainer() ) );
 	
 	return result;
 }
@@ -870,3 +873,52 @@ double metaData::flip( long int objectID )
 		}
 	}
 }
+
+long int metaData::fastSearch( label name, std::string value, bool recompute )
+{
+	long int result;
+	
+	if( recompute || fastStringSearch.empty( ) || fastStringSearchLabel != name )
+	{
+		fastStringSearchLabel = name;
+		
+		// Repopulate list
+		// Traverse all the structure looking for objects
+		// that satisfy search criteria
+	
+		std::map< long int, metaDataContainer *>::iterator It;
+	
+		metaDataContainer * aux;
+	
+		for( It = objects.begin( ) ; It != objects.end( ); It ++ )
+		{
+			aux = It->second;
+		
+			if( aux->valueExists( name ) )
+			{
+				fastStringSearch[ *((std::string *)((It->second)->getValue( name ))) ] = It->first ;
+				
+				if( aux->pairExists( name, value) )
+				{
+					result = It->first ;
+				}
+			}
+		}
+	}
+	else
+	{
+		std::map< std::string, long int>::iterator It;
+	
+		if( ( It = fastStringSearch.find( value ) ) != fastStringSearch.end( ) )
+		{
+			result = It->second;
+		}
+		else
+		{
+			result = -1; // Not found
+		}
+	}
+	
+	return result;
+}
+		

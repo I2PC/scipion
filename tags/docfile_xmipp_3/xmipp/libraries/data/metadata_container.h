@@ -33,6 +33,7 @@
 
 enum label 
 { 
+	UNDEFINED = -1,
 	ANGLEROT, 
 	ANGLETILT, 
 	ANGLEPSI,

@@ -44,6 +44,9 @@ class metaData
 		std::map< long int, metaDataContainer *> objects;
 		std::map< long int, metaDataContainer *>::iterator objectsIterator;
 		
+		std::map< std::string, long int> fastStringSearch;
+		label fastStringSearchLabel;
+		
 		std::string path;
 		
 	public:
@@ -60,6 +63,8 @@ class metaData
 		long int firstObject( );
 		long int nextObject( );
 		long int lastObject( );
+		
+		long int fastSearch( label name, std::string value, bool recompute = false );
 		
 		// Set a new pair/value for an specified object. If no objectID is given, that
 		// pointed by the class iterator is used 
