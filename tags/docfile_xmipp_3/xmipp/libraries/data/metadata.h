@@ -99,6 +99,7 @@ class metaData
 		std::string image( long int objectID );
 		std::string micrograph( long int objectID );
 		
+		std::string eraseChar( std::string origStr, char character );
 
 	};
 

@@ -31,6 +31,17 @@ metaData::metaData()
 	objects.clear( );	
 }
 
+std::string metaData::eraseChar( std::string origStr, char character )
+{
+	std::string temp;
+			
+	for( unsigned int i = 0 ; i < origStr.length( ) ; i++ )
+		if ( origStr[ i ] != character ) 
+			temp += origStr[ i ];
+
+	return temp;
+}
+
 metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 {
 	path = std::string("");
@@ -41,11 +52,11 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 	
 	// Search for Headerinfo, if present we are processing an old-styled docfile
 	// else we are processing a new Xmipp metadata file
-	getline(infile, line, '\n');
+	getline( infile, line, '\n');
 	
 	int pos = line.find( "Headerinfo" );
 	
-	if( pos != std::string::npos )
+	if( pos != std::string::npos ) // Headerinfo token founds
 	{
 		// Remove from the beginning to the end of "Headerinfo columns:"
 		pos = line.find( ":" );
@@ -53,47 +64,54 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 		
 		std::vector<std::string> labelsVector;
 		
+		// Extract labels until the string is empty
 		while ( line != "" )
 		{
-			pos = line.find(")");
+			pos = line.find( ")" );
 			std::string label = line.substr( 0, pos+1 );
 			line.erase( 0,pos+1);
 			
-			// The token can now contain a ','
-			pos = label.find(",");
-			label.erase(pos,1);
+			// The token can now contain a ',', if so, remove it
+			if( ( pos = label.find( "," ) ) != std::string::npos )
+				label.erase( pos, 1 );
 			
-			// Remove unneded parenteses and contents
-			pos = label.find("(");
-			int pos2 = label.find(")");
-			label.erase(pos,pos2-pos+1);
+			// Remove unneded parentheses and contents
+			pos = label.find( "(" );
+			int pos2 = label.find( ")" );
+			label.erase( pos, pos2-pos+1 );
 			
 			// Remove white spaces
-			std::string temp;
-			
-			for( unsigned int i = 0 ; i < label.length() ; i++ )
-				if ( label[ i ] != ' ' ) 
-					temp += label[ i ];
-			
-			label = temp;
-
+			label = eraseChar( label, ' ' );
+		
 			labelsVector.push_back( label );
 		}
 		
+		int isname=0;
 		while ( getline( infile, line, '\n') )
 		{
-			long int objectID = addObject( );
-
-			// Parse labels
-			std::stringstream os2( line );          
-			std::string value;
-			
-			int counter = 0;
-			while ( os2 >> value )
+			if( isname % 2 == 0 )
 			{
-				if( counter >= 2 ) // Discard two first numbers
-					setValue( labelsVector[counter-2], value );
-				counter++;
+				long int objectID = addObject( );
+				line.erase(0,line.find(";")+1);
+				
+				// Remove spaces from string
+				line = eraseChar( line, ' ' );
+				
+				setValue( IMAGE, line );
+			}
+			else
+			{
+				// Parse labels
+				std::stringstream os2( line );          
+				std::string value;
+				
+				int counter = 0;
+				while ( os2 >> value )
+				{
+					if( counter >= 2 ) // Discard two first numbers
+						setValue( labelsVector[counter-2], value );
+					counter++;
+				}
 			}
 		}
 	}
@@ -107,13 +125,7 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 		}
 		else
 		{
-			std::string temp;
-			
-			for( unsigned int i = 0 ; i < line.length() ; i++ )
-				if ( line[ i ] != ' ' ) 
-					temp += line[ i ];
-			
-			line = temp;
+			line = eraseChar( line, ' ' );
 		}
 		
 		setPath( line );
@@ -122,8 +134,8 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 		getline( infile, line, '\n');
 		
 		// Remove ';'
-		line = line.substr( 1 );
-		
+		line.erase(0,line.find(";")+1);
+				
 		// Parse labels
 		std::stringstream os( line );          
 		std::string label;                 
@@ -152,9 +164,11 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 			}
 		}
 	}
+	
+	infile.close( );
 }
 
-metaData::~metaData()
+metaData::~metaData( )
 {
 	objects.clear( );
 }
