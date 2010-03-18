@@ -27,7 +27,7 @@
 #define METADATACONTAINER_H
 
 #include <map>
-#include <string>
+#include "strings.h"
 #include <iostream>
 #include <sstream>
 
@@ -51,7 +51,7 @@ enum label
 	FLIP
 };
 
-class metaDataContainer
+class MetaDataContainer
 {
 	/** Container for pairs "name" and value. Note that void * allows to use
 	    mixed types */
@@ -62,18 +62,18 @@ class metaDataContainer
 	public:
 	
 	/** Constructor */
-	metaDataContainer();
+	MetaDataContainer();
 	
 	/** Destructor */
-	~metaDataContainer();
+	~MetaDataContainer();
 	
 	/** Create a new pair name-value of integer type */
 	void addValue( label name, double value );
 	void addValue( label name, float value );
 	void addValue( label name, int value );
 	void addValue( label name, bool value );
-	void addValue( label name, std::string value );
-	void addValue( std::string name, std::string value );
+	void addValue( label name, XmpString value );
+	void addValue( XmpString name, XmpString value );
 	
 	void * getValue( label name );
 	bool valueExists( label name );
@@ -82,12 +82,12 @@ class metaDataContainer
 	bool pairExists( label name, float value );
 	bool pairExists( label name, int value );
 	bool pairExists( label name, bool value );
-	bool pairExists( label name, std::string value );
+	bool pairExists( label name, XmpString value );
 	
 	void deleteValue( label name );
 	
-	static label codifyLabel( std::string strLabel );
-	static std::string decodeLabel( label inputLabel );
+	static label codifyLabel( XmpString strLabel );
+	static XmpString decodeLabel( label inputLabel );
 };
 
 #endif

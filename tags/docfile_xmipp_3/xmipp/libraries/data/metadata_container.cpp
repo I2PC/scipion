@@ -24,40 +24,40 @@
 ***************************************************************************/
 #include "metadata_container.h"
 
-metaDataContainer::metaDataContainer(){};
-metaDataContainer::~metaDataContainer(){};
+MetaDataContainer::MetaDataContainer(){};
+MetaDataContainer::~MetaDataContainer(){};
 
-void metaDataContainer::addValue( label name, int value )
+void MetaDataContainer::addValue( label name, int value )
 {
 	void * newValue = (void *)(new int(value));
 	insertVoidPtr( name, newValue );
 }
 
-void metaDataContainer::addValue( label name, double value )
+void MetaDataContainer::addValue( label name, double value )
 {
 	void * newValue = (void *)(new double(value));
 	insertVoidPtr( name, newValue );
 }
 
-void metaDataContainer::addValue( label name, float value )
+void MetaDataContainer::addValue( label name, float value )
 {
 	void * newValue = (void *)(new float(value));
 	insertVoidPtr( name, newValue );
 }
 
-void metaDataContainer::addValue( label name, bool value )
+void MetaDataContainer::addValue( label name, bool value )
 {
 	void * newValue = (void *)(new bool(value));
 	insertVoidPtr( name, newValue );
 }
 
-void metaDataContainer::addValue( label name, std::string value )
+void MetaDataContainer::addValue( label name, XmpString value )
 {
-	void * newValue = (void *)(new std::string(value));
+	void * newValue = (void *)(new XmpString(value));
 	insertVoidPtr( name, newValue );
 }
 
-void metaDataContainer::addValue( std::string name, std::string value )
+void MetaDataContainer::addValue( XmpString name, XmpString value )
 {	
 	label lCode = codifyLabel( name );
 	std::istringstream i( value );
@@ -88,12 +88,12 @@ void metaDataContainer::addValue( std::string name, std::string value )
 	
 }
 
-void metaDataContainer::insertVoidPtr( label name, void * value )
+void MetaDataContainer::insertVoidPtr( label name, void * value )
 {
 	values[ name ] = value;
 }
 
-void * metaDataContainer::getValue( label name )
+void * MetaDataContainer::getValue( label name )
 {	
 	std::map<label, void *>::iterator element; 
 
@@ -109,7 +109,7 @@ void * metaDataContainer::getValue( label name )
 	}
 }
 
-bool metaDataContainer::valueExists( label name )
+bool MetaDataContainer::valueExists( label name )
 {
 	if( values.find( name ) == values.end( ) )
 	{
@@ -121,7 +121,7 @@ bool metaDataContainer::valueExists( label name )
 	}
 }
 
-bool metaDataContainer::pairExists( label name, double value )
+bool MetaDataContainer::pairExists( label name, double value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
@@ -143,7 +143,7 @@ bool metaDataContainer::pairExists( label name, double value )
 	}
 }
 
-bool metaDataContainer::pairExists( label name, float value )
+bool MetaDataContainer::pairExists( label name, float value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
@@ -165,7 +165,7 @@ bool metaDataContainer::pairExists( label name, float value )
 	}
 }
 
-bool metaDataContainer::pairExists( label name, int value )
+bool MetaDataContainer::pairExists( label name, int value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
@@ -187,7 +187,7 @@ bool metaDataContainer::pairExists( label name, int value )
 	}
 }
 
-bool metaDataContainer::pairExists( label name, bool value )
+bool MetaDataContainer::pairExists( label name, bool value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
@@ -209,7 +209,7 @@ bool metaDataContainer::pairExists( label name, bool value )
 	}
 }
 
-bool metaDataContainer::pairExists( label name, std::string value )
+bool MetaDataContainer::pairExists( label name, XmpString value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
@@ -220,7 +220,7 @@ bool metaDataContainer::pairExists( label name, std::string value )
 	
 	if( It != values.end( ))
 	{
-		if( value == *((std::string *)(It->second)) )
+		if( value == *((XmpString *)(It->second)) )
 		{
 			return true;
 		}
@@ -231,12 +231,12 @@ bool metaDataContainer::pairExists( label name, std::string value )
 	}
 }
 
-void metaDataContainer::deleteValue( label name )
+void MetaDataContainer::deleteValue( label name )
 {
 	values.erase( name );
 }
 	
-label metaDataContainer::codifyLabel( std::string strLabel )
+label MetaDataContainer::codifyLabel( XmpString strLabel )
 {
 	if( strLabel == "angleRot" || strLabel == "rot" )
 	{
@@ -300,56 +300,57 @@ label metaDataContainer::codifyLabel( std::string strLabel )
 	}
 }
 
-std::string metaDataContainer::decodeLabel( label inputLabel )
+XmpString MetaDataContainer::decodeLabel( label inputLabel )
 {
-	switch ( inputLabel ) {
+	switch ( inputLabel ) 
+	{
 		case ANGLEROT:
-			return std::string( "angleRot" );
+			return XmpString( "angleRot" );
 			break;
 		case ANGLETILT:
-			return std::string( "angleTilt" );
+			return XmpString( "angleTilt" );
 			break;
 		case ANGLEPSI:
-			return std::string( "anglePsi" );
+			return XmpString( "anglePsi" );
 			break;
 		case IMAGE:
-			return std::string( "image" );
+			return XmpString( "image" );
 			break;
 		case MICROGRAPH:
-			return std::string( "micrograph" );
+			return XmpString( "micrograph" );
 			break;
 		case CTFMODEL:
-			return std::string( "CTFModel" );
+			return XmpString( "CTFModel" );
 			break;
 		case SHIFTX:
-			return std::string( "shiftX" );
+			return XmpString( "shiftX" );
 			break;
 		case SHIFTY:
-			return std::string( "shiftY" );
+			return XmpString( "shiftY" );
 			break;
 		case SHIFTZ:
-			return std::string( "shiftZ" );
+			return XmpString( "shiftZ" );
 			break;
 		case ENABLED:
-			return std::string( "enabled" );
+			return XmpString( "enabled" );
 			break;
 		case ORIGINX:
-			return std::string( "originX" );
+			return XmpString( "originX" );
 			break;
 		case ORIGINY:
-			return std::string( "originY" );
+			return XmpString( "originY" );
 			break;
 		case ORIGINZ:
-			return std::string( "originZ" );
+			return XmpString( "originZ" );
 			break;
 		case WEIGHT:
-			return std::string( "weight" );
+			return XmpString( "weight" );
 			break;
 		case FLIP: 
-			return std::string( "flip" );
+			return XmpString( "flip" );
 			break;
 		default:
-			return std::string( "" );
+			return XmpString( "" );
 			break;
 	}
 }

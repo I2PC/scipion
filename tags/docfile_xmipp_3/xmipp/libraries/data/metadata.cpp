@@ -25,57 +25,46 @@
 
 #include "metadata.h"
 
-metaData::metaData()
+MetaData::MetaData()
 {
-	path = std::string("");
+	path = XmpString("");
 	objects.clear( );
 	
 	fastStringSearchLabel = UNDEFINED;	
 }
 
-std::string metaData::eraseChar( std::string origStr, char character )
+MetaData::MetaData( XmpString fileName, std::vector<label> * labelsVector )
 {
-	std::string temp;
-			
-	for( unsigned int i = 0 ; i < origStr.length( ) ; i++ )
-		if ( origStr[ i ] != character ) 
-			temp += origStr[ i ];
-
-	return temp;
-}
-
-metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
-{
-	path = std::string("");
+	path = XmpString("");
 	fastStringSearchLabel = UNDEFINED;	
 
 	// Open file
 	std::ifstream infile ( fileName.data(), std::ios_base::in );
-	std::string line;
+	XmpString line;
 	
 	// Search for Headerinfo, if present we are processing an old-styled docfile
-	// else we are processing a new Xmipp metadata file
+	// else we are processing a new Xmipp MetaData file
 	getline( infile, line, '\n');
 	
 	int pos = line.find( "Headerinfo" );
 	
-	if( pos != std::string::npos ) // Headerinfo token founds
+	if( pos != XmpString::npos ) // Headerinfo token founds
 	{
 		// Remove from the beginning to the end of "Headerinfo columns:"
 		pos = line.find( ":" );
 		line = line.erase( 0, pos + 1 );
 		
-		std::vector<std::string> labelsVector;
+		std::vector<XmpString> labelsVector;
 		
 		// Extract labels until the string is empty
 		while ( line != "" )
 		{
 			pos = line.find( ")" );
-			std::string label = line.substr( 0, pos+1 );
-			line.erase( 0,pos+1);
+			XmpString label = line.substr( 0, pos+1 );
+			line.erase( 0, pos+1 );
 			
 			// The token can now contain a ',', if so, remove it
-			if( ( pos = label.find( "," ) ) != std::string::npos )
+			if( ( pos = label.find( "," ) ) != XmpString::npos )
 				label.erase( pos, 1 );
 			
 			// Remove unneded parentheses and contents
@@ -84,7 +73,7 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 			label.erase( pos, pos2-pos+1 );
 			
 			// Remove white spaces
-			label = eraseChar( label, ' ' );
+			label.removeChar( ' ' );
 		
 			labelsVector.push_back( label );
 		}
@@ -98,7 +87,7 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 				line.erase(0,line.find(";")+1);
 				
 				// Remove spaces from string
-				line = eraseChar( line, ' ' );
+				line.removeChar( ' ' );
 				
 				setValue( IMAGE, line );
 			}
@@ -106,7 +95,7 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 			{
 				// Parse labels
 				std::stringstream os2( line );          
-				std::string value;
+				XmpString value;
 				
 				int counter = 0;
 				while ( os2 >> value )
@@ -122,13 +111,13 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 	{
 		pos = line.rfind( "*" );
 		
-		if( pos == std::string::npos )
+		if( pos == XmpString::npos )
 		{
 			REPORT_ERROR( 200, "End of string reached" );
 		}
 		else
 		{
-			line = eraseChar( line, ' ' );
+			line.removeChar( ' ' );
 		}
 		
 		setPath( line );
@@ -141,9 +130,9 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 				
 		// Parse labels
 		std::stringstream os( line );          
-		std::string label;                 
+		XmpString label;                 
 		
-		std::vector<std::string> labelsVector;
+		std::vector<XmpString> labelsVector;
 		
 		while ( os >> label )
 		{
@@ -157,7 +146,7 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 			
 			// Parse labels
 			std::stringstream os2( line );          
-			std::string value;
+			XmpString value;
 			
 			int counter = 0;
 			while ( os2 >> value )
@@ -171,27 +160,27 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 	infile.close( );
 }
 
-metaData::~metaData( )
+MetaData::~MetaData( )
 {
 	objects.clear( );
 }
 
-bool metaData::isEmpty( )
+bool MetaData::isEmpty( )
 {
 	return objects.empty( );
 }
 
-void metaData::clear( )
+void MetaData::clear( )
 {
-	path = std::string("");
+	path = XmpString("");
 	objects.clear( );		
 }
 
-void metaData::setPath( std::string newPath )
+void MetaData::setPath( XmpString newPath )
 {
 	if( newPath == "" )
 	{  
-		path = std::string( getcwd( NULL, 0 ) );
+		path = XmpString( getcwd( NULL, 0 ) );
 	}
 	else
 	{
@@ -199,15 +188,15 @@ void metaData::setPath( std::string newPath )
 	}
 }
 
-std::string metaData::getPath( )
+XmpString MetaData::getPath( )
 {
 	return path;
 }
 
-long int metaData::addObject( )
+long int MetaData::addObject( )
 {
 	long int result = lastObject();
-	typedef std::pair<long int, metaDataContainer *> newPair;
+	typedef std::pair<long int, MetaDataContainer *> newPair;
 	
 	if( result == NO_OBJECTS_STORED )
 	{
@@ -218,12 +207,12 @@ long int metaData::addObject( )
 		result++;
 	}
 
-	objects.insert( newPair( result, new metaDataContainer() ) );
+	objects.insert( newPair( result, new MetaDataContainer() ) );
 	
 	return result;
 }
 
-long int metaData::firstObject( ) 
+long int MetaData::firstObject( ) 
 { 
 	size_t result = 0;
 	
@@ -240,7 +229,7 @@ long int metaData::firstObject( )
 	return result;
 };
 
-long int metaData::nextObject( ) 
+long int MetaData::nextObject( ) 
 { 
 	size_t result = 0;
 	
@@ -265,7 +254,7 @@ long int metaData::nextObject( )
 	return result;
 };
 
-long int metaData::lastObject( )
+long int MetaData::lastObject( )
 {
 	size_t result = 0;
 	
@@ -284,7 +273,7 @@ long int metaData::lastObject( )
 	return result;
 };
 
-bool metaData::setValue( label name, double value, long int objectID )
+bool MetaData::setValue( label name, double value, long int objectID )
 {
 	long int auxID;
 	
@@ -299,7 +288,7 @@ bool metaData::setValue( label name, double value, long int objectID )
 			auxID = objectID;
 		}
 		
-		metaDataContainer * aux = objects[auxID];
+		MetaDataContainer * aux = objects[auxID];
 		
 		aux->addValue( name, value );
 		
@@ -311,7 +300,7 @@ bool metaData::setValue( label name, double value, long int objectID )
 	}
 }
 
-bool metaData::setValue( label name, float value, long int objectID )
+bool MetaData::setValue( label name, float value, long int objectID )
 {
 	long int auxID;
 	
@@ -326,7 +315,7 @@ bool metaData::setValue( label name, float value, long int objectID )
 			auxID = objectID;
 		}
 		
-		metaDataContainer * aux = objects[auxID];
+		MetaDataContainer * aux = objects[auxID];
 		
 		aux->addValue( name, value );
 
@@ -338,7 +327,7 @@ bool metaData::setValue( label name, float value, long int objectID )
 	}	
 }
 
-bool metaData::setValue( label name, int value, long int objectID )
+bool MetaData::setValue( label name, int value, long int objectID )
 {
 	long int auxID;
 	
@@ -353,7 +342,7 @@ bool metaData::setValue( label name, int value, long int objectID )
 			auxID = objectID;
 		}
 		
-		metaDataContainer * aux = objects[auxID];
+		MetaDataContainer * aux = objects[auxID];
 		
 		aux->addValue( name, value );
 
@@ -365,7 +354,7 @@ bool metaData::setValue( label name, int value, long int objectID )
 	}	
 }
 
-bool metaData::setValue( label name, std::string value, long int objectID )
+bool MetaData::setValue( label name, XmpString value, long int objectID )
 {
 	long int auxID;
 	
@@ -380,7 +369,7 @@ bool metaData::setValue( label name, std::string value, long int objectID )
 			auxID = objectID;
 		}
 		
-		metaDataContainer * aux = objects[auxID];
+		MetaDataContainer * aux = objects[auxID];
 		
 		aux->addValue( name, value );
 		
@@ -392,7 +381,7 @@ bool metaData::setValue( label name, std::string value, long int objectID )
 	}	
 }
 
-bool metaData::setValue( std::string name, std::string value, long int objectID )
+bool MetaData::setValue( XmpString name, XmpString value, long int objectID )
 {
 	long int auxID;
 	
@@ -407,7 +396,7 @@ bool metaData::setValue( std::string name, std::string value, long int objectID 
 			auxID = objectID;
 		}
 		
-		metaDataContainer * aux = objects[auxID];
+		MetaDataContainer * aux = objects[auxID];
 		
 		aux->addValue( name, value );
 		
@@ -419,16 +408,16 @@ bool metaData::setValue( std::string name, std::string value, long int objectID 
 	}	
 }
 
-std::vector<long int> metaData::findObjects( label name, double value )
+std::vector<long int> MetaData::findObjects( label name, double value )
 {
 	std::vector<long int> result;
 	
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< long int, metaDataContainer *>::iterator It;
+	std::map< long int, MetaDataContainer *>::iterator It;
 	
-	metaDataContainer * aux;
+	MetaDataContainer * aux;
 	
 	for( It = objects.begin( ) ; It != objects.end( ); It ++ )
 	{
@@ -441,16 +430,16 @@ std::vector<long int> metaData::findObjects( label name, double value )
 	return result;
 }
 
-std::vector<long int> metaData::findObjects( label name, float value )
+std::vector<long int> MetaData::findObjects( label name, float value )
 {
 	std::vector<long int> result;
 	
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< long int, metaDataContainer *>::iterator It;
+	std::map< long int, MetaDataContainer *>::iterator It;
 	
-	metaDataContainer * aux;
+	MetaDataContainer * aux;
 	
 	for( It = objects.begin( ) ; It != objects.end( ); It ++ )
 	{
@@ -463,16 +452,16 @@ std::vector<long int> metaData::findObjects( label name, float value )
 	return result;
 }
 
-std::vector<long int> metaData::findObjects( label name, int value )
+std::vector<long int> MetaData::findObjects( label name, int value )
 {
 	std::vector<long int> result;
 	
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< long int, metaDataContainer *>::iterator It;
+	std::map< long int, MetaDataContainer *>::iterator It;
 	
-	metaDataContainer * aux;
+	MetaDataContainer * aux;
 	
 	for( It = objects.begin( ) ; It != objects.end( ); It ++ )
 	{
@@ -485,16 +474,16 @@ std::vector<long int> metaData::findObjects( label name, int value )
 	return result;
 }
 
-std::vector<long int> metaData::findObjects( label name, bool value )
+std::vector<long int> MetaData::findObjects( label name, bool value )
 {
 	std::vector<long int> result;
 	
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< long int, metaDataContainer *>::iterator It;
+	std::map< long int, MetaDataContainer *>::iterator It;
 	
-	metaDataContainer * aux;
+	MetaDataContainer * aux;
 	
 	for( It = objects.begin( ) ; It != objects.end( ); It ++ )
 	{
@@ -507,16 +496,16 @@ std::vector<long int> metaData::findObjects( label name, bool value )
 	return result;
 }
 
-std::vector<long int> metaData::findObjects( label name, std::string value )
+std::vector<long int> MetaData::findObjects( label name, XmpString value )
 {
 	std::vector<long int> result;
 	
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< long int, metaDataContainer *>::iterator It;
+	std::map< long int, MetaDataContainer *>::iterator It;
 	
-	metaDataContainer * aux;
+	MetaDataContainer * aux;
 	
 	for( It = objects.begin( ) ; It != objects.end( ); It ++ )
 	{
@@ -529,7 +518,7 @@ std::vector<long int> metaData::findObjects( label name, std::string value )
 	return result;
 }
 
-double metaData::angleRot( long int objectID )
+double MetaData::angleRot( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -538,7 +527,7 @@ double metaData::angleRot( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( ANGLEROT );
 		
 		if( result == NULL )
@@ -552,7 +541,7 @@ double metaData::angleRot( long int objectID )
 	}
 }
 
-double metaData::angleTilt( long int objectID )
+double MetaData::angleTilt( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -561,7 +550,7 @@ double metaData::angleTilt( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( ANGLETILT );
 		
 		if( result == NULL )
@@ -575,7 +564,7 @@ double metaData::angleTilt( long int objectID )
 	}
 }
 
-double metaData::anglePsi( long int objectID )
+double MetaData::anglePsi( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -584,7 +573,7 @@ double metaData::anglePsi( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( ANGLEPSI );
 		
 		if( result == NULL )
@@ -598,7 +587,7 @@ double metaData::anglePsi( long int objectID )
 	}
 }
 
-bool metaData::enabled( long int objectID )
+bool MetaData::enabled( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -607,7 +596,7 @@ bool metaData::enabled( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		bool * result = (bool *)aux->getValue( ENABLED );
 		
 		if( result == NULL )
@@ -621,7 +610,7 @@ bool metaData::enabled( long int objectID )
 	}
 }
 
-double metaData::shiftX( long int objectID )
+double MetaData::shiftX( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -630,7 +619,7 @@ double metaData::shiftX( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( SHIFTX );
 		
 		if( result == NULL )
@@ -644,7 +633,7 @@ double metaData::shiftX( long int objectID )
 	}
 }
 
-double metaData::shiftY( long int objectID )
+double MetaData::shiftY( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -653,7 +642,7 @@ double metaData::shiftY( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( SHIFTY );
 		
 		if( result == NULL )
@@ -667,7 +656,7 @@ double metaData::shiftY( long int objectID )
 	}
 }
 
-double metaData::shiftZ( long int objectID )
+double MetaData::shiftZ( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -676,7 +665,7 @@ double metaData::shiftZ( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( SHIFTZ );
 		
 		if( result == NULL )
@@ -690,7 +679,7 @@ double metaData::shiftZ( long int objectID )
 	}
 }
 
-double metaData::originX( long int objectID )
+double MetaData::originX( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -699,7 +688,7 @@ double metaData::originX( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( ORIGINX );
 		
 		if( result == NULL )
@@ -713,7 +702,7 @@ double metaData::originX( long int objectID )
 	}
 }
 
-double metaData::originY( long int objectID )
+double MetaData::originY( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -722,7 +711,7 @@ double metaData::originY( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( ORIGINY );
 		
 		if( result == NULL )
@@ -736,7 +725,7 @@ double metaData::originY( long int objectID )
 	}
 }
 
-double metaData::originZ( long int objectID )
+double MetaData::originZ( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -745,7 +734,7 @@ double metaData::originZ( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( ORIGINZ );
 		
 		if( result == NULL )
@@ -759,7 +748,7 @@ double metaData::originZ( long int objectID )
 	}
 }
 
-std::string metaData::image( long int objectID )
+XmpString MetaData::image( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -768,8 +757,8 @@ std::string metaData::image( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( IMAGE );
+		MetaDataContainer * aux = objects[ objectID ];
+		XmpString * result = (XmpString *)aux->getValue( IMAGE );
 		
 		if( result == NULL )
 		{
@@ -782,7 +771,7 @@ std::string metaData::image( long int objectID )
 	}
 }
 
-std::string metaData::CTFModel( long int objectID )
+XmpString MetaData::CTFModel( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -791,8 +780,8 @@ std::string metaData::CTFModel( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( CTFMODEL );
+		MetaDataContainer * aux = objects[ objectID ];
+		XmpString * result = (XmpString *)aux->getValue( CTFMODEL );
 		
 		if( result == NULL )
 		{
@@ -805,7 +794,7 @@ std::string metaData::CTFModel( long int objectID )
 	}
 }
 
-std::string metaData::micrograph( long int objectID )
+XmpString MetaData::micrograph( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -814,8 +803,8 @@ std::string metaData::micrograph( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( MICROGRAPH );
+		MetaDataContainer * aux = objects[ objectID ];
+		XmpString * result = (XmpString *)aux->getValue( MICROGRAPH );
 		
 		if( result == NULL )
 		{
@@ -828,7 +817,7 @@ std::string metaData::micrograph( long int objectID )
 	}
 }
 
-double metaData::weight( long int objectID )
+double MetaData::weight( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -837,7 +826,7 @@ double metaData::weight( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( WEIGHT );
 		
 		if( result == NULL )
@@ -851,7 +840,7 @@ double metaData::weight( long int objectID )
 	}
 }
 
-double metaData::flip( long int objectID )
+double MetaData::flip( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -860,7 +849,7 @@ double metaData::flip( long int objectID )
 	}
 	else
 	{
-		metaDataContainer * aux = objects[ objectID ];
+		MetaDataContainer * aux = objects[ objectID ];
 		double * result = (double *)aux->getValue( FLIP );
 		
 		if( result == NULL )
@@ -874,7 +863,7 @@ double metaData::flip( long int objectID )
 	}
 }
 
-long int metaData::fastSearch( label name, std::string value, bool recompute )
+long int MetaData::fastSearch( label name, XmpString value, bool recompute )
 {
 	long int result;
 	
@@ -886,9 +875,9 @@ long int metaData::fastSearch( label name, std::string value, bool recompute )
 		// Traverse all the structure looking for objects
 		// that satisfy search criteria
 	
-		std::map< long int, metaDataContainer *>::iterator It;
+		std::map< long int, MetaDataContainer *>::iterator It;
 	
-		metaDataContainer * aux;
+		MetaDataContainer * aux;
 	
 		for( It = objects.begin( ) ; It != objects.end( ); It ++ )
 		{
@@ -896,7 +885,7 @@ long int metaData::fastSearch( label name, std::string value, bool recompute )
 		
 			if( aux->valueExists( name ) )
 			{
-				fastStringSearch[ *((std::string *)((It->second)->getValue( name ))) ] = It->first ;
+				fastStringSearch[ *((XmpString *)((It->second)->getValue( name ))) ] = It->first ;
 				
 				if( aux->pairExists( name, value) )
 				{
@@ -907,7 +896,7 @@ long int metaData::fastSearch( label name, std::string value, bool recompute )
 	}
 	else
 	{
-		std::map< std::string, long int>::iterator It;
+		std::map< XmpString, long int>::iterator It;
 	
 		if( ( It = fastStringSearch.find( value ) ) != fastStringSearch.end( ) )
 		{
