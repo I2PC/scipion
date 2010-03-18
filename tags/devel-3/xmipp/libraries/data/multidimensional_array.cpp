@@ -25,27 +25,30 @@
 
 #include "multidimensional_array.h"
 
-template<>
-std::ostream& operator<<(std::ostream& ostrm,
-    const MultidimArray< std::complex<double> >& v)
+
+
+// Special case for complex numbers
+template <>
+void applyGeometryBSpline2D(Matrix2D< std::complex<double> > &M2,
+                            const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
+                            int Splinedegree, bool inv, bool wrap, std::complex<double> outside,
+                            unsigned long n)
 {
-    if (v.xdim == 0)
-        ostrm << "NULL Array\n";
-    else
-        ostrm << std::endl;
-
-    for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
-    {
-        ostrm << "Slice No. " << k << std::endl;
-        for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
-        {
-            for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
-            {
-                ostrm << VOL_ELEM(v, k, i, j) << ' ';
-            }
-            ostrm << std::endl;
-        }
-    }
-
-    return ostrm;
+    Matrix2D<double> re, im, rotre, rotim;
+    MultidimArray<std::complex<double> > oneImg;
+    double outre, outim;
+    re.resize(YSIZE(M1), XSIZE(M1));
+    im.resize(YSIZE(M1), XSIZE(M1));
+    outre = outside.real();
+    outim = outside.imag();
+    M1.getImage(n, oneImg);
+    Complex2RealImag(MULTIDIM_ARRAY(oneImg),
+                     MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
+                     MULTIDIM_SIZE(oneImg));
+    applyGeometryBSpline(rotre, A, re, Splinedegree, inv, wrap, outre);
+    applyGeometryBSpline(rotim, A, im, Splinedegree, inv, wrap, outim);
+    M2.resize(oneImg);
+    RealImag2Complex(MULTIDIM_ARRAY(rotre), MULTIDIM_ARRAY(rotim),
+                     MULTIDIM_ARRAY(M2), MULTIDIM_SIZE(re));
 }
+

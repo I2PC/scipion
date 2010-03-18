@@ -706,9 +706,9 @@ public:
      */
     void coreInit()
     {
-        zdim=ydim=xdim=yxdim=zyxdim=nzyxdim=0;
+        xdim=yxdim=zyxdim=nzyxdim=0;
+        ydim=zdim=ndim=1;
         zinit=yinit=xinit=0;
-        ndim=1;
         data=NULL;
         destroyData=true;
     }
@@ -942,6 +942,122 @@ public:
         size[3] = ndim;
     }
 
+    /** @defgroup VolumesUtilites Utilities
+     * @ingroup Volumes
+     */
+
+    /** Put a 3D window to the nth volume
+     * @ingroup MultidimSize
+     *
+     * The volume is windowed within the two positions given to this function.
+     * Indexes always refer to logical indexes. If a position is outside the
+     * actual matrix range then the matrix is padded init_value until the
+     * new position is reached. In the following example suppose that m1
+     * is the following and that the origin is (-1,-1,-1).
+     *
+     * @code
+     * slice 0
+     * [01 02 03          [
+     *  04 05 06           04 05 06 0
+     *  07 08 09]          07 08 09 0]
+     *
+     * ----->
+     *
+     * slice 1
+     * [11 12 13          [
+     *  14 15 16           14 15 16 0
+     *  17 18 19]          17 18 19 0]
+     * @endcode
+     *
+     * @code
+     * V1.window(0, 0, -1, 1, 1, 2);
+     * @endcode
+     */
+    void window(int z0, int y0, int x0, int zF, int yF, int xF, T init_value = 0, unsigned long n = 0)
+    {
+        MultidimArray<T> result(1, zF - z0 + 1, yF - y0 + 1, xF - x0 + 1);
+        result.zinit = z0;
+        result.yinit = y0;
+        result.xinit = x0;
+
+        for (int k = z0; k <= zF; k++)
+            for (int i = y0; i <= yF; i++)
+                for (int j = x0; j <= xF; j++)
+                    if ((k >= STARTINGZ(*this) && k <= FINISHINGZ(*this)) &&
+                        (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
+                        (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
+                        VOL_ELEM(result, k, i, j) = NZYX_ELEM(*this, n, k, i, j);
+                    else
+                        VOL_ELEM(result, k, i, j) = init_value;
+
+        *this = result;
+    }
+
+    /** Put a 2D window to the nth matrix
+     * @ingroup MultidimSize
+     *
+     * The matrix is windowed within the two positions given to this function.
+     * Indexes always refer to logical indexes. If a position is outside the
+     * actual matrix range then the matrix is padded with init_value until the
+     * new position is reached. In the following examples suppose that m1 is the
+     * following and that the origin is (-1,-1).
+     *
+     * @code
+     *      [1 2 3               [1 2 3 0
+     * m1 =  4 5 6    --->  m1 =  4 5 6 0
+     *       7 8 9]               7 8 9 0]
+     *
+     * @endcode
+     *
+     * @code
+     * m1.window(-1, -1, 1, 2);
+     * @endcode
+     */
+    void window(int y0, int x0, int yF, int xF, T init_value = 0, unsigned long n = 0)
+    {
+        MultidimArray<T> result(1, 1, yF - y0 + 1, xF - x0 + 1);
+        STARTINGY(result) = y0;
+        STARTINGX(result) = x0;
+
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
+        if (j >= STARTINGX(*this) && j <= FINISHINGX(*this) &&
+            i >= STARTINGY(*this) && i <= FINISHINGY(*this))
+            MAT_ELEM(result, i, j) = NZYX_ELEM(*this, n, 0, i, j);
+        else
+            MAT_ELEM(result, i, j) = init_value;
+
+        *this = result;
+    }
+
+    /** Put a 1D window to the nth vector
+     * @ingroup MultidimSize
+     *
+     * The vector is windowed within the two indexes given to this function.
+     * Indexes always refer to logical indexes. If an index is outside the
+     * actual vector range then the vector is padded winit_value. In the
+     * following examples suppose that v1=[-2 -1 0 1 2] and that the origin is
+     * -2.
+     *
+     * @code
+     * v1.window(-1, 2); // v1=[-1 0 1 2]; v1.startingX() == -1
+     *
+     * v1.window(-3, 1); // v1=[0 -2 -1 0 1]; v1.startingX() == -3
+     * @endcode
+     */
+    void window(int x0, int xF, T init_value = 0, unsigned long n = 0)
+    {
+        Matrix1D<T> result(xF - x0 + 1);
+        STARTINGX(result) = x0;
+
+        for (int j = x0; j <= xF; j++)
+            if (j >= STARTINGX(*this) && j <= FINISHINGX(*this))
+                VEC_ELEM(result, j) = NZYX_ELEM(*this, n, 0, 0, j);
+            else
+                VEC_ELEM(result, j) = init_value;
+
+        *this = result;
+    }
+
     /** Print shape of multidimensional array.
      * @ingroup MultidimSize
      *
@@ -1023,7 +1139,7 @@ public:
     }
 
     /** Outside
-     * @ingroup VolumesSizeShape
+     * @ingroup MultidimSize
      *
      * TRUE if the logical index given is outside the definition region of this
      * array.
@@ -1053,6 +1169,35 @@ public:
             REPORT_ERROR(2,"Outside: index vector has too many components");
     }
 
+    /** IsCorner (in 2D or 3D matrix)
+     * @ingroup MultidimSize
+     *
+     * TRUE if the logical index given is a corner of the definition region of this
+     * array.
+     */
+    bool isCorner(const Matrix1D< double >& v) const
+    {
+        if (XSIZE(v) < 2)
+            REPORT_ERROR(1, "isCorner: index vector has got not enough components");
+
+        else if (XSIZE==2)
+            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this)) ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this))  ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this)));
+        else if (XSIZE==3)
+            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this) && ZZ(v) == STARTINGZ(*this))  ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this) && ZZ(v) == FINISHINGZ(*this)) ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)) ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this) && ZZ(v) == FINISHINGZ(*this))  ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
+        else
+            REPORT_ERROR(1, "isCorner: index vector has too many components");
+
+    }
 
 
     ///defgroup MultidimMemory Access to the pixel values
@@ -1144,7 +1289,7 @@ public:
         return MAT_ELEM(*this, ROUND(YY(v)), ROUND(XX(v)));
     }
 
-    /** Matrix element access via intger vector
+    /** Matrix element access via integer vector
      * @ingroup MultidimMemory
      */
     T& operator()(const Matrix1D< int >& v) const
@@ -1170,6 +1315,373 @@ public:
        return VEC_ELEM(*this, i);
     }
 
+
+    /** Get a single 1,2 or 3D image from a multi-image array
+     *  @ingroup MultidimMemory
+     * 
+     * This function extracts a single-image array from a multi-image one.
+     * @code
+     * V.getImage(0, m);
+     * @endcode
+     */
+    void getImage(unsigned long n, MultidimArray<T>& M) const
+    {
+        if (XSIZE(*this) == 0)
+        {
+            M.clear();
+            return;
+        }
+
+        if (n > NSIZE(*this))
+            REPORT_ERROR(1," Multidimarray getImage: n larger than NSIZE");
+
+        M.resize(1, ZSIZE(*this), YSIZE(*this), XSIZE(*this));
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(M)
+            DIRECT_MAT_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+        
+        STARTINGX(M) = STARTINGX(*this);
+        STARTINGY(M) = STARTINGY(*this);
+        STARTINGZ(M) = STARTINGZ(*this);
+
+    }
+
+    /** 2D Slice access for reading.
+     * @ingroup MultidimMemory
+     *
+     * This function returns a slice (a 2D matrix) corresponding to the choosen
+     * slice inside the nth 3D matrix, the numbering of the slices is also logical not
+     * physical. This function differs from the previous one in that this one
+     * cuts and assign in a single step instead of in two steps, as in
+     * the previous example.
+     *
+     * @code
+     * V.slice(0, m);
+     * @endcode
+     */
+    //FIXME PENDING TO CHANGE FROM MATRIX3D!! 
+    void getSlice(int k, MultidimArray<T>& M, char axis = 'Z', unsigned long n = 0) const
+    {
+        if (XSIZE(*this) == 0)
+        {
+            M.clear();
+            return;
+        }
+
+        switch (axis)
+        {
+        case 'Z':
+            if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
+                REPORT_ERROR(1203,
+                             "Slice: Multidim subscript (k) out of range");
+
+            k = k - STARTINGZ(*this);
+            M.resize(1, 1, YSIZE(*this), XSIZE(*this));
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
+                DIRECT_MAT_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+            STARTINGX(M) = STARTINGX(*this);
+            STARTINGY(M) = STARTINGY(*this);
+            break;
+        case 'Y':
+            if (k < STARTINGY(*this) || k > FINISHINGY(*this))
+                REPORT_ERROR(1203,
+                             "Slice: Multidim subscript (i) out of range");
+
+            k = k - STARTINGY(*this);
+            M.resize(ZSIZE(*this), XSIZE(*this));
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
+                DIRECT_MAT_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, k, j);
+            STARTINGX(M) = STARTINGX(*this);
+            STARTINGY(M) = STARTINGZ(*this);
+            break;
+        case 'X':
+            if (k < STARTINGX(*this) || k > FINISHINGX(*this))
+                REPORT_ERROR(1203,
+                             "Slice: Multidim subscript (j) out of range");
+
+            k = k - STARTINGX(*this);
+            M.resize(ZSIZE(*this), YSIZE(*this));
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
+                DIRECT_MAT_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, j, k);
+            STARTINGX(M) = STARTINGY(*this);
+            STARTINGY(M) = STARTINGZ(*this);
+            break;
+        default:
+            REPORT_ERROR(1205,
+                         (std::string) "Slice: not supported axis " + axis);
+        }
+    }
+
+    /** Slice access for writing.
+     * @ingroup MultidimMemory
+     *
+     * This function sets a 2D matrix corresponding to the choosen slice inside the nth
+     * volume, the numbering of the slices is also logical not physical.
+     *
+     * @code
+     * // Copies slice 0 in slice 1
+     * V.setSlice(1, (V.slice(0)));
+     * @endcode
+     */
+    void setSlice(int k, const MultidimArray<T>& v, unsigned long n = 0)
+    {
+        if (XSIZE(*this) == 0)
+            return;
+
+        if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
+            REPORT_ERROR(1203,
+                         "setSlice: Matrix3D subscript (k) out of range");
+
+        if (v.rowNumber() != YSIZE(*this) || v.colNumber() != XSIZE(*this))
+            REPORT_ERROR(1202,
+                         "setSlice: Matrix3D dimensions different from the matrix ones");
+
+        k = k - STARTINGZ(*this);
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(v)
+            DIRECT_NZYX_ELEM(*this, n, k, i, j) = DIRECT_MAT_ELEM(v, i, j);
+    }
+
+    /** Get row
+     * @ingroup MultidimMemory
+     *
+     * This function returns a row vector corresponding to the choosen
+     * row inside the nth 2D matrix, the numbering of the rows is also
+     * logical not physical.
+     *
+     * @code
+     * std::vector< double > v;
+     * m.getRow(-2, v);
+     * @endcode
+     */
+    void getRow(int i, MultidimArray<T>& v, unsigned long n = 0) const
+    {
+        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
+        {
+            v.clear();
+            return;
+        }
+
+        if (i < STARTINGY(*this) || i > FINISHINGY(*this))
+            REPORT_ERROR(1103, "getRow: Matrix subscript (i) greater than matrix dimension");
+
+        v.resize(XSIZE(*this));
+        STARTINGX(v) = STARTINGX(*this);
+
+        for (int j = STARTINGX(*this); j <= FINISHINGX(*this); j++)
+            VEC_ELEM(v, j) = NZYX_ELEM(*this, n, 0, i, j);
+
+        v.setRow();
+    }
+
+    /** Return row. The same as previous.
+     * @ingroup MatricesMemory
+      */
+    Matrix1D<T> Row(int i, unsigned long n = 0) const
+    {
+        MultidimArray<T> aux;
+        getRow(i, aux, n);
+        return aux;
+    }
+
+    /** Get Column
+     * @ingroup MatricesMemory
+     *
+     * This function returns a column vector corresponding to the
+     * choosen column inside the nth 2D matrix, the numbering of the
+     * column is also logical not physical.
+     *
+     * @code
+     * std::vector< double > v;
+     * m.getCol(-1, v);
+     * @endcode
+     */
+    void getCol(int j, Matrix1D<T>& v, unsigned long n = 0) const
+    {
+        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
+        {
+            v.clear();
+            return;
+        }
+
+        if (j < STARTINGX(*this) || j > FINISHINGX(*this))
+            REPORT_ERROR(1103,"getCol: Matrix subscript (j) greater than matrix dimension");
+
+        v.resize(YSIZE(*this));
+        STARTINGX(v)  = STARTINGY(*this);
+
+        for (int i = STARTINGY(*this); i <= FINISHINGY(*this); i++)
+            VEC_ELEM(v, i) = NZYX_ELEM(*this, n, 0, i, j);
+
+        // FIXME: THINK WHETHER THIS IS NECESSARY... FOR NOW IT CONFLICTS WITH setCol below.
+        //v.setCol();
+    }
+
+    /** Return Column. The same as previous.
+     * @ingroup MatricesMemory
+     */
+    Matrix1D<T> Col(int i, unsigned long n = 0) const
+    {
+        MultidimArray<T> aux;
+        getCol(i, aux, n);
+        return aux;
+    }
+
+    /** Set Row
+     * @ingroup MatricesMemory
+     *
+     * This function sets a row vector corresponding to the choosen
+     * row inside the nth 2D matrix, the numbering of the rows is also
+     * logical not physical.
+     *
+     * @code
+     * m.setRow(-2, m.row(1)); // Copies row 1 in row -2
+     * @endcode
+     */
+    void setRow(int i, const MultidimArray<T>& v, unsigned long n = 0)
+    {
+        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
+            REPORT_ERROR(1, "setRow: Target matrix is empty");
+
+        if (i < STARTINGY(*this) || i > FINISHINGY(*this))
+            REPORT_ERROR(1103, "setRow: Matrix subscript (i) out of range");
+
+        if (XSIZE(v) != XSIZE(*this))
+            REPORT_ERROR(1102,
+                         "setRow: Vector dimension different from matrix one");
+
+        //FIXME....
+        //if (!v.isRow())
+        //    REPORT_ERROR(1107, "setRow: Not a row vector in assignment");
+
+        i = i - STARTINGY(*this);
+        for (int j = 0; j < XSIZE(*this); j++)
+            DIRECT_NZYX_ELEM(*this, n, 0, i, j) = DIRECT_VEC_ELEM(v, j);
+    }
+
+    /** Set Column
+     * @ingroup MatricesMemory
+     *
+     * This function sets a column vector corresponding to the choosen column
+     * inside matrix, the numbering of the column is also logical not physical.
+     *
+     * @code
+     * m.setCol(-1, (m.row(1)).transpose()); // Copies row 1 in column -1
+     * @endcode
+     */
+    void setCol(int j, const Matrix1D<T>& v, unsigned long n = 0)
+    {
+        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
+            REPORT_ERROR(1, "setCol: Target matrix is empty");
+
+        if (j < STARTINGX(*this) || j > FINISHINGX(*this))
+            REPORT_ERROR(1103, "setCol: Matrix subscript (j) out of range");
+
+        if (XSIZE(v) != YSIZE(*this))
+            REPORT_ERROR(1102,
+                         "setCol: Vector dimension different from matrix one");
+        
+        // FIXME...
+        //if (!v.isCol())
+        //    REPORT_ERROR(1107, "setCol: Not a column vector in assignment");
+
+        j = j - STARTINGX(*this);
+        for (int i = 0; i < YSIZE(*this); i++)
+            DIRECT_NZYX_ELEM(*this, n, 0, i, j) = DIRECT_VEC_ELEM(v, i);
+    }
+
+
+
+    /** 3D Logical to physical index translation.
+     * @ingroup VolumesMemory
+     *
+     * This function returns the physical position of a logical one.
+     *
+     * @code
+     * m.toPhysical(k_log, i_log, j_log, k_phys, i_phys, j_phys);
+     * @endcode
+     */
+    void toPhysical(int k_log, int i_log, int j_log,
+                          int& k_phys, int& i_phys, int& j_phys) const
+    {
+        k_phys = k_log - STARTINGZ(*this);
+        i_phys = i_log - STARTINGY(*this);
+        j_phys = j_log - STARTINGX(*this);
+    }
+
+    /** 3D Physical to logical index translation.
+     * @ingroup VolumesMemory
+     *
+     * This function returns the logical position of a physical one.
+     *
+     * @code
+     * m.toLogical(i_phys, j_phys, i_log, j_log);
+     * @endcode
+     */
+    void toLogical(int k_phys, int i_phys, int j_phys,
+                          int& k_log, int& i_log, int& j_log) const
+    {
+        k_log = k_phys + STARTINGZ(*this);
+        i_log = i_phys + STARTINGY(*this);
+        j_log = j_phys + STARTINGX(*this);
+    }
+
+    /** 2D Logical to physical index translation
+     * @ingroup MultidimMemory
+     *
+     * This function returns the physical position of a logical one.
+     *
+     * @code
+     * m.toPhysical(i_log, j_log, i_phys, j_phys);
+     * @endcode
+     */
+    void toPhysical(int i_log, int j_log, int& i_phys, int& j_phys) const
+    {
+        i_phys = i_log - STARTINGY(*this);
+        j_phys = j_log - STARTINGX(*this);
+    }
+
+    /** 2D Physical to logical index translation
+     * @ingroup MultidimMemory
+     *
+     * This function returns the logical position of a physical one.
+     *
+     * @code
+     * m.toLogical(i_phys, j_phys, i_log, j_log);
+     * @endcode
+     */
+    void toLogical(int i_phys, int j_phys, int &i_log, int& j_log) const
+    {
+        i_log = i_phys + STARTINGY(*this);
+        j_log = j_phys + STARTINGX(*this);
+    }
+
+    /** 1D Logical to physical index translation
+     * @ingroup MultidimMemory
+     *
+     * This function returns the physical position of a logical one.
+     *
+     * @code
+     * v.toPhysical(i_log, i_phys);
+     * @endcode
+     */
+    void toPhysical(int i_log, int& i_phys) const
+    {
+        i_phys = i_log - STARTINGX(*this);
+    }
+
+    /** 1D Physical to logical index translation.
+     * @ingroup MultidimMemory
+     *
+     * This function returns the logical position of a physical one.
+     *
+     * @code
+     * v.toLogical(i_phys, i_log);
+     * @endcode
+     */
+    void toLogical(int i_phys, int& i_log) const
+    {
+        i_log = i_phys + STARTINGX(*this);
+    }
 
     /** Interpolates the value of the nth 3D matrix M at the point (x,y,z).
      * @ingroup MultidimMemory
@@ -1510,7 +2022,7 @@ public:
      * interpolated_value = Bspline_coeffs.interpolatedElementBSpline(0.5,3);
      * @endcode
      */
-    T interpolatedElementBSpline1D(double x, int SplineDegree = 3, n = 0) const
+    T interpolatedElementBSpline1D(double x, int SplineDegree = 3, unsigned long n = 0) const
     {
         int SplineDegree_1 = SplineDegree - 1;
 
@@ -1584,23 +2096,6 @@ public:
         xinit = FIRST_XMIPP_INDEX(xdim);
     }
 
-    /** Move origin to.
-     * @ingroup MultidimSize
-     *
-     * This function adjust logical indexes such that the Xmipp origin of the
-     * array moves to the specified position. For instance, an array whose x
-     * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
-     * go from 3 to 5. This is very useful for convolution operations where you
-     * only need to move the logical starting of the array.
-     *
-     */
-    void moveOriginTo(int k, int i, int j)
-    {
-        zinit = k + FIRST_XMIPP_INDEX(zdim);
-        yinit = i + FIRST_XMIPP_INDEX(ydim);
-        xinit = j + FIRST_XMIPP_INDEX(xdim);
-    }
-
     /** Returns the first valid logical Z index.
      * @ingroup MultidimSize
      */
@@ -1672,6 +2167,117 @@ public:
     {
         return xdim;
     }
+
+    /** Produce a 3D array suitable for working with Numerical Recipes.
+     * @ingroup MultidimSize
+     *
+     * This function must be used only as a preparation for routines which need
+     * that the first physical index is 1 and not 0 as it usually is in C. New
+     * memory is needed to hold the new double pointer array.
+     */
+    T*** adaptForNumericalRecipes(unsigned long n = 0) const
+    {
+        T*** m = NULL;
+        ask_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(*this)
+            m[k+1][i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+
+        return m;
+    }
+
+    /** Kill a 3D array produced for numerical recipes.
+     * @ingroup MultidimSize
+     */
+    void killAdaptationForNumericalRecipes(T*** m) const
+    {
+        free_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
+    }
+
+    /** Produce a 2D array suitable for working with Numerical Recipes
+     * @ingroup MatricesSize
+     *
+     * This function must be used only as a preparation for routines which need
+     * that the first physical index is 1 and not 0 as it usually is in C. New
+     * memory is needed to hold the new double pointer array.
+     */
+    T** adaptForNumericalRecipes(unsigned long n = 0) const
+    {
+        T** m = NULL;
+        ask_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(*this)
+            m[i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, 0, i, j);
+
+        return m;
+    }
+
+    /** Produce a 1D pointer suitable for working with Numerical Recipes (2)
+     * @ingroup MultidimSize
+     *
+     * This function meets the same goal as the one before, however this one
+     * work with 2D arrays as a single pointer. The first element of the array
+     * is pointed by result[1*Xdim+1], and in general result[i*Xdim+j]
+     */
+    T* adaptForNumericalRecipes2() const
+    {
+        return MULTIDIM_ARRAY(*this) - 1 - XSIZE(*this);
+    }
+
+    /** Load 2D array from numerical recipes result.
+     * @ingroup MatricesSize
+     */
+    void loadFromNumericalRecipes(T** m, int Ydim, int Xdim)
+    {
+        resize(Ydim, Xdim);
+
+        for (int i = 1; i <= Ydim; i++)
+            for (int j = 1; j <= Xdim; j++)
+                (*this)(i - 1, j - 1) = m[i][j];
+    }
+
+    /** Kill a 2D array produced for numerical recipes
+     * @ingroup MatricesSize
+     *
+     * The allocated memory is freed.
+     */
+    void killAdaptationForNumericalRecipes(T** m) const
+    {
+        free_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
+    }
+
+    /** Kill a 2D array produced for numerical recipes, 2.
+     * @ingroup MatricesSize
+     *
+     * Nothing needs to be done.
+     */
+    void killAdaptationForNumericalRecipes2(T** m) const
+        {}
+
+    /** Produce a 1D array suitable for working with Numerical Recipes
+     * @ingroup MultidimSize
+     *
+     * This function must be used only as a preparation for routines which need
+     * that the first physical index is 1 and not 0 as it usually is in C. In
+     * fact the vector provided for Numerical recipes is exactly this same one
+     * but with the indexes changed.
+     *
+     * This function is not ported to Python.
+     */
+    T* adaptForNumericalRecipes() const
+    {
+        return MULTIDIM_ARRAY(*this) - 1;
+    }
+
+    /** Kill a 1D array produced for Numerical Recipes.
+     * @ingroup MultidimSize
+     *
+     * Nothing needs to be done in fact.
+     *
+     * This function is not ported to Python.
+     */
+    void killAdaptationForNumericalRecipes(T* m) const
+        {}
 
     /// @defgroup Statistics Statistics functions
     /// @ingroup MultidimensionalArrays
@@ -1753,6 +2359,127 @@ public:
                 minval = *ptr;
 
         return minval;
+    }
+
+    /** 4D Indices for the minimum element.
+     * @ingroup Statistics
+     *
+     * This function returns the index of the minimum element of an array.
+     * array(l,k,i,j). Returns -1 if the array is empty
+     */
+    void minIndex(int &lmin, int& kmin, int& imin, int& jmin) const
+    {
+        if (XSIZE(*this) == 0)
+        {
+            kmin = imin = jmin = -1;
+            return;
+        }
+
+        kmin = STARTINGZ(*this);
+        imin = STARTINGY(*this);
+        jmin = STARTINGX(*this);
+        lmin = 0;
+        T minval = NZYX_ELEM(*this, lmin, kmin, imin, jmin);
+
+        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+            if (NZYX_ELEM(*this, l, k, i, j) > minval)
+            {
+                minval = NZYX_ELEM(*this, l, k, i, j);
+                lmin = l;
+                kmin = k;
+                imin = i;
+                jmin = j;
+            }
+    }
+
+    /** 3D Indices for the minimum element.
+     * @ingroup Statistics
+     *
+     * This function just calls to the 4D function
+     */
+    void minIndex(int& kmin, int& imin, int& jmin) const
+    {
+        minIndex(0,kmin,imin,jmin);
+    }
+
+    /** 2D Indices for the minimum element.
+     * @ingroup Statistics
+     *
+     * This function just calls to the 4D function
+     */
+    void minIndex(int& imin, int& jmin) const
+    {
+        minIndex(0,0,imin,jmin);
+    }
+
+    /** 1D Indices for the minimum element.
+     * @ingroup Statistics
+     *
+     * This function just calls to the 4D function
+     */
+    void minIndex(int& jmin) const
+    {
+        minIndex(0,0,0,jmin);
+    }
+
+    /** 4D Indices for the maximum element.
+     * @ingroup Statistics
+     *
+     * This function returns the index of the maximum element of an array.
+     * array(l,k,i,j). Returns -1 if the array is empty
+     */
+    void maxIndex(int &lmin, int& kmax, int& imax, int& jmax) const
+    {
+        if (XSIZE(*this) == 0)
+        {
+            kmax = imax = jmax = -1;
+            return;
+        }
+
+        kmax = STARTINGZ(*this);
+        imax = STARTINGY(*this);
+        jmax = STARTINGX(*this);
+        lmax = 0;
+        T maxval = VOL_ELEM(*this, lmax, kmax, imax, jmax);
+
+        FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(*this)
+            if (NZYX_ELEM(*this, l, k, i, j) > maxval)
+            {
+                maxval = NZYX_ELEM(*this, l, k, i, j);
+                kmax = k;
+                imax = i;
+                jmax = j;
+            }
+    }
+
+    /** 3D Indices for the maximum element.
+     * @ingroup Statistics
+     *
+     * This function just calls to the 4D function
+     */
+    void maxIndex(int& kmax, int& imax, int& jmax) const
+    {
+        maxIndex(0,kmax,imax,jmax);
+    }
+
+    /** 2D Indices for the maximum element.
+     * @ingroup Statistics
+     *
+     * This function just calls to the 4D function
+     */
+    void maxIndex(int& imax, int& jmax) const
+    {
+        maxIndex(0,0,imax,jmax);
+    }
+
+    /** 1D Indices for the maximum element.
+     * @ingroup Statistics
+     *
+     * This function just calls to the 4D function
+     */
+    void maxIndex(int& jmax) const
+    {
+        maxIndex(0,0,0,jmax);
     }
 
     /** Minimum and maximum of the values in the array.
@@ -1878,6 +2605,47 @@ public:
             stddev = 0;
     }
 
+    /** Compute statistics within 2D region of 2D image.
+     * @ingroup Statistics
+     *
+     * The 2D region is specified by two corners.
+     * Note that this function only works for the 0th image in a multi-image array...
+     */
+    void computeStats(double& avg,
+                       double& stddev,
+                       T& min_val,
+                       T& max_val,
+                       const Matrix1D< int >& corner1,
+                       const Matrix1D< int >& corner2) const
+    {
+	min_val = max_val = (*this)(corner1);
+
+	Matrix1D< double > r(3);
+	double N = 0, sum = 0, sum2 = 0;
+
+	FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+	{
+            sum += (*this)(r);
+            sum2 += (*this)(r) * (*this)(r);
+            N++;
+
+            if ((*this)(r) < min_val)
+        	min_val = (*this)(r);
+            else if ((*this)(r) > max_val)
+        	max_val = (*this)(r);
+	}
+
+	if (N != 0)
+	{
+            avg = sum / N;
+            stddev = sqrt(sum2 / N - avg * avg);
+	}
+	else
+	{
+            avg = stddev = 0;
+	}
+    }
+
     /** Median
      * @ingroup Statistics
      *
@@ -1943,47 +2711,67 @@ public:
             slope = 0;
 
         T* ptr=NULL;
-	    unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
             *ptr = minF + static_cast< T >(slope *
                 static_cast< double >(*ptr - min0));
     }
 
-    /** Adjust the average and stddev of the array to given values.
+    /** Adjust the range of the array to a given one within a mask.
      * @ingroup Statistics
      *
-     * A linear operation is performed on the values of the array such
-     * that after it, the average and standard deviation of the array
-     * are the two values set. The actual array is modified itself
+     * A linear operation is performed on the values of the array such that
+     * after it, the values of the array are comprissed between the two values
+     * set. The actual array is modified itself. The linear transformation
+	 * is computed within the mask, but it is applied everywhere.
      *
      * @code
-     * v.statisticsAdjust(0,1);
-     * // The array has got now 0 mean and stddev=1
+     * v.rangeAdjust(0, 1, mask);
+     * // The array is now ranging from 0 to 1
      * @endcode
      */
-    // This function must be explictly implemented outside.
-    void statisticsAdjust(double avgF, double stddevF)
+    // This function must be explictly implemented outside
+    void rangeAdjust(T minF, T maxF, MultidimArray<int> &mask)
     {
-        double avg0, stddev0;
-        double a, b;
-
-        if (NZYXSIZE(*this) == 0)
+        if (MULTIDIM_SIZE(*this) <= 0)
             return;
 
-        T minval, maxval;
-        computeStats(avg0, stddev0, minval, maxval);
-
-        if (stddev0 != 0)
-            a = static_cast< double >(stddevF) / static_cast< double >(stddev0);
-        else
-            a = 0;
-
-        b = static_cast< double >(avgF) - a * static_cast< double >(avg0);
-
+        double min0, max0;
+        bool first=true;
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
+        int * ptrMask=MULTIDIM_ARRAY(mask);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = static_cast< T >(a * static_cast< double > (*ptr) + b);
+        {
+            if (*ptrMask)
+            {
+                T val= *ptr;
+                if (first)
+                {
+                    min0=max0=(double)val;
+                    first=false;
+                }
+                else
+                {
+                    min0=XMIPP_MIN(min0,val);
+                    max0=XMIPP_MAX(max0,val);
+                }
+            }
+            double* ptrMasK++;
+       }
+
+        // If max0==min0, it means that the vector is a constant one, so the
+        // only possible transformation is to a fixed minF
+        double slope;
+        if (max0 != min0)
+            slope = static_cast< double >(maxF - minF) /
+                    static_cast< double >(max0 - min0);
+        else
+            slope = 0;
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+            *ptr = minF + static_cast< T >(slope *
+                static_cast< double >(*ptr - min0));
     }
 
     /** Adjust the range of the array to the range of another array in
@@ -2030,6 +2818,43 @@ public:
         double b=(N*sumxy-sumx*sumy)/(N*sumx2-sumx*sumx);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
             *ptr = static_cast< double >(a+b * static_cast< double > (*ptr));
+    }
+
+    /** Adjust the average and stddev of the array to given values.
+     * @ingroup Statistics
+     *
+     * A linear operation is performed on the values of the array such
+     * that after it, the average and standard deviation of the array
+     * are the two values set. The actual array is modified itself
+     *
+     * @code
+     * v.statisticsAdjust(0,1);
+     * // The array has got now 0 mean and stddev=1
+     * @endcode
+     */
+    // This function must be explictly implemented outside.
+    void statisticsAdjust(double avgF, double stddevF)
+    {
+        double avg0, stddev0;
+        double a, b;
+
+        if (NZYXSIZE(*this) == 0)
+            return;
+
+        T minval, maxval;
+        computeStats(avg0, stddev0, minval, maxval);
+
+        if (stddev0 != 0)
+            a = static_cast< double >(stddevF) / static_cast< double >(stddev0);
+        else
+            a = 0;
+
+        b = static_cast< double >(avgF) - a * static_cast< double >(avg0);
+
+        T* ptr=NULL;
+	unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+            *ptr = static_cast< T >(a * static_cast< double > (*ptr) + b);
     }
 
     /// @defgroup Arithmethic Arithmethic operations
@@ -2563,6 +3388,32 @@ public:
      * the array.
      */
 
+    /** Computes the center of mass of the nth array
+     * @ingroup MultidimUtilities
+     */
+    void centerOfMass(Matrix1D< double >& center, void * mask=NULL, unsigned long n = 0)
+    {
+	center.initZeros(3);
+	double mass = 0;
+	MultidimArray< int >* imask = (MultidimArray< int >*) mask;
+
+	FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
+	{
+            if ((imask == NULL || NZYX_ELEM(*imask, n, k, i, j)) &&
+		VOL_ELEM(*this, k, i, j) > 0)
+            {
+        	XX(center) += j * NZYX_ELEM(*this, n, k, i, j);
+        	YY(center) += i * NZYX_ELEM(*this, n, k, i, j);
+        	ZZ(center) += k * NZYX_ELEM(*this, n, k, i, j);
+
+        	mass += NZYX_ELEM(*this, n, k, i, j);
+            }
+	}
+
+	if (mass != 0)
+            center /= mass;
+    }
+
     /** Several thresholding.
      * @ingroup MultidimUtilities
      *
@@ -3051,25 +3902,24 @@ public:
     }
 
 
-    /// FIXME RETHINK FOR 4D!??
-
     /** Produce spline coefficients.
      * @ingroup Utilites
      */
 #ifndef DBL_EPSILON
 #define DBL_EPSILON 1e-50
 #endif
-    void produceSplineCoefficients(MultidimArray< double >& coeffs, int SplineDegree = 3)
+    void produceSplineCoefficients(MultidimArray< double >& coeffs, 
+                                   int SplineDegree = 3, unsigned long n = 0)
     const
     {
-        coeffs.initZeros(NSIZE(*this), ZSIZE(*this), YSIZE(*this), XSIZE(*this));
+        coeffs.initZeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         STARTINGX(coeffs) = STARTINGX(*this);
         STARTINGY(coeffs) = STARTINGY(*this);
         STARTINGZ(coeffs) = STARTINGZ(*this);
 
         int Status;
         MultidimArray< double > aux;
-        typeCast(*this, aux);
+        typeCast(*this, aux, n); // This will create a single volume!
 
         ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(coeffs),
                           XSIZE(*this), YSIZE(*this), ZSIZE(*this),
@@ -3079,13 +3929,11 @@ public:
             REPORT_ERROR(1, "Matrix3D::produceSplineCoefficients: Error");
     }
 
-    /// FIXME RETHINK FOR 4D!??
-
     /** Produce image from B-spline coefficients.
      * @ingroup Utilites
      */
-    void produceImageFromSplineCoefficients(
-        MultidimArray< double >& img, int SplineDegree = 3) const
+    void produceImageFromSplineCoefficients(MultidimArray< double >& img, 
+                                            int SplineDegree = 3, unsigned long n = 0) const
     {
         img.initZeros(ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         STARTINGX(img) = STARTINGX(*this);
@@ -3094,7 +3942,7 @@ public:
 
         int Status;
         MultidimArray< double > aux;
-        typeCast(*this, aux);
+        typeCast(*this, aux, n); // This will create a single volume!
         
         ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(img),
                           XSIZE(*this), YSIZE(*this), ZSIZE(*this),
@@ -3197,6 +4045,7 @@ public:
     }
 
 
+
     //FIXME: THIS HAS TO BE RETHOUGHT!
     /** Read from an ASCII file.
      * @ingroup Operators
@@ -3296,6 +4145,13 @@ public:
         system((static_cast< std::string >("xmipp_edit -i " + nam +
                                            " -remove &").c_str()));
     }
+
+    // include 3D transformation stuff
+    #include "multidimensional_array_transform3d.h"
+
+    // include 2D transformation stuff
+    #include "multidimensional_array_transform2d.h"
+
 };
 
 /// @defgroup MultidimFunctions Functions for all multidimensional arrays
@@ -3306,9 +4162,10 @@ public:
  *
  * If we have an integer array and we need a double one, we can use this
  * function. The conversion is done through a type casting of each element
+ * If n >= 0, only the nth volumes will be converted, otherwise all NSIZE volumes
  */
 template<typename T1, typename T2>
-void typeCast(const MultidimArray<T1>& v1, MultidimArray<T2>& v2)
+    void typeCast(const MultidimArray<T1>& v1, MultidimArray<T2>& v2, long n = -1)
 {
     if (NZYXSIZE(v1) == 0)
     {
@@ -3316,11 +4173,21 @@ void typeCast(const MultidimArray<T1>& v1, MultidimArray<T2>& v2)
         return;
     }
 
-    v2.resize(v1);
-    T1* ptr1=NULL;
-    unsigned long int n;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v1,n,ptr1)
-        DIRECT_MULTIDIM_ELEM(v2,n) = static_cast< T2 >(*ptr1);
+    if (n < 0)
+    {
+        v2.resize(v1);
+        T1* ptr1=NULL;
+        unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v1,n,ptr1)
+            DIRECT_MULTIDIM_ELEM(v2,n) = static_cast< T2 >(*ptr1);
+    }
+    else
+    {
+        v2.resize(ZSIZE(v1),YSIZE(v1),XSIZE(v1));
+        FOR_ALL_DIRECT_ELEMENTS_MATRIX3D(v2)
+            DIRECT_VOL_ELEM(v2,k,i,j) = static_cast< T2 >DIRECT_NZYX_ELEM(v1,n,k,i,j);
+    }
+
 }
 
 template <typename T>
@@ -3407,6 +4274,58 @@ void coreScalarByArray(const T& op1,
         }
 }
 
+/** MultidimArray equality.
+ * @ingroup MultidimMisc */
+template<typename T>
+bool operator==(const MultidimArray<T>& op1, const MultidimArray<T>& op2)
+{
+    return op1.equal(op2);
+}
+
+/** MultidimArray inequality.
+ * @ingroup MultidimMisc */
+template<typename T>
+bool operator!=(const MultidimArray<T>& op1, const MultidimArray<T>& op2)
+{
+    return !(op1==op2);
+}
+
+/** Reduce both volumes to a common size.
+ * @ingroup MultidimMisc
+ *
+ * Search the range of logical indexes for which both volumes have got valid
+ * values, and cut both to that size, the corresponding origin is automatically
+ * computed.
+ *
+ * @code
+ * Matrix3D< double > V1(4, 5, 3);
+ * V1.startingX() = -2;
+ * V1.startingY() = -2;
+ * V1.startingZ() = -2;
+ *
+ * Matrix3D< double > V2(4, 2, 3);
+ * V2.startingX() = 0;
+ * V2.startingY() = 0;
+ * V2.startingZ() = 0;
+ *
+ * // V1 and V2 range from (0,0,0)=(z,y,x) to (1,1,0)
+ * cutToCommonSize(V1, V2);
+ * @endcode
+ */
+template<typename T>
+void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
+{
+    int z0 = XMIPP_MAX(STARTINGZ(V1), STARTINGZ(V2));
+    int zF = XMIPP_MIN(FINISHINGZ(V1), FINISHINGZ(V2));
+    int y0 = XMIPP_MAX(STARTINGY(V1), STARTINGY(V2));
+    int yF = XMIPP_MIN(FINISHINGY(V1), FINISHINGY(V2));
+    int x0 = XMIPP_MAX(STARTINGX(V1), STARTINGX(V2));
+    int xF = XMIPP_MIN(FINISHINGX(V1), FINISHINGX(V2));
+
+    V1.window(z0, y0, x0, zF, yF, xF);
+    V2.window(z0, y0, x0, zF, yF, xF);
+}
+
 template<>
 inline void MultidimArray< std::complex< double > >::produceSplineCoefficients(
     MultidimArray< double >& coeffs, int SplineDegree) const
@@ -3414,6 +4333,7 @@ inline void MultidimArray< std::complex< double > >::produceSplineCoefficients(
     // TODO Implement
     std::cerr << "Spline coefficients of a complex matrix is not implemented\n";
 }
+
 
 template<typename T>
 std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
@@ -3461,7 +4381,10 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
     return ostrm;
 }
 
-template<>
-std::ostream& operator<<(std::ostream& ostrm,
-    const MultidimArray< std::complex<double> >& v);
+// Specializations case for complex numbers
+template <>
+void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
+                          const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
+                          int Splinedegree, bool inv, bool wrap, std::complex<double> outside, 
+                          unsigned long n = 0);
 #endif

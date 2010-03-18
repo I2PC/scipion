@@ -85,49 +85,6 @@ void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
            result.adaptForNumericalRecipes());
 }
 
-// Special case for complex numbers
-template <>
-void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
-                        const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
-                        int Splinedegree, bool inv, bool wrap, std::complex<double> outside)
-{
-    Matrix2D<double> re, im, rotre, rotim;
-    double outre, outim;
-    re.resize(YSIZE(M1), XSIZE(M1));
-    im.resize(YSIZE(M1), XSIZE(M1));
-    outre = outside.real();
-    outim = outside.imag();
-    Complex2RealImag(MULTIDIM_ARRAY(M1),
-                     MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-                     MULTIDIM_SIZE(M1));
-    applyGeometryBSpline(rotre, A, re, Splinedegree, inv, wrap, outre);
-    applyGeometryBSpline(rotim, A, im, Splinedegree, inv, wrap, outim);
-    M2.resize(M1);
-    RealImag2Complex(MULTIDIM_ARRAY(rotre), MULTIDIM_ARRAY(rotim),
-                     MULTIDIM_ARRAY(M2), MULTIDIM_SIZE(re));
-}
-
-// Linear interpolation ----------------------------------------------------
-template<>
-std::complex< double > Matrix2D< std::complex< double > >::interpolatedElement(
-    double x, double y, std::complex< double > outside_value) const
-{
-    int x0 = FLOOR(x);
-    double fx = x - x0;
-    int x1 = x0 + 1;
-    int y0 = FLOOR(y);
-    double fy = y - y0;
-    int y1 = y0 + 1;
-
-    std::complex< double > d00 = outside(y0, x0) ? outside_value : MAT_ELEM(*this, y0, x0);
-    std::complex< double > d10 = outside(y1, x0) ? outside_value : MAT_ELEM(*this, y1, x0);
-    std::complex< double > d11 = outside(y1, x1) ? outside_value : MAT_ELEM(*this, y1, x1);
-    std::complex< double > d01 = outside(y0, x1) ? outside_value : MAT_ELEM(*this, y0, x1);
-
-    std::complex< double > d0 = LIN_INTERP(fx, d00, d01);
-    std::complex< double > d1 = LIN_INTERP(fx, d10, d11);
-    return LIN_INTERP(fy, d0, d1);
-}
 
 /* Is diagonal ------------------------------------------------------------- */
 template <>
