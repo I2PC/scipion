@@ -33,10 +33,35 @@
 
 #include <typeinfo>
 #include "funcs.h"
+#include "memory.h"
 #include "geometry.h"
 #include "gcc_version.h"
-#include "bsoft_utils.h"
 
+enum TransformType {
+        NoTransform = 0,        // No transform
+        Standard = 1,           // Standard transform: origin = (0,0,0)
+        Centered = 2,           // Centered transform: origin = (nx/2,ny/2,nz/2)
+        Hermitian = 3,          // Hermitian half: origin = (0,0,0)
+        CentHerm = 4            // Centered hermitian: origin = (0,ny/2,nz/2)
+} ;
+
+enum DataType {
+        Unknown_Type = 0,       // Undefined data type
+        UChar = 1,              // Unsigned character or byte type
+        SChar = 2,              // Signed character (for CCP4)
+        UShort = 3,             // Unsigned integer (2-byte)
+        Short = 4,              // Signed integer (2-byte)
+        Int = 5,                // Signed integer (4-byte)
+        Long = 6,               // Signed integer (4 or 8 byte, depending on system)
+        Float = 7,              // Floating point (4-byte)
+        Double = 8,             // Double precision floating point (8-byte)
+        ComplexShort = 9,       // Complex two-byte integer (4-byte)
+        ComplexInt = 10,        // Complex integer (8-byte)
+        ComplexFloat = 11,      // Complex floating point (8-byte)
+        ComplexDouble = 12      // Complex floating point (16-byte)
+} ;
+
+#define SWAPTRIG     65535   // Threshold file z size above which bytes are swapped
 
 /** Template class for subimage header information
  * @ingroup Images
@@ -496,10 +521,10 @@ public:
              if ( datatype >= ComplexShort ) 
                  datatypesize /= 2;
              for ( unsigned long i=0; i<pageNrElements; i+=datatypesize ) 
-                 swapbytes(page+i, datatypesize);
+                 ByteSwap(page+i, datatypesize);
          } else if ( swap > 1 ) {
              for ( unsigned long i=0; i<pageNrElements; i+=swap ) 
-                 swapbytes(page+i, swap);
+                 ByteSwap(page+i, swap);
          }
      }
 
@@ -556,11 +581,11 @@ public:
             std::cerr<<"devel3"<<std::endl;
 #endif
             if (pagesize > pagemax)
-                page = (char *) balloc(pagemax*sizeof(char));
+                page = (char *) askMemory(pagemax*sizeof(char));
             else
-                page = (char *) balloc(pagesize*sizeof(char));
+                page = (char *) askMemory(pagesize*sizeof(char));
 
-            if ( pad > 0) padpage = (char *) balloc(pad*sizeof(char));
+            if ( pad > 0) padpage = (char *) askMemory(pad*sizeof(char));
             fseek( fimg, myoffset, SEEK_SET );
             std::cerr<<"NSIZE(data)= "<<NSIZE(data)<<std::endl;
             for ( size_t myn=0; myn<NSIZE(data); myn++ ) 
@@ -602,7 +627,7 @@ public:
                if ( pad > 0 ) fread( padpage, pad, 1, fimg);
             }
             if ( pad > 0 ) 
-                bfree(padpage, pad*sizeof(char));
+                freeMemory(padpage, pad*sizeof(char));
 	} 
         else 
         {
@@ -641,6 +666,9 @@ public:
     }
 
 };
+
+// Ask memeory size of datatype
+unsigned long   gettypesize(DataType type);
 
 // Special case for complex numbers
 template<>
