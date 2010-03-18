@@ -396,6 +396,7 @@ ReconsSources = [
     'adjust_volume_grey_levels.cpp',
     'align2d.cpp',
     'align_tilt_pairs.cpp',
+    'analyze_cluster.cpp',
     'angular_assign_for_tomogram.cpp',
     'angular_assign_for_tilt_series.cpp',
     'angular_commonline.cpp',
@@ -457,6 +458,7 @@ ReconsSources = [
     'refinement.cpp',
     'resolution_ssnr.cpp',
     'series_remove_fluctuations.cpp',
+    'sort_images.cpp',
     'spar.cpp',
     'sparma.cpp',
     'surface.cpp',
@@ -518,6 +520,7 @@ AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('align2d', ['XmippRecons'])
 AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('align_volumes')
+AddXmippProgram('analyze_cluster', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
 AddXmippProgram('angular_class_average', ['XmippRecons'])
@@ -530,7 +533,7 @@ AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 AddXmippProgram('angular_project_library', ['XmippRecons'])
 AddXmippProgram('average')
-AddXmippProgram('break_symmetry',               ['XmippRecons'])
+AddXmippProgram('break_symmetry', ['XmippRecons'])
 AddXmippProgram('center_image')
 AddXmippProgram('classify_batch_som', ['XmippClassif'])
 AddXmippProgram('classify_fcmeans', ['XmippClassif'])
@@ -650,6 +653,7 @@ AddXmippProgram('separate_objects')
 AddXmippProgram('series_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('shift')
 AddXmippProgram('sort_by_statistics')
+AddXmippProgram('sort_images', ['XmippRecons'])
 AddXmippProgram('statistics')
 AddXmippProgram('convert_stack22images')
 AddXmippProgram('symmetrize', ['XmippRecons'])
