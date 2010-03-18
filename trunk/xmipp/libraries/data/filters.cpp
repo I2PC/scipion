@@ -878,6 +878,8 @@ void alignImages(const Matrix2D< double >& Iref, Matrix2D< double >& I,
         I=IauxSR;
         M=ASR;
     }
+    
+    if (plans!=NULL) delete plans;
 }
 
 /* Estimate 2D Gaussian ---------------------------------------------------- */
@@ -1674,6 +1676,8 @@ void centerImageRotationally(Matrix2D<double> &I)
         local_transformer);
 
     I.selfRotateBSpline(3,-bestRot/2,WRAP);
+
+    if (plans!=NULL) delete plans;
 }
 
 /* Center both rotationally and translationally ---------------------------- */
