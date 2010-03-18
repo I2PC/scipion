@@ -92,10 +92,13 @@ class metaData
 		double originX( long int objectID );
 		double originY( long int objectID );
 		double originZ( long int objectID );
+		double weight( long int objectID );
+		double flip( long int objectID );
 		bool enabled( long int objectID );
 		std::string CTFModel( long int objectID );
 		std::string image( long int objectID );
 		std::string micrograph( long int objectID );
+		
 
 	};
 

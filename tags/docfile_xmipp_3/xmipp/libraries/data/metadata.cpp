@@ -43,15 +43,63 @@ metaData::metaData( std::string fileName, std::vector<label> * labelsVector )
 	// else we are processing a new Xmipp metadata file
 	getline(infile, line, '\n');
 	
-	if( line.find( "Headerinfo" ) != std::string::npos )
+	int pos = line.find( "Headerinfo" );
+	
+	if( pos != std::string::npos )
 	{
+		// Remove from the beginning to the end of "Headerinfo columns:"
+		pos = line.find( ":" );
+		line = line.erase( 0, pos + 1 );
+		
+		std::vector<std::string> labelsVector;
+		
+		while ( line != "" )
+		{
+			pos = line.find(")");
+			std::string label = line.substr( 0, pos+1 );
+			line.erase( 0,pos+1);
+			
+			// The token can now contain a ','
+			pos = label.find(",");
+			label.erase(pos,1);
+			
+			// Remove unneded parenteses and contents
+			pos = label.find("(");
+			int pos2 = label.find(")");
+			label.erase(pos,pos2-pos+1);
+			
+			// Remove white spaces
+			std::string temp;
+			
+			for( unsigned int i = 0 ; i < label.length() ; i++ )
+				if ( label[ i ] != ' ' ) 
+					temp += label[ i ];
+			
+			label = temp;
+
+			labelsVector.push_back( label );
+		}
+		
 		while ( getline( infile, line, '\n') )
 		{
+			long int objectID = addObject( );
+
+			// Parse labels
+			std::stringstream os2( line );          
+			std::string value;
+			
+			int counter = 0;
+			while ( os2 >> value )
+			{
+				if( counter >= 2 ) // Discard two first numbers
+					setValue( labelsVector[counter-2], value );
+				counter++;
+			}
 		}
 	}
 	else
 	{
-		int pos = line.rfind( "*" );
+		pos = line.rfind( "*" );
 		
 		if( pos == std::string::npos )
 		{
@@ -708,7 +756,7 @@ std::string metaData::image( long int objectID )
 		
 		if( result == NULL )
 		{
-			std::cerr << "No 'fileName' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+			std::cerr << "No 'image' label found for objectID = " << objectID << " . Exiting... " << std::endl;
 		}
 		else
 		{
@@ -731,7 +779,7 @@ std::string metaData::CTFModel( long int objectID )
 		
 		if( result == NULL )
 		{
-			std::cerr << "No 'fileName' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+			std::cerr << "No 'CTFModel' label found for objectID = " << objectID << " . Exiting... " << std::endl;
 		}
 		else
 		{
@@ -754,7 +802,53 @@ std::string metaData::micrograph( long int objectID )
 		
 		if( result == NULL )
 		{
-			std::cerr << "No 'fileName' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+			std::cerr << "No 'micrograph' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
+double metaData::weight( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		metaDataContainer * aux = objects[ objectID ];
+		double * result = (double *)aux->getValue( WEIGHT );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'weight' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
+double metaData::flip( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		metaDataContainer * aux = objects[ objectID ];
+		double * result = (double *)aux->getValue( FLIP );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'flip' label found for objectID = " << objectID << " . Exiting... " << std::endl;
 		}
 		else
 		{

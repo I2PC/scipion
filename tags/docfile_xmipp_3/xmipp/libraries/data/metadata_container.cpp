@@ -238,15 +238,15 @@ void metaDataContainer::deleteValue( label name )
 	
 label metaDataContainer::codifyLabel( std::string strLabel )
 {
-	if( strLabel == "angleRot" )
+	if( strLabel == "angleRot" || strLabel == "rot" )
 	{
 		return ANGLEROT;
 	}
-	else if( strLabel == "angleTilt" )
+	else if( strLabel == "angleTilt" || strLabel == "tilt" )
 	{
 		return ANGLETILT;
 	}
-	else if( strLabel == "anglePsi" )
+	else if( strLabel == "anglePsi" || strLabel == "psi" )
 	{
 		return ANGLEPSI;
 	}
@@ -262,15 +262,15 @@ label metaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return CTFMODEL;
 	}
-	else if( strLabel == "shiftX" )
+	else if( strLabel == "shiftX" || strLabel == "Xoff" )
 	{
 		return SHIFTX;
 	}
-	else if( strLabel == "shiftY" )
+	else if( strLabel == "shiftY" || strLabel == "Yoff" )
 	{
 		return SHIFTY;
 	}
-	else if( strLabel == "shiftZ" )
+	else if( strLabel == "shiftZ" || strLabel == "Zoff" )
 	{
 		return SHIFTZ;
 	}
@@ -289,6 +289,14 @@ label metaDataContainer::codifyLabel( std::string strLabel )
 	else if( strLabel == "originZ" )
 	{
 		return ORIGINZ;
+	}
+	else if( strLabel == "Weight" )
+	{
+		return WEIGHT;
+	}
+	else if( strLabel == "Flip" )
+	{
+		return FLIP;
 	}
 }
 
@@ -333,6 +341,12 @@ std::string metaDataContainer::decodeLabel( label inputLabel )
 			break;
 		case ORIGINZ:
 			return std::string( "originZ" );
+			break;
+		case WEIGHT:
+			return std::string( "weight" );
+			break;
+		case FLIP: 
+			return std::string( "flip" );
 			break;
 		default:
 			return std::string( "" );

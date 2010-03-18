@@ -45,7 +45,9 @@ enum label
 	ENABLED, 
 	ORIGINX, 
 	ORIGINY, 
-	ORIGINZ 
+	ORIGINZ,
+	WEIGHT,
+	FLIP
 };
 
 class metaDataContainer
