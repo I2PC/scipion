@@ -299,6 +299,18 @@ label MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return FLIP;
 	}
+	else if( strLabel == "Ref" )
+	{
+		return REF;
+	}
+	else if( strLabel == "maxCC" )
+	{
+		return MAXCC;
+	}
+	else
+	{
+		return UNDEFINED;
+	}
 }
 
 std::string MetaDataContainer::decodeLabel( label inputLabel )
@@ -349,6 +361,12 @@ std::string MetaDataContainer::decodeLabel( label inputLabel )
 			break;
 		case FLIP: 
 			return std::string( "flip" );
+			break;
+		case REF: 
+			return std::string( "ref" );
+			break;
+		case MAXCC: 
+			return std::string( "maxCC" );
 			break;
 		default:
 			return std::string( "" );

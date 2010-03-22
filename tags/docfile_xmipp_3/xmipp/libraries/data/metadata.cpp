@@ -77,6 +77,7 @@ std::cout << "Is Old Xmipp format" << std::endl;
 			newLabel = removeChar( newLabel, ' ' );
 		
 std::cout << "New label found: " << newLabel << std::endl;
+
 			if( labelsVector != NULL )
 			{
 				std::vector< label >::iterator location;
@@ -86,6 +87,7 @@ std::cout << "New label found: " << newLabel << std::endl;
    				if ( location != labelsVector->end() )
 				{
 					readLabels.push_back( newLabel );
+std::cout << "Label accepted as: " <<  MetaDataContainer::codifyLabel(newLabel) << std::endl;
 				}
    				else
 				{
@@ -95,6 +97,7 @@ std::cout << "New label found: " << newLabel << std::endl;
 			else
 			{
 				readLabels.push_back( newLabel );
+std::cout << "Label accepted as: " <<  MetaDataContainer::codifyLabel(newLabel) << std::endl;
 			}
 		}
 		

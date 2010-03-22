@@ -49,6 +49,7 @@ enum label
 	ORIGINZ,
 	WEIGHT,
 	FLIP,
+	REF,
 	MAXCC
 };
 
