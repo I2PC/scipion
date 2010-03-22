@@ -146,5 +146,6 @@ void Usage()
               << "   [-sel selFile]    : Selfile with the set of images\n"
               << "   [-vol volume]     : Volume with the set of images\n"
               << "   [-reverse]        : Reverse endiannness for reading the stack\n"
+              << "   [-skipHeaders]    : skip headers in badly formed Spider stacks\n"
     ;
 }
