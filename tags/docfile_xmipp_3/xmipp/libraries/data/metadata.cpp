@@ -33,6 +33,35 @@ MetaData::MetaData()
 	fastStringSearchLabel = UNDEFINED;	
 }
 
+void MetaData::save( std::string fileName )
+{
+	// Open file
+	std::ofstream outfile ( fileName.data(), std::ios_base::out );
+
+	outfile << "; ";
+	outfile << "XMIPP_3 * ";
+	outfile << path << std::endl;
+	
+	std::map< long int, MetaDataContainer *>::iterator It;
+	std::vector< label >::iterator strIt;
+	
+	outfile << "; ";
+	for( strIt = readLabels.begin( ); strIt != readLabels.end( ); strIt ++ )
+	{
+		outfile << MetaDataContainer::decodeLabel(*strIt);
+		outfile << " ";
+	}
+	outfile << std::endl;
+	
+/*	for( It = objects.begin( ); It != objects.end(); It ++)
+	{
+		for( strIt = readLabels.begin( ); strIt != readLabels.end( ); strIt ++ )
+		{
+			outfile << 
+		}
+	} */
+}
+
 MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 {
 	path = std::string( "" );
@@ -50,13 +79,34 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 	
 	if( pos != std::string::npos ) // Headerinfo token found
 	{
-std::cout << "Is Old Xmipp format" << std::endl;
+		bool saveName = true;
+		
 		// Remove from the beginning to the end of "Headerinfo columns:"
 		pos = line.find( ":" );
 		line = line.erase( 0, pos + 1 );
 		
-		std::vector<std::string> readLabels;
-		
+		if( labelsVector != NULL )
+		{
+			std::vector< label >::iterator location;
+					
+   			location = std::find( labelsVector->begin(), labelsVector->end(), IMAGE );
+	
+	   		if ( location != labelsVector->end() )
+			{
+				readLabels.push_back( IMAGE );
+				saveName = true;
+			}
+			else
+			{
+				saveName = false;
+			}
+		}
+		else
+		{				
+			readLabels.push_back( IMAGE );
+			saveName = true;
+		}
+							
 		// Extract labels until the string is empty
 		while ( line != "" )
 		{
@@ -76,8 +126,6 @@ std::cout << "Is Old Xmipp format" << std::endl;
 			// Remove white spaces
 			newLabel = removeChar( newLabel, ' ' );
 		
-std::cout << "New label found: " << newLabel << std::endl;
-
 			if( labelsVector != NULL )
 			{
 				std::vector< label >::iterator location;
@@ -86,8 +134,7 @@ std::cout << "New label found: " << newLabel << std::endl;
 
    				if ( location != labelsVector->end() )
 				{
-					readLabels.push_back( newLabel );
-std::cout << "Label accepted as: " <<  MetaDataContainer::codifyLabel(newLabel) << std::endl;
+					readLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
 				}
    				else
 				{
@@ -96,13 +143,10 @@ std::cout << "Label accepted as: " <<  MetaDataContainer::codifyLabel(newLabel) 
 			}
 			else
 			{
-				readLabels.push_back( newLabel );
-std::cout << "Label accepted as: " <<  MetaDataContainer::codifyLabel(newLabel) << std::endl;
+				readLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
 			}
 		}
-		
-std::cout << "Filling-up structure: " << std::endl;
-		
+				
 		int isname=0;
 		while ( getline( infile, line, '\n') )
 		{
@@ -113,7 +157,7 @@ std::cout << "Filling-up structure: " << std::endl;
 				
 				// Remove spaces from string
 				line = removeChar( line, ' ' );
-				
+								
 				setValue( IMAGE, line );
 			}
 			else
@@ -126,15 +170,21 @@ std::cout << "Filling-up structure: " << std::endl;
 				while ( os2 >> value )
 				{
 					if( counter >= 2 ) // Discard two first numbers
-						setValue( readLabels[counter-2], value );
+					{
+						if( saveName )
+							setValue( readLabels[counter-1], value );
+						else
+							setValue( readLabels[counter-2], value );
+					}
 					counter++;
 				}
 			}
+			
+			isname++;
 		}
 	}
 	else
 	{
-std::cout << "Is New Xmipp format" << std::endl;
 		pos = line.rfind( "*" );
 		
 		if( pos == std::string::npos )
@@ -157,12 +207,10 @@ std::cout << "Is New Xmipp format" << std::endl;
 		// Parse labels
 		std::stringstream os( line );          
 		std::string newLabel;                 
-		
-		std::vector<std::string> labelsVector;
-		
+				
 		while ( os >> newLabel )
 		{
-			labelsVector.push_back( newLabel );
+			readLabels.push_back(  MetaDataContainer::codifyLabel(newLabel) );
 		}
 		
 		// Read data and fill structures accordingly
@@ -177,7 +225,7 @@ std::cout << "Is New Xmipp format" << std::endl;
 			int counter = 0;
 			while ( os2 >> value )
 			{
-				setValue( labelsVector[counter], value );
+				setValue( readLabels[counter], value );
 				counter++;
 			}
 		}
@@ -223,7 +271,7 @@ long int MetaData::addObject( )
 {
 	long int result = lastObject();
 	typedef std::pair<long int, MetaDataContainer *> newPair;
-	
+		
 	if( result == NO_OBJECTS_STORED )
 	{
 		result = 0;
@@ -235,12 +283,16 @@ long int MetaData::addObject( )
 
 	objects.insert( newPair( result, new MetaDataContainer() ) );
 	
+	// Set iterator pointing to the newly added object
+	objectsIterator = objects.end( );
+	objectsIterator--;
+
 	return result;
 }
 
 long int MetaData::firstObject( ) 
 { 
-	size_t result = 0;
+	long int result = 0;
 	
 	if( !objects.empty( ))
 	{
@@ -257,7 +309,7 @@ long int MetaData::firstObject( )
 
 long int MetaData::nextObject( ) 
 { 
-	size_t result = 0;
+	long int result = 0;
 	
 	if( !objects.empty( ))
 	{
@@ -282,13 +334,12 @@ long int MetaData::nextObject( )
 
 long int MetaData::lastObject( )
 {
-	size_t result = 0;
+	long int result = 0;
 	
 	if( !objects.empty( ))
 	{
-		objectsIterator = objects.end(); 
-		objectsIterator--;
-		
+		objectsIterator = objects.end();
+		objectsIterator--;	
 		result = objectsIterator->first;
 	}
 	else
@@ -383,7 +434,7 @@ bool MetaData::setValue( label name, int value, long int objectID )
 bool MetaData::setValue( label name, std::string value, long int objectID )
 {
 	long int auxID;
-	
+
 	if( !objects.empty( ))
 	{
 		if( objectID == -1 )
@@ -904,6 +955,29 @@ double MetaData::maxCC( long int objectID )
 		if( result == NULL )
 		{
 			std::cerr << "No 'maxCC' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
+int MetaData::ref( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		MetaDataContainer * aux = objects[ objectID ];
+		int * result = (int *)aux->getValue( REF );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'ref' label found for objectID = " << objectID << " . Exiting... " << std::endl;
 		}
 		else
 		{

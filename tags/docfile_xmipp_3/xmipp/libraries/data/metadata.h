@@ -48,6 +48,8 @@ class MetaData
 	std::map< std::string, long int> fastStringSearch;
 	label fastStringSearchLabel;
 
+	std::vector< label > readLabels;
+
 	std::string path;
 
 public:
@@ -55,6 +57,8 @@ public:
 	MetaData();
 	MetaData( std::string fileName, std::vector<label> * labelsVector = NULL );
 	~MetaData();
+	
+	void save( std::string fileName );
 	
 	bool isEmpty( );
 	
@@ -101,6 +105,7 @@ public:
 	double weight( long int objectID );
 	double flip( long int objectID );
 	double maxCC( long int objectID );
+	int ref( long int objectID );
 	bool enabled( long int objectID );
 	std::string CTFModel( long int objectID );
 	std::string image( long int objectID );
