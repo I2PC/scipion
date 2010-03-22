@@ -33,35 +33,6 @@ MetaData::MetaData()
 	fastStringSearchLabel = UNDEFINED;	
 }
 
-void MetaData::save( std::string fileName )
-{
-	// Open file
-	std::ofstream outfile ( fileName.data(), std::ios_base::out );
-
-	outfile << "; ";
-	outfile << "XMIPP_3 * ";
-	outfile << path << std::endl;
-	
-	std::map< long int, MetaDataContainer *>::iterator It;
-	std::vector< label >::iterator strIt;
-	
-	outfile << "; ";
-	for( strIt = readLabels.begin( ); strIt != readLabels.end( ); strIt ++ )
-	{
-		outfile << MetaDataContainer::decodeLabel(*strIt);
-		outfile << " ";
-	}
-	outfile << std::endl;
-	
-/*	for( It = objects.begin( ); It != objects.end(); It ++)
-	{
-		for( strIt = readLabels.begin( ); strIt != readLabels.end( ); strIt ++ )
-		{
-			outfile << 
-		}
-	} */
-}
-
 MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 {
 	path = std::string( "" );
@@ -93,7 +64,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 	
 	   		if ( location != labelsVector->end() )
 			{
-				readLabels.push_back( IMAGE );
+				activeLabels.push_back( IMAGE );
 				saveName = true;
 			}
 			else
@@ -103,7 +74,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 		}
 		else
 		{				
-			readLabels.push_back( IMAGE );
+			activeLabels.push_back( IMAGE );
 			saveName = true;
 		}
 							
@@ -134,7 +105,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 
    				if ( location != labelsVector->end() )
 				{
-					readLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
+					activeLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
 				}
    				else
 				{
@@ -143,7 +114,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 			}
 			else
 			{
-				readLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
+				activeLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
 			}
 		}
 				
@@ -172,9 +143,9 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 					if( counter >= 2 ) // Discard two first numbers
 					{
 						if( saveName )
-							setValue( readLabels[counter-1], value );
+							setValue( MetaDataContainer::decodeLabel(activeLabels[counter-1]), value );
 						else
-							setValue( readLabels[counter-2], value );
+							setValue( MetaDataContainer::decodeLabel(activeLabels[counter-2]), value );
 					}
 					counter++;
 				}
@@ -210,7 +181,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 				
 		while ( os >> newLabel )
 		{
-			readLabels.push_back(  MetaDataContainer::codifyLabel(newLabel) );
+			activeLabels.push_back(  MetaDataContainer::codifyLabel(newLabel) );
 		}
 		
 		// Read data and fill structures accordingly
@@ -225,13 +196,45 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 			int counter = 0;
 			while ( os2 >> value )
 			{
-				setValue( readLabels[counter], value );
+				setValue( activeLabels[counter], value );
 				counter++;
 			}
 		}
 	}
 	
 	infile.close( );
+}
+
+void MetaData::save( std::string fileName )
+{
+	// Open file
+	std::ofstream outfile ( fileName.data(), std::ios_base::out );
+
+	outfile << "; ";
+	outfile << "XMIPP_3 * ";
+	outfile << path << std::endl;
+	
+	std::map< long int, MetaDataContainer *>::iterator It;
+	std::vector< label >::iterator strIt;
+	
+	outfile << "; ";	
+	for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
+	{
+		outfile << MetaDataContainer::decodeLabel(*strIt);
+		outfile << " ";
+	}
+	outfile << std::endl;
+	
+	for( It = objects.begin( ); It != objects.end(); It ++)
+	{
+		for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
+		{
+			(It->second)->writeValuesToFile( outfile, *strIt );
+			outfile << " ";
+		}
+		
+		outfile << std::endl;
+	} 
 }
 
 MetaData::~MetaData( )

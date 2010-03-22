@@ -48,7 +48,7 @@ class MetaData
 	std::map< std::string, long int> fastStringSearch;
 	label fastStringSearchLabel;
 
-	std::vector< label > readLabels;
+	std::vector< label > activeLabels;
 
 	std::string path;
 

@@ -65,24 +65,33 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 	// Look for a double value
 	if( lCode == ANGLEROT || lCode == ANGLETILT || lCode == ANGLEPSI ||
 	   lCode == SHIFTX || lCode == SHIFTY || lCode == SHIFTZ ||
-	   lCode == ORIGINX || lCode == ORIGINY || lCode == ORIGINZ ) 
+	   lCode == ORIGINX || lCode == ORIGINY || lCode == ORIGINZ || 
+	   lCode == WEIGHT || lCode == MAXCC ) 
 	{
 		double doubleValue;
 		
 		i >> doubleValue;			
-		
+				
 		addValue( lCode, doubleValue );
 	}
 	else if( lCode == IMAGE || lCode == MICROGRAPH || lCode == CTFMODEL )
 	{
 		addValue( lCode, value );
 	}
-	else if( lCode == ENABLED )
+	else if( lCode == REF )
+	{
+		int intValue;
+		
+		i >> intValue;
+				
+		addValue( lCode, intValue ); 
+	}
+	else if( lCode == ENABLED || lCode == FLIP )
 	{
 		bool boolValue;
 		
 		i >> boolValue;
-		
+				
 		addValue( lCode, boolValue );
 	}
 	
@@ -238,6 +247,8 @@ void MetaDataContainer::deleteValue( label name )
 	
 label MetaDataContainer::codifyLabel( std::string strLabel )
 {
+	// NOTE: For the "||" cases, the left label is the XMIPP_3 version's and
+	// the right value is the old-styled one
 
 	if( strLabel == "angleRot" || strLabel == "rot" )
 	{
@@ -291,15 +302,15 @@ label MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return ORIGINZ;
 	}
-	else if( strLabel == "Weight" )
+	else if( strLabel == "weight" || strLabel == "Weight"  )
 	{
 		return WEIGHT;
 	}
-	else if( strLabel == "Flip" )
+	else if( strLabel == "flip" || strLabel == "Flip" )
 	{
 		return FLIP;
 	}
-	else if( strLabel == "Ref" )
+	else if( strLabel == "ref" || strLabel == "Ref" )
 	{
 		return REF;
 	}
@@ -373,3 +384,64 @@ std::string MetaDataContainer::decodeLabel( label inputLabel )
 			break;
 	}
 }
+
+void MetaDataContainer::writeValuesToFile( std::ofstream &outfile, label inputLabel )
+{
+	switch ( inputLabel ) 
+	{
+		case ANGLEROT:
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		case ANGLETILT:
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		case ANGLEPSI:
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		case IMAGE:
+			outfile << *((std::string*)(getValue( inputLabel )));
+			break;
+		case MICROGRAPH:
+			outfile << *((std::string*)(getValue( inputLabel )));
+			break;
+		case CTFMODEL:
+			outfile << *((std::string*)(getValue( inputLabel )));
+			break;
+		case SHIFTX:
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		case SHIFTY:
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		case SHIFTZ:
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		case ENABLED:
+			outfile << *((bool*)(getValue( inputLabel )));
+			break;
+		case ORIGINX:
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		case ORIGINY:
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		case ORIGINZ:
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		case WEIGHT:
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		case FLIP: 
+			outfile << *((bool*)(getValue( inputLabel )));
+			break;
+		case REF: 
+			outfile << *((int*)(getValue( inputLabel )));
+			break;
+		case MAXCC: 
+			outfile << *((double*)(getValue( inputLabel )));
+			break;
+		default:
+			break;
+	}
+}
+

@@ -30,6 +30,7 @@
 #include "strings.h"
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 enum label 
 { 
@@ -88,6 +89,8 @@ class MetaDataContainer
 	
 	void deleteValue( label name );
 	
+	void writeValuesToFile( std::ofstream &outfile, label inputLabel );
+
 	static label codifyLabel( std::string strLabel );
 	static std::string decodeLabel( label inputLabel );
 };
