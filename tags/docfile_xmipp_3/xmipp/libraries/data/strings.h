@@ -31,30 +31,18 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+	
+/** Removes all occurrences of 'character' from the string no matter 
+where they are */
+std::string removeChar( std::string str, char character );
+	
+/** Removes escaped symbols \n, \t, \v, \b, \r, \f, and \a */
+std::string unescape( std::string str );
 
-class XmpString : public std::string
-{
-public:
-	XmpString( const char * newString );
-	XmpString( const XmpString & oldString );
-	XmpString( const std::string & oldString );
-	XmpString( );
-	
-	const XmpString & operator=(const XmpString & op);
-	const XmpString & operator=(const std::string & op);
-	
-	/** Removes all occurrences of 'character' from the string no matter 
-	where they are */
-	unsigned int removeChar( char character );
-	
-	/** Removes escaped symbols \n, \t, \v, \b, \r, \f, and \a */
-	void unescape( );
-	
-	/** Removes white spaces from the beginning and the end of the string
-	as well as \n and \t special characters
-	and simplifies the rest of groups of white spaces of the string to
-	a single white space */
-	void simplify( );
-};
+/** Removes white spaces from the beginning and the end of the string
+as well as escaped characters
+and simplifies the rest of groups of white spaces of the string to
+a single white space */
+std::string simplify( std::string str );
 
 #endif

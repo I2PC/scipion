@@ -25,95 +25,58 @@
 
 #include "strings.h"
 
-XmpString::XmpString( const char * newString ):std::string( newString )
+std::string removeChar( std::string str, char character )
 {
-}
-
-XmpString::XmpString( const XmpString & oldString )
-{
-	*this = oldString;
-}
-
-XmpString::XmpString( const std::string & oldString )
-{
-	*this = oldString;
-}
-
-XmpString::XmpString( ):std::string( "" )
-{
-}
-
-const XmpString & XmpString::operator=(const XmpString & op)
-{
-	if( &op != this)
-		*this = op;
-	
-	return *this;
-}
-
-const XmpString & XmpString::operator=(const std::string & op)
-{
-	if( &op != this)
-		*this = op;
-	
-	return *this;
-}
-
-unsigned int XmpString::removeChar( char character )
-{
-	unsigned int counter = 0; // Removed occurrences of specified character
-	XmpString temp;
+	std::string temp;
 			
-	for( unsigned int i = 0 ; i < this->length( ) ; i++ )
+	for( unsigned int i = 0 ; i < str.length( ) ; i++ )
 	{
-		if ( (*this)[ i ] != character ) 
-			temp += (*this)[ i ];
-		else
-			counter++;
+		if ( str[ i ] != character ) 
+			temp += str[ i ];
 	}
 	
-	return counter;
+	return temp;
 }
 
-void XmpString::unescape(  )
+std::string unescape( std::string str )
 {
-	XmpString temp;
+	std::string temp;
 
-	for( unsigned int i = 0 ; i < this->length( ) ; i++ )
+	for( unsigned int i = 0 ; i < str.length( ) ; i++ )
 	{
-		char current_char = (*this)[ i ];
+		char current_char = str[ i ];
 			
 		if( current_char != '\n' && current_char != '\t' && 
 			current_char != '\v' && current_char != '\b' &&
 			current_char != '\r' && current_char != '\f' &&
 			current_char != '\a' )
 		{
-			temp += (*this)[ i ];
+			temp += str[ i ];
 		}	
 	}
 	
-	(*this) = temp;
+	return temp;
 }
 
-void XmpString::simplify( )
+std::string simplify( std::string str )
 {
-	XmpString temp;
+	std::string temp;
 	
 	// First, unescape string
-	unescape( );
+	str = unescape( str );
 	
 	// Remove spaces from the beginning
-	int pos = this->find_first_not_of( ' ' );
-	this->erase( 0, pos );
+	int pos = str.find_first_not_of( ' ' );
+	str.erase( 0, pos );
 	
 	// Trim the rest of spaces
-	for( unsigned int i = 0 ; i < this->length( ) ; )
+	for( unsigned int i = 0 ; i < str.length( ) ; )
 	{
-		temp += (*this)[ i ];
+		temp += str[ i ];
 		
-		if ( (*this)[ i ] == ' ' )
+		if ( str[ i ] == ' ' )
 		{			
-			while( (*this)[ i ] == ' ' )
+			while( str[ i ] == ' ' )
 			{
 				i++;
 			}
@@ -130,5 +93,7 @@ void XmpString::simplify( )
 	{
 		temp.resize( temp.size() - 1 );
 	}
+	
+	return temp;
 }
 
