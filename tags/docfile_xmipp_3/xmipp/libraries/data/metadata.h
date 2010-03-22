@@ -44,10 +44,15 @@ class MetaData
 {
 	std::map< long int, MetaDataContainer *> objects;
 	std::map< long int, MetaDataContainer *>::iterator objectsIterator;
-
+	
+	// Allows a fast search for pairs where the value is
+	// a string
 	std::map< std::string, long int> fastStringSearch;
 	label fastStringSearchLabel;
 
+	// What labels have been read from a docfile/metadata file
+	// and/or will be stored on a new metadata file when "save" is
+	// called
 	std::vector< label > activeLabels;
 
 	std::string path;

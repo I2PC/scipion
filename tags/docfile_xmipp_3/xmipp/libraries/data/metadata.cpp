@@ -56,6 +56,9 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 		pos = line.find( ":" );
 		line = line.erase( 0, pos + 1 );
 		
+		// In the old docfile format the "image" label did not exist, it was
+		// a ";" commented line containing the name of the projection. Therefore,
+		// for the new format it must be added by hand, if necessary
 		if( labelsVector != NULL )
 		{
 			std::vector< label >::iterator location;
