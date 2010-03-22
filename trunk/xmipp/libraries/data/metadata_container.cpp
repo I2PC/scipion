@@ -24,47 +24,78 @@
 ***************************************************************************/
 #include "metadata_container.h"
 
-metaDataContainer::metaDataContainer(){};
-metaDataContainer::~metaDataContainer(){};
+MetaDataContainer::MetaDataContainer(){};
+MetaDataContainer::~MetaDataContainer(){};
 
-void metaDataContainer::addValue( std::string name, int value )
+void MetaDataContainer::addValue( label name, int value )
 {
 	void * newValue = (void *)(new int(value));
 	insertVoidPtr( name, newValue );
 }
 
-void metaDataContainer::addValue( std::string name, double value )
+void MetaDataContainer::addValue( label name, double value )
 {
 	void * newValue = (void *)(new double(value));
 	insertVoidPtr( name, newValue );
 }
 
-void metaDataContainer::addValue( std::string name, float value )
+void MetaDataContainer::addValue( label name, float value )
 {
 	void * newValue = (void *)(new float(value));
 	insertVoidPtr( name, newValue );
 }
 
-void metaDataContainer::addValue( std::string name, bool value )
+void MetaDataContainer::addValue( label name, bool value )
 {
 	void * newValue = (void *)(new bool(value));
 	insertVoidPtr( name, newValue );
 }
 
-void metaDataContainer::addValue( std::string name, std::string value )
+void MetaDataContainer::addValue( label name, XmpString value )
 {
-	void * newValue = (void *)(new std::string(value));
+	void * newValue = (void *)(new XmpString(value));
 	insertVoidPtr( name, newValue );
 }
 
-void metaDataContainer::insertVoidPtr( std::string name, void * value )
+void MetaDataContainer::addValue( XmpString name, XmpString value )
+{	
+	label lCode = codifyLabel( name );
+	std::istringstream i( value );
+	
+	// Look for a double value
+	if( lCode == ANGLEROT || lCode == ANGLETILT || lCode == ANGLEPSI ||
+	   lCode == SHIFTX || lCode == SHIFTY || lCode == SHIFTZ ||
+	   lCode == ORIGINX || lCode == ORIGINY || lCode == ORIGINZ ) 
+	{
+		double doubleValue;
+		
+		i >> doubleValue;			
+		
+		addValue( lCode, doubleValue );
+	}
+	else if( lCode == IMAGE || lCode == MICROGRAPH || lCode == CTFMODEL )
+	{
+		addValue( lCode, value );
+	}
+	else if( lCode == ENABLED )
+	{
+		bool boolValue;
+		
+		i >> boolValue;
+		
+		addValue( lCode, boolValue );
+	}
+	
+}
+
+void MetaDataContainer::insertVoidPtr( label name, void * value )
 {
 	values[ name ] = value;
 }
 
-void * metaDataContainer::getValue( std::string name )
+void * MetaDataContainer::getValue( label name )
 {	
-	std::map<std::string, void *>::iterator element; 
+	std::map<label, void *>::iterator element; 
 
 	element = values.find( name );
 
@@ -78,7 +109,7 @@ void * metaDataContainer::getValue( std::string name )
 	}
 }
 
-bool metaDataContainer::valueExists( std::string name )
+bool MetaDataContainer::valueExists( label name )
 {
 	if( values.find( name ) == values.end( ) )
 	{
@@ -90,12 +121,12 @@ bool metaDataContainer::valueExists( std::string name )
 	}
 }
 
-bool metaDataContainer::pairExists( std::string name, double value )
+bool MetaDataContainer::pairExists( label name, double value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< std::string, void *>::iterator It;
+	std::map< label, void *>::iterator It;
 	
 	It = values.find( name );
 	
@@ -112,12 +143,12 @@ bool metaDataContainer::pairExists( std::string name, double value )
 	}
 }
 
-bool metaDataContainer::pairExists( std::string name, float value )
+bool MetaDataContainer::pairExists( label name, float value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< std::string, void *>::iterator It;
+	std::map< label, void *>::iterator It;
 	
 	It = values.find( name );
 	
@@ -134,12 +165,12 @@ bool metaDataContainer::pairExists( std::string name, float value )
 	}
 }
 
-bool metaDataContainer::pairExists( std::string name, int value )
+bool MetaDataContainer::pairExists( label name, int value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< std::string, void *>::iterator It;
+	std::map< label, void *>::iterator It;
 	
 	It = values.find( name );
 	
@@ -156,12 +187,12 @@ bool metaDataContainer::pairExists( std::string name, int value )
 	}
 }
 
-bool metaDataContainer::pairExists( std::string name, bool value )
+bool MetaDataContainer::pairExists( label name, bool value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< std::string, void *>::iterator It;
+	std::map< label, void *>::iterator It;
 	
 	It = values.find( name );
 	
@@ -178,18 +209,18 @@ bool metaDataContainer::pairExists( std::string name, bool value )
 	}
 }
 
-bool metaDataContainer::pairExists( std::string name, std::string value )
+bool MetaDataContainer::pairExists( label name, XmpString value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< std::string, void *>::iterator It;
+	std::map< label, void *>::iterator It;
 	
 	It = values.find( name );
 	
 	if( It != values.end( ))
 	{
-		if( value == *((std::string *)(It->second)) )
+		if( value == *((XmpString *)(It->second)) )
 		{
 			return true;
 		}
@@ -200,8 +231,126 @@ bool metaDataContainer::pairExists( std::string name, std::string value )
 	}
 }
 
-void metaDataContainer::deleteValue( std::string name )
+void MetaDataContainer::deleteValue( label name )
 {
 	values.erase( name );
 }
 	
+label MetaDataContainer::codifyLabel( XmpString strLabel )
+{
+	if( strLabel == "angleRot" || strLabel == "rot" )
+	{
+		return ANGLEROT;
+	}
+	else if( strLabel == "angleTilt" || strLabel == "tilt" )
+	{
+		return ANGLETILT;
+	}
+	else if( strLabel == "anglePsi" || strLabel == "psi" )
+	{
+		return ANGLEPSI;
+	}
+	else if( strLabel == "image" )
+	{
+		return IMAGE;
+	}
+	else if( strLabel == "micrograph" )
+	{
+		return MICROGRAPH;
+	}
+	else if( strLabel == "CTFModel" )
+	{
+		return CTFMODEL;
+	}
+	else if( strLabel == "shiftX" || strLabel == "Xoff" )
+	{
+		return SHIFTX;
+	}
+	else if( strLabel == "shiftY" || strLabel == "Yoff" )
+	{
+		return SHIFTY;
+	}
+	else if( strLabel == "shiftZ" || strLabel == "Zoff" )
+	{
+		return SHIFTZ;
+	}
+	else if( strLabel == "enabled" )
+	{
+		return ENABLED;
+	}
+	else if( strLabel == "originX" )
+	{
+		return ORIGINX;
+	}
+	else if( strLabel == "originY" )
+	{
+		return ORIGINY;
+	}
+	else if( strLabel == "originZ" )
+	{
+		return ORIGINZ;
+	}
+	else if( strLabel == "Weight" )
+	{
+		return WEIGHT;
+	}
+	else if( strLabel == "Flip" )
+	{
+		return FLIP;
+	}
+}
+
+XmpString MetaDataContainer::decodeLabel( label inputLabel )
+{
+	switch ( inputLabel ) 
+	{
+		case ANGLEROT:
+			return XmpString( "angleRot" );
+			break;
+		case ANGLETILT:
+			return XmpString( "angleTilt" );
+			break;
+		case ANGLEPSI:
+			return XmpString( "anglePsi" );
+			break;
+		case IMAGE:
+			return XmpString( "image" );
+			break;
+		case MICROGRAPH:
+			return XmpString( "micrograph" );
+			break;
+		case CTFMODEL:
+			return XmpString( "CTFModel" );
+			break;
+		case SHIFTX:
+			return XmpString( "shiftX" );
+			break;
+		case SHIFTY:
+			return XmpString( "shiftY" );
+			break;
+		case SHIFTZ:
+			return XmpString( "shiftZ" );
+			break;
+		case ENABLED:
+			return XmpString( "enabled" );
+			break;
+		case ORIGINX:
+			return XmpString( "originX" );
+			break;
+		case ORIGINY:
+			return XmpString( "originY" );
+			break;
+		case ORIGINZ:
+			return XmpString( "originZ" );
+			break;
+		case WEIGHT:
+			return XmpString( "weight" );
+			break;
+		case FLIP: 
+			return XmpString( "flip" );
+			break;
+		default:
+			return XmpString( "" );
+			break;
+	}
+}

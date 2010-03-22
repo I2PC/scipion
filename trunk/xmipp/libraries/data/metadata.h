@@ -28,8 +28,10 @@
 
 #include <map>
 #include <vector>
-#include <string>
 #include <iostream>
+#include <sstream>
+#include "funcs.h"
+#include "strings.h"
 
 #include "metadata_container.h"
 
@@ -37,72 +39,70 @@
 #define NO_OBJECTS_STORED	-1
 #define NO_MORE_OBJECTS		-2
 
-// Types that can be stored as metaData
-#define UNDEFINED_TYPE		0
-#define IMAGE_TYPE			1
-#define MICROGRAPH_TYPE		2
-#define VOLUME_TYPE			3
+class MetaData
+{
+	std::map< long int, MetaDataContainer *> objects;
+	std::map< long int, MetaDataContainer *>::iterator objectsIterator;
 
-class metaData
-	{
-		std::map< long int, metaDataContainer *> objects;
-		std::map< long int, metaDataContainer *>::iterator objectsIterator;
-		
-		std::string programName;
-		std::string path;
-		unsigned int objectsType;
-		
-	public:
-		
-		metaData();
-		metaData( std::string fileName, std::string type, std::vector<std::string> * labelsVector = NULL );
-		~metaData();
-		
-		bool isEmpty( );
-		
-		void clear( );
-		
-		long int addObject( );
-		long int firstObject( );
-		long int nextObject( );
-		long int lastObject( );
-		
-		// Set a new pair/value for an specified object. If no objectID is given, that
-		// pointed by the class iterator is used 
-		bool setValue( std::string label, double value, long int objectID = -1 );
-		bool setValue( std::string label, float value, long int objectID = -1 );
-		bool setValue( std::string label, int value, long int objectID = -1 );
-		bool setValue( std::string label, bool, long int objectID = -1 );
-		bool setValue( std::string label, std::string value, long int objectID = -1 );
-		
-		// Get the collection of objects whose pair label/value is given
-		std::vector<long int> findObjects( std::string label, double value );
-		std::vector<long int> findObjects( std::string label, float value );
-		std::vector<long int> findObjects( std::string label, int value );
-		std::vector<long int> findObjects( std::string label, bool value );
-		std::vector<long int> findObjects( std::string label, std::string value );
-		
-		// Xmipp-specific, for new parameters add here.
-		void setProgram( std::string newProgName );		
-		void setPath( std::string newPath );	
-		void setType( unsigned int newObjectsType );
-		
-		std::string getProgram( );
-		std::string getPath( );
-		unsigned int getType( );
-		
-		double rot( long int objectID );
-		double tilt( long int objectID );
-		double psi( long int objectID );
-		double shiftX( long int objectID );
-		double shiftY( long int objectID );
-		double shiftZ( long int objectID );
-		double originX( long int objectID );
-		double originY( long int objectID );
-		double originZ( long int objectID );
-		bool enabled( long int objectID );
-		std::string fileName( long int objectID );
+	std::map< XmpString, long int> fastStringSearch;
+	label fastStringSearchLabel;
 
-	};
+	XmpString path;
+
+public:
+	
+	MetaData();
+	MetaData( XmpString fileName, std::vector<label> * labelsVector = NULL );
+	~MetaData();
+	
+	bool isEmpty( );
+	
+	void clear( );
+	
+	long int addObject( );
+	long int firstObject( );
+	long int nextObject( );
+	long int lastObject( );
+	
+	long int fastSearch( label name, XmpString value, bool recompute = false );
+	
+	// Set a new pair/value for an specified object. If no objectID is given, that
+	// pointed by the class iterator is used 
+	bool setValue( label name, double value, long int objectID = -1 );
+	bool setValue( label name, float value, long int objectID = -1 );
+	bool setValue( label name, int value, long int objectID = -1 );
+	bool setValue( label name, bool, long int objectID = -1 );
+	bool setValue( label name, XmpString value, long int objectID = -1 );
+	
+	bool setValue( XmpString name, XmpString value, long int objectID = -1 );
+	
+	// Get the collection of objects whose pair label/value is given
+	std::vector<long int> findObjects( label name, double value );
+	std::vector<long int> findObjects( label name, float value );
+	std::vector<long int> findObjects( label name, int value );
+	std::vector<long int> findObjects( label name, bool value );
+	std::vector<long int> findObjects( label name, XmpString value );
+	
+	// Xmipp-specific, for new parameters add here.
+	void setPath( XmpString newPath = "" );	
+	
+	XmpString getPath( );
+	
+	double angleRot( long int objectID );
+	double angleTilt( long int objectID );
+	double anglePsi( long int objectID );
+	double shiftX( long int objectID );
+	double shiftY( long int objectID );
+	double shiftZ( long int objectID );
+	double originX( long int objectID );
+	double originY( long int objectID );
+	double originZ( long int objectID );
+	double weight( long int objectID );
+	double flip( long int objectID );
+	bool enabled( long int objectID );
+	XmpString CTFModel( long int objectID );
+	XmpString image( long int objectID );
+	XmpString micrograph( long int objectID );
+};
 
 #endif
