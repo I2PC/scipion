@@ -48,7 +48,8 @@ enum label
 	ORIGINY, 
 	ORIGINZ,
 	WEIGHT,
-	FLIP
+	FLIP,
+	MAXCC
 };
 
 class MetaDataContainer
@@ -72,8 +73,8 @@ class MetaDataContainer
 	void addValue( label name, float value );
 	void addValue( label name, int value );
 	void addValue( label name, bool value );
-	void addValue( label name, XmpString value );
-	void addValue( XmpString name, XmpString value );
+	void addValue( label name, std::string value );
+	void addValue( std::string name, std::string value );
 	
 	void * getValue( label name );
 	bool valueExists( label name );
@@ -82,12 +83,12 @@ class MetaDataContainer
 	bool pairExists( label name, float value );
 	bool pairExists( label name, int value );
 	bool pairExists( label name, bool value );
-	bool pairExists( label name, XmpString value );
+	bool pairExists( label name, std::string value );
 	
 	void deleteValue( label name );
 	
-	static label codifyLabel( XmpString strLabel );
-	static XmpString decodeLabel( label inputLabel );
+	static label codifyLabel( std::string strLabel );
+	static std::string decodeLabel( label inputLabel );
 };
 
 #endif

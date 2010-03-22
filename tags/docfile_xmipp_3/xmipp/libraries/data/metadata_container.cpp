@@ -51,13 +51,13 @@ void MetaDataContainer::addValue( label name, bool value )
 	insertVoidPtr( name, newValue );
 }
 
-void MetaDataContainer::addValue( label name, XmpString value )
+void MetaDataContainer::addValue( label name, std::string value )
 {
-	void * newValue = (void *)(new XmpString(value));
+	void * newValue = (void *)(new std::string(value));
 	insertVoidPtr( name, newValue );
 }
 
-void MetaDataContainer::addValue( XmpString name, XmpString value )
+void MetaDataContainer::addValue( std::string name, std::string value )
 {	
 	label lCode = codifyLabel( name );
 	std::istringstream i( value );
@@ -209,7 +209,7 @@ bool MetaDataContainer::pairExists( label name, bool value )
 	}
 }
 
-bool MetaDataContainer::pairExists( label name, XmpString value )
+bool MetaDataContainer::pairExists( label name, std::string value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
@@ -220,7 +220,7 @@ bool MetaDataContainer::pairExists( label name, XmpString value )
 	
 	if( It != values.end( ))
 	{
-		if( value == *((XmpString *)(It->second)) )
+		if( value == *((std::string *)It->second) )
 		{
 			return true;
 		}
@@ -236,8 +236,9 @@ void MetaDataContainer::deleteValue( label name )
 	values.erase( name );
 }
 	
-label MetaDataContainer::codifyLabel( XmpString strLabel )
+label MetaDataContainer::codifyLabel( std::string strLabel )
 {
+
 	if( strLabel == "angleRot" || strLabel == "rot" )
 	{
 		return ANGLEROT;
@@ -300,57 +301,57 @@ label MetaDataContainer::codifyLabel( XmpString strLabel )
 	}
 }
 
-XmpString MetaDataContainer::decodeLabel( label inputLabel )
+std::string MetaDataContainer::decodeLabel( label inputLabel )
 {
 	switch ( inputLabel ) 
 	{
 		case ANGLEROT:
-			return XmpString( "angleRot" );
+			return std::string( "angleRot" );
 			break;
 		case ANGLETILT:
-			return XmpString( "angleTilt" );
+			return std::string( "angleTilt" );
 			break;
 		case ANGLEPSI:
-			return XmpString( "anglePsi" );
+			return std::string( "anglePsi" );
 			break;
 		case IMAGE:
-			return XmpString( "image" );
+			return std::string( "image" );
 			break;
 		case MICROGRAPH:
-			return XmpString( "micrograph" );
+			return std::string( "micrograph" );
 			break;
 		case CTFMODEL:
-			return XmpString( "CTFModel" );
+			return std::string( "CTFModel" );
 			break;
 		case SHIFTX:
-			return XmpString( "shiftX" );
+			return std::string( "shiftX" );
 			break;
 		case SHIFTY:
-			return XmpString( "shiftY" );
+			return std::string( "shiftY" );
 			break;
 		case SHIFTZ:
-			return XmpString( "shiftZ" );
+			return std::string( "shiftZ" );
 			break;
 		case ENABLED:
-			return XmpString( "enabled" );
+			return std::string( "enabled" );
 			break;
 		case ORIGINX:
-			return XmpString( "originX" );
+			return std::string( "originX" );
 			break;
 		case ORIGINY:
-			return XmpString( "originY" );
+			return std::string( "originY" );
 			break;
 		case ORIGINZ:
-			return XmpString( "originZ" );
+			return std::string( "originZ" );
 			break;
 		case WEIGHT:
-			return XmpString( "weight" );
+			return std::string( "weight" );
 			break;
 		case FLIP: 
-			return XmpString( "flip" );
+			return std::string( "flip" );
 			break;
 		default:
-			return XmpString( "" );
+			return std::string( "" );
 			break;
 	}
 }

@@ -27,20 +27,20 @@
 
 MetaData::MetaData()
 {
-	path = XmpString("");
+	path = std::string("");
 	objects.clear( );
 	
 	fastStringSearchLabel = UNDEFINED;	
 }
 
-MetaData::MetaData( XmpString fileName, std::vector<label> * labelsVector )
+MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 {
-	path = XmpString("");
+	path = std::string( "" );
 	fastStringSearchLabel = UNDEFINED;	
 
 	// Open file
 	std::ifstream infile ( fileName.data(), std::ios_base::in );
-	XmpString line;
+	std::string line;
 	
 	// Search for Headerinfo, if present we are processing an old-styled docfile
 	// else we are processing a new Xmipp MetaData file
@@ -48,35 +48,57 @@ MetaData::MetaData( XmpString fileName, std::vector<label> * labelsVector )
 	
 	int pos = line.find( "Headerinfo" );
 	
-	if( pos != XmpString::npos ) // Headerinfo token founds
+	if( pos != std::string::npos ) // Headerinfo token found
 	{
+std::cout << "Is Old Xmipp format" << std::endl;
 		// Remove from the beginning to the end of "Headerinfo columns:"
 		pos = line.find( ":" );
 		line = line.erase( 0, pos + 1 );
 		
-		std::vector<XmpString> labelsVector;
+		std::vector<std::string> readLabels;
 		
 		// Extract labels until the string is empty
 		while ( line != "" )
 		{
 			pos = line.find( ")" );
-			XmpString label = line.substr( 0, pos+1 );
+			std::string newLabel = line.substr( 0, pos+1 );
 			line.erase( 0, pos+1 );
 			
 			// The token can now contain a ',', if so, remove it
-			if( ( pos = label.find( "," ) ) != XmpString::npos )
-				label.erase( pos, 1 );
+			if( ( pos = newLabel.find( "," ) ) != std::string::npos )
+				newLabel.erase( pos, 1 );
 			
 			// Remove unneded parentheses and contents
-			pos = label.find( "(" );
-			int pos2 = label.find( ")" );
-			label.erase( pos, pos2-pos+1 );
+			pos = newLabel.find( "(" );
+			int pos2 = newLabel.find( ")" );
+			newLabel.erase( pos, pos2-pos+1 );
 			
 			// Remove white spaces
-			label.removeChar( ' ' );
+			newLabel = removeChar( newLabel, ' ' );
 		
-			labelsVector.push_back( label );
+std::cout << "New label found: " << newLabel << std::endl;
+			if( labelsVector != NULL )
+			{
+				std::vector< label >::iterator location;
+				
+   				location = std::find( labelsVector->begin(), labelsVector->end(), MetaDataContainer::codifyLabel( newLabel ) );
+
+   				if ( location != labelsVector->end() )
+				{
+					readLabels.push_back( newLabel );
+				}
+   				else
+				{
+					std::cout << "Discarded label " << newLabel << std::endl;
+				} 
+			}
+			else
+			{
+				readLabels.push_back( newLabel );
+			}
 		}
+		
+std::cout << "Filling-up structure: " << std::endl;
 		
 		int isname=0;
 		while ( getline( infile, line, '\n') )
@@ -87,7 +109,7 @@ MetaData::MetaData( XmpString fileName, std::vector<label> * labelsVector )
 				line.erase(0,line.find(";")+1);
 				
 				// Remove spaces from string
-				line.removeChar( ' ' );
+				line = removeChar( line, ' ' );
 				
 				setValue( IMAGE, line );
 			}
@@ -95,13 +117,13 @@ MetaData::MetaData( XmpString fileName, std::vector<label> * labelsVector )
 			{
 				// Parse labels
 				std::stringstream os2( line );          
-				XmpString value;
+				std::string value;
 				
 				int counter = 0;
 				while ( os2 >> value )
 				{
 					if( counter >= 2 ) // Discard two first numbers
-						setValue( labelsVector[counter-2], value );
+						setValue( readLabels[counter-2], value );
 					counter++;
 				}
 			}
@@ -109,15 +131,16 @@ MetaData::MetaData( XmpString fileName, std::vector<label> * labelsVector )
 	}
 	else
 	{
+std::cout << "Is New Xmipp format" << std::endl;
 		pos = line.rfind( "*" );
 		
-		if( pos == XmpString::npos )
+		if( pos == std::string::npos )
 		{
 			REPORT_ERROR( 200, "End of string reached" );
 		}
 		else
 		{
-			line.removeChar( ' ' );
+			line = removeChar( line, ' ' );
 		}
 		
 		setPath( line );
@@ -130,13 +153,13 @@ MetaData::MetaData( XmpString fileName, std::vector<label> * labelsVector )
 				
 		// Parse labels
 		std::stringstream os( line );          
-		XmpString label;                 
+		std::string newLabel;                 
 		
-		std::vector<XmpString> labelsVector;
+		std::vector<std::string> labelsVector;
 		
-		while ( os >> label )
+		while ( os >> newLabel )
 		{
-			labelsVector.push_back( label );
+			labelsVector.push_back( newLabel );
 		}
 		
 		// Read data and fill structures accordingly
@@ -146,7 +169,7 @@ MetaData::MetaData( XmpString fileName, std::vector<label> * labelsVector )
 			
 			// Parse labels
 			std::stringstream os2( line );          
-			XmpString value;
+			std::string value;
 			
 			int counter = 0;
 			while ( os2 >> value )
@@ -172,15 +195,15 @@ bool MetaData::isEmpty( )
 
 void MetaData::clear( )
 {
-	path = XmpString("");
+	path = std::string("");
 	objects.clear( );		
 }
 
-void MetaData::setPath( XmpString newPath )
+void MetaData::setPath( std::string newPath )
 {
 	if( newPath == "" )
 	{  
-		path = XmpString( getcwd( NULL, 0 ) );
+		path = std::string( getcwd( NULL, 0 ) );
 	}
 	else
 	{
@@ -188,7 +211,7 @@ void MetaData::setPath( XmpString newPath )
 	}
 }
 
-XmpString MetaData::getPath( )
+std::string MetaData::getPath( )
 {
 	return path;
 }
@@ -354,7 +377,7 @@ bool MetaData::setValue( label name, int value, long int objectID )
 	}	
 }
 
-bool MetaData::setValue( label name, XmpString value, long int objectID )
+bool MetaData::setValue( label name, std::string value, long int objectID )
 {
 	long int auxID;
 	
@@ -381,7 +404,7 @@ bool MetaData::setValue( label name, XmpString value, long int objectID )
 	}	
 }
 
-bool MetaData::setValue( XmpString name, XmpString value, long int objectID )
+bool MetaData::setValue( std::string name, std::string value, long int objectID )
 {
 	long int auxID;
 	
@@ -496,7 +519,7 @@ std::vector<long int> MetaData::findObjects( label name, bool value )
 	return result;
 }
 
-std::vector<long int> MetaData::findObjects( label name, XmpString value )
+std::vector<long int> MetaData::findObjects( label name, std::string value )
 {
 	std::vector<long int> result;
 	
@@ -748,7 +771,7 @@ double MetaData::originZ( long int objectID )
 	}
 }
 
-XmpString MetaData::image( long int objectID )
+std::string MetaData::image( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -758,7 +781,7 @@ XmpString MetaData::image( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		XmpString * result = (XmpString *)aux->getValue( IMAGE );
+		std::string * result = (std::string *)aux->getValue( IMAGE );
 		
 		if( result == NULL )
 		{
@@ -771,7 +794,7 @@ XmpString MetaData::image( long int objectID )
 	}
 }
 
-XmpString MetaData::CTFModel( long int objectID )
+std::string MetaData::CTFModel( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -781,7 +804,7 @@ XmpString MetaData::CTFModel( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		XmpString * result = (XmpString *)aux->getValue( CTFMODEL );
+		std::string * result = (std::string *)aux->getValue( CTFMODEL );
 		
 		if( result == NULL )
 		{
@@ -794,7 +817,7 @@ XmpString MetaData::CTFModel( long int objectID )
 	}
 }
 
-XmpString MetaData::micrograph( long int objectID )
+std::string MetaData::micrograph( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{
@@ -804,7 +827,7 @@ XmpString MetaData::micrograph( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		XmpString * result = (XmpString *)aux->getValue( MICROGRAPH );
+		std::string * result = (std::string *)aux->getValue( MICROGRAPH );
 		
 		if( result == NULL )
 		{
@@ -863,7 +886,30 @@ double MetaData::flip( long int objectID )
 	}
 }
 
-long int MetaData::fastSearch( label name, XmpString value, bool recompute )
+double MetaData::maxCC( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		MetaDataContainer * aux = objects[ objectID ];
+		double * result = (double *)aux->getValue( MAXCC );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'maxCC' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
+long int MetaData::fastSearch( label name, std::string value, bool recompute )
 {
 	long int result;
 	
@@ -885,7 +931,7 @@ long int MetaData::fastSearch( label name, XmpString value, bool recompute )
 		
 			if( aux->valueExists( name ) )
 			{
-				fastStringSearch[ *((XmpString *)((It->second)->getValue( name ))) ] = It->first ;
+				fastStringSearch[ *((std::string *)((It->second)->getValue( name ))) ] = It->first ;
 				
 				if( aux->pairExists( name, value) )
 				{
@@ -896,7 +942,7 @@ long int MetaData::fastSearch( label name, XmpString value, bool recompute )
 	}
 	else
 	{
-		std::map< XmpString, long int>::iterator It;
+		std::map< std::string, long int>::iterator It;
 	
 		if( ( It = fastStringSearch.find( value ) ) != fastStringSearch.end( ) )
 		{
