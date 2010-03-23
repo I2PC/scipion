@@ -48,19 +48,19 @@ class MetaData
 	// Allows a fast search for pairs where the value is
 	// a string
 	std::map< std::string, long int> fastStringSearch;
-	label fastStringSearchLabel;
+	MetaDataLabel fastStringSearchLabel;
 
 	// What labels have been read from a docfile/metadata file
 	// and/or will be stored on a new metadata file when "save" is
 	// called
-	std::vector< label > activeLabels;
+	std::vector< MetaDataLabel > activeLabels;
 
 	std::string path;
 
 public:
 	
 	MetaData();
-	MetaData( std::string fileName, std::vector<label> * labelsVector = NULL );
+	MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
 	~MetaData();
 	
 	void save( std::string fileName );
@@ -74,24 +74,24 @@ public:
 	long int nextObject( );
 	long int lastObject( );
 	
-	long int fastSearch( label name, std::string value, bool recompute = false );
+	long int fastSearch( MetaDataLabel name, std::string value, bool recompute = false );
 	
 	// Set a new pair/value for an specified object. If no objectID is given, that
 	// pointed by the class iterator is used 
-	bool setValue( label name, double value, long int objectID = -1 );
-	bool setValue( label name, float value, long int objectID = -1 );
-	bool setValue( label name, int value, long int objectID = -1 );
-	bool setValue( label name, bool, long int objectID = -1 );
-	bool setValue( label name, std::string value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, double value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, float value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, int value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, bool, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, std::string value, long int objectID = -1 );
 	
 	bool setValue( std::string name, std::string value, long int objectID = -1 );
 	
 	// Get the collection of objects whose pair label/value is given
-	std::vector<long int> findObjects( label name, double value );
-	std::vector<long int> findObjects( label name, float value );
-	std::vector<long int> findObjects( label name, int value );
-	std::vector<long int> findObjects( label name, bool value );
-	std::vector<long int> findObjects( label name, std::string value );
+	std::vector<long int> findObjects( MetaDataLabel name, double value );
+	std::vector<long int> findObjects( MetaDataLabel name, float value );
+	std::vector<long int> findObjects( MetaDataLabel name, int value );
+	std::vector<long int> findObjects( MetaDataLabel name, bool value );
+	std::vector<long int> findObjects( MetaDataLabel name, std::string value );
 	
 	// Xmipp-specific, for new parameters add here.
 	void setPath( std::string newPath = "" );	

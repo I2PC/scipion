@@ -27,31 +27,31 @@
 MetaDataContainer::MetaDataContainer(){};
 MetaDataContainer::~MetaDataContainer(){};
 
-void MetaDataContainer::addValue( label name, int value )
+void MetaDataContainer::addValue( MetaDataLabel name, int value )
 {
 	void * newValue = (void *)(new int(value));
 	insertVoidPtr( name, newValue );
 }
 
-void MetaDataContainer::addValue( label name, double value )
+void MetaDataContainer::addValue( MetaDataLabel name, double value )
 {
 	void * newValue = (void *)(new double(value));
 	insertVoidPtr( name, newValue );
 }
 
-void MetaDataContainer::addValue( label name, float value )
+void MetaDataContainer::addValue( MetaDataLabel name, float value )
 {
 	void * newValue = (void *)(new float(value));
 	insertVoidPtr( name, newValue );
 }
 
-void MetaDataContainer::addValue( label name, bool value )
+void MetaDataContainer::addValue( MetaDataLabel name, bool value )
 {
 	void * newValue = (void *)(new bool(value));
 	insertVoidPtr( name, newValue );
 }
 
-void MetaDataContainer::addValue( label name, std::string value )
+void MetaDataContainer::addValue( MetaDataLabel name, std::string value )
 {
 	void * newValue = (void *)(new std::string(value));
 	insertVoidPtr( name, newValue );
@@ -59,14 +59,14 @@ void MetaDataContainer::addValue( label name, std::string value )
 
 void MetaDataContainer::addValue( std::string name, std::string value )
 {	
-	label lCode = codifyLabel( name );
+	MetaDataLabel lCode = codifyLabel( name );
 	std::istringstream i( value );
 	
 	// Look for a double value
-	if( lCode == ANGLEROT || lCode == ANGLETILT || lCode == ANGLEPSI ||
-	   lCode == SHIFTX || lCode == SHIFTY || lCode == SHIFTZ ||
-	   lCode == ORIGINX || lCode == ORIGINY || lCode == ORIGINZ || 
-	   lCode == WEIGHT || lCode == MAXCC ) 
+	if( lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||
+	   lCode == MDL_SHIFTX || lCode == MDL_SHIFTY || lCode == MDL_SHIFTZ ||
+	   lCode == MDL_ORIGINX || lCode == MDL_ORIGINY || lCode == MDL_ORIGINZ || 
+	   lCode == MDL_WEIGHT || lCode == MDL_MAXCC ) 
 	{
 		double doubleValue;
 		
@@ -74,11 +74,11 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 				
 		addValue( lCode, doubleValue );
 	}
-	else if( lCode == IMAGE || lCode == MICROGRAPH || lCode == CTFMODEL )
+	else if( lCode == MDL_IMAGE || lCode == MDL_MICROGRAPH || lCode == MDL_CTFMODEL )
 	{
 		addValue( lCode, value );
 	}
-	else if( lCode == REF )
+	else if( lCode == MDL_REF )
 	{
 		int intValue;
 		
@@ -86,7 +86,7 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 				
 		addValue( lCode, intValue ); 
 	}
-	else if( lCode == ENABLED || lCode == FLIP )
+	else if( lCode == MDL_ENABLED || lCode == MDL_FLIP )
 	{
 		bool boolValue;
 		
@@ -97,14 +97,14 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 	
 }
 
-void MetaDataContainer::insertVoidPtr( label name, void * value )
+void MetaDataContainer::insertVoidPtr( MetaDataLabel name, void * value )
 {
 	values[ name ] = value;
 }
 
-void * MetaDataContainer::getValue( label name )
+void * MetaDataContainer::getValue( MetaDataLabel name )
 {	
-	std::map<label, void *>::iterator element; 
+	std::map<MetaDataLabel, void *>::iterator element; 
 
 	element = values.find( name );
 
@@ -118,7 +118,7 @@ void * MetaDataContainer::getValue( label name )
 	}
 }
 
-bool MetaDataContainer::valueExists( label name )
+bool MetaDataContainer::valueExists( MetaDataLabel name )
 {
 	if( values.find( name ) == values.end( ) )
 	{
@@ -130,12 +130,12 @@ bool MetaDataContainer::valueExists( label name )
 	}
 }
 
-bool MetaDataContainer::pairExists( label name, double value )
+bool MetaDataContainer::pairExists( MetaDataLabel name, double value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< label, void *>::iterator It;
+	std::map< MetaDataLabel, void *>::iterator It;
 	
 	It = values.find( name );
 	
@@ -152,12 +152,12 @@ bool MetaDataContainer::pairExists( label name, double value )
 	}
 }
 
-bool MetaDataContainer::pairExists( label name, float value )
+bool MetaDataContainer::pairExists( MetaDataLabel name, float value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< label, void *>::iterator It;
+	std::map< MetaDataLabel, void *>::iterator It;
 	
 	It = values.find( name );
 	
@@ -174,12 +174,12 @@ bool MetaDataContainer::pairExists( label name, float value )
 	}
 }
 
-bool MetaDataContainer::pairExists( label name, int value )
+bool MetaDataContainer::pairExists( MetaDataLabel name, int value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< label, void *>::iterator It;
+	std::map< MetaDataLabel, void *>::iterator It;
 	
 	It = values.find( name );
 	
@@ -196,12 +196,12 @@ bool MetaDataContainer::pairExists( label name, int value )
 	}
 }
 
-bool MetaDataContainer::pairExists( label name, bool value )
+bool MetaDataContainer::pairExists( MetaDataLabel name, bool value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< label, void *>::iterator It;
+	std::map< MetaDataLabel, void *>::iterator It;
 	
 	It = values.find( name );
 	
@@ -218,12 +218,12 @@ bool MetaDataContainer::pairExists( label name, bool value )
 	}
 }
 
-bool MetaDataContainer::pairExists( label name, std::string value )
+bool MetaDataContainer::pairExists( MetaDataLabel name, std::string value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
 	
-	std::map< label, void *>::iterator It;
+	std::map< MetaDataLabel, void *>::iterator It;
 	
 	It = values.find( name );
 	
@@ -240,143 +240,143 @@ bool MetaDataContainer::pairExists( label name, std::string value )
 	}
 }
 
-void MetaDataContainer::deleteValue( label name )
+void MetaDataContainer::deleteValue( MetaDataLabel name )
 {
 	values.erase( name );
 }
 	
-label MetaDataContainer::codifyLabel( std::string strLabel )
+MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
 {
-	// NOTE: For the "||" cases, the left label is the XMIPP_3 version's and
+	// NOTE: For the "||" cases, the left MetaDataLabel is the XMIPP_3 version's and
 	// the right value is the old-styled one
 
 	if( strLabel == "angleRot" || strLabel == "rot" )
 	{
-		return ANGLEROT;
+		return MDL_ANGLEROT;
 	}
 	else if( strLabel == "angleTilt" || strLabel == "tilt" )
 	{
-		return ANGLETILT;
+		return MDL_ANGLETILT;
 	}
 	else if( strLabel == "anglePsi" || strLabel == "psi" )
 	{
-		return ANGLEPSI;
+		return MDL_ANGLEPSI;
 	}
 	else if( strLabel == "image" )
 	{
-		return IMAGE;
+		return MDL_IMAGE;
 	}
 	else if( strLabel == "micrograph" )
 	{
-		return MICROGRAPH;
+		return MDL_MICROGRAPH;
 	}
 	else if( strLabel == "CTFModel" )
 	{
-		return CTFMODEL;
+		return MDL_CTFMODEL;
 	}
 	else if( strLabel == "shiftX" || strLabel == "Xoff" )
 	{
-		return SHIFTX;
+		return MDL_SHIFTX;
 	}
 	else if( strLabel == "shiftY" || strLabel == "Yoff" )
 	{
-		return SHIFTY;
+		return MDL_SHIFTY;
 	}
 	else if( strLabel == "shiftZ" || strLabel == "Zoff" )
 	{
-		return SHIFTZ;
+		return MDL_SHIFTZ;
 	}
 	else if( strLabel == "enabled" )
 	{
-		return ENABLED;
+		return MDL_ENABLED;
 	}
 	else if( strLabel == "originX" )
 	{
-		return ORIGINX;
+		return MDL_ORIGINX;
 	}
 	else if( strLabel == "originY" )
 	{
-		return ORIGINY;
+		return MDL_ORIGINY;
 	}
 	else if( strLabel == "originZ" )
 	{
-		return ORIGINZ;
+		return MDL_ORIGINZ;
 	}
 	else if( strLabel == "weight" || strLabel == "Weight"  )
 	{
-		return WEIGHT;
+		return MDL_WEIGHT;
 	}
 	else if( strLabel == "flip" || strLabel == "Flip" )
 	{
-		return FLIP;
+		return MDL_FLIP;
 	}
 	else if( strLabel == "ref" || strLabel == "Ref" )
 	{
-		return REF;
+		return MDL_REF;
 	}
 	else if( strLabel == "maxCC" )
 	{
-		return MAXCC;
+		return MDL_MAXCC;
 	}
 	else
 	{
-		return UNDEFINED;
+		return MDL_UNDEFINED;
 	}
 }
 
-std::string MetaDataContainer::decodeLabel( label inputLabel )
+std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 {
 	switch ( inputLabel ) 
 	{
-		case ANGLEROT:
+		case MDL_ANGLEROT:
 			return std::string( "angleRot" );
 			break;
-		case ANGLETILT:
+		case MDL_ANGLETILT:
 			return std::string( "angleTilt" );
 			break;
-		case ANGLEPSI:
+		case MDL_ANGLEPSI:
 			return std::string( "anglePsi" );
 			break;
-		case IMAGE:
+		case MDL_IMAGE:
 			return std::string( "image" );
 			break;
-		case MICROGRAPH:
+		case MDL_MICROGRAPH:
 			return std::string( "micrograph" );
 			break;
-		case CTFMODEL:
+		case MDL_CTFMODEL:
 			return std::string( "CTFModel" );
 			break;
-		case SHIFTX:
+		case MDL_SHIFTX:
 			return std::string( "shiftX" );
 			break;
-		case SHIFTY:
+		case MDL_SHIFTY:
 			return std::string( "shiftY" );
 			break;
-		case SHIFTZ:
+		case MDL_SHIFTZ:
 			return std::string( "shiftZ" );
 			break;
-		case ENABLED:
+		case MDL_ENABLED:
 			return std::string( "enabled" );
 			break;
-		case ORIGINX:
+		case MDL_ORIGINX:
 			return std::string( "originX" );
 			break;
-		case ORIGINY:
+		case MDL_ORIGINY:
 			return std::string( "originY" );
 			break;
-		case ORIGINZ:
+		case MDL_ORIGINZ:
 			return std::string( "originZ" );
 			break;
-		case WEIGHT:
+		case MDL_WEIGHT:
 			return std::string( "weight" );
 			break;
-		case FLIP: 
+		case MDL_FLIP: 
 			return std::string( "flip" );
 			break;
-		case REF: 
+		case MDL_REF: 
 			return std::string( "ref" );
 			break;
-		case MAXCC: 
+		case MDL_MAXCC: 
 			return std::string( "maxCC" );
 			break;
 		default:
@@ -385,59 +385,59 @@ std::string MetaDataContainer::decodeLabel( label inputLabel )
 	}
 }
 
-void MetaDataContainer::writeValuesToFile( std::ofstream &outfile, label inputLabel )
+void MetaDataContainer::writeValuesToFile( std::ofstream &outfile, MetaDataLabel inputLabel )
 {
 	switch ( inputLabel ) 
 	{
-		case ANGLEROT:
+		case MDL_ANGLEROT:
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
-		case ANGLETILT:
+		case MDL_ANGLETILT:
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
-		case ANGLEPSI:
+		case MDL_ANGLEPSI:
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
-		case IMAGE:
+		case MDL_IMAGE:
 			outfile << *((std::string*)(getValue( inputLabel )));
 			break;
-		case MICROGRAPH:
+		case MDL_MICROGRAPH:
 			outfile << *((std::string*)(getValue( inputLabel )));
 			break;
-		case CTFMODEL:
+		case MDL_CTFMODEL:
 			outfile << *((std::string*)(getValue( inputLabel )));
 			break;
-		case SHIFTX:
+		case MDL_SHIFTX:
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
-		case SHIFTY:
+		case MDL_SHIFTY:
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
-		case SHIFTZ:
+		case MDL_SHIFTZ:
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
-		case ENABLED:
+		case MDL_ENABLED:
 			outfile << *((bool*)(getValue( inputLabel )));
 			break;
-		case ORIGINX:
+		case MDL_ORIGINX:
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
-		case ORIGINY:
+		case MDL_ORIGINY:
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
-		case ORIGINZ:
+		case MDL_ORIGINZ:
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
-		case WEIGHT:
+		case MDL_WEIGHT:
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
-		case FLIP: 
+		case MDL_FLIP: 
 			outfile << *((bool*)(getValue( inputLabel )));
 			break;
-		case REF: 
+		case MDL_REF: 
 			outfile << *((int*)(getValue( inputLabel )));
 			break;
-		case MAXCC: 
+		case MDL_MAXCC: 
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
 		default:

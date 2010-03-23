@@ -30,13 +30,13 @@ MetaData::MetaData()
 	path = std::string("");
 	objects.clear( );
 	
-	fastStringSearchLabel = UNDEFINED;	
+	fastStringSearchLabel = MDL_UNDEFINED;	
 }
 
-MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
+MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector )
 {
 	path = std::string( "" );
-	fastStringSearchLabel = UNDEFINED;	
+	fastStringSearchLabel = MDL_UNDEFINED;	
 
 	// Open file
 	std::ifstream infile ( fileName.data(), std::ios_base::in );
@@ -61,13 +61,13 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 		// for the new format it must be added by hand, if necessary
 		if( labelsVector != NULL )
 		{
-			std::vector< label >::iterator location;
+			std::vector< MetaDataLabel >::iterator location;
 					
-   			location = std::find( labelsVector->begin(), labelsVector->end(), IMAGE );
+   			location = std::find( labelsVector->begin(), labelsVector->end(), MDL_IMAGE );
 	
 	   		if ( location != labelsVector->end() )
 			{
-				activeLabels.push_back( IMAGE );
+				activeLabels.push_back( MDL_IMAGE );
 				saveName = true;
 			}
 			else
@@ -77,7 +77,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 		}
 		else
 		{				
-			activeLabels.push_back( IMAGE );
+			activeLabels.push_back( MDL_IMAGE );
 			saveName = true;
 		}
 							
@@ -102,7 +102,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 		
 			if( labelsVector != NULL )
 			{
-				std::vector< label >::iterator location;
+				std::vector< MetaDataLabel >::iterator location;
 				
    				location = std::find( labelsVector->begin(), labelsVector->end(), MetaDataContainer::codifyLabel( newLabel ) );
 
@@ -110,10 +110,6 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 				{
 					activeLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
 				}
-   				else
-				{
-					std::cout << "Discarded label " << newLabel << std::endl;
-				} 
 			}
 			else
 			{
@@ -132,7 +128,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 				// Remove spaces from string
 				line = removeChar( line, ' ' );
 								
-				setValue( IMAGE, line );
+				setValue( MDL_IMAGE, line );
 			}
 			else
 			{
@@ -159,7 +155,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 	}
 	else
 	{
-		pos = line.rfind( "*" );
+		pos = line.find( "*" );
 		
 		if( pos == std::string::npos )
 		{
@@ -167,6 +163,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 		}
 		else
 		{
+			line.erase( 0, pos+1 );
 			line = removeChar( line, ' ' );
 		}
 		
@@ -199,7 +196,7 @@ MetaData::MetaData( std::string fileName, std::vector<label> * labelsVector )
 			int counter = 0;
 			while ( os2 >> value )
 			{
-				setValue( activeLabels[counter], value );
+				setValue( MetaDataContainer::decodeLabel(activeLabels[counter]), value );
 				counter++;
 			}
 		}
@@ -218,7 +215,7 @@ void MetaData::save( std::string fileName )
 	outfile << path << std::endl;
 	
 	std::map< long int, MetaDataContainer *>::iterator It;
-	std::vector< label >::iterator strIt;
+	std::vector< MetaDataLabel >::iterator strIt;
 	
 	outfile << "; ";	
 	for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
@@ -356,7 +353,7 @@ long int MetaData::lastObject( )
 	return result;
 };
 
-bool MetaData::setValue( label name, double value, long int objectID )
+bool MetaData::setValue( MetaDataLabel name, double value, long int objectID )
 {
 	long int auxID;
 	
@@ -383,7 +380,7 @@ bool MetaData::setValue( label name, double value, long int objectID )
 	}
 }
 
-bool MetaData::setValue( label name, float value, long int objectID )
+bool MetaData::setValue( MetaDataLabel name, float value, long int objectID )
 {
 	long int auxID;
 	
@@ -410,7 +407,7 @@ bool MetaData::setValue( label name, float value, long int objectID )
 	}	
 }
 
-bool MetaData::setValue( label name, int value, long int objectID )
+bool MetaData::setValue( MetaDataLabel name, int value, long int objectID )
 {
 	long int auxID;
 	
@@ -437,7 +434,7 @@ bool MetaData::setValue( label name, int value, long int objectID )
 	}	
 }
 
-bool MetaData::setValue( label name, std::string value, long int objectID )
+bool MetaData::setValue( MetaDataLabel name, std::string value, long int objectID )
 {
 	long int auxID;
 
@@ -491,7 +488,7 @@ bool MetaData::setValue( std::string name, std::string value, long int objectID 
 	}	
 }
 
-std::vector<long int> MetaData::findObjects( label name, double value )
+std::vector<long int> MetaData::findObjects( MetaDataLabel name, double value )
 {
 	std::vector<long int> result;
 	
@@ -513,7 +510,7 @@ std::vector<long int> MetaData::findObjects( label name, double value )
 	return result;
 }
 
-std::vector<long int> MetaData::findObjects( label name, float value )
+std::vector<long int> MetaData::findObjects( MetaDataLabel name, float value )
 {
 	std::vector<long int> result;
 	
@@ -535,7 +532,7 @@ std::vector<long int> MetaData::findObjects( label name, float value )
 	return result;
 }
 
-std::vector<long int> MetaData::findObjects( label name, int value )
+std::vector<long int> MetaData::findObjects( MetaDataLabel name, int value )
 {
 	std::vector<long int> result;
 	
@@ -557,7 +554,7 @@ std::vector<long int> MetaData::findObjects( label name, int value )
 	return result;
 }
 
-std::vector<long int> MetaData::findObjects( label name, bool value )
+std::vector<long int> MetaData::findObjects( MetaDataLabel name, bool value )
 {
 	std::vector<long int> result;
 	
@@ -579,7 +576,7 @@ std::vector<long int> MetaData::findObjects( label name, bool value )
 	return result;
 }
 
-std::vector<long int> MetaData::findObjects( label name, std::string value )
+std::vector<long int> MetaData::findObjects( MetaDataLabel name, std::string value )
 {
 	std::vector<long int> result;
 	
@@ -611,7 +608,7 @@ double MetaData::angleRot( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( ANGLEROT );
+		double * result = (double *)aux->getValue( MDL_ANGLEROT );
 		
 		if( result == NULL )
 		{
@@ -634,7 +631,7 @@ double MetaData::angleTilt( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( ANGLETILT );
+		double * result = (double *)aux->getValue( MDL_ANGLETILT );
 		
 		if( result == NULL )
 		{
@@ -657,7 +654,7 @@ double MetaData::anglePsi( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( ANGLEPSI );
+		double * result = (double *)aux->getValue( MDL_ANGLEPSI );
 		
 		if( result == NULL )
 		{
@@ -680,7 +677,7 @@ bool MetaData::enabled( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		bool * result = (bool *)aux->getValue( ENABLED );
+		bool * result = (bool *)aux->getValue( MDL_ENABLED );
 		
 		if( result == NULL )
 		{
@@ -703,7 +700,7 @@ double MetaData::shiftX( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( SHIFTX );
+		double * result = (double *)aux->getValue( MDL_SHIFTX );
 		
 		if( result == NULL )
 		{
@@ -726,7 +723,7 @@ double MetaData::shiftY( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( SHIFTY );
+		double * result = (double *)aux->getValue( MDL_SHIFTY );
 		
 		if( result == NULL )
 		{
@@ -749,7 +746,7 @@ double MetaData::shiftZ( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( SHIFTZ );
+		double * result = (double *)aux->getValue( MDL_SHIFTZ );
 		
 		if( result == NULL )
 		{
@@ -772,7 +769,7 @@ double MetaData::originX( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( ORIGINX );
+		double * result = (double *)aux->getValue( MDL_ORIGINX );
 		
 		if( result == NULL )
 		{
@@ -795,7 +792,7 @@ double MetaData::originY( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( ORIGINY );
+		double * result = (double *)aux->getValue( MDL_ORIGINY );
 		
 		if( result == NULL )
 		{
@@ -818,7 +815,7 @@ double MetaData::originZ( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( ORIGINZ );
+		double * result = (double *)aux->getValue( MDL_ORIGINZ );
 		
 		if( result == NULL )
 		{
@@ -841,7 +838,7 @@ std::string MetaData::image( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( IMAGE );
+		std::string * result = (std::string *)aux->getValue( MDL_IMAGE );
 		
 		if( result == NULL )
 		{
@@ -864,7 +861,7 @@ std::string MetaData::CTFModel( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( CTFMODEL );
+		std::string * result = (std::string *)aux->getValue( MDL_CTFMODEL );
 		
 		if( result == NULL )
 		{
@@ -887,7 +884,7 @@ std::string MetaData::micrograph( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( MICROGRAPH );
+		std::string * result = (std::string *)aux->getValue( MDL_MICROGRAPH );
 		
 		if( result == NULL )
 		{
@@ -910,7 +907,7 @@ double MetaData::weight( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( WEIGHT );
+		double * result = (double *)aux->getValue( MDL_WEIGHT );
 		
 		if( result == NULL )
 		{
@@ -933,7 +930,7 @@ double MetaData::flip( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( FLIP );
+		double * result = (double *)aux->getValue( MDL_FLIP );
 		
 		if( result == NULL )
 		{
@@ -956,7 +953,7 @@ double MetaData::maxCC( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MAXCC );
+		double * result = (double *)aux->getValue( MDL_MAXCC );
 		
 		if( result == NULL )
 		{
@@ -979,7 +976,7 @@ int MetaData::ref( long int objectID )
 	else
 	{
 		MetaDataContainer * aux = objects[ objectID ];
-		int * result = (int *)aux->getValue( REF );
+		int * result = (int *)aux->getValue( MDL_REF );
 		
 		if( result == NULL )
 		{
@@ -992,12 +989,13 @@ int MetaData::ref( long int objectID )
 	}
 }
 
-long int MetaData::fastSearch( label name, std::string value, bool recompute )
+long int MetaData::fastSearch( MetaDataLabel name, std::string value, bool recompute )
 {
 	long int result;
 	
 	if( recompute || fastStringSearch.empty( ) || fastStringSearchLabel != name )
 	{
+		fastStringSearch.clear( );
 		fastStringSearchLabel = name;
 		
 		// Repopulate list

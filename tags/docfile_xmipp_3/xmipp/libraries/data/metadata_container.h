@@ -32,35 +32,48 @@
 #include <sstream>
 #include <fstream>
 
-enum label 
+// This enum defines what MetaDataLabels this class can manage, if
+// you need a new one add it here and modify affected methods:
+//
+// 	- static MetaDataLabel codifyLabel( std::string strLabel );
+//	- static std::string decodeLabel( MetaDataLabel inputLabel );      
+//	- void writeValuesToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
+//	- void addValue( std::string name, std::string value );
+//
+// The order these labels are defined in the "label" enum
+// is that that will be used when writing a metadata file
+enum MetaDataLabel 
 { 
-	UNDEFINED = -1,
-	ANGLEROT, 
-	ANGLETILT, 
-	ANGLEPSI,
-	IMAGE,
-	MICROGRAPH,
-	CTFMODEL,
-	SHIFTX, 
-	SHIFTY, 
-	SHIFTZ, 
-	ENABLED, 
-	ORIGINX, 
-	ORIGINY, 
-	ORIGINZ,
-	WEIGHT,
-	FLIP,
-	REF,
-	MAXCC
+	MDL_UNDEFINED = -1,
+	MDL_ANGLEROT, 
+	MDL_ANGLETILT, 
+	MDL_ANGLEPSI,
+	MDL_IMAGE,
+	MDL_MICROGRAPH,
+	MDL_CTFMODEL,
+	MDL_SHIFTX, 
+	MDL_SHIFTY, 
+	MDL_SHIFTZ, 
+	MDL_ENABLED, 
+	MDL_ORIGINX, 
+	MDL_ORIGINY, 
+	MDL_ORIGINZ,
+	MDL_WEIGHT,
+	MDL_FLIP,
+	MDL_REF,
+	MDL_MAXCC,
+	MDL_LAST_LABEL	// NOTE: Do keep this label always at the end
+			 	// it is here for looping purposes  	
 };
+
 
 class MetaDataContainer
 {
 	/** Container for pairs "name" and value. Note that void * allows to use
 	    mixed types */
-	std::map<label, void *> values;
+	std::map<MetaDataLabel, void *> values;
 	
-	void insertVoidPtr( label name, void * value );
+	void insertVoidPtr( MetaDataLabel name, void * value );
 
 	public:
 	
@@ -71,28 +84,28 @@ class MetaDataContainer
 	~MetaDataContainer();
 	
 	/** Create a new pair name-value of integer type */
-	void addValue( label name, double value );
-	void addValue( label name, float value );
-	void addValue( label name, int value );
-	void addValue( label name, bool value );
-	void addValue( label name, std::string value );
+	void addValue( MetaDataLabel name, double value );
+	void addValue( MetaDataLabel name, float value );
+	void addValue( MetaDataLabel name, int value );
+	void addValue( MetaDataLabel name, bool value );
+	void addValue( MetaDataLabel name, std::string value );
 	void addValue( std::string name, std::string value );
 	
-	void * getValue( label name );
-	bool valueExists( label name );
+	void * getValue( MetaDataLabel name );
+	bool valueExists( MetaDataLabel name );
 	
-	bool pairExists( label name, double value );
-	bool pairExists( label name, float value );
-	bool pairExists( label name, int value );
-	bool pairExists( label name, bool value );
-	bool pairExists( label name, std::string value );
+	bool pairExists( MetaDataLabel name, double value );
+	bool pairExists( MetaDataLabel name, float value );
+	bool pairExists( MetaDataLabel name, int value );
+	bool pairExists( MetaDataLabel name, bool value );
+	bool pairExists( MetaDataLabel name, std::string value );
 	
-	void deleteValue( label name );
+	void deleteValue( MetaDataLabel name );
 	
-	void writeValuesToFile( std::ofstream &outfile, label inputLabel );
+	void writeValuesToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
 
-	static label codifyLabel( std::string strLabel );
-	static std::string decodeLabel( label inputLabel );
+	static MetaDataLabel codifyLabel( std::string strLabel );
+	static std::string decodeLabel( MetaDataLabel inputLabel );
 };
 
 #endif
