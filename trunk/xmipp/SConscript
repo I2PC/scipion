@@ -212,9 +212,8 @@ def AddMPILibrary(name, basedir, sources, includes):
     env.Alias(name, install)
     env.Default(alias)
 
-# COSS wanted an explicit list...
-def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
-
+def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
+    shlibprefix='lib'):
     # setup
     basedir = AddLastSlash(basedir)
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -224,7 +223,7 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
 
     # separate local and global includes
     for x in includes:
-        if x[0] != '#':
+        if x[0] != '#' and x[0]!='/':
             includes[includes.index(x)] = basedir + x
 
     # action
@@ -244,7 +243,8 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
             sources,
             CPPPATH = includes + [env['CPPPATH']],
             LIBPATH = libpath,
-            LIBS = libs
+            LIBS = libs,
+            SHLIBPREFIX=shlibprefix
             )
 
     # alias
@@ -254,54 +254,28 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     env.Default(alias)
 
 def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
-    if not int(env['swig']):
-        return
-
-    # setup
-    basedirswig = AddLastSlash(basedir+"/swig")
-    libprefix = os.path.join(env['prefix'], 'lib')
-    for x in sourceList:
-        if x.find(basedirswig)==-1:
-            sourceList[sourceList.index(x)] = basedirswig + x
-
-    # separate local and global includes
-    for x in includes:
-        if x[0] != '#':
-            includes[includes.index(x)] = basedirswig + x
-
-    # Build depedencies
-    env.Depends(basedirswig + "lib" + name + "Swig.so",
-       Glob(basedir, '*.h', [])+Glob(basedirswig, '*.i', []));
-
-    # action
-    # FIXME Exclusive may not be what users want
-    if int(env['static']):
-        library = env.StaticLibrary(
-            target=basedirswig + name + "Swig",
-            source=sourceList,
-            CPPPATH = includes + [env['CPPPATH']] + [env['SWIGCPPPATH']],
-            LIBPATH = libpath+["lib"],
-            LIBS = libs+["XmippExternal"],
-            SWIGFLAGS = [env['SWIGFLAGS']]
-            )
-    else:
-        library = env.SharedLibrary(
-            target=basedirswig + name + "Swig",
-            source=sourceList,
-            CPPPATH = includes + [env['CPPPATH']] + [env['SWIGCPPPATH']],
-            LIBPATH = libpath+["lib"],
-            LIBS = libs+["XmippExternal"],
-            SWIGFLAGS = [env['SWIGFLAGS']]
-            )
-
-    # alias
-    alias = env.Alias(name, library)
-    install = env.InstallAs(target=[libprefix+"/_"+name+".so",
-                                    libprefix+"/"+name+".py"],
-        source=[basedirswig + "lib"+ name + "Swig.so",
-                basedirswig + name + ".py"])
-    env.Alias(name, install)
-    env.Default(alias)
+    # Create wrapper
+    if int(env['swig']):
+        # setup
+        basedirswig = AddLastSlash(basedir+"/swig")
+        libprefix = os.path.join(env['prefix'], 'lib')
+        
+        # Build wrapper
+        wrapper = env.i2cc(basedirswig + name + "_wrap.cc", sourceList)
+        Depends(wrapper, Glob(basedir, '*.h', [])+Glob(basedirswig, '*.i', []))
+        
+        # alias
+        alias=env.Alias(name,wrapper)
+        env.Default(alias)
+    
+    # Create library
+    import distutils.sysconfig
+    AddLibrary("_"+name, basedirswig, [name+"_wrap.cc"],
+        ['#',distutils.sysconfig.get_python_inc()],['lib'],['XmippData'],'_')
+    
+    install = env.InstallAs(libprefix+'/'+name+'.py',basedirswig+name+".py")
+    env.Alias(name+'.py', install)
+    env.Default(name+'.py')
     
 def AddSQLiteLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -357,9 +331,6 @@ def AddFFTWLibrary():
     install = env.Install(libprefix, source=toBuild)
     env.Alias(toCopy, install)
     env.Default(alias)
-
-
-
 
 # --- Libraries
 

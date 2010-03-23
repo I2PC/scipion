@@ -341,16 +341,10 @@ elif (ARGUMENTS['mode'] == 'compile'):
 
     # SWIG
     if int(env['swig']):
-        import distutils.sysconfig
-        SWIGScanner = SCons.Scanner.ClassicCPP(
-            "SWIGScan",
-            ".i",
-            "CPPPATH",
-            '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
-        )
-        env.Prepend(SCANNERS=[SWIGScanner])
-        env.Append(SWIGFLAGS=["-python","-c++"])
-        env.Append(SWIGCPPPATH=[distutils.sysconfig.get_python_inc()]);
+        swigBuilder = Builder(action=env['SWIG']+' -python -c++ -o $TARGET $SOURCE',
+                     suffix='.cc',
+                     src_suffix='.i')
+        env.Append(BUILDERS={'i2cc': swigBuilder})   
 
     Export('env')
     env.SConscript('SConscript')
