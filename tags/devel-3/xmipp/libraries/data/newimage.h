@@ -73,10 +73,10 @@ enum DataType {
 class SubImage
 {
 public:
-    float xoff, yoff, zoff; // Origin (position of object origin in voxel coordinates)
-    float rot, tilt, psi;   // Assigned angles
-    float weight;	     // Weight associated with the image
-    float flip;              // For xmipp-style flipping
+    double shiftX, shiftY, shiftZ;        // Origin 
+    double angleRot, angleTilt, anglePsi; // Euler angles
+    double weight;	                  // Weight
+    bool   flip;                          // Apply mirror operation
 
 public:
 
@@ -98,10 +98,10 @@ public:
      */
     void emptyInit()
     {
-        xoff = yoff = zoff = 0.;
-        rot = tilt = psi = 0.;
+        shiftX = shiftY = shiftZ = 0.;
+        angleRot = angleTilt = anglePsi = 0.;
         weight = 1.;
-        flip = 0.;
+        flip = false;
     }    
 
     /** Destructor.
