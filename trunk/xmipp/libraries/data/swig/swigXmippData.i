@@ -103,6 +103,7 @@ $result=PyInt_FromLong((long)*$1);
 %include swigdocfile.i
 %include swigargs.i
 %include swigsqllite.i
+%include swigmetadata.i
 //%include swigmultidimensional_array.i
 //%include swigmatrix1d.i
 //%include swigmatrix2d.i
