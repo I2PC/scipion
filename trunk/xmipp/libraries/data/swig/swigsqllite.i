@@ -1,5 +1,5 @@
 %{
-#include "../CppSQLite3.h"
+#include "../cppsqlite3.h"
 %}
 
 %ignore CppSQLite3Exception;
@@ -7,7 +7,7 @@
 %ignore CppSQLite3Binary;
 %ignore CppSQLite3Query;
 %ignore CppSQLite3Statement;
-%include "../CppSQLite3.h"
+%include "../cppsqlite3.h"
 
 /* Test code:
 python
