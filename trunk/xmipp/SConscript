@@ -272,10 +272,13 @@ def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
     import distutils.sysconfig
     AddLibrary("_"+name, basedirswig, [name+"_wrap.cc"],
         ['#',distutils.sysconfig.get_python_inc()],['lib'],['XmippData'],'_')
-    
-    install = env.InstallAs(libprefix+'/'+name+'.py',basedirswig+name+".py")
-    env.Alias(name+'.py', install)
-    env.Default(name+'.py')
+    #
+    command = "ln -s ../" + basedirswig+name+".py " + libprefix+'/'+name+'.py'
+    print command
+    os.system(command)
+    #install = env.InstallAs(libprefix+'/'+name+'.py',basedirswig+name+".py")
+    #env.Alias(name+'.py', install)
+    #env.Default(name+'.py')
     
 def AddSQLiteLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
