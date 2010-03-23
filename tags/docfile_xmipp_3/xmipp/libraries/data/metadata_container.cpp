@@ -385,7 +385,7 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 	}
 }
 
-void MetaDataContainer::writeValuesToFile( std::ofstream &outfile, MetaDataLabel inputLabel )
+void MetaDataContainer::writeValueToFile( std::ofstream &outfile, MetaDataLabel inputLabel )
 {
 	switch ( inputLabel ) 
 	{
@@ -445,3 +445,28 @@ void MetaDataContainer::writeValuesToFile( std::ofstream &outfile, MetaDataLabel
 	}
 }
 
+bool MetaDataContainer::isValidLabel( MetaDataLabel inputLabel )
+{
+	if( inputLabel > MDL_UNDEFINED && inputLabel < MDL_LAST_LABEL )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool MetaDataContainer::isValidLabel( std::string inputLabel )
+{
+	MetaDataLabel label = codifyLabel( inputLabel );
+	
+	if( label > MDL_UNDEFINED && label < MDL_LAST_LABEL )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}

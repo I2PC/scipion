@@ -63,7 +63,7 @@ enum MetaDataLabel
 	MDL_REF,
 	MDL_MAXCC,
 	MDL_LAST_LABEL	// NOTE: Do keep this label always at the end
-			 	// it is here for looping purposes  	
+			 		// it is here for looping purposes  	
 };
 
 
@@ -88,12 +88,12 @@ class MetaDataContainer
 	void addValue( MetaDataLabel name, float value );
 	void addValue( MetaDataLabel name, int value );
 	void addValue( MetaDataLabel name, bool value );
-	void addValue( MetaDataLabel name, std::string value );
+	void addValue( MetaDataLabel name, std::string value  );
 	void addValue( std::string name, std::string value );
 	
 	void * getValue( MetaDataLabel name );
 	bool valueExists( MetaDataLabel name );
-	
+
 	bool pairExists( MetaDataLabel name, double value );
 	bool pairExists( MetaDataLabel name, float value );
 	bool pairExists( MetaDataLabel name, int value );
@@ -102,10 +102,12 @@ class MetaDataContainer
 	
 	void deleteValue( MetaDataLabel name );
 	
-	void writeValuesToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
+	void writeValueToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
 
 	static MetaDataLabel codifyLabel( std::string strLabel );
 	static std::string decodeLabel( MetaDataLabel inputLabel );
+	static bool isValidLabel( MetaDataLabel inputLabel );
+	static bool isValidLabel( std::string inputLabel );
 };
 
 #endif

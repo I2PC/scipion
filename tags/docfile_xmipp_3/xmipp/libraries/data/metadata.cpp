@@ -229,7 +229,7 @@ void MetaData::save( std::string fileName )
 	{
 		for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
 		{
-			(It->second)->writeValuesToFile( outfile, *strIt );
+			(It->second)->writeValueToFile( outfile, *strIt );
 			outfile << " ";
 		}
 		
@@ -357,7 +357,7 @@ bool MetaData::setValue( MetaDataLabel name, double value, long int objectID )
 {
 	long int auxID;
 	
-	if( !objects.empty( ))
+	if( !objects.empty( ) && MetaDataContainer::isValidLabel( name ))
 	{
 		if( objectID == -1 )
 		{
@@ -370,6 +370,29 @@ bool MetaData::setValue( MetaDataLabel name, double value, long int objectID )
 		
 		MetaDataContainer * aux = objects[auxID];
 		
+		// Check whether label is correct (belongs to the enum in the metadata_container header
+		// and whether it is present in the activeLabels vector. If not, add it to all the other
+		// objects with default values
+		std::vector< MetaDataLabel >::iterator location;
+		std::map< long int, MetaDataContainer *>::iterator It;
+									
+   		location = std::find( activeLabels.begin(), activeLabels.end(), name );
+		
+	   	if ( location != activeLabels.end() )
+		{
+			activeLabels.push_back( name );
+			
+			// Add this label to the rest of the objects in this class
+			for( It = objects.begin( ); It != objects.end(); It ++)
+			{
+				if( It->second != aux )
+				{
+					(It->second)->addValue( name, double() );
+				}		
+			} 
+			
+		}
+			
 		aux->addValue( name, value );
 		
 		return true;
@@ -384,7 +407,7 @@ bool MetaData::setValue( MetaDataLabel name, float value, long int objectID )
 {
 	long int auxID;
 	
-	if( !objects.empty( ))
+	if( !objects.empty( ) && MetaDataContainer::isValidLabel( name ))
 	{
 		if( objectID == -1 )
 		{
@@ -397,6 +420,29 @@ bool MetaData::setValue( MetaDataLabel name, float value, long int objectID )
 		
 		MetaDataContainer * aux = objects[auxID];
 		
+		// Check whether label is correct (belongs to the enum in the metadata_container header
+		// and whether it is present in the activeLabels vector. If not, add it to all the other
+		// objects with default values
+		std::vector< MetaDataLabel >::iterator location;
+		std::map< long int, MetaDataContainer *>::iterator It;
+									
+   		location = std::find( activeLabels.begin(), activeLabels.end(), name );
+		
+	   	if ( location != activeLabels.end() )
+		{
+			activeLabels.push_back( name );
+			
+			// Add this label to the rest of the objects in this class
+			for( It = objects.begin( ); It != objects.end(); It ++)
+			{
+				if( It->second != aux )
+				{
+					(It->second)->addValue( name, float() );
+				}		
+			} 
+			
+		}
+			
 		aux->addValue( name, value );
 
 		return true;
@@ -411,7 +457,7 @@ bool MetaData::setValue( MetaDataLabel name, int value, long int objectID )
 {
 	long int auxID;
 	
-	if( !objects.empty( ))
+	if( !objects.empty( ) && MetaDataContainer::isValidLabel( name ))
 	{
 		if( objectID == -1 )
 		{
@@ -424,8 +470,81 @@ bool MetaData::setValue( MetaDataLabel name, int value, long int objectID )
 		
 		MetaDataContainer * aux = objects[auxID];
 		
+		// Check whether label is correct (belongs to the enum in the metadata_container header
+		// and whether it is present in the activeLabels vector. If not, add it to all the other
+		// objects with default values
+		std::vector< MetaDataLabel >::iterator location;
+		std::map< long int, MetaDataContainer *>::iterator It;
+									
+   		location = std::find( activeLabels.begin(), activeLabels.end(), name );
+		
+	   	if ( location != activeLabels.end() )
+		{
+			activeLabels.push_back( name );
+			
+			// Add this label to the rest of the objects in this class
+			for( It = objects.begin( ); It != objects.end(); It ++)
+			{
+				if( It->second != aux )
+				{
+					(It->second)->addValue( name, int() );
+				}		
+			} 
+			
+		}
+		
 		aux->addValue( name, value );
 
+		return true;
+	}	
+	else
+	{
+		return false;
+	}	
+}
+
+bool MetaData::setValue( MetaDataLabel name, bool value, long int objectID )
+{
+	long int auxID;
+
+	if( !objects.empty( ) && MetaDataContainer::isValidLabel( name ))
+	{
+		if( objectID == -1 )
+		{
+			auxID = objectsIterator->first;
+		}
+		else
+		{
+			auxID = objectID;
+		}
+		
+		MetaDataContainer * aux = objects[auxID];
+
+		// Check whether label is correct (belongs to the enum in the metadata_container header
+		// and whether it is present in the activeLabels vector. If not, add it to all the other
+		// objects with default values
+		std::vector< MetaDataLabel >::iterator location;
+		std::map< long int, MetaDataContainer *>::iterator It;
+									
+   		location = std::find( activeLabels.begin(), activeLabels.end(), name );
+		
+	   	if ( location != activeLabels.end() )
+		{
+			activeLabels.push_back( name );
+			
+			// Add this label to the rest of the objects in this class
+			for( It = objects.begin( ); It != objects.end(); It ++)
+			{
+				if( It->second != aux )
+				{
+					(It->second)->addValue( name, bool( ) );
+				}		
+			} 
+			
+		}
+		
+		aux->addValue( name, value );
+		
 		return true;
 	}	
 	else
@@ -438,7 +557,7 @@ bool MetaData::setValue( MetaDataLabel name, std::string value, long int objectI
 {
 	long int auxID;
 
-	if( !objects.empty( ))
+	if( !objects.empty( ) && MetaDataContainer::isValidLabel( name ))
 	{
 		if( objectID == -1 )
 		{
@@ -450,6 +569,29 @@ bool MetaData::setValue( MetaDataLabel name, std::string value, long int objectI
 		}
 		
 		MetaDataContainer * aux = objects[auxID];
+
+		// Check whether label is correct (belongs to the enum in the metadata_container header
+		// and whether it is present in the activeLabels vector. If not, add it to all the other
+		// objects with default values
+		std::vector< MetaDataLabel >::iterator location;
+		std::map< long int, MetaDataContainer *>::iterator It;
+									
+   		location = std::find( activeLabels.begin(), activeLabels.end(), name );
+		
+	   	if ( location != activeLabels.end() )
+		{
+			activeLabels.push_back( name );
+			
+			// Add this label to the rest of the objects in this class
+			for( It = objects.begin( ); It != objects.end(); It ++)
+			{
+				if( It->second != aux )
+				{
+					(It->second)->addValue( name, std::string( "" ) );
+				}		
+			} 
+			
+		}
 		
 		aux->addValue( name, value );
 		
@@ -465,7 +607,9 @@ bool MetaData::setValue( std::string name, std::string value, long int objectID 
 {
 	long int auxID;
 	
-	if( !objects.empty( ))
+	MetaDataLabel label = MetaDataContainer::codifyLabel( name );
+	
+	if( !objects.empty( ) && MetaDataContainer::isValidLabel( label ) )
 	{
 		if( objectID == -1 )
 		{
@@ -477,8 +621,31 @@ bool MetaData::setValue( std::string name, std::string value, long int objectID 
 		}
 		
 		MetaDataContainer * aux = objects[auxID];
+
+		// Check whether label is correct (belongs to the enum in the metadata_container header
+		// and whether it is present in the activeLabels vector. If not, add it to all the other
+		// objects with default values
+		std::vector< MetaDataLabel >::iterator location;
+		std::map< long int, MetaDataContainer *>::iterator It;
+									
+   		location = std::find( activeLabels.begin(), activeLabels.end(), label );
 		
-		aux->addValue( name, value );
+	   	if ( location != activeLabels.end() )
+		{
+			activeLabels.push_back( label );
+			
+			// Add this label to the rest of the objects in this class
+			for( It = objects.begin( ); It != objects.end(); It ++)
+			{
+				if( It->second != aux )
+				{
+					(It->second)->addValue( label, std::string( "" ) );
+				}		
+			} 
+			
+		}
+		
+		aux->addValue( label, value );
 		
 		return true;
 	}	
