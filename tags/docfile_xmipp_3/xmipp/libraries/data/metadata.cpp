@@ -29,13 +29,13 @@ MetaData::MetaData()
 {
 	path = std::string("");
 	objects.clear( );
-	
 	fastStringSearchLabel = MDL_UNDEFINED;	
 }
 
 MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector )
 {
 	path = std::string( "" );
+	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
 
 	// Open file
@@ -53,8 +53,7 @@ MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVec
 		bool saveName = true;
 		
 		// Remove from the beginning to the end of "Headerinfo columns:"
-		pos = line.find( ":" );
-		line = line.erase( 0, pos + 1 );
+		line = line.erase( 0, line.find( ":" ) + 1 );
 		
 		// In the old docfile format the "image" label did not exist, it was
 		// a ";" commented line containing the name of the projection. Therefore,
@@ -70,15 +69,10 @@ MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVec
 				activeLabels.push_back( MDL_IMAGE );
 				saveName = true;
 			}
-			else
-			{
-				saveName = false;
-			}
 		}
 		else
 		{				
 			activeLabels.push_back( MDL_IMAGE );
-			saveName = true;
 		}
 							
 		// Extract labels until the string is empty
@@ -94,8 +88,7 @@ MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVec
 			
 			// Remove unneded parentheses and contents
 			pos = newLabel.find( "(" );
-			int pos2 = newLabel.find( ")" );
-			newLabel.erase( pos, pos2-pos+1 );
+			newLabel.erase( pos, newLabel.find( ")" )-pos+1 );
 			
 			// Remove white spaces
 			newLabel = removeChar( newLabel, ' ' );
@@ -239,7 +232,7 @@ void MetaData::save( std::string fileName )
 
 MetaData::~MetaData( )
 {
-	objects.clear( );
+	clear( );
 }
 
 bool MetaData::isEmpty( )
@@ -251,6 +244,15 @@ void MetaData::clear( )
 {
 	path = std::string("");
 	objects.clear( );		
+	
+	objectsIterator = objects.end();
+	
+	fastStringSearch.clear( );;
+	fastStringSearchLabel = MDL_UNDEFINED;
+
+	activeLabels.clear( );
+
+	path = std::string(""); 
 }
 
 void MetaData::setPath( std::string newPath )

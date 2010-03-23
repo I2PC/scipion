@@ -43,10 +43,15 @@
 class MetaData
 {
 	std::map< long int, MetaDataContainer *> objects;
+	
+	// Used by firstObject, nextObject and lastObject to keep a pointer
+	// to the "active" object. This way when you call setValue without
+	// an objectID, this one is chosen
 	std::map< long int, MetaDataContainer *>::iterator objectsIterator;
 	
 	// Allows a fast search for pairs where the value is
-	// a string
+	// a string, i.e. looking for filenames which is quite
+	// usual
 	std::map< std::string, long int> fastStringSearch;
 	MetaDataLabel fastStringSearchLabel;
 
