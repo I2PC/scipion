@@ -255,10 +255,10 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
 
 def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
     # Create wrapper
+    # setup
+    basedirswig = AddLastSlash(basedir+"/swig")
+    libprefix = os.path.join(env['prefix'], 'lib')
     if int(env['swig']):
-        # setup
-        basedirswig = AddLastSlash(basedir+"/swig")
-        libprefix = os.path.join(env['prefix'], 'lib')
         
         # Build wrapper
         wrapper = env.i2cc(basedirswig + name + "_wrap.cc", sourceList)
