@@ -35,7 +35,7 @@ void MetaDataContainer::addValue( MetaDataLabel name, int value )
 
 void MetaDataContainer::addValue( MetaDataLabel name, double value )
 {
-	void * newValue = (void *)(new double(value));
+    void * newValue = (void *)(new double(value));
 	insertVoidPtr( name, newValue );
 }
 
