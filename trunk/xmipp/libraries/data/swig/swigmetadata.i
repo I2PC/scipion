@@ -4,6 +4,8 @@
 %}
 //Python does not have float/double variable, just reals that will be cast to double
 %ignore MetaData::setValue( MetaDataLabel name, float value, long int objectID = -1 );
+%ignore MetaDataContainer::addValue( MetaDataLabel name, float value );
+%ignore MetaDataContainer::pairExists( MetaDataLabel name, float value );
 
 %include ../metadata.h
 %include ../metadata_container.h
