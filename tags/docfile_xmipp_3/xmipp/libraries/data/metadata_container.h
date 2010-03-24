@@ -62,6 +62,10 @@ enum MetaDataLabel
 	MDL_FLIP,
 	MDL_REF,
 	MDL_MAXCC,
+    MDL_SERIE,
+    MDL_PMAX,
+    MDL_INPUTPARAMS,
+    MDL_PERIODOGRAM,
 	MDL_LAST_LABEL	// NOTE: Do keep this label always at the end
 			 		// it is here for looping purposes  	
 };

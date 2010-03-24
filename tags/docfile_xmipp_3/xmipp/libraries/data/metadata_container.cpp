@@ -66,7 +66,7 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 	if( lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||
 	   lCode == MDL_SHIFTX || lCode == MDL_SHIFTY || lCode == MDL_SHIFTZ ||
 	   lCode == MDL_ORIGINX || lCode == MDL_ORIGINY || lCode == MDL_ORIGINZ || 
-	   lCode == MDL_WEIGHT || lCode == MDL_MAXCC ) 
+	   lCode == MDL_WEIGHT || lCode == MDL_MAXCC || lCode == MDL_PMAX ) 
 	{
 		double doubleValue;
 		
@@ -74,7 +74,9 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 				
 		addValue( lCode, doubleValue );
 	}
-	else if( lCode == MDL_IMAGE || lCode == MDL_MICROGRAPH || lCode == MDL_CTFMODEL )
+	else if( lCode == MDL_IMAGE || lCode == MDL_MICROGRAPH || lCode == MDL_CTFMODEL ||
+        lCode == MDL_INPUTPARAMS || lCode == MDL_PERIODOGRAM ||
+        lCode == MDL_SERIE )
 	{
 		addValue( lCode, value );
 	}
@@ -318,6 +320,22 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return MDL_MAXCC;
 	}
+	else if( strLabel == "serie" )
+	{
+		return MDL_SERIE;
+	}
+	else if( strLabel == "pMax" )
+	{
+		return MDL_PMAX;
+	}
+	else if( strLabel == "inputParams" )
+	{
+		return MDL_INPUTPARAMS;
+	}
+	else if( strLabel == "periodogram" )
+	{
+		return MDL_PERIODOGRAM;
+	}
 	else
 	{
 		return MDL_UNDEFINED;
@@ -379,6 +397,18 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 		case MDL_MAXCC: 
 			return std::string( "maxCC" );
 			break;
+        case MDL_SERIE:
+            return std::string( "serie" );
+            break;
+        case MDL_PMAX:
+            return std::string( "pMax" );
+            break;
+        case MDL_INPUTPARAMS:
+            return std::string( "inputParams" );
+            break;
+        case MDL_PERIODOGRAM:
+            return std::string( "periodogram" );
+            break;
 		default:
 			return std::string( "" );
 			break;
@@ -439,6 +469,18 @@ void MetaDataContainer::writeValueToFile( std::ofstream &outfile, MetaDataLabel 
 			break;
 		case MDL_MAXCC: 
 			outfile << *((double*)(getValue( inputLabel )));
+			break;
+        case MDL_PMAX:
+            outfile << *((double*)(getValue( inputLabel )));
+			break;
+        case MDL_SERIE:
+            outfile << *((std::string*)(getValue( inputLabel )));
+            break;
+        case MDL_INPUTPARAMS:
+            outfile << *((std::string*)(getValue( inputLabel )));
+			break;
+        case MDL_PERIODOGRAM:
+            outfile << *((std::string*)(getValue( inputLabel )));
 			break;
 		default:
 			break;

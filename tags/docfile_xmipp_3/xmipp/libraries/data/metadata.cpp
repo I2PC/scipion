@@ -997,6 +997,30 @@ double MetaData::originZ( long int objectID )
 	}
 }
 
+double MetaData::pMax( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		MetaDataContainer * aux = objects[ objectID ];
+		double * result = (double *)aux->getValue( MDL_PMAX );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'pMax' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
+
 std::string MetaData::image( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
@@ -1065,6 +1089,76 @@ std::string MetaData::micrograph( long int objectID )
 		}
 	}
 }
+
+std::string MetaData::inputParam( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		MetaDataContainer * aux = objects[ objectID ];
+		std::string * result = (std::string *)aux->getValue( MDL_INPUTPARAMS );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'inputParam' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
+std::string MetaData::periodogram( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		MetaDataContainer * aux = objects[ objectID ];
+		std::string * result = (std::string *)aux->getValue( MDL_PERIODOGRAM );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'periodogram' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
+std::string MetaData::serie( long int objectID )
+{
+	if( objects.find( objectID ) == objects.end( ) )
+	{
+		// This objectID does not exist, finish execution
+		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	}
+	else
+	{
+		MetaDataContainer * aux = objects[ objectID ];
+		std::string * result = (std::string *)aux->getValue( MDL_SERIE );
+		
+		if( result == NULL )
+		{
+			std::cerr << "No 'serie' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+		}
+		else
+		{
+			return (*result);
+		}
+	}
+}
+
 
 double MetaData::weight( long int objectID )
 {
