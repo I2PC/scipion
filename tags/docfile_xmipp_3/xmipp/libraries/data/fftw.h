@@ -60,6 +60,9 @@ public:
     /** Real array, in fact a pointer to the user array is stored. */
     MultidimArray<double> *fReal;
 
+     /** Complex array, in fact a pointer to the user array is stored. */
+    MultidimArray<std::complex<double> > *fComplex;
+
     /** Fourier array  */
     MultidimArray< std::complex<double> > fFourier;
 
@@ -277,6 +280,9 @@ public:
     /* Pointer to the array of doubles with which the plan was computed */
     double * dataPtr;
 
+    /* Pointer to the array of complex<double> with which the plan was computed */
+    std::complex<double> * complexDataPtr;
+
     /** Clear object */
     void clear();
 
@@ -290,6 +296,7 @@ public:
 
     /** Get the Multidimarray that is being used as input. */
     const MultidimArray<double> &getReal() const;
+    const MultidimArray<std::complex<double> > &getComplex() const;
 
     /** Set a Multidimarray for input.
         The data of img will be the one of fReal. In forward
@@ -297,6 +304,13 @@ public:
         the result will be stored in img. This means that the size
         of img cannot change between calls. */
     void setReal(MultidimArray<double> &img);
+
+    /** Set a Multidimarray for input.
+        The data of img will be the one of fComplex. In forward
+        transforms it is not modified, but in backward transforms,
+        the result will be stored in img. This means that the size
+        of img cannot change between calls. */
+    void setReal(MultidimArray<std::complex<double> > &img);
 
     /** Set a Multidimarray for the Fourier transform.
         The values of the input array are copied in the internal array.

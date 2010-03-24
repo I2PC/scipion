@@ -248,30 +248,38 @@ if (ARGUMENTS['mode'] == 'configure'):
     # It is ugly to call configure from scons, but I do not know how to do it otherwise
     # create configuration file for fftw
     finalSQLiteFlags= env['SQLITEFLAGS']
-    #if not int(env['static']):
-    #    finalFFTWFlags+=" --enable-shared"
-    if int(env['verbose_sqlite']):
-        print "* Configuring FFTW ... " 
-        os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags)
-    else:
-        print "* Configuring SQLite (see build/sqlite_configure.log for details) ... "
-        print "cd external/sqlite-3.6.23;./configure "  + finalSQLiteFlags
-        os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags + " > ../../build/sqlite_configure.log ")
+    if not GetOption("help"):
+    	if os.path.exists('external/sqlite-3.6.23/Makefile'):
+	    command = 'cd external/sqlite-3.6.23;  make distclean>/dev/null'
+	    print command
+	    os.system(command)
+	if int(env['verbose_sqlite']):
+            print "* Configuring SQLITE ... " 
+            os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags)
+	else:
+            print "* Configuring SQLite (see build/sqlite_configure.log for details) ... "
+            print "cd external/sqlite-3.6.23;./configure "  + finalSQLiteFlags
+            os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags + " > ../../build/sqlite_configure.log ")
  
  
     # FFTW
     # It is ugly to call configure from scons, but I do not know how to do it otherwise
     # create configuration file for fftw
     finalFFTWFlags= env['FFTWFLAGS']
-    if not int(env['static']):
-        finalFFTWFlags+=" --enable-shared"
-    if int(env['verbose_fftw']):
-        print "* Configuring FFTW ... " 
-        os.system("cd external/fftw-3.2.2;./configure " + finalFFTWFlags)
-    else:
-        print "* Configuring FFTW (see build/fftw_configure.log for details) ... "
-        print "cd external/fftw-3.2.2;./configure " + finalFFTWFlags
-        os.system("cd external/fftw-3.2.2;./configure " + finalFFTWFlags + " > ../../build/fftw_configure.log ")
+    if not GetOption("help"):
+    	if os.path.exists('external/fftw-3.2.2/Makefile'):
+	    command = 'cd external/fftw-3.2.2;  make distclean>/dev/null'
+	    print command
+	    os.system(command)
+	if not int(env['static']):
+            finalFFTWFlags+=" --enable-shared"
+	if int(env['verbose_fftw']):
+            print "* Configuring FFTW ... " 
+            os.system("cd external/fftw-3.2.2;./configure " + finalFFTWFlags)
+	else:
+            print "* Configuring FFTW (see build/fftw_configure.log for details) ... "
+            print "cd external/fftw-3.2.2;./configure " + finalFFTWFlags
+            os.system("cd external/fftw-3.2.2;./configure " + finalFFTWFlags + " > ../../build/fftw_configure.log ")
 
     env = conf.Finish()
     opts.Save('options.cache', env)
@@ -286,6 +294,7 @@ elif (ARGUMENTS['mode'] == 'compile'):
     # debug?
     if int(env['debug']):
         env.Append(CXXFLAGS = ['-g'])
+        env.Append(CXXFLAGS = ['-O0'])
         env.Append(CXXFLAGS = ['-pg'])
         env.Append(CCFLAGS = ['-g'])
         env.Append(CCFLAGS = ['-pg'])
@@ -333,16 +342,10 @@ elif (ARGUMENTS['mode'] == 'compile'):
 
     # SWIG
     if int(env['swig']):
-        import distutils.sysconfig
-        SWIGScanner = SCons.Scanner.ClassicCPP(
-            "SWIGScan",
-            ".i",
-            "CPPPATH",
-            '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
-        )
-        env.Prepend(SCANNERS=[SWIGScanner])
-        env.Append(SWIGFLAGS=["-python","-c++"])
-        env.Append(SWIGCPPPATH=[distutils.sysconfig.get_python_inc()]);
+        swigBuilder = Builder(action=env['SWIG']+' -python -c++ -o $TARGET $SOURCE',
+                     suffix='.cc',
+                     src_suffix='.i')
+        env.Append(BUILDERS={'i2cc': swigBuilder})   
 
     Export('env')
     env.SConscript('SConscript')

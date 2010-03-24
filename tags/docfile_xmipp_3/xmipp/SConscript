@@ -212,9 +212,8 @@ def AddMPILibrary(name, basedir, sources, includes):
     env.Alias(name, install)
     env.Default(alias)
 
-# COSS wanted an explicit list...
-def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
-
+def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
+    shlibprefix='lib'):
     # setup
     basedir = AddLastSlash(basedir)
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -224,7 +223,7 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
 
     # separate local and global includes
     for x in includes:
-        if x[0] != '#':
+        if x[0] != '#' and x[0]!='/':
             includes[includes.index(x)] = basedir + x
 
     # action
@@ -244,7 +243,8 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
             sources,
             CPPPATH = includes + [env['CPPPATH']],
             LIBPATH = libpath,
-            LIBS = libs
+            LIBS = libs,
+            SHLIBPREFIX=shlibprefix
             )
 
     # alias
@@ -254,54 +254,31 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[]):
     env.Default(alias)
 
 def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
-    if not int(env['swig']):
-        return
-
+    # Create wrapper
     # setup
     basedirswig = AddLastSlash(basedir+"/swig")
     libprefix = os.path.join(env['prefix'], 'lib')
-    for x in sourceList:
-        if x.find(basedirswig)==-1:
-            sourceList[sourceList.index(x)] = basedirswig + x
-
-    # separate local and global includes
-    for x in includes:
-        if x[0] != '#':
-            includes[includes.index(x)] = basedirswig + x
-
-    # Build depedencies
-    env.Depends(basedirswig + "lib" + name + "Swig.so",
-       Glob(basedir, '*.h', [])+Glob(basedirswig, '*.i', []));
-
-    # action
-    # FIXME Exclusive may not be what users want
-    if int(env['static']):
-        library = env.StaticLibrary(
-            target=basedirswig + name + "Swig",
-            source=sourceList,
-            CPPPATH = includes + [env['CPPPATH']] + [env['SWIGCPPPATH']],
-            LIBPATH = libpath+["lib"],
-            LIBS = libs+["XmippExternal"],
-            SWIGFLAGS = [env['SWIGFLAGS']]
-            )
-    else:
-        library = env.SharedLibrary(
-            target=basedirswig + name + "Swig",
-            source=sourceList,
-            CPPPATH = includes + [env['CPPPATH']] + [env['SWIGCPPPATH']],
-            LIBPATH = libpath+["lib"],
-            LIBS = libs+["XmippExternal"],
-            SWIGFLAGS = [env['SWIGFLAGS']]
-            )
-
-    # alias
-    alias = env.Alias(name, library)
-    install = env.InstallAs(target=[libprefix+"/_"+name+".so",
-                                    libprefix+"/"+name+".py"],
-        source=[basedirswig + "lib"+ name + "Swig.so",
-                basedirswig + name + ".py"])
-    env.Alias(name, install)
-    env.Default(alias)
+    if int(env['swig']):
+        
+        # Build wrapper
+        wrapper = env.i2cc(basedirswig + name + "_wrap.cc", sourceList)
+        Depends(wrapper, Glob(basedir, '*.h', [])+Glob(basedirswig, '*.i', []))
+        
+        # alias
+        alias=env.Alias(name,wrapper)
+        env.Default(alias)
+    
+    # Create library
+    import distutils.sysconfig
+    AddLibrary("_"+name, basedirswig, [name+"_wrap.cc"],
+        ['#',distutils.sysconfig.get_python_inc()],['lib'],['XmippData'],'_')
+    #
+    command = "ln -fs ../" + basedirswig+name+".py " + libprefix+'/'+name+'.py'
+    print command
+    os.system(command)
+    #install = env.InstallAs(libprefix+'/'+name+'.py',basedirswig+name+".py")
+    #env.Alias(name+'.py', install)
+    #env.Default(name+'.py')
     
 def AddSQLiteLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -358,9 +335,6 @@ def AddFFTWLibrary():
     env.Alias(toCopy, install)
     env.Default(alias)
 
-
-
-
 # --- Libraries
 
 # SQLite
@@ -396,6 +370,7 @@ ReconsSources = [
     'adjust_volume_grey_levels.cpp',
     'align2d.cpp',
     'align_tilt_pairs.cpp',
+    'analyze_cluster.cpp',
     'angular_assign_for_tomogram.cpp',
     'angular_assign_for_tilt_series.cpp',
     'angular_commonline.cpp',
@@ -457,6 +432,7 @@ ReconsSources = [
     'refinement.cpp',
     'resolution_ssnr.cpp',
     'series_remove_fluctuations.cpp',
+    'sort_images.cpp',
     'spar.cpp',
     'sparma.cpp',
     'surface.cpp',
@@ -518,6 +494,7 @@ AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('align2d', ['XmippRecons'])
 AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('align_volumes')
+AddXmippProgram('analyze_cluster', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
 AddXmippProgram('angular_class_average', ['XmippRecons'])
@@ -530,7 +507,7 @@ AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 AddXmippProgram('angular_project_library', ['XmippRecons'])
 AddXmippProgram('average')
-AddXmippProgram('break_symmetry',               ['XmippRecons'])
+AddXmippProgram('break_symmetry', ['XmippRecons'])
 AddXmippProgram('center_image')
 AddXmippProgram('classify_batch_som', ['XmippClassif'])
 AddXmippProgram('classify_fcmeans', ['XmippClassif'])
@@ -650,6 +627,7 @@ AddXmippProgram('separate_objects')
 AddXmippProgram('series_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('shift')
 AddXmippProgram('sort_by_statistics')
+AddXmippProgram('sort_images', ['XmippRecons'])
 AddXmippProgram('statistics')
 AddXmippProgram('convert_stack22images')
 AddXmippProgram('symmetrize', ['XmippRecons'])

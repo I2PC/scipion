@@ -78,7 +78,7 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 	{
 		addValue( lCode, value );
 	}
-	else if( lCode == MDL_REF )
+	else if( lCode == MDL_REF || lCode == MDL_ENABLED )
 	{
 		int intValue;
 		
@@ -86,7 +86,7 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 				
 		addValue( lCode, intValue ); 
 	}
-	else if( lCode == MDL_ENABLED || lCode == MDL_FLIP )
+	else if( lCode == MDL_FLIP )
 	{
 		bool boolValue;
 		
@@ -417,7 +417,7 @@ void MetaDataContainer::writeValueToFile( std::ofstream &outfile, MetaDataLabel 
 			outfile << *((double*)(getValue( inputLabel )));
 			break;
 		case MDL_ENABLED:
-			outfile << *((bool*)(getValue( inputLabel )));
+			outfile << *((int*)(getValue( inputLabel )));
 			break;
 		case MDL_ORIGINX:
 			outfile << *((double*)(getValue( inputLabel )));

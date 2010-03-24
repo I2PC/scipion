@@ -36,7 +36,9 @@ XmippFftw::XmippFftw()
     fPlanForward=NULL;
     fPlanBackward=NULL;
     fReal=NULL;
+    fComplex=NULL;
     dataPtr=NULL;
+    complexDataPtr=NULL;
     nthreads=1;
     threadsSetOn=false;
 }
@@ -44,6 +46,7 @@ XmippFftw::XmippFftw()
 void XmippFftw::clear()
 {
     fReal=NULL;
+    fComplex=NULL;
     fFourier.clear();
     // Anything to do with plans has to be protected for threads!
     pthread_mutex_lock(&fftw_plan_mutex);
@@ -53,6 +56,7 @@ void XmippFftw::clear()
     fPlanForward     = NULL;
     fPlanBackward    = NULL;
     dataPtr          = NULL;
+    complexDataPtr   = NULL;
 }
 
 XmippFftw::~XmippFftw()
@@ -65,6 +69,12 @@ const MultidimArray<double> &XmippFftw::getReal() const
 {
     return (*fReal);
 }
+
+const MultidimArray<std::complex<double> > &XmippFftw::getComplex() const
+{
+    return (*fComplex);
+}
+
 
 void XmippFftw::setReal(MultidimArray<double> &input)
 {
@@ -115,6 +125,58 @@ void XmippFftw::setReal(MultidimArray<double> &input)
                 REPORT_ERROR(1, "FFTW plans cannot be created");
             delete [] N;
             dataPtr=MULTIDIM_ARRAY(*fReal);
+        pthread_mutex_unlock(&fftw_plan_mutex);
+    }
+}
+
+void XmippFftw::setReal(MultidimArray<std::complex<double> > &input)
+{
+    bool recomputePlan=false;
+    if (fComplex==NULL) recomputePlan=true;
+    else if (complexDataPtr!=MULTIDIM_ARRAY(input)) recomputePlan=true;
+    else recomputePlan=!(fComplex->sameShape(input));
+    fFourier.resize(input);
+    fComplex=&input;
+
+    if (recomputePlan)
+    {
+        int ndim=3;
+        if (ZSIZE(input)==1)
+        {
+            ndim=2;
+            if (YSIZE(input)==1)
+                ndim=1;
+        }
+        int *N = new int[ndim];
+        switch (ndim)
+        {
+            case 1:
+                N[0]=XSIZE(input);
+                break;
+            case 2:
+                N[0]=YSIZE(input);
+                N[1]=XSIZE(input);
+                break;
+            case 3:
+                N[0]=ZSIZE(input);
+                N[1]=YSIZE(input);
+                N[2]=XSIZE(input);
+                break;
+        }
+
+        pthread_mutex_lock(&fftw_plan_mutex);
+            if (fPlanForward!=NULL)  fftw_destroy_plan(fPlanForward);
+            fPlanForward=NULL;
+            fPlanForward = fftw_plan_dft(ndim, N, (fftw_complex*) MULTIDIM_ARRAY(*fComplex),
+                                         (fftw_complex*) MULTIDIM_ARRAY(fFourier), FFTW_FORWARD, FFTW_ESTIMATE);
+            if (fPlanBackward!=NULL) fftw_destroy_plan(fPlanBackward);
+            fPlanBackward=NULL;
+            fPlanBackward = fftw_plan_dft(ndim, N, (fftw_complex*) MULTIDIM_ARRAY(fFourier), 
+                                          (fftw_complex*) MULTIDIM_ARRAY(*fComplex), FFTW_BACKWARD, FFTW_ESTIMATE);
+            if (fPlanForward == NULL || fPlanBackward == NULL)
+                REPORT_ERROR(1, "FFTW plans cannot be created");
+            delete [] N;
+            complexDataPtr=MULTIDIM_ARRAY(*fComplex);
         pthread_mutex_unlock(&fftw_plan_mutex);
     }
 }
@@ -267,6 +329,28 @@ void frc_dpr(Matrix2D< double > & m1,
     Matrix2D< std::complex< double > > FT2;
     XmippFftw transformer2;
     transformer2.FourierTransform(m2, FT2, false);
+/*
+std::cout << STARTINGY(FT1) << "," << FINISHINGY(FT1) << std::endl;
+std::cout << STARTINGX(FT1) << "," << FINISHINGX(FT1) << std::endl;
+
+std::cout << STARTINGY(m1) << "," << FINISHINGY(m1) << std::endl;
+std::cout << STARTINGX(m1) << "," << FINISHINGX(m1) << std::endl;
+
+    for (int i=STARTINGY(FT1); i<=FINISHINGY(FT1); i++)
+    {
+        for (int j=STARTINGX(FT1); j<=FINISHINGX(FT1); j++)
+	{
+		FT1(i,j)=std::complex< double >( m1(i-128,j-128), 0.0 );
+	}
+    }
+
+    for (int i=STARTINGY(FT2); i<=FINISHINGY(FT2); i++)
+    {
+        for (int j=STARTINGX(FT2); j<=FINISHINGX(FT2); j++)
+	{
+		FT2(i,j)=std::complex< double >( m2(i-128,j-128), 0.0 );
+	}
+    }*/
 
     Matrix1D< int > radial_count(XSIZE(m1)/2+1);
     Matrix1D<double> num, den1, den2;

@@ -103,6 +103,7 @@ $result=PyInt_FromLong((long)*$1);
 %include swigdocfile.i
 %include swigargs.i
 %include swigsqllite.i
+%include swigmetadata.i
 //%include swigmultidimensional_array.i
 //%include swigmatrix1d.i
 //%include swigmatrix2d.i
@@ -111,4 +112,4 @@ $result=PyInt_FromLong((long)*$1);
 //%include swiggeometry.i
 //%include swigmicrograph.i
 
-// rm libraries/data/swig/libXmippDataSwig.so libraries/data/swig/XmippData.py libraries/data/swig/swigXmippData_wrap.os libraries/data/swig/swigXmippData_wrap.cc ; ./scons.compile
+// rm libraries/data/swig/_XmippData.so libraries/data/swig/XmippData.py libraries/data/swig/XmippData_wrap.os libraries/data/swig/XmippData_wrap.cc lib/_XmippData.so lib/XmippData.py ; ./scons.compile
