@@ -115,11 +115,15 @@ public:
 	double weight( long int objectID );
 	double flip( long int objectID );
 	double maxCC( long int objectID );
+    double pMax( long int objectID );
 	int ref( long int objectID );
 	int enabled( long int objectID );
 	std::string CTFModel( long int objectID );
 	std::string image( long int objectID );
 	std::string micrograph( long int objectID );
+	std::string inputParam( long int objectID );
+	std::string periodogram( long int objectID );
+	std::string serie( long int objectID );
 };
 
 #endif
