@@ -836,7 +836,7 @@ double MetaData::anglePsi( long int objectID )
 	}
 }
 
-bool MetaData::enabled( long int objectID )
+int MetaData::enabled( long int objectID )
 {
 	if( objects.find( objectID ) == objects.end( ) )
 	{

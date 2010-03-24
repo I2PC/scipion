@@ -116,7 +116,7 @@ public:
 	double flip( long int objectID );
 	double maxCC( long int objectID );
 	int ref( long int objectID );
-	bool enabled( long int objectID );
+	int enabled( long int objectID );
 	std::string CTFModel( long int objectID );
 	std::string image( long int objectID );
 	std::string micrograph( long int objectID );
