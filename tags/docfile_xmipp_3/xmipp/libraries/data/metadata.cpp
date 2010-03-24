@@ -27,14 +27,14 @@
 
 MetaData::MetaData()
 {
-	path = std::string("");
+	setPath();
 	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
 }
 
 MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector )
 {
-	path = std::string( "" );
+	setPath();
 	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
 
@@ -358,13 +358,13 @@ long int MetaData::lastObject( )
 bool MetaData::setValue( MetaDataLabel name, double value, long int objectID )
 {
 	long int auxID;
-	
+	    
 	if( !objects.empty( ) && MetaDataContainer::isValidLabel( name ))
 	{
-		if( objectID == -1 )
+    	if( objectID == -1 )
 		{
 			auxID = objectsIterator->first;
-		}
+    	}
 		else
 		{
 			auxID = objectID;
@@ -380,7 +380,7 @@ bool MetaData::setValue( MetaDataLabel name, double value, long int objectID )
 									
    		location = std::find( activeLabels.begin(), activeLabels.end(), name );
 		
-	   	if ( location != activeLabels.end() )
+	   	if ( location == activeLabels.end() )
 		{
 			activeLabels.push_back( name );
 			
@@ -430,7 +430,7 @@ bool MetaData::setValue( MetaDataLabel name, float value, long int objectID )
 									
    		location = std::find( activeLabels.begin(), activeLabels.end(), name );
 		
-	   	if ( location != activeLabels.end() )
+	   	if ( location == activeLabels.end() )
 		{
 			activeLabels.push_back( name );
 			
@@ -480,7 +480,7 @@ bool MetaData::setValue( MetaDataLabel name, int value, long int objectID )
 									
    		location = std::find( activeLabels.begin(), activeLabels.end(), name );
 		
-	   	if ( location != activeLabels.end() )
+	   	if ( location == activeLabels.end() )
 		{
 			activeLabels.push_back( name );
 			
@@ -530,7 +530,7 @@ bool MetaData::setValue( MetaDataLabel name, bool value, long int objectID )
 									
    		location = std::find( activeLabels.begin(), activeLabels.end(), name );
 		
-	   	if ( location != activeLabels.end() )
+	   	if ( location == activeLabels.end() )
 		{
 			activeLabels.push_back( name );
 			
@@ -580,7 +580,7 @@ bool MetaData::setValue( MetaDataLabel name, std::string value, long int objectI
 									
    		location = std::find( activeLabels.begin(), activeLabels.end(), name );
 		
-	   	if ( location != activeLabels.end() )
+	   	if ( location == activeLabels.end() )
 		{
 			activeLabels.push_back( name );
 			
@@ -632,7 +632,7 @@ bool MetaData::setValue( std::string name, std::string value, long int objectID 
 									
    		location = std::find( activeLabels.begin(), activeLabels.end(), label );
 		
-	   	if ( location != activeLabels.end() )
+	   	if ( location == activeLabels.end() )
 		{
 			activeLabels.push_back( label );
 			
@@ -647,7 +647,7 @@ bool MetaData::setValue( std::string name, std::string value, long int objectID 
 			
 		}
 		
-		aux->addValue( label, value );
+		aux->addValue( name, value );
 		
 		return true;
 	}	
