@@ -33,7 +33,7 @@ MetaData::MetaData()
     objectsIterator = objects.begin();
 }
 
-void MetaData::read( std::ifstream *infile, bool skipDisabled, std::vector<MetaDataLabel> * labelsVector )
+void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector )
 {
     infile->seekg(0, std::ios::beg); 
 	std::string line;
@@ -87,7 +87,7 @@ void MetaData::read( std::ifstream *infile, bool skipDisabled, std::vector<MetaD
 	}
 }
 
-void MetaData::readOldDocFile( std::ifstream *infile, bool skipDisabled, std::vector<MetaDataLabel> * labelsVector )
+void MetaData::readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector )
 {
     bool saveName = true;
     infile->seekg(0, std::ios::beg);     
@@ -194,13 +194,18 @@ void MetaData::readOldDocFile( std::ifstream *infile, bool skipDisabled, std::ve
     }   
 }
 
-void MetaData::readOldSelFile( std::ifstream *infile, bool skipDisabled )
+void MetaData::readOldSelFile( std::ifstream *infile )
 {	
     infile->seekg(0, std::ios::beg);     
     std::string line;
-
-	getline( *infile, line, '\n');
-	while ( getline( *infile, line, '\n') )
+	
+    getline( *infile, line, '\n');
+  	
+    activeLabels.push_back( MDL_IMAGE );
+    activeLabels.push_back( MDL_ENABLED );
+    
+    int counter = 0;
+    while ( getline( *infile, line, '\n') )
     {
 	    line=simplify(line);
 	    if (line[0] == '#' || line[0] == '\0' || line[0] == ';')
@@ -211,21 +216,19 @@ void MetaData::readOldSelFile( std::ifstream *infile, bool skipDisabled )
 	        std::string name=line.substr( 0, pos );
             line.erase(0,pos+1);
             int i = atoi (line.c_str());
-            if (skipDisabled && i==(-1))
-                continue;
             addObject();
-            setValue(MDL_IMAGE,name);
-            setValue(MDL_ENABLED,i);
+            setValue( MDL_IMAGE, name);
+            setValue( MDL_ENABLED, i);
+            counter++;
         } 
     }	
 }
 
-MetaData::MetaData( std::string fileName, bool skipDisabled, std::vector<MetaDataLabel> * labelsVector )
+MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector )
 {
-	setPath();
+	setPath( );
 	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
-    objectsIterator = objects.begin();
 
 	// Open file
 	std::ifstream infile ( fileName.data(), std::ios_base::in );
@@ -239,7 +242,10 @@ MetaData::MetaData( std::string fileName, bool skipDisabled, std::vector<MetaDat
 	
 	if( pos != std::string::npos ) // Headerinfo token found
 	{
-        readOldDocFile( &infile , skipDisabled, labelsVector );
+        readOldDocFile( &infile, labelsVector );
+        std::cerr << (std::string)"You are using an old file format (DOCFILE) which is going " +
+                    "to be deprecated in next Xmipp release !!"<<  std::endl;
+           
 	}
 	else
 	{
@@ -249,13 +255,17 @@ MetaData::MetaData( std::string fileName, bool skipDisabled, std::vector<MetaDat
 	    
         if( pos != std::string::npos ) // xmipp_3 token found
         {
-            read( &infile, skipDisabled, labelsVector );
+            read( &infile, labelsVector );
 	    }
         else    // We are reading an old selfile
         {
-            readOldSelFile( &infile, skipDisabled );   
+            readOldSelFile( &infile );   
+            std::cerr << (std::string)"You are using an old file format (SELFILE) which is going " +
+                    "to be deprecated in next Xmipp release !!"<< std::endl;
         }
     }
+
+    objectsIterator = objects.begin();
 	
 	infile.close( );
 }
@@ -631,7 +641,7 @@ bool MetaData::setValue( MetaDataLabel name, std::string value, long int objectI
 		{
 			auxID = objectID;
 		}
-		
+    	
 		MetaDataContainer * aux = objects[auxID];
 
 		// Check whether label is correct (belongs to the enum in the metadata_container header
@@ -653,8 +663,7 @@ bool MetaData::setValue( MetaDataLabel name, std::string value, long int objectI
 				{
 					(It->second)->addValue( name, std::string( "" ) );
 				}		
-			} 
-			
+			} 	
 		}
 		
 		aux->addValue( name, value );
@@ -755,7 +764,7 @@ void MetaData::removeObjects( MetaDataLabel name, int value )
 {
     std::vector<long int> toRemove = findObjects( name, value );    
     std::vector<long int>::iterator It;
-	
+
 	MetaDataContainer * aux;
 	
     for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
@@ -845,11 +854,11 @@ std::vector<long int> MetaData::findObjects( MetaDataLabel name, float value )
 
 std::vector<long int> MetaData::findObjects( MetaDataLabel name, int value )
 {
+
 	std::vector<long int> result;
 	
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
-	
 	std::map< long int, MetaDataContainer *>::iterator It;
 	
 	MetaDataContainer * aux;

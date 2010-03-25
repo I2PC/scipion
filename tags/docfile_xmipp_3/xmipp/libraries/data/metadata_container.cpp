@@ -29,6 +29,7 @@ MetaDataContainer::~MetaDataContainer(){};
 
 void MetaDataContainer::addValue( MetaDataLabel name, int value )
 {
+std::cout << "NEW INT POINTER" << std::endl;
 	void * newValue = (void *)(new int(value));
 	insertVoidPtr( name, newValue );
 }
@@ -136,110 +137,85 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, double value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
+    double * currValue = (double *)values[ name ];
 	
-	std::map< MetaDataLabel, void *>::iterator It;
-	
-	It = values.find( name );
-	
-	if( It != values.end( ))
+    if( currValue != NULL )
 	{
-		if( value == *((double *)(It->second)) )
+        if( value == *currValue )
 		{
 			return true;
 		}
 	}
-	else
-	{
-		return false;
-	}
+	
+    return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, float value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
+    float * currValue = (float *)values[ name ];
 	
-	std::map< MetaDataLabel, void *>::iterator It;
-	
-	It = values.find( name );
-	
-	if( It != values.end( ))
+    if( currValue != NULL )
 	{
-		if( value == *((float *)(It->second)) )
+        if( value == *currValue )
 		{
 			return true;
 		}
 	}
-	else
-	{
-		return false;
-	}
+	
+    return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, int value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
+    int * currValue = (int *)values[ name ];
 	
-	std::map< MetaDataLabel, void *>::iterator It;
-	
-	It = values.find( name );
-	
-	if( It != values.end( ))
-	{
-		if( value == *((int *)(It->second)) )
+    if( currValue != NULL )
+	{        
+		if( value == *currValue )
 		{
 			return true;
 		}
 	}
-	else
-	{
-		return false;
-	}
+	
+	return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, bool value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
-	
-	std::map< MetaDataLabel, void *>::iterator It;
-	
-	It = values.find( name );
-	
-	if( It != values.end( ))
+    bool * currValue = (bool *)values[ name];
+    
+	if( currValue != 0 )
 	{
-		if( value == *((bool *)(It->second)) )
+	    if( value == *currValue )
 		{
 			return true;
 		}
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, std::string value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
+    std::string * currValue = (std::string *)values[ name ];	
 	
-	std::map< MetaDataLabel, void *>::iterator It;
-	
-	It = values.find( name );
-	
-	if( It != values.end( ))
+    if( currValue != 0 )
 	{
-		if( value == *((std::string *)It->second) )
+	    if( value == *currValue )
 		{
 			return true;
 		}
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 void MetaDataContainer::deleteValue( MetaDataLabel name )

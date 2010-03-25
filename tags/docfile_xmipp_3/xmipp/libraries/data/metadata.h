@@ -36,15 +36,8 @@
 
 #include "metadata_container.h"
 
-
 class MetaData
 {
-    // Possible error codes for the map
-    enum errors
-    {
-        NO_OBJECTS_STORED,
-        NO_MORE_OBJECTS
-    };
 
 	std::map< long int, MetaDataContainer *> objects;
 	
@@ -78,18 +71,25 @@ class MetaData
 	bool setValue( std::string name, std::string value, long int objectID = -1 );
     
 	long int addObject( );
+
+    void readOldSelFile( std::ifstream *infile );
+    void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
+    void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
+
+public:
+    // Possible error codes for the map
+    enum errors
+    {
+        NO_OBJECTS_STORED = -1,
+        NO_MORE_OBJECTS = -2
+    };
+    
 	long int firstObject( );
 	long int nextObject( );
 	long int lastObject( );
-
-    void readOldSelFile( std::ifstream *infile, bool skipDisabled );
-    void readOldDocFile( std::ifstream *infile, bool skipDisabled, std::vector<MetaDataLabel> * labelsVector );
-    void read( std::ifstream *infile, bool skipDisabled, std::vector<MetaDataLabel> * labelsVector );
-
-public:
 	
 	MetaData();
-	MetaData( std::string fileName, bool skipDisabled, std::vector<MetaDataLabel> * labelsVector = NULL );
+	MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
 	~MetaData();
 	
 	void write( std::string fileName );
@@ -121,6 +121,8 @@ public:
 	
 	std::string getPath( );
 	
+//    void getAngles( double &rot, double &tilt, double &psi, long int objectID = -1 );
+    
 	double angleRot( long int objectID = -1 );
 	double angleTilt( long int objectID = -1 );
 	double anglePsi( long int objectID = -1 );
@@ -142,6 +144,8 @@ public:
 	std::string CTFInputParams( long int objectID = -1 );
 	std::string periodogram( long int objectID = -1 );
 	std::string serie( long int objectID = -1 );
+    
+//    void setAngles( double rot, double tilt, double psi, long int objectID = -1 );
     
     void setAngleRot( double value, long int objectID = -1 );
     void setAngleTilt( double value, long int objectID = -1 );
