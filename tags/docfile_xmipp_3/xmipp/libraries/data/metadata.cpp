@@ -30,13 +30,202 @@ MetaData::MetaData()
 	setPath();
 	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
+    objectsIterator = objects.begin();
 }
 
-MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector )
+void MetaData::read( std::ifstream *infile, bool skipDisabled, std::vector<MetaDataLabel> * labelsVector )
+{
+    infile->seekg(0, std::ios::beg); 
+	std::string line;
+
+	getline( *infile, line, '\n');
+	
+    int pos = line.find( "*" );
+		
+	if( pos == std::string::npos )
+    {
+		REPORT_ERROR( 200, "End of string reached" );
+	}
+	else
+	{
+		line.erase( 0, pos+1 );
+		line = removeChar( line, ' ' );
+	}
+	
+	setPath( line );
+		
+	// Get Labels line
+	getline( *infile, line, '\n');
+		
+	// Remove ';'
+	line.erase(0,line.find(";")+1);
+				
+	// Parse labels
+	std::stringstream os( line );          
+	std::string newLabel;                 
+				
+	while ( os >> newLabel )
+	{
+		activeLabels.push_back(  MetaDataContainer::codifyLabel(newLabel) );
+	}
+		
+	// Read data and fill structures accordingly
+	while ( getline( *infile, line, '\n') )
+	{
+		long int objectID = addObject( );
+		
+		// Parse labels
+		std::stringstream os2( line );          
+		std::string value;
+		
+		int counter = 0;
+		while ( os2 >> value )
+		{
+			setValue( MetaDataContainer::decodeLabel(activeLabels[counter]), value );
+			counter++;
+		}
+	}
+}
+
+void MetaData::readOldDocFile( std::ifstream *infile, bool skipDisabled, std::vector<MetaDataLabel> * labelsVector )
+{
+    bool saveName = true;
+    infile->seekg(0, std::ios::beg);     
+    std::string line;
+    
+	// Search for Headerinfo, if present we are processing an old-styled docfile
+	// else we are processing a new Xmipp MetaData file
+	getline( *infile, line, '\n');
+	
+	int pos = line.find( "Headerinfo" );
+    
+    // Remove from the beginning to the end of "Headerinfo columns:"
+    line = line.erase( 0, line.find( ":" ) + 1 );
+           
+    // In the old docfile format the "image" label did not exist, it was
+    // a ";" commented line containing the name of the projection. Therefore,
+    // for the new format it must be added by hand, if necessary
+    if( labelsVector != NULL )
+    {   
+        std::vector< MetaDataLabel >::iterator location;
+            		
+        location = std::find( labelsVector->begin(), labelsVector->end(), MDL_IMAGE );
+            
+        if ( location != labelsVector->end() )
+        {
+           	activeLabels.push_back( MDL_IMAGE );
+           	saveName = true;
+        }
+    }   
+    else
+    {				
+        activeLabels.push_back( MDL_IMAGE );
+    }   
+            				
+    // Extract labels until the string is empty
+    while ( line != "" )
+    {   
+        pos = line.find( ")" );
+        std::string newLabel = line.substr( 0, pos+1 );
+        line.erase( 0, pos+1 );
+            
+        // The token can now contain a ',', if so, remove it
+        if( ( pos = newLabel.find( "," ) ) != std::string::npos )
+         	newLabel.erase( pos, 1 );
+            
+        // Remove unneded parentheses and contents
+        pos = newLabel.find( "(" );
+        newLabel.erase( pos, newLabel.find( ")" )-pos+1 );
+            
+        // Remove white spaces
+        newLabel = removeChar( newLabel, ' ' );
+            
+        if( labelsVector != NULL )
+        {
+            std::vector< MetaDataLabel >::iterator location;
+            	
+            location = std::find( labelsVector->begin(), labelsVector->end(), MetaDataContainer::codifyLabel( newLabel ) );
+
+            if ( location != labelsVector->end() )
+            {
+            	activeLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
+            }
+        }
+        else
+        {
+          	activeLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
+        }
+    }   
+            	
+    int isname=0;
+    while ( getline( *infile, line, '\n') )
+    {   
+        if( isname % 2 == 0 )
+        {
+          	long int objectID = addObject( );
+           	line.erase(0,line.find(";")+1);
+            	
+           	// Remove spaces from string
+           	line = removeChar( line, ' ' );
+           					
+           	setValue( MDL_IMAGE, line );
+        }
+        else
+        {
+           	// Parse labels
+           	std::stringstream os2( line );          
+           	std::string value;
+            	
+           	int counter = 0;
+           	while ( os2 >> value )
+           	{
+           		if( counter >= 2 ) // Discard two first numbers
+           		{
+           			if( saveName )
+           				setValue( MetaDataContainer::decodeLabel(activeLabels[counter-1]), value );
+           			else
+           				setValue( MetaDataContainer::decodeLabel(activeLabels[counter-2]), value );
+           		}
+           		counter++;
+           	}
+        }
+            
+        isname++;
+    }   
+}
+
+void MetaData::readOldSelFile( std::ifstream *infile, bool skipDisabled )
+{	
+    infile->seekg(0, std::ios::beg);     
+    std::string line;
+
+	getline( *infile, line, '\n');
+	while ( getline( *infile, line, '\n') )
+    {
+	    line=simplify(line);
+	    if (line[0] == '#' || line[0] == '\0' || line[0] == ';')
+	         continue;
+	    else
+	    {
+	        int pos = line.find( " " );
+	        std::string name=line.substr( 0, pos );
+            line.erase(0,pos+1);
+            int i = atoi (line.c_str());
+            if (skipDisabled && i==(-1))
+                continue;
+            addObject();
+            setValue(MDL_IMAGE,name);
+            setValue(MDL_ENABLED,i);
+        } 
+    }	
+}
+
+MetaData::MetaData( std::string fileName, bool skipDisabled, std::vector<MetaDataLabel> * labelsVector )
 {
 	setPath();
 	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
+    objectsIterator = objects.begin();
 
 	// Open file
 	std::ifstream infile ( fileName.data(), std::ios_base::in );
@@ -50,155 +239,28 @@ MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVec
 	
 	if( pos != std::string::npos ) // Headerinfo token found
 	{
-		bool saveName = true;
-		
-		// Remove from the beginning to the end of "Headerinfo columns:"
-		line = line.erase( 0, line.find( ":" ) + 1 );
-		
-		// In the old docfile format the "image" label did not exist, it was
-		// a ";" commented line containing the name of the projection. Therefore,
-		// for the new format it must be added by hand, if necessary
-		if( labelsVector != NULL )
-		{
-			std::vector< MetaDataLabel >::iterator location;
-					
-   			location = std::find( labelsVector->begin(), labelsVector->end(), MDL_IMAGE );
-	
-	   		if ( location != labelsVector->end() )
-			{
-				activeLabels.push_back( MDL_IMAGE );
-				saveName = true;
-			}
-		}
-		else
-		{				
-			activeLabels.push_back( MDL_IMAGE );
-		}
-							
-		// Extract labels until the string is empty
-		while ( line != "" )
-		{
-			pos = line.find( ")" );
-			std::string newLabel = line.substr( 0, pos+1 );
-			line.erase( 0, pos+1 );
-			
-			// The token can now contain a ',', if so, remove it
-			if( ( pos = newLabel.find( "," ) ) != std::string::npos )
-				newLabel.erase( pos, 1 );
-			
-			// Remove unneded parentheses and contents
-			pos = newLabel.find( "(" );
-			newLabel.erase( pos, newLabel.find( ")" )-pos+1 );
-			
-			// Remove white spaces
-			newLabel = removeChar( newLabel, ' ' );
-		
-			if( labelsVector != NULL )
-			{
-				std::vector< MetaDataLabel >::iterator location;
-				
-   				location = std::find( labelsVector->begin(), labelsVector->end(), MetaDataContainer::codifyLabel( newLabel ) );
-
-   				if ( location != labelsVector->end() )
-				{
-					activeLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
-				}
-			}
-			else
-			{
-				activeLabels.push_back( MetaDataContainer::codifyLabel(newLabel) );
-			}
-		}
-				
-		int isname=0;
-		while ( getline( infile, line, '\n') )
-		{
-			if( isname % 2 == 0 )
-			{
-				long int objectID = addObject( );
-				line.erase(0,line.find(";")+1);
-				
-				// Remove spaces from string
-				line = removeChar( line, ' ' );
-								
-				setValue( MDL_IMAGE, line );
-			}
-			else
-			{
-				// Parse labels
-				std::stringstream os2( line );          
-				std::string value;
-				
-				int counter = 0;
-				while ( os2 >> value )
-				{
-					if( counter >= 2 ) // Discard two first numbers
-					{
-						if( saveName )
-							setValue( MetaDataContainer::decodeLabel(activeLabels[counter-1]), value );
-						else
-							setValue( MetaDataContainer::decodeLabel(activeLabels[counter-2]), value );
-					}
-					counter++;
-				}
-			}
-			
-			isname++;
-		}
+        readOldDocFile( &infile , skipDisabled, labelsVector );
 	}
 	else
 	{
-		pos = line.find( "*" );
-		
-		if( pos == std::string::npos )
-		{
-			REPORT_ERROR( 200, "End of string reached" );
-		}
-		else
-		{
-			line.erase( 0, pos+1 );
-			line = removeChar( line, ' ' );
-		}
-		
-		setPath( line );
-		
-		// Get Labels line
-		getline( infile, line, '\n');
-		
-		// Remove ';'
-		line.erase(0,line.find(";")+1);
-				
-		// Parse labels
-		std::stringstream os( line );          
-		std::string newLabel;                 
-				
-		while ( os >> newLabel )
-		{
-			activeLabels.push_back(  MetaDataContainer::codifyLabel(newLabel) );
-		}
-		
-		// Read data and fill structures accordingly
-		while ( getline( infile, line, '\n') )
-		{
-			long int objectID = addObject( );
-			
-			// Parse labels
-			std::stringstream os2( line );          
-			std::string value;
-			
-			int counter = 0;
-			while ( os2 >> value )
-			{
-				setValue( MetaDataContainer::decodeLabel(activeLabels[counter]), value );
-				counter++;
-			}
-		}
-	}
+        getline( infile, line, '\n');
+        
+        pos = line.find( "XMIPP_3 * " );
+	    
+        if( pos != std::string::npos ) // xmipp_3 token found
+        {
+            read( &infile, skipDisabled, labelsVector );
+	    }
+        else    // We are reading an old selfile
+        {
+            readOldSelFile( &infile, skipDisabled );   
+        }
+    }
 	
 	infile.close( );
 }
 
-void MetaData::save( std::string fileName )
+void MetaData::write( std::string fileName )
 {
 	// Open file
 	std::ofstream outfile ( fileName.data(), std::ios_base::out );
@@ -766,490 +828,469 @@ std::vector<long int> MetaData::findObjects( MetaDataLabel name, std::string val
 	
 	return result;
 }
-
 double MetaData::angleRot( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_ANGLEROT );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_ANGLEROT );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'angleRot' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'angleRot' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+        exit( 1 );
 	}
+
+	return (*result);
 }
 
 double MetaData::angleTilt( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_ANGLETILT );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_ANGLETILT );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'angleTilt' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'angleTilt' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+        exit( 1 );
 	}
+
+	return (*result);
 }
 
 double MetaData::anglePsi( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_ANGLEPSI );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_ANGLEPSI );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'anglePs' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'anglePs' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
 	}
+
+	return (*result);
 }
 
 int MetaData::enabled( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		bool * result = (bool *)aux->getValue( MDL_ENABLED );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    int * result = (int *)aux->getValue( MDL_ENABLED );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'enabled' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
-	}
+	if( result == NULL )
+	{
+		std::cerr << "No 'enabled' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
+	}	
+			
+    return (*result);
 }
 
 double MetaData::shiftX( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_SHIFTX );
+	
+	if( result == NULL )		
+    {
+		std::cerr << "No 'siftX' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
 	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_SHIFTX );
-		
-		if( result == NULL )
-		{
-			std::cerr << "No 'shiftX' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
-	}
+	
+    return (*result);
 }
 
 double MetaData::shiftY( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_SHIFTY );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_SHIFTY );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'shiftY' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'shiftY' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
 	}
+
+	return (*result);
 }
 
 double MetaData::shiftZ( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_SHIFTZ );
-		
-		if( result == NULL )
-		{
-			std::cerr << "No 'shiftZ' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
-	}
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_SHIFTZ );
+	
+	if( result == NULL )
+    {
+		std::cerr << "No 'shiftZ' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
+	}	
+
+	return (*result);
 }
 
 double MetaData::originX( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_ORIGINX );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_ORIGINX );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'originX' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'originX' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
 	}
+	
+    return (*result);
 }
 
 double MetaData::originY( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_ORIGINY );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_ORIGINY );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'originY' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'originY' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
 	}
+	
+    return (*result);
 }
 
 double MetaData::originZ( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_ORIGINZ );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_ORIGINZ );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'originZ' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'originZ' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
 	}
+
+	return (*result);
 }
 
 double MetaData::pMax( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_PMAX );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_PMAX );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'pMax' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'pMax' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
 	}
+	
+    return (*result);
 }
 
 
 std::string MetaData::image( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( MDL_IMAGE );
+	MetaDataContainer * aux = getObject( objectID );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'image' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+    std::string * result = (std::string *)aux->getValue( MDL_IMAGE );
+		
+	if( result == NULL )
+	{
+		std::cerr << "No 'image' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
 	}
+
+	return (*result);
 }
 
 std::string MetaData::CTFModel( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( MDL_CTFMODEL );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    std::string * result = (std::string *)aux->getValue( MDL_CTFMODEL );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'CTFModel' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'CTFModel' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+       	exit( 1 );
 	}
+	
+    return (*result);
 }
 
 std::string MetaData::micrograph( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( MDL_MICROGRAPH );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    std::string * result = (std::string *)aux->getValue( MDL_MICROGRAPH );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'micrograph' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'micrograph' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+   	    exit( 1 );
 	}
+
+    return (*result);
 }
 
-std::string MetaData::inputParam( long int objectID )
+std::string MetaData::CTFInputParams( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( MDL_INPUTPARAMS );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    std::string * result = (std::string *)aux->getValue( MDL_CTFINPUTPARAMS );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'inputParam' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'CTFInputParam' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+        exit( 1 );
 	}
+
+	return (*result);
 }
 
 std::string MetaData::periodogram( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( MDL_PERIODOGRAM );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    std::string * result = (std::string *)aux->getValue( MDL_PERIODOGRAM );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'periodogram' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+	if( result == NULL )
+	{
+		std::cerr << "No 'periodogram' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+	    exit( 1 );
 	}
+
+	return (*result);
 }
 
 std::string MetaData::serie( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( MDL_SERIE );
+	MetaDataContainer * aux = getObject( objectID );
+    
+    std::string * result = (std::string *)aux->getValue( MDL_SERIE );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'serie' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
-	}
+	if( result == NULL )
+	{
+		std::cerr << "No 'serie' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+	    exit( 1 );
+ 	}
+    
+    return (*result);
 }
-
 
 double MetaData::weight( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+	MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_WEIGHT );
+	
+	if( result == NULL )	
+    {
+		std::cerr << "No 'weight' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+	    exit( 1 );
 	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_WEIGHT );
-		
-		if( result == NULL )
-		{
-			std::cerr << "No 'weight' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
-	}
+
+	return (*result);
 }
 
 double MetaData::flip( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
+    MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_FLIP );
+        
+	if( result == NULL )
 	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+		std::cerr << "No 'flip' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+        exit( 1 );
 	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_FLIP );
-		
-		if( result == NULL )
-		{
-			std::cerr << "No 'flip' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
-	}
+
+	return (*result);
 }
 
 double MetaData::maxCC( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
-	else
-	{
-		MetaDataContainer * aux = objects[ objectID ];
-		double * result = (double *)aux->getValue( MDL_MAXCC );
+    MetaDataContainer * aux = getObject( objectID );
+    
+    double * result = (double *)aux->getValue( MDL_MAXCC );
 		
-		if( result == NULL )
-		{
-			std::cerr << "No 'maxCC' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
-	}
+	if( result == NULL )
+	{
+		std::cerr << "No 'maxCC' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+	    exit( 1 );
+    }
+
+	return (*result);
 }
 
 int MetaData::ref( long int objectID )
 {
-	if( objects.find( objectID ) == objects.end( ) )
+    MetaDataContainer * aux = getObject( objectID );
+	
+    int * result = (int *)aux->getValue( MDL_REF );
+		
+	if( result == NULL )
+	{
+		std::cerr << "No 'ref' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+	    exit( 1 );
+    }
+	
+    return (*result);
+}
+
+void MetaData::setAngleRot( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_ANGLEROT, value );
+}
+
+void MetaData::setAngleTilt( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_ANGLETILT, value );
+}
+
+void MetaData::setAnglePsi( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_ANGLEPSI, value );
+}
+
+void MetaData::setEnabled( int value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_ENABLED, value );
+}
+
+void MetaData::setShiftX( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_SHIFTX, value );
+}
+
+void MetaData::setShiftY( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_SHIFTY, value );
+}
+
+void MetaData::setShiftZ( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_SHIFTZ, value );
+}
+
+void MetaData::setOriginX( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_ORIGINX, value );
+}
+
+void MetaData::setOriginY( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_ORIGINY, value );
+}
+
+void MetaData::setOriginZ( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_ORIGINZ, value );
+}
+
+void MetaData::setPMax( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_PMAX, value );
+}
+
+
+void MetaData::setImage( std::string value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_IMAGE, value );
+}
+
+void MetaData::setCTFModel( std::string value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_CTFMODEL, value );
+}
+
+void MetaData::setMicrograph( std::string value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_MICROGRAPH, value );
+}
+
+void MetaData::setCTFInputParams( std::string value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_CTFINPUTPARAMS, value );
+}
+
+void MetaData::setPeriodogram( std::string value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_PERIODOGRAM, value );
+}
+
+void MetaData::setSerie( std::string value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_SERIE, value );
+}
+
+void MetaData::setWeight( double value, long int objectID )
+{
+	MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_WEIGHT, value );
+}
+
+void MetaData::setFlip( bool value, long int objectID )
+{
+    MetaDataContainer * aux = getObject( objectID );
+    aux->addValue( MDL_FLIP, value );
+}
+
+void MetaData::setMaxCC( double value, long int objectID )
+{
+    MetaDataContainer * aux = getObject( objectID );   
+    aux->addValue( MDL_MAXCC, value );
+}
+
+void MetaData::setRef( int value, long int objectID )
+{
+    MetaDataContainer * aux = getObject( objectID );	
+    aux->addValue( MDL_REF, value );
+}
+
+MetaDataContainer * MetaData::getObject( long int objectID )
+{
+    MetaDataContainer * aux;
+    
+    if( objectID == -1 )
+    {
+        aux = objectsIterator->second;
+    }
+	else if( objects.find( objectID ) == objects.end( ) )
 	{
 		// This objectID does not exist, finish execution
 		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
+	    exit( 1 );
+    }
 	else
 	{
-		MetaDataContainer * aux = objects[ objectID ];
-		int * result = (int *)aux->getValue( MDL_REF );
-		
-		if( result == NULL )
-		{
-			std::cerr << "No 'ref' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+		aux = objects[ objectID ];
 	}
+ 
+    return aux;  
 }
 
 long int MetaData::fastSearch( MetaDataLabel name, std::string value, bool recompute )

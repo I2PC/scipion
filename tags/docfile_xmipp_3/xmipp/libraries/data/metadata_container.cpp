@@ -75,7 +75,7 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 		addValue( lCode, doubleValue );
 	}
 	else if( lCode == MDL_IMAGE || lCode == MDL_MICROGRAPH || lCode == MDL_CTFMODEL ||
-        lCode == MDL_INPUTPARAMS || lCode == MDL_PERIODOGRAM ||
+        lCode == MDL_CTFINPUTPARAMS || lCode == MDL_PERIODOGRAM ||
         lCode == MDL_SERIE )
 	{
 		addValue( lCode, value );
@@ -328,9 +328,9 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return MDL_PMAX;
 	}
-	else if( strLabel == "inputParams" )
+	else if( strLabel == "CTFInputParams" )
 	{
-		return MDL_INPUTPARAMS;
+		return MDL_CTFINPUTPARAMS;
 	}
 	else if( strLabel == "periodogram" )
 	{
@@ -403,8 +403,8 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
         case MDL_PMAX:
             return std::string( "pMax" );
             break;
-        case MDL_INPUTPARAMS:
-            return std::string( "inputParams" );
+        case MDL_CTFINPUTPARAMS:
+            return std::string( "CTFInputParams" );
             break;
         case MDL_PERIODOGRAM:
             return std::string( "periodogram" );
@@ -476,7 +476,7 @@ void MetaDataContainer::writeValueToFile( std::ofstream &outfile, MetaDataLabel 
         case MDL_SERIE:
             outfile << *((std::string*)(getValue( inputLabel )));
             break;
-        case MDL_INPUTPARAMS:
+        case MDL_CTFINPUTPARAMS:
             outfile << *((std::string*)(getValue( inputLabel )));
 			break;
         case MDL_PERIODOGRAM:
