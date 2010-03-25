@@ -22,7 +22,7 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-
+//#define METADATA
 #ifndef METADATA
 
 #include <data/args.h>
@@ -135,50 +135,49 @@ int main(int argc, char *argv[])
     {
         
         fn_in  = getParameter(argc, argv, "-i"); 
-	if (checkParameter(argc, argv, "-o"))
+	    if (checkParameter(argc, argv, "-o"))
             fn_out = getParameter(argc, argv, "-o");
-	else
-	    fn_out = fn_in;   
-        round_shifts = checkParameter(argc, argv, "-round_shifts");
-
+	    else
+	        fn_out = fn_in;   
+            round_shifts = checkParameter(argc, argv, "-round_shifts");
     }
     catch (Xmipp_error XE)
     {
         std::cout << XE;
         Usage();
     }
-    MetaData        SF(fn_in,true);
-
-// Extracting information  ==================================================
+    MetaData SF(fn_in);
+    SF.removeObjects( MDL_ENABLED, -1 );
+    // Extracting information  ==================================================
     try
     {
 
-	long int ret=SF.firstObject();
-	if(ret==NO_OBJECTS_STORED)
-	{
-	    std::cerr << "Empty inputFile File\n";
-	    exit(1);
-	}
-	do
+	    long int ret=SF.firstObject();
+	    if(ret==MetaData::NO_OBJECTS_STORED)
+	    {
+	        std::cerr << "Empty inputFile File\n";
+	        exit(1);
+	    }
+	    do
         {
-	    fn_img = SF.image();
+	        fn_img = SF.image();
             if (fn_img=="") break;
             head.read(fn_img);
-            head.get_originOffsets(xx, yy);
+            head.get_originOffsets( xx, yy );
             if (round_shifts)
             {
                 xx = (float)ROUND(xx);
                 yy = (float)ROUND(yy);
             }
-	    SF.setValue(MDL_ANGLEROT, (double)head.Phi());
-	    SF.setValue(MDL_ANGLETILT,(double)head.Theta());
-	    SF.setValue(MDL_ANGLEPSI, (double)head.Psi());
-	    SF.setValue(MDL_SHIFTX,   (double)xx);
-	    SF.setValue(MDL_SHIFTY,   (double)yy);
-	    SF.setValue(MDL_WEIGHT,   (double)head.Weight());
-	    SF.setValue(MDL_FLIP,     (double)head.Flip());
+	        SF.setAngleRot( head.Phi());
+	        SF.setAngleTilt( head.Theta());
+    	    SF.setAnglePsi( head.Psi());
+	        SF.setShiftX( xx );
+	        SF.setShiftY( yy );
+	        SF.setWeight( head.Weight());
+	        SF.setFlip( head.Flip());
         }
-        while (SF.nextObject()!=NO_MORE_OBJECTS);
+        while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
 	
         SF.write(fn_out);
     }
