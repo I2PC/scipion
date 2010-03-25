@@ -29,7 +29,6 @@ MetaDataContainer::~MetaDataContainer(){};
 
 void MetaDataContainer::addValue( MetaDataLabel name, int value )
 {
-std::cout << "NEW INT POINTER" << std::endl;
 	void * newValue = (void *)(new int(value));
 	insertVoidPtr( name, newValue );
 }

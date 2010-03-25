@@ -243,8 +243,8 @@ MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVec
 	if( pos != std::string::npos ) // Headerinfo token found
 	{
         readOldDocFile( &infile, labelsVector );
-        std::cerr << (std::string)"You are using an old file format (DOCFILE) which is going " +
-                    "to be deprecated in next Xmipp release !!"<<  std::endl;
+        std::cerr << (std::string)"WARNING: ** You are using an old file format (DOCFILE) which is going " +
+                    "to be deprecated in next Xmipp release **"<<  std::endl;
            
 	}
 	else
@@ -260,8 +260,8 @@ MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVec
         else    // We are reading an old selfile
         {
             readOldSelFile( &infile );   
-            std::cerr << (std::string)"You are using an old file format (SELFILE) which is going " +
-                    "to be deprecated in next Xmipp release !!"<< std::endl;
+            std::cerr << (std::string)"WARNING: ** You are using an old file format (SELFILE) which is going " +
+                    "to be deprecated in next Xmipp release **"<< std::endl;
         }
     }
 

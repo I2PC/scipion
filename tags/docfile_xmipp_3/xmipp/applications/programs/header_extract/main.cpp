@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     }
     MetaData SF(fn_in);
     SF.removeObjects( MDL_ENABLED, -1 );
-// Extracting information  ==================================================
+    // Extracting information  ==================================================
     try
     {
 
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 	        fn_img = SF.image();
             if (fn_img=="") break;
             head.read(fn_img);
-            head.get_originOffsets(xx, yy);
+            head.get_originOffsets( xx, yy );
             if (round_shifts)
             {
                 xx = (float)ROUND(xx);
@@ -172,8 +172,8 @@ int main(int argc, char *argv[])
 	        SF.setAngleRot( head.Phi());
 	        SF.setAngleTilt( head.Theta());
     	    SF.setAnglePsi( head.Psi());
-	        SF.setShiftX( xx);
-	        SF.setShiftY( yy);
+	        SF.setShiftX( xx );
+	        SF.setShiftY( yy );
 	        SF.setWeight( head.Weight());
 	        SF.setFlip( head.Flip());
         }
