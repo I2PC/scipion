@@ -1,5 +1,8 @@
 #!/bin/sh
+
 if [ $# != 0 ] ; then
+   echo "; XMIPP_3 * /home/roberto/Ribosome"
+   echo "; image enabled" 
    for i in $1
    do
       echo $i 1
