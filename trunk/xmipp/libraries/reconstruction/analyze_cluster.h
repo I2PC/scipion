@@ -66,16 +66,19 @@ public:
     Matrix2D<int> mask;
 
     // Set of images assigned to the class
-    std::vector< ImageXmipp * > Iclass;
+    std::vector< Matrix1D<float> * > Iclass;
     
     // Set of images assigned to the class
-    std::vector< ImageXmipp * > Iclassorig;
+    std::vector< Matrix1D<float> * > Iclassorig;
     
     // Set of basis functions
-    std::vector< ImageXmipp * > PCAbasis;
+    std::vector< Matrix1D<double> * > PCAbasis;
 
     // Set of distances
     Matrix1D<double> distance;
+    
+    // Number of pixels in the mask
+    int Npixels;
 public:
     /// Read argument from command line
     void read(int argc, char **argv);

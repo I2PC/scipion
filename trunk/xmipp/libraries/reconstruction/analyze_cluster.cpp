@@ -31,7 +31,6 @@
 // Read arguments ==========================================================
 void Prog_analyze_cluster_prm::read(int argc, char **argv)
 {
-
     fnSel = getParameter(argc, argv, "-i");
     fnRef = getParameter(argc, argv, "-ref");
     oext  = getParameter(argc, argv, "-oext", "");
@@ -84,6 +83,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
     mask.resize(Iref());
     mask.setXmippOrigin();
     BinaryCircularMask(mask,XSIZE(Iref())/2, INNER_MASK);
+    Npixels=(int)mask.sum();
 
     // Read all images in the class and substract the mean
     // once aligned
@@ -92,15 +92,15 @@ void Prog_analyze_cluster_prm::produceSideInfo()
     int currentIdx=-1;
     while (!SF.eof())
     {
-        ImageXmipp *Iaux=new ImageXmipp;
-        Iaux->read(SF.NextImg());
-        (*Iaux)().setXmippOrigin();
-        classfile.push_back(Iaux->name());
+        ImageXmipp Iaux;
+        Iaux.read(SF.NextImg());
+        Iaux().setXmippOrigin();
+        classfile.push_back(Iaux.name());
         currentIdx++;
         
         // Choose between this image and its mirror
         Matrix2D<double> I, Imirror;
-        I=(*Iaux)();
+        I=Iaux();
         Imirror=I;
         Imirror.selfReverseX();
         Imirror.setXmippOrigin();
@@ -116,36 +116,43 @@ void Prog_analyze_cluster_prm::produceSideInfo()
         double corrMirror=correlation_index(Iref(),Imirror,&mask);
         
         if (corr>corrMirror)
-            (*Iaux)()=I;
+            Iaux()=I;
         else
-            (*Iaux)()=Imirror;
+            Iaux()=Imirror;
 
         // Produce aligned
         if (align)
         {
-            if (oext=="") Iaux->write();
+            if (oext=="") Iaux.write();
             else
             {
-                FileName fnRoot=Iaux->name().without_extension();
-                Iaux->write(fnRoot+"."+oext);
-                classfile[currentIdx]=Iaux->name();
+                FileName fnRoot=Iaux.name().without_extension();
+                Iaux.write(fnRoot+"."+oext);
+                classfile[currentIdx]=Iaux.name();
             }
         }
 
         // Mask and store
         FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
-            if (!mask(i,j)) (*Iaux)(i,j)=0;
-        Iavg+=(*Iaux)();
+            if (!mask(i,j)) Iaux(i,j)=0;
+        Iavg+=Iaux();
 
-        ImageXmipp *Iaux2=new ImageXmipp;
-        *Iaux2=*Iaux;
-        Iclassorig.push_back(Iaux2);
-        Iclass.push_back(Iaux);
+        Matrix1D<float> *v=new Matrix1D<float>(Npixels);
+        Matrix1D<float> *v2=new Matrix1D<float>(Npixels);
+        int idx=0;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+            if (mask(i,j))
+            {
+                (*v2)(idx)=(*v)(idx)=I(i,j);
+                idx++;
+            }
+        Iclassorig.push_back(v2);
+        Iclass.push_back(v);
         
         #ifdef DEBUG
             std::cout << "Correlation=" << corr << " mirror=" << corrMirror
                       << std::endl;
-            Iaux->write("PPPclassAligned.xmp");
+            Iaux.write("PPPclassAligned.xmp");
             std::cout << "Press any key\n";
             char c; std::cin >> c;
         #endif
@@ -153,12 +160,27 @@ void Prog_analyze_cluster_prm::produceSideInfo()
     Iavg/=Iclass.size();
 
     // Compute the difference to the mean
-    for (int i=0; i<Iclass.size(); i++)
+    for (int ii=0; ii<Iclass.size(); ii++)
     {
-        (*(Iclass[i]))()-=Iavg;
-        (*(Iclass[i]))().statisticsAdjust(0,1);
+        int idx=0;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+            if (mask(i,j))
+            {
+                (*(Iclass[ii]))(idx)-=Iavg(i,j);
+                idx++;
+            }
+        (*(Iclass[ii])).statisticsAdjust(0,1);
         #ifdef DEBUG
-            Iclass[i]->write("PPPdiff.xmp");
+            ImageXmipp save;
+            save().resize(mask);
+            idx=0;
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+                if (mask(i,j))
+                {
+                    save(i,j)=(*(Iclass[ii]))(idx);
+                    idx++;
+                }
+            save.write("PPPdiff.xmp");
             std::cout << "Press any key\n";
             char c; std::cin >> c;
         #endif
@@ -166,10 +188,10 @@ void Prog_analyze_cluster_prm::produceSideInfo()
     
     // Take the first differences for the PCA basis
     NPCA=XMIPP_MIN(NPCA,Iclass.size());
-    for (int i=0; i<NPCA; i++)
+    for (int ii=0; ii<NPCA; ii++)
     {
-        ImageXmipp *IPCA=new ImageXmipp;
-        *IPCA=*Iclass[i];
+        Matrix1D<double> *IPCA=new Matrix1D<double>(Npixels);
+        typeCast(*Iclass[ii],*IPCA);
         PCAbasis.push_back(IPCA);
     }
 }
@@ -182,15 +204,14 @@ void Prog_analyze_cluster_prm::projectOnPCABasis(Matrix2D<double> &CtY)
     CtY.initZeros(NPCA,Nimgs);
     for (int ii=0; ii<Nimgs; ii++)
     {
-        const Matrix2D<double> &Iii=(*(Iclass[ii]))();
+        const Matrix1D<float> &Iii=*(Iclass[ii]);
         for (int jj=0; jj<NPCA; jj++)
         {
-            const Matrix2D<double> &Ijj=(*(PCAbasis[jj]))();
+            const Matrix1D<double> &Ijj=*(PCAbasis[jj]);
             CtY(jj,ii)=0;
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
-                if (mask(i,j))
-                    DIRECT_MAT_ELEM(CtY,jj,ii)+=
-                        MAT_ELEM(Iii,i,j)*MAT_ELEM(Ijj,i,j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(Iii)
+                DIRECT_MAT_ELEM(CtY,jj,ii)+=
+                    DIRECT_VEC_ELEM(Iii,i)*DIRECT_VEC_ELEM(Ijj,i);
         }
     }
 }
@@ -209,15 +230,14 @@ void Prog_analyze_cluster_prm::learnPCABasis()
         Matrix2D<double> CtC(NPCA,NPCA);
         for (int ii=0; ii<NPCA; ii++)
         {
-            const Matrix2D<double> &Iii=(*(PCAbasis[ii]))();
+            const Matrix1D<double> &Iii=*(PCAbasis[ii]);
             for (int jj=ii; jj<NPCA; jj++)
             {
-                const Matrix2D<double> &Ijj=(*(PCAbasis[jj]))();
+                const Matrix1D<double> &Ijj=*(PCAbasis[jj]);
                 CtC(ii,jj)=0;
-                FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
-                    if (mask(i,j))
-                        DIRECT_MAT_ELEM(CtC,ii,jj)+=
-                            MAT_ELEM(Iii,i,j)*MAT_ELEM(Ijj,i,j);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(Ijj)
+                    DIRECT_MAT_ELEM(CtC,ii,jj)+=
+                        DIRECT_VEC_ELEM(Iii,i)*DIRECT_VEC_ELEM(Ijj,i);
                 if (ii!=jj)
                     CtC(jj,ii)=CtC(ii,jj);
             }
@@ -230,21 +250,38 @@ void Prog_analyze_cluster_prm::learnPCABasis()
         
         // M-step ..........................................................
         Matrix2D<double> XtXXtinv=X.transpose()*(X*X.transpose()).inv();
-        for (int i=0; i<NPCA; i++)
+        for (int ii=0; ii<NPCA; ii++)
         {
-            Matrix2D<double> &Ipca=(*(PCAbasis[i]))();
+            Matrix1D<double> &Ipca=*(PCAbasis[ii]);
             #ifdef DEBUG
                 ImageXmipp save;
-                save()=Ipca; save.write("PPPoldbasis.xmp");
+                save().resize(mask);
+                int idx=0;
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+                    if (mask(i,j))
+                    {
+                        save(i,j)=Ipca(idx);
+                        idx++;
+                    }
+                save.write("PPPoldbasis.xmp");
             #endif
             Ipca.initZeros();
-            for (int j=0; j<Nimgs; j++)
+            for (int jj=0; jj<Nimgs; jj++)
             {
-                const Matrix2D<double> &I=(*(Iclass[j]))();
-                Ipca+=I*XtXXtinv(j,i);
+                const Matrix1D<float> &I=*(Iclass[jj]);
+                double val=XtXXtinv(jj,ii);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(I)
+                    DIRECT_VEC_ELEM(Ipca,i)+=DIRECT_VEC_ELEM(I,i)*val;
             }
             #ifdef DEBUG
-                save()=Ipca; save.write("PPPnewbasis.xmp");
+                idx=0;
+                FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+                    if (mask(i,j))
+                    {
+                        save(i,j)=Ipca(idx);
+                        idx++;
+                    }
+                save.write("PPPnewbasis.xmp");
                 std::cout << "New basis: " << i << ". Press any key" << std::endl;
                 char c; std::cin >> c;
             #endif
@@ -293,8 +330,7 @@ void Prog_analyze_cluster_prm::run()
     FileName fnRoot=fnSel.without_extension();
     Matrix1D<int> idx=distance.indexSort();
     SelFile SFout_good, SFout_bad;
-    ImageXmipp Iavg;
-    Iavg().initZeros(Iref());
+    Matrix1D<float> Iavg(Npixels);
     double N=0;
     std::ofstream fhOut;
     fhOut.open((fnRoot+"_score.txt").c_str());
@@ -305,7 +341,7 @@ void Prog_analyze_cluster_prm::run()
         if (distance(idx(i)-1)<distThreshold)
         {
             SFout_good.insert(classfile[idx(i)-1]);
-            Iavg()+=(*(Iclassorig[idx(i)-1]))();
+            Iavg+=*(Iclassorig[idx(i)-1]);
             N++;
         }
         else
@@ -316,10 +352,30 @@ void Prog_analyze_cluster_prm::run()
     {
         SFout_good.write(fnRoot+"_pca.sel");
         SFout_bad.write(fnRoot+"_outliers.sel");
-        Iavg()/=N;
-        Iavg.write(fnRoot+"_pca.xmp");
+        Iavg/=N;
+        int idx=0;
+        ImageXmipp save;
+        save().initZeros(mask);
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+            if (mask(i,j))
+            {
+                save(i,j)=Iavg(idx);
+                idx++;
+            }
+        save.write(fnRoot+"_pca.xmp");
     }
     
-    for (int i=0; i<NPCA; i++)
-        PCAbasis[i]->write(fnRoot+"_pcabasis_"+integerToString(i,2)+".xmp");
+    for (int ii=0; ii<NPCA; ii++)
+    {
+        ImageXmipp save;
+        save().initZeros(mask);
+        int idx=0;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+            if (mask(i,j))
+            {
+                save(i,j)=(*(PCAbasis[ii]))(idx);
+                idx++;
+            }
+        save.write(fnRoot+"_pcabasis_"+integerToString(ii,2)+".xmp");
+    }
 }
