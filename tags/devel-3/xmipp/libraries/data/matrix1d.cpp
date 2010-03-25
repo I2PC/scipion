@@ -75,7 +75,7 @@ void powellOptimizer(Matrix1D<double> &p, int i0, int n,
     double *xi = NULL;
 
     // Adapt indexes of p
-    double *pptr = p.adaptForNumericalRecipes();
+    double *pptr = p.adaptForNumericalRecipes1D();
     double *auxpptr = pptr + (i0 - 1);
 
     // Form direction matrix

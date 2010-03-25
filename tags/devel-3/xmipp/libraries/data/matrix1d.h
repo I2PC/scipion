@@ -472,6 +472,48 @@ public:
             << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
     }
 
+    /** Resize to a given size
+     * @ingroup VectorsSize
+     *
+     * This function resize the actual array to the given size. If the
+     * actual array is larger than the pattern then the values outside
+     * the new size are lost, if it is smaller then 0's are added. An
+     * exception is thrown if there is no memory.
+     *
+     * @code
+     * m1.resize(3);
+     * @endcode
+     */
+    void resize(int Xdim)
+    {
+        MultidimArray<T>::resize(1,1,1,Xdim);
+    }
+
+    /** Produce a 1D array suitable for working with Numerical Recipes
+     * @ingroup VectorsSize
+     *
+     * This function must be used only as a preparation for routines which need
+     * that the first physical index is 1 and not 0 as it usually is in C. In
+     * fact the vector provided for Numerical recipes is exactly this same one
+     * but with the indexes changed.
+     *
+     * This function is not ported to Python.
+     */
+    T* adaptForNumericalRecipes() const
+    {
+        return MULTIDIM_ARRAY(*this) - 1;
+    }
+
+    /** Kill a 1D array produced for Numerical Recipes.
+     * @ingroup VectorsSize
+     *
+     * Nothing needs to be done in fact.
+     *
+     * This function is not ported to Python.
+     */
+    void killAdaptationForNumericalRecipes(T* m) const
+        {}
+
     /** Resize taking the shape from another vector
      * @ingroup VectorsSize
      */
@@ -595,6 +637,24 @@ public:
         if (XSIZE(*this) != 3)
             REPORT_ERROR(1003, "Z: Subscript not defined for this dimension");
         return ZZ(*this);
+    }
+
+    /** Vector element access
+     * @ingroup VectorsMemory
+     *
+     * Returns the value of a vector logical position. In our example we could
+     * access from v(-2) to v(2). The elements can be used either by value or by
+     * reference. An exception is thrown if the index is outside the logical
+     * range.
+     *
+     * @code
+     * v(-2) = 1;
+     * val = v(-2);
+     * @endcode
+     */
+    T& operator()(int i) const
+    {
+        return VEC_ELEM(*this, i);
     }
 
     /// @defgroup VectorsUtilities Utilities
@@ -1060,7 +1120,7 @@ void powellOptimizer(Matrix1D< double >& p,
  * @endcode
  */
 class GaussianInterpolator {
-    Matrix1D<double> v;
+    MultidimArray<double> v;
     double xstep;
     double xmax;
     double ixstep;

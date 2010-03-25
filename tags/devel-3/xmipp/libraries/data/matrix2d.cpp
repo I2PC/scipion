@@ -33,12 +33,12 @@ void svbksb(Matrix2D<double> &u, Matrix1D<double> &w, Matrix2D<double> &v,
             Matrix1D<double> &b, Matrix1D<double> &x)
 {
     // Call to the numerical recipes routine. Results will be stored in X
-    svbksb(u.adaptForNumericalRecipes2(),
-           w.adaptForNumericalRecipes(),
-           v.adaptForNumericalRecipes2(),
+    svbksb(u.adaptForNumericalRecipes22D(),
+           w.adaptForNumericalRecipes2D(),
+           v.adaptForNumericalRecipes22D(),
            u.rowNumber(), u.colNumber(),
-           b.adaptForNumericalRecipes(),
-           x.adaptForNumericalRecipes());
+           b.adaptForNumericalRecipes2D(),
+           x.adaptForNumericalRecipes2D());
 }
 
 /* Solve Cx=d, nonnegative x */
@@ -78,11 +78,11 @@ void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
     Matrix2D<double> Ap = A;
     Matrix1D<double> p(XSIZE(A));
     result.resize(XSIZE(A));
-    choldc(Ap.adaptForNumericalRecipes2(), XSIZE(A),
-           p.adaptForNumericalRecipes());
-    cholsl(Ap.adaptForNumericalRecipes2(), XSIZE(A),
-           p.adaptForNumericalRecipes(), b.adaptForNumericalRecipes(),
-           result.adaptForNumericalRecipes());
+    choldc(Ap.adaptForNumericalRecipes22D(), XSIZE(A),
+           p.adaptForNumericalRecipes2D());
+    cholsl(Ap.adaptForNumericalRecipes22D(), XSIZE(A),
+           p.adaptForNumericalRecipes2D(), b.adaptForNumericalRecipes2D(),
+           result.adaptForNumericalRecipes2D());
 }
 
 

@@ -31,11 +31,12 @@
 #include <complex>
 
 #include <external/bilib/headers/pyramidtools.h>
-#include "matrix1d.h"
 #include "multidimensional_array.h"
+#include "matrix1d.h"
 #include "error.h"
 
 #ifndef SWIG
+
 template<typename T>
 void multiplyElements(const Matrix2D<T>& op1, const Matrix2D<T>& op2,
     Matrix2D<T>& result);
@@ -415,8 +416,52 @@ public:
         }
 
         resize(Ydim, Xdim);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-	        DIRECT_MAT_ELEM(*this, i, j) = (T)(i == j);
+        for (int i=0; i<YSIZE(*this); i++)
+            for (int j=0; j<XSIZE(*this); j++)
+                DIRECT_MAT_ELEM(*this, i, j) = (T)(i == j);
+
+        /* I dont know why this does not work...
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(*this)
+        {
+            DIRECT_MAT_ELEM(*this, i, j) = (T)(i == j);
+        }
+        */
+    }
+
+    /** Resize to a given size
+     * @ingroup MatricesSize
+     *
+     * This function resize the actual array to the given size. The origin is
+     * not modified. If the actual array is larger than the pattern then the
+     * values outside the new size are lost, if it is smaller then 0's are
+     * added. An exception is thrown if there is no memory.
+     *
+     * @code
+     * m1.resize(3, 2);
+     * @endcode
+     */
+    void resize(int Ydim, int Xdim)
+    {
+        MultidimArray<T>::resize(1, 1, Ydim, Xdim);
+    }
+
+    /** Resize taking the shape from another matrix
+     * @ingroup MatricesSize
+     */
+    template <typename T1>
+    void resize(const Matrix2D<T1> &M)
+    {
+        MultidimArray<T>::resize(M);
+    }
+
+    /** Resize taking the shape from another matrix which
+        is given as a MultidimArray
+     * @ingroup MatricesSize
+     */
+    template <typename T1>
+    void resize(const MultidimArray<T1> &M)
+    {
+        MultidimArray<T>::resize(M);
     }
 
 
@@ -570,7 +615,7 @@ public:
 
         for (int i = 0; i < N; i++)
         {
-            profile(i) = interpolatedElement(tx, ty);
+            profile(i) = interpolatedElement2D(tx, ty);
             tx += tx_step;
             ty += ty_step;
         }
@@ -1318,8 +1363,8 @@ void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result)
     // Solve
     result = b;
     Matrix2D<T> Aux = A;
-    gaussj(Aux.adaptForNumericalRecipes2(), Aux.ydim,
-           result.adaptForNumericalRecipes2(), b.xdim);
+    gaussj(Aux.adaptForNumericalRecipes22D(), Aux.ydim,
+           result.adaptForNumericalRecipes22D(), b.xdim);
 }
 
 // TODO Document
@@ -1328,17 +1373,17 @@ void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d)
 {
     LU = A;
     indx.resize(XSIZE(A));
-    ludcmp(LU.adaptForNumericalRecipes2(), XSIZE(A),
-           indx.adaptForNumericalRecipes(), &d);
+    ludcmp(LU.adaptForNumericalRecipes22D(), XSIZE(A),
+           indx.adaptForNumericalRecipes2D(), &d);
 }
 
 // TODO Document
 template<typename T>
 void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b)
 {
-    lubksb(LU.adaptForNumericalRecipes2(), XSIZE(indx),
-           indx.adaptForNumericalRecipes(),
-           b.adaptForNumericalRecipes());
+    lubksb(LU.adaptForNumericalRecipes22D(), XSIZE(indx),
+           indx.adaptForNumericalRecipes2D(),
+           b.adaptForNumericalRecipes2D());
 }
 
 // TODO Document
