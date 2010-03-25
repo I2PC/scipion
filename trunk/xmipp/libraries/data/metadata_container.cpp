@@ -66,7 +66,7 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 	if( lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||
 	   lCode == MDL_SHIFTX || lCode == MDL_SHIFTY || lCode == MDL_SHIFTZ ||
 	   lCode == MDL_ORIGINX || lCode == MDL_ORIGINY || lCode == MDL_ORIGINZ || 
-	   lCode == MDL_WEIGHT || lCode == MDL_MAXCC ) 
+	   lCode == MDL_WEIGHT || lCode == MDL_MAXCC || lCode == MDL_PMAX ) 
 	{
 		double doubleValue;
 		
@@ -74,7 +74,9 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 				
 		addValue( lCode, doubleValue );
 	}
-	else if( lCode == MDL_IMAGE || lCode == MDL_MICROGRAPH || lCode == MDL_CTFMODEL )
+	else if( lCode == MDL_IMAGE || lCode == MDL_MICROGRAPH || lCode == MDL_CTFMODEL ||
+        lCode == MDL_CTFINPUTPARAMS || lCode == MDL_PERIODOGRAM ||
+        lCode == MDL_SERIE )
 	{
 		addValue( lCode, value );
 	}
@@ -134,110 +136,85 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, double value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
+    double * currValue = (double *)values[ name ];
 	
-	std::map< MetaDataLabel, void *>::iterator It;
-	
-	It = values.find( name );
-	
-	if( It != values.end( ))
+    if( currValue != NULL )
 	{
-		if( value == *((double *)(It->second)) )
+        if( value == *currValue )
 		{
 			return true;
 		}
 	}
-	else
-	{
-		return false;
-	}
+	
+    return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, float value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
+    float * currValue = (float *)values[ name ];
 	
-	std::map< MetaDataLabel, void *>::iterator It;
-	
-	It = values.find( name );
-	
-	if( It != values.end( ))
+    if( currValue != NULL )
 	{
-		if( value == *((float *)(It->second)) )
+        if( value == *currValue )
 		{
 			return true;
 		}
 	}
-	else
-	{
-		return false;
-	}
+	
+    return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, int value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
+    int * currValue = (int *)values[ name ];
 	
-	std::map< MetaDataLabel, void *>::iterator It;
-	
-	It = values.find( name );
-	
-	if( It != values.end( ))
-	{
-		if( value == *((int *)(It->second)) )
+    if( currValue != NULL )
+	{        
+		if( value == *currValue )
 		{
 			return true;
 		}
 	}
-	else
-	{
-		return false;
-	}
+	
+	return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, bool value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
-	
-	std::map< MetaDataLabel, void *>::iterator It;
-	
-	It = values.find( name );
-	
-	if( It != values.end( ))
+    bool * currValue = (bool *)values[ name];
+    
+	if( currValue != 0 )
 	{
-		if( value == *((bool *)(It->second)) )
+	    if( value == *currValue )
 		{
 			return true;
 		}
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, std::string value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
+    std::string * currValue = (std::string *)values[ name ];	
 	
-	std::map< MetaDataLabel, void *>::iterator It;
-	
-	It = values.find( name );
-	
-	if( It != values.end( ))
+    if( currValue != 0 )
 	{
-		if( value == *((std::string *)It->second) )
+	    if( value == *currValue )
 		{
 			return true;
 		}
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 void MetaDataContainer::deleteValue( MetaDataLabel name )
@@ -318,6 +295,22 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return MDL_MAXCC;
 	}
+	else if( strLabel == "serie" )
+	{
+		return MDL_SERIE;
+	}
+	else if( strLabel == "pMax" )
+	{
+		return MDL_PMAX;
+	}
+	else if( strLabel == "CTFInputParams" )
+	{
+		return MDL_CTFINPUTPARAMS;
+	}
+	else if( strLabel == "periodogram" )
+	{
+		return MDL_PERIODOGRAM;
+	}
 	else
 	{
 		return MDL_UNDEFINED;
@@ -379,6 +372,18 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 		case MDL_MAXCC: 
 			return std::string( "maxCC" );
 			break;
+        case MDL_SERIE:
+            return std::string( "serie" );
+            break;
+        case MDL_PMAX:
+            return std::string( "pMax" );
+            break;
+        case MDL_CTFINPUTPARAMS:
+            return std::string( "CTFInputParams" );
+            break;
+        case MDL_PERIODOGRAM:
+            return std::string( "periodogram" );
+            break;
 		default:
 			return std::string( "" );
 			break;
@@ -439,6 +444,18 @@ void MetaDataContainer::writeValueToFile( std::ofstream &outfile, MetaDataLabel 
 			break;
 		case MDL_MAXCC: 
 			outfile << *((double*)(getValue( inputLabel )));
+			break;
+        case MDL_PMAX:
+            outfile << *((double*)(getValue( inputLabel )));
+			break;
+        case MDL_SERIE:
+            outfile << *((std::string*)(getValue( inputLabel )));
+            break;
+        case MDL_CTFINPUTPARAMS:
+            outfile << *((std::string*)(getValue( inputLabel )));
+			break;
+        case MDL_PERIODOGRAM:
+            outfile << *((std::string*)(getValue( inputLabel )));
 			break;
 		default:
 			break;

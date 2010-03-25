@@ -36,12 +36,9 @@
 
 #include "metadata_container.h"
 
-// Possible error codes for the map
-#define NO_OBJECTS_STORED	-1
-#define NO_MORE_OBJECTS		-2
-
 class MetaData
 {
+
 	std::map< long int, MetaDataContainer *> objects;
 	
 	// Used by firstObject, nextObject and lastObject to keep a pointer
@@ -56,31 +53,43 @@ class MetaData
 	MetaDataLabel fastStringSearchLabel;
 
 	// What labels have been read from a docfile/metadata file
-	// and/or will be stored on a new metadata file when "write" is
+	// and/or will be stored on a new metadata file when "save" is
 	// called
 	std::vector< MetaDataLabel > activeLabels;
 
 	std::string path;
-        /** Read MetaData file (and old docfiles)
-	*
-	*/
-	void read( std::string fileName, std::vector<MetaDataLabel> * labelsVector = NULL);
+    
+    MetaDataContainer * getObject( long int objectID = -1 );
+
+	// Set a new pair/value for an specified object. If no objectID is given, that
+	// pointed by the class iterator is used 
+	bool setValue( MetaDataLabel name, double value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, float value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, int value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, bool, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, std::string value, long int objectID = -1 );
+	bool setValue( std::string name, std::string value, long int objectID = -1 );
+    
+	long int addObject( );
+
+    void readOldSelFile( std::ifstream *infile );
+    void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
+    void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
 
 public:
+    // Possible error codes for the map
+    enum errors
+    {
+        NO_OBJECTS_STORED = -1,
+        NO_MORE_OBJECTS = -2
+    };
+    
+	long int firstObject( );
+	long int nextObject( );
+	long int lastObject( );
 	
 	MetaData();
-	/** Read metadata (or old docfile). 
-	 * Read metadata (or old docfile) and fill the labels 
-	 * present in vector labelsVector
-	 *
-	 */
 	MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
-	
-	/** Backwards compatibility for selfiles
-	* Read old sel files and load them as metadata objects.
-	* If skipDiscarded is true then images with -1 are skipped
-	*/
-	MetaData( std::string fileName, bool skipDiscarded);
 	~MetaData();
 	
 	void write( std::string fileName );
@@ -89,22 +98,7 @@ public:
 	
 	void clear( );
 	
-	long int addObject( );
-	long int firstObject( );
-	long int nextObject( );
-	long int lastObject( );
-	
 	long int fastSearch( MetaDataLabel name, std::string value, bool recompute = false );
-	
-	// Set a new pair/value for an specified object. If no objectID is given, that
-	// pointed by the class iterator is used 
-	bool setValue( MetaDataLabel name, double value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, float value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, int value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, bool, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, std::string value, long int objectID = -1 );
-	
-	bool setValue( std::string name, std::string value, long int objectID = -1 );
 	
 	// Get the collection of objects whose pair label/value is given
 	std::vector<long int> findObjects( MetaDataLabel name, double value );
@@ -113,28 +107,68 @@ public:
 	std::vector<long int> findObjects( MetaDataLabel name, bool value );
 	std::vector<long int> findObjects( MetaDataLabel name, std::string value );
 	
-	// Xmipp-specific, for new parameters add here.
+    // Removes the collection of objects whose pair label/value is given
+    // NOTE: The iterator will point to the first object after any of these
+    // operations.
+	void removeObjects( MetaDataLabel name, double value );
+	void removeObjects( MetaDataLabel name, float value );
+	void removeObjects( MetaDataLabel name, int value );
+	void removeObjects( MetaDataLabel name, bool value );
+	void removeObjects( MetaDataLabel name, std::string value );
+	
+    // Xmipp-specific, for new parameters add here.
 	void setPath( std::string newPath = "" );	
 	
 	std::string getPath( );
 	
-	double angleRot( long int objectID );
-	double angleTilt( long int objectID );
-	double anglePsi( long int objectID );
-	double shiftX( long int objectID );
-	double shiftY( long int objectID );
-	double shiftZ( long int objectID );
-	double originX( long int objectID );
-	double originY( long int objectID );
-	double originZ( long int objectID );
-	double weight( long int objectID );
-	double flip( long int objectID );
-	double maxCC( long int objectID );
-	int ref( long int objectID );
-	int enabled( long int objectID );
-	std::string CTFModel( long int objectID );
-	std::string image( long int objectID = -1);
-	std::string micrograph( long int objectID );
+//    void getAngles( double &rot, double &tilt, double &psi, long int objectID = -1 );
+    
+	double angleRot( long int objectID = -1 );
+	double angleTilt( long int objectID = -1 );
+	double anglePsi( long int objectID = -1 );
+	double shiftX( long int objectID = -1 );
+	double shiftY( long int objectID = -1 );
+	double shiftZ( long int objectID = -1 );
+	double originX( long int objectID = -1 );
+	double originY( long int objectID = -1 );
+	double originZ( long int objectID = -1 );
+	double weight( long int objectID = -1 );
+	double flip( long int objectID = -1 );
+	double maxCC( long int objectID = -1);
+    double pMax( long int objectID = -1 );
+	int ref( long int objectID = -1 );
+	int enabled( long int objectID = -1 );
+	std::string CTFModel( long int objectID = -1 );
+	std::string image( long int objectID = -1 );
+	std::string micrograph( long int objectID = -1 );
+	std::string CTFInputParams( long int objectID = -1 );
+	std::string periodogram( long int objectID = -1 );
+	std::string serie( long int objectID = -1 );
+    
+//    void setAngles( double rot, double tilt, double psi, long int objectID = -1 );
+    
+    void setAngleRot( double value, long int objectID = -1 );
+    void setAngleTilt( double value, long int objectID = -1 );
+    void setAnglePsi( double value, long int objectID = -1 );
+    void setEnabled( int value, long int objectID = -1 );
+    void setShiftX( double value, long int objectID = -1 );
+    void setShiftY( double value, long int objectID = -1 );
+    void setShiftZ( double value, long int objectID = -1 );
+    void setOriginX( double value, long int objectID = -1 );
+    void setOriginY( double value, long int objectID = -1 );
+    void setOriginZ( double value, long int objectID = -1 );
+    void setPMax( double value, long int objectID = -1 );
+    void setImage( std::string value, long int objectID = -1 );
+    void setCTFModel( std::string value, long int objectID = -1 );
+    void setMicrograph( std::string value, long int objectID = -1 );
+    void setCTFInputParams( std::string value, long int objectID = -1 );
+    void setPeriodogram( std::string value, long int objectID = -1 );
+    void setSerie( std::string value, long int objectID = -1 );
+    void setWeight( double value, long int objectID = -1 );
+    void setFlip( bool value, long int objectID = -1 );
+    void setMaxCC( double value, long int objectID = -1 );
+    void setRef( int value, long int objectID = -1 );
+
 };
 
 #endif
