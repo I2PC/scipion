@@ -107,7 +107,16 @@ public:
 	std::vector<long int> findObjects( MetaDataLabel name, bool value );
 	std::vector<long int> findObjects( MetaDataLabel name, std::string value );
 	
-	// Xmipp-specific, for new parameters add here.
+    // Removes the collection of objects whose pair label/value is given
+    // NOTE: The iterator will point to the first object after any of these
+    // operations.
+	void removeObjects( MetaDataLabel name, double value );
+	void removeObjects( MetaDataLabel name, float value );
+	void removeObjects( MetaDataLabel name, int value );
+	void removeObjects( MetaDataLabel name, bool value );
+	void removeObjects( MetaDataLabel name, std::string value );
+	
+    // Xmipp-specific, for new parameters add here.
 	void setPath( std::string newPath = "" );	
 	
 	std::string getPath( );

@@ -719,6 +719,86 @@ bool MetaData::setValue( std::string name, std::string value, long int objectID 
 	}	
 }
 
+void MetaData::removeObjects( MetaDataLabel name, double value )
+{	
+    std::vector<long int> toRemove = findObjects( name, value );    
+    std::vector<long int>::iterator It;
+	
+	MetaDataContainer * aux;
+	
+    for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
+	{
+        delete (objects[ *It ]);
+        objects.erase( *It );
+	}
+    
+    objectsIterator=objects.begin( );
+}
+
+void MetaData::removeObjects( MetaDataLabel name, float value )
+{
+    std::vector<long int> toRemove = findObjects( name, value );    
+    std::vector<long int>::iterator It;
+	
+	MetaDataContainer * aux;
+	
+    for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
+	{
+        delete (objects[ *It ]);
+        objects.erase( *It );
+	}
+   
+    objectsIterator=objects.begin( );
+}
+
+void MetaData::removeObjects( MetaDataLabel name, int value )
+{
+    std::vector<long int> toRemove = findObjects( name, value );    
+    std::vector<long int>::iterator It;
+	
+	MetaDataContainer * aux;
+	
+    for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
+	{
+        delete (objects[ *It ]);
+        objects.erase( *It );
+	}
+    
+    objectsIterator=objects.begin( );
+}
+
+void MetaData::removeObjects( MetaDataLabel name, bool value )
+{
+    std::vector<long int> toRemove = findObjects( name, value );    
+    std::vector<long int>::iterator It;
+	
+	MetaDataContainer * aux;
+	
+    for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
+	{
+        delete (objects[ *It ]);
+        objects.erase( *It );
+	}
+    
+    objectsIterator=objects.begin( );
+}
+
+void MetaData::removeObjects( MetaDataLabel name, std::string value )
+{
+    std::vector<long int> toRemove = findObjects( name, value );    
+    std::vector<long int>::iterator It;
+	
+	MetaDataContainer * aux;
+	
+    for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
+	{
+        delete (objects[ *It ]);
+        objects.erase( *It );
+	}
+    
+    objectsIterator=objects.begin( );
+}
+
 std::vector<long int> MetaData::findObjects( MetaDataLabel name, double value )
 {
 	std::vector<long int> result;
