@@ -450,6 +450,7 @@ ReconsSources = [
     'psd_enhance.cpp',
     'psd_sort.cpp',
     'radon.cpp',
+    'range_adjust',
     'recons_misc.cpp',
     'reconstruct_art.cpp',
     'reconstruct_wbp.cpp',
@@ -511,6 +512,9 @@ AddProgram('find_center2d', 'applications/legacy/find_center2d', '*.cpp', [],
     ['XmippData', 'OldXmipp', 'XmippExternal']+FFTWLibs+SQLiteLibs, [], [])
 
 # Src (apps)
+
+AddXmippProgram('testnewimage')
+
 
 AddXmippProgram('add_noise')
 AddXmippProgram('adapt_for_spider', ['XmippInterface'])
@@ -628,7 +632,7 @@ AddXmippProgram('project_tomography', ['XmippRecons'])
 AddXmippProgram('projection_real_shears', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('psd_sort', ['XmippRecons'])
-AddXmippProgram('range_adjust')
+AddXmippProgram('range_adjust', ['XmippRecons'])
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
