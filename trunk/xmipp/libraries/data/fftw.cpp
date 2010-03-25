@@ -329,6 +329,28 @@ void frc_dpr(Matrix2D< double > & m1,
     Matrix2D< std::complex< double > > FT2;
     XmippFftw transformer2;
     transformer2.FourierTransform(m2, FT2, false);
+/*
+std::cout << STARTINGY(FT1) << "," << FINISHINGY(FT1) << std::endl;
+std::cout << STARTINGX(FT1) << "," << FINISHINGX(FT1) << std::endl;
+
+std::cout << STARTINGY(m1) << "," << FINISHINGY(m1) << std::endl;
+std::cout << STARTINGX(m1) << "," << FINISHINGX(m1) << std::endl;
+
+    for (int i=STARTINGY(FT1); i<=FINISHINGY(FT1); i++)
+    {
+        for (int j=STARTINGX(FT1); j<=FINISHINGX(FT1); j++)
+	{
+		FT1(i,j)=std::complex< double >( m1(i-128,j-128), 0.0 );
+	}
+    }
+
+    for (int i=STARTINGY(FT2); i<=FINISHINGY(FT2); i++)
+    {
+        for (int j=STARTINGX(FT2); j<=FINISHINGX(FT2); j++)
+	{
+		FT2(i,j)=std::complex< double >( m2(i-128,j-128), 0.0 );
+	}
+    }*/
 
     Matrix1D< int > radial_count(XSIZE(m1)/2+1);
     Matrix1D<double> num, den1, den2;
