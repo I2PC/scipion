@@ -273,9 +273,15 @@ def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
     AddLibrary("_"+name, basedirswig, [name+"_wrap.cc"],
         ['#',distutils.sysconfig.get_python_inc()],['lib'],['XmippData'],'_')
     #
-    command = "ln -fs ../" + basedirswig+name+".py " + libprefix+'/'+name+'.py'
+    pyFile = libprefix+'/'+name+'.py'
+    if os.path.exists(pyFile):
+       command = "ln -fs "
+    else:
+       command = "ln -s  "
+    command = command + " ../" + basedirswig+name+".py " + libprefix+'/'+name+'.py'
     print command
     os.system(command)
+    	
     #install = env.InstallAs(libprefix+'/'+name+'.py',basedirswig+name+".py")
     #env.Alias(name+'.py', install)
     #env.Default(name+'.py')

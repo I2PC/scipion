@@ -32,12 +32,8 @@ MetaData::MetaData()
 	fastStringSearchLabel = MDL_UNDEFINED;	
 }
 
-MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector )
+void MetaData::read( std::string fileName, std::vector<MetaDataLabel> * labelsVector )
 {
-	setPath();
-	objects.clear( );
-	fastStringSearchLabel = MDL_UNDEFINED;	
-
 	// Open file
 	std::ifstream infile ( fileName.data(), std::ios_base::in );
 	std::string line;
@@ -197,8 +193,56 @@ MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVec
 	
 	infile.close( );
 }
+MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector )
+{
+	setPath();
+	objects.clear( );
+	fastStringSearchLabel = MDL_UNDEFINED;	
+        read(fileName,labelsVector);
+}
 
-void MetaData::save( std::string fileName )
+MetaData::MetaData( std::string fileName, bool skipDiscarded )
+{
+	setPath();
+	objects.clear( );
+	fastStringSearchLabel = MDL_UNDEFINED;	
+
+	// Open file
+	std::ifstream infile ( fileName.data(), std::ios_base::in );
+	std::string line;
+
+	getline( infile, line, '\n');
+	int pos = line.find( "XMIPP_3 * " );
+	if( pos != std::string::npos ) // xmipp_3 token found
+            read( fileName );
+        else
+        {   
+            std::cerr << "OLD SELFILE STYLE: support for selfiles will be deprecated\
+             in next version\n"; 
+            infile.seekg(0, std::ios::beg);          
+	    while ( getline( infile, line, '\n') )
+	    {
+		    line=simplify(line);
+		    if (line[0] == '#' || line[0] == '\0' || line[0] == ';')
+		         continue;
+		    else
+		    {
+		        int pos = line.find( " " );
+	 	        std::string name=line.substr( 0, pos );
+                        line.erase(0,pos+1);
+                        int i = atoi (line.c_str());
+                        if (skipDiscarded && i==(-1))
+                            continue;
+                        addObject();
+                        setValue(MDL_IMAGE,name);
+                        setValue(MDL_ENABLED,i);
+                    } 
+            }	
+	    infile.close( );
+        }
+
+}
+void MetaData::write( std::string fileName )
 {
 	// Open file
 	std::ofstream outfile ( fileName.data(), std::ios_base::out );
@@ -206,7 +250,7 @@ void MetaData::save( std::string fileName )
 	outfile << "; ";
 	outfile << "XMIPP_3 * ";
 	outfile << path << std::endl;
-	
+
 	std::map< long int, MetaDataContainer *>::iterator It;
 	std::vector< MetaDataLabel >::iterator strIt;
 	
@@ -998,26 +1042,30 @@ double MetaData::originZ( long int objectID )
 }
 
 std::string MetaData::image( long int objectID )
-{
-	if( objects.find( objectID ) == objects.end( ) )
+{       
+        MetaDataContainer * aux;
+        if(objectID==-1)
+        {
+            aux = objectsIterator->second;   
+        }
+	else if( objects.find( objectID ) == objects.end( ) )
 	{
 		// This objectID does not exist, finish execution
 		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	}
+	        exit(1);
+        }
 	else
 	{
-		MetaDataContainer * aux = objects[ objectID ];
-		std::string * result = (std::string *)aux->getValue( MDL_IMAGE );
-		
-		if( result == NULL )
-		{
-			std::cerr << "No 'image' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-		}
-		else
-		{
-			return (*result);
-		}
+		aux = objects[ objectID ];
 	}
+	std::string * result = (std::string *)aux->getValue( MDL_IMAGE );
+
+	if( result == NULL )
+	{
+		std::cerr << "No 'image' label found for objectID = " << objectID << " . Exiting... " << std::endl;
+	        exit(1);
+        }
+        return (*result);
 }
 
 std::string MetaData::CTFModel( long int objectID )

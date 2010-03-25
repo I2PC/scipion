@@ -25,8 +25,7 @@
 
 #include <data/args.h>
 #include <data/image.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 
 void Usage();
 
@@ -35,18 +34,21 @@ int main(int argc, char *argv[])
 {
     bool            round_shifts = false;
     float           xx, yy;
-    FileName        fn_img, fn_out;
-    SelFile         SF;
-    DocFile         DF;
+    FileName        fn_img, fn_out,fn_in;
     ImageXmipp      img;
     headerXmipp     head;
+    FileName        inputFile;
+    
 
 // Check command line options ===========================================
     try
     {
-
-        SF.read(getParameter(argc, argv, "-i"));
-        fn_out = getParameter(argc, argv, "-o");
+        
+        fn_in  = getParameter(argc, argv, "-i"); 
+	if (checkParameter(argc, argv, "-o"))
+            fn_out = getParameter(argc, argv, "-o");
+	else
+	    fn_out = fn_in;   
         round_shifts = checkParameter(argc, argv, "-round_shifts");
 
     }
@@ -55,20 +57,21 @@ int main(int argc, char *argv[])
         std::cout << XE;
         Usage();
     }
+    MetaData        SF(fn_in,true);
 
 // Extracting information  ==================================================
     try
     {
 
-        DF.reserve(SF.ImgNo());
-        Matrix1D<double> docline;
-        DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)");
-
-        docline.initZeros(7);
-        SF.go_beginning();
-        while (!SF.eof())
+	long int ret=SF.firstObject();
+	if(ret==NO_OBJECTS_STORED)
+	{
+	    std::cerr << "Empty inputFile File\n";
+	    exit(1);
+	}
+	do
         {
-            fn_img = SF.NextImg();
+	    fn_img = SF.image();
             if (fn_img=="") break;
             head.read(fn_img);
             head.get_originOffsets(xx, yy);
@@ -77,18 +80,17 @@ int main(int argc, char *argv[])
                 xx = (float)ROUND(xx);
                 yy = (float)ROUND(yy);
             }
-            docline(0) = head.Phi();
-            docline(1) = head.Theta();
-            docline(2) = head.Psi();
-            docline(3) = xx;
-            docline(4) = yy;
-            docline(5) = head.Weight();
-            docline(6) = head.Flip();
-            DF.append_comment(fn_img);
-            DF.append_data_line(docline);
+	    SF.setValue(MDL_ANGLEROT, (double)head.Phi());
+	    SF.setValue(MDL_ANGLETILT,(double)head.Theta());
+	    SF.setValue(MDL_ANGLEPSI, (double)head.Psi());
+	    SF.setValue(MDL_SHIFTX,   (double)xx);
+	    SF.setValue(MDL_SHIFTY,   (double)yy);
+	    SF.setValue(MDL_WEIGHT,   (double)head.Weight());
+	    SF.setValue(MDL_FLIP,     (double)head.Flip());
         }
-        DF.write(fn_out);
-        std::cerr << " done!" << std::endl;
+        while (SF.nextObject()!=NO_MORE_OBJECTS);
+	
+        SF.write(fn_out);
     }
     catch (Xmipp_error XE)
     {
@@ -100,12 +102,13 @@ int main(int argc, char *argv[])
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    printf("Purpose:\n");
-    printf(" Extracts the geometric transformation (angles & shifts) in the header of 2D-images.\n");
-    printf("Usage:\n");
-    printf("   header_extract \n");
-    printf("        -i <selfile>       : input selfile\n");
-    printf("        -o <docfile>       : output document file\n");
-    printf("       [-round_shifts]     : Round shifts to integers \n");
+    std::cout << " Purpose:\n";
+    std::cout << " Extracts the geometric transformation (angles & shifts) in the header of 2D-images.\n";
+    std::cout << " Usage:\n";
+    std::cout << "    header_extract \n";
+    std::cout << "         -i <selfile>       : input selfile\n";
+    std::cout << (std::string)"       [-o <docfile> ]     : output metaData file, by default data\n" +
+                                         "\t\t is stored in input metaData file\n";
+    std::cout << "        [-round_shifts]     : Round shifts to integers \n";
     exit(1);
 }

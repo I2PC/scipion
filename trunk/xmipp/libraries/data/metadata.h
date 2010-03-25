@@ -56,19 +56,34 @@ class MetaData
 	MetaDataLabel fastStringSearchLabel;
 
 	// What labels have been read from a docfile/metadata file
-	// and/or will be stored on a new metadata file when "save" is
+	// and/or will be stored on a new metadata file when "write" is
 	// called
 	std::vector< MetaDataLabel > activeLabels;
 
 	std::string path;
+        /** Read MetaData file (and old docfiles)
+	*
+	*/
+	void read( std::string fileName, std::vector<MetaDataLabel> * labelsVector = NULL);
 
 public:
 	
 	MetaData();
+	/** Read metadata (or old docfile). 
+	 * Read metadata (or old docfile) and fill the labels 
+	 * present in vector labelsVector
+	 *
+	 */
 	MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
+	
+	/** Backwards compatibility for selfiles
+	* Read old sel files and load them as metadata objects.
+	* If skipDiscarded is true then images with -1 are skipped
+	*/
+	MetaData( std::string fileName, bool skipDiscarded);
 	~MetaData();
 	
-	void save( std::string fileName );
+	void write( std::string fileName );
 	
 	bool isEmpty( );
 	
@@ -118,7 +133,7 @@ public:
 	int ref( long int objectID );
 	int enabled( long int objectID );
 	std::string CTFModel( long int objectID );
-	std::string image( long int objectID );
+	std::string image( long int objectID = -1);
 	std::string micrograph( long int objectID );
 };
 
