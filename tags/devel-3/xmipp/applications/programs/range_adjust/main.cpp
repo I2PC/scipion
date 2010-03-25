@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/range_adjust.h>
+#include <reconstruction/range_adjust.h>
 
 bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
