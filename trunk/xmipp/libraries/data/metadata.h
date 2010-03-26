@@ -84,7 +84,7 @@ public:
 	// Possible error codes for the map
     enum errors
     {
-        NO_OBJECTS_STORED = -1,
+        NO_OBJECTS_STORED = -1, // NOTE: Do not change this value (-1)
         NO_MORE_OBJECTS = -2
     };
     

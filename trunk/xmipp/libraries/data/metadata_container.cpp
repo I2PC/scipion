@@ -219,7 +219,10 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, std::string value )
 
 void MetaDataContainer::deleteValue( MetaDataLabel name )
 {
-	values.erase( name );
+    if( values[ name ] != NULL )
+        free( values[ name ] );
+	
+    values.erase( name );
 }
 	
 MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )

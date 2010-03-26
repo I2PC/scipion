@@ -70,7 +70,6 @@ enum MetaDataLabel
 			 		    // it is here for looping purposes  	
 };
 
-
 class MetaDataContainer
 {
 	/** Container for pairs "name" and value. Note that void * allows to use

@@ -365,18 +365,9 @@ std::string MetaData::getPath( )
 
 long int MetaData::addObject( )
 {
-	long int result = lastObject();
+	long int result = lastObject() + 1;
 	typedef std::pair<long int, MetaDataContainer *> newPair;
 		
-	if( result == NO_OBJECTS_STORED )
-	{
-		result = 0;
-	}
-	else
-	{
-		result++;
-	}
-
 	objects.insert( newPair( result, new MetaDataContainer() ) );
 	
 	// Set iterator pointing to the newly added object
@@ -483,7 +474,6 @@ bool MetaData::setValue( MetaDataLabel name, double value, long int objectID )
 					(It->second)->addValue( name, double() );
 				}		
 			} 
-			
 		}
 			
 		aux->addValue( name, value );
@@ -1251,155 +1241,109 @@ int MetaData::ref( long int objectID )
     return (*result);
 }
 
-//No PUEDES LLAMAR A aux->addValue por que entonces no actualizas las etiquetas
-//activeLabels
-//o llamas a setValue o creas una funcion que permita añadir etiquetas.
-//lo cual es probablemente mas razonable
 void MetaData::setAngleRot( double value, long int objectID )
 {
 	setValue(MDL_ANGLEROT,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_ANGLEROT, value );
 }
 
 void MetaData::setAngleTilt( double value, long int objectID )
 {
 	setValue(MDL_ANGLETILT,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_ANGLETILT, value );
 }
 
 void MetaData::setAnglePsi( double value, long int objectID )
 {
 	setValue(MDL_ANGLEPSI,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_ANGLEPSI, value );
 }
 
 void MetaData::setEnabled( int value, long int objectID )
 {
 	setValue(MDL_ENABLED,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_ENABLED, value );
 }
 
 void MetaData::setShiftX( double value, long int objectID )
 {
 	setValue(MDL_SHIFTX,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_SHIFTX, value );
 }
 
 void MetaData::setShiftY( double value, long int objectID )
 {
 	setValue(MDL_SHIFTY,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_SHIFTY, value );
 }
 
 void MetaData::setShiftZ( double value, long int objectID )
 {
 	setValue(MDL_SHIFTZ,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_SHIFTZ, value );
 }
 
 void MetaData::setOriginX( double value, long int objectID )
 {
 	setValue(MDL_ORIGINX,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_ORIGINX, value );
 }
 
 void MetaData::setOriginY( double value, long int objectID )
 {
 	setValue(MDL_ORIGINY,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_ORIGINY, value );
 }
 
 void MetaData::setOriginZ( double value, long int objectID )
 {
 	setValue(MDL_ORIGINZ,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_ORIGINZ, value );
 }
 
 void MetaData::setPMax( double value, long int objectID )
 {
 	setValue(MDL_PMAX,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_PMAX, value );
 }
 
 void MetaData::setImage( std::string value, long int objectID )
 {
 	setValue(MDL_IMAGE,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_IMAGE, value );
 }
 
 void MetaData::setCTFModel( std::string value, long int objectID )
 {
 	setValue(MDL_CTFMODEL,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_CTFMODEL, value );
 }
 
 void MetaData::setMicrograph( std::string value, long int objectID )
 {
 	setValue(MDL_MICROGRAPH,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_MICROGRAPH, value );
 }
 
 void MetaData::setCTFInputParams( std::string value, long int objectID )
 {
 	setValue(MDL_CTFINPUTPARAMS,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_CTFINPUTPARAMS, value );
 }
 
 void MetaData::setPeriodogram( std::string value, long int objectID )
 {
 	setValue(MDL_PERIODOGRAM,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_PERIODOGRAM, value );
 }
 
 void MetaData::setSerie( std::string value, long int objectID )
 {
 	setValue(MDL_SERIE,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_SERIE, value );
 }
 
 void MetaData::setWeight( double value, long int objectID )
 {
 	setValue(MDL_WEIGHT,value,objectID);
-	//MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_WEIGHT, value );
 }
 
 void MetaData::setFlip( bool value, long int objectID )
 {
 	setValue(MDL_FLIP,value,objectID);
-    //MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_FLIP, value );
 }
 
 void MetaData::setMaxCC( double value, long int objectID )
 {
 	setValue(MDL_MAXCC,value,objectID);
-    //MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_MAXCC, value );
 }
 
 void MetaData::setRef( int value, long int objectID )
 {
 	setValue(MDL_REF,value,objectID);
-    //MetaDataContainer * aux = getObject( objectID );
-    //aux->addValue( MDL_REF, value );
 }
 
 MetaDataContainer * MetaData::getObject( long int objectID )
