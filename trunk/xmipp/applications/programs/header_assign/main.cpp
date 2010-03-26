@@ -22,6 +22,8 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+//#define METADATA
+#ifndef METADATA
 
 #include <data/args.h>
 #include <data/image.h>
@@ -270,3 +272,112 @@ void Usage()
     printf("       [-levels <n=0>]     : Levels of pyramidal reduction, n=1, 2, ...\n");
     exit(1);
 }
+#else
+
+
+#include <data/args.h>
+#include <data/image.h>
+#include <data/metadata.h>
+
+void Usage();
+
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
+{
+    double          rot, tilt, psi, xshift, yshift;
+    double           weight, mirror;
+    FileName        fn_img, fn_out, fn_in;
+    ImageXmipp      img;
+    int             levels,round_shifts;
+    bool            verb;
+
+// Check command line options ===========================================
+    try
+    {
+        try
+        {
+        	round_shifts = checkParameter(argc, argv, "-round_shifts");
+        	levels = textToInteger(getParameter(argc, argv, "-levels", "0"));
+        	fn_in = getParameter(argc, argv, "-i");
+        }
+        catch (Xmipp_error XE)
+        {
+            std::cout << XE;
+            Usage();
+        }
+        //no longer suported
+        //fn_out = getParameter(argc, argv, "-o", "");
+        verb  = checkParameter(argc, argv, "-verb");
+
+        MetaData SF(fn_in);
+        SF.removeObjects( MDL_ENABLED, -1 );
+        std::vector< MetaDataLabel >::iterator strIt;
+
+		long int ret=SF.firstObject();
+		if(ret==MetaData::NO_OBJECTS_STORED)
+		{
+			std::cerr << "Empty inputFile File\n";
+			exit(1);
+		}
+		do
+		{
+			fn_img = SF.image();
+			if (fn_img=="") break;
+			img.read(fn_img);
+			img.clear_fFlag_flag();
+			for( strIt  = SF.activeLabels.begin();
+				 strIt != SF.activeLabels.end();
+				 strIt ++ )
+			{
+				std::cout << *strIt << std::endl;
+			}
+			//rot    = SF.AngleRot();
+			//tilt   = SF.AngleTilt();
+			//psi    = SF.AnglePsi();
+			//xshift = SF.ShiftX();
+			//yshift = SF.ShiftY();
+			//weight = SF.Weight();
+			//mirror = SF.Flip();
+			//img.set_eulerAngles(rot, tilt, psi);
+			//img.set_originOffsets(xshift, yshift);
+			//img.set_weight(weight);
+			//img.set_flip(mirror);
+			//img.write(fn_img);
+			////LEVELS -VERB
+		}
+		while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
+    }
+    catch (Xmipp_error XE)
+    {
+        std::cout << XE;
+    }
+
+}
+
+/* Usage ------------------------------------------------------------------- */
+void Usage()
+{
+    printf("Purpose:\n");
+    printf(" Set the geometric transformation (angles & shifts) in the header of 2D-images.\n");
+    printf("Usage:\n");
+    printf("   header_assign  \n");
+    printf("        -i <docfile>       : input metaData file\n");
+    //no longer suported
+    //printf("       [-o <selfile>]      : selfile containing the images to be assessed\n");
+    //printf("                             (only necessary for non-NewXmipp docfiles) \n");
+    printf("       [-verb]             : output assigned information to screen \n");
+//Instead of this offer a utility to operate with metadata files: suppress one colum
+//multiply, divide, add by a number, etc, add a constant column, merge,...
+//    printf("       [-columns] <rot=1> <tilt=2> <psi=3> <Xoff=4> <Yoff=5> \n"
+//           "                           : where the 5 integers are the column numbers for the \n"
+//           "                           : respective angles and offsets in the docfile\n"
+//           "                           : Negative column numbers result in a sign change\n"
+//           "                           : Zero means: leave this entry intact in the images\n");
+//    printf("       [-weight <col_w=6>] : Set ML-weights (from column number col_w) \n");
+//    printf("       [-mirror <col_m=7>] : Set mirror-flag (from column col_m) (0=no-flip; 1=flip)\n");
+    printf("       [-round_shifts]     : Round shifts to integers \n");
+    printf("       [-levels <n=0>]     : Levels of pyramidal reduction, n=1, 2, ...\n");
+    exit(1);
+}
+
+#endif

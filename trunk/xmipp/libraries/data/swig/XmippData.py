@@ -467,7 +467,7 @@ class MetaData(_object):
         except: self.this = this
     __swig_destroy__ = _XmippData.delete_MetaData
     __del__ = lambda self : None;
-    def save(*args): return _XmippData.MetaData_save(*args)
+    def write(*args): return _XmippData.MetaData_write(*args)
     def isEmpty(*args): return _XmippData.MetaData_isEmpty(*args)
     def clear(*args): return _XmippData.MetaData_clear(*args)
     def addObject(*args): return _XmippData.MetaData_addObject(*args)

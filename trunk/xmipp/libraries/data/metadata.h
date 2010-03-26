@@ -52,10 +52,6 @@ class MetaData
 	std::map< std::string, long int> fastStringSearch;
 	MetaDataLabel fastStringSearchLabel;
 
-	// What labels have been read from a docfile/metadata file
-	// and/or will be stored on a new metadata file when "save" is
-	// called
-	std::vector< MetaDataLabel > activeLabels;
 
 	std::string path;
     
@@ -77,7 +73,13 @@ class MetaData
     void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
 
 public:
-    // Possible error codes for the map
+    //ROB i NEED THIS TO BE PUBLIC
+	// What labels have been read from a docfile/metadata file
+	// and/or will be stored on a new metadata file when "save" is
+	// called
+	std::vector< MetaDataLabel > activeLabels;
+
+	// Possible error codes for the map
     enum errors
     {
         NO_OBJECTS_STORED = -1,
