@@ -31,13 +31,14 @@ MetaData::MetaData()
 	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
     objectsIterator = objects.begin();
+    isColumnFormat = true;
 }
 
 void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector )
 {
     infile->seekg(0, std::ios::beg); 
 	std::string line;
-
+    
 	getline( *infile, line, '\n');
 	
     int pos = line.find( "*" );
@@ -49,42 +50,58 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
 	else
 	{
 		line.erase( 0, pos+1 );
-		line = removeChar( line, ' ' );
+        
+        pos = line.find( " row_format " );
+
+        if( pos != std::string::npos )
+        {
+            isColumnFormat = false;
+        }
+            
 	}
-	
+    
+	pos = line.find( "*" );
+	line.erase( 0, pos+1 );
+    line = removeChar( line, ' ' );
 	setPath( line );
 		
-	// Get Labels line
-	getline( *infile, line, '\n');
+    if( isColumnFormat )
+    {
+	    // Get Labels line
+	    getline( *infile, line, '\n');
 		
-	// Remove ';'
-	line.erase(0,line.find(";")+1);
+    	// Remove ';'
+	    line.erase(0,line.find(";")+1);
 				
-	// Parse labels
-	std::stringstream os( line );          
-	std::string newLabel;                 
+	    // Parse labels
+    	std::stringstream os( line );          
+    	std::string newLabel;                 
 				
-	while ( os >> newLabel )
-	{
-		activeLabels.push_back(  MetaDataContainer::codifyLabel(newLabel) );
-	}
+	    while ( os >> newLabel )
+	    {
+		    activeLabels.push_back(  MetaDataContainer::codifyLabel(newLabel) );
+	    }
 		
-	// Read data and fill structures accordingly
-	while ( getline( *infile, line, '\n') )
-	{
-		long int objectID = addObject( );
+	    // Read data and fill structures accordingly
+	    while ( getline( *infile, line, '\n') )
+	    {
+    		long int objectID = addObject( );
 		
-		// Parse labels
-		std::stringstream os2( line );          
-		std::string value;
+		    // Parse labels
+		    std::stringstream os2( line );          
+	    	std::string value;
 		
-		int counter = 0;
-		while ( os2 >> value )
-		{
-			setValue( MetaDataContainer::decodeLabel(activeLabels[counter]), value );
-			counter++;
-		}
-	}
+    		int counter = 0;
+		    while ( os2 >> value )
+		    {
+			    setValue( MetaDataContainer::decodeLabel(activeLabels[counter]), value );
+			    counter++;
+		    }
+	    }
+    }
+    else
+    {
+    }
 }
 
 void MetaData::readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector )
@@ -167,7 +184,6 @@ void MetaData::readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel>
             	
            	// Remove spaces from string
            	line = removeChar( line, ' ' );
-           					
            	setValue( MDL_IMAGE, line );
         }
         else
@@ -196,15 +212,12 @@ void MetaData::readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel>
 
 void MetaData::readOldSelFile( std::ifstream *infile )
 {	
-    infile->seekg(0, std::ios::beg);     
+    infile->seekg( 0, std::ios::beg );     
     std::string line;
-	
-    getline( *infile, line, '\n');
-  	
+	  	
     activeLabels.push_back( MDL_IMAGE );
     activeLabels.push_back( MDL_ENABLED );
     
-    int counter = 0;
     while ( getline( *infile, line, '\n') )
     {
 	    line=simplify(line);
@@ -219,7 +232,6 @@ void MetaData::readOldSelFile( std::ifstream *infile )
             addObject();
             setValue( MDL_IMAGE, name);
             setValue( MDL_ENABLED, i);
-            counter++;
         } 
     }	
 }
@@ -229,6 +241,7 @@ MetaData::MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVec
 	setPath( );
 	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
+    isColumnFormat = true;
 
 	// Open file
 	std::ifstream infile ( fileName.data(), std::ios_base::in );
@@ -277,7 +290,11 @@ void MetaData::write( std::string fileName )
 	std::ofstream outfile ( fileName.data(), std::ios_base::out );
 
 	outfile << "; ";
-	outfile << "XMIPP_3 * ";
+    if( isColumnFormat )
+	    outfile << "XMIPP_3 * column_format * ";
+    else
+        outfile << "XMIPP_3 * row_format * ";
+   
 	outfile << path << std::endl;
 	
 	std::map< long int, MetaDataContainer *>::iterator It;
@@ -616,7 +633,6 @@ bool MetaData::setValue( MetaDataLabel name, bool value, long int objectID )
 					(It->second)->addValue( name, bool( ) );
 				}		
 			} 
-			
 		}
 		
 		aux->addValue( name, value );
@@ -915,7 +931,7 @@ std::vector<long int> MetaData::findObjects( MetaDataLabel name, std::string val
 		
 		if( aux->pairExists( name, value ) )
 			result.push_back( It->first );
-			}
+	}
 	
 	return result;
 }
@@ -1388,23 +1404,27 @@ void MetaData::setRef( int value, long int objectID )
 
 MetaDataContainer * MetaData::getObject( long int objectID )
 {
-    MetaDataContainer * aux;
-    
-    if( objectID == -1 )
+    if( isEmpty( ) )
     {
-        aux = objectsIterator->second;
+	    // The objects map is empty, error
+	    std::cerr << "There are no objects stored. Exiting... " << std::endl;
+        exit( 1 );
     }
-	else if( objects.find( objectID ) == objects.end( ) )
-	{
-		// This objectID does not exist, finish execution
-		std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
-	    exit( 1 );
-    }
-	else
-	{
-		aux = objects[ objectID ];
-	}
  
+    MetaDataContainer * aux;
+       
+    if( objectID == -1 )
+        aux = objectsIterator->second;
+	else
+        aux = objects[ objectID ];    
+    
+    if( aux == NULL )
+    {  
+       // This objectID does not exist, finish execution
+       std::cerr << "No objectID = " << objectID << " found. Exiting... " << std::endl;
+       exit( 1 );
+    }
+
     return aux;  
 }
 

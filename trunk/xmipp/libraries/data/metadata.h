@@ -72,6 +72,8 @@ class MetaData
     void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
     void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
 
+    bool isColumnFormat;
+    
 public:
     //ROB i NEED THIS TO BE PUBLIC
 	// What labels have been read from a docfile/metadata file
