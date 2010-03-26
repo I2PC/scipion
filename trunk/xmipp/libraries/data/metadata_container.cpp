@@ -299,7 +299,7 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return MDL_SERIE;
 	}
-	else if( strLabel == "pMax" )
+	else if( strLabel == "pMax" || strLabel == "Pmax" || strLabel == "sumP" )
 	{
 		return MDL_PMAX;
 	}

@@ -294,6 +294,7 @@ elif (ARGUMENTS['mode'] == 'compile'):
     # debug?
     if int(env['debug']):
         env.Append(CXXFLAGS = ['-g'])
+        env.Append(CXXFLAGS = ['-O0'])
         env.Append(CXXFLAGS = ['-pg'])
         env.Append(CCFLAGS = ['-g'])
         env.Append(CCFLAGS = ['-pg'])

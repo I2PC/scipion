@@ -45,29 +45,29 @@
 enum MetaDataLabel 
 { 
 	MDL_UNDEFINED = -1,
-	MDL_ANGLEROT, 
-	MDL_ANGLETILT, 
-	MDL_ANGLEPSI,
-	MDL_IMAGE,
-	MDL_MICROGRAPH,
-	MDL_CTFMODEL,
-	MDL_SHIFTX, 
-	MDL_SHIFTY, 
-	MDL_SHIFTZ, 
-	MDL_ENABLED, 
-	MDL_ORIGINX, 
-	MDL_ORIGINY, 
-	MDL_ORIGINZ,
-	MDL_WEIGHT,
-	MDL_FLIP,
-	MDL_REF,
-	MDL_MAXCC,
-    MDL_SERIE,
-    MDL_PMAX,
-    MDL_CTFINPUTPARAMS,
-    MDL_PERIODOGRAM,
-	MDL_LAST_LABEL	// NOTE: Do keep this label always at the end
-			 		// it is here for looping purposes  	
+	MDL_ANGLEROT,       // Rotation angle of an image (double)
+	MDL_ANGLETILT,      // Tilting angle of an image (double)
+	MDL_ANGLEPSI,       // Psi angle of an image (double)
+	MDL_IMAGE,          // Name of an image (std::string)
+	MDL_MICROGRAPH,     // Name of a micrograph (std::string)
+	MDL_CTFMODEL,       // Name for the CTF Model (std::string)
+	MDL_SHIFTX,         // Shift for the image in the X axis (double)
+	MDL_SHIFTY,         // Shift for the image in the Y axis (double)
+	MDL_SHIFTZ,         // Shift for the image in the Z axis (double)
+	MDL_ENABLED,        // Is this image enabled? (int [-1 or 1])
+	MDL_ORIGINX,        // Origin for the image in the X axis (double)
+	MDL_ORIGINY,        // Origin for the image in the Y axis (double)
+	MDL_ORIGINZ,        // Origin for the image in the Z axis (double)
+	MDL_WEIGHT,         // Weight assigned to the image (double)
+	MDL_FLIP,           // Flip the image? (bool)
+	MDL_REF,            // Class to which the image belongs (int)
+	MDL_MAXCC,          // Cross-correlation for the image (double)
+    MDL_SERIE,          // A collection of micrographs, e.g. a tilt serie (std::string)
+    MDL_PMAX,           // Maximum value of normalized probability function (now called "Pmax/sumP") (double)
+    MDL_CTFINPUTPARAMS, // Parameters file for the CTF Model (std::string)
+    MDL_PERIODOGRAM,    // A periodogram's file name (std::string)
+	MDL_LAST_LABEL	    // **** NOTE ****: Do keep this label always at the end
+			 		    // it is here for looping purposes  	
 };
 
 
