@@ -95,7 +95,7 @@ public:
 	long int lastObject( );
 	
 	MetaData();
-	MetaData( std::string fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
+	MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
 	~MetaData();
 	
 	void write( std::string fileName );
