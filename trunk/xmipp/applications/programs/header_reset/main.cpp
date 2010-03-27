@@ -26,27 +26,30 @@
 #include <data/args.h>
 #include <data/image.h>
 #include <data/selfile.h>
+#include <data/metadata.h>
 
 void Usage();
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    SelFile         SF;
     ImageXmipp      img;
     FileName        fn_input;
     bool            tiltSeries;
     double          firstAngle, angularStep;
+    MetaData SF;
 
     try
     {
         fn_input = getParameter(argc, argv, "-i");
         if (Is_ImageXmipp(fn_input))
         {
-            SF.insert(fn_input, SelLine::ACTIVE);
+        	SF.addObject();
+            SF.setImage( fn_input);
+            SF.setEnabled( 1);
         }
         else
-            SF.read(fn_input);
+            SF.read( fn_input ,NULL);
 
         tiltSeries=checkParameter(argc,argv,"-tiltSeries");
         if (tiltSeries)
@@ -71,11 +74,11 @@ int main(int argc, char *argv[])
             std::cerr << "Setting the tilt angles to a tilt series\n"
                       << "First angle=" << firstAngle << std::endl
                       << "Angular step=" << angularStep << std::endl;
-        SF.go_beginning();
+		long int ret=SF.firstObject();
         double angle=firstAngle;
-        while (!SF.eof())
+        do
         {
-            FileName fn_img=SF.NextImg();
+            FileName fn_img=SF.image();
             if (fn_img=="") break;
             img.read(fn_img);
             img.clear_header();
@@ -86,6 +89,8 @@ int main(int argc, char *argv[])
             }
             img.write(img.name());
         }
+        while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
+
     }
     catch (Xmipp_error XE)
     {
@@ -101,7 +106,7 @@ void Usage()
     printf(" Reset the geometric transformation (angles & shifts) in the header of 2D-images.\n");
     printf("Usage:\n");
     printf("   header_reset \n");
-    printf("    -i                                   : Selfile with images or individual image\n");
+    printf("    -i                                   : metaDataFile with images or individual image\n");
     printf("   [-tiltSeries <firstAngle> <angleStep>]: Assign a regularly spaced angular distribution\n");
     exit(1);
 }
