@@ -195,10 +195,10 @@ void Usage()
     std::cout << " Extracts the geometric transformation (angles & shifts) in the header of 2D-images.\n";
     std::cout << " Usage:\n";
     std::cout << "    header_extract \n";
-    std::cout << "         -i <selfile>       : input selfile\n";
+    std::cout <<              "        -i <selfile>       : input selfile\n";
     std::cout << (std::string)"       [-o <docfile> ]     : output metaData file, by default data\n" +
-                                         "\t\t is stored in input metaData file\n";
-    std::cout << "        [-round_shifts]     : Round shifts to integers \n";
+                              "                             is stored in input metaData file\n";
+    std::cout <<              "       [-round_shifts]     : Round shifts to integers \n";
     exit(1);
 }
 
