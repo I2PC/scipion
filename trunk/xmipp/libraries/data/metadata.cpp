@@ -33,7 +33,11 @@ MetaData::MetaData()
     objectsIterator = objects.begin();
     isColumnFormat = true;
 }
-
+void MetaData::read( FileName filename, std::vector<MetaDataLabel> * labelsVector )
+{
+    	std::ifstream infile ( filename.data(), std::ios_base::in );
+    	read( &infile, labelsVector );
+}
 void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector )
 {
     infile->seekg(0, std::ios::beg); 

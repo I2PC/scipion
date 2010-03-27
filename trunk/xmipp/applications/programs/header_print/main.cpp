@@ -25,18 +25,17 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/selfile.h>
 #include <data/volume.h>
 #include <cstdio>
-
+#include <data/image.h>
+#include <data/metadata.h>
 void Usage();
 
 int main(int argc, char **argv)
 {
     FileName        fn_input;
-    SelFile         SF;
     headerXmipp     header;
-    int             show_old_rot;     // True if old rot is to be shown
+    MetaData SF;
 
     // Read arguments --------------------------------------------------------
     try
@@ -45,12 +44,14 @@ int main(int argc, char **argv)
         if (Is_VolumeXmipp(fn_input) || Is_ImageXmipp(fn_input) ||
             Is_FourierVolumeXmipp(fn_input) || Is_FourierImageXmipp(fn_input))
         {
-            SF.insert(fn_input, SelLine::ACTIVE);
+        	SF.addObject();
+            SF.setImage( fn_input);
+            SF.setEnabled( 1);
         }
         else
-            SF.read(fn_input);
-
-        show_old_rot = checkParameter(argc, argv, "-show_old_rot");
+        {
+            SF.read( fn_input ,NULL);
+        }
     }
     catch (Xmipp_error XE)
     {
@@ -61,12 +62,17 @@ int main(int argc, char **argv)
 
     try
     {
-
         // Process each file -----------------------------------------------------
-        SF.go_beginning();
-        while (!SF.eof())
+		long int ret=SF.firstObject();
+		if(ret==MetaData::NO_OBJECTS_STORED)
+		{
+			std::cerr << "Empty inputFile File\n";
+			exit(1);
+		}
+		do
         {
-            FileName file_name = SF.NextImg();
+            FileName file_name = SF.image();
+
             if (file_name=="") break;
 
             // For volumes ........................................................
@@ -84,8 +90,6 @@ int main(int argc, char **argv)
                 header.read(file_name);
                 std::cout << "FileName     : " << file_name << std::endl;
                 std::cout << header;
-                if (show_old_rot)
-                    std::cout << "Old rot      : " << header.old_rot() << std::endl;
                 std::cout << std::endl;
 
                 // For fourier volumes .................................................
@@ -113,6 +117,7 @@ int main(int argc, char **argv)
             std::cout << std::endl;
 
         } // while
+        while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
     }
     catch (Xmipp_error XE)
@@ -131,8 +136,8 @@ void Usage()
     std::cerr << "    Prints to screen some of the information stored in the header\n";
 
     std::cerr << "Usage: header_print " << std::endl
-    << "    -i               : Selfile with images/volumes \n"
+    << "    -i               : metaDataFile with images/volumes \n"
     << "                        or individual image or volume \n"
-    << "   [-show_old_rot]   : also show old rotational angle\n";
+    ;
 }
 

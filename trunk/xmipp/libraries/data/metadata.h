@@ -33,7 +33,7 @@
 #include <sstream>
 #include "funcs.h"
 #include "strings.h"
-
+#include "funcs.h"
 #include "metadata_container.h"
 
 class MetaData
@@ -66,7 +66,6 @@ class MetaData
 	bool setValue( MetaDataLabel name, std::string value, long int objectID = -1 );
 	bool setValue( std::string name, std::string value, long int objectID = -1 );
     
-	long int addObject( );
 
     void readOldSelFile( std::ifstream *infile );
     void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
@@ -80,6 +79,9 @@ public:
 	// and/or will be stored on a new metadata file when "save" is
 	// called
 	std::vector< MetaDataLabel > activeLabels;
+
+	long int addObject( );
+    void read( FileName infile, std::vector<MetaDataLabel> * labelsVector );
 
 	// Possible error codes for the map
     enum errors
