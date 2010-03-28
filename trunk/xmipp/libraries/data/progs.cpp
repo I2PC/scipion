@@ -125,7 +125,7 @@ void SF_main(int argc, char **argv,
     VolumeXmipp vol;
     FourierImageXmipp IMG;
     FourierVolumeXmipp VOL;
-    SelFile SF_in, SF_out;
+    MetaData SF_in, SF_out;
 
     bool(*fi2i)(ImageXmipp &, const Prog_parameters *) = NULL;
     bool(*fi2I)(ImageXmipp &, FourierImageXmipp &, const Prog_parameters *) = NULL;
@@ -266,21 +266,21 @@ void SF_main(int argc, char **argv,
         else
         {
             // For a selection file .................................................
-            SF_in.read(prm->fn_in);
-            SF_out.clear();
+            SF_in.read(prm->fn_in,NULL);
+            //SF_out.clear();
 
             // Initialise progress bar
             time_config();
             int i = 0;
             if (prm->allow_time_bar && !prm->quiet)
-                init_progress_bar(SF_in.ImgNo());
-            int istep = CEIL((double)SF_in.ImgNo() / 60.0);
+                init_progress_bar(SF_in.size());
+            int istep = CEIL((double)SF_in.size() / 60.0);
 
             // Process all selfile
-            while (!SF_in.eof())
+            do
             {
                 FileName fn_read;
-                fn_read = SF_in.NextImg();
+                fn_read = SF_in.image();
                 if (fn_read=="") break;
                 if (prm->each_image_produces_an_output)
                     if (prm->oext == "" && prm->oroot == "")
@@ -407,16 +407,20 @@ void SF_main(int argc, char **argv,
                 }
 
                 if (prm->each_image_produces_an_output)
+                	SF_out.addObject();
+                    SF_out.setImage( prm->fn_out);
                     if (success)
-                        SF_out.insert(prm->fn_out);
-                    else
-                        SF_out.insert(prm->fn_out, SelLine::DISCARDED);
+                    	SF_out.setEnabled( 1);
+					else
+						SF_out.setEnabled( -1);
 
                 if (i++ % istep == 0 && prm->allow_time_bar && !prm->quiet)
                     progress_bar(i);
             }
+            while (SF_in.nextObject()!= MetaData::NO_MORE_OBJECTS);
+
             if (prm->allow_time_bar && !prm->quiet)
-                progress_bar(SF_in.ImgNo());
+                progress_bar(SF_in.size());
             if (prm->each_image_produces_an_output)
                 if (prm->oext != "")
                 {

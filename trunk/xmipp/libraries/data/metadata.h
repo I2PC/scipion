@@ -174,6 +174,7 @@ public:
     void setFlip( bool value, long int objectID = -1 );
     void setMaxCC( double value, long int objectID = -1 );
     void setRef( int value, long int objectID = -1 );
+    size_t size(void){return objects.size();}
 
 };
 
