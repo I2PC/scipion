@@ -130,37 +130,3 @@ int main(int argc, char **argv)
     SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
 }
 
-/* Menus =================================================================== */
-/*Colimate:
-   PROGRAM Visualize_FFT {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Visualize_FFT/Help/Visualize_FFT.html";
-      help="Visualize the Fourier Transform of volumes and images";
-      OPEN MENU menu_visualize_FFT;
-      COMMAND LINES {
- + usual: xmipp_visualize_FFT
-               #include "prog_line.mnu"
-          $AMPL_PHASE
-   [-log10] [-squared] [-do_not_center]
-      }
-      PARAMETER DEFINITIONS {
-         #include "prog_vars.mnu"
-         $AMPL_PHASE {
-     label="Visualize";
-     type=exclusion {
-        "Amplitude" {-amplitudes}
-        "Phase"     {-phase}
-     };
-  }
-  OPT(-log10)   {label="Log10";}
-  OPT(-squared) {label="Squared";}
-  OPT(-do_not_center) {label="Do not center";}
-      }
-   }
-
-   MENU menu_visualize_FFT {
-      #include "prog_menu.mnu"
-      $AMPL_PHASE
-      {OPT(-log10) OPT(-squared)}
-      OPT(-do_not_center)
-   }
-*/
