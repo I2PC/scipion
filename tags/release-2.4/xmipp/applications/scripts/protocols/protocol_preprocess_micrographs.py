@@ -223,7 +223,7 @@ class preprocess_A_class:
 	self.Stddev=Stddev
         self.ConversionTask=ConversionTask
         self.DoDownSample=DoDownSample
-        self.Down=Down
+        self.Down=float(Down)
         self.DownKernel=DownKernel
         self.DoCtfEstimate=DoCtfEstimate
         self.Voltage=Voltage
