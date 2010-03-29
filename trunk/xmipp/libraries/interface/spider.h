@@ -29,8 +29,10 @@
 #ifndef _XMIPP_SPIDER_HH
 #define _XMIPP_SPIDER_HH
 
+#include <data/metadata.h>
+
 #include <data/funcs.h>
-#include <data/selfile.h>
+//include <data/selfile.h>
 #include <data/docfile.h>
 #include <data/volume.h>
 #include <data/image.h>
@@ -47,13 +49,13 @@ void generate_Spider_count(int imax, DocFile &DF_out);
     of the Xmipp Selfiles are translated into 0.
 
     Set new_style to produce the new style of Spider selfiles.*/
-void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out, bool new_style);
+void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style);
 
 /** Extract angles from a SelFile and store them in a DocFile.
     You can specify the order of the angle extraction by default
     (rot, tilt, psi).
     An exception is thrown if the angles are not one of these.*/
-void extract_angles(SelFile &SF_in, DocFile &DF_out,
+void extract_angles(MetaData &SF_in, DocFile &DF_out,
                     const std::string &ang1 = "rot", const std::string &ang2 = "tilt",
                     const std::string &ang3 = "psi");
 
@@ -74,7 +76,7 @@ void write_angles(SelFile &SF_out, DocFile &DF_in,
     is shown in stdout. A selFile is returned with the new set of images.
     The renaming is done by calls to cp in the Operating System, so there
     is no restriction on th einput names. */
-void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
+void rename_for_Spider(MetaData &SF_in, MetaData &SF_out, const FileName &fn_root,
                        const FileName &out_ext);
 
 /** Create empty Spider file.
@@ -125,7 +127,7 @@ void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
 void Fourier_transform_of_Radon_transform(const FileName &fn_in,
         const FileName &fn_out, double cutoff_freq,
         double Fermi_temperature = 0.2);
-
+#ifdef DEPRECATED
 /** Angular_refinement via Radon.
     The angular refinement process via the Radon transform is performed.
     All refinements are considered as subsearches within the given range.
@@ -157,6 +159,7 @@ void Angular_refinement_Matching(const FileName &fn_vol, const FileName &fn_sel,
                                  double max_shift = 2, double shift_step = 1,
                                  double first_ring = 0, double last_ring = -1);
 
+#endif
 //@}
 
 #endif

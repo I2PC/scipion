@@ -43,38 +43,39 @@ void generate_Spider_count(int imax, DocFile &DF_out)
 }
 
 // Translate to Spider selfile ---------------------------------------------
-void translate_to_Spider_sel(SelFile &SF_in, DocFile &DF_out, bool new_style)
+void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style)
 {
     Matrix1D<double>   aux(1);
-    int               selline = 1;
+    //int               selline = 1;
 
     DF_out.clear();
-    DF_out.append_comment((std::string)"Translation for Spider of " + SF_in.name());
-
-    SF_in.go_beginning();
-    while (!SF_in.eof())
+    DF_out.append_comment((std::string)"Translation for Spider of " + SF_in.getFilename());
+    int i=1;
+    do
     {
         bool store = true;
-        if (!SF_in.Is_COMMENT())
+        //if (!SF_in.Is_COMMENT())
         {
-            if (SF_in.Is_ACTIVE())
+            if (SF_in.enabled()==1)
             {
                 if (!new_style) aux(0) = 1;
-                else            aux(0) = ((FileName)SF_in.get_current_file()).get_number();
+                //else            aux(0) = ((FileName)SF_in.get_current_file()).get_number();
+                else            aux(0) = i++;
             }
             else
             {
                 if (!new_style) aux(0) = 0;
-                else            store = false;
+                else            {store = false; i++;}
             }
             if (store) DF_out.append_data_line(aux);
         }
-        SF_in.next();
     }
+    while (SF_in.nextObject()!= MetaData::NO_MORE_OBJECTS);
+
 }
 
 // Extract angles ----------------------------------------------------------
-void extract_angles(SelFile &SF_in, DocFile &DF_out,
+void extract_angles(MetaData &SF_in, DocFile &DF_out,
                     const std::string &ang1, const std::string &ang2,
                     const std::string &ang3)
 {
@@ -84,18 +85,18 @@ void extract_angles(SelFile &SF_in, DocFile &DF_out,
     checkAngle(ang3);
 
     DF_out.clear();
-    DF_out.append_comment((std::string)"Angles for " + SF_in.name() +
+    DF_out.append_comment((std::string)"Angles for " + SF_in.image() +
                           ".   Angle order: " + ang1 + " " + ang2 + " " + ang3);
 
     int i = 0;
     time_config();
     std::cerr << "Extracting angles ...\n";
-    init_progress_bar(SF_in.ImgNo());
-    while (!SF_in.eof())
+    init_progress_bar(SF_in.size());
+    do
     {
         // Read image
         ImageXmipp P;
-        FileName fn_img=SF_in.NextImg();
+        FileName fn_img=SF_in.image();
         if (fn_img=="") break;
         P.read(fn_img);
         if (P.Is_flag_set() == 0 || P.Is_flag_set() > 2)
@@ -113,7 +114,9 @@ void extract_angles(SelFile &SF_in, DocFile &DF_out,
         i++;
         if (i % 10 == 0) progress_bar(i);
     }
-    progress_bar(SF_in.ImgNo());
+    while (SF_in.nextObject()!= MetaData::NO_MORE_OBJECTS);
+
+    progress_bar(SF_in.size());
 }
 #ifdef NEVERDEFINED
 // write_angles
@@ -168,21 +171,22 @@ void write_angles(SelFile &SF_in, DocFile &DF_in,
 }
 #endif
 // Rename for Spider -------------------------------------------------------
-void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
+void rename_for_Spider(MetaData &SF_in, MetaData &SF_out, const FileName &fn_root,
                        const FileName &out_ext)
 {
     FileName fn_in, fn_out;
     int counter = 1;
 
-    SF_out.clear();
-    while (!SF_in.eof())
+    do
     {
-        fn_in = SF_in.NextImg();
+    	fn_in = SF_in.image();
         if (fn_in=="") break;
         fn_out = fn_root + integerToString(counter, 5);
         if (out_ext == "") fn_out = fn_out.add_extension(fn_in.get_extension());
         else             fn_out = fn_out.add_extension(out_ext);
-        SF_out.insert(fn_out);
+        SF_out.addObject();
+        SF_out.setImage( fn_out);
+        SF_out.setEnabled( 1);
 
         std::cout << "Renaming " << fn_in << " as " << fn_out << std::endl;
         std::string command = (std::string)"cp " + fn_in + " " + fn_out;
@@ -190,6 +194,8 @@ void rename_for_Spider(SelFile &SF_in, SelFile &SF_out, const FileName &fn_root,
 
         counter++;
     }
+    while (SF_in.nextObject()!= MetaData::NO_MORE_OBJECTS);
+
 }
 
 // Create empty Spider file ------------------------------------------------
@@ -335,6 +341,7 @@ void Fourier_transform_of_Radon_transform(const FileName &fn_in,
     system(((std::string)"mv superfeo2.fft " + fn_out).c_str());
 }
 
+#ifdef DEPRECATED
 // Angular refinement Radon ------------------------------------------------
 void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
                               const FileName &fn_report,
@@ -648,3 +655,4 @@ void Angular_refinement_Matching(const FileName &fn_vol,
     DF_report_standard.write(fn_report + ".txt");
     system(((std::string)"rm apmq." + fn_ext + " refangles." + fn_ext).c_str());
 }
+#endif

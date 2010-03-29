@@ -32,6 +32,7 @@ MetaData::MetaData()
 	fastStringSearchLabel = MDL_UNDEFINED;	
     objectsIterator = objects.begin();
     isColumnFormat = true;
+    infile.clear();
 }
 
 void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector )
@@ -248,7 +249,7 @@ void MetaData::read( FileName fileName, std::vector<MetaDataLabel> * labelsVecto
 	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
     isColumnFormat = true;
-
+    infile = fileName;
 	// Open file
 	std::ifstream infile ( fileName.data(), std::ios_base::in );
 	std::string line;

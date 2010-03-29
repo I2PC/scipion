@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         if (Is_VolumeXmipp(fn_input) || Is_ImageXmipp(fn_input) ||
             Is_FourierVolumeXmipp(fn_input) || Is_FourierImageXmipp(fn_input))
         {
-        	SF.addObject();
+       	    SF.addObject();
             SF.setImage( fn_input);
             SF.setEnabled( 1);
         }

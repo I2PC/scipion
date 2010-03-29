@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
             }
 	        SF.setAngleRot( head.Phi());
 	        SF.setAngleTilt( head.Theta());
-    	    SF.setAnglePsi( head.Psi());
+    	        SF.setAnglePsi( head.Psi());
 	        SF.setShiftX( xx );
 	        SF.setShiftY( yy );
 	        SF.setWeight( head.Weight());

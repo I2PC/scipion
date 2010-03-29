@@ -36,7 +36,8 @@ int main(int argc, char **argv) {
     std::string       ang1="rot",ang2="tilt",ang3="psi";
     int               maxcount;
     
-    SelFile           SF, SF_out;
+    MetaData          SF;
+    MetaData           SF_out;
     DocFile           DF;
     Matrix1D<float>   aux;
     int               selline;
@@ -74,19 +75,20 @@ try {
 
 // Perform operation
    if      (command=="rename") {
-      SF.read(fn_sel);
+      SF.read(fn_sel,NULL);
       rename_for_Spider(SF,SF_out,out_root,out_ext);
       SF_out.write(fn_out);
    }
    else if (command=="generate_count") {
+	   //saves old doc file for spider
       generate_Spider_count(maxcount,DF);
       DF.write(fn_out);
    } else if (command=="translate_sel") {
-      SF.read(fn_sel);
+	  SF.read(fn_sel,NULL);
       translate_to_Spider_sel(SF,DF,newsel_style);
       DF.write(fn_out);
    } else if (command=="extract_angles") {
-      SF.read(fn_sel);
+      SF.read(fn_sel,NULL);
       extract_angles(SF,DF,ang1,ang2,ang3);
       DF.write(fn_out);
    }
@@ -97,20 +99,20 @@ try {
 // Usage -------------------------------------------------------------------
 void Usage() {
    std::cerr << "Usage: adapt_for_Spider rename            : Generate correlative names\n"
-        << "            -i <sel_file>                 : Input Xmipp selection file\n"
-        << "            -o <output Xmipp SelFile>     : Output Xmipp SelFile\n"
+        << "            -i metaData File              : Input Xmipp selection file\n"
+        << "            -o metaData file              : Output Xmipp SelFile\n"
         << "            -oroot <root_name>            : root name for output images\n"
         << "            [-oext <output extension="">  : if nothing is provided the same\n"
         << "                                            as the original images' one is used\n" 
         << "       adapt_for_Spider generate_count    : Generate corresponding Spider SelFile\n"
-        << "            -max <max_count>              : Input Xmipp selection file\n"
+        << "            -max <max_count>              : number images\n"
         << "            -o <DocFile>                  : Output Spider CountFile\n"
         << "       adapt_for_Spider translate_sel     : Generate corresponding Spider SelFile\n"
-        << "            -i <Xmipp Selfile>            : Input Xmipp selection file\n"
-        << "            -o <Spider Selfile>           : Output Spider SelFile\n"
-	<< "           [-new_style]                   : Generate new Spider Selfile style\n"
+        << "            -i metadata file              : Input Xmipp selection file\n"
+        << "            -o metadata file              : Output Spider SelFile\n"
+	<< "           [-new_style]                       : Generate new Spider Selfile style\n"
         << "       adapt_for_Spider extract_angles    : Generate a Docfile with angles\n"
-        << "            -i <sel_file>                 : Input Xmipp selection file\n"
+        << "            -i metadata                   : Input Xmipp selection file\n"
         << "            -o <Ang DocFile>              : Output Docfile\n"
         << "           [-order <ang1> <ang2> <ang3>   : order of the angles\n"
         << "                                            by default, psi, tilt, rot\n";

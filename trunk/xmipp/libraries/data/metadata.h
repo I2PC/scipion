@@ -72,7 +72,10 @@ class MetaData
     void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
 
     bool isColumnFormat;
-    
+    /**Input file name
+     *
+     */
+    FileName infile;
 public:
     //ROB i NEED THIS TO BE PUBLIC
 	// What labels have been read from a docfile/metadata file
@@ -175,6 +178,11 @@ public:
     void setMaxCC( double value, long int objectID = -1 );
     void setRef( int value, long int objectID = -1 );
     size_t size(void){return objects.size();}
+    /** Return metafile filename
+     *
+     */
+
+    FileName getFilename(){return (infile);}
 
 };
 
