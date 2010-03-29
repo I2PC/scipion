@@ -44,7 +44,7 @@ void Prog_Adjust_Volume_Parameters::usage()
 {
     std::cerr << "Usage: adjust_volume\n";
     std::cerr << "   -i <Volume>         : Input volume\n"
-    << "   -sel <SelFile>      : Set of projections\n"
+    << "   -sel MetaDataFile      : Set of projections\n"
     << "  [-o <Output Volume>] : By default, the input one\n"
     << "  [-optimize]          : Optimize\n"
     << "  [-probb_eval <p=0.2>]: Probability of being evaluated\n"
@@ -55,7 +55,7 @@ void Prog_Adjust_Volume_Parameters::usage()
 void Prog_Adjust_Volume_Parameters::show()
 {
     std::cout << "Input Volume:  " << fn_vol   << std::endl
-    << "Input Selfile: " << fn_sel   << std::endl
+    << "Input MetaDAtaFile: " << fn_sel   << std::endl
     << "Output Volume: " << fn_out   << std::endl
     << "Optimize:      " << optimize << std::endl
     ;
@@ -71,8 +71,8 @@ void Prog_Adjust_Volume_Parameters::produce_side_info()
     V = IV();
     V.setXmippOrigin();
 
-    // Read input selfile
-    SF.read(fn_sel);
+    // Read input metadataFile
+    SF.read(fn_sel,NULL);
 }
 
 /* Goal function -----------------------------------------------------------  */
@@ -94,12 +94,19 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
 
     // Compute the mismatching
     double retval = 0;
-    SF.go_first_ACTIVE();
+    //SF.go_first_ACTIVE();
     int N = 0;
-    while (!SF.eof())
+    //while (!SF.eof())
+    long int ret=SF.firstObject();
+    if(ret==MetaData::NO_OBJECTS_STORED)
+    {
+            std::cerr << "Empty inputFile File\n";
+            exit(1);
+    }
+    do
     {
         // Read next image
-        FileName fn = SF.NextImg();
+        FileName fn = SF.image();
         if (fn=="") break;
 
         // Skip randomly some images
@@ -131,6 +138,8 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
         std::cin >> c;
 #endif
     }
+    while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
+
     return retval / N;
 }
 #undef DEBUG
@@ -141,15 +150,21 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
     // Compute the average power and average value of all the projections
     double sum = 0, sum2 = 0, N = 0;
     std::cerr << "Computing first estimate of the linear transformation ...\n";
-    int imgno = SF.ImgNo();
+    int imgno = SF.size();
     init_progress_bar(imgno);
     int i = 0;
 
     int projXdim, projYdim;
-    while (!SF.eof())
+    long int ret=SF.firstObject();
+    if(ret==MetaData::NO_OBJECTS_STORED)
+    {
+            std::cerr << "Empty inputFile File\n";
+            exit(1);
+    }
+    do
     {
         // Read image
-        FileName fn = SF.NextImg();
+        FileName fn = SF.image();
         if (fn=="") break;
         ImageXmipp I;
         I.read(fn);
@@ -168,6 +183,7 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
         i++;
         if (i % 10 == 0) progress_bar(i);
     }
+    while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
     progress_bar(imgno);
     std::cout << std::endl;
 

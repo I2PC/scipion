@@ -27,7 +27,7 @@
 
 #include <data/funcs.h>
 #include <data/volume.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 
 /**@defgroup AdjustVolumeProgram adjust_volume_grey_values (Adjust volume grey values to a set of projections)
    @ingroup ReconsLibraryPrograms */
@@ -52,7 +52,7 @@ public:
     // Input volume
     Matrix3D<double> V;
     // SelFile
-    SelFile SF;
+    MetaData SF;
 public:
     /** Read from a command line.
         An exception might be thrown by any of the internal conversions,
