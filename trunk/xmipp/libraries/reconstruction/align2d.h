@@ -24,14 +24,20 @@
  ***************************************************************************/
 #ifndef _PROG_ALIGN2D
 #define _PROG_ALIGN2D
+//#define METADATA
 
 #include <data/fftw.h>
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/docfile.h>
-#include <data/selfile.h>
+#ifndef METADATA
+  #include <data/docfile.h>
+  #include <data/selfile.h>
+#else
+  #include <data/metadata.h>
+#endif
+#include <data/metadata.h>
 #include <data/image.h>
-
+#include <data/header.h>
 #include <vector>
 
 /**@defgroup Align2DProgram align2d (Align a set of 2D images)
@@ -84,7 +90,11 @@ public:
 
 public:
     // SelFile images
+#ifndef METADATA
     SelFile SF;
+#else
+	MetaData SF;
+#endif
     // Stack of input images
     std::vector<ImageXmipp>  images;
     // Stack of optimal correlations for all images

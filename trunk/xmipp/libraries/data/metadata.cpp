@@ -929,6 +929,46 @@ std::vector<long int> MetaData::findObjects( MetaDataLabel name, std::string val
 	
 	return result;
 }
+
+bool MetaData::detectObjects( MetaDataLabel name, int value )
+{
+	bool result=false;
+	// Traverse all the structure looking for objects
+	// that satisfy search criteria
+	MetaDataContainer * aux;
+	std::map< long int, MetaDataContainer *>::iterator It;
+	for( It = objects.begin( ) ; It != objects.end( ); It ++ )
+	{
+		aux = It->second;
+		if( aux->pairExists( name, value ) )
+			{
+			  result=true;
+			  break;
+			}
+	}
+	return result;
+}
+
+long int MetaData::countObjects( MetaDataLabel name, int value )
+{
+	long int result=0;
+
+	// Traverse all the structure looking for objects
+	// that satisfy search criteria
+	MetaDataContainer * aux;
+	std::map< long int, MetaDataContainer *>::iterator It;
+
+
+	for( It = objects.begin( ) ; It != objects.end( ); It ++ )
+	{
+		aux = It->second;
+
+		if( aux->pairExists( name, value ) )
+			  result++;
+	}
+
+	return result;
+}
 double MetaData::angleRot( long int objectID )
 {
 	MetaDataContainer * aux = getObject( objectID );
@@ -1425,3 +1465,67 @@ long int MetaData::fastSearch( MetaDataLabel name, std::string value, bool recom
 	return result;
 }
 		
+/* Statistics -------------------------------------------------------------- */
+void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
+                             double& _max, bool apply_geo)
+{
+    _min = MAXFLOAT;
+    _max = 0;
+    bool first = true;
+    int n = 0;
+    // Calculate Mean
+    long int ret=MT.firstObject();
+    if(ret==MetaData::NO_OBJECTS_STORED)
+                    {
+                            std::cerr << "Empty inputFile File\n";
+                            exit(1);
+                    }
+    do
+    {
+        FileName image_name = MT.image();
+        if(MT.enabled()==(-1)||image_name == "")
+            continue;
+        Image *image = Image::LoadImage(image_name, apply_geo); // reads image
+        double min, max, avg, stddev;
+        (*image)().computeStats(avg, stddev, min, max);
+        if (_min > min)
+            _min = min;
+        if (_max < max)
+            _max = max;
+        if (first)
+        {
+            _ave = *image;
+            first = false;
+        }
+        else
+        {
+            _ave() += (*image)();
+        }
+        delete image;
+        n++;
+    }
+    while (MT.nextObject()!= MetaData::NO_MORE_OBJECTS);
+
+    if (n > 0)
+        _ave() /= n;
+    _sd = _ave;
+    _sd().initZeros();
+    // Calculate SD
+    MT.firstObject();
+    do
+    {
+        FileName image_name = MT.image();
+        if(MT.enabled()==(-1)) continue;
+        if (image_name == "")
+            continue;
+        Image *image = Image::LoadImage(image_name, apply_geo); // reads image
+        Image tmpImg;
+        tmpImg() = (((*image)() - _ave()));
+        tmpImg() *= tmpImg();
+        _sd() += tmpImg();
+        delete image;
+    }
+    while (MT.nextObject()!= MetaData::NO_MORE_OBJECTS);
+    _sd() /= (n - 1);
+    _sd().selfSQRTnD();
+}

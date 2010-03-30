@@ -35,6 +35,7 @@
 #include "strings.h"
 #include "funcs.h"
 #include "metadata_container.h"
+#include "image.h"
 
 class MetaData
 {
@@ -183,7 +184,21 @@ public:
      */
 
     FileName getFilename(){return (infile);}
+    /*Detect is there is at least one entry with the given label,entry pair
+     * So far only implemented for int
+     */
+    bool detectObjects( MetaDataLabel name, int value );
+    /**Count number of objects that satisfy a given label,entry pair
+     * So far only implemented for int
+     */
+    long int countObjects( MetaDataLabel name, int value );
 
 };
+/** Compute images metadata estatistics
+ * This use to be part of Metadata but should not
+ */
+
+void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
+                             double& _max, bool apply_geo);
 
 #endif
