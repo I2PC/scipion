@@ -73,6 +73,51 @@ void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style)
     while (SF_in.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
 }
+////////////////////////////7
+//this version should be removed
+//////////////////////////////
+
+void extract_angles(SelFile &SF_in, DocFile &DF_out,
+                    const std::string &ang1, const std::string &ang2,
+                    const std::string &ang3)
+{
+
+    checkAngle(ang1);
+    checkAngle(ang2);
+    checkAngle(ang3);
+
+    DF_out.clear();
+    DF_out.append_comment((std::string)"Angles for " + SF_in.name() +
+                          ".   Angle order: " + ang1 + " " + ang2 + " " + ang3);
+
+    int i = 0;
+    time_config();
+    std::cerr << "Extracting angles ...\n";
+    init_progress_bar(SF_in.ImgNo());
+    while (!SF_in.eof())
+    {
+        // Read image
+        ImageXmipp P;
+        FileName fn_img=SF_in.NextImg();
+        if (fn_img=="") break;
+        P.read(fn_img);
+        if (P.Is_flag_set() == 0 || P.Is_flag_set() > 2)
+            DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
+                                 ang1, ang2, ang3);
+        else if (P.Is_flag_set() == 1)
+            DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
+                                 P.rot1(), P.tilt1(), P.psi1(),
+                                 ang1, ang2, ang3);
+        else if (P.Is_flag_set() == 2)
+            DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
+                                 P.rot1(), P.tilt1(), P.psi1(),
+                                 P.rot2(), P.tilt2(), P.psi2(),
+                                 ang1, ang2, ang3);
+        i++;
+        if (i % 10 == 0) progress_bar(i);
+    }
+    progress_bar(SF_in.ImgNo());
+}
 
 // Extract angles ----------------------------------------------------------
 void extract_angles(MetaData &SF_in, DocFile &DF_out,
