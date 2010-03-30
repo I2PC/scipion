@@ -223,7 +223,10 @@ class preprocess_A_class:
 	self.Stddev=Stddev
         self.ConversionTask=ConversionTask
         self.DoDownSample=DoDownSample
-        self.Down=float(Down)
+        if (float(Down)==int(Down)):
+            self.Down=int(Down)
+        else:
+            self.Down=float(Down)
         self.DownKernel=DownKernel
         self.DoCtfEstimate=DoCtfEstimate
         self.Voltage=Voltage
@@ -441,6 +444,7 @@ class preprocess_A_class:
                      fh=open('all_ctfs.sel','w')
                      fh.writelines(self.ctfselfile)
                      fh.close()
+             os.write(fh_mpi,"\n");
 
 	os.close(fh_mpi)#file must be closed before executed
         log.cat(self.log,xmpi_run_file + '_2.sh')
@@ -682,7 +686,6 @@ class preprocess_A_class:
             #os.system(command )
             os.write(fh_mpi,command+'\n')
             #os.write(fh_mpi,command+'\n')
-
         else:
             # Convert output to Xmipp ctfparam files
             self.convert_ctffind_output_to_xmipp_style(fh_mpi)        
@@ -774,7 +777,6 @@ class preprocess_A_class:
         fh=open(paramname,"w")
         fh.writelines(paramlist)
         fh.close()
-
 
     def perform_ctf_phase_flipping(self,fh_mpi):
         import os
