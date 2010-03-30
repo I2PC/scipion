@@ -223,7 +223,10 @@ class preprocess_A_class:
 	self.Stddev=Stddev
         self.ConversionTask=ConversionTask
         self.DoDownSample=DoDownSample
-        self.Down=float(Down)
+        if (float(Down)==int(Down)):
+            self.Down=int(Down)
+        else:
+            self.Down=float(Down)
         self.DownKernel=DownKernel
         self.DoCtfEstimate=DoCtfEstimate
         self.Voltage=Voltage
@@ -441,6 +444,7 @@ class preprocess_A_class:
                      fh=open('all_ctfs.sel','w')
                      fh.writelines(self.ctfselfile)
                      fh.close()
+             os.write(fh_mpi,"\n");
 
 	os.close(fh_mpi)#file must be closed before executed
         log.cat(self.log,xmpi_run_file + '_2.sh')
