@@ -22,12 +22,17 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+//#define METADATA
 
 #include <data/fftw.h>
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/docfile.h>
-#include <data/selfile.h>
+#ifndef METADATA
+  #include <data/docfile.h>
+  #include <data/selfile.h>
+#else
+  #include <data/metadata.h>
+#endif
 #include <data/image.h>
 #include <data/geometry.h>
 #include <data/filters.h>
@@ -39,8 +44,12 @@
 class Prog_centilt_prm
 {
 public:
-    /** SelFiles for untilted and tilted images */
+    /** MetaData for untilted and tilted images */
+#ifndef METADATA
     SelFile SFu, SFt;
+#else
+	MetaData SFu, SFt;
+#endif
     /**  Filename output document file */
     FileName fn_doc;
     /**  Filename output extension */
