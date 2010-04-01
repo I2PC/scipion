@@ -26,7 +26,7 @@
 #define _PROG_ANALYZE_CLUSTER
 
 #include <data/funcs.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 
 /**@defgroup AnalyzeClusterProgram analyze cluster
    @ingroup ReconsLibraryPrograms */

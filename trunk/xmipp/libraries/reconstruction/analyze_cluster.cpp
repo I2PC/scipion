@@ -43,13 +43,13 @@ void Prog_analyze_cluster_prm::read(int argc, char **argv)
 // Show ====================================================================
 void Prog_analyze_cluster_prm::show()
 {
-    std::cerr << "Input selfile:    " << fnSel         << std::endl
-              << "Reference:        " << fnRef         << std::endl
-              << "Produce aligned:  " << align         << std::endl
-              << "Output extension: " << oext          << std::endl
-              << "PCA dimension:    " << NPCA          << std::endl
-              << "Iterations:       " << Niter         << std::endl
-              << "Maximum distance: " << distThreshold << std::endl
+    std::cerr << "Input metadata file:    " << fnSel         << std::endl
+              << "Reference:              " << fnRef         << std::endl
+              << "Produce aligned:        " << align         << std::endl
+              << "Output extension:       " << oext          << std::endl
+              << "PCA dimension:          " << NPCA          << std::endl
+              << "Iterations:             " << Niter         << std::endl
+              << "Maximum distance:       " << distThreshold << std::endl
     ;
 }
 
@@ -57,7 +57,7 @@ void Prog_analyze_cluster_prm::show()
 void Prog_analyze_cluster_prm::usage()
 {
     std::cerr << "Usage:  " << std::endl
-              << "   -i <selfile>       : selfile with images assigned to the cluster\n"
+              << "   -i <metadatafile>  : metadata file  with images assigned to the cluster\n"
               << "   -ref <image>       : class representative\n"
               << "  [-produceAligned]   : write the aligned images\n"
               << "  [-oext <ext="">]    : in case you want to produce aligned images\n"
@@ -74,8 +74,10 @@ void Prog_analyze_cluster_prm::usage()
 void Prog_analyze_cluster_prm::produceSideInfo()
 {
     // Read input selfile and reference
-    SelFile SF;
-    SF.read(fnSel);
+    MetaData SF;
+    SF.read(fnSel,NULL);
+    SF.removeObjects( MDL_ENABLED, -1 );
+    //remove descarted images
     Iref.read(fnRef);
     Iref().setXmippOrigin();
     
@@ -90,10 +92,10 @@ void Prog_analyze_cluster_prm::produceSideInfo()
     Matrix2D<double> Iavg;
     Iavg.initZeros(Iref());
     int currentIdx=-1;
-    while (!SF.eof())
+    do
     {
         ImageXmipp Iaux;
-        Iaux.read(SF.NextImg());
+        Iaux.read(SF.image());
         Iaux().setXmippOrigin();
         classfile.push_back(Iaux.name());
         currentIdx++;
@@ -157,6 +159,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
             char c; std::cin >> c;
         #endif
     }
+    while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
     Iavg/=Iclass.size();
 
     // Compute the difference to the mean
@@ -329,7 +332,7 @@ void Prog_analyze_cluster_prm::run()
     // Output    
     FileName fnRoot=fnSel.without_extension();
     Matrix1D<int> idx=distance.indexSort();
-    SelFile SFout_good, SFout_bad;
+    MetaData SFout_good, SFout_bad;
     Matrix1D<float> Iavg(Npixels);
     double N=0;
     std::ofstream fhOut;
@@ -340,12 +343,18 @@ void Prog_analyze_cluster_prm::run()
         fhOut << classfile[idx(i)-1] << "    " << distance(idx(i)-1) << std::endl;
         if (distance(idx(i)-1)<distThreshold)
         {
-            SFout_good.insert(classfile[idx(i)-1]);
+        	SFout_good.addObject();
+        	SFout_good.setImage(classfile[idx(i)-1]);
+            SFout_good.setEnabled( 1);
             Iavg+=*(Iclassorig[idx(i)-1]);
             N++;
         }
         else
-            SFout_bad.insert(classfile[idx(i)-1]);
+        {
+        	SFout_bad.addObject();
+        	SFout_bad.setImage(classfile[idx(i)-1]);
+        	SFout_bad.setEnabled(1);
+        }
     }
     fhOut.close();
     if (N>0)
