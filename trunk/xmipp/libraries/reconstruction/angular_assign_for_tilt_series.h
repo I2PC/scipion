@@ -27,7 +27,7 @@
 
 #include <vector>
 #include <data/matrix1d.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <pthread.h>
 
 /**@defgroup AngularAssignTiltSeries angular_assign_for_tilt_series
@@ -73,10 +73,10 @@ class Alignment;
 /** This is the main class */
 class Prog_tomograph_alignment {
 public:
-    /// SelFile with all images
+    /// MetaData File with all images
     FileName fnSel;
    
-    /// SelFile with all images at the original scale
+    /// MetaData File with all images at the original scale
     FileName fnSelOrig;
    
     /// Output root
@@ -215,11 +215,11 @@ public:
     void run();
    
 public:
-    // Selfile with the input images
-    SelFile SF;
+    // MetaData with the input images
+    MetaData SF;
 
-    // Selfile with the input images
-    SelFile SForig;
+    // MetaData with the input images
+    MetaData SForig;
 
     // List of image pointers
     std::vector < Matrix2D<unsigned char> *> img;

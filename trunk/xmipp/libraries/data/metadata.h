@@ -36,6 +36,8 @@
 #include "funcs.h"
 #include "metadata_container.h"
 #include "image.h"
+#include <time.h>
+#include <stdio.h>
 
 class MetaData
 {
@@ -55,6 +57,7 @@ class MetaData
 
 
 	std::string path;
+	std::string comment;
     
     MetaDataContainer * getObject( long int objectID = -1 );
 
@@ -78,14 +81,18 @@ class MetaData
      */
     FileName infile;
 public:
-    //ROB i NEED THIS TO BE PUBLIC
-	// What labels have been read from a docfile/metadata file
-	// and/or will be stored on a new metadata file when "save" is
-	// called
+	/** What labels have been read from a docfile/metadata file
+	* and/or will be stored on a new metadata file when "save" is
+	* called
+	* */
 	std::vector< MetaDataLabel > activeLabels;
 
 	long int addObject( );
-    void read( FileName infile, std::vector<MetaDataLabel> * labelsVector );
+    void read( FileName infile, std::vector<MetaDataLabel> * labelsVector=NULL );
+    /** Overloading of the read function for python
+     *
+     */
+    //void read( std::string infile){read(infile,NULL);}
 
 	// Possible error codes for the map
     enum errors
@@ -128,8 +135,10 @@ public:
 	
     // Xmipp-specific, for new parameters add here.
 	void setPath( std::string newPath = "" );	
+	void setComment( std::string Comment = "" );
 	
 	std::string getPath( );
+	std::string getComment( );
 	
 //    void getAngles( double &rot, double &tilt, double &psi, long int objectID = -1 );
     

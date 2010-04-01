@@ -1,13 +1,18 @@
-#!/bin/sh
+#!/usr/bin/env python
+import os,glob,sys
 
-if [ $# != 0 ] ; then
-   echo "; XMIPP_3 * /home/roberto/Ribosome"
-   echo "; image enabled" 
-   for i in $1
-   do
-      echo $i 1
-   done
-else 
-   echo "Usage: selfile_create \"pattern\" > selfile"
-fi
+if len(sys.argv) < 2:
+   print 'Usage: selfile_create "pattern" > metadataFile'
+   sys.exit()
 
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+import XmippData,os,glob,sys
+
+id=mD.addObject();
+
+for file in glob.glob(sys.argv[1]):
+    mD.addObject();
+    mD.setImage(file)
+    mD.setEnabled("1")
+mD.write("std::cout")

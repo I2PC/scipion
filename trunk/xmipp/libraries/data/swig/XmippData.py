@@ -462,6 +462,8 @@ class MetaData(_object):
     __swig_setmethods__["activeLabels"] = _XmippData.MetaData_activeLabels_set
     __swig_getmethods__["activeLabels"] = _XmippData.MetaData_activeLabels_get
     if _newclass:activeLabels = _swig_property(_XmippData.MetaData_activeLabels_get, _XmippData.MetaData_activeLabels_set)
+    def addObject(*args): return _XmippData.MetaData_addObject(*args)
+    def read(*args): return _XmippData.MetaData_read(*args)
     NO_OBJECTS_STORED = _XmippData.MetaData_NO_OBJECTS_STORED
     NO_MORE_OBJECTS = _XmippData.MetaData_NO_MORE_OBJECTS
     def firstObject(*args): return _XmippData.MetaData_firstObject(*args)
@@ -480,7 +482,9 @@ class MetaData(_object):
     def findObjects(*args): return _XmippData.MetaData_findObjects(*args)
     def removeObjects(*args): return _XmippData.MetaData_removeObjects(*args)
     def setPath(*args): return _XmippData.MetaData_setPath(*args)
+    def setComment(*args): return _XmippData.MetaData_setComment(*args)
     def getPath(*args): return _XmippData.MetaData_getPath(*args)
+    def getComment(*args): return _XmippData.MetaData_getComment(*args)
     def angleRot(*args): return _XmippData.MetaData_angleRot(*args)
     def angleTilt(*args): return _XmippData.MetaData_angleTilt(*args)
     def anglePsi(*args): return _XmippData.MetaData_anglePsi(*args)
@@ -523,9 +527,14 @@ class MetaData(_object):
     def setFlip(*args): return _XmippData.MetaData_setFlip(*args)
     def setMaxCC(*args): return _XmippData.MetaData_setMaxCC(*args)
     def setRef(*args): return _XmippData.MetaData_setRef(*args)
+    def size(*args): return _XmippData.MetaData_size(*args)
+    def getFilename(*args): return _XmippData.MetaData_getFilename(*args)
+    def detectObjects(*args): return _XmippData.MetaData_detectObjects(*args)
+    def countObjects(*args): return _XmippData.MetaData_countObjects(*args)
 MetaData_swigregister = _XmippData.MetaData_swigregister
 MetaData_swigregister(MetaData)
 
+get_statistics = _XmippData.get_statistics
 MDL_UNDEFINED = _XmippData.MDL_UNDEFINED
 MDL_ANGLEROT = _XmippData.MDL_ANGLEROT
 MDL_ANGLETILT = _XmippData.MDL_ANGLETILT

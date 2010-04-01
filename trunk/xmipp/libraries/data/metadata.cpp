@@ -28,6 +28,7 @@
 MetaData::MetaData()
 {
 	setPath();
+	setComment();
 	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
     objectsIterator = objects.begin();
@@ -58,14 +59,15 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
         {
             isColumnFormat = false;
         }
-            
 	}
     
 	pos = line.find( "*" );
 	line.erase( 0, pos+1 );
     line = removeChar( line, ' ' );
 	setPath( line );
-		
+	getline( *infile, line, '\n');
+	setComment( line.erase(0,2));
+
     if( isColumnFormat )
     {
 	    // Get Labels line
@@ -86,7 +88,9 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
 	    // Read data and fill structures accordingly
 	    while ( getline( *infile, line, '\n') )
 	    {
-    		long int objectID = addObject( );
+		    if (line[0] == '#' || line[0] == '\0' || line[0] == ';')
+		         continue;
+	    	long int objectID = addObject( );
 		
 		    // Parse labels
 		    std::stringstream os2( line );          
@@ -100,7 +104,7 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
 		    }
 	    }
     }
-    else
+    else//RowFormat??????
     {
     }
 }
@@ -246,6 +250,7 @@ MetaData::MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector
 void MetaData::read( FileName fileName, std::vector<MetaDataLabel> * labelsVector )
 {
 	setPath( );
+	setComment();
 	objects.clear( );
 	fastStringSearchLabel = MDL_UNDEFINED;	
     isColumnFormat = true;
@@ -300,11 +305,14 @@ void MetaData::write( std::string fileName )
         outfile << "XMIPP_3 * row_format * ";
    
 	outfile << path << std::endl;
-	
+	outfile << "; ";
+	outfile << comment ;
+	outfile << std::endl ;
+
 	std::map< long int, MetaDataContainer *>::iterator It;
 	std::vector< MetaDataLabel >::iterator strIt;
 	
-	outfile << "; ";	
+	outfile << "; ";
 	for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
 	{
 		outfile << MetaDataContainer::decodeLabel(*strIt);
@@ -337,7 +345,8 @@ bool MetaData::isEmpty( )
 
 void MetaData::clear( )
 {
-	path = std::string("");
+	path.clear();
+	comment.clear();
 	objects.clear( );		
 	
 	objectsIterator = objects.end();
@@ -347,7 +356,6 @@ void MetaData::clear( )
 
 	activeLabels.clear( );
 
-	path = std::string(""); 
 }
 
 void MetaData::setPath( std::string newPath )
@@ -365,6 +373,24 @@ void MetaData::setPath( std::string newPath )
 std::string MetaData::getPath( )
 {
 	return path;
+}
+
+void MetaData::setComment( std::string newComment )
+{
+	if( newComment == "" )
+	{
+	    time_t current = time(0);
+	    comment = (std::string)  "No comment";
+	}
+	else
+	{
+		comment = newComment;
+	}
+}
+
+std::string MetaData::getComment( )
+{
+	return comment;
 }
 
 long int MetaData::addObject( )
@@ -1464,7 +1490,7 @@ long int MetaData::fastSearch( MetaDataLabel name, std::string value, bool recom
 	
 	return result;
 }
-		
+
 /* Statistics -------------------------------------------------------------- */
 void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
                              double& _max, bool apply_geo)

@@ -448,8 +448,8 @@ void Prog_tomograph_alignment::show() {
 
 void Prog_tomograph_alignment::usage() const {
    std::cerr << "tomograph_alignment\n"
-             << "   -i <selfile>                   : Input images\n"
-             << "  [-iorig <selfile>]              : Selfile with images at original scale\n"
+             << "   -i <metadatafile>                   : Input images\n"
+             << "  [-iorig <metadatafile>]              : metadatafile with images at original scale\n"
              << "  [-oroot <fn_out>]               : Output alignment\n"
              << "  [-localAffine]                  : Look for affine transformations close to I\n"
              << "  [-useCriticalPoints <n>]        : Use critical points instead of a grid\n"
@@ -644,8 +644,9 @@ void Prog_tomograph_alignment::produceSideInfo() {
 
    bestPreviousAlignment=new Alignment(this);
    // Read input data
-   SF.read(fnSel);
-   Nimg=SF.ImgNo();
+   SF.read(fnSel,NULL);
+   SF.removeObjects( MDL_ENABLED, -1 );
+   Nimg=SF.size();
    if (Nimg!=0)
    {
        // Clear the list of images if not empty
@@ -663,12 +664,13 @@ void Prog_tomograph_alignment::produceSideInfo() {
        std::cerr << "Reading input data\n";
        init_progress_bar(Nimg);
        int n=0;
-       SF.go_first_ACTIVE();
+       SF.firstObject();
        iMinTilt=-1;
        double minTilt=1000;
        bool nonZeroTilt=false;
-       while (!SF.eof()) {
-          FileName fn=SF.NextImg();
+       do
+       {
+          FileName fn=SF.image();
           if (fn=="") break;
           ImageXmipp imgaux(fn);
           if (difficult)
@@ -732,6 +734,7 @@ void Prog_tomograph_alignment::produceSideInfo() {
 
           progress_bar(n++);
        }
+       while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
        progress_bar(Nimg);
        if (!nonZeroTilt)
             REPORT_ERROR(1,"Tilt angles have not been assigned to the input selfile");
@@ -740,8 +743,10 @@ void Prog_tomograph_alignment::produceSideInfo() {
     // Read images at original scale
     if (fnSelOrig!="")
     {
-        SForig.read(fnSelOrig);
-        if (SForig.ImgNo()!=SF.ImgNo())
+        SForig.read(fnSelOrig,NULL);
+        SForig.removeObjects( MDL_ENABLED, -1 );
+
+        if (SForig.size()!=SF.size())
             REPORT_ERROR(1,"The number of images in both selfiles (-i and -iorig) is different");
     }
 
@@ -2048,13 +2053,22 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
     z0/=z0N;
     std::cout << "Average height of the landmarks at 0 degrees=" << z0
               << std::endl;
-
+//#define  METADATA
+#ifndef METADATA
     DocFile DF;
+#else
+    MetaData DF;
+#endif
+
     if (fnSelOrig!="")
-       SForig.go_first_ACTIVE();
+       SForig.firstObject();
+#ifndef METADATA
     DF.append_comment("in-plane rotation    Xshift      Yshift");
     DF.append_comment("First shift by -(Xshift,Yshift)");
     DF.append_comment("Then, rotate by in-plane rotation");
+#else
+    DF.setComment("First shift by -(shiftX,shiftY), then rotate by psi");
+#endif
     for (int i=0;i<Nimg; i++) {
          // Align the normal image
          ImageXmipp I;
@@ -2088,7 +2102,8 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
          if (fnSelOrig!="")
          {
              ImageXmipp Iorig;
-             Iorig.read(SForig.NextImg());
+             Iorig.read(SForig.image());
+             SForig.nextObject();
              mask.initZeros(Iorig());
              FOR_ALL_ELEMENTS_IN_MATRIX2D(Iorig())
                  if (Iorig(i,j)!=0) mask(i,j)=1;
@@ -2113,12 +2128,21 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
          }
 
          // Prepare data for the docfile
+#ifndef METADATA
          Matrix1D<double> params(3);
          params(0)=90-alignment.rot+alignment.psi(i);
          params(1)=XX(alignment.di[i]+alignment.diaxis[i]);
          params(2)=YY(alignment.di[i]+alignment.diaxis[i]);
+
          DF.append_comment(fn_corrected);
          DF.append_data_line(params);
+#else
+         DF.addObject();
+         DF.setImage(fn_corrected);
+         DF.setAnglePsi(90-alignment.rot+alignment.psi(i));
+         DF.setShiftX(XX(alignment.di[i]+alignment.diaxis[i]));
+         DF.setShiftY(YY(alignment.di[i]+alignment.diaxis[i]));
+#endif
     }
     DF.write(fnRoot+"_correction_parameters.txt");
 
