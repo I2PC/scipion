@@ -1154,6 +1154,17 @@ void ByteSwap(unsigned char * b, int n)
     }
 }
 
+// Bsoft function
+void swapbytes(char* v, unsigned long n)
+{
+        char            t;
+        for ( int i=0; i<n/2; i++ ) {
+                t = v[i];
+                v[i] = v[n-1-i];
+                v[n-1-i] = t;
+        }
+}
+
 /** Returns true if machine is little endian else false */
 bool IsLittleEndian(void)
 {

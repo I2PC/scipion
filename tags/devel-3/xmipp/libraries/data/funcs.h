@@ -1413,6 +1413,20 @@ size_t FWRITE(const void* src,
 
 void ByteSwap(unsigned char* b, int n);
 
+/************************************************************************
+@Function: swapbytes from bsoft
+@Description:
+        Swaps bytes.
+@Algorithm:
+        Byte swapping is done in place.
+@Arguments:
+        char* v                         a pointer to the bytes.
+        unsigned long n         the number of bytes to swap.
+@Returns:
+        void                            -.
+**************************************************************************/
+void swapbytes(char* v, unsigned long n);
+
 /** Returns 1 if machine is big endian else 0
  * @ingroup LittleBigEndian
  */
