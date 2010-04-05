@@ -11,6 +11,9 @@
 %include ../metadata_container.h
 
 /*
+==================
+First example
+==================
 python
 import XmippData
 #create metadata object
