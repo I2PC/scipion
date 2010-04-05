@@ -28,6 +28,7 @@
 
 #include "grids.h"
 #include "multidimensional_array.h"
+#include "imageover.h"
 #include <pthread.h>
 
 // Thread declaration
