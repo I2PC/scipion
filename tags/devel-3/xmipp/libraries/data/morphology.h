@@ -24,10 +24,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #ifndef _XMIPP_MORPHOLOGY_HH
-#  define _XMIPP_MORPHOLOGY_HH
+#define _XMIPP_MORPHOLOGY_HH
 
-#include "matrix2d.h"
-#include "matrix3d.h"
+#include "multidimensional_array.h"
 
 /// @defgroup MathematicalMorphology Mathematical morphology
 /// @ingroup DataLibrary
@@ -43,7 +42,7 @@
 
     Example of use:
     @code
-    Matrix2D<double> maskDilated;
+    MultidimArray<double> maskDilated;
     maskDilated.initZeros(mask);
     dilate2D(mask,maskDilated,8,0,patchSize);    
     @endcode
@@ -54,32 +53,32 @@
 //@{
 /** Dilate.
     See the group documentation for the parameter meanings */
-void dilate2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
+void dilate2D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
               int count, int size);
 /** Erode.
     See the group documentation for the parameter meanings */
-void erode2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
+void erode2D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
              int count, int size);
 /** Closing=Dilation+Erosion */
-void closing2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
+void closing2D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                int count, int size);
 /** Opening=Erosion+Dilation */
-void opening2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
+void opening2D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                int count, int size);
 /** Border of a binary image.
     The border is computed as the substraction of an image and its dilation. */
-void border(const Matrix2D<double> &img, Matrix2D<double> &border);
+void border(const MultidimArray<double> &img, MultidimArray<double> &border);
 /** Simplify border.
     The border is simplified by removing all points having more than 2
     neighbours. */
-void simplify_border(const Matrix2D<double> &border,
-                     Matrix2D<double> &simplified_border);
+void simplify_border(const MultidimArray<double> &border,
+                     MultidimArray<double> &simplified_border);
 
 /** Random Convex hull.
     This routine takes a random number (N) of triangles within the image
     and fill these triangles. The effect is like that of creating the convex
     hull of a binary image. */
-void random_convex_hull(const Matrix2D<double> &img, Matrix2D<double> &hull,
+void random_convex_hull(const MultidimArray<double> &img, MultidimArray<double> &hull,
                         long N = 100);
 //@}
 
