@@ -31,8 +31,7 @@
 
 #include <vector>
 
-#include "image.h"
-#include "volume.h"
+#include "multidimensional_array.h"
 #include "blobs.h"
 #include "projection.h"
 
