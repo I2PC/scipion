@@ -445,14 +445,16 @@ public:
     void zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) const;
 
     /// Apply CTF to an image
-    void Apply_CTF(Matrix2D < std::complex<double> > &FFTI) const;
+    void Apply_CTF(MultidimArray < std::complex<double> > &FFTI) const;
 
     /** Generate CTF image.
         The sample image is used only to take its dimensions. */
     template <class T>
-    void Generate_CTF(const Matrix2D<T> &sample_image,
-                      Matrix2D < std::complex<double> > &CTF) const
+    void Generate_CTF(const MultidimArray<T> &sample_image,
+                      MultidimArray < std::complex<double> > &CTF) const
     {
+        if ( ZSIZE(sample_image) > 1 )
+            REPORT_ERROR(1,"ERROR: Generate_CTF only works with 2D sample images, not 3D."); 
         Generate_CTF(YSIZE(sample_image), XSIZE(sample_image), CTF);
         STARTINGX(CTF) = STARTINGX(sample_image);
         STARTINGY(CTF) = STARTINGY(sample_image);
@@ -460,7 +462,7 @@ public:
 
     /// Generate CTF image.
     void Generate_CTF(int Ydim, int Xdim,
-                      Matrix2D < std::complex<double> > &CTF) const;
+                      MultidimArray < std::complex<double> > &CTF) const;
 
     /** Check physical meaning.
         true if the CTF parameters have physical meaning.

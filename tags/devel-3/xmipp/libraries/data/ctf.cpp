@@ -317,10 +317,13 @@ void XmippCTF::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) co
 #undef DEBUG
 
 /* Apply the CTF to an image ----------------------------------------------- */
-void XmippCTF::Apply_CTF(Matrix2D < std::complex<double> > &FFTI) const
+void XmippCTF::Apply_CTF(MultidimArray < std::complex<double> > &FFTI) const
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
+    if ( ZSIZE(FFTI) > 1 )
+        REPORT_ERROR(1,"ERROR: Apply_CTF only works on 2D images, not 3D."); 
+    
     FOR_ALL_ELEMENTS_IN_MATRIX2D(FFTI)
     {
         XX(idx) = j;
@@ -334,7 +337,7 @@ void XmippCTF::Apply_CTF(Matrix2D < std::complex<double> > &FFTI) const
 /* Generate CTF Image ------------------------------------------------------ */
 //#define DEBUG
 void XmippCTF::Generate_CTF(int Ydim, int Xdim,
-                            Matrix2D < std::complex<double> > &CTF) const
+                            MultidimArray < std::complex<double> > &CTF) const
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
