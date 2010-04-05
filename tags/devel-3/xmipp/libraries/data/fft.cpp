@@ -29,46 +29,85 @@
 
 /* Format conversions ------------------------------------------------------ */
 /** Convert whole -> half of (centro-symmetric) Fourier transforms 1D. -- */
-void Whole2Half(const Matrix1D<std::complex<double> > &in,
-                Matrix1D<std::complex<double> > &out)
+void Whole2Half(const MultidimArray<std::complex<double> > &in,
+                MultidimArray<std::complex<double> > &out)
 {
-    int ldim = (int)(XSIZE(in) / 2) + 1;
-    out.resize(ldim);
-    for (int j = 0; j < ldim; j++)
-	out(j) = in(j);
+    if ( ZSIZE(in)==1 && YSIZE(in)==1 )
+    {
+        // 1D
+        int ldim = (int)(XSIZE(in) / 2) + 1;
+        out.resize(ldim);
+        for (int j = 0; j < ldim; j++)
+            out(j) = in(j);
+    }
+    else if ( ZSIZE(in)==1 )
+    {
+        // 2D
+        // This assumes squared images...
+        int ldim = (int)(YSIZE(in) / 2) + 1;
+        
+        out.initZeros(ldim, XSIZE(in));
+        // Fill first column only half
+        for (int j = 0; j < ldim; j++)
+            dMij(out, 0, j) = dMij(in, 0, j);
+        // Fill rest
+        for (int i = 1; i < ldim; i++)
+            for (int j = 0; j < XSIZE(in); j++)
+                dMij(out, i, j) = dMij(in, i, j);
+    }
+    else
+        REPORT_ERROR(1,"ERROR: Whole2Half only implemented for 1D and 2D multidimArrays");
+
 }
 
 /** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
-void Half2Whole(const Matrix1D<std::complex<double> > &in, 
-		Matrix1D<std::complex<double> > &out, int orixdim)
+void Half2Whole(const MultidimArray<std::complex<double> > &in, 
+		MultidimArray<std::complex<double> > &out, int oridim)
 {
-    out.resize(orixdim);
-    for (int j = 0; j < XSIZE(in); j++)
-	out(j) = in(j);
-    for (int j = XSIZE(in); j < orixdim; j++)
-	out(j) = conj(in(orixdim - j));
+    if ( ZSIZE(in)==1 && YSIZE(in)==1 )
+    {
+        // 1D
+        out.resize(oridim);
+        for (int j = 0; j < XSIZE(in); j++)
+            out(j) = in(j);
+        for (int j = XSIZE(in); j < oridim; j++)
+	out(j) = conj(in(oridim - j));
+    }
+    else if ( ZSIZE(in)==1 )
+    {
+        // 2D
+        out.resize(oridim, XSIZE(in));
+
+        // Old part
+        for (int i = 0; i < YSIZE(in); i++)
+            for (int j = 0; j < XSIZE(in); j++)
+                dMij(out, i, j) = dMij(in, i, j);
+
+        // Complete first column of old part
+        for (int j = YSIZE(in); j < XSIZE(in); j++)
+            dMij(out, 0, j) = conj(dMij(in, 0, XSIZE(in) - j));
+
+        // New part
+        for (int i = YSIZE(in); i < oridim; i++)
+        {
+            dMij(out, i, 0) = conj(dMij(in, oridim - i, 0));
+            for (int j = 1; j < XSIZE(in); j++)
+                dMij(out, i, j) = conj(dMij(in, oridim - i, XSIZE(in) - j));
+        }
+    }
 }
 
 /** Convert whole -> half of (centro-symmetric) Fourier transforms 2D. -- */
-void Whole2Half(const Matrix2D<std::complex<double> > &in,
-                Matrix2D<std::complex<double> > &out)
+void Whole2Half(const MultidimArray<std::complex<double> > &in,
+                MultidimArray<std::complex<double> > &out)
 {
-    // This assumes squared images...
-    int ldim = (int)(YSIZE(in) / 2) + 1;
-
-    out.initZeros(ldim, XSIZE(in));
-    // Fill first column only half
-    for (int j = 0; j < ldim; j++)
-        dMij(out, 0, j) = dMij(in, 0, j);
-    // Fill rest
-    for (int i = 1; i < ldim; i++)
-        for (int j = 0; j < XSIZE(in); j++)
-            dMij(out, i, j) = dMij(in, i, j);
 }
 
 /** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
-void Half2Whole(const Matrix2D<std::complex<double> > &in, Matrix2D<std::complex<double> > &out, int oriydim)
+void Half2Whole(const MultidimArray<std::complex<double> > &in, 
+                MultidimArray<std::complex<double> > &out, int oriydim)
 {
+
     out.resize(oriydim, XSIZE(in));
 
     // Old part
@@ -90,20 +129,9 @@ void Half2Whole(const Matrix2D<std::complex<double> > &in, Matrix2D<std::complex
 }
 
 /** Convert complex -> real,imag Fourier transforms 2D. -- */
-void Complex2RealImag(const Matrix2D< std::complex< double > > & in,
-                      Matrix2D< double > & real,
-                      Matrix2D< double > & imag)
-{
-    real.resize(in);
-    imag.resize(in);
-    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(real),
-        MULTIDIM_ARRAY(imag), MULTIDIM_SIZE(in));
-}
-
-/** Convert complex -> real,imag Fourier transforms 3D. -- */
-void Complex2RealImag(const Matrix3D< std::complex< double > > & in,
-                      Matrix3D< double > & real,
-                      Matrix3D< double > & imag)
+void Complex2RealImag(const MultidimArray< std::complex< double > > & in,
+                      MultidimArray< double > & real,
+                      MultidimArray< double > & imag)
 {
     real.resize(in);
     imag.resize(in);
@@ -112,9 +140,9 @@ void Complex2RealImag(const Matrix3D< std::complex< double > > & in,
 }
 
 /** Convert real,imag -> complex Fourier transforms 3D. -- */
-void RealImag2Complex(const Matrix3D< double > & real,
-                      const Matrix3D< double > & imag,
-                      Matrix3D< std::complex< double > > & out)
+void RealImag2Complex(const MultidimArray< double > & real,
+                      const MultidimArray< double > & imag,
+                      MultidimArray< std::complex< double > > & out)
 {
     out.resize(real);
     RealImag2Complex(MULTIDIM_ARRAY(real), MULTIDIM_ARRAY(imag),
@@ -122,61 +150,67 @@ void RealImag2Complex(const Matrix3D< double > & real,
 }
 
 /** Direct Fourier Transform 1D ------------------------------------------- */
-void FourierTransform(const Matrix1D<double> &in,
-                      Matrix1D< std::complex<double> > &out)
+void FourierTransform(const MultidimArray<double> &in,
+                      MultidimArray< std::complex<double> > &out)
 {
-    int N = XSIZE(in);
-    Matrix1D<double> re(in), tmp(N), im(N), cas(N);
-    out.resize(N);
+    
+    if ( ZSIZE(in)==1 && YSIZE(in)==1 )
+    {
+        // 1D
+        int N = XSIZE(in);
+        Matrix1D<double> re(in), tmp(N), im(N), cas(N);
+        out.resize(N);
 
-    GetCaS(MULTIDIM_ARRAY(cas), N);
-    DftRealToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-                           MULTIDIM_ARRAY(tmp), MULTIDIM_ARRAY(cas), N);
-    RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-                     MULTIDIM_ARRAY(out), N);
+        GetCaS(MULTIDIM_ARRAY(cas), N);
+        DftRealToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
+                               MULTIDIM_ARRAY(tmp), MULTIDIM_ARRAY(cas), N);
+        RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
+                         MULTIDIM_ARRAY(out), N);
+    }
+    else
+    {
+        // 2D and 3D
+        int Status;
+        MultidimArray<double> re(in), im;
+        im.resize(in);
+        out.resize(in);
+        VolumeDftRealToRealImaginary(MULTIDIM_ARRAY(re),
+                                     MULTIDIM_ARRAY(im), XSIZE(in), YSIZE(in), ZSIZE(in), &Status);
+        RealImag2Complex(re,im,out);
+    }
+
 }
 
-/** Direct Fourier Transform 2D. ------------------------------------------ */
-void FourierTransform(const Matrix2D<double> &in,
-                      Matrix2D< std::complex<double> > &out)
-{
-    int Status;
-    Matrix2D<double> re(in), im;
-    im.resize(in);
-    out.resize(in);
-    VolumeDftRealToRealImaginary(MULTIDIM_ARRAY(re),
-                                 MULTIDIM_ARRAY(im), XSIZE(in), YSIZE(in), 1, &Status);
-    RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-                     MULTIDIM_ARRAY(out), XSIZE(in)*YSIZE(in));
-}
-
-/** Direct Fourier Transform 3D. ------------------------------------------ */
-void FourierTransform(const Matrix3D<double> &in,
-                      Matrix3D< std::complex<double> > &out)
-{
-    int Status;
-    Matrix3D<double> re(in), im;
-    im.resize(in);
-    out.resize(in);
-    VolumeDftRealToRealImaginary(MULTIDIM_ARRAY(re),
-                                 MULTIDIM_ARRAY(im),
-                                 XSIZE(in), YSIZE(in), ZSIZE(in), &Status);
-    RealImag2Complex(re,im,out);
-}
 
 /** Inverse Fourier Transform 1D. ----------------------------------------- */
-void InverseFourierTransform(const Matrix1D< std::complex<double> > &in,
-                             Matrix1D<double> &out)
+void InverseFourierTransform(const MultidimArray< std::complex<double> > &in,
+                             MultidimArray<double> &out)
 {
-    int N = XSIZE(in);
-    Matrix1D<double> tmp(N), im(N), cas(N);
-    out.resize(N);
+    if ( ZSIZE(in)==1 && YSIZE(in)==1 )
+    {
+        // 1D
+        int N = XSIZE(in);
+        MultidimArray<double> tmp(N), im(N), cas(N);
+        out.resize(N);
 
-    GetCaS(MULTIDIM_ARRAY(cas), N);
-    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(out),
-                     MULTIDIM_ARRAY(im), N);
-    InvDftRealImaginaryToReal(MULTIDIM_ARRAY(out), MULTIDIM_ARRAY(im),
-                              MULTIDIM_ARRAY(tmp), MULTIDIM_ARRAY(cas), N);
+        GetCaS(MULTIDIM_ARRAY(cas), N);
+        Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(out),
+                         MULTIDIM_ARRAY(im), N);
+        InvDftRealImaginaryToReal(MULTIDIM_ARRAY(out), MULTIDIM_ARRAY(im),
+                                  MULTIDIM_ARRAY(tmp), MULTIDIM_ARRAY(cas), N);
+    }
+    else
+    {
+        // 2D and 3D
+        int Status;
+        MultidimArray<double> im;
+        out.resize(in);
+        im.resize(in);
+        Complex2RealImag(in, out, im);
+        VolumeInvDftRealImaginaryToReal(MULTIDIM_ARRAY(out),
+                                        MULTIDIM_ARRAY(im),
+                                        XSIZE(in), YSIZE(in), ZSIZE(in), &Status);
+    }
 }
 
 /** Inverse Fourier Transform 2D. ----------------------------------------- */
@@ -372,51 +406,56 @@ void ShiftFFT(Matrix3D< std::complex< double > > & v,
 }
 
 /* Position origin at center ----------------------------------------------- */
-void CenterOriginFFT(Matrix1D< std::complex< double > > & v, bool forward)
+void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward)
 {
-    double xshift = -(double)(int)(XSIZE(v) / 2);
-    if (forward)
+    if ( ZSIZE(in)==1 && YSIZE(in)==1 )
     {
-        ShiftFFT(v, xshift);
-        CenterFFT(v, forward);
+        // 1D
+        double xshift = -(double)(int)(XSIZE(v) / 2);
+        if (forward)
+        {
+            ShiftFFT(v, xshift);
+            CenterFFT(v, forward);
+        }
+        else
+        {
+            CenterFFT(v, forward);
+            ShiftFFT(v, -xshift);
+        }
+    }
+    else if (ZSIZE(in)==1 )
+    {
+        // 2D
+        
+        double xshift = -(double)(int)(XSIZE(v) / 2);
+        double yshift = -(double)(int)(YSIZE(v) / 2);
+        if (forward)
+        {
+            ShiftFFT(v, xshift, yshift);
+            CenterFFT(v, forward);
+        }
+        else
+        {
+            CenterFFT(v, forward);
+            ShiftFFT(v, -xshift, -yshift);
+        }
     }
     else
-    {
-        CenterFFT(v, forward);
-        ShiftFFT(v, -xshift);
-    }
-}
-
-void CenterOriginFFT(Matrix2D< std::complex< double > > & v, bool forward)
-{
-    double xshift = -(double)(int)(XSIZE(v) / 2);
-    double yshift = -(double)(int)(YSIZE(v) / 2);
-    if (forward)
-    {
-        ShiftFFT(v, xshift, yshift);
-        CenterFFT(v, forward);
-    }
-    else
-    {
-        CenterFFT(v, forward);
-        ShiftFFT(v, -xshift, -yshift);
-    }
-}
-
-void CenterOriginFFT(Matrix3D< std::complex< double > > & v, bool forward)
-{
-    double xshift = -(double)(int)(XSIZE(v) / 2);
-    double yshift = -(double)(int)(YSIZE(v) / 2);
-    double zshift = -(double)(int)(ZSIZE(v) / 2);
-    if (forward)
-    {
-        ShiftFFT(v, xshift, yshift, zshift);
-        CenterFFT(v, forward);
-    }
-    else
-    {
-        CenterFFT(v, forward);
-        ShiftFFT(v, -xshift, -yshift, -zshift);
+    { 
+        // 3D
+        double xshift = -(double)(int)(XSIZE(v) / 2);
+        double yshift = -(double)(int)(YSIZE(v) / 2);
+        double zshift = -(double)(int)(ZSIZE(v) / 2);
+        if (forward)
+        {
+            ShiftFFT(v, xshift, yshift, zshift);
+            CenterFFT(v, forward);
+        }
+        else
+        {
+            CenterFFT(v, forward);
+            ShiftFFT(v, -xshift, -yshift, -zshift);
+        }
     }
 }
 
