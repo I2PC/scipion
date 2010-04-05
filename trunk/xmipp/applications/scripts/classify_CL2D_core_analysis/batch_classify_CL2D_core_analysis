@@ -1,0 +1,354 @@
+#!/usr/bin/env python
+import glob
+import os
+import sys
+from operator import itemgetter
+from threading import Thread
+
+# --------------------------------------------------------------------
+def readSelfile(fnSel):
+    fh=open(fnSel,'r')
+    lines=fh.readlines()
+    selFile=set()
+    for line in lines:
+        args=line.split()
+        if (len(args)>1):
+            if args[0]=="#":
+                 continue
+            if args[0]==";":
+                 continue
+            selFile.add(args[0])
+    fh.close()
+    return selFile
+
+def writeSelfile(selfile,fnSel):
+    fh=open(fnSel,'w')
+    for img in selfile:
+        fh.write(img+" 1\n")
+    fh.close()
+
+# --------------------------------------------------------------------
+def readClassF1(fnRoot,nclass,level):
+    return readSelfile(fnRoot+"_level_"+'%02d'%level+"_"+'%06d'%nclass+"_F1.sel")
+
+def readClassF12(fnRoot,nclass,level):
+    return readSelfile(fnRoot+"_level_"+'%02d'%level+"_"+'%06d'%nclass+"_F12.sel")
+
+# --------------------------------------------------------------------
+class sortJunkThread(Thread):
+    def __init__(self,Nthreads,myId,fnRoot,classFiles):
+        Thread.__init__(self)
+        self.Nthreads=Nthreads
+        self.myId=myId
+        self.fnRoot=fnRoot
+        self.classFiles=classFiles
+        self.Zscore={}
+        self.Nscore={}
+    
+    def run(self):
+        if (self.myId==0):
+            print "   Sorting junk (%): ",
+        lastShown=-1
+        idx=1
+        for className in self.classFiles:
+            if (idx % self.Nthreads)==self.myId:
+                if (self.myId==0):
+                    toShow=int(100*float(idx)/len(self.classFiles))
+                    if toShow>lastShown:
+                        print str(toShow)+" ",
+                        lastShown=toShow
+                sys.stdout.flush()
+                fnClass=className[0:className.rfind('.sel')]
+                os.system("xmipp_selfile_compare -i1 "+\
+                    fnRoot+"_F1_good.sel -i2 "+fnClass+\
+                    ".sel -method both -o "+fnClass+"_F1.sel")
+                os.system("xmipp_analyze_cluster -i "+fnClass+"_F1.sel -ref "+\
+                    fnClass+".xmp -dontMask >& /dev/null")
+                fh=open(fnClass+"_F1_score.txt");
+                lines=fh.readlines()
+                for line in lines:
+                    args=line.split()
+                    if args[0] in self.Zscore:
+                        self.Zscore[args[0]]=self.Zscore[args[0]]+float(args[1])
+                        self.Nscore[args[0]]=self.Nscore[args[0]]+1
+                    else:
+                        self.Zscore[args[0]]=float(args[1])
+                        self.Nscore[args[0]]=1
+                fh.close()
+                os.system("rm -f "+fnClass+"_F1_pca* "+fnClass+"_F1_outliers.sel "+\
+                    fnClass+"_F1_score.txt")
+            idx=idx+1
+        if (self.myId==0):
+            print
+
+def sortJunk(Nthreads,fnRoot,classFiles,thZscore):
+    print "Sorting junk ----------------------------------------------"
+    # Sort obvious junk
+    os.system("cat "+fnRoot+"_level_00_??????.sel > "+fnRoot+"_all.sel")
+    os.system("xmipp_sort_by_statistics -i "+fnRoot+"_all.sel -o "+\
+        fnRoot+"_F1 -zcut "+str(thZscore))
+    os.system("mv -f "+fnRoot+"_F1.sel "+fnRoot+"_F1_sorted.sel")
+
+    # Sort junk according to clusters
+    threadList=[]
+    # Launch threads
+    for i in range(0,Nthreads):
+        currentThread=sortJunkThread(Nthreads,i,fnRoot,classFiles)
+        threadList.append(currentThread)
+        currentThread.start()
+
+    # Pickup results
+    Zscore={}
+    Nscore={}
+    for thread in threadList:
+        thread.join()
+        for image in thread.Zscore:
+            if image in Zscore:
+                Zscore[image]=Zscore[image]+thread.Zscore[image]
+                Nscore[image]=Nscore[image]+thread.Nscore[image]
+            else:
+                Zscore[image]=thread.Zscore[image]
+                Nscore[image]=thread.Nscore[image]
+    
+    # Compute average Zscore
+    for image in Zscore:
+        Zscore[image]=Zscore[image]/Nscore[image]
+
+    # Sort by Zscore
+    ZscoreSorted=sorted(Zscore.items(), key=itemgetter(1))
+    fhSortedSel=open(fnRoot+"_F12_sorted.sel",'w')
+    fhSortedScore=open(fnRoot+"_F12_sorted_score.txt",'w')
+    badImages=set()
+    for score in ZscoreSorted:
+        fhSortedSel.write(score[0]+" 1\n")
+        fhSortedScore.write(score[0]+" "+str(score[1])+"\n")
+        if score[1]>thZscore:
+            badImages.add(score[0])
+    fhSortedSel.close()
+    fhSortedScore.close()
+    
+    # Filter classes
+    for className in classFiles:
+        fnClass=className[0:className.rfind('.sel')]
+        thisClass=readSelfile(fnClass+"_F1.sel")
+        thisClass=thisClass-badImages
+        writeSelfile(thisClass,fnClass+"_F12.sel")
+
+# --------------------------------------------------------------------
+class buildCoreThread(Thread):
+    def __init__(self,Nthreads,myId,fnRoot,level,Nclasses,\
+        thGoodClass):
+        Thread.__init__(self)
+        self.Nthreads=Nthreads
+        self.myId=myId
+        self.fnRoot=fnRoot
+        self.level=level
+        self.Nclasses=Nclasses
+        self.thGoodClass=thGoodClass
+        self.totalSum=0
+        self.goodSum=0
+        self.classSum=0
+
+    def run(self):
+        for nclass in range(0,self.Nclasses):
+            if ((nclass+1) % self.Nthreads)==self.myId:
+                # Read the selfile for this class and level
+                thisClass=readClassF12(self.fnRoot,nclass,self.level)
+                self.totalSum=self.totalSum+len(thisClass)
+                coocurrence={}
+
+                # For all previous levels
+                for levelp in range(0,self.level):
+                    # Get the number of classes in that level
+                    Nclasses=len(glob.glob(self.fnRoot+"_level_"+'%02d'%levelp+"_??????.xmp"));
+                    for nclassp in range(0,Nclasses):
+                        otherClass=readClassF12(self.fnRoot,nclassp,levelp)
+                        commonImages=thisClass & otherClass
+                        if (len(commonImages)>1):
+                            for img1 in commonImages:
+                                for img2 in commonImages:
+                                    if not img1<img2:
+                                        key=(img1,img2)
+                                        if key in coocurrence:
+                                            coocurrence[key]=coocurrence[key]+1
+                                        else:
+                                            coocurrence[key]=1
+
+                # Analyze coocurrence
+                core=set()
+                if len(coocurrence)>0:
+                    for key in coocurrence:
+                        if coocurrence[key]==self.level:
+                            core.add(key[0])
+                            core.add(key[1])
+                if (float(len(core))/len(thisClass))>self.thGoodClass:
+                    fnSel=self.fnRoot+"_level_"+'%02d'%self.level+"_"+\
+                        '%06d'%nclass+"_F123.sel";
+                    writeSelfile(core,fnSel)
+                    self.goodSum=self.goodSum+len(core)
+                    self.classSum=self.classSum+1
+
+def computeCores(Nthreads,fnRoot,Nlevels):
+    print "Computing cores -------------------------------------------"
+    for level in range(1,Nlevels):
+        # Get the number of classes in that level
+        Nclasses=len(glob.glob(fnRoot+"_level_"+'%02d'%level+"_??????.xmp"));
+        print "Analyzing "+str(Nclasses)+" classes at level "+str(level)
+        threadList=[]
+        for i in range(0,Nthreads):
+            currentThread=buildCoreThread(Nthreads,i,
+                fnRoot,level,Nclasses,thGoodClass)
+            threadList.append(currentThread)
+            currentThread.start()
+
+        totalSum=0
+        goodSum=0
+        classSum=0
+        for thread in threadList:
+            thread.join()
+            totalSum=totalSum+thread.totalSum
+            goodSum=goodSum+thread.goodSum
+            classSum=classSum+thread.classSum
+
+        print "   "+str(goodSum)+" out of "+str(totalSum)+\
+            " images are in "+str(classSum)+" good classes"
+
+# --------------------------------------------------------------------
+class purifyCoresThread(Thread):
+    def __init__(self,Nthreads,myId,coreFiles,Zscore):
+        Thread.__init__(self)
+        self.Nthreads=Nthreads
+        self.myId=myId
+        self.coreFiles=coreFiles
+        self.Zscore=Zscore
+    
+    def run(self):
+        idx=1
+        lastShown=-1
+        if (self.myId==0):
+            print "   Purifying (%): ",
+        for image in self.coreFiles:
+            if (idx % self.Nthreads)==self.myId:
+                if (self.myId==0):
+                    toShow=int(100*float(idx)/len(self.coreFiles))
+                    if toShow>lastShown:
+                        print str(toShow)+" ",
+                        lastShown=toShow
+                sys.stdout.flush()
+                fnClass=image[0:image.rfind('_F123.sel')]
+                os.system("xmipp_sort_by_statistics -i "+fnClass+\
+                    "_F123.sel -o "+\
+                    fnClass+"_F1234 -zcut "+str(self.Zscore)+\
+                    " >& /dev/null")
+                os.system("mv -f "+fnClass+"_F1234_good.sel "+fnClass+"_F12345.sel")
+                os.system("xmipp_analyze_cluster -i "+fnClass+\
+                    "_F12345.sel -ref "+\
+                    fnClass+".xmp -maxDist "+str(self.Zscore)+" -dontMask >& /dev/null")
+            idx=idx+1
+        if (self.myId==0):
+            print
+
+def purifyCores(Nthreads,coreFiles,Zscore):
+    print "Purifying cores -------------------------------------------"
+    threadList=[]
+    # Launch threads
+    for i in range(0,Nthreads):
+        currentThread=purifyCoresThread(Nthreads,i,coreFiles,Zscore)
+        threadList.append(currentThread)
+        currentThread.start()
+
+    # Wait for all threads
+    for thread in threadList:
+        thread.join()
+
+# --------------------------------------------------------------------
+def fileLength(fname):
+    return len(open(fname).readlines())
+
+def summary(fnRoot,Nlevels):
+    print "Summary ---------------------------------------------------"
+    for level in range(1,Nlevels):
+        print "Level: "+str(level)
+        Nclasses=len(glob.glob(fnRoot+"_level_"+'%02d'%level+"_??????.xmp"));
+        totalSum=0
+        finalSum=0
+        goodClasses=0;
+        for nclass in range(0,Nclasses):
+            fnClass=fnRoot+"_level_"+'%02d'%level+"_"+'%06d'%nclass;
+            Ninitial=fileLength(fnClass+".sel")
+            Nfinal=0
+            if os.path.exists(fnClass+"_F12345_pca.sel"):
+                Nfinal=fileLength(fnClass+"_F12345_pca.sel")
+                goodClasses=goodClasses+1
+            print "     Class: "+str(nclass)+" from "+str(Ninitial)+\
+                " to "+str(Nfinal)
+            totalSum=totalSum+Ninitial
+            finalSum=finalSum+Nfinal
+        print "     There are "+str(goodClasses)+" good classes at this level"
+        print "     The number of images represented has shrinked from "+\
+            str(totalSum)+" to "+str(finalSum)
+
+# --------------------------------------------------------------------
+def sortImages(fnRoot,Nlevels):
+    print "Sorting images --------------------------------------------"
+    for level in range(1,Nlevels):
+        print "Level: "+str(level)
+        fnLevel=fnRoot+"_level_"+'%02d'%level
+        os.system('xmipp_selfile_create "'+fnLevel+'_??????_F12345_pca.xmp" > '+\
+            fnLevel+"_F12345_pca.sel");
+        os.system('xmipp_sort_images -i '+fnLevel+\
+            "_F12345_pca.sel -oroot "+fnLevel+"_F12345_pca_sorted -processSelfiles");
+
+# --------------------------------------------------------------------
+if __name__ == "__main__":
+
+    if not sys.argv[1:]:
+        print "Usage: xmipp_classify_CL2D_core_analysis <rootname> <thGoodClass=50%> <thJunkZscore=2.5> <thPCAZscore=1.5> <thr=1>"
+        sys.exit()
+    args = sys.argv[1:]
+    fnRoot=args[0]
+    if len(args)>=2:
+        thGoodClass=float(args[1])
+    else:
+        thGoodClass=50.0
+    thGoodClass=thGoodClass/100
+
+    if len(args)>=3:
+        thJunkZscore=float(args[2])
+    else:
+        thJunkZscore=2
+
+    if len(args)>=4:
+        thPCAZscore=float(args[3])
+    else:
+        thPCAZscore=1.5
+
+    if len(args)>=5:
+        Nthreads=int(args[4])
+    else:
+        Nthreads=50.0
+
+    # Separate the root into directory and label    
+    idx=fnRoot.rfind('/')
+    fnDir=fnRoot[0:idx]
+    fnLabel=fnRoot[idx+1:len(fnRoot)]
+
+    # Check which are the different existing levels
+    Nlevels=len(glob.glob(fnRoot+"_level_??_.sel"));
+
+    # Build the sort junk
+    classFiles=sorted(glob.glob(fnRoot+"_level_??_??????.sel"));
+    sortJunk(Nthreads,fnRoot,classFiles,thJunkZscore);
+
+    # Compute the core of each level
+    computeCores(Nthreads,fnRoot,Nlevels);
+    
+    # Purify cores
+    coreFiles=sorted(glob.glob(fnRoot+"_level_??_??????_F123.sel"));
+    purifyCores(Nthreads,coreFiles,thPCAZscore)
+    
+    # Sort images
+    sortImages(fnRoot,Nlevels)
+
+    # Summary
+    summary(fnRoot,Nlevels)
