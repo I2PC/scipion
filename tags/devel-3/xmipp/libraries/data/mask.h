@@ -26,14 +26,14 @@
 #ifndef MASK_H
 #define MASK_H
 
+#include "multidimensional_array.h"
 #include "matrix2d.h"
-#include "matrix3d.h"
 #include "histogram.h"
 #include "blobs.h"
 
-void apply_geo_binary_2D_mask(Matrix2D< int > &mask,
+void apply_geo_binary_2D_mask(MultidimArray< int > &mask,
                               const Matrix2D< double >& A);
-void apply_geo_cont_2D_mask(Matrix2D< double >& mask,
+void apply_geo_cont_2D_mask(MultidimArray< double >& mask,
                             const Matrix2D< double >& A);
 
 /// @defgroup Masks Masks
@@ -336,7 +336,7 @@ void BinaryWedgeMask(MultidimArray< double >& mask, double theta0, double thetaF
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask3D_6neig(Matrix3D< int >& mask, int value = 1, int center = NO_ACTIVATE);
+void mask3D_6neig(MultidimArray< int >& mask, int value = 1, int center = NO_ACTIVATE);
 
 /** Creates a 3x3x3 mask with value1 (1 by default) for those 6-neighbors and
  * value2 for the 18 neighbors of the central point (0 otherwise).
@@ -344,7 +344,7 @@ void mask3D_6neig(Matrix3D< int >& mask, int value = 1, int center = NO_ACTIVATE
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask3D_18neig(Matrix3D< int >& mask, int value1 = 1, int value2 = 1,
+void mask3D_18neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
                    int center = NO_ACTIVATE);
 
 /** Creates a 3x3x3 mask with value1 (1 by default) for those 6-neighbors,
@@ -354,7 +354,7 @@ void mask3D_18neig(Matrix3D< int >& mask, int value1 = 1, int value2 = 1,
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask3D_26neig(Matrix3D< int >& mask, int value1 = 1, int value2 = 1,
+void mask3D_26neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
                    int value3 = 1, int center = NO_ACTIVATE);
 
 /** Parameters for a general Mask.
@@ -627,7 +627,7 @@ public:
     void generate_mask(int Zdim, int Ydim, int Xdim)
     {
         resize(Zdim, Ydim, Xdim);
-        generate_mask(apply_geo);
+        generate_mask();
     }
 
     /** Generate mask for an empty signal
@@ -655,167 +655,33 @@ public:
         generate_mask(apply_geo);
     }
 
-    /** Apply mask to signal
-     * subs_val is the substitute value in case of binary masks
-     */
-    template<typename T>
-    void apply_mask(const Matrix1D< T >& I, Matrix1D< T >& result,
-                    T subs_val = 0)
-    {
-        switch (datatype())
-        {
-        case INT_MASK:
-            apply_binary_mask(imask1D, I, result, subs_val);
-            break;
-
-        case DOUBLE_MASK:
-            apply_cont_mask(dmask1D, I, result);
-            break;
-        }
-    }
-
     /** Apply mask to image
      * subs_val is the substitute value in case of binary masks
      */
     template<typename T>
-    void apply_mask(const Matrix2D< T >& I, Matrix2D< T >& result,
+    void apply_mask(const MultidimArray< T >& I, MultidimArray< T >& result,
                     T subs_val = 0, const bool& apply_geo = false)
     {
         switch (datatype())
         {
         case INT_MASK:
             if (apply_geo)
-                apply_geo_binary_2D_mask(imask2D, mask_geo);
+                apply_geo_binary_2D_mask(imask, mask_geo);
 
-            apply_binary_mask(imask2D, I, result, subs_val);
+            apply_binary_mask(imask, I, result, subs_val);
             break;
 
         case DOUBLE_MASK:
             if (apply_geo)
-                apply_geo_cont_2D_mask(dmask2D, mask_geo);
+                apply_geo_cont_2D_mask(dmask, mask_geo);
 
-            apply_cont_mask(dmask2D, I, result);
+            apply_cont_mask(dmask, I, result);
             break;
         }
     }
 
-    /** Apply mask to volume
-     * subs_val is the substitute value in case of binary masks
-     */
-    template<typename T>
-    void apply_mask(const Matrix3D< T >& I, Matrix3D< T >& result, T subs_val = 0)
-    {
-        switch (datatype())
-        {
-        case INT_MASK:
-            apply_binary_mask(imask3D, I, result, subs_val);
-            break;
 
-        case DOUBLE_MASK:
-            apply_cont_mask(dmask3D, I, result);
-            break;
-        }
-    }
-
-    /** Produce vector from signal
-     *
-     * This function returns a 1D vector with all those points for which the
-     * mask was greater than 0. If the output vector is of size 0, then it is
-     * resized to the right size. Otherwise, it is assumed that it has already
-     * the right size. The input vector is assumed to be of the same size as the
-     * existing mask.
-     */
-    template<typename T>
-    void produce_vector(const Matrix1D< T >& I, Matrix1D< T >& result)
-    {
-        // Resize the output vector
-        if (XSIZE(result) == 0)
-        {
-            int size = 0;
-            switch (datatype())
-            {
-            case INT_MASK:
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(imask1D)
-                if (DIRECT_VEC_ELEM(imask1D, i) > 0)
-                    size++;
-                break;
-
-            case DOUBLE_MASK:
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(dmask1D)
-                if (DIRECT_VEC_ELEM(dmask1D, i) > 0)
-                    size++;
-                break;
-            }
-            result.initZeros(size);
-        }
-
-        int p = 0;
-        switch (datatype())
-        {
-        case INT_MASK:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(imask1D)
-            if (DIRECT_VEC_ELEM(imask1D, i) > 0)
-                DIRECT_VEC_ELEM(result, p++) = DIRECT_VEC_ELEM(I, i);
-            break;
-
-        case DOUBLE_MASK:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(dmask1D)
-            if (DIRECT_VEC_ELEM(dmask1D, i) > 0)
-                DIRECT_VEC_ELEM(result, p++) = DIRECT_VEC_ELEM(I, i);
-            break;
-        }
-    }
-
-    /** Produce vector from image
-     *
-     * This function returns a 1D vector with all those pixels for which the
-     * mask was greater than 0. If the output vector is of size 0, then it is
-     * resized to the right size. Otherwise, it is assumed that it has already
-     * the right size. The input image is assumed to be of the same size as the
-     * existing mask.
-     */
-    template<typename T>
-    void produce_vector(const Matrix2D< T >& I, Matrix1D< T >& result)
-    {
-        // Resize the output vector
-        if (XSIZE(result) == 0)
-        {
-            int size = 0;
-            switch (datatype())
-            {
-            case INT_MASK:
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imask2D)
-                if (DIRECT_MAT_ELEM(imask2D, i, j) > 0)
-                    size++;
-                break;
-
-            case DOUBLE_MASK:
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(dmask2D)
-                if (DIRECT_MAT_ELEM(dmask2D, i, j) > 0)
-                    size++;
-                break;
-            }
-            result.initZeros(size);
-        }
-
-        int p = 0;
-        switch (datatype())
-        {
-        case INT_MASK:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imask2D)
-            if (DIRECT_MAT_ELEM(imask2D, i, j) > 0)
-                DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
-            break;
-
-        case DOUBLE_MASK:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(dmask2D)
-            if (DIRECT_MAT_ELEM(dmask2D, i, j) > 0)
-                DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
-            break;
-        }
-    }
-
-    /** Produce vector from volume
+    /** Produce vector from MultidimArray
      *
      * This function returns a 1D vector with all those voxels for which the
      * mask was greater than 0. If the output vector is of size 0, then it is
@@ -824,7 +690,7 @@ public:
      * existing mask.
      */
     template<typename T>
-    void produce_vector(const Matrix3D< T >& I, Matrix1D< T >& result)
+    void produce_vector(const MultidimArray< T >& I, MultidimArray< T >& result)
     {
         // Resize the output vector
         if (XSIZE(result) == 0)
@@ -833,14 +699,14 @@ public:
             switch (datatype())
             {
             case INT_MASK:
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask3D)
-                if (DIRECT_MAT_ELEM(imask3D, i, j) > 0)
+                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask)
+                if (DIRECT_MAT_ELEM(imask, i, j) > 0)
                     size++;
                 break;
 
             case DOUBLE_MASK:
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask3D)
-                if (DIRECT_MAT_ELEM(dmask3D, i, j) > 0)
+                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask)
+                if (DIRECT_MAT_ELEM(dmask, i, j) > 0)
                     size++;
                 break;
             }
@@ -851,44 +717,44 @@ public:
         switch (datatype())
         {
         case INT_MASK:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask3D)
-            if (DIRECT_MAT_ELEM(imask3D, i, j) > 0)
-                DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask)
+            if (DIRECT_MAT_ELEM(imask, i, j) > 0)
+                DIRECT_VEC_ELEM(result, p++) = DIRECT_VOL_ELEM(I, k, i, j);
             break;
         case DOUBLE_MASK:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask3D)
-            if (DIRECT_MAT_ELEM(dmask3D, i, j) > 0)
-                DIRECT_VEC_ELEM(result, p++) = DIRECT_MAT_ELEM(I, i, j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask)
+            if (DIRECT_MAT_ELEM(dmask, i, j) > 0)
+                DIRECT_VEC_ELEM(result, p++) = DIRECT_VOL_ELEM(I, k, i, j);
             break;
         }
     }
 
-    /** Get binary 1D mask
+    /** Get binary mask
      */
-    Matrix1D< int >& get_binary_mask1D()
+    MultidimArray< int >& get_binary_mask()
     {
-        return imask1D;
+        return imask;
     }
 
-    /** Set binary 1D mask
+    /** Set binary mask
      */
-    void set_binary_mask1D(Matrix1D< int >& _imask1D)
+    void set_binary_mask(MultidimArray< int >& _imask)
     {
-        imask1D = _imask1D;
+        imask = _imask;
     }
 
-    /** Get continuous 1D mask
+    /** Get continuous mask
      */
-    Matrix1D< double >& get_cont_mask1D()
+    MultidimArray< double >& get_cont_mask()
     {
-        return dmask1D;
+        return dmask;
     }
 
-    /** Set continuous 1D mask
+    /** Set continuous mask
      */
-    void set_cont_mask1D(Matrix1D< double >& _dmask1D)
+    void set_cont_mask(MultidimArray< double >& _dmask)
     {
-        dmask1D = _dmask1D;
+        dmask = _dmask;
     }
 
     /** Get binary 2D mask
@@ -896,55 +762,6 @@ public:
     Matrix2D< int >& get_binary_mask2D()
     {
         return imask2D;
-    }
-
-    /** Set binary 2D mask
-     */
-    void set_binary_mask2D(Matrix2D< int >& _imask2D)
-    {
-        imask2D = _imask2D;
-    }
-
-    /** Get continuous 2D mask
-     */
-    Matrix2D< double >& get_cont_mask2D()
-    {
-        return dmask2D;
-    }
-
-    /** Set continuous 2D mask
-     */
-    void set_cont_mask2D(Matrix2D< double >& _dmask2D)
-    {
-        dmask2D = _dmask2D;
-    }
-
-    /** Get binary 3D mask
-     */
-    Matrix3D< int >& get_binary_mask3D()
-    {
-        return imask3D;
-    }
-
-    /** Set binary 3D mask
-     */
-    void set_binary_mask3D(Matrix3D< int >& _imask3D)
-    {
-        imask3D = _imask3D;
-    }
-
-    /** Get continuous 3D mask
-     */
-    Matrix3D< double >& get_cont_mask3D()
-    {
-        return dmask3D;
-    }
-
-    /** Set continuous 3D mask
-     */
-    void set_cont_mask3D(Matrix3D< double >& _dmask3D)
-    {
-        dmask3D = _dmask3D;
     }
 
     /** Force to be continuous
@@ -955,9 +772,7 @@ public:
     {
         if (datatype() == INT_MASK)
         {
-            typeCast(imask1D, dmask1D);
-            typeCast(imask2D, dmask2D);
-            typeCast(imask3D, dmask3D);
+            typeCast(imask, dmask);
         }
     }
 
@@ -969,9 +784,7 @@ public:
     {
         if (datatype() == DOUBLE_MASK)
         {
-            typeCast(dmask1D, imask1D);
-            typeCast(dmask2D, imask2D);
-            typeCast(dmask3D, imask3D);
+            typeCast(dmask, imask);
         }
     }
 };
@@ -986,51 +799,6 @@ public:
  * remain untouched. This region where the mask is active within the overlapping
  * area will be called in this documentation: active area.
  */
-
-/** Compute statistics in the active area (2D)
- * @ingroup MasksTools
- *
- * Only the statistics for values in the overlapping between the mask and the
- * image for those the mask is not 0 are computed.
- */
-template<typename T>
-void computeStats_within_binary_mask(const Matrix2D< int >& mask,
-                                      const Matrix2D< T >& m, T& min_val,
-                                      T& max_val, double& avg, double& stddev)
-{
-    SPEED_UP_temps;
-    double sum1 = 0;
-    double sum2 = 0;
-    int N = 0;
-
-    max_val = min_val = DIRECT_MAT_ELEM(m, 0, 0);
-
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask, m)
-    {
-        if (MAT_ELEM(mask, i, j) != 0)
-        {
-            N++;
-
-            // Minimum and maximum
-            if (MAT_ELEM(m, i, j) < min_val)
-                min_val = MAT_ELEM(m, i, j);
-
-            if (MAT_ELEM(m, i, j) > max_val)
-                max_val = MAT_ELEM(m, i, j);
-
-            // cumulative sums for average and standard deviation
-            sum1 += (double) MAT_ELEM(m, i, j);
-            sum2 += ((double) MAT_ELEM(m, i, j)) * ((double) MAT_ELEM(m, i, j));
-        }
-    }
-
-    // average and standard deviation
-    avg = sum1 / (double) N;
-    if (N > 1)
-        stddev = sqrt(ABS(sum2 / N - avg * avg) * N / (N - 1));
-    else
-        stddev = 0;
-}
 
 /** Apply geometric transformation to a binary (2D) mask
  * @ingroup MasksTools
