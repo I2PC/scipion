@@ -28,7 +28,10 @@
 #include <data/args.h>
 #include <data/filters.h>
 #include <data/fftw.h>
-#include <data/docfile.h>
+//#define  METADATA
+#ifndef METADATA
+    <data/docfile.h>
+#else
 #include <data/de_solver.h>
 #include <data/morphology.h>
 #include <fstream>
@@ -2053,7 +2056,6 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
     z0/=z0N;
     std::cout << "Average height of the landmarks at 0 degrees=" << z0
               << std::endl;
-//#define  METADATA
 #ifndef METADATA
     DocFile DF;
 #else
