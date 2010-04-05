@@ -46,7 +46,7 @@ std::ostream & operator << (std::ostream &_out,
 
 // Interpolate image value -------------------------------------------------
 double Cylindrical_Wave_Decomposition::interpolate(
-    Matrix2D<double> &img, double y, double x)
+    MultidimArray<double> &img, double y, double x)
 {
     y = y - 1; // Since Fortran starts indexing at 1
     x = x - 1;
@@ -61,7 +61,7 @@ double Cylindrical_Wave_Decomposition::interpolate(
 }
 
 // Compute CWD -------------------------------------------------------------
-void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
+void Cylindrical_Wave_Decomposition::compute_cwd(MultidimArray<double> &img)
 {
     double coseno[1281], ampcos[5191], ampsen[5191];
     double ac, as, bc, bs, b1, coefca, coefcb, coefsa, coefsb;
@@ -357,7 +357,7 @@ void Rotational_Spectrum::compute_rotational_spectrum(
 }
 
 // Compute spectrum --------------------------------------------------------
-void Rotational_Spectrum::compute_rotational_spectrum(Matrix2D<double> &img,
+void Rotational_Spectrum::compute_rotational_spectrum(MultidimArray<double> &img,
         double xr1, double xr2, double xdr, double xr)
 {
     // Compute the cylindrical wave decomposition

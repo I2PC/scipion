@@ -26,7 +26,7 @@
 #ifndef ROTATIONALSPECTRUM_H
 #define ROTATIONALSPECTRUM_H
 
-#include "matrix2d.h"
+#include "multidimensional_array.h"
 
 #include <iostream>
 
@@ -64,20 +64,20 @@ public:
     int ir;
 
     ///  Ampcos
-    Matrix1D< double > out_ampcos;
+    MultidimArray< double > out_ampcos;
 
     ///  Ampsin
-    Matrix1D< double > out_ampsin;
+    MultidimArray< double > out_ampsin;
 
     /// Show this object
     friend std::ostream& operator<<(std::ostream& _out,
                                     const Cylindrical_Wave_Decomposition& _cwd);
 
     /// Interpolate image value (bilinear)
-    double interpolate(Matrix2D< double >& img, double y, double x);
+    double interpolate(MultidimArray< double >& img, double y, double x);
 
     /// Compute the Cylindrical Wave decomposition of an image
-    void compute_cwd(Matrix2D< double >& img);
+    void compute_cwd(MultidimArray< double >& img);
 };
 
 /** Rotational spectrum.
@@ -144,7 +144,7 @@ public:
     double dr;
 
     ///  Rotational spectrum.
-    Matrix1D< double > rot_spectrum;
+    MultidimArray< double > rot_spectrum;
 
     /// Show.
     friend std::ostream& operator<<(std::ostream& _out,
@@ -156,7 +156,7 @@ public:
      * radius. xdr the increment, and xr the length of integration. Usually,
      * xr=xr2-xr1.
      */
-    void compute_rotational_spectrum(Matrix2D< double >& img,
+    void compute_rotational_spectrum(MultidimArray< double >& img,
                                      double xr1,
                                      double xr2,
                                      double xdr,
