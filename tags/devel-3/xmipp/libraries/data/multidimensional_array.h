@@ -1182,7 +1182,6 @@ public:
      * TRUE if the logical index given is outside the definition region of this
      * array.
      */
-    /*
     bool outside(const Matrix1D<double> &r) const
     {
         if (XSIZE(r) < 1)
@@ -1207,7 +1206,6 @@ public:
         else
             REPORT_ERROR(2,"Outside: index vector has too many components");
     }
-    */
 
     /** IsCorner (in 2D or 3D matrix)
      * @ingroup MultidimSize
@@ -1215,7 +1213,6 @@ public:
      * TRUE if the logical index given is a corner of the definition region of this
      * array.
      */
-    /*
     bool isCorner(const Matrix1D< double >& v) const
     {
         if (XSIZE(v) < 2)
@@ -1239,7 +1236,6 @@ public:
             REPORT_ERROR(1, "isCorner: index vector has too many components");
 
     }
-    */
 
     ///defgroup MultidimMemory Access to the pixel values
     /** Volume element access via double vector.
@@ -1258,24 +1254,20 @@ public:
      * val = V(vectorR3(1, -2, 0));
      * @endcode
      */
-    /*
     T& operator()(const Matrix1D< double >& v) const
     {
         v.resize(3);
         return VOL_ELEM((*this), ROUND(ZZ(v)), ROUND(YY(v)), ROUND(XX(v)));
     }
-    */
 
     /** Volume element access via integer vector.
      * @ingroup MultidimMemory
      */
-    /*
     T& operator()(const Matrix1D< int >& v) const
     {
         v.resize(3);
         return VOL_ELEM((*this), ZZ(v), YY(v), XX(v));
     }
-    */
 
      /** Volume element access via index.
      * @ingroup MultidimMemory
@@ -2633,7 +2625,6 @@ public:
      * The 2D region is specified by two corners.
      * Note that this function only works for the 0th image in a multi-image array...
      */
-    /*
     void computeStats(double& avg,
                        double& stddev,
                        T& min_val,
@@ -2668,7 +2659,6 @@ public:
             avg = stddev = 0;
 	}
     }
-    */
 
     /** Median
      * @ingroup Statistics
@@ -3399,7 +3389,6 @@ public:
     /** Computes the center of mass of the nth array
      * @ingroup MultidimUtilities
      */
-    /*
     void centerOfMass(Matrix1D< double >& center, void * mask=NULL, unsigned long n = 0)
     {
 	center.initZeros(3);
@@ -3422,7 +3411,6 @@ public:
 	if (mass != 0)
             center /= mass;
     }
-    */
 
     /** Several thresholding.
      * @ingroup MultidimUtilities
@@ -4005,7 +3993,6 @@ public:
 
 
 
-    //FIXME: THIS HAS TO BE RETHOUGHT!
     /** Read from an ASCII file.
      * @ingroup Operators
      *
