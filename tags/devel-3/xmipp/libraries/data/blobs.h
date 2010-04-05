@@ -27,8 +27,7 @@
 #define _BLOBS_HH
 
 #include "grids.h"
-#include "image.h"
-#include "volume.h"
+#include "multidimensional_array.h"
 #include <pthread.h>
 
 // Thread declaration
@@ -49,14 +48,14 @@ extern int slices_processed;
 
 // This structure is needed to pass parameters to threads. 
 typedef struct{
-	const Matrix3D<double> *vol_blobs;
+	const MultidimArray<double> *vol_blobs;
 	const SimpleGrid *grid;
 	const struct blobtype *blob;
-	Matrix3D<double> *vol_voxels;
+	MultidimArray<double> *vol_voxels;
 	const Matrix2D<double> *D;
 	int istep;
-	Matrix3D<double> *vol_corr;
-	const Matrix3D<double> *vol_mask;
+	MultidimArray<double> *vol_corr;
+	const MultidimArray<double> *vol_mask;
 	bool FORW;
 	int eq_mode;
 	int thread_id;
@@ -336,14 +335,14 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
    D*(i,j,k)'.
 */
 void blobs2voxels(const GridVolume &vol_blobs,
-                  const struct blobtype &blob, Matrix3D<double> *vol_voxels,
+                  const struct blobtype &blob, MultidimArray<double> *vol_voxels,
                   const Matrix2D<double> *D = NULL, int threads = 1, int Zdim = 0, int Ydim = 0, int Xdim = 0);
 
 /** Blob coefficients as a voxel volume.
     This function returns a volume with the blob coefficients in their right position
     in space. The voxel size is g/2 */
 void blobs2space_coefficients(const GridVolume &vol_blobs, const struct blobtype &blob,
-                              Matrix3D<double> *vol_coefs);
+                              MultidimArray<double> *vol_coefs);
 
 #define SHOW_CONVERSION 1
 /** Voxels ---> Blobs.
@@ -363,10 +362,10 @@ void blobs2space_coefficients(const GridVolume &vol_blobs, const struct blobtype
     otherwise a single grid with tilted axis is.
 
     Valid grid types are defined in Some useful grids*/
-void voxels2blobs(const Matrix3D<double> *vol_voxels,
+void voxels2blobs(const MultidimArray<double> *vol_voxels,
                   const struct blobtype &blob, GridVolume &vol_blobs,
                   int grid_type, double grid_relative_size,
-                  double lambda, const Matrix3D<double> *vol_mask = NULL,
+                  double lambda, const MultidimArray<double> *vol_mask = NULL,
                   const Matrix2D<double> *D = NULL,
                   double final_error_change = 0.01, int tell = 0, double R = -1, int threads = 1);
 
@@ -397,9 +396,9 @@ void voxels2blobs(const Matrix3D<double> *vol_voxels,
      \\VMAXARTK:  update with the maximum update.*/
 void ART_voxels2blobs_single_step(
     GridVolume &vol_in, GridVolume *vol_out, const struct blobtype &blob,
-    const Matrix2D<double> *D, double lambda, Matrix3D<double> *theo_vol,
-    const Matrix3D<double> *read_vol, Matrix3D<double> *corr_vol,
-    const Matrix3D<double> *mask_vol,
+    const Matrix2D<double> *D, double lambda, MultidimArray<double> *theo_vol,
+    const MultidimArray<double> *read_vol, MultidimArray<double> *corr_vol,
+    const MultidimArray<double> *mask_vol,
     double &mean_error, double &max_error, int eq_mode = VARTK, int threads=1);
 //@}
 #endif

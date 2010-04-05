@@ -421,14 +421,14 @@ void * blobs2voxels_SimpleGrid( void * data )
 {
 	ThreadBlobsToVoxels * thread_data = (ThreadBlobsToVoxels *) data;
 	
-	const Matrix3D<double> *vol_blobs = thread_data->vol_blobs;
+	const MultidimArray<double> *vol_blobs = thread_data->vol_blobs;
 	const SimpleGrid *grid = thread_data->grid;
 	const struct blobtype *blob = thread_data->blob;
-	Matrix3D<double> *vol_voxels = thread_data->vol_voxels;
+	MultidimArray<double> *vol_voxels = thread_data->vol_voxels;
 	const Matrix2D<double> *D = thread_data->D;
 	int istep = thread_data->istep;
-	Matrix3D<double> *vol_corr = thread_data->vol_corr;
-	const Matrix3D<double> *vol_mask = thread_data->vol_mask;;
+	MultidimArray<double> *vol_corr = thread_data->vol_corr;
+	const MultidimArray<double> *vol_mask = thread_data->vol_mask;;
 	bool FORW = thread_data->FORW;
 	int eq_mode = thread_data->eq_mode;
 	
@@ -859,7 +859,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 /* Blobs -> Voxels for a Grid ---------------------------------------------- */
 //#define DEBUG
 void blobs2voxels(const GridVolume &vol_blobs,
-                  const struct blobtype &blob, Matrix3D<double> *vol_voxels,
+                  const struct blobtype &blob, MultidimArray<double> *vol_voxels,
                   const Matrix2D<double> *D, int threads, int Zdim, int Ydim, int Xdim)
 {
 
@@ -923,7 +923,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
         std::cout << "So far vol stats: ";
         (*vol_voxels).printStats();
         std::cout << std::endl;
-        VolumeXmipp save;
+        Image<double> save;
         save() = *vol_voxels;
         save.write((std::string)"PPPvoxels" + integerToString(i));
 #endif
@@ -960,7 +960,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
 /* Blobs -> Coefs ---------------------------------------------------------- */
 //#define DEBUG
 void blobs2space_coefficients(const GridVolume &vol_blobs,
-                              const struct blobtype &blob, Matrix3D<double> *vol_coefs)
+                              const struct blobtype &blob, MultidimArray<double> *vol_coefs)
 {
 
     // Compute vol_coefs shape
@@ -1025,10 +1025,10 @@ void ART_voxels2blobs_single_step(
     const struct blobtype &blob,        // blob
     const Matrix2D<double> *D,          // deformation matrix
     double lambda,                      // ART lambda
-    Matrix3D<double> *theo_vol,         // Theoretical volume
-    const Matrix3D<double> *read_vol,   // Volume we want to translate to blobs
-    Matrix3D<double> *corr_vol,         // Normalizing volume
-    const Matrix3D<double> *mask_vol,   // Mask volume, 1 if that voxel must
+    MultidimArray<double> *theo_vol,         // Theoretical volume
+    const MultidimArray<double> *read_vol,   // Volume we want to translate to blobs
+    MultidimArray<double> *corr_vol,         // Normalizing volume
+    const MultidimArray<double> *mask_vol,   // Mask volume, 1 if that voxel must
     // be counted as a true equation
     double &mean_error,                 // Output mean error
     double &max_error,                  // Output maximum error in a voxel
@@ -1110,7 +1110,7 @@ void ART_voxels2blobs_single_step(
     VOL_ELEM(*theo_vol, k, i, j) /= norm;
 
 #ifdef DEBUG
-    VolumeXmipp save, save2;
+    Image<double> save, save2;
     save() = *theo_vol;
     save.write("PPPtheovol.vol");
     std::cout << "Theo stats:";
@@ -1232,14 +1232,14 @@ void ART_voxels2blobs_single_step(
 #undef DEBUG
 
 //#define DEBUG
-void voxels2blobs(const Matrix3D<double> *vol_voxels,
+void voxels2blobs(const MultidimArray<double> *vol_voxels,
                   const struct blobtype &blob,
                   GridVolume &vol_blobs, int grid_type, double grid_relative_size,
-                  double lambda, const Matrix3D<double> *vol_mask,
+                  double lambda, const MultidimArray<double> *vol_mask,
                   const Matrix2D<double> *D, double final_error_change,
                   int tell, double R, int threads)
 {
-    VolumeXmipp theo_vol, corr_vol;
+    Image<double> theo_vol, corr_vol;
     double mean_error, mean_error_1, max_error;
     int it = 1;
 
