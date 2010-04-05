@@ -353,7 +353,7 @@ std::cout << STARTINGX(m1) << "," << FINISHINGX(m1) << std::endl;
     }*/
 
     Matrix1D< int > radial_count(XSIZE(m1)/2+1);
-    Matrix1D<double> num, den1, den2;
+    Matrix1D<double> num, den1, den2, den_dpr;
     Matrix1D<double> f(3);
     num.initZeros(radial_count);
     den1.initZeros(radial_count);
@@ -363,7 +363,10 @@ std::cout << STARTINGX(m1) << "," << FINISHINGX(m1) << std::endl;
     //since atan2 is called many times
     //untill atan2 is changed by a table let us make dpr an option
     if (skipdpr)
+    {
         dpr.initZeros(radial_count);
+        den_dpr.initZeros(radial_count);
+    }
     freq.initZeros(radial_count);
     frc.initZeros(radial_count);
     frc_noise.initZeros(radial_count);
@@ -386,7 +389,8 @@ std::cout << STARTINGX(m1) << "," << FINISHINGX(m1) << std::endl;
         {
             double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
                     (atan2(z2.imag(), z2.real()))),-180, 180);
-            dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
+            dpr(idx)+=((absz1+absz2)*phaseDiff*phaseDiff);
+            den_dpr(idx)+=(absz1+absz2);
         }
         radial_count(idx)++;
     }
@@ -397,7 +401,7 @@ std::cout << STARTINGX(m1) << "," << FINISHINGX(m1) << std::endl;
         frc(i) = num(i)/sqrt(den1(i)*den2(i));
         frc_noise(i) = 2 / sqrt((double) radial_count(i));
         if (skipdpr)
-            dpr(i)/=radial_count(i);
+        	dpr(i)=sqrt(dpr(i) / den_dpr(i));
     }
 }
 
@@ -421,13 +425,16 @@ void frc_dpr(Matrix3D< double > & m1,
     transformer2.FourierTransform(m2, FT2, false);
 
     Matrix1D< int > radial_count(XSIZE(m1)/2+1);
-    Matrix1D<double> num, den1, den2, f(3);
+    Matrix1D<double> num, den1, den2, den_dpr, f(3);
     num.initZeros(radial_count);
     den1.initZeros(radial_count);
     den2.initZeros(radial_count);
 
     if (skipdpr)
+    {
         dpr.initZeros(radial_count);
+        den_dpr.initZeros(radial_count);
+    }
     freq.initZeros(radial_count);
     frc.initZeros(radial_count);
     frc_noise.initZeros(radial_count);
@@ -451,7 +458,8 @@ void frc_dpr(Matrix3D< double > & m1,
         {    
             double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
                     (atan2(z2.imag(), z2.real()))),-180, 180);
-            dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
+            dpr(idx)+=((absz1+absz2)*phaseDiff*phaseDiff);
+            den_dpr(idx)+=(absz1+absz2);
         }
         radial_count(idx)++;
     }
@@ -469,7 +477,7 @@ void frc_dpr(Matrix3D< double > & m1,
            frc(i) = 0;
         frc_noise(i) = 2 / sqrt((double) radial_count(i));
         if (skipdpr)
-            dpr(i)/=radial_count(i);
+        	dpr(i)=sqrt(dpr(i) / den_dpr(i));
     }
 }
 void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem,int nThreads) 
