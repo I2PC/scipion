@@ -32,8 +32,7 @@
 #ifndef GRIDDING_H
 #define GRIDDING_H
 #include "funcs.h"
-#include "matrix2d.h"
-#include "matrix3d.h"
+#include "multidimensional_array.h"
 #include "fft.h"
 
 #define GRIDDING_ALPHA 1.75
@@ -50,75 +49,44 @@
 // ************************ Reverse Gridding *********************************
 // ***************************************************************************
 
-/** Produce a complex Matrix2D for reverse gridding from a complex Matrix2D
+/** Produce a complex MultidimArray for reverse gridding from a complex MultidimArray
  * @ingroup ReverseGridding
  *
- *  Produces a 2D Fourier-space matrix2d for reverse-gridding
- *  interpolation from a Fourier-space matrix2d
+ *  Produces a Fourier-space MultidimArray for reverse-gridding
+ *  interpolation from a Fourier-space MultidimArray 
  */
-void produceReverseGriddingFourierMatrix2D(const Matrix2D< std::complex < double> > &in, 
-					   Matrix2D< std::complex < double > > &out,
-					   KaiserBessel &kb);
+void produceReverseGriddingFourierMatrix(MultidimArray< std::complex < double > > &in, 
+                                         MultidimArray< std::complex < double > > &out,
+                                         KaiserBessel &kb);
 
-/** Produce a complex Matrix2D for reverse gridding from a real Matrix2D
+/** Produce a complex MultidimArray for reverse gridding from a real Matrix2D
  * @ingroup ReverseGridding
  *
- *  Produces a 2D Fourier-space matrix2d for reverse-gridding
- *  interpolation from a real-space matrix2d 
- *  This real-space matrix2d should have the Xmipp origin set!
+ *  Produces a Fourier-space MultidimArray for reverse-gridding
+ *  interpolation from a real-space MultidimArray 
+ *  This real-space MultidimArray should have the Xmipp origin set!
  */
-void produceReverseGriddingFourierMatrix2D(const Matrix2D< double > &in, 
-					   Matrix2D< std::complex< double > > &out,
-					   KaiserBessel &kb);
+void produceReverseGriddingFourierMatrix(const MultidimArray< double > &in, 
+                                         MultidimArray< std::complex< double > > &out,
+                                         KaiserBessel &kb);
 
-/** Produce a real Matrix2D for reverse gridding from a real Matrix2D
+/** Produce a real MultidimArray for reverse gridding from a real Matrix2D
  * @ingroup ReverseGridding
  *
- *  Produces a 2D real-space matrix2d for reverse-gridding interpolation
- *  from a real-space matrix2d
+ *  Produces a real-space MultidimArray for reverse-gridding
+ *  interpolation from a real-space MultidimArray
  */
-void produceReverseGriddingMatrix2D(const Matrix2D< double > &in, 
-				    Matrix2D< double > &out,
-				    KaiserBessel &kb);
+void produceReverseGriddingMatrix(const MultidimArray< double > &in, 
+                                  MultidimArray< double > &out,
+                                  KaiserBessel &kb);
 
-/** Produce a complex Matrix3D for reverse gridding from a complex Matrix2D
+/** Reverse-gridding based interpolationin a MultidimArray
  * @ingroup ReverseGridding
  *
- *  Produces a 3D Fourier-space matrix3d for reverse-gridding
- *  interpolation from a Fourier-space matrix3d
- */
-void produceReverseGriddingFourierMatrix3D(Matrix3D< std::complex < double > > &in, 
-					   Matrix3D< std::complex < double > > &out,
-					   KaiserBessel &kb);
-
-/** Produce a complex Matrix3D for reverse gridding from a real Matrix2D
- * @ingroup ReverseGridding
- *
- *  Produces a 3D Fourier-space matrix3d for reverse-gridding
- *  interpolation from a real-space matrix3d 
- *  This real-space matrix3d should have the Xmipp origin set!
- */
-void produceReverseGriddingFourierMatrix3D(const Matrix3D< double > &in, 
-					   Matrix3D< std::complex< double > > &out,
-					   KaiserBessel &kb);
-
-/** Produce a real Matrix3D for reverse gridding from a real Matrix2D
- * @ingroup ReverseGridding
- *
- *  Produces a 3D real-space matrix3d for reverse-gridding
- *  interpolation from a real-space matrix3d
- */
-void produceReverseGriddingMatrix3D(const Matrix3D< double > &in, 
-				    Matrix3D< double > &out,
-				    KaiserBessel &kb);
-
-/** Reverse-gridding based interpolation in a 2D matrix
- * @ingroup ReverseGridding
- *
- * Interpolates the value of the 2D matrix M at the point (x,y) knowing
+ * Interpolates the value of the MultidimArray M at the point (x,y,z) knowing
  * that this image has been processed for reverse-gridding
  *
- * (x,y) are in logical coordinates
+ * (x,y,z) are in logical coordinates (note that n is supposed to be one)
  *
  * To interpolate using gridding you must prepare the image first!
  * An example to interpolate an image at (0.5,0.5) using
@@ -127,12 +95,12 @@ void produceReverseGriddingMatrix3D(const Matrix3D< double > &in,
  * @code
  * KaiserBessel kb;
  * matrix2D<double> Maux;
- * produceReverseGriddingMatrix2D(img(),Maux,kb);
- * interpolated_value = interpolatedElementReverseGridding(Maux,0.5,0.5,kb);
+ * produceReverseGriddingMatrix(img(),Maux,kb);
+ * interpolated_value = interpolatedElementReverseGridding2D(Maux,0.5,0.5,kb);
  * @endcode
  */
 template <typename T>
-T interpolatedElementReverseGridding(const Matrix2D<T> &in, double x, double y, const KaiserBessel &kb)
+T interpolatedElementReverseGridding2D(const MultidimArray<T> &in, double x, double y, const KaiserBessel &kb)
 {
     // size of this image:
     int nx = XSIZE(in);
@@ -286,13 +254,13 @@ T interpolatedElementReverseGridding(const Matrix2D<T> &in, double x, double y, 
  *
  * @code
  * KaiserBessel kb;
- * matrix3D<double> Maux;
+ * MultidimArray<double> Maux;
  * produceReverseGriddingMatrix3D(vol(),Maux,kb);
- * interpolated_value = interpolatedElementReverseGridding(Maux,0.5,0.5,0.5,kb);
+ * interpolated_value = interpolatedElementReverseGridding3D(Maux,0.5,0.5,0.5,kb);
  * @endcode
  */
 template <typename T>
-T interpolatedElementReverseGridding(Matrix3D<T> &in, double x, double y, double z, const KaiserBessel &kb)
+T interpolatedElementReverseGridding3D(MultidimArray<T> &in, double x, double y, double z, const KaiserBessel &kb)
 {
     // size of this image:
     int nx = XSIZE(in);
@@ -774,7 +742,7 @@ T interpolatedElementReverseGridding(Matrix3D<T> &in, double x, double y, double
  *
  * @code
  * KaiserBessel kb;
- * matrix3D<std::complex<double> > Faux;
+ * MultidimArray<std::complex<double> > Faux;
  * TODO!!!!
  * @endcode
  */
@@ -798,16 +766,17 @@ T interpolatedElementReverseGridding(Matrix3D<T> &in, double x, double y, double
  * @code
  * KaiserBessel kb;
  * matrix2D<double> Maux,out;
- * produceReverseGriddingMatrix2D(img(),Maux,kb);
+ * produceReverseGriddingMatrix(img(),Maux,kb);
  * Matrix2D<double> A = rotation2DMatrix(63.1);
  * applyGeometryReverseGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
  * @endcode
  */
 template<typename T>
-void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A, 
-				  const Matrix2D<T> &M1, 
-				  const KaiserBessel &kb, bool inv, bool wrap, 
-				  int nx = 0, int ny = 0, T outside = (T) 0)
+void applyGeometryReverseGridding2D(MultidimArray<T> &M2, 
+                                    const MultidimArray<T> &M1, 
+                                    Matrix2D< double > A, 
+                                    const KaiserBessel &kb, bool inv, bool wrap, 
+                                    int nx = 0, int ny = 0, T outside = (T) 0)
 {
     int m1, n1, m2, n2;
     double x, y, xp, yp;
@@ -891,7 +860,7 @@ void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A,
             }
 
             if (interp)
-                dMij(M2, i, j) = interpolatedElementReverseGridding(M1,xp,yp,kb);
+                dMij(M2, i, j) = interpolatedElementReverseGridding2D(M1,xp,yp,kb);
 	    else
 		dMij(M2, i, j) = outside;
 
@@ -911,22 +880,24 @@ void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A,
  *
  * A is a 3x3 transformation matrix.
  *
- * To interpolate using gridding you must prepare the matrix3d first!
+ * To interpolate using gridding you must prepare the MultidimArray first!
  * An example to apply a gridding-based transformation would be:
  *
  * @code
  * KaiserBessel kb;
- * matrix3D<double> Maux,out;
- * produceReverseGriddingMatrix3D(vol(),Maux,kb);
+ * MultidimArray<double> Maux,out;
+ * produceReverseGriddingMatrix(vol(),Maux,kb);
  * Matrix2D<double> A = rotation2DMatrix(63.1);
- * applyGeometryReverseGridding(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
+ * applyGeometryReverseGridding3D(out,A,Maux,IS_NOT_INV,DONT_WRAP,kb);
  * @endcode
  */
 template<typename T>
-void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A, 
-				  Matrix3D<T> &V1, const KaiserBessel &kb, 
-				  bool inv, bool wrap, 
-				  int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
+void applyGeometryReverseGridding3D(MultidimArray<T> &V2,
+                                    const MultidimArray<T> &V1,  
+                                    Matrix2D< double > A, 
+                                    const KaiserBessel &kb, 
+                                    bool inv, bool wrap, 
+                                    int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
 {
     int m1, n1, o1, m2, n2, o2;
     double x, y, z, xp, yp, zp;
@@ -956,7 +927,7 @@ void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A,
     if (!inv)
         A = A.inv();
 
-    // Find center of Matrix3D
+    // Find center of MultidimArray
     cen_z = (int)(V2.zdim / 2);
     cen_y = (int)(V2.ydim / 2);
     cen_x = (int)(V2.xdim / 2);
@@ -968,9 +939,9 @@ void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A,
     maxyp  = LAST_XMIPP_INDEX(YSIZE(V1)/2);
     maxzp  = LAST_XMIPP_INDEX(ZSIZE(V1)/2);
 
-    // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
-    // voxel in the output Matrix3D we calculate which are the corresponding
-    // ones in the original Matrix3D, make an interpolation with them and put
+    // Now we go from the output MultidimArray to the input MultidimArray, ie, for any
+    // voxel in the output MultidimArray we calculate which are the corresponding
+    // ones in the original MultidimArray, make an interpolation with them and put
     // this value at the output voxel
 
     // V2 is not initialised to 0 because all its pixels are rewritten
@@ -978,7 +949,7 @@ void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A,
         for (int i = 0; i < V2.ydim; i++)
         {
             // Calculate position of the beginning of the row in the output
-            // Matrix3D
+            // MultidimArray
             x = -cen_x;
             y = i - cen_y;
             z = k - cen_z;
@@ -1031,7 +1002,7 @@ void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A,
                 }
 
                 if (interp)
-                    dVkij(V2, k, i, j) = (T) interpolatedElementReverseGridding(V1,xp,yp,zp,kb);
+                    dVkij(V2, k, i, j) = (T) interpolatedElementReverseGridding3D(V1,xp,yp,zp,kb);
                 else
                     dVkij(V2, k, i, j) = outside;
 
@@ -1077,7 +1048,7 @@ void approximateVoronoiArea(std::vector<double> &voronoi_area,
  * @code
  * KaiserBessel kb;
  * std::vector<double> x,y,data,voronoi_area;
- * matrix2D<double> Maux;
+ * MultidimArray<double> Maux;
  *
  * P.getCartesianCoordinates(x,y,data); // (P is a Polar<double>)
  * approximateVoronoiArea(voronoi_area,x,y);
@@ -1087,16 +1058,16 @@ void approximateVoronoiArea(std::vector<double> &voronoi_area,
  *
  */
 template <typename T>
-Matrix2D<T> interpolateCartesianFromArbitrarySampling(const int xdim, const int ydim,
-						      const std::vector<double> &xin, 
-						      const std::vector<double> &yin,
-						      const std::vector<T> &data, 
-						      const std::vector<double> &voronoi_area,
-						      const KaiserBessel &kb)
+MultidimArray<T> interpolateCartesianFromArbitrarySampling(const int xdim, const int ydim,
+                                                           const std::vector<double> &xin, 
+                                                           const std::vector<double> &yin,
+                                                           const std::vector<T> &data, 
+                                                           const std::vector<double> &voronoi_area,
+                                                           const KaiserBessel &kb)
 {
 
     double wx,wy, xx, yy, dx, dy, r, w, sumw;
-    Matrix2D<T> result;
+    MultidimAaray<T> result;
 
     // Oversample result GRIDDING_NPAD times
     result.initZeros(GRIDDING_NPAD*xdim, GRIDDING_NPAD*ydim);
@@ -1138,34 +1109,34 @@ Matrix2D<T> interpolateCartesianFromArbitrarySampling(const int xdim, const int 
 /** Finish forward gridding after interpolateCartesianFromArbitrarySampling
  * @ingroup ForwardGridding
  *
- *  Produces a 2D real-space matrix2d after having performed 
+ *  Produces a real-space MultidimArray after having performed 
  *  interpolateCartesianFromArbitrarySampling for real-space coordinates.
  */
-void produceForwardGriddingMatrix2D(const Matrix2D< double > &in, 
-				    Matrix2D< double > &out,
-				    KaiserBessel &kb);
+void produceForwardGriddingMatrix(const MultidimArray< double > &in, 
+                                  MultidimArray< double > &out,
+                                  KaiserBessel &kb);
 
 /** Finish forward gridding after interpolateCartesianFromArbitrarySampling
  * @ingroup ForwardGridding
  *
- *  Produces a 2D real-space matrix2d after having performed
+ *  Produces a real-space MultidimArray after having performed
  *  interpolateCartesianFromArbitrarySampling for fourier-space coordinates.
  */
-void produceForwardGriddingMatrix2D(const Matrix2D< std::complex<double > > &in, 
-				    Matrix2D< double > &out,
-				    KaiserBessel &kb,
-				    bool is_centered = true);
+void produceForwardGriddingMatrix(const MultidimArray< std::complex<double > > &in, 
+                                  MultidimArray< double > &out,
+                                  KaiserBessel &kb,
+                                  bool is_centered = true);
 
 /** Finish forward gridding after interpolateCartesianFromArbitrarySampling
  * @ingroup ForwardGridding
  *
- *  Produces a 2D fourier-space matrix2d after having performed
+ *  Produces a 2D fourier-space MultidimArray after having performed
  *  interpolateCartesianFromArbitrarySampling for fourier-space coordinates.
  */
-void produceForwardGriddingFourierMatrix2D(const Matrix2D< std::complex<double > > &in, 
-					   Matrix2D< std::complex<double > > &out,
-					   KaiserBessel &kb,
-					   bool is_centered = true);
+void produceForwardGriddingFourierMatrix(const MultidimArray< std::complex<double > > &in, 
+                                         MultidimArray< std::complex<double > > &out,
+                                         KaiserBessel &kb,
+                                         bool is_centered = true);
 
 
 #endif
