@@ -757,13 +757,6 @@ public:
         dmask = _dmask;
     }
 
-    /** Get binary 2D mask
-     */
-    Matrix2D< int >& get_binary_mask2D()
-    {
-        return imask2D;
-    }
-
     /** Force to be continuous
      *
      * This function is used when you need a binary mask as a double matrix.
