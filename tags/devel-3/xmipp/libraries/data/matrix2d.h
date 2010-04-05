@@ -617,7 +617,7 @@ public:
 
         for (int i = 0; i < N; i++)
         {
-            profile(i) = interpolatedElement2D(tx, ty);
+            profile(i) = MultidimArray<T>::interpolatedElement2D(tx, ty);
             tx += tx_step;
             ty += ty_step;
         }
