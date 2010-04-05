@@ -39,29 +39,27 @@ void apply_geo_cont_2D_mask(Matrix2D< double >& mask,
 /// @defgroup Masks Masks
 /// @ingroup DataLibrary
 
-/// @defgroup Masks1D 1D masks
-/// @ingroup Masks
-
 #define INNER_MASK 1
 #define OUTSIDE_MASK 2
 #define NO_ACTIVATE 0
 #define ACTIVATE 1
 
-/** Creates a 1D RaisedCosine mask for already sized masks
- * @ingroup Masks1D
+/** Creates a RaisedCosine mask for already sized masks
+ * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0), by default (0,0), is created with the
+ * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the
  * radius indicated. The only two valid modes are INNER_MASK (by default) or
  * OUTSIDE_MASK. Inner mask are normal RaisedCosines, and outside masks are
  * 1 - RaisedCosine. When entering, the mask is initialiazed to 0 and then the
  * mask is created.
  */
-void RaisedCosineMask(Matrix1D< double >& mask,
-                      double r1, double r2, int mode = INNER_MASK, double x0 = 0);
+void RaisedCosineMask(MultidimArray< double >& mask,
+                      double r1, double r2, int mode = INNER_MASK, double x0 = 0,
+                      double y0 = 0, double z0 = 0);
 
-/** Creates a 1D RaisedCrown mask for already sized masks
- * @ingroup Masks1D
+/** Creates a RaisedCrown mask for already sized masks
+ * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0), by default (0,0), is created within the
@@ -70,22 +68,22 @@ void RaisedCosineMask(Matrix1D< double >& mask,
  * normal RaisedCrowns, and outside masks are 1 - RaisedCrowns. When entering,
  * the mask is initialiazed to 0 and then the mask is created.
  */
-void RaisedCrownMask(Matrix1D< double >& mask,
+void RaisedCrownMask(MultidimArray< double >& mask,
                      double r1, double r2, double pix_width,
                      int mode = INNER_MASK,
-                     double x0 = 0);
+                     double x0 = 0, double y0 = 0, double z0 = 0);
 
-/** 1D Kaiser window
- * @ingroup Masks1D
+/** Kaiser window
+ * @ingroup Masks
  *  The mask is resized.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1.0).
  */
-void KaiserMask(Matrix1D<double> &mask, double delta = 0.01,
+void KaiserMask(MultidimArray<double> &mask, double delta = 0.01,
                 double Deltaw = 1.0 / 12.0);
 
-/** Creates a 1D sinc mask for already sized masks
- * @ingroup Masks1D
+/** Creates a sinc mask for already sized masks
+ * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0), by default (0), is created with the
@@ -96,33 +94,128 @@ void KaiserMask(Matrix1D<double> &mask, double delta = 0.01,
  *
  * Remind that sinc(w*n) is zero at n=1/w;
  */
-void SincMask(Matrix1D< double >& mask,
-              double omega, int mode = INNER_MASK, double x0 = 0);
+void SincMask(MultidimArray< double >& mask,
+              double omega, int mode = INNER_MASK, double x0 = 0, double y0 = 0, double z0 = 0);
 
-/** Creates a 1D radial-sinc-kaiser mask, the mask is resized.
- * @ingroup Masks1D
+/** Creates a radial-sinc-kaiser mask, the mask is resized.
+ * @ingroup Masks
  *  This function returns a sinc mask windowed by a Kaiser window.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1).
  *  omega=low pass frequency (normalized to 1).
  */
-void SincKaiserMask(Matrix1D<double> &mask,
+void SincKaiserMask(MultidimArray<double> &mask,
                     double omega, double delta = 0.01, double Deltaw = 1.0 / 12.0);
 
-/// @defgroup Masks2D 2D masks
-/// @ingroup Masks
+/** Blackman window
+ * @ingroup Masks
+ *
+ * It receives no parameter.
+ */
+void BlackmanMask(MultidimArray< double >& mask, int mode = INNER_MASK,
+                  double x0 = 0, double y0 = 0, double z0 = 0);
 
-/** Creates a 2D circular mask for already sized masks
- * @ingroup Masks2D
+/** Creates a sinc-blackman mask, the mask is resized
+ * @ingroup Masks
+ *
+ * This function returns a sinc mask windowed by a Blackman window. The window
+ * is designed to cover a certain power of the sinc
+ */
+void SincBlackmanMask(MultidimArray< double >& mask,
+                      double omega, double power_percentage,
+                      int mode = INNER_MASK, 
+                      double x0 = 0, double y0 = 0, double z0 = 0);
+
+/** Creates a circular mask for already sized masks
+ * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0), by default (0,0), is created with the
+ * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the
  * radius indicated. The only two valid modes are INNER_MASK (by default) or
  * OUTSIDE_MASK. When entering the mask is initialiazed to 0 and then the mask
  * is created.
  */
-void BinaryCircularMask(Matrix2D< int >& mask,
-                        double radius, int mode = INNER_MASK, double x0 = 0, double y0 = 0);
+void BinaryCircularMask(MultidimArray< int >& mask,
+                        double radius, int mode = INNER_MASK, 
+                        double x0 = 0, double y0 = 0, double z0 = 0);
+
+
+/** Creates a circular mask with blob-shaped edges for already sized masks
+ * @ingroup Masks
+ *
+ * The mask is supposed to be resized and with its logical origin already set. A
+ * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the
+ * radius indicated. The only two valid modes are INNER_MASK (by default) or
+ * OUTSIDE_MASK. When entering the mask is initialiazed to 0 and then the mask
+ * is created.
+ */
+void BlobCircularMask(MultidimArray<double> &mask,
+                      double r1, blobtype blob, int mode, 
+                      double x0 = 0, double y0 = 0, double z0 = 0);
+
+
+/** Creates a crown mask for already sized masks
+ * @ingroup Masks
+ *
+ * The mask is supposed to be resized and with its logical origin already set. A
+ * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the two
+ * radii indicated. The only two valid modes are INNER_MASK (by default, between
+ * the two radii) or OUTSIDE_MASK (the negative of the crown). It is supposed
+ * that R1 is smaller than R2.
+ *
+ * When entering the mask is initialiazed to 0 and then the mask is created.
+ */
+void BinaryCrownMask(MultidimArray< int >& mask,
+                     double R1, double R2, int mode = INNER_MASK, 
+                     double x0 = 0, double y0 = 0, double z0 = 0);
+
+/** Creates a crown mask  with blob-shaped edges for already sized masks
+ * @ingroup Masks
+ *
+ * The mask is supposed to be resized and with its logical origin already set. A
+ * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the two
+ * radii indicated. The only two valid modes are INNER_MASK (by default, between
+ * the two radii) or OUTSIDE_MASK (the negative of the crown). It is supposed
+ * that R1 is smaller than R2.
+ *
+ * When entering the mask is initialiazed to 0 and then the mask is created.
+ */
+void BlobCrownMask(MultidimArray<double> &mask,
+                   double r1, double r2, blobtype blob, int mode, 
+                   double x0 = 0, double y0 = 0, double z0 = 0);
+
+/** Creates a frame mask for already sized masks
+ * @ingroup Masks
+ *
+ * The mask is supposed to be resized and with its logical origin already set. A
+ * square placed logically at (x0,y0), by default (0,0), is created with the two
+ * rectangular dimensions indicated. The only two valid modes are INNER_MASK (by
+ * default, between the two radii) or OUTSIDE_MASK (the negative of the crown).
+ * It is supposed that R1 is smaller than R2.
+ *
+ * When entering the mask is initialiazed to 0 and then the mask is created.
+ */
+void BinaryFrameMask(MultidimArray< int >& mask,
+                     int Xrect, int Yrect, int mode = INNER_MASK, 
+                     double x0 = 0, double y0 = 0, double z0 = 0);
+
+/** Creates a gaussian mask for already sized masks
+ * @ingroup Masks
+ *
+ * The mask is supposed to be resized and with its logical origin already set. A
+ * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the
+ * radius indicated. The only two valid modes are INNER_MASK (by default) or
+ * OUTSIDE_MASK. Inner mask are normal sincs, and outside masks are 1 -
+ * gaussian.
+ *
+ * When entering the mask is initialiazed to 0 and then the mask is created.
+ */
+void GaussianMask(MultidimArray< double >& mask,
+                  double sigma, int mode = INNER_MASK, 
+                  double x0 = 0, double y0 = 0, double z0 = 0);
+
+/// @defgroup Masks2D 2D masks
+/// @ingroup Masks
 
 /** Creates a 2D DWT circular for already sized masks
  * @ingroup Masks2D
@@ -134,135 +227,10 @@ void BinaryCircularMask(Matrix2D< int >& mask,
  *
  * If the quadrant="xx" then 01, 10 and 11 are generated together
  */
-void BinaryDWTCircularMask(Matrix2D< int >& mask,
-                           double radius, int smin, int smax,
-                           const std::string& quadrant);
+void BinaryDWTCircularMask2D(MultidimArray< int >& mask,
+                             double radius, int smin, int smax,
+                             const std::string& quadrant);
 
-/** Creates a 2D crown mask for already sized masks
- * @ingroup Masks2D
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0), by default (0,0), is created with the two
- * radii indicated. The only two valid modes are INNER_MASK (by default, between
- * the two radii) or OUTSIDE_MASK (the negative of the crown). It is supposed
- * that R1 is smaller than R2.
- *
- * When entering the mask is initialiazed to 0 and then the mask is created.
- */
-void BinaryCrownMask(Matrix2D< int >& mask,
-                     double R1, double R2, int mode = INNER_MASK, double x0 = 0,
-                     double y0 = 0);
-
-/** Creates a 2D frame mask for already sized masks
- * @ingroup Masks2D
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * square placed logically at (x0,y0), by default (0,0), is created with the two
- * rectangular dimensions indicated. The only two valid modes are INNER_MASK (by
- * default, between the two radii) or OUTSIDE_MASK (the negative of the crown).
- * It is supposed that R1 is smaller than R2.
- *
- * When entering the mask is initialiazed to 0 and then the mask is created.
- */
-void BinaryFrameMask(Matrix2D< int >& mask,
-                     int Xrect, int Yrect, int mode = INNER_MASK, double x0 = 0,
-                     double y0 = 0);
-
-/** Creates a 2D gaussian mask for already sized masks
- * @ingroup Masks2D
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0), by default (0,0), is created with the
- * radius indicated. The only two valid modes are INNER_MASK (by default) or
- * OUTSIDE_MASK. Inner mask are normal sincs, and outside masks are 1 -
- * gaussian.
- *
- * When entering the mask is initialiazed to 0 and then the mask is created.
- */
-void GaussianMask(Matrix2D< double >& mask,
-                  double sigma, int mode = INNER_MASK, double x0 = 0, double y0 = 0);
-
-/** Creates a 2D RaisedCosine mask for already sized masks
- * @ingroup Masks2D
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0), by default (0,0), is created with the
- * radius indicated. The only two valid modes are INNER_MASK (by default) or
- * OUTSIDE_MASK. Inner mask are normal RaisedCosines, and outside masks are 1 -
- * RaisedCosine.
- *
- * When entering, the mask is initialiazed to 0 and then the mask is created.
- */
-void RaisedCosineMask(Matrix2D< double >& mask,
-                      double r1, double r2, int mode = INNER_MASK, double x0 = 0,
-                      double y0 = 0);
-
-/** Creates a 2D RaisedCrown mask for already sized masks
- * @ingroup Masks2D
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0), by default (0,0), is created within the
- * two the radii indicated with an extra region of (pix_width) pixels. The only
- * two valid modes are INNER_MASK (by default) or OUTSIDE_MASK. Inner mask are
- * normal RaisedCrowns, and outside masks are 1 - RaisedCrowns.
- *
- * When entering, the mask is initialiazed to 0 and then the mask is created.
- */
-void RaisedCrownMask(Matrix2D< double >& mask,
-                     double r1, double r2, double pix_width,
-                     int mode = INNER_MASK, double x0 = 0, double y0 = 0);
-
-/** 2D blackman window
- * @ingroup Masks2D
- *
- * It receives no parameter.
- */
-void BlackmanMask(Matrix2D< double >& mask, int mode = INNER_MASK,
-                  double x0 = 0, double y0 = 0);
-
-/** 2D Kaiser window
- * @ingroup Masks2D
- *  The mask is resized.
- *  delta=ripple (in natural units) in the pass band.
- *  Deltaw=transition bandwidth (normalized to 1.0).
- */
-void KaiserMask(Matrix2D<double> &mask, double delta = 0.01,
-                double Deltaw = 1.0 / 12.0);
-
-/** Creates a 2D sinc mask for already sized masks
- * @ingroup Masks2D
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0), by default (0,0), is created with the
- * radius indicated. The only two valid modes are INNER_MASK (by default) or
- * OUTSIDE_MASK. Inner mask are normal gaussians, and outside masks are 1 -
- * sinc. When entering the mask is initialiazed to 0 and then the mask is
- * created.
- *
- * Remind that sinc(w*n) is zero at n=1/w;
- */
-void SincMask(Matrix2D< double >& mask,
-              double omega, int mode = INNER_MASK, double x0 = 0, double y0 = 0);
-
-/** Creates a 2D sinc-blackman mask, the mask is resized
- * @ingroup Masks2D
- *
- * This function returns a sinc mask windowed by a Blackman window. The window
- * is designed to cover a certain power of the sinc
- */
-void SincBlackmanMask(Matrix2D< double >& mask,
-                      double omega, double power_percentage,
-                      int mode = INNER_MASK, double x0 = 0, double y0 = 0);
-
-/** Creates a 2D radial-sinc-kaiser mask, the mask is resized.
- * @ingroup Masks2D
- *  This function returns a sinc mask windowed by a Kaiser window.
- *  delta=ripple (in natural units) in the pass band.
- *  Deltaw=transition bandwidth (normalized to 1).
- *  omega=low pass frequency (normalized to 1).
- */
-void SincKaiserMask(Matrix2D<double> &mask,
-                    double omega, double delta = 0.01, double Deltaw = 1.0 / 12.0);
 
 /** Creates a 2D separable-sinc-kaiser mask, the mask is resized.
  * @ingroup Masks2D
@@ -271,9 +239,9 @@ void SincKaiserMask(Matrix2D<double> &mask,
  *  Deltaw=transition bandwidth (normalized to 1).
  *  omega=low pass frequency (normalized to 1).
  */
-void SeparableSincKaiserMask(Matrix2D<double> &mask,
-                             double omega, double delta = 0.01,
-                             double Deltaw = 1.0 / 12.0);
+void SeparableSincKaiserMask2D(MultidimArray<double> &mask,
+                               double omega, double delta = 0.01,
+                               double Deltaw = 1.0 / 12.0);
 
 /** Creates a 3x3 mask with value (1 by default) for those 4-neighbours of the
  * central point (0 otherwise).
@@ -281,7 +249,7 @@ void SeparableSincKaiserMask(Matrix2D<double> &mask,
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask2D_4neig(Matrix2D< int >& mask, int value = 1, int center = NO_ACTIVATE);
+void mask2D_4neig(MultidimArray< int >& mask, int value = 1, int center = NO_ACTIVATE);
 
 /** Creates a 3x3 mask with value1 for those 4-neighbors of the central point
  * and value2 for the 8 neighbours.
@@ -289,25 +257,11 @@ void mask2D_4neig(Matrix2D< int >& mask, int value = 1, int center = NO_ACTIVATE
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
-void mask2D_8neig(Matrix2D< int >& mask, int value1 = 1, int value2 = 1,
+void mask2D_8neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
                   int center = NO_ACTIVATE);
 
 /// @defgroup Masks3D 3D masks
 /// @ingroup Masks
-
-/** Creates a 3D spherical mask for already sized masks
- * @ingroup Masks3D
- *
- * The mask is supposed to be already resized and with its logical origin
- * defined. A sphere placed logically at (z0,x0,y0), by default (0,0,0), is
- * created with the radius indicated. The only two valid modes are INNER_MASK
- * (by default)or OUTSIDE_MASK.
- *
- * When entering the mask is initialiazed to 0 and then the mask is created.
- */
-void BinarySphericalMask(Matrix3D< int >& mask,
-                         double radius, int mode = INNER_MASK, double x0 = 0,
-                         double y0 = 0, double z0 = 0);
 
 /** Creates a 3D DWT spherical for already sized masks
  * @ingroup Masks3D
@@ -318,23 +272,9 @@ void BinarySphericalMask(Matrix3D< int >& mask,
  *
  * If quadrant=xxx then 001,010,011,100,101,110 and 111 are generated together
  */
-void BinaryDWTCircularMask(Matrix3D< int >& mask,
-                           double radius, int smin, int smax,
-                           const std::string& quadrant);
-
-/** Creates a 3D crown mask for already sized masks
- * @ingroup Masks3D
- *
- * The mask is supposed to be already resized and with its logical origin
- * defined. A sphere placed logically at (z0,x0,y0), by default (0,0,0), is
- * created with the radii indicated. The only two valid modes are INNER_MASK
- * (by default)or OUTSIDE_MASK.
- *
- * When entering the mask is initialiazed to 0 and then the mask is created.
- */
-void BinaryCrownMask(Matrix3D< int >& mask,
-                     double R1, double R2, int mode = INNER_MASK, double x0 = 0,
-                     double y0 = 0, int z0 = 0);
+void BinaryDWTSphericalMask2D(MultidimArray< int >& mask,
+                              double radius, int smin, int smax,
+                              const std::string& quadrant);
 
 /** Creates a 3D Cylinder mask for already sized masks
  * @ingroup Masks3D
@@ -345,9 +285,9 @@ void BinaryCrownMask(Matrix3D< int >& mask,
  * INNER_MASK (by default) or OUTSIDE_MASK. When entering the mask is
  * initialiazed to 0 and then the mask is created.
  */
-void BinaryCylinderMask(Matrix3D< int >& mask,
-                        double R, double H, int mode = INNER_MASK, double x0 = 0,
-                        double y0 = 0, int z0 = 0);
+void BinaryCylinderMask(MultidimArray< int >& mask,
+                        double R, double H, int mode = INNER_MASK, 
+                        double x0 = 0, double y0 = 0, int z0 = 0);
 
 /** Creates a 3D frame mask for already sized masks
  * @ingroup Masks3D
@@ -360,7 +300,7 @@ void BinaryCylinderMask(Matrix3D< int >& mask,
  *
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
-void BinaryFrameMask(Matrix3D< int >& mask,
+void BinaryFrameMask(MultidimArray< int >& mask,
                      int Xrect, int Yrect, int Zrect, int mode = INNER_MASK,
                      double x0 = 0, double y0 = 0, double z0 = 0);
 
@@ -374,7 +314,7 @@ void BinaryFrameMask(Matrix3D< int >& mask,
  *
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
-void BinaryConeMask(Matrix3D< int >& mask,
+void BinaryConeMask(MultidimArray< int >& mask,
                     double theta, int mode = INNER_MASK);
 
 /** Creates a 3D missing wedge mask
@@ -386,98 +326,9 @@ void BinaryConeMask(Matrix3D< int >& mask,
  * outside (ie in the missing wedge) it will be zero. The mask is centered at
  * (x0,y0,z0), and rotated with respect to euler angle matrix A.
  */
-void BinaryWedgeMask(Matrix3D< double >& mask, double theta0, double thetaF,
+void BinaryWedgeMask(MultidimArray< double >& mask, double theta0, double thetaF,
                      Matrix2D< double > A);
 
-/** Creates a 3D gaussian mask for already sized masks
- * @ingroup Masks3D
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0), by default (0,0), is created with the
- * radius indicated. The only two valid modes are INNER_MASK (by default) or
- * OUTSIDE_MASK. Inner mask are normal gaussians, and outside masks are
- *  1 - gaussian. When entering the mask is initialiazed to 0 and then the mask
- * is created.
- */
-void GaussianMask(Matrix3D< double >& mask,
-                  double sigma, int mode = INNER_MASK, double x0 = 0, double y0 = 0,
-                  double z0 = 0);
-
-
-void BlobCircularMask(Matrix3D<double> &mask,
-                      double r1, blobtype blob,
-                      int mode, double x0, double y0, double z0);
-
-void BlobCrownMask(Matrix3D<double> &mask,
-                   double r1, double r2, blobtype blob,
-                   int mode, double x0, double y0, double z0);
-
-/** Creates a 3D RaisedCosine mask for already sized masks
- * @ingroup Masks3D
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with
- * the radius indicated. The only two valid modes are INNER_MASK (by default) or
- * OUTSIDE_MASK. Inner mask are normal RaisedCosines, and outside masks are 1 -
- * RaisedCosine.
- *
- * When entering, the mask is initialiazed to 0 and then the mask is created.
- */
-void RaisedCosineMask(Matrix3D< double >& mask,
-                      double r1, double r2, int mode = INNER_MASK, double x0 = 0,
-                      double y0 = 0, double z0 = 0);
-
-/** Creates a 3D RaisedCrown mask for already sized masks
- * @ingroup Masks3D
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0,z0), by default (0,0,0), is created within
- * the two the radii indicated with an extra region of (pix_width) voxels. The
- * only two valid modes are INNER_MASK (by default) or OUTSIDE_MASK. Inner mask
- * are normal RaisedCrowns, and outside masks are 1 - RaisedCrowns.
- *
- * When entering, the mask is initialiazed to 0 and then the mask is created.
- */
-void RaisedCrownMask(Matrix3D< double >& mask,
-                     double r1, double r2, double pix_width,
-                     int mode = INNER_MASK, double x0 = 0, double y0 = 0,
-                     double z0 = 0);
-
-/** 3D blackman window
- * @ingroup Masks3D
- *
- * It receives no parameter.
- */
-void BlackmanMask(Matrix3D< double >& mask, int mode = INNER_MASK,
-                  double x0 = 0, double y0 = 0, double z0 = 0);
-
-/** Creates a 3D sinc mask for already sized masks
- * @ingroup Masks3D
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with
- * the radius indicated. The only two valid modes are INNER_MASK (by default) or
- * OUTSIDE_MASK. Inner mask are normal gaussians, and outside masks are 1 -
- * sinc.
- *
- * When entering the mask is initialiazed to 0 and then the mask is created.
- *
- * Remind that sinc(w*t) is zero at t=1/w;
- */
-void SincMask(Matrix3D< double >& mask,
-              double omega, int mode = INNER_MASK, double x0 = 0, double y0 = 0,
-              double z0 = 0);
-
-/** Creates a 3D sinc-blackman mask, the mask is resized
- * @ingroup Masks3D
- *
- * This function returns a sinc mask windowed by a Blackman window. The window
- * is designed to cover a certain power of the sinc
- */
-void SincBlackmanMask(Matrix3D< double >& mask,
-                      double omega, double power_percentage,
-                      int mode = INNER_MASK, double x0 = 0, double y0 = 0,
-                      double z0 = 0);
 
 /** Creates a 3x3x3 mask with value (1 by default) for those 6-neighbors of the
  * central point (0 otherwise).
@@ -571,10 +422,11 @@ public:
 #define READ_MASK                10
 #define RAISED_CROWN_MASK        11
 #define BINARY_DWT_CIRCULAR_MASK 12
-#define BINARY_CONE_MASK         13
-#define BINARY_WEDGE_MASK        14
-#define BLOB_CIRCULAR_MASK       15
-#define BLOB_CROWN_MASK          16
+#define BINARY_DWT_SPHERICAL_MASK 13
+#define BINARY_CONE_MASK         14
+#define BINARY_WEDGE_MASK        15
+#define BLOB_CIRCULAR_MASK       16
+#define BLOB_CROWN_MASK          17
 
     /** Mask Type
      *
@@ -675,29 +527,13 @@ public:
      */
     int allowed_data_types;
 
-    /** 1D integer mask
+    /** integer mask
      */
-    Matrix1D< int > imask1D;
+    MultidimArray< int > imask;
 
-    /** 2D integer mask
+    /** double mask
      */
-    Matrix2D< int > imask2D;
-
-    /** 3D integer mask
-     */
-    Matrix3D< int > imask3D;
-
-    /** 1D double mask
-     */
-    Matrix1D< double > dmask1D;
-
-    /** 2D double mask
-     */
-    Matrix2D< double > dmask2D;
-
-    /** 3D double mask
-     */
-    Matrix3D< double > dmask3D;
+    MultidimArray< double > dmask;
 
 public:
 
@@ -727,17 +563,9 @@ public:
      */
     void usage() const;
 
-    /** Save 1D mask as a text file
+    /** Save mask as an image
      */
-    void write_1Dmask(const FileName& fn);
-
-    /** Save 2D mask as an ImageXmipp
-     */
-    void write_2Dmask(const FileName& fn);
-
-    /** Save 3D mask as an VolumeXmipp
-     */
-    void write_3Dmask(const FileName& fn);
+    void write_mask(const FileName& fn);
 
     /** Return the type of the mask. INT_MASK, DOUBLE_MASK
      */
@@ -774,50 +602,16 @@ public:
     /** Resize after a pattern
      */
     template<typename T>
-    void resize(const Matrix1D< T>& m)
+    void resize(const MultidimArray< T>& m)
     {
         switch (datatype())
         {
         case INT_MASK:
-            imask1D.resize(m);
+            imask.resize(m);
             break;
 
         case DOUBLE_MASK:
-            dmask1D.resize(m);
-            break;
-        }
-    }
-
-    /** Resize after a pattern
-     */
-    template<typename T>
-    void resize(const Matrix2D< T >& m)
-    {
-        switch (datatype())
-        {
-        case INT_MASK:
-            imask2D.resize(m);
-            break;
-
-        case DOUBLE_MASK:
-            dmask2D.resize(m);
-            break;
-        }
-    }
-
-    /** Resize after a pattern
-     */
-    template<typename T>
-    void resize(const Matrix3D< T >& m)
-    {
-        switch (datatype())
-        {
-        case INT_MASK:
-            imask3D.resize(m);
-            break;
-
-        case DOUBLE_MASK:
-            dmask3D.resize(m);
+            dmask.resize(m);
             break;
         }
     }
@@ -826,69 +620,39 @@ public:
      * It is supposed that the image is already resized and with its logical
      * origin set.
      */
-    void generate_1Dmask();
+    void generate_mask(const bool& apply_geo = false );
 
     /** Generate mask for an empty signal
      */
-    void generate_1Dmask(int Xdim)
+    void generate_mask(int Zdim, int Ydim, int Xdim)
+    {
+        resize(Zdim, Ydim, Xdim);
+        generate_mask(apply_geo);
+    }
+
+    /** Generate mask for an empty signal
+     */
+    void generate_mask(int Ydim, int Xdim, const bool& apply_geo = false)
+    {
+        resize(Ydim, Xdim);
+        generate_mask(apply_geo);
+    }
+
+    /** Generate mask for an empty signal
+     */
+    void generate_mask(int Xdim)
     {
         resize(Xdim);
-        generate_1Dmask();
+        generate_mask();
     }
 
     /** Generate mask for a signal following a pattern
      */
     template<typename T>
-    void generate_1Dmask(const Matrix1D< T >& m)
+    void generate_mask(const MultidimArray< T >& m, const bool& apply_geo = false)
     {
         resize(m);
-        generate_1Dmask();
-    }
-
-    /** Generate mask for a resized image
-     * It is supposed that the image is already resized and with its logical
-     * origin set
-     */
-    void generate_2Dmask(const bool& apply_geo = false );
-
-    /** Generate mask for an empty image
-     */
-    void generate_2Dmask(int Ydim, int Xdim, const bool& apply_geo = false)
-    {
-        resize(Ydim, Xdim);
-        generate_2Dmask(apply_geo);
-    }
-
-    /** Generate mask for an image following a pattern
-     */
-    template<typename T>
-    void generate_2Dmask(const Matrix2D< T >& m, const bool& apply_geo = false)
-    {
-        resize(m);
-        generate_2Dmask(apply_geo);
-    }
-
-    /** Generate mask for a resized volume
-     * It is supposed that the image is already resized and with its logical
-     * origin set.
-     */
-    void generate_3Dmask();
-
-    /** Generate mask for an empty volume.
-     */
-    void generate_3Dmask(int Zdim, int Ydim, int Xdim)
-    {
-        resize(Zdim, Ydim, Xdim);
-        generate_3Dmask();
-    }
-
-    /** Generate mask for an image following a pattern
-     */
-    template<typename T>
-    void generate_3Dmask(const Matrix3D< T >& m)
-    {
-        resize(m);
-        generate_3Dmask();
+        generate_mask(apply_geo);
     }
 
     /** Apply mask to signal
@@ -1268,122 +1032,27 @@ void computeStats_within_binary_mask(const Matrix2D< int >& mask,
         stddev = 0;
 }
 
-/** Apply geometric transformation to a binary mask
+/** Apply geometric transformation to a binary (2D) mask
  * @ingroup MasksTools
  */
-void apply_geo_binary_2D_mask(Matrix2D< int >& mask,
+void apply_geo_binary_2D_mask(MultidimArray< int >& mask,
                               const Matrix2D< double >& A);
 
-/** Apply geometric transformation to a continuous mask
+/** Apply geometric transformation to a continuous (2D) mask
  * @ingroup MasksTools
  */
-void apply_geo_cont_2D_mask(Matrix2D< double >& mask,
+void apply_geo_cont_2D_mask(MultidimArray< double >& mask,
                             const Matrix2D< double >& A);
 
-/** Apply binary mask to an image (1D)
- * @ingroup MasksTools
- *
- * The image values for which the input mask is 0 are set to (subs_val). The
- * input and output matrices can be the same ones. Only the overlapping values
- * are affected by the mask.
- *
- */
-template<typename T>
-void apply_binary_mask(const Matrix1D< int >& mask, const Matrix1D< T >& m_in,
-                       Matrix1D< T >& m_out, T subs_val = (T) 0)
-{
-    m_out.resize(m_in);
-
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(m_out)
-    // If in common with the mask
-    if (i >= STARTINGX(mask) && i <= FINISHINGX(mask))
-        if (VEC_ELEM(mask, i) == 0)
-            VEC_ELEM(m_out, i) = subs_val;
-        else
-            VEC_ELEM(m_out, i) = VEC_ELEM(m_in, i);
-    // It is not in common, leave the original one
-    else
-        VEC_ELEM(m_out, i) = VEC_ELEM(m_in, i);
-}
-
-/** Apply continuous mask to an image (1D)
- * @ingroup MasksTools
- *
- * The image is multiplied by the mask. The input and output matrices can be the
- * same ones. Only the overlapping values are affected by the mask.
- */
-template<typename T>
-void apply_cont_mask(const Matrix1D< double >& mask, const Matrix1D< T >& m_in,
-                     Matrix1D< T >& m_out)
-{
-    m_out.resize(m_in);
-
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(m_out)
-    // If in common with the mask
-    if (i >= STARTINGX(mask) && i <= FINISHINGX(mask))
-        VEC_ELEM(m_out, i) = (T)(VEC_ELEM(m_in, i) * VEC_ELEM(mask, i));
-    // It is not in common, leave the original one
-    else
-        VEC_ELEM(m_out, i) = VEC_ELEM(m_in, i);
-}
-
-/** Apply binary mask to an image (2D)
- * @ingroup MasksTools
- *
- * The image values for which the input mask is 0 are set to (subs_val). The
- * input and output matrices can be the same ones. Only the overlapping values
- * are affected by the mask
- */
-template<typename T>
-void apply_binary_mask(const Matrix2D< int >& mask, const Matrix2D< T >& m_in,
-                       Matrix2D< T >& m_out, T subs_val = (T) 0)
-{
-    m_out.resize(m_in);
-
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(m_out)
-    // If in common with the mask
-    if (i >= STARTINGY(mask) && i <= FINISHINGY(mask) &&
-        j >= STARTINGX(mask) && j <= FINISHINGX(mask))
-        if (MAT_ELEM(mask, i, j) == 0)
-            MAT_ELEM(m_out, i, j) = subs_val;
-        else
-            MAT_ELEM(m_out, i, j) = MAT_ELEM(m_in, i, j);
-    // It is not in common, leave the original one
-    else
-        MAT_ELEM(m_out, i, j) = MAT_ELEM(m_in, i, j);
-}
-
-/** Apply continuous mask to an image (2D)
- * @ingroup MasksTools
- *
- * The image is multiplied by the mask. The input and output matrices can be the
- * same ones. Only the overlapping values are affected by the mask.
-  */
-template<typename T>
-void apply_cont_mask(const Matrix2D< double >& mask, const Matrix2D< T >& m_in,
-                     Matrix2D< T >& m_out)
-{
-    m_out.resize(m_in);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(m_out)
-    // If in common with the mask
-    if (i >= STARTINGY(mask) && i <= FINISHINGY(mask) &&
-        j >= STARTINGX(mask) && j <= FINISHINGX(mask))
-        MAT_ELEM(m_out, i, j) = (T)(MAT_ELEM(m_in, i, j) *
-                                    MAT_ELEM(mask, i, j));
-    // It is not in common, leave the original one
-    else
-        MAT_ELEM(m_out, i, j) = MAT_ELEM(m_in, i, j);
-}
-
-/** Compute statistics in the active area (3D)
+/** Compute statistics in the active area
  * @ingroup MaskTools
  *
  * Only the statistics for values in the overlapping between the mask and the
  * volume for those the mask is not 0 are computed.
  */
 template<typename T>
-void computeStats_within_binary_mask(const Matrix3D< int >& mask,
-                                      const Matrix3D< T >& m, T& min_val,
+void computeStats_within_binary_mask(const MultidimArray< int >& mask,
+                                      const MultidimArray< T >& m, T& min_val,
                                       T& max_val,
                                       double& avg, double& stddev)
 {
@@ -1422,15 +1091,15 @@ void computeStats_within_binary_mask(const Matrix3D< int >& mask,
         stddev = 0;
 }
 
-/** Apply mask to an volume (3D)
+/** Apply mask to a MultidimArray
  * @ingroup MasksTools
  *
  * The volume values for which the input mask is 0 are set to 0. The input and
  * output volumes can be the same ones.
  */
 template<typename T>
-void apply_binary_mask(const Matrix3D< int >& mask, const Matrix3D< T >& m_in,
-                       Matrix3D< T >& m_out, T subs_val = (T) 0)
+void apply_binary_mask(const MultidimArray< int >& mask, const MultidimArray< T >& m_in,
+                       MultidimArray< T >& m_out, T subs_val = (T) 0)
 {
     m_out.resize(m_in);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(m_out)
@@ -1447,15 +1116,15 @@ void apply_binary_mask(const Matrix3D< int >& mask, const Matrix3D< T >& m_in,
         VOL_ELEM(m_out, k, i, j) = VOL_ELEM(m_in, k, i, j);
 }
 
-/** Apply continuous mask to an image (3D)
+/** Apply continuous mask to a MultidimArray
  * @ingroup MasksTools
  *
  * The image is multiplied by the mask. The input and output matrices can be the
  * same ones. Only the overlapping values are affected by the mask.
  */
 template<typename T>
-void apply_cont_mask(const Matrix3D< double >& mask, const Matrix3D< T >& m_in,
-                     Matrix3D< T >& m_out)
+void apply_cont_mask(const MultidimArray< double >& mask, const MultidimArray< T >& m_in,
+                     MultidimArray< T >& m_out)
 {
     m_out.resize(m_in);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(m_out)
@@ -1470,48 +1139,6 @@ void apply_cont_mask(const Matrix3D< double >& mask, const Matrix3D< T >& m_in,
         VOL_ELEM(m_out, k, i, j) = VOL_ELEM(m_in, k, i, j);
 }
 
-/** Compute histogram inside mask within its minimum and maximum value (2D)
- * @ingroup MasksTools
- *
- * Given a matrix as input, this function returns its histogram within the
- * minimum and maximum of the matrix inside the mask, in this way all the values
- * in the matrix are counted. The matrix can be of any numerical type (short
- * int, int, double, ...). The number of steps must always be given.
- */
-template<typename T>
-void compute_hist_within_binary_mask(const Matrix2D< int >& mask,
-                                     Matrix2D< T >& v, histogram1D& hist,
-                                     int no_steps)
-{
-    T min_val, max_val;
-    double avg, stddev;
-
-    computeStats_within_binary_mask(mask, v, min_val, max_val, avg, stddev);
-    compute_hist_within_binary_mask(mask, v, hist, min_val, max_val, no_steps);
-}
-
-/** Compute histogram inside mask within two values (2D)
- * @ingroup MasksTools
- *
- * Given a matrix as input, this function returns the histogram of values inside
- * the mask within two values, the matrix values outside this range are not
- * counted. This can be used to avoid the effect of outliers which causes a
- * "compression" in the histogram. The matrix can be of any numerical type
- * (short int, int, double, ...). The number of steps must always be given.
- */
-template<typename T>
-void compute_hist_within_binary_mask(const Matrix2D< int >& mask,
-                                     const Matrix2D< T >& v, histogram1D &hist,
-                                     T min, T max, int no_steps)
-{
-    SPEED_UP_temps;
-    hist.init(min, max, no_steps);
-
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask, v)
-    if (MAT_ELEM(mask, i, j) != 0)
-        hist.insert_value(MAT_ELEM(v, i, j));
-}
-
 /** Compute histogram inside mask within its minimum and maximum value (3D)
  * @ingroup MasksTools
  *
@@ -1521,8 +1148,8 @@ void compute_hist_within_binary_mask(const Matrix2D< int >& mask,
  * (short int, int, double, ...). The number of steps must always be given.
  */
 template<typename T>
-void compute_hist_within_binary_mask(const Matrix3D< int >& mask,
-                                     Matrix3D< T >& v, histogram1D &hist,
+void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
+                                     MultidimArray< T >& v, histogram1D &hist,
                                      int no_steps)
 {
     T min_val, max_val;
@@ -1542,8 +1169,8 @@ void compute_hist_within_binary_mask(const Matrix3D< int >& mask,
  * (short int, int, double, ...). The number of steps must always be given.
  */
 template<typename T>
-void compute_hist_within_binary_mask(const Matrix3D< int >& mask,
-                                     const Matrix3D< T >& v, histogram1D& hist,
+void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
+                                     const MultidimArray< T >& v, histogram1D& hist,
                                      T min, T max, int no_steps)
 {
     SPEED_UP_temps;
@@ -1585,49 +1212,6 @@ void compute_hist_within_binary_mask(const Matrix3D< int >& mask,
 #define count_with_mask_between(mask, m, th1, th2) \
     count_with_mask(mask, m, COUNT_BETWEEN, th1, th2);
 
-/** Count pixels with mask and threshold
- * @ingroup MasksTools
- *
- * This function returns the number of pixels in the ACTIVE area of an image
- * with a value:
- *
- * COUNT_ABOVE: greater or equal than th1
- * COUNT_BELOW: smaller or equal than th1
- * COUNT_BETWEEN: smaller or equal than th1 and greater or equal than th2
- *
- * For complex matrices the absolute value is compared.
- */
-template<typename T>
-int count_with_mask(const Matrix2D< int >& mask,
-                    const Matrix2D< T >& m, int mode, double th1, double th2)
-{
-    SPEED_UP_temps;
-    int N = 0;
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(mask, m)
-    if (MAT_ELEM(mask, i, j))
-        switch (mode)
-        {
-        case (COUNT_ABOVE):
-                        if (MAT_ELEM(m, i, j) >= th1)
-                            N++;
-            break;
-
-        case (COUNT_BELOW):
-                        if (MAT_ELEM(m, i, j) <= th1)
-                            N++;
-            break;
-
-        case (COUNT_BETWEEN):
-                        if (MAT_ELEM(m, i, j) >= th1 && MAT_ELEM(m, i, j) <= th2)
-                            N++;
-            break;
-        }
-    return N;
-}
-
-int count_with_mask(const Matrix2D< int >& mask,
-                    const Matrix2D< std::complex< double > > & m, int mode,
-                    double th1, double th2);
 
 /** Count voxels with mask and threshold
  * @ingroup MasksTools
@@ -1642,8 +1226,8 @@ int count_with_mask(const Matrix2D< int >& mask,
  * For complex matrices the absolute value is compared.
  */
 template<typename T>
-int count_with_mask(const Matrix3D< int >& mask,
-                    const Matrix3D< T >& m, int mode, double th1, double th2)
+int count_with_mask(const MultidimArray< int >& mask,
+                    const MultidimArray< T >& m, int mode, double th1, double th2)
 {
     SPEED_UP_temps;
     int N = 0;
@@ -1669,31 +1253,17 @@ int count_with_mask(const Matrix3D< int >& mask,
     return N;
 }
 
-int count_with_mask(const Matrix3D< int >& mask,
-                    const Matrix3D< std::complex< double > > & m, int mode,
+int count_with_mask(const MultidimArray< int >& mask,
+                    const MultidimArray< std::complex< double > > & m, int mode,
                     double th1, double th2);
 
-/** Invert binary mask (2D)
+/** Invert binary mask
  * @ingroup MasksTools
  *
  * 0's are converted in 1's and viceversa
  */
 template<typename T>
-void invert_binary_mask(Matrix2D< T >& mask)
-{
-    T* ptr=NULL;
-    unsigned long int n;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(mask,n,ptr)
-        *ptr = 1-(*ptr);
-}
-
-/** Invert binary mask (3D)
- * @ingroup MasksTools
- *
- * 0's are converted in 1's and viceversa
- */
-template<typename T>
-void invert_binary_mask(Matrix3D< T >& mask)
+void invert_binary_mask(MultidimArray< T >& mask)
 {
     T* ptr=NULL;
     unsigned long int n;
@@ -1708,19 +1278,8 @@ void invert_binary_mask(Matrix3D< T >& mask)
  * voxels within the mask are used to compute the linear transformation. If no
  * mask is provided then all voxels are used.
  */
-void rangeAdjust_within_mask(const Matrix2D< double >* mask,
-                              const Matrix2D< double >& m1,
-                              Matrix2D< double >& m2);
-
-/** Range adjust within binary mask
- * @ingroup MasksTools
- *
- * Make the grey values of m2 fit, in L2 sense, with those in m1. Only the
- * voxels within the mask are used to compute the linear transformation. If no
- * mask is provided then all voxels are used.
- */
-void rangeAdjust_within_mask(const Matrix3D< double >* mask,
-                              const Matrix3D< double >& m1,
-                              Matrix3D< double >& m2);
+void rangeAdjust_within_mask(const MultidimArray< double >* mask,
+                              const MultidimArray< double >& m1,
+                              MultidimArray< double >& m2);
 
 #endif
