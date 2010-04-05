@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/volume_segment.h>
+#include <reconstruction/volume_segment.h>
 
 void Usage(const Prog_segment_prm &prm);
 

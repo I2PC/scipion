@@ -464,7 +464,8 @@ ReconsSources = [
     'symmetrize.cpp',
 #   'virus_vertex',
     'volume_foms.cpp',
-    'volume_labelling.cpp']
+    'volume_labelling.cpp',
+    'volume_segment']
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
            ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
@@ -661,7 +662,7 @@ AddXmippProgram('threshold')
 AddXmippProgram('try_symmetry')
 #AddXmippProgram('test_sql', ['XmippRecons'])
 #AddXmippProgram('virus_vertex', ['XmippRecons'])
-AddXmippProgram('volume_segment')
+AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('window')
 
 # --- Scripts
