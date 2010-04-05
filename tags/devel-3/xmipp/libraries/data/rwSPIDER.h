@@ -112,7 +112,7 @@ int  readSPIDER(int img_select)
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL ) return(-1);
 	
-    SPIDERhead*	header = (SPIDERhead *) balloc(sizeof(SPIDERhead));
+    SPIDERhead*	header = (SPIDERhead *) askMemory(sizeof(SPIDERhead));
     if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 ) return(-2);
 	
     // Determine byte order and swap bytes if from different-endian machine
@@ -171,12 +171,12 @@ int  readSPIDER(int img_select)
     }
 	
     image = new SubImage [n];
-    image->xoff = header->xoff;
-    image->yoff = header->yoff;
-    image->zoff = header->zoff;
-    image->rot  = header->phi;
-    image->tilt = header->theta;
-    image->psi  = header->gamma;
+    image->shiftX = header->xoff;
+    image->shiftY = header->yoff;
+    image->shiftZ = header->zoff;
+    image->angleRot  = header->phi;
+    image->angleTilt = header->theta;
+    image->anglePsi  = header->gamma;
     image->weight = header->Weight;
     image->flip = header->Flip;
 
@@ -190,18 +190,18 @@ int  readSPIDER(int img_select)
                 for ( b = (char *) header; b<hend; b+=4 ) 
                     swapbytes(b, 4);
             j = ( n > 1 )? j = i: 0;
-            image[j].xoff = header->xoff;
-            image[j].yoff = header->yoff;
-            image[j].zoff = header->zoff;
-            image[j].rot  = header->phi;
-            image[j].tilt = header->theta;
-            image[j].psi  = header->gamma;
+            image[j].shiftX = header->xoff;
+            image[j].shiftY = header->yoff;
+            image[j].shiftZ = header->zoff;
+            image[j].angleRot  = header->phi;
+            image[j].angleTilt = header->theta;
+            image[j].anglePsi  = header->gamma;
             image[j].weight = header->Weight;
             image[j].flip = header->Flip;
         }
     }
 
-    bfree(header, sizeof(SPIDERhead));
+    freeMemory(header, sizeof(SPIDERhead));
 	
 #ifdef DEBUG
     std::cerr<<"DEBUG readSPIDER: header_size = "<<header_size<<" image_size = "<<image_size<<std::endl;
@@ -243,7 +243,7 @@ int 	writeSPIDER()
     float		labbyt = labrec*lenbyt; 		// Size of header in bytes
     offset = (int) labbyt;
 	
-    SPIDERhead*	header = (SPIDERhead *) balloc((int)labbyt*sizeof(char));
+    SPIDERhead*	header = (SPIDERhead *) askMemory((int)labbyt*sizeof(char));
 	
 	// Map the parameters
     header->lenbyt = lenbyt;					// Record length (in bytes)
@@ -293,12 +293,12 @@ int 	writeSPIDER()
         header->maxim = n;
     }
 	
-    header->xoff = image->xoff;
-    header->yoff = image->yoff;
-    header->zoff = image->zoff;
-    header->phi = image->rot;
-    header->theta = image->tilt;
-    header->gamma = image->psi;
+    header->xoff = image->shiftX;
+    header->yoff = image->shiftY;
+    header->zoff = image->shiftZ;
+    header->phi  = image->angleRot;
+    header->theta = image->angleTilt;
+    header->gamma = image->anglePsi;
 
     // Set time and date
     time_t timer;
@@ -328,7 +328,7 @@ int 	writeSPIDER()
     if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL ) return(-1);
     fwrite( header, offset, 1, fimg );
 
-    char* fdata = (char *) balloc(datasize);
+    char* fdata = (char *) askMemory(datasize);
     if ( n == 1 ) 
     {
         if ( dataflag ) 
@@ -346,12 +346,12 @@ int 	writeSPIDER()
         for ( size_t i=0; i<n; i++ ) 
         {
             header->imgnum = i + 1;
-            header->xoff = image[i].xoff;
-            header->yoff = image[i].yoff;
-            header->zoff = image[i].zoff;
-            header->phi  = image[i].rot;
-            header->theta = image[i].tilt;
-            header->gamma = image[i].psi;
+            header->xoff = image[i].shiftX;
+            header->yoff = image[i].shiftY;
+            header->zoff = image[i].shiftZ;
+            header->phi  = image[i].angleRot;
+            header->theta = image[i].angleTilt;
+            header->gamma = image[i].anglePsi;
             fwrite( header, offset, 1, fimg );
             if (datatype < ComplexShort)
                 castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
@@ -362,8 +362,8 @@ int 	writeSPIDER()
     }
 	
     fclose(fimg);
-    bfree(fdata, datasize);
-    bfree(header, (int)labbyt*sizeof(char));
+    freeMemory(fdata, datasize);
+    freeMemory(header, (int)labbyt*sizeof(char));
 	
     return(0);
 }

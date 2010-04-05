@@ -85,7 +85,7 @@ int readMRC()
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL ) return(-1);
 
-        MRChead*        header = (MRChead *) balloc(sizeof(MRChead));
+        MRChead*        header = (MRChead *) askMemory(sizeof(MRChead));
         if ( fread( header, MRCSIZE, 1, fimg ) < 1 ) return(-2);
 
     // Determine byte order and swap bytes if from little-endian machine
@@ -145,16 +145,13 @@ int readMRC()
     image = new SubImage [1];
     if (image == NULL)
             REPORT_ERROR(1001, "Allocate: No space left for subimage structure");
-    //image->xoff = -header->nxStart;	// Old header
-    //image->yoff = -header->nyStart;
-    //image->zoff = -header->nzStart;
-    image->xoff = -header->xOrigin/ux;	// New header
-    image->yoff = -header->yOrigin/uy;
-    image->zoff = -header->zOrigin/uz;
-    image->rot = image->tilt = image->psi = image->flip = 0.;
+    image->shiftX = -header->xOrigin/ux;	// New header
+    image->shiftY = -header->yOrigin/uy;
+    image->shiftZ = -header->zOrigin/uz;
+    image->angleRot = image->angleTilt = image->anglePsi = image->flip = 0.;
     image->weight = 1.;
 
-    bfree(header, sizeof(MRChead));
+    freeMemory(header, sizeof(MRChead));
 
     readData(fimg, -1, swap, 0);
 
@@ -168,7 +165,7 @@ int writeMRC()
         if ( transform != NoTransform )
             img_convert_fourier(p, CentHerm);
     */
-    MRChead*        header = (MRChead *) balloc(sizeof(MRChead));
+    MRChead*        header = (MRChead *) askMemory(sizeof(MRChead));
 
     // Map the parameters
     strncpy(header->map, "MAP ", 4);
@@ -192,9 +189,9 @@ int writeMRC()
         case ComplexFloat: header->mode = 4; break;
         default:           header->mode = 0; break;
     }
-    header->nxStart = (int) (-image->xoff - 0.5);
-    header->nyStart = (int) (-image->yoff - 0.5);
-    header->nzStart = (int) (-image->zoff - 0.5);
+    header->nxStart = (int) (-image->shiftX - 0.5);
+    header->nyStart = (int) (-image->shiftY - 0.5);
+    header->nzStart = (int) (-image->shiftZ - 0.5);
     header->mx = (int) (ua/ux + 0.5);
     header->my = (int) (ub/uy + 0.5);
     header->mz = (int) (uc/uz + 0.5);
@@ -208,9 +205,9 @@ int writeMRC()
     header->a = ua;
     header->b = ub;
     header->c = uc;
-    header->xOrigin = -image->xoff*ux;
-    header->yOrigin = -image->yoff*uy;
-    header->zOrigin = -image->zoff*uz;
+    header->xOrigin = -image->shiftX*ux;
+    header->yOrigin = -image->shiftY*uy;
+    header->zOrigin = -image->shiftZ*uz;
 
     // This is a band-aid to overcome the limitations of the image format
     if ( fabs(ua - ux*header->mx) > 0.001 || 
@@ -255,7 +252,7 @@ int writeMRC()
     fwrite( header, MRCSIZE, 1, fimg );
     if ( dataflag )
     {
-        char* fdata = (char *) balloc(datasize);
+        char* fdata = (char *) askMemory(datasize);
         switch (datatype)
         {
         case UChar: 
@@ -290,11 +287,11 @@ int writeMRC()
             REPORT_ERROR(22,"Error: invalid datatype in writeMRC");
         }
         fwrite( fdata, datasize, 1, fimg );
-        bfree(fdata, datasize);
+        freeMemory(fdata, datasize);
     }
 
     fclose(fimg);
-    bfree(header, sizeof(MRChead));
+    freeMemory(header, sizeof(MRChead));
 
     return(0);
 }
