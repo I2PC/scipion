@@ -27,6 +27,9 @@
 #define PROJECTION_H
 
 #include "image.h"
+#include "matrix1d.h"
+#include "matrix2d.h"
+#include "image.h"
 #include "threads.h"
 #include "grids.h"
 #include "basis.h"
@@ -36,13 +39,13 @@
 extern barrier_t project_barrier;
 extern pthread_mutex_t project_mutex;
 
-/// @defgroup Projections Projections (ImageXmipp + Euler angles)
+/// @defgroup Projections Projections (2D Image + Euler angles)
 /// @ingroup DataLibrary
 
 /** Projection class.
  * @ingroup Projections
  *
- * A projection is an ImageXmipp plus some information (about the direction
+ * A projection is a 2D, <double> Image plus some information (about the direction
  * of prejection) which makes it suitable for 3D reconstruction. A projection
  * is supposed to have the point (0,0) at the center of the image and not in
  * the corners as usual matrices have.
@@ -55,10 +58,9 @@ extern pthread_mutex_t project_mutex;
  * P.set_angles(30, 45, -50); // Set Euler angles
  * @endcode
  *
- * From now on, the projection can be treated as any other Image. You can even
- * write it on disk as it inherits from ImageXmipp.
+ * From now on, the projection can be treated as any other Image. 
  */
-class Projection: public ImageXmipp
+class Projection: public Image<double>
 {
 public:
     /** Vector perpendicular to the projection plane.
@@ -122,16 +124,16 @@ public:
 typedef struct {
         int thread_id;
         int threads_count;
-        VolumeT<double> * vol;
+        Image<double> * vol;
         const SimpleGrid * grid;
         const Basis * basis;
         Projection * global_proj;
         Projection * global_norm_proj;
         int FORW;
         int eq_mode;
-        const VolumeT<int> *VNeq;
+        const Image<int> *VNeq;
         Matrix2D<double> *M;
-        const Matrix2D<int> *mask;
+        const MultidimArray<int> *mask;
         double ray_length;  
         double rot,tilt,psi;
 	bool destroy;
@@ -141,11 +143,11 @@ extern project_thread_params * project_threads;
 
 
 template <class T>
-void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
+void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                         const Basis *basis,
                         Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
-                        const VolumeT<int> *VNeq, Matrix2D<double> *M,
-			const Matrix2D<int> *mask=NULL,
+                        const Image<int> *VNeq, Matrix2D<double> *M,
+			const MultidimArray<int> *mask=NULL,
                         double ray_length = -1.0,
                         int thread_id = -1, int num_threads = 1);
 
@@ -214,7 +216,7 @@ void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
     
     Set it to NULL if you don't want to use it
  */
-void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
+void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi,
 		    const Matrix1D<double> *roffset=NULL);
 
@@ -233,7 +235,7 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
     Where Raxis is the 3D rotation matrix given by the axis and
     the angle.
 */
-void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
+void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
    int Ydim, int Xdim, double axisRot, double axisTilt,
    const Matrix1D<double> &raxis, double angle, double inplaneRot,
    const Matrix1D<double> &rinplane);
@@ -248,7 +250,7 @@ void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
  - Pixel( y,z ) is the value of the pixel where the ray departs from.
  - Distance is the distance the ray goes through the Voxel.
 */
-void singleWBP(Matrix3D<double> &V, Projection &P);
+void singleWBP(MultidimArray<double> &V, Projection &P);
 
 /** Count equations in volume.
    For Component AVeraing (CAV), the number of equations in which
@@ -327,7 +329,7 @@ void *project_SimpleGridThread( void * params )
 {	
 	project_thread_params * thread_data = (project_thread_params *)params;
 	
-	VolumeT<T> * vol;
+	Image<T> * vol;
 	const SimpleGrid * grid;
 	
 	int thread_id = thread_data->thread_id;
@@ -346,9 +348,9 @@ void *project_SimpleGridThread( void * params )
 	
 	int FORW;
 	int eq_mode;
-	const VolumeT<int> *VNeq=NULL;        
+	const Image<int> *VNeq=NULL;        
 	Matrix2D<double> *M=NULL;
-        const Matrix2D<int> *mask=NULL;
+        const MultidimArray<int> *mask=NULL;
 	double ray_length;
 	
 	double rot,tilt,psi;
@@ -421,11 +423,11 @@ void *project_SimpleGridThread( void * params )
 //#define DEBUG
 //#define DEBUG_LITTLE
 template <class T>
-void project_SimpleGrid(VolumeT<T> *vol, const SimpleGrid *grid,
+void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                         const Basis *basis,
                         Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
-                        const VolumeT<int> *VNeq, Matrix2D<double> *M,
-                        const Matrix2D<int> *mask,
+                        const Image<int> *VNeq, Matrix2D<double> *M,
+                        const MultidimArray<int> *mask,
                         double ray_length, 
                         int thread_id, int numthreads)
 {
@@ -971,7 +973,7 @@ void project_Volume(
     // Project each subvolume
     for (int i = 0; i < vol.VolumesNo(); i++)
     {
-        VolumeT<int> *VNeq;
+        Image<int> *VNeq;
         if (GVNeq != NULL)   VNeq = &((*GVNeq)(i));
         else VNeq = NULL;
         
@@ -1000,7 +1002,7 @@ void project_Volume(
 		}
 	
 #ifdef DEBUG
-        ImageXmipp save;
+        Image<double> save;
         save = norm_proj;
         if (FORW) save.write((std::string)"PPPnorm_FORW" + (char)(48 + i));
         else      save.write((std::string)"PPPnorm_BACK" + (char)(48 + i));

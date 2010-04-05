@@ -42,7 +42,7 @@ project_thread_params * project_threads;
 /* Reset =================================================================== */
 void Projection::reset(int Ydim, int Xdim)
 {
-    img.initZeros(Ydim, Xdim);
+    data.initZeros(Ydim, Xdim);
     moveOriginTo_center();
 }
 
@@ -59,7 +59,7 @@ void Projection::set_angles(double _rot, double _tilt, double _psi)
 /* Read ==================================================================== */
 void Projection::read(const FileName &fn, const bool &apply_shifts)
 {
-    ImageXmipp::read(fn, false, false, false, apply_shifts);
+    Image<double>::read(fn, false, false, false, apply_shifts);
     Euler_angles2matrix(rot(), tilt(), psi(), euler);
     eulert = euler.transpose();
     euler.getRow(2, direction);
@@ -70,7 +70,7 @@ void Projection::read(const FileName &fn, const bool &apply_shifts)
 Projection & Projection::operator = (const Projection &P)
 {
     // Esto hay que ponerlo m�s elegantemente accediendo al = del padre
-    *(ImageXmipp *)this = * ((ImageXmipp *) & P);
+    *(Image *)this = * ((Image *) & P);
     direction = P.direction;
     euler     = P.euler;
     eulert    = P.eulert;
@@ -86,7 +86,7 @@ void Projection::assign(const Projection &P)
 // Projection from a voxel volume ==========================================
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
-void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
+void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi,
 		    const Matrix1D<double> *roffset)
 {
@@ -272,7 +272,7 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 
 /* Project a voxel volume with respect to an offcentered axis -------------- */
 //#define DEBUG
-void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
+void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
    int Ydim, int Xdim, double axisRot, double axisTilt,
    const Matrix1D<double> &raxis, double angle, double inplaneRot,
    const Matrix1D<double> &rinplane)
@@ -314,7 +314,7 @@ void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
 
 // Sjors, 16 May 2005
 // This routine may give volumes with spurious high frequencies.....
-void singleWBP(Matrix3D<double> &V, Projection &P)
+void singleWBP(MultidimArray<double> &V, Projection &P)
 {
     SPEED_UP_temps;
 
@@ -481,7 +481,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
                                 const Matrix1D<double> &shift,
                                 const Matrix1D<double> &aint, const Matrix1D<double> &bint,
                                 const Matrix2D<double> &D,  const Matrix2D<double> &Dinv,
-                                const Matrix2D<int> &mask, int FORW, int eq_mode)
+                                const MultidimArray<int> &mask, int FORW, int eq_mode)
 {
     Matrix1D<double> prjX(3);                // Coordinate: Projection of the
     Matrix1D<double> prjY(3);                // 3 grid vectors
@@ -844,7 +844,7 @@ void project_Crystal_Volume(
     const Matrix1D<double> &bint,         // Second lattice vector (2x1) in voxels
     const Matrix2D<double> &D,            // volume deformation matrix
     const Matrix2D<double> &Dinv,         // volume deformation matrix
-    const Matrix2D<int>   &mask,          // volume mask
+    const MultidimArray<int>   &mask,          // volume mask
     int              FORW,                // 1 if we are projecting a volume
     //   norm_proj is calculated
     // 0 if we are backprojecting
@@ -866,7 +866,7 @@ void project_Crystal_Volume(
                                    proj, norm_proj, shift, aint, bint, D, Dinv, mask, FORW, eq_mode);
 
 #ifdef DEBUG
-        ImageXmipp save;
+        Image<double> save;
         save = norm_proj;
         if (FORW) save.write((std::string)"PPPnorm_FORW" + (char)(48 + i));
         else      save.write((std::string)"PPPnorm_BACK" + (char)(48 + i));
