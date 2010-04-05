@@ -49,7 +49,11 @@ ANOTHER EXAMPLE (xmipp_selfile_create)
 import os,glob,sys
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
 sys.path.append(scriptdir) # add default search path
-import XmippData
+
+import XmippData # import interface with xmipp
+
+#some functions in xmipp require filenames, this is not a native 
+#data type in python. So it need to be explicitely defined as follows
 outFile=XmippData.FileName()
 if len(sys.argv) == 1:
    print 'Usage: selfile_create "pattern"  metadataFile'
@@ -64,13 +68,15 @@ else:
    print 'Example2: xmipp_selfile_create "Images/*xmp"  > all_images.sel'
    sys.exit()
 
-
+#create metadata object
 mD=XmippData.MetaData()
 
+#loop through the images
 for file in glob.glob(sys.argv[1]):
     mD.addObject();
     mD.setImage(file)
     mD.setEnabled(1)
+#write sel file    
 mD.write(outFile)
 
 */
