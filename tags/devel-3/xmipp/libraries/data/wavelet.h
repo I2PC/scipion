@@ -28,7 +28,8 @@
 #ifndef WAVELET_H
 #define WAVELET_H
 
-#include "matrix3d.h"
+#include "multidimensional_array.h"
+#include "matrix1d.h"
 #include "numerical_recipes.h"
 
 /// @defgroup Wavelets Wavelets
@@ -53,24 +54,8 @@
  *
  * If the isign=-1 then the inverse wavelet transform is performed.
  */
-void Bilib_DWT(const Matrix1D< double >& input,
-               Matrix1D< double >& result,
-               int iterations,
-               int isign = 1);
-
-/** B-spline Wavelet transform of a matrix.
- * @ingroup WaveletsBilib
- */
-void Bilib_DWT(const Matrix2D< double >& input,
-               Matrix2D< double >& result,
-               int iterations,
-               int isign = 1);
-
-/** B-spline Wavelet transform of a matrix.
- * @ingroup WaveletsBilib
- */
-void Bilib_DWT(const Matrix3D< double >& input,
-               Matrix3D< double >& result,
+void Bilib_DWT(const MultidimArray< double >& input,
+               MultidimArray< double >& result,
                int iterations,
                int isign = 1);
 
@@ -85,7 +70,7 @@ void Bilib_DWT(const Matrix3D< double >& input,
  */
 void set_DWT_type(int DWT_type);
 
-/** DWT of a vector.
+/** DWT of a MultidimArray
  * @ingroup WaveletsRecipes
  *
  * The output vector can be the same as the input one. Previously the type of
@@ -93,81 +78,34 @@ void set_DWT_type(int DWT_type);
  * if isign=-1 the inverse DWT is done.
  */
 template<typename T>
-void DWT(const Matrix1D< T >& v, Matrix1D< double >& result, int isign = 1)
+void DWT(const MultidimArray< T >& v, MultidimArray< double >& result, int isign = 1)
 {
-    unsigned long int nn[1];
-    unsigned long int* ptr_nn = nn - 1;
-
-    typeCast(v, result);
-    nn[0] = XSIZE(result);
-    double* ptr_result = MULTIDIM_ARRAY(result) - 1;
-    wtn(ptr_result, ptr_nn, 1, isign, pwt);
-}
-
-/** DWT of a array.
- * @ingroup WaveletsRecipes
- *
- * The output array can be the same as the input one. Previously the type of
- * DWT must be set with set_DWT_type. If isign=1 the direct DWT is performed,
- * if isign=-1 the inverse DWT is done.
- */
-template<typename T>
-void DWT(const Matrix2D< T >& v, Matrix2D< double >& result, int isign = 1)
-{
-    unsigned long int nn[2];
-    unsigned long int* ptr_nn = nn - 1;
-
-    typeCast(v, result);
-    nn[1] = YSIZE(result);
-    nn[0] = XSIZE(result);
-    double* ptr_result = MULTIDIM_ARRAY(result) - 1;
-    wtn(ptr_result, ptr_nn, 2, isign, pwt);
-}
-
-/** DWT of a volume.
- * @ingroup WaveletsRecipes
- *
- * The output vector can be the same as the input one. Previously the type of
- * DWT must be set with set_DWT_type. If isign=1 the direct DWT is performed,
- * if isign=-1 the inverse DWT is done.
- */
-template<typename T>
-void DWT(const Matrix3D< T >& v, Matrix3D< double >& result, int isign = 1)
-{
-    unsigned long int nn[2];
+    unsigned long int nn[3];
     unsigned long int *ptr_nn = nn - 1;
+    int dim;
+    nn[2] = ZSIZE(v);
+    nn[1] = YSIZE(v);
+    nn[0] = XSIZE(v);
+
+    if (YSIZE(v) == 1 && ZSIZE(v) == 1)
+        dim = 1;
+    else if (ZSIZE(v) == 1)
+        dim = 2;
+    else 
+        dim = 3;
 
     typeCast(v, result);
-    nn[2] = ZSIZE(result);
-    nn[1] = YSIZE(result);
-    nn[0] = XSIZE(result);
     double* ptr_result = MULTIDIM_ARRAY(result) - 1;
-    wtn(ptr_result, ptr_nn, 3, isign, pwt);
+    wtn(ptr_result, ptr_nn, dim, isign, pwt);
 }
 
-/** IDWT of a vector.
- * @ingroup WaveletsRecipes
- *
- * The output vector can be the same as the input one. Previously the type of
- * DWT must be set with set_DWT_type.
- */
-void IDWT(const Matrix1D< double >& v, Matrix1D< double >& result);
-
-/** IDWT of an array.
- * @ingroup WaveletsRecipes
- *
- * The output vector can be the same as the input one. Previously the type of
- * DWT must be set with set_DWT_type.
- */
-void IDWT(const Matrix2D< double >& v, Matrix2D< double >& result);
-
-/** IDWT of a volume.
+/** IDWT of a MultidimArray.
  * @ingroup WaveletsRecipes
  *
  * The output volume can be the same as the input one. Previously the type of
  * DWT must be set with set_DWT_type.
  */
-void IDWT(const Matrix3D< double >& v, Matrix3D< double >& result);
+void IDWT(const MultidimArray< double >& v, MultidimArray< double >& result);
 
 /// @defgroup WaveletRelated Wavelet related functions
 /// @ingroup Wavelets
@@ -179,7 +117,7 @@ void IDWT(const Matrix3D< double >& v, Matrix3D< double >& result);
  * pass version of the image at scale s is stored in the 01 quadrant of that
  * scale.
  */
-void DWT_lowpass(const Matrix2D< double >& v, Matrix2D< double >& result);
+void DWT_lowpass2D(const MultidimArray< double >& v, MultidimArray< double >& result);
 
 #define DWT_Imin(s, smax, l) static_cast< int >(((l == '0') ? 0 : \
         pow(2.0, smax - s - 1)))
@@ -195,7 +133,7 @@ void DWT_lowpass(const Matrix2D< double >& v, Matrix2D< double >& result);
  */
 template<typename T>
 void SelectDWTBlock(int scale,
-                    const Matrix1D< T >& I,
+                    const MultidimArray< T >& I,
                     const std::string& quadrant,
                     int& x1,
                     int& x2)
@@ -215,7 +153,7 @@ void SelectDWTBlock(int scale,
  */
 template<typename T>
 void SelectDWTBlock(int scale,
-                    const Matrix2D< T >& I,
+                    const MultidimArray< T >& I,
                     const std::string& quadrant,
                     int& x1,
                     int& x2,
@@ -244,7 +182,7 @@ void SelectDWTBlock(int scale,
  */
 template<typename T>
 void SelectDWTBlock(int scale,
-                    const Matrix3D< T >& I,
+                    const MultidimArray< T >& I,
                     const std::string& quadrant,
                     int& x1,
                     int& x2,
@@ -335,46 +273,38 @@ void Get_Scale_Quadrant(int size_x,
 /** Remove all information within a quadrant and scale.
  * @ingroup WaveletsDenoising
  */
-void clean_quadrant(Matrix2D< double >& I,
-                    int scale,
-                    const std::string& quadrant);
+void clean_quadrant2D(MultidimArray< double >& I,
+                      int scale,
+                      const std::string& quadrant);
 
 /** Remove all information within a quadrant and scale.
  * @ingroup WaveletsDenoising
  */
-void clean_quadrant(Matrix3D< double >& I,
-                    int scale,
-                    const std::string& quadrant);
+void clean_quadrant3D(MultidimArray< double >& I,
+                      int scale,
+                      const std::string& quadrant);
 
-/** Soft thresholding 2D.
+/** Soft thresholding .
  * @ingroup WaveletsDenoising
  *
  * Substract a value from all coefficients, if the the value is greater than
  * the absolute value of the coefficient, that coefficient is set to 0.
  */
-void soft_thresholding(Matrix2D< double >& I, double th);
-
-/** Soft thresholding 3D.
- * @ingroup WaveletsDenoising
- *
- * Substract a value from all coefficients, if the the value is greater than
- * the absolute value of the coefficient, that coefficient is set to 0.
- */
-void soft_thresholding(Matrix3D< double >& I, double th);
+void soft_thresholding(MultidimArray< double >& I, double th);
 
 /** Adaptive soft thresholding 2D.
  * @ingroup WaveletsDenoising
  *
  * Chang, Yu, Betterli. IEEE Int. Conf. Image Processing
  */
-void adaptive_soft_thresholding(Matrix2D< double >& I, int scale);
+void adaptive_soft_thresholding2D(MultidimArray< double >& I, int scale);
 
 /** Keep central part 2D.
  * @ingroup WaveletsDenoising
  *
  * Keep those coefficients in a certain radius.
  */
-void DWT_keep_central_part(Matrix2D< double >& I, double R);
+void DWT_keep_central_part(MultidimArray< double >& I, double R);
 
 /** Bayesian, Wiener filtering.
  * @ingroup WaveletsDenoising
@@ -387,7 +317,7 @@ void DWT_keep_central_part(Matrix2D< double >& I, double R);
  * If denoise is set to false, then S and N coefficients are estimated but they
  * are not applied to the image.
  */
-Matrix1D< double > bayesian_wiener_filtering(Matrix2D< double >& WI,
+MultidimArray< double > bayesian_wiener_filtering2D(MultidimArray< double >& WI,
         int allowed_scale,
         double SNR0 = 0.1,
         double SNRF = 0.2,
@@ -400,9 +330,9 @@ Matrix1D< double > bayesian_wiener_filtering(Matrix2D< double >& WI,
  *
  * This is the function that really denoise.
  */
-void bayesian_wiener_filtering(Matrix2D< double >& WI,
-                               int allowed_scale,
-                               Matrix1D< double >& estimatedS);
+void bayesian_wiener_filtering2D(MultidimArray< double >& WI,
+                                 int allowed_scale,
+                                 MultidimArray< double >& estimatedS);
 
 /** Bayesian, Wiener filtering.
  * @ingroup WaveletsDenoising
@@ -415,7 +345,7 @@ void bayesian_wiener_filtering(Matrix2D< double >& WI,
  * If denoise is set to false, then S and N coefficients are estimated but they
  * are not applied to the image.
  */
-Matrix1D< double > bayesian_wiener_filtering(Matrix3D< double >& WI,
+MultidimArray< double > bayesian_wiener_filtering3D(MultidimArray< double >& WI,
         int allowed_scale,
         double SNR0 = 0.1,
         double SNRF = 0.2,
@@ -428,8 +358,8 @@ Matrix1D< double > bayesian_wiener_filtering(Matrix3D< double >& WI,
  *
  * This is the function that really denoise.
  */
-void bayesian_wiener_filtering(Matrix3D< double >& WI,
+void bayesian_wiener_filtering3D(MultidimArray< double >& WI,
                                int allowed_scale,
-                               Matrix1D< double >& estimatedS);
+                               MultidimArray< double >& estimatedS);
 
 #endif
