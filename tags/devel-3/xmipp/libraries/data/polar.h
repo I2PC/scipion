@@ -32,8 +32,7 @@
 #ifndef POLAR_H
 #define POLAR_H
 #include "funcs.h"
-#include "matrix2d.h"
-#include "gridding.h"
+#include "multidimensional_array.h"
 #include "fftw.h"
 
 #define FULL_CIRCLES 0
@@ -53,7 +52,7 @@
 typedef struct Polar_Fftw_Plans
 {
     std::vector<XmippFftw>          transformers;
-    std::vector<Matrix1D<double> >  arrays;
+    std::vector<MultidimArray<double> >  arrays;
 }
 Polar_fftw_plans;
 
@@ -67,7 +66,7 @@ public:
     int                        mode;         // Use full or half circles
     double                     oversample;
     std::vector<double>        ring_radius;  // radius of each ring
-    std::vector<Matrix1D<T> >  rings;        // vector with all rings
+    std::vector<MultidimArray<T> >  rings;        // vector with all rings
 public:
     /** Empty constructor
      *
@@ -382,31 +381,31 @@ public:
 
     /** 1D Matrix access
      *
-     * This operator can be used to access any ring of the polar as Matrix1D.
+     * This operator can be used to access any ring of the polar as MultidimArray.
      *
      * @code
-     * Matrix1D<double> secondring = P.getRing(1);
+     * MultidimArray<double> secondring = P.getRing(1);
      * @endcode
      */
-    Matrix1D< T >& getRing(int i)
+    MultidimArray< T >& getRing(int i)
     {
         return rings[i];
     }
-    const  Matrix1D< T >& getRing(int i) const
+    const  MultidimArray< T >& getRing(int i) const
     {
         return rings[i];
     }
 
     /** 1D Matrix access
      *
-     * This operator can be used to set any ring of the polar with a Matrix1D.
+     * This operator can be used to set any ring of the polar with a MultidimArray.
      *
      * @code
-     * Matrix1D<double> ring;
+     * MultidimArray<double> ring;
      * P.setRing(1,ring);
      * @endcode
      */
-    void setRing(int i, Matrix1D< T > val)
+    void setRing(int i, MultidimArray< T > val)
     {
         rings[i] = val;
     }
@@ -591,99 +590,19 @@ public:
 
     }
 
-    /** Convert cartesian Matrix2D to Polar using gridding interpolation
+    /** Convert cartesian MultidimArray to Polar using B-spline interpolation
      *
-     * The input Matrix2D is assumed to be pre-processed for gridding
-     *
-     * @code
-     * Polar P;
-     * KaiserBessel kb;
-     * Matrix2D<double> Maux;
-     * produceReverseGriddingMatrix2D(img(),Maux,kb);
-     * P.getPolarFromCartesian(Maux,kb,1,15);
-     * @endcode
-     *
-     */
-    void getPolarFromCartesianGridding(const Matrix2D<T> &M1, KaiserBessel &kb, 
-				       int first_ring, int last_ring, 
-				       double xoff = 0., double yoff = 0.,
-				       double oversample1 = 1., int mode1 = FULL_CIRCLES)
-    {
-	int nsam;
-	int nring = last_ring - first_ring + 1;
-	double radius, twopi, dphi, phi; 
-	double xp, yp, minxp, maxxp, minyp, maxyp;
-
-	Matrix1D<T> Mring;
-	rings.clear();
-	ring_radius.clear();
-	mode = mode1;
-	oversample = oversample1;
-
-	if (mode == FULL_CIRCLES)
-	    twopi = 2.*PI;
-	else if (mode == HALF_CIRCLES)
-	    twopi = PI;
-	else
-	    REPORT_ERROR(1,"Incorrect mode for getPolarFromCartesian");
-	
-
-	// Take 2x oversize M1 dims into account for calculating the limits 
-	minxp = FIRST_XMIPP_INDEX(XSIZE(M1)/2);
-	minyp = FIRST_XMIPP_INDEX(YSIZE(M1)/2);
-	maxxp = LAST_XMIPP_INDEX(XSIZE(M1)/2);
-	maxyp = LAST_XMIPP_INDEX(YSIZE(M1)/2);
-
-	// Loop over all polar coordinates
-	for (int iring = first_ring, ii = 0; iring <= last_ring; iring++, ii++)
-	{
-	    radius = (double) iring;
-	    // Non-constant sampling!! (always even for convenient Half2Whole of FTs)
-	    nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
-	    nsam = XMIPP_MAX(1, nsam);
-	    dphi = twopi / (double)nsam;
-	    Mring.resize(nsam);
-	    for (int iphi = 0; iphi < nsam; iphi++)
-	    {
-		// from polar to original cartesian coordinates
-		phi = iphi * dphi;
-		xp = sin(phi) * radius;
-		yp = cos(phi) * radius;
-
-		// Origin offsets
-		xp += xoff;
-		yp += yoff; 
-
-		// Wrap coordinates
-                if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
-                    xp > maxxp + XMIPP_EQUAL_ACCURACY)
-                    xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
-                if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
-                    yp > maxyp + XMIPP_EQUAL_ACCURACY)
-                    yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
-
-		// Perform the convolution interpolation
-		Mring(iphi) = (T) interpolatedElementReverseGridding(M1,xp,yp,kb);
-	    }
-	    rings.push_back(Mring);
-	    ring_radius.push_back(radius);
-	}
-
-    }
-
-    /** Convert cartesian Matrix2D to Polar using B-spline interpolation
-     *
-     * The input Matrix2D is assumed to be pre-processed for B-splines
+     * The input MultidimArray is assumed to be pre-processed for B-splines
      *
      * @code
      * Polar P;
-     * Matrix2D<double> Maux;
+     * MultidimArray<double> Maux;
      * img().produceSplineCoefficients(Maux,3);
      * P.getPolarFromCartesianBSpline(Maux,1,15);
      * @endcode
      *
      */
-    void getPolarFromCartesianBSpline(const Matrix2D<T> &M1, 
+    void getPolarFromCartesianBSpline(const MultidimArray<T> &M1, 
 				     int first_ring, int last_ring, int BsplineOrder=3,
 				     double xoff = 0., double yoff = 0.,
 				     double oversample1 = 1., int mode1 = FULL_CIRCLES)
@@ -693,7 +612,7 @@ public:
 	double radius, twopi, dphi, phi; 
 	double xp, yp, minxp, maxxp, minyp, maxyp;
 
-	Matrix1D<T> Mring;
+	MultidimArray<T> Mring;
 	rings.clear();
 	ring_radius.clear();
 	mode = mode1;
@@ -777,7 +696,7 @@ public:
  * They should initially be calculated as in the example below
  * 
  * @code
- * Matrix1D<double> angles, corr;
+ * MultidimArray<double> angles, corr;
  * Polar_fftw_plans plans;
  * Polar<std::complex<double> > F1, F2;
  * 
@@ -802,7 +721,7 @@ void fourierTransformRings(Polar<double > & in,
  * They should initially be calculated as in the example below
  * 
  * @code
- * Matrix1D<double> angles, corr;
+ * MultidimArray<double> angles, corr;
  * Polar_fftw_plans plans;
  * Polar<std::complex<double> > F1, F2;
  * 
@@ -828,7 +747,7 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
  *  already in its fReal, and a Fourier Transform already calculated
  * 
  * @code
- * Matrix1D<double> angles, corr;
+ * MultidimArray<double> angles, corr;
  * XmippFftw local_transformer;
  * Polar_fftw_plans plans;
  * Polar<std::complex<double> > F1, F2;
@@ -850,12 +769,12 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
  */
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 			   const Polar<std::complex<double> > &M2,
-                           Matrix1D<double> &angles, 
+                           MultidimArray<double> &angles, 
                            XmippFftw &local_transformer);
 
 /** Compute a normalized polar Fourier transform of the input image.
     If plans is NULL, they are computed and returned. */
-void normalizedPolarFourierTransform(const Matrix2D<double> &in,
+void normalizedPolarFourierTransform(const MultidimArray<double> &in,
     Polar< std::complex<double> > &out, bool flag,
     int first_ring, int last_ring, Polar_fftw_plans *&plans,
     int BsplineOrder=3);
@@ -865,7 +784,7 @@ double best_rotation(const Polar< std::complex<double> > &I1,
     const Polar< std::complex<double> > &I2, XmippFftw &local_transformer);
 
 /** Align I2 rotationally to I1 */
-void alignRotationally(Matrix2D<double> &I1, Matrix2D<double> &I2,
+void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,
     int splineOrder=1, int wrap=WRAP);
 
 //@}
