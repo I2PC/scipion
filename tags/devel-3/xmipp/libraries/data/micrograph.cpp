@@ -645,7 +645,7 @@ void Micrograph::move_last_coord_to(int x, int y)
 
 /* Downsample -------------------------------------------------------------- */
 void downsample(const Micrograph &M, int Xstep, int Ystep,
-                const Matrix2D<double> &kernel, Micrograph &Mp,
+                const MultidimArray<double> &kernel, Micrograph &Mp,
                 bool do_fourier, int nThreads)
 {
     // Find first and last indexes in each direction
