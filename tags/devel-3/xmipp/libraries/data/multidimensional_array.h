@@ -33,10 +33,10 @@
 #include <external/bilib/headers/linearalgebra.h>
 #include <external/bilib/headers/changebasis.h>
 #include <external/bilib/headers/kernel.h>
+#include <external/bilib/headers/pyramidtools.h>
 #include "funcs.h"
 #include "error.h"
 #include "args.h"
-//#include "matrix1d.h" 
 
 extern int bestPrecision(float F, int _width);
 extern std::string floatToString(float F, int _width, int _prec);
@@ -106,7 +106,7 @@ extern std::string integerToString(int I, int _width, char fill_with);
  */
 #define ZSIZE(v) ((v).zdim)
 
-/** Access to Z dimension (size)
+/** Access to N dimension (size)
  * @ingroup MultidimArraysSizeShape
  */
 #define NSIZE(v) ((v).ndim)
@@ -3280,6 +3280,14 @@ public:
     /** Initialize to zeros with a given size.
      * @ingroup Initialization
      */
+    void initZeros(int Xdim)
+    {
+        initZeros(1, 1, 1, Xdim);
+    }
+
+    /** Initialize to zeros with a given size.
+     * @ingroup Initialization
+     */
     void initZeros(int Ydim, int Xdim)
     {
         initZeros(1, 1, Ydim, Xdim);
@@ -4321,8 +4329,7 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
 }
 
 // Specializations case for complex numbers
-template <>
-std::ostream& operator<<(std::ostream& ostrm,
-    const MultidimArray< std::complex<double> >& v)
+template<>
+std::ostream& operator<<(std::ostream& ostrm, const MultidimArray< std::complex<double> >& v);
 
 #endif
