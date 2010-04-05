@@ -30,12 +30,14 @@
 #include <string>
 #include <complex>
 
-#include <external/bilib/headers/pyramidtools.h>
-#include "multidimensional_array.h"
+//#include <external/bilib/headers/pyramidtools.h>
 #include "matrix1d.h"
+#include "multidimensional_array.h"
 #include "error.h"
 
 #ifndef SWIG
+
+template <typename T> class Matrix2D;
 
 template<typename T>
 void multiplyElements(const Matrix2D<T>& op1, const Matrix2D<T>& op2,
@@ -606,7 +608,7 @@ public:
      * in the line is N.
      */
     void profile(int x0, int y0, int xF, int yF, int N,
-                 Matrix1D< double >& profile) const
+                 Matrix1D< T >& profile) const
     {
         profile.initZeros(N);
         double tx_step = (double)(xF - x0) / (N - 1);
