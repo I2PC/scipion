@@ -26,7 +26,8 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#include "matrix3d.h"
+#include "matrix1d.h"
+#include "matrix2d.h"
 
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.19209e-07
@@ -853,23 +854,13 @@ Matrix2D< double > Euler_rotation3DMatrix(double rot, double tilt, double psi);
 /** Rotate a volume after 3 Euler angles
  * @ingroup EulerOperations
  *
- * The following prototype of the function is faster.
- */
-Matrix3D< double > Euler_rotate(const Matrix3D< double >& V,
-                                double rot,
-                                double tilt,
-                                double psi);
-
-/** Rotate a volume after 3 Euler angles
- * @ingroup EulerOperations
- *
  * Input and output volumes cannot be the same one.
  */
-void Euler_rotate(const Matrix3D< double >& V,
+void Euler_rotate(const MultidimArray< double >& V,
                   double rot,
                   double tilt,
                   double psi,
-                  Matrix3D< double >& result);
+                  MultidimArray< double >& result);
 
 /** Compute circle around Euler matrix
  * @ingroup EulerOperations
