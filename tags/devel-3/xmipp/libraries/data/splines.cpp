@@ -30,7 +30,7 @@
 double Bspline03LUT(double x)
 {
     static bool firstCall = true;
-    static Matrix1D<double> table(BSPLINE03_SUBSAMPLING);
+    static MultidimArray<double> table(BSPLINE03_SUBSAMPLING);
     static const double deltax = 2.0 / BSPLINE03_SUBSAMPLING;
     static const double ideltax = 1.0 / deltax;
     if (firstCall)
@@ -205,10 +205,10 @@ double spatial_Bspline03_proj(
 #undef DEBUG
 
 /* Splines -> Voxels for a SimpleGrid -------------------------------------- */
-void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
+void spatial_Bspline032voxels_SimpleGrid(const MultidimArray<double> &vol_splines,
         const SimpleGrid &grid,
-        Matrix3D<double> *vol_voxels,
-        const Matrix3D<double> *vol_mask = NULL)
+        MultidimArray<double> *vol_voxels,
+        const MultidimArray<double> *vol_mask = NULL)
 {
     Matrix1D<double> act_coord(3);           // Coord: Actual position inside
     // the voxel volume without deforming
@@ -383,7 +383,7 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
 /* Splines -> Voxels for a Grid -------------------------------------------- */
 //#define DEBUG
 void spatial_Bspline032voxels(const GridVolume &vol_splines,
-                              Matrix3D<double> *vol_voxels, int Zdim, int Ydim, int Xdim)
+                              MultidimArray<double> *vol_voxels, int Zdim, int Ydim, int Xdim)
 {
     // Resize and set starting corner .......................................
     if (Zdim == 0 || Ydim == 0 || Xdim == 0)

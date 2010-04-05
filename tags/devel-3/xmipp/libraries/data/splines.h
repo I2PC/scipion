@@ -87,7 +87,7 @@ double spatial_Bspline03_proj(const Matrix1D<double> &r, const Matrix1D<double> 
    fit into the output volume.
 */
 void spatial_Bspline032voxels(const GridVolume &vol_splines,
-                              Matrix3D<double> *vol_voxels,
+                              MultidimArray<double> *vol_voxels,
                               int Zdim = 0, int Ydim = 0, int Xdim = 0);
 //@}
 #endif
