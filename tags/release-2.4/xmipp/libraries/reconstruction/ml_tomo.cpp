@@ -486,9 +486,11 @@ void Prog_ml_tomo_prm::produceSideInfo()
         mysampling.SL.read_sym_file(fn_sym);
         if (mysampling.SL.SymsNo() > 0)
         { 
-#ifdef DEBUG            
-            std::cerr<<" Using symmetry vresion of the code.... "<<std::endl;
-#endif
+            std::cerr<<"  --> Using symmetry version of the code: "<<std::endl;
+            std::cerr<<"      [-psi, -tilt, -rot] is applied to the references, thereby "<<std::endl;
+            std::cerr<<"      tilt and psi are sampled on an hexagonal lattice, " <<std::endl;
+            std::cerr<<"      and rot is sampled linearly "<<std::endl;
+            std::cerr<<"      -dont_limit_psirange option is not allowed.... "<<std::endl;
             do_sym=true;
         }   
         mysampling.fill_L_R_repository();
@@ -1071,8 +1073,18 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                 {
                     DFsub.append_comment(fn_tmp);
                     DL=DF.get_current_line();
+                    if (do_sym)
+                    {
+                        imgs_optpsi[imgno]=DL[0]; // for limited psi (now rot) searches
+                        // Reverse rotation applied to the references!!
+                        double daux=DL[0];
+                        DL[0]=-DL[2];
+                        DL[1]=-DL[1];
+                        DL[2]=-daux;
+                    }
+                    else
+                        imgs_optpsi[imgno]=DL[2]; // for limited psi searches
                     DFsub.append_line(DL);
-                    imgs_optpsi[imgno]=DL[2]; // for limited psi searches
                     if (dont_align || dont_rotate || do_only_average) 
                     {
                         imgs_optangno[imgno]=DFsub.dataLineNo()-1;
