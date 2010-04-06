@@ -176,6 +176,9 @@ class visualize_ML3D_class:
         for iter in iters:
             patt=utils_xmipp.composeFileName('RunML3D/ml3d_it',iter,'')
             selfiles=glob.glob(utils_xmipp.composeWildcardFileName(patt+'_vol','sel'))
+            # For single-reference refinements
+            if (len(selfiles)==0):
+                selfiles=glob.glob(patt+'.sel')
             selfiles.sort()
             if (self.VisualizeML3DAvgs):
                 for selfile in selfiles:
@@ -193,6 +196,9 @@ class visualize_ML3D_class:
 
             if (self.VisualizeML3DReferences):
                 volumes=glob.glob(utils_xmipp.composeWildcardFileName(patt+'_vol','vol'))
+                # For single-reference refinements
+                if (len(volumes)==0):
+                    volumes=glob.glob(patt+'.vol')
                 volumes.sort()
                 for volume in volumes:
                     self.ShowVolumes.append(volume)
@@ -296,8 +302,11 @@ class visualize_ML3D_class:
                 fh.close()
                 words1=line1.split()
                 words2=line2.split()
-                # get iteration
-                iter=int(words2[6])-1
+                # get iteration MLF there is no -noise term in the logfile...
+                if (words1[1].find('MLF') < 0): 
+                    iter=int(words2[6])-1
+                else:
+                    iter=int(words2[4])-1
                 # get data
                 newlines1.append(str(iter)+' '+words1[7]+'\n')
                 newlines2.append(str(iter)+' '+words1[9]+'\n')
