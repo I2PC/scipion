@@ -470,6 +470,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
     DIRECT_MULTIDIM_ELEM(fourier_mask,0) = 0.;
     DIRECT_MULTIDIM_ELEM(fourier_imask,0) = 0.;
 
+
     // Precalculate sampling
     do_sym=false;
     if (dont_align || do_only_average || dont_rotate)
@@ -484,14 +485,20 @@ void Prog_ml_tomo_prm::produceSideInfo()
         if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
             REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
         mysampling.SL.read_sym_file(fn_sym);
+        // Check whether we are using symmetry 
         if (mysampling.SL.SymsNo() > 0)
         { 
-            std::cerr<<"  --> Using symmetry version of the code: "<<std::endl;
-            std::cerr<<"      [-psi, -tilt, -rot] is applied to the references, thereby "<<std::endl;
-            std::cerr<<"      tilt and psi are sampled on an hexagonal lattice, " <<std::endl;
-            std::cerr<<"      and rot is sampled linearly "<<std::endl;
-            std::cerr<<"      -dont_limit_psirange option is not allowed.... "<<std::endl;
             do_sym=true;
+            if (verb > 0)
+            {
+                std::cerr<<"  --> Using symmetry version of the code: "<<std::endl;
+                std::cerr<<"      [-psi, -tilt, -rot] is applied to the references, thereby "<<std::endl;
+                std::cerr<<"      tilt and psi are sampled on an hexagonal lattice, " <<std::endl;
+                std::cerr<<"      and rot is sampled linearly "<<std::endl;
+                std::cerr<<"      Note that -dont_limit_psirange option is not allowed.... "<<std::endl;
+            }
+            if (!do_limit_psirange && ang_search > 0.)
+                REPORT_ERROR(1,"ml_tomo: ERROR: exhaustive psi-angle search only allowed for C1 symmetry");
         }   
         mysampling.fill_L_R_repository();
         // by default max_tilt= +91., min_tilt= -91.
@@ -504,15 +511,6 @@ void Prog_ml_tomo_prm::produceSideInfo()
                                                       0.75 * angular_sampling);
         if (psi_sampling < 0)
             psi_sampling = angular_sampling;
-    }
-
-    /* If there is symmetry, then the -psi, -tilt, -rot is applied to the references 
-       In that case, together with -ang_search, psi-angle searches cannot be exhaustive (they are sampled in rot!)
-     */
-    if (do_sym)
-    {
-        if (!do_limit_psirange && ang_search > 0.)
-            REPORT_ERROR(1,"ml_tomo: ERROR: exhaustive psi-angle search only allowed for C1 symmetry");
     }
 
     if (do_only_average)
@@ -1085,17 +1083,17 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                     else
                         imgs_optpsi[imgno]=DL[2]; // for limited psi searches
                     DFsub.append_line(DL);
+                    imgs_optangno[imgno]=DFsub.dataLineNo()-1;
+                    int aux = (int)DL[6] - 1;
+                    if (aux < 0 || aux >= nr_ref)
+                        imgs_optrefno[imgno]=0;
+                    else
+                        imgs_optrefno[imgno]=aux;
                     if (dont_align || dont_rotate || do_only_average) 
                     {
-                        imgs_optangno[imgno]=DFsub.dataLineNo()-1;
                         imgs_optoffsets[imgno](0)=DL[3];
                         imgs_optoffsets[imgno](1)=DL[4];
                         imgs_optoffsets[imgno](2)=DL[5];
-                        int aux = (int)DL[6] - 1;
-                        if (aux < 0 || aux >= nr_ref)
-                            imgs_optrefno[imgno]=0;
-                        else
-                            imgs_optrefno[imgno]=aux;
                     }
                 }
             } 
