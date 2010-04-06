@@ -1989,7 +1989,10 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     // the distance between 150 and 150 is also zero... 
                     if (ABS(realWRAP(all_angle_info[angno].tilt, -90., 90.)) < 1.1 * ang_search)
                         is_within_psirange=true;
-                    else if (ABS(realWRAP(old_psi - (all_angle_info[angno]).psi,-180.,180.)) <= ang_search)
+                    else if ( (do_sym && 
+                               ABS(realWRAP(old_psi - (all_angle_info[angno]).rot,-180.,180.)) <= ang_search)  
+                              || (!do_sym && 
+                               ABS(realWRAP(old_psi - (all_angle_info[angno]).psi,-180.,180.)) <= ang_search) )
                         is_within_psirange=true;
                     else
                         is_within_psirange=false;
@@ -2337,7 +2340,10 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
                     // the distance between 150 and 150 is also zero... 
                     if (ABS(realWRAP(all_angle_info[angno].tilt, -90., 90.)) < 1.1 * ang_search)
                         is_within_psirange=true;
-                    else if (ABS(realWRAP(old_psi - (all_angle_info[angno]).psi,-180.,180.)) <= ang_search)
+                    else if ( (do_sym && 
+                               ABS(realWRAP(old_psi - (all_angle_info[angno]).rot,-180.,180.)) <= ang_search)  
+                              || (!do_sym && 
+                               ABS(realWRAP(old_psi - (all_angle_info[angno]).psi,-180.,180.)) <= ang_search) )
                         is_within_psirange=true;
                     else
                         is_within_psirange=false;
