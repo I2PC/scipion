@@ -379,7 +379,6 @@ void MetaData::setComment( std::string newComment )
 {
 	if( newComment == "" )
 	{
-	    time_t current = time(0);
 	    comment = (std::string)  "No comment";
 	}
 	else
