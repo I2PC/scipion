@@ -936,20 +936,23 @@ class MyQueueLaunch:
         self.e.grid(row=1,column=0,columnspan=2)
         self.e.insert(0,"qsub.py")
         Button(self.top, text="Submit", command=self.ok,
-               bg = ButtonBackgroundColour,
+               bg = ButtonBackgroundColour,underline=0, 
                activebackground=ButtonActiveBackgroundColour).grid(row=2,column=0)
-        Button(self.top, text="Cancel", command=self.cancel,
-               bg = ButtonBackgroundColour,
-               activebackground=ButtonActiveBackgroundColour).grid(row=2,column=1)
+        self.top.bind('<Alt_L><s>', self.ok)
 
-    def ok(self):
+        Button(self.top, text="Cancel", command=self.cancel,
+               bg = ButtonBackgroundColour, underline=0, 
+               activebackground=ButtonActiveBackgroundColour).grid(row=2,column=1)
+        self.top.bind('<Alt_L><c>', self.cancel)
+
+    def ok(self, event=""):
         import os
         command=self.e.get()+" "+self.command
         print "* Executing job with: "+command
         os.system(command)
         self.top.destroy()
 
-    def cancel(self):
+    def cancel(self, event=""):
         self.top.destroy()
 
 class MyShowMoreHelp:
