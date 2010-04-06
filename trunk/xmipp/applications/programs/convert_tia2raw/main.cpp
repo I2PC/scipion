@@ -26,10 +26,6 @@
 #include <data/args.h>
 #include <data/selfile.h>
 #include <data/image.h>
-#include <string>
-using namespace std;
-
-
 
 
 struct DataHeader
@@ -51,7 +47,7 @@ struct ImDataHeader
     PIXEL_WIDTH,         	//CalibrationDeltaX
     CalibrationOffsetY,  	//CalibrationOffsetY
     PIXEL_HEIGHT;           //CalibrationDeltaY
-    string     DATA_TYPE_SIZE_STRING;
+    std::string     DATA_TYPE_SIZE_STRING;
     bool      isSigned;
 
 };
@@ -176,7 +172,7 @@ void Usage(char **argv)
            "\nESPECIFIC PARAMETERS FOR SINGLE-FILE CONVERSION"
            "\n    -i,--ImageIn file_in        input TIA file"
            "\n    -o,--OutRootName file_out   output RAW file"
-           "\nESPECIFIC PARAMETERS FOR SEL-FILE CONVERSION"
+           "\nESPECIFIC PARAMETERS FOR SEL-FILE  CONVERSION"
            "\n    -sel  input_file            input sel file"
            "\n    -oext input_file            extension for the output files"
            "\nGENERAL PARAMETERS"
@@ -417,7 +413,7 @@ void printHeader(DataHeader Header)
 
 void setDataType(ImDataHeader & DataH)
 {
-    string auxString;
+    std::string auxString;
     short int dataType=0;
 
     DataH.isSigned = 0;
