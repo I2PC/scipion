@@ -1128,9 +1128,18 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
         while (!DFsub.eof())
         {
             DL=DFsub.get_current_line();
-            myinfo.rot = DL[0];
-            myinfo.tilt = DL[1];
-            myinfo.psi = DL[2];
+            if (do_sym)
+            {
+                myinfo.rot = -DL[2];
+                myinfo.tilt = -DL[1];
+                myinfo.psi = -DL[0];
+            }
+            else
+            {
+                myinfo.rot = DL[0];
+                myinfo.tilt = DL[1];
+                myinfo.psi = DL[2];
+            }
             myinfo.A = Euler_rotation3DMatrix(myinfo.rot, myinfo.tilt, myinfo.psi);
             myinfo.direction = nr_ang;
             all_angle_info.push_back(myinfo);
