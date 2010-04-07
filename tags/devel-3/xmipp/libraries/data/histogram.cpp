@@ -40,7 +40,7 @@ void histogram1D::clear()
     hmax = 0;
     step_size = 0;
     no_samples = 0;
-    MultidimArray<double>::clear();
+    coreMultidimArray<double>::clear();
 }
 
 /* Assignment -------------------------------------------------------------- */
@@ -48,7 +48,7 @@ histogram1D & histogram1D::operator =(const histogram1D &H)
 {
     if (this != &H)
     {
-        this->MultidimArray<double>::operator = (H);
+        this->coreMultidimArray<double>::operator = (H);
         hmin       = H.hmin;
         hmax       = H.hmax;
         step_size  = H.step_size;
@@ -68,7 +68,7 @@ void histogram1D::init(double min_val, double max_val, int n_steps)
     hmin = min_val;
     hmax = max_val;
     step_size = (double)(max_val - min_val) / (double) n_steps; // CO: n_steps-1->n_steps
-    MultidimArray<double>::initZeros(n_steps);
+    coreMultidimArray<double>::initZeros(n_steps);
     no_samples = 0;
 }
 
@@ -93,7 +93,7 @@ void histogram1D::insert_value(double val)
 /* std::cout << hist ------------------------------------------------------------ */
 std::ostream& operator << (std::ostream &o, const histogram1D &hist)
 {
-    MultidimArray<double> aux;
+    coreMultidimArray<double> aux;
     aux.resize(hist.stepNo(), 2);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(hist)
     {
@@ -199,7 +199,7 @@ double histogram1D::mass_below(double value)
 /* Entropy ----------------------------------------------------------------- */
 double histogram1D::entropy() const
 {
-    MultidimArray<double> p;
+    coreMultidimArray<double> p;
     p.initZeros(XSIZE(*this));
     double pSum=0;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(p)
@@ -289,7 +289,7 @@ double KLDistance(const histogram1D& h1, const histogram1D& h2)
 /* ------------------------------------------------------------------------- */
 /* Initialization ---------------------------------------------------------- */
 void IrregularHistogram1D::init(const histogram1D &hist,
-    const MultidimArray<int> &bins)
+    const coreMultidimArray<int> &bins)
 {
     int steps_no = XSIZE(bins);
     __binsRightLimits.initZeros(steps_no);
@@ -357,7 +357,7 @@ void histogram2D::clear()
     jmax = 0;
     jstep_size = 0;
     no_samples = 0;
-    MultidimArray<double>::clear();
+    coreMultidimArray<double>::clear();
 }
 
 /* Assignment -------------------------------------------------------------- */
@@ -365,7 +365,7 @@ histogram2D & histogram2D::operator = (const histogram2D &H)
 {
     if (this != &H)
     {
-        this->MultidimArray<double>::operator =(H);
+        this->coreMultidimArray<double>::operator =(H);
         imin        = H.imin;
         imax        = H.imax;
         istep_size  = H.istep_size;
@@ -417,7 +417,7 @@ void histogram2D::insert_value(double v, double u)
 /* std::cout << hist ------------------------------------------------------------ */
 std::ostream& operator << (std::ostream &o, const histogram2D &hist)
 {
-    MultidimArray<double> aux;
+    coreMultidimArray<double> aux;
     aux.resize(hist.IstepNo()*hist.JstepNo(), 3);
     int n = 0;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(hist)
@@ -436,7 +436,7 @@ void histogram2D::write(const FileName &fn)
     std::ofstream  fh;
     fh.open(fn.c_str(), std::ios::out);
     if (!fh)
-        REPORT_ERROR(1, (std::string)"MultidimArray::write: File " + fn + " cannot be openned for output");
+        REPORT_ERROR(1, (std::string)"coreMultidimArray::write: File " + fn + " cannot be openned for output");
     fh << *this;
     fh.close();
 }

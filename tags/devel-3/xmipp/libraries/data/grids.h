@@ -895,9 +895,9 @@ public:
 
             // Resize grid
             grid.universe2grid(corner1, grid.lowest);
-            grid.lowest.selfFLOORnD();
+            grid.lowest.selfFLOOR();
             grid.universe2grid(corner2, grid.highest);
-            grid.highest.selfCEILnD();
+            grid.highest.selfCEIL();
 
             // Resize auxiliary volume
             int Zdim, Ydim, Xdim;

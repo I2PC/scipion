@@ -34,7 +34,7 @@
 #include "funcs.h"
 #include "memory.h"
 #include "gcc_version.h"
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 
 
 typedef enum TransformType {

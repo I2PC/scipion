@@ -32,7 +32,7 @@
 
 //#include <external/bilib/headers/pyramidtools.h>
 #include "matrix1d.h"
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 #include "error.h"
 
 #ifndef SWIG
@@ -289,7 +289,7 @@ int bestPrecision(float F, int _width);
 /// Template class for Xmipp matrices
 /// @ingroup Matrices
 template<typename T>
-class Matrix2D: public MultidimArray<T>
+class Matrix2D: public coreMultidimArray<T>
 {
 public:
 
@@ -308,25 +308,8 @@ public:
     /** Empty constructor
      * @ingroup MatricesConstructors
      */
-    Matrix2D(): MultidimArray<T>()
+    Matrix2D(): coreMultidimArray<T>()
     {
-    }
-
-    /** Dimension constructor
-     * @ingroup MatricesConstructors
-     *
-     * The dimension constructor creates a matrix with memory associated (but
-     * not assigned to anything, could be full of garbage) origin=0, size=the
-     * given one. e careful that first number is the Y dimension (number of
-     * rows), and the second the X dimension (number of columns).
-     *
-     * @code
-     * Matrix2D< double > v1(6, 3);
-     * @endcode
-     */
-    Matrix2D(int Ydim, int Xdim): MultidimArray<T>()
-    {
-    	resize(Ydim,Xdim);
     }
 
     /** Copy constructor
@@ -349,26 +332,11 @@ public:
      */
      void clear()
      {
-        MultidimArray<T>::clear();
+        coreMultidimArray<T>::clear();
      }
 
     /// @defgroup MatricesInitialization Initialization
     /// @ingroup Matrices
-
-    /** Alias a multidimarray.
-     * @ingroup MatricesInitialization
-     *
-     * Treat the multidimarray as if it were a matrix. The data is not copied
-     * into new memory, but a pointer to the multidimarray is copied.
-     * You should not make any operation on this matrix such that the
-     * memory locations are changed
-     */
-     void alias(const MultidimArray<T> &m)
-     {
-         copyShape(m);
-         this->data=m.data;
-         this->destroyData=false;
-     }
 
     /** Identity matrix of current size
      * @ingroup MatricesInitialization
@@ -430,21 +398,12 @@ public:
         */
     }
 
-    /** Resize to a given size
+    /** Resize to given dimension
      * @ingroup MatricesSize
-     *
-     * This function resize the actual array to the given size. The origin is
-     * not modified. If the actual array is larger than the pattern then the
-     * values outside the new size are lost, if it is smaller then 0's are
-     * added. An exception is thrown if there is no memory.
-     *
-     * @code
-     * m1.resize(3, 2);
-     * @endcode
      */
     void resize(int Ydim, int Xdim)
     {
-        MultidimArray<T>::resize(1, 1, Ydim, Xdim);
+        coreMultidimArray<T>::resize(1, 1, Ydim, Xdim);
     }
 
     /** Resize taking the shape from another matrix
@@ -453,20 +412,8 @@ public:
     template <typename T1>
     void resize(const Matrix2D<T1> &M)
     {
-        MultidimArray<T>::resize(M);
+        coreMultidimArray<T>::resize(M);
     }
-
-    /** Resize taking the shape from another matrix which
-        is given as a MultidimArray
-     * @ingroup MatricesSize
-     */
-    template <typename T1>
-    void resize(const MultidimArray<T1> &M)
-    {
-        MultidimArray<T>::resize(M);
-    }
-
-
 
     /** Makes a matrix from a vector
      * @ingroup MatricesInitialization
@@ -593,36 +540,6 @@ public:
      *         MAT_ELEM(m, i, j) += 1;
      * @endcode
      */
-
-    /** @defgroup MatricesMemory Memory access
-     * @ingroup Matrices
-     *
-     * This functions allows you to access to the matrix elements.
-     */
-
-    /** Extracts the profile between two points
-     * @ingroup MatricesMemory
-     *
-     * Given two logical indexes, this function returns samples of the line that
-     * joins them. This is done by bilinear interpolation. The number of samples
-     * in the line is N.
-     */
-    void profile(int x0, int y0, int xF, int yF, int N,
-                 Matrix1D< T >& profile) const
-    {
-        profile.initZeros(N);
-        double tx_step = (double)(xF - x0) / (N - 1);
-        double ty_step = (double)(yF - y0) / (N - 1);
-        double tx = x0, ty = y0;
-
-        for (int i = 0; i < N; i++)
-        {
-            profile(i) = MultidimArray<T>::interpolatedElement2D(tx, ty);
-            tx += tx_step;
-            ty += ty_step;
-        }
-    }
-
 
     /// @defgroup MatrixOperators Operators
     /// @ingroup Matrices
@@ -868,7 +785,7 @@ public:
         Matrix1D< double > w;
         svdcmp(*this, u, w, v); // *this = U * W * V^t
 
-        double tol = MultidimArray<T>::computeMax() *
+        double tol = coreMultidimArray<T>::computeMax() *
             XMIPP_MAX(XSIZE(*this),YSIZE(*this)) * 1e-14;
         result.initZeros(XSIZE(*this), YSIZE(*this));
 

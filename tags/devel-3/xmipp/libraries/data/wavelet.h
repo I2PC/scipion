@@ -28,7 +28,7 @@
 #ifndef WAVELET_H
 #define WAVELET_H
 
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 #include "matrix1d.h"
 #include "numerical_recipes.h"
 

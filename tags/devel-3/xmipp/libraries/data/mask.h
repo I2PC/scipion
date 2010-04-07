@@ -26,7 +26,7 @@
 #ifndef MASK_H
 #define MASK_H
 
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 #include "matrix2d.h"
 #include "histogram.h"
 #include "blobs.h"

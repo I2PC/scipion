@@ -27,7 +27,7 @@
 #define _BLOBS_HH
 
 #include "grids.h"
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 #include "imageover.h"
 #include <pthread.h>
 

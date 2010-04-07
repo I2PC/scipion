@@ -30,7 +30,7 @@
 #include <complex>
 #include <cmath>
 
-#include "multidimensional_array.h"
+#include "core_multidim_array.h"
 #include "error.h"
 
 template <typename T> class Matrix2D;
@@ -50,36 +50,6 @@ template <typename T> class Matrix2D;
  * not warned of it), and destination vectors are not returned saving time in
  * the copy constructor and in the creation/destruction of temporary vectors.
  */
-
-/** Access to X component
- * @ingroup VectorsMemory
- *
- * @code
- * XX(v) = 1;
- * val = XX(v);
- * @endcode
- */
-#define XX(v) DIRECT_VEC_ELEM(v, 0)
-
-/** Access to Y component
- * @ingroup VectorsMemory
- *
- * @code
- * YY(v) = 1;
- * val = YY(v);
- * @endcode
- */
-#define YY(v) DIRECT_VEC_ELEM(v, 1)
-
-/** Access to Z component
- * @ingroup VectorsMemory
- *
- * @code
- * ZZ(v) = 1;
- * val = ZZ(v);
- * @endcode
- */
-#define ZZ(v) DIRECT_VEC_ELEM(v, 2)
 
 /** @defgroup VectorsGeometry Geometry vectors
  * @ingroup VectorsSpeedUp
@@ -266,7 +236,7 @@ template <typename T> class Matrix2D;
 /// Template class for Xmipp vectors
 /// @ingroup Vectors
 template<typename T>
-class Matrix1D: public MultidimArray<T>
+class Matrix1D: public coreMultidimArray<T>
 {
 public:
     bool row; ///< 0=column vector (default), 1=row vector
@@ -290,7 +260,7 @@ public:
      * // empty row vector
      * @endcode
      */
-    Matrix1D(bool column = true): MultidimArray<T>() 
+    Matrix1D(bool column = true): coreMultidimArray<T>() 
     {
         row = ! column;
     }
@@ -312,10 +282,10 @@ public:
      * // empty row vector
      * @endcode
      */
-    Matrix1D(int dim, bool column = true): MultidimArray<T>()
+    Matrix1D(int Xdim, bool column = true): coreMultidimArray<T>()
     {
         row = ! column;
-        MultidimArray<T>::resize(1,1,dim);
+        coreMultidimArray<T>::resize(1,1,1,Xdim);
     }
 
     /** Copy constructor
@@ -328,18 +298,10 @@ public:
      * Matrix1D< double > v2(v1);
      * @endcode
      */
-    Matrix1D(const Matrix1D<T>& v): MultidimArray<T>()
+    Matrix1D(const Matrix1D<T>& v): coreMultidimArray<T>()
     {
         *this = v;
     }
-
-    /** Clear.
-     * @ingroup VectorsConstructors
-     */
-     void clear()
-     {
-        MultidimArray<T>::clear();
-     }
 
     /// @defgroup VectorsInitialization Initialization
     /// @ingroup Vectors
@@ -352,7 +314,7 @@ public:
      * You should not make any operation on this vector such that the
      * memory locations are changed
      */
-     void alias(const MultidimArray<T> &m)
+     void alias(const coreMultidimArray<T> &m)
      {
          this->row=false;
          copyShape(m);
@@ -360,87 +322,21 @@ public:
          this->destroyData=false;
      }
 
-    /** Linear initialization
-     * @ingroup VectorsInitialization
-     *
-     * The vector is filled with values increasing/decreasing linearly within a
-     * range or at given steps.
-     *
-     * Increment functionality: The default increment is 1, the initial point is
-     * incremented by this value until the upper limit is reached. This is the
-     * default working mode for the function.
-     *
-     * @code
-     * v1.initLinear(1, 3); // v1=[1 2 3]
-     * v1.initLinear(1.5, 3.1); // v1=[1.5 2.5]
-     * v1.initLinear(0, 10, 3); // v1=[0 3 6 9]
-     * v1.initLinear(0, 10, 3, "incr"); // v1=[0 3 6 9]
-     * @endcode
-     *
-     * Step functionality: The given range is divided in as many points as
-     * indicated (in the example 6 points).
-     *
-     * @code
-     * v1.initLinear(0, 10, 6, "steps"); // v1=[0 2 4 6 8 10]
-     * @endcode
-     */
-    void initLinear(T minF, T maxF, int n = 1, const std::string& mode = "incr")
-    {
-        double slope;
-        int steps;
-
-        if (mode == "incr")
-        {
-            steps = 1 + (int) FLOOR((double) ABS((maxF - minF)) / ((double) n));
-            slope = n * SGN(maxF - minF);
-        }
-        else if (mode == "steps")
-        {
-            steps = n;
-            slope = (maxF - minF) / (steps - 1);
-        }
-        else
-            REPORT_ERROR(1005, "Init_linear: Mode not supported (" + mode +
-                         ")");
-
-        if (steps == 0)
-            clear();
-        else
-        {
-            resize(steps);
-            for (int i = 0; i < steps; i++)
-                VEC_ELEM(*this, i) = (T)((double) minF + slope * i);
-        }
-    }
-
-    /** Zero initialisation with a new dimension
-     * @ingroup VectorsInitialization
-     *
-     * @code
-     * v1.initZeros(6);
-     * @endcode
-     */
-    void initZeros(int dim)
-    {
-        resize(dim);
-        initConstant((T) 0);
-    }
-
-    /** Zero initialisation with current dimension
-     * @ingroup VectorsInitialization
-     */
-    void initZeros()
-    {
-        MultidimArray<T>::initZeros();
-    }
-
     /** Zero initialisation with current dimension
      * @ingroup VectorsInitialization
      */
     template <typename T1>
     void initZeros(const Matrix1D<T1> &m)
     {
-        MultidimArray<T>::initZeros(m);
+        coreMultidimArray<T>::initZeros(m);
+    }
+
+    /** Zero initialisation with given dimension
+     * @ingroup VectorsInitialization
+     */
+    void initZeros(int Xdim)
+    {
+        coreMultidimArray<T>::initZeros(Xdim);
     }
 
     /** @defgroup VectorsSize Size and shape
@@ -472,47 +368,16 @@ public:
             << "i=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
     }
 
-    /** Resize to a given size
+
+    /** Resize with size
      * @ingroup VectorsSize
-     *
-     * This function resize the actual array to the given size. If the
-     * actual array is larger than the pattern then the values outside
-     * the new size are lost, if it is smaller then 0's are added. An
-     * exception is thrown if there is no memory.
-     *
-     * @code
-     * m1.resize(3);
-     * @endcode
+     * 
+     * This function is needed to be able to resize inside this class
      */
     void resize(int Xdim)
     {
-        MultidimArray<T>::resize(1,1,1,Xdim);
+    	coreMultidimArray<T>::resize(Xdim);
     }
-
-    /** Produce a 1D array suitable for working with Numerical Recipes
-     * @ingroup VectorsSize
-     *
-     * This function must be used only as a preparation for routines which need
-     * that the first physical index is 1 and not 0 as it usually is in C. In
-     * fact the vector provided for Numerical recipes is exactly this same one
-     * but with the indexes changed.
-     *
-     * This function is not ported to Python.
-     */
-    T* adaptForNumericalRecipes() const
-    {
-        return MULTIDIM_ARRAY(*this) - 1;
-    }
-
-    /** Kill a 1D array produced for Numerical Recipes.
-     * @ingroup VectorsSize
-     *
-     * Nothing needs to be done in fact.
-     *
-     * This function is not ported to Python.
-     */
-    void killAdaptationForNumericalRecipes(T* m) const
-        {}
 
     /** Resize taking the shape from another vector
      * @ingroup VectorsSize
@@ -520,7 +385,7 @@ public:
     template <typename T1>
     void resize(const Matrix1D<T1> &M)
     {
-    	MultidimArray<T>::resize(M);
+    	coreMultidimArray<T>::resize(M);
     }
 
     /** True if vector is a row.
@@ -639,24 +504,6 @@ public:
         return ZZ(*this);
     }
 
-    /** Vector element access
-     * @ingroup VectorsMemory
-     *
-     * Returns the value of a vector logical position. In our example we could
-     * access from v(-2) to v(2). The elements can be used either by value or by
-     * reference. An exception is thrown if the index is outside the logical
-     * range.
-     *
-     * @code
-     * v(-2) = 1;
-     * val = v(-2);
-     * @endcode
-     */
-    T& operator()(int i) const
-    {
-        return VEC_ELEM(*this, i);
-    }
-
     /// @defgroup VectorsUtilities Utilities
     /// @ingroup Vectors
 
@@ -700,7 +547,7 @@ public:
      */
     void selfReverse()
     {
-        MultidimArray<T>::selfReverseX();
+        coreMultidimArray<T>::selfReverseX();
     }
 
     /** Module of the vector
@@ -715,7 +562,7 @@ public:
      */
     double module() const
     {
-        return sqrt(MultidimArray<T>::sum2());
+        return sqrt(coreMultidimArray<T>::sum2());
     }
 
     /** Angle of the vector
@@ -741,7 +588,7 @@ public:
             *this *= im;
         }
         else
-            MultidimArray<T>::initZeros();
+            coreMultidimArray<T>::initZeros();
     }
 
     /** Sort vector elements
@@ -766,7 +613,7 @@ public:
         typeCast(*this, aux);
 
         // Sort
-        double * aux_array = aux.adaptForNumericalRecipes();
+        double * aux_array = aux.adaptForNumericalRecipes1D();
         qcksrt(XSIZE(*this), aux_array);
 
         typeCast(aux, temp);
@@ -806,8 +653,8 @@ public:
         typeCast(*this, temp);
 
         // Sort indexes
-        double* temp_array = temp.adaptForNumericalRecipes();
-        int* indx_array = indx.adaptForNumericalRecipes();
+        double* temp_array = temp.adaptForNumericalRecipes1D();
+        int* indx_array = indx.adaptForNumericalRecipes1D();
         indexx(XSIZE(*this), temp_array, indx_array);
 
         return indx;
@@ -824,7 +671,7 @@ public:
     {
         FileName fn_tmp;
         fn_tmp.init_random(10);
-        MultidimArray<T>::write(static_cast<std::string>("PPP") +
+        coreMultidimArray<T>::write(static_cast<std::string>("PPP") +
             fn_tmp + ".txt");
 
         std::ofstream fh_gplot;
@@ -1120,7 +967,7 @@ void powellOptimizer(Matrix1D< double >& p,
  * @endcode
  */
 class GaussianInterpolator {
-    MultidimArray<double> v;
+    Matrix1D<double> v;
     double xstep;
     double xmax;
     double ixstep;
