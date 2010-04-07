@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 		}
 		do
 		{
-			fn_img = SF.image();
+			SF.getValue( MDL_IMAGE, fn_img);
 			if (fn_img=="") break;
 			img.read(fn_img);
 			img.clear_fFlag_flag();
@@ -80,19 +80,19 @@ int main(int argc, char *argv[])
 
 				switch ((*strIt)) {
 					case MDL_ANGLEROT:
-						rot    = SF.angleRot();
+						SF.getValue( MDL_ANGLEROT, rot);
 						img.set_rot(rot);
 						break;
 					case MDL_ANGLETILT:
-						tilt   = SF.angleTilt();
+						SF.getValue( MDL_ANGLETILT, tilt);
 						img.set_tilt(tilt);
 						break;
 					case MDL_ANGLEPSI:
-						psi    = SF.anglePsi();
+						SF.getValue( MDL_ANGLEPSI, psi);
 						img.set_psi(psi);
 						break;
 					case MDL_SHIFTX:
-						xshift = SF.shiftX();
+						SF.getValue( MDL_SHIFTX, xshift);
 					    if (levels != 0)
 							xshift /= pow(2.0, levels);
 		                if (round_shifts)
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 						img.set_Xoff(xshift);
 						break;
 					case MDL_SHIFTY:
-						yshift = SF.shiftY();
+						SF.getValue(MDL_SHIFTY, yshift);
 					    if (levels != 0)
 							yshift /= pow(2.0, levels);
 		                if (round_shifts)
@@ -108,11 +108,11 @@ int main(int argc, char *argv[])
 						img.set_Yoff(yshift);
 						break;
 					case MDL_WEIGHT:
-						weight = SF.weight();
+						SF.getValue( MDL_WEIGHT, weight);
 						img.set_weight(weight);
 						break;
 					case MDL_FLIP:
-						mirror = SF.flip();
+						SF.getValue( MDL_FLIP, mirror);
 						img.set_flip(mirror);
 						break;
 				}

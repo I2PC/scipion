@@ -56,7 +56,11 @@ void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style)
         bool store = true;
         //if (!SF_in.Is_COMMENT())
         {
-            if (SF_in.enabled()==1)
+            bool enabled;
+            
+            SF_in.getValue( MDL_ENABLED, enabled );
+            
+            if ( enabled ==1)
             {
                 if (!new_style) aux(0) = 1;
                 //else            aux(0) = ((FileName)SF_in.get_current_file()).get_number();
@@ -130,7 +134,12 @@ void extract_angles(MetaData &SF_in, DocFile &DF_out,
     checkAngle(ang3);
 
     DF_out.clear();
-    DF_out.append_comment((std::string)"Angles for " + SF_in.image() +
+    
+    FileName auxFn;
+    
+    SF_in.getValue( MDL_IMAGE, auxFn );
+    
+    DF_out.append_comment((std::string)"Angles for " + auxFn +
                           ".   Angle order: " + ang1 + " " + ang2 + " " + ang3);
 
     int i = 0;
@@ -141,7 +150,8 @@ void extract_angles(MetaData &SF_in, DocFile &DF_out,
     {
         // Read image
         ImageXmipp P;
-        FileName fn_img=SF_in.image();
+        FileName fn_img;
+        SF_in.getValue( MDL_IMAGE, fn_img); 
         if (fn_img=="") break;
         P.read(fn_img);
         if (P.Is_flag_set() == 0 || P.Is_flag_set() > 2)
@@ -224,14 +234,14 @@ void rename_for_Spider(MetaData &SF_in, MetaData &SF_out, const FileName &fn_roo
 
     do
     {
-    	fn_in = SF_in.image();
+    	SF_in.getValue( MDL_IMAGE, fn_in);
         if (fn_in=="") break;
         fn_out = fn_root + integerToString(counter, 5);
         if (out_ext == "") fn_out = fn_out.add_extension(fn_in.get_extension());
         else             fn_out = fn_out.add_extension(out_ext);
         SF_out.addObject();
-        SF_out.setImage( fn_out);
-        SF_out.setEnabled( 1);
+        SF_out.setValue( MDL_IMAGE, fn_out);
+        SF_out.setValue( MDL_ENABLED, 1);
 
         std::cout << "Renaming " << fn_in << " as " << fn_out << std::endl;
         std::string command = (std::string)"cp " + fn_in + " " + fn_out;

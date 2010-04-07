@@ -45,8 +45,8 @@ int main(int argc, char **argv)
             Is_FourierVolumeXmipp(fn_input) || Is_FourierImageXmipp(fn_input))
         {
        	    SF.addObject();
-            SF.setImage( fn_input);
-            SF.setEnabled( 1);
+            SF.setValue( MDL_IMAGE, fn_input);
+            SF.setValue( MDL_ENABLED, 1);
         }
         else
         {
@@ -71,7 +71,8 @@ int main(int argc, char **argv)
 		}
 		do
         {
-            FileName file_name = SF.image();
+            FileName file_name;
+            SF.getValue( MDL_IMAGE, file_name);
 
             if (file_name=="") break;
 

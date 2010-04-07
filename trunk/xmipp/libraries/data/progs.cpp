@@ -280,7 +280,8 @@ void SF_main(int argc, char **argv,
             do
             {
                 FileName fn_read;
-                fn_read = SF_in.image();
+                SF_in.getValue( MDL_IMAGE, fn_read);
+                //fn_read = SF_in.image();
                 if (fn_read=="") break;
                 if (prm->each_image_produces_an_output)
                     if (prm->oext == "" && prm->oroot == "")
@@ -408,11 +409,12 @@ void SF_main(int argc, char **argv,
 
                 if (prm->each_image_produces_an_output)
                 	SF_out.addObject();
-                    SF_out.setImage( prm->fn_out);
+                    SF_out.setValue( MDL_IMAGE, prm->fn_out);
+                    //SF_out.setImage( prm->fn_out);
                     if (success)
-                    	SF_out.setEnabled( 1);
+                    	SF_out.setValue( MDL_ENABLED, 1);
 					else
-						SF_out.setEnabled( -1);
+						SF_out.setValue( MDL_ENABLED,-1);
 
                 if (i++ % istep == 0 && prm->allow_time_bar && !prm->quiet)
                     progress_bar(i);

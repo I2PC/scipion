@@ -95,7 +95,9 @@ void Prog_analyze_cluster_prm::produceSideInfo()
     do
     {
         ImageXmipp Iaux;
-        Iaux.read(SF.image());
+        FileName auxFn;
+        SF.getValue( MDL_IMAGE, auxFn );
+        Iaux.read( auxFn );
         Iaux().setXmippOrigin();
         classfile.push_back(Iaux.name());
         currentIdx++;
@@ -344,16 +346,16 @@ void Prog_analyze_cluster_prm::run()
         if (distance(idx(i)-1)<distThreshold)
         {
         	SFout_good.addObject();
-        	SFout_good.setImage(classfile[idx(i)-1]);
-            SFout_good.setEnabled( 1);
+        	SFout_good.setValue( MDL_IMAGE, classfile[idx(i)-1]);
+            SFout_good.setValue( MDL_ENABLED, 1);
             Iavg+=*(Iclassorig[idx(i)-1]);
             N++;
         }
         else
         {
         	SFout_bad.addObject();
-        	SFout_bad.setImage(classfile[idx(i)-1]);
-        	SFout_bad.setEnabled(1);
+        	SFout_bad.setValue( MDL_IMAGE, classfile[idx(i)-1]);
+        	SFout_bad.setValue( MDL_ENABLED, 1);
         }
     }
     fhOut.close();

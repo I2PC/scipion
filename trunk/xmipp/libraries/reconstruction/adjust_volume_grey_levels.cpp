@@ -106,7 +106,8 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
     do
     {
         // Read next image
-        FileName fn = SF.image();
+        FileName fn;
+        SF.getValue( MDL_IMAGE, fn);
         if (fn=="") break;
 
         // Skip randomly some images
@@ -164,7 +165,8 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
     do
     {
         // Read image
-        FileName fn = SF.image();
+        FileName fn;
+        SF.getValue( MDL_IMAGE, fn);
         if (fn=="") break;
         ImageXmipp I;
         I.read(fn);

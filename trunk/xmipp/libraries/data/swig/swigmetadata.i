@@ -17,26 +17,25 @@ First example
 python
 import XmippData
 #create metadata object
-outFile=XmippData.FileName()
-outFile='kk'
+outFile=XmippData.FileName('kk')
 mD=XmippData.MetaData();
 #create metadatacontainer (one line of metadata)
 id=mD.addObject();
 valor=10.3
 #fill an object data
-result=mD.setImage("image0001.xmp")
-result=mD.setAngleRot(valor)
-result=mD.setAnglePsi(123.2)
+mD.setValue( XmippData.MDL_IMAGE, "image0001.xmp")
+mD.setValue( XmippData.MDL_ANGLEPSI, valor)
+mD.setValue( XmippData.MDL_ANGLEROT, 123.2)
 
 id=mD.addObject();
-result=mD.setImage("image0002.xmp")
-result=mD.setAngleRot(valor*2.)
-result=mD.setAnglePsi(123.3)
+mD.setValue( XmippData.MDL_IMAGE, "image0002.xmp")
+mD.setValue( XmippData.MDL_ANGLEPSI, valor*2.)
+mD.setValue( XmippData.MDL_ANGLEROT, 124.2)
 
 mD.write(outFile)
 
 #modify first added object
-result=mD.setAngleRot(valor*3)
+mD.setValue( XmippData.MDL_ANGLEROT, 444.2)
 
 mD.write("prueba2.doc")
 
@@ -52,11 +51,7 @@ ANOTHER EXAMPLE (xmipp_selfile_create)
 import os,glob,sys
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
 sys.path.append(scriptdir) # add default search path
-
-import XmippData # import interface with xmipp
-
-#some functions in xmipp require filenames, this is not a native 
-#data type in python. So it need to be explicitely defined as follows
+import XmippData
 outFile=XmippData.FileName()
 if len(sys.argv) == 1:
    print 'Usage: selfile_create "pattern"  metadataFile'
@@ -71,15 +66,20 @@ else:
    print 'Example2: xmipp_selfile_create "Images/*xmp"  > all_images.sel'
    sys.exit()
 
-#create metadata object
+
 mD=XmippData.MetaData()
 
-#loop through the images
-for file in glob.glob(sys.argv[1]):
+files = glob.glob(sys.argv[1])
+files.sort()
+for file in files:
     mD.addObject();
-    mD.setImage(file)
-    mD.setEnabled(1)
-#write sel file    
+    mD.setValue( XmippData.MDL_IMAGE, file)
+    mD.setValue( XmippData.MDL_ENABLED, 1)
 mD.write(outFile)
 
-*/
+================================
+#Do not use de asigment operator rather use the copy constructor
+mD2=XmippData.MetaData(mD);
+mD2.write("two")
+mD2.setValue( XmippData.MDL_ANGLEROT, 111.2)
+mD2.write("three")

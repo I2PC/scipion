@@ -31,6 +31,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include "funcs.h"
 
 // This enum defines what MetaDataLabels this class can manage, if
 // you need a new one add it here and modify affected methods:
@@ -70,19 +71,43 @@ enum MetaDataLabel
 			 		    // it is here for looping purposes  	
 };
 
+#define IS_DOUBLE(lCode) lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||\
+               lCode == MDL_SHIFTX   || lCode == MDL_SHIFTY    || lCode == MDL_SHIFTZ   ||\
+               lCode == MDL_ORIGINX  || lCode == MDL_ORIGINY   || lCode == MDL_ORIGINZ  ||\
+               lCode == MDL_WEIGHT   || lCode == MDL_MAXCC     || lCode == MDL_PMAX
+
+#define IS_STRING(lCode) lCode == MDL_IMAGE       || lCode == MDL_MICROGRAPH     || \
+	                     lCode == MDL_CTFMODEL    || lCode == MDL_CTFINPUTPARAMS || \
+	                     lCode == MDL_PERIODOGRAM || lCode == MDL_SERIE
+
+#define IS_INT(lCode)    lCode == MDL_REF         || lCode == MDL_ENABLED
+
+#define IS_BOOL(lCode)   lCode == MDL_FLIP
+
+
 class MetaDataContainer
 {
 	/** Container for pairs "name" and value. Note that void * allows to use
 	    mixed types */
 	std::map<MetaDataLabel, void *> values;
-	
+
 	void insertVoidPtr( MetaDataLabel name, void * value );
+	void * getVoidPtr( MetaDataLabel name );
 
 	public:
+
+	/**Assignment operator
+	 *
+	 */
+	MetaDataContainer& operator = ( MetaDataContainer &MDc);
 	
 	/** Constructor */
 	MetaDataContainer();
-	
+	/** Copy constructor
+	 *
+	 */
+	MetaDataContainer( MetaDataContainer &MDc);
+
 	/** Destructor */
 	~MetaDataContainer();
 	
@@ -93,8 +118,13 @@ class MetaDataContainer
 	void addValue( MetaDataLabel name, bool value );
 	void addValue( MetaDataLabel name, std::string value  );
 	void addValue( std::string name, std::string value );
-	
-	void * getValue( MetaDataLabel name );
+
+	void getValue( MetaDataLabel name, int &value );
+	void getValue( MetaDataLabel name, double &value );
+	void getValue( MetaDataLabel name, float &value );
+	void getValue( MetaDataLabel name, std::string &value );
+	void getValue( MetaDataLabel name, bool &value );
+
 	bool valueExists( MetaDataLabel name );
 
 	bool pairExists( MetaDataLabel name, double value );
@@ -111,6 +141,7 @@ class MetaDataContainer
 	static std::string decodeLabel( MetaDataLabel inputLabel );
 	static bool isValidLabel( MetaDataLabel inputLabel );
 	static bool isValidLabel( std::string inputLabel );
+
 };
 
 #endif

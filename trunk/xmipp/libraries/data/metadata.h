@@ -43,7 +43,7 @@ class MetaData
 {
 
 	std::map< long int, MetaDataContainer *> objects;
-	
+
 	// Used by firstObject, nextObject and lastObject to keep a pointer
 	// to the "active" object. This way when you call setValue without
 	// an objectID, this one is chosen
@@ -61,26 +61,33 @@ class MetaData
     
     MetaDataContainer * getObject( long int objectID = -1 );
 
-	// Set a new pair/value for an specified object. If no objectID is given, that
-	// pointed by the class iterator is used 
-	bool setValue( MetaDataLabel name, double value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, float value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, int value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, bool, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, std::string value, long int objectID = -1 );
-	bool setValue( std::string name, std::string value, long int objectID = -1 );
-    
-
-    void readOldSelFile( std::ifstream *infile );
-    void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
-    void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
 
     bool isColumnFormat;
     /**Input file name
      *
      */
     FileName infile;
+
 public:
+
+	// Set a new pair/value for an specified object. If no objectID is given, that
+	// pointed by the class iterator is used 
+	bool setValue( MetaDataLabel name, double value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, float value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, int value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, bool value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, std::string value, long int objectID = -1 );
+	bool setValue( std::string name, std::string value, long int objectID = -1 );
+    
+	void getValue( MetaDataLabel name, double &value, long int objectID = -1 );
+	void getValue( MetaDataLabel name, float &value, long int objectID = -1 );
+	void getValue( MetaDataLabel name, int &value, long int objectID = -1 );
+	void getValue( MetaDataLabel name, bool &value, long int objectID = -1 );
+	void getValue( MetaDataLabel name, std::string &value, long int objectID = -1 );
+
+    void readOldSelFile( std::ifstream *infile );
+    void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
+    void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
 	/** What labels have been read from a docfile/metadata file
 	* and/or will be stored on a new metadata file when "save" is
 	* called
@@ -109,6 +116,15 @@ public:
 	MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
 	~MetaData();
 	
+	/**Copy constructor
+	 *
+	 */
+	MetaData(MetaData & c);
+    /** Assignment operator
+     *
+    */
+	MetaData& operator = ( MetaData &MD);
+
 	void write( std::string fileName );
 	
 	bool isEmpty( );
@@ -140,53 +156,6 @@ public:
 	std::string getPath( );
 	std::string getComment( );
 	
-//    void getAngles( double &rot, double &tilt, double &psi, long int objectID = -1 );
-    
-	double angleRot( long int objectID = -1 );
-	double angleTilt( long int objectID = -1 );
-	double anglePsi( long int objectID = -1 );
-	double shiftX( long int objectID = -1 );
-	double shiftY( long int objectID = -1 );
-	double shiftZ( long int objectID = -1 );
-	double originX( long int objectID = -1 );
-	double originY( long int objectID = -1 );
-	double originZ( long int objectID = -1 );
-	double weight( long int objectID = -1 );
-	double flip( long int objectID = -1 );
-	double maxCC( long int objectID = -1);
-    double pMax( long int objectID = -1 );
-	int ref( long int objectID = -1 );
-	int enabled( long int objectID = -1 );
-	std::string CTFModel( long int objectID = -1 );
-	std::string image( long int objectID = -1 );
-	std::string micrograph( long int objectID = -1 );
-	std::string CTFInputParams( long int objectID = -1 );
-	std::string periodogram( long int objectID = -1 );
-	std::string serie( long int objectID = -1 );
-    
-//    void setAngles( double rot, double tilt, double psi, long int objectID = -1 );
-    
-    void setAngleRot( double value, long int objectID = -1 );
-    void setAngleTilt( double value, long int objectID = -1 );
-    void setAnglePsi( double value, long int objectID = -1 );
-    void setEnabled( int value, long int objectID = -1 );
-    void setShiftX( double value, long int objectID = -1 );
-    void setShiftY( double value, long int objectID = -1 );
-    void setShiftZ( double value, long int objectID = -1 );
-    void setOriginX( double value, long int objectID = -1 );
-    void setOriginY( double value, long int objectID = -1 );
-    void setOriginZ( double value, long int objectID = -1 );
-    void setPMax( double value, long int objectID = -1 );
-    void setImage( std::string value, long int objectID = -1 );
-    void setCTFModel( std::string value, long int objectID = -1 );
-    void setMicrograph( std::string value, long int objectID = -1 );
-    void setCTFInputParams( std::string value, long int objectID = -1 );
-    void setPeriodogram( std::string value, long int objectID = -1 );
-    void setSerie( std::string value, long int objectID = -1 );
-    void setWeight( double value, long int objectID = -1 );
-    void setFlip( bool value, long int objectID = -1 );
-    void setMaxCC( double value, long int objectID = -1 );
-    void setRef( int value, long int objectID = -1 );
     size_t size(void){return objects.size();}
     /** Return metafile filename
      *

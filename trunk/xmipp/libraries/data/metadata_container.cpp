@@ -26,6 +26,69 @@
 
 MetaDataContainer::MetaDataContainer(){};
 MetaDataContainer::~MetaDataContainer(){};
+MetaDataContainer& MetaDataContainer::operator = ( MetaDataContainer &MDc)
+{
+
+    if (this != &MDc)
+    {
+    	void * aux;
+    	MetaDataLabel lCode;
+    	std::map<MetaDataLabel, void *>::iterator It;
+		for( It = (MDc.values).begin( ) ; It != (MDc.values).end( ); It ++ )
+		{
+			aux   = It->second;
+		    lCode = It->first;
+
+			if( IS_DOUBLE(lCode) )
+			{
+				addValue( lCode, * ((double *) aux) );
+			}
+			else if( IS_STRING(lCode) )
+			{
+				addValue( lCode, * ((std::string *) aux) );
+			}
+			else if( IS_INT(lCode))
+			{
+				addValue( lCode, * ((int *) aux) );
+			}
+			else if( IS_BOOL(lCode))
+			{
+				addValue( lCode, * ((bool *) aux) );
+			}
+
+		}
+    }
+    return *this;
+}
+MetaDataContainer::MetaDataContainer  ( MetaDataContainer &MDc)
+{
+	void * aux;
+	MetaDataLabel lCode;
+	std::map<MetaDataLabel, void *>::iterator It;
+	for( It = (MDc.values).begin( ) ; It != (MDc.values).end( ); It ++ )
+	{
+		aux   = It->second;
+		lCode = It->first;
+
+		if( IS_DOUBLE(lCode) )
+		{
+			addValue( lCode, * ((double *) aux) );
+		}
+		else if( IS_STRING(lCode) )
+		{
+			addValue( lCode, * ((std::string *) aux) );
+		}
+		else if( IS_INT(lCode))
+		{
+			addValue( lCode, * ((int *) aux) );
+		}
+		else if( IS_BOOL(lCode))
+		{
+			addValue( lCode, * ((bool *) aux) );
+		}
+
+	}
+}
 
 void MetaDataContainer::addValue( MetaDataLabel name, int value )
 {
@@ -57,16 +120,14 @@ void MetaDataContainer::addValue( MetaDataLabel name, std::string value )
 	insertVoidPtr( name, newValue );
 }
 
+
 void MetaDataContainer::addValue( std::string name, std::string value )
 {	
 	MetaDataLabel lCode = codifyLabel( name );
 	std::istringstream i( value );
 	
 	// Look for a double value
-	if( lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||
-	   lCode == MDL_SHIFTX || lCode == MDL_SHIFTY || lCode == MDL_SHIFTZ ||
-	   lCode == MDL_ORIGINX || lCode == MDL_ORIGINY || lCode == MDL_ORIGINZ || 
-	   lCode == MDL_WEIGHT || lCode == MDL_MAXCC || lCode == MDL_PMAX ) 
+	if( IS_DOUBLE(lCode) )
 	{
 		double doubleValue;
 		
@@ -74,13 +135,11 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 				
 		addValue( lCode, doubleValue );
 	}
-	else if( lCode == MDL_IMAGE || lCode == MDL_MICROGRAPH || lCode == MDL_CTFMODEL ||
-        lCode == MDL_CTFINPUTPARAMS || lCode == MDL_PERIODOGRAM ||
-        lCode == MDL_SERIE )
+	else if( IS_STRING(lCode) )
 	{
 		addValue( lCode, value );
 	}
-	else if( lCode == MDL_REF || lCode == MDL_ENABLED )
+	else if( IS_INT(lCode))
 	{
 		int intValue;
 		
@@ -88,7 +147,7 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 				
 		addValue( lCode, intValue ); 
 	}
-	else if( lCode == MDL_FLIP )
+	else if( IS_BOOL(lCode))
 	{
 		bool boolValue;
 		
@@ -104,7 +163,7 @@ void MetaDataContainer::insertVoidPtr( MetaDataLabel name, void * value )
 	values[ name ] = value;
 }
 
-void * MetaDataContainer::getValue( MetaDataLabel name )
+void  MetaDataContainer::getValue( MetaDataLabel name, int &value )
 {	
 	std::map<MetaDataLabel, void *>::iterator element; 
 
@@ -112,7 +171,85 @@ void * MetaDataContainer::getValue( MetaDataLabel name )
 
 	if ( element == values.end( ) )
 	{
-		return NULL;
+		REPORT_ERROR(1,(std::string) "Label(int) " + decodeLabel(name) + " not found\n" );
+	}
+	else
+	{
+		value = *((int *)element->second);
+	}
+}
+void  MetaDataContainer::getValue( MetaDataLabel name, double &value )
+{
+	std::map<MetaDataLabel, void *>::iterator element;
+
+	element = values.find( name );
+
+	if ( element == values.end( ) )
+	{
+		REPORT_ERROR(1,(std::string) "Label(double) " + decodeLabel(name) + " not found\n" );
+	}
+	else
+	{
+		value = *((double *)element->second);
+	}
+}
+void  MetaDataContainer::getValue( MetaDataLabel name, float &value )
+{
+	std::map<MetaDataLabel, void *>::iterator element;
+
+	element = values.find( name );
+
+	if ( element == values.end( ) )
+	{
+		REPORT_ERROR(1,(std::string) "Label(float) " + decodeLabel(name) + " not found\n" );
+	}
+	else
+	{
+		value = *((float *)element->second);
+	}
+}
+
+void  MetaDataContainer::getValue( MetaDataLabel name, std::string &value )
+{
+	std::map<MetaDataLabel, void *>::iterator element;
+
+	element = values.find( name );
+
+	if ( element == values.end( ) )
+	{
+		REPORT_ERROR(1,(std::string) "Label(string) " + decodeLabel(name) + " not found\n" );
+	}
+	else
+	{
+		value = *((std::string *)element->second);
+	}
+}
+
+void  MetaDataContainer::getValue( MetaDataLabel name, bool &value )
+{
+	std::map<MetaDataLabel, void *>::iterator element;
+
+	element = values.find( name );
+
+	if ( element == values.end( ) )
+	{
+		REPORT_ERROR(1,(std::string) "Label(bool) " + decodeLabel(name) + " not found\n" );
+	}
+	else
+	{
+		value = *((bool *)element->second);
+	}
+}
+
+void * MetaDataContainer::getVoidPtr( MetaDataLabel name )
+{
+	std::map<MetaDataLabel, void *>::iterator element;
+
+	element = values.find( name );
+
+	if ( element == values.end( ) )
+	{
+		REPORT_ERROR(1,(std::string) "Label(bool) " + decodeLabel(name) + " not found\n" );
 	}
 	else
 	{
@@ -400,67 +537,67 @@ void MetaDataContainer::writeValueToFile( std::ofstream &outfile, MetaDataLabel 
 	switch ( inputLabel ) 
 	{
 		case MDL_ANGLEROT:
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_ANGLETILT:
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_ANGLEPSI:
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_IMAGE:
-			outfile << *((std::string*)(getValue( inputLabel )));
+			outfile << *((std::string*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_MICROGRAPH:
-			outfile << *((std::string*)(getValue( inputLabel )));
+			outfile << *((std::string*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_CTFMODEL:
-			outfile << *((std::string*)(getValue( inputLabel )));
+			outfile << *((std::string*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_SHIFTX:
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_SHIFTY:
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_SHIFTZ:
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_ENABLED:
-			outfile << *((int*)(getValue( inputLabel )));
+			outfile << *((int*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_ORIGINX:
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_ORIGINY:
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_ORIGINZ:
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_WEIGHT:
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_FLIP: 
-			outfile << *((bool*)(getValue( inputLabel )));
+			outfile << *((bool*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_REF: 
-			outfile << *((int*)(getValue( inputLabel )));
+			outfile << *((int*)(getVoidPtr( inputLabel )));
 			break;
 		case MDL_MAXCC: 
-			outfile << *((double*)(getValue( inputLabel )));
+			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
         case MDL_PMAX:
-            outfile << *((double*)(getValue( inputLabel )));
+            outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
         case MDL_SERIE:
-            outfile << *((std::string*)(getValue( inputLabel )));
+            outfile << *((std::string*)(getVoidPtr( inputLabel )));
             break;
         case MDL_CTFINPUTPARAMS:
-            outfile << *((std::string*)(getValue( inputLabel )));
+            outfile << *((std::string*)(getVoidPtr( inputLabel )));
 			break;
         case MDL_PERIODOGRAM:
-            outfile << *((std::string*)(getValue( inputLabel )));
+            outfile << *((std::string*)(getVoidPtr( inputLabel )));
 			break;
 		default:
 			break;

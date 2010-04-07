@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
         if (Is_ImageXmipp(fn_input))
         {
         	SF.addObject();
-            SF.setImage( fn_input);
-            SF.setEnabled( 1);
+            SF.setValue( MDL_IMAGE, fn_input);
+            SF.setValue( MDL_ENABLED, 1);
         }
         else
             SF.read( fn_input ,NULL);
@@ -78,7 +78,8 @@ int main(int argc, char *argv[])
         double angle=firstAngle;
         do
         {
-            FileName fn_img=SF.image();
+            FileName fn_img;
+            SF.getValue( MDL_IMAGE, fn_img); 
             if (fn_img=="") break;
             img.read(fn_img);
             img.clear_header();

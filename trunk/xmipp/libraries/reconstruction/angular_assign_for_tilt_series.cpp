@@ -30,8 +30,10 @@
 #include <data/fftw.h>
 //#define  METADATA
 #ifndef METADATA
-    <data/docfile.h>
+    #include <data/docfile.h>
 #else
+    #include <data/metadata.h>
+#endif
 #include <data/de_solver.h>
 #include <data/morphology.h>
 #include <fstream>
@@ -673,7 +675,9 @@ void Prog_tomograph_alignment::produceSideInfo() {
        bool nonZeroTilt=false;
        do
        {
-          FileName fn=SF.image();
+          FileName fn;
+          
+          SF.getValue( MDL_IMAGE, fn ); 
           if (fn=="") break;
           ImageXmipp imgaux(fn);
           if (difficult)
@@ -2104,7 +2108,9 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
          if (fnSelOrig!="")
          {
              ImageXmipp Iorig;
-             Iorig.read(SForig.image());
+             FileName auxFn;
+             SForig.getValue( MDL_IMAGE, auxFn );
+             Iorig.read( auxFn );
              SForig.nextObject();
              mask.initZeros(Iorig());
              FOR_ALL_ELEMENTS_IN_MATRIX2D(Iorig())

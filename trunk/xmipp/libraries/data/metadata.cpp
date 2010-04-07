@@ -36,6 +36,55 @@ MetaData::MetaData()
     infile.clear();
 }
 
+MetaData::MetaData(MetaData &MD)
+{
+	this->setComment(MD.getComment());
+	this->setPath(MD.getPath());
+	this->isColumnFormat = MD.isColumnFormat;
+	this->infile         = MD.infile;
+	this->fastStringSearchLabel = MDL_UNDEFINED;
+	this->activeLabels          = MD.activeLabels;
+
+	//objects, define iterator
+	std::map< long int, MetaDataContainer *>::iterator objIt;
+	for( objIt  = MD.objects.begin();
+		 objIt != MD.objects.end();
+		 objIt ++ )
+	{
+		long int idx = this->addObject();
+
+		this->objects[idx]= new MetaDataContainer( *(objIt->second));
+	}
+	this->objectsIterator = objects.begin();
+
+}
+
+MetaData& MetaData::operator = ( MetaData &MD)
+{
+	if (this != &MD)
+	{
+		this->setComment(MD.getComment());
+		this->setPath(MD.getPath());
+		this->isColumnFormat = MD.isColumnFormat;
+		this->infile         = MD.infile;
+		this->fastStringSearchLabel = MDL_UNDEFINED;
+		this->activeLabels          = MD.activeLabels;
+
+		//objects, define iterator
+		std::map< long int, MetaDataContainer *>::iterator objIt;
+		for( objIt  = MD.objects.begin();
+			 objIt != MD.objects.end();
+			 objIt ++ )
+		{
+			long int idx = this->addObject();
+
+			this->objects[idx]= new MetaDataContainer( *(objIt->second));
+		}
+		this->objectsIterator = objects.begin();
+	}
+    return *this;
+}
+
 void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector )
 {
     infile->seekg(0, std::ios::beg); 
@@ -256,8 +305,12 @@ void MetaData::read( FileName fileName, std::vector<MetaDataLabel> * labelsVecto
     isColumnFormat = true;
     infile = fileName;
 	// Open file
-	std::ifstream infile ( fileName.data(), std::ios_base::in );
+ 	std::ifstream infile ( fileName.data(), std::ios_base::in );
 	std::string line;
+    if(infile.fail())
+    {
+		REPORT_ERROR( 200, (std::string) "File" + fileName +  " does not exits" );
+    }
 	
 	// Search for Headerinfo, if present we are processing an old-styled docfile
 	// else we are processing a new Xmipp MetaData file
@@ -551,8 +604,7 @@ bool MetaData::setValue( MetaDataLabel name, float value, long int objectID )
 				{
 					(It->second)->addValue( name, float() );
 				}		
-			} 
-			
+			}
 		}
 			
 		aux->addValue( name, value );
@@ -994,425 +1046,39 @@ long int MetaData::countObjects( MetaDataLabel name, int value )
 
 	return result;
 }
-double MetaData::angleRot( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_ANGLEROT );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'angleRot' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-        exit( 1 );
-	}
 
-	return (*result);
+void MetaData::getValue( MetaDataLabel name, double &value, long int objectID )
+{	
+    MetaDataContainer * aux = getObject( objectID );
+    
+    aux->getValue( name, value );
 }
 
-double MetaData::angleTilt( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_ANGLETILT );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'angleTilt' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-        exit( 1 );
-	}
-
-	return (*result);
-}
-
-double MetaData::anglePsi( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_ANGLEPSI );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'anglePs' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}
-
-	return (*result);
-}
-
-int MetaData::enabled( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    int * result = (int *)aux->getValue( MDL_ENABLED );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'enabled' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}	
-			
-    return (*result);
-}
-
-double MetaData::shiftX( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_SHIFTX );
-	
-	if( result == NULL )		
-    {
-		std::cerr << "No 'siftX' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}
-	
-    return (*result);
-}
-
-double MetaData::shiftY( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_SHIFTY );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'shiftY' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}
-
-	return (*result);
-}
-
-double MetaData::shiftZ( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_SHIFTZ );
-	
-	if( result == NULL )
-    {
-		std::cerr << "No 'shiftZ' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}	
-
-	return (*result);
-}
-
-double MetaData::originX( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_ORIGINX );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'originX' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}
-	
-    return (*result);
-}
-
-double MetaData::originY( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_ORIGINY );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'originY' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}
-	
-    return (*result);
-}
-
-double MetaData::originZ( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_ORIGINZ );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'originZ' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}
-
-	return (*result);
-}
-
-double MetaData::pMax( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_PMAX );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'pMax' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}
-	
-    return (*result);
-}
-
-
-std::string MetaData::image( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-		
-    std::string * result = (std::string *)aux->getValue( MDL_IMAGE );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'image' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}
-
-	return (*result);
-}
-
-std::string MetaData::CTFModel( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    std::string * result = (std::string *)aux->getValue( MDL_CTFMODEL );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'CTFModel' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-       	exit( 1 );
-	}
-	
-    return (*result);
-}
-
-std::string MetaData::micrograph( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    std::string * result = (std::string *)aux->getValue( MDL_MICROGRAPH );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'micrograph' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-   	    exit( 1 );
-	}
-
-    return (*result);
-}
-
-std::string MetaData::CTFInputParams( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    std::string * result = (std::string *)aux->getValue( MDL_CTFINPUTPARAMS );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'CTFInputParam' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-        exit( 1 );
-	}
-
-	return (*result);
-}
-
-std::string MetaData::periodogram( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    std::string * result = (std::string *)aux->getValue( MDL_PERIODOGRAM );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'periodogram' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-	    exit( 1 );
-	}
-
-	return (*result);
-}
-
-std::string MetaData::serie( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    std::string * result = (std::string *)aux->getValue( MDL_SERIE );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'serie' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-	    exit( 1 );
- 	}
-    
-    return (*result);
-}
-
-double MetaData::weight( long int objectID )
-{
-	MetaDataContainer * aux = getObject( objectID );
-    
-    double * result = (double *)aux->getValue( MDL_WEIGHT );
-	
-	if( result == NULL )	
-    {
-		std::cerr << "No 'weight' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-	    exit( 1 );
-	}
-
-	return (*result);
-}
-
-double MetaData::flip( long int objectID )
+void MetaData::getValue( MetaDataLabel name, float &value, long int objectID )
 {
     MetaDataContainer * aux = getObject( objectID );
     
-    double * result = (double *)aux->getValue( MDL_FLIP );
-        
-	if( result == NULL )
-	{
-		std::cerr << "No 'flip' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-        exit( 1 );
-	}
-
-	return (*result);
+    aux->getValue( name, value );
 }
 
-double MetaData::maxCC( long int objectID )
+void MetaData::getValue( MetaDataLabel name, int &value, long int objectID )
 {
     MetaDataContainer * aux = getObject( objectID );
     
-    double * result = (double *)aux->getValue( MDL_MAXCC );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'maxCC' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-	    exit( 1 );
-    }
-
-	return (*result);
+    aux->getValue( name, value );
 }
 
-int MetaData::ref( long int objectID )
+void MetaData::getValue( MetaDataLabel name, bool &value, long int objectID )
 {
     MetaDataContainer * aux = getObject( objectID );
-	
-    int * result = (int *)aux->getValue( MDL_REF );
-		
-	if( result == NULL )
-	{
-		std::cerr << "No 'ref' label found for objectID = " << objectID << " . Exiting... " << std::endl;
-	    exit( 1 );
-    }
-	
-    return (*result);
+    
+    aux->getValue( name, value );
 }
 
-void MetaData::setAngleRot( double value, long int objectID )
+void MetaData::getValue( MetaDataLabel name, std::string &value, long int objectID )
 {
-	setValue(MDL_ANGLEROT,value,objectID);
-}
-
-void MetaData::setAngleTilt( double value, long int objectID )
-{
-	setValue(MDL_ANGLETILT,value,objectID);
-}
-
-void MetaData::setAnglePsi( double value, long int objectID )
-{
-	setValue(MDL_ANGLEPSI,value,objectID);
-}
-
-void MetaData::setEnabled( int value, long int objectID )
-{
-	setValue(MDL_ENABLED,value,objectID);
-}
-
-void MetaData::setShiftX( double value, long int objectID )
-{
-	setValue(MDL_SHIFTX,value,objectID);
-}
-
-void MetaData::setShiftY( double value, long int objectID )
-{
-	setValue(MDL_SHIFTY,value,objectID);
-}
-
-void MetaData::setShiftZ( double value, long int objectID )
-{
-	setValue(MDL_SHIFTZ,value,objectID);
-}
-
-void MetaData::setOriginX( double value, long int objectID )
-{
-	setValue(MDL_ORIGINX,value,objectID);
-}
-
-void MetaData::setOriginY( double value, long int objectID )
-{
-	setValue(MDL_ORIGINY,value,objectID);
-}
-
-void MetaData::setOriginZ( double value, long int objectID )
-{
-	setValue(MDL_ORIGINZ,value,objectID);
-}
-
-void MetaData::setPMax( double value, long int objectID )
-{
-	setValue(MDL_PMAX,value,objectID);
-}
-
-void MetaData::setImage( std::string value, long int objectID )
-{
-	setValue(MDL_IMAGE,value,objectID);
-}
-
-void MetaData::setCTFModel( std::string value, long int objectID )
-{
-	setValue(MDL_CTFMODEL,value,objectID);
-}
-
-void MetaData::setMicrograph( std::string value, long int objectID )
-{
-	setValue(MDL_MICROGRAPH,value,objectID);
-}
-
-void MetaData::setCTFInputParams( std::string value, long int objectID )
-{
-	setValue(MDL_CTFINPUTPARAMS,value,objectID);
-}
-
-void MetaData::setPeriodogram( std::string value, long int objectID )
-{
-	setValue(MDL_PERIODOGRAM,value,objectID);
-}
-
-void MetaData::setSerie( std::string value, long int objectID )
-{
-	setValue(MDL_SERIE,value,objectID);
-}
-
-void MetaData::setWeight( double value, long int objectID )
-{
-	setValue(MDL_WEIGHT,value,objectID);
-}
-
-void MetaData::setFlip( bool value, long int objectID )
-{
-	setValue(MDL_FLIP,value,objectID);
-}
-
-void MetaData::setMaxCC( double value, long int objectID )
-{
-	setValue(MDL_MAXCC,value,objectID);
-}
-
-void MetaData::setRef( int value, long int objectID )
-{
-	setValue(MDL_REF,value,objectID);
+    MetaDataContainer * aux = getObject( objectID );
+    
 }
 
 MetaDataContainer * MetaData::getObject( long int objectID )
@@ -1464,7 +1130,9 @@ long int MetaData::fastSearch( MetaDataLabel name, std::string value, bool recom
 		
 			if( aux->valueExists( name ) )
 			{
-				fastStringSearch[ *((std::string *)((It->second)->getValue( name ))) ] = It->first ;
+                std::string auxStr;
+                (It->second)->getValue( name, auxStr );
+				fastStringSearch[ auxStr ] = It->first;
 				
 				if( aux->pairExists( name, value) )
 				{
@@ -1494,7 +1162,7 @@ long int MetaData::fastSearch( MetaDataLabel name, std::string value, bool recom
 void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
                              double& _max, bool apply_geo)
 {
-    _min = MAXFLOAT;
+/*    _min = MAXFLOAT;
     _max = 0;
     bool first = true;
     int n = 0;
@@ -1552,5 +1220,5 @@ void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
     }
     while (MT.nextObject()!= MetaData::NO_MORE_OBJECTS);
     _sd() /= (n - 1);
-    _sd().selfSQRTnD();
+    _sd().selfSQRTnD();*/
 }

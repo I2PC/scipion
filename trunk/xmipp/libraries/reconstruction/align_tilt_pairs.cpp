@@ -422,10 +422,15 @@ void Prog_centilt_prm::centilt()
     //while (imgno < n_images)
     SFu.firstObject();
     SFt.firstObject();
+    
+    FileName file_name;
+        
     do
     {
         // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
-        Iu.read(SFu.image());
+        SF.getValue( MDL_IMAGE, file_name);
+        Iu.read( file_name);
+
         Iu().setXmippOrigin();
         Euler_angles2matrix(Iu.Phi(), 0., 0., A);
         A(0, 2) = -Iu.Xoff();
@@ -434,7 +439,8 @@ void Prog_centilt_prm::centilt()
         Iu().selfApplyGeometry(A, IS_INV, DONT_WRAP, outside);
 
         // Read in tilted image and apply Psi (align tilt-axis with y-axis) and shifts if present
-        It.read(SFt.image());
+        SFt.getValue( MDL_IMAGE, file_name);
+        It.read( file_name );
         // Store original matrix for later output
         Maux.resize(It());
         Maux = It();
@@ -457,19 +463,25 @@ void Prog_centilt_prm::centilt()
             {
                 fn_img = fn_img.without_extension() + "." + oext;
             }
-			SFt.setAngleRot( It.Phi());
-			SFt.setAngleTilt( It.Theta());
-			SFt.setAnglePsi( It.psi());
-			SFt.setShiftX( It.Xoff() );
-			SFt.setShiftY( It.Yoff() );
-			SFt.setMaxCC( ccf);
-            SFt.setImage(fn_img);//name may have changed
+			SFt.setValue( MDL_ANGLEROT,It.Phi() );
+			SFt.setValue( MDL_ANGLETILT,It.Theta() );
+			SFt.setValue( MDL_ANGLEPSI,It.psi() );
+			SFt.setValue( MDL_SHIFTX,It.Xoff() );
+	        SFt.setValue( MDL_SHIFTY,It.Yoff() );
+            SFt.setValue( MDL_MAXCC,ccf );
+            SFt.setValue( MDL_IMAGE,fn_img );
+
             // Re-store original matrix & write out tilted image
             It() = Maux;
             It.write(fn_img);
         }
         else
         {
+            SFt.setValue( MDL_ENABLED, -1);
+            SFt.setValue( MDL_SHIFTX, 0.);
+            SFt.setValue( MDL_SHIFTY, 0.);
+            SFt.setValue( MDL_ENABLED, -1);
+            
         	SFt.setEnabled(-1);
 			SFt.setShiftX( 0. );
 			SFt.setShiftY( 0. );
