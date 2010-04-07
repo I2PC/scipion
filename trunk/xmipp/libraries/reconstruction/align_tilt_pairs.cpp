@@ -428,7 +428,7 @@ void Prog_centilt_prm::centilt()
     do
     {
         // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
-        SF.getValue( MDL_IMAGE, file_name);
+        SFu.getValue( MDL_IMAGE, file_name);
         Iu.read( file_name);
 
         Iu().setXmippOrigin();
@@ -479,12 +479,12 @@ void Prog_centilt_prm::centilt()
         else
         {
             SFt.setValue( MDL_ENABLED, -1);
-            SFt.setValue( MDL_SHIFTX, 0.d);
-            SFt.setValue( MDL_SHIFTY, 0.d);
+            SFt.setValue( MDL_SHIFTX, 0.);
+            SFt.setValue( MDL_SHIFTY, 0.);
             SFt.setValue( MDL_ENABLED, -1);
-			SFt.setValue( MDL_SHIFTX,0.d );
-	        SFt.setValue( MDL_SHIFTY,0.d );
-            SFt.setValue( MDL_MAXCC,0.d );
+			SFt.setValue( MDL_SHIFTX,0. );
+	        SFt.setValue( MDL_SHIFTY,0. );
+            SFt.setValue( MDL_MAXCC,0. );
 			n_discarded++;
         }
 

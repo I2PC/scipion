@@ -22,7 +22,7 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#define METADATA
+//#define METADATA
 
 #include <data/fftw.h>
 #include <data/args.h>

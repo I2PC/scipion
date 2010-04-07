@@ -10,6 +10,7 @@
 %include ../metadata.h
 %include ../metadata_container.h
 
+
 /*
 ==================
 First example
@@ -83,3 +84,4 @@ mD2=XmippData.MetaData(mD);
 mD2.write("two")
 mD2.setValue( XmippData.MDL_ANGLEROT, 111.2)
 mD2.write("three")
+*/
