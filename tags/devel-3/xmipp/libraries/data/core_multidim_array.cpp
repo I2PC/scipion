@@ -23,12 +23,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "multidim_array.h"
+#include "core_multidim_array.h"
 
 
 // Show a complex array ---------------------------------------------------
 std::ostream& operator<<(std::ostream& ostrm,
-    const MultidimArray< std::complex<double> >& v)
+    const coreMultidimArray< std::complex<double> >& v)
 {
     if (v.xdim == 0)
         ostrm << "NULL Matrix3D\n";
