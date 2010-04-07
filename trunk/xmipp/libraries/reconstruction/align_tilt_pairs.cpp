@@ -470,6 +470,7 @@ void Prog_centilt_prm::centilt()
 	        SFt.setValue( MDL_SHIFTY,It.Yoff() );
             SFt.setValue( MDL_MAXCC,ccf );
             SFt.setValue( MDL_IMAGE,fn_img );
+            SFt.setValue( MDL_ENABLED, 1);
 
             // Re-store original matrix & write out tilted image
             It() = Maux;
@@ -478,14 +479,12 @@ void Prog_centilt_prm::centilt()
         else
         {
             SFt.setValue( MDL_ENABLED, -1);
-            SFt.setValue( MDL_SHIFTX, 0.);
-            SFt.setValue( MDL_SHIFTY, 0.);
+            SFt.setValue( MDL_SHIFTX, 0.d);
+            SFt.setValue( MDL_SHIFTY, 0.d);
             SFt.setValue( MDL_ENABLED, -1);
-            
-        	SFt.setEnabled(-1);
-			SFt.setShiftX( 0. );
-			SFt.setShiftY( 0. );
-			SFt.setMaxCC( 0.);
+			SFt.setValue( MDL_SHIFTX,0.d );
+	        SFt.setValue( MDL_SHIFTY,0.d );
+            SFt.setValue( MDL_MAXCC,0.d );
 			n_discarded++;
         }
 
