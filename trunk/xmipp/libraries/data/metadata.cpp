@@ -1162,7 +1162,7 @@ long int MetaData::fastSearch( MetaDataLabel name, std::string value, bool recom
 void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
                              double& _max, bool apply_geo)
 {
-/*    _min = MAXFLOAT;
+    _min = MAXFLOAT;
     _max = 0;
     bool first = true;
     int n = 0;
@@ -1173,10 +1173,13 @@ void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
                             std::cerr << "Empty inputFile File\n";
                             exit(1);
                     }
+    FileName image_name;
+    int _enabled;
     do
     {
-        FileName image_name = MT.image();
-        if(MT.enabled()==(-1)||image_name == "")
+        MT.getValue(MDL_IMAGE,image_name);
+        MT.getValue(MDL_ENABLED,_enabled);
+        if(_enabled==(-1)||image_name == "")
             continue;
         Image *image = Image::LoadImage(image_name, apply_geo); // reads image
         double min, max, avg, stddev;
@@ -1207,9 +1210,9 @@ void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
     MT.firstObject();
     do
     {
-        FileName image_name = MT.image();
-        if(MT.enabled()==(-1)) continue;
-        if (image_name == "")
+        MT.getValue(MDL_IMAGE,image_name);
+        MT.getValue(MDL_ENABLED,_enabled);
+        if(_enabled==(-1)||image_name == "")
             continue;
         Image *image = Image::LoadImage(image_name, apply_geo); // reads image
         Image tmpImg;
@@ -1220,5 +1223,5 @@ void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
     }
     while (MT.nextObject()!= MetaData::NO_MORE_OBJECTS);
     _sd() /= (n - 1);
-    _sd().selfSQRTnD();*/
+    _sd().selfSQRTnD();
 }
