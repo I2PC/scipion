@@ -434,7 +434,7 @@ int main(int argc, char **argv)
     {
         isort = sorted(imgno) - 1;
         SFout.insert(prm.names[isort]);
-        if (prm.zscore(isort)/14.<prm.cutoff)
+        if (prm.zscore(isort)/14.<prm.cutoff && prm.cutoff>0)
             SFoutGood.insert(prm.names[isort]);
         fh_zsum << prm.zscore(isort)/14. << "   " << prm.names[isort] << std::endl;
         fh_zind << prm.names[isort]
@@ -456,5 +456,5 @@ int main(int argc, char **argv)
     fh_zsum.close();
     fh_zind.close();
     SFout.write(prm.fn_out + ".sel");
-    SFoutGood.write(prm.fn_out + "_good.sel");
+    if (prm.zcut>0) SFoutGood.write(prm.fn_out + "_good.sel");
 }
