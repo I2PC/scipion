@@ -29,8 +29,8 @@
 #define LOG2 0.693147181
 
 #include "image.h"
-#include "volume.h"
 #include "mask.h"
+#include "numerical_tools.h"
 
 /// @defgroup Filters Filters
 /// @ingroup DataLibrary
@@ -59,7 +59,7 @@ void substract_background_rolling_ball(Matrix2D<double> &I, int radius);
  *
  * The minimum density value is brought to 0 and the maximum to 255.
  */
-void contrast_enhancement(Image* I);
+void contrast_enhancement(Image<double>* I);
 
 /** Region growing for images
  * @ingroup Filters
@@ -314,121 +314,13 @@ double correlation(const Matrix3D< T >& x,
     return retval / (Slices * Rows * Cols);
 }
 
-/** correlation_index 1D
- * @ingroup Filters
- *
- * Return the sum{(x-mean_x)*(y-mean_y)}/(stddev_x*stddev_y*n) in the common
- * positions.
- */
-template <typename T>
-double correlation_index(const Matrix1D< T >& x, const Matrix1D< T >& y)
-{
-    SPEED_UP_temps;
-
-    double retval = 0;
-    double mean_x, mean_y;
-    double stddev_x, stddev_y;
-    double aux;
-    T dummy;
-    long n = 0;
-
-    x.computeStats(mean_x, stddev_x, dummy, dummy);
-    y.computeStats(mean_y, stddev_y, dummy, dummy);
-    if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
-        ABS(stddev_y)<XMIPP_EQUAL_ACCURACY) return 0;
-
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x, y)
-    {
-        retval += (VEC_ELEM(x, i) - mean_x) * (VEC_ELEM(y, i) - mean_y);
-        n++;
-    }
-
-    if (n != 0)
-        return retval / ((stddev_x * stddev_y) * n);
-    else
-        return 0;
-}
-
-/** correlation_index 2D
+/** correlation_index nD
  * @ingroup Filters
  */
 template <typename T>
-double correlation_index(const Matrix2D< T >& x,
-                         const Matrix2D< T >&y,
-                         const Matrix2D< int >* mask = NULL,
-                         Matrix2D< double >* Contributions = NULL)
-{
-    SPEED_UP_temps;
-
-    double retval = 0, aux;
-    double mean_x, mean_y;
-    double stddev_x, stddev_y;
-    T dummy;
-    long n = 0;
-
-    if (mask == NULL)
-    {
-        x.computeStats(mean_x, stddev_x, dummy, dummy);
-        y.computeStats(mean_y, stddev_y, dummy, dummy);
-    }
-    else
-    {
-        computeStats_within_binary_mask(*mask, x, dummy, dummy, mean_x,
-                                         stddev_x);
-        computeStats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
-                                         stddev_y);
-    }
-    if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
-        ABS(stddev_y)<XMIPP_EQUAL_ACCURACY) return 0;
-
-    // If contributions are desired. Please, be careful interpreting individual
-    // contributions to the covariance! One pixel value afect others.
-    if (Contributions != NULL)
-    {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x, y)
-        {
-            if (mask != NULL)
-                if (!(*mask)(i, j))
-                    continue;
-
-            aux = (MAT_ELEM(x, i, j) - mean_x) * (MAT_ELEM(y, i, j) - mean_y);
-            MAT_ELEM(*Contributions, i, j) = aux;
-            retval += aux;
-            n++;
-        }
-
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(*Contributions)
-        MAT_ELEM(*Contributions, i, j) /= ((stddev_x * stddev_y) * n);
-
-    }
-    // In other case, normal process (less computationaly expensive)
-    else
-    {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x, y)
-        {
-            if (mask != NULL)
-                if (!(*mask)(i, j))
-                    continue;
-
-            retval += (MAT_ELEM(x, i, j) - mean_x) * (MAT_ELEM(y, i, j) -
-                      mean_y);
-            n++;
-        }
-    }
-
-    if (n != 0)
-        return retval / ((stddev_x * stddev_y) * n);
-    else
-        return 0;
-}
-
-/** correlation_index 3D
- * @ingroup Filters
- */
-template <typename T>
-double correlation_index(const Matrix3D< T >& x,
-                         const Matrix3D< T >& y,
-                         const Matrix3D< int >* mask = NULL,
+double correlation_index(const MultidimArray< T >& x,
+                         const MultidimArray< T >& y,
+                         const MultidimArray< int >* mask = NULL,
                          Matrix3D< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
@@ -495,24 +387,6 @@ double correlation_index(const Matrix3D< T >& x,
         return 0;
 }
 
-/** Correntropy 1D
- * @ingroup Filters
- */
-template <typename T>
-double correntropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
-    double sigma)
-{
-    double retval=0;
-    double K=-0.5/(sigma*sigma);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(x)
-    {
-        double diff=DIRECT_VEC_ELEM(x,i)-DIRECT_VEC_ELEM(y,i);
-        retval+=exp(K*diff*diff);
-    }
-    retval/=XSIZE(x);
-    return retval;
-}
-
 /** Fast Correntropy 1D
  * @ingroup Filters
  */
@@ -520,6 +394,9 @@ template <typename T>
 double fastCorrentropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
     double sigma, const GaussianInterpolator &G)
 {
+    if ( !(x.checkDimension(1) && y.checkDimension(1)) )
+        REPORT_ERROR(1,"fastCorrentropy ERROR: both arguments should be 1D");
+
     double retval=0;
     double isigma=1.0/sigma;
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(x)
@@ -528,29 +405,11 @@ double fastCorrentropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
     return retval;
 }
 
-/** Correntropy 2D
+/** Correntropy nD
  * @ingroup Filters
  */
 template <typename T>
-double correntropy(const Matrix2D<T> &x, const Matrix2D<T> &y,
-    double sigma)
-{
-    double retval=0;
-    double K=-0.5/(sigma*sigma);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(x)
-    {
-        double diff=DIRECT_MAT_ELEM(x,i,j)-DIRECT_MAT_ELEM(y,i,j);
-        retval+=exp(K*diff*diff);
-    }
-    retval/=XSIZE(x)*YSIZE(x);
-    return retval;
-}
-
-/** Correntropy 3D
- * @ingroup Filters
- */
-template <typename T>
-double correntropy(const Matrix3D<T> &x, const Matrix3D<T> &y,
+double correntropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
     double sigma)
 {
     double retval=0;
@@ -628,70 +487,13 @@ void estimateGaussian2D(const Matrix2D<double> &I,
     double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
     bool estimateMu=true, int iterations=10);
 
-/** euclidian_distance 1D
- * @ingroup Filters
- *
- * Return the SQRT[sum{(x-y)*(x-y)}] in the common positions.
- */
-template <typename T>
-double euclidian_distance(const Matrix1D< T >& x, const Matrix1D< T >& y)
-{
-    SPEED_UP_temps;
-
-    double retval = 0;
-    long n = 0;
-
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x, y)
-    {
-        retval += (VEC_ELEM(x, i) - VEC_ELEM(y, i)) * (VEC_ELEM(x, i) -
-                  VEC_ELEM(y, i));
-        n++;
-    }
-
-    if (n != 0)
-        return sqrt(retval);
-    else
-        return 0;
-}
-
-/** euclidian distance 2D
- * @ingroup Filters
- *
- */
-template <typename T>
-double euclidian_distance(const Matrix2D< T >& x,
-                          const Matrix2D< T >& y,
-                          const Matrix2D< int >* mask = NULL)
-{
-    SPEED_UP_temps;
-
-    double retval = 0;
-    long n = 0;
-
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x, y)
-    {
-        if (mask != NULL)
-            if (!(*mask)(i, j))
-                continue;
-
-        retval += (MAT_ELEM(x, i, j) - MAT_ELEM(y, i, j)) * (MAT_ELEM(x, i, j)
-                  - MAT_ELEM(y, i, j));
-        n++;
-    }
-
-    if (n != 0)
-        return sqrt(retval);
-    else
-        return 0;
-}
-
-/** euclidian distance 3D
+/** euclidian distance nD
  * @ingroup Filters
  */
 template <typename T>
-double euclidian_distance(const Matrix3D< T >& x,
-                          const Matrix3D< T >& y,
-                          const Matrix3D< int >* mask = NULL)
+double euclidian_distance(const MultidimArray< T >& x,
+                          const MultidimArray< T >& y,
+                          const MultidimArray< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -715,7 +517,7 @@ double euclidian_distance(const Matrix3D< T >& x,
         return 0;
 }
 
-/** mutual information 1D
+/** mutual information nD
  * @ingroup Filters
  *
  * Return the mutual information:
@@ -732,163 +534,11 @@ double euclidian_distance(const Matrix3D< T >& x,
  * (according to: Tourassi et al. (2001) Med. Phys. 28 pp. 2394-2402.)
  */
 template <typename T>
-double mutual_information(const Matrix1D< T >& x,
-                          const Matrix1D< T >& y,
-                          int nx = 0,
-                          int ny = 0)
-{
-    SPEED_UP_temps;
-
-    long n = 0;
-    histogram1D histx, histy;
-    histogram2D histxy;
-    Matrix1D< T > aux_x, aux_y;
-    Matrix1D< double > mx, my;
-    Matrix2D< double > mxy;
-    int xdim, ydim;
-    double MI = 0.0;
-    double HAB = 0.0;
-    double retval = 0.0;
-
-    aux_x.resize(x);
-    aux_y.resize(y);
-
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x, y)
-    {
-        aux_x(n) = VEC_ELEM(x, i);
-        aux_y(n) = VEC_ELEM(y, i);
-        n++;
-    }
-
-    aux_x.resize(n);
-    aux_y.resize(n);
-
-    if (n != 0)
-    {
-        if (nx == 0)
-            //Assume Gaussian distribution
-            nx = (int)((log((double) n) / LOG2) + 1);
-
-        if (ny == 0)
-            //Assume Gaussian distribution
-            ny = (int)((log((double) n) / LOG2) + 1);
-
-        compute_hist(aux_x, histx, nx);
-        compute_hist(aux_y, histy, ny);
-        compute_hist(aux_x, aux_y, histxy, nx, ny);
-
-        mx = histx;
-        my = histy;
-        mxy = histxy;
-
-        for (int i = 0; i < nx; i++)
-        {
-            double histxi = (histx(i)) / n;
-            for (int j = 0; j < ny; j++)
-            {
-                double histyj = (histy(j)) / n;
-                double histxyij = (histxy(i, j)) / n;
-
-                if (histxyij > 0)
-                    retval += histxyij * log(histxyij / (histxi * histyj)) /
-                              LOG2;
-            }
-        }
-
-        return retval;
-    }
-    else
-        return 0;
-}
-
-/** mutual information 2D
- * @ingroup Filters
- */
-template <typename T>
-double mutual_information(const Matrix2D< T >& x,
-                          const Matrix2D< T >& y,
+double mutual_information(const MultidimArray< T >& x,
+                          const MultidimArray< T >& y,
                           int nx = 0,
                           int ny = 0,
-                          const Matrix2D< int >* mask = NULL)
-{
-    SPEED_UP_temps;
-
-    long n = 0;
-    histogram1D histx, histy;
-    histogram2D histxy;
-    Matrix1D< T > aux_x, aux_y;
-    Matrix1D< double > mx, my;
-    Matrix2D< double > mxy;
-    int xdim, ydim;
-    double retval = 0.0;
-
-    xdim=XSIZE(x);
-    ydim=YSIZE(x);
-    aux_x.resize(xdim * ydim);
-    xdim=XSIZE(y);
-    ydim=YSIZE(y);
-    aux_y.resize(xdim * ydim);
-
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x, y)
-    {
-        if (mask != NULL)
-            if (!(*mask)(i, j))
-                continue;
-
-        aux_x(n) = MAT_ELEM(x, i, j);
-        aux_y(n) = MAT_ELEM(y, i, j);
-        n++;
-    }
-
-    aux_x.resize(n);
-    aux_y.resize(n);
-
-    if (n != 0)
-    {
-        if (nx == 0)
-            //Assume Gaussian distribution
-            nx = (int)((log((double) n) / LOG2) + 1);
-
-        if (ny == 0)
-            //Assume Gaussian distribution
-            ny = (int)((log((double) n) / LOG2) + 1);
-
-        compute_hist(aux_x, histx, nx);
-        compute_hist(aux_y, histy, ny);
-        compute_hist(aux_x, aux_y, histxy, nx, ny);
-
-        mx = histx;
-        my = histy;
-        mxy = histxy;
-
-        for (int i = 0; i < nx; i++)
-        {
-            double histxi = (histx(i)) / n;
-            for (int j = 0; j < ny; j++)
-            {
-                double histyj = (histy(j)) / n;
-                double histxyij = (histxy(i, j)) / n;
-                if (histxyij > 0)
-                    retval += histxyij * log(histxyij / (histxi * histyj)) /
-                              LOG2;
-            }
-        }
-
-        return retval;
-    }
-    else
-        return 0;
-}
-
-/** mutual information 3D
- * @ingroup Filters
- */
-template <typename T>
-double mutual_information(const Matrix3D< T >& x,
-                          const Matrix3D< T >& y,
-                          int nx = 0,
-                          int ny = 0,
-                          const Matrix3D< int >* mask = NULL)
+                          const MultidimArray< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -960,125 +610,14 @@ double mutual_information(const Matrix3D< T >& x,
         return 0;
 }
 
-/** RMS 1D
- * @ingroup Filters
- *
- * Return the sqrt(sum{(x-y)*(x-y)}/n) in the common positions.
- */
-template <typename T>
-double rms(const Matrix1D< T >& x,
-           const Matrix1D< T >& y,
-           const Matrix1D< int >* mask = NULL,
-           Matrix1D< double >* Contributions = NULL)
-{
-    SPEED_UP_temps;
-
-    double retval = 0, aux;
-    int n = 0;
-
-    // If contributions are desired
-    if (Contributions != NULL)
-    {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x, y)
-        {
-            if (mask != NULL)
-                if (!(*mask)(i))
-                    continue;
-
-            aux = (VEC_ELEM(x, i) - VEC_ELEM(y, i)) * (VEC_ELEM(x, i) -
-                    VEC_ELEM(y, i));
-            VEC_ELEM(*Contributions, i) = aux;
-            retval += aux;
-            n++;
-        }
-
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(*Contributions)
-        VEC_ELEM(*Contributions, i) = sqrt(VEC_ELEM(*Contributions, i) / n);
-    }
-    // In other case, normal process (less computationaly expensive)
-    else
-    {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(x, y)
-        {
-            if (mask != NULL)
-                if (!(*mask)(i))
-                    continue;
-
-            retval += (VEC_ELEM(x, i) - VEC_ELEM(y, i)) * (VEC_ELEM(x, i) -
-                      VEC_ELEM(y, i));
-            n++;
-        }
-    }
-
-    if (n != 0)
-        return sqrt(retval / n);
-    else
-        return 0;
-}
-
-/** RMS 2D
+/** RMS nD
  * @ingroup Filters
  */
 template <typename T>
-double rms(const Matrix2D< T >& x,
-           const Matrix2D< T >& y,
-           const Matrix2D< int >* mask = NULL,
-           Matrix2D< double >* Contributions = NULL)
-{
-    SPEED_UP_temps;
-
-    double retval = 0, aux;
-    int n = 0;
-
-    // If contributions are desired
-    if (Contributions != NULL)
-    {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x, y)
-        {
-            if (mask != NULL)
-                if (!(*mask)(i, j))
-                    continue;
-
-            aux = (MAT_ELEM(x, i, j) - MAT_ELEM(y, i, j)) * (MAT_ELEM(x, i, j)
-                    - MAT_ELEM(y, i, j));
-            MAT_ELEM(*Contributions, i, j) = aux;
-            retval += aux;
-            n++;
-        }
-
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(*Contributions)
-        MAT_ELEM(*Contributions, i, j) = sqrt(MAT_ELEM(*Contributions, i, j) /
-                                              n);
-    }
-    // In other case, normal process (less computationaly expensive)
-    else
-    {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(x, y)
-        {
-            if (mask != NULL)
-                if (!(*mask)(i, j))
-                    continue;
-
-            retval += (MAT_ELEM(x, i, j) - MAT_ELEM(y, i, j)) *
-                      (MAT_ELEM(x, i, j) - MAT_ELEM(y, i, j));
-            n++;
-        }
-    }
-
-    if (n != 0)
-        return sqrt(retval / n);
-    else
-        return 0;
-}
-
-/** RMS 3D
- * @ingroup Filters
- */
-template <typename T>
-double rms(const Matrix3D< T >& x,
-           const Matrix3D< T >& y,
-           const Matrix3D< int >* mask = NULL,
-           Matrix3D< double >* Contributions = NULL)
+double rms(const MultidimArray< T >& x,
+           const MultidimArray< T >& y,
+           const MultidimArray< int >* mask = NULL,
+           MultidimArray< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 

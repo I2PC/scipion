@@ -207,7 +207,7 @@ void FFT_magnitude(const MultidimArray< std::complex<double> > &v,
                    MultidimArray<double> &mag)
 {
     mag.resize(v);
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v) mag(i) = abs(v(i));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v) mag(n) = abs(v(n));
 }
 
 /* FFT Phase ------------------------------------------------------- */
@@ -215,7 +215,7 @@ void FFT_phase(const MultidimArray< std::complex<double> > &v,
                MultidimArray<double> &phase)
 {
     phase.resize(v);
-    FOR_ALL_ELEMENTS_IN_MULTIDIM_ARRAY(v) phase(i) = atan2(v(i).imag(), v(i).real());
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v) phase(n) = atan2(v(n).imag(), v(n).real());
 }
 
 // Fourier ring correlation -----------------------------------------------

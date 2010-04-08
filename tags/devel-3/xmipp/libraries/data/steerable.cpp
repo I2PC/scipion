@@ -26,7 +26,6 @@
 
 #include "steerable.h"
 #include "fftw.h"
-#include "volume.h"
 #include "histogram.h"
 #include "filters.h"
 #include "morphology.h"
