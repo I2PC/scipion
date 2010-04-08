@@ -1078,6 +1078,7 @@ void MetaData::getValue( MetaDataLabel name, bool &value, long int objectID )
 void MetaData::getValue( MetaDataLabel name, std::string &value, long int objectID )
 {
     MetaDataContainer * aux = getObject( objectID );
+    aux->getValue( name, value );
     
 }
 
@@ -1159,9 +1160,10 @@ long int MetaData::fastSearch( MetaDataLabel name, std::string value, bool recom
 }
 
 /* Statistics -------------------------------------------------------------- */
-void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
+void get_statistics(MetaData MT_in,Image& _ave, Image& _sd, double& _min,
                              double& _max, bool apply_geo)
 {
+	MetaData MT(MT_in); //copy constructor so original MT is not changed
     _min = MAXFLOAT;
     _max = 0;
     bool first = true;
@@ -1224,4 +1226,38 @@ void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
     while (MT.nextObject()!= MetaData::NO_MORE_OBJECTS);
     _sd() /= (n - 1);
     _sd().selfSQRTnD();
+}
+
+void ImgSize(int &Ydim, int &Xdim)
+{
+	/*
+    std::vector<SelLine>::iterator aux = current_line;
+    go_first_ACTIVE();
+    FileName fn_img = (*current_line).text;
+    if (fn_img.find("imagic:") != -1)
+    {
+        Image *img = Image::LoadImage(fn_img);
+        Ydim = (*img)().ydim;
+        Xdim = (*img)().xdim;
+        delete img;
+    }
+    else if (Is_ImageXmipp(fn_img))
+    {
+        ImageXmipp img;
+        img.read(fn_img);
+        Ydim = img().ydim;
+        Xdim = img().xdim;
+    }
+    else if (Is_FourierImageXmipp(fn_img))
+    {
+        FourierImageXmipp img;
+        img.read(fn_img);
+        Ydim = img().ydim;
+        Xdim = img().xdim;
+    }
+    else
+        REPORT_ERROR(1, "SelFile::ImgSize: First Active file is not an image");
+
+    current_line = aux;
+    */
 }

@@ -33,7 +33,6 @@
 #include <sstream>
 #include "funcs.h"
 #include "strings.h"
-#include "funcs.h"
 #include "metadata_container.h"
 #include "image.h"
 #include <time.h>
