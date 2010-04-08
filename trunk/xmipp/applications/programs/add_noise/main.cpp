@@ -104,7 +104,7 @@ public:
     void usage()
     {
         Prog_parameters::usage();
-        std::cerr 
+        std::cerr
             << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
             << "  [-student <df> <stddev> [<avg>=0]] : t-student noise parameters\n"
             << "  [-uniform  <min> <max>]   : Uniform noise parameters\n"
