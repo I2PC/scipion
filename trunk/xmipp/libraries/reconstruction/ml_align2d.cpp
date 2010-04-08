@@ -207,7 +207,7 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         std::cerr << "--> Maximum-likelihood multi-reference refinement "
                 << std::endl;
         std::cerr << "  Input images            : " << fn_sel << " ("
-                << nr_exp_images << ")" << std::endl;
+                << nr_images_global << ")" << std::endl;
 
         if (fn_ref != "")
             std::cerr << "  Reference image(s)      : " << fn_ref << std::endl;
@@ -388,7 +388,12 @@ void Prog_MLalign2D_prm::produceSideInfo()
 
     // Read selfile with experimental images
     SF.read(fn_sel);
-    nr_exp_images = SF.ImgNo();
+    nr_images_global = SF.ImgNo();
+    // By default set myFirst and myLast equal to 0 and N
+    // respectively, this should be changed when using MPI
+    // by calling setWorkingImages before produceSideInfo2
+    myFirstImg = 0;
+    myLastImg = nr_images_global - 1;
 
     // Get original image size
     SF.ImgSize(dim, dim);
@@ -540,11 +545,14 @@ void Prog_MLalign2D_prm::produceSideInfo()
     }
 
 
+    //FIXME: Move to produceSideInfo2
+    // for only reservate memory for the number of
+    // images for work in (mainly to save memory in MPI)
     /// Initialize docfiledata
     Matrix1D<double> dataline(DATALINELENGTH);
     dataline.initZeros();
 
-    for (int i = 0; i < SF.ImgNo(); i++)
+    FOR_ALL_GLOBAL_IMAGES()
         docfiledata.push_back(dataline);
 }//close function produceSideInfo
 
@@ -577,7 +585,8 @@ void Prog_MLalign2D_prm::generateInitialReferences()
         SFtmp.go_beginning();
         SFtmp.jump_lines(Nsub * refno);
 
-        if (refno == model.n_ref - 1) Nsub = SFtmp.ImgNo() - refno * Nsub;
+        if (refno == model.n_ref - 1)
+            Nsub = SFtmp.ImgNo() - refno * Nsub;
 
         for (int nn = 0; nn < Nsub; nn++)
         {
@@ -642,7 +651,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         model.Iref[refno] = img;
         // Default start is all equal model fractions
         model.alpha_k[refno] = (double) 1 / SFr.ImgNo();
-        model.Iref[refno].set_weight(model.alpha_k[refno] * (double) nr_exp_images);
+        model.Iref[refno].set_weight(model.alpha_k[refno] * (double) nr_images_global);
         // Default start is half-half mirrored images
         model.mirror_fraction[refno] = ( do_mirror ? 0.5 : 0.);
         refno++;
@@ -651,7 +660,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
     // Initialize trymindiff for all images
     imgs_trymindiff.clear();
 
-    for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
+    FOR_ALL_LOCAL_IMAGES()
     {
         imgs_optrefno.push_back(0);
         imgs_trymindiff.push_back(-1.);
@@ -664,7 +673,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         imgs_scale.clear();
         imgs_bgmean.clear();
 
-        for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
+        FOR_ALL_LOCAL_IMAGES()
         {
             imgs_bgmean.push_back(0.);
             imgs_scale.push_back(1.);
@@ -683,13 +692,13 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
 
     idum = (do_mirror ? 4 : 2) * model.n_ref;
 
-    for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
+    FOR_ALL_LOCAL_IMAGES()
     {
         imgs_offsets.push_back(Vdum);
 
         for (int refno = 0; refno < idum; refno++)
         {
-            imgs_offsets[imgno].push_back(offx);
+            imgs_offsets[IMG_INDEX].push_back(offx);
         }
     }
 
@@ -699,7 +708,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         imgs_oldphi.clear();
         imgs_oldtheta.clear();
 
-        for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
+        FOR_ALL_LOCAL_IMAGES()
         {
             imgs_oldphi.push_back(-999.);
             imgs_oldtheta.push_back(-999.);
@@ -724,8 +733,8 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
                 {
                     if (limit_rot)
                     {
-                        imgs_oldphi[imgno] = DF(0);
-                        imgs_oldtheta[imgno] = DF(1);
+                        imgs_oldphi[IMG_INDEX] = DF(0);
+                        imgs_oldtheta[IMG_INDEX] = DF(1);
                     }
 
                     if (zero_offsets)
@@ -734,16 +743,16 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
 
                         for (int refno = 0; refno < idum; refno++)
                         {
-                            imgs_offsets[imgno][2 * refno] = DF(3);
-                            imgs_offsets[imgno][2 * refno + 1] = DF(4);
+                            imgs_offsets[IMG_INDEX][2 * refno] = DF(3);
+                            imgs_offsets[IMG_INDEX][2 * refno + 1] = DF(4);
                         }
 
                     }
 
                     if (do_norm)
                     {
-                        imgs_bgmean[imgno] = DF(9);
-                        imgs_scale[imgno] = DF(10);
+                        imgs_bgmean[IMG_INDEX] = DF(9);
+                        imgs_scale[IMG_INDEX] = DF(10);
                     }
                 }
                 else
@@ -797,15 +806,18 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
 
     //--------Setup for BLOCKS------------
     //Set image blocks vector
-    img_blocks.resize(nr_exp_images, 0);
-    int img_per_block = nr_exp_images / blocks;
-    int img_rest = nr_exp_images % blocks;
+    img_blocks.resize(nr_images_global, 0);
+//TODO: REMOVE after testing
+//    int img_per_block = nr_images_global / blocks;
+//    int img_rest = nr_images_global % blocks;
     int first_img, last_img;
 
     if (blocks > 1)
     {
         for (int b = 0; b < blocks; b++)
         {
+            divide_equally(nr_images_global, blocks, b, first_img, last_img);
+            /*TODO: remove after testing
             if (b < img_rest)
             {
                 first_img = b * (img_per_block + 1);
@@ -816,6 +828,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
                 first_img = b * img_per_block + img_rest;
                 last_img = first_img + img_per_block - 1;
             }
+            */
 
             for (int i = first_img; i <= last_img; i++)
                 img_blocks[i] = b;
@@ -1983,151 +1996,154 @@ void Prog_MLalign2D_prm::expectation()
     timer.tic(E_FOR);
 
 #endif
+
+    int img_done = 0;
+    //for (int imgno = 0, img_done = 0; imgno < nn; imgno++)
     // Loop over all images
-    for (int imgno = 0, img_done = 0; imgno < nn; imgno++)
-    if (img_blocks[imgno] == current_block)
-    {
-#ifdef TIMING
-        timer.tic(FOR_F1);
-#endif
-        SF.go_beginning();
-        SF.jump(imgno, SelLine::ACTIVE);
-        fn_img = SF.get_current_file();
-
-        img.read(fn_img, false, false, false, false);
-        img().setXmippOrigin();
-        Xi2 = img().sum2();
-        Mimg = img();
-
-        // These two parameters speed up expectationSingleImage
-        opt_refno = imgs_optrefno[imgno];
-        trymindiff = imgs_trymindiff[imgno];
-
-        if (trymindiff < 0.)
-        // 90% of Xi2 may be a good idea (factor half because 0.5*diff is calculated)
-        trymindiff = trymindiff_factor * 0.5 * Xi2;
-
-        if (do_norm)
+    FOR_ALL_LOCAL_IMAGES()
+        if (img_blocks[IMG_INDEX] == current_block)
         {
-            bgmean = imgs_bgmean[imgno];
-            opt_scale = imgs_scale[imgno];
-        }
+    #ifdef TIMING
+            timer.tic(FOR_F1);
+    #endif
+            SF.go_beginning();
+            SF.jump(imgno, SelLine::ACTIVE);
+            fn_img = SF.get_current_file();
 
-        // Get optimal offsets for all references
-        if (fast_mode)
-        {
-            allref_offsets = imgs_offsets[imgno];
-        }
+            img.read(fn_img, false, false, false, false);
+            img().setXmippOrigin();
+            Xi2 = img().sum2();
+            Mimg = img();
 
-        // Read optimal orientations from memory
-        if (limit_rot)
-        {
-            old_phi = imgs_oldphi[imgno];
-            old_theta = imgs_oldtheta[imgno];
-        }
+            // These two parameters speed up expectationSingleImage
+            opt_refno = imgs_optrefno[IMG_INDEX];
+            trymindiff = imgs_trymindiff[IMG_INDEX];
 
-#ifdef TIMING
-        timer.toc(FOR_F1);
+            if (trymindiff < 0.)
+            // 90% of Xi2 may be a good idea (factor half because 0.5*diff is calculated)
+            trymindiff = trymindiff_factor * 0.5 * Xi2;
 
-        timer.tic(FOR_PFS);
+            if (do_norm)
+            {
+                bgmean = imgs_bgmean[IMG_INDEX];
+                opt_scale = imgs_scale[IMG_INDEX];
+            }
 
-#endif
-        // For limited orientational search: preselect relevant directions
-        preselectLimitedDirections(old_phi, old_theta);
+            // Get optimal offsets for all references
+            if (fast_mode)
+            {
+                allref_offsets = imgs_offsets[IMG_INDEX];
+            }
 
-        // Use a maximum-likelihood target function in real space
-        // with complete or reduced-space translational searches (-fast)
-        if (fast_mode)
-            preselectFastSignificant();
-        else
-            Msignificant.initConstant(1);
+            // Read optimal orientations from memory
+            if (limit_rot)
+            {
+                old_phi = imgs_oldphi[IMG_INDEX];
+                old_theta = imgs_oldtheta[IMG_INDEX];
+            }
 
-#ifdef TIMING
+    #ifdef TIMING
+            timer.toc(FOR_F1);
 
-        timer.toc(FOR_PFS);
+            timer.tic(FOR_PFS);
 
-        timer.tic(FOR_ESI);
+    #endif
+            // For limited orientational search: preselect relevant directions
+            preselectLimitedDirections(old_phi, old_theta);
 
-#endif
+            // Use a maximum-likelihood target function in real space
+            // with complete or reduced-space translational searches (-fast)
+            if (fast_mode)
+                preselectFastSignificant();
+            else
+                Msignificant.initConstant(1);
 
-        expectationSingleImage(opt_offsets);
+    #ifdef TIMING
 
-#ifdef TIMING
+            timer.toc(FOR_PFS);
 
-        timer.toc(FOR_ESI);
+            timer.tic(FOR_ESI);
 
-        timer.tic(FOR_F2);
+    #endif
 
-#endif
-        // Write optimal offsets for all references to disc
-        if (fast_mode)
-        {
-            imgs_offsets[imgno] = allref_offsets;
-        }
+            expectationSingleImage(opt_offsets);
 
-        // Store mindiff for next iteration
-        imgs_trymindiff[imgno] = trymindiff;
+    #ifdef TIMING
 
-        // Store opt_refno for next iteration
-        imgs_optrefno[imgno] = opt_refno;
+            timer.toc(FOR_ESI);
 
-        // Store optimal phi and theta in memory
-        if (limit_rot)
-        {
-            imgs_oldphi[imgno] = model.Iref[opt_refno].Phi();
-            imgs_oldtheta[imgno] = model.Iref[opt_refno].Theta();
-        }
+            timer.tic(FOR_F2);
 
-        // Store optimal normalization parameters in memory
-        if (do_norm)
-        {
-            imgs_scale[imgno] = opt_scale;
-            imgs_bgmean[imgno] = bgmean;
-        }
+    #endif
+            // Write optimal offsets for all references to disc
+            if (fast_mode)
+            {
+                imgs_offsets[IMG_INDEX] = allref_offsets;
+            }
 
-        // Output docfile
-        if (-opt_psi > 360.)
-        {
-            opt_psi += 360.;
-            opt_flip = 1.;
-        }
-        else
-        {
-            opt_flip = 0.;
-        }
+            // Store mindiff for next iteration
+            imgs_trymindiff[IMG_INDEX] = trymindiff;
 
-        docfiledata[imgno](0) = model.Iref[opt_refno].Phi(); // rot
-        docfiledata[imgno](1) = model.Iref[opt_refno].Theta(); // tilt
-        docfiledata[imgno](2) = opt_psi + 360.; // psi
-        docfiledata[imgno](3) = opt_offsets(0); // Xoff
-        docfiledata[imgno](4) = opt_offsets(1); // Yoff
-        docfiledata[imgno](5) = (double) (opt_refno + 1); // Ref
-        docfiledata[imgno](6) = opt_flip; // Mirror
-        docfiledata[imgno](7) = fracweight; // P_max/P_tot
-        docfiledata[imgno](8) = dLL; // log-likelihood
+            // Store opt_refno for next iteration
+            imgs_optrefno[IMG_INDEX] = opt_refno;
 
-        if (do_norm)
-        {
-            docfiledata[imgno](9) = bgmean; // background mean
-            docfiledata[imgno](10) = opt_scale; // image scale
-        }
+            // Store optimal phi and theta in memory
+            if (limit_rot)
+            {
+                imgs_oldphi[IMG_INDEX] = model.Iref[opt_refno].Phi();
+                imgs_oldtheta[IMG_INDEX] = model.Iref[opt_refno].Theta();
+            }
 
-        if (model.do_student)
-        {
-            docfiledata[imgno](11) = maxweight2; // Robustness weight
-        }
+            // Store optimal normalization parameters in memory
+            if (do_norm)
+            {
+                imgs_scale[IMG_INDEX] = opt_scale;
+                imgs_bgmean[IMG_INDEX] = bgmean;
+            }
 
-        if (verb > 0 && img_done % c == 0)
-            progress_bar(img_done);
-        img_done++;
+            // Output docfile
+            if (-opt_psi > 360.)
+            {
+                opt_psi += 360.;
+                opt_flip = 1.;
+            }
+            else
+            {
+                opt_flip = 0.;
+            }
 
-#ifdef TIMING
+            docfiledata[IMG_INDEX](0) = model.Iref[opt_refno].Phi(); // rot
+            docfiledata[IMG_INDEX](1) = model.Iref[opt_refno].Theta(); // tilt
+            docfiledata[IMG_INDEX](2) = opt_psi + 360.; // psi
+            docfiledata[IMG_INDEX](3) = opt_offsets(0); // Xoff
+            docfiledata[IMG_INDEX](4) = opt_offsets(1); // Yoff
+            docfiledata[IMG_INDEX](5) = (double) (opt_refno + 1); // Ref
+            docfiledata[IMG_INDEX](6) = opt_flip; // Mirror
+            docfiledata[IMG_INDEX](7) = fracweight; // P_max/P_tot
+            docfiledata[IMG_INDEX](8) = dLL; // log-likelihood
 
-        timer.toc(FOR_F2);
+            if (do_norm)
+            {
+                docfiledata[IMG_INDEX](9) = bgmean; // background mean
+                docfiledata[IMG_INDEX](10) = opt_scale; // image scale
+            }
 
-#endif
+            if (model.do_student)
+            {
+                docfiledata[IMG_INDEX](11) = maxweight2; // Robustness weight
+            }
 
-    }//close if current_block, also close of for all images
+            if (verb > 0 && img_done % c == 0)
+                progress_bar(img_done);
+            img_done++;
+
+    #ifdef TIMING
+
+            timer.toc(FOR_F2);
+
+    #endif
+
+        }//close if current_block, also close of for all images
 
 #ifdef TIMING
     timer.toc(E_FOR);
@@ -2321,7 +2337,7 @@ void Prog_MLalign2D_prm::writeDocfile(FileName fn_base)
      DFout.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
      SF.go_beginning();
 
-      for (int imgno = 0; imgno < SF.ImgNo(); imgno++)
+      FOR_ALL_GLOBAL_IMAGES()
       {
           DFout.append_comment(SF.NextImg());
           DFout.append_data_line(docfiledata[imgno]);
@@ -2496,6 +2512,13 @@ FileName Prog_MLalign2D_prm::getBaseName(std::string suffix, int number)
     if (number >= 0)
         fn_base.compose(fn_base, number, "");
     return fn_base;
+}
+
+/// This function only should be called when using MPI
+/// for each proccess take some part of all images
+void Prog_MLalign2D_prm::setWorkingImages(int size, int rank)
+{
+    nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg, myLastImg);
 }
 
 ///////////// Model_MLalign2D Implementation ////////////

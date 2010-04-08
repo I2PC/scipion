@@ -53,6 +53,11 @@ int refno, load; \
 while ((load = getThreadRefnoJob(refno)) > 0) \
     for (int i = 0; i < load; i++, refno = (refno + 1) % model.n_ref)
 
+#define FOR_ALL_GLOBAL_IMAGES() \
+    for (int imgno = 0; imgno < nr_images_global; imgno++)
+#define FOR_ALL_LOCAL_IMAGES() \
+    for (int imgno = myFirstImg; imgno <= myLastImg; imgno++)
+#define IMG_INDEX (imgno - myFirstImg)
 #ifdef TIMING
 //testing time...
 
@@ -228,7 +233,11 @@ public:
     /** Total number of no-mirror rotations in FOR_ALL_FLIPS */
     int nr_nomirror_flips;
     /** Total number of experimental images */
-    int nr_exp_images;
+    int nr_images_global;
+    /** Total number of local mpi images */
+    int nr_images_local;
+    /** First and last images, useful for mpi*/
+    int myFirstImg, myLastImg;
     /** Sum of squared amplitudes of the references */
     std::vector<double> A2;
     /** Sum of squared amplitudes of the experimental image */
@@ -444,6 +453,10 @@ public:
     /// Get base name based on fn_root and some number
     FileName getBaseName(std::string suffix = "", int number = -1);
 
+    /// This function only should be called when using MPI
+    /// before call produceSideInfo2
+    /// for each proccess take some part of all images
+    void setWorkingImages(int size, int rank);
 };
 
 
