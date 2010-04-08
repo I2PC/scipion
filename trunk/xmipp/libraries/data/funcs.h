@@ -1645,4 +1645,16 @@ private:
                                       (double) MaxInteger);
     }
 };
+
+/** Divides a number into most equally groups
+ *
+ * For example you want to distribute N jobs between M workers
+ * so each worker will have N/M jobs and some of them(N % M first)
+ * will have N/M + 1 jobs
+ * So for the worker 'rank' will be computed the first and last job to do
+ * Return the number of jobs assigned, that could be N/M + 1 or N/M
+ *
+ */
+int divide_equally(int N, int size, int rank, int &first, int &last);
+
 #endif

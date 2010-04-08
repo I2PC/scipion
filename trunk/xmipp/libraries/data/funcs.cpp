@@ -1167,3 +1167,23 @@ bool IsBigEndian(void)
     static const unsigned long ul = 0x01000000;
     return ((int)(*((unsigned char *) &ul)))!=0;
 }
+
+/** Divides a number into most equally groups */
+int divide_equally(int N, int size, int rank, int &first, int &last)
+{
+    int jobs_per_worker = N / size;
+    int jobs_resting = N % size;
+
+    if (rank < jobs_resting)
+    {
+        first = rank * (jobs_per_worker + 1);
+        last = first + jobs_per_worker;
+    }
+    else
+    {
+        first = rank * jobs_per_worker + jobs_resting;
+        last = first + jobs_per_worker - 1;
+    }
+
+    return last - first + 1;
+}
