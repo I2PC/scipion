@@ -712,7 +712,7 @@ FileName SelFile::FileExtension()
 }
 
 /* Statistics -------------------------------------------------------------- */
-void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
+void SelFile::get_statistics(Image<double>& _ave, Image<double>& _sd, double& _min,
                              double& _max, bool apply_geo)
 {
     _min = MAXFLOAT;
@@ -726,7 +726,10 @@ void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
         std::string image_name = NextImg();
         if (image_name == "")
             continue;
-        Image *image = Image::LoadImage(image_name, apply_geo); // reads image
+        //// FIXME: image headers are no longer applied now....
+        //// This wasn't very important for the statistics anyway...
+        Image<double> tt;
+        tt.read(image_name);
         double min, max, avg, stddev;
         (*image)().computeStats(avg, stddev, min, max);
         if (_min > min)

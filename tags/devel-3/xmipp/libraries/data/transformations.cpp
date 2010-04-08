@@ -924,3 +924,173 @@ void radialAverage(const MultidimArray< T >& m,
         radial_mean(i) /= (T) radial_count(i);
 }
 
+/* Rotation 2D ------------------------------------------------------------- */
+Matrix2D<double> rotation2DMatrix(double ang)
+{
+    Matrix2D<double> result(3, 3);
+    rotation2DMatrix(ang, result);
+    return result;
+}
+
+void rotation2DMatrix(double ang, Matrix2D< double > &result)
+{
+    double cosine, sine;
+
+    ang = DEG2RAD(ang);
+    cosine = cos(ang);
+    sine = sin(ang);
+
+    DIRECT_MAT_ELEM(result, 0, 0) = cosine;
+    DIRECT_MAT_ELEM(result, 0, 1) = -sine;
+    DIRECT_MAT_ELEM(result, 0, 2) = 0;
+
+    DIRECT_MAT_ELEM(result, 1, 0) = sine;
+    DIRECT_MAT_ELEM(result, 1, 1) = cosine;
+    DIRECT_MAT_ELEM(result, 1, 2) = 0;
+
+    DIRECT_MAT_ELEM(result, 2, 0) = 0;
+    DIRECT_MAT_ELEM(result, 2, 1) = 0;
+    DIRECT_MAT_ELEM(result, 2, 2) = 1;
+}
+
+/* Translation 2D ---------------------------------------------------------- */
+Matrix2D<double> translation2DMatrix(const Matrix1D<double> &v)
+{
+    if (XSIZE(v) != 2)
+        REPORT_ERROR(1002, "Translation2D_matrix: vector is not in R2");
+
+    Matrix2D<double> result(3, 3);
+
+    result.initIdentity();
+    DIRECT_MAT_ELEM(result, 0, 2) = XX(v);
+    DIRECT_MAT_ELEM(result, 1, 2) = YY(v);
+
+    return result;
+}
+
+/* Rotation 3D around the system axes -------------------------------------- */
+Matrix2D<double> rotation3DMatrix(double ang, char axis)
+{
+    Matrix2D<double> result(4, 4);
+    double cosine, sine;
+
+    ang = DEG2RAD(ang);
+    cosine = cos(ang);
+    sine = sin(ang);
+
+    result.initZeros();
+    DIRECT_MAT_ELEM(result, 3, 3) = 1;
+    switch (axis)
+    {
+    case 'Z':
+        DIRECT_MAT_ELEM(result, 0, 0) = cosine;
+        DIRECT_MAT_ELEM(result, 0, 1) = -sine;
+        DIRECT_MAT_ELEM(result, 1, 0) = sine;
+        DIRECT_MAT_ELEM(result, 1, 1) = cosine;
+        DIRECT_MAT_ELEM(result, 2, 2) = 1;
+        break;
+    case 'Y':
+        DIRECT_MAT_ELEM(result, 0, 0) = cosine;
+        DIRECT_MAT_ELEM(result, 0, 2) = -sine;
+        DIRECT_MAT_ELEM(result, 2, 0) = sine;
+        DIRECT_MAT_ELEM(result, 2, 2) = cosine;
+        DIRECT_MAT_ELEM(result, 1, 1) = 1;
+        break;
+    case 'X':
+        DIRECT_MAT_ELEM(result, 1, 1) = cosine;
+        DIRECT_MAT_ELEM(result, 1, 2) = -sine;
+        DIRECT_MAT_ELEM(result, 2, 1) = sine;
+        DIRECT_MAT_ELEM(result, 2, 2) = cosine;
+        DIRECT_MAT_ELEM(result, 0, 0) = 1;
+        break;
+    default:
+        REPORT_ERROR(1105, "rotation3DMatrix: Unknown axis");
+    }
+    return result;
+}
+
+/* Align a vector with Z axis */
+Matrix2D<double> alignWithZ(const Matrix1D<double> &axis)
+{
+    Matrix1D<double>  Axis;
+    Matrix2D<double>  A(4, 4);
+
+    if (XSIZE(axis) != 3)
+        REPORT_ERROR(1002, "alignWithZ: Axis is not in R3");
+
+    // Copy axis and compute length of the projection on YZ plane
+    Axis = axis;
+    Axis.selfNormalize();
+    double proj_mod = sqrt(YY(Axis) * YY(Axis) + ZZ(Axis) * ZZ(Axis));
+
+    A(3, 3) = 1;
+    if (proj_mod > XMIPP_EQUAL_ACCURACY)
+    { // proj_mod!=0
+        // Build Matrix A, which makes the turning axis coincident with Z
+        A(0, 0) = proj_mod;
+        A(0, 1) = -XX(Axis) * YY(Axis) / proj_mod;
+        A(0, 2) = -XX(Axis) * ZZ(Axis) / proj_mod;
+        A(1, 0) = 0;
+        A(1, 1) = ZZ(Axis) / proj_mod;
+        A(1, 2) = -YY(Axis) / proj_mod;
+        A(2, 0) = XX(Axis);
+        A(2, 1) = YY(Axis);
+        A(2, 2) = ZZ(Axis);
+    }
+    else
+    {
+        // I know that the Axis is the X axis
+        A(0, 0) = 0;
+        A(0, 1) = 0;
+        A(0, 2) = -1;
+        A(1, 0) = 0;
+        A(1, 1) = 1;
+        A(1, 2) = 0;
+        A(2, 0) = 1;
+        A(2, 1) = 0;
+        A(2, 2) = 0;
+    }
+    return A;
+}
+
+/* Rotation 3D around any axis -------------------------------------------- */
+Matrix2D<double> rotation3DMatrix(double ang, const Matrix1D<double> &axis)
+{
+    // Compute a matrix which makes the turning axis coincident with Z
+    // And turn around this axis
+    Matrix2D<double> A = alignWithZ(axis);
+    return A.transpose() * rotation3DMatrix(ang, 'Z') * A;
+}
+
+/* Translation 3D ---------------------------------------------------------- */
+Matrix2D<double> translation3DMatrix(const Matrix1D<double> &v)
+{
+    if (XSIZE(v) != 3)
+        REPORT_ERROR(1002, "Translation3D_matrix: vector is not in R3");
+
+    Matrix2D<double> result(4, 4);
+
+    result.initIdentity();
+    DIRECT_MAT_ELEM(result, 0, 3) = XX(v);
+    DIRECT_MAT_ELEM(result, 1, 3) = YY(v);
+    DIRECT_MAT_ELEM(result, 2, 3) = ZZ(v);
+
+    return result;
+}
+
+/* Scale 3D ---------------------------------------------------------------- */
+Matrix2D<double> scale3DMatrix(const Matrix1D<double> &sc)
+{
+    if (XSIZE(sc) != 3)
+        REPORT_ERROR(1002, "Scale3D_matrix: vector is not in R3");
+
+    Matrix2D<double> result(4, 4);
+
+    result.initIdentity();
+    DIRECT_MAT_ELEM(result, 0, 0) = XX(sc);
+    DIRECT_MAT_ELEM(result, 1, 1) = YY(sc);
+    DIRECT_MAT_ELEM(result, 2, 2) = ZZ(sc);
+
+    return result;
+}
+

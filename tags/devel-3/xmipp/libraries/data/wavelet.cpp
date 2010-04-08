@@ -30,6 +30,7 @@
 
 #include "wavelet.h"
 #include "args.h"
+#include "numerical_tools.h"
 #include "histogram.h"
 #include "mask.h"
 
@@ -89,7 +90,7 @@ void Bilib_DWT(const MultidimArray<double> &input,
             int zsize = XMIPP_MAX(1, ZSIZE(input) / (int)pow(2.0, (double)i));
 
             // Pick the Lowest subband
-            MultidimArray<double> input_aux, result_aux;
+            Matrix1D<double> input_aux, result_aux;
             input_aux.resize(zsize, ysize, xsize);
             result_aux.resize(zsize, ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
@@ -119,7 +120,7 @@ void Bilib_DWT(const MultidimArray<double> &input,
             int zsize = XMIPP_MAX(1, ZSIZE(input) / (int)pow(2.0, (double)i));
 
             // Pick the Lowest subband
-            MultidimArray<double> input_aux, result_aux;
+            Matrix1D<double> input_aux, result_aux;
             input_aux.resize(zsize, ysize, xsize);
             result_aux.resize(zsize, ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
@@ -176,7 +177,7 @@ void DWT_lowpass2D(const MultidimArray<double> &v, MultidimArray<double> &result
         SelectDWTBlock(s, v, "01", x1, x2, y1, y2);
         for (y = y1, i = 0; y <= y2; y++, i++)
             for (x = x1, j = 0; x <= x2; x++, j++)
-                result(y, x) = aux(i, j);
+                MAT_ELEM(result, y, x) = MAT_ELEM(aux, i, j);
     }
 }
 
@@ -300,29 +301,16 @@ void clean_quadrant3D(MultidimArray<double> &I, int scale, const std::string &qu
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2) I(r) = 0;
 }
 
-// Soft thresholding -------------------------------------------------------
-void soft_thresholding(Matrix2D<double> &I, double th)
-{
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
-    if (ABS(I(i, j)) > th)
-        if (I(i, j) > 0)
-            I(i, j) -= th;
-        else
-            I(i, j) += th;
-    else
-        I(i, j) = 0;
-}
-
 void soft_thresholding(MultidimArray<double> &I, double th)
 {
     FOR_ALL_ELEMENTS_IN_MATRIX3D(I)
-    if (ABS(I(k, i, j)) > th)
-        if (I(k, i, j) > 0)
-            I(k, i, j) -= th;
+        if (ABS(VOL_ELEM(I, k, i, j)) > th)
+        if (VOL_ELEM(I, k, i, j) > 0)
+            VOL_ELEM(I, k, i, j) -= th;
         else
-            I(k, i, j) += th;
+            VOL_ELEM(I, k, i, j) += th;
     else
-        I(k, i, j) = 0;
+        VOL_ELEM(I, k, i, j) = 0;
 }
 
 // Adaptive soft thresholding ----------------------------------------------
@@ -351,7 +339,7 @@ void adaptive_soft_thresholding_block2D(MultidimArray<double> &I, int scale,
     }
 }
 
-double compute_noise_power(Matrix2D<double> &I)
+double compute_noise_power(MultidimArray<double> &I)
 {
     // Compute histogram of the absolute values of the DWT coefficients
     // at scale=0
@@ -710,7 +698,7 @@ void bayesian_wiener_filtering2D(MultidimArray<double> &WI,
         double N = estimatedS(i);
         double S = estimatedS(i + XSIZE(scale));
         for (int k = 0; k < orientation.size(); k++)
-            DWT_Bijaoui_denoise_LL(WI, scale(i), orientation[k], 0, S, N);
+            DWT_Bijaoui_denoise_LL2D(WI, scale(i), orientation[k], 0, S, N);
     }
 }
 
@@ -810,7 +798,7 @@ MultidimArray<double> bayesian_wiener_filtering3D(MultidimArray<double> &WI, int
 
     /* Apply the Bijaoui denoising to all scales >= allowed_scale */
     if (denoise)
-        bayesian_wiener_filtering(WI, allowed_scale, estimatedS);
+        bayesian_wiener_filtering3D(WI, allowed_scale, estimatedS);
     return estimatedS;
 }
 #undef DEBUG
@@ -836,6 +824,6 @@ void bayesian_wiener_filtering3D(MultidimArray<double> &WI,
         double N = estimatedS(i);
         double S = estimatedS(i + XSIZE(scale));
         for (int k = 0; k < orientation.size(); k++)
-            DWT_Bijaoui_denoise_LL(WI, scale(i), orientation[k], 0, S, N);
+            DWT_Bijaoui_denoise_LL3D(WI, scale(i), orientation[k], 0, S, N);
     }
 }

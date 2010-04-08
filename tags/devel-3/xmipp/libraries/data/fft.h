@@ -128,7 +128,7 @@ inline void digfreq2contfreq(const Matrix1D< double >& digfreq,
 {
     contfreq.resize(digfreq);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(digfreq)
-        VEC_ELEM(contfreq,n) = VEC_ELEM(digfreq,n) / pixel_size;
+        VEC_ELEM(contfreq,i) = VEC_ELEM(digfreq,i) / pixel_size;
 }
 
 /** Continuous to Digital frequency
@@ -143,7 +143,7 @@ inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
 {
     digfreq.resize(contfreq);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(contfreq)
-        VEC_ELEM(digfreq,n) = VEC_ELEM(contfreq,n) * pixel_size;
+        VEC_ELEM(digfreq,i) = VEC_ELEM(contfreq,i) * pixel_size;
 }
 
 /** @defgroup FourierFormat Format conversions
@@ -286,7 +286,7 @@ void InverseFourierTransformHalf(const MultidimArray< std::complex< double > > &
 template <typename T>
 void CenterFFT(MultidimArray< T >& v, bool forward)
 {
-    if ( ZSIZE(in)==1 && YSIZE(in)==1 )
+    if ( v.getDim() == 1 )
     {
         // 1D
         MultidimArray< T > aux;
@@ -316,7 +316,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
         for (int i = 0; i < l; i++)
             DIRECT_VEC_ELEM(v, i) = DIRECT_VEC_ELEM(aux, i);
     }
-    else if ( ZSIZE(in)==1 )
+    else if ( v.getDim() == 2 )
     {
         // 2D
         MultidimArray< T > aux;
@@ -378,7 +378,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                 DIRECT_MAT_ELEM(v, i, j) = DIRECT_VEC_ELEM(aux, i);
         }
     }
-    else
+    else if ( v.getDim() == 3 )
     {
         // 3D
         MultidimArray< T > aux;
@@ -470,6 +470,8 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                     DIRECT_VOL_ELEM(v, k, i, j) = DIRECT_VEC_ELEM(aux, k);
             }
     }
+    else
+        REPORT_ERROR(1,"CenterFFT ERROR: Dimension should be 1, 2 or 3");
 }
 
 /** FFT shift 1D

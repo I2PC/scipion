@@ -26,8 +26,7 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#include "matrix1d.h"
-#include "matrix2d.h"
+#include "multidimensional_array.h"
 
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.19209e-07
@@ -915,5 +914,9 @@ double intersection_unit_cylinder(const Matrix1D< double >& u,
  */
 double intersection_unit_cube(const Matrix1D< double >& u,
                               const Matrix1D< double >& r);
+
+
+
+
 
 #endif

@@ -36,8 +36,11 @@
 #define DONT_WRAP false
 #define WRAP true
 
+/// @defgroup GeometricalTransformations Geometrical transformations
+/// @ingroup DataLibrary
+
 /** Applies a geometrical transformation.
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  *
  * Any geometrical transformation defined by the matrix A (double (4x4)!!
  * ie, in homogeneous R3 coordinates) is applied to the volume V1.
@@ -126,7 +129,7 @@ void applyGeometry(int Splinedegree,
                    bool wrap, std::complex<double> outside, unsigned long n = 0);
 
 /** Produce spline coefficients.
- * @ingroup  VolumesGeometrical
+ * @ingroup  GeometricalTransformations
  *
  * Create a single image with spline coefficients for the nth image
  *
@@ -148,7 +151,7 @@ void produceSplineCoefficients(int Splinedegree,
                                unsigned long n = 0);
 
 /** Produce image from B-spline coefficients.
- * @ingroup  VolumesGeometrical
+ * @ingroup  GeometricalTransformations
  * Note that the coeffs and img are only single images!
  */
 template<typename T>
@@ -158,7 +161,7 @@ void produceImageFromSplineCoefficients(int Splinedegree,
 #undef DBL_EPSILON
 
 /** Rotate an array around a given system axis.
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  *
  * The rotation angle is in degrees, and the rotational axis is either
  * 'X', 'Y' or 'Z' for 3D arrays and only 'Z' for 2D arrays. An
@@ -176,7 +179,7 @@ void rotate(int Splinedegree,
             bool wrap = DONT_WRAP, T outside = 0, unsigned long n = 0);
 
 /** Rotate a 3D array around any axis.
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  *
  * The rotation angle is in degrees, and the rotational axis is given as a
  * R3 vector. An exception is thrown if the axis is not a R3 vector. The
@@ -194,7 +197,7 @@ void rotate(int Splinedegree,
             bool wrap = DONT_WRAP, T outside = 0, unsigned long n = 0);
 
 /** Translate a volume.
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  *
  * The shift is given as a R2 or R3 vector (shift_X, shift_Y, shift_Z) for 2D and 3D arrays, respectively.
  * An exception is thrown if the displacement is not a R3 vector.
@@ -212,7 +215,7 @@ void translate(int Splinedegree,
                bool wrap = WRAP, T outside = 0, unsigned long n = 0);
 
 /** Translate center of mass to center
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  *
  * If the input has very high values, it is better to rescale it to be
  * between 0 and 1.
@@ -224,7 +227,7 @@ void translateCenterOfMassToCenter(int Splinedegree,
                                    bool wrap = WRAP, unsigned long n = 0);
 
 /** Scales to a new size.
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  *
  * The volume is scaled (resampled) to fill a new size. It is not the
  * same as "window" in this same class. The size can be larger or smaller
@@ -250,7 +253,7 @@ void scaleToSize(int Splinedegree,
                  unsigned long n = 0);
 
 /** Reduce the nth volume by 2 using a BSpline pyramid.
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  */
 template<typename T>
 void pyramidReduce(int Splinedegree, 
@@ -260,7 +263,7 @@ void pyramidReduce(int Splinedegree,
                    unsigned long n = 0);
 
 /** Expand the nth volume by 2 using a BSpline pyramid.
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  */
 template<typename T>
 void pyramidExpand(int Splinedegree, 
@@ -270,7 +273,7 @@ void pyramidExpand(int Splinedegree,
                    unsigned long n = 0);
 
 /** Reduce a set of B-spline coefficients.
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  *
  * Knowing that V1 is a (single image of) B-spline coefficients, produce the
  * reduced set of B-spline coefficients using the two-scale relationship.
@@ -281,7 +284,7 @@ void reduceBSpline(int Splinedegree,
                    const MultidimArray<T> &V1);
   
 /** Expand a set of B-spline coefficients.
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  *
  * Knowing that V1 is a (single image of) B-spline coefficients, produce the
  * expanded set of B-spline coefficients using the two-scale relationship.
@@ -292,7 +295,7 @@ void expandBSpline3D(int Splinedegree,
                      const MultidimArray<T> &V1);
 
 /** Does a radial average of a 2D/3D image, around the voxel where is the origin.
- * @ingroup VolumesGeometrical
+ * @ingroup GeometricalTransformations
  *
  * A vector radial_mean is returned where:
  * - the first element is the mean of the voxels whose
@@ -318,3 +321,126 @@ void radialAverage(const MultidimArray< T >& m,
                    MultidimArray< int >& radial_count,
                    const bool& rounding = false,
                    unsigned long n = 0);
+
+/** Creates a rotational matrix (3x3) for images
+ * @ingroup GeometricalTransformations
+ *
+ * The rotation angle is in degrees.
+ *
+ * @code
+ * m = rotation2DMatrix(60);
+ * @endcode
+ */
+Matrix2D< double > rotation2DMatrix(double ang);
+
+/** Creates a rotational matrix (3x3) for images
+ * @ingroup GeometricalTransformations
+ *
+ * The rotation angle is in degrees.
+ * m must have been already resized to 3x3
+ *
+ * @code
+ *  rotation2DMatrix(60,m);
+ * @endcode
+ */
+void rotation2DMatrix(double ang, Matrix2D< double > &m);
+
+/** Creates a translational matrix (3x3) for images
+ * @ingroup GeometricalTransformations
+ *
+ * The shift is given as a R2 vector (shift_X, shift_Y). An exception is thrown
+ * if the displacement is not a R2 vector.
+ *
+ * @code
+ * // Displacement of 1 pixel to the right
+ * m = translation2DMatrix(vectorR2(1, 0));
+ * @endcode
+ */
+Matrix2D< double > translation2DMatrix(const Matrix1D< double > &v);
+
+/** Creates a rotational matrix (4x4) for volumes around system axis
+ * @ingroup GeometricalTransformations
+ *
+ * The rotation angle is in degrees, and the rotational axis is either 'X', 'Y'
+ * or 'Z'. An exception is thrown if the axis given is not one of these.
+ *
+ * The returned matrices are respectively alpha degrees around Z
+ *
+ * @code
+ * [ cos(A) -sin(A)     0   ]
+ * [ sin(A)  cos(A)     0   ]
+ * [   0       0        1   ]
+ * @endcode
+ *
+ * alpha degrees around Y
+ * @code
+ * [ cos(A)    0    -sin(A) ]
+ * [   0       1       0    ]
+ * [ sin(A)    0     cos(A) ]
+ * @endcode
+ *
+ * alpha degrees around X
+ * @code
+ * [   1       0       0    ]
+ * [   0     cos(A) -sin(A) ]
+ * [   0     sin(A)  cos(A) ]
+ * @endcode
+ *
+ * @code
+ * m = rotation3DMatrix(60, 'X');
+ * @endcode
+ */
+Matrix2D< double > rotation3DMatrix(double ang, char axis);
+
+/** Creates a rotational matrix (4x4) for volumes around any axis
+ * @ingroup GeometricalTransformations
+ *
+ * The rotation angle is in degrees, and the rotational axis is given as a R3
+ * vector. An exception is thrown if the axis is not a R3 vector. The axis needs
+ * not to be unitary.
+ *
+ * @code
+ * m = rotation3DMatrix(60, vectorR3(1, 1, 1));
+ * @endcode
+ */
+Matrix2D< double > rotation3DMatrix(double ang, const Matrix1D< double >& axis);
+
+/** Matrix which transforms the given axis into Z
+ * @ingroup GeometricalTransformations
+ *
+ * A geometrical transformation matrix (4x4) is returned such that the given
+ * axis is rotated until it is aligned with the Z axis. This is very useful in
+ * order to produce rotational matrices, for instance, around any axis.
+ *
+ * @code
+ * Matrix2D< double > A = alignWithZ(axis);
+ * return A.transpose() * rotation3DMatrix(ang, 'Z') * A;
+ * @endcode
+ *
+ * The returned matrix is such that A*axis=Z, where Z and axis are column
+ * vectors.
+ */
+Matrix2D< double > alignWithZ(const Matrix1D< double >& axis);
+
+/** Creates a translational matrix (4x4) for volumes
+ * @ingroup GeometricalTransformations
+ *
+ * The shift is given as a R3 vector (shift_X, shift_Y, shift_Z). An exception
+ * is thrown if the displacement is not a R3 vector.
+ *
+ * @code
+ * // Displacement of 2 pixels down
+ * m = translation3DMatrix(vectorR3(0, 0, 2));
+ * @endcode
+ */
+Matrix2D< double > translation3DMatrix(const Matrix1D< double >& v);
+
+/** Creates a scaling matrix (4x4) for volumes
+ * @ingroup GeometricalTransformations
+ *
+ * The scaling factors for the different axis must be given as a vector. So
+ * that, XX(sc)=scale for X axis, YY(sc)=...
+ */
+Matrix2D< double > scale3DMatrix(const Matrix1D< double >& sc);
+
+

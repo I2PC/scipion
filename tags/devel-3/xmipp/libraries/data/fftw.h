@@ -325,10 +325,13 @@ void FFT_phase(const MultidimArray< std::complex< double > > & v,
  * Fourier Transform. (Using the correlation theorem)
  */
 template <typename T>
-void auto_correlation_vector(const MultidimArray< T > & Img, MultidimArray< double >& R)
+void auto_correlation_vector(const Matrix1D< T > & Img, Matrix1D< double >& R)
 {
+    if (!Img.checkDimension(1))
+        REPORT_ERROR(1,"auto_correlation_vector ERROR: argument should be 1D.");
+
     // Compute the Fourier Transform
-    MultidimArray< std::complex< double > > FFT1;
+    Matrix1D< std::complex< double > > FFT1;
     XmippFftw transformer1;
     R=Img;
     transformer1.FourierTransform(R, FFT1, false);
@@ -357,6 +360,9 @@ void correlation_vector(const MultidimArray< T > & m1,
                         const MultidimArray< T > & m2,
                         MultidimArray< double >& R)
 {
+    if ( !(m1.checkDimension(2) && m2.checkDimension(2)) )
+        REPORT_ERROR(1,"correlation_vector ERROR: arguments should be 2D.");
+
     // Compute the Fourier Transforms
     MultidimArray< std::complex< double > > FFT1, FFT2;
     XmippFftw transformer1, transformer2;
@@ -384,9 +390,12 @@ void correlation_vector(const MultidimArray< T > & m1,
  *  
  *  It is assumed that the two vectors v1, and v2 are of the same size. */
 template <class T>
-void correlation_vector_no_Fourier(const MultidimArray<T> &v1, const MultidimArray<T> &v2,
-    MultidimArray<T> &result)
+void correlation_vector_no_Fourier(const Matrix1D<T> &v1, const Matrix1D<T> &v2,
+    Matrix1D<T> &result)
 {
+    if ( !(v1.checkDimension(1) && v2.checkDimension(1)) )
+        REPORT_ERROR(1,"correlation_vector_no_Fourier ERROR: arguments should be 1D.");
+
     result.initZeros(v1);
     result.setXmippOrigin();
     int N=XSIZE(v1)-1;
@@ -456,28 +465,16 @@ void auto_correlation_matrix(const Matrix2D< T > & Img, Matrix2D< double >& R)
     CenterFFT(R, true);
 }
 
-/** Fourier-Ring-Correlation between two 2D-matrices using FFT
- * @ingroup FourierOperations
- */
-void frc_dpr(Matrix2D< double > & m1,
-             Matrix2D< double > & m2,
-             double sampling_rate,
-             MultidimArray< double >& freq,
-             MultidimArray< double >& frc,
-             MultidimArray< double >& frc_noise,
-             MultidimArray< double >& dpr,
-             bool skipdpr=false);
-
-/** Fourier-Ring-Correlation between two 3D-matrices using FFT
+/** Fourier-Ring-Correlation between two multidimArrays using FFT
  * @ingroup FourierOperations
  */
 void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double > & m2,
              double sampling_rate,
-             MultidimArray< double >& freq,
-             MultidimArray< double >& frc,
-             MultidimArray< double >& frc_noise,
-             MultidimArray< double >& dpr,
+             Matrix1D< double >& freq,
+             Matrix1D< double >& frc,
+             Matrix1D< double >& frc_noise,
+             Matrix1D< double >& dpr,
              bool skipdpr=false);
 /** 
  * Scale matrix using Fourier transform
@@ -487,7 +484,7 @@ void frc_dpr(MultidimArray< double > & m1,
  * @param Mpmem matrix to scale
  * @param nThreads number of threads
  */ 
-void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem, int nthreads=1);
+void selfScaleToSizeFourier(int Ydim, int Xdim, Matrix2D<double>& Mpmem, int nthreads=1);
 
 
 /** Get the amplitude or power spectrum of the map in Fourier space
@@ -496,38 +493,38 @@ void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem, int nthr
 #define POWER_SPECTRUM 0
 #define AMPLITUDE_SPECTRUM 1
 
-void getSpectrum(MultidimArray<double> &Min, 
-                 MultidimArray<double> &spectrum,
+void getSpectrum(Matrix3D<double> &Min, 
+                 Matrix1D<double> &spectrum,
                  int spectrum_type=AMPLITUDE_SPECTRUM);
 
 /** Divide the input map in Fourier-space by the spectrum provided.
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void divideBySpectrum(MultidimArray<double> &Min, 
-                      MultidimArray<double> &spectrum,
+void divideBySpectrum(Matrix3D<double> &Min, 
+                      Matrix1D<double> &spectrum,
                       bool leave_origin_intact=false);
 
 /** Multiply the input map in Fourier-space by the spectrum provided.
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void multiplyBySpectrum(MultidimArray<double> &Min, 
-                        MultidimArray<double> &spectrum,
+void multiplyBySpectrum(Matrix3D<double> &Min, 
+                        Matrix1D<double> &spectrum,
                         bool leave_origin_intact=false);
 
 /** Perform a whitening of the amplitude/power spectrum of a 3D map 
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void whitenSpectrum(MultidimArray<double> &Min, 
-                    MultidimArray<double> &Mout, 
+void whitenSpectrum(Matrix3D<double> &Min, 
+                    Matrix1D<double> &Mout, 
                     int spectrum_type=AMPLITUDE_SPECTRUM,
                     bool leave_origin_intact=false);
 
 /** Adapts Min to have the same spectrum as spectrum_ref
     If only_amplitudes==true, the amplitude rather than the power spectrum will be equalized
 */
-void adaptSpectrum(MultidimArray<double> &Min, 
-                   MultidimArray<double> &Mout,
-                   const MultidimArray<double> spectrum_ref,
+void adaptSpectrum(Matrix3D<double> &Min, 
+                   Matrix3D<double> &Mout,
+                   const Matrix1D<double> spectrum_ref,
                    int spectrum_type=AMPLITUDE_SPECTRUM,
                    bool leave_origin_intact=false);
 

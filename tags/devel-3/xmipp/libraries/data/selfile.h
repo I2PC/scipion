@@ -712,8 +712,8 @@ public:
      *  sel.get_statistics(aveImg, min, max);
      *  @endcode
      */
-    void get_statistics(Image& _ave,
-                        Image& _sd,
+    void get_statistics(Image<double>& _ave,
+                        Image<double>& _sd,
                         double& _min,
                         double& _max,
                         bool apply_geo = false);

@@ -27,8 +27,7 @@
 #ifndef HISTOGRAM_H
 #define HISTOGRAM_H
 
-#include "core_multidim_array.h"
-#include "matrix1d.h"
+#include "multidim_array.h"
 
 /// @defgroup Histograms Histograms
 /// @ingroup DataLibrary
@@ -100,7 +99,7 @@
  *     << " to " << effF << std::endl;
  * @endcode
  */
-class histogram1D: public coreMultidimArray< double >
+class histogram1D: public MultidimArray< double >
 {
 public:
     // Structure
@@ -332,10 +331,10 @@ class IrregularHistogram1D
 {
     public:
         histogram1D         __hist;
-        coreMultidimArray<double>    __binsRightLimits;
+        Matrix1D<double>    __binsRightLimits;
     public:
         /// Initialize class
-        void init(const histogram1D &oldHistogram, const coreMultidimArray<int> &bins);
+        void init(const histogram1D &oldHistogram, const Matrix1D<int> &bins);
         
         /// Return the index corresponding to a certain value
         int val2Index(double value);
@@ -407,7 +406,7 @@ void compute_hist(const T& v, histogram1D& hist,
  * The region is defined by its corners
  */
 template<typename T>
-void compute_hist(const coreMultidimArray< T >& v, histogram1D& hist,
+void compute_hist(const MultidimArray< T >& v, histogram1D& hist,
                     const Matrix1D< int >& corner1,
                     const Matrix1D< int >& corner2,
                     int no_steps = 100)
@@ -511,14 +510,14 @@ void reject_outliers(T& v, double percentil_out = 0.25)
  * array is defined between 0 and bins-1.
  */
 template<typename T>
-void histogram_equalization(coreMultidimArray<T>& v, int bins = 8)
+void histogram_equalization(MultidimArray<T>& v, int bins = 8)
 {
     const int hist_steps = 200;
     histogram1D hist;
     compute_hist(v, hist, hist_steps);
 
     // Compute the distribution function of the pdf
-    coreMultidimArray<double> norm_sum(hist_steps);
+    Matrix1D<double> norm_sum(hist_steps);
     norm_sum(0) = hist(0);
 
     for (int i = 1; i < hist_steps; i++)
@@ -526,7 +525,7 @@ void histogram_equalization(coreMultidimArray<T>& v, int bins = 8)
     norm_sum /= MULTIDIM_SIZE(v);
 
     // array to store the boundary pixels of bins
-    coreMultidimArray< double > div(bins - 1);
+    Matrix1D< double > div(bins - 1);
     int index = 0;
 
     for (int current_bin = 1; current_bin < bins; current_bin++)
@@ -576,7 +575,7 @@ void histogram_equalization(coreMultidimArray<T>& v, int bins = 8)
  * histograms 1D.
  *
  */
-class histogram2D : public coreMultidimArray< double >
+class histogram2D : public MultidimArray< double >
 {
 public:
     // Structure
@@ -864,7 +863,7 @@ void compute_hist(const T& v1, const T& v2,
  * within the specified values, all the values lying outside are not counted
  */
 template<typename T>
-void compute_hist(const coreMultidimArray<T>& v1, const coreMultidimArray<T>& v2,
+void compute_hist(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
     	    	  histogram2D& hist,
                   double m1, double M1, double m2, double M2, int no_steps1,
                   int no_steps2)
