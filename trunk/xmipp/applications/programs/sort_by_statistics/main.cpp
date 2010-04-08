@@ -389,7 +389,7 @@ public:
 int main(int argc, char **argv)
 {
 
-    SelFile SF, SFout, SFtrain;
+    SelFile SF, SFout, SFtrain, SFoutGood;
     int imgno, dim, nr_imgs, isort;
 
     Matrix1D<int> sorted;
@@ -434,6 +434,8 @@ int main(int argc, char **argv)
     {
         isort = sorted(imgno) - 1;
         SFout.insert(prm.names[isort]);
+        if (prm.zscore(isort)/14.<prm.cutoff)
+            SFoutGood.insert(prm.names[isort]);
         fh_zsum << prm.zscore(isort)/14. << "   " << prm.names[isort] << std::endl;
         fh_zind << prm.names[isort]
         << " : " << prm.values[isort][0]
@@ -453,7 +455,6 @@ int main(int argc, char **argv)
     }
     fh_zsum.close();
     fh_zind.close();
-    fn = prm.fn_out + ".sel";
-    SFout.write(fn);
-
+    SFout.write(prm.fn_out + ".sel");
+    SFoutGood.write(prm.fn_out + "_good.sel");
 }
