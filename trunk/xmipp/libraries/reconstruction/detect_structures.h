@@ -29,6 +29,7 @@
 
 #include <data/matrix3d.h>
 #include <data/steerable.h>
+#include <data/threads.h>
 #include <vector>
 
 /// @defgroup DetectStructures Detect structures
@@ -76,6 +77,10 @@ public:
 
     /// Plane 2 tilt
     double tilt2;
+    
+    /// Concurrent threads to be spawned
+    int threads;
+
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);

@@ -58,6 +58,8 @@ void Prog_Detect_Structures_Param::read(int argc, char **argv)
         rot2  = textToFloat(argv[i+3]);
         tilt2 = textToFloat(argv[i+4]);
     }
+    
+    threads=textToInteger(getParameter(argc,argv,"-thr","1"));
 }
 
 void Prog_Detect_Structures_Param::show() const
@@ -72,6 +74,7 @@ void Prog_Detect_Structures_Param::show() const
         << "AngStep:              " << angStep            << std::endl
         << "Remove Background:    " << removeBackground   << std::endl
         << "Remove Missing Wedge: " << removeMissingWedge << std::endl
+        << "Using Threads:        " << threads            << std::endl
     ;
     if (removeMissingWedge)
         std::cout << "Plane 1: " << rot1 << " " << tilt1 << std::endl
@@ -90,7 +93,7 @@ void Prog_Detect_Structures_Param::usage() const
         << "   [-angStep <ang=5>]   : Angular step\n"
         << "   [-removeBackground]  : Remove background\n"
         << "   [-missing <rot1> <tilt1> <rot2> <tilt2>] : Remove missing wedge\n"
-    ;
+		<< "   [-thr <t=1>]         : Number of parallel threads to use\n";
 }
 
 void Prog_Detect_Structures_Param::run()
@@ -111,7 +114,12 @@ void Prog_Detect_Structures_Param::run()
             MW->tiltNeg=tilt2;
         }
         
-        Steerable *filter=new Steerable(sigma,Vaux(),angStep,filterType,MW);
+        Steerable *filter;
+        
+        if( filterType == "wall" )
+            filter=new Steerable(sigma,Vaux(),angStep, FT_WALLS ,MW, threads);
+        else
+            filter=new Steerable(sigma,Vaux(),angStep, FT_FILAMENTS ,MW, threads);
         
         // Compute energy percentage
         double totalEnergy=Vaux().sum2();
