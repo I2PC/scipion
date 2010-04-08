@@ -28,9 +28,8 @@
 #ifndef _SYMMETRIES_HH
 #define _SYMMETRIES_HH
 
-#include "matrix2d.h"
+#include "multidim_array.h"
 #include "funcs.h"
-#include "volume.h"
 #include "args.h"
 #include "grids.h"
 

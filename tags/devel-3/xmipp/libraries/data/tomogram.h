@@ -27,7 +27,7 @@
 #define TOMOGRAM_H
 
 #include "funcs.h"
-#include "matrix3d.h"
+#include "multidim_array.h"
 
 /// @defgroup Tomograms Tomograms
 /// @ingroup DataLibrary

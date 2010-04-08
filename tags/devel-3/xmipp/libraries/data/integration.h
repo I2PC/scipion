@@ -30,7 +30,7 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
-#include "matrix1d.h"
+#include "multidim_array.h"
 
 /** @defgroup NumericalIntegration Numerical integration
  *  @ingroup DataLibrary

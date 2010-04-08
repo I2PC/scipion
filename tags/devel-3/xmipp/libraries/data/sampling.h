@@ -31,7 +31,7 @@
 
 #include "docfile.h"
 #include "macros.h"
-#include "matrix1d.h"
+#include "multidim_array.h"
 #include "symmetries.h"
 #include "geometry.h"
 
