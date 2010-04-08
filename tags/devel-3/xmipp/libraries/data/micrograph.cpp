@@ -71,6 +71,8 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
 
     // Look for micrograph dimensions
     // check if the file format is spider
+    ///// FIXME READING SPIDER FORMAT!!!!
+    /*
     if (Is_ImageXmipp(fn_micrograph))
     {
         headerXmipp     header;
@@ -85,6 +87,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
     }
     else
     {
+    */
         fn_inf = fn_micrograph.add_extension("inf");
         FILE *fh_inf = fopen(fn_inf.c_str(), "r");
         if (!fh_inf)
@@ -103,7 +106,10 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
         else
             __is_signed = false;
         fclose(fh_inf);
+        /*
     }
+        */
+
     // Open micrograph and map
     fh_micrograph = open(fn_micrograph.c_str(), O_RDWR, S_IREAD | S_IWRITE);
     if (fh_micrograph == -1)
@@ -457,7 +463,7 @@ void Micrograph::scale_coordinates(const double &c)
 }
 
 /* Scissor ----------------------------------------------------------------- */
-int Micrograph::scissor(const Particle_coords &P, ImageT<double> &result,
+int Micrograph::scissor(const Particle_coords &P, Image<double> &result,
                         double Dmin, double Dmax, double scaleX, double scaleY,
                         bool only_check)
 {
@@ -490,16 +496,16 @@ int Micrograph::scissor(const Particle_coords &P, ImageT<double> &result,
                         else
                             temp = log10((double)(*this)(j, i));
                         if (compute_inverse)
-                            result(i - i0, j - j0) = (Dmax - temp) / range;
+                            MAT_ELEM(result(),i - i0, j - j0) = (Dmax - temp) / range;
                         else
-                            result(i - i0, j - j0) = (temp - Dmin) / range;
+                            MAT_ELEM(result(),i - i0, j - j0) = (temp - Dmin) / range;
                     }
                     else
                     {
                         if (compute_inverse)
-                            result(i - i0, j - j0) = (Dmax - (*this)(j, i)) / range;
+                            MAT_ELEM(result(), i - i0, j - j0) = (Dmax - (*this)(j, i)) / range;
                         else
-                            result(i - i0, j - j0) = (*this)(j, i);
+                            MAT_ELEM(result(), i - i0, j - j0) = (*this)(j, i);
                     }
                 }
         }
@@ -520,7 +526,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
 {
     SelFile SF;
     FileName fn_out;
-    ImageXmipp I;
+    Image<double> I;
     Micrograph *M;
 
     // Set Source image
@@ -567,7 +573,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
         if (coords[n].valid && coords[n].label == label)
         {
             fn_out.compose(fn_root, i++, "xmp");
-            if (!M->scissor(coords[n], (Image &) I, Dmin, Dmax, scaleX, scaleY))
+            if (!M->scissor(coords[n], (Image<double> &) I, Dmin, Dmax, scaleX, scaleY))
             {
                 std::cout << "Particle " << fn_out << " is very near the border, "
                           << "corresponding image is set to blank\n";
@@ -576,9 +582,12 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             else
                 SF.insert(fn_out);
             //  if (ang!=0) I().rotate(-ang);
+            /// FIXME: HEADER MODIFICATION 
+            /*
             I.set_rot((float)ang);
             I.set_tilt((float)tilt);
             I.set_psi((float)psi);
+            */
             I.write(fn_out);
         }
     if (labels[label] != "")

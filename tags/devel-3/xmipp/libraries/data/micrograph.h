@@ -73,7 +73,7 @@ class Micrograph
 protected:
     /* This image will contain a single particle from the micrograph,
        this is done to avoid asking/freeing memory all time. */
-    Image                   single_particle;
+    Image<double>           single_particle;
     std::vector<Particle_coords> coords;
     FileName                fn_coords;
     FileName                fn_micrograph;
@@ -250,7 +250,7 @@ public:
         trnasmitance
 
         Returns 0 if an error ocurred and 1 if everything is all right*/
-    int scissor(const Particle_coords &P, ImageT<double> &result,
+    int scissor(const Particle_coords &P, Image<double> &result,
                 double Dmin, double Dmax,
                 double scaleX = 1, double scaleY = 1, bool only_check = false);
 
