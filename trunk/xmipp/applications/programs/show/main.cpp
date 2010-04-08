@@ -31,6 +31,7 @@
 #include <graphics/show_spectra.h>
 #include <graphics/show_som.h>
 #include <graphics/show_spectra_som.h>
+#include <graphics/show_cl2d.h>
 
 #include <qapplication.h>
 
@@ -46,6 +47,7 @@ void Usage();
 #define MODE_CTF      7
 #define MODE_PSDSEL   8
 #define MODE_CTFSEL   9
+#define MODE_CL2D    10
 
 int main(int argc, char **argv)
 {
@@ -91,6 +93,11 @@ int main(int argc, char **argv)
         {
             mode = MODE_SOM;
             ifirst = paremeterPosition(argc, argv, "-som");
+        }
+        else if (checkParameter(argc, argv, "-cl2d"))
+        {
+            mode = MODE_CL2D;
+            ifirst = paremeterPosition(argc, argv, "-cl2d");
         }
         else if (checkParameter(argc, argv, "-psd"))
         {
@@ -206,6 +213,10 @@ int main(int argc, char **argv)
                     {
                         // Not implemented
                     }
+                    else if (mode == MODE_CL2D)
+                    {
+                        // Not implemented
+                    }
                     else if (mode == MODE_PSD)
                     {
                         // Not implemented
@@ -262,6 +273,8 @@ int main(int argc, char **argv)
                 case MODE_SPECT:
                     continue;
                 case MODE_SOM:
+                    break;
+                case MODE_CL2D:
                     break;
                 case MODE_SPECTSOM:
                     break;
@@ -344,6 +357,14 @@ int main(int argc, char **argv)
                 showsom->show();
                 shown++;
             }
+            else if (mode == MODE_CL2D)
+            {
+                ShowCL2D *showcl2d = new ShowCL2D;
+                showcl2d->apply_geo = apply_geo;
+                showcl2d->initWithFile(argv[i]);
+                showcl2d->show();
+                shown++;
+            }
             else if (mode == MODE_SPECTSOM)
             {
                 ShowSpectraSOM *showspectrasom = new ShowSpectraSOM;
@@ -380,6 +401,7 @@ void Usage()
     << "                            to see slices in that direction\n"
     << "    -spect <datafile>     : Spectra .dat file\n"
     << "    -som <SOM rootname>   : SOM images\n"
+    << "    -cl2d <CL2D rootname> : CL2D images\n"
     << "    -spectsom <SOM root>  : SOM spectra\n"
     << "       -din <Original.dat>: Original data\n"
     << "   [-w]                   : width (default: 10)\n"
