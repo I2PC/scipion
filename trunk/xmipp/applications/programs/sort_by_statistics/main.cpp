@@ -456,5 +456,5 @@ int main(int argc, char **argv)
     fh_zsum.close();
     fh_zind.close();
     SFout.write(prm.fn_out + ".sel");
-    if (prm.zcut>0) SFoutGood.write(prm.fn_out + "_good.sel");
+    if (prm.cutoff>0) SFoutGood.write(prm.fn_out + "_good.sel");
 }
