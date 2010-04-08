@@ -31,16 +31,17 @@
 // Read arguments ==========================================================
 void Prog_sort_images_prm::read(int argc, char **argv)
 {
-
     fnSel  = getParameter(argc, argv, "-i");
     fnRoot = getParameter(argc, argv, "-oroot");
+    processSelfiles=checkParameter(argc, argv, "-processSelfiles");
 }
 
 // Show ====================================================================
 void Prog_sort_images_prm::show()
 {
-    std::cerr << "Input selfile:    " << fnSel         << std::endl
-              << "Output rootname:  " << fnRoot        << std::endl
+    std::cerr << "Input selfile:    " << fnSel           << std::endl
+              << "Output rootname:  " << fnRoot          << std::endl
+              << "Process selfiles: " << processSelfiles << std::endl
     ;
 }
 
@@ -50,6 +51,7 @@ void Prog_sort_images_prm::usage()
     std::cerr << "Usage:  " << std::endl
               << "   -i <selfile>       : selfile of images\n"
               << "   -oroot <rootname>  : output rootname\n"
+              << "  [-processSelfiles]  : process selfiles\n"
     ;
 }
 
@@ -123,7 +125,7 @@ void Prog_sort_images_prm::chooseNextImage()
     }
     
     SFoutOriginal.insert(toClassify[bestIdx]);
-    bestImage.write(fnRoot+integerToString(SFout.ImgNo(),5)+".xmp");
+    bestImage.write(fnRoot+integerToString(SFoutOriginal.ImgNo(),5)+".xmp");
     toClassify.erase(toClassify.begin()+bestIdx);
     lastImage=bestImage;
     SFout.insert(bestImage.name());
@@ -142,4 +144,25 @@ void Prog_sort_images_prm::run()
     std::cout << toClassify.size() << std::endl;
     SFoutOriginal.write(fnRoot+".sel");
     SFout.write(fnRoot+"_aligned.sel");
+    
+    if (processSelfiles)
+    {
+        std::ofstream fhInfo;
+        fhInfo.open((fnRoot+"_info.txt").c_str());
+        if (!fhInfo)
+            REPORT_ERROR(1,(std::string)"Cannot open "+fnRoot+"_info.txt for output");
+        SFout.go_first_ACTIVE();
+        SFoutOriginal.go_first_ACTIVE();
+        while (!SFout.eof())
+        {
+            FileName fnOutOrig=SFoutOriginal.NextImg();
+            FileName fnOut=SFout.NextImg();
+            FileName fnSel=fnOutOrig.without_extension()+".sel";
+            SelFile SFaux;
+            SFaux.read(fnSel);
+            fhInfo << fnOut << " " << fnOutOrig << " " << fnSel << " "
+                   << SFaux.ImgNo() << std::endl;
+        }
+        fhInfo.close();
+    }
 }

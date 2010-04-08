@@ -41,6 +41,8 @@ public:
     /**  Filename output rootname */
     FileName fnRoot;
 
+    /** Also process the corresponding selfiles */
+    bool processSelfiles;
 public:
     // Output selfile
     SelFile SFout;
