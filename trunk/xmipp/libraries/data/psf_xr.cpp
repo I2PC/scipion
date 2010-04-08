@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "otf_xr.h"
+#include "psf_xr.h"
 #include "args.h"
 #include "fft.h"
 

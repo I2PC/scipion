@@ -24,7 +24,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/otf_xr.h>
+#include <data/psf_xr.h>
 #include <data/args.h>
 
 int main(int argc, char **argv)
