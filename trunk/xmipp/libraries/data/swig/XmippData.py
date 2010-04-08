@@ -160,6 +160,27 @@ floatP_swigregister = _XmippData.floatP_swigregister
 floatP_swigregister(floatP)
 floatP_frompointer = _XmippData.floatP_frompointer
 
+class stringP(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, stringP, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, stringP, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _XmippData.new_stringP(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_stringP
+    __del__ = lambda self : None;
+    def assign(*args): return _XmippData.stringP_assign(*args)
+    def value(*args): return _XmippData.stringP_value(*args)
+    def cast(*args): return _XmippData.stringP_cast(*args)
+    __swig_getmethods__["frompointer"] = lambda x: _XmippData.stringP_frompointer
+    if _newclass:frompointer = staticmethod(_XmippData.stringP_frompointer)
+stringP_swigregister = _XmippData.stringP_swigregister
+stringP_swigregister(stringP)
+stringP_frompointer = _XmippData.stringP_frompointer
+
 class string(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, string, name, value)

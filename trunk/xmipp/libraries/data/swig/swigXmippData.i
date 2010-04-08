@@ -12,6 +12,7 @@
 %pointer_class(char,charP);
 %pointer_class(double,doubleP);
 %pointer_class(float,floatP);
+%pointer_class(std::string,stringP);
 
 // Redefine all assignment operators of classes as the function .assign()
 %rename(assign) *::operator=;

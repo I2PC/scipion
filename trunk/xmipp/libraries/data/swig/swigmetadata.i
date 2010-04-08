@@ -43,6 +43,14 @@ mD.write("prueba2.doc")
 mD2=XmippData.MetaData();
 
 mD2.read(outFile)
+ss=XmippData.stringP()
+dd=XmippData.doubleP()
+mD2.getValue( XmippData.MDL_IMAGE, ss)
+ss.value()
+mD2.getValue( XmippData.MDL_ANGLEPSI, dd)
+dd.value()
+
+
 
 ==================
 ANOTHER EXAMPLE (xmipp_selfile_create)
