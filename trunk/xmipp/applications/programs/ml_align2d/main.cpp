@@ -145,10 +145,15 @@ int main(int argc, char **argv)
 
             if (converged)
             {
-                if (prm.verb > 0)
-                    std::cerr << " Optimization converged!" << std::endl;
+                if (prm.verb > 0) std::cerr << " Optimization converged!"
+                        << std::endl;
 
                 break;
+            }
+            else
+            {
+                // reset DFo
+                prm.DFo.clear();
             }
 
 #ifdef TIMING

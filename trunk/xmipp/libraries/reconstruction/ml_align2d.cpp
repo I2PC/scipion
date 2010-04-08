@@ -394,6 +394,7 @@ void Prog_MLalign2D_prm::produceSideInfo()
     // by calling setWorkingImages before produceSideInfo2
     myFirstImg = 0;
     myLastImg = nr_images_global - 1;
+    nr_images_local = nr_images_global;
 
     // Get original image size
     SF.ImgSize(dim, dim);
@@ -545,15 +546,6 @@ void Prog_MLalign2D_prm::produceSideInfo()
     }
 
 
-    //FIXME: Move to produceSideInfo2
-    // for only reservate memory for the number of
-    // images for work in (mainly to save memory in MPI)
-    /// Initialize docfiledata
-    Matrix1D<double> dataline(DATALINELENGTH);
-    dataline.initZeros();
-
-    FOR_ALL_GLOBAL_IMAGES()
-        docfiledata.push_back(dataline);
 }//close function produceSideInfo
 
 // Generate initial references =============================================
@@ -804,9 +796,25 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         }
     }
 
+    //--------Setup for Docfile -----------
+
+    //FIXME: Move to produceSideInfo2
+    // for only reservate memory for the number of
+    // images for work in (mainly to save memory in MPI)
+    /// Initialize docfiledata
+//    Matrix1D<double> dataline(DATALINELENGTH);
+//    dataline.initZeros();
+//
+//    FOR_ALL_LOCAL_IMAGES()
+//        docfiledata[IMG_INDEX] = dataline;
+    std::cerr << "alocating docfiledata...images:" << std::endl;
+    docfiledata.resize(nr_images_local, DATALINELENGTH);
+    std::cerr << "alocated..." << std::endl;
+
+
     //--------Setup for BLOCKS------------
     //Set image blocks vector
-    img_blocks.resize(nr_images_global, 0);
+    img_blocks.resize(nr_images_local, 0);
 //TODO: REMOVE after testing
 //    int img_per_block = nr_images_global / blocks;
 //    int img_rest = nr_images_global % blocks;
@@ -2112,25 +2120,25 @@ void Prog_MLalign2D_prm::expectation()
                 opt_flip = 0.;
             }
 
-            docfiledata[IMG_INDEX](0) = model.Iref[opt_refno].Phi(); // rot
-            docfiledata[IMG_INDEX](1) = model.Iref[opt_refno].Theta(); // tilt
-            docfiledata[IMG_INDEX](2) = opt_psi + 360.; // psi
-            docfiledata[IMG_INDEX](3) = opt_offsets(0); // Xoff
-            docfiledata[IMG_INDEX](4) = opt_offsets(1); // Yoff
-            docfiledata[IMG_INDEX](5) = (double) (opt_refno + 1); // Ref
-            docfiledata[IMG_INDEX](6) = opt_flip; // Mirror
-            docfiledata[IMG_INDEX](7) = fracweight; // P_max/P_tot
-            docfiledata[IMG_INDEX](8) = dLL; // log-likelihood
+            docfiledata(IMG_INDEX,0) = model.Iref[opt_refno].Phi(); // rot
+            docfiledata(IMG_INDEX,1) = model.Iref[opt_refno].Theta(); // tilt
+            docfiledata(IMG_INDEX,2) = opt_psi + 360.; // psi
+            docfiledata(IMG_INDEX,3) = opt_offsets(0); // Xoff
+            docfiledata(IMG_INDEX,4) = opt_offsets(1); // Yoff
+            docfiledata(IMG_INDEX,5) = (double) (opt_refno + 1); // Ref
+            docfiledata(IMG_INDEX,6) = opt_flip; // Mirror
+            docfiledata(IMG_INDEX,7) = fracweight; // P_max/P_tot
+            docfiledata(IMG_INDEX,8) = dLL; // log-likelihood
 
             if (do_norm)
             {
-                docfiledata[IMG_INDEX](9) = bgmean; // background mean
-                docfiledata[IMG_INDEX](10) = opt_scale; // image scale
+                docfiledata(IMG_INDEX,9) = bgmean; // background mean
+                docfiledata(IMG_INDEX,10) = opt_scale; // image scale
             }
 
             if (model.do_student)
             {
-                docfiledata[IMG_INDEX](11) = maxweight2; // Robustness weight
+                docfiledata(IMG_INDEX,11) = maxweight2; // Robustness weight
             }
 
             if (verb > 0 && img_done % c == 0)
@@ -2328,37 +2336,54 @@ bool Prog_MLalign2D_prm::checkConvergence()
     return converged;
 }//close function checkConvergence
 
+/// Add docfiledata to docfile
+void Prog_MLalign2D_prm::addDocfileData(Matrix2D<double> data, int first, int last)
+{
+    SelFile SFTemp;
+    Matrix1D<double> dataline(DATALINELENGTH);
+
+    SF.chooseSubset(first, last, SFTemp);
+    SFTemp.go_beginning();
+
+    for (int j = 0; j < YSIZE(data); j++)
+    {
+        DFo.append_comment(SFTemp.NextImg());
+        for (int i = 0; i < DATALINELENGTH; i++)
+            dataline(i) = data(j, i);
+        DFo.append_data_line(dataline);
+
+    }
+}//close function addDocfileData
+
 void Prog_MLalign2D_prm::writeDocfile(FileName fn_base)
 {
     FileName fn_tmp;
     DocFile DFout;
     fn_base += ".doc";
 
-     DFout.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
-     SF.go_beginning();
 
-      FOR_ALL_GLOBAL_IMAGES()
-      {
-          DFout.append_comment(SF.NextImg());
-          DFout.append_data_line(docfiledata[imgno]);
-      }
-      DFout.write(fn_base);
+     DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
+     //SF.go_beginning();
+
+     ///FIXME: CHECK IF ARE DATA PRESENT
+     addDocfileData(docfiledata, myFirstImg, myLastImg);
+     DFo.write(fn_base);
 
       // Also write out selfiles of all experimental images,
       // classified according to optimal reference image
       SelFile SFo;
       for (int refno = 0; refno < model.n_ref; refno++)
       {
-          DFout.go_beginning();
+          DFo.go_beginning();
           SFo.clear();
 
-          for (int n = 0; n < DFout.dataLineNo(); n++)
+          for (int n = 0; n < DFo.dataLineNo(); n++)
           {
-              DFout.next();
-              fn_tmp = ((DFout.get_current_line()).get_text()).erase(0, 3);
-              DFout.adjust_to_data_line();
+              DFo.next();
+              fn_tmp = ((DFo.get_current_line()).get_text()).erase(0, 3);
+              DFo.adjust_to_data_line();
 
-              if ((refno + 1) == (int) DFout(5))
+              if ((refno + 1) == (int) DFo(5))
                   SFo.insert(fn_tmp, SelLine::ACTIVE);
           }
 

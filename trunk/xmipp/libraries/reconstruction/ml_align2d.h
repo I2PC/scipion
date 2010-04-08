@@ -328,7 +328,7 @@ public:
     int opt_refno, iopt_psi, iopt_flip;
     double trymindiff, opt_scale, bgmean, opt_psi;
     double fracweight, maxweight2, dLL;
-    std::vector<Matrix1D<double> > docfiledata;
+    Matrix2D<double> docfiledata;
 
     /** From expectationSingleImage */
     std::vector<Matrix2D<std::complex<double> > > Fimg_flip, mysumimgs;
@@ -440,6 +440,9 @@ public:
 
     /// check convergence
     bool checkConvergence();
+
+    /// Add docfiledata to docfile
+    void addDocfileData(Matrix2D<double> data, int first, int last);
 
     /// Write Docfile
     void writeDocfile(FileName fn_base);
