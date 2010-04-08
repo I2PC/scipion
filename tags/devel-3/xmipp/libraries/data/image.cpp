@@ -103,3 +103,4 @@ unsigned long  gettypesize(DataType type)
 
     return(size);
 }
+

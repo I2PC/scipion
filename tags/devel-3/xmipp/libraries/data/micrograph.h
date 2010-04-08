@@ -32,7 +32,7 @@
 #include <vector>
 
 #include "funcs.h"
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 #include "image.h"
 #include "fftw.h"
 

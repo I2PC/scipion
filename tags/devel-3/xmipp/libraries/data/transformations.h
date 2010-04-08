@@ -27,7 +27,7 @@
 #ifndef TRANSFORMATIONS_H
 #define TRANSFORMATIONS_H
 
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
 

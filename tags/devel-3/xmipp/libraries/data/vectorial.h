@@ -26,7 +26,7 @@
 #ifndef VECTORIAL_H
 #define VECTORIAL_H
 
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 
 /// @defgroup Vectorial Vector volumes
 /// @ingroup MultidimensionalArrays

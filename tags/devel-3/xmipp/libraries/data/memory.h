@@ -167,7 +167,6 @@ char* askMemory(unsigned long size);
 */
 int freeMemory(void* ptr, unsigned long memsize);
 
-
 //@}
 #endif
 

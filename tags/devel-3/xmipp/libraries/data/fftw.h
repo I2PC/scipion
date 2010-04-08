@@ -29,7 +29,7 @@
 
 #include <complex>
 #include "../../external/fftw-3.2.2/api/fftw3.h"
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 #include "fft.h"
 
 /** @defgroup FourierW FFTW Fourier transforms

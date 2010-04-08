@@ -26,7 +26,7 @@
 #ifndef _XMIPP_MORPHOLOGY_HH
 #define _XMIPP_MORPHOLOGY_HH
 
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 
 /// @defgroup MathematicalMorphology Mathematical morphology
 /// @ingroup DataLibrary

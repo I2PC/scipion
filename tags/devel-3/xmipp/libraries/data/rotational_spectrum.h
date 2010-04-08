@@ -26,7 +26,7 @@
 #ifndef ROTATIONALSPECTRUM_H
 #define ROTATIONALSPECTRUM_H
 
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 
 #include <iostream>
 

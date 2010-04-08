@@ -32,7 +32,7 @@
 #ifndef POLAR_H
 #define POLAR_H
 #include "funcs.h"
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 #include "fftw.h"
 
 #define FULL_CIRCLES 0

@@ -31,7 +31,7 @@
 
 #include <vector>
 
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 #include "blobs.h"
 #include "projection.h"
 

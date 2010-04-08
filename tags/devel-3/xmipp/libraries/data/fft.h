@@ -28,7 +28,7 @@
 
 #include <complex>
 
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
 #include "selfile.h"
