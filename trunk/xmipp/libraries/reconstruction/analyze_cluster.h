@@ -55,6 +55,9 @@ public:
     
     /** Distance Threshold */
     double distThreshold;
+    
+    /** Don't mask*/
+    bool dontMask;
 public:
     // SelFile images
     std::vector< FileName > classfile;

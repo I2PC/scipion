@@ -38,6 +38,7 @@ void Prog_analyze_cluster_prm::read(int argc, char **argv)
     NPCA  = textToInteger(getParameter(argc, argv, "-NPCA", "2"));
     Niter  = textToInteger(getParameter(argc, argv, "-iter", "10"));
     distThreshold = textToFloat(getParameter(argc, argv, "-maxDist", "2"));
+    dontMask = checkParameter(argc, argv, "-dontMask");
 }
 
 // Show ====================================================================
@@ -50,6 +51,7 @@ void Prog_analyze_cluster_prm::show()
               << "PCA dimension:          " << NPCA          << std::endl
               << "Iterations:             " << Niter         << std::endl
               << "Maximum distance:       " << distThreshold << std::endl
+              << "Don't mask:       " << dontMask      << std::endl
     ;
 }
 
@@ -66,6 +68,7 @@ void Prog_analyze_cluster_prm::usage()
               << "  [-NPCA <dim=2>]     : PCA dimension\n"
               << "  [-iter <N=10>]      : Number of iterations\n"
               << "  [-maxDist <d=2>]    : Maximum distance\n"
+              << "  [-dontMask]         : Don't use a circular mask\n"
     ;
 }
 
@@ -84,7 +87,10 @@ void Prog_analyze_cluster_prm::produceSideInfo()
     // Prepare mask
     mask.resize(Iref());
     mask.setXmippOrigin();
-    BinaryCircularMask(mask,XSIZE(Iref())/2, INNER_MASK);
+    if (dontMask)
+        mask.initConstant(1);
+    else
+        BinaryCircularMask(mask,XSIZE(Iref())/2, INNER_MASK);
     Npixels=(int)mask.sum();
 
     // Read all images in the class and substract the mean
