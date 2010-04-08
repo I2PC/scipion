@@ -95,6 +95,7 @@ public:
 
 	long int addObject( );
     void read( FileName infile, std::vector<MetaDataLabel> * labelsVector=NULL );
+    // mergeMetaDatas(metadata)
     /** Overloading of the read function for python
      *
      */
@@ -110,6 +111,7 @@ public:
 	long int firstObject( );
 	long int nextObject( );
 	long int lastObject( );
+	//////////////////////// long int goToObject(object_id)
 	
 	MetaData();
 	MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
@@ -138,6 +140,7 @@ public:
 	std::vector<long int> findObjects( MetaDataLabel name, int value );
 	std::vector<long int> findObjects( MetaDataLabel name, bool value );
 	std::vector<long int> findObjects( MetaDataLabel name, std::string value );
+	////////findObjects in a range
 	
     // Removes the collection of objects whose pair label/value is given
     // NOTE: The iterator will point to the first object after any of these
@@ -147,7 +150,10 @@ public:
 	void removeObjects( MetaDataLabel name, int value );
 	void removeObjects( MetaDataLabel name, bool value );
 	void removeObjects( MetaDataLabel name, std::string value );
-	
+	////////removeObjects in a range
+	/////// remove id
+	//////////////////////removeLabel
+
     // Xmipp-specific, for new parameters add here.
 	void setPath( std::string newPath = "" );	
 	void setComment( std::string Comment = "" );
@@ -179,3 +185,24 @@ void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
                              double& _max, bool apply_geo);
 
 #endif
+/*
+ *
+ * //read to joined tables
+   *  metaData::metaData(FileName baseName,
+                         string tableName1 ,
+                         string join attribute1,//from MTC 1
+                         string join attribute2,//from MTC 2
+                         string tableName2,
+                         vector<string> vectorType);
+//read three joined tables
+   *  metaData::metaData(FileName baseName,
+                         string tableName1 ,
+                         string join attribute1_1,//from MTC 1
+                         string join attribute2_1,//from MTC 2
+                         string tableName2,
+                         string join attribute2_2,//from MTC 2
+                         string join attribute3_1,//from MTC 3
+                         string tableName3,
+                         vector<string> vectorType);
+ */
+ */
