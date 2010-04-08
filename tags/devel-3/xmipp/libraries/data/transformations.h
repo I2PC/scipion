@@ -28,8 +28,6 @@
 #define TRANSFORMATIONS_H
 
 #include "multidim_array.h"
-#include "matrix1d.h"
-#include "matrix2d.h"
 
 #define IS_INV true
 #define IS_NOT_INV false

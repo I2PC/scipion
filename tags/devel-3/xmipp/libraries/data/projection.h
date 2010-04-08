@@ -27,9 +27,6 @@
 #define PROJECTION_H
 
 #include "image.h"
-#include "matrix1d.h"
-#include "matrix2d.h"
-#include "image.h"
 #include "threads.h"
 #include "grids.h"
 #include "basis.h"

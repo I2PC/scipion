@@ -27,7 +27,7 @@
 #ifndef STEERABLE_H
 #define STEERABLE_H
 
-#include "matrix3d.h"
+#include "multidim_array.h"
 #include <vector>
 
 /// @defgroup MissingWedge Missing wedge

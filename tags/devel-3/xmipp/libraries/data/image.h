@@ -570,7 +570,7 @@ public:
         data.resize(n, z, y, xstore);
 
 #ifdef DEBUG
-        data.printShape(); std::cerr<<std::endl;
+        data.printShape();
         printf("DEBUG img_read_data: Data size: %ld %ld %ld %ld\n", XSIZE(data), YSIZE(data), ZSIZE(data), NSIZE(data));
         printf("DEBUG img_read_data: Page size: %ld %ld %ld (%ld)\n", px, py, pz, pagesize);
         printf("DEBUG img_read_data: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);

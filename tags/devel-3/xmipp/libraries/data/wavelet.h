@@ -29,7 +29,6 @@
 #define WAVELET_H
 
 #include "multidim_array.h"
-#include "matrix1d.h"
 #include "numerical_recipes.h"
 
 /// @defgroup Wavelets Wavelets

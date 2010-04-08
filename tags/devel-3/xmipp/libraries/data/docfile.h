@@ -30,8 +30,6 @@
 #include <string>
 
 #include "args.h"
-#include "matrix1d.h"
-#include "matrix2d.h"
 #include "image.h"
 #include "selfile.h"
 
