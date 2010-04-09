@@ -54,6 +54,7 @@ int main(int argc, char **argv)
     int numCols, numRows, mode, ifirst;
     FileName fn_dat, fn_assign, fn_assignsel;
     bool poll, apply_geo = true, common_normalization = false;
+    std::string filterSuffix;
 
     try
     {
@@ -98,6 +99,7 @@ int main(int argc, char **argv)
         {
             mode = MODE_CL2D;
             ifirst = paremeterPosition(argc, argv, "-cl2d");
+            filterSuffix = getParameter(argc,argv,"-filterSuffix","");
         }
         else if (checkParameter(argc, argv, "-psd"))
         {
@@ -361,6 +363,7 @@ int main(int argc, char **argv)
             {
                 ShowCL2D *showcl2d = new ShowCL2D;
                 showcl2d->apply_geo = apply_geo;
+                showcl2d->filterSuffix = filterSuffix;
                 showcl2d->initWithFile(argv[i]);
                 showcl2d->show();
                 shown++;
@@ -402,6 +405,7 @@ void Usage()
     << "    -spect <datafile>     : Spectra .dat file\n"
     << "    -som <SOM rootname>   : SOM images\n"
     << "    -cl2d <CL2D rootname> : CL2D images\n"
+    << "      [-filterSuffix <s>] : Filter suffix for the CL2D\n"
     << "    -spectsom <SOM root>  : SOM spectra\n"
     << "       -din <Original.dat>: Original data\n"
     << "   [-w]                   : width (default: 10)\n"
