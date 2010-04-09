@@ -93,7 +93,7 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Select only relevant part of selfile for this rank
-        prm.SF.mpi_select_part(rank, size, num_img_tot);
+        //prm.SF.mpi_select_part(rank, size, num_img_tot);
 
         // And produce selfile-specific side-info
         prm.produceSideInfo2();
@@ -206,47 +206,51 @@ int main(int argc, char **argv)
             if (rank != 0)
             {
                 // All slaves send docfile to the master
-                std::ostringstream doc;
-                doc << prm.DFo;
-                int s_size=  doc.str().size();
-                char results[s_size];
-                strncpy(results,doc.str().c_str(),s_size);
-                results[s_size]='\0';
+//                std::ostringstream doc;
+//                doc << prm.DFo;
+                int s_size = MULTIDIM_SIZE(prm.docfiledata);
+                //doc.str().size();
+//                char results[s_size];
+//                strncpy(results,doc.str().c_str(),s_size);
+//                results[s_size]='\0';
                 MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE, MPI_COMM_WORLD);
-                MPI_Send(results, s_size, MPI_CHAR, 0, TAG_DOCFILE, MPI_COMM_WORLD);
+                MPI_Send(MULTIDIM_ARRAY(prm.docfiledata), s_size, MPI_DOUBLE, 0, TAG_DOCFILE, MPI_COMM_WORLD);
             }
             else
             {
                 // Master fills docfile 
-                std::ofstream myDocFile;
-                FileName fn_tmp;
-                fn_tmp.compose(prm.fn_root + "_it",prm.iter,"doc");
-                myDocFile.open (fn_tmp.c_str());
-                myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)\n";
+//                std::ofstream myDocFile;
+//                FileName fn_tmp;
+//                fn_tmp.compose(prm.fn_root + "_it",prm.iter,"doc");
+//                myDocFile.open (fn_tmp.c_str());
+                prm.DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
+                //myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)\n";
 
                 // Master's own contribution
-                myDocFile << prm.DFo;
-                int docCounter=1;
+                prm.addDocfileData(prm.docfiledata, prm.myFirstImg, prm.myLastImg);
+                //myDocFile << prm.DFo;
+                int s_size, first_img, last_img;
+                int docCounter = 1;
+
                 while (docCounter < size)
                 {
                     // receive in order
-                    int iNumber, s_size;
                     MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE, MPI_COMM_WORLD, &status);
-                    char results[s_size];
-                    MPI_Recv(results, s_size, MPI_CHAR, docCounter, TAG_DOCFILE, MPI_COMM_WORLD, &status);
-                    results[s_size]='\0';
-                    myDocFile<<results ;
+                    MPI_Recv(MULTIDIM_ARRAY(prm.docfiledata), s_size, MPI_DOUBLE, docCounter, TAG_DOCFILE, MPI_COMM_WORLD, &status);
+                    divide_equally(prm.nr_images_global, size, docCounter, first_img, last_img);
+                    prm.addDocfileData(prm.docfiledata, first_img, last_img);
+                    //results[s_size]='\0';
+                    //myDocFile<<results ;
                     docCounter++;
                 }
 
                 //save doc_file and renumber it
-                myDocFile.close();
-                prm.DFo.clear();
-                prm.DFo.read(fn_tmp);
+                //myDocFile.close();
+                //prm.DFo.clear();
+                //prm.DFo.read(fn_tmp);
                 prm.DFo.renum();
-
                 // Output all intermediate files
-               prm.writeOutputFiles(prm.model, OUT_ITER);
+                prm.writeOutputFiles(prm.model, OUT_ITER);
             }
             MPI_Barrier(MPI_COMM_WORLD);
             

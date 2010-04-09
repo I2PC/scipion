@@ -797,27 +797,11 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
     }
 
     //--------Setup for Docfile -----------
-
-    //FIXME: Move to produceSideInfo2
-    // for only reservate memory for the number of
-    // images for work in (mainly to save memory in MPI)
-    /// Initialize docfiledata
-//    Matrix1D<double> dataline(DATALINELENGTH);
-//    dataline.initZeros();
-//
-//    FOR_ALL_LOCAL_IMAGES()
-//        docfiledata[IMG_INDEX] = dataline;
-    std::cerr << "alocating docfiledata...images:" << std::endl;
     docfiledata.resize(nr_images_local, DATALINELENGTH);
-    std::cerr << "alocated..." << std::endl;
-
 
     //--------Setup for BLOCKS------------
     //Set image blocks vector
     img_blocks.resize(nr_images_local, 0);
-//TODO: REMOVE after testing
-//    int img_per_block = nr_images_global / blocks;
-//    int img_rest = nr_images_global % blocks;
     int first_img, last_img;
 
     if (blocks > 1)
@@ -825,18 +809,6 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         for (int b = 0; b < blocks; b++)
         {
             divide_equally(nr_images_global, blocks, b, first_img, last_img);
-            /*TODO: remove after testing
-            if (b < img_rest)
-            {
-                first_img = b * (img_per_block + 1);
-                last_img = first_img + img_per_block;
-            }
-            else
-            {
-                first_img = b * img_per_block + img_rest;
-                last_img = first_img + img_per_block - 1;
-            }
-            */
 
             for (int i = first_img; i <= last_img; i++)
                 img_blocks[i] = b;
@@ -2344,12 +2316,13 @@ void Prog_MLalign2D_prm::addDocfileData(Matrix2D<double> data, int first, int la
 
     SF.chooseSubset(first, last, SFTemp);
     SFTemp.go_beginning();
-
-    for (int j = 0; j < YSIZE(data); j++)
+    int index;
+    for (int i = first; i <= last; i++)
     {
+        index = i - first;
         DFo.append_comment(SFTemp.NextImg());
-        for (int i = 0; i < DATALINELENGTH; i++)
-            dataline(i) = data(j, i);
+        for (int j = 0; j < DATALINELENGTH; j++)
+            dataline(j) = dMij(data, index, j);
         DFo.append_data_line(dataline);
 
     }
