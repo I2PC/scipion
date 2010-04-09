@@ -14,11 +14,11 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-InSelFile='all_images.sel'
+InSelFile='all.sel'
 # Working subdirectory:
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir='CL2D/classes4'
+WorkingDir='CL2D/classes64'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
@@ -26,11 +26,11 @@ DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir="/gpfs/fs1/home/bioinfo/coss/temp/Small_TAG_normalized"
+ProjectDir='/home/coss/temp/CL2Dsort/Johan'
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored here
 """
-LogDir="Logs"
+LogDir='Logs'
 
 #------------------------------------------------------------------------------------------------
 # {section} Preprocessing parameters
@@ -50,8 +50,11 @@ Lowpass =0.4
 #------------------------------------------------------------------------------------------------
 # {section} Class averages parameters
 #------------------------------------------------------------------------------------------------
+# Perform CL2D
+DoCL2D=False
+
 # Number of references (or classes) to be used:
-NumberOfReferences=8
+NumberOfReferences=64
 
 # {expert} Number of initial references
 """ Initial number of initial models
@@ -80,16 +83,45 @@ ComparisonMethod='correlation'
 """ Use the classical clustering criterion or the robust clustering criterion """
 ClusteringMethod='classical'
 
-# {expert} Additional parameters for class_averages
+# {expert} Additional parameters for classify_CL2D
 """ -verbose, -alignImages, -corr_split, ...
 """
-AdditionalParameters=''
+AdditionalParameters='-verbose'
+
+#------------------------------------------------------------------------------------------------
+# {section} Core analysis
+#------------------------------------------------------------------------------------------------
+# Perform core analysis
+DoCoreAnalysis=True
+
+# Good class core size (%)
+""" A class is a good class if at least this percentage (around 50%) of the
+    images assigned to it have been together in all the previous levels.
+    Larger values of this parameter tend to keep few good classes. Smaller
+    values of this parameter tend to consider more classes as good ones."""
+thGoodClass=50
+
+# Junk Zscore
+""" Which is the average Z-score to be considered as junk. Typical values
+    go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is
+    within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores
+    accept more images."""
+thJunkZscore=2
+
+# PCA Zscore
+""" Which is the PCA Z-score to be considered as junk. Typical values
+    go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is
+    within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores
+    accept more images.
+    
+    This Z-score is measured after projecting onto the PCA space."""
+thPCAZscore=2
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Number of MPI processes to use:
-NumberOfMpiProcesses=8
+NumberOfMpiProcesses=128
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -126,6 +158,7 @@ class CL2D_class:
                  SamplingRate,
                  Highpass,
                  Lowpass,
+                 DoCL2D,
                  NumberOfReferences,
                  NumberOfReferences0,
                  NumberOfIterations,
@@ -134,6 +167,10 @@ class CL2D_class:
                  ComparisonMethod,
                  ClusteringMethod,
                  AdditionalParameters,
+                 DoCoreAnalysis,
+                 thGoodClass,
+                 thJunkZscore,
+                 thPCAZscore,
                  NumberOfMpiProcesses,
                  SystemFlavour):
 	     
@@ -146,6 +183,7 @@ class CL2D_class:
         self.SamplingRate=SamplingRate
         self.Highpass=Highpass
         self.Lowpass=Lowpass
+        self.DoCL2D=DoCL2D
         self.NumberOfReferences=NumberOfReferences
         self.NumberOfReferences0=NumberOfReferences0
         self.NumberOfIterations=NumberOfIterations
@@ -154,6 +192,11 @@ class CL2D_class:
         self.ComparisonMethod=ComparisonMethod
         self.ClusteringMethod=ClusteringMethod
         self.AdditionalParameters=AdditionalParameters
+        self.DoCoreAnalysis=DoCoreAnalysis
+        self.thGoodClass=thGoodClass
+        self.thJunkZscore=thJunkZscore
+        self.thPCAZscore=thPCAZscore
+        self.thr=2
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
         self.SystemFlavour=SystemFlavour
    
@@ -182,8 +225,13 @@ class CL2D_class:
         log.make_backup_of_script_file(sys.argv[0],
             os.path.abspath(self.WorkingDir))
 
-        # Execute protocol in the working directory
-        self.execute_CLalign2D()
+        # Execute CL2D in the working directory
+        if self.DoCL2D:
+            self.execute_CLalign2D()
+     
+        # Execute CL2D core in the working directory
+        if self.DoCoreAnalysis:
+            self.execute_core_analysis()
      
         # Finish
         self.close()
@@ -225,7 +273,7 @@ class CL2D_class:
                                   self.SystemFlavour)
 
         print '*********************************************************************'
-        print '*  Executing class_averages program :' 
+        print '*  Executing CL2D program :' 
         if (self.NumberOfReferences0>self.NumberOfReferences):
             self.NumberOfReferences0=self.NumberOfReferences
         params= '-i '+str(self.InSelFile)+' -o '+WorkingDir+'/class '+\
@@ -242,14 +290,32 @@ class CL2D_class:
         if (self.ClusteringMethod=='classical'):
             params+= ' -classicalMultiref '
 
-        launch_job.launch_job("xmipp_class_averages",
+        launch_job.launch_job("xmipp_classify_CL2D",
                               params,
                               self.log,
                               True,
-                              self.NumberOfMpiProcesses,
                               1,
+                              self.thr,
                               self.SystemFlavour)
 
+    def execute_core_analysis(self):
+        import launch_job
+        print '*********************************************************************'
+        print '*  Executing CL2D core analysis :' 
+        params= WorkingDir+'/class '+\
+                str(self.thGoodClass)+' '+\
+                str(self.thJunkZscore)+' '+\
+                str(self.thPCAZscore)+' '+\
+                str(self.thr)
+
+        launch_job.launch_job("xmipp_classify_CL2D_core_analysis",
+                              params,
+                              self.log,
+                              False,
+                              1,
+                              1,
+                              self.SystemFlavour)
+        
     def close(self):
         message='Done!'
         print '*',message
@@ -267,6 +333,7 @@ if __name__ == '__main__':
                     SamplingRate,
                     Highpass,
                     Lowpass,
+                    DoCL2D,
                     NumberOfReferences,
                     NumberOfReferences0,
                     NumberOfIterations,
@@ -275,5 +342,9 @@ if __name__ == '__main__':
                     ComparisonMethod,
                     ClusteringMethod,
                     AdditionalParameters,
+                    DoCoreAnalysis,
+                    thGoodClass,
+                    thJunkZscore,
+                    thPCAZscore,
                     NumberOfMpiProcesses,
                     SystemFlavour)
