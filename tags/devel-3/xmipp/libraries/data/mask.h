@@ -183,21 +183,6 @@ void BlobCrownMask(MultidimArray<double> &mask,
                    double r1, double r2, blobtype blob, int mode, 
                    double x0 = 0, double y0 = 0, double z0 = 0);
 
-/** Creates a frame mask for already sized masks
- * @ingroup Masks
- *
- * The mask is supposed to be resized and with its logical origin already set. A
- * square placed logically at (x0,y0), by default (0,0), is created with the two
- * rectangular dimensions indicated. The only two valid modes are INNER_MASK (by
- * default, between the two radii) or OUTSIDE_MASK (the negative of the crown).
- * It is supposed that R1 is smaller than R2.
- *
- * When entering the mask is initialiazed to 0 and then the mask is created.
- */
-void BinaryFrameMask(MultidimArray< int >& mask,
-                     int Xrect, int Yrect, int mode = INNER_MASK, 
-                     double x0 = 0, double y0 = 0, double z0 = 0);
-
 /** Creates a gaussian mask for already sized masks
  * @ingroup Masks
  *

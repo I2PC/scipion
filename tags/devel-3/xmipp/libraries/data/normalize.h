@@ -27,6 +27,7 @@
 #define NORMALIZE_H
 
 #include "progs.h"
+#include "image.h"
 #include "mask.h"
 
 /// @defgroup Normalize Normalization of images and volumes
@@ -65,7 +66,7 @@
    @endcode
    Comments: it's not bad but positivity constraints cannot be imposed
 */
-void normalize_OldXmipp(Matrix2D<double> &I);
+void normalize_OldXmipp(MultidimArray<double> &I);
 
 /** Near_OldXmipp normalization.
    Formula:
@@ -79,7 +80,7 @@ void normalize_OldXmipp(Matrix2D<double> &I);
    @endcode
    Comments: it's not bad but positivity constraints cannot be imposed
 */
-void normalize_Near_OldXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
+void normalize_Near_OldXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask);
 
 /** OldXmipp decomposition.
    Formula:
@@ -97,8 +98,8 @@ void normalize_Near_OldXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
       If no mask is applied, then this formula is a beautiful decomposition
       of the OldXmipp method in two steps.
 */
-void normalize_OldXmipp_decomposition(Matrix2D<double> &I,
-                                      const Matrix2D<int> &bg_mask, const Matrix2D<double> *mask = NULL);
+void normalize_OldXmipp_decomposition(MultidimArray<double> &I,
+                                      const MultidimArray<int> &bg_mask, const MultidimArray<double> *mask = NULL);
 
 /** Tomography normalization.
    This is similar to the OldXmipp normalization, but the mean and
@@ -134,7 +135,7 @@ void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
    Comments: it's not bad but positivity constraints cannot be imposed and
       the statistical properties are not so good.
 */
-void normalize_Michael(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
+void normalize_Michael(MultidimArray<double> &I, const MultidimArray<int> &bg_mask);
 
 /** NewXmipp's normalization.
    Formula:
@@ -154,7 +155,7 @@ void normalize_Michael(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
 disabled. However, a positivity constraint can be applied on the 3D
 volume.
 */
-void normalize_NewXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
+void normalize_NewXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask);
 
 /** NewXmipp 2's normalization.
    Formula:
@@ -171,7 +172,7 @@ void normalize_NewXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
 disabled. However, a positivity constraint can be applied on the 3D
 volume.
 */
-void normalize_NewXmipp2(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
+void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_mask);
 
 /** Removal of inclined background densities (ramps):
     fitting of a least squares plane throught the pixels in the
@@ -268,7 +269,7 @@ public:
      */
     double thresh_neigh;
 
-    Matrix2D< int  > bg_mask, bg_mask_bck;
+    MultidimArray< int  > bg_mask, bg_mask_bck;
     bool apply_geo;
     bool enable_mask;
     Mask_Params mask_prm;
@@ -292,12 +293,12 @@ public:
     /** Apply inverse geometric transformation.
      * As stored in image header to the mask.
      */
-    void apply_geo_mask(ImageXmipp& img);
+    void apply_geo_mask(Image<double>& img);
 
     /** Apply to an image.
      * The input image is modified.
      */
-    void apply(ImageXmipp &img);
+    void apply(Image<double> &img);
 public:
     // Mean and standard deviation of the image 0. Used for tomography
     double mu0, sigma0;

@@ -26,7 +26,6 @@
 #include "mask.h"
 #include "args.h"
 #include "image.h"
-#include "volume.h"
 #include "wavelet.h"
 
 /*---------------------------------------------------------------------------*/
@@ -1167,7 +1166,7 @@ void apply_geo_binary_2D_mask(MultidimArray<int> &mask,
     double outside = DIRECT_MAT_ELEM(tmp, 0, 0);
     MultidimArray<double> tmp2 = tmp;
     // Instead of IS_INV for images use IS_NOT_INV for masks!
-    applyGeometry(1, tmp,tmp2,A, IS_NOT_INV, DONT_WRAP, outside);
+    applyGeometry(1, tmp, tmp2, A, IS_NOT_INV, DONT_WRAP, outside);
     // The type cast gives strange results here, using round instead
     //typeCast(tmp, mask);
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(mask) {

@@ -290,8 +290,8 @@ void frc_dpr(MultidimArray< double > & m1,
 
 void selfScaleToSizeFourier(int Ydim, int Xdim, Matrix2D<double>& Mpmem,int nThreads) 
  {
-     if (!Mpmem.checkDimension(2))
-         REPORT_ERROR(1,"selfScaleToSizeFourier ERROR: Mpmem should be 2D");
+
+     Mpmem.checkDimension(2);
 
      //Mmem = *this
      //memory for fourier transform output
@@ -332,8 +332,7 @@ void getSpectrum(Matrix3D<double> &Min,
                  Matrix1D<double> &spectrum,
                  int spectrum_type)
 {
-    if (!Min.checkDimension(3))
-        REPORT_ERROR(1,"getSpectrum ERROR: Min should be 3D");
+    Min.checkDimension(3);
 
     Matrix3D<std::complex<double> > Faux;
     int xsize = XSIZE(Min);
@@ -368,8 +367,7 @@ void divideBySpectrum(Matrix3D<double> &Min,
                       bool leave_origin_intact)
 {
     
-    if (!Min.checkDimension(3))
-        REPORT_ERROR(1,"divideBySpectrum ERROR: Min should be 3D");
+    Min.checkDimension(3);
 
     Matrix1D<double> div_spec(spectrum);
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(spectrum)
@@ -386,8 +384,7 @@ void multiplyBySpectrum(Matrix3D<double> &Min,
                         Matrix1D<double> &spectrum,
                         bool leave_origin_intact)
 {
-    if (!Min.checkDimension(3))
-        REPORT_ERROR(1,"multiplyBySpectrum ERROR: Min should be 3D");
+    Min.checkDimension(3);
 
     Matrix3D<std::complex<double> > Faux;
     Matrix1D<double> f(3);
@@ -419,8 +416,7 @@ void whitenSpectrum(Matrix3D<double> &Min,
                     int spectrum_type,
                     bool leave_origin_intact)
 {
-    if (!Min.checkDimension(3))
-        REPORT_ERROR(1,"whitenSpectrum ERROR: Min should be 3D");
+    Min.checkDimension(3);
 
     Matrix1D<double> spectrum;
     getSpectrum(Min,spectrum,spectrum_type);
@@ -436,8 +432,7 @@ void adaptSpectrum(Matrix3D<double> &Min,
                    bool leave_origin_intact)
 {
     
-    if (!Min.checkDimension(3))
-        REPORT_ERROR(1,"adaptSpectrum ERROR: Min should be 3D");
+    Min.checkDimension(3);
 
     Matrix1D<double> spectrum;
     getSpectrum(Min,spectrum,spectrum_type);

@@ -26,7 +26,7 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.19209e-07

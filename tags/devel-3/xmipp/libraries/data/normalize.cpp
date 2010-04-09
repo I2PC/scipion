@@ -25,7 +25,6 @@
 
 #include "args.h"
 #include "micrograph.h"
-#include "mask.h"
 #include "normalize.h"
 #include "selfile.h"
 
@@ -33,7 +32,7 @@
 #include <iostream>
 
 /* Normalizations ---------------------------------------------------------- */
-void normalize_OldXmipp(Matrix2D<double> &I)
+void normalize_OldXmipp(MultidimArray<double> &I)
 {
     double avg, stddev, min, max;
     I.computeStats(avg, stddev, min, max);
@@ -41,7 +40,7 @@ void normalize_OldXmipp(Matrix2D<double> &I)
     I /= stddev;
 }
 
-void normalize_Near_OldXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
+void normalize_Near_OldXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
@@ -52,8 +51,8 @@ void normalize_Near_OldXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
     I /= stddevbg;
 }
 
-void normalize_OldXmipp_decomposition(Matrix2D<double> &I, const Matrix2D<int> &bg_mask,
-                                     const Matrix2D<double> *mask)
+void normalize_OldXmipp_decomposition(MultidimArray<double> &I, const MultidimArray<int> &bg_mask,
+                                     const MultidimArray<double> *mask)
 {
     double avgbg, stddevbg, minbg, maxbg;
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
@@ -69,6 +68,9 @@ void normalize_OldXmipp_decomposition(Matrix2D<double> &I, const Matrix2D<int> &
 void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
     double &sigmai, bool tiltMask, bool tomography0, double mu0, double sigma0)
 {
+    // Tilt series are always 2D
+    I.checkDimension(2);
+
     const int L=2;
     double Npiece=(2*L+1)*(2*L+1);
 
@@ -126,7 +128,7 @@ void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
         }
     }
     #ifdef DEBUG
-        ImageXmipp save;
+        Image<double> save;
         save()=I; save.write("PPP.xmp");
         typeCast(mask,save()); save.write("PPPmask.xmp");
         std::cout << "Press any key\n";
@@ -163,7 +165,7 @@ void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
 }
 #undef DEBUG
 
-void normalize_Michael(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
+void normalize_Michael(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
@@ -182,7 +184,7 @@ void normalize_Michael(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
     }
 }
 
-void normalize_NewXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
+void normalize_NewXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
     double avgbg, stddevbg, minbg, maxbg;
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
@@ -191,7 +193,7 @@ void normalize_NewXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
     I /= stddevbg;
 }
 
-void normalize_NewXmipp2(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
+void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
     double avg, stddev, min, max;
     double avgbg, stddevbg, minbg, maxbg;
@@ -204,6 +206,10 @@ void normalize_NewXmipp2(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
 
 void normalize_ramp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
 {
+    
+    // Only 2D ramps implemented
+    I.checkDimension(2);
+
     fit_point          onepoint;
     std::vector<fit_point>  allpoints;
     double             pA, pB, pC;
@@ -247,6 +253,9 @@ void normalize_remove_neighbours(Matrix2D<double> &I,
     double             sum1 = 0.;
     double             sum2 = 0;
     int                N = 0;
+
+    // Only implemented for 2D arrays
+    I.checkDimension(2);
 
     // Fit a least squares plane through the background pixels
     allpoints.clear();
@@ -349,9 +358,6 @@ void Normalize_parameters::read(int argc, char** argv)
     else
         REPORT_ERROR(1, "Normalize: Unknown normalizing method");
 
-    // Normalizing a volume
-    volume = checkParameter(argc, argv, "-vol");
-
     // Invert contrast?
     invert_contrast = checkParameter(argc, argv, "-invert");
 
@@ -368,123 +374,118 @@ void Normalize_parameters::read(int argc, char** argv)
     apply_geo = false;
 
     // Get background mask
-    if (!volume)
+    background_mode = NONE;
+    if (method == NEWXMIPP || method == NEWXMIPP2 || method == MICHAEL ||
+        method == NEAR_OLDXMIPP || method == RAMP || method == NEIGHBOUR)
     {
-        if (method == NEWXMIPP || method == NEWXMIPP2 || method == MICHAEL ||
-            method == NEAR_OLDXMIPP || method == RAMP || method == NEIGHBOUR)
+        enable_mask = checkParameter(argc, argv, "-mask");
+        if (enable_mask)
         {
-            enable_mask = checkParameter(argc, argv, "-mask");
-            if (enable_mask)
-            {
-                mask_prm.allowed_data_types = INT_MASK;
-                mask_prm.read(argc, argv);
-            }
-            else
-            {
-                enable_mask = false;
-                int i = paremeterPosition(argc, argv, "-background");
-                if (i + 2 >= argc)
-                    REPORT_ERROR(1,
-                                 "Normalize: Not enough parameters after -background");
-
-                aux = argv[i + 1];
-                r  = textToInteger(argv[i + 2]);
-
-                if (aux == "frame")
-                    background_mode = FRAME;
-                else if (aux == "circle")
-                    background_mode = CIRCLE;
-                else
-                    REPORT_ERROR(1, "Normalize: Unknown background mode");
-            }
-
-            // Default is NOT to apply inverse transformation from image header to the mask
-            apply_geo = checkParameter(argc, argv, "-apply_geo");
+            mask_prm.allowed_data_types = INT_MASK;
+            mask_prm.read(argc, argv);
         }
         else
-            background_mode = NONE;
-
-        if (method == RANDOM)
         {
-            int i = paremeterPosition(argc, argv, "-prm");
-            if (i + 4 >= argc)
+            enable_mask = false;
+            int i = paremeterPosition(argc, argv, "-background");
+            if (i + 2 >= argc)
                 REPORT_ERROR(1,
-                             "Normalize_parameters::read: Not enough parameters after -prm");
+                             "Normalize: Not enough parameters after -background");
+            
+            aux = argv[i + 1];
+            r  = textToInteger(argv[i + 2]);
 
-            a0 = textToFloat(argv[i + 1]);
-            aF = textToFloat(argv[i + 2]);
-            b0 = textToFloat(argv[i + 3]);
-            bF = textToFloat(argv[i + 4]);
+            if (aux == "frame")
+                background_mode = FRAME;
+            else if (aux == "circle")
+                background_mode = CIRCLE;
+            else
+                REPORT_ERROR(1, "Normalize: Unknown background mode");
         }
 
-        produce_side_info();
+        // Default is NOT to apply inverse transformation from image header to the mask
+        apply_geo = checkParameter(argc, argv, "-apply_geo");
     }
+
+    if (method == RANDOM)
+    {
+        int i = paremeterPosition(argc, argv, "-prm");
+        if (i + 4 >= argc)
+            REPORT_ERROR(1,
+                         "Normalize_parameters::read: Not enough parameters after -prm");
+
+        a0 = textToFloat(argv[i + 1]);
+        aF = textToFloat(argv[i + 2]);
+        b0 = textToFloat(argv[i + 3]);
+        bF = textToFloat(argv[i + 4]);
+    }
+
+    produce_side_info();
+
 }
 
 void Normalize_parameters::produce_side_info()
 {
     int Zdim, Ydim, Xdim;
     get_input_size(Zdim, Ydim, Xdim);
-    if (!volume)
+    if (!enable_mask)
     {
-        if (!enable_mask)
-        {
-            bg_mask.resize(Ydim, Xdim);
-            bg_mask.setXmippOrigin();
+        bg_mask.resize(Zdim, Ydim, Xdim);
+        bg_mask.setXmippOrigin();
 
-            switch (background_mode)
-            {
-            case FRAME:
-                BinaryFrameMask(bg_mask, Xdim - 2 * r, Ydim - 2 * r,
-                                OUTSIDE_MASK);
-                break;
-            case CIRCLE:
-                BinaryCircularMask(bg_mask, r, OUTSIDE_MASK);
-                break;
-            }
-        }
-        else
+        switch (background_mode)
         {
-            mask_prm.generate_2Dmask(Ydim, Xdim);
-            bg_mask = mask_prm.imask2D;
-	    // backup a copy of the mask for apply_geo mode
-	    bg_mask_bck = bg_mask;
+        case FRAME:
+            BinaryFrameMask(bg_mask, Xdim - 2 * r, Ydim - 2 * r, Zdim - 2 * r,
+                            OUTSIDE_MASK);
+            break;
+        case CIRCLE:
+            BinaryCircularMask(bg_mask, r, OUTSIDE_MASK);
+            break;
         }
+    }
+    else
+    {
+        mask_prm.generate_mask(Zdim, Ydim, Xdim);
+        bg_mask = mask_prm.imask;
+        // backup a copy of the mask for apply_geo mode
+        bg_mask_bck = bg_mask;
+    }
         
-        // Get the parameters from the 0 degrees 
-        if (method==TOMOGRAPHY0)
+    // Get the parameters from the 0 degrees 
+    if (method==TOMOGRAPHY0)
+    {
+        // Look for the image at 0 degrees
+        SelFile SF;
+        try {
+            SF.read(fn_in);
+        } catch (Xmipp_error XE)
         {
-            // Look for the image at 0 degrees
-            SelFile SF;
-            try {
-                SF.read(fn_in);
-            } catch (Xmipp_error XE)
-            {
-                REPORT_ERROR(1,(std::string)"There is a problem opening the selfile"+
-                    fn_in+". Make sure it is a correct selfile");
-            }
-            SF.go_first_ACTIVE();
-            double bestTilt=1000;
-            FileName bestImage;
-            while (!SF.eof())
-            {
-                FileName fn_img=SF.NextImg();
-                if (fn_img=="") break;
-                ImageXmipp I;
-                I.read(fn_img);
-                if (ABS(I.tilt())<bestTilt)
-                {
-                    bestTilt=ABS(I.tilt());
-                    bestImage=fn_img;
-                }
-            }
-            if (bestImage=="")
-                REPORT_ERROR(1,"Cannot find the image at 0 degrees");
-            
-            // Compute the mu0 and sigma0 for this image
-            ImageXmipp I(bestImage);
-            normalize_tomography(I(), I.tilt(), mu0, sigma0, tiltMask);
+            REPORT_ERROR(1,(std::string)"There is a problem opening the selfile"+
+                         fn_in+". Make sure it is a correct selfile");
         }
+        SF.go_first_ACTIVE();
+        double bestTilt=1000;
+        FileName bestImage;
+        while (!SF.eof())
+        {
+            FileName fn_img=SF.NextImg();
+            if (fn_img=="") break;
+            Image<double> I;
+            I.read(fn_img);
+            if (ABS(I.tilt())<bestTilt)
+            {
+                bestTilt=ABS(I.tilt());
+                bestImage=fn_img;
+            }
+        }
+        if (bestImage=="")
+            REPORT_ERROR(1,"Cannot find the image at 0 degrees");
+        
+        // Compute the mu0 and sigma0 for this image
+        Image<double> I;
+        I.read(bestImage);
+        normalize_tomography(I(), I.tilt(), mu0, sigma0, tiltMask);
     }
 }
 
@@ -585,16 +586,14 @@ void Normalize_parameters::usage()
 {
     Prog_parameters::usage();
 
-    std::cerr << "NORMALIZATION OF VOLUMES\n"
-    << "  [-vol]                    : Activate this mode\n"
-    << "  [-invert]                 : Invert contrast \n";
-
-    std::cerr << "NORMALIZATION OF IMAGES\n"
+    std::cerr << "NORMALIZATION\n"
     << "  [-method <mth=NewXmipp>   : Normalizing method. Valid ones are:\n"
     << "                              OldXmipp, Near_OldXmipp, NewXmipp, Tomography, Tomography0\n"
     << "                              NewXmipp2, Michael, None, Random, Ramp, Neighbour\n"
     << "                              Methods NewXmipp, Michael, Near_OldXmipp\n"
     << "                              and Ramp need a background mask:\n"
+    << "                              Note that methods Tomography, Tomography0, Ramp and Neighbour\n"
+    << "                                 are not valid for 3D volumes\n"
     << "  [-background frame <r>  | : Rectangular background of r pixels\n"
     << "   -background circle <r> | : Circular background outside radius=r\n"
     << "   -mask <options>]           Use an alternative type of background mask\n"
@@ -609,8 +608,11 @@ void Normalize_parameters::usage()
     << "  [-tiltMask]               : Apply a mask depending on the tilt\n";
 }
 
-void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
+void Normalize_parameters::apply_geo_mask(Image<double>& img)
 {
+    // Applygeo only valid for 2D images for now...
+    img().checkDimension(2);
+
     Matrix2D< double > tmp;
     // get copy of the mask 
     tmp.resize(bg_mask_bck);
@@ -619,14 +621,13 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
     double outside = DIRECT_MAT_ELEM(tmp, 0, 0);
 
     // Instead of IS_INV for images use IS_NOT_INV for masks!
-    tmp.selfApplyGeometryBSpline(img.get_transformation_matrix(), 3, IS_NOT_INV,
-                                DONT_WRAP, outside);
+    selfApplyGeometry(3, tmp, img.getTransformationMatrix(), IS_NOT_INV, DONT_WRAP, outside);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(bg_mask)
         dMij(bg_mask,i,j)=ROUND(dMij(tmp,i,j));
 }
 
-void Normalize_parameters::apply(ImageXmipp &img)
+void Normalize_parameters::apply(Image<double> &img)
 {
     double a, b;
     if (invert_contrast)
@@ -639,21 +640,21 @@ void Normalize_parameters::apply(ImageXmipp &img)
 
         if ((min - avg) / stddev < thresh_black_dust && remove_black_dust)
         {
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
+            FOR_ALL_ELEMENTS_IN_MATRIX3D(img())
             {
-                zz = (img(i, j) - avg) / stddev;
+                zz = (VOL_ELEM(img(), k, i, j) - avg) / stddev;
                 if (zz < thresh_black_dust)
-                    img(i, j) = rnd_gaus(avg,stddev);
+                    VOL_ELEM(img(), k, i, j) = rnd_gaus(avg,stddev);
             }
         }
 
         if ((max - avg) / stddev > thresh_white_dust && remove_white_dust)
         {
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
+            FOR_ALL_ELEMENTS_IN_MATRIX3D(img())
             {
-                zz = (img(i, j) - avg) / stddev;
+                zz = (VOL_ELEM(img(), k, i, j) - avg) / stddev;
                 if (zz > thresh_white_dust)
-                    img(i, j) = rnd_gaus(avg,stddev);
+                    VOL_ELEM(img(), k, i, j) = rnd_gaus(avg,stddev);
             }
         }
     }
@@ -692,8 +693,8 @@ void Normalize_parameters::apply(ImageXmipp &img)
     case RANDOM:
         a = rnd_unif(a0, aF);
         b = rnd_unif(b0, bF);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
-            img(i, j) = a * img(i, j) + b;
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(img())
+            VOL_ELEM(img(), k, i, j) = a * VOL_ELEM(img(), k, i, j) + b;
         break;
     }
 }

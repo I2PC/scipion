@@ -110,7 +110,7 @@ void normalizedPolarFourierTransform(const MultidimArray<double> &in,
     else
     {
         MultidimArray<double> Maux;
-        in.produceSplineCoefficients(Maux,3);
+        produceSplineCoefficients(3, Maux, in);
         polarIn.getPolarFromCartesianBSpline(Maux,first_ring,last_ring,BsplineOrder);
     }
     double mean = polarIn.computeSum(true);
@@ -171,8 +171,7 @@ void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,
     double bestRot = best_rotation(polarFourierI1,polarFourierI2,
         local_transformer);
 
-    if (splineOrder==1)
-        I2.selfRotate(-bestRot,wrap);
-    else
-        I2.selfRotateBSpline(3,-bestRot,wrap);
+    MultidimArray<double> tmp=I2;
+    rotate(splineOrder, I2, tmp, -bestRot, 'Z', wrap);
+
 }

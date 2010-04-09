@@ -27,7 +27,6 @@
 #define PROGS_H
 
 #include "image.h"
-#include "volume.h"
 
 /** @defgroup Programs Basic structure for programs using selfiles
  *  @ingroup DataLibrary
@@ -120,6 +119,5 @@ void SF_main(int argc,
              char** argv,
              Prog_parameters* prm,
              void* process_img,
-             void* process_vol,
              int operation_mode = IMAGE2IMAGE);
 #endif

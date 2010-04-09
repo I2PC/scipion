@@ -28,6 +28,7 @@
 #define TRANSFORMATIONS_H
 
 #include "multidim_array.h"
+#include "geometry.h"
 
 #define IS_INV true
 #define IS_NOT_INV false
@@ -118,13 +119,40 @@ void applyGeometry(int Splinedegree,
                    const Matrix2D< double > A, bool inv, 
                    bool wrap, T outside = 0, unsigned long n = 0);
 
-//Special case for complex arrays
-template <>
+template<typename T>
+
+/** Applies a geometrical transformation and overwrites the input matrix.
+ * @ingroup GeometricalTransformations
+ *
+ * The same as the previous function, but input array is overwritten
+ */
+void selfApplyGeometry(int Splinedegree, 
+                       MultidimArray<T>& V1,
+                       const Matrix2D< double > A, bool inv, 
+                       bool wrap, T outside = 0, unsigned long n = 0)
+{
+    MultidimArray<T> aux = V1;
+    applyGeometry(Splinedegree, V1, aux, A, inv, wrap, outside, n);
+}
+
+
+//Special cases for complex arrays
+//template <>
 void applyGeometry(int Splinedegree, 
                    MultidimArray< std::complex<double> > &V2,
                    const MultidimArray< std::complex<double> > &V1,  
                    const Matrix2D<double> &A, bool inv, 
                    bool wrap, std::complex<double> outside, unsigned long n = 0);
+// Same as above
+void selfApplyGeometry(int Splinedegree, 
+                       MultidimArray< std::complex<double> > &V1,
+                       const Matrix2D<double> &A, bool inv, 
+                       bool wrap, std::complex<double> outside, unsigned long n = 0)
+{
+    MultidimArray<std::complex<double> > aux = V1;
+    applyGeometry(Splinedegree, V1, aux, A, inv, wrap, outside, n);
+}   
+
 
 /** Produce spline coefficients.
  * @ingroup  GeometricalTransformations
@@ -139,10 +167,9 @@ template<typename T>
 void produceSplineCoefficients(int Splinedegree, 
                                MultidimArray< double > &coeffs,
                                const MultidimArray< T > &V1,  
-                               unsigned long n = 0)
+                               unsigned long n = 0);
 
 // Special case for complex arrays
-template<>
 void produceSplineCoefficients(int Splinedegree, 
                                MultidimArray< double > &coeffs,
                                const MultidimArray< std::complex<double> > &V1,  
@@ -155,7 +182,7 @@ void produceSplineCoefficients(int Splinedegree,
 template<typename T>
 void produceImageFromSplineCoefficients(int Splinedegree, 
                                         MultidimArray< T >& img, 
-                                        const MultidimArray< double > &coeffs)
+                                        const MultidimArray< double > &coeffs);
 #undef DBL_EPSILON
 
 /** Rotate an array around a given system axis.
@@ -243,7 +270,6 @@ void scaleToSize(int Splinedegree,
                  unsigned long n = 0);
 
 // Special case for complex arrays
-template<>
 void scaleToSize(int Splinedegree, 
                  MultidimArray< std::complex<double> > &V2,
                  const MultidimArray< std::complex<double> > &V1,
@@ -442,3 +468,4 @@ Matrix2D< double > translation3DMatrix(const Matrix1D< double >& v);
 Matrix2D< double > scale3DMatrix(const Matrix1D< double >& sc);
 
 
+#endif

@@ -35,7 +35,7 @@
 #include "memory.h"
 #include "gcc_version.h"
 #include "multidim_array.h"
-
+#include "transformations.h"
 
 typedef enum TransformType {
         NoTransform = 0,        // No transform
@@ -223,9 +223,40 @@ public:
      #include "rwSPIDER.h"
      #include "rwMRC.h"
 
+     /** Is this file an image
+      *
+      *  Check whether a real-space image can be read
+      *  
+      */
+     bool isImage(const FileName name)
+     {
+         return !read(name, false);
+     }
+
+     /** Is this file a real-valued image
+      *
+      *  Check whether a real-space image can be read
+      *  
+      */
+     bool isRealImage(const FileName name)
+     {
+         return (isImage(name) && datatype < 9);
+     }
+
+     /** Is this file a complex image
+      *
+      *  Check whether a fourier-space (complex) image can be read
+      *  
+      */
+     bool isComplexImage(const FileName name)
+     {
+         return (isImage(name) && datatype >= 9);
+     }
+
     /** General read function
      */
-     void read(const FileName name, bool readdata=true, int select_img=-1)
+     int read(const FileName name, bool readdata=true, int select_img=-1,
+              bool apply_geo = false, bool only_apply_shifts = false)
      {
          int err = 0;
          FileName basename, extension;
@@ -308,12 +339,29 @@ public:
 		err = -1;
 	}
         */
-	
+         /*
          if ( err < 0 ) {
              REPORT_ERROR(10,"Error reading file");
          }
+         */
+
+         if (readdata && (apply_geo || only_apply_shifts))
+         {
+             Matrix2D< double > A = getTransformationMatrix(only_apply_shifts);
+             if (!A.isIdentity())
+             {
+                 Matrix2D<T> tmp = (*this)();
+                 applyGeometry(3, (*this)(), tmp, A, IS_INV, WRAP);
+             }
+         }
+
+         // Negative error are bad.
+         return err;
 
      }
+
+     
+
 
     /** General write function
      */
@@ -667,6 +715,130 @@ public:
     {
         return data;
     }
+
+
+
+    /** Get Rot angle
+     *
+     * @code
+     * std::cout << "First Euler angle " << I.rot() << std::endl;
+     * @endcode
+     */
+    float rot(unsigned long n = 0) const
+    {
+        return (image[n]).angleRot;
+    }
+
+    /** Get Tilt angle
+     *
+     * @code
+     * std::cout << "Second Euler angle " << I.tilt() << std::endl;
+     * @endcode
+     */
+    float tilt(unsigned long n = 0) const
+    {
+        return (image[n]).angleTilt;
+    }
+
+    /** Get Psi angle
+     *
+     * @code
+     * std::cout << "Third Euler angle " << I.psi() << std::endl;
+     * @endcode
+     */
+    float psi(unsigned long n = 0) const
+    {
+        return (image[n]).anglePsi;
+    }
+
+    /** Get Xoff
+     *
+     * @code
+     * std::cout << "Origin offset in X " << I.Xoff() << std::endl;
+     * @endcode
+     */
+    float Xoff(unsigned long n = 0) const
+    {
+        return (image[n]).shiftX;
+    }
+
+    /** Get Yoff
+     *
+     * @code
+     * std::cout << "Origin offset in Y " << I.Yoff() << std::endl;
+     * @endcode
+     */
+    float Yoff(unsigned long n = 0) const
+    {
+        return (image[n]).shiftY;
+    }
+
+    /** Get Zoff
+     *
+     * @code
+     * std::cout << "Origin offset in Z " << I.Zoff() << std::endl;
+     * @endcode
+     */
+    float Zoff(unsigned long n = 0) const
+    {
+        return (image[n]).shiftZ;
+    }
+
+    /** Get geometric transformation matrix from 2D-image header
+     */
+    Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false, 
+                                               unsigned long n = 0)
+    {
+        // This has only been implemented for 2D images...
+        (*this)().checkDimension(2);
+        
+        double phi = (image[n]).angleRot;
+        double psi = realWRAP((image[n]).anglePsi, -180, 180);
+        double theta = realWRAP((image[n]).angleTilt, -180, 180);
+        double xoff = (image[n]).shiftX;
+        double yoff = (image[n]).shiftY;
+
+        Matrix2D< double > A(3, 3);
+        A.initIdentity();
+
+        if (only_apply_shifts)
+        {
+            Euler_angles2matrix(0., 0., 0., A);
+            A(0, 2) = -xoff;
+            A(1, 2) = -yoff;
+        }
+        else
+        {
+            if (theta == 0.)
+            {
+                // For untilted images: apply Euler matrix
+                Euler_angles2matrix(phi, 0., psi, A);
+            }
+            else
+            {
+                // For tilted images: only apply Psi
+                // Take another_set into account
+                if (theta < 0.)
+                {
+                    theta = -theta;
+                    psi = realWRAP(psi - 180., -180, 180);
+                }
+                Euler_angles2matrix(0., 0., psi, A);
+            }
+            A(0, 2) = -xoff;
+            A(1, 2) = -yoff;
+        }
+
+        // Also for only_apply_shifts: mirror if necessary!
+        if ((image[n]).flip)
+        {
+            A(0, 0) = -A(0, 0);
+            A(0, 1) = -A(0, 1);
+        }
+
+        return A;
+    }
+    
 
 };
 

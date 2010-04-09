@@ -327,8 +327,7 @@ void FFT_phase(const MultidimArray< std::complex< double > > & v,
 template <typename T>
 void auto_correlation_vector(const Matrix1D< T > & Img, Matrix1D< double >& R)
 {
-    if (!Img.checkDimension(1))
-        REPORT_ERROR(1,"auto_correlation_vector ERROR: argument should be 1D.");
+    Img.checkDimension(1);
 
     // Compute the Fourier Transform
     Matrix1D< std::complex< double > > FFT1;
@@ -360,8 +359,8 @@ void correlation_vector(const MultidimArray< T > & m1,
                         const MultidimArray< T > & m2,
                         MultidimArray< double >& R)
 {
-    if ( !(m1.checkDimension(2) && m2.checkDimension(2)) )
-        REPORT_ERROR(1,"correlation_vector ERROR: arguments should be 2D.");
+    m1.checkDimension(2);
+    m2.checkDimension(2);
 
     // Compute the Fourier Transforms
     MultidimArray< std::complex< double > > FFT1, FFT2;
@@ -393,8 +392,8 @@ template <class T>
 void correlation_vector_no_Fourier(const Matrix1D<T> &v1, const Matrix1D<T> &v2,
     Matrix1D<T> &result)
 {
-    if ( !(v1.checkDimension(1) && v2.checkDimension(1)) )
-        REPORT_ERROR(1,"correlation_vector_no_Fourier ERROR: arguments should be 1D.");
+    v1.checkDimension(1);
+    v2.checkDimension(1);
 
     result.initZeros(v1);
     result.setXmippOrigin();

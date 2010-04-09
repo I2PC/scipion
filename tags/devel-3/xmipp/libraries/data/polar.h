@@ -33,6 +33,7 @@
 #define POLAR_H
 #include "funcs.h"
 #include "multidim_array.h"
+#include "transformations.h"
 #include "fftw.h"
 
 #define FULL_CIRCLES 0
@@ -533,6 +534,7 @@ public:
      * of the polar structure. 
      *
      */
+#define GRIDDING_K 6
     void getCartesianCoordinates(std::vector<double> &x,
 				 std::vector<double> &y,
 				 std::vector<T> &data,
@@ -662,9 +664,9 @@ public:
 
 		// Perform the convolution interpolation
                 if (BsplineOrder==1)
-                    Mring(iphi) = (T) M1.interpolatedElement(xp,yp);
+                    Mring(iphi) = (T) M1.interpolatedElement2D(xp,yp);
                 else
-                    Mring(iphi) = (T) M1.interpolatedElementBSpline(xp,yp,BsplineOrder);
+                    Mring(iphi) = (T) M1.interpolatedElementBSpline2D(xp,yp,BsplineOrder);
 	    }
 	    rings.push_back(Mring);
 	    ring_radius.push_back(radius);

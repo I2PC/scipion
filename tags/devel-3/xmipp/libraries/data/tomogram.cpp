@@ -25,7 +25,7 @@
 
 #include "tomogram.h"
 #include "args.h"
-#include "volume.h"
+#include "image.h"
 
 #include <fstream>
 #include <stdio.h>
