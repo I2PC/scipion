@@ -37,10 +37,10 @@ void applyGeometry(int Splinedegree,
     if (&V1 == &V2)
         REPORT_ERROR(1101,"ApplyGeometry: Input array cannot be the same as output array");
 
-    if (ZSIZE(V1) == 1 && ((XSIZE(A) != 3) || (YSIZE(A) != 3)) )
+    if ( V1.getDim()==2 && ((XSIZE(A) != 3) || (YSIZE(A) != 3)) )
         REPORT_ERROR(1102,"ApplyGeometry: 2D transformation matrix is not 3x3");
 
-    if (ZSIZE(V1) > 1 && ((XSIZE(A) != 4) || (YSIZE(A) != 4)) )
+    if ( V1.getDim()==3 && ((XSIZE(A) != 4) || (YSIZE(A) != 4)) )
         REPORT_ERROR(1103,"ApplyGeometry: 3D transformation matrix is not 4x4");
 
     if (A.isIdentity())
@@ -591,15 +591,17 @@ void rotate(int Splinedegree,
             bool wrap, T outside, unsigned long n)
 {
     Matrix2D< double > tmp;
-    if (ZSIZE(V1) == 1)
+    if (V1.getDim()==2)
     {
         tmp = rotation2DMatrix(ang);
     }
-    else
+    else if (V1.getDim()==3)
     {
         tmp = rotation3DMatrix(ang, axis);
     }
-    
+    else
+        REPORT_ERROR(1,"rotate ERROR: rotate only valid for 2D or 3D arrays");
+
     applyGeometry(Splinedegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
 
 }
@@ -611,15 +613,9 @@ void rotate(int Splinedegree,
             double ang, const Matrix1D< double >& axis, 
             bool wrap, T outside, unsigned long n)
 {
-    if (ZSIZE(V1)==1)
-        REPORT_ERROR(1,"rotate with axis definition is only for 3D arrays");
-    else
-    {
-        Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
-        applyGeometry(Splinedegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
-
-    }
-
+    V1.checkDimension(3);
+    Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
+    applyGeometry(Splinedegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
 }
 
 template<typename T>
@@ -630,11 +626,13 @@ void translate(int Splinedegree,
                bool wrap, T outside, unsigned long n)
 {
     Matrix2D< double > tmp;
-    if (ZSIZE==1)
+    if (V2.getDim()==2)
         tmp = translation2DMatrix(v);
-    else
+    else if (V2.getDim()==3)
         tmp = translation3DMatrix(v);
-    applyGeometry3D(Splinedegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
+    else
+        REPORT_ERROR(1,"translate ERROR: translate only valid for 2D or 3D arrays");
+    applyGeometry(Splinedegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
 }
 
 template<typename T>
@@ -660,14 +658,14 @@ void scaleToSize(int Splinedegree,
 {
 
     Matrix2D< double > tmp;
-    if (ZSIZE(V1) == 1)
+    if (V1.getDim()==2)
     {
         tmp.initIdentity(3);
         DIRECT_MAT_ELEM(temp, 0, 0) = (double) Xdim / (double) XSIZE(V1);
         DIRECT_MAT_ELEM(temp, 1, 1) = (double) Ydim / (double) YSIZE(V1);
         V2.resize(1, 1, Ydim, Xdim);
     }
-    else
+    else if (V1.getDim()==3)
     {
         tmp.initIdentity(4);
         DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) XSIZE(V1);
@@ -675,6 +673,8 @@ void scaleToSize(int Splinedegree,
         DIRECT_MAT_ELEM(tmp, 2, 2) = (double) Zdim / (double) ZSIZE(V1);
         V2.resize(1, Zdim, Ydim, Xdim);
     }
+    else
+        REPORT_ERROR(1,"scaleToSize ERROR: scaleToSize only valid for 2D or 3D arrays");
     applyGeometry(Splinedegree, V2, V1, tmp, IS_NOT_INV, WRAP, n);
 
 }
@@ -772,7 +772,7 @@ void reduceBSpline(int Splinedegree,
 
     MultidimArray< double>  aux;
     typeCast(V1, aux);
-    if (ZSIZE(V1) == 1)
+    if (V1.getDim() == 2)
     {
        if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 != 0)
             aux.resize(YSIZE(aux) - 1, XSIZE(aux) - 1);
@@ -785,7 +785,7 @@ void reduceBSpline(int Splinedegree,
        Reduce_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
                  MULTIDIM_ARRAY(V2), g, ng, IsCentered);
     }
-    else
+    else if (V1.getDim() == 3)
     {
         if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 != 0 && ZSIZE(aux) % 2 != 0)
             aux.resize(ZSIZE(aux - 1), YSIZE(aux) - 1, XSIZE(aux) - 1);
@@ -805,6 +805,10 @@ void reduceBSpline(int Splinedegree,
         V2.resize(ZSIZE(aux) / 2, YSIZE(aux) / 2, XSIZE(aux) / 2);
         Reduce_3D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux), ZSIZE(aux),
                   MULTIDIM_ARRAY(V2), g, ng, IsCentered);
+    }
+    else
+        REPORT_ERROR(1,"reduceBSpline ERROR: only valid for 2D or 3D arrays");
+
 
 }
 
@@ -827,18 +831,21 @@ void expandBSpline3D(int Splinedegree,
     MultidimArray< double > aux;
     typeCast(V1, aux);
 
-    if (ZSIZE(V1) == 1)
+    if (V1.getDim() == 2)
     {
         V2.resize(2 * YSIZE(aux), 2 * XSIZE(aux));
         Expand_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
                   MULTIDIM_ARRAY(V2), h, nh, IsCentered);
     }
-    else
+    else (V1.getDim() == 3)
     {
         V2.resize(2 * ZSIZE(aux), 2 * YSIZE(aux), 2 * XSIZE(aux));
         Expand_3D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux), ZSIZE(aux),
                   MULTIDIM_ARRAY(V2), h, nh, IsCentered);
     }
+    else
+        REPORT_ERROR(1,"expandBSpline ERROR: only valid for 2D or 3D arrays");
+
 
 }
 

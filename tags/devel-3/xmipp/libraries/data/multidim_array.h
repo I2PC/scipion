@@ -3040,7 +3040,8 @@ public:
      */
     void maxIndex(int& kmax, int& imax, int& jmax) const
     {
-        maxIndex(0,kmax,imax,jmax);
+        int dum;
+        maxIndex(dum, kmax, imax, jmax);
     }
 
     /** 2D Indices for the maximum element.
@@ -3050,7 +3051,8 @@ public:
      */
     void maxIndex(int& imax, int& jmax) const
     {
-        maxIndex(0,0,imax,jmax);
+        int dum;
+        maxIndex(dum, dum, imax, jmax);
     }
 
     /** 1D Indices for the maximum element.
@@ -3060,7 +3062,8 @@ public:
      */
     void maxIndex(int& jmax) const
     {
-        maxIndex(0,0,0,jmax);
+        int dum;
+        maxIndex(dum, dum, dum, jmax);
     }
 
     /** Minimum and maximum of the values in the array.

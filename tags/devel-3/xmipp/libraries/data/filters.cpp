@@ -31,6 +31,9 @@
 /* Substract background ---------------------------------------------------- */
 void substract_background_plane(Matrix2D<double> &I)
 {
+
+    I.checkDimension(2);
+
     Matrix2D<double> A(3, 3);
     Matrix1D<double> x(3), b(3);
 
@@ -62,6 +65,9 @@ void substract_background_plane(Matrix2D<double> &I)
 /* Substract background ---------------------------------------------------- */
 void substract_background_rolling_ball(Matrix2D<double> &I, int radius)
 {
+
+    I.checkDimension(2);
+
     // Build the ball
     int arcTrimPer;
     int shrinkFactor;
@@ -151,22 +157,25 @@ void substract_background_rolling_ball(Matrix2D<double> &I, int radius)
     
     // Now rescale the background
     Matrix2D<double> bgEnlarged;
-    Irolled.scaleToSize(YSIZE(I),XSIZE(I),bgEnlarged);
+    scaleToSize(1, Irolled, bgEnlarged, YSIZE(I),XSIZE(I));
     bgEnlarged.copyShape(I);
     I-=bgEnlarged;
 }
 
 /* Contranst enhancement --------------------------------------------------- */
-void contrast_enhancement(Image *I)
+void contrast_enhancement(Image<double> *I)
 {
     (*I)().rangeAdjust(0, 255);
 }
 
 /* Region growing for images ----------------------------------------------- */
-void region_growing(const Matrix2D<double> &I_in, Matrix2D<double> &I_out,
-                    int i, int j,
-                    float stop_colour, float filling_colour, bool less, int neighbourhood)
+void region_growing2D(const Matrix2D<double> &I_in, Matrix2D<double> &I_out,
+                      int i, int j,
+                      float stop_colour, float filling_colour, bool less, int neighbourhood)
 {
+
+    I_in.checkDimension(2);
+
     std::list<int> iNeighbours;   /* A list for neighbour pixels */
     int iCurrenti, iCurrentj;     /* Coordinates of the current pixel considered */
 
@@ -219,10 +228,12 @@ void region_growing(const Matrix2D<double> &I_in, Matrix2D<double> &I_out,
 }
 
 /* Region growing for volumes ----------------------------------------------- */
-void region_growing(const Matrix3D<double> &V_in, Matrix3D<double> &V_out,
-                    int k, int i, int j,
-                    float stop_colour, float filling_colour, bool less)
+void region_growing3D(const Matrix3D<double> &V_in, Matrix3D<double> &V_out,
+                      int k, int i, int j,
+                      float stop_colour, float filling_colour, bool less)
 {
+    V_in.checkDimension(3);
+
     std::list<int> iNeighbours;       /* A list for neighbour voxels */
     int iCurrentk, iCurrenti, iCurrentj;     /* Coordinates of the current voxel considered */
 
@@ -300,6 +311,8 @@ void distance_transform(const Matrix2D<int> &in,
     Matrix2D<int> &out, bool wrap)
 {
     std::list<int> toExplore;   /* A list of points to explore */
+    
+    in.checkDimension(2);
 
     out.resize(in);
     out.initConstant(XSIZE(in)+YSIZE(in));
@@ -355,9 +368,11 @@ void distance_transform(const Matrix2D<int> &in,
 }
 
 /* Label image ------------------------------------------------------------ */
-int label_image(const Matrix2D<double> &I, Matrix2D<double> &label,
-                int neighbourhood)
+int label_image2D(const Matrix2D<double> &I, Matrix2D<double> &label,
+                  int neighbourhood)
 {
+    I.checkDimension(2);
+
     label = I;
     int colour = 32000;
     bool found;
@@ -365,7 +380,7 @@ int label_image(const Matrix2D<double> &I, Matrix2D<double> &label,
     {
         if (label(i, j) != 1)
             continue;
-        region_growing(label, label, i, j, 0, colour, false, neighbourhood);
+        region_growing2D(label, label, i, j, 0, colour, false, neighbourhood);
         colour++;
     }
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
@@ -375,8 +390,10 @@ int label_image(const Matrix2D<double> &I, Matrix2D<double> &label,
 }
 
 /* Label volume ------------------------------------------------------------ */
-int label_volume(const Matrix3D<double> &V, Matrix3D<double> &label)
+int label_image3D(const Matrix3D<double> &V, Matrix3D<double> &label)
 {
+    V.checkDimension(2);
+
     label = V;
     int colour = 32000;
     bool found;
@@ -384,7 +401,7 @@ int label_volume(const Matrix3D<double> &V, Matrix3D<double> &label)
     {
         if (label(k, i, j) != 1)
             continue;
-        region_growing(label, label, k, i, j, 0, colour, false);
+        region_growing3D(label, label, k, i, j, 0, colour, false);
         colour++;
     }
     FOR_ALL_ELEMENTS_IN_MATRIX3D(label)
@@ -397,8 +414,10 @@ int label_volume(const Matrix3D<double> &V, Matrix3D<double> &label)
 void remove_small_components(Matrix2D<double> &I, int size,
                              int neighbourhood)
 {
+    I.checkDimension(2);
+
     Matrix2D<double> label;
-    int imax = label_image(I, label, neighbourhood);
+    int imax = label_image2D(I, label, neighbourhood);
     Matrix1D<int> nlabel(imax + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label) nlabel((int)(label(i, j)))++;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
@@ -410,8 +429,10 @@ void remove_small_components(Matrix2D<double> &I, int size,
 void keep_biggest_component(Matrix2D<double> &I, double percentage,
                             int neighbourhood)
 {
+    I.checkDimension(2);
+
     Matrix2D<double> label;
-    int imax = label_image(I, label, neighbourhood);
+    int imax = label_image2D(I, label, neighbourhood);
     Matrix1D<int> nlabel(imax + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
     {
@@ -448,9 +469,11 @@ void keep_biggest_component(Matrix2D<double> &I, double percentage,
 /* Fill object ------------------------------------------------------------- */
 void fill_binary_object(Matrix2D<double> &I, int neighbourhood)
 {
+    I.checkDimension(2);
+
     Matrix2D<double> label;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I) I(i, j) = 1 - I(i, j);
-    int imax = label_image(I, label, neighbourhood);
+    int imax = label_image2D(I, label, neighbourhood);
     double l0 = label(STARTINGY(I), STARTINGX(I));
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
     if (label(i, j) == l0)
@@ -462,6 +485,8 @@ void fill_binary_object(Matrix2D<double> &I, int neighbourhood)
 /* Otsu Segmentation ------------------------------------------------------- */
 void OtsuSegmentation(Matrix3D<double> &V)
 {
+    V.checkDimension(3);
+
     // Compute the probability density function
     histogram1D hist;
     hist.clear();
@@ -505,6 +530,8 @@ void OtsuSegmentation(Matrix3D<double> &V)
 /* Entropy Segmentation ---------------------------------------------------- */
 void EntropySegmentation(Matrix3D<double> &V)
 {
+    V.checkDimension(3);
+
     // Compute the probability density function
     histogram1D hist;
     hist.clear();
@@ -564,6 +591,8 @@ void EntropySegmentation(Matrix3D<double> &V)
 /* Otsu+Entropy Segmentation ----------------------------------------------- */
 void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
 {
+    V.checkDimension(3);
+
     // Compute the probability density function
     histogram1D hist;
     hist.clear();
@@ -647,6 +676,9 @@ void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
 void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
                 double &shiftX, double &shiftY, const Matrix2D<int> *mask)
 {
+    I1.checkDimension(2);
+    I2.checkDimension(2);
+
     int              imax, jmax, i_actual, j_actual;
     double           max, xmax, ymax, sumcorr, avecorr, stdcorr, dummy;
     float            xshift, yshift, shift;
@@ -724,10 +756,15 @@ void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
 void best_nonwrapping_shift(const Matrix2D<double> &I1,
     const Matrix2D<double> &I2, double &shiftX, double &shiftY)
 {
+    I1.checkDimension(2);
+    I2.checkDimension(2);
+
     best_shift(I1, I2, shiftX, shiftY);
     double bestCorr, corr;
     Matrix2D<double> Iaux;
-    I1.translate(vectorR2(-shiftX,-shiftY),Iaux, DONT_WRAP);
+    
+    translate(1, Iaux, I1, vectorR2(-shiftX,-shiftY), DONT_WRAP);
+    //I1.translate(vectorR2(-shiftX,-shiftY),Iaux, DONT_WRAP);
     bestCorr=corr=correlation_index(I2,Iaux);
     double finalX=shiftX;
     double finalY=shiftY;
@@ -743,7 +780,8 @@ void best_nonwrapping_shift(const Matrix2D<double> &I1,
     Iaux.initZeros();
     double testX=(shiftX>0) ? (shiftX-XSIZE(I1)):(shiftX+XSIZE(I1));
     double testY=shiftY;
-    I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
+    translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
+    //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
     corr=correlation_index(I2,Iaux);
     if (corr>bestCorr) finalX=testX;
     #ifdef DEBUG
@@ -755,7 +793,8 @@ void best_nonwrapping_shift(const Matrix2D<double> &I1,
     Iaux.initZeros();
     testX=shiftX;
     testY=(shiftY>0) ? (shiftY-YSIZE(I1)):(shiftY+YSIZE(I1));
-    I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
+    translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
+    //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
     corr=correlation_index(I2,Iaux);
     if (corr>bestCorr)
         finalY=testY;
@@ -768,7 +807,8 @@ void best_nonwrapping_shift(const Matrix2D<double> &I1,
     Iaux.initZeros();
     testX=(shiftX>0) ? (shiftX-XSIZE(I1)):(shiftX+XSIZE(I1));
     testY=(shiftY>0) ? (shiftY-YSIZE(I1)):(shiftY+YSIZE(I1));
-    I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
+    translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
+    //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
     corr=correlation_index(I2,Iaux);
     if (corr>bestCorr) {
         finalX=testX;
@@ -789,6 +829,9 @@ void best_nonwrapping_shift(const Matrix2D<double> &I1,
 void alignImages(const Matrix2D< double >& Iref, Matrix2D< double >& I,
     Matrix2D< double >&M)
 {
+    Iref.checkDimension(2);
+    I.checkDimension(2);
+
     Matrix2D<double> ARS, ASR, R;
     ARS.initIdentity(3);
     ASR.initIdentity(3);
@@ -819,7 +862,7 @@ void alignImages(const Matrix2D< double >& Iref, Matrix2D< double >& I,
         best_nonwrapping_shift(I,IauxSR,shiftX,shiftY);
         ASR(0,2)+=shiftX;
         ASR(1,2)+=shiftY;
-        applyGeometry(IauxSR,ASR,I,IS_NOT_INV,WRAP);
+        applyGeometry(1, IauxSR, I, ASR, IS_NOT_INV, WRAP);
         
         Polar< std::complex<double> > polarFourierI;
 	normalizedPolarFourierTransform(
@@ -835,7 +878,7 @@ void alignImages(const Matrix2D< double >& Iref, Matrix2D< double >& I,
             local_transformer);
 	R=rotation2DMatrix(-bestRot);
         ASR=R*ASR;
-        applyGeometry(IauxSR,ASR,I,IS_NOT_INV,WRAP);
+        applyGeometry(1, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
         // Rotate then shift
 	normalizedPolarFourierTransform(
@@ -850,12 +893,12 @@ void alignImages(const Matrix2D< double >& Iref, Matrix2D< double >& I,
             local_transformer);
 	R=rotation2DMatrix(-bestRot);
         ARS=R*ARS;
-        applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
+        applyGeometry(1, IauxRS, I, ARS, IS_NOT_INV, WRAP);
 
         best_nonwrapping_shift(Iref,IauxRS,shiftX,shiftY);
         ARS(0,2)+=shiftX;
         ARS(1,2)+=shiftY;
-        applyGeometry(IauxRS,ARS,I,IS_NOT_INV,WRAP);
+        applyGeometry(1, IauxRS, I, ARS, IS_NOT_INV, WRAP);
     }
     
     double corrRS=correlation_index(IauxRS,Iref);
@@ -890,6 +933,8 @@ void estimateGaussian2D(const Matrix2D<double> &I,
     double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
     bool estimateMu, int iterations)
 {
+    I.checkDimension(2);
+
     Matrix2D<double> z(I);
 
     // Estimate b
@@ -966,6 +1011,8 @@ void estimateGaussian2D(const Matrix2D<double> &I,
 void Fourier_Bessel_decomposition(const Matrix2D<double> &img_in,
                                   Matrix2D<double> &m_out, double r1, double r2, int k1, int k2)
 {
+    img_in.checkDimension(2);
+
     for (int k = k1; k <= k2; k++)
     {
         int k_1 = k - 1;
@@ -1024,6 +1071,8 @@ double Shah_energy(const Matrix2D<double> &img,
                    const Matrix2D<double> &edge_strength,
                    double K, const Matrix1D<double> &W)
 {
+    img.checkDimension(2);
+
     int Ydim1 = YSIZE(img) - 1;
     int Xdim1 = XSIZE(img) - 1;
 
@@ -1063,8 +1112,9 @@ double Update_surface_Shah(Matrix2D<double> &img,
                            Matrix2D<double> &edge_strength,
                            const Matrix1D<double> &W)
 {
-    double Diff = 0.0, Norm = 0.0;
+    img.checkDimension(2);
 
+    double Diff = 0.0, Norm = 0.0;
     int Ydim1 = YSIZE(img) - 1;
     int Xdim1 = XSIZE(img) - 1;
 
@@ -1123,8 +1173,9 @@ double Update_edge_Shah(Matrix2D<double> &img,
                         double K,
                         const Matrix1D<double> &W)
 {
-    double Diff = 0.0, Norm = 0.0;
+    img.checkDimension(2);
 
+    double Diff = 0.0, Norm = 0.0;
     int Ydim1 = YSIZE(img) - 1;
     int Xdim1 = XSIZE(img) - 1;
     double Kinv = 1.0 / K;
@@ -1173,6 +1224,8 @@ void Smoothing_Shah(Matrix2D<double> &img,
                     bool adjust_range)
 {
 
+    img.checkDimension(2);
+
     typeCast(img, surface_strength);
     if (adjust_range)
         surface_strength.rangeAdjust(0, 1);
@@ -1215,6 +1268,8 @@ void Smoothing_Shah(Matrix2D<double> &img,
 double tomographicDiffusion(Matrix3D< double >& V,
     const Matrix1D< double >& alpha, double lambda)
 {
+    V.checkDimension(3);
+
     double alphax=XX(alpha);
     double alphay=YY(alpha);
     double alphaz=ZZ(alpha);
@@ -1334,6 +1389,8 @@ void rotational_invariant_moments(const Matrix2D<double> &img,
                                   const Matrix2D<int> *mask,
                                   Matrix1D<double> &v_out)
 {
+    img.checkDimension(2);
+
     // Prepare some variables
     double m_11 = 0, m_02 = 0, m_20 = 0, m_12 = 0, m_21 = 0, m_03 = 0, m_30 = 0; //, m_00=0;
     double normalize_x = 2.0 / XSIZE(img);
@@ -1396,6 +1453,8 @@ void inertia_moments(const Matrix2D<double> &img,
                      Matrix1D<double> &v_out,
                      Matrix2D<double> &u)
 {
+    img.checkDimension(2);
+
     // Prepare some variables
     double m_11 = 0, m_02 = 0, m_20 = 0;
     double normalize_x = 2.0 / XSIZE(img);
@@ -1432,6 +1491,8 @@ void inertia_moments(const Matrix2D<double> &img,
 /* Fill triangle ----------------------------------------------------------- */
 void fill_triangle(Matrix2D<double> &img, int *tx, int *ty, double color)
 {
+    img.checkDimension(2);
+
     /*
      * Order in y values
      */
@@ -1582,6 +1643,8 @@ void local_thresholding(Matrix2D<double> &img,
                         Matrix2D<int> &result,
                         Matrix2D<int> *mask)
 {
+    img.checkDimension(2);
+
     // Convolve the input image with the kernel
     Matrix2D<double> convolved;
     convolved.initZeros(img);
@@ -1628,6 +1691,8 @@ void local_thresholding(Matrix2D<double> &img,
 /* Center translationally -------------------------------------------------- */
 void centerImageTranslationally(Matrix2D<double> &I)
 {
+    I.checkDimension(2);
+
     Matrix2D<double> Ix  = I; Ix.selfReverseX();   Ix.setXmippOrigin();
     Matrix2D<double> Iy  = I; Iy.selfReverseY();   Iy.setXmippOrigin();
     Matrix2D<double> Ixy = Ix; Ixy.selfReverseY(); Ixy.setXmippOrigin();
@@ -1642,12 +1707,16 @@ void centerImageTranslationally(Matrix2D<double> &I)
     
     Matrix1D<double> shift(2);
     VECTOR_R2(shift,-meanShiftX,-meanShiftY);
-    I.selfTranslateBSpline(3,shift);
+    Matrix2D<double> aux = I;
+    translate(3, I, aux, shift);
+    //I.selfTranslateBSpline(3,shift);
 }
 
 /* Center rotationally ----------------------------------------------------- */
 void centerImageRotationally(Matrix2D<double> &I)
 {
+    I.checkDimension(2);
+
     Matrix2D<double> Ix  = I; Ix.selfReverseX();
     Ix.setXmippOrigin();
 
@@ -1665,13 +1734,17 @@ void centerImageRotationally(Matrix2D<double> &I)
     double bestRot = best_rotation(polarFourierIx,polarFourierI,
         local_transformer);
 
-    I.selfRotateBSpline(3,-bestRot/2,WRAP);
+    Matrix2D<double> aux = I;
+    rotate(3, I, aux, -bestRot/2,WRAP);
+    //I.selfRotateBSpline(3,-bestRot/2,WRAP);
 }
 
 /* Center both rotationally and translationally ---------------------------- */
 //#define DEBUG
 void centerImage(Matrix2D<double> &I, int Niter, bool limitShift)
 {
+    I.checkDimension(2);
+
     I.setXmippOrigin();
     double avg=I.computeAvg();
     I-=avg;
@@ -1729,7 +1802,7 @@ void centerImage(Matrix2D<double> &I, int Niter, bool limitShift)
         A(0,2)+=-meanShiftX/2;
         A(1,2)+=-meanShiftY/2;
         Iaux.initZeros();
-        applyGeometry(Iaux,A,I,IS_NOT_INV,WRAP);
+        applyGeometry(1, Iaux, I, A, IS_NOT_INV, WRAP);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
             if (!mask(i,j)) Iaux(i,j)=0;
         
@@ -1761,7 +1834,7 @@ void centerImage(Matrix2D<double> &I, int Niter, bool limitShift)
         
         A=rotation2DMatrix(-bestRot/2)*A;
         Iaux.initZeros();
-        applyGeometry(Iaux,A,I,IS_NOT_INV,WRAP);
+        applyGeometry(1, Iaux, I, A, IS_NOT_INV, WRAP);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
             if (!mask(i,j)) Iaux(i,j)=0;
 
@@ -1790,7 +1863,7 @@ void centerImage(Matrix2D<double> &I, int Niter, bool limitShift)
         int yF=FINISHINGX(lineY); while (lineY(yF)<thY) yF--;
         if ((xF-x0)>(yF-y0))
             A=rotation2DMatrix(90)*A;
-        applyGeometry(Iaux,A,I,IS_NOT_INV,WRAP);
+        applyGeometry(1, Iaux, I, A, IS_NOT_INV, WRAP);
         #ifdef DEBUG
             lineX.write("PPPlineX.txt");
             lineY.write("PPPlineY.txt");
@@ -1801,7 +1874,7 @@ void centerImage(Matrix2D<double> &I, int Niter, bool limitShift)
             char c; std::cin >> c;
         #endif
     }
-    applyGeometryBSpline(Iaux,A,I,3,IS_NOT_INV,WRAP);
+    applyGeometry(3, Iaux, I, A, IS_NOT_INV,WRAP);
     I=Iaux;
     I+=avg;
     if (plans!=NULL) delete plans;

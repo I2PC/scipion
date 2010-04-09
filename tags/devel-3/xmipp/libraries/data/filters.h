@@ -74,14 +74,14 @@ void contrast_enhancement(Image<double>* I);
  *
  * Valid neighbourhoods are 4 or 8.
  */
-void region_growing(const Matrix2D< double >& I_in,
-                    Matrix2D< double >& I_out,
-                    int i,
-                    int j,
-                    float stop_colour = 1,
-                    float filling_colour = 1,
-                    bool less = true,
-                    int neighbourhood = 8);
+void region_growing2D(const Matrix2D< double >& I_in,
+                      Matrix2D< double >& I_out,
+                      int i,
+                      int j,
+                      float stop_colour = 1,
+                      float filling_colour = 1,
+                      bool less = true,
+                      int neighbourhood = 8);
 
 /** Region growing for volumes
  * @ingroup Filter
@@ -94,14 +94,14 @@ void region_growing(const Matrix2D< double >& I_in,
  * border are greater than the region voxels. If less is false the region is
  * grown so that all voxels on its border are smaller than the region voxels.
  */
-void region_growing(const Matrix3D< double >& V_in,
-                    Matrix3D< double >& V_out,
-                    int k,
-                    int i,
-                    int j,
-                    float stop_colour = 1,
-                    float filling_colour = 1,
-                    bool less = true);
+void region_growing3D(const Matrix3D< double >& V_in,
+                      Matrix3D< double >& V_out,
+                      int k,
+                      int i,
+                      int j,
+                      float stop_colour = 1,
+                      float filling_colour = 1,
+                      bool less = true);
 
 /** L1 distance transform
   * @ingroup Filters
@@ -119,9 +119,9 @@ void distance_transform(const Matrix2D<int> &in,
  * components. The background is labeled as 0, and the components as 1, 2, 3
  * ...
  */
-int label_image(const Matrix2D< double >& I,
-                Matrix2D< double >& label,
-                int neighbourhood = 8);
+int label_image2D(const Matrix2D< double >& I,
+                  Matrix2D< double >& label,
+                  int neighbourhood = 8);
 
 /** Label a binary volume
  * @ingroup Filters
@@ -130,7 +130,7 @@ int label_image(const Matrix2D< double >& I,
  * components. The background is labeled as 0, and the components as 1, 2, 3
  * ...
  */
-int label_volume(const Matrix3D< double >& V, Matrix3D< double >& label);
+int label_image3D(const Matrix3D< double >& V, Matrix3D< double >& label);
 
 /** Remove connected components
  * @ingroup Filters
