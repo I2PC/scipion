@@ -1025,6 +1025,36 @@ template<typename T>
 void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
     MultidimArray<T>& result, char operation);
 
+template<typename T>
+void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result);
+
+template<typename T>
+void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result);
+
+template<typename T>
+void solveBySVD(const Matrix2D<T>& A,
+                const Matrix1D<T>& b,
+                Matrix1D< double >& result,
+                double tolerance);
+
+template<typename T>
+void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d);
+
+template<typename T>
+void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b);
+
+template<typename T>
+void svdcmp(const Matrix2D< T >& a,
+            Matrix2D< double >& u,
+            Matrix1D< double >& w,
+            Matrix2D< double >& v);
+
+void svbksb(Matrix2D< double >& u,
+            Matrix1D< double >& w,
+            Matrix2D< double >& v,
+            Matrix1D< double >& b,
+            Matrix1D< double >& x);
+
 
 /** Template class for Xmipp arrays.
   * @ingroup MultidimensionalArrays

@@ -546,7 +546,7 @@ void sharpening(const MultidimArray<double> &in, double width, double strength,
     MultidimArray<double> dilated, eroded;
     dilate3D(in,kernel,dilated);
     erode3D(in,kernel,eroded);
-    VolumeXmipp save;
+    Image<double> save;
     save()=dilated; save.write("PPPdilated.vol");
     save()=eroded; save.write("PPPeroded.vol");
     

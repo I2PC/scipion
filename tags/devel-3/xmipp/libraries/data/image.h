@@ -66,6 +66,11 @@ unsigned long   gettypesize(DataType type);
 
 
 #define SWAPTRIG     65535   // Threshold file z size above which bytes are swapped
+// For fast access to pixel values (and for backwards compatibility of the code)
+#define IMGPIXEL(I, i, j) MAT_ELEM(((I).data), (i), (j))
+#define VOLVOXEL(V, k, i, j) VOL_ELEM(((V).data), (k), (i), (j))
+#define DIRECT_IMGPIXEL(I, i, j) DIRECT_MAT_ELEM(((I).data), (i), (j))
+#define IMGMATRIX(I) ((I).data)
 
 
 /** Template class for subimage header information
@@ -782,6 +787,28 @@ public:
     float Zoff(unsigned long n = 0) const
     {
         return (image[n]).shiftZ;
+    }
+
+    /** Set Euler angles in image header
+     *
+     */
+    void setEulerAngles(double rot, double tilt, double psi, 
+                        unsigned long n = 0)
+    {
+        (image[n]).angleRot = rot;
+        (image[n]).angleTilt = rot;
+        (image[n]).anglePsi = rot;
+    }
+
+    /** Set origin offsets in image header
+     *
+     */
+    void setShifts(double xoff, double yoff, double zoff = 0., 
+                        unsigned long n = 0)
+    {
+        (image[n]).shiftX = xoff;
+        (image[n]).shiftY = yoff;
+        (image[n]).shiftZ = zoff;
     }
 
     /** Get geometric transformation matrix from 2D-image header

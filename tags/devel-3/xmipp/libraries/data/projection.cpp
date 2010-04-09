@@ -43,13 +43,13 @@ project_thread_params * project_threads;
 void Projection::reset(int Ydim, int Xdim)
 {
     data.initZeros(Ydim, Xdim);
-    moveOriginTo_center();
+    data.setXmippOrigin();
 }
 
 /* Set angles ============================================================== */
 void Projection::set_angles(double _rot, double _tilt, double _psi)
 {
-    set_eulerAngles(_rot, _tilt, _psi);
+    setEulerAngles(_rot, _tilt, _psi);
     Euler_angles2matrix(_rot, _tilt, _psi, euler);
     eulert = euler.transpose();
     euler.getRow(2, direction);
@@ -59,7 +59,7 @@ void Projection::set_angles(double _rot, double _tilt, double _psi)
 /* Read ==================================================================== */
 void Projection::read(const FileName &fn, const bool &apply_shifts)
 {
-    Image<double>::read(fn, false, false, false, apply_shifts);
+    Image<double>::read(fn, true, 0, false, apply_shifts);
     Euler_angles2matrix(rot(), tilt(), psi(), euler);
     eulert = euler.transpose();
     euler.getRow(2, direction);
@@ -70,7 +70,7 @@ void Projection::read(const FileName &fn, const bool &apply_shifts)
 Projection & Projection::operator = (const Projection &P)
 {
     // Esto hay que ponerlo m�s elegantemente accediendo al = del padre
-    *(Image *)this = * ((Image *) & P);
+    *(Image<double> *)this = * ((Image<double> *) & P);
     direction = P.direction;
     euler     = P.euler;
     eulert    = P.eulert;
@@ -86,7 +86,7 @@ void Projection::assign(const Projection &P)
 // Projection from a voxel volume ==========================================
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
-void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
+void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi,
 		    const Matrix1D<double> *roffset)
 {
@@ -262,7 +262,7 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
             while ((alpha_max - alpha) > XMIPP_EQUAL_ACCURACY);
         } // for
 
-        P(i, j) = ray_sum * 0.25;
+        MAT_ELEM(P(), i, j) = ray_sum * 0.25;
 #ifdef DEBUG
         std::cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << std::endl;
 #endif
@@ -272,7 +272,7 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
 
 /* Project a voxel volume with respect to an offcentered axis -------------- */
 //#define DEBUG
-void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
+void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
    int Ydim, int Xdim, double axisRot, double axisTilt,
    const Matrix1D<double> &raxis, double angle, double inplaneRot,
    const Matrix1D<double> &rinplane)
@@ -314,7 +314,7 @@ void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
 
 // Sjors, 16 May 2005
 // This routine may give volumes with spurious high frequencies.....
-void singleWBP(MultidimArray<double> &V, Projection &P)
+void singleWBP(Matrix3D<double> &V, Projection &P)
 {
     SPEED_UP_temps;
 
@@ -412,7 +412,7 @@ void singleWBP(MultidimArray<double> &V, Projection &P)
 
             double diff_alpha = XMIPP_MIN(XMIPP_MIN(diffx, diffy), diffz);
 
-            V(ZZ(idx), YY(idx), XX(idx)) += diff_alpha * P(i, j);
+            VOL_ELEM(V, ZZ(idx), YY(idx), XX(idx)) += diff_alpha * MAT_ELEM(P(), i, j);
 
             if (ABS(diff_alpha - diffx) <= XMIPP_EQUAL_ACCURACY)
             {
@@ -475,13 +475,13 @@ For each blob in the grid
     xw=(int) intWRAP(x,x0,xF); \
     yw=(int) intWRAP(y,y0,yF);
 
-void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
+void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
                                 const Basis &basis,
                                 Projection &proj, Projection &norm_proj,
                                 const Matrix1D<double> &shift,
                                 const Matrix1D<double> &aint, const Matrix1D<double> &bint,
                                 const Matrix2D<double> &D,  const Matrix2D<double> &Dinv,
-                                const MultidimArray<int> &mask, int FORW, int eq_mode)
+                                const Matrix2D<int> &mask, int FORW, int eq_mode)
 {
     Matrix1D<double> prjX(3);                // Coordinate: Projection of the
     Matrix1D<double> prjY(3);                // 3 grid vectors
@@ -844,7 +844,7 @@ void project_Crystal_Volume(
     const Matrix1D<double> &bint,         // Second lattice vector (2x1) in voxels
     const Matrix2D<double> &D,            // volume deformation matrix
     const Matrix2D<double> &Dinv,         // volume deformation matrix
-    const MultidimArray<int>   &mask,          // volume mask
+    const Matrix2D<int>    &mask,         // volume mask
     int              FORW,                // 1 if we are projecting a volume
     //   norm_proj is calculated
     // 0 if we are backprojecting

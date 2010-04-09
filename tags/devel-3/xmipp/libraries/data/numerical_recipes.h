@@ -28,6 +28,7 @@
 #ifndef _NUMERICAL_HH
 #   define _NUMERICAL_HH
 
+#include <math.h>
 #include "memory.h"
 #include "macros.h"
 #include "error.h"

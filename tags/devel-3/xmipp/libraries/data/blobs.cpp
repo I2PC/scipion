@@ -183,9 +183,9 @@ double sum_blob_SimpleGrid(const struct blobtype &blob, const SimpleGrid &grid,
 // Compute the sum in the points inside the grid
 // The integer part of the vectors is taken for not picking points
 // just in the border of the blob, which we know they are 0.
-    for (i = (int)corner1.X(); i <= (int)corner2.X(); i++)
-        for (j = (int)corner1.Y(); j <= (int)corner2.Y(); j++)
-            for (k = (int)corner1.Z(); k <= (int)corner2.Z(); k++)
+    for (i = (int)XX(corner1); i <= (int)XX(corner2); i++)
+        for (j = (int)YY(corner1); j <= (int)YY(corner2); j++)
+            for (k = (int)ZZ(corner1); k <= (int)ZZ(corner2); k++)
             {
                 VECTOR_R3(gr, i, j, k);
                 grid.grid2universe(gr, ur);
@@ -346,8 +346,9 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
     retval.order = 2;
     int alpha_size = FLOOR((alpha_F - alpha_0) / inc_alpha + 1);
     int a_size = FLOOR((a_F - a_0) / inc_a + 1);
-    ImageXmipp att(alpha_size, a_size);
-    ImageXmipp ops(alpha_size, a_size);
+    Image<double> att, ops;
+    att().resize(alpha_size, a_size);
+    ops().resize(alpha_size, a_size);
     int i, j, best_i, best_j;
     double a, alpha, best_a = -1, best_alpha = -1;
     double best_ops = 1e10, best_att = 0;
@@ -356,20 +357,22 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
         {
             retval.radius = a;
             retval.alpha = alpha;
-            att(i, j) = blob_att(w, retval);
-            ops(i, j) = blob_ops(w, retval);
+            MAT_ELEM(att(), i, j) = blob_att(w, retval);
+            MAT_ELEM(ops(), i, j) = blob_ops(w, retval);
             if (j > 0)
                 for (int n = target_length - 1; n >= 0; n--)
-                    if (att(i, j - 1) > target_att[n] && att(i, j) < target_att[n])
+                    if (MAT_ELEM(att(), i, j - 1) > target_att[n] && 
+                        MAT_ELEM(att(), i, j) < target_att[n])
                     {
-                        att(i, j) = 0;
-                        if (ops(i, j - 1) < best_ops && att(i, j - 1) >= best_att)
+                        MAT_ELEM(att(), i, j) = 0;
+                        if (MAT_ELEM(ops(), i, j - 1) < best_ops && 
+                            MAT_ELEM(att(), i, j - 1) >= best_att)
                         {
                             best_i = i;
                             best_j = j - 1;
                             best_alpha = alpha;
                             best_a = a - inc_a;
-                            best_ops = ops(i, j - 1);
+                            best_ops = MAT_ELEM(ops(), i, j - 1);
                             best_att = target_att[n];
                         }
                     }
@@ -804,8 +807,8 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 
     // Add blob radius in each direction, and find the furthest integer
     // samples => compute size
-    Gcorner1 -= blob.radius; Gcorner1.selfCEILnD();
-    Gcorner2 += blob.radius; Gcorner2.selfFLOORnD();
+    Gcorner1 -= blob.radius; Gcorner1.selfCEIL();
+    Gcorner2 += blob.radius; Gcorner2.selfFLOOR();
 
     XX(size) = (int)XX(Gcorner2) - (int)XX(Gcorner1) + 1;
     YY(size) = (int)YY(Gcorner2) - (int)YY(Gcorner1) + 1;
@@ -996,8 +999,10 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
                     VECTOR_R3(grid_index, j, i, k);
                     vol_blobs.grid(n).grid2universe(grid_index, univ_position);
                     V3_BY_CT(coef_position, univ_position, 1.0 / g_2);
-                    (*vol_coefs)((int)ZZ(coef_position), (int)YY(coef_position),
-                                 (int)XX(coef_position)) = vol_blobs(n)(k, i, j);
+                    VOL_ELEM((*vol_coefs), 
+                        (int)ZZ(coef_position), 
+                        (int)YY(coef_position),
+                        (int)XX(coef_position) ) = VOL_ELEM(vol_blobs(n)(), k, i, j);
 #ifdef DEBUG
                     std::cout << "Blob value at (" << j << "," << i << ","
                     << k << ") (" << XX(univ_position)
@@ -1005,7 +1010,7 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
                     << ZZ(univ_position) << ") ("
                     << XX(coef_position) << "," << YY(coef_position) << ","
                     << ZZ(coef_position) << ") --> "
-                    << vol_blobs(n)((int)k, (int)i, (int)j) << std::endl;
+                    << VOL_ELEM(vol_blobs(n)(), (int)k, (int)i, (int)j) << std::endl;
 #endif
                 }
     }
