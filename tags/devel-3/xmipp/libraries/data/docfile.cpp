@@ -845,7 +845,7 @@ void DocFile::set_angles(int k, double rot, double tilt, double psi,
     }
 }
 
-void DocFile::get_image(int key, ImageXmipp &I, bool apply_geo)
+void DocFile::get_image(int key, Image<double> &I, bool apply_geo)
 {
     current_line = m.begin();
     current_line += 2*key;
@@ -862,18 +862,15 @@ void DocFile::get_image(int key, ImageXmipp &I, bool apply_geo)
     I().setXmippOrigin();
 
     // Store translation in header and apply it to the actual image
-    I.set_rot(DL[0]);
-    I.set_tilt(DL[1]);
-    I.set_psi(DL[2]);
-    I.set_Xoff(DL[3]);
-    I.set_Yoff(DL[4]);
-    I.set_flip(0.);
+    I.setEulerAngles(DL[0], DL[1], DL[2]);
+    I.setShifts(DL[3], DL[4]);
+    I.setFlip(false);
 
     if (apply_geo)
     {
-        Matrix2D<double> A = I.get_transformation_matrix(true);
+        Matrix2D<double> A = I.getTransformationMatrix(true);
         if (!A.isIdentity())
-	    I().selfApplyGeometryBSpline(A, 3, IS_INV, WRAP);
+        selfApplyGeometry(3, I(), A, IS_INV, WRAP);
     }
 }
 

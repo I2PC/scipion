@@ -829,7 +829,7 @@ public:
      * The docfile is supposed to be an alignment docfile, and it is
      * assumed that no key is missing from the file
      */
-    void get_image(int key, ImageXmipp &I, bool apply_geo=false);
+    void get_image(int key, Image<double> &I, bool apply_geo=false);
 
     /** Get image name on key i
      * @ingroup DocFileInfo

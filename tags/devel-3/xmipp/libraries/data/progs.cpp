@@ -46,6 +46,7 @@ void Prog_parameters::show()
 {
     if (quiet) return;
     std::cout << "Input File: " << fn_in << std::endl;
+    /////////////////FIXME!!
     if (apply_geo && !Is_VolumeXmipp(fn_in))
         std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
     if (each_image_produces_an_output)

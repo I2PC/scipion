@@ -811,7 +811,23 @@ public:
         (image[n]).shiftZ = zoff;
     }
 
-    /** Get geometric transformation matrix from 2D-image header
+    /** Set flip in image header
+     *
+     */
+    void setFlip(bool _flip, unsigned long n = 0)
+    {
+        (image[n]).flip = _flip;
+    }
+
+     /** Set Weight in image header
+     *
+     */
+    void setWeight(bool _weight, unsigned long n = 0)
+    {
+        (image[n]).weight = _weight;
+    }
+
+   /** Get geometric transformation matrix from 2D-image header
      */
     Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false, 
                                                unsigned long n = 0)
