@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef MULTIDIMENSIONALARRAY_H
-#define MULTIDIMENSIONALARRAY_H
+#ifndef MULTIDIM_ARRAY_H
+#define MULTIDIM_ARRAY_H
 
 #include <typeinfo>
 
@@ -1439,7 +1439,8 @@ public:
      * returns true if the dimension is equal to the argument and false otherwise
      * It also prints an error message in the latter case.
      */
-    bool checkDimension(int dim) const
+#define checkDimension(dim) checkDimensionWithDebug(dim,__FILE__,__LINE__)
+    void checkDimensionWithDebug(int dim, const char *file, int line) const
     {
         if (getDim() != dim)
         {
@@ -1447,11 +1448,8 @@ public:
             std::cerr << "MultidimArray shape: "; 
             printShape(std::cerr);
             std::cerr << std::endl;
-            return false;
-        }
-        else
-        {
-            return true;
+            std::cerr << "Check called from file "<<file<<" line "<<line<<std::endl;
+            exit(1);
         }
     }
 
@@ -3888,8 +3886,7 @@ public:
         double slope;
         int steps;
 
-        if (!checkDimension(1))
-            REPORT_ERROR(1,"MultidimArray ERROR: initLinear only valid for 1D vectors");
+        checkDimension(1);
 
         if (mode == "incr")
         {
@@ -3957,8 +3954,7 @@ public:
      */
     void initIdentity(int Ydim, int Xdim)
     {
-        if (!checkDimension(2))
-            REPORT_ERROR(1,"MultidimArray ERROR: initIdentity only valid for 2D matrices");
+        checkDimension(2);
 
         if (Xdim == 0 || Ydim == 0)
         {
@@ -4825,8 +4821,7 @@ public:
      */
     void selfTranspose()
     {
-        if (!checkDimension(1))
-            REPORT_ERROR(1,"MultidimArray ERROR: transpose only valid for 1D vectors");
+        checkDimension(1);
         row = !row;
     }
 
@@ -4842,8 +4837,7 @@ public:
      */
     double module() const
     {
-        if (!checkDimension(1))
-            REPORT_ERROR(1,"MultidimArray ERROR: module only valid for 1D vectors");
+        checkDimension(1);
         return sqrt(sum2());
     }
 
@@ -4855,8 +4849,7 @@ public:
      */
     double angle()
     {
-        if (!checkDimension(1))
-            REPORT_ERROR(1,"MultidimArray ERROR: atan2 only valid for 1D vectors");
+        checkDimension(1);
         return atan2((double) YY(*this), (double) XX(*this));
     }
 
@@ -4865,8 +4858,7 @@ public:
      */
     void selfNormalize()
     {
-        if (!checkDimension(1))
-            REPORT_ERROR(1,"MultidimArray ERROR: selfNormalize only valid for 1D vectors");
+        checkDimension(1);
         double m = module();
         if (ABS(m) > XMIPP_EQUAL_ACCURACY)
         {
@@ -4889,8 +4881,7 @@ public:
      */
     MultidimArray<T> sort() const
     {
-        if (!checkDimension(1))
-            REPORT_ERROR(1,"MultidimArray ERROR: sort only valid for 1D vectors");
+        checkDimension(1);
 
         MultidimArray<T> temp;
         MultidimArray< double > aux;
@@ -4924,10 +4915,9 @@ public:
      */
     MultidimArray< int > indexSort() const
     {
-        MultidimArray< int >   indx;
-        if (!checkDimension(1))
-            REPORT_ERROR(1,"MultidimArray ERROR: indexSort only valid for 1D vectors");
+        checkDimension(1);
 
+        MultidimArray< int >   indx;
         MultidimArray< double > temp;
 
         if (XSIZE(*this) == 0)
@@ -4961,9 +4951,7 @@ public:
      */
     void showWithGnuPlot(const std::string& xlabel, const std::string& title)
     {
-        if (!checkDimension(1))
-            REPORT_ERROR(1,"MultidimArray ERROR: showWithGnuPlot only valid for 1D vectors");
-
+        checkDimension(1);
         FileName fn_tmp;
         fn_tmp.init_random(10);
         MultidimArray<T>::write(static_cast<std::string>("PPP") +
@@ -4995,8 +4983,7 @@ public:
      */
     void numericalDerivative(MultidimArray<double> &result)
     {
-        if (!checkDimension(1))
-            REPORT_ERROR(1,"MultidimArray ERROR: numericalDerivative only valid for 1D vectors");
+        checkDimension(1);
 
         const double i12=1.0/12.0;
 	result.initZeros(*this);
@@ -5004,8 +4991,6 @@ public:
             result(i)=i12*(-(*this)(i+2)+8*(*this)(i+1)
                            -8*(*this)(i-1)+(*this)(i+2));
     }
-
-
 
 ////////////// 2D MATRICES
     /// @defgroup MatricesUtilities
@@ -5021,8 +5006,7 @@ public:
      */
     bool isDiagonal() const
     {
-        if (!checkDimension(2))
-            REPORT_ERROR(1,"MultidimArray ERROR: isDiagonal only valid for 2D matrices");
+        checkDimension(2);
 
         if (XSIZE(*this) != YSIZE(*this))
             return false;
@@ -5043,8 +5027,7 @@ public:
      */
     bool isScalar() const
     {
-        if (!checkDimension(2))
-            REPORT_ERROR(1,"MultidimArray ERROR: isScalar only valid for 2D matrices");
+        checkDimension(2);
 
         if (!isDiagonal())
             return false;
@@ -5067,8 +5050,7 @@ public:
      */
     bool isIdentity() const
     {
-        if (!checkDimension(2))
-            REPORT_ERROR(1,"MultidimArray ERROR: isIndentity only valid for 2D matrices");
+        checkDimension(2);
 
         return isScalar() &&
                ABS(DIRECT_MAT_ELEM(*this, 0, 0) - (T) 1) < XMIPP_EQUAL_ACCURACY;
@@ -5087,8 +5069,7 @@ public:
      */
     void fromVector(const Matrix1D<T>& op1)
     {
-        if (!op1.checkDimension(1))
-            REPORT_ERROR(1,"MultidimArray ERROR: argument of fromVector should be a 1D vector");
+        op1.checkDimension(1);
 
         // Null vector => Null matrix
         if (XSIZE(op1) == 0)
@@ -5134,8 +5115,7 @@ public:
      */
     void toVector(Matrix1D<T>& op1) const
     {
-        if (!checkDimension(2))
-            REPORT_ERROR(1,"MultidimArray ERROR: toVector only valid for 2D Matrices");
+        checkDimension(2);
 
         // Null matrix => Null vector
         if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
@@ -5185,8 +5165,7 @@ public:
      */
     T det() const
     {
-        if (!checkDimension(2))
-            REPORT_ERROR(1,"MultidimArray ERROR: det only valid for 2D Matrices");
+        checkDimension(2);
 
         // (see Numerical Recipes, Chapter 2 Section 5)
         if (XSIZE(*this) == 0)
@@ -5235,8 +5214,7 @@ public:
      */
     void inv(Matrix2D<T>& result) const
     {
-        if (!checkDimension(2))
-            REPORT_ERROR(1,"MultidimArray ERROR: inv only valid for 2D Matrices");
+        checkDimension(2);
 
         if (XSIZE(*this) == 0)
             REPORT_ERROR(1108, "Inverse: Matrix is empty");
@@ -5290,7 +5268,6 @@ public:
     }
 
 
-
 };
 
 /// @defgroup MultidimFunctions Functions for all multidimensional arrays
@@ -5304,7 +5281,7 @@ public:
  * If n >= 0, only the nth volumes will be converted, otherwise all NSIZE volumes
  */
 template<typename T1, typename T2>
-    void typeCast(const MultidimArray<T1>& v1, MultidimArray<T2>& v2, long n = -1)
+void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, long n = -1)
 {
     if (NZYXSIZE(v1) == 0)
     {
@@ -5581,8 +5558,8 @@ Matrix1D< int > vectorR3(int x, int y, int z);
 template<typename T>
 T dotProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
 {
-    if ( !(v1.checkDimension(1) && v2.checkDimension(1)) )
-        REPORT_ERROR(1,"vectorProduct ERROR: both arguments should be 1D vectors");
+    v1.checkDimension(1);
+    v2.checkDimension(1);
 
     if (!v1.sameShape(v2))
         REPORT_ERROR(1002, "Dot product: vectors of different size or shape");
@@ -5611,8 +5588,8 @@ T dotProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
 template<typename T>
 Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
 {
-    if ( !(v1.checkDimension(1) && v2.checkDimension(1)) )
-        REPORT_ERROR(1,"vectorProduct ERROR: both arguments should be 1D vectors");
+    v1.checkDimension(1);
+    v2.checkDimension(1);
 
     if (v1.xdim != 3 || v2.xdim != 3)
         REPORT_ERROR(1002, "Vector_product: vectors are not in R3");
@@ -5640,8 +5617,9 @@ template<typename T>
 void vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2,
    Matrix1D<T> &result)
 {
-    if ( !(v1.checkDimension(1) && v2.checkDimension(1) && result.checkDimension(1)) )
-        REPORT_ERROR(1,"vectorProduct ERROR: all arguments should be 1D vectors");
+    v1.checkDimension(1);
+    v2.checkDimension(1);
+    result.checkDimension(1);
 
     XX(result) = YY(v1) * ZZ(v2) - ZZ(v1) * YY(v2);
     YY(result) = ZZ(v1) * XX(v2) - XX(v1) * ZZ(v2);
@@ -5694,8 +5672,8 @@ void sortTwoVectors(Matrix1D<T>& v1, Matrix1D<T>& v2)
 template<typename T>
 void multiplyMatrixbyMatrix(const Matrix2D<T>& op1, const Matrix2D<T>& op2, Matrix2D<T>& result)
 {
-    if ( !(op1.checkDimension(2) && op2.checkDimension(2)) )
-        REPORT_ERROR(2,"multiplyMatrix ERROR: Both arguments should be 2D matrices!");
+    op1.checkDimension(2);
+    op2.checkDimension(2);
 
     if (XSIZE(op1) != YSIZE(op2))
         REPORT_ERROR(1102, "Not compatible sizes in matrix multiplication");
@@ -5723,8 +5701,8 @@ template<typename T>
 void multiplyMatrixbyVector(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
 {
 
-    if (!(A.checkDimension(2) && b.checkDimension(1)) )
-        REPORT_ERROR(1,"multiplyMatrixbyVector ERROR: A should be 2D and b should be 1D");
+    A.checkDimension(2);
+    b.checkDimension(1);
 
     if (XSIZE(A) != XSIZE(b))
         REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
@@ -5757,8 +5735,8 @@ void multiplyMatrixbyVector(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D
 template<typename T>
 void multiplyVectorbyMatrix(const Matrix1D<T>& b, const Matrix2D<T>& A, Matrix1D<T>& result)
 {
-    if (!(A.checkDimension(2) && b.checkDimension(1)) )
-        REPORT_ERROR(1,"multiplyMatrixbyVector ERROR: A should be 2D and b should be 1D");
+    A.checkDimension(2);
+    b.checkDimension(1);
 
     if (XSIZE(b) != YSIZE(A))
         REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
