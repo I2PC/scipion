@@ -25,6 +25,7 @@
 
 #include "show_cl2d.h"
 #include "show_2d.h"
+#include "show_selfile.h"
 
 #include <qmessagebox.h>
 
@@ -68,18 +69,25 @@ void ShowCL2D::readFile(const FileName &_fn_root,
 {
     clear();
     fn = _fn_root;
-    setCaption(fn.c_str());
+    setCaption(fn.c_str()+filterSuffix);
     readSelFile(_fn_root + ".sel");
     SFcv=new SelFile[listSize];
     hisAssigned=new std::string[listSize];
     for (int i=0; i<listSize; i++)
     {
         FileName fnCV=imgnames[i].without_extension();
-        SFcv[i].read(fnCV+".sel");
-        hisAssigned[i]=integerToString(SFcv[i].ImgNo());
+        if (exists(fnCV+filterSuffix+".sel"))
+        {
+        	SFcv[i].read(fnCV+filterSuffix+".sel");
+			hisAssigned[i]=integerToString(SFcv[i].ImgNo());
+        }
+        else
+        {
+			hisAssigned[i]="0";
+        }
     }
-    NumCols=FLOOR(sqrt(listSize));
-    NumRows=CEIL(sqrt(listSize));
+    NumRows=FLOOR(sqrt(listSize));
+    NumCols=CEIL(listSize/NumRows);
 }
 
 /* Initialize right click menubar ------------------------------------------ */
@@ -116,6 +124,11 @@ void ShowCL2D::initRightclickMenubar()
     // Statistics
     options->insertItem("View assigned images",  this,  SLOT(showAssigned()));
     options->insertItem("Show this image separately", this, SLOT(showThisImage()));
+    options->insertItem("Show this class separately", this, SLOT(showThisClass()));
+    if (exists(imgnames[0].without_extension()+"_pcabasis_00.xmp"))
+    	options->insertItem("Show PCA basis for this class", this, SLOT(showThisPCA()));
+    if (exists(imgnames[0].without_extension()+"_outliers.sel"))
+    	options->insertItem("Show outliers for this class", this, SLOT(showThisOutliers()));
     options->insertSeparator();
 
     // Insert options the menu
@@ -201,4 +214,55 @@ void ShowCL2D::showThisImage()
     ImageViewer *showimg = new ImageViewer(imgnames[i].c_str(), false);
     showimg->loadImage(imgnames[i].c_str());
     showimg->show();
+}
+
+void ShowCL2D::showThisClass()
+{
+    int row = currentRow();
+    int col = currentColumn();
+    int i = indexOf(row, col);
+
+    ShowSel *showsel = new ShowSel;
+    showsel->apply_geo = apply_geo;
+    showsel->showonlyactive = true;
+    FileName fnClassRoot=imgnames[i].without_extension();
+    showsel->initWithFile(10, 10, fnClassRoot+filterSuffix+".sel");
+    showsel->show();
+}
+
+void ShowCL2D::showThisPCA()
+{
+    int row = currentRow();
+    int col = currentColumn();
+    int i = indexOf(row, col);
+
+    int n=0;
+    bool finish=false;
+    while (!finish)
+    {
+		FileName fnPCA=imgnames[i].without_extension()+"_pcabasis_"+integerToString(n,2)+".xmp";
+        if (exists(fnPCA))
+        {
+			ImageViewer *showimg = new ImageViewer(fnPCA.c_str(),false);
+			showimg->loadImage(fnPCA.c_str());
+			showimg->show();
+			n++;
+        }
+        else
+        	finish=true;
+    }
+}
+
+void ShowCL2D::showThisOutliers()
+{
+    int row = currentRow();
+    int col = currentColumn();
+    int i = indexOf(row, col);
+
+    ShowSel *showsel = new ShowSel;
+    showsel->apply_geo = apply_geo;
+    showsel->showonlyactive = true;
+    FileName fnClassRoot=imgnames[i].without_extension();
+    showsel->initWithFile(10, 10, fnClassRoot+filterSuffix+"_outliers.sel");
+    showsel->show();
 }

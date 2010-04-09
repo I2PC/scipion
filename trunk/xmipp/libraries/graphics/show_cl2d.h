@@ -39,6 +39,8 @@ public:
     // Apply geometric transformation when showing average & stddev of original images
     // and to compute the error image
     bool        apply_geo;
+    // Filter suffix
+    std::string filterSuffix;
 protected:
     // Array of selfiles, a selfile for each codevector
     SelFile *SFcv;
@@ -75,10 +77,12 @@ protected slots:
     /* Different kind of labels */
     void changeLabelsToName();
     void changeLabelsToHis();
-    /* Show assigned images */
+    /* Particular shows */
     void showAssigned();
-    /* Show this image */
     void showThisImage();
+    void showThisClass();
+    void showThisPCA();
+    void showThisOutliers();
 
 public:
     /** Init with SOM files.
