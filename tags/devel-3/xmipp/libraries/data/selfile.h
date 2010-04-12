@@ -640,7 +640,7 @@ public:
      */
     int LineNo();
 
-    /** Returns the size of the images inside.
+    /** Returns the size of the 2D images inside.
      * @ingroup SelFilesInfo
      *
      * The filenames within a selection file are supposed to be for SPIDER
@@ -655,7 +655,28 @@ public:
      * sel.ImgSize(y, x);
      * @endcode
      */
-    void ImgSize(int& Ydim, int& Xdim);
+    void ImgSize(int& Ydim, int& Xdim)
+    {
+        int dum;
+        ImgSize(dum, Ydim, Xdim);
+    }
+
+    /** Returns the size of the 3D images inside.
+     * @ingroup SelFilesInfo
+     *
+     * The filenames within a selection file are supposed to be for SPIDER
+     * images, this function opens one of the images (an active one) and
+     * returns the size of that image, supposed to be the same for the rest of
+     * the images in the selection file.
+     *
+     * An exception is thrown if the first valid image in the selfile, doesn't
+     * exist in the disk or it is not a XMIPP image.
+     *
+     * @code
+     * sel.ImgSize(z, y, x);
+     * @endcode
+     */
+    void ImgSize(int& Zdim, int& Ydim, int& Xdim);
 
     /** Returns the extension of the files inside.
      * @ingroup SelFilesInfo

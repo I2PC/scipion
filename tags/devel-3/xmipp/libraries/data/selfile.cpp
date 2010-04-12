@@ -668,32 +668,15 @@ int SelFile::LineNo()
 }
 
 /* Image size -------------------------------------------------------------- */
-void SelFile::ImgSize(int &Ydim, int &Xdim)
+void SelFile::ImgSize(int &Zdim, int &Ydim, int &Xdim)
 {
     std::vector<SelLine>::iterator aux = current_line;
     go_first_ACTIVE();
     FileName fn_img = (*current_line).text;
-    if (fn_img.find("imagic:") != -1)
-    {
-        Image *img = Image::LoadImage(fn_img);
-        Ydim = (*img)().ydim;
-        Xdim = (*img)().xdim;
-        delete img;
-    }
-    else if (Is_ImageXmipp(fn_img))
-    {
-        ImageXmipp img;
-        img.read(fn_img);
-        Ydim = img().ydim;
-        Xdim = img().xdim;
-    }
-    else if (Is_FourierImageXmipp(fn_img))
-    {
-        FourierImageXmipp img;
-        img.read(fn_img);
-        Ydim = img().ydim;
-        Xdim = img().xdim;
-    }
+    Image<double> I1;
+    int Ndim;
+    if (I1.IsImage(fn_img))
+        I1.getDimensions(Xdim, Ydim, Zdim, Ndim);
     else
         REPORT_ERROR(1, "SelFile::ImgSize: First Active file is not an image");
 
@@ -726,24 +709,22 @@ void SelFile::get_statistics(Image<double>& _ave, Image<double>& _sd, double& _m
         std::string image_name = NextImg();
         if (image_name == "")
             continue;
-        //// FIXME: image headers are no longer applied now....
-        //// This wasn't very important for the statistics anyway...
-        Image<double> tt;
-        tt.read(image_name);
+        Image<double> img;
+        img.read(image_name, true, 0, apply_geo);
         double min, max, avg, stddev;
-        (*image)().computeStats(avg, stddev, min, max);
+        img().computeStats(avg, stddev, min, max);
         if (_min > min)
             _min = min;
         if (_max < max)
             _max = max;
         if (first)
         {
-            _ave = *image;
+            _ave = img();
             first = false;
         }
         else
         {
-            _ave() += (*image)();
+            _ave() += img();
         }
         delete image;
         n++;
@@ -759,9 +740,9 @@ void SelFile::get_statistics(Image<double>& _ave, Image<double>& _sd, double& _m
         std::string image_name = NextImg();
         if (image_name == "")
             continue;
-        Image *image = Image::LoadImage(image_name, apply_geo); // reads image
-        Image tmpImg;
-        tmpImg() = (((*image)() - _ave()));
+        Image<double> img;
+        img.read(image_name, true, 0, apply_geo);
+        tmpImg() = img() - _ave();
         tmpImg() *= tmpImg();
         _sd() += tmpImg();
         delete image;

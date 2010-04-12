@@ -133,13 +133,17 @@ class Image
 {
 public:
 
-    unsigned int        dataflag;	// Flag to force reading of the data
+    SubImage*           image;         // Sub-images
+    MultidimArray<T>    data;           // The image data array
+    // FIXME: why cant this one be private as well?
+    DataType		datatype;	// Data type
+private:
     FileName            filename;       // File name
+    unsigned int        dataflag;	// Flag to force reading of the data
     unsigned long	x, y, z;        // Image dimensions in X, Y and Z
     unsigned long	n, i;		// Number of images and image number (may be > n)
     unsigned long	px, py, pz; 	// Page dimensions
     unsigned long	offset; 	// Data offset
-    DataType		datatype;	// Data type
     TransformType	transform;  	// Transform type
     double		min, max;	// Limits
     double		avg, std;	// Average and standard deviation
@@ -151,8 +155,7 @@ public:
     double		ua, ub, uc; 	// Unit cell dimensions (angstrom)
     double		alf, bet, gam;	// Unit cell angles (radian)
     unsigned int	spacegroup;	// Space group
-    SubImage*           image;          // Sub-images
-    MultidimArray<T>    data;           // The image data array
+
 
 public:
     /** Empty constructor
@@ -366,7 +369,7 @@ public:
      }
 
      
-
+     
 
     /** General write function
      */
@@ -722,8 +725,32 @@ public:
     }
 
 
+    /** Get file name
+     *
+     * @code
+     * std::cout << "Image name = " << I.name() << std::endl;
+     * @endcode
+     */
+     FileName name() const
+     {
+        return filename;
+     }
 
-    /** Get Rot angle
+    /** Get Image dimensions
+     *
+     * @code
+     * std::cout << "Image name = " << I.name() << std::endl;
+     * @endcode
+     */
+     void getDimensions(int &Xdim, int &Ydim, int &Zdim, int &Ndim) const
+     {
+         Xdim = x;
+         Ydim = y;
+         Zdim = z;
+         Ndim = n;
+     }
+
+     /** Get Rot angle
      *
      * @code
      * std::cout << "First Euler angle " << I.rot() << std::endl;
@@ -789,6 +816,14 @@ public:
         return (image[n]).shiftZ;
     }
 
+    /** Set file name
+     *
+     */
+     void setName(const FileName _filename)
+     {
+        filename = _filename;
+     }
+
     /** Set Euler angles in image header
      *
      */
@@ -827,7 +862,7 @@ public:
         (image[n]).weight = _weight;
     }
 
-   /** Get geometric transformation matrix from 2D-image header
+   /** Get geometric transformation matrix from 2D-image headerq
      */
     Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false, 
                                                unsigned long n = 0)
@@ -835,9 +870,9 @@ public:
         // This has only been implemented for 2D images...
         (*this)().checkDimension(2);
         
-        double phi = (image[n]).angleRot;
+        double phi = realWRAP((image[n]).angleRot, 0., 360.);
         double psi = realWRAP((image[n]).anglePsi, -180, 180);
-        double theta = realWRAP((image[n]).angleTilt, -180, 180);
+        double theta = realWRAP((image[n]).angleTilt, 0., 360);
         double xoff = (image[n]).shiftX;
         double yoff = (image[n]).shiftY;
 

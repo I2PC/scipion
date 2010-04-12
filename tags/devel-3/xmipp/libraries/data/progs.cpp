@@ -47,7 +47,8 @@ void Prog_parameters::show()
     if (quiet) return;
     std::cout << "Input File: " << fn_in << std::endl;
     /////////////////FIXME!!
-    if (apply_geo && !Is_VolumeXmipp(fn_in))
+    //if (apply_geo && !Is_VolumeXmipp(fn_in))
+    if (apply_geo)
         std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
     if (each_image_produces_an_output)
     {
@@ -78,10 +79,9 @@ void Prog_parameters::usage()
 
 void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
 {
-    if (Is_Image(fn_in))
+    Image<double> I;
+    if (I.isImage(fn_in))
     {
-        Image<double> I;
-        I.read(fn_in);
         Zdim = ZSIZE(I());
         Ydim = YSIZE(I());
         Xdim = XSIZE(I());
@@ -90,13 +90,14 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
     {
         SelFile SF;
         SF.read(fn_in);
-        SF.ImgSize(Zdim,Ydim, Xdim);
+        SF.ImgSize(Ydim, Xdim);
     }
 }
 
 int Prog_parameters::get_images_to_process()
 {
-    if (Is_Image(fn_in))
+    Image<double> I;
+    if (I.isImage(fn_in))
         return 1;
     else
     {
@@ -121,6 +122,7 @@ void SF_main(int argc, char **argv,
     bool(*fI2i)(Image<std::complex<double> > &, Image<double> &, const Prog_parameters *) = NULL;
     bool(*fI2I)(Image<std::complex<double> > &, const Prog_parameters *) = NULL;
     bool(*fi2F)(Image<double> &, const FileName &, const Prog_parameters *) = NULL;
+    bool(*fF2F)(const FileName &, const FileName &, const Prog_parameters *) = NULL;
 
     // Read command line ....................................................
     try
@@ -150,7 +152,7 @@ void SF_main(int argc, char **argv,
             fn_out = prm->fn_out;
 
         // For single image .....................................................
-        if (isImage(prm->fn_in))
+        if (img.isImage(prm->fn_in))
         {
             /// FIXME applygeo
             img.read(prm->fn_in);//, false, false, prm->apply_geo);
@@ -182,7 +184,7 @@ void SF_main(int argc, char **argv,
             }
         }
         // For single Fourier image .............................................
-        else if (isComplexImage(prm->fn_in))
+        else if (IMG.isComplexImage(prm->fn_in))
         {
             IMG.read(prm->fn_in);
             IMG().setXmippOrigin();
@@ -243,7 +245,7 @@ void SF_main(int argc, char **argv,
                         prm->fn_out = fn_read.without_extension() + "." + prm->oext;
                     }
 
-                if (isImage(fn_read))
+                if (img.isImage(fn_read))
                 {
                     img.read(fn_read, false, false, prm->apply_geo);
                     img().setXmippOrigin();
@@ -275,7 +277,7 @@ void SF_main(int argc, char **argv,
                         break;
                     }
                 }
-                else if (isComplexImage(fn_read))
+                else if (IMG.isComplexImage(fn_read))
                 {
                     IMG.read(fn_read);
                     IMG().setXmippOrigin();
