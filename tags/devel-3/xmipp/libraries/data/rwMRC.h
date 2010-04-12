@@ -85,12 +85,13 @@ int readMRC()
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL ) return(-1);
 
-        MRChead*        header = (MRChead *) askMemory(sizeof(MRChead));
-        if ( fread( header, MRCSIZE, 1, fimg ) < 1 ) return(-2);
+    MRChead*        header = (MRChead *) askMemory(sizeof(MRChead));
+    if ( fread( header, MRCSIZE, 1, fimg ) < 1 ) return(-2);
 
     // Determine byte order and swap bytes if from little-endian machine
+    swap = 0;
     char*       b = (char *) header;
-    int         i, swap = 0;
+    int         i;
     if ( ( abs( header->mode ) > SWAPTRIG ) || ( abs(header->nz) > SWAPTRIG ) ) {
 #ifdef DEBUG        
         fprintf(stderr, "Warning: Swapping header byte order for 4-byte types\n");
@@ -153,7 +154,7 @@ int readMRC()
 
     freeMemory(header, sizeof(MRChead));
 
-    readData(fimg, -1, swap, 0);
+    readData(fimg, -1, 0);
 
     fclose(fimg);
 

@@ -63,16 +63,28 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
 
     // Look for tomogram dimensions
     // check if the file format is spider
-    if (Is_VolumeXmipp(fn_tomogram))
+    Image<double> img;
+    if (img.isImage(fn_tomogram))
     {
-        headerXmipp     header;
-        header.read(fn_tomogram);
-        Xdim = header.iXdim();
-        Ydim = header.iYdim();
-        Zdim = header.iZdim();
-        __offset = header.get_header_size();
+        int swap, xdim, ydim, zdim, ndim;
+        unsigned long offset;
+        img.getDimensions(xdim, ydim, zdim, ndim);
+        img.getHeaderInfo(offset, swap);
+        Xdim = xdim;
+        Ydim = ydim;
+        Zdim = zdim;
+        // FIXME: swap can be larger than 1 as well....
+        if (swap == 0)
+            reversed = false;
+        else 
+            reversed = true;
+        __offset = offset;
         __depth = 32;
-        reversed = header.reversed();
+        /// FIXME NOT IMPLEMENTED YET... ASK COSS
+        // perhaps this is gettypesize?
+        /*
+        __depth = 32;
+        */
     }
     else
     {

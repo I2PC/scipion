@@ -25,7 +25,6 @@
 
 #include "args.h"
 #include "gcc_version.h"
-#include "matrix1d.h"
 
 #include <cstdio>
 #include <cmath>
@@ -618,12 +617,12 @@ int numComponents(const std::string &str)
 }
 
 // Get float vector ========================================================
-Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
+MultidimArray<double> getVectorParameter(int argc, char **argv, const char *param,
                                   int dim, int _errno,
                                   const std::string & errmsg,
                                   int exit)
 {
-    Matrix1D<double> aux;
+    MultidimArray<double> aux;
     bool count_dimensionality = (dim == -1);
 
     // Find and form vector
@@ -1055,14 +1054,14 @@ bool checkParameter(FILE *fh, const char *param)
 }
 
 // Get vector param from file ==============================================
-Matrix1D<double> getVectorParameter(FILE *fh, const char *param,
+MultidimArray<double> getVectorParameter(FILE *fh, const char *param,
                                   int dim, int _errno, 
                                   const std::string &errmsg, int exit)
 {
     int    argcp;
     char **argvp = NULL;
     char  *copy = NULL;
-    Matrix1D<double> retval;
+    MultidimArray<double> retval;
     if (!generateCommandLine(fh, param, argcp, argvp, copy))
         if (dim == -1)
             return retval;

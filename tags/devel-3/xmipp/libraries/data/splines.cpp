@@ -61,9 +61,9 @@ double sum_spatial_Bspline03_SimpleGrid(const SimpleGrid &grid)
 // Compute the sum in the points inside the grid
 // The integer part of the vectors is taken for not picking points
 // just in the border of the spline, which we know they are 0.
-    for (i = (int)corner1.X(); i <= (int)corner2.X(); i++)
-        for (j = (int)corner1.Y(); j <= (int)corner2.Y(); j++)
-            for (k = (int)corner1.Z(); k <= (int)corner2.Z(); k++)
+    for (i = (int)XX(corner1); i <= (int)XX(corner2); i++)
+        for (j = (int)YY(corner1); j <= (int)YY(corner2); j++)
+            for (k = (int)ZZ(corner1); k <= (int)ZZ(corner2); k++)
             {
                 VECTOR_R3(gr, i, j, k);
                 grid.grid2universe(gr, ur);

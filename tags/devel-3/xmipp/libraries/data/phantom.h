@@ -286,7 +286,7 @@ public:
         considered to belong to the feature if it is totally inside
         the feature. If the plane is outside the volume
         scope the result is mean=variance=0 */
-    void mean_variance_in_plane(Volume *V, double z, double &mean, double &var);
+    void mean_variance_in_plane(Image<double> *V, double z, double &mean, double &var);
 
     /** Project feature onto a projection plane.
         Projection is a class itself which has got inside the direction of
@@ -320,7 +320,7 @@ public:
                     ...
         }
         @endcode*/
-    void corners(const Volume *V, Matrix1D<double> &corner1,
+    void corners(const Image<double> *V, Matrix1D<double> &corner1,
                  Matrix1D<double> &corner2);
 
 #define INTERNAL 0
@@ -349,7 +349,7 @@ public:
         f.draw_in(&V,EXTERNAL,0.5) --> External density=0.5
         @endcode
     */
-    void draw_in(Volume *V, int color_mode = INTERNAL, double colour = -1);
+    void draw_in(Image<double> *V, int color_mode = INTERNAL, double colour = -1);
 
     /** Draw the surface of the feature.
         This function draws the surface of the feature at the given volume.
@@ -357,7 +357,7 @@ public:
         inside the feature meets 1<=n<=7. The default gray_level with which
         voxels will be drawn is 2 (normally higher than the usual volume grey
         levels, and the behaviour of the voxels drawn is Assign. */
-    void sketch_in(Volume *V, double colour = 2);
+    void sketch_in(Image<double> *V, double colour = 2);
 
     /** Shift.
         Shift the feature a given amount of voxels. The new center is the old
@@ -1543,7 +1543,7 @@ public:
         The volume is cleaned, resized to the phantom size and its origin
         is set at the center of the volume. Then every feature is drawn into
         the volume */
-    void draw_in(Volume *V);
+    void draw_in(Image<double> *V);
 
     /** Label a volume after the phantom.
         The volume is cleaned, resized to the phantom size and its origin
@@ -1552,7 +1552,7 @@ public:
         the border for first feature density -1,
         the first feature has got density 1, the second 2 and its border -2,
         ... */
-    void label(Volume *V);
+    void label(Image<double> *V);
 
 #define DONT_CLEAN 0
 #define CLEAN      1
@@ -1564,7 +1564,7 @@ public:
         to the labels CLEAN or DONT_CLEAN (by default). The grey level for
         those voxels can be defined (by default, 2) and the colour is
         assigned */
-    void sketch_in(Volume *V, int clean = DONT_CLEAN, double colour = 2);
+    void sketch_in(Image<double> *V, int clean = DONT_CLEAN, double colour = 2);
 
     /** Shift.
         Shift all features in the phantom a given amount of voxels. See
@@ -1636,7 +1636,7 @@ public:
         If the output image is not resized, it is resized to the Y and X dimensions
         of the phantom.
         */
-    void surface(double z0, double radius, int direction, Image *P)
+    void surface(double z0, double radius, int direction, Image<double> *P)
     const;
 };
 //@}

@@ -128,11 +128,11 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             auxstr = nextToken();
             fold = textToInteger(auxstr);
             auxstr = nextToken();
-            axis.X() = textToDouble(auxstr);
+            XX(axis) = textToDouble(auxstr);
             auxstr = nextToken();
-            axis.Y() = textToDouble(auxstr);
+            YY(axis) = textToDouble(auxstr);
             auxstr = nextToken();
-            axis.Z() = textToDouble(auxstr);
+            ZZ(axis) = textToDouble(auxstr);
             ang_incr = 360. / fold;
             L.initIdentity();
             for (j = 1, rot_ang = ang_incr; j < fold; j++, rot_ang += ang_incr)
@@ -160,11 +160,11 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
         else if (strcmp(auxstr, "mirror_plane") == 0)
         {
             auxstr = nextToken();
-            axis.X() = textToFloat(auxstr);
+            XX(axis) = textToFloat(auxstr);
             auxstr = nextToken();
-            axis.Y() = textToFloat(auxstr);
+            YY(axis) = textToFloat(auxstr);
             auxstr = nextToken();
-            axis.Z() = textToFloat(auxstr);
+            ZZ(axis) = textToFloat(auxstr);
             L.initIdentity();
             L(2, 2) = -1;
             Matrix2D<double> A = alignWithZ(axis);
@@ -867,7 +867,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 
 /* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
 
-void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
+void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
                      const Matrix2D<int> &mask, int volume_no,
@@ -1087,7 +1087,7 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
 }//symmetryP2_122 end
 /* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
 
-void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
+void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
                      const Matrix2D<int> &mask, int volume_no,
@@ -1306,7 +1306,7 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
             }//for end
 }//symmetryP2_122 end
 /* Symmetrizes a simple grid with P4  symmetry --------------------------*/
-void symmetry_P4(Volume &vol, const SimpleGrid &grid,
+void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
                  const Matrix2D<int> &mask, int volume_no, int grid_type)
@@ -1499,7 +1499,7 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
 }
 /* Symmetrizes a simple grid with P4212 symmetry--------------------------*/
 
-void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
+void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
                      const Matrix2D<int> &mask, int volume_no,
@@ -1815,7 +1815,7 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
             }//for end
 }//symmetryP42_12 end
 /* Symmetrizes a simple grid with P6 symmetry-----------------------------*/
-void symmetry_P6(Volume &vol, const SimpleGrid &grid,
+void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
                  const Matrix2D<int> &mask, int volume_no,

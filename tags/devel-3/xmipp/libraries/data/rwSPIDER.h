@@ -114,10 +114,11 @@ int  readSPIDER(int img_select)
 	
     SPIDERhead*	header = (SPIDERhead *) askMemory(sizeof(SPIDERhead));
     if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 ) return(-2);
+    swap = 0;
 	
     // Determine byte order and swap bytes if from different-endian machine
     char*   	b = (char *) header;
-    int     	i, j, swap = 0;
+    int     	i, j;
     int     	extent = SPIDERSIZE - 180;  // exclude char bytes from swapping
     if ( ( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > SWAPTRIG ) ||
          ( fabs(header->nslice) < 1 ) ) 
@@ -208,7 +209,7 @@ int  readSPIDER(int img_select)
     std::cerr<<"DEBUG readSPIDER: img_select= "<<img_select<<" n= "<<n<<" pad = "<<pad<<std::endl;
 #endif
 	
-    readData(fimg, img_select, swap, pad );
+    readData(fimg, img_select, pad );
     
     fclose(fimg);
 		

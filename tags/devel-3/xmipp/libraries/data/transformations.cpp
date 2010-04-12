@@ -27,7 +27,7 @@
 #include "transformations.h"
 
 template<typename T>
-void applyGeometry(int Splinedegree, 
+void applyGeometry(int SplineDegree, 
                    MultidimArray<T>& V2, 
                    const MultidimArray<T>& V1, 
                    const Matrix2D< double > &A, bool inv, 
@@ -55,6 +55,7 @@ void applyGeometry(int Splinedegree,
         return;
     }
 
+    MultidimArray<double> Bcoeffs;
     Matrix2D<double> Ainv;
     const Matrix2D<double> * Aptr=&A;
     if (!inv)
@@ -70,18 +71,7 @@ void applyGeometry(int Splinedegree,
     if (XSIZE(V2) == 0)
         V2.resize(1, ZSIZE(V1), YSIZE(V1), XSIZE(V1));
 
-    MultidimArray Bcoeffs;
-    if (Splinedegree > 1)
-    {
-        // Build the B-spline coefficients
-        //FIXME get produceSplineCoefficients OUTSIDE multidimArray!
-        produceSplineCoefficients(Splinedegree, Bcoeffs, V1, n); //Bcoeffs is a single image
-        STARTINGX(Bcoeffs) = (int) minxp;
-        STARTINGY(Bcoeffs) = (int) minyp;
-        STARTINGZ(Bcoeffs) = (int) minzp;
-    }
-
-    if (ZSIZE(V1) == 1)
+    if (V1.getDim() == 2)
     {
         // 2D transformation
 
@@ -95,23 +85,31 @@ void applyGeometry(int Splinedegree,
         if (outside != 0.)
         {
             // Initialise output matrix with value=outside
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M2)
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(V2)
             {
-                DIRECT_MAT_ELEM(M2, i, j) = outside;
+                DIRECT_MAT_ELEM(V2, i, j) = outside;
             }
         }
 
         // Find center and limits of image
-        cen_y  = (int)(YSIZE(M2) / 2);
-        cen_x  = (int)(XSIZE(M2) / 2);
-        cen_yp = (int)(YSIZE(M1) / 2);
-        cen_xp = (int)(XSIZE(M1) / 2);
+        cen_y  = (int)(YSIZE(V2) / 2);
+        cen_x  = (int)(XSIZE(V2) / 2);
+        cen_yp = (int)(YSIZE(V1) / 2);
+        cen_xp = (int)(XSIZE(V1) / 2);
         minxp  = -cen_xp;
         minyp  = -cen_yp;
-        maxxp  = XSIZE(M1) - cen_xp - 1;
-        maxyp  = YSIZE(M1) - cen_yp - 1;
-        Xdim   = XSIZE(M1);
-        Ydim   = YSIZE(M1);
+        maxxp  = XSIZE(V1) - cen_xp - 1;
+        maxyp  = YSIZE(V1) - cen_yp - 1;
+        Xdim   = XSIZE(V1);
+        Ydim   = YSIZE(V1);
+
+        if (SplineDegree > 1)
+        {
+            // Build the B-spline coefficients
+            produceSplineCoefficients(SplineDegree, Bcoeffs, V1, n); //Bcoeffs is a single image
+            STARTINGX(Bcoeffs) = (int) minxp;
+            STARTINGY(Bcoeffs) = (int) minyp;
+        }
 
         // Now we go from the output image to the input image, ie, for any pixel
         // in the output image we calculate which are the corresponding ones in
@@ -126,7 +124,7 @@ void applyGeometry(int Splinedegree,
                   << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n";
 #endif
 
-        for (int i = 0; i < YSIZE(M2); i++)
+        for (int i = 0; i < YSIZE(V2); i++)
         {
             // Calculate position of the beginning of the row in the output image
             x = -cen_x;
@@ -139,7 +137,7 @@ void applyGeometry(int Splinedegree,
             xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + dMij(Aref, 0, 2);
             yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + dMij(Aref, 1, 2);
 
-            for (int j = 0; j < XSIZE(M2); j++)
+            for (int j = 0; j < XSIZE(V2); j++)
             {
                 bool interp;
                 T tmp;
@@ -185,7 +183,7 @@ void applyGeometry(int Splinedegree,
 
                 if (interp)
                 {
-                    if (Splinedegree==1)
+                    if (SplineDegree==1)
                     {
                         // Linear interpolation
 
@@ -221,30 +219,30 @@ void applyGeometry(int Splinedegree,
                         // if wx == 0 means that the rightest point is useless for this
                         // interpolation, and even it might not be defined if m1=xdim-1
                         // The same can be said for wy.
-                        tmp  = (T)((1 - wy) * (1 - wx) * DIRECT_NZYX_ELEM(M1, n, 0, n1, m1));
+                        tmp  = (T)((1 - wy) * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, 0, n1, m1));
                         
-                        if (wx != 0 && m2 < M1.xdim)
-                            tmp += (T)((1 - wy) * wx * DIRECT_NZYX_ELEM(M1, n, 0, n1, m2));
+                        if (wx != 0 && m2 < V1.xdim)
+                            tmp += (T)((1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, 0, n1, m2));
                     
-                        if (wy != 0 && n2 < M1.ydim)
+                        if (wy != 0 && n2 < V1.ydim)
                         {
-                            tmp += (T)(wy * (1 - wx) * DIRECT_NZYX_ELEM(M1, n, 0, n2, m1));
+                            tmp += (T)(wy * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, 0, n2, m1));
                             
-                            if (wx != 0 && m2 < M1.xdim)
-                                tmp += (T)(wy * wx * DIRECT_NZYX_ELEM(M1, n, 0, n2, m2));
+                            if (wx != 0 && m2 < V1.xdim)
+                                tmp += (T)(wy * wx * DIRECT_NZYX_ELEM(V1, n, 0, n2, m2));
                         }
 
-                        dMij(M2, i, j) = tmp;
+                        dMij(V2, i, j) = tmp;
                     }
                     else
                     {
                         // B-spline interpolation
 
-                        dMij(M2, i, j) = (T) Bcoeffs.interpolatedElementBSpline(
-                            xp, yp, Splinedegree);
+                        dMij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D(
+                            xp, yp, SplineDegree);
                     }
 #ifdef DEBUG_APPYGEO
-                    std::cout << "   val= " << dMij(M2, i, j) << std::endl;
+                    std::cout << "   val= " << dMij(V2, i, j) << std::endl;
 #endif
                 }
 
@@ -289,6 +287,14 @@ void applyGeometry(int Splinedegree,
                   << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
             ;
 #endif
+
+        if (SplineDegree > 1)
+        {
+            // Build the B-spline coefficients
+            produceSplineCoefficients(SplineDegree, Bcoeffs, V1, n); //Bcoeffs is a single image
+            STARTINGX(Bcoeffs) = (int) minxp;
+            STARTINGY(Bcoeffs) = (int) minyp;
+        }
 
         // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
         // voxel in the output Matrix3D we calculate which are the corresponding
@@ -367,7 +373,7 @@ void applyGeometry(int Splinedegree,
                     
                     if (interp)
                     {
-                        if (Splinedegree == 1)
+                        if (SplineDegree == 1)
                         {
 
                             // Linear interpolation
@@ -470,7 +476,7 @@ void applyGeometry(int Splinedegree,
                             // B-spline interpolation
 
                             dVkij(V2, k, i, j) =
-                                (T) Bcoeffs.interpolatedElementBSpline(xp, yp, zp,Splinedegree);
+                                (T) Bcoeffs.interpolatedElementBSpline3D(xp, yp, zp,SplineDegree);
 
                         }
                     }
@@ -489,16 +495,26 @@ void applyGeometry(int Splinedegree,
 }
 
 
+template<typename T>
+void selfApplyGeometry(int Splinedegree, 
+                       MultidimArray<T>& V1,
+                       const Matrix2D< double > A, bool inv, 
+                       bool wrap, T outside, unsigned long n)
+{
+    MultidimArray<T> aux = V1;
+    applyGeometry(Splinedegree, V1, aux, A, inv, wrap, outside, n);
+}
+
 // Special case for complex numbers
 template <>
-void applyGeometry(int Splinedegree, 
+void applyGeometry(int SplineDegree, 
                    MultidimArray< std::complex<double> > &V2,
                    const MultidimArray< std::complex<double> > &V1,
                    const Matrix2D<double> &A, bool inv, 
                    bool wrap, std::complex<double> outside, unsigned long n)
 {
 
-    if (Splinedegree > 1)
+    if (SplineDegree > 1)
     {
         MultidimArray<double> re, im, rotre, rotim;
         MultidimArray<std::complex<double> > oneImg;
@@ -511,20 +527,28 @@ void applyGeometry(int Splinedegree,
         Complex2RealImag(MULTIDIM_ARRAY(oneImg),
                          MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                          MULTIDIM_SIZE(oneImg));
-        applyGeometryBSpline(rotre, A, re, Splinedegree, inv, wrap, outre);
-        applyGeometryBSpline(rotim, A, im, Splinedegree, inv, wrap, outim);
+        applyGeometry(SplineDegree, rotre, re, A, inv, wrap, outre);
+        applyGeometry(SplineDegree, rotim, im, A, inv, wrap, outim);
         V2.resize(oneImg);
         RealImag2Complex(MULTIDIM_ARRAY(rotre), MULTIDIM_ARRAY(rotim),
                          MULTIDIM_ARRAY(V2), MULTIDIM_SIZE(re));
     }
     else
-        applyGeometry(Splinedegree, V2, V1, A, inv, wrap, outside, n);
+        applyGeometry(SplineDegree, V2, V1, A, inv, wrap, outside, n);
         
 
 }
+void selfApplyGeometry(int Splinedegree, 
+                       MultidimArray< std::complex<double> > &V1,
+                       const Matrix2D<double> &A, bool inv, 
+                       bool wrap, std::complex<double> outside, unsigned long n)
+{
+    MultidimArray<std::complex<double> > aux = V1;
+    applyGeometry(Splinedegree, V1, aux, A, inv, wrap, outside, n);
+}
 
 template<typename T>
-void produceSplineCoefficients(int Splinedegree, 
+void produceSplineCoefficients(int SplineDegree, 
                                MultidimArray< double > &coeffs,
                                const MultidimArray< T > &V1,  
                                unsigned long n)
@@ -550,7 +574,7 @@ void produceSplineCoefficients(int Splinedegree,
 
 // Special case for complex arrays
 template<>
-void produceSplineCoefficients(int Splinedegree, 
+void produceSplineCoefficients(int SplineDegree, 
                                MultidimArray< double > &coeffs,
                                const MultidimArray< std::complex<double> > &V1,  
                                unsigned long n)
@@ -560,7 +584,7 @@ void produceSplineCoefficients(int Splinedegree,
 }
 
 template<typename T>
-void produceImageFromSplineCoefficients(int Splinedegree, 
+void produceImageFromSplineCoefficients(int SplineDegree, 
                                         MultidimArray< double >& img, 
                                         const MultidimArray< double > &coeffs)
 {
@@ -584,7 +608,7 @@ void produceImageFromSplineCoefficients(int Splinedegree,
 }
 
 template<typename T>
-void rotate(int Splinedegree, 
+void rotate(int SplineDegree, 
             MultidimArray<T> &V2,
             const MultidimArray<T> &V1, 
             double ang, char axis, 
@@ -602,12 +626,12 @@ void rotate(int Splinedegree,
     else
         REPORT_ERROR(1,"rotate ERROR: rotate only valid for 2D or 3D arrays");
 
-    applyGeometry(Splinedegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
+    applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
 
 }
 
 template<typename T>
-void rotate(int Splinedegree, 
+void rotate(int SplineDegree, 
             MultidimArray<T> &V2,
             const MultidimArray<T> &V1, 
             double ang, const Matrix1D< double >& axis, 
@@ -615,11 +639,11 @@ void rotate(int Splinedegree,
 {
     V1.checkDimension(3);
     Matrix2D< double > tmp = rotation3DMatrix(ang, axis);
-    applyGeometry(Splinedegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
+    applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
 }
 
 template<typename T>
-void translate(int Splinedegree, 
+void translate(int SplineDegree, 
                MultidimArray<T> &V2,
                const MultidimArray<T> &V1, 
                const Matrix1D< double >& v, 
@@ -632,11 +656,11 @@ void translate(int Splinedegree,
         tmp = translation3DMatrix(v);
     else
         REPORT_ERROR(1,"translate ERROR: translate only valid for 2D or 3D arrays");
-    applyGeometry(Splinedegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
+    applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
 }
 
 template<typename T>
-void translateCenterOfMassToCenter(int Splinedegree, 
+void translateCenterOfMassToCenter(int SplineDegree, 
                                    MultidimArray<T> &V2,
                                    const MultidimArray<T> &V1, 
                                    bool wrap, unsigned long n)
@@ -646,11 +670,11 @@ void translateCenterOfMassToCenter(int Splinedegree,
     Matrix1D< double > center;
     V2.centerOfMass(center,NULL,n);
     center *= -1;
-    translate(Splinedegree, V2, V1, center, wrap, 0, n);
+    translate(SplineDegree, V2, V1, center, wrap, 0, n);
 }
 
 template<typename T>
-void scaleToSize(int Splinedegree, 
+void scaleToSize(int SplineDegree, 
                  MultidimArray<T> &V2,
                  const MultidimArray<T> &V1,
                  int Xdim, int Ydim, int Zdim,
@@ -661,8 +685,8 @@ void scaleToSize(int Splinedegree,
     if (V1.getDim()==2)
     {
         tmp.initIdentity(3);
-        DIRECT_MAT_ELEM(temp, 0, 0) = (double) Xdim / (double) XSIZE(V1);
-        DIRECT_MAT_ELEM(temp, 1, 1) = (double) Ydim / (double) YSIZE(V1);
+        DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) XSIZE(V1);
+        DIRECT_MAT_ELEM(tmp, 1, 1) = (double) Ydim / (double) YSIZE(V1);
         V2.resize(1, 1, Ydim, Xdim);
     }
     else if (V1.getDim()==3)
@@ -675,20 +699,23 @@ void scaleToSize(int Splinedegree,
     }
     else
         REPORT_ERROR(1,"scaleToSize ERROR: scaleToSize only valid for 2D or 3D arrays");
-    applyGeometry(Splinedegree, V2, V1, tmp, IS_NOT_INV, WRAP, n);
+
+//FIXME I Dont know why the compiler does not let me use ",0, n" ...
+    //applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, WRAP, 0, n);
+    applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, WRAP);
 
 }
 
 // Special case for complex arrays
-void scaleToSize(int Splinedegree, 
+void scaleToSize(int SplineDegree, 
                  MultidimArray< std::complex<double> > &V2,
                  const MultidimArray< std::complex<double> > &V1,
                  int Xdim, int Ydim, int Zdim,
                  unsigned long n)
 {
-    if (Splinedegree > 1)
+    if (SplineDegree > 1)
     {
-        MultidimArray< double > re, im, scre, scim;
+        MultidimArray< double > re, im, aux;
         MultidimArray<std::complex<double> > oneImg;
 
         re.resize(ZSIZE(V1), YSIZE(V1), XSIZE(V1));
@@ -698,31 +725,29 @@ void scaleToSize(int Splinedegree,
         Complex2RealImag(MULTIDIM_ARRAY(oneImg),
                          MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                          MULTIDIM_SIZE(oneImg));
-
-        re.scaleToSize(Splinedegree, Ydim, Xdim, Zdim, scre);
-        im.scaleToSize(Splinedegree, Ydim, Xdim, Zdim, scim);
-
-        result.resize(Zdim, Ydim, Xdim);
-
+        aux = re;
+        scaleToSize(SplineDegree, re, aux, Ydim, Xdim, Zdim);
+        aux = im;
+        scaleToSize(SplineDegree, im, aux, Ydim, Xdim, Zdim);
         RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                          MULTIDIM_ARRAY(V2), MULTIDIM_SIZE(re));
     }
     else
-        scaleToSize(Splinedegree, V2, V1, Xdim, Ydim, Zdim, n);
+        scaleToSize(SplineDegree, V2, V1, Xdim, Ydim, Zdim, n);
     
 }
 
 
 
 template<typename T>
-void pyramidReduce(int Splinedegree, 
+void pyramidReduce(int SplineDegree, 
                    MultidimArray<T> &V2,
                    const MultidimArray<T> &V1,
                    int levels, 
                    unsigned long n)
 {
     MultidimArray< double > coeffs;
-    produceSplineCoefficients(Splinedegree, coeffs, V1, n);
+    produceSplineCoefficients(SplineDegree, coeffs, V1, n);
 
     for (int i = 0; i < levels; i++)
     {
@@ -734,14 +759,15 @@ void pyramidReduce(int Splinedegree,
 
 }
 
-void pyramidExpand(int Splinedegree, 
+template<typename T>
+void pyramidExpand(int SplineDegree, 
                    MultidimArray<T> &V2,
                    const MultidimArray<T> &V1,
                    int levels, 
                    unsigned long n)
 {
     MultidimArray< double > coeffs;
-    produceSplineCoefficients(Splinedegree, coeffs, V1, n);
+    produceSplineCoefficients(SplineDegree, coeffs, V1, n);
 
     for (int i = 0; i < levels; i++)
     {
@@ -754,7 +780,7 @@ void pyramidExpand(int Splinedegree,
 }
 
 template<typename T>
-void reduceBSpline(int Splinedegree, 
+void reduceBSpline(int SplineDegree, 
                    MultidimArray< double >& V2, 
                    const MultidimArray<T> &V1)
 {
@@ -813,7 +839,7 @@ void reduceBSpline(int Splinedegree,
 }
 
 template<typename T>
-void expandBSpline3D(int Splinedegree, 
+void expandBSpline3D(int SplineDegree, 
                      MultidimArray< double >& V2, 
                      const MultidimArray<T> &V1)
 {
@@ -837,7 +863,7 @@ void expandBSpline3D(int Splinedegree,
         Expand_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
                   MULTIDIM_ARRAY(V2), h, nh, IsCentered);
     }
-    else (V1.getDim() == 3)
+    else if (V1.getDim() == 3)
     {
         V2.resize(2 * ZSIZE(aux), 2 * YSIZE(aux), 2 * XSIZE(aux));
         Expand_3D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux), ZSIZE(aux),

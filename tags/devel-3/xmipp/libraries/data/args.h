@@ -29,11 +29,12 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include "multidim_array.h"
 //ROB
 #include <string.h>
 
 #include "funcs.h"
-template <typename T> class Matrix1D;
+template <typename T> class MultidimArray;
 
 /** @defgroup Arguments Arguments parsing
  *  @ingroup DataLibrary
@@ -566,7 +567,7 @@ void readFloatList(const std::string& str,
 template <typename T>
 void readFloatList(const char* str,
                      int N,
-                     Matrix1D< T >& v,
+                     MultidimArray< T >& v,
                      int _errno = 2105,
                      std::string errmsg = "Error reading floating list",
                      int exit = 0)
@@ -753,13 +754,13 @@ int numComponents(const std::string& str);
  * is thrown. If there is no dimensionality and a single parameter is behind the
  * flag then no brackets are needed
  */
-Matrix1D< double > getVectorParameter(int argc,
-                                    char** argv,
-                                    const char* param,
-                                    int dim = 2,
-                                    int _errno = -1,
-                                    const std::string & errmsg = "",
-                                    int exit = 0);
+MultidimArray< double > getVectorParameter(int argc,
+                                      char** argv,
+                                      const char* param,
+                                      int dim = 2,
+                                      int _errno = -1,
+                                      const std::string & errmsg = "",
+                                      int exit = 0);
 
 /** Get specific command line.
  * @ingroup CommandLineFunctions
@@ -899,7 +900,7 @@ bool checkParameter(FILE* fh, const char* param);
  *
  * The same as before but reading is done from a file
  */
-Matrix1D< double > getVectorParameter(FILE* fh,
+MultidimArray< double > getVectorParameter(FILE* fh,
                                     const char* param,
                                     int dim = 2,
                                     int _errno = -1,

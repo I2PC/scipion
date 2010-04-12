@@ -815,7 +815,7 @@ const
 /* Draw in                                                                   */
 /* ------------------------------------------------------------------------- */
 /* Corners ----------------------------------------------------------------- */
-void Feature::corners(const Volume *V, Matrix1D<double> &corner1,
+void Feature::corners(const Image<double> *V, Matrix1D<double> &corner1,
                       Matrix1D<double> &corner2)
 {
     corner1.resize(3);
@@ -844,7 +844,7 @@ void Feature::corners(const Volume *V, Matrix1D<double> &corner1,
 /* Draw a feature ---------------------------------------------------------- */
 //#define DEBUG
 #define Vr VOLVOXEL((*V),(int)ZZ(r),(int)YY(r),(int)XX(r))
-void Feature::draw_in(Volume *V, int colour_mode, double colour)
+void Feature::draw_in(Image<double> *V, int colour_mode, double colour)
 {
     Matrix1D<double>   aux1(3), aux2(3), corner1(3), corner2(3), r(3);
     int               add;
@@ -900,7 +900,7 @@ void Feature::draw_in(Volume *V, int colour_mode, double colour)
 #undef DEBUG
 
 /* Sketch a feature -------------------------------------------------------- */
-void Feature::sketch_in(Volume *V, double colour)
+void Feature::sketch_in(Image<double> *V, double colour)
 {
     Matrix1D<double>   aux1(3), aux2(3), corner1(3), corner2(3), r(3);
     int               inside;
@@ -1752,7 +1752,7 @@ void Cone::init_rnd(
 /* ------------------------------------------------------------------------- */
 /* Mean and Variance in a plane                                              */
 /* ------------------------------------------------------------------------- */
-void Feature::mean_variance_in_plane(Volume *V, double z, double &mean,
+void Feature::mean_variance_in_plane(Image<double> *V, double z, double &mean,
                                      double &var)
 {
     double sum1 = 0;
@@ -2112,19 +2112,21 @@ int Phantom::any_feature_intersects_sphere(const Matrix1D<double> &r,
 
 /* Draw a Phantom ---------------------------------------------------------- */
 // Always suppose CC grid
-void Phantom::draw_in(Volume *V)
+void Phantom::draw_in(Image<double> *V)
 {
-    V->adapt_to_size(zdim, ydim, xdim);
+    (*V)().resize(zdim, ydim, xdim);
+    (*V)().setXmippOrigin();
     (*V)().initConstant(Background_Density);
     for (int i = 0; i < VF.size(); i++) VF[i]->draw_in(V);
 }
 
 /* Label a Phantom --------------------------------------------------------- */
 // Always suppose CC grid
-void Phantom::label(Volume *V)
+void Phantom::label(Image<double> *V)
 {
     Matrix1D<double> r(3), aux1(3), aux2(3);
-    V->adapt_to_size(zdim, ydim, xdim);
+    (*V)().resize(zdim, ydim, xdim);
+    (*V)().setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*V))
     {
         ZZ(r) = k;
@@ -2141,9 +2143,13 @@ void Phantom::label(Volume *V)
 
 /* Sketch a Phantom -------------------------------------------------------- */
 // Always suppose CC grid
-void Phantom::sketch_in(Volume *V, int clean, double colour)
+void Phantom::sketch_in(Image<double> *V, int clean, double colour)
 {
-    if (clean) V->adapt_to_size(zdim, ydim, xdim);
+    if (clean) 
+    {
+        (*V)().resize(zdim, ydim, xdim);
+        (*V)().setXmippOrigin();
+    }
     for (int i = 0; i < VF.size(); i++) VF[i]->sketch_in(V, colour);
 }
 
@@ -2183,7 +2189,8 @@ void Phantom::project_to(Projection &P, int Ydim, int Xdim,
     << "A\n" << A;
 #endif
     // Initialise projection
-    P.adapt_to_size(Ydim, Xdim);
+    P().resize(Ydim, Xdim);
+    P().setXmippOrigin();
     P.set_angles(rot, tilt, psi);
 
     // Compute volume to Projection matrix
@@ -2223,7 +2230,7 @@ void Phantom::project_to(Projection &P, const Matrix2D<double> &VP, double    di
 
 /* Surface ----------------------------------------------------------------- */
 //#define DEBUG
-void Phantom::surface(double z0, double radius, int direction, Image *P)
+void Phantom::surface(double z0, double radius, int direction, Image<double> *P)
 const
 {
     if (z0 != zdim)
@@ -2236,7 +2243,11 @@ const
 #endif
 
     Matrix1D<double> aux1(3), aux2(3), aux3(3), r(3);
-    if (XSIZE((*P)()) == 0) P->adapt_to_size(ydim, xdim);
+    if (XSIZE((*P)()) == 0) 
+    {
+        (*P)().resize(ydim, xdim);
+        (*P)().setXmippOrigin();
+    }
     FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(*P))
     {
 #ifdef DEBUG

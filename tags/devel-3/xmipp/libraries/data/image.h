@@ -65,10 +65,54 @@ typedef enum DataType {
 unsigned long   gettypesize(DataType type);
 
 
+/** Image Matrix access.
+ * @ingroup ImagesSpeedUp
+ *
+ * This macro does the same as the normal 3D matrix access but in a faster way
+ * as no function call is generated.
+ *
+ * @code
+ * VOLMATRIX(V).resize(128, 128, 128);
+ *
+ * VOLMATRIX(V2) = VOLMATRIX(V1) + VOLMATRIX(V2);
+ * @endcode
+ */
+#define VOLMATRIX(V) ((V).data)
+
 #define SWAPTRIG     65535   // Threshold file z size above which bytes are swapped
 // For fast access to pixel values (and for backwards compatibility of the code)
 #define IMGPIXEL(I, i, j) MAT_ELEM(((I).data), (i), (j))
+
+/** Voxel access.
+ * @ingroup ImagesSpeedUp
+ *
+ * This macro does the same as the normal voxel access (remember, logical
+ * access) but in a faster way as no function call is generated.
+ *
+ * @code
+ * std::cout << "Grey level of voxel (2,-3,-3) of the Volume = " <<
+ *     VOLVOXEL(V, 2, -3, -3) << std::endl;
+ *
+ * VOLVOXEL(I, 2, -3, -3) = VOLVOXEL(I, 2, -3, -2);
+ * @endcode
+ */
 #define VOLVOXEL(V, k, i, j) VOL_ELEM(((V).data), (k), (i), (j))
+
+/** Physical voxel access.
+ * @ingroup ImagesSpeedUp
+ *
+ * The physical voxel access gives you access to a voxel by its physical
+ * position and not by its logical one. This access shouldn't be used as a
+ * custom, use instead the logical access, but there might be cases in which
+ * this access might be interesting. Physical positions start at index 0 in C.
+ *
+ * @code
+ * std::cout << "This is the first voxel stored in the Volume " <<
+ *     DIRECT_VOLVOXEL(V, 0, 0, 0) << std::endl;
+ * @endcode
+ */
+#define DIRECT_VOLVOXEL(V, k, i, j) DIRECT_VOL_ELEM(((V).img), (k), (i), (j))
+
 #define DIRECT_IMGPIXEL(I, i, j) DIRECT_MAT_ELEM(((I).data), (i), (j))
 #define IMGMATRIX(I) ((I).data)
 
@@ -144,6 +188,7 @@ private:
     unsigned long	n, i;		// Number of images and image number (may be > n)
     unsigned long	px, py, pz; 	// Page dimensions
     unsigned long	offset; 	// Data offset
+    int                 swap;           // Perform byte swapping upon reading
     TransformType	transform;  	// Transform type
     double		min, max;	// Limits
     double		avg, std;	// Average and standard deviation
@@ -203,6 +248,7 @@ public:
         px = py = pz = 0;
         filename = "";
         offset = 0;
+        swap = 0;
         transform = NoTransform;
         min = max = avg = 0.;
         std = -1.;
@@ -567,7 +613,7 @@ public:
          }
      }
 
-     void swapPage(char * page, size_t pageNrElements, int swap)
+     void swapPage(char * page, size_t pageNrElements)
      {
          unsigned long datatypesize = gettypesize(datatype);
 #ifdef DEBUG
@@ -587,7 +633,7 @@ public:
          }
      }
 
-     void readData(FILE* fimg, int select_img, int swap, unsigned long pad)
+     void readData(FILE* fimg, int select_img, unsigned long pad)
      {
 #define DEBUG
 #ifdef DEBUG
@@ -669,7 +715,7 @@ public:
  #endif
 
                     //swap per page
-                    if (swap) swapPage(page, readsize_n, swap);
+                    if (swap) swapPage(page, readsize_n);
                     std::cerr<<"after swap haveread_n= "<<haveread_n<<std::endl;
 
                     // cast to T per page
@@ -738,9 +784,6 @@ public:
 
     /** Get Image dimensions
      *
-     * @code
-     * std::cout << "Image name = " << I.name() << std::endl;
-     * @endcode
      */
      void getDimensions(int &Xdim, int &Ydim, int &Zdim, int &Ndim) const
      {
@@ -749,7 +792,16 @@ public:
          Zdim = z;
          Ndim = n;
      }
-
+     
+    /** Get Image dimensions
+     *
+     */
+     void getHeaderInfo(unsigned long &_offset, int &_swap) const
+     {
+         _offset = offset;
+         _swap = swap;
+     }
+     
      /** Get Rot angle
      *
      * @code

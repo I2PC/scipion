@@ -323,35 +323,35 @@ void symmetrize_crystal_volume(GridVolume &vol,
 
 /** Symmetrizes a simple grid with P2_122  symmetry
 */
-void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
+void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
                      const Matrix2D<int> &mask, int volume_no,
                      int grid_type);
 /** Symmetrizes a simple grid with P22_12  symmetry
 */
-void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
+void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
                      const Matrix2D<int> &mask, int volume_no,
                      int grid_type);
 /** Symmetrizes a simple grid with P4  symmetry
 */
-void symmetry_P4(Volume &vol, const SimpleGrid &grid,
+void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
                  const Matrix2D<int> &mask, int volume_no,
                  int grid_type);
 /** Symmetrizes a simple grid with P4212 symmetry
 */
-void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
+void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
                      const Matrix2D<int> &mask, int volume_no,
                      int grid_type);
 /** Symmetrizes a simple grid with P6 symmetry
 */
-void symmetry_P6(Volume &vol, const SimpleGrid &grid,
+void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
                  const Matrix2D<int> &mask, int volume_no,

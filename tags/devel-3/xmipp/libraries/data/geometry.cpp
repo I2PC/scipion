@@ -901,7 +901,7 @@ Matrix2D<double> Euler_rotation3DMatrix(double rot, double tilt, double psi)
 void Euler_rotate(const MultidimArray<double> &V, double rot, double tilt, double psi,
                   MultidimArray<double> &result)
 {
-    applyGeometry(result, Euler_rotation3DMatrix(rot, tilt, psi), V, IS_NOT_INV, DONT_WRAP);
+    applyGeometry(1, result, V, Euler_rotation3DMatrix(rot, tilt, psi), IS_NOT_INV, DONT_WRAP);
 }
 
 

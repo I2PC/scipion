@@ -34,6 +34,8 @@
 #define IS_NOT_INV false
 #define DONT_WRAP false
 #define WRAP true
+#define DBL_EPSILON 1e-50
+
 
 /// @defgroup GeometricalTransformations Geometrical transformations
 /// @ingroup DataLibrary
@@ -119,39 +121,29 @@ void applyGeometry(int Splinedegree,
                    const Matrix2D< double > A, bool inv, 
                    bool wrap, T outside = 0, unsigned long n = 0);
 
-template<typename T>
 
 /** Applies a geometrical transformation and overwrites the input matrix.
  * @ingroup GeometricalTransformations
  *
  * The same as the previous function, but input array is overwritten
  */
+template<typename T>
 void selfApplyGeometry(int Splinedegree, 
                        MultidimArray<T>& V1,
                        const Matrix2D< double > A, bool inv, 
-                       bool wrap, T outside = 0, unsigned long n = 0)
-{
-    MultidimArray<T> aux = V1;
-    applyGeometry(Splinedegree, V1, aux, A, inv, wrap, outside, n);
-}
-
+                       bool wrap, T outside = 0, unsigned long n = 0);
 
 //Special cases for complex arrays
-//template <>
 void applyGeometry(int Splinedegree, 
                    MultidimArray< std::complex<double> > &V2,
                    const MultidimArray< std::complex<double> > &V1,  
                    const Matrix2D<double> &A, bool inv, 
                    bool wrap, std::complex<double> outside, unsigned long n = 0);
-// Same as above
+//Special cases for complex arrays
 void selfApplyGeometry(int Splinedegree, 
                        MultidimArray< std::complex<double> > &V1,
                        const Matrix2D<double> &A, bool inv, 
-                       bool wrap, std::complex<double> outside, unsigned long n = 0)
-{
-    MultidimArray<std::complex<double> > aux = V1;
-    applyGeometry(Splinedegree, V1, aux, A, inv, wrap, outside, n);
-}   
+                       bool wrap, std::complex<double> outside, unsigned long n = 0);
 
 
 /** Produce spline coefficients.
@@ -160,9 +152,6 @@ void selfApplyGeometry(int Splinedegree,
  * Create a single image with spline coefficients for the nth image
  *
  */
-#ifndef DBL_EPSILON
-#define DBL_EPSILON 1e-50
-#endif
 template<typename T>
 void produceSplineCoefficients(int Splinedegree, 
                                MultidimArray< double > &coeffs,
@@ -183,7 +172,6 @@ template<typename T>
 void produceImageFromSplineCoefficients(int Splinedegree, 
                                         MultidimArray< T >& img, 
                                         const MultidimArray< double > &coeffs);
-#undef DBL_EPSILON
 
 /** Rotate an array around a given system axis.
  * @ingroup GeometricalTransformations

@@ -34,6 +34,7 @@
 #include "funcs.h"
 #include "selfile.h"
 #include "image.h"
+#include "numerical_tools.h"
 
 /*****************************************************************************/
 /* SEL FILE LINE                                                 */
@@ -244,55 +245,37 @@ void SelFile::read(const FileName &sel_name, int overriding)
     if (overriding)
         clear();
 
-    // Open file
-    if (sel_name.find(IMAGIC_TAG) == 0)
+    // Read normal selfile
+    fh_sel.open(sel_name.c_str(), std::ios::in);
+    if (!fh_sel)
+        REPORT_ERROR(1551, (std::string)"SelFile::read: File " + sel_name + " not found");
+    
+    // Read each line and keep it in the list of the SelFile object
+    fh_sel.peek();
+    while (!fh_sel.eof())
     {
-        // Read Imagic selfile
-        const FileName hed_fname = sel_name.substr(IMAGIC_TAG_LEN);
-        ImageImagicinfo info = ImagicGetImgInfo(hed_fname);
-        no_imgs = info.num_img;
-        temp.line_type = SelLine::DATALINE;
-        temp.label = SelLine::ACTIVE;
-        for (unsigned i = 0; i < no_imgs; i++)
+        try
         {
-            temp.text = ImagicMakeName(hed_fname.c_str(), i);
+            fh_sel >> temp;
+        }
+        catch (Xmipp_error)
+        {
+            std::cout << "Sel file: Line " << line_no << " is skipped due to an error\n";
+        }
+        switch (temp.line_type)
+        {
+        case (SelLine::NOT_ASSIGNED): break; // Line with an error
+        case (SelLine::DATALINE):
+            if (temp.label != SelLine::DISCARDED)
+                no_imgs++;
             text_line.push_back(temp);
+            break;
+        case (SelLine::COMMENT):
+            text_line.push_back(temp);
+            break;
         }
-    }
-    else
-    {
-        // Read normal selfile
-        fh_sel.open(sel_name.c_str(), std::ios::in);
-        if (!fh_sel)
-            REPORT_ERROR(1551, (std::string)"SelFile::read: File " + sel_name + " not found");
-
-        // Read each line and keep it in the list of the SelFile object
+        line_no++;
         fh_sel.peek();
-        while (!fh_sel.eof())
-        {
-            try
-            {
-                fh_sel >> temp;
-            }
-            catch (Xmipp_error)
-            {
-                std::cout << "Sel file: Line " << line_no << " is skipped due to an error\n";
-            }
-            switch (temp.line_type)
-            {
-            case (SelLine::NOT_ASSIGNED): break; // Line with an error
-            case (SelLine::DATALINE):
-                            if (temp.label != SelLine::DISCARDED)
-                                no_imgs++;
-                text_line.push_back(temp);
-                break;
-            case (SelLine::COMMENT):
-                            text_line.push_back(temp);
-                break;
-            }
-            line_no++;
-            fh_sel.peek();
-        }
 
         // Close file
         fh_sel.close();
@@ -322,38 +305,18 @@ void SelFile::write(const FileName &sel_name)
         fn_sel = sel_name;
     // Don't use sel_name=="" because it wastes memory
 
-    if (sel_name.find(IMAGIC_TAG) == 0)
-    {
-        // Write Imagic selfile
-        const FileName hed_fname = sel_name.substr(IMAGIC_TAG_LEN);
-        std::vector<Image *> imgs;
-        for (; current != last; current++)
-        {
-            Image *img;
-            if (current->Is_data() && (current->get_label() == SelLine::ACTIVE) &&
-                (img = Image::LoadImage(current->get_text())))
-                imgs.push_back(img);
-        }
-        if (!ImagicWriteImagicFile(hed_fname, imgs))
-            REPORT_ERROR(1553, "Error writing selfile to Imagic file " + sel_name);
-        for (std::vector<Image *>::iterator i = imgs.begin(); i != imgs.end(); i++)
-            delete(*i);
-    }
-    else
-    {
-        // Write Xmipp selfile
-        // Open file
-        fh_sel.open(fn_sel.c_str(), std::ios::out);
-        if (!fh_sel)
-            REPORT_ERROR(1553, "SelFile::write: File " + fn_sel + " cannot be written");
-
-        // Read each line and keep it in the list of the SelFile object
-        while (current != last)
-            fh_sel << *(current++);
-
-        // Close file
-        fh_sel.close();
-    }
+    // Write Xmipp selfile
+    // Open file
+    fh_sel.open(fn_sel.c_str(), std::ios::out);
+    if (!fh_sel)
+        REPORT_ERROR(1553, "SelFile::write: File " + fn_sel + " cannot be written");
+    
+    // Read each line and keep it in the list of the SelFile object
+    while (current != last)
+        fh_sel << *(current++);
+    
+    // Close file
+    fh_sel.close();
 }
 
 /* Merging with another selfile -------------------------------------------- */
@@ -675,7 +638,7 @@ void SelFile::ImgSize(int &Zdim, int &Ydim, int &Xdim)
     FileName fn_img = (*current_line).text;
     Image<double> I1;
     int Ndim;
-    if (I1.IsImage(fn_img))
+    if (I1.isImage(fn_img))
         I1.getDimensions(Xdim, Ydim, Zdim, Ndim);
     else
         REPORT_ERROR(1, "SelFile::ImgSize: First Active file is not an image");
@@ -702,6 +665,8 @@ void SelFile::get_statistics(Image<double>& _ave, Image<double>& _sd, double& _m
     _max = 0;
     bool first = true;
     int n = 0;
+    Image<double> img, tmpImg;
+
     // Calculate Mean
     go_beginning();
     while ((!eof()))
@@ -709,7 +674,6 @@ void SelFile::get_statistics(Image<double>& _ave, Image<double>& _sd, double& _m
         std::string image_name = NextImg();
         if (image_name == "")
             continue;
-        Image<double> img;
         img.read(image_name, true, 0, apply_geo);
         double min, max, avg, stddev;
         img().computeStats(avg, stddev, min, max);
@@ -719,14 +683,14 @@ void SelFile::get_statistics(Image<double>& _ave, Image<double>& _sd, double& _m
             _max = max;
         if (first)
         {
-            _ave = img();
+            _ave = img;
             first = false;
         }
         else
         {
             _ave() += img();
         }
-        delete image;
+        img.clear();
         n++;
     }
     if (n > 0)
@@ -740,15 +704,14 @@ void SelFile::get_statistics(Image<double>& _ave, Image<double>& _sd, double& _m
         std::string image_name = NextImg();
         if (image_name == "")
             continue;
-        Image<double> img;
         img.read(image_name, true, 0, apply_geo);
         tmpImg() = img() - _ave();
         tmpImg() *= tmpImg();
         _sd() += tmpImg();
-        delete image;
+        img.clear();
     }
     _sd() /= (n - 1);
-    _sd().selfSQRTnD();
+    _sd().selfSQRT();
 }
 
 

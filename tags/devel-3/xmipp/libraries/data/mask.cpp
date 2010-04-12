@@ -1052,9 +1052,9 @@ void Mask_Params::write_mask(const FileName &fn)
 {
     Image<double> img;
     if (datatype() == INT_MASK)
-        img=imask;
+        typeCast(imask, img());
     else if (datatype() == DOUBLE_MASK)
-        img=dmask;
+        img()=dmask;
     img.write(fn);
 }
 
@@ -1079,13 +1079,13 @@ void Mask_Params::generate_mask(const bool& apply_geo)
         imask.initConstant(1);
         break;
     case BINARY_CIRCULAR_MASK:
-        BinarySphericalMask(imask, R1, mode, x0, y0, z0);
+        BinaryCircularMask(imask, R1, mode, x0, y0, z0);
         break;
     case BINARY_DWT_CIRCULAR_MASK:
-        BinaryDWTCircularMask(imask, R1, smin, smax, quadrant);
+        BinaryDWTCircularMask2D(imask, R1, smin, smax, quadrant);
         break;
-    case BINARY_DWTSPHERICAL_MASK:
-        BinaryDWTSphericalMask(imask, R1, smin, smax, quadrant);
+    case BINARY_DWT_SPHERICAL_MASK:
+        BinaryDWTSphericalMask3D(imask, R1, smin, smax, quadrant);
         break;
     case BINARY_CROWN_MASK:
         BinaryCrownMask(imask, R1, R2, mode, x0, y0, z0);
