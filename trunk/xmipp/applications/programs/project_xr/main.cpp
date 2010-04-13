@@ -27,33 +27,72 @@
 #include <data/psf_xr.h>
 #include <data/args.h>
 
-int main(int argc, char **argv)
-{
-	FileName fnPSF;
+
+void usage();
+
+int main(int argc, char **argv) {
+	FileName fnPSF, fnPSFOut;
 	XmippXRPSF psf;
 
-    try
-    {
-    	fnPSF=getParameter(argc,argv,"-psf");
-    }
-    catch (Xmipp_error &XE)
-    {
-    	std::cerr << XE << std::endl;
-    	psf.usage();
-    	// usage();
-    	return 1;
-    }
+	try {
+		if (checkParameter(argc, argv, "-psf")) {
+			fnPSF = getParameter(argc, argv, "-psf");
+			psf.read(fnPSF);
+		} else
+			psf.clear();
 
-    try
-    {
-//    	XmippXRPSF psf;
-    	psf.read(fnPSF);
-    	std::cout << psf << std::endl;
-    }
-    catch (Xmipp_error &XE)
-    {
-    	std::cerr << XE << std::endl;
-    	return 1;
-    }
-    return 0;
+	} catch (Xmipp_error &XE) {
+		std::cerr << XE << std::endl;
+		//    	psf.usage();
+		usage();
+		return 1;
+	}
+
+	try {
+		//    	XmippXRPSF psf;
+		psf.produceSideInfo();
+		std::cout << psf << std::endl;
+
+		if (checkParameter(argc, argv, "-psfout")) {
+			fnPSFOut = getParameter(argc, argv, "-psfout");
+//			psf.write(fnPSFOut);
+
+
+		ImageXmipp Im;
+		Matrix2D < std::complex < double > > Ic(128,128);
+
+
+//		Ic = (lensPD(psf.Flens, psf.lambda,psf.dxo, 128, 128));
+		Ic = (lensPD(psf.Flens, psf.lambda,psf.dxo, Ic.xdim, Ic.ydim));
+
+		Im().resize(Ic);
+
+
+
+		FOR_ALL_ELEMENTS_IN_MATRIX2D(Ic)
+		{
+//			Im(i,j) = atan2(Ic(i,j).imag(),Ic(i,j).real());
+			Im(i,j) = arg(Ic(i,j));
+
+		}
+
+		Im.write(fnPSFOut);
+
+//		std::cout << Ic << std::endl;
+//		std::cout << Ir << std::endl;
+
+		}
+
+	} catch (Xmipp_error &XE) {
+		std::cerr << XE << std::endl;
+		return 1;
+	}
+	return 0;
+}
+
+void usage() {
+	std::cerr << "Usage: project_xr [options]\n"
+			<< "   -psf <PSF description file>      : PSF characteristic of the microscope \n"
+			<< "  [-w_dir \"[X=1,Y=0]\"             : test \n"
+			<< "  [-w_step <step=0.001>]          : test\n";
 }

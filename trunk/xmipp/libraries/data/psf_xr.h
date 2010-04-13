@@ -26,30 +26,35 @@
 #ifndef _PSF_XR_HH
 #define _PSF_XR_HH
 
+#include "fftw.h"
 #include "matrix2d.h"
+#include <complex>
+#include "image.h"
 
 /**@defgroup PSFXRSupport X-Ray PSF support classes
-   @ingroup DataLibrary */
+ @ingroup DataLibrary */
 //@{
 /** X-ray PSF class.
 
 
-*/
+ */
 class XmippXRPSF
 {
 public:
-	// Current OTF
-	Matrix2D< std::complex<double> > OTF;
+    // Current OTF
+    Matrix2D<std::complex<double> > OTF;
 
-	/* RX Microscope configuration */
-	/// Lens Aperture Radius
-	double Rlens;
-	/// Object plane on Focus
-	double Zo;
-	/// Image plane (CCD position)
-	double Zi;
-	/// Minimum resolution condition
-	double dxiMax;
+    /* RX Microscope configuration */
+    /// Lens Aperture Radius
+    double Rlens;
+    /// Object plane on Focus (Reference)
+    double Zo;
+    /// Object plane
+    double Z;
+    /// Image plane (CCD position)
+    double Zi;
+    /// Minimum resolution condition
+    double dxiMax;
 
 public:
     /// Lambda
@@ -57,7 +62,7 @@ public:
 
     /* RX Microscope configuration */
 
-    /// Focal length
+    /// Focal length in mm
     double Flens;
     /// Number of zones in zone plate
     double Nzp;
@@ -77,18 +82,18 @@ public:
     }
 
     /** Read from file.
-        An exception is thrown if the file cannot be open.*/
+     An exception is thrown if the file cannot be open.*/
     void read(const FileName &fn);
 
     /** Write to file.
-        An exception is thrown if the file cannot be open.*/
+     An exception is thrown if the file cannot be open.*/
     void write(const FileName &fn);
 
     /// Usage
     void usage();
 
     /// Show
-    friend std::ostream & operator << (std::ostream &out, const XmippXRPSF &psf);
+    friend std::ostream & operator <<(std::ostream &out, const XmippXRPSF &psf);
 
     /// Clear.
     void clear();
@@ -97,14 +102,14 @@ public:
     void produceSideInfo();
 
     /// Apply OTF to an image
-    void applyOTF(Matrix2D < double > &I) const;
+    void applyOTF(Matrix2D<double> &I) const;
 
     /** Generate OTF image.
-        The sample image is used only to take its dimensions. */
-    template <class T>
+     The sample image is used only to take its dimensions. */
+    template<class T>
     void generateOTF(const Matrix2D<T> &sample_image) const
     {
-    	generateOTF(YSIZE(sample_image), XSIZE(sample_image));
+        generateOTF(YSIZE(sample_image), XSIZE(sample_image));
         STARTINGX(OTF) = STARTINGX(sample_image);
         STARTINGY(OTF) = STARTINGY(sample_image);
     }
@@ -112,5 +117,19 @@ public:
     /// Generate OTF image.
     void generateOTF(int Ydim, int Xdim) const;
 };
+
+/// Generate the quadratic phase distribution of a ideal lens using the size of the input matrix
+template<class T>
+Matrix2D<std::complex<double> > lensPD(double Flens, double lambda, double dx,
+                                       const Matrix2D<T> &sample_image)
+{
+    return lensPD(Flens, lambda, dx, XSIZE(sample_image), YSIZE(sample_image));
+}
+
+/// Generate the quadratic phase distribution of a ideal lens
+Matrix2D<std::complex<double> > lensPD(double Flens, double lambda, double dx,
+                                       double Nx, double Ny);
+
 //@}
+
 #endif
