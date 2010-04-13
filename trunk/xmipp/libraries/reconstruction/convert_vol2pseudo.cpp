@@ -61,6 +61,7 @@ void Prog_Convert_Vol2Pseudo::read(int argc, char **argv)
     allowMovement = !checkParameter(argc,argv,"-dontAllowMovement");
     allowIntensity = !checkParameter(argc,argv,"-dontAllowIntensity");
     intensityColumn = getParameter(argc,argv,"-intensityColumn","occupancy");
+    Nclosest = textToInteger(getParameter(argc,argv,"-Nclosest","3"));
     minDistance = textToFloat(getParameter(argc,argv,"-minDistance","0.001"));
     penalty = textToFloat(getParameter(argc,argv,"-penalty","10"));
     numThreads = textToInteger(getParameter(argc,argv,"-thr","1"));
@@ -79,6 +80,7 @@ void Prog_Convert_Vol2Pseudo::show() const
               << "AllowMovement:  " << allowMovement   << std::endl
               << "AllowIntensity: " << allowIntensity  << std::endl
               << "Intensity Col:  " << intensityColumn << std::endl
+              << "Nclosest:       " << Nclosest        << std::endl
               << "Min. Distance:  " << minDistance     << std::endl
               << "Penalty:        " << penalty         << std::endl
               << "Threads:        " << numThreads      << std::endl
@@ -103,6 +105,8 @@ void Prog_Convert_Vol2Pseudo::usage() const
               << "  [-dontAllowIntensity]            : Don't allow Gaussians to change intensity\n"
               << "  [-intensityColumn <s=occupancy>] : Where to write the intensity in the PDB file\n"
               << "                                     Valid values: occupancy, Bfactor\n"
+              << "  [-Nclosest <N=3>]                : N closest atoms, it is used only for the\n"
+              << "                                     distance histogram\n"
               << "  [-minDistance <d=0.001>]         : Minimum distance between two atoms\n"
               << "                                     Set it to -1 to disable\n"
               << "  [-penalty <p=10>]                : Penalty for overshooting\n"
@@ -666,6 +670,43 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     histogram1D hist;
     compute_hist(intensities, hist, 100);
     hist.write(fnOut+"_approximation.hist");
+
+    // Compute the histogram of distances
+    int Natoms=atoms.size();
+    Matrix1D<double> NclosestDistances;
+    NclosestDistances.resize((Natoms-1)*Nclosest);
+    for (int i=0; i<Natoms; i++)
+    {
+        std::vector<double> NclosestToThisAtom;
+        for (int j=i+1; j<Natoms; j++)
+        {
+            double dist=(atoms[i].location-atoms[j].location).module();
+            int closestSoFar=NclosestToThisAtom.size();
+            if (closestSoFar==0)
+                NclosestToThisAtom.push_back(dist);
+            else
+            {
+                int idx=0;
+                while (idx<closestSoFar && NclosestToThisAtom[idx]<dist)
+                    idx++;
+                if (idx<closestSoFar)
+                {
+                    NclosestToThisAtom.insert(
+                        NclosestToThisAtom.begin()+idx,1,dist);
+                    if (NclosestToThisAtom.size()>Nclosest)
+                        NclosestToThisAtom.erase(NclosestToThisAtom.begin()+
+                            Nclosest);
+                }
+                if (idx==closestSoFar && closestSoFar<Nclosest)
+                    NclosestToThisAtom.push_back(dist);
+            }
+        }
+        if (i<Natoms-1)
+            for (int k=0; k<Nclosest; k++)
+                NclosestDistances(i*Nclosest+k)=sampling*NclosestToThisAtom[k];
+    }
+    compute_hist(NclosestDistances, hist, 100);
+    hist.write(fnOut+"_distance.hist");
 
     // Save the difference
     VolumeXmipp Vdiff;

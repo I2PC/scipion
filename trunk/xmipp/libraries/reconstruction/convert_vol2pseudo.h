@@ -116,6 +116,9 @@ public:
     
     /// Sampling rate
     double sampling;
+    
+    /// N closest atoms for the distance histogram
+    int Nclosest;
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);
