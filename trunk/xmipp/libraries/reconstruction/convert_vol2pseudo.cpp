@@ -96,6 +96,7 @@ void Prog_Convert_Vol2Pseudo::usage() const
               << "   -i <volume>                     : Input volume\n"
               << "  [-o <rootname>]                  : Output rootname\n"
               << "  [-sigma <s=1.5>]                 : Sigma of gaussians (in Angstroms)\n"
+              << "                                     It should be comparable to the sampling rate\n"
               << "  [-initialSeeds <N=300>]          : Initial number of gaussians\n"
               << "  [-growSeeds <%=30>]              : Percentage of growth\n"
               << "  [-stop <p=0.001>]                : Stop criterion (0<p<1) for inner iterations\n"
