@@ -331,10 +331,10 @@ class IrregularHistogram1D
 {
     public:
         histogram1D         __hist;
-        Matrix1D<double>    __binsRightLimits;
+        MultidimArray<double>    __binsRightLimits;
     public:
         /// Initialize class
-        void init(const histogram1D &oldHistogram, const Matrix1D<int> &bins);
+        void init(const histogram1D &oldHistogram, const MultidimArray<int> &bins);
         
         /// Return the index corresponding to a certain value
         int val2Index(double value);
@@ -517,7 +517,7 @@ void histogram_equalization(MultidimArray<T>& v, int bins = 8)
     compute_hist(v, hist, hist_steps);
 
     // Compute the distribution function of the pdf
-    Matrix1D<double> norm_sum(hist_steps);
+    MultidimArray<double> norm_sum(hist_steps);
     norm_sum(0) = hist(0);
 
     for (int i = 1; i < hist_steps; i++)
@@ -525,7 +525,7 @@ void histogram_equalization(MultidimArray<T>& v, int bins = 8)
     norm_sum /= MULTIDIM_SIZE(v);
 
     // array to store the boundary pixels of bins
-    Matrix1D< double > div(bins - 1);
+    MultidimArray< double > div(bins - 1);
     int index = 0;
 
     for (int current_bin = 1; current_bin < bins; current_bin++)
