@@ -27,7 +27,6 @@
 #define MATRIX2D_H_
 
 #include "matrix1d.h"
-#include "numerical_tools.h"
 
 /** @defgroup Matrices Matrices speed up macros
  * @ingroup XXX
@@ -198,18 +197,9 @@
             dMij(A, 2, 0)*dMij(Ainv, 0, 2)); \
         M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
 
-/*
-template<typename T>
-void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result);
 
-template<typename T>
-void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result);
-
-template<typename T>
-void solveBySVD(const Matrix2D<T>& A,
-                const Matrix1D<T>& b,
-                Matrix1D< double >& result,
-                double tolerance);
+template<typename T> class Matrix1D;
+template<typename T> class Matrix2D;
 
 template<typename T>
 void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d);
@@ -228,7 +218,7 @@ void svbksb(Matrix2D< double >& u,
             Matrix2D< double >& v,
             Matrix1D< double >& b,
             Matrix1D< double >& x);
-*/
+
 
 template<typename T>
 class Matrix2D
@@ -1041,90 +1031,6 @@ void multiplyVectorbyMatrix(const Matrix1D<T>& b, const Matrix2D<T>& A, Matrix1D
 
 // TODO Document
 template<typename T>
-void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
-{
-    if (A.xdim == 0)
-        REPORT_ERROR(1108, "Solve: Matrix is empty");
-
-    if (A.xdim != A.ydim)
-        REPORT_ERROR(1109, "Solve: Matrix is not squared");
-
-    if (A.xdim != b.xdim)
-        REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
-
-    if (b.isRow())
-        REPORT_ERROR(1107, "Solve: Not correct vector shape");
-
-    // Perform LU decomposition and then solve
-    Matrix1D< int > indx;
-    T d;
-    Matrix2D<T> LU;
-    ludcmp(A, LU, indx, d);
-    result = b;
-    lubksb(LU, indx, result);
-}
-
-// TODO Document
-template<typename T>
-void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
-                  Matrix1D< double >& result, double tolerance)
-{
-    if (A.xdim == 0)
-        REPORT_ERROR(1108, "Solve: Matrix is empty");
-
-    if (A.xdim != A.ydim)
-        REPORT_ERROR(1109, "Solve: Matrix is not squared");
-
-    if (A.xdim != b.xdim)
-        REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
-
-    if (b.isRow())
-        REPORT_ERROR(1107, "Solve: Not correct vector shape");
-
-    // First perform de single value decomposition
-    // Xmipp interface that calls to svdcmp of numerical recipes
-    Matrix2D< double > u, v;
-    Matrix1D< double > w;
-    svdcmp(A, u, w, v);
-
-    // Here is checked if eigenvalues of the svd decomposition are acceptable
-    // If a value is lower than tolerance, the it's zeroed, as this increases
-    // the precision of the routine.
-    for (int i = 0; i < w.xdim; i++)
-    	if (w(i) < tolerance)
-    		w(i) = 0;
-
-    // Set size of matrices
-    result.resize(b.xdim);
-
-    // Xmipp interface that calls to svdksb of numerical recipes
-    Matrix1D< double > bd;
-    typeCast(b, bd);
-    svbksb(u, w, v, bd, result);
-}
-
-// TODO Document
-template<typename T>
-void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result)
-{
-    if (A.xdim == 0)
-        REPORT_ERROR(1108, "Solve: Matrix is empty");
-
-    if (A.xdim != A.ydim)
-        REPORT_ERROR(1109, "Solve: Matrix is not squared");
-
-    if (A.ydim != b.ydim)
-        REPORT_ERROR(1102, "Solve: Different sizes of A and b");
-
-    // Solve
-    result = b;
-    Matrix2D<T> Aux = A;
-    gaussj(Aux.adaptForNumericalRecipes2(), Aux.ydim,
-           result.adaptForNumericalRecipes2(), b.xdim);
-}
-
-// TODO Document
-template<typename T>
 void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d)
 {
     LU = A;
@@ -1141,6 +1047,13 @@ void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b)
            indx.adaptForNumericalRecipes(),
            b.adaptForNumericalRecipes());
 }
+
+// TODO Document
+void svbksb(Matrix2D< double >& u,
+            Matrix1D< double >& w,
+            Matrix2D< double >& v,
+            Matrix1D< double >& b,
+            Matrix1D< double >& x);
 
 // TODO Document
 #define VIA_BILIB
