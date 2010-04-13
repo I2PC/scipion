@@ -404,7 +404,7 @@ public:
              Matrix2D< double > A = getTransformationMatrix(only_apply_shifts);
              if (!A.isIdentity())
              {
-                 Matrix2D<T> tmp = (*this)();
+                 MultidimArray<T> tmp = (*this)();
                  applyGeometry(3, (*this)(), tmp, A, IS_INV, WRAP);
              }
          }

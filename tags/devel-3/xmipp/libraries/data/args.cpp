@@ -617,12 +617,12 @@ int numComponents(const std::string &str)
 }
 
 // Get float vector ========================================================
-MultidimArray<double> getVectorParameter(int argc, char **argv, const char *param,
+Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
                                   int dim, int _errno,
                                   const std::string & errmsg,
                                   int exit)
 {
-    MultidimArray<double> aux;
+    Matrix1D<double> aux;
     bool count_dimensionality = (dim == -1);
 
     // Find and form vector
@@ -1054,14 +1054,14 @@ bool checkParameter(FILE *fh, const char *param)
 }
 
 // Get vector param from file ==============================================
-MultidimArray<double> getVectorParameter(FILE *fh, const char *param,
+Matrix1D<double> getVectorParameter(FILE *fh, const char *param,
                                   int dim, int _errno, 
                                   const std::string &errmsg, int exit)
 {
     int    argcp;
     char **argvp = NULL;
     char  *copy = NULL;
-    MultidimArray<double> retval;
+    Matrix1D<double> retval;
     if (!generateCommandLine(fh, param, argcp, argvp, copy))
         if (dim == -1)
             return retval;

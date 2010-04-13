@@ -37,10 +37,11 @@
 #include "funcs.h"
 #include "error.h"
 #include "args.h"
+#include "matrix1d.h"
+#include "matrix2d.h"
 
 extern int bestPrecision(float F, int _width);
 extern std::string floatToString(float F, int _width, int _prec);
-extern std::string integerToString(int I, int _width, char fill_with);
 
 /// @defgroup MultidimensionalArrays Multidimensional Arrays
 /// @ingroup Arrays
@@ -60,18 +61,6 @@ extern std::string integerToString(int I, int _width, char fill_with);
 
 /// @defgroup MultidimArraysSizeShape Size and shape
 /// @ingroup MultidimArraysSpeedUp
-
-/** Redefine Matrix1D
- * @ingroup MultidimArraysSizeShape
- * For compatibility with the old code and making dimensions explicit
- */
-#define Matrix1D MultidimArray
-
-/** Redefine Matrix2D
- * @ingroup MultidimArraysSizeShape
- * For compatibility with the old code and making dimensions explicit
- */
-#define Matrix2D MultidimArray
 
 /** Redefine Matrix3D
  * @ingroup MultidimArraysSizeShape
@@ -300,35 +289,6 @@ extern std::string integerToString(int I, int _width, char fill_with);
         for (int i=STARTINGY(V); i<=FINISHINGY(V); i++) \
             for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
 
-/** For all elements in the array between corners.
- * @ingroup MultidimArraySizeShape
- *
- * This macro is used to generate loops for a volume in an easy manner. Then
- *  ZZ(r), YY(r) and XX(r) range from
- *
- * (int) ZZ(corner1) to (int)ZZ(corner2),
- * (int) YY(corner1) to (int)YY(corner2),
- * (int) XX(corner1) to (int) XX(corner2) (included limits) respectively.
- *
- * Notice that corner1 and corner2 need only be MultidimArray.
- *
- * @code
- * MultidimArray< double > corner1(3), corner2(3), r(3);
- * XX(corner1) = -1; XX(corner2) = 1;
- * YY(corner1) = -2; YY(corner2) = 2;
- * ZZ(corner1) = -3; ZZ(corner2) = 3;
- *
- * FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
- * {
- *     std::cout << v(r) << " ";
- * }
- * @endcode
- */
-#define FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2) \
-    for (ZZ(r)=ZZ((corner1)); ZZ(r)<=ZZ((corner2)); ZZ(r)++) \
-        for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
-            for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
-
 /** For all elements in common.
  * @ingroup MultidimArraySizeShape
  *
@@ -449,33 +409,6 @@ extern std::string integerToString(int I, int _width, char fill_with);
     for (int i=STARTINGY(m); i<=FINISHINGY(m); i++) \
         for (int j=STARTINGX(m); j<=FINISHINGX(m); j++)
 
-/** For all elements in the array between corners
- * @ingroup MatricesSizeShape
- *
- * This macro is used to generate loops for a matrix in an easy manner. It needs
- * an externally defined MultidimArray< double > r(2). Then YY(r) and XX(r) range
- * from (int) YY(corner1) to (int)YY(corner2), (int) XX(corner1) to (int)
- * XX(corner2) (included limits) respectively. Notice that corner1 and corner2
- * need only be MultidimArray.
- *
- * @code
- * MultidimArray< double > corner1(2), corner2(2);
- * MultidimArray< int > r(2);
- * XX(corner1) = -1;
- * XX(corner2) = 1;
- * YY(corner1) = -2;
- * YY(corner2) = 2;
- *
- * FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
- * {
- *     std::cout << v(r) << " ";
- * }
- * @endcode
- */
-#define FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2) \
-    for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
-        for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
-
 /** For all elements in common
  * @ingroup MatricesSizeShape
  *
@@ -505,6 +438,84 @@ extern std::string integerToString(int I, int _width, char fill_with);
     for (int i=ispduptmp2; i<=ispduptmp3; i++) \
         for (int j=ispduptmp4; j<=ispduptmp5; j++)
 
+/** For all elements in the array between corners.
+ * @ingroup MultidimArraySizeShape
+ *
+ * This macro is used to generate loops for a volume in an easy manner. Then
+ *  ZZ(r), YY(r) and XX(r) range from
+ *
+ * (int) ZZ(corner1) to (int)ZZ(corner2),
+ * (int) YY(corner1) to (int)YY(corner2),
+ * (int) XX(corner1) to (int) XX(corner2) (included limits) respectively.
+ *
+ * Notice that corner1 and corner2 need only be MultidimArray.
+ *
+ * @code
+ * MultidimArray< double > corner1(3), corner2(3), r(3);
+ * XX(corner1) = -1; XX(corner2) = 1;
+ * YY(corner1) = -2; YY(corner2) = 2;
+ * ZZ(corner1) = -3; ZZ(corner2) = 3;
+ *
+ * FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
+ * {
+ *     std::cout << v(r) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2) \
+    for (ZZ(r)=ZZ((corner1)); ZZ(r)<=ZZ((corner2)); ZZ(r)++) \
+        for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
+            for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
+
+
+/** For all elements in the array between corners
+ * @ingroup MatricesSizeShape
+ *
+ * This macro is used to generate loops for a matrix in an easy manner. It needs
+ * an externally defined MultidimArray< double > r(2). Then YY(r) and XX(r) range
+ * from (int) YY(corner1) to (int)YY(corner2), (int) XX(corner1) to (int)
+ * XX(corner2) (included limits) respectively. Notice that corner1 and corner2
+ * need only be MultidimArray.
+ *
+ * @code
+ * MultidimArray< double > corner1(2), corner2(2);
+ * MultidimArray< int > r(2);
+ * XX(corner1) = -1;
+ * XX(corner2) = 1;
+ * YY(corner1) = -2;
+ * YY(corner2) = 2;
+ *
+ * FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+ * {
+ *     std::cout << v(r) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2) \
+    for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
+        for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
+
+/** For all elements in the array between corners
+ * @ingroup MultidimArraySizeShape
+ *
+ * This macro is used to generate loops for a vector in an easy manner. It needs
+ * an externally defined MultidimArray< double > r(1). Then XX(r) ranges from
+ * (int) XX(corner1) to (int) XX(corner2) (included limits) (notice that corner1
+ * and corner2 need only to be MultidimArray).
+ *
+ * @code
+ * MultidimArray< double > corner1(1), corner2(1), r(1);
+ * XX(corner1) = -1;
+ * XX(corner2) = 1;
+ * FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
+ * {
+ *     std::cout << v(XX(r)) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2) \
+    for (XX(r)=(int) XX((corner1)); XX(r)<=(int) XX((corner2)); XX(r)++)
+
 /** For all elements in the array, accessed physically
  * @ingroup MatricesSizeShape
  *
@@ -522,27 +533,6 @@ extern std::string integerToString(int I, int _width, char fill_with);
 #define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(m) \
     for (int i=0; i<YSIZE(m); i++) \
         for (int j=0; j<XSIZE(m); j++)
-
-/** Vector element: Physical access
- * @ingroup MultidimArraySizeShape
- *
- * Be careful because this is physical access, usually vectors follow the C
- * convention of starting index==0. This function should not be used as it goes
- * against the vector library philosophy unless you explicitly want to access
- * directly to any value in the vector without taking into account its logical
- * position.
- *
- * @code
- * DIRECT_VEC_ELEM(v, 0) = 1;
- * val = DIRECT_VEC_ELEM(v, 0);
- * @endcode
- */
-#define DIRECT_VEC_ELEM(v, i) ((v).data[(i)])
-
-/** A short alias to previous function
- * @ingroup MultidimArraySizeShape
- */
-#define dVi(v, i) DIRECT_VEC_ELEM(v, i)
 
 /** Vector element: Logical access
  * @ingroup MultidimArraySizeShape
@@ -570,27 +560,6 @@ extern std::string integerToString(int I, int _width, char fill_with);
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX1D(v) \
     for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
-
-/** For all elements in the array between corners
- * @ingroup MultidimArraySizeShape
- *
- * This macro is used to generate loops for a vector in an easy manner. It needs
- * an externally defined MultidimArray< double > r(1). Then XX(r) ranges from
- * (int) XX(corner1) to (int) XX(corner2) (included limits) (notice that corner1
- * and corner2 need only to be MultidimArray).
- *
- * @code
- * MultidimArray< double > corner1(1), corner2(1), r(1);
- * XX(corner1) = -1;
- * XX(corner2) = 1;
- * FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
- * {
- *     std::cout << v(XX(r)) << " ";
- * }
- * @endcode
- */
-#define FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2) \
-    for (XX(r)=(int) XX((corner1)); XX(r)<=(int) XX((corner2)); XX(r)++)
 
 /** For all elements in common
  * @ingroup MultidimArraySizeShape
@@ -634,381 +603,6 @@ extern std::string integerToString(int I, int _width, char fill_with);
     for (int i=0; i<v.xdim; i++)
 
 
-/** @defgroup Vectors Vectors speed up macros
- * @ingroup MultidimArraysSpeedUp
- *
- * This macros are defined to allow high speed in critical parts of your
- * program. They shouldn't be used systematically as usually there is no
- * checking on the correctness of the operation you are performing. Speed comes
- * from three facts: first, they are macros and no function call is performed
- * (although most of the critical functions are inline functions), there is no
- * checking on the correctness of the operation (it could be wrong and you are
- * not warned of it), and destination vectors are not returned saving time in
- * the copy constructor and in the creation/destruction of temporary vectors.
- */
-
-/** Access to X component
- * @ingroup Vectors
- *
- * @code
- * XX(v) = 1;
- * val = XX(v);
- * @endcode
- */
-#define XX(v) DIRECT_VEC_ELEM(v, 0)
-
-/** Access to Y component
- * @ingroup Vectors
- *
- * @code
- * YY(v) = 1;
- * val = YY(v);
- * @endcode
- */
-#define YY(v) DIRECT_VEC_ELEM(v, 1)
-
-/** Access to Z component
- * @ingroup Vectors
- *
- * @code
- * ZZ(v) = 1;
- * val = ZZ(v);
- * @endcode
- */
-#define ZZ(v) DIRECT_VEC_ELEM(v, 2)
-
-/** Creates vector in R2
- * @ingroup Vectors
- *
- * The vector must be created beforehand to the correct size. After this macro
- * the vector is (x, y) in R2.
- *
- * @code
- * MultidimArray< double > v(2);
- * VECTOR_R2(v, 1, 2);
- * @endcode
- */
-#define VECTOR_R2(v, x, y) { \
-        XX(v) = x; YY(v) = y; }
-
-/** Creates vector in R3
- * @ingroup Vectors
- *
- * The vector must be created beforehand to the correct size. After this macro
- * the vector is (x, y, z) in R3.
- *
- * @code
- * MultidimArray< double > v(3);
- * VECTOR_R2(v, 1, 2, 1);
- * @endcode
- */
-#define VECTOR_R3(v, x, y, z) { \
-        XX(v) = x; YY(v) = y; ZZ(v) = z;}
-
-/** Adding two R2 vectors (a=b+c)
- * @ingroup Vector
- *
- * @code
- * MultidimArray< double > a(2), b(2), c(2);
- * ...;
- * V2_PLUS_V2(a, b, c);
- * @endcode
- */
-#define V2_PLUS_V2(a, b, c) { \
-        XX(a) = XX(b) + XX(c); \
-        YY(a) = YY(b) + YY(c); }
-
-/** Substracting two R2 vectors (a=b-c)
- * @ingroup Vectors
- *
- * @code
- * MultidimArray< double > a(2), b(2), c(2);
- * ...;
- * V2_MINUS_V2(a, b, c);
- * @endcode
- */
-#define V2_MINUS_V2(a, b, c) { \
-        XX(a) = XX(b) - XX(c); \
-        YY(a) = YY(b) - YY(c); }
-
-/** Adding/substracting a constant to a R2 vector (a=b-k).
- * @ingroup Vectors
- *
- * @code
- * MultidimArray< double > a(2), b(2);
- * double k;
- * ...;
- * V2_PLUS_CT(a, b, k);
- *
- * MultidimArray< double > a(2), b(2);
- * double k;
- * ...;
- * V2_PLUS_CT(a, b, -k);
- * @endcode
- */
-#define V2_PLUS_CT(a, b, k) { \
-        XX(a) = XX(b) + (k); \
-        YY(a) = YY(b) + (k); }
-
-/** Multiplying/dividing by a constant a R2 vector (a=b*k)
- * @ingroup Vectors
- *
- * @code
- * MultidimArray< double > a(2), b(2);
- * double k;
- * ...;
- * V2_BY_CT(a, b, k);
- *
- * MultidimArray< double > a(2), b(2);
- * double k;
- * ...;
- * V2_BY_CT(a, b, 1/k);
- * @endcode
- */
-#define V2_BY_CT(a, b, k) { \
-        XX(a) = XX(b) * (k); \
-        YY(a) = YY(b) * (k); }
-
-/** Adding two R3 vectors (a=b+c)
- * @ingroup Vector
- *
- * @code
- * MultidimArray< double > a(3), b(3), c(3);
- * ...;
- * V3_PLUS_V3(a, b, c);
- * @endcode
- */
-#define V3_PLUS_V3(a, b, c) { \
-        XX(a) = XX(b) + XX(c); \
-        YY(a) = YY(b) + YY(c); \
-        ZZ(a) = ZZ(b) + ZZ(c); }
-
-/** Substracting two R3 vectors (a=b-c)
- * @ingroup Vectors
- *
- * @code
- * MultidimArray< double > a(3), b(3), c(3);
- * ...;
- * V3_MINUS_V3(a, b, c);
- * @endcode
- */
-#define V3_MINUS_V3(a, b, c) { \
-        XX(a) = XX(b) - XX(c); \
-        YY(a) = YY(b) - YY(c); \
-        ZZ(a) = ZZ(b) - ZZ(c); }
-
-/** Adding/substracting a constant to a R3 vector (a=b-k)
- * @ingroup Vectors
- *
- * @code
- * MultidimArray< double > a(3), b(3);
- * double k;
- * ...;
- * V3_PLUS_CT(a, b, k);
- *
- * MultidimArray< double > a(3), b(3);
- * double k;
- * ...;
- * V3_PLUS_CT(a, b, -k);
- * @endcode
- */
-#define V3_PLUS_CT(a, b, c) { \
-        XX(a) = XX(b) + (c); \
-        YY(a) = YY(b) + (c); \
-        ZZ(a) = ZZ(b) + (c); }
-
-/** Multiplying/dividing by a constant a R3 vector (a=b*k)
- * @ingroup Vectors
- *
- * @code
- * MultidimArray< double > a(3), b(3);
- * double k;
- * ...;
- * V3_BY_CT(a, b, k);
- *
- * MultidimArray< double > a(3), b(3);
- * double k;
- * ...;
- * V3_BY_CT(a, b, 1/k);
- * @endcode
- */
-#define V3_BY_CT(a, b, c) { \
-        XX(a) = XX(b) * (c); \
-        YY(a) = YY(b) * (c); \
-        ZZ(a) = ZZ(b) * (c); }
-
-
-/** @defgroup Matrices Matrices speed up macros
- * @ingroup MultidimArraysSpeedUp
- *
- */
-
-/** Matrix (3x3) by vector (3x1) (a=M*b)
- * @ingroup Matrices
- *
- * You must "load" the temporary variables, and create the result vector with
- * the appropiate size. You can reuse the vector b to store the results (that
- * is, M3x3_BY_V3x1(b, M, b);, is allowed).
- *
- * @code
- * double example
- * {
- *     SPEED_UP_temps;
- *
- *     Matrix1D< double > a(3), b(3);
- *     Matrix2D< double > M(3, 3);
- *
- *     M.init_random(0, 1);
- *     b.init_random(0, 1);
- *     M3x3_BY_V3x1(a, M, b);
- *
- *     return a.sum();
- * }
- * @endcode
- */
-#define M3x3_BY_V3x1(a, M, b) { \
-        spduptmp0 = dMij(M, 0, 0) * XX(b) + dMij(M, 0, 1) * YY(b) + dMij(M, 0, 2) \
-                    * ZZ(b); \
-        spduptmp1 = dMij(M, 1, 0) * XX(b) + dMij(M, 1, 1) * YY(b) + dMij(M, 1, 2) \
-                    * ZZ(b); \
-        spduptmp2 = dMij(M, 2, 0) * XX(b) + dMij(M, 2, 1) * YY(b) + dMij(M, 2, 2) \
-                    * ZZ(b); \
-        XX(a) = spduptmp0; YY(a) = spduptmp1; ZZ(a) = spduptmp2; }
-
-
-/** Matrix (3x3) by Matrix (3x3) (A=B*C)
- * @ingroup Matrices
- *
- * You must "load" the temporary variables, and create the result vector with
- * the appropiate size. You can reuse any of the multiplicands to store the
- * results (that is, M3x3_BY_M3x3(A, A, B);, is allowed).
- */
-#define M3x3_BY_M3x3(A, B, C) { \
-        spduptmp0 = dMij(B, 0, 0) * dMij(C, 0, 0) + dMij(B, 0, 1) * dMij(C, 1, 0) \
-                    + dMij(B, 0, 2) * dMij(C, 2, 0); \
-        spduptmp1 = dMij(B, 0, 0) * dMij(C, 0, 1) + dMij(B, 0, 1) * dMij(C, 1, 1) \
-                    + dMij(B, 0, 2) * dMij(C, 2, 1); \
-        spduptmp2 = dMij(B, 0, 0) * dMij(C, 0, 2) + dMij(B, 0, 1) * dMij(C, 1, 2) \
-                    + dMij(B, 0, 2) * dMij(C, 2, 2); \
-        spduptmp3 = dMij(B, 1, 0) * dMij(C, 0, 0) + dMij(B, 1, 1) * dMij(C, 1, 0) \
-                    + dMij(B, 1, 2) * dMij(C, 2, 0); \
-        spduptmp4 = dMij(B, 1, 0) * dMij(C, 0, 1) + dMij(B, 1, 1) * dMij(C, 1, 1) \
-                    + dMij(B, 1, 2) * dMij(C, 2, 1); \
-        spduptmp5 = dMij(B, 1, 0) * dMij(C, 0, 2) + dMij(B, 1, 1) * dMij(C, 1, 2) \
-                    + dMij(B, 1, 2) * dMij(C, 2, 2); \
-        spduptmp6 = dMij(B, 2, 0) * dMij(C, 0, 0) + dMij(B, 2, 1) * dMij(C, 1, 0) \
-                    + dMij(B, 2, 2) * dMij(C, 2, 0); \
-        spduptmp7 = dMij(B, 2, 0) * dMij(C, 0, 1) + dMij(B, 2, 1) * dMij(C, 1, 1) \
-                    + dMij(B, 2, 2) * dMij(C, 2, 1); \
-        spduptmp8 = dMij(B, 2, 0) * dMij(C, 0, 2) + dMij(B, 2, 1) * dMij(C, 1, 2) \
-                    + dMij(B, 2, 2) * dMij(C, 2, 2); \
-        dMij(A, 0, 0) = spduptmp0; \
-        dMij(A, 0, 1) = spduptmp1; \
-        dMij(A, 0, 2) = spduptmp2; \
-        dMij(A, 1, 0) = spduptmp3; \
-        dMij(A, 1, 1) = spduptmp4; \
-        dMij(A, 1, 2) = spduptmp5; \
-        dMij(A, 2, 0) = spduptmp6; \
-        dMij(A, 2, 1) = spduptmp7; \
-        dMij(A, 2, 2) = spduptmp8; }
-
-/** Matrix (2x2) by vector (2x1) (a=M*b)
- * @ingroup Matrices
- *
- * You must "load" the temporary variables, and create the result vector with
- * the appropiate size. You can reuse the vector b to store the results (that
- * is, M2x2_BY_V2x1(b, M, b);, is allowed).
- *
- * @code
- * double example
- * {
- *     SPEED_UP_temps;
- *
- *     Matrix1D< double > a(2), b(2);
- *     Matrix2D< double > M(2, 2);
- *
- *     M.init_random(0, 1);
- *     b.init_random(0, 1);
- *
- *     M2x2_BY_V2x1(a, M, b);
- *
- *     return a.sum();
- * }
- * @endcode
- */
-#define M2x2_BY_V2x1(a, M, b) { \
-        spduptmp0 = dMij(M, 0, 0) * XX(b) + dMij(M, 0, 1) * YY(b); \
-        spduptmp1 = dMij(M, 1, 0) * XX(b) + dMij(M, 1, 1) * YY(b); \
-        XX(a) = spduptmp0; \
-        YY(a) = spduptmp1; }
-
-/** Matrix (2x2) by constant (M2=M1*k)
- * @ingroup Matrices
- *
- * You must create the result matrix with the appropiate size. You can reuse
- * the matrix M1 to store the results (that is, M2x2_BY_CT(M, M, k);, is
- * allowed).
- */
-#define M2x2_BY_CT(M2, M1, k) { \
-        dMij(M2, 0, 0) = dMij(M1, 0, 0) * k; \
-        dMij(M2, 0, 1) = dMij(M1, 0, 1) * k; \
-        dMij(M2, 1, 0) = dMij(M1, 1, 0) * k; \
-        dMij(M2, 1, 1) = dMij(M1, 1, 1) * k; }
-
-/** Matrix (3x3) by constant (M2=M1*k)
- * @ingroup MatricesArithmetic
- *
- * You must create the result matrix with the appropiate size. You can reuse the
- * matrix M1 to store the results (that is, M2x2_BY_CT(M, M, k);, is allowed).
- */
-#define M3x3_BY_CT(M2, M1, k) { \
-        dMij(M2, 0, 0) = dMij(M1, 0, 0) * k; \
-        dMij(M2, 0, 1) = dMij(M1, 0, 1) * k; \
-        dMij(M2, 0, 2) = dMij(M1, 0, 2) * k; \
-        dMij(M2, 1, 0) = dMij(M1, 1, 0) * k; \
-        dMij(M2, 1, 1) = dMij(M1, 1, 1) * k; \
-        dMij(M2, 1, 2) = dMij(M1, 1, 2) * k; \
-        dMij(M2, 2, 0) = dMij(M1, 2, 0) * k; \
-        dMij(M2, 2, 1) = dMij(M1, 2, 1) * k; \
-        dMij(M2, 2, 2) = dMij(M1, 2, 2) * k; }
-
-/** Inverse of a matrix (2x2)
- * @ingroup MatricesArithmetic
- *
- * Input and output matrix cannot be the same one. The output is supposed to be
- * already resized.
- */
-#define M2x2_INV(Ainv, A) { \
-        spduptmp0 = 1.0 / (dMij(A, 0, 0) * dMij(A, 1, 1) - dMij(A, 0, 1) \
-                           * dMij(A, 1, 0)); \
-        dMij(Ainv, 0, 0) = dMij(A, 1, 1); \
-        dMij(Ainv, 0, 1) = -dMij(A, 0, 1); \
-        dMij(Ainv, 1, 0) = -dMij(A, 1, 0); \
-        dMij(Ainv, 1, 1) =  dMij(A, 0, 0); \
-        M2x2_BY_CT(Ainv, Ainv, spduptmp0); }
-
-/** Inverse of a matrix (3x3)
- * @ingroup Matrices
- *
- * Input and output matrix cannot be the same one. The output is supposed to be
- * already resized.
- */
-#define M3x3_INV(Ainv, A) { \
-        dMij(Ainv, 0, 0) =   dMij(A, 2, 2)*dMij(A, 1, 1)-dMij(A, 2, 1)*dMij(A, 1, 2); \
-        dMij(Ainv, 0, 1) = -(dMij(A, 2, 2)*dMij(A, 0, 1)-dMij(A, 2, 1)*dMij(A, 0, 2)); \
-        dMij(Ainv, 0, 2) =   dMij(A, 1, 2)*dMij(A, 0, 1)-dMij(A, 1, 1)*dMij(A, 0, 2); \
-        dMij(Ainv, 1, 0) = -(dMij(A, 2, 2)*dMij(A, 1, 0)-dMij(A, 2, 0)*dMij(A, 1, 2)); \
-        dMij(Ainv, 1, 1) =   dMij(A, 2, 2)*dMij(A, 0, 0)-dMij(A, 2, 0)*dMij(A, 0, 2); \
-        dMij(Ainv, 1, 2) = -(dMij(A, 1, 2)*dMij(A, 0, 0)-dMij(A, 1, 0)*dMij(A, 0, 2)); \
-        dMij(Ainv, 2, 0) =   dMij(A, 2, 1)*dMij(A, 1, 0)-dMij(A, 2, 0)*dMij(A, 1, 1); \
-        dMij(Ainv, 2, 1) = -(dMij(A, 2, 1)*dMij(A, 0, 0)-dMij(A, 2, 0)*dMij(A, 0, 1)); \
-        dMij(Ainv, 2, 2) =   dMij(A, 1, 1)*dMij(A, 0, 0)-dMij(A, 1, 0)*dMij(A, 0, 1); \
-        spduptmp0 = 1.0 / (dMij(A, 0, 0)*dMij(Ainv, 0, 0)+dMij(A, 1, 0)*dMij(Ainv, 0, 1)+\
-            dMij(A, 2, 0)*dMij(Ainv, 0, 2)); \
-        M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
-
-
-
 
 // Forward declarations ====================================================
 template<typename T> class MultidimArray;
@@ -1024,36 +618,6 @@ void coreScalarByArray(const T& op1, const MultidimArray<T>& op2,
 template<typename T>
 void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
     MultidimArray<T>& result, char operation);
-
-template<typename T>
-void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result);
-
-template<typename T>
-void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result);
-
-template<typename T>
-void solveBySVD(const Matrix2D<T>& A,
-                const Matrix1D<T>& b,
-                Matrix1D< double >& result,
-                double tolerance);
-
-template<typename T>
-void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d);
-
-template<typename T>
-void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b);
-
-template<typename T>
-void svdcmp(const Matrix2D< T >& a,
-            Matrix2D< double >& u,
-            Matrix1D< double >& w,
-            Matrix2D< double >& v);
-
-void svbksb(Matrix2D< double >& u,
-            Matrix1D< double >& w,
-            Matrix2D< double >& v,
-            Matrix1D< double >& b,
-            Matrix1D< double >& x);
 
 
 /** Template class for Xmipp arrays.
@@ -1104,9 +668,6 @@ public:
     // X init
     int xinit;
 
-    /// Only for 1D vectors; false=column (default)
-    bool row; 
-
 public:
     /// @defgroup MultidimArrayConstructors Constructors
     /// @ingroup MultidimensionalArrays
@@ -1115,10 +676,9 @@ public:
      * The empty constructor creates an array with no memory associated,
      * size=0.
      */
-    MultidimArray(bool column = true)
+    MultidimArray()
     {
         coreInit();
-        row!=column;
     }
     
     /** Size constructor with 4D size.
@@ -1159,12 +719,11 @@ public:
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
-    MultidimArray(int Xdim, bool column = true)
+    MultidimArray(int Xdim)
     {
         coreInit();
         resize(1, 1, 1, Xdim);
-        row = ! column;
-    }
+     }
 
     /** Copy constructor
      * @ingroup MultidimArrayConstructors
@@ -1176,11 +735,10 @@ public:
      * Matrix3D< double > V2(V1);
      * @endcode
      */
-    MultidimArray(const MultidimArray<T>& V, bool column = true)
+    MultidimArray(const MultidimArray<T>& V)
     {
         coreInit();
         *this = V;
-        row!=column;
     }
 
     /** Destructor.
@@ -1211,7 +769,6 @@ public:
         xdim=yxdim=zyxdim=nzyxdim=0;
         ydim=zdim=ndim=1;
         zinit=yinit=xinit=0;
-        row=false;
         data=NULL;
         destroyData=true;
     }
@@ -1270,7 +827,6 @@ public:
         zinit=m.zinit;
         yinit=m.yinit;
         xinit=m.xinit;
-        row=m.row;
     }
 
     /** Alias a multidimarray.
@@ -1286,7 +842,6 @@ public:
          copyShape(m);
          this->data=m.data;
          this->destroyData=false;
-         this->row=m.row;
      }
 
     /** Resize to a given size
@@ -1424,7 +979,6 @@ public:
         STARTINGX(*this) = STARTINGX(v);
         STARTINGY(*this) = STARTINGY(v);
         STARTINGZ(*this) = STARTINGZ(v);
-        row = v.row;
     }
 
     /** Returns the multidimArray N,Z, Y and X dimensions.
@@ -1498,56 +1052,6 @@ public:
         size[1] = ydim;
         size[2] = zdim;
         size[3] = ndim;
-    }
-
-    /** True if vector is a row.
-     * @ingroup MultidimSize
-     *
-     * @code
-     * if (v.isRow())
-     *     std::cout << "v is a row vector\n";
-     * @endcode
-     */
-    int isRow() const
-    {
-        return row;
-    }
-
-    /** True if vector is a column
-     * @ingroup MultidimSize
-     *
-     * @code
-     * if (v.isCol())
-     *     std::cout << "v is a column vector\n";
-     * @endcode
-     */
-    int  isCol()  const
-    {
-        return !row;
-    }
-
-    /** Forces the vector to be a row vector
-     * @ingroup MultidimSize
-     *
-     * @code
-     * v.setRow();
-     * @endcode
-     */
-    void setRow()
-    {
-        row = true;
-    }
-
-    /** Forces the vector to be a column vector
-     * @ingroup MultidimSize
-     *
-     * @code
-     * v.setCol();
-     * @endcode
-     */
-    void setCol()
-    {
-        row = false;
     }
 
     /** Put a 3D window to the nth volume
@@ -1761,7 +1265,7 @@ public:
      * TRUE if the logical index given is outside the definition region of this
      * array.
      */
-    bool outside(const MultidimArray<double> &r) const
+    bool outside(const Matrix1D<double> &r) const
     {
         if (XSIZE(r) < 1)
         {
@@ -1786,35 +1290,6 @@ public:
             REPORT_ERROR(2,"Outside: index vector has too many components");
     }
 
-    /** IsCorner (in 2D or 3D matrix)
-     * @ingroup MultidimSize
-     *
-     * TRUE if the logical index given is a corner of the definition region of this
-     * array.
-     */
-    bool isCorner(const MultidimArray< double >& v) const
-    {
-        if (XSIZE(v) < 2)
-            REPORT_ERROR(1, "isCorner: index vector has got not enough components");
-
-        else if (XSIZE(v)==2)
-            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this)) ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this))  ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this)));
-        else if (XSIZE(v)==3)
-            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this) && ZZ(v) == STARTINGZ(*this))  ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this) && ZZ(v) == FINISHINGZ(*this)) ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)) ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this) && ZZ(v) == FINISHINGZ(*this))  ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
-        else
-            REPORT_ERROR(1, "isCorner: index vector has too many components");
-
-    }
 
     ///defgroup MultidimMemory Access to the pixel values
     /** Volume element access via double vector.
@@ -1833,7 +1308,7 @@ public:
      * val = V(vectorR3(1, -2, 0));
      * @endcode
      */
-    T& operator()(MultidimArray< double >& v) const
+    T& operator()(Matrix1D< double >& v) const
     {
         v.resize(3);
         return VOL_ELEM((*this), ROUND(ZZ(v)), ROUND(YY(v)), ROUND(XX(v)));
@@ -1842,7 +1317,7 @@ public:
     /** Volume element access via integer vector.
      * @ingroup MultidimMemory
      */
-    T& operator()(MultidimArray< int >& v) const
+    T& operator()(Matrix1D< int >& v) const
     {
         v.resize(3);
         return VOL_ELEM((*this), ZZ(v), YY(v), XX(v));
@@ -3226,38 +2701,70 @@ public:
      * Note that this function only works for the 0th image in a multi-image array...
      */
     void computeStats(double& avg,
-                       double& stddev,
-                       T& min_val,
-                       T& max_val,
-                       MultidimArray< int >& corner1,
-                       MultidimArray< int >& corner2) const
+    		double& stddev,
+    		T& min_val,
+    		T& max_val,
+    		MultidimArray< int >& corner1,
+    		MultidimArray< int >& corner2,
+    		unsigned long n = 0)
     {
-	min_val = max_val = (*this)(corner1);
+    	(*this).checkDimension(2);
+    	min_val = max_val = NZYX_ELEM((*this), n, 0, YY(corner1), XX(corner1));
 
-	MultidimArray< double > r(3);
-	double N = 0, sum = 0, sum2 = 0;
+    	Matrix1D< double > r(3);
+    	double N = 0, sum = 0, sum2 = 0;
 
-	FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
-	{
-            sum += (*this)(r);
-            sum2 += (*this)(r) * (*this)(r);
-            N++;
+    	FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+    	{
+    			sum += (*this)(r);
+    			sum2 += (*this)(r) * (*this)(r);
+    			N++;
 
-            if ((*this)(r) < min_val)
-        	min_val = (*this)(r);
-            else if ((*this)(r) > max_val)
-        	max_val = (*this)(r);
-	}
+    			if ((*this)(r) < min_val)
+    			min_val = (*this)(r);
+    			else if ((*this)(r) > max_val)
+    			max_val = (*this)(r);
+    	}
 
-	if (N != 0)
-	{
-            avg = sum / N;
-            stddev = sqrt(sum2 / N - avg * avg);
-	}
-	else
-	{
-            avg = stddev = 0;
-	}
+    	if (N != 0)
+    	{
+    			avg = sum / N;
+    			stddev = sqrt(sum2 / N - avg * avg);
+    	}
+    	else
+    	{
+    			avg = stddev = 0;
+    	}
+    }
+
+    /** IsCorner (in 2D or 3D matrix)
+     * @ingroup MultidimSize
+     *
+     * TRUE if the logical index given is a corner of the definition region of this
+     * array.
+     */
+    bool isCorner(const Matrix1D< double >& v) const
+    {
+        if (XSIZE(v) < 2)
+            REPORT_ERROR(1, "isCorner: index vector has got not enough components");
+
+        else if (XSIZE(*this)==2)
+            return ((XX(*this) == STARTINGX(*this)  && YY(*this) == STARTINGY(*this))  ||
+                    (XX(*this) == STARTINGX(*this)  && YY(*this) == FINISHINGY(*this)) ||
+                    (XX(*this) == FINISHINGX(*this) && YY(*this) == STARTINGY(*this))  ||
+                    (XX(*this) == FINISHINGX(*this) && YY(*this) == FINISHINGY(*this)));
+        else if (XSIZE(*this)==3)
+            return ((XX(*this) == STARTINGX(*this)  && YY(*this) == STARTINGY(*this) && ZZ(*this) == STARTINGZ(*this)) ||
+                    (XX(*this) == STARTINGX(*this)  && YY(*this) == FINISHINGY(*this) && ZZ(*this) == STARTINGZ(*this)) ||
+                    (XX(*this) == FINISHINGX(*this) && YY(*this) == STARTINGY(*this) && ZZ(*this) == STARTINGZ(*this))  ||
+                    (XX(*this) == FINISHINGX(*this) && YY(*this) == FINISHINGY(*this) && ZZ(*this) == STARTINGZ(*this)) ||
+                    (XX(*this) == STARTINGX(*this)  && YY(*this) == STARTINGY(*this) && ZZ(*this) == FINISHINGZ(*this)) ||
+                    (XX(*this) == STARTINGX(*this)  && YY(*this) == FINISHINGY(*this) && ZZ(*this) == FINISHINGZ(*this)) ||
+                    (XX(*this) == FINISHINGX(*this) && YY(*this) == STARTINGY(*this) && ZZ(*this) == FINISHINGZ(*this))  ||
+                    (XX(*this) == FINISHINGX(*this) && YY(*this) == FINISHINGY(*this) && ZZ(*this) == FINISHINGZ(*this)));
+        else
+            REPORT_ERROR(1, "isCorner: index vector has too many components");
+
     }
 
     /** Median
@@ -3914,6 +3421,7 @@ public:
      * v1.initLinear(0, 10, 6, "steps"); // v1=[0 2 4 6 8 10]
      * @endcode
      */
+		/*
     void initLinear(T minF, T maxF, int n = 1, const std::string& mode = "incr")
     {
         double slope;
@@ -3944,63 +3452,7 @@ public:
                 VEC_ELEM(*this, i) = (T)((double) minF + slope * i);
         }
     }
-
-
-    /** 2D Identity matrix of current size
-     * @ingroup Initialization
-     *
-     * If actually the matrix is not squared then an identity matrix is
-     * generated of size (Xdim x Xdim).
-     *
-     * @code
-     * m.initIdentity();
-     * @endcode
-     */
-    void initIdentity()
-    {
-        initIdentity(XSIZE(*this), XSIZE(*this));
-    }
-
-    /** 2D Identity matrix of a given size
-     * @ingroup Initialization
-     *
-     * A (dim x dim) identity matrix is generated.
-     *
-     * @code
-     * m.initIdentity(3);
-     * @endcode
-     */
-    void initIdentity(int dim)
-    {
-        initIdentity(dim, dim);
-    }
-
-    /** 2D Identity matrix of a given size
-     * @ingroup Initialization
-     *
-     * A (dimX x dimY) identity matrix is generated. That is, any element i, j
-     * of the matrix such that i = j is equal to 1.
-     *
-     * @code
-     * m.initIdentity(2, 3);
-     * @endcode
-     */
-    void initIdentity(int Ydim, int Xdim)
-    {
-        checkDimension(2);
-
-        if (Xdim == 0 || Ydim == 0)
-        {
-            clear();
-            return;
-        }
-
-        resize(Ydim, Xdim);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(*this)
-        {
-            DIRECT_MAT_ELEM(*this, i, j) = (T)(i == j);
-        }
-    }
+	*/
 
     /** Initialize with random values.
      * @ingroup Initialization
@@ -4099,7 +3551,7 @@ public:
     /** Computes the center of mass of the nth array
      * @ingroup MultidimUtilities
      */
-    void centerOfMass(MultidimArray< double >& center, void * mask=NULL, unsigned long n = 0)
+    void centerOfMass(Matrix1D< double >& center, void * mask=NULL, unsigned long n = 0)
     {
 	center.initZeros(3);
 	double mass = 0;
@@ -4285,7 +3737,7 @@ public:
     void substitute(T oldv,
                     T newv,
                     double accuracy = XMIPP_EQUAL_ACCURACY,
-		    MultidimArray<int> * mask = NULL )
+                    MultidimArray<int> * mask = NULL )
     {
         T* ptr=NULL;
 	unsigned long int n;
@@ -4667,7 +4119,7 @@ public:
      * Actual size of the array is used to know how many values must be read.
      *
      * @code
-     * v.resize(3);
+     * v.<3);
      * std::cin >> v;
      * @endcode
      *
@@ -4703,105 +4155,6 @@ public:
 
 
 
-    /** Read from an ASCII file.
-     * @ingroup Operators
-     *
-     * The array must be previously resized to the correct size.
-     */
-    void read(const FileName& fn)
-    {
-        std::ifstream in;
-        in.open(fn.c_str(), std::ios::in);
-
-        if (!in)
-            REPORT_ERROR(1,
-                         static_cast< std::string >("MultidimArray::read: File " +
-                                                    fn + " not found"));
-
-        in >> *this;
-        in.close();
-    }
-
-    /** Read from a binary file.
-     * @ingroup Operators
-     *
-     * The array must be previously resized to the correct size.
-     */
-    void readBinary(const FileName& fn)
-    {
-        std::ifstream in;
-        in.open(fn.c_str(), std::ios::in | std::ios::binary);
-        if (!in)
-            REPORT_ERROR(1,
-                         static_cast< std::string>("MultidimArray::read: File " + fn
-                                                   + " not found"));
-
-        T* ptr;
-	unsigned long int n;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            in.read(reinterpret_cast< char* >(ptr), sizeof(T));
-
-        in.close();
-    }
-
-    /** Write to an ASCII file.
-     * @ingroup Operators
-     */
-    void write(const FileName& fn) const
-    {
-        std::ofstream out;
-        out.open(fn.c_str(), std::ios::out);
-        if (!out)
-            REPORT_ERROR(1,
-                         static_cast< std::string >("MultidimArray::write: File " + fn
-                                                    + " cannot be opened for output"));
-
-        out << *this;
-        out.close();
-    }
-
-    /** Write to a binary file.
-     * @ingroup Operators
-     */
-    void writeBinary(const FileName& fn) const
-    {
-        std::ofstream out;
-
-        out.open(fn.c_str(), std::ios::out | std::ios::binary);
-        if (!out)
-            REPORT_ERROR(1,
-                         static_cast< std::string >("MultidimArray::write: File " + fn
-                                                    + " not found"));
-
-        T* ptr;
-	unsigned long int n;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            out.write(reinterpret_cast< char* >(ptr), sizeof(T));
-
-        out.close();
-    }
-
-    /** Edit with xmipp_editor.
-     * @ingroup Operators
-     *
-     *
-     * This function generates a random filename starting with PPP and
-     * edits it with xmipp_editor. After closing the editor the file is
-     * removed.
-     */
-    // FIXME This is not good practice.. (system)
-    void edit()
-    {
-        FileName nam;
-        nam.init_random(15);
-
-        nam = static_cast< std::string >("PPP" + nam + ".txt");
-        write(nam);
-
-        system((static_cast< std::string >("xmipp_edit -i " + nam +
-                                           " -remove &").c_str()));
-    }
-
 ////////////// VECTORS
     /// @defgroup VectorsUtilities
     /// @ingroup Vectors
@@ -4829,14 +4182,8 @@ public:
 
             STARTINGX(result) = STARTINGX(*this);
             STARTINGY(result) = STARTINGY(*this);
-            
+
             return result;
-        }
-        else if (getDim()==1)
-        {
-            MultidimArray<T> temp(*this);
-            temp.selfTranspose();
-            return temp;
         }
         else
         {
@@ -4846,460 +4193,6 @@ public:
             REPORT_ERROR(1,"transpose ERROR: transpose only valid for 1D or 2D");
         }
     }
-
-    /** Algebraic transpose of 1D vector
-     * @ingroup VectorsUtilities
-     *
-     * The same as before but the result is stored in this same object.
-     */
-    void selfTranspose()
-    {
-        checkDimension(1);
-        row = !row;
-    }
-
-    /** Module of the vector
-     * @ingroup VectorsUtilities
-     *
-     * This module is defined as the square root of the sum of the squared
-     * components. Euclidean norm of the vector.
-     *
-     * @code
-     * double mod = v.module();
-     * @endcode
-     */
-    double module() const
-    {
-        checkDimension(1);
-        return sqrt(sum2());
-    }
-
-    /** Angle of the vector
-     * @ingroup VectorsUtilities
-     *
-     * Supposing this vector is in R2 this function returns the angle of this
-     * vector with X axis, ie, atan2(YY(v), XX(v))
-     */
-    double angle()
-    {
-        checkDimension(1);
-        return atan2((double) YY(*this), (double) XX(*this));
-    }
-
-    /** Normalize this vector, store the result here
-     * @ingroup VectorsUtilities
-     */
-    void selfNormalize()
-    {
-        checkDimension(1);
-        double m = module();
-        if (ABS(m) > XMIPP_EQUAL_ACCURACY)
-        {
-            T im=(T) (1.0/m);
-            *this *= im;
-        }
-        else
-            MultidimArray<T>::initZeros();
-    }
-
-    /** Sort vector elements
-     * @ingroup VectorsUtilities
-     *
-     * Sort in ascending order the vector elements. You can use the "reverse"
-     * function to sort in descending order.
-     *
-     * @code
-     * v2 = v1.sort();
-     * @endcode
-     */
-    MultidimArray<T> sort() const
-    {
-        checkDimension(1);
-
-        MultidimArray<T> temp;
-        MultidimArray< double > aux;
-
-        if (XSIZE(*this) == 0)
-            return temp;
-
-        // Initialise data
-        typeCast(*this, aux);
-
-        // Sort
-        double * aux_array = aux.adaptForNumericalRecipes1D();
-        qcksrt(XSIZE(*this), aux_array);
-
-        typeCast(aux, temp);
-        return temp;
-    }
-
-    /** Gives a vector with the indexes for a sorted vector
-     * @ingroup VectorsUtilities
-     *
-     * This function returns the indexes of a sorted vector. The input vector is
-     * not modified at all. For instance, if the input vector is [3 2 -1 0] the
-     * result of this function would be [3 4 2 1] meaning that the lowest value
-     * is at index 3, then comes the element at index 4, ... Note that
-     * indexes start at 1.
-     *
-     * @code
-     * v2 = v1.indexSort();
-     * @endcode
-     */
-    MultidimArray< int > indexSort() const
-    {
-        checkDimension(1);
-
-        MultidimArray< int >   indx;
-        MultidimArray< double > temp;
-
-        if (XSIZE(*this) == 0)
-            return indx;
-
-        if (XSIZE(*this) == 1)
-        {
-            indx.resize(1);
-            indx(0) = 1;
-            return indx;
-        }
-
-        // Initialise data
-        indx.resize(XSIZE(*this));
-        typeCast(*this, temp);
-
-        // Sort indexes
-        double* temp_array = temp.adaptForNumericalRecipes1D();
-        int* indx_array = indx.adaptForNumericalRecipes1D();
-        indexx(XSIZE(*this), temp_array, indx_array);
-
-        return indx;
-    }
-
-
-    /** Show using gnuplot
-     * @ingroup VectorsUtilities
-     *
-     * This function uses gnuplot to plot this vector. You must supply the
-     * xlabel, ylabel, and title.
-     */
-    void showWithGnuPlot(const std::string& xlabel, const std::string& title)
-    {
-        checkDimension(1);
-        FileName fn_tmp;
-        fn_tmp.init_random(10);
-        MultidimArray<T>::write(static_cast<std::string>("PPP") +
-            fn_tmp + ".txt");
-
-        std::ofstream fh_gplot;
-        fh_gplot.open((static_cast<std::string>("PPP") + fn_tmp +
-            ".gpl").c_str());
-        if (!fh_gplot)
-            REPORT_ERROR(1,
-            static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
-                + fn_tmp + ".gpl for output");
-        fh_gplot << "set xlabel \"" + xlabel + "\"\n";
-        fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
-        "\" w l\n";
-        fh_gplot << "pause 300 \"\"\n";
-        fh_gplot.close();
-        system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
-            ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
-    }
-
-    /** Compute numerical derivative
-     * @ingroup VectorsUtilities
-     *
-     * The numerical derivative is of the same size as the input vector.
-     * However, the first two and the last two samples are set to 0,
-     * because the numerical method is not able to correctly estimate the
-     * derivative there.
-     */
-    void numericalDerivative(MultidimArray<double> &result)
-    {
-        checkDimension(1);
-
-        const double i12=1.0/12.0;
-	result.initZeros(*this);
-	for (int i=STARTINGX(*this)+2; i<=FINISHINGX(*this)-2; i++)
-            result(i)=i12*(-(*this)(i+2)+8*(*this)(i+1)
-                           -8*(*this)(i-1)+(*this)(i+2));
-    }
-
-////////////// 2D MATRICES
-    /// @defgroup MatricesUtilities
-    /// @ingroup Matrices
-
-    /** True if the matrix is diagonal
-     * @ingroup MatricesUtilities
-     *
-     * @code
-     * if (m.isDiagonal())
-     *     std::cout << "The matrix is diagonal\n";
-     * @endcode
-     */
-    bool isDiagonal() const
-    {
-        checkDimension(2);
-
-        if (XSIZE(*this) != YSIZE(*this))
-            return false;
-
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-        if (i != j && ABS(DIRECT_MAT_ELEM(*this, i, j)) >
-            XMIPP_EQUAL_ACCURACY)
-            return false;
-
-        return true;
-    }
-
-    /** True if the matrix is scalar
-     * @ingroup MatricesUtilities
-     *
-     * A scalar matrix is diagonal and all the values at the diagonal are the
-     * same
-     */
-    bool isScalar() const
-    {
-        checkDimension(2);
-
-        if (!isDiagonal())
-            return false;
-
-        for (int i = 1; i < YSIZE(*this); i++)
-            if (ABS(DIRECT_MAT_ELEM(*this, i, i) - DIRECT_MAT_ELEM(*this, 0, 0))
-                > XMIPP_EQUAL_ACCURACY)
-                return false;
-
-        return true;
-    }
-
-    /** True if the matrix is identity
-     * @ingroup MatricesUtilities
-     *
-     * @code
-     * if (m.isIdentity())
-     *     std::cout << "The matrix is identity\n";
-     * @endcode
-     */
-    bool isIdentity() const
-    {
-        checkDimension(2);
-
-        return isScalar() &&
-               ABS(DIRECT_MAT_ELEM(*this, 0, 0) - (T) 1) < XMIPP_EQUAL_ACCURACY;
-    }
-
-    /** Makes a matrix from a vector
-     * @ingroup MatricesUtilities
-     *
-     * The origin of the matrix is set such that it has one of the index origins
-     * (X or Y) to the same value as the vector, and the other set to 0
-     * according to the shape.
-     *
-     * @code
-     * Matrix2D< double > m = fromVector(v);
-     * @endcode
-     */
-    void fromVector(const Matrix1D<T>& op1)
-    {
-        op1.checkDimension(1);
-
-        // Null vector => Null matrix
-        if (XSIZE(op1) == 0)
-        {
-            clear();
-            return;
-        }
-
-        // Look at shape and copy values
-        if (op1.isRow())
-        {
-            resize(1, XSIZE(op1));
-
-            for (int j = 0; j < XSIZE(op1); j++)
-                DIRECT_MAT_ELEM(*this, 0, j) = DIRECT_VEC_ELEM(op1, j);
-
-            STARTINGX(*this) = STARTINGX(op1);
-            STARTINGY(*this) = 0;
-        }
-        else
-        {
-            resize(XSIZE(op1), 1);
-
-            for (int i = 0; i < XSIZE(op1); i++)
-                DIRECT_MAT_ELEM(*this, i, 0) = DIRECT_VEC_ELEM(op1, i);
-
-            STARTINGX(*this) = 0;
-            STARTINGY(*this) = STARTINGX(op1);
-        }
-    }
-
-    /** Makes a vector from a matrix
-     * @ingroup MatricesUtilities
-     *
-     * An exception is thrown if the matrix is not a single row or a single
-     * column. The origin of the vector is set according to the one of the
-     * matrix.
-     *
-     * @code
-     * Matrix1D< double > v;
-     * m.toVector(v);
-     * @endcode
-     */
-    void toVector(Matrix1D<T>& op1) const
-    {
-        checkDimension(2);
-
-        // Null matrix => Null vector
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
-        {
-            op1.clear();
-            return;
-        }
-
-        // If matrix is not a vector, produce an error
-        if (XSIZE(*this) != 1 && (YSIZE(*this) != 1))
-            REPORT_ERROR(1102,
-                         "To_vector: Matrix cannot be converted to vector");
-
-        // Look at shape and copy values
-        if (YSIZE(*this) == 1)
-        {
-            // Row vector
-            op1.resize(XSIZE(*this));
-
-            for (int j = 0; j < XSIZE(*this); j++)
-                DIRECT_VEC_ELEM(op1, j) = DIRECT_MAT_ELEM(*this, 0, j);
-
-            op1.setRow();
-            STARTINGX(op1) = STARTINGX(*this);
-        }
-        else
-        {
-            // Column vector
-            op1.resize(YSIZE(*this));
-
-            for (int i = 0; i < YSIZE(*this); i++)
-                DIRECT_VEC_ELEM(op1, i) = DIRECT_MAT_ELEM(*this, i, 0);
-
-            op1.setCol();
-            STARTINGX(op1) = STARTINGY(*this);
-        }
-    }
-
-    /** Determinant of a matrix
-     * @ingroup MatricesUtilities
-     *
-     * An exception is thrown if the matrix is not squared or it is empty.
-     *
-     * @code
-     * double det = m.det();
-     * @endcode
-     */
-    T det() const
-    {
-        checkDimension(2);
-
-        // (see Numerical Recipes, Chapter 2 Section 5)
-        if (XSIZE(*this) == 0)
-            REPORT_ERROR(1108, "determinant: Matrix is empty");
-
-        if (XSIZE(*this) != YSIZE(*this))
-            REPORT_ERROR(1109, "determinant: Matrix is not squared");
-
-        for (int i = 0; i < YSIZE(*this); i++)
-        {
-            bool all_zeros = true;
-            for (int j = 0; j < XSIZE(*this); j++)
-                if (ABS(DIRECT_MAT_ELEM(*this, i, j)) > XMIPP_EQUAL_ACCURACY)
-                {
-                    all_zeros = false;
-                    break;
-                }
-
-            if (all_zeros)
-                return 0;
-        }
-
-        // Perform decomposition
-        MultidimArray< int > indx;
-        T d;
-        MultidimArray<T> LU;
-        ludcmp(*this, LU, indx, d);
-
-        // Calculate determinant
-        for (int i = 0; i < XSIZE(*this); i++)
-            d *= (T) LU(i , i);
-
-        return d;
-    }
-
-    /** Inverse of a matrix
-     * @ingroup MatricesUtilities
-     *
-     * The matrix is inverted using a SVD decomposition. In fact the
-     * pseudoinverse is returned.
-     *
-     * @code
-     * Matrix2D< double > m1_inv;
-     * m1.inv(m1_inv);
-     * @endcode
-     */
-    void inv(Matrix2D<T>& result) const
-    {
-        checkDimension(2);
-
-        if (XSIZE(*this) == 0)
-            REPORT_ERROR(1108, "Inverse: Matrix is empty");
-
-        // Perform SVD decomposition
-        MultidimArray< double > u, v;
-        MultidimArray< double > w;
-        svdcmp(*this, u, w, v); // *this = U * W * V^t
-
-        double tol = MultidimArray<T>::computeMax() *
-            XMIPP_MAX(XSIZE(*this),YSIZE(*this)) * 1e-14;
-        result.initZeros(XSIZE(*this), YSIZE(*this));
-
-        // Compute W^-1
-        bool invertible = false;
-        for (int i = 0; i < XSIZE(w); i++)
-        {
-            if (ABS(DIRECT_VEC_ELEM(w, i)) > tol)
-            {
-                DIRECT_VEC_ELEM(w, i) = 1.0 / DIRECT_VEC_ELEM(w, i);
-                invertible = true;
-            }
-            else
-                DIRECT_VEC_ELEM(w, i) = 0.0;
-        }
-
-        if (!invertible)
-            return;
-
-        // Compute V*W^-1
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
-            DIRECT_MAT_ELEM(v, i, j) *= DIRECT_VEC_ELEM(w, j);
-
-        // Compute Inverse
-        for (int i = 0; i < XSIZE(*this); i++)
-            for (int j = 0; j < YSIZE(*this); j++)
-                for (int k = 0; k < XSIZE(*this); k++)
-                    DIRECT_MAT_ELEM(result, i, j) += (T)
-                        (DIRECT_MAT_ELEM(v, i, k) * DIRECT_MAT_ELEM(u, j, k));
-    }
-
-    /** Inverse of a matrix
-     * @ingroup MatricesUtilities
-     */
-    MultidimArray<T> inv() const
-    {
-        MultidimArray<T> result;
-        inv(result);
-
-        return result;
-    }
-
 
 };
 
@@ -5477,7 +4370,6 @@ void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
 
 
 
-
 template<typename T>
 std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
 {
@@ -5528,267 +4420,5 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
 template<>
 std::ostream& operator<<(std::ostream& ostrm, const MultidimArray< std::complex<double> >& v);
 
-template<>
-bool Matrix2D< std::complex< double > >::isDiagonal() const;
-
-template<>
-bool Matrix2D< std::complex<double> >::isScalar() const;
-
-
-////////VECTORS
-
-/**@defgroup VectorsRelated Related functions
- * @ingroup MultidimensionalArrays
- *
- * These functions are not methods of MultidimArray
- */
-
-/** Creates vector in R2
- * @ingroup VectorsRelated
- *
- * After this function the vector is (x,y) in R2.
- *
- * @code
- * Matrix1D< double > v = vectorR2(1, 2);
- * @endcode
- */
-Matrix1D< double > vectorR2(double x, double y);
-
-/** Creates vector in R3
- * @ingroup VectorsRelated
- *
- * After this function the vector is (x,y,z) in R3.
- *
- * @code
- * Matrix1D< double > v = vectorR2(1, 2, 1);
- * @endcode
- */
-Matrix1D< double > vectorR3(double x, double y, double z);
-
-/** Creates an integer vector in Z3
- * @ingroup VectorsRelated
- */
-Matrix1D< int > vectorR3(int x, int y, int z);
-
-/** Dot product.
- * @ingroup VectorsRelated
- *
- * Given any two vectors in Rn (n-dimensional vector), this function returns the
- * dot product of both. If the vectors are not of the same size or shape then an
- * exception is thrown. The dot product is defined as the sum of the component
- * by component multiplication.
- *
- * For the R3 vectors (V1x,V1y,V1z), (V2x, V2y, V2z) the result is V1x*V2x +
- * V1y*V2y + V1z*V2z.
- *
- * @code
- * Matrix1D< double > v1(1000);
- * v1.init_random(0, 10, "gaussian");
- * std::cout << "The power of this vector should be 100 and is " <<
- *     dotProduct(v1, v1) << std::endl;
- * @endcode
- */
-template<typename T>
-T dotProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
-{
-    v1.checkDimension(1);
-    v2.checkDimension(1);
-
-    if (!v1.sameShape(v2))
-        REPORT_ERROR(1002, "Dot product: vectors of different size or shape");
-
-    T accumulate = 0;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v1)
-        accumulate += DIRECT_VEC_ELEM(v1,i) * DIRECT_VEC_ELEM(v2,i);
-
-    return accumulate;
-}
-
-/** Vector product in R3
- * @ingroup VectorsRelated
- *
- * This function takes two R3 vectors and compute their vectorial product. For
- * two vectors (V1x,V1y,V1z), (V2x, V2y, V2z) the result is (V1y*V2z-V1z*v2y,
- * V1z*V2x-V1x*V2z, V1x*V2y-V1y*V2x). Pay attention that this operator is not
- * conmutative. An exception is thrown if the vectors are not of the same shape
- * or they don't belong to R3.
- *
- * @code
- * Matrix1D< T > X = vectorR3(1, 0, 0), Y = vector_R3(0, 1, 0);
- * std::cout << "X*Y=Z=" << vectorProduct(X,Y).transpose() << std::endl;
- * @endcode
- */
-template<typename T>
-Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
-{
-    v1.checkDimension(1);
-    v2.checkDimension(1);
-
-    if (v1.xdim != 3 || v2.xdim != 3)
-        REPORT_ERROR(1002, "Vector_product: vectors are not in R3");
-
-    if (v1.isRow() != v2.isRow())
-        REPORT_ERROR(1007, "Vector_product: vectors are of different shape");
-
-    Matrix1D< T > result(3);
-    XX(result) = YY(v1) * ZZ(v2) - ZZ(v1) * YY(v2);
-    YY(result) = ZZ(v1) * XX(v2) - XX(v1) * ZZ(v2);
-    ZZ(result) = XX(v1) * YY(v2) - YY(v1) * XX(v2);
-
-    return result;
-}
-
-/** Vector product in R3
- * @ingroup VectorsRelated
- *
- * This function computes the vector product of two R3 vectors.
- * No check is performed, it is assumed that the output vector
- * is already resized
- *
- */
-template<typename T>
-void vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2,
-   Matrix1D<T> &result)
-{
-    v1.checkDimension(1);
-    v2.checkDimension(1);
-    result.checkDimension(1);
-
-    XX(result) = YY(v1) * ZZ(v2) - ZZ(v1) * YY(v2);
-    YY(result) = ZZ(v1) * XX(v2) - XX(v1) * ZZ(v2);
-    ZZ(result) = XX(v1) * YY(v2) - YY(v1) * XX(v2);
-}
-
-/** Sort two vectors
- * @ingroup VectorsMiscellaneous
- *
- * v1 and v2 must be of the same shape, if not an exception is thrown. After
- * calling this function all components in v1 are the minimum between the
- * corresponding components in v1 and v2, and all components in v2 are the
- * maximum.
- *
- * For instance, XX(v1)=MIN(XX(v1), XX(v2)), XX(v2)=MAX(XX(v1), XX(v2)). Notice
- * that both vectors are modified. This function is very useful for sorting two
- * corners. After calling it you can certainly perform a non-empty for (from
- * corner1 to corner2) loop.
- */
-template<typename T>
-void sortTwoVectors(Matrix1D<T>& v1, Matrix1D<T>& v2)
-{
-    T temp;
-    if (!v1.sameShape(v2))
-        REPORT_ERROR(1007,
-                     "sortTwoVectors: vectors are not of the same shape");
-
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(v1)
-    {
-        temp = XMIPP_MIN(VEC_ELEM(v1, i), VEC_ELEM(v2, i));
-        VEC_ELEM(v2, i) = XMIPP_MAX(VEC_ELEM(v1, i), VEC_ELEM(v2, i));
-        VEC_ELEM(v1, i) = temp;
-    }
-}
-
-//////// 2D MATRICES
-
-/**@defgroup MatricesRelated Related functions
- * @ingroup MultidimensionalArrays
- *
- * These functions are not methods of MultidimArray
- */
-
-/* Matrix x Matrix multiplication
- * @ingroup MatricesRelated
- * This is a matrix multiplication, not an element-by-element multiplication!
- *
- * result = A * A;
- */
-template<typename T>
-void multiplyMatrixbyMatrix(const Matrix2D<T>& op1, const Matrix2D<T>& op2, Matrix2D<T>& result)
-{
-    op1.checkDimension(2);
-    op2.checkDimension(2);
-
-    if (XSIZE(op1) != YSIZE(op2))
-        REPORT_ERROR(1102, "Not compatible sizes in matrix multiplication");
-
-    result.initZeros(YSIZE(op1), XSIZE(op2));
-    for (int i = 0; i < YSIZE(op1); i++)
-        for (int j = 0; j < XSIZE(op2); j++)
-            for (int k = 0; k < XSIZE(op1); k++)
-                DIRECT_MAT_ELEM(result, i, j) += DIRECT_MAT_ELEM(op1, i, k) *
-                                                 DIRECT_MAT_ELEM(op2, k, j);
-
-    STARTINGY(result) = STARTINGY(op1);
-    STARTINGX(result) = STARTINGX(op1);
-}
-
-/* Matrix x Vector multiplication
- * @ingroup MatricesRelated
- * This is a matrix multiplication, not an element-by-element multiplication!
- *
- * result = A * b;
- * b should be a column vector, result will be a row vector
- *
- */
-template<typename T>
-void multiplyMatrixbyVector(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
-{
-
-    A.checkDimension(2);
-    b.checkDimension(1);
-
-    if (XSIZE(A) != XSIZE(b))
-        REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
-
-    if (!b.isCol())
-        REPORT_ERROR(1102, "Vector is not a column");
-
-    result.initZeros(YSIZE(A));
-    
-    for (int i = 0; i < YSIZE(A); i++)
-        for (int j = 0; j < XSIZE(b); j++)
-            DIRECT_VEC_ELEM(result, i) += DIRECT_MAT_ELEM(A, i, j) *
-                DIRECT_VEC_ELEM(b, j);
-    
-    result.setCol();
-    STARTINGX(result) = STARTINGY(A);
-    
-    return result;
-
-
-}
-
-/* Vector x Matrix multiplication
- * @ingroup MatricesRelated
- * This is a matrix multiplication, not an element-by-element multiplication!
- *
- * result = b * A;
- * b should be a row vector, result will be a column vector
- */
-template<typename T>
-void multiplyVectorbyMatrix(const Matrix1D<T>& b, const Matrix2D<T>& A, Matrix1D<T>& result)
-{
-    A.checkDimension(2);
-    b.checkDimension(1);
-
-    if (XSIZE(b) != YSIZE(A))
-        REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
-
-    if (!b.isRow())
-        REPORT_ERROR(1102, "Vector is not a row");
-
-    result.initZeros(XSIZE(A));
-    for (int j = 0; j < XSIZE(A); j++)
-        for (int i = 0; i < YSIZE(A); i++)
-            DIRECT_VEC_ELEM(result, j) += DIRECT_VEC_ELEM(b, i) *
-                                          DIRECT_MAT_ELEM(A, i, j);
-
-    result.setRow();
-    STARTINGX(result) = STARTINGX(A);
-
-    return result;
-
-
-}
 
 #endif

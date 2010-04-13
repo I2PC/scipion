@@ -29,12 +29,12 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-#include "multidim_array.h"
+#include "matrix1d.h"
 //ROB
 #include <string.h>
 
 #include "funcs.h"
-template <typename T> class MultidimArray;
+template <typename T> class Matrix1D;
 
 /** @defgroup Arguments Arguments parsing
  *  @ingroup DataLibrary
@@ -567,7 +567,7 @@ void readFloatList(const std::string& str,
 template <typename T>
 void readFloatList(const char* str,
                      int N,
-                     MultidimArray< T >& v,
+                     Matrix1D< T >& v,
                      int _errno = 2105,
                      std::string errmsg = "Error reading floating list",
                      int exit = 0)
@@ -595,7 +595,7 @@ void readFloatList(const char* str,
             REPORT_ERROR(_errno, errmsg);
         }
 
-        DIRECT_VEC_ELEM(v, i) = valueF;
+        v(i) = valueF;
         if (i != N - 1)
             token = nextToken();
     }
@@ -754,7 +754,7 @@ int numComponents(const std::string& str);
  * is thrown. If there is no dimensionality and a single parameter is behind the
  * flag then no brackets are needed
  */
-MultidimArray< double > getVectorParameter(int argc,
+Matrix1D< double > getVectorParameter(int argc,
                                       char** argv,
                                       const char* param,
                                       int dim = 2,
@@ -900,7 +900,7 @@ bool checkParameter(FILE* fh, const char* param);
  *
  * The same as before but reading is done from a file
  */
-MultidimArray< double > getVectorParameter(FILE* fh,
+Matrix1D< double > getVectorParameter(FILE* fh,
                                     const char* param,
                                     int dim = 2,
                                     int _errno = -1,

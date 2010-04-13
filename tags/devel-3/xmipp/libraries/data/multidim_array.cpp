@@ -83,30 +83,4 @@ bool Matrix2D< std::complex<double> >::isScalar() const
 
 /////////// Vectors stuff 
 
-/* Vector R2 and R3 -------------------------------------------------------- */
-Matrix1D<double> vectorR2(double x, double y)
-{
-    Matrix1D<double> result(2);
-    VEC_ELEM(result, 0) = x;
-    VEC_ELEM(result, 1) = y;
-    return result;
-}
-
-Matrix1D<double> vectorR3(double x, double y, double z)
-{
-    Matrix1D<double> result(3);
-    VEC_ELEM(result, 0) = x;
-    VEC_ELEM(result, 1) = y;
-    VEC_ELEM(result, 2) = z;
-    return result;
-}
-
-Matrix1D<int> vectorR3(int x, int y, int z)
-{
-    Matrix1D<int> result(3);
-    VEC_ELEM(result, 0) = x;
-    VEC_ELEM(result, 1) = y;
-    VEC_ELEM(result, 2) = z;
-    return result;
-}
 
