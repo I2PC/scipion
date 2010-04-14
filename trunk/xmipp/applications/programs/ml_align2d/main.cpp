@@ -141,6 +141,8 @@ int main(int argc, char **argv)
             // Check convergence
             converged = prm.checkConvergence();
             // Write output files
+            prm.addDocfileHeaderComment();
+            prm.addDocfileData(prm.docfiledata, prm.myFirstImg, prm.myLastImg);
             prm.writeOutputFiles(prm.model, OUT_ITER);
 
             if (converged)

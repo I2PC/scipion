@@ -93,7 +93,28 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Select only relevant part of selfile for this rank
-        //prm.SF.mpi_select_part(rank, size, num_img_tot);
+
+
+        //Get the images to working on
+        prm.nr_images_local = divide_equally(prm.nr_images_global, size, rank, prm.myFirstImg, prm.myLastImg);
+
+
+        //Send and recv blocks distribution
+        //if using blocks
+        if (prm.blocks > 1)
+        {
+            int s_size = prm.nr_images_global;
+
+            if (rank == 0) //Send blocks distribution to slaves
+            {
+                for (int docCounter = 1; docCounter < size; docCounter++)
+                    MPI_Send(prm.img_blocks.data(), s_size, MPI_INT, docCounter, TAG_DOCFILE, MPI_COMM_WORLD);
+            }
+            else //receive blocks distr from the master
+            {
+                MPI_Recv(prm.img_blocks.data(), s_size, MPI_INT, 0, TAG_DOCFILE, MPI_COMM_WORLD, &status);
+            }
+        }//close if blocks
 
         // And produce selfile-specific side-info
         prm.produceSideInfo2();
@@ -205,30 +226,17 @@ int main(int argc, char **argv)
             // Write intermediate files 
             if (rank != 0)
             {
-                // All slaves send docfile to the master
-//                std::ostringstream doc;
-//                doc << prm.DFo;
+                // All slaves send docfile data to the master
                 int s_size = MULTIDIM_SIZE(prm.docfiledata);
-                //doc.str().size();
-//                char results[s_size];
-//                strncpy(results,doc.str().c_str(),s_size);
-//                results[s_size]='\0';
                 MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE, MPI_COMM_WORLD);
                 MPI_Send(MULTIDIM_ARRAY(prm.docfiledata), s_size, MPI_DOUBLE, 0, TAG_DOCFILE, MPI_COMM_WORLD);
             }
             else
             {
                 // Master fills docfile 
-//                std::ofstream myDocFile;
-//                FileName fn_tmp;
-//                fn_tmp.compose(prm.fn_root + "_it",prm.iter,"doc");
-//                myDocFile.open (fn_tmp.c_str());
-                prm.DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
-                //myDocFile << " ; Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)\n";
-
+                prm.addDocfileHeaderComment();
                 // Master's own contribution
                 prm.addDocfileData(prm.docfiledata, prm.myFirstImg, prm.myLastImg);
-                //myDocFile << prm.DFo;
                 int s_size, first_img, last_img;
                 int docCounter = 1;
 
@@ -239,15 +247,11 @@ int main(int argc, char **argv)
                     MPI_Recv(MULTIDIM_ARRAY(prm.docfiledata), s_size, MPI_DOUBLE, docCounter, TAG_DOCFILE, MPI_COMM_WORLD, &status);
                     divide_equally(prm.nr_images_global, size, docCounter, first_img, last_img);
                     prm.addDocfileData(prm.docfiledata, first_img, last_img);
-                    //results[s_size]='\0';
-                    //myDocFile<<results ;
                     docCounter++;
+
                 }
 
-                //save doc_file and renumber it
-                //myDocFile.close();
-                //prm.DFo.clear();
-                //prm.DFo.read(fn_tmp);
+                //Renumber docfile
                 prm.DFo.renum();
                 // Output all intermediate files
                 prm.writeOutputFiles(prm.model, OUT_ITER);

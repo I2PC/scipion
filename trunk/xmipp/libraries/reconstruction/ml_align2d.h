@@ -444,6 +444,8 @@ public:
     /// Add docfiledata to docfile
     void addDocfileData(Matrix2D<double> data, int first, int last);
 
+    /// Add header comment to docfile
+    void addDocfileHeaderComment();
     /// Write Docfile
     void writeDocfile(FileName fn_base);
 
@@ -456,10 +458,6 @@ public:
     /// Get base name based on fn_root and some number
     FileName getBaseName(std::string suffix = "", int number = -1);
 
-    /// This function only should be called when using MPI
-    /// before call produceSideInfo2
-    /// for each proccess take some part of all images
-    void setWorkingImages(int size, int rank);
 };
 
 

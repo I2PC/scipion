@@ -545,6 +545,43 @@ void Prog_MLalign2D_prm::produceSideInfo()
         maxw_ref.resize(mysize);
     }
 
+    //--------Setup for BLOCKS------------
+    //Set image blocks vector
+    //TODO: for MPI all slave will produce this unnecessary
+    //also all images are kept in memory an transmitted
+    //from the master and only the local part is needed
+    img_blocks.resize(nr_images_global, 0);
+    int first_img, last_img;
+
+    if (blocks > 1)
+    {
+        for (int b = 0; b < blocks; b++)
+        {
+            divide_equally(nr_images_global, blocks, b, first_img, last_img);
+
+            for (int i = first_img; i <= last_img; i++)
+                img_blocks[i] = b;
+        }
+        //randomize elements
+        if (randomize)
+        {
+            //randomize_random_generator();
+            //srand( time(NULL));
+            //FIXME: Implement this in funcs.h
+            std::random_shuffle(img_blocks.begin(), img_blocks.end());
+        }
+    }//close if blocks
+
+    //FIXME: Only for testing, writing blocks distribution to file
+//    FileName bfn = fn_root + ".blocks";
+//
+//    FILE* f = fopen("blocks.txt", "w");
+//    FOR_ALL_LOCAL_IMAGES()
+//    {
+//        fprintf(f, "%d\n", img_blocks[IMG_INDEX]);
+//    }
+//    fclose(f);
+
 
 }//close function produceSideInfo
 
@@ -595,10 +632,12 @@ void Prog_MLalign2D_prm::generateInitialReferences()
         Iave.write(fn_tmp);
         SFr.insert(fn_tmp, SelLine::ACTIVE);
 
-        if (verb > 0) progress_bar(refno);
+        if (verb > 0)
+            progress_bar(refno);
     }
 
-    if (verb > 0) progress_bar(model.n_ref);
+    if (verb > 0)
+        progress_bar(model.n_ref);
 
     fn_ref = fn_root + "_it";
 
@@ -693,6 +732,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
             imgs_offsets[IMG_INDEX].push_back(offx);
         }
     }
+
 
     // For limited orientational search: initialize imgs_oldphi & imgs_oldtheta to -999.
     if (limit_rot)
@@ -799,24 +839,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
     //--------Setup for Docfile -----------
     docfiledata.resize(nr_images_local, DATALINELENGTH);
 
-    //--------Setup for BLOCKS------------
-    //Set image blocks vector
-    img_blocks.resize(nr_images_local, 0);
-    int first_img, last_img;
 
-    if (blocks > 1)
-    {
-        for (int b = 0; b < blocks; b++)
-        {
-            divide_equally(nr_images_global, blocks, b, first_img, last_img);
-
-            for (int i = first_img; i <= last_img; i++)
-                img_blocks[i] = b;
-        }
-        //randomize elements
-        if (randomize)
-            std::random_shuffle(img_blocks.begin(), img_blocks.end());
-    }//close if blocks
 
 }//close function produceSideInfo2
 
@@ -1757,21 +1780,20 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                             Maux.initZeros();
 
                             FOR_ALL_ELEMENTS_IN_MATRIX2D(Mweight)
-                                {
-                                    MAT_ELEM(Maux, i, j)
-                                            = MAT_ELEM(Mweight, i, j);
-                                }
+                            {
+                                MAT_ELEM(Maux, i, j)
+                                        = MAT_ELEM(Mweight, i, j);
+                            }
 
                             // Use forward FFT in convolution theorem again
                             // Takes the input from Maux and leaves it in Faux
                             local_transformer.FourierTransform();
 
                             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
-                                {
-                                    dMij(mysumimgs[refnoipsi],i,j)
-                                            += conj(dMij(Faux,i,j))
-                                                    * dMij(Fimg_flip[iflip],i,j);
-                                }
+                            {
+                                dMij(mysumimgs[refnoipsi],i,j)
+                                        += conj(dMij(Faux,i,j)) * dMij(Fimg_flip[iflip],i,j);
+                            }
                         }
                     } // close if Msignificant
                 } // close for ipsi
@@ -1981,7 +2003,8 @@ void Prog_MLalign2D_prm::expectation()
     //for (int imgno = 0, img_done = 0; imgno < nn; imgno++)
     // Loop over all images
     FOR_ALL_LOCAL_IMAGES()
-        if (img_blocks[IMG_INDEX] == current_block)
+        //if (img_blocks[IMG_INDEX] == current_block)
+        if (img_blocks[imgno] == current_block)
         {
     #ifdef TIMING
             timer.tic(FOR_F1);
@@ -2092,15 +2115,15 @@ void Prog_MLalign2D_prm::expectation()
                 opt_flip = 0.;
             }
 
-            docfiledata(IMG_INDEX,0) = model.Iref[opt_refno].Phi(); // rot
-            docfiledata(IMG_INDEX,1) = model.Iref[opt_refno].Theta(); // tilt
-            docfiledata(IMG_INDEX,2) = opt_psi + 360.; // psi
-            docfiledata(IMG_INDEX,3) = opt_offsets(0); // Xoff
-            docfiledata(IMG_INDEX,4) = opt_offsets(1); // Yoff
-            docfiledata(IMG_INDEX,5) = (double) (opt_refno + 1); // Ref
-            docfiledata(IMG_INDEX,6) = opt_flip; // Mirror
-            docfiledata(IMG_INDEX,7) = fracweight; // P_max/P_tot
-            docfiledata(IMG_INDEX,8) = dLL; // log-likelihood
+            dMij(docfiledata,IMG_INDEX,0) = model.Iref[opt_refno].Phi(); // rot
+            dMij(docfiledata,IMG_INDEX,1) = model.Iref[opt_refno].Theta(); // tilt
+            dMij(docfiledata,IMG_INDEX,2) = opt_psi + 360.; // psi
+            dMij(docfiledata,IMG_INDEX,3) = opt_offsets(0); // Xoff
+            dMij(docfiledata,IMG_INDEX,4) = opt_offsets(1); // Yoff
+            dMij(docfiledata,IMG_INDEX,5) = (double) (opt_refno + 1); // Ref
+            dMij(docfiledata,IMG_INDEX,6) = opt_flip; // Mirror
+            dMij(docfiledata,IMG_INDEX,7) = fracweight; // P_max/P_tot
+            dMij(docfiledata,IMG_INDEX,8) = dLL; // log-likelihood
 
             if (do_norm)
             {
@@ -2316,6 +2339,8 @@ void Prog_MLalign2D_prm::addDocfileData(Matrix2D<double> data, int first, int la
 
     SF.chooseSubset(first, last, SFTemp);
     SFTemp.go_beginning();
+    //SF.go_beginning();
+    //SF.jump_lines(first);
     int index;
     for (int i = first; i <= last; i++)
     {
@@ -2328,18 +2353,17 @@ void Prog_MLalign2D_prm::addDocfileData(Matrix2D<double> data, int first, int la
     }
 }//close function addDocfileData
 
+void Prog_MLalign2D_prm::addDocfileHeaderComment()
+{
+    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
+}
+
 void Prog_MLalign2D_prm::writeDocfile(FileName fn_base)
 {
     FileName fn_tmp;
     DocFile DFout;
     fn_base += ".doc";
 
-
-     DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
-     //SF.go_beginning();
-
-     ///FIXME: CHECK IF ARE DATA PRESENT
-     addDocfileData(docfiledata, myFirstImg, myLastImg);
      DFo.write(fn_base);
 
       // Also write out selfiles of all experimental images,
@@ -2510,13 +2534,6 @@ FileName Prog_MLalign2D_prm::getBaseName(std::string suffix, int number)
     if (number >= 0)
         fn_base.compose(fn_base, number, "");
     return fn_base;
-}
-
-/// This function only should be called when using MPI
-/// for each proccess take some part of all images
-void Prog_MLalign2D_prm::setWorkingImages(int size, int rank)
-{
-    nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg, myLastImg);
 }
 
 ///////////// Model_MLalign2D Implementation ////////////
