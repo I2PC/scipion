@@ -193,8 +193,16 @@ void XmippFftw::Transform(int sign)
     if (sign == FFTW_FORWARD)
     {
         fftw_execute(fPlanForward);
+        unsigned long int size=0;
+        if(fReal!=NULL)
+			size = MULTIDIM_SIZE(*fReal);
+        else if (fComplex!= NULL)
+        	size = MULTIDIM_SIZE(*fComplex);
+        else
+        	REPORT_ERROR(-1,"No complex nor real data defined");
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fFourier)
-            DIRECT_MULTIDIM_ELEM(fFourier,n) /= MULTIDIM_SIZE(*fReal);
+			DIRECT_MULTIDIM_ELEM(fFourier,n) /= size;
+
     }
     else if (sign == FFTW_BACKWARD)
         fftw_execute(fPlanBackward);
