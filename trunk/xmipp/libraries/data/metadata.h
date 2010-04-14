@@ -142,6 +142,8 @@ public:
 	std::vector<long int> findObjects( MetaDataLabel name, std::string value );
 	////////findObjects in a range
 	
+    void combine( MetaData & other, MetaDataLabel thisLabel, MetaDataLabel otherLabel );
+    
     // Removes the collection of objects whose pair label/value is given
     // NOTE: The iterator will point to the first object after any of these
     // operations.

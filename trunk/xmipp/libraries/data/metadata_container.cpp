@@ -532,6 +532,85 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 	}
 }
 
+void MetaDataContainer::writeValueToString( std::string &outString, MetaDataLabel inputLabel )
+{	
+    std::ostringstream oss;
+    oss << std::setprecision(100);
+    oss << std::fixed;
+
+    switch ( inputLabel ) 
+	{
+		case MDL_ANGLEROT:
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_ANGLETILT:
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_ANGLEPSI:
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_IMAGE:
+			oss << *((std::string*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_MICROGRAPH:
+			oss << *((std::string*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_CTFMODEL:
+			oss << *((std::string*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_SHIFTX:
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_SHIFTY:
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_SHIFTZ:
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_ENABLED:
+			oss << *((int*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_ORIGINX:
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_ORIGINY:
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_ORIGINZ:
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_WEIGHT:
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_FLIP: 
+			oss << *((bool*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_REF: 
+			oss << *((int*)(getVoidPtr( inputLabel )));
+			break;
+		case MDL_MAXCC: 
+			oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+        case MDL_PMAX:
+            oss << *((double*)(getVoidPtr( inputLabel )));
+			break;
+        case MDL_SERIE:
+            oss << *((std::string*)(getVoidPtr( inputLabel )));
+            break;
+        case MDL_CTFINPUTPARAMS:
+            oss << *((std::string*)(getVoidPtr( inputLabel )));
+			break;
+        case MDL_PERIODOGRAM:
+            oss << *((std::string*)(getVoidPtr( inputLabel )));
+			break;
+		default:
+			break;
+	}
+    
+    outString = oss.str( );
+
+}
+
 void MetaDataContainer::writeValueToFile( std::ofstream &outfile, MetaDataLabel inputLabel )
 {
 	switch ( inputLabel ) 

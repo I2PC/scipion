@@ -29,6 +29,7 @@
 #include <map>
 #include "strings.h"
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <fstream>
 #include "funcs.h"
@@ -41,34 +42,39 @@
 //	- void writeValuesToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
 //	- void addValue( std::string name, std::string value );
 //
-// The order these labels are defined in the "label" enum
-// is that that will be used when writing a metadata file
+// Keep this special structure (using MDL_FIRSTLABEL and MDL_LAST_LABEL) so the
+// programmer can iterate through it like this:
+//
+//  for( MetaDataLabel mdl = MDL_FIRST_LABEL ; mdl < MDL_LAST_LABEL ; MetaDataLabel( mdl+1 ) )
+//
+
 enum MetaDataLabel 
 { 
 	MDL_UNDEFINED = -1,
-	MDL_ANGLEROT,       // Rotation angle of an image (double)
-	MDL_ANGLETILT,      // Tilting angle of an image (double)
-	MDL_ANGLEPSI,       // Psi angle of an image (double)
-	MDL_IMAGE,          // Name of an image (std::string)
-	MDL_MICROGRAPH,     // Name of a micrograph (std::string)
-	MDL_CTFMODEL,       // Name for the CTF Model (std::string)
-	MDL_SHIFTX,         // Shift for the image in the X axis (double)
-	MDL_SHIFTY,         // Shift for the image in the Y axis (double)
-	MDL_SHIFTZ,         // Shift for the image in the Z axis (double)
-	MDL_ENABLED,        // Is this image enabled? (int [-1 or 1])
-	MDL_ORIGINX,        // Origin for the image in the X axis (double)
-	MDL_ORIGINY,        // Origin for the image in the Y axis (double)
-	MDL_ORIGINZ,        // Origin for the image in the Z axis (double)
-	MDL_WEIGHT,         // Weight assigned to the image (double)
-	MDL_FLIP,           // Flip the image? (bool)
-	MDL_REF,            // Class to which the image belongs (int)
-	MDL_MAXCC,          // Cross-correlation for the image (double)
-    MDL_SERIE,          // A collection of micrographs, e.g. a tilt serie (std::string)
-    MDL_PMAX,           // Maximum value of normalized probability function (now called "Pmax/sumP") (double)
-    MDL_CTFINPUTPARAMS, // Parameters file for the CTF Model (std::string)
-    MDL_PERIODOGRAM,    // A periodogram's file name (std::string)
-	MDL_LAST_LABEL	    // **** NOTE ****: Do keep this label always at the end
-			 		    // it is here for looping purposes  	
+    MDL_FIRST_LABEL,
+	MDL_ANGLEROT = MDL_FIRST_LABEL,       // Rotation angle of an image (double)
+	MDL_ANGLETILT,                        // Tilting angle of an image (double)
+	MDL_ANGLEPSI,                         // Psi angle of an image (double)
+	MDL_IMAGE,                            // Name of an image (std::string)
+	MDL_MICROGRAPH,                       // Name of a micrograph (std::string)
+	MDL_CTFMODEL,                         // Name for the CTF Model (std::string)
+	MDL_SHIFTX,                           // Shift for the image in the X axis (double)
+	MDL_SHIFTY,                           // Shift for the image in the Y axis (double)
+	MDL_SHIFTZ,                           // Shift for the image in the Z axis (double)
+	MDL_ENABLED,                          // Is this image enabled? (int [-1 or 1])
+	MDL_ORIGINX,                          // Origin for the image in the X axis (double)
+	MDL_ORIGINY,                          // Origin for the image in the Y axis (double)
+	MDL_ORIGINZ,                          // Origin for the image in the Z axis (double)
+	MDL_WEIGHT,                           // Weight assigned to the image (double)
+	MDL_FLIP,                             // Flip the image? (bool)
+	MDL_REF,                              // Class to which the image belongs (int)
+	MDL_MAXCC,                            // Cross-correlation for the image (double)
+    MDL_SERIE,                            // A collection of micrographs, e.g. a tilt serie (std::string)
+    MDL_PMAX,                             // Maximum value of normalized probability function (now called "Pmax/sumP") (double)
+    MDL_CTFINPUTPARAMS,                   // Parameters file for the CTF Model (std::string)
+    MDL_PERIODOGRAM,                      // A periodogram's file name (std::string)
+	MDL_LAST_LABEL	                      // **** NOTE ****: Do keep this label always at the end
+			 		                      // it is here for looping purposes  	
 };
 
 #define IS_DOUBLE(lCode) lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||\
@@ -136,6 +142,7 @@ class MetaDataContainer
 	void deleteValue( MetaDataLabel name );
 	
 	void writeValueToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
+    void writeValueToString( std::string &outString, MetaDataLabel inputLabel );
 
 	static MetaDataLabel codifyLabel( std::string strLabel );
 	static std::string decodeLabel( MetaDataLabel inputLabel );

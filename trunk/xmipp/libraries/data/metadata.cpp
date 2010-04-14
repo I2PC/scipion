@@ -295,6 +295,40 @@ MetaData::MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector
 	read(fileName,labelsVector);
 }
 
+void MetaData::combine( MetaData & other, MetaDataLabel thisLabel, MetaDataLabel otherLabel )
+{
+    std::map< long int, MetaDataContainer *>::iterator It;
+	
+	MetaDataContainer * aux, * aux2;
+    std::string value1, value2;
+    	
+	for( long int IDthis = firstObject( ) ; IDthis != NO_MORE_OBJECTS; IDthis = nextObject( ) )
+	{
+		aux = getObject( IDthis );
+		aux->writeValueToString( value1, thisLabel );
+        
+        for( long int IDother = other.firstObject(); IDother != NO_MORE_OBJECTS; IDother = other.nextObject( ) )
+        {
+            other.getObject( IDother );
+            aux2->writeValueToString( value2, otherLabel );
+            
+            if( value2 == value1 )
+            {
+                for( MetaDataLabel mdl = MDL_FIRST_LABEL ; mdl <= MDL_LAST_LABEL ; MetaDataLabel( mdl+1 ) )
+                {
+                    if( aux2->valueExists( mdl ) && !aux->valueExists( mdl ) )
+                    {
+                        std::string value;
+                        
+                        aux2->writeValueToString( value, mdl );
+                        
+                        setValue( MetaDataContainer::decodeLabel( mdl ), value );
+                    }
+                }
+            }
+        }
+	}
+}
 
 void MetaData::read( FileName fileName, std::vector<MetaDataLabel> * labelsVector )
 {
@@ -1080,6 +1114,7 @@ void MetaData::getValue( MetaDataLabel name, std::string &value, long int object
     MetaDataContainer * aux = getObject( objectID );
     aux->getValue( name, value );
     
+    aux->getValue( name, value );
 }
 
 MetaDataContainer * MetaData::getObject( long int objectID )
