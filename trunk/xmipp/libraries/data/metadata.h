@@ -72,14 +72,12 @@ public:
 	// Set a new pair/value for an specified object. If no objectID is given, that
 	// pointed by the class iterator is used 
 	bool setValue( MetaDataLabel name, double value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, float value, long int objectID = -1 );
 	bool setValue( MetaDataLabel name, int value, long int objectID = -1 );
 	bool setValue( MetaDataLabel name, bool value, long int objectID = -1 );
 	bool setValue( MetaDataLabel name, std::string value, long int objectID = -1 );
 	bool setValue( std::string name, std::string value, long int objectID = -1 );
     
 	void getValue( MetaDataLabel name, double &value, long int objectID = -1 );
-	void getValue( MetaDataLabel name, float &value, long int objectID = -1 );
 	void getValue( MetaDataLabel name, int &value, long int objectID = -1 );
 	void getValue( MetaDataLabel name, bool &value, long int objectID = -1 );
 	void getValue( MetaDataLabel name, std::string &value, long int objectID = -1 );
@@ -136,11 +134,13 @@ public:
 	
 	// Get the collection of objects whose pair label/value is given
 	std::vector<long int> findObjects( MetaDataLabel name, double value );
-	std::vector<long int> findObjects( MetaDataLabel name, float value );
 	std::vector<long int> findObjects( MetaDataLabel name, int value );
 	std::vector<long int> findObjects( MetaDataLabel name, bool value );
 	std::vector<long int> findObjects( MetaDataLabel name, std::string value );
-	////////findObjects in a range
+	
+ 	// findObjects in a range
+    std::vector<long int> findObjectsInRange( MetaDataLabel name, double minValue, double maxValue );
+	std::vector<long int> findObjectsInRange( MetaDataLabel name, int minValue, int maxValue );
 	
     void combine( MetaData & other, MetaDataLabel thisLabel);
     
@@ -148,7 +148,6 @@ public:
     // NOTE: The iterator will point to the first object after any of these
     // operations.
 	void removeObjects( MetaDataLabel name, double value );
-	void removeObjects( MetaDataLabel name, float value );
 	void removeObjects( MetaDataLabel name, int value );
 	void removeObjects( MetaDataLabel name, bool value );
 	void removeObjects( MetaDataLabel name, std::string value );

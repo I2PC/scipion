@@ -102,12 +102,6 @@ void MetaDataContainer::addValue( MetaDataLabel name, double value )
 	insertVoidPtr( name, newValue );
 }
 
-void MetaDataContainer::addValue( MetaDataLabel name, float value )
-{
-	void * newValue = (void *)(new float(value));
-	insertVoidPtr( name, newValue );
-}
-
 void MetaDataContainer::addValue( MetaDataLabel name, bool value )
 {
 	void * newValue = (void *)(new bool(value));
@@ -193,21 +187,6 @@ void  MetaDataContainer::getValue( MetaDataLabel name, double &value )
 		value = *((double *)element->second);
 	}
 }
-void  MetaDataContainer::getValue( MetaDataLabel name, float &value )
-{
-	std::map<MetaDataLabel, void *>::iterator element;
-
-	element = values.find( name );
-
-	if ( element == values.end( ) )
-	{
-		REPORT_ERROR(1,(std::string) "Label(float) " + decodeLabel(name) + " not found\n" );
-	}
-	else
-	{
-		value = *((float *)element->second);
-	}
-}
 
 void  MetaDataContainer::getValue( MetaDataLabel name, std::string &value )
 {
@@ -274,23 +253,6 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, double value )
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
     double * currValue = (double *)values[ name ];
-	
-    if( currValue != NULL )
-	{
-        if( value == *currValue )
-		{
-			return true;
-		}
-	}
-	
-    return false;
-}
-
-bool MetaDataContainer::pairExists( MetaDataLabel name, float value )
-{
-	// Traverse all the structure looking for objects
-	// that satisfy search criteria
-    float * currValue = (float *)values[ name ];
 	
     if( currValue != NULL )
 	{

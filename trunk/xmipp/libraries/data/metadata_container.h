@@ -119,7 +119,6 @@ class MetaDataContainer
 	
 	/** Create a new pair name-value of integer type */
 	void addValue( MetaDataLabel name, double value );
-	void addValue( MetaDataLabel name, float value );
 	void addValue( MetaDataLabel name, int value );
 	void addValue( MetaDataLabel name, bool value );
 	void addValue( MetaDataLabel name, std::string value  );
@@ -127,14 +126,12 @@ class MetaDataContainer
 
 	void getValue( MetaDataLabel name, int &value );
 	void getValue( MetaDataLabel name, double &value );
-	void getValue( MetaDataLabel name, float &value );
 	void getValue( MetaDataLabel name, std::string &value );
 	void getValue( MetaDataLabel name, bool &value );
 
 	bool valueExists( MetaDataLabel name );
 
 	bool pairExists( MetaDataLabel name, double value );
-	bool pairExists( MetaDataLabel name, float value );
 	bool pairExists( MetaDataLabel name, int value );
 	bool pairExists( MetaDataLabel name, bool value );
 	bool pairExists( MetaDataLabel name, std::string value );

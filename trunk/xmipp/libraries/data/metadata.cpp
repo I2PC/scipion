@@ -601,55 +601,6 @@ bool MetaData::setValue( MetaDataLabel name, double value, long int objectID )
 	}
 }
 
-bool MetaData::setValue( MetaDataLabel name, float value, long int objectID )
-{
-	long int auxID;
-	
-	if( !objects.empty( ) && MetaDataContainer::isValidLabel( name ))
-	{
-		if( objectID == -1 )
-		{
-			auxID = objectsIterator->first;
-		}
-		else
-		{
-			auxID = objectID;
-		}
-		
-		MetaDataContainer * aux = objects[auxID];
-		
-		// Check whether label is correct (belongs to the enum in the metadata_container header
-		// and whether it is present in the activeLabels vector. If not, add it to all the other
-		// objects with default values
-		std::vector< MetaDataLabel >::iterator location;
-		std::map< long int, MetaDataContainer *>::iterator It;
-									
-   		location = std::find( activeLabels.begin(), activeLabels.end(), name );
-		
-	   	if ( location == activeLabels.end() )
-		{
-			activeLabels.push_back( name );
-			
-			// Add this label to the rest of the objects in this class
-			for( It = objects.begin( ); It != objects.end(); It ++)
-			{
-				if( It->second != aux )
-				{
-					(It->second)->addValue( name, float() );
-				}		
-			}
-		}
-			
-		aux->addValue( name, value );
-
-		return true;
-	}	
-	else
-	{
-		return false;
-	}	
-}
-
 bool MetaData::setValue( MetaDataLabel name, int value, long int objectID )
 {
 	long int auxID;
@@ -866,22 +817,6 @@ void MetaData::removeObjects( MetaDataLabel name, double value )
     objectsIterator=objects.begin( );
 }
 
-void MetaData::removeObjects( MetaDataLabel name, float value )
-{
-    std::vector<long int> toRemove = findObjects( name, value );    
-    std::vector<long int>::iterator It;
-	
-	MetaDataContainer * aux;
-	
-    for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
-	{
-        delete (objects[ *It ]);
-        objects.erase( *It );
-	}
-   
-    objectsIterator=objects.begin( );
-}
-
 void MetaData::removeObjects( MetaDataLabel name, int value )
 {
     std::vector<long int> toRemove = findObjects( name, value );    
@@ -930,9 +865,9 @@ void MetaData::removeObjects( MetaDataLabel name, std::string value )
     objectsIterator=objects.begin( );
 }
 
-std::vector<long int> MetaData::findObjects( MetaDataLabel name, double value )
-{
-	std::vector<long int> result;
+std::vector<long int> MetaData::findObjectsInRange( MetaDataLabel name, double minValue, double maxValue )
+{	
+    std::vector<long int> result;
 	
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
@@ -945,14 +880,55 @@ std::vector<long int> MetaData::findObjects( MetaDataLabel name, double value )
 	{
 		aux = It->second;
 		
-		if( aux->pairExists( name, value ) )
-			result.push_back( It->first );
+		if( aux->valueExists( name ) )
+        {
+            double value;
+            aux->getValue( name, value );
+            
+            std::cerr << "VAL_D: " << value << std::endl;
+            if( value >= minValue && value <= maxValue )
+            {
+                result.push_back( It->first );
+            }
+        }
 	}
 	
 	return result;
 }
 
-std::vector<long int> MetaData::findObjects( MetaDataLabel name, float value )
+std::vector<long int> MetaData::findObjectsInRange( MetaDataLabel name, int minValue, int maxValue )
+{
+    std::vector<long int> result;
+	
+	// Traverse all the structure looking for objects
+	// that satisfy search criteria
+	
+	std::map< long int, MetaDataContainer *>::iterator It;
+	
+	MetaDataContainer * aux;
+	
+	for( It = objects.begin( ) ; It != objects.end( ); It ++ )
+	{
+		aux = It->second;
+		
+		if( aux->valueExists( name ) )
+        {
+            int value;
+            aux->getValue( name, value );
+                        std::cerr << "VAL_I: " << value << std::endl;
+
+            if( value >= minValue && value <= maxValue )
+            {
+                result.push_back( It->first );
+            }
+        }
+	}
+	
+	return result;
+
+}
+
+std::vector<long int> MetaData::findObjects( MetaDataLabel name, double value )
 {
 	std::vector<long int> result;
 	
@@ -1082,13 +1058,6 @@ long int MetaData::countObjects( MetaDataLabel name, int value )
 
 void MetaData::getValue( MetaDataLabel name, double &value, long int objectID )
 {	
-    MetaDataContainer * aux = getObject( objectID );
-    
-    aux->getValue( name, value );
-}
-
-void MetaData::getValue( MetaDataLabel name, float &value, long int objectID )
-{
     MetaDataContainer * aux = getObject( objectID );
     
     aux->getValue( name, value );
