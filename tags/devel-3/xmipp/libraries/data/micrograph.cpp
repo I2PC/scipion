@@ -679,8 +679,8 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
     {
         std::cout << "Performing the Fourier downsampling\n";
         // Read the micrograph in memory as doubles
-        Matrix2D<double> Mmem(Ydim,Xdim);
-        Matrix2D<std::complex<double> > MmemFourier;
+        MultidimArray<double> Mmem(Ydim,Xdim);
+        MultidimArray<std::complex<double> > MmemFourier;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Mmem)
             Mmem(i,j)=(double)M(j,i);
 
@@ -690,8 +690,8 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         transformerM.FourierTransform(Mmem, MmemFourier, false);
 
         // Create space for the downsampled image and its Fourier transform
-        Matrix2D<double> Mpmem(Ypdim,Xpdim);
-        Matrix2D<std::complex<double> > MpmemFourier;
+        MultidimArray<double> Mpmem(Ypdim,Xpdim);
+        MultidimArray<std::complex<double> > MpmemFourier;
         XmippFftw transformerMp;
         transformerMp.setThreadsNumber(nThreads);
         transformerMp.setReal(Mpmem);

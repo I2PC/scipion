@@ -118,7 +118,7 @@ void normalize_OldXmipp_decomposition(MultidimArray<double> &I,
    The estimated mean of the image and the local variance are returned in
    sigmai and mui.
 */
-void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
+void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     double &sigmai, bool tiltMask,
     bool tomography0=false, double mu0=0, double sigma0=1);
 
@@ -178,12 +178,12 @@ void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_
     fitting of a least squares plane throught the pixels in the
     bg_mask, then subtraction of the plane, and division by the
     standard deviation of the pixels in the bg_mask */
-void normalize_ramp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
+void normalize_ramp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask);
 
 /** Removal of neighbouring particles
     .... */
-void normalize_remove_neighbours(Matrix2D<double> &I, 
-				 const Matrix2D<int> &bg_mask,
+void normalize_remove_neighbours(MultidimArray<double> &I,
+				 const MultidimArray<int> &bg_mask,
                                  const double &threshold);
 //@}
 

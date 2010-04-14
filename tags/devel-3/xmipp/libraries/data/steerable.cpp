@@ -31,7 +31,7 @@
 #include "morphology.h"
 
 // Remove wedge ------------------------------------------------------------
-void MissingWedge::removeWedge(Matrix3D<double> &V) const
+void MissingWedge::removeWedge(MultidimArray<double> &V) const
 {
     Matrix2D<double> Epos, Eneg;
     Euler_angles2matrix(rotPos,tiltPos,0,Epos);
@@ -41,7 +41,7 @@ void MissingWedge::removeWedge(Matrix3D<double> &V) const
     Matrix1D<int> idx(3);
 
     XmippFftw transformer;
-    Matrix3D< std::complex<double> > Vfft;
+    MultidimArray< std::complex<double> > Vfft;
     transformer.FourierTransform(V,Vfft,false);
 
     FOR_ALL_ELEMENTS_IN_MATRIX3D(Vfft)
@@ -60,7 +60,7 @@ void MissingWedge::removeWedge(Matrix3D<double> &V) const
 }
 
 // Constructor -------------------------------------------------------------
-Steerable::Steerable(double sigma, Matrix3D<double> &Vtomograph, 
+Steerable::Steerable(double sigma, MultidimArray<double> &Vtomograph,
     double deltaAng, const std::string &filterType, const MissingWedge *_MW) 
 {
     MW=_MW;
@@ -125,23 +125,23 @@ Steerable::Steerable(double sigma, Matrix3D<double> &Vtomograph,
 }
 
 /* Build basis ------------------------------------------------------------- */
-void Steerable::buildBasis(const Matrix3D<double> &Vtomograph, double sigma)
+void Steerable::buildBasis(const MultidimArray<double> &Vtomograph, double sigma)
 {
-    std::vector< Matrix1D<double> > hx, hy, hz;
+    std::vector< MultidimArray<double> > hx, hy, hz;
     generate1DFilters(sigma, Vtomograph, hx, hy, hz);
     for (int n=0; n<6; n++)
     {
-        Matrix3D<double> aux;
+        MultidimArray<double> aux;
         singleFilter(Vtomograph,hx[n],hy[n],hz[n],aux);
         basis.push_back(aux);
     }    
 }        
 
-void Steerable::singleFilter(const Matrix3D<double>& Vin,
-    Matrix1D<double> &hx, Matrix1D<double> &hy, Matrix1D<double> &hz,
-    Matrix3D<double> &Vout){
+void Steerable::singleFilter(const MultidimArray<double>& Vin,
+    MultidimArray<double> &hx, MultidimArray<double> &hy, MultidimArray<double> &hz,
+    MultidimArray<double> &Vout){
 
-    Matrix1D< std::complex<double> > H, Aux;
+    MultidimArray< std::complex<double> > H, Aux;
     Vout.initZeros(Vin);
 
     // Filter in X
@@ -154,7 +154,7 @@ void Steerable::singleFilter(const Matrix3D<double>& Vin,
 
     XmippFftw transformer2;
     
-    Matrix1D<double> aux(XSIZE(Vin));
+    MultidimArray<double> aux(XSIZE(Vin));
         	   
     transformer2.setReal(aux);		   
 		   
@@ -229,13 +229,13 @@ void Steerable::singleFilter(const Matrix3D<double>& Vin,
 
 /* Filter generation ------------------------------------------------------- */
 void Steerable::generate1DFilters(double sigma,
-    const Matrix3D<double> &Vtomograph,
-    std::vector< Matrix1D<double> > &hx,
-    std::vector< Matrix1D<double> > &hy,
-    std::vector< Matrix1D<double> > &hz){
+    const MultidimArray<double> &Vtomograph,
+    std::vector< MultidimArray<double> > &hx,
+    std::vector< MultidimArray<double> > &hy,
+    std::vector< MultidimArray<double> > &hz){
 
     // Initialization 
-    Matrix1D<double> aux;    
+    MultidimArray<double> aux;
     aux.initZeros(XSIZE(Vtomograph));
     aux.setXmippOrigin();
     for (int i=0; i<6; i++) hx.push_back(aux);
@@ -287,10 +287,10 @@ void Steerable::generate1DFilters(double sigma,
     }
 }
 
-void Steerable::generate3DFilter(Matrix3D<double>& h3D,
-    std::vector< Matrix1D<double> > &hx,
-    std::vector< Matrix1D<double> > &hy,
-    std::vector< Matrix1D<double> > &hz)
+void Steerable::generate3DFilter(MultidimArray<double>& h3D,
+    std::vector< MultidimArray<double> > &hx,
+    std::vector< MultidimArray<double> > &hy,
+    std::vector< MultidimArray<double> > &hz)
 {
     h3D.initZeros(XSIZE(hz[0]),XSIZE(hy[0]),XSIZE(hx[0]));
     h3D.setXmippOrigin();

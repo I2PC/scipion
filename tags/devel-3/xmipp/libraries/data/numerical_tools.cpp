@@ -44,7 +44,7 @@ void powellOptimizer(Matrix1D<double> &p, int i0, int n,
     double *xi = NULL;
 
     // Adapt indexes of p
-    double *pptr = p.adaptForNumericalRecipes1D();
+    double *pptr = p.adaptForNumericalRecipes();
     double *auxpptr = pptr + (i0 - 1);
 
     // Form direction matrix
@@ -118,11 +118,11 @@ void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
     Matrix2D<double> Ap = A;
     Matrix1D<double> p(XSIZE(A));
     result.resize(XSIZE(A));
-    choldc(Ap.adaptForNumericalRecipes22D(), XSIZE(A),
-           p.adaptForNumericalRecipes1D());
-    cholsl(Ap.adaptForNumericalRecipes22D(), XSIZE(A),
-           p.adaptForNumericalRecipes1D(), b.adaptForNumericalRecipes1D(),
-           result.adaptForNumericalRecipes1D());
+    choldc(Ap.adaptForNumericalRecipes2(), XSIZE(A),
+           p.adaptForNumericalRecipes());
+    cholsl(Ap.adaptForNumericalRecipes2(), XSIZE(A),
+           p.adaptForNumericalRecipes(), b.adaptForNumericalRecipes(),
+           result.adaptForNumericalRecipes());
 }
 
 

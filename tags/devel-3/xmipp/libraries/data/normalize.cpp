@@ -65,7 +65,7 @@ void normalize_OldXmipp_decomposition(MultidimArray<double> &I, const MultidimAr
 }
 
 //#define DEBUG
-void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
+void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     double &sigmai, bool tiltMask, bool tomography0, double mu0, double sigma0)
 {
     // Tilt series are always 2D
@@ -76,7 +76,7 @@ void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
 
     // Build a mask using the tilt angle
     I.setXmippOrigin();
-    Matrix2D<int> mask;
+    MultidimArray<int> mask;
     mask.initZeros(I);
     int Xdimtilt=XMIPP_MIN(FLOOR(0.5*(XSIZE(I)*cos(DEG2RAD(tilt)))),
         0.5*(XSIZE(I)-(2*L+1)));
@@ -89,7 +89,7 @@ void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
         }
 
     // Estimate the local variance
-    Matrix2D<double> localVariance;
+    MultidimArray<double> localVariance;
     localVariance.initZeros(I);
     double meanVariance=0;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
@@ -204,7 +204,7 @@ void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_
     I /= ABS(avg - avgbg);
 }
 
-void normalize_ramp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
+void normalize_ramp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
     
     // Only 2D ramps implemented
@@ -242,8 +242,8 @@ void normalize_ramp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
 
 }
 
-void normalize_remove_neighbours(Matrix2D<double> &I, 
-				 const Matrix2D<int> &bg_mask,
+void normalize_remove_neighbours(MultidimArray<double> &I,
+				 const MultidimArray<int> &bg_mask,
                                  const double &threshold)
 {
     fit_point          onepoint;
@@ -613,7 +613,7 @@ void Normalize_parameters::apply_geo_mask(Image<double>& img)
     // Applygeo only valid for 2D images for now...
     img().checkDimension(2);
 
-    Matrix2D< double > tmp;
+    MultidimArray< double > tmp;
     // get copy of the mask 
     tmp.resize(bg_mask_bck);
     typeCast(bg_mask_bck, tmp);

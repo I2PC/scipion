@@ -29,7 +29,7 @@
 #include <list>
 
 /* Substract background ---------------------------------------------------- */
-void substract_background_plane(Matrix2D<double> &I)
+void substract_background_plane(MultidimArray<double> &I)
 {
 
     I.checkDimension(2);
@@ -63,7 +63,7 @@ void substract_background_plane(Matrix2D<double> &I)
 }
 
 /* Substract background ---------------------------------------------------- */
-void substract_background_rolling_ball(Matrix2D<double> &I, int radius)
+void substract_background_rolling_ball(MultidimArray<double> &I, int radius)
 {
 
     I.checkDimension(2);
@@ -91,7 +91,7 @@ void substract_background_rolling_ball(Matrix2D<double> &I, int radius)
     int xtrim = (int)(arcTrimPer*smallballradius)/100; // only use a patch of the rolling ball
     int halfWidth = ROUND(smallballradius - xtrim);
     int ballWidth = 2*halfWidth+1;
-    Matrix2D<double> ball(ballWidth,ballWidth);
+    MultidimArray<double> ball(ballWidth,ballWidth);
     ball.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_MATRIX2D(ball)
     {
@@ -103,7 +103,7 @@ void substract_background_rolling_ball(Matrix2D<double> &I, int radius)
     // minimum of its neighbourhood
     int sXdim = (XSIZE(I)+shrinkFactor-1)/shrinkFactor;
     int sYdim = (YSIZE(I)+shrinkFactor-1)/shrinkFactor;
-    Matrix2D<double> shrinkI(sYdim,sXdim);
+    MultidimArray<double> shrinkI(sYdim,sXdim);
     shrinkI.setXmippOrigin();
     for (int ySmall=0; ySmall<sYdim; ySmall++) {
         for (int xSmall=0; xSmall<sXdim; xSmall++) {
@@ -120,7 +120,7 @@ void substract_background_rolling_ball(Matrix2D<double> &I, int radius)
     
     // Now roll the ball
     radius=ballWidth/2;
-    Matrix2D<double> Irolled;
+    MultidimArray<double> Irolled;
     Irolled.resize(shrinkI);
     Irolled.initConstant(-500);
     for (int yb=-radius; yb<YSIZE(shrinkI)+radius; yb++) {
@@ -156,7 +156,7 @@ void substract_background_rolling_ball(Matrix2D<double> &I, int radius)
     }
     
     // Now rescale the background
-    Matrix2D<double> bgEnlarged;
+    MultidimArray<double> bgEnlarged;
     scaleToSize(1, Irolled, bgEnlarged, YSIZE(I),XSIZE(I));
     bgEnlarged.copyShape(I);
     I-=bgEnlarged;
@@ -169,7 +169,7 @@ void contrast_enhancement(Image<double> *I)
 }
 
 /* Region growing for images ----------------------------------------------- */
-void region_growing2D(const Matrix2D<double> &I_in, Matrix2D<double> &I_out,
+void region_growing2D(const MultidimArray<double> &I_in, MultidimArray<double> &I_out,
                       int i, int j,
                       float stop_colour, float filling_colour, bool less, int neighbourhood)
 {
@@ -228,7 +228,7 @@ void region_growing2D(const Matrix2D<double> &I_in, Matrix2D<double> &I_out,
 }
 
 /* Region growing for volumes ----------------------------------------------- */
-void region_growing3D(const Matrix3D<double> &V_in, Matrix3D<double> &V_out,
+void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &V_out,
                       int k, int i, int j,
                       float stop_colour, float filling_colour, bool less)
 {
@@ -307,8 +307,8 @@ void region_growing3D(const Matrix3D<double> &V_in, Matrix3D<double> &V_out,
     }
 }
 
-void distance_transform(const Matrix2D<int> &in,
-    Matrix2D<int> &out, bool wrap)
+void distance_transform(const MultidimArray<int> &in,
+    MultidimArray<int> &out, bool wrap)
 {
     std::list<int> toExplore;   /* A list of points to explore */
     
@@ -368,7 +368,7 @@ void distance_transform(const Matrix2D<int> &in,
 }
 
 /* Label image ------------------------------------------------------------ */
-int label_image2D(const Matrix2D<double> &I, Matrix2D<double> &label,
+int label_image2D(const MultidimArray<double> &I, MultidimArray<double> &label,
                   int neighbourhood)
 {
     I.checkDimension(2);
@@ -390,9 +390,9 @@ int label_image2D(const Matrix2D<double> &I, Matrix2D<double> &label,
 }
 
 /* Label volume ------------------------------------------------------------ */
-int label_image3D(const Matrix3D<double> &V, Matrix3D<double> &label)
+int label_image3D(const MultidimArray<double> &V, MultidimArray<double> &label)
 {
-    V.checkDimension(2);
+    V.checkDimension(3);
 
     label = V;
     int colour = 32000;
@@ -411,14 +411,14 @@ int label_image3D(const Matrix3D<double> &V, Matrix3D<double> &label)
 }
 
 /* Remove small components ------------------------------------------------- */
-void remove_small_components(Matrix2D<double> &I, int size,
+void remove_small_components(MultidimArray<double> &I, int size,
                              int neighbourhood)
 {
     I.checkDimension(2);
 
-    Matrix2D<double> label;
+    MultidimArray<double> label;
     int imax = label_image2D(I, label, neighbourhood);
-    Matrix1D<int> nlabel(imax + 1);
+    MultidimArray<int> nlabel(imax + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label) nlabel((int)(label(i, j)))++;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
     if (nlabel((int)(label(i, j))) < size)
@@ -426,14 +426,14 @@ void remove_small_components(Matrix2D<double> &I, int size,
 }
 
 /* Keep biggest component -------------------------------------------------- */
-void keep_biggest_component(Matrix2D<double> &I, double percentage,
+void keep_biggest_component(MultidimArray<double> &I, double percentage,
                             int neighbourhood)
 {
     I.checkDimension(2);
 
-    Matrix2D<double> label;
+    MultidimArray<double> label;
     int imax = label_image2D(I, label, neighbourhood);
-    Matrix1D<int> nlabel(imax + 1);
+    MultidimArray<int> nlabel(imax + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(label)
     {
         int idx = (int)(label(i, j));
@@ -441,7 +441,7 @@ void keep_biggest_component(Matrix2D<double> &I, double percentage,
             continue;
         nlabel(idx)++;
     }
-    Matrix1D<int> best = nlabel.indexSort();
+    MultidimArray<int> best = nlabel.indexSort();
     best -= 1;
     int nbest = XSIZE(best) - 1;
     double total = nlabel.sum();
@@ -467,11 +467,11 @@ void keep_biggest_component(Matrix2D<double> &I, double percentage,
 }
 
 /* Fill object ------------------------------------------------------------- */
-void fill_binary_object(Matrix2D<double> &I, int neighbourhood)
+void fill_binary_object(MultidimArray<double> &I, int neighbourhood)
 {
     I.checkDimension(2);
 
-    Matrix2D<double> label;
+    MultidimArray<double> label;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I) I(i, j) = 1 - I(i, j);
     int imax = label_image2D(I, label, neighbourhood);
     double l0 = label(STARTINGY(I), STARTINGX(I));
@@ -483,7 +483,7 @@ void fill_binary_object(Matrix2D<double> &I, int neighbourhood)
 }
 
 /* Otsu Segmentation ------------------------------------------------------- */
-void OtsuSegmentation(Matrix3D<double> &V)
+void OtsuSegmentation(MultidimArray<double> &V)
 {
     V.checkDimension(3);
 
@@ -495,7 +495,7 @@ void OtsuSegmentation(Matrix3D<double> &V)
 
     // Compute the cumulative 0th and 1st order moments
     double x;
-    Matrix1D<double> mom0, mom1;
+    MultidimArray<double> mom0, mom1;
     mom0.initZeros(XSIZE(hist));
     mom1.initZeros(XSIZE(hist));
     mom0(0)=hist(0);
@@ -528,7 +528,7 @@ void OtsuSegmentation(Matrix3D<double> &V)
 }
 
 /* Entropy Segmentation ---------------------------------------------------- */
-void EntropySegmentation(Matrix3D<double> &V)
+void EntropySegmentation(MultidimArray<double> &V)
 {
     V.checkDimension(3);
 
@@ -540,7 +540,7 @@ void EntropySegmentation(Matrix3D<double> &V)
 
     // Compute the cumulative 0th and 1st order moments
     double x;
-    Matrix1D<double> mom0;
+    MultidimArray<double> mom0;
     mom0.initZeros(XSIZE(hist));
     mom0(0)=hist(0);
     for (int i=1; i<XSIZE(mom0); i++)
@@ -548,7 +548,7 @@ void EntropySegmentation(Matrix3D<double> &V)
 
     // Entropy for black and white parts of the histogram
     const double epsilon = 1e-15;
-    Matrix1D<double> h1, h2;
+    MultidimArray<double> h1, h2;
     h1.initZeros(XSIZE(hist));
     h2.initZeros(XSIZE(hist));
     for (int i=0; i<XSIZE(hist); i++) {
@@ -589,7 +589,7 @@ void EntropySegmentation(Matrix3D<double> &V)
 }
 
 /* Otsu+Entropy Segmentation ----------------------------------------------- */
-void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
+void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil)
 {
     V.checkDimension(3);
 
@@ -601,7 +601,7 @@ void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
 
     // Compute the cumulative 0th and 1st order moments
     double x;
-    Matrix1D<double> mom0,mom1;
+    MultidimArray<double> mom0,mom1;
     mom0.initZeros(XSIZE(hist));
     mom1.initZeros(XSIZE(hist));
     mom0(0)=hist(0);
@@ -614,7 +614,7 @@ void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
 
     // Entropy for black and white parts of the histogram
     const double epsilon = 1e-15;
-    Matrix1D<double> h1, h2;
+    MultidimArray<double> h1, h2;
     h1.initZeros(XSIZE(hist));
     h2.initZeros(XSIZE(hist));
     for (int i=0; i<XSIZE(hist); i++) {
@@ -640,7 +640,7 @@ void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
     }
 
     // Compute sigma2B and H
-    Matrix1D<double> sigma2B, H, HSigma2B;
+    MultidimArray<double> sigma2B, H, HSigma2B;
     sigma2B.initZeros(XSIZE(hist)-1);
     H.initZeros(XSIZE(hist)-1);
     HSigma2B.initZeros(XSIZE(hist)-1);
@@ -659,7 +659,7 @@ void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
     }
     
     // Sort HSigma2B and take a given percentage of it
-    Matrix1D<double> HSigma2Bsorted=HSigma2B.sort();
+    MultidimArray<double> HSigma2Bsorted=HSigma2B.sort();
     int iTh=ROUND(XSIZE(HSigma2B)*percentil);
     double threshold=HSigma2Bsorted(iTh);
     
@@ -673,8 +673,8 @@ void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil)
 }
 
 /* Best shift -------------------------------------------------------------- */
-void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
-                double &shiftX, double &shiftY, const Matrix2D<int> *mask)
+void best_shift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
+                double &shiftX, double &shiftY, const MultidimArray<int> *mask)
 {
     I1.checkDimension(2);
     I2.checkDimension(2);
@@ -684,7 +684,7 @@ void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
     float            xshift, yshift, shift;
     int              n_max = -1;
     bool             neighbourhood = true;
-    Matrix2D<double> Mcorr;
+    MultidimArray<double> Mcorr;
 
     correlation_matrix(I1, I2, Mcorr);
 
@@ -753,15 +753,15 @@ void best_shift(const Matrix2D<double> &I1, const Matrix2D<double> &I2,
 
 /* Best non-wrapping shift ------------------------------------------------- */
 //#define DEBUG
-void best_nonwrapping_shift(const Matrix2D<double> &I1,
-    const Matrix2D<double> &I2, double &shiftX, double &shiftY)
+void best_nonwrapping_shift(const MultidimArray<double> &I1,
+    const MultidimArray<double> &I2, double &shiftX, double &shiftY)
 {
     I1.checkDimension(2);
     I2.checkDimension(2);
 
     best_shift(I1, I2, shiftX, shiftY);
     double bestCorr, corr;
-    Matrix2D<double> Iaux;
+    MultidimArray<double> Iaux;
     
     translate(1, Iaux, I1, vectorR2(-shiftX,-shiftY), DONT_WRAP);
     //I1.translate(vectorR2(-shiftX,-shiftY),Iaux, DONT_WRAP);
@@ -826,7 +826,7 @@ void best_nonwrapping_shift(const Matrix2D<double> &I1,
 #undef DEBUG
 
 /* Align two images -------------------------------------------------------- */
-void alignImages(const Matrix2D< double >& Iref, Matrix2D< double >& I,
+void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I,
     Matrix2D< double >&M)
 {
     Iref.checkDimension(2);
@@ -835,7 +835,7 @@ void alignImages(const Matrix2D< double >& Iref, Matrix2D< double >& I,
     Matrix2D<double> ARS, ASR, R;
     ARS.initIdentity(3);
     ASR.initIdentity(3);
-    Matrix2D<double> IauxSR=I, IauxRS=I;
+    MultidimArray<double> IauxSR=I, IauxRS=I;
 
     Polar_fftw_plans *plans=NULL;
     Polar< std::complex<double> > polarFourierIref;
@@ -849,7 +849,7 @@ void alignImages(const Matrix2D< double >& Iref, Matrix2D< double >& I,
             1);
 
     XmippFftw local_transformer;
-    Matrix1D<double> rotationalCorr;
+    MultidimArray<double> rotationalCorr;
     rotationalCorr.resize(2*polarFourierIref.getSampleNoOuterRing()-1);
     local_transformer.setReal(rotationalCorr);
 
@@ -919,7 +919,7 @@ void alignImages(const Matrix2D< double >& Iref, Matrix2D< double >& I,
 /* See Brandle, Chen, Bischof, Lapp. Robust parametric and semi-parametric
    spot fitting for spot array images. 2000 */
 double unnormalizedGaussian2D(const Matrix1D<double> &r,
-                  const Matrix1D<double> &mu,
+                  const MultidimArray<double> &mu,
                   const Matrix2D<double> &sigmainv)
 {
     double x=XX(r)-XX(mu);
@@ -929,13 +929,13 @@ double unnormalizedGaussian2D(const Matrix1D<double> &r,
                      DIRECT_MAT_ELEM(sigmainv,1,1)*y*y));
 }
 
-void estimateGaussian2D(const Matrix2D<double> &I,
-    double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
+void estimateGaussian2D(const MultidimArray<double> &I,
+    double &a, double &b, MultidimArray<double> &mu, Matrix2D<double> &sigma,
     bool estimateMu, int iterations)
 {
     I.checkDimension(2);
 
-    Matrix2D<double> z(I);
+    MultidimArray<double> z(I);
 
     // Estimate b
     histogram1D hist;
@@ -1008,8 +1008,8 @@ void estimateGaussian2D(const Matrix2D<double> &I,
 }
 
 /* Fourier-Bessel decomposition. ------------------------------------------- */
-void Fourier_Bessel_decomposition(const Matrix2D<double> &img_in,
-                                  Matrix2D<double> &m_out, double r1, double r2, int k1, int k2)
+void Fourier_Bessel_decomposition(const MultidimArray<double> &img_in,
+                                  MultidimArray<double> &m_out, double r1, double r2, int k1, int k2)
 {
     img_in.checkDimension(2);
 
@@ -1053,23 +1053,23 @@ void Fourier_Bessel_decomposition(const Matrix2D<double> &img_in,
             coefca = h / PI / 2.;
         }
 
-        Matrix1D<double> sine(CEIL(my5));
+        MultidimArray<double> sine(CEIL(my5));
         FOR_ALL_ELEMENTS_IN_MATRIX1D(sine) sine(i) = sin((i + 1) * h);
 
     }
 }
 
 /* Harmonic decomposition. ------------------------------------------------- */
-void harmonic_decomposition(const Matrix2D<double> &img_in,
-                            Matrix1D<double> &v_out)
+void harmonic_decomposition(const MultidimArray<double> &img_in,
+                            MultidimArray<double> &v_out)
 {}
 
 /* Shah energy ------------------------------------------------------------- */
 /* This function computes the current functional energy */
-double Shah_energy(const Matrix2D<double> &img,
-                   const Matrix2D<double> &surface_strength,
-                   const Matrix2D<double> &edge_strength,
-                   double K, const Matrix1D<double> &W)
+double Shah_energy(const MultidimArray<double> &img,
+                   const MultidimArray<double> &surface_strength,
+                   const MultidimArray<double> &edge_strength,
+                   double K, const MultidimArray<double> &W)
 {
     img.checkDimension(2);
 
@@ -1107,10 +1107,10 @@ double Shah_energy(const Matrix2D<double> &img,
    on a finite differences solution to the following equation:
        0 = dE/df = dF/df - d(dF/dfx)/dx - d(dF/dfy)/dy
            + dd(dF/dfxx)/dxx + dd(dF/dfxy)/dxy + dd(dF/dfyy)/dyy */
-double Update_surface_Shah(Matrix2D<double> &img,
-                           Matrix2D<double> &surface_strength,
-                           Matrix2D<double> &edge_strength,
-                           const Matrix1D<double> &W)
+double Update_surface_Shah(MultidimArray<double> &img,
+                           MultidimArray<double> &surface_strength,
+                           MultidimArray<double> &edge_strength,
+                           const MultidimArray<double> &W)
 {
     img.checkDimension(2);
 
@@ -1167,11 +1167,11 @@ double Update_surface_Shah(Matrix2D<double> &img,
 /* This routine performs one update to the edge estimate based
    on a finite differences solution to the following equation:
    0 = dE/ds = dF/ds - d(dF/dsx)/dx - d(dF/dsy)/dy */
-double Update_edge_Shah(Matrix2D<double> &img,
-                        Matrix2D<double> &surface_strength,
-                        Matrix2D<double> &edge_strength,
+double Update_edge_Shah(MultidimArray<double> &img,
+                        MultidimArray<double> &surface_strength,
+                        MultidimArray<double> &edge_strength,
                         double K,
-                        const Matrix1D<double> &W)
+                        const MultidimArray<double> &W)
 {
     img.checkDimension(2);
 
@@ -1214,10 +1214,10 @@ double Update_edge_Shah(Matrix2D<double> &img,
 
 /* Smoothing Shah ---------------------------------------------------------- */
 #define SHAH_CONVERGENCE_THRESHOLD  0.0001
-void Smoothing_Shah(Matrix2D<double> &img,
-                    Matrix2D<double> &surface_strength,
-                    Matrix2D<double> &edge_strength,
-                    const Matrix1D<double> &W,
+void Smoothing_Shah(MultidimArray<double> &img,
+                    MultidimArray<double> &surface_strength,
+                    MultidimArray<double> &edge_strength,
+                    const MultidimArray<double> &W,
                     int OuterLoops,
                     int InnerLoops,
                     int RefinementLoops,
@@ -1265,8 +1265,8 @@ void Smoothing_Shah(Matrix2D<double> &img,
 
 /* Tomographic diffusion --------------------------------------------------- */
 //#define DEBUG
-double tomographicDiffusion(Matrix3D< double >& V,
-    const Matrix1D< double >& alpha, double lambda)
+double tomographicDiffusion(MultidimArray< double >& V,
+    const MultidimArray< double >& alpha, double lambda)
 {
     V.checkDimension(3);
 
@@ -1291,7 +1291,7 @@ double tomographicDiffusion(Matrix3D< double >& V,
     regError*=0.5;
     
     // Compute the gradient of the regularization error
-    Matrix3D<double> gradient;
+    MultidimArray<double> gradient;
     gradient.initZeros(V);
     for (int z=2; z<ZSIZE(V)-2; z++)
         for (int y=2; y<YSIZE(V)-2; y++)
@@ -1385,9 +1385,9 @@ double tomographicDiffusion(Matrix3D< double >& V,
 #undef DEBUG
 
 /* Rotational invariant moments -------------------------------------------- */
-void rotational_invariant_moments(const Matrix2D<double> &img,
-                                  const Matrix2D<int> *mask,
-                                  Matrix1D<double> &v_out)
+void rotational_invariant_moments(const MultidimArray<double> &img,
+                                  const MultidimArray<int> *mask,
+                                  MultidimArray<double> &v_out)
 {
     img.checkDimension(2);
 
@@ -1448,8 +1448,8 @@ void rotational_invariant_moments(const Matrix2D<double> &img,
 }
 
 /* Inertia moments --------------------------------------------------------- */
-void inertia_moments(const Matrix2D<double> &img,
-                     const Matrix2D<int> *mask,
+void inertia_moments(const MultidimArray<double> &img,
+                     const MultidimArray<int> *mask,
                      Matrix1D<double> &v_out,
                      Matrix2D<double> &u)
 {
@@ -1489,7 +1489,7 @@ void inertia_moments(const Matrix2D<double> &img,
 }
 
 /* Fill triangle ----------------------------------------------------------- */
-void fill_triangle(Matrix2D<double> &img, int *tx, int *ty, double color)
+void fill_triangle(MultidimArray<double> &img, int *tx, int *ty, double color)
 {
     img.checkDimension(2);
 
@@ -1637,16 +1637,15 @@ void fill_triangle(Matrix2D<double> &img, int *tx, int *ty, double color)
 }
 
 /* Local thresholding ------------------------------------------------------ */
-void local_thresholding(Matrix2D<double> &img,
+void local_thresholding(MultidimArray<double> &img,
                         double C,
                         double dimLocal,
-                        Matrix2D<int> &result,
-                        Matrix2D<int> *mask)
+                        MultidimArray<int> &result,
+                        MultidimArray<int> *mask)
 {
-    img.checkDimension(2);
 
     // Convolve the input image with the kernel
-    Matrix2D<double> convolved;
+    MultidimArray<double> convolved;
     convolved.initZeros(img);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(convolved)
     {
@@ -1689,13 +1688,13 @@ void local_thresholding(Matrix2D<double> &img,
 }
 
 /* Center translationally -------------------------------------------------- */
-void centerImageTranslationally(Matrix2D<double> &I)
+void centerImageTranslationally(MultidimArray<double> &I)
 {
     I.checkDimension(2);
 
-    Matrix2D<double> Ix  = I; Ix.selfReverseX();   Ix.setXmippOrigin();
-    Matrix2D<double> Iy  = I; Iy.selfReverseY();   Iy.setXmippOrigin();
-    Matrix2D<double> Ixy = Ix; Ixy.selfReverseY(); Ixy.setXmippOrigin();
+    MultidimArray<double> Ix  = I; Ix.selfReverseX();   Ix.setXmippOrigin();
+    MultidimArray<double> Iy  = I; Iy.selfReverseY();   Iy.setXmippOrigin();
+    MultidimArray<double> Ixy = Ix; Ixy.selfReverseY(); Ixy.setXmippOrigin();
     
     double meanShiftX=0, meanShiftY=0, shiftX, shiftY;
     best_nonwrapping_shift(I,Ix, meanShiftX,meanShiftY);
@@ -1707,17 +1706,17 @@ void centerImageTranslationally(Matrix2D<double> &I)
     
     Matrix1D<double> shift(2);
     VECTOR_R2(shift,-meanShiftX,-meanShiftY);
-    Matrix2D<double> aux = I;
+    MultidimArray<double> aux = I;
     translate(3, I, aux, shift);
     //I.selfTranslateBSpline(3,shift);
 }
 
 /* Center rotationally ----------------------------------------------------- */
-void centerImageRotationally(Matrix2D<double> &I)
+void centerImageRotationally(MultidimArray<double> &I)
 {
     I.checkDimension(2);
 
-    Matrix2D<double> Ix  = I; Ix.selfReverseX();
+    MultidimArray<double> Ix  = I; Ix.selfReverseX();
     Ix.setXmippOrigin();
 
     Polar_fftw_plans *plans=NULL;
@@ -1728,20 +1727,20 @@ void centerImageRotationally(Matrix2D<double> &I)
         XSIZE(I)/2,plans);
 
     XmippFftw local_transformer;
-    Matrix1D<double> rotationalCorr;
+    MultidimArray<double> rotationalCorr;
     rotationalCorr.resize(2*polarFourierI.getSampleNoOuterRing()-1);
     local_transformer.setReal(rotationalCorr);
     double bestRot = best_rotation(polarFourierIx,polarFourierI,
         local_transformer);
 
-    Matrix2D<double> aux = I;
+    MultidimArray<double> aux = I;
     rotate(3, I, aux, -bestRot/2,WRAP);
     //I.selfRotateBSpline(3,-bestRot/2,WRAP);
 }
 
 /* Center both rotationally and translationally ---------------------------- */
 //#define DEBUG
-void centerImage(Matrix2D<double> &I, int Niter, bool limitShift)
+void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
 {
     I.checkDimension(2);
 
@@ -1749,15 +1748,16 @@ void centerImage(Matrix2D<double> &I, int Niter, bool limitShift)
     double avg=I.computeAvg();
     I-=avg;
 
-    Matrix2D<double> Ix, Iy, Ixy, Iaux, A;
+    MultidimArray<double> Ix, Iy, Ixy, Iaux;
+    Matrix2D<double> A;
     A.initIdentity(3);
     Iaux=I;
     
-    Matrix2D<int> mask;
+    MultidimArray<int> mask;
     mask.initZeros(I);
     BinaryCircularMask(mask,XSIZE(I)/2);
     
-    Matrix1D<double> lineY, lineX;
+    MultidimArray<double> lineY, lineX;
     lineY.initZeros(YSIZE(I)); STARTINGX(lineY)=STARTINGY(I);
     lineX.initZeros(XSIZE(I)); STARTINGX(lineX)=STARTINGX(I);
 
@@ -1820,7 +1820,7 @@ void centerImage(Matrix2D<double> &I, int Niter, bool limitShift)
         normalizedPolarFourierTransform(Iaux, polarFourierI, true, XSIZE(I)/5,
             XSIZE(I)/2,plans);
         XmippFftw local_transformer;
-        Matrix1D<double> rotationalCorr;
+        MultidimArray<double> rotationalCorr;
         rotationalCorr.resize(2*polarFourierI.getSampleNoOuterRing()-1);
         local_transformer.setReal(rotationalCorr);
 

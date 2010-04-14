@@ -56,7 +56,7 @@ public:
     }
 
     /// Remove wedge
-    void removeWedge(Matrix3D<double> &V) const;
+    void removeWedge(MultidimArray<double> &V) const;
 };
 ///@}
 
@@ -69,7 +69,7 @@ class Steerable
 {
 public:
     // Basis functions for the steerability
-    std::vector< Matrix3D<double> > basis;
+    std::vector< MultidimArray<double> > basis;
 
     // Missing wedge
     const MissingWedge *MW;
@@ -79,30 +79,30 @@ public:
        deltaAng controls the accuracy of the final filtering.
        Vtomograph is the volume to filter.
        filterType is wall or filament. */
-    Steerable(double sigma, Matrix3D<double> &Vtomograph, 
+    Steerable(double sigma, MultidimArray<double> &Vtomograph,
         double deltaAng, const std::string &filterType,
         const MissingWedge *_MW);
     
     /** This function is the one really filtering */
-    void buildBasis(const Matrix3D<double> &Vtomograph, double sigma);
+    void buildBasis(const MultidimArray<double> &Vtomograph, double sigma);
 
     /** Internal function for the generation of 1D filters. */
     void generate1DFilters(double sigma,
-        const Matrix3D<double> &Vtomograph,
-        std::vector< Matrix1D<double> > &hx,
-        std::vector< Matrix1D<double> > &hy,
-        std::vector< Matrix1D<double> > &hz);
+        const MultidimArray<double> &Vtomograph,
+        std::vector< MultidimArray<double> > &hx,
+        std::vector< MultidimArray<double> > &hy,
+        std::vector< MultidimArray<double> > &hz);
 
     /** Internal function for the generation of 3D filters. */
-    void generate3DFilter(Matrix3D<double>& h3D,
-	std::vector< Matrix1D<double> > &hx,
-	std::vector< Matrix1D<double> > &hy,
-	std::vector< Matrix1D<double> > &hz);
+    void generate3DFilter(MultidimArray<double>& h3D,
+	std::vector< MultidimArray<double> > &hx,
+	std::vector< MultidimArray<double> > &hy,
+	std::vector< MultidimArray<double> > &hz);
 
     /** Internal function for filtering */
-    void singleFilter(const Matrix3D<double>& Vin,
-        Matrix1D<double> &hx, Matrix1D<double> &hy, 
-        Matrix1D<double> &hz, Matrix3D<double> &Vout);
+    void singleFilter(const MultidimArray<double>& Vin,
+        MultidimArray<double> &hx, MultidimArray<double> &hy,
+        MultidimArray<double> &hz, MultidimArray<double> &Vout);
 };
 ///@}
 #endif

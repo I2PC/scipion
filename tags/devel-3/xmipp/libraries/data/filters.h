@@ -41,7 +41,7 @@
  * The background is computed as the plane which best fits all density values,
  * then this plane is substracted from the image.
  */
-void substract_background_plane(Matrix2D<double> &I);
+void substract_background_plane(MultidimArray<double> &I);
 
 /** Substract background
  * @ingroup Filters
@@ -52,7 +52,7 @@ void substract_background_plane(Matrix2D<double> &I);
  * This code has been implemented after the one of "Subtract background" in
  * ImageJ.
  */
-void substract_background_rolling_ball(Matrix2D<double> &I, int radius);
+void substract_background_rolling_ball(MultidimArray<double> &I, int radius);
 
 /** Constrast enhancement
  * @ingroup Filters
@@ -74,8 +74,8 @@ void contrast_enhancement(Image<double>* I);
  *
  * Valid neighbourhoods are 4 or 8.
  */
-void region_growing2D(const Matrix2D< double >& I_in,
-                      Matrix2D< double >& I_out,
+void region_growing2D(const MultidimArray< double >& I_in,
+                      MultidimArray< double >& I_out,
                       int i,
                       int j,
                       float stop_colour = 1,
@@ -94,8 +94,8 @@ void region_growing2D(const Matrix2D< double >& I_in,
  * border are greater than the region voxels. If less is false the region is
  * grown so that all voxels on its border are smaller than the region voxels.
  */
-void region_growing3D(const Matrix3D< double >& V_in,
-                      Matrix3D< double >& V_out,
+void region_growing3D(const MultidimArray< double >& V_in,
+                      MultidimArray< double >& V_out,
                       int k,
                       int i,
                       int j,
@@ -109,8 +109,8 @@ void region_growing3D(const Matrix3D< double >& V_in,
   * If wrap is set, the image borders are wrapped around.
   * This is useful if the image coordinates represent angles
   */
-void distance_transform(const Matrix2D<int> &in,
-    Matrix2D<int> &out, bool wrap=false);
+void distance_transform(const MultidimArray<int> &in,
+    MultidimArray<int> &out, bool wrap=false);
 
 /** Label a binary image
  * @ingroup Filters
@@ -119,8 +119,8 @@ void distance_transform(const Matrix2D<int> &in,
  * components. The background is labeled as 0, and the components as 1, 2, 3
  * ...
  */
-int label_image2D(const Matrix2D< double >& I,
-                  Matrix2D< double >& label,
+int label_image2D(const MultidimArray< double >& I,
+                  MultidimArray< double >& label,
                   int neighbourhood = 8);
 
 /** Label a binary volume
@@ -130,14 +130,14 @@ int label_image2D(const Matrix2D< double >& I,
  * components. The background is labeled as 0, and the components as 1, 2, 3
  * ...
  */
-int label_image3D(const Matrix3D< double >& V, Matrix3D< double >& label);
+int label_image3D(const MultidimArray< double >& V, MultidimArray< double >& label);
 
 /** Remove connected components
  * @ingroup Filters
  *
  * Remove connected components smaller than a given size. They are set to 0.
  */
-void remove_small_components(Matrix2D< double >& I,
+void remove_small_components(MultidimArray< double >& I,
                              int size,
                              int neighbourhood = 8);
 
@@ -147,7 +147,7 @@ void remove_small_components(Matrix2D< double >& I,
  * If the biggest component does not cover the percentage required (by default,
  * 0), more big components are taken until this is accomplished.
  */
-void keep_biggest_component(Matrix2D< double >& I,
+void keep_biggest_component(MultidimArray< double >& I,
                             double percentage = 0,
                             int neighbourhood = 8);
 
@@ -156,7 +156,7 @@ void keep_biggest_component(Matrix2D< double >& I,
  *
  * Everything that is not background is assumed to be object.
  */
-void fill_binary_object(Matrix2D< double >&I, int neighbourhood = 8);
+void fill_binary_object(MultidimArray< double >&I, int neighbourhood = 8);
 
 /** Segment an object using Otsu's method
  * @ingroup Filters
@@ -166,7 +166,7 @@ void fill_binary_object(Matrix2D< double >&I, int neighbourhood = 8);
  *
  * http://www.biomecardio.com/matlab/otsu.html
  */
-void OtsuSegmentation(Matrix3D<double> &V);
+void OtsuSegmentation(MultidimArray<double> &V);
 
 /** Segment an object using Entropy method
  * @ingroup Filters
@@ -176,7 +176,7 @@ void OtsuSegmentation(Matrix3D<double> &V);
  *
  * http://rsbweb.nih.gov/ij/plugins/download/Entropy_Threshold.java
  */
-void EntropySegmentation(Matrix3D<double> &V);
+void EntropySegmentation(MultidimArray<double> &V);
 
 /** Segment an object using a combination of Otsu and Entropy method
  * @ingroup Filters
@@ -190,7 +190,7 @@ void EntropySegmentation(Matrix3D<double> &V);
  * volume is the first value in the curve Z(t) falling below this
  * percentil.
  */
-void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil=0.05);
+void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil=0.05);
 
 /** Correlation 1D
  * @ingroup Filters
@@ -202,9 +202,9 @@ void EntropyOtsuSegmentation(Matrix3D<double> &V, double percentil=0.05);
  * This function returns the number of objects (different from background)
  */
 template <typename T>
-double correlation(const Matrix1D< T >& x,
-                   const Matrix1D< T >& y,
-                   const Matrix1D< int >* mask = NULL,
+double correlation(const MultidimArray< T >& x,
+                   const MultidimArray< T >& y,
+                   const MultidimArray< int >* mask = NULL,
                    int l = 0)
 {
     SPEED_UP_temps;
@@ -234,9 +234,9 @@ double correlation(const Matrix1D< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double correlation(const Matrix2D< T >& x,
-                   const Matrix2D< T >& y,
-                   const Matrix2D< int >* mask = NULL,
+double correlation(const MultidimArray< T >& x,
+                   const MultidimArray< T >& y,
+                   const MultidimArray< int >* mask = NULL,
                    int l = 0, int m = 0)
 {
     /* Note: l index is for rows and m index for columns */
@@ -272,9 +272,9 @@ double correlation(const Matrix2D< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double correlation(const Matrix3D< T >& x,
-                   const Matrix3D< T >& y,
-                   const Matrix3D< int >* mask = NULL,
+double correlation(const MultidimArray< T >& x,
+                   const MultidimArray< T >& y,
+                   const MultidimArray< int >* mask = NULL,
                    int l = 0,
                    int m = 0,
                    int q = 0)
@@ -321,7 +321,7 @@ template <typename T>
 double correlation_index(const MultidimArray< T >& x,
                          const MultidimArray< T >& y,
                          const MultidimArray< int >* mask = NULL,
-                         Matrix3D< double >* Contributions = NULL)
+                         MultidimArray< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 
@@ -391,7 +391,7 @@ double correlation_index(const MultidimArray< T >& x,
  * @ingroup Filters
  */
 template <typename T>
-double fastCorrentropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
+double fastCorrentropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
     double sigma, const GaussianInterpolator &G)
 {
     if ( !(x.checkDimension(1) && y.checkDimension(1)) )
@@ -433,11 +433,11 @@ double correntropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
  * To apply these results you must shift I1 by (-shiftX,-shiftY) or 
  * I2 by (shiftX, shiftY)
  */
-void best_shift(const Matrix2D< double >& I1,
-                const Matrix2D< double >& I2,
+void best_shift(const MultidimArray< double >& I1,
+                const MultidimArray< double >& I2,
                 double& shiftX,
                 double& shiftY,
-                const Matrix2D< int >* mask = NULL);
+                const MultidimArray< int >* mask = NULL);
 
 /** Translational search (non-wrapping)
  * @ingroup Filters
@@ -446,8 +446,8 @@ void best_shift(const Matrix2D< double >& I1,
  * images. You can restrict the shift to a region defined by a mask (the maximum
  * will be sought where the mask is 1).
  */
-void best_nonwrapping_shift(const Matrix2D< double >& I1,
-                const Matrix2D< double >& I2,
+void best_nonwrapping_shift(const MultidimArray< double >& I1,
+                const MultidimArray< double >& I2,
                 double& shiftX,
                 double& shiftY);
 
@@ -458,8 +458,8 @@ void best_nonwrapping_shift(const Matrix2D< double >& I1,
  * rotational alignments are both considered. The matrix transforming I2
  * into I1 is returned.
  */
-void alignImages(const Matrix2D< double >& Iref,
-                 Matrix2D< double >& I,
+void alignImages(const MultidimArray< double >& Iref,
+                 MultidimArray< double >& I,
                  Matrix2D< double >&M);
 
 /** Unnormalized 2D gaussian value using covariance
@@ -471,7 +471,7 @@ void alignImages(const Matrix2D< double >& Iref,
  * G(r,mu,sigma)=exp(-0.5 * (r-mu)^t sigma^-1 (r-mu))
  */
 double unnormalizedGaussian2D(const Matrix1D<double> &r,
-    const Matrix1D<double> &mu,
+    const MultidimArray<double> &mu,
     const Matrix2D<double> &sigmainv);
 
 /** Fit Gaussian spot to an image.
@@ -483,8 +483,8 @@ double unnormalizedGaussian2D(const Matrix1D<double> &r,
  * You can choose if the center is estimated or it is assumed to be 0.
  * You can choose the number of iterations for the estiamtion.
  */
-void estimateGaussian2D(const Matrix2D<double> &I,
-    double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
+void estimateGaussian2D(const MultidimArray<double> &I,
+    double &a, double &b, MultidimArray<double> &mu, Matrix2D<double> &sigma,
     bool estimateMu=true, int iterations=10);
 
 /** euclidian distance nD
@@ -545,9 +545,9 @@ double mutual_information(const MultidimArray< T >& x,
     long n = 0;
     histogram1D histx, histy;
     histogram2D histxy;
-    Matrix1D< T > aux_x, aux_y;
-    Matrix1D< double > mx, my;
-    Matrix2D< double > mxy;
+    MultidimArray< T > aux_x, aux_y;
+    MultidimArray< double > mx, my;
+    MultidimArray< double > mxy;
     int xdim, ydim, zdim;
     double retval = 0.0;
 
@@ -673,8 +673,8 @@ double rms(const MultidimArray< T >& x,
  * shape, and the image logical origin is used for the decomposition.
  * k1 and k2 determines the harmonic coefficients to be computed.
  */
-void Fourier_Bessel_decomposition(const Matrix2D< double >& img_in,
-                                  Matrix2D< double >& m_out,
+void Fourier_Bessel_decomposition(const MultidimArray< double >& img_in,
+                                  MultidimArray< double >& m_out,
                                   double r1,
                                   double r2,
                                   int k1,
@@ -683,12 +683,12 @@ void Fourier_Bessel_decomposition(const Matrix2D< double >& img_in,
 /** Harmonic decomposition
  * @ingroup Filters
  */
-void harmonic_decomposition(const Matrix2D< double >& img_in,
-                            Matrix1D< double >& v_out);
+void harmonic_decomposition(const MultidimArray< double >& img_in,
+                            MultidimArray< double >& v_out);
 
 // TODO Document, check indentation
 template <typename T>
-void sort(T a, T b, T c, Matrix1D< T >& v)
+void sort(T a, T b, T c, MultidimArray< T >& v)
 {
     if (a < b)
         if (b < c)
@@ -730,7 +730,7 @@ void sort(T a, T b, T c, Matrix1D< T >& v)
 }
 
 template <typename T>
-void merge_sort(Matrix1D< T >& v1, Matrix1D< T >& v2, Matrix1D< T >& v)
+void merge_sort(MultidimArray< T >& v1, MultidimArray< T >& v2, MultidimArray< T >& v)
 {
     int i1 = 0, i2 = 0, i = 0;
 
@@ -753,7 +753,7 @@ void merge_sort(Matrix1D< T >& v1, Matrix1D< T >& v2, Matrix1D< T >& v)
 // elements. This way is guaranteed a minimum number of comparisons (maximum
 // number of comparisons to perform the sort, 5)
 template <typename T>
-void fast_merge_sort(Matrix1D< T >& x, Matrix1D< T >& y, Matrix1D< T >& v)
+void fast_merge_sort(MultidimArray< T >& x, MultidimArray< T >& y, MultidimArray< T >& v)
 {
     if (x(0) < y(0))
     {
@@ -941,7 +941,7 @@ void fast_merge_sort(Matrix1D< T >& x, Matrix1D< T >& y, Matrix1D< T >& v)
 
 // TODO Document
 template <typename T>
-void median(Matrix1D< T >& x, Matrix1D< T >& y, T& m)
+void median(MultidimArray< T >& x, MultidimArray< T >& y, T& m)
 {
     if (x(0) < y(1))
         if (x(1) < y(1))
@@ -974,7 +974,7 @@ void median(Matrix1D< T >& x, Matrix1D< T >& y, T& m)
  * @ingroup Filters
  */
 template <typename T>
-void median_filter3x3(Matrix2D< T >&m, Matrix2D< T >& out)
+void median_filter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
 {
     int backup_startingx = STARTINGX(m);
     int backup_startingy = STARTINGY(m);
@@ -988,8 +988,8 @@ void median_filter3x3(Matrix2D< T >&m, Matrix2D< T >& out)
 
     // Set the initial and final matrix indices to explore
     int initialY = 1, initialX = 1;
-    int finalY = m.rowNumber() - 2;
-    int finalX = m.colNumber() - 2;
+    int finalY = YSIZE(m) - 2;
+    int finalX = XSIZE(m) - 2;
 
     // For every row
     for (int i = initialY; i <= finalY; i++)
@@ -1068,10 +1068,10 @@ void median_filter3x3(Matrix2D< T >&m, Matrix2D< T >& out)
  *
  * Paper: Teboul, et al. IEEE-Trans. on Image Proc. Vol. 7, 387-397.
  */
-void Smoothing_Shah(Matrix2D< double >& img,
-                    Matrix2D< double >& surface_strength,
-                    Matrix2D< double >& edge_strength,
-                    const Matrix1D< double >& W,
+void Smoothing_Shah(MultidimArray< double >& img,
+                    MultidimArray< double >& surface_strength,
+                    MultidimArray< double >& edge_strength,
+                    const MultidimArray< double >& W,
                     int OuterLoops,
                     int InnerLoops,
                     int RefinementLoops,
@@ -1085,8 +1085,8 @@ void Smoothing_Shah(Matrix2D< double >& img,
  *
  * The function returns the value of the regularization term.
  */
-double tomographicDiffusion(Matrix3D< double >& V,
-    const Matrix1D< double >& alpha, double lambda);
+double tomographicDiffusion(MultidimArray< double >& V,
+    const MultidimArray< double >& alpha, double lambda);
  
 /** Rotational invariant moments
  * @ingroup Filters
@@ -1098,9 +1098,9 @@ double tomographicDiffusion(Matrix3D< double >& V,
  * These moments have been taken from
  * http://www.cs.cf.ac.uk/Dave/Vision_lecture/node36.html (moments 1 to 5).
  */
-void rotational_invariant_moments(const Matrix2D< double >& img,
-                                  const Matrix2D< int >* mask,
-                                  Matrix1D< double >& v_out);
+void rotational_invariant_moments(const MultidimArray< double >& img,
+                                  const MultidimArray< int >* mask,
+                                  MultidimArray< double >& v_out);
 
 /** Inertia moments
  * @ingroup Filters
@@ -1110,8 +1110,8 @@ void rotational_invariant_moments(const Matrix2D< double >& img,
  * moments. v_out contains the inertia moments while the columns of u contain
  * the directions of the principal axes.
  */
-void inertia_moments(const Matrix2D< double >& img,
-                     const Matrix2D< int >* mask,
+void inertia_moments(const MultidimArray< double >& img,
+                     const MultidimArray< int >* mask,
                      Matrix1D< double >& v_out,
                      Matrix2D< double >& u);
 
@@ -1121,7 +1121,7 @@ void inertia_moments(const Matrix2D< double >& img,
  * The points are supplied as a pointer to three integer positions. They can be
  * negative
  */
-void fill_triangle(Matrix2D< double >&img, int* tx, int* ty, double color);
+void fill_triangle(MultidimArray< double >&img, int* tx, int* ty, double color);
 
 /** Local thresholding
  * @ingroup Filters
@@ -1137,11 +1137,11 @@ void fill_triangle(Matrix2D< double >&img, int* tx, int* ty, double color);
  * - Thresholding the difference image with C.
  * - Inverting the thresholded image.
  */
-void local_thresholding(Matrix2D< double >& img,
+void local_thresholding(MultidimArray< double >& img,
                         double C,
                         double dimLocal,
-                        Matrix2D< int >& result,
-                        Matrix2D< int >* mask = NULL);
+                        MultidimArray< int >& result,
+                        MultidimArray< int >* mask = NULL);
 
 /** Center an image translationally
  * @ingroup Filters
@@ -1150,7 +1150,7 @@ void local_thresholding(Matrix2D< double >& img,
  * translationally. For doing so, it compares this image with its mirrored
  * (X, Y, XY) versions.
  */
-void centerImageTranslationally(Matrix2D<double> &I);
+void centerImageTranslationally(MultidimArray<double> &I);
 
 /** Center an image rotationally
  * @ingroup Filters
@@ -1159,7 +1159,7 @@ void centerImageTranslationally(Matrix2D<double> &I);
  * rotationally. For doing so, it compares this image with its mirrored
  * (X) version.
  */
-void centerImageRotationally(Matrix2D<double> &I);
+void centerImageRotationally(MultidimArray<double> &I);
 
 /** Center an image both translationally and rotationally
  * @ingroup Filters
@@ -1169,6 +1169,6 @@ void centerImageRotationally(Matrix2D<double> &I);
  * with its mirrored (X, Y, XY) versions. The image is aligned translationally
  * and then rotationally Niter times.
  */
-void centerImage(Matrix2D<double> &I, int Niter=10, bool limitShift=true);
+void centerImage(MultidimArray<double> &I, int Niter=10, bool limitShift=true);
 
 #endif

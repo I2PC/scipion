@@ -455,7 +455,7 @@ void * blobs2voxels_SimpleGrid( void * data )
     Matrix1D<double> corner2(3), corner1(3); // Coord: Corners of the
     // blob in the voxel volume
     Matrix1D<double> gcurrent(3);            // Position in g of current point
-    Matrix1D<double> blob_table;             // Something like a blobprint
+    MultidimArray<double> blob_table;             // Something like a blobprint
     // but with the values of the
     // blob in space
     double         d;                        // Distance between the center
@@ -754,13 +754,13 @@ void * blobs2voxels_SimpleGrid( void * data )
                 }
 				
                 // Prepare for next iteration
-                XX(act_coord) = XX(act_coord) + grid->relative_size * MAT_ELEM(grid->basis, 0, 0);
-                YY(act_coord) = YY(act_coord) + grid->relative_size * MAT_ELEM(grid->basis, 1, 0);
-                ZZ(act_coord) = ZZ(act_coord) + grid->relative_size * MAT_ELEM(grid->basis, 2, 0);
+                XX(act_coord) = XX(act_coord) + grid->relative_size * (grid->basis)( 0, 0);
+                YY(act_coord) = YY(act_coord) + grid->relative_size * (grid->basis)( 1, 0);
+                ZZ(act_coord) = ZZ(act_coord) + grid->relative_size * (grid->basis)( 2, 0);
             }
-            XX(beginY) = XX(beginY) + grid->relative_size * MAT_ELEM(grid->basis, 0, 1);
-            YY(beginY) = YY(beginY) + grid->relative_size * MAT_ELEM(grid->basis, 1, 1);
-            ZZ(beginY) = ZZ(beginY) + grid->relative_size * MAT_ELEM(grid->basis, 2, 1);
+            XX(beginY) = XX(beginY) + grid->relative_size * (grid->basis)( 0, 1);
+            YY(beginY) = YY(beginY) + grid->relative_size * (grid->basis)( 1, 1);
+            ZZ(beginY) = ZZ(beginY) + grid->relative_size * (grid->basis)( 2, 1);
         }
 		
 		pthread_mutex_lock(&blobs_conv_mutex);

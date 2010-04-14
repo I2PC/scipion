@@ -316,7 +316,7 @@ void DWT_keep_central_part(MultidimArray< double >& I, double R);
  * If denoise is set to false, then S and N coefficients are estimated but they
  * are not applied to the image.
  */
-MultidimArray< double > bayesian_wiener_filtering2D(MultidimArray< double >& WI,
+Matrix1D< double > bayesian_wiener_filtering2D(MultidimArray< double >& WI,
         int allowed_scale,
         double SNR0 = 0.1,
         double SNRF = 0.2,
@@ -331,7 +331,7 @@ MultidimArray< double > bayesian_wiener_filtering2D(MultidimArray< double >& WI,
  */
 void bayesian_wiener_filtering2D(MultidimArray< double >& WI,
                                  int allowed_scale,
-                                 MultidimArray< double >& estimatedS);
+                                 Matrix1D< double >& estimatedS);
 
 /** Bayesian, Wiener filtering.
  * @ingroup WaveletsDenoising
@@ -344,7 +344,7 @@ void bayesian_wiener_filtering2D(MultidimArray< double >& WI,
  * If denoise is set to false, then S and N coefficients are estimated but they
  * are not applied to the image.
  */
-MultidimArray< double > bayesian_wiener_filtering3D(MultidimArray< double >& WI,
+Matrix1D< double > bayesian_wiener_filtering3D(MultidimArray< double >& WI,
         int allowed_scale,
         double SNR0 = 0.1,
         double SNRF = 0.2,
@@ -359,6 +359,6 @@ MultidimArray< double > bayesian_wiener_filtering3D(MultidimArray< double >& WI,
  */
 void bayesian_wiener_filtering3D(MultidimArray< double >& WI,
                                int allowed_scale,
-                               MultidimArray< double >& estimatedS);
+                               Matrix1D< double >& estimatedS);
 
 #endif

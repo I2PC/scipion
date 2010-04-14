@@ -222,10 +222,10 @@ void FFT_phase(const MultidimArray< std::complex<double> > &v,
 void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double > & m2,
              double sampling_rate,
-             Matrix1D< double >& freq,
-             Matrix1D< double >& frc,
-             Matrix1D< double >& frc_noise,
-             Matrix1D< double >& dpr,
+             MultidimArray< double >& freq,
+             MultidimArray< double >& frc,
+             MultidimArray< double >& frc_noise,
+             MultidimArray< double >& dpr,
              bool skipdpr)
 {
     if (!m1.sameShape(m2))
@@ -239,8 +239,8 @@ void frc_dpr(MultidimArray< double > & m1,
     XmippFftw transformer2;
     transformer2.FourierTransform(m2, FT2, false);
 
-    Matrix1D< int > radial_count(XSIZE(m1)/2+1);
-    Matrix1D<double> num, den1, den2;
+    MultidimArray< int > radial_count(XSIZE(m1)/2+1);
+    MultidimArray<double> num, den1, den2;
     Matrix1D<double> f(3);
     num.initZeros(radial_count);
     den1.initZeros(radial_count);
@@ -288,14 +288,12 @@ void frc_dpr(MultidimArray< double > & m1,
     }
 }
 
-void selfScaleToSizeFourier(int Ydim, int Xdim, Matrix2D<double>& Mpmem,int nThreads) 
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int nThreads)
  {
-
-     Mpmem.checkDimension(2);
 
      //Mmem = *this
      //memory for fourier transform output
-     Matrix2D<std::complex<double> > MmemFourier;
+     MultidimArray<std::complex<double> > MmemFourier;
      // Perform the Fourier transform
      XmippFftw transformerM;
      transformerM.setThreadsNumber(nThreads);
@@ -303,7 +301,7 @@ void selfScaleToSizeFourier(int Ydim, int Xdim, Matrix2D<double>& Mpmem,int nThr
 
      // Create space for the downsampled image and its Fourier transform
      Mpmem.resize(Ydim, Xdim);
-     Matrix2D<std::complex<double> > MpmemFourier;
+     MultidimArray<std::complex<double> > MpmemFourier;
      XmippFftw transformerMp;
      transformerMp.setReal(Mpmem);
      transformerMp.getFourierAlias(MpmemFourier);
@@ -328,16 +326,16 @@ void selfScaleToSizeFourier(int Ydim, int Xdim, Matrix2D<double>& Mpmem,int nThr
  }
 
 
-void getSpectrum(Matrix3D<double> &Min, 
-                 Matrix1D<double> &spectrum,
+void getSpectrum(MultidimArray<double> &Min,
+                 MultidimArray<double> &spectrum,
                  int spectrum_type)
 {
     Min.checkDimension(3);
 
-    Matrix3D<std::complex<double> > Faux;
+    MultidimArray<std::complex<double> > Faux;
     int xsize = XSIZE(Min);
     Matrix1D<double> f(3);
-    Matrix1D<double> count(xsize);
+    MultidimArray<double> count(xsize);
     XmippFftw transformer;
 
     spectrum.initZeros(xsize);
@@ -362,14 +360,14 @@ void getSpectrum(Matrix3D<double> &Min,
             spectrum(i) /= count(i);
 }
 
-void divideBySpectrum(Matrix3D<double> &Min, 
-                      Matrix1D<double> &spectrum,
+void divideBySpectrum(MultidimArray<double> &Min,
+                      MultidimArray<double> &spectrum,
                       bool leave_origin_intact)
 {
     
     Min.checkDimension(3);
 
-    Matrix1D<double> div_spec(spectrum);
+    MultidimArray<double> div_spec(spectrum);
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(spectrum)
     {
         if (ABS(dVi(spectrum,i)) > 0.)
@@ -380,15 +378,15 @@ void divideBySpectrum(Matrix3D<double> &Min,
     multiplyBySpectrum(Min,div_spec,leave_origin_intact);
 }
 
-void multiplyBySpectrum(Matrix3D<double> &Min, 
-                        Matrix1D<double> &spectrum,
+void multiplyBySpectrum(MultidimArray<double> &Min,
+                        MultidimArray<double> &spectrum,
                         bool leave_origin_intact)
 {
     Min.checkDimension(3);
 
-    Matrix3D<std::complex<double> > Faux;
+    MultidimArray<std::complex<double> > Faux;
     Matrix1D<double> f(3);
-    Matrix1D<double> lspectrum;
+    MultidimArray<double> lspectrum;
     XmippFftw transformer;
     double dim3 = XSIZE(Min)*YSIZE(Min)*ZSIZE(Min);
 
@@ -411,30 +409,30 @@ void multiplyBySpectrum(Matrix3D<double> &Min,
 }
 
 
-void whitenSpectrum(Matrix3D<double> &Min, 
-                    Matrix1D<double> &Mout, 
+void whitenSpectrum(MultidimArray<double> &Min,
+                    MultidimArray<double> &Mout,
                     int spectrum_type,
                     bool leave_origin_intact)
 {
     Min.checkDimension(3);
 
-    Matrix1D<double> spectrum;
+    MultidimArray<double> spectrum;
     getSpectrum(Min,spectrum,spectrum_type);
     Mout=Min;
     divideBySpectrum(Mout,spectrum,leave_origin_intact);
 
 }
 
-void adaptSpectrum(Matrix3D<double> &Min, 
-                   Matrix3D<double> &Mout,
-                   const Matrix1D<double> spectrum_ref,
+void adaptSpectrum(MultidimArray<double> &Min,
+                   MultidimArray<double> &Mout,
+                   const MultidimArray<double> spectrum_ref,
                    int spectrum_type,
                    bool leave_origin_intact)
 {
     
     Min.checkDimension(3);
 
-    Matrix1D<double> spectrum;
+    MultidimArray<double> spectrum;
     getSpectrum(Min,spectrum,spectrum_type);
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(spectrum)
     {

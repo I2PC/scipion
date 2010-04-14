@@ -1258,11 +1258,11 @@ public:
             if (typeinfoT == typeinfoD)
             {
                 for (i = 0; i < 3; i++)
-                    for (j = 0; j < 3; j++) PACK_DOUBLE(MAT_ELEM(this_grid.basis  , i, j));
-                for (i = 0; i < 3; i++)    PACK_DOUBLE(VEC_ELEM(this_grid.lowest , i));
-                for (i = 0; i < 3; i++)    PACK_DOUBLE(VEC_ELEM(this_grid.highest, i));
+                    for (j = 0; j < 3; j++) PACK_DOUBLE((this_grid.basis)(i, j));
+                for (i = 0; i < 3; i++)    PACK_DOUBLE((this_grid.lowest)(i));
+                for (i = 0; i < 3; i++)    PACK_DOUBLE((this_grid.highest)(i));
                 PACK_DOUBLE(this_grid.relative_size);
-                for (i = 0; i < 3; i++)    PACK_DOUBLE(VEC_ELEM(this_grid.origin, i));
+                for (i = 0; i < 3; i++)    PACK_DOUBLE((this_grid.origin)(i));
                 PACK_DOUBLE(this_grid.R2);
 
                 // Store volume control ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -1282,11 +1282,11 @@ public:
                                  "GridVolume is integer and (sizeof(float)!= sizeof(int)");
 
                 for (i = 0; i < 3; i++)
-                    for (j = 0; j < 3; j++) PACK_INT(MAT_ELEM(this_grid.basis  , i, j));
-                for (i = 0; i < 3; i++)    PACK_INT(VEC_ELEM(this_grid.lowest , i));
-                for (i = 0; i < 3; i++)    PACK_INT(VEC_ELEM(this_grid.highest, i));
+                    for (j = 0; j < 3; j++) PACK_INT((this_grid.basis)(i, j));
+                for (i = 0; i < 3; i++)    PACK_INT((this_grid.lowest)(i));
+                for (i = 0; i < 3; i++)    PACK_INT((this_grid.highest)(i));
                 PACK_INT(this_grid.relative_size);
-                for (i = 0; i < 3; i++)    PACK_INT(VEC_ELEM(this_grid.origin, i));
+                for (i = 0; i < 3; i++)    PACK_INT((this_grid.origin)(i));
                 PACK_INT(this_grid.R2);
 
                 // Store volume control ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -1375,11 +1375,11 @@ public:
             if (typeinfoT == typeinfoD)
             {
                 for (i = 0; i < 3; i++)
-                    for (j = 0; j < 3; j++) UNPACK_DOUBLE(MAT_ELEM(sG.basis  , i, j), double);
-                for (i = 0; i < 3; i++)    UNPACK_DOUBLE(VEC_ELEM(sG.lowest , i), int);
-                for (i = 0; i < 3; i++)    UNPACK_DOUBLE(VEC_ELEM(sG.highest, i), int);
+                    for (j = 0; j < 3; j++) UNPACK_DOUBLE((sG.basis)(i, j), double);
+                for (i = 0; i < 3; i++)    UNPACK_DOUBLE((sG.lowest)(i), int);
+                for (i = 0; i < 3; i++)    UNPACK_DOUBLE((sG.highest)(i), int);
                 UNPACK_DOUBLE(sG.relative_size, double);
-                for (i = 0; i < 3; i++)    UNPACK_DOUBLE(VEC_ELEM(sG.origin, i), double);
+                for (i = 0; i < 3; i++)    UNPACK_DOUBLE((sG.origin)(i), double);
                 UNPACK_DOUBLE(sG.R2, double);
             }
             else if (typeinfoT == typeinfoI)
@@ -1391,11 +1391,11 @@ public:
                                  "GridVolume is integer and (sizeof(float)!= sizeof(int)");
 
                 for (i = 0; i < 3; i++)
-                    for (j = 0; j < 3; j++) UNPACK_INT(MAT_ELEM(sG.basis  , i, j), double);
-                for (i = 0; i < 3; i++)    UNPACK_INT(VEC_ELEM(sG.lowest , i), int);
-                for (i = 0; i < 3; i++)    UNPACK_INT(VEC_ELEM(sG.highest, i), int);
+                    for (j = 0; j < 3; j++) UNPACK_INT((sG.basis)(i, j), double);
+                for (i = 0; i < 3; i++)    UNPACK_INT((sG.lowest)(i), int);
+                for (i = 0; i < 3; i++)    UNPACK_INT((sG.highest)(i), int);
                 UNPACK_INT(sG.relative_size, double);
-                for (i = 0; i < 3; i++)    UNPACK_INT(VEC_ELEM(sG.origin, i), double);
+                for (i = 0; i < 3; i++)    UNPACK_INT((sG.origin)(i), double);
                 UNPACK_INT(sG.R2, double);
             }
             sG.inv_basis = sG.basis.inv();

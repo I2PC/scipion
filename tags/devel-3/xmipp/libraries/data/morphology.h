@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Pedro A. de Alarcón     (pedro@cnb.csic.es)
+ *              Pedro A. de Alarcï¿½n     (pedro@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -97,30 +97,30 @@ void random_convex_hull(const MultidimArray<double> &img, MultidimArray<double> 
 //@{
 /** Binary Dilate.
     See the group documentation for the parameter meanings */
-void dilate3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
+void dilate3D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
               int count, int size);
 /** Binary Erode.
     See the group documentation for the parameter meanings */
-void erode3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
+void erode3D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
              int count, int size);
 /** Binary Closing=Dilation+Erosion */
-void closing3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
+void closing3D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                int count, int size);
 /** Binary Opening=Erosion+Dilation */
-void opening3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
+void opening3D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                int count, int size);
 
 /** Gray dilation.
     The structuring element must be centered at 0. */
-void dilate3D(const Matrix3D<double> &in,
-              const Matrix3D<double> &structuringElement,
-              Matrix3D<double> &out);
+void dilate3D(const MultidimArray<double> &in,
+              const MultidimArray<double> &structuringElement,
+              MultidimArray<double> &out);
 
 /** Gray erosion.
     The structuring element must be centered at 0. */
-void erode3D(const Matrix3D<double> &in,
-              const Matrix3D<double> &structuringElement,
-              Matrix3D<double> &out);
+void erode3D(const MultidimArray<double> &in,
+              const MultidimArray<double> &structuringElement,
+              MultidimArray<double> &out);
 
 /** Sharpening.
     Width (radius in pixels), strength (as a percentange of the input range).
@@ -128,7 +128,7 @@ void erode3D(const Matrix3D<double> &in,
     Implemented according to JGM Schavemaker, MJT Reinders, JJ Gerbrands,
     E Backer. Image sharpening by morphological filtering. Pattern Recognition
     33: 997-1012 (2000). */
-void sharpening(const Matrix3D<double> &in, double width, double strength,
-              Matrix3D<double> &out);
+void sharpening(const MultidimArray<double> &in, double width, double strength,
+              MultidimArray<double> &out);
 //@}
 #endif

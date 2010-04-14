@@ -87,8 +87,8 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
     int size[3];
     v.getSize(size);
 
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-        FFT_IDX2DIGFREQ(VEC_ELEM(idx, i), size[i], VEC_ELEM(freq, i));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(idx)
+        FFT_IDX2DIGFREQ(DIRECT_VEC_ELEM(idx, i), size[i], DIRECT_VEC_ELEM(freq, i));
 }
 
 /** Frequency to index
@@ -110,8 +110,8 @@ void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
     int size[3];
     v.getSize(size);
 
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-        DIGFREQ2FFT_IDX(VEC_ELEM(freq, i), size[i], VEC_ELEM(idx, i));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(idx)
+        DIGFREQ2FFT_IDX(DIRECT_VEC_ELEM(freq, i), size[i], DIRECT_VEC_ELEM(idx, i));
 }
 
 /** Digital to Continuous frequency
@@ -125,8 +125,8 @@ inline void digfreq2contfreq(const Matrix1D< double >& digfreq,
                              double pixel_size)
 {
     contfreq.resize(digfreq);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(digfreq)
-        VEC_ELEM(contfreq,i) = VEC_ELEM(digfreq,i) / pixel_size;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(digfreq)
+		DIRECT_VEC_ELEM(contfreq,i) = DIRECT_VEC_ELEM(digfreq,i) / pixel_size;
 }
 
 /** Continuous to Digital frequency
@@ -140,8 +140,8 @@ inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
                              double pixel_size)
 {
     digfreq.resize(contfreq);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(contfreq)
-        VEC_ELEM(digfreq,i) = VEC_ELEM(contfreq,i) * pixel_size;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(contfreq)
+		DIRECT_VEC_ELEM(digfreq,i) = DIRECT_VEC_ELEM(contfreq,i) * pixel_size;
 }
 
 /** @defgroup FourierFormat Format conversions

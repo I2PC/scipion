@@ -28,12 +28,6 @@
 
 #include <typeinfo>
 
-#include <external/bilib/types/tsplinebasis.h>
-#include <external/bilib/types/tboundaryconvention.h>
-#include <external/bilib/headers/linearalgebra.h>
-#include <external/bilib/headers/changebasis.h>
-#include <external/bilib/headers/kernel.h>
-#include <external/bilib/headers/pyramidtools.h>
 #include "funcs.h"
 #include "error.h"
 #include "args.h"
@@ -61,12 +55,6 @@ extern std::string floatToString(float F, int _width, int _prec);
 
 /// @defgroup MultidimArraysSizeShape Size and shape
 /// @ingroup MultidimArraysSpeedUp
-
-/** Redefine Matrix3D
- * @ingroup MultidimArraysSizeShape
- * For compatibility with the old code and making dimensions explicit
- */
-#define Matrix3D MultidimArray
 
 /** Returns the first X valid logical index
  * @ingroup MultidimArraysSizeShape
@@ -251,24 +239,24 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @ingroup MultidimArraySizeShape
  * v is the array, k is the slice (Z), i is the Y index and j is the X index.
  */
-#define DIRECT_VOL_ELEM(v,k,i,j) ((v).data[(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
+#define DIRECT_A3D_ELEM(v,k,i,j) ((v).data[(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
 
 /** A short alias for the previous function.
  * @ingroup MultidimArraySizeShape
  *
  */
-#define dVkij(V, k, i, j) DIRECT_VOL_ELEM(V, k, i, j)
+#define dAkij(V, k, i, j) DIRECT_A3D_ELEM(V, k, i, j)
 
 /** Volume element: Logical access.
  * @ingroup MultidimArraySizeShape
  *
  * @code
- * VOL_ELEM(V, -1, -2, 1) = 1;
- * val = VOL_ELEM(V, -1, -2, 1);
+ * A3D_ELEM(V, -1, -2, 1) = 1;
+ * val = A3D_ELEM(V, -1, -2, 1);
  * @endcode
  */
-#define VOL_ELEM(V, k, i, j) \
-    DIRECT_VOL_ELEM((V),(k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
+#define A3D_ELEM(V, k, i, j) \
+    DIRECT_A3D_ELEM((V),(k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
 
 /** For all elements in the array.
  * @ingroup MultidimArraySizeShape
@@ -278,13 +266,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * mathematical definition (ie, logical access).
  *
  * @code
- * FOR_ALL_ELEMENTS_IN_MATRIX3D(V)
+ * FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
  * {
  *     std::cout << V(k, i, j) << " ";
  * }
  * @endcode
  */
-#define FOR_ALL_ELEMENTS_IN_MATRIX3D(V) \
+#define FOR_ALL_ELEMENTS_IN_ARRAY3D(V) \
     for (int k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
         for (int i=STARTINGY(V); i<=FINISHINGY(V); i++) \
             for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
@@ -308,13 +296,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * V1.setXmippOrigin();
  * V2.setXmippOrigin();
  *
- * FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(V1, V2)
+ * FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(V1, V2)
  * {
  *    // ...
  * }
  * @endcode
  */
-#define FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(V1, V2) \
+#define FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(V1, V2) \
     ispduptmp0 = XMIPP_MAX(STARTINGZ(V1), STARTINGZ(V2)); \
     ispduptmp1 = XMIPP_MIN(FINISHINGZ(V1),FINISHINGZ(V2)); \
     ispduptmp2 = XMIPP_MAX(STARTINGY(V1), STARTINGY(V2)); \
@@ -333,13 +321,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * physical definition.
  *
  * @code
- * FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V)
+ * FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V)
  * {
- *     std::cout << DIRECT_VOL_ELEM(m, k, i, j) << " ";
+ *     std::cout << DIRECT_A3D_ELEM(m, k, i, j) << " ";
  * }
  * @endcode
  */
-#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V) \
+#define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V) \
     for (int k=0; k<ZSIZE(V); k++) \
         for (int i=0; i<YSIZE(V); i++) \
             for (int j=0; j<XSIZE(V); j++)
@@ -356,28 +344,28 @@ extern std::string floatToString(float F, int _width, int _prec);
  * logical position
  *
  * @code
- * DIRECT_MAT_ELEM(m, 0, 0) = 1;
- * val = DIRECT_MAT_ELEM(m, 0, 0);
+ * DIRECT_A2D_ELEM(m, 0, 0) = 1;
+ * val = DIRECT_A2D_ELEM(m, 0, 0);
  * @endcode
 
  */
-#define DIRECT_MAT_ELEM(v,i,j) ((v).data[(i)*(v).xdim+(j)])
+#define DIRECT_A2D_ELEM(v,i,j) ((v).data[(i)*(v).xdim+(j)])
 
-/** Short alias for DIRECT_MAT_ELEM
+/** Short alias for DIRECT_A2D_ELEM
  * @ingroup MatricesSizeShape
  */
-#define dMij(M, i, j) DIRECT_MAT_ELEM(M, i, j)
+#define dAij(M, i, j) DIRECT_A2D_ELEM(M, i, j)
 
 /** Matrix element: Logical access
  * @ingroup MatricesSizeShape
  *
  * @code
- * MAT_ELEM(m, -2, 1) = 1;
- * val = MAT_ELEM(m, -2, 1);
+ * A2D_ELEM(m, -2, 1) = 1;
+ * val = A2D_ELEM(m, -2, 1);
  * @endcode
  */
-#define MAT_ELEM(v, i, j) \
-    DIRECT_MAT_ELEM(v, (i) - STARTINGY(v), (j) - STARTINGX(v))
+#define A2D_ELEM(v, i, j) \
+    DIRECT_A2D_ELEM(v, (i) - STARTINGY(v), (j) - STARTINGX(v))
 
 /** TRUE if both arrays have the same shape
  * @ingroup MatricesSizeShape
@@ -399,13 +387,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * mathematical definition (ie, logical access).
  *
  * @code
- * FOR_ALL_ELEMENTS_IN_MATRIX2D(m)
+ * FOR_ALL_ELEMENTS_IN_ARRAY2D(m)
  * {
  *     std::cout << m(i, j) << " ";
  * }
  * @endcode
  */
-#define FOR_ALL_ELEMENTS_IN_MATRIX2D(m) \
+#define FOR_ALL_ELEMENTS_IN_ARRAY2D(m) \
     for (int i=STARTINGY(m); i<=FINISHINGY(m); i++) \
         for (int j=STARTINGX(m); j<=FINISHINGX(m); j++)
 
@@ -424,13 +412,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * m1.setXmippOrigin();
  * m2.setXmippOrigin();
  *
- * FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(m1, m2)
+ * FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY2D(m1, m2)
  * {
  *     ...
  * }
  * @endcode
  */
-#define FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX2D(m1, m2) \
+#define FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY2D(m1, m2) \
     ispduptmp2 = XMIPP_MAX(STARTINGY(m1), STARTINGY(m2)); \
     ispduptmp3 = XMIPP_MIN(FINISHINGY(m1), FINISHINGY(m2)); \
     ispduptmp4 = XMIPP_MAX(STARTINGX(m1), STARTINGX(m2)); \
@@ -456,13 +444,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * YY(corner1) = -2; YY(corner2) = 2;
  * ZZ(corner1) = -3; ZZ(corner2) = 3;
  *
- * FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
+ * FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(corner1, corner2)
  * {
  *     std::cout << v(r) << " ";
  * }
  * @endcode
  */
-#define FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2) \
+#define FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(corner1, corner2) \
     for (ZZ(r)=ZZ((corner1)); ZZ(r)<=ZZ((corner2)); ZZ(r)++) \
         for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
             for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
@@ -485,13 +473,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * YY(corner1) = -2;
  * YY(corner2) = 2;
  *
- * FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+ * FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
  * {
  *     std::cout << v(r) << " ";
  * }
  * @endcode
  */
-#define FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2) \
+#define FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2) \
     for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
         for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
 
@@ -507,13 +495,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * MultidimArray< double > corner1(1), corner2(1), r(1);
  * XX(corner1) = -1;
  * XX(corner2) = 1;
- * FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2)
+ * FOR_ALL_ELEMENTS_IN_ARRAY1D_BETWEEN(corner1, corner2)
  * {
  *     std::cout << v(XX(r)) << " ";
  * }
  * @endcode
  */
-#define FOR_ALL_ELEMENTS_IN_MATRIX1D_BETWEEN(corner1, corner2) \
+#define FOR_ALL_ELEMENTS_IN_ARRAY1D_BETWEEN(corner1, corner2) \
     for (XX(r)=(int) XX((corner1)); XX(r)<=(int) XX((corner2)); XX(r)++)
 
 /** For all elements in the array, accessed physically
@@ -524,25 +512,46 @@ extern std::string floatToString(float F, int _width, int _prec);
  * matrix using its physical definition.
  *
  * @code
- * FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(m)
+ * FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(m)
  * {
- *     std::cout << DIRECT_MAT_ELEM(m, i, j) << " ";
+ *     std::cout << DIRECT_A2D_ELEM(m, i, j) << " ";
  * }
  * @endcode
  */
-#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(m) \
+#define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(m) \
     for (int i=0; i<YSIZE(m); i++) \
         for (int j=0; j<XSIZE(m); j++)
+
+/** Vector element: Physical access
+ * @ingroup MultidimArraySizeShape
+ *
+ * Be careful because this is physical access, usually vectors follow the C
+ * convention of starting index==0. This function should not be used as it goes
+ * against the vector library philosophy unless you explicitly want to access
+ * directly to any value in the vector without taking into account its logical
+ * position.
+ *
+ * @code
+ * DIRECT_VEC_ELEM(v, 0) = 1;
+ * val = DIRECT_VEC_ELEM(v, 0);
+ * @endcode
+ */
+#define DIRECT_A1D_ELEM(v, i) ((v).vdata[(i)])
+
+/** A short alias to previous function
+ * @ingroup MultidimArraySizeShape
+ */
+#define dAi(v, i) DIRECT_A1D_ELEM(v, i)
 
 /** Vector element: Logical access
  * @ingroup MultidimArraySizeShape
  *
  * @code
- * VEC_ELEM(v, -2) = 1;
- * val = VEC_ELEM(v, -2);
+ * A1D_ELEM(v, -2) = 1;
+ * val = A1D_ELEM(v, -2);
  * @endcode
  */
-#define VEC_ELEM(v, i) DIRECT_VEC_ELEM(v, (i) - ((v).xinit))
+#define A1D_ELEM(v, i) DIRECT_A1D_ELEM(v, (i) - ((v).xinit))
 
 /** For all elements in the array
  * @ingroup MultidimArraySizeShape
@@ -558,7 +567,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * }
  * @endcode
  */
-#define FOR_ALL_ELEMENTS_IN_MATRIX1D(v) \
+#define FOR_ALL_ELEMENTS_IN_ARRAY1D(v) \
     for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
 
 /** For all elements in common
@@ -574,13 +583,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * v1.setXmippOrigin();
  * v2.setXmippOrigin();
  *
- * FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(v1, v2)
+ * FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY1D(v1, v2)
  * {
  *     ...
  * }
  * @endcode
  */
-#define FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX1D(v1, v2) \
+#define FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY1D(v1, v2) \
     ispduptmp4 = XMIPP_MAX(STARTINGX(v1), STARTINGX(v2)); \
     ispduptmp5 = XMIPP_MIN(FINISHINGX(v1), FINISHINGX(v2)); \
     for (int i=ispduptmp4; i<=ispduptmp5; i++)
@@ -593,13 +602,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * using its physical definition.
  *
  * @code
- * FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
+ * FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
  * {
- *     std::cout << DIRECT_MAT_ELEM(v, i) << " ";
+ *     std::cout << DIRECT_A2D_ELEM(v, i) << " ";
  * }
  * @endcode
  */
-#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v) \
+#define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v) \
     for (int i=0; i<v.xdim; i++)
 
 
@@ -898,7 +907,7 @@ public:
                         else if (j >= XSIZE(*this))
                             val = 0;
                         else
-                            val = DIRECT_VOL_ELEM(*this, k, i, j);
+                            val = DIRECT_A3D_ELEM(*this, k, i, j);
                         new_data[l*ZYXdim + k*YXdim+i*Xdim+j] = val;
                     }
 
@@ -1094,9 +1103,9 @@ public:
                     if ((k >= STARTINGZ(*this) && k <= FINISHINGZ(*this)) &&
                         (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
                         (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
-                        VOL_ELEM(result, k, i, j) = NZYX_ELEM(*this, n, k, i, j);
+                        A3D_ELEM(result, k, i, j) = NZYX_ELEM(*this, n, k, i, j);
                     else
-                        VOL_ELEM(result, k, i, j) = init_value;
+                        A3D_ELEM(result, k, i, j) = init_value;
 
         *this = result;
     }
@@ -1127,12 +1136,12 @@ public:
         STARTINGY(result) = y0;
         STARTINGX(result) = x0;
 
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(result)
         if (j >= STARTINGX(*this) && j <= FINISHINGX(*this) &&
             i >= STARTINGY(*this) && i <= FINISHINGY(*this))
-            MAT_ELEM(result, i, j) = NZYX_ELEM(*this, n, 0, i, j);
+            A2D_ELEM(result, i, j) = NZYX_ELEM(*this, n, 0, i, j);
         else
-            MAT_ELEM(result, i, j) = init_value;
+            A2D_ELEM(result, i, j) = init_value;
 
         *this = result;
     }
@@ -1159,9 +1168,9 @@ public:
 
         for (int j = x0; j <= xF; j++)
             if (j >= STARTINGX(*this) && j <= FINISHINGX(*this))
-                VEC_ELEM(result, j) = NZYX_ELEM(*this, n, 0, 0, j);
+                A1D_ELEM(result, j) = NZYX_ELEM(*this, n, 0, 0, j);
             else
-                VEC_ELEM(result, j) = init_value;
+                A1D_ELEM(result, j) = init_value;
 
         *this = result;
     }
@@ -1267,20 +1276,20 @@ public:
      */
     bool outside(const Matrix1D<double> &r) const
     {
-        if (XSIZE(r) < 1)
+        if (r.vdim < 1)
         {
             REPORT_ERROR(1, "Outside: index vector has not got enough components");
         }
-        else if (XSIZE(r)==1)
+        else if (r.vdim==1)
         {    
             return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this));
         }
-        else if (XSIZE(r)==2)
+        else if (r.vdim==2)
         {
             return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
                     YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this));
         }
-        else if (XSIZE(r)==3)
+        else if (r.vdim==3)
         {
             return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
                     YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this) ||
@@ -1311,7 +1320,7 @@ public:
     T& operator()(Matrix1D< double >& v) const
     {
         v.resize(3);
-        return VOL_ELEM((*this), ROUND(ZZ(v)), ROUND(YY(v)), ROUND(XX(v)));
+        return A3D_ELEM((*this), ROUND(ZZ(v)), ROUND(YY(v)), ROUND(XX(v)));
     }
 
     /** Volume element access via integer vector.
@@ -1320,7 +1329,7 @@ public:
     T& operator()(Matrix1D< int >& v) const
     {
         v.resize(3);
-        return VOL_ELEM((*this), ZZ(v), YY(v), XX(v));
+        return A3D_ELEM((*this), ZZ(v), YY(v), XX(v));
     }
 
      /** 4D element access via index.
@@ -1356,7 +1365,7 @@ public:
      */
     T& operator()(int k, int i, int j) const
     {
-        return VOL_ELEM(*this, k, i, j);
+        return A3D_ELEM(*this, k, i, j);
     }
 
     /** Matrix element access via index
@@ -1375,7 +1384,7 @@ public:
      */
     T& operator()(int i, int j) const
     {
-        return MAT_ELEM(*this, i, j);
+        return A2D_ELEM(*this, i, j);
     }
 
     /** Vector element access
@@ -1393,7 +1402,7 @@ public:
      */
     T& operator()(int i) const
     {
-       return VEC_ELEM(*this, i);
+       return A1D_ELEM(*this, i);
     }
 
 
@@ -1417,8 +1426,8 @@ public:
             REPORT_ERROR(1," Multidimarray getImage: n larger than NSIZE");
 
         M.resize(1, ZSIZE(*this), YSIZE(*this), XSIZE(*this));
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(M)
-            DIRECT_MAT_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(M)
+            DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
         
         STARTINGX(M) = STARTINGX(*this);
         STARTINGY(M) = STARTINGY(*this);
@@ -1439,7 +1448,6 @@ public:
      * V.slice(0, m);
      * @endcode
      */
-    //FIXME PENDING TO CHANGE FROM MATRIX3D!! 
     void getSlice(int k, MultidimArray<T>& M, char axis = 'Z', unsigned long n = 0) const
     {
         if (XSIZE(*this) == 0)
@@ -1457,8 +1465,8 @@ public:
 
             k = k - STARTINGZ(*this);
             M.resize(1, 1, YSIZE(*this), XSIZE(*this));
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
-                DIRECT_MAT_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
+                DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGY(*this);
             break;
@@ -1469,8 +1477,8 @@ public:
 
             k = k - STARTINGY(*this);
             M.resize(ZSIZE(*this), XSIZE(*this));
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
-                DIRECT_MAT_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, k, j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
+                DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, k, j);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
@@ -1481,8 +1489,8 @@ public:
 
             k = k - STARTINGX(*this);
             M.resize(ZSIZE(*this), YSIZE(*this));
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(M)
-                DIRECT_MAT_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, j, k);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
+                DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, j, k);
             STARTINGX(M) = STARTINGY(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
@@ -1518,159 +1526,9 @@ public:
 
         k = k - STARTINGZ(*this);
 
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(v)
-            DIRECT_NZYX_ELEM(*this, n, k, i, j) = DIRECT_MAT_ELEM(v, i, j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(v)
+            DIRECT_NZYX_ELEM(*this, n, k, i, j) = DIRECT_A2D_ELEM(v, i, j);
     }
-
-    /** Get row
-     * @ingroup MultidimMemory
-     *
-     * This function returns a row vector corresponding to the choosen
-     * row inside the nth 2D matrix, the numbering of the rows is also
-     * logical not physical.
-     *
-     * @code
-     * std::vector< double > v;
-     * m.getRow(-2, v);
-     * @endcode
-     */
-    void getRow(int i, MultidimArray<T>& v, unsigned long n = 0) const
-    {
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
-        {
-            v.clear();
-            return;
-        }
-
-        if (i < STARTINGY(*this) || i > FINISHINGY(*this))
-            REPORT_ERROR(1103, "getRow: Matrix subscript (i) greater than matrix dimension");
-
-        v.resize(XSIZE(*this));
-        STARTINGX(v) = STARTINGX(*this);
-
-        for (int j = STARTINGX(*this); j <= FINISHINGX(*this); j++)
-            VEC_ELEM(v, j) = NZYX_ELEM(*this, n, 0, i, j);
-
-        v.setRow();
-    }
-
-    /** Return row. The same as previous.
-     * @ingroup MatricesMemory
-      */
-    MultidimArray<T> Row(int i, unsigned long n = 0) const
-    {
-        MultidimArray<T> aux;
-        getRow(i, aux, n);
-        return aux;
-    }
-
-    /** Get Column
-     * @ingroup MatricesMemory
-     *
-     * This function returns a column vector corresponding to the
-     * choosen column inside the nth 2D matrix, the numbering of the
-     * column is also logical not physical.
-     *
-     * @code
-     * std::vector< double > v;
-     * m.getCol(-1, v);
-     * @endcode
-     */
-    void getCol(int j, MultidimArray<T>& v, unsigned long n = 0) const
-    {
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
-        {
-            v.clear();
-            return;
-        }
-
-        if (j < STARTINGX(*this) || j > FINISHINGX(*this))
-            REPORT_ERROR(1103,"getCol: Matrix subscript (j) greater than matrix dimension");
-
-        v.resize(YSIZE(*this));
-        STARTINGX(v)  = STARTINGY(*this);
-
-        for (int i = STARTINGY(*this); i <= FINISHINGY(*this); i++)
-            VEC_ELEM(v, i) = NZYX_ELEM(*this, n, 0, i, j);
-
-        // FIXME: THINK WHETHER THIS IS NECESSARY... FOR NOW IT CONFLICTS WITH setCol below.
-        //v.setCol();
-    }
-
-    /** Return Column. The same as previous.
-     * @ingroup MatricesMemory
-     */
-    MultidimArray<T> Col(int i, unsigned long n = 0) const
-    {
-        MultidimArray<T> aux;
-        getCol(i, aux, n);
-        return aux;
-    }
-
-    /** Set Row
-     * @ingroup MatricesMemory
-     *
-     * This function sets a row vector corresponding to the choosen
-     * row inside the nth 2D matrix, the numbering of the rows is also
-     * logical not physical.
-     *
-     * @code
-     * m.setRow(-2, m.row(1)); // Copies row 1 in row -2
-     * @endcode
-     */
-    void setRow(int i, const MultidimArray<T>& v, unsigned long n = 0)
-    {
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
-            REPORT_ERROR(1, "setRow: Target matrix is empty");
-
-        if (i < STARTINGY(*this) || i > FINISHINGY(*this))
-            REPORT_ERROR(1103, "setRow: Matrix subscript (i) out of range");
-
-        if (XSIZE(v) != XSIZE(*this))
-            REPORT_ERROR(1102,
-                         "setRow: Vector dimension different from matrix one");
-
-        //FIXME....
-        //if (!v.isRow())
-        //    REPORT_ERROR(1107, "setRow: Not a row vector in assignment");
-
-        i = i - STARTINGY(*this);
-        for (int j = 0; j < XSIZE(*this); j++)
-            DIRECT_NZYX_ELEM(*this, n, 0, i, j) = DIRECT_VEC_ELEM(v, j);
-    }
-
-    /** Set Column
-     * @ingroup MatricesMemory
-     *
-     * This function sets a column vector corresponding to the choosen column
-     * inside matrix, the numbering of the column is also logical not physical.
-     *
-     * @code
-     * m.setCol(-1, (m.row(1)).transpose()); // Copies row 1 in column -1
-     * @endcode
-     */
-    void setCol(int j, const MultidimArray<T>& v, unsigned long n = 0)
-    {
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
-            REPORT_ERROR(1, "setCol: Target matrix is empty");
-
-        if (j < STARTINGX(*this) || j > FINISHINGX(*this))
-            REPORT_ERROR(1103, "setCol: Matrix subscript (j) out of range");
-
-        if (XSIZE(v) != YSIZE(*this))
-            REPORT_ERROR(1102,
-                         "setCol: Vector dimension different from matrix one");
-        
-        // FIXME...
-        //if (!v.isCol())
-        //    REPORT_ERROR(1107, "setCol: Not a column vector in assignment");
-
-        j = j - STARTINGX(*this);
-        for (int i = 0; i < YSIZE(*this); i++)
-            DIRECT_NZYX_ELEM(*this, n, 0, i, j) = DIRECT_VEC_ELEM(v, i);
-    }
-
-
 
     /** 3D Logical to physical index translation.
      * @ingroup MultidimArrayMemory
@@ -2235,22 +2093,6 @@ public:
         return zdim;
     }
 
-    /** Returns Y dimension.
-     * @ingroup MultidimArraySize
-     */
-    int rowNumber() const
-    {
-        return ydim;
-    }
-
-    /** Returns X dimension.
-     * @ingroup MultidimArraySize
-     */
-    int colNumber() const
-    {
-        return xdim;
-    }
-
     /** Produce a 3D array suitable for working with Numerical Recipes.
      * @ingroup MultidimSize
      *
@@ -2263,7 +2105,7 @@ public:
         T*** m = NULL;
         ask_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
 
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(*this)
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*this)
             m[k+1][i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, k, i, j);
 
         return m;
@@ -2289,7 +2131,7 @@ public:
         T** m = NULL;
         ask_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
 
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(*this)
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*this)
             m[i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, 0, i, j);
 
         return m;
@@ -2704,8 +2546,8 @@ public:
     		double& stddev,
     		T& min_val,
     		T& max_val,
-    		MultidimArray< int >& corner1,
-    		MultidimArray< int >& corner2,
+    		Matrix1D< int >& corner1,
+    		Matrix1D< int >& corner2,
     		unsigned long n = 0)
     {
     	(*this).checkDimension(2);
@@ -2714,7 +2556,7 @@ public:
     	Matrix1D< double > r(3);
     	double N = 0, sum = 0, sum2 = 0;
 
-    	FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+    	FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
     	{
     			sum += (*this)(r);
     			sum2 += (*this)(r) * (*this)(r);
@@ -2745,7 +2587,7 @@ public:
      */
     bool isCorner(const Matrix1D< double >& v) const
     {
-        if (XSIZE(v) < 2)
+        if (v.vdim < 2)
             REPORT_ERROR(1, "isCorner: index vector has got not enough components");
 
         else if (XSIZE(*this)==2)
@@ -3449,7 +3291,7 @@ public:
         {
             resize(steps);
             for (int i = 0; i < steps; i++)
-                VEC_ELEM(*this, i) = (T)((double) minF + slope * i);
+                A1D_ELEM(*this, i) = (T)((double) minF + slope * i);
         }
     }
 	*/
@@ -3557,10 +3399,10 @@ public:
 	double mass = 0;
 	MultidimArray< int >* imask = (MultidimArray< int >*) mask;
 
-	FOR_ALL_ELEMENTS_IN_MATRIX3D(*this)
+	FOR_ALL_ELEMENTS_IN_ARRAY3D(*this)
 	{
             if ((imask == NULL || NZYX_ELEM(*imask, n, k, i, j)) &&
-		VOL_ELEM(*this, k, i, j) > 0)
+		A3D_ELEM(*this, k, i, j) > 0)
             {
         	XX(center) += j * NZYX_ELEM(*this, n, k, i, j);
         	YY(center) += i * NZYX_ELEM(*this, n, k, i, j);
@@ -3572,6 +3414,78 @@ public:
 
 	if (mass != 0)
             center /= mass;
+    }
+
+    /** Sort 1D vector elements
+     * @ingroup VectorsUtilities
+     *
+     * Sort in ascending order the vector elements. You can use the "reverse"
+     * function to sort in descending order.
+     *
+     * @code
+     * v2 = v1.sort();
+     * @endcode
+     */
+    MultidimArray<T> sort() const
+    {
+    	checkDimension(1);
+
+    	MultidimArray<T> temp;
+        MultidimArray< double > aux;
+
+        if (xdim == 0)
+            return temp;
+
+        // Initialise data
+        typeCast(*this, aux);
+
+        // Sort
+        double * aux_array = aux.adaptForNumericalRecipes1D();
+        qcksrt(xdim, aux_array);
+
+        typeCast(aux, temp);
+        return temp;
+    }
+
+    /** Gives a vector with the indexes for a sorted vector
+     * @ingroup MultidimUtilities
+     *
+     * This function returns the indexes of a sorted vector. The input vector is
+     * not modified at all. For instance, if the input vector is [3 2 -1 0] the
+     * result of this function would be [3 4 2 1] meaning that the lowest value
+     * is at index 3, then comes the element at index 4, ... Note that
+     * indexes start at 1.
+     *
+     * @code
+     * v2 = v1.indexSort();
+     * @endcode
+     */
+    MultidimArray< int > indexSort() const
+    {
+    	checkDimension(1);
+
+    	MultidimArray< int >   indx;
+        MultidimArray< double > temp;
+
+        if (xdim == 0)
+            return indx;
+
+        if (xdim == 1)
+        {
+            indx.resize(1);
+            indx(0) = 1;
+            return indx;
+        }
+
+        // Initialise data
+        indx.resize(xdim);
+        typeCast(*this, temp);
+
+        // Sort indexes
+        double* temp_array = temp.adaptForNumericalRecipes1D();
+        int* indx_array = indx.adaptForNumericalRecipes1D();
+
+        return indx;
     }
 
     /** Several thresholding.
@@ -4177,8 +4091,8 @@ public:
             T aux;
             Matrix2D<T> result(XSIZE(*this), YSIZE(*this));
 
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(result)
-                DIRECT_MAT_ELEM(result, i, j) = DIRECT_MAT_ELEM(*this, j, i);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(result)
+                DIRECT_A2D_ELEM(result, i, j) = DIRECT_A2D_ELEM(*this, j, i);
 
             STARTINGX(result) = STARTINGX(*this);
             STARTINGY(result) = STARTINGY(*this);
@@ -4226,8 +4140,8 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, long n = -1)
     else
     {
         v2.resize(ZSIZE(v1),YSIZE(v1),XSIZE(v1));
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(v2)
-            DIRECT_VOL_ELEM(v2,k,i,j) = static_cast< T2 >DIRECT_NZYX_ELEM(v1,n,k,i,j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(v2)
+            DIRECT_A3D_ELEM(v2,k,i,j) = static_cast< T2 >DIRECT_NZYX_ELEM(v1,n,k,i,j);
     }
 
 }
@@ -4378,7 +4292,7 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
     else
         ostrm << std::endl;
 
-    double max_val = ABS(DIRECT_VOL_ELEM(v , 0, 0, 0));
+    double max_val = ABS(DIRECT_A3D_ELEM(v , 0, 0, 0));
 
     T* ptr;
     unsigned long int n;
@@ -4390,7 +4304,7 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
     if (YSIZE(v)==1 && ZSIZE(v)==1)
     {
         for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
-            ostrm << floatToString((double) VOL_ELEM(v, 0, 0, j), 10, prec)
+            ostrm << floatToString((double) A3D_ELEM(v, 0, 0, j), 10, prec)
                   << std::endl;
     }
     else
@@ -4405,7 +4319,7 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
                 {
                     for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
                     {
-                        ostrm << floatToString((double) VOL_ELEM(v, k, i, j), 10, prec) << ' ';
+                        ostrm << floatToString((double) A3D_ELEM(v, k, i, j), 10, prec) << ' ';
                     }
                     ostrm << std::endl;
                 }

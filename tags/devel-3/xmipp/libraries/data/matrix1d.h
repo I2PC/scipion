@@ -58,13 +58,29 @@ extern std::string floatToString(float F, int _width, int _prec);
  * val = DIRECT_VEC_ELEM(v, 0);
  * @endcode
  */
-#define DIRECT_VEC_ELEM(v, i) ((v).data[(i)])
+#define DIRECT_VEC_ELEM(v, i) ((v).vdata[(i)])
 
 /** A short alias to previous function
  * @ingroup MultidimArraySizeShape
  */
 #define dVi(v, i) DIRECT_VEC_ELEM(v, i)
 
+/** For all elements in the array
+ * @ingroup MultidimArraySizeShape
+ *
+ * This macro is used to generate loops for the vector in an easy manner. It
+ * defines an internal index 'i' which ranges the vector using its mathematical
+ * definition (ie, logical access).
+ *
+ * @code
+ * FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
+ * {
+ *     std::cout << v(i) << " ";
+ * }
+ * @endcode
+ */
+#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v) \
+    for (int i=0; i<=vdim; i++)
 
 /** Access to X component
  * @ingroup Vectors
@@ -74,7 +90,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * val = XX(v);
  * @endcode
  */
-#define XX(v) (v).data[0]
+#define XX(v) (v).vdata[0]
 
 /** Access to Y component
  * @ingroup Vectors
@@ -84,7 +100,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * val = YY(v);
  * @endcode
  */
-#define YY(v) (v).data[1]
+#define YY(v) (v).vdata[1]
 
 /** Access to Z component
  * @ingroup Vectors
@@ -94,7 +110,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * val = ZZ(v);
  * @endcode
  */
-#define ZZ(v) (v).data[1]
+#define ZZ(v) (v).vdata[1]
 
 /** Creates vector in R2
  * @ingroup Vectors
@@ -264,13 +280,13 @@ class Matrix1D
 public:
     /* The array itself.
     */
-    T* data;
+    T* vdata;
 
     // Destroy data
     bool destroyData;
 
     // Number of elements
-    int xdim;
+    int vdim;
 
     bool row; ///< 0=column vector (default), 1=row vector
 
@@ -363,38 +379,38 @@ public:
      */
     void coreInit()
     {
-        xdim=0;
+        vdim=0;
         row=false;
-        data=NULL;
+        vdata=NULL;
         destroyData=true;
     }
 
     /** Core allocate.
      * @ingroup MultidimArrayCore
      */
-    void coreAllocate(int _xdim)
+    void coreAllocate(int _vdim)
     {
-        if (_xdim<=0)
+        if (_vdim<=0)
         {
             clear();
             return;
         }
 
-        xdim=_xdim;
-        data = new T [xdim];
-        if (data == NULL)
+        vdim=_vdim;
+        vdata = new T [vdim];
+        if (vdata == NULL)
             REPORT_ERROR(1001, "Allocate: No space left");
     }
 
     /** Core deallocate.
      * @ingroup MultidimArrayCore
-     * Free all data.
+     * Free all vdata.
      */
     void coreDeallocate()
     {
-        if (data != NULL && destroyData)
-            delete[] data;
-        data=NULL;
+        if (vdata != NULL && destroyData)
+            delete[] vdata;
+        vdata=NULL;
     }
 
     /** Resize to a given size
@@ -411,7 +427,7 @@ public:
      */
     void resize(int Xdim)
     {
-        if (Xdim == xdim)
+        if (Xdim == vdim)
             return;
 
         if (Xdim <= 0)
@@ -421,11 +437,11 @@ public:
         }
 
 
-        T * new_data;
+        T * new_vdata;
 
         try
         {
-        	new_data = new T [Xdim];
+        	new_vdata = new T [Xdim];
         }
         catch (std::bad_alloc &)
 		{
@@ -436,20 +452,40 @@ public:
 		for (int j = 0; j < Xdim; j++)
 		{
 			T val;
-			if (j >= xdim)
+			if (j >= vdim)
 				val = 0;
 			else
-				val = data[j];
-			new_data[j] = val;
+				val = vdata[j];
+			new_vdata[j] = val;
 		}
 
 		// deallocate old vector
 		coreDeallocate();
 
 		// assign *this vector to the newly created
-		data = new_data;
-		xdim = Xdim;
+		vdata = new_vdata;
+		vdim = Xdim;
 
+    }
+
+    /** Resize according to a pattern.
+     * @ingroup Initialization
+     *
+     * This function resize the actual array to the same size
+     * as the input pattern. If the actual array is larger than the pattern
+     * then the trailing values are lost, if it is smaller then 0's are
+     * added at the end
+     *
+     * @code
+     * v2.resize(v1);
+     * // v2 has got now the same structure as v1
+     * @endcode
+     */
+    template<typename T1>
+    void resize(const Matrix1D<T1> &v)
+    {
+        if (vdim != v.vdim)
+            resize(v.vdim);
     }
 
     /** Same value in all components.
@@ -465,9 +501,9 @@ public:
      */
     void initConstant(T val)
     {
-    	for (int j = 0; j < xdim; j++)
+    	for (int j = 0; j < vdim; j++)
     	{
-    		data[j] = val;
+    		vdata[j] = val;
     	}
     }
 
@@ -504,7 +540,7 @@ public:
     template <typename T1>
     bool sameShape(const Matrix1D<T1>& op) const
     {
-        return (xdim == op.xdim);
+        return (vdim == op.vdim);
     }
 
     /** Produce a vector suitable for working with Numerical Recipes
@@ -519,7 +555,7 @@ public:
      */
     T* adaptForNumericalRecipes() const
     {
-        return (*this).data - 1;
+        return (*this).vdata - 1;
     }
 
     /** Kill an array produced for Numerical Recipes.
@@ -599,7 +635,7 @@ public:
      */
     T& operator()(int i) const
     {
-        return data[i];
+        return vdata[i];
     }
 
     /** Assignment.
@@ -618,24 +654,304 @@ public:
         if (&op1 != this)
         {
             resize(op1);
-            for (int i = 0; i < xdim; i++)
-            	data[i] = op1.data[i];
+            for (int i = 0; i < vdim; i++)
+            	vdata[i] = op1.vdata[i];
             row=op1.row;
         }
 
         return *this;
     }
 
-    /// @defgroup VectorsUtilities Utilities
+	/// @defgroup VectorsUtilities Utilities
     /// @ingroup Vectors
 
-    /** Vector by matrix
+    /** CEILING
      * @ingroup VectorsUtilities
      *
-     * Algebraic vector by matrix multiplication. This function is actually
-     * implemented in xmippMatrices2D
+     * Applies a CEILING (look for the nearest larger integer) to each
+     * array element.
      */
-    //Matrix1D<T> operator*(const Matrix2D<T>& M);
+    void selfCEIL()
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] = CEIL(vdata[i]);
+    }
+
+    /** FLOOR
+     * @ingroup VectorsUtilities
+     *
+     * Applies a FLOOR (look for the nearest larger integer) to each
+     * array element.
+     */
+    void selfFLOOR()
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] = FLOOR(vdata[i]);
+    }
+
+    /** ROUND
+     * @ingroup VectorsUtilities
+     *
+     * Applies a ROUND (look for the nearest larger integer) to each
+     * array element.
+     */
+    void selfROUND()
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] = ROUND(vdata[i]);
+    }
+
+
+    /** v3 = v1 * k.
+     * @ingroup VectorsUtilities
+     */
+    Matrix1D<T> operator*(T op1) const
+    {
+        Matrix1D<T> tmp(*this);
+        for (int i=0; i < vdim; i++)
+        	tmp.vdata[i] = vdata[i] * op1;
+        return tmp;
+    }
+
+    /** v3 = v1 / k.
+     * @ingroup VectorsUtilities
+     */
+    Matrix1D<T> operator/(T op1) const
+    {
+        Matrix1D<T> tmp(*this);
+        for (int i=0; i < vdim; i++)
+        	tmp.vdata[i] = vdata[i] / op1;
+        return tmp;
+    }
+
+    /** v3 = v1 + k.
+     * @ingroup VectorsUtilities
+     */
+    Matrix1D<T> operator+(T op1) const
+    {
+        Matrix1D<T> tmp(*this);
+        for (int i=0; i < vdim; i++)
+        	tmp.vdata[i] = vdata[i] + op1;
+        return tmp;
+    }
+
+    /** v3 = v1 - k.
+     * @ingroup VectorsUtilities
+     */
+    Matrix1D<T> operator-(T op1) const
+    {
+        Matrix1D<T> tmp(*this);
+        for (int i=0; i < vdim; i++)
+        	tmp.vdata[i] = vdata[i] - op1;
+        return tmp;
+    }
+
+    /** v3 = k * v2.
+     * @ingroup VectorsUtilities
+     */
+    friend Matrix1D<T> operator*(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp(op2);
+        for (int i=0; i < op2.vdim; i++)
+        	tmp.vdata[i] = op1 * op2.vdata[i];
+        return tmp;
+    }
+
+    /** v3 = k / v2.
+     * @ingroup VectorsUtilities
+     */
+    friend Matrix1D<T> operator/(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp(op2);
+        for (int i=0; i < op2.vdim; i++)
+        	tmp.vdata[i] = op1 / op2.vdata[i];
+        return tmp;
+    }
+
+    /** v3 = k + v2.
+     * @ingroup VectorsUtilities
+     */
+    friend Matrix1D<T> operator+(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp(op2);
+        for (int i=0; i < op2.vdim; i++)
+        	tmp.vdata[i] = op1 + op2.vdata[i];
+        return tmp;
+    }
+
+    /** v3 = k - v2.
+     * @ingroup VectorsUtilities
+     */
+    friend Matrix1D<T> operator-(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp(op2);
+        for (int i=0; i < op2.vdim; i++)
+        	tmp.vdata[i] = op1 - op2.vdata[i];
+        return tmp;
+    }
+
+    /** v3 *= k.
+     * @ingroup VectorsUtilities
+     */
+    void operator*=(T op1)
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] *= op1;
+    }
+
+    /** v3 /= k.
+      * @ingroup VectorsUtilities
+      */
+     void operator/=(T op1)
+     {
+         for (int i=0; i < vdim; i++)
+         	vdata[i] /= op1;
+     }
+
+     /** v3 += k.
+     * @ingroup VectorsUtilities
+     */
+    void operator+=(T op1)
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] += op1;
+    }
+
+    /** v3 -= k.
+      * @ingroup VectorsUtilities
+      */
+     void operator-=(T op1)
+     {
+         for (int i=0; i < vdim; i++)
+         	vdata[i] -= op1;
+     }
+
+     /** v3 = v1 * v2.
+     * @ingroup VectorsUtilities
+     */
+     Matrix1D<T> operator*(const Matrix1D<T>& op1) const
+    {
+         Matrix1D<T> tmp(op1);
+         for (int i=0; i < vdim; i++)
+         	tmp.vdata[i] = vdata[i] * op1.vdata[i];
+         return tmp;
+    }
+
+     /** v3 = v1 / v2.
+     * @ingroup VectorsUtilities
+     */
+     Matrix1D<T> operator/(const Matrix1D<T>& op1) const
+    {
+         Matrix1D<T> tmp(op1);
+         for (int i=0; i < vdim; i++)
+         	tmp.vdata[i] = vdata[i] / op1.vdata[i];
+         return tmp;
+    }
+     /** v3 = v1 + v2.
+     * @ingroup VectorsUtilities
+     */
+     Matrix1D<T> operator+(const Matrix1D<T>& op1) const
+    {
+         Matrix1D<T> tmp(op1);
+         for (int i=0; i < vdim; i++)
+         	tmp.vdata[i] = vdata[i] + op1.vdata[i];
+         return tmp;
+    }
+
+     /** v3 = v1 - v2.
+     * @ingroup VectorsUtilities
+     */
+     Matrix1D<T> operator-(const Matrix1D<T>& op1) const
+    {
+         Matrix1D<T> tmp(op1);
+         for (int i=0; i < vdim; i++)
+         	tmp.vdata[i] = vdata[i] - op1.vdata[i];
+         return tmp;
+    }
+
+     /** v3 *= v2.
+     * @ingroup VectorsUtilities
+     */
+    void operator*=(const Matrix1D<T>& op1)
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] *= op1.vdata[i];
+    }
+
+    /** v3 /= v2.
+     * @ingroup VectorsUtilities
+     */
+    void operator/=(const Matrix1D<T>& op1)
+    {
+        for (int i=0; i < vdim; i++)
+         	vdata[i] /= op1.vdata[i];
+    }
+
+     /** v3 += v2.
+     * @ingroup VectorsUtilities
+     */
+    void operator+=(const Matrix1D<T>& op1)
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] += op1.vdata[i];
+    }
+
+    /** v3 -= v2.
+     * @ingroup VectorsUtilities
+     */
+    void operator-=(const Matrix1D<T>& op1)
+    {
+        for (int i=0; i < vdim; i++)
+         	vdata[i] -= op1.vdata[i];
+    }
+
+    /** Unary minus.
+     * @ingroup Operators
+     *
+     * It is used to build arithmetic expressions. You can make a minus
+     * of anything as long as it is correct semantically.
+     *
+     * @code
+     * v1 = -v2;
+     * v1 = -v2.transpose();
+     * @endcode
+     */
+    Matrix1D<T> operator-() const
+    {
+        Matrix1D<T> tmp(*this);
+        for (int i=0; i < vdim; i++)
+         	tmp.vdata[i] - vdata[i];
+        return tmp;
+    }
+
+    /** Sort 1D vector elements
+     * @ingroup VectorsUtilities
+     *
+     * Sort in ascending order the vector elements. You can use the "reverse"
+     * function to sort in descending order.
+     *
+     * @code
+     * v2 = v1.sort();
+     * @endcode
+     */
+    Matrix1D<T> sort() const
+    {
+     	Matrix1D<T> temp;
+        Matrix1D< double > aux;
+
+        if (vdim == 0)
+            return temp;
+
+        // Initialise vdata
+        typeCast(*this, aux);
+
+        // Sort
+        double * aux_array = aux.adaptForNumericalRecipes();
+        qcksrt(vdim, aux_array);
+
+        typeCast(aux, temp);
+        return temp;
+    }
 
     /** Algebraic transpose of vector
      * @ingroup VectorsUtilities
@@ -664,7 +980,26 @@ public:
         row = !row;
     }
 
-    /** Sum of squared vector values.
+    /** Sum of vector values.
+     * @ingroup VectorsUtilities
+     *
+     * This function returns the sum of all internal values.
+     *
+     * @code
+     * double sum = m.sum();
+     * @endcode
+     */
+    double sum() const
+    {
+        double sum = 0;
+		for (int j = 0; j < vdim; j++)
+		{
+			sum += vdata[j];
+		}
+		return sum;
+    }
+
+   /** Sum of squared vector values.
      * @ingroup VectorsUtilities
      *
      * This function returns the sum of all internal values to the second
@@ -677,9 +1012,9 @@ public:
     double sum2() const
     {
         double sum = 0;
-		for (int j = 0; j < xdim; j++)
+		for (int j = 0; j < vdim; j++)
 		{
-			sum += data[j] * data[j];
+			sum += vdata[j] * vdata[j];
 		}
 		return sum;
     }
@@ -747,80 +1082,11 @@ public:
      */
     void selfReverse()
     {
-    	for (int j = 0; j <= (int)(xdim - 1) / 2; j++)
+    	for (int j = 0; j <= (int)(vdim - 1) / 2; j++)
     	{
     		T aux;
-    		SWAP(data[j], data[xdim-1-j], aux);
+    		SWAP(vdata[j], vdata[vdim-1-j], aux);
     	}
-    }
-
-    /** Sort vector elements
-     * @ingroup VectorsUtilities
-     *
-     * Sort in ascending order the vector elements. You can use the "reverse"
-     * function to sort in descending order.
-     *
-     * @code
-     * v2 = v1.sort();
-     * @endcode
-     */
-    Matrix1D<T> sort() const
-    {
-    	Matrix1D<T> temp;
-        Matrix1D< double > aux;
-
-        if (xdim == 0)
-            return temp;
-
-        // Initialise data
-        typeCast(*this, aux);
-
-        // Sort
-        double * aux_array = aux.adaptForNumericalRecipes();
-        qcksrt(xdim, aux_array);
-
-        typeCast(aux, temp);
-        return temp;
-    }
-
-    /** Gives a vector with the indexes for a sorted vector
-     * @ingroup VectorsUtilities
-     *
-     * This function returns the indexes of a sorted vector. The input vector is
-     * not modified at all. For instance, if the input vector is [3 2 -1 0] the
-     * result of this function would be [3 4 2 1] meaning that the lowest value
-     * is at index 3, then comes the element at index 4, ... Note that
-     * indexes start at 1.
-     *
-     * @code
-     * v2 = v1.indexSort();
-     * @endcode
-     */
-    Matrix1D< int > indexSort() const
-    {
-    	Matrix1D< int >   indx;
-        Matrix1D< double > temp;
-
-        if (xdim == 0)
-            return indx;
-
-        if (xdim == 1)
-        {
-            indx.resize(1);
-            indx(0) = 1;
-            return indx;
-        }
-
-        // Initialise data
-        indx.resize(xdim);
-        typeCast(*this, temp);
-
-        // Sort indexes
-        double* temp_array = temp.adaptForNumericalRecipes();
-        int* indx_array = indx.adaptForNumericalRecipes();
-        indexx(xdim, temp_array, indx_array);
-
-        return indx;
     }
 
     /** Show using gnuplot
@@ -933,23 +1199,23 @@ public:
  template<typename T>
  std::ostream& operator<<(std::ostream& ostrm, const Matrix1D<T>& v)
  {
-     if (v.xdim == 0)
+     if (v.vdim == 0)
          ostrm << "NULL Array\n";
      else
          ostrm << std::endl;
 
-     double max_val = ABS(v.data[0]);
+     double max_val = ABS(v.vdata[0]);
 
-     for (int j = 0; j < v.xdim; j++)
+     for (int j = 0; j < v.vdim; j++)
      {
-    	 max_val = XMIPP_MAX(max_val, v.data[j]);
+    	 max_val = XMIPP_MAX(max_val, v.vdata[j]);
      }
 
      int prec = bestPrecision(max_val, 10);
 
-     for (int j = 0; j < v.xdim; j++)
+     for (int j = 0; j < v.vdim; j++)
      {
-    	 ostrm << floatToString((double) v.data[j], 10, prec)
+    	 ostrm << floatToString((double) v.vdata[j], 10, prec)
     	 << std::endl;
      }
      return ostrm;
@@ -1013,9 +1279,9 @@ public:
          REPORT_ERROR(1002, "Dot product: vectors of different size or shape");
 
      T accumulate = 0;
-     for (int j = 0; j < v1.xdim; j++)
+     for (int j = 0; j < v1.vdim; j++)
      {
-    	 accumulate += v1.data[j] * v2.data[j];
+    	 accumulate += v1.vdata[j] * v2.vdata[j];
      }
      return accumulate;
  }
@@ -1037,7 +1303,7 @@ public:
  template<typename T>
  Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
  {
-     if (v1.xdim != 3 || v2.xdim != 3)
+     if (v1.vdim != 3 || v2.vdim != 3)
          REPORT_ERROR(1002, "Vector_product: vectors are not in R3");
 
      if (v1.isRow() != v2.isRow())
@@ -1089,11 +1355,11 @@ public:
          REPORT_ERROR(1007,
                       "sortTwoVectors: vectors are not of the same shape");
 
-     for (int j = 0; j < v1.xdim; j++)
+     for (int j = 0; j < v1.vdim; j++)
      {
-    	 temp       = XMIPP_MIN(v1.data[j], v2.data[j]);
-    	 v2.data[j] = XMIPP_MAX(v1.data[j], v2.data[j]);
-    	 v1.data[j] = temp;
+    	 temp       = XMIPP_MIN(v1.vdata[j], v2.vdata[j]);
+    	 v2.vdata[j] = XMIPP_MAX(v1.vdata[j], v2.vdata[j]);
+    	 v1.vdata[j] = temp;
      }
  }
 
@@ -1107,16 +1373,16 @@ public:
  template<typename T1, typename T2>
  void typeCast(const Matrix1D<T1>& v1,  Matrix1D<T2>& v2)
  {
-     if (v1.xdim == 0)
+     if (v1.vdim == 0)
      {
          v2.clear();
          return;
      }
 
-     v2.resize(v1.xdim);
-     for (int j = 0; j < v1.xdim; j++)
+     v2.resize(v1.vdim);
+     for (int j = 0; j < v1.vdim; j++)
      {
-    	 v2.data[j] = static_cast< T2 > (v1.data[j]);
+    	 v2.vdata[j] = static_cast< T2 > (v1.vdata[j]);
      }
 
  }

@@ -90,7 +90,7 @@ void Bilib_DWT(const MultidimArray<double> &input,
             int zsize = XMIPP_MAX(1, ZSIZE(input) / (int)pow(2.0, (double)i));
 
             // Pick the Lowest subband
-            Matrix1D<double> input_aux, result_aux;
+            MultidimArray<double> input_aux, result_aux;
             input_aux.resize(zsize, ysize, xsize);
             result_aux.resize(zsize, ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
@@ -120,7 +120,7 @@ void Bilib_DWT(const MultidimArray<double> &input,
             int zsize = XMIPP_MAX(1, ZSIZE(input) / (int)pow(2.0, (double)i));
 
             // Pick the Lowest subband
-            Matrix1D<double> input_aux, result_aux;
+            MultidimArray<double> input_aux, result_aux;
             input_aux.resize(zsize, ysize, xsize);
             result_aux.resize(zsize, ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
@@ -585,7 +585,7 @@ void bayesian_solve_eq_system(
 #undef DEBUG
 
 //#define DEBUG
-MultidimArray<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int allowed_scale,
+Matrix1D<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int allowed_scale,
         double SNR0, double SNRF, bool white_noise, int tell, bool denoise)
 {
     /*Calculate the power of the wavelet transformed image */
@@ -608,12 +608,12 @@ MultidimArray<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int
 
     /*Calculate the power at each band*/
     //init the scale vector
-    MultidimArray<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
+    Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
     int scale_dim = XSIZE(scale);
 
     //define some vectors
-    MultidimArray<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
+    Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
     Matrix1D<int> x0(2), xF(2), r(2);
     std::vector<std::string> orientation;
     orientation.push_back("01");
@@ -657,7 +657,7 @@ MultidimArray<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int
     }
 
     /*Solve the Equation System*/
-    MultidimArray<double> estimatedS;
+    Matrix1D<double> estimatedS;
     bayesian_solve_eq_system(power, average, Ncoefs,
                              SNR0, SNRF, powerI, power_rest, white_noise, tell, estimatedS);
 
@@ -691,7 +691,7 @@ void bayesian_wiener_filtering2D(MultidimArray<double> &WI,
 
     int max_scale = ROUND(log(double(XSIZE(WI))) / log(2.0));
     Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
 
     for (int i = 0;i < XSIZE(scale);i++)
     {
@@ -703,7 +703,7 @@ void bayesian_wiener_filtering2D(MultidimArray<double> &WI,
 }
 
 //#define DEBUG
-MultidimArray<double> bayesian_wiener_filtering3D(MultidimArray<double> &WI, int allowed_scale,
+Matrix1D<double> bayesian_wiener_filtering3D(MultidimArray<double> &WI, int allowed_scale,
                                                   double SNR0, double SNRF, bool white_noise, 
                                                   int tell, bool denoise)
 {
@@ -727,12 +727,12 @@ MultidimArray<double> bayesian_wiener_filtering3D(MultidimArray<double> &WI, int
 
     /*Calculate the power at each band*/
     //init the scale vector
-    MultidimArray<int> scale(allowed_scale + 1);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
+    Matrix1D<int> scale(allowed_scale + 1);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
     int scale_dim = XSIZE(scale);
 
     //define some vectors
-    MultidimArray<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
+    Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
     Matrix1D<int> x0(3), xF(3), r(3);
     std::vector<std::string> orientation;
     orientation.push_back("001");
@@ -781,7 +781,7 @@ MultidimArray<double> bayesian_wiener_filtering3D(MultidimArray<double> &WI, int
     }
 
     /*Solve the Equation System*/
-    MultidimArray<double> estimatedS;
+    Matrix1D<double> estimatedS;
     bayesian_solve_eq_system(power, average, Ncoefs,
                              SNR0, SNRF, powerI, power_rest, white_noise, tell, estimatedS);
     if (tell)
@@ -804,7 +804,7 @@ MultidimArray<double> bayesian_wiener_filtering3D(MultidimArray<double> &WI, int
 #undef DEBUG
 
 void bayesian_wiener_filtering3D(MultidimArray<double> &WI,
-                               int allowed_scale, MultidimArray<double> &estimatedS)
+                               int allowed_scale, Matrix1D<double> &estimatedS)
 {
     std::vector<std::string> orientation;
     orientation.push_back("001");

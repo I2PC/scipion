@@ -325,12 +325,12 @@ void FFT_phase(const MultidimArray< std::complex< double > > & v,
  * Fourier Transform. (Using the correlation theorem)
  */
 template <typename T>
-void auto_correlation_vector(const Matrix1D< T > & Img, Matrix1D< double >& R)
+void auto_correlation_vector(const MultidimArray< T > & Img, MultidimArray< double >& R)
 {
     Img.checkDimension(1);
 
     // Compute the Fourier Transform
-    Matrix1D< std::complex< double > > FFT1;
+    MultidimArray< std::complex< double > > FFT1;
     XmippFftw transformer1;
     R=Img;
     transformer1.FourierTransform(R, FFT1, false);
@@ -406,7 +406,7 @@ void correlation_vector_no_Fourier(const Matrix1D<T> &v1, const Matrix1D<T> &v2,
 }
 
 
-/** Correlation of two matrices
+/** Correlation of two nD images
  * @ingroup FourierOperations
  *
  * Fast calcuation of the correlation matrix on two matrices using Fast Fourier
@@ -414,21 +414,21 @@ void correlation_vector_no_Fourier(const Matrix1D<T> &v1, const Matrix1D<T> &v2,
  * resized
  */
 template <typename T>
-void correlation_matrix(const Matrix2D< T > & m1,
-                        const Matrix2D< T > & m2,
-                        Matrix2D< double >& R)
+void correlation_matrix(const MultidimArray< T > & m1,
+                        const MultidimArray< T > & m2,
+                        MultidimArray< double >& R)
 {
     // Compute the Fourier Transforms
-    Matrix2D< std::complex< double > > FFT1, FFT2;
+    MultidimArray< std::complex< double > > FFT1, FFT2;
     XmippFftw transformer1, transformer2;
     R=m1;
     transformer1.FourierTransform(R, FFT1, false);
-    transformer2.FourierTransform((Matrix2D<T> &)m2, FFT2, false);
+    transformer2.FourierTransform((MultidimArray<T> &)m2, FFT2, false);
 
     // Multiply FFT1 * FFT2'
     double dSize=MULTIDIM_SIZE(R);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT1)
-        FFT1(i, j) *= dSize * conj(FFT2(i, j));
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(FFT1)
+        FFT1(k, i, j) *= dSize * conj(FFT2(k, i, j));
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
@@ -437,25 +437,25 @@ void correlation_matrix(const Matrix2D< T > & m1,
     CenterFFT(R, true);
 }
 
-/** Autocorrelation function of a Xmipp matrix
+/** Autocorrelation function of an image
  * @ingroup FourierOperations
  *
  * Fast calcuation of the autocorrelation matrix of a given one using Fast
  * Fourier Transform. (Using the correlation theorem)
  */
 template <typename T>
-void auto_correlation_matrix(const Matrix2D< T > & Img, Matrix2D< double >& R)
+void auto_correlation_matrix(const MultidimArray< T > & Img, MultidimArray< double >& R)
 {
     // Compute the Fourier Transform
-    Matrix2D< std::complex< double > > FFT1;
+    MultidimArray< std::complex< double > > FFT1;
     XmippFftw transformer1;
     R=Img;
     transformer1.FourierTransform(R, FFT1);
 
     // Multiply FFT1 * FFT1'
     double dSize=MULTIDIM_SIZE(Img);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT1)
-        FFT1(i, j) *= dSize * conj(FFT1(i, j));
+    FOR_ALL_ELEMENTS_IN_MATRIX3D(FFT1)
+        FFT1(k, i, j) *= dSize * conj(FFT1(k, i, j));
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
@@ -470,10 +470,10 @@ void auto_correlation_matrix(const Matrix2D< T > & Img, Matrix2D< double >& R)
 void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double > & m2,
              double sampling_rate,
-             Matrix1D< double >& freq,
-             Matrix1D< double >& frc,
-             Matrix1D< double >& frc_noise,
-             Matrix1D< double >& dpr,
+             MultidimArray< double >& freq,
+             MultidimArray< double >& frc,
+             MultidimArray< double >& frc_noise,
+             MultidimArray< double >& dpr,
              bool skipdpr=false);
 /** 
  * Scale matrix using Fourier transform
@@ -483,7 +483,7 @@ void frc_dpr(MultidimArray< double > & m1,
  * @param Mpmem matrix to scale
  * @param nThreads number of threads
  */ 
-void selfScaleToSizeFourier(int Ydim, int Xdim, Matrix2D<double>& Mpmem, int nthreads=1);
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem, int nthreads=1);
 
 
 /** Get the amplitude or power spectrum of the map in Fourier space
@@ -492,38 +492,38 @@ void selfScaleToSizeFourier(int Ydim, int Xdim, Matrix2D<double>& Mpmem, int nth
 #define POWER_SPECTRUM 0
 #define AMPLITUDE_SPECTRUM 1
 
-void getSpectrum(Matrix3D<double> &Min, 
-                 Matrix1D<double> &spectrum,
+void getSpectrum(MultidimArray<double> &Min,
+                 MultidimArray<double> &spectrum,
                  int spectrum_type=AMPLITUDE_SPECTRUM);
 
 /** Divide the input map in Fourier-space by the spectrum provided.
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void divideBySpectrum(Matrix3D<double> &Min, 
-                      Matrix1D<double> &spectrum,
+void divideBySpectrum(MultidimArray<double> &Min,
+                      MultidimArray<double> &spectrum,
                       bool leave_origin_intact=false);
 
 /** Multiply the input map in Fourier-space by the spectrum provided.
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void multiplyBySpectrum(Matrix3D<double> &Min, 
-                        Matrix1D<double> &spectrum,
+void multiplyBySpectrum(MultidimArray<double> &Min,
+                        MultidimArray<double> &spectrum,
                         bool leave_origin_intact=false);
 
 /** Perform a whitening of the amplitude/power spectrum of a 3D map 
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void whitenSpectrum(Matrix3D<double> &Min, 
-                    Matrix1D<double> &Mout, 
+void whitenSpectrum(MultidimArray<double> &Min,
+                    MultidimArray<double> &Mout,
                     int spectrum_type=AMPLITUDE_SPECTRUM,
                     bool leave_origin_intact=false);
 
 /** Adapts Min to have the same spectrum as spectrum_ref
     If only_amplitudes==true, the amplitude rather than the power spectrum will be equalized
 */
-void adaptSpectrum(Matrix3D<double> &Min, 
-                   Matrix3D<double> &Mout,
-                   const Matrix1D<double> spectrum_ref,
+void adaptSpectrum(MultidimArray<double> &Min,
+                   MultidimArray<double> &Mout,
+                   const MultidimArray<double> spectrum_ref,
                    int spectrum_type=AMPLITUDE_SPECTRUM,
                    bool leave_origin_intact=false);
 
