@@ -42,7 +42,7 @@ class XmippXRPSF
 {
 public:
     // Current OTF
-    Matrix2D<std::complex<double> > OTF;
+    Matrix2D< std::complex<double> > OTF;
 
     /* RX Microscope configuration */
     /// Lens Aperture Radius
@@ -53,7 +53,8 @@ public:
     double Z;
     /// Image plane (CCD position)
     double Zi;
-    /// Minimum resolution condition
+    /* Minimum resolution condition.
+		The same for both axis x-y, due to the simmetry of the lens aperture */
     double dxiMax;
 
 public:
@@ -69,11 +70,13 @@ public:
     /// Magnification
     double Ms;
 
-    /// object space XY-plane sampling rate (nm/pixel)
+    /// object space XY-plane sampling rate
     double dxo;
-    /// object space Z sampling rate (nm/pixel)
+    /// Image space XY-plane sampling rate
+    double dxi;
+    /// object space Z sampling rate
     double dzo;
-    /// Shift
+
 
     /** Empty constructor. */
     XmippXRPSF()
@@ -106,30 +109,25 @@ public:
 
     /** Generate OTF image.
      The sample image is used only to take its dimensions. */
-    template<class T>
-    void generateOTF(const Matrix2D<T> &sample_image) const
-    {
-        generateOTF(YSIZE(sample_image), XSIZE(sample_image));
-        STARTINGX(OTF) = STARTINGX(sample_image);
-        STARTINGY(OTF) = STARTINGY(sample_image);
-    }
+//    template<class T>
+//    void generateOTF(const Matrix2D<T> &sample_image) const
+//    {
+//        generateOTF(YSIZE(sample_image), XSIZE(sample_image));
+//        STARTINGX(OTF) = STARTINGX(sample_image);
+//        STARTINGY(OTF) = STARTINGY(sample_image);
+//    }
 
     /// Generate OTF image.
-    void generateOTF(int Ydim, int Xdim) const;
+    void generateOTF(Matrix2D<double> &Im) ;
+
+    void generateOTF(Matrix2D<std::complex<double> > &Im) ;
+
 };
 
-/// Generate the quadratic phase distribution of a ideal lens using the size of the input matrix
-template<class T>
-Matrix2D<std::complex<double> > lensPD(double Flens, double lambda, double dx,
-                                       const Matrix2D<T> &sample_image)
-{
-    return lensPD(Flens, lambda, dx, XSIZE(sample_image), YSIZE(sample_image));
-}
 
 /// Generate the quadratic phase distribution of a ideal lens
-Matrix2D<std::complex<double> > lensPD(double Flens, double lambda, double dx,
-                                       double Nx, double Ny);
+void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
+
 
 //@}
-
 #endif

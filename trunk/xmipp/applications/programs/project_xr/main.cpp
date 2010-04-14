@@ -58,26 +58,25 @@ int main(int argc, char **argv) {
 //			psf.write(fnPSFOut);
 
 
-		ImageXmipp Im;
 		Matrix2D < std::complex < double > > Ic(128,128);
+//		Matrix2D < double > Ic(128,128);
 
 
 //		Ic = (lensPD(psf.Flens, psf.lambda,psf.dxo, 128, 128));
-		Ic = (lensPD(psf.Flens, psf.lambda,psf.dxo, Ic.xdim, Ic.ydim));
+		lensPD(Ic, psf.Flens, psf.lambda,psf.dxo,psf.dxo);
 
+#define DEBUG
+
+		psf.generateOTF(Ic);
+
+#ifdef DEBUG
+		ImageXmipp Im;
 		Im().resize(Ic);
-
-
-
 		FOR_ALL_ELEMENTS_IN_MATRIX2D(Ic)
-		{
-//			Im(i,j) = atan2(Ic(i,j).imag(),Ic(i,j).real());
-			Im(i,j) = arg(Ic(i,j));
-
-		}
+		         Im(i,j) = arg(Ic(i,j));
 
 		Im.write(fnPSFOut);
-
+#endif
 //		std::cout << Ic << std::endl;
 //		std::cout << Ir << std::endl;
 
@@ -96,3 +95,6 @@ void usage() {
 			<< "  [-w_dir \"[X=1,Y=0]\"             : test \n"
 			<< "  [-w_step <step=0.001>]          : test\n";
 }
+
+#undef DEBUG
+
