@@ -5,6 +5,12 @@
 %include stl.i
 %include cstring.i
 %include std_string.i
+%include "std_vector.i"
+
+namespace std {
+   %template(vectori) vector<int>;
+   %template(vectord) vector<double>;
+};
 
 // Pointers to base classes
 %include cpointer.i

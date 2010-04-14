@@ -9,6 +9,9 @@
 
 %include ../metadata.h
 %include ../metadata_container.h
+namespace std {
+   %template(vectorm) vector<MetaDataLabel>;
+};
 
 
 /*
