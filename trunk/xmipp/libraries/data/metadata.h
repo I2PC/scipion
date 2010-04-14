@@ -184,6 +184,18 @@ public:
 void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
                              double& _max, bool apply_geo);
 
+/** For all objects.
+    @code
+    FOR_ALL_OBJECTS_IN_METADATA(metadata) {
+        double rot; DF.getValue( MDL_ANGLEROT, rot);
+    }
+    @endcode
+*/
+#define FOR_ALL_OBJECTS_IN_METADATA(metadata) \
+    metadata.firstObject(); for (long int kkkk=0; \
+        kkkk<metadata.size(); \
+        kkkk++, metadata.nextObject())
+
 #endif
 /*
  *
