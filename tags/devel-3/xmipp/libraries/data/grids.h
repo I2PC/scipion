@@ -911,8 +911,7 @@ public:
             // Copy values in common
             Image<T> * origin = LV[n];
             SPEED_UP_temps;
-            FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D
-            (VOLMATRIX(*Vol_aux), VOLMATRIX(*origin))
+            FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(VOLMATRIX(*Vol_aux), VOLMATRIX(*origin))
             {
                 VOLVOXEL(*Vol_aux, k, i, j) = VOLVOXEL(*origin, k, i, j);
             }

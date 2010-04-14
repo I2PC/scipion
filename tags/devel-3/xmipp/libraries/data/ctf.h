@@ -102,7 +102,7 @@
 
             Matrix1D<int>    idx(2);  // Indexes for Fourier plane
             Matrix1D<double> freq(2); // Frequencies for Fourier plane
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(Ictf()) {
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(Ictf()) {
                XX(idx)=j; YY(idx)=i;
                FFT_idx2digfreq(Ictf(), idx, freq);
                digfreq2contfreq(freq, freq, CTF.Tm);

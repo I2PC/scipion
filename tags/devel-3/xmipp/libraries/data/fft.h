@@ -79,16 +79,16 @@
 template <typename T>
 void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 {
-    if (XSIZE(idx) < 1 || XSIZE(idx) > 3)
+    if (idx.size() < 1 || idx.size() > 3)
         REPORT_ERROR(1, "FFT_idx2digfreq: Index is not of the correct size");
 
-    freq.resize(XSIZE(idx));
+    freq.resize(idx.size());
 
     int size[3];
     v.getSize(size);
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(idx)
-        FFT_IDX2DIGFREQ(DIRECT_VEC_ELEM(idx, i), size[i], DIRECT_VEC_ELEM(freq, i));
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
+        FFT_IDX2DIGFREQ(idx(i), size[i], freq(i));
 }
 
 /** Frequency to index
@@ -102,16 +102,16 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 template <typename T>
 void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
 {
-    if (XSIZE(freq) < 1 || XSIZE(freq) > 3)
+    if (freq.size() < 1 || freq.size() > 3)
         REPORT_ERROR(1, "digfreq2FFT_idx: freq is not of the correct size");
 
-    idx.resize(XSIZE(freq));
+    idx.resize(freq.size());
 
     int size[3];
     v.getSize(size);
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(idx)
-        DIGFREQ2FFT_IDX(DIRECT_VEC_ELEM(freq, i), size[i], DIRECT_VEC_ELEM(idx, i));
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
+        DIGFREQ2FFT_IDX(freq(i), size[i], idx(i));
 }
 
 /** Digital to Continuous frequency
@@ -125,8 +125,8 @@ inline void digfreq2contfreq(const Matrix1D< double >& digfreq,
                              double pixel_size)
 {
     contfreq.resize(digfreq);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(digfreq)
-		DIRECT_VEC_ELEM(contfreq,i) = DIRECT_VEC_ELEM(digfreq,i) / pixel_size;
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(digfreq)
+		contfreq(i) = digfreq(i) / pixel_size;
 }
 
 /** Continuous to Digital frequency
@@ -140,8 +140,8 @@ inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
                              double pixel_size)
 {
     digfreq.resize(contfreq);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(contfreq)
-		DIRECT_VEC_ELEM(digfreq,i) = DIRECT_VEC_ELEM(contfreq,i) * pixel_size;
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(contfreq)
+		digfreq(i) = contfreq(i) * pixel_size;
 }
 
 /** @defgroup FourierFormat Format conversions
@@ -216,7 +216,7 @@ void RealImag2Complex(const MultidimArray< double > & real,
  * 	 int N1=(int)CEIL(T1/T);
  * 
  * 	 // Fill x with a pulse from -N1 to N1 (-T1 to T1 in continuous)
- * 	 FOR_ALL_ELEMENTS_IN_MATRIX1D(x)
+ * 	 FOR_ALL_ELEMENTS_IN_ARRAY1D(x)
  * 	    if (ABS(i)<=N1) x(i)=1;
  * 
  * 	 // Compute the Fourier transform
@@ -227,13 +227,13 @@ void RealImag2Complex(const MultidimArray< double > & real,
  * 
  * 	 // Compute the frequency axes
  * 	 MultidimArray<double> contfreq(XSIZE(X)), digfreq(XSIZE(X));
- *          FOR_ALL_ELEMENTS_IN_MATRIX1D(X)
+ *          FOR_ALL_ELEMENTS_IN_ARRAY1D(X)
  *              FFT_IDX2DIGFREQ(i,XSIZE(X),digfreq(i));
  * 	 digfreq*=2*PI;
  * 	 contfreq=digfreq/T;
  * 
  * 	 // Show all Fourier transforms
- * 	 FOR_ALL_ELEMENTS_IN_MATRIX1D(X) {
+ * 	 FOR_ALL_ELEMENTS_IN_ARRAY1D(X) {
  * 	     if (digfreq(i)>=0)
  *                 std::cout << digfreq(i) << " " << contfreq(i) << " "
  * 		          << XSIZE(X)*Xmag(i) << " "
@@ -307,12 +307,12 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
             else if (ip >= l)
                 ip -= l;
 
-            aux(ip) = DIRECT_VEC_ELEM(v, i);
+            aux(ip) = DIRECT_A1D_ELEM(v, i);
         }
 
         // Copy the vector
         for (int i = 0; i < l; i++)
-            DIRECT_VEC_ELEM(v, i) = DIRECT_VEC_ELEM(aux, i);
+            DIRECT_A1D_ELEM(v, i) = DIRECT_A1D_ELEM(aux, i);
     }
     else if ( v.getDim() == 2 )
     {
@@ -340,12 +340,12 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                 else if (jp >= l)
                     jp -= l;
                 
-                aux(jp) = DIRECT_MAT_ELEM(v, i, j);
+                aux(jp) = DIRECT_A2D_ELEM(v, i, j);
             }
             
             // Copy the vector
             for (int j = 0; j < l; j++)
-                DIRECT_MAT_ELEM(v, i, j) = DIRECT_VEC_ELEM(aux, j);
+                DIRECT_A2D_ELEM(v, i, j) = DIRECT_A1D_ELEM(aux, j);
         }
         
         // Shift in the Y direction
@@ -368,12 +368,12 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                 else if (ip >= l)
                     ip -= l;
                 
-                aux(ip) = DIRECT_MAT_ELEM(v, i, j);
+                aux(ip) = DIRECT_A2D_ELEM(v, i, j);
             }
             
             // Copy the vector
             for (int i = 0; i < l; i++)
-                DIRECT_MAT_ELEM(v, i, j) = DIRECT_VEC_ELEM(aux, i);
+                DIRECT_A2D_ELEM(v, i, j) = DIRECT_A1D_ELEM(aux, i);
         }
     }
     else if ( v.getDim() == 3 )
@@ -403,12 +403,12 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                     else if (jp >= l)
                         jp -= l;
 
-                    aux(jp) = DIRECT_VOL_ELEM(v, k, i, j);
+                    aux(jp) = DIRECT_A3D_ELEM(v, k, i, j);
                 }
                 
                 // Copy the vector
                 for (int j = 0; j < l; j++)
-                    DIRECT_VOL_ELEM(v, k, i, j) = DIRECT_VEC_ELEM(aux, j);
+                    DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, j);
             }
 
         // Shift in the Y direction
@@ -432,12 +432,12 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                     else if (ip >= l)
                         ip -= l;
                     
-                    aux(ip) = DIRECT_VOL_ELEM(v, k, i, j);
+                    aux(ip) = DIRECT_A3D_ELEM(v, k, i, j);
                 }
                 
                 // Copy the vector
                 for (int i = 0; i < l; i++)
-                    DIRECT_VOL_ELEM(v, k, i, j) = DIRECT_VEC_ELEM(aux, i);
+                    DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, i);
             }
         
         // Shift in the Z direction
@@ -460,12 +460,12 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                     else if (kp >= l)
                         kp -= l;
                     
-                    aux(kp) = DIRECT_VOL_ELEM(v, k, i, j);
+                    aux(kp) = DIRECT_A3D_ELEM(v, k, i, j);
                 }
                 
                 // Copy the vector
                 for (int k = 0; k < l; k++)
-                    DIRECT_VOL_ELEM(v, k, i, j) = DIRECT_VEC_ELEM(aux, k);
+                    DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, k);
             }
     }
     else
@@ -544,7 +544,7 @@ void series_convolution(MultidimArray< T >& series1,
     // Multiply the vectors element by element to do the convolution in the
     // Fourier space
     double dSize=XSIZE(series1);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(FFT1)
         FFT1(i) *= dSize * FFT2(i);
 
     // Recover the convolution result by inverse FFT

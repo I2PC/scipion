@@ -496,16 +496,16 @@ int Micrograph::scissor(const Particle_coords &P, Image<double> &result,
                         else
                             temp = log10((double)(*this)(j, i));
                         if (compute_inverse)
-                            MAT_ELEM(result(),i - i0, j - j0) = (Dmax - temp) / range;
+                            A2D_ELEM(result(),i - i0, j - j0) = (Dmax - temp) / range;
                         else
-                            MAT_ELEM(result(),i - i0, j - j0) = (temp - Dmin) / range;
+                            A2D_ELEM(result(),i - i0, j - j0) = (temp - Dmin) / range;
                     }
                     else
                     {
                         if (compute_inverse)
-                            MAT_ELEM(result(), i - i0, j - j0) = (Dmax - (*this)(j, i)) / range;
+                            A2D_ELEM(result(), i - i0, j - j0) = (Dmax - (*this)(j, i)) / range;
                         else
-                            MAT_ELEM(result(), i - i0, j - j0) = (*this)(j, i);
+                            A2D_ELEM(result(), i - i0, j - j0) = (*this)(j, i);
                     }
                 }
         }
@@ -681,7 +681,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         // Read the micrograph in memory as doubles
         MultidimArray<double> Mmem(Ydim,Xdim);
         MultidimArray<std::complex<double> > MmemFourier;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mmem)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(Mmem)
             Mmem(i,j)=(double)M(j,i);
 
         // Perform the Fourier transform
@@ -719,7 +719,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         b = -omin;
 
         // Copy back data
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mpmem)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(Mpmem)
         {
             pixval=Mpmem(i,j);
             if (Mp.depth() != 32)
@@ -747,7 +747,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
                 for (jj = 0, x = x0; x < xF; x += Xstep, jj++)
                 {
                     pixval = 0;
-                    FOR_ALL_ELEMENTS_IN_MATRIX2D(kernel)
+                    FOR_ALL_ELEMENTS_IN_ARRAY2D(kernel)
                     {
                         int j2 = intWRAP(j + x, 0, xF - 1);
                         int i2 = intWRAP(i + y, 0, yF - 1);

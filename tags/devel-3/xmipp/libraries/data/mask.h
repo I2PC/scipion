@@ -683,14 +683,14 @@ public:
             switch (datatype())
             {
             case INT_MASK:
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask)
-                if (DIRECT_MAT_ELEM(imask, i, j) > 0)
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(imask)
+                if (DIRECT_A2D_ELEM(imask, i, j) > 0)
                     size++;
                 break;
 
             case DOUBLE_MASK:
-                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask)
-                if (DIRECT_MAT_ELEM(dmask, i, j) > 0)
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(dmask)
+                if (DIRECT_A2D_ELEM(dmask, i, j) > 0)
                     size++;
                 break;
             }
@@ -701,14 +701,14 @@ public:
         switch (datatype())
         {
         case INT_MASK:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(imask)
-            if (DIRECT_MAT_ELEM(imask, i, j) > 0)
-                DIRECT_VEC_ELEM(result, p++) = DIRECT_VOL_ELEM(I, k, i, j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(imask)
+            if (DIRECT_A2D_ELEM(imask, i, j) > 0)
+                DIRECT_A1D_ELEM(result, p++) = DIRECT_A3D_ELEM(I, k, i, j);
             break;
         case DOUBLE_MASK:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(dmask)
-            if (DIRECT_MAT_ELEM(dmask, i, j) > 0)
-                DIRECT_VEC_ELEM(result, p++) = DIRECT_VOL_ELEM(I, k, i, j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(dmask)
+            if (DIRECT_A2D_ELEM(dmask, i, j) > 0)
+                DIRECT_A1D_ELEM(result, p++) = DIRECT_A3D_ELEM(I, k, i, j);
             break;
         }
     }
@@ -806,25 +806,25 @@ void computeStats_within_binary_mask(const MultidimArray< int >& mask,
     double sum2 = 0;
     int N = 0;
 
-    max_val = min_val = DIRECT_VOL_ELEM(m, 0, 0, 0);
+    max_val = min_val = DIRECT_A3D_ELEM(m, 0, 0, 0);
 
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask, m)
+    FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, m)
     {
-        if (VOL_ELEM(mask, k, i, j) != 0)
+        if (A3D_ELEM(mask, k, i, j) != 0)
         {
             N++;
 
             // Minimum and maximum
-            if (VOL_ELEM(m, k, i, j) < min_val)
-                min_val = VOL_ELEM(m, k, i, j);
+            if (A3D_ELEM(m, k, i, j) < min_val)
+                min_val = A3D_ELEM(m, k, i, j);
 
-            if (VOL_ELEM(m, k, i, j) > max_val)
-                max_val = VOL_ELEM(m, k, i, j);
+            if (A3D_ELEM(m, k, i, j) > max_val)
+                max_val = A3D_ELEM(m, k, i, j);
 
             // cumulative sums for average and standard deviation
-            sum1 += (double) VOL_ELEM(m, k, i, j);
-            sum2 += ((double) VOL_ELEM(m, k, i, j)) *
-                    ((double) VOL_ELEM(m, k, i, j));
+            sum1 += (double) A3D_ELEM(m, k, i, j);
+            sum2 += ((double) A3D_ELEM(m, k, i, j)) *
+                    ((double) A3D_ELEM(m, k, i, j));
         }
     }
 
@@ -847,18 +847,18 @@ void apply_binary_mask(const MultidimArray< int >& mask, const MultidimArray< T 
                        MultidimArray< T >& m_out, T subs_val = (T) 0)
 {
     m_out.resize(m_in);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(m_out)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(m_out)
     // If in common with the mask
     if (k >= STARTINGZ(mask) && k <= FINISHINGZ(mask) &&
         i >= STARTINGY(mask) && i <= FINISHINGY(mask) &&
         j >= STARTINGX(mask) && j <= FINISHINGX(mask))
-        if (VOL_ELEM(mask, k, i, j) == 0)
-            VOL_ELEM(m_out, k, i, j) = subs_val;
+        if (A3D_ELEM(mask, k, i, j) == 0)
+            A3D_ELEM(m_out, k, i, j) = subs_val;
         else
-            VOL_ELEM(m_out, k, i, j) = VOL_ELEM(m_in, k, i, j);
+            A3D_ELEM(m_out, k, i, j) = A3D_ELEM(m_in, k, i, j);
     // It is not in common, leave the original one
     else
-        VOL_ELEM(m_out, k, i, j) = VOL_ELEM(m_in, k, i, j);
+        A3D_ELEM(m_out, k, i, j) = A3D_ELEM(m_in, k, i, j);
 }
 
 /** Apply continuous mask to a MultidimArray
@@ -872,16 +872,16 @@ void apply_cont_mask(const MultidimArray< double >& mask, const MultidimArray< T
                      MultidimArray< T >& m_out)
 {
     m_out.resize(m_in);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(m_out)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(m_out)
     // If in common with the mask
     if (k >= STARTINGZ(mask) && k <= FINISHINGZ(mask) &&
         i >= STARTINGY(mask) && i <= FINISHINGY(mask) &&
         j >= STARTINGX(mask) && j <= FINISHINGX(mask))
-        VOL_ELEM(m_out, k, i, j) = (T)(VOL_ELEM(m_in, k, i, j)
-                                       * VOL_ELEM(mask, k, i, j));
+        A3D_ELEM(m_out, k, i, j) = (T)(A3D_ELEM(m_in, k, i, j)
+                                       * A3D_ELEM(mask, k, i, j));
     // It is not in common, leave the original one
     else
-        VOL_ELEM(m_out, k, i, j) = VOL_ELEM(m_in, k, i, j);
+        A3D_ELEM(m_out, k, i, j) = A3D_ELEM(m_in, k, i, j);
 }
 
 /** Compute histogram inside mask within its minimum and maximum value (3D)
@@ -920,9 +920,9 @@ void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
 {
     SPEED_UP_temps;
     hist.init(min, max, no_steps);
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask, v)
-    if (VOL_ELEM(mask, k, i, j) != 0)
-        hist.insert_value(VOL_ELEM(v, k, i, j));
+    FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, v)
+    if (A3D_ELEM(mask, k, i, j) != 0)
+        hist.insert_value(A3D_ELEM(v, k, i, j));
 }
 
 #define COUNT_ABOVE 1
@@ -976,22 +976,22 @@ int count_with_mask(const MultidimArray< int >& mask,
 {
     SPEED_UP_temps;
     int N = 0;
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask, m)
-    if (VOL_ELEM(mask, k, i, j))
+    FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, m)
+    if (A3D_ELEM(mask, k, i, j))
         switch (mode)
         {
         case (COUNT_ABOVE):
-                        if (VOL_ELEM(m, k, i, j) >= th1)
+                        if (A3D_ELEM(m, k, i, j) >= th1)
                             N++;
             break;
 
         case (COUNT_BELOW):
-                        if (VOL_ELEM(m, k, i, j) <= th1)
+                        if (A3D_ELEM(m, k, i, j) <= th1)
                             N++;
             break;
 
         case (COUNT_BETWEEN):
-                        if (VOL_ELEM(m, k, i, j) >= th1 && VOL_ELEM(m, k, i, j) <= th2)
+                        if (A3D_ELEM(m, k, i, j) >= th1 && A3D_ELEM(m, k, i, j) <= th2)
                             N++;
             break;
         }

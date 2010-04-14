@@ -220,10 +220,10 @@ double correlation(const MultidimArray< T >& x,
         if (ip >= 0 && ip < Rows)
         {
             if (mask != NULL)
-                if (!DIRECT_VEC_ELEM((*mask), i))
+                if (!DIRECT_A1D_ELEM((*mask), i))
                     continue;
 
-            retval += DIRECT_VEC_ELEM(x, i) * DIRECT_VEC_ELEM(y, ip);
+            retval += DIRECT_A1D_ELEM(x, i) * DIRECT_A1D_ELEM(y, ip);
         }
     }
 
@@ -259,10 +259,10 @@ double correlation(const MultidimArray< T >& x,
 
             if (ip >= 0 && ip < Rows && jp >= 0 && jp < Cols)
                 if (mask != NULL)
-                    if (!DIRECT_MAT_ELEM((*mask), i, j))
+                    if (!DIRECT_A2D_ELEM((*mask), i, j))
                         continue;
 
-            retval += DIRECT_MAT_ELEM(x, i, j) * DIRECT_MAT_ELEM(y, ip, jp);
+            retval += DIRECT_A2D_ELEM(x, i, j) * DIRECT_A2D_ELEM(y, ip, jp);
         }
 
     return retval / (Cols * Rows);
@@ -303,11 +303,11 @@ double correlation(const MultidimArray< T >& x,
                     kp < Slices)
                 {
                     if (mask != NULL)
-                        if (!DIRECT_VOL_ELEM((*mask), k, i, j))
+                        if (!DIRECT_A3D_ELEM((*mask), k, i, j))
                             continue;
 
-                    retval += DIRECT_VOL_ELEM(x, k, i, j) *
-                              DIRECT_VOL_ELEM(y, kp, ip, jp);
+                    retval += DIRECT_A3D_ELEM(x, k, i, j) *
+                              DIRECT_A3D_ELEM(y, kp, ip, jp);
                 }
             }
 
@@ -351,31 +351,31 @@ double correlation_index(const MultidimArray< T >& x,
     // contributions to the covariance! One pixel value afect others.
     if (Contributions != NULL)
     {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x, y)
+        FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(x, y)
         {
             if (mask != NULL)
                 if (!(*mask)(k, i, j))
                     continue;
 
-            aux = (VOL_ELEM(x, k, i, j) - mean_x) * (VOL_ELEM(y, k, i, j) -
+            aux = (A3D_ELEM(x, k, i, j) - mean_x) * (A3D_ELEM(y, k, i, j) -
                     mean_y);
-            VOL_ELEM(*Contributions, k, i, j) = aux;
+            A3D_ELEM(*Contributions, k, i, j) = aux;
             retval += aux;
             n++;
         }
 
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(*Contributions)
-        VOL_ELEM(*Contributions, k, i, j) /= ((stddev_x * stddev_y) * n);
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(*Contributions)
+        A3D_ELEM(*Contributions, k, i, j) /= ((stddev_x * stddev_y) * n);
     }
     else
     {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x, y)
+        FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(x, y)
         {
             if (mask != NULL)
                 if (!(*mask)(k, i, j))
                     continue;
 
-            retval += (VOL_ELEM(x, k, i, j) - mean_x) * (VOL_ELEM(y, k, i, j) -
+            retval += (A3D_ELEM(x, k, i, j) - mean_x) * (A3D_ELEM(y, k, i, j) -
                       mean_y);
             n++;
         }
@@ -399,8 +399,8 @@ double fastCorrentropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
 
     double retval=0;
     double isigma=1.0/sigma;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(x)
-        retval+=G.getValue(isigma*(DIRECT_VEC_ELEM(x,i)-DIRECT_VEC_ELEM(y,i)));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(x)
+        retval+=G.getValue(isigma*(DIRECT_A1D_ELEM(x,i)-DIRECT_A1D_ELEM(y,i)));
     retval/=XSIZE(x);
     return retval;
 }
@@ -414,9 +414,9 @@ double correntropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
 {
     double retval=0;
     double K=-0.5/(sigma*sigma);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(x)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(x)
     {
-        double diff=DIRECT_VOL_ELEM(x,k,i,j)-DIRECT_VOL_ELEM(y,k,i,j);
+        double diff=DIRECT_A3D_ELEM(x,k,i,j)-DIRECT_A3D_ELEM(y,k,i,j);
         retval+=exp(K*diff*diff);
     }
     retval/=XSIZE(x)*YSIZE(x)*ZSIZE(x);
@@ -471,7 +471,7 @@ void alignImages(const MultidimArray< double >& Iref,
  * G(r,mu,sigma)=exp(-0.5 * (r-mu)^t sigma^-1 (r-mu))
  */
 double unnormalizedGaussian2D(const Matrix1D<double> &r,
-    const MultidimArray<double> &mu,
+    const Matrix1D<double> &mu,
     const Matrix2D<double> &sigmainv);
 
 /** Fit Gaussian spot to an image.
@@ -484,7 +484,7 @@ double unnormalizedGaussian2D(const Matrix1D<double> &r,
  * You can choose the number of iterations for the estiamtion.
  */
 void estimateGaussian2D(const MultidimArray<double> &I,
-    double &a, double &b, MultidimArray<double> &mu, Matrix2D<double> &sigma,
+    double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
     bool estimateMu=true, int iterations=10);
 
 /** euclidian distance nD
@@ -500,14 +500,14 @@ double euclidian_distance(const MultidimArray< T >& x,
     double retval = 0;
     long n = 0;
 
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x, y)
+    FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(x, y)
     {
         if (mask != NULL)
             if (!(*mask)(k, i, j))
                 continue;
 
-        retval += (VOL_ELEM(x, k, i, j) - VOL_ELEM(y, k, i, j)) *
-                  (VOL_ELEM(x, k, i, j) - VOL_ELEM(y, k, i, j));
+        retval += (A3D_ELEM(x, k, i, j) - A3D_ELEM(y, k, i, j)) *
+                  (A3D_ELEM(x, k, i, j) - A3D_ELEM(y, k, i, j));
         n++;
     }
 
@@ -560,14 +560,14 @@ double mutual_information(const MultidimArray< T >& x,
     zdim=ZSIZE(y);
     aux_y.resize(xdim * ydim * zdim);
 
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x, y)
+    FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(x, y)
     {
         if (mask != NULL)
             if (!(*mask)(k, i, j))
                 continue;
 
-        aux_x(n) = VOL_ELEM(x, k, i, j);
-        aux_y(n) = VOL_ELEM(y, k, i, j);
+        aux_x(n) = A3D_ELEM(x, k, i, j);
+        aux_y(n) = A3D_ELEM(y, k, i, j);
         n++;
     }
 
@@ -628,33 +628,33 @@ double rms(const MultidimArray< T >& x,
     // If contributions are desired
     if (Contributions != NULL)
     {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x, y)
+        FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(x, y)
         {
             if (mask != NULL)
                 if (!(*mask)(k, i, j))
                     continue;
 
-            aux = (VOL_ELEM(x, k, i, j) - VOL_ELEM(y, k, i, j)) *
-                  (VOL_ELEM(x, k, i, j) - VOL_ELEM(y, k, i, j));
-            VOL_ELEM(*Contributions, k, i, j) = aux;
+            aux = (A3D_ELEM(x, k, i, j) - A3D_ELEM(y, k, i, j)) *
+                  (A3D_ELEM(x, k, i, j) - A3D_ELEM(y, k, i, j));
+            A3D_ELEM(*Contributions, k, i, j) = aux;
             retval += aux;
             n++;
         }
 
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(*Contributions)
-        VOL_ELEM(*Contributions, k, i, j) = sqrt(VOL_ELEM(*Contributions,
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(*Contributions)
+        A3D_ELEM(*Contributions, k, i, j) = sqrt(A3D_ELEM(*Contributions,
                                             k, i, j) / n);
     }
     else
     {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(x, y)
+        FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(x, y)
         {
             if (mask != NULL)
                 if (!(*mask)(k, i, j))
                     continue;
 
-            retval += (VOL_ELEM(x, k, i, j) - VOL_ELEM(y, k, i, j)) *
-                      (VOL_ELEM(x, k, i, j) - VOL_ELEM(y, k, i, j));
+            retval += (A3D_ELEM(x, k, i, j) - A3D_ELEM(y, k, i, j)) *
+                      (A3D_ELEM(x, k, i, j) - A3D_ELEM(y, k, i, j));
             n++;
         }
     }
@@ -1002,10 +1002,10 @@ void median_filter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
             if (j == 1)
             {
                 // Order the first and second vectors of 3 elements
-                sort(DIRECT_MAT_ELEM(m, i - 1, j - 1), DIRECT_MAT_ELEM(m, i, j - 1),
-                     DIRECT_MAT_ELEM(m, i + 1, j - 1), v1);
-                sort(DIRECT_MAT_ELEM(m, i - 1, j), DIRECT_MAT_ELEM(m, i, j),
-                     DIRECT_MAT_ELEM(m, i + 1, j), v2);
+                sort(DIRECT_A2D_ELEM(m, i - 1, j - 1), DIRECT_A2D_ELEM(m, i, j - 1),
+                     DIRECT_A2D_ELEM(m, i + 1, j - 1), v1);
+                sort(DIRECT_A2D_ELEM(m, i - 1, j), DIRECT_A2D_ELEM(m, i, j),
+                     DIRECT_A2D_ELEM(m, i + 1, j), v2);
             }
             else
             {
@@ -1021,18 +1021,18 @@ void median_filter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
             {
                 v1 = v3;
                 v2 = v4;
-                sort(DIRECT_MAT_ELEM(m, i - 1, j + 1), DIRECT_MAT_ELEM(m, i, j + 1),
-                     DIRECT_MAT_ELEM(m, i + 1, j + 1), v3);
+                sort(DIRECT_A2D_ELEM(m, i - 1, j + 1), DIRECT_A2D_ELEM(m, i, j + 1),
+                     DIRECT_A2D_ELEM(m, i + 1, j + 1), v3);
                 fast_merge_sort(v2, v3, v);
                 median(v1, v, out(i, j));
             }
             else
             {
                 // Order the third and fourth vectors of 3 elements
-                sort(DIRECT_MAT_ELEM(m, i - 1, j + 1), DIRECT_MAT_ELEM(m, i, j + 1),
-                     DIRECT_MAT_ELEM(m, i + 1, j + 1), v3);
-                sort(DIRECT_MAT_ELEM(m, i - 1, j + 2), DIRECT_MAT_ELEM(m, i, j + 2),
-                     DIRECT_MAT_ELEM(m, i + 1, j + 2), v4);
+                sort(DIRECT_A2D_ELEM(m, i - 1, j + 1), DIRECT_A2D_ELEM(m, i, j + 1),
+                     DIRECT_A2D_ELEM(m, i + 1, j + 1), v3);
+                sort(DIRECT_A2D_ELEM(m, i - 1, j + 2), DIRECT_A2D_ELEM(m, i, j + 2),
+                     DIRECT_A2D_ELEM(m, i + 1, j + 2), v4);
 
                 // Merge sort the second and third vectors
                 fast_merge_sort(v2, v3, v);
@@ -1086,7 +1086,7 @@ void Smoothing_Shah(MultidimArray< double >& img,
  * The function returns the value of the regularization term.
  */
 double tomographicDiffusion(MultidimArray< double >& V,
-    const MultidimArray< double >& alpha, double lambda);
+    const Matrix1D< double >& alpha, double lambda);
  
 /** Rotational invariant moments
  * @ingroup Filters

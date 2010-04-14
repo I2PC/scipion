@@ -59,7 +59,7 @@ void rotation2DMatrix(double ang, Matrix2D< double > &result)
 /* Translation 2D ---------------------------------------------------------- */
 Matrix2D<double> translation2DMatrix(const Matrix1D<double> &v)
 {
-    if (XSIZE(v) != 2)
+    if (v.size() != 2)
         REPORT_ERROR(1002, "Translation2D_matrix: vector is not in R2");
 
     Matrix2D<double> result(3, 3);
@@ -118,7 +118,7 @@ Matrix2D<double> alignWithZ(const Matrix1D<double> &axis)
     Matrix1D<double>  Axis;
     Matrix2D<double>  A(4, 4);
 
-    if (XSIZE(axis) != 3)
+    if (axis.size() != 3)
         REPORT_ERROR(1002, "alignWithZ: Axis is not in R3");
 
     // Copy axis and compute length of the projection on YZ plane
@@ -168,7 +168,7 @@ Matrix2D<double> rotation3DMatrix(double ang, const Matrix1D<double> &axis)
 /* Translation 3D ---------------------------------------------------------- */
 Matrix2D<double> translation3DMatrix(const Matrix1D<double> &v)
 {
-    if (XSIZE(v) != 3)
+    if (v.size() != 3)
         REPORT_ERROR(1002, "Translation3D_matrix: vector is not in R3");
 
     Matrix2D<double> result(4, 4);
@@ -184,7 +184,7 @@ Matrix2D<double> translation3DMatrix(const Matrix1D<double> &v)
 /* Scale 3D ---------------------------------------------------------------- */
 Matrix2D<double> scale3DMatrix(const Matrix1D<double> &sc)
 {
-    if (XSIZE(sc) != 3)
+    if (sc.size() != 3)
         REPORT_ERROR(1002, "Scale3D_matrix: vector is not in R3");
 
     Matrix2D<double> result(4, 4);

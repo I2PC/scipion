@@ -86,7 +86,7 @@ void Projection::assign(const Projection &P)
 // Projection from a voxel volume ==========================================
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
-void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
+void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi,
 		    const Matrix1D<double> *roffset)
 {
@@ -118,8 +118,8 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
     double half_y_sign = 0.5 * y_sign;
     double half_z_sign = 0.5 * z_sign;
 
-    Matrix2D<double> &mP = P();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(mP)
+    MultidimArray<double> &mP = P();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(mP)
     {
         Matrix1D<double> r_p(3); // r_p are the coordinates of the
         // pixel being projected in the
@@ -262,7 +262,7 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
             while ((alpha_max - alpha) > XMIPP_EQUAL_ACCURACY);
         } // for
 
-        MAT_ELEM(P(), i, j) = ray_sum * 0.25;
+        A2D_ELEM(P(), i, j) = ray_sum * 0.25;
 #ifdef DEBUG
         std::cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << std::endl;
 #endif
@@ -272,7 +272,7 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 
 /* Project a voxel volume with respect to an offcentered axis -------------- */
 //#define DEBUG
-void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
+void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
    int Ydim, int Xdim, double axisRot, double axisTilt,
    const Matrix1D<double> &raxis, double angle, double inplaneRot,
    const Matrix1D<double> &rinplane)
@@ -314,7 +314,7 @@ void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
 
 // Sjors, 16 May 2005
 // This routine may give volumes with spurious high frequencies.....
-void singleWBP(Matrix3D<double> &V, Projection &P)
+void singleWBP(MultidimArray<double> &V, Projection &P)
 {
     SPEED_UP_temps;
 
@@ -340,8 +340,8 @@ void singleWBP(Matrix3D<double> &V, Projection &P)
     double half_y_sign = 0.5 * y_sign;
     double half_z_sign = 0.5 * z_sign;
 
-    Matrix2D<double> &mP = P();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(mP)
+    MultidimArray<double> &mP = P();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(mP)
     {
         Matrix1D<double> r_p(3); // r_p are the coordinates of the
         // pixel being projected in the
@@ -412,7 +412,7 @@ void singleWBP(Matrix3D<double> &V, Projection &P)
 
             double diff_alpha = XMIPP_MIN(XMIPP_MIN(diffx, diffy), diffz);
 
-            VOL_ELEM(V, ZZ(idx), YY(idx), XX(idx)) += diff_alpha * MAT_ELEM(P(), i, j);
+            A3D_ELEM(V, ZZ(idx), YY(idx), XX(idx)) += diff_alpha * A2D_ELEM(P(), i, j);
 
             if (ABS(diff_alpha - diffx) <= XMIPP_EQUAL_ACCURACY)
             {
@@ -703,7 +703,7 @@ void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
                 // Be careful that you cannot skip any blob, although its
                 // value be 0, because it is useful for norm_proj
                 // unless it doesn't belong to the reconstruction mask
-                if (MAT_ELEM(mask, i, j) && grid.is_interesting(grid_index))
+                if (A2D_ELEM(mask, i, j) && grid.is_interesting(grid_index))
                 {
                     // Look for the position in the deformed projection
                     M2x2_BY_V2x1(defactprj, A, actprj);

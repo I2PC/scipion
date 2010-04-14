@@ -89,7 +89,7 @@
  * // Histogram computation
  * for (int i=STARTINGY(A); i<=FINISHINGY(A); i++)
  *     for (int j=STARTINGX(A); j<=FINISHINGX(A); j++)
- *         hist.insert_value(MAT_ELEM(A,i,j));
+ *         hist.insert_value(A2D_ELEM(A,i,j));
  *
  * // Effective range computation
  * eff0 = hist.percentil(2.5);
@@ -416,7 +416,7 @@ void compute_hist(const MultidimArray< T >& v, histogram1D& hist,
     hist.init(min, max, no_steps);
 
     Matrix1D< int > r(2);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
         hist.insert_value(v(r));
 }
 
@@ -495,11 +495,11 @@ void reject_outliers(T& v, double percentil_out = 0.25)
     double eff0 = hist.percentil(percentil_out / 2);
     double effF = hist.percentil(100 - percentil_out / 2);
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
-	if (DIRECT_VEC_ELEM(v,i) < eff0)
-            DIRECT_VEC_ELEM(v,i) = eff0;
-	else if (DIRECT_VEC_ELEM(v,i) > effF)
-            DIRECT_VEC_ELEM(v,i) = effF;
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
+	if (DIRECT_A1D_ELEM(v,i) < eff0)
+            DIRECT_A1D_ELEM(v,i) = eff0;
+	else if (DIRECT_A1D_ELEM(v,i) > effF)
+            DIRECT_A1D_ELEM(v,i) = effF;
 }
 
 /** Histogram equalization and re-quantization
@@ -521,7 +521,7 @@ void histogram_equalization(MultidimArray<T>& v, int bins = 8)
     norm_sum(0) = hist(0);
 
     for (int i = 1; i < hist_steps; i++)
-        dVi(norm_sum,i) = norm_sum(i - 1) + hist(i);    
+        norm_sum(i) = norm_sum(i - 1) + hist(i);
     norm_sum /= MULTIDIM_SIZE(v);
 
     // array to store the boundary pixels of bins

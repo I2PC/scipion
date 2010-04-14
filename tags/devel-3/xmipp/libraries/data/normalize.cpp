@@ -92,7 +92,7 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     MultidimArray<double> localVariance;
     localVariance.initZeros(I);
     double meanVariance=0;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
     {
         if (mask(i,j)==0) continue;
         // Center a mask of size 5x5 and estimate the variance within the mask
@@ -115,7 +115,7 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     // the same as the variance in the whole image
     double iFu=1/icdf_FSnedecor(4*L*L+4*L,N-1,0.975);
     double iFl=1/icdf_FSnedecor(4*L*L+4*L,N-1,0.025);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(localVariance)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(localVariance)
     {
         if (localVariance(i,j)==0) mask(i,j)=0;
         else
@@ -142,7 +142,7 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     if (tomography0)
     {
         double adjustedStddev=sigma0*cosTilt;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
             if (!tiltMask || ABS(j)<Xdimtilt)
                 I(i,j)=(I(i,j)/cosTilt-mu0)/adjustedStddev;
             else if (tiltMask)
@@ -152,7 +152,7 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     {
         double adjustedStddev=sqrt(meanVariance)*cosTilt;
         adjustedStddev=stddev*cosTilt;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
             if (!tiltMask || ABS(j)<Xdimtilt)
                 I(i,j)=(I(i,j)-avg)/adjustedStddev;
             else if (tiltMask)
@@ -218,22 +218,22 @@ void normalize_ramp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
     // Fit a least squares plane through the background pixels
     allpoints.clear();
     I.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
-        if (MAT_ELEM(bg_mask, i, j))
+        if (A2D_ELEM(bg_mask, i, j))
         {
             onepoint.x = j;
             onepoint.y = i;
-            onepoint.z = MAT_ELEM(I, i, j);
+            onepoint.z = A2D_ELEM(I, i, j);
             onepoint.w = 1.;
             allpoints.push_back(onepoint);
         }
     }
     least_squares_plane_fit(allpoints, pA, pB, pC);
     // Substract the plane from the image
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
-        MAT_ELEM(I, i, j) -= pA * j + pB * i + pC;
+        A2D_ELEM(I, i, j) -= pA * j + pB * i + pC;
     }
     // Divide by the remaining std.dev. in the background region
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
@@ -265,15 +265,15 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,stddevbg);
 
     // Fit plane through those pixels within +/- threshold*sigma
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
-        if (MAT_ELEM(bg_mask, i, j))
+        if (A2D_ELEM(bg_mask, i, j))
         {
-	    if ( ABS(avgbg - MAT_ELEM(I, i, j)) < threshold * stddevbg)
+	    if ( ABS(avgbg - A2D_ELEM(I, i, j)) < threshold * stddevbg)
 	    {
 		onepoint.x = j;
 		onepoint.y = i;
-		onepoint.z = MAT_ELEM(I, i, j);
+		onepoint.z = A2D_ELEM(I, i, j);
 		onepoint.w = 1.;
 		allpoints.push_back(onepoint);
 	    }
@@ -282,22 +282,22 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
     least_squares_plane_fit(allpoints, pA, pB, pC);
 
     // Substract the plane from the image
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
-        MAT_ELEM(I, i, j) -= pA * j + pB * i + pC;
+        A2D_ELEM(I, i, j) -= pA * j + pB * i + pC;
     }
 
     // Get std.dev. of the background pixels within +/- threshold*sigma 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
-        if (MAT_ELEM(bg_mask, i, j))
+        if (A2D_ELEM(bg_mask, i, j))
         {
-	    if ( ABS(MAT_ELEM(I, i, j)) < threshold * stddevbg)
+	    if ( ABS(A2D_ELEM(I, i, j)) < threshold * stddevbg)
 	    {
 		N++;
-		sum1 +=  (double) MAT_ELEM(I, i, j);
-		sum2 += ((double) MAT_ELEM(I, i, j)) * 
-		    ((double) MAT_ELEM(I, i, j));
+		sum1 +=  (double) A2D_ELEM(I, i, j);
+		sum2 += ((double) A2D_ELEM(I, i, j)) * 
+		    ((double) A2D_ELEM(I, i, j));
 	    }
 	}
     }
@@ -307,15 +307,15 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
 
     // Replace pixels outside +/- threshold*sigma by samples from 
     // a gaussian with avg-plane and newstddev
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
-        if (MAT_ELEM(bg_mask, i, j))
+        if (A2D_ELEM(bg_mask, i, j))
         {
-	    if ( ABS(MAT_ELEM(I, i, j)) > threshold * stddevbg)
+	    if ( ABS(A2D_ELEM(I, i, j)) > threshold * stddevbg)
 	    {
 		// get local average
 		aux = pA * j + pB * i + pC;
-		MAT_ELEM(I, i, j)=rnd_gaus(aux, newstddev );
+		A2D_ELEM(I, i, j)=rnd_gaus(aux, newstddev );
 	    }
 	}
     }
@@ -618,13 +618,13 @@ void Normalize_parameters::apply_geo_mask(Image<double>& img)
     tmp.resize(bg_mask_bck);
     typeCast(bg_mask_bck, tmp);
 
-    double outside = DIRECT_MAT_ELEM(tmp, 0, 0);
+    double outside = DIRECT_A2D_ELEM(tmp, 0, 0);
 
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     selfApplyGeometry(3, tmp, img.getTransformationMatrix(), IS_NOT_INV, DONT_WRAP, outside);
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(bg_mask)
-        dMij(bg_mask,i,j)=ROUND(dMij(tmp,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(bg_mask)
+        dAij(bg_mask,i,j)=ROUND(dAij(tmp,i,j));
 }
 
 void Normalize_parameters::apply(Image<double> &img)
@@ -640,21 +640,21 @@ void Normalize_parameters::apply(Image<double> &img)
 
         if ((min - avg) / stddev < thresh_black_dust && remove_black_dust)
         {
-            FOR_ALL_ELEMENTS_IN_MATRIX3D(img())
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
             {
-                zz = (VOL_ELEM(img(), k, i, j) - avg) / stddev;
+                zz = (A3D_ELEM(img(), k, i, j) - avg) / stddev;
                 if (zz < thresh_black_dust)
-                    VOL_ELEM(img(), k, i, j) = rnd_gaus(avg,stddev);
+                    A3D_ELEM(img(), k, i, j) = rnd_gaus(avg,stddev);
             }
         }
 
         if ((max - avg) / stddev > thresh_white_dust && remove_white_dust)
         {
-            FOR_ALL_ELEMENTS_IN_MATRIX3D(img())
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
             {
-                zz = (VOL_ELEM(img(), k, i, j) - avg) / stddev;
+                zz = (A3D_ELEM(img(), k, i, j) - avg) / stddev;
                 if (zz > thresh_white_dust)
-                    VOL_ELEM(img(), k, i, j) = rnd_gaus(avg,stddev);
+                    A3D_ELEM(img(), k, i, j) = rnd_gaus(avg,stddev);
             }
         }
     }
@@ -693,8 +693,8 @@ void Normalize_parameters::apply(Image<double> &img)
     case RANDOM:
         a = rnd_unif(a0, aF);
         b = rnd_unif(b0, bF);
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(img())
-            VOL_ELEM(img(), k, i, j) = a * VOL_ELEM(img(), k, i, j) + b;
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
+            A3D_ELEM(img(), k, i, j) = a * A3D_ELEM(img(), k, i, j) + b;
         break;
     }
 }

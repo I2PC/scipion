@@ -218,13 +218,13 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
 template<typename T>
 void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
 {
-    if (A.xdim == 0)
+    if (A.mdimx == 0)
         REPORT_ERROR(1108, "Solve: Matrix is empty");
 
-    if (A.xdim != A.ydim)
+    if (A.mdimx != A.mdimy)
         REPORT_ERROR(1109, "Solve: Matrix is not squared");
 
-    if (A.xdim != b.xdim)
+    if (A.mdimx != b.size())
         REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
 
     if (b.isRow())
@@ -244,13 +244,13 @@ template<typename T>
 void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
                   Matrix1D< double >& result, double tolerance)
 {
-    if (A.xdim == 0)
+    if (A.mdimx == 0)
         REPORT_ERROR(1108, "Solve: Matrix is empty");
 
-    if (A.xdim != A.ydim)
+    if (A.mdimx != A.mdimy)
         REPORT_ERROR(1109, "Solve: Matrix is not squared");
 
-    if (A.xdim != b.xdim)
+    if (A.mdimx != b.size())
         REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
 
     if (b.isRow())
@@ -265,12 +265,12 @@ void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
     // Here is checked if eigenvalues of the svd decomposition are acceptable
     // If a value is lower than tolerance, the it's zeroed, as this increases
     // the precision of the routine.
-    for (int i = 0; i < w.xdim; i++)
+    for (int i = 0; i < w.size(); i++)
     	if (w(i) < tolerance)
     		w(i) = 0;
 
     // Set size of matrices
-    result.resize(b.xdim);
+    result.resize(b.size());
 
     // Xmipp interface that calls to svdksb of numerical recipes
     Matrix1D< double > bd;
@@ -282,20 +282,20 @@ void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
 template<typename T>
 void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result)
 {
-    if (A.xdim == 0)
+    if (A.mdimx == 0)
         REPORT_ERROR(1108, "Solve: Matrix is empty");
 
-    if (A.xdim != A.ydim)
+    if (A.mdimx != A.mdimy)
         REPORT_ERROR(1109, "Solve: Matrix is not squared");
 
-    if (A.ydim != b.ydim)
+    if (A.mdimy != b.mdimy)
         REPORT_ERROR(1102, "Solve: Different sizes of A and b");
 
     // Solve
     result = b;
     Matrix2D<T> Aux = A;
-    gaussj(Aux.adaptForNumericalRecipes2(), Aux.ydim,
-           result.adaptForNumericalRecipes2(), b.xdim);
+    gaussj(Aux.adaptForNumericalRecipes2(), Aux.mdimy,
+           result.adaptForNumericalRecipes2(), b.mdimx);
 }
 
 

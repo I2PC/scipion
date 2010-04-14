@@ -81,7 +81,7 @@ unsigned long   gettypesize(DataType type);
 
 #define SWAPTRIG     65535   // Threshold file z size above which bytes are swapped
 // For fast access to pixel values (and for backwards compatibility of the code)
-#define IMGPIXEL(I, i, j) MAT_ELEM(((I).data), (i), (j))
+#define IMGPIXEL(I, i, j) A2D_ELEM(((I).data), (i), (j))
 
 /** Voxel access.
  * @ingroup ImagesSpeedUp
@@ -96,7 +96,7 @@ unsigned long   gettypesize(DataType type);
  * VOLVOXEL(I, 2, -3, -3) = VOLVOXEL(I, 2, -3, -2);
  * @endcode
  */
-#define VOLVOXEL(V, k, i, j) VOL_ELEM(((V).data), (k), (i), (j))
+#define VOLVOXEL(V, k, i, j) A3D_ELEM(((V).data), (k), (i), (j))
 
 /** Physical voxel access.
  * @ingroup ImagesSpeedUp
@@ -111,9 +111,9 @@ unsigned long   gettypesize(DataType type);
  *     DIRECT_VOLVOXEL(V, 0, 0, 0) << std::endl;
  * @endcode
  */
-#define DIRECT_VOLVOXEL(V, k, i, j) DIRECT_VOL_ELEM(((V).img), (k), (i), (j))
+#define DIRECT_VOLVOXEL(V, k, i, j) DIRECT_A3D_ELEM(((V).img), (k), (i), (j))
 
-#define DIRECT_IMGPIXEL(I, i, j) DIRECT_MAT_ELEM(((I).data), (i), (j))
+#define DIRECT_IMGPIXEL(I, i, j) DIRECT_A2D_ELEM(((I).data), (i), (j))
 #define IMGMATRIX(I) ((I).data)
 
 

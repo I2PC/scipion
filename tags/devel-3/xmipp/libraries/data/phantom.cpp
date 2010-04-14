@@ -872,7 +872,7 @@ void Feature::draw_in(Image<double> *V, int colour_mode, double colour)
     std::cout << "   Corner 1" << corner1.transpose() << std::endl;
     std::cout << "   Corner 2" << corner2.transpose() << std::endl;
 #endif
-    FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(corner1, corner2)
     {
         inside = voxel_inside_by_normalized_density(r, aux1, aux2);
 #ifdef DEBUG
@@ -906,7 +906,7 @@ void Feature::sketch_in(Image<double> *V, double colour)
     int               inside;
 
     corners(V, corner1, corner2);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(corner1, corner2)
     {
         inside = voxel_inside(r, aux1, aux2);
         if (inside != 0 && inside != 8)
@@ -2127,7 +2127,7 @@ void Phantom::label(Image<double> *V)
     Matrix1D<double> r(3), aux1(3), aux2(3);
     (*V)().resize(zdim, ydim, xdim);
     (*V)().setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(VOLMATRIX(*V))
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(VOLMATRIX(*V))
     {
         ZZ(r) = k;
         YY(r) = i;
@@ -2248,7 +2248,7 @@ const
         (*P)().resize(ydim, xdim);
         (*P)().setXmippOrigin();
     }
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(*P))
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(*P))
     {
 #ifdef DEBUG
         std::cout << "Processing (" << i << "," << j << ")" << std::endl;

@@ -53,7 +53,7 @@
  * }
  * @endcode
  */
-#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(m) \
+#define FOR_ALL_ELEMENTS_IN_MATRIX2D(m) \
     for (int i=0; i<=mdimy; i++) \
         for (int j=0; j<=mdimx; j++)
 
@@ -681,7 +681,7 @@ public:
     {
         Matrix1D<T> result;
 
-        if (mdimx != op1.mdimx)
+        if (mdimx != op1.size())
             REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
 
         if (!op1.isCol())
@@ -690,7 +690,7 @@ public:
         result.initZeros(mdimy);
 
         for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < op1.mdimx; j++)
+            for (int j = 0; j < op1.size(); j++)
                 result(i) += (*this)(i, j) * op1(j);
 
         result.setCol();
@@ -902,7 +902,7 @@ public:
     void fromVector(const Matrix1D<T>& op1)
     {
         // Null vector => Null matrix
-        if (op1.vdim == 0)
+        if (op1.size() == 0)
         {
             clear();
             return;
@@ -911,16 +911,16 @@ public:
         // Look at shape and copy values
         if (op1.isRow())
         {
-            resize(1, op1.vdim);
+            resize(1, op1.size());
 
-            for (int j = 0; j < op1.vdim; j++)
+            for (int j = 0; j < op1.size(); j++)
                 (*this)(0, j) = op1( j);
         }
         else
         {
-            resize(op1.vdim, 1);
+            resize(op1.size(), 1);
 
-            for (int i = 0; i < op1.vdim; i++)
+            for (int i = 0; i < op1.size(); i++)
             	(*this)(i, 0) = op1( i);
         }
     }
@@ -1070,7 +1070,7 @@ public:
         if (i < 0 || i >= mdimy)
             REPORT_ERROR(1103, "setRow: Matrix subscript (i) out of range");
 
-        if (v.vdim != mdimx)
+        if (v.size() != mdimx)
             REPORT_ERROR(1102,
                          "setRow: Vector dimension different from matrix one");
 
@@ -1099,7 +1099,7 @@ public:
         if (j < 0 || j>= mdimx)
             REPORT_ERROR(1103, "setCol: Matrix subscript (j) out of range");
 
-        if (v.vdim != mdimy)
+        if (v.size() != mdimy)
             REPORT_ERROR(1102,
                          "setCol: Vector dimension different from matrix one");
 
@@ -1156,6 +1156,27 @@ public:
         return d;
     }
 
+    /** Algebraic transpose of a Matrix
+     * @ingroup VectorsUtilities
+     *
+     * You can use the transpose in as complex expressions as you like. The
+     * origin of the vector is not changed.
+     *
+     * @code
+     * v2 = v1.transpose();
+     * @endcode
+     */
+    Matrix2D<T> transpose() const
+    {
+    	T aux;
+    	Matrix2D<T> result(XSIZE(*this), YSIZE(*this));
+
+    	FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
+    	result(i, j) = (*this)(j, i);
+
+    	return result;
+    }
+
     /** Inverse of a matrix
      * @ingroup MatricesUtilities
      *
@@ -1184,7 +1205,7 @@ public:
 
         // Compute W^-1
         bool invertible = false;
-        for (int i = 0; i < w.vdim; i++)
+        for (int i = 0; i < w.size(); i++)
         {
             if (ABS(w(i)) > tol)
             {
@@ -1264,7 +1285,7 @@ template<typename T>
 void multiplyMatrixbyVector(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
 {
 
-    if (A.mdimx != b.vdim)
+    if (A.mdimx != b.size())
         REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
 
     if (!b.isCol())
@@ -1273,7 +1294,7 @@ void multiplyMatrixbyVector(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D
     result.initZeros(A.mdimy);
 
     for (int i = 0; i < A.mdimy; i++)
-        for (int j = 0; j < b.vdim; j++)
+        for (int j = 0; j < b.size(); j++)
             result(i) += A(i, j) * b(j);
 
     result.setCol();
@@ -1292,7 +1313,7 @@ void multiplyMatrixbyVector(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D
 template<typename T>
 void multiplyVectorbyMatrix(const Matrix1D<T>& b, const Matrix2D<T>& A, Matrix1D<T>& result)
 {
-    if (b.vdim != A.mdimy)
+    if (b.size() != A.mdimy)
         REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
 
     if (!b.isRow())
@@ -1322,7 +1343,7 @@ void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d)
 template<typename T>
 void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b)
 {
-    lubksb(LU.adaptForNumericalRecipes2(), indx.vdim,
+    lubksb(LU.adaptForNumericalRecipes2(), indx.size(),
            indx.adaptForNumericalRecipes(),
            b.adaptForNumericalRecipes());
 }

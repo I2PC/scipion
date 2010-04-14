@@ -49,11 +49,11 @@ void Whole2Half(const MultidimArray<std::complex<double> > &in,
         out.initZeros(ldim, XSIZE(in));
         // Fill first column only half
         for (int j = 0; j < ldim; j++)
-            dMij(out, 0, j) = dMij(in, 0, j);
+            dAij(out, 0, j) = dAij(in, 0, j);
         // Fill rest
         for (int i = 1; i < ldim; i++)
             for (int j = 0; j < XSIZE(in); j++)
-                dMij(out, i, j) = dMij(in, i, j);
+                dAij(out, i, j) = dAij(in, i, j);
     }
     else
         REPORT_ERROR(1,"ERROR: Whole2Half only implemented for 1D and 2D multidimArrays");
@@ -81,18 +81,18 @@ void Half2Whole(const MultidimArray<std::complex<double> > &in,
         // Old part
         for (int i = 0; i < YSIZE(in); i++)
             for (int j = 0; j < XSIZE(in); j++)
-                dMij(out, i, j) = dMij(in, i, j);
+                dAij(out, i, j) = dAij(in, i, j);
 
         // Complete first column of old part
         for (int j = YSIZE(in); j < XSIZE(in); j++)
-            dMij(out, 0, j) = conj(dMij(in, 0, XSIZE(in) - j));
+            dAij(out, 0, j) = conj(dAij(in, 0, XSIZE(in) - j));
 
         // New part
         for (int i = YSIZE(in); i < oridim; i++)
         {
-            dMij(out, i, 0) = conj(dMij(in, oridim - i, 0));
+            dAij(out, i, 0) = conj(dAij(in, oridim - i, 0));
             for (int j = 1; j < XSIZE(in); j++)
-                dMij(out, i, j) = conj(dMij(in, oridim - i, XSIZE(in) - j));
+                dAij(out, i, j) = conj(dAij(in, oridim - i, XSIZE(in) - j));
         }
     }
 }
@@ -280,17 +280,17 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v,
 	v.checkDimension(1);
     double dotp, a, b, c, d, ac, bd, ab_cd;
     double xxshift = xshift / (double)XSIZE(v);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
     {
         dotp = -2 * PI * ((double)(i) * xxshift);
         a = cos(dotp);
         b = sin(dotp);
-        c = DIRECT_VEC_ELEM(v,i).real();
-        d = DIRECT_VEC_ELEM(v,i).imag();
+        c = DIRECT_A1D_ELEM(v,i).real();
+        d = DIRECT_A1D_ELEM(v,i).imag();
         ac = a * c;
         bd = b * d;
         ab_cd = (a + b) * (c + d); // (ab_cd-ac-bd = ad+bc : but needs 4 multiplications)
-        DIRECT_VEC_ELEM(v,i) = std::complex<double>(ac - bd, ab_cd - ac - bd);
+        DIRECT_A1D_ELEM(v,i) = std::complex<double>(ac - bd, ab_cd - ac - bd);
     }
 }
 
@@ -301,17 +301,17 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v,
     double dotp, a, b, c, d, ac, bd, ab_cd;
     double xxshift = xshift / (double)XSIZE(v);
     double yyshift = yshift / (double)YSIZE(v);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(v)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(v)
     {
         dotp = -2 * PI * ((double)(j) * xxshift + (double)(i) * yyshift);
         a = cos(dotp);
         b = sin(dotp);
-        c = DIRECT_MAT_ELEM(v,i,j).real();
-        d = DIRECT_MAT_ELEM(v,i,j).imag();
+        c = DIRECT_A2D_ELEM(v,i,j).real();
+        d = DIRECT_A2D_ELEM(v,i,j).imag();
         ac = a * c;
         bd = b * d;
         ab_cd = (a + b) * (c + d);
-        DIRECT_MAT_ELEM(v,i,j) = std::complex<double>(ac - bd, ab_cd - ac - bd);
+        DIRECT_A2D_ELEM(v,i,j) = std::complex<double>(ac - bd, ab_cd - ac - bd);
     }
 }
 
@@ -323,17 +323,17 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v,
     double xxshift = xshift / (double)XSIZE(v);
     double yyshift = yshift / (double)YSIZE(v);
     double zzshift = zshift / (double)ZSIZE(v);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(v)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(v)
     {
         dotp = -2 * PI * ((double)(j) * xxshift + (double)(i) * yyshift + (double)(k) * zzshift);
         a = cos(dotp);
         b = sin(dotp);
-        c = DIRECT_VOL_ELEM(v,k,i,j).real();
-        d = DIRECT_VOL_ELEM(v,k,i,j).imag();
+        c = DIRECT_A3D_ELEM(v,k,i,j).real();
+        d = DIRECT_A3D_ELEM(v,k,i,j).imag();
         ac = a * c;
         bd = b * d;
         ab_cd = (a + b) * (c + d);
-        DIRECT_VOL_ELEM(v,k,i,j) = std::complex<double>(ac - bd, ab_cd - ac - bd);
+        DIRECT_A3D_ELEM(v,k,i,j) = std::complex<double>(ac - bd, ab_cd - ac - bd);
     }
 }
 
@@ -419,7 +419,7 @@ void numerical_derivative(Matrix2D<double> &M, Matrix2D<double> &D,
     // Savitzky-Golay filter is returned in wrap-around style, so
     // correct it to use with the convolution routine
     Matrix1D<double> coefficients(dim);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(coefficients)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(coefficients)
     {
         int j = i + window_size;
         if (j < dim)

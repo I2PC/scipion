@@ -248,10 +248,10 @@ void applyGeometry(int SplineDegree,
     if (&V1 == &V2)
         REPORT_ERROR(1101,"ApplyGeometry: Input array cannot be the same as output array");
 
-    if ( V1.getDim()==2 && ((XSIZE(A) != 3) || (YSIZE(A) != 3)) )
+    if ( V1.getDim()==2 && ((A.mdimx != 3) || (A.mdimy != 3)) )
         REPORT_ERROR(1102,"ApplyGeometry: 2D transformation matrix is not 3x3");
 
-    if ( V1.getDim()==3 && ((XSIZE(A) != 4) || (YSIZE(A) != 4)) )
+    if ( V1.getDim()==3 && ((A.mdimx != 4) || (A.mdimy != 4)) )
         REPORT_ERROR(1103,"ApplyGeometry: 3D transformation matrix is not 4x4");
 
     if (A.isIdentity())
@@ -296,9 +296,9 @@ void applyGeometry(int SplineDegree,
         if (outside != 0.)
         {
             // Initialise output matrix with value=outside
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(V2)
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(V2)
             {
-                DIRECT_MAT_ELEM(V2, i, j) = outside;
+                DIRECT_A2D_ELEM(V2, i, j) = outside;
             }
         }
 
@@ -443,17 +443,17 @@ void applyGeometry(int SplineDegree,
                                 tmp += (T)(wy * wx * DIRECT_NZYX_ELEM(V1, n, 0, n2, m2));
                         }
 
-                        dMij(V2, i, j) = tmp;
+                        dAij(V2, i, j) = tmp;
                     }
                     else
                     {
                         // B-spline interpolation
 
-                        dMij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D(
+                        dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D(
                             xp, yp, SplineDegree);
                     }
 #ifdef DEBUG_APPYGEO
-                    std::cout << "   val= " << dMij(V2, i, j) << std::endl;
+                    std::cout << "   val= " << dAij(V2, i, j) << std::endl;
 #endif
                 }
 
@@ -473,7 +473,7 @@ void applyGeometry(int SplineDegree,
         int cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
         double wx, wy, wz;
 
-        // Find center of Matrix3D
+        // Find center of MultidimArray
         cen_z = (int)(V2.zdim / 2);
         cen_y = (int)(V2.ydim / 2);
         cen_x = (int)(V2.xdim / 2);
@@ -507,9 +507,9 @@ void applyGeometry(int SplineDegree,
             STARTINGY(Bcoeffs) = (int) minyp;
         }
 
-        // Now we go from the output Matrix3D to the input Matrix3D, ie, for any
-        // voxel in the output Matrix3D we calculate which are the corresponding
-        // ones in the original Matrix3D, make an interpolation with them and put
+        // Now we go from the output MultidimArray to the input MultidimArray, ie, for any
+        // voxel in the output MultidimArray we calculate which are the corresponding
+        // ones in the original MultidimArray, make an interpolation with them and put
         // this value at the output voxel
 
         // V2 is not initialised to 0 because all its pixels are rewritten
@@ -517,7 +517,7 @@ void applyGeometry(int SplineDegree,
             for (int i = 0; i < V2.ydim; i++)
             {
                 // Calculate position of the beginning of the row in the output
-                // Matrix3D
+                // MultidimArray
                 x = -cen_x;
                 y = i - cen_y;
                 z = k - cen_z;
@@ -680,19 +680,19 @@ void applyGeometry(int SplineDegree,
                                     "tmp= " << tmp << std::endl;
 #endif
 
-                            dVkij(V2 , k, i, j) = tmp;
+                            dAkij(V2 , k, i, j) = tmp;
                         }
                         else
                         {
                             // B-spline interpolation
 
-                            dVkij(V2, k, i, j) =
+                            dAkij(V2, k, i, j) =
                                 (T) Bcoeffs.interpolatedElementBSpline3D(xp, yp, zp,SplineDegree);
 
                         }
                     }
                     else
-                        dVkij(V2, k, i, j) = outside;
+                        dAkij(V2, k, i, j) = outside;
 
 
                     // Compute new point inside input image
@@ -1103,7 +1103,7 @@ void radialAverage(const MultidimArray< T >& m,
     Matrix1D< double > idx(3);
 
     // If center_of_rot was written for 2D image
-    if (XSIZE(center_of_rot) < 3)
+    if (center_of_rot.size() < 3)
         center_of_rot.resize(3);
 
     // First determine the maximum distance that one should expect, to set the
@@ -1149,7 +1149,7 @@ void radialAverage(const MultidimArray< T >& m,
 
     // Perform the radial sum and count pixels that contribute to every
     // distance
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(m)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(m)
     {
         ZZ(idx) = k - ZZ(center_of_rot);
         YY(idx) = i - YY(center_of_rot);
@@ -1170,7 +1170,7 @@ void radialAverage(const MultidimArray< T >& m,
     }
 
     // Perform the mean
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_mean)
         radial_mean(i) /= (T) radial_count(i);
 }
 

@@ -169,10 +169,10 @@ void XmippFftw::enforceHermitianSymmetry()
             {
                 int isym=intWRAP(-i,0,YSIZE(*fReal)-1);
                 std::complex<double> mean=0.5*(
-                    DIRECT_MAT_ELEM(fFourier,i,0)+
-                    conj(DIRECT_MAT_ELEM(fFourier,isym,0)));
-                DIRECT_MAT_ELEM(fFourier,i,0)=mean;
-                DIRECT_MAT_ELEM(fFourier,isym,0)=conj(mean);
+                    DIRECT_A2D_ELEM(fFourier,i,0)+
+                    conj(DIRECT_A2D_ELEM(fFourier,isym,0)));
+                DIRECT_A2D_ELEM(fFourier,i,0)=mean;
+                DIRECT_A2D_ELEM(fFourier,isym,0)=conj(mean);
             }
             break;
         case 3:
@@ -183,20 +183,20 @@ void XmippFftw::enforceHermitianSymmetry()
                 {
                     int isym=intWRAP(-i,0,YSIZE(*fReal)-1);
                     std::complex<double> mean=0.5*(
-                        DIRECT_VOL_ELEM(fFourier,k,i,0)+
-                        conj(DIRECT_VOL_ELEM(fFourier,ksym,isym,0)));
-                    DIRECT_VOL_ELEM(fFourier,k,i,0)=mean;
-                    DIRECT_VOL_ELEM(fFourier,ksym,isym,0)=conj(mean);
+                        DIRECT_A3D_ELEM(fFourier,k,i,0)+
+                        conj(DIRECT_A3D_ELEM(fFourier,ksym,isym,0)));
+                    DIRECT_A3D_ELEM(fFourier,k,i,0)=mean;
+                    DIRECT_A3D_ELEM(fFourier,ksym,isym,0)=conj(mean);
                 }
             }
             for (int k=1; k<=zHalf; k++)
             {
                 int ksym=intWRAP(-k,0,ZSIZE(*fReal)-1);
                 std::complex<double> mean=0.5*(
-                    DIRECT_VOL_ELEM(fFourier,k,0,0)+
-                    conj(DIRECT_VOL_ELEM(fFourier,ksym,0,0)));
-                DIRECT_VOL_ELEM(fFourier,k,0,0)=mean;
-                DIRECT_VOL_ELEM(fFourier,ksym,0,0)=conj(mean);
+                    DIRECT_A3D_ELEM(fFourier,k,0,0)+
+                    conj(DIRECT_A3D_ELEM(fFourier,ksym,0,0)));
+                DIRECT_A3D_ELEM(fFourier,k,0,0)=mean;
+                DIRECT_A3D_ELEM(fFourier,ksym,0,0)=conj(mean);
             }
             break;
     }
@@ -255,15 +255,15 @@ void frc_dpr(MultidimArray< double > & m1,
     frc.initZeros(radial_count);
     frc_noise.initZeros(radial_count);
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(FT1)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FT1)
     {
         FFT_IDX2DIGFREQ(j,XSIZE(m1),XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(m1),YY(f));
         double R=f.module();
         if (R>0.5) continue;
         int idx=ROUND(R*XSIZE(m1));
-        std::complex<double> z1=dMij(FT1, i, j);
-        std::complex<double> z2=dMij(FT2, i, j);
+        std::complex<double> z1=dAij(FT1, i, j);
+        std::complex<double> z2=dAij(FT2, i, j);
         double absz1=abs(z1);
         double absz2=abs(z2);
         num(idx)+=real(conj(z1) * z2);
@@ -278,7 +278,7 @@ void frc_dpr(MultidimArray< double > & m1,
         radial_count(idx)++;
     }
 
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(freq)
     {
         freq(i) = (double) i / (XSIZE(m1) * sampling_rate);
         frc(i) = num(i)/sqrt(den1(i)*den2(i));
@@ -341,7 +341,7 @@ void getSpectrum(MultidimArray<double> &Min,
     spectrum.initZeros(xsize);
     count.initZeros();
     transformer.FourierTransform(Min, Faux, false);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(Faux)
     {
         FFT_IDX2DIGFREQ(j,xsize,XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(Faux),YY(f));
@@ -350,9 +350,9 @@ void getSpectrum(MultidimArray<double> &Min,
         //if (R>0.5) continue;
         int idx=ROUND(R*xsize);
         if (spectrum_type == AMPLITUDE_SPECTRUM)
-            spectrum(idx) += abs(dVkij(Faux, k, i, j));
+            spectrum(idx) += abs(dAkij(Faux, k, i, j));
         else
-            spectrum(idx) += abs(dVkij(Faux, k, i, j)) * abs(dVkij(Faux, k, i, j));
+            spectrum(idx) += abs(dAkij(Faux, k, i, j)) * abs(dAkij(Faux, k, i, j));
         count(idx) += 1.;
     }
     for (int i = 0; i < xsize; i++)
@@ -368,12 +368,12 @@ void divideBySpectrum(MultidimArray<double> &Min,
     Min.checkDimension(3);
 
     MultidimArray<double> div_spec(spectrum);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(spectrum)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(spectrum)
     {
-        if (ABS(dVi(spectrum,i)) > 0.)
-            dVi(div_spec,i) = 1./dVi(spectrum,i);
+        if (ABS(dAi(spectrum,i)) > 0.)
+            dAi(div_spec,i) = 1./dAi(spectrum,i);
         else
-            dVi(div_spec,i) = 1.;
+            dAi(div_spec,i) = 1.;
     }
     multiplyBySpectrum(Min,div_spec,leave_origin_intact);
 }
@@ -394,7 +394,7 @@ void multiplyBySpectrum(MultidimArray<double> &Min,
     lspectrum=spectrum;
     if (leave_origin_intact)
         lspectrum(0)=1.;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(Faux)
     {
         FFT_IDX2DIGFREQ(j,XSIZE(Min), XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(Faux),YY(f));
@@ -402,7 +402,7 @@ void multiplyBySpectrum(MultidimArray<double> &Min,
         double R=f.module();
         //if (R > 0.5) continue;
         int idx=ROUND(R*XSIZE(Min));
-        dVkij(Faux, k, i, j) *=  lspectrum(idx) * dim3;
+        dAkij(Faux, k, i, j) *=  lspectrum(idx) * dim3;
     }
     transformer.inverseFourierTransform();
 
@@ -434,7 +434,7 @@ void adaptSpectrum(MultidimArray<double> &Min,
 
     MultidimArray<double> spectrum;
     getSpectrum(Min,spectrum,spectrum_type);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(spectrum)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(spectrum)
     {
         if (spectrum(i) > 0.)
             spectrum(i) = spectrum_ref(i)/spectrum(i);

@@ -44,7 +44,7 @@ void MissingWedge::removeWedge(MultidimArray<double> &V) const
     MultidimArray< std::complex<double> > Vfft;
     transformer.FourierTransform(V,Vfft,false);
 
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(Vfft)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(Vfft)
     {
         // Frequency in the coordinate system of the volume
         VECTOR_R3(idx,j,i,k);
@@ -87,7 +87,7 @@ Steerable::Steerable(double sigma, MultidimArray<double> &Vtomograph,
     double u0=1;
     double u1=0;
     double u2=0;                
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(Vtomograph){
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(Vtomograph){
         Vtomograph(k,i,j) = basis[0](k,i,j) * (a+b*u0*u0) +
                             basis[1](k,i,j) * (a+b*u1*u1) +
                             basis[2](k,i,j) * (a+b*u2*u2) +
@@ -107,7 +107,7 @@ Steerable::Steerable(double sigma, MultidimArray<double> &Vtomograph,
             double u0 = SIND(rot)*COSD(tilt);
             double u1 = SIND(rot)*SIND(tilt);
             double u2 = COSD(rot);
-            FOR_ALL_ELEMENTS_IN_MATRIX3D(Vtomograph)
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(Vtomograph)
             {
                 double filterval =
                     basis[0](k,i,j) * (a+b*u0*u0) +
@@ -149,7 +149,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
     XmippFftw transformer;
     transformer.FourierTransform(hx,H);
     
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(H)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(H)
           H(i)*= MINUS_ONE_POWER(i);
 
     XmippFftw transformer2;
@@ -162,7 +162,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
         for (int i=0; i<YSIZE(Vin); i++)
         {
             for (int j=0; j<XSIZE(Vin); j++)
-                DIRECT_VEC_ELEM(aux,j)=DIRECT_VOL_ELEM(Vin,k,i,j);
+                DIRECT_A1D_ELEM(aux,j)=DIRECT_A3D_ELEM(Vin,k,i,j);
 			    
 	    transformer2.FourierTransform( );	    
 	    transformer2.getFourierAlias( Aux );
@@ -170,13 +170,13 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
 	    transformer2.inverseFourierTransform( );
             	    
 	    for (int j=0; j<XSIZE(Vin); j++)
-                DIRECT_VOL_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_VEC_ELEM(aux,j);
+                DIRECT_A3D_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_A1D_ELEM(aux,j);
         }
 
     // Filter in Y
     transformer.FourierTransform(hy,H);
     
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(H)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(H)
           H(i)*= MINUS_ONE_POWER(i);
 
     aux.initZeros(YSIZE(Vin));
@@ -186,7 +186,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
         for (int j=0; j<XSIZE(Vin); j++)
         {
             for (int i=0; i<YSIZE(Vin); i++)
-                DIRECT_VEC_ELEM(aux,i)=DIRECT_VOL_ELEM(Vout,k,i,j);
+                DIRECT_A1D_ELEM(aux,i)=DIRECT_A3D_ELEM(Vout,k,i,j);
 
 	    transformer2.FourierTransform( );	    
 	    transformer2.getFourierAlias( Aux );
@@ -194,14 +194,14 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
 	    transformer2.inverseFourierTransform( );
             
 	    for (int i=0; i<YSIZE(Vin); i++)
-                DIRECT_VOL_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_VEC_ELEM(aux,i);
+                DIRECT_A3D_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_A1D_ELEM(aux,i);
         }
 
     // Filter in Z
 
     transformer.FourierTransform(hz,H);
 
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(H)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(H)
           H(i)*= MINUS_ONE_POWER(i);
 
     aux.initZeros(ZSIZE(Vin));    
@@ -211,7 +211,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
         for (int j=0; j<XSIZE(Vin); j++)
         {
             for (int k=0; k<ZSIZE(Vin); k++)
-                DIRECT_VEC_ELEM(aux,k)=DIRECT_VOL_ELEM(Vout,k,i,j);
+                DIRECT_A1D_ELEM(aux,k)=DIRECT_A3D_ELEM(Vout,k,i,j);
 
 	    transformer2.FourierTransform( );	    
 	    transformer2.getFourierAlias( Aux );
@@ -219,7 +219,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
 	    transformer2.inverseFourierTransform( );
 
             for (int k=0; k<ZSIZE(Vin); k++)
-                DIRECT_VOL_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_VEC_ELEM(aux,k);
+                DIRECT_A3D_ELEM(Vout,k,i,j)=XSIZE(aux)*DIRECT_A1D_ELEM(aux,k);
         }
     
     // If Missing wedge
@@ -252,7 +252,7 @@ void Steerable::generate1DFilters(double sigma,
     double k1 =  1.0/pow((2.0*PI*sigma),(3.0/2.0));
     double k2 = -1.0/(sigma2);
     
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(hx[0])
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(hx[0])
     {        
         double i2=i*i;
         double g = -exp(-i2/(2.0*sigma2));
@@ -263,7 +263,7 @@ void Steerable::generate1DFilters(double sigma,
 	hx[4](i) = k1*k2*k2*g*i;
 	hx[5](i) = k1*k2*k2*g;
     }    
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(hy[0])
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(hy[0])
     {
         double i2=i*i;
         double g = -exp(-i2/(2.0*sigma2));
@@ -274,7 +274,7 @@ void Steerable::generate1DFilters(double sigma,
         hy[4](i) = g;
         hy[5](i) = g*i;
     }
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(hz[0])
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(hz[0])
     {
         double i2=i*i;
         double g = -exp(-i2/(2.0*sigma2));
@@ -294,7 +294,7 @@ void Steerable::generate3DFilter(MultidimArray<double>& h3D,
 {
     h3D.initZeros(XSIZE(hz[0]),XSIZE(hy[0]),XSIZE(hx[0]));
     h3D.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(h3D)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(h3D)
         for (int n=0; n<6; n++)
             h3D(k,i,j)+=(hz[n](k)*hy[n](i)*hx[n](j));    
 }

@@ -240,7 +240,7 @@ void Tomogram::close_tomogram()
 
 /* Get piece --------------------------------------------------------------- */
 void Tomogram::get_piece(Matrix1D<int> &r0, Matrix1D<int> &length,
-                         Matrix3D<double> &piece) const
+                         MultidimArray<double> &piece) const
 {
     Matrix1D<int> rF = r0 + length - 1;
     std::cout << r0.transpose() << std::endl;
@@ -261,18 +261,18 @@ void Tomogram::get_piece(Matrix1D<int> &r0, Matrix1D<int> &length,
     for (kp = ZZ(r0), k = 0; k < ZSIZE(piece); k++, kp++)
         for (ip = YY(r0), i = 0; i < YSIZE(piece); i++, ip++)
             for (jp = XX(r0), j = 0; j < XSIZE(piece); j++, jp++)
-                DIRECT_VOL_ELEM(piece, k, i, j) = (*this)(jp, ip, kp);
+                DIRECT_A3D_ELEM(piece, k, i, j) = (*this)(jp, ip, kp);
 }
 
 /* Set piece --------------------------------------------------------------- */
 void Tomogram::set_piece(Matrix1D<int> &r0, Matrix1D<int> &length,
-                         Matrix3D<double> &piece)
+                         MultidimArray<double> &piece)
 {
     int k, i, j, kp, ip, jp;
     for (kp = ZZ(r0), k = 0; k < ZSIZE(piece); k++, kp++)
         for (ip = YY(r0), i = 0; i < YSIZE(piece); i++, ip++)
             for (jp = XX(r0), j = 0; j < XSIZE(piece); j++, jp++)
-                set_val(jp, ip, kp, DIRECT_VOL_ELEM(piece, k, i, j));
+                set_val(jp, ip, kp, DIRECT_A3D_ELEM(piece, k, i, j));
 }
 
 /* Compute stats ----------------------------------------------------------- */

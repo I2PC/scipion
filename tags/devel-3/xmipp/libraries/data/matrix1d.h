@@ -44,27 +44,6 @@ extern std::string floatToString(float F, int _width, int _prec);
  * the copy constructor and in the creation/destruction of temporary vectors.
  */
 
-/** Vector element: Physical access
- * @ingroup MultidimArraySizeShape
- *
- * Be careful because this is physical access, usually vectors follow the C
- * convention of starting index==0. This function should not be used as it goes
- * against the vector library philosophy unless you explicitly want to access
- * directly to any value in the vector without taking into account its logical
- * position.
- *
- * @code
- * DIRECT_VEC_ELEM(v, 0) = 1;
- * val = DIRECT_VEC_ELEM(v, 0);
- * @endcode
- */
-#define DIRECT_VEC_ELEM(v, i) ((v).vdata[(i)])
-
-/** A short alias to previous function
- * @ingroup MultidimArraySizeShape
- */
-#define dVi(v, i) DIRECT_VEC_ELEM(v, i)
-
 /** For all elements in the array
  * @ingroup MultidimArraySizeShape
  *
@@ -79,8 +58,8 @@ extern std::string floatToString(float F, int _width, int _prec);
  * }
  * @endcode
  */
-#define FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v) \
-    for (int i=0; i<=vdim; i++)
+#define FOR_ALL_ELEMENTS_IN_MATRIX1D(v) \
+    for (int i=0; i<=v.vdim; i++)
 
 /** Access to X component
  * @ingroup Vectors
@@ -567,6 +546,18 @@ public:
      */
     void killAdaptationForNumericalRecipes(T* m) const
         {}
+
+    /** Returns the size of this vector
+     * @ingroup VectorsSize
+     *
+     * @code
+     * int nn = a.size();
+     * @endcode
+     */
+    int size() const
+    {
+        return vdim;
+    }
 
     /** True if vector is a row.
      * @ingroup VectorsSize

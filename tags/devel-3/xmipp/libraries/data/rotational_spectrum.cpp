@@ -38,7 +38,7 @@ std::ostream & operator << (std::ostream &_out,
     << "r1=" << _cwd.r1 << std::endl
     << "r2=" << _cwd.r2 << std::endl
     << "r3=" << _cwd.r3 << std::endl;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(_cwd.out_ampcos)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(_cwd.out_ampcos)
     _out << _cwd.out_ampcos(i) << " "
     << _cwd.out_ampsin(i) << std::endl;
     return _out;
@@ -53,7 +53,7 @@ double Cylindrical_Wave_Decomposition::interpolate(
     int iy = (int)y; /* Trunc the x, y coordinates to int */
     int ix = (int)x;
     double scale =  y - iy;
-    double *ptr_yx = &DIRECT_MAT_ELEM(img, iy, ix);
+    double *ptr_yx = &DIRECT_A2D_ELEM(img, iy, ix);
     double *ptr_y1x = ptr_yx + XSIZE(img);
     double introw1 = *ptr_yx  + scale * (*(ptr_yx + 1)  - *ptr_yx);
     double introw2 = *ptr_y1x + scale * (*(ptr_y1x + 1) - *ptr_y1x);
@@ -202,10 +202,10 @@ void Cylindrical_Wave_Decomposition::compute_cwd(MultidimArray<double> &img)
 
     out_ampcos.initZeros((numax - numin + 1)*ir);
     out_ampsin = out_ampcos;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(out_ampcos)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(out_ampcos)
     {
-        VEC_ELEM(out_ampcos, i) = ampcos[i+1];
-        VEC_ELEM(out_ampsin, i) = ampsen[i+1];
+        A1D_ELEM(out_ampcos, i) = ampcos[i+1];
+        A1D_ELEM(out_ampsin, i) = ampsen[i+1];
     }
 }
 
@@ -247,10 +247,10 @@ void Rotational_Spectrum::compute_rotational_spectrum(
     double rl  = cwd.r1;
     double rh  = cwd.r2;
     double dr  = cwd.r3;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(cwd.out_ampcos)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(cwd.out_ampcos)
     {
-        c[i+1] = VEC_ELEM(cwd.out_ampcos, i);
-        s[i+1] = VEC_ELEM(cwd.out_ampsin, i);
+        c[i+1] = A1D_ELEM(cwd.out_ampcos, i);
+        s[i+1] = A1D_ELEM(cwd.out_ampsin, i);
     }
 
     n = numax - numin + 1;

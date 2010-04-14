@@ -31,7 +31,7 @@ std::ostream& operator<<(std::ostream& ostrm,
     const MultidimArray< std::complex<double> >& v)
 {
     if (v.xdim == 0)
-        ostrm << "NULL Matrix3D\n";
+        ostrm << "NULL MultidimArray\n";
     else
         ostrm << std::endl;
 
@@ -44,7 +44,7 @@ std::ostream& operator<<(std::ostream& ostrm,
             for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
             {
                 for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
-                    ostrm << VOL_ELEM(v, k, i, j) << ' ';
+                    ostrm << A3D_ELEM(v, k, i, j) << ' ';
                 ostrm << std::endl;
             }
         }

@@ -292,7 +292,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  *
  * @code
  * SPEED_UP_temps; 
- * Matrix3D< double > V1(10, 10, 10), V2(20, 20, 20);
+ * MultidimArray< double > V1(10, 10, 10), V2(20, 20, 20);
  * V1.setXmippOrigin();
  * V2.setXmippOrigin();
  *
@@ -532,11 +532,11 @@ extern std::string floatToString(float F, int _width, int _prec);
  * position.
  *
  * @code
- * DIRECT_VEC_ELEM(v, 0) = 1;
- * val = DIRECT_VEC_ELEM(v, 0);
+ * DIRECT_A1D_ELEM(v, 0) = 1;
+ * val = DIRECT_A1D_ELEM(v, 0);
  * @endcode
  */
-#define DIRECT_A1D_ELEM(v, i) ((v).vdata[(i)])
+#define DIRECT_A1D_ELEM(v, i) ((v).data[(i)])
 
 /** A short alias to previous function
  * @ingroup MultidimArraySizeShape
@@ -561,7 +561,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * definition (ie, logical access).
  *
  * @code
- * FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
+ * FOR_ALL_ELEMENTS_IN_ARRAY1D(v)
  * {
  *     std::cout << v(i) << " ";
  * }
@@ -741,7 +741,7 @@ public:
      * different memory assignment.
      *
      * @code
-     * Matrix3D< double > V2(V1);
+     * MultidimArray< double > V2(V1);
      * @endcode
      */
     MultidimArray(const MultidimArray<T>& V)
@@ -1276,20 +1276,20 @@ public:
      */
     bool outside(const Matrix1D<double> &r) const
     {
-        if (r.vdim < 1)
+        if (r.size() < 1)
         {
             REPORT_ERROR(1, "Outside: index vector has not got enough components");
         }
-        else if (r.vdim==1)
+        else if (r.size()==1)
         {    
             return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this));
         }
-        else if (r.vdim==2)
+        else if (r.size()==2)
         {
             return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
                     YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this));
         }
-        else if (r.vdim==3)
+        else if (r.size()==3)
         {
             return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
                     YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this) ||
@@ -1518,11 +1518,11 @@ public:
 
         if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
             REPORT_ERROR(1203,
-                         "setSlice: Matrix3D subscript (k) out of range");
+                         "setSlice: MultidimArray subscript (k) out of range");
 
         if (v.rowNumber() != YSIZE(*this) || v.colNumber() != XSIZE(*this))
             REPORT_ERROR(1202,
-                         "setSlice: Matrix3D dimensions different from the matrix ones");
+                         "setSlice: MultidimArray dimensions different from the matrix ones");
 
         k = k - STARTINGZ(*this);
 
@@ -2587,7 +2587,7 @@ public:
      */
     bool isCorner(const Matrix1D< double >& v) const
     {
-        if (v.vdim < 2)
+        if (v.size() < 2)
             REPORT_ERROR(1, "isCorner: index vector has got not enough components");
 
         else if (XSIZE(*this)==2)
@@ -4073,40 +4073,6 @@ public:
     /// @defgroup VectorsUtilities
     /// @ingroup Vectors
 
-    /** Algebraic transpose of 1D vector
-     * @ingroup VectorsUtilities
-     *
-     * You can use the transpose in as complex expressions as you like. The
-     * origin of the vector is not changed.
-     *
-     * @code
-     * v2 = v1.transpose();
-     * @endcode
-     */
-    MultidimArray<T> transpose() const
-    {
-        if (getDim()==2)
-        {
-
-            T aux;
-            Matrix2D<T> result(XSIZE(*this), YSIZE(*this));
-
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(result)
-                DIRECT_A2D_ELEM(result, i, j) = DIRECT_A2D_ELEM(*this, j, i);
-
-            STARTINGX(result) = STARTINGX(*this);
-            STARTINGY(result) = STARTINGY(*this);
-
-            return result;
-        }
-        else
-        {
-            std::cerr<< "MultidimArray shape: ";
-            printShape(std::cerr);
-            std::cerr<<std::endl;
-            REPORT_ERROR(1,"transpose ERROR: transpose only valid for 1D or 2D");
-        }
-    }
 
 };
 
@@ -4254,12 +4220,12 @@ bool operator!=(const MultidimArray<T>& op1, const MultidimArray<T>& op2)
  * computed.
  *
  * @code
- * Matrix3D< double > V1(4, 5, 3);
+ * MultidimArray< double > V1(4, 5, 3);
  * V1.startingX() = -2;
  * V1.startingY() = -2;
  * V1.startingZ() = -2;
  *
- * Matrix3D< double > V2(4, 2, 3);
+ * MultidimArray< double > V2(4, 2, 3);
  * V2.startingX() = 0;
  * V2.startingY() = 0;
  * V2.startingZ() = 0;

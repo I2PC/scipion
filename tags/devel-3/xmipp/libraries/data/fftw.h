@@ -50,7 +50,7 @@
  * transformer.FourierTransform(V(),Vfft,false);
  * MultidimArray<double> Vmag;
  * Vmag.resize(Vfft);
- * FOR_ALL_ELEMENTS_IN_MATRIX3D(Vmag)
+ * FOR_ALL_ELEMENTS_IN_ARRAY3D(Vmag)
  *     Vmag(k,i,j)=20*log10(abs(Vfft(k,i,j)));
  * @endcode
  */
@@ -209,33 +209,33 @@ public:
             switch (ndim)
             {
                 case 1:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(V)
+                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(V)
                         if (i<XSIZE(fFourier))
-                            DIRECT_VEC_ELEM(V,i)=DIRECT_VEC_ELEM(fFourier,i);
+                            DIRECT_A1D_ELEM(V,i)=DIRECT_A1D_ELEM(fFourier,i);
                         else
-                            DIRECT_VEC_ELEM(V,i)=
-                                conj(DIRECT_VEC_ELEM(fFourier,
+                            DIRECT_A1D_ELEM(V,i)=
+                                conj(DIRECT_A1D_ELEM(fFourier,
                                     XSIZE(*fReal)-i));
                     break;
                 case 2:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(V)
+                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(V)
                         if (j<XSIZE(fFourier))
-                            DIRECT_MAT_ELEM(V,i,j)=
-                                DIRECT_MAT_ELEM(fFourier,i,j);
+                            DIRECT_A2D_ELEM(V,i,j)=
+                                DIRECT_A2D_ELEM(fFourier,i,j);
                         else
-                            DIRECT_MAT_ELEM(V,i,j)=
-                                conj(DIRECT_MAT_ELEM(fFourier,
+                            DIRECT_A2D_ELEM(V,i,j)=
+                                conj(DIRECT_A2D_ELEM(fFourier,
                                     (YSIZE(*fReal)-i)%YSIZE(*fReal),
                                      XSIZE(*fReal)-j));
                     break;
                 case 3:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V)
+                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V)
                         if (j<XSIZE(fFourier))
-                            DIRECT_VOL_ELEM(V,k,i,j)=
-                                DIRECT_VOL_ELEM(fFourier,k,i,j);
+                            DIRECT_A3D_ELEM(V,k,i,j)=
+                                DIRECT_A3D_ELEM(fFourier,k,i,j);
                         else
-                            DIRECT_VOL_ELEM(V,k,i,j)=
-                                conj(DIRECT_VOL_ELEM(fFourier,
+                            DIRECT_A3D_ELEM(V,k,i,j)=
+                                conj(DIRECT_A3D_ELEM(fFourier,
                                     (ZSIZE(*fReal)-k)%ZSIZE(*fReal),
                                     (YSIZE(*fReal)-i)%YSIZE(*fReal),
                                      XSIZE(*fReal)-j));
@@ -258,16 +258,16 @@ public:
         switch (ndim)
         {
         case 1:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(fFourier)
-                DIRECT_VEC_ELEM(fFourier,i)=DIRECT_VEC_ELEM(V,i);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(fFourier)
+                DIRECT_A1D_ELEM(fFourier,i)=DIRECT_A1D_ELEM(V,i);
             break;
         case 2:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(fFourier)
-                DIRECT_MAT_ELEM(fFourier,i,j) = DIRECT_MAT_ELEM(V,i,j); 
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(fFourier)
+                DIRECT_A2D_ELEM(fFourier,i,j) = DIRECT_A2D_ELEM(V,i,j); 
             break;
         case 3:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(fFourier)
-                DIRECT_VOL_ELEM(fFourier,k,i,j) = DIRECT_VOL_ELEM(V,k,i,j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(fFourier)
+                DIRECT_A3D_ELEM(fFourier,k,i,j) = DIRECT_A3D_ELEM(V,k,i,j);
             break;
         }
     }
@@ -337,7 +337,7 @@ void auto_correlation_vector(const MultidimArray< T > & Img, MultidimArray< doub
 
     // Multiply FFT1 * FFT1'
     double dSize=XSIZE(Img);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(FFT1)
         FFT1(i) *= dSize * conj(FFT1(i));
 
     // Invert the product, in order to obtain the correlation image
@@ -371,7 +371,7 @@ void correlation_vector(const MultidimArray< T > & m1,
 
     // Multiply FFT1 * FFT2'
     double dSize=XSIZE(m1);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(FFT1)
         FFT1(i) *= dSize * conj(FFT2(i));
 
     // Invert the product, in order to obtain the correlation image
@@ -398,10 +398,10 @@ void correlation_vector_no_Fourier(const Matrix1D<T> &v1, const Matrix1D<T> &v2,
     result.initZeros(v1);
     result.setXmippOrigin();
     int N=XSIZE(v1)-1;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(result)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(result)
         for (int k=0; k<XSIZE(v1); k++)
-            result(i)+=DIRECT_VEC_ELEM(v1,intWRAP(k+i,0,N))*
-                       DIRECT_VEC_ELEM(v2,k);
+            result(i)+=DIRECT_A1D_ELEM(v1,intWRAP(k+i,0,N))*
+                       DIRECT_A1D_ELEM(v2,k);
     STARTINGX(result)=0;
 }
 
@@ -427,7 +427,7 @@ void correlation_matrix(const MultidimArray< T > & m1,
 
     // Multiply FFT1 * FFT2'
     double dSize=MULTIDIM_SIZE(R);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(FFT1)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(FFT1)
         FFT1(k, i, j) *= dSize * conj(FFT2(k, i, j));
 
     // Invert the product, in order to obtain the correlation image
@@ -454,7 +454,7 @@ void auto_correlation_matrix(const MultidimArray< T > & Img, MultidimArray< doub
 
     // Multiply FFT1 * FFT1'
     double dSize=MULTIDIM_SIZE(Img);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(FFT1)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(FFT1)
         FFT1(k, i, j) *= dSize * conj(FFT1(k, i, j));
 
     // Invert the product, in order to obtain the correlation image

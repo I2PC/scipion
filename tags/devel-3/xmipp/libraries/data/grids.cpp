@@ -242,7 +242,7 @@ Grid Create_CC_grid(double relative_size, const Matrix1D<double> &corner1,
     SimpleGrid      aux_grid;
 
     Matrix1D<double> origin = (corner1 + corner2) / 2;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(origin)
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(origin)
         if (ABS(ROUND(origin(i))-origin(i))<0.45)
             origin(i)=ROUND(origin(i));
         else

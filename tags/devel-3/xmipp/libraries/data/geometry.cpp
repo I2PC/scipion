@@ -538,8 +538,8 @@ double Euler_distanceBetweenMatrices(const Matrix2D<double> &E1,
     const Matrix2D<double> &E2)
 {
     double retval=0;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(E1)
-        retval+=DIRECT_MAT_ELEM(E1,i,j)*DIRECT_MAT_ELEM(E2,i,j);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(E1)
+        retval+=DIRECT_A2D_ELEM(E1,i,j)*DIRECT_A2D_ELEM(E2,i,j);
     return retval/3.0;
 }
 
@@ -561,9 +561,9 @@ void Euler_direction(double alpha, double beta, double gamma,
     sc = sb * ca;
     ss = sb * sa;
 
-    VEC_ELEM(v, 0) = sc;
-    VEC_ELEM(v, 1) = ss;
-    VEC_ELEM(v, 2) = cb;
+    A1D_ELEM(v, 0) = sc;
+    A1D_ELEM(v, 1) = ss;
+    A1D_ELEM(v, 2) = cb;
 }
 
 /* Euler direction2angles ------------------------------- */
@@ -585,7 +585,7 @@ void Euler_direction2angles(Matrix1D<double> &v0,
     v.selfNormalize();
 
     v_aux.resize(3);
-    cb = VEC_ELEM(v, 2);
+    cb = A1D_ELEM(v, 2);
 
     if (fabs((cb)) > 0.999847695)/*one degree */
     {
@@ -607,23 +607,23 @@ void Euler_direction2angles(Matrix1D<double> &v0,
 
         sb = sin(aux_beta);
 
-        abs_ca = fabs(VEC_ELEM(v, 0)) / sb;
+        abs_ca = fabs(A1D_ELEM(v, 0)) / sb;
         if (fabs((abs_ca - 1.)) < FLT_EPSILON)
             aux_alpha = 0.;
         else
             aux_alpha = acos(abs_ca);
 
-        VEC_ELEM(v_aux, 0) = sin(aux_beta) * cos(aux_alpha);
-        VEC_ELEM(v_aux, 1) = sin(aux_beta) * sin(aux_alpha);
-        VEC_ELEM(v_aux, 2) = cos(aux_beta);
+        A1D_ELEM(v_aux, 0) = sin(aux_beta) * cos(aux_alpha);
+        A1D_ELEM(v_aux, 1) = sin(aux_beta) * sin(aux_alpha);
+        A1D_ELEM(v_aux, 2) = cos(aux_beta);
 
         error = fabs(dotProduct(v, v_aux) - 1.);
         alpha = aux_alpha;
         beta = aux_beta;
 
-        VEC_ELEM(v_aux, 0) = sin(aux_beta) * cos(-1. * aux_alpha);
-        VEC_ELEM(v_aux, 1) = sin(aux_beta) * sin(-1. * aux_alpha);
-        VEC_ELEM(v_aux, 2) = cos(aux_beta);
+        A1D_ELEM(v_aux, 0) = sin(aux_beta) * cos(-1. * aux_alpha);
+        A1D_ELEM(v_aux, 1) = sin(aux_beta) * sin(-1. * aux_alpha);
+        A1D_ELEM(v_aux, 2) = cos(aux_beta);
         newerror = fabs(dotProduct(v, v_aux) - 1.);
         if (error > newerror)
         {
@@ -632,9 +632,9 @@ void Euler_direction2angles(Matrix1D<double> &v0,
             error = newerror;
         }
 
-        VEC_ELEM(v_aux, 0) = sin(-aux_beta) * cos(-1. * aux_alpha);
-        VEC_ELEM(v_aux, 1) = sin(-aux_beta) * sin(-1. * aux_alpha);
-        VEC_ELEM(v_aux, 2) = cos(-aux_beta);
+        A1D_ELEM(v_aux, 0) = sin(-aux_beta) * cos(-1. * aux_alpha);
+        A1D_ELEM(v_aux, 1) = sin(-aux_beta) * sin(-1. * aux_alpha);
+        A1D_ELEM(v_aux, 2) = cos(-aux_beta);
         newerror = fabs(dotProduct(v, v_aux) - 1.);
         if (error > newerror)
         {
@@ -643,9 +643,9 @@ void Euler_direction2angles(Matrix1D<double> &v0,
             error = newerror;
         }
 
-        VEC_ELEM(v_aux, 0) = sin(-aux_beta) * cos(aux_alpha);
-        VEC_ELEM(v_aux, 1) = sin(-aux_beta) * sin(aux_alpha);
-        VEC_ELEM(v_aux, 2) = cos(-aux_beta);
+        A1D_ELEM(v_aux, 0) = sin(-aux_beta) * cos(aux_alpha);
+        A1D_ELEM(v_aux, 1) = sin(-aux_beta) * sin(aux_alpha);
+        A1D_ELEM(v_aux, 2) = cos(-aux_beta);
         newerror = fabs(dotProduct(v, v_aux) - 1.);
 
         if (error > newerror)
@@ -798,7 +798,7 @@ void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
     }
 
     Euler_direction(rot, tilt, psi, w);
-    if (fabs(VEC_ELEM(w, 2)) > 0.999847695)/*cos one degree */
+    if (fabs(A1D_ELEM(w, 2)) > 0.999847695)/*cos one degree */
     {
         Euler_direction(rot, 10., psi, w);
         new_w = (Matrix1D<double>)(D_1 * w) / ((D_1 * w).module());
@@ -806,7 +806,7 @@ void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
 
         Euler_direction(rot, tilt, psi, w);
         new_w = (Matrix1D<double>)((D_1 * w) / ((D_1 * w).module()));
-        new_tilt = SGN(new_tilt) * fabs(ACOSD(VEC_ELEM(new_w, 2)));
+        new_tilt = SGN(new_tilt) * fabs(ACOSD(A1D_ELEM(new_w, 2)));
         new_psi = psi;
 
         // so, for small tilt the value of the rot is not realiable
@@ -894,7 +894,7 @@ Matrix2D<double> Euler_rotation3DMatrix(double rot, double tilt, double psi)
     //Euler_angles2matrix(rot,-tilt,psi,temp);
     Euler_angles2matrix(rot, tilt, psi, temp);
     temp.resize(4, 4);
-    DIRECT_MAT_ELEM(temp, 3, 3) = 1;
+    DIRECT_A2D_ELEM(temp, 3, 3) = 1;
     return temp;
 }
 

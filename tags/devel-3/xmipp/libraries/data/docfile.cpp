@@ -101,7 +101,7 @@ void DocLine::set(const Matrix1D< double >& v)
 
     data.reserve(XSIZE(v));
     for (int i = STARTINGX(v); i <= FINISHINGX(v); i++)
-        data.push_back(VEC_ELEM(v, i));
+        data.push_back(A1D_ELEM(v, i));
 }
 
 void DocLine::clear()
@@ -242,7 +242,7 @@ DocFile& DocFile::operator=(const Matrix2D< double >& A)
         temp.data.resize(XSIZE(A));
 
         for (int j = STARTINGX(A); j <= FINISHINGX(A); j++)
-            temp.data[j-STARTINGX(A)] = MAT_ELEM(A, i, j);
+            temp.data[j-STARTINGX(A)] = A2D_ELEM(A, i, j);
 
         m.push_back(temp);
     }
@@ -1061,25 +1061,25 @@ int DocFile::append_angles(double rot, double tilt, double psi,
     Matrix1D< double > aux(3);
 
     if (ang1[0] == 'r')
-        VEC_ELEM(aux, 0) = rot;
+        A1D_ELEM(aux, 0) = rot;
     else if (ang1[0] == 't')
-        VEC_ELEM(aux, 0) = tilt;
+        A1D_ELEM(aux, 0) = tilt;
     else if (ang1[0] == 'p')
-        VEC_ELEM(aux, 0) = psi;
+        A1D_ELEM(aux, 0) = psi;
 
     if (ang2[0] == 'r')
-        VEC_ELEM(aux, 1) = rot;
+        A1D_ELEM(aux, 1) = rot;
     else if (ang2[0] == 't')
-        VEC_ELEM(aux, 1) = tilt;
+        A1D_ELEM(aux, 1) = tilt;
     else if (ang2[0] == 'p')
-        VEC_ELEM(aux, 1) = psi;
+        A1D_ELEM(aux, 1) = psi;
 
     if (ang3[0] == 'r')
-        VEC_ELEM(aux, 2) = rot;
+        A1D_ELEM(aux, 2) = rot;
     else if (ang3[0] == 't')
-        VEC_ELEM(aux, 2) = tilt;
+        A1D_ELEM(aux, 2) = tilt;
     else if (ang3[0] == 'p')
-        VEC_ELEM(aux, 2) = psi;
+        A1D_ELEM(aux, 2) = psi;
 
     return append_data_line(aux);
 }
@@ -1091,46 +1091,46 @@ int DocFile::append_angles(double rot, double tilt, double psi,
     Matrix1D< double > aux(6);
 
     if (ang1[0] == 'r')
-        VEC_ELEM(aux, 0) = rot;
+        A1D_ELEM(aux, 0) = rot;
     else if (ang1[0] == 't')
-        VEC_ELEM(aux, 0) = tilt;
+        A1D_ELEM(aux, 0) = tilt;
     else if (ang1[0] == 'p')
-        VEC_ELEM(aux, 0) = psi;
+        A1D_ELEM(aux, 0) = psi;
 
     if (ang2[0] == 'r')
-        VEC_ELEM(aux, 1) = rot;
+        A1D_ELEM(aux, 1) = rot;
     else if (ang2[0] == 't')
-        VEC_ELEM(aux, 1) = tilt;
+        A1D_ELEM(aux, 1) = tilt;
     else if (ang2[0] == 'p')
-        VEC_ELEM(aux, 1) = psi;
+        A1D_ELEM(aux, 1) = psi;
 
     if (ang3[0] == 'r')
-        VEC_ELEM(aux, 2) = rot;
+        A1D_ELEM(aux, 2) = rot;
     else if (ang3[0] == 't')
-        VEC_ELEM(aux, 2) = tilt;
+        A1D_ELEM(aux, 2) = tilt;
     else if (ang3[0] == 'p')
-        VEC_ELEM(aux, 2) = psi;
+        A1D_ELEM(aux, 2) = psi;
 
     if (ang1[0] == 'r')
-        VEC_ELEM(aux, 3) = rot1;
+        A1D_ELEM(aux, 3) = rot1;
     else if (ang1[0] == 't')
-        VEC_ELEM(aux, 3) = tilt1;
+        A1D_ELEM(aux, 3) = tilt1;
     else if (ang1[0] == 'p')
-        VEC_ELEM(aux, 3) = psi1;
+        A1D_ELEM(aux, 3) = psi1;
 
     if (ang2[0] == 'r')
-        VEC_ELEM(aux, 4) = rot1;
+        A1D_ELEM(aux, 4) = rot1;
     else if (ang2[0] == 't')
-        VEC_ELEM(aux, 4) = tilt1;
+        A1D_ELEM(aux, 4) = tilt1;
     else if (ang2[0] == 'p')
-        VEC_ELEM(aux, 4) = psi1;
+        A1D_ELEM(aux, 4) = psi1;
 
     if (ang3[0] == 'r')
-        VEC_ELEM(aux, 5) = rot1;
+        A1D_ELEM(aux, 5) = rot1;
     else if (ang3[0] == 't')
-        VEC_ELEM(aux, 5) = tilt1;
+        A1D_ELEM(aux, 5) = tilt1;
     else if (ang3[0] == 'p')
-        VEC_ELEM(aux, 5) = psi1;
+        A1D_ELEM(aux, 5) = psi1;
 
     return append_data_line(aux);
 }
@@ -1143,67 +1143,67 @@ int DocFile::append_angles(double rot, double tilt, double psi,
     Matrix1D< double > aux(9);
 
     if (ang1[0] == 'r')
-        VEC_ELEM(aux, 0) = rot;
+        A1D_ELEM(aux, 0) = rot;
     else if (ang1[0] == 't')
-        VEC_ELEM(aux, 0) = tilt;
+        A1D_ELEM(aux, 0) = tilt;
     else if (ang1[0] == 'p')
-        VEC_ELEM(aux, 0) = psi;
+        A1D_ELEM(aux, 0) = psi;
 
     if (ang2[0] == 'r')
-        VEC_ELEM(aux, 1) = rot;
+        A1D_ELEM(aux, 1) = rot;
     else if (ang2[0] == 't')
-        VEC_ELEM(aux, 1) = tilt;
+        A1D_ELEM(aux, 1) = tilt;
     else if (ang2[0] == 'p')
-        VEC_ELEM(aux, 1) = psi;
+        A1D_ELEM(aux, 1) = psi;
 
     if (ang3[0] == 'r')
-        VEC_ELEM(aux, 2) = rot;
+        A1D_ELEM(aux, 2) = rot;
     else if (ang3[0] == 't')
-        VEC_ELEM(aux, 2) = tilt;
+        A1D_ELEM(aux, 2) = tilt;
     else if (ang3[0] == 'p')
-        VEC_ELEM(aux, 2) = psi;
+        A1D_ELEM(aux, 2) = psi;
 
     if (ang1[0] == 'r')
-        VEC_ELEM(aux, 3) = rot1;
+        A1D_ELEM(aux, 3) = rot1;
     else if (ang1[0] == 't')
-        VEC_ELEM(aux, 3) = tilt1;
+        A1D_ELEM(aux, 3) = tilt1;
     else if (ang1[0] == 'p')
-        VEC_ELEM(aux, 3) = psi1;
+        A1D_ELEM(aux, 3) = psi1;
 
     if (ang2[0] == 'r')
-        VEC_ELEM(aux, 4) = rot1;
+        A1D_ELEM(aux, 4) = rot1;
     else if (ang2[0] == 't')
-        VEC_ELEM(aux, 4) = tilt1;
+        A1D_ELEM(aux, 4) = tilt1;
     else if (ang2[0] == 'p')
-        VEC_ELEM(aux, 4) = psi1;
+        A1D_ELEM(aux, 4) = psi1;
 
     if (ang3[0] == 'r')
-        VEC_ELEM(aux, 5) = rot1;
+        A1D_ELEM(aux, 5) = rot1;
     else if (ang3[0] == 't')
-        VEC_ELEM(aux, 5) = tilt1;
+        A1D_ELEM(aux, 5) = tilt1;
     else if (ang3[0] == 'p')
-        VEC_ELEM(aux, 5) = psi1;
+        A1D_ELEM(aux, 5) = psi1;
 
     if (ang1[0] == 'r')
-        VEC_ELEM(aux, 6) = rot2;
+        A1D_ELEM(aux, 6) = rot2;
     else if (ang1[0] == 't')
-        VEC_ELEM(aux, 6) = tilt2;
+        A1D_ELEM(aux, 6) = tilt2;
     else if (ang1[0] == 'p')
-        VEC_ELEM(aux, 6) = psi2;
+        A1D_ELEM(aux, 6) = psi2;
 
     if (ang2[0] == 'r')
-        VEC_ELEM(aux, 7) = rot2;
+        A1D_ELEM(aux, 7) = rot2;
     else if (ang2[0] == 't')
-        VEC_ELEM(aux, 7) = tilt2;
+        A1D_ELEM(aux, 7) = tilt2;
     else if (ang2[0] == 'p')
-        VEC_ELEM(aux, 7) = psi2;
+        A1D_ELEM(aux, 7) = psi2;
 
     if (ang3[0] == 'r')
-        VEC_ELEM(aux, 8) = rot2;
+        A1D_ELEM(aux, 8) = rot2;
     else if (ang3[0] == 't')
-        VEC_ELEM(aux, 8) = tilt2;
+        A1D_ELEM(aux, 8) = tilt2;
     else if (ang3[0] == 'p')
-        VEC_ELEM(aux, 8) = psi2;
+        A1D_ELEM(aux, 8) = psi2;
 
     return append_data_line(aux);
 }
@@ -1411,7 +1411,7 @@ Matrix1D< double > DocFile::col(int c)
     while (current != last)
     {
         if (current->line_type == DocLine::DATALINE)
-            VEC_ELEM(result, i++) = (*current)[c];
+            A1D_ELEM(result, i++) = (*current)[c];
 
         current++;
     }
@@ -1430,7 +1430,7 @@ Matrix1D< double > DocFile::row(int k)
     result.setRow();
 
     for (int i = 0; i < result.xdim; i++)
-        VEC_ELEM(result, i) = it->data[i];
+        A1D_ELEM(result, i) = it->data[i];
 
     return result;
 }
@@ -1441,7 +1441,7 @@ void DocFile::setCol(int c, Matrix1D< double >& v)
 
     for (int i = STARTINGX(v); i <= FINISHINGX(v); i++)
     {
-        set(c, VEC_ELEM(v, i));
+        set(c, A1D_ELEM(v, i));
         next_data_line();
     }
     renum();

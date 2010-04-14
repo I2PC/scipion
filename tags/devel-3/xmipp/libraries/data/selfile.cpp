@@ -938,7 +938,7 @@ SelFile SelFile::randomSubset(int subsetN, bool withReplacement)
     if (withReplacement)
     {
         idx.initZeros(N);
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(idx)
             idx(i)=ROUND(rnd_unif(0,N-1));
     }
     else

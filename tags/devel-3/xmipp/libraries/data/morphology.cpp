@@ -169,7 +169,7 @@ void border(const MultidimArray<double> &img, MultidimArray<double> &border)
     /*
     border.initZeros(img);
     erode2D(img,border,8,0,1);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(border)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(border)
        border(i,j)=img(i,j)-border(i,j);
     */
     border.initZeros(img);
@@ -245,7 +245,7 @@ void random_convex_hull(const MultidimArray<double> &img, MultidimArray<double> 
 
     std::vector<int> full_tx, full_ty;
     // Build the list of points
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(img)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(img)
     if (img(i, j) > 0)
     {
         full_tx.push_back(j);
@@ -469,8 +469,8 @@ void dilate3D(const MultidimArray<double> &in,
         for (int ii=0; ii<YSIZE(out); ii++)
             for (int jj=0; jj<XSIZE(out); jj++)
             {
-                double maxLocal=DIRECT_VOL_ELEM(in,kk,ii,jj)+
-                    VOL_ELEM(structuringElement,0,0,0);
+                double maxLocal=DIRECT_A3D_ELEM(in,kk,ii,jj)+
+                    A3D_ELEM(structuringElement,0,0,0);
                 int k0=XMIPP_MAX(0,kk+STARTINGZ(structuringElement))-kk;
                 int kF=XMIPP_MIN(ZSIZE(out)-1,kk+FINISHINGZ(structuringElement))-kk;
                 int i0=XMIPP_MAX(0,ii+STARTINGY(structuringElement))-ii;
@@ -481,12 +481,12 @@ void dilate3D(const MultidimArray<double> &in,
                     for (int i=i0; i<=iF; i++)
                         for (int j=j0; j<=jF; j++)
                         {
-                            double val=DIRECT_VOL_ELEM(in,kk+k,ii+i,jj+j)+
-                                VOL_ELEM(structuringElement,k,i,j);
+                            double val=DIRECT_A3D_ELEM(in,kk+k,ii+i,jj+j)+
+                                A3D_ELEM(structuringElement,k,i,j);
                             maxLocal=XMIPP_MAX(maxLocal,val);
                         }
                 maxLocal=XMIPP_MIN(maxLocal,maxval);
-                DIRECT_VOL_ELEM(out,kk,ii,jj)=maxLocal;
+                DIRECT_A3D_ELEM(out,kk,ii,jj)=maxLocal;
             }
 }
 
@@ -500,8 +500,8 @@ void erode3D(const MultidimArray<double> &in,
         for (int ii=0; ii<YSIZE(out); ii++)
             for (int jj=0; jj<XSIZE(out); jj++)
             {
-                double minLocal=DIRECT_VOL_ELEM(in,kk,ii,jj)-
-                    VOL_ELEM(structuringElement,0,0,0);
+                double minLocal=DIRECT_A3D_ELEM(in,kk,ii,jj)-
+                    A3D_ELEM(structuringElement,0,0,0);
                 int k0=XMIPP_MAX(0,kk+STARTINGZ(structuringElement))-kk;
                 int kF=XMIPP_MIN(ZSIZE(out)-1,kk+FINISHINGZ(structuringElement))-kk;
                 int i0=XMIPP_MAX(0,ii+STARTINGY(structuringElement))-ii;
@@ -512,12 +512,12 @@ void erode3D(const MultidimArray<double> &in,
                     for (int i=i0; i<=iF; i++)
                         for (int j=j0; j<=jF; j++)
                         {
-                            double val=DIRECT_VOL_ELEM(in,kk+k,ii+i,jj+j)-
-                                VOL_ELEM(structuringElement,k,i,j);
+                            double val=DIRECT_A3D_ELEM(in,kk+k,ii+i,jj+j)-
+                                A3D_ELEM(structuringElement,k,i,j);
                             minLocal=XMIPP_MIN(minLocal,val);
                         }
                 minLocal=XMIPP_MAX(minLocal,minval);
-                DIRECT_VOL_ELEM(out,kk,ii,jj)=minLocal;
+                DIRECT_A3D_ELEM(out,kk,ii,jj)=minLocal;
             }
 }
 
@@ -536,7 +536,7 @@ void sharpening(const MultidimArray<double> &in, double width, double strength,
     double c=minval+(maxval-minval)*strength/100;
     double a=(minval-c)/width2;
 
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(kernel)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(kernel)
     {
         double r2=k*k+i*i+j*j;
         kernel(k,i,j)=a*r2+c;
@@ -553,7 +553,7 @@ void sharpening(const MultidimArray<double> &in, double width, double strength,
     // Sharpen
     out=in;
     double eps=(maxval-minval)*0.01;
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(in)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(in)
     {
         double threshold=0.5*(dilated(k,i,j)+eroded(k,i,j));
         if      (in(k,i,j)>threshold+eps)  out(k,i,j)=dilated(k,i,j);

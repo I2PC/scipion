@@ -71,7 +71,7 @@ void GaussianInterpolator::initialize(double _xmax, int N, bool normalize)
     ixstep=1.0/xstep;
     v.initZeros(N);
     double inorm=1.0/sqrt(2*PI);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(v)
     {
         double x=i*xstep;
         v(i)=exp(-x*x/2);
@@ -93,8 +93,8 @@ double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
         REPORT_ERROR(1107, "Solve_nonneg: Not correct vector shape");
 
     Matrix2D<double> Ct(XSIZE(C), YSIZE(C)); // Ct=C^t
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Ct)
-        DIRECT_MAT_ELEM(Ct, i, j) = DIRECT_MAT_ELEM(C, j, i);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Ct)
+        DIRECT_A2D_ELEM(Ct, i, j) = DIRECT_A2D_ELEM(C, j, i);
 
     result.initZeros(YSIZE(Ct));
     double rnorm;
@@ -139,8 +139,8 @@ void evaluateQuadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
     grad.initZeros(XSIZE(x));
     for (int i = 0; i < YSIZE(H); i++)
         for (int j = 0; j < XSIZE(x); j++)
-            DIRECT_VEC_ELEM(grad, i) += DIRECT_MAT_ELEM(H, i, j) *
-                                        DIRECT_VEC_ELEM(x, j);
+            DIRECT_A1D_ELEM(grad, i) += DIRECT_A2D_ELEM(H, i, j) *
+                                        DIRECT_A1D_ELEM(x, j);
 
     // Now, compute c^t*x+1/2*x^t*H*x
     // Add c to the gradient
@@ -148,10 +148,10 @@ void evaluateQuadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
     val = 0;
     for (int j = 0; j < XSIZE(x); j++)
     {
-        quad += DIRECT_VEC_ELEM(grad, j) * DIRECT_VEC_ELEM(grad, j); // quad=x^t*H^t*H*x
-        val += DIRECT_VEC_ELEM(c, j) * DIRECT_VEC_ELEM(x, j);  // val=c^t*x
+        quad += DIRECT_A1D_ELEM(grad, j) * DIRECT_A1D_ELEM(grad, j); // quad=x^t*H^t*H*x
+        val += DIRECT_A1D_ELEM(c, j) * DIRECT_A1D_ELEM(x, j);  // val=c^t*x
 
-        DIRECT_VEC_ELEM(grad, j) += DIRECT_VEC_ELEM(c, j);     // grad+=c
+        DIRECT_A1D_ELEM(grad, j) += DIRECT_A1D_ELEM(c, j);     // grad+=c
     }
     val += 0.5 * quad;
 }
@@ -347,30 +347,30 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
 
     Matrix2D<double> X(Nx,Nx); // X=(A^t * A +lambda *G^t G)
     // Compute A^t*A
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(X)
         // Compute the dot product of the i-th and j-th columns of A
         for (int k=0; k<YSIZE(A); k++)
-            DIRECT_MAT_ELEM(X,i,j)+=
-                DIRECT_MAT_ELEM(A,k,i)*DIRECT_MAT_ELEM(A,k,j);
+            DIRECT_A2D_ELEM(X,i,j)+=
+                DIRECT_A2D_ELEM(A,k,i)*DIRECT_A2D_ELEM(A,k,j);
 
     // Compute lambda*G^t*G
     if (XSIZE(G)==0)
         for (int i=0; i<Nx; i++)
-            DIRECT_MAT_ELEM(X,i,i)+=lambda;
+            DIRECT_A2D_ELEM(X,i,i)+=lambda;
     else
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(X)
             // Compute the dot product of the i-th and j-th columns of G
             for (int k=0; k<YSIZE(G); k++)
-                DIRECT_MAT_ELEM(X,i,j)+=
-                    DIRECT_MAT_ELEM(G,k,i)*DIRECT_MAT_ELEM(G,k,j);
+                DIRECT_A2D_ELEM(X,i,j)+=
+                    DIRECT_A2D_ELEM(G,k,i)*DIRECT_A2D_ELEM(G,k,j);
 
     // Compute A^t*d
     Matrix1D<double> Atd(Nx);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(Atd)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(Atd)
         // Compute the dot product of the i-th column of A and d
         for (int k=0; k<YSIZE(A); k++)
-            DIRECT_VEC_ELEM(Atd,i)+=
-                DIRECT_MAT_ELEM(A,k,i)*DIRECT_VEC_ELEM(d,k);
+            DIRECT_A1D_ELEM(Atd,i)+=
+                DIRECT_A2D_ELEM(A,k,i)*DIRECT_A1D_ELEM(d,k);
 
     // Compute the inverse of X
     Matrix2D<double> Xinv;
@@ -378,9 +378,9 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
 
     // Now multiply Xinv * A^t * d
     x.initZeros(Nx);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(Xinv)
-        DIRECT_VEC_ELEM(x,i)+=DIRECT_MAT_ELEM(Xinv,i,j)*
-            DIRECT_VEC_ELEM(Atd,j);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(Xinv)
+        DIRECT_A1D_ELEM(x,i)+=DIRECT_A2D_ELEM(Xinv,i,j)*
+            DIRECT_A1D_ELEM(Atd,j);
 }
 
 

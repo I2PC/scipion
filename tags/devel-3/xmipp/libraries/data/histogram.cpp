@@ -80,7 +80,7 @@ void histogram1D::insert_value(double val)
     val2index(val, i);
     if (i == -1)
         return; // the value is outside our scope
-    VEC_ELEM(*this, i)++;
+    A1D_ELEM(*this, i)++;
     no_samples++;
 #ifdef DEBUG
 
@@ -95,10 +95,10 @@ std::ostream& operator << (std::ostream &o, const histogram1D &hist)
 {
     MultidimArray<double> aux;
     aux.resize(hist.stepNo(), 2);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(hist)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(hist)
     {
-        hist.index2val(i, MAT_ELEM(aux, i, 0));
-        MAT_ELEM(aux, i, 1) = VEC_ELEM(hist, i);
+        hist.index2val(i, A2D_ELEM(aux, i, 0));
+        A2D_ELEM(aux, i, 1) = A1D_ELEM(hist, i);
     }
     o << aux;
     return o;
@@ -142,8 +142,8 @@ double histogram1D::percentil(double percent_mass)
     int N_diff_from_0 = 0;
     while (acc < required_mass)
     {
-        acc += VEC_ELEM(*this, i);
-        if (VEC_ELEM(*this, i) > 0)
+        acc += A1D_ELEM(*this, i);
+        if (A1D_ELEM(*this, i) > 0)
             N_diff_from_0++;
         i++;
     }
@@ -163,8 +163,8 @@ double histogram1D::percentil(double percent_mass)
         /* CO: We cannot assure that there is at least what is supposed to be
                above this threshold. Let's move to the safe side
         i--;
-        acc -= VEC_ELEM(*this,i);
-        percentil_i=i+(required_mass-acc)/(double) VEC_ELEM(*this,i); */
+        acc -= A1D_ELEM(*this,i);
+        percentil_i=i+(required_mass-acc)/(double) A1D_ELEM(*this,i); */
         percentil_i = i - 1;
     }
 
@@ -189,7 +189,7 @@ double histogram1D::mass_below(double value)
     index2val(i, current_value);
     while (current_value <= value)
     {
-        acc += VEC_ELEM(*this, i);
+        acc += A1D_ELEM(*this, i);
         i++;
         index2val(i, current_value);
     }
@@ -202,16 +202,16 @@ double histogram1D::entropy() const
     MultidimArray<double> p;
     p.initZeros(XSIZE(*this));
     double pSum=0;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(p)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(p)
     {
-        VEC_ELEM(p,i)=VEC_ELEM(*this,i)+1;
-        pSum+=VEC_ELEM(p,i);
+        A1D_ELEM(p,i)=A1D_ELEM(*this,i)+1;
+        pSum+=A1D_ELEM(p,i);
     }
     double entropy=0;
     double ipSum=1.0/pSum;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(p)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(p)
     {
-        double pi=VEC_ELEM(p,i)*ipSum;
+        double pi=A1D_ELEM(p,i)*ipSum;
         entropy-=pi*log(pi);
     }
     return entropy;
@@ -242,9 +242,9 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
     while (v <= hmax)
     {
         h1.val2index(v, ih1);
-        p1 = VEC_ELEM(h1, ih1) / h1.no_samples;
+        p1 = A1D_ELEM(h1, ih1) / h1.no_samples;
         h2.val2index(v, ih2);
-        p2 = VEC_ELEM(h2, ih2) / h2.no_samples;
+        p2 = A1D_ELEM(h2, ih2) / h2.no_samples;
         //#define DEBUG
 #ifdef DEBUG
 
@@ -279,7 +279,7 @@ double KLDistance(const histogram1D& h1, const histogram1D& h2)
         REPORT_ERROR(1,"KLDistance: Histograms of different sizes");
     
     double retval=0;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(h1)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(h1)
         if (h2(i)!=0.0 && h1(i)!=0.0) retval += h1(i)*log10(h1(i)/h2(i)); 
     return retval;
 }
@@ -410,7 +410,7 @@ void histogram2D::insert_value(double v, double u)
         return; // it is outside our scope
     i = CLIP(i, 0, YSIZE(*this));
     j = CLIP(j, 0, XSIZE(*this));
-    MAT_ELEM(*this, i, j)++;
+    A2D_ELEM(*this, i, j)++;
     no_samples++;
 }
 
@@ -420,10 +420,10 @@ std::ostream& operator << (std::ostream &o, const histogram2D &hist)
     MultidimArray<double> aux;
     aux.resize(hist.IstepNo()*hist.JstepNo(), 3);
     int n = 0;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(hist)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(hist)
     {
-        hist.index2val(i, j, MAT_ELEM(aux, n, 0), MAT_ELEM(aux, n, 1));
-        MAT_ELEM(aux, n, 2) = MAT_ELEM(hist, i, j);
+        hist.index2val(i, j, A2D_ELEM(aux, n, 0), A2D_ELEM(aux, n, 1));
+        A2D_ELEM(aux, n, 2) = A2D_ELEM(hist, i, j);
         n++;
     }
     o << aux;
