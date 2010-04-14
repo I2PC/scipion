@@ -25,10 +25,10 @@
 
 //#include "mpi_run.h"
 
+#include <mpi.h>
 #include <cstring>
 #include <cstdlib>
 #include <data/funcs.h>
-#include <mpi.h>
 #include <iostream>
 #include <sstream>
 #include <fstream>

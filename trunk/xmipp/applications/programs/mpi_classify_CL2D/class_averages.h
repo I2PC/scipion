@@ -25,12 +25,12 @@
 #ifndef _PROG_VQ_PROJECTIONS
 #define _PROG_VQ_PROJECTIONS
 
+#include <mpi.h>
 #include <data/selfile.h>
 #include <data/polar.h>
 #include <data/fftw.h>
 #include <data/histogram.h>
 #include <vector>
-#include <mpi.h>
 
 /**@defgroup VQforProjections
    @ingroup ReconsLibraryPrograms */
