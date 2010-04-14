@@ -295,28 +295,26 @@ MetaData::MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector
 	read(fileName,labelsVector);
 }
 
-void MetaData::combine( MetaData & other, MetaDataLabel thisLabel, MetaDataLabel otherLabel )
+void MetaData::combine( MetaData & other, MetaDataLabel thisLabel )
 {
-    std::map< long int, MetaDataContainer *>::iterator It;
 	
 	MetaDataContainer * aux, * aux2;
     std::string value1, value2;
     	
 	for( long int IDthis = firstObject( ) ; IDthis != NO_MORE_OBJECTS; IDthis = nextObject( ) )
 	{
-		aux = getObject( IDthis );
+		aux = getObject( );
 		aux->writeValueToString( value1, thisLabel );
-        
         for( long int IDother = other.firstObject(); IDother != NO_MORE_OBJECTS; IDother = other.nextObject( ) )
         {
-            other.getObject( IDother );
-            aux2->writeValueToString( value2, otherLabel );
+            aux2 = other.getObject( );
+            aux2->writeValueToString( value2, thisLabel );
             
             if( value2 == value1 )
             {
-                for( MetaDataLabel mdl = MDL_FIRST_LABEL ; mdl <= MDL_LAST_LABEL ; MetaDataLabel( mdl+1 ) )
+                for( MetaDataLabel mdl = MDL_FIRST_LABEL ; mdl <= MDL_LAST_LABEL ; mdl=MetaDataLabel( mdl+1 ) )
                 {
-                    if( aux2->valueExists( mdl ) && !aux->valueExists( mdl ) )
+                    if( aux2->valueExists( mdl ) )
                     {
                         std::string value;
                         
@@ -325,6 +323,7 @@ void MetaData::combine( MetaData & other, MetaDataLabel thisLabel, MetaDataLabel
                         setValue( MetaDataContainer::decodeLabel( mdl ), value );
                     }
                 }
+                break;
             }
         }
 	}
@@ -343,7 +342,7 @@ void MetaData::read( FileName fileName, std::vector<MetaDataLabel> * labelsVecto
 	std::string line;
     if(infile.fail())
     {
-		REPORT_ERROR( 200, (std::string) "File" + fileName +  " does not exits" );
+		REPORT_ERROR( 200, (std::string) "File " + fileName +  " does not exits" );
     }
 	
 	// Search for Headerinfo, if present we are processing an old-styled docfile

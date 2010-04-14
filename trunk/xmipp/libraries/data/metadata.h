@@ -142,7 +142,7 @@ public:
 	std::vector<long int> findObjects( MetaDataLabel name, std::string value );
 	////////findObjects in a range
 	
-    void combine( MetaData & other, MetaDataLabel thisLabel, MetaDataLabel otherLabel );
+    void combine( MetaData & other, MetaDataLabel thisLabel);
     
     // Removes the collection of objects whose pair label/value is given
     // NOTE: The iterator will point to the first object after any of these
@@ -193,10 +193,10 @@ void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
     }
     @endcode
 */
-#define FOR_ALL_OBJECTS_IN_METADATA(metadata) \
-    metadata.firstObject(); for (long int kkkk=0; \
-        kkkk<metadata.size(); \
-        kkkk++, metadata.nextObject())
+#define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
+        for( long int kkkk = kkkk_metadata.firstObject(); \
+             kkkk != NO_MORE_OBJECTS; \
+             kkkk_metadata.nextObject( ) )
 
 #endif
 /*
