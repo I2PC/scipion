@@ -174,7 +174,7 @@ void InterPolynomial::ComputeLagrangeBasis(double *yy, unsigned nPtsTotal)
           if (fabs(v) > vabs)
           {
               vmax = v;
-              vabs = abs(v);
+              vabs = condorAbs(v);
               kmax = k;
           }
           if (fabs(v) > good ) break;
@@ -529,9 +529,9 @@ void InterPolynomial::updateM(Vector newPoint, double valueF)
     while (i--)
     {
         a=newPoint.euclidianDistance(xx[i]);
-        sum+=abs(pp[i]( newPoint ))*a*a*a;
+        sum+=condorAbs(pp[i]( newPoint ))*a*a*a;
     }
-    M=mmax(M, abs((*this)(newPoint)-valueF)/sum);
+    M=mmax(M, condorAbs((*this)(newPoint)-valueF)/sum);
     nUpdateOfM++;
 }
 
@@ -545,7 +545,7 @@ double InterPolynomial::interpError(Vector Point)
     while (i--)
     {
         a=Point.euclidianDistance(xx[i]);
-        sum+=abs(pp[i]( Point ))*a*a*a;
+        sum+=condorAbs(pp[i]( Point ))*a*a*a;
     }
     return M*sum;
 }
@@ -582,7 +582,7 @@ int InterPolynomial::findAGoodPointToReplace(int excludeFromT,
         a=aa/rho;
         // because of the next line, rho is important:
         a=mmax(a*a*a,1.0);
-        a*=abs(pp[i] (pointToAdd));
+        a*=condorAbs(pp[i] (pointToAdd));
 
         if (a>maxa)
         {
@@ -602,7 +602,7 @@ void InterPolynomial::check(Vector Base, double (*f)(  Vector ) )
     {
         r=(*f)(NewtonPoints[i]+Base);
         bound=(*this)(NewtonPoints[i]);
-        if ((abs(bound-r)>1e-15)&&(abs(bound-r)>1e-3*abs(bound))) 
+        if ((condorAbs(bound-r)>1e-15)&&(condorAbs(bound-r)>1e-3*condorAbs(bound))) 
         {
             printf("error\n"); 
             test();
@@ -643,7 +643,7 @@ void InterPolynomial::replace(int t, Vector pointToAdd, double valueF)
     // update the coefficents of general poly.
 
     valueF-=(*this)(pointToAdd);
-    if (abs(valueF)>1e-11) (*this)+=valueF*pp[t];
+    if (condorAbs(valueF)>1e-11) (*this)+=valueF*pp[t];
     
 //    test();
 }
@@ -674,7 +674,7 @@ int InterPolynomial::maybeAdd(Vector pointToAdd, unsigned k, double rho, double 
 
     // no tested:
 
-    if (abs(NewtonBasis[j](pointToAdd))*distMax*distMax*distMax/(dd*dd*dd)>1.0) 
+    if (condorAbs(NewtonBasis[j](pointToAdd))*distMax*distMax*distMax/(dd*dd*dd)>1.0) 
     {
         printf("good point found.\n");
         replace(j, pointToAdd, valueF);
@@ -729,18 +729,18 @@ int InterPolynomial::checkIfValidityIsInBound(Vector ddv, unsigned k, double bou
         {
 /*			vd=L2NormMinimizer(pp[j], xk, rho);
             vd+=xk;
-            vmax=abs(pp[j](vd));
+            vmax=condorAbs(pp[j](vd));
 
 			Vector vd2=L2NormMinimizer(pp[j], xk, rho);
             vd2+=xk;
-            double vmax2=abs(pp[j](vd));
+            double vmax2=condorAbs(pp[j](vd));
 			
 			if (vmax<vmax2) { vmax=vmax2; vd=vd2; }
 */
 			vd=LAGMAXModified(GXk,H,rho,vmax);
 //            tmp=vd.euclidianNorm();
 	        vd+=xk;
-			vmax=abs(pp[j](vd));
+			vmax=condorAbs(pp[j](vd));
             
             if (tmp*vmax>=bound) break;
         }

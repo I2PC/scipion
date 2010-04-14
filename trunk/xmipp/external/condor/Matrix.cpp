@@ -1042,7 +1042,7 @@ double Matrix::LnftyNorm()
     while (nl--)
     {
         sum=0; j=nc; xp=*(a++);
-        while (j--) sum+=abs(*(xp++));
+        while (j--) sum+=condorAbs(*(xp++));
         m=::mmax(m,sum);
     }
     return m;
@@ -1222,9 +1222,9 @@ int Matrix::solve(Vector vB)
 		for ( k=0; k<nl-1 ; k++ )
 		{
 			// find l = pivot index
-            l=k; maxp=abs(x[k][k]);
+            l=k; maxp=condorAbs(x[k][k]);
             for (i=k+1; i<nl; i++)
-                if (abs(x[i][k])>maxp) { maxp=abs(x[i][k]); l=i; }
+                if (condorAbs(x[i][k])>maxp) { maxp=condorAbs(x[i][k]); l=i; }
 
             jpvt[k] = l;
 			// zero pivot implies this column already triangularized

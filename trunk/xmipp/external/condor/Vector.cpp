@@ -228,7 +228,7 @@ double Vector::L1Norm()
     if (sz()==0) return 0;
     double *x=d->p, sum=0;
     int ni=sz();
-    while (ni--) sum+=abs(*(x++));
+    while (ni--) sum+=condorAbs(*(x++));
     return sum;
 }
 
@@ -256,7 +256,7 @@ double Vector::LnftyDistance(Vector v)
 {
     double *xp1=d->p, *xp2=v.d->p, sum=-1.0;
     int ni=sz();
-    while (ni--) sum=::mmax(sum, abs(*(xp1++)-*(xp2++)));
+    while (ni--) sum=::mmax(sum, condorAbs(*(xp1++)-*(xp2++)));
     return sum;
 }
 
@@ -264,7 +264,7 @@ double Vector::LnftyNorm()
 {
     double *xp1=d->p, sum=-1.0;
     int ni=sz();
-    while (ni--) sum=::mmax(sum, abs(*(xp1++)));
+    while (ni--) sum=::mmax(sum, condorAbs(*(xp1++)));
     return sum;
 }
 
@@ -273,7 +273,7 @@ double Vector::L1Distance(Vector v)
     if (sz()==0) return 0;
     double *xp1=d->p, *xp2=v.d->p, sum=0;
     int ni=sz();
-    while (ni--) sum+=abs(*(xp1++)-*(xp2++));
+    while (ni--) sum+=condorAbs(*(xp1++)-*(xp2++));
     return sum;
 }
 

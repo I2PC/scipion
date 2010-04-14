@@ -102,7 +102,7 @@ Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
             dd2=D2.square();
             dhd2=D2.scalarProduct(H.multiply(D2));
 
-            if (abs(dhd1/dd1)>abs(dhd2/dd2)) { D=D1; dd=dd1; dhd=dhd1; } 
+            if (condorAbs(dhd1/dd1)>condorAbs(dhd2/dd2)) { D=D1; dd=dd1; dhd=dhd1; } 
             else { D=D2; dd=dd2; dhd=dhd2; }
             d=(double*)D;
         }
@@ -122,10 +122,10 @@ Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
     i=n; while (i--) v[i]=d[i]-temp*g[i];
     vv=V.square();
 
-    if ((normG*dd)<(0.5-2*rho*abs(dhd))||(vv/dd<1e-4))
+    if ((normG*dd)<(0.5-2*rho*condorAbs(dhd))||(vv/dd<1e-4))
     {
         D.multiply(scale);
-        VMAX=abs(scale*(gd+0.5*scale*dhd));
+        VMAX=condorAbs(scale*(gd+0.5*scale*dhd));
         return D;
     }
 
@@ -140,7 +140,7 @@ Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
            vhv=V.scalarProduct(H.multiply(V));
     double theta, cosTheta, sinTheta;
 
-    if (abs(vhg)<0.01*mmax(abs(vhv),abs(ghg)))
+    if (condorAbs(vhg)<0.01*mmax(condorAbs(vhv),condorAbs(ghg)))
     {
         cosTheta=1.0;
         sinTheta=0.0;
@@ -171,15 +171,15 @@ Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
     vhv=(ghg*sqr(sinTheta)+vhv*sqr(cosTheta)*sqr(norm));
 
     double halfRootTwo=sqrt(0.5),   // =sqrt(2)/2=cos(PI/4)
-           t1=normG*cosTheta*rho,   // t1=abs(D.scalarProduct(G));
-           t2=normG*sinTheta*rho,   // t2=abs(V.scalarProduct(G));
-           at1=abs(t1),
-           at2=abs(t2),
+           t1=normG*cosTheta*rho,   // t1=condorAbs(D.scalarProduct(G));
+           t2=normG*sinTheta*rho,   // t2=condorAbs(V.scalarProduct(G));
+           at1=condorAbs(t1),
+           at2=condorAbs(t2),
            t3=0.25*(dhd+vhv),
-           q1=abs(at1+0.5*dhd),
-           q2=abs(at2+0.5*vhv),
-           q3=abs(halfRootTwo*(at1+at2)+t3),
-           q4=abs(halfRootTwo*(at1-at2)+t3);
+           q1=condorAbs(at1+0.5*dhd),
+           q2=condorAbs(at2+0.5*vhv),
+           q3=condorAbs(halfRootTwo*(at1+at2)+t3),
+           q4=condorAbs(halfRootTwo*(at1-at2)+t3);
     if ((q4>q3)&&(q4>q2)&&(q4>q1))
     {
         double st1=sign(t1*t3), st2=sign(t2*t3);

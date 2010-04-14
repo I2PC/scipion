@@ -134,7 +134,7 @@ void simpleQPSolve(Matrix mH, Vector vG, Matrix mA, Vector vB,   // in
         if ((mymin!=mymax)||(mymin!=0.0)||(mymax!=0.0))
         {
             lambda[k]=lambda[i];
-            maxb=mmax(maxb,abs(b[i]));
+            maxb=mmax(maxb,condorAbs(b[i]));
             scaleLambda[k]=mA.euclidianNorm(i);
             vi_QP[k]=i;
             k++;

@@ -41,7 +41,7 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 #define PI 3.1415926535897932384626433832795
 #define ROOT2 1.41421356
  
-inline double abs( const double t1 )
+inline double condorAbs( const double t1 )
 {
 	return t1 > 0.0 ? t1 : -t1;
 }
@@ -54,13 +54,13 @@ inline double sign( const double a )
 
 inline double sign( const double t1, const double t2 )
 {
-    if(t2>=0) return abs(t1);
-    return -abs(t1);
+    if(t2>=0) return condorAbs(t1);
+    return -condorAbs(t1);
 }
 
 inline double isInt( const double a)
 {
-    return abs(a-floor( a + 0.5 ))<1e-4;
+    return condorAbs(a-floor( a + 0.5 ))<1e-4;
 }
 
 inline double mmin( const double t1, const double t2 )

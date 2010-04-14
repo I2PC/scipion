@@ -338,7 +338,7 @@ void Polynomial::print()
 				if (queryFlag( NicePrint ))
 				{
                     if (*tt<0) printf("-");
-                    printf("%f x^",abs(*tt)); I.print();
+                    printf("%f x^",condorAbs(*tt)); I.print();
 				}
 				else
 				{
@@ -350,7 +350,7 @@ void Polynomial::print()
 			if (queryFlag( NicePrint ))
 			{
                 if (*tt<0) printf("-"); else printf("+");
-                printf("%f x^",abs(*tt)); I.print();
+                printf("%f x^",condorAbs(*tt)); I.print();
 			}
 			else
 			{

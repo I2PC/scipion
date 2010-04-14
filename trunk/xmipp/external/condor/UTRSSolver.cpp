@@ -99,7 +99,7 @@ double initLambdaL(double normG,double delta, Matrix H)
     for (i=0; i<n; i++) 
     {
         sum=h[i][i];
-        for (j=0; j<n; j++) if (j!=i) sum+=abs(h[i][j]);
+        for (j=0; j<n; j++) if (j!=i) sum+=condorAbs(h[i][j]);
         a=mmax(a,sum);
     }
     a=mmin(a,H.frobeniusNorm());
@@ -117,7 +117,7 @@ double initLambdaU(double normG,double delta, Matrix H)
     for (i=0; i<n; i++) 
     {
         sum=-h[i][i];
-        for (j=0; j<n; j++) if (j!=i) sum+=abs(h[i][j]);
+        for (j=0; j<n; j++) if (j!=i) sum+=condorAbs(h[i][j]);
         a=mmax(a,sum);
     }
     a=mmin(a,H.frobeniusNorm());
@@ -135,7 +135,7 @@ double initLambdaU2(Matrix H)
     for (i=0; i<n; i++) 
     {
         sum=h[i][i];
-        for (j=0; j<n; j++) if (j!=i) sum+=abs(h[i][j]);
+        for (j=0; j<n; j++) if (j!=i) sum+=condorAbs(h[i][j]);
         a=mmax(a,sum);
     }
     a=mmin(a,H.frobeniusNorm());
@@ -200,7 +200,7 @@ Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
 
         // check for termination
 #ifndef POWEL_TERMINATION
-        if (abs(normS-delta)<kappaEasy*delta) 
+        if (condorAbs(normS-delta)<kappaEasy*delta) 
         { 
             s.multiply(delta/normS);
             info=1; 

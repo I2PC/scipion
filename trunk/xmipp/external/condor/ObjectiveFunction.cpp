@@ -94,8 +94,8 @@ void ObjectiveFunction::endInit()
     isConstrained=0;
     for (i=0; i<mdim; i++)
     {
-        if (bbl[i]>-INF) {isConstrained=1; maxNormLC=mmax(maxNormLC, abs(bbl[i])); }
-        if (bbu[i]< INF) {isConstrained=1; maxNormLC=mmax(maxNormLC, abs(bbu[i])); }
+        if (bbl[i]>-INF) {isConstrained=1; maxNormLC=mmax(maxNormLC, condorAbs(bbl[i])); }
+        if (bbu[i]< INF) {isConstrained=1; maxNormLC=mmax(maxNormLC, condorAbs(bbu[i])); }
     }
     if (b.sz()) { isConstrained=1; maxNormLC=mmax(maxNormLC,b.LnftyNorm()); }
     tolLC=(1.0+maxNormLC)*tolRelFeasibilityForLC*(mdim*2+A.nLine());
@@ -110,7 +110,7 @@ void ObjectiveFunction::initTolLC(Vector vX)
     double *ofb=b;
 
     for (i=0; i<A.nLine(); i++)
-        maxNormLC=mmax(maxNormLC, abs(ofb[i]-A.scalarProduct(i,vX)));
+        maxNormLC=mmax(maxNormLC, condorAbs(ofb[i]-A.scalarProduct(i,vX)));
 
     tolLC=(1.0+maxNormLC)*tolRelFeasibilityForLC*(dim()*2+A.nLine());
 }
@@ -119,7 +119,7 @@ void ObjectiveFunction::initTolNLC(Vector c, double delta)
 {
     int i;
 
-    for (i=0; i<nNLConstraints; i++) maxNormNLC=mmax(maxNormNLC,abs(c[i]));
+    for (i=0; i<nNLConstraints; i++) maxNormNLC=mmax(maxNormNLC,condorAbs(c[i]));
     if (delta<INF) maxNormNLC=mmax(maxNormNLC,delta*delta);
 
     tolNLC=(1.0+maxNormNLC)*tolRelFeasibilityForNLC*nNLConstraints;
@@ -128,7 +128,7 @@ void ObjectiveFunction::initTolNLC(Vector c, double delta)
 void ObjectiveFunction::updateCounter(double df, Vector vX, int nerror)
 {
     nfe++;
-    if ((dfold==INF)&&(nerror==0)) { dfref=(1+abs(df))*1e-8; dfold=df; nfe2=nfe; return; }
+    if ((dfold==INF)&&(nerror==0)) { dfref=(1+condorAbs(df))*1e-8; dfold=df; nfe2=nfe; return; }
     if (dfold-df<dfref) return;
     if (!isFeasible(vX)) return;
     
@@ -376,7 +376,7 @@ CorrectScaleOF::CorrectScaleOF(int _t, ObjectiveFunction *_of):
     int i=of->dim();
     rescaling.setSize(i);
     double *xs=of->xStart,*r=rescaling;
-    while (i--) r[i]=abs(xs[i])+1.0;
+    while (i--) r[i]=condorAbs(xs[i])+1.0;
 
     if (of->isConstrained)
     {

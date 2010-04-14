@@ -124,7 +124,7 @@ double euclidianNorm(int i, double *xp)
 
     while (i--)
     {
-        xabs=abs(*(xp++));
+        xabs=condorAbs(*(xp++));
         
         if (xabs>BIG)
         {

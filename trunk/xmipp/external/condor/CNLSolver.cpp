@@ -203,7 +203,7 @@ void CONDOR( double rhoStart, double rhoEnd, int niter,
                 //  IF THE MODEL REDUCTION IS SMALL, THEN WE DO NOT SAMPLE FUNCTION
                 //  AT THE NEW POINT. WE THEN WILL TRY TO IMPROVE THE MODEL.
 
-                noise=0.5*mmax(of->noiseAbsolute*(1+of->noiseRelative), abs(valueFk)*of->noiseRelative);
+                noise=0.5*mmax(of->noiseAbsolute*(1+of->noiseRelative), condorAbs(valueFk)*of->noiseRelative);
                 if ((reduction<noise)&&(!forceTRStep)) { evalNeeded=true; break; }
                 forceTRStep=false; evalNeeded=false;
 
