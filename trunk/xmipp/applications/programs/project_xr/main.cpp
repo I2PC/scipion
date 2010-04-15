@@ -30,70 +30,85 @@
 
 void usage();
 
-int main(int argc, char **argv) {
-	FileName fnPSF, fnPSFOut;
-	XmippXRPSF psf;
+int main(int argc, char **argv)
+{
+    FileName fnPSF, fnPSFOut, fnImgOut;
+    XmippXRPSF psf;
 
-	try {
-		if (checkParameter(argc, argv, "-psf")) {
-			fnPSF = getParameter(argc, argv, "-psf");
-			psf.read(fnPSF);
-		} else
-			psf.clear();
+    #define DEBUG
 
-	} catch (Xmipp_error &XE) {
-		std::cerr << XE << std::endl;
-		//    	psf.usage();
-		usage();
-		return 1;
-	}
+    try
+    {
+        if (checkParameter(argc, argv, "-psf"))
+        {
+            fnPSF = getParameter(argc, argv, "-psf");
+            psf.read(fnPSF);
+        }
+        else
+            psf.clear();
 
-	try {
-		//    	XmippXRPSF psf;
-		psf.produceSideInfo();
-		std::cout << psf << std::endl;
+    }
+    catch (Xmipp_error &XE)
+    {
+        std::cerr << XE << std::endl;
+        //     psf.usage();
+        usage();
+        return 1;
+    }
 
-		if (checkParameter(argc, argv, "-psfout")) {
-			fnPSFOut = getParameter(argc, argv, "-psfout");
-//			psf.write(fnPSFOut);
+    try
+    {
+        //     XmippXRPSF psf;
+        psf.produceSideInfo();
+        std::cout << psf << std::endl;
+
+        Matrix2D < std::complex < double > > Image(128,512);
+//        Matrix2D < double > Image(1280,1280);
+        //  Matrix2D < double > Ic(128,128);
+
+        psf.generateOTF(Image);
 
 
-		Matrix2D < std::complex < double > > Ic(128,128);
-//		Matrix2D < double > Ic(128,128);
 
+        //  Ic = (lensPD(psf.Flens, psf.lambda,psf.dxo, 128, 128));
+        //  lensPD(Ic, psf.Flens, psf.lambda,psf.dxo,psf.dxo);
 
-//		Ic = (lensPD(psf.Flens, psf.lambda,psf.dxo, 128, 128));
-		lensPD(Ic, psf.Flens, psf.lambda,psf.dxo,psf.dxo);
+        if (checkParameter(argc, argv, "-psfout"))
+        {
+            fnPSFOut = getParameter(argc, argv, "-psfout");
+            psf.write(fnPSFOut);
+        }
+        if (checkParameter(argc, argv, "-imgout"))
+        {
+            fnImgOut = getParameter(argc, argv, "-imgout");
 
-#define DEBUG
+            ImageXmipp Im; //(Image.ydim, Image.xdim);
+            Im().resize(psf.OTF);
 
-		psf.generateOTF(Ic);
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(psf.OTF)
+				Im(i,j) = abs(psf.OTF(i,j));
+
+            Im.write(fnImgOut);
 
 #ifdef DEBUG
-		ImageXmipp Im;
-		Im().resize(Ic);
-		FOR_ALL_ELEMENTS_IN_MATRIX2D(Ic)
-		         Im(i,j) = arg(Ic(i,j));
-
-		Im.write(fnPSFOut);
 #endif
-//		std::cout << Ic << std::endl;
-//		std::cout << Ir << std::endl;
+        }
 
-		}
-
-	} catch (Xmipp_error &XE) {
-		std::cerr << XE << std::endl;
-		return 1;
-	}
-	return 0;
+    }
+    catch (Xmipp_error &XE)
+    {
+        std::cerr << XE << std::endl;
+        return 1;
+    }
+    return 0;
 }
 
-void usage() {
-	std::cerr << "Usage: project_xr [options]\n"
-			<< "   -psf <PSF description file>      : PSF characteristic of the microscope \n"
-			<< "  [-w_dir \"[X=1,Y=0]\"             : test \n"
-			<< "  [-w_step <step=0.001>]          : test\n";
+void usage()
+{
+    std::cerr << "Usage: project_xr [options]\n"
+    << "   -psf <PSF description file>      : PSF characteristic of the microscope \n"
+    << "  [-w_dir \"[X=1,Y=0]\"             : test \n"
+    << "  [-w_step <step=0.001>]          : test\n";
 }
 
 #undef DEBUG

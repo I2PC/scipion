@@ -26,6 +26,7 @@
 #include "psf_xr.h"
 #include "args.h"
 #include "fft.h"
+#include "mask.h"
 
 /* Read -------------------------------------------------------------------- */
 void XmippXRPSF::read(const FileName &fn)
@@ -125,10 +126,11 @@ void XmippXRPSF::produceSideInfo()
     dxi = dxo * Ms;
     dxiMax = lambda * Zi / (2 * Rlens);
 
-    Z = 0.99999*Zo;
+//    Z = 0.99999*Zo;
+    Z = Zo;
 }
 
-/* Apply the CTF to an image ----------------------------------------------- */
+/* Apply the OTF to an image ----------------------------------------------- */
 void XmippXRPSF::applyOTF(Matrix2D<double> &I) const
 {
     //    Matrix1D<int>    idx(2);
@@ -168,85 +170,75 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
     std::cout << "Nx = " << Nx << "   Ny = " << Ny << std::endl;
     std::cout << "dxl = " << dxl << "   dyl = " << dyl << std::endl;
     std::cout << "Equivalent focal = " << focalEquiv << std::endl;
+    std::cout << "Discrete X-Radius in pixels = " << Rlens / dxl  << std::endl;
+    std::cout << "Discrete Y-Radius in pixels = " << Rlens / dyl  << std::endl;
     std::cout << std::endl;
 #endif
 
-    Matrix2D< std::complex<double> > LPD(Ny, Nx),LPDFT;
+    Matrix2D< std::complex<double> > PSFi;
     XmippFftw transformer;
-    //Matrix2D< std::complex<double> > LPD(OTF);
-//    OTF=LPD;
-    OTF.resize(Ny,Nx);
+    Mask_Params mask_prm;
 
-    lensPD(LPD, focalEquiv, lambda, dxl, dyl);
+    OTF.resize(Ny,Nx);
+    lensPD(OTF, focalEquiv, lambda, dxl, dyl);
+
+
+    // TODO incluir la mascara de la apertura de la lente: circular, pero en este caso se ha de hacer con una elipse
+
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
+      {
+  		if (sqrt(double(i*i)*dyl*dyl + double(j*j)*dxl*dxl) > Rlens) OTF(i,j)=0;
+      }
 
 #ifdef DEBUG
 
     // lensPD(LPD, focalEquiv, lambda,dxo,dxo);
     ImageXmipp _Im;
-    _Im().resize(LPD);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(LPD)
-    _Im(i,j) = arg(LPD(i,j));
+    _Im().resize(OTF);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
+    _Im(i,j) = arg(OTF(i,j));
 
-    _Im.write("borrame.spi");
+    _Im.write("lensphase.spi");
 #endif
 
-    transformer.FourierTransform(LPD, LPDFT, false);
 
+    transformer.FourierTransform(OTF, PSFi, false);
+    CenterOriginFFT(PSFi, 1);
+     double norm=0;
+
+//     FOR_ALL_ELEMENTS_IN_MATRIX2D(LPDFT)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
+    {
+    	 PSFi.data[n] = abs(PSFi.data[n]);
+    	 PSFi.data[n] *= PSFi.data[n];
+    	 norm +=  PSFi.data[n].real();
+    }
+     PSFi /= norm;
+    //
+     transformer.inverseFourierTransform();
+     CenterOriginFFT(OTF, 1);
 
 #ifdef DEBUG
 
     std::cout << "checkpoint transformer  1" << std::endl;
-    _Im().resize(LPDFT);
+    _Im().resize(OTF);
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(LPDFT)
-    {
-        _Im(i,j) = abs(LPDFT(i,j));
-    }
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(PSFi)
+            _Im(i,j) = abs(PSFi(i,j));
 
-    _Im.write("borrameFT.spi");
-    std::cout << "checkpoint transformer 2" << std::endl;
+    _Im.write("psfi.spi");
+
+    Im.setXmippOrigin();
+
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
+        Im(i,j) = abs(OTF(i,j));
+
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(Im)
+		_Im(i,j) = Im(i,j);
+
+    _Im.write("otf.spi");
+
 #endif
-
-//    OTF.resize(LPD);
-     //OTF = LPD;
-    // OTF.resize(LPDFT);
-
-    // OTF = &LPDFT();
-
-    // LPDFT = abs(LPDFT);
-    // LPDFT *= LPDFT;
-    //
-    // double norm=0;
-    //
-    // FOR_ALL_ELEMENTS_IN_MATRIX2D(LPDFT)
-    //  norm += LPDFT(i,j);
-    //
-    // LPDFT /= norm;
-    //
-    // transformer1.inverseFourierTransform();
-    //
-    // OTF = LPD;
-
-
-    //    Matrix1D<int>    idx(2);
-    //    Matrix1D<double> freq(2);
-    //    OTF.resize(Ydim, Xdim);
-    //#ifdef DEBUG
-    //    std::cout << "OTF:\n" << *this << std::endl;
-    //#endif
-    //    FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
-    //    {
-    //        XX(idx) = j;
-    //        YY(idx) = i;
-    //        FFT_idx2digfreq(OTF, idx, freq);
-    //        digfreq2contfreq(freq, freq, Tm);
-    //        OTF(i, j) = OTF_at(XX(freq), YY(freq));
-    //#ifdef DEBUG
-    //        if (i == 0)
-    //            std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
-    //            << " " << OTF(i, j) << std::endl;
-    //#endif
-    //    }
 }
 
 /* Generate the quadratic phase distribution of an ideal lens ------------- */
