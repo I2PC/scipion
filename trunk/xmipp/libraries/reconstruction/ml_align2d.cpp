@@ -1983,13 +1983,14 @@ void Prog_MLalign2D_prm::expectation()
 
     Msignificant.resize(model.n_ref, nr_psi * nr_flip);
 
-    int nn = SF.ImgNo();
-    int ni = nn / blocks;
+    static int img_done;
+    if (verb > 0 && current_block == 0) //when not iem current block is always 0
+    {
+        init_progress_bar(nr_images_local);
+        img_done = 0;
+    }
 
-    if (verb > 0)
-        init_progress_bar(ni);
-
-    int c = XMIPP_MAX(1, ni / 60);
+    int c = XMIPP_MAX(1, nr_images_local / 60);
 
 #ifdef TIMING
 
@@ -1999,7 +2000,7 @@ void Prog_MLalign2D_prm::expectation()
 
 #endif
 
-    int img_done = 0;
+
     //for (int imgno = 0, img_done = 0; imgno < nn; imgno++)
     // Loop over all images
     FOR_ALL_LOCAL_IMAGES()
@@ -2127,13 +2128,13 @@ void Prog_MLalign2D_prm::expectation()
 
             if (do_norm)
             {
-                docfiledata(IMG_INDEX,9) = bgmean; // background mean
-                docfiledata(IMG_INDEX,10) = opt_scale; // image scale
+                dMij(docfiledata,IMG_INDEX,9) = bgmean; // background mean
+                dMij(docfiledata,IMG_INDEX,10) = opt_scale; // image scale
             }
 
             if (model.do_student)
             {
-                docfiledata(IMG_INDEX,11) = maxweight2; // Robustness weight
+                dMij(docfiledata,IMG_INDEX,11) = maxweight2; // Robustness weight
             }
 
             if (verb > 0 && img_done % c == 0)
@@ -2153,8 +2154,8 @@ void Prog_MLalign2D_prm::expectation()
 
 #endif
 
-    if (verb > 0)
-        progress_bar(ni);
+    if (verb > 0 && current_block == (blocks - 1))
+        progress_bar(nr_images_local);
 
 #ifdef TIMING
 
@@ -2337,15 +2338,15 @@ void Prog_MLalign2D_prm::addDocfileData(Matrix2D<double> data, int first, int la
     SelFile SFTemp;
     Matrix1D<double> dataline(DATALINELENGTH);
 
-    SF.chooseSubset(first, last, SFTemp);
-    SFTemp.go_beginning();
-    //SF.go_beginning();
-    //SF.jump_lines(first);
+    //SF.chooseSubset(first, last, SFTemp);
+    //SFTemp.go_beginning();
+    SF.go_beginning();
+    SF.jump_lines(first);
     int index;
     for (int i = first; i <= last; i++)
     {
         index = i - first;
-        DFo.append_comment(SFTemp.NextImg());
+        DFo.append_comment(SF.NextImg());
         for (int j = 0; j < DATALINELENGTH; j++)
             dataline(j) = dMij(data, index, j);
         DFo.append_data_line(dataline);

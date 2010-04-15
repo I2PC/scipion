@@ -90,7 +90,6 @@ int main(int argc, char **argv)
 #ifdef TIMING
                 prm.timer.tic(ITER_E);
 #endif
-                std::cout << "------- ITER: " << prm.iter << " ------ BLOCK: " << prm.current_block + 1 << "-------------" << std::endl;
                 // Integrate over all images
                 prm.expectation();
 #ifdef TIMING
@@ -106,7 +105,6 @@ int main(int argc, char **argv)
                     if (prm.iter > 1)
                     {
                         prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
-                        //block_model.print();
                         prm.model.substractModel(block_model);
                     }
                     prm.maximization(block_model);
