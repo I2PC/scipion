@@ -90,7 +90,7 @@ void DocLine::set(int i, double val)
     data[i] = val;
 }
 
-void DocLine::set(const Matrix1D< double >& v)
+void DocLine::set(const MultidimArray< double >& v)
 {
     data.clear();
     if (line_type != DATALINE)
@@ -230,7 +230,7 @@ DocFile& DocFile::operator=(const DocFile& doc)
     return *this;
 }
 
-DocFile& DocFile::operator=(const Matrix2D< double >& A)
+DocFile& DocFile::operator=(const MultidimArray< double >& A)
 {
     clear();
     DocLine temp;
@@ -248,7 +248,7 @@ DocFile& DocFile::operator=(const Matrix2D< double >& A)
     }
 
     fn_doc = "";
-    no_lines = A.rowNumber();
+    no_lines = YSIZE(A);
     renum();
     go_beginning();
 
@@ -974,7 +974,7 @@ int DocFile::insert_data_line(int count)
     return it->key;
 }
 
-int DocFile::insert_data_line(const Matrix1D< double >& v)
+int DocFile::insert_data_line(const MultidimArray< double >& v)
 {
     DocLine tmp;
     tmp.set(v);
@@ -985,6 +985,18 @@ int DocFile::insert_data_line(const Matrix1D< double >& v)
     int ret = current_line->key;
     current_line++;
     no_lines++;
+
+    return ret;
+}
+
+int DocFile::insert_data_line(const Matrix1D< double >& v)
+{
+	int ret;
+	MultidimArray<double> tmp(v.size());
+
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
+		A1D_ELEM(tmp, i) = v(i);
+    ret = insert_data_line(tmp);
 
     return ret;
 }
@@ -1035,7 +1047,7 @@ int DocFile::append_data_line(int count)
     return ret;
 }
 
-int DocFile::append_data_line(const Matrix1D< double >& v)
+int DocFile::append_data_line(const MultidimArray< double >& v)
 {
     DocLine tmp;
     tmp.set(v);
@@ -1058,7 +1070,7 @@ void DocFile::append_comment(const std::string& comment)
 int DocFile::append_angles(double rot, double tilt, double psi,
                            const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
-    Matrix1D< double > aux(3);
+    MultidimArray< double > aux(3);
 
     if (ang1[0] == 'r')
         A1D_ELEM(aux, 0) = rot;
@@ -1088,7 +1100,7 @@ int DocFile::append_angles(double rot, double tilt, double psi,
                            double rot1, double tilt1, double psi1,
                            const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
-    Matrix1D< double > aux(6);
+    MultidimArray< double > aux(6);
 
     if (ang1[0] == 'r')
         A1D_ELEM(aux, 0) = rot;
@@ -1140,7 +1152,7 @@ int DocFile::append_angles(double rot, double tilt, double psi,
                            double rot2, double tilt2, double psi2,
                            const std::string& ang1, const std::string& ang2, const std::string& ang3)
 {
-    Matrix1D< double > aux(9);
+    MultidimArray< double > aux(9);
 
     if (ang1[0] == 'r')
         A1D_ELEM(aux, 0) = rot;
@@ -1400,9 +1412,9 @@ DocFile DocFile::sort_by_filenames()
     return result;
 }
 
-Matrix1D< double > DocFile::col(int c)
+MultidimArray< double > DocFile::col(int c)
 {
-    Matrix1D< double > result(no_lines);
+    MultidimArray< double > result(no_lines);
 
     std::vector< DocLine >::iterator current = m.begin();
     std::vector< DocLine >::iterator last = m.end();
@@ -1419,15 +1431,14 @@ Matrix1D< double > DocFile::col(int c)
     return result;
 }
 
-Matrix1D< double > DocFile::row(int k)
+MultidimArray< double > DocFile::row(int k)
 {
-    Matrix1D< double > result;
+    MultidimArray< double > result;
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
         return result;
 
     result.resize(it->data.size());
-    result.setRow();
 
     for (int i = 0; i < result.xdim; i++)
         A1D_ELEM(result, i) = it->data[i];
@@ -1435,7 +1446,7 @@ Matrix1D< double > DocFile::row(int k)
     return result;
 }
 
-void DocFile::setCol(int c, Matrix1D< double >& v)
+void DocFile::setCol(int c, MultidimArray< double >& v)
 {
     go_first_data_line();
 

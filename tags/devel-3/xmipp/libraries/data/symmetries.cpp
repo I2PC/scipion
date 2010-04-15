@@ -346,8 +346,8 @@ const
     for (k = 4 * i; k < 4*i + 4; k++)
         for (l = 0; l < 4; l++)
         {
-            DIRECT_A2D_ELEM(L, k - 4*i, l) = DIRECT_A2D_ELEM(__L, k, l);
-            DIRECT_A2D_ELEM(R, k - 4*i, l) = DIRECT_A2D_ELEM(__R, k, l);
+            L(k - 4*i, l) = __L(k, l);
+            R(k - 4*i, l) = __R(k, l);
         }
 }
 
@@ -359,8 +359,8 @@ void SymList::set_matrices(int i, const Matrix2D<double> &L,
     for (k = 4 * i; k < 4*i + 4; k++)
         for (l = 0; l < 4; l++)
         {
-            DIRECT_A2D_ELEM(__L, k, l) = DIRECT_A2D_ELEM(L, k - 4 * i, l);
-            DIRECT_A2D_ELEM(__R, k, l) = DIRECT_A2D_ELEM(R, k - 4 * i, l);
+            __L(k, l) = L(k - 4 * i, l);
+            __R(k, l) = R(k - 4 * i, l);
         }
 }
 
@@ -368,25 +368,25 @@ void SymList::set_matrices(int i, const Matrix2D<double> &L,
 void SymList::get_shift(int i, Matrix1D<double> &shift) const
 {
     shift.resize(3);
-    XX(shift) = DIRECT_A2D_ELEM(__shift, i, 0);
-    YY(shift) = DIRECT_A2D_ELEM(__shift, i, 1);
-    ZZ(shift) = DIRECT_A2D_ELEM(__shift, i, 2);
+    XX(shift) = __shift(i, 0);
+    YY(shift) = __shift(i, 1);
+    ZZ(shift) = __shift(i, 2);
 }
 
 void SymList::set_shift(int i, const Matrix1D<double> &shift)
 {
-    if (XSIZE(shift) != 3)
+    if (shift.size() != 3)
         REPORT_ERROR(1002, "SymList::add_shift: Shift vector is not 3x1");
-    DIRECT_A2D_ELEM(__shift, i, 0) = XX(shift);
-    DIRECT_A2D_ELEM(__shift, i, 1) = YY(shift);
-    DIRECT_A2D_ELEM(__shift, i, 2) = ZZ(shift);
+    __shift(i, 0) = XX(shift);
+    __shift(i, 1) = YY(shift);
+    __shift(i, 2) = ZZ(shift);
 }
 
 void SymList::add_shift(const Matrix1D<double> &shift)
 {
-    if (XSIZE(shift) != 3)
+    if (shift.size() != 3)
         REPORT_ERROR(1002, "SymList::add_shift: Shift vector is not 3x1");
-    int i = YSIZE(__shift);
+    int i = __shift.Xdim();
     __shift.resize(i + 1, 3);
     set_shift(i, shift);
 }
@@ -395,17 +395,17 @@ void SymList::add_shift(const Matrix1D<double> &shift)
 void SymList::add_matrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
                            int chain_length)
 {
-    if (XSIZE(L) != 4 || YSIZE(L) != 4 || XSIZE(R) != 4 || YSIZE(R) != 4)
+    if (L.Xdim() != 4 || L.Ydim() != 4 || R.Xdim() != 4 || R.Ydim() != 4)
         REPORT_ERROR(1002, "SymList::add_matrix: Transformation matrix is not 4x4");
     if (TrueSymsNo() == SymsNo())
     {
-        __L.resize(__L.ydim + 4, 4);
-        __R.resize(__R.ydim + 4, 4);
-        __chain_length.resize(__chain_length.xdim + 1);
+        __L.resize(__L.Ydim() + 4, 4);
+        __R.resize(__R.Ydim() + 4, 4);
+        __chain_length.resize(__chain_length.size() + 1);
     }
 
     set_matrices(true_symNo, L, R);
-    __chain_length(XSIZE(__chain_length) - 1) = chain_length;
+    __chain_length(__chain_length.size() - 1) = chain_length;
     true_symNo++;
 }
 
@@ -415,9 +415,9 @@ bool found_not_tried(const Matrix2D<int> &tried, int &i, int &j,
 {
     i = j = 0;
     int n = 0;
-    while (n != YSIZE(tried))
+    while (n != tried.Ydim())
     {
-        if (A2D_ELEM(tried, i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
+        if (tried(i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
             return true;
         if (i != n)
         {
@@ -490,7 +490,7 @@ void SymList::compute_subgroup(double accuracy)
 #undef DEBUG
             add_matrices(newL, newR, new_chain_length);
             add_shift(shift);
-            tried.resize(YSIZE(tried) + 1, XSIZE(tried) + 1);
+            tried.resize(tried.Ydim() + 1, tried.Xdim() + 1);
         }
     }
 }
@@ -806,7 +806,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
                                const Matrix1D<double> &eprm_aint,
                                const Matrix1D<double> &eprm_bint,
                                int eprm_space_group,
-                               const Matrix2D<int> &mask, int grid_type)
+                               const MultidimArray<int> &mask, int grid_type)
 {
 //SO FAR ONLY THE GRID CENTERED IN 0,0,0 IS SYMMETRIZED, THE OTHER
 //ONE SINCE REQUIRE INTERPOLATION IS IGNORED
@@ -870,7 +870,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const Matrix2D<int> &mask, int volume_no,
+                     const MultidimArray<int> &mask, int volume_no,
                      int grid_type)
 {
 
@@ -1090,7 +1090,7 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
 void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const Matrix2D<int> &mask, int volume_no,
+                     const MultidimArray<int> &mask, int volume_no,
                      int grid_type)
 {
 
@@ -1309,7 +1309,7 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
 void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
-                 const Matrix2D<int> &mask, int volume_no, int grid_type)
+                 const MultidimArray<int> &mask, int volume_no, int grid_type)
 {
     int ZZ_lowest = (int) ZZ(grid.lowest);
     int YY_lowest = STARTINGY(mask);
@@ -1502,7 +1502,7 @@ void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
 void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const Matrix2D<int> &mask, int volume_no,
+                     const MultidimArray<int> &mask, int volume_no,
                      int grid_type)
 {
 
@@ -1818,7 +1818,7 @@ void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
 void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
-                 const Matrix2D<int> &mask, int volume_no,
+                 const MultidimArray<int> &mask, int volume_no,
                  int grid_type)
 {
 

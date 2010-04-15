@@ -526,6 +526,23 @@ public:
         initZeros();
     }
 
+    /** Initialize to zeros following a pattern.
+      * @ingroup Initialization
+      *
+      * All values are set to 0, and the origin and size of the pattern are
+      * adopted.
+      *
+      * @code
+      * v2.initZeros(v1);
+      * @endcode
+      */
+    template <typename T1>
+    void initZeros(const Matrix2D<T1>& op)
+    {
+    	resize(op);
+    	initConstant(static_cast< T >(0));
+	}
+
     /** 2D Identity matrix of current size
      * @ingroup Initialization
      *
@@ -966,6 +983,24 @@ public:
         return mdimx;
     }
 
+    /** Equality.
+     * @ingroup Operators
+     *
+     * Returns true if this object has got the same shape (origin and size)
+     * than the argument and the same values (within accuracy).
+     */
+    bool equal(const Matrix2D<T>& op,
+    	double accuracy = XMIPP_EQUAL_ACCURACY) const
+    {
+        if (!sameShape(op))
+            return false;
+        for (int i = 0; i < mdimy; i++)
+            for (int j = 0; j < mdimx; j++)
+            	if (ABS( (*this)(i,j) - op(i,j) ) > accuracy)
+            		return false;
+        return true;
+    }
+
     /** Makes a matrix from a vector
      * @ingroup MatricesUtilities
      *
@@ -1323,89 +1358,27 @@ public:
 
 }; // class Matrix2D
 
-
-///FIXME: implement these as real multiplications!!
-/**@defgroup MatricesRelated Related functions
- * @ingroup MultidimensionalArrays
- *
- * These functions are not methods of MultidimArray
- */
-
-/* Matrix x Matrix multiplication
- * @ingroup MatricesRelated
- * This is a matrix multiplication, not an element-by-element multiplication!
- *
- * result = A * A;
- */
+// TODO Document
 template<typename T>
-void multiplyMatrixbyMatrix(const Matrix2D<T>& op1, const Matrix2D<T>& op2, Matrix2D<T>& result)
+Matrix1D<T> Matrix1D<T>::operator*(const Matrix2D<T>& M)
 {
-     if (op1.mdimx != op2.mdimy)
-        REPORT_ERROR(1102, "Not compatible sizes in matrix multiplication");
+    Matrix1D<T> result;
 
-    result.initZeros(op1.mdimy, op2.mdimx);
-    for (int i = 0; i < op1.mdimy; i++)
-        for (int j = 0; j < op2.mdimx; j++)
-            for (int k = 0; k < op1.mdimx; k++)
-                result(i, j) += op1(i, k) * op2(k, j);
-
- }
-
-/* Matrix x Vector multiplication
- * @ingroup MatricesRelated
- * This is a matrix multiplication, not an element-by-element multiplication!
- *
- * result = A * b;
- * b should be a column vector, result will be a row vector
- *
- */
-template<typename T>
-void multiplyMatrixbyVector(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
-{
-
-    if (A.mdimx != b.size())
+    if ((*this).size() != M.Ydim())
         REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
 
-    if (!b.isCol())
-        REPORT_ERROR(1102, "Vector is not a column");
-
-    result.initZeros(A.mdimy);
-
-    for (int i = 0; i < A.mdimy; i++)
-        for (int j = 0; j < b.size(); j++)
-            result(i) += A(i, j) * b(j);
-
-    result.setCol();
-    return result;
-
-
-}
-
-/* Vector x Matrix multiplication
- * @ingroup MatricesRelated
- * This is a matrix multiplication, not an element-by-element multiplication!
- *
- * result = b * A;
- * b should be a row vector, result will be a column vector
- */
-template<typename T>
-void multiplyVectorbyMatrix(const Matrix1D<T>& b, const Matrix2D<T>& A, Matrix1D<T>& result)
-{
-    if (b.size() != A.mdimy)
-        REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
-
-    if (!b.isRow())
+    if (!isRow())
         REPORT_ERROR(1102, "Vector is not a row");
 
-    result.initZeros(A.mdimx);
-    for (int j = 0; j < A.mdimx; j++)
-        for (int i = 0; i < A.mdimy; i++)
-            result(j) += b(i) * A( i, j);
+    result.initZeros(M.Xdim());
+    for (int j = 0; j < M.Xdim(); j++)
+        for (int i = 0; i < M.Ydim(); i++)
+            result(j) += (*this)(i) * M(i, j);
 
     result.setRow();
     return result;
-
 }
+
 
 // TODO Document
 template<typename T>

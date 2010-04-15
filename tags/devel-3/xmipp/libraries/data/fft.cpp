@@ -127,7 +127,7 @@ void FourierTransform(const MultidimArray<double> &in,
     {
         // 1D
         int N = XSIZE(in);
-        Matrix1D<double> re(in), tmp(N), im(N), cas(N);
+        MultidimArray<double> re(in), tmp(N), im(N), cas(N);
         out.resize(N);
 
         GetCaS(MULTIDIM_ARRAY(cas), N);
@@ -214,7 +214,7 @@ void FourierTransform(const MultidimArray<std::complex<double> > &in,
 	in.checkDimension(1);
 
 	int N = XSIZE(in);
-    Matrix1D<double> re(N), tmpre(N), tmpim(N), im(N), cas(N);
+    MultidimArray<double> re(N), tmpre(N), tmpim(N), im(N), cas(N);
     out.resize(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
@@ -235,7 +235,7 @@ void InverseFourierTransform(const MultidimArray< std::complex<double> > &in,
 	in.checkDimension(1);
 
 	int N = XSIZE(in);
-    Matrix1D<double> tmpre(N), tmpim(N), re(N), im(N), cas(N);
+    MultidimArray<double> tmpre(N), tmpim(N), re(N), im(N), cas(N);
     out.resize(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
@@ -393,62 +393,3 @@ void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward)
         REPORT_ERROR(1,"CenterOriginFFT ERROR: only valis for 1D or 2D or 3D");
 }
 
-/* Numerical derivative of a matrix ----------------------------- */
-void numerical_derivative(Matrix2D<double> &M, Matrix2D<double> &D,
-                          char direction, int order, int window_size, int polynomial_order)
-{
-
-    // Set D to be a copy in shape of M
-    D.initZeros(M);
-
-    Matrix1D<double> v, rotated;
-    Matrix1D<double> ans; // To obtain results
-
-    // Wrap around version of the Savitzky-Golay coefficients
-    int dim = 2 * window_size + 1;
-    rotated.resize(dim);
-
-    double *pans = ans.adaptForNumericalRecipes1D();
-    double *pv = v.adaptForNumericalRecipes1D();
-    double *protated = rotated.adaptForNumericalRecipes1D();
-
-    // Calculate the Savitzky-Golay filter coeficients
-    savgol(protated, 2*window_size + 1, window_size,
-           window_size, order, polynomial_order);
-
-    // Savitzky-Golay filter is returned in wrap-around style, so
-    // correct it to use with the convolution routine
-    Matrix1D<double> coefficients(dim);
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(coefficients)
-    {
-        int j = i + window_size;
-        if (j < dim)
-            coefficients(j) = rotated(i);
-        else
-            coefficients(j - dim) = rotated(i);
-    }
-
-    // Apply the Savitzky-Golay filter to every row or column
-    if (direction == 'x')
-    {
-        // For every row (values in a row are values of the X direction)
-        for (int i = STARTINGY(M);i <= FINISHINGY(M);i++)
-        {
-            M.getRow(i, v);
-            series_convolution(v, coefficients, ans, false);
-            ans.setRow();
-            D.setRow(i, ans);
-        }
-    }
-    else if (direction == 'y')
-    {
-        // For every column (values in a column are values of the Y direction)
-        for (int i = STARTINGX(M);i <= FINISHINGX(M);i++)
-        {
-            M.getCol(i, v);
-            series_convolution(v, coefficients, ans, false);
-            ans.setCol();
-            D.setCol(i, ans);
-        }
-    }
-}

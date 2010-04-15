@@ -65,7 +65,7 @@ void RaisedCrownMask(MultidimArray<double> &mask,
     }
 }
 
-void KaiserMask(Matrix1D<double> &mask, double delta, double Deltaw)
+void KaiserMask(MultidimArray<double> &mask, double delta, double Deltaw)
 {
     // Convert Deltaw from a frequency normalized to 1, to a freq. normalized to PI
     Deltaw *= PI;
@@ -465,8 +465,8 @@ void BinaryWedgeMask(MultidimArray<double> &mask, double theta0, double thetaF,
     A = A.inv();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
     {
-        xp = dAij(A, 0, 0) * (double)j + dAij(A, 0, 1) * (double)i + dAij(A, 0, 2) * (double)k;
-        zp = dAij(A, 2, 0) * (double)j + dAij(A, 2, 1) * (double)i + dAij(A, 2, 2) * (double)k;
+        xp = A(0, 0) * (double)j + A(0, 1) * (double)i + A(0, 2) * (double)k;
+        zp = A(2, 0) * (double)j + A(2, 1) * (double)i + A(2, 2) * (double)k;
         limx0 = tg0 * zp;
         limxF = tgF * zp;
         if (zp >= 0)
@@ -1189,7 +1189,7 @@ int count_with_mask(const MultidimArray<int> &mask,
 {
     SPEED_UP_temps;
     int N = 0;
-    FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(mask, m)
+    FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, m)
     if (A2D_ELEM(mask, i, j))
         switch (mode)
         {
@@ -1220,7 +1220,7 @@ void rangeAdjust_within_mask(const MultidimArray<double> *mask,
     // Compute Least squares solution
     if (mask == NULL)
     {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(m1, m2)
+        FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(m1, m2)
         {
             A(0, 0) += m2(k, i, j) * m2(k, i, j);
             A(0, 1) += m2(k, i, j);
@@ -1232,7 +1232,7 @@ void rangeAdjust_within_mask(const MultidimArray<double> *mask,
     }
     else
     {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D(*mask, m2)
+        FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(*mask, m2)
         {
             if ((*mask)(k, i, j))
             {

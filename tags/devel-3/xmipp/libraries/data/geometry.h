@@ -299,7 +299,7 @@ public:
      *
      * The logical indexes of this matrix go from Y=[m0...mF] and X=[l0...lF]
      */
-    Matrix2D< double > c_ml;
+    MultidimArray< double > c_ml;
 
     /// Evaluate the model at the point (x,y)
     inline double evaluate(double x, double y) const

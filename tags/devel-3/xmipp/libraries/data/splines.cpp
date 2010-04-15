@@ -358,17 +358,17 @@ void spatial_Bspline032voxels_SimpleGrid(const MultidimArray<double> &vol_spline
                 }
 
                 // Prepare for next iteration
-                XX(act_coord) = XX(act_coord) + grid.relative_size * A2D_ELEM(grid.basis, 0, 0);
-                YY(act_coord) = YY(act_coord) + grid.relative_size * A2D_ELEM(grid.basis, 1, 0);
-                ZZ(act_coord) = ZZ(act_coord) + grid.relative_size * A2D_ELEM(grid.basis, 2, 0);
+                XX(act_coord) = XX(act_coord) + grid.relative_size * grid.basis(0, 0);
+                YY(act_coord) = YY(act_coord) + grid.relative_size * grid.basis(1, 0);
+                ZZ(act_coord) = ZZ(act_coord) + grid.relative_size * grid.basis(2, 0);
             }
-            XX(beginY) = XX(beginY) + grid.relative_size * A2D_ELEM(grid.basis, 0, 1);
-            YY(beginY) = YY(beginY) + grid.relative_size * A2D_ELEM(grid.basis, 1, 1);
-            ZZ(beginY) = ZZ(beginY) + grid.relative_size * A2D_ELEM(grid.basis, 2, 1);
+            XX(beginY) = XX(beginY) + grid.relative_size * grid.basis(0, 1);
+            YY(beginY) = YY(beginY) + grid.relative_size * grid.basis(1, 1);
+            ZZ(beginY) = ZZ(beginY) + grid.relative_size * grid.basis(2, 1);
         }
-        XX(beginZ) = XX(beginZ) + grid.relative_size * A2D_ELEM(grid.basis, 0, 2);
-        YY(beginZ) = YY(beginZ) + grid.relative_size * A2D_ELEM(grid.basis, 1, 2);
-        ZZ(beginZ) = ZZ(beginZ) + grid.relative_size * A2D_ELEM(grid.basis, 2, 2);
+        XX(beginZ) = XX(beginZ) + grid.relative_size * grid.basis(0, 2);
+        YY(beginZ) = YY(beginZ) + grid.relative_size * grid.basis(1, 2);
+        ZZ(beginZ) = ZZ(beginZ) + grid.relative_size * grid.basis(2, 2);
     }
 }
 #undef x0

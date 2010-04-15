@@ -131,14 +131,14 @@ public:
      */
     void set(int i, double val);
 
-    /** Set a vector (Matrix1D) as Document line.
+    /** Set a vector (MultidimArray) as Document line.
      * @ingroup DocFileAccess
      *
      * It doesn't matter if it is a row or a column vector. The previous data
      * is overwritten and the key is kept. If it was not a data line, then the
      * new key=0.
      */
-    void set(const Matrix1D< double >& v);
+    void set(const MultidimArray< double >& v);
 
     /// @defgroup DocLineStructure Structure information
     /// @ingroup DocLines
@@ -326,12 +326,12 @@ public:
      * The old information in the document file is lost.
      *
      * @code
-     * Matrix2D< double > A(30, 3);
+     * MultidimArray< double > A(30, 3);
      * A.init_random(0, 180);
      * DF = A;
      * @endcode
      */
-    DocFile& operator=(const Matrix2D< double >& A);
+    DocFile& operator=(const MultidimArray< double >& A);
 
     /** Show a document file.
      * @ingroup DocFileOperator
@@ -963,6 +963,19 @@ public:
      *  insertion         m
      *  line              n
      *
+     * MultidimArray< double > proj_angles(3);
+     * ...
+     * new_key = DF.insert_data_line(proj_angles);
+     * @endcode
+     */
+    int insert_data_line(const MultidimArray< double >& v);
+
+    /** Insert a data line before current line.
+     * @ingroup DocFileModify
+     *
+     * As the previous function, but using a Matrix1D instead of a 1D MultidimArray
+     *
+     * @code
      * Matrix1D< double > proj_angles(3);
      * ...
      * new_key = DF.insert_data_line(proj_angles);
@@ -1025,12 +1038,12 @@ public:
      * moved, neither.
      *
      * @code
-     * Matrix1D< double > proj_angles(3);
+     * MultidimArray< double > proj_angles(3);
      * ...
      * new_key = DF.append_data_line(proj_angles);
      * @endcode
      */
-    int append_data_line(const Matrix1D< double >& v);
+    int append_data_line(const MultidimArray< double >& v);
 
     /** Append angles.
      * @ingroup DocFileModify
@@ -1206,7 +1219,7 @@ public:
     /** Column to vector.
      * @ingroup DocFileHelpful
      *
-     * This function produces a double Matrix1D which is composed by all the
+     * This function produces a double MultidimArray which is composed by all the
      * components of a certain column inside the document file. If a given line
      * hasn't got enough data to fill that column (for instance, the line is 3
      * values long and we are asking for column 3 (remember that column
@@ -1214,23 +1227,23 @@ public:
      * 0's.
      *
      * @code
-     * Matrix1D< double > tilt_angle = DF.column(1);
+     * MultidimArray< double > tilt_angle = DF.column(1);
      * @endcode
      */
-    Matrix1D< double > col(int _col);
+    MultidimArray< double > col(int _col);
 
     /** Row to vector.
      * @ingroup DocFileHelpful
      *
-     * This function produces a double Matrix1D which is composed by all the
+     * This function produces a double MultidimArray which is composed by all the
      * components of a certain line inside the document file. If the key doesn't
      * exist then an empty vector is returned.
      *
      * @code
-     * Matrix1D< double > tilt_angle = DF.row(700);
+     * MultidimArray< double > tilt_angle = DF.row(700);
      * @endcode
      */
-    Matrix1D< double > row(int _key);
+    MultidimArray< double > row(int _key);
 
     /** Vector to column.
      * @ingroup DocFileHelpful
@@ -1248,7 +1261,7 @@ public:
      * DF.set_column(1, tilt_angle);
      * @endcode
      */
-    void setCol(int _col, Matrix1D< double >& v);
+    void setCol(int _col, MultidimArray< double >& v);
 };
 
 /// @defgroup DocFileFunction Useful functions working with docfiles

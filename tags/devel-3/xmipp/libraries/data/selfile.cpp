@@ -934,7 +934,7 @@ SelFile SelFile::randomSubset(int subsetN, bool withReplacement)
     if (N==0) return result;
     
     // Generate the set of random indexes
-    Matrix1D<int> idx;
+    MultidimArray<int> idx;
     if (withReplacement)
     {
         idx.initZeros(N);

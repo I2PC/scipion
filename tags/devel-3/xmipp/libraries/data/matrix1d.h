@@ -31,6 +31,8 @@
 extern int bestPrecision(float F, int _width);
 extern std::string floatToString(float F, int _width, int _prec);
 
+template <typename T> class Matrix2D;
+
 /** @defgroup Vectors Vectors speed up macros
  * @ingroup MultidimArraysSpeedUp
  *
@@ -516,6 +518,23 @@ public:
         resize(Xdim);
         initZeros();
     }
+
+    /** Initialize to zeros following a pattern.
+      * @ingroup Initialization
+      *
+      * All values are set to 0, and the origin and size of the pattern are
+      * adopted.
+      *
+      * @code
+      * v2.initZeros(v1);
+      * @endcode
+      */
+    template <typename T1>
+    void initZeros(const Matrix1D<T1>& op)
+    {
+    	resize(op);
+    	initConstant(static_cast< T >(0));
+	}
 
     /** Same shape.
      * @ingroup MultidimSize
@@ -1086,6 +1105,14 @@ public:
     		SWAP(vdata[j], vdata[vdim-1-j], aux);
     	}
     }
+
+    /** Vector by matrix
+     * @ingroup VectorsUtilities
+     *
+     * Algebraic vector by matrix multiplication. This function is actually
+     * implemented in xmippMatrices2D
+     */
+    Matrix1D<T> operator*(const Matrix2D<T>& M);
 
     /** Show using gnuplot
      * @ingroup VectorsUtilities
