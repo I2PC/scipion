@@ -108,7 +108,7 @@ struct SPIDERhead {         	// file header for SPIDER data
 **************************************************************************/
 int  readSPIDER(int img_select)
 {
-#define DEBUG
+//#define DEBUG
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL ) return(-1);
 	
@@ -324,7 +324,7 @@ int 	writeSPIDER()
     printf("DEBUG writeSPIDER: Data type size: %ld\n", datatypesize);
     printf("DEBUG writeSPIDER: Data size: %ld\n", datasize);
     printf("DEBUG writeSPIDER: Data offset: %ld\n", offset);
-    printf("DEBUG writeSPIDER: File %s\n", filename.c_str());
+	printf("DEBUG writeSPIDER: File %s\n", filename.c_str());
 #endif
 
     FILE        *fimg;
