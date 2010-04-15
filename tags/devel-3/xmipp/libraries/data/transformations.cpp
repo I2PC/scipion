@@ -43,17 +43,17 @@ void rotation2DMatrix(double ang, Matrix2D< double > &result)
     cosine = cos(ang);
     sine = sin(ang);
 
-    DIRECT_MAT_ELEM(result, 0, 0) = cosine;
-    DIRECT_MAT_ELEM(result, 0, 1) = -sine;
-    DIRECT_MAT_ELEM(result, 0, 2) = 0;
+    result(0, 0) = cosine;
+    result(0, 1) = -sine;
+    result(0, 2) = 0;
 
-    DIRECT_MAT_ELEM(result, 1, 0) = sine;
-    DIRECT_MAT_ELEM(result, 1, 1) = cosine;
-    DIRECT_MAT_ELEM(result, 1, 2) = 0;
+    result(1, 0) = sine;
+    result(1, 1) = cosine;
+    result(1, 2) = 0;
 
-    DIRECT_MAT_ELEM(result, 2, 0) = 0;
-    DIRECT_MAT_ELEM(result, 2, 1) = 0;
-    DIRECT_MAT_ELEM(result, 2, 2) = 1;
+    result(2, 0) = 0;
+    result(2, 1) = 0;
+    result(2, 2) = 1;
 }
 
 /* Translation 2D ---------------------------------------------------------- */
@@ -65,8 +65,8 @@ Matrix2D<double> translation2DMatrix(const Matrix1D<double> &v)
     Matrix2D<double> result(3, 3);
 
     result.initIdentity();
-    DIRECT_MAT_ELEM(result, 0, 2) = XX(v);
-    DIRECT_MAT_ELEM(result, 1, 2) = YY(v);
+    result(0, 2) = XX(v);
+    result(1, 2) = YY(v);
 
     return result;
 }
@@ -82,29 +82,29 @@ Matrix2D<double> rotation3DMatrix(double ang, char axis)
     sine = sin(ang);
 
     result.initZeros();
-    DIRECT_MAT_ELEM(result, 3, 3) = 1;
+    result(3, 3) = 1;
     switch (axis)
     {
     case 'Z':
-        DIRECT_MAT_ELEM(result, 0, 0) = cosine;
-        DIRECT_MAT_ELEM(result, 0, 1) = -sine;
-        DIRECT_MAT_ELEM(result, 1, 0) = sine;
-        DIRECT_MAT_ELEM(result, 1, 1) = cosine;
-        DIRECT_MAT_ELEM(result, 2, 2) = 1;
+        result(0, 0) = cosine;
+        result(0, 1) = -sine;
+        result(1, 0) = sine;
+        result(1, 1) = cosine;
+        result(2, 2) = 1;
         break;
     case 'Y':
-        DIRECT_MAT_ELEM(result, 0, 0) = cosine;
-        DIRECT_MAT_ELEM(result, 0, 2) = -sine;
-        DIRECT_MAT_ELEM(result, 2, 0) = sine;
-        DIRECT_MAT_ELEM(result, 2, 2) = cosine;
-        DIRECT_MAT_ELEM(result, 1, 1) = 1;
+        result(0, 0) = cosine;
+        result(0, 2) = -sine;
+        result(2, 0) = sine;
+        result(2, 2) = cosine;
+        result(1, 1) = 1;
         break;
     case 'X':
-        DIRECT_MAT_ELEM(result, 1, 1) = cosine;
-        DIRECT_MAT_ELEM(result, 1, 2) = -sine;
-        DIRECT_MAT_ELEM(result, 2, 1) = sine;
-        DIRECT_MAT_ELEM(result, 2, 2) = cosine;
-        DIRECT_MAT_ELEM(result, 0, 0) = 1;
+        result(1, 1) = cosine;
+        result(1, 2) = -sine;
+        result(2, 1) = sine;
+        result(2, 2) = cosine;
+        result(0, 0) = 1;
         break;
     default:
         REPORT_ERROR(1105, "rotation3DMatrix: Unknown axis");
@@ -174,9 +174,9 @@ Matrix2D<double> translation3DMatrix(const Matrix1D<double> &v)
     Matrix2D<double> result(4, 4);
 
     result.initIdentity();
-    DIRECT_MAT_ELEM(result, 0, 3) = XX(v);
-    DIRECT_MAT_ELEM(result, 1, 3) = YY(v);
-    DIRECT_MAT_ELEM(result, 2, 3) = ZZ(v);
+    result(0, 3) = XX(v);
+    result(1, 3) = YY(v);
+    result(2, 3) = ZZ(v);
 
     return result;
 }
@@ -190,9 +190,9 @@ Matrix2D<double> scale3DMatrix(const Matrix1D<double> &sc)
     Matrix2D<double> result(4, 4);
 
     result.initIdentity();
-    DIRECT_MAT_ELEM(result, 0, 0) = XX(sc);
-    DIRECT_MAT_ELEM(result, 1, 1) = YY(sc);
-    DIRECT_MAT_ELEM(result, 2, 2) = ZZ(sc);
+    result(0, 0) = XX(sc);
+    result(1, 1) = YY(sc);
+    result(2, 2) = ZZ(sc);
 
     return result;
 }

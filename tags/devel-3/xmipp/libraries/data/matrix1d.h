@@ -44,6 +44,13 @@ extern std::string floatToString(float F, int _width, int _prec);
  * the copy constructor and in the creation/destruction of temporary vectors.
  */
 
+/** Array access.
+ * @ingroup MultidimArraySizeShape
+ *
+ * This macro gives you access to the array (T)
+ */
+#define MATRIX1D_ARRAY(v) ((v).vdata)
+
 /** For all elements in the array
  * @ingroup MultidimArraySizeShape
  *

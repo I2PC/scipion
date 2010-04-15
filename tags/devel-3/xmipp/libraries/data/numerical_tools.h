@@ -31,6 +31,7 @@
 #include "numerical_recipes.h" 
 #include "matrix1d.h"
 #include "matrix2d.h"
+#include "multidim_array.h"
 
 template<typename T> class Matrix1D;
 template<typename T> class Matrix2D;
@@ -43,7 +44,7 @@ template<typename T> class Matrix2D;
  *
  * Generate a random permutation of the numbers between 0 and N-1
  */
-void randomPermutation(int N, Matrix1D<int>& result);
+void randomPermutation(int N, MultidimArray<int>& result);
 
 
 /** Optimize using Powell's method.
@@ -108,7 +109,7 @@ void powellOptimizer(Matrix1D< double >& p,
  * @endcode
  */
 class GaussianInterpolator {
-    Matrix1D<double> v;
+    MultidimArray<double> v;
     double xstep;
     double xmax;
     double ixstep;
@@ -218,13 +219,13 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
 template<typename T>
 void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
 {
-    if (A.mdimx == 0)
+    if (A.Xdim() == 0)
         REPORT_ERROR(1108, "Solve: Matrix is empty");
 
-    if (A.mdimx != A.mdimy)
+    if (A.Xdim() != A.Ydim())
         REPORT_ERROR(1109, "Solve: Matrix is not squared");
 
-    if (A.mdimx != b.size())
+    if (A.Xdim() != b.size())
         REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
 
     if (b.isRow())
@@ -244,13 +245,13 @@ template<typename T>
 void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
                   Matrix1D< double >& result, double tolerance)
 {
-    if (A.mdimx == 0)
+    if (A.Xdim() == 0)
         REPORT_ERROR(1108, "Solve: Matrix is empty");
 
-    if (A.mdimx != A.mdimy)
+    if (A.Xdim() != A.Ydim())
         REPORT_ERROR(1109, "Solve: Matrix is not squared");
 
-    if (A.mdimx != b.size())
+    if (A.Xdim() != b.size())
         REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
 
     if (b.isRow())
@@ -282,20 +283,20 @@ void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
 template<typename T>
 void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result)
 {
-    if (A.mdimx == 0)
+    if (A.Xdim() == 0)
         REPORT_ERROR(1108, "Solve: Matrix is empty");
 
-    if (A.mdimx != A.mdimy)
+    if (A.Xdim() != A.Ydim())
         REPORT_ERROR(1109, "Solve: Matrix is not squared");
 
-    if (A.mdimy != b.mdimy)
+    if (A.Ydim() != b.Ydim())
         REPORT_ERROR(1102, "Solve: Different sizes of A and b");
 
     // Solve
     result = b;
     Matrix2D<T> Aux = A;
-    gaussj(Aux.adaptForNumericalRecipes2(), Aux.mdimy,
-           result.adaptForNumericalRecipes2(), b.mdimx);
+    gaussj(Aux.adaptForNumericalRecipes2(), Aux.Ydim(),
+           result.adaptForNumericalRecipes2(), b.Xdim());
 }
 
 

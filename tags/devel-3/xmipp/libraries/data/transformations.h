@@ -248,10 +248,10 @@ void applyGeometry(int SplineDegree,
     if (&V1 == &V2)
         REPORT_ERROR(1101,"ApplyGeometry: Input array cannot be the same as output array");
 
-    if ( V1.getDim()==2 && ((A.mdimx != 3) || (A.mdimy != 3)) )
+    if ( V1.getDim()==2 && ((A.Xdim() != 3) || (A.Ydim() != 3)) )
         REPORT_ERROR(1102,"ApplyGeometry: 2D transformation matrix is not 3x3");
 
-    if ( V1.getDim()==3 && ((A.mdimx != 4) || (A.mdimy != 4)) )
+    if ( V1.getDim()==3 && ((A.Xdim() != 4) || (A.Ydim() != 4)) )
         REPORT_ERROR(1103,"ApplyGeometry: 3D transformation matrix is not 4x4");
 
     if (A.isIdentity())
@@ -345,8 +345,8 @@ void applyGeometry(int SplineDegree,
             // geometrical transformation
             // they are related by
             // coords_output(=x,y) = A * coords_input (=xp,yp)
-            xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + dMij(Aref, 0, 2);
-            yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + dMij(Aref, 1, 2);
+            xp = x * Aref(0, 0) + y * Aref(0, 1) + Aref(0, 2);
+            yp = x * Aref(1, 0) + y * Aref(1, 1) + Aref(1, 2);
 
             for (int j = 0; j < XSIZE(V2); j++)
             {
@@ -458,8 +458,8 @@ void applyGeometry(int SplineDegree,
                 }
 
                 // Compute new point inside input image
-                xp += dMij(Aref, 0, 0);
-                yp += dMij(Aref, 1, 0);
+                xp += Aref(0, 0);
+                yp += Aref(1, 0);
             }
         }
     }
@@ -525,12 +525,9 @@ void applyGeometry(int SplineDegree,
                 // Calculate this position in the input image according to the
                 // geometrical transformation they are related by
                 // coords_output(=x,y) = A * coords_input (=xp,yp)
-                xp = x * dMij(Aref, 0, 0) + y * dMij(Aref, 0, 1) + z * dMij(Aref, 0, 2)
-                    + dMij(Aref, 0, 3);
-                yp = x * dMij(Aref, 1, 0) + y * dMij(Aref, 1, 1) + z * dMij(Aref, 1, 2)
-                    + dMij(Aref, 1, 3);
-                zp = x * dMij(Aref, 2, 0) + y * dMij(Aref, 2, 1) + z * dMij(Aref, 2, 2)
-                    + dMij(Aref, 2, 3);
+                xp = x * Aref(0, 0) + y * Aref(0, 1) + z * Aref(0, 2) + Aref(0, 3);
+                yp = x * Aref(1, 0) + y * Aref(1, 1) + z * Aref(1, 2) + Aref(1, 3);
+                zp = x * Aref(2, 0) + y * Aref(2, 1) + z * Aref(2, 2) + Aref(2, 3);
                 
                 for (int j = 0; j < V2.xdim; j++)
                 {
@@ -696,9 +693,9 @@ void applyGeometry(int SplineDegree,
 
 
                     // Compute new point inside input image
-                    xp += dMij(Aref, 0, 0);
-                    yp += dMij(Aref, 1, 0);
-                    zp += dMij(Aref, 2, 0);
+                    xp += Aref(0, 0);
+                    yp += Aref(1, 0);
+                    zp += Aref(2, 0);
                 }
             }
     }
@@ -889,16 +886,16 @@ void scaleToSize(int SplineDegree,
     if (V1.getDim()==2)
     {
         tmp.initIdentity(3);
-        DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) XSIZE(V1);
-        DIRECT_MAT_ELEM(tmp, 1, 1) = (double) Ydim / (double) YSIZE(V1);
+        tmp(0, 0) = (double) Xdim / (double) XSIZE(V1);
+        tmp(1, 1) = (double) Ydim / (double) YSIZE(V1);
         V2.resize(1, 1, Ydim, Xdim);
     }
     else if (V1.getDim()==3)
     {
         tmp.initIdentity(4);
-        DIRECT_MAT_ELEM(tmp, 0, 0) = (double) Xdim / (double) XSIZE(V1);
-        DIRECT_MAT_ELEM(tmp, 1, 1) = (double) Ydim / (double) YSIZE(V1);
-        DIRECT_MAT_ELEM(tmp, 2, 2) = (double) Zdim / (double) ZSIZE(V1);
+        tmp(0, 0) = (double) Xdim / (double) XSIZE(V1);
+        tmp(1, 1) = (double) Ydim / (double) YSIZE(V1);
+        tmp(2, 2) = (double) Zdim / (double) ZSIZE(V1);
         V2.resize(1, Zdim, Ydim, Xdim);
     }
     else

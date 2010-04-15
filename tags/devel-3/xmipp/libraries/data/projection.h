@@ -272,7 +272,7 @@ void project_Crystal_Volume(GridVolume &vol, const Basis &basis,
                             double rot, double tilt, double psi, const Matrix1D<double> &shift,
                             const Matrix1D<double> &aint, const Matrix1D<double> &bint,
                             const Matrix2D<double> &D, const Matrix2D<double> &Dinv,
-                            const Matrix2D<int> &mask, int FORW, int eq_mode = ARTK);
+                            const MultidimArray<int> &mask, int FORW, int eq_mode = ARTK);
 
 // Implementations =========================================================
 // Some aliases

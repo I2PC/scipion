@@ -39,6 +39,13 @@
  *
  */
 
+/** Array access.
+ * @ingroup MatricesSizeShape
+ *
+ * This macro gives you access to the array (T)
+ */
+#define MATRIX2D_ARRAY(m) ((m).mdata)
+
 /** For all elements in the array
  * @ingroup MatricesSizeShape
  *
@@ -54,19 +61,18 @@
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX2D(m) \
-    for (int i=0; i<=mdimy; i++) \
-        for (int j=0; j<=mdimx; j++)
+    for (int i=0; i<=(m).mdimy; i++) \
+        for (int j=0; j<=(m).mdimx; j++)
 
 /** Matrix element: Element access
  * @ingroup MatricesSizeShape
  *
  * @code
- * DIRECT_MAT_ELEM(m, -2, 1) = 1;
- * val = DIRECT_MAT_ELEM(m, -2, 1);
+ * dMij(m, -2, 1) = 1;
+ * val = dMij(m, -2, 1);
  * @endcode
  */
-#define DIRECT_MAT_ELEM(v, i, j) ((v).mdata[(i)*(v).mdimx+(j)])
-#define dMij(v, i, j)  DIRECT_MAT_ELEM(v, i, j)
+#define dMij(m, i, j)  ((m).mdata[(i)*(m).mdimx+(j)])
 
 /** Matrix (3x3) by vector (3x1) (a=M*b)
  * @ingroup Matrices
@@ -574,7 +580,7 @@ public:
     }
 
     /** Same shape.
-     * @ingroup MultidimSize
+     * @ingroup MatricesSize
      *
      * Returns true if this object has got the same shape (origin and size)
      * than the argument
@@ -583,6 +589,26 @@ public:
     bool sameShape(const Matrix2D<T1>& op) const
     {
         return ((mdimx == op.mdimx) && (mdimy == op.mdimy));
+    }
+
+    /** X dimension
+     * @ingroup MatricesSize
+     *
+     * Returns X dimension
+     */
+    int Xdim() const
+    {
+        return mdimx;
+    }
+
+    /** Y dimension
+     * @ingroup MatricesSize
+     *
+     * Returns Y dimension
+     */
+    int Ydim() const
+    {
+        return mdimy;
     }
 
     /// @defgroup VectorsMemory Memory access
@@ -651,7 +677,18 @@ public:
         return tmp;
     }
 
-    /** v3 *= k.
+    /** v3 = k * v2.
+     * @ingroup MatricesAlgebra
+     */
+    friend Matrix2D<T> operator*(T op1, const Matrix2D<T>& op2)
+    {
+        Matrix2D<T> tmp(op2);
+        for (int i=0; i < op2.mdim; i++)
+        	tmp.mdata[i] = op1 * op2.mdata[i];
+        return tmp;
+    }
+
+   /** v3 *= k.
      * @ingroup MatricesAlgebra
      */
     void operator*=(T op1)
@@ -668,7 +705,6 @@ public:
          for (int i=0; i < mdim; i++)
          	mdata[i] /= op1;
      }
-
 
     /** Matrix by vector multiplication
      * @ingroup MatricesAlgebraic
@@ -716,6 +752,48 @@ public:
             for (int j = 0; j < op1.mdimx; j++)
                 for (int k = 0; k < mdimx; k++)
                     result(i, j) += (*this)(i, k) * op1(k, j);
+
+        return result;
+    }
+
+    /** Matrix summation
+     * @ingroup MatricesAlgebraic
+     *
+     * @code
+     * C = A + B;
+     * @endcode
+     */
+    Matrix2D<T> operator+(const Matrix2D<T>& op1) const
+    {
+        Matrix2D<T> result;
+        if (mdimx != op1.mdimx || mdimy != op1.mdimy)
+            REPORT_ERROR(1102, "Not same sizes in matrix summation");
+
+        result.initZeros(mdimy, mdimx);
+        for (int i = 0; i < mdimy; i++)
+            for (int j = 0; j < mdimx; j++)
+            	result(i, j) = (*this)(i, j) + op1(i, j);
+
+        return result;
+    }
+
+    /** Matrix subtraction
+     * @ingroup MatricesAlgebraic
+     *
+     * @code
+     * C = A - B;
+     * @endcode
+     */
+    Matrix2D<T> operator-(const Matrix2D<T>& op1) const
+    {
+        Matrix2D<T> result;
+        if (mdimx != op1.mdimx || mdimy != op1.mdimy)
+            REPORT_ERROR(1102, "Not same sizes in matrix summation");
+
+        result.initZeros(mdimy, mdimx);
+        for (int i = 0; i < mdimy; i++)
+            for (int j = 0; j < mdimx; j++)
+            	result(i, j) = (*this)(i, j) - op1(i, j);
 
         return result;
     }
@@ -1169,7 +1247,7 @@ public:
     Matrix2D<T> transpose() const
     {
     	T aux;
-    	Matrix2D<T> result(XSIZE(*this), YSIZE(*this));
+    	Matrix2D<T> result(mdimx, mdimy);
 
     	FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
     	result(i, j) = (*this)(j, i);

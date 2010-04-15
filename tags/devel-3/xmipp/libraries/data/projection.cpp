@@ -481,7 +481,7 @@ void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
                                 const Matrix1D<double> &shift,
                                 const Matrix1D<double> &aint, const Matrix1D<double> &bint,
                                 const Matrix2D<double> &D,  const Matrix2D<double> &Dinv,
-                                const Matrix2D<int> &mask, int FORW, int eq_mode)
+                                const MultidimArray<int> &mask, int FORW, int eq_mode)
 {
     Matrix1D<double> prjX(3);                // Coordinate: Projection of the
     Matrix1D<double> prjY(3);                // 3 grid vectors
@@ -844,7 +844,7 @@ void project_Crystal_Volume(
     const Matrix1D<double> &bint,         // Second lattice vector (2x1) in voxels
     const Matrix2D<double> &D,            // volume deformation matrix
     const Matrix2D<double> &Dinv,         // volume deformation matrix
-    const Matrix2D<int>    &mask,         // volume mask
+    const MultidimArray<int>    &mask,         // volume mask
     int              FORW,                // 1 if we are projecting a volume
     //   norm_proj is calculated
     // 0 if we are backprojecting

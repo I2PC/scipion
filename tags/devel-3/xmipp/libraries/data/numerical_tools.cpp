@@ -25,9 +25,9 @@
 #include "numerical_tools.h"
 
 /* Random permutation ------------------------------------------------------ */
-void randomPermutation(int N, Matrix1D<int>& result)
+void randomPermutation(int N, MultidimArray<int>& result)
 {
-    Matrix1D<double> aux;
+    MultidimArray<double> aux;
     aux.resize(N);
     aux.initRandom(0,1);
     
@@ -85,24 +85,23 @@ void GaussianInterpolator::initialize(double _xmax, int N, bool normalize)
 double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
                     Matrix1D<double> &result)
 {
-    if (XSIZE(C) == 0)
+    if (C.Xdim() == 0)
         REPORT_ERROR(1108, "Solve_nonneg: Matrix is empty");
-    if (YSIZE(C) != XSIZE(d))
+    if (C.Ydim() != d.size())
         REPORT_ERROR(1102, "Solve_nonneg: Different sizes of Matrix and Vector");
     if (d.isRow())
         REPORT_ERROR(1107, "Solve_nonneg: Not correct vector shape");
 
-    Matrix2D<double> Ct(XSIZE(C), YSIZE(C)); // Ct=C^t
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Ct)
-        DIRECT_A2D_ELEM(Ct, i, j) = DIRECT_A2D_ELEM(C, j, i);
+    Matrix2D<double> Ct;
+	Ct=C.transpose();
 
-    result.initZeros(YSIZE(Ct));
+    result.initZeros(Ct.Ydim());
     double rnorm;
 
     // Watch out that matrix Ct is transformed.
-    int success = nnls(MULTIDIM_ARRAY(Ct), XSIZE(Ct), YSIZE(Ct),
-                       MULTIDIM_ARRAY(d),
-                       MULTIDIM_ARRAY(result),
+    int success = nnls(MATRIX2D_ARRAY(Ct), Ct.Xdim(), Ct.Ydim(),
+                       MATRIX1D_ARRAY(d),
+                       MATRIX1D_ARRAY(result),
                        &rnorm, NULL, NULL, NULL);
     if (success == 1)
         std::cerr << "Warning, too many iterations in nnls\n";
@@ -116,11 +115,11 @@ void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
                         Matrix1D<double> &result)
 {
     Matrix2D<double> Ap = A;
-    Matrix1D<double> p(XSIZE(A));
-    result.resize(XSIZE(A));
-    choldc(Ap.adaptForNumericalRecipes2(), XSIZE(A),
+    Matrix1D<double> p(A.Xdim());
+    result.resize(A.Xdim());
+    choldc(Ap.adaptForNumericalRecipes2(), A.Xdim(),
            p.adaptForNumericalRecipes());
-    cholsl(Ap.adaptForNumericalRecipes2(), XSIZE(A),
+    cholsl(Ap.adaptForNumericalRecipes2(), A.Xdim(),
            p.adaptForNumericalRecipes(), b.adaptForNumericalRecipes(),
            result.adaptForNumericalRecipes());
 }
@@ -130,28 +129,27 @@ void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
 void evaluateQuadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
                     const Matrix2D<double> &H, double &val, Matrix1D<double> &grad)
 {
-    if (XSIZE(x) != XSIZE(c))
+    if (x.size() != c.size())
         REPORT_ERROR(1102, "Eval_quadratic: Not compatible sizes in x and c");
-    if (XSIZE(H) != XSIZE(x))
+    if (H.Xdim() != x.size())
         REPORT_ERROR(1102, "Eval_quadratic: Not compatible sizes in x and H");
 
     // H*x, store in grad
-    grad.initZeros(XSIZE(x));
-    for (int i = 0; i < YSIZE(H); i++)
-        for (int j = 0; j < XSIZE(x); j++)
-            DIRECT_A1D_ELEM(grad, i) += DIRECT_A2D_ELEM(H, i, j) *
-                                        DIRECT_A1D_ELEM(x, j);
+    grad.initZeros(x.size());
+    for (int i = 0; i < H.Ydim(); i++)
+        for (int j = 0; j < x.size(); j++)
+            grad(i) += H(i, j) * x(j);
 
     // Now, compute c^t*x+1/2*x^t*H*x
     // Add c to the gradient
     double quad = 0;
     val = 0;
-    for (int j = 0; j < XSIZE(x); j++)
+    for (int j = 0; j < x.size(); j++)
     {
-        quad += DIRECT_A1D_ELEM(grad, j) * DIRECT_A1D_ELEM(grad, j); // quad=x^t*H^t*H*x
-        val += DIRECT_A1D_ELEM(c, j) * DIRECT_A1D_ELEM(x, j);  // val=c^t*x
+        quad += grad(j) * grad(j); // quad=x^t*H^t*H*x
+        val += c(j) * x(j);  // val=c^t*x
 
-        DIRECT_A1D_ELEM(grad, j) += DIRECT_A1D_ELEM(c, j);     // grad+=c
+        grad(j) += c(j);     // grad+=c
     }
     val += 0.5 * quad;
 }
@@ -233,36 +231,36 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
     CDAB prm;
     prm.C = C;
     prm.D.fromVector(d);
-    prm.A.initZeros(YSIZE(A) + YSIZE(Aeq), XSIZE(A));
-    prm.B.initZeros(YSIZE(prm.A), 1);
+    prm.A.initZeros(A.Ydim() + Aeq.Ydim(), A.Xdim());
+    prm.B.initZeros(prm.A.Ydim(), 1);
 
 
     // Copy Inequalities
-    for (int i = 0; i < YSIZE(A); i++)
+    for (int i = 0; i < A.Ydim(); i++)
     {
-        for (int j = 0; j < XSIZE(A); j++)
+        for (int j = 0; j < A.Xdim(); j++)
             prm.A(i, j) = A(i, j);
         prm.B(i, 0) = b(i);
     }
 
     // Copy Equalities
-    for (int i = 0; i < YSIZE(Aeq); i++)
+    for (int i = 0; i < Aeq.Ydim(); i++)
     {
-        for (int j = 0; j < XSIZE(Aeq); j++)
-            prm.A(i + YSIZE(A), j) = Aeq(i, j);
-        prm.B(i + YSIZE(A), 0) = beq(i);
+        for (int j = 0; j < Aeq.Xdim(); j++)
+            prm.A(i + A.Ydim(), j) = Aeq(i, j);
+        prm.B(i + A.Ydim(), 0) = beq(i);
     }
 
     double bigbnd = 1e30;
     // Bounds
-    if (XSIZE(bl) == 0)
+    if (bl.size() == 0)
     {
-        bl.resize(XSIZE(C));
+        bl.resize(C.Xdim());
         bl.initConstant(-bigbnd);
     }
-    if (XSIZE(bu) == 0)
+    if (bu.size() == 0)
     {
-        bu.resize(XSIZE(C));
+        bu.resize(C.Xdim());
         bu.initConstant(bigbnd);
     }
 
@@ -274,26 +272,26 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
     double epsneq = 1e-4; // Epsilon for equalities
     double udelta = 0.e0; // Finite difference approximation
     // of the gradients. Not used in this function
-    int    nparam = XSIZE(C); // Number of variables
+    int    nparam = C.Xdim(); // Number of variables
     int    nf = 1;          // Number of objective functions
-    int    neqn = YSIZE(Aeq);        // Number of nonlinear equations
-    int    nineqn = YSIZE(A);      // Number of nonlinear inequations
-    int    nineq = YSIZE(A);  // Number of linear inequations
-    int    neq = YSIZE(Aeq);  // Number of linear equations
+    int    neqn = Aeq.Ydim();        // Number of nonlinear equations
+    int    nineqn = A.Ydim();      // Number of nonlinear inequations
+    int    nineq = A.Ydim();  // Number of linear inequations
+    int    neq = Aeq.Ydim();  // Number of linear equations
     int    inform;
     int    ncsrl = 0, ncsrn = 0, nfsr = 0, mesh_pts[] = {0};
 
-    if (XSIZE(x) == 0)
+    if (x.size() == 0)
         x.initZeros(nparam);
     Matrix1D<double> f(nf), g(nineq + neq), lambda(nineq + neq + nf + nparam);
 
     // Call the minimization routine
     cfsqp(nparam, nf, nfsr, nineqn, nineq, neqn, neq, ncsrl, ncsrn, mesh_pts,
           mode, iprint, miter, &inform, bigbnd, eps, epsneq, udelta,
-          MULTIDIM_ARRAY(bl), MULTIDIM_ARRAY(bu),
-          MULTIDIM_ARRAY(x),
-          MULTIDIM_ARRAY(f), MULTIDIM_ARRAY(g),
-          MULTIDIM_ARRAY(lambda),
+          MATRIX1D_ARRAY(bl), MATRIX1D_ARRAY(bu),
+          MATRIX1D_ARRAY(x),
+          MATRIX1D_ARRAY(f), MATRIX1D_ARRAY(g),
+          MATRIX1D_ARRAY(lambda),
           //  quadprg_obj32,quadprog_cntr32,quadprog_grob32,quadprog_grcn32,
           quadraticProgramming_obj32, quadraticProgramming_cntr32, grobfd, grcnfd,
           (void*)&prm);
@@ -342,35 +340,32 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
     const Matrix1D< double >& d, double lambda,
     const Matrix2D< double >& G, Matrix1D< double >& x)
 {
-    int Nd=YSIZE(A); // Number of data samples
-    int Nx=XSIZE(A); // Number of variables
+    int Nd=A.Ydim(); // Number of data samples
+    int Nx=A.Xdim(); // Number of variables
 
     Matrix2D<double> X(Nx,Nx); // X=(A^t * A +lambda *G^t G)
     // Compute A^t*A
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(X)
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
         // Compute the dot product of the i-th and j-th columns of A
-        for (int k=0; k<YSIZE(A); k++)
-            DIRECT_A2D_ELEM(X,i,j)+=
-                DIRECT_A2D_ELEM(A,k,i)*DIRECT_A2D_ELEM(A,k,j);
+        for (int k=0; k<A.Ydim(); k++)
+            X(i,j) += A(k,i) * A(k,j);
 
     // Compute lambda*G^t*G
-    if (XSIZE(G)==0)
+    if (G.Xdim()==0)
         for (int i=0; i<Nx; i++)
-            DIRECT_A2D_ELEM(X,i,i)+=lambda;
+            X(i,i)+=lambda;
     else
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(X)
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
             // Compute the dot product of the i-th and j-th columns of G
-            for (int k=0; k<YSIZE(G); k++)
-                DIRECT_A2D_ELEM(X,i,j)+=
-                    DIRECT_A2D_ELEM(G,k,i)*DIRECT_A2D_ELEM(G,k,j);
+            for (int k=0; k<G.Ydim(); k++)
+                X(i,j) += G(k,i) * G(k,j);
 
     // Compute A^t*d
     Matrix1D<double> Atd(Nx);
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(Atd)
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(Atd)
         // Compute the dot product of the i-th column of A and d
-        for (int k=0; k<YSIZE(A); k++)
-            DIRECT_A1D_ELEM(Atd,i)+=
-                DIRECT_A2D_ELEM(A,k,i)*DIRECT_A1D_ELEM(d,k);
+        for (int k=0; k<A.Ydim(); k++)
+            Atd(i) += A(k,i) * d(k);
 
     // Compute the inverse of X
     Matrix2D<double> Xinv;
@@ -378,9 +373,8 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
 
     // Now multiply Xinv * A^t * d
     x.initZeros(Nx);
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(Xinv)
-        DIRECT_A1D_ELEM(x,i)+=DIRECT_A2D_ELEM(Xinv,i,j)*
-            DIRECT_A1D_ELEM(Atd,j);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(Xinv)
+        x(i) += Xinv(i,j) * Atd(j);
 }
 
 
