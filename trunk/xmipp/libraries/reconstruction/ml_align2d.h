@@ -55,9 +55,14 @@ while ((load = getThreadRefnoJob(refno)) > 0) \
 
 #define FOR_ALL_GLOBAL_IMAGES() \
     for (int imgno = 0; imgno < nr_images_global; imgno++)
+
 #define FOR_ALL_LOCAL_IMAGES() \
     for (int imgno = myFirstImg; imgno <= myLastImg; imgno++)
-#define IMG_INDEX (imgno - myFirstImg)
+
+#define IMG_LOCAL_INDEX (imgno - myFirstImg)
+#define IMG_REAL_INDEX(imgno) img_order[(imgno)]
+#define IMG_BLOCK(imgno) (imgno) % blocks
+
 #ifdef TIMING
 //testing time...
 
@@ -329,6 +334,7 @@ public:
     double trymindiff, opt_scale, bgmean, opt_psi;
     double fracweight, maxweight2, dLL;
     Matrix2D<double> docfiledata;
+    Matrix2D<double> global_docfiledata;
 
     /** From expectationSingleImage */
     std::vector<Matrix2D<std::complex<double> > > Fimg_flip, mysumimgs;
@@ -346,13 +352,18 @@ public:
     //Some incremental stuff
     /** Model */
     Model_MLalign2D model, *current_model;
-    std::vector<int> img_blocks;
+    //std::vector<int> img_blocks;
     //Number of blocks for IEM
     int blocks;
     //Current processing block
     int current_block;
     //Dont randomize for tests
     bool randomize;
+    //Change order for randomize without modifying selfile
+    std::vector<int> img_order;
+
+    //Stuff for MPI, if not size = 1 and rank = 0
+    int size, rank;
 
 #ifdef TIMING
     JMTimer timer;
@@ -370,6 +381,9 @@ public:
 
     /// Extended Usage
     void extendedUsage(bool ML3D = false);
+
+    ///Try to merge produceSideInfo1 and 2
+    void newProduceSideInfo(int size = 1, int rank = 0);
 
     /// Setup lots of stuff
     void produceSideInfo();
@@ -442,10 +456,10 @@ public:
     bool checkConvergence();
 
     /// Add docfiledata to docfile
-    void addDocfileData(Matrix2D<double> data, int first, int last);
+    void addPartialDocfileData(Matrix2D<double> data, int first, int last);
 
-    /// Add header comment to docfile
-    void addDocfileHeaderComment();
+    void addDocfileData();
+
     /// Write Docfile
     void writeDocfile(FileName fn_base);
 

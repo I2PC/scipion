@@ -139,8 +139,8 @@ int main(int argc, char **argv)
             // Check convergence
             converged = prm.checkConvergence();
             // Write output files
-            prm.addDocfileHeaderComment();
-            prm.addDocfileData(prm.docfiledata, prm.myFirstImg, prm.myLastImg);
+            //prm.addDocfileHeaderComment();
+            prm.addPartialDocfileData(prm.docfiledata, prm.myFirstImg, prm.myLastImg);
             prm.writeOutputFiles(prm.model, OUT_ITER);
 
             if (converged)
@@ -149,11 +149,6 @@ int main(int argc, char **argv)
                         << std::endl;
 
                 break;
-            }
-            else
-            {
-                // reset DFo
-                prm.DFo.clear();
             }
 
 #ifdef TIMING

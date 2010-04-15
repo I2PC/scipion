@@ -108,11 +108,11 @@ int main(int argc, char **argv)
             if (rank == 0) //Send blocks distribution to slaves
             {
                 for (int docCounter = 1; docCounter < size; docCounter++)
-                    MPI_Send(prm.img_blocks.data(), s_size, MPI_INT, docCounter, TAG_DOCFILE, MPI_COMM_WORLD);
+                    MPI_Send(prm.img_order.data(), s_size, MPI_INT, docCounter, TAG_DOCFILE, MPI_COMM_WORLD);
             }
             else //receive blocks distr from the master
             {
-                MPI_Recv(prm.img_blocks.data(), s_size, MPI_INT, 0, TAG_DOCFILE, MPI_COMM_WORLD, &status);
+                MPI_Recv(prm.img_order.data(), s_size, MPI_INT, 0, TAG_DOCFILE, MPI_COMM_WORLD, &status);
             }
         }//close if blocks
 
@@ -234,9 +234,9 @@ int main(int argc, char **argv)
             else
             {
                 // Master fills docfile 
-                prm.addDocfileHeaderComment();
+                //prm.addDocfileHeaderComment();
                 // Master's own contribution
-                prm.addDocfileData(prm.docfiledata, prm.myFirstImg, prm.myLastImg);
+                prm.addPartialDocfileData(prm.docfiledata, prm.myFirstImg, prm.myLastImg);
                 int s_size, first_img, last_img;
                 int docCounter = 1;
 
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
                     MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE, MPI_COMM_WORLD, &status);
                     MPI_Recv(MULTIDIM_ARRAY(prm.docfiledata), s_size, MPI_DOUBLE, docCounter, TAG_DOCFILE, MPI_COMM_WORLD, &status);
                     divide_equally(prm.nr_images_global, size, docCounter, first_img, last_img);
-                    prm.addDocfileData(prm.docfiledata, first_img, last_img);
+                    prm.addPartialDocfileData(prm.docfiledata, first_img, last_img);
                     docCounter++;
 
                 }
@@ -263,11 +263,6 @@ int main(int argc, char **argv)
                 if (prm.verb > 0)
                     std::cerr << " Optimization converged!" << std::endl;
                 break;
-            }
-            else
-            {
-                // reset DFo
-            	prm.DFo.clear();
             }
             MPI_Barrier(MPI_COMM_WORLD);
 

@@ -379,6 +379,11 @@ void Prog_MLalign2D_prm::extendedUsage(bool ML3D)
     exit(1);
 }
 
+// Try to merge produceSideInfo 1 y 2
+void Prog_MLalign2D_prm::newProduceSideInfo(int size, int rank)
+{
+}//close function
+
 // Set up a lot of general stuff
 // This side info is general, i.e. in parallel mode it is the same for
 // all processors! (in contrast to produce_Side_info2)
@@ -545,32 +550,38 @@ void Prog_MLalign2D_prm::produceSideInfo()
         maxw_ref.resize(mysize);
     }
 
+    //-------Randomize the order of images
+    img_order.resize(nr_images_global, 0);
+    for (int i = 0; i < nr_images_global; i++)
+        img_order[i] = i;
+    std::random_shuffle(img_order.begin(), img_order.end());
+
     //--------Setup for BLOCKS------------
     //Set image blocks vector
     //TODO: for MPI all slave will produce this unnecessary
     //also all images are kept in memory an transmitted
     //from the master and only the local part is needed
-    img_blocks.resize(nr_images_global, 0);
-    int first_img, last_img;
-
-    if (blocks > 1)
-    {
-        for (int b = 0; b < blocks; b++)
-        {
-            divide_equally(nr_images_global, blocks, b, first_img, last_img);
-
-            for (int i = first_img; i <= last_img; i++)
-                img_blocks[i] = b;
-        }
-        //randomize elements
-        if (randomize)
-        {
-            //randomize_random_generator();
-            //srand( time(NULL));
-            //FIXME: Implement this in funcs.h
-            std::random_shuffle(img_blocks.begin(), img_blocks.end());
-        }
-    }//close if blocks
+//    img_blocks.resize(nr_images_global, 0);
+//    int first_img, last_img;
+//
+//    if (blocks > 1)
+//    {
+//        for (int b = 0; b < blocks; b++)
+//        {
+//            divide_equally(nr_images_global, blocks, b, first_img, last_img);
+//
+//            for (int i = first_img; i <= last_img; i++)
+//                img_blocks[i] = b;
+//        }
+//        //randomize elements
+//        if (randomize)
+//        {
+//            //randomize_random_generator();
+//            //srand( time(NULL));
+//            //FIXME: Implement this in funcs.h
+//            std::random_shuffle(img_blocks.begin(), img_blocks.end());
+//        }
+//    }//close if blocks
 
     //FIXME: Only for testing, writing blocks distribution to file
 //    FileName bfn = fn_root + ".blocks";
@@ -578,7 +589,7 @@ void Prog_MLalign2D_prm::produceSideInfo()
 //    FILE* f = fopen("blocks.txt", "w");
 //    FOR_ALL_LOCAL_IMAGES()
 //    {
-//        fprintf(f, "%d\n", img_blocks[IMG_INDEX]);
+//        fprintf(f, "%d\n", img_blocks[IMG_LOCAL_INDEX]);
 //    }
 //    fclose(f);
 
@@ -645,7 +656,7 @@ void Prog_MLalign2D_prm::generateInitialReferences()
 
     SFr.write(fn_ref);
 
-}
+}//close function generateInitialReferences
 
 // Read reference images to memory and initialize offset vectors
 // This side info is NOT general, i.e. in parallel mode it is NOT the
@@ -662,7 +673,6 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
     std::vector<double> Vdum;
 
     // Read in all reference images in memory
-
     if (Is_ImageXmipp(fn_ref))
     {
         SFr.reserve(1);
@@ -729,7 +739,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
 
         for (int refno = 0; refno < idum; refno++)
         {
-            imgs_offsets[IMG_INDEX].push_back(offx);
+            imgs_offsets[IMG_LOCAL_INDEX].push_back(offx);
         }
     }
 
@@ -747,6 +757,8 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         }
     }
 
+    //FIXME: Now the selfile is not splitted, so only need to iterate
+    //over local images and read parameters
     // Read optimal image-parameters from fn_doc
     if (fn_doc != "")
     {
@@ -757,6 +769,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
             SF.go_beginning();
             int imgno = 0;
 
+
             while (!SF.eof())
             {
                 fn_tmp = SF.NextImg();
@@ -765,8 +778,8 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
                 {
                     if (limit_rot)
                     {
-                        imgs_oldphi[IMG_INDEX] = DF(0);
-                        imgs_oldtheta[IMG_INDEX] = DF(1);
+                        imgs_oldphi[IMG_LOCAL_INDEX] = DF(0);
+                        imgs_oldtheta[IMG_LOCAL_INDEX] = DF(1);
                     }
 
                     if (zero_offsets)
@@ -775,16 +788,16 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
 
                         for (int refno = 0; refno < idum; refno++)
                         {
-                            imgs_offsets[IMG_INDEX][2 * refno] = DF(3);
-                            imgs_offsets[IMG_INDEX][2 * refno + 1] = DF(4);
+                            imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = DF(3);
+                            imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = DF(4);
                         }
 
                     }
 
                     if (do_norm)
                     {
-                        imgs_bgmean[IMG_INDEX] = DF(9);
-                        imgs_scale[IMG_INDEX] = DF(10);
+                        imgs_bgmean[IMG_LOCAL_INDEX] = DF(9);
+                        imgs_scale[IMG_LOCAL_INDEX] = DF(10);
                     }
                 }
                 else
@@ -838,8 +851,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
 
     //--------Setup for Docfile -----------
     docfiledata.resize(nr_images_local, DATALINELENGTH);
-
-
+    global_docfiledata.resize(nr_images_global, DATALINELENGTH);
 
 }//close function produceSideInfo2
 
@@ -2004,14 +2016,16 @@ void Prog_MLalign2D_prm::expectation()
     //for (int imgno = 0, img_done = 0; imgno < nn; imgno++)
     // Loop over all images
     FOR_ALL_LOCAL_IMAGES()
-        //if (img_blocks[IMG_INDEX] == current_block)
-        if (img_blocks[imgno] == current_block)
+    {
+        //if (img_blocks[IMG_LOCAL_INDEX] == current_block)
+        //if (img_blocks[imgno] == current_block)
+        if (IMG_BLOCK(imgno) == current_block)
         {
     #ifdef TIMING
             timer.tic(FOR_F1);
     #endif
             SF.go_beginning();
-            SF.jump(imgno, SelLine::ACTIVE);
+            SF.jump(IMG_REAL_INDEX(imgno), SelLine::ACTIVE);
             fn_img = SF.get_current_file();
 
             img.read(fn_img, false, false, false, false);
@@ -2020,8 +2034,8 @@ void Prog_MLalign2D_prm::expectation()
             Mimg = img();
 
             // These two parameters speed up expectationSingleImage
-            opt_refno = imgs_optrefno[IMG_INDEX];
-            trymindiff = imgs_trymindiff[IMG_INDEX];
+            opt_refno = imgs_optrefno[IMG_LOCAL_INDEX];
+            trymindiff = imgs_trymindiff[IMG_LOCAL_INDEX];
 
             if (trymindiff < 0.)
             // 90% of Xi2 may be a good idea (factor half because 0.5*diff is calculated)
@@ -2029,21 +2043,21 @@ void Prog_MLalign2D_prm::expectation()
 
             if (do_norm)
             {
-                bgmean = imgs_bgmean[IMG_INDEX];
-                opt_scale = imgs_scale[IMG_INDEX];
+                bgmean = imgs_bgmean[IMG_LOCAL_INDEX];
+                opt_scale = imgs_scale[IMG_LOCAL_INDEX];
             }
 
             // Get optimal offsets for all references
             if (fast_mode)
             {
-                allref_offsets = imgs_offsets[IMG_INDEX];
+                allref_offsets = imgs_offsets[IMG_LOCAL_INDEX];
             }
 
             // Read optimal orientations from memory
             if (limit_rot)
             {
-                old_phi = imgs_oldphi[IMG_INDEX];
-                old_theta = imgs_oldtheta[IMG_INDEX];
+                old_phi = imgs_oldphi[IMG_LOCAL_INDEX];
+                old_theta = imgs_oldtheta[IMG_LOCAL_INDEX];
             }
 
     #ifdef TIMING
@@ -2082,27 +2096,27 @@ void Prog_MLalign2D_prm::expectation()
             // Write optimal offsets for all references to disc
             if (fast_mode)
             {
-                imgs_offsets[IMG_INDEX] = allref_offsets;
+                imgs_offsets[IMG_LOCAL_INDEX] = allref_offsets;
             }
 
             // Store mindiff for next iteration
-            imgs_trymindiff[IMG_INDEX] = trymindiff;
+            imgs_trymindiff[IMG_LOCAL_INDEX] = trymindiff;
 
             // Store opt_refno for next iteration
-            imgs_optrefno[IMG_INDEX] = opt_refno;
+            imgs_optrefno[IMG_LOCAL_INDEX] = opt_refno;
 
             // Store optimal phi and theta in memory
             if (limit_rot)
             {
-                imgs_oldphi[IMG_INDEX] = model.Iref[opt_refno].Phi();
-                imgs_oldtheta[IMG_INDEX] = model.Iref[opt_refno].Theta();
+                imgs_oldphi[IMG_LOCAL_INDEX] = model.Iref[opt_refno].Phi();
+                imgs_oldtheta[IMG_LOCAL_INDEX] = model.Iref[opt_refno].Theta();
             }
 
             // Store optimal normalization parameters in memory
             if (do_norm)
             {
-                imgs_scale[IMG_INDEX] = opt_scale;
-                imgs_bgmean[IMG_INDEX] = bgmean;
+                imgs_scale[IMG_LOCAL_INDEX] = opt_scale;
+                imgs_bgmean[IMG_LOCAL_INDEX] = bgmean;
             }
 
             // Output docfile
@@ -2116,25 +2130,25 @@ void Prog_MLalign2D_prm::expectation()
                 opt_flip = 0.;
             }
 
-            dMij(docfiledata,IMG_INDEX,0) = model.Iref[opt_refno].Phi(); // rot
-            dMij(docfiledata,IMG_INDEX,1) = model.Iref[opt_refno].Theta(); // tilt
-            dMij(docfiledata,IMG_INDEX,2) = opt_psi + 360.; // psi
-            dMij(docfiledata,IMG_INDEX,3) = opt_offsets(0); // Xoff
-            dMij(docfiledata,IMG_INDEX,4) = opt_offsets(1); // Yoff
-            dMij(docfiledata,IMG_INDEX,5) = (double) (opt_refno + 1); // Ref
-            dMij(docfiledata,IMG_INDEX,6) = opt_flip; // Mirror
-            dMij(docfiledata,IMG_INDEX,7) = fracweight; // P_max/P_tot
-            dMij(docfiledata,IMG_INDEX,8) = dLL; // log-likelihood
+            dMij(docfiledata,IMG_LOCAL_INDEX,0) = model.Iref[opt_refno].Phi(); // rot
+            dMij(docfiledata,IMG_LOCAL_INDEX,1) = model.Iref[opt_refno].Theta(); // tilt
+            dMij(docfiledata,IMG_LOCAL_INDEX,2) = opt_psi + 360.; // psi
+            dMij(docfiledata,IMG_LOCAL_INDEX,3) = opt_offsets(0); // Xoff
+            dMij(docfiledata,IMG_LOCAL_INDEX,4) = opt_offsets(1); // Yoff
+            dMij(docfiledata,IMG_LOCAL_INDEX,5) = (double) (opt_refno + 1); // Ref
+            dMij(docfiledata,IMG_LOCAL_INDEX,6) = opt_flip; // Mirror
+            dMij(docfiledata,IMG_LOCAL_INDEX,7) = fracweight; // P_max/P_tot
+            dMij(docfiledata,IMG_LOCAL_INDEX,8) = dLL; // log-likelihood
 
             if (do_norm)
             {
-                dMij(docfiledata,IMG_INDEX,9) = bgmean; // background mean
-                dMij(docfiledata,IMG_INDEX,10) = opt_scale; // image scale
+                dMij(docfiledata,IMG_LOCAL_INDEX,9) = bgmean; // background mean
+                dMij(docfiledata,IMG_LOCAL_INDEX,10) = opt_scale; // image scale
             }
 
             if (model.do_student)
             {
-                dMij(docfiledata,IMG_INDEX,11) = maxweight2; // Robustness weight
+                dMij(docfiledata,IMG_LOCAL_INDEX,11) = maxweight2; // Robustness weight
             }
 
             if (verb > 0 && img_done % c == 0)
@@ -2148,6 +2162,7 @@ void Prog_MLalign2D_prm::expectation()
     #endif
 
         }//close if current_block, also close of for all images
+    }
 
 #ifdef TIMING
     timer.toc(E_FOR);
@@ -2333,30 +2348,33 @@ bool Prog_MLalign2D_prm::checkConvergence()
 }//close function checkConvergence
 
 /// Add docfiledata to docfile
-void Prog_MLalign2D_prm::addDocfileData(Matrix2D<double> data, int first, int last)
+void Prog_MLalign2D_prm::addPartialDocfileData(Matrix2D<double> data, int first, int last)
 {
-    SelFile SFTemp;
     Matrix1D<double> dataline(DATALINELENGTH);
-
-    //SF.chooseSubset(first, last, SFTemp);
-    //SFTemp.go_beginning();
     SF.go_beginning();
     SF.jump_lines(first);
     int index;
+
     for (int i = first; i <= last; i++)
     {
         index = i - first;
-        DFo.append_comment(SF.NextImg());
         for (int j = 0; j < DATALINELENGTH; j++)
-            dataline(j) = dMij(data, index, j);
-        DFo.append_data_line(dataline);
-
+            dMij(global_docfiledata, IMG_REAL_INDEX(i), j) = dMij(data, index, j);
     }
 }//close function addDocfileData
 
-void Prog_MLalign2D_prm::addDocfileHeaderComment()
+void Prog_MLalign2D_prm::addDocfileData()
 {
-    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
+    Matrix1D<double> dataline(DATALINELENGTH);
+
+    SF.go_beginning();
+    FOR_ALL_GLOBAL_IMAGES()
+    {
+        DFo.append_comment(SF.NextImg());
+        for (int j = 0; j < DATALINELENGTH; j++)
+            dataline(j) = dMij(global_docfiledata, imgno, j);
+        DFo.append_data_line(dataline);
+    }
 }
 
 void Prog_MLalign2D_prm::writeDocfile(FileName fn_base)
@@ -2365,7 +2383,9 @@ void Prog_MLalign2D_prm::writeDocfile(FileName fn_base)
     DocFile DFout;
     fn_base += ".doc";
 
-     DFo.write(fn_base);
+    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), LL (9), bgmean (10), scale (11), w_robust (12)");
+    addDocfileData();
+    DFo.write(fn_base);
 
       // Also write out selfiles of all experimental images,
       // classified according to optimal reference image
@@ -2389,7 +2409,8 @@ void Prog_MLalign2D_prm::writeDocfile(FileName fn_base)
           fn_tmp.compose(fn_tmp, refno + 1, "sel");
           SFo.write(fn_tmp);
       }
-
+      //Clear docfile
+      DFo.clear();
 }//close function writeDocfile
 
 void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)

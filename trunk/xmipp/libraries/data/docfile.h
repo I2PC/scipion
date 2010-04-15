@@ -396,7 +396,7 @@ public:
      * DF.append("angles2.doc");
      * @endcode
      */
-    void append(FileName _name)
+    void append(const FileName &_name)
     {
         read(_name, 0);
     }
