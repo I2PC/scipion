@@ -765,6 +765,67 @@ public:
      */
     FileName get_root() const;
 
+    /** Change all characters for lowercases
+     * @ingroup FilenameComposing
+     *
+     * @code
+     * FileName fn_proj("g1tA00001");
+     * fn_proj = fn_proj.to_lowercase(); // fn_proj = "g1ta00001"
+     * @endcode
+     */
+    FileName to_lowercase() const;
+
+   /** Change all characters for uppercases
+    * @ingroup FilenameComposing
+    *
+    * @code
+    * FileName fn_proj("g1tA00001");
+    * fn_proj = fn_proj.to_uppercase(); // fn_proj = "G1Ta00001"
+    * @endcode
+    */
+    FileName to_uppercase() const;
+
+    /** Check whether the filename contains the argument substring
+     *
+     * @code
+     * FileName fn_proj("g1ta00001.raw#d=f");
+     * if (fn_proj.contains("raw) )  // true
+     */
+	bool contains(const std::string& str) const;
+
+    /** Return substring before first instance of argument (as in Bsoft)
+     *
+      * @code
+     * FileName fn_proj("g1ta00001.raw#d=f");
+     * fn_proj = fn_proj.before_first_of("#"); // fn_proj = "g1ta00001.raw"
+     */
+    FileName before_first_of(const std::string& str) const;
+
+    /** Return substring before last instance of argument (as in Bsoft)
+     *
+      * @code
+     * FileName fn_proj("g1ta00001.raw#d=f");
+     * fn_proj = fn_proj.before_last_of("#"); // fn_proj = "g1ta00001.raw"
+     */
+    FileName before_last_of(const std::string& str) const;
+
+
+    /** Return substring after first instance of argument (as in Bsoft)
+     *
+      * @code
+     * FileName fn_proj("g1ta00001.raw#d=f");
+     * fn_proj = fn_proj.after_first_of("#"); // fn_proj = "d=f"
+     */
+    FileName after_first_of(const std::string& str) const;
+
+    /** Return substring after last instance of argument (as in Bsoft)
+     *
+      * @code
+     * FileName fn_proj("g1ta00001.raw#d=f");
+     * fn_proj = fn_proj.after_last_of("#"); // fn_proj = "d=f"
+     */
+    FileName after_last_of(const std::string& str) const;
+
     /** Get the base name from a filename
      * @ingroup FilenameComposing
      */
@@ -894,6 +955,34 @@ public:
      * @ingroup FilenameManipulators
      */
     FileName remove_all_extensions() const;
+
+    /** Get image format identifier (as in Bsoft)
+     * @ingroup FilenameManipulators
+     *
+     * @code
+     * fn_proj = "g1ta00001.xmp";
+     * fn_proj = fn_proj.get_image_format(); // fn_proj == "xmp"
+     * fn_proj = "g1ta00001.nor:spi";
+     * fn_proj = fn_proj.get_image_format(); // fn_proj == "spi"
+     * fn_proj = "input.file#d=f#x=120,120,55#h=1024";
+     * fn_proj = fn_proj.get_image_format(); // fn_proj == "raw"
+     * @endcode
+     */
+    FileName get_image_format() const;
+
+    /** Clean image FileName (as in Bsoft)
+     * @ingroup FilenameManipulators
+     *
+     * @code
+     * fn_proj = "g1ta00001.xmp";
+     * fn_proj = fn_proj.get_image_format(); // fn_proj == "g1ta00001.xmp"
+     * fn_proj = "g1ta00001.nor:spi";
+     * fn_proj = fn_proj.clean_image_name(); // fn_proj == "g1ta00001.nor"
+     * fn_proj = "input.file#d=f#x=120,120,55#h=1024";
+     * fn_proj = fn_proj.clean_image_name(); // fn_proj == "input.file"
+     * @endcode
+     */
+    //FileName clean_image_name() const;
 
     /** Substitute ext1 by ext2
      * @ingroup FilenameManipulators

@@ -321,7 +321,8 @@ public:
      */
     Matrix1D(int dim, bool column = true)
     {
-        row = ! column;
+    	coreInit();
+    	row = ! column;
         resize(dim);
     }
 

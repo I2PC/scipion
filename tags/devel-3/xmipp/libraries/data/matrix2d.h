@@ -323,7 +323,8 @@ public:
      */
     Matrix2D(int Ydim, int Xdim)
     {
-        resize(Ydim, Xdim);
+    	coreInit();
+    	resize(Ydim, Xdim);
     }
 
     /** Copy constructor

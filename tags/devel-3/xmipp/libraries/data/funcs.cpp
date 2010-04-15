@@ -664,6 +664,73 @@ FileName FileName::get_root() const
     return (FileName) substr(0, root_end + 1);
 }
 
+// Convert to lower case characters .........................................
+FileName FileName::to_lowercase() const
+{
+    FileName result = *this;
+    for(unsigned int i=0;i<result.length();i++)
+      result[i] = tolower(result[i]);
+    return result;
+}
+
+// Convert to upper case characters .........................................
+FileName FileName::to_uppercase() const
+{
+    FileName result = *this;
+    for(unsigned int i=0;i<result.length();i++)
+      result[i] = toupper(result[i]);
+    return result;
+}
+
+// Is substring present?
+bool FileName::contains(const std::string& str) const
+{
+	if (find(str) > -1)
+		return true;
+	else
+		return false;
+}
+
+// Get substring before first instance of str
+FileName FileName::before_first_of(const std::string& str) const
+{
+	int point = find_first_of(str);
+    if (point > -1)
+		return substr(0, point);
+    else
+    	return *this;
+}
+
+// Get substring before last instance of str
+FileName FileName::before_last_of(const std::string& str) const
+{
+	int point = find_last_of(str);
+    if (point > -1)
+		return substr(0, point);
+    else
+    	return *this;
+}
+
+// Get substring after first instance of str
+FileName FileName::after_first_of(const std::string& str) const
+{
+	int point = find_first_of(str);
+    if (point > -1)
+		return substr(point + 1);
+    else
+    	return *this;
+}
+
+// Get substring after last instance of str
+FileName FileName::after_last_of(const std::string& str) const
+{
+	int point = find_last_of(str);
+    if (point > -1)
+		return substr(point + 1);
+    else
+    	return *this;
+}
+
 // Get the base name of a filename .........................................
 std::string FileName::get_baseName() const
 {
@@ -808,6 +875,21 @@ FileName FileName::remove_all_extensions() const
         return *this;
     else
         return substr(0, first);
+}
+
+FileName FileName::get_image_format() const
+{
+	int first;
+	FileName result;
+    if ( find("#", 0) > -1 )
+    	return "raw";
+    else if ( first = find(":", 0) > -1 )
+    	result = substr(first + 1) ;
+    else
+    	result = substr(find_last_of('.') + 1);
+
+    return result.to_lowercase();
+
 }
 
 // Substitute one extension by other .......................................

@@ -180,26 +180,26 @@ public:
     SubImage*           image;         // Sub-images
     MultidimArray<T>    data;           // The image data array
     // FIXME: why cant this one be private as well?
-    DataType		datatype;	// Data type
+    DataType			datatype;	// Data type
 private:
     FileName            filename;       // File name
-    unsigned int        dataflag;	// Flag to force reading of the data
+    int        			dataflag;	// Flag to force reading of the data
     unsigned long	x, y, z;        // Image dimensions in X, Y and Z
     unsigned long	n, i;		// Number of images and image number (may be > n)
     unsigned long	px, py, pz; 	// Page dimensions
     unsigned long	offset; 	// Data offset
     int                 swap;           // Perform byte swapping upon reading
-    TransformType	transform;  	// Transform type
-    double		min, max;	// Limits
-    double		avg, std;	// Average and standard deviation
-    double		smin, smax; 	// Limits for display
-    double		scale;		// Scale of last density conversion operation
-    double		shift;		// Shift of last density conversion operation before scaling
-    double		resolution; 	// Resolution limit of data - used for low-pass filtering
-    double		ux, uy, uz;	// Voxel units (angstrom/pixel edge)
-    double		ua, ub, uc; 	// Unit cell dimensions (angstrom)
-    double		alf, bet, gam;	// Unit cell angles (radian)
-    unsigned int	spacegroup;	// Space group
+    TransformType		transform;  	// Transform type
+    double				min, max;	// Limits
+    double				avg, std;	// Average and standard deviation
+    double				smin, smax; 	// Limits for display
+    double				scale;		// Scale of last density conversion operation
+    double				shift;		// Shift of last density conversion operation before scaling
+    double				resolution; 	// Resolution limit of data - used for low-pass filtering
+    double				ux, uy, uz;	// Voxel units (angstrom/pixel edge)
+    double				ua, ub, uc; 	// Unit cell dimensions (angstrom)
+    double				alf, bet, gam;	// Unit cell angles (radian)
+    unsigned int		spacegroup;	// Space group
 
 
 public:
@@ -243,6 +243,7 @@ public:
     void clear()
     {
         data.clear();
+        dataflag = -1;
         datatype = Unknown_Type;
         x = y = z = n = 0;
         px = py = pz = 0;
@@ -313,11 +314,20 @@ public:
               bool apply_geo = false, bool only_apply_shifts = false)
      {
          int err = 0;
-         FileName basename, extension;
-         
+
+         // Check whether to read the data or only the header
+         if ( readdata ) dataflag = 1;
+         else dataflag = -1;
+
+         FileName ext_name = name.get_image_format();
+
+         //FIXME if filename contains # Bsoft cleans it!!
          filename = name;
 
-         if ( readdata ) dataflag = 1;
+         std::cerr << "name="<<name <<std::endl;
+         std::cerr << "ext= "<<ext_name <<std::endl;
+         std::cerr<<" now reading: "<< filename<<" dataflag= "<<dataflag<<std::endl;
+
          /*
            Bimage* 	p = init_img();
            if ( filename.contains("#") )
@@ -326,7 +336,7 @@ public:
            p->filename = clean_filename;
          */
 
-         if (filename.get_extension()=="mrc")
+         if (ext_name=="mrc")
              err = readMRC();
          else
              err = readSPIDER(select_img);
@@ -409,33 +419,28 @@ public:
              }
          }
 
-         // Negative error are bad.
+         // Negative errors are bad.
          return err;
 
      }
-
-     
-     
 
     /** General write function
      */
      void write(const FileName name)
      {
          int err = 0;
-         FileName basename, extension;
-         
-         filename = name;
+         FileName ext_name = name.get_image_format();
+         filename = name.before_first_of(":");
+         filename = filename.before_first_of("#");
 
-         // PERHAPS HERE CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
-
-         if (filename.get_extension()=="mrc")
-             //REPORT_ERROR(22,"writeMRC NOT IMPLEMENTED YET");
+          // PERHAPS HERE CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
+         if (ext_name.contains("mrc"))
              err = writeMRC();
          else
              err = writeSPIDER();
 
          if ( err < 0 ) {
-             std::cerr<<" Filename = "<<filename<<" Extension= "<<extension<<std::endl;
+             std::cerr<<" Filename = "<<filename<<" Extension= "<<ext_name<<std::endl;
              REPORT_ERROR(10,"Error writing file");
          }
 
@@ -635,105 +640,100 @@ public:
 
      void readData(FILE* fimg, int select_img, unsigned long pad)
      {
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
          std::cerr<<"entering readdata"<<std::endl;
          std::cerr<<" readData flag= "<<dataflag<<std::endl;
 #endif
         if ( dataflag < 1 ) return;
 	
-	if ( px < 1 ) px = x;
-	if ( py < 1 ) py = y;
-	if ( pz < 1 ) pz = z;
+		if ( px < 1 ) px = x;
+		if ( py < 1 ) py = y;
+		if ( pz < 1 ) pz = z;
+
+		// If only half of a transform is stored, it need to be handled
+		unsigned long xstore = x;
+		unsigned long xpage = px;
+		if (transform == Hermitian || transform == CentHerm ) {
+				xstore = x/2 + 1;
+			if ( px > xstore ) xpage = xstore;
+		}
+
+		// Reset select to get the correct offset
+		if ( select_img < 0 ) select_img = 0;
+
+		size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
+		size_t datatypesize=gettypesize(datatype);
+		size_t pagesize_n=xpage*py*pz;
+		size_t pagesize  =pagesize_n*datatypesize;
+		size_t pagesize_t=pagesize_n*sizeof(T);
+		size_t pagemax_n = ROUND(pagemax/datatypesize);
+		size_t haveread_n=0;
+
+		char*	page = NULL;
+		char*	padpage = NULL;
 	
-	// If only half of a transform is stored, it need to be handled
-	unsigned long xstore = x;
-	unsigned long xpage = px;
-	if (transform == Hermitian || transform == CentHerm ) {
-            xstore = x/2 + 1;
-		if ( px > xstore ) xpage = xstore;
-	}
+		// Allocate memory for image data
+		data.resize(n, z, y, xstore);
 	
-	// Reset select to get the correct offset
-	if ( select_img < 0 ) select_img = 0;
-
-        size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
-        size_t datatypesize=gettypesize(datatype);
-        size_t pagesize_n=xpage*py*pz;
-        size_t pagesize  =pagesize_n*datatypesize;
-        size_t pagesize_t=pagesize_n*sizeof(T);
-        size_t pagemax_n = ROUND(pagemax/datatypesize);
-        size_t haveread_n=0;
-
- 	char*	page = NULL;
-	char*	padpage = NULL;
-
-        // Allocate memory for image data
-        data.resize(n, z, y, xstore);
-
 #ifdef DEBUG
-        data.printShape();
-        printf("DEBUG img_read_data: Data size: %ld %ld %ld %ld\n", XSIZE(data), YSIZE(data), ZSIZE(data), NSIZE(data));
-        printf("DEBUG img_read_data: Page size: %ld %ld %ld (%ld)\n", px, py, pz, pagesize);
-        printf("DEBUG img_read_data: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
+			data.printShape();
+			printf("DEBUG img_read_data: Data size: %ld %ld %ld %ld\n", XSIZE(data), YSIZE(data), ZSIZE(data), NSIZE(data));
+			printf("DEBUG img_read_data: Page size: %ld %ld %ld (%ld)\n", px, py, pz, pagesize);
+			printf("DEBUG img_read_data: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
 #endif 
 
-	if ( XSIZE(data) == px && YSIZE(data) == py && ZSIZE(data) == pz ) { // 3D block
-            myoffset = offset + select_img*(pagesize + pad);
+		if ( XSIZE(data) == px && YSIZE(data) == py && ZSIZE(data) == pz )
+		{ // 3D block
+			myoffset = offset + select_img*(pagesize + pad);
 #ifdef DEBUG
-            std::cerr<<"DEBUG img_read_data: Reading 3D blocks: myoffset = "
-                     <<myoffset<<" select_img= "<<select_img<<" pagesize= "<<pagesize<<" offset= "<<offset<<std::endl;
-            std::cerr<<"devel3"<<std::endl;
+			std::cerr<<"DEBUG img_read_data: Reading 3D blocks: myoffset = "
+						 <<myoffset<<" select_img= "<<select_img<<" pagesize= "<<pagesize<<" offset= "<<offset<<std::endl;
 #endif
-            if (pagesize > pagemax)
-                page = (char *) askMemory(pagemax*sizeof(char));
-            else
-                page = (char *) askMemory(pagesize*sizeof(char));
+			if (pagesize > pagemax)
+				page = (char *) askMemory(pagemax*sizeof(char));
+			else
+				page = (char *) askMemory(pagesize*sizeof(char));
 
-            if ( pad > 0) padpage = (char *) askMemory(pad*sizeof(char));
-            fseek( fimg, myoffset, SEEK_SET );
-            std::cerr<<"NSIZE(data)= "<<NSIZE(data)<<std::endl;
-            for ( size_t myn=0; myn<NSIZE(data); myn++ ) 
-            {
-                for (size_t myj=0; myj<pagesize; myj+=pagemax ) 
-                {
-                    std::cerr<<"myn= "<<myn<<" myj= "<<myj<<" pagesize= "<<pagesize<<std::endl;
+			if ( pad > 0) padpage = (char *) askMemory(pad*sizeof(char));
+			fseek( fimg, myoffset, SEEK_SET );
+			for ( size_t myn=0; myn<NSIZE(data); myn++ )
+			{
+				for (size_t myj=0; myj<pagesize; myj+=pagemax )
+				{
 
-                    // Read next page. Divide pages larger than pagemax 
-                    readsize = pagesize - myj;
-                    if ( readsize > pagemax ) readsize = pagemax;
-                    readsize_n = readsize/datatypesize;
-                    std::cerr<<"readsize_n= "<<readsize_n <<" readsize= "<<readsize<<" datatypesize= "<<datatypesize<<std::endl;
-               
-                    //Read page from disc
-                    fread( page, readsize, 1, fimg );
-                    std::cerr<<"after fread"<<std::endl;
+					// Read next page. Divide pages larger than pagemax
+					readsize = pagesize - myj;
+					if ( readsize > pagemax ) readsize = pagemax;
+					readsize_n = readsize/datatypesize;
+
+					//Read page from disc
+					fread( page, readsize, 1, fimg );
+					std::cerr<<"after fread"<<std::endl;
 #ifdef DEBUG
-                    float* tt;
-                    tt=(float*)page;
-                    std::cerr<<"page="<<tt[0]<<std::endl;
- #endif
-
-                    //swap per page
-                    if (swap) swapPage(page, readsize_n);
-                    std::cerr<<"after swap haveread_n= "<<haveread_n<<std::endl;
-
-                    // cast to T per page
-                    castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, readsize_n);
-                    std::cerr<<"after cast"<<std::endl;
-
-#ifdef DEBUG
-                    T* ttt;
-                    ttt=(T*)(MULTIDIM_ARRAY(data) + haveread_n);
-                    std::cerr<<"data="<<ttt[0]<<std::endl;
+					float* tt;
+					tt=(float*)page;
+					std::cerr<<"page="<<tt[0]<<std::endl;
 #endif
-                    haveread_n += readsize_n;
-               }
-               if ( pad > 0 ) fread( padpage, pad, 1, fimg);
-            }
-            if ( pad > 0 ) 
-                freeMemory(padpage, pad*sizeof(char));
-	} 
+
+					//swap per page
+					if (swap) swapPage(page, readsize_n);
+
+					// cast to T per page
+					castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, readsize_n);
+
+#ifdef DEBUG
+					T* ttt;
+					ttt=(T*)(MULTIDIM_ARRAY(data) + haveread_n);
+					std::cerr<<"data="<<ttt[0]<<std::endl;
+#endif
+					haveread_n += readsize_n;
+				}
+				if ( pad > 0 ) fread( padpage, pad, 1, fimg);
+			}
+			if ( pad > 0 )
+				freeMemory(padpage, pad*sizeof(char));
+		}
         else 
         {
             REPORT_ERROR(12,"BUG: entering bsoft rwimg code that was meant for unsupported MFF, DSN6 or BRIX format...");

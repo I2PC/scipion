@@ -1062,10 +1062,10 @@ void Mask_Params::write_mask(const FileName &fn)
 // Generate mask --------------------------------------------------------
 void Mask_Params::generate_mask(const bool& apply_geo)
 {
-    Image<double> img;
-    Matrix2D<double> AA(4, 4);
-    AA.initIdentity();
-    blobtype blob;
+	Image<double> img;
+	Matrix2D<double> AA(4, 4);
+	AA.initIdentity();
+	blobtype blob;
     if (type==BLOB_CIRCULAR_MASK || type==BLOB_CROWN_MASK)
     {
         blob.radius = blob_radius; 
@@ -1124,7 +1124,7 @@ void Mask_Params::generate_mask(const bool& apply_geo)
         SincMask(dmask, omega, mode, x0, y0, z0);
         break;
     case READ_MASK:
-        img.read(fn_mask);
+    	img.read(fn_mask);
         typeCast(img(), imask);
         imask.setXmippOrigin();
         break;
