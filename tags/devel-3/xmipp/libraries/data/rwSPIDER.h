@@ -64,8 +64,8 @@ struct SPIDERhead {         	// file header for SPIDER data
         float Tinc; // 4*3 = 12, 12+28 = 40B
 
         /** Sjors Scheres 17/12/04 **/
-        float Weight; // For Maximum-Likelihood refinement
-        float Flip;   // 0=no flipping operation (false), 1=flipping (true)
+        float weight; // For Maximum-Likelihood refinement
+        float flip;   // 0=no flipping operation (false), 1=flipping (true)
 
         char fNada2[576]; // empty 700-76-40=624-40-8= 576 bytes
 
@@ -178,8 +178,8 @@ int  readSPIDER(int img_select)
     image->angleRot  = header->phi;
     image->angleTilt = header->theta;
     image->anglePsi  = header->gamma;
-    image->weight = header->Weight;
-    image->flip = header->Flip;
+    image->weight = header->weight;
+    image->flip = header->flip;
 
     if ( header->istack > 0 ) {
         offset += offset;
@@ -197,8 +197,8 @@ int  readSPIDER(int img_select)
             image[j].angleRot  = header->phi;
             image[j].angleTilt = header->theta;
             image[j].anglePsi  = header->gamma;
-            image[j].weight = header->Weight;
-            image[j].flip = header->Flip;
+            image[j].weight = header->weight;
+            image[j].flip = header->flip;
         }
     }
 
@@ -300,6 +300,8 @@ int 	writeSPIDER()
     header->phi  = image->angleRot;
     header->theta = image->angleTilt;
     header->gamma = image->anglePsi;
+    header->weight = image->weight;
+    header->flip = image->flip;
 
     // Set time and date
     time_t timer;
@@ -353,6 +355,9 @@ int 	writeSPIDER()
             header->phi  = image[i].angleRot;
             header->theta = image[i].angleTilt;
             header->gamma = image[i].anglePsi;
+            header->weight = image[i].weight;
+            header->flip = image[i].flip;
+
             fwrite( header, offset, 1, fimg );
             if (datatype < ComplexShort)
                 castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
