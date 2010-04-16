@@ -532,17 +532,33 @@ std::string MetaData::getComment( )
 	return comment;
 }
 
-long int MetaData::addObject( )
+long int MetaData::addObject( long int objectID )
 {
-	long int result = lastObject( ) + 1;
-	typedef std::pair<long int, MetaDataContainer *> newPair;
-		
-	objects.insert( newPair( result, new MetaDataContainer() ) );
+    typedef std::pair<long int, MetaDataContainer *> newPair;
+	long int result;	
+    
+    if( objectID == -1 )
+    {
+	    result = lastObject( ) + 1;
+	    
+	    objects.insert( newPair( result, new MetaDataContainer() ) );
 	
-	// Set iterator pointing to the newly added object
-	objectsIterator = objects.end( );
-	objectsIterator--;
-
+	    // Set iterator pointing to the newly added object
+	    objectsIterator = objects.end( );
+	    objectsIterator--;
+    }
+    else
+    {
+        result = objectID;
+        
+        // Does the object already exist ?, remove
+        objects.erase( objectID );
+        
+        // The object does not exist, create it		
+	    objects.insert( newPair( objectID, new MetaDataContainer() ) );
+        objectsIterator = objects.find( objectID );
+    }
+    
 	return result;
 }
 

@@ -83,13 +83,20 @@ public:
     void readOldSelFile( std::ifstream *infile );
     void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
     void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
-	/** What labels have been read from a docfile/metadata file
-	* and/or will be stored on a new metadata file when "save" is
-	* called
-	* */
+	
+    /** What labels have been read from a docfile/metadata file
+	*   and/or will be stored on a new metadata file when "save" is
+	*   called 
+    **/
 	std::vector< MetaDataLabel > activeLabels;
 
-	long int addObject( );
+    /** Adds a new, empty object to the objects map. If objectID == -1
+    *   the new ID will be that for the last object inserted + 1, else
+    *   the given objectID is used. If there is already an object whose
+    *   objectID == input objectID, just removes it and creates an empty
+    *   one 
+    **/
+	long int addObject( long int objectID = -1 );
     
     void read( FileName infile, std::vector<MetaDataLabel> * labelsVector=NULL );
 
