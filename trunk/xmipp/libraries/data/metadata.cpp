@@ -534,7 +534,7 @@ std::string MetaData::getComment( )
 
 long int MetaData::addObject( )
 {
-	long int result = lastObject() + 1;
+	long int result = lastObject( ) + 1;
 	typedef std::pair<long int, MetaDataContainer *> newPair;
 		
 	objects.insert( newPair( result, new MetaDataContainer() ) );
@@ -882,13 +882,19 @@ bool MetaData::setValue( std::string name, std::string value, long int objectID 
 	}	
 }
 
+bool MetaData::removeObject( long int objectID )
+{        
+    int result = objects.erase( objectID );
+    objectsIterator = objects.begin( );
+    return result;
+}
+    
 void MetaData::removeObjects( std::vector<long int> &toRemove )
 {
     std::vector<long int>::iterator It;
     
     for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
 	{
-        delete (objects[ *It ]);
         objects.erase( *It );
 	}
     
@@ -903,7 +909,6 @@ void MetaData::removeObjects( MetaDataLabel name, double value )
 		
     for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
 	{
-        delete (objects[ *It ]);
         objects.erase( *It );
 	}
     
@@ -919,7 +924,6 @@ void MetaData::removeObjects( MetaDataLabel name, int value )
 	
     for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
 	{
-        delete (objects[ *It ]);
         objects.erase( *It );
 	}
     
@@ -935,7 +939,6 @@ void MetaData::removeObjects( MetaDataLabel name, bool value )
 	
     for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
 	{
-        delete (objects[ *It ]);
         objects.erase( *It );
 	}
     
@@ -951,7 +954,6 @@ void MetaData::removeObjects( MetaDataLabel name, std::string value )
 	
     for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
 	{
-        delete (objects[ *It ]);
         objects.erase( *It );
 	}
     

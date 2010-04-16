@@ -90,6 +90,7 @@ public:
 	std::vector< MetaDataLabel > activeLabels;
 
 	long int addObject( );
+    
     void read( FileName infile, std::vector<MetaDataLabel> * labelsVector=NULL );
 
 	// Possible error codes for the map
@@ -147,7 +148,10 @@ public:
 	void removeObjects( MetaDataLabel name, std::string value );
     void removeObjects( std::vector<long int> &toRemove );
     
-	////////removeObjects in a range
+    // Removes true if the object was removed or false if
+    // the object did not exist
+    bool removeObject( long int objectID );
+    
 	/////// remove id
 	//////////////////////removeLabel
 
