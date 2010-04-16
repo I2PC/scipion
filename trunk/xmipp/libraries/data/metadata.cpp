@@ -33,7 +33,7 @@ MetaData::MetaData()
 	fastStringSearchLabel = MDL_UNDEFINED;	
     objectsIterator = objects.begin();
     isColumnFormat = true;
-    infile.clear();
+    inFile.clear();
 }
 
 MetaData::MetaData(MetaData &MD)
@@ -41,7 +41,7 @@ MetaData::MetaData(MetaData &MD)
 	this->setComment(MD.getComment());
 	this->setPath(MD.getPath());
 	this->isColumnFormat = MD.isColumnFormat;
-	this->infile         = MD.infile;
+	this->inFile         = MD.inFile;
 	this->fastStringSearchLabel = MDL_UNDEFINED;
 	this->activeLabels          = MD.activeLabels;
 
@@ -66,7 +66,7 @@ MetaData& MetaData::operator = ( MetaData &MD)
 		this->setComment(MD.getComment());
 		this->setPath(MD.getPath());
 		this->isColumnFormat = MD.isColumnFormat;
-		this->infile         = MD.infile;
+		this->inFile         = MD.inFile;
 		this->fastStringSearchLabel = MDL_UNDEFINED;
 		this->activeLabels          = MD.activeLabels;
 
@@ -137,11 +137,20 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
 	    // Read data and fill structures accordingly
 	    while ( getline( *infile, line, '\n') )
 	    {
-		    if (line[0] == '#' || line[0] == '\0' || line[0] == ';')
+            if ( line[0] == '\0' || line[0] == '#')
 		         continue;
-	    	long int objectID = addObject( );
+	    	 
+		    long int objectID = addObject( );
 		
-		    // Parse labels
+		    if ( line[0] == ';' )
+            {
+                line.erase(0,1);
+                line=simplify(line);
+                setValue( MDL_COMMENT, line );
+                getline( *infile, line, '\n');
+            }
+            
+            // Parse labels
 		    std::stringstream os2( line );          
 	    	std::string value;
 		
@@ -153,8 +162,28 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
 		    }
 	    }
     }
-    else//RowFormat??????
+    else  //RowFormat
     {
+    	std::string label;                 
+        std::string value;
+        
+        long int objectID = addObject( );
+       				
+	    // Read data and fill structures accordingly
+	    while ( getline( *infile, line, '\n') )
+	    {
+		    if (line[0] == '#' || line[0] == '\0' || line[0] == ';')
+		         continue;
+	    	
+		    // Parse labels
+		    std::stringstream os( line );    
+                  
+	    	os >> label;
+		    activeLabels.push_back(  MetaDataContainer::codifyLabel(label) );
+		    os >> value;
+
+		    setValue( label , value );
+	    }
     }
 }
 
@@ -297,7 +326,11 @@ MetaData::MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector
 
 void MetaData::combine( MetaData & other, MetaDataLabel thisLabel )
 {
-	
+    if( !isColumnFormat )
+    {
+        REPORT_ERROR( -1, "Row formatted MetaData can not be combined" );
+    }
+    
 	MetaDataContainer * aux, * aux2;
     std::string value1, value2;
     	
@@ -331,15 +364,13 @@ void MetaData::combine( MetaData & other, MetaDataLabel thisLabel )
 
 void MetaData::read( FileName fileName, std::vector<MetaDataLabel> * labelsVector )
 {
-	setPath( );
-	setComment();
-	objects.clear( );
-	fastStringSearchLabel = MDL_UNDEFINED;	
-    isColumnFormat = true;
-    infile = fileName;
+    clear();
+    inFile = fileName;
+    
 	// Open file
  	std::ifstream infile ( fileName.data(), std::ios_base::in );
 	std::string line;
+    
     if(infile.fail())
     {
 		REPORT_ERROR( 200, (std::string) "File " + fileName +  " does not exits" );
@@ -355,8 +386,7 @@ void MetaData::read( FileName fileName, std::vector<MetaDataLabel> * labelsVecto
 	{
         readOldDocFile( &infile, labelsVector );
         std::cerr << (std::string)"WARNING: ** You are using an old file format (DOCFILE) which is going " +
-                    "to be deprecated in next Xmipp release **"<<  std::endl;
-           
+                    "to be deprecated in next Xmipp release **" <<  std::endl;    
 	}
 	else
 	{
@@ -370,7 +400,7 @@ void MetaData::read( FileName fileName, std::vector<MetaDataLabel> * labelsVecto
         {
             readOldSelFile( &infile );   
             std::cerr << (std::string)"WARNING: ** You are using an old file format (SELFILE) which is going " +
-                    "to be deprecated in next Xmipp release **"<< std::endl;
+                    "to be deprecated in next Xmipp release **" << std::endl;
         }
     }
 
@@ -397,26 +427,49 @@ void MetaData::write( std::string fileName )
 
 	std::map< long int, MetaDataContainer *>::iterator It;
 	std::vector< MetaDataLabel >::iterator strIt;
-	
-	outfile << "; ";
-	for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
-	{
-		outfile << MetaDataContainer::decodeLabel(*strIt);
-		outfile << " ";
-	}
-	outfile << std::endl;
+    
+    if( isColumnFormat )
+    {
+	    outfile << "; ";
+	    for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
+	    {
+		    outfile << MetaDataContainer::decodeLabel(*strIt);
+		    outfile << " ";
+	    }   
+	    outfile << std::endl;
 
-	for( It = objects.begin( ); It != objects.end(); It ++)
-	{
-		for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
-		{
-			outfile.width(10);
-			(It->second)->writeValueToFile( outfile, *strIt );
-			outfile << " ";
-		}
+	    for( It = objects.begin( ); It != objects.end(); It ++)
+	    {
+            if( (It->second)->valueExists( MDL_COMMENT ) )
+            {
+                std::string entryComment;
+                (It->second)->getValue( MDL_COMMENT, entryComment );
+                outfile << "; " << entryComment << std::endl;
+            }
+		    	
+		    for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
+		    {   
+                outfile.width(10);
+		    	(It->second)->writeValueToFile( outfile, *strIt );
+	    		outfile << " ";
+	    	}
 		
-		outfile << std::endl;
-	} 
+		    outfile << std::endl;
+	    } 
+    }
+    else
+    {
+        // Get first object. In this case (row format) there is a single object
+        MetaDataContainer * object = getObject( );
+        
+        for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
+	    {
+		    outfile << MetaDataContainer::decodeLabel(*strIt);
+		    outfile << " ";
+            object->writeValueToFile( outfile, *strIt );
+	        outfile << std::endl;
+        }   
+    }
 }
 
 MetaData::~MetaData( )
@@ -431,17 +484,18 @@ bool MetaData::isEmpty( )
 
 void MetaData::clear( )
 {
-	path.clear();
-	comment.clear();
+	path.clear( );
+	comment.clear( );
 	objects.clear( );		
 	
-	objectsIterator = objects.end();
+	objectsIterator = objects.end( );
 	
 	fastStringSearch.clear( );;
 	fastStringSearchLabel = MDL_UNDEFINED;
 
 	activeLabels.clear( );
-
+    isColumnFormat = true;
+    inFile = FileName::FileName( );;
 }
 
 void MetaData::setPath( std::string newPath )
@@ -551,6 +605,34 @@ long int MetaData::lastObject( )
 	
 	return result;
 };
+
+long int MetaData::goToObject( long int objectID )
+{
+	long int result = objectID;
+	
+	if( !objects.empty( ))
+	{
+        std::map< long int, MetaDataContainer *>::iterator It;
+	
+        It = objects.find( objectID );
+        
+        if( It == objects.end( ) )
+        {
+            result = NO_OBJECT_FOUND;
+        }
+        else
+        {   
+            objectsIterator = It;
+        }
+	}
+	else
+	{
+		result = NO_OBJECTS_STORED;
+	}
+	
+	return result;
+
+}
 
 bool MetaData::setValue( MetaDataLabel name, double value, long int objectID )
 {

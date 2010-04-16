@@ -65,7 +65,7 @@ class MetaData
     /**Input file name
      *
      */
-    FileName infile;
+    FileName inFile;
 
 public:
 
@@ -93,23 +93,19 @@ public:
 
 	long int addObject( );
     void read( FileName infile, std::vector<MetaDataLabel> * labelsVector=NULL );
-    // mergeMetaDatas(metadata)
-    /** Overloading of the read function for python
-     *
-     */
-    //void read( std::string infile){read(infile,NULL);}
 
 	// Possible error codes for the map
     enum errors
     {
         NO_OBJECTS_STORED = -1, // NOTE: Do not change this value (-1)
-        NO_MORE_OBJECTS = -2
+        NO_MORE_OBJECTS = -2,
+        NO_OBJECT_FOUND = -3
     };
     
 	long int firstObject( );
 	long int nextObject( );
 	long int lastObject( );
-	//////////////////////// long int goToObject(object_id)
+	long int goToObject( long int objectID );
 	
 	MetaData();
 	MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
@@ -151,6 +147,8 @@ public:
 	void removeObjects( MetaDataLabel name, int value );
 	void removeObjects( MetaDataLabel name, bool value );
 	void removeObjects( MetaDataLabel name, std::string value );
+    
+    
 	////////removeObjects in a range
 	/////// remove id
 	//////////////////////removeLabel
@@ -167,7 +165,7 @@ public:
      *
      */
 
-    FileName getFilename(){return (infile);}
+    FileName getFilename(){return (inFile);}
     /*Detect is there is at least one entry with the given label,entry pair
      * So far only implemented for int
      */
@@ -198,15 +196,8 @@ void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
              kkkk_metadata.nextObject( ) )
 
 #endif
+
 /*
- *
- * //read to joined tables
-   *  metaData::metaData(FileName baseName,
-                         string tableName1 ,
-                         string join attribute1,//from MTC 1
-                         string join attribute2,//from MTC 2
-                         string tableName2,
-                         vector<string> vectorType);
 //read three joined tables
    *  metaData::metaData(FileName baseName,
                          string tableName1 ,

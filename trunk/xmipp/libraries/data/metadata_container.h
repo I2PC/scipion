@@ -53,6 +53,7 @@ enum MetaDataLabel
 	MDL_UNDEFINED = -1,
     MDL_FIRST_LABEL,
 	MDL_ANGLEROT = MDL_FIRST_LABEL,       // Rotation angle of an image (double)
+    MDL_COMMENT,                          // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
 	MDL_ANGLETILT,                        // Tilting angle of an image (double)
 	MDL_ANGLEPSI,                         // Psi angle of an image (double)
 	MDL_IMAGE,                            // Name of an image (std::string)
@@ -82,7 +83,7 @@ enum MetaDataLabel
                lCode == MDL_ORIGINX  || lCode == MDL_ORIGINY   || lCode == MDL_ORIGINZ  ||\
                lCode == MDL_WEIGHT   || lCode == MDL_MAXCC     || lCode == MDL_PMAX
 
-#define IS_STRING(lCode) lCode == MDL_IMAGE       || lCode == MDL_MICROGRAPH     || \
+#define IS_STRING(lCode) lCode == MDL_COMMENT     || lCode == MDL_IMAGE          || lCode == MDL_MICROGRAPH     || \
 	                     lCode == MDL_CTFMODEL    || lCode == MDL_CTFINPUTPARAMS || \
 	                     lCode == MDL_PERIODOGRAM || lCode == MDL_SERIE
 

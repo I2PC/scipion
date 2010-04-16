@@ -580,6 +580,9 @@ void MetaDataContainer::writeValueToFile( std::ofstream &outfile, MetaDataLabel 
 		case MDL_ANGLEROT:
 			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
+        case MDL_COMMENT:
+            outfile << *((std::string*)(getVoidPtr( inputLabel )));
+            break;
 		case MDL_ANGLETILT:
 			outfile << *((double*)(getVoidPtr( inputLabel )));
 			break;
