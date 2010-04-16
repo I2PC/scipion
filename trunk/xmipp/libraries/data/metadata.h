@@ -53,13 +53,11 @@ class MetaData
 	// usual
 	std::map< std::string, long int> fastStringSearch;
 	MetaDataLabel fastStringSearchLabel;
-
-
+    
 	std::string path;
 	std::string comment;
     
     MetaDataContainer * getObject( long int objectID = -1 );
-
 
     bool isColumnFormat;
     /**Input file name
@@ -147,7 +145,7 @@ public:
 	void removeObjects( MetaDataLabel name, int value );
 	void removeObjects( MetaDataLabel name, bool value );
 	void removeObjects( MetaDataLabel name, std::string value );
-    
+    void removeObjects( std::vector<long int> &toRemove );
     
 	////////removeObjects in a range
 	/////// remove id

@@ -631,7 +631,6 @@ long int MetaData::goToObject( long int objectID )
 	}
 	
 	return result;
-
 }
 
 bool MetaData::setValue( MetaDataLabel name, double value, long int objectID )
@@ -883,13 +882,25 @@ bool MetaData::setValue( std::string name, std::string value, long int objectID 
 	}	
 }
 
+void MetaData::removeObjects( std::vector<long int> &toRemove )
+{
+    std::vector<long int>::iterator It;
+    
+    for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
+	{
+        delete (objects[ *It ]);
+        objects.erase( *It );
+	}
+    
+    // Reset iterator due to unknown iterator state after removing items
+    objectsIterator=objects.begin( );
+}
+
 void MetaData::removeObjects( MetaDataLabel name, double value )
 {	
     std::vector<long int> toRemove = findObjects( name, value );    
     std::vector<long int>::iterator It;
-	
-	MetaDataContainer * aux;
-	
+		
     for( It = toRemove.begin( ) ; It != toRemove.end( ); It ++ )
 	{
         delete (objects[ *It ]);
