@@ -38,26 +38,14 @@ int main(int argc, char **argv)
     // Get input parameters
     try
     {
+        //Read arguments
         prm.read(argc, argv);
-        prm.produceSideInfo();
-        prm.show();
-
-        if (prm.fn_ref == "")
-        {
-            if (prm.model.n_ref != 0)
-            {
-                prm.generateInitialReferences();
-            }
-            else
-            {
-                REPORT_ERROR(1, "Please provide -ref or -nref");
-            }
-        }
-
-        prm.produceSideInfo2();
+        //Generate initial references if not provided
+        prm.generateInitialReferences();
+        //Do some initialization work
+        prm.newProduceSideInfo();
+        //Create threads to be ready for work
         prm.createThreads();
-
-
     }
     catch (Xmipp_error XE)
     {

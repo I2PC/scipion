@@ -63,6 +63,9 @@ while ((load = getThreadRefnoJob(refno)) > 0) \
 #define IMG_REAL_INDEX(imgno) img_order[(imgno)]
 #define IMG_BLOCK(imgno) (imgno) % blocks
 
+//For MPI
+#define IS_MASTER (rank == 0)
+
 #ifdef TIMING
 //testing time...
 
@@ -364,6 +367,8 @@ public:
 
     //Stuff for MPI, if not size = 1 and rank = 0
     int size, rank;
+    //Seed for randomize
+    int seed;
 
 #ifdef TIMING
     JMTimer timer;

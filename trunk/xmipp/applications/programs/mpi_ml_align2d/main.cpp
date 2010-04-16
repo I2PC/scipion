@@ -59,65 +59,30 @@ int main(int argc, char **argv)
             MPI_Barrier(MPI_COMM_WORLD);
         }
 
-        if (rank != 0)
-            prm.verb = 0;
-
-        // All nodes produce general side-info
-        prm.produceSideInfo();
-
-        // Some output to screen
-        if (rank == 0)
-            prm.show();
-
-        // Create references from random subset averages, or read them from selfile
-        if (prm.fn_ref == "")
+        if (IS_MASTER)
         {
-            if (prm.model.n_ref != 0)
-            {
-                if (rank == 0)
-                {
-                    prm.generateInitialReferences();
-                }
-                else
-                {
-                    prm.fn_ref = prm.fn_root + "_it";
-                    prm.fn_ref.compose(prm.fn_ref, 0, "sel");
-                }
-                MPI_Barrier(MPI_COMM_WORLD);
-            }
-            else
-            {
-                REPORT_ERROR(1, "Please provide -ref or -nref");
-            }
+            prm.generateInitialReferences();
+            //Send seed to slaves for same randomization
+            //FIXME: create random seed and send to slaves
+            prm.seed = 1;
+            for (int slave = 1; slave < size; slave++)
+                MPI_Send(&prm.seed, 1, MPI_INT, slave, TAG_DOCFILE, MPI_COMM_WORLD);
         }
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        // Select only relevant part of selfile for this rank
-
-
-        //Get the images to working on
-        prm.nr_images_local = divide_equally(prm.nr_images_global, size, rank, prm.myFirstImg, prm.myLastImg);
-
-
-        //Send and recv blocks distribution
-        //if using blocks
-        if (prm.blocks > 1)
+        else
         {
-            int s_size = prm.nr_images_global;
-
-            if (rank == 0) //Send blocks distribution to slaves
+            prm.verb = 0;
+            if (prm.fn_ref == "")
             {
-                for (int docCounter = 1; docCounter < size; docCounter++)
-                    MPI_Send(prm.img_order.data(), s_size, MPI_INT, docCounter, TAG_DOCFILE, MPI_COMM_WORLD);
+                prm.fn_ref = prm.fn_root + "_it";
+                prm.fn_ref.compose(prm.fn_ref, 0, "sel");
             }
-            else //receive blocks distr from the master
-            {
-                MPI_Recv(prm.img_order.data(), s_size, MPI_INT, 0, TAG_DOCFILE, MPI_COMM_WORLD, &status);
-            }
-        }//close if blocks
-
-        // And produce selfile-specific side-info
-        prm.produceSideInfo2();
+            //Receive seeds for randomization
+            MPI_Recv(&prm.seed, 1, MPI_INT, 0, TAG_DOCFILE, MPI_COMM_WORLD, &status);
+        }
+        //Syncronize all before read references
+        MPI_Barrier(MPI_COMM_WORLD);
+        // All nodes produce general side-info
+        prm.newProduceSideInfo(size, rank);
         prm.createThreads();
         MPI_Barrier(MPI_COMM_WORLD);
 
@@ -138,7 +103,6 @@ int main(int argc, char **argv)
         Maux.resize(prm.dim, prm.dim);
         Maux.setXmippOrigin();
         Model_MLalign2D block_model(prm.model.n_ref);
-
 
         // Loop over all iterations
         for (prm.iter = prm.istart; prm.iter <= prm.Niter; prm.iter++)

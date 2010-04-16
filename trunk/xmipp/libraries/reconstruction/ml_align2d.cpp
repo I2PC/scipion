@@ -382,6 +382,355 @@ void Prog_MLalign2D_prm::extendedUsage(bool ML3D)
 // Try to merge produceSideInfo 1 y 2
 void Prog_MLalign2D_prm::newProduceSideInfo(int size, int rank)
 {
+    ImageXmipp img;
+    FileName fn_tmp;
+    int refno = 0;
+
+    // Read in all reference images in memory
+    if (Is_ImageXmipp(fn_ref))
+    {
+        SFr.reserve(1);
+        SFr.insert(fn_ref);
+    }
+    else
+    {
+        SFr.read(fn_ref);
+    }
+
+    model.n_ref = SFr.ImgNo();
+    model.setSize();
+
+    std::cerr << "th" << rank << ": looping references..." <<std::endl;
+
+    SFr.go_beginning();
+    SFr.ImgSize(model.dim, model.dim);
+    while ((!SFr.eof()))
+    {
+        fn_tmp = SFr.NextImg();
+        img.read(fn_tmp, false, false, true, false);
+        img().setXmippOrigin();
+        model.Iref[refno] = img;
+        // Default start is all equal model fractions
+        model.alpha_k[refno] = (double) 1 / SFr.ImgNo();
+        model.Iref[refno].set_weight(model.alpha_k[refno] * (double) nr_images_global);
+        // Default start is half-half mirrored images
+        model.mirror_fraction[refno] = ( do_mirror ? 0.5 : 0.);
+        refno++;
+    }
+
+    // Read selfile with experimental images
+    SF.read(fn_sel);
+    nr_images_global = SF.ImgNo();
+    // By default set myFirst and myLast equal to 0 and N
+    // respectively, this should be changed when using MPI
+    // by calling setWorkingImages before produceSideInfo2
+    myFirstImg = 0;
+    myLastImg = nr_images_global - 1;
+    //This will differs from nr_images_global if MPI
+    nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg, myLastImg);
+    // Get original image size
+    SF.ImgSize(dim, dim);
+    hdim = dim / 2;
+    dim2 = dim * dim;
+    ddim2 = (double) dim2;
+    sigma_noise2 = model.sigma_noise * model.sigma_noise;
+
+    if (model.do_student)
+    {
+        df2 = -(df + ddim2) / 2.;
+        dfsigma2 = df * sigma_noise2;
+    }
+
+    // prepare masks for rotated references
+    mask.resize(dim, dim);
+
+    mask.setXmippOrigin();
+
+    BinaryCircularMask(mask, hdim, INNER_MASK);
+
+    omask.resize(dim, dim);
+
+    omask.setXmippOrigin();
+
+    BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
+
+    model.dim = dim;
+    Iold.resize(model.n_ref);
+
+    // Construct matrices for 0, 90, 180 & 270 degree flipping and mirrors
+    Matrix2D<double> A(3, 3);
+    psi_max = 90.;
+    nr_psi = CEIL(psi_max / psi_step);
+    psi_step = psi_max / nr_psi;
+    nr_flip = nr_nomirror_flips = 4;
+    A.initIdentity();
+    F.push_back(A);
+
+    A(0, 0) = 0.;
+    A(1, 1) = 0.;
+    A(1, 0) = 1.;
+    A(0, 1) = -1;
+    F.push_back(A);
+
+    A(0, 0) = -1.;
+    A(1, 1) = -1.;
+    A(1, 0) = 0.;
+    A(0, 1) = 0;
+    F.push_back(A);
+
+    A(0, 0) = 0.;
+    A(1, 1) = 0.;
+    A(1, 0) = -1.;
+    A(0, 1) = 1;
+    F.push_back(A);
+
+    if (do_mirror)
+    {
+        nr_flip = 8;
+        A.initIdentity();
+        A(0, 0) = -1;
+        F.push_back(A);
+
+        A(0, 0) = 0.;
+        A(1, 1) = 0.;
+        A(1, 0) = 1.;
+        A(0, 1) = 1;
+        F.push_back(A);
+
+        A(0, 0) = 1.;
+        A(1, 1) = -1.;
+        A(1, 0) = 0.;
+        A(0, 1) = 0;
+        F.push_back(A);
+
+        A(0, 0) = 0.;
+        A(1, 1) = 0.;
+        A(1, 0) = -1.;
+        A(0, 1) = -1;
+        F.push_back(A);
+    }
+
+    // Set limit_rot
+    limit_rot = (search_rot < 180.);
+
+    // Set sigdim, i.e. the number of pixels that will be considered in the translations
+    if (save_mem2)
+        sigdim = 2 * CEIL(model.sigma_offset * 3);
+    else
+        sigdim = 2 * CEIL(model.sigma_offset * 6);
+
+    sigdim++; // (to get uneven number)
+
+    sigdim = XMIPP_MIN(dim, sigdim);
+
+    //Some vectors and matrixes initialization
+    refw.resize(model.n_ref);
+
+    refw2.resize(model.n_ref);
+
+    refwsc2.resize(model.n_ref);
+
+    refw_mirror.resize(model.n_ref);
+
+    sumw_refpsi.resize(model.n_ref * nr_psi);
+
+    A2.resize(model.n_ref);
+
+    fref.resize(model.n_ref * nr_psi);
+
+    mref.resize(model.n_ref * nr_psi);
+
+    wsum_Mref.resize(model.n_ref);
+
+    mysumimgs.resize(model.n_ref * nr_psi);
+
+    if (fast_mode)
+    {
+        int mysize = model.n_ref * (do_mirror ? 2 : 1);
+        //if (do_mirror)
+        //    mysize *= 2;
+        ioptx_ref.resize(mysize);
+        iopty_ref.resize(mysize);
+        ioptflip_ref.resize(mysize);
+        maxw_ref.resize(mysize);
+    }
+
+    //-------Randomize the order of images
+    img_order.resize(nr_images_global, 0);
+    for (int i = 0; i < nr_images_global; i++)
+        img_order[i] = i;
+    srand(seed);
+    std::random_shuffle(img_order.begin(), img_order.end());
+    srand( time(NULL));
+
+    //////////// FROM MAIN /////////////
+    show();
+
+    /////////// FROM SIDEINFO 2 ///////////
+    int c, idum;
+    DocFile DF;
+    DocLine DL;
+    fn_tmp = "";
+    double offx, offy, aux, sumfrac = 0.;
+    std::vector<double> Vdum;
+
+
+
+    // Initialize trymindiff for all images
+    imgs_trymindiff.clear();
+
+    FOR_ALL_LOCAL_IMAGES()
+    {
+        imgs_optrefno.push_back(0);
+        imgs_trymindiff.push_back(-1.);
+    }
+
+    // Initialize scale and bgmean for all images
+    // (for now initialize to 1 and 0, below also include doc)
+    if (do_norm)
+    {
+        imgs_scale.clear();
+        imgs_bgmean.clear();
+
+        FOR_ALL_LOCAL_IMAGES()
+        {
+            imgs_bgmean.push_back(0.);
+            imgs_scale.push_back(1.);
+        }
+
+        average_scale = 1.;
+        model.scale.clear();
+        for (int refno = 0; refno < model.n_ref; refno++)
+        {
+            model.scale.push_back(1.);
+        }
+    }
+
+    // Initialize imgs_offsets vectors
+    offx = (zero_offsets ? 0. : -999);
+
+    idum = (do_mirror ? 4 : 2) * model.n_ref;
+
+    FOR_ALL_LOCAL_IMAGES()
+    {
+        imgs_offsets.push_back(Vdum);
+
+        for (int refno = 0; refno < idum; refno++)
+        {
+            imgs_offsets[IMG_LOCAL_INDEX].push_back(offx);
+        }
+    }
+
+
+    // For limited orientational search: initialize imgs_oldphi & imgs_oldtheta to -999.
+    if (limit_rot)
+    {
+        imgs_oldphi.clear();
+        imgs_oldtheta.clear();
+
+        FOR_ALL_LOCAL_IMAGES()
+        {
+            imgs_oldphi.push_back(-999.);
+            imgs_oldtheta.push_back(-999.);
+        }
+    }
+
+    //FIXME: Now the selfile is not splitted, so only need to iterate
+    //over local images and read parameters
+    // Read optimal image-parameters from fn_doc
+    if (fn_doc != "")
+    {
+        if (limit_rot || zero_offsets || do_norm)
+        {
+            DF.read(fn_doc);
+            DF.go_beginning();
+            SF.go_beginning();
+            int imgno = 0;
+
+
+            while (!SF.eof())
+            {
+                fn_tmp = SF.NextImg();
+
+                if (DF.search_comment(fn_tmp))
+                {
+                    if (limit_rot)
+                    {
+                        imgs_oldphi[IMG_LOCAL_INDEX] = DF(0);
+                        imgs_oldtheta[IMG_LOCAL_INDEX] = DF(1);
+                    }
+
+                    if (zero_offsets)
+                    {
+                        idum = (do_mirror ? 2 : 1) * model.n_ref;
+
+                        for (int refno = 0; refno < idum; refno++)
+                        {
+                            imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = DF(3);
+                            imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = DF(4);
+                        }
+
+                    }
+
+                    if (do_norm)
+                    {
+                        imgs_bgmean[IMG_LOCAL_INDEX] = DF(9);
+                        imgs_scale[IMG_LOCAL_INDEX] = DF(10);
+                    }
+                }
+                else
+                {
+                    REPORT_ERROR(1, (std::string)"Prog_MLalign2D_prm: Cannot find " + fn_tmp + " in docfile " + fn_doc);
+                }
+
+                imgno++;
+            }
+
+            DF.clear();
+        }
+    }
+
+    // read in model fractions if given on command line
+    if (fn_frac != "")
+    {
+        DF.read(fn_frac);
+        DF.go_first_data_line();
+
+        for (int refno = 0; refno < model.n_ref; refno++)
+        {
+            DL = DF.get_current_line();
+            model.alpha_k[refno] = DL[0];
+
+            if (do_mirror)
+            {
+                if (DL[1] > 1. || DL[1] < 0.) REPORT_ERROR(1, "Prog_MLalign2D_prm: Mirror fraction (2nd column) should be [0,1]!");
+
+                model.mirror_fraction[refno] = DL[1];
+            }
+
+            if (do_norm)
+            {
+                model.scale[refno] = DL[3];
+            }
+
+            sumfrac += model.alpha_k[refno];
+            DF.next_data_line();
+        }
+
+        if (ABS(sumfrac - 1.) > 1e-3) if (verb > 0) std::cerr
+                << " ->WARNING: Sum of all expected model fractions ("
+                << sumfrac << ") is not one!" << std::endl;
+
+        for (int refno = 0; refno < model.n_ref; refno++)
+        {
+            model.alpha_k[refno] /= sumfrac;
+        }
+    }
+
+    //--------Setup for Docfile -----------
+    docfiledata.resize(nr_images_local, DATALINELENGTH);
+    global_docfiledata.resize(nr_images_global, DATALINELENGTH);
+
 }//close function
 
 // Set up a lot of general stuff
@@ -427,29 +776,6 @@ void Prog_MLalign2D_prm::produceSideInfo()
 
     BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
 
-    // Get number of references
-    if (do_ML3D)
-    {
-        do_generate_refs = false;
-    }
-    else if (fn_ref != "")
-    {
-        do_generate_refs = false;
-
-        if (Is_ImageXmipp(fn_ref))
-            model.n_ref = 1;
-        else
-        {
-            SFr.read(fn_ref);
-            model.n_ref = SFr.ImgNo();
-        }
-    }
-    else
-    {
-        do_generate_refs = true;
-    }
-
-    model.setSize();
     model.dim = dim;
     Iold.resize(model.n_ref);
 
@@ -599,63 +925,97 @@ void Prog_MLalign2D_prm::produceSideInfo()
 // Generate initial references =============================================
 void Prog_MLalign2D_prm::generateInitialReferences()
 {
-
-    SelFile SFtmp, SFout;
-    ImageXmipp Iave, Itmp;
-    double dummy;
-    FileName fn_tmp;
-
-    if (verb > 0)
+    // Get number of references
+    if (do_ML3D)
     {
-        std::cerr
-                << "  Generating initial references by averaging over random subsets"
-                << std::endl;
-        init_progress_bar(model.n_ref);
+        do_generate_refs = false;
     }
-
-    // Make random subsets and calculate average images
-    SFtmp = SF.randomize();
-
-    int Nsub = ROUND((double)SFtmp.ImgNo() / model.n_ref);
-
-    for (int refno = 0; refno < model.n_ref; refno++)
+    else if (fn_ref != "")
     {
-        SFout.clear();
-        SFout.reserve(Nsub);
-        SFtmp.go_beginning();
-        SFtmp.jump_lines(Nsub * refno);
+        do_generate_refs = false;
 
-        if (refno == model.n_ref - 1)
-            Nsub = SFtmp.ImgNo() - refno * Nsub;
-
-        for (int nn = 0; nn < Nsub; nn++)
+        if (Is_ImageXmipp(fn_ref))
+            model.n_ref = 1;
+        else
         {
-            SFout.insert(SFtmp.current());
-            SFtmp.NextImg();
+            SFr.read(fn_ref);
+            model.n_ref = SFr.ImgNo();
         }
-
-        SFout.get_statistics(Iave, Itmp, dummy, dummy);
-        fn_tmp = fn_root + "_it";
-        fn_tmp.compose(fn_tmp, 0, "");
-        fn_tmp = fn_tmp + "_ref";
-        fn_tmp.compose(fn_tmp, refno + 1, "");
-        fn_tmp = fn_tmp + ".xmp";
-        Iave.write(fn_tmp);
-        SFr.insert(fn_tmp, SelLine::ACTIVE);
-
-        if (verb > 0)
-            progress_bar(refno);
+    }
+    else
+    {
+        do_generate_refs = true;
     }
 
-    if (verb > 0)
-        progress_bar(model.n_ref);
+    // Reserve memory in model
+    model.setSize();
 
-    fn_ref = fn_root + "_it";
+    if (fn_ref == "")
+    {
+        //FIXME: n_ref > 0 ???
+        if (model.n_ref != 0)
+        {
+            SelFile SFtmp, SFout;
+            ImageXmipp Iave, Itmp;
+            double dummy;
+            FileName fn_tmp;
 
-    fn_ref.compose(fn_ref, 0, "sel");
+            if (verb > 0)
+            {
+                std::cerr
+                        << "  Generating initial references by averaging over random subsets"
+                        << std::endl;
+                init_progress_bar(model.n_ref);
+            }
 
-    SFr.write(fn_ref);
+            // Make random subsets and calculate average images
+            SFtmp = SF.randomize();
 
+            int Nsub = ROUND((double)SFtmp.ImgNo() / model.n_ref);
+
+            for (int refno = 0; refno < model.n_ref; refno++)
+            {
+                SFout.clear();
+                SFout.reserve(Nsub);
+                SFtmp.go_beginning();
+                SFtmp.jump_lines(Nsub * refno);
+
+                if (refno == model.n_ref - 1)
+                    Nsub = SFtmp.ImgNo() - refno * Nsub;
+
+                for (int nn = 0; nn < Nsub; nn++)
+                {
+                    SFout.insert(SFtmp.current());
+                    SFtmp.NextImg();
+                }
+
+                SFout.get_statistics(Iave, Itmp, dummy, dummy);
+                fn_tmp = fn_root + "_it";
+                fn_tmp.compose(fn_tmp, 0, "");
+                fn_tmp = fn_tmp + "_ref";
+                fn_tmp.compose(fn_tmp, refno + 1, "");
+                fn_tmp = fn_tmp + ".xmp";
+                Iave.write(fn_tmp);
+                SFr.insert(fn_tmp, SelLine::ACTIVE);
+
+                if (verb > 0)
+                    progress_bar(refno);
+            }
+
+            if (verb > 0)
+                progress_bar(model.n_ref);
+
+            fn_ref = fn_root + "_it";
+
+            fn_ref.compose(fn_ref, 0, "sel");
+
+            SFr.write(fn_ref);
+        }
+        else
+        {
+            REPORT_ERROR(1, "Please provide -ref or -nref");
+        }
+    }
 }//close function generateInitialReferences
 
 // Read reference images to memory and initialize offset vectors
@@ -664,39 +1024,14 @@ void Prog_MLalign2D_prm::generateInitialReferences()
 void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
 {
 
-    int c, idum, refno = 0;
+    int c, idum;
     DocFile DF;
     DocLine DL;
     double offx, offy, aux, sumfrac = 0.;
     FileName fn_tmp;
-    ImageXmipp img;
     std::vector<double> Vdum;
 
-    // Read in all reference images in memory
-    if (Is_ImageXmipp(fn_ref))
-    {
-        SFr.reserve(1);
-        SFr.insert(fn_ref);
-    }
-    else
-    {
-        SFr.read(fn_ref);
-    }
 
-    SFr.go_beginning();
-    while ((!SFr.eof()))
-    {
-        fn_tmp = SFr.NextImg();
-        img.read(fn_tmp, false, false, true, false);
-        img().setXmippOrigin();
-        model.Iref[refno] = img;
-        // Default start is all equal model fractions
-        model.alpha_k[refno] = (double) 1 / SFr.ImgNo();
-        model.Iref[refno].set_weight(model.alpha_k[refno] * (double) nr_images_global);
-        // Default start is half-half mirrored images
-        model.mirror_fraction[refno] = ( do_mirror ? 0.5 : 0.);
-        refno++;
-    }
 
     // Initialize trymindiff for all images
     imgs_trymindiff.clear();
@@ -818,7 +1153,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
         DF.read(fn_frac);
         DF.go_first_data_line();
 
-        for (refno = 0; refno < model.n_ref; refno++)
+        for (int refno = 0; refno < model.n_ref; refno++)
         {
             DL = DF.get_current_line();
             model.alpha_k[refno] = DL[0];
@@ -843,7 +1178,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int nr_vols)
                 << " ->WARNING: Sum of all expected model fractions ("
                 << sumfrac << ") is not one!" << std::endl;
 
-        for (refno = 0; refno < model.n_ref; refno++)
+        for (int refno = 0; refno < model.n_ref; refno++)
         {
             model.alpha_k[refno] /= sumfrac;
         }
@@ -868,29 +1203,29 @@ void Prog_MLalign2D_prm::calculatePdfInplane()
     sum = 0.;
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(P_phi)
+    {
+        x = (double) j;
+        y = (double) i;
+        r2 = x * x + y * y;
+
+        if (model.sigma_offset > 0.)
         {
-            x = (double) j;
-            y = (double) i;
-            r2 = x * x + y * y;
-
-            if (model.sigma_offset > 0.)
-            {
-                pdfpix = exp(-r2 / (2 * model.sigma_offset * model.sigma_offset));
-                pdfpix /= 2 * PI * model.sigma_offset * model.sigma_offset * nr_psi
-                        * nr_nomirror_flips;
-            }
-            else
-            {
-                if (j == 0 && i == 0)
-                    pdfpix = 1.;
-                else
-                    pdfpix = 0.;
-            }
-
-            MAT_ELEM(P_phi, i, j) = pdfpix;
-            MAT_ELEM(Mr2, i, j) = (float) r2;
-            sum += pdfpix;
+            pdfpix = exp(-r2 / (2 * model.sigma_offset * model.sigma_offset));
+            pdfpix /= 2 * PI * model.sigma_offset * model.sigma_offset * nr_psi
+                    * nr_nomirror_flips;
         }
+        else
+        {
+            if (j == 0 && i == 0)
+                pdfpix = 1.;
+            else
+                pdfpix = 0.;
+        }
+
+        MAT_ELEM(P_phi, i, j) = pdfpix;
+        MAT_ELEM(Mr2, i, j) = (float) r2;
+        sum += pdfpix;
+    }
 
     // Normalization
     P_phi /= sum;
