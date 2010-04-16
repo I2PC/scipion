@@ -32,10 +32,10 @@ void usage();
 
 int main(int argc, char **argv)
 {
-    FileName fnPSF, fnPSFOut, fnImgOut;
+    FileName fnPSF, fnPSFOut, fnImgIn, fnImgOut;
     XmippXRPSF psf;
 
-    #define DEBUG
+#define DEBUG
 
     try
     {
@@ -62,11 +62,41 @@ int main(int argc, char **argv)
         psf.produceSideInfo();
         std::cout << psf << std::endl;
 
-        Matrix2D < std::complex < double > > Image(128,512);
-//        Matrix2D < double > Image(1280,1280);
-        //  Matrix2D < double > Ic(128,128);
+        if (checkParameter(argc, argv, "-vol"))
+        {
+        	VolumeXmipp   phantomVol;
 
-        psf.generateOTF(Image);
+		}
+
+        if (checkParameter(argc, argv, "-img"))
+        {
+        	fnImgIn = getParameter(argc, argv, "-img");
+        	ImageXmipp ImXmipp;
+        	Matrix2D < std::complex < double > > ImgIn;
+
+        	ImXmipp.read(fnImgIn);
+        	ImgIn.resize(ImXmipp());
+
+        	FOR_ALL_ELEMENTS_IN_MATRIX2D(ImgIn)
+				ImgIn(i,j).real() = ImXmipp(i,j);
+
+            psf.generateOTF(ImgIn);
+
+            psf.applyOTF(ImgIn);
+
+            fnImgOut = getParameter(argc, argv, "-imgout");
+
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(ImgIn)
+				ImXmipp(i,j) = abs(ImgIn(i,j));
+
+            ImXmipp.write(fnImgOut);
+       		}
+
+
+//        Matrix2D < double > Image(1280,1280);
+
+
+//        psf.generateOTF(Image);
 
 
 
@@ -78,21 +108,18 @@ int main(int argc, char **argv)
             fnPSFOut = getParameter(argc, argv, "-psfout");
             psf.write(fnPSFOut);
         }
-        if (checkParameter(argc, argv, "-imgout"))
-        {
-            fnImgOut = getParameter(argc, argv, "-imgout");
-
-            ImageXmipp Im; //(Image.ydim, Image.xdim);
-            Im().resize(psf.OTF);
-
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(psf.OTF)
-				Im(i,j) = abs(psf.OTF(i,j));
-
-            Im.write(fnImgOut);
-
-#ifdef DEBUG
-#endif
-        }
+//        if (checkParameter(argc, argv, "-imgout"))
+//        {
+//            fnImgOut = getParameter(argc, argv, "-imgout");
+//
+//            ImageXmipp Im; //(Image.ydim, Image.xdim);
+//            Im().resize(psf.OTF);
+//
+//            FOR_ALL_ELEMENTS_IN_MATRIX2D(psf.OTF)
+//				Im(i,j) = abs(psf.OTF(i,j));
+//            Im.write(fnImgOut);
+//
+//        }
 
     }
     catch (Xmipp_error &XE)
