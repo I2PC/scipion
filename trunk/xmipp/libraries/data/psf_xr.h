@@ -116,7 +116,7 @@ public:
         Matrix2D<std::complex<double> > ImFT;
         XmippFftw transformer;
 
-        Im.setXmippOrigin();
+//        Im.setXmippOrigin();
 #define DEBUG
 #ifdef DEBUG
 
@@ -125,7 +125,7 @@ public:
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Im)
         _Im(i,j) = abs(Im(i,j));
 
-        _Im.write(("apply.spi"));
+        _Im.write(("psfxr-Imin.spi"));
 #endif
 
         transformer.FourierTransform(Im, ImFT, false);
@@ -137,25 +137,26 @@ public:
 
 #ifdef DEBUG
 
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
-        _Im(i,j) = abs(OTF(i,j));
+//        FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
+//			_Im(i,j) = abs(OTF(i,j));
+//        _Im.write(("apply-otf.spi"));
 
-        _Im.write(("apply-otf.spi"));
+        CenterOriginFFT(ImFT, 1);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(ImFT)
-        _Im(i,j) = abs(ImFT(i,j));
+			_Im(i,j) = abs(ImFT(i,j));
 
-        _Im.write(("apply-imft.spi"));
+        _Im.write(("psfxr-imft.spi"));
 
 #endif
 
-//        CenterOriginFFT(Im, 1);
+        //        CenterOriginFFT(Im, 1);
 
 #ifdef DEBUG
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Im)
         _Im(i,j) = abs(Im(i,j));
 
-        _Im.write(("apply-imfilt.spi"));
+        _Im.write(("psfxr-imout.spi"));
 #endif
 
     }
@@ -172,6 +173,11 @@ public:
 
 /// Generate the quadratic phase distribution of a ideal lens
 void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
+
+
+/// Generate projection for an X-ray microscope... TBC
+void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut);
+
 
 
 //@}

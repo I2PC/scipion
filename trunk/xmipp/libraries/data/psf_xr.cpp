@@ -125,7 +125,7 @@ void XmippXRPSF::produceSideInfo()
     dxi = dxo * Ms;
     dxiMax = lambda * Zi / (2 * Rlens);
 
-//        Z = 0.99999*Zo;
+    //        Z = 0.99999*Zo;
     Z = Zo;
 }
 
@@ -150,14 +150,14 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
 
 
     double Nx = Im.xdim, Ny = Im.ydim;
-    double focalEquiv = 1/(1/Z - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
+    double focalEquiv = 1/(1/(Z + DeltaZo) - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
     double dxl = lambda*Zi / (Nx * dxi); // Pixel X-size en the plane of lens aperture
     double dyl = lambda*Zi / (Ny * dxi); // Pixel Y-size en the plane of lens aperture
 
 #ifdef DEBUG
 
     std::cout << std::endl;
-    std::cout << "XmippXRPSF::GenerateOTF - Declaration" << std::endl;
+    std::cout << "XmippXRPSF::GenerateOTF - Parameters:" << std::endl;
     std::cout << "Nx = " << Nx << "   Ny = " << Ny << std::endl;
     std::cout << "dxl = " << dxl << "   dyl = " << dyl << std::endl;
     std::cout << "Equivalent focal = " << focalEquiv << std::endl;
@@ -168,36 +168,32 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
 
     Matrix2D< std::complex<double> > PSFi;
     XmippFftw transformer;
-    //    Mask_Params mask_prm; TODO ¿merece la pena integrar la mascara mediante este metodo?
+    //    Mask_Params mask_prm; TODO do we have to include masks using this method?
 
     OTF.resize(Ny,Nx);
     lensPD(OTF, focalEquiv, lambda, dxl, dyl);
 
-//    OTF.window(-128,-128,127,255,10);
+    //    OTF.window(-128,-128,127,255,10);
 
-    // TODO incluir la mascara de la apertura de la lente: circular, pero en este caso se ha de hacer con una elipse
 
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
-          {
-        if (sqrt(double(i*i)*dyl*dyl + double(j*j)*dxl*dxl) > Rlens) OTF(i,j)=0;
-//        if (sqrt(double(i*i)+ double(j*j)) > 64) OTF(i,j)=0;
-
-          }
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
+    {
+        if (sqrt(double(i*i)*dyl*dyl + double(j*j)*dxl*dxl) > Rlens)
+            OTF(i,j)=0;
+        //        if (sqrt(double(i*i)+ double(j*j)) > 64) OTF(i,j)=0;
+    }
 
 #ifdef DEBUG
-
-    // lensPD(LPD, focalEquiv, lambda,dxo,dxo);
     ImageXmipp _Im;
     _Im().resize(OTF);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
     _Im(i,j) = abs(OTF(i,j));
-
-    _Im.write("lensphase.spi");
+    _Im.write("psfxr-lens.spi");
 #endif
 
 
     transformer.FourierTransform(OTF, PSFi, false);
-//    CenterOriginFFT(PSFi, 1);
+    //    CenterOriginFFT(PSFi, 1);
     double norm=0;
 
     //     FOR_ALL_ELEMENTS_IN_MATRIX2D(LPDFT)
@@ -208,28 +204,21 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
         norm +=  PSFi.data[n].real();
     }
     PSFi /= norm;
-    //
+
     transformer.inverseFourierTransform();
-//    CenterOriginFFT(OTF, 1);
 
 #ifdef DEBUG
 
-    std::cout << "checkpoint transformer  1" << std::endl;
-
     CenterOriginFFT(OTF,1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
-       _Im(i,j) = abs(OTF(i,j));
-       _Im.write("otf.spi");
-       CenterOriginFFT(OTF,1);
+    _Im(i,j) = abs(OTF(i,j));
+    _Im.write("psfxr-otf.spi");
+    CenterOriginFFT(OTF,0);
 
-       CenterOriginFFT(PSFi,1);
+    CenterOriginFFT(PSFi,1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(PSFi)
     _Im(i,j) = abs(PSFi(i,j));
-    _Im.write("psfi.spi");
-    CenterOriginFFT(PSFi,1);
-
-
-
+    _Im.write("psfxr-psfi.spi");
 #endif
 }
 
@@ -258,7 +247,34 @@ void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, do
     }
 }
 
+void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
+{
+    imOut() = Matrix2D<double> (vol().ydim, vol().xdim);
+    imOut().initZeros();
+//    imOut()+= 1;
+    imOut().setXmippOrigin();
 
+    Matrix2D<double> imTemp(imOut()), intExp(imOut());
+    intExp.initZeros();
+
+    vol().setXmippOrigin();
+
+    for (int k=((vol()).zinit); k<=((vol()).zinit + (vol()).zdim - 1); k++)
+    {
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(imTemp)
+        {
+            intExp(i, j) += VOL_ELEM(vol(), i, j, k);
+            imTemp(i, j) = exp(-intExp(i,j)*psf.dzo)*vol(i,j,k)*psf.dzo;
+        }
+        psf.Z = psf.Zo - k*psf.dzo;
+        psf.generateOTF(imTemp);
+        psf.applyOTF(imTemp);
+        imOut() += imTemp;
+    }
+
+    imOut() = 1-imOut();
+
+}
 
 
 #undef DEBUG

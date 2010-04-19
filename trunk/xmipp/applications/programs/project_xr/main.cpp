@@ -52,13 +52,13 @@ int main(int argc, char **argv)
     {
         std::cerr << XE << std::endl;
         psf.usage();
-//        usage();
         return 1;
     }
 
     try
     {
-        //     XmippXRPSF psf;
+        fnImgOut = getParameter(argc, argv, "-imgout");
+
         psf.produceSideInfo();
 
         if (checkParameter(argc, argv, "-v"))
@@ -67,11 +67,23 @@ int main(int argc, char **argv)
         if (checkParameter(argc, argv, "-vol"))
         {
             VolumeXmipp   phantomVol;
+            ImageXmipp    imOut;
+
+            fnImgIn = getParameter(argc, argv, "-vol");
+
+            phantomVol.read(fnImgIn);
+
+            std::cout << phantomVol().zdim << std::endl;
+
+            project_xr(psf, phantomVol, imOut);
+
+            imOut.write(fnImgOut);
+
 
         }
 
-//        if (checkParameter(argc, argv, "-img"))
-//        {
+        if (checkParameter(argc, argv, "-img"))
+        {
             fnImgIn = getParameter(argc, argv, "-img");
             ImageXmipp ImXmipp;
             Matrix2D < std::complex < double > > ImgIn;
@@ -88,13 +100,12 @@ int main(int argc, char **argv)
 
             psf.applyOTF(ImgIn);
 
-            fnImgOut = getParameter(argc, argv, "-imgout");
 
             FOR_ALL_ELEMENTS_IN_MATRIX2D(ImgIn)
             ImXmipp(i,j) = abs(ImgIn(i,j));
 
             ImXmipp.write(fnImgOut);
-//        }
+        }
 
 
         //        Matrix2D < double > Image(1280,1280);
@@ -108,19 +119,6 @@ int main(int argc, char **argv)
             fnPSFOut = getParameter(argc, argv, "-psfout");
             psf.write(fnPSFOut);
         }
-        //        if (checkParameter(argc, argv, "-imgout"))
-        //        {
-        //            fnImgOut = getParameter(argc, argv, "-imgout");
-        //
-        //            ImageXmipp Im; //(Image.ydim, Image.xdim);
-        //            Im().resize(psf.OTF);
-        //
-        //            FOR_ALL_ELEMENTS_IN_MATRIX2D(psf.OTF)
-        //    Im(i,j) = abs(psf.OTF(i,j));
-        //            Im.write(fnImgOut);
-        //
-        //        }
-
     }
     catch (Xmipp_error &XE)
     {
