@@ -51,8 +51,8 @@ int main(int argc, char **argv)
     catch (Xmipp_error &XE)
     {
         std::cerr << XE << std::endl;
-        //     psf.usage();
-        usage();
+        psf.usage();
+//        usage();
         return 1;
     }
 
@@ -60,25 +60,29 @@ int main(int argc, char **argv)
     {
         //     XmippXRPSF psf;
         psf.produceSideInfo();
-        std::cout << psf << std::endl;
+
+        if (checkParameter(argc, argv, "-v"))
+        	std::cout << psf << std::endl;
 
         if (checkParameter(argc, argv, "-vol"))
         {
-        	VolumeXmipp   phantomVol;
+            VolumeXmipp   phantomVol;
 
-		}
+        }
 
-        if (checkParameter(argc, argv, "-img"))
-        {
-        	fnImgIn = getParameter(argc, argv, "-img");
-        	ImageXmipp ImXmipp;
-        	Matrix2D < std::complex < double > > ImgIn;
+//        if (checkParameter(argc, argv, "-img"))
+//        {
+            fnImgIn = getParameter(argc, argv, "-img");
+            ImageXmipp ImXmipp;
+            Matrix2D < std::complex < double > > ImgIn;
 
-        	ImXmipp.read(fnImgIn);
-        	ImgIn.resize(ImXmipp());
+            ImXmipp.read(fnImgIn);
+            ImXmipp().setXmippOrigin();
 
-        	FOR_ALL_ELEMENTS_IN_MATRIX2D(ImgIn)
-				ImgIn(i,j).real() = ImXmipp(i,j);
+            ImgIn.resize(ImXmipp());
+
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(ImgIn)
+            ImgIn(i,j).real() = ImXmipp(i,j);
 
             psf.generateOTF(ImgIn);
 
@@ -87,44 +91,41 @@ int main(int argc, char **argv)
             fnImgOut = getParameter(argc, argv, "-imgout");
 
             FOR_ALL_ELEMENTS_IN_MATRIX2D(ImgIn)
-				ImXmipp(i,j) = abs(ImgIn(i,j));
+            ImXmipp(i,j) = abs(ImgIn(i,j));
 
             ImXmipp.write(fnImgOut);
-       		}
+//        }
 
 
-//        Matrix2D < double > Image(1280,1280);
+        //        Matrix2D < double > Image(1280,1280);
 
 
-//        psf.generateOTF(Image);
+        //        psf.generateOTF(Image);
 
-
-
-        //  Ic = (lensPD(psf.Flens, psf.lambda,psf.dxo, 128, 128));
-        //  lensPD(Ic, psf.Flens, psf.lambda,psf.dxo,psf.dxo);
 
         if (checkParameter(argc, argv, "-psfout"))
         {
             fnPSFOut = getParameter(argc, argv, "-psfout");
             psf.write(fnPSFOut);
         }
-//        if (checkParameter(argc, argv, "-imgout"))
-//        {
-//            fnImgOut = getParameter(argc, argv, "-imgout");
-//
-//            ImageXmipp Im; //(Image.ydim, Image.xdim);
-//            Im().resize(psf.OTF);
-//
-//            FOR_ALL_ELEMENTS_IN_MATRIX2D(psf.OTF)
-//				Im(i,j) = abs(psf.OTF(i,j));
-//            Im.write(fnImgOut);
-//
-//        }
+        //        if (checkParameter(argc, argv, "-imgout"))
+        //        {
+        //            fnImgOut = getParameter(argc, argv, "-imgout");
+        //
+        //            ImageXmipp Im; //(Image.ydim, Image.xdim);
+        //            Im().resize(psf.OTF);
+        //
+        //            FOR_ALL_ELEMENTS_IN_MATRIX2D(psf.OTF)
+        //    Im(i,j) = abs(psf.OTF(i,j));
+        //            Im.write(fnImgOut);
+        //
+        //        }
 
     }
     catch (Xmipp_error &XE)
     {
         std::cerr << XE << std::endl;
+        usage();
         return 1;
     }
     return 0;

@@ -39,20 +39,17 @@ void XmippXRPSF::read(const FileName &fn)
 
     try
     {
-        lambda = textToFloat(getParameter(fh_param, "lambda", 0, "2.43"))
-                 * 1e-9;
-        Flens
-        = textToFloat(getParameter(fh_param, "focal_length", 0,
-                                   "1.4742")) * 1e-3;
+        lambda = textToFloat(getParameter(fh_param, "lambda", 0, "2.43"))* 1e-9;
+        Flens = textToFloat(getParameter(fh_param, "focal_length", 0, "1.4742")) * 1e-3;
         Nzp = textToFloat(getParameter(fh_param, "zones_number", 0, "560"));
         Ms = textToFloat(getParameter(fh_param, "magnification", 0, "2304"));
-        dxo = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1")) * 1
-              - 9;
+        dxo = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1")) *1e-9;
         if (checkParameter(fh_param, "z_sampling_rate"))
-            dzo = textToFloat(getParameter(fh_param, "z_sampling_rate", 0))
-                  * 1e-9;
+            dzo = textToFloat(getParameter(fh_param, "z_sampling_rate", 0)) *1e-9;
         else
             dzo = dxo;
+        DeltaZo = textToFloat(getParameter(fh_param, "z_axis_shift", 0, "0")) *1e-6;
+
     }
     catch (Xmipp_error XE)
     {
@@ -82,7 +79,8 @@ void XmippXRPSF::usage()
     << "  [zones_number=<Nzp=560>]          : zone plate number\n"
     << "  [magnification=<Ms=2304>]         : Microscope magnification\n"
     << "  [sampling_rate=<dxo=1>]           : Object XY plane resolution in nm/pixel\n"
-    << "  [z_sampling_rate=<dzo=dxo>]       : Object Z axis resolution in nm/pixel\n";
+    << "  [z_sampling_rate=<dzo=dxo>]       : Object Z axis resolution in nm/pixel\n"
+    << "  [z_axis_shift=<DeltaZo=0>]        : Z axis shift in um\n";
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -95,12 +93,12 @@ std::ostream & operator <<(std::ostream &out, const XmippXRPSF &psf)
     << "magnification=        " << psf.Ms << std::endl
     << "sampling_rate=        " << psf.dxo * 1e9 << " nm" << std::endl
     << "z_sampling_rate=      " << psf.dzo * 1e9 << " nm" << std::endl
+    << "DeltaZo=              " << psf.DeltaZo * 1e6 << " um" << std::endl
     << std::endl
     << "Lens Radius=          " << psf.Rlens * 1e6 << " um" << std::endl
     << "Zo=                   " << psf.Zo * 1e3 << " mm" << std::endl
     << "Zi=                   " << psf.Zi * 1e3 << " mm" << std::endl
-    << "Minimum Resolution    " << psf.dxiMax * 1e6 << " um" << std::endl
-
+    << "Minimum Resolution=   " << psf.dxiMax * 1e6 << " um" << std::endl
     ;
 
     return out;
@@ -114,6 +112,7 @@ void XmippXRPSF::clear()
     Nzp = 560;
     Ms = 2304;
     dzo = dxo = 1e-9;
+    DeltaZo = 0;
 }
 
 /* Produce Side Information ------------------------------------------------ */
@@ -126,24 +125,14 @@ void XmippXRPSF::produceSideInfo()
     dxi = dxo * Ms;
     dxiMax = lambda * Zi / (2 * Rlens);
 
-//    Z = 0.99999*Zo;
+//        Z = 0.99999*Zo;
     Z = Zo;
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
-void XmippXRPSF::applyOTF(Matrix2D<double> &I) const
-{
-    //    Matrix1D<int>    idx(2);
-    //    Matrix1D<double> freq(2);
-    //    FOR_ALL_ELEMENTS_IN_MATRIX2D(FFTI)
-    //    {
-    //        XX(idx) = j;
-    //        YY(idx) = i;
-    //        FFT_idx2digfreq(FFTI, idx, freq);
-    //        double ctf = CTF_at(XX(freq), YY(freq));
-    //        FFTI(i, j) *= ctf;
-    //    }
-}
+//void XmippXRPSF::applyOTF(Matrix2D<double> &I) const
+//{
+//}
 
 /* Generate the Intensity PSF for a specific XR microscope configuration     ------------- */
 /* Generate OTF Image ------------------------------------------------------ */
@@ -159,12 +148,14 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
 #define DEBUG
     /// REMEMBER TO INCLUDE AND/OR ANALYZE THE MINIMUM RESOLUTION CONDITION !!!! ////
 
+
     double Nx = Im.xdim, Ny = Im.ydim;
     double focalEquiv = 1/(1/Z - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
     double dxl = lambda*Zi / (Nx * dxi); // Pixel X-size en the plane of lens aperture
     double dyl = lambda*Zi / (Ny * dxi); // Pixel Y-size en the plane of lens aperture
 
 #ifdef DEBUG
+
     std::cout << std::endl;
     std::cout << "XmippXRPSF::GenerateOTF - Declaration" << std::endl;
     std::cout << "Nx = " << Nx << "   Ny = " << Ny << std::endl;
@@ -177,18 +168,21 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
 
     Matrix2D< std::complex<double> > PSFi;
     XmippFftw transformer;
-    Mask_Params mask_prm;
+    //    Mask_Params mask_prm; TODO ¿merece la pena integrar la mascara mediante este metodo?
 
     OTF.resize(Ny,Nx);
     lensPD(OTF, focalEquiv, lambda, dxl, dyl);
 
+//    OTF.window(-128,-128,127,255,10);
 
     // TODO incluir la mascara de la apertura de la lente: circular, pero en este caso se ha de hacer con una elipse
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
-      {
-  		if (sqrt(double(i*i)*dyl*dyl + double(j*j)*dxl*dxl) > Rlens) OTF(i,j)=0;
-      }
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
+          {
+        if (sqrt(double(i*i)*dyl*dyl + double(j*j)*dxl*dxl) > Rlens) OTF(i,j)=0;
+//        if (sqrt(double(i*i)+ double(j*j)) > 64) OTF(i,j)=0;
+
+          }
 
 #ifdef DEBUG
 
@@ -196,47 +190,45 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
     ImageXmipp _Im;
     _Im().resize(OTF);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
-    _Im(i,j) = arg(OTF(i,j));
+    _Im(i,j) = abs(OTF(i,j));
 
     _Im.write("lensphase.spi");
 #endif
 
 
     transformer.FourierTransform(OTF, PSFi, false);
-    CenterOriginFFT(PSFi, 1);
-     double norm=0;
+//    CenterOriginFFT(PSFi, 1);
+    double norm=0;
 
-//     FOR_ALL_ELEMENTS_IN_MATRIX2D(LPDFT)
+    //     FOR_ALL_ELEMENTS_IN_MATRIX2D(LPDFT)
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
     {
-    	 PSFi.data[n] = abs(PSFi.data[n]);
-    	 PSFi.data[n] *= PSFi.data[n];
-    	 norm +=  PSFi.data[n].real();
+        PSFi.data[n] = abs(PSFi.data[n]);
+        PSFi.data[n] *= PSFi.data[n];
+        norm +=  PSFi.data[n].real();
     }
-     PSFi /= norm;
+    PSFi /= norm;
     //
-     transformer.inverseFourierTransform();
-     CenterOriginFFT(OTF, 1);
+    transformer.inverseFourierTransform();
+//    CenterOriginFFT(OTF, 1);
 
 #ifdef DEBUG
 
     std::cout << "checkpoint transformer  1" << std::endl;
-    _Im().resize(OTF);
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(PSFi)
-            _Im(i,j) = abs(PSFi(i,j));
-
-    _Im.write("psfi.spi");
-
-    Im.setXmippOrigin();
-
+    CenterOriginFFT(OTF,1);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
-        Im(i,j) = abs(OTF(i,j));
+       _Im(i,j) = abs(OTF(i,j));
+       _Im.write("otf.spi");
+       CenterOriginFFT(OTF,1);
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(Im)
-		_Im(i,j) = Im(i,j);
+       CenterOriginFFT(PSFi,1);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(PSFi)
+    _Im(i,j) = abs(PSFi(i,j));
+    _Im.write("psfi.spi");
+    CenterOriginFFT(PSFi,1);
 
-    _Im.write("otf.spi");
+
 
 #endif
 }
@@ -262,8 +254,8 @@ void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, do
 
         (Im(i, j)).real() = cos(phase);
         (Im(i, j)).imag() = sin(phase);
-    }
 
+    }
 }
 
 
