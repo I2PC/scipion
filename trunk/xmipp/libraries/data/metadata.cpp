@@ -332,6 +332,29 @@ MetaData::MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector
 	read(fileName,labelsVector);
 }
 
+void MetaData::combineWithFiles( MetaDataLabel thisLabel )
+{	
+    if( !isColumnFormat )
+    {
+        REPORT_ERROR( -1, "Row formatted MetaData can not be combined" );
+    }
+    
+    MetaData auxMetaData;
+    
+    for( long int IDthis = firstObject( ) ; IDthis != NO_MORE_OBJECTS; IDthis = nextObject( ) )
+	{
+        MetaDataContainer * aux = getObject( );
+		
+        // Read fileName
+        FileName fileName;
+        aux->writeValueToString( fileName , thisLabel );
+        
+        // Read file
+        auxMetaData.read( fileName );
+        combine( auxMetaData, thisLabel );
+    }
+}
+
 void MetaData::combine( MetaData & other, MetaDataLabel thisLabel )
 {
     if( !isColumnFormat )

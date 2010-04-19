@@ -147,6 +147,7 @@ public:
 	std::vector<long int> findObjectsInRange( MetaDataLabel name, int minValue, int maxValue );
 	
     void combine( MetaData & other, MetaDataLabel thisLabel);
+    void combineWithFiles( MetaDataLabel thisLabel );
     
     // Removes the collection of objects whose pair label/value is given
     // NOTE: The iterator will point to the first object after any of these
