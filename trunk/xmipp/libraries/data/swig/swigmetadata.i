@@ -95,4 +95,29 @@ mD2=XmippData.MetaData(mD);
 mD2.write("two")
 mD2.setValue( XmippData.MDL_ANGLEROT, 111.2)
 mD2.write("three")
+
+=================
+import XmippData
+outFile=XmippData.FileName('kk')
+mD=XmippData.MetaData();
+id=mD.addObject();
+mD.setValue( XmippData.MDL_ANGLEPSI, 10.3)
+b=XmippData.vectord()
+b.push_back(12);
+b.push_back(45);
+mD.setValue(XmippData.MDL_NMA,b)
+mD.setValue(XmippData.MDL_ANGLEROT, 11.0)
+mD.write(outFile)
+
+import XmippData
+inFile=XmippData.FileName('kk')
+mD=XmippData.MetaData();
+mD.read(inFile)
+b=XmippData.vectord();
+mD.getValue(XmippData.MDL_NMA,b)
+b[0]
+b[1]
+dd=XmippData.doubleP()
+mD.getValue(XmippData.MDL_ANGLEROT,dd) 
+print dd.value()
 */
