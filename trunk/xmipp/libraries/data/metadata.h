@@ -203,9 +203,8 @@ void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
 */
 #define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
         for( long int kkkk = kkkk_metadata.firstObject(); \
-             kkkk != NO_MORE_OBJECTS; \
-             kkkk_metadata.nextObject( ) )
-
+             kkkk != MetaData::NO_MORE_OBJECTS; \
+             kkkk=kkkk_metadata.nextObject( ) )
 #endif
 
 /*
