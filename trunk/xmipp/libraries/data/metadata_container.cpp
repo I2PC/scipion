@@ -545,17 +545,21 @@ void MetaDataContainer::writeValueToString( std::string &outString,
     MetaDataLabel inputLabel )
 {	
     std::ostringstream oss;
-    oss << std::setprecision(100);
-    oss << std::fixed;
 
     if( IS_DOUBLE(inputLabel) )
-	oss << *((double*)(getVoidPtr( inputLabel )));
+    {
+        oss << std::setprecision(10) << std::setw(17) << std::scientific;
+	    oss << *((double*)(getVoidPtr( inputLabel )));
+    }
     else if( IS_STRING(inputLabel) )
 	oss << *((std::string*)(getVoidPtr( inputLabel )));
     else if( IS_INT(inputLabel))
-	oss << *((int*)(getVoidPtr( inputLabel )));
+    {
+        oss << std::setprecision(10) << std::setw(12) << std::fixed;
+	    oss << *((int*)(getVoidPtr( inputLabel )));
+    }
     else if( IS_BOOL(inputLabel))
-	oss << *((bool*)(getVoidPtr( inputLabel )));
+	    oss << *((bool*)(getVoidPtr( inputLabel )));
     else if( IS_VECTOR(inputLabel))
     {
         const std::vector<double> &myVector=*(
@@ -563,8 +567,11 @@ void MetaDataContainer::writeValueToString( std::string &outString,
         int imax=myVector.size();
         oss << "** ";
         for (int i=0; i<imax; i++)
+        {
+            oss << std::setprecision(10) << std::setw(17) << std::scientific;
             oss << myVector[i] << " ";
-	oss << "**";
+        }
+	    oss << "**";
     }
     
     outString = oss.str( );
@@ -575,13 +582,19 @@ void MetaDataContainer::writeValueToFile( std::ofstream &outfile,
     MetaDataLabel inputLabel )
 {
     if( IS_DOUBLE(inputLabel) )
-	outfile << *((double*)(getVoidPtr( inputLabel )));
+    {
+        outfile << std::setprecision(10) << std::setw(17) << std::scientific;
+    	outfile << *((double*)(getVoidPtr( inputLabel )));
+    }
     else if( IS_STRING(inputLabel) )
-	outfile << *((std::string*)(getVoidPtr( inputLabel )));
+    	outfile << *((std::string*)(getVoidPtr( inputLabel )));
     else if( IS_INT(inputLabel))
-	outfile << *((int*)(getVoidPtr( inputLabel )));
+    {
+        outfile << std::setprecision(10) << std::setw(12) << std::fixed;
+	    outfile << *((int*)(getVoidPtr( inputLabel )));
+    }
     else if( IS_BOOL(inputLabel))
-	outfile << *((bool*)(getVoidPtr( inputLabel )));
+    	outfile << *((bool*)(getVoidPtr( inputLabel )));
     else if( IS_VECTOR(inputLabel))
     {
         const std::vector<double> &myVector=*(
@@ -589,8 +602,11 @@ void MetaDataContainer::writeValueToFile( std::ofstream &outfile,
         int imax=myVector.size();
         outfile << "** ";
         for (int i=0; i<imax; i++)
+        {
+            outfile << std::setprecision(10) << std::setw(17) << std::scientific;
             outfile << myVector[i] << " ";
-	outfile << "**";
+        }
+    	outfile << "**";
     }
 }
 
