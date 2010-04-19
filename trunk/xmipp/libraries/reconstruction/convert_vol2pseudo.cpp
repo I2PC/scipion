@@ -134,7 +134,7 @@ void Prog_Convert_Vol2Pseudo::produceSideInfo()
     mask_prm.generate_3Dmask(Vin());
     
     sigma3=3*sigma;
-    gaussianTable.resize(CEIL(sigma3*sqrt(3)*1000));
+    gaussianTable.resize(CEIL(sigma3*sqrt(3.0)*1000));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(gaussianTable)
         gaussianTable(i)=gaussian1D(i/1000.0,sigma);
     

@@ -257,7 +257,7 @@ void CommonLine_Parameters::getAndPrepareBlock(int i,
     sigma/=Nthr;
     int Ydim, Xdim;
     SF.ImgSize(Ydim,Xdim);
-    sigma*=sqrt(2*Xdim);
+    sigma*=sqrt(2.0*Xdim);
     
     // Threads structures are not needed any more
     delete( th_ids );
