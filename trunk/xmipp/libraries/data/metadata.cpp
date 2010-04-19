@@ -337,7 +337,7 @@ void MetaData::toDataBase( FileName DBname, std::string tableName )
     try
     {
         CppSQLite3DB db;
-        db.open( DBname.c_str( ) ); 
+        db.open( DBname ); 
 
         if( tableName == "" )
         {
@@ -347,7 +347,7 @@ void MetaData::toDataBase( FileName DBname, std::string tableName )
             tableName = inFile;
         }
 
-        if( !db.tableExists( tableName.c_str() ) )
+        if( !db.tableExists( tableName ) )
         {
             std::string sqlCommand = "create table ";
             sqlCommand += tableName + "(";
@@ -390,7 +390,7 @@ void MetaData::toDataBase( FileName DBname, std::string tableName )
             sqlCommand.erase( sqlCommand.end()-1 );
             sqlCommand += ");";
 
-            db.execDML( sqlCommand.c_str( ) );
+            db.execDML( sqlCommand );
             db.execDML("begin transaction;");
 
             sqlCommand = "insert into " + tableName + " values (";
@@ -403,7 +403,7 @@ void MetaData::toDataBase( FileName DBname, std::string tableName )
             sqlCommand.erase( sqlCommand.end( )-1);
             sqlCommand += ");";
 
-            CppSQLite3Statement stmt = db.compileStatement( sqlCommand.c_str( ) );
+            CppSQLite3Statement stmt = db.compileStatement( sqlCommand );
 
             for( long int IDthis = firstObject( ) ; IDthis != NO_MORE_OBJECTS; IDthis = nextObject( ) )
 	        {
@@ -441,7 +441,6 @@ void MetaData::toDataBase( FileName DBname, std::string tableName )
                         stmt.bind( labelsCounter, value );
                     }
 	            }  
-                std::cerr << std::endl;
                 stmt.execDML();
                 stmt.reset(); 
             }

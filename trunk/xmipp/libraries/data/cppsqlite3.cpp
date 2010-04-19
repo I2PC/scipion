@@ -1141,33 +1141,33 @@ void CppSQLite3DB::close()
 }
 
 
-CppSQLite3Statement CppSQLite3DB::compileStatement(const char* szSQL)
+CppSQLite3Statement CppSQLite3DB::compileStatement(const std::string &szSQL)
 {
 	checkDB();
 
-	sqlite3_stmt* pVM = compile(szSQL);
+	sqlite3_stmt* pVM = compile(szSQL.c_str( ));
 	return CppSQLite3Statement(mpDB, pVM);
 }
 
 
-bool CppSQLite3DB::tableExists(const char* szTable)
+bool CppSQLite3DB::tableExists(const std::string &szTable)
 {
 	char szSQL[128];
 	sprintf(szSQL,
 			"select count(*) from sqlite_master where type='table' and name='%s'",
-			szTable);
+			szTable.c_str( ));
 	int nRet = execScalar(szSQL);
 	return (nRet > 0);
 }
 
 
-int CppSQLite3DB::execDML(const char* szSQL)
+int CppSQLite3DB::execDML(const std::string &szSQL)
 {
 	checkDB();
 
 	char* szError=0;
 
-	int nRet = sqlite3_exec(mpDB, szSQL, 0, 0, &szError);
+	int nRet = sqlite3_exec(mpDB, szSQL.c_str( ), 0, 0, &szError);
 
 	if (nRet == SQLITE_OK)
 	{

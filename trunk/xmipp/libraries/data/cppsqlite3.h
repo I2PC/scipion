@@ -272,9 +272,9 @@ public:
 
     void close();
 
-	bool tableExists(const char* szTable);
+	bool tableExists(const std::string &szTable);
 
-    int execDML(const char* szSQL);
+    int execDML(const std::string &szSQL);
 
     CppSQLite3Query execQuery(const char* szSQL);
 
@@ -282,7 +282,7 @@ public:
 
     CppSQLite3Table getTable(const char* szSQL);
 
-    CppSQLite3Statement compileStatement(const char* szSQL);
+    CppSQLite3Statement compileStatement(const std::string &szSQL);
 
     sqlite_int64 lastRowId();
 
