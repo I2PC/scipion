@@ -358,11 +358,6 @@ bool MetaDataContainer::pairExists( MetaDataLabel name,
 
 void MetaDataContainer::deleteValue( MetaDataLabel name )
 {
-	//I do not fully understan this but free can no be correct, may delete is OK
-	//ROB?
-    if( values[ name ] != NULL )
-        delete( values[ name ] );
-	
     values.erase( name );
 }
 	
