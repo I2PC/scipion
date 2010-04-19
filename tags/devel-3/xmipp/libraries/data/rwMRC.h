@@ -160,6 +160,7 @@ int readMRC()
 
     return(0);
 }
+
 int writeMRC()
 {
     /*
@@ -242,6 +243,7 @@ int writeMRC()
     size_t datasize_n = (size_t) header->nx*header->ny*header->nz;
     size_t datasize = (size_t) datasize_n * datatypesize;
 
+#define DEBUG
 #ifdef DEBUG
     printf("DEBUG rwMRC: Offset = %ld,  Typesize = %ld,  Datasize = %ld\n",
            offset, datatypesize, datasize);

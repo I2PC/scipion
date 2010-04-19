@@ -108,7 +108,7 @@ struct SPIDERhead {         	// file header for SPIDER data
 **************************************************************************/
 int  readSPIDER(int img_select)
 {
-//#define DEBUG
+#define DEBUG
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL ) return(-1);
 	

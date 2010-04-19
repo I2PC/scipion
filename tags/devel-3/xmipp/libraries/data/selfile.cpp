@@ -132,6 +132,7 @@ std::istream& operator >> (std::istream& o, SelLine &SFL)
         else
             REPORT_ERROR(1552, "Format error when reading Selection line");
     }
+
     return o;
 }
 
@@ -264,9 +265,10 @@ void SelFile::read(const FileName &sel_name, int overriding)
         }
         switch (temp.line_type)
         {
-        case (SelLine::NOT_ASSIGNED): break; // Line with an error
+        case (SelLine::NOT_ASSIGNED):
+        	break; // Line with an error
         case (SelLine::DATALINE):
-            if (temp.label != SelLine::DISCARDED)
+        	if (temp.label != SelLine::DISCARDED)
                 no_imgs++;
             text_line.push_back(temp);
             break;
@@ -276,10 +278,10 @@ void SelFile::read(const FileName &sel_name, int overriding)
         }
         line_no++;
         fh_sel.peek();
-
-        // Close file
-        fh_sel.close();
     }
+
+    // Close file
+    fh_sel.close();
 
     // Set "pointer" to the beginning of the file
     if (overriding)

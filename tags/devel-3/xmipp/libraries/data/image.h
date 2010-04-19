@@ -433,9 +433,17 @@ public:
          filename = name.before_first_of(":");
          filename = filename.before_first_of("#");
 
+#ifdef DEBUG
+         std::cerr<<"extension for write= "<<ext_name<<std::endl;
+         std::cerr<<"filename= "<<filename<<std::endl;
+#endif
+
           // PERHAPS HERE CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
          if (ext_name.contains("mrc"))
-             err = writeMRC();
+         {
+        	 std::cerr<<"write mrc"<<std::endl;
+        	 err = writeMRC();
+         }
          else
              err = writeSPIDER();
 
@@ -640,7 +648,7 @@ public:
 
      void readData(FILE* fimg, int select_img, unsigned long pad)
      {
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
          std::cerr<<"entering readdata"<<std::endl;
          std::cerr<<" readData flag= "<<dataflag<<std::endl;

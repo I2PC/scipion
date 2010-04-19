@@ -685,7 +685,8 @@ FileName FileName::to_uppercase() const
 // Is substring present?
 bool FileName::contains(const std::string& str) const
 {
-	if (find(str) > -1)
+	int point = rfind(str);
+	if (point > -1)
 		return true;
 	else
 		return false;
