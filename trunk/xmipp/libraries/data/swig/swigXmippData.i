@@ -10,6 +10,7 @@
 namespace std {
    %template(vectori) vector<int>;
    %template(vectord) vector<double>;
+   %template(vectorli) vector<long int>;
 };
 
 // Pointers to base classes
@@ -30,6 +31,7 @@ namespace std {
 #include <string>
 using namespace std;
 %}
+
 
 // Map reference types and pointers
 %typemap(out) int &

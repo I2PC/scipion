@@ -32,6 +32,7 @@
 #include "../../external/sqlite-3.6.23/sqlite3.h"
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 #define CPPSQLITE_ERROR 1000
 
@@ -267,7 +268,7 @@ public:
 
     virtual ~CppSQLite3DB();
 
-    void open(const char* szFile);
+    void open(const std::string &dbName);
 
     void close();
 

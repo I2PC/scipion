@@ -1117,9 +1117,9 @@ CppSQLite3DB& CppSQLite3DB::operator=(const CppSQLite3DB& db)
 }
 
 
-void CppSQLite3DB::open(const char* szFile)
+void CppSQLite3DB::open(const std::string &dbName)
 {
-	int nRet = sqlite3_open(szFile, &mpDB);
+	int nRet = sqlite3_open(dbName.c_str(), &mpDB);
 
 	if (nRet != SQLITE_OK)
 	{

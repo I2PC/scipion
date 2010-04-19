@@ -332,6 +332,132 @@ MetaData::MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector
 	read(fileName,labelsVector);
 }
 
+void MetaData::toDataBase( FileName DBname, std::string tableName )
+{
+    try
+    {
+        CppSQLite3DB db;
+        db.open( DBname.c_str( ) ); 
+
+        if( tableName == "" )
+        {
+            if( inFile == "" )
+                REPORT_ERROR( -1, "Please, supply a name for the table" );
+
+            tableName = inFile;
+        }
+
+        if( !db.tableExists( tableName.c_str() ) )
+        {
+            std::string sqlCommand = "create table ";
+            sqlCommand += tableName + "(";
+
+            std::vector< MetaDataLabel >::iterator strIt;
+
+            int labelsCounter = 0;
+
+            for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
+	        {
+		        std::string label = MetaDataContainer::decodeLabel(*strIt);
+
+                if( IS_DOUBLE( *strIt ) )
+                {
+                    sqlCommand += label + " double,";
+                    labelsCounter ++;
+                }
+                else if( IS_STRING( *strIt ) )
+                {
+                    sqlCommand += label + " text,";
+                    labelsCounter ++;
+	            }
+                else if( IS_INT( *strIt ))
+                {
+                    sqlCommand += label + " int,";
+                    labelsCounter ++;
+                }
+                else if( IS_BOOL( *strIt ))
+                {
+                    sqlCommand += label + " int,";
+                    labelsCounter ++;
+                }
+                else if( IS_VECTOR( *strIt ))
+                {
+                    std::cerr << "SQLLITE does not support vectors, skipping vector labelled " << label << std::endl; 
+                }
+	        }   
+
+            // remove last ','
+            sqlCommand.erase( sqlCommand.end()-1 );
+            sqlCommand += ");";
+
+            db.execDML( sqlCommand.c_str( ) );
+            db.execDML("begin transaction;");
+
+            sqlCommand = "insert into " + tableName + " values (";
+
+            for( int i = 0 ; i < labelsCounter ; i ++ )
+            {
+                sqlCommand += "?,";
+            }
+
+            sqlCommand.erase( sqlCommand.end( )-1);
+            sqlCommand += ");";
+
+            CppSQLite3Statement stmt = db.compileStatement( sqlCommand.c_str( ) );
+
+            for( long int IDthis = firstObject( ) ; IDthis != NO_MORE_OBJECTS; IDthis = nextObject( ) )
+	        {
+                MetaDataContainer * aux = getObject( );
+
+                labelsCounter = 0;
+                for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
+	            {
+                    if( IS_DOUBLE( *strIt ) )
+                    {
+                        labelsCounter++;
+                        double value;
+                        getValue( *strIt, value );
+                        stmt.bind( labelsCounter, value );
+                    }
+                    else if( IS_STRING( *strIt ) )
+                    {
+                        labelsCounter++;
+                        std::string value;
+                        getValue( *strIt, value );
+                        stmt.bind( labelsCounter, value.c_str( ) );
+	                }
+                    else if( IS_INT( *strIt ) ) 
+                    {
+                        labelsCounter++;
+                        int value;
+                        getValue( *strIt, value );
+                        stmt.bind( labelsCounter, value );
+                    }
+                    else if( IS_BOOL( *strIt ))
+                    {
+                        labelsCounter++;
+                        bool value;
+                        getValue( *strIt, value );
+                        stmt.bind( labelsCounter, value );
+                    }
+	            }  
+                std::cerr << std::endl;
+                stmt.execDML();
+                stmt.reset(); 
+            }
+
+            db.execDML("commit transaction;");
+        }
+
+        db.close();
+    
+    }
+    catch (CppSQLite3Exception& e)
+    {
+        REPORT_ERROR( e.errorCode(), e.errorMessage());
+    }
+}
+
 void MetaData::combineWithFiles( MetaDataLabel thisLabel )
 {	
     if( !isColumnFormat )

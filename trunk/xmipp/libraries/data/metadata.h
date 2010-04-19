@@ -37,10 +37,10 @@
 #include "image.h"
 #include <time.h>
 #include <stdio.h>
+#include "cppsqlite3.h"    
 
 class MetaData
 {
-
 	std::map< long int, MetaDataContainer *> objects;
 
 	// Used by firstObject, nextObject and lastObject to keep a pointer
@@ -86,6 +86,8 @@ public:
     void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
     void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
 	
+    void toDataBase( FileName DBname, std::string tableName = "" );
+    
     /** What labels have been read from a docfile/metadata file
 	*   and/or will be stored on a new metadata file when "save" is
 	*   called 

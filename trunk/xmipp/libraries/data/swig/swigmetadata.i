@@ -120,4 +120,21 @@ b[1]
 dd=XmippData.doubleP()
 mD.getValue(XmippData.MDL_ANGLEROT,dd) 
 print dd.value()
+
+================
+
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+import XmippData
+outFile=XmippData.FileName()
+outFile=XmippData.FileName("roberto.doc")
+dbFile=XmippData.FileName("kkk.db")
+mD=XmippData.MetaData();
+mD.read(outFile)
+mD.toDataBase( dbFile, "prueba" );
+
 */
+
+
+
