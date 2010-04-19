@@ -51,9 +51,9 @@
 enum MetaDataLabel 
 { 
 	MDL_UNDEFINED = -1,
-    MDL_FIRST_LABEL,
+        MDL_FIRST_LABEL,
 	MDL_ANGLEROT = MDL_FIRST_LABEL,       // Rotation angle of an image (double)
-    MDL_COMMENT,                          // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
+        MDL_COMMENT,                          // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
 	MDL_ANGLETILT,                        // Tilting angle of an image (double)
 	MDL_ANGLEPSI,                         // Psi angle of an image (double)
 	MDL_IMAGE,                            // Name of an image (std::string)
@@ -70,12 +70,13 @@ enum MetaDataLabel
 	MDL_FLIP,                             // Flip the image? (bool)
 	MDL_REF,                              // Class to which the image belongs (int)
 	MDL_MAXCC,                            // Cross-correlation for the image (double)
-    MDL_SERIE,                            // A collection of micrographs, e.g. a tilt serie (std::string)
-    MDL_PMAX,                             // Maximum value of normalized probability function (now called "Pmax/sumP") (double)
-    MDL_CTFINPUTPARAMS,                   // Parameters file for the CTF Model (std::string)
-    MDL_PERIODOGRAM,                      // A periodogram's file name (std::string)
+        MDL_SERIE,                            // A collection of micrographs, e.g. a tilt serie (std::string)
+        MDL_PMAX,                             // Maximum value of normalized probability function (now called "Pmax/sumP") (double)
+        MDL_CTFINPUTPARAMS,                   // Parameters file for the CTF Model (std::string)
+        MDL_PERIODOGRAM,                      // A periodogram's file name (std::string)
+        MDL_NMA,                              // Normal mode displacements
 	MDL_LAST_LABEL	                      // **** NOTE ****: Do keep this label always at the end
-			 		                      // it is here for looping purposes  	
+			 		      // it is here for looping purposes  	
 };
 
 #define IS_DOUBLE(lCode) lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||\
@@ -91,6 +92,7 @@ enum MetaDataLabel
 
 #define IS_BOOL(lCode)   lCode == MDL_FLIP
 
+#define IS_VECTOR(lCode) lCode == MDL_NMA
 
 class MetaDataContainer
 {
@@ -122,21 +124,24 @@ class MetaDataContainer
 	void addValue( MetaDataLabel name, double value );
 	void addValue( MetaDataLabel name, int value );
 	void addValue( MetaDataLabel name, bool value );
-	void addValue( MetaDataLabel name, std::string value  );
-	void addValue( std::string name, std::string value );
+	void addValue( MetaDataLabel name, const std::string &value  );
+	void addValue( MetaDataLabel name, const std::vector<double> &value  );
+	void addValue( const std::string &name, const std::string &value );
 
 	void getValue( MetaDataLabel name, int &value );
 	void getValue( MetaDataLabel name, double &value );
 	void getValue( MetaDataLabel name, std::string &value );
 	void getValue( MetaDataLabel name, bool &value );
+	void getValue( MetaDataLabel name, std::vector<double> &value );
 
 	bool valueExists( MetaDataLabel name );
 
 	bool pairExists( MetaDataLabel name, double value );
 	bool pairExists( MetaDataLabel name, int value );
 	bool pairExists( MetaDataLabel name, bool value );
-	bool pairExists( MetaDataLabel name, std::string value );
-	
+	bool pairExists( MetaDataLabel name, const std::string &value );
+        // pairExists for vectors makes nosense, not implemented
+
 	void deleteValue( MetaDataLabel name );
 	
 	void writeValueToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
@@ -146,7 +151,6 @@ class MetaDataContainer
 	static std::string decodeLabel( MetaDataLabel inputLabel );
 	static bool isValidLabel( MetaDataLabel inputLabel );
 	static bool isValidLabel( std::string inputLabel );
-
 };
 
 #endif

@@ -72,13 +72,15 @@ public:
 	bool setValue( MetaDataLabel name, double value, long int objectID = -1 );
 	bool setValue( MetaDataLabel name, int value, long int objectID = -1 );
 	bool setValue( MetaDataLabel name, bool value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, std::string value, long int objectID = -1 );
-	bool setValue( std::string name, std::string value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, const std::string &value, long int objectID = -1 );
+	bool setValue( MetaDataLabel name, const std::vector<double> &value, long int objectID = -1 );
+	bool setValue( const std::string &name, const std::string &value, long int objectID = -1 );
     
 	void getValue( MetaDataLabel name, double &value, long int objectID = -1 );
 	void getValue( MetaDataLabel name, int &value, long int objectID = -1 );
 	void getValue( MetaDataLabel name, bool &value, long int objectID = -1 );
 	void getValue( MetaDataLabel name, std::string &value, long int objectID = -1 );
+	void getValue( MetaDataLabel name, std::vector<double> &value, long int objectID = -1 );
 
     void readOldSelFile( std::ifstream *infile );
     void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
@@ -126,7 +128,7 @@ public:
     */
 	MetaData& operator = ( MetaData &MD);
 
-	void write( std::string fileName );
+	void write( const std::string &fileName );
 	
 	bool isEmpty( );
 	

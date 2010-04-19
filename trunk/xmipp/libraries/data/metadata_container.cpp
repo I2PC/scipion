@@ -55,6 +55,10 @@ MetaDataContainer& MetaDataContainer::operator = ( MetaDataContainer &MDc)
 			{
 				addValue( lCode, * ((bool *) aux) );
 			}
+			else if( IS_VECTOR(lCode) )
+			{
+				addValue( lCode, * ((std::vector<double> *) aux) );
+			}
 
 		}
     }
@@ -86,6 +90,10 @@ MetaDataContainer::MetaDataContainer  ( MetaDataContainer &MDc)
 		{
 			addValue( lCode, * ((bool *) aux) );
 		}
+		else if( IS_VECTOR(lCode) )
+		{
+			addValue( lCode, * ((std::vector<double> *) aux) );
+		}
 
 	}
 }
@@ -108,14 +116,21 @@ void MetaDataContainer::addValue( MetaDataLabel name, bool value )
 	insertVoidPtr( name, newValue );
 }
 
-void MetaDataContainer::addValue( MetaDataLabel name, std::string value )
+void MetaDataContainer::addValue( MetaDataLabel name, const std::string &value )
 {
 	void * newValue = (void *)(new std::string(value));
 	insertVoidPtr( name, newValue );
 }
 
+void MetaDataContainer::addValue( MetaDataLabel name,
+    const std::vector<double> &value )
+{
+	void * newValue = (void *)(new std::vector<double>(value));
+	insertVoidPtr( name, newValue );
+}
 
-void MetaDataContainer::addValue( std::string name, std::string value )
+void MetaDataContainer::addValue( const std::string &name,
+    const std::string &value )
 {	
 	MetaDataLabel lCode = codifyLabel( name );
 	std::istringstream i( value );
@@ -149,7 +164,14 @@ void MetaDataContainer::addValue( std::string name, std::string value )
 				
 		addValue( lCode, boolValue );
 	}
-	
+	else if( IS_VECTOR(lCode))
+	{
+		std::vector<double> vectorValue;
+                double val;
+                while (i >> val)
+                    vectorValue.push_back(val);
+		addValue( lCode, vectorValue );
+	}
 }
 
 void MetaDataContainer::insertVoidPtr( MetaDataLabel name, void * value )
@@ -220,6 +242,22 @@ void  MetaDataContainer::getValue( MetaDataLabel name, bool &value )
 	}
 }
 
+void  MetaDataContainer::getValue( MetaDataLabel name, std::vector<double> &value )
+{
+	std::map<MetaDataLabel, void *>::iterator element;
+
+	element = values.find( name );
+
+	if ( element == values.end( ) )
+	{
+		REPORT_ERROR(1,(std::string) "Label(vector) " + decodeLabel(name) + " not found\n" );
+	}
+	else
+	{
+		value = *((std::vector<double> *)element->second);
+	}
+}
+
 void * MetaDataContainer::getVoidPtr( MetaDataLabel name )
 {
 	std::map<MetaDataLabel, void *>::iterator element;
@@ -256,7 +294,8 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, double value )
 	
     if( currValue != NULL )
 	{
-        if( value == *currValue )
+        double val=value- *currValue;
+        if( ABS(val)<XMIPP_EQUAL_ACCURACY )
 		{
 			return true;
 		}
@@ -299,7 +338,8 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, bool value )
 	return false;
 }
 
-bool MetaDataContainer::pairExists( MetaDataLabel name, std::string value )
+bool MetaDataContainer::pairExists( MetaDataLabel name,
+    const std::string &value )
 {
 	// Traverse all the structure looking for objects
 	// that satisfy search criteria
@@ -415,6 +455,10 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return MDL_PERIODOGRAM;
 	}
+	else if( strLabel == "NMADisplacements" )
+	{
+		return MDL_NMA;
+	}
 	else
 	{
 		return MDL_UNDEFINED;
@@ -488,164 +532,66 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
         case MDL_PERIODOGRAM:
             return std::string( "periodogram" );
             break;
+        case MDL_NMA:
+            return std::string( "NMADisplacements" );
+            break;
 		default:
 			return std::string( "" );
 			break;
 	}
 }
 
-void MetaDataContainer::writeValueToString( std::string &outString, MetaDataLabel inputLabel )
+void MetaDataContainer::writeValueToString( std::string &outString,
+    MetaDataLabel inputLabel )
 {	
     std::ostringstream oss;
     oss << std::setprecision(100);
     oss << std::fixed;
 
-    switch ( inputLabel ) 
-	{
-		case MDL_ANGLEROT:
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ANGLETILT:
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ANGLEPSI:
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_IMAGE:
-			oss << *((std::string*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_MICROGRAPH:
-			oss << *((std::string*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_CTFMODEL:
-			oss << *((std::string*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_SHIFTX:
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_SHIFTY:
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_SHIFTZ:
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ENABLED:
-			oss << *((int*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ORIGINX:
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ORIGINY:
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ORIGINZ:
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_WEIGHT:
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_FLIP: 
-			oss << *((bool*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_REF: 
-			oss << *((int*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_MAXCC: 
-			oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-        case MDL_PMAX:
-            oss << *((double*)(getVoidPtr( inputLabel )));
-			break;
-        case MDL_SERIE:
-            oss << *((std::string*)(getVoidPtr( inputLabel )));
-            break;
-        case MDL_CTFINPUTPARAMS:
-            oss << *((std::string*)(getVoidPtr( inputLabel )));
-			break;
-        case MDL_PERIODOGRAM:
-            oss << *((std::string*)(getVoidPtr( inputLabel )));
-			break;
-		default:
-			break;
-	}
+    if( IS_DOUBLE(inputLabel) )
+	oss << *((double*)(getVoidPtr( inputLabel )));
+    else if( IS_STRING(inputLabel) )
+	oss << *((std::string*)(getVoidPtr( inputLabel )));
+    else if( IS_INT(inputLabel))
+	oss << *((int*)(getVoidPtr( inputLabel )));
+    else if( IS_BOOL(inputLabel))
+	oss << *((bool*)(getVoidPtr( inputLabel )));
+    else if( IS_VECTOR(inputLabel))
+    {
+        const std::vector<double> &myVector=*(
+            (std::vector<double>*)(getVoidPtr( inputLabel )));
+        int imax=myVector.size();
+        oss << "** ";
+        for (int i=0; i<imax; i++)
+            oss << myVector[i] << " ";
+	oss << "**";
+    }
     
     outString = oss.str( );
 
 }
 
-void MetaDataContainer::writeValueToFile( std::ofstream &outfile, MetaDataLabel inputLabel )
+void MetaDataContainer::writeValueToFile( std::ofstream &outfile,
+    MetaDataLabel inputLabel )
 {
-	switch ( inputLabel ) 
-	{
-		case MDL_ANGLEROT:
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-        case MDL_COMMENT:
-            outfile << *((std::string*)(getVoidPtr( inputLabel )));
-            break;
-		case MDL_ANGLETILT:
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ANGLEPSI:
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_IMAGE:
-			outfile << *((std::string*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_MICROGRAPH:
-			outfile << *((std::string*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_CTFMODEL:
-			outfile << *((std::string*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_SHIFTX:
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_SHIFTY:
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_SHIFTZ:
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ENABLED:
-			outfile << *((int*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ORIGINX:
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ORIGINY:
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_ORIGINZ:
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_WEIGHT:
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_FLIP: 
-			outfile << *((bool*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_REF: 
-			outfile << *((int*)(getVoidPtr( inputLabel )));
-			break;
-		case MDL_MAXCC: 
-			outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-        case MDL_PMAX:
-            outfile << *((double*)(getVoidPtr( inputLabel )));
-			break;
-        case MDL_SERIE:
-            outfile << *((std::string*)(getVoidPtr( inputLabel )));
-            break;
-        case MDL_CTFINPUTPARAMS:
-            outfile << *((std::string*)(getVoidPtr( inputLabel )));
-			break;
-        case MDL_PERIODOGRAM:
-            outfile << *((std::string*)(getVoidPtr( inputLabel )));
-			break;
-		default:
-			break;
-	}
+    if( IS_DOUBLE(inputLabel) )
+	outfile << *((double*)(getVoidPtr( inputLabel )));
+    else if( IS_STRING(inputLabel) )
+	outfile << *((std::string*)(getVoidPtr( inputLabel )));
+    else if( IS_INT(inputLabel))
+	outfile << *((int*)(getVoidPtr( inputLabel )));
+    else if( IS_BOOL(inputLabel))
+	outfile << *((bool*)(getVoidPtr( inputLabel )));
+    else if( IS_VECTOR(inputLabel))
+    {
+        const std::vector<double> &myVector=*(
+            (std::vector<double>*)(getVoidPtr( inputLabel )));
+        int imax=myVector.size();
+        outfile << "** ";
+        for (int i=0; i<imax; i++)
+            outfile << myVector[i] << " ";
+	outfile << "**";
+    }
 }
 
 bool MetaDataContainer::isValidLabel( MetaDataLabel inputLabel )

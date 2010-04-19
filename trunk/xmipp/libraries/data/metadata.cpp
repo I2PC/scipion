@@ -154,10 +154,18 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
 		    std::stringstream os2( line );          
 	    	std::string value;
 		
-    		int counter = 0;
+            int counter=0;
 		    while ( os2 >> value )
 		    {
-			    setValue( MetaDataContainer::decodeLabel(activeLabels[counter]), value );
+                if (IS_VECTOR(activeLabels[counter]) && value=="**")
+                {
+                    std::string aux;
+                    while (os2 >> value)
+                        if (value=="**") break;
+                        else aux+=value+" ";
+                    value=aux;
+                }
+                setValue( MetaDataContainer::decodeLabel(activeLabels[counter]), value );
 			    counter++;
 		    }
 	    }
@@ -409,7 +417,7 @@ void MetaData::read( FileName fileName, std::vector<MetaDataLabel> * labelsVecto
 	infile.close( );
 }
 
-void MetaData::write( std::string fileName )
+void MetaData::write( const std::string &fileName )
 {
 	// Open file
 	std::ofstream outfile ( fileName.data(), std::ios_base::out );
@@ -797,7 +805,8 @@ bool MetaData::setValue( MetaDataLabel name, bool value, long int objectID )
 	}	
 }
 
-bool MetaData::setValue( MetaDataLabel name, std::string value, long int objectID )
+bool MetaData::setValue( MetaDataLabel name, const std::string &value,
+    long int objectID )
 {
 	long int auxID;
 
@@ -846,7 +855,58 @@ bool MetaData::setValue( MetaDataLabel name, std::string value, long int objectI
 	}	
 }
 
-bool MetaData::setValue( std::string name, std::string value, long int objectID )
+bool MetaData::setValue( MetaDataLabel name, const std::vector<double> &value,
+    long int objectID )
+{
+	long int auxID;
+
+	if( !objects.empty( ) && MetaDataContainer::isValidLabel( name ))
+	{
+		if( objectID == -1 )
+		{
+			auxID = objectsIterator->first;
+		}
+		else
+		{
+			auxID = objectID;
+		}
+    	
+		MetaDataContainer * aux = objects[auxID];
+
+		// Check whether label is correct (belongs to the enum in the metadata_container header
+		// and whether it is present in the activeLabels vector. If not, add it to all the other
+		// objects with default values
+		std::vector< MetaDataLabel >::iterator location;
+		std::map< long int, MetaDataContainer *>::iterator It;
+									
+   		location = std::find( activeLabels.begin(), activeLabels.end(), name );
+		
+	   	if ( location == activeLabels.end() )
+		{
+			activeLabels.push_back( name );
+			
+			// Add this label to the rest of the objects in this class
+			for( It = objects.begin( ); It != objects.end(); It ++)
+			{
+				if( It->second != aux )
+				{
+					(It->second)->addValue( name, std::vector<double>() );
+				}		
+			} 	
+		}
+		
+		aux->addValue( name, value );
+		
+		return true;
+	}	
+	else
+	{
+		return false;
+	}	
+}
+
+bool MetaData::setValue( const std::string &name,
+    const std::string &value, long int objectID )
 {
 	long int auxID;
 	
@@ -1177,22 +1237,26 @@ void MetaData::getValue( MetaDataLabel name, double &value, long int objectID )
 void MetaData::getValue( MetaDataLabel name, int &value, long int objectID )
 {
     MetaDataContainer * aux = getObject( objectID );
-    
     aux->getValue( name, value );
 }
 
 void MetaData::getValue( MetaDataLabel name, bool &value, long int objectID )
 {
     MetaDataContainer * aux = getObject( objectID );
-    
     aux->getValue( name, value );
 }
 
-void MetaData::getValue( MetaDataLabel name, std::string &value, long int objectID )
+void MetaData::getValue( MetaDataLabel name, std::vector<double> &value,
+    long int objectID )
 {
     MetaDataContainer * aux = getObject( objectID );
     aux->getValue( name, value );
-    
+}
+
+void MetaData::getValue( MetaDataLabel name, std::string &value,
+    long int objectID )
+{
+    MetaDataContainer * aux = getObject( objectID );
     aux->getValue( name, value );
 }
 
