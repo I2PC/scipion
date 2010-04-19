@@ -274,12 +274,8 @@ void VQProjection::show() const
 double fastCorrentropy(const Matrix2D<double> &x, const Matrix2D<double> &y,
     double sigma, const GaussianInterpolator &G, const Matrix2D<int> &mask)
 {
-    double retvalxy=0, retvalxx=0, retvalyy=0;
+    double retvalxy=0;
     double isigma=1.0/sigma;
-    double minx, maxx, avgx, stddevx;
-    double miny, maxy, avgy, stddevy;
-    computeStats_within_binary_mask(mask, x, minx, maxx, avgx, stddevx);
-    computeStats_within_binary_mask(mask, y, miny, maxy, avgy, stddevy);
     int maskSum=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(x)
     {
