@@ -214,9 +214,6 @@ public:
     // the object did not exist
     bool removeObject( long int objectID );
     
-	/////// remove id
-	//////////////////////removeLabel
-
     // Xmipp-specific, for new parameters add here.
 	void setPath( std::string newPath = "" );	
 	void setComment( std::string Comment = "" );
@@ -230,14 +227,19 @@ public:
      */
 
     FileName getFilename(){return (inFile);}
-    /*Detect is there is at least one entry with the given label,entry pair
-     * So far only implemented for int
+    
+    /**Count number of objects that satisfy a given label,entry pair
+     */
+    long int countObjects( MetaDataLabel name, double value );
+    long int countObjects( MetaDataLabel name, int value );
+    long int countObjects( MetaDataLabel name, bool value );
+    long int countObjects( MetaDataLabel name, const std::string &value );
+    
+    /*Detect if there is at least one entry with the given label-value pair
+     * This can be much faster than 'countObjects' as it stops iterating once the first
+     * object has been found.
      */
     bool detectObjects( MetaDataLabel name, int value );
-    /**Count number of objects that satisfy a given label,entry pair
-     * So far only implemented for int
-     */
-    long int countObjects( MetaDataLabel name, int value );
 
 };
 

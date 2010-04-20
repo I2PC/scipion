@@ -1378,23 +1378,22 @@ bool MetaData::detectObjects( MetaDataLabel name, int value )
 
 long int MetaData::countObjects( MetaDataLabel name, int value )
 {
-	long int result=0;
+	return ( (findObjects( name, value)).size( ) );
+}
 
-	// Traverse all the structure looking for objects
-	// that satisfy search criteria
-	MetaDataContainer * aux;
-	std::map< long int, MetaDataContainer *>::iterator It;
+long int MetaData::countObjects( MetaDataLabel name, double value )
+{	
+    return ( (findObjects( name, value)).size( ) );
+}
 
+long int MetaData::countObjects( MetaDataLabel name, bool value )
+{	
+    return ( (findObjects( name, value)).size( ) );
+}
 
-	for( It = objects.begin( ) ; It != objects.end( ); It ++ )
-	{
-		aux = It->second;
-
-		if( aux->pairExists( name, value ) )
-			  result++;
-	}
-
-	return result;
+long int MetaData::countObjects( MetaDataLabel name, const std::string &value )
+{	
+    return ( (findObjects( name, value)).size( ) );
 }
 
 void MetaData::getValue( MetaDataLabel name, double &value, long int objectID )
@@ -1416,15 +1415,13 @@ void MetaData::getValue( MetaDataLabel name, bool &value, long int objectID )
     aux->getValue( name, value );
 }
 
-void MetaData::getValue( MetaDataLabel name, std::vector<double> &value,
-    long int objectID )
+void MetaData::getValue( MetaDataLabel name, std::vector<double> &value, long int objectID )
 {
     MetaDataContainer * aux = getObject( objectID );
     aux->getValue( name, value );
 }
 
-void MetaData::getValue( MetaDataLabel name, std::string &value,
-    long int objectID )
+void MetaData::getValue( MetaDataLabel name, std::string &value, long int objectID )
 {
     MetaDataContainer * aux = getObject( objectID );
     aux->getValue( name, value );
