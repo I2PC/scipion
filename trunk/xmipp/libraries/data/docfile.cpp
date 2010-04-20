@@ -159,7 +159,7 @@ void DocLine::read(std::istream& in)
     data.clear();
 
     // Check if comment or empty line
-    int charpos1 = line.find_first_not_of(" ");
+    int charpos1 = line.find_first_not_of(" \t");
     if (line[0] == '\0' || line[charpos1] == '#' || line[charpos1] == ';')
     {
         line_type = DocLine::COMMENT;
