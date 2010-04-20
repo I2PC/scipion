@@ -53,61 +53,25 @@ public:
     void usage()
     {
         Prog_parameters::usage();
-        std::cerr << "  [-flipX]                  : Flip along X\n"
+        std::cerr
+        << "  [-flipX]                  : Flip along X\n"
         << "  [-flipY]                  : Flip along Y\n"
         << "  [-flipZ]                  : Flip along Z\n";
     }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Flip_parameters *eprm = (Flip_parameters *) prm;
     if (eprm->flipX) img().selfReverseX();
     if (eprm->flipY) img().selfReverseY();
-    return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    Flip_parameters *eprm = (Flip_parameters *) prm;
-    if (eprm->flipX) vol().selfReverseX();
-    if (eprm->flipY) vol().selfReverseY();
-    if (eprm->flipZ) vol().selfReverseZ();
+    if (eprm->flipZ) img().selfReverseZ();
     return true;
 }
 
 int main(int argc, char **argv)
 {
     Flip_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
 
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Flip {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Flip/Help/flip.html";
-      help="Flip (mirror) volumes and images";
-      OPEN MENU menu_flip;
-      COMMAND LINES {
- + usual: xmipp_flip
-               #include "prog_line.mnu"
-               [-flipX]
-               [-flipY]
-               [-flipZ]
-      }
-      PARAMETER DEFINITIONS {
-        #include "prog_vars.mnu"
-        OPT(-flipX) {label="Flip X";}
-        OPT(-flipY) {label="Flip Y";}
-        OPT(-flipZ) {label="Flip Z";}
-      }
-   }
-
-   MENU menu_flip {
-      #include "prog_menu.mnu"
-      "Flipping parameters"
-      OPT(-flipX)
-      OPT(-flipY)
-      OPT(-flipZ)
-   }
-*/
