@@ -26,7 +26,7 @@
 
 #include <data/args.h>
 #include <data/selfile.h>
-#include <data/volume.h>
+#include <data/image.h>
 #include <cstdio>
 
 void Usage();
@@ -35,22 +35,20 @@ int main(int argc, char **argv)
 {
     FileName        fn_input;
     SelFile         SF;
-    headerXmipp     header;
+    Image<double>  image;
     int             show_old_rot;     // True if old rot is to be shown
 
     // Read arguments --------------------------------------------------------
     try
     {
         fn_input = getParameter(argc, argv, "-i");
-        if (Is_VolumeXmipp(fn_input) || Is_ImageXmipp(fn_input) ||
-            Is_FourierVolumeXmipp(fn_input) || Is_FourierImageXmipp(fn_input))
+        if (image.isImage(fn_input) )
         {
             SF.insert(fn_input, SelLine::ACTIVE);
         }
         else
             SF.read(fn_input);
 
-        show_old_rot = checkParameter(argc, argv, "-show_old_rot");
     }
     catch (Xmipp_error XE)
     {
@@ -69,49 +67,10 @@ int main(int argc, char **argv)
             FileName file_name = SF.NextImg();
             if (file_name=="") break;
 
-            // For volumes ........................................................
-            if (Is_VolumeXmipp(file_name))
-            {
-                header.read(file_name);
-                std::cout << "FileName     : " << file_name << std::endl;
-                std::cout << header;
-
-                // For images .........................................................
-            }
-            else if (Is_ImageXmipp(file_name))
-            {
-
-                header.read(file_name);
-                std::cout << "FileName     : " << file_name << std::endl;
-                std::cout << header;
-                if (show_old_rot)
-                    std::cout << "Old rot      : " << header.old_rot() << std::endl;
-                std::cout << std::endl;
-
-                // For fourier volumes .................................................
-            }
-            else if (Is_FourierVolumeXmipp(file_name))
-            {
-                header.read(file_name);
-                std::cout << "FileName     : " << file_name << std::endl;
-                std::cout << header;
-
-                // For fourier images .................................................
-            }
-            else if (Is_FourierImageXmipp(file_name))
-            {
-                header.read(file_name);
-                std::cout << "FileName     : " << file_name << std::endl;
-                std::cout << header;
-
-                // Is not an Spider file ..............................................
-            }
-            else
-                std::cout << file_name << " is not a Spider File";
-
-            // Finish information .................................................
-            std::cout << std::endl;
-
+            image.read(file_name, false, -1, false);
+			std::cout << "FileName     : " << file_name << std::endl;
+			std::cout << image;
+			std::cout << std::endl;
         } // while
 
     }
@@ -133,6 +92,6 @@ void Usage()
     std::cerr << "Usage: header_print " << std::endl
     << "    -i               : Selfile with images/volumes \n"
     << "                        or individual image or volume \n"
-    << "   [-show_old_rot]   : also show old rotational angle\n";
+    <<std::endl;
 }
 
