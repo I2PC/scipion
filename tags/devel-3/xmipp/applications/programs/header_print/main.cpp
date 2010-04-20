@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     try
     {
         fn_input = getParameter(argc, argv, "-i");
-        if (image.isImage(fn_input) )
+        if (isAnImage(fn_input) )
         {
             SF.insert(fn_input, SelLine::ACTIVE);
         }
