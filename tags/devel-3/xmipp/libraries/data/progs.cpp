@@ -153,8 +153,7 @@ void SF_main(int argc, char **argv,
         // For single image .....................................................
         if (img.isImage(prm->fn_in))
         {
-            /// FIXME applygeo
-            img.read(prm->fn_in);//, false, false, prm->apply_geo);
+            img.read(prm->fn_in, true, -1, prm->apply_geo);
             img().setXmippOrigin();
             switch (operation_mode)
             {
@@ -167,7 +166,8 @@ void SF_main(int argc, char **argv,
                             std::cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
                                  << " the only exception is the apply_geo program";
                            }
-                    */     img.write(fn_out);
+                    */
+                	img.write(fn_out);
                 }
                 break;
             case IMAGE2FOURIER:
@@ -246,7 +246,7 @@ void SF_main(int argc, char **argv,
 
                 if (img.isImage(fn_read))
                 {
-                    img.read(fn_read, false, false, prm->apply_geo);
+                    img.read(fn_read, true, -1, prm->apply_geo);
                     img().setXmippOrigin();
                     switch (operation_mode)
                     {
@@ -261,8 +261,8 @@ void SF_main(int argc, char **argv,
                                    << " the only exception is the apply_geo program";
                             }
                             */
-                            img.write(prm->fn_out);
-                        }
+                        	img.write(prm->fn_out);
+						}
                         break;
                     case IMAGE2FOURIER:
                         fi2I = (bool(*)(Image<double> &, Image<std::complex<double> > &, const Prog_parameters *)) process_img;

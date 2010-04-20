@@ -220,6 +220,7 @@ int writeMRC()
         header->a = ux*header->mx;
         header->b = uy*header->my;
         header->c = uz*header->mz;
+//#define DEBUG
 #ifdef DEBUG
             fprintf(stderr, "Warning: Resetting the unit cell to: %g %g %g A\n", 
                     header->a, header->b, header->c );
@@ -244,13 +245,18 @@ int writeMRC()
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL ) return(-1);
 
+	// Write header
     fwrite( header, MRCSIZE, 1, fimg );
+    freeMemory(header, sizeof(MRChead));
 
+	// Write 3D map
     if ( typeid(T) == typeid(double) ||
     		typeid(T) == typeid(float) ||
     		typeid(T) == typeid(int) )
-		writePageAsDatatype(fimg, Float, datasize_n);
-	else if ( typeid(T) == typeid(unsigned char) ||
+    {
+    	writePageAsDatatype(fimg, Float, datasize_n);
+    }
+    else if ( typeid(T) == typeid(unsigned char) ||
 			typeid(T) == typeid(signed char) )
 		writePageAsDatatype(fimg, SChar, datasize_n);
 	else if ( typeid(T) == typeid(std::complex<float>) ||
@@ -260,7 +266,7 @@ int writeMRC()
 		REPORT_ERROR(1,"ERROR write MRC image: invalid typeid(T)");
 
     fclose(fimg);
-    freeMemory(header, sizeof(MRChead));
+
 
     return(0);
 }

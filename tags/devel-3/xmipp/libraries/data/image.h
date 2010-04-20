@@ -450,7 +450,6 @@ public:
           // PERHAPS HERE CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
          if (ext_name.contains("mrc"))
          {
-        	 std::cerr<<"write mrc"<<std::endl;
         	 err = writeMRC();
          }
          else
@@ -608,7 +607,8 @@ public:
              else
              {
                  float * ptr = (float *) page;
-                 for(int i=0; i<pageSize;i++) ptr[i] = (float)srcPtr[i];
+                 for(int i=0; i<pageSize;i++)
+                	 ptr[i] = (float)srcPtr[i];
              }
              break;
          }
