@@ -177,27 +177,24 @@ class Image
 {
 public:
 
-    SubImage*           image;         // Sub-images
-    MultidimArray<T>    data;           // The image data array
+    SubImage*           image;      // Sub-images
+    MultidimArray<T>    data;       // The image data array
     // FIXME: why cant this one be private as well?
-    DataType			datatype;	// Data type
 private:
-    FileName            filename;       // File name
+    FileName            filename;   // File name
     int        			dataflag;	// Flag to force reading of the data
-    unsigned long	x, y, z;        // Image dimensions in X, Y and Z
-    unsigned long	n, i;		// Number of images and image number (may be > n)
-    unsigned long	px, py, pz; 	// Page dimensions
+    unsigned long	i;			// Current image number (may be > NSIZE)
     unsigned long	offset; 	// Data offset
-    int                 swap;           // Perform byte swapping upon reading
-    TransformType		transform;  	// Transform type
+    int                swap;       // Perform byte swapping upon reading
+    TransformType		transform;  // Transform type
     double				min, max;	// Limits
     double				avg, std;	// Average and standard deviation
-    double				smin, smax; 	// Limits for display
+    double				smin, smax; // Limits for display
     double				scale;		// Scale of last density conversion operation
     double				shift;		// Shift of last density conversion operation before scaling
-    double				resolution; 	// Resolution limit of data - used for low-pass filtering
+    double				resolution; // Resolution limit of data - used for low-pass filtering
     double				ux, uy, uz;	// Voxel units (angstrom/pixel edge)
-    double				ua, ub, uc; 	// Unit cell dimensions (angstrom)
+    double				ua, ub, uc; // Unit cell dimensions (angstrom)
     double				alf, bet, gam;	// Unit cell angles (radian)
     unsigned int		spacegroup;	// Space group
 
@@ -208,7 +205,7 @@ public:
      * An empty image is created.
      *
      * @code
-     * Image I;
+     * Image<double> I;
      * @endcode
      */
     Image()
@@ -217,7 +214,7 @@ public:
         clear();
     }
 
-    /** Constructor with DataType and size
+    /** Constructor with size
      *
      * A blank image (0.0 filled) is created with the given size. Pay attention
      * to the dimension order: Y and then X.
@@ -226,11 +223,10 @@ public:
      * Image I(64,64);
      * @endcode
      */
-    Image(DataType type, int Xdim, int Ydim, int Zdim=1, int Ndim=1)
+    Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1)
     {
         image = NULL;
         clear();
-        datatype = type;
         data.resize(Ndim, Zdim, Ydim, Xdim);
         image = new SubImage [Ndim];
         if (image == NULL)
@@ -244,13 +240,12 @@ public:
     {
         data.clear();
         dataflag = -1;
-        datatype = Unknown_Type;
-        x = y = z = n = 0;
-        px = py = pz = 0;
+    	if ( isComplex()) transform = Standard;
+		else transform = NoTransform;
+        i = 0;
         filename = "";
         offset = 0;
         swap = 0;
-        transform = NoTransform;
         min = max = avg = 0.;
         std = -1.;
         scale = shift = 1.;
@@ -259,11 +254,26 @@ public:
         ua = ub = uc = 1.;
         alf, bet, gam = DEG2RAD(90.);
         spacegroup = 1;
+        // delete subimage structure if present
         if (image != NULL)
             delete[] image;
-        image = NULL;
+        // and put a single empty copy
+        image = new SubImage [1];
+        if (image == NULL)
+            REPORT_ERROR(1001, "Allocate: No space left for subimage structure");
     }
 
+
+    /** Check whether image is complex based on typeid(T)
+      */
+    bool isComplex() const
+    {
+    	if ( typeid(T) == typeid(std::complex<double>) ||
+    			typeid(T) == typeid(std::complex<float>) )
+			return true;
+		else
+			return false;
+    }
 
     /** Destructor.
      */
@@ -295,7 +305,7 @@ public:
       */
      bool isRealImage(const FileName name)
      {
-         return (isImage(name) && datatype < 9);
+         return (isImage(name) && !isComplex());
      }
 
      /** Is this file a complex image
@@ -305,7 +315,7 @@ public:
       */
      bool isComplexImage(const FileName name)
      {
-         return (isImage(name) && datatype >= 9);
+         return (isImage(name) && isComplex());
      }
 
     /** General read function
@@ -320,26 +330,21 @@ public:
          else dataflag = -1;
 
          FileName ext_name = name.get_image_format();
-
-         //FIXME if filename contains # Bsoft cleans it!!
-         filename = name;
-
+         if ( name.contains("#") )
+        	 filename = name;
+         else
+        	 filename = name.before_first_of(":");
+#ifdef DEBUG
          std::cerr << "name="<<name <<std::endl;
          std::cerr << "ext= "<<ext_name <<std::endl;
          std::cerr<<" now reading: "<< filename<<" dataflag= "<<dataflag<<std::endl;
+#endif
 
-         /*
-           Bimage* 	p = init_img();
-           if ( filename.contains("#") )
-           p->filename = filename;
-           else
-           p->filename = clean_filename;
-         */
-
-         if (ext_name=="mrc")
+         if (ext_name.contains("mrc"))
              err = readMRC();
          else
              err = readSPIDER(select_img);
+
         //err = readMRC(*this, imgno);
         /*
 	if ( filename.contains("#") || ext.empty() )
@@ -438,6 +443,10 @@ public:
          std::cerr<<"filename= "<<filename<<std::endl;
 #endif
 
+         // Check that image is not empty
+         if (getSize() < 1)
+        	 REPORT_ERROR(1,"write Image ERROR: image is empty!");
+
           // PERHAPS HERE CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
          if (ext_name.contains("mrc"))
          {
@@ -460,7 +469,7 @@ public:
  *    input pointer  char *
  */
 
-     void castPage2T(char * page, T * ptrDest, size_t pageSize )
+     void castPage2T(char * page, T * ptrDest, DataType datatype, size_t pageSize )
      {
 
          switch (datatype)
@@ -581,15 +590,14 @@ public:
          
      }
 
-/** Cast page from T to outputDataType
- * @ingroup LittleBigEndian
+/** Cast page from T to datatype
+ * @ingroup XXX
  *    input pointer  char *
  */
-     void castPage2Datatype(T * srcPtr, char * page, DataType outputDataType, size_t pageSize )
+     void castPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize )
 
      {
-
-         switch (outputDataType)
+         switch (datatype)
          {
          case Float:
          {
@@ -619,14 +627,34 @@ public:
          }    
          default:
          {
-             std::cerr<<"Datatype= "<<datatype<<std::endl;
-             REPORT_ERROR(16," ERROR: cannot cast datatype to T");
+             std::cerr<<"outputDatatype= "<<datatype<<std::endl;
+             REPORT_ERROR(16," ERROR: cannot cast T to outputDatatype");
              break;
          }
          }
      }
 
-     void swapPage(char * page, size_t pageNrElements)
+     /** Write an entire page as datatype
+      * @ingroup XXX
+      *
+      * A page of datasize_n elements T is cast to datatype and written to fimg
+      * The memory for the casted page is allocated and freed internally.
+      *
+      */
+     void writePageAsDatatype(FILE * fimg, DataType datatype, size_t datasize_n )
+     {
+    	 size_t datasize = datasize_n * gettypesize(datatype);
+    	 char * fdata = (char *) askMemory(datasize);
+    	 castPage2Datatype(MULTIDIM_ARRAY(data), fdata, datatype, datasize_n);
+    	 fwrite( fdata, datasize, 1, fimg );
+    	 freeMemory(fdata, datasize);
+     }
+
+     /** Swap an entire page
+       * @ingroup XXX
+       *    input pointer  char *
+       */
+     void swapPage(char * page, size_t pageNrElements, DataType datatype)
      {
          unsigned long datatypesize = gettypesize(datatype);
 #ifdef DEBUG
@@ -646,106 +674,70 @@ public:
          }
      }
 
-     void readData(FILE* fimg, int select_img, unsigned long pad)
+     void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)
      {
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
          std::cerr<<"entering readdata"<<std::endl;
          std::cerr<<" readData flag= "<<dataflag<<std::endl;
 #endif
         if ( dataflag < 1 ) return;
 	
-		if ( px < 1 ) px = x;
-		if ( py < 1 ) py = y;
-		if ( pz < 1 ) pz = z;
-
-		// If only half of a transform is stored, it need to be handled
-		unsigned long xstore = x;
-		unsigned long xpage = px;
-		if (transform == Hermitian || transform == CentHerm ) {
-				xstore = x/2 + 1;
-			if ( px > xstore ) xpage = xstore;
-		}
+		// If only half of a transform is stored, it needs to be handled
+		if (transform == Hermitian || transform == CentHerm )
+			data.setXdim(XSIZE(data)/2 + 1);
 
 		// Reset select to get the correct offset
 		if ( select_img < 0 ) select_img = 0;
 
 		size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
 		size_t datatypesize=gettypesize(datatype);
-		size_t pagesize_n=xpage*py*pz;
-		size_t pagesize  =pagesize_n*datatypesize;
-		size_t pagesize_t=pagesize_n*sizeof(T);
+		size_t pagesize  =ZYXSIZE(data)*datatypesize;
 		size_t pagemax_n = ROUND(pagemax/datatypesize);
 		size_t haveread_n=0;
 
 		char*	page = NULL;
 		char*	padpage = NULL;
 	
-		// Allocate memory for image data
-		data.resize(n, z, y, xstore);
-	
-#ifdef DEBUG
-			data.printShape();
-			printf("DEBUG img_read_data: Data size: %ld %ld %ld %ld\n", XSIZE(data), YSIZE(data), ZSIZE(data), NSIZE(data));
-			printf("DEBUG img_read_data: Page size: %ld %ld %ld (%ld)\n", px, py, pz, pagesize);
-			printf("DEBUG img_read_data: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
-#endif 
+		// Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+		data.coreAllocate();
+		myoffset = offset + select_img*(pagesize + pad);
 
-		if ( XSIZE(data) == px && YSIZE(data) == py && ZSIZE(data) == pz )
-		{ // 3D block
-			myoffset = offset + select_img*(pagesize + pad);
 #ifdef DEBUG
-			std::cerr<<"DEBUG img_read_data: Reading 3D blocks: myoffset = "
-						 <<myoffset<<" select_img= "<<select_img<<" pagesize= "<<pagesize<<" offset= "<<offset<<std::endl;
+		data.printShape();
+		printf("DEBUG: Page size: %ld offset= %d \n", pagesize, offset);
+		printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
+		printf("DEBUG: myoffset = %d select_img= %d \n", myoffset, select_img);
 #endif
-			if (pagesize > pagemax)
-				page = (char *) askMemory(pagemax*sizeof(char));
-			else
-				page = (char *) askMemory(pagesize*sizeof(char));
 
-			if ( pad > 0) padpage = (char *) askMemory(pad*sizeof(char));
-			fseek( fimg, myoffset, SEEK_SET );
-			for ( size_t myn=0; myn<NSIZE(data); myn++ )
+		if (pagesize > pagemax)
+			page = (char *) askMemory(pagemax*sizeof(char));
+		else
+			page = (char *) askMemory(pagesize*sizeof(char));
+
+		if ( pad > 0) padpage = (char *) askMemory(pad*sizeof(char));
+		fseek( fimg, myoffset, SEEK_SET );
+		for ( size_t myn=0; myn<NSIZE(data); myn++ )
+		{
+			for (size_t myj=0; myj<pagesize; myj+=pagemax )
 			{
-				for (size_t myj=0; myj<pagesize; myj+=pagemax )
-				{
+				// Read next page. Divide pages larger than pagemax
+				readsize = pagesize - myj;
+				if ( readsize > pagemax ) readsize = pagemax;
+				readsize_n = readsize/datatypesize;
 
-					// Read next page. Divide pages larger than pagemax
-					readsize = pagesize - myj;
-					if ( readsize > pagemax ) readsize = pagemax;
-					readsize_n = readsize/datatypesize;
-
-					//Read page from disc
-					fread( page, readsize, 1, fimg );
-					std::cerr<<"after fread"<<std::endl;
-#ifdef DEBUG
-					float* tt;
-					tt=(float*)page;
-					std::cerr<<"page="<<tt[0]<<std::endl;
-#endif
-
-					//swap per page
-					if (swap) swapPage(page, readsize_n);
-
-					// cast to T per page
-					castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, readsize_n);
-
-#ifdef DEBUG
-					T* ttt;
-					ttt=(T*)(MULTIDIM_ARRAY(data) + haveread_n);
-					std::cerr<<"data="<<ttt[0]<<std::endl;
-#endif
-					haveread_n += readsize_n;
-				}
-				if ( pad > 0 ) fread( padpage, pad, 1, fimg);
+				//Read page from disc
+				fread( page, readsize, 1, fimg );
+				//swap per page
+				if (swap) swapPage(page, readsize_n, datatype);
+				// cast to T per page
+				castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype, readsize_n);
+				haveread_n += readsize_n;
 			}
-			if ( pad > 0 )
-				freeMemory(padpage, pad*sizeof(char));
+			if ( pad > 0 ) fread( padpage, pad, 1, fimg);
 		}
-        else 
-        {
-            REPORT_ERROR(12,"BUG: entering bsoft rwimg code that was meant for unsupported MFF, DSN6 or BRIX format...");
-        }
+		if ( pad > 0 )
+			freeMemory(padpage, pad*sizeof(char));
 	
 #ifdef DEBUG
         printf("DEBUG img_read_data: Finished reading and converting data\n");
@@ -795,12 +787,17 @@ public:
      */
      void getDimensions(int &Xdim, int &Ydim, int &Zdim, int &Ndim) const
      {
-         Xdim = x;
-         Ydim = y;
-         Zdim = z;
-         Ndim = n;
+         Xdim = XSIZE(data);
+         Ydim = YSIZE(data);
+         Zdim = ZSIZE(data);
+         Ndim = NSIZE(data);
      }
      
+     long unsigned int getSize() const
+     {
+    	 return NZYXSIZE(data);
+     }
+
     /** Get Image dimensions
      *
      */
@@ -983,12 +980,13 @@ public:
 // Special case for complex numbers
 template<>
 void Image< std::complex< double > >::castPage2T(char * page, 
-                                                 std::complex<double> * ptrDest, 
+                                                 std::complex<double> * ptrDest,
+                                                 DataType datatype,
                                                  size_t pageSize);
 template<>
 void Image< std::complex< double > >::castPage2Datatype(std::complex< double > * srcPtr, 
                                                         char * page, 
-                                                        DataType outputDataType, 
+                                                        DataType datatype,
                                                         size_t pageSize);
 
 

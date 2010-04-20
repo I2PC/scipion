@@ -3,6 +3,7 @@
 template<>
 void Image< std::complex< double > >::castPage2T(char * page, 
                                                  std::complex<double> * ptrDest, 
+                                                 DataType datatype,
                                                  size_t pageSize)
 {
 
@@ -44,10 +45,10 @@ void Image< std::complex< double > >::castPage2T(char * page,
 template<>
 void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * srcPtr, 
                                                         char * page, 
-                                                        DataType outputDataType, 
+                                                        DataType datatype,
                                                         size_t pageSize)
 {
-    switch (outputDataType)
+    switch (datatype)
     {
     case ComplexShort:
     {

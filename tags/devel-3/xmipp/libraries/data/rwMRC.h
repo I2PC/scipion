@@ -106,10 +106,8 @@ int readMRC()
         REPORT_ERROR(1,"readMRC: VAX floating point conversion unsupported");
 
     // Map the parameters
-    x = header->nx;
-    y = header->ny;
-    z = header->nz;
-    n = 1;
+    data.setDimensions(header->nx, header->ny, header->nz, 1);
+    DataType datatype;
     switch ( header->mode%5 ) {
         case 0: datatype = SChar; break;
         case 1: datatype = Short; break;
@@ -122,9 +120,10 @@ int readMRC()
     if ( header->mode%5 > 2 && header->mode%5 < 5 ) {
         transform = CentHerm;
         fseek(fimg, 0, SEEK_END);
-        if ( ftell(fimg) > offset + 0.8*n*y*z*gettypesize(datatype) )
-            n = 2*(n - 1);
-        if ( header->mx%2 == 1 ) n += 1;     // Quick fix for odd x-size maps
+        if ( ftell(fimg) > offset + 0.8*ZYXSIZE(data)*gettypesize(datatype) )
+            data.setXdim(2 * (XSIZE(data) - 1));
+        if ( header->mx%2 == 1 )
+			data.setXdim(XSIZE(data) + 1);     // Quick fix for odd x-size maps
     }
 
     min = header->amin;
@@ -154,7 +153,7 @@ int readMRC()
 
     freeMemory(header, sizeof(MRChead));
 
-    readData(fimg, -1, 0);
+    readData(fimg, -1, datatype, 0);
 
     fclose(fimg);
 
@@ -173,28 +172,27 @@ int writeMRC()
     strncpy(header->map, "MAP ", 4);
     // FIXME TO BE DONE WITH rwCCP4!!
     //set_CCP4_machine_stamp(header->machst);
-    header->nx = x;
-    header->ny = y;
-    header->nz = z;
+    header->nx = XSIZE(data);
+    header->ny = YSIZE(data);
+    header->nz = ZSIZE(data);
     if ( transform == CentHerm ) 
-        header->nx = x/2 + 1;        // If a transform, physical storage is nx/2 + 1
-    switch ( datatype ) 
-    {
-        case UChar:        header->mode = 0; break;
-        case SChar:        header->mode = 0; break;
-        case UShort:       header->mode = 1; break;
-        case Short:        header->mode = 1; break;
-        case Int:          header->mode = 2; break;
-        case Float:        header->mode = 2; break;
-        case ComplexShort: header->mode = 3; break;
-        case ComplexInt:   header->mode = 4; break;
-        case ComplexFloat: header->mode = 4; break;
-        default:           header->mode = 0; break;
-    }
-    header->nxStart = (int) (-image->shiftX - 0.5);
-    header->nyStart = (int) (-image->shiftY - 0.5);
-    header->nzStart = (int) (-image->shiftZ - 0.5);
-    header->mx = (int) (ua/ux + 0.5);
+        header->nx = XSIZE(data)/2 + 1;        // If a transform, physical storage is nx/2 + 1
+
+	// Convert T to datatype
+    if ( typeid(T) == typeid(double) ||
+    		typeid(T) == typeid(float) ||
+    		typeid(T) == typeid(int) )
+		header->mode = 2;
+	else if ( typeid(T) == typeid(unsigned char) ||
+			typeid(T) == typeid(signed char) )
+		header->mode = 0;
+	else if ( typeid(T) == typeid(std::complex<float>) ||
+    		typeid(T) == typeid(std::complex<double>) )
+		header->mode = 4;
+    else
+		REPORT_ERROR(1,"ERROR write MRC image: invalid typeid(T)");
+
+	header->mx = (int) (ua/ux + 0.5);
     header->my = (int) (ub/uy + 0.5);
     header->mz = (int) (uc/uz + 0.5);
     header->mapc = 1;
@@ -207,6 +205,9 @@ int writeMRC()
     header->a = ua;
     header->b = ub;
     header->c = uc;
+    header->nxStart = (int) (-image->shiftX - 0.5);
+    header->nyStart = (int) (-image->shiftY - 0.5);
+    header->nzStart = (int) (-image->shiftZ - 0.5);
     header->xOrigin = -image->shiftX*ux;
     header->yOrigin = -image->shiftY*uy;
     header->zOrigin = -image->shiftZ*uz;
@@ -224,74 +225,39 @@ int writeMRC()
                     header->a, header->b, header->c );
 #endif
     }
-
     header->alpha = alf*180/M_PI;
     header->beta =  bet*180/M_PI;
     header->gamma = gam*180/M_PI;
     header->ispg =  spacegroup;
-
     header->nsymbt = 0;
-
-    long                    i;
-    
     header->nlabl = 10; // or zero?
     //strncpy(header->labels, p->label.c_str(), 799);
 
     offset = MRCSIZE + header->nsymbt;
-
-    size_t datatypesize = gettypesize(datatype);
     size_t datasize_n = (size_t) header->nx*header->ny*header->nz;
-    size_t datasize = (size_t) datasize_n * datatypesize;
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
-    printf("DEBUG rwMRC: Offset = %ld,  Typesize = %ld,  Datasize = %ld\n",
-           offset, datatypesize, datasize);
+    printf("DEBUG rwMRC: Offset = %ld,  Datasize_n = %ld\n", offset, datasize_n);
 #endif
 
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL ) return(-1);
 
     fwrite( header, MRCSIZE, 1, fimg );
-    if ( dataflag )
-    {
-        char* fdata = (char *) askMemory(datasize);
-        switch (datatype)
-        {
-        case UChar: 
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, SChar, datasize_n);
-            break;
-        case SChar: 
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, SChar, datasize_n);
-            break;
-        case UShort:
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Short, datasize_n);
-            break;
-        case Short: 
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Short, datasize_n);
-            break;
-        case Int:
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
-            break;
-        case Float:
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
-            break;
-        case ComplexShort:
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexShort, datasize_n);
-            break;
-        case ComplexInt:
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
-            break;
-        case ComplexFloat:
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
-            break;
-        default: 
-            std::cerr<<"datatype= "<<datatype<<std::endl;
-            REPORT_ERROR(22,"Error: invalid datatype in writeMRC");
-        }
-        fwrite( fdata, datasize, 1, fimg );
-        freeMemory(fdata, datasize);
-    }
+
+    if ( typeid(T) == typeid(double) ||
+    		typeid(T) == typeid(float) ||
+    		typeid(T) == typeid(int) )
+		writePageAsDatatype(fimg, Float, datasize_n);
+	else if ( typeid(T) == typeid(unsigned char) ||
+			typeid(T) == typeid(signed char) )
+		writePageAsDatatype(fimg, SChar, datasize_n);
+	else if ( typeid(T) == typeid(std::complex<float>) ||
+	    		typeid(T) == typeid(std::complex<double>) )
+		writePageAsDatatype(fimg, ComplexFloat, datasize_n);
+	else
+		REPORT_ERROR(1,"ERROR write MRC image: invalid typeid(T)");
 
     fclose(fimg);
     freeMemory(header, sizeof(MRChead));

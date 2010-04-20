@@ -108,7 +108,7 @@ struct SPIDERhead {         	// file header for SPIDER data
 **************************************************************************/
 int  readSPIDER(int img_select)
 {
-#define DEBUG
+//#define DEBUG
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL ) return(-1);
 	
@@ -131,18 +131,16 @@ int  readSPIDER(int img_select)
     }
     
     // Map the parameters
-    x = px = (int) header->nsam;
-    y = py = (int) header->nrow;
-    z = pz = (int) header->nslice;
-    n = 1;
-    datatype = Float;
+    data.setDimensions((int) header->nsam, (int) header->nrow, (int) header->nslice, 1);
+    DataType datatype = Float;
     transform = NoTransform;
     if ( header->iform < 0 ) 
     {
         transform = Hermitian;
         datatype = ComplexFloat;
-        n -= 2;
+        data.setXdim(XSIZE(data) - 2);
     }
+
     offset = (int) header->labbyt;
     min = header->fmin;
     max = header->fmax;
@@ -151,27 +149,27 @@ int  readSPIDER(int img_select)
     ux = uy = uz = header->scale;
 		
     size_t header_size = offset;
-    size_t image_size = header_size + x*y*z*sizeof(float);
+    size_t image_size = header_size + ZYXSIZE(data)*sizeof(float);
     size_t pad = offset;
     
     if ( header->istack > 0 ) 
-        n = (int) header->maxim;
+        data.setNdim((int) header->maxim);
 
-    unsigned long 		imgstart = 0;
-    unsigned long 		imgend = n;
+    unsigned long 		Ndim, imgstart = 0;
+    unsigned long 		imgend = NSIZE(data);
     char*			hend;
 
     if ( img_select > -1 ) 
     {
-        if ( img_select >= (long)n ) 
-            img_select = n - 1;
+        if ( img_select >= (long)NSIZE(data) )
+            img_select = NSIZE(data) - 1;
         imgstart = img_select;
         imgend = img_select + 1;
-        n = 1;
+        data.setNdim(1);
         i = img_select;
     }
 	
-    image = new SubImage [n];
+    image = new SubImage [NSIZE(data)];
     image->shiftX = header->xoff;
     image->shiftY = header->yoff;
     image->shiftZ = header->zoff;
@@ -190,7 +188,7 @@ int  readSPIDER(int img_select)
             if ( swap ) 
                 for ( b = (char *) header; b<hend; b+=4 ) 
                     swapbytes(b, 4);
-            j = ( n > 1 )? j = i: 0;
+            j = ( NSIZE(data) > 1 )? j = i: 0;
             image[j].shiftX = header->xoff;
             image[j].shiftY = header->yoff;
             image[j].shiftZ = header->zoff;
@@ -209,7 +207,7 @@ int  readSPIDER(int img_select)
     std::cerr<<"DEBUG readSPIDER: img_select= "<<img_select<<" n= "<<n<<" pad = "<<pad<<std::endl;
 #endif
 	
-    readData(fimg, img_select, pad );
+    readData(fimg, img_select, datatype, pad );
     
     fclose(fimg);
 		
@@ -229,16 +227,12 @@ int  readSPIDER(int img_select)
 **************************************************************************/
 int 	writeSPIDER()
 {
+//#define DEBUG
 #ifdef DEBUG
         printf("DEBUG writeSPIDER: Writing Spider file\n");
 #endif            
 
-    /*
-      if ( transform != NoTransform )
-          img_convert_fourier(p, Hermitian);
-    */
-
-    float		lenbyt = sizeof(float)*x;		// Record length (in bytes)
+    float		lenbyt = sizeof(float)*XSIZE(data);		// Record length (in bytes)
     float		labrec = floor(SPIDERSIZE/lenbyt);	// # header records
     if ( fmod(SPIDERSIZE,lenbyt) != 0 ) labrec++;
     float		labbyt = labrec*lenbyt; 		// Size of header in bytes
@@ -251,23 +245,24 @@ int 	writeSPIDER()
     header->labrec = labrec;					// # header records
     header->labbyt = labbyt; 					// Size of header in bytes
 
-    header->irec = labrec + floor((x*y*z*sizeof(float))/lenbyt + 0.999999);	// Total # records
-    header->nsam = x;
-    header->nrow = y;
-    header->nslice = z;
+    header->irec = labrec + floor((ZYXSIZE(data)*sizeof(float))/lenbyt + 0.999999);	// Total # records
+    header->nsam = XSIZE(data);
+    header->nrow = YSIZE(data);
+    header->nslice = ZSIZE(data);
 
     // If a transform, then the physical storage in x is only half+1
-    size_t xstore = x;
-    if ( transform == Hermitian ) {
-        xstore = x/2 + 1;
-        header->nsam = 2*xstore;
+    size_t xstore = XSIZE(data);
+    if ( transform == Hermitian )
+    {
+        xstore = XSIZE(data)/2 + 1;
+        header->nsam = XSIZE(data)*xstore;
     }
 	
 #ifdef DEBUG
     printf("DEBUG writeSPIDER: Size: %g %g %g\n", header->nsam, header->nrow, header->nslice);
 #endif
 
-    if ( z < 2 ) 
+    if ( ZSIZE(data) < 2 )
     {
         if ( transform == NoTransform )
             header->iform = 1;				 // 2D image
@@ -287,11 +282,11 @@ int 	writeSPIDER()
     header->sig = std;
 	
     // For multi-image files
-    if (n > 1 ) 
+    if (NSIZE(data) > 1 )
     {
         header->istack = 2;
         header->inuse = -1;
-        header->maxim = n;
+        header->maxim = NSIZE(data);
     }
 	
     header->xoff = image->shiftX;
@@ -310,18 +305,19 @@ int 	writeSPIDER()
     while ( t->tm_year > 100 ) t->tm_year -= 100;
     sprintf(header->ctim, "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
     sprintf(header->cdat, "%02d-%02d-%02d", t->tm_mday, t->tm_mon, t->tm_year);
-    //strncpy(header->ctit, "Created by Xmipppppp", 160);
 
-    size_t datatypesize = gettypesize(datatype);
-    size_t datasize = xstore*y*z*datatypesize;
-    size_t datasize_n = xstore*y*z;
-	
+    size_t datasize, datasize_n;
+    datasize_n = xstore*YSIZE(data)*ZSIZE(data);
+	if (isComplex())
+		datasize = datasize_n * gettypesize(ComplexFloat);
+	else
+		datasize = datasize_n * gettypesize(Float);
+
 #ifdef DEBUG
     printf("DEBUG writeSPIDER: Date and time: %s %s\n", header->cdat, header->ctim);
     printf("DEBUG writeSPIDER: Text label: %s\n", header->ctit);
     printf("DEBUG writeSPIDER: Header size: %g\n", header->labbyt);
     printf("DEBUG writeSPIDER: Header records and record length: %g %g\n", header->labrec, header->lenbyt);
-    printf("DEBUG writeSPIDER: Data type size: %ld\n", datatypesize);
     printf("DEBUG writeSPIDER: Data size: %ld\n", datasize);
     printf("DEBUG writeSPIDER: Data offset: %ld\n", offset);
 	printf("DEBUG writeSPIDER: File %s\n", filename.c_str());
@@ -332,21 +328,20 @@ int 	writeSPIDER()
     fwrite( header, offset, 1, fimg );
 
     char* fdata = (char *) askMemory(datasize);
-    if ( n == 1 ) 
+    if ( NSIZE(data) == 1 )
     {
-        if ( dataflag ) 
-        {
-            if (datatype < ComplexShort)
-                castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
-            else
-                castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
-            fwrite( fdata, datasize, 1, fimg );
-        }
-    } else {
+    	if (isComplex())
+    		castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
+		else
+			castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
+        fwrite( fdata, datasize, 1, fimg );
+    }
+    else
+    {
         header->istack = 0;
         header->inuse = 0;
         header->maxim = 0;
-        for ( size_t i=0; i<n; i++ ) 
+        for ( size_t i=0; i<NSIZE(data); i++ )
         {
             header->imgnum = i + 1;
             header->xoff = image[i].shiftX;
@@ -359,10 +354,10 @@ int 	writeSPIDER()
             header->flip = image[i].flip;
 
             fwrite( header, offset, 1, fimg );
-            if (datatype < ComplexShort)
-                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
-            else
+            if (isComplex())
                 castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
+            else
+                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
             fwrite( fdata, datasize, 1, fimg );
         }
     }

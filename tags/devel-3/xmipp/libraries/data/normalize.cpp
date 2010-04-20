@@ -440,7 +440,7 @@ void Normalize_parameters::produce_side_info()
                             OUTSIDE_MASK);
             break;
         case CIRCLE:
-            BinaryCircularMask(bg_mask, r, OUTSIDE_MASK);
+        	BinaryCircularMask(bg_mask, r, OUTSIDE_MASK);
             break;
         }
     }
@@ -492,91 +492,81 @@ void Normalize_parameters::produce_side_info()
 void Normalize_parameters::show()
 {
     Prog_parameters::show();
-    if (!volume)
-    {
-        std::cout << "Normalizing method: ";
-        switch (method)
-        {
-        case OLDXMIPP:
-            std::cout << "OldXmipp\n";
-            break;
-        case NEAR_OLDXMIPP:
-            std::cout << "Near_OldXmipp\n";
-            break;
-        case NEWXMIPP:
-            std::cout << "NewXmipp\n";
-            break;
-        case NEWXMIPP2:
-            std::cout << "NewXmipp2\n";
-            break;
-        case MICHAEL:
-            std::cout << "Michael\n";
-            break;
-        case NONE:
-            std::cout << "None\n";
-            break;
-        case RAMP:
-            std::cout << "Ramp\n";
-            break;
-        case NEIGHBOUR:
-            std::cout << "Neighbour\n";
-            break;
-        case TOMOGRAPHY:
-            std::cout << "Tomography\n";
-            break;
-        case TOMOGRAPHY0:
-            std::cout << "Tomography0\n";
-            break;
-        case RANDOM:
-            std::cout << "Random a=[" << a0 << "," << aF << "], " << "b=[" <<
-            b0 << "," << bF << "]\n";
-            break;
-        }
+	std::cout << "Normalizing method: ";
+	switch (method)
+	{
+	case OLDXMIPP:
+		std::cout << "OldXmipp\n";
+		break;
+	case NEAR_OLDXMIPP:
+		std::cout << "Near_OldXmipp\n";
+		break;
+	case NEWXMIPP:
+		std::cout << "NewXmipp\n";
+		break;
+	case NEWXMIPP2:
+		std::cout << "NewXmipp2\n";
+		break;
+	case MICHAEL:
+		std::cout << "Michael\n";
+		break;
+	case NONE:
+		std::cout << "None\n";
+		break;
+	case RAMP:
+		std::cout << "Ramp\n";
+		break;
+	case NEIGHBOUR:
+		std::cout << "Neighbour\n";
+		break;
+	case TOMOGRAPHY:
+		std::cout << "Tomography\n";
+		break;
+	case TOMOGRAPHY0:
+		std::cout << "Tomography0\n";
+		break;
+	case RANDOM:
+		std::cout << "Random a=[" << a0 << "," << aF << "], " << "b=[" <<
+		b0 << "," << bF << "]\n";
+		break;
+	}
 
-        if (method == NEWXMIPP || method == NEWXMIPP2 ||
-            method == NEAR_OLDXMIPP || method == MICHAEL || 
-	    method == RAMP || method == NEIGHBOUR)
-        {
-            std::cout << "Background mode: ";
-            switch (background_mode)
-            {
-            case NONE :
-                std::cout << "None\n";
-                break;
-            case FRAME:
-                std::cout << "Frame, width=" << r << std::endl;
-                std::cout << "Apply transformation to mask: " << apply_geo <<
-                std::endl;
-                break;
-            case CIRCLE:
-                std::cout << "Circle, radius=" << r << std::endl;
-                std::cout << "Apply transformation to mask: " << apply_geo <<
-                std::endl;
-                break;
-            }
-        }
+	if (method == NEWXMIPP || method == NEWXMIPP2 ||
+		method == NEAR_OLDXMIPP || method == MICHAEL ||
+	method == RAMP || method == NEIGHBOUR)
+	{
+		std::cout << "Background mode: ";
+		switch (background_mode)
+		{
+		case NONE :
+			std::cout << "None\n";
+			break;
+		case FRAME:
+			std::cout << "Frame, width=" << r << std::endl;
+			std::cout << "Apply transformation to mask: " << apply_geo <<
+			std::endl;
+			break;
+		case CIRCLE:
+			std::cout << "Circle, radius=" << r << std::endl;
+			std::cout << "Apply transformation to mask: " << apply_geo <<
+			std::endl;
+			break;
+		}
+	}
 
-        if (invert_contrast)
-            std::cout << "Invert contrast "<< std::endl;
+	if (invert_contrast)
+		std::cout << "Invert contrast "<< std::endl;
 
-        if (tiltMask)
-            std::cout << "Applying a mask depending on tilt "<< std::endl;
+	if (tiltMask)
+		std::cout << "Applying a mask depending on tilt "<< std::endl;
 
-        if (remove_black_dust)
-            std::cout << "Remove black dust particles, using threshold " <<
-            floatToString(thresh_black_dust) << std::endl;
+	if (remove_black_dust)
+		std::cout << "Remove black dust particles, using threshold " <<
+		floatToString(thresh_black_dust) << std::endl;
 
-        if (remove_white_dust)
-            std::cout << "Remove white dust particles, using threshold " <<
-            floatToString(thresh_white_dust) << std::endl;
-    }
-    else
-    {
-        std::cout << "Normalizing volumes: " << volume << std::endl;
-        if (invert_contrast)
-            std::cout << "Invert contrast "<< std::endl;
-
-    }
+	if (remove_white_dust)
+		std::cout << "Remove white dust particles, using threshold " <<
+		floatToString(thresh_white_dust) << std::endl;
 
     if (method == NEWXMIPP && enable_mask)
         mask_prm.show();
