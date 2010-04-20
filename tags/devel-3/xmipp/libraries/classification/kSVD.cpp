@@ -38,8 +38,8 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
     double errorLimit=approximationError*1e-10;
 
     // Initialize the number of available atoms
-    int N=YSIZE(D); // Dimension of each atom
-    int K=XSIZE(D); // Number of atoms in the dictionary
+    int N=D.Ydim(); // Dimension of each atom
+    int K=D.Xdim(); // Number of atoms in the dictionary
     Matrix1D<int> availableAtoms;
     availableAtoms.initZeros(K);
     availableAtoms.initConstant(1);
@@ -57,7 +57,7 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
     for (int k=0; k<K; k++)
     {
         for (int j=0; j<N; j++)
-            DIRECT_VEC_ELEM(c,k)+=DIRECT_MAT_ELEM(D,j,k)*DIRECT_VEC_ELEM(x,j);
+            c(k)+=D(j,k)*x(j);
         
         // Check if this is the maximum
         if (ABS(c(k))>ckm)
@@ -93,15 +93,14 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
             // Compute the product between the atoms km and k
             double aux=0;
             for (int j=0; j<N; j++)
-                aux+=DIRECT_MAT_ELEM(D,j,km)*DIRECT_MAT_ELEM(D,j,k);
-            DIRECT_MAT_ELEM(R,s,k)=aux;
+                aux+=D(j,km)*D(j,k);
+            R(s,k)=aux;
             
             // Readjust R
             for (int n=0; n<s; n++)
-                DIRECT_MAT_ELEM(R,s,k)-=DIRECT_MAT_ELEM(R,n,km)*
-                    DIRECT_MAT_ELEM(R,n,k);
-            if (DIRECT_VEC_ELEM(u,km)>XMIPP_EQUAL_ACCURACY)
-                DIRECT_MAT_ELEM(R,s,k)/=DIRECT_VEC_ELEM(u,km);
+                R(s,k)-=R(n,km)*R(n,k);
+            if (u(km)>XMIPP_EQUAL_ACCURACY)
+                R(s,k)/=u(km);
             
             // Update the rest of variables
             c(k)=c(k)*u(k)-c(km)*R(s,k);
@@ -150,23 +149,21 @@ double lasso(const Matrix1D<double> &x,
     double lambda, Matrix1D<double> &alpha,
     const int maxIter, const double tol)
 {
-    int K=XSIZE(D);
-    int N=YSIZE(D);
+    int K=D.Xdim();
+    int N=D.Ydim();
 
     // Compute the ridge least squares solution
     // Compute D^t*x
     Matrix1D<double> Dtx(K);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(Dtx)
         // Compute the dot product of the i-th column of D and x
-        for (int k=0; k<YSIZE(D); k++)
-            DIRECT_VEC_ELEM(Dtx,i)+=
-                DIRECT_MAT_ELEM(D,k,i)*DIRECT_VEC_ELEM(x,k);
+        for (int k=0; k<D.Ydim(); k++)
+            Dtx(i)+= D(k,i)*x(k);
 
     // Now multiply DtdLambdaInv * D^t * x
     alpha.initZeros(K);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(DtDlambdaInv)
-        DIRECT_VEC_ELEM(alpha,i)+=DIRECT_MAT_ELEM(DtDlambdaInv,i,j)*
-            DIRECT_VEC_ELEM(Dtx,j);
+        alpha(i)+=DtDlambdaInv(i,j)*Dtx(j);
 
     // Iterate over alpha
     Matrix1D<double> alphaOld;
@@ -178,43 +175,41 @@ double lasso(const Matrix1D<double> &x,
         alphaOld=alpha;
         
         // Update alpha
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(alpha)
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(alpha)
         {
-            double S=-DIRECT_VEC_ELEM(Dtx,i);
-            for (int j=0; j<XSIZE(alpha); j++)
-                if (i!=j) S+=DIRECT_MAT_ELEM(DtD,i,j)*DIRECT_VEC_ELEM(alpha,j);
+            double S=-Dtx(i);
+            for (int j=0; j<alpha.size(); j++)
+                if (i!=j) S+=DtD(i,j)*alpha(j);
             if (ABS(S)<lambda)
-                DIRECT_VEC_ELEM(alpha,i)=0;
+                alpha(i)=0;
             else if (S>lambda)
-                DIRECT_VEC_ELEM(alpha,i)=(lambda-S)/DtD(i,i);
+                alpha(i)=(lambda-S)/DtD(i,i);
             else
-                DIRECT_VEC_ELEM(alpha,i)=(-lambda-S)/DtD(i,i);
+                alpha(i)=(-lambda-S)/DtD(i,i);
         }
         
         // Prepare for next iteration
         iter++;
         double normDiff=0, normAlpha=0;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(alpha)
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(alpha)
         {
-            double diff=DIRECT_VEC_ELEM(alpha,i)-DIRECT_VEC_ELEM(alphaOld,i);
+            double diff=alpha(i)-alphaOld(i);
             normDiff+=diff*diff;
-            normAlpha+=DIRECT_VEC_ELEM(alpha,i)*DIRECT_VEC_ELEM(alpha,i);
+            normAlpha+=alpha(i)*alpha(i);
         }
         finished=(iter>=maxIter) || normDiff/normAlpha<tol;
     }
     
     // Compute the approximation error
-    Matrix1D<double> xp(XSIZE(x));
-    for (int j=0; j<XSIZE(D); j++)
-        if (DIRECT_VEC_ELEM(alpha,j)!=0)
-            for (int i=0; i<YSIZE(D); i++)
-                DIRECT_VEC_ELEM(xp,i)+=
-                    DIRECT_MAT_ELEM(D,i,j)*
-                    DIRECT_VEC_ELEM(alpha,j);
+    Matrix1D<double> xp(x.size());
+    for (int j=0; j<D.Xdim(); j++)
+        if (alpha(j)!=0)
+            for (int i=0; i<D.Ydim(); i++)
+                xp(i)+=D(i,j)*alpha(j);
     double approximationError=0;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(xp)
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(xp)
     {
-        double diff=DIRECT_VEC_ELEM(xp,i)-DIRECT_VEC_ELEM(x,i);
+        double diff=xp(i)-x(i);
         approximationError+=diff*diff;
     }
     
@@ -231,8 +226,8 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
     int projectionMethod, double lambda)
 {
     int Nvectors=X.size();
-    int K=XSIZE(D); // Number of atoms
-    int N=YSIZE(D); // Dimension of the atoms
+    int K=D.Xdim(); // Number of atoms
+    int N=D.Ydim(); // Dimension of the atoms
 
     // Ask for memory for Alpha if necessary
     if (Alpha.size()!=Nvectors)
@@ -256,9 +251,9 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
     Matrix1D<double> power;
     power.initZeros(Nvectors);
     for (int n=0; n<Nvectors; n++)
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(X[n])
-            power(n)+=DIRECT_VEC_ELEM(X[n],i)*DIRECT_VEC_ELEM(X[n],i);
-    double avgPower=power.computeAvg();
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(X[n])
+            power(n)+=X[n](i)*X[n](i);
+    double avgPower=power.sum(true);
 
     // Perform kSVD
     int iterations=0;
@@ -272,14 +267,13 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
         if (projectionMethod==LASSO_PROJECTION)
         {
             DtD.initZeros(K,K);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(DtD)
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(DtD)
                 // Compute the dot product between the columns i and j of D
-                for (int k=0; k<YSIZE(D); k++)
-                    DIRECT_MAT_ELEM(DtD,i,j)+=
-                        DIRECT_MAT_ELEM(D,k,i)*DIRECT_MAT_ELEM(D,k,j);
+                for (int k=0; k<D.Ydim(); k++)
+                    DtD(i,j)+=D(k,i)*D(k,j);
             DtDlambda=DtD;
             for (int i=0; i<K; i++)
-                DIRECT_MAT_ELEM(DtDlambda,i,i)+=lambda;
+                DtDlambda(i,i)+=lambda;
             DtDlambda.inv(DtDlambdaInv);
         }
         std::cout << "Sparse coding\n";
@@ -299,7 +293,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
             if (n%100==0) progress_bar(n);
         }
         progress_bar(Nvectors);
-        double Noise=error.computeAvg();
+        double Noise=error.sum(true);
         std::cout << "kSVD error=" << Noise << " "
                   << " (" << 100*Noise/avgPower << "%)" << std::endl;
         if (projectionMethod==LASSO_PROJECTION)
@@ -337,17 +331,16 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
                     xp.initZeros(N);
                     for (int kp=0; kp<K; kp++)
                     {
-                        double w=DIRECT_VEC_ELEM(Alpha[n],kp);
+                        double w=Alpha[n](kp);
                         if (kp!=k && w!=0)
                             for (int j=0; j<N; j++)
-                                DIRECT_VEC_ELEM(xp,j)+=
-                                    w*DIRECT_MAT_ELEM(D,j,kp);
+                                xp(j)+=w*D(j,kp);
                     }
 
                     // Fill the error matrix EkR
                     const Matrix1D<double> &x=X[n];
                     for (int j=0; j<N; j++)
-                        EkR(j,nk)=DIRECT_VEC_ELEM(x,j)-DIRECT_VEC_ELEM(xp,j);
+                        EkR(j,nk)=x(j)-xp(j);
                 }
 
                 // Compute the SVD decomposition of the EkR matrix
@@ -357,21 +350,21 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
                 double normU0=0;
                 for (int j=0; j<N; j++)
                 {
-                    double uj0=DIRECT_MAT_ELEM(U,j,0);
+                    double uj0=U(j,0);
                     normU0+=uj0*uj0;
                 }
                 normU0=sqrt(normU0);
                 double inormU0=1/normU0;
                 for (int j=0; j<N; j++)
-                    DIRECT_MAT_ELEM(D,j,k)=DIRECT_MAT_ELEM(U,j,0)*inormU0;
+                    D(j,k)=U(j,0)*inormU0;
 
                 // Update the coefficients of the users of atom k
-                double W0=DIRECT_VEC_ELEM(W,0)*normU0;
+                double W0=W(0)*normU0;
                 for (int nk=0; nk<Nk; nk++)
                 {
                     // Select vector nk
                     int n=listUsers[k][nk];
-                    DIRECT_VEC_ELEM(Alpha[n],k)=DIRECT_MAT_ELEM(V,nk,0)*W0;
+                    Alpha[n](k)=V(nk,0)*W0;
                 }
 
                 #ifdef DEBUG
@@ -391,7 +384,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
                 error.maxIndex(iworse);
                 error(iworse)=0;
                 for (int j=0; j<N; j++)
-                    DIRECT_MAT_ELEM(D,j,k)=DIRECT_VEC_ELEM(X[iworse],j);
+                    D(j,k)=X[iworse](j);
             }
             progress_bar(k);
         }
@@ -399,7 +392,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
         
         // Prepare for next iteration
         iterations++;
-        currentError=error.computeAvg();
+        currentError=error.sum(true);
         if (previousError==0) previousError=currentError;
         else {
             limitAchieved=

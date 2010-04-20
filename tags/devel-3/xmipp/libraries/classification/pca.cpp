@@ -499,7 +499,7 @@ void Running_PCA::new_sample(const Matrix1D<double> &sample)
             // between un and the current eigenvector estimate
             double scale = 0;
             for (int i = 0; i < d; i++)
-                scale += DIRECT_VEC_ELEM(un, i) * DIRECT_MAT_ELEM(eigenvectors, i, j);
+                scale += un(i) * eigenvectors(i, j);
 
             // Re-estimate the eigenvector
             double norm2 = 0;
@@ -507,26 +507,26 @@ void Running_PCA::new_sample(const Matrix1D<double> &sample)
             double w2 = (1.0 - w1) * scale;
             for (int i = 0; i < d; i++)
             {
-                DIRECT_MAT_ELEM(eigenvectors, i, j) =
-                    w1 * DIRECT_MAT_ELEM(eigenvectors, i, j) +
-                    w2 * DIRECT_VEC_ELEM(un, i);
-                norm2 += DIRECT_MAT_ELEM(eigenvectors, i, j) *
-                         DIRECT_MAT_ELEM(eigenvectors, i, j);
+                eigenvectors(i, j) =
+                    w1 * eigenvectors(i, j) +
+                    w2 * un(i);
+                norm2 += eigenvectors(i, j) *
+                         eigenvectors(i, j);
             }
 
             // Renormalize
             if (norm2 > XMIPP_EQUAL_ACCURACY)
             {
                 double norm = sqrt(norm2);
-                for (int i = 0; i < d; i++) DIRECT_MAT_ELEM(eigenvectors, i, j) /= norm;
+                for (int i = 0; i < d; i++) eigenvectors(i, j) /= norm;
             }
 
             // Project un onto the space spanned by this eigenvector
             double project = 0;
             for (int i = 0; i < d; i++)
-                project += DIRECT_VEC_ELEM(un, i) * DIRECT_MAT_ELEM(eigenvectors, i, j);
+                project += un(i) * eigenvectors(i, j);
             for (int i = 0; i < d; i++)
-                DIRECT_VEC_ELEM(un, i) -= project * DIRECT_MAT_ELEM(eigenvectors, i, j);
+                un(i) -= project * eigenvectors(i, j);
 
             // Update the variance of this vector
             sum_proj(j) += project;
@@ -542,7 +542,5 @@ void Running_PCA::project(const Matrix1D<double> &input,
     output.initZeros(J);
     for (int j = 0; j < J; j++)
         for (int i = 0; i < d; i++)
-            DIRECT_VEC_ELEM(output, j) +=
-                (DIRECT_VEC_ELEM(input, i) - DIRECT_VEC_ELEM(current_sample_mean, i)) *
-                DIRECT_MAT_ELEM(eigenvectors, i, j);
+            output(j) += (input(i) - current_sample_mean(i)) * eigenvectors(i, j);
 }

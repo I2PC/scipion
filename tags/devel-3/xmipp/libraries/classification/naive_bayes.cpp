@@ -59,7 +59,7 @@ int splitHistogramsUsingEntropy(const std::vector<histogram1D> &hist,
     }
 
     // Compute for each class the probability of being l<=l0 and l>l0
-    Matrix2D<double> p(K, 2);
+    MultidimArray<double> p(K, 2);
     for (int k = 0; k < K; k++)
     {
         p(k, 0) = histNorm[k](l0);
@@ -76,7 +76,7 @@ int splitHistogramsUsingEntropy(const std::vector<histogram1D> &hist,
     {
         // Compute the entropy of the clases if we split by l
         double entropy = 0;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(p)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(p)
             if (p(i, j) != 0) entropy -= p(i, j) * log10(p(i, j));
 
         #ifdef DEBUG_SPLITTING_USING_ENTROPY
@@ -117,7 +117,7 @@ int splitHistogramsUsingEntropy(const std::vector<histogram1D> &hist,
 }
 
 /* Constructor ------------------------------------------------------------- */
-LeafNode::LeafNode(const std::vector < Matrix1D<double> > &leafFeatures, 
+LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures, 
     int discrete_levels)
 {
     __discreteLevels = discrete_levels;
@@ -178,7 +178,7 @@ LeafNode::LeafNode(const std::vector < Matrix1D<double> > &leafFeatures,
     }
 
     // Compute the bins of the split
-    Matrix1D<int> newBins(__discreteLevels);
+    MultidimArray<int> newBins(__discreteLevels);
     int imax=intervals.size();
     for (int i=0; i<imax; i++)
     {
@@ -238,8 +238,8 @@ std::ostream & operator << (std::ostream &_out, const LeafNode &leaf)
 /* Naive Bayes classifier                                                    */
 /* ------------------------------------------------------------------------- */
 NaiveBayes::NaiveBayes(
-    const std::vector< Matrix2D<double> > &features,
-    const Matrix1D<double> &priorProbs,
+    const std::vector< MultidimArray<double> > &features,
+    const MultidimArray<double> &priorProbs,
     int discreteLevels)
 { 
     K = features.size();
@@ -250,7 +250,7 @@ NaiveBayes::NaiveBayes(
 
     // Build a leafnode for each feature and assign a weight
     __weights.initZeros(Nfeatures);
-    std::vector < Matrix1D<double> > aux(K);	
+    std::vector < MultidimArray<double> > aux(K);	
     for (int f=0; f<Nfeatures; f++)
     {
         for (int k=0; k<K; k++)
@@ -281,7 +281,7 @@ NaiveBayes::~NaiveBayes()
 }
 
 /* Set cost matrix --------------------------------------------------------- */
-void NaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
+void NaiveBayes::setCostMatrix(const MultidimArray<double> &cost)
 {
     if (XSIZE(cost)!=K || YSIZE(cost)!=K)
         REPORT_ERROR(1,"Cost matrix does not have the apropriate size");
@@ -289,10 +289,10 @@ void NaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 }
 
 /* Do inference ------------------------------------------------------------ */
-int NaiveBayes::doInference(const Matrix1D<double> &newFeatures,
+int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
     double &cost)
 {
-    Matrix1D<double> classesProbs;
+    MultidimArray<double> classesProbs;
     classesProbs = __priorProbsLog10;
     for(int f=0; f<Nfeatures; f++)
         for (int k=0; k<K; k++)
@@ -323,7 +323,7 @@ int NaiveBayes::doInference(const Matrix1D<double> &newFeatures,
     classesProbs/=classesProbs.sum();
 //    std::cout << "classesProbs norm " << classesProbs.transpose() << std::endl;
     
-    Matrix1D<double> allCosts;
+    MultidimArray<double> allCosts;
     allCosts=__cost*classesProbs;
     for (int k=0; k<K; k++)
         allCosts(k)=log10(allCosts(k));
@@ -365,8 +365,8 @@ std::ostream & operator << (std::ostream &_out, const NaiveBayes &naive)
 
 /* Ensemble constructor ---------------------------------------------------- */
 EnsembleNaiveBayes::EnsembleNaiveBayes(
-    const std::vector < Matrix2D<double> >  &features,
-    const Matrix1D<double> &priorProbs,
+    const std::vector < MultidimArray<double> >  &features,
+    const MultidimArray<double> &priorProbs,
     int discreteLevels, int numberOfClassifiers, 
     double samplingFeatures, double samplingIndividuals,
     const std::string &newJudgeCombination)
@@ -378,25 +378,25 @@ EnsembleNaiveBayes::EnsembleNaiveBayes(
     for (int n=0; n<numberOfClassifiers; n++)
     {
         // Produce the set of features for this subclassifier
-        Matrix1D<int> subFeatures(NsubFeatures);
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(subFeatures)
+        MultidimArray<int> subFeatures(NsubFeatures);
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(subFeatures)
             subFeatures(i)=ROUND(rnd_unif(0,NFeatures-1));
 
         // Container for the new training sample
-        std::vector< Matrix2D<double> >  newFeatures;
+        std::vector< MultidimArray<double> >  newFeatures;
 
         // Produce the data set for each class
         for (int k=0; k<K; k++)
         {
             int NIndividuals=YSIZE(features[k]);
             int NsubIndividuals=CEIL(NIndividuals*samplingIndividuals);
-            Matrix1D<int> subIndividuals(NsubIndividuals);
-            FOR_ALL_ELEMENTS_IN_MATRIX1D(subIndividuals)
+            MultidimArray<int> subIndividuals(NsubIndividuals);
+            FOR_ALL_ELEMENTS_IN_ARRAY1D(subIndividuals)
                 subIndividuals(i)=ROUND(rnd_unif(0,NsubIndividuals-1));
 
-            Matrix2D<double> newFeaturesK;
+            MultidimArray<double> newFeaturesK;
             newFeaturesK.initZeros(NsubIndividuals,NsubFeatures);
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(newFeaturesK)
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(newFeaturesK)
                 newFeaturesK(i,j)=features[k](subIndividuals(i),subFeatures(j));
             
             newFeatures.push_back(newFeaturesK);
@@ -418,7 +418,7 @@ EnsembleNaiveBayes::~EnsembleNaiveBayes()
 }
 
 /* Set cost matrix --------------------------------------------------------- */
-void EnsembleNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
+void EnsembleNaiveBayes::setCostMatrix(const MultidimArray<double> &cost)
 {
     int nmax=ensemble.size();
     for (int n=0; n<nmax; n++)
@@ -426,23 +426,23 @@ void EnsembleNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 }
 
 /* Do inference ------------------------------------------------------------ */
-int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
-    double &cost, Matrix1D<int> &votes)
+int EnsembleNaiveBayes::doInference(const MultidimArray<double> &newFeatures,
+    double &cost, MultidimArray<int> &votes)
 {
 
     int nmax=ensemble.size();
-    Matrix1D<double> minCost, maxCost;
+    MultidimArray<double> minCost, maxCost;
     votes.initZeros(K);
     minCost.initZeros(K); minCost.initConstant(1);
     maxCost.initZeros(K); maxCost.initConstant(1);
     double bestMinCost=0;
     int bestClass;
-    Matrix1D<double> newFeaturesn;
+    MultidimArray<double> newFeaturesn;
     for (int n=0; n<nmax; n++)
     {
         double costn;
         newFeaturesn.initZeros(XSIZE(ensembleFeatures[n]));
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(newFeaturesn)
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(newFeaturesn)
             newFeaturesn(i)=newFeatures(ensembleFeatures[n](i));
         int k=ensemble[n]->doInference(newFeaturesn, costn);
         votes(k)++;
