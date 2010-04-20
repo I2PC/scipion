@@ -113,7 +113,7 @@ public:
     }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Add_noise_parameters *eprm = (Add_noise_parameters *) prm;
     if (eprm->gaussian)
@@ -123,38 +123,16 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     else if (eprm->uniform)
         img().addNoise(eprm->noise_min, eprm->noise_max, "uniform");
     if (eprm->do_limit0)
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(img())
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(img())
         {
-            dMij(img(),i,j) = XMIPP_MAX(dMij(img(),i,j),eprm->limit0);
+            dAkij(img(),k,i,j) = XMIPP_MAX(dAkij(img(),k,i,j),eprm->limit0);
         }
     if (eprm->do_limitF)
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(img())
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(img())
         {
-            dMij(img(),i,j) = XMIPP_MIN(dMij(img(),i,j),eprm->limitF);
+            dAkij(img(),k,i,j) = XMIPP_MIN(dAkij(img(),k,i,j),eprm->limitF);
         }
 
-    return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    Add_noise_parameters *eprm = (Add_noise_parameters *) prm;
-    if (eprm->gaussian)
-        vol().addNoise(eprm->noise_avg, eprm->noise_stddev, "gaussian");
-    else if (eprm->student)
-        vol().addNoise(eprm->noise_avg, eprm->noise_stddev, "student", eprm->df);
-    else if (eprm->uniform)
-        vol().addNoise(eprm->noise_min, eprm->noise_max, "uniform");
-    if (eprm->do_limit0)
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(vol())
-        {
-            dVkij(vol(),k,i,j) = XMIPP_MAX(dVkij(vol(),k,i,j),eprm->limit0);
-        }
-    if (eprm->do_limitF)
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(vol())
-        {
-            dVkij(vol(),k,i,j) = XMIPP_MIN(dVkij(vol(),k,i,j),eprm->limitF);
-        }
     return true;
 }
 
@@ -162,36 +140,6 @@ int main(int argc, char **argv)
 {
     Add_noise_parameters prm;
     randomize_random_generator();
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
 
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Add_noise {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Add_noise/Help/add_noise.html";
-      help="Add noise to volumes and images";
-      OPEN MENU menu_add_noise;
-      COMMAND LINES {
- + usual: xmipp_add_noise
-               #include "prog_line.mnu"
-               [-gaussian $STDDEV [$AVG]]
-               [-uniform  $MIN $MAX]
-      }
-      PARAMETER DEFINITIONS {
-        #include "prog_vars.mnu"
-        OPT(-gaussian) {label="Add gaussian noise";}
-           $STDDEV {label="Standard deviation"; type=float;}
-           $AVG    {label="Average";            type=float;}
-        OPT(-uniform) {label="Add uniform noise";}
-           $MIN    {label="Minimum value";      type=float;}
-           $MAX    {label="Maximum value";      type=float;}
-      }
-   }
-
-   MENU menu_add_noise {
-      #include "prog_menu.mnu"
-      "Noise parameters"
-      OPT(-gaussian)
-      OPT(-uniform)
-   }
-*/
