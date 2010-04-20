@@ -25,25 +25,18 @@
 
 #include <data/normalize.h>
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Normalize_parameters * eprm = (Normalize_parameters *) prm;
+    std::cerr << "operation_mode= "<<prm->operation_mode <<std::endl;
+
     if (eprm->apply_geo) eprm->apply_geo_mask(img);
     eprm->apply(img);
-    return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    Normalize_parameters * eprm = (Normalize_parameters *) prm;
-    if (eprm->invert_contrast)
-        vol() *= -1.;
-    vol().statisticsAdjust(0, 1);
     return true;
 }
 
 int main(int argc, char **argv)
 {
     Normalize_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
