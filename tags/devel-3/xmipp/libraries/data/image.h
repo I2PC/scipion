@@ -291,17 +291,17 @@ public:
      /** Is this file an image
       *
       *  Check whether a real-space image can be read
-      *  
+      *
       */
      bool isImage(const FileName name)
      {
-         return !read(name, false);
+    	 return !read(name, false);
      }
 
      /** Is this file a real-valued image
       *
       *  Check whether a real-space image can be read
-      *  
+      *
       */
      bool isRealImage(const FileName name)
      {
@@ -311,7 +311,7 @@ public:
      /** Is this file a complex image
       *
       *  Check whether a fourier-space (complex) image can be read
-      *  
+      *
       */
      bool isComplexImage(const FileName name)
      {
@@ -813,7 +813,7 @@ public:
      * std::cout << "First Euler angle " << I.rot() << std::endl;
      * @endcode
      */
-    float rot(unsigned long n = 0) const
+    double rot(unsigned long n = 0) const
     {
         return (image[n]).angleRot;
     }
@@ -824,7 +824,7 @@ public:
      * std::cout << "Second Euler angle " << I.tilt() << std::endl;
      * @endcode
      */
-    float tilt(unsigned long n = 0) const
+    double tilt(unsigned long n = 0) const
     {
         return (image[n]).angleTilt;
     }
@@ -835,7 +835,7 @@ public:
      * std::cout << "Third Euler angle " << I.psi() << std::endl;
      * @endcode
      */
-    float psi(unsigned long n = 0) const
+    double psi(unsigned long n = 0) const
     {
         return (image[n]).anglePsi;
     }
@@ -846,7 +846,7 @@ public:
      * std::cout << "Origin offset in X " << I.Xoff() << std::endl;
      * @endcode
      */
-    float Xoff(unsigned long n = 0) const
+    double Xoff(unsigned long n = 0) const
     {
         return (image[n]).shiftX;
     }
@@ -857,7 +857,7 @@ public:
      * std::cout << "Origin offset in Y " << I.Yoff() << std::endl;
      * @endcode
      */
-    float Yoff(unsigned long n = 0) const
+    double Yoff(unsigned long n = 0) const
     {
         return (image[n]).shiftY;
     }
@@ -868,10 +868,32 @@ public:
      * std::cout << "Origin offset in Z " << I.Zoff() << std::endl;
      * @endcode
      */
-    float Zoff(unsigned long n = 0) const
+    double Zoff(unsigned long n = 0) const
     {
         return (image[n]).shiftZ;
     }
+
+    /** Get Weight
+    *
+    * @code
+    * std::cout << "weight= " << I.weight() << std::endl;
+    * @endcode
+    */
+   double weight(unsigned long n = 0) const
+   {
+       return (image[n]).weight;
+   }
+
+   /** Get Flip
+   *
+   * @code
+   * std::cout << "flip= " << flip() << std::endl;
+   * @endcode
+   */
+   bool flip(unsigned long n = 0) const
+   {
+	   return (image[n]).flip;
+   }
 
     /** Set file name
      *
@@ -974,8 +996,44 @@ public:
         return A;
     }
     
+    friend std::ostream& operator<<(std::ostream& o, const Image<T>& I)
+    {
+    	o << "Image type   : ";
+    	if (I.isComplex())
+    		o << "Fourier-space image" << std::endl;
+    	else
+    		o << "Real-space image" << std::endl;
+
+    	o << "Reversed     : ";
+    	if (I.swap)
+    		o << "TRUE"  << std::endl;
+    	else
+    		o << "FALSE" << std::endl;
+
+    	o << "dimensions   : " << ZSIZE(I()) << " x " << YSIZE(I()) << " x " << XSIZE(I());
+    	o << "  (slices x rows x columns)" << std::endl;
+    	o << "Euler angles : " << std::endl;
+    	o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
+    	o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
+    	o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
+    	o << "Origin Offsets : " << std::endl;
+    	o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
+    	o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
+    	o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
+    	o << "Header size  : " << I.offset << std::endl;
+    	o << "Weight  : " << I.weight() << std::endl;
+    	o << "Flip    : " << I.flip() << std::endl;
+    	 return o;
+      }
 
 };
+
+/** Is this file an image
+ *
+ *  Check whether a real-space image can be read
+ *
+ */
+bool isImage(const FileName name);
 
 // Special case for complex numbers
 template<>

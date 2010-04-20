@@ -105,3 +105,9 @@ unsigned long  gettypesize(DataType type)
     return(size);
 }
 
+//Check whether this file is a readable image
+bool isImage(const FileName name)
+{
+    Image<int> tmp;
+    return tmp.isImage(name);
+}

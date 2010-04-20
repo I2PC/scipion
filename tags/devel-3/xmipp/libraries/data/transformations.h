@@ -833,12 +833,13 @@ void translate(int SplineDegree,
                bool wrap = WRAP, T outside = 0, unsigned long n = 0)
 {
     Matrix2D< double > tmp;
-    if (V2.getDim()==2)
+    if (V1.getDim()==2)
         tmp = translation2DMatrix(v);
-    else if (V2.getDim()==3)
+    else if (V1.getDim()==3)
         tmp = translation3DMatrix(v);
     else
         REPORT_ERROR(1,"translate ERROR: translate only valid for 2D or 3D arrays");
+
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
 }
 
@@ -1091,7 +1092,7 @@ void expandBSpline3D(int SplineDegree,
  */
 template<typename T>
 void radialAverage(const MultidimArray< T >& m,
-                   const Matrix1D< int >& center_of_rot,
+                   Matrix1D< int >& center_of_rot,
                    MultidimArray< T >& radial_mean,
                    MultidimArray< int >& radial_count,
                    const bool& rounding = false,

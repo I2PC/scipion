@@ -971,6 +971,48 @@ public:
         return temp;
     }
 
+    /** Index for the maximum element.
+     * @ingroup Statistics
+     *
+     * This function returns the index of the maximum element of an matrix1d.
+     * Returns -1 if the array is empty
+     */
+    void maxIndex(int& jmax) const
+    {
+        if (vdim == 0)
+        {
+            jmax = -1;
+            return;
+        }
+
+        jmax = 0;
+        T maxval = (*this)(0);
+        for (int j = 0; j < vdim; j++)
+       	 if ( (*this)(j) > maxval )
+       		 jmax =j;
+    }
+
+    /** Index for the minimum element.
+     * @ingroup Statistics
+     *
+     * This function returns the index of the minimum element of an matrix1d.
+     * Returns -1 if the array is empty
+     */
+    void minIndex(int& jmin) const
+    {
+        if (vdim == 0)
+        {
+            jmin = -1;
+            return;
+        }
+
+        jmin = 0;
+        T minval = (*this)(0);
+        for (int j = 0; j < vdim; j++)
+       	 if ( (*this)(j) < minval )
+       		 jmin =j;
+    }
+
     /** Algebraic transpose of vector
      * @ingroup VectorsUtilities
      *
@@ -1007,14 +1049,17 @@ public:
      * double sum = m.sum();
      * @endcode
      */
-    double sum() const
+    double sum(bool average=false) const
     {
         double sum = 0;
 		for (int j = 0; j < vdim; j++)
 		{
 			sum += vdata[j];
 		}
-		return sum;
+		if (average)
+			return sum/(double)vdim;
+		else
+			return sum;
     }
 
    /** Sum of squared vector values.
@@ -1389,7 +1434,7 @@ public:
      }
  }
 
- /** Conversion from one type to another.
+/** Conversion from one type to another.
   * @ingroup MultidimFunctions
   *
   * If we have an integer array and we need a double one, we can use this

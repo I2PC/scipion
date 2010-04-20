@@ -1631,6 +1631,63 @@ public:
             DIRECT_NZYX_ELEM(*this, n, k, i, j) = DIRECT_A2D_ELEM(v, i, j);
     }
 
+    /** Get Column
+     * @ingroup MultidimMemory
+     *
+     * This function returns a column vector corresponding to the
+     * choosen column.
+     *
+     * @code
+     * std::vector< double > v;
+     * m.getCol(-1, v);
+     * @endcode
+     */
+    void getCol(int j, MultidimArray<T>& v) const
+    {
+        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
+        {
+            v.clear();
+            return;
+        }
+
+        if (j < 0 || j >= XSIZE(*this))
+            REPORT_ERROR(1103,"getCol: Matrix subscript (j) greater than matrix dimension");
+
+        v.resize(YSIZE(*this));
+        for (int i = 0; i < YSIZE(*this); i++)
+            v(i) = (*this)(i, j);
+
+    }
+
+    /** Get row
+     * @ingroup MultidimMemory
+     *
+     * This function returns a row vector corresponding to the choosen
+     * row inside the nth 2D matrix, the numbering of the rows is also
+     * logical not physical.
+     *
+     * @code
+     * std::vector< double > v;
+     * m.getRow(-2, v);
+     * @endcode
+     */
+    void getRow(int i, MultidimArray<T>& v) const
+    {
+        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
+        {
+            v.clear();
+            return;
+        }
+
+        if (i < 0 || i >= YSIZE(*this))
+            REPORT_ERROR(1103, "getRow: Matrix subscript (i) greater than matrix dimension");
+
+        v.resize(XSIZE(*this));
+        for (int j = 0; j < XSIZE(*this); j++)
+            v(j) = (*this)(i, j);
+
+    }
+
     /** 3D Logical to physical index translation.
      * @ingroup MultidimArrayMemory
      *
@@ -2138,7 +2195,41 @@ public:
         xinit = FIRST_XMIPP_INDEX(xdim);
     }
 
-    /** Returns the first valid logical Z index.
+
+    /** Move origin to.
+      * @ingroup MultidimSize
+      *
+      * This function adjust logical indexes such that the Xmipp origin of the
+      * array moves to the specified position. For instance, an array whose x
+      * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
+      * go from 3 to 5. This is very useful for convolution operations where you
+      * only need to move the logical starting of the array.
+      *
+      */
+     void moveOriginTo(int k, int i, int j)
+     {
+         zinit = k + FIRST_XMIPP_INDEX(zdim);
+         yinit = i + FIRST_XMIPP_INDEX(ydim);
+         xinit = j + FIRST_XMIPP_INDEX(xdim);
+     }
+
+     /** Move origin to.
+       * @ingroup MultidimSize
+       *
+       * This function adjust logical indexes such that the Xmipp origin of the
+       * array moves to the specified position. For instance, an array whose x
+       * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
+       * go from 3 to 5. This is very useful for convolution operations where you
+       * only need to move the logical starting of the array.
+       *
+       */
+      void moveOriginTo(int i, int j)
+      {
+          yinit = i + FIRST_XMIPP_INDEX(ydim);
+          xinit = j + FIRST_XMIPP_INDEX(xdim);
+      }
+
+   /** Returns the first valid logical Z index.
      * @ingroup MultidimSize
      */
     int startingZ() const
