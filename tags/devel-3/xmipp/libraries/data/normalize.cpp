@@ -130,7 +130,9 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     #ifdef DEBUG
         Image<double> save;
         save()=I; save.write("PPP.xmp");
-        typeCast(mask,save()); save.write("PPPmask.xmp");
+        Image<int> savemask;
+        savemask()=mask;
+        savemask.write("PPPmask.xmp");
         std::cout << "Press any key\n";
         char c; std::cin >> c;
     #endif
@@ -452,7 +454,15 @@ void Normalize_parameters::produce_side_info()
         bg_mask_bck = bg_mask;
     }
         
-    // Get the parameters from the 0 degrees 
+//#define DEBUG
+#ifdef DEBUG
+		Image<int> tt;
+		tt()=bg_mask;
+		tt.write("PPPmask.xmp");
+		std::cerr<<"DEBUG info: written PPPmask.xmp"<<std::endl;
+#endif
+
+	// Get the parameters from the 0 degrees
     if (method==TOMOGRAPHY0)
     {
         // Look for the image at 0 degrees

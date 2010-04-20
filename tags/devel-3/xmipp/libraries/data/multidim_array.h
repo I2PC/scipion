@@ -782,7 +782,7 @@ public:
         destroyData=true;
     }
 
-    /** Core allocate.
+    /** Core allocate with dimensions.
      * @ingroup MultidimArrayCore
      */
     void coreAllocate(unsigned long int _ndim, int _zdim, int _ydim, int _xdim)
@@ -805,6 +805,97 @@ public:
         if (data == NULL)
             REPORT_ERROR(1001, "Allocate: No space left");
     }
+
+    /** Core allocate without dimensions.
+     * @ingroup MultidimArrayCore
+     *
+     * It is supposed the dimensions are set previously with setXdim(x), setYdim(y)
+     * setZdim(z), setNdim(n) or with setDimensions(Xdim, Ydim, Zdim, Ndim);
+     *
+     */
+    void coreAllocate()
+    {
+        if (ndim <= 0 || zdim <= 0 || ydim <=0 || xdim <=0)
+        {
+            clear();
+            return;
+        }
+
+        data = new T [nzyxdim];
+        if (data == NULL)
+            REPORT_ERROR(1001, "Allocate: No space left");
+    }
+
+    /** Sets new 4D dimensions.
+     * @ingroup MultidimArraySize
+     *
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     *
+     */
+    void setDimensions(int Xdim, int Ydim, int Zdim, unsigned long int Ndim)
+    {
+        ndim=Ndim;
+        zdim=Zdim;
+        ydim=Ydim;
+        xdim=Xdim;
+        yxdim=ydim*xdim;
+        zyxdim=zdim*yxdim;
+        nzyxdim=ndim*zyxdim;
+    }
+
+    /** Sets new N dimension.
+     * @ingroup MultidimArraySize
+     *
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     *
+     */
+    void setNdim(int Ndim)
+    {
+        ndim = Ndim;
+        nzyxdim=ndim*zyxdim;
+    }
+
+    /** Sets new Z dimension.
+     * @ingroup MultidimArraySize
+     *
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     *
+     */
+    void setZdim(int Zdim)
+    {
+        zdim = Zdim;
+        zyxdim=zdim*yxdim;
+        nzyxdim=ndim*zyxdim;
+    }
+
+    /** Sets new Y dimension.
+     * @ingroup MultidimArraySize
+     *
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     *
+     */
+    void setYdim(int Ydim)
+    {
+        ydim = Ydim;
+        yxdim=ydim*xdim;
+        zyxdim=zdim*yxdim;
+        nzyxdim=ndim*zyxdim;
+    }
+
+    /** Sets new X dimension.
+      * @ingroup MultidimArraySize
+      *
+      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+      *
+      */
+     void setXdim(int Xdim)
+     {
+         xdim = Xdim;
+         yxdim=ydim*xdim;
+         zyxdim=zdim*yxdim;
+         nzyxdim=ndim*zyxdim;
+     }
+
 
     /** Core deallocate.
      * @ingroup MultidimArrayCore
@@ -993,18 +1084,28 @@ public:
     /** Returns the multidimArray N,Z, Y and X dimensions.
      * @ingroup MultidimSize
      *
-     * Pay attention to the dimension order (N,Z,Y,X).
-     *
      * @code
-     * V.getDimension(Ndim, Zdim, Ydim, Xdim);
+     * V.getDimensions(Xdim, Ydim, Zdim, Ndim);
      * @endcode
      */
-    void getDimension(unsigned long int &Ndim, int& Zdim, int& Ydim, int& Xdim) const
+    void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const
     {
         Xdim = XSIZE(*this);
         Ydim = YSIZE(*this);
         Zdim = ZSIZE(*this);
         Ndim = NSIZE(*this);
+    }
+
+    /** Returns the total size of the multidimArray
+     * @ingroup MultidimSize
+     *
+     * @code
+     * if (V.getSize() > 1) ...
+     * @endcode
+     */
+    unsigned long int getSize() const
+    {
+        return NZYXSIZE(*this);
     }
 
     /** Returns the multidimArray dimension.
@@ -2083,14 +2184,6 @@ public:
     int finishingX() const
     {
         return xinit + xdim - 1;
-    }
-
-    /** Returns Z dimension.
-     * @ingroup MultidimArraySize
-     */
-    int sliceNumber() const
-    {
-        return zdim;
     }
 
     /** Produce a 3D array suitable for working with Numerical Recipes.

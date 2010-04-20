@@ -80,11 +80,10 @@ void Prog_parameters::usage()
 void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
 {
     Image<double> I;
+    int dum;
     if (I.isImage(fn_in))
     {
-        Zdim = ZSIZE(I());
-        Ydim = YSIZE(I());
-        Xdim = XSIZE(I());
+        I.getDimensions(Xdim, Ydim, Zdim,dum);
     }
     else
     {

@@ -286,9 +286,9 @@ double correlation(const MultidimArray< T >& x,
     int Rows, Cols, Slices; // of the volumes
 
     // do the computation
-    Cols = x.colNumber();
-    Rows = x.rowNumber();
-    Slices = x.sliceNumber();
+    Cols = XSIZE(x);
+    Rows = YSIZE(x);
+    Slices = ZSIZE(x);
 
     long N = 0;
     for (k = 0; k < Slices; k++)
