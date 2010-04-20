@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     int c, nn, imgno, opt_refno;
     bool converged;
     double aux;
-    Matrix2D<double> Maux;
+    MultidimArray<double> Maux;
     FileName fn_img, fn_tmp;
 
     Prog_MLalign2D_prm prm;
