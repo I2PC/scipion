@@ -30,7 +30,7 @@
 #define _XMIPP_CRISP_HH
 
 #include <data/funcs.h>
-#include <data/volume.h>
+#include <data/image.h>
 
 /**@defgroup Crisp Crisp
    @ingroup InterfaceLibrary */
@@ -71,7 +71,7 @@ public:
     /// Filename
     FileName name;
     /// Volume
-    Volume V;
+    Image<double> V;
 
 public:
     /// Read from file

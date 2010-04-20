@@ -69,7 +69,7 @@ void CrispVolume::read(const FileName &fn)
             {
                 short tmp;
                 FREAD(&tmp, sizeof(short), 1, fp, true);
-                DIRECT_VOLVOXEL(V, z, y, x) = tmp;
+                DIRECT_A3D_ELEM(V(), z, y, x) = tmp;
             }
 
     // Close file
@@ -96,7 +96,7 @@ std::ostream & operator << (std::ostream &out, const CrispVolume &cv)
 
 void CrispVolume::write_as_spider(const FileName &fn)
 {
-    VolumeXmipp aux;
+    Image<double> aux;
     aux = V;
     aux.write(fn);
 }

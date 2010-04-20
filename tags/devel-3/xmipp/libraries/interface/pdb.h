@@ -132,20 +132,20 @@ public:
     See Peng, Ren, Dudarev, Whelan. Robust parameterization of elastic and
     absorptive electron atomic scattering factors. Acta Cryst. A52: 257-276
     (1996). Table 3 and equation 3.*/
-void atomDescriptors(const std::string &atom, Matrix1D<double> &descriptors);
+void atomDescriptors(const std::string &atom, MultidimArray<double> &descriptors);
 
 /** Compute the electron Form Factor in Fourier space.
     The electron scattering factor at a frequency f (Angstroms^-1)
     is computed as f_el(f)=sum_i(ai exp(-bi*x^2)). */
 double electronFormFactorFourier(double f,
-    const Matrix1D<double> &descriptors);
+    const MultidimArray<double> &descriptors);
 
 /** Compute the electron Form Factor in Real space.
     Konwing the electron form factor in Fourier space is easy to make an
     inverse Fourier transform and express it in real space. r is the
     distance to the center of the atom in Angstroms. */
 double electronFormFactorRealSpace(double r,
-    const Matrix1D<double> &descriptors);
+    const MultidimArray<double> &descriptors);
 
 /** Atom radial profile.
     Returns the radial profile of a given atom, i.e., the electron scattering
@@ -153,23 +153,23 @@ double electronFormFactorRealSpace(double r,
     at a sampling rate M*T. The radial profile is sampled at T Angstroms/pixel.
 */
 void atomRadialProfile(int M, double T, const std::string &atom,
-    Matrix1D<double> &profile);
+    MultidimArray<double> &profile);
 
 /** Atom projection radial profile.
     Returns the radial profile of the atom described by its profileCoefficients
     (Bspline coefficients). */
 void atomProjectionRadialProfile(int M,
-    const Matrix1D<double> &profileCoefficients,
-    Matrix1D<double> &projectionProfile);
+    const MultidimArray<double> &profileCoefficients,
+    MultidimArray<double> &projectionProfile);
 
 /** Class for Atom interpolations. */
 class AtomInterpolator
 {
 public:
     // Vector of radial volume profiles
-    std::vector< Matrix1D<double> > volumeProfileCoefficients;
+    std::vector< MultidimArray<double> > volumeProfileCoefficients;
     // Vector of radial projection profiles
-    std::vector< Matrix1D<double> > projectionProfileCoefficients;
+    std::vector< MultidimArray<double> > projectionProfileCoefficients;
     // Vector of atom radii
     std::vector<double> radii;
     // Downsampling factor
@@ -217,7 +217,7 @@ public:
     	int idx=getAtomIndex(atom);
 	if (r>radii[idx]) return 0;
 	else return volumeProfileCoefficients[idx].
-	    	       interpolatedElementBSpline(r*M,3);
+	    	       interpolatedElementBSpline1D(r*M,3);
     }
 
     /** Projection value at a distance r of the atom whose first letter
@@ -227,7 +227,7 @@ public:
     	int idx=getAtomIndex(atom);
 	if (r>radii[idx]) return 0;
 	else return projectionProfileCoefficients[idx].
-	    	       interpolatedElementBSpline(r*M,3);
+	    	       interpolatedElementBSpline1D(r*M,3);
     }
 };
 

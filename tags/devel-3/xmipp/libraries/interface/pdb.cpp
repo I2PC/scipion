@@ -30,6 +30,7 @@
 #include <data/mask.h>
 #include <data/fftw.h>
 #include <data/integration.h>
+#include <data/numerical_tools.h>
 
 /* Atom charge ------------------------------------------------------------- */
 int atomCharge(const std::string &atom)
@@ -292,7 +293,7 @@ void PDBPhantom::shift(double x, double y, double z) {
 }
 
 /* Atom descriptors -------------------------------------------------------- */
-void atomDescriptors(const std::string &atom, Matrix1D<double> &descriptors)
+void atomDescriptors(const std::string &atom, MultidimArray<double> &descriptors)
 {
     descriptors.initZeros(11);
     if (atom=="H") {
@@ -384,7 +385,7 @@ void atomDescriptors(const std::string &atom, Matrix1D<double> &descriptors)
 }
 
 /* Electron form factor in Fourier ----------------------------------------- */
-double electronFormFactorFourier(double f, const Matrix1D<double> &descriptors)
+double electronFormFactorFourier(double f, const MultidimArray<double> &descriptors)
 {
     double retval=0;
     for (int i=1; i<=5; i++) {
@@ -413,7 +414,7 @@ double electronFormFactorFourier(double f, const Matrix1D<double> &descriptors)
    transformation.
 */ 
 double electronFormFactorRealSpace(double r,
-    const Matrix1D<double> &descriptors)
+    const MultidimArray<double> &descriptors)
 {
     double retval=0;
     for (int i=1; i<=5; i++) {
@@ -428,8 +429,8 @@ double electronFormFactorRealSpace(double r,
 
 /* Computation of the low pass filter -------------------------------------- */
 // Returns the impulse response of the lowpass filter
-void hlpf(Matrix1D<double> &f, int M, double T, const std::string &filterType,
-   Matrix1D<double> &filter, double reductionFactor=0.8,
+void hlpf(MultidimArray<double> &f, int M, double T, const std::string &filterType,
+   MultidimArray<double> &filter, double reductionFactor=0.8,
    double ripple=0.01, double deltaw=1.0/8.0)
 {
    filter.initZeros(XSIZE(f));
@@ -437,7 +438,7 @@ void hlpf(Matrix1D<double> &f, int M, double T, const std::string &filterType,
    
    int Nmax=(int)CEIL(M/2.0);
    if (filterType=="SimpleAveraging") {
-      FOR_ALL_ELEMENTS_IN_MATRIX1D(filter)
+      FOR_ALL_ELEMENTS_IN_ARRAY1D(filter)
         if (ABS(i)<=Nmax) filter(i)=1.0/(2*Nmax+1);
    } else if (filterType=="SincKaiser") {
       SincKaiserMask(filter,reductionFactor*PI/M,ripple,deltaw);
@@ -450,26 +451,26 @@ void hlpf(Matrix1D<double> &f, int M, double T, const std::string &filterType,
 }
 
 /* Convolution between f and the hlpf -------------------------------------- */
-void fhlpf(const Matrix1D<double> &f, const Matrix1D<double> &filter,
-   int M, Matrix1D<double> &convolution)
+void fhlpf(const MultidimArray<double> &f, const MultidimArray<double> &filter,
+   int M, MultidimArray<double> &convolution)
 {
    // Expand the two input signals
    int Nmax=FINISHINGX(filter);
-   Matrix1D<double> auxF, auxFilter;
+   MultidimArray<double> auxF, auxFilter;
    auxF=f;
    auxFilter=filter;
    auxF.window(STARTINGX(f)-Nmax,FINISHINGX(f)+Nmax);
    auxFilter.window(STARTINGX(filter)-Nmax,FINISHINGX(filter)+Nmax);
    
    // Convolve in Fourier
-   Matrix1D< std::complex<double> > F, Filter;
+   MultidimArray< std::complex<double> > F, Filter;
    FourierTransform(auxF,F);
    FourierTransform(auxFilter,Filter);
    F*=Filter;
    
    // Correction for the double phase factor and the double
    // amplitude factor
-   FOR_ALL_ELEMENTS_IN_MATRIX1D(F) {
+   FOR_ALL_ELEMENTS_IN_ARRAY1D(F) {
       double w; FFT_IDX2DIGFREQ(i,XSIZE(F),w);
       w*=2*PI;
       F(i)*=std::complex<double>(cos(w*(STARTINGX(auxFilter)-1)),
@@ -482,7 +483,7 @@ void fhlpf(const Matrix1D<double> &f, const Matrix1D<double> &filter,
 
 /* Optimization of the low pass filter to fit a given atom ----------------- */
 Matrix1D<double> globalHlpfPrm(3);
-Matrix1D<double> globalf;
+MultidimArray<double> globalf;
 int globalM;
 double globalT;
 std::string globalAtom;
@@ -498,39 +499,38 @@ double Hlpf_fitness(double *p, void *prm)
     if (deltaw<0 || deltaw>0.2) return 1e38;
     
     // Construct the filter with the current parameters
-    Matrix1D<double> filter, auxf;
+    MultidimArray<double> filter, auxf;
     auxf=globalf;
     hlpf(auxf, globalM, globalT, "SincKaiser", filter, reductionFactor,
        ripple, deltaw);
     
     // Convolve the filter with the atomic profile
-    Matrix1D<double> fhlpfFinelySampled;
+    MultidimArray<double> fhlpfFinelySampled;
     fhlpf(auxf, filter, globalM, fhlpfFinelySampled);
 
     // Coarsely sample
     double Rmax=FINISHINGX(fhlpfFinelySampled)*globalT;
     int imax=CEIL(Rmax/(globalM*globalT));
-    Matrix1D<double> fhlpfCoarselySampled(2*imax+1);
-    Matrix1D<double> splineCoeffsfhlpfFinelySampled;
-    fhlpfFinelySampled.produceSplineCoefficients(
-       splineCoeffsfhlpfFinelySampled,3);
+    MultidimArray<double> fhlpfCoarselySampled(2*imax+1);
+    MultidimArray<double> splineCoeffsfhlpfFinelySampled;
+    produceSplineCoefficients(3, splineCoeffsfhlpfFinelySampled, fhlpfFinelySampled);
     fhlpfCoarselySampled.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(fhlpfCoarselySampled) {
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(fhlpfCoarselySampled) {
        double r=i*(globalM*globalT)/globalT;
        fhlpfCoarselySampled(i)=
-          splineCoeffsfhlpfFinelySampled.interpolatedElementBSpline(r,3);
+          splineCoeffsfhlpfFinelySampled.interpolatedElementBSpline1D(r,3);
     }
 
     // Build the frequency response of the convolved and coarsely sampled
     // atom
-    Matrix1D<double> aux, FfilterMag, freq;
-    Matrix1D< std::complex<double> > Ffilter;
+    MultidimArray<double> aux, FfilterMag, freq;
+    MultidimArray< std::complex<double> > Ffilter;
     aux=fhlpfCoarselySampled;
     aux.window(-10*FINISHINGX(aux),10*FINISHINGX(aux));
     FourierTransform(aux,Ffilter);
     FFT_magnitude(Ffilter,FfilterMag);
     freq.initZeros(XSIZE(Ffilter));
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(FfilterMag)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(FfilterMag)
        FFT_IDX2DIGFREQ(i,XSIZE(FfilterMag),freq(i));
     freq/=globalM*globalT;
     double amplitudeFactor=fhlpfFinelySampled.sum()/
@@ -538,8 +538,8 @@ double Hlpf_fitness(double *p, void *prm)
 
     // Compute the error in representation
     double error=0;
-    Matrix1D<double> descriptors; atomDescriptors(globalAtom, descriptors);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(FfilterMag)
+    MultidimArray<double> descriptors; atomDescriptors(globalAtom, descriptors);
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(FfilterMag)
         if (freq(i)>=0) {
             double f1=20*log10(FfilterMag(i)*XSIZE(FfilterMag)*amplitudeFactor);
 	    double f2=20*log10(1/globalT*
@@ -563,8 +563,8 @@ double Hlpf_fitness(double *p, void *prm)
     of the cutoff frequency, bestPrm(1)=ripple of the Kaiser window,
     bestPrm(2)=deltaw of the Kaiser window.
 */
-void optimizeHlpf(Matrix1D<double> &f, int M, double T, const std::string &atom,
-    Matrix1D<double> &filter, Matrix1D<double> &bestPrm)
+void optimizeHlpf(MultidimArray<double> &f, int M, double T, const std::string &atom,
+    MultidimArray<double> &filter, Matrix1D<double> &bestPrm)
 {
     globalHlpfPrm(0)=1.0;     // reduction factor
     globalHlpfPrm(1)=0.01;    // ripple
@@ -584,14 +584,14 @@ void optimizeHlpf(Matrix1D<double> &f, int M, double T, const std::string &atom,
 
 /* Atom radial profile ----------------------------------------------------- */
 void atomRadialProfile(int M, double T, const std::string &atom,
-    Matrix1D<double> &profile)
+    MultidimArray<double> &profile)
 {
     // Compute the electron form factor in real space
     double largestb1=76.7309/(4*PI*PI);
     double Rmax=4*sqrt(2*largestb1);
     int imax=(int)CEIL(Rmax/T);
-    Matrix1D<double> descriptors;  atomDescriptors(atom, descriptors);
-    Matrix1D<double> f(2*imax+1);
+    MultidimArray<double> descriptors;  atomDescriptors(atom, descriptors);
+    MultidimArray<double> f(2*imax+1);
     f.setXmippOrigin();
     for (int i=-imax; i<=imax; i++) {
 	double r=i*T;
@@ -599,7 +599,8 @@ void atomRadialProfile(int M, double T, const std::string &atom,
     }
 
     // Compute the optimal filter
-    Matrix1D<double> filter, bestPrm;
+    MultidimArray<double> filter;
+    Matrix1D<double> bestPrm;
     optimizeHlpf(f, M, T, atom, filter, bestPrm);
     
     // Perform the convolution
@@ -625,19 +626,19 @@ class AtomValueFunc: public doubleFunction
 public:
     int M;
     double r0_2, z;
-    const Matrix1D<double> *profileCoefficients;
+    const MultidimArray<double> *profileCoefficients;
     virtual double operator()()
     {
     	double r=M*sqrt(r0_2+z*z);
 	if (ABS(r)>FINISHINGX(*profileCoefficients)) return 0;
-    	return profileCoefficients->interpolatedElementBSpline(r,3);
+    	return profileCoefficients->interpolatedElementBSpline1D(r,3);
     }
 };
 
 #define INTEGRATION 2
 void atomProjectionRadialProfile(int M, 
-    const Matrix1D<double> &profileCoefficients,
-    Matrix1D<double> &projectionProfile)
+    const MultidimArray<double> &profileCoefficients,
+    MultidimArray<double> &projectionProfile)
 {
     AtomValueFunc atomValue;
     atomValue.profileCoefficients=&profileCoefficients;
@@ -646,7 +647,7 @@ void atomProjectionRadialProfile(int M,
     double r2=radius*radius;
     
     projectionProfile.initZeros(profileCoefficients);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(projectionProfile)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(projectionProfile)
     {
     	double r0=(double)i/M;
 	atomValue.r0_2=r0*r0;
@@ -684,12 +685,12 @@ void AtomInterpolator::setup(int m, double hights, bool computeProjection)
 
 void AtomInterpolator::addAtom(const std::string &atom, bool computeProjection)
 {
-    Matrix1D<double> profile;
-    Matrix1D<double> splineCoeffs;
+    MultidimArray<double> profile;
+    MultidimArray<double> splineCoeffs;
     
     // Atomic profile
     atomRadialProfile(M, highTs, atom, profile);
-    profile.produceSplineCoefficients(splineCoeffs,3);
+    produceSplineCoefficients(3, splineCoeffs, profile);
     volumeProfileCoefficients.push_back(splineCoeffs);
     
     // Radius
@@ -698,9 +699,9 @@ void AtomInterpolator::addAtom(const std::string &atom, bool computeProjection)
     // Projection profile
     if (computeProjection)
     {
-	atomProjectionRadialProfile(M, splineCoeffs, profile);
-	profile.produceSplineCoefficients(splineCoeffs,3);
-	projectionProfileCoefficients.push_back(splineCoeffs);
+    	atomProjectionRadialProfile(M, splineCoeffs, profile);
+    	produceSplineCoefficients(3, splineCoeffs, profile);
+    	projectionProfileCoefficients.push_back(splineCoeffs);
     }
 }
 
@@ -856,7 +857,8 @@ void projectPDB(const PDBPhantom &phantomPDB,
     int Ydim, int Xdim, double rot, double tilt, double psi)
 {
     // Initialise projection
-    proj.adapt_to_size(Ydim, Xdim);
+    proj().initZeros(Ydim, Xdim);
+    proj().setXmippOrigin();
     proj.set_angles(rot, tilt, psi);
 
     // Compute volume to Projection matrix

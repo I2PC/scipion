@@ -34,8 +34,8 @@
 #include <data/volume.h>
 
 /* Derivative -------------------------------------------------------------- */
-void compute_derivative(const Matrix3D<double> &in_vol,
-                        Matrix3D<double> &out_vol, char *type,
+void compute_derivative(const MultidimArray<double> &in_vol,
+                        MultidimArray<double> &out_vol, char *type,
                         double sigma)
 {
     // Prepare some variables
@@ -70,7 +70,7 @@ void compute_derivative(const Matrix3D<double> &in_vol,
     SET_DERIVATIVE_TYPE_FOR('Z', 2);
 
     // Compute derivative
-    Matrix3D<float> aux;
+    MultidimArray<float> aux;
     typeCast(in_vol, aux);
     // This auxiliar volume is used due to the fact that INRIA library
     // seems to have a problem with input double volumes
@@ -81,8 +81,8 @@ void compute_derivative(const Matrix3D<double> &in_vol,
 }
 
 /* Gradient ---------------------------------------------------------------- */
-void compute_gradient(const Matrix3D<double> &in_vol,
-                      Vectorial_Matrix3D &out_vol, double sigma)
+void compute_gradient(const MultidimArray<double> &in_vol,
+                      Vectorial_MultidimArray &out_vol, double sigma)
 {
     out_vol.resize(in_vol);
     compute_derivative(in_vol, out_vol.X(), "X", sigma);
