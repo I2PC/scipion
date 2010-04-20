@@ -25,6 +25,7 @@
 
 #include <data/args.h>
 #include <data/selfile.h>
+#include <data/transformations.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -38,7 +39,7 @@ int main(int argc, char **argv)
     float tmpR;
     char *fname, *iname, *bmname;
     std::string selname;
-    ImageXmipp mask;
+    Image<int> mask;
     std::vector < std::vector <float> > dataPoints;
     std::vector < std::string > labels;
     bool nomask = false;
@@ -92,7 +93,7 @@ int main(int argc, char **argv)
             mask.read(bmname);        // Reads the mask
             //Adjust the range to 0-1
             mask().rangeAdjust(0, 1); // just in case
-            std::cout << mask;             // Output Volumen Information
+            mask().printShape();
         }
 
         std::cout << "generating data......" << std::endl;
@@ -105,7 +106,8 @@ int main(int argc, char **argv)
             if (image_name=="") break;
             if (verb)
                 std::cout << "generating points for image " << image_name << "......" << std::endl;
-            ImageXmipp image(image_name, apply_geo);     // reads image
+            Image<double> image;
+            image.read(image_name, true, -1, apply_geo);     // reads image
 
             // Extract the data
             image().setXmippOrigin();  // sets origin at the center of the image.
@@ -117,34 +119,33 @@ int main(int argc, char **argv)
             if (!radial_avg)
             {
                 // If pixel mode
-                for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
-                    for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++)
-                    {
-                        // Checks if pixel is different from zero (it's inside the binary mask)
-                        bool cond;
-                        if (!nomask) cond = mask(y, x) != 0;
-                        else         cond = true;
-                        if (cond)
-                            imagePoints.push_back(image(y, x));
-                    } // for x
+            	FOR_ALL_ELEMENTS_IN_ARRAY3D(image())
+				{
+					// Checks if pixel is different from zero (it's inside the binary mask)
+					bool cond;
+					if (!nomask) cond = mask()(k, i, j) != 0;
+					else         cond = true;
+					if (cond)
+						imagePoints.push_back(image()(k, i, j));
+				}
             }
             else
             {
                 // If radial average mode
                 // Apply the mask
                 if (!nomask)
-                    FOR_ALL_ELEMENTS_IN_MATRIX2D(image())
-                    if (mask(i, j) == 0) image(i, j) = 0;
+                    FOR_ALL_ELEMENTS_IN_ARRAY3D(image())
+                    if (mask()(k, i, j) == 0) image()(k, i, j) = 0;
 
                 // Compute the radial average
-                Matrix1D<int> center_of_rot(2);
-                VECTOR_R2(center_of_rot, 0, 0);
-                Matrix1D<int> radial_count;
-                Matrix1D<double> radial_mean;
+                Matrix1D<int> center_of_rot(3);
+                VECTOR_R3(center_of_rot, 0, 0, 0);
+                MultidimArray<int> radial_count;
+                MultidimArray<double> radial_mean;
                 radialAverage(image(), center_of_rot, radial_mean, radial_count);
 
                 // Copy radial_mean to std::vector<float>
-                FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_mean)
+                FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_mean)
                 imagePoints.push_back((float)radial_mean(i));
             }
 
