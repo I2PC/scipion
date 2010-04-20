@@ -25,21 +25,16 @@
 
 #include "metadata.h"
 
-MetaData::MetaData()
+MetaData::MetaData( ) 
 {
-	setPath();
-	setComment();
-	objects.clear( );
-	fastStringSearchLabel = MDL_UNDEFINED;	
-    objectsIterator = objects.begin();
-    isColumnFormat = true;
-    inFile.clear();
+    clear( );
 }
 
-MetaData::MetaData(MetaData &MD)
+MetaData::MetaData( MetaData &MD )
 {
-	this->setComment(MD.getComment());
-	this->setPath(MD.getPath());
+    clear( );
+	this->setComment( MD.getComment( ) );
+	this->setPath( MD.getPath( ) );
 	this->isColumnFormat = MD.isColumnFormat;
 	this->inFile         = MD.inFile;
 	this->fastStringSearchLabel = MDL_UNDEFINED;
@@ -47,20 +42,21 @@ MetaData::MetaData(MetaData &MD)
 
 	//objects, define iterator
 	std::map< long int, MetaDataContainer *>::iterator objIt;
-	for( objIt  = MD.objects.begin();
-		 objIt != MD.objects.end();
+	for( objIt  = MD.objects.begin( );
+		 objIt != MD.objects.end( );
 		 objIt ++ )
 	{
-		long int idx = this->addObject();
+		long int idx = this->addObject( );
 
-		this->objects[idx]= new MetaDataContainer( *(objIt->second));
+		this->objects[idx]= new MetaDataContainer( *( objIt->second ) );
 	}
-	this->objectsIterator = objects.begin();
+	this->objectsIterator = objects.begin( );
 
 }
 
-MetaData& MetaData::operator = ( MetaData &MD)
+MetaData& MetaData::operator = ( MetaData &MD )
 {
+    clear( );
 	if (this != &MD)
 	{
 		this->setComment(MD.getComment());
@@ -87,7 +83,7 @@ MetaData& MetaData::operator = ( MetaData &MD)
 
 void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector )
 {
-    infile->seekg(0, std::ios::beg); 
+    infile->seekg( 0, std::ios::beg ); 
 	std::string line;
     
 	getline( *infile, line, '\n');
@@ -123,7 +119,7 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
 	    getline( *infile, line, '\n');
 		
     	// Remove ';'
-	    line.erase(0,line.find(";")+1);
+	    line.erase( 0, line.find( ";" ) + 1 );
 				
 	    // Parse labels
     	std::stringstream os( line );          
@@ -133,7 +129,7 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
         
 	    while ( os >> newLabel )
 	    {
-            MetaDataLabel label = MetaDataContainer::codifyLabel(newLabel);
+            MetaDataLabel label = MetaDataContainer::codifyLabel( newLabel );
             
             if( label == MDL_UNDEFINED )
                 ignoreLabels.push_back( labelPosition );
@@ -353,7 +349,7 @@ void MetaData::readOldSelFile( std::ifstream *infile )
 
 MetaData::MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector )
 {
-	read(fileName,labelsVector);
+	read( fileName,labelsVector );
 }
 
 void MetaData::toDataBase( FileName DBname, std::string tableName )
@@ -677,7 +673,7 @@ void MetaData::clear( )
     ignoreLabels.clear( );
     
     isColumnFormat = true;
-    inFile = FileName::FileName( );;
+    inFile = FileName::FileName( );
 }
 
 void MetaData::setPath( std::string newPath )

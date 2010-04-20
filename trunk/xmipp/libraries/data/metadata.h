@@ -72,6 +72,7 @@ class MetaData
 	std::string comment;    ///< A general comment for the MetaData file
     
     MetaDataContainer * getObject( long int objectID = -1 );
+    void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
 
     bool isColumnFormat;    ///< Format for the file, column or row formatted
     
@@ -140,7 +141,7 @@ public:
 
     void readOldSelFile( std::ifstream *infile );
     void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
-    void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
+    void read( FileName infile, std::vector<MetaDataLabel> * labelsVector=NULL );
 	
     void toDataBase( FileName DBname, std::string tableName = "" );
     
@@ -149,6 +150,12 @@ public:
 	*   called 
     **/
 	std::vector< MetaDataLabel > activeLabels;
+
+    /** When reading a column formated file, if a label is found that
+    *   does not exists as a MetaDataLabel, it is ignored. For further
+    *   file processing, such columns must be ignored and this structure
+    *   allows to do that
+    **/
     std::vector< unsigned int > ignoreLabels;
 
     /** Adds a new, empty object to the objects map. If objectID == -1
@@ -159,7 +166,6 @@ public:
     **/
 	long int addObject( long int objectID = -1 );
     
-    void read( FileName infile, std::vector<MetaDataLabel> * labelsVector=NULL );
 
 	// Possible error codes for the map
     enum errors
@@ -204,7 +210,7 @@ public:
 	void removeObjects( MetaDataLabel name, std::string value );
     void removeObjects( std::vector<long int> &toRemove );
     
-    // Removes true if the object was removed or false if
+    // Returns true if the object was removed or false if
     // the object did not exist
     bool removeObject( long int objectID );
     
