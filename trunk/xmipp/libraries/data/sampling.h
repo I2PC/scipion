@@ -121,13 +121,7 @@ public:
     /** symmetry information **/
     SymList  SL;
 
-    /* Docfile with proyection directions as coordinates */
-    DocFile           DFvectors;
-    
-    /* Docfile with proyection directions as euler angles */
-    DocFile           DFangles;
-
-    /** Compuute edge sampling points
+    /** Compute edge sampling points
         if you are looking only for directtions set only_half_sphere = true
     */
     void Compute_sampling_points(bool only_half_sphere = true,
