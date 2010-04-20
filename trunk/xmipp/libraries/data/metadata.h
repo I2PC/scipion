@@ -39,9 +39,23 @@
 #include <stdio.h>
 #include "cppsqlite3.h"    
 
+/// @defgroup MetaData Metadata management 
+/// @ingroup DataLibrary
+
+/// @defgroup MetaDataClass Metadata class management
+/// @ingroup MetaData
+
+/** MetaData Manager.
+ * @ingroup MetaDataClass
+ *
+ * The MetaData class manages all procedures related to
+ * metadata. MetaData is intended to group toghether old
+ * Xmipp specific files like Docfiles, Selfiles, etc..
+ * 
+ */
 class MetaData
 {
-	std::map< long int, MetaDataContainer *> objects;
+	std::map< long int, MetaDataContainer *> objects;   ///< Effectively stores all metadata
 
 	// Used by firstObject, nextObject and lastObject to keep a pointer
 	// to the "active" object. This way when you call setValue without
@@ -54,18 +68,60 @@ class MetaData
 	std::map< std::string, long int> fastStringSearch;
 	MetaDataLabel fastStringSearchLabel;
     
-	std::string path;
-	std::string comment;
+	std::string path;   ///< A parameter stored on MetaData Files
+	std::string comment;    ///< A general comment for the MetaData file
     
     MetaDataContainer * getObject( long int objectID = -1 );
 
-    bool isColumnFormat;
+    bool isColumnFormat;    ///< Format for the file, column or row formatted
+    
     /**Input file name
-     *
+     * Where does this MetaData come from/go to be stored?
      */
     FileName inFile;
 
 public:
+
+    /// @defgroup MetaDataConstructors Constructors for MetaData objects
+    /// @ingroup MetaDataClass
+
+    /** Empty Constructor.
+     * @ingroup MetaDataConstructors
+     *
+     * The MetaData is created with no data stored on it. You can fill in it programmatically
+     * or by a later reading from a MetaData file or old Xmipp formatted type.
+     */
+	MetaData();
+    
+    /** From File Constructor.
+     * @ingroup MetaDataConstructors
+     *
+     * The MetaData is created and data is read from provided fileName. Optionally, a vector
+     * of labels can be provided to read just those required labels
+     */
+	MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
+
+	/** Copy constructor
+	 * @ingroup MetaDataConstructors
+     *
+     * Created a new metadata by copying all data from an existing MetaData object.
+	 */
+	MetaData(MetaData & c);
+    
+    /** Assignment operator
+     * @ingroup MetaDataConstructors
+     *
+     * Copies MetaData from an existing MetaData object.
+     */
+	MetaData& operator = ( MetaData &MD );
+    
+    /** Destructor
+     * @ingroup MetaDataConstructors
+     *
+     * Frees all used memory and destroys object.
+     */
+	~MetaData();
+	
 
 	// Set a new pair/value for an specified object. If no objectID is given, that
 	// pointed by the class iterator is used 
@@ -93,6 +149,7 @@ public:
 	*   called 
     **/
 	std::vector< MetaDataLabel > activeLabels;
+    std::vector< unsigned int > ignoreLabels;
 
     /** Adds a new, empty object to the objects map. If objectID == -1
     *   the new ID will be that for the last object inserted + 1, else
@@ -117,19 +174,6 @@ public:
 	long int lastObject( );
 	long int goToObject( long int objectID );
 	
-	MetaData();
-	MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
-	~MetaData();
-	
-	/**Copy constructor
-	 *
-	 */
-	MetaData(MetaData & c);
-    /** Assignment operator
-     *
-    */
-	MetaData& operator = ( MetaData &MD);
-
 	void write( const std::string &fileName );
 	
 	bool isEmpty( );
@@ -190,6 +234,7 @@ public:
     long int countObjects( MetaDataLabel name, int value );
 
 };
+
 /** Compute images metadata estatistics
  * This use to be part of Metadata but should not
  */

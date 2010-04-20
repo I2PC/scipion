@@ -115,7 +115,7 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
     line = removeChar( line, ' ' );
 	setPath( line );
 	getline( *infile, line, '\n');
-	setComment( line.erase(0,2));
+	setComment( line.erase(0,2) );
 
     if( isColumnFormat )
     {
@@ -128,10 +128,19 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
 	    // Parse labels
     	std::stringstream os( line );          
     	std::string newLabel;                 
-				
+		
+        int labelPosition=0;
+        
 	    while ( os >> newLabel )
 	    {
-		    activeLabels.push_back(  MetaDataContainer::codifyLabel(newLabel) );
+            MetaDataLabel label = MetaDataContainer::codifyLabel(newLabel);
+            
+            if( label == MDL_UNDEFINED )
+                ignoreLabels.push_back( labelPosition );
+            else
+		        activeLabels.push_back( label );
+            
+            labelPosition++;
 	    }
 		
 	    // Read data and fill structures accordingly
@@ -154,10 +163,20 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
 		    std::stringstream os2( line );          
 	    	std::string value;
 		
-            int counter=0;
+            int labelPosition=0;
+            int counterIgnored=0;
+            
 		    while ( os2 >> value )
 		    {
-                if (IS_VECTOR(activeLabels[counter]) && value=="**")
+                if( std::find( ignoreLabels.begin(), ignoreLabels.end() ,labelPosition ) != ignoreLabels.end())
+                {
+                    // Ignore this column
+                    counterIgnored++;
+                    labelPosition++;
+                    continue;
+                }
+                
+                if ( IS_VECTOR( activeLabels[ labelPosition - counterIgnored ] ) && value=="**")
                 {
                     std::string aux;
                     while (os2 >> value)
@@ -165,14 +184,15 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
                         else aux+=value+" ";
                     value=aux;
                 }
-                setValue( MetaDataContainer::decodeLabel(activeLabels[counter]), value );
-			    counter++;
+                
+                setValue( MetaDataContainer::decodeLabel( activeLabels[ labelPosition - counterIgnored ] ), value );
+			    labelPosition++;
 		    }
 	    }
     }
     else  //RowFormat
     {
-    	std::string label;                 
+    	std::string newLabel;                 
         std::string value;
         
         long int objectID = addObject( );
@@ -186,11 +206,15 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
 		    // Parse labels
 		    std::stringstream os( line );    
                   
-	    	os >> label;
-		    activeLabels.push_back(  MetaDataContainer::codifyLabel(label) );
-		    os >> value;
+	    	os >> newLabel;
+            os >> value;
 
-		    setValue( label , value );
+            MetaDataLabel label = MetaDataContainer::codifyLabel(newLabel);
+            if( label != MDL_UNDEFINED )
+            {
+		        activeLabels.push_back( label );
+        	    setValue( newLabel , value );
+            }
 	    }
     }
 }
@@ -650,6 +674,8 @@ void MetaData::clear( )
 	fastStringSearchLabel = MDL_UNDEFINED;
 
 	activeLabels.clear( );
+    ignoreLabels.clear( );
+    
     isColumnFormat = true;
     inFile = FileName::FileName( );;
 }
