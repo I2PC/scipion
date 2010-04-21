@@ -878,7 +878,7 @@ FileName FileName::remove_all_extensions() const
         return substr(0, first);
 }
 
-FileName FileName::get_image_format() const
+FileName FileName::get_file_format() const
 {
 	int first;
 	FileName result;
@@ -891,6 +891,11 @@ FileName FileName::get_image_format() const
 
     return result.to_lowercase();
 
+}
+
+bool FileName::isSelfile() const
+{
+	return get_file_format()=="sel";
 }
 
 // Substitute one extension by other .......................................
