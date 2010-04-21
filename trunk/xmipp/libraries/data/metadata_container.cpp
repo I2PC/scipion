@@ -540,8 +540,9 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 }
 
 void MetaDataContainer::writeValueToString( std::string &outString,
-    MetaDataLabel inputLabel )
+    MetaDataLabel inLabel )
 {	
+	MetaDataLabel inputLabel = static_cast<MetaDataLabel>(inLabel);
     std::ostringstream oss;
 
     if( isDouble(inputLabel) )

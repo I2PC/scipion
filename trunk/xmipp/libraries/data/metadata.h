@@ -123,6 +123,7 @@ public:
      */
 	~MetaData();
 	
+	void setColumnFormat( bool column );
 
 	// Set a new pair/value for an specified object. If no objectID is given, that
 	// pointed by the class iterator is used 
@@ -186,6 +187,8 @@ public:
 	
 	void clear( );
 	
+	void writeValueToString(std::string & result, const std::string & inputLabel );
+
 	long int fastSearch( MetaDataLabel name, std::string value, bool recompute = false );
 	
 	// Get the collection of objects whose pair label/value is given

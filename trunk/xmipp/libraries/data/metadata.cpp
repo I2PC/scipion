@@ -352,6 +352,11 @@ MetaData::MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector
 	read( fileName,labelsVector );
 }
 
+void MetaData::setColumnFormat( bool column)
+{
+	isColumnFormat=column;
+}
+
 void MetaData::toDataBase( FileName DBname, std::string tableName )
 {
     try
@@ -521,7 +526,7 @@ void MetaData::combine( MetaData & other, MetaDataLabel thisLabel )
             
             if( value2 == value1 )
             {
-                for( MetaDataLabel mdl = MDL_FIRST_LABEL ; mdl <= MDL_LAST_LABEL ; mdl=MetaDataLabel( mdl+1 ) )
+                for( MetaDataLabel mdl = static_cast<MetaDataLabel>(MDL_FIRST_LABEL) ; mdl <= MDL_LAST_LABEL ; mdl=MetaDataLabel( mdl+1 ) )
                 {
                     if( aux2->valueExists( mdl ) )
                     {
@@ -583,6 +588,12 @@ void MetaData::read( FileName fileName, std::vector<MetaDataLabel> * labelsVecto
     objectsIterator = objects.begin();
 	
 	infile.close( );
+}
+
+void MetaData::writeValueToString(  std::string & result, const std::string &inputLabel )
+{
+	MetaDataContainer * aux = getObject( );
+	aux->writeValueToString(result,MetaDataContainer::codifyLabel(inputLabel));
 }
 
 void MetaData::write( const std::string &fileName )

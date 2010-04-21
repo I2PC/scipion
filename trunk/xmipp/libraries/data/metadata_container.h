@@ -47,11 +47,10 @@
 //
 //  for( MetaDataLabel mdl = MDL_FIRST_LABEL ; mdl < MDL_LAST_LABEL ; MetaDataLabel( mdl+1 ) )
 //
-
 enum MetaDataLabel 
 { 
 	MDL_UNDEFINED = -1,
-    MDL_FIRST_LABEL,
+	MDL_FIRST_LABEL,
 	MDL_ANGLEROT = MDL_FIRST_LABEL,       // Rotation angle of an image (double)
     MDL_COMMENT,                          // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
 	MDL_ANGLETILT,                        // Tilting angle of an image (double)
