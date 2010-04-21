@@ -26,7 +26,6 @@
 #include "fourier_filter.h"
 
 #include <data/args.h>
-#include <data/volume.h>
 #include <data/image.h>
 #include <data/mask.h>
 #include <data/fft.h>
@@ -342,41 +341,22 @@ double FourierMask::maskValue(const Matrix1D<double> &w)
 }
 
 /* Generate mask ----------------------------------------------------------- */
-void FourierMask::generate_mask(Matrix2D<double> &v)
-{
-    transformer.setReal(v);
-    Matrix2D< std::complex<double> > Fourier;
-    transformer.getFourierAlias(Fourier);
-    maskFourier2D.resize(Fourier);
-    w.resize(2);
-    for (int i=0; i<YSIZE(maskFourier2D); i++)
-    {
-        FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
-        for (int j=0; j<XSIZE(maskFourier2D); j++)
-        {
-            FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
-            DIRECT_MAT_ELEM(maskFourier2D,i,j)=maskValue(w);
-        }
-    }
-}
-
-/* Generate mask ----------------------------------------------------------- */
-void FourierMask::generate_mask(Matrix3D<double> &v)
+void FourierMask::generate_mask(MultidimArray<double> &v)
 {
     
     if (do_generate_3dmask)
     {
         transformer.setReal(v);
-        Matrix3D< std::complex<double> > Fourier;
+        MultidimArray< std::complex<double> > Fourier;
         transformer.getFourierAlias(Fourier);
-        maskFourier3D.resize(Fourier);
-        Matrix3D<double> mask(v);
+        maskFourier.resize(Fourier);
+        MultidimArray<double> mask(v);
         mask.setXmippOrigin();
         Matrix2D<double> A(3,3);
         A.initIdentity();
-        Matrix3D<int> imask;
+        MultidimArray<int> imask;
 
-        VolumeXmipp Vt;
+        Image<double> Vt;
         switch (FilterShape)
         {
             case WEDGE:
@@ -389,53 +369,43 @@ void FourierMask::generate_mask(Matrix3D<double> &v)
                 {
                     DIRECT_MULTIDIM_ELEM(mask,n)=(double)(DIRECT_MULTIDIM_ELEM(imask,n));
                 }
-                Vt=mask;
+                Vt()=mask;
                 Vt.write("cone.vol");
                 break;
         }
         
-        // Transfer mask to maskFourier3D
-        for (int z=0, ii=0, yy, zz; z<ZSIZE(maskFourier3D); z++)
+        // Transfer mask to maskFourier
+        for (int z=0, ii=0, yy, zz; z<ZSIZE(maskFourier); z++)
         {
-            if ( z > (ZSIZE(maskFourier3D) - 1)/2 ) 
-                zz = z-ZSIZE(maskFourier3D);
+            if ( z > (ZSIZE(maskFourier) - 1)/2 )
+                zz = z-ZSIZE(maskFourier);
             else 
                 zz = z;
-            for (int y=0; y<YSIZE(maskFourier3D); y++)
+            for (int y=0; y<YSIZE(maskFourier); y++)
             {
-                if ( y > (YSIZE(maskFourier3D) - 1)/2 ) 
-                    yy = y-YSIZE(maskFourier3D);
+                if ( y > (YSIZE(maskFourier) - 1)/2 )
+                    yy = y-YSIZE(maskFourier);
                 else 
                     yy = y;
-                for (int xx=0; xx<XSIZE(maskFourier3D); xx++,ii++)
+                for (int xx=0; xx<XSIZE(maskFourier); xx++,ii++)
                 {
-                    DIRECT_MULTIDIM_ELEM(maskFourier3D,ii) = 
-                        VOL_ELEM(mask,zz,yy,xx);
+                    DIRECT_MULTIDIM_ELEM(maskFourier,ii) =
+                        A3D_ELEM(mask,zz,yy,xx);
                 }
             }
         }
     }
  }
 
-/* Apply mask -------------------------------------------------------------- */
-void FourierMask::apply_mask_Space(Matrix2D<double> &v)
+void FourierMask::apply_mask_Space(MultidimArray<double> &v)
 {
-    Matrix2D< std::complex<double> > aux2D;
-    transformer.FourierTransform(v, aux2D, false);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux2D)
-        DIRECT_MULTIDIM_ELEM(aux2D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier2D,n);
-    transformer.inverseFourierTransform();
-}
-
-void FourierMask::apply_mask_Space(Matrix3D<double> &v)
-{
-    Matrix3D< std::complex<double> > aux3D;
+    MultidimArray< std::complex<double> > aux3D;
     transformer.FourierTransform(v, aux3D, false);
 
     if (do_generate_3dmask)
     {
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux3D)
-            DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier3D,n);
+            DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier,n);
     }
     else
     {
@@ -449,7 +419,7 @@ void FourierMask::apply_mask_Space(Matrix3D<double> &v)
                 for (int j=0; j<XSIZE(aux3D); j++)
                 {
                     FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
-                    DIRECT_VOL_ELEM(aux3D,k,i,j)*=maskValue(w);
+                    DIRECT_A3D_ELEM(aux3D,k,i,j)*=maskValue(w);
                 }
             }
         }
@@ -458,14 +428,15 @@ void FourierMask::apply_mask_Space(Matrix3D<double> &v)
 }
 
 /* Mask power -------------------------------------------------------------- */
-double FourierMask::mask2D_power()
+double FourierMask::mask_power()
 {
-    return maskFourier2D.sum2()/MULTIDIM_SIZE(maskFourier2D);
+    return maskFourier.sum2()/MULTIDIM_SIZE(maskFourier);
 }
 
 // Correct phase -----------------------------------------------------------
 void FourierMask::correct_phase()
 {
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(maskFourier2D)
-        if (maskFourier2D(i, j) < 0) maskFourier2D(i, j) *= -1;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(maskFourier)
+		if (DIRECT_MULTIDIM_ELEM(maskFourier,n)< 0)
+			DIRECT_MULTIDIM_ELEM(maskFourier,n)*= -1;
 }
