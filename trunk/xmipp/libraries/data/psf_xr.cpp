@@ -259,17 +259,33 @@ void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
 
     vol().setXmippOrigin();
 
+#define DEBUG
+#ifdef DEBUG
+    ImageXmipp _Im(imOut);
+    _Im().setXmippOrigin();
+
+#endif
+
     for (int k=((vol()).zinit); k<=((vol()).zinit + (vol()).zdim - 1); k++)
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(imTemp)
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(intExp)
         {
-            intExp(i, j) += VOL_ELEM(vol(), i, j, k);
-            imTemp(i, j) = exp(-intExp(i,j)*psf.dzo)*vol(i,j,k)*psf.dzo;
+            intExp(i, j) = intExp(i, j) + vol(k, i, j);
+//            imTemp(i, j) = (intExp(i,j)*psf.dzo*(-1))*vol(k,i,j)*psf.dzo;
+            imTemp(i, j) = exp(intExp(i,j)*(-1))*vol(k,i,j);
+            _Im(i,j) = imTemp(i,j);
         }
         psf.Z = psf.Zo - k*psf.dzo;
         psf.generateOTF(imTemp);
         psf.applyOTF(imTemp);
         imOut() += imTemp;
+
+#ifdef DEBUG
+//        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imTemp)
+//        _Im(i,j) = abs(imTemp(i,j));
+
+        _Im.write("psfxr-imTemp.spi");
+#endif
     }
 
     imOut() = 1-imOut();

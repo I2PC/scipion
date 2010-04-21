@@ -122,6 +122,7 @@ public:
 
         ImageXmipp _Im;
         _Im().resize(Im);
+        _Im().setXmippOrigin();
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Im)
         _Im(i,j) = abs(Im(i,j));
 
@@ -142,6 +143,7 @@ public:
 //        _Im.write(("apply-otf.spi"));
 
         CenterOriginFFT(ImFT, 1);
+        _Im().resize(ImFT);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(ImFT)
 			_Im(i,j) = abs(ImFT(i,j));
 
@@ -152,16 +154,13 @@ public:
         //        CenterOriginFFT(Im, 1);
 
 #ifdef DEBUG
-
+        _Im().resize(Im);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Im)
         _Im(i,j) = abs(Im(i,j));
 
         _Im.write(("psfxr-imout.spi"));
 #endif
-
     }
-
-
 
     /// Generate OTF image.
     void generateOTF(Matrix2D<double> &Im) ;
