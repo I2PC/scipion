@@ -13,7 +13,6 @@ namespace std {
    %template(vectorm) vector<MetaDataLabel>;
 };
 
-
 /*
 ==================
 First example
@@ -134,6 +133,9 @@ mD=XmippData.MetaData();
 mD.read(outFile)
 mD.toDataBase( dbFile, "prueba" );
 
+====================
+
+ XmippData.isBool(XmippData.MDL_ENABLED)
 */
 
 
