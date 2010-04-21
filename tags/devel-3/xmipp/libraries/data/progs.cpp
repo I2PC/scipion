@@ -81,29 +81,29 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
 {
     Image<double> I;
     int dum;
-    if (I.isImage(fn_in))
-    {
-        I.getDimensions(Xdim, Ydim, Zdim,dum);
-    }
-    else
+    if (fn_in.isSelfile())
     {
         SelFile SF;
         SF.read(fn_in);
         SF.ImgSize(Ydim, Xdim);
     }
+    else
+    {
+    	I.read(fn_in);
+    	I.getDimensions(Xdim, Ydim, Zdim,dum);
+    }
 }
 
 int Prog_parameters::get_images_to_process()
 {
-    Image<double> I;
-    if (I.isImage(fn_in))
-        return 1;
-    else
+    if (fn_in.isSelfile())
     {
-        SelFile SF;
+    	SelFile SF;
         SF.read(fn_in);
         return SF.ImgNo();
     }
+    else
+    	return 1;
 }
 
 /* With arguments ---------------------------------------------------------- */
@@ -150,177 +150,181 @@ void SF_main(int argc, char **argv,
         else
             fn_out = prm->fn_out;
 
-        // For single image .....................................................
-        if (img.isImage(prm->fn_in))
-        {
-            img.read(prm->fn_in, true, -1, prm->apply_geo);
-            img().setXmippOrigin();
-            switch (operation_mode)
-            {
-            case IMAGE2IMAGE:
-                fi2i = (bool(*)(Image<double> &, const Prog_parameters *)) process_img;
-                success = fi2i(img, prm);
-                if (prm->each_image_produces_an_output)
-                {
-                    /*       if (prm->apply_geo) {
-                            std::cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
-                                 << " the only exception is the apply_geo program";
-                           }
-                    */
-                	img.write(fn_out);
-                }
-                break;
-            case IMAGE2FOURIER:
-                fi2I = (bool(*)(Image<double> &, Image<std::complex<double> > &, const Prog_parameters *)) process_img;
-                success = fi2I(img, IMG, prm);
-                if (prm->each_image_produces_an_output)
-                    IMG.write(fn_out);
-                break;
-            case IMAGE2FILE:
-                fi2F = (bool(*)(Image<double> &, const FileName &, const Prog_parameters *)) process_img;
-                success = fi2F(img, fn_out, prm);
-                break;
-            }
-        }
-        // For single Fourier image .............................................
-        else if (IMG.isComplexImage(prm->fn_in))
-        {
-            IMG.read(prm->fn_in);
-            IMG().setXmippOrigin();
-            switch (operation_mode)
-            {
-            case FOURIER2FOURIER:
-                fI2I = (bool(*)(Image<std::complex<double> > &, const Prog_parameters *)) process_img;
-                success = fI2I(IMG, prm);
-                if (prm->each_image_produces_an_output)
-                    IMG.write(fn_out);
-                break;
-            case FOURIER2IMAGE:
-                fI2i = (bool(*)(Image<std::complex<double> > &, Image<double> &, const Prog_parameters *)) process_img;
-                success = fI2i(IMG, img, prm);
-                if (prm->each_image_produces_an_output)
-                    img.write(fn_out);
-                break;
-            }
-        }
+        if (prm->fn_in.isSelfile())
         // For a selection file .................................................
+		 {
+			 SF_in.read(prm->fn_in);
+			 SF_out.clear();
+
+			 // Initialise progress bar
+			 time_config();
+			 int i = 0;
+			 if (prm->allow_time_bar && !prm->quiet)
+				 init_progress_bar(SF_in.ImgNo());
+			 int istep = CEIL((double)SF_in.ImgNo() / 60.0);
+
+			 // Process all selfile
+			 while (!SF_in.eof())
+			 {
+				 FileName fn_read;
+				 fn_read = SF_in.NextImg();
+				 if (fn_read=="") break;
+				 if (prm->each_image_produces_an_output)
+					 if (prm->oext == "" && prm->oroot == "")
+						 prm->fn_out = fn_read;
+					 else if (prm->oroot != "")
+					 {
+						 prm->fn_out = prm->oroot + fn_read.without_root();
+						 if (operation_mode == IMAGE2FOURIER)
+							 if (fn_read.get_extension() == "xmp")
+								 prm->fn_out = prm->fn_out.without_extension() + ".fft";
+							 else
+								 prm->fn_out = prm->fn_out.without_extension() + ".fft3";
+						 if (operation_mode == FOURIER2IMAGE)
+							 if (fn_read.get_extension() == "fft")
+								 prm->fn_out = prm->fn_out.without_extension() + ".xmp";
+							 else
+								 prm->fn_out = prm->fn_out.without_extension() + ".vol";
+					 }
+					 else
+					 {
+						 prm->fn_out = fn_read.without_extension() + "." + prm->oext;
+					 }
+
+				 if (img.isRealImage(fn_read))
+				 {
+					 std::cerr << "real image" <<std::endl;
+
+					 img.read(fn_read, true, -1, prm->apply_geo);
+					 img().setXmippOrigin();
+					 switch (operation_mode)
+					 {
+					 case IMAGE2IMAGE:
+						 fi2i = (bool(*)(Image<double> &, const Prog_parameters *)) process_img;
+						 success = fi2i(img, prm);
+						 if (prm->each_image_produces_an_output)
+						 {
+							 /*
+							 if (prm->apply_geo) {
+							   std::cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
+									<< " the only exception is the apply_geo program";
+							 }
+							 */
+							img.write(prm->fn_out);
+						}
+						 break;
+					 case IMAGE2FOURIER:
+						 fi2I = (bool(*)(Image<double> &, Image<std::complex<double> > &, const Prog_parameters *)) process_img;
+						 success = fi2I(img, IMG, prm);
+						 if (prm->each_image_produces_an_output)
+							 IMG.write(prm->fn_out);
+						 break;
+					 case IMAGE2FILE:
+						 fi2F = (bool(*)(Image<double> &, const FileName &, const Prog_parameters *)) process_img;
+						 success = fi2F(img, prm->fn_out, prm);
+						 break;
+					 }
+				 }
+				 else if (IMG.isComplexImage(fn_read))
+				 {
+					 IMG.read(fn_read);
+					 IMG().setXmippOrigin();
+					 switch (operation_mode)
+					 {
+					 case FOURIER2FOURIER:
+						 fI2I = (bool(*)(Image<std::complex<double> > &, const Prog_parameters *)) process_img;
+						 success = fI2I(IMG, prm);
+						 if (prm->each_image_produces_an_output)
+							 IMG.write(prm->fn_out);
+						 break;
+					 case FOURIER2IMAGE:
+						 fI2i = (bool(*)(Image<std::complex<double> > &, Image<double> &, const Prog_parameters *)) process_img;
+						 success = fI2i(IMG, img, prm);
+						 if (prm->each_image_produces_an_output)
+							 img.write(prm->fn_out);
+						 break;
+					 }
+				 }
+				 else if (operation_mode == FILE2FILE)
+				 {
+					 fF2F = (bool(*)(const FileName &, const FileName &, const Prog_parameters *)) process_img;
+					 success = fF2F(fn_read, prm->fn_out, prm);
+				 }
+
+				 if (prm->each_image_produces_an_output)
+					 if (success)
+						 SF_out.insert(prm->fn_out);
+					 else
+						 SF_out.insert(prm->fn_out, SelLine::DISCARDED);
+
+				 if (i++ % istep == 0 && prm->allow_time_bar && !prm->quiet)
+					 progress_bar(i);
+			 }
+			 if (prm->allow_time_bar && !prm->quiet)
+				 progress_bar(SF_in.ImgNo());
+			 if (prm->each_image_produces_an_output)
+				 if (prm->oext != "")
+				 {
+					 prm->fn_out = prm->fn_in.insert_before_extension(prm->oext);
+					 SF_out.write(prm->fn_out);
+				 }
+		 }
         else
         {
-            SF_in.read(prm->fn_in);
-            SF_out.clear();
-
-            // Initialise progress bar
-            time_config();
-            int i = 0;
-            if (prm->allow_time_bar && !prm->quiet)
-                init_progress_bar(SF_in.ImgNo());
-            int istep = CEIL((double)SF_in.ImgNo() / 60.0);
-
-            // Process all selfile
-            while (!SF_in.eof())
-            {
-                FileName fn_read;
-                fn_read = SF_in.NextImg();
-                if (fn_read=="") break;
-                if (prm->each_image_produces_an_output)
-                    if (prm->oext == "" && prm->oroot == "")
-                        prm->fn_out = fn_read;
-                    else if (prm->oroot != "")
-                    {
-                        prm->fn_out = prm->oroot + fn_read.without_root();
-                        if (operation_mode == IMAGE2FOURIER)
-                            if (fn_read.get_extension() == "xmp")
-                                prm->fn_out = prm->fn_out.without_extension() + ".fft";
-                            else
-                                prm->fn_out = prm->fn_out.without_extension() + ".fft3";
-                        if (operation_mode == FOURIER2IMAGE)
-                            if (fn_read.get_extension() == "fft")
-                                prm->fn_out = prm->fn_out.without_extension() + ".xmp";
-                            else
-                                prm->fn_out = prm->fn_out.without_extension() + ".vol";
-                    }
-                    else
-                    {
-                        prm->fn_out = fn_read.without_extension() + "." + prm->oext;
-                    }
-
-                if (img.isImage(fn_read))
-                {
-                    img.read(fn_read, true, -1, prm->apply_geo);
-                    img().setXmippOrigin();
-                    switch (operation_mode)
-                    {
-                    case IMAGE2IMAGE:
-                        fi2i = (bool(*)(Image<double> &, const Prog_parameters *)) process_img;
-                        success = fi2i(img, prm);
-                        if (prm->each_image_produces_an_output)
-                        {
-                            /*
-                            if (prm->apply_geo) {
-                              std::cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
-                                   << " the only exception is the apply_geo program";
-                            }
-                            */
-                        	img.write(prm->fn_out);
-						}
-                        break;
-                    case IMAGE2FOURIER:
-                        fi2I = (bool(*)(Image<double> &, Image<std::complex<double> > &, const Prog_parameters *)) process_img;
-                        success = fi2I(img, IMG, prm);
-                        if (prm->each_image_produces_an_output)
-                            IMG.write(prm->fn_out);
-                        break;
-                    case IMAGE2FILE:
-                        fi2F = (bool(*)(Image<double> &, const FileName &, const Prog_parameters *)) process_img;
-                        success = fi2F(img, prm->fn_out, prm);
-                        break;
-                    }
-                }
-                else if (IMG.isComplexImage(fn_read))
-                {
-                    IMG.read(fn_read);
-                    IMG().setXmippOrigin();
-                    switch (operation_mode)
-                    {
-                    case FOURIER2FOURIER:
-                        fI2I = (bool(*)(Image<std::complex<double> > &, const Prog_parameters *)) process_img;
-                        success = fI2I(IMG, prm);
-                        if (prm->each_image_produces_an_output)
-                            IMG.write(prm->fn_out);
-                        break;
-                    case FOURIER2IMAGE:
-                        fI2i = (bool(*)(Image<std::complex<double> > &, Image<double> &, const Prog_parameters *)) process_img;
-                        success = fI2i(IMG, img, prm);
-                        if (prm->each_image_produces_an_output)
-                            img.write(prm->fn_out);
-                        break;
-                    }
-                }
-                else if (operation_mode == FILE2FILE)
-                {
-                    fF2F = (bool(*)(const FileName &, const FileName &, const Prog_parameters *)) process_img;
-                    success = fF2F(fn_read, prm->fn_out, prm);
-                }
-
-                if (prm->each_image_produces_an_output)
-                    if (success)
-                        SF_out.insert(prm->fn_out);
-                    else
-                        SF_out.insert(prm->fn_out, SelLine::DISCARDED);
-
-                if (i++ % istep == 0 && prm->allow_time_bar && !prm->quiet)
-                    progress_bar(i);
-            }
-            if (prm->allow_time_bar && !prm->quiet)
-                progress_bar(SF_in.ImgNo());
-            if (prm->each_image_produces_an_output)
-                if (prm->oext != "")
-                {
-                    prm->fn_out = prm->fn_in.insert_before_extension(prm->oext);
-                    SF_out.write(prm->fn_out);
-                }
+        	if (img.isRealImage(prm->fn_in))
+        	{
+        		// For single image .....................................................
+				img.read(prm->fn_in, true, -1, prm->apply_geo);
+	        	img().setXmippOrigin();
+				switch (operation_mode)
+				{
+				case IMAGE2IMAGE:
+					fi2i = (bool(*)(Image<double> &, const Prog_parameters *)) process_img;
+					success = fi2i(img, prm);
+					if (prm->each_image_produces_an_output)
+					{
+						/*       if (prm->apply_geo) {
+								std::cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
+									 << " the only exception is the apply_geo program";
+							   }
+						*/
+						img.write(fn_out);
+					}
+					break;
+				case IMAGE2FOURIER:
+					fi2I = (bool(*)(Image<double> &, Image<std::complex<double> > &, const Prog_parameters *)) process_img;
+					success = fi2I(img, IMG, prm);
+					if (prm->each_image_produces_an_output)
+						IMG.write(fn_out);
+					break;
+				case IMAGE2FILE:
+					fi2F = (bool(*)(Image<double> &, const FileName &, const Prog_parameters *)) process_img;
+					success = fi2F(img, fn_out, prm);
+					break;
+				}
+        	}
+        	else if (IMG.isComplexImage(prm->fn_in))
+        	{
+				IMG.read(prm->fn_in);
+				IMG().setXmippOrigin();
+				switch (operation_mode)
+				{
+				case FOURIER2FOURIER:
+					fI2I = (bool(*)(Image<std::complex<double> > &, const Prog_parameters *)) process_img;
+					success = fI2I(IMG, prm);
+					if (prm->each_image_produces_an_output)
+						IMG.write(fn_out);
+					break;
+				case FOURIER2IMAGE:
+					fI2i = (bool(*)(Image<std::complex<double> > &, Image<double> &, const Prog_parameters *)) process_img;
+					success = fI2i(IMG, img, prm);
+					if (prm->each_image_produces_an_output)
+						img.write(fn_out);
+					break;
+				}
+			}
         }
-    }
+     }
     catch (Xmipp_error XE)
     {
         std::cout << XE;
