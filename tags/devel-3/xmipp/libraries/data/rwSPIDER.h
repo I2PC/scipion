@@ -110,10 +110,13 @@ int  readSPIDER(int img_select)
 {
 //#define DEBUG
     FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL ) return(-1);
-	
+    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
+    	REPORT_ERROR(1,"rwSPIDER: cannot read image.");
+
     SPIDERhead*	header = (SPIDERhead *) askMemory(sizeof(SPIDERhead));
-    if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 ) return(-2);
+    if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
+    	REPORT_ERROR(1,"rwSPIDER: cannot allocate memory for header");
+
     swap = 0;
 	
     // Determine byte order and swap bytes if from different-endian machine
@@ -131,7 +134,11 @@ int  readSPIDER(int img_select)
     }
     
     // Map the parameters
-    data.setDimensions((int) header->nsam, (int) header->nrow, (int) header->nslice, 1);
+    data.setDimensions(
+    		(int) header->nsam,
+    		(int) header->nrow,
+    		(int) header->nslice,
+    		(unsigned long int)1 );
     DataType datatype = Float;
     transform = NoTransform;
     if ( header->iform < 0 ) 
@@ -152,24 +159,31 @@ int  readSPIDER(int img_select)
     size_t image_size = header_size + ZYXSIZE(data)*sizeof(float);
     size_t pad = offset;
     
+#ifdef DEBUG
+    if (!(ABS(header->istack)<1e-10 || ABS(header->istack - 2)<1e-10))
+    {
+    	std::cerr << "istack="<< header->istack<<std::endl;
+    	REPORT_ERROR(1,"INVALID ISTACK");
+    }
+#endif
     if ( header->istack > 0 ) 
         data.setNdim((int) header->maxim);
 
-    unsigned long 		Ndim, imgstart = 0;
+    unsigned long 		Ndim = NSIZE(data), imgstart = 0;
     unsigned long 		imgend = NSIZE(data);
     char*			hend;
-
     if ( img_select > -1 ) 
     {
-        if ( img_select >= (long)NSIZE(data) )
-            img_select = NSIZE(data) - 1;
+        if ( img_select >= Ndim )
+            img_select = Ndim - 1;
         imgstart = img_select;
         imgend = img_select + 1;
         data.setNdim(1);
+        Ndim = 1;
         i = img_select;
     }
-	
-    image = new SubImage [NSIZE(data)];
+
+    image = new SubImage [Ndim];
     image->shiftX = header->xoff;
     image->shiftY = header->yoff;
     image->shiftZ = header->zoff;
@@ -183,12 +197,13 @@ int  readSPIDER(int img_select)
         offset += offset;
         for ( i=imgstart; i<imgend; i++ ) {
             fseek( fimg, header_size + i*image_size, SEEK_SET );
-            if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 ) return(-3);
+            if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
+            	REPORT_ERROR(3,"rwSPIDER: cannot read multifile header information");
             hend = (char *) header + extent;
             if ( swap ) 
                 for ( b = (char *) header; b<hend; b+=4 ) 
                     swapbytes(b, 4);
-            j = ( NSIZE(data) > 1 )? j = i: 0;
+            j = ( Ndim > 1 )? j = i: 0;
             image[j].shiftX = header->xoff;
             image[j].shiftY = header->yoff;
             image[j].shiftZ = header->zoff;
@@ -204,7 +219,7 @@ int  readSPIDER(int img_select)
 	
 #ifdef DEBUG
     std::cerr<<"DEBUG readSPIDER: header_size = "<<header_size<<" image_size = "<<image_size<<std::endl;
-    std::cerr<<"DEBUG readSPIDER: img_select= "<<img_select<<" n= "<<NSIZE(data)<<" pad = "<<pad<<std::endl;
+    std::cerr<<"DEBUG readSPIDER: img_select= "<<img_select<<" n= "<<Ndim<<" pad = "<<pad<<std::endl;
 #endif
 	
     readData(fimg, img_select, datatype, pad );
@@ -237,7 +252,6 @@ int 	writeSPIDER()
     if ( fmod(SPIDERSIZE,lenbyt) != 0 ) labrec++;
     float		labbyt = labrec*lenbyt; 		// Size of header in bytes
     offset = (int) labbyt;
-	
     SPIDERhead*	header = (SPIDERhead *) askMemory((int)labbyt*sizeof(char));
 	
 	// Map the parameters
@@ -255,7 +269,7 @@ int 	writeSPIDER()
     if ( transform == Hermitian )
     {
         xstore = XSIZE(data)/2 + 1;
-        header->nsam = XSIZE(data)*xstore;
+        header->nsam = 2*xstore;
     }
 	
 #ifdef DEBUG
@@ -268,7 +282,8 @@ int 	writeSPIDER()
             header->iform = 1;				 // 2D image
         else
             header->iform = -12 + (int)header->nsam%2;   // 2D Fourier transform
-    } else 
+    }
+    else
     {
         if ( transform == NoTransform )
             header->iform = 3;				 // 3D volume
@@ -287,6 +302,12 @@ int 	writeSPIDER()
         header->istack = 2;
         header->inuse = -1;
         header->maxim = NSIZE(data);
+    }
+    else
+    {
+        header->istack = 0;
+        header->inuse = 0;
+        header->maxim = 1;
     }
 	
     header->xoff = image->shiftX;
@@ -308,7 +329,7 @@ int 	writeSPIDER()
 
     size_t datasize, datasize_n;
     datasize_n = xstore*YSIZE(data)*ZSIZE(data);
-	if (isComplex())
+	if (isComplexT())
 		datasize = datasize_n * gettypesize(ComplexFloat);
 	else
 		datasize = datasize_n * gettypesize(Float);
@@ -330,7 +351,7 @@ int 	writeSPIDER()
     char* fdata = (char *) askMemory(datasize);
     if ( NSIZE(data) == 1 )
     {
-    	if (isComplex())
+    	if (isComplexT())
     		castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
 		else
 			castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
@@ -338,10 +359,10 @@ int 	writeSPIDER()
     }
     else
     {
-        header->istack = 0;
-        header->inuse = 0;
-        header->maxim = 0;
-        for ( size_t i=0; i<NSIZE(data); i++ )
+		header->istack = 0;
+		header->inuse = 0;
+		header->maxim = 0;
+		for ( size_t i=0; i<NSIZE(data); i++ )
         {
             header->imgnum = i + 1;
             header->xoff = image[i].shiftX;
@@ -354,7 +375,7 @@ int 	writeSPIDER()
             header->flip = image[i].flip;
 
             fwrite( header, offset, 1, fimg );
-            if (isComplex())
+            if (isComplexT())
                 castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
             else
                 castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
