@@ -297,11 +297,14 @@ public:
      * limited to MAX_FILENAME_LENGTH characters. After reading the selfile
      * pointer is moved to the first ACTIVE image.
      *
+     * The function will return false is there is any NOT_ASSIGNED line in the file
+     * in that case, the file reading will be aborted
+     *
      * @code
      * sel.read("g2t.sel");
      * @endcode
      */
-    void read(const FileName& name, int overrinding = 1);
+    bool read(const FileName& name, int overriding = 1);
 
     /** Append a file from disk to an already read one.
      * @ingroup SelFilesDisk

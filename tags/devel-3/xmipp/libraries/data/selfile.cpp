@@ -236,7 +236,7 @@ void SelFile::clean_comments()
 }
 
 /* Read -------------------------------------------------------------------- */
-void SelFile::read(const FileName &sel_name, int overriding)
+bool SelFile::read(const FileName &sel_name, int overriding)
 {
     SelLine   temp;
     std::ifstream  fh_sel;
@@ -266,7 +266,7 @@ void SelFile::read(const FileName &sel_name, int overriding)
         switch (temp.line_type)
         {
         case (SelLine::NOT_ASSIGNED):
-        	break; // Line with an error
+        	return false; // Line with an error
         case (SelLine::DATALINE):
         	if (temp.label != SelLine::DISCARDED)
                 no_imgs++;
@@ -287,6 +287,7 @@ void SelFile::read(const FileName &sel_name, int overriding)
     if (overriding)
         fn_sel = sel_name;
     go_first_ACTIVE();
+    return true;
 }
 /* Merge ------------------------------------------------------------------- */
 void SelFile::merge(const FileName &sel_name)
@@ -532,8 +533,8 @@ void SelFile::adjust_to_label(SelLine::Label label)
 /* Next Image with a certain label ----------------------------------------- */
 const std::string& SelFile::NextImg(SelLine::Label label)
 {
-    adjust_to_label(label);
-    static const std::string emptyString;
+	adjust_to_label(label);
+	static const std::string emptyString;
     if (current_line != text_line.end())
         return (*current_line++).text;
     else
