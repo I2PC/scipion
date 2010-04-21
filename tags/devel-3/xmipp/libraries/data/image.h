@@ -334,6 +334,7 @@ public:
         	 filename = name;
          else
         	 filename = name.before_first_of(":");
+//#define DEBUG
 #ifdef DEBUG
          std::cerr << "name="<<name <<std::endl;
          std::cerr << "ext= "<<ext_name <<std::endl;
@@ -1028,12 +1029,6 @@ public:
 
 };
 
-/** Is this file an image
- *
- *  Check whether a real-space image can be read
- *
- */
-bool isImage(const FileName name);
 
 // Special case for complex numbers
 template<>

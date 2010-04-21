@@ -1311,6 +1311,7 @@ public:
                << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
         else
             out << " Empty MultidimArray!";
+        out<<"\n";
             
     }
 
