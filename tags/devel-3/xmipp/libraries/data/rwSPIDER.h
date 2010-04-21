@@ -204,7 +204,7 @@ int  readSPIDER(int img_select)
 	
 #ifdef DEBUG
     std::cerr<<"DEBUG readSPIDER: header_size = "<<header_size<<" image_size = "<<image_size<<std::endl;
-    std::cerr<<"DEBUG readSPIDER: img_select= "<<img_select<<" n= "<<n<<" pad = "<<pad<<std::endl;
+    std::cerr<<"DEBUG readSPIDER: img_select= "<<img_select<<" n= "<<NSIZE(data)<<" pad = "<<pad<<std::endl;
 #endif
 	
     readData(fimg, img_select, datatype, pad );

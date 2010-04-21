@@ -103,7 +103,7 @@ int readMRC()
 
     // Convert VAX floating point types if necessary
     if ( header->amin > header->amax )
-        REPORT_ERROR(1,"readMRC: VAX floating point conversion unsupported");
+        REPORT_ERROR(1,"readMRC: amin > max: VAX floating point conversion unsupported");
 
     // Map the parameters
     data.setDimensions(header->nx, header->ny, header->nz, 1);
