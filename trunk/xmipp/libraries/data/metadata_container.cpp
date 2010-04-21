@@ -39,23 +39,23 @@ MetaDataContainer& MetaDataContainer::operator = ( MetaDataContainer &MDc)
 			aux   = It->second;
 		    lCode = It->first;
 
-			if( IS_DOUBLE(lCode) )
+			if( isDouble(lCode) )
 			{
 				addValue( lCode, * ((double *) aux) );
 			}
-			else if( IS_STRING(lCode) )
+			else if( isString(lCode) )
 			{
 				addValue( lCode, * ((std::string *) aux) );
 			}
-			else if( IS_INT(lCode))
+			else if( isInt(lCode))
 			{
 				addValue( lCode, * ((int *) aux) );
 			}
-			else if( IS_BOOL(lCode))
+			else if( isBool(lCode))
 			{
 				addValue( lCode, * ((bool *) aux) );
 			}
-			else if( IS_VECTOR(lCode) )
+			else if( isVector(lCode) )
 			{
 				addValue( lCode, * ((std::vector<double> *) aux) );
 			}
@@ -74,23 +74,23 @@ MetaDataContainer::MetaDataContainer  ( MetaDataContainer &MDc)
 		aux   = It->second;
 		lCode = It->first;
 
-		if( IS_DOUBLE(lCode) )
+		if( isDouble(lCode) )
 		{
 			addValue( lCode, * ((double *) aux) );
 		}
-		else if( IS_STRING(lCode) )
+		else if( isString(lCode) )
 		{
 			addValue( lCode, * ((std::string *) aux) );
 		}
-		else if( IS_INT(lCode))
+		else if( isInt(lCode))
 		{
 			addValue( lCode, * ((int *) aux) );
 		}
-		else if( IS_BOOL(lCode))
+		else if( isBool(lCode))
 		{
 			addValue( lCode, * ((bool *) aux) );
 		}
-		else if( IS_VECTOR(lCode) )
+		else if( isVector(lCode) )
 		{
 			addValue( lCode, * ((std::vector<double> *) aux) );
 		}
@@ -136,7 +136,7 @@ void MetaDataContainer::addValue( const std::string &name,
 	std::istringstream i( value );
 	
 	// Look for a double value
-	if( IS_DOUBLE(lCode) )
+	if( isDouble(lCode) )
 	{
 		double doubleValue;
 		
@@ -144,11 +144,11 @@ void MetaDataContainer::addValue( const std::string &name,
 				
 		addValue( lCode, doubleValue );
 	}
-	else if( IS_STRING(lCode) )
+	else if( isString(lCode) )
 	{
 		addValue( lCode, value );
 	}
-	else if( IS_INT(lCode))
+	else if( isInt(lCode))
 	{
 		int intValue;
 		
@@ -156,7 +156,7 @@ void MetaDataContainer::addValue( const std::string &name,
 				
 		addValue( lCode, intValue ); 
 	}
-	else if( IS_BOOL(lCode))
+	else if( isBool(lCode))
 	{
 		bool boolValue;
 		
@@ -164,7 +164,7 @@ void MetaDataContainer::addValue( const std::string &name,
 				
 		addValue( lCode, boolValue );
 	}
-	else if( IS_VECTOR(lCode))
+	else if( isVector(lCode))
 	{
 		std::vector<double> vectorValue;
                 double val;
@@ -476,6 +476,9 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 		case MDL_IMAGE:
 			return std::string( "image" );
 			break;
+		case MDL_COMMENT:
+			return std::string( "comment" );
+			break;
 		case MDL_MICROGRAPH:
 			return std::string( "micrograph" );
 			break;
@@ -541,21 +544,21 @@ void MetaDataContainer::writeValueToString( std::string &outString,
 {	
     std::ostringstream oss;
 
-    if( IS_DOUBLE(inputLabel) )
+    if( isDouble(inputLabel) )
     {
         oss << std::setprecision(10) << std::setw(17) << std::scientific;
 	    oss << *((double*)(getVoidPtr( inputLabel )));
     }
-    else if( IS_STRING(inputLabel) )
+    else if( isString(inputLabel) )
 	oss << *((std::string*)(getVoidPtr( inputLabel )));
-    else if( IS_INT(inputLabel))
+    else if( isInt(inputLabel))
     {
         oss << std::setprecision(10) << std::setw(12) << std::fixed;
 	    oss << *((int*)(getVoidPtr( inputLabel )));
     }
-    else if( IS_BOOL(inputLabel))
+    else if( isBool(inputLabel))
 	    oss << *((bool*)(getVoidPtr( inputLabel )));
-    else if( IS_VECTOR(inputLabel))
+    else if( isVector(inputLabel))
     {
         const std::vector<double> &myVector=*(
             (std::vector<double>*)(getVoidPtr( inputLabel )));
@@ -576,21 +579,21 @@ void MetaDataContainer::writeValueToString( std::string &outString,
 void MetaDataContainer::writeValueToFile( std::ofstream &outfile,
     MetaDataLabel inputLabel )
 {
-    if( IS_DOUBLE(inputLabel) )
+    if( isDouble(inputLabel) )
     {
         outfile << std::setprecision(10) << std::setw(17) << std::scientific;
     	outfile << *((double*)(getVoidPtr( inputLabel )));
     }
-    else if( IS_STRING(inputLabel) )
+    else if( isString(inputLabel) )
     	outfile << *((std::string*)(getVoidPtr( inputLabel )));
-    else if( IS_INT(inputLabel))
+    else if( isInt(inputLabel))
     {
         outfile << std::setprecision(10) << std::setw(12) << std::fixed;
 	    outfile << *((int*)(getVoidPtr( inputLabel )));
     }
-    else if( IS_BOOL(inputLabel))
+    else if( isBool(inputLabel))
     	outfile << *((bool*)(getVoidPtr( inputLabel )));
-    else if( IS_VECTOR(inputLabel))
+    else if( isVector(inputLabel))
     {
         const std::vector<double> &myVector=*(
             (std::vector<double>*)(getVoidPtr( inputLabel )));

@@ -51,9 +51,9 @@
 enum MetaDataLabel 
 { 
 	MDL_UNDEFINED = -1,
-        MDL_FIRST_LABEL,
+    MDL_FIRST_LABEL,
 	MDL_ANGLEROT = MDL_FIRST_LABEL,       // Rotation angle of an image (double)
-        MDL_COMMENT,                          // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
+    MDL_COMMENT,                          // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
 	MDL_ANGLETILT,                        // Tilting angle of an image (double)
 	MDL_ANGLEPSI,                         // Psi angle of an image (double)
 	MDL_IMAGE,                            // Name of an image (std::string)
@@ -79,20 +79,51 @@ enum MetaDataLabel
 			 		      // it is here for looping purposes  	
 };
 
-#define IS_DOUBLE(lCode) lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||\
-               lCode == MDL_SHIFTX   || lCode == MDL_SHIFTY    || lCode == MDL_SHIFTZ   ||\
-               lCode == MDL_ORIGINX  || lCode == MDL_ORIGINY   || lCode == MDL_ORIGINZ  ||\
-               lCode == MDL_WEIGHT   || lCode == MDL_MAXCC     || lCode == MDL_PMAX
+inline bool isString(MetaDataLabel lCode)
+{
+    if(lCode == MDL_COMMENT     || lCode == MDL_IMAGE          || 
+       lCode == MDL_MICROGRAPH  || 
+       lCode == MDL_CTFMODEL    || lCode == MDL_CTFINPUTPARAMS || 
+       lCode == MDL_PERIODOGRAM || lCode == MDL_SERIE)
+        return true;
+    else
+        return false;
+}
 
-#define IS_STRING(lCode) lCode == MDL_COMMENT     || lCode == MDL_IMAGE          || lCode == MDL_MICROGRAPH     || \
-	                     lCode == MDL_CTFMODEL    || lCode == MDL_CTFINPUTPARAMS || \
-	                     lCode == MDL_PERIODOGRAM || lCode == MDL_SERIE
+inline bool isDouble(MetaDataLabel lCode)
+{
+    if(lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||\
+       lCode == MDL_SHIFTX   || lCode == MDL_SHIFTY    || lCode == MDL_SHIFTZ   ||\
+       lCode == MDL_ORIGINX  || lCode == MDL_ORIGINY   || lCode == MDL_ORIGINZ  ||\
+       lCode == MDL_WEIGHT   || lCode == MDL_MAXCC     || lCode == MDL_PMAX)
+        return true;
+    else
+        return false;
+}
 
-#define IS_INT(lCode)    lCode == MDL_REF         || lCode == MDL_ENABLED
+inline bool isVector(MetaDataLabel lCode)
+{
+    if(lCode==MDL_NMA)
+        return true;
+    else
+        return false;
+}
 
-#define IS_BOOL(lCode)   lCode == MDL_FLIP
+inline bool isBool(MetaDataLabel lCode)
+{
+    if(lCode==MDL_FLIP)
+        return true;
+    else
+        return false;
+}
 
-#define IS_VECTOR(lCode) lCode == MDL_NMA
+inline bool isInt(MetaDataLabel lCode)
+{
+    if(lCode == MDL_REF || lCode == MDL_ENABLED)
+        return true;
+    else
+        return false;
+}
 
 class MetaDataContainer
 {
