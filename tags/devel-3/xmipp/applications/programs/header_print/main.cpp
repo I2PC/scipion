@@ -36,19 +36,15 @@ int main(int argc, char **argv)
     FileName        fn_input;
     SelFile         SF;
     Image<double>  image;
-    int             show_old_rot;     // True if old rot is to be shown
 
     // Read arguments --------------------------------------------------------
     try
     {
         fn_input = getParameter(argc, argv, "-i");
-        if (isAnImage(fn_input) )
-        {
-            SF.insert(fn_input, SelLine::ACTIVE);
-        }
+        if (fn_input.isSelfile())
+        	SF.read(fn_input);
         else
-            SF.read(fn_input);
-
+        	SF.insert(fn_input, SelLine::ACTIVE);
     }
     catch (Xmipp_error XE)
     {
@@ -67,8 +63,8 @@ int main(int argc, char **argv)
             FileName file_name = SF.NextImg();
             if (file_name=="") break;
 
-            image.read(file_name, false, -1, false);
-			std::cout << "FileName     : " << file_name << std::endl;
+            std::cout << "FileName     : " << file_name << std::endl;
+			image.read(file_name, false, -1, false);
 			std::cout << image;
 			std::cout << std::endl;
         } // while

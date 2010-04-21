@@ -52,14 +52,12 @@ int main(int argc, char **argv)
     try
     {
         fn_input = getParameter(argc, argv, "-i");
-        if (isAnImage(fn_input))
-        {
-        	SF.insert(fn_input, SelLine::ACTIVE);
-        }
+        if (fn_input.isSelfile())
+        	SF.read(fn_input);
         else
-            SF.read(fn_input);
+        	SF.insert(fn_input, SelLine::ACTIVE);
 
-        mask_prm.read(argc, argv);
+		mask_prm.read(argc, argv);
         fn_stats     = getParameter(argc, argv, "-o", "");
         short_format = checkParameter(argc, argv, "-short_format");
         save_mask    = checkParameter(argc, argv, "-save_mask");
@@ -100,7 +98,6 @@ int main(int argc, char **argv)
         {
             FileName file_name = SF.NextImg();
             if (file_name=="") break;
-
             image.read(file_name);
             image().setXmippOrigin();
 
@@ -215,5 +212,4 @@ void Usage()
     << "   [-save_mask]      : save 2D and 3D masks (as \"mask2D\" or \"mask3D\") \n";
 
 }
-
 
