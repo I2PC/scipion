@@ -193,8 +193,6 @@ void SF_main(int argc, char **argv,
 
 				 if (img.isRealImage(fn_read))
 				 {
-					 std::cerr << "real image" <<std::endl;
-
 					 img.read(fn_read, true, -1, prm->apply_geo);
 					 img().setXmippOrigin();
 					 switch (operation_mode)
