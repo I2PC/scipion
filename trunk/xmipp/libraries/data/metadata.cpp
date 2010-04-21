@@ -172,7 +172,7 @@ void MetaData::read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsV
                     continue;
                 }
                 
-                if ( IS_VECTOR( activeLabels[ labelPosition - counterIgnored ] ) && value=="**")
+                if ( isVector( activeLabels[ labelPosition - counterIgnored ] ) && value=="**")
                 {
                     std::string aux;
                     while (os2 >> value)
@@ -380,27 +380,27 @@ void MetaData::toDataBase( FileName DBname, std::string tableName )
 	        {
 		        std::string label = MetaDataContainer::decodeLabel(*strIt);
 
-                if( IS_DOUBLE( *strIt ) )
+                if( isDouble( *strIt ) )
                 {
                     sqlCommand += label + " double,";
                     labelsCounter ++;
                 }
-                else if( IS_STRING( *strIt ) )
+                else if( isString( *strIt ) )
                 {
                     sqlCommand += label + " text,";
                     labelsCounter ++;
 	            }
-                else if( IS_INT( *strIt ))
+                else if( isInt( *strIt ))
                 {
                     sqlCommand += label + " int,";
                     labelsCounter ++;
                 }
-                else if( IS_BOOL( *strIt ))
+                else if( isBool( *strIt ))
                 {
                     sqlCommand += label + " int,";
                     labelsCounter ++;
                 }
-                else if( IS_VECTOR( *strIt ))
+                else if( isVector( *strIt ))
                 {
                     std::cerr << "SQLLITE does not support vectors, skipping vector labelled " << label << std::endl; 
                 }
@@ -432,28 +432,28 @@ void MetaData::toDataBase( FileName DBname, std::string tableName )
                 labelsCounter = 0;
                 for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
 	            {
-                    if( IS_DOUBLE( *strIt ) )
+                    if( isDouble( *strIt ) )
                     {
                         labelsCounter++;
                         double value;
                         getValue( *strIt, value );
                         stmt.bind( labelsCounter, value );
                     }
-                    else if( IS_STRING( *strIt ) )
+                    else if( isString( *strIt ) )
                     {
                         labelsCounter++;
                         std::string value;
                         getValue( *strIt, value );
                         stmt.bind( labelsCounter, value.c_str( ) );
 	                }
-                    else if( IS_INT( *strIt ) ) 
+                    else if( isInt( *strIt ) )
                     {
                         labelsCounter++;
                         int value;
                         getValue( *strIt, value );
                         stmt.bind( labelsCounter, value );
                     }
-                    else if( IS_BOOL( *strIt ))
+                    else if( isBool( *strIt ))
                     {
                         labelsCounter++;
                         bool value;
