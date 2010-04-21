@@ -980,8 +980,8 @@ void median_filter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
     int backup_startingy = STARTINGY(m);
 
     STARTINGX(m) = STARTINGY(m) = 0;
-    Matrix1D< T > v1(3), v2(3), v3(3), v4(3);
-    Matrix1D< T > v(6);
+    MultidimArray< T > v1(3), v2(3), v3(3), v4(3);
+    MultidimArray< T > v(6);
 
     // Set the output matrix size
     out.resize(m);
