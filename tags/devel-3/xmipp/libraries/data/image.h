@@ -240,8 +240,10 @@ public:
     {
         data.clear();
         dataflag = -1;
-    	if ( isComplex()) transform = Standard;
-		else transform = NoTransform;
+        if (isComplexT())
+        	transform = Standard;
+    	else
+    		transform = NoTransform;
         i = 0;
         filename = "";
         offset = 0;
@@ -263,16 +265,19 @@ public:
             REPORT_ERROR(1001, "Allocate: No space left for subimage structure");
     }
 
+    /** Check whether image is complex based on T
+       */
+     bool isComplexT() const
+     {
+    	 return ( typeid(T) == typeid(std::complex<double>) ||
+    			 typeid(T) == typeid(std::complex<float>) );
+     }
 
-    /** Check whether image is complex based on typeid(T)
+	/** Check whether image is complex based on transform
       */
     bool isComplex() const
     {
-    	if ( typeid(T) == typeid(std::complex<double>) ||
-    			typeid(T) == typeid(std::complex<float>) )
-			return true;
-		else
-			return false;
+    	return !(transform==NoTransform);
     }
 
     /** Destructor.
@@ -329,7 +334,7 @@ public:
          if ( readdata ) dataflag = 1;
          else dataflag = -1;
 
-         FileName ext_name = name.get_image_format();
+         FileName ext_name = name.get_file_format();
          if ( name.contains("#") )
         	 filename = name;
          else
@@ -435,7 +440,7 @@ public:
      void write(const FileName name)
      {
          int err = 0;
-         FileName ext_name = name.get_image_format();
+         FileName ext_name = name.get_file_format();
          filename = name.before_first_of(":");
          filename = filename.before_first_of("#");
 
