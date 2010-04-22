@@ -971,19 +971,15 @@ public:
      */
     void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
-        std::cerr << "inside resize" <<std::endl;
-
     	if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
             Zdim == ZSIZE(*this) && Ndim == NSIZE(*this) && data !=NULL)
             return;
 
-        std::cerr << "inside resize2" <<std::endl;
-        if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0 || Ndim <= 0)
+    	if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0 || Ndim <= 0)
         {
             clear();
             return;
         }
-        std::cerr << "inside resize3" <<std::endl;
 
         // data can be NULL while xdim etc are set to non-zero values
         // (This can happen for reading of images...)
