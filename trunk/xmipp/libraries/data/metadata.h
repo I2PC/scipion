@@ -1,6 +1,6 @@
 /***************************************************************************
  * 
- * Authors:      J.R. Bilbao-Castro (jrbcast@ace.ual.es)
+ * Authors:     J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *

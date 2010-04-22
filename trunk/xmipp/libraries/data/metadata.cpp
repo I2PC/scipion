@@ -772,13 +772,6 @@ long int MetaData::addObject( long int objectID )
         objectsIterator = objects.find( objectID );
     }
     
-    // Set default values for the existing labels
-    std::vector<MetaDataLabel>::iterator It;
-    for( It = activeLabels.begin(); It != activeLabels.end(); It++ )
-    {
-    	(objectsIterator->second)->addValue( MetaDataContainer::decodeLabel(*It), std::string( "" ) );
-    }
-    
 	return result;
 }
 
