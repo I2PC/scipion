@@ -1466,37 +1466,81 @@ long int MetaData::countObjects(MetaDataLabel name, const std::string &value)
     return ((findObjects(name, value)).size());
 }
 
-void MetaData::getValue(MetaDataLabel name, double &value, long int objectID)
+bool MetaData::getValue(MetaDataLabel name, double &value, long int objectID)
 {
     MetaDataContainer * aux = getObject(objectID);
+    if( !aux->valueExists(name) )
+    {
+    	return false;
+    }
+    else
+    {
+    	aux->getValue(name, value);
+    }
 
-    aux->getValue(name, value);
+    return true;
 }
 
-void MetaData::getValue(MetaDataLabel name, int &value, long int objectID)
+bool MetaData::getValue(MetaDataLabel name, int &value, long int objectID)
 {
     MetaDataContainer * aux = getObject(objectID);
-    aux->getValue(name, value);
+    if( !aux->valueExists(name) )
+    {
+    	return false;
+    }
+    else
+    {
+    	aux->getValue(name, value);
+    }
+
+    return true;
 }
 
-void MetaData::getValue(MetaDataLabel name, bool &value, long int objectID)
+bool MetaData::getValue(MetaDataLabel name, bool &value, long int objectID)
 {
     MetaDataContainer * aux = getObject(objectID);
-    aux->getValue(name, value);
+    if( !aux->valueExists(name) )
+    {
+    	return false;
+    }
+    else
+    {
+    	aux->getValue(name, value);
+    }
+
+    return true;
 }
 
-void MetaData::getValue(MetaDataLabel name, std::vector<double> &value,
+bool MetaData::getValue(MetaDataLabel name, std::vector<double> &value,
                         long int objectID)
 {
     MetaDataContainer * aux = getObject(objectID);
-    aux->getValue(name, value);
+    if( !aux->valueExists(name) )
+    {
+    	return false;
+    }
+    else
+    {
+    	aux->getValue(name, value);
+    }
+
+    return true;
 }
 
-void MetaData::getValue(MetaDataLabel name, std::string &value,
+bool MetaData::getValue(MetaDataLabel name, std::string &value,
                         long int objectID)
 {
     MetaDataContainer * aux = getObject(objectID);
-    aux->getValue(name, value);
+    if( !aux->valueExists(name) )
+    {
+    	return false;
+    }
+    else
+    {
+    	aux->getValue(name, value);
+    }
+
+    return true;
 }
 
 MetaDataContainer * MetaData::getObject(long int objectID)
