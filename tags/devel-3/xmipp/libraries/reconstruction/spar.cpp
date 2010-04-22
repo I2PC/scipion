@@ -406,7 +406,7 @@ double NonCausalAR(MultidimArray<double> &Img,
 }
 
 /* AR Filter --------------------------------------------------------------- */
-#define DEBUG
+//#define DEBUG
 void ARFilter(MultidimArray<double> &Img, MultidimArray< std::complex<double> > &Filter,
               MultidimArray<double> &ARParameters)
 {

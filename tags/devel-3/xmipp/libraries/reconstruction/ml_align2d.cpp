@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #include "ml_align2d.h"
-#define DEBUG
+//#define DEBUG
 
 //Mutex for each thread update sums
 pthread_mutex_t update_mutex =

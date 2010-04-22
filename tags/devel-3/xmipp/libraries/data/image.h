@@ -347,6 +347,7 @@ public:
          else
         	 filename = name.before_first_of(":");
 //#define DEBUG
+#undef DEBUG
 #ifdef DEBUG
          std::cerr << "name="<<name <<std::endl;
          std::cerr << "ext= "<<ext_name <<std::endl;

@@ -109,6 +109,7 @@ struct SPIDERhead {         	// file header for SPIDER data
 int  readSPIDER(int img_select)
 {
 //#define DEBUG
+#undef DEBUG
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
     	REPORT_ERROR(1,"rwSPIDER: cannot read image.");
