@@ -77,7 +77,7 @@ void randomPermutation(int N, MultidimArray<int>& result);
   * Example of use:
   *
   * @code
-  * Matrix1D<double> x(8), steps(8);
+  * MultidimArray<double> x(8), steps(8);
   * double fitness;
   * int iter;
   * steps.initConstant(1);
@@ -86,14 +86,14 @@ void randomPermutation(int N, MultidimArray<int>& result);
   * @endcode
   *
   */
-void powellOptimizer(Matrix1D< double >& p,
+void powellOptimizer(MultidimArray< double >& p,
                      int i0, int n,
                      double(*f)(double* , void *),
                      void *prm, 
                      double ftol,
                      double& fret,
                      int& iter,
-                     const Matrix1D< double >& steps,
+                     const MultidimArray< double >& steps,
                      bool show = false);
 
 /** Gaussian interpolator

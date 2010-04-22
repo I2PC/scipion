@@ -4253,6 +4253,97 @@ public:
     }
 
 
+    /** Extracts the 1D profile between two points in a 2D array
+     * @ingroup MultidimUtilities
+     *
+     * Given two logical indexes, this function returns samples of the line that
+     * joins them. This is done by bilinear interpolation. The number of samples
+     * in the line is N.
+     */
+    void profile(int x0, int y0, int xF, int yF, int N,
+                 MultidimArray< double >& profile) const
+    {
+        checkDimension(2);
+    	profile.initZeros(N);
+        double tx_step = (double)(xF - x0) / (N - 1);
+        double ty_step = (double)(yF - y0) / (N - 1);
+        double tx = x0, ty = y0;
+
+        for (int i = 0; i < N; i++)
+        {
+            profile(i) = interpolatedElement2D(tx, ty);
+            tx += tx_step;
+            ty += ty_step;
+        }
+    }
+
+    /** Show using gnuplot
+     * @ingroup MultidimArrayUtilities
+     *
+     * This function uses gnuplot to plot this vector. You must supply the
+     * xlabel, ylabel, and title.
+     */
+    void showWithGnuPlot(const std::string& xlabel, const std::string& title)
+    {
+    	checkDimension(1);
+
+    	FileName fn_tmp;
+        fn_tmp.init_random(10);
+        MultidimArray<T>::write(static_cast<std::string>("PPP") +
+            fn_tmp + ".txt");
+
+        std::ofstream fh_gplot;
+        fh_gplot.open((static_cast<std::string>("PPP") + fn_tmp +
+            ".gpl").c_str());
+        if (!fh_gplot)
+            REPORT_ERROR(1,
+            static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
+                + fn_tmp + ".gpl for output");
+        fh_gplot << "set xlabel \"" + xlabel + "\"\n";
+        fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
+        "\" w l\n";
+        fh_gplot << "pause 300 \"\"\n";
+        fh_gplot.close();
+        system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
+            ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
+    }
+
+    /** Edit with xmipp_editor.
+     * @ingroup MultidimUtilities
+     *
+     *
+     * This function generates a random filename starting with PPP and
+     * edits it with xmipp_editor. After closing the editor the file is
+     * removed.
+     */
+    // FIXME This is not good practice.. (system)
+    void edit()
+    {
+        FileName nam;
+        nam.init_random(15);
+
+        nam = static_cast< std::string >("PPP" + nam + ".txt");
+        write(nam);
+
+        system((static_cast< std::string >("xmipp_edit -i " + nam +
+                                           " -remove &").c_str()));
+    }
+
+    /** Write to an ASCII file.
+     * @ingroup Operators
+     */
+    void write(const FileName& fn) const
+    {
+        std::ofstream out;
+        out.open(fn.c_str(), std::ios::out);
+        if (!out)
+            REPORT_ERROR(1,
+                         static_cast< std::string >("MultidimArray::write: File " + fn
+                                                    + " cannot be opened for output"));
+
+        out << *this;
+        out.close();
+    }
 
 ////////////// VECTORS
     /// @defgroup VectorsUtilities

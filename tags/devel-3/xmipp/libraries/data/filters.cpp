@@ -1069,7 +1069,7 @@ void harmonic_decomposition(const MultidimArray<double> &img_in,
 double Shah_energy(const MultidimArray<double> &img,
                    const MultidimArray<double> &surface_strength,
                    const MultidimArray<double> &edge_strength,
-                   double K, const MultidimArray<double> &W)
+                   double K, const Matrix1D<double> &W)
 {
     img.checkDimension(2);
 
@@ -1110,7 +1110,7 @@ double Shah_energy(const MultidimArray<double> &img,
 double Update_surface_Shah(MultidimArray<double> &img,
                            MultidimArray<double> &surface_strength,
                            MultidimArray<double> &edge_strength,
-                           const MultidimArray<double> &W)
+                           const Matrix1D<double> &W)
 {
     img.checkDimension(2);
 
@@ -1171,7 +1171,7 @@ double Update_edge_Shah(MultidimArray<double> &img,
                         MultidimArray<double> &surface_strength,
                         MultidimArray<double> &edge_strength,
                         double K,
-                        const MultidimArray<double> &W)
+                        const Matrix1D<double> &W)
 {
     img.checkDimension(2);
 
@@ -1217,7 +1217,7 @@ double Update_edge_Shah(MultidimArray<double> &img,
 void Smoothing_Shah(MultidimArray<double> &img,
                     MultidimArray<double> &surface_strength,
                     MultidimArray<double> &edge_strength,
-                    const MultidimArray<double> &W,
+                    const Matrix1D<double> &W,
                     int OuterLoops,
                     int InnerLoops,
                     int RefinementLoops,

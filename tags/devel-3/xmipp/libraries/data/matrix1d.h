@@ -1160,12 +1160,14 @@ public:
      */
     Matrix1D<T> operator*(const Matrix2D<T>& M);
 
+
     /** Show using gnuplot
      * @ingroup VectorsUtilities
      *
      * This function uses gnuplot to plot this vector. You must supply the
      * xlabel, ylabel, and title.
      */
+    /*
     void showWithGnuPlot(const std::string& xlabel, const std::string& title)
     {
     	FileName fn_tmp;
@@ -1188,6 +1190,7 @@ public:
         system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
             ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
     }
+	*/
 
     /** Compute numerical derivative
      * @ingroup VectorsUtilities
@@ -1226,9 +1229,31 @@ public:
     }
 
 
+    /** Input from input stream.
+     * @ingroup Operators
+     *
+     * Actual size of the array is used to know how many values must be read.
+     *
+     * @code
+     * v.<3);
+     * std::cin >> v;
+     * @endcode
+     *
+     * This function is not ported to Python.
+     */
+    // This function must be explictly implemented outside
+    friend std::istream& operator>>(std::istream& in, Matrix1D<T>& v)
+    {
+        T* ptr;
+        for (int i = 0; i < v.size(); i++)
+        	in >> *ptr;
+		return in;
+    }
+
     /** Write to an ASCII file.
      * @ingroup Operators
      */
+    /*
     void write(const FileName& fn) const
     {
         std::ofstream out;
@@ -1241,6 +1266,7 @@ public:
         out << *this;
         out.close();
     }
+	*/
 
     /** Edit with xmipp_editor.
      * @ingroup Operators
@@ -1251,6 +1277,7 @@ public:
      * removed.
      */
     // FIXME This is not good practice.. (system)
+    /*
     void edit()
     {
         FileName nam;
@@ -1262,6 +1289,7 @@ public:
         system((static_cast< std::string >("xmipp_edit -i " + nam +
                                            " -remove &").c_str()));
     }
+    */
 
 
 

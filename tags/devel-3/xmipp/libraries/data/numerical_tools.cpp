@@ -36,15 +36,15 @@ void randomPermutation(int N, MultidimArray<int>& result)
 }
 
 /* Powell's optimizer ------------------------------------------------------ */
-void powellOptimizer(Matrix1D<double> &p, int i0, int n,
+void powellOptimizer(MultidimArray<double> &p, int i0, int n,
                       double(*f)(double *x, void *), void * prm,
                       double ftol, double &fret,
-                      int &iter, const Matrix1D<double> &steps, bool show)
+                      int &iter, const MultidimArray<double> &steps, bool show)
 {
     double *xi = NULL;
 
     // Adapt indexes of p
-    double *pptr = p.adaptForNumericalRecipes();
+    double *pptr = p.adaptForNumericalRecipes1D();
     double *auxpptr = pptr + (i0 - 1);
 
     // Form direction matrix

@@ -192,83 +192,7 @@ void EntropySegmentation(MultidimArray<double> &V);
  */
 void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil=0.05);
 
-/** Correlation 1D
- * @ingroup Filters
- *
- * This function returns the product of both signals in the common positions.
- * Notice that it is not the correlation what is usually needed but the
- * covariance that is the product of the two signals minus their means.
- *
- * This function returns the number of objects (different from background)
- */
-template <typename T>
-double correlation(const MultidimArray< T >& x,
-                   const MultidimArray< T >& y,
-                   const MultidimArray< int >* mask = NULL,
-                   int l = 0)
-{
-    SPEED_UP_temps;
-
-    double retval = 0; // returned value
-    int i, ip; // indexes
-    int Rows; // of the matrices
-
-    Rows = XSIZE(x);
-    for (i = 0; i < Rows; i++)
-    {
-        ip = i - l;
-        if (ip >= 0 && ip < Rows)
-        {
-            if (mask != NULL)
-                if (!DIRECT_A1D_ELEM((*mask), i))
-                    continue;
-
-            retval += DIRECT_A1D_ELEM(x, i) * DIRECT_A1D_ELEM(y, ip);
-        }
-    }
-
-    return retval / Rows;
-}
-
-/** Correlation 2D
- * @ingroup Filters
- */
-template <typename T>
-double correlation(const MultidimArray< T >& x,
-                   const MultidimArray< T >& y,
-                   const MultidimArray< int >* mask = NULL,
-                   int l = 0, int m = 0)
-{
-    /* Note: l index is for rows and m index for columns */
-
-    SPEED_UP_temps;
-
-    double retval = 0; // returned value
-    int i, j, ip, jp; // indexes
-    int Rows, Cols; // of the matrices
-
-    // do the computation
-    Cols = x.colNumber();
-    Rows = x.rowNumber();
-
-    for (i = 0; i < Rows; i++)
-        for (j = 0; j < Cols; j++)
-        {
-            ip = i - l;
-            jp = j - m;
-
-            if (ip >= 0 && ip < Rows && jp >= 0 && jp < Cols)
-                if (mask != NULL)
-                    if (!DIRECT_A2D_ELEM((*mask), i, j))
-                        continue;
-
-            retval += DIRECT_A2D_ELEM(x, i, j) * DIRECT_A2D_ELEM(y, ip, jp);
-        }
-
-    return retval / (Cols * Rows);
-}
-
-/** Correlation 3D
+/** Correlation nD
  * @ingroup Filters
  */
 template <typename T>
@@ -1071,7 +995,7 @@ void median_filter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
 void Smoothing_Shah(MultidimArray< double >& img,
                     MultidimArray< double >& surface_strength,
                     MultidimArray< double >& edge_strength,
-                    const MultidimArray< double >& W,
+                    const Matrix1D< double >& W,
                     int OuterLoops,
                     int InnerLoops,
                     int RefinementLoops,

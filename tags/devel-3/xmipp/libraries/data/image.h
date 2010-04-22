@@ -323,6 +323,13 @@ public:
          return (isImage(name) && isComplex());
      }
 
+     /** Rename the image
+       */
+     void rename (const FileName name)
+     {
+    	 filename = name;
+     }
+
     /** General read function
      */
      int read(const FileName name, bool readdata=true, int select_img=-1,
@@ -437,9 +444,13 @@ public:
 
     /** General write function
      */
-     void write(const FileName name)
+     void write(FileName name="")
      {
          int err = 0;
+
+         if (name == "")
+        	 name = filename;
+
          FileName ext_name = name.get_file_format();
          filename = name.before_first_of(":");
          filename = filename.before_first_of("#");

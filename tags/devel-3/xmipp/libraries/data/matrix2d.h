@@ -1465,5 +1465,29 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T2>& v2)
 
 }
 
+/// Show matrix
+template<typename T>
+std::ostream& operator<<(std::ostream& ostrm, const Matrix2D<T>& v)
+{
+    if (v.Xdim() == 0 || v.Ydim() == 0)
+        ostrm << "NULL matrix\n";
+    else
+    {
+        ostrm << std::endl;
+        double max_val = v.computeMax();
+        int prec = bestPrecision(max_val, 10);
+
+        for (int i = 0; i < v.Ydim(); i++)
+        {
+            for (int j = 0; j < v.Xdim(); j++)
+            {
+                ostrm << floatToString((double) v(i, j), 10, prec) << ' ';
+            }
+            ostrm << std::endl;
+        }
+    }
+
+    return ostrm;
+}
 
 #endif /* MATRIX2D_H_ */
