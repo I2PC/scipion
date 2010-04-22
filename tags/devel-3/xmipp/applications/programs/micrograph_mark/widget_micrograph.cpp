@@ -1357,8 +1357,11 @@ int AutoParticlePicking::automaticallySelectParticles()
             std::vector<int> toKeep;
             for (int i=0; i<YSIZE(features[1]); i++)
             {
-                Matrix1D<double> trialFeatures;
-                features[1].getRow(i,trialFeatures);
+                MultidimArray<double> aux;
+                features[1].getRow(i,aux);
+                Matrix1D<double> trialFeatures(XSIZE(aux));
+                FOR_ALL_ELEMENTS_IN_ARRAY1D(aux)
+					trialFeatures(i) = aux(i);
                 double cost;
                 int votes=__selection_model2.isParticle(trialFeatures,cost);
                 if (votes<8)
@@ -1606,7 +1609,7 @@ void AutoParticlePicking::classifyMask()
     }
         
     #ifdef DEBUG_CLASSIFY
-        ImageXmipp save;
+        Image<double> save;
         typeCast(*classif1, save());
         save.write("PPPmaskClassification1.xmp");
 
@@ -2167,9 +2170,8 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
     #endif    
     if (__output_scale==0)
     {
-        MultidimArray<double> auxPiece;
-        piece.pyramidExpand(auxPiece);
-        piece=auxPiece;
+        MultidimArray<double> auxPiece=piece;
+        pyramidExpand(1, piece, auxPiece);
         #ifdef DEBUG_PREPARE    
             save() = piece;
             save.write("PPPpiece1.5.xmp");
@@ -2203,7 +2205,8 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
         save() = piece;
         save.write("PPPpiece3.xmp");
     #endif    
-    original_piece.selfScaleToSize(YSIZE(piece), XSIZE(piece));
+    MultidimArray<double> Maux=original_piece;
+    scaleToSize(1, original_piece, Maux, YSIZE(piece), XSIZE(piece));
 
     // Reject 5% of the outliers
     reject_outliers(original_piece, 5.0);
@@ -2222,7 +2225,7 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
 void AutoParticlePicking::find_neighbour(const MultidimArray<double> &piece,
     std::vector<int> &_idx, int _index,
     int _x, int _y, int _posx, int _posy, MultidimArray<char> &_visited,
-    std::vector< MultidimArray<int> > &_nbr)
+    std::vector< Matrix1D<int> > &_nbr)
 {
     int piece_xsize = XSIZE(piece);
     int piece_ysize = YSIZE(piece);
@@ -2262,7 +2265,7 @@ void AutoParticlePicking::find_neighbour(const MultidimArray<double> &piece,
             (nx + xmask2 < right) &&
             (ny + ymask2 < bottom))
         {
-            MultidimArray<int> current_nbr;
+            Matrix1D<int> current_nbr;
             current_nbr.initZeros(3);
             current_nbr(0) = current_part;
             current_nbr(1) = nx - left;
@@ -2511,7 +2514,7 @@ void AutoParticlePicking::saveModels(const FileName &_fn_root)
     saveAutoParticles();
 
     // Save the mask
-    ImageXmipp save;
+    Image<double> save;
     typeCast(__mask.get_binary_mask(), save());
     save.write(fn_root + ".mask");
 

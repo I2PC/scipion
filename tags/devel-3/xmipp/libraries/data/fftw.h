@@ -389,8 +389,8 @@ void correlation_vector(const MultidimArray< T > & m1,
  *  
  *  It is assumed that the two vectors v1, and v2 are of the same size. */
 template <class T>
-void correlation_vector_no_Fourier(const Matrix1D<T> &v1, const Matrix1D<T> &v2,
-    Matrix1D<T> &result)
+void correlation_vector_no_Fourier(const MultidimArray<T> &v1, const MultidimArray<T> &v2,
+    MultidimArray<T> &result)
 {
     v1.checkDimension(1);
     v2.checkDimension(1);

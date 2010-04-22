@@ -1034,7 +1034,7 @@ void reduceBSpline(int SplineDegree,
  * expanded set of B-spline coefficients using the two-scale relationship.
  */
 template<typename T>
-void expandBSpline3D(int SplineDegree, 
+void expandBSpline(int SplineDegree,
                      MultidimArray< double >& V2, 
                      const MultidimArray<T> &V1)
 {
