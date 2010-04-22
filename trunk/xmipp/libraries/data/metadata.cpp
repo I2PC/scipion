@@ -633,8 +633,11 @@ void MetaData::write( const std::string &fileName )
 	    outfile << "; ";
 	    for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
 	    {
+	    	if( *strIt != MDL_COMMENT )
+		{
 		    outfile << MetaDataContainer::decodeLabel(*strIt);
 		    outfile << " ";
+		}
 	    }   
 	    outfile << std::endl;
 
@@ -644,14 +647,18 @@ void MetaData::write( const std::string &fileName )
             {
                 std::string entryComment;
                 (It->second)->getValue( MDL_COMMENT, entryComment );
+		if( entryComment != std::string("") )		
                 outfile << "; " << entryComment << std::endl;
             }
 		    	
 		    for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
 		    {   
+		    	if( *strIt != MDL_COMMENT )
+			{
                 outfile.width(10);
 		    	(It->second)->writeValueToFile( outfile, *strIt );
 	    		outfile << " ";
+			}
 	    	}
 		
 		    outfile << std::endl;
@@ -664,11 +671,14 @@ void MetaData::write( const std::string &fileName )
         
         for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
 	    {
+	    if( *strIt != MDL_COMMENT )
+	    {
             outfile.width(20);
 		    outfile << MetaDataContainer::decodeLabel(*strIt);
 		    outfile << " ";
             object->writeValueToFile( outfile, *strIt );
 	        outfile << std::endl;
+		}
         }   
     }
 }
