@@ -408,7 +408,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * SPEED_UP_temps.
  *
  * @code
- * Matrix2D< double > m1(10, 10), m2(20, 20);
+ * MultidimArray< double > m1(10, 10), m2(20, 20);
  * m1.setXmippOrigin();
  * m2.setXmippOrigin();
  *
@@ -579,7 +579,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * (included limits) respectively. You need to define SPEED_UP_temps.
  *
  * @code
- * Matrix2D< double > v1(10), v2(20);
+ * MultidimArray< double > v1(10), v2(20);
  * v1.setXmippOrigin();
  * v2.setXmippOrigin();
  *
@@ -749,6 +749,19 @@ public:
         coreInit();
         *this = V;
     }
+
+    /** Copy constructor from a Matrix1D.
+     * @ingroup MultidimArrayConstructors
+     * The Size constructor creates an array with memory associated,
+     * and fills it with zeros.
+     */
+    MultidimArray(const Matrix1D<T>& V)
+    {
+        coreInit();
+        resize(1, 1, 1, V.size());
+        for (int i = 0; i < V.size(); i++)
+        	(*this)(i) = V(i);
+     }
 
     /** Destructor.
      * @ingroup MultidimArrayConstructors
@@ -1615,7 +1628,7 @@ public:
      */
     void setSlice(int k, const MultidimArray<T>& v, unsigned long n = 0)
     {
-        if (XSIZE(*this) == 0)
+        if (xdim == 0)
             return;
 
         if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
@@ -1645,21 +1658,46 @@ public:
      */
     void getCol(int j, MultidimArray<T>& v) const
     {
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
+        if (xdim == 0 || ydim == 0)
         {
             v.clear();
             return;
         }
 
-        if (j < 0 || j >= XSIZE(*this))
+        if (j < 0 || j >= xdim)
             REPORT_ERROR(1103,"getCol: Matrix subscript (j) greater than matrix dimension");
 
-        v.resize(YSIZE(*this));
-        for (int i = 0; i < YSIZE(*this); i++)
+        v.resize(ydim);
+        for (int i = 0; i < ydim; i++)
             v(i) = (*this)(i, j);
 
     }
 
+    /** Set Column
+     * @ingroup MultidimMemory
+     *
+     * This function sets a column vector corresponding to the choosen column
+     * inside matrix.
+     *
+     * @code
+     * m.setCol(0, (m.row(1)).transpose()); // Copies row 1 in column 0
+     * @endcode
+     */
+    void setCol(int j, const MultidimArray<T>& v)
+    {
+        if (xdim == 0 || ydim == 0)
+            REPORT_ERROR(1, "setCol: Target matrix is empty");
+
+        if (j < 0 || j>= xdim)
+            REPORT_ERROR(1103, "setCol: Matrix subscript (j) out of range");
+
+        if (v.xdim != ydim)
+            REPORT_ERROR(1102,
+                         "setCol: Vector dimension different from matrix one");
+
+        for (int i = 0; i < ydim; i++)
+            (*this)(i, j) = v(i);
+    }
     /** Get row
      * @ingroup MultidimMemory
      *
@@ -1674,19 +1712,44 @@ public:
      */
     void getRow(int i, MultidimArray<T>& v) const
     {
-        if (XSIZE(*this) == 0 || YSIZE(*this) == 0)
+        if (xdim == 0 || ydim == 0)
         {
             v.clear();
             return;
         }
 
-        if (i < 0 || i >= YSIZE(*this))
+        if (i < 0 || i >= ydim)
             REPORT_ERROR(1103, "getRow: Matrix subscript (i) greater than matrix dimension");
 
-        v.resize(XSIZE(*this));
-        for (int j = 0; j < XSIZE(*this); j++)
+        v.resize(xdim);
+        for (int j = 0; j < xdim; j++)
             v(j) = (*this)(i, j);
 
+    }
+
+    /** Set Row
+     * @ingroup MatricesMemory
+     *
+     * This function sets a row vector corresponding to the choosen row in the 2D Matrix
+     *
+     * @code
+     * m.setRow(-2, m.row(1)); // Copies row 1 in row -2
+     * @endcode
+     */
+    void setRow(int i, const MultidimArray<T>& v)
+    {
+        if (xdim == 0 || ydim == 0)
+            REPORT_ERROR(1, "setRow: Target matrix is empty");
+
+        if (i < 0 || i >= ydim)
+            REPORT_ERROR(1103, "setRow: Matrix subscript (i) out of range");
+
+        if (v.xdim != xdim)
+            REPORT_ERROR(1102,
+                         "setRow: Vector dimension different from matrix one");
+
+        for (int j = 0; j < xdim; j++)
+            (*this)(i, j) = v(j);
     }
 
     /** 3D Logical to physical index translation.
@@ -1994,7 +2057,7 @@ public:
      * splines would be:
      *
      * @code
-     * Matrix2D< double > Bspline_coeffs;
+     * MultidimArray< double > Bspline_coeffs;
      * myImage.produceSplineCoefficients(Bspline_coeffs, 3);
      * interpolated_value = Bspline_coeffs.interpolatedElementBSpline(0.5,
      * 0.5,3);
