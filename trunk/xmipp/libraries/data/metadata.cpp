@@ -490,6 +490,7 @@ void MetaData::combineWithFiles( MetaDataLabel thisLabel )
     }
     
     MetaData auxMetaData;
+    MetaDataContainer auxMetaDataContainer;
     
     for( long int IDthis = firstObject( ) ; IDthis != NO_MORE_OBJECTS; IDthis = nextObject( ) )
 	{
@@ -501,8 +502,20 @@ void MetaData::combineWithFiles( MetaDataLabel thisLabel )
         
         // Read file
         auxMetaData.read( fileName );
-        combine( auxMetaData );
-    }
+        auxMetaDataContainer = auxMetaData.getObject();
+
+        for( MetaDataLabel mdl = MDL_FIRST_LABEL ; mdl <= MDL_LAST_LABEL ; mdl=MetaDataLabel( mdl+1 ) )
+        {
+             if( auxMetaDataContainer->valueExists( mdl ) )
+             {
+                 std::string value;
+
+                 auxMetaDataContainer->writeValueToString( value, mdl );
+
+                 setValue( MetaDataContainer::decodeLabel( mdl ), value );
+             }
+         }
+	}
 }
 
 void MetaData::combine( MetaData & other, MetaDataLabel thisLabel )
