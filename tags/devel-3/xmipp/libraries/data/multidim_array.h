@@ -628,6 +628,16 @@ template<typename T>
 void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
     MultidimArray<T>& result, char operation);
 
+/* MultidimArray aliases
+ * @ingroup MultidimensionalArrays
+ * Just for making explicit for what dimensionality these MultidimArrays are meant
+ * No check on dimensions or whatsoever is performed..
+ * This is just for clarity in the code
+ */
+#define MultidimArray1D MultidimArray
+#define MultidimArray2D MultidimArray
+#define MultidimArray3D MultidimArray
+
 
 /** Template class for Xmipp arrays.
   * @ingroup MultidimensionalArrays
@@ -1704,6 +1714,7 @@ public:
         for (int i = 0; i < ydim; i++)
             (*this)(i, j) = v(i);
     }
+
     /** Get row
      * @ingroup MultidimMemory
      *
