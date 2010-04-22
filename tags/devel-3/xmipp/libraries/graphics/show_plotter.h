@@ -48,7 +48,7 @@
 #include <qmainwindow.h>
 #endif
 
-#include <data/matrix2d.h>
+#include <data/multidim_array.h>
 
 /**@defgroup ShowPlotter Show Plotter
    @ingroup GraphicsLibrary */
@@ -111,7 +111,7 @@ public:
 };
 
 /** Class to represent pairs of values.
-    It may receive a Matrix2D object or two matrices 1D;
+    It may receive a 2D MultidimArray object or two 1D MultidimArrays;
     It has some utilities like ZoomIn & Out, move through it, save plotter as
     .png image.
 
@@ -123,7 +123,7 @@ public:
          int main(int argc, char *argv[]) {
             try {
                // Data to plot
-               Matrix1D<double> y;
+               MultidimArray double> y;
                y.initLinear(1,100);
 
                // Setup the interface
@@ -158,19 +158,19 @@ public:
     ~Plotter();
 
     /** Assign a new curve to the plotter.
-        It needs an ID for the curve and a Matrix1D with the curve.
+        It needs an ID for the curve and a MultidimArray with the curve.
         it will be assigned to CurveMap and shown in the plotter.*/
-    void setCurveData(int id, const Matrix1D<double> &Y);
+    void setCurveData1D(int id, const MultidimArray<double> &Y);
 
     /** Assign a new curve to the plotter. */
-    void setCurveData(int id, const Matrix1D<double> &X,
-                      const Matrix1D<double> &Y);
+    void setCurveData1D(int id, const MultidimArray<double> &X,
+                      const MultidimArray<double> &Y);
 
     /** Assign a new curve to the plotter.
         The first column is assumed to be the X axis and the second column
         the Y axis.
     */
-    void setCurveData(int id, const Matrix2D<double> &data);
+    void setCurveData2D(int id, const MultidimArray<double> &data);
 
     /** Delete a curve from our plotter. */
     void deleteCurve(int id);
@@ -239,7 +239,7 @@ public:
     QRect rubberBandRect;
 
     // Data to plot
-    std::map<int, Matrix2D<double> > curveMap;
+    std::map<int, MultidimArray<double> > curveMap;
     std::map<int, bool > curveActive;
 };
 //@}

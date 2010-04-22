@@ -178,7 +178,8 @@ void ShowSel::compute_global_normalization_params()
     bool first = true;
     for (int i = 0; i < listSize; i++)
     {
-        ImageXmipp I(imgnames[i]);
+        Image<double> I;
+        I.read(imgnames[i]);
         if (load_mode == PSD_mode) xmipp2PSD(I(), I());
         double min_val, max_val;
         I().computeDoubleMinMax(min_val, max_val);
@@ -345,29 +346,23 @@ const char * ShowSel::cellLabel(int i) const
 /* Produce pixmap ---------------------------------------------------------- */
 void ShowSel::producePixmapAt(int i)
 {
-    ImageXmipp I;
+    Image<double> I;
     // Read image
-    if (imgnames[i].find("imagic:") != -1)
-    {
-        Image *img = Image::LoadImage(imgnames[i]);
-        I() = (*img)();
-        delete img;
-    }
-    else if (Is_ImageXmipp(imgnames[i]))
+    if (I.isRealImage(imgnames[i]))
     {
         // Plain Xmipp images
-        I.read(imgnames[i], FALSE, FALSE, apply_geo, FALSE);
+        I.read(imgnames[i], true, -1, apply_geo, FALSE);
         if (load_mode == PSD_mode) xmipp2PSD(I(), I());
     }
-    else if (Is_FourierImageXmipp(imgnames[i]))
+    else if (I.isComplexImage(imgnames[i]))
     {
         // FFT Xmipp images: plot log10(1+|I|^2)
-        FourierImageXmipp If;
+        Image<std::complex<double> > If;
         If.read(imgnames[i]);
         FFT_magnitude(If(), I());
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
-            MAT_ELEM(I(), i, j) =
-                log10(1 + MAT_ELEM(I(), i, j) * MAT_ELEM(I(), i, j));
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
+            A2D_ELEM(I(), i, j) =
+                log10(1 + A2D_ELEM(I(), i, j) * A2D_ELEM(I(), i, j));
     }
     else
         // Unknown image
@@ -380,7 +375,10 @@ void ShowSel::producePixmapAt(int i)
 
     // If PSD mode, make the full window fit the current size
     if (load_mode == PSD_mode || load_mode == CTF_mode)
-        I().selfScaleToSize(rowHeight(0), columnWidth(0));
+    {
+    	MultidimArray<double> Maux=I();
+    	scaleToSize(1, I(), Maux, rowHeight(0), columnWidth(0));
+    }
 
     // Convert Xmipp image to Pixmap
     content[i] = new QPixmap;

@@ -358,13 +358,16 @@ void ShowTable::drawFrameAndLabel(QPainter *p, int row, int col, int i,
 }
 
 /* Scale and normalize an image -------------------------------------------- */
-void ShowTable::scale_and_normalize(Matrix2D<double> &I, bool normalize,
+void ShowTable::scale_and_normalize(MultidimArray<double> &I, bool normalize,
                                     int &minGray, int &maxGray)
 {
     // Care about size
     if (currScale != 100)
-        I.selfScaleToSize((int)(currScale / 100*projYdim),
+    {
+    	MultidimArray<double> Maux=I;
+    	scaleToSize(1, I, Maux, (int)(currScale / 100*projYdim),
                              (int)(currScale / 100*projXdim));
+    }
 
     // Care about the normalization
     minGray = 0;
@@ -502,7 +505,7 @@ void ShowTable::showStats(SelFile &SF, bool apply_geo)
 {
     try
     {
-        Image _ave, _sd;
+        Image<double> _ave, _sd;
         double _minPixel, _maxPixel;
         SF.go_beginning();
         SF.get_statistics(_ave, _sd, _minPixel, _maxPixel, apply_geo);

@@ -130,10 +130,10 @@ void AssignCTFViewer::updateMask(std::vector<float> &prm)
     r2_min *= r2_min;
     double r2_max = max_freq * XSIZE(xmippImage_backup);
     r2_max *= r2_max;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(xmippImage_backup)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(xmippImage_backup)
     {
         double r2 = i * i + j * j;
-        if (r2 < r2_min || r2 > r2_max) xmippImage(i, j) = 0;
+        if (r2 < r2_min || r2 > r2_max) xmippImage()(i, j) = 0;
     }
     xmipp2Qt(xmippImage);
     showImage();

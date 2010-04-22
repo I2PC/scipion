@@ -196,7 +196,7 @@ ImageViewer::ImageViewer(QImage *_image, const char *name)
 
 /****************************************************/
 
-ImageViewer::ImageViewer(ImageT<double> *_image, const char *name)
+ImageViewer::ImageViewer(Image<double> *_image, const char *name)
 #ifdef QT3_SUPPORT
         : QWidget(NULL, name, Qt::WDestructiveClose),
 #else
@@ -211,12 +211,12 @@ ImageViewer::ImageViewer(ImageT<double> *_image, const char *name)
     load_mode = ImageViewer::Normal_mode;
     Init();
     filename = name;
-    if (xmipp2Qt((Image&) *_image)) showImage();
+    if (xmipp2Qt((Image<double> &) *_image)) showImage();
 }
 
 /****************************************************/
 
-ImageViewer::ImageViewer(FourierImageXmipp *_FFTimage, const char *name)
+ImageViewer::ImageViewer(Image<std::complex<double> > *_FFTimage, const char *name)
 #ifdef QT3_SUPPORT
         : QWidget(NULL, name, Qt::WDestructiveClose),
 #else
@@ -233,19 +233,19 @@ ImageViewer::ImageViewer(FourierImageXmipp *_FFTimage, const char *name)
     filename = name;
     xmippImageFourier = (*_FFTimage)();
     CenterFFT(xmippImageFourier, true);
-    ImageXmipp I;
+    Image<double> I;
     generateFFTImage(I());
     if (xmipp2Qt(I)) showImage();
 }
 
-void ImageViewer::generateFFTImage(Matrix2D<double> &out)
+void ImageViewer::generateFFTImage(MultidimArray<double> &out)
 {
-    Matrix2D<int> Isubs;
+    MultidimArray<int> Isubs;
     Isubs.initZeros(YSIZE(xmippImageFourier), XSIZE(xmippImageFourier));
     out.initZeros(YSIZE(xmippImageFourier), XSIZE(xmippImageFourier));
     double min_positive;
     bool first = true;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(xmippImageFourier)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(xmippImageFourier)
     {
         double ampl, phase, val, eps;
         eps = 0;
@@ -253,26 +253,26 @@ void ImageViewer::generateFFTImage(Matrix2D<double> &out)
         switch (fft_show_mode)
         {
         case 0:
-            ampl = abs(MAT_ELEM(xmippImageFourier, i, j));
+            ampl = abs(A2D_ELEM(xmippImageFourier, i, j));
             if (ampl != 0)
-                val = MAT_ELEM(out, i, j) = 10 * log10(ampl * ampl);
-            else MAT_ELEM(Isubs, i, j) = 1;
+                val = A2D_ELEM(out, i, j) = 10 * log10(ampl * ampl);
+            else A2D_ELEM(Isubs, i, j) = 1;
             break;
         case 1:
-            val = MAT_ELEM(out, i, j) = real(MAT_ELEM(xmippImageFourier, i, j));
+            val = A2D_ELEM(out, i, j) = real(A2D_ELEM(xmippImageFourier, i, j));
             break;
         case 2:
-            val = MAT_ELEM(out, i, j) = imag(MAT_ELEM(xmippImageFourier, i, j));
+            val = A2D_ELEM(out, i, j) = imag(A2D_ELEM(xmippImageFourier, i, j));
             break;
         case 3:
-            val = MAT_ELEM(out, i, j) = abs(MAT_ELEM(xmippImageFourier, i, j));
+            val = A2D_ELEM(out, i, j) = abs(A2D_ELEM(xmippImageFourier, i, j));
             break;
         case 4:
-            ampl = abs(MAT_ELEM(xmippImageFourier, i, j));
-            val = MAT_ELEM(out, i, j) = ampl * ampl;
+            ampl = abs(A2D_ELEM(xmippImageFourier, i, j));
+            val = A2D_ELEM(out, i, j) = ampl * ampl;
             break;
         case 5:
-            val = MAT_ELEM(out, i, j) = arg(MAT_ELEM(xmippImageFourier, i, j));
+            val = A2D_ELEM(out, i, j) = arg(A2D_ELEM(xmippImageFourier, i, j));
             break;
         }
         if (val < min_positive || first)
@@ -285,9 +285,9 @@ void ImageViewer::generateFFTImage(Matrix2D<double> &out)
     // Substitute 0s by something a little bit smaller
     if (fft_show_mode == 0)
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Isubs)
-            if (MAT_ELEM(Isubs, i, j) == 1)
-                MAT_ELEM(out, i, j) = min_positive - 1;
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(Isubs)
+            if (A2D_ELEM(Isubs, i, j) == 1)
+                A2D_ELEM(out, i, j) = min_positive - 1;
     }
 
     out.setXmippOrigin();
@@ -340,8 +340,9 @@ void ImageViewer::doOption(int item)
     }
     else if (item == ravg)
     {
-        Matrix1D<double> radial_profile;
-        Matrix1D<int> center_of_rot(2), radial_count;
+        MultidimArray<double> radial_profile;
+        MultidimArray<int> radial_count;
+        Matrix1D<int> center_of_rot(2);
         radialAverage(xmippImage(), center_of_rot, radial_profile, radial_count);
         radial_profile.showWithGnuPlot("Radius", "Radial average");
         radial_profile.edit();
@@ -352,7 +353,7 @@ void ImageViewer::doOption(int item)
     }
     else if (item == profile)
     {
-        Matrix1D<double> profile;
+        MultidimArray<double> profile;
         xmippImage().profile(
             xi + STARTINGX(xmippImage()), yi + STARTINGY(xmippImage()),
             xf + STARTINGX(xmippImage()), yf + STARTINGY(xmippImage()), 100, profile);
@@ -500,7 +501,7 @@ void ImageViewer::updateStatus()
             moremsg.sprintf("(%d,%d)=(%d,%d)= %.3f ",
                             picky, pickx,
                             y_log, x_log,
-                            xmippImage(y_log, x_log));
+                            xmippImage()(y_log, x_log));
             message += moremsg;
         }
         moremsg.sprintf("%dx%d", image.width(), image.height());
@@ -532,7 +533,7 @@ void ImageViewer::saveImage(int item)
     {
         try
         {
-            ImageXmipp tmpImage;
+            Image<double> tmpImage;
             tmpImage() = xmippImage();
             // Saves Xmipp Image
             tmpImage.rename((std::string)((const char *)savefilename));
@@ -644,7 +645,7 @@ bool ImageViewer::showImage()
 
 /*****************************************/
 
-bool ImageViewer::xmipp2Qt(ImageT<double>& _image)
+bool ImageViewer::xmipp2Qt(Image<double>& _image)
 {
     bool ok = FALSE;
 
@@ -720,7 +721,6 @@ bool ImageViewer::loadImage(const char *fileName,
 {
     filename = fileName;
     load_mode = _load_mode;
-    bool imagic = ((std::string)(filename)).find("imagic:") == 0;
     bool ok = FALSE;
     static bool message_shown = false;
     if (filename)
@@ -734,21 +734,12 @@ bool ImageViewer::loadImage(const char *fileName,
             try
             {
                 // reads Xmipp Image
-                Image tmpImage;
-                if (!imagic) wait_until_stable_size(filename);
-                if (imagic)
+                Image<double> tmpImage;
+                if (tmpImage.isRealImage(filename))
                 {
                     isFourierImage = false;
-                    Image *p = Image::LoadImage(filename);
-                    if (!p) REPORT_ERROR(1, "ImageViewer::loadImage: Unknown format");
-                    tmpImage() = (*p)();
-                    delete p;
-                }
-                else if (Is_ImageXmipp(filename))
-                {
-                    isFourierImage = false;
-                    ImageXmipp p;
-                    p.read((FileName)filename, FALSE, FALSE, apply_geo, FALSE);
+                    Image<double> p;
+                    p.read((FileName)filename, true, -1, apply_geo, FALSE);
                     if (load_mode == ImageViewer::PSD_mode)
                     {
                         // It is only the ARMA model
@@ -764,10 +755,10 @@ bool ImageViewer::loadImage(const char *fileName,
                     }
                     tmpImage() = p();
                 }
-                else if (Is_FourierImageXmipp(filename))
+                else if (tmpImage.isComplexImage(filename))
                 {
                     isFourierImage = true;
-                    FourierImageXmipp If;
+                    Image<std::complex<double> > If;
                     If.read(filename);
                     xmippImageFourier = If();
                     CenterFFT(xmippImageFourier, true);
@@ -801,7 +792,7 @@ bool ImageViewer::loadImage(const char *fileName,
     {
         ok = showImage();
         struct stat info;
-        if (stat(filename, &info) && !imagic)
+        if (stat(filename, &info))
         {
             std::cerr << "loadImage: Cannot get time of file " << filename << std::endl;
             modification_time = 0;
@@ -812,7 +803,7 @@ bool ImageViewer::loadImage(const char *fileName,
     return ok;
 }
 
-bool ImageViewer::loadMatrix(Matrix2D<double> &_matrix,
+bool ImageViewer::loadMatrix(MultidimArray<double> &_matrix,
                              double _minGray, double _maxGray, TLoadMode _load_mode)
 {
     load_mode = _load_mode;
@@ -820,7 +811,7 @@ bool ImageViewer::loadMatrix(Matrix2D<double> &_matrix,
     static bool message_shown = false;
     if (XSIZE(_matrix) == 0) return false;
 
-    Image tmpImage;
+    Image<double> tmpImage;
     isFourierImage = false;
     if (load_mode == ImageViewer::PSD_mode)
     {
@@ -1068,7 +1059,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
     case Qt::Key_N:    // Natural size (original size)
         if (e->state() == Qt::ControlButton)
         { // If 'Ctrol N' key,
-            resize(xmippImage().colNumber(), xmippImage().rowNumber() + status->height());
+            resize(XSIZE(xmippImage()), YSIZE(xmippImage()) + status->height());
         }
         break;
     case Qt::Key_M:
@@ -1076,7 +1067,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
         if (e->state() == Qt::ControlButton)
         { // If 'Ctrol-' key,
             // Aspect ratio of the original image
-            double ratio_original = (double)xmippImage().colNumber() / xmippImage().rowNumber();
+            double ratio_original = (double)XSIZE(xmippImage()) / YSIZE(xmippImage());
             int new_width = width() / 2;
             int new_height = ROUND(new_width / ratio_original);
             resize(new_width, new_height + status->height());
@@ -1086,7 +1077,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
     case Qt::Key_Plus:    // Double size
         if (e->state() == Qt::ControlButton)
         { // If 'Ctrol+' key,
-            double ratio_original = (double)xmippImage().colNumber() / xmippImage().rowNumber();
+            double ratio_original = (double)XSIZE(xmippImage()) / YSIZE(xmippImage());
             int new_width = width() * 2;
             int new_height = ROUND(new_width / ratio_original);
             resize(new_width, new_height + status->height());
@@ -1095,7 +1086,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
     case Qt::Key_A:        // Aspect ratio
         if (e->state() == Qt::ControlButton)
         { // If 'Ctrol+' key,
-            double ratio = (double) xmippImage().colNumber() / (double) xmippImage().rowNumber();
+            double ratio = (double) XSIZE(xmippImage()) / (double) YSIZE(xmippImage());
             resize(width(), (int)(width() / ratio + status->height()));
         }
         break;
@@ -1250,7 +1241,7 @@ void ImageViewer::set_fft_show_mode(int _fft_show_mode)
     fft_show_mode = _fft_show_mode;
     if (isFourierImage)
     {
-        ImageXmipp I;
+        Image<double> I;
         generateFFTImage(I());
         if (xmipp2Qt(I)) showImage();
     }
@@ -1329,26 +1320,27 @@ void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
     prm.mask_w1 = enhance_prms[3];
     prm.mask_w2 = enhance_prms[4];
 
-    ImageXmipp I, Iaux;
+    Image<double> I;
+    MultidimArray<double> Iaux;
     I.read(filename);
     int Xdim = XSIZE(I());
     int Ydim = YSIZE(I());
     if (load_mode == ImageViewer::CTF_mode)
     {
-        Iaux() = I();
+        Iaux = I();
         // Remove the part of the model
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
             if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
-                I(i, j) = I(i, XSIZE(I()) - 1 - j);
+                I()(i, j) = I()(i, XSIZE(I()) - 1 - j);
     }
     prm.apply(I());
     if (load_mode == ImageViewer::CTF_mode)
     {
         CenterFFT(I(), true);
         // Copy the part of the model
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
             if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
-                I(i, j) = ABS(Iaux(i, j));
+                I()(i, j) = ABS(Iaux(i, j));
         CenterFFT(I(), false);
     }
     I().setXmippOrigin();
