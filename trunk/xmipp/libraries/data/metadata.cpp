@@ -490,7 +490,7 @@ void MetaData::combineWithFiles( MetaDataLabel thisLabel )
     }
     
     MetaData auxMetaData;
-    MetaDataContainer auxMetaDataContainer;
+    MetaDataContainer * auxMetaDataContainer;
     
     for( long int IDthis = firstObject( ) ; IDthis != NO_MORE_OBJECTS; IDthis = nextObject( ) )
 	{
