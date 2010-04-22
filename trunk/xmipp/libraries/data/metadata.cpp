@@ -798,7 +798,7 @@ long int MetaData::addObject(long int objectID)
     std::vector<MetaDataLabel>::iterator It;
     for (It = activeLabels.begin(); It != activeLabels.end(); It++)
     {
-        (objectsIterator.second)->addValue(decodeLabel(*It), std::string(""));
+        (objectsIterator->second)->addValue(MetaDataContainer::decodeLabel(*It), std::string(""));
     }
 
     return result;
