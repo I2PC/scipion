@@ -139,7 +139,7 @@ public:
     /** Number of reference images */
     int n_ref;
     /** References images */
-    std::vector < ImageXmippT<double> > Iref;
+    std::vector < Image<double> > Iref;
     /** Sigma value for expected pixel noise */
     double sigma_noise;
     /** sigma-value for origin offsets */
@@ -174,7 +174,7 @@ public:
     double get_sumw(int refno);
     double get_sumw_mirror(int refno);
     double get_sumwsc(int refno);
-    Matrix2D<double> get_wsum_Mref(int refno);
+    MultidimArray<double> get_wsum_Mref(int refno);
     double get_sumw_allrefs();
     double get_wsum_sigma_offset();
     double get_wsum_sigma_noise();
@@ -244,11 +244,11 @@ public:
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
     std::vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
-    std::vector < ImageXmippT<double> > Iold;
+    std::vector < Image<double> > Iold;
     /** Matrices for calculating PDF of (in-plane) translations */
-    Matrix2D<double> P_phi, Mr2;
+    MultidimArray<double> P_phi, Mr2;
     /** Masks for rotated references */
-    Matrix2D<int> mask, omask;
+    MultidimArray<int> mask, omask;
     /** Fast mode */
     bool fast_mode;
     /** Fast mode */
@@ -307,22 +307,22 @@ public:
     double LL, sumfracweight;
     double wsum_sigma_noise, wsum_sigma_offset, sumw_allrefs;
     std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror;
-    std::vector<Matrix2D<double > > wsum_Mref;
+    std::vector<MultidimArray<double > > wsum_Mref;
     std::vector<double> conv;
-    Matrix2D<int> Msignificant;
-    Matrix2D<double> Mimg;
+    MultidimArray<int> Msignificant;
+    MultidimArray<double> Mimg;
     std::vector<double> allref_offsets;
     std::vector<double> pdf_directions;
-    std::vector<Matrix2D<double> > mref;
-    std::vector<Matrix2D<std::complex<double> > > fref;
-    std::vector<Matrix2D<std::complex<double > > > wsumimgs;
+    std::vector<MultidimArray<double> > mref;
+    std::vector<MultidimArray<std::complex<double> > > fref;
+    std::vector<MultidimArray<std::complex<double > > > wsumimgs;
     int opt_refno, iopt_psi, iopt_flip;
     double trymindiff, opt_scale, bgmean, opt_psi;
     double fracweight, maxweight2, dLL;
-    std::vector<Matrix1D<double> > docfiledata;
+    std::vector<MultidimArray<double> > docfiledata;
 
     /** From expectationSingleImage */
-    std::vector<Matrix2D<std::complex<double> > > Fimg_flip, mysumimgs;
+    std::vector<MultidimArray<std::complex<double> > > Fimg_flip, mysumimgs;
     std::vector<double> refw, refw2, refwsc2, refw_mirror, sumw_refpsi;
     double wsum_corr, sum_refw, sum_refw2, maxweight;
     double wsum_sc, wsum_sc2, wsum_offset, old_bgmean;

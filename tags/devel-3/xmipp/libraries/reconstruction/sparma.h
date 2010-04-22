@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Javier Ángel Velázquez Muriel (javi@cnb.csic.es)
+ *              Javier ï¿½ngel Velï¿½zquez Muriel (javi@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -30,7 +30,7 @@
 #define MA        1   // parameter, or sigma in the output ARMAParameters matrix
 #define SIGMA       2   // returned by functions.
 
-#include <data/matrix2d.h>
+#include <data/multidim_array.h>
 
 /**@defgroup SpARMA Spectrum modelling by ARMA filters
    @ingroup ReconsLibrary */
@@ -89,9 +89,9 @@
 
    DATE:        26-3-2001
 */
-double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
-                  int N_MA, int M_MA, Matrix2D<double> &ARParameters,
-                  Matrix2D<double> &MAParameters);
+double CausalARMA(MultidimArray<double> &Img, int N_AR, int M_AR,
+                  int N_MA, int M_MA, MultidimArray<double> &ARParameters,
+                  MultidimArray<double> &MAParameters);
 
 
 /** ARMAFilter.
@@ -112,8 +112,8 @@ double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
 
    DATE:        26-3-2001
 */
-void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
-                Matrix2D<double> &ARParameters, Matrix2D<double> &MAParameters,
+void ARMAFilter(MultidimArray<double> &Img, MultidimArray< double > &Filter,
+                MultidimArray<double> &ARParameters, MultidimArray<double> &MAParameters,
                 double dSigma);
 //@}
 

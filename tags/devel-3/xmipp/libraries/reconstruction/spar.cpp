@@ -43,7 +43,7 @@
    DATE:        26-1-2001
 
 /**************************************************************************/
-double ComputeTermA(Matrix1D<double> &dDigitalFreq, Matrix2D<double> &ARParameters)
+double ComputeTermA(Matrix1D<double> &dDigitalFreq, MultidimArray<double> &ARParameters)
 {
     double A = 0;
 
@@ -56,7 +56,7 @@ double ComputeTermA(Matrix1D<double> &dDigitalFreq, Matrix2D<double> &ARParamete
             // contains sigma.
             if (!(p == 0 && q == 0))
             {
-                A += MAT_ELEM(ARParameters, p, q) *
+                A += A2D_ELEM(ARParameters, p, q) *
                      cos((-2) * PI * (p * YY(dDigitalFreq) + q * XX(dDigitalFreq)));
             }
         }
@@ -80,7 +80,7 @@ double ComputeTermA(Matrix1D<double> &dDigitalFreq, Matrix2D<double> &ARParamete
    DATE:        26-1-2001
 
 /**************************************************************************/
-double ComputeTermB(Matrix1D<double> &dDigitalFreq, Matrix2D<double> &ARParameters)
+double ComputeTermB(Matrix1D<double> &dDigitalFreq, MultidimArray<double> &ARParameters)
 {
     double B = 0;
 
@@ -92,7 +92,7 @@ double ComputeTermB(Matrix1D<double> &dDigitalFreq, Matrix2D<double> &ARParamete
             // contains sigma.
             if (!(p == 0 && q == 0))
             {
-                B += MAT_ELEM(ARParameters, p, q) *
+                B += A2D_ELEM(ARParameters, p, q) *
                      sin((-2) * PI * (p * YY(dDigitalFreq) + q * XX(dDigitalFreq)));
             }
         }
@@ -143,8 +143,8 @@ double ComputeTermB(Matrix1D<double> &dDigitalFreq, Matrix2D<double> &ARParamete
 
 /**************************************************************************/
 // #define DEBUG
-double CausalAR(Matrix2D<double> &Img,
-                int orderR, int orderC, Matrix2D<double> &ARParameters)
+double CausalAR(MultidimArray<double> &Img,
+                int orderR, int orderC, MultidimArray<double> &ARParameters)
 {
 
     int l0;  // initial Rows coeficient for correlations
@@ -185,28 +185,21 @@ double CausalAR(Matrix2D<double> &Img,
     int eq, co; // auxiliary indexes for equation and coeficient
 
     // Compute correlation matrix (we'll name it R)
-    Matrix2D<double> R((lF - p0) - (l0 - pF) + 1, (mF - q0) - (m0 - qF) + 1);
+    MultidimArray<double> R((lF - p0) - (l0 - pF) + 1, (mF - q0) - (m0 - qF) + 1);
     R.initZeros();
     STARTINGY(R) = l0 - pF;
     STARTINGX(R) = m0 - qF;
     std::cerr << "Generating correlation coefficients ...\n";
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(R)
-    MAT_ELEM(R, i, j) = correlation(Img, Img, NULL, i, j);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(R)
+		A2D_ELEM(R, i, j) = correlation(Img, Img, NULL, i, j);
 
     // Set equation system for AR model
     Matrix2D<double> Coeficients;
     Matrix1D<double> Indep_terms, ARcoeficients;
 
     Coeficients.resize((lF - l0 + 1)*(mF - m0 + 1) - mF, (lF - l0 + 1)*(mF - m0 + 1) - mF);
-
-    STARTINGX(Coeficients) = 0;
-    STARTINGY(Coeficients) = 0;
-
     Indep_terms.resize((lF - l0 + 1)*(mF - m0 + 1) - mF);
-    STARTINGX(Indep_terms) = 0;
-
     ARcoeficients.resize((lF - l0 + 1)*(mF - m0 + 1) - mF);
-    STARTINGX(ARcoeficients) = 0;
 
     // Generate matrix
     eq = 0; // equation number
@@ -246,13 +239,13 @@ double CausalAR(Matrix2D<double> &Img,
                                 // It's supposed that the filter asociated to the random process
                                 // has a response h(0,0)=1 and h(i,j)=0 elsewhere.
                                 if (l == 0 && m == 0)
-                                    MAT_ELEM(Coeficients, eq, co) = -1;
+                                    Coeficients(eq, co) = -1;
                                 else
-                                    MAT_ELEM(Coeficients, eq, co) = 0;
+                                    Coeficients(eq, co) = 0;
                             }
                             else
                             {
-                                MAT_ELEM(Coeficients, eq, co) = R(l - p, m - q);
+                                Coeficients(eq, co) = R(l - p, m - q);
                             }
                             // increment the coeficient counter into an equation
                             co++;
@@ -294,19 +287,19 @@ double CausalAR(Matrix2D<double> &Img,
             }
             else
             {
-                MAT_ELEM(ARParameters, p, q) = VEC_ELEM(ARcoeficients, co);
+                A2D_ELEM(ARParameters, p, q) = ARcoeficients(co);
                 co++;
             }
         }
 
     // return the sigma coeficient
-    return MAT_ELEM(ARParameters, 0, 0);
+    return A2D_ELEM(ARParameters, 0, 0);
 }
 #undef DEBUG
 
 /* Non causal AR ----------------------------------------------------------- */
-double NonCausalAR(Matrix2D<double> &Img,
-                   int orderR, int orderC, Matrix2D<double> &ARParameters)
+double NonCausalAR(MultidimArray<double> &Img,
+                   int orderR, int orderC, MultidimArray<double> &ARParameters)
 {
 
     int l0;  // initial Rows coeficient for correlations
@@ -330,28 +323,21 @@ double NonCausalAR(Matrix2D<double> &Img,
     int eq, co; // auxiliary indexes for equation and coeficient
 
     // Compute correlation matrix (we'll name it R)
-    Matrix2D<double> R((lF - p0) - (l0 - pF) + 1, (mF - q0) - (m0 - qF) + 1);
+    MultidimArray<double> R((lF - p0) - (l0 - pF) + 1, (mF - q0) - (m0 - qF) + 1);
     R.initZeros();
     STARTINGY(R) = l0 - pF;
     STARTINGX(R) = m0 - qF;
     std::cerr << "Generating correlation coefficients ...\n";
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(R)
-    MAT_ELEM(R, i, j) = correlation(Img, Img, NULL, i, j);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(R)
+    A2D_ELEM(R, i, j) = correlation(Img, Img, NULL, i, j);
 
     // Set equation system for AR model
     Matrix2D<double> Coeficients;
     Matrix1D<double> Indep_terms, ARcoeficients;
 
     Coeficients.resize((lF - l0 + 1)*(mF - m0 + 1), (lF - l0 + 1)*(mF - m0 + 1));
-
-    STARTINGX(Coeficients) = 0;
-    STARTINGY(Coeficients) = 0;
-
     Indep_terms.resize((lF - l0 + 1)*(mF - m0 + 1));
-    STARTINGX(Indep_terms) = 0;
-
     ARcoeficients.resize((lF - l0 + 1)*(mF - m0 + 1));
-    STARTINGX(ARcoeficients) = 0;
 
     // Generate matrix
     eq = 0; // equation number
@@ -376,16 +362,16 @@ double NonCausalAR(Matrix2D<double> &Img,
                         // has a response h(0,0)=1 and h(i,j)=0 elsewhere.
                         if (l == 0 && m == 0)
                         {
-                            MAT_ELEM(Coeficients, eq, co) = -1;
+                            Coeficients(eq, co) = -1;
                         }
                         else
                         {
-                            MAT_ELEM(Coeficients, eq, co) = 0;
+                            Coeficients(eq, co) = 0;
                         }
                     }
                     else
                     {
-                        MAT_ELEM(Coeficients, eq, co) = R(l - p, m - q);
+                        Coeficients(eq, co) = R(l - p, m - q);
                     }
                     // increment the coeficient counter into an equation
                     co++;
@@ -411,18 +397,18 @@ double NonCausalAR(Matrix2D<double> &Img,
     for (int p = pF; p >= p0; p--)
         for (int q = qF; q >= q0; q--)
         {
-            MAT_ELEM(ARParameters, p, q) = VEC_ELEM(ARcoeficients, co);
+            A2D_ELEM(ARParameters, p, q) = ARcoeficients(co);
             co++;
         }
 
     // return the sigma coeficient
-    return MAT_ELEM(ARParameters, 0, 0);
+    return A2D_ELEM(ARParameters, 0, 0);
 }
 
 /* AR Filter --------------------------------------------------------------- */
 #define DEBUG
-void ARFilter(Matrix2D<double> &Img, Matrix2D< std::complex<double> > &Filter,
-              Matrix2D<double> &ARParameters)
+void ARFilter(MultidimArray<double> &Img, MultidimArray< std::complex<double> > &Filter,
+              MultidimArray<double> &ARParameters)
 {
 
     double A, B;  /* Two Terms involved in calculation
@@ -441,7 +427,7 @@ void ARFilter(Matrix2D<double> &Img, Matrix2D< std::complex<double> > &Filter,
 #ifdef DEBUG
     std::ofstream filelog("coeficientes.txt");
 #endif
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(Filter)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(Filter)
     {
         // Compute dDigitalFreq
         XX(dDigitalFreq) = j / XSIZE(Filter);
@@ -451,7 +437,7 @@ void ARFilter(Matrix2D<double> &Img, Matrix2D< std::complex<double> > &Filter,
         A = ComputeTermA(dDigitalFreq, ARParameters);
         B = ComputeTermB(dDigitalFreq, ARParameters);
 
-        double sigma = sqrt(MAT_ELEM(ARParameters, 0, 0));
+        double sigma = sqrt(A2D_ELEM(ARParameters, 0, 0));
         Filter(i, j) = std::complex<double> (sigma * (1 + A) / ((1 + A) * (1 + A) + B * B),
                                         sigma * (-B) / ((1 + A) * (1 + A) + B * B));
 
@@ -467,9 +453,9 @@ void ARFilter(Matrix2D<double> &Img, Matrix2D< std::complex<double> > &Filter,
 #undef DEBUG
 
 /* Combine AR filters ------------------------------------------------------ */
-void combineARFilters(const Matrix2D< std::complex<double> > &Filter1,
-                      const Matrix2D< std::complex<double> > &Filter2,
-                      Matrix2D< std::complex<double> > &Filter,
+void combineARFilters(const MultidimArray< std::complex<double> > &Filter1,
+                      const MultidimArray< std::complex<double> > &Filter2,
+                      MultidimArray< std::complex<double> > &Filter,
                       const std::string &method)
 {
     Filter.resize(Filter1);
@@ -482,7 +468,7 @@ void combineARFilters(const Matrix2D< std::complex<double> > &Filter1,
     else                                 imethod = 0;
 
     double abs1, abs2;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(Filter)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(Filter)
     {
         switch (imethod)
         {

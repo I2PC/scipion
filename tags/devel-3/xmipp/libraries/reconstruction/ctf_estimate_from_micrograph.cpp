@@ -29,7 +29,7 @@
 #include <data/args.h>
 #include <data/micrograph.h>
 #include <data/selfile.h>
-#include <data/header.h>
+#include <data/image.h>
 #include <data/fft.h>
 
 /* Read parameters ========================================================= */
@@ -121,18 +121,18 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
 
 /* Compute PSD by piece averaging ========================================== */
 //#define DEBUG
-void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
-        Matrix2D<double> &psd)
+void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
+        MultidimArray<double> &psd)
 {
     int small_Ydim = 2 * YSIZE(piece) / Nside_piece;
     int small_Xdim = 2 * XSIZE(piece) / Nside_piece;
-    Matrix2D<double> small_piece(small_Ydim, small_Xdim);
+    MultidimArray<double> small_piece(small_Ydim, small_Xdim);
 
     int Xstep = (XSIZE(piece) - small_Xdim) / (Nside_piece - 1);
     int Ystep = (YSIZE(piece) - small_Ydim) / (Nside_piece - 1);
     psd.initZeros(small_piece);
     #ifdef DEBUG
-        ImageXmipp save;
+        Image<double> save;
         save()=piece;
         save.write("PPPpiece.xmp");
     #endif
@@ -146,8 +146,8 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
             int i, j, ib, jb;
             for (i = 0, ib = i0; i < small_Ydim; i++, ib++)
                 for (j = 0, jb = j0; j < small_Xdim; j++, jb++)
-                    DIRECT_MAT_ELEM(small_piece, i, j) =
-                        DIRECT_MAT_ELEM(piece, ib, jb);
+                    DIRECT_A2D_ELEM(small_piece, i, j) =
+                        DIRECT_A2D_ELEM(piece, ib, jb);
             
             #ifdef DEBUG
                 save()=small_piece;
@@ -155,12 +155,12 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
             #endif
 
             // Compute the PSD of the small piece
-            Matrix2D<double> small_psd;
+            MultidimArray<double> small_psd;
             small_psd.initZeros(small_piece);
             if (PSD_mode == ARMA)
             {
                 // Compute the ARMA model
-                Matrix2D<double> ARParameters, MAParameters;
+                MultidimArray<double> ARParameters, MAParameters;
                 double dSigma = CausalARMA(small_piece, ARMA_prm.N_AR, ARMA_prm.M_AR,
                                            ARMA_prm.N_MA, ARMA_prm.M_MA, ARParameters, MAParameters);
                 ARMAFilter(small_piece, small_psd, ARParameters, MAParameters, dSigma);
@@ -168,7 +168,7 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
             else
             {
                 // Compute the periodogram
-                Matrix2D< std::complex<double> > Periodogram;
+                MultidimArray< std::complex<double> > Periodogram;
                 FourierTransform(small_piece, Periodogram);
                 FFT_magnitude(Periodogram, small_psd);
                 small_psd *= small_psd;
@@ -192,8 +192,10 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
         save.write("PPPpsd1.xmp");
     #endif
 
+
     CenterFFT(psd, true);
-    psd.selfScaleToSizeBSpline(3, YSIZE(piece), XSIZE(piece));
+    MultidimArray<double> Maux=psd;
+    scaleToSize(3, psd, Maux, YSIZE(piece), XSIZE(piece));
     CenterFFT(psd, false);
     psd.threshold("below", 0, 0);
 
@@ -291,7 +293,7 @@ void Prog_assign_CTF_prm::process()
     PosFile.clear();
     PosFile.seekg(0, std::ios::beg); // Start of file
     SF.go_beginning();
-    ImageXmipp psd_avg;
+    Image<double> psd_avg;
     std::cerr << "Computing models of each piece ...\n";
     init_progress_bar(div_Number);
 
@@ -351,7 +353,7 @@ void Prog_assign_CTF_prm::process()
         }
 
         // Extract micrograph piece ..........................................
-        Matrix2D<double> piece(N_vertical, N_horizontal);
+        MultidimArray<double> piece(N_vertical, N_horizontal);
         if (!selfile_mode)
         {
             for (int k = 0; k < YSIZE(piece); k++)
@@ -360,20 +362,20 @@ void Prog_assign_CTF_prm::process()
         }
         else
         {
-            ImageXmipp I;
+            Image<double> I;
             I.read(SF.get_current_file());
             piece = I();
         }
         piece.statisticsAdjust(0, 1);
 
         // Estimate the power spectrum .......................................
-        ImageXmipp psd;
+        Image<double> psd;
         psd().resize(piece);
         if (!piece_averaging)
             if (PSD_mode == ARMA)
             {
                 // Compute the ARMA model
-                Matrix2D<double> ARParameters, MAParameters;
+                MultidimArray<double> ARParameters, MAParameters;
                 double dSigma = CausalARMA(piece, ARMA_prm.N_AR, ARMA_prm.M_AR,
                                            ARMA_prm.N_MA, ARMA_prm.M_MA, ARParameters, MAParameters);
                 ARMAFilter(piece, psd(), ARParameters, MAParameters, dSigma);
@@ -381,7 +383,7 @@ void Prog_assign_CTF_prm::process()
             else
             {
                 // Compute the periodogram
-                Matrix2D< std::complex<double> > Periodogram;
+                MultidimArray< std::complex<double> > Periodogram;
                 FourierTransform(piece, Periodogram);
                 FFT_magnitude(Periodogram, psd());
                 psd() *= psd();
@@ -463,7 +465,7 @@ void Prog_assign_CTF_prm::process()
             }
             else
             {
-                Matrix2D<double> CTFs(bootstrapN,32);
+                MultidimArray<double> CTFs(bootstrapN,32);
                 adjust_CTF_prm.bootstrap=true;
                 adjust_CTF_prm.show_optimization=true;
                 FileName fnBase=fn_avg.without_extension();
@@ -521,7 +523,7 @@ void Prog_assign_CTF_prm::process()
                     progress_bar(n);
                 }
                 progress_bar(bootstrapN);
-                CTFs.write("bootstrap.txt");
+                //CTFs.write("bootstrap.txt");
             }
         }
     }

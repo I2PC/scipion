@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Javier Angel Velazquez Muriel (javi@cnb.csic.es)
- *              Carlos Oscar Sánchez Sorzano
+ *              Carlos Oscar Sï¿½nchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -98,8 +98,8 @@ public:
         Compute the PSD of a piece by subdividing it in smaller pieces and
         averaging their PSDs. The piece will be cut into 3x3 overlapping
         pieces of size N/2 x N/2.*/
-    void PSD_piece_by_averaging(Matrix2D<double> &piece,
-                                Matrix2D<double> &psd);
+    void PSD_piece_by_averaging(MultidimArray<double> &piece,
+                                MultidimArray<double> &psd);
 
     /// Process the whole thing
     void process();

@@ -41,11 +41,11 @@ public:
     /// Model to which the current one must be similar
     FileName             fn_similar_model;
     /// CTF amplitude to model
-    ImageXmipp           ctftomodel;
+    Image<double>           ctftomodel;
     /// CTF amplitude to model
-    ImageXmipp           enhanced_ctftomodel;
+    Image<double>           enhanced_ctftomodel;
     /// CTF amplitude to model
-    ImageXmipp           enhanced_ctftomodel_fullsize;
+    Image<double>           enhanced_ctftomodel_fullsize;
     /// CTF model
     XmippCTF             initial_ctfmodel;
     /// Show convergence values
@@ -75,7 +75,7 @@ public:
     double               enhanced_weight;
 
     /// Set of parameters for the complete adjustment of the CTF
-    Matrix1D<double>     adjust;
+    MultidimArray<double>     adjust;
     
     /// Model simplification
     int                  modelSimplification;
@@ -97,11 +97,11 @@ public:
 
     /** Generate half-plane model at a given size.
         It is assumed that ROUT_Adjust_CTF has been already run */
-    void generate_model_halfplane(int Ydim, int Xdim, Matrix2D<double> &model);
+    void generate_model_halfplane(int Ydim, int Xdim, MultidimArray<double> &model);
 
     /** Generate quadrant model at a given size.
         It is assumed that ROUT_Adjust_CTF has been already run */
-    void generate_model_quadrant(int Ydim, int Xdim, Matrix2D<double> &model);
+    void generate_model_quadrant(int Ydim, int Xdim, MultidimArray<double> &model);
 };
 
 /** Core of the Adjust CTF routine.

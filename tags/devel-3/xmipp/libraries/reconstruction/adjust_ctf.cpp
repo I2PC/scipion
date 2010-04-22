@@ -52,18 +52,18 @@ double CTF_fitness(double *, void *);
 namespace AdjustCTF {
     // Some aliases
     Adjust_CTF_Parameters *global_prm;
-    Matrix2D<double>      *f;               // The CTF to model
-    Matrix1D<double>      *global_adjust;   // Current theoretical adjustment
+    MultidimArray<double>      *f;               // The CTF to model
+    MultidimArray<double>      *global_adjust;   // Current theoretical adjustment
 
     // Frequency of each point in digital units
-    Matrix2D<double>       global_x_digfreq;
-    Matrix2D<double>       global_y_digfreq;
-    Matrix2D<double>       global_w_digfreq;
-    Matrix2D<double>       global_x_contfreq;
-    Matrix2D<double>       global_y_contfreq;
-    Matrix2D<double>       global_w_contfreq;
-    Matrix2D<double>       global_mask;
-    Matrix1D<double>       global_w_count;
+    MultidimArray<double>       global_x_digfreq;
+    MultidimArray<double>       global_y_digfreq;
+    MultidimArray<double>       global_w_digfreq;
+    MultidimArray<double>       global_x_contfreq;
+    MultidimArray<double>       global_y_contfreq;
+    MultidimArray<double>       global_w_contfreq;
+    MultidimArray<double>       global_mask;
+    MultidimArray<double>       global_w_count;
 
     // Penalization for forbidden values of the parameters
     double         global_heavy_penalization;
@@ -600,7 +600,7 @@ void Adjust_CTF_Parameters::produce_side_info()
 
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_x_digfreq)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_x_digfreq)
     {
         XX(idx) = j;
         YY(idx) = i;
@@ -621,7 +621,7 @@ void Adjust_CTF_Parameters::produce_side_info()
     // Build frequency mask
     global_mask.initZeros(global_w_digfreq);
     global_w_count.initZeros(XSIZE(global_w_digfreq));
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
     {
         if (global_w_digfreq(i, j) >= max_freq ||
             global_w_digfreq(i, j) <= min_freq) continue;
@@ -635,7 +635,7 @@ void Adjust_CTF_Parameters::produce_side_info()
     {
         double N=global_mask.sum();
         std::vector< Matrix1D<int> > positions;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(global_mask)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(global_mask)
             if (global_mask(i,j))
             {
                 Matrix1D<int> r(2);
@@ -676,9 +676,9 @@ void Adjust_CTF_Parameters::produce_side_info()
     // Divide by the number of count at each frequency
     // and mask between min_freq and max_freq
     double min_val = enhanced_ctftomodel().computeMin();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_mask)
-    	if (global_mask(i, j)<=0) enhanced_ctftomodel(i, j) = min_val;
-    Matrix2D<double> aux;
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_mask)
+    	if (global_mask(i, j)<=0) enhanced_ctftomodel()(i, j) = min_val;
+    MultidimArray<double> aux;
     median_filter3x3(enhanced_ctftomodel(), aux);
     enhanced_ctftomodel() = aux;
     enhanced_ctftomodel().rangeAdjust(0, 1);
@@ -696,7 +696,7 @@ void Adjust_CTF_Parameters::produce_side_info()
 
 /* Generate model so far ---------------------------------------------------- */
 /* The model is taken from global_adjust and global_ctfmodel is modified */
-void generate_model_so_far(ImageXmipp &I, bool apply_log = false)
+void generate_model_so_far(Image<double> &I, bool apply_log = false)
 {
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
@@ -706,7 +706,7 @@ void generate_model_so_far(ImageXmipp &I, bool apply_log = false)
     global_ctfmodel.Produce_Side_Info();
 
     I().resize(*f);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
     {
         XX(idx) = j;
         YY(idx) = i;
@@ -716,23 +716,23 @@ void generate_model_so_far(ImageXmipp &I, bool apply_log = false)
         // Decide what to save
         double param;
         if (global_action <= 1)
-            I(i, j) = global_ctfmodel.CTFnoise_at(XX(freq), YY(freq));
+            I()(i, j) = global_ctfmodel.CTFnoise_at(XX(freq), YY(freq));
         else if (global_action == 2)
         {
             double E = global_ctfmodel.CTFdamping_at(XX(freq), YY(freq));
-            I(i, j) = global_ctfmodel.CTFnoise_at(XX(freq), YY(freq)) + E * E;
+            I()(i, j) = global_ctfmodel.CTFnoise_at(XX(freq), YY(freq)) + E * E;
         }
         else if (global_action >= 3 && global_action <= 5)
         {
             double ctf = global_ctfmodel.CTFpure_at(XX(freq), YY(freq));
-            I(i, j) = global_ctfmodel.CTFnoise_at(XX(freq), YY(freq)) + ctf * ctf;
+            I()(i, j) = global_ctfmodel.CTFnoise_at(XX(freq), YY(freq)) + ctf * ctf;
         }
         else
         {
             double ctf = global_ctfmodel.CTFpure_at(XX(freq), YY(freq));
-            I(i, j) = ctf;
+            I()(i, j) = ctf;
         }
-        if (apply_log) I(i, j) = 10 * log10(I(i, j));
+        if (apply_log) I()(i, j) = 10 * log10(I()(i, j));
     }
 }
 
@@ -745,10 +745,10 @@ void save_intermediate_results(const FileName &fn_root, bool
                                generate_profiles = true)
 {
     std::ofstream plotX, plotY, plot_radial;
-    ImageXmipp save;
+    Image<double> save;
     generate_model_so_far(save, false);
 
-    ImageXmipp save_ctf;
+    Image<double> save_ctf;
     global_prm->generate_model_halfplane(
         global_prm->ctfmodelSize, global_prm->ctfmodelSize,
         save_ctf());
@@ -778,9 +778,9 @@ void save_intermediate_results(const FileName &fn_root, bool
     {
         if (global_mask(i, 0)<=0) continue;
         plotY << global_w_digfreq(i, 0) << " " << global_w_contfreq(i, 0)
-        << " " << save(i, 0) << " "
+        << " " << save()(i, 0) << " "
         << (*f)(i, 0) << " "
-        << global_prm->enhanced_ctftomodel(i, 0)
+        << global_prm->enhanced_ctftomodel()(i, 0)
         << std::endl;
     }
 
@@ -789,30 +789,30 @@ void save_intermediate_results(const FileName &fn_root, bool
     {
         if (global_mask(0, j)<=0) continue;
         plotX << global_w_digfreq(0, j) << " " << global_w_contfreq(0, j)
-        << " " << save(0, j) << " "
+        << " " << save()(0, j) << " "
         << (*f)(0, j) << " "
-        << global_prm->enhanced_ctftomodel(0, j)
+        << global_prm->enhanced_ctftomodel()(0, j)
         << std::endl;
     }
 
     // Generate radial average
-    Matrix1D<double> radial_CTFmodel_avg(YSIZE(save()) / 2);
-    Matrix1D<double> radial_CTFampl_avg(YSIZE(save()) / 2);
-    Matrix1D<double> radial_enhanced_avg(YSIZE(save()) / 2);
-    Matrix1D<int>    radial_N(YSIZE(save()) / 2);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
+    MultidimArray<double> radial_CTFmodel_avg(YSIZE(save()) / 2);
+    MultidimArray<double> radial_CTFampl_avg(YSIZE(save()) / 2);
+    MultidimArray<double> radial_enhanced_avg(YSIZE(save()) / 2);
+    MultidimArray<int>    radial_N(YSIZE(save()) / 2);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
     {
         if (global_mask(i, j)<=0) continue;
-        double model2 = save(i, j);
+        double model2 = save()(i, j);
 
         int r = FLOOR(global_w_digfreq(i, j) * (double)YSIZE(*f));
         radial_CTFmodel_avg(r) += model2;
         radial_CTFampl_avg(r) += (*f)(i, j);
-        radial_enhanced_avg(r) += global_prm->enhanced_ctftomodel(i, j);
+        radial_enhanced_avg(r) += global_prm->enhanced_ctftomodel()(i, j);
         radial_N(r)++;
     }
 
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0) continue;
         plot_radial << global_w_digfreq(i, 0) << " " << global_w_contfreq(i, 0)
@@ -829,7 +829,7 @@ void save_intermediate_results(const FileName &fn_root, bool
 
 /* Generate model at a given size ------------------------------------------ */
 void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
-        Matrix2D<double> &model)
+        MultidimArray<double> &model)
 {
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
@@ -838,7 +838,8 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
     model = global_prm->enhanced_ctftomodel_fullsize();
 
     // Scale and remove negative values because of the interpolation
-    model.selfScaleToSizeBSpline(3, Ydim, Xdim);
+    MultidimArray<double> Maux=model;
+    scaleToSize(3, model, Maux, Ydim, Xdim);
     model.rangeAdjust(0, 1);
 
     // Generate the CTF model
@@ -848,7 +849,7 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
     // Write the two model quadrants
     double minval = 1e38;
     double maxval = -1e38;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(model)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
         if ((j >= Xdim / 2 && i >= Ydim / 2) || (j < Xdim / 2 && i < Ydim / 2))
         {
@@ -865,7 +866,7 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
     }
 
     // Normalize the CTF model
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(model)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
         if ((j >= Xdim / 2 && i >= Ydim / 2) || (j < Xdim / 2 && i < Ydim / 2))
         {
@@ -876,7 +877,7 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
 }
 
 void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
-        Matrix2D<double> &model)
+        MultidimArray<double> &model)
 {
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
@@ -885,7 +886,8 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
     model = global_prm->enhanced_ctftomodel_fullsize();
 
     // Scale and remove negative values because of the interpolation
-    model.selfScaleToSizeBSpline(3, Ydim, Xdim);
+    MultidimArray<double> Maux=model;
+    scaleToSize(3, model, Maux, Ydim, Xdim);
     model.rangeAdjust(0, 1);
 
     // The left part is the CTF model
@@ -895,7 +897,7 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
 
     double minval = 1e38;
     double maxval = -1e38;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(model)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
         if (j >= Xdim / 2) continue;
 
@@ -910,7 +912,7 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
         maxval = XMIPP_MAX(maxval, model(i, j));
     }
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(model)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
         if (j >= Xdim / 2) continue;
         model(i, j) = (model(i, j) - minval) / (maxval - minval);
@@ -1025,11 +1027,11 @@ double CTF_fitness(double *p, void *)
     for (int i = 0; i < YSIZE(global_w_digfreq); i += global_evaluation_reduction)
         for (int j = 0; j < XSIZE(global_w_digfreq); j += global_evaluation_reduction)
         {
-            if (DIRECT_MAT_ELEM(global_mask, i, j)<=0) continue;
+            if (DIRECT_A2D_ELEM(global_mask, i, j)<=0) continue;
 
             // Compute each component
-            double f_x = DIRECT_MAT_ELEM(global_x_contfreq, i, j);
-            double f_y = DIRECT_MAT_ELEM(global_y_contfreq, i, j);
+            double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
+            double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
             double bg = global_ctfmodel.CTFnoise_at(f_x, f_y);
             double envelope, ctf_without_damping, ctf_with_damping;
             double ctf2_th;
@@ -1068,8 +1070,8 @@ double CTF_fitness(double *p, void *)
             }
 
             // Compute distance
-            double ctf2 = DIRECT_MAT_ELEM(*f, i, j);
-            double enhanced_ctf = DIRECT_MAT_ELEM(global_prm->enhanced_ctftomodel(), i, j);
+            double ctf2 = DIRECT_A2D_ELEM(*f, i, j);
+            double enhanced_ctf = DIRECT_A2D_ELEM(global_prm->enhanced_ctftomodel(), i, j);
             double dist = 0;
             int r = FLOOR(global_w_digfreq(i, j) * (double)YSIZE(global_w_digfreq));
             double ctf_with_damping2;
@@ -1079,13 +1081,13 @@ double CTF_fitness(double *p, void *)
             case 1:
                 dist = ABS(ctf2 - bg);
                 if (global_penalize && bg > ctf2 &&
-                    DIRECT_MAT_ELEM(global_w_digfreq, i, j) > global_max_gauss_freq)
+                    DIRECT_A2D_ELEM(global_w_digfreq, i, j) > global_max_gauss_freq)
                     dist *= global_current_penalty;
                 break;
             case 2:
                 dist = ABS(ctf2 - ctf2_th);
                 if (global_penalize && ctf2_th < ctf2 &&
-                    DIRECT_MAT_ELEM(global_w_digfreq, i, j) > global_max_gauss_freq)
+                    DIRECT_A2D_ELEM(global_w_digfreq, i, j) > global_max_gauss_freq)
                     dist *= global_current_penalty;
                 break;
             case 4:
@@ -1221,14 +1223,14 @@ void center_optimization_focus(bool adjust_freq, bool adjust_th,
     // Compute maximum value within central region
     if (adjust_th)
     {
-        ImageXmipp save;
+        Image<double> save;
         generate_model_so_far(save);
         double max_val = 0;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
         {
             double w = global_w_digfreq(i, j);
             if (w >= w1 && w <= w2)
-                max_val = XMIPP_MAX(max_val, save(i, j));
+                max_val = XMIPP_MAX(max_val, save()(i, j));
         }
         if (global_value_th != -1)
             global_value_th = XMIPP_MIN(global_value_th, max_val * margin);
@@ -1252,7 +1254,7 @@ void estimate_background_sqrt_parameters()
     // for the maximum X and Y frequencies
     double base_line = 0;
     int N = 0;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
     if (global_w_digfreq(i, j) > 0.4)
     {
         N++;
@@ -1265,7 +1267,7 @@ void estimate_background_sqrt_parameters()
     A.initZeros();
     Matrix1D<double> b(2);
     b.initZeros();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
     {
         if (global_mask(i, j)<=0) continue;
 
@@ -1302,7 +1304,7 @@ void estimate_background_sqrt_parameters()
 
     // Now optimize .........................................................
     double fitness;
-    Matrix1D<double> steps;
+    MultidimArray<double> steps;
     steps.resize(SQRT_CTF_PARAMETERS);
     steps.initConstant(0);
     steps(0) = steps(1) = steps(2) = 1;
@@ -1355,11 +1357,11 @@ void estimate_background_gauss_parameters()
         std::cout << "Computing first background Gaussian parameters ...\n";
 
     // Compute radial averages
-    Matrix1D<double> radial_CTFmodel_avg(YSIZE(*f) / 2);
-    Matrix1D<double> radial_CTFampl_avg(YSIZE(*f) / 2);
-    Matrix1D<int>    radial_N(YSIZE(*f) / 2);
+    MultidimArray<double> radial_CTFmodel_avg(YSIZE(*f) / 2);
+    MultidimArray<double> radial_CTFampl_avg(YSIZE(*f) / 2);
+    MultidimArray<int>    radial_N(YSIZE(*f) / 2);
     double w_max_gauss = 0.25;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
     {
         if (global_mask(i, j)<=0) continue;
         double w = global_w_digfreq(i, j);
@@ -1375,9 +1377,9 @@ void estimate_background_gauss_parameters()
     // Compute the average radial error
     double error2_avg = 0;
     int N_avg = 0;
-    Matrix1D<double> error;
+    MultidimArray<double> error;
     error.initZeros(radial_CTFmodel_avg);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0) continue;
         error(i) = (radial_CTFampl_avg(i) - radial_CTFmodel_avg(i)) / radial_N(i);
@@ -1393,7 +1395,7 @@ void estimate_background_gauss_parameters()
     // Compute the minimum radial error
     bool   first = true, OK_to_proceed = false;
     double error2_min = 0, wmin, fmin;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0) continue;
         double w = global_w_digfreq(i, 0);
@@ -1435,7 +1437,7 @@ void estimate_background_gauss_parameters()
     // Compute the maximum radial error
     first = true;
     double error2_max = 0, wmax, fmax;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0) continue;
         double w = global_w_digfreq(i, 0);
@@ -1469,7 +1471,7 @@ void estimate_background_gauss_parameters()
     A.initZeros();
     Matrix1D<double> b(2);
     b.initZeros();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
     {
         if (global_mask(i, j)<=0) continue;
         if (global_w_digfreq(i, j) > wmin) continue;
@@ -1520,19 +1522,19 @@ void estimate_background_gauss_parameters2()
         std::cout << "Computing first background Gaussian2 parameters ...\n";
 
     // Compute radial averages
-    Matrix1D<double> radial_CTFmodel_avg(YSIZE(*f) / 2);
-    Matrix1D<double> radial_CTFampl_avg(YSIZE(*f) / 2);
-    Matrix1D<int>    radial_N(YSIZE(*f) / 2);
+    MultidimArray<double> radial_CTFmodel_avg(YSIZE(*f) / 2);
+    MultidimArray<double> radial_CTFampl_avg(YSIZE(*f) / 2);
+    MultidimArray<int>    radial_N(YSIZE(*f) / 2);
     double w_max_gauss = 0.25;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
     {
         if (global_mask(i, j)<=0) continue;
         double w = global_w_digfreq(i, j);
         if (w > w_max_gauss) continue;
 
         int r = FLOOR(w * (double)YSIZE(*f));
-        double f_x = DIRECT_MAT_ELEM(global_x_contfreq, i, j);
-        double f_y = DIRECT_MAT_ELEM(global_y_contfreq, i, j);
+        double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
+        double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
         double bg = global_ctfmodel.CTFnoise_at(f_x, f_y);
         double envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
         double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
@@ -1544,9 +1546,9 @@ void estimate_background_gauss_parameters2()
     }
 
     // Compute the average radial error
-    Matrix1D<double> error;
+    MultidimArray<double> error;
     error.initZeros(radial_CTFmodel_avg);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0) continue;
         error(i) = (radial_CTFampl_avg(i) - radial_CTFmodel_avg(i)) / radial_N(i);
@@ -1562,7 +1564,7 @@ void estimate_background_gauss_parameters2()
 
     // Compute the maximum (negative) radial error
     double error_max = 0, wmax, fmax;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(radial_CTFmodel_avg)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_CTFmodel_avg)
     {
         if (radial_N(i) == 0) continue;
         double w = global_w_digfreq(i, 0);
@@ -1584,7 +1586,7 @@ void estimate_background_gauss_parameters2()
     Matrix1D<double> b(2);
     b.initZeros();
     int N = 0;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
     {
         if (global_mask(i, j)<=0) continue;
         if (global_w_digfreq(i, j) > wmin) continue;
@@ -1601,8 +1603,8 @@ void estimate_background_gauss_parameters2()
         double weight = 1 + global_max_freq - global_w_digfreq(i, j);
 
         // Compute error
-        double f_x = DIRECT_MAT_ELEM(global_x_contfreq, i, j);
-        double f_y = DIRECT_MAT_ELEM(global_y_contfreq, i, j);
+        double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
+        double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
         double bg = global_ctfmodel.CTFnoise_at(f_x, f_y);
         double envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
         double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
@@ -1642,7 +1644,7 @@ void estimate_background_gauss_parameters2()
 
 #ifdef DEBUG
     // Check
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(global_w_digfreq)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_w_digfreq)
     {
         if (global_mask(i, j)<=0) continue;
         if (global_w_digfreq(i, j) > wmin) continue;
@@ -1656,8 +1658,8 @@ void estimate_background_gauss_parameters2()
         if (fmod > fzero.module()) continue;
 
         // Compute error
-        double f_x = DIRECT_MAT_ELEM(global_x_contfreq, i, j);
-        double f_y = DIRECT_MAT_ELEM(global_y_contfreq, i, j);
+        double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
+        double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
         double bg = global_ctfmodel.CTFnoise_at(f_x, f_y);
         double envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
         double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
@@ -1704,7 +1706,7 @@ void estimate_envelope_parameters()
     global_penalize = false;
     int iter;
     double fitness;
-    Matrix1D<double> steps;
+    MultidimArray<double> steps;
     steps.resize(ENVELOPE_PARAMETERS);
     steps.initConstant(1);
     steps(1) = 0; // Do not optimize Cs
@@ -1770,7 +1772,7 @@ void estimate_defoci()
     double defocusV0 = -1e3, defocusU0 = -1e3;
     double defocusVF = -100e3, defocusUF = -100e3;
     double initial_defocusStep = 8e3;
-    Matrix2D<double> error;
+    MultidimArray<double> error;
 
     // Check if there is no initial guess
     double min_allowed_defocusU = -100e3, max_allowed_defocusU = -1e3;
@@ -1808,7 +1810,7 @@ void estimate_defoci()
     }
 
     double K_so_far = global_ctfmodel.K;
-    Matrix1D<double> steps(DEFOCUS_PARAMETERS);
+    MultidimArray<double> steps(DEFOCUS_PARAMETERS);
     steps.initConstant(1);
     steps(3) = 0; // Do not optimize kV
     steps(4) = 0; // Do not optimize K
@@ -1871,15 +1873,15 @@ void estimate_defoci()
                                           << " K=" << global_ctfmodel.K
                                           << " error=" << error(i, j) << std::endl;
 #ifdef DEBUG
-                                ImageXmipp save;
+                                Image<double> save;
                                 save() = global_prm->enhanced_ctftomodel();
                                 save.write("PPPenhanced.xmp");
                                 for (int i = 0; i < YSIZE(global_w_digfreq); i += 1)
                                     for (int j = 0; j < XSIZE(global_w_digfreq); j += 1)
                                     {
-                                        if (DIRECT_MAT_ELEM(global_mask, i, j)<=0) continue;
-                                        double f_x = DIRECT_MAT_ELEM(global_x_contfreq, i, j);
-                                        double f_y = DIRECT_MAT_ELEM(global_y_contfreq, i, j);
+                                        if (DIRECT_A2D_ELEM(global_mask, i, j)<=0) continue;
+                                        double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
+                                        double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
                                         double envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
                                         double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
                                         double ctf_with_damping = envelope * ctf_without_damping;
@@ -1940,7 +1942,7 @@ void estimate_defoci()
         i = j = 0;
         if (global_show >= 2)
         {
-            ImageXmipp save;
+            Image<double> save;
             save() = error;
             save.write("error.xmp");
             std::cout << "Press any key: Error saved\n";
@@ -1964,18 +1966,18 @@ void estimate_defoci()
         std::cout << "First defocus Fit:\n" << global_ctfmodel << std::endl;
         save_intermediate_results("step03a_first_defocus_fit");
         global_prm->enhanced_ctftomodel.write("step03a_enhanced_PSD.xmp");
-        ImageXmipp save, save2, save3;
+        Image<double> save, save2, save3;
         save().resize(YSIZE(global_w_digfreq), XSIZE(global_w_digfreq));
         save2().resize(save());
         save3().resize(save());
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(save())
         {
-            save(i, j) = global_prm->enhanced_ctftomodel(i, j);
-            double f_x = DIRECT_MAT_ELEM(global_x_contfreq, i, j);
-            double f_y = DIRECT_MAT_ELEM(global_y_contfreq, i, j);
+            save()(i, j) = global_prm->enhanced_ctftomodel()(i, j);
+            double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
+            double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
             double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
-            save2(i, j) = ctf_without_damping * ctf_without_damping;
-            save3(i, j) = -global_prm->enhanced_ctftomodel(i, j) *
+            save2()(i, j) = ctf_without_damping * ctf_without_damping;
+            save3()(i, j) = -global_prm->enhanced_ctftomodel()(i, j) *
                           ctf_without_damping * ctf_without_damping;
         }
         save.write("step03a_enhanced_PSD.xmp");
@@ -2009,7 +2011,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
     // Some variables needed by all steps
     int iter;
     double fitness;
-    Matrix1D<double> steps;
+    MultidimArray<double> steps;
 
     /************************************************************************
       STEPs 1, 2, 3 and 4:  Find background which best fits the CTF

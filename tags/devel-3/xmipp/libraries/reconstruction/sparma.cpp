@@ -87,7 +87,7 @@ void ARMA_parameters::write(const FileName &fn_prm, bool rewrite)
 }
 
 // First quadrant neighbours -----------------------------------------------
-void First_Quadrant_Neighbors(int N, int M, Matrix2D<double> &Neighbors)
+void First_Quadrant_Neighbors(int N, int M, MultidimArray<double> &Neighbors)
 {
     long NumberOfPoints = (N + 1) * M;
     int n;
@@ -107,7 +107,7 @@ void First_Quadrant_Neighbors(int N, int M, Matrix2D<double> &Neighbors)
 }
 
 // Second quadrant neighbours ----------------------------------------------
-void Second_Quadrant_Neighbors(int N, int M, Matrix2D<double> &Neighbors)
+void Second_Quadrant_Neighbors(int N, int M, MultidimArray<double> &Neighbors)
 {
     long NumberOfPoints = N * (M + 1);
     int n;
@@ -128,14 +128,14 @@ void Second_Quadrant_Neighbors(int N, int M, Matrix2D<double> &Neighbors)
 
 
 // Compute ARMA model ------------------------------------------------------
-double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
-                  int N_MA, int M_MA, Matrix2D<double> &ARParameters,
-                  Matrix2D<double> &MAParameters)
+double CausalARMA(MultidimArray<double> &Img, int N_AR, int M_AR,
+                  int N_MA, int M_MA, MultidimArray<double> &ARParameters,
+                  MultidimArray<double> &MAParameters)
 {
     double dSigma; // To store de sigma coeficient of the model
 
     // Calculate the autocorrelation matrix
-    Matrix2D<double> R;
+    MultidimArray<double> R;
     auto_correlation_matrix(Img, R);
     R.setXmippOrigin();
 
@@ -144,7 +144,7 @@ double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
     /**********************************************************************/
     Matrix2D<double> Coeficients;
     Matrix1D<double> Indep_terms, ARcoeficients;
-    Matrix2D<double> N3;
+    MultidimArray<double> N3;
 
     // Assign the support region for the AR part of the model (N1)
     First_Quadrant_Neighbors(N_AR, M_AR, ARParameters);
@@ -154,18 +154,12 @@ double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
     // Here is the same of N1, but it hasn�t to be
     First_Quadrant_Neighbors(N_AR, M_AR, N3);
 
-    long NumberOfARParameters = ARParameters.rowNumber();
-    long NumberOfMAParameters = MAParameters.rowNumber();
+    long NumberOfARParameters = YSIZE(ARParameters);
+    long NumberOfMAParameters = YSIZE(MAParameters);
 
     Coeficients.resize(NumberOfARParameters, NumberOfARParameters);
-    STARTINGX(Coeficients) = 0;
-    STARTINGY(Coeficients) = 0;
-
     Indep_terms.resize(NumberOfARParameters);
-    STARTINGX(Indep_terms) = 0;
-
     ARcoeficients.resize(NumberOfARParameters);
-    STARTINGX(ARcoeficients) = 0;
 
     // Generate matrix (eq stands for equation number and co for coeficents)
     for (long eq = 0 ; eq < NumberOfARParameters; eq++)
@@ -174,7 +168,7 @@ double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
         // if it was not calculated before).
         int l = (int)N3(eq, 0);
         int m = (int)N3(eq, 1);
-        Indep_terms(eq) = MAT_ELEM(R, l, m);
+        Indep_terms(eq) = A2D_ELEM(R, l, m);
 
         // take the coeficients
         for (long co = 0 ; co < NumberOfARParameters; co++)
@@ -184,7 +178,7 @@ double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
             int alpha2 = (int)(N3(eq, 1) - ARParameters(co, 1));
             int beta1 = (int)(N3(eq, 0) + ARParameters(co, 0));
             int beta2 = (int)(N3(eq, 1) + ARParameters(co, 1));
-            MAT_ELEM(Coeficients, eq, co) = R(alpha1, alpha2) + R(beta1, beta2);
+            Coeficients(eq, co) = R(alpha1, alpha2) + R(beta1, beta2);
         }
     }
 
@@ -195,7 +189,7 @@ double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
 
     // Assign the results to the matrix given as parameter
     for (long n = 0 ; n < NumberOfARParameters; n++)
-        MAT_ELEM(ARParameters, n, 2) = VEC_ELEM(ARcoeficients, n);
+        A2D_ELEM(ARParameters, n, 2) = ARcoeficients(n);
 
     /**********************************************************************/
     // Determine the sigma coeficient from the equation for (p,q)=(0,0)
@@ -205,11 +199,11 @@ double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
     {
         int p = (int)ARParameters(n, 0);
         int q = (int)ARParameters(n, 1);
-        dSum += MAT_ELEM(ARParameters, n, 2) * MAT_ELEM(R, p, q);
+        dSum += A2D_ELEM(ARParameters, n, 2) * A2D_ELEM(R, p, q);
     }
 
     // And calculate sigma
-    dSigma = (MAT_ELEM(R, 0, 0) - 2 * dSum);
+    dSigma = (A2D_ELEM(R, 0, 0) - 2 * dSum);
     double idSigma = 1.0 / dSigma;
 
     /**********************************************************************/
@@ -220,23 +214,23 @@ double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
     for (long n = 0 ; n < NumberOfMAParameters; n++)
     {
         dSum = 0;
-        double MAn0 = MAT_ELEM(MAParameters, n, 0);
-        double MAn1 = MAT_ELEM(MAParameters, n, 1);
+        double MAn0 = A2D_ELEM(MAParameters, n, 0);
+        double MAn1 = A2D_ELEM(MAParameters, n, 1);
         for (long m = 0 ; m < NumberOfARParameters; m++)
         {
-            double ARm0 = MAT_ELEM(ARParameters, m, 0);
-            double ARm1 = MAT_ELEM(ARParameters, m, 1);
+            double ARm0 = A2D_ELEM(ARParameters, m, 0);
+            double ARm1 = A2D_ELEM(ARParameters, m, 1);
             int alpha1 = (int)(MAn0 - ARm0);
             int alpha2 = (int)(MAn1 - ARm1);
             int beta1 = (int)(MAn0 + ARm0);
             int beta2 = (int)(MAn1 + ARm1);
-            dSum += MAT_ELEM(ARParameters, m, 2) * (
-                        MAT_ELEM(R, alpha1, alpha2) + MAT_ELEM(R, beta1, beta2));
+            dSum += A2D_ELEM(ARParameters, m, 2) * (
+                        A2D_ELEM(R, alpha1, alpha2) + A2D_ELEM(R, beta1, beta2));
         }
 
         int p = (int)MAn0;
         int q = (int)MAn1;
-        MAT_ELEM(MAParameters, n, 2) = (MAT_ELEM(R, p, q) - dSum) * idSigma;
+        A2D_ELEM(MAParameters, n, 2) = (A2D_ELEM(R, p, q) - dSum) * idSigma;
     }
 
     // return the sigma coeficient
@@ -244,34 +238,34 @@ double CausalARMA(Matrix2D<double> &Img, int N_AR, int M_AR,
 }
 
 // Compute the ARMA Filter -------------------------------------------------
-void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
-                Matrix2D<double> &ARParameters, Matrix2D<double> &MAParameters,
+void ARMAFilter(MultidimArray<double> &Img, MultidimArray< double > &Filter,
+                MultidimArray<double> &ARParameters, MultidimArray<double> &MAParameters,
                 double dSigma)
 {
     bool apply_final_median_filter = false;
     Matrix1D<double> dDigitalFreq(2);
 
     // Resize de Filter to the image dimensions
-    Filter.resize(Img.rowNumber(), Img.colNumber());
+    Filter.resize(YSIZE(Img), XSIZE(Img));
     Filter.initZeros();
 
     // Compute the filter (only half the values are computed)
     // The other half is computed based in symmetry.
-    int sizeX = Img.colNumber();
-    int sizeY = Img.rowNumber();
-    long NumberOfMAParameters = MAParameters.rowNumber();
-    long NumberOfARParameters = ARParameters.rowNumber();
-    Matrix2D<int> iMAParameters(NumberOfMAParameters, 2),
+    int sizeX = XSIZE(Img);
+    int sizeY = YSIZE(Img);
+    long NumberOfMAParameters = YSIZE(MAParameters);
+    long NumberOfARParameters = YSIZE(ARParameters);
+    MultidimArray<int> iMAParameters(NumberOfMAParameters, 2),
     iARParameters(NumberOfARParameters, 2);
     for (long n = 0 ; n < NumberOfMAParameters; n++)
     {
-        DIRECT_MAT_ELEM(iMAParameters, n, 0) = (int)DIRECT_MAT_ELEM(MAParameters, n, 0);
-        DIRECT_MAT_ELEM(iMAParameters, n, 1) = (int)DIRECT_MAT_ELEM(MAParameters, n, 1);
+        DIRECT_A2D_ELEM(iMAParameters, n, 0) = (int)DIRECT_A2D_ELEM(MAParameters, n, 0);
+        DIRECT_A2D_ELEM(iMAParameters, n, 1) = (int)DIRECT_A2D_ELEM(MAParameters, n, 1);
     }
     for (long n = 0 ; n < NumberOfARParameters; n++)
     {
-        DIRECT_MAT_ELEM(iARParameters, n, 0) = (int)DIRECT_MAT_ELEM(ARParameters, n, 0);
-        DIRECT_MAT_ELEM(iARParameters, n, 1) = (int)DIRECT_MAT_ELEM(ARParameters, n, 1);
+        DIRECT_A2D_ELEM(iARParameters, n, 0) = (int)DIRECT_A2D_ELEM(ARParameters, n, 0);
+        DIRECT_A2D_ELEM(iARParameters, n, 1) = (int)DIRECT_A2D_ELEM(ARParameters, n, 1);
     }
     for (int i = 0;i < sizeY;i++)
         for (int j = 0;j < (sizeX / 2);j++)
@@ -284,9 +278,9 @@ void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
             double B = 0;
             for (long n = 0 ; n < NumberOfMAParameters; n++)
             {
-                int p = DIRECT_MAT_ELEM(iMAParameters, n, 0);
-                int q = DIRECT_MAT_ELEM(iMAParameters, n, 1);
-                B += DIRECT_MAT_ELEM(MAParameters, n, 2) * 2 *
+                int p = DIRECT_A2D_ELEM(iMAParameters, n, 0);
+                int q = DIRECT_A2D_ELEM(iMAParameters, n, 1);
+                B += DIRECT_A2D_ELEM(MAParameters, n, 2) * 2 *
                      cos((-2) * PI * (p * YY(dDigitalFreq) + q * XX(dDigitalFreq)));
             }
             B = B + 1.0;
@@ -295,9 +289,9 @@ void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
             double A = 0;
             for (long n = 0 ; n < NumberOfARParameters; n++)
             {
-                int p = DIRECT_MAT_ELEM(iARParameters, n, 0);
-                int q = DIRECT_MAT_ELEM(iARParameters, n, 1);
-                A += DIRECT_MAT_ELEM(ARParameters, n, 2) * 2 *
+                int p = DIRECT_A2D_ELEM(iARParameters, n, 0);
+                int q = DIRECT_A2D_ELEM(iARParameters, n, 1);
+                A += DIRECT_A2D_ELEM(ARParameters, n, 2) * 2 *
                      cos((-2) * PI * (p * YY(dDigitalFreq) + q * XX(dDigitalFreq)));
             }
             A = 1.0 - A;
@@ -319,11 +313,11 @@ void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
     // Apply final median filter
     if (apply_final_median_filter)
     {
-        Matrix2D<double> aux;
+        MultidimArray<double> aux;
         median_filter3x3(Filter, aux);
         // Copy all but the borders
         for (int i = 1; i < YSIZE(Filter) - 1; i++)
             for (int j = 1; j < XSIZE(Filter) - 1; j++)
-                DIRECT_MAT_ELEM(Filter, i, j) = DIRECT_MAT_ELEM(aux, i, j);
+                DIRECT_A2D_ELEM(Filter, i, j) = DIRECT_A2D_ELEM(aux, i, j);
     }
 }

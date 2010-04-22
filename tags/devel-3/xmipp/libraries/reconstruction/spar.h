@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Javier Ángel Velázquez Muriel (javi@cnb.csic.es)
+ *              Javier ï¿½ngel Velï¿½zquez Muriel (javi@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -27,7 +27,7 @@
 #ifndef _PROG_SPAR_HH
 #define _PROG_SPAR_HH
 
-#include <data/matrix2d.h>
+#include <data/multidim_array.h>
 
 /**@defgroup SPAR Spectrum modelling by AR filters
    @ingroup ReconsLibrary */
@@ -69,8 +69,8 @@
 
    DATE:        19-1-2001
 */
-double CausalAR(Matrix2D<double> &Img,
-                int orderR, int orderC, Matrix2D<double> &ARParameters);
+double CausalAR(MultidimArray<double> &Img,
+                int orderR, int orderC, MultidimArray<double> &ARParameters);
 
 /** NonCausalAR.
 
@@ -96,8 +96,8 @@ double CausalAR(Matrix2D<double> &Img,
 
    DATE:          21-2-2001
 */
-double NonCausalAR(Matrix2D<double> &Img,
-                   int orderR, int orderC, Matrix2D<double> &ARParameters);
+double NonCausalAR(MultidimArray<double> &Img,
+                   int orderR, int orderC, MultidimArray<double> &ARParameters);
 
 /** ARFilter.
    This function returns the AR Filter associated to an AR model.
@@ -113,8 +113,8 @@ double NonCausalAR(Matrix2D<double> &Img,
 
    DATE:        6-1-2001
 */
-void ARFilter(Matrix2D<double> &Img, Matrix2D< std::complex<double> > &Filter,
-              Matrix2D<double> &ARParameters);
+void ARFilter(MultidimArray<double> &Img, MultidimArray< std::complex<double> > &Filter,
+              MultidimArray<double> &ARParameters);
 
 /** Combine AR Filters.
 
@@ -135,9 +135,9 @@ void ARFilter(Matrix2D<double> &Img, Matrix2D< std::complex<double> > &Filter,
 
    DATE:        6-1-2001
 */
-void combineARFilters(const Matrix2D< std::complex<double> > &Filter1,
-                      const Matrix2D< std::complex<double> > &Filter2,
-                      Matrix2D< std::complex<double> > &Filter,
+void combineARFilters(const MultidimArray< std::complex<double> > &Filter1,
+                      const MultidimArray< std::complex<double> > &Filter2,
+                      MultidimArray< std::complex<double> > &Filter,
                       const std::string &method);
 
 //@}
