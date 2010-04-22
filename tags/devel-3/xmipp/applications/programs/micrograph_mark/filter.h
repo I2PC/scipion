@@ -41,7 +41,7 @@ public:
     QtFilter(const Micrograph *_M);
 
     // Apply the filter
-    virtual void apply(Image *_img) = 0;
+    virtual void apply(Image<double> *_img) = 0;
 };
 
 
@@ -52,7 +52,7 @@ public:
     static QString name;
     QtInvertContrastFilter(const Micrograph *_M): QtFilter(_M)
     {}
-    virtual void apply(Image *_img);
+    virtual void apply(Image<double> *_img);
 };
 
 /* Enhance contrast -------------------------------------------------------- */
@@ -62,7 +62,7 @@ public:
     QtEnhanceContrastFilter(const Micrograph *_M): QtFilter(_M)
     {}
     static QString name;
-    virtual void apply(Image *_img);
+    virtual void apply(Image<double> *_img);
 };
 
 /* Substract background ---------------------------------------------------- */
@@ -72,7 +72,7 @@ public:
     QtSubstractBackgroundFilter(const Micrograph *_M): QtFilter(_M)
     {}
     static QString name;
-    virtual void apply(Image *_img);
+    virtual void apply(Image<double> *_img);
 };
 
 /* Remove Outliers --------------------------------------------------------- */
@@ -82,7 +82,7 @@ public:
     QtRemoveOutlierFilter(const Micrograph *_M): QtFilter(_M)
     {}
     static QString name;
-    virtual void apply(Image *_img);
+    virtual void apply(Image<double> *_img);
 };
 
 /* Low Pass ---------------------------------------------------------------- */
@@ -92,7 +92,7 @@ public:
     QtLowPassFilter(const Micrograph *_M);
     static QString name;
     FourierMask filter;
-    virtual void apply(Image *_img);
+    virtual void apply(Image<double> *_img);
 };
 
 /* High Pass --------------------------------------------------------------- */
@@ -102,7 +102,7 @@ public:
     QtHighPassFilter(const Micrograph *_M);
     static QString name;
     FourierMask filter;
-    virtual void apply(Image *_img);
+    virtual void apply(Image<double> *_img);
 };
 
 #endif

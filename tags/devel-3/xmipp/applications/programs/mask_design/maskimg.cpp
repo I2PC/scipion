@@ -178,7 +178,7 @@ maskImg::maskImg(QWidget *parent, QImage *_image, maskType _typeOfMask, const ch
 
 /****************************************************/
 
-maskImg::maskImg(QWidget *parent, ImageT<double> *_image, maskType _typeOfMask, const char *name, int wFlags)
+maskImg::maskImg(QWidget *parent, Image<double> *_image, maskType _typeOfMask, const char *name, int wFlags)
 #ifdef QT3_SUPPORT
         : QWidget(parent, name, (Qt::WindowFlags) wFlags),
 #else
@@ -392,7 +392,7 @@ void maskImg::updateStatus()
             xmippImage().toLogical(picky, pickx, y_log, x_log);
             moremsg.sprintf("(%d,%d)= %.3f ",
                             x_log, y_log,
-                            xmippImage(y_log, x_log));
+                            xmippImage()(y_log, x_log));
             message += moremsg;
         }
         moremsg.sprintf("%dx%d", image.width(), image.height());
@@ -472,27 +472,27 @@ void maskImg::saveImage(int item)
         {
             // Creates a Xmipp temporal Image
 
-            ImageXmipp tmpImage(xmippImage().rowNumber(), xmippImage().colNumber());
+            Image<double> tmpImage(YSIZE(xmippImage()), XSIZE(xmippImage()));
 
             // Writes pixels.
-            for (int y = 0; y < tmpImage().rowNumber(); y++)
-                for (int x = 0; x < tmpImage().colNumber(); x++)
+            for (int y = 0; y < YSIZE(tmpImage()); y++)
+                for (int x = 0; x < XSIZE(tmpImage()); x++)
                 {
                     int phy_x, phy_y;
-                    phy_x = (int)((float)(x * pmScaled.width()) / (float)xmippImage().colNumber());
-                    phy_y = (int)((float)(y * pmScaled.height()) / (float)xmippImage().rowNumber());
+                    phy_x = (int)((float)(x * pmScaled.width()) / (float)XSIZE(xmippImage()));
+                    phy_y = (int)((float)(y * pmScaled.height()) / (float)YSIZE(xmippImage()));
                     if (theMaskFigure->isIn(phy_x, phy_y))
-                        tmpImage(y, x) = (float) 1.0;
+                        tmpImage()(y, x) = (float) 1.0;
                     else
-                        tmpImage(y, x) = (float) 0.0;
+                        tmpImage()(y, x) = (float) 0.0;
                 }
 
             // Saves Xmipp Image
             tmpImage.rename((std::string)((const  char *)savefilename));
             tmpImage.write();
             // print parameters
-            theMaskFigure->print(pmScaled.width() / (float)xmippImage().colNumber(),
-                                 pmScaled.height() / (float)xmippImage().rowNumber());
+            theMaskFigure->print(pmScaled.width() / (float)XSIZE(xmippImage()),
+                                 pmScaled.height() / (float)YSIZE(xmippImage()));
         }
         catch (Xmipp_error)
         {
@@ -567,7 +567,7 @@ bool maskImg::showImage()
 
 /*****************************************/
 
-bool maskImg::xmipp2Qt(ImageT<double> &_image)
+bool maskImg::xmipp2Qt(Image<double> &_image)
 {
     bool ok = FALSE;
 
@@ -575,7 +575,7 @@ bool maskImg::xmipp2Qt(ImageT<double> &_image)
     {
         xmippImage = _image;
         // Creates a Qt Image to hold Xmipp Image
-        QImage tmpImage(_image().colNumber(), _image().rowNumber(), 8, 256);
+        QImage tmpImage(XSIZE(_image()), YSIZE(_image()), 8, 256);
         _image().rangeAdjust(0, 255);
 
         // Sets Graylevel Palette.
@@ -586,9 +586,9 @@ bool maskImg::xmipp2Qt(ImageT<double> &_image)
             tmpImage.setColor(i, c.rgb());
         }
         // Reads pixels.
-        for (int y = 0; y < _image().rowNumber(); y++)
-            for (int x = 0; x < _image().colNumber(); x++)
-                tmpImage.setPixel(x, y, ((uint) _image(y, x)));
+        for (int y = 0; y <YSIZE(_image()); y++)
+            for (int x = 0; x < XSIZE(_image()); x++)
+                tmpImage.setPixel(x, y, ((uint) _image()(y, x)));
 
         image = tmpImage;
         xmippFlag = 0;   // Sets flag = Xmipp image.
@@ -621,12 +621,12 @@ bool maskImg::Qt2xmipp(QImage _image)
         image.setNumColors(256);
 
         // Creates a Xmipp Image to hold Qt Image
-        Image tmpImage(image.height(), image.width());
+        Image<double> tmpImage(image.height(), image.width());
 
         // Reads pixels.
         for (int y = 0; y < image.width(); y++)
             for (int x = 0; x < image.height(); x++)
-                tmpImage(x, y) = (double) image.pixelIndex(y, x);
+                tmpImage()(x, y) = (double) image.pixelIndex(y, x);
 
 
         xmippImage = tmpImage;
@@ -676,13 +676,11 @@ bool maskImg::loadImage(const char *fileName)
             try
             {
                 // reads Xmipp Image
-                Image *tmpImage = Image::LoadImage(fileName, apply_geo);
-                if (!tmpImage)
-                    REPORT_ERROR(1501, (std::string)"Error opening file " + fileName);
+                Image<double> (tmpImage);
+                tmpImage.read(fileName, true, -1, apply_geo);
                 ok = TRUE;
-                ok = xmipp2Qt(*tmpImage);
-                delete tmpImage;
-            }
+                ok = xmipp2Qt(tmpImage);
+			}
             catch (Xmipp_error)
             {
                 ok = FALSE;
@@ -921,7 +919,7 @@ void maskImg::keyPressEvent(QKeyEvent* e)
     case Qt::Key_N:    // Natural size (original size)
         if (e->state() == Qt::ControlButton)
         { // If 'Ctrol N' key,
-            resize(xmippImage().colNumber(), xmippImage().rowNumber() + status->height());
+            resize(XSIZE(xmippImage()), YSIZE(xmippImage()) + status->height());
         }
         break;
     case Qt::Key_M:
@@ -950,7 +948,7 @@ void maskImg::keyPressEvent(QKeyEvent* e)
     case Qt::Key_A:        // Aspect ratio
         if (e->state() == Qt::ControlButton)
         { // If 'Ctrol+' key,
-            double ratio = (double) xmippImage().colNumber() / (double) xmippImage().rowNumber();
+            double ratio = (double) XSIZE(xmippImage()) / (double) YSIZE(xmippImage());
             resize((int)width(), (int)(width() / ratio + status->height()));
         }
         break;

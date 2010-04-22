@@ -144,7 +144,8 @@ int main(int argc, char **argv)
                             fn = fn.substr(0, fn.length() - 1);
                         if (exists(fn.c_str()))
                         {
-                            VolumeXmipp V(fn);
+                            Image<double> V;
+                            V.read(fn);
                             double maux, Maux;
                             V().computeDoubleMinMax(maux, Maux);
                             if (i == ifirst + 1)
@@ -162,9 +163,10 @@ int main(int argc, char **argv)
                 }
                 else
                 {
-                    if (mode == MODE_IMG)
+                    if (mode == MODE_IMG )
                     {
-                        ImageXmipp I(argv[i]);
+                        Image<double> I;
+                        I.read(argv[i]);
                         double maux, Maux;
                         I().computeDoubleMinMax(maux, Maux);
                         if (i == ifirst + 1)
@@ -181,22 +183,6 @@ int main(int argc, char **argv)
                     else if (mode == MODE_SEL)
                     {
                         // Not implemented
-                    }
-                    else if (mode == MODE_VOL)
-                    {
-                        VolumeXmipp V(argv[i]);
-                        double maux, Maux;
-                        V().computeDoubleMinMax(maux, Maux);
-                        if (i == ifirst + 1)
-                        {
-                            m = maux;
-                            M = Maux;
-                        }
-                        else
-                        {
-                            m = XMIPP_MIN(m, maux);
-                            M = XMIPP_MAX(M, Maux);
-                        }
                     }
                     else if (mode == MODE_SPECT)
                     {
@@ -234,7 +220,6 @@ int main(int argc, char **argv)
                 {
                 case MODE_IMG:
                     fn = argv[i];
-                    if (fn.find("imagic:") != -1) break;
                     std::cerr << argv[i] << " is not a valid filename\n";
                     continue;
                 case MODE_PSDSEL:

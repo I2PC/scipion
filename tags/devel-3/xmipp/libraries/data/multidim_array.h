@@ -971,32 +971,42 @@ public:
      */
     void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
-        if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
-            Zdim == ZSIZE(*this) && Ndim == NSIZE(*this) )
+        std::cerr << "inside resize" <<std::endl;
+
+    	if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
+            Zdim == ZSIZE(*this) && Ndim == NSIZE(*this) && data !=NULL)
             return;
 
+        std::cerr << "inside resize2" <<std::endl;
         if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0 || Ndim <= 0)
         {
             clear();
             return;
         }
+        std::cerr << "inside resize3" <<std::endl;
+
+        // data can be NULL while xdim etc are set to non-zero values
+        // (This can happen for reading of images...)
+        // In that case, initialize data to zeros.
+        if (NZYXSIZE(*this) > 0 && data == NULL)
+        	coreAllocate();
 
         // Ask for memory
         size_t YXdim=Ydim*Xdim;
         size_t ZYXdim=Zdim*YXdim;
         size_t NZYXdim=Ndim*ZYXdim;
 	
-	T * new_data;
-	
-	try
-	{	
-		new_data = new T [NZYXdim];
-	}
-	catch (std::bad_alloc &)
-	{
-		REPORT_ERROR(1001, "Allocate: No space left");
-	}
+		T * new_data;
 
+		try
+		{
+			new_data = new T [NZYXdim];
+		}
+		catch (std::bad_alloc &)
+		{
+			REPORT_ERROR(1001, "Allocate: No space left");
+		}
+	
         // Copy needed elements, fill with 0 if necessary
         for (unsigned long int l = 0; l < Ndim; l++)
             for (int k = 0; k < Zdim; k++)
@@ -1086,7 +1096,7 @@ public:
     void resize(const MultidimArray<T1> &v)
     {
         if (NSIZE(*this) != NSIZE(v) || XSIZE(*this) != XSIZE(v) || 
-            YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v))
+            YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v) || data==NULL)
             resize(NSIZE(v), ZSIZE(v), YSIZE(v), XSIZE(v));
 
         STARTINGX(*this) = STARTINGX(v);
@@ -4244,13 +4254,12 @@ public:
     {
         if (&op1 != this)
         {
-            resize(op1);
+        	resize(op1);
             T *ptr;
-	    unsigned long int n;
+            unsigned long int n;
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(op1,n,ptr)
                 DIRECT_MULTIDIM_ELEM(*this,n) = *ptr;
         }
-
         return *this;
     }
 
@@ -4306,7 +4315,7 @@ public:
     bool equal(const MultidimArray<T>& op,
     	double accuracy = XMIPP_EQUAL_ACCURACY) const
     {
-        if (!sameShape(op))
+        if (!sameShape(op) || data==NULL || op.data == NULL)
             return false;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*this)
             if (ABS(DIRECT_MULTIDIM_ELEM(*this,n) -

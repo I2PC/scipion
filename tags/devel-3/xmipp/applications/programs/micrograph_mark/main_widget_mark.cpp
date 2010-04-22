@@ -443,14 +443,14 @@ void QtMainWidgetMark::compute_alphas()
     // If there is no tilted image there is nothing to do
     if (__mTiltedWidget == NULL) return;
 
-    Matrix1D<double> angles(3);
+    MultidimArray<double> angles(3);
     angles.initZeros();
     double fitness;
     int iter;
     pair_Put = &__Put;
 
     // Coarse search
-    double *aux = angles.adaptForNumericalRecipes();
+    double *aux = angles.adaptForNumericalRecipes1D();
     double best_alpha_u = 0, best_alpha_t = 0, best_fit = 1e8;
     aux[3] = __gamma;
     for (aux[1] = 0; aux[1] < 180; aux[1] += 10)
@@ -464,13 +464,13 @@ void QtMainWidgetMark::compute_alphas()
                 best_alpha_t = aux[2];
             }
         }
-    angles.killAdaptationForNumericalRecipes(aux);
+    angles.killAdaptationForNumericalRecipes1D(aux);
     angles(0) = best_alpha_u;
     angles(1) = best_alpha_t;
     angles(2) = __gamma;
 
     // Fine search
-    Matrix1D<double> steps(3);
+    MultidimArray<double> steps(3);
     steps.initConstant(1);
     powellOptimizer(angles, 1, 3, &matrix_fitness, NULL,
                      0.001, fitness, iter, steps, false);

@@ -130,13 +130,13 @@ void Classification_model::import_model(const Classification_model &_model)
 
 /* Initialize -------------------------------------------------------------- */
 void Classification_model::initNaiveBayes(
-    const std::vector < Matrix2D<double> > &features,
-    const Matrix1D<double> &probs, int discreteLevels,
+    const std::vector < MultidimArray<double> > &features,
+    const MultidimArray<double> &probs, int discreteLevels,
     double penalization)
 {
     __bayesNet=new NaiveBayes(features, probs, discreteLevels);
     int K=features.size();
-    Matrix2D<double> cost(K,K);
+    MultidimArray<double> cost(K,K);
     cost.initConstant(1);
     for (int i=0; i<XSIZE(cost); i++)
        cost(i,i)=0;
@@ -146,8 +146,8 @@ void Classification_model::initNaiveBayes(
 }
 
 void Classification_model::initNaiveBayesEnsemble(
-    const std::vector < Matrix2D<double> > &features,
-    const Matrix1D<double> &probs, int discreteLevels,
+    const std::vector < MultidimArray<double> > &features,
+    const MultidimArray<double> &probs, int discreteLevels,
     double penalization, int numberOfClassifiers,
     double samplingFeatures, double samplingIndividuals,
     const std::string &newJudgeCombination)
@@ -156,7 +156,7 @@ void Classification_model::initNaiveBayesEnsemble(
         numberOfClassifiers, samplingFeatures, samplingIndividuals,
         newJudgeCombination);
     int K=features.size();
-    Matrix2D<double> cost(K,K);
+    MultidimArray<double> cost(K,K);
     cost.initConstant(1);
     for (int i=0; i<XSIZE(cost); i++)
        cost(i,i)=0;
@@ -187,7 +187,7 @@ std::ostream & operator << (std::ostream &_out, const Classification_model &_m)
     _out << "\n";
        
     _out << "#Model_parameters..." << std::endl;
-    _out << "#Vector_size= " << XSIZE(_m.__training_particles[0][0].vec) << std::endl;
+    _out << "#Vector_size= " <<(_m.__training_particles[0][0].vec).size() << std::endl;
     _out << "#Class_Number= " << _m.__classNo << std::endl;
     
     for (int i = 0; i < _m.__classNo; i++)
@@ -999,11 +999,11 @@ void AutoParticlePicking::learnParticles(int _ellipse_radius)
     buildNegativeVectors(__training_model,true);
 
     // Count the number of points scanned in a micrograph
-    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const MultidimArray<int> &mask = __mask.get_binary_mask();
     int top = 0, left = 0, next_top = 0, next_left = 0;
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
     int Nscanned=0;
-    Matrix2D<double> piece;
+    MultidimArray<double> piece;
     while (get_corner_piece(piece, top, left, skip_y,
                             next_skip_x, next_skip_y, next_top,
 			    next_left, __piece_overlap, true))
@@ -1046,14 +1046,14 @@ void AutoParticlePicking::buildSelectionModel()
 /* produceFeatures --------------------------------------------------------- */
 void AutoParticlePicking::produceFeatures(
     const Classification_model &_model,
-    std::vector < Matrix2D<double> > &_features)
+    std::vector < MultidimArray<double> > &_features)
 {
     _features.clear();
     std::vector < std::vector<Particle> > particles=
         _model.__training_particles;
     int vec_size=0;
     for (int i=0; i<particles.size(); i++)
-        if (particles[i].size()!=0) vec_size=XSIZE(particles[i][0].vec);
+        if (particles[i].size()!=0) vec_size=(particles[i][0].vec).size();
     
     for(int j = 0; j < __classNo; j++)
     {
@@ -1064,7 +1064,7 @@ void AutoParticlePicking::produceFeatures(
             _features.resize(__classNo - 1);
             break;
         }
-        _features.push_back(*(new Matrix2D<double>));
+        _features.push_back(*(new MultidimArray<double>));
         _features[j].initZeros(imax, vec_size);
         for(int i = 0; i < imax; i++)
         {
@@ -1076,7 +1076,7 @@ void AutoParticlePicking::produceFeatures(
 
 /* produceClassesProbabilities --------------------------------------------- */
 void AutoParticlePicking::produceClassesProbabilities(
-    const Classification_model &_model, Matrix1D<double> &probabilities)
+    const Classification_model &_model, MultidimArray<double> &probabilities)
 {
     double micrographsScanned = 0.0;
     double particlesMarked = 0.0;
@@ -1127,8 +1127,8 @@ void * automaticallySelectParticlesThread(void * args)
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
     Matrix1D<double> v;
     int N = 1, particle_idx = 0, Nscanned=0;
-    Matrix2D<double> piece, original_piece;
-    const Matrix2D<int> &mask = autoPicking->__mask.get_binary_mask2D();
+    MultidimArray<double> piece, original_piece;
+    const MultidimArray<int> &mask = autoPicking->__mask.get_binary_mask();
     std::vector< Particle > threadCandidates;
     do
     {
@@ -1185,8 +1185,7 @@ void * automaticallySelectParticlesThread(void * args)
                              << std::endl;
                 #endif
 
-	        if (autoPicking->build_vector(piece, original_piece,
-                    posx, posy, v))
+	        if (autoPicking->build_vector(piece, original_piece, posx, posy, v))
                 {
                     double cost;
                     int votes=autoPicking->__selection_model.isParticle(v,cost);
@@ -1250,11 +1249,11 @@ int AutoParticlePicking::automaticallySelectParticles()
 
     // Initialize some variables
     __auto_candidates.resize(0);
-    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const MultidimArray<int> &mask = __mask.get_binary_mask();
 
     // Get the training features and the a priori probabilities    
-    std::vector < Matrix2D<double> > features;
-    Matrix1D<double> probs;
+    std::vector < MultidimArray<double> > features;
+    MultidimArray<double> probs;
     produceFeatures(__selection_model,features);
     produceClassesProbabilities(__selection_model,probs);
 
@@ -1313,7 +1312,7 @@ int AutoParticlePicking::automaticallySelectParticles()
         {
             __selection_model2.clear();
             __selection_model2.init(2);
-            std::vector < Matrix2D<double> >::iterator featuresIterator=
+            std::vector < MultidimArray<double> >::iterator featuresIterator=
                 features.begin();
             featuresIterator++;
             features.erase(featuresIterator);
@@ -1368,9 +1367,9 @@ int AutoParticlePicking::automaticallySelectParticles()
 
             if (toKeep.size()>0)
             {
-                Matrix2D<double> difficultParticles;
+                MultidimArray<double> difficultParticles;
                 difficultParticles.initZeros(toKeep.size(),XSIZE(features[1]));
-                FOR_ALL_ELEMENTS_IN_MATRIX2D(difficultParticles)
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(difficultParticles)
                     difficultParticles(i,j)=features[1](toKeep[i],j);
                 int NErrors=YSIZE(features[1]);
                 features.pop_back();
@@ -1503,7 +1502,7 @@ void AutoParticlePicking::restrictSelection(float _cost)
 /* Create mask for learning particles ---------------------------------------*/
 void AutoParticlePicking::createMask()
 {
-    if (XSIZE(__mask.get_binary_mask2D()) != 0) return;
+    if (XSIZE(__mask.get_binary_mask()) != 0) return;
 
     int xsize = __mask_size / __reduction;
     int ysize = xsize;
@@ -1513,8 +1512,8 @@ void AutoParticlePicking::createMask()
     __mask.mode = INNER_MASK;
     __mask.R1 = radius;
     __mask.resize(xsize, ysize);
-    __mask.generate_2Dmask();
-    __mask.get_binary_mask2D().setXmippOrigin();
+    __mask.generate_mask();
+    __mask.get_binary_mask().setXmippOrigin();
 
     classifyMask();
 }
@@ -1522,7 +1521,7 @@ void AutoParticlePicking::createMask()
 /* Classify the mask pixels -------------------------------------------------*/
 void AutoParticlePicking::classifyMask()
 {
-    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const MultidimArray<int> &mask = __mask.get_binary_mask();
     if (XSIZE(mask) == 0) return;
     double max_radius_particle = __particle_radius / __reduction;
 
@@ -1533,17 +1532,17 @@ void AutoParticlePicking::classifyMask()
     // 6 is the minimum radius to be informative
     double radial_step = (max_radius - 6) / __radial_bins;
 
-    Matrix2D<int> *classif1 = new Matrix2D<int>;
+    MultidimArray<int> *classif1 = new MultidimArray<int>;
     classif1->resize(mask);
     classif1->initConstant(-1);
 
-    Matrix2D<int> *classif2 = new Matrix2D<int>;
+    MultidimArray<int> *classif2 = new MultidimArray<int>;
     classif2->resize(mask);
     classif2->initConstant(-1);
     const double deltaAng=(PI/8.0);
 
-    Matrix1D<int> Nrad(__radial_bins);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+    MultidimArray<int> Nrad(__radial_bins);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
     {
         double radius = sqrt((double)(i * i + j * j));
         double angle = atan2((double)i, (double)j);
@@ -1569,7 +1568,7 @@ void AutoParticlePicking::classifyMask()
     // Create the holders for the radius values in classif1
     for (int i = 0; i < __radial_bins; i++)
     {
-        Matrix1D<int> *aux1 = new Matrix1D<int>;
+        MultidimArray<int> *aux1 = new MultidimArray<int>;
         aux1->initZeros(Nrad(i));
         __radial_val.push_back(aux1);
     }
@@ -1578,17 +1577,17 @@ void AutoParticlePicking::classifyMask()
     int angleBins=classif2->computeMax()+1;
     for (int i = 0; i < angleBins; i++)
     {
-        Matrix1D<double> *aux2 = new Matrix1D<double>;
+        MultidimArray<double> *aux2 = new MultidimArray<double>;
         aux2->initZeros(__radial_bins);
         __sector.push_back(aux2);
         
-        Matrix1D<int> *iaux2 = new Matrix1D<int>;
+        MultidimArray<int> *iaux2 = new MultidimArray<int>;
         iaux2->initZeros(__radial_bins);
         __Nsector.push_back(iaux2);
     }
 
     // Compute the number of elements in each sector
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(*classif1)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(*classif1)
     {
         int idx1 = (*classif1)(i, j);
         if (idx1 != -1)
@@ -1601,7 +1600,7 @@ void AutoParticlePicking::classifyMask()
 
     for (int i = 0; i < __radial_bins; i++)
     {
-        Matrix1D<double> *aux3 = new Matrix1D<double>;
+        MultidimArray<double> *aux3 = new MultidimArray<double>;
         aux3->initZeros(angleBins);
         __ring.push_back(aux3);
     }
@@ -1629,7 +1628,7 @@ void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
     Matrix1D<double> v;
     int numParticles = 0;
 
-    Matrix1D<char> visited(num_part);
+    MultidimArray<char> visited(num_part);
     while (visited.sum() < num_part)
     {
         int part_i = 0;
@@ -1644,7 +1643,7 @@ void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
         int x = __m->coord(part_idx).X;
         int y = __m->coord(part_idx).Y;
         int posx, posy;
-        Matrix2D<double> piece, original_piece;
+        MultidimArray<double> piece, original_piece;
         get_centered_piece(piece, x, y, posx, posy);
 
         // Denoise, reduce, reject outliers and equalize histogram
@@ -1708,11 +1707,11 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
         std::cerr << "Building automatic false positives ..." << std::endl;
     else
         std::cerr << "Building non particles ..." << std::endl;
-    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const MultidimArray<int> &mask = __mask.get_binary_mask();
 
     // Setup a classification model with the already known data
-    std::vector < Matrix2D<double> > features;
-    Matrix1D<double> probs;
+    std::vector < MultidimArray<double> > features;
+    MultidimArray<double> probs;
     if (checkForPalsePostives)
     {
         // Gather all information for classification
@@ -1742,7 +1741,7 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
     // counting the non particles and calculating their features. For 
     // the process of automatic selecting we will want an overlap so we
     // do not miss any particle.
-    Matrix2D<double> piece, original_piece;
+    MultidimArray<double> piece, original_piece;
     while (get_corner_piece(piece, top, left, skip_y,
                             next_skip_x, next_skip_y, next_top, next_left, 0,
                             true))
@@ -1845,8 +1844,8 @@ bool AutoParticlePicking::anyParticle(int posx, int posy, int rect_size)
 }
 
 /* Build classification vector --------------------------------------------- */
-bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
-    const Matrix2D<double> &original_piece, int _x, int _y,
+bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
+    const MultidimArray<double> &original_piece, int _x, int _y,
     Matrix1D<double> &_result)
 {
     #ifdef DEBUG_BUILDVECTOR
@@ -1859,9 +1858,9 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
         +(angleBins-1)+(angleBins-1)*angleBins // sector correlations
         +(2*__radial_bins-19)*angleBins // ring correlations
         );
-    const Matrix2D<int> &mask =         __mask.get_binary_mask2D();
-    const Matrix2D<int> &classif1 =  (*(__mask_classification[0]));
-    const Matrix2D<int> &classif2 =  (*(__mask_classification[1]));
+    const MultidimArray<int> &mask =         __mask.get_binary_mask();
+    const MultidimArray<int> &classif1 =  (*(__mask_classification[0]));
+    const MultidimArray<int> &classif2 =  (*(__mask_classification[1]));
 
     if (STARTINGX(mask) + _x < STARTINGX(piece)) return false;
     if (STARTINGY(mask) + _y < STARTINGY(piece)) return false;
@@ -1885,33 +1884,33 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
         }
     #endif
 
-    Matrix1D<int> radial_idx(__radial_bins);
-    Matrix2D<double> particle;
+    MultidimArray<int> radial_idx(__radial_bins);
+    MultidimArray<double> particle;
     particle.initZeros(YSIZE(mask), XSIZE(mask));
     STARTINGY(particle) = STARTINGY(mask);
     STARTINGX(particle) = STARTINGX(mask);
 
     // Copy __radial_val, __sector, and __ring into local structures
     // so that threads are applicable
-    std::vector< Matrix1D<int> > radial_val;
+    std::vector< MultidimArray<int> > radial_val;
     for (int i=0; i<__radial_val.size(); i++)
     {
-        Matrix1D<int> dummyi=*(__radial_val[i]);
+        MultidimArray<int> dummyi=*(__radial_val[i]);
         radial_val.push_back(dummyi);
     }
 
-    std::vector< Matrix1D<double> > sector;
-    Matrix1D<double> dummyd=*(__sector[0]);
+    std::vector< MultidimArray<double> > sector;
+    MultidimArray<double> dummyd=*(__sector[0]);
     for (int i=0; i<__sector.size(); i++)
         sector.push_back(dummyd);
 
-    std::vector< Matrix1D<double> > ring;
+    std::vector< MultidimArray<double> > ring;
     dummyd=*(__ring[0]);
     for (int i=0; i<__ring.size(); i++)
         ring.push_back(dummyd);
 
     // Put the image values into the corresponding radial bins
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
     {
         int val = (int)piece(_y + i, _x + j);
         bool foreground = mask(i, j);
@@ -1942,7 +1941,7 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
     // Compute the sector averages and reorganize the data in rings
     for (int j = 0; j < angleBins; j++)
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(sector[j])
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(sector[j])
         {
             if ((*(__Nsector[j]))(i)>0)
             {
@@ -1965,7 +1964,7 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
     // Compute the correlation of the sectors
     for (int step = 1; step<angleBins; step++)
     {
-        Matrix1D<double> sectorCorr;
+        MultidimArray<double> sectorCorr;
         sectorCorr.initZeros(angleBins);
         for (int i = 0; i<angleBins; i++)
         {
@@ -1974,7 +1973,7 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
                 sector[intWRAP(i+step,0,angleBins-1)]);
         }
         _result(idx_result++) = sectorCorr.computeAvg();
-        Matrix1D<double> sectorAutocorr;
+        MultidimArray<double> sectorAutocorr;
         correlation_vector_no_Fourier(sectorCorr,sectorCorr,sectorAutocorr);
         for (int j = 0; j < XSIZE(sectorAutocorr); j++)
             _result(idx_result++) = sectorAutocorr(j);
@@ -1984,7 +1983,7 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
     for (int step = 1; step<=2; step++)
          for (int i = 8; i<__radial_bins-step; i++)
          {
-             Matrix1D<double> ringCorr;
+             MultidimArray<double> ringCorr;
              correlation_vector_no_Fourier(ring[i],ring[i+step],ringCorr);
              for (int j = 0; j < XSIZE(ringCorr); j++)
                  _result(idx_result++) = ringCorr(j);
@@ -1998,7 +1997,7 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
             saveOrig.write("PPP3.xmp");
 
             save().initZeros(savefg());
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(save())
             {
                 int idx1 = classif1(i, j);
                 if (idx1 == -1) continue;
@@ -2009,7 +2008,7 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
             save.write("PPP4.xmp");
 
             save().initZeros();
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(save())
             {
                 int idx1 = classif1(i, j);
                 if (idx1 == -1) continue;
@@ -2022,9 +2021,9 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
     #endif
 
     #ifdef DEBUG_BUILDVECTOR
-        Matrix2D<double> A;
+        MultidimArray<double> A;
         A.resize(angleBins,XSIZE(sector[0]));
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(A)
             A(i,j)=sector[i](j);
         A.write("PPPsector.txt");
         std::cout << _result.transpose() << std::endl;
@@ -2041,7 +2040,7 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
 /* Get piece --------------------------------------------------------------- */
 // to get the piece containing (x,y) of size xsize,ysize
 // return the position of x,y in the piece in posx,posy
-void AutoParticlePicking::get_centered_piece(Matrix2D<double> &piece,
+void AutoParticlePicking::get_centered_piece(MultidimArray<double> &piece,
     int _x, int _y, int &_posx, int &_posy)
 {
     piece.resize(__piece_xsize, __piece_xsize);
@@ -2088,12 +2087,12 @@ void AutoParticlePicking::get_centered_piece(Matrix2D<double> &piece,
 
 // Get a piece whose top-left corner is at the desired position (if possible)
 bool AutoParticlePicking::get_corner_piece(
-    Matrix2D<double> &piece,
+    MultidimArray<double> &piece,
     int _top, int _left, int _skip_y,
     int &_next_skip_x, int &_next_skip_y, int &_next_top, int &_next_left,
     int overlap, bool copyPiece)
 {
-    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const MultidimArray<int> &mask = __mask.get_binary_mask();
 
     int maxx, maxy;
     __m->size(maxx, maxy);
@@ -2142,8 +2141,8 @@ bool AutoParticlePicking::get_corner_piece(
 
 /* Prepare piece ----------------------------------------------------------- */
 static pthread_mutex_t preparePieceMutex = PTHREAD_MUTEX_INITIALIZER;
-bool AutoParticlePicking::prepare_piece(Matrix2D<double> &piece,
-    Matrix2D<double> &original_piece)
+bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
+    MultidimArray<double> &original_piece)
 {
     original_piece = piece;
     #ifdef DEBUG_PREPARE    
@@ -2168,7 +2167,7 @@ bool AutoParticlePicking::prepare_piece(Matrix2D<double> &piece,
     #endif    
     if (__output_scale==0)
     {
-        Matrix2D<double> auxPiece;
+        MultidimArray<double> auxPiece;
         piece.pyramidExpand(auxPiece);
         piece=auxPiece;
         #ifdef DEBUG_PREPARE    
@@ -2220,14 +2219,14 @@ bool AutoParticlePicking::prepare_piece(Matrix2D<double> &piece,
 
 /* Get neighbours ---------------------------------------------------------- */
 //To get the neighbours and their positions in the piece image
-void AutoParticlePicking::find_neighbour(const Matrix2D<double> &piece,
+void AutoParticlePicking::find_neighbour(const MultidimArray<double> &piece,
     std::vector<int> &_idx, int _index,
-    int _x, int _y, int _posx, int _posy, Matrix1D<char> &_visited,
-    std::vector< Matrix1D<int> > &_nbr)
+    int _x, int _y, int _posx, int _posy, MultidimArray<char> &_visited,
+    std::vector< MultidimArray<int> > &_nbr)
 {
     int piece_xsize = XSIZE(piece);
     int piece_ysize = YSIZE(piece);
-    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const MultidimArray<int> &mask = __mask.get_binary_mask();
 
     // If all the particles are visited
     if (_visited.sum() == XSIZE(_visited)) return;
@@ -2263,7 +2262,7 @@ void AutoParticlePicking::find_neighbour(const Matrix2D<double> &piece,
             (nx + xmask2 < right) &&
             (ny + ymask2 < bottom))
         {
-            Matrix1D<int> current_nbr;
+            MultidimArray<int> current_nbr;
             current_nbr.initZeros(3);
             current_nbr(0) = current_part;
             current_nbr(1) = nx - left;
@@ -2276,10 +2275,10 @@ void AutoParticlePicking::find_neighbour(const Matrix2D<double> &piece,
 
 /* Get next scanning position ---------------------------------------------- */
 bool AutoParticlePicking::get_next_scanning_pos(
-    const Matrix2D<double> &piece,
+    const MultidimArray<double> &piece,
     int &_x, int &_y, int _skip_x, int _skip_y, int overlap)
 {
-    const Matrix2D<int> &mask = __mask.get_binary_mask2D();
+    const MultidimArray<int> &mask = __mask.get_binary_mask();
 
     if (_x + XSIZE(mask) / 2 > XSIZE(piece) ||
         _y + YSIZE(mask) / 2 > YSIZE(piece)) 
@@ -2467,9 +2466,9 @@ void AutoParticlePicking::loadModels(const FileName &fn)
     // Load the mask
     __mask.type = READ_MASK;
     __mask.fn_mask = __modelRootName + ".mask";
-    __mask.generate_2Dmask();
-    __mask.get_binary_mask2D().setXmippOrigin();
-    __mask_size = XSIZE(__mask.get_binary_mask2D()) * __reduction;
+    __mask.generate_mask();
+    __mask.get_binary_mask().setXmippOrigin();
+    __mask_size = XSIZE(__mask.get_binary_mask()) * __reduction;
     
     classifyMask();
 
@@ -2513,7 +2512,7 @@ void AutoParticlePicking::saveModels(const FileName &_fn_root)
 
     // Save the mask
     ImageXmipp save;
-    typeCast(__mask.get_binary_mask2D(), save());
+    typeCast(__mask.get_binary_mask(), save());
     save.write(fn_root + ".mask");
 
     // Save parameters

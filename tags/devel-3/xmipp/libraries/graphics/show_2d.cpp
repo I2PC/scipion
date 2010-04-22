@@ -727,20 +727,20 @@ bool ImageViewer::loadImage(const char *fileName,
     {
 
         // try to read image from standard format.
-        if (image.load(filename, 0)) ok = Qt2xmipp(image);
+    	if (image.load(filename, 0)) ok = Qt2xmipp(image);
 
         if (!ok)
         {
             try
             {
                 // reads Xmipp Image
-                Image<double> tmpImage;
+            	Image<double> tmpImage;
                 if (tmpImage.isRealImage(filename))
                 {
-                    isFourierImage = false;
+                	isFourierImage = false;
                     Image<double> p;
                     p.read((FileName)filename, true, -1, apply_geo, FALSE);
-                    if (load_mode == ImageViewer::PSD_mode)
+                	if (load_mode == ImageViewer::PSD_mode)
                     {
                         // It is only the ARMA model
                         xmipp2PSD(p(), p());
@@ -753,7 +753,10 @@ bool ImageViewer::loadImage(const char *fileName,
                         if (fn_assign != "")
                             options->setItemEnabled(recomputectfmodel, true);
                     }
-                    tmpImage() = p();
+                	std::cerr << "hola4b" <<std::endl;
+                    tmpImage = p;
+                	std::cerr << "hola5" <<std::endl;
+
                 }
                 else if (tmpImage.isComplexImage(filename))
                 {
@@ -771,6 +774,8 @@ bool ImageViewer::loadImage(const char *fileName,
                 minGray = _minGray;
                 maxGray = _maxGray;
                 ok = xmipp2Qt(tmpImage);
+            	std::cerr << "hola6" <<std::endl;
+
             }
             catch (Xmipp_error)
             {

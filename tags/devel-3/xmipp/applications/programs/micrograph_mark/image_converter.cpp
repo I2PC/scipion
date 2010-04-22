@@ -31,28 +31,28 @@ QtImageConverter::QtImageConverter()
 {}
 
 /* qt to xmipp converter --------------------------------------------------- */
-Image *QtImageConverter::qt2xmipp(QImage *qtImg)
+Image<double> *QtImageConverter::qt2xmipp(QImage *qtImg)
 {
-    Image *xmippImg = new Image(qtImg->height(), qtImg->width());
+    Image<double> *xmippImg = new Image<double>(qtImg->height(), qtImg->width());
 
     for (int y = 0; y < qtImg->height(); y++)
         for (int x = 0; x < qtImg->width(); x++)
-            (*xmippImg)(y, x) = qtImg->pixelIndex(x, y);
+            (*xmippImg)()(y, x) = qtImg->pixelIndex(x, y);
 
     return(xmippImg);
 }
 
 /* xmipp to qt converter --------------------------------------------------- */
-QImage *QtImageConverter::xmipp2qt(Image *xmippImg)
+QImage *QtImageConverter::xmipp2qt(Image<double> *xmippImg)
 {
-    QImage *qtImg = new QImage((*xmippImg)().colNumber(), (*xmippImg)().rowNumber(),
+    QImage *qtImg = new QImage(XSIZE((*xmippImg)()), YSIZE((*xmippImg)()),
                                8, 256);
 
     for (int i = 0; i < 256; i++) qtImg->setColor(i, qRgb(i, i, i));
 
     for (int y = 0; y < qtImg->height(); y++)
         for (int x = 0; x < qtImg->width(); x++)
-            qtImg->setPixel(x, y, (unsigned int)((*xmippImg)(y, x)));
+            qtImg->setPixel(x, y, (unsigned int)((*xmippImg)()(y, x)));
 
     return(qtImg);
 }

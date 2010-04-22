@@ -32,10 +32,10 @@ public:
     QtImageConverter();
 
     // qt to xmipp converter
-    Image *qt2xmipp(QImage *qtImg);
+    Image<double> *qt2xmipp(QImage *qtImg);
 
     // xmipp to qt converter
-    QImage *xmipp2qt(Image *xmippImg);
+    QImage *xmipp2qt(Image<double> *xmippImg);
 };
 
 #endif

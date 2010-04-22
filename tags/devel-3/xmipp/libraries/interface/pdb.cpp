@@ -482,7 +482,7 @@ void fhlpf(const MultidimArray<double> &f, const MultidimArray<double> &filter,
 }
 
 /* Optimization of the low pass filter to fit a given atom ----------------- */
-Matrix1D<double> globalHlpfPrm(3);
+MultidimArray<double> globalHlpfPrm(3);
 MultidimArray<double> globalf;
 int globalM;
 double globalT;
@@ -564,7 +564,7 @@ double Hlpf_fitness(double *p, void *prm)
     bestPrm(2)=deltaw of the Kaiser window.
 */
 void optimizeHlpf(MultidimArray<double> &f, int M, double T, const std::string &atom,
-    MultidimArray<double> &filter, Matrix1D<double> &bestPrm)
+    MultidimArray<double> &filter, MultidimArray<double> &bestPrm)
 {
     globalHlpfPrm(0)=1.0;     // reduction factor
     globalHlpfPrm(1)=0.01;    // ripple
@@ -575,7 +575,7 @@ void optimizeHlpf(MultidimArray<double> &f, int M, double T, const std::string &
     globalAtom=atom;
     double fitness;
     int iter;
-    Matrix1D<double> steps(3); steps.initConstant(1);
+    MultidimArray<double> steps(3); steps.initConstant(1);
     powellOptimizer(globalHlpfPrm, 1, 3,
                       &Hlpf_fitness, NULL, 0.05, fitness, iter, steps, false);
     bestPrm=globalHlpfPrm;
@@ -600,7 +600,7 @@ void atomRadialProfile(int M, double T, const std::string &atom,
 
     // Compute the optimal filter
     MultidimArray<double> filter;
-    Matrix1D<double> bestPrm;
+    MultidimArray<double> bestPrm;
     optimizeHlpf(f, M, T, atom, filter, bestPrm);
     
     // Perform the convolution
