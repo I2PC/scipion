@@ -390,6 +390,10 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return MDL_CTFMODEL;
 	}
+	else if( strLabel == "scale" || strLabel == "Scale" )
+	{
+		return MDL_SCALE;
+	}
 	else if( strLabel == "shiftX" || strLabel == "Xoff" )
 	{
 		return MDL_SHIFTX;
@@ -454,6 +458,22 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return MDL_NMA;
 	}
+	else if( strLabel == "sampling_rate")
+	{
+		return MDL_SAMPLINGRATE;
+	}
+	else if( strLabel == "voltage" )
+	{
+		return MDL_VOLTAGE;
+	}
+	else if( strLabel == "defocusU" )
+	{
+		return MDL_DEFOCUSU;
+	}
+	else if( strLabel == "defocusV" )
+	{
+		return MDL_DEFOCUSV;
+	}
 	else
 	{
 		return MDL_UNDEFINED;
@@ -484,6 +504,9 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 			break;
 		case MDL_CTFMODEL:
 			return std::string( "CTFModel" );
+			break;
+		case MDL_SCALE:
+			return std::string( "scale" );
 			break;
 		case MDL_SHIFTX:
 			return std::string( "shiftX" );
@@ -533,6 +556,19 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
         case MDL_NMA:
             return std::string( "NMADisplacements" );
             break;
+        case MDL_SAMPLINGRATE:
+            return std::string( "sampling_rate" );
+            break;
+        case MDL_VOLTAGE:
+            return std::string( "voltage" );
+            break;
+        case MDL_DEFOCUSU:
+            return std::string( "defocusU" );
+            break;
+        case MDL_DEFOCUSV:
+            return std::string( "defocusV" );
+            break;
+
 		default:
 			return std::string( "" );
 			break;

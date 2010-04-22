@@ -136,6 +136,32 @@ mD.toDataBase( dbFile, "prueba" );
 ====================
 
  XmippData.isBool(XmippData.MDL_ENABLED)
+ 
+ ====================
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+import XmippData
+inputMetaDataFile  = XmippData.FileName('kk.ctfparam')
+mD = XmippData.MetaData(inputMetaDataFile)
+voltage=XmippData.doubleP()
+defocusu=XmippData.doubleP()
+mD.getValue(XmippData.MDL_DEFOCUSU,defocusu)
+mD.getValue(XmippData.MDL_VOLTAGE,voltage)
+print defocusu.value(),voltage.value()
+mD.setValue(XmippData.MDL_DEFOCUSU,3333.)
+mD.write('ww')
+==================================
+#combinewithfiles
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+import XmippData
+inputMetaDataFile   = XmippData.FileName('t.doc')
+mD = XmippData.MetaData(inputMetaDataFile)
+mD.combineWithFiles(XmippData.MDL_CTFMODEL)
+mD.write('ww')
+
 */
 
 

@@ -123,6 +123,10 @@ public:
      */
 	~MetaData();
 	
+	/** Set to false for row format (parameter files)
+	 *  set to true  for column format (this is the default) (docfiles)
+	 *
+	 */
 	void setColumnFormat( bool column );
 
 	// Set a new pair/value for an specified object. If no objectID is given, that
@@ -201,7 +205,7 @@ public:
     std::vector<long int> findObjectsInRange( MetaDataLabel name, double minValue, double maxValue );
 	std::vector<long int> findObjectsInRange( MetaDataLabel name, int minValue, int maxValue );
 	
-    void combine( MetaData & other, MetaDataLabel thisLabel);
+    void combine( MetaData & other, MetaDataLabel thisLabel=MDL_UNDEFINED);
     void combineWithFiles( MetaDataLabel thisLabel );
     
     // Removes the collection of objects whose pair label/value is given

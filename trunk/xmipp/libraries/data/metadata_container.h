@@ -51,29 +51,64 @@ enum MetaDataLabel
 { 
 	MDL_UNDEFINED = -1,
 	MDL_FIRST_LABEL,
-	MDL_ANGLEROT = MDL_FIRST_LABEL,       // Rotation angle of an image (double)
-    MDL_COMMENT,                          // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
+	MDL_ANGLEPSI = MDL_FIRST_LABEL,       // Psi angle of an image (double)
+	MDL_ANGLEROT,                         // Rotation angle of an image (double)
 	MDL_ANGLETILT,                        // Tilting angle of an image (double)
-	MDL_ANGLEPSI,                         // Psi angle of an image (double)
-	MDL_IMAGE,                            // Name of an image (std::string)
-	MDL_MICROGRAPH,                       // Name of a micrograph (std::string)
+	MDL_COMMENT,                          // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
+	MDL_CTFINPUTPARAMS,                   // Parameters file for the CTF Model (std::string)
 	MDL_CTFMODEL,                         // Name for the CTF Model (std::string)
-	MDL_SHIFTX,                           // Shift for the image in the X axis (double)
-	MDL_SHIFTY,                           // Shift for the image in the Y axis (double)
-	MDL_SHIFTZ,                           // Shift for the image in the Z axis (double)
 	MDL_ENABLED,                          // Is this image enabled? (int [-1 or 1])
+	MDL_FLIP,                             // Flip the image? (bool)
+	MDL_IMAGE,                            // Name of an image (std::string)
+	MDL_MAXCC,                            // Cross-correlation for the image (double)
+	MDL_MICROGRAPH,                       // Name of a micrograph (std::string)
+	MDL_NMA,                              // Normal mode displacements
 	MDL_ORIGINX,                          // Origin for the image in the X axis (double)
 	MDL_ORIGINY,                          // Origin for the image in the Y axis (double)
 	MDL_ORIGINZ,                          // Origin for the image in the Z axis (double)
-	MDL_WEIGHT,                           // Weight assigned to the image (double)
-	MDL_FLIP,                             // Flip the image? (bool)
+	MDL_PERIODOGRAM,                      // A periodogram's file name (std::string)
+	MDL_PMAX,                             // Maximum value of normalized probability function (now called "Pmax/sumP") (double)
 	MDL_REF,                              // Class to which the image belongs (int)
-	MDL_MAXCC,                            // Cross-correlation for the image (double)
-        MDL_SERIE,                            // A collection of micrographs, e.g. a tilt serie (std::string)
-        MDL_PMAX,                             // Maximum value of normalized probability function (now called "Pmax/sumP") (double)
-        MDL_CTFINPUTPARAMS,                   // Parameters file for the CTF Model (std::string)
-        MDL_PERIODOGRAM,                      // A periodogram's file name (std::string)
-        MDL_NMA,                              // Normal mode displacements
+	MDL_SCALE,                            // scaling factor for an image or volume (double)
+	MDL_SERIE,                            // A collection of micrographs, e.g. a tilt serie (std::string)
+	MDL_SHIFTX,                           // Shift for the image in the X axis (double)
+	MDL_SHIFTY,                           // Shift for the image in the Y axis (double)
+	MDL_SHIFTZ,                           // Shift for the image in the Z axis (double)
+	MDL_WEIGHT,                           // Weight assigned to the image (double)
+//add row only label at the end of the enum
+	MDL_SAMPLINGRATE,                      // sampling rate (double)
+	MDL_VOLTAGE,                           // microscope voltage (double)
+	MDL_DEFOCUSU,                          // microscope defocus U direction (double)
+	MDL_DEFOCUSV,                          // microscope defocus V direction (double)
+/*
+	MDL_azimuthal_angle=      72.3493
+	MDL_spherical_aberration= 5.6
+	MDL_chromatic_aberration= 1.99957
+	MDL_energy_loss=          0.0240301
+	MDL_lens_stability=       0
+	MDL_convergence_cone=     0.000329129
+	MDL_longitudinal_displace=8.66588e-05
+	MDL_transversal_displace= 4.14845
+	MDL_Q0=                   -0.1
+	MDL_K=                    2.13333
+	MDL_gaussian_K=           2.58626
+	MDL_sigmaU=               100000
+	MDL_sigmaV=               85359.1
+	MDL_cU=                   0.00332111
+	MDL_cV=                   0.0132845
+	MDL_gaussian_angle=       2.32559e-11
+	MDL_sqrt_K=               70.1711
+	MDL_sqU=                  20.3219
+	MDL_sqV=                  19.1215
+	MDL_sqrt_angle=           67.1273
+	MDL_base_line=            0.368481
+	MDL_gaussian_K2=          0.24108
+	MDL_sigmaU2=              6489.64
+	MDL_sigmaV2=              5825.19
+	MDL_cU2=                  0.06172
+	MDL_cV2=                  0.0586838
+	MDL_gaussian_angle2=      90
+*/
 	MDL_LAST_LABEL	                      // **** NOTE ****: Do keep this label always at the end
 			 		      // it is here for looping purposes  	
 };
@@ -91,10 +126,15 @@ inline bool isString(MetaDataLabel lCode)
 
 inline bool isDouble(MetaDataLabel lCode)
 {
-    if(lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||\
-       lCode == MDL_SHIFTX   || lCode == MDL_SHIFTY    || lCode == MDL_SHIFTZ   ||\
-       lCode == MDL_ORIGINX  || lCode == MDL_ORIGINY   || lCode == MDL_ORIGINZ  ||\
-       lCode == MDL_WEIGHT   || lCode == MDL_MAXCC     || lCode == MDL_PMAX)
+    if(lCode == MDL_ANGLEROT     || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||\
+       lCode == MDL_SHIFTX       || lCode == MDL_SHIFTY    || lCode == MDL_SHIFTZ   ||\
+       lCode == MDL_ORIGINX      || lCode == MDL_ORIGINY   || lCode == MDL_ORIGINZ  ||\
+       lCode == MDL_WEIGHT       || lCode == MDL_MAXCC     || lCode == MDL_PMAX     ||\
+       lCode == MDL_SCALE        ||\
+       \
+       lCode == MDL_SAMPLINGRATE || lCode == MDL_VOLTAGE   || lCode == MDL_DEFOCUSU ||
+       lCode == MDL_DEFOCUSV \
+       )
         return true;
     else
         return false;

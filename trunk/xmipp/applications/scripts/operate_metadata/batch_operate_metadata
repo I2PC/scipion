@@ -93,7 +93,6 @@ while(id!=XmippData.MetaData.NO_MORE_OBJECTS):
 	   mD.writeValueToString(_auxString,i)
 	   auxExpression=auxExpression.replace(i,_auxString.value())
        replaceString="result=auxExpression.replace"+expression.split('replace')[1]
-       print replaceString
        exec replaceString   
    mD.setValue(metaDataLabelName,result) 
    id=mD.nextObject()

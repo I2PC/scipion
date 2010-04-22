@@ -501,7 +501,7 @@ void MetaData::combineWithFiles( MetaDataLabel thisLabel )
         
         // Read file
         auxMetaData.read( fileName );
-        combine( auxMetaData, thisLabel );
+        combine( auxMetaData );
     }
 }
 
@@ -651,6 +651,7 @@ void MetaData::write( const std::string &fileName )
         
         for( strIt = activeLabels.begin( ); strIt != activeLabels.end( ); strIt ++ )
 	    {
+            outfile.width(20);
 		    outfile << MetaDataContainer::decodeLabel(*strIt);
 		    outfile << " ";
             object->writeValueToFile( outfile, *strIt );
