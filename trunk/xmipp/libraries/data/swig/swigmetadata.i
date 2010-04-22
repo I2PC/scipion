@@ -159,6 +159,8 @@ sys.path.append(scriptdir) # add default search path
 import XmippData
 inputMetaDataFile   = XmippData.FileName('t.doc')
 mD = XmippData.MetaData(inputMetaDataFile)
+
+
 mD.combineWithFiles(XmippData.MDL_CTFMODEL)
 mD.write('ww')
 
