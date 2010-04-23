@@ -38,27 +38,27 @@
 #include "transformations.h"
 
 typedef enum TransformType {
-        NoTransform = 0,        // No transform
-        Standard = 1,           // Standard transform: origin = (0,0,0)
-        Centered = 2,           // Centered transform: origin = (nx/2,ny/2,nz/2)
-        Hermitian = 3,          // Hermitian half: origin = (0,0,0)
-        CentHerm = 4            // Centered hermitian: origin = (0,ny/2,nz/2)
+    NoTransform = 0,        // No transform
+    Standard = 1,           // Standard transform: origin = (0,0,0)
+    Centered = 2,           // Centered transform: origin = (nx/2,ny/2,nz/2)
+    Hermitian = 3,          // Hermitian half: origin = (0,0,0)
+    CentHerm = 4            // Centered hermitian: origin = (0,ny/2,nz/2)
 } ;
 
 typedef enum DataType {
-        Unknown_Type = 0,       // Undefined data type
-        UChar = 1,              // Unsigned character or byte type
-        SChar = 2,              // Signed character (for CCP4)
-        UShort = 3,             // Unsigned integer (2-byte)
-        Short = 4,              // Signed integer (2-byte)
-        Int = 5,                // Signed integer (4-byte)
-        Long = 6,               // Signed integer (4 or 8 byte, depending on system)
-        Float = 7,              // Floating point (4-byte)
-        Double = 8,             // Double precision floating point (8-byte)
-        ComplexShort = 9,       // Complex two-byte integer (4-byte)
-        ComplexInt = 10,        // Complex integer (8-byte)
-        ComplexFloat = 11,      // Complex floating point (8-byte)
-        ComplexDouble = 12      // Complex floating point (16-byte)
+    Unknown_Type = 0,       // Undefined data type
+    UChar = 1,              // Unsigned character or byte type
+    SChar = 2,              // Signed character (for CCP4)
+    UShort = 3,             // Unsigned integer (2-byte)
+    Short = 4,              // Signed integer (2-byte)
+    Int = 5,                // Signed integer (4-byte)
+    Long = 6,               // Signed integer (4 or 8 byte, depending on system)
+    Float = 7,              // Floating point (4-byte)
+    Double = 8,             // Double precision floating point (8-byte)
+    ComplexShort = 9,       // Complex two-byte integer (4-byte)
+    ComplexInt = 10,        // Complex integer (8-byte)
+    ComplexFloat = 11,      // Complex floating point (8-byte)
+    ComplexDouble = 12      // Complex floating point (16-byte)
 } ;
 
 // Ask memory size of datatype
@@ -127,9 +127,9 @@ unsigned long   gettypesize(DataType type);
 class SubImage
 {
 public:
-    double shiftX, shiftY, shiftZ;        // Origin 
+    double shiftX, shiftY, shiftZ;        // Origin
     double angleRot, angleTilt, anglePsi; // Euler angles
-    double weight;	                  // Weight
+    double weight;                   // Weight
     bool   flip;                          // Apply mirror operation
 
 public:
@@ -156,15 +156,15 @@ public:
         angleRot = angleTilt = anglePsi = 0.;
         weight = 1.;
         flip = false;
-    }    
+    }
 
     /** Destructor.
      */
-     ~SubImage()
-     {
-     }
-    
-};
+    ~SubImage()
+    {}
+
+}
+;
 
 /** Template class for images
  * @ingroup Images
@@ -182,21 +182,21 @@ public:
     // FIXME: why cant this one be private as well?
 private:
     FileName            filename;   // File name
-    int        			dataflag;	// Flag to force reading of the data
-    unsigned long	i;			// Current image number (may be > NSIZE)
-    unsigned long	offset; 	// Data offset
+    int           dataflag; // Flag to force reading of the data
+    unsigned long i;   // Current image number (may be > NSIZE)
+    unsigned long offset;  // Data offset
     int                swap;       // Perform byte swapping upon reading
-    TransformType		transform;  // Transform type
-    double				min, max;	// Limits
-    double				avg, std;	// Average and standard deviation
-    double				smin, smax; // Limits for display
-    double				scale;		// Scale of last density conversion operation
-    double				shift;		// Shift of last density conversion operation before scaling
-    double				resolution; // Resolution limit of data - used for low-pass filtering
-    double				ux, uy, uz;	// Voxel units (angstrom/pixel edge)
-    double				ua, ub, uc; // Unit cell dimensions (angstrom)
-    double				alf, bet, gam;	// Unit cell angles (radian)
-    unsigned int		spacegroup;	// Space group
+    TransformType  transform;  // Transform type
+    double    min, max; // Limits
+    double    avg, std; // Average and standard deviation
+    double    smin, smax; // Limits for display
+    double    scale;  // Scale of last density conversion operation
+    double    shift;  // Shift of last density conversion operation before scaling
+    double    resolution; // Resolution limit of data - used for low-pass filtering
+    double    ux, uy, uz; // Voxel units (angstrom/pixel edge)
+    double    ua, ub, uc; // Unit cell dimensions (angstrom)
+    double    alf, bet, gam; // Unit cell angles (radian)
+    unsigned int  spacegroup; // Space group
 
 
 public:
@@ -241,9 +241,9 @@ public:
         data.clear();
         dataflag = -1;
         if (isComplexT())
-        	transform = Standard;
-    	else
-    		transform = NoTransform;
+            transform = Standard;
+        else
+            transform = NoTransform;
         i = 0;
         filename = "";
         offset = 0;
@@ -267,502 +267,530 @@ public:
 
     /** Check whether image is complex based on T
        */
-     bool isComplexT() const
-     {
-    	 return ( typeid(T) == typeid(std::complex<double>) ||
-    			 typeid(T) == typeid(std::complex<float>) );
-     }
+    bool isComplexT() const
+    {
+        return ( typeid(T) == typeid(std::complex<double>) ||
+                 typeid(T) == typeid(std::complex<float>) );
+    }
 
-	/** Check whether image is complex based on transform
-      */
+    /** Check whether image is complex based on transform
+         */
     bool isComplex() const
     {
-    	return !(transform==NoTransform);
+        return !(transform==NoTransform);
     }
 
     /** Destructor.
      */
-     ~Image()
-     {
-         clear();
-     }
+    ~Image()
+    {
+        clear();
+    }
 
 
-     /** Specific read functions for different file formats
-     */
-     #include "rwSPIDER.h"
+    /** Specific read functions for different file formats
+    */
+#include "rwSPIDER.h"
      #include "rwMRC.h"
 
-     /** Is this file an image
-      *
-      *  Check whether a real-space image can be read
-      *
-      */
-     bool isImage(const FileName name)
-     {
-    	 return !read(name, false);
-     }
+    /** Is this file an image
+     *
+     *  Check whether a real-space image can be read
+     *
+     */
+    bool isImage(const FileName name)
+    {
+        return !read(name, false);
+    }
 
-     /** Is this file a real-valued image
-      *
-      *  Check whether a real-space image can be read
-      *
-      */
-     bool isRealImage(const FileName name)
-     {
-         return (isImage(name) && !isComplex());
-     }
+    /** Is this file a real-valued image
+     *
+     *  Check whether a real-space image can be read
+     *
+     */
+    bool isRealImage(const FileName name)
+    {
+        return (isImage(name) && !isComplex());
+    }
 
-     /** Is this file a complex image
-      *
-      *  Check whether a fourier-space (complex) image can be read
-      *
-      */
-     bool isComplexImage(const FileName name)
-     {
-         return (isImage(name) && isComplex());
-     }
+    /** Is this file a complex image
+     *
+     *  Check whether a fourier-space (complex) image can be read
+     *
+     */
+    bool isComplexImage(const FileName name)
+    {
+        return (isImage(name) && isComplex());
+    }
 
-     /** Rename the image
-       */
-     void rename (const FileName name)
-     {
-    	 filename = name;
-     }
+    /** Rename the image
+      */
+    void rename (const FileName name)
+    {
+        filename = name;
+    }
 
     /** General read function
      */
-     int read(const FileName name, bool readdata=true, int select_img=-1,
-              bool apply_geo = false, bool only_apply_shifts = false)
-     {
-         int err = 0;
+    int read(const FileName name, bool readdata=true, int select_img=-1,
+             bool apply_geo = false, bool only_apply_shifts = false)
+    {
+        int err = 0;
 
-         // Check whether to read the data or only the header
-         if ( readdata ) dataflag = 1;
-         else dataflag = -1;
+        // Check whether to read the data or only the header
+        if ( readdata )
+            dataflag = 1;
+        else
+            dataflag = -1;
 
-         FileName ext_name = name.get_file_format();
-         if ( name.contains("#") )
-        	 filename = name;
-         else
-        	 filename = name.before_first_of(":");
-//#define DEBUG
+        FileName ext_name = name.get_file_format();
+        if ( name.contains("#") )
+            filename = name;
+        else
+            filename = name.before_first_of(":");
+        //#define DEBUG
 #undef DEBUG
 #ifdef DEBUG
-         std::cerr << "name="<<name <<std::endl;
-         std::cerr << "ext= "<<ext_name <<std::endl;
-         std::cerr<<" now reading: "<< filename<<" dataflag= "<<dataflag<<std::endl;
+
+        std::cerr << "name="<<name <<std::endl;
+        std::cerr << "ext= "<<ext_name <<std::endl;
+        std::cerr<<" now reading: "<< filename<<" dataflag= "<<dataflag<<std::endl;
 #endif
 
-         if (ext_name.contains("mrc"))
-             err = readMRC();
-         else
-             err = readSPIDER(select_img);
+        if (ext_name.contains("mrc"))
+            err = readMRC();
+        else
+            err = readSPIDER(select_img);
 
         //err = readMRC(*this, imgno);
         /*
-	if ( filename.contains("#") || ext.empty() )
-		err = readRAW(p, select_img);
-	else if ( ext.contains("raw") )
-		err = readRAW(p, select_img);
-	else if ( ext.contains("asc") || ext.contains( "txt") )
-		err = readASCII(p);
-	else if ( ext.contains("pic") )
-		err = readBIORAD(p);
-	else if ( ext.contains("brx" ) || ext.contains("brix" ) )
-		err = readBRIX(p);
-	else if ( ext.contains("dat" ) )
-		err = readBrookhavenSTEM(p);
-	else if ( ext.contains("ccp") || ext.contains("map") )
-		err = readCCP4(p);
-	else if ( ext.contains("di") )
-		err = readDI(p, select_img);
-	else if ( ext.contains("dm") )
-		err = readDM(p);
-	else if ( ext.contains("omap" ) || ext.contains("dsn6") || ext.contains("dn6") )
-		err = readDSN6(p);
-	else if ( ext.contains("em") )
-		err = readEM(p);
-	else if ( ext.contains("pot") )
-		err = readGOODFORD(p);
-	else if ( ext.contains("grd") )
-		err = readGRD(p);
-	else if ( ext.contains("hkl") )
-		err = readHKL(p);
-	else if ( ext.contains("img") || ext.contains("hed") )
-		err = readIMAGIC(p, select_img);
-	else if ( ext.contains("ip") )
-		err = readIP(p);
-	else if ( ext.contains("jpg") || ext.contains("jpeg") )
-		err = readJPEG(p);
-	else if ( ext.contains("mif") )
-		err = readMIFF(p, select_img);
-	else if ( ext.contains("mff") )
-		err = readMFF(p);
-	else if ( ext.contains("mrc") )
-		err = readMRC(p);
-	else if ( ext.contains("pif") || ext.contains("sf") )
-		err = readPIF(p, select_img);
-	else if ( ext.contains("bp") || ext.contains("bq") )
-		err = readPIC(p);
-	else if ( ext.contains("png") )
-		err = readPNG(p);
-	else if ( ext.contains("spe") )
-		err = readSPE(p, select_img);
-	else if ( ext.contains("spi") )
-		err = readSPIDER(p, select_img);
-	else if ( ext.contains("spm") || ext.contains("sup") || ext == "f" )
-		err = readSUPRIM(p);
-	else if ( ext.contains("tif") )
-		err = readTIFF(p, select_img);
-	else if ( ext.contains("xpl") || ext.contains("cns") || ext.contains("rfl") )
-		err = readXPLOR(p);
-	else {
-		fprintf(stderr, "Error: File format with extension \"%s\" not supported!\n", ext.c_str());
-		err = -1;
-	}
+        if ( filename.contains("#") || ext.empty() )
+        err = readRAW(p, select_img);
+        else if ( ext.contains("raw") )
+        err = readRAW(p, select_img);
+        else if ( ext.contains("asc") || ext.contains( "txt") )
+        err = readASCII(p);
+        else if ( ext.contains("pic") )
+        err = readBIORAD(p);
+        else if ( ext.contains("brx" ) || ext.contains("brix" ) )
+        err = readBRIX(p);
+        else if ( ext.contains("dat" ) )
+        err = readBrookhavenSTEM(p);
+        else if ( ext.contains("ccp") || ext.contains("map") )
+        err = readCCP4(p);
+        else if ( ext.contains("di") )
+        err = readDI(p, select_img);
+        else if ( ext.contains("dm") )
+        err = readDM(p);
+        else if ( ext.contains("omap" ) || ext.contains("dsn6") || ext.contains("dn6") )
+        err = readDSN6(p);
+        else if ( ext.contains("em") )
+        err = readEM(p);
+        else if ( ext.contains("pot") )
+        err = readGOODFORD(p);
+        else if ( ext.contains("grd") )
+        err = readGRD(p);
+        else if ( ext.contains("hkl") )
+        err = readHKL(p);
+        else if ( ext.contains("img") || ext.contains("hed") )
+        err = readIMAGIC(p, select_img);
+        else if ( ext.contains("ip") )
+        err = readIP(p);
+        else if ( ext.contains("jpg") || ext.contains("jpeg") )
+        err = readJPEG(p);
+        else if ( ext.contains("mif") )
+        err = readMIFF(p, select_img);
+        else if ( ext.contains("mff") )
+        err = readMFF(p);
+        else if ( ext.contains("mrc") )
+        err = readMRC(p);
+        else if ( ext.contains("pif") || ext.contains("sf") )
+        err = readPIF(p, select_img);
+        else if ( ext.contains("bp") || ext.contains("bq") )
+        err = readPIC(p);
+        else if ( ext.contains("png") )
+        err = readPNG(p);
+        else if ( ext.contains("spe") )
+        err = readSPE(p, select_img);
+        else if ( ext.contains("spi") )
+        err = readSPIDER(p, select_img);
+        else if ( ext.contains("spm") || ext.contains("sup") || ext == "f" )
+        err = readSUPRIM(p);
+        else if ( ext.contains("tif") )
+        err = readTIFF(p, select_img);
+        else if ( ext.contains("xpl") || ext.contains("cns") || ext.contains("rfl") )
+        err = readXPLOR(p);
+        else {
+        fprintf(stderr, "Error: File format with extension \"%s\" not supported!\n", ext.c_str());
+        err = -1;
+    }
         */
-         /*
-         if ( err < 0 ) {
-             REPORT_ERROR(10,"Error reading file");
-         }
-         */
+        /*
+        if ( err < 0 ) {
+            REPORT_ERROR(10,"Error reading file");
+    }
+        */
 
-         if (readdata && (apply_geo || only_apply_shifts))
-         {
-             Matrix2D< double > A = getTransformationMatrix(only_apply_shifts);
-             if (!A.isIdentity())
-             {
-                 MultidimArray<T> tmp = (*this)();
-                 applyGeometry(3, (*this)(), tmp, A, IS_INV, WRAP);
-             }
-         }
+        if (readdata && (apply_geo || only_apply_shifts))
+        {
+            Matrix2D< double > A = getTransformationMatrix(only_apply_shifts);
+            if (!A.isIdentity())
+            {
+                MultidimArray<T> tmp = (*this)();
+                applyGeometry(BSPLINE3, (*this)(), tmp, A, IS_INV, WRAP);
+            }
+        }
 
-         // Negative errors are bad.
-         return err;
+        // Negative errors are bad.
+        return err;
 
-     }
+    }
 
     /** General write function
      */
-     void write(FileName name="")
-     {
-         int err = 0;
+    void write(FileName name="")
+    {
+        int err = 0;
 
-         if (name == "")
-        	 name = filename;
+        if (name == "")
+            name = filename;
 
-         FileName ext_name = name.get_file_format();
-         filename = name.before_first_of(":");
-         filename = filename.before_first_of("#");
+        FileName ext_name = name.get_file_format();
+        filename = name.before_first_of(":");
+        filename = filename.before_first_of("#");
 
 #ifdef DEBUG
-         std::cerr<<"extension for write= "<<ext_name<<std::endl;
-         std::cerr<<"filename= "<<filename<<std::endl;
+
+        std::cerr<<"extension for write= "<<ext_name<<std::endl;
+        std::cerr<<"filename= "<<filename<<std::endl;
 #endif
 
-         // Check that image is not empty
-         if (getSize() < 1)
-        	 REPORT_ERROR(1,"write Image ERROR: image is empty!");
+        // Check that image is not empty
+        if (getSize() < 1)
+            REPORT_ERROR(1,"write Image ERROR: image is empty!");
 
-          // PERHAPS HERE CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
-         if (ext_name.contains("mrc"))
-         {
-        	 err = writeMRC();
-         }
-         else
-             err = writeSPIDER();
+        // PERHAPS HERE CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
+        if (ext_name.contains("mrc"))
+        {
+            err = writeMRC();
+        }
+        else
+            err = writeSPIDER();
 
-         if ( err < 0 ) {
-             std::cerr<<" Filename = "<<filename<<" Extension= "<<ext_name<<std::endl;
-             REPORT_ERROR(10,"Error writing file");
-         }
+        if ( err < 0 )
+        {
+            std::cerr<<" Filename = "<<filename<<" Extension= "<<ext_name<<std::endl;
+            REPORT_ERROR(10,"Error writing file");
+        }
 
-     }
+    }
 
 
-/** Cast a page of data from type dataType to type Tdest
- * @ingroup LittleBigEndian
- *    input pointer  char *
- */
+    /** Cast a page of data from type dataType to type Tdest
+     * @ingroup LittleBigEndian
+     *    input pointer  char *
+     */
 
-     void castPage2T(char * page, T * ptrDest, DataType datatype, size_t pageSize )
-     {
+    void castPage2T(char * page, T * ptrDest, DataType datatype, size_t pageSize )
+    {
 
-         switch (datatype)
-         {
-         case Unknown_Type:
-             REPORT_ERROR(12,"ERROR: datatype is Unknown_Type");
-         case UChar:
-         {
-             if (typeid(T) == typeid(unsigned char))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 unsigned char * ptr = (unsigned char *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
-         }
-         case SChar:
-         {
-             if (typeid(T) == typeid(signed char))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 signed char * ptr = (signed char *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
-         }
-         case UShort:
-         {
-             if (typeid(T) == typeid(unsigned short))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 unsigned short * ptr = (unsigned short *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
-         }
-         case Short:
-         {
-             if (typeid(T) == typeid(short))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 short * ptr = (short *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
-         }
-         case Int:
-         {
-             if (typeid(T) == typeid(int))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 int * ptr = (int *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
-         }
-         case Long:
-         {
-             if (typeid(T) == typeid(long))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 long * ptr = (long *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
-         }
-         case Float:
-         {
-             if (typeid(T) == typeid(float))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 float * ptr = (float *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
-         }
-         case Double:
-         {
-             if (typeid(T) == typeid(double))
-             {
-                 memcpy(ptrDest, page, pageSize*sizeof(T));
-             }
-             else
-             {
-                 double * ptr = (double *) page;
-                 for(int i=0; i<pageSize;i++) ptrDest[i]=(T) ptr[i];
-             }
-             break;
-         }
-         default:
-         {
-             std::cerr<<"Datatype= "<<datatype<<std::endl;
-             REPORT_ERROR(16," ERROR: cannot cast datatype to T");
-             break;
-         }
-         }    
-         
-     }
+        switch (datatype)
+        {
+        case Unknown_Type:
+            REPORT_ERROR(12,"ERROR: datatype is Unknown_Type");
+        case UChar:
+            {
+                if (typeid(T) == typeid(unsigned char))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                }
+                else
+                {
+                    unsigned char * ptr = (unsigned char *) page;
+                    for(int i=0; i<pageSize;i++)
+                        ptrDest[i]=(T) ptr[i];
+                }
+                break;
+            }
+        case SChar:
+                {
+                    if (typeid(T) == typeid(signed char))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        signed char * ptr = (signed char *) page;
+                        for(int i=0; i<pageSize;i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case UShort:
+                {
+                    if (typeid(T) == typeid(unsigned short))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        unsigned short * ptr = (unsigned short *) page;
+                        for(int i=0; i<pageSize;i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case Short:
+                {
+                    if (typeid(T) == typeid(short))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        short * ptr = (short *) page;
+                        for(int i=0; i<pageSize;i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case Int:
+                {
+                    if (typeid(T) == typeid(int))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        int * ptr = (int *) page;
+                        for(int i=0; i<pageSize;i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case Long:
+                {
+                    if (typeid(T) == typeid(long))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        long * ptr = (long *) page;
+                        for(int i=0; i<pageSize;i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case Float:
+                {
+                    if (typeid(T) == typeid(float))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        float * ptr = (float *) page;
+                        for(int i=0; i<pageSize;i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case Double:
+                {
+                    if (typeid(T) == typeid(double))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        double * ptr = (double *) page;
+                        for(int i=0; i<pageSize;i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        default:
+                {
+                    std::cerr<<"Datatype= "<<datatype<<std::endl;
+                    REPORT_ERROR(16," ERROR: cannot cast datatype to T");
+                    break;
+                }
+            }
 
-/** Cast page from T to datatype
- * @ingroup XXX
- *    input pointer  char *
- */
-     void castPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize )
+    }
 
-     {
-         switch (datatype)
-         {
-         case Float:
-         {
-             if (typeid(T) == typeid(float))
-             {
-                 memcpy(page, srcPtr, pageSize*sizeof(T));
-             }
-             else
-             {
-                 float * ptr = (float *) page;
-                 for(int i=0; i<pageSize;i++)
-                	 ptr[i] = (float)srcPtr[i];
-             }
-             break;
-         }
-         case Double:
-         {
-             if (typeid(T) == typeid(double))
-             {
-                 memcpy(page, srcPtr, pageSize*sizeof(T));
-             }
-             else
-             {
-                 double * ptr = (double *) page;
-                 for(int i=0; i<pageSize;i++) ptr[i] = (double)srcPtr[i];
-             }
-             break;
-         }    
-         default:
-         {
-             std::cerr<<"outputDatatype= "<<datatype<<std::endl;
-             REPORT_ERROR(16," ERROR: cannot cast T to outputDatatype");
-             break;
-         }
-         }
-     }
+    /** Cast page from T to datatype
+     * @ingroup XXX
+     *    input pointer  char *
+     */
+    void castPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize )
 
-     /** Write an entire page as datatype
+    {
+        switch (datatype)
+        {
+        case Float:
+            {
+                if (typeid(T) == typeid(float))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                }
+                else
+                {
+                    float * ptr = (float *) page;
+                    for(int i=0; i<pageSize;i++)
+                        ptr[i] = (float)srcPtr[i];
+                }
+                break;
+            }
+        case Double:
+                {
+                    if (typeid(T) == typeid(double))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        double * ptr = (double *) page;
+                        for(int i=0; i<pageSize;i++)
+                            ptr[i] = (double)srcPtr[i];
+                    }
+                break;
+            }
+        default:
+                {
+                    std::cerr<<"outputDatatype= "<<datatype<<std::endl;
+                    REPORT_ERROR(16," ERROR: cannot cast T to outputDatatype");
+                    break;
+                }
+            }
+    }
+
+    /** Write an entire page as datatype
+     * @ingroup XXX
+     *
+     * A page of datasize_n elements T is cast to datatype and written to fimg
+     * The memory for the casted page is allocated and freed internally.
+     *
+     */
+    void writePageAsDatatype(FILE * fimg, DataType datatype, size_t datasize_n )
+    {
+        size_t datasize = datasize_n * gettypesize(datatype);
+        char * fdata = (char *) askMemory(datasize);
+        castPage2Datatype(MULTIDIM_ARRAY(data), fdata, datatype, datasize_n);
+        fwrite( fdata, datasize, 1, fimg );
+        freeMemory(fdata, datasize);
+    }
+
+    /** Swap an entire page
       * @ingroup XXX
-      *
-      * A page of datasize_n elements T is cast to datatype and written to fimg
-      * The memory for the casted page is allocated and freed internally.
-      *
+      *    input pointer  char *
       */
-     void writePageAsDatatype(FILE * fimg, DataType datatype, size_t datasize_n )
-     {
-    	 size_t datasize = datasize_n * gettypesize(datatype);
-    	 char * fdata = (char *) askMemory(datasize);
-    	 castPage2Datatype(MULTIDIM_ARRAY(data), fdata, datatype, datasize_n);
-    	 fwrite( fdata, datasize, 1, fimg );
-    	 freeMemory(fdata, datasize);
-     }
-
-     /** Swap an entire page
-       * @ingroup XXX
-       *    input pointer  char *
-       */
-     void swapPage(char * page, size_t pageNrElements, DataType datatype)
-     {
-         unsigned long datatypesize = gettypesize(datatype);
+    void swapPage(char * page, size_t pageNrElements, DataType datatype)
+    {
+        unsigned long datatypesize = gettypesize(datatype);
 #ifdef DEBUG
-         std::cerr<<"DEBUG swapPage: Swapping image data with swap= "
-                  << swap<<" datatypesize= "<<datatypesize<<std::endl;;
+
+        std::cerr<<"DEBUG swapPage: Swapping image data with swap= "
+        << swap<<" datatypesize= "<<datatypesize<<std::endl;
+        ;
 #endif
 
-         // Swap bytes if required
-         if ( swap == 1 ) {
-             if ( datatype >= ComplexShort ) 
-                 datatypesize /= 2;
-             for ( unsigned long i=0; i<pageNrElements; i+=datatypesize ) 
-                 swapbytes(page+i, datatypesize);
-         } else if ( swap > 1 ) {
-             for ( unsigned long i=0; i<pageNrElements; i+=swap ) 
-                 swapbytes(page+i, swap);
-         }
-     }
+        // Swap bytes if required
+        if ( swap == 1 )
+        {
+            if ( datatype >= ComplexShort )
+                datatypesize /= 2;
+            for ( unsigned long i=0; i<pageNrElements; i+=datatypesize )
+                swapbytes(page+i, datatypesize);
+        }
+        else if ( swap > 1 )
+        {
+            for ( unsigned long i=0; i<pageNrElements; i+=swap )
+                swapbytes(page+i, swap);
+        }
+    }
 
-     void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)
-     {
-//#define DEBUG
+    void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)
+    {
+        //#define DEBUG
 #ifdef DEBUG
-         std::cerr<<"entering readdata"<<std::endl;
-         std::cerr<<" readData flag= "<<dataflag<<std::endl;
-#endif
-        if ( dataflag < 1 ) return;
-	
-		// If only half of a transform is stored, it needs to be handled
-		if (transform == Hermitian || transform == CentHerm )
-			data.setXdim(XSIZE(data)/2 + 1);
-
-		// Reset select to get the correct offset
-		if ( select_img < 0 ) select_img = 0;
-
-		size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
-		size_t datatypesize=gettypesize(datatype);
-		size_t pagesize  =ZYXSIZE(data)*datatypesize;
-		size_t pagemax_n = ROUND(pagemax/datatypesize);
-		size_t haveread_n=0;
-
-		char*	page = NULL;
-		char*	padpage = NULL;
-	
-		// Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
-		data.coreAllocate();
-		myoffset = offset + select_img*(pagesize + pad);
-
-#ifdef DEBUG
-		data.printShape();
-		printf("DEBUG: Page size: %ld offset= %d \n", pagesize, offset);
-		printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
-		printf("DEBUG: myoffset = %d select_img= %d \n", myoffset, select_img);
+        std::cerr<<"entering readdata"<<std::endl;
+        std::cerr<<" readData flag= "<<dataflag<<std::endl;
 #endif
 
-		if (pagesize > pagemax)
-			page = (char *) askMemory(pagemax*sizeof(char));
-		else
-			page = (char *) askMemory(pagesize*sizeof(char));
+        if ( dataflag < 1 )
+            return;
 
-		if ( pad > 0) padpage = (char *) askMemory(pad*sizeof(char));
-		fseek( fimg, myoffset, SEEK_SET );
-		for ( size_t myn=0; myn<NSIZE(data); myn++ )
-		{
-			for (size_t myj=0; myj<pagesize; myj+=pagemax )
-			{
-				// Read next page. Divide pages larger than pagemax
-				readsize = pagesize - myj;
-				if ( readsize > pagemax ) readsize = pagemax;
-				readsize_n = readsize/datatypesize;
+        // If only half of a transform is stored, it needs to be handled
+        if (transform == Hermitian || transform == CentHerm )
+            data.setXdim(XSIZE(data)/2 + 1);
 
-				//Read page from disc
-				fread( page, readsize, 1, fimg );
-				//swap per page
-				if (swap) swapPage(page, readsize_n, datatype);
-				// cast to T per page
-				castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype, readsize_n);
-				haveread_n += readsize_n;
-			}
-			if ( pad > 0 ) fread( padpage, pad, 1, fimg);
-		}
-		if ( pad > 0 )
-			freeMemory(padpage, pad*sizeof(char));
-	
+        // Reset select to get the correct offset
+        if ( select_img < 0 )
+            select_img = 0;
+
+        size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
+        size_t datatypesize=gettypesize(datatype);
+        size_t pagesize  =ZYXSIZE(data)*datatypesize;
+        size_t pagemax_n = ROUND(pagemax/datatypesize);
+        size_t haveread_n=0;
+
+        char* page = NULL;
+        char* padpage = NULL;
+
+        // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+        data.coreAllocate();
+        myoffset = offset + select_img*(pagesize + pad);
+
 #ifdef DEBUG
+
+        data.printShape();
+        printf("DEBUG: Page size: %ld offset= %d \n", pagesize, offset);
+        printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
+        printf("DEBUG: myoffset = %d select_img= %d \n", myoffset, select_img);
+#endif
+
+        if (pagesize > pagemax)
+            page = (char *) askMemory(pagemax*sizeof(char));
+        else
+            page = (char *) askMemory(pagesize*sizeof(char));
+
+        if ( pad > 0)
+            padpage = (char *) askMemory(pad*sizeof(char));
+        fseek( fimg, myoffset, SEEK_SET );
+        for ( size_t myn=0; myn<NSIZE(data); myn++ )
+        {
+            for (size_t myj=0; myj<pagesize; myj+=pagemax )
+            {
+                // Read next page. Divide pages larger than pagemax
+                readsize = pagesize - myj;
+                if ( readsize > pagemax )
+                    readsize = pagemax;
+                readsize_n = readsize/datatypesize;
+
+                //Read page from disc
+                fread( page, readsize, 1, fimg );
+                //swap per page
+                if (swap)
+                    swapPage(page, readsize_n, datatype);
+                // cast to T per page
+                castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype, readsize_n);
+                haveread_n += readsize_n;
+            }
+            if ( pad > 0 )
+                fread( padpage, pad, 1, fimg);
+        }
+        if ( pad > 0 )
+            freeMemory(padpage, pad*sizeof(char));
+
+#ifdef DEBUG
+
         printf("DEBUG img_read_data: Finished reading and converting data\n");
 #endif
 
         return;
-     }
+    }
 
     /** Data access
      *
@@ -831,42 +859,42 @@ public:
      * std::cout << "Image name = " << I.name() << std::endl;
      * @endcode
      */
-     FileName name() const
-     {
+    FileName name() const
+    {
         return filename;
-     }
+    }
 
     /** Get Image dimensions
      *
      */
-     void getDimensions(int &Xdim, int &Ydim, int &Zdim, int &Ndim) const
-     {
-         Xdim = XSIZE(data);
-         Ydim = YSIZE(data);
-         Zdim = ZSIZE(data);
-         Ndim = NSIZE(data);
-     }
-     
-     long unsigned int getSize() const
-     {
-    	 return NZYXSIZE(data);
-     }
+    void getDimensions(int &Xdim, int &Ydim, int &Zdim, int &Ndim) const
+    {
+        Xdim = XSIZE(data);
+        Ydim = YSIZE(data);
+        Zdim = ZSIZE(data);
+        Ndim = NSIZE(data);
+    }
+
+    long unsigned int getSize() const
+    {
+        return NZYXSIZE(data);
+    }
 
     /** Get Image dimensions
      *
      */
-     void getHeaderInfo(unsigned long &_offset, int &_swap) const
-     {
-         _offset = offset;
-         _swap = swap;
-     }
-     
-     /** Get Rot angle
-     *
-     * @code
-     * std::cout << "First Euler angle " << I.rot() << std::endl;
-     * @endcode
-     */
+    void getHeaderInfo(unsigned long &_offset, int &_swap) const
+    {
+        _offset = offset;
+        _swap = swap;
+    }
+
+    /** Get Rot angle
+    *
+    * @code
+    * std::cout << "First Euler angle " << I.rot() << std::endl;
+    * @endcode
+    */
     double rot(unsigned long n = 0) const
     {
         return (image[n]).angleRot;
@@ -933,34 +961,34 @@ public:
     * std::cout << "weight= " << I.weight() << std::endl;
     * @endcode
     */
-   double weight(unsigned long n = 0) const
-   {
-       return (image[n]).weight;
-   }
+    double weight(unsigned long n = 0) const
+    {
+        return (image[n]).weight;
+    }
 
-   /** Get Flip
-   *
-   * @code
-   * std::cout << "flip= " << flip() << std::endl;
-   * @endcode
-   */
-   bool flip(unsigned long n = 0) const
-   {
-	   return (image[n]).flip;
-   }
+    /** Get Flip
+    *
+    * @code
+    * std::cout << "flip= " << flip() << std::endl;
+    * @endcode
+    */
+    bool flip(unsigned long n = 0) const
+    {
+        return (image[n]).flip;
+    }
 
     /** Set file name
      *
      */
-     void setName(const FileName _filename)
-     {
+    void setName(const FileName _filename)
+    {
         filename = _filename;
-     }
+    }
 
     /** Set Euler angles in image header
      *
      */
-    void setEulerAngles(double rot, double tilt, double psi, 
+    void setEulerAngles(double rot, double tilt, double psi,
                         unsigned long n = 0)
     {
         (image[n]).angleRot = rot;
@@ -971,8 +999,8 @@ public:
     /** Set origin offsets in image header
      *
      */
-    void setShifts(double xoff, double yoff, double zoff = 0., 
-                        unsigned long n = 0)
+    void setShifts(double xoff, double yoff, double zoff = 0.,
+                   unsigned long n = 0)
     {
         (image[n]).shiftX = xoff;
         (image[n]).shiftY = yoff;
@@ -987,22 +1015,22 @@ public:
         (image[n]).flip = _flip;
     }
 
-     /** Set Weight in image header
-     *
-     */
+    /** Set Weight in image header
+    *
+    */
     void setWeight(bool _weight, unsigned long n = 0)
     {
         (image[n]).weight = _weight;
     }
 
-   /** Get geometric transformation matrix from 2D-image headerq
-     */
-    Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false, 
-                                               unsigned long n = 0)
+    /** Get geometric transformation matrix from 2D-image headerq
+      */
+    Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false,
+            unsigned long n = 0)
     {
         // This has only been implemented for 2D images...
         (*this)().checkDimension(2);
-        
+
         double phi = realWRAP((image[n]).angleRot, 0., 360.);
         double psi = realWRAP((image[n]).anglePsi, -180, 180);
         double theta = realWRAP((image[n]).angleTilt, 0., 360);
@@ -1049,51 +1077,51 @@ public:
 
         return A;
     }
-    
+
     friend std::ostream& operator<<(std::ostream& o, const Image<T>& I)
     {
-    	o << "Image type   : ";
-    	if (I.isComplex())
-    		o << "Fourier-space image" << std::endl;
-    	else
-    		o << "Real-space image" << std::endl;
+        o << "Image type   : ";
+        if (I.isComplex())
+            o << "Fourier-space image" << std::endl;
+        else
+            o << "Real-space image" << std::endl;
 
-    	o << "Reversed     : ";
-    	if (I.swap)
-    		o << "TRUE"  << std::endl;
-    	else
-    		o << "FALSE" << std::endl;
+        o << "Reversed     : ";
+        if (I.swap)
+            o << "TRUE"  << std::endl;
+        else
+            o << "FALSE" << std::endl;
 
-    	o << "dimensions   : " << ZSIZE(I()) << " x " << YSIZE(I()) << " x " << XSIZE(I());
-    	o << "  (slices x rows x columns)" << std::endl;
-    	o << "Euler angles : " << std::endl;
-    	o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
-    	o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
-    	o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
-    	o << "Origin Offsets : " << std::endl;
-    	o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
-    	o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
-    	o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
-    	o << "Header size  : " << I.offset << std::endl;
-    	o << "Weight  : " << I.weight() << std::endl;
-    	o << "Flip    : " << I.flip() << std::endl;
-    	 return o;
-      }
+        o << "dimensions   : " << ZSIZE(I()) << " x " << YSIZE(I()) << " x " << XSIZE(I());
+        o << "  (slices x rows x columns)" << std::endl;
+        o << "Euler angles : " << std::endl;
+        o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
+        o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
+        o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
+        o << "Origin Offsets : " << std::endl;
+        o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
+        o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
+        o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
+        o << "Header size  : " << I.offset << std::endl;
+        o << "Weight  : " << I.weight() << std::endl;
+        o << "Flip    : " << I.flip() << std::endl;
+        return o;
+    }
 
 };
 
 
 // Special case for complex numbers
 template<>
-void Image< std::complex< double > >::castPage2T(char * page, 
-                                                 std::complex<double> * ptrDest,
-                                                 DataType datatype,
-                                                 size_t pageSize);
+void Image< std::complex< double > >::castPage2T(char * page,
+        std::complex<double> * ptrDest,
+        DataType datatype,
+        size_t pageSize);
 template<>
-void Image< std::complex< double > >::castPage2Datatype(std::complex< double > * srcPtr, 
-                                                        char * page, 
-                                                        DataType datatype,
-                                                        size_t pageSize);
+void Image< std::complex< double > >::castPage2Datatype(std::complex< double > * srcPtr,
+        char * page,
+        DataType datatype,
+        size_t pageSize);
 
 
 #endif

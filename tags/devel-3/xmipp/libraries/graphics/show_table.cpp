@@ -364,8 +364,7 @@ void ShowTable::scale_and_normalize(MultidimArray<double> &I, bool normalize,
     // Care about size
     if (currScale != 100)
     {
-    	MultidimArray<double> Maux=I;
-    	scaleToSize(1, I, Maux, (int)(currScale / 100*projYdim),
+    	selfScaleToSize(LINEAR, I, (int)(currScale / 100*projYdim),
                              (int)(currScale / 100*projXdim));
     }
 

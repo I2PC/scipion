@@ -376,8 +376,7 @@ void ShowSel::producePixmapAt(int i)
     // If PSD mode, make the full window fit the current size
     if (load_mode == PSD_mode || load_mode == CTF_mode)
     {
-    	MultidimArray<double> Maux=I();
-    	scaleToSize(1, I(), Maux, rowHeight(0), columnWidth(0));
+    	selfScaleToSize(LINEAR, I(), rowHeight(0), columnWidth(0));
     }
 
     // Convert Xmipp image to Pixmap

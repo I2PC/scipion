@@ -199,10 +199,10 @@ Matrix2D<double> scale3DMatrix(const Matrix1D<double> &sc)
 
 
 // Special case for complex numbers
-void applyGeometry(int SplineDegree, 
+void applyGeometry(int SplineDegree,
                    MultidimArray< std::complex<double> > &V2,
                    const MultidimArray< std::complex<double> > &V1,
-                   const Matrix2D<double> &A, bool inv, 
+                   const Matrix2D<double> &A, bool inv,
                    bool wrap, std::complex<double> outside, unsigned long n)
 {
 
@@ -227,14 +227,14 @@ void applyGeometry(int SplineDegree,
     }
     else
         applyGeometry(SplineDegree, V2, V1, A, inv, wrap, outside, n);
-        
+
 
 }
 
 // Special case for complex numbers
-void selfApplyGeometry(int Splinedegree, 
+void selfApplyGeometry(int Splinedegree,
                        MultidimArray< std::complex<double> > &V1,
-                       const Matrix2D<double> &A, bool inv, 
+                       const Matrix2D<double> &A, bool inv,
                        bool wrap, std::complex<double> outside, unsigned long n)
 {
     MultidimArray<std::complex<double> > aux = V1;
@@ -242,17 +242,17 @@ void selfApplyGeometry(int Splinedegree,
 }
 
 // Special case for complex arrays
-void produceSplineCoefficients(int SplineDegree, 
+void produceSplineCoefficients(int SplineDegree,
                                MultidimArray< double > &coeffs,
-                               const MultidimArray< std::complex<double> > &V1,  
+                               const MultidimArray< std::complex<double> > &V1,
                                unsigned long n)
 {
     // TODO Implement
     REPORT_ERROR(222,"Spline coefficients of a complex matrix is not implemented.");
 }
 
-void produceImageFromSplineCoefficients(int SplineDegree, 
-                                        MultidimArray< double >& img, 
+void produceImageFromSplineCoefficients(int SplineDegree,
+                                        MultidimArray< double >& img,
                                         const MultidimArray< double > &coeffs)
 {
 
@@ -264,19 +264,19 @@ void produceImageFromSplineCoefficients(int SplineDegree,
     int Status;
     MultidimArray< double > aux;
     typeCast(coeffs, aux); // This will create a single volume!
-        
+
     ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(img),
                       XSIZE(coeffs), YSIZE(coeffs), ZSIZE(coeffs),
                       BasicSpline, CardinalSpline, SplineDegree,
                       MirrorOnBounds, DBL_EPSILON, &Status);
     if (Status)
         REPORT_ERROR(1201, "Error in ImageFromSplineCoefficients...");
-    
+
 }
 
 
 // Special case for complex arrays
-void scaleToSize(int SplineDegree, 
+void scaleToSize(int SplineDegree,
                  MultidimArray< std::complex<double> > &V2,
                  const MultidimArray< std::complex<double> > &V1,
                  int Xdim, int Ydim, int Zdim,
@@ -303,5 +303,15 @@ void scaleToSize(int SplineDegree,
     }
     else
         scaleToSize(SplineDegree, V2, V1, Xdim, Ydim, Zdim, n);
-    
+
+}
+
+// Special case for complex arrays
+void selfScaleToSize(int SplineDegree,
+                     MultidimArray< std::complex<double> > &V1,
+                     int Xdim, int Ydim, int Zdim,
+                     unsigned long n)
+{
+    MultidimArray<std::complex<double> > aux;
+    scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim, n);
 }

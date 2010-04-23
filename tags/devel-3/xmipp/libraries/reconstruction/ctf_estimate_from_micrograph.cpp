@@ -194,8 +194,7 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
 
 
     CenterFFT(psd, true);
-    MultidimArray<double> Maux=psd;
-    scaleToSize(3, psd, Maux, YSIZE(piece), XSIZE(piece));
+    selfScaleToSize(BSPLINE3, psd, YSIZE(piece), XSIZE(piece));
     CenterFFT(psd, false);
     psd.threshold("below", 0, 0);
 

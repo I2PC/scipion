@@ -621,7 +621,7 @@ void Normalize_parameters::apply_geo_mask(Image<double>& img)
     double outside = DIRECT_A2D_ELEM(tmp, 0, 0);
 
     // Instead of IS_INV for images use IS_NOT_INV for masks!
-    selfApplyGeometry(3, tmp, img.getTransformationMatrix(), IS_NOT_INV, DONT_WRAP, outside);
+    selfApplyGeometry(BSPLINE3, tmp, img.getTransformationMatrix(), IS_NOT_INV, DONT_WRAP, outside);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(bg_mask)
         dAij(bg_mask,i,j)=ROUND(dAij(tmp,i,j));

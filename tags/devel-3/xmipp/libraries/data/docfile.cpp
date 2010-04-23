@@ -870,7 +870,7 @@ void DocFile::get_image(int key, Image<double> &I, bool apply_geo)
     {
         Matrix2D<double> A = I.getTransformationMatrix(true);
         if (!A.isIdentity())
-        selfApplyGeometry(3, I(), A, IS_INV, WRAP);
+        selfApplyGeometry(BSPLINE3, I(), A, IS_INV, WRAP);
     }
 }
 

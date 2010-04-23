@@ -862,7 +862,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
         best_nonwrapping_shift(I,IauxSR,shiftX,shiftY);
         ASR(0,2)+=shiftX;
         ASR(1,2)+=shiftY;
-        applyGeometry(1, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
         
         Polar< std::complex<double> > polarFourierI;
 	normalizedPolarFourierTransform(
@@ -878,7 +878,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
             local_transformer);
 	R=rotation2DMatrix(-bestRot);
         ASR=R*ASR;
-        applyGeometry(1, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
         // Rotate then shift
 	normalizedPolarFourierTransform(
@@ -893,12 +893,12 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
             local_transformer);
 	R=rotation2DMatrix(-bestRot);
         ARS=R*ARS;
-        applyGeometry(1, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
 
         best_nonwrapping_shift(Iref,IauxRS,shiftX,shiftY);
         ARS(0,2)+=shiftX;
         ARS(1,2)+=shiftY;
-        applyGeometry(1, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
     }
     
     double corrRS=correlation_index(IauxRS,Iref);
@@ -1802,7 +1802,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         A(0,2)+=-meanShiftX/2;
         A(1,2)+=-meanShiftY/2;
         Iaux.initZeros();
-        applyGeometry(1, Iaux, I, A, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
             if (!mask(i,j)) Iaux(i,j)=0;
         
@@ -1834,7 +1834,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         
         A=rotation2DMatrix(-bestRot/2)*A;
         Iaux.initZeros();
-        applyGeometry(1, Iaux, I, A, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
             if (!mask(i,j)) Iaux(i,j)=0;
 
@@ -1863,7 +1863,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         int yF=FINISHINGX(lineY); while (lineY(yF)<thY) yF--;
         if ((xF-x0)>(yF-y0))
             A=rotation2DMatrix(90)*A;
-        applyGeometry(1, Iaux, I, A, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
         #ifdef DEBUG
             lineX.write("PPPlineX.txt");
             lineY.write("PPPlineY.txt");
@@ -1874,7 +1874,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
             char c; std::cin >> c;
         #endif
     }
-    applyGeometry(3, Iaux, I, A, IS_NOT_INV,WRAP);
+    applyGeometry(BSPLINE3, Iaux, I, A, IS_NOT_INV,WRAP);
     I=Iaux;
     I+=avg;
     if (plans!=NULL) delete plans;

@@ -838,8 +838,7 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
     model = global_prm->enhanced_ctftomodel_fullsize();
 
     // Scale and remove negative values because of the interpolation
-    MultidimArray<double> Maux=model;
-    scaleToSize(3, model, Maux, Ydim, Xdim);
+    selfScaleToSize(BSPLINE3, model, Ydim, Xdim);
     model.rangeAdjust(0, 1);
 
     // Generate the CTF model
@@ -886,8 +885,7 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
     model = global_prm->enhanced_ctftomodel_fullsize();
 
     // Scale and remove negative values because of the interpolation
-    MultidimArray<double> Maux=model;
-    scaleToSize(3, model, Maux, Ydim, Xdim);
+    selfScaleToSize(BSPLINE3, model, Ydim, Xdim);
     model.rangeAdjust(0, 1);
 
     // The left part is the CTF model

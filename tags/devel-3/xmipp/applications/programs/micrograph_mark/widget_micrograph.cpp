@@ -2205,8 +2205,7 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
         save() = piece;
         save.write("PPPpiece3.xmp");
     #endif    
-    MultidimArray<double> Maux=original_piece;
-    scaleToSize(1, original_piece, Maux, YSIZE(piece), XSIZE(piece));
+    selfScaleToSize(LINEAR, original_piece, YSIZE(piece), XSIZE(piece));
 
     // Reject 5% of the outliers
     reject_outliers(original_piece, 5.0);

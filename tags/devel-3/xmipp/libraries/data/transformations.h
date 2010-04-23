@@ -236,12 +236,16 @@ Matrix2D< double > scale3DMatrix(const Matrix1D< double >& sc);
  * applyGeometry(V2, A, V1);
  * @endcode
  */
+#define LINEAR 1
+#define BSPLINE2 2
+#define BSPLINE3 3
+#define BSPLINE4 4
 
 template<typename T>
-void applyGeometry(int SplineDegree, 
+void applyGeometry(int SplineDegree,
                    MultidimArray<T>& V2,
                    const MultidimArray<T>& V1,
-                   const Matrix2D< double > A, bool inv, 
+                   const Matrix2D< double > A, bool inv,
                    bool wrap, T outside = 0, unsigned long n = 0)
 {
 
@@ -290,7 +294,7 @@ void applyGeometry(int SplineDegree,
         double x, y, xp, yp;
         double minxp, minyp, maxxp, maxyp;
         int cen_x, cen_y, cen_xp, cen_yp;
-        double wx, wy; 
+        double wx, wy;
         int Xdim, Ydim;
 
         if (outside != 0.)
@@ -329,10 +333,10 @@ void applyGeometry(int SplineDegree,
 
 #ifdef DEBUG_APPLYGEO
         std::cout << "A\n" << Aref << std::endl
-                  << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
-                  << "(cen_xp,cen_yp)=(" << cen_xp << "," << cen_yp << ")\n"
-                  << "(min_xp,min_yp)=(" << minxp  << "," << minyp  << ")\n"
-                  << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n";
+        << "(cen_x ,cen_y )=(" << cen_x  << "," << cen_y  << ")\n"
+        << "(cen_xp,cen_yp)=(" << cen_xp << "," << cen_yp << ")\n"
+        << "(min_xp,min_yp)=(" << minxp  << "," << minyp  << ")\n"
+        << "(max_xp,max_yp)=(" << maxxp  << "," << maxyp  << ")\n";
 #endif
 
         for (int i = 0; i < YSIZE(V2); i++)
@@ -354,10 +358,11 @@ void applyGeometry(int SplineDegree,
                 T tmp;
 
 #ifdef DEBUG_APPLYGEO
+
                 std::cout << "Computing (" << i << "," << j << ")\n";
                 std::cout << "   (y, x) =(" << y << "," << x << ")\n"
-                          << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
-                          << std::endl;
+                << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
+                << std::endl;
 #endif
                 // If the point is outside the image, apply a periodic extension
                 // of the image, what exits by one side enters by the other
@@ -367,10 +372,10 @@ void applyGeometry(int SplineDegree,
                     if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
                         xp > maxxp + XMIPP_EQUAL_ACCURACY)
                         xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
-                    
+
                     if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
                         yp > maxyp + XMIPP_EQUAL_ACCURACY)
-                        
+
                         yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
                 }
                 else
@@ -378,7 +383,7 @@ void applyGeometry(int SplineDegree,
                     if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
                         xp > maxxp + XMIPP_EQUAL_ACCURACY)
                         interp = false;
-                    
+
                     if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
                         yp > maxyp + XMIPP_EQUAL_ACCURACY)
                         interp = false;
@@ -386,7 +391,7 @@ void applyGeometry(int SplineDegree,
 
 #ifdef DEBUG_APPLYGEO
                 std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
-                          << std::endl;
+                << std::endl;
                 std::cout << "   Interp = " << interp << std::endl;
                 // The following line sounds dangerous...
                 //x++;
@@ -410,7 +415,7 @@ void applyGeometry(int SplineDegree,
                         n1 = (int) wy;
                         wy = wy - n1;
                         n2 = n1 + 1;
-                    
+
                         // m2 and n2 can be out by 1 so wrap must be check here
                         if (wrap)
                         {
@@ -419,10 +424,10 @@ void applyGeometry(int SplineDegree,
                             if (n2 >= Ydim)
                                 n2 = 0;
                         }
-                    
+
 #ifdef DEBUG_APPLYGEO
                         std::cout << "   From (" << n1 << "," << m1 << ") and ("
-                                  << n2 << "," << m2 << ")\n";
+                        << n2 << "," << m2 << ")\n";
                         std::cout << "   wx= " << wx << " wy= " << wy << std::endl;
 #endif
 
@@ -431,14 +436,14 @@ void applyGeometry(int SplineDegree,
                         // interpolation, and even it might not be defined if m1=xdim-1
                         // The same can be said for wy.
                         tmp  = (T)((1 - wy) * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, 0, n1, m1));
-                        
+
                         if (wx != 0 && m2 < V1.xdim)
                             tmp += (T)((1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, 0, n1, m2));
-                    
+
                         if (wy != 0 && n2 < V1.ydim)
                         {
                             tmp += (T)(wy * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, 0, n2, m1));
-                            
+
                             if (wx != 0 && m2 < V1.xdim)
                                 tmp += (T)(wy * wx * DIRECT_NZYX_ELEM(V1, n, 0, n2, m2));
                         }
@@ -450,11 +455,12 @@ void applyGeometry(int SplineDegree,
                         // B-spline interpolation
 
                         dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D(
-                            xp, yp, SplineDegree);
+                                             xp, yp, SplineDegree);
                     }
 #ifdef DEBUG_APPYGEO
                     std::cout << "   val= " << dAij(V2, i, j) << std::endl;
 #endif
+
                 }
 
                 // Compute new point inside input image
@@ -488,15 +494,16 @@ void applyGeometry(int SplineDegree,
         maxzp = V1.zdim - cen_zp - 1;
 
 #ifdef DEBUG
+
         std::cout << "Geometry 2 center=("
-                  << cen_z  << "," << cen_y  << "," << cen_x  << ")\n"
-                  << "Geometry 1 center=("
-                  << cen_zp << "," << cen_yp << "," << cen_xp << ")\n"
-                  << "           min=("
-                  << minzp  << "," << minyp  << "," << minxp  << ")\n"
-                  << "           max=("
-                  << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
-            ;
+        << cen_z  << "," << cen_y  << "," << cen_x  << ")\n"
+        << "Geometry 1 center=("
+        << cen_zp << "," << cen_yp << "," << cen_xp << ")\n"
+        << "           min=("
+        << minzp  << "," << minyp  << "," << minxp  << ")\n"
+        << "           max=("
+        << maxzp  << "," << maxyp  << "," << maxxp  << ")\n"
+        ;
 #endif
 
         if (SplineDegree > 1)
@@ -521,31 +528,32 @@ void applyGeometry(int SplineDegree,
                 x = -cen_x;
                 y = i - cen_y;
                 z = k - cen_z;
-                
+
                 // Calculate this position in the input image according to the
                 // geometrical transformation they are related by
                 // coords_output(=x,y) = A * coords_input (=xp,yp)
                 xp = x * Aref(0, 0) + y * Aref(0, 1) + z * Aref(0, 2) + Aref(0, 3);
                 yp = x * Aref(1, 0) + y * Aref(1, 1) + z * Aref(1, 2) + Aref(1, 3);
                 zp = x * Aref(2, 0) + y * Aref(2, 1) + z * Aref(2, 2) + Aref(2, 3);
-                
+
                 for (int j = 0; j < V2.xdim; j++)
                 {
                     bool interp;
                     T tmp;
-                    
+
 #ifdef DEBUG
+
                     bool show_debug = false;
                     if ((i == 0 && j == 0 && k == 0) ||
                         (i == V2.ydim - 1 && j == V2.xdim - 1 && k == V2.zdim - 1))
                         show_debug = true;
-                    
+
                     if (show_debug)
                         std::cout << "(x,y,z)-->(xp,yp,zp)= "
-                                  << "(" << x  << "," << y  << "," << z  << ") "
-                                  << "(" << xp << "," << yp << "," << zp << ")\n";
+                        << "(" << x  << "," << y  << "," << z  << ") "
+                        << "(" << xp << "," << yp << "," << zp << ")\n";
 #endif
-                    
+
                     // If the point is outside the volume, apply a periodic
                     // extension of the volume, what exits by one side enters by
                     // the other
@@ -555,11 +563,11 @@ void applyGeometry(int SplineDegree,
                         if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
                             xp > maxxp + XMIPP_EQUAL_ACCURACY)
                             xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
-                        
+
                         if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
                             yp > maxyp + XMIPP_EQUAL_ACCURACY)
                             yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
-                        
+
                         if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
                             zp > maxzp + XMIPP_EQUAL_ACCURACY)
                             zp = realWRAP(zp, minzp - 0.5, maxzp + 0.5);
@@ -569,16 +577,16 @@ void applyGeometry(int SplineDegree,
                         if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
                             xp > maxxp + XMIPP_EQUAL_ACCURACY)
                             interp = false;
-                        
+
                         if (yp < minyp - XMIPP_EQUAL_ACCURACY ||
                             yp > maxyp + XMIPP_EQUAL_ACCURACY)
                             interp = false;
-                        
+
                         if (zp < minzp - XMIPP_EQUAL_ACCURACY ||
                             zp > maxzp + XMIPP_EQUAL_ACCURACY)
                             interp = false;
                     }
-                    
+
                     if (interp)
                     {
                         if (SplineDegree == 1)
@@ -603,37 +611,38 @@ void applyGeometry(int SplineDegree,
                             o1 = (int) wz;
                             wz = wz - o1;
                             o2 = o1 + 1;
-                        
+
 #ifdef DEBUG
+
                             if (show_debug)
                             {
                                 std::cout << "After wrapping(xp,yp,zp)= "
-                                          << "(" << xp << "," << yp << "," << zp << ")\n";
+                                << "(" << xp << "," << yp << "," << zp << ")\n";
                                 std::cout << "(m1,n1,o1)-->(m2,n2,o2)="
-                                          << "(" << m1 << "," << n1 << "," << o1 << ") "
-                                          << "(" << m2 << "," << n2 << "," << o2 << ")\n";
+                                << "(" << m1 << "," << n1 << "," << o1 << ") "
+                                << "(" << m2 << "," << n2 << "," << o2 << ")\n";
                                 std::cout << "(wx,wy,wz)="
-                                          << "(" << wx << "," << wy << "," << wz << ")\n";
+                                << "(" << wx << "," << wy << "," << wz << ")\n";
                             }
 #endif
-                        
+
                             // Perform interpolation
                             // if wx == 0 means that the rightest point is useless for
                             // this interpolation, and even it might not be defined if
                             // m1=xdim-1
                             // The same can be said for wy.
                             tmp  = (T)((1 - wz) * (1 - wy) * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, o1, n1, m1));
-                        
+
                             if (wx != 0 && m2 < V1.xdim)
                                 tmp += (T)((1 - wz) * (1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, o1, n1, m2));
-                        
+
                             if (wy != 0 && n2 < V1.ydim)
                             {
                                 tmp += (T)((1 - wz) * wy * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, o1, n2, m1));
                                 if (wx != 0 && m2 < V1.xdim)
                                     tmp += (T)((1 - wz) * wy * wx * DIRECT_NZYX_ELEM(V1, n, o1, n2, m2));
                             }
-                        
+
                             if (wz != 0 && o2 < V1.zdim)
                             {
                                 tmp += (T)(wz * (1 - wy) * (1 - wx) * DIRECT_NZYX_ELEM(V1, n, o2, n1, m1));
@@ -650,31 +659,31 @@ void applyGeometry(int SplineDegree,
 #ifdef DEBUG
                             if (show_debug)
                                 std::cout <<
-                                    "tmp1=" << DIRECT_NZYX_ELEM(V1, n, o1, n1, m1) << " " 
-                                            << (T)((1 - wz) *(1 - wy) *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o1, n1, m1)) 
-                                            << std::endl <<
-                                    "tmp2=" << DIRECT_NZYX_ELEM(V1, n, o1, n1, m2) << " " 
-                                            << (T)((1 - wz) *(1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, o1, n1, m2)) 
-                                            << std::endl <<
-                                    "tmp3=" << DIRECT_NZYX_ELEM(V1, n, o1, n2, m1) << " " 
-                                            << (T)((1 - wz) * wy *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o1, n2, m1)) 
-                                            << std::endl <<
-                                    "tmp4=" << DIRECT_NZYX_ELEM(V1, n, o1, n2, m2) << " " 
-                                            << (T)((1 - wz) * wy * wx * DIRECT_NZYX_ELEM(V1, n, o1, n2, m2)) 
-                                            << std::endl <<
-                                    "tmp5=" << DIRECT_NZYX_ELEM(V1, n, o2, n1, m1) << " " 
-                                            << (T)(wz * (1 - wy) *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o2, n1, m1))
-                                            << std::endl <<
-                                    "tmp6=" << DIRECT_NZYX_ELEM(V1, n, o2, n1, m2) << " " 
-                                            << (T)(wz * (1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, o2, n1, m2)) 
-                                            << std::endl <<
-                                    "tmp7=" << DIRECT_NZYX_ELEM(V1, n, o2, n2, m1) << " " 
-                                            << (T)(wz * wy *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o2, n2, m1)) 
-                                            << std::endl <<
-                                    "tmp8=" << DIRECT_NZYX_ELEM(V1, n, o2, n2, m2) << " " 
-                                            << (T)(wz * wy * wx * DIRECT_NZYX_ELEM(V1, n, o2, n2, m2)) 
-                                            << std::endl <<
-                                    "tmp= " << tmp << std::endl;
+                                "tmp1=" << DIRECT_NZYX_ELEM(V1, n, o1, n1, m1) << " "
+                                << (T)((1 - wz) *(1 - wy) *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o1, n1, m1))
+                                << std::endl <<
+                                "tmp2=" << DIRECT_NZYX_ELEM(V1, n, o1, n1, m2) << " "
+                                << (T)((1 - wz) *(1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, o1, n1, m2))
+                                << std::endl <<
+                                "tmp3=" << DIRECT_NZYX_ELEM(V1, n, o1, n2, m1) << " "
+                                << (T)((1 - wz) * wy *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o1, n2, m1))
+                                << std::endl <<
+                                "tmp4=" << DIRECT_NZYX_ELEM(V1, n, o1, n2, m2) << " "
+                                << (T)((1 - wz) * wy * wx * DIRECT_NZYX_ELEM(V1, n, o1, n2, m2))
+                                << std::endl <<
+                                "tmp5=" << DIRECT_NZYX_ELEM(V1, n, o2, n1, m1) << " "
+                                << (T)(wz * (1 - wy) *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o2, n1, m1))
+                                << std::endl <<
+                                "tmp6=" << DIRECT_NZYX_ELEM(V1, n, o2, n1, m2) << " "
+                                << (T)(wz * (1 - wy) * wx * DIRECT_NZYX_ELEM(V1, n, o2, n1, m2))
+                                << std::endl <<
+                                "tmp7=" << DIRECT_NZYX_ELEM(V1, n, o2, n2, m1) << " "
+                                << (T)(wz * wy *(1 - wx) * DIRECT_NZYX_ELEM(V1, n, o2, n2, m1))
+                                << std::endl <<
+                                "tmp8=" << DIRECT_NZYX_ELEM(V1, n, o2, n2, m2) << " "
+                                << (T)(wz * wy * wx * DIRECT_NZYX_ELEM(V1, n, o2, n2, m2))
+                                << std::endl <<
+                                "tmp= " << tmp << std::endl;
 #endif
 
                             dAkij(V2 , k, i, j) = tmp;
@@ -710,9 +719,9 @@ void applyGeometry(int SplineDegree,
  * The same as the previous function, but input array is overwritten
  */
 template<typename T>
-void selfApplyGeometry(int SplineDegree, 
+void selfApplyGeometry(int SplineDegree,
                        MultidimArray<T>& V1,
-                       const Matrix2D< double > A, bool inv, 
+                       const Matrix2D< double > A, bool inv,
                        bool wrap, T outside = 0, unsigned long n = 0)
 {
     MultidimArray<T> aux = V1;
@@ -720,16 +729,16 @@ void selfApplyGeometry(int SplineDegree,
 }
 
 //Special cases for complex arrays
-void applyGeometry(int SplineDegree, 
+void applyGeometry(int SplineDegree,
                    MultidimArray< std::complex<double> > &V2,
-                   const MultidimArray< std::complex<double> > &V1,  
-                   const Matrix2D<double> &A, bool inv, 
+                   const MultidimArray< std::complex<double> > &V1,
+                   const Matrix2D<double> &A, bool inv,
                    bool wrap, std::complex<double> outside, unsigned long n = 0);
 
 //Special cases for complex arrays
-void selfApplyGeometry(int SplineDegree, 
+void selfApplyGeometry(int SplineDegree,
                        MultidimArray< std::complex<double> > &V1,
-                       const Matrix2D<double> &A, bool inv, 
+                       const Matrix2D<double> &A, bool inv,
                        bool wrap, std::complex<double> outside, unsigned long n = 0);
 
 
@@ -740,9 +749,9 @@ void selfApplyGeometry(int SplineDegree,
  *
  */
 template<typename T>
-void produceSplineCoefficients(int SplineDegree, 
+void produceSplineCoefficients(int SplineDegree,
                                MultidimArray< double > &coeffs,
-                               const MultidimArray< T > &V1,  
+                               const MultidimArray< T > &V1,
                                unsigned long n = 0)
 {
 
@@ -766,17 +775,17 @@ void produceSplineCoefficients(int SplineDegree,
 
 
 // Special case for complex arrays
-void produceSplineCoefficients(int SplineDegree, 
+void produceSplineCoefficients(int SplineDegree,
                                MultidimArray< double > &coeffs,
-                               const MultidimArray< std::complex<double> > &V1,  
+                               const MultidimArray< std::complex<double> > &V1,
                                unsigned long n = 0);
 
 /** Produce image from B-spline coefficients.
  * @ingroup  GeometricalTransformations
  * Note that the coeffs and img are only single images!
  */
-void produceImageFromSplineCoefficients(int SplineDegree, 
-                                        MultidimArray< double >& img, 
+void produceImageFromSplineCoefficients(int SplineDegree,
+                                        MultidimArray< double >& img,
                                         const MultidimArray< double > &coeffs);
 
 /** Rotate an array around a given system axis.
@@ -791,10 +800,10 @@ void produceImageFromSplineCoefficients(int SplineDegree,
  * @endcode
  */
 template<typename T>
-void rotate(int SplineDegree, 
-            MultidimArray<T>& V2, 
-            const MultidimArray<T>& V1, 
-            double ang, char axis = 'Z', 
+void rotate(int SplineDegree,
+            MultidimArray<T>& V2,
+            const MultidimArray<T>& V1,
+            double ang, char axis = 'Z',
             bool wrap = DONT_WRAP, T outside = 0, unsigned long n = 0)
 {
     Matrix2D< double > tmp;
@@ -813,8 +822,23 @@ void rotate(int SplineDegree,
 
 }
 
+/** Rotate an array around a given system axis.
+ * @ingroup GeometricalTransformations
+ *
+ * The same as the previous function, but input array is overwritten
+ */
+template<typename T>
+void selfRotate(int SplineDegree,
+                MultidimArray<T>& V1,
+                double ang, char axis = 'Z',
+                bool wrap = DONT_WRAP, T outside = 0, unsigned long n = 0)
+{
+    MultidimArray<T> aux = V1;
+    rotate(SplineDegree, V1, aux, ang, axis, wrap, outside, n);
+}
 
-/** Translate a volume.
+
+/** Translate a array.
  * @ingroup GeometricalTransformations
  *
  * The shift is given as a R2 or R3 vector (shift_X, shift_Y, shift_Z) for 2D and 3D arrays, respectively.
@@ -826,10 +850,10 @@ void rotate(int SplineDegree,
  * @endcode
  */
 template<typename T>
-void translate(int SplineDegree, 
+void translate(int SplineDegree,
                MultidimArray<T> &V2,
-               const MultidimArray<T> &V1, 
-               const Matrix1D< double >& v, 
+               const MultidimArray<T> &V1,
+               const Matrix1D< double >& v,
                bool wrap = WRAP, T outside = 0, unsigned long n = 0)
 {
     Matrix2D< double > tmp;
@@ -843,6 +867,20 @@ void translate(int SplineDegree,
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside, n);
 }
 
+/** Translate an array.
+ * @ingroup GeometricalTransformations
+ *
+ * The same as the previous function, but input array is overwritten
+ */
+template<typename T>
+void selfTranslate(int SplineDegree,
+                   MultidimArray<T>& V1,
+                   const Matrix1D< double >& v,
+                   bool wrap = WRAP, T outside = 0, unsigned long n = 0)
+{
+    MultidimArray<T> aux = V1;
+    translate(SplineDegree, V1, aux, v, wrap, outside, n);
+}
 
 /** Translate center of mass to center
  * @ingroup GeometricalTransformations
@@ -851,9 +889,9 @@ void translate(int SplineDegree,
  * between 0 and 1.
  */
 template<typename T>
-void translateCenterOfMassToCenter(int SplineDegree, 
+void translateCenterOfMassToCenter(int SplineDegree,
                                    MultidimArray<T> &V2,
-                                   const MultidimArray<T> &V1, 
+                                   const MultidimArray<T> &V1,
                                    bool wrap = WRAP, unsigned long n = 0)
 {
     V2 = V1;
@@ -862,6 +900,20 @@ void translateCenterOfMassToCenter(int SplineDegree,
     V2.centerOfMass(center,NULL,n);
     center *= -1;
     translate(SplineDegree, V2, V1, center, wrap, 0, n);
+}
+
+/** Translate center of mass to center
+ * @ingroup GeometricalTransformations
+ *
+ * The same as the previous function, but input array is overwritten
+ */
+template<typename T>
+void selfTranslateCenterOfMassToCenter(int SplineDegree,
+                                       MultidimArray<T> &V1,
+                                       bool wrap = WRAP, unsigned long n = 0)
+{
+    MultidimArray<T> aux = V1;
+    translateCenterOfMassToCenter(SplineDegree, V1, aux, wrap, n);
 }
 
 /** Scales to a new size.
@@ -876,7 +928,7 @@ void translateCenterOfMassToCenter(int SplineDegree,
  * @endcode
  */
 template<typename T>
-void scaleToSize(int SplineDegree, 
+void scaleToSize(int SplineDegree,
                  MultidimArray<T> &V2,
                  const MultidimArray<T> &V1,
                  int Xdim, int Ydim, int Zdim = 1,
@@ -908,11 +960,30 @@ void scaleToSize(int SplineDegree,
 
 }
 
+/** Scales to a new size.
+ * @ingroup GeometricalTransformations
+ *
+ * The same as the previous function, but input array is overwritten
+ */
+void selfScaleToSize(int SplineDegree,
+                 MultidimArray<T> &V1,
+                 int Xdim, int Ydim, int Zdim = 1,
+                 unsigned long n = 0)
+{
+	MultidimArray<T> aux = V1;
+	scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim, n);
+}
 
 // Special case for complex arrays
-void scaleToSize(int SplineDegree, 
+void scaleToSize(int SplineDegree,
                  MultidimArray< std::complex<double> > &V2,
                  const MultidimArray< std::complex<double> > &V1,
+                 int Xdim, int Ydim, int Zdim = 1,
+                 unsigned long n = 0);
+
+// Special case for complex arrays
+void selfScaleToSize(int SplineDegree,
+                 MultidimArray< std::complex<double> > &V1,
                  int Xdim, int Ydim, int Zdim = 1,
                  unsigned long n = 0);
 
@@ -920,10 +991,10 @@ void scaleToSize(int SplineDegree,
  * @ingroup GeometricalTransformations
  */
 template<typename T>
-void pyramidReduce(int SplineDegree, 
+void pyramidReduce(int SplineDegree,
                    MultidimArray<T> &V2,
                    const MultidimArray<T> &V1,
-                   int levels = 1, 
+                   int levels = 1,
                    unsigned long n = 0)
 {
     MultidimArray< double > coeffs;
@@ -939,14 +1010,29 @@ void pyramidReduce(int SplineDegree,
 
 }
 
+/** Reduce the nth volume by 2 using a BSpline pyramid.
+ * @ingroup GeometricalTransformations
+ *
+ * The same as the previous function, but input array is overwritten
+ */
+template<typename T>
+void selfPyramidReduce(int SplineDegree,
+                   MultidimArray<T> &V1,
+                   int levels = 1,
+                   unsigned long n = 0)
+{
+	MultidimArray<T> aux = V1;
+	pyramidReduce(SplineDegree, V1, aux, levels, n);
+}
+
 /** Expand the nth volume by 2 using a BSpline pyramid.
  * @ingroup GeometricalTransformations
  */
 template<typename T>
-void pyramidExpand(int SplineDegree, 
+void pyramidExpand(int SplineDegree,
                    MultidimArray<T> &V2,
                    const MultidimArray<T> &V1,
-                   int levels = 1, 
+                   int levels = 1,
                    unsigned long n = 0)
 {
     MultidimArray< double > coeffs;
@@ -962,6 +1048,21 @@ void pyramidExpand(int SplineDegree,
 
 }
 
+/** Expand the nth volume by 2 using a BSpline pyramid.
+ * @ingroup GeometricalTransformations
+ *
+ * The same as the previous function, but input array is overwritten
+ */
+template<typename T>
+void selfPyramidExpand(int SplineDegree,
+                   MultidimArray<T> &V1,
+                   int levels = 1,
+                   unsigned long n = 0)
+{
+	MultidimArray<T> aux = V1;
+	pyramidExpand(SplineDegree, V1, aux, levels, n);
+}
+
 /** Reduce a set of B-spline coefficients.
  * @ingroup GeometricalTransformations
  *
@@ -969,8 +1070,8 @@ void pyramidExpand(int SplineDegree,
  * reduced set of B-spline coefficients using the two-scale relationship.
  */
 template<typename T>
-void reduceBSpline(int SplineDegree, 
-                   MultidimArray< double >& V2, 
+void reduceBSpline(int SplineDegree,
+                   MultidimArray< double >& V2,
                    const MultidimArray<T> &V1)
 {
     double g[200]; // Coefficients of the reduce filter
@@ -989,16 +1090,16 @@ void reduceBSpline(int SplineDegree,
     typeCast(V1, aux);
     if (V1.getDim() == 2)
     {
-       if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 != 0)
+        if (XSIZE(aux) % 2 != 0 && YSIZE(aux) % 2 != 0)
             aux.resize(YSIZE(aux) - 1, XSIZE(aux) - 1);
         else if (YSIZE(aux) % 2 != 0)
             aux.resize(YSIZE(aux) - 1, XSIZE(aux));
         else if (XSIZE(aux) % 2 != 0)
             aux.resize(YSIZE(aux), XSIZE(aux) - 1);
 
-       V2.resize(YSIZE(aux) / 2, XSIZE(aux) / 2);
-       Reduce_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
-                 MULTIDIM_ARRAY(V2), g, ng, IsCentered);
+        V2.resize(YSIZE(aux) / 2, XSIZE(aux) / 2);
+        Reduce_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
+                  MULTIDIM_ARRAY(V2), g, ng, IsCentered);
     }
     else if (V1.getDim() == 3)
     {
@@ -1026,7 +1127,7 @@ void reduceBSpline(int SplineDegree,
 
 
 }
-  
+
 /** Expand a set of B-spline coefficients.
  * @ingroup GeometricalTransformations
  *
@@ -1035,8 +1136,8 @@ void reduceBSpline(int SplineDegree,
  */
 template<typename T>
 void expandBSpline(int SplineDegree,
-                     MultidimArray< double >& V2, 
-                     const MultidimArray<T> &V1)
+                   MultidimArray< double >& V2,
+                   const MultidimArray<T> &V1)
 {
     double g[200]; // Coefficients of the reduce filter
     long ng; // Number of coefficients of the reduce filter
@@ -1169,7 +1270,7 @@ void radialAverage(const MultidimArray< T >& m,
 
     // Perform the mean
     FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_mean)
-        radial_mean(i) /= (T) radial_count(i);
+    radial_mean(i) /= (T) radial_count(i);
 }
 
 

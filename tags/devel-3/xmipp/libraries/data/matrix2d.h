@@ -74,7 +74,7 @@
  * @endcode
  */
 
- #define MAT_ELEM(m,i,j) ((m).mdata[(i)*(m).mdimx+(j)])
+#define MAT_ELEM(m,i,j) ((m).mdata[(i)*(m).mdimx+(j)])
 
 /** Matrix element: Element access
  * @ingroup MatricesSizeShape
@@ -253,8 +253,10 @@
         M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
 
 
-template<typename T> class Matrix1D;
-template<typename T> class Matrix2D;
+template<typename T>
+class Matrix1D;
+template<typename T>
+class Matrix2D;
 
 template<typename T>
 void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d);
@@ -315,7 +317,7 @@ public:
      */
     Matrix2D()
     {
-    	coreInit();
+        coreInit();
     }
 
     /** Dimension constructor
@@ -337,8 +339,8 @@ public:
      */
     Matrix2D(int Ydim, int Xdim)
     {
-    	coreInit();
-    	resize(Ydim, Xdim);
+        coreInit();
+        resize(Ydim, Xdim);
     }
 
     /** Copy constructor
@@ -360,19 +362,19 @@ public:
     /** Destructor.
      * @ingroup MultidimArrayConstructors
      */
-     ~Matrix2D()
-     {
+    ~Matrix2D()
+    {
         coreDeallocate();
-     }
+    }
 
     /** Clear.
      * @ingroup MultidimArrayConstructors
      */
-     void clear()
-     {
+    void clear()
+    {
         coreDeallocate();
         coreInit();
-     }
+    }
 
     /// @defgroup MultidimArrayCore Core memory operations for MultidimArrays
     /// @ingroup MultidimensionalArrays
@@ -446,14 +448,14 @@ public:
 
         try
         {
-        	new_mdata = new T [YXdim];
+            new_mdata = new T [YXdim];
         }
         catch (std::bad_alloc &)
-		{
-			REPORT_ERROR(1001, "Allocate: No space left");
-		}
+        {
+            REPORT_ERROR(1001, "Allocate: No space left");
+        }
 
-		// Copy needed elements, fill with 0 if necessary
+        // Copy needed elements, fill with 0 if necessary
         for (int i = 0; i < Ydim; i++)
             for (int j = 0; j < Xdim; j++)
             {
@@ -467,14 +469,14 @@ public:
                 new_mdata[i*Xdim+j] = val;
             }
 
-		// deallocate old vector
-		coreDeallocate();
+        // deallocate old vector
+        coreDeallocate();
 
-		// assign *this vector to the newly created
-		mdata = new_mdata;
-		mdimx = Xdim;
-		mdimy = Ydim;
-		mdim = Xdim * Ydim;
+        // assign *this vector to the newly created
+        mdata = new_mdata;
+        mdimx = Xdim;
+        mdimy = Ydim;
+        mdim = Xdim * Ydim;
     }
 
     /** Resize according to a pattern.
@@ -511,10 +513,10 @@ public:
      */
     void initConstant(T val)
     {
-    	for (int j = 0; j < mdim; j++)
-    	{
-    		mdata[j] = val;
-    	}
+        for (int j = 0; j < mdim; j++)
+        {
+            mdata[j] = val;
+        }
     }
 
     /** Initialize to zeros with current size.
@@ -554,9 +556,9 @@ public:
     template <typename T1>
     void initZeros(const Matrix2D<T1>& op)
     {
-    	resize(op);
-    	initConstant(static_cast< T >(0));
-	}
+        resize(op);
+        initConstant(static_cast< T >(0));
+    }
 
     /** 2D Identity matrix of current size
      * @ingroup Initialization
@@ -606,9 +608,9 @@ public:
         }
 
         resize(Ydim, Xdim);
-		for (int i = 0; i < mdimy; i++)
-			for (int j = 0; j < mdimx; j++)
-				(*this)(i,j) = (T)(i == j);
+        for (int i = 0; i < mdimy; i++)
+            for (int j = 0; j < mdimx; j++)
+                (*this)(i,j) = (T)(i == j);
     }
 
     /** Same shape.
@@ -680,7 +682,7 @@ public:
         {
             resize(op1);
             for (int i = 0; i< op1.mdim; i++)
-				mdata[i] = op1.mdata[i];
+                mdata[i] = op1.mdata[i];
         }
 
         return *this;
@@ -694,7 +696,7 @@ public:
     {
         Matrix2D<T> tmp(*this);
         for (int i=0; i < mdim; i++)
-        	tmp.mdata[i] = mdata[i] * op1;
+            tmp.mdata[i] = mdata[i] * op1;
         return tmp;
     }
 
@@ -705,7 +707,7 @@ public:
     {
         Matrix2D<T> tmp(*this);
         for (int i=0; i < mdim; i++)
-        	tmp.mdata[i] = mdata[i] / op1;
+            tmp.mdata[i] = mdata[i] / op1;
         return tmp;
     }
 
@@ -716,27 +718,27 @@ public:
     {
         Matrix2D<T> tmp(op2);
         for (int i=0; i < op2.mdim; i++)
-        	tmp.mdata[i] = op1 * op2.mdata[i];
+            tmp.mdata[i] = op1 * op2.mdata[i];
         return tmp;
     }
 
-   /** v3 *= k.
-     * @ingroup MatricesAlgebra
-     */
+    /** v3 *= k.
+      * @ingroup MatricesAlgebra
+      */
     void operator*=(T op1)
     {
         for (int i=0; i < mdim; i++)
-        	mdata[i] *= op1;
+            mdata[i] *= op1;
     }
 
     /** v3 /= k.
       * @ingroup MatricesAlgebra
       */
-     void operator/=(T op1)
-     {
-         for (int i=0; i < mdim; i++)
-         	mdata[i] /= op1;
-     }
+    void operator/=(T op1)
+    {
+        for (int i=0; i < mdim; i++)
+            mdata[i] /= op1;
+    }
 
     /** Matrix by vector multiplication
      * @ingroup MatricesAlgebraic
@@ -804,7 +806,7 @@ public:
         result.initZeros(mdimy, mdimx);
         for (int i = 0; i < mdimy; i++)
             for (int j = 0; j < mdimx; j++)
-            	result(i, j) = (*this)(i, j) + op1(i, j);
+                result(i, j) = (*this)(i, j) + op1(i, j);
 
         return result;
     }
@@ -825,7 +827,7 @@ public:
         result.initZeros(mdimy, mdimx);
         for (int i = 0; i < mdimy; i++)
             for (int j = 0; j < mdimx; j++)
-            	result(i, j) = (*this)(i, j) - op1(i, j);
+                result(i, j) = (*this)(i, j) - op1(i, j);
 
         return result;
     }
@@ -835,50 +837,50 @@ public:
       *
       * The returned value is of the same type as the type of the array.
       */
-     T computeMax() const
-     {
-         if (mdim <= 0)
-             return static_cast< T >(0);
+    T computeMax() const
+    {
+        if (mdim <= 0)
+            return static_cast< T >(0);
 
-         T maxval = mdata[0];
-         for (int n = 0; n < mdim; n++)
-        	 if (mdata[n] > maxval)
-        		 maxval = mdata[n];
-         return maxval;
-     }
+        T maxval = mdata[0];
+        for (int n = 0; n < mdim; n++)
+            if (mdata[n] > maxval)
+                maxval = mdata[n];
+        return maxval;
+    }
 
-     /** Minimum of the values in the array.
-        * @ingroup Statistics
-        *
-        * The returned value is of the same type as the type of the array.
-        */
-       T computeMin() const
-       {
-           if (mdim <= 0)
-               return static_cast< T >(0);
+    /** Minimum of the values in the array.
+       * @ingroup Statistics
+       *
+       * The returned value is of the same type as the type of the array.
+       */
+    T computeMin() const
+    {
+        if (mdim <= 0)
+            return static_cast< T >(0);
 
-           T minval = mdata[0];
-           for (int n = 0; n < mdim; n++)
-          	 if (mdata[n] < minval)
-          		 minval = mdata[n];
-           return minval;
-       }
+        T minval = mdata[0];
+        for (int n = 0; n < mdim; n++)
+            if (mdata[n] < minval)
+                minval = mdata[n];
+        return minval;
+    }
 
-       /** Produce a 2D array suitable for working with Numerical Recipes
-     * @ingroup MatricesSize
-     *
-     * This function must be used only as a preparation for routines which need
-     * that the first physical index is 1 and not 0 as it usually is in C. New
-     * memory is needed to hold the new double pointer array.
-     */
+    /** Produce a 2D array suitable for working with Numerical Recipes
+    * @ingroup MatricesSize
+    *
+    * This function must be used only as a preparation for routines which need
+    * that the first physical index is 1 and not 0 as it usually is in C. New
+    * memory is needed to hold the new double pointer array.
+    */
     T** adaptForNumericalRecipes() const
     {
         T** m = NULL;
         ask_Tmatrix(m, 1, mdimy, 1, mdimx);
 
-		for (int i = 0; i < mdimy; i++)
-			for (int j = 0; j < mdimx; j++)
-				m[i+1][j+1] = mdata[i*mdimx + j];
+        for (int i = 0; i < mdimy; i++)
+            for (int j = 0; j < mdimx; j++)
+                m[i+1][j+1] = mdata[i*mdimx + j];
 
         return m;
     }
@@ -942,10 +944,10 @@ public:
             return false;
 
         for (int i = 0; i < mdimy; i++)
-        	for (int j = 0; j < mdimx; j++)
-        		if (i != j && ABS((*this)(i, j)) >
-        		            XMIPP_EQUAL_ACCURACY)
-        		            return false;
+            for (int j = 0; j < mdimx; j++)
+                if (i != j && ABS((*this)(i, j)) >
+                    XMIPP_EQUAL_ACCURACY)
+                    return false;
         return true;
     }
 
@@ -1005,14 +1007,14 @@ public:
      * than the argument and the same values (within accuracy).
      */
     bool equal(const Matrix2D<T>& op,
-    	double accuracy = XMIPP_EQUAL_ACCURACY) const
+               double accuracy = XMIPP_EQUAL_ACCURACY) const
     {
         if (!sameShape(op))
             return false;
         for (int i = 0; i < mdimy; i++)
             for (int j = 0; j < mdimx; j++)
-            	if (ABS( (*this)(i,j) - op(i,j) ) > accuracy)
-            		return false;
+                if (ABS( (*this)(i,j) - op(i,j) ) > accuracy)
+                    return false;
         return true;
     }
 
@@ -1049,7 +1051,7 @@ public:
             resize(op1.size(), 1);
 
             for (int i = 0; i < op1.size(); i++)
-            	(*this)(i, 0) = op1( i);
+                (*this)(i, 0) = op1( i);
         }
     }
 
@@ -1086,7 +1088,7 @@ public:
             op1.resize(mdimx);
 
             for (int j = 0; j < mdimx; j++)
-				op1(j) = (*this)(0, j);
+                op1(j) = (*this)(0, j);
 
             op1.setRow();
         }
@@ -1096,10 +1098,10 @@ public:
             op1.resize(mdimy);
 
             for (int i = 0; i < mdimy; i++)
-				op1(i) = (*this)(i, 0);
+                op1(i) = (*this)(i, 0);
 
             op1.setCol();
-		}
+        }
     }
 
     /** Get row
@@ -1250,7 +1252,7 @@ public:
      */
     T det() const
     {
-    	// (see Numerical Recipes, Chapter 2 Section 5)
+        // (see Numerical Recipes, Chapter 2 Section 5)
         if (mdimx == 0 || mdimy == 0)
             REPORT_ERROR(1108, "determinant: Matrix is empty");
 
@@ -1296,13 +1298,13 @@ public:
      */
     Matrix2D<T> transpose() const
     {
-    	T aux;
-    	Matrix2D<T> result(mdimx, mdimy);
+        T aux;
+        Matrix2D<T> result(mdimx, mdimy);
 
-    	FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
-    	result(i, j) = (*this)(j, i);
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
+        result(i, j) = (*this)(j, i);
 
-    	return result;
+        return result;
     }
 
     /** Inverse of a matrix
@@ -1337,11 +1339,11 @@ public:
         {
             if (ABS(w(i)) > tol)
             {
-            	w(i) = 1.0 / w(i);
+                w(i) = 1.0 / w(i);
                 invertible = true;
             }
             else
-            	w(i) = 0.0;
+                w(i) = 0.0;
         }
 
         if (!invertible)
@@ -1349,14 +1351,14 @@ public:
 
         // Compute V*W^-1
         for (int i = 0; i < v.mdimy; i++)
-        	for (int j = 0; j < v.mdimx; j++)
-        		v(i,j) = w(j);
+            for (int j = 0; j < v.mdimx; j++)
+                v(i,j) = w(j);
 
         // Compute Inverse
         for (int i = 0; i < mdimx; i++)
             for (int j = 0; j < mdimy; j++)
                 for (int k = 0; k < mdimx; k++)
-					result(i,j) += (T) v(i,k) * u(j,k);
+                    result(i,j) += (T) v(i,k) * u(j,k);
     }
 
     /** Inverse of a matrix
@@ -1371,7 +1373,8 @@ public:
     }
 
 
-}; // class Matrix2D
+}
+; // class Matrix2D
 
 // TODO Document
 template<typename T>
@@ -1438,6 +1441,7 @@ void svdcmp(const Matrix2D< T >& a,
 
     // Call to the numerical recipes routine
 #ifdef VIA_NR
+
     svdcmp(u.mdata,
            u.mdimy, u.mdimx,
            w.vdata,
@@ -1445,6 +1449,7 @@ void svdcmp(const Matrix2D< T >& a,
 #endif
 
 #ifdef VIA_BILIB
+
     int status;
     SingularValueDecomposition(u.mdata,
                                u.mdimy, u.mdimx,
@@ -1474,8 +1479,8 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T2>& v2)
     }
 
     v2.resize(v1);
-	for (int n = 0; n < v1.mdim; n++)
-		v2.mdata[n] = static_cast< T2 > (v1.mdata[n]);
+    for (int n = 0; n < v1.mdim; n++)
+        v2.mdata[n] = static_cast< T2 > (v1.mdata[n]);
 
 }
 
