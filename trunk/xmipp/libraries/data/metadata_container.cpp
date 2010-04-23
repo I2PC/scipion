@@ -228,7 +228,6 @@ void  MetaDataContainer::getValue( MetaDataLabel name, std::string &value )
     {
         value = *((std::string *)element->second);
     }
-    ::
 }
 
 void  MetaDataContainer::getValue( MetaDataLabel name, bool &value )
