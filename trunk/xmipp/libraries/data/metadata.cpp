@@ -716,6 +716,7 @@ bool MetaData::isEmpty()
 
 void MetaData::clear()
 {
+	srand ( time(NULL) );
     path.clear();
     comment.clear();
     objects.clear();
@@ -800,6 +801,10 @@ long int MetaData::addObject(long int objectID)
     {
         (objectsIterator->second)->addValue(MetaDataContainer::decodeLabel(*It), std::string(""));
     }
+
+	// Create a randomized structure
+    size_t randomIndex = rand() % randomOrderedObjects.size();
+    randomOrderedObjects[randomIndex]=result;
 
     return result;
 }
@@ -1195,9 +1200,15 @@ bool MetaData::setValue(const std::string &name, const std::string &value,
     }
 }
 
+std::vector<long int> & MetaData::getRandomOrderedObjects()
+{
+	return randomOrderedObjects;
+}
+
 bool MetaData::removeObject(long int objectID)
 {
     int result = objects.erase(objectID);
+    randomOrderedObjects.erase(std::find(randomOrderedObjects.begin(),randomOrderedObjects.end(), objectID));
     objectsIterator = objects.begin();
     return result;
 }
@@ -1209,6 +1220,7 @@ void MetaData::removeObjects(std::vector<long int> &toRemove)
     for (It = toRemove.begin(); It != toRemove.end(); It++)
     {
         objects.erase(*It);
+        randomOrderedObjects.erase(std::find(randomOrderedObjects.begin(),randomOrderedObjects.end(), *It));
     }
 
     // Reset iterator due to unknown iterator state after removing items
@@ -1218,59 +1230,25 @@ void MetaData::removeObjects(std::vector<long int> &toRemove)
 void MetaData::removeObjects(MetaDataLabel name, double value)
 {
     std::vector<long int> toRemove = findObjects(name, value);
-    std::vector<long int>::iterator It;
-
-    for (It = toRemove.begin(); It != toRemove.end(); It++)
-    {
-        objects.erase(*It);
-    }
-
-    objectsIterator = objects.begin();
+    removeObjects(toRemove);
 }
 
 void MetaData::removeObjects(MetaDataLabel name, int value)
 {
     std::vector<long int> toRemove = findObjects(name, value);
-    std::vector<long int>::iterator It;
-
-    MetaDataContainer * aux;
-
-    for (It = toRemove.begin(); It != toRemove.end(); It++)
-    {
-        objects.erase(*It);
-    }
-
-    objectsIterator = objects.begin();
+    removeObjects(toRemove);
 }
 
 void MetaData::removeObjects(MetaDataLabel name, bool value)
 {
     std::vector<long int> toRemove = findObjects(name, value);
-    std::vector<long int>::iterator It;
-
-    MetaDataContainer * aux;
-
-    for (It = toRemove.begin(); It != toRemove.end(); It++)
-    {
-        objects.erase(*It);
-    }
-
-    objectsIterator = objects.begin();
+    removeObjects(toRemove);
 }
 
 void MetaData::removeObjects(MetaDataLabel name, std::string value)
 {
     std::vector<long int> toRemove = findObjects(name, value);
-    std::vector<long int>::iterator It;
-
-    MetaDataContainer * aux;
-
-    for (It = toRemove.begin(); It != toRemove.end(); It++)
-    {
-        objects.erase(*It);
-    }
-
-    objectsIterator = objects.begin();
+    removeObjects(toRemove);
 }
 
 std::vector<long int> MetaData::findObjectsInRange(MetaDataLabel name,

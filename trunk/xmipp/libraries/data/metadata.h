@@ -68,6 +68,8 @@ class MetaData
 	std::map< std::string, long int> fastStringSearch;
 	MetaDataLabel fastStringSearchLabel;
     
+	std::vector<long int> randomOrderedObjects;
+
 	std::string path;   ///< A parameter stored on MetaData Files
 	std::string comment;    ///< A general comment for the MetaData file
     
@@ -148,6 +150,8 @@ public:
     void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
     void read( FileName infile, std::vector<MetaDataLabel> * labelsVector=NULL );
 	
+    std::vector<long int> & getRandomOrderedObjects();
+
     void toDataBase( FileName DBname, std::string tableName = "" );
     
     /** What labels have been read from a docfile/metadata file
