@@ -214,8 +214,8 @@ class MetaDataContainer
 
 	void deleteValue( MetaDataLabel name );
 	
-	void writeValueToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
-    void writeValueToString( std::string &outString, MetaDataLabel inputLabel );
+	bool writeValueToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
+    bool writeValueToString( std::string &outString, MetaDataLabel inputLabel );
 
 	static MetaDataLabel codifyLabel( std::string strLabel );
 	static std::string decodeLabel( MetaDataLabel inputLabel );
