@@ -270,7 +270,7 @@ void * MetaDataContainer::getVoidPtr( MetaDataLabel name )
 
     if ( element == values.end( ) )
     {
-        REPORT_ERROR(1,(std::string) "Label(bool) " + decodeLabel(name) + " not found\n" );
+        REPORT_ERROR(1,(std::string) "Label " + decodeLabel(name) + " not found on getVoidPtr()\n" );
     }
     else
     {
@@ -294,52 +294,57 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, double value )
 {
     // Traverse all the structure looking for objects
     // that satisfy search criteria
-    double * currValue = (double *)values[ name ];
+	std::map<MetaDataLabel, void *>::iterator It;
 
-    if( currValue != NULL )
+	It = values.find( name );
+
+    if( It != values.end() )
     {
-        double val=value- *currValue;
-        if( ABS(val)<XMIPP_EQUAL_ACCURACY )
+        if( ABS( *((double *)It.second) - value )<XMIPP_EQUAL_ACCURACY )
         {
             return true;
         }
     }
 
-    return false;
+	return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, int value )
 {
     // Traverse all the structure looking for objects
     // that satisfy search criteria
-    int * currValue = (int *)values[ name ];
+	std::map<MetaDataLabel, void *>::iterator It;
 
-    if( currValue != NULL )
+	It = values.find( name );
+
+    if( It != values.end() )
     {
-        if( value == *currValue )
+        if( ABS( *((int *)It.second) - value )<XMIPP_EQUAL_ACCURACY )
         {
             return true;
         }
     }
 
-    return false;
+	return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, bool value )
 {
     // Traverse all the structure looking for objects
     // that satisfy search criteria
-    bool * currValue = (bool *)values[ name];
+	std::map<MetaDataLabel, void *>::iterator It;
 
-    if( currValue != 0 )
+	It = values.find( name );
+
+    if( It != values.end() )
     {
-        if( value == *currValue )
+        if( ABS( *((bool *)It.second) - value )<XMIPP_EQUAL_ACCURACY )
         {
             return true;
         }
     }
 
-    return false;
+	return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name,
@@ -347,17 +352,19 @@ bool MetaDataContainer::pairExists( MetaDataLabel name,
 {
     // Traverse all the structure looking for objects
     // that satisfy search criteria
-    std::string * currValue = (std::string *)values[ name ];
+	std::map<MetaDataLabel, void *>::iterator It;
 
-    if( currValue != 0 )
+	It = values.find( name );
+
+    if( It != values.end() )
     {
-        if( value == *currValue )
+        if( ABS( *((std::string *)It.second) - value )<XMIPP_EQUAL_ACCURACY )
         {
             return true;
         }
     }
 
-    return false;
+	return false;
 }
 
 void MetaDataContainer::deleteValue( MetaDataLabel name )
