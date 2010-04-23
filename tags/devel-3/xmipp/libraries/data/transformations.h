@@ -965,6 +965,7 @@ void scaleToSize(int SplineDegree,
  *
  * The same as the previous function, but input array is overwritten
  */
+template<typename T>
 void selfScaleToSize(int SplineDegree,
                  MultidimArray<T> &V1,
                  int Xdim, int Ydim, int Zdim = 1,
