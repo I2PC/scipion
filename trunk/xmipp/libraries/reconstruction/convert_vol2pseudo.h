@@ -119,6 +119,9 @@ public:
     
     /// N closest atoms for the distance histogram
     int Nclosest;
+
+    /// Don't scale the atom weights at the end
+    bool dontScale;
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);
