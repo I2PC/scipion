@@ -66,6 +66,7 @@ void Prog_Convert_Vol2Pseudo::read(int argc, char **argv)
     penalty = textToFloat(getParameter(argc,argv,"-penalty","10"));
     numThreads = textToInteger(getParameter(argc,argv,"-thr","1"));
     sampling = textToFloat(getParameter(argc,argv,"-sampling_rate","1"));
+    dontScale = checkParameter(argc,argv,"-dontScale");
 }
 
 void Prog_Convert_Vol2Pseudo::show() const
@@ -85,6 +86,7 @@ void Prog_Convert_Vol2Pseudo::show() const
               << "Penalty:        " << penalty         << std::endl
               << "Threads:        " << numThreads      << std::endl
               << "Sampling Rate:  " << sampling        << std::endl
+              << "Don't scale:    " << dontScale       << std::endl
     ;    
     if (useMask) mask_prm.show();
     else std::cout << "No mask\n";
@@ -112,6 +114,7 @@ void Prog_Convert_Vol2Pseudo::usage() const
               << "                                     Set it to -1 to disable\n"
               << "  [-penalty <p=10>]                : Penalty for overshooting\n"
               << "  [-sampling_rate <Ts=1>]          : Sampling rate Angstroms/pixel\n"
+              << "  [-dontScale]                     : Don't scale atom weights in the PDB\n"
               << "  [-thr <n=1>]                     : Number of threads\n"
     ;
     mask_prm.usage();
@@ -669,7 +672,7 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     FOR_ALL_ELEMENTS_IN_MATRIX1D(intensities)
         intensities(i)=atoms[i].intensity;
     histogram1D hist;
-    compute_hist(intensities, hist, 100);
+    compute_hist(intensities, hist, 0, intensities.computeMax(), 100);
     hist.write(fnOut+"_approximation.hist");
 
     // Compute the histogram of distances
@@ -706,7 +709,8 @@ void Prog_Convert_Vol2Pseudo::writeResults()
             for (int k=0; k<Nclosest; k++)
                 NclosestDistances(i*Nclosest+k)=sampling*NclosestToThisAtom[k];
     }
-    compute_hist(NclosestDistances, hist, 100);
+    compute_hist(NclosestDistances, hist, 0, NclosestDistances.computeMax(),
+        100);
     hist.write(fnOut+"_distance.hist");
 
     // Save the difference
@@ -725,6 +729,7 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     double minIntensity=intensities.computeMin();
     double maxIntensity=intensities.computeMax();
     double a=0.99/(maxIntensity-minIntensity);
+    if (dontScale) a=1;
     
     FILE *fhOut=NULL;
     fhOut=fopen((fnOut+".pdb").c_str(),"w");
