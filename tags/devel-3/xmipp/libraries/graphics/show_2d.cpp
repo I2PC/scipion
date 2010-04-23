@@ -753,10 +753,7 @@ bool ImageViewer::loadImage(const char *fileName,
                         if (fn_assign != "")
                             options->setItemEnabled(recomputectfmodel, true);
                     }
-                	std::cerr << "hola4b" <<std::endl;
                     tmpImage = p;
-                	std::cerr << "hola5" <<std::endl;
-
                 }
                 else if (tmpImage.isComplexImage(filename))
                 {
@@ -774,7 +771,6 @@ bool ImageViewer::loadImage(const char *fileName,
                 minGray = _minGray;
                 maxGray = _maxGray;
                 ok = xmipp2Qt(tmpImage);
-            	std::cerr << "hola6" <<std::endl;
 
             }
             catch (Xmipp_error)
