@@ -789,6 +789,42 @@ public:
     }
 
 
+    /** Pixel access
+     *
+     * This operator is used to access a pixel within a 2D image. This is a
+     * logical access, so you could access to negative positions if the image
+     * has been defined so (see the general explanation for the class).
+     *
+     * @code
+     * std::cout << "Grey level of pixel (-3,-3) of the image = " << I(-3, -3)
+     * << std::endl;
+     *
+     * I(-3, -3) = I(-3, -2);
+     * @endcode
+     */
+    T& operator()(int i, int j) const
+    {
+        return A2D_ELEM(data, i, j);
+    }
+
+    /** Voxel access
+     *
+     * This operator is used to access a voxel within a 3D image. This is a
+     * logical access, so you could access to negative positions if the image
+     * has been defined so (see the general explanation for the class).
+     *
+     * @code
+     * std::cout << "Grey level of pixel (-3,-3, 1) of the volume = " << I(-3, -3, 1)
+     * << std::endl;
+     *
+     * I(-3, -3, 1) = I(-3, -2, 0);
+     * @endcode
+     */
+    T& operator()(int k, int i, int j) const
+    {
+        return A3D_ELEM(data, k, i, j);
+    }
+
     /** Get file name
      *
      * @code

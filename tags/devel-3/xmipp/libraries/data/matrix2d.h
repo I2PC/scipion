@@ -64,15 +64,29 @@
     for (int i=0; i<=(m).mdimy; i++) \
         for (int j=0; j<=(m).mdimx; j++)
 
+/** Access to a matrix element
+ * @ingroup MatricesSizeShape
+ * v is the array, i and j define the element v_ij.
+ *
+  * @code
+ * MAT_ELEM(m, 0, 0) = 1;
+ * val = MAT_ELEM(m, 0, 0);
+ * @endcode
+ */
+
+ #define MAT_ELEM(m,i,j) ((m).mdata[(i)*(m).mdimx+(j)])
+
 /** Matrix element: Element access
  * @ingroup MatricesSizeShape
  *
+ * This is just a redefinition
+ * of the function above
  * @code
  * dMij(m, -2, 1) = 1;
  * val = dMij(m, -2, 1);
  * @endcode
  */
-#define dMij(m, i, j)  ((m).mdata[(i)*(m).mdimx+(j)])
+#define dMij(m, i, j)  MAT_ELEM(m, i, j)
 
 /** Matrix (3x3) by vector (3x1) (a=M*b)
  * @ingroup Matrices
