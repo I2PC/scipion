@@ -319,7 +319,7 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, int value )
 
     if( It != values.end() )
     {
-        if( ABS( *((int *)(It->second)) - value )<XMIPP_EQUAL_ACCURACY )
+        if( *((int *)(It->second)) == value )
         {
             return true;
         }
@@ -338,7 +338,7 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, bool value )
 
     if( It != values.end() )
     {
-        if( ABS( *((bool *)(It->second)) - value )<XMIPP_EQUAL_ACCURACY )
+        if( *((bool *)(It->second)) == value )
         {
             return true;
         }
@@ -358,7 +358,7 @@ bool MetaDataContainer::pairExists( MetaDataLabel name,
 
     if( It != values.end() )
     {
-        if( ABS( *((std::string *)(It->second)) - value )<XMIPP_EQUAL_ACCURACY )
+        if( *((std::string *)(It->second)) == value  )
         {
             return true;
         }
