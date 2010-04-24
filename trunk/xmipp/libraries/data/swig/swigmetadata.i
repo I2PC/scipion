@@ -126,11 +126,17 @@ import os,glob,sys
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
 sys.path.append(scriptdir) # add default search path
 import XmippData
-outFile=XmippData.FileName()
-outFile=XmippData.FileName("roberto.doc")
+outFile=XmippData.FileName("yy.doc")
 dbFile=XmippData.FileName("kkk.db")
 mD=XmippData.MetaData();
 mD.read(outFile)
+mD.toDataBase( dbFile, "prueba" );
+vv=XmippData.vectorm()
+vv.append(XmippData.MDL_IMAGE)
+vv.append(XmippData.MDL_ANGLEPSI)
+
+print "here"
+mD.toDataBase( dbFile, "prueba",vv );
 mD.toDataBase( dbFile, "prueba" );
 
 ====================

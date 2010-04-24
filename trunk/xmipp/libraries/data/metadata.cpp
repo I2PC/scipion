@@ -364,7 +364,9 @@ void MetaData::setColumnFormat(bool column)
     isColumnFormat = column;
 }
 
-void MetaData::toDataBase(FileName DBname, std::string tableName)
+void MetaData::toDataBase(FileName DBname,
+                          std::string tableName,
+                          std::vector<MetaDataLabel> * labelsVector)
 {
     try
     {
@@ -378,110 +380,129 @@ void MetaData::toDataBase(FileName DBname, std::string tableName)
 
             tableName = inFile;
         }
-
-        if (!db.tableExists(tableName))
+        int labelsCounter = 0;
+        std::string sqlCommandCreate = "create table ";
+        sqlCommandCreate += tableName + "(objId int primary key,";
+        std::vector<MetaDataLabel>::iterator strIt;
+        std::string sqlCommandInsert = "insert into " + \
+                                       tableName + \
+                                       "(objId," ;
+        for (strIt = activeLabels.begin();
+             strIt != activeLabels.end();
+             strIt++)
         {
-            std::string sqlCommand = "create table ";
-            sqlCommand += tableName + "(";
-
-            std::vector<MetaDataLabel>::iterator strIt;
-
-            int labelsCounter = 0;
-
-            for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
+            if (labelsVector==NULL || std::find(labelsVector->begin(),
+                                                labelsVector->end(),
+                                                *strIt) != labelsVector->end())
             {
                 std::string label = MetaDataContainer::decodeLabel(*strIt);
-
+                sqlCommandInsert += label + ",";
                 if (isDouble(*strIt))
                 {
-                    sqlCommand += label + " double,";
+                    sqlCommandCreate += label + " double,";
                     labelsCounter++;
                 }
                 else if (isString(*strIt))
                 {
-                    sqlCommand += label + " text,";
+                    sqlCommandCreate += label + " text,";
                     labelsCounter++;
                 }
                 else if (isInt(*strIt))
                 {
-                    sqlCommand += label + " int,";
+                    sqlCommandCreate += label + " int,";
                     labelsCounter++;
                 }
                 else if (isBool(*strIt))
                 {
-                    sqlCommand += label + " int,";
+                    sqlCommandCreate += label + " int,";
                     labelsCounter++;
                 }
                 else if (isVector(*strIt))
                 {
                     std::cerr
-                    << "SQLLITE does not support vectors, skipping vector labelled "
+                    << "SQLLITE does not support vectors, skipping vector labeled "
                     << label << std::endl;
                 }
             }
+        }//end table creation
+        // remove last ','
+        sqlCommandCreate.erase(sqlCommandCreate.end() - 1);
+        sqlCommandInsert.erase(sqlCommandInsert.end() - 1);
+        sqlCommandCreate += ");";
+        sqlCommandInsert += ") values(";
+        for (int i = 0; i <= labelsCounter; i++)
+        {
+            sqlCommandInsert += "?,";
+        }
+        sqlCommandInsert.erase(sqlCommandInsert.end() - 1);
+        sqlCommandInsert += ");";
+        if (!db.tableExists(tableName))
+            db.execDML(sqlCommandCreate);
 
-            // remove last ','
-            sqlCommand.erase(sqlCommand.end() - 1);
-            sqlCommand += ");";
+        db.execDML("begin transaction;");
+        //std::vector<MetaDataLabel>::iterator strIt;
+        CppSQLite3Statement stmt = db.compileStatement(sqlCommandInsert);
 
-            db.execDML(sqlCommand);
-            db.execDML("begin transaction;");
-
-            sqlCommand = "insert into " + tableName + " values (";
-
-            for (int i = 0; i < labelsCounter; i++)
+        for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
+             = nextObject())
+        {
+            stmt.bind(1,(int)IDthis);
+            labelsCounter = 1;
+            /*
+             *
+             for (strIt = activeLabels.begin();
+                 strIt != activeLabels.end();
+                 strIt++)
+            */
             {
-                sqlCommand += "?,";
-            }
-
-            sqlCommand.erase(sqlCommand.end() - 1);
-            sqlCommand += ");";
-
-            CppSQLite3Statement stmt = db.compileStatement(sqlCommand);
-
-            for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
-                 = nextObject())
-            {
-                MetaDataContainer * aux = getObject();
-
-                labelsCounter = 0;
-                for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
                 {
-                    if (isDouble(*strIt))
+                    MetaDataContainer * aux = getObject();
+                    //save objID - primary key-
+                    stmt.bind(labelsCounter,(int)IDthis);
+                    for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
                     {
-                        labelsCounter++;
-                        double value;
-                        getValue(*strIt, value);
-                        stmt.bind(labelsCounter, value);
-                    }
-                    else if (isString(*strIt))
-                    {
-                        labelsCounter++;
-                        std::string value;
-                        getValue(*strIt, value);
-                        stmt.bind(labelsCounter, value.c_str());
-                    }
-                    else if (isInt(*strIt))
-                    {
-                        labelsCounter++;
-                        int value;
-                        getValue(*strIt, value);
-                        stmt.bind(labelsCounter, value);
-                    }
-                    else if (isBool(*strIt))
-                    {
-                        labelsCounter++;
-                        bool value;
-                        getValue(*strIt, value);
-                        stmt.bind(labelsCounter, value);
+                        if (labelsVector==NULL || std::find(labelsVector->begin(),
+                                                            labelsVector->end(),
+                                                            *strIt) != labelsVector->end())
+                        {
+                            if (isDouble(*strIt))
+                            {
+                                labelsCounter++;
+                                double value;
+                                getValue(*strIt, value);
+                                stmt.bind(labelsCounter, value);
+                            }
+                            else if (isString(*strIt))
+                            {
+                                labelsCounter++;
+                                std::string value;
+                                getValue(*strIt, value);
+                                stmt.bind(labelsCounter, value.c_str());
+                            }
+                            else if (isInt(*strIt))
+                            {
+                                labelsCounter++;
+                                int value;
+                                getValue(*strIt, value);
+                                stmt.bind(labelsCounter, value);
+                            }
+                            else if (isBool(*strIt))
+                            {
+                                labelsCounter++;
+                                bool value;
+                                getValue(*strIt, value);
+                                stmt.bind(labelsCounter, value);
+                            }
+                        }
                     }
                 }
-                stmt.execDML();
-                stmt.reset();
             }
-
-            db.execDML("commit transaction;");
+            stmt.execDML();
+            stmt.reset();
         }
+
+        db.execDML("commit transaction;");
+
 
         db.close();
 
@@ -716,7 +737,7 @@ bool MetaData::isEmpty()
 
 void MetaData::clear()
 {
-	srand ( time(NULL) );
+    srand ( time(NULL) );
     path.clear();
     comment.clear();
     objects.clear();
@@ -772,21 +793,15 @@ long int MetaData::addObject(long int objectID)
 {
     typedef std::pair<long int, MetaDataContainer *> newPair;
     long int result;
-std::cerr << "inside addobject, objid=" << objectID << std::endl;
+
     if (objectID == -1)
     {
-    	std::cerr << "before result" << std::endl;
         result = lastObject() + 1;
-    	std::cerr << "after result" << std::endl;
 
-    	std::cerr << "before insert" << std::endl;
         objects.insert(newPair(result, new MetaDataContainer()));
-    	std::cerr << "after insert" << std::endl;
 
         // Set iterator pointing to the newly added object
-    	std::cerr << "before objects" << std::endl;
         objectsIterator = objects.end();
-    	std::cerr << "after objects" << std::endl;
         objectsIterator--;
     }
     else
@@ -801,25 +816,24 @@ std::cerr << "inside addobject, objid=" << objectID << std::endl;
         objectsIterator = objects.find(objectID);
     }
 
-	std::cerr << "before activeLabels.begin" << std::endl;
-
     // Set default values for the existing labels
     std::vector<MetaDataLabel>::iterator It;
     for (It = activeLabels.begin(); It != activeLabels.end(); It++)
     {
-        (objectsIterator->second)->addValue(MetaDataContainer::decodeLabel(*It), std::string(""));
+        (objectsIterator->second)->addValue(
+            MetaDataContainer::decodeLabel(*It), std::string(""));
     }
-	std::cerr << "after activeLabels.begin" << std::endl;
 
 #ifdef NEVERDEFINE
-	//¿Que leches es esto?
-	//randomizar siempre?
-	// Create a randomized structure
-	std::cerr << "before randomize, print randomize size " << randomOrderedObjects.size() << std::endl;
+    //¿Que leches es esto?
+    //randomizar siempre?
+    // randomize no ha  sido inicializado
+    std::cerr << "before randomize, print randomize size " << randomOrderedObjects.size() << std::endl;
     size_t randomIndex = rand() % randomOrderedObjects.size();
     randomOrderedObjects[randomIndex]=result;
-	std::cerr << "after randomize" << std::endl;
+    std::cerr << "after randomize" << std::endl;
 #endif
+
     return result;
 }
 
@@ -1216,13 +1230,13 @@ bool MetaData::setValue(const std::string &name, const std::string &value,
 
 std::vector<long int> & MetaData::getRandomOrderedObjects()
 {
-	return randomOrderedObjects;
+    return randomOrderedObjects;
 }
 
 bool MetaData::removeObject(long int objectID)
 {
     int result = objects.erase(objectID);
-    randomOrderedObjects.erase(std::find(randomOrderedObjects.begin(),randomOrderedObjects.end(), objectID));
+    //randomOrderedObjects.erase(std::find(randomOrderedObjects.begin(),randomOrderedObjects.end(), objectID));
     objectsIterator = objects.begin();
     return result;
 }
@@ -1234,7 +1248,7 @@ void MetaData::removeObjects(std::vector<long int> &toRemove)
     for (It = toRemove.begin(); It != toRemove.end(); It++)
     {
         objects.erase(*It);
-        randomOrderedObjects.erase(std::find(randomOrderedObjects.begin(),randomOrderedObjects.end(), *It));
+        //randomOrderedObjects.erase(std::find(randomOrderedObjects.begin(),randomOrderedObjects.end(), *It));
     }
 
     // Reset iterator due to unknown iterator state after removing items
@@ -1463,11 +1477,11 @@ bool MetaData::getValue(MetaDataLabel name, double &value, long int objectID)
     MetaDataContainer * aux = getObject(objectID);
     if( !aux->valueExists(name) )
     {
-    	return false;
+        return false;
     }
     else
     {
-    	aux->getValue(name, value);
+        aux->getValue(name, value);
     }
 
     return true;
@@ -1478,11 +1492,11 @@ bool MetaData::getValue(MetaDataLabel name, int &value, long int objectID)
     MetaDataContainer * aux = getObject(objectID);
     if( !aux->valueExists(name) )
     {
-    	return false;
+        return false;
     }
     else
     {
-    	aux->getValue(name, value);
+        aux->getValue(name, value);
     }
 
     return true;
@@ -1493,11 +1507,11 @@ bool MetaData::getValue(MetaDataLabel name, bool &value, long int objectID)
     MetaDataContainer * aux = getObject(objectID);
     if( !aux->valueExists(name) )
     {
-    	return false;
+        return false;
     }
     else
     {
-    	aux->getValue(name, value);
+        aux->getValue(name, value);
     }
 
     return true;
@@ -1509,11 +1523,11 @@ bool MetaData::getValue(MetaDataLabel name, std::vector<double> &value,
     MetaDataContainer * aux = getObject(objectID);
     if( !aux->valueExists(name) )
     {
-    	return false;
+        return false;
     }
     else
     {
-    	aux->getValue(name, value);
+        aux->getValue(name, value);
     }
 
     return true;
@@ -1525,11 +1539,11 @@ bool MetaData::getValue(MetaDataLabel name, std::string &value,
     MetaDataContainer * aux = getObject(objectID);
     if( !aux->valueExists(name) )
     {
-    	return false;
+        return false;
     }
     else
     {
-    	aux->getValue(name, value);
+        aux->getValue(name, value);
     }
 
     return true;

@@ -150,9 +150,11 @@ public:
     void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
     void read( FileName infile, std::vector<MetaDataLabel> * labelsVector=NULL );
 	
+    void toDataBase( FileName DBname,
+    		         std::string tableName = "",
+	                 std::vector<MetaDataLabel> * labelsVector=NULL);
     std::vector<long int> & getRandomOrderedObjects();
 
-    void toDataBase( FileName DBname, std::string tableName = "" );
     
     /** What labels have been read from a docfile/metadata file
 	*   and/or will be stored on a new metadata file when "save" is
