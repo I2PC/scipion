@@ -772,15 +772,21 @@ long int MetaData::addObject(long int objectID)
 {
     typedef std::pair<long int, MetaDataContainer *> newPair;
     long int result;
-
+std::cerr << "inside addobject, objid=" << objectID << std::endl;
     if (objectID == -1)
     {
+    	std::cerr << "before result" << std::endl;
         result = lastObject() + 1;
+    	std::cerr << "after result" << std::endl;
 
+    	std::cerr << "before insert" << std::endl;
         objects.insert(newPair(result, new MetaDataContainer()));
+    	std::cerr << "after insert" << std::endl;
 
         // Set iterator pointing to the newly added object
+    	std::cerr << "before objects" << std::endl;
         objectsIterator = objects.end();
+    	std::cerr << "after objects" << std::endl;
         objectsIterator--;
     }
     else
@@ -795,17 +801,25 @@ long int MetaData::addObject(long int objectID)
         objectsIterator = objects.find(objectID);
     }
 
+	std::cerr << "before activeLabels.begin" << std::endl;
+
     // Set default values for the existing labels
     std::vector<MetaDataLabel>::iterator It;
     for (It = activeLabels.begin(); It != activeLabels.end(); It++)
     {
         (objectsIterator->second)->addValue(MetaDataContainer::decodeLabel(*It), std::string(""));
     }
+	std::cerr << "after activeLabels.begin" << std::endl;
 
+#ifdef NEVERDEFINE
+	//¿Que leches es esto?
+	//randomizar siempre?
 	// Create a randomized structure
+	std::cerr << "before randomize, print randomize size " << randomOrderedObjects.size() << std::endl;
     size_t randomIndex = rand() % randomOrderedObjects.size();
     randomOrderedObjects[randomIndex]=result;
-
+	std::cerr << "after randomize" << std::endl;
+#endif
     return result;
 }
 
