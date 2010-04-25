@@ -1,3 +1,6 @@
+/*
+ * Adapted to xmipp by Roberto Marabini roberto@cnb.csic.es
+ */
 ////////////////////////////////////////////////////////////////////////////////
 // CppSQLite3 - A C++ wrapper around the SQLite3 embedded database library.
 //
@@ -33,6 +36,8 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <ostream>
+#include <iostream>
 
 #define CPPSQLITE_ERROR 1000
 
@@ -268,7 +273,17 @@ public:
 
     virtual ~CppSQLite3DB();
 
-    void open(const std::string &dbName);
+    /**
+     *      #define SQLITE_OPEN_READONLY         0x00000001
+            #define SQLITE_OPEN_READWRITE        0x00000002
+            #define SQLITE_OPEN_CREATE           0x00000004
+            #define SQLITE_OPEN_NOMUTEX          0x00008000
+            #define SQLITE_OPEN_FULLMUTEX        0x00010000
+            #define SQLITE_OPEN_SHAREDCACHE      0x00020000
+            #define SQLITE_OPEN_PRIVATECACHE     0x00040000
+     *
+     */
+    void open(const std::string &dbName, int flag=(SQLITE_OPEN_READWRITE));
 
     void close();
 
@@ -276,11 +291,11 @@ public:
 
     int execDML(const std::string &szSQL);
 
-    CppSQLite3Query execQuery(const char* szSQL);
+    CppSQLite3Query execQuery(const std::string & szSQL);
 
-    int execScalar(const char* szSQL);
+    int execScalar(const std::string & szSQL);
 
-    CppSQLite3Table getTable(const char* szSQL);
+    CppSQLite3Table getTable(const std::string & szSQL);
 
     CppSQLite3Statement compileStatement(const std::string &szSQL);
 
@@ -297,7 +312,7 @@ private:
     CppSQLite3DB(const CppSQLite3DB& db);
     CppSQLite3DB& operator=(const CppSQLite3DB& db);
 
-    sqlite3_stmt* compile(const char* szSQL);
+    sqlite3_stmt* compile(const std::string &szSQL);
 
     void checkDB();
 

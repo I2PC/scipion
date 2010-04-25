@@ -75,6 +75,7 @@ enum MetaDataLabel
 	MDL_SHIFTY,                           // Shift for the image in the Y axis (double)
 	MDL_SHIFTZ,                           // Shift for the image in the Z axis (double)
 	MDL_WEIGHT,                           // Weight assigned to the image (double)
+	MDL_OBJID,                            // object id (int)
 //add row only label at the end of the enum
 	MDL_SAMPLINGRATE,                      // sampling rate (double)
 	MDL_VOLTAGE,                           // microscope voltage (double)
@@ -158,7 +159,7 @@ inline bool isBool(MetaDataLabel lCode)
 
 inline bool isInt(MetaDataLabel lCode)
 {
-    if(lCode == MDL_REF || lCode == MDL_ENABLED)
+    if(lCode == MDL_REF || lCode == MDL_ENABLED || lCode == MDL_OBJID)
         return true;
     else
         return false;

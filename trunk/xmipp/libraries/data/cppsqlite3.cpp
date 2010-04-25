@@ -1,3 +1,7 @@
+/*
+ * Adapted to xmipp by Roberto Marabini roberto@cnb.csic.es
+ */
+
 ////////////////////////////////////////////////////////////////////////////////
 // CppSQLite3 - A C++ wrapper around the SQLite3 embedded database library.
 //
@@ -1117,9 +1121,9 @@ CppSQLite3DB& CppSQLite3DB::operator=(const CppSQLite3DB& db)
 }
 
 
-void CppSQLite3DB::open(const std::string &dbName)
+void CppSQLite3DB::open(const std::string &dbName, int flags)
 {
-	int nRet = sqlite3_open(dbName.c_str(), &mpDB);
+	int nRet = sqlite3_open_v2(dbName.c_str(), &mpDB, flags,NULL);
 
 	if (nRet != SQLITE_OK)
 	{
@@ -1145,7 +1149,7 @@ CppSQLite3Statement CppSQLite3DB::compileStatement(const std::string &szSQL)
 {
 	checkDB();
 
-	sqlite3_stmt* pVM = compile(szSQL.c_str( ));
+	sqlite3_stmt* pVM = compile(szSQL);
 	return CppSQLite3Statement(mpDB, pVM);
 }
 
@@ -1180,7 +1184,7 @@ int CppSQLite3DB::execDML(const std::string &szSQL)
 }
 
 
-CppSQLite3Query CppSQLite3DB::execQuery(const char* szSQL)
+CppSQLite3Query CppSQLite3DB::execQuery(const std::string & szSQL)
 {
 	checkDB();
 
@@ -1207,7 +1211,7 @@ CppSQLite3Query CppSQLite3DB::execQuery(const char* szSQL)
 }
 
 
-int CppSQLite3DB::execScalar(const char* szSQL)
+int CppSQLite3DB::execScalar(const std::string & szSQL)
 {
 	CppSQLite3Query q = execQuery(szSQL);
 
@@ -1222,7 +1226,7 @@ int CppSQLite3DB::execScalar(const char* szSQL)
 }
 
 
-CppSQLite3Table CppSQLite3DB::getTable(const char* szSQL)
+CppSQLite3Table CppSQLite3DB::getTable(const std::string & szSQL)
 {
 	checkDB();
 
@@ -1232,7 +1236,7 @@ CppSQLite3Table CppSQLite3DB::getTable(const char* szSQL)
 	int nRows(0);
 	int nCols(0);
 
-	nRet = sqlite3_get_table(mpDB, szSQL, &paszResults, &nRows, &nCols, &szError);
+	nRet = sqlite3_get_table(mpDB, szSQL.c_str(), &paszResults, &nRows, &nCols, &szError);
 
 	if (nRet == SQLITE_OK)
 	{
@@ -1269,7 +1273,7 @@ void CppSQLite3DB::checkDB()
 }
 
 
-sqlite3_stmt* CppSQLite3DB::compile(const char* szSQL)
+sqlite3_stmt* CppSQLite3DB::compile(const std::string &szSQL)
 {
 	checkDB();
 
@@ -1277,7 +1281,7 @@ sqlite3_stmt* CppSQLite3DB::compile(const char* szSQL)
 	const char* szTail=0;
 	sqlite3_stmt* pVM;
 
-	int nRet = sqlite3_prepare(mpDB, szSQL, -1, &pVM, &szTail);
+	int nRet = sqlite3_prepare_v2(mpDB, szSQL.c_str(), -1, &pVM, &szTail);
 
 	if (nRet != SQLITE_OK)
 	{

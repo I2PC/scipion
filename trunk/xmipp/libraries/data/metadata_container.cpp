@@ -437,6 +437,10 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
     {
         return MDL_WEIGHT;
     }
+    else if( strLabel == "objId")
+    {
+        return MDL_OBJID;
+    }
     else if( strLabel == "flip" || strLabel == "Flip" )
     {
         return MDL_FLIP;
@@ -549,7 +553,10 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
     case MDL_REF:
         return std::string( "ref" );
         break;
-    case MDL_MAXCC:
+    case MDL_OBJID:
+        return std::string( "objId" );
+        break;
+	case MDL_MAXCC:
         return std::string( "maxCC" );
         break;
     case MDL_SERIE:

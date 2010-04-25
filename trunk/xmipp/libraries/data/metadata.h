@@ -37,9 +37,9 @@
 #include "image.h"
 #include <time.h>
 #include <stdio.h>
-#include "cppsqlite3.h"    
+#include "cppsqlite3.h"
 
-/// @defgroup MetaData Metadata management 
+/// @defgroup MetaData Metadata management
 /// @ingroup DataLibrary
 
 /// @defgroup MetaDataClass Metadata class management
@@ -55,29 +55,29 @@
  */
 class MetaData
 {
-	std::map< long int, MetaDataContainer *> objects;   ///< Effectively stores all metadata
+    std::map< long int, MetaDataContainer *> objects;   ///< Effectively stores all metadata
 
-	// Used by firstObject, nextObject and lastObject to keep a pointer
-	// to the "active" object. This way when you call setValue without
-	// an objectID, this one is chosen
-	std::map< long int, MetaDataContainer *>::iterator objectsIterator;
-	
-	// Allows a fast search for pairs where the value is
-	// a string, i.e. looking for filenames which is quite
-	// usual
-	std::map< std::string, long int> fastStringSearch;
-	MetaDataLabel fastStringSearchLabel;
-    
-	std::vector<long int> randomOrderedObjects;
+    // Used by firstObject, nextObject and lastObject to keep a pointer
+    // to the "active" object. This way when you call setValue without
+    // an objectID, this one is chosen
+    std::map< long int, MetaDataContainer *>::iterator objectsIterator;
 
-	std::string path;   ///< A parameter stored on MetaData Files
-	std::string comment;    ///< A general comment for the MetaData file
-    
+    // Allows a fast search for pairs where the value is
+    // a string, i.e. looking for filenames which is quite
+    // usual
+    std::map< std::string, long int> fastStringSearch;
+    MetaDataLabel fastStringSearchLabel;
+
+    std::vector<long int> randomOrderedObjects;
+
+    std::string path;   ///< A parameter stored on MetaData Files
+    std::string comment;    ///< A general comment for the MetaData file
+
     MetaDataContainer * getObject( long int objectID = -1 );
     void read( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
 
     bool isColumnFormat;    ///< Format for the file, column or row formatted
-    
+
     /**Input file name
      * Where does this MetaData come from/go to be stored?
      */
@@ -94,73 +94,76 @@ public:
      * The MetaData is created with no data stored on it. You can fill in it programmatically
      * or by a later reading from a MetaData file or old Xmipp formatted type.
      */
-	MetaData();
-    
+    MetaData();
+
     /** From File Constructor.
      * @ingroup MetaDataConstructors
      *
      * The MetaData is created and data is read from provided fileName. Optionally, a vector
      * of labels can be provided to read just those required labels
      */
-	MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
+    MetaData( FileName fileName, std::vector<MetaDataLabel> * labelsVector = NULL );
 
-	/** Copy constructor
-	 * @ingroup MetaDataConstructors
-     *
-     * Created a new metadata by copying all data from an existing MetaData object.
-	 */
-	MetaData(MetaData & c);
-    
+    /** Copy constructor
+     * @ingroup MetaDataConstructors
+        *
+        * Created a new metadata by copying all data from an existing MetaData object.
+     */
+    MetaData(MetaData & c);
+
     /** Assignment operator
      * @ingroup MetaDataConstructors
      *
      * Copies MetaData from an existing MetaData object.
      */
-	MetaData& operator = ( MetaData &MD );
-    
+    MetaData& operator = ( MetaData &MD );
+
     /** Destructor
      * @ingroup MetaDataConstructors
      *
      * Frees all used memory and destroys object.
      */
-	~MetaData();
-	
-	/** Set to false for row format (parameter files)
-	 *  set to true  for column format (this is the default) (docfiles)
-	 *
-	 */
-	void setColumnFormat( bool column );
+    ~MetaData();
 
-	// Set a new pair/value for an specified object. If no objectID is given, that
-	// pointed by the class iterator is used 
-	bool setValue( MetaDataLabel name, double value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, int value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, bool value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, const std::string &value, long int objectID = -1 );
-	bool setValue( MetaDataLabel name, const std::vector<double> &value, long int objectID = -1 );
-	bool setValue( const std::string &name, const std::string &value, long int objectID = -1 );
-    
-	bool getValue( MetaDataLabel name, double &value, long int objectID = -1 );
-	bool getValue( MetaDataLabel name, int &value, long int objectID = -1 );
-	bool getValue( MetaDataLabel name, bool &value, long int objectID = -1 );
-	bool getValue( MetaDataLabel name, std::string &value, long int objectID = -1 );
-	bool getValue( MetaDataLabel name, std::vector<double> &value, long int objectID = -1 );
+    /** Set to false for row format (parameter files)
+     *  set to true  for column format (this is the default) (docfiles)
+     *
+     */
+    void setColumnFormat( bool column );
+
+    // Set a new pair/value for an specified object. If no objectID is given, that
+    // pointed by the class iterator is used
+    bool setValue( MetaDataLabel name, double value, long int objectID = -1 );
+    bool setValue( MetaDataLabel name, int value, long int objectID = -1 );
+    bool setValue( MetaDataLabel name, bool value, long int objectID = -1 );
+    bool setValue( MetaDataLabel name, const std::string &value, long int objectID = -1 );
+    bool setValue( MetaDataLabel name, const std::vector<double> &value, long int objectID = -1 );
+    bool setValue( const std::string &name, const std::string &value, long int objectID = -1 );
+
+    bool getValue( MetaDataLabel name, double &value, long int objectID = -1 );
+    bool getValue( MetaDataLabel name, int &value, long int objectID = -1 );
+    bool getValue( MetaDataLabel name, bool &value, long int objectID = -1 );
+    bool getValue( MetaDataLabel name, std::string &value, long int objectID = -1 );
+    bool getValue( MetaDataLabel name, std::vector<double> &value, long int objectID = -1 );
 
     void readOldSelFile( std::ifstream *infile );
     void readOldDocFile( std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector );
     void read( FileName infile, std::vector<MetaDataLabel> * labelsVector=NULL );
-	
-    void toDataBase( FileName DBname,
-    		         std::string tableName = "",
-	                 std::vector<MetaDataLabel> * labelsVector=NULL);
+
+    void toDataBase( const FileName & DBname,
+                     const std::string & tableName = "",
+                     std::vector<MetaDataLabel> * labelsVector=NULL);
+    void fromDataBase( const FileName & DBname,
+                       const std::string & tableName,
+                       std::vector<MetaDataLabel> * labelsVector=NULL);
     std::vector<long int> & getRandomOrderedObjects();
 
-    
+
     /** What labels have been read from a docfile/metadata file
-	*   and/or will be stored on a new metadata file when "save" is
-	*   called 
+    *   and/or will be stored on a new metadata file when "save" is
+    *   called
     **/
-	std::vector< MetaDataLabel > activeLabels;
+    std::vector< MetaDataLabel > activeLabels;
 
     /** When reading a column formated file, if a label is found that
     *   does not exists as a MetaDataLabel, it is ignored. For further
@@ -175,79 +178,85 @@ public:
     *   objectID == input objectID, just removes it and creates an empty
     *   one 
     **/
-	long int addObject( long int objectID = -1 );
-    
+    long int addObject( long int objectID = -1 );
 
-	// Possible error codes for the map
+
+    // Possible error codes for the map
     enum errors
     {
         NO_OBJECTS_STORED = -1, // NOTE: Do not change this value (-1)
         NO_MORE_OBJECTS = -2,
         NO_OBJECT_FOUND = -3
     };
-    
-	long int firstObject( );
-	long int nextObject( );
-	long int lastObject( );
-	long int goToObject( long int objectID );
-	
-	void write( const std::string &fileName );
-	
-	bool isEmpty( );
-	
-	void clear( );
-	
-	void writeValueToString(std::string & result, const std::string & inputLabel );
 
-	long int fastSearch( MetaDataLabel name, std::string value, bool recompute = false );
-	
-	// Get the collection of objects whose pair label/value is given
-	std::vector<long int> findObjects( MetaDataLabel name, double value );
-	std::vector<long int> findObjects( MetaDataLabel name, int value );
-	std::vector<long int> findObjects( MetaDataLabel name, bool value );
-	std::vector<long int> findObjects( MetaDataLabel name, std::string value );
-	
- 	// findObjects in a range
+    long int firstObject( );
+    long int nextObject( );
+    long int lastObject( );
+    long int goToObject( long int objectID );
+
+    void write( const std::string &fileName );
+
+    bool isEmpty( );
+
+    void clear( );
+
+    void writeValueToString(std::string & result, const std::string & inputLabel );
+
+    long int fastSearch( MetaDataLabel name, std::string value, bool recompute = false );
+
+    // Get the collection of objects whose pair label/value is given
+    std::vector<long int> findObjects( MetaDataLabel name, double value );
+    std::vector<long int> findObjects( MetaDataLabel name, int value );
+    std::vector<long int> findObjects( MetaDataLabel name, bool value );
+    std::vector<long int> findObjects( MetaDataLabel name, std::string value );
+
+    // findObjects in a range
     std::vector<long int> findObjectsInRange( MetaDataLabel name, double minValue, double maxValue );
-	std::vector<long int> findObjectsInRange( MetaDataLabel name, int minValue, int maxValue );
-	
+    std::vector<long int> findObjectsInRange( MetaDataLabel name, int minValue, int maxValue );
+
     void combine( MetaData & other, MetaDataLabel thisLabel=MDL_UNDEFINED);
     void combineWithFiles( MetaDataLabel thisLabel );
-    
+
     // Removes the collection of objects whose pair label/value is given
     // NOTE: The iterator will point to the first object after any of these
     // operations.
-	void removeObjects( MetaDataLabel name, double value );
-	void removeObjects( MetaDataLabel name, int value );
-	void removeObjects( MetaDataLabel name, bool value );
-	void removeObjects( MetaDataLabel name, std::string value );
+    void removeObjects( MetaDataLabel name, double value );
+    void removeObjects( MetaDataLabel name, int value );
+    void removeObjects( MetaDataLabel name, bool value );
+    void removeObjects( MetaDataLabel name, std::string value );
     void removeObjects( std::vector<long int> &toRemove );
-    
+
     // Returns true if the object was removed or false if
     // the object did not exist
     bool removeObject( long int objectID );
-    
+
     // Xmipp-specific, for new parameters add here.
-	void setPath( std::string newPath = "" );	
-	void setComment( std::string Comment = "" );
-	
-	std::string getPath( );
-	std::string getComment( );
-	
-    size_t size(void){return objects.size();}
+    void setPath( std::string newPath = "" );
+    void setComment( std::string Comment = "" );
+
+    std::string getPath( );
+    std::string getComment( );
+
+    size_t size(void)
+    {
+        return objects.size();
+    }
     /** Return metafile filename
      *
      */
 
-    FileName getFilename(){return (inFile);}
-    
+    FileName getFilename()
+    {
+        return (inFile);
+    }
+
     /**Count number of objects that satisfy a given label,entry pair
      */
     long int countObjects( MetaDataLabel name, double value );
     long int countObjects( MetaDataLabel name, int value );
     long int countObjects( MetaDataLabel name, bool value );
     long int countObjects( MetaDataLabel name, const std::string &value );
-    
+
     /*Detect if there is at least one entry with the given label-value pair
      * This can be much faster than 'countObjects' as it stops iterating once the first
      * object has been found.
@@ -261,7 +270,7 @@ public:
  */
 
 void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
-                             double& _max, bool apply_geo);
+                    double& _max, bool apply_geo);
 
 /** For all objects.
     @code
@@ -276,16 +285,4 @@ void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
              kkkk=kkkk_metadata.nextObject( ) )
 #endif
 
-/*
-//read three joined tables
-   *  metaData::metaData(FileName baseName,
-                         string tableName1 ,
-                         string join attribute1_1,//from MTC 1
-                         string join attribute2_1,//from MTC 2
-                         string tableName2,
-                         string join attribute2_2,//from MTC 2
-                         string join attribute3_1,//from MTC 3
-                         string tableName3,
-                         vector<string> vectorType);
- */
 

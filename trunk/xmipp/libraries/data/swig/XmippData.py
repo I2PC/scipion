@@ -633,6 +633,7 @@ class MetaData(_object):
     def readOldDocFile(*args): return _XmippData.MetaData_readOldDocFile(*args)
     def read(*args): return _XmippData.MetaData_read(*args)
     def toDataBase(*args): return _XmippData.MetaData_toDataBase(*args)
+    def fromDataBase(*args): return _XmippData.MetaData_fromDataBase(*args)
     def getRandomOrderedObjects(*args): return _XmippData.MetaData_getRandomOrderedObjects(*args)
     __swig_setmethods__["activeLabels"] = _XmippData.MetaData_activeLabels_set
     __swig_getmethods__["activeLabels"] = _XmippData.MetaData_activeLabels_get
@@ -697,6 +698,7 @@ MDL_SHIFTX = _XmippData.MDL_SHIFTX
 MDL_SHIFTY = _XmippData.MDL_SHIFTY
 MDL_SHIFTZ = _XmippData.MDL_SHIFTZ
 MDL_WEIGHT = _XmippData.MDL_WEIGHT
+MDL_OBJID = _XmippData.MDL_OBJID
 MDL_SAMPLINGRATE = _XmippData.MDL_SAMPLINGRATE
 MDL_VOLTAGE = _XmippData.MDL_VOLTAGE
 MDL_DEFOCUSU = _XmippData.MDL_DEFOCUSU

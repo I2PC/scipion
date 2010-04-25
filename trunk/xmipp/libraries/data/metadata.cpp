@@ -364,25 +364,28 @@ void MetaData::setColumnFormat(bool column)
     isColumnFormat = column;
 }
 
-void MetaData::toDataBase(FileName DBname,
-                          std::string tableName,
+void MetaData::toDataBase(const FileName & DBname,
+                          const std::string & tableName,
                           std::vector<MetaDataLabel> * labelsVector)
 {
     try
     {
         CppSQLite3DB db;
-        db.open(DBname);
+        db.open(DBname,SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE);
+
+        int labelsCounter = 0;
+        std::string sqlCommandCreate = "create table ";
 
         if (tableName == "")
         {
             if (inFile == "")
                 REPORT_ERROR( -1, "Please, supply a name for the table" );
-
-            tableName = inFile;
+            else
+                sqlCommandCreate += inFile;
         }
-        int labelsCounter = 0;
-        std::string sqlCommandCreate = "create table ";
-        sqlCommandCreate += tableName + "(objId int primary key,";
+        else
+            sqlCommandCreate += tableName;
+        sqlCommandCreate += "(objId int primary key,";
         std::vector<MetaDataLabel>::iterator strIt;
         std::string sqlCommandInsert = "insert into " + \
                                        tableName + \
@@ -454,65 +457,162 @@ void MetaData::toDataBase(FileName DBname,
                  strIt != activeLabels.end();
                  strIt++)
             */
+
+
+            MetaDataContainer * aux = getObject();
+            //save objID - primary key-
+            //notice that you can not add two object with the same objID
+            stmt.bind(labelsCounter,(int)IDthis);
+            for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
             {
+                if (labelsVector==NULL || std::find(labelsVector->begin(),
+                                                    labelsVector->end(),
+                                                    *strIt) != labelsVector->end())
                 {
-                    MetaDataContainer * aux = getObject();
-                    //save objID - primary key-
-                    stmt.bind(labelsCounter,(int)IDthis);
-                    for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
+                    if (isDouble(*strIt))
                     {
-                        if (labelsVector==NULL || std::find(labelsVector->begin(),
-                                                            labelsVector->end(),
-                                                            *strIt) != labelsVector->end())
-                        {
-                            if (isDouble(*strIt))
-                            {
-                                labelsCounter++;
-                                double value;
-                                getValue(*strIt, value);
-                                stmt.bind(labelsCounter, value);
-                            }
-                            else if (isString(*strIt))
-                            {
-                                labelsCounter++;
-                                std::string value;
-                                getValue(*strIt, value);
-                                stmt.bind(labelsCounter, value.c_str());
-                            }
-                            else if (isInt(*strIt))
-                            {
-                                labelsCounter++;
-                                int value;
-                                getValue(*strIt, value);
-                                stmt.bind(labelsCounter, value);
-                            }
-                            else if (isBool(*strIt))
-                            {
-                                labelsCounter++;
-                                bool value;
-                                getValue(*strIt, value);
-                                stmt.bind(labelsCounter, value);
-                            }
-                        }
+                        labelsCounter++;
+                        double value;
+                        getValue(*strIt, value);
+                        stmt.bind(labelsCounter, value);
+                    }
+                    else if (isString(*strIt))
+                    {
+                        labelsCounter++;
+                        std::string value;
+                        getValue(*strIt, value);
+                        stmt.bind(labelsCounter, value.c_str());
+                    }
+                    else if (isInt(*strIt))
+                    {
+                        labelsCounter++;
+                        int value;
+                        getValue(*strIt, value);
+                        stmt.bind(labelsCounter, value);
+                    }
+                    else if (isBool(*strIt))
+                    {
+                        labelsCounter++;
+                        bool value;
+                        getValue(*strIt, value);
+                        stmt.bind(labelsCounter, value);
                     }
                 }
             }
             stmt.execDML();
             stmt.reset();
         }
-
         db.execDML("commit transaction;");
-
-
         db.close();
-
     }
     catch (CppSQLite3Exception& e)
     {
         REPORT_ERROR( e.errorCode(), e.errorMessage());
     }
 }
+void MetaData::fromDataBase(const FileName & DBname,
+                            const std::string & tableName,
+                            std::vector<MetaDataLabel> * labelsVector)
+{
+    //check that database and table exits
+    try
+    {
+        std::vector<MetaDataLabel> _labelsVector;
+        std::string sqlCommand;
+        std::vector<MetaDataLabel>::iterator strIt;
+        if (!exists(DBname))
+            REPORT_ERROR( 1, (std::string)"database "+ DBname + " does not exists");
+        CppSQLite3DB db;
+        db.open(DBname,SQLITE_OPEN_READONLY);
+        if (!db.tableExists(tableName) )
+            REPORT_ERROR( 1, (std::string)"table "+ tableName + " does not exists");
+        clear();
+        // we can use db.getTable(sqlCommand) but it is slow so let us go low level.
+        //IF NULL get table column names
+        /*
+        PRAGMA table_info([table]) returns:
 
+        [0] = column number
+        [1] = column name
+        [2] = column type
+        [3] = flag: is the column NOT NULL?
+        [4] = default value of the column
+        [5] = flag: is this column part of the table's PRIMARY KEY?
+        */
+        if (labelsVector==NULL)
+        {
+            sqlCommand=(std::string)"PRAGMA table_info(" + tableName + ");";
+            CppSQLite3Query q = db.execQuery(sqlCommand);
+            while (!q.eof())
+            {
+                _labelsVector.push_back(MetaDataContainer::codifyLabel(q.fieldValue(1)));
+                q.nextRow();
+            }
+        }
+        else
+        {
+            _labelsVector.push_back(MDL_OBJID);
+            for (strIt  = (*labelsVector).begin();
+                 strIt != (*labelsVector).end();
+                 strIt++)
+            {
+                _labelsVector.push_back(*strIt);
+            }
+        }
+        sqlCommand = "select ";
+        for (strIt  = (_labelsVector).begin();
+             strIt != (_labelsVector).end();
+             strIt++)
+        {
+            sqlCommand += MetaDataContainer::decodeLabel(*strIt) + ",";
+        }
+        sqlCommand.erase(sqlCommand.end() - 1);
+        sqlCommand += (std::string)" from " + tableName;
+        sqlCommand += " order by 1;"; //sort always by objId
+        std::cerr << "sqlCommand " << sqlCommand << std::endl;
+
+
+        CppSQLite3Query q = db.execQuery(sqlCommand);
+        int labelsCounter = 0;
+
+        while (!q.eof())
+        {
+            labelsCounter = 0;
+            addObject();
+            for (strIt  = (_labelsVector).begin();
+                 strIt != (_labelsVector).end();
+                 strIt++)
+            {
+                if (isDouble(*strIt))
+                {
+                    labelsCounter++;
+                    double value;
+                    value=q.getFloatField(labelsCounter);
+                    setValue(*strIt,value);
+                }
+                else if (isInt(*strIt))
+                {
+                    labelsCounter++;
+                    int value;
+                    value=q.getIntField(labelsCounter);
+                }
+            }
+            //cout << q.getIntField(0) << "|";
+            //cout << q.getStringField(1, "NULL") << "|";
+            //cout << q.getIntField(2, -1) << "|";
+            //cout << q.getFloatField(3, -3.33) << "|" << endl;
+            q.nextRow();
+        }
+
+        //        CppSQLite3Table t = db.getTable(sqlCommand);
+        db.close();
+    }
+    catch (CppSQLite3Exception& e)
+    {
+        REPORT_ERROR( e.errorCode(), e.errorMessage());
+    }
+
+}
 void MetaData::combineWithFiles(MetaDataLabel thisLabel)
 {
     if (!isColumnFormat)
@@ -550,7 +650,6 @@ void MetaData::combineWithFiles(MetaDataLabel thisLabel)
         }
     }
 }
-
 void MetaData::combine(MetaData & other, MetaDataLabel thisLabel)
 {
     if (!isColumnFormat)
