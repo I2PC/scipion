@@ -77,8 +77,13 @@ MetaData& MetaData::operator =(MetaData &MD)
     return *this;
 }
 
-MetaData& MetaData::add (MetaData &MD)
+void MetaData::union_ (MetaData &MD)
 {
+    if (!isColumnFormat)
+    {
+        REPORT_ERROR( -1, "Row formatted MetaData can not be added" );
+    }
+
     std::map<long int, MetaDataContainer *>::iterator objIt;
     for (objIt = MD.objects.begin(); objIt != MD.objects.end(); objIt++)
     {
@@ -86,7 +91,89 @@ MetaData& MetaData::add (MetaData &MD)
         objects[idx] = new MetaDataContainer(*(objIt->second));
     }
     this->objectsIterator = objects.begin();
-    return *this;
+}
+
+void MetaData::intersection(MetaData &minuend,MetaData &subtrahend, MetaDataLabel thisLabel)
+{
+    if (!isColumnFormat)
+    {
+        REPORT_ERROR( -1, "Row formatted MetaData can not be substracted" );
+    }
+    this->activeLabels = minuend.activeLabels;
+    MetaDataContainer * aux, *aux2;
+    std::string value1, value2;
+    std::map<long int, MetaDataContainer *>::iterator itMinuend;
+    for (itMinuend = minuend.objects.begin();
+         itMinuend != minuend.objects.end();
+         itMinuend++)
+    {
+        aux = minuend.getObject(itMinuend->first);
+        aux->writeValueToString(value1, thisLabel);
+        for (long int idSubtrahendr  = subtrahend.firstObject();
+             idSubtrahendr != NO_MORE_OBJECTS;
+             idSubtrahendr  = subtrahend.nextObject())
+        {
+            aux2 = subtrahend.getObject(idSubtrahendr);
+            aux2->writeValueToString(value2, thisLabel);
+
+            if (value2 == value1)
+            {
+                long int idx = this->addObject();
+                this->objects[idx] = new MetaDataContainer(*(itMinuend->second));
+                break;
+            }
+        }
+    }
+    this->objectsIterator = objects.begin();
+}
+
+void MetaData::substraction(MetaData &minuend,MetaData &subtrahend, MetaDataLabel thisLabel)
+{
+    if (!isColumnFormat)
+    {
+        REPORT_ERROR( -1, "Row formatted MetaData can not be substracted" );
+    }
+    this->activeLabels = minuend.activeLabels;
+    MetaDataContainer * aux, *aux2;
+    std::string value1, value2;
+    std::map<long int, MetaDataContainer *>::iterator itMinuend;
+    for (itMinuend = minuend.objects.begin();
+         itMinuend != minuend.objects.end();
+         itMinuend++)
+    {
+        aux = minuend.getObject(itMinuend->first);
+        aux->writeValueToString(value1, thisLabel);
+        std::cerr << "object number value1 " << itMinuend->first << " " << value1 << std::endl;
+        bool doSave=false;
+        for (long int idSubtrahendr  = subtrahend.firstObject();
+             idSubtrahendr != NO_MORE_OBJECTS;
+             idSubtrahendr  = subtrahend.nextObject())
+        {
+            aux2 = subtrahend.getObject(idSubtrahendr);
+            aux2->writeValueToString(value2, thisLabel);
+            std::cerr << "object number value2" << idSubtrahendr << " " << value2 << std::endl;
+
+            if (value2 == value1)
+            {
+                doSave=false;
+                break;
+            }
+            else
+            {
+                doSave=true;
+            }
+        }
+        if (doSave)
+        {
+            long int idx = this->addObject();
+            this->objects[idx] = new MetaDataContainer(*(itMinuend->second));
+            std::cerr << "value1 = value2, results.size idx second"
+            << value2 << this->size()
+            << " " << idx
+            << itMinuend->second << std::endl;
+        }
+    }
+    this->objectsIterator = objects.begin();
 }
 
 void MetaData::read(std::ifstream *infile,

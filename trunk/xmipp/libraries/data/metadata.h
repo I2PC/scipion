@@ -118,9 +118,17 @@ public:
      */
     MetaData& operator = ( MetaData &MD );
 
-    /** add two metadata object, result in calling metadata object
+    /** union of  metadata objects, result in calling metadata object
      */
-    MetaData& add ( MetaData &MD );
+    void union_ ( MetaData &MD );
+
+    /** intersects two metadata objects, result in "calling" metadata
+     */
+    void intersection(MetaData & minuend,MetaData & subtrahend, MetaDataLabel thisLabel);
+
+    /** substract two metadata objects, result in "calling" metadata
+     */
+    void substraction(MetaData & minuend,MetaData & subtrahend, MetaDataLabel thisLabel);
 
     /** Destructor
      * @ingroup MetaDataConstructors

@@ -188,6 +188,50 @@ mD = XmippData.MetaData(inputMetaDataFile)
 mD.combineWithFiles(XmippData.MDL_CTFMODEL)
 mD.write('ww')
 
+==============
+test operator plus
+================
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+import XmippData
+yy   = XmippData.FileName('yy.doc')
+aa   = XmippData.FileName('aa.doc')
+mDyy = XmippData.MetaData(yy)
+mDaa = XmippData.MetaData(aa)
+mDaa.union_(mDyy)
+mDaa.write("sum.doc")
+mDyy.write("sum2.doc")
+
+==============
+test operator minus
+================
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+import XmippData
+aa   = XmippData.FileName('aa.doc')
+bb   = XmippData.FileName('bb.doc')
+mDaa = XmippData.MetaData(aa)
+mDbb = XmippData.MetaData(bb)
+mDresult = XmippData.MetaData()
+mDresult.intersection(mDaa,mDbb,XmippData.MDL_IMAGE)
+mDresult.write("minus.doc")
+==============
+test operator substraction
+================
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+import XmippData
+aa   = XmippData.FileName('aa.doc')
+bb   = XmippData.FileName('bb.doc')
+mDaa = XmippData.MetaData(aa)
+mDbb = XmippData.MetaData(bb)
+mDresult = XmippData.MetaData()
+mDresult.substraction(mDaa,mDbb,XmippData.MDL_IMAGE)
+mDresult.write("substraction.doc")
+
 */
 
 

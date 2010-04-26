@@ -624,7 +624,9 @@ class MetaData(_object):
         try: self.this.append(this)
         except: self.this = this
     def assign(*args): return _XmippData.MetaData_assign(*args)
-    def add(*args): return _XmippData.MetaData_add(*args)
+    def union_(*args): return _XmippData.MetaData_union_(*args)
+    def intersection(*args): return _XmippData.MetaData_intersection(*args)
+    def substraction(*args): return _XmippData.MetaData_substraction(*args)
     __swig_destroy__ = _XmippData.delete_MetaData
     __del__ = lambda self : None;
     def setColumnFormat(*args): return _XmippData.MetaData_setColumnFormat(*args)
