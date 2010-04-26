@@ -57,10 +57,7 @@ void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style);
     An exception is thrown if the angles are not one of these.*/
 void extract_angles(MetaData &SF_in, DocFile &DF_out,
                     const std::string &ang1 = "rot", const std::string &ang2 = "tilt",
-                    const std::string &ang3 = "psi");
-void extract_angles(SelFile &SF_in, DocFile &DF_out,
-                    const std::string &ang1 = "rot", const std::string &ang2 = "tilt",
-                    const std::string &ang3 = "psi");
+                    const std::string &ang3 = "psi", bool fromMetadata=false);
 
 #ifdef NEVERDEFINED
 /** Extract angles from a Docfile and store them in a SelFile.
