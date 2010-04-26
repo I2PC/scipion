@@ -60,7 +60,7 @@ int main(int argc, char **argv)
         prm.produce_side_info(rank);
 
         // Divide the selfile in chunks
-        int imgNbr = prm.DFexp.dataLineNo();
+        int imgNbr = prm.DFexp.size();
 
         // Make the alignment, rank=0 receives all the assignments
         // The rest of the ranks compute the angular parameters for their
@@ -94,17 +94,19 @@ int main(int argc, char **argv)
         }
         else
         {
-            for (int key=1; key<=imgNbr; key++)
+            int i=0;
+            FOR_ALL_OBJECTS_IN_METADATA(prm.DFexp)
             {
-                if (key%(NProcessors-1)+1==rank)
+                if ((i+1)%(NProcessors-1)+1==rank)
                 {
-                    ImageXmipp img;
-                    prm.DFexp.get_image(key,img);
+                    std::string fnImg;
+                    prm.DFexp.getValue(MDL_IMAGE,fnImg);
+                    ImageXmipp img(fnImg);
                     double shiftX, shiftY, psi, rot, tilt;
                     double corr = prm.predict_angles(img, shiftX, shiftY, rot, tilt, psi);
 
                     // Send the alignment parameters to the master
-                    v[0] = key-1;
+                    v[0] = i;
                     v[1] = rot;
                     v[2] = tilt;
                     v[3] = psi;
@@ -113,6 +115,7 @@ int main(int argc, char **argv)
                     v[6] = corr;
                     MPI_Send(v, 7, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
                 }
+                i++;
             }
         }
 
