@@ -655,17 +655,17 @@ bool MetaDataContainer::writeValueToString( std::string &outString,
         {
             double d;
             d=*((double*)(getVoidPtr( inputLabel )));
-            if(d< 0.001)
-            	oss << std::setprecision(10) << std::setw(17) << std::scientific;
+            if(ABS(d)< 0.001)
+            	oss << std::setw(12) << std::scientific;
             else
-            	oss <<  std::setw(12) ;
+            	oss <<  std::setw(12) << std::fixed ;
             oss << d;
         }
         else if( isString(inputLabel) )
             oss << *((std::string*)(getVoidPtr( inputLabel )));
         else if( isInt(inputLabel))
         {
-            oss << std::setprecision(10) << std::setw(12) << std::fixed;
+            oss << std::setw(12) << std::fixed;
             oss << *((int*)(getVoidPtr( inputLabel )));
         }
         else if( isBool(inputLabel))
@@ -677,7 +677,7 @@ bool MetaDataContainer::writeValueToString( std::string &outString,
             oss << "** ";
             for (int i=0; i<imax; i++)
             {
-                oss << std::setprecision(10) << std::setw(17) << std::scientific;
+                oss << std::setw(17) << std::scientific;
                 oss << myVector[i] << " ";
             }
             oss << "**";
@@ -702,17 +702,17 @@ bool MetaDataContainer::writeValueToFile( std::ofstream &outfile,
         {
             double d;
             d=*((double*)(getVoidPtr( inputLabel )));
-            if(d< 0.001)
-            	outfile << std::setprecision(10) << std::setw(17) << std::scientific;
+            if(ABS(d)< 0.001)
+            	outfile <<  std::setw(12) << std::scientific;
             else
-            	outfile <<  std::setw(12) ;
+            	outfile <<  std::setw(12) << std::fixed;
             outfile << d;
         }
         else if( isString(inputLabel) )
             outfile << *((std::string*)(getVoidPtr( inputLabel )));
         else if( isInt(inputLabel))
         {
-            outfile << std::setprecision(10) << std::setw(12) << std::fixed;
+            outfile  << std::setw(12) << std::fixed;
             outfile << *((int*)(getVoidPtr( inputLabel )));
         }
         else if( isBool(inputLabel))
@@ -725,7 +725,7 @@ bool MetaDataContainer::writeValueToFile( std::ofstream &outfile,
             outfile << "** ";
             for (int i=0; i<imax; i++)
             {
-                outfile << std::setprecision(10) << std::setw(17) << std::scientific;
+                outfile << std::setw(17) << std::scientific;
                 outfile << myVector[i] << " ";
             }
             outfile << "**";
