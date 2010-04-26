@@ -135,22 +135,28 @@ vv.append(XmippData.MDL_IMAGE)
 vv.append(XmippData.MDL_ANGLEPSI)
 
 print "here"
-mD.toDataBase( dbFile, "prueba",vv );
 mD.toDataBase( dbFile, "prueba" );
 
+mD.toDataBase( dbFile, "prueba",vv );
 
 ====================
 import os,glob,sys
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
 sys.path.append(scriptdir) # add default search path
 import XmippData
+mD=XmippData.MetaData();
 dbFile=XmippData.FileName("kkk.db")
 outFile=XmippData.FileName("fromdatabase.doc")
+vv=XmippData.vectorm()
+vv.append(XmippData.MDL_IMAGE)
+vv.append(XmippData.MDL_ANGLEPSI)
 
-mD=XmippData.MetaData();
+mD1=XmippData.MetaData();
+mD1.fromDataBase( dbFile, "prueba" );
+mD1.write("fromdatabase.doc")
+mD1.fromDataBase( dbFile, "prueba",vv );
+
 mD.fromDataBase( dbFile, "prueba" );
-mD.write("fromdatabase.doc")
-
 ====================
 
  XmippData.isBool(XmippData.MDL_ENABLED)
