@@ -294,9 +294,9 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, double value )
 {
     // Traverse all the structure looking for objects
     // that satisfy search criteria
-	std::map<MetaDataLabel, void *>::iterator It;
+    std::map<MetaDataLabel, void *>::iterator It;
 
-	It = values.find( name );
+    It = values.find( name );
 
     if( It != values.end() )
     {
@@ -306,16 +306,16 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, double value )
         }
     }
 
-	return false;
+    return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, int value )
 {
     // Traverse all the structure looking for objects
     // that satisfy search criteria
-	std::map<MetaDataLabel, void *>::iterator It;
+    std::map<MetaDataLabel, void *>::iterator It;
 
-	It = values.find( name );
+    It = values.find( name );
 
     if( It != values.end() )
     {
@@ -325,16 +325,16 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, int value )
         }
     }
 
-	return false;
+    return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name, bool value )
 {
     // Traverse all the structure looking for objects
     // that satisfy search criteria
-	std::map<MetaDataLabel, void *>::iterator It;
+    std::map<MetaDataLabel, void *>::iterator It;
 
-	It = values.find( name );
+    It = values.find( name );
 
     if( It != values.end() )
     {
@@ -344,7 +344,7 @@ bool MetaDataContainer::pairExists( MetaDataLabel name, bool value )
         }
     }
 
-	return false;
+    return false;
 }
 
 bool MetaDataContainer::pairExists( MetaDataLabel name,
@@ -352,9 +352,9 @@ bool MetaDataContainer::pairExists( MetaDataLabel name,
 {
     // Traverse all the structure looking for objects
     // that satisfy search criteria
-	std::map<MetaDataLabel, void *>::iterator It;
+    std::map<MetaDataLabel, void *>::iterator It;
 
-	It = values.find( name );
+    It = values.find( name );
 
     if( It != values.end() )
     {
@@ -364,7 +364,7 @@ bool MetaDataContainer::pairExists( MetaDataLabel name,
         }
     }
 
-	return false;
+    return false;
 }
 
 void MetaDataContainer::deleteValue( MetaDataLabel name )
@@ -377,18 +377,18 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
     // NOTE: For the "||" cases, the left MetaDataLabel is the XMIPP_3 version's and
     // the right value is the old-styled one
 
-	if( strLabel == "angleRot" || strLabel == "rot" )
-	{
-		return MDL_ANGLEROT;
-	}
-	else if( strLabel == "angleTilt" || strLabel == "tilt" )
-	{
-		return MDL_ANGLETILT;
-	}
-	else if( strLabel == "anglePsi" || strLabel == "psi" )
-	{
-		return MDL_ANGLEPSI;
-	}
+    if( strLabel == "angleRot" || strLabel == "rot" )
+    {
+        return MDL_ANGLEROT;
+    }
+    else if( strLabel == "angleTilt" || strLabel == "tilt" )
+    {
+        return MDL_ANGLETILT;
+    }
+    else if( strLabel == "anglePsi" || strLabel == "psi" )
+    {
+        return MDL_ANGLEPSI;
+    }
 	else if( strLabel == "angleRot2" || strLabel == "rot2" )
 	{
 		return MDL_ANGLEROT2;
@@ -401,34 +401,34 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return MDL_ANGLEPSI2;
 	}
-	else if( strLabel == "image" )
-	{
-		return MDL_IMAGE;
-	}
-	else if( strLabel == "micrograph" )
-	{
-		return MDL_MICROGRAPH;
-	}
-	else if( strLabel == "CTFModel" )
-	{
-		return MDL_CTFMODEL;
-	}
-	else if( strLabel == "scale" || strLabel == "Scale" )
-	{
-		return MDL_SCALE;
-	}
-	else if( strLabel == "shiftX" || strLabel == "Xoff" )
-	{
-		return MDL_SHIFTX;
-	}
-	else if( strLabel == "shiftY" || strLabel == "Yoff" )
-	{
-		return MDL_SHIFTY;
-	}
-	else if( strLabel == "shiftZ" || strLabel == "Zoff" )
-	{
-		return MDL_SHIFTZ;
-	}
+    else if( strLabel == "image" )
+    {
+        return MDL_IMAGE;
+    }
+    else if( strLabel == "micrograph" )
+    {
+        return MDL_MICROGRAPH;
+    }
+    else if( strLabel == "CTFModel" )
+    {
+        return MDL_CTFMODEL;
+    }
+    else if( strLabel == "scale" || strLabel == "Scale" )
+    {
+        return MDL_SCALE;
+    }
+    else if( strLabel == "shiftX" || strLabel == "Xoff" )
+    {
+        return MDL_SHIFTX;
+    }
+    else if( strLabel == "shiftY" || strLabel == "Yoff" )
+    {
+        return MDL_SHIFTY;
+    }
+    else if( strLabel == "shiftZ" || strLabel == "Zoff" )
+    {
+        return MDL_SHIFTZ;
+    }
 	else if( strLabel == "X")
 	{
 		return MDL_X;
@@ -441,101 +441,101 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
 	{
 		return MDL_Z;
 	}
-	else if( strLabel == "enabled" )
-	{
-		return MDL_ENABLED;
-	}
-	else if( strLabel == "originX" )
-	{
-		return MDL_ORIGINX;
-	}
-	else if( strLabel == "originY" )
-	{
-		return MDL_ORIGINY;
-	}
-	else if( strLabel == "originZ" )
-	{
-		return MDL_ORIGINZ;
-	}
-	else if( strLabel == "weight" || strLabel == "Weight"  )
-	{
-		return MDL_WEIGHT;
-	}
+    else if( strLabel == "enabled" )
+    {
+        return MDL_ENABLED;
+    }
+    else if( strLabel == "originX" )
+    {
+        return MDL_ORIGINX;
+    }
+    else if( strLabel == "originY" )
+    {
+        return MDL_ORIGINY;
+    }
+    else if( strLabel == "originZ" )
+    {
+        return MDL_ORIGINZ;
+    }
+    else if( strLabel == "weight" || strLabel == "Weight"  )
+    {
+        return MDL_WEIGHT;
+    }
     else if( strLabel == "objId")
     {
         return MDL_OBJID;
     }
-	else if( strLabel == "flip" || strLabel == "Flip" )
-	{
-		return MDL_FLIP;
-	}
-	else if( strLabel == "ref" || strLabel == "Ref" )
-	{
-		return MDL_REF;
-	}
-	else if( strLabel == "maxCC" )
-	{
-		return MDL_MAXCC;
-	}
+    else if( strLabel == "flip" || strLabel == "Flip" )
+    {
+        return MDL_FLIP;
+    }
+    else if( strLabel == "ref" || strLabel == "Ref" )
+    {
+        return MDL_REF;
+    }
+    else if( strLabel == "maxCC" )
+    {
+        return MDL_MAXCC;
+    }
 	else if( strLabel == "cost" )
 	{
 		return MDL_COST;
 	}
-	else if( strLabel == "serie" )
-	{
-		return MDL_SERIE;
-	}
-	else if( strLabel == "pMax" || strLabel == "Pmax" || strLabel == "sumP" )
-	{
-		return MDL_PMAX;
-	}
-	else if( strLabel == "CTFInputParams" )
-	{
-		return MDL_CTFINPUTPARAMS;
-	}
-	else if( strLabel == "periodogram" )
-	{
-		return MDL_PERIODOGRAM;
-	}
-	else if( strLabel == "NMADisplacements" )
-	{
-		return MDL_NMA;
-	}
-	else if( strLabel == "sampling_rate")
-	{
-		return MDL_SAMPLINGRATE;
-	}
-	else if( strLabel == "voltage" )
-	{
-		return MDL_VOLTAGE;
-	}
-	else if( strLabel == "defocusU" )
-	{
-		return MDL_DEFOCUSU;
-	}
-	else if( strLabel == "defocusV" )
-	{
-		return MDL_DEFOCUSV;
-	}
-	else
-	{
-		return MDL_UNDEFINED;
-	}
+    else if( strLabel == "serie" )
+    {
+        return MDL_SERIE;
+    }
+    else if( strLabel == "pMax" || strLabel == "Pmax" || strLabel == "sumP" )
+    {
+        return MDL_PMAX;
+    }
+    else if( strLabel == "CTFInputParams" )
+    {
+        return MDL_CTFINPUTPARAMS;
+    }
+    else if( strLabel == "periodogram" )
+    {
+        return MDL_PERIODOGRAM;
+    }
+    else if( strLabel == "NMADisplacements" )
+    {
+        return MDL_NMA;
+    }
+    else if( strLabel == "sampling_rate")
+    {
+        return MDL_SAMPLINGRATE;
+    }
+    else if( strLabel == "voltage" )
+    {
+        return MDL_VOLTAGE;
+    }
+    else if( strLabel == "defocusU" )
+    {
+        return MDL_DEFOCUSU;
+    }
+    else if( strLabel == "defocusV" )
+    {
+        return MDL_DEFOCUSV;
+    }
+    else
+    {
+        return MDL_UNDEFINED;
+    }
 }
 
 std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 {
-	switch ( inputLabel ) 
-	{
-		case MDL_ANGLEROT:
-			return std::string( "angleRot" );
-			break;
-		case MDL_ANGLETILT:
-			return std::string( "angleTilt" );
-			break;
-		case MDL_ANGLEPSI:
-			return std::string( "anglePsi" );
-			break;
+    switch ( inputLabel )
+    {
+    case MDL_ANGLEROT:
+        return std::string( "angleRot" );
+        break;
+    case MDL_ANGLETILT:
+        return std::string( "angleTilt" );
+        break;
+    case MDL_ANGLEPSI:
+        return std::string( "anglePsi" );
+        break;
 		case MDL_ANGLEROT2:
 			return std::string( "angleRot2" );
 			break;
@@ -545,30 +545,30 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 		case MDL_ANGLEPSI2:
 			return std::string( "anglePsi2" );
 			break;
-		case MDL_IMAGE:
-			return std::string( "image" );
-			break;
-		case MDL_COMMENT:
-			return std::string( "comment" );
-			break;
-		case MDL_MICROGRAPH:
-			return std::string( "micrograph" );
-			break;
-		case MDL_CTFMODEL:
-			return std::string( "CTFModel" );
-			break;
-		case MDL_SCALE:
-			return std::string( "scale" );
-			break;
-		case MDL_SHIFTX:
-			return std::string( "shiftX" );
-			break;
-		case MDL_SHIFTY:
-			return std::string( "shiftY" );
-			break;
-		case MDL_SHIFTZ:
-			return std::string( "shiftZ" );
-			break;
+    case MDL_IMAGE:
+        return std::string( "image" );
+        break;
+    case MDL_COMMENT:
+        return std::string( "comment" );
+        break;
+    case MDL_MICROGRAPH:
+        return std::string( "micrograph" );
+        break;
+    case MDL_CTFMODEL:
+        return std::string( "CTFModel" );
+        break;
+    case MDL_SCALE:
+        return std::string( "scale" );
+        break;
+    case MDL_SHIFTX:
+        return std::string( "shiftX" );
+        break;
+    case MDL_SHIFTY:
+        return std::string( "shiftY" );
+        break;
+    case MDL_SHIFTZ:
+        return std::string( "shiftZ" );
+        break;
 		case MDL_X:
 			return std::string( "X" );
 			break;
@@ -578,66 +578,67 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
 		case MDL_Z:
 			return std::string( "Z" );
 			break;
-		case MDL_ENABLED:
-			return std::string( "enabled" );
-			break;
-		case MDL_ORIGINX:
-			return std::string( "originX" );
-			break;
-		case MDL_ORIGINY:
-			return std::string( "originY" );
-			break;
-		case MDL_ORIGINZ:
-			return std::string( "originZ" );
-			break;
-		case MDL_WEIGHT:
-			return std::string( "weight" );
-			break;
+    case MDL_ENABLED:
+        return std::string( "enabled" );
+        break;
+    case MDL_ORIGINX:
+        return std::string( "originX" );
+        break;
+    case MDL_ORIGINY:
+        return std::string( "originY" );
+        break;
+    case MDL_ORIGINZ:
+        return std::string( "originZ" );
+        break;
+    case MDL_WEIGHT:
+        return std::string( "weight" );
+        break;
         case MDL_OBJID:
             return std::string( "objId" );
             break;
-		case MDL_FLIP: 
-			return std::string( "flip" );
-			break;
-		case MDL_REF: 
-			return std::string( "ref" );
-			break;
-		case MDL_MAXCC: 
-			return std::string( "maxCC" );
-			break;
+    case MDL_FLIP:
+        return std::string( "flip" );
+        break;
+    case MDL_REF:
+        return std::string( "ref" );
+        break;
+    case MDL_MAXCC:
+        return std::string( "maxCC" );
+        break;
 		case MDL_COST:
 			return std::string( "cost" );
 			break;
-        case MDL_SERIE:
-            return std::string( "serie" );
-            break;
-        case MDL_PMAX:
-            return std::string( "pMax" );
-            break;
-        case MDL_CTFINPUTPARAMS:
-            return std::string( "CTFInputParams" );
-            break;
-        case MDL_PERIODOGRAM:
-            return std::string( "periodogram" );
-            break;
-        case MDL_NMA:
-            return std::string( "NMADisplacements" );
-            break;
-        case MDL_SAMPLINGRATE:
-            return std::string( "sampling_rate" );
-            break;
-        case MDL_VOLTAGE:
-            return std::string( "voltage" );
-            break;
-        case MDL_DEFOCUSU:
-            return std::string( "defocusU" );
-            break;
-        case MDL_DEFOCUSV:
-            return std::string( "defocusV" );
-            break;
-        default:
-            return std::string( "" );
-            break;
+    case MDL_SERIE:
+        return std::string( "serie" );
+        break;
+    case MDL_PMAX:
+        return std::string( "pMax" );
+        break;
+    case MDL_CTFINPUTPARAMS:
+        return std::string( "CTFInputParams" );
+        break;
+    case MDL_PERIODOGRAM:
+        return std::string( "periodogram" );
+        break;
+    case MDL_NMA:
+        return std::string( "NMADisplacements" );
+        break;
+    case MDL_SAMPLINGRATE:
+        return std::string( "sampling_rate" );
+        break;
+    case MDL_VOLTAGE:
+        return std::string( "voltage" );
+        break;
+    case MDL_DEFOCUSU:
+        return std::string( "defocusU" );
+        break;
+    case MDL_DEFOCUSV:
+        return std::string( "defocusV" );
+        break;
+
+    default:
+        return std::string( "" );
+        break;
     }
 }
 
@@ -652,8 +653,13 @@ bool MetaDataContainer::writeValueToString( std::string &outString,
 
         if( isDouble(inputLabel) )
         {
-            oss << std::setprecision(10) << std::setw(17) << std::scientific;
-            oss << *((double*)(getVoidPtr( inputLabel )));
+            double d;
+            d=*((double*)(getVoidPtr( inputLabel )));
+            if(d< 0.001)
+            	oss << std::setprecision(10) << std::setw(17) << std::scientific;
+            else
+            	oss <<  std::setw(12) ;
+            oss << d;
         }
         else if( isString(inputLabel) )
             oss << *((std::string*)(getVoidPtr( inputLabel )));
@@ -694,8 +700,13 @@ bool MetaDataContainer::writeValueToFile( std::ofstream &outfile,
     {
         if( isDouble(inputLabel) )
         {
-            outfile << std::setprecision(10) << std::setw(17) << std::scientific;
-            outfile << *((double*)(getVoidPtr( inputLabel )));
+            double d;
+            d=*((double*)(getVoidPtr( inputLabel )));
+            if(d< 0.001)
+            	outfile << std::setprecision(10) << std::setw(17) << std::scientific;
+            else
+            	outfile <<  std::setw(12) ;
+            outfile << d;
         }
         else if( isString(inputLabel) )
             outfile << *((std::string*)(getVoidPtr( inputLabel )));

@@ -569,7 +569,6 @@ void MetaData::fromDataBase(const FileName & DBname,
         sqlCommand.erase(sqlCommand.end() - 1);
         sqlCommand += (std::string)" from " + tableName;
         sqlCommand += " order by 1;"; //sort always by objId
-        std::cerr << "sqlCommand " << sqlCommand << std::endl;
 
 
         CppSQLite3Query q = db.execQuery(sqlCommand);
@@ -578,8 +577,9 @@ void MetaData::fromDataBase(const FileName & DBname,
         while (!q.eof())
         {
             labelsCounter = 0;
-            addObject();
-            for (strIt  = (_labelsVector).begin();
+            int _objID=q.getIntField(labelsCounter);
+            addObject(_objID);
+            for (strIt  = (_labelsVector).begin()+1;
                  strIt != (_labelsVector).end();
                  strIt++)
             {
@@ -595,12 +595,27 @@ void MetaData::fromDataBase(const FileName & DBname,
                     labelsCounter++;
                     int value;
                     value=q.getIntField(labelsCounter);
+                    setValue(*strIt,value);
+                }
+                else if (isString(*strIt))
+                {
+                    labelsCounter++;
+                    std::string value;
+                    value.assign( q.getStringField(labelsCounter) );
+                    setValue(*strIt,value);
+                }
+                else if (isBool(*strIt))
+                {
+                    labelsCounter++;
+                    int value;
+                    value=q.getIntField(labelsCounter);
+                    setValue(*strIt,(bool)value);
+                }
+                else
+                {
+                    REPORT_ERROR( 1, (std::string)"unknown type in fromDataBase routine");
                 }
             }
-            //cout << q.getIntField(0) << "|";
-            //cout << q.getStringField(1, "NULL") << "|";
-            //cout << q.getIntField(2, -1) << "|";
-            //cout << q.getFloatField(3, -3.33) << "|" << endl;
             q.nextRow();
         }
 
