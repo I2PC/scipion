@@ -71,7 +71,8 @@ Prog_PDBPhantom_Parameters::Prog_PDBPhantom_Parameters()
 }
 
 /* Produce Side Info ------------------------------------------------------- */
-void Prog_PDBPhantom_Parameters::produceSideInfo() {
+void Prog_PDBPhantom_Parameters::produceSideInfo()
+{
     if (useFixedGaussian && sigmaGaussian<0)
     {
         // Check if it is a pseudodensity volume
@@ -85,9 +86,11 @@ void Prog_PDBPhantom_Parameters::produceSideInfo() {
             // Read an ATOM line
             std::string line;
             getline(fh_pdb, line);
-            if (line == "") continue;
+            if (line == "")
+                continue;
             std::string kind = line.substr(0,6);
-            if (kind!="REMARK") continue;
+            if (kind!="REMARK")
+                continue;
             std::vector< std::string > results;
             splitString(line," ",results);
             if (results[1]=="xmipp_convert_vol2pseudo")
@@ -100,12 +103,13 @@ void Prog_PDBPhantom_Parameters::produceSideInfo() {
         fh_pdb.close();
     }
 
-    if (!useBlobs && !usePoorGaussian && !useFixedGaussian) {
-	// Compute the downsampling factor
-	M=(int)ROUND(Ts/highTs);
+    if (!useBlobs && !usePoorGaussian && !useFixedGaussian)
+    {
+        // Compute the downsampling factor
+        M=(int)ROUND(Ts/highTs);
 
-	// Atom profiles for the electron scattering method
-	atomProfiles.setup(M,highTs,false);
+        // Atom profiles for the electron scattering method
+        atomProfiles.setup(M,highTs,false);
     }
 }
 
@@ -151,14 +155,15 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
 {
     fn_pdb = getParameter(argc, argv, "-i");
     fn_out = getParameter(argc, argv, "-o", "");
-    if (fn_out == "") fn_out = fn_pdb.without_extension();
+    if (fn_out == "")
+        fn_out = fn_pdb.without_extension();
     Ts = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     highTs = textToFloat(getParameter(argc, argv, "-high_sampling_rate", "0.08333333"));
     output_dim = textToInteger(getParameter(argc, argv, "-size", "-1"));
     useBlobs = checkParameter(argc, argv, "-blobs");
     usePoorGaussian = checkParameter(argc, argv, "-poor_Gaussian");
-    useFixedGaussian = checkParameter(argc, argv, "-fixed_Gaussian"); 	 
-    if (useFixedGaussian) 	 
+    useFixedGaussian = checkParameter(argc, argv, "-fixed_Gaussian");
+    if (useFixedGaussian)
         sigmaGaussian=textToFloat(getParameter(argc,argv,"-fixed_Gaussian","-1"));
     doCenter = checkParameter(argc, argv, "-centerPDB");
     intensityColumn = getParameter(argc,argv,"-intensityColumn","");
@@ -168,22 +173,23 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
 void Prog_PDBPhantom_Parameters::usage()
 {
     std::cerr << "convert_pdb2vol\n"
-	      << "   -i <pdb file>		       : File to process\n"
-	      << "  [-o <fn_root>]		       : Root name for output\n"
-	      << "  [-sampling_rate <Ts=1>]	       : Sampling rate (Angstroms/pixel)\n"
-	      << "  [-high_sampling_rate <highTs=1/12>]: Sampling rate before downsampling\n"
-	      << "  [-size <output_dim>]	       : Final size in pixels (must be a power of 2, if blobs are used)\n"
-              << "  [-centerPDB]                       : Center PDB with the center of mass\n"
-	      << "  [-blobs]                           : Use blobs instead of scattering factors\n"
-              << "  [-poor_Gaussian]                   : Use a simple Gaussian adapted to each atom\n"
-              << "  [-fixed_Gaussian <std>]            : Use a fixed Gausian for each atom with\n" 	 
-              << "                                       this standard deviation\n"    
-              << "  [-intensityColumn <s=occupancy>]   : Where to write the intensity in the PDB file\n"       
-              << "                                       Valid values: occupancy, Bfactor\n"
-              << "\n"
-	      << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
-	      << "   xmipp_convert_pdb2vol -i 1o7d.pdb -sampling_rate 1.6\n"
-	      << "   xmipp_fourier_filter -i 1o7d.vol -o 1o7d_filtered.vol -low_pass 10 -sampling 1.6 -fourier_mask raised_cosine 0.1\n"
+    << "   -i <pdb file>         : File to process\n"
+    << "  [-o <fn_root>]         : Root name for output\n"
+    << "  [-sampling_rate <Ts=1>]        : Sampling rate (Angstroms/pixel)\n"
+    << "  [-high_sampling_rate <highTs=1/12>]: Sampling rate before downsampling\n"
+    << "  [-size <output_dim>]        : Final size in pixels (must be a power of 2, if blobs are used)\n"
+    << "  [-centerPDB]                       : Center PDB with the center of mass\n"
+    << "  [-blobs]                           : Use blobs instead of scattering factors\n"
+    << "  [-poor_Gaussian]                   : Use a simple Gaussian adapted to each atom\n"
+    << "  [-fixed_Gaussian <std=-1>]         : Use a fixed Gausian for each atom with\n"
+    << "                                       this standard deviation\n"
+    << "                                       If not given, the standard deviation is taken from the PDB file\n"
+    << "  [-intensityColumn <s=occupancy>]   : Where to write the intensity in the PDB file\n"
+    << "                                       Valid values: occupancy, Bfactor\n"
+    << "\n"
+    << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
+    << "   xmipp_convert_pdb2vol -i 1o7d.pdb -sampling_rate 1.6\n"
+    << "   xmipp_fourier_filter -i 1o7d.vol -o 1o7d_filtered.vol -low_pass 10 -sampling 1.6 -fourier_mask raised_cosine 0.1\n"
     ;
 }
 
@@ -191,17 +197,17 @@ void Prog_PDBPhantom_Parameters::usage()
 void Prog_PDBPhantom_Parameters::show()
 {
     std::cout << "PDB file:           " << fn_pdb           << std::endl
-              << "Sampling rate:      " << Ts               << std::endl
-              << "High sampling rate: " << highTs           << std::endl
-              << "Size:               " << output_dim       << std::endl
-              << "Center PDB:         " << doCenter         << std::endl
-	      << "Use blobs:          " << useBlobs         << std::endl
-	      << "Use poor Gaussian:  " << usePoorGaussian  << std::endl
-	      << "Use fixed Gaussian: " << useFixedGaussian << std::endl
+    << "Sampling rate:      " << Ts               << std::endl
+    << "High sampling rate: " << highTs           << std::endl
+    << "Size:               " << output_dim       << std::endl
+    << "Center PDB:         " << doCenter         << std::endl
+    << "Use blobs:          " << useBlobs         << std::endl
+    << "Use poor Gaussian:  " << usePoorGaussian  << std::endl
+    << "Use fixed Gaussian: " << useFixedGaussian << std::endl
     ;
     if (useFixedGaussian)
         std::cout << "Intensity Col:      " << intensityColumn  << std::endl
-                  << "Sigma:              " << sigmaGaussian  << std::endl;
+        << "Sigma:              " << sigmaGaussian  << std::endl;
 }
 
 /* Compute protein geometry ------------------------------------------------ */
@@ -226,7 +232,7 @@ void Prog_PDBPhantom_Parameters::compute_protein_geometry()
         max_dim = XMIPP_MAX(max_dim, CEIL(XX(limit) * 2 / Ts) + 5);
         if (useBlobs)
             output_dim = (int)NEXT_POWER_OF_2(max_dim);
-        else 
+        else
             output_dim = max_dim+10;
     }
 }
@@ -243,7 +249,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
     Vhigh().initZeros(finalDim,finalDim,finalDim);
     Vhigh().setXmippOrigin();
     std::cout << "The highly sampled volume is of size " << XSIZE(Vhigh())
-              << std::endl;
+    << std::endl;
 
     // Fill the volume with the different atoms
     std::ifstream fh_pdb;
@@ -254,15 +260,18 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
 
     // Process all lines of the file
     int col=1;
-    if (intensityColumn=="Bfactor") col=2;
+    if (intensityColumn=="Bfactor")
+        col=2;
     while (!fh_pdb.eof())
     {
         // Read an ATOM line
         std::string line;
         getline(fh_pdb, line);
-        if (line == "") continue;
+        if (line == "")
+            continue;
         std::string kind = line.substr(0,4);
-        if (kind != "ATOM" && kind !="HETA") continue;
+        if (kind != "ATOM" && kind !="HETA")
+            continue;
 
         // Extract atom type and position
         // Typical line:
@@ -283,7 +292,8 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
         double weight, radius;
         if (!useFixedGaussian)
         {
-            if (atom_type=="HETA") continue;
+            if (atom_type=="HETA")
+                continue;
             atomBlobDescription(atom_type, weight, radius);
         }
         else
@@ -295,7 +305,8 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
                 weight=textToFloat(line.substr(60,6));
         }
         blob.radius = radius;
-        if (usePoorGaussian) radius=XMIPP_MAX(radius/Ts,4.5);
+        if (usePoorGaussian)
+            radius=XMIPP_MAX(radius/Ts,4.5);
         double GaussianSigma2=(radius/(3*sqrt(2.0)));
         if (useFixedGaussian)
             GaussianSigma2=sigmaGaussian;
@@ -319,11 +330,11 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
                     VECTOR_R3(rdiff, XX(r) - j, YY(r) - i, ZZ(r) - k);
                     rdiff*=highTs;
                     if (useBlobs)
-                       Vhigh(k, i, j) += weight * blob_val(rdiff.module(), blob);
+                        Vhigh(k, i, j) += weight * blob_val(rdiff.module(), blob);
                     else if (usePoorGaussian || useFixedGaussian)
-                       Vhigh(k, i, j) += weight * 
-                          exp(-rdiff.module()*rdiff.module()/(2*GaussianSigma2))*
-                          GaussianNormalization;
+                        Vhigh(k, i, j) += weight *
+                                          exp(-rdiff.module()*rdiff.module()/(2*GaussianSigma2))*
+                                          GaussianNormalization;
                 }
     }
 
@@ -347,7 +358,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
     // Now scale using Bsplines
     int new_output_dim = CEIL(XSIZE(Vlow()) * current_Ts / Ts);
     Vlow().scaleToSizeBSpline(3, new_output_dim, new_output_dim, new_output_dim,
-                                 Vhigh());
+                              Vhigh());
     Vlow() = Vhigh();
     Vlow().setXmippOrigin();
 
@@ -376,7 +387,8 @@ void Prog_PDBPhantom_Parameters::blob_properties() const
 }
 
 /* Create protein using scattering profiles -------------------------------- */
-void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles() {
+void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles()
+{
     // Create an empty volume to hold the protein
     Vlow().initZeros(output_dim,output_dim,output_dim);
     Vlow().setXmippOrigin();
@@ -394,9 +406,11 @@ void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles() {
         // Read an ATOM line
         std::string line;
         getline(fh_pdb, line);
-        if (line == "") continue;
+        if (line == "")
+            continue;
         std::string kind =line.substr(0,4);
-        if (kind != "ATOM") continue;
+        if (kind != "ATOM")
+            continue;
 
         // Extract atom type and position
         // Typical line:
@@ -413,8 +427,9 @@ void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles() {
         r /= Ts;
 
         // Characterize atom
-	try {
-	    double radius=atomProfiles.atomRadius(atom_type[0]);
+        try
+        {
+            double radius=atomProfiles.atomRadius(atom_type[0]);
 
             // Find the part of the volume that must be updated
             int k0 = XMIPP_MAX(FLOOR(ZZ(r) - radius), STARTINGZ(Vlow()));
@@ -426,19 +441,21 @@ void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles() {
 
             // Fill the volume with this atom
             for (int k = k0; k <= kF; k++)
-        	for (int i = i0; i <= iF; i++)
+                for (int i = i0; i <= iF; i++)
                     for (int j = j0; j <= jF; j++)
                     {
-                	Matrix1D<double> rdiff(3);
-                	VECTOR_R3(rdiff, XX(r) - j, YY(r) - i, ZZ(r) - k);
-			double rdiffModule=rdiff.module();
-			if (rdiffModule<radius) 
-                	    Vlow(k, i, j) += atomProfiles.volumeAtDistance(
-			       atom_type[0],rdiffModule);
+                        Matrix1D<double> rdiff(3);
+                        VECTOR_R3(rdiff, XX(r) - j, YY(r) - i, ZZ(r) - k);
+                        double rdiffModule=rdiff.module();
+                        if (rdiffModule<radius)
+                            Vlow(k, i, j) += atomProfiles.volumeAtDistance(
+                                                 atom_type[0],rdiffModule);
                     }
-	} catch (Xmipp_error XE) {
-	    std::cerr << "Ignoring atom of type *" << atom_type << "*" << std::endl;
-	}
+        }
+        catch (Xmipp_error XE)
+        {
+            std::cerr << "Ignoring atom of type *" << atom_type << "*" << std::endl;
+        }
     }
 
     // Close file
@@ -449,17 +466,23 @@ void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles() {
 void Prog_PDBPhantom_Parameters::run()
 {
     compute_protein_geometry();
-    if (useBlobs) {
-	create_protein_at_high_sampling_rate();
-	create_protein_at_low_sampling_rate();
-	blob_properties();
-    } else if (usePoorGaussian || useFixedGaussian) {
+    if (useBlobs)
+    {
+        create_protein_at_high_sampling_rate();
+        create_protein_at_low_sampling_rate();
+        blob_properties();
+    }
+    else if (usePoorGaussian || useFixedGaussian)
+    {
         highTs=Ts;
-	create_protein_at_high_sampling_rate();
+        create_protein_at_high_sampling_rate();
         Vlow=Vhigh;
         Vhigh.clear();
-    } else {
-    	create_protein_using_scattering_profiles();
     }
-    if (fn_out!="") Vlow.write(fn_out + ".vol");
+    else
+    {
+        create_protein_using_scattering_profiles();
+    }
+    if (fn_out!="")
+        Vlow.write(fn_out + ".vol");
 }
