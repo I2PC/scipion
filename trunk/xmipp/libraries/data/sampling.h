@@ -29,12 +29,11 @@
 #include <vector>
 #include <iterator>
 
-#include "docfile.h"
+#include "metadata.h"
 #include "macros.h"
 #include "matrix1d.h"
 #include "symmetries.h"
 #include "geometry.h"
-
 
 #define cte_w 1.107149
 /**@defgroup SphereSampling sampling (Sampling the projection sphere)
@@ -256,18 +255,18 @@ public:
    void remove_points_far_away_from_experimental_data();
 
    /** Find the closest sampling point for a docfile of experimental projections*/   
-   void find_closest_sampling_point(DocFile &DFi,
-                                    FileName output_file_root);
-   void find_closest_sampling_point(FileName FnexperimentalImages,
-                                    FileName output_file_root);
+   void find_closest_sampling_point(MetaData &DFi,
+                                    const FileName &output_file_root);
+   void find_closest_sampling_point(const FileName &FnexperimentalImages,
+                                    const FileName &output_file_root);
 
    /**for each sampling point find the experimental images
       closer to that point than to any other */
-   void  find_closest_experimental_point();
+   void find_closest_experimental_point();
 
    /** Precalculate exp_data by symmetry matrices (speeds up calculations)*/
-   void fill_exp_data_projection_direction_by_L_R(DocFile &DFi);
-   void fill_exp_data_projection_direction_by_L_R(FileName FnexperimentalImages);
+   void fill_exp_data_projection_direction_by_L_R(MetaData &DFi);
+   void fill_exp_data_projection_direction_by_L_R(const FileName &FnexperimentalImages);
 };
 //@}
 #endif

@@ -27,7 +27,6 @@
 /* Default Constructor */
 XmippSampling::XmippSampling()
 {
-
     vertices aux;
     aux.rot =   -PI / 5.;
     aux.tilt = PI / 2. - cte_w  ;
@@ -1301,9 +1300,7 @@ void XmippSampling::create_sym_file(FileName simFp,int symmetry, int sym_order)
 }
 void XmippSampling::create_asym_unit_file(const FileName &docfilename)
 {
-    DocFile DFvectors, DFangles;
-    DFvectors.clear();
-    DFangles.clear();
+    MetaData DFvectors, DFangles;
     FileName tmp_filename;
     //#define CHIMERA
     #ifdef CHIMERA
@@ -1327,8 +1324,14 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
 		   << std::endl
 		   ;
 	#endif
-        DFvectors.insert_data_line(no_redundant_sampling_points_vector[i]);
-        DFangles.insert_data_line(no_redundant_sampling_points_angles[i]);
+        DFvectors.addObject();
+        DFvectors.setValue(MDL_X,XX(no_redundant_sampling_points_vector[i]));
+        DFvectors.setValue(MDL_Y,YY(no_redundant_sampling_points_vector[i]));
+        DFvectors.setValue(MDL_Z,ZZ(no_redundant_sampling_points_vector[i]));
+        DFangles.addObject();
+        DFangles.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[i]));
+        DFangles.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[i]));
+        DFangles.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[i]));
     }
     #ifdef CHIMERA
     filestr.close();
@@ -1664,17 +1667,17 @@ void XmippSampling::remove_points_far_away_from_experimental_data()
     #endif
     #undef CHIMERA
 }
-void XmippSampling::find_closest_sampling_point(FileName FnexperimentalImages,
-                                                FileName output_file_root)
+void XmippSampling::find_closest_sampling_point(const FileName &FnexperimentalImages,
+                                                const FileName &output_file_root)
 {
     //read input files
-    DocFile          DFi;
-    DFi.read(FnexperimentalImages);//experiemntal points
+    MetaData DFi;
+    DFi.read(FnexperimentalImages);//experimental points
     find_closest_sampling_point(DFi,output_file_root);
 
 }
-void XmippSampling::find_closest_sampling_point(DocFile &DFi,
-                                                FileName output_file_root)
+void XmippSampling::find_closest_sampling_point(MetaData &DFi,
+                                                const FileName &output_file_root)
 {
     double my_dotProduct,my_dotProduct_aux;
     Matrix1D<double>  row(3),direction(3);
@@ -1687,32 +1690,8 @@ void XmippSampling::find_closest_sampling_point(DocFile &DFi,
     int winner_sampling=-1;
     int winner_exp_L_R=-1;
     
-    DFi.set(1,9,0);
-    DFi.go_beginning();
-    std::string   comment;
-    comment = (DFi.get_current_line()).get_text();    
-    if (strstr(comment.c_str(), "Headerinfo") == NULL &&
-        strstr(comment.c_str(), "ProjectionMatching") == NULL
-        )
-    {
-        std::cerr << "Error!! Docfile is not of Headerinfo. " << std::endl;
-        std::cerr << "current Docline " << comment << std::endl;
-        exit(1);
-    }
-    DFi.go_beginning();
-    DFi.remove_current();
-    DFi.go_beginning();
-    std::string   tmp_string; 
-    tmp_string  = "ProjectionMatching columns: rot (1), tilt (2), psi (3),";
-    tmp_string += " Xoff (4), Yoff (5), winner_ref (6),";
-    #ifdef MYPSI    
-    tmp_string += " PSI (7), ref_rot (8), ref_tilt (9),";
-    #else
-    tmp_string += " void (7, reserved for psi), ref_rot (8), ref_tilt (9),";
-    #endif
-    tmp_string += " ref_psi (10)";
-    DFi.insert_comment(tmp_string);
-    DFi.go_first_data_line();
+    MetaData DFo;
+    DFo.setComment("Original rot, tilt, psi, Xoff, Yoff are stored as comments");
 
 //#define DEBUG3
 #ifdef  DEBUG3
@@ -1721,6 +1700,7 @@ void XmippSampling::find_closest_sampling_point(DocFile &DFi,
     int exp_image=1;
 #endif
 
+    DFi.firstObject();
     for(int i=0;i< exp_data_projection_direction_by_L_R.size();)
     {
         my_dotProduct=-2; 
@@ -1758,19 +1738,29 @@ void XmippSampling::find_closest_sampling_point(DocFile &DFi,
         }
 #endif
         //add winner to the DOC fILE
-        DFi.set(5, winner_sampling);
+        std::string fnImg, comment;
+        double aux;
+        DFi.getValue(MDL_IMAGE,fnImg);
+        DFi.getValue(MDL_ANGLEROT,aux);  comment+=floatToString(aux)+" ";
+        DFi.getValue(MDL_ANGLETILT,aux); comment+=floatToString(aux)+" ";
+        DFi.getValue(MDL_ANGLEPSI,aux);  comment+=floatToString(aux)+" ";
+        DFi.getValue(MDL_SHIFTX,aux);    comment+=floatToString(aux)+" ";
+        DFi.getValue(MDL_SHIFTY,aux);    comment+=floatToString(aux);
+        DFo.addObject();
+        DFo.setValue(MDL_COMMENT,comment);
+        DFo.setValue(MDL_IMAGE,fnImg);
+        DFo.setValue(MDL_REF, winner_sampling);
         #ifdef MYPSI    
-        DFi.set(6, exp_data_projection_direction_by_L_R_psi[winner_exp_L_R]);
-        #else
-        DFi.set(6,0.); 
+        DFo.set(6, exp_data_projection_direction_by_L_R_psi[winner_exp_L_R]);
         #endif
-        DFi.set(7,XX(no_redundant_sampling_points_angles[winner_sampling]));  
-        DFi.set(8,YY(no_redundant_sampling_points_angles[winner_sampling]));  
-        DFi.set(9,ZZ(no_redundant_sampling_points_angles[winner_sampling]));  
-        DFi.next_data_line();
+        DFo.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[winner_sampling]));
+        DFo.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[winner_sampling]));  
+        DFo.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[winner_sampling]));  
+        
+        DFi.nextObject();
     }//for i 
-    if(output_file_root.size() > 0)
-        DFi.write(output_file_root+ "_closest_sampling_points.doc");  
+    if (output_file_root.size() > 0)
+        DFo.write(output_file_root+ "_closest_sampling_points.doc");  
 #ifdef  DEBUG3
     filestr.close();
 #endif
@@ -1916,20 +1906,21 @@ void XmippSampling::fill_L_R_repository(void)
 #undef DEBUG3
 }
 
-void XmippSampling::fill_exp_data_projection_direction_by_L_R(FileName FnexperimentalImages)
+void XmippSampling::fill_exp_data_projection_direction_by_L_R(
+    const FileName &FnexperimentalImages)
 {
     //read input files
-    DocFile          DFi;
+    MetaData DFi;
     DFi.read(FnexperimentalImages);//experimental points
     fill_exp_data_projection_direction_by_L_R(DFi);
 }
 
-void XmippSampling::fill_exp_data_projection_direction_by_L_R(DocFile &DFi)
+void XmippSampling::fill_exp_data_projection_direction_by_L_R(MetaData &DFi)
 {
     std::vector <Matrix1D<double> > exp_data_projection_direction;
     Matrix1D<double>  direction(3);
     double rotp, tiltp, psip;
-    DFi.go_first_data_line();
+    DFi.firstObject();
     //#define CHIMERA
     #ifdef CHIMERA
     std::ofstream filestr; 
@@ -1945,15 +1936,14 @@ void XmippSampling::fill_exp_data_projection_direction_by_L_R(DocFile &DFi)
     #endif
     
     double img_tilt,img_rot,img_psi;
-    while (!DFi.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(DFi)
     {
-        img_rot   = DFi(0);
-        img_tilt  = DFi(1);
-        img_psi   = DFi(2);
+        DFi.getValue(MDL_ANGLEROT,img_rot);
+        DFi.getValue(MDL_ANGLETILT,img_tilt);
+        DFi.getValue(MDL_ANGLEPSI,img_psi);
 
         Euler_direction(img_rot, img_tilt, img_psi, direction);
         exp_data_projection_direction.push_back(direction);
-        DFi.next_data_line();
     }
 
     exp_data_projection_direction_by_L_R.clear();
