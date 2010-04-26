@@ -32,98 +32,98 @@ void dm32raw(const FileName &, const FileName &, bool);
 
 
 struct image_data{
-	 int Xdim, Ydim, header, dataType;
- };
+	int Xdim, Ydim, header, dataType;
+};
 
 
- int readTagDM3(FILE *fh_in, bool bigEndian, int depLevel, int index[], image_data* &imData, int &imCount);
- void FREADTagValue(void *fieldValue, int numberType, int n, FILE* fh_in, bool bigEndian);
- char* sprintfTagValue(void *value, int numberType);
+int readTagDM3(FILE *fh_in, bool bigEndian, int depLevel, int index[], image_data* &imData, int &imCount);
+void FREADTagValue(void *fieldValue, int numberType, int n, FILE* fh_in, bool bigEndian);
+char* sprintfTagValue(void *value, int numberType);
 
 
 int main(int argc, char *argv[])
 {
-    FileName       fn_in;    // input file
-    FileName       fn_out;   // output file
-    FileName       fn_sel;   // input selfile
-    FileName       fn_oext;  // output extension
-    
-    bool           reverse_endian;
+	FileName       fn_in;    // input file
+	FileName       fn_out;   // output file
+	FileName       fn_sel;   // input selfile
+	FileName       fn_oext;  // output extension
 
-    if( IsBigEndian())
-    	EXIT_ERROR(1, "dm32raw: This program only works for little endian boxes");
+	bool           reverse_endian;
 
-    /* Parameters ============================================================== */
-    try
-    {
-        if (argc == 1) Usage(argv);
-        if (checkParameter(argc, argv, "-i"))
-        {
-            fn_in = getParameter(argc, argv, "-i");
-            if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
-                EXIT_ERROR(1, "dm32raw: -i option is not compatible with -sel or -oext");
-        }
-        if (checkParameter(argc, argv, "-o"))
-        {
-            fn_out = getParameter(argc, argv, "-o");
-            if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
-                EXIT_ERROR(1, "dm32raw: -o option is not compatible with -sel or -oext");
-        }
-        if (checkParameter(argc, argv, "-sel"))
-        {
-            fn_sel = getParameter(argc, argv, "-sel");
-            fn_oext  = getParameter(argc, argv, "-oext", "raw");
-            if (checkParameter(argc, argv, "-i") || checkParameter(argc, argv, "-o"))
-                EXIT_ERROR(1, "dm32raw: -sel option is not compatible with -i or -o");
-        }
+	if( IsBigEndian())
+		EXIT_ERROR(1, "dm32raw: This program only works for little endian boxes");
 
-        reverse_endian = checkParameter(argc, argv, "-reverse_endian");
-    }
-    catch (Xmipp_error XE)
-    {
-        std::cout << XE;
-        Usage(argv);
-    }
+	/* Parameters ============================================================== */
+	try
+	{
+		if (argc == 1) Usage(argv);
+		if (checkParameter(argc, argv, "-i"))
+		{
+			fn_in = getParameter(argc, argv, "-i");
+			if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
+				EXIT_ERROR(1, "dm32raw: -i option is not compatible with -sel or -oext");
+		}
+		if (checkParameter(argc, argv, "-o"))
+		{
+			fn_out = getParameter(argc, argv, "-o");
+			if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
+				EXIT_ERROR(1, "dm32raw: -o option is not compatible with -sel or -oext");
+		}
+		if (checkParameter(argc, argv, "-sel"))
+		{
+			fn_sel = getParameter(argc, argv, "-sel");
+			fn_oext  = getParameter(argc, argv, "-oext", "raw");
+			if (checkParameter(argc, argv, "-i") || checkParameter(argc, argv, "-o"))
+				EXIT_ERROR(1, "dm32raw: -sel option is not compatible with -i or -o");
+		}
 
-    try
-    {
-        /* Perform conversion ====================================================== */
+		reverse_endian = checkParameter(argc, argv, "-reverse_endian");
+	}
+	catch (Xmipp_error XE)
+	{
+		std::cout << XE;
+		Usage(argv);
+	}
 
-        /* input is a sel file*/
-        if (fn_sel!="")
-        {
-            SelFile SF(fn_sel), SF_out;
-            std::cerr << "Converting from DM3 to RAW ...\n";
-            init_progress_bar(SF.ImgNo());
-            int i=0;
-            while (!SF.eof())
-            {
-                FileName in_name = SF.NextImg();
-                FileName out_name = in_name.without_extension()+"."+fn_oext;
-                SF_out.insert(out_name);
-                dm32raw(in_name, out_name, reverse_endian);
-                progress_bar(i++);
-            }
-            progress_bar(SF.ImgNo());
-            SF_out.write(fn_sel.without_extension()+"_raw.sel");
-        }
+	try
+	{
+		/* Perform conversion ====================================================== */
 
-        /* input/output are single files */
-        else if (fn_in!="")
-        {
-        	if (fn_out=="")
-        		dm32raw(fn_in, fn_in.without_extension()+".raw", reverse_endian);
-        	else
-        		dm32raw(fn_in, fn_out, reverse_endian);
-        }
+		/* input is a sel file*/
+		if (fn_sel!="")
+		{
+			SelFile SF(fn_sel), SF_out;
+			std::cerr << "Converting from DM3 to RAW ...\n";
+			init_progress_bar(SF.ImgNo());
+			int i=0;
+			while (!SF.eof())
+			{
+				FileName in_name = SF.NextImg();
+				FileName out_name = in_name.without_extension()+"."+fn_oext;
+				SF_out.insert(out_name);
+				dm32raw(in_name, out_name, reverse_endian);
+				progress_bar(i++);
+			}
+			progress_bar(SF.ImgNo());
+			SF_out.write(fn_sel.without_extension()+"_raw.sel");
+		}
 
-    }
-    catch (Xmipp_error XE)
-    {
-        std::cout << XE;
-        exit(1);
-    }
-    exit(0);
+		/* input/output are single files */
+		else if (fn_in!="")
+		{
+			if (fn_out=="")
+				dm32raw(fn_in, fn_in.without_extension()+".raw", reverse_endian);
+			else
+				dm32raw(fn_in, fn_out, reverse_endian);
+		}
+
+	}
+	catch (Xmipp_error XE)
+	{
+		std::cout << XE;
+		exit(1);
+	}
+	exit(0);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -131,20 +131,20 @@ int main(int argc, char *argv[])
 /* ------------------------------------------------------------------------- */
 void Usage(char **argv)
 {
-    printf(
-        "Usage: %s [Purpose and Parameters]"
-        "\nPurpose: Convert from Digital Micrograph 3 (dm3) images to raw format"
-        "\nParameter Values: (note space before value)"
-        "\nESPECIFIC PARAMETERS FOR SINGLE-FILE CONVERSION"
-        "\n    -i    file_in        input md file"
-        "\n    -o    file_out       output Spider file"
-        "\nESPECIFIC PARAMETERS FOR SEL-FILE CONVERSION"
-        "\n    -sel  input_file     input sel file"
-        "\n    -oext input_file     extension for the output files"
-        "\nGENERAL PARAMETERS"
-        "\n   [-reverse_endian]     by default, output has the same endiannes as input"
-        "\n"
-        , argv[0]);
+	printf(
+			"Usage: %s [Purpose and Parameters]"
+			"\nPurpose: Convert from Digital Micrograph 3 (dm3) images to raw format"
+			"\nParameter Values: (note space before value)"
+			"\nESPECIFIC PARAMETERS FOR SINGLE-FILE CONVERSION"
+			"\n    -i    file_in        input md file"
+			"\n    -o    file_out       output Spider file"
+			"\nESPECIFIC PARAMETERS FOR SEL-FILE CONVERSION"
+			"\n    -sel  input_file     input sel file"
+			"\n    -oext input_file     extension for the output files"
+			"\nGENERAL PARAMETERS"
+			"\n   [-reverse_endian]     by default, output has the same endiannes as input"
+			"\n"
+			, argv[0]);
 }
 
 void dm32raw(const FileName &fn_in,
@@ -179,9 +179,9 @@ void dm32raw(const FileName &fn_in,
 	FREAD(&dummy,1,2,fh_in,0); // skip sorted and open
 	FREAD(&nrTags,sizeof(int),1,fh_in,1); //  number of tags in root directory (12h = 18)
 
-//	printf( "fileVersion: %d\n", fileVersion);
-//	printf( "littleEndian: %d\n", byteOrder);
-//	printf( "Number of tags: %d\n\n", nrTags);
+	//	printf( "fileVersion: %d\n", fileVersion);
+	//	printf( "littleEndian: %d\n", byteOrder);
+	//	printf( "Number of tags: %d\n\n", nrTags);
 
 
 	/* Read of the root tags ===================================================== */
@@ -195,14 +195,14 @@ void dm32raw(const FileName &fn_in,
 
 	/* Select the located images =================================================== */
 
-//	if (imCount>2)
-//		REPORT_ERROR(6001, "More than one image in file, this option is not implemented.");
+	//	if (imCount>2)
+	//		REPORT_ERROR(6001, "More than one image in file, this option is not implemented.");
 
 	int imIndex[imCount];
 
 	for (int n=0;n<imCount;n++) {			// Select all images except thumbnails
 
-		if ((imData+n)->dataType==7){ // (thumbnail=23 / image=7)
+		if ((imData+n)->dataType==1 | (imData+n)->dataType==7){ // (thumbnail=23 / image long =7 / image short = 1)
 			imIndex[imCountF] = n;
 			imCountF++;
 		}
@@ -214,6 +214,8 @@ void dm32raw(const FileName &fn_in,
 
 #define BUFFSIZE 1024*1024
 
+	int nBytes;
+
 	for (int n=0;n<imCountF;n++)
 	{
 		if (imCountF==1)
@@ -224,77 +226,114 @@ void dm32raw(const FileName &fn_in,
 		/* Write image to file ==================================*/
 
 		if ( ( fh_out = fopen(fn_outF.c_str(), "wb") ) == NULL )
-					REPORT_ERROR(6001, "Cannot create output file (dm32raw).");
+			REPORT_ERROR(6001, "Cannot create output file (dm32raw).");
 
-		int * imBuffer;
-		float * imFloatBuffer;
-		imBuffer = (int *) malloc (BUFFSIZE * sizeof(int));
-		imFloatBuffer = (float *) malloc (BUFFSIZE * sizeof(float));
-
-		fseek(fh_in,(imData+imIndex[n])->header,SEEK_SET);
-
-
-		unsigned int bytesLeft;
-		unsigned int end_header=(sizeof(int)*(imData+imIndex[n])->Xdim*(imData+imIndex[n])->Ydim)+(imData+imIndex[n])->header;
-		bytesLeft = end_header - ftell(fh_in);
-
-		while (bytesLeft > BUFFSIZE*4)
+		if ((imData+imIndex[n])->dataType==7 | (imData+imIndex[n])->dataType==23)
 		{
-			FREAD(imBuffer, sizeof(int),BUFFSIZE, fh_in, bigEndian);
-			for( int l=0 ; l < BUFFSIZE; l++)
-				imFloatBuffer[l]=(float) imBuffer[l];
-			FWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, reverse_endian);
+			nBytes = 4;
+			int * imBuffer;
+			float * imFloatBuffer;
+			imBuffer = (int *) malloc (BUFFSIZE * sizeof(int));
+			imFloatBuffer = (float *) malloc (BUFFSIZE * sizeof(float));
+
+			fseek(fh_in,(imData+imIndex[n])->header,SEEK_SET);
+
+			unsigned int bytesLeft;
+			unsigned int end_header=(nBytes*(imData+imIndex[n])->Xdim*(imData+imIndex[n])->Ydim)+(imData+imIndex[n])->header;
 			bytesLeft = end_header - ftell(fh_in);
 
+			while (bytesLeft >= BUFFSIZE*4)
+			{
+				FREAD(imBuffer, nBytes,BUFFSIZE, fh_in, bigEndian);
+				for( int l=0 ; l < BUFFSIZE; l++)
+					imFloatBuffer[l]=(float) imBuffer[l];
+				FWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, reverse_endian);
+				bytesLeft = end_header - ftell(fh_in);
+			}
+			if (bytesLeft > 0)
+			{
+				FREAD(imBuffer, nBytes,bytesLeft/nBytes, fh_in, bigEndian);
+				for( int l=0 ; l < bytesLeft/nBytes; l++)
+					imFloatBuffer[l]=(float) imBuffer[l];
+				FWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/nBytes, fh_out, reverse_endian);
+			}
 		}
-		if (bytesLeft > 0)
+		else
 		{
-			FREAD(imBuffer, sizeof(int),bytesLeft/sizeof(int), fh_in, bigEndian);
-			for( int l=0 ; l < bytesLeft/sizeof(int); l++)
-				imFloatBuffer[l]=(float) imBuffer[l];
-			FWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/sizeof(int), fh_out, reverse_endian);
+			nBytes = 2;
 
-			if (fclose(fh_out)!=0)
-				REPORT_ERROR(6001, "Error creating output file (dm32raw).");
+			short * imBuffer;
+			float * imFloatBuffer;
+			imBuffer = (short *) malloc (BUFFSIZE * sizeof(short));
+			imFloatBuffer = (float *) malloc (BUFFSIZE * sizeof(float));
+
+			fseek(fh_in,(imData+imIndex[n])->header,SEEK_SET);
 
 
-			/* Write INF file ==================================*/
+			unsigned int bytesLeft;
+			unsigned int end_header=(nBytes*(imData+imIndex[n])->Xdim*(imData+imIndex[n])->Ydim)+(imData+imIndex[n])->header;
+			bytesLeft = end_header - ftell(fh_in);
 
-			fn_outF=fn_outF.add_extension("inf");
-			if ( ( fh_out = fopen(fn_outF.c_str(), "w") ) == NULL )
-								REPORT_ERROR(6001, "Cannot create output info file (dm32raw).");
-
-			fprintf(fh_out,"# Bits per sample\n");
-			fprintf(fh_out,"bitspersample= %d\n",sizeof(int)*8);
-			fprintf(fh_out,"# Samples per pixel\n");
-			fprintf(fh_out,"samplesperpixel= 1\n");
-			fprintf(fh_out,"# Image width\n");
-			fprintf(fh_out,"Xdim= %d\n",(imData+imIndex[n])->Xdim);
-			fprintf(fh_out,"# Image length\n");
-			fprintf(fh_out,"Ydim= %d\n",(imData+imIndex[n])->Ydim);
-			fprintf(fh_out,"# offset in bytes (zero by default)\n");
-			fprintf(fh_out,"offset= 0\n");
-			fprintf(fh_out,"# Is a signed or Unsigned int (by default true)\n");
-			fprintf(fh_out,"is_signed = true\n");
-
-			if (fclose(fh_out)!=0)
-							REPORT_ERROR(6001, "Error creating output info file (dm32raw).");
+			while (bytesLeft >= BUFFSIZE*4)
+						{
+							FREAD(imBuffer, nBytes,BUFFSIZE, fh_in, bigEndian);
+							for( int l=0 ; l < BUFFSIZE; l++)
+								imFloatBuffer[l]=(float) imBuffer[l];
+							FWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, reverse_endian);
+							bytesLeft = end_header - ftell(fh_in);
+						}
+						if (bytesLeft > 0)
+						{
+							FREAD(imBuffer, nBytes,bytesLeft/nBytes, fh_in, bigEndian);
+							for( int l=0 ; l < bytesLeft/nBytes; l++)
+								imFloatBuffer[l]=(float) imBuffer[l];
+							FWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/nBytes, fh_out, reverse_endian);
+						}
 		}
+
+
+
+		if (fclose(fh_out)!=0)
+			REPORT_ERROR(6001, "Error creating output file (dm32raw).");
+
+
+		/* Write INF file ==================================*/
+
+		fn_outF=fn_outF.add_extension("inf");
+		if ( ( fh_out = fopen(fn_outF.c_str(), "w") ) == NULL )
+			REPORT_ERROR(6001, "Cannot create output info file (dm32raw).");
+
+		fprintf(fh_out,"# Bits per sample\n");
+		fprintf(fh_out,"bitspersample= %d\n",nBytes*8);
+		fprintf(fh_out,"# Samples per pixel\n");
+		fprintf(fh_out,"samplesperpixel= 1\n");
+		fprintf(fh_out,"# Image width\n");
+		fprintf(fh_out,"Xdim= %d\n",(imData+imIndex[n])->Xdim);
+		fprintf(fh_out,"# Image length\n");
+		fprintf(fh_out,"Ydim= %d\n",(imData+imIndex[n])->Ydim);
+		fprintf(fh_out,"# offset in bytes (zero by default)\n");
+		fprintf(fh_out,"offset= 0\n");
+		fprintf(fh_out,"# Is a signed or Unsigned int (by default true)\n");
+		fprintf(fh_out,"is_signed = true\n");
+
+		if (fclose(fh_out)!=0)
+			REPORT_ERROR(6001, "Error creating output info file (dm32raw).");
+
 	}
 }
 
 
 int readTagDM3(FILE *fh_in,
-		         bool bigEndian,
-		         int depLevel,
-		         int index[],
-		         image_data * & imData, ////////////////////////////////////////////
-		         int &imCount)
+		bool bigEndian,
+		int depLevel,
+		int index[],
+		image_data * & imData, ////////////////////////////////////////////
+		int &imCount)
 {
 	depLevel++;
 
 	/* Header Tag ============================================================== */
-	
+
 	unsigned char cdTag;
 	unsigned int  idTag;
 	unsigned short int ltName;
@@ -309,88 +348,88 @@ int readTagDM3(FILE *fh_in,
 
 	for (int n=1;n<=depLevel;n++)
 
-//		printf("%d.",index[n-1]);
+		//		printf("%d.",index[n-1]);
 
 
-	/* Reading tags ===================================================================*/
-	if (idTag == 20)		// Tag directory
-	{
-//		printf("- Dir: %s\n",tagName);
-		unsigned char dummy;
-		unsigned int nTags;
-		FREAD(&dummy,sizeof(unsigned char),1,fh_in,false); // 1 = sorted (normally = 1)
-		FREAD(&dummy,sizeof(unsigned char),1,fh_in,false); //  0 = closed, 1 = open (normally = 0)
-		FREAD(&nTags,sizeof(int),1,fh_in,true);             //  number of tags in tag directory
-	
-		int * newIndex;
-		newIndex = new int[depLevel+1];
-		for (int k=0;k<depLevel;k++)
-			newIndex[k]=index[k];
-
-		if (strcmp(tagName,"ImageList")==0)    // Number of images
+		/* Reading tags ===================================================================*/
+		if (idTag == 20)		// Tag directory
 		{
-			imData = new image_data[nTags];
-		}
-		else if (strcmp(tagName,"Dimensions")==0)
-		{
-			newIndex[depLevel] = 1;
-			(imData+imCount)->Ydim = readTagDM3(fh_in, bigEndian, depLevel,newIndex,imData,imCount);
+			//		printf("- Dir: %s\n",tagName);
+			unsigned char dummy;
+			unsigned int nTags;
+			FREAD(&dummy,sizeof(unsigned char),1,fh_in,false); // 1 = sorted (normally = 1)
+			FREAD(&dummy,sizeof(unsigned char),1,fh_in,false); //  0 = closed, 1 = open (normally = 0)
+			FREAD(&nTags,sizeof(int),1,fh_in,true);             //  number of tags in tag directory
 
-			newIndex[depLevel] = 2;
-			(imData+imCount)->Xdim = readTagDM3(fh_in, bigEndian, depLevel,newIndex,imData,imCount);
+			int * newIndex;
+			newIndex = new int[depLevel+1];
+			for (int k=0;k<depLevel;k++)
+				newIndex[k]=index[k];
 
-			imCount++;
-			return 0;
-		 }
-		
-		for (int n=1;n<=nTags;n++)
-		{
-			newIndex[depLevel] = n;
-			readTagDM3(fh_in, bigEndian, depLevel,newIndex,imData,imCount);
-		}
-		return 0;
-	}
-	else if (idTag == 21)    // Tag
-	{
-//		printf("- Tag: %s ",tagName);
-
-		unsigned int nnum;
-		char	buf[4]; // to read %%%% symbols
-
-		FREAD(&buf,1,4,fh_in,false); // To read %%%% symbols
-		FREAD(&nnum,sizeof(unsigned int),1,fh_in,true); // Size of info array
-
-		unsigned int * info;
-		info = new unsigned int[nnum];
-		FREAD(info,sizeof(unsigned int),nnum,fh_in,true); // Reading of Info
-
-
-		/* Tag classification  =======================================*/
-
-		if (nnum == 1)   // Single entry tag
-		{
-			int tagValue=0;
-
-			FREADTagValue(&tagValue,info[0],1,fh_in,bigEndian);
-//			printf(" = %s\n", sprintfTagValue(&tagValue,info[0]));
-
-			if (strcmp(tagName,"DataType")==0)
+			if (strcmp(tagName,"ImageList")==0)    // Number of images
 			{
-				(imData+imCount)->dataType = tagValue;
+				imData = new image_data[nTags];
+			}
+			else if (strcmp(tagName,"Dimensions")==0)
+			{
+				newIndex[depLevel] = 1;
+				(imData+imCount)->Ydim = readTagDM3(fh_in, bigEndian, depLevel,newIndex,imData,imCount);
+
+				newIndex[depLevel] = 2;
+				(imData+imCount)->Xdim = readTagDM3(fh_in, bigEndian, depLevel,newIndex,imData,imCount);
+
+				imCount++;
+				return 0;
 			}
 
-			return tagValue;
+			for (int n=1;n<=nTags;n++)
+			{
+				newIndex[depLevel] = n;
+				readTagDM3(fh_in, bigEndian, depLevel,newIndex,imData,imCount);
+			}
+			return 0;
 		}
-		else if(nnum == 3 && info[0]==20)			// Tag array
-		{ 										  /*nnum = 3
+		else if (idTag == 21)    // Tag
+		{
+			//		printf("- Tag: %s ",tagName);
+
+			unsigned int nnum;
+			char	buf[4]; // to read %%%% symbols
+
+			FREAD(&buf,1,4,fh_in,false); // To read %%%% symbols
+			FREAD(&nnum,sizeof(unsigned int),1,fh_in,true); // Size of info array
+
+			unsigned int * info;
+			info = new unsigned int[nnum];
+			FREAD(info,sizeof(unsigned int),nnum,fh_in,true); // Reading of Info
+
+
+			/* Tag classification  =======================================*/
+
+			if (nnum == 1)   // Single entry tag
+			{
+				int tagValue=0;
+
+				FREADTagValue(&tagValue,info[0],1,fh_in,bigEndian);
+				//			printf(" = %s\n", sprintfTagValue(&tagValue,info[0]));
+
+				if (strcmp(tagName,"DataType")==0)
+				{
+					(imData+imCount)->dataType = tagValue;
+				}
+
+				return tagValue;
+			}
+			else if(nnum == 3 && info[0]==20)			// Tag array
+			{ 										  /*nnum = 3
 													info(0) = 20
 													info(1) = number type for all values
 													info(2) = info(nnum) = size of array*/
 
-			if (strcmp(tagName,"Data")==0)    // Locating the image data
-			{
-				(imData+imCount)->header = ftell(fh_in);
-			}
+				if (strcmp(tagName,"Data")==0)    // Locating the image data
+				{
+					(imData+imCount)->header = ftell(fh_in);
+				}
 
 				// Jump the array values
 				int k;
@@ -398,26 +437,26 @@ int readTagDM3(FILE *fh_in,
 				else if(info[1] == 3 || info[1] == 5) k = 4;
 				else if(info[1] == 10 ) k = 1;
 
-	//			printf("Position before array = %d \n ", ftell(fh_in));
-//				printf("(Array size = %d) \n", info[nnum-1]*k);
+				//			printf("Position before array = %d \n ", ftell(fh_in));
+				//				printf("(Array size = %d) \n", info[nnum-1]*k);
 
 				fseek( fh_in, ftell(fh_in)+(info[nnum-1])*k , SEEK_SET );
 
-	//			printf("Position = %d \n ", ftell(fh_in));
-	//		}else{
-	//			int arrayValue[info[2]];
-	//			memset(arrayValue,0,sizeof(arrayValue));
-	//			FREADTagValue(&arrayValue,info[1],info[2],fh_in,bigEndian);
-	//			for (int n=0;info[2];n++){
-	//				printf("%d  ", arrayValue[n]);
-	//			} std::cout << "\n\n";
+				//			printf("Position = %d \n ", ftell(fh_in));
+				//		}else{
+				//			int arrayValue[info[2]];
+				//			memset(arrayValue,0,sizeof(arrayValue));
+				//			FREADTagValue(&arrayValue,info[1],info[2],fh_in,bigEndian);
+				//			for (int n=0;info[2];n++){
+				//				printf("%d  ", arrayValue[n]);
+				//			} std::cout << "\n\n";
 
 				return 0;
-		
-		}
-		else if (info[0]==20 && info[1] == 15)    // Tag Group array
-		{
-													/*nnum = size of array
+
+			}
+			else if (info[0]==20 && info[1] == 15)    // Tag Group array
+			{
+				/*nnum = size of array
 													info(0) = 20 (array)
 													info(1) = 15 (group)
 													info(2) = 0 (always 0)
@@ -425,111 +464,111 @@ int readTagDM3(FILE *fh_in,
 													info(2*i+3) = number type for value i
 													info(nnum) = size of info array*/
 
-//			printf(" = (");
+				//			printf(" = (");
 
-			int nBytes=0, k, fieldValue;
+				int nBytes=0, k, fieldValue;
 
 
-			for (int n=1;n<=info[3];n++)
-			{
-				fieldValue=0;
+				for (int n=1;n<=info[3];n++)
+				{
+					fieldValue=0;
 
-				FREADTagValue(&fieldValue,info[3+2*n],1,fh_in,bigEndian);
+					FREADTagValue(&fieldValue,info[3+2*n],1,fh_in,bigEndian);
 
-				if(info[3+2*n] == 2 || info[3+2*n] == 4) k = 2;
-				else if(info[3+2*n] == 3 || info[3+2*n] == 5) k = 4;
-				else if(info[3+2*n] == 10 ) k = 1;
-				nBytes+=k;
-//				printf( "%s", sprintfTagValue(&fieldValue,info[3+2*n]));
-//				if(n<info[3]) printf(","); else printf(")\n");
+					if(info[3+2*n] == 2 || info[3+2*n] == 4) k = 2;
+					else if(info[3+2*n] == 3 || info[3+2*n] == 5) k = 4;
+					else if(info[3+2*n] == 10 ) k = 1;
+					nBytes+=k;
+					//				printf( "%s", sprintfTagValue(&fieldValue,info[3+2*n]));
+					//				if(n<info[3]) printf(","); else printf(")\n");
+				}
+
+				// Jump the array values
+
+				//			printf("Reading of array values\n");
+				//		printf("Position = %d \n ", ftell(fh_in));
+
+				fseek( fh_in, ftell(fh_in)+(info[nnum-1]-1)*nBytes , SEEK_SET );
+				return 0;
 			}
-
-			// Jump the array values
-
-//			printf("Reading of array values\n");
-	//		printf("Position = %d \n ", ftell(fh_in));
-
-			fseek( fh_in, ftell(fh_in)+(info[nnum-1]-1)*nBytes , SEEK_SET );
-			return 0;
-		}
-		else if (info[0] == 15)    // Tag Group  (struct)
-		{
-									/* info[1] = length group name (always =0)
+			else if (info[0] == 15)    // Tag Group  (struct)
+			{
+				/* info[1] = length group name (always =0)
 									   info[2] = number of entries in group */
-			/*nnum = size of info array
+				/*nnum = size of info array
 			info(1) = 0fh
 			info(3) = number of values in group
 			info(2*i+3) = number type for value i
 			Other info entries are always zero*/
 
-//			printf(" = [");
+				//			printf(" = [");
 
-			for (int n=1;n<=info[2];n++)
-			{
-				int fieldValue=0;
-				FREADTagValue(&fieldValue,info[2+2*n],1,fh_in,bigEndian);
+				for (int n=1;n<=info[2];n++)
+				{
+					int fieldValue=0;
+					FREADTagValue(&fieldValue,info[2+2*n],1,fh_in,bigEndian);
 
-//				printf( "%s", sprintfTagValue(&fieldValue,info[2+2*n]));
-//				if(n<info[2]) printf(","); else printf("]\n");
+					//				printf( "%s", sprintfTagValue(&fieldValue,info[2+2*n]));
+					//				if(n<info[2]) printf(","); else printf("]\n");
+				}
+				//					printf("Position = %d \n ", ftell(fh_in));
+
+				return 0;
 			}
-//					printf("Position = %d \n ", ftell(fh_in));
-
-			return 0;
 		}
-	}
 }
 
 
 void FREADTagValue(void *fieldValue,
-					  int numberType,
-					  int n, FILE* fh_in,
-					  bool bigEndian)
+		int numberType,
+		int n, FILE* fh_in,
+		bool bigEndian)
 {
 
 	switch(numberType)
 	{
-		case 2:						// (02h =  2  i2* signed    (short)
-			short* shortValue;
-			shortValue = (short*)fieldValue;
-			FREAD(shortValue,sizeof(short),n,fh_in,bigEndian);
-			break;
-		case 3:								  // 03h =  3  i4* signed    (long)
-	//		int* intValue[n];
-	//		*intValue = (int*) malloc(sizeof(intValue));
-	//		FREAD(intValue,sizeof(int),n,fh_in,bigEndian);
-	//		fieldValue = (int*)intValue;
-			FREAD(fieldValue,sizeof(int),n,fh_in,bigEndian);
-			break;
-		case 4:							//  04h =  4  i2* unsigned  (ushort) or unicode string
-			unsigned short* uShortValue;
-			uShortValue = (unsigned short*)fieldValue;
-			FREAD(shortValue,sizeof(unsigned short),n,fh_in,bigEndian);
-			break;
-		case 5:								//  05h =  5  i4* unsigned  (ulong)
-			unsigned int* uIntValue;
-			uIntValue = (unsigned int*)fieldValue;
-			FREAD(uIntValue,sizeof(unsigned int),n,fh_in,bigEndian);
-			break;
-		case 6:								//  06h =  6  f4*           (float)
-			float* floatValue;
-			floatValue = (float *) fieldValue;
-			FREAD(floatValue,sizeof(float),n,fh_in,bigEndian);
-			break;
-		case 7:								//  07h =  7  f8*           (double)
-			double* doubValue;
-			doubValue = (double*) fieldValue;
-			FREAD(doubValue,sizeof(double),n,fh_in,bigEndian);
-			break;
-		case 8:								//  08h =  8  i1            (boolean)
-			bool* boolValue;
-			boolValue = (bool*) fieldValue;
-			FREAD(boolValue,sizeof(bool),n,fh_in,bigEndian);
-			break;
-		case 10:								//  0ah = 10  i1
-			char* cValue;
-			cValue = (char*) fieldValue;
-			FREAD(cValue,sizeof(char),n,fh_in,bigEndian);
-			break;
+	case 2:						// (02h =  2  i2* signed    (short)
+		short* shortValue;
+		shortValue = (short*)fieldValue;
+		FREAD(shortValue,sizeof(short),n,fh_in,bigEndian);
+		break;
+	case 3:								  // 03h =  3  i4* signed    (long)
+		//		int* intValue[n];
+		//		*intValue = (int*) malloc(sizeof(intValue));
+		//		FREAD(intValue,sizeof(int),n,fh_in,bigEndian);
+		//		fieldValue = (int*)intValue;
+		FREAD(fieldValue,sizeof(int),n,fh_in,bigEndian);
+		break;
+	case 4:							//  04h =  4  i2* unsigned  (ushort) or unicode string
+		unsigned short* uShortValue;
+		uShortValue = (unsigned short*)fieldValue;
+		FREAD(uShortValue,sizeof(unsigned short),n,fh_in,bigEndian);
+		break;
+	case 5:								//  05h =  5  i4* unsigned  (ulong)
+		unsigned int* uIntValue;
+		uIntValue = (unsigned int*)fieldValue;
+		FREAD(uIntValue,sizeof(unsigned int),n,fh_in,bigEndian);
+		break;
+	case 6:								//  06h =  6  f4*           (float)
+		float* floatValue;
+		floatValue = (float *) fieldValue;
+		FREAD(floatValue,sizeof(float),n,fh_in,bigEndian);
+		break;
+	case 7:								//  07h =  7  f8*           (double)
+		double* doubValue;
+		doubValue = (double*) fieldValue;
+		FREAD(doubValue,sizeof(double),n,fh_in,bigEndian);
+		break;
+	case 8:								//  08h =  8  i1            (boolean)
+		bool* boolValue;
+		boolValue = (bool*) fieldValue;
+		FREAD(boolValue,sizeof(bool),n,fh_in,bigEndian);
+		break;
+	case 10:								//  0ah = 10  i1
+		char* cValue;
+		cValue = (char*) fieldValue;
+		FREAD(cValue,sizeof(char),n,fh_in,bigEndian);
+		break;
 	}
 
 }
@@ -538,7 +577,7 @@ void FREADTagValue(void *fieldValue,
 
 
 char* sprintfTagValue(void *fieldValue, int numberType)
-{
+				{
 
 	char str[10];
 	int len;
@@ -589,13 +628,13 @@ char* sprintfTagValue(void *fieldValue, int numberType)
 	for (int k=0;k<len;k++) out[k]=str[k];
 	out[len]='\0';
 	return out;
-}
+				}
 
 
 
- /********************************
-  *
-  * Digital Micrograph file format
+/********************************
+ *
+ * Digital Micrograph file format
 
 Digital Micrograph is an image processing program produced commercially by Gatan.
 
@@ -1071,4 +1110,4 @@ ImageIndex         Image number of thumbnail image
 
 Unfortunately the tags describing the image are after the image itself, this is particularly annoying for the image dimensions.
 
-*/
+ */
