@@ -54,6 +54,9 @@ enum MetaDataLabel
 	MDL_ANGLEPSI = MDL_FIRST_LABEL,       // Psi angle of an image (double)
 	MDL_ANGLEROT,                         // Rotation angle of an image (double)
 	MDL_ANGLETILT,                        // Tilting angle of an image (double)
+	MDL_ANGLEPSI2,                        // Psi angle of an image (double)
+	MDL_ANGLEROT2,                        // Rotation angle of an image (double)
+	MDL_ANGLETILT2,                       // Tilting angle of an image (double)
 	MDL_COMMENT,                          // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
 	MDL_CTFINPUTPARAMS,                   // Parameters file for the CTF Model (std::string)
 	MDL_CTFMODEL,                         // Name for the CTF Model (std::string)
@@ -61,6 +64,7 @@ enum MetaDataLabel
 	MDL_FLIP,                             // Flip the image? (bool)
 	MDL_IMAGE,                            // Name of an image (std::string)
 	MDL_MAXCC,                            // Cross-correlation for the image (double)
+	MDL_COST,                             // Cost for the image (double)
 	MDL_MICROGRAPH,                       // Name of a micrograph (std::string)
 	MDL_NMA,                              // Normal mode displacements
 	MDL_ORIGINX,                          // Origin for the image in the X axis (double)
@@ -74,6 +78,9 @@ enum MetaDataLabel
 	MDL_SHIFTX,                           // Shift for the image in the X axis (double)
 	MDL_SHIFTY,                           // Shift for the image in the Y axis (double)
 	MDL_SHIFTZ,                           // Shift for the image in the Z axis (double)
+	MDL_X,                                // X component (double)
+	MDL_Y,                                // Y component (double)
+	MDL_Z,                                // Z component (double)
 	MDL_WEIGHT,                           // Weight assigned to the image (double)
 	MDL_OBJID,                            // object id (int)
 //add row only label at the end of the enum
@@ -127,11 +134,13 @@ inline bool isString(MetaDataLabel lCode)
 
 inline bool isDouble(MetaDataLabel lCode)
 {
-    if(lCode == MDL_ANGLEROT     || lCode == MDL_ANGLETILT || lCode == MDL_ANGLEPSI ||\
-       lCode == MDL_SHIFTX       || lCode == MDL_SHIFTY    || lCode == MDL_SHIFTZ   ||\
-       lCode == MDL_ORIGINX      || lCode == MDL_ORIGINY   || lCode == MDL_ORIGINZ  ||\
-       lCode == MDL_WEIGHT       || lCode == MDL_MAXCC     || lCode == MDL_PMAX     ||\
-       lCode == MDL_SCALE        ||\
+    if(lCode == MDL_ANGLEROT     || lCode == MDL_ANGLETILT  || lCode == MDL_ANGLEPSI  ||\
+       lCode == MDL_ANGLEROT2    || lCode == MDL_ANGLETILT2 || lCode == MDL_ANGLEPSI2 ||\
+       lCode == MDL_SHIFTX       || lCode == MDL_SHIFTY     || lCode == MDL_SHIFTZ    ||\
+       lCode == MDL_ORIGINX      || lCode == MDL_ORIGINY    || lCode == MDL_ORIGINZ   ||\
+       lCode == MDL_X            || lCode == MDL_Y          || lCode == MDL_Z         ||\
+       lCode == MDL_WEIGHT       || lCode == MDL_MAXCC      || lCode == MDL_PMAX      ||\
+       lCode == MDL_SCALE        || lCode == MDL_COST || \
        \
        lCode == MDL_SAMPLINGRATE || lCode == MDL_VOLTAGE   || lCode == MDL_DEFOCUSU ||
        lCode == MDL_DEFOCUSV \
