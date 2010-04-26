@@ -733,16 +733,14 @@ void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm,
 int PROJECT_Effectively_project(const Projection_Parameters &prm,
                                 PROJECT_Side_Info &side,
 				const Crystal_Projection_Parameters &prm_crystal,
-                                Projection &proj, SelFile &SF)
+                                Projection &proj, MetaData &SF)
 {
     int NumProjs = 0;
     SF.clear();
     std::cerr << "Projecting ...\n";
     if (!(prm.tell&TELL_SHOW_ANGLES)) init_progress_bar(side.DF.dataLineNo());
-    SF.reserve(side.DF.dataLineNo());
-    DocFile DF_movements;
-    DF_movements.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), noisy rot(4), noisy tilt (5), noisy psi (6), Xoff (7), Yoff (8)");
-    Matrix1D<double> movements(8);
+    MetaData DF_movements;
+    DF_movements.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
 
     while (!side.DF.eof())
     {
@@ -750,19 +748,26 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         FileName fn_proj;              // Projection name
         fn_proj.compose(prm.fnProjectionSeed, side.DF.get_current_key(),
                         prm.fn_projection_extension);
+        DF_movements.addObject();
+        DF_movements.setValue(MDL_IMAGE,fn_proj);
+        DF_movements.setValue(MDL_ENABLED,1);
 
         // Choose angles .....................................................
         if (prm.tell&TELL_SHOW_ANGLES) side.DF.show_line(std::cout);
         else if ((NumProjs % XMIPP_MAX(1, side.DF.dataLineNo() / 60)) == 0)
             progress_bar(NumProjs);
-        movements(0) = rot  = side.DF(0);
-        movements(1) = tilt = side.DF(1);
-        movements(2) = psi  = side.DF(2);
+        rot  = side.DF(0);
+        tilt = side.DF(1);
+        psi  = side.DF(2);
+        DF_movements.setValue(MDL_ANGLEROT,rot);
+        DF_movements.setValue(MDL_ANGLETILT,tilt);
+        DF_movements.setValue(MDL_ANGLEPSI,psi);
+
         // Choose Center displacement ........................................
         double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
         double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
-        movements(6) = -shiftX;
-        movements(7) = -shiftY;
+        DF_movements.setValue(MDL_SHIFTX,-shiftX);
+        DF_movements.setValue(MDL_SHIFTY,-shiftY);
 
         // Really project ....................................................
         if (side.phantomMode==PROJECT_Side_Info::VOXEL)
@@ -802,9 +807,9 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         rot  += rnd_gaus(prm.rot_range.Navg,  prm.rot_range.Ndev);
         tilt += rnd_gaus(prm.tilt_range.Navg, prm.tilt_range.Ndev);
         psi  += rnd_gaus(prm.psi_range.Navg,  prm.psi_range.Ndev);
-        movements(3) = rot - movements(0);
-        movements(4) = tilt - movements(1);
-        movements(5) = psi - movements(2);
+        DF_movements.setValue(MDL_ANGLEROT2,rot);
+        DF_movements.setValue(MDL_ANGLETILT2,tilt);
+        DF_movements.setValue(MDL_ANGLEPSI2,psi);
         proj.set_eulerAngles(rot, tilt, psi);
         proj.set_originOffsets(-shiftX,-shiftY);
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
@@ -812,9 +817,9 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         // Save ..............................................................
         proj.write(fn_proj);
         NumProjs++;
-        SF.insert(fn_proj, SelLine::ACTIVE);
-        DF_movements.append_comment(fn_proj);
-        DF_movements.append_data_line(movements);
+        SF.addObject();
+        SF.setValue(MDL_IMAGE,fn_proj);
+        SF.setValue(MDL_ENABLED,1);
 
         side.DF.next_data_line();
     }
@@ -825,7 +830,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
 }
 
 /* ROUT_project ============================================================ */
-int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF)
+int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, MetaData &SF)
 {
     randomize_random_generator();
 // Read projection parameters and produce side information

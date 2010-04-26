@@ -27,7 +27,7 @@
 
 #include <data/funcs.h>
 #include <data/docfile.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/projection.h>
 #include <interface/pdb.h>
 
@@ -257,7 +257,7 @@ int PROJECT_Assign_angles(DocFile &DF, const Projection_Parameters &prm);
     A selection file with all images is also returned.*/
 int PROJECT_Effectively_project(const Projection_Parameters &prm,
                                 PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
-                                Projection &proj, SelFile &SF);
+                                Projection &proj, MetaData &SF);
 
 /* Main routine ------------------------------------------------------------ */
 /** Main Project routine.
@@ -273,6 +273,6 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     The returned number is the total number of projections generated.
     A selection file with all images is also returned (and saved if any
     name has been given in the parameters).*/
-int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, SelFile &SF);
+int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, MetaData &SF);
 //@}
 #endif
