@@ -371,7 +371,7 @@ void Prog_angular_project_library_Parameters::run()
 	#endif
                  
     //only rank 0 create sel file
-    SelFile  mySF;
+    MetaData  mySF;
     FileName fn_temp;
     int myCounter=0;
     
@@ -379,7 +379,9 @@ void Prog_angular_project_library_Parameters::run()
        for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
        {    
 	   fn_temp.compose(output_file_root, ++myCounter,"xmp");
-	   mySF.insert(fn_temp);
+       mySF.addObject();
+	   mySF.setValue(MDL_IMAGE,fn_temp);
+	   mySF.setValue(MDL_ENABLED,1);
        }
     fn_temp=output_file_root+".sel";   
     mySF.write(fn_temp);         
@@ -405,15 +407,14 @@ void Prog_angular_project_library_Parameters::createGroupSamplingFiles(void)
     printf ("re-read entire sampling file after %.2lf seconds\n", time_dif );
 #endif
 
-    SelFile  mySF(fn_groups);
+    MetaData mySF(fn_groups);
     FileName fn_temp;
     FileName my_output_file_root;
     int igrp = 0;
-    mySF.go_beginning();
-    while (!mySF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(mySF)
     {
         igrp++;
-        fn_temp = mySF.NextImg();
+        mySF.getValue(MDL_IMAGE,fn_temp);
         if (fn_temp=="") break;
         my_output_file_root.compose(output_file_root + "_group",igrp,"");
         std::cerr<<"Writing group sampling file "<< my_output_file_root<<std::endl;           
