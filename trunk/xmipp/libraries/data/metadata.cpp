@@ -1535,6 +1535,7 @@ void MetaData::findObjectsInRange( MetaData &MD,
                                    MetaDataLabel name,
                                    double minValue,
                                    double maxValue )
+
 {
 
 

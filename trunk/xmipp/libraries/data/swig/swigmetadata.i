@@ -6,11 +6,11 @@
 %ignore MetaData::setValue( MetaDataLabel name, float value, long int objectID = -1 );
 %ignore MetaDataContainer::addValue( MetaDataLabel name, float value );
 %ignore MetaDataContainer::pairExists( MetaDataLabel name, float value );
-
 %include ../metadata.h
 %include ../metadata_container.h
 namespace std {
    %template(vectorm) vector<MetaDataLabel>;
+//   %template(findObjectsInRangeInt) findObjectsInRange<MetaData,MetaDataLabel,int,int>;
 };
 
 /*

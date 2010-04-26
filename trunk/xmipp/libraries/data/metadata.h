@@ -230,7 +230,7 @@ public:
      *
      */
     void findObjectsInRange( MetaData &base, MetaDataLabel name, double minValue, double maxValue );
-//    void findObjectsInRange( MetaData &base, MetaDataLabel name, int minValue, int maxValue );
+    void findObjectsInRange( MetaData &base, MetaDataLabel name, int minValue, int maxValue );
 //    template <class T> void findObjectsInRange( MetaData &base, MetaDataLabel name, T minValue, T maxValue );
 
     void combine( MetaData & other, MetaDataLabel thisLabel=MDL_UNDEFINED);
