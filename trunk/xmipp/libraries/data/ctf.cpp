@@ -663,12 +663,11 @@ void CTFDat::getCurrentLine(FileName& fnProjection, FileName& fnCTF)
     fnCTF=fnCTFList[current];
 }
 
-void CTFDat::createFromSelfileAndSingleCTF(SelFile &SF, const FileName &fnCtf)
+void CTFDat::createFromSelfileAndSingleCTF(MetaData &SF, const FileName &fnCtf)
 {
-    SF.go_first_ACTIVE();
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        FileName fn_img=SF.NextImg();
+        FileName fn_img; SF.getValue(MDL_IMAGE,fn_img);
         if (fn_img=="") break;
     	append(fn_img,fnCtf);
     }

@@ -27,7 +27,7 @@
 #define _CTF_HH
 
 #include "image.h"
-#include "selfile.h"
+#include "metadata.h"
 #include <map>
 
 /**@defgroup CTFSupport CTF support classes
@@ -541,7 +541,7 @@ public:
     void getCurrentLine(FileName& fnProjection, FileName& fnCtf);
     
     /// Creates a CTFDat with a selfile for which there is a single CTF
-    void createFromSelfileAndSingleCTF(SelFile &SF,
+    void createFromSelfileAndSingleCTF(MetaData &SF,
        const FileName &fnCtf);
 };
 //@}
