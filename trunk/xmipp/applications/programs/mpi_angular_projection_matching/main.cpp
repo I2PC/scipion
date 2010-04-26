@@ -231,7 +231,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
            if (mpi_job_size == -1)
             {   
                 int numberOfJobs=nProcs-1;//one node is the master
-                mpi_job_size=ceil((double)DFexp.dataLineNo()/numberOfJobs);
+                mpi_job_size=ceil((double)DFexp.size()/numberOfJobs);
             }
         }
         MPI_Bcast(&max_number_of_images_in_around_a_sampling_point, 
@@ -265,7 +265,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
             int tip=-1;
             int number_of_processed_images=0;
             int stopTagsSent =0;
-            int total_number_of_images=DFexp.dataLineNo();
+            int total_number_of_images=DFexp.size();
             Matrix1D<double>                 dataline(8);
             //DocFile DFo;
             FileName                         fn_tmp;
@@ -274,11 +274,6 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
             int c = XMIPP_MAX(1, total_number_of_images / 80);
             init_progress_bar(total_number_of_images);
 
-            DFexp.go_beginning();
-            DFexp.remove_current();
-            DFexp.go_beginning();
-            DFexp.insert_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), maxCC (8)");
-            DFexp.set(1,7,0);
             while(1)
             {
                 //Wait until any message arrives
@@ -305,16 +300,16 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                     //create doc file
                     for (int i = 0; i < number; i++)
 	                {
-                        int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]+1);
-	                    DFexp.locate(lineNumber);
-	                    DFexp.set(0,output_values[i*MY_OUPUT_SIZE+2]);
-	                    DFexp.set(1,output_values[i*MY_OUPUT_SIZE+3]);
-	                    DFexp.set(2,output_values[i*MY_OUPUT_SIZE+4]);
-	                    DFexp.set(3,output_values[i*MY_OUPUT_SIZE+5]);
-	                    DFexp.set(4,output_values[i*MY_OUPUT_SIZE+6]);
-	                    DFexp.set(5,output_values[i*MY_OUPUT_SIZE+7]+1);
-	                    DFexp.set(6,output_values[i*MY_OUPUT_SIZE+8]);
-	                    DFexp.set(7,output_values[i*MY_OUPUT_SIZE+9]);
+                        int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]);
+	                    DFexp.goToObject(lineNumber);
+                        DFexp.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2]);
+                        DFexp.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3]);
+                        DFexp.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4]);
+                        DFexp.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5]);
+                        DFexp.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
+                        DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
+                        DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
+                        DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
                     }         
                 }
                 // worker is free
@@ -406,15 +401,15 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
                     for (int i = 0; i < number; i++)
 	                {
                         int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]+1);
-	                    DFexp.locate(lineNumber);
-	                    DFexp.set(0,output_values[i*MY_OUPUT_SIZE+2]);
-	                    DFexp.set(1,output_values[i*MY_OUPUT_SIZE+3]);
-	                    DFexp.set(2,output_values[i*MY_OUPUT_SIZE+4]);
-	                    DFexp.set(3,output_values[i*MY_OUPUT_SIZE+5]);
-	                    DFexp.set(4,output_values[i*MY_OUPUT_SIZE+6]);
-	                    DFexp.set(5,output_values[i*MY_OUPUT_SIZE+7]+1);
-	                    DFexp.set(6,output_values[i*MY_OUPUT_SIZE+8]);
-	                    DFexp.set(7,output_values[i*MY_OUPUT_SIZE+9]);
+	                    DFexp.goToObject(lineNumber);
+                        DFexp.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2]);
+                        DFexp.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3]);
+                        DFexp.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4]);
+                        DFexp.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5]);
+                        DFexp.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
+                        DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
+                        DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
+                        DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
                     }         
                 }
                 else if (status.MPI_TAG == TAG_FREEWORKER)
