@@ -26,14 +26,14 @@
 #define _PROG_ANGULAR_PREDICT_TOMOGRPAHY
 
 #include <data/funcs.h>
-#include <data/progs.h>
 #include <data/selfile.h>
+#include <data/volume.h>
 
 /**@defgroup AngularPredictTomography angular_assign_for_tomogram (Discrete angular assignment for tomography)
    @ingroup ReconsLibraryPrograms */
 //@{
 /** Alignment structure */
-class Alignment
+class AlignmentTomography
 {
 public:
     double rot;
@@ -42,30 +42,24 @@ public:
     double x;
     double y;
     double corr;
-    friend std::ostream & operator << (std::ostream &out, const Alignment &A)
-    {
-        out << A.rot << "\t" << A.tilt << "\t" << A.psi << "\t" << A.x
-            << "\t" << A.y << "\t" << A.corr << std::endl;
-        return out;
-    }
-    bool operator < (const Alignment &rhs) const
-    {
-        return corr < rhs.corr;
-    }
-    bool operator > (const Alignment &rhs) const
-    {
-        return corr > rhs.corr;
-    }
+    FileName fn_img;
+    FileName fn_mask;
+    
+    AlignmentTomography();
 };
 
 /** Angular Predict parameters. */
-class Prog_angular_predict_tomography_prm: public Prog_parameters
+class Prog_angular_predict_tomography_prm
 {
 public:
     /** Filename of the reference volume */
     FileName fn_ref;
-    /** Filename for the output angles.*/
-    FileName fn_out_ang;
+    /** Filename of the images */
+    FileName fn_sel;
+    /** Filename of the masks */
+    FileName fn_masksel;
+    /** Root filename for the output */
+    FileName fn_out;
     /** Maximum rotation change. */
     double max_rot_change;
     /** Max tilt change */
@@ -82,18 +76,12 @@ public:
     double max_shift_change;
     /** Shift step */
     double shift_step;
-    /** Shifts should be applied only in X */
-    bool onlyX;
-    /** Shifts should be applied only in Y */
-    bool onlyY;
+    /** Adjust gray */
+    bool adjustGray;
 public:
     VolumeXmipp V;
-    std::vector<Alignment> list_of_assigned;
-    std::vector<FileName>  image_name;
+    std::vector<AlignmentTomography> list_of_assigned;
 public:
-    /// Empty constructor
-    Prog_angular_predict_tomography_prm();
-
     /// Read argument from command line
     void read(int argc, char **argv);
 
@@ -110,13 +98,10 @@ public:
     /** Predict angles and shift.
         This function searches in the shift-psi space and for each combination
         it correlates with the whole reference set. */
-    double predict_angles(ImageXmipp &I,
-                          double &assigned_shiftX, double &assigned_shiftY,
-                          double &assigned_rot, double &assigned_tilt, double &assigned_psi);
+    void predict_angles(int i);
 
-    /** Finish processing.
-        Close all output files. */
-    void finish_processing();
+    /** Run the algorithm over all images */
+    void run();
 };
 //@}
 #endif
