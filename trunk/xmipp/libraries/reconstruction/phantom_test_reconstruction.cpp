@@ -555,7 +555,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 
 // Generate projections ----------------------------------------------------
     Projection Proj;
-    SelFile SF;
+    MetaData SF;
 
     Prog_proj_prm.fn_sel_file = fn_root + ".sel";
 
@@ -577,7 +577,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 
     PROJECT_Effectively_project(proj_prm, side, crystal_proj_prm, Proj, SF);
     SF.write(Prog_proj_prm.fn_sel_file);
-    SF.go_first_ACTIVE();
+    SF.firstObject();
 
 // Adding microscope effect ------------------------------------------------
     if (prm.sigma != 0 ||
@@ -592,15 +592,20 @@ void single_recons_test(const Recons_test_Parameters &prm,
         prm_micro.sigma = prm.sigma;
         prm_micro.low_pass_before_CTF = prm.low_pass_before_CTF;
         prm_micro.after_ctf_noise = true;
-        SF.ImgSize(prm_micro.Ydim,prm_micro.Xdim);
+        SF.firstObject();
+        FileName fn_img; SF.getValue(MDL_IMAGE,fn_img);
+        ImageXmipp img;
+        img.read(fn_img);
+        prm_micro.Ydim = YSIZE(img());
+		prm_micro.Xdim = XSIZE(img());
         prm_micro.produce_side_info();
 
         std::cerr << "Applying microscope simulation ...\n";
-        init_progress_bar(SF.ImgNo());
+        init_progress_bar(SF.size());
         int i = 0;
-        while (!SF.eof())
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            FileName fn_proj = SF.NextImg();
+            FileName fn_proj; SF.getValue(MDL_IMAGE,fn_proj);
             if (fn_proj=="") break;
             ImageXmipp I;
             I.read(fn_proj);
@@ -612,8 +617,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
             i++;
             if (i % 20 == 0) progress_bar(i);
         }
-        progress_bar(SF.ImgNo());
-        SF.go_first_ACTIVE();
+        progress_bar(SF.size());
+        SF.firstObject();
     }
 
 // Filter the images -------------------------------------------------------
@@ -625,12 +630,12 @@ void single_recons_test(const Recons_test_Parameters &prm,
         Filter.w1 = prm.w_hp;
         Filter.raised_w = 0.02;
         std::cerr << "Filtering the images ...\n";
-        init_progress_bar(SF.ImgNo());
+        init_progress_bar(SF.size());
         int i = 0;
         bool first = true;
-        while (!SF.eof())
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            FileName fn_proj = SF.NextImg();
+            FileName fn_proj; SF.getValue(MDL_IMAGE, fn_proj);
             if (fn_proj=="") break;
             ImageXmipp I;
             I.read(fn_proj);
@@ -647,8 +652,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
             i++;
             if (i % 20 == 0) progress_bar(i);
         }
-        progress_bar(SF.ImgNo());
-        SF.go_first_ACTIVE();
+        progress_bar(SF.size());
+        SF.firstObject();
     }
 
 // Normalize ---------------------------------------------------------------
@@ -656,18 +661,17 @@ void single_recons_test(const Recons_test_Parameters &prm,
     if (prm.enable_normalization)
     {
         Normalize_parameters norm_prm;
-        norm_prm.fn_in = SF.name();
+        norm_prm.fn_in = SF.getFilename();
         norm_prm.method = prm.normalizing_method;
         norm_prm.background_mode = CIRCLE;
         norm_prm.r = prm.bg_radius;
         norm_prm.produce_side_info();
         std::cerr << "Applying linear transformation and normalizing ...\n";
-        init_progress_bar(SF.ImgNo());
+        init_progress_bar(SF.size());
         int n = 0;
-        while (!SF.eof())
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            FileName fn_proj = SF.NextImg();
-            if (fn_proj=="") break;
+            FileName fn_proj; SF.getValue(MDL_IMAGE, fn_proj);
             ImageXmipp I;
             I.read(fn_proj);
             I().setXmippOrigin();
@@ -682,8 +686,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
             n++;
             if (n % 20 == 0) progress_bar(n);
         }
-        progress_bar(SF.ImgNo());
-        SF.go_first_ACTIVE();
+        progress_bar(SF.size());
+        SF.firstObject();
     }
 
 // Correct phase -----------------------------------------------------------

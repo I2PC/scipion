@@ -22,96 +22,6 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-//#define METADATA
-#ifndef METADATA
-
-#include <data/args.h>
-#include <data/image.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
-
-void Usage();
-
-/* MAIN -------------------------------------------------------------------- */
-int main(int argc, char *argv[])
-{
-    bool            round_shifts = false;
-    float           xx, yy;
-    FileName        fn_img, fn_out;
-    SelFile         SF;
-    DocFile         DF;
-    ImageXmipp      img;
-    headerXmipp     head;
-
-// Check command line options ===========================================
-    try
-    {
-
-        SF.read(getParameter(argc, argv, "-i"));
-        fn_out = getParameter(argc, argv, "-o");
-        round_shifts = checkParameter(argc, argv, "-round_shifts");
-
-    }
-    catch (Xmipp_error XE)
-    {
-        std::cout << XE;
-        Usage();
-    }
-
-// Extracting information  ==================================================
-    try
-    {
-
-        DF.reserve(SF.ImgNo());
-        Matrix1D<double> docline;
-        DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)");
-
-        docline.initZeros(7);
-        SF.go_beginning();
-        while (!SF.eof())
-        {
-            fn_img = SF.NextImg();
-            if (fn_img=="") break;
-            head.read(fn_img);
-            head.get_originOffsets(xx, yy);
-            if (round_shifts)
-            {
-                xx = (float)ROUND(xx);
-                yy = (float)ROUND(yy);
-            }
-            docline(0) = head.Phi();
-            docline(1) = head.Theta();
-            docline(2) = head.Psi();
-            docline(3) = xx;
-            docline(4) = yy;
-            docline(5) = head.Weight();
-            docline(6) = head.Flip();
-            DF.append_comment(fn_img);
-            DF.append_data_line(docline);
-        }
-        DF.write(fn_out);
-        std::cerr << " done!" << std::endl;
-    }
-    catch (Xmipp_error XE)
-    {
-        std::cout << XE;
-    }
-
-}
-
-/* Usage ------------------------------------------------------------------- */
-void Usage()
-{
-    printf("Purpose:\n");
-    printf(" Extracts the geometric transformation (angles & shifts) in the header of 2D-images.\n");
-    printf("Usage:\n");
-    printf("   header_extract \n");
-    printf("        -i <selfile>       : input selfile\n");
-    printf("        -o <docfile>       : output document file\n");
-    printf("       [-round_shifts]     : Round shifts to integers \n");
-    exit(1);
-}
-#else
 
 #include <data/args.h>
 #include <data/image.h>
@@ -128,7 +38,6 @@ int main(int argc, char *argv[])
     ImageXmipp      img;
     headerXmipp     head;
     FileName        inputFile;
-    
 
 // Check command line options ===========================================
     try
@@ -160,7 +69,7 @@ int main(int argc, char *argv[])
 	    }
 	    do
         {
-	        fn_img = SF.image();
+	        SF.getValue(MDL_IMAGE,fn_img);
             if (fn_img=="") break;
             head.read(fn_img);
             head.get_originOffsets( xx, yy );
@@ -169,13 +78,13 @@ int main(int argc, char *argv[])
                 xx = (float)ROUND(xx);
                 yy = (float)ROUND(yy);
             }
-	        SF.setAngleRot( head.Phi());
-	        SF.setAngleTilt( head.Theta());
-    	        SF.setAnglePsi( head.Psi());
-	        SF.setShiftX( xx );
-	        SF.setShiftY( yy );
-	        SF.setWeight( head.Weight());
-	        SF.setFlip( head.Flip());
+	        SF.setValue(MDL_ANGLEROT, head.Phi());
+	        SF.setValue(MDL_ANGLETILT, head.Theta());
+    	    SF.setValue(MDL_ANGLEPSI, head.Psi());
+	        SF.setValue(MDL_SHIFTX, xx );
+	        SF.setValue(MDL_SHIFTY, yy );
+	        SF.setValue(MDL_WEIGHT, head.Weight());
+	        SF.setValue(MDL_FLIP, head.Flip());
         }
         while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
 	
@@ -201,5 +110,3 @@ void Usage()
     std::cout <<              "       [-round_shifts]     : Round shifts to integers \n";
     exit(1);
 }
-
-#endif

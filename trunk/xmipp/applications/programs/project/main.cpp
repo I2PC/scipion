@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 {
     Prog_Project_Parameters      prog_prm;
     Projection                   proj;
-    SelFile                      SF;
+    MetaData                     SF;
 
 // Check the command line
     try

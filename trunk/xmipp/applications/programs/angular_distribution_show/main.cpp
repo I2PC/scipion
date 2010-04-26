@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/geometry.h>
 #include <data/histogram.h>
 #include <interface/spider.h>
@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
             angles.read(fn_ang);
         else
         {
-            SelFile selfile(fn_sel);
+            MetaData selfile(fn_sel);
             extract_angles(selfile, angles, ang1, ang2, ang3);
         }
         int AngleNo = angles.dataLineNo();

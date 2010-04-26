@@ -31,12 +31,11 @@
 #include <iostream>
 #include <data/fftw.h>
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
 #include <data/image.h>
 #include <data/projection.h>
 #include <data/threads.h>
 #include <data/blobs.h>
+#include <data/metadata.h>
 
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
@@ -67,7 +66,7 @@ struct ImageThreadParams
         int read;
         Matrix2D<double> * localAInv;
         int imageIndex;
-        DocFile * docFile;
+        MetaData * docFile;
         double weight;
         double localweight;
 };
@@ -80,10 +79,10 @@ public:
     FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control, fn_fsc;
 
     /** SelFile containing all projections */
-    SelFile SF;
+    MetaData SF;
 
     /** DocFile containing all angles */
-    DocFile DF;
+    MetaData DF;
 
     /** verbosity flag */
     int verb;
@@ -145,9 +144,6 @@ public: // Internal members
     int volPadSizeY;
     int volPadSizeZ;
 
-    // Column numbers in the docfile
-    int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;
-
     // Table with blob values, lineal sampling
     Matrix1D<double>  Fourier_blob_table;
 
@@ -202,7 +198,7 @@ public:
 
     /// Get angles (either from reading the header or from a docfile)
     void get_angles_for_image(const FileName &fn, double &rot, double &tilt,
-        double &psi, double &xoff, double &yoff, double &flip, double &weight, DocFile * docFile);
+        double &psi, double &xoff, double &yoff, double &flip, double &weight, MetaData * docFile);
 
     /// Main Loop 
     void run();

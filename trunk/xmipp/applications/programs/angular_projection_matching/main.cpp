@@ -29,7 +29,7 @@
 int main(int argc, char **argv)
 {
 
-    DocFile                          DFo;
+    MetaData                         DFo;
     Prog_angular_projection_matching_prm prm;
     FileName                         fn_tmp;
     Matrix1D<double>                 dataline(8);
@@ -50,47 +50,41 @@ int main(int argc, char **argv)
         exit(0);
     }
 
-    int nr_images = prm.DFexp.dataLineNo();
-    int                              input_images[nr_images+1];
-    double                           output_values[MY_OUPUT_SIZE*nr_images+1];
+    int nr_images = prm.DFexp.size();
+    int input_images[nr_images+1];
+    double output_values[MY_OUPUT_SIZE*nr_images+1];
 
     try
     {
-
-        DFo.clear();
-        DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), maxCC (8)");
-
         // Process all images
-	input_images[0]=nr_images;
-	for (int i = 0; i < nr_images; i++)
-	{
-	    input_images[i+1]=i;
-	}
-        prm.processSomeImages(input_images,output_values);
+	    input_images[0]=nr_images;
+	    for (int i = 0; i < nr_images; i++)
+	    {
+	        input_images[i+1]=i;
+	    }
+            prm.processSomeImages(input_images,output_values);
 
-	// Fill output docfile
-	for (int i = 0; i < nr_images; i++)
-	{
+	    // Fill output docfile
+	    for (int i = 0; i < nr_images; i++)
+	    {
+	        prm.DFexp.goToObject(ROUND(output_values[i*MY_OUPUT_SIZE+1]));
+            prm.DFexp.getValue(MDL_IMAGE,fn_tmp);
 
-	    prm.DFexp.locate(ROUND(output_values[i*MY_OUPUT_SIZE+1]+1));
-	    prm.DFexp.previous();
-	    fn_tmp = ((prm.DFexp.get_current_line()).get_text()).erase(0, 3);
+            DFo.addObject();
+            DFo.setValue(MDL_IMAGE,fn_tmp);
+            DFo.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2]);
+            DFo.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3]);
+            DFo.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4]);
+            DFo.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5]);
+            DFo.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
+            DFo.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
+           	DFo.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
+            DFo.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
+	    }
 
-	    dataline(0)=output_values[i*MY_OUPUT_SIZE+2];
-	    dataline(1)=output_values[i*MY_OUPUT_SIZE+3];
-	    dataline(2)=output_values[i*MY_OUPUT_SIZE+4];
-	    dataline(3)=output_values[i*MY_OUPUT_SIZE+5];
-	    dataline(4)=output_values[i*MY_OUPUT_SIZE+6];
-	    dataline(5)=output_values[i*MY_OUPUT_SIZE+7] + 1;
-	    dataline(6)=output_values[i*MY_OUPUT_SIZE+8];
-	    dataline(7)=output_values[i*MY_OUPUT_SIZE+9];
-	    DFo.append_comment(fn_tmp);
-	    DFo.append_data_line(dataline);
-	}
-	
-	fn_tmp=prm.fn_root + ".doc";
-	DFo.write(fn_tmp);
-	std::cerr<<"done!"<<std::endl;
+	    fn_tmp=prm.fn_root + ".doc";
+	    DFo.write(fn_tmp);
+	    std::cerr<<"done!"<<std::endl;
     }
     catch (Xmipp_error XE)
     {

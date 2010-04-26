@@ -119,18 +119,16 @@ public:
         if ( rank > 0)
         {
             produce_Side_info();
-
-            SF.go_beginning();
+            SF.firstObject();
         }
         else
         {
             show();
-
             SF.read(fn_sel);
         }
 
         //leer sel file / dividir por mpi_job_size 
-        numberOfJobs=ceil((double)SF.ImgNo()/mpi_job_size);
+        numberOfJobs=ceil((double)SF.size()/mpi_job_size);
 
         //only one node will write in the console
         if (rank == 1 )
@@ -302,7 +300,7 @@ public:
                  {
                      th_args[nt].parent=this;
                      th_args[nt].myThreadID = nt;
-                     th_args[nt].docFile = new DocFile( DF );
+                     th_args[nt].docFile = new MetaData( DF );
                      pthread_create((th_ids+nt),NULL,processImageThread,(void*)(th_args+nt));
                  }
 
@@ -650,8 +648,8 @@ public:
                          min_i = jobNumber*mpi_job_size;
                          max_i = min_i + mpi_job_size - 1;
 
-                         if ( max_i >= SF.ImgNo())
-                             max_i  = SF.ImgNo()-1;
+                         if ( max_i >= SF.size())
+                             max_i  = SF.size()-1;
 
                          processImages( min_i, max_i );
                      }

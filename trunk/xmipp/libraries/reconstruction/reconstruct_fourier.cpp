@@ -125,29 +125,21 @@ void Prog_RecFourier_prm::produce_Side_info()
     if (fn_doc != "")
     {
         DF.read(fn_doc);
-        col_rot    = DF.getColNumberFromHeader("rot")  - 1;
-        col_tilt   = DF.getColNumberFromHeader("tilt") - 1;
-        col_psi    = DF.getColNumberFromHeader("psi")  - 1;
-        col_xoff   = DF.getColNumberFromHeader("Xoff") - 1;
-        col_yoff   = DF.getColNumberFromHeader("Yoff") - 1;
-        col_flip   = DF.getColNumberFromHeader("Flip") - 1;
-        col_weight=-1;
-        if (do_weights)
-            col_weight = DF.getColNumberFromHeader("Weight") - 1;
-        if (SF.ImgNo() != DF.get_last_key())
+        if (SF.size() != DF.size())
             REPORT_ERROR(1, "docfile and corresponding selfile have unequal (active) entries");
     }
 
 
-    SF.go_beginning();
-
     // Ask for memory for the output volume and its Fourier transform
-    int Ydim, Xdim;
-    SF.ImgSize(Ydim, Xdim);
+    SF.firstObject();
+    FileName fnImg; SF.getValue(MDL_IMAGE,fnImg);
+    ImageXmipp I(fnImg);
+    int Ydim=YSIZE(I());
+    int Xdim=XSIZE(I());
     if (Ydim!=Xdim)
         REPORT_ERROR(1,"This algorithm only works for squared images");
     imgSize=Xdim;
-     volPadSizeX = volPadSizeY = volPadSizeZ=Xdim*padding_factor_vol;
+    volPadSizeX = volPadSizeY = volPadSizeZ=Xdim*padding_factor_vol;
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
 
     //use threads for volume inverse fourier transform, plan is created in setReal()
@@ -188,7 +180,7 @@ void Prog_RecFourier_prm::produce_Side_info()
     {
     	//use a r*r sample instead of r
     	//DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
-        DIRECT_VEC_ELEM(blobTableSqrt,i)    = blob_val(blobTableSize*sqrt(i), blob)  *iw0;
+        DIRECT_VEC_ELEM(blobTableSqrt,i)    = blob_val(blobTableSize*sqrt((double)i), blob)  *iw0;
         //***
         //DIRECT_VEC_ELEM(fourierBlobTableSqrt,i) =
         //     blob_Fourier_val(fourierBlobTableSize*sqrt(i), blobFourier)*padXdim3  *iw0;
@@ -226,29 +218,27 @@ void Prog_RecFourier_prm::produce_Side_info()
 
 void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
                                                double &tilt, double &psi, double &xoff, double &yoff, double &flip,
-                                               double &weight, DocFile * docFile)
+                                               double &weight, MetaData * docfile)
 {
 
-    if ((*docFile).search_comment(fn))
+    std::vector<long int> found=(*docfile).findObjects(MDL_IMAGE,fn);
+    if (found.size()==1)
     {
-        rot    = (*docFile)(col_rot);
-        tilt   = (*docFile)(col_tilt);
-        psi    = (*docFile)(col_psi);
-        xoff   = (*docFile)(col_xoff);
-        yoff   = (*docFile)(col_yoff);
-        if (col_flip < 0)
-            flip   = 0.;
-        else
-            flip   = (*docFile)(col_flip);
-        if (col_weight < 0)
-            weight = 0.;
-        else
-            weight = (*docFile)(col_weight);
+    	(*docfile).goToObject(found[0]);
+        (*docfile).getValue(MDL_ANGLEROT,rot);
+        (*docfile).getValue(MDL_ANGLETILT,tilt);
+        (*docfile).getValue(MDL_ANGLEPSI,psi);
+        (*docfile).getValue(MDL_SHIFTX,xoff);
+        (*docfile).getValue(MDL_SHIFTY,yoff);
+        flip=0;
+        weight=0;
+        bool iflip;
+        (*docfile).getValue(MDL_FLIP,iflip);
+        flip=iflip;
+        // COSS (*docfile).getValue(MDL_WEIGHT,weight);
     }
     else
-    {
         REPORT_ERROR(1, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
-    }
 }
 
 void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
@@ -271,7 +261,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     Matrix2D<double> localPaddedImg;
     XmippFftw localTransformerImg;
 
-    DocFile * docFile = threadParams->docFile;
+    MetaData * docFile = threadParams->docFile;
 
     do
     {
@@ -286,12 +276,10 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                 if ( threadParams->imageIndex >= 0 )
                 {
                     FileName fn_img;
-                    
-                    fn_img = parent->SF.get_file_number( threadParams->imageIndex );
+                    parent->SF.getValue(MDL_IMAGE, fn_img, threadParams->imageIndex );
 
                     // Read input image
                     double rot, tilt, psi, xoff,yoff,flip,weight;
-
                     Projection proj;
 
                     if (parent->fn_doc == "")
@@ -651,7 +639,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
 {
     Matrix2D< std::complex<double> > *paddedFourier;
 
-    int repaint = ceil((double)SF.ImgNo()/60);
+    int repaint = ceil((double)SF.size()/60);
 
     bool processed;
     int imgno = 0;
@@ -873,7 +861,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
 void Prog_RecFourier_prm::run()
 {
     // Process all images in the selfile
-    if (verb) init_progress_bar(SF.ImgNo());
+    if (verb) init_progress_bar(SF.size());
 
     // Create threads stuff
     barrier_init( &barrier, numThreads+1 );
@@ -888,14 +876,14 @@ void Prog_RecFourier_prm::run()
         // Passing parameters to each thread
         th_args[nt].parent = this;
         th_args[nt].myThreadID = nt;
-        th_args[nt].docFile = new DocFile(DF);
+        th_args[nt].docFile = new MetaData(DF);
         pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
     }
 
     if( fn_fsc != "" )
-        processImages(0,SF.ImgNo()-1,true);
+        processImages(0,SF.size()-1,true);
     else
-        processImages(0,SF.ImgNo()-1,false);
+        processImages(0,SF.size()-1,false);
 
     finishComputations(fn_out);
 

@@ -58,7 +58,7 @@ int main(int argc, char **argv)
         prm.produce_side_info();
 
         // Divide the selfile in chunks
-        int imgNbr = prm.DF_initial.dataLineNo();
+        int imgNbr = prm.DF_initial.size();
 
         // Make the alignment, rank=0 receives all the assignments
         // The rest of the ranks compute the angular parameters for their
@@ -92,12 +92,13 @@ int main(int argc, char **argv)
         }
         else
         {
-            for (int key=1; key<=imgNbr; key++)
+            for (int key=0; key<imgNbr; key++)
             {
                 if (key%(NProcessors-1)+1==rank)
                 {
-                    ImageXmipp img;
-                    prm.DF_initial.get_image(key,img);
+                    FileName fnImg;
+                    prm.DF_initial.getValue(MDL_IMAGE,fnImg,key);
+                    ImageXmipp img(fnImg);
                     double shiftX = img.Xoff();
                     double shiftY = img.Yoff();
                     double rot    = img.rot();
