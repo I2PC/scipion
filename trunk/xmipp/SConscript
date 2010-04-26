@@ -421,7 +421,7 @@ ReconsSources = [
 #    'ml_align3d.cpp',
     'mlf_align2d.cpp',
     'ml_refine3d.cpp',
-    'ml_tomo.cpp',
+#    'ml_tomo.cpp',
     'nma_alignment.cpp',
     'phantom_create_micrograph.cpp',
     'phantom_create_random.cpp',
@@ -595,7 +595,7 @@ AddXmippProgram('ml_align2d_combine', ['XmippRecons'])
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
 AddXmippProgram('mlf_refine3d', ['XmippRecons'])
 #AddXmippProgram('mlf_tomo', ['XmippRecons'])
-AddXmippProgram('ml_tomo', ['XmippRecons'])
+#AddXmippProgram('ml_tomo', ['XmippRecons'])
 AddXmippProgram('morphology')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('normalize')
@@ -717,7 +717,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_common_lines', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])
+    # AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])
     AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
