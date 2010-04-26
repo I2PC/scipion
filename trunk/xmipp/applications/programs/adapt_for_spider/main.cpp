@@ -37,11 +37,12 @@ int main(int argc, char **argv) {
     int               maxcount;
     
     MetaData          SF;
-    MetaData           SF_out;
+    MetaData          SF_out;
     DocFile           DF;
     Matrix1D<float>   aux;
     int               selline;
     bool              newsel_style;
+    bool              from_metadata;
 
 // Check command line ------------------------------------------------------
 try {
@@ -68,19 +69,20 @@ try {
          ang2=argv[i+2];
          ang3=argv[i+3];
       }
+      from_metadata=checkParameter(argc,argv,"-from_metadata");
    }
 } catch (Xmipp_error XE) {std::cerr << XE; Usage(); exit(1);}
 
 try {
 
 // Perform operation
-   if      (command=="rename") {
+   if (command=="rename") {
       SF.read(fn_sel,NULL);
       rename_for_Spider(SF,SF_out,out_root,out_ext);
       SF_out.write(fn_out);
    }
    else if (command=="generate_count") {
-	   //saves old doc file for spider
+	  //saves old doc file for spider
       generate_Spider_count(maxcount,DF);
       DF.write(fn_out);
    } else if (command=="translate_sel") {
@@ -89,7 +91,7 @@ try {
       DF.write(fn_out);
    } else if (command=="extract_angles") {
       SF.read(fn_sel,NULL);
-      extract_angles(SF,DF,ang1,ang2,ang3);
+      extract_angles(SF,DF,ang1,ang2,ang3,from_metadata);
       DF.write(fn_out);
    }
 } catch (Xmipp_error XE) {std::cerr << XE;}
@@ -110,11 +112,14 @@ void Usage() {
         << "       adapt_for_Spider translate_sel     : Generate corresponding Spider SelFile\n"
         << "            -i metadata file              : Input Xmipp selection file\n"
         << "            -o metadata file              : Output Spider SelFile\n"
-	<< "           [-new_style]                       : Generate new Spider Selfile style\n"
+    	<< "           [-new_style]                   : Generate new Spider Selfile style\n"
         << "       adapt_for_Spider extract_angles    : Generate a Docfile with angles\n"
         << "            -i metadata                   : Input Xmipp selection file\n"
         << "            -o <Ang DocFile>              : Output Docfile\n"
         << "           [-order <ang1> <ang2> <ang3>   : order of the angles\n"
-        << "                                            by default, psi, tilt, rot\n";
+        << "                                            by default, psi, tilt, rot\n"
+        << "           [-from_metadata]               : get angles from metadata\n"
+        << "                                            instead of from the header\n"
+    ;
 }
 
