@@ -139,8 +139,8 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
 
     ImageXmipp       img,empty;
     Projection       proj;
-    DocFile          DF;
-    SelFile          SFr,emptySF;
+    MetaData         DF;
+    MetaData         SFr,emptySF;
     SymList          SL;
     FileName         fn_img;
     double           mean,stddev,psi=0.;
@@ -157,14 +157,8 @@ void Prog_angular_projection_matching_prm::produceSideInfo() {
     barrier_init(&thread_barrier, threads);
 
     // Read one image to get dim
-    DFexp.go_first_data_line();
-    DFexp.previous();
-    if (DFexp.get_current_line().Is_comment()) 
-	{
-	fn_img = ((DFexp.get_current_line()).get_text()).erase(0, 3);
-	}
-    else
-	REPORT_ERROR(1,"BUG: no comment in DFexp where expected....");
+    DFexp.firstObject();
+    DFexp.getValue(MDL_IMAGE,fn_img);
     img.read(fn_img);
     dim = XSIZE(img());
     
@@ -642,8 +636,6 @@ void Prog_angular_projection_matching_prm::translationallyAlignOneImage(Matrix2D
 
 void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, double * my_output) 
 {
-
-
   ImageXmipp img;
   double opt_rot, opt_tilt, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr=-99.e99;
   int opt_refno;
@@ -716,41 +708,32 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
       my_output[imgno * MY_OUPUT_SIZE + 4] = opt_psi;
       my_output[imgno * MY_OUPUT_SIZE + 5] = opt_xoff;
       my_output[imgno * MY_OUPUT_SIZE + 6] = opt_yoff;
-      my_output[imgno * MY_OUPUT_SIZE + 7] = opt_refno; 
+      my_output[imgno * MY_OUPUT_SIZE + 7] = opt_refno;
       my_output[imgno * MY_OUPUT_SIZE + 8] = opt_flip;
       my_output[imgno * MY_OUPUT_SIZE + 9] = maxcorr;
-
   }
-
 }
 
 void Prog_angular_projection_matching_prm::getCurrentImage(int imgno, ImageXmipp &img)
 {
 
-    FileName	     fn_img;
-    DocLine	     DL;
+    FileName fn_img;
     Matrix2D<double> A;
 
     // jump to line imgno+1 in DFexp, get data and filename
-    DFexp.locate(imgno+1);
-    DL = DFexp.get_current_line();
-    DFexp.previous();
-    if (DFexp.get_current_line().Is_comment()) 
-    {
-       fn_img = ((DFexp.get_current_line()).get_text()).erase(0, 3);
-    }
-    else
-    {
-       REPORT_ERROR(1,"BUG: no comment in DFexp where expected....");
-    }
+    DFexp.goToObject(imgno);
+    DFexp.getValue(MDL_IMAGE,fn_img);
 
     // Read actual image
     img.read(fn_img);
     img().setXmippOrigin();
 
     // Store translation in header and apply it to the actual image
-    img.set_Xoff(DL[3]);
-    img.set_Yoff(DL[4]);
+    double shiftX, shiftY;
+    DFexp.getValue(MDL_SHIFTX,shiftX);
+    DFexp.getValue(MDL_SHIFTY,shiftY);
+    img.set_Xoff(shiftX);
+    img.set_Yoff(shiftY);
     img.set_rot(0.);
     img.set_tilt(0.);
     img.set_psi(0.);

@@ -28,8 +28,7 @@
 
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
 #include <data/filters.h>
 #include <data/mask.h>
@@ -74,9 +73,7 @@ public:
     /** Filenames */
     FileName fn_exp, fn_ref, fn_root, fn_ctf;
     /** Docfile with experimental images */
-    DocFile DFexp;
-    /** Selfile with experimental images */
-    SelFile SFexp;
+    MetaData DFexp;
     /** dimension of the images and padded images */
     int dim, paddim;
     /** Padding factor (only for applying CTF to references) */
