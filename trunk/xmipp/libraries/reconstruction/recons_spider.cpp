@@ -32,13 +32,13 @@
 #include "recons_spider.h"
 
 // SIRT --------------------------------------------------------------------
-void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,
+void SIRT_Spider(MetaData &SF, double lambda, double no_it, int radius,
                  const FileName &fn_root, const FileName &fn_ext,
                  const FileName &fn_recons_root, const FileName &fn_batch)
 {
     // Generate Spider selection file
     DocFile DF;
-    generate_Spider_count(SF.ImgNo(), DF);
+    generate_Spider_count(SF.size(), DF);
     FileName fn_spider_sel = fn_root + "sel." + fn_ext;
     DF.write(fn_spider_sel);
 
@@ -55,9 +55,10 @@ void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,
         REPORT_ERROR(3005, (std::string)"single_recons_test:: Could not open "
                      "the file " + full_fn_batch + " for output");
 
-    SF.go_first_ACTIVE();
+    SF.firstObject();
+    FileName fnImg; SF.getValue(MDL_IMAGE,fnImg);
     fh_batch << "bp rp\n";
-    fh_batch << SF.get_current_file() << std::endl;
+    fh_batch << fnImg << std::endl;
     fh_batch << fn_spider_sel << std::endl;
     fh_batch << radius << std::endl;
     fh_batch << fn_spider_ang << std::endl;

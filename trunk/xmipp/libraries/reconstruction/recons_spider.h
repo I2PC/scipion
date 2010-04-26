@@ -29,7 +29,7 @@
 #ifndef _RECONS_SPIDER_HH
 #define _RECONS_SPIDER_HH
 
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/funcs.h>
 
 /**@defgroup SpiderRecons Interaction with Spider 
@@ -60,7 +60,7 @@
     @endcode
     The actual process status is written to std::cerr.
 */
-void SIRT_Spider(SelFile &SF, double lambda, double no_it, int radius,
+void SIRT_Spider(MetaData &SF, double lambda, double no_it, int radius,
                  const FileName &fn_root, const FileName &fn_ext,
                  const FileName &fn_recons_root, const FileName &fn_batch);
 //@}
