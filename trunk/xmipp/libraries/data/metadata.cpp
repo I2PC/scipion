@@ -77,6 +77,18 @@ MetaData& MetaData::operator =(MetaData &MD)
     return *this;
 }
 
+MetaData& MetaData::add (MetaData &MD)
+{
+    std::map<long int, MetaDataContainer *>::iterator objIt;
+    for (objIt = MD.objects.begin(); objIt != MD.objects.end(); objIt++)
+    {
+        long int idx = this->addObject();
+        objects[idx] = new MetaDataContainer(*(objIt->second));
+    }
+    this->objectsIterator = objects.begin();
+    return *this;
+}
+
 void MetaData::read(std::ifstream *infile,
                     std::vector<MetaDataLabel> * labelsVector)
 {

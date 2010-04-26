@@ -118,6 +118,10 @@ public:
      */
     MetaData& operator = ( MetaData &MD );
 
+    /** add two metadata object, result in calling metadata object
+     */
+    MetaData& add ( MetaData &MD );
+
     /** Destructor
      * @ingroup MetaDataConstructors
      *
