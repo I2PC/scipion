@@ -73,7 +73,7 @@ void Prog_angular_distance_prm::produce_side_info()
     if (fn_sym != "") SL.read_sym_file(fn_sym);
 
     // Check that both docfiles are of the same length
-    if (DF1.dataLineNo() != DF2.dataLineNo())
+    if (DF1.size() != DF2.size())
         REPORT_ERROR(1, "Angular_distance: Input Docfiles with different number of entries");
 }
 
@@ -200,19 +200,16 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
 void Prog_angular_distance_prm::compute_distance(double &angular_distance,
     double &shift_distance)
 {
-    DocFile DF_out;
+    MetaData DF_out;
     angular_distance = 0;
     shift_distance = 0;
 
-    DF1.go_first_data_line();
-    DF2.go_first_data_line();
-    DF_out.reserve(DF1.dataLineNo());
+    DF1.firstObject();
+    DF2.firstObject();
     
-    int dim = DF1.FirstLine_colNumber();
-    Matrix1D<double> aux(17);
     Matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff,
         X_diff, Y_diff, shift_diff;
-    rot_diff.resize(DF1.dataLineNo());
+    rot_diff.resize(DF1.size());
     tilt_diff.resize(rot_diff);
     psi_diff.resize(rot_diff);
     vec_diff.resize(rot_diff);
@@ -221,10 +218,10 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
     shift_diff.resize(rot_diff);
 
     // Build output comment
-    DF_out.append_comment("            rot1       rot2    diff_rot     tilt1      tilt2    diff_tilt    psi1       psi2     diff_psi   ang_dist      X1         X2        Xdiff       Y1          Y2       Ydiff     ShiftDiff");
+    DF_out.setComment("rot1 rot2 diff_rot tilt1 tilt2 diff_tilt psi1 psi2 diff_psi ang_dist X1 X2 Xdiff Y1 Y2 Ydiff ShiftDiff");
 
     int i = 0;
-    while (!DF1.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(DF1)
     {
         // Read input data
         double rot1,  tilt1,  psi1;
@@ -232,51 +229,16 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
         double rot2p, tilt2p, psi2p;
         double distp;
         double X1, X2, Y1, Y2;
-        if (dim >= 1)
-        {
-            rot1 = DF1(0);
-            rot2 = DF2(0);
-        }
-        else
-        {
-            rot1 = rot2 = 0;
-        }
-        if (dim >= 2)
-        {
-            tilt1 = DF1(1);
-            tilt2 = DF2(1);
-        }
-        else
-        {
-            tilt1 = tilt2 = 0;
-        }
-        if (dim >= 3)
-        {
-            psi1 = DF1(2);
-            psi2 = DF2(2);
-        }
-        else
-        {
-            psi1 = psi2 = 0;
-        }
-        if (dim >= 4)
-        {
-            X1 = DF1(3);
-            X2 = DF2(3);
-        }
-        else
-        {
-            X1 = X2 = 0;
-        }
-        if (dim >= 5)
-        {
-            Y1 = DF1(4);
-            Y2 = DF2(4);
-        }
-        else
-        {
-            Y1 = Y2 = 0;
-        }
+        DF1.getValue(MDL_ANGLEROT,rot1);
+        DF2.getValue(MDL_ANGLEROT,rot2);
+        DF1.getValue(MDL_ANGLETILT,tilt1);
+        DF2.getValue(MDL_ANGLETILT,tilt2);
+        DF1.getValue(MDL_ANGLEPSI,psi1);
+        DF2.getValue(MDL_ANGLEPSI,psi2);
+        DF1.getValue(MDL_SHIFTX,X1);
+        DF2.getValue(MDL_SHIFTX,X2);
+        DF1.getValue(MDL_SHIFTY,Y1);
+        DF2.getValue(MDL_SHIFTY,Y2);
 
         // Bring both angles to a normalized set
         rot1 = realWRAP(rot1, -180, 180);
@@ -303,30 +265,33 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
         shift_diff(i) = sqrt(X_diff(i)*X_diff(i)+Y_diff(i)*Y_diff(i));
 
         // Fill the output result
-        aux(0) = rot1;
-        aux(1) = rot2p;
-        aux(2) = rot_diff(i);
-        aux(3) = tilt1;
-        aux(4) = tilt2p;
-        aux(5) = tilt_diff(i);
-        aux(6) = psi1;
-        aux(7) = psi2p;
-        aux(8) = psi_diff(i);
-        aux(9) = distp;
-        aux(10) = X1;
-        aux(11) = X2;
-        aux(12) = X_diff(i);
-        aux(13) = Y1;
-        aux(14) = Y2;
-        aux(15) = Y_diff(i);
-        aux(16) = shift_diff(i);
+        std::string output;
+        output+=floatToString(rot1)+" ";
+        output+=floatToString(rot2p)+" ";
+        output+=floatToString(rot_diff(i))+" ";
+        output+=floatToString(tilt1)+" ";
+        output+=floatToString(tilt2p)+" ";
+        output+=floatToString(tilt_diff(i))+" ";
+        output+=floatToString(psi1)+" ";
+        output+=floatToString(psi2p)+" ";
+        output+=floatToString(psi_diff(i))+" ";
+        output+=floatToString(distp)+" ";
+        output+=floatToString(X1)+" ";
+        output+=floatToString(X2)+" ";
+        output+=floatToString(X_diff(i))+" ";
+        output+=floatToString(Y1)+" ";
+        output+=floatToString(Y2)+" ";
+        output+=floatToString(Y_diff(i))+" ";
+        output+=floatToString(shift_diff(i))+" ";
         angular_distance += distp;
         shift_distance += shift_diff(i);
-        DF_out.append_data_line(aux);
+        DF_out.addObject();
+        DF_out.setValue(MDL_COMMENT,output);
+        FileName fnImg; DF1.getValue(MDL_IMAGE,fnImg);
+        DF_out.setValue(MDL_IMAGE,fnImg);
 
         // Move to next data line
-        DF1.next_data_line();
-        DF2.next_data_line();
+        DF2.nextObject();
         i++;
     }
     angular_distance /= i;

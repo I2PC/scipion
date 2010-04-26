@@ -81,8 +81,8 @@ void Prog_angular_predict_continuous_prm::usage()
     std::cerr
         << " Usage:\n"
         << "   -ref <Xmipp Volume>        : Reference volume\n"
-        << "   -ang <angle file>          : DocFile with the initial angles\n"
-        << "   -oang <angle file>         : DocFile with output angles\n"
+        << "   -ang <angle file>          : MetaData with the initial angles\n"
+        << "   -oang <angle file>         : MetaData with output angles\n"
         << "  [-gaussian_Fourier <s=0.5>] : Weighting sigma in Fourier space\n"
         << "  [-gaussian_Real    <s=0.5>] : Weighting sigma in Real space\n"
         << "  [-max_iter <max=60>]        : Maximum number of iterations\n"
@@ -104,7 +104,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
     V().setXmippOrigin();
 
     // Resize the predicted vectors
-    int number_of_images = DF_initial.dataLineNo();
+    int number_of_images = DF_initial.size();
     current_image = 0;
     image_name.resize(number_of_images);
     predicted_rot.resize(number_of_images);
@@ -213,20 +213,21 @@ void Prog_angular_predict_continuous_prm::finish_processing()
 {
     // Save predicted angles
     int p = predicted_rot.size();
-    DocFile DF;
-    DF.reserve(2*p + 1);
-    DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Cost(6)");
+    MetaData DF;
+    DF_initial.firstObject();
     Matrix1D<double> v(6);
     for (int i = 0; i < p; i++)
     {
-        v(0) = predicted_rot[i];
-        v(1) = predicted_tilt[i];
-        v(2) = predicted_psi[i];
-        v(3) = predicted_shiftX[i];
-        v(4) = predicted_shiftY[i];
-        v(5) = predicted_cost[i];
-        DF.append_comment(DF_initial.get_imagename(i+1));
-        DF.append_data_line(v);
+    	DF.addObject();
+    	FileName fnImg; DF_initial.getValue(MDL_IMAGE,fnImg);
+        DF.setValue(MDL_IMAGE,fnImg);
+    	DF.setValue(MDL_ANGLEROT,predicted_rot[i]);
+    	DF.setValue(MDL_ANGLETILT,predicted_tilt[i]);
+    	DF.setValue(MDL_ANGLEPSI,predicted_psi[i]);
+    	DF.setValue(MDL_SHIFTX,predicted_shiftX[i]);
+    	DF.setValue(MDL_SHIFTY,predicted_shiftY[i]);
+    	DF.setValue(MDL_COST,predicted_cost[i]);
+    	DF_initial.nextObject();
     }
     DF.write(fn_out_ang);
 }
@@ -234,18 +235,20 @@ void Prog_angular_predict_continuous_prm::finish_processing()
 // Run ---------------------------------------------------------------------
 void Prog_angular_predict_continuous_prm::run()
 {
-    int Nimg=DF_initial.dataLineNo();
+    int Nimg=DF_initial.size();
     if (!quiet) init_progress_bar(Nimg);
-    for (int key=1; key<=Nimg; key++)
+    int key=0;
+    FOR_ALL_OBJECTS_IN_METADATA(DF_initial)
     {
-        ImageXmipp img;
-        DF_initial.get_image(key,img);
+        FileName fnImg; DF_initial.getValue(MDL_IMAGE,fnImg);
+        ImageXmipp img; img.read(fnImg);
         double shiftX = img.Xoff();
         double shiftY = img.Yoff();
         double rot    = img.rot();
         double tilt   = img.tilt();
         double psi    = img.psi();
         double cost = predict_angles(img, shiftX, shiftY, rot, tilt, psi);
+        key++;
         if (!quiet) progress_bar(key);
     }
     if (!quiet) progress_bar(Nimg);

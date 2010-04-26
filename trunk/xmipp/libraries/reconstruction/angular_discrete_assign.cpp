@@ -27,7 +27,6 @@
 #include "fourier_filter.h"
 
 #include <data/args.h>
-#include <data/docfile.h>
 #include <data/histogram.h>
 #include <data/geometry.h>
 #include <data/wavelet.h>
@@ -137,25 +136,24 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
 
     // Read the experimental images
     DFexp.read(fn_exp);
-    DFexp.go_first_data_line();
+    DFexp.firstObject();
 
     // Read the angle file
-    DocFile DF;
+    MetaData DF;
     DF.read(fn_ref.without_extension()+"_angles.doc");
-    DF.go_first_data_line();
-    rot.resize(DF.dataLineNo());
-    tilt.resize(DF.dataLineNo());
+    DF.firstObject();
+    rot.resize(DF.size());
+    tilt.resize(DF.size());
     int i = 0;
-    while (!DF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(DF)
     {
-        rot[i] = DF(0);  // Rotational angle
-        tilt[i] = DF(1); // Tilting angle
+        DF.getValue(MDL_ANGLEROT, rot[i]);
+        DF.getValue(MDL_ANGLETILT, tilt[i]);
         i++;
-        DF.next_data_line();
     }
 
     // Resize the predicted vectors
-    int number_of_images = DFexp.dataLineNo();
+    int number_of_images = DFexp.size();
     current_img = 0;
     image_name.resize(number_of_images);
     predicted_rot.resize(number_of_images);
@@ -1003,20 +1001,20 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
 void Prog_angular_predict_prm::finish_processing()
 {
     int p = predicted_rot.size();
-    DocFile DF;
-    DF.reserve(2*p + 1);
-    DF.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5), Score(6)");
-    Matrix1D<double> v(6);
+    MetaData DF;
+    DFexp.firstObject();
     for (int i = 0; i < p; i++)
     {
-        v(0) = predicted_rot[i];
-        v(1) = predicted_tilt[i];
-        v(2) = predicted_psi[i];
-        v(3) = predicted_shiftX[i];
-        v(4) = predicted_shiftY[i];
-        v(5) = predicted_corr[i];
-        DF.append_comment(DFexp.get_imagename(i+1));
-        DF.append_data_line(v);
+        DF.addObject();
+        std::string fn; DFexp.getValue(MDL_IMAGE, fn);
+        DF.setValue(MDL_IMAGE,     fn);
+        DF.setValue(MDL_ANGLEROT,  predicted_rot[i]);
+        DF.setValue(MDL_ANGLETILT, predicted_tilt[i]);
+        DF.setValue(MDL_ANGLEPSI,  predicted_psi[i]);
+        DF.setValue(MDL_SHIFTX,    predicted_shiftX[i]);
+        DF.setValue(MDL_SHIFTY,    predicted_shiftY[i]);
+        DF.setValue(MDL_MAXCC,     predicted_corr[i]);
+        DFexp.nextObject();
     }
     DF.write(fn_out_ang);
 }
@@ -1024,15 +1022,18 @@ void Prog_angular_predict_prm::finish_processing()
 // Run ---------------------------------------------------------------------
 void Prog_angular_predict_prm::run()
 {
-    int Nimg=DFexp.dataLineNo();
+    int Nimg=DFexp.size();
     if (!quiet) init_progress_bar(Nimg);
-    for (int key=1; key<=Nimg; key++)
+    int n=0;
+    FOR_ALL_OBJECTS_IN_METADATA(DFexp)
     {
-        ImageXmipp img;
-        DFexp.get_image(key,img);
+        std::string fnImg;
+        DFexp.getValue(MDL_IMAGE,fnImg);
+        ImageXmipp img(fnImg);
         double shiftX, shiftY, psi, rot, tilt;
         double corr = predict_angles(img, shiftX, shiftY, rot, tilt, psi);
-        if (!quiet) progress_bar(key);
+        n++;
+        if (!quiet && n%10==0) progress_bar(n);
     }
     if (!quiet) progress_bar(Nimg);
     

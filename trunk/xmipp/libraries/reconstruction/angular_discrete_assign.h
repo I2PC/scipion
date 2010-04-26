@@ -28,6 +28,7 @@
 #include <data/funcs.h>
 #include <data/progs.h>
 #include <data/selfile.h>
+#include <data/metadata.h>
 #include <classification/pca.h>
 
 #include "angular_distance.h"
@@ -90,7 +91,7 @@ public:
     bool search5D;
 public:
     // Docfile with the experimental images
-    DocFile DFexp;
+    MetaData DFexp;
     // Number of subbands
     int SBNo;
     // Subband size

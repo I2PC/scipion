@@ -32,7 +32,6 @@
 #include <data/matrix2d.h>
 #include <data/matrix1d.h>
 #include <data/mask.h>
-#include <data/docfile.h>
 
 /**@defgroup AngularPredictContinuous angular_continuous_assign (Continuous angular assignment)
    @ingroup ReconsLibraryPrograms */
@@ -65,7 +64,7 @@ public:
     // Imaginary part of the Fourier transform
     Matrix3D<double> imDFTVolume;
     // DocFile with the initial guess
-    DocFile          DF_initial;
+    MetaData         DF_initial;
     // Weighting mask in Fourier space
     Mask_Params      mask_Fourier;
     // Weighting mask in Real space

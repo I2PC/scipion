@@ -26,7 +26,7 @@
 #define _PROG_ANGULAR_DISTANCE
 
 #include <data/funcs.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 
 #include <data/symmetries.h>
 
@@ -51,9 +51,9 @@ public:
     bool object_rotation;
 public:
     // DocFile 1
-    DocFile DF1;
+    MetaData DF1;
     // DocFile 2
-    DocFile DF2;
+    MetaData DF2;
     // Symmetry List
     SymList SL;
 public:
