@@ -124,7 +124,7 @@ void MetaData::intersection(MetaData &minuend,MetaData &subtrahend, MetaDataLabe
             }
         }
     }
-    this->objectsIterator = objects.begin();
+    this->objectsIterator = this->objects.begin();
 }
 
 void MetaData::substraction(MetaData &minuend,MetaData &subtrahend, MetaDataLabel thisLabel)
@@ -173,7 +173,7 @@ void MetaData::substraction(MetaData &minuend,MetaData &subtrahend, MetaDataLabe
             << itMinuend->second << std::endl;
         }
     }
-    this->objectsIterator = objects.begin();
+    this->objectsIterator = this->objects.begin();
 }
 
 void MetaData::read(std::ifstream *infile,
@@ -1513,7 +1513,6 @@ std::vector<long int> MetaData::findObjectsInRange(MetaDataLabel name,
             double value;
             aux->getValue(name, value);
 
-            std::cerr << "VAL_D: " << value << std::endl;
             if (value >= minValue && value <= maxValue)
             {
                 result.push_back(It->first);
@@ -1522,6 +1521,36 @@ std::vector<long int> MetaData::findObjectsInRange(MetaDataLabel name,
     }
 
     return result;
+}
+
+/**
+template <class T>
+void MetaData::findObjectsInRange( MetaData &MD,
+                                   MetaDataLabel name,
+                                   T minValue,
+                                   T maxValue )
+**/
+
+void MetaData::findObjectsInRange( MetaData &MD,
+                                   MetaDataLabel name,
+                                   double minValue,
+                                   double maxValue )
+{
+
+
+    if (!isColumnFormat)
+    {
+        REPORT_ERROR( -1, "Row formatted MetaData can not be added" );
+    }
+
+    this->activeLabels=MD.activeLabels;
+    std::vector<long int> toAdd = MD.findObjectsInRange(name, minValue,maxValue);
+    for(int i= 0;i< toAdd.size();i++)
+    {
+        long int idx = this->addObject();
+        this->objects[idx] = new MetaDataContainer(*(MD.objects[i]));
+    }
+    this->objectsIterator = this->objects.begin();
 }
 
 std::vector<long int> MetaData::findObjectsInRange(MetaDataLabel name,
@@ -1544,7 +1573,6 @@ std::vector<long int> MetaData::findObjectsInRange(MetaDataLabel name,
         {
             int value;
             aux->getValue(name, value);
-            std::cerr << "VAL_I: " << value << std::endl;
 
             if (value >= minValue && value <= maxValue)
             {
@@ -1906,7 +1934,17 @@ void get_statistics(MetaData MT_in, Image& _ave, Image& _sd, double& _min,
     _sd() /= (n - 1);
     _sd().selfSQRTnD();
 }
-
+/**
+void metadata_init()
+{
+ //I do not want to make T general, it will only work for doubles and float
+ MetaData MD;
+ int i;
+ double d;
+ MD.findObjectsInRange(MD, MDL_REF,      i, i );
+ MD.findObjectsInRange(MD, MDL_ANGLEPSI, d, d );
+}
+**/
 void ImgSize(int &Ydim, int &Xdim)
 {
     /*

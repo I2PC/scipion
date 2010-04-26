@@ -231,6 +231,18 @@ mDbb = XmippData.MetaData(bb)
 mDresult = XmippData.MetaData()
 mDresult.substraction(mDaa,mDbb,XmippData.MDL_IMAGE)
 mDresult.write("substraction.doc")
+==============
+test operator findOnjects in range
+================
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+import XmippData
+aa   = XmippData.FileName('aa.doc')
+mDaa = XmippData.MetaData(aa)
+mDResult = XmippData.MetaData()
+mDResult.findObjectsInRange(mDaa,XmippData.MDL_ANGLEROT,3.,100.)
+mDResult.write("findObjectsInRange.doc")
 
 */
 

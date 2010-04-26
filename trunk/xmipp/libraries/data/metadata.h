@@ -119,6 +119,7 @@ public:
     MetaData& operator = ( MetaData &MD );
 
     /** union of  metadata objects, result in calling metadata object
+     * union is a reserved word so I called this method union_
      */
     void union_ ( MetaData &MD );
 
@@ -225,6 +226,12 @@ public:
     // findObjects in a range
     std::vector<long int> findObjectsInRange( MetaDataLabel name, double minValue, double maxValue );
     std::vector<long int> findObjectsInRange( MetaDataLabel name, int minValue, int maxValue );
+    /**Create new mwtadata with selected range of values
+     *
+     */
+    void findObjectsInRange( MetaData &base, MetaDataLabel name, double minValue, double maxValue );
+//    void findObjectsInRange( MetaData &base, MetaDataLabel name, int minValue, int maxValue );
+//    template <class T> void findObjectsInRange( MetaData &base, MetaDataLabel name, T minValue, T maxValue );
 
     void combine( MetaData & other, MetaDataLabel thisLabel=MDL_UNDEFINED);
     void combineWithFiles( MetaDataLabel thisLabel );
