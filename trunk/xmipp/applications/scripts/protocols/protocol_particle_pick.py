@@ -39,12 +39,12 @@ PosName='Common'
 
 # Perform automatic particle picking
 """ Perform automatic particle picking """
-AutomaticPicking=True
+AutomaticPicking=False
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/coss/temp/F22_cib'
+ProjectDir='/home/scheres/Demo/my_experiment'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -358,11 +358,11 @@ class particle_pick_class:
         label=str(count).zfill(5)
         l=Label(self.frame, text=label, 
                 bg=self.LabelBackgroundColour)
-        l.grid(row=row, column=3)
+        l.grid(row=row, column=2)
         r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
                            value=micrograph, indicatoron=0,
                            command=self.LaunchPairMark)
-        r.grid(row=row, column=2,sticky=N)
+        r.grid(row=row, column=1,sticky=N)
         return row
 
     def InvertSelection(self):
@@ -498,14 +498,13 @@ class particle_pick_class:
                 bg=self.LabelBackgroundColour)
         if (self.AutomaticPicking):
             l.grid(row=self.buttonrow, column=3)
-        else:
-            l.grid(row=self.buttonrow, column=2)
-        if (self.AutomaticPicking):
             totalAuto=self.CountAll(self.PosName+'.auto')
             label=str(totalAuto).zfill(5)
             l=Label(self.frame, text=label, 
                     bg=self.LabelBackgroundColour)
             l.grid(row=self.buttonrow, column=4)
+        else:
+            l.grid(row=self.buttonrow, column=2)
 
     def GuiClose(self):
         import sys
