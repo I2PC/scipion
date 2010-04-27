@@ -630,6 +630,7 @@ class MetaData(_object):
     __swig_destroy__ = _XmippData.delete_MetaData
     __del__ = lambda self : None;
     def setColumnFormat(*args): return _XmippData.MetaData_setColumnFormat(*args)
+    def getColumnFormat(*args): return _XmippData.MetaData_getColumnFormat(*args)
     def setValue(*args): return _XmippData.MetaData_setValue(*args)
     def readOldSelFile(*args): return _XmippData.MetaData_readOldSelFile(*args)
     def readOldDocFile(*args): return _XmippData.MetaData_readOldDocFile(*args)
@@ -812,4 +813,7 @@ vectorm_swigregister(vectorm)
 addObjectsInRangeInt = _XmippData.addObjectsInRangeInt
 addObjectsInRangeDouble = _XmippData.addObjectsInRangeDouble
 
+setValueInt = _XmippData.setValueInt
+setValueDouble = _XmippData.setValueDouble
+setValueString = _XmippData.setValueString
 

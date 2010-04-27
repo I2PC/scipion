@@ -24,6 +24,6 @@ files = glob.glob(sys.argv[1])
 files.sort()
 for file in files:
     mD.addObject();
-    mD.setValue( XmippData.MDL_IMAGE, file)
-    mD.setValue( XmippData.MDL_ENABLED, 1)
+    XmippData.setValueString(mD, XmippData.MDL_IMAGE, file,-1)
+    XmippData.setValueInt(mD, XmippData.MDL_ENABLED, 1,-1)
 mD.write(outFile)

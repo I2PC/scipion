@@ -155,13 +155,13 @@ public:
     }
     // Set a new pair/value for an specified object. If no objectID is given, that
     // pointed by the class iterator is used
-    bool setValue(MetaDataLabel name, double value, long int objectID = -1);
-    bool setValue(MetaDataLabel name, int value, long int objectID = -1);
-    bool setValue(MetaDataLabel name, bool value, long int objectID = -1);
-    bool setValue(MetaDataLabel name, const std::string &value,
-                  long int objectID = -1);
-    bool setValue(MetaDataLabel name, const std::vector<double> &value,
-                  long int objectID = -1);
+//    bool setValue(MetaDataLabel name, double value, long int objectID = -1);
+//    bool setValue(MetaDataLabel name, int value, long int objectID = -1);
+//    bool setValue(MetaDataLabel name, bool value, long int objectID = -1);
+//    bool setValue(MetaDataLabel name, const std::string &value,
+//                  long int objectID = -1);
+//    bool setValue(MetaDataLabel name, const std::vector<double> &value,
+//                  long int objectID = -1);
     bool setValue(const std::string &name, const std::string &value,
                   long int objectID = -1);
 
@@ -281,16 +281,6 @@ public:
      */
     bool detectObjects(MetaDataLabel name, int value);
 
-    /**Add object with metadata label name in the range given by minvalue and maxvalue
-     * This template function may be accessed from swig
-     *
-     * */
-    template<class T>
-    friend void addObjectsInRange(MetaData &MDin, MetaData &MDout,
-                                  MetaDataLabel name, T minValue, T maxValue)
-    {
-        MDout.fillMetaData(MDin, MDin.findObjectsInRange(name, minValue, maxValue));
-    }
 
     template<class T>
     std::vector<long int> findObjectsInRange(MetaDataLabel name, T minValue, T maxValue)
@@ -377,6 +367,71 @@ public:
         }
 
         return true;
+    }
+
+    template<class T>
+    bool setValue(MetaDataLabel name, T value, long int objectID=-1)
+    {
+        long int auxID;
+
+        if (!objects.empty() && MetaDataContainer::isValidLabel(name))
+        {
+            if (objectID == -1)
+            {
+                auxID = objectsIterator->first;
+            }
+            else
+            {
+                auxID = objectID;
+            }
+
+            MetaDataContainer * aux = objects[auxID];
+
+            // Check whether label is correct (belongs to the enum in the metadata_container header
+            // and whether it is present in the activeLabels vector. If not, add it to all the other
+            // objects with default values
+            std::vector<MetaDataLabel>::iterator location;
+            std::map<long int, MetaDataContainer *>::iterator It;
+
+            location = std::find(activeLabels.begin(), activeLabels.end(), name);
+
+            if (location == activeLabels.end())
+            {
+                activeLabels.push_back(name);
+
+                // Add this label to the rest of the objects in this class
+                for (It = objects.begin(); It != objects.end(); It++)
+                {
+                    if (It->second != aux)
+                    {
+                        (It->second)->addValue(name, T());
+                    }
+                }
+            }
+
+            aux->addValue(name, value);
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    /**Add object with metadata label name in the range given by minvalue and maxvalue
+     * This template function may be accessed from swig
+     *
+     * */
+    template<class T>
+    friend void addObjectsInRangeSwig(MetaData &MDin, MetaData &MDout,
+                                  MetaDataLabel name, T minValue, T maxValue)
+    {
+        MDout.fillMetaData(MDin, MDin.findObjectsInRange(name, minValue, maxValue));
+    }
+    template<class T>
+    friend bool setValueSwig(MetaData &MDout,MetaDataLabel name, T value, long int objectID=-1)
+    {
+    	MDout.setValue( name,  value, objectID);
     }
 
 

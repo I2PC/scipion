@@ -1133,7 +1133,7 @@ long int MetaData::goToObject(long int objectID)
 
     return result;
 }
-
+#ifdef NEVERDEFINED
 bool MetaData::setValue(MetaDataLabel name, double value, long int objectID)
 {
     long int auxID;
@@ -1381,6 +1381,7 @@ bool MetaData::setValue(MetaDataLabel name, const std::vector<double> &value,
         return false;
     }
 }
+#endif
 
 bool MetaData::setValue(const std::string &name, const std::string &value,
                         long int objectID)

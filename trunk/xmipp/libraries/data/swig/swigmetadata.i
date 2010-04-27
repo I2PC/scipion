@@ -3,7 +3,6 @@
 #include "../metadata_container.h"
 %}
 //Python does not have float/double variable, just reals that will be cast to double
-%ignore MetaData::setValue( MetaDataLabel name, float value, long int objectID = -1 );
 %ignore MetaDataContainer::addValue( MetaDataLabel name, float value );
 %ignore MetaDataContainer::pairExists( MetaDataLabel name, float value );
 %include ../metadata.h
@@ -13,8 +12,12 @@ namespace std {
    
 };
 
-%template(addObjectsInRangeInt) addObjectsInRange<int>;
-%template(addObjectsInRangeDouble) addObjectsInRange<double>; 
+%template(addObjectsInRangeInt) addObjectsInRangeSwig<int>;
+%template(addObjectsInRangeDouble) addObjectsInRangeSwig<double>; 
+
+%template(setValueInt)       setValueSwig<int>; 
+%template(setValueDouble)    setValueSwig<double>; 
+%template(setValueString)    setValueSwig<std::string>;
 
 /*
 ==================
@@ -267,6 +270,3 @@ MDo.setValue(XmippData.MDL_SUMWEIGHT, 0.555);
 
 MDo.write("rowformat.doc")
 */
-
-
-
