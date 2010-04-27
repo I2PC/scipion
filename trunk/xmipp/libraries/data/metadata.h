@@ -291,6 +291,12 @@ public:
 void get_statistics(MetaData MT,Image& _ave, Image& _sd, double& _min,
                     double& _max, bool apply_geo);
 
+/** Get image size
+ *
+ */
+void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim);
+
+
 /** For all objects.
     @code
     FOR_ALL_OBJECTS_IN_METADATA(metadata) {
