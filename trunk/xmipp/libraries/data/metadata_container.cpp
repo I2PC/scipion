@@ -389,18 +389,18 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
     {
         return MDL_ANGLEPSI;
     }
-	else if( strLabel == "angleRot2" || strLabel == "rot2" )
-	{
-		return MDL_ANGLEROT2;
-	}
-	else if( strLabel == "angleTilt2" || strLabel == "tilt2" )
-	{
-		return MDL_ANGLETILT2;
-	}
-	else if( strLabel == "anglePsi2" || strLabel == "psi2" )
-	{
-		return MDL_ANGLEPSI2;
-	}
+    else if( strLabel == "angleRot2" || strLabel == "rot2" )
+    {
+        return MDL_ANGLEROT2;
+    }
+    else if( strLabel == "angleTilt2" || strLabel == "tilt2" )
+    {
+        return MDL_ANGLETILT2;
+    }
+    else if( strLabel == "anglePsi2" || strLabel == "psi2" )
+    {
+        return MDL_ANGLEPSI2;
+    }
     else if( strLabel == "image" )
     {
         return MDL_IMAGE;
@@ -429,18 +429,18 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
     {
         return MDL_SHIFTZ;
     }
-	else if( strLabel == "X")
-	{
-		return MDL_X;
-	}
-	else if( strLabel == "Y")
-	{
-		return MDL_Y;
-	}
-	else if( strLabel == "Z")
-	{
-		return MDL_Z;
-	}
+    else if( strLabel == "X")
+    {
+        return MDL_X;
+    }
+    else if( strLabel == "Y")
+    {
+        return MDL_Y;
+    }
+    else if( strLabel == "Z")
+    {
+        return MDL_Z;
+    }
     else if( strLabel == "enabled" )
     {
         return MDL_ENABLED;
@@ -477,10 +477,10 @@ MetaDataLabel MetaDataContainer::codifyLabel( std::string strLabel )
     {
         return MDL_MAXCC;
     }
-	else if( strLabel == "cost" )
-	{
-		return MDL_COST;
-	}
+    else if( strLabel == "cost" )
+    {
+        return MDL_COST;
+    }
     else if( strLabel == "serie" )
     {
         return MDL_SERIE;
@@ -536,15 +536,15 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
     case MDL_ANGLEPSI:
         return std::string( "anglePsi" );
         break;
-		case MDL_ANGLEROT2:
-			return std::string( "angleRot2" );
-			break;
-		case MDL_ANGLETILT2:
-			return std::string( "angleTilt2" );
-			break;
-		case MDL_ANGLEPSI2:
-			return std::string( "anglePsi2" );
-			break;
+    case MDL_ANGLEROT2:
+        return std::string( "angleRot2" );
+        break;
+    case MDL_ANGLETILT2:
+        return std::string( "angleTilt2" );
+        break;
+    case MDL_ANGLEPSI2:
+        return std::string( "anglePsi2" );
+        break;
     case MDL_IMAGE:
         return std::string( "image" );
         break;
@@ -569,15 +569,15 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
     case MDL_SHIFTZ:
         return std::string( "shiftZ" );
         break;
-		case MDL_X:
-			return std::string( "X" );
-			break;
-		case MDL_Y:
-			return std::string( "Y" );
-			break;
-		case MDL_Z:
-			return std::string( "Z" );
-			break;
+    case MDL_X:
+        return std::string( "X" );
+        break;
+    case MDL_Y:
+        return std::string( "Y" );
+        break;
+    case MDL_Z:
+        return std::string( "Z" );
+        break;
     case MDL_ENABLED:
         return std::string( "enabled" );
         break;
@@ -593,9 +593,9 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
     case MDL_WEIGHT:
         return std::string( "weight" );
         break;
-        case MDL_OBJID:
-            return std::string( "objId" );
-            break;
+    case MDL_OBJID:
+        return std::string( "objId" );
+        break;
     case MDL_FLIP:
         return std::string( "flip" );
         break;
@@ -605,9 +605,9 @@ std::string MetaDataContainer::decodeLabel( MetaDataLabel inputLabel )
     case MDL_MAXCC:
         return std::string( "maxCC" );
         break;
-		case MDL_COST:
-			return std::string( "cost" );
-			break;
+    case MDL_COST:
+        return std::string( "cost" );
+        break;
     case MDL_SERIE:
         return std::string( "serie" );
         break;
@@ -656,9 +656,9 @@ bool MetaDataContainer::writeValueToString( std::string &outString,
             double d;
             d=*((double*)(getVoidPtr( inputLabel )));
             if(ABS(d)< 0.001)
-            	oss << std::setw(12) << std::scientific;
+                oss << std::setw(12) << std::scientific;
             else
-            	oss <<  std::setw(12) << std::fixed ;
+                oss <<  std::setw(12) << std::fixed ;
             oss << d;
         }
         else if( isString(inputLabel) )
@@ -703,9 +703,9 @@ bool MetaDataContainer::writeValueToFile( std::ofstream &outfile,
             double d;
             d=*((double*)(getVoidPtr( inputLabel )));
             if(ABS(d)< 0.001)
-            	outfile <<  std::setw(12) << std::scientific;
+                outfile <<  std::setw(12) << std::scientific;
             else
-            	outfile <<  std::setw(12) << std::fixed;
+                outfile <<  std::setw(12) << std::fixed;
             outfile << d;
         }
         else if( isString(inputLabel) )
