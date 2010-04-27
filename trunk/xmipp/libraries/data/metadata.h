@@ -103,7 +103,7 @@ public:
      * of labels can be provided to read just those required labels
      */
     MetaData(FileName fileName, std::vector<MetaDataLabel> * labelsVector =
-            NULL);
+                 NULL);
 
     /** Copy constructor
      * @ingroup MetaDataConstructors
@@ -127,12 +127,12 @@ public:
     /** intersects two metadata objects, result in "calling" metadata
      */
     void intersection(MetaData & minuend, MetaData & subtrahend,
-            MetaDataLabel thisLabel);
+                      MetaDataLabel thisLabel);
 
     /** substract two metadata objects, result in "calling" metadata
      */
     void substraction(MetaData & minuend, MetaData & subtrahend,
-            MetaDataLabel thisLabel);
+                      MetaDataLabel thisLabel);
 
     /** Destructor
      * @ingroup MetaDataConstructors
@@ -146,33 +146,42 @@ public:
      *
      */
     void setColumnFormat(bool column);
-
+    /**Get column format info.
+     *
+     */
+    bool getColumnFormat()
+    {
+        return isColumnFormat;
+    }
     // Set a new pair/value for an specified object. If no objectID is given, that
     // pointed by the class iterator is used
     bool setValue(MetaDataLabel name, double value, long int objectID = -1);
     bool setValue(MetaDataLabel name, int value, long int objectID = -1);
     bool setValue(MetaDataLabel name, bool value, long int objectID = -1);
     bool setValue(MetaDataLabel name, const std::string &value,
-            long int objectID = -1);
+                  long int objectID = -1);
     bool setValue(MetaDataLabel name, const std::vector<double> &value,
-            long int objectID = -1);
+                  long int objectID = -1);
     bool setValue(const std::string &name, const std::string &value,
-            long int objectID = -1);
-
-    //bool getValue(MetaDataLabel name, std::vector<double> &value,
-    //        long int objectID = -1);
+                  long int objectID = -1);
 
     void readOldSelFile(std::ifstream *infile);
     void readOldDocFile(std::ifstream *infile,
-            std::vector<MetaDataLabel> * labelsVector);
-    void
-    read(FileName infile, std::vector<MetaDataLabel> * labelsVector = NULL);
+                        std::vector<MetaDataLabel> * labelsVector);
+    void read(FileName infile,
+              std::vector<MetaDataLabel> * labelsVector = NULL);
 
+    /**convert metafile to table in database
+     *
+     */
     void toDataBase(const FileName & DBname,
-            const std::string & tableName = "",
-            std::vector<MetaDataLabel> * labelsVector = NULL);
+                    const std::string & tableName = "",
+                    std::vector<MetaDataLabel> * labelsVector = NULL);
+    /**Convert table from database in metadata
+     *
+     */
     void fromDataBase(const FileName & DBname, const std::string & tableName,
-            std::vector<MetaDataLabel> * labelsVector = NULL);
+                      std::vector<MetaDataLabel> * labelsVector = NULL);
     std::vector<long int> & getRandomOrderedObjects();
 
     /** What labels have been read from a docfile/metadata file
@@ -216,17 +225,15 @@ public:
     void clear();
 
     void writeValueToString(std::string & result,
-            const std::string & inputLabel);
+                            const std::string & inputLabel);
 
     long int fastSearch(MetaDataLabel name, std::string value, bool recompute =
-            false);
+                            false);
 
-    /**Create new metadata with selected range of values
+    /**Create new metadata with selected objectId
      *
      */
     void fillMetaData(MetaData &base, std::vector<long int> objectsToAdd);
-
-    //    template <class T> void findObjectsInRange( MetaData &base, MetaDataLabel name, T minValue, T maxValue );
 
     void combine(MetaData & other, MetaDataLabel thisLabel = MDL_UNDEFINED);
     void combineWithFiles(MetaDataLabel thisLabel);
@@ -240,8 +247,14 @@ public:
     // the object did not exist
     bool removeObject(long int objectID);
 
-    // Xmipp-specific, for new parameters add here.
+    /**Set Path
+     * will appear in first line
+     */
     void setPath(std::string newPath = "");
+
+    /**Set Header Comment
+     * will appear in second line
+     */
     void setComment(std::string Comment = "");
 
     std::string getPath();
@@ -268,10 +281,13 @@ public:
      */
     bool detectObjects(MetaDataLabel name, int value);
 
-    /**May delete next function **/
+    /**Add object with metadata label name in the range given by minvalue and maxvalue
+     * This template function may be accessed from swig
+     *
+     * */
     template<class T>
     friend void addObjectsInRange(MetaData &MDin, MetaData &MDout,
-            MetaDataLabel name, T minValue, T maxValue)
+                                  MetaDataLabel name, T minValue, T maxValue)
     {
         MDout.fillMetaData(MDin, MDin.findObjectsInRange(name, minValue, maxValue));
     }
@@ -309,7 +325,7 @@ public:
 
     template<class T>
     std::vector<long int> findObjects(MetaDataLabel name,
-            T value)
+                                      T value)
     {
         std::vector<long int> result;
 
@@ -324,7 +340,8 @@ public:
         {
             aux = It->second;
 
-            if (aux->pairExists(name, value)) result.push_back(It->first);
+            if (aux->pairExists(name, value))
+                result.push_back(It->first);
         }
 
         return result;
@@ -347,7 +364,7 @@ public:
 
     template<class T>
     bool getValue(MetaDataLabel name, T &value,
-            long int objectID = -1)
+                  long int objectID = -1)
     {
         MetaDataContainer * aux = getObject(objectID);
         if (!aux->valueExists(name))
@@ -370,7 +387,7 @@ public:
  */
 
 void get_statistics(MetaData MT, Image& _ave, Image& _sd, double& _min,
-        double& _max, bool apply_geo);
+                    double& _max, bool apply_geo);
 
 /** Get image size
  *
