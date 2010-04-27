@@ -37,10 +37,10 @@
 // This enum defines what MetaDataLabels this class can manage, if
 // you need a new one add it here and modify affected methods:
 //
-// 	- static MetaDataLabel codifyLabel( std::string strLabel );
-//	- static std::string decodeLabel( MetaDataLabel inputLabel );      
-//	- void writeValuesToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
-//	- void addValue( std::string name, std::string value );
+//  - static MetaDataLabel codifyLabel( std::string strLabel );
+// - static std::string decodeLabel( MetaDataLabel inputLabel );
+// - void writeValuesToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
+// - void addValue( std::string name, std::string value );
 //
 // Keep this special structure (using MDL_FIRSTLABEL and MDL_LAST_LABEL) so the
 // programmer can iterate through it like this:
@@ -49,7 +49,9 @@
 //
 enum MetaDataLabel
 {
-    MDL_UNDEFINED = -1, MDL_FIRST_LABEL, MDL_ANGLEPSI = MDL_FIRST_LABEL, // Psi angle of an image (double)
+    MDL_UNDEFINED = -1,
+    MDL_FIRST_LABEL,
+    MDL_ANGLEPSI = MDL_FIRST_LABEL, // Psi angle of an image (double)
     MDL_ANGLEROT, // Rotation angle of an image (double)
     MDL_ANGLETILT, // Tilting angle of an image (double)
     MDL_ANGLEPSI2, // Psi angle of an image (double)
@@ -129,17 +131,15 @@ enum MetaDataLabel
      MDL_cV2=                  0.0586838
      MDL_gaussian_angle2=      90
      */
-    MDL_LAST_LABEL
-// **** NOTE ****: Do keep this label always at the end
-// it is here for looping purposes
+    MDL_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
+    // it is here for looping purposes
 };
 
 inline bool isString(MetaDataLabel lCode)
 {
-    if (lCode == MDL_COMMENT || lCode == MDL_IMAGE || lCode == MDL_MICROGRAPH
-            || lCode == MDL_CTFMODEL || lCode == MDL_CTFINPUTPARAMS || lCode
-            == MDL_PERIODOGRAM || lCode == MDL_SERIE || lCode == MDL_IMGMD
-            || lCode == MDL_REFMD)
+    if (lCode == MDL_COMMENT  || lCode == MDL_IMAGE          || lCode == MDL_MICROGRAPH  ||
+        lCode == MDL_CTFMODEL || lCode == MDL_CTFINPUTPARAMS || lCode == MDL_PERIODOGRAM ||
+        lCode == MDL_SERIE    || lCode == MDL_IMGMD          || lCode == MDL_REFMD)
         return true;
     else
         return false;
@@ -147,19 +147,18 @@ inline bool isString(MetaDataLabel lCode)
 
 inline bool isDouble(MetaDataLabel lCode)
 {
-    if (lCode == MDL_ANGLEROT || lCode == MDL_ANGLETILT || lCode
-            == MDL_ANGLEPSI || lCode == MDL_ANGLEROT2 || lCode
-            == MDL_ANGLETILT2 || lCode == MDL_ANGLEPSI2 || lCode == MDL_SHIFTX
-            || lCode == MDL_SHIFTY || lCode == MDL_SHIFTZ || lCode
-            == MDL_ORIGINX || lCode == MDL_ORIGINY || lCode == MDL_ORIGINZ
-            || lCode == MDL_X || lCode == MDL_Y || lCode == MDL_Z || lCode
-            == MDL_WEIGHT || lCode == MDL_MAXCC || lCode == MDL_PMAX || lCode
-            == MDL_SCALE || lCode == MDL_COST || lCode == MDL_BGMEAN || lCode
-            == MDL_INTSCALE || lCode == MDL_SAMPLINGRATE || lCode
-            == MDL_MODELFRAC || lCode == MDL_MIRRORFRAC || lCode == MDL_VOLTAGE
-            || lCode == MDL_DEFOCUSU || lCode == MDL_DEFOCUSV || lCode
-            == MDL_LL || lCode == MDL_WROBUST || lCode == MDL_SIGNALCHANGE
-            || lCode == MDL_SIGMANOISE || lCode == MDL_SIGMAOFFSET || lCode == MDL_SUMWEIGHT)
+    if (lCode == MDL_ANGLEROT     || lCode == MDL_ANGLETILT    || lCode == MDL_ANGLEPSI    ||
+    	lCode == MDL_ANGLEROT2    || lCode == MDL_ANGLETILT2   || lCode == MDL_ANGLEPSI2   ||
+    	lCode == MDL_SHIFTX       || lCode == MDL_SHIFTY       || lCode == MDL_SHIFTZ      ||
+    	lCode == MDL_ORIGINX      || lCode == MDL_ORIGINY      || lCode == MDL_ORIGINZ     ||
+    	lCode == MDL_X            || lCode == MDL_Y            || lCode == MDL_Z           ||
+    	lCode == MDL_WEIGHT       || lCode == MDL_MAXCC        || lCode == MDL_PMAX        ||
+    	lCode == MDL_SCALE        || lCode == MDL_COST         || lCode == MDL_BGMEAN      ||
+    	lCode == MDL_INTSCALE     || lCode == MDL_SAMPLINGRATE || lCode == MDL_MODELFRAC   ||
+    	lCode == MDL_MIRRORFRAC   || lCode == MDL_VOLTAGE      || lCode == MDL_DEFOCUSU    ||
+    	lCode == MDL_DEFOCUSV     || lCode == MDL_LL           || lCode == MDL_WROBUST     ||
+    	lCode == MDL_SIGNALCHANGE || lCode == MDL_SIGMANOISE   || lCode == MDL_SIGMAOFFSET ||
+    	lCode == MDL_SUMWEIGHT)
         return true;
     else
         return false;
@@ -184,7 +183,7 @@ inline bool isBool(MetaDataLabel lCode)
 inline bool isInt(MetaDataLabel lCode)
 {
     if (lCode == MDL_REF || lCode == MDL_ENABLED || lCode == MDL_OBJID || lCode
-            == MDL_ITER || lCode == MDL_BLOCK)
+        == MDL_ITER || lCode == MDL_BLOCK)
         return true;
     else
         return false;
