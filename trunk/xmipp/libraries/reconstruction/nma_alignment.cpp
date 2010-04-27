@@ -31,6 +31,7 @@
 #include <data/selfile.h>
 #include <data/docfile.h>
 
+
 // Empty constructor =======================================================
 Prog_nma_alignment_prm::Prog_nma_alignment_prm()
 {
