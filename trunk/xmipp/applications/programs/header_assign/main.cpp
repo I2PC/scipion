@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         }
 
         MetaData SF(fn_in);
-        SF.removeObjects( MDL_ENABLED, -1 );
+        SF.removeObjects(MDL_ENABLED, -1 );
         std::vector< MetaDataLabel >::iterator strIt;
 
 		long int ret=SF.firstObject();

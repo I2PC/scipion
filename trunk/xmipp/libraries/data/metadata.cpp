@@ -1454,205 +1454,21 @@ void MetaData::removeObjects(std::vector<long int> &toRemove)
     objectsIterator = objects.begin();
 }
 
-void MetaData::removeObjects(MetaDataLabel name, double value)
+
+void MetaData::fillMetaData(MetaData &MD, std::vector<long int> objectsToAdd)
 {
-    std::vector<long int> toRemove = findObjects(name, value);
-    removeObjects(toRemove);
-}
-
-void MetaData::removeObjects(MetaDataLabel name, int value)
-{
-    std::vector<long int> toRemove = findObjects(name, value);
-    removeObjects(toRemove);
-}
-
-void MetaData::removeObjects(MetaDataLabel name, bool value)
-{
-    std::vector<long int> toRemove = findObjects(name, value);
-    removeObjects(toRemove);
-}
-
-void MetaData::removeObjects(MetaDataLabel name, std::string value)
-{
-    std::vector<long int> toRemove = findObjects(name, value);
-    removeObjects(toRemove);
-}
-
-std::vector<long int> MetaData::findObjectsInRange(MetaDataLabel name,
-        double minValue, double maxValue)
-{
-    std::vector<long int> result;
-
-    // Traverse all the structure looking for objects
-    // that satisfy search criteria
-
-    std::map<long int, MetaDataContainer *>::iterator It;
-
-    MetaDataContainer * aux;
-
-    for (It = objects.begin(); It != objects.end(); It++)
-    {
-        aux = It->second;
-
-        if (aux->valueExists(name))
-        {
-            double value;
-            aux->getValue(name, value);
-
-            if (value >= minValue && value <= maxValue)
-            {
-                result.push_back(It->first);
-            }
-        }
-    }
-
-    return result;
-}
-
-/**
- template <class T>
- void MetaData::findObjectsInRange( MetaData &MD,
- MetaDataLabel name,
- T minValue,
- T maxValue )
- **/
-
-void MetaData::findObjectsInRange(MetaData &MD, MetaDataLabel name,
-        double minValue, double maxValue)
-
-{
-
     if (!isColumnFormat)
     {
         REPORT_ERROR( -1, "Row formatted MetaData can not be added" );
     }
 
     this->activeLabels = MD.activeLabels;
-    std::vector<long int> toAdd = MD.findObjectsInRange(name, minValue,
-            maxValue);
-    for (int i = 0; i < toAdd.size(); i++)
+    for (int i = 0; i < objectsToAdd.size(); i++)
     {
         long int idx = this->addObject();
         this->objects[idx] = new MetaDataContainer(*(MD.objects[i]));
     }
     this->objectsIterator = this->objects.begin();
-}
-
-std::vector<long int> MetaData::findObjectsInRange(MetaDataLabel name,
-        int minValue, int maxValue)
-{
-    std::vector<long int> result;
-
-    // Traverse all the structure looking for objects
-    // that satisfy search criteria
-
-    std::map<long int, MetaDataContainer *>::iterator It;
-
-    MetaDataContainer * aux;
-
-    for (It = objects.begin(); It != objects.end(); It++)
-    {
-        aux = It->second;
-
-        if (aux->valueExists(name))
-        {
-            int value;
-            aux->getValue(name, value);
-
-            if (value >= minValue && value <= maxValue)
-            {
-                result.push_back(It->first);
-            }
-        }
-    }
-
-    return result;
-
-}
-
-std::vector<long int> MetaData::findObjects(MetaDataLabel name, double value)
-{
-    std::vector<long int> result;
-
-    // Traverse all the structure looking for objects
-    // that satisfy search criteria
-
-    std::map<long int, MetaDataContainer *>::iterator It;
-
-    MetaDataContainer * aux;
-
-    for (It = objects.begin(); It != objects.end(); It++)
-    {
-        aux = It->second;
-
-        if (aux->pairExists(name, value)) result.push_back(It->first);
-    }
-
-    return result;
-}
-
-std::vector<long int> MetaData::findObjects(MetaDataLabel name, int value)
-{
-
-    std::vector<long int> result;
-
-    // Traverse all the structure looking for objects
-    // that satisfy search criteria
-    std::map<long int, MetaDataContainer *>::iterator It;
-
-    MetaDataContainer * aux;
-
-    for (It = objects.begin(); It != objects.end(); It++)
-    {
-        aux = It->second;
-
-        if (aux->pairExists(name, value)) result.push_back(It->first);
-    }
-
-    return result;
-}
-
-std::vector<long int> MetaData::findObjects(MetaDataLabel name, bool value)
-{
-    std::vector<long int> result;
-
-    // Traverse all the structure looking for objects
-    // that satisfy search criteria
-
-    std::map<long int, MetaDataContainer *>::iterator It;
-
-    MetaDataContainer * aux;
-
-    for (It = objects.begin(); It != objects.end(); It++)
-    {
-        aux = It->second;
-
-        if (aux->pairExists(name, value)) result.push_back(It->first);
-    }
-
-    return result;
-}
-
-std::vector<long int> MetaData::findObjects(MetaDataLabel name,
-        std::string value)
-{
-    std::vector<long int> result;
-
-    // Traverse all the structure looking for objects
-    // that satisfy search criteria
-
-    std::map<long int, MetaDataContainer *>::iterator It;
-
-    MetaDataContainer * aux;
-
-    for (It = objects.begin(); It != objects.end(); It++)
-    {
-        aux = It->second;
-
-        if (aux->pairExists(name, value)) result.push_back(It->first);
-    }
-
-    return result;
 }
 
 bool MetaData::detectObjects(MetaDataLabel name, int value)
@@ -1674,102 +1490,6 @@ bool MetaData::detectObjects(MetaDataLabel name, int value)
     return result;
 }
 
-long int MetaData::countObjects(MetaDataLabel name, int value)
-{
-    return ((findObjects(name, value)).size());
-}
-
-long int MetaData::countObjects(MetaDataLabel name, double value)
-{
-    return ((findObjects(name, value)).size());
-}
-
-long int MetaData::countObjects(MetaDataLabel name, bool value)
-{
-    return ((findObjects(name, value)).size());
-}
-
-long int MetaData::countObjects(MetaDataLabel name, const std::string &value)
-{
-    return ((findObjects(name, value)).size());
-}
-
-bool MetaData::getValue(MetaDataLabel name, double &value, long int objectID)
-{
-    MetaDataContainer * aux = getObject(objectID);
-    if (!aux->valueExists(name))
-    {
-        return false;
-    }
-    else
-    {
-        aux->getValue(name, value);
-    }
-
-    return true;
-}
-
-bool MetaData::getValue(MetaDataLabel name, int &value, long int objectID)
-{
-    MetaDataContainer * aux = getObject(objectID);
-    if (!aux->valueExists(name))
-    {
-        return false;
-    }
-    else
-    {
-        aux->getValue(name, value);
-    }
-
-    return true;
-}
-
-bool MetaData::getValue(MetaDataLabel name, bool &value, long int objectID)
-{
-    MetaDataContainer * aux = getObject(objectID);
-    if (!aux->valueExists(name))
-    {
-        return false;
-    }
-    else
-    {
-        aux->getValue(name, value);
-    }
-
-    return true;
-}
-
-bool MetaData::getValue(MetaDataLabel name, std::vector<double> &value,
-        long int objectID)
-{
-    MetaDataContainer * aux = getObject(objectID);
-    if (!aux->valueExists(name))
-    {
-        return false;
-    }
-    else
-    {
-        aux->getValue(name, value);
-    }
-
-    return true;
-}
-
-bool MetaData::getValue(MetaDataLabel name, std::string &value,
-        long int objectID)
-{
-    MetaDataContainer * aux = getObject(objectID);
-    if (!aux->valueExists(name))
-    {
-        return false;
-    }
-    else
-    {
-        aux->getValue(name, value);
-    }
-
-    return true;
-}
 
 MetaDataContainer * MetaData::getObject(long int objectID)
 {
@@ -1908,22 +1628,12 @@ void get_statistics(MetaData MT_in, Image& _ave, Image& _sd, double& _min,
     _sd() /= (n - 1);
     _sd().selfSQRTnD();
 }
-/**
- void metadata_init()
- {
- //I do not want to make T general, it will only work for doubles and float
- MetaData MD;
- int i;
- double d;
- MD.findObjectsInRange(MD, MDL_REF,      i, i );
- MD.findObjectsInRange(MD, MDL_ANGLEPSI, d, d );
- }
- **/
+
 void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
 {
     MD.firstObject();
     FileName fn_img;
-    MD.getValue(MDL_IMAGE,fn_img);
+    MD.getValue(MDL_IMAGE, fn_img);
     ImageXmipp img;
     img.read(fn_img);
     Ydim = img().ydim;

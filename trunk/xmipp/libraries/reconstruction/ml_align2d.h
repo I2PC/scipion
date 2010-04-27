@@ -30,8 +30,7 @@
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
 #include <data/geometry.h>
 #include <data/filters.h>
@@ -60,7 +59,7 @@ while ((load = getThreadRefnoJob(refno)) > 0) \
     for (int imgno = myFirstImg; imgno <= myLastImg; imgno++)
 
 #define IMG_LOCAL_INDEX (imgno - myFirstImg)
-#define IMG_REAL_INDEX(imgno) img_order[(imgno)]
+#define IMG_REAL_INDEX(imgno) img_id[(imgno)]
 #define IMG_BLOCK(imgno) (imgno) % blocks
 
 //For MPI
@@ -179,7 +178,7 @@ public:
     Model_MLalign2D(int n_ref);
 
     void initData();
-    void setSize();
+    void setNRef(int n_ref);
     void combineModel(Model_MLalign2D model, int sign);
     void addModel(Model_MLalign2D model);
     void substractModel(Model_MLalign2D model);
@@ -209,7 +208,7 @@ class Prog_MLalign2D_prm
 {
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
-    FileName fn_sel, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_oext, fn_scratch, fn_control;
+    FileName fn_img, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_oext, fn_scratch, fn_control;
     /** Command line */
     std::string cline;
     double sigma_noise2;
@@ -235,7 +234,7 @@ public:
     /** Number of operations in "flip-array" (depending on do_mirror) */
     int nr_flip;
     /** Sampling rate for in-plane rotation */
-    float psi_step;
+    double psi_step;
     /** Total degrees in FOR_ALL_ROTATIONS */
     double psi_max;
     /** Total number of no-mirror rotations in FOR_ALL_FLIPS */
@@ -256,8 +255,8 @@ public:
     int verb;
     /** Stopping criterium */
     double eps;
-    /** SelFiles with experimental and reference images */
-    SelFile SF, SFr;
+    /** MetaData files for experimental and reference images */
+    MetaData MDimg, MDref, MDlog;
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
     std::vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
@@ -280,10 +279,8 @@ public:
     double search_rot;
     /** Save memory options */
     bool save_mem1, save_mem2, save_mem3;
-    /** Output document file with output optimal assignments*/
-    DocFile DFo;
     /** Vectors to store old phi and theta for all images */
-    std::vector<float> imgs_oldphi, imgs_oldtheta;
+    std::vector<double> imgs_oldphi, imgs_oldtheta;
     /** Flag for using ML3D */
     bool do_ML3D;
     /** Flag for generation of initial models from random subsets */
@@ -311,6 +308,8 @@ public:
     /** Overall average scale (to be forced to one)*/
     double average_scale;
  
+    bool do_restart;
+
     /** Thread stuff */
     int threads, threadTask;
     barrier_t barrier, barrier2;
@@ -337,7 +336,6 @@ public:
     double trymindiff, opt_scale, bgmean, opt_psi;
     double fracweight, maxweight2, dLL;
     Matrix2D<double> docfiledata;
-    Matrix2D<double> global_docfiledata;
 
     /** From expectationSingleImage */
     std::vector<Matrix2D<std::complex<double> > > Fimg_flip, mysumimgs;
@@ -361,14 +359,14 @@ public:
     //Current processing block
     int current_block;
     //Dont randomize for tests
-    bool randomize;
-    //Change order for randomize without modifying selfile
-    std::vector<int> img_order;
+    //bool randomize;
+    //Vector of image IDs in the MetaData object (change order for randomize)
+    std::vector<long int> img_id;
 
-    //Stuff for MPI, if not size = 1 and rank = 0
-    int size, rank;
     //Seed for randomize
     int seed;
+    //To check when to do the first iem iteration
+    bool do_first_iem;
 
 #ifdef TIMING
     JMTimer timer;
@@ -388,17 +386,15 @@ public:
     void extendedUsage(bool ML3D = false);
 
     ///Try to merge produceSideInfo1 and 2
-    void newProduceSideInfo(int size = 1, int rank = 0);
+    void produceSideInfo(int rank = 0);
+    ///Try to merge produceSideInfo1 and 2
+    void produceSideInfo2(int size = 1, int rank = 0);
 
-    /// Setup lots of stuff
-    void produceSideInfo();
+    /// Randomize initial images order, only one
+    void randomizeImagesOrder();
 
     /// Generate initial references from random subset averages
     void generateInitialReferences();
-
-    /** Read reference images in memory & set offset vectors
-        (This produce_side_info is Selfile-dependent!) */
-    void produceSideInfo2(int nr_vols = 1);
 
     /// Calculate probability density distribution for in-plane transformations
     void calculatePdfInplane();
@@ -411,7 +407,7 @@ public:
 
     /** Calculate which references have projection directions close to
         phi and theta */
-    void preselectLimitedDirections(float &phi, float &theta);
+    void preselectLimitedDirections(double &phi, double &theta);
 
     /** Pre-calculate which model and phi have significant probabilities
        without taking translations into account! */

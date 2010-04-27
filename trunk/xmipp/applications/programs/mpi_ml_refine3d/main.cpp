@@ -90,14 +90,15 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // All nodes produce general side-info
-        ML2D_prm.produceSideInfo();
-        MPI_Barrier(MPI_COMM_WORLD);
+        //ML2D_prm.produceSideInfo();
+        //MPI_Barrier(MPI_COMM_WORLD);
 
         // Select only relevant part of selfile for this rank
-        ML2D_prm.SF.mpi_select_part(rank, size, num_img_tot);
+        //ML2D_prm.SF.mpi_select_part(rank, size, num_img_tot);
 
         // All nodes read node-specific side-info into memory
-        ML2D_prm.produceSideInfo2(prm.Nvols);
+        //ML2D_prm.produceSideInfo2(prm.Nvols);
+        ML2D_prm.newProduceSideInfo(size, rank);
         ML2D_prm.Iold.clear(); // To save memory
         ML2D_prm.createThreads();
 

@@ -10,8 +10,11 @@
 %include ../metadata_container.h
 namespace std {
    %template(vectorm) vector<MetaDataLabel>;
-//   %template(findObjectsInRangeInt) findObjectsInRange<MetaData,MetaDataLabel,int,int>;
+   
 };
+
+%template(addObjectsInRangeInt) addObjectsInRange<int>;
+%template(addObjectsInRangeDouble) addObjectsInRange<double>; 
 
 /*
 ==================
@@ -232,7 +235,7 @@ mDresult = XmippData.MetaData()
 mDresult.substraction(mDaa,mDbb,XmippData.MDL_IMAGE)
 mDresult.write("substraction.doc")
 ==============
-test operator findOnjects in range
+test operator findObjects in range
 ================
 import os,glob,sys
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
@@ -243,7 +246,26 @@ mDaa = XmippData.MetaData(aa)
 mDResult = XmippData.MetaData()
 mDResult.findObjectsInRange(mDaa,XmippData.MDL_ANGLEROT,3.,100.)
 mDResult.write("findObjectsInRange.doc")
+==============
+test row format
+================
+import os,glob,sys
 
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+
+import XmippData
+aa   = XmippData.FileName('aa.doc')
+MDo = XmippData.MetaData()
+MDo.setColumnFormat(False)
+MDo.addObject();
+MDo.setValue(XmippData.MDL_LL, -88888.);
+MDo.setValue(XmippData.MDL_PMAX, 666.67898);
+MDo.setValue(XmippData.MDL_SIGMANOISE, 2233.890);
+MDo.setValue(XmippData.MDL_SIGMAOFFSET, 22345.8888);
+MDo.setValue(XmippData.MDL_SUMWEIGHT, 0.555);
+
+MDo.write("rowformat.doc")
 */
 
 

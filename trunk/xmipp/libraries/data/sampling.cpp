@@ -1740,7 +1740,7 @@ void XmippSampling::find_closest_sampling_point(MetaData &DFi,
         //add winner to the DOC fILE
         std::string fnImg, comment;
         double aux;
-        DFi.getValue(MDL_IMAGE,fnImg);
+        DFi.getValue(MDL_IMAGE, fnImg);
         DFi.getValue(MDL_ANGLEROT,aux);  comment+=floatToString(aux)+" ";
         DFi.getValue(MDL_ANGLETILT,aux); comment+=floatToString(aux)+" ";
         DFi.getValue(MDL_ANGLEPSI,aux);  comment+=floatToString(aux)+" ";

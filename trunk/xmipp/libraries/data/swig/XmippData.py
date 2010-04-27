@@ -631,7 +631,6 @@ class MetaData(_object):
     __del__ = lambda self : None;
     def setColumnFormat(*args): return _XmippData.MetaData_setColumnFormat(*args)
     def setValue(*args): return _XmippData.MetaData_setValue(*args)
-    def getValue(*args): return _XmippData.MetaData_getValue(*args)
     def readOldSelFile(*args): return _XmippData.MetaData_readOldSelFile(*args)
     def readOldDocFile(*args): return _XmippData.MetaData_readOldDocFile(*args)
     def read(*args): return _XmippData.MetaData_read(*args)
@@ -657,8 +656,7 @@ class MetaData(_object):
     def clear(*args): return _XmippData.MetaData_clear(*args)
     def writeValueToString(*args): return _XmippData.MetaData_writeValueToString(*args)
     def fastSearch(*args): return _XmippData.MetaData_fastSearch(*args)
-    def findObjects(*args): return _XmippData.MetaData_findObjects(*args)
-    def findObjectsInRange(*args): return _XmippData.MetaData_findObjectsInRange(*args)
+    def fillMetaData(*args): return _XmippData.MetaData_fillMetaData(*args)
     def combine(*args): return _XmippData.MetaData_combine(*args)
     def combineWithFiles(*args): return _XmippData.MetaData_combineWithFiles(*args)
     def removeObjects(*args): return _XmippData.MetaData_removeObjects(*args)
@@ -669,12 +667,12 @@ class MetaData(_object):
     def getComment(*args): return _XmippData.MetaData_getComment(*args)
     def size(*args): return _XmippData.MetaData_size(*args)
     def getFilename(*args): return _XmippData.MetaData_getFilename(*args)
-    def countObjects(*args): return _XmippData.MetaData_countObjects(*args)
     def detectObjects(*args): return _XmippData.MetaData_detectObjects(*args)
 MetaData_swigregister = _XmippData.MetaData_swigregister
 MetaData_swigregister(MetaData)
 
 get_statistics = _XmippData.get_statistics
+ImgSize = _XmippData.ImgSize
 MDL_UNDEFINED = _XmippData.MDL_UNDEFINED
 MDL_FIRST_LABEL = _XmippData.MDL_FIRST_LABEL
 MDL_ANGLEPSI = _XmippData.MDL_ANGLEPSI
@@ -700,6 +698,13 @@ MDL_PERIODOGRAM = _XmippData.MDL_PERIODOGRAM
 MDL_PMAX = _XmippData.MDL_PMAX
 MDL_REF = _XmippData.MDL_REF
 MDL_SCALE = _XmippData.MDL_SCALE
+MDL_BGMEAN = _XmippData.MDL_BGMEAN
+MDL_INTSCALE = _XmippData.MDL_INTSCALE
+MDL_MODELFRAC = _XmippData.MDL_MODELFRAC
+MDL_MIRRORFRAC = _XmippData.MDL_MIRRORFRAC
+MDL_LL = _XmippData.MDL_LL
+MDL_WROBUST = _XmippData.MDL_WROBUST
+MDL_SIGNALCHANGE = _XmippData.MDL_SIGNALCHANGE
 MDL_SERIE = _XmippData.MDL_SERIE
 MDL_SHIFTX = _XmippData.MDL_SHIFTX
 MDL_SHIFTY = _XmippData.MDL_SHIFTY
@@ -713,6 +718,13 @@ MDL_SAMPLINGRATE = _XmippData.MDL_SAMPLINGRATE
 MDL_VOLTAGE = _XmippData.MDL_VOLTAGE
 MDL_DEFOCUSU = _XmippData.MDL_DEFOCUSU
 MDL_DEFOCUSV = _XmippData.MDL_DEFOCUSV
+MDL_IMGMD = _XmippData.MDL_IMGMD
+MDL_REFMD = _XmippData.MDL_REFMD
+MDL_ITER = _XmippData.MDL_ITER
+MDL_BLOCK = _XmippData.MDL_BLOCK
+MDL_SIGMANOISE = _XmippData.MDL_SIGMANOISE
+MDL_SIGMAOFFSET = _XmippData.MDL_SIGMAOFFSET
+MDL_SUMWEIGHT = _XmippData.MDL_SUMWEIGHT
 MDL_LAST_LABEL = _XmippData.MDL_LAST_LABEL
 isString = _XmippData.isString
 isDouble = _XmippData.isDouble
@@ -797,5 +809,7 @@ class vectorm(_object):
 vectorm_swigregister = _XmippData.vectorm_swigregister
 vectorm_swigregister(vectorm)
 
+addObjectsInRangeInt = _XmippData.addObjectsInRangeInt
+addObjectsInRangeDouble = _XmippData.addObjectsInRangeDouble
 
 

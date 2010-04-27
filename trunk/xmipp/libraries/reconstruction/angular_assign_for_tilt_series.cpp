@@ -28,7 +28,7 @@
 #include <data/args.h>
 #include <data/filters.h>
 #include <data/fftw.h>
-//#define  METADATA
+#define  METADATA
 #ifndef METADATA
     #include <data/docfile.h>
 #else
@@ -2146,10 +2146,11 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
          DF.append_data_line(params);
 #else
          DF.addObject();
-         DF.setImage(fn_corrected);
-         DF.setAnglePsi(90-alignment.rot+alignment.psi(i));
-         DF.setShiftX(XX(alignment.di[i]+alignment.diaxis[i]));
-         DF.setShiftY(YY(alignment.di[i]+alignment.diaxis[i]));
+         DF.setValue(MDL_IMAGE, fn_corrected);
+         DF.setValue(MDL_ANGLEPSI, 90.-alignment.rot+alignment.psi(i));
+         DF.setValue(MDL_SHIFTX, XX(alignment.di[i]+alignment.diaxis[i]));
+         DF.setValue(MDL_SHIFTY, YY(alignment.di[i]+alignment.diaxis[i]));
+
 #endif
     }
     DF.write(fnRoot+"_correction_parameters.txt");

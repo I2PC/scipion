@@ -41,9 +41,9 @@ int main(int argc, char **argv)
         //Read arguments
         prm.read(argc, argv);
         //Generate initial references if not provided
-        prm.generateInitialReferences();
+        prm.produceSideInfo();
         //Do some initialization work
-        prm.newProduceSideInfo();
+        prm.produceSideInfo2();
         //Create threads to be ready for work
         prm.createThreads();
     }
@@ -90,14 +90,14 @@ int main(int argc, char **argv)
                 }
                 else //do IEM
                 {
-                    if (prm.iter > 1)
+                    if (prm.do_first_iem || prm.iter > 1)
                     {
                         prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
                         prm.model.substractModel(block_model);
                     }
                     prm.maximization(block_model);
                     prm.writeOutputFiles(block_model, OUT_BLOCK);
-                    if (prm.iter > 1)
+                    if (prm.do_first_iem || prm.iter > 1)
                     {
                         prm.model.addModel(block_model);
                     }
