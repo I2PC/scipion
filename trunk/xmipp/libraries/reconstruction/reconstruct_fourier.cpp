@@ -221,7 +221,7 @@ void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
                                                double &weight, MetaData * docfile)
 {
 
-    std::vector<long int> found=(*docfile).findObjects(MDL_IMAGE,fn);
+    std::vector<long int> found=(*docfile).findObjects(MDL_IMAGE,(std::string)fn);
     if (found.size()==1)
     {
     	(*docfile).goToObject(found[0]);
