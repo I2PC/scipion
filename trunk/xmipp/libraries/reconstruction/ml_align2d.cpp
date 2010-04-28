@@ -40,72 +40,26 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     int argc2 = 0;
     char ** argv2 = NULL;
 
+    double restart_noise, restart_offset;
+    FileName restart_imgmd, restart_refmd;
+    int restart_iter, restart_seed;
+
     if (checkParameter(argc, argv, "-restart"))
     {
         do_restart = true;
-        /*
-         std::string comment;
-         FileName fn_sel;
-         DocFile DFi;
-         DFi.read(getParameter(argc, argv, "-restart"));
-         DFi.go_beginning();
-         comment = (DFi.get_current_line()).get_text();
+        MetaData MDrestart;
+        double noise, offset;
+        char *copy  = NULL;
 
-         if (strstr(comment.c_str(), "MLalign2D-logfile") == NULL)
-         {
-         std::cerr << "Error!! Docfile is not of MLalign2D-logfile type. "
-         << std::endl;
-         exit(1);
-         }
-         else
-         {
-         char *copy;
-         int n = 0;
-         int nmax = DFi.dataLineNo();
-         SFr.reserve(nmax);
-         copy = NULL;
-         DFi.next();
-         comment = " -frac " + DFi.name();
-
-         if (!ML3D)
-         {
-         fn_sel = DFi.name();
-         fn_sel = fn_sel.without_extension() + "_restart.sel";
-         comment += " -ref " + fn_sel;
-         }
-
-         comment += (DFi.get_current_line()).get_text();
-         DFi.next();
-         cline = (DFi.get_current_line()).get_text();
-         comment = comment + cline;
-         // regenerate command line
-         generateCommandLine(comment, argc2, argv2, copy);
-
-         if (!ML3D)
-         {
-         // Read images names from restart file
-         DFi.next();
-
-         while (n < nmax)
-         {
-         n++;
-         DFi.next();
-
-         if (DFi.get_current_line().Is_comment()) fn_sel
-         = ((DFi.get_current_line()).get_text()).erase(0, 3);
-
-         SFr.insert(fn_sel, SelLine::ACTIVE);
-
-         DFi.adjust_to_data_line();
-         }
-
-         fn_sel = DFi.name();
-         fn_sel = fn_sel.without_extension() + "_restart.sel";
-         SFr.write(fn_sel);
-         SFr.clear();
-         }
-         }
-         */
+        MDrestart.read(getParameter(argc, argv, "-restart"));
+        cline = MDrestart.getComment();
+        MDrestart.getValue(MDL_SIGMANOISE, restart_noise);
+        MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset);
+        MDrestart.getValue(MDL_IMGMD, restart_imgmd);
+        MDrestart.getValue(MDL_REFMD, restart_refmd);
+        MDrestart.getValue(MDL_ITER, restart_iter);
+        MDrestart.getValue(MDL_RANDOMSEED, restart_seed);
+        generateCommandLine(cline, argc2, argv2, copy);
     }
     else
     {
@@ -167,15 +121,26 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     trymindiff_factor = textToFloat(getParameter(argc2, argv2,
             "-trymindiff_factor", "0.9"));
     seed = textToInteger(getParameter(argc2, argv2, "-random_seed", "-1"));
-    if (seed == -1) seed = time(NULL);
-
     // Only for interaction with refine3d:
     search_rot = textToFloat(getParameter(argc2, argv2, "-search_rot", "999."));
-
     //IEM stuff
     blocks = textToInteger(getParameter(argc2, argv2, "-iem", "1"));
 
+    // Now reset some stuff for restart
+    if (do_restart)
+    {
+        fn_img = restart_imgmd;
+        fn_ref = restart_refmd;
+        model.n_ref = 0; // JUst to be sure (not strictly necessary)
+        model.sigma_noise = restart_noise;
+        model.sigma_offset = restart_offset;
+        seed = restart_seed;
+        istart = restart_iter + 1;
+    }
+
+    // FIXME: check this also for restart always set to false??
     do_first_iem = false;
+    if (seed == -1) seed = time(NULL);
 }
 
 // Show ====================================================================
@@ -396,6 +361,8 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
     // Read selfile with experimental images
     // and set some global variables
     MDimg.read(fn_img);
+    // Remove disabled images
+    MDimg.removeObjects(MDL_ENABLED, false);
     nr_images_global = MDimg.size();
     // By default set myFirst and myLast equal to 0 and N
     // respectively, this should be changed when using MPI
@@ -2369,11 +2336,16 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
         MDo.addObject();
         MDo.setValue(MDL_IMAGE, fn_tmp);
         MDo.setValue(MDL_ENABLED, true);
-        MDo.setValue(MDL_MODELFRAC, model.alpha_k[refno]);
+        MDo.setValue(MDL_WEIGHT, Itmp.weight());
         if (do_mirror) MDo.setValue(MDL_MIRRORFRAC,
                 model.mirror_fraction[refno]);
         MDo.setValue(MDL_SIGNALCHANGE, conv[refno]);
         if (write_norm) MDo.setValue(MDL_INTSCALE, model.scale[refno]);
+        if (do_ML3D)
+        {
+            MDo.setValue(MDL_ANGLEROT, Itmp.Phi());
+            MDo.setValue(MDL_ANGLETILT, Itmp.Theta());
+        }
     }
 
     fn_tmp = fn_base + "_ref.xmd";
@@ -2388,7 +2360,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     MDo.setValue(MDL_PMAX, model.avePmax);
     MDo.setValue(MDL_SIGMANOISE, model.sigma_noise);
     MDo.setValue(MDL_SIGMAOFFSET, model.sigma_offset);
-    MDo.setValue(MDL_SUMWEIGHT, model.sumw_allrefs);
+    MDo.setValue(MDL_RANDOMSEED, seed);
     if (write_norm)
     {
         MDo.setValue(MDL_INTSCALE, average_scale);
@@ -2413,7 +2385,6 @@ void Prog_MLalign2D_prm::readModel(Model_MLalign2D &model, FileName fn_base)
     model.dim = dim;
     MDi.getValue(MDL_LL, model.LL);
     MDi.getValue(MDL_PMAX, model.avePmax);
-    MDi.getValue(MDL_SUMWEIGHT, model.sumw_allrefs);
     MDi.getValue(MDL_SIGMANOISE, model.sigma_noise);
     MDi.getValue(MDL_SIGMAOFFSET, model.sigma_offset);
 
@@ -2423,16 +2394,22 @@ void Prog_MLalign2D_prm::readModel(Model_MLalign2D &model, FileName fn_base)
     MDi.clear();
     MDi.read(fn_base + "_ref.xmd");
     int refno = 0;
+    model.sumw_allrefs = 0.;
     FOR_ALL_OBJECTS_IN_METADATA(MDi)
     {
         MDi.getValue(MDL_IMAGE, fn_img);
         img.read(fn_img, false, false, true, false);
         img().setXmippOrigin();
         model.Iref[refno] = img;
-        MDi.getValue(MDL_MODELFRAC, model.alpha_k[refno]);
+        MDi.getValue(MDL_WEIGHT, model.alpha_k[refno]);
         MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno]);
+        model.sumw_allrefs += model.alpha_k[refno];
         refno++;
     }
+
+    // Divide all alpha_k by sumw_allrefs
+    for (refno = 0; refno < model.n_ref; refno++)
+        model.alpha_k[refno] /= model.sumw_allrefs;
 
 }//close function readModel
 
