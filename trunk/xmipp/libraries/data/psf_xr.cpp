@@ -167,14 +167,16 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
 #endif
 
     Matrix2D< std::complex<double> > PSFi;
-    XmippFftw transformer;
+    Matrix2D<double> PSFiTemp;
+    XmippFftw transformer, transformer2;
+    double norm=0;
+
     //    Mask_Params mask_prm; TODO do we have to include masks using this method?
 
     OTF.resize(Ny,Nx);
     lensPD(OTF, focalEquiv, lambda, dxl, dyl);
 
     //    OTF.window(-128,-128,127,255,10);
-
 
     FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
     {
@@ -193,32 +195,38 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
 
 
     transformer.FourierTransform(OTF, PSFi, false);
-    //    CenterOriginFFT(PSFi, 1);
-    double norm=0;
+//    CenterOriginFFT(PSFi, 1);
+    PSFiTemp.resize(PSFi);
 
     //     FOR_ALL_ELEMENTS_IN_MATRIX2D(LPDFT)
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(PSFi)
     {
-        PSFi.data[n] = abs(PSFi.data[n]);
-        PSFi.data[n] *= PSFi.data[n];
-        norm +=  PSFi.data[n].real();
+        PSFiTemp(i,j) = abs(PSFi(i,j));
+        PSFiTemp(i,j) *= PSFiTemp(i,j);
+        norm +=  PSFiTemp(i,j);
     }
-    PSFi /= norm;
-
-    transformer.inverseFourierTransform();
+    PSFiTemp /= norm;
 
 #ifdef DEBUG
+//    CenterOriginFFT(PSFi,1);
+    _Im().resize(PSFiTemp);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(PSFiTemp)
+    _Im(i,j) = PSFiTemp(i,j);
+    _Im.write("psfxr-psfi.spi");
+#endif
 
-    CenterOriginFFT(OTF,1);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
+//    OTF.resize(OTF.ydim,OTF.xdim/2+1);
+//    OTF.clear();
+//    transformer.clear();
+    transformer2.FourierTransform(PSFiTemp,OTF, false);
+
+#ifdef DEBUG
+//    CenterOriginFFT(OTF,1);
+    _Im().resize(OTF);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(OTF)
     _Im(i,j) = abs(OTF(i,j));
     _Im.write("psfxr-otf.spi");
-    CenterOriginFFT(OTF,0);
-
-    CenterOriginFFT(PSFi,1);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(PSFi)
-    _Im(i,j) = abs(PSFi(i,j));
-    _Im.write("psfxr-psfi.spi");
+//    CenterOriginFFT(OTF,0);
 #endif
 }
 
@@ -256,6 +264,8 @@ void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
 
     Matrix2D<double> imTemp(imOut()), intExp(imOut());
     intExp.initZeros();
+    intExp.setXmippOrigin();
+    imTemp.setXmippOrigin();
 
     vol().setXmippOrigin();
 
@@ -272,23 +282,29 @@ void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
         {
             intExp(i, j) = intExp(i, j) + vol(k, i, j);
 //            imTemp(i, j) = (intExp(i,j)*psf.dzo*(-1))*vol(k,i,j)*psf.dzo;
-            imTemp(i, j) = exp(intExp(i,j)*(-1))*vol(k,i,j);
-            _Im(i,j) = imTemp(i,j);
+            imTemp(i, j) = exp(intExp(i,j)*(-1)*100)*vol(k,i,j)*100;
+//            _Im(i,j) = imTemp(i,j);
         }
         psf.Z = psf.Zo - k*psf.dzo;
         psf.generateOTF(imTemp);
-        psf.applyOTF(imTemp);
-        imOut() += imTemp;
 
 #ifdef DEBUG
-//        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imTemp)
-//        _Im(i,j) = abs(imTemp(i,j));
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(imTemp)
+        _Im(i,j) = abs(imTemp(i,j));
+
 
         _Im.write("psfxr-imTemp.spi");
 #endif
+        psf.applyOTF(imTemp);
+
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(imTemp)
+			imOut(i,j) += abs(imTemp(i,j));
+
+        imOut.write("psfxr-imout.spi");
+
     }
 
-    imOut() = 1-imOut();
+//    imOut() = 1-imOut();
 
 }
 
