@@ -143,16 +143,12 @@ void MetaData::substraction(MetaData &minuend, MetaData &subtrahend,
     {
         aux = minuend.getObject(itMinuend->first);
         aux->writeValueToString(value1, thisLabel);
-        std::cerr << "object number value1 " << itMinuend->first << " "
-        << value1 << std::endl;
         bool doSave = false;
         for (long int idSubtrahendr = subtrahend.firstObject(); idSubtrahendr
              != NO_MORE_OBJECTS; idSubtrahendr = subtrahend.nextObject())
         {
             aux2 = subtrahend.getObject(idSubtrahendr);
             aux2->writeValueToString(value2, thisLabel);
-            std::cerr << "object number value2" << idSubtrahendr << " "
-            << value2 << std::endl;
 
             if (value2 == value1)
             {
@@ -168,9 +164,6 @@ void MetaData::substraction(MetaData &minuend, MetaData &subtrahend,
         {
             long int idx = this->addObject();
             this->objects[idx] = new MetaDataContainer(*(itMinuend->second));
-            std::cerr << "value1 = value2, results.size idx second" << value2
-            << this->size() << " " << idx << itMinuend->second
-            << std::endl;
         }
     }
     this->objectsIterator = this->objects.begin();
@@ -699,7 +692,8 @@ void MetaData::fromDataBase(const FileName & DBname,
                     labelsCounter++;
                     int value;
                     value = q.getIntField(labelsCounter);
-                    setValue(*strIt, (bool) value);
+                    bool value2 = (bool) value;
+                    setValue(*strIt, value2);
                 }
                 else
                 {
@@ -1030,16 +1024,6 @@ long int MetaData::addObject(long int objectID)
         (objectsIterator->second)->addValue(
             MetaDataContainer::decodeLabel(*It), std::string(""));
     }
-
-#ifdef NEVERDEFINE
-    //¿Que leches es esto?
-    //randomizar siempre?
-    // randomize no ha  sido inicializado
-    std::cerr << "before randomize, print randomize size " << randomOrderedObjects.size() << std::endl;
-    size_t randomIndex = rand() % randomOrderedObjects.size();
-    randomOrderedObjects[randomIndex]=result;
-    std::cerr << "after randomize" << std::endl;
-#endif
 
     return result;
 }

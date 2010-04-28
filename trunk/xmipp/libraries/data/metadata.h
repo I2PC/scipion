@@ -126,7 +126,7 @@ public:
 
     /** intersects two metadata objects, result in "calling" metadata
      */
-    void intersection(MetaData & minuend, MetaData & subtrahend,
+    void intersection(MetaData & minuend, MetaData & ,
                       MetaDataLabel thisLabel);
 
     /** substract two metadata objects, result in "calling" metadata
@@ -266,8 +266,6 @@ public:
         return (inFile);
     }
 
-
-
     /*Detect if there is at least one entry with the given label-value pair
      * This can be much faster than 'countObjects' as it stops iterating once the first
      * object has been found.
@@ -358,15 +356,13 @@ public:
         {
             aux->getValue(name, value);
         }
-
         return true;
     }
 
     template<class T>
-    bool setValue(MetaDataLabel name, T value, long int objectID=-1)
+    bool setValue(MetaDataLabel name,const T &value, long int objectID=-1)
     {
         long int auxID;
-
         if (!objects.empty() && MetaDataContainer::isValidLabel(name))
         {
             if (objectID == -1)
@@ -385,13 +381,10 @@ public:
             // objects with default values
             std::vector<MetaDataLabel>::iterator location;
             std::map<long int, MetaDataContainer *>::iterator It;
-
             location = std::find(activeLabels.begin(), activeLabels.end(), name);
-
             if (location == activeLabels.end())
             {
                 activeLabels.push_back(name);
-
                 // Add this label to the rest of the objects in this class
                 for (It = objects.begin(); It != objects.end(); It++)
                 {
@@ -401,9 +394,7 @@ public:
                     }
                 }
             }
-
             aux->addValue(name, value);
-
             return true;
         }
         else
@@ -411,20 +402,26 @@ public:
             return false;
         }
     }
+
     /**Add object with metadata label name in the range given by minvalue and maxvalue
      * This template function may be accessed from swig
      *
      * */
     template<class T>
     friend void addObjectsInRangeSwig(MetaData &MDin, MetaData &MDout,
-                                  MetaDataLabel name, T minValue, T maxValue)
+                                      MetaDataLabel name, T minValue, T maxValue)
     {
         MDout.fillMetaData(MDin, MDin.findObjectsInRange(name, minValue, maxValue));
     }
     template<class T>
-    friend bool setValueSwig(MetaData &MDout,MetaDataLabel name, T value, long int objectID=-1)
+    friend bool setValueSwig(MetaData &MDout,MetaDataLabel name, T &value, long int objectID=-1)
     {
-    	MDout.setValue( name,  value, objectID);
+        MDout.setValue( name, value, objectID);
+    }
+    template<class T>
+    friend bool getValueSwig(MetaData &MDout,MetaDataLabel name, T &value, long int objectID=-1)
+    {
+        MDout.getValue( name,  value, objectID);
     }
 
 

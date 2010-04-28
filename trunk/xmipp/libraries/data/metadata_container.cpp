@@ -100,41 +100,9 @@ MetaDataContainer::MetaDataContainer(MetaDataContainer &MDc)
         {
             addValue(lCode, *((std::vector<double> *) aux));
         }
-
     }
 }
-/**
- void MetaDataContainer::addValue(MetaDataLabel name, int value)
- {
- void * newValue = (void *) (new int(value));
- insertVoidPtr(name, newValue);
- }
 
- void MetaDataContainer::addValue(MetaDataLabel name, double value)
- {
- void * newValue = (void *) (new double(value));
- insertVoidPtr(name, newValue);
- }
-
- void MetaDataContainer::addValue(MetaDataLabel name, bool value)
- {
- void * newValue = (void *) (new bool(value));
- insertVoidPtr(name, newValue);
- }
-
- void MetaDataContainer::addValue(MetaDataLabel name, const std::string &value)
- {
- void * newValue = (void *) (new std::string(value));
- insertVoidPtr(name, newValue);
- }
-
- void MetaDataContainer::addValue(MetaDataLabel name,
- const std::vector<double> &value)
- {
- void * newValue = (void *) (new std::vector<double>(value));
- insertVoidPtr(name, newValue);
- }
- */
 void MetaDataContainer::addValue(const std::string &name,
         const std::string &value)
 {
@@ -184,86 +152,6 @@ void MetaDataContainer::insertVoidPtr(MetaDataLabel name, void * value)
 {
     values[name] = value;
 }
-/**
- void MetaDataContainer::getValue(MetaDataLabel name, int &value)
- {
- std::map<MetaDataLabel, void *>::iterator element;
-
- element = values.find(name);
-
- if (element == values.end())
- {
- REPORT_ERROR(1,(std::string) "Label(int) " + decodeLabel(name) + " not found\n" );
- }
- else
- {
- value = *((int *) element->second);
- }
- }
- void MetaDataContainer::getValue(MetaDataLabel name, double &value)
- {
- std::map<MetaDataLabel, void *>::iterator element;
-
- element = values.find(name);
-
- if (element == values.end())
- {
- REPORT_ERROR(1,(std::string) "Label(double) " + decodeLabel(name) + " not found\n" );
- }
- else
- {
- value = *((double *) element->second);
- }
- }
-
- void MetaDataContainer::getValue(MetaDataLabel name, std::string &value)
- {
- std::map<MetaDataLabel, void *>::iterator element;
-
- element = values.find(name);
-
- if (element == values.end())
- {
- REPORT_ERROR(1,(std::string) "Label(string) " + decodeLabel(name) + " not found\n" );
- }
- else
- {
- value = *((std::string *) element->second);
- }
- }
-
- void MetaDataContainer::getValue(MetaDataLabel name, bool &value)
- {
- std::map<MetaDataLabel, void *>::iterator element;
-
- element = values.find(name);
-
- if (element == values.end())
- {
- REPORT_ERROR(1,(std::string) "Label(bool) " + decodeLabel(name) + " not found\n" );
- }
- else
- {
- value = *((bool *) element->second);
- }
- }
-
- void MetaDataContainer::getValue(MetaDataLabel name, std::vector<double> &value)
- {
- std::map<MetaDataLabel, void *>::iterator element;
-
- element = values.find(name);
-
- if (element == values.end())
- {
- REPORT_ERROR(1,(std::string) "Label(vector) " + decodeLabel(name) + " not found\n" );
- }
- else
- {
- value = *((std::vector<double> *) element->second);
- }
- }
- */
 void * MetaDataContainer::getVoidPtr(MetaDataLabel name)
 {
     std::map<MetaDataLabel, void *>::iterator element;
