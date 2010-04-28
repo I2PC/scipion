@@ -155,13 +155,6 @@ public:
     }
     // Set a new pair/value for an specified object. If no objectID is given, that
     // pointed by the class iterator is used
-//    bool setValue(MetaDataLabel name, double value, long int objectID = -1);
-//    bool setValue(MetaDataLabel name, int value, long int objectID = -1);
-//    bool setValue(MetaDataLabel name, bool value, long int objectID = -1);
-//    bool setValue(MetaDataLabel name, const std::string &value,
-//                  long int objectID = -1);
-//    bool setValue(MetaDataLabel name, const std::vector<double> &value,
-//                  long int objectID = -1);
     bool setValue(const std::string &name, const std::string &value,
                   long int objectID = -1);
 

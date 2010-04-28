@@ -103,7 +103,7 @@ MetaDataContainer::MetaDataContainer(MetaDataContainer &MDc)
 
     }
 }
-
+/**
 void MetaDataContainer::addValue(MetaDataLabel name, int value)
 {
     void * newValue = (void *) (new int(value));
@@ -134,7 +134,7 @@ void MetaDataContainer::addValue(MetaDataLabel name,
     void * newValue = (void *) (new std::vector<double>(value));
     insertVoidPtr(name, newValue);
 }
-
+*/
 void MetaDataContainer::addValue(const std::string &name,
         const std::string &value)
 {
@@ -184,7 +184,7 @@ void MetaDataContainer::insertVoidPtr(MetaDataLabel name, void * value)
 {
     values[name] = value;
 }
-
+/**
 void MetaDataContainer::getValue(MetaDataLabel name, int &value)
 {
     std::map<MetaDataLabel, void *>::iterator element;
@@ -263,7 +263,7 @@ void MetaDataContainer::getValue(MetaDataLabel name, std::vector<double> &value)
         value = *((std::vector<double> *) element->second);
     }
 }
-
+*/
 void * MetaDataContainer::getVoidPtr(MetaDataLabel name)
 {
     std::map<MetaDataLabel, void *>::iterator element;
@@ -290,64 +290,6 @@ bool MetaDataContainer::valueExists(MetaDataLabel name)
     {
         return true;
     }
-}
-
-bool MetaDataContainer::pairExists(MetaDataLabel name, double value)
-{
-    // Traverse all the structure looking for objects
-    // that satisfy search criteria
-    std::map<MetaDataLabel, void *>::iterator It;
-
-    It = values.find(name);
-
-    if (It != values.end())
-    {
-        if (ABS( *((double *)(It->second)) - value )
-                < XMIPP_EQUAL_ACCURACY)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool MetaDataContainer::pairExists(MetaDataLabel name, int value)
-{
-    // Traverse all the structure looking for objects
-    // that satisfy search criteria
-    std::map<MetaDataLabel, void *>::iterator It;
-
-    It = values.find(name);
-
-    if (It != values.end())
-    {
-        if (*((int *) (It->second)) == value)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool MetaDataContainer::pairExists(MetaDataLabel name, bool value)
-{
-    // Traverse all the structure looking for objects
-    // that satisfy search criteria
-    std::map<MetaDataLabel, void *>::iterator It;
-
-    It = values.find(name);
-
-    if (It != values.end())
-    {
-        if (*((bool *) (It->second)) == value)
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 bool MetaDataContainer::pairExists(MetaDataLabel name, const std::string &value)

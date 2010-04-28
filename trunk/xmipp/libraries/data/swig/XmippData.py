@@ -746,7 +746,6 @@ class MetaDataContainer(_object):
     __swig_destroy__ = _XmippData.delete_MetaDataContainer
     __del__ = lambda self : None;
     def addValue(*args): return _XmippData.MetaDataContainer_addValue(*args)
-    def getValue(*args): return _XmippData.MetaDataContainer_getValue(*args)
     def valueExists(*args): return _XmippData.MetaDataContainer_valueExists(*args)
     def pairExists(*args): return _XmippData.MetaDataContainer_pairExists(*args)
     def deleteValue(*args): return _XmippData.MetaDataContainer_deleteValue(*args)

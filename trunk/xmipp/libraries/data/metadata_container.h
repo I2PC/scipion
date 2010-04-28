@@ -148,17 +148,17 @@ inline bool isString(MetaDataLabel lCode)
 inline bool isDouble(MetaDataLabel lCode)
 {
     if (lCode == MDL_ANGLEROT     || lCode == MDL_ANGLETILT    || lCode == MDL_ANGLEPSI    ||
-    	lCode == MDL_ANGLEROT2    || lCode == MDL_ANGLETILT2   || lCode == MDL_ANGLEPSI2   ||
-    	lCode == MDL_SHIFTX       || lCode == MDL_SHIFTY       || lCode == MDL_SHIFTZ      ||
-    	lCode == MDL_ORIGINX      || lCode == MDL_ORIGINY      || lCode == MDL_ORIGINZ     ||
-    	lCode == MDL_X            || lCode == MDL_Y            || lCode == MDL_Z           ||
-    	lCode == MDL_WEIGHT       || lCode == MDL_MAXCC        || lCode == MDL_PMAX        ||
-    	lCode == MDL_SCALE        || lCode == MDL_COST         || lCode == MDL_BGMEAN      ||
-    	lCode == MDL_INTSCALE     || lCode == MDL_SAMPLINGRATE || lCode == MDL_MODELFRAC   ||
-    	lCode == MDL_MIRRORFRAC   || lCode == MDL_VOLTAGE      || lCode == MDL_DEFOCUSU    ||
-    	lCode == MDL_DEFOCUSV     || lCode == MDL_LL           || lCode == MDL_WROBUST     ||
-    	lCode == MDL_SIGNALCHANGE || lCode == MDL_SIGMANOISE   || lCode == MDL_SIGMAOFFSET ||
-    	lCode == MDL_SUMWEIGHT)
+        lCode == MDL_ANGLEROT2    || lCode == MDL_ANGLETILT2   || lCode == MDL_ANGLEPSI2   ||
+        lCode == MDL_SHIFTX       || lCode == MDL_SHIFTY       || lCode == MDL_SHIFTZ      ||
+        lCode == MDL_ORIGINX      || lCode == MDL_ORIGINY      || lCode == MDL_ORIGINZ     ||
+        lCode == MDL_X            || lCode == MDL_Y            || lCode == MDL_Z           ||
+        lCode == MDL_WEIGHT       || lCode == MDL_MAXCC        || lCode == MDL_PMAX        ||
+        lCode == MDL_SCALE        || lCode == MDL_COST         || lCode == MDL_BGMEAN      ||
+        lCode == MDL_INTSCALE     || lCode == MDL_SAMPLINGRATE || lCode == MDL_MODELFRAC   ||
+        lCode == MDL_MIRRORFRAC   || lCode == MDL_VOLTAGE      || lCode == MDL_DEFOCUSU    ||
+        lCode == MDL_DEFOCUSV     || lCode == MDL_LL           || lCode == MDL_WROBUST     ||
+        lCode == MDL_SIGNALCHANGE || lCode == MDL_SIGMANOISE   || lCode == MDL_SIGMAOFFSET ||
+        lCode == MDL_SUMWEIGHT)
         return true;
     else
         return false;
@@ -216,26 +216,58 @@ public:
     ~MetaDataContainer();
 
     /** Create a new pair name-value of integer type */
-    void addValue(MetaDataLabel name, double value);
-    void addValue(MetaDataLabel name, int value);
-    void addValue(MetaDataLabel name, bool value);
-    void addValue(MetaDataLabel name, const std::string &value);
-    void addValue(MetaDataLabel name, const std::vector<double> &value);
     void addValue(const std::string &name, const std::string &value);
 
-    void getValue(MetaDataLabel name, int &value);
-    void getValue(MetaDataLabel name, double &value);
-    void getValue(MetaDataLabel name, std::string &value);
-    void getValue(MetaDataLabel name, bool &value);
-    void getValue(MetaDataLabel name, std::vector<double> &value);
+    template<class T>
+    void addValue(MetaDataLabel name, const T &value)
+    {
+        void * newValue = (void *) (new T(value));
+        insertVoidPtr(name, newValue);
+    }
 
+    template<class T>
+    void getValue(MetaDataLabel name, T &value)
+    {
+        std::map<MetaDataLabel, void *>::iterator element;
+
+        element = values.find(name);
+
+        if (element == values.end())
+        {
+            REPORT_ERROR(1,(std::string) "Label(int) " + decodeLabel(name) + " not found\n" );
+        }
+        else
+        {
+            value = *((T *) element->second);
+        }
+    }
     bool valueExists(MetaDataLabel name);
 
-    bool pairExists(MetaDataLabel name, double value);
-    bool pairExists(MetaDataLabel name, int value);
-    bool pairExists(MetaDataLabel name, bool value);
+    //string is not part of the template because - is not defined for string
     bool pairExists(MetaDataLabel name, const std::string &value);
-    // pairExists for vectors makes nosense, not implemented
+
+    template<class T>
+    bool pairExists(MetaDataLabel name, T value)
+    {
+        // Traverse all the structure looking for objects
+        // that satisfy search criteria
+        std::map<MetaDataLabel, void *>::iterator It;
+
+        It = values.find(name);
+
+        if (It != values.end())
+        {
+            if (ABS( *((T *)(It->second)) - value )
+                    < XMIPP_EQUAL_ACCURACY)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
 
     void deleteValue(MetaDataLabel name);
 
