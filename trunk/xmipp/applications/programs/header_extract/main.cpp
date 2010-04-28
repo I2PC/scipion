@@ -78,13 +78,13 @@ int main(int argc, char *argv[])
                 xx = (float)ROUND(xx);
                 yy = (float)ROUND(yy);
             }
-	        SF.setValue(MDL_ANGLEROT, head.Phi());
-	        SF.setValue(MDL_ANGLETILT, head.Theta());
-    	    SF.setValue(MDL_ANGLEPSI, head.Psi());
-	        SF.setValue(MDL_SHIFTX, xx );
-	        SF.setValue(MDL_SHIFTY, yy );
-	        SF.setValue(MDL_WEIGHT, head.Weight());
-	        SF.setValue(MDL_FLIP, head.Flip());
+	        SF.setValue(MDL_ANGLEROT,  (double) head.Phi());
+	        SF.setValue(MDL_ANGLETILT, (double) head.Theta());
+    	    SF.setValue(MDL_ANGLEPSI,  (double) head.Psi());
+	        SF.setValue(MDL_SHIFTX,    (double) xx );
+	        SF.setValue(MDL_SHIFTY,    (double) yy );
+	        SF.setValue(MDL_WEIGHT,    (double) head.Weight());
+	        SF.setValue(MDL_FLIP,      (bool)   head.Flip());
         }
         while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
 	
