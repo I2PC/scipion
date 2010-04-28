@@ -105,7 +105,7 @@ void CONDOR( double rhoStart, double rhoEnd, int niter,
     k=poly.kbest;
     valueFk=poly.valuesF[k];
 
-    fprintf(stderr,"init part 1 finished.\n");
+    //fprintf(stderr,"init part 1 finished.\n");
 
 /*    InterPolynomial poly(dim,2,of);
     for (;;)
@@ -143,8 +143,8 @@ void CONDOR( double rhoStart, double rhoEnd, int niter,
     // update M:
     fullUpdateOfM(rho,poly.vBase,of->data,poly);
     
-    fprintf(stderr,"init part 2 finished.\n");
-    fprintf(stderr,"init finished.\n");
+    //fprintf(stderr,"init part 2 finished.\n");
+    //fprintf(stderr,"init finished.\n");
 
     // first of init all variables:
     parallelImprove(&poly, &k, rho, &valueFk, poly.vBase);
@@ -168,7 +168,7 @@ void CONDOR( double rhoStart, double rhoEnd, int niter,
                    ||(of->isConstrained&&checkForTermination(poly.NewtonPoints[k], poly.vBase, rhoEnd)))
                 {
                     poly.vBase+=poly.NewtonPoints[k];
-                    fprintf(stderr,"rho=%e; fo=%e; NF=%i\n", rho,valueFk,of->getNFE());
+                    //fprintf(stderr,"rho=%e; fo=%e; NF=%i\n", rho,valueFk,of->getNFE());
                     of->valueBest=valueFk;
                     of->xBest=poly.vBase;
                     // to do : compute H and Lambda
@@ -181,7 +181,7 @@ void CONDOR( double rhoStart, double rhoEnd, int niter,
                 }
    
                 // to debug:
-                fprintf(stderr,"Best Value Objective=%e (nfe=%i)\n", valueFk, of->getNFE());
+                //fprintf(stderr,"Best Value Objective=%e (nfe=%i)\n", valueFk, of->getNFE());
                 
                 d=ConstrainedL2NormMinimizer(poly,k,delta,&info,1000,&lambda1,poly.vBase,of);
 
@@ -310,7 +310,7 @@ void CONDOR( double rhoStart, double rhoEnd, int niter,
         // change rho because no improvement can now be made:
         if (rho<=rhoEnd) break;
 
-        fprintf(stderr,"rho=%e; fo=%e; NF=%i\n", rho,valueFk,of->getNFE());
+        //fprintf(stderr,"rho=%e; fo=%e; NF=%i\n", rho,valueFk,of->getNFE());
 
         if (rho<16*rhoEnd) rhoNew=rhoEnd;
         else if (rho<250*rhoEnd) rhoNew=sqrt(rho*rhoEnd);
@@ -352,7 +352,7 @@ void CONDOR( double rhoStart, double rhoEnd, int niter,
 
 
 //    delete[] points; :not necessary: done in destructor of poly which is called automatically:
-    fprintf(stderr,"rho=%e; fo=%e; NF=%i\n", rho,valueFk,of->getNFE());
+    //fprintf(stderr,"rho=%e; fo=%e; NF=%i\n", rho,valueFk,of->getNFE());
     
     of->valueBest=valueFk;
     of->xBest=poly.vBase;
