@@ -20,11 +20,23 @@ namespace std {
 %template(setValueDouble)    setValueSwig<double>; 
 %template(setValueString)    setValueSwig<std::string>;
 
+%template(getValueBool)      getValueSwig<bool>; 
+%template(getValueInt)       getValueSwig<int>; 
+%template(getValueDouble)    getValueSwig<double>; 
+%template(getValueString)    getValueSwig<std::string>;
+
+%template(addObjectsInRangeInt)       addObjectsInRangeSwig<int>;
+%template(addObjectsInRangeDouble)    addObjectsInRangeSwig<double>;
+%template(addObjectsInRangeBool)      addObjectsInRangeSwig<bool>;
+
 /*
 ==================
 First example
 ==================
 python
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
 import XmippData
 #create metadata object
 outFile=XmippData.FileName('kk')
@@ -33,19 +45,19 @@ mD=XmippData.MetaData();
 id=mD.addObject();
 valor=10.3
 #fill an object data
-mD.setValue( XmippData.MDL_IMAGE, "image0001.xmp")
-mD.setValue( XmippData.MDL_ANGLEPSI, valor)
-mD.setValue( XmippData.MDL_ANGLEROT, 123.2)
+XmippData.setValueString( mD, XmippData.MDL_IMAGE, "image0001.xmp")
+XmippData.setValueDoblue( mD, XmippData.MDL_ANGLEPSI, valor)
+XmippData.setValueDoblue( mD, XmippData.MDL_ANGLEROT, 123.2)
 
 id=mD.addObject();
-mD.setValue( XmippData.MDL_IMAGE, "image0002.xmp")
-mD.setValue( XmippData.MDL_ANGLEPSI, valor*2.)
-mD.setValue( XmippData.MDL_ANGLEROT, 124.2)
+XmippData.setValueString( mD, XmippData.MDL_IMAGE, "image0002.xmp")
+XmippData.setValueDoblue( mD, XmippData.MDL_ANGLEPSI, valor*2.)
+XmippData.setValueDoblue( mD, XmippData.MDL_ANGLEROT, 124.2)
 
 mD.write(outFile)
 
 #modify first added object
-mD.setValue( XmippData.MDL_ANGLEROT, 444.2)
+XmippData.setValueDouble(mD, XmippData.MDL_ANGLEROT, 444.2)
 
 mD.write("prueba2.doc")
 
@@ -54,9 +66,9 @@ mD2=XmippData.MetaData();
 mD2.read(outFile)
 ss=XmippData.stringP()
 dd=XmippData.doubleP()
-mD2.getValue( XmippData.MDL_IMAGE, ss)
+getValueString( mD2,XmippData.MDL_IMAGE, ss)
 ss.value()
-mD2.getValue( XmippData.MDL_ANGLEPSI, dd)
+getValueDouble( mD2, XmippData.MDL_ANGLEPSI, dd)
 dd.value()
 
 

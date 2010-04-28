@@ -750,7 +750,6 @@ class MetaDataContainer(_object):
     def valueExists(*args): return _XmippData.MetaDataContainer_valueExists(*args)
     def pairExists(*args): return _XmippData.MetaDataContainer_pairExists(*args)
     def deleteValue(*args): return _XmippData.MetaDataContainer_deleteValue(*args)
-    def writeValueToStream(*args): return _XmippData.MetaDataContainer_writeValueToStream(*args)
     def writeValueToFile(*args): return _XmippData.MetaDataContainer_writeValueToFile(*args)
     def writeValueToString(*args): return _XmippData.MetaDataContainer_writeValueToString(*args)
     __swig_getmethods__["codifyLabel"] = lambda x: _XmippData.MetaDataContainer_codifyLabel
@@ -813,9 +812,14 @@ vectorm_swigregister(vectorm)
 
 addObjectsInRangeInt = _XmippData.addObjectsInRangeInt
 addObjectsInRangeDouble = _XmippData.addObjectsInRangeDouble
+addObjectsInRangeBool = _XmippData.addObjectsInRangeBool
 
 setValueBool = _XmippData.setValueBool
 setValueInt = _XmippData.setValueInt
 setValueDouble = _XmippData.setValueDouble
 setValueString = _XmippData.setValueString
+getValueBool = _XmippData.getValueBool
+getValueInt = _XmippData.getValueInt
+getValueDouble = _XmippData.getValueDouble
+getValueString = _XmippData.getValueString
 
