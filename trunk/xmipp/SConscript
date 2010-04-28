@@ -664,7 +664,7 @@ AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
 AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
 # AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
-AddBatch('move_along_NMAmode', 'applications/scripts/move_along_NMAmode')
+AddBatch('move_along_NMAmode', 'applications/scripts/move_along_NMAmode','.pl')
 
 # Protocols
 AddProtocol('arg.py', 'applications/scripts/protocols')
