@@ -726,6 +726,7 @@ MDL_BLOCK = _XmippData.MDL_BLOCK
 MDL_SIGMANOISE = _XmippData.MDL_SIGMANOISE
 MDL_SIGMAOFFSET = _XmippData.MDL_SIGMAOFFSET
 MDL_SUMWEIGHT = _XmippData.MDL_SUMWEIGHT
+MDL_RANDOMSEED = _XmippData.MDL_RANDOMSEED
 MDL_LAST_LABEL = _XmippData.MDL_LAST_LABEL
 isString = _XmippData.isString
 isDouble = _XmippData.isDouble
@@ -812,6 +813,7 @@ vectorm_swigregister(vectorm)
 addObjectsInRangeInt = _XmippData.addObjectsInRangeInt
 addObjectsInRangeDouble = _XmippData.addObjectsInRangeDouble
 
+setValueBool = _XmippData.setValueBool
 setValueInt = _XmippData.setValueInt
 setValueDouble = _XmippData.setValueDouble
 setValueString = _XmippData.setValueString
