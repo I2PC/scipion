@@ -104,37 +104,37 @@ MetaDataContainer::MetaDataContainer(MetaDataContainer &MDc)
     }
 }
 /**
-void MetaDataContainer::addValue(MetaDataLabel name, int value)
-{
-    void * newValue = (void *) (new int(value));
-    insertVoidPtr(name, newValue);
-}
+ void MetaDataContainer::addValue(MetaDataLabel name, int value)
+ {
+ void * newValue = (void *) (new int(value));
+ insertVoidPtr(name, newValue);
+ }
 
-void MetaDataContainer::addValue(MetaDataLabel name, double value)
-{
-    void * newValue = (void *) (new double(value));
-    insertVoidPtr(name, newValue);
-}
+ void MetaDataContainer::addValue(MetaDataLabel name, double value)
+ {
+ void * newValue = (void *) (new double(value));
+ insertVoidPtr(name, newValue);
+ }
 
-void MetaDataContainer::addValue(MetaDataLabel name, bool value)
-{
-    void * newValue = (void *) (new bool(value));
-    insertVoidPtr(name, newValue);
-}
+ void MetaDataContainer::addValue(MetaDataLabel name, bool value)
+ {
+ void * newValue = (void *) (new bool(value));
+ insertVoidPtr(name, newValue);
+ }
 
-void MetaDataContainer::addValue(MetaDataLabel name, const std::string &value)
-{
-    void * newValue = (void *) (new std::string(value));
-    insertVoidPtr(name, newValue);
-}
+ void MetaDataContainer::addValue(MetaDataLabel name, const std::string &value)
+ {
+ void * newValue = (void *) (new std::string(value));
+ insertVoidPtr(name, newValue);
+ }
 
-void MetaDataContainer::addValue(MetaDataLabel name,
-        const std::vector<double> &value)
-{
-    void * newValue = (void *) (new std::vector<double>(value));
-    insertVoidPtr(name, newValue);
-}
-*/
+ void MetaDataContainer::addValue(MetaDataLabel name,
+ const std::vector<double> &value)
+ {
+ void * newValue = (void *) (new std::vector<double>(value));
+ insertVoidPtr(name, newValue);
+ }
+ */
 void MetaDataContainer::addValue(const std::string &name,
         const std::string &value)
 {
@@ -185,85 +185,85 @@ void MetaDataContainer::insertVoidPtr(MetaDataLabel name, void * value)
     values[name] = value;
 }
 /**
-void MetaDataContainer::getValue(MetaDataLabel name, int &value)
-{
-    std::map<MetaDataLabel, void *>::iterator element;
+ void MetaDataContainer::getValue(MetaDataLabel name, int &value)
+ {
+ std::map<MetaDataLabel, void *>::iterator element;
 
-    element = values.find(name);
+ element = values.find(name);
 
-    if (element == values.end())
-    {
-        REPORT_ERROR(1,(std::string) "Label(int) " + decodeLabel(name) + " not found\n" );
-    }
-    else
-    {
-        value = *((int *) element->second);
-    }
-}
-void MetaDataContainer::getValue(MetaDataLabel name, double &value)
-{
-    std::map<MetaDataLabel, void *>::iterator element;
+ if (element == values.end())
+ {
+ REPORT_ERROR(1,(std::string) "Label(int) " + decodeLabel(name) + " not found\n" );
+ }
+ else
+ {
+ value = *((int *) element->second);
+ }
+ }
+ void MetaDataContainer::getValue(MetaDataLabel name, double &value)
+ {
+ std::map<MetaDataLabel, void *>::iterator element;
 
-    element = values.find(name);
+ element = values.find(name);
 
-    if (element == values.end())
-    {
-        REPORT_ERROR(1,(std::string) "Label(double) " + decodeLabel(name) + " not found\n" );
-    }
-    else
-    {
-        value = *((double *) element->second);
-    }
-}
+ if (element == values.end())
+ {
+ REPORT_ERROR(1,(std::string) "Label(double) " + decodeLabel(name) + " not found\n" );
+ }
+ else
+ {
+ value = *((double *) element->second);
+ }
+ }
 
-void MetaDataContainer::getValue(MetaDataLabel name, std::string &value)
-{
-    std::map<MetaDataLabel, void *>::iterator element;
+ void MetaDataContainer::getValue(MetaDataLabel name, std::string &value)
+ {
+ std::map<MetaDataLabel, void *>::iterator element;
 
-    element = values.find(name);
+ element = values.find(name);
 
-    if (element == values.end())
-    {
-        REPORT_ERROR(1,(std::string) "Label(string) " + decodeLabel(name) + " not found\n" );
-    }
-    else
-    {
-        value = *((std::string *) element->second);
-    }
-}
+ if (element == values.end())
+ {
+ REPORT_ERROR(1,(std::string) "Label(string) " + decodeLabel(name) + " not found\n" );
+ }
+ else
+ {
+ value = *((std::string *) element->second);
+ }
+ }
 
-void MetaDataContainer::getValue(MetaDataLabel name, bool &value)
-{
-    std::map<MetaDataLabel, void *>::iterator element;
+ void MetaDataContainer::getValue(MetaDataLabel name, bool &value)
+ {
+ std::map<MetaDataLabel, void *>::iterator element;
 
-    element = values.find(name);
+ element = values.find(name);
 
-    if (element == values.end())
-    {
-        REPORT_ERROR(1,(std::string) "Label(bool) " + decodeLabel(name) + " not found\n" );
-    }
-    else
-    {
-        value = *((bool *) element->second);
-    }
-}
+ if (element == values.end())
+ {
+ REPORT_ERROR(1,(std::string) "Label(bool) " + decodeLabel(name) + " not found\n" );
+ }
+ else
+ {
+ value = *((bool *) element->second);
+ }
+ }
 
-void MetaDataContainer::getValue(MetaDataLabel name, std::vector<double> &value)
-{
-    std::map<MetaDataLabel, void *>::iterator element;
+ void MetaDataContainer::getValue(MetaDataLabel name, std::vector<double> &value)
+ {
+ std::map<MetaDataLabel, void *>::iterator element;
 
-    element = values.find(name);
+ element = values.find(name);
 
-    if (element == values.end())
-    {
-        REPORT_ERROR(1,(std::string) "Label(vector) " + decodeLabel(name) + " not found\n" );
-    }
-    else
-    {
-        value = *((std::vector<double> *) element->second);
-    }
-}
-*/
+ if (element == values.end())
+ {
+ REPORT_ERROR(1,(std::string) "Label(vector) " + decodeLabel(name) + " not found\n" );
+ }
+ else
+ {
+ value = *((std::vector<double> *) element->second);
+ }
+ }
+ */
 void * MetaDataContainer::getVoidPtr(MetaDataLabel name)
 {
     std::map<MetaDataLabel, void *>::iterator element;
@@ -706,7 +706,7 @@ bool MetaDataContainer::writeValueToString(std::string &outString,
         {
             double d;
             d = *((double*) (getVoidPtr(inputLabel)));
-            if (ABS(d) < 0.001)
+            if (d != 0. && ABS(d) < 0.001)
                 oss << std::setw(12) << std::scientific;
             else
                 oss << std::setw(12) << std::fixed;
@@ -716,7 +716,7 @@ bool MetaDataContainer::writeValueToString(std::string &outString,
             oss << *((std::string*) (getVoidPtr(inputLabel)));
         else if (isInt(inputLabel))
         {
-            oss << std::setw(12) << std::fixed;
+            oss << std::setw(10) << std::fixed;
             oss << *((int*) (getVoidPtr(inputLabel)));
         }
         else if (isBool(inputLabel))
@@ -729,7 +729,11 @@ bool MetaDataContainer::writeValueToString(std::string &outString,
             oss << "** ";
             for (int i = 0; i < imax; i++)
             {
-                oss << std::setw(17) << std::scientific;
+                oss << std::setw(12) << std::scientific;
+                if (myVector[i] != 0. && ABS(myVector[i]) < 0.001)
+                    oss << std::setw(12) << std::scientific;
+                else
+                    oss << std::setw(12) << std::fixed;
                 oss << myVector[i] << " ";
             }
             oss << "**";
@@ -754,7 +758,7 @@ bool MetaDataContainer::writeValueToFile(std::ofstream &outfile,
         {
             double d;
             d = *((double*) (getVoidPtr(inputLabel)));
-            if (ABS(d) < 0.001)
+            if (d!= 0. && ABS(d) < 0.001)
                 outfile << std::setw(12) << std::scientific;
             else
                 outfile << std::setw(12) << std::fixed;
@@ -764,26 +768,23 @@ bool MetaDataContainer::writeValueToFile(std::ofstream &outfile,
             outfile << *((std::string*) (getVoidPtr(inputLabel)));
         else if (isInt(inputLabel))
         {
-            outfile << std::setw(12) << std::fixed;
+            outfile << std::setw(10) << std::fixed;
             outfile << *((int*) (getVoidPtr(inputLabel)));
         }
         else if (isBool(inputLabel))
-        {
-            if (((bool*) (getVoidPtr(inputLabel))))
-                outfile << "1";
-            else
-                outfile << "0";
-        }
-        //outfile << *((bool*) (getVoidPtr(inputLabel)));
+            outfile << *((bool*) (getVoidPtr(inputLabel)));
         else if (isVector(inputLabel))
         {
             const std::vector<double> &myVector =
-            *((std::vector<double>*) (getVoidPtr(inputLabel)));
+                    *((std::vector<double>*) (getVoidPtr(inputLabel)));
             int imax = myVector.size();
             outfile << "** ";
             for (int i = 0; i < imax; i++)
             {
-                outfile << std::setw(17) << std::scientific;
+                if (myVector[i] != 0. && ABS(myVector[i]) < 0.001)
+                    outfile << std::setw(12) << std::scientific;
+                else
+                    outfile << std::setw(12) << std::fixed;
                 outfile << myVector[i] << " ";
             }
             outfile << "**";
