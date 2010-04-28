@@ -15,6 +15,7 @@ namespace std {
 %template(addObjectsInRangeInt) addObjectsInRangeSwig<int>;
 %template(addObjectsInRangeDouble) addObjectsInRangeSwig<double>; 
 
+%template(setValueBool)      setValueSwig<bool>; 
 %template(setValueInt)       setValueSwig<int>; 
 %template(setValueDouble)    setValueSwig<double>; 
 %template(setValueString)    setValueSwig<std::string>;
