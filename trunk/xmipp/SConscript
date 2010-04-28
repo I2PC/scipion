@@ -664,6 +664,7 @@ AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
 AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
 # AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
+AddBatch('move_along_NMAmode', 'applications/scripts/move_along_NMAmode')
 
 # Protocols
 AddProtocol('arg.py', 'applications/scripts/protocols')
@@ -721,6 +722,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
     AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
