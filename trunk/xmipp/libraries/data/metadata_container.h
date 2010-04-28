@@ -102,6 +102,7 @@ enum MetaDataLabel
     MDL_SIGMANOISE, // Standard deviation of the noise in ML model
     MDL_SIGMAOFFSET, // Standard deviation of the offsets in ML model
     MDL_SUMWEIGHT, // Sum of all weights in ML model
+    MDL_RANDOMSEED, // Seed for random number generator
     /*
      MDL_azimuthal_angle=      72.3493
      MDL_spherical_aberration= 5.6
@@ -183,7 +184,7 @@ inline bool isBool(MetaDataLabel lCode)
 inline bool isInt(MetaDataLabel lCode)
 {
     if (lCode == MDL_REF || lCode == MDL_ENABLED || lCode == MDL_OBJID || lCode
-        == MDL_ITER || lCode == MDL_BLOCK)
+        == MDL_ITER || lCode == MDL_BLOCK ||lCode == MDL_RANDOMSEED)
         return true;
     else
         return false;

@@ -518,6 +518,10 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_SUMWEIGHT;
     }
+    else if (strLabel == "randomSeed")
+    {
+        return MDL_RANDOMSEED;
+    }
 
     else
     {
@@ -679,6 +683,9 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
         case MDL_SUMWEIGHT:
             return std::string("sumWeight");
             break;
+        case MDL_RANDOMSEED:
+            return std::string("randomSeed");
+            break;
 
         default:
             return std::string("");
@@ -761,11 +768,17 @@ bool MetaDataContainer::writeValueToFile(std::ofstream &outfile,
             outfile << *((int*) (getVoidPtr(inputLabel)));
         }
         else if (isBool(inputLabel))
-            outfile << *((bool*) (getVoidPtr(inputLabel)));
+        {
+            if (((bool*) (getVoidPtr(inputLabel))))
+                outfile << "1";
+            else
+                outfile << "0";
+        }
+        //outfile << *((bool*) (getVoidPtr(inputLabel)));
         else if (isVector(inputLabel))
         {
             const std::vector<double> &myVector =
-                    *((std::vector<double>*) (getVoidPtr(inputLabel)));
+            *((std::vector<double>*) (getVoidPtr(inputLabel)));
             int imax = myVector.size();
             outfile << "** ";
             for (int i = 0; i < imax; i++)
