@@ -362,7 +362,7 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
     // and set some global variables
     MDimg.read(fn_img);
     // Remove disabled images
-    MDimg.removeObjects(MDL_ENABLED, false);
+    MDimg.removeObjects(MDL_ENABLED, -1);
     nr_images_global = MDimg.size();
     // By default set myFirst and myLast equal to 0 and N
     // respectively, this should be changed when using MPI
@@ -421,7 +421,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
         MDref.clear();
         MDref.addObject();
         MDref.setValue(MDL_IMAGE, fn_ref);
-        MDref.setValue(MDL_ENABLED, true);
+        MDref.setValue(MDL_ENABLED, 1);
     }
     else
     {
@@ -731,7 +731,7 @@ void Prog_MLalign2D_prm::generateInitialReferences()
         IRef.write(fn_tmp);
         MDref.addObject();
         MDref.setValue(MDL_IMAGE, fn_tmp);
-        MDref.setValue(MDL_ENABLED, true);
+        MDref.setValue(MDL_ENABLED, 1);
 
         if (verb > 0) progress_bar(refno);
     }//close for refno
@@ -2263,7 +2263,7 @@ void Prog_MLalign2D_prm::addPartialDocfileData(Matrix2D<double> data,
         MDimg.setValue(MDL_REF, ROUND(dMij(data, index, 5) + 1), img_id[imgno]);
         if (do_mirror)
         {
-            MDimg.setValue(MDL_FLIP, dMij(data, index, 6), img_id[imgno]);
+            MDimg.setValue(MDL_FLIP, dMij(data, index, 6) != 0., img_id[imgno]);
         }
         MDimg.setValue(MDL_PMAX, dMij(data, index, 7), img_id[imgno]);
         MDimg.setValue(MDL_LL, dMij(data, index, 8), img_id[imgno]);
@@ -2335,7 +2335,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
 
         MDo.addObject();
         MDo.setValue(MDL_IMAGE, fn_tmp);
-        MDo.setValue(MDL_ENABLED, true);
+        MDo.setValue(MDL_ENABLED, 1);
         MDo.setValue(MDL_WEIGHT, Itmp.weight());
         if (do_mirror) MDo.setValue(MDL_MIRRORFRAC,
                 model.mirror_fraction[refno]);
