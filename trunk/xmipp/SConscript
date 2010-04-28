@@ -653,6 +653,7 @@ AddXmippProgram('window')
 # NOTE PDBsidechain is in the only one in perl
 AddBatch('selfile_create', 'applications/scripts/selfile_create','.py')
 AddBatch('metadata_utilities', 'applications/scripts/metadata_utilities','.py')
+AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
 AddBatch('classify_CL2D_core_analysis', 'applications/scripts/classify_CL2D_core_analysis')
 AddBatch('convert_img2jpg','applications/scripts/convert_img2jpg')
 AddBatch('convert_lst2sel', 'applications/scripts/convert_lst2sel')
