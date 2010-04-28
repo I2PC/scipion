@@ -693,63 +693,7 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
     }
 }
 
-bool MetaDataContainer::writeValueToString(std::string &outString,
-        MetaDataLabel inLabel)
-{
-    MetaDataLabel inputLabel = static_cast<MetaDataLabel> (inLabel);
-
-    if (valueExists(inLabel))
-    {
-        std::ostringstream oss;
-
-        if (isDouble(inputLabel))
-        {
-            double d;
-            d = *((double*) (getVoidPtr(inputLabel)));
-            if (d != 0. && ABS(d) < 0.001)
-                oss << std::setw(12) << std::scientific;
-            else
-                oss << std::setw(12) << std::fixed;
-            oss << d;
-        }
-        else if (isString(inputLabel))
-            oss << *((std::string*) (getVoidPtr(inputLabel)));
-        else if (isInt(inputLabel))
-        {
-            oss << std::setw(10) << std::fixed;
-            oss << *((int*) (getVoidPtr(inputLabel)));
-        }
-        else if (isBool(inputLabel))
-            oss << *((bool*) (getVoidPtr(inputLabel)));
-        else if (isVector(inputLabel))
-        {
-            const std::vector<double> &myVector =
-                    *((std::vector<double>*) (getVoidPtr(inputLabel)));
-            int imax = myVector.size();
-            oss << "** ";
-            for (int i = 0; i < imax; i++)
-            {
-                oss << std::setw(12) << std::scientific;
-                if (myVector[i] != 0. && ABS(myVector[i]) < 0.001)
-                    oss << std::setw(12) << std::scientific;
-                else
-                    oss << std::setw(12) << std::fixed;
-                oss << myVector[i] << " ";
-            }
-            oss << "**";
-        }
-
-        outString = oss.str();
-        return true;
-    }
-    else
-    {
-        outString = std::string("");
-        return false;
-    }
-}
-
-bool MetaDataContainer::writeValueToFile(std::ofstream &outfile,
+bool MetaDataContainer::writeValueToStream(std::ostream &outstream,
         MetaDataLabel inputLabel)
 {
     if (valueExists(inputLabel))
@@ -759,35 +703,35 @@ bool MetaDataContainer::writeValueToFile(std::ofstream &outfile,
             double d;
             d = *((double*) (getVoidPtr(inputLabel)));
             if (d!= 0. && ABS(d) < 0.001)
-                outfile << std::setw(12) << std::scientific;
+                outstream << std::setw(12) << std::scientific;
             else
-                outfile << std::setw(12) << std::fixed;
-            outfile << d;
+                outstream << std::setw(12) << std::fixed;
+            outstream << d;
         }
         else if (isString(inputLabel))
-            outfile << *((std::string*) (getVoidPtr(inputLabel)));
+            outstream << *((std::string*) (getVoidPtr(inputLabel)));
         else if (isInt(inputLabel))
         {
-            outfile << std::setw(10) << std::fixed;
-            outfile << *((int*) (getVoidPtr(inputLabel)));
+            outstream << std::setw(10) << std::fixed;
+            outstream << *((int*) (getVoidPtr(inputLabel)));
         }
         else if (isBool(inputLabel))
-            outfile << *((bool*) (getVoidPtr(inputLabel)));
+            outstream << *((bool*) (getVoidPtr(inputLabel)));
         else if (isVector(inputLabel))
         {
             const std::vector<double> &myVector =
                     *((std::vector<double>*) (getVoidPtr(inputLabel)));
             int imax = myVector.size();
-            outfile << "** ";
+            outstream << "** ";
             for (int i = 0; i < imax; i++)
             {
                 if (myVector[i] != 0. && ABS(myVector[i]) < 0.001)
-                    outfile << std::setw(12) << std::scientific;
+                    outstream << std::setw(12) << std::scientific;
                 else
-                    outfile << std::setw(12) << std::fixed;
-                outfile << myVector[i] << " ";
+                    outstream << std::setw(12) << std::fixed;
+                outstream << myVector[i] << " ";
             }
-            outfile << "**";
+            outstream << "**";
         }
         return true;
     }
@@ -795,6 +739,19 @@ bool MetaDataContainer::writeValueToFile(std::ofstream &outfile,
     {
         return false;
     }
+}
+
+bool MetaDataContainer::writeValueToString(std::string &outString,
+        MetaDataLabel inLabel)
+{
+    std::ostringstream oss;
+    outString = writeValueToStream(oss, inLabel) ? oss.str() : std::string("");
+}
+
+bool MetaDataContainer::writeValueToFile(std::ofstream &outfile,
+        MetaDataLabel inputLabel)
+{
+    writeValueToStream(outfile, inputLabel);
 }
 
 bool MetaDataContainer::isValidLabel(MetaDataLabel inputLabel)

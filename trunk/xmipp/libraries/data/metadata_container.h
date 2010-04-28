@@ -272,6 +272,7 @@ public:
 
     void deleteValue(MetaDataLabel name);
 
+    bool writeValueToStream(std::ostream &outstream, MetaDataLabel inputLabel);
     bool writeValueToFile(std::ofstream &outfile, MetaDataLabel inputLabel);
     bool writeValueToString(std::string &outString, MetaDataLabel inputLabel);
 

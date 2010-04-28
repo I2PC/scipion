@@ -67,6 +67,7 @@ int main(int argc, char **argv)
 #ifdef TIMING
             prm.timer.tic(ITER);
 #endif
+
             if (prm.verb > 0)
                 std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
 
@@ -81,9 +82,11 @@ int main(int argc, char **argv)
                 // Integrate over all images
                 prm.expectation();
 #ifdef TIMING
+
                 prm.timer.toc(ITER_E);
                 prm.timer.tic(ITER_M);
 #endif
+
                 if (prm.blocks == 1) //ie not IEM
                 {
                     prm.maximization(prm.model);
@@ -92,11 +95,13 @@ int main(int argc, char **argv)
                 {
                     if (prm.do_first_iem || prm.iter > 1)
                     {
+
                         prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
                         prm.model.substractModel(block_model);
                     }
                     prm.maximization(block_model);
                     prm.writeOutputFiles(block_model, OUT_BLOCK);
+
                     if (prm.do_first_iem || prm.iter > 1)
                     {
                         prm.model.addModel(block_model);
@@ -104,7 +109,7 @@ int main(int argc, char **argv)
                 }
 
 #ifdef TIMING
-            prm.timer.toc(ITER_M);
+                prm.timer.toc(ITER_M);
 #endif
 
             }//close for blocks
@@ -114,7 +119,6 @@ int main(int argc, char **argv)
                 for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
                 {
                     prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
-
                     if (prm.current_block == 0)
                         prm.model = block_model;
                     else
@@ -133,8 +137,9 @@ int main(int argc, char **argv)
 
             if (converged)
             {
-                if (prm.verb > 0) std::cerr << " Optimization converged!"
-                        << std::endl;
+                if (prm.verb > 0)
+                    std::cerr << " Optimization converged!"
+                    << std::endl;
 
                 break;
             }
