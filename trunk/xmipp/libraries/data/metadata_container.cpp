@@ -410,6 +410,14 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_RANDOMSEED;
     }
+    else if (strLabel == "KStest")
+    {
+        return MDL_KSTEST;
+    }
+    else if (strLabel == "defocusGroup")
+    {
+        return MDL_DEFGROUP;
+    }
 
     else
     {
@@ -573,6 +581,12 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
             break;
         case MDL_RANDOMSEED:
             return std::string("randomSeed");
+            break;
+        case MDL_DEFGROUP:
+            return std::string("defocusGroup");
+            break;
+        case MDL_KSTEST:
+            return std::string("KStest");
             break;
 
         default:

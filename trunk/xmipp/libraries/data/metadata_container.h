@@ -103,6 +103,8 @@ enum MetaDataLabel
     MDL_SIGMAOFFSET, // Standard deviation of the offsets in ML model
     MDL_SUMWEIGHT, // Sum of all weights in ML model
     MDL_RANDOMSEED, // Seed for random number generator
+    MDL_DEFGROUP, // Defocus group
+    MDL_KSTEST, //KS-test statistics
     /*
      MDL_azimuthal_angle=      72.3493
      MDL_spherical_aberration= 5.6
@@ -159,7 +161,7 @@ inline bool isDouble(MetaDataLabel lCode)
         lCode == MDL_MIRRORFRAC   || lCode == MDL_VOLTAGE      || lCode == MDL_DEFOCUSU    ||
         lCode == MDL_DEFOCUSV     || lCode == MDL_LL           || lCode == MDL_WROBUST     ||
         lCode == MDL_SIGNALCHANGE || lCode == MDL_SIGMANOISE   || lCode == MDL_SIGMAOFFSET ||
-        lCode == MDL_SUMWEIGHT)
+        lCode == MDL_SUMWEIGHT || lCode == MDL_KSTEST)
         return true;
     else
         return false;
@@ -184,7 +186,7 @@ inline bool isBool(MetaDataLabel lCode)
 inline bool isInt(MetaDataLabel lCode)
 {
     if (lCode == MDL_REF || lCode == MDL_ENABLED || lCode == MDL_OBJID || lCode
-        == MDL_ITER || lCode == MDL_BLOCK ||lCode == MDL_RANDOMSEED)
+        == MDL_ITER || lCode == MDL_BLOCK ||lCode == MDL_RANDOMSEED || lCode == MDL_DEFGROUP)
         return true;
     else
         return false;
