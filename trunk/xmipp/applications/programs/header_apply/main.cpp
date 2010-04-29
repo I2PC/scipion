@@ -46,7 +46,7 @@ public:
     {
         Prog_parameters::usage();
         std::cerr << "  [-dont_wrap]              : By default, the image is wrapped\n"
-                  << "  [-gridding]               : Use reverse gridding for interpolation\n";
+	     << "  [-gridding]               : Use reverse gridding for interpolation\n";
     }
 
     void show()
@@ -65,14 +65,14 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     Matrix2D<double> Maux;
     if (eprm->gridding)
     {
-        KaiserBessel kb;
-        produceReverseGriddingMatrix2D(img(),Maux,kb);
-        applyGeometryReverseGridding(img(), img.get_transformation_matrix(), Maux, kb, IS_INV, eprm->wrap);
+	KaiserBessel kb;
+	produceReverseGriddingMatrix2D(img(),Maux,kb);
+	applyGeometryReverseGridding(img(), img.get_transformation_matrix(), Maux, kb, IS_INV, eprm->wrap);
     }
     else
     {
-        applyGeometryBSpline(Maux, img.get_transformation_matrix(), img(), 3, IS_INV, eprm->wrap);
-        img()=Maux;
+	applyGeometryBSpline(Maux, img.get_transformation_matrix(), img(), 3, IS_INV, eprm->wrap);
+	img()=Maux;
     }
 
     //Reset in-plane transformations of the header

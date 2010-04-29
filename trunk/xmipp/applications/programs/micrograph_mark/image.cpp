@@ -68,7 +68,7 @@ void QtImage::exact_imageToMicrograph(int _x, int _y, double &_rx, double &_ry)
 
 /* Constructor ------------------------------------------------------------- */
 QtImage::QtImage(QWidget *_parent, const char *_name, Qt::WFlags _f) :
-    QWidget(_parent, _name, _f)
+        QWidget(_parent, _name, _f)
 {
     __m                 = NULL;
     __filtersController = NULL;

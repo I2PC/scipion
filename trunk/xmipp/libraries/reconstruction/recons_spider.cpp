@@ -56,8 +56,7 @@ void SIRT_Spider(MetaData &SF, double lambda, double no_it, int radius,
                      "the file " + full_fn_batch + " for output");
 
     SF.firstObject();
-    FileName fnImg;
-    SF.getValue(MDL_IMAGE,fnImg);
+    FileName fnImg; SF.getValue(MDL_IMAGE,fnImg);
     fh_batch << "bp rp\n";
     fh_batch << fnImg << std::endl;
     fh_batch << fn_spider_sel << std::endl;

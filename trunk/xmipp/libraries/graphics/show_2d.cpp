@@ -160,12 +160,12 @@ void ImageViewer::Init()
 /****************************************************/
 ImageViewer::ImageViewer(const char *name, bool _check_file_change):
 #ifdef QT3_SUPPORT
-    QWidget(NULL, name, Qt::WDestructiveClose),
+                         QWidget(NULL, name, Qt::WDestructiveClose),
 #else
-    QWidget(NULL, name, QWidget::WDestructiveClose),
+                         QWidget(NULL, name, QWidget::WDestructiveClose),
 #endif
-    filename(0),
-    helpmsg(0)
+        filename(0),
+        helpmsg(0)
 {
     check_file_change = _check_file_change;
     apply_geo = true;
@@ -178,13 +178,12 @@ ImageViewer::ImageViewer(const char *name, bool _check_file_change):
 
 ImageViewer::ImageViewer(QImage *_image, const char *name)
 #ifdef QT3_SUPPORT
-    : QWidget(NULL, name, Qt::WDestructiveClose),
+        : QWidget(NULL, name, Qt::WDestructiveClose),
 #else
-    :
-    QWidget(NULL, name, QWidget::WDestructiveClose),
+        : QWidget(NULL, name, QWidget::WDestructiveClose),
 #endif
-      filename(0),
-      helpmsg(0)
+        filename(0),
+        helpmsg(0)
 {
     check_file_change = false;
     apply_geo = true;
@@ -199,13 +198,12 @@ ImageViewer::ImageViewer(QImage *_image, const char *name)
 
 ImageViewer::ImageViewer(ImageT<double> *_image, const char *name)
 #ifdef QT3_SUPPORT
-    : QWidget(NULL, name, Qt::WDestructiveClose),
+        : QWidget(NULL, name, Qt::WDestructiveClose),
 #else
-    :
-    QWidget(NULL, name, QWidget::WDestructiveClose),
+        : QWidget(NULL, name, QWidget::WDestructiveClose),
 #endif
-      filename(0),
-      helpmsg(0)
+        filename(0),
+        helpmsg(0)
 {
     check_file_change = false;
     apply_geo = true;
@@ -220,13 +218,12 @@ ImageViewer::ImageViewer(ImageT<double> *_image, const char *name)
 
 ImageViewer::ImageViewer(FourierImageXmipp *_FFTimage, const char *name)
 #ifdef QT3_SUPPORT
-    : QWidget(NULL, name, Qt::WDestructiveClose),
+        : QWidget(NULL, name, Qt::WDestructiveClose),
 #else
-    :
-    QWidget(NULL, name, QWidget::WDestructiveClose),
+        : QWidget(NULL, name, QWidget::WDestructiveClose),
 #endif
-      filename(0),
-      helpmsg(0)
+        filename(0),
+        helpmsg(0)
 {
     check_file_change = false;
     apply_geo = true;
@@ -289,8 +286,8 @@ void ImageViewer::generateFFTImage(Matrix2D<double> &out)
     if (fft_show_mode == 0)
     {
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Isubs)
-        if (MAT_ELEM(Isubs, i, j) == 1)
-            MAT_ELEM(out, i, j) = min_positive - 1;
+            if (MAT_ELEM(Isubs, i, j) == 1)
+                MAT_ELEM(out, i, j) = min_positive - 1;
     }
 
     out.setXmippOrigin();
@@ -438,7 +435,7 @@ void ImageViewer::refineProfileLine()
     prm_name.push_back("Y final");
 
     ScrollParam* param_window = new ScrollParam(min, max, initial_value, prm_name,
-            "Setup profile line", 0, "new window", Qt::WDestructiveClose, 0);
+                                "Setup profile line", 0, "new window", Qt::WDestructiveClose, 0);
 
     // Connect its output to my input (set_spacing)
     connect(param_window, SIGNAL(new_value(std::vector<float>)),
@@ -888,8 +885,7 @@ void ImageViewer::scale()
 
     QApplication::setOverrideCursor(Qt::waitCursor);   // this might take time
     if (width() == pm.width() && h == pm.height())
-    {
-        // no need to scale if widget
+    {      // no need to scale if widget
         pmScaled = pm;    // size equals pixmap size
     }
     else
@@ -924,8 +920,7 @@ void ImageViewer::resizeEvent(QResizeEvent *)
 
     int h = height() - status->height();
     if (width() != pmScaled.width() || h != pmScaled.height())
-    {
-        // if new size,
+    {      // if new size,
         scale();    // scale pmScaled to window
         updateStatus();
     }
@@ -1048,44 +1043,38 @@ void ImageViewer::mouseMoveEvent(QMouseEvent *e)
 void ImageViewer::keyPressEvent(QKeyEvent* e)
 {
     switch (e->key())
-    {
-        // Look at the key code
+    {   // Look at the key code
     case Qt::Key_F1:
         menubar->exec();
         break;
     case Qt::Key_R:
         if (e->state() == Qt::ControlButton)
-        {
-            // If 'Ctrol R' key,
+        { // If 'Ctrol R' key,
             xmippImage().moveOriginTo(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner
         }
         break;
     case Qt::Key_Q:
         if (e->state() == Qt::ControlButton)
-        {
-            // If 'Ctrol Q' key,
+        { // If 'Ctrol Q' key,
             exit(0); // Terminate program
         }
         break;
     case Qt::Key_O:    // Xmipp origin
         if (e->state() == Qt::ControlButton)
-        {
-            // If 'Ctrol N' key,
+        { // If 'Ctrol N' key,
             xmippImage().setXmippOrigin(); // sets origin at the center of the iamge.
         }
         break;
     case Qt::Key_N:    // Natural size (original size)
         if (e->state() == Qt::ControlButton)
-        {
-            // If 'Ctrol N' key,
+        { // If 'Ctrol N' key,
             resize(xmippImage().colNumber(), xmippImage().rowNumber() + status->height());
         }
         break;
     case Qt::Key_M:
     case Qt::Key_Minus:    // Half size
         if (e->state() == Qt::ControlButton)
-        {
-            // If 'Ctrol-' key,
+        { // If 'Ctrol-' key,
             // Aspect ratio of the original image
             double ratio_original = (double)xmippImage().colNumber() / xmippImage().rowNumber();
             int new_width = width() / 2;
@@ -1096,8 +1085,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
     case Qt::Key_P:
     case Qt::Key_Plus:    // Double size
         if (e->state() == Qt::ControlButton)
-        {
-            // If 'Ctrol+' key,
+        { // If 'Ctrol+' key,
             double ratio_original = (double)xmippImage().colNumber() / xmippImage().rowNumber();
             int new_width = width() * 2;
             int new_height = ROUND(new_width / ratio_original);
@@ -1106,8 +1094,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
         break;
     case Qt::Key_A:        // Aspect ratio
         if (e->state() == Qt::ControlButton)
-        {
-            // If 'Ctrol+' key,
+        { // If 'Ctrol+' key,
             double ratio = (double) xmippImage().colNumber() / (double) xmippImage().rowNumber();
             resize(width(), (int)(width() / ratio + status->height()));
         }
@@ -1127,8 +1114,7 @@ void ImageViewer::keyPressEvent(QKeyEvent* e)
 void ImageViewer::paintEvent(QPaintEvent *e)
 {
     if (pm.size() != QSize(0, 0))
-    {
-        // is an image loaded?
+    {  // is an image loaded?
         QPainter painter(this);
         painter.setClipRect(e->rect());
         painter.drawPixmap(0, 0, pmScaled);
@@ -1352,8 +1338,8 @@ void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
         Iaux() = I();
         // Remove the part of the model
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
-        if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
-            I(i, j) = I(i, XSIZE(I()) - 1 - j);
+            if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
+                I(i, j) = I(i, XSIZE(I()) - 1 - j);
     }
     prm.apply(I());
     if (load_mode == ImageViewer::CTF_mode)
@@ -1361,8 +1347,8 @@ void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
         CenterFFT(I(), true);
         // Copy the part of the model
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
-        if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
-            I(i, j) = ABS(Iaux(i, j));
+            if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
+                I(i, j) = ABS(Iaux(i, j));
         CenterFFT(I(), false);
     }
     I().setXmippOrigin();

@@ -151,21 +151,18 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
        (computed in Linux) */
 #define TYPE_TABLE_SIZE 10
 
-    int type_table[TYPE_TABLE_SIZE][5] =
-    {
-        0, 0,  48,  65, 11,
-        0, 0,  32,  65, 10,
-        0, 0,  16,  65,  9,
-        0, 0,   0,  65,  8,
-        0, 0,  64,  64,  3,
-        0, 0, 128,  63,  1,
-        0, 0, 128, 191, -1,
-        0, 0,  64, 192, -3,
-        0, 0, 160, 192, -5,
-        0, 0, 224, 192, -7
-    };
-    union
-    {
+    int type_table[TYPE_TABLE_SIZE][5] = {
+                                             0, 0,  48,  65, 11,
+                                             0, 0,  32,  65, 10,
+                                             0, 0,  16,  65,  9,
+                                             0, 0,   0,  65,  8,
+                                             0, 0,  64,  64,  3,
+                                             0, 0, 128,  63,  1,
+                                             0, 0, 128, 191, -1,
+                                             0, 0,  64, 192, -3,
+                                             0, 0, 160, 192, -5,
+                                             0, 0, 224, 192, -7};
+    union {
         unsigned char c[4];
         float         f;
     } file_type;
@@ -275,12 +272,12 @@ int headerXmipp::read(FILE *fp, bool skip_type_check, bool force_reversed,
 
 #ifdef DEBUG
             std::cout << "usfHeader=    " << usfHeader     << std::endl
-                      << "usfNcol=      " << usfNcol       << std::endl
-                      << "usfNrow=      " << usfNrow       << std::endl
-                      << "computed size=" << size          << std::endl
-                      << "file size=    " << info.st_size  << std::endl
-                      << "header.fIform=" << header.fIform << std::endl
-                      ;
+                 << "usfNcol=      " << usfNcol       << std::endl
+                 << "usfNrow=      " << usfNrow       << std::endl
+                 << "computed size=" << size          << std::endl
+                 << "file size=    " << info.st_size  << std::endl
+                 << "header.fIform=" << header.fIform << std::endl
+            ;
 #endif
 
             if ((size != info.st_size) || (header.fIform != 1))

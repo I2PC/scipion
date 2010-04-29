@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Roberto Marabini
+ * Authors:    Roberto Marabini 
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -60,7 +60,7 @@ public:
        dn, dnv, dnh, t, td, th, o, oh, i, ih */
     FileName        fn_sym;
 
-    /** 1-17 symmetry grouips */
+    /** 1-17 symmetry grouips */ 
     int symmetry;
 
     /** For infinite groups symmetry order*/
@@ -71,7 +71,7 @@ public:
 
     /** maximun tilt angle */
     double max_tilt_angle;
-
+    
     /** minimum tilt angle */
     double min_tilt_angle;
 

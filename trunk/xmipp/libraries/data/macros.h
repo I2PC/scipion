@@ -217,7 +217,7 @@
 #define intWRAP(x, x0, xF) (((x) >= (x0) && (x) <= (xF)) ? (x) : ((x) < (x0)) \
                             ? ((x) - (int)(((x) - (x0) + 1) / ((xF) - (x0) + 1) - 1) * \
                                ((xF) - (x0) + 1)) : ((x) - (int)(((x) - (xF) - 1) / ((xF) - (x0) + 1) \
-                                       + 1) * ((xF) - (x0) + 1)))
+                                                                 + 1) * ((xF) - (x0) + 1)))
 
 /** Wrapping for real numbers
  * @ingroup MacrosNumerical
@@ -325,13 +325,13 @@
  *
  */
 #define BSPLINE03(arg,result) {\
-        double x = ABS(arg); \
-        if (x < 1.0) \
-            result=(x * x * (x - 2.0) * (1.0 / 2.0) + 2.0 / 3.0);\
-        else if (x < 2.0) { \
-            x -= 2.0;\
-            result=x*x*x*(-1.0 / 6.0); \
-        } else \
+	double x = ABS(arg); \
+	if (x < 1.0) \
+	    result=(x * x * (x - 2.0) * (1.0 / 2.0) + 2.0 / 3.0);\
+	else if (x < 2.0) { \
+	    x -= 2.0;\
+	    result=x*x*x*(-1.0 / 6.0); \
+	} else \
             result=0;\
     }
 

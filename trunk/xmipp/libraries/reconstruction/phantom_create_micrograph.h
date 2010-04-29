@@ -39,25 +39,25 @@ class Prog_Phantom_Create_Micrograph_Parameters
 public:
     /// Volume
     FileName fn_vol;
-
+    
     /// Rootname for the micrographs
     FileName fn_root;
 
     /// Size of the micrograph
     int Xdim;
-
+    
     /// Number of micrographs
     int Nmicrographs;
 
     /// Density of particles (a percentage<100)
     double density;
-
+    
     /// CTF
     Prog_Microscope_Parameters microscope;
 public:
     // Volume
     VolumeXmipp V;
-
+    
     // Number of projections per micrograph
     int Nproj;
 public:

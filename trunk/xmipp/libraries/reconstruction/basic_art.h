@@ -40,7 +40,7 @@
 struct Recons_info;
 
 /**@defgroup BasicART Basic and common ART
-   @ingroup ReconsLibraryPrograms
+   @ingroup ReconsLibraryPrograms 
     The main difference between ART applied to different cases (single
     particles, crystals, ...) is the single step applied to each case.
     Most of the tasks in the ART are common to all ART processes. All
@@ -230,12 +230,12 @@ public:
 
     /// Noisy reconstruction
     bool noisy_reconstruction;
-
-    /// Only for internal purposes, MUST be set when running MPI.
-    bool using_MPI;
-
-    /// Number of threads to use. Can not be different than 1 when using MPI.
-    int threads;
+	
+	/// Only for internal purposes, MUST be set when running MPI.
+	bool using_MPI;
+	
+	/// Number of threads to use. Can not be different than 1 when using MPI.
+	int threads;
 
 #define TELL_IV                    0x100
 #define TELL_ONLY_SYM              0x80
@@ -549,8 +549,8 @@ struct Recons_info
     The result is stored in the Recons_info array which should point
     to NULL when it is not initialized. */
 void build_recons_info(SelFile &selfile, SelFile &selctf,
-                       const FileName &fn_ctf, const SymList &SL, Recons_info * &IMG_Inf,
-                       bool do_not_use_symproj);
+    const FileName &fn_ctf, const SymList &SL, Recons_info * &IMG_Inf,
+    bool do_not_use_symproj);
 
 /* ------------------------------------------------------------------------- */
 /** Variability structure */
@@ -592,8 +592,7 @@ class POCSClass
 {
 public:
     typedef enum {POCS_measuring, POCS_use, POCS_lowering, POCS_N_measure,
-                  POCS_N_use
-                 } t_POCS_status;
+                  POCS_N_use} t_POCS_status;
     t_POCS_status POCS_state;
     double POCS_avg;
     double POCS_stddev;

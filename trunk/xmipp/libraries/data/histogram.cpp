@@ -85,7 +85,7 @@ void histogram1D::insert_value(double val)
 #ifdef DEBUG
 
     std::cout << "   hmin " << hmin << " hmax " << hmax << " value " << val
-              << " index " << i << " out of " << no_steps << std::endl;
+    << " index " << i << " out of " << no_steps << std::endl;
 #endif
 }
 #undef DEBUG
@@ -276,10 +276,10 @@ double KLDistance(const histogram1D& h1, const histogram1D& h2)
 {
     if (XSIZE(h1)!=XSIZE(h2))
         REPORT_ERROR(1,"KLDistance: Histograms of different sizes");
-
+    
     double retval=0;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(h1)
-    if (h2(i)!=0.0 && h1(i)!=0.0) retval += h1(i)*log10(h1(i)/h2(i));
+        if (h2(i)!=0.0 && h1(i)!=0.0) retval += h1(i)*log10(h1(i)/h2(i)); 
     return retval;
 }
 
@@ -288,7 +288,7 @@ double KLDistance(const histogram1D& h1, const histogram1D& h2)
 /* ------------------------------------------------------------------------- */
 /* Initialization ---------------------------------------------------------- */
 void IrregularHistogram1D::init(const histogram1D &hist,
-                                const Matrix1D<int> &bins)
+    const Matrix1D<int> &bins)
 {
     int steps_no = XSIZE(bins);
     __binsRightLimits.initZeros(steps_no);
@@ -311,7 +311,7 @@ int IrregularHistogram1D::val2Index(double value)
     int binsNo = XSIZE(__binsRightLimits);
     for (int i = 0; i < binsNo; i++)
         if(value <= __binsRightLimits(i)) return i;
-
+    
     //In case the value is greater, we return the last bin
     return binsNo - 1;
 }
@@ -324,7 +324,7 @@ void IrregularHistogram1D::selfNormalize()
 
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &_out,
-                            const IrregularHistogram1D &_hist)
+    const IrregularHistogram1D &_hist)
 {
     for (int i = 0; i < XSIZE(_hist.__binsRightLimits); i++)
         _out << "\t" << _hist.__binsRightLimits(i) << "\t\t" << _hist.__hist(i) << std::endl;

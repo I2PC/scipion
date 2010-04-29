@@ -54,7 +54,7 @@ public:
      * Parameter: _final
      */
     Descent(const double _initial = 1, const double _final = 0)
-        : initial(_initial), final(_final)
+            : initial(_initial), final(_final)
     {};
 
     /**
@@ -144,7 +144,7 @@ public:
      * Parameter: _nSteps     Number of training steps
      */
     xmippSOM(Descent& _alpha, Descent& _radius,  neighType _neighType, unsigned long _nSteps)
-        : xmippBaseAlgo<xmippMap>(), somAlpha(_alpha), somRadius(_radius), somNeigh(_neighType), somNSteps(_nSteps)
+            : xmippBaseAlgo<xmippMap>(), somAlpha(_alpha), somRadius(_radius), somNeigh(_neighType), somNSteps(_nSteps)
     {};
 
     /**
@@ -278,7 +278,7 @@ private:
       * Parameter: _ts   The training set
       */
     virtual void train(xmippMap& _som, const TS& _ts) const
-    {};
+        {};
 
 
 };

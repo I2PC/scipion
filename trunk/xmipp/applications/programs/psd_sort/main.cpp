@@ -32,21 +32,19 @@ int main(int argc, char **argv)
     try
     {
         prm.read(argc,argv);
-    }
-    catch (Xmipp_error XE)
+    } catch (Xmipp_error XE)
     {
         std::cerr << XE << std::endl;
         prm.usage();
         return 1;
     }
-
+    
     try
     {
         prm.produceSideInfo();
         prm.show();
         prm.run();
-    }
-    catch (Xmipp_error XE)
+    } catch (Xmipp_error XE)
     {
         std::cerr << XE << std::endl;
         return 1;

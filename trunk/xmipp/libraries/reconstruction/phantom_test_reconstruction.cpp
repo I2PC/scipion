@@ -66,7 +66,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
     {
         // Reconstruction method
         str = getParameter(fh_param, "reconstruction method", 0, NULL,
-                           3007, "Recons_test_Parameters::read: Reconstruction method not found");
+                        3007, "Recons_test_Parameters::read: Reconstruction method not found");
         if (str == "ART")              recons_method = use_ART;
         else if (str == "SIRT")        recons_method = use_SIRT;
         else if (str == "WBP")         recons_method = use_WBP;
@@ -80,10 +80,10 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
 
         // Several filenames and parameters
         fn_random_phantom = getParameter(fh_param, "phantom family", 0, "",
-                                         3007, "Recons_test_Parameters::read: Random Phantom filename not found");
+                                      3007, "Recons_test_Parameters::read: Random Phantom filename not found");
         fn_proj_params = getParameter(fh_param, "projection parameters", 0, NULL,
-                                      3007, "Recons_test_Parameters::read: Projection parameters "
-                                      "filename not found");
+                                   3007, "Recons_test_Parameters::read: Projection parameters "
+                                   "filename not found");
         fn_voxel_phantom = getParameter(fh_param, "voxel phantom", 0, "");
         fn_crystal = getParameter(fh_param, "crystal parameters", 0, "");
         fn_sym    = getParameter(fh_param, "symmetry file", 0, "");
@@ -111,13 +111,13 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         {
             enable_top_surface = true;
             top0 = textToFloat(firstWord(str), 3007,
-                               "Recons_test_Parameters::read: top0 is not a true number");
+                        "Recons_test_Parameters::read: top0 is not a true number");
             auxstr = nextToken();
             // Is it a range?
             if (auxstr == NULL) topF = top0;
             else
                 topF = textToFloat(auxstr, 3007,
-                                   "Recons_test_Parameters::read: topF is not a true number");
+                            "Recons_test_Parameters::read: topF is not a true number");
         }
         else enable_top_surface = false;
 
@@ -126,13 +126,13 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         {
             enable_bottom_surface = true;
             bottom0 = textToFloat(firstWord(str), 3007,
-                                  "Recons_test_Parameters::read: bottom0 is not a true number");
+                           "Recons_test_Parameters::read: bottom0 is not a true number");
             auxstr = nextToken();
             // Is it a range?
             if (auxstr == NULL) bottomF = bottom0;
             else
                 bottomF = textToFloat(auxstr, 3007,
-                                      "Recons_test_Parameters::read: bottomF is not a true number");
+                               "Recons_test_Parameters::read: bottomF is not a true number");
         }
         else enable_bottom_surface = false;
 
@@ -186,7 +186,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         if (start_from_phantom)
         {
             starting_low_pass = textToFloat(getParameter(fh_param, "starting lowpass", 0, "",
-                                            3007, "Recons_test_Parameters::read: starting lowpass is missing"));
+                                               3007, "Recons_test_Parameters::read: starting lowpass is missing"));
             starting_noise = textToFloat(getParameter(fh_param, "starting noise", 0, "0"));
         }
 
@@ -204,11 +204,11 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
                 if (str != "")
                 {
                     lambda0.push_back(textToFloat(firstWord(str), 3007,
-                                                  "Recons_test_Parameters::read: lambda0 is not a true number"));
+                                           "Recons_test_Parameters::read: lambda0 is not a true number"));
                     auxstr = nextWord(3007, "Recons_test_Parameters::read: "
-                                      "number of iterations not found");
+                                       "number of iterations not found");
                     no_it0.push_back(textToInteger(auxstr, 3007,
-                                                   "Recons_test_Parameters::read: no_it0 is not a true number"));
+                                          "Recons_test_Parameters::read: no_it0 is not a true number"));
                     auxstr = nextToken();
                     // Is it a range?
                     if (auxstr == NULL)
@@ -219,11 +219,11 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
                     else
                     {
                         lambdaF.push_back(textToFloat(auxstr, 3007,
-                                                      "Recons_test_Parameters::read: lambdaF is not a true number"));
+                                               "Recons_test_Parameters::read: lambdaF is not a true number"));
                         auxstr = nextWord(3007, "Recons_test_Parameters::read: "
-                                          "number of iterations not found");
+                                           "number of iterations not found");
                         no_itF.push_back(textToInteger(auxstr, 3007,
-                                                       "Recons_test_Parameters::read: no_itF is not a true number"));
+                                              "Recons_test_Parameters::read: no_itF is not a true number"));
                     }
                     skip++;
                 }
@@ -245,7 +245,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
                 if (str != "")
                 {
                     WBP_threshold.push_back(textToFloat(firstWord(str), 3007,
-                                                        "Recons_test_Parameters::read: WBP threshold is not a true number"));
+                                                 "Recons_test_Parameters::read: WBP threshold is not a true number"));
                     skip++;
                 }
                 else if (skip == 0)
@@ -270,7 +270,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         fn_alternative_evaluation_phantom = getParameter(fh_param,
                                             "alternative evaluation phantom", 0, "");
         fn_smooth_evaluation_mask = getParameter(fh_param,
-                                    "smooth evaluation mask", 0, "");
+                                              "smooth evaluation mask", 0, "");
     }
     catch (Xmipp_error XE)
     {
@@ -287,21 +287,21 @@ std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm
     out << "   Reconstruction method=";
     switch (prm.recons_method)
     {
-    case use_ART:
-        out << "ART\n";
-        break;
-    case use_SIRT:
-        out << "SIRT\n";
-        break;
-    case use_WBP:
-        out << "WBP\n";
-        break;
-    case use_SIRT_Spider:
-        out << "SIRT Spider\n";
-        break;
-    case use_FOURIER:
-        out << "Fourier\n";
-        break;
+        case use_ART:
+            out << "ART\n";
+            break;
+        case use_SIRT:
+            out << "SIRT\n";
+            break;
+        case use_WBP:
+            out << "WBP\n";
+            break;
+        case use_SIRT_Spider:
+            out << "SIRT Spider\n";
+            break;
+        case use_FOURIER:
+            out << "Fourier\n";
+            break;
     }
     out << "   Phantom family: " << prm.fn_random_phantom << std::endl;
     out << "   Voxel Phantom: "  << prm.fn_voxel_phantom  << std::endl;
@@ -341,9 +341,9 @@ std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm
     if (prm.enable_normalization)
     {
         out << "   Y=AX+B: A follows N(" << prm.a_avg << "," << prm.a_stddev
-            << ") and B follows N(" << prm.b_avg << ","
-            << prm.b_stddev << ")\n"
-            << "   Normalizing method: ";
+        << ") and B follows N(" << prm.b_avg << ","
+        << prm.b_stddev << ")\n"
+        << "   Normalizing method: ";
         switch (prm.normalizing_method)
         {
         case OLDXMIPP:
@@ -376,7 +376,7 @@ std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm
 
     if (prm.correct_amplitude)
         out << "   Correcting CTF amplitude\n"
-            << "   IDR relaxation factor: " << prm.mu << std::endl;
+        << "   IDR relaxation factor: " << prm.mu << std::endl;
     if (prm.unmatched)
         out << "   Unmatched CTF correction\n";
     if (prm.recons_method == use_ART || prm.recons_method == use_SIRT)
@@ -416,18 +416,18 @@ std::ostream & operator << (std::ostream &out, const Recons_test_Parameters &prm
     else
         for (int i = 0; i < prm.lambda0.size(); i++)
             out << "   Lambda0=" << prm.lambda0[i]
-                << " LambdaF=" << prm.lambdaF[i]
-                << " No It0 =" << prm.no_it0[i]
-                << " No ItF =" << prm.no_itF[i]
-                << std::endl;
+            << " LambdaF=" << prm.lambdaF[i]
+            << " No It0 =" << prm.no_it0[i]
+            << " No ItF =" << prm.no_itF[i]
+            << std::endl;
     if (prm.tomography) out << "   Tomography mode\n";
     if (prm.evaluate)
         out << "   Evaluation active\n"
-            << "   Alternative evaluation phantom: "
-            << prm.fn_alternative_evaluation_phantom << std::endl
-            << "   Smooth evaluation mask: "
-            << prm.fn_smooth_evaluation_mask << std::endl
-            ;
+        << "   Alternative evaluation phantom: "
+        << prm.fn_alternative_evaluation_phantom << std::endl
+        << "   Smooth evaluation mask: "
+        << prm.fn_smooth_evaluation_mask << std::endl
+        ;
     return out;
 }
 
@@ -475,7 +475,7 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
                 double estimated_sample_size =
                     t * training_stddev / (prm.accuracy / 100 * training_avg);
                 std::cout << "tFOM values=" << aux.transpose() << std::endl
-                          << estimated_sample_size << " samples will be needed\n";
+                << estimated_sample_size << " samples will be needed\n";
                 if (sample_size < estimated_sample_size && k == sample_size - 1)
                 {
                     sample_size++;
@@ -593,12 +593,11 @@ void single_recons_test(const Recons_test_Parameters &prm,
         prm_micro.low_pass_before_CTF = prm.low_pass_before_CTF;
         prm_micro.after_ctf_noise = true;
         SF.firstObject();
-        FileName fn_img;
-        SF.getValue(MDL_IMAGE,fn_img);
+        FileName fn_img; SF.getValue(MDL_IMAGE,fn_img);
         ImageXmipp img;
         img.read(fn_img);
         prm_micro.Ydim = YSIZE(img());
-        prm_micro.Xdim = XSIZE(img());
+		prm_micro.Xdim = XSIZE(img());
         prm_micro.produce_side_info();
 
         std::cerr << "Applying microscope simulation ...\n";
@@ -606,8 +605,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         int i = 0;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            FileName fn_proj;
-            SF.getValue(MDL_IMAGE,fn_proj);
+            FileName fn_proj; SF.getValue(MDL_IMAGE,fn_proj);
             if (fn_proj=="") break;
             ImageXmipp I;
             I.read(fn_proj);
@@ -637,8 +635,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         bool first = true;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            FileName fn_proj;
-            SF.getValue(MDL_IMAGE, fn_proj);
+            FileName fn_proj; SF.getValue(MDL_IMAGE, fn_proj);
             if (fn_proj=="") break;
             ImageXmipp I;
             I.read(fn_proj);
@@ -674,8 +671,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         int n = 0;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            FileName fn_proj;
-            SF.getValue(MDL_IMAGE, fn_proj);
+            FileName fn_proj; SF.getValue(MDL_IMAGE, fn_proj);
             ImageXmipp I;
             I.read(fn_proj);
             I().setXmippOrigin();
@@ -699,15 +695,15 @@ void single_recons_test(const Recons_test_Parameters &prm,
     if (prm.correct_phase)
     {
         CTFDat ctfdat;
-        ctfdat.createFromSelfileAndSingleCTF(SF,prm.fn_CTF);
-        ctfdat.write(prm.fn_CTF+"_ctfdat");
-
+	ctfdat.createFromSelfileAndSingleCTF(SF,prm.fn_CTF);
+	ctfdat.write(prm.fn_CTF+"_ctfdat");
+    
         CorrectPhaseParams correct;
         correct.fnCtfdat = prm.fn_CTF;
         correct.produceSideInfo();
         correct.run();
-
-        system(((std::string)"rm "+prm.fn_CTF+"_ctfdat").c_str());
+	
+	system(((std::string)"rm "+prm.fn_CTF+"_ctfdat").c_str());
     }
     fn_applied_CTF = prm.fn_CTF;
 
@@ -828,7 +824,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         }
 
         std::cout << "Selected: Lambda= " << art_prm.lambda_list.transpose() << std::endl
-                  << " No_it= " << art_prm.no_it << std::endl;
+        << " No_it= " << art_prm.no_it << std::endl;
 
         if (prm.run_also_without_constraints)
         {
@@ -879,8 +875,8 @@ void single_recons_test(const Recons_test_Parameters &prm,
         {
             // Apply IDR
             CTFDat ctfdat;
-            ctfdat.createFromSelfileAndSingleCTF(SF,fn_applied_CTF);
-            ctfdat.write(fn_applied_CTF+"_ctfdat");
+	    ctfdat.createFromSelfileAndSingleCTF(SF,fn_applied_CTF);
+	    ctfdat.write(fn_applied_CTF+"_ctfdat");
 
             Prog_IDR_ART_Parameters idr_prm;
             idr_prm.mu = prm.mu;
@@ -888,9 +884,9 @@ void single_recons_test(const Recons_test_Parameters &prm,
             idr_prm.fn_vol = vol_recons.name();
             idr_prm.produce_side_info();
             idr_prm.IDR_correction();
-
-            // COSS: This should be further tested since idr rewrites
-            //       the input images
+	    
+	    // COSS: This should be further tested since idr rewrites
+	    //       the input images
 
             fn_recons_root = vol_recons.name().without_extension();
         }
@@ -898,10 +894,10 @@ void single_recons_test(const Recons_test_Parameters &prm,
     else if (prm.recons_method == use_WBP)
     {
         std::string command_line = (std::string)"xmipp_reconstruct_wbp -i " +
-                                   Prog_proj_prm.fn_sel_file +
-                                   " -o " + fn_recons_root + ".vol " +
-                                   " -radius " + integerToString((int)(proj_prm.proj_Xdim / 2)) +
-                                   " -threshold " + floatToString(prm.WBP_threshold[i], 0);
+              Prog_proj_prm.fn_sel_file +
+              " -o " + fn_recons_root + ".vol " +
+              " -radius " + integerToString((int)(proj_prm.proj_Xdim / 2)) +
+              " -threshold " + floatToString(prm.WBP_threshold[i], 0);
         std::cerr << "Reconstructing with WBP ...\n";
         system(command_line.c_str());
     }
@@ -918,10 +914,10 @@ void single_recons_test(const Recons_test_Parameters &prm,
     else if (prm.recons_method == use_FOURIER)
     {
         std::string command_line = (std::string)"xmipp_reconstruct_fourier -i " +
-                                   Prog_proj_prm.fn_sel_file +
-                                   " -o " + fn_recons_root + ".vol " +
-                                   " -pad_proj " + integerToString(prm.pad_proj) +
-                                   " -pad_vol" + integerToString(prm.pad_vol);
+              Prog_proj_prm.fn_sel_file +
+              " -o " + fn_recons_root + ".vol " +
+              " -pad_proj " + integerToString(prm.pad_proj) +
+              " -pad_vol" + integerToString(prm.pad_vol);
         std::cerr << "Reconstructing with Fourier ...\n";
         system(command_line.c_str());
     }

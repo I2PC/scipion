@@ -50,8 +50,7 @@ public:
                    IMG_INT  = 9, /*IMG_SHORT  = , IMG_UCHAR = ,*/
                    VOL_BYTE = 2,  VOL_XMIPP  = 3,
                    VOL_INT  = 10 , /*VOL_SHORT  = , VOL_UCHAR =, */
-                   IMG_FOURIER = -1, VOL_FOURIER = -3
-                 } initMode;
+                   IMG_FOURIER = -1, VOL_FOURIER = -3} initMode;
 
     // Constructors
     headerXmipp(initMode _im = IMG_BYTE)
@@ -61,7 +60,7 @@ public:
     }
 
     // Some operators streams
-    friend std::ostream& operator<<(std::ostream& o, const headerXmipp& I);
+    friend std::ostream& operator<<(std::ostream& o, const headerXmipp& I); 
     void print_hard(std::ostream& o) const;
 
     // reversed is only used in case that the type_check is skipped
@@ -69,14 +68,14 @@ public:
              bool skip_type_check = false,
              bool reversed = false,
              bool skip_extra_checkings = false);
-
-    int read(const FileName& fn,
+             
+    int read(const FileName& fn, 
              bool skip_type_check = false,
              bool reversed = false,
              bool skip_extra_checkings = false);
-
+             
     void write(FILE* fp, bool force_reversed = false);
-
+    
     void write(const FileName &fn, bool force_reversed = false);
 
     // Set type of header
@@ -92,7 +91,7 @@ public:
     }
 
     void clear();
-
+    
     void set_header(); // Sets a consistent header
 
     // Interaction with data
@@ -668,23 +667,23 @@ private:
         float fStack; // >0 -> indicates a stack of images.
 
         /* 25*/
-        float fUnused1;
+        float fUnused1; 
 
         /* 26*/
         float fMaxim; // Number of images in the stack
 
         /* 27*/
         float fImgnum; // Position is only used in a stacked image header.
-        // There, this position contains the number of the
-        // current image or zero if this image is unused.
+                       // There, this position contains the number of the
+                       // current image or zero if this image is unused.
 
         /* 28*/
         float fLastidx; // Position is only used in overall header of
-        // indexed stacks. There, this position is the highest
-        // index location currently in use.
+                        // indexed stacks. There, this position is the highest
+                        // index location currently in use.
 
         /* 29*/
-        float fUnused2;
+        float fUnused2; 
 
         /* 30*/
         float fFlag; // THAT ANGLES ARE SET. 1 = ONE ADDITIONAL

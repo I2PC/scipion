@@ -42,7 +42,7 @@
 /**@defgroup Distances Distances
    @ingroup ClassificationLibrary */
 //@{
-
+   
 /**
  * Euclidean distance.
  * Parameter: _v1  First argument

@@ -64,13 +64,13 @@ void spectro_m(char *nom, float xr1, float xr2, float xdr, float xr,
 
 {
     float *e[MAX_HARMONIC], *rv, *st, *ep[MAX_HARMONIC], *erp [MAX_HARMONIC],
-          *rp1, *rp2, *sp;
+    *rp1, *rp2, *sp;
     FILE *in, *prt; /* input & output file */
     short ir, numin, numax;
     float xx0, yy0, rl, rh, dr, *c, *s;
     char nomin[128], nomprt[128];  /* names of files */
     int i1, n, m, i, j1, k, j, iflag, ir1, ir2, ndr, nr, ncol, nvez,
-        irk, k1, k2;
+    irk, k1, k2;
 
     /******************** request some bytes of storage *******************/
 

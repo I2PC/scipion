@@ -76,82 +76,82 @@ void Projection_Tomography_Parameters::read(const FileName &fn_proj_param)
         {
         case 0:
             fnPhantom = firstWord(line, 3007,
-                                  "Projection_Tomography_Parameters::read: Phantom name not found");
+                                    "Projection_Tomography_Parameters::read: Phantom name not found");
             lineNo = 1;
             break;
         case 1:
             fnProjectionSeed =
                 firstWord(line, 3007,
-                          "Projection_Tomography_Parameters::read: Error in Projection seed");
+                           "Projection_Tomography_Parameters::read: Error in Projection seed");
             // Next two parameters are optional
             auxstr = nextToken();
             if (auxstr != NULL) starting =
                     textToInteger(auxstr, 3007,
-                                  "Projection_Tomography_Parameters::read: Error in First "
-                                  "projection number");
+                         "Projection_Tomography_Parameters::read: Error in First "
+                         "projection number");
             fn_projection_extension = nextToken();
             lineNo = 2;
             break;
         case 2:
             proj_Xdim = textToInteger(firstToken(line), 3007,
-                                      "Projection_Tomography_Parameters::read: Error in X dimension");
+                             "Projection_Tomography_Parameters::read: Error in X dimension");
             proj_Ydim = textToInteger(nextToken(), 3007,
-                                      "Projection_Tomography_Parameters::read: Error in Y dimension");
+                             "Projection_Tomography_Parameters::read: Error in Y dimension");
             lineNo = 3;
             break;
         case 3:
             axisRot = textToDouble(firstToken(line), 3007,
-                                   "Projection_Tomography_Parameters::read: Error in axisRot");
+                             "Projection_Tomography_Parameters::read: Error in axisRot");
             axisTilt = textToDouble(nextToken(), 3007,
-                                    "Projection_Tomography_Parameters::read: Error in axisTilt");
+                             "Projection_Tomography_Parameters::read: Error in axisTilt");
             lineNo = 4;
             break;
         case 4:
-            raxis.resize(3);
-            XX(raxis) = textToDouble(firstToken(line), 3007,
-                                     "Projection_Tomography_Parameters::read: Error in X component of raxis");
-            YY(raxis) = textToDouble(nextToken(), 3007,
-                                     "Projection_Tomography_Parameters::read: Error in Y component of raxis");
-            ZZ(raxis) = textToDouble(nextToken(), 3007,
-                                     "Projection_Tomography_Parameters::read: Error in Z component of raxis");
-            lineNo = 5;
+	    raxis.resize(3);
+	    XX(raxis) = textToDouble(firstToken(line), 3007,
+                             "Projection_Tomography_Parameters::read: Error in X component of raxis");
+	    YY(raxis) = textToDouble(nextToken(), 3007,
+                             "Projection_Tomography_Parameters::read: Error in Y component of raxis");
+	    ZZ(raxis) = textToDouble(nextToken(), 3007,
+                             "Projection_Tomography_Parameters::read: Error in Z component of raxis");
+	    lineNo = 5;
             break;
         case 5:
-            tilt0 = textToDouble(firstToken(line), 3007,
-                                 "Projection_Tomography_Parameters::read: Error in tilt0");
-            tiltF = textToDouble(nextToken(), 3007,
-                                 "Projection_Tomography_Parameters::read: Error in tiltF");
-            tiltStep = textToDouble(nextToken(), 3007,
-                                    "Projection_Tomography_Parameters::read: Error in tiltStep");
-            lineNo = 6;
-            break;
+	    tilt0 = textToDouble(firstToken(line), 3007,
+                             "Projection_Tomography_Parameters::read: Error in tilt0");
+	    tiltF = textToDouble(nextToken(), 3007,
+                             "Projection_Tomography_Parameters::read: Error in tiltF");
+	    tiltStep = textToDouble(nextToken(), 3007,
+                             "Projection_Tomography_Parameters::read: Error in tiltStep");
+	    lineNo = 6;
+	    break;
         case 6:
             Nangle_dev = textToFloat(firstWord(line), 3007,
-                                     "Projection_Tomography_Parameters::read: Error in angular noise");
+                                  "Projection_Tomography_Parameters::read: Error in angular noise");
             auxstr = nextToken();
             if (auxstr != NULL)
                 Nangle_avg = textToFloat(auxstr, 3007,
-                                         "Projection_Tomography_Parameters::read: Error in angular bias");
+                                      "Projection_Tomography_Parameters::read: Error in angular bias");
             else Nangle_avg = 0;
             lineNo = 7;
             break;
         case 7:
             Npixel_dev = textToFloat(firstWord(line), 3007,
-                                     "Projection_Tomography_Parameters::read: Error in pixel noise");
+                              "Projection_Tomography_Parameters::read: Error in pixel noise");
             auxstr = nextToken();
             if (auxstr != NULL)
                 Npixel_avg = textToFloat(auxstr, 3007,
-                                         "Projection_Tomography_Parameters::read: Error in pixel bias");
+                                  "Projection_Tomography_Parameters::read: Error in pixel bias");
             else Npixel_avg = 0;
             lineNo = 8;
             break;
         case 8:
             Ncenter_dev = textToFloat(firstWord(line), 3007,
-                                      "Projection_Tomography_Parameters::read: Error in center noise");
+                               "Projection_Tomography_Parameters::read: Error in center noise");
             auxstr = nextToken();
             if (auxstr != NULL)
                 Ncenter_avg = textToFloat(auxstr, 3007,
-                                          "Projection_Tomography_Parameters::read: Error in center bias");
+                                   "Projection_Tomography_Parameters::read: Error in center bias");
             else Ncenter_avg = 0;
             lineNo = 9;
             break;
@@ -196,37 +196,37 @@ int PROJECT_Tomography_Effectively_project(
 
         // Choose Center displacement ........................................
         double shiftX     = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
-        double shiftY     = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
+        double shiftY 	  = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
         movements(6) = shiftX;
         movements(7) = shiftY;
-        Matrix1D<double> inPlaneShift(3);
-        VECTOR_R3(inPlaneShift,shiftX,shiftY,0);
+	Matrix1D<double> inPlaneShift(3);
+	VECTOR_R3(inPlaneShift,shiftX,shiftY,0);
 
         // Really project ....................................................
         project_Volume_offCentered(side.phantomVol(), proj,
-                                   prm.proj_Ydim, prm.proj_Xdim, prm.axisRot, prm.axisTilt,
-                                   prm.raxis, angle, 0, inPlaneShift);
+	    prm.proj_Ydim, prm.proj_Xdim, prm.axisRot, prm.axisTilt,
+	    prm.raxis, angle, 0, inPlaneShift);
 
         // Add noise in angles and voxels ....................................
-        movements(0)=proj.rot();
-        movements(1)=proj.tilt();
-        movements(2)=proj.psi();
+	movements(0)=proj.rot();
+	movements(1)=proj.tilt();
+	movements(2)=proj.psi();
         movements(3)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
         movements(4)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
         movements(5)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
         proj.set_eulerAngles(movements(0)+movements(3),
-                             movements(1)+movements(4),movements(2)+movements(5));
+	    movements(1)+movements(4),movements(2)+movements(5));
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
         // Save ..............................................................
         if (prm.tell&TELL_SHOW_ANGLES)
-            std::cout << idx << "\t" << movements(0) << "\t"
-                      << movements(1) << "\t" << movements(2) << std::endl;
+	    std::cout << idx << "\t" << movements(0) << "\t"
+	    	      << movements(1) << "\t" << movements(2) << std::endl;
         else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60)) == 0)
             progress_bar(numProjs);
         proj.write(fn_proj);
         numProjs++;
-        idx++;
+	idx++;
         SF.insert(fn_proj, SelLine::ACTIVE);
         DF_movements.append_data_line(movements);
     }
@@ -238,7 +238,7 @@ int PROJECT_Tomography_Effectively_project(
 
 /* ROUT_project ============================================================ */
 int ROUT_Tomography_project(Prog_Project_Tomography_Parameters &prm,
-                            Projection &proj, SelFile &SF)
+    Projection &proj, SelFile &SF)
 {
     randomize_random_generator();
 
@@ -255,7 +255,7 @@ int ROUT_Tomography_project(Prog_Project_Tomography_Parameters &prm,
     {
         // Really project
         ProjNo = PROJECT_Tomography_Effectively_project(proj_prm, side,
-                 proj, SF);
+    	    proj, SF);
         // Save SelFile
         if (prm.fn_sel_file != "") SF.write(prm.fn_sel_file);
     }

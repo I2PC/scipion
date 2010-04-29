@@ -53,12 +53,12 @@ public:
     void usage()
     {
         std::cout  << " A sorting program for identifying junk particles \n"
-                   << " Parameters:\n"
-                   << " -i <selfile>            : Selfile with (normalized) input images\n"
-                   << " [-o <root=\"sort_junk\">] : Output rootname\n"
-                   << " [-train <selfile>]      : Train on selfile with good particles\n"
-                   << " [-zcut <float=-1>]       : Cut-off for Z-scores (negative for no cut-off) \n"
-                   ;
+        << " Parameters:\n"
+        << " -i <selfile>            : Selfile with (normalized) input images\n"
+        << " [-o <root=\"sort_junk\">] : Output rootname\n"
+        << " [-train <selfile>]      : Train on selfile with good particles\n"
+        << " [-zcut <float=-1>]       : Cut-off for Z-scores (negative for no cut-off) \n"
+        ;
     }
 
     void process_selfile(SelFile &SF, bool do_means, bool do_values)
@@ -244,62 +244,62 @@ public:
             zscore.resize(nr_imgs);
             for (imgno = 0; imgno < nr_imgs; imgno++)
             {
-                if (sig_mean > 0.)
-                    values[imgno][0] = ABS(avg_mean - values[imgno][0]) / sig_mean;
-                else
-                    values[imgno][0] = 0.;
-                if (sig_sig > 0.)
-                    values[imgno][1] = ABS(values[imgno][1] - avg_sig) / sig_sig;
-                else
-                    values[imgno][1] = 0.;
-                if (sig_min > 0.)
-                    values[imgno][2] = ABS(values[imgno][2] - avg_min) / sig_min;
-                else
-                    values[imgno][2] = 0.;
-                if (sig_max > 0.)
-                    values[imgno][3] = ABS(values[imgno][3] - avg_max) / sig_max;
-                else
-                    values[imgno][3] = 0.;
-                if (sig_nhighpix > 0.)
-                    values[imgno][4] = ABS(values[imgno][4] - avg_nhighpix) / sig_nhighpix;
-                else
-                    values[imgno][4] = 0.;
-                if (sig_nlowpix > 0.)
-                    values[imgno][5] = ABS(values[imgno][5] - avg_nlowpix) / sig_nlowpix;
-                else
-                    values[imgno][5] = 0.;
-                if (sig_nradhigh > 0.)
-                    values[imgno][6] = ABS(values[imgno][6] - avg_nradhigh) / sig_nradhigh;
-                else
-                    values[imgno][6] = 0.;
-                if (sig_nradlow > 0.)
-                    values[imgno][7] = ABS(values[imgno][7] - avg_nradlow) / sig_nradlow;
-                else
-                    values[imgno][7] = 0.;
-                if (sig_sigquad > 0.)
-                    values[imgno][8] = ABS(values[imgno][8] - avg_sigquad) / sig_sigquad;
-                else
-                    values[imgno][8] = 0.;
-                if (sig_meanquad > 0.)
-                    values[imgno][9] = ABS(values[imgno][9] - avg_meanquad) / sig_meanquad;
-                else
-                    values[imgno][9] = 0.;
-                if (sig_ampl2_1 > 0.)
-                    values[imgno][10] = ABS(values[imgno][10] - avg_ampl2_1) / sig_ampl2_1;
-                else
-                    values[imgno][10] = 0.;
-                if (sig_ampl2_2 > 0.)
-                    values[imgno][11] = ABS(values[imgno][11] - avg_ampl2_2) / sig_ampl2_2;
-                else
-                    values[imgno][11] = 0.;
-                if (sig_ampl2_3 > 0.)
-                    values[imgno][12] = ABS(values[imgno][12] - avg_ampl2_3) / sig_ampl2_3;
-                else
-                    values[imgno][12] = 0.;
-                if (sig_ampl2_4 > 0.)
-                    values[imgno][13] = ABS(values[imgno][13] - avg_ampl2_4) / sig_ampl2_4;
-                else
-                    values[imgno][13] = 0.;
+		if (sig_mean > 0.)
+		    values[imgno][0] = ABS(avg_mean - values[imgno][0]) / sig_mean;
+		else
+		    values[imgno][0] = 0.;
+		if (sig_sig > 0.)
+		    values[imgno][1] = ABS(values[imgno][1] - avg_sig) / sig_sig;
+		else
+		    values[imgno][1] = 0.;
+		if (sig_min > 0.)
+		    values[imgno][2] = ABS(values[imgno][2] - avg_min) / sig_min;
+		else
+		    values[imgno][2] = 0.;
+		if (sig_max > 0.)
+		    values[imgno][3] = ABS(values[imgno][3] - avg_max) / sig_max;
+		else
+		    values[imgno][3] = 0.;
+		if (sig_nhighpix > 0.)
+		    values[imgno][4] = ABS(values[imgno][4] - avg_nhighpix) / sig_nhighpix;
+		else
+		    values[imgno][4] = 0.;
+		if (sig_nlowpix > 0.)
+		    values[imgno][5] = ABS(values[imgno][5] - avg_nlowpix) / sig_nlowpix;
+		else
+		    values[imgno][5] = 0.;
+		if (sig_nradhigh > 0.)
+		    values[imgno][6] = ABS(values[imgno][6] - avg_nradhigh) / sig_nradhigh;
+		else
+		    values[imgno][6] = 0.;
+		if (sig_nradlow > 0.)
+		    values[imgno][7] = ABS(values[imgno][7] - avg_nradlow) / sig_nradlow;
+		else
+		    values[imgno][7] = 0.;
+		if (sig_sigquad > 0.)
+		    values[imgno][8] = ABS(values[imgno][8] - avg_sigquad) / sig_sigquad;
+		else
+		    values[imgno][8] = 0.;
+		if (sig_meanquad > 0.)
+		    values[imgno][9] = ABS(values[imgno][9] - avg_meanquad) / sig_meanquad;
+		else
+		    values[imgno][9] = 0.;
+		if (sig_ampl2_1 > 0.)
+		    values[imgno][10] = ABS(values[imgno][10] - avg_ampl2_1) / sig_ampl2_1;
+ 		else
+		    values[imgno][10] = 0.;
+		if (sig_ampl2_2 > 0.)
+		    values[imgno][11] = ABS(values[imgno][11] - avg_ampl2_2) / sig_ampl2_2;
+		else
+		    values[imgno][11] = 0.;
+		if (sig_ampl2_3 > 0.)
+		    values[imgno][12] = ABS(values[imgno][12] - avg_ampl2_3) / sig_ampl2_3;
+		else
+		    values[imgno][12] = 0.;
+		if (sig_ampl2_4 > 0.)
+		    values[imgno][13] = ABS(values[imgno][13] - avg_ampl2_4) / sig_ampl2_4;
+		else
+		    values[imgno][13] = 0.;
 
                 if (cutoff > 0.)
                 {
@@ -438,20 +438,20 @@ int main(int argc, char **argv)
             SFoutGood.insert(prm.names[isort]);
         fh_zsum << prm.zscore(isort)/14. << "   " << prm.names[isort] << std::endl;
         fh_zind << prm.names[isort]
-                << " : " << prm.values[isort][0]
-                << " " << prm.values[isort][1]
-                << " " << prm.values[isort][2]
-                << " " << prm.values[isort][3]
-                << " " << prm.values[isort][4]
-                << " " << prm.values[isort][5]
-                << " " << prm.values[isort][6]
-                << " " << prm.values[isort][7]
-                << " " << prm.values[isort][8]
-                << " " << prm.values[isort][9]
-                << " " << prm.values[isort][10]
-                << " " << prm.values[isort][11]
-                << " " << prm.values[isort][12]
-                << " " << prm.values[isort][13] << std::endl;
+        << " : " << prm.values[isort][0]
+        << " " << prm.values[isort][1]
+        << " " << prm.values[isort][2]
+        << " " << prm.values[isort][3]
+        << " " << prm.values[isort][4]
+        << " " << prm.values[isort][5]
+        << " " << prm.values[isort][6]
+        << " " << prm.values[isort][7]
+        << " " << prm.values[isort][8]
+        << " " << prm.values[isort][9]
+        << " " << prm.values[isort][10]
+        << " " << prm.values[isort][11]
+        << " " << prm.values[isort][12]
+        << " " << prm.values[isort][13] << std::endl;
     }
     fh_zsum.close();
     fh_zind.close();

@@ -45,13 +45,13 @@ public:
 
     /// Maximum allowed error
     double max_error;
-
+    
     /// Resolution for maximum allowed error (in dig. freq.)
     double resol_error;
 
     /// Resolution for maximum allowed error (in pixels)
     int iresol_error;
-
+    
     // Pixel size  (Angstrom)
     double pixel_size;
 

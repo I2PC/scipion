@@ -55,41 +55,41 @@ int       output_values_size;
 //to access parent variables
 class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_prm
 {
-public:
+    public:
     //int rank, size, num_img_tot;
 
-    /** Number of Procesors **/
-    int nProcs;
+        /** Number of Procesors **/
+        int nProcs;
+        
+        /** Dvide the job in this number block with this number of images */
+        int mpi_job_size;
 
-    /** Dvide the job in this number block with this number of images */
-    int mpi_job_size;
+        /** classify the experimental data making voronoi regions
+            with an hexagonal grid mapped onto a sphere surface */
+        double chunk_angular_distance;
+               
+        /** computing node number. Master=0 */
+        int rank;
 
-    /** classify the experimental data making voronoi regions
-        with an hexagonal grid mapped onto a sphere surface */
-    double chunk_angular_distance;
+        /** status after am MPI call */
+        MPI_Status status;
+                
+        /** total number of images */
+        int num_img_tot;
 
-    /** computing node number. Master=0 */
-    int rank;
+        /** symmetry file */
+        FileName        fn_sym;
+        
+        /** sampling object */
+        XmippSampling chunk_mysampling;
 
-    /** status after am MPI call */
-    MPI_Status status;
+        /** Symmetry. One of the 17 possible symmetries in
+            single particle electron microscopy.
+             */
+        int symmetry;
 
-    /** total number of images */
-    int num_img_tot;
-
-    /** symmetry file */
-    FileName        fn_sym;
-
-    /** sampling object */
-    XmippSampling chunk_mysampling;
-
-    /** Symmetry. One of the 17 possible symmetries in
-        single particle electron microscopy.
-         */
-    int symmetry;
-
-    /** For infinite groups symmetry order*/
-    int sym_order;
+        /** For infinite groups symmetry order*/
+        int sym_order;
 
     /*  constructor ------------------------------------------------------- */
     Prog_mpi_angular_projection_matching_prm()
@@ -111,7 +111,7 @@ public:
         Prog_angular_projection_matching_prm::read(argc,argv);
         mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
         chunk_angular_distance = textToFloat(getParameter(argc,
-                                             argv,"-chunk_angular_distance","-1"));
+        argv,"-chunk_angular_distance","-1"));
         fn_sym = getParameter(argc, argv, "-sym","c1");
     }
 
@@ -132,17 +132,17 @@ public:
                   << "                                 i1h (default MDB), i2h, i3h, i4h\n"
                   << "                               : where n may change from 1 to 99\n"
                   ;
-    }
+     }
 
 
     /* Show -------------------------------------------------------------------- */
     void show()
     {
         Prog_angular_projection_matching_prm::show();
-        std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
-                  << " Sampling rate(chunk_angular_distance): " << chunk_angular_distance    << std::endl
-                  << " Symmetry group:            " << fn_sym << std::endl
-                  ;
+	std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
+              << " Sampling rate(chunk_angular_distance): " << chunk_angular_distance    << std::endl
+              << " Symmetry group:            " << fn_sym << std::endl
+              ;
     }
 
     /* Pre Run --------------------------------------------------------------------- */
@@ -150,97 +150,97 @@ public:
     {
         produceSideInfo();
         int max_number_of_images_in_around_a_sampling_point=0;
-        if (rank == 0)
+        if (rank == 0) 
         {
             show();
             //read experimental doc file
             DFexp.read(fn_exp);
             //process the symmetry file
             if (!chunk_mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-                REPORT_ERROR(3005, (std::string)"mpi_angular_proj_match::prerun Invalid symmetry: " +  fn_sym);
+                 REPORT_ERROR(3005, (std::string)"mpi_angular_proj_match::prerun Invalid symmetry: " +  fn_sym);
             chunk_mysampling.SL.read_sym_file(fn_sym);
             // find a value for chunk_angular_distance if != -1
             if( chunk_angular_distance == -1)
                 compute_chunk_angular_distance(symmetry, sym_order);
-            //store symmetry matrices, this is faster than computing them
-            //each time we need them
-            chunk_mysampling.fill_L_R_repository();
+	    //store symmetry matrices, this is faster than computing them 
+	    //each time we need them
+	    chunk_mysampling.fill_L_R_repository();
             int remaining_points=0;
-            while(remaining_points==0)
-            {
-                //first set sampling rate
-                chunk_mysampling.SetSampling(chunk_angular_distance);
-                //create sampling points in the whole sphere
-                chunk_mysampling.Compute_sampling_points(false,91.,-91.);
-                //precompute product between symmetry matrices
-                //and experimental data
-                chunk_mysampling.fill_exp_data_projection_direction_by_L_R(fn_exp);
-                //remove redundant sampling points: symmetry
+	    while(remaining_points==0)
+	    {
+	        //first set sampling rate
+	        chunk_mysampling.SetSampling(chunk_angular_distance);
+	        //create sampling points in the whole sphere
+	        chunk_mysampling.Compute_sampling_points(false,91.,-91.);
+	        //precompute product between symmetry matrices 
+	        //and experimental data
+	        chunk_mysampling.fill_exp_data_projection_direction_by_L_R(fn_exp);
+	        //remove redundant sampling points: symmetry
                 chunk_mysampling.remove_redundant_points(symmetry, sym_order);
                 remaining_points=chunk_mysampling.no_redundant_sampling_points_angles.size();
                 if (chunk_angular_distance>2)
-                    chunk_angular_distance -= 1;
+	            chunk_angular_distance -= 1;
                 else
                     chunk_angular_distance /=2;
-                //if(remaining_points ==0)
-                std::cerr << "New chunk_angular_distance "
-                          << chunk_angular_distance << std::endl;
-                if(chunk_angular_distance < 0)
-                {
-                    std::cerr << " Can compute chunk_angular_distance\n";
-                    exit(1);
-                }
-            }
-            //remove sampling points too far away from experimental data
+	        //if(remaining_points ==0)
+		    std::cerr << "New chunk_angular_distance " 
+		              << chunk_angular_distance << std::endl;
+		if(chunk_angular_distance < 0)
+		{
+		std::cerr << " Can compute chunk_angular_distance\n";
+		exit(1);
+		}
+	    }
+	    //remove sampling points too far away from experimental data
             chunk_mysampling.remove_points_far_away_from_experimental_data();
             //for each sampling point find the experimental images
             //closer to that point than to any other
-            chunk_mysampling.find_closest_experimental_point();
+	    chunk_mysampling.find_closest_experimental_point();
             //print number of points per node
             //#define DEBUG
-#ifdef DEBUG
+            #ifdef DEBUG
             std::cerr << "voronoi region, number of elements" << std::endl;
             for (int j = 0;
-                 j < chunk_mysampling.my_exp_img_per_sampling_point.size();
-                 j++)
-                std::cerr << j
-                          << " "
-                          << chunk_mysampling.my_exp_img_per_sampling_point[j].size()
-                          << std::endl;
-#endif
-#undef DEBUG
+                  j < chunk_mysampling.my_exp_img_per_sampling_point.size();
+                  j++)   
+                    std::cerr << j 
+                              << " " 
+                              << chunk_mysampling.my_exp_img_per_sampling_point[j].size()
+                              << std::endl;
+            #endif
+            #undef DEBUG
             for (int j = 0;
-                 j < chunk_mysampling.my_exp_img_per_sampling_point.size();
-                 j++)
-            {
-                if (max_number_of_images_in_around_a_sampling_point
-                    < chunk_mysampling.my_exp_img_per_sampling_point[j].size())
-                    max_number_of_images_in_around_a_sampling_point
-                    = chunk_mysampling.my_exp_img_per_sampling_point[j].size();
-            }
-            std::cerr << "number of subsets "
-                      << chunk_mysampling.my_exp_img_per_sampling_point.size()
+                  j < chunk_mysampling.my_exp_img_per_sampling_point.size();
+                  j++)   
+                    {
+                     if (max_number_of_images_in_around_a_sampling_point  
+                         < chunk_mysampling.my_exp_img_per_sampling_point[j].size())
+                         max_number_of_images_in_around_a_sampling_point
+                         = chunk_mysampling.my_exp_img_per_sampling_point[j].size();       
+                    }
+            std::cerr << "number of subsets " 
+                      << chunk_mysampling.my_exp_img_per_sampling_point.size() 
                       << std::endl;
-            std::cerr << "biggest subset (EXPERIMENTAL images per chunk)"
-                      << max_number_of_images_in_around_a_sampling_point
+            std::cerr << "biggest subset (EXPERIMENTAL images per chunk)" 
+                      << max_number_of_images_in_around_a_sampling_point 
                       << std::endl;
             std::cerr << "maximun number of references in memory "
                       <<  max_nr_refs_in_memory
                       << std::endl;
-            //alloc memory for buffer
-            if (mpi_job_size == -1)
-            {
+            //alloc memory for buffer          
+           if (mpi_job_size == -1)
+            {   
                 int numberOfJobs=nProcs-1;//one node is the master
                 mpi_job_size=ceil((double)DFexp.size()/numberOfJobs);
             }
         }
-        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point,
+        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point, 
                   1, MPI_INT, 0, MPI_COMM_WORLD);
         input_images_size = max_number_of_images_in_around_a_sampling_point+1 +1;
         input_images  = (int *)    malloc(input_images_size*sizeof(int));
         output_values_size=MY_OUPUT_SIZE*max_number_of_images_in_around_a_sampling_point+1;
         output_values = (double *) malloc(output_values_size*sizeof(double));
-
+           
         //only one node will write in the console
         if (rank != 1)
             verb = 0;
@@ -248,14 +248,14 @@ public:
             verb = 1;
         //initialize each node, this shoud be out of run
         //because is made once per node but not one per packet
-
+        
         //many sequential programs free object alloc in side_info
         //becareful with that
     }
 
     /* Run --------------------------------------------------------------------- */
     void run()
-    {
+    {   
         if (rank == 0)
         {
             int N = chunk_mysampling.my_exp_img_per_sampling_point.size();
@@ -269,7 +269,7 @@ public:
             Matrix1D<double>                 dataline(8);
             //DocFile DFo;
             FileName                         fn_tmp;
-
+            
             // Initialize progress bar
             int c = XMIPP_MAX(1, total_number_of_images / 80);
             init_progress_bar(total_number_of_images);
@@ -279,29 +279,29 @@ public:
                 //Wait until any message arrives
                 //be aware that mpi_Probe will block the program untill a message is received
                 //#define DEBUG
-#ifdef DEBUG
+                #ifdef DEBUG
                 std::cerr << "Mp1 waiting for any  message " << std::endl;
-#endif
+                #endif
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-#ifdef DEBUG
+                #ifdef DEBUG
                 std::cerr << "Mp2 received tag from worker " <<  status.MPI_SOURCE << std::endl;
-#endif
+                #endif
                 // worker sends work
                 if (status.MPI_TAG == TAG_WORKFROMWORKER)
                 {
-                    MPI_Recv(output_values,
-                             output_values_size,
-                             MPI_DOUBLE,
-                             MPI_ANY_SOURCE,
+                    MPI_Recv(output_values, 
+                             output_values_size, 
+                             MPI_DOUBLE, 
+                             MPI_ANY_SOURCE, 
                              TAG_WORKFROMWORKER,
-                             MPI_COMM_WORLD,
+                             MPI_COMM_WORLD, 
                              &status);
-                    int number= ROUND(output_values[0]/MY_OUPUT_SIZE);
+                    int number= ROUND(output_values[0]/MY_OUPUT_SIZE);        
                     //create doc file
                     for (int i = 0; i < number; i++)
-                    {
+	                {
                         int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]);
-                        DFexp.goToObject(lineNumber);
+	                    DFexp.goToObject(lineNumber);
                         DFexp.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2]);
                         DFexp.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3]);
                         DFexp.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4]);
@@ -310,32 +310,32 @@ public:
                         DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
                         DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
                         DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
-                    }
+                    }         
                 }
                 // worker is free
                 else if (status.MPI_TAG == TAG_FREEWORKER)
                 {
                     MPI_Recv(&tip, 1, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                             MPI_COMM_WORLD, &status);
-                    //#define DEBUG
-#ifdef DEBUG
-                    std::cerr << "Mr3 received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE
+                         MPI_COMM_WORLD, &status);
+                    //#define DEBUG     
+                    #ifdef DEBUG
+                    std::cerr << "Mr3 received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE 
                               << "with tip= " << tip
                               << "\nnumber_of_processed_images "
                               << number_of_processed_images
                               << "\ntotal_number_of_images "
                               << total_number_of_images
                               << std::endl;
-#endif
-#undef DEBUG
+                    #endif
+                    #undef DEBUG
                     if(number_of_processed_images>=total_number_of_images)
                     {
                         MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
                         stopTagsSent++;
-#ifdef DEBUG
+                        #ifdef DEBUG
                         std::cerr << "Ms4 sent stop tag to worker " <<  status.MPI_SOURCE << std::endl
-                                  << std::endl;
-#endif
+                                 << std::endl;
+                        #endif
                         break;
                     }
                     if(tip==-1)
@@ -351,37 +351,37 @@ public:
                         index = index_counter;
                     }
                     int number_of_images_to_transfer=XMIPP_MIN(
-                                                         chunk_mysampling.my_exp_img_per_sampling_point[index].size(),
-                                                         mpi_job_size);
+                                                chunk_mysampling.my_exp_img_per_sampling_point[index].size(),
+                                                mpi_job_size);
 
                     input_images[0]=index;
                     input_images[1]=number_of_images_to_transfer;
 
 
-                    for(int k=2; k<number_of_images_to_transfer+2; k++)
-                    {
-                        number_of_processed_images++;
-                        input_images[k]=chunk_mysampling.my_exp_img_per_sampling_point[index].back();
-                        chunk_mysampling.my_exp_img_per_sampling_point[index].pop_back();
-                    }
+                    for(int k=2;k<number_of_images_to_transfer+2;k++)
+                       {
+                       number_of_processed_images++;
+                       input_images[k]=chunk_mysampling.my_exp_img_per_sampling_point[index].back();
+                       chunk_mysampling.my_exp_img_per_sampling_point[index].pop_back();
+                       }
 
                     MPI_Send(input_images,
                              number_of_images_to_transfer+2,
-                             MPI_INT,
+                             MPI_INT, 
                              status.MPI_SOURCE,
                              TAG_WORKFORWORKER,
                              MPI_COMM_WORLD);
-#ifdef DEBUG
-                    std::cerr << "Ms_s send work for worker "
-                              <<  status.MPI_SOURCE
+                    #ifdef DEBUG
+                    std::cerr << "Ms_s send work for worker " 
+                              <<  status.MPI_SOURCE 
                               << "with index " << index%N
                               << std::endl;
-#endif
+                    #endif
                     // Update progress bar
                     if (number_of_processed_images % c == 0) progress_bar(number_of_processed_images);
 
-                }//TAG_FREEWORKER
-            }//while
+                    }//TAG_FREEWORKER
+            }//while       
             progress_bar(total_number_of_images);
 
             while (stopTagsSent < (nProcs-1))
@@ -389,19 +389,19 @@ public:
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 if (status.MPI_TAG == TAG_WORKFROMWORKER)
                 {
-                    MPI_Recv(output_values,
-                             output_values_size,
-                             MPI_DOUBLE,
-                             MPI_ANY_SOURCE,
+                    MPI_Recv(output_values, 
+                             output_values_size, 
+                             MPI_DOUBLE, 
+                             MPI_ANY_SOURCE, 
                              TAG_WORKFROMWORKER,
-                             MPI_COMM_WORLD,
+                             MPI_COMM_WORLD, 
                              &status);
-                    int number= ROUND(output_values[0]/MY_OUPUT_SIZE);
+                    int number= ROUND(output_values[0]/MY_OUPUT_SIZE);        
                     //create doc file
                     for (int i = 0; i < number; i++)
-                    {
+	                {
                         int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]+1);
-                        DFexp.goToObject(lineNumber);
+	                    DFexp.goToObject(lineNumber);
                         DFexp.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2]);
                         DFexp.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3]);
                         DFexp.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4]);
@@ -410,119 +410,119 @@ public:
                         DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
                         DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
                         DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
-                    }
+                    }         
                 }
                 else if (status.MPI_TAG == TAG_FREEWORKER)
                 {
                     MPI_Recv(&tip, 1, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
-                             MPI_COMM_WORLD, &status);
-#ifdef DEBUG
+                          MPI_COMM_WORLD, &status);
+                    #ifdef DEBUG
                     std::cerr << "Mr received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << std::endl;
                     std::cerr << "Ms sent TAG_STOP to worker" << status.MPI_SOURCE << std::endl;
-#endif
+                    #endif
                     MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
                     stopTagsSent++;
                 }
                 else
                 {
                     error_exit("Received unknown TAG I quit (master)");
-                }
-
+                }           
+                  
             }
-            //close temperoal file with results
-            DFexp.write(fn_root + ".doc");
+            //close temperoal file with results               
+	        DFexp.write(fn_root + ".doc");
 
 
         }
         else //rank !=0
         {
-            // Select only relevant part of selfile for this rank
-            // job number
-            // job size
-            // aux variable
-            int worker_tip=-1;;
+        // Select only relevant part of selfile for this rank
+        // job number
+        // job size
+        // aux variable
+        int worker_tip=-1;;
             while (1)
             {
                 int jobNumber=0;
                 MPI_Send(&worker_tip, 1, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
                 //#define DEBUG
-#ifdef DEBUG
+                #ifdef DEBUG
                 std::cerr << "W" << rank << " " << "sent TAG_FREEWORKER to master " << std::endl;
-#endif
+                #endif
                 //get your next task
                 MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-#ifdef DEBUG
+                #ifdef DEBUG
                 std::cerr << "W" << rank << " " << "probe MPI_ANY_TAG " << std::endl;
-#endif
+                #endif
                 if (status.MPI_TAG == TAG_STOP)//no more jobs exit
-                {
+                    {
                     //If I  do not read this tag
                     //master will no further process
                     //a posibility is a non-blocking send
                     MPI_Recv(0, 0, MPI_INT, 0, TAG_STOP,
-                             MPI_COMM_WORLD, &status);
-#ifdef DEBUG
-                    std::cerr << "Wr" << rank
+                         MPI_COMM_WORLD, &status);
+                    #ifdef DEBUG
+                    std::cerr << "Wr" << rank 
                               << " " << "TAG_STOP" << std::endl;
-#endif
+                    #endif
                     break;
-                }
+                    }
                 if (status.MPI_TAG == TAG_WORKFORWORKER)
-                    //there is still some work to be done
-                {
+                //there is still some work to be done    
+                    {
                     //get the jobs number
-                    MPI_Recv(input_images,
-                             input_images_size,
-                             MPI_INT,
-                             0,
-                             TAG_WORKFORWORKER,
-                             MPI_COMM_WORLD,
+                    MPI_Recv(input_images, 
+                             input_images_size, 
+                             MPI_INT, 
+                             0, 
+                             TAG_WORKFORWORKER, 
+                             MPI_COMM_WORLD, 
                              &status);
                     worker_tip =  input_images[0];
                     int number_of_transfered_images =  input_images[1];
                     //#define DEBUG
-#ifdef DEBUG
+		    #ifdef DEBUG
                     std::cerr << "Wr " << rank << " " << "TAG_WORKFORWORKER" << std::endl;
-                    std::cerr << "\n rank, tip, input_images_size "
-                              << rank
-                              << " "
-                              << worker_tip
+                    std::cerr << "\n rank, tip, input_images_size " 
+                              << rank 
+                              << " " 
+                              << worker_tip 
                               << " "
                               << input_images[1]
                               << std::endl;
                     for (int i=2; i < number_of_transfered_images+2 ; i++)
-                        std::cerr << input_images[i] << " " ;
-                    std::cerr << std::endl;
-#endif
-#undef DEBUG
+                        std::cerr << input_images[i] << " " ;   
+                    std::cerr << std::endl;  
+                    #endif
+		    #undef DEBUG
                     /////////////
                     processSomeImages(&(input_images[1]),output_values);
-#ifdef DEBUG
+                    #ifdef DEBUG
                     std::cerr << "Ws " << rank << " " << "TAG_WORKFROMWORKER" << std::endl;
-                    std::cerr << "\n rank, size "
-                              << rank
-                              << " "
+                    std::cerr << "\n rank, size " 
+                              << rank 
+                              << " " 
                               << output_values[0]
                               << std::endl;
-                    std::cerr << std::endl;
+                    std::cerr << std::endl;    
                     for (int i=0; i < output_values[0]; i++)
-                        std::cerr << output_values[i] << " " ;
-                    std::cerr << std::endl;
-#endif
+                        std::cerr << output_values[i] << " " ;   
+                    std::cerr << std::endl;  
+                    #endif
                     MPI_Send(output_values,
                              output_values_size,
-                             MPI_DOUBLE,
+                             MPI_DOUBLE, 
                              0,
                              TAG_WORKFROMWORKER,
                              MPI_COMM_WORLD);
                     ///////////////
-                }
+                    }
                 else
-                {
+                    {
                     error_exit("Received unknown TAG I quit (worker)");
-                }
-            }//while(1)
-        }//worker
+                    }           
+             }//while(1)
+        }//worker    
     }
 
     /* a short function to print a message and exit */
@@ -531,14 +531,14 @@ public:
         fprintf(stderr, "%s", msg);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
-
+    
     /** guess a good value for chunk_angular_distance.
         this value is use to divide the work between
         the different working nodes */
     void compute_chunk_angular_distance(int symmetry, int sym_order)
-    {
+    {    
         double non_reduntant_area_of_ewald_sphere =
-            chunk_mysampling.SL.non_redundant_evald_sphere(symmetry,sym_order);
+               chunk_mysampling.SL.non_redundant_evald_sphere(symmetry,sym_order);
         double number_cpus  = (double) nProcs-1;
         //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
         double neighborhood_radius= ABS(acos(mysampling.cos_neighborhood_radius));
@@ -548,13 +548,13 @@ public:
         while(1)
         {
             if(counter++ > 1000)
-            {
+                {
                 chunk_angular_distance= 0.001;
                 std::cerr << "****************************************************" << std::endl;
                 std::cerr << "* WARNING: The neighbourhood does not fit in memory " << std::endl;
                 std::cerr << "****************************************************" << std::endl;
                 break;
-            }
+                }
             double area_chunk=non_reduntant_area_of_ewald_sphere/number_cpus;
             //area chunk is area of spheric casket=2 PI h
             chunk_angular_distance=acos(1-area_chunk/(2*PI));
@@ -563,54 +563,54 @@ public:
             //let us see how many references from the reference library fit
             //in area_chunk, that is divide area_chunk between the voronoi
             //region of the sampling points of the reference library
-            double areaVoronoiRegionReferenceLibrary = 2 *( 3 *(  acos(
-                        //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
-                        cos(mysampling.sampling_rate_rad)/(1+cos(mysampling.sampling_rate_rad)) )  ) - PI);
+            double areaVoronoiRegionReferenceLibrary = 2 *( 3 *(  acos( 
+            //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
+            cos(mysampling.sampling_rate_rad)/(1+cos(mysampling.sampling_rate_rad)) )  ) - PI);
             int number_of_images_that_fit_in_a_chunck_neigh =
-                ceil(area_chunck_neigh / areaVoronoiRegionReferenceLibrary);
-            //#define DEBUG
-#ifdef DEBUG
+                   ceil(area_chunck_neigh / areaVoronoiRegionReferenceLibrary);
+            //#define DEBUG        
+            #ifdef DEBUG
             std::cerr << "\n\ncounter " << counter << std::endl;
             std::cerr << "area_chunk " << area_chunk << std::endl;
             std::cerr << "2*chunk_angular_distance " << 2*chunk_angular_distance << std::endl;
             //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
-            std::cerr << "sampling_rate_rad " << mysampling.sampling_rate_rad
-                      << " " << mysampling.sampling_rate_rad*180/PI
+            std::cerr << "sampling_rate_rad " << mysampling.sampling_rate_rad 
+                      << " " << mysampling.sampling_rate_rad*180/PI 
                       <<  std::endl;
-            std::cerr << "neighborhood_radius " << neighborhood_radius
+            std::cerr << "neighborhood_radius " << neighborhood_radius 
                       <<  std::endl;
             std::cerr << "areaVoronoiRegionReferenceLibrary " << areaVoronoiRegionReferenceLibrary << std::endl;
             std::cerr << "number_of_images_that_fit_in_a_chunck_neigh " << number_of_images_that_fit_in_a_chunck_neigh << std::endl;
             std::cerr << "number_cpus " << number_cpus << std::endl;
             std::cerr << "max_nr_imgs_in_memory " << max_nr_imgs_in_memory << std::endl;
-#endif
-#undef DEBUG
+            #endif
+            #undef DEBUG
             if(number_of_images_that_fit_in_a_chunck_neigh>max_nr_imgs_in_memory)
                 number_cpus  = 1.2*number_cpus;
             else
-                break;
+                break;   
         }
         //chunk_angular_distance -= neighborhood_radius;
         chunk_angular_distance *= 2.0;
 
-        //#define DEBUG
-#ifdef DEBUG
-        std::cerr << "chunk_angular_distance "  << chunk_angular_distance
-                  <<  std::endl
-                  << "neighborhood_radius "     << neighborhood_radius
-                  <<  std::endl;
-#endif
-#undef DEBUG
-        //chuck should not be bigger than a triangle in the icosahedra
-        if(chunk_angular_distance >= 0.5 * cte_w)
-            chunk_angular_distance  = 0.5 * cte_w;
-        chunk_angular_distance *= (180./PI);
-        //#define DEBUG
-#ifdef DEBUG
-        std::cerr << "chunk_angular_distance_degrees "  << chunk_angular_distance
-                  <<  std::endl;
-#endif
-#undef DEBUG
+            //#define DEBUG        
+            #ifdef DEBUG
+            std::cerr << "chunk_angular_distance "  << chunk_angular_distance
+                      <<  std::endl
+                      << "neighborhood_radius "     << neighborhood_radius 
+                      <<  std::endl;
+            #endif
+            #undef DEBUG
+            //chuck should not be bigger than a triangle in the icosahedra 
+            if(chunk_angular_distance >= 0.5 * cte_w)
+               chunk_angular_distance  = 0.5 * cte_w;
+            chunk_angular_distance *= (180./PI);
+            //#define DEBUG        
+            #ifdef DEBUG
+            std::cerr << "chunk_angular_distance_degrees "  << chunk_angular_distance
+                      <<  std::endl;
+            #endif
+            #undef DEBUG
     }
 
 };
@@ -628,7 +628,7 @@ int main(int argc, char *argv[])
     Prog_mpi_angular_projection_matching_prm prm;
     bool finalize_worker=false;
     if (prm.rank == 0)
-    {
+    {    
         try
         {
             prm.read(argc, argv);
@@ -643,7 +643,7 @@ int main(int argc, char *argv[])
         }
     }
     if (prm.rank != 0)
-    {
+    {    
         try
         {
             prm.read(argc, argv);

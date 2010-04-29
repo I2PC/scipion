@@ -47,22 +47,21 @@ extern int * slices_status;
 // Number of already processed slices.
 extern int slices_processed;
 
-// This structure is needed to pass parameters to threads.
-typedef struct
-{
-    const Matrix3D<double> *vol_blobs;
-    const SimpleGrid *grid;
-    const struct blobtype *blob;
-    Matrix3D<double> *vol_voxels;
-    const Matrix2D<double> *D;
-    int istep;
-    Matrix3D<double> *vol_corr;
-    const Matrix3D<double> *vol_mask;
-    bool FORW;
-    int eq_mode;
-    int thread_id;
-    int threads_num;
-    int min_separation;
+// This structure is needed to pass parameters to threads. 
+typedef struct{
+	const Matrix3D<double> *vol_blobs;
+	const SimpleGrid *grid;
+	const struct blobtype *blob;
+	Matrix3D<double> *vol_voxels;
+	const Matrix2D<double> *D;
+	int istep;
+	Matrix3D<double> *vol_corr;
+	const Matrix3D<double> *vol_mask;
+	bool FORW;
+	int eq_mode;
+	int thread_id;
+	int threads_num;
+	int min_separation;
 } ThreadBlobsToVoxels ;
 
 /* ========================================================================= */

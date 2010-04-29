@@ -65,17 +65,17 @@ int main(int argc, char **argv)
 void Usage(char *argv[])
 {
     std::cout << "Purpose:\n"
-              << "    Computes 2D crystal distorsion AND unbends the crystal\n"
-              << "    The input is a cor (MRC) file\n"
-              << "Usage:" << argv[0] << " -i InImage -o OutImage -cor filename"
-              << " -cc_peak_factor cc_peak_factor -interp_model InterpModel" << std::endl << std::endl
-              << "\t-i               :  Input Image" << std::endl
-              << "\t-o               :  Output image" << std::endl
-              << "\t-cor             : Correlation file" << std::endl
-              << "\t-cc_peak_factor  : crosscorrelation thershold (0-1)" << std::endl
-              << "\t-interp_model    : interpolation scheme (Linear or Bessel) "
-              << "used for computation of crystal distorsion" << std::endl
-              ;
+    << "    Computes 2D crystal distorsion AND unbends the crystal\n"
+    << "    The input is a cor (MRC) file\n"
+    << "Usage:" << argv[0] << " -i InImage -o OutImage -cor filename"
+    << " -cc_peak_factor cc_peak_factor -interp_model InterpModel" << std::endl << std::endl
+    << "\t-i               :  Input Image" << std::endl
+    << "\t-o               :  Output image" << std::endl
+    << "\t-cor             : Correlation file" << std::endl
+    << "\t-cc_peak_factor  : crosscorrelation thershold (0-1)" << std::endl
+    << "\t-interp_model    : interpolation scheme (Linear or Bessel) "
+    << "used for computation of crystal distorsion" << std::endl
+    ;
     exit(1);
 
 }

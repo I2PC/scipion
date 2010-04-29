@@ -54,7 +54,7 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     ctf.clear();
     ctf_valid = false;
     psdPresent = false;
-
+    
     // Connect plotter resize to recompute curves
     connect(&plotter, SIGNAL(resizeDone()),
             this, SLOT(recomputeCurves()));
@@ -768,22 +768,19 @@ void CTFViewer::setImageViewer()
     imageViewer->show();
 
     // Load the CTF in image I
-    try
-    {
-        I.read(fn_root + ".psd");
-        CenterFFT(I(), true);
-        I().setXmippOrigin();
-        psdPresent = true;
+    try {
+       I.read(fn_root + ".psd");
+       CenterFFT(I(), true);
+       I().setXmippOrigin();
+       psdPresent = true;
 
-        // Recompute curves since the experimental curve has changed
-        recomputeCurves();
-    }
-    catch (Xmipp_error XE)
-    {
-        I.clear();
-        psdPresent = false;
-        ShowExperimental->setChecked(true);
-        ShowExperimental->setEnabled(false);
+       // Recompute curves since the experimental curve has changed
+       recomputeCurves();
+    } catch (Xmipp_error XE) {
+       I.clear();
+       psdPresent = false;
+       ShowExperimental->setChecked(true);
+       ShowExperimental->setEnabled(false);
     }
 }
 
@@ -802,14 +799,14 @@ void CTFViewer::getExperimentalCurve(int angle, Matrix2D<double> &data,
 
     int Nmax = CEIL(t_max / Ts);
     data.resize(Nmax, 2);
-    int i = 0;
-    for (double t = 0; t < t_max; t += Ts, i++)
-    {
-        data(i, 0) = t * 1.0 / (XSIZE(I()) * sampling_rate);
-        data(i, 1) = I().interpolatedElement(t * cos_ang, t * sin_ang);
-        if (TenLog->isOn()) data(i, 1) = 10 * log10(data(i, 1));
-        if (i == Nmax) break;
-    }
+     int i = 0;
+     for (double t = 0; t < t_max; t += Ts, i++)
+     {
+         data(i, 0) = t * 1.0 / (XSIZE(I()) * sampling_rate);
+         data(i, 1) = I().interpolatedElement(t * cos_ang, t * sin_ang);
+         if (TenLog->isOn()) data(i, 1) = 10 * log10(data(i, 1));
+         if (i == Nmax) break;
+     }
 }
 
 // Generate CTF model ------------------------------------------------------
@@ -833,14 +830,14 @@ void CTFViewer::generate_ctfmodel()
         YY(freq) = ((double)i-Ydim/2.0)/Xdim;
         digfreq2contfreq(freq, freq, ctf.Tm);
         model(i, j) = ctf.CTFpure_at(XX(freq), YY(freq));
-        model(i,j)*=model(i,j);
-        minval=XMIPP_MIN(minval,model(i,j));
-        maxval=XMIPP_MAX(maxval,model(i,j));
+	model(i,j)*=model(i,j);
+    	minval=XMIPP_MIN(minval,model(i,j));
+    	maxval=XMIPP_MAX(maxval,model(i,j));
     }
     FOR_ALL_ELEMENTS_IN_MATRIX2D(model())
     {
         if (j < Xdim / 2) continue;
-        model(i,j)=(model(i,j)-minval)/(maxval-minval);
+	model(i,j)=(model(i,j)-minval)/(maxval-minval);
     }
 
     // Recompute curves

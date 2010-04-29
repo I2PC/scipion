@@ -132,17 +132,17 @@ public:
     {
         Prog_parameters::usage();
         std::cerr << "   -shift \"[<x>,<y>[,<z>]]\" : Shift by (x,y,z) for volumes, (x,y) for images\n"
-                  << "   -scale \"[<x>,[<y>,<z>]]\" : Scale by (x,y,z)\n"
-                  << "   -shift <DocFile>         : Shifts are stored in a Docfile\n"
-                  << "   -scale <DocFile>         : Scales are stored in a Docfile (may be the same\n"
-                  << "                              Docfile used for shifts\n"
-                  << "  [-colX_shift <col>]       : Column with  the X shift\n"
-                  << "                              First column in the DocFile with data is number 0.\n"
-                  << "  [-colX_scale <col>]       : Column with the scale information\n"
-                  << "  [-center_mass]            : Move the center of mass to the origin\n"
-                  << "  [-dont_wrap]              : By default, the image is wrapped\n"
-                  << "  [-store_in_header]        : Do not shift, but store the shift in the header\n"
-                  << "                              Not applicable to volumes\n";
+        << "   -scale \"[<x>,[<y>,<z>]]\" : Scale by (x,y,z)\n"
+        << "   -shift <DocFile>         : Shifts are stored in a Docfile\n"
+        << "   -scale <DocFile>         : Scales are stored in a Docfile (may be the same\n"
+        << "                              Docfile used for shifts\n"
+        << "  [-colX_shift <col>]       : Column with  the X shift\n"
+        << "                              First column in the DocFile with data is number 0.\n"
+        << "  [-colX_scale <col>]       : Column with the scale information\n"
+        << "  [-center_mass]            : Move the center of mass to the origin\n"
+        << "  [-dont_wrap]              : By default, the image is wrapped\n"
+        << "  [-store_in_header]        : Do not shift, but store the shift in the header\n"
+        << "                              Not applicable to volumes\n";
     }
 };
 

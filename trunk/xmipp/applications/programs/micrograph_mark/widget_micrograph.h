@@ -68,7 +68,7 @@ class Particle
 public:
     int x, y;             // position in micrograph
     int idx;              // Index of this particle within the micrograph
-    // list of coordinates
+                          // list of coordinates
     char status;          // rejected=0, selected=1 or moved=2
     Matrix1D<double> vec; // vector of that particle
     double cost;          // Associated cost
@@ -82,10 +82,10 @@ public:
 
 struct SAscendingParticleSort
 {
-    bool operator()(const Particle& rpStart, const Particle& rpEnd)
-    {
-        return rpStart.cost < rpEnd.cost;
-    }
+     bool operator()(const Particle& rpStart, const Particle& rpEnd)
+     {
+          return rpStart.cost < rpEnd.cost;
+     }
 };
 
 /* Classification model ---------------------------------------------------- */
@@ -107,8 +107,7 @@ public:
 
 public:
     // Constructor
-    Classification_model(int _classNo=3)
-    {
+    Classification_model(int _classNo=3) {
         init(_classNo);
     }
 
@@ -116,8 +115,7 @@ public:
     void clear();
 
     // Is empy
-    bool isEmpty()
-    {
+    bool isEmpty() {
         return __micrographs_number==0;
     }
 
@@ -125,44 +123,44 @@ public:
     void init(int _classNo=3)
     {
         __classNo = _classNo;
-        __training_particles.resize(__classNo);
-        __micrographs_number = 0;
+	__training_particles.resize(__classNo);
+	__micrographs_number = 0;
         __falsePositives.resize(0);
     }
 
     // Different additions
     void addMicrographScanned(int micrographScanned)
     {
-        __micrographs_scanned.push_back(micrographScanned);
+	    __micrographs_scanned.push_back(micrographScanned);
     }
-
+    
     void addParticleTraining(const Particle &p, int classIdx)
     {
         __training_particles[classIdx].push_back(p);
     }
-
+    
     void addParticlePicked(int particlePicked)
     {
-        __particles_picked.push_back(particlePicked);
+	    __particles_picked.push_back(particlePicked);
     }
-
+    
     void addFalsePositives(int falsePositives)
     {
-        __falsePositives.push_back(falsePositives);
+	    __falsePositives.push_back(falsePositives);
     }
-
+    
     void addMicrographItem()
     {
-        __micrographs_number++;
+	    __micrographs_number++;
     }
-
+    
     // Import classification model
     void import_model(const Classification_model &_model);
 
     // Is a particle?
     int isParticle(const Matrix1D<double> &new_features, double &cost)
     {
-
+        
         int retval;
         if (__bayesClassifier==0)
         {
@@ -177,36 +175,35 @@ public:
         }
         return retval;
     }
-
+    
     //init the naive bayesian network
-    void initNaiveBayes(const std::vector < Matrix2D<double> >
-                        &features, const Matrix1D<double> &probs,
+    void initNaiveBayes(const std::vector < Matrix2D<double> > 
+			&features, const Matrix1D<double> &probs,
                         int discreteLevels, double penalization);
 
     //init the naive bayesian network
-    void initNaiveBayesEnsemble(const std::vector < Matrix2D<double> >
-                                &features, const Matrix1D<double> &probs,
-                                int discreteLevels, double penalization,
-                                int numberOfClassifiers,
-                                double samplingFeatures, double samplingIndividuals,
-                                const std::string &newJudgeCombination);
+    void initNaiveBayesEnsemble(const std::vector < Matrix2D<double> > 
+			&features, const Matrix1D<double> &probs,
+                        int discreteLevels, double penalization,
+                        int numberOfClassifiers,
+                        double samplingFeatures, double samplingIndividuals,
+                        const std::string &newJudgeCombination);
 
     // Print
     friend std::ostream & operator << (std::ostream &_out,
-                                       const Classification_model &_m);
+        const Classification_model &_m);
 
     // Print Shape
     void printShape() const;
 
     // Read
     friend std::istream & operator >> (std::istream &_in,
-                                       Classification_model &_m);
+        Classification_model &_m);
 };
 
 /* Automatic particle picking ---------------------------------------------- */
 /** Class to perform the automatic particle picking */
-class AutoParticlePicking
-{
+class AutoParticlePicking {
 public:
     Micrograph                *__m;
     FileName                   __modelRootName;
@@ -231,7 +228,7 @@ public:
     int                        __min_distance_between_particles;
     int                        __output_scale;
     int                        __reduction; // Of the piece with respect
-    // to the micrograph
+                                            // to the micrograph
     int                        __piece_overlap;
     int                        __scan_overlap;
     int                        __learn_overlap;
@@ -250,7 +247,7 @@ public:
 
     // Configure auto
     void configure_auto(int _ellipse_radius);
-
+        
     // Set the number of threads
     void setNumThreads(int _numThreads);
 
@@ -269,24 +266,24 @@ public:
 
     // Build vectors
     void buildVectors(std::vector<int> &_idx, Classification_model &_model);
-
+    
     // Build vector from non particles
     void buildNegativeVectors(Classification_model &__model,
-                              bool checkForPalsePostives);
-
+        bool checkForPalsePostives);
+    
     // Build classfication vector
     // x,y are in the coordinate system of the piece (that might be
     // a reduced version of a piece in the micrograph)
     // (0,0) is the top-left corner
     // Returns true if the vector is successfully built
     bool build_vector(const Matrix2D<double> &piece,
-                      const Matrix2D<double> &original_piece,
-                      int _x, int _y, Matrix1D<double> &_result);
+        const Matrix2D<double> &original_piece,
+        int _x, int _y, Matrix1D<double> &_result);
 
     // Get a piece of the micrograph centered at position x,y (if possible)
     // the position of (x,y) in the piece is returned in (posx, posy)
     void get_centered_piece(Matrix2D<double> &piece,
-                            int _x, int _y, int &_posx, int &_posy);
+        int _x, int _y, int &_posx, int &_posy);
 
     // Get a piece whose top-left corner is at the desired position (if possible)
     // Returns true if the piece could be taken, and false if the whole
@@ -299,16 +296,16 @@ public:
     // need to be shifted in order to fit with the required size.
     // The overlap parameter defines what piece overlap we want.
     bool get_corner_piece(Matrix2D<double> &piece,
-                          int _top, int _left, int _skip_y,
-                          int &_next_skip_x, int &_next_skip_y, int &_next_top,
-                          int &_next_left, int overlap, bool copyPiece);
+        int _top, int _left, int _skip_y,
+        int &_next_skip_x, int &_next_skip_y, int &_next_top,
+        int &_next_left, int overlap, bool copyPiece);
 
     // Denoise, reject outliers and equalize histogram
     // Returns true, if successful. False if unsuccessful (skip this piece)
     // Usually, it is unsuccessful if the denoising fails to work because
     // some "weird" features of the piece
     bool prepare_piece(Matrix2D<double> &piece,
-                       Matrix2D<double> &original_piece);
+        Matrix2D<double> &original_piece);
 
     //To get the neighbours of the particle at position (x,y) in the micrograph
     // (with actual coordinates in the piece posx,posy)
@@ -322,7 +319,7 @@ public:
     // Automatically Select Particles
     // Returns the number of particles selected.
     int automaticallySelectParticles();
-
+    
     // check if there are any particles in the actual scanning position
     bool anyParticle(int posx, int posy, int rect_size);
 
@@ -360,12 +357,12 @@ public:
 
     // Get Features of the classification model
     void produceFeatures(const Classification_model &_model,
-                         std::vector < Matrix2D<double> > &_features);
+        std::vector < Matrix2D<double> > &_features);
 
     // Get classes probabilities
     void produceClassesProbabilities(const Classification_model &_model,
-                                     Matrix1D<double> &probabilities);
-
+        Matrix1D<double> &probabilities);
+    
     // Get false positives automatically selected
     void getAutoFalsePositives(Classification_model &_training_model);
 
@@ -385,8 +382,7 @@ public:
 };
 
 // AutomaticallySelectThreadParams
-struct AutomaticallySelectThreadParams
-{
+struct AutomaticallySelectThreadParams {
     AutoParticlePicking *autoPicking;
     int idThread;
 };
@@ -530,7 +526,7 @@ public:
 
     // Automatically Select Particles
     void automaticallySelectParticles();
-
+    
     // Save models
     void saveModels(bool askFilename);
 

@@ -89,21 +89,21 @@ void show_measured_point(std::ostream &out, Recons_test_Parameters prm, int i)
         if (!prm.succesive_params)
         {
             out << ": lambda= " << prm.lambda0[i]
-                << "  no_it= " << prm.no_it0[i];
+            << "  no_it= " << prm.no_it0[i];
             if (prm.lambda0[i] != prm.lambdaF[i] || prm.no_it0[i] != prm.no_itF[i])
                 out << " lambdaF= " << prm.lambdaF[i] << " no_itF= "
-                    << prm.no_itF[i] << " ";
+                << prm.no_itF[i] << " ";
         }
         else
         {
             for (int j = 0; j < prm.lambda0.size(); j++)
             {
                 out << "\n    lambda= " << prm.lambda0[j]
-                    << "  no_it= " << prm.no_it0[j] << " ";
+                << "  no_it= " << prm.no_it0[j] << " ";
                 if (prm.lambda0[j] != prm.lambdaF[j]
                     || prm.no_it0[j] != prm.no_itF[j])
                     out << " lambdaF= " << prm.lambdaF[j] << " no_itF= "
-                        << prm.no_itF[j] << " ";
+                    << prm.no_itF[j] << " ";
             }
             out << "\n    ";
         }
@@ -145,7 +145,7 @@ void test_training(Recons_test_Parameters &prm, int nvol,
         show_measured_point(fh_hist, prm, i);
         if (!prm.evaluate)
             fh_hist << " ---> " << training_avgs(i) << "+-" << training_devs(i)
-                    << " (" << training_N(i) << ")";
+            << " (" << training_N(i) << ")";
         fh_hist << "std::endl";
         fh_hist.flush();
     }
@@ -161,7 +161,7 @@ void test_training(Recons_test_Parameters &prm, int nvol,
         {
             show_measured_point(std::cout, prm, i);
             std::cout << " ---> " << training_avgs(i) << "+-" << training_devs(i)
-                      << " (" << training_N(i) << ")";
+            << " (" << training_N(i) << ")";
             std::cout << std::endl;
         }
     }

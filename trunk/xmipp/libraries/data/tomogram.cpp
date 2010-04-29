@@ -265,7 +265,7 @@ void Tomogram::set_piece(Matrix1D<int> &r0, Matrix1D<int> &length,
 
 /* Compute stats ----------------------------------------------------------- */
 void Tomogram::computeStats(float &minval, float &maxval, float &avg, float &stddev)
-const
+    const
 {
     minval=(*this)(0,0,0);
     maxval=minval;

@@ -31,7 +31,7 @@
 #include <data/wavelet.h>
 
 /* Fill Reconstruction info structure -------------------------------------- */
-void build_recons_info(SelFile &selfile, SelFile &selctf,
+void build_recons_info(SelFile &selfile, SelFile &selctf, 
                        const FileName &fn_ctf, const SymList &SL,
                        Recons_info * &IMG_Inf, bool do_not_use_symproj)
 {
@@ -563,7 +563,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                                                  POCS_mean_error, POCS_max_error, VARTK);
                     if (prm->tell&TELL_SAVE_AT_EACH_STEP)
                         std::cout << "    POCS Iteration " << i
-                                  << " POCS Error=" <<  POCS_mean_error << std::endl;
+                        << " POCS Error=" <<  POCS_mean_error << std::endl;
                 }
             }
             break;
@@ -619,7 +619,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             case POCS_use:
                 POCS_used++;
                 POCS_errors.computeStats(POCS_avg,
-                                         POCS_stddev, dummy, POCS_min);
+                                          POCS_stddev, dummy, POCS_min);
 #ifdef DEBUG_POCS
                 std::cout << "Reference errors: " << POCS_errors.transpose() << std::endl;
                 std::cout << "Checking " << ABS(POCS_mean_error - POCS_avg) << " " << 1.2*1.96*POCS_stddev << std::endl;
@@ -639,12 +639,10 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                         POCS_errors(POCS_vec_i) = POCS_mean_error;
                     }
                     if (POCS_used < POCS_N_use)
-                    {
-                        // While not enough uses
+                    { // While not enough uses
                     }
                     else if (POCS_freq < 3)
-                    {
-                        // increase frequency
+                    { // increase frequency
                         POCS_freq++;
 #ifdef DEBUG_POCS
                         std::cerr << "2: Changing to " << POCS_freq << std::endl;
@@ -678,7 +676,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             case POCS_lowering:
                 // Lower the POCS error before measuring again
                 POCS_errors.computeStats(POCS_avg,
-                                         POCS_stddev, POCS_max, dummy);
+                                          POCS_stddev, POCS_max, dummy);
                 POCS_used++;
                 if (POCS_mean_error < POCS_max || POCS_used > 2*POCS_N_measure)
                 {

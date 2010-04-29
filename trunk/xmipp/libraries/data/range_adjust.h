@@ -50,11 +50,11 @@ public:
     double sigma;
 
     /// Mask
-    Mask_Params mask_prm;
-
-    /** Empty constructor */
-    Prog_Range_adjust_Parameters(): Prog_parameters(), mask_prm(INT_MASK)
-    {}
+	Mask_Params mask_prm;
+	
+	/** Empty constructor */
+	Prog_Range_adjust_Parameters(): Prog_parameters(), mask_prm(INT_MASK)
+	{}
 
     /** Read from a command line.
      *

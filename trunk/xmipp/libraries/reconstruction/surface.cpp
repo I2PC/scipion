@@ -50,14 +50,14 @@ void Prog_Surface_Parameters::usage() const
 {
     std::cout << "\nUsage:\n";
     std::cout << "surface\n"
-              << "  [-i <Phantom file>]             : Phantom description file\n"
-              << "  [-o <volume_mask>]              : Output mask\n"
-              << "  [-r <probe_radius=0.5>]         : Probe radius for surface generation\n"
-              << "  [-top <top surface file>]       : Output Top surface\n"
-              << "  [-bottom <bottom surface file>] : Output Bottom surface\n"
-              << "  [-ztop <ztop>]                  : Maximum height for top ray\n"
-              << "  [-zbottom <zbottom>]            : Maximum height for bottom ray\n"
-              << "  [-zdim <zdim>]                  : Output Z dimension\n";
+    << "  [-i <Phantom file>]             : Phantom description file\n"
+    << "  [-o <volume_mask>]              : Output mask\n"
+    << "  [-r <probe_radius=0.5>]         : Probe radius for surface generation\n"
+    << "  [-top <top surface file>]       : Output Top surface\n"
+    << "  [-bottom <bottom surface file>] : Output Bottom surface\n"
+    << "  [-ztop <ztop>]                  : Maximum height for top ray\n"
+    << "  [-zbottom <zbottom>]            : Maximum height for bottom ray\n"
+    << "  [-zdim <zdim>]                  : Output Z dimension\n";
 }
 
 /* Produce side information ================================================ */

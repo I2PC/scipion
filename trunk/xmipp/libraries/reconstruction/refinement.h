@@ -124,8 +124,8 @@ void calculate_and_find_correlation_max_mat(Matrix2D<T> const &mat1,
                 {
                     stop_loop = true;
                     std::cout << "\nWarning(calculate_and_find_correlation_max_mat)"
-                              << "\n some points neede to determine the maxima"
-                              << "\n are not available" << std::endl;
+                    << "\n some points neede to determine the maxima"
+                    << "\n are not available" << std::endl;
                 }
             }
     }

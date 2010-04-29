@@ -93,7 +93,7 @@ void rawWriteTile(
 {
     unsigned int i, j;
     unsigned int x_max = x + tileWidth,
-                 y_max = y + tileLength;
+                         y_max = y + tileLength;
     static double minval = 10e10;
     static double maxval = -10e10;
     unsigned short int  uiVal;
@@ -315,10 +315,10 @@ int main(int argc, char *argv[])
     // RGB images are usually samplesPerPixel=3 (this is only implemented for untiled 8-bit tiffs)
     if (samplesPerPixel != 1 && samplesPerPixel != 3)
     {
-        std::cerr <<"WARNING! This tif has a strange value for samplesPerPixel (i.e. "<<samplesPerPixel<<")"<<std::endl;
-        std::cerr <<"         Some scanners do not set this value correctly"<<std::endl;
-        std::cerr <<"         Setting samplePerPixel to 1 and continuing execution ... "<<std::endl;
-        samplesPerPixel = 1;
+      std::cerr <<"WARNING! This tif has a strange value for samplesPerPixel (i.e. "<<samplesPerPixel<<")"<<std::endl;
+      std::cerr <<"         Some scanners do not set this value correctly"<<std::endl;
+      std::cerr <<"         Setting samplePerPixel to 1 and continuing execution ... "<<std::endl;
+      samplesPerPixel = 1;      
     }
 
     if (TIFFIsTiled(tif))

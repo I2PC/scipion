@@ -1,5 +1,5 @@
 /***************************************************************************
- *
+ * 
  * Authors:     J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -51,7 +51,7 @@
  * The MetaData class manages all procedures related to
  * metadata. MetaData is intended to group toghether old
  * Xmipp specific files like Docfiles, Selfiles, etc..
- *
+ * 
  */
 class MetaData
 {
@@ -447,8 +447,8 @@ void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim);
  @endcode
  */
 #define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
-    for(long int kkkk = kkkk_metadata.firstObject(); \
-        kkkk != MetaData::NO_MORE_OBJECTS; \
-        kkkk=kkkk_metadata.nextObject())
+        for(long int kkkk = kkkk_metadata.firstObject(); \
+             kkkk != MetaData::NO_MORE_OBJECTS; \
+             kkkk=kkkk_metadata.nextObject())
 #endif
 

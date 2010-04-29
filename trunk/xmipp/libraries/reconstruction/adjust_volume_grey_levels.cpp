@@ -44,21 +44,21 @@ void Prog_Adjust_Volume_Parameters::usage()
 {
     std::cerr << "Usage: adjust_volume\n";
     std::cerr << "   -i <Volume>         : Input volume\n"
-              << "   -sel MetaDataFile      : Set of projections\n"
-              << "  [-o <Output Volume>] : By default, the input one\n"
-              << "  [-optimize]          : Optimize\n"
-              << "  [-probb_eval <p=0.2>]: Probability of being evaluated\n"
-              ;
+    << "   -sel MetaDataFile      : Set of projections\n"
+    << "  [-o <Output Volume>] : By default, the input one\n"
+    << "  [-optimize]          : Optimize\n"
+    << "  [-probb_eval <p=0.2>]: Probability of being evaluated\n"
+    ;
 }
 
 /* Show -------------------------------------------------------------------- */
 void Prog_Adjust_Volume_Parameters::show()
 {
     std::cout << "Input Volume:  " << fn_vol   << std::endl
-              << "Input MetaDAtaFile: " << fn_sel   << std::endl
-              << "Output Volume: " << fn_out   << std::endl
-              << "Optimize:      " << optimize << std::endl
-              ;
+    << "Input MetaDAtaFile: " << fn_sel   << std::endl
+    << "Output Volume: " << fn_out   << std::endl
+    << "Optimize:      " << optimize << std::endl
+    ;
 }
 
 
@@ -100,8 +100,8 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
     long int ret=SF.firstObject();
     if(ret==MetaData::NO_OBJECTS_STORED)
     {
-        std::cerr << "Empty inputFile File\n";
-        exit(1);
+            std::cerr << "Empty inputFile File\n";
+            exit(1);
     }
     do
     {
@@ -159,8 +159,8 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
     long int ret=SF.firstObject();
     if(ret==MetaData::NO_OBJECTS_STORED)
     {
-        std::cerr << "Empty inputFile File\n";
-        exit(1);
+            std::cerr << "Empty inputFile File\n";
+            exit(1);
     }
     do
     {
@@ -231,7 +231,7 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
         int iter;
         global_adjust_volume_prm = this;
         powellOptimizer(p, 1, 2, &projection_mismatching, NULL,
-                        ftol, fret, iter, steps, true);
+            ftol, fret, iter, steps, true);
         a = p(0);
         b = p(1);
     }

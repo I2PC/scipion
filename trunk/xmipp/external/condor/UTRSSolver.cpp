@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
-              using trust Region method for high-computing load,
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
+              using trust Region method for high-computing load, 
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product,
+If you want to include this tools in any commercial product, 
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -42,18 +42,13 @@ double findAlpha(Vector s,Vector u, double delta, Polynomial &q, Vector pointXk,
     int n=s.sz();
     while (n--)
     {
-        a+=sqr(*up);
-        b+=*up * *sp;
-        c+=sqr(*sp);
-        sp++;
-        up++;
+        a+=sqr(*up); b+=*up * *sp; c+=sqr(*sp);
+        sp++; up++;
     }
     double tmp1=-b/a, tmp2= sqrt(b*b-a*c)/a, q1, q2;
 
     n=s.sz();
-    v1.setSize(n);
-    v2.setSize(n);
-    tmp.setSize(n);
+    v1.setSize(n); v2.setSize(n); tmp.setSize(n);
     if (!(q==Polynomial::emptyPolynomial))
     {
         v1.copyFrom(u);
@@ -63,9 +58,9 @@ double findAlpha(Vector s,Vector u, double delta, Polynomial &q, Vector pointXk,
         tmp+=pointXk;
         q1=q(tmp);
 
-        // !!! don't do this:
-        //    output=v1;
-        //    return tmp1+tmp2;
+    // !!! don't do this:
+    //    output=v1;
+    //    return tmp1+tmp2;
 
         v2.copyFrom(u);
         v2.multiply(tmp1-tmp2);
@@ -74,8 +69,7 @@ double findAlpha(Vector s,Vector u, double delta, Polynomial &q, Vector pointXk,
         tmp+=pointXk;
         q2=q(tmp);
 
-    }
-    else
+    } else
     {
         v1.copyFrom(u);
         v1.multiply(tmp1+tmp2);
@@ -89,13 +83,8 @@ double findAlpha(Vector s,Vector u, double delta, Polynomial &q, Vector pointXk,
         H.multiply(tmp,v2);
         q2=-minusG.scalarProduct(v2)+0.5*v2.scalarProduct(tmp);
     }
-    if (q1>q2)
-    {
-        output=v1;
-        return tmp1+tmp2;
-    }
-    output=v2;
-    return tmp1-tmp2;
+    if (q1>q2) { output=v1; return tmp1+tmp2; }
+    output=v2; return tmp1-tmp2;
 }
 
 double initLambdaL(double normG,double delta, Matrix H)
@@ -107,7 +96,7 @@ double initLambdaL(double normG,double delta, Matrix H)
     l=mmax(0.0,-a);
 
     a=0;
-    for (i=0; i<n; i++)
+    for (i=0; i<n; i++) 
     {
         sum=h[i][i];
         for (j=0; j<n; j++) if (j!=i) sum+=condorAbs(h[i][j]);
@@ -125,7 +114,7 @@ double initLambdaU(double normG,double delta, Matrix H)
     int n=H.nLine(),i,j;
     double **h=H, sum,l,a=-INF;
 
-    for (i=0; i<n; i++)
+    for (i=0; i<n; i++) 
     {
         sum=-h[i][i];
         for (j=0; j<n; j++) if (j!=i) sum+=condorAbs(h[i][j]);
@@ -143,7 +132,7 @@ double initLambdaU2(Matrix H)
     int n=H.nLine(),i,j;
     double **h=H, sum,a=-INF;
 
-    for (i=0; i<n; i++)
+    for (i=0; i<n; i++) 
     {
         sum=h[i][i];
         for (j=0; j<n; j++) if (j!=i) sum+=condorAbs(h[i][j]);
@@ -155,8 +144,8 @@ double initLambdaU2(Matrix H)
 
 // #define POWEL_TERMINATION 1
 
-Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
-                       int *infoOut, int maxIter, double *lambda1, Vector minusG, Matrix H)
+Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta, 
+                                        int *infoOut, int maxIter, double *lambda1, Vector minusG, Matrix H)
 {
 // lambda1>0.0 if interior convergence
 
@@ -164,7 +153,7 @@ Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
 //    const double kappaEasy=0.1, kappaHard=0.2;
     const double kappaEasy=0.01, kappaHard=0.02;
 
-    double normG,lambda,lambdaCorrection, lambdaPlus, lambdaL, lambdaU,
+    double normG,lambda,lambdaCorrection, lambdaPlus, lambdaL, lambdaU, 
            uHu, alpha, normS;
     int info=0, n=minusG.sz();
     Matrix HLambda(n,n);
@@ -195,13 +184,12 @@ Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
         {
             if (!H.cholesky(L, lambda, &lambdaCorrection))
             {
-                //         lambdaL=mmax(mmax(lambdaL,lambda),lambdaCorrection);
+       //         lambdaL=mmax(mmax(lambdaL,lambda),lambdaCorrection);
                 lambdaL=mmax(lambdaL,lambda+lambdaCorrection);
                 lambda=mmax(sqrt(lambdaL*lambdaU), lambdaL+theta*(lambdaU-lambdaL));
                 continue;
             }
-        }
-        else choleskyFactorAlreadyComputed=false;
+        } else choleskyFactorAlreadyComputed=false;
 
 
         // cholesky factorization successfull : solve Hlambda * s = -G
@@ -212,21 +200,21 @@ Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
 
         // check for termination
 #ifndef POWEL_TERMINATION
-        if (condorAbs(normS-delta)<kappaEasy*delta)
-        {
+        if (condorAbs(normS-delta)<kappaEasy*delta) 
+        { 
             s.multiply(delta/normS);
-            info=1;
-            break;
+            info=1; 
+            break; 
         }
 #else
 //      powell check !!!
         HLambda.copyFrom(H);
         HLambda.addUnityInPlace(lambda);
         double sHs=s.scalarProduct(HLambda.multiply(s));
-        if (sqr(delta/normS-1)<kappaEasy*(1+lambda*delta*delta/sHs))
+        if (sqr(delta/normS-1)<kappaEasy*(1+lambda*delta*delta/sHs)) 
         {
             s.multiply(delta/normS);
-            info=1;
+            info=1; 
             break;
         }
 #endif
@@ -235,14 +223,9 @@ Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
         {
             // check for termination
             // interior convergence; maybe break;
-            if (lambda==0)
-            {
-                info=1;
-                break;
-            }
-            lambdaU=mmin(lambdaU,lambda);
-        }
-        else lambdaL=mmax(lambdaL,lambda);
+            if (lambda==0) { info=1; break; }
+            lambdaU=mmin(lambdaU,lambda); 
+        } else lambdaL=mmax(lambdaL,lambda);
 
 //        if (lambdaU-lambdaL<kappaEasy*(2-kappaEasy)*lambdaL) { info=3; break; };
 
@@ -272,22 +255,16 @@ Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
                 kappaHard*(sHs+lambda*sqr(delta)))
 #endif
             {
-                s=sFinal;
-                info=2;
-                break;
+                s=sFinal; info=2; break;
             }
         }
-        if ((normS>delta)&&(!gIsNull))
-        {
-            lambda=lambdaPlus;
-            continue;
-        };
+        if ((normS>delta)&&(!gIsNull)) { lambda=lambdaPlus; continue; };
 
-        if (H.cholesky(L, lambdaPlus, &lambdaCorrection))
-        {
-            lambda=lambdaPlus;
-            choleskyFactorAlreadyComputed=true;
-            continue;
+        if (H.cholesky(L, lambdaPlus, &lambdaCorrection)) 
+        { 
+            lambda=lambdaPlus; 
+            choleskyFactorAlreadyComputed=true; 
+            continue; 
         }
 
         lambdaL=mmax(lambdaL,lambdaPlus);
@@ -303,8 +280,7 @@ Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
         {
             // calculate the value of the lowest eigenvalue of H
             // to check
-            lambdaL=0;
-            lambdaU=initLambdaU2(H);
+            lambdaL=0; lambdaU=initLambdaU2(H);
             while (lambdaL<0.99*lambdaU)
             {
                 lambda=0.5*(lambdaL+lambdaU);
@@ -313,14 +289,13 @@ Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
                 else lambdaU=lambda;
             }
             *lambda1=lambdaL;
-        }
-        else *lambda1=0.0;
+        } else *lambda1=0.0;
     }
     return s;
 }
 
-Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
-                       int *infoOut, int maxIter, double *lambda1)
+Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta, 
+                                        int *infoOut, int maxIter, double *lambda1)
 {
     int n=q.dim();
     Matrix H(n,n);
@@ -329,8 +304,8 @@ Vector L2NormMinimizer(Polynomial q, Vector pointXk, double delta,
     return L2NormMinimizer(q,pointXk,delta,infoOut,maxIter,lambda1,vG,H);
 }
 
-Vector L2NormMinimizer(Polynomial q, double delta,
-                       int *infoOut, int maxIter, double *lambda1)
+Vector L2NormMinimizer(Polynomial q, double delta, 
+                                        int *infoOut, int maxIter, double *lambda1)
 {
     return L2NormMinimizer(q, Vector::emptyVector, delta, infoOut, maxIter, lambda1);
 }

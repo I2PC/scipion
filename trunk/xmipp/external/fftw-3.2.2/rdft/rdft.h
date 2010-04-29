@@ -25,30 +25,29 @@
 #include "codelet-rdft.h"
 
 /* problem.c: */
-typedef struct
-{
-    problem super;
-    tensor *sz, *vecsz;
-    R *I, *O;
+typedef struct {
+     problem super;
+     tensor *sz, *vecsz;
+     R *I, *O;
 #if defined(STRUCT_HACK_KR)
-    rdft_kind kind[1];
+     rdft_kind kind[1];
 #elif defined(STRUCT_HACK_C99)
-    rdft_kind kind[];
+     rdft_kind kind[];
 #else
-    rdft_kind *kind;
+     rdft_kind *kind;
 #endif
 } problem_rdft;
 
 void X(rdft_zerotens)(tensor *sz, R *I);
 problem *X(mkproblem_rdft)(const tensor *sz, const tensor *vecsz,
-                           R *I, R *O, const rdft_kind *kind);
+			   R *I, R *O, const rdft_kind *kind);
 problem *X(mkproblem_rdft_d)(tensor *sz, tensor *vecsz,
-                             R *I, R *O, const rdft_kind *kind);
+			     R *I, R *O, const rdft_kind *kind);
 problem *X(mkproblem_rdft_0_d)(tensor *vecsz, R *I, R *O);
 problem *X(mkproblem_rdft_1)(const tensor *sz, const tensor *vecsz,
-                             R *I, R *O, rdft_kind kind);
+			     R *I, R *O, rdft_kind kind);
 problem *X(mkproblem_rdft_1_d)(tensor *sz, tensor *vecsz,
-                               R *I, R *O, rdft_kind kind);
+			       R *I, R *O, rdft_kind kind);
 
 const char *X(rdft_kind_str)(rdft_kind kind);
 
@@ -58,16 +57,15 @@ void X(rdft_solve)(const plan *ego_, const problem *p_);
 /* plan.c: */
 typedef void (*rdftapply) (const plan *ego, R *I, R *O);
 
-typedef struct
-{
-    plan super;
-    rdftapply apply;
+typedef struct {
+     plan super;
+     rdftapply apply;
 } plan_rdft;
 
 plan *X(mkplan_rdft)(size_t size, const plan_adt *adt, rdftapply apply);
 
 #define MKPLAN_RDFT(type, adt, apply) \
-    (type *)X(mkplan_rdft)(sizeof(type), adt, apply)
+  (type *)X(mkplan_rdft)(sizeof(type), adt, apply)
 
 /* various solvers */
 
@@ -92,10 +90,10 @@ void X(hc2hc_generic_register)(planner *p);
 
 /****************************************************************************/
 /* problem2.c: */
-/*
+/* 
    An RDFT2 problem transforms a 1d real array r[n] with stride is/os
    to/from an "unpacked" complex array {rio,iio}[n/2 + 1] with stride
-   os/is.  R0 points to the first even element of the real array.
+   os/is.  R0 points to the first even element of the real array.  
    R1 points to the first odd element of the real array.
 
    Strides on the real side of the transform express distances
@@ -107,26 +105,25 @@ void X(hc2hc_generic_register)(planner *p);
    the input stride would be 2, not 1.  This convention is necessary
    for hc2c codelets to work, since they transpose even/odd with
    real/imag.
-
+   
    Multidimensional transforms use complex DFTs for the
-   noncontiguous dimensions.  vecsz has the usual interpretation.
+   noncontiguous dimensions.  vecsz has the usual interpretation.  
 */
-typedef struct
-{
-    problem super;
-    tensor *sz;
-    tensor *vecsz;
-    R *r0, *r1;
-    R *cr, *ci;
-    rdft_kind kind; /* assert(kind < DHT) */
+typedef struct {
+     problem super;
+     tensor *sz;
+     tensor *vecsz;
+     R *r0, *r1;
+     R *cr, *ci;
+     rdft_kind kind; /* assert(kind < DHT) */
 } problem_rdft2;
 
 problem *X(mkproblem_rdft2)(const tensor *sz, const tensor *vecsz,
-                            R *r0, R *r1, R *cr, R *ci, rdft_kind kind);
+			    R *r0, R *r1, R *cr, R *ci, rdft_kind kind);
 problem *X(mkproblem_rdft2_d)(tensor *sz, tensor *vecsz,
-                              R *r0, R *r1, R *cr, R *ci, rdft_kind kind);
+			      R *r0, R *r1, R *cr, R *ci, rdft_kind kind);
 problem *X(mkproblem_rdft2_d_3pointers)(tensor *sz, tensor *vecsz,
-                                        R *r, R *cr, R *ci, rdft_kind kind);
+					R *r, R *cr, R *ci, rdft_kind kind);
 int X(rdft2_inplace_strides)(const problem_rdft2 *p, int vdim);
 INT X(rdft2_tensor_max_index)(const tensor *sz, rdft_kind k);
 void X(rdft2_strides)(rdft_kind kind, const iodim *d, INT *rs, INT *cs);
@@ -141,16 +138,15 @@ void X(rdft2_solve)(const plan *ego_, const problem *p_);
 /* plan.c: */
 typedef void (*rdft2apply) (const plan *ego, R *r0, R *r1, R *cr, R *ci);
 
-typedef struct
-{
-    plan super;
-    rdft2apply apply;
+typedef struct {
+     plan super;
+     rdft2apply apply;
 } plan_rdft2;
 
 plan *X(mkplan_rdft2)(size_t size, const plan_adt *adt, rdft2apply apply);
 
 #define MKPLAN_RDFT2(type, adt, apply) \
-    (type *)X(mkplan_rdft2)(sizeof(type), adt, apply)
+  (type *)X(mkplan_rdft2)(sizeof(type), adt, apply)
 
 /* various solvers */
 

@@ -83,7 +83,7 @@ void Bilib_DWT(const Matrix1D<double> &input,
             // Pick the Lowest subband
             Matrix1D<double> input_aux(xsize), result_aux(xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
-            DIRECT_VEC_ELEM(input_aux, i) = DIRECT_VEC_ELEM(result, i);
+            	DIRECT_VEC_ELEM(input_aux, i) = DIRECT_VEC_ELEM(result, i);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -95,7 +95,7 @@ void Bilib_DWT(const Matrix1D<double> &input,
 
             // Return the subband to the output
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
-            DIRECT_VEC_ELEM(result, i) = DIRECT_VEC_ELEM(result_aux, i);
+            	DIRECT_VEC_ELEM(result, i) = DIRECT_VEC_ELEM(result_aux, i);
         }
     }
     else if (isign == -1)
@@ -182,7 +182,7 @@ void Bilib_DWT(const Matrix2D<double> &input,
             // Pick the Lowest subband
             Matrix2D<double> input_aux(ysize, xsize), result_aux(ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            DIRECT_MAT_ELEM(input_aux, i, j) = DIRECT_MAT_ELEM(result, i, j);
+            	DIRECT_MAT_ELEM(input_aux, i, j) = DIRECT_MAT_ELEM(result, i, j);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -194,7 +194,7 @@ void Bilib_DWT(const Matrix2D<double> &input,
 
             // Return the subband to the output
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            DIRECT_MAT_ELEM(result, i, j) = DIRECT_MAT_ELEM(result_aux, i, j);
+            	DIRECT_MAT_ELEM(result, i, j) = DIRECT_MAT_ELEM(result_aux, i, j);
         }
     }
     else if (isign == -1)
@@ -209,7 +209,7 @@ void Bilib_DWT(const Matrix2D<double> &input,
             // Pick the Lowest subband
             Matrix2D<double> input_aux(ysize, xsize), result_aux(ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            DIRECT_MAT_ELEM(input_aux, i, j) = DIRECT_MAT_ELEM(input, i, j);
+                DIRECT_MAT_ELEM(input_aux, i, j) = DIRECT_MAT_ELEM(input, i, j);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -221,7 +221,7 @@ void Bilib_DWT(const Matrix2D<double> &input,
 
             // Return the subband to the output
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            DIRECT_MAT_ELEM(input, i, j) = DIRECT_MAT_ELEM(result_aux, i, j);
+            	DIRECT_MAT_ELEM(input, i, j) = DIRECT_MAT_ELEM(result_aux, i, j);
         }
 
         // First iteration
@@ -286,9 +286,9 @@ void Bilib_DWT(const Matrix3D<double> &input,
 
             // Pick the Lowest subband
             Matrix3D<double> input_aux(zsize, ysize, xsize),
-                     result_aux(zsize, ysize, xsize);
+            	    	     result_aux(zsize, ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-            DIRECT_VOL_ELEM(input_aux, k, i, j) = DIRECT_VOL_ELEM(result, k, i, j);
+                DIRECT_VOL_ELEM(input_aux, k, i, j) = DIRECT_VOL_ELEM(result, k, i, j);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -300,7 +300,7 @@ void Bilib_DWT(const Matrix3D<double> &input,
 
             // Return the subband to the output
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-            DIRECT_VOL_ELEM(result, k, i, j) = DIRECT_VOL_ELEM(result_aux, k, i, j);
+                DIRECT_VOL_ELEM(result, k, i, j) = DIRECT_VOL_ELEM(result_aux, k, i, j);
         }
     }
     else if (isign == -1)
@@ -315,9 +315,9 @@ void Bilib_DWT(const Matrix3D<double> &input,
 
             // Pick the Lowest subband
             Matrix3D<double> input_aux(zsize, ysize, xsize),
-                     result_aux(zsize, ysize, xsize);
+            result_aux(zsize, ysize, xsize);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-            DIRECT_VOL_ELEM(input_aux, k, i, j) = DIRECT_VOL_ELEM(input, k, i, j);
+                DIRECT_VOL_ELEM(input_aux, k, i, j) = DIRECT_VOL_ELEM(input, k, i, j);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -329,7 +329,7 @@ void Bilib_DWT(const Matrix3D<double> &input,
 
             // Return the subband to the output
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-            DIRECT_VOL_ELEM(input, k, i, j) = DIRECT_VOL_ELEM(result_aux, k, i, j);
+                DIRECT_VOL_ELEM(input, k, i, j) = DIRECT_VOL_ELEM(result_aux, k, i, j);
         }
 
         // First iteration
@@ -693,34 +693,34 @@ void bayesian_solve_eq_system(
     if (white_noise)
         extra_constraints += (scale_dim - 1);
     A.initZeros(2*(scale_dim - 1) + 2*scale_dim + 2 + extra_constraints, 2*scale_dim);
-    for (int i = 1; i < scale_dim; i++)
+    for (int i = 1;i < scale_dim;i++)
     {
         A(i - 1, i - 1) = 1;
         A(i - 1, i) = -1;
         A(i - 1 + scale_dim - 1, i - 1 + scale_dim) = 1;
         A(i - 1 + scale_dim - 1, i + scale_dim) = -1;
     }
-    for (int i = 0; i < 2*scale_dim; i++)
+    for (int i = 0;i < 2*scale_dim;i++)
         A(i + 2*(scale_dim - 1), i) = -1;
 
     // Constraints on the SNR
     Matrix1D<double> aux0coefs(scale_dim);
-    for (int j = 0; j < scale_dim; j++)
+    for (int j = 0;j < scale_dim;j++)
         aux0coefs(j) = Ncoefs(j) * SNR0;
     Matrix1D<double> auxFcoefs(scale_dim);
-    for (int j = 0; j < scale_dim; j++)
+    for (int j = 0;j < scale_dim;j++)
         auxFcoefs(j) = Ncoefs(j) * SNRF;
 
     //initializing the second last row of A
-    for (int j = 0; j < scale_dim; j++)
+    for (int j = 0;j < scale_dim;j++)
         A(2*(scale_dim - 1) + 2*scale_dim, j) = (-1) * auxFcoefs(j);
-    for (int j = scale_dim; j < 2*scale_dim; j++)
+    for (int j = scale_dim;j < 2*scale_dim;j++)
         A(2*(scale_dim - 1) + 2*scale_dim, j) = Ncoefs(j - scale_dim);
 
     //initializing the last row of A
-    for (int j = 0; j < scale_dim; j++)
+    for (int j = 0;j < scale_dim;j++)
         A(2*(scale_dim - 1) + 2*scale_dim + 1, j) = aux0coefs(j);
-    for (int j = scale_dim; j < 2*scale_dim; j++)
+    for (int j = scale_dim;j < 2*scale_dim;j++)
         A(2*(scale_dim - 1) + 2*scale_dim + 1, j) = (-1) * Ncoefs(j - scale_dim);
 
     // White noise constraints
@@ -737,7 +737,7 @@ void bayesian_solve_eq_system(
     // Initialize Aeq matrix
     Matrix2D<double> Aeq;
     Aeq.initZeros(1, 2*scale_dim);
-    for (int j = 0; j < scale_dim; j++)
+    for (int j = 0;j < scale_dim;j++)
     {
         Aeq(0, j) = Ncoefs(j);
         Aeq(0, j + scale_dim) = Ncoefs(j);
@@ -751,7 +751,7 @@ void bayesian_solve_eq_system(
     //initialization of Matrix C (cost matrix)
     Matrix2D<double> C;
     C.initZeros(scale_dim, 2*scale_dim);
-    for (int j = 0; j < scale_dim; j++)
+    for (int j = 0;j < scale_dim;j++)
     {
         C(j, j) = 1;
         C(j, j + scale_dim) = 1;
@@ -769,15 +769,15 @@ void bayesian_solve_eq_system(
     beq.write("./matrices/beq.txt");
 
     std::cout << "Equation system Cx=d\n"
-              << "C=\n" << C << std::endl
-              << "d=" << (power / Ncoefs).transpose() << std::endl
-              << "Constraints\n"
-              << "Ax<=b\n"
-              << "A=\n" << A << std::endl
-              << "b=" << b.transpose() << std::endl
-              << "Aeq x=beq\n"
-              << "Aeq=\n" << Aeq << std::endl
-              << "beq=" << beq.transpose() << std::endl;
+    << "C=\n" << C << std::endl
+    << "d=" << (power / Ncoefs).transpose() << std::endl
+    << "Constraints\n"
+    << "Ax<=b\n"
+    << "A=\n" << A << std::endl
+    << "b=" << b.transpose() << std::endl
+    << "Aeq x=beq\n"
+    << "Aeq=\n" << Aeq << std::endl
+    << "beq=" << beq.transpose() << std::endl;
 #endif
 
     // Solve the system
@@ -793,9 +793,9 @@ void bayesian_solve_eq_system(
     std::cout << estimatedS;
     std::cout << "--------------------------- \n";
     std::cout << "Inequality constraints agreement" << std::endl
-              << (A*estimatedS).transpose() << std::endl;
+    << (A*estimatedS).transpose() << std::endl;
     std::cout << "Equality constraints agreement" << std::endl
-              << (Aeq*estimatedS).transpose() << std::endl;
+    << (Aeq*estimatedS).transpose() << std::endl;
     std::cout << "Goal function value: " << (C*estimatedS).transpose() << std::endl;
 #endif
 }
@@ -836,7 +836,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
     orientation.push_back("01");
     orientation.push_back("10");
     orientation.push_back("11");
-    for (int j = 0; j < XSIZE(scale); j++)
+    for (int j = 0;j < XSIZE(scale);j++)
     {
         for (int k = 0; k < orientation.size(); k++)
         {
@@ -910,7 +910,7 @@ void bayesian_wiener_filtering(Matrix2D<double> &WI,
     Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
 
-    for (int i = 0; i < XSIZE(scale); i++)
+    for (int i = 0;i < XSIZE(scale);i++)
     {
         double N = estimatedS(i);
         double S = estimatedS(i + XSIZE(scale));
@@ -958,7 +958,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
     orientation.push_back("101");
     orientation.push_back("110");
     orientation.push_back("111");
-    for (int j = 0; j < XSIZE(scale); j++)
+    for (int j = 0;j < XSIZE(scale);j++)
     {
         for (int k = 0; k < orientation.size(); k++)
         {
@@ -1035,7 +1035,7 @@ void bayesian_wiener_filtering(Matrix3D<double> &WI,
     Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
 
-    for (int i = 0; i < XSIZE(scale); i++)
+    for (int i = 0;i < XSIZE(scale);i++)
     {
         double N = estimatedS(i);
         double S = estimatedS(i + XSIZE(scale));

@@ -43,8 +43,7 @@
    @ingroup ReconsLibraryPrograms */
 //@{
 /** angular_class_average parameters. */
-class Prog_angular_class_average_prm
-{
+class Prog_angular_class_average_prm {
 
 public:
 
@@ -53,7 +52,7 @@ public:
     /** Output rootnames */
     FileName         fn_out, fn_out1, fn_out2, fn_wien;
     /** Column numbers */
-    int              col_rot, col_tilt, col_psi, col_xshift, col_yshift, col_mirror, col_select, col_ref;
+    int              col_rot, col_tilt, col_psi, col_xshift, col_yshift, col_mirror, col_select, col_ref;          
     /** Upper and lower absolute and relative selection limits */
     double           limit0, limitF, limitR;
     /** Flags wether to use limit0, limitF and limitR selection */
@@ -97,57 +96,57 @@ public:
     Matrix1D<double> corr;
 
 public:
-    /// Read arguments from command line
-    void read(int argc, char **argv);
+  /// Read arguments from command line
+  void read(int argc, char **argv);
 
-    /// Show
-    void show();
+  /// Show
+  void show();
 
-    /// Usage
-    void usage();
+  /// Usage
+  void usage();
 
-    /** Make shiftmask and calculate nr_psi */
-    void produceSideInfo();
+  /** Make shiftmask and calculate nr_psi */
+  void produceSideInfo();
 
-    /** Convert from cartesian to FT of polar coordinates */
-    void getPolar(Matrix2D<double> &img, Polar<std::complex <double> > &fP,
-                  bool conjugated=false, float xoff = 0., float yoff = 0.);
+  /** Convert from cartesian to FT of polar coordinates */
+  void getPolar(Matrix2D<double> &img, Polar<std::complex <double> > &fP, 
+                bool conjugated=false, float xoff = 0., float yoff = 0.);
 
-    /** Re-align all images in a class */
-    void reAlignClass(ImageXmipp &avg1,
-                      ImageXmipp &avg2,
-                      SelFile    &SFclass1,
-                      SelFile    &SFclass2,
-                      std::vector<ImageXmipp> imgs,
-                      std::vector<int> splits,
-                      std::vector<int> numbers,
-                      int dirno,
-                      double * my_output);
+  /** Re-align all images in a class */
+  void reAlignClass(ImageXmipp &avg1,
+                    ImageXmipp &avg2,
+                    SelFile    &SFclass1,
+                    SelFile    &SFclass2,
+                    std::vector<ImageXmipp> imgs,
+                    std::vector<int> splits,
+                    std::vector<int> numbers,
+                    int dirno,
+                    double * my_output);
 
-    /** Apply Wiener filter */
-    void applyWienerFilter(Matrix2D<double> &img);
+  /** Apply Wiener filter */
+  void applyWienerFilter(Matrix2D<double> &img);
 
-    /** Process a single class */
-    void processOneClass(int &dirno,
-                         double * my_output);
+  /** Process a single class */
+  void processOneClass(int &dirno, 
+                       double * my_output);
 
-    /** Write average and selfiles to disc */
-    void writeToDisc(ImageXmipp avg,
-                     int        dirno,
-                     SelFile    SF,
-                     FileName   fn,
-                     bool       write_selfile,
-                     FileName   oext="xmp");
+  /** Write average and selfiles to disc */
+  void writeToDisc(ImageXmipp avg,
+                   int        dirno,
+                   SelFile    SF,
+                   FileName   fn,                                                 
+                   bool       write_selfile,
+                   FileName   oext="xmp");
 
-    /** Add an image to the selfile and docfile of all class averages */
-    void addClassAverage(int dirno,
-                         double w,
-                         double w1,
-                         double w2);
+  /** Add an image to the selfile and docfile of all class averages */
+  void addClassAverage(int dirno,
+                       double w,
+                       double w1,
+                       double w2);
 
-    /** Write selfile and docfile of all class averages to disc */
-    void finalWriteToDisc();
-
+  /** Write selfile and docfile of all class averages to disc */
+  void finalWriteToDisc();
+ 
 
 };
 //@}

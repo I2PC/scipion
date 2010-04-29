@@ -103,9 +103,9 @@ int main(int argc, char **argv)
             accuracy = textToFloat(getParameter(argc, argv, "-accuracy", "0"));
         }
         else enable_random_substitute = false;
-        // Read mask stuff
+	// Read mask stuff
         mask_prm.read(argc, argv);
-        apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
+	apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
 
     }
 
@@ -123,20 +123,20 @@ int main(int argc, char **argv)
         {
             image_mode = true;
             I.read(fn_in);
-            mask_prm.mask_geo = I.get_transformation_matrix();
-            mask_prm.generate_2Dmask(I(),apply_geo);
-            mask2D = & (mask_prm.get_binary_mask2D());
+	    mask_prm.mask_geo = I.get_transformation_matrix();
+	    mask_prm.generate_2Dmask(I(),apply_geo);
+	    mask2D = & (mask_prm.get_binary_mask2D());
         }
         else if (Is_VolumeXmipp(fn_in))
         {
             image_mode = false;
             V.read(fn_in);
-            mask_prm.generate_3Dmask(V());
-            mask3D = & (mask_prm.get_binary_mask3D());
+	    mask_prm.generate_3Dmask(V());
+	    mask3D = & (mask_prm.get_binary_mask3D());
         }
         else EXIT_ERROR(1, "Threshold: Input file is not an image nor a volume");
 
-        // Apply density restrictions -------------------------------------------
+       // Apply density restrictions -------------------------------------------
         if (image_mode)
         {
             if (enable_th_below) I().threshold("below", th_below, th_below, mask2D);
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
             else
                 V().randomSubstitute(old_val, avg_val, sig_val, accuracy, mask3D);
 
-        // Apply distance restrictions ------------------------------------------
+         // Apply distance restrictions ------------------------------------------
         if (!image_mode && fn_dist != "")
         {
             Vdist.read(fn_dist);
@@ -207,24 +207,24 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cout << "threshold [Parameters]:\n"
-              << "   -i <File_in>                   : Input Xmipp Volume or Image\n"
-              << "  [-o <File_out>]                 : If not given, the same as input\n"
-              << "  [-dist <Distance volume>        : of the same size as the input\n"
-              << "   -label <Label volume>          : of the same size as the input\n"
-              << "  [-dmin <dmin>]                  : remove voxels whose distance is smaller\n"
-              << "  [-dmax <dmax>]]                 : remove voxels whose distance is greater\n"
-              << "  [-below <th>]                   : remove voxels below this threshold\n"
-              << "  [-above <th>]                   : remove voxels above this threshold\n"
-              << "  [-abs_below <th>]               : remove voxels below this threshold\n"
-              << "                                  : they will be set to 0\n"
-              << "  [-binarize]]                    : binarize output\n"
-              << "  [-substitute <old_val> <new_val>: where a value can be\n"
-              << "                                    (<val>|min|max)\n"
-              << "  [-random_substitute <old_val> <avg_val> <std_val>: where avg_val and sig_val \n"
-              << "                                    are the mean and stddev of a Gaussian distribution \n"
-              << "    [-accuracy <accuracy=0>]]     : when substituting this value\n"
-              << "                                    determines if two values are the same\n"
-              << "  [-dont_apply_geo]               : dont apply (opposite) header transformation to mask\n";
+    << "   -i <File_in>                   : Input Xmipp Volume or Image\n"
+    << "  [-o <File_out>]                 : If not given, the same as input\n"
+    << "  [-dist <Distance volume>        : of the same size as the input\n"
+    << "   -label <Label volume>          : of the same size as the input\n"
+    << "  [-dmin <dmin>]                  : remove voxels whose distance is smaller\n"
+    << "  [-dmax <dmax>]]                 : remove voxels whose distance is greater\n"
+    << "  [-below <th>]                   : remove voxels below this threshold\n"
+    << "  [-above <th>]                   : remove voxels above this threshold\n"
+    << "  [-abs_below <th>]               : remove voxels below this threshold\n"
+    << "                                  : they will be set to 0\n"
+    << "  [-binarize]]                    : binarize output\n"
+    << "  [-substitute <old_val> <new_val>: where a value can be\n"
+    << "                                    (<val>|min|max)\n"
+    << "  [-random_substitute <old_val> <avg_val> <std_val>: where avg_val and sig_val \n"
+    << "                                    are the mean and stddev of a Gaussian distribution \n"
+    << "    [-accuracy <accuracy=0>]]     : when substituting this value\n"
+    << "                                    determines if two values are the same\n"
+    << "  [-dont_apply_geo]               : dont apply (opposite) header transformation to mask\n";
 
 }
 

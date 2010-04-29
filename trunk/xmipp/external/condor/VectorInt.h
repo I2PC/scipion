@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
-              using trust Region method for high-computing load,
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
+              using trust Region method for high-computing load, 
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product,
+If you want to include this tools in any commercial product, 
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -30,12 +30,12 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 
 class VectorInt
 {
-public:
+  public: 
     typedef struct VectorIntDataTag
     {
-        int n,extention;
-        int ref_count;
-        int *p;
+       int n,extention;
+       int ref_count;
+       int *p;
     } VectorIntData;
     VectorIntData *d;
 
@@ -47,7 +47,7 @@ public:
     VectorInt clone();
     void copyFrom(VectorInt r);
     VectorInt( const VectorInt& P );
-    VectorInt& operator=( const VectorInt& P );
+	VectorInt& operator=( const VectorInt& P );
     void destroyCurrentBuffer();
     ~VectorInt();
 
@@ -55,27 +55,18 @@ public:
     void setSize(int _n);
     void exactshape();
     void print();
-
+    
     // only use the following method at your own risks!
     void prepareExtend(int new_extention);
-
+    
 //    int &operator [](int i) { return p[i]; };
-    inline int sz()
-    {
-        return d->n;
-    };
-    int operator==( const VectorInt& P)
-    {
-        return (d==P.d);
-    }
-    operator int*() const
-    {
-        return d->p;
-    };
+    inline int sz() {return d->n;};
+    int operator==( const VectorInt& P) {return (d==P.d);}
+    operator int*() const { return d->p; };
 //    operator unsigned*() const { return (unsigned*)p; };
 //    int &operator[]( unsigned i) {return p[i];};
     int equals( const VectorInt& Q );
-
+    
     static VectorInt emptyVectorInt;
 
 private:

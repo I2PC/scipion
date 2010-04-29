@@ -32,8 +32,8 @@ void Prog_tomo_extract_subvolume_prm::read(int argc, char **argv)
     // Read command line
     if (checkParameter(argc, argv, "-more_options"))
     {
-        usage();
-        extendedUsage();
+	usage();
+	extendedUsage();
     }
     fn_doc = getParameter(argc, argv, "-doc", "");
     fn_sym = getParameter(argc, argv, "-sym", "c1");
@@ -160,7 +160,7 @@ void Prog_tomo_extract_subvolume_prm::produceSideInfo()
         }
         if (is_uniq)
         {
-            centers_subvolumes.push_back(newcenter);
+            centers_subvolumes.push_back(newcenter);               
             rotations_subvolumes.push_back(R);
         }
     }
@@ -207,7 +207,7 @@ void Prog_tomo_extract_subvolume_prm::processImages(int imgno_start, int imgno_e
 
         x0 = FIRST_XMIPP_INDEX(size);
         xF = LAST_XMIPP_INDEX(size);
-
+        
         // Tomo_Extract each of the unique subvolumes
         for (int i = 0; i < centers_subvolumes.size(); i++)
         {
@@ -241,7 +241,7 @@ void Prog_tomo_extract_subvolume_prm::processImages(int imgno_start, int imgno_e
             DFout.append_comment(fn_out);
             DFout.append_line(DLout);
         }
-
+        
     }
 
 }

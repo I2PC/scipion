@@ -87,27 +87,27 @@ int main(int argc, char **argv)
             }
 
             DFo.clear();
-            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
+	    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
 
             // Pre-calculate pdfs
             ML2D_prm.updatePdfTranslations();
 
             // Integrate over all images
             ML2D_prm.sumOverAllImages(ML2D_prm.SF, ML2D_prm.Iref,
-                                      LL, sumcorr, DFo, fP_wsum_imgs,
-                                      wsum_sigma_noise, wsum_sigma_offset, sumw, sumw_mirror);
+				      LL, sumcorr, DFo, fP_wsum_imgs,
+				      wsum_sigma_noise, wsum_sigma_offset, sumw, sumw_mirror);
 
             // Update model parameters
             ML2D_prm.updateParameters(fP_wsum_imgs, wsum_sigma_noise, wsum_sigma_offset,
-                                      sumw, sumw_mirror, sumcorr, sumw_allrefs);
+				      sumw, sumw_mirror, sumcorr, sumw_allrefs);
 
             // Write intermediate output files
             ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
             prm.concatenate_selfiles(iter);
 
-            // Jump out before 3D reconstruction
-            // (Useful for some parallelization protocols)
-            if (prm.skip_reconstruction) exit(1);
+	    // Jump out before 3D reconstruction 
+	    // (Useful for some parallelization protocols)
+	    if (prm.skip_reconstruction) exit(1);
 
             // Reconstruct new volumes from the reference images
             for (volno = 0; volno < prm.Nvols; volno++)
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
             if (!converged && iter + 1 <= prm.Niter)
             {
                 prm.project_reference_volume(ML2D_prm.SFr);
-                // Read new references from disc
+                // Read new references from disc 
                 ML2D_prm.SFr.go_beginning();
                 c = 0;
                 while (!ML2D_prm.SFr.eof())
@@ -146,7 +146,7 @@ int main(int argc, char **argv)
             iter++;
         } // end loop iterations
 
-        // Write out converged doc and logfiles
+	// Write out converged doc and logfiles
         ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0) std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;

@@ -56,17 +56,17 @@ void Prog_projection_matching_crystal_prm::usage()
 {
     std::cerr << "Usage:  projection_matching [options] " << std::endl;
     std::cerr << "   -ref <selfile>                : Selfile with reference images \n"
-              << "   -exp <selfile>                : Selfile with experimenal images \n"
-              << "   -o filerootname               : Output file root name \n"
-              << "   -psi_sam number               : number of samples \n"
-              << "   -psi_distance degrees  : psi_distance to experimental \
+    << "   -exp <selfile>                : Selfile with experimenal images \n"
+    << "   -o filerootname               : Output file root name \n"
+    << "   -psi_sam number               : number of samples \n"
+    << "   -psi_distance degrees  : psi_distance to experimental \
     proj\n"
-              << "   -rot_distance degrees  : rot_distance to experimental \
+    << "   -rot_distance degrees  : rot_distance to experimental \
     proj\n"
-              << "   -tilt_distance degrees : tilt_distance to experimental \
+    << "   -tilt_distance degrees : tilt_distance to experimental \
     proj\n"
-              << "   -max_shift double      : maximun allowed shift in pixels \n"
-              << " [ -dont_modify_header ]       : Do not store alignment parameters in the image headers \n";
+    << "   -max_shift double      : maximun allowed shift in pixels \n"
+    << " [ -dont_modify_header ]       : Do not store alignment parameters in the image headers \n";
     ;
 }
 
@@ -255,13 +255,13 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(Matrix2D<double>
                         xmax = XX(shift_vector[ishift]) * my_scale;
                         ymax = YY(shift_vector[ishift]) * my_scale;
                         std::cout <<  SFref.get_file_number(dir_counter) <<
-                                  " rot= "  << ref_rot[dir_counter]  <<
-                                  " tilt= " << ref_tilt[dir_counter] <<
-                                  " psi= "  << my_psi << " CC= " << thisCC << std::endl;
+                        " rot= "  << ref_rot[dir_counter]  <<
+                        " tilt= " << ref_tilt[dir_counter] <<
+                        " psi= "  << my_psi << " CC= " << thisCC << std::endl;
                         " xmax= "
-                                << xmax << " ymax= " << ymax << std::endl;
+                        << xmax << " ymax= " << ymax << std::endl;
                         " scale= "
-                                << my_scale << std::endl;
+                        << my_scale << std::endl;
 #endif
 #undef DEBUG
                         if (thisCC > maxCC)
@@ -291,13 +291,13 @@ void Prog_projection_matching_crystal_prm::PM_process_one_image(Matrix2D<double>
     //#define DEBUG
 #ifdef DEBUG
     std::cout <<  SFref.get_file_number(opt_dirno) <<
-              " rot= "  << ref_rot[opt_dirno]  <<
-              " tilt= " << ref_tilt[opt_dirno] <<
-              " psi= "  << opt_psi <<
-              " opt_xoff= "  << opt_xoff <<
-              " opt_yoff= "  << opt_yoff <<
-              " opt_scale= "  << opt_scale <<
-              " CC= " << maxCC << std::endl;
+    " rot= "  << ref_rot[opt_dirno]  <<
+    " tilt= " << ref_tilt[opt_dirno] <<
+    " psi= "  << opt_psi <<
+    " opt_xoff= "  << opt_xoff <<
+    " opt_yoff= "  << opt_yoff <<
+    " opt_scale= "  << opt_scale <<
+    " CC= " << maxCC << std::endl;
 #endif
 #undef DEBUG
     //#define DEBUG

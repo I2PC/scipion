@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
-              using trust Region method for high-computing load,
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
+              using trust Region method for high-computing load, 
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product,
+If you want to include this tools in any commercial product, 
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -65,7 +65,7 @@ void KeepBests::setOptionalN(int _optionalN)
     double *t;
     if (optionalN) t=(double*)realloc(ctable[0].optValue,_optionalN*n*sizeof(double));
     else t=(double*)malloc(_optionalN*n*sizeof(double));
-    for (i=0; i<n; i++)
+    for (i=0; i<n; i++) 
     {
         ctable[i].optValue=t;
         t+=_optionalN;
@@ -103,11 +103,7 @@ void KeepBests::add(double key, double value, double *optionalValue)
 void KeepBests::add(double key, double value, double *optionalValue, int nn)
 {
     cell *t=end, *prev, *t_next=NULL;
-    while ((t)&&(t->K>key))
-    {
-        t_next=t;
-        t=t->prev;
-    };
+    while ((t)&&(t->K>key)) { t_next=t; t=t->prev; };
     if (t_next)
     {
         if (t_next==end)
@@ -117,22 +113,21 @@ void KeepBests::add(double key, double value, double *optionalValue, int nn)
             if ((optionalN)&&(optionalValue))
             {
                 memcpy(end->optValue, optionalValue, nn*sizeof(double));
-                if (optionalN-nn>0)
+                if (optionalN-nn>0) 
                     memset(end->optValue+nn,0,(optionalN-nn)*sizeof(double));
             }
-        }
-        else
+        } else
         {
             prev=end->prev;
             end->prev=t;
             t_next->prev=end;
-
+    
             end->K=key;
             end->value=value;
             if ((optionalN)&&(optionalValue))
             {
                 memcpy(end->optValue, optionalValue, nn*sizeof(double));
-                if (optionalN-nn)
+                if (optionalN-nn) 
                     memset(end->optValue+nn,0,(optionalN-nn)*sizeof(double));
             }
             end=prev;
@@ -144,11 +139,7 @@ double KeepBests::getValue(int i)
 {
     cell *t=end;
     i=n-i-1;
-    while (i)
-    {
-        t=t->prev;
-        i--;
-    }
+    while (i) { t=t->prev; i--; }
     return t->value;
 }
 
@@ -156,11 +147,7 @@ double KeepBests::getKey(int i)
 {
     cell *t=end;
     i=n-i-1;
-    while (i)
-    {
-        t=t->prev;
-        i--;
-    }
+    while (i) { t=t->prev; i--; }
     return t->K;
 }
 
@@ -170,11 +157,7 @@ double KeepBests::getOptValue(int i, int no)
     _local_getOptValueI=i;
     cell *t=end;
     i=n-i-1;
-    while (i)
-    {
-        t=t->prev;
-        i--;
-    }
+    while (i) { t=t->prev; i--; }
     _local_getOptValueC=t;
     return t->optValue[no];
 }
@@ -183,10 +166,6 @@ double *KeepBests::getOptValue(int i)
 {
     cell *t=end;
     i=n-i-1;
-    while (i)
-    {
-        t=t->prev;
-        i--;
-    }
+    while (i) { t=t->prev; i--; }
     return t->optValue;
 }

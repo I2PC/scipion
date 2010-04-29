@@ -38,16 +38,16 @@ void Usage();
         int count; \
         if      (count_above && !count_below) {\
             std::cout << stringToString(fn_in,max_length) \
-                      << " number of " << elem_type << " above " << th_above; \
+            << " number of " << elem_type << " above " << th_above; \
             count=count_with_mask_above(mask,m,th_above); \
         } else if (count_below && !count_above) {\
             std::cout << stringToString(fn_in,max_length) \
-                      << " number of " << elem_type << " below " << th_below; \
+            << " number of " << elem_type << " below " << th_below; \
             count=count_with_mask_below(mask,m,th_below); \
         } else if (count_below && count_above) {\
             std::cout << stringToString(fn_in,max_length) \
-                      << " number of " << elem_type << " above " << th_above \
-                      << " and below " << th_below << " = "; \
+            << " number of " << elem_type << " above " << th_above \
+            << " and below " << th_below << " = "; \
             count=count_with_mask_between(mask,m,th_above,th_below); \
         } \
         std::cout << " = " << count << std::endl; \
@@ -307,14 +307,14 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cerr << "Usage: mask <parameters>\n"
-              << "   -i <image or volume> [-o <image_out or volume_out]\n"
-              << "   -i <selfile> [-oext <output extension>]\n"
-              << "   [-save_mask]                       : apply and save mask\n"
-              << "   [-dont_apply_geo]                  : dont apply (opposite) geometric transformation as stored in header of 2D-image\n"
-              << "   [-create_mask <output mask file>]  : don't apply and save mask\n"
-              << "   [-count_above <th>]                : voxels within mask >= th\n"
-              << "   [-count_below <th>]                : voxels within mask <= th\n"
-              << "   [-substitute <val=0>|min|max|avg]  : value outside the mask\n";
+    << "   -i <image or volume> [-o <image_out or volume_out]\n"
+    << "   -i <selfile> [-oext <output extension>]\n"
+    << "   [-save_mask]                       : apply and save mask\n"
+    << "   [-dont_apply_geo]                  : dont apply (opposite) geometric transformation as stored in header of 2D-image\n"
+    << "   [-create_mask <output mask file>]  : don't apply and save mask\n"
+    << "   [-count_above <th>]                : voxels within mask >= th\n"
+    << "   [-count_below <th>]                : voxels within mask <= th\n"
+    << "   [-substitute <val=0>|min|max|avg]  : value outside the mask\n";
 }
 
 /* Menus ------------------------------------------------------------------- */

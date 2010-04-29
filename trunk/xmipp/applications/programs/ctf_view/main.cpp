@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     {
         std::cerr << XE;
         std::cerr << "Usage: CTFViewer\n"
-                  << "   [-i <CTF file>] : The file is assumed to be of kind .ctfparam\n";
+        << "   [-i <CTF file>] : The file is assumed to be of kind .ctfparam\n";
         exit(1);
     }
     try

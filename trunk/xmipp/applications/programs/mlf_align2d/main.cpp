@@ -81,26 +81,26 @@ int main(int argc, char **argv)
 
             if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
-            for (int refno = 0; refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
+            for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
 
             DFo.clear();
-            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), scale (10), KSprob (11)");
+	    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), scale (10), KSprob (11)");
 
             // Pre-calculate pdfs
             prm.calculateInPlanePDF();
 
             // Integrate over all images
             prm.sumOverAllImages(prm.SF, prm.Iref, iter,
-                                 LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
-                                 Mwsum_sigma2, wsum_sigma_offset,
-                                 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
+				 LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
+				 Mwsum_sigma2, wsum_sigma_offset, 
+				 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
 
             // Update model parameters
             prm.updateParameters(wsum_Mref, wsum_ctfMref,
-                                 Mwsum_sigma2,wsum_sigma_offset,
-                                 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
-                                 sumcorr, sumw_allrefs,
-                                 spectral_signal);
+				 Mwsum_sigma2,wsum_sigma_offset, 
+				 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
+				 sumcorr, sumw_allrefs,
+				 spectral_signal);
 
             // Check convergence
             converged = prm.checkConvergence(conv);
@@ -108,13 +108,13 @@ int main(int argc, char **argv)
             prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
 
             // Calculate new wiener filters
-            prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
+	    prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
 
             if (converged)
             {
-                if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
-                break;
-            }
+		if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
+		break;
+	    }
 
         } // end loop iterations
         prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);

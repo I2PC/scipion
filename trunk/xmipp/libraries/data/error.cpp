@@ -35,7 +35,7 @@ void _Xmipp_error(const int nerr, const std::string &what,
 
 // Object Constructor
 Xmipp_error::Xmipp_error(const int nerr, const std::string &what,
-                         const std::string &fileArg, const long lineArg)
+    	    	    	 const std::string &fileArg, const long lineArg)
 {
     __errno = nerr;
     msg = what;

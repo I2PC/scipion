@@ -32,25 +32,25 @@ int main(int argc, char **argv)
     CorrectAmplitude3DParams prm;
     try
     {
-        prm.read(argc,argv);
+       prm.read(argc,argv);
     }
     catch (Xmipp_error XE)
     {
-        std::cerr << XE << std::endl;
-        prm.usage();
-        exit(1);
+       std::cerr << XE << std::endl;
+       prm.usage();
+       exit(1);
     }
-
+    
     try
     {
-        prm.show();
-        prm.produceSideInfo();
-        prm.run();
+       prm.show();
+       prm.produceSideInfo();
+       prm.run();
     }
     catch (Xmipp_error XE)
     {
-        std::cerr << XE << std::endl;
-        return 1;
+       std::cerr << XE << std::endl;
+       return 1;
     }
     return 0;
 }

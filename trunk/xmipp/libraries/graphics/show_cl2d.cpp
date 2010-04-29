@@ -65,7 +65,7 @@ void ShowCL2D::initWithFile(const FileName &_fn_root)
 
 /* Read a CL2D ------------------------------------------------------------- */
 void ShowCL2D::readFile(const FileName &_fn_root,
-                        double _minGray, double _maxGray)
+                       double _minGray, double _maxGray)
 {
     clear();
     fn = _fn_root;
@@ -78,12 +78,12 @@ void ShowCL2D::readFile(const FileName &_fn_root,
         FileName fnCV=imgnames[i].without_extension();
         if (exists(fnCV+filterSuffix+".sel"))
         {
-            SFcv[i].read(fnCV+filterSuffix+".sel");
-            hisAssigned[i]=integerToString(SFcv[i].ImgNo());
+        	SFcv[i].read(fnCV+filterSuffix+".sel");
+			hisAssigned[i]=integerToString(SFcv[i].ImgNo());
         }
         else
         {
-            hisAssigned[i]="0";
+			hisAssigned[i]="0";
         }
     }
     NumRows=FLOOR(sqrt(listSize));
@@ -126,9 +126,9 @@ void ShowCL2D::initRightclickMenubar()
     options->insertItem("Show this image separately", this, SLOT(showThisImage()));
     options->insertItem("Show this class separately", this, SLOT(showThisClass()));
     if (exists(imgnames[0].without_extension()+"_pcabasis_00.xmp"))
-        options->insertItem("Show PCA basis for this class", this, SLOT(showThisPCA()));
+    	options->insertItem("Show PCA basis for this class", this, SLOT(showThisPCA()));
     if (exists(imgnames[0].without_extension()+"_outliers.sel"))
-        options->insertItem("Show outliers for this class", this, SLOT(showThisOutliers()));
+    	options->insertItem("Show outliers for this class", this, SLOT(showThisOutliers()));
     options->insertSeparator();
 
     // Insert options the menu
@@ -197,10 +197,10 @@ const char * ShowCL2D::cellLabel(int i) const
     if (options->isItemEnabled(mi_showLabel)) return NULL;
     switch (labeltype)
     {
-    case Name_LABEL:
-        return imgnames[i].c_str();
-    case Histogram_LABEL:
-        return hisAssigned[i].c_str();
+        case Name_LABEL:
+            return imgnames[i].c_str();
+        case Histogram_LABEL:
+            return hisAssigned[i].c_str();
     }
 }
 
@@ -240,16 +240,16 @@ void ShowCL2D::showThisPCA()
     bool finish=false;
     while (!finish)
     {
-        FileName fnPCA=imgnames[i].without_extension()+"_pcabasis_"+integerToString(n,2)+".xmp";
+		FileName fnPCA=imgnames[i].without_extension()+"_pcabasis_"+integerToString(n,2)+".xmp";
         if (exists(fnPCA))
         {
-            ImageViewer *showimg = new ImageViewer(fnPCA.c_str(),false);
-            showimg->loadImage(fnPCA.c_str());
-            showimg->show();
-            n++;
+			ImageViewer *showimg = new ImageViewer(fnPCA.c_str(),false);
+			showimg->loadImage(fnPCA.c_str());
+			showimg->show();
+			n++;
         }
         else
-            finish=true;
+        	finish=true;
     }
 }
 

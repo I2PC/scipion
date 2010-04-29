@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     try
     {
         // Read input parameters
-        prm.MPIversion=true;
+	prm.MPIversion=true;
         prm.read(argc, argv);
     }
     catch (Xmipp_error XE)
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     {
         std::cout << XE << std::endl;
         MPI_Finalize();
-        return 1 ;
+	return 1 ;
     }
     MPI_Finalize();
     return 0 ;

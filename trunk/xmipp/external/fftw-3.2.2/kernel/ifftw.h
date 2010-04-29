@@ -25,8 +25,8 @@
 
 #include "config.h"
 
-#include <stdlib.h>     /* size_t */
-#include <stdarg.h>     /* va_list */
+#include <stdlib.h>		/* size_t */
+#include <stdarg.h>		/* va_list */
 #include <stddef.h>             /* ptrdiff_t */
 
 #if HAVE_SYS_TYPES_H
@@ -56,14 +56,14 @@
 /* determine precision and name-mangling scheme */
 #define CONCAT(prefix, name) prefix ## name
 #if defined(FFTW_SINGLE)
-typedef float R;
+  typedef float R;
 # define X(name) CONCAT(fftwf_, name)
 #elif defined(FFTW_LDOUBLE)
-typedef long double R;
+  typedef long double R;
 # define X(name) CONCAT(fftwl_, name)
 # define TRIGREAL_IS_LONG_DOUBLE
 #else
-typedef double R;
+  typedef double R;
 # define X(name) CONCAT(fftw_, name)
 #endif
 
@@ -108,7 +108,7 @@ typedef struct scanner_s scanner;
 #endif
 
 #if defined(HAVE_ALLOCA) && defined(FFTW_ENABLE_ALLOCA)
-/* use alloca if available */
+   /* use alloca if available */
 
 #ifndef alloca
 #ifdef __GNUC__
@@ -122,7 +122,7 @@ typedef struct scanner_s scanner;
 #   include <alloca.h>
 #  else
 #   ifdef _AIX
-#pragma alloca
+ #pragma alloca
 #   else
 #    ifndef alloca /* predefined by HP cc +Olibcalls */
 void *alloca(size_t);
@@ -134,20 +134,20 @@ void *alloca(size_t);
 #endif
 
 #  ifdef MIN_ALIGNMENT
-#    define STACK_MALLOC(T, p, x)               \
-    {                              \
-        p = (T)alloca((x) + MIN_ALIGNMENT);            \
-        p = (T)(((uintptr_t)p + (MIN_ALIGNMENT - 1)) & \
-                (~(uintptr_t)(MIN_ALIGNMENT - 1)));      \
-    }
-#    define STACK_FREE(x)
+#    define STACK_MALLOC(T, p, x)				\
+     {								\
+         p = (T)alloca((x) + MIN_ALIGNMENT);			\
+         p = (T)(((uintptr_t)p + (MIN_ALIGNMENT - 1)) &	\
+               (~(uintptr_t)(MIN_ALIGNMENT - 1)));		\
+     }
+#    define STACK_FREE(x) 
 #  else /* HAVE_ALLOCA && !defined(MIN_ALIGNMENT) */
-#    define STACK_MALLOC(T, p, x) p = (T)alloca(x)
-#    define STACK_FREE(x)
+#    define STACK_MALLOC(T, p, x) p = (T)alloca(x) 
+#    define STACK_FREE(x) 
 #  endif
 
 #else /* ! HAVE_ALLOCA */
-/* use malloc instead of alloca */
+   /* use malloc instead of alloca */
 #  define STACK_MALLOC(T, p, x) p = (T)MALLOC(x, OTHER)
 #  define STACK_FREE(x) X(ifree)(x)
 #endif /* ! HAVE_ALLOCA */
@@ -159,11 +159,11 @@ void *alloca(size_t);
 #  if SIZEOF_VOID_P == 0
 #    error sizeof void* is unknown!
 #  elif SIZEOF_UNSIGNED_INT == SIZEOF_VOID_P
-typedef unsigned int uintptr_t;
+     typedef unsigned int uintptr_t;
 #  elif SIZEOF_UNSIGNED_LONG == SIZEOF_VOID_P
-typedef unsigned long uintptr_t;
+     typedef unsigned long uintptr_t;
 #  elif SIZEOF_UNSIGNED_LONG_LONG == SIZEOF_VOID_P
-typedef unsigned long long uintptr_t;
+     typedef unsigned long long uintptr_t;
 #  else
 #    error no unsigned integer type matches void* sizeof!
 #  endif
@@ -181,17 +181,17 @@ typedef unsigned long long uintptr_t;
 
 /*-----------------------------------------------------------------------*/
 /* assert.c: */
-IFFTW_EXTERN void X(assertion_failed)(const char *s,
-                                      int line, const char *file);
+IFFTW_EXTERN void X(assertion_failed)(const char *s, 
+				      int line, const char *file);
 
 /* always check */
-#define CK(ex)                       \
-    (void)((ex) || (X(assertion_failed)(#ex, __LINE__, __FILE__), 0))
+#define CK(ex)						 \
+      (void)((ex) || (X(assertion_failed)(#ex, __LINE__, __FILE__), 0))
 
 #ifdef FFTW_DEBUG
 /* check only if debug enabled */
-#define A(ex)                        \
-    (void)((ex) || (X(assertion_failed)(#ex, __LINE__, __FILE__), 0))
+#define A(ex)						 \
+      (void)((ex) || (X(assertion_failed)(#ex, __LINE__, __FILE__), 0))
 #else
 #define A(ex) /* nothing */
 #endif
@@ -208,21 +208,20 @@ extern void X(kernel_free)(void *p);
 /* alloc.c: */
 
 /* objects allocated by malloc, for statistical purposes */
-enum malloc_tag
-{
-    EVERYTHING,
-    PLANS,
-    SOLVERS,
-    PROBLEMS,
-    BUFFERS,
-    HASHT,
-    TENSORS,
-    PLANNERS,
-    SLVDESCS,
-    TWIDDLES,
-    STRIDES,
-    OTHER,
-    MALLOC_WHAT_LAST       /* must be last */
+enum malloc_tag {
+     EVERYTHING,
+     PLANS,
+     SOLVERS,
+     PROBLEMS,
+     BUFFERS,
+     HASHT,
+     TENSORS,
+     PLANNERS,
+     SLVDESCS,
+     TWIDDLES,
+     STRIDES,
+     OTHER,
+     MALLOC_WHAT_LAST		/* must be last */
 };
 
 IFFTW_EXTERN void X(ifree)(void *ptr);
@@ -231,7 +230,7 @@ extern void X(ifree0)(void *ptr);
 #ifdef FFTW_DEBUG_MALLOC
 
 IFFTW_EXTERN void *X(malloc_debug)(size_t n, enum malloc_tag what,
-                                   const char *file, int line);
+			     const char *file, int line);
 #define MALLOC(n, what) X(malloc_debug)(n, what, __FILE__, __LINE__)
 #define NATIVE_MALLOC(n, what) MALLOC(n, what)
 IFFTW_EXTERN void X(malloc_print_minfo)(int vrbose);
@@ -251,15 +250,15 @@ extern int X(in_thread);
 #  define THREAD_OFF X(in_thread) = in_thread_save; }
 #else
 #  define IN_THREAD 0
-#  define THREAD_ON
-#  define THREAD_OFF
+#  define THREAD_ON 
+#  define THREAD_OFF 
 #endif
 
 /*-----------------------------------------------------------------------*/
 /* low-resolution clock */
 
 #ifdef FAKE_CRUDE_TIME
-typedef int crude_time;
+ typedef int crude_time;
 #else
 # if TIME_WITH_SYS_TIME
 #  include <sys/time.h>
@@ -280,15 +279,15 @@ typedef int crude_time;
 # endif
 
 # if defined(HAVE_GETTIMEOFDAY)
-typedef struct timeval crude_time;
+   typedef struct timeval crude_time;
 # else
-typedef clock_t crude_time;
+   typedef clock_t crude_time;
 # endif
 #endif /* else FAKE_CRUDE_TIME */
 
 crude_time X(get_crude_time)(void);
 double X(elapsed_since)(const planner *plnr, const problem *p,
-                        crude_time t0); /* time in seconds since t0 */
+			crude_time t0); /* time in seconds since t0 */
 
 /*-----------------------------------------------------------------------*/
 /* ops.c: */
@@ -297,12 +296,11 @@ double X(elapsed_since)(const planner *plnr, const problem *p,
  * and the total number of multiplications is mul + fma.
  * Total flops = add + mul + 2 * fma
  */
-typedef struct
-{
-    double add;
-    double mul;
-    double fma;
-    double other;
+typedef struct {
+     double add;
+     double mul;
+     double fma;
+     double other;
 } opcnt;
 
 void X(ops_zero)(opcnt *dst);
@@ -342,14 +340,13 @@ typedef unsigned long md5uint; /* at least 32 bits as per C standard */
 
 typedef md5uint md5sig[4];
 
-typedef struct
-{
-    md5sig s; /* state and signature */
+typedef struct {
+     md5sig s; /* state and signature */
 
-    /* fields not meant to be used outside md5.c: */
-    unsigned char c[64]; /* stuff not yet processed */
-    unsigned l;  /* total length.  Should be 64 bits long, but this is
-             good enough for us */
+     /* fields not meant to be used outside md5.c: */
+     unsigned char c[64]; /* stuff not yet processed */
+     unsigned l;  /* total length.  Should be 64 bits long, but this is
+		     good enough for us */
 } md5;
 
 void X(md5begin)(md5 *p);
@@ -366,22 +363,20 @@ void X(md5end)(md5 *p);
 #define STRUCT_HACK_KR
 #undef STRUCT_HACK_C99
 
-typedef struct
-{
-    INT n;
-    INT is;            /* input stride */
-    INT os;            /* output stride */
+typedef struct {
+     INT n;
+     INT is;			/* input stride */
+     INT os;			/* output stride */
 } iodim;
 
-typedef struct
-{
-    int rnk;
+typedef struct {
+     int rnk;
 #if defined(STRUCT_HACK_KR)
-    iodim dims[1];
+     iodim dims[1];
 #elif defined(STRUCT_HACK_C99)
-    iodim dims[];
+     iodim dims[];
 #else
-    iodim *dims;
+     iodim *dims;
 #endif
 } tensor;
 
@@ -389,7 +384,7 @@ typedef struct
   Definition of rank -infinity.
   This definition has the property that if you want rank 0 or 1,
   you can simply test for rank <= 1.  This is a common case.
-
+ 
   A tensor of rank -infinity has size 0.
 */
 #define RNK_MINFTY  ((int)(((unsigned) -1) >> 1))
@@ -401,19 +396,19 @@ tensor *X(mktensor)(int rnk);
 tensor *X(mktensor_0d)(void);
 tensor *X(mktensor_1d)(INT n, INT is, INT os);
 tensor *X(mktensor_2d)(INT n0, INT is0, INT os0,
-                       INT n1, INT is1, INT os1);
+		       INT n1, INT is1, INT os1);
 tensor *X(mktensor_3d)(INT n0, INT is0, INT os0,
-                       INT n1, INT is1, INT os1,
-                       INT n2, INT is2, INT os2);
+		       INT n1, INT is1, INT os1,
+		       INT n2, INT is2, INT os2);
 tensor *X(mktensor_4d)(INT n0, INT is0, INT os0,
-                       INT n1, INT is1, INT os1,
-                       INT n2, INT is2, INT os2,
-                       INT n3, INT is3, INT os3);
+		       INT n1, INT is1, INT os1,
+		       INT n2, INT is2, INT os2,
+		       INT n3, INT is3, INT os3);
 tensor *X(mktensor_5d)(INT n0, INT is0, INT os0,
-                       INT n1, INT is1, INT os1,
-                       INT n2, INT is2, INT os2,
-                       INT n3, INT is3, INT os3,
-                       INT n4, INT is4, INT os4);
+		       INT n1, INT is1, INT os1,
+		       INT n2, INT is2, INT os2,
+		       INT n3, INT is3, INT os3,
+		       INT n4, INT is4, INT os4);
 INT X(tensor_sz)(const tensor *sz);
 void X(tensor_md5)(md5 *p, const tensor *t);
 INT X(tensor_max_index)(const tensor *sz);
@@ -445,36 +440,33 @@ int X(tensor_inplace_locations)(const tensor *sz, const tensor *vecsz);
 
 /*-----------------------------------------------------------------------*/
 /* problem.c: */
-enum
-{
-    /* a problem that cannot be solved */
-    PROBLEM_UNSOLVABLE,
+enum { 
+     /* a problem that cannot be solved */
+     PROBLEM_UNSOLVABLE,
 
-    PROBLEM_DFT,
-    PROBLEM_RDFT,
-    PROBLEM_RDFT2,
+     PROBLEM_DFT, 
+     PROBLEM_RDFT,
+     PROBLEM_RDFT2,
 
-    /* for mpi/ subdirectory */
-    PROBLEM_MPI_DFT,
-    PROBLEM_MPI_RDFT,
-    PROBLEM_MPI_RDFT2,
-    PROBLEM_MPI_TRANSPOSE,
+     /* for mpi/ subdirectory */
+     PROBLEM_MPI_DFT,
+     PROBLEM_MPI_RDFT,
+     PROBLEM_MPI_RDFT2,
+     PROBLEM_MPI_TRANSPOSE,
 
-    PROBLEM_LAST
+     PROBLEM_LAST 
 };
 
-typedef struct
-{
-    int problem_kind;
-    void (*hash) (const problem *ego, md5 *p);
-    void (*zero) (const problem *ego);
-    void (*print) (const problem *ego, printer *p);
-    void (*destroy) (problem *ego);
+typedef struct {
+     int problem_kind;
+     void (*hash) (const problem *ego, md5 *p);
+     void (*zero) (const problem *ego);
+     void (*print) (const problem *ego, printer *p);
+     void (*destroy) (problem *ego);
 } problem_adt;
 
-struct problem_s
-{
-    const problem_adt *adt;
+struct problem_s {
+     const problem_adt *adt;
 };
 
 problem *X(mkproblem)(size_t sz, const problem_adt *adt);
@@ -483,29 +475,27 @@ problem *X(mkproblem_unsolvable)(void);
 
 /*-----------------------------------------------------------------------*/
 /* print.c */
-struct printer_s
-{
-    void (*print)(printer *p, const char *format, ...);
-    void (*vprint)(printer *p, const char *format, va_list ap);
-    void (*putchr)(printer *p, char c);
-    void (*cleanup)(printer *p);
-    int indent;
-    int indent_incr;
+struct printer_s {
+     void (*print)(printer *p, const char *format, ...);
+     void (*vprint)(printer *p, const char *format, va_list ap);
+     void (*putchr)(printer *p, char c);
+     void (*cleanup)(printer *p);
+     int indent;
+     int indent_incr;
 };
 
-printer *X(mkprinter)(size_t size,
-                      void (*putchr)(printer *p, char c),
-                      void (*cleanup)(printer *p));
+printer *X(mkprinter)(size_t size, 
+		      void (*putchr)(printer *p, char c),
+		      void (*cleanup)(printer *p));
 IFFTW_EXTERN void X(printer_destroy)(printer *p);
 
 /*-----------------------------------------------------------------------*/
 /* scan.c */
-struct scanner_s
-{
-    int (*scan)(scanner *sc, const char *format, ...);
-    int (*vscan)(scanner *sc, const char *format, va_list ap);
-    int (*getchr)(scanner *sc);
-    int ungotc;
+struct scanner_s {
+     int (*scan)(scanner *sc, const char *format, ...);
+     int (*vscan)(scanner *sc, const char *format, va_list ap);
+     int (*getchr)(scanner *sc);
+     int ungotc;
 };
 
 scanner *X(mkscanner)(size_t size, int (*getchr)(scanner *sc));
@@ -514,29 +504,26 @@ void X(scanner_destroy)(scanner *sc);
 /*-----------------------------------------------------------------------*/
 /* plan.c: */
 
-enum wakefulness
-{
-    SLEEPY,
-    AWAKE_ZERO,
-    AWAKE_SQRTN_TABLE,
-    AWAKE_SINCOS
+enum wakefulness {
+     SLEEPY,
+     AWAKE_ZERO,
+     AWAKE_SQRTN_TABLE,
+     AWAKE_SINCOS
 };
 
-typedef struct
-{
-    void (*solve)(const plan *ego, const problem *p);
-    void (*awake)(plan *ego, enum wakefulness wakefulness);
-    void (*print)(const plan *ego, printer *p);
-    void (*destroy)(plan *ego);
+typedef struct {
+     void (*solve)(const plan *ego, const problem *p);
+     void (*awake)(plan *ego, enum wakefulness wakefulness);
+     void (*print)(const plan *ego, printer *p);
+     void (*destroy)(plan *ego);
 } plan_adt;
 
-struct plan_s
-{
-    const plan_adt *adt;
-    opcnt ops;
-    double pcost;
-    enum wakefulness wakefulness; /* used for debugging only */
-    int could_prune_now_p;
+struct plan_s {
+     const plan_adt *adt;
+     opcnt ops;
+     double pcost;
+     enum wakefulness wakefulness; /* used for debugging only */
+     int could_prune_now_p;
 };
 
 plan *X(mkplan)(size_t size, const plan_adt *adt);
@@ -546,17 +533,15 @@ void X(plan_null_destroy)(plan *ego);
 
 /*-----------------------------------------------------------------------*/
 /* solver.c: */
-typedef struct
-{
-    int problem_kind;
-    plan *(*mkplan)(const solver *ego, const problem *p, planner *plnr);
-    void (*destroy)(solver *ego);
+typedef struct {
+     int problem_kind;
+     plan *(*mkplan)(const solver *ego, const problem *p, planner *plnr);
+     void (*destroy)(solver *ego);
 } solver_adt;
 
-struct solver_s
-{
-    const solver_adt *adt;
-    int refcnt;
+struct solver_s {
+     const solver_adt *adt;
+     int refcnt;
 };
 
 solver *X(mksolver)(size_t size, const solver_adt *adt);
@@ -570,75 +555,69 @@ void X(solver_register)(planner *plnr, solver *s);
 /*-----------------------------------------------------------------------*/
 /* planner.c */
 
-typedef struct slvdesc_s
-{
-    solver *slv;
-    const char *reg_nam;
-    unsigned nam_hash;
-    int reg_id;
-    int next_for_same_problem_kind;
+typedef struct slvdesc_s {
+     solver *slv;
+     const char *reg_nam;
+     unsigned nam_hash;
+     int reg_id;
+     int next_for_same_problem_kind;
 } slvdesc;
 
 typedef struct solution_s solution; /* opaque */
 
-/* interpretation of L and U:
+/* interpretation of L and U: 
 
    - if it returns a plan, the planner guarantees that all applicable
      plans at least as impatient as U have been tried, and that each
      plan in the solution is at least as impatient as L.
-
+   
    - if it returns 0, the planner guarantees to have tried all solvers
      at least as impatient as L, and that none of them was applicable.
 
    The structure is packed to fit into 64 bits.
 */
 
-typedef struct
-{
-    unsigned l:20;
-    unsigned hash_info:3;
+typedef struct {
+     unsigned l:20;
+     unsigned hash_info:3;
 #    define BITS_FOR_TIMELIMIT 9
-unsigned timelimit_impatience:
-    BITS_FOR_TIMELIMIT;
-    unsigned u:20;
-
-    /* abstraction break: we store the solver here to pad the
-        structure to 64 bits.  Otherwise, the struct is padded to 64
-        bits anyway, and another word is allocated for slvndx. */
+     unsigned timelimit_impatience:BITS_FOR_TIMELIMIT;
+     unsigned u:20;
+     
+     /* abstraction break: we store the solver here to pad the
+	structure to 64 bits.  Otherwise, the struct is padded to 64
+	bits anyway, and another word is allocated for slvndx. */
 #    define BITS_FOR_SLVNDX 12
-unsigned slvndx:
-    BITS_FOR_SLVNDX;
+     unsigned slvndx:BITS_FOR_SLVNDX;
 } flags_t;
 
 /* impatience flags  */
-enum
-{
-    BELIEVE_PCOST = 0x0001,
-    ESTIMATE = 0x0002,
-    NO_DFT_R2HC = 0x0004,
-    NO_SLOW = 0x0008,
-    NO_VRECURSE = 0x0010,
-    NO_INDIRECT_OP = 0x0020,
-    NO_LARGE_GENERIC = 0x0040,
-    NO_RANK_SPLITS = 0x0080,
-    NO_VRANK_SPLITS = 0x0100,
-    NO_NONTHREADED = 0x0200,
-    NO_BUFFERING = 0x0400,
-    NO_FIXED_RADIX_LARGE_N = 0x0800,
-    NO_DESTROY_INPUT = 0x1000,
-    NO_SIMD = 0x2000,
-    CONSERVE_MEMORY = 0x4000,
-    NO_DHT_R2HC = 0x8000,
-    NO_UGLY = 0x10000,
-    ALLOW_PRUNING = 0x20000
+enum {
+     BELIEVE_PCOST = 0x0001,
+     ESTIMATE = 0x0002,
+     NO_DFT_R2HC = 0x0004,
+     NO_SLOW = 0x0008,
+     NO_VRECURSE = 0x0010,
+     NO_INDIRECT_OP = 0x0020,
+     NO_LARGE_GENERIC = 0x0040,
+     NO_RANK_SPLITS = 0x0080,
+     NO_VRANK_SPLITS = 0x0100,
+     NO_NONTHREADED = 0x0200,
+     NO_BUFFERING = 0x0400,
+     NO_FIXED_RADIX_LARGE_N = 0x0800,
+     NO_DESTROY_INPUT = 0x1000,
+     NO_SIMD = 0x2000,
+     CONSERVE_MEMORY = 0x4000,
+     NO_DHT_R2HC = 0x8000,
+     NO_UGLY = 0x10000,
+     ALLOW_PRUNING = 0x20000
 };
 
 /* hashtable information */
-enum
-{
-    BLESSING = 0x1,   /* save this entry */
-    H_VALID = 0x2,    /* valid hastable entry */
-    H_LIVE = 0x4      /* entry is nonempty, implies H_VALID */
+enum {
+     BLESSING = 0x1,   /* save this entry */
+     H_VALID = 0x2,    /* valid hastable entry */
+     H_LIVE = 0x4      /* entry is nonempty, implies H_VALID */
 };
 
 #define PLNR_L(plnr) ((plnr)->flags.l)
@@ -658,9 +637,9 @@ enum
 #define NO_SLOWP(plnr) (PLNR_L(plnr) & NO_SLOW)
 #define NO_UGLYP(plnr) (PLNR_L(plnr) & NO_UGLY)
 #define NO_FIXED_RADIX_LARGE_NP(plnr) \
-    (PLNR_L(plnr) & NO_FIXED_RADIX_LARGE_N)
+  (PLNR_L(plnr) & NO_FIXED_RADIX_LARGE_N)
 #define NO_NONTHREADEDP(plnr) \
-    ((PLNR_L(plnr) & NO_NONTHREADED) && (plnr)->nthr > 1)
+  ((PLNR_L(plnr) & NO_NONTHREADED) && (plnr)->nthr > 1)
 
 #define NO_DESTROY_INPUTP(plnr) (PLNR_L(plnr) & NO_DESTROY_INPUT)
 #define NO_SIMDP(plnr) (PLNR_L(plnr) & NO_SIMD)
@@ -670,79 +649,75 @@ enum
 
 typedef enum { FORGET_ACCURSED, FORGET_EVERYTHING } amnesia;
 
-typedef enum
-{
-    /* WISDOM_NORMAL: planner may or may not use wisdom */
-    WISDOM_NORMAL,
+typedef enum { 
+     /* WISDOM_NORMAL: planner may or may not use wisdom */
+     WISDOM_NORMAL, 
 
-    /* WISDOM_ONLY: planner must use wisdom and must avoid searching */
-    WISDOM_ONLY,
+     /* WISDOM_ONLY: planner must use wisdom and must avoid searching */
+     WISDOM_ONLY, 
 
-    /* WISDOM_IS_BOGUS: planner must return 0 as quickly as possible */
-    WISDOM_IS_BOGUS,
+     /* WISDOM_IS_BOGUS: planner must return 0 as quickly as possible */
+     WISDOM_IS_BOGUS,
 
-    /* WISDOM_IGNORE_INFEASIBLE: planner ignores infeasible wisdom */
-    WISDOM_IGNORE_INFEASIBLE,
+     /* WISDOM_IGNORE_INFEASIBLE: planner ignores infeasible wisdom */
+     WISDOM_IGNORE_INFEASIBLE,
 
-    /* WISDOM_IGNORE_ALL: planner ignores all */
-    WISDOM_IGNORE_ALL
+     /* WISDOM_IGNORE_ALL: planner ignores all */
+     WISDOM_IGNORE_ALL
 } wisdom_state_t;
 
-typedef struct
-{
-    void (*register_solver)(planner *ego, solver *s);
-    plan *(*mkplan)(planner *ego, const problem *p);
-    void (*forget)(planner *ego, amnesia a);
-    void (*exprt)(planner *ego, printer *p); /* ``export'' is a reserved
-                         word in C++. */
-    int (*imprt)(planner *ego, scanner *sc);
+typedef struct {
+     void (*register_solver)(planner *ego, solver *s);
+     plan *(*mkplan)(planner *ego, const problem *p);
+     void (*forget)(planner *ego, amnesia a);
+     void (*exprt)(planner *ego, printer *p); /* ``export'' is a reserved
+						 word in C++. */
+     int (*imprt)(planner *ego, scanner *sc);
 } planner_adt;
 
 /* hash table of solutions */
-typedef struct
-{
-    solution *solutions;
-    unsigned hashsiz, nelem;
+typedef struct {
+     solution *solutions;
+     unsigned hashsiz, nelem;
 
-    /* statistics */
-    int lookup, succ_lookup, lookup_iter;
-    int insert, insert_iter, insert_unknown;
-    int nrehash;
+     /* statistics */
+     int lookup, succ_lookup, lookup_iter;
+     int insert, insert_iter, insert_unknown;
+     int nrehash;
 } hashtab;
 
 typedef enum { COST_SUM, COST_MAX } cost_kind;
 
-struct planner_s
-{
-    const planner_adt *adt;
-    void (*hook)(struct planner_s *plnr, plan *pln,
-                 const problem *p, int optimalp);
-    double (*cost_hook)(const problem *p, double t, cost_kind k);
+struct planner_s {
+     const planner_adt *adt;
+     void (*hook)(struct planner_s *plnr, plan *pln, 
+		  const problem *p, int optimalp);
+     double (*cost_hook)(const problem *p, double t, cost_kind k);
 
-    /* solver descriptors */
-    slvdesc *slvdescs;
-    unsigned nslvdesc, slvdescsiz;
-    const char *cur_reg_nam;
-    int cur_reg_id;
-    int slvdescs_for_problem_kind[PROBLEM_LAST];
+     /* solver descriptors */
+     slvdesc *slvdescs;
+     unsigned nslvdesc, slvdescsiz;
+     const char *cur_reg_nam;
+     int cur_reg_id;
+     int slvdescs_for_problem_kind[PROBLEM_LAST];
 
-    wisdom_state_t wisdom_state;
+     wisdom_state_t wisdom_state;
 
-    hashtab htab_blessed;
-    hashtab htab_unblessed;
+     hashtab htab_blessed;
+     hashtab htab_unblessed;
 
-    int nthr;
-    flags_t flags;
+     int nthr;
+     flags_t flags;
 
-    crude_time start_time;
-    double timelimit; /* elapsed_since(start_time) at which to bail out */
-    int timed_out; /* whether most recent search timed out */
-    int need_timeout_check;
+     crude_time start_time;
+     double timelimit; /* elapsed_since(start_time) at which to bail out */
+     int timed_out; /* whether most recent search timed out */
+     int need_timeout_check;
 
-    /* various statistics */
-    int nplan;    /* number of plans evaluated */
-    double pcost, epcost; /* total pcost of measured/estimated plans */
-    int nprob;    /* number of problems evaluated */
+     /* various statistics */
+     int nplan;    /* number of plans evaluated */
+     double pcost, epcost; /* total pcost of measured/estimated plans */
+     int nprob;    /* number of problems evaluated */
 };
 
 planner *X(mkplanner)(void);
@@ -750,7 +725,7 @@ void X(planner_destroy)(planner *ego);
 
 /*
   Iterate over all solvers.   Read:
-
+ 
   @article{ baker93iterators,
   author = "Henry G. Baker, Jr.",
   title = "Iterators: Signs of Weakness in Object-Oriented Languages",
@@ -760,32 +735,32 @@ void X(planner_destroy)(planner *ego);
   pages = "18--25"
   }
 */
-#define FORALL_SOLVERS(ego, s, p, what)         \
-    {                           \
-        unsigned _cnt;                 \
-        for (_cnt = 0; _cnt < ego->nslvdesc; ++_cnt) { \
-            slvdesc *p = ego->slvdescs + _cnt;        \
-            solver *s = p->slv;               \
-            what;                     \
-        }                          \
-    }
+#define FORALL_SOLVERS(ego, s, p, what)			\
+{							\
+     unsigned _cnt;					\
+     for (_cnt = 0; _cnt < ego->nslvdesc; ++_cnt) {	\
+	  slvdesc *p = ego->slvdescs + _cnt;		\
+	  solver *s = p->slv;				\
+	  what;						\
+     }							\
+}
 
-#define FORALL_SOLVERS_OF_KIND(kind, ego, s, p, what)       \
-    {                               \
-        int _cnt = ego->slvdescs_for_problem_kind[kind];       \
-        while (_cnt >= 0) {                    \
-            slvdesc *p = ego->slvdescs + _cnt;            \
-            solver *s = p->slv;                   \
-            what;                         \
-            _cnt = p->next_for_same_problem_kind;         \
-        }                              \
-    }
+#define FORALL_SOLVERS_OF_KIND(kind, ego, s, p, what)		\
+{								\
+     int _cnt = ego->slvdescs_for_problem_kind[kind]; 		\
+     while (_cnt >= 0) {					\
+	  slvdesc *p = ego->slvdescs + _cnt;			\
+	  solver *s = p->slv;					\
+	  what;							\
+	  _cnt = p->next_for_same_problem_kind;			\
+     }								\
+}
 
 
 /* make plan, destroy problem */
 plan *X(mkplan_d)(planner *ego, problem *p);
-plan *X(mkplan_f_d)(planner *ego, problem *p,
-                    unsigned l_set, unsigned u_set, unsigned u_reset);
+plan *X(mkplan_f_d)(planner *ego, problem *p, 
+		    unsigned l_set, unsigned u_set, unsigned u_reset);
 
 /*-----------------------------------------------------------------------*/
 /* stride.c: */
@@ -825,11 +800,7 @@ typedef INT stride;
 /*-----------------------------------------------------------------------*/
 /* solvtab.c */
 
-struct solvtab_s
-{
-    void (*reg)(planner *);
-    const char *reg_nam;
-};
+struct solvtab_s { void (*reg)(planner *); const char *reg_nam; };
 typedef struct solvtab_s solvtab[];
 void X(solvtab_exec)(const solvtab tbl, planner *p);
 #define SOLVTAB(s) { s, STRINGIZE(s) }
@@ -838,57 +809,53 @@ void X(solvtab_exec)(const solvtab tbl, planner *p);
 /*-----------------------------------------------------------------------*/
 /* pickdim.c */
 int X(pickdim)(int which_dim, const int *buddies, int nbuddies,
-               const tensor *sz, int oop, int *dp);
+	       const tensor *sz, int oop, int *dp);
 
 /*-----------------------------------------------------------------------*/
 /* twiddle.c */
 /* little language to express twiddle factors computation */
-enum { TW_COS = 0, TW_SIN = 1, TW_CEXP = 2, TW_NEXT = 3,
-       TW_FULL = 4, TW_HALF = 5
-     };
+enum { TW_COS = 0, TW_SIN = 1, TW_CEXP = 2, TW_NEXT = 3, 
+       TW_FULL = 4, TW_HALF = 5 };
 
-typedef struct
-{
-    unsigned char op;
-    signed char v;
-    short i;
+typedef struct {
+     unsigned char op;
+     signed char v;
+     short i;
 } tw_instr;
 
-typedef struct twid_s
-{
-    R *W;                     /* array of twiddle factors */
-    INT n, r, m;                /* transform order, radix, # twiddle rows */
-    int refcnt;
-    const tw_instr *instr;
-    struct twid_s *cdr;
-    enum wakefulness wakefulness;
+typedef struct twid_s {
+     R *W;                     /* array of twiddle factors */
+     INT n, r, m;                /* transform order, radix, # twiddle rows */
+     int refcnt;
+     const tw_instr *instr;
+     struct twid_s *cdr;
+     enum wakefulness wakefulness;
 } twid;
 
 INT X(twiddle_length)(INT r, const tw_instr *p);
 void X(twiddle_awake)(enum wakefulness wakefulness,
-                      twid **pp, const tw_instr *instr, INT n, INT r, INT m);
+		      twid **pp, const tw_instr *instr, INT n, INT r, INT m);
 
 /*-----------------------------------------------------------------------*/
 /* trig.c */
 #ifdef TRIGREAL_IS_LONG_DOUBLE
-typedef long double trigreal;
+   typedef long double trigreal;
 #else
-typedef double trigreal;
+   typedef double trigreal;
 #endif
 
 typedef struct triggen_s triggen;
 
-struct triggen_s
-{
-    void (*cexp)(triggen *t, INT m, R *result);
-    void (*cexpl)(triggen *t, INT m, trigreal *result);
-    void (*rotate)(triggen *p, INT m, R xr, R xi, R *res);
+struct triggen_s {
+     void (*cexp)(triggen *t, INT m, R *result);
+     void (*cexpl)(triggen *t, INT m, trigreal *result);
+     void (*rotate)(triggen *p, INT m, R xr, R xi, R *res);
 
-    INT twshft;
-    INT twradix;
-    INT twmsk;
-    trigreal *W0, *W1;
-    INT n;
+     INT twshft;
+     INT twradix;
+     INT twmsk;
+     trigreal *W0, *W1;
+     INT n;
 };
 
 triggen *X(mktriggen)(enum wakefulness wakefulness, INT n);
@@ -898,7 +865,7 @@ void X(triggen_destroy)(triggen *p);
 /* primes.c: */
 
 #define MULMOD(x, y, p) \
-    (((x) <= 92681 - (y)) ? ((x) * (y)) % (p) : X(safe_mulmod)(x, y, p))
+   (((x) <= 92681 - (y)) ? ((x) * (y)) % (p) : X(safe_mulmod)(x, y, p))
 
 INT X(safe_mulmod)(INT x, INT y, INT p);
 INT X(power_mod)(INT n, INT m, INT p);
@@ -930,38 +897,38 @@ void X(rader_tl_delete)(R *W, rader_tl **tl);
 INT X(compute_tilesz)(INT vl, int how_many_tiles_in_cache);
 
 void X(tile2d)(INT n0l, INT n0u, INT n1l, INT n1u, INT tilesz,
-               void (*f)(INT n0l, INT n0u, INT n1l, INT n1u, void *args),
-               void *args);
+	       void (*f)(INT n0l, INT n0u, INT n1l, INT n1u, void *args),
+	       void *args);
 void X(cpy1d)(R *I, R *O, INT n0, INT is0, INT os0, INT vl);
 void X(cpy2d)(R *I, R *O,
-              INT n0, INT is0, INT os0,
-              INT n1, INT is1, INT os1,
-              INT vl);
+	      INT n0, INT is0, INT os0,
+	      INT n1, INT is1, INT os1,
+	      INT vl);
 void X(cpy2d_ci)(R *I, R *O,
-                 INT n0, INT is0, INT os0,
-                 INT n1, INT is1, INT os1,
-                 INT vl);
+		 INT n0, INT is0, INT os0,
+		 INT n1, INT is1, INT os1,
+		 INT vl);
 void X(cpy2d_co)(R *I, R *O,
-                 INT n0, INT is0, INT os0,
-                 INT n1, INT is1, INT os1,
-                 INT vl);
+		 INT n0, INT is0, INT os0,
+		 INT n1, INT is1, INT os1,
+		 INT vl);
 void X(cpy2d_tiled)(R *I, R *O,
-                    INT n0, INT is0, INT os0,
-                    INT n1, INT is1, INT os1,
-                    INT vl);
+		    INT n0, INT is0, INT os0,
+		    INT n1, INT is1, INT os1, 
+		    INT vl);
 void X(cpy2d_tiledbuf)(R *I, R *O,
-                       INT n0, INT is0, INT os0,
-                       INT n1, INT is1, INT os1,
-                       INT vl);
+		       INT n0, INT is0, INT os0,
+		       INT n1, INT is1, INT os1, 
+		       INT vl);
 void X(cpy2d_pair)(R *I0, R *I1, R *O0, R *O1,
-                   INT n0, INT is0, INT os0,
-                   INT n1, INT is1, INT os1);
+		   INT n0, INT is0, INT os0,
+		   INT n1, INT is1, INT os1);
 void X(cpy2d_pair_ci)(R *I0, R *I1, R *O0, R *O1,
-                      INT n0, INT is0, INT os0,
-                      INT n1, INT is1, INT os1);
+		      INT n0, INT is0, INT os0,
+		      INT n1, INT is1, INT os1);
 void X(cpy2d_pair_co)(R *I0, R *I1, R *O0, R *O1,
-                      INT n0, INT is0, INT os0,
-                      INT n1, INT is1, INT os1);
+		      INT n0, INT is0, INT os0,
+		      INT n1, INT is1, INT os1);
 
 void X(transpose)(R *I, INT n, INT s0, INT s1, INT vl);
 void X(transpose_tiled)(R *I, INT n, INT s0, INT s1, INT vl);
@@ -969,9 +936,9 @@ void X(transpose_tiledbuf)(R *I, INT n, INT s0, INT s1, INT vl);
 
 typedef void (*transpose_func)(R *I, INT n, INT s0, INT s1, INT vl);
 typedef void (*cpy2d_func)(R *I, R *O,
-                           INT n0, INT is0, INT os0,
-                           INT n1, INT is1, INT os1,
-                           INT vl);
+			   INT n0, INT is0, INT os0,
+			   INT n1, INT is1, INT os1,
+			   INT vl);
 
 #if HAVE_CELL
 int X(cell_transpose_applicable)(R *I, const iodim *d, INT vl);
@@ -985,13 +952,13 @@ void X(cell_copy)(R *I, R *O, const iodim *n, const iodim *v);
 void X(null_awake)(plan *ego, enum wakefulness wakefulness);
 double X(iestimate_cost)(const planner *, const plan *, const problem *);
 
-double X(measure_execution_time)(const planner *plnr,
-                                 plan *pln, const problem *p);
+double X(measure_execution_time)(const planner *plnr, 
+				 plan *pln, const problem *p);
 int X(alignment_of)(R *p);
 unsigned X(hash)(const char *s);
 INT X(nbuf)(INT n, INT vl, INT maxnbuf);
-int X(nbuf_redundant)(INT n, INT vl, int which,
-                      const INT *maxnbuf, int nmaxnbuf);
+int X(nbuf_redundant)(INT n, INT vl, int which, 
+		      const INT *maxnbuf, int nmaxnbuf);
 INT X(bufdist)(INT n, INT vl);
 int X(toobig)(INT n);
 int X(ct_uglyp)(INT min_n, INT v, INT n, INT r);
@@ -1011,12 +978,12 @@ R *X(join_taint)(R *p1, R *p2);
 #endif
 
 #ifdef FFTW_DEBUG_ALIGNMENT
-#  define ASSERT_ALIGNED_DOUBLE {       \
-        double __foo;              \
-        CK(!(((uintptr_t) &__foo) & 0x7));     \
-    }
+#  define ASSERT_ALIGNED_DOUBLE {		\
+     double __foo;				\
+     CK(!(((uintptr_t) &__foo) & 0x7));		\
+}
 #else
-#  define ASSERT_ALIGNED_DOUBLE
+#  define ASSERT_ALIGNED_DOUBLE 
 #endif /* FFTW_DEBUG_ALIGNMENT */
 
 
@@ -1053,7 +1020,7 @@ typedef R E;  /* internal precision of codelets. */
 
      asm ("# confuse gcc %0" : "=f"(a) : "0"(a));
      return a * b + c;
-
+     
    in each of the FMA, FMS, FNMA, and FNMS functions.  However, this
    does not solve the problem either, because two equal asm statements
    count as a common subexpression!  One must use *different* fake asm
@@ -1080,30 +1047,30 @@ typedef R E;  /* internal precision of codelets. */
 */
 static __inline__ E FMA(E a, E b, E c)
 {
-    E x = a * b;
-    x = x + c;
-    return x;
+     E x = a * b;
+     x = x + c;
+     return x;
 }
 
 static __inline__ E FMS(E a, E b, E c)
 {
-    E x = a * b;
-    x = x - c;
-    return x;
+     E x = a * b;
+     x = x - c;
+     return x;
 }
 
 static __inline__ E FNMA(E a, E b, E c)
 {
-    E x = a * b;
-    x = - (x + c);
-    return x;
+     E x = a * b;
+     x = - (x + c);
+     return x;
 }
 
 static __inline__ E FNMS(E a, E b, E c)
 {
-    E x = a * b;
-    x = - (x - c);
-    return x;
+     E x = a * b;
+     x = - (x - c);
+     return x;
 }
 #else
 #define FMA(a, b, c) (((a) * (b)) + (c))
@@ -1114,15 +1081,15 @@ static __inline__ E FNMS(E a, E b, E c)
 
 /* stack-alignment hackery */
 #ifdef __ICC /* Intel's compiler for ia32 */
-#define WITH_ALIGNED_STACK(what)                \
-    {                               \
-        /*                             \
-                              * Simply calling alloca seems to do the right thing.  \
-                              * The size of the allocated block seems to be irrelevant. \
-                              */                            \
-        _alloca(16);                       \
-        what                           \
-    }
+#define WITH_ALIGNED_STACK(what)				\
+{								\
+     /*								\
+      * Simply calling alloca seems to do the right thing.	\
+      * The size of the allocated block seems to be irrelevant.	\
+      */							\
+     _alloca(16);						\
+     what							\
+}
 #endif
 
 #if defined(__GNUC__) && defined(__i386__) && !defined(WITH_ALIGNED_STACK) \
@@ -1140,23 +1107,23 @@ static __inline__ E FNMS(E a, E b, E c)
  * correct.
  */
 
-#define WITH_ALIGNED_STACK(what)                \
-    {                               \
-        /*                             \
-                              * Use alloca to allocate some memory on the stack.    \
-                              * This alerts gcc that something funny is going       \
-                              * on, so that it does not omit the frame pointer      \
-                              * etc.                            \
-                              */                            \
-        (void)__builtin_alloca(16);                \
-        \
-        /*                             \
-                              * Now align the stack pointer             \
-                              */                            \
-        __asm__ __volatile__ ("andl $-16, %esp");          \
-        \
-        what                           \
-    }
+#define WITH_ALIGNED_STACK(what)				\
+{								\
+     /*								\
+      * Use alloca to allocate some memory on the stack.	\
+      * This alerts gcc that something funny is going		\
+      * on, so that it does not omit the frame pointer		\
+      * etc.							\
+      */							\
+     (void)__builtin_alloca(16);				\
+								\
+     /*								\
+      * Now align the stack pointer				\
+      */							\
+     __asm__ __volatile__ ("andl $-16, %esp");			\
+								\
+     what							\
+}
 #endif
 
 #ifndef WITH_ALIGNED_STACK

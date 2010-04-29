@@ -12,13 +12,12 @@
 // available through pthreads system library. Nonetheless, sometimes it is not
 // so we have to implement it here.
 
-typedef struct mybarrier_t
-{
+typedef struct mybarrier_t {
     int needed;
     int called;
     pthread_mutex_t mutex;
     pthread_cond_t cond;
-} barrier_t;
+}barrier_t; 
 
 int barrier_init(barrier_t *barrier,int needed);
 int barrier_destroy(barrier_t *barrier);

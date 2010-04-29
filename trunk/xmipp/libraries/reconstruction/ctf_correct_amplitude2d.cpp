@@ -50,7 +50,7 @@ void CorrectAmplitude2DParams::usage()
     std::cerr << "   -ctfdat <CTF descr file or selfile> : list of particles and CTFs\n"
               << "  [-relax <beta=1>]                    : relaxation factor\n"
               << "  [-iterations <N=300>]                : number of iterations\n"
-              ;
+    ;
 }
 
 /* Produce Side information ------------------------------------------------ */
@@ -72,9 +72,8 @@ void CorrectAmplitude2DParams::run()
     while (!ctfdat.eof())
     {
         FileName fnProjection, fnCTF;
-        ctfdat.getCurrentLine(fnProjection,fnCTF);
-        if (fnProjection!="")
-        {
+	ctfdat.getCurrentLine(fnProjection,fnCTF);
+	if (fnProjection!="") {
             // Read input image and compute its Fourier transform
             ImageXmipp I;
             I.read(fnProjection);
@@ -94,16 +93,16 @@ void CorrectAmplitude2DParams::run()
             f=fft;
             for (int n=0; n<Niterations; n++)
                 FOR_ALL_ELEMENTS_IN_MATRIX2D(f)
-                f(i,j)=f(i,j)+beta*ctf.maskFourier2D(i, j)*
-                       (fft(i,j)-ctf.maskFourier2D(i, j)*f(i,j));
+                    f(i,j)=f(i,j)+beta*ctf.maskFourier2D(i, j)*
+                        (fft(i,j)-ctf.maskFourier2D(i, j)*f(i,j));
             fft=f;
 
             // Go back to real space
             transformer.inverseFourierTransform();
             I.write();
-        }
+	}
         if (i++ % istep == 0) progress_bar(i);
-        ctfdat.nextLine();
+	ctfdat.nextLine();
     }
     progress_bar(ctfdat.lineNo());
 }

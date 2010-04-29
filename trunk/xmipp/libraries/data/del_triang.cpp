@@ -73,7 +73,7 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
     ymin = pxyz[0].y;
     xmax = xmin;
     ymax = ymin;
-    for (i = 1; i < nv; i++)
+    for (i = 1;i < nv;i++)
     {
         if (pxyz[i].x < xmin)
             xmin = pxyz[i].x;
@@ -119,7 +119,7 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
     /*
        Include each point one at a time into the existing mesh
     */
-    for (i = 0; i < nv; i++)
+    for (i = 0;i < nv;i++)
     {
 
         xp = pxyz[i].x;
@@ -132,7 +132,7 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
            three edges of that triangle are added to the edge buffer
            and that triangle is removed.
         */
-        for (j = 0; j < (*ntri); j++)
+        for (j = 0;j < (*ntri);j++)
         {
             if (complete[j])
                 continue;
@@ -178,9 +178,9 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
            Note: if all triangles are specified anticlockwise then all
                  interior edges are opposite pointing in direction.
         */
-        for (j = 0; j < nedge - 1; j++)
+        for (j = 0;j < nedge - 1;j++)
         {
-            for (k = j + 1; k < nedge; k++)
+            for (k = j + 1;k < nedge;k++)
             {
                 if ((edges[j].p1 == edges[k].p2) && (edges[j].p2 == edges[k].p1))
                 {
@@ -205,7 +205,7 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
            Skipping over any tagged edges.
            All edges are arranged in clockwise order.
         */
-        for (j = 0; j < nedge; j++)
+        for (j = 0;j < nedge;j++)
         {
             if (edges[j].p1 < 0 || edges[j].p2 < 0)
                 continue;
@@ -226,7 +226,7 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
        Remove triangles with supertriangle vertices
        These are triangles which have a vertex number greater than nv
     */
-    for (i = 0; i < (*ntri); i++)
+    for (i = 0;i < (*ntri);i++)
     {
         if (v[i].p1 >= nv || v[i].p2 >= nv || v[i].p3 >= nv)
         {
@@ -249,7 +249,7 @@ skip:
    NOTE: A point on the edge is inside the circumcircle
 */
 bool CircumCircle(double xp, double yp, double x1, double y1, double x2, double y2, double x3, double y3,
-                  double *xc, double *yc, double *r)
+                 double *xc, double *yc, double *r)
 {
     double m1, m2, mx1, mx2, my1, my2;
     double dx, dy, rsqr, drsqr;

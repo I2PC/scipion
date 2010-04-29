@@ -49,7 +49,7 @@ QtDialogFamilies::QtDialogFamilies(QWidget *_parent,
                                    const char *_name,
                                    bool _modal,
                                    Qt::WFlags _f) :
-    QDialog(_parent, _name, _modal, _f)
+        QDialog(_parent, _name, _modal, _f)
 {
 
     __m               = NULL;

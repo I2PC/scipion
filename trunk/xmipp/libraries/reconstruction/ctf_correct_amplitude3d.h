@@ -60,10 +60,10 @@ public:
 
     /// Dimensions of the volumes
     int Zdim, Ydim, Xdim;
-
+	
     /// Side Info: CTF
     FourierMask ctf;
-
+    
     /// Side Info: ctfdat
     CTFDat ctfdat;
 
@@ -74,7 +74,7 @@ public:
     DocFile DFimgs;
 
     /// The 3D CTFs and Wiener filters
-    std::vector< Matrix1D<double> > Vctfs1D, Vwien1D;
+    std::vector< Matrix1D<double> > Vctfs1D, Vwien1D; 
 
 public:
     /** Empty constructor */
@@ -95,9 +95,9 @@ public:
     void produceSideInfo();
 
     /** Generate 1D CTFs. */
-    void generateCTF1D(const FileName &fnCTF,
-                       const double nr_steps,
-                       Matrix1D<double> &CTF1D);
+    void generateCTF1D(const FileName &fnCTF, 
+		       const double nr_steps,
+		       Matrix1D<double> &CTF1D);
 
     /** Generate Wiener filters */
     void generateWienerFilters();

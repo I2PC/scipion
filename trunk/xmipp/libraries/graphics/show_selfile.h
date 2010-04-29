@@ -52,8 +52,7 @@ class ShowSel: public ShowTable
 {
     Q_OBJECT;
 public:
-    typedef enum
-    {
+    typedef enum {
         Normal_mode,
         PSD_mode,
         CTF_mode
@@ -80,8 +79,8 @@ protected:
 
     // Some menu items to enable/disable them
     int mi_Individual_norm, mi_Global_norm,
-        mi_showLabel,       mi_hideLabel,
-        mi_selAsLabels,     mi_imgAsLabels;
+    mi_showLabel,       mi_hideLabel,
+    mi_selAsLabels,     mi_imgAsLabels;
 
     // Assign CTF file: This is used for a single micrograph with pieces
     FileName fn_assign;

@@ -151,10 +151,10 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             ML2D_prm.sumOverAllImages(ML2D_prm.SF, ML2D_prm.Iref, iter,
-                                      LL, sumcorr, DFo,
-                                      wsum_Mref, wsum_ctfMref,
-                                      Mwsum_sigma2, wsum_sigma_offset,
-                                      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
+				      LL, sumcorr, DFo, 
+				      wsum_Mref, wsum_ctfMref,
+				      Mwsum_sigma2, wsum_sigma_offset, 
+				      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
 
             // Here MPI_allreduce of all weighted sums, LL, etc.
             // All nodes need the answer to calculate internally
@@ -171,37 +171,37 @@ int main(int argc, char **argv)
                 MPI_Allreduce(MULTIDIM_ARRAY(ML2D_prm.sumhist), MULTIDIM_ARRAY(Vaux),
                               MULTIDIM_SIZE(ML2D_prm.sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
-                DIRECT_MULTIDIM_ELEM(ML2D_prm.sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+                    DIRECT_MULTIDIM_ELEM(ML2D_prm.sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
                 for (int ires = 0; ires < ML2D_prm.hdim; ires++)
                 {
                     Vaux.resize(ML2D_prm.sumhist);
                     MPI_Allreduce(MULTIDIM_ARRAY(ML2D_prm.resolhist[ires]), MULTIDIM_ARRAY(Vaux),
                                   MULTIDIM_SIZE(ML2D_prm.resolhist[ires]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
-                    DIRECT_MULTIDIM_ELEM(ML2D_prm.resolhist[ires], n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+                        DIRECT_MULTIDIM_ELEM(ML2D_prm.resolhist[ires], n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
                 }
             }
-            for (int ifocus = 0; ifocus < ML2D_prm.nr_focus; ifocus++)
-            {
-                for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++)
-                {
-                    MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    Mwsum_sigma2[ifocus][ii] = aux;
-                }
+	    for (int ifocus = 0; ifocus < ML2D_prm.nr_focus; ifocus++)
+	    {
+		for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++)
+		{
+		    MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		    Mwsum_sigma2[ifocus][ii] = aux;
+		}
                 if (ML2D_prm.do_student)
                 {
                     MPI_Allreduce(&sumw_defocus[ifocus], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     sumw_defocus[ifocus] = aux;
                 }
-            }
-            for (int refno = 0; refno < ML2D_prm.n_ref; refno++)
-            {
-                if (ML2D_prm.do_ctf_correction)
-                {
-                    MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
-                                  MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                    wsum_ctfMref[refno] = Maux;
-                }
+	    }
+	    for (int refno = 0;refno < ML2D_prm.n_ref; refno++)
+	    {
+		if (ML2D_prm.do_ctf_correction)
+		{
+		    MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
+				  MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		    wsum_ctfMref[refno] = Maux;
+		}
                 MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
                               MULTIDIM_SIZE(wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 wsum_Mref[refno] = Maux;
@@ -219,12 +219,12 @@ int main(int argc, char **argv)
 
             // Update model parameters
             ML2D_prm.updateParameters(wsum_Mref, wsum_ctfMref,
-                                      Mwsum_sigma2, wsum_sigma_offset,
-                                      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
-                                      sumcorr, sumw_allrefs,
-                                      spectral_signal, prm.eachvol_end[0]+1);
+				      Mwsum_sigma2, wsum_sigma_offset, 
+				      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus, 
+				      sumcorr, sumw_allrefs,
+				      spectral_signal, prm.eachvol_end[0]+1);
 
-            // Write intermediate files
+            // Write intermediate files 
             if (rank != 0)
             {
                 // All slaves send docfile to the master
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                // Master fills docfile
+                // Master fills docfile 
                 std::ofstream myDocFile;
                 FileName fn_tmp;
                 fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
@@ -315,7 +315,7 @@ int main(int argc, char **argv)
 
             // Update filenames in SFvol (now without noise volumes!)
             prm.remake_SFvol(iter, false, false);
-            ML2D_prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
+	    ML2D_prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
 
             if (!converged && iter + 1 <= prm.Niter)
             {
@@ -337,8 +337,8 @@ int main(int argc, char **argv)
             iter++;
         } // end loop iterations
 
-        if (rank == 0)
-            ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+	if (rank == 0)
+	    ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;

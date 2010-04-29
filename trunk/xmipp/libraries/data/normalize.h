@@ -108,18 +108,18 @@ void normalize_OldXmipp_decomposition(Matrix2D<double> &I,
    @code
    I'=(I-m(I))/(sqrt(v(I))*cos^2(tilt))
    @endcode
-
+   
    Formula for tomography0:
    @code
    I'=(I/cos(tilt)-m0)/(sqrt(v(I))*cos(tilt))
    @endcode
-
+   
    The estimated mean of the image and the local variance are returned in
    sigmai and mui.
 */
 void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
-                          double &sigmai, bool tiltMask,
-                          bool tomography0=false, double mu0=0, double sigma0=1);
+    double &sigmai, bool tiltMask,
+    bool tomography0=false, double mu0=0, double sigma0=1);
 
 /** Michael's normalization.
    Formula:
@@ -181,8 +181,8 @@ void normalize_ramp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask);
 
 /** Removal of neighbouring particles
     .... */
-void normalize_remove_neighbours(Matrix2D<double> &I,
-                                 const Matrix2D<int> &bg_mask,
+void normalize_remove_neighbours(Matrix2D<double> &I, 
+				 const Matrix2D<int> &bg_mask,
                                  const double &threshold);
 //@}
 

@@ -173,41 +173,41 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
 void Prog_PDBPhantom_Parameters::usage()
 {
     std::cerr << "convert_pdb2vol\n"
-              << "   -i <pdb file>         : File to process\n"
-              << "  [-o <fn_root>]         : Root name for output\n"
-              << "  [-sampling_rate <Ts=1>]        : Sampling rate (Angstroms/pixel)\n"
-              << "  [-high_sampling_rate <highTs=1/12>]: Sampling rate before downsampling\n"
-              << "  [-size <output_dim>]        : Final size in pixels (must be a power of 2, if blobs are used)\n"
-              << "  [-centerPDB]                       : Center PDB with the center of mass\n"
-              << "  [-blobs]                           : Use blobs instead of scattering factors\n"
-              << "  [-poor_Gaussian]                   : Use a simple Gaussian adapted to each atom\n"
-              << "  [-fixed_Gaussian <std=-1>]         : Use a fixed Gausian for each atom with\n"
-              << "                                       this standard deviation\n"
-              << "                                       If not given, the standard deviation is taken from the PDB file\n"
-              << "  [-intensityColumn <s=occupancy>]   : Where to write the intensity in the PDB file\n"
-              << "                                       Valid values: occupancy, Bfactor\n"
-              << "\n"
-              << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
-              << "   xmipp_convert_pdb2vol -i 1o7d.pdb -sampling_rate 1.6\n"
-              << "   xmipp_fourier_filter -i 1o7d.vol -o 1o7d_filtered.vol -low_pass 10 -sampling 1.6 -fourier_mask raised_cosine 0.1\n"
-              ;
+    << "   -i <pdb file>         : File to process\n"
+    << "  [-o <fn_root>]         : Root name for output\n"
+    << "  [-sampling_rate <Ts=1>]        : Sampling rate (Angstroms/pixel)\n"
+    << "  [-high_sampling_rate <highTs=1/12>]: Sampling rate before downsampling\n"
+    << "  [-size <output_dim>]        : Final size in pixels (must be a power of 2, if blobs are used)\n"
+    << "  [-centerPDB]                       : Center PDB with the center of mass\n"
+    << "  [-blobs]                           : Use blobs instead of scattering factors\n"
+    << "  [-poor_Gaussian]                   : Use a simple Gaussian adapted to each atom\n"
+    << "  [-fixed_Gaussian <std=-1>]         : Use a fixed Gausian for each atom with\n"
+    << "                                       this standard deviation\n"
+    << "                                       If not given, the standard deviation is taken from the PDB file\n"
+    << "  [-intensityColumn <s=occupancy>]   : Where to write the intensity in the PDB file\n"
+    << "                                       Valid values: occupancy, Bfactor\n"
+    << "\n"
+    << "Example of use: Sample at 1.6A and limit the frequency to 10A\n"
+    << "   xmipp_convert_pdb2vol -i 1o7d.pdb -sampling_rate 1.6\n"
+    << "   xmipp_fourier_filter -i 1o7d.vol -o 1o7d_filtered.vol -low_pass 10 -sampling 1.6 -fourier_mask raised_cosine 0.1\n"
+    ;
 }
 
 /* Show -------------------------------------------------------------------- */
 void Prog_PDBPhantom_Parameters::show()
 {
     std::cout << "PDB file:           " << fn_pdb           << std::endl
-              << "Sampling rate:      " << Ts               << std::endl
-              << "High sampling rate: " << highTs           << std::endl
-              << "Size:               " << output_dim       << std::endl
-              << "Center PDB:         " << doCenter         << std::endl
-              << "Use blobs:          " << useBlobs         << std::endl
-              << "Use poor Gaussian:  " << usePoorGaussian  << std::endl
-              << "Use fixed Gaussian: " << useFixedGaussian << std::endl
-              ;
+    << "Sampling rate:      " << Ts               << std::endl
+    << "High sampling rate: " << highTs           << std::endl
+    << "Size:               " << output_dim       << std::endl
+    << "Center PDB:         " << doCenter         << std::endl
+    << "Use blobs:          " << useBlobs         << std::endl
+    << "Use poor Gaussian:  " << usePoorGaussian  << std::endl
+    << "Use fixed Gaussian: " << useFixedGaussian << std::endl
+    ;
     if (useFixedGaussian)
         std::cout << "Intensity Col:      " << intensityColumn  << std::endl
-                  << "Sigma:              " << sigmaGaussian  << std::endl;
+        << "Sigma:              " << sigmaGaussian  << std::endl;
 }
 
 /* Compute protein geometry ------------------------------------------------ */
@@ -249,7 +249,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
     Vhigh().initZeros(finalDim,finalDim,finalDim);
     Vhigh().setXmippOrigin();
     std::cout << "The highly sampled volume is of size " << XSIZE(Vhigh())
-              << std::endl;
+    << std::endl;
 
     // Fill the volume with the different atoms
     std::ifstream fh_pdb;

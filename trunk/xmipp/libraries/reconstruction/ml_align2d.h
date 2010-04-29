@@ -48,9 +48,9 @@
 class Prog_MLalign2D_prm;
 
 #define FOR_ALL_THREAD_REFNO() \
-    int refno, load; \
-    while ((load = getThreadRefnoJob(refno)) > 0) \
-        for (int i = 0; i < load; i++, refno = (refno + 1) % model.n_ref)
+int refno, load; \
+while ((load = getThreadRefnoJob(refno)) > 0) \
+    for (int i = 0; i < load; i++, refno = (refno + 1) % model.n_ref)
 
 #define FOR_ALL_GLOBAL_IMAGES() \
     for (int imgno = 0; imgno < nr_images_global; imgno++)
@@ -105,7 +105,7 @@ public:
         int i = (int)tb;
         gettimeofday(&end_time, NULL);
         times[i] += (end_time.tv_sec - start_times[i].tv_sec) * 1000000 +
-                    (end_time.tv_usec - start_times[i].tv_usec);
+                       (end_time.tv_usec - start_times[i].tv_usec);
     }
 
     void printTimes(bool doClear)
@@ -138,8 +138,7 @@ public:
 
 
 // This structure is needed to pass parameters to the threads
-typedef struct
-{
+typedef struct{
     int thread_id;
     Prog_MLalign2D_prm * prm;
 } structThreadTasks;
@@ -308,7 +307,7 @@ public:
     std::vector<int> imgs_optrefno;
     /** Overall average scale (to be forced to one)*/
     double average_scale;
-
+ 
     bool do_restart;
 
     /** Thread stuff */

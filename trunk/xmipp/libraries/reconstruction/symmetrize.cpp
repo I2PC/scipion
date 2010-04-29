@@ -42,26 +42,26 @@ void Symmetrize_Parameters::read(int argc, char **argv)
 void Symmetrize_Parameters::usage()
 {
     std::cout
-            << "Usage: symmetrize [Purpose and Parameters]\n"
-            << "Purpose: Symmetrize a 3D volume\n"
-            << "Parameter Values: (notice space before value)\n"
-            << "    -i <file_in>        : input 3D Xmipp file\n"
-            << "   [-o <file_out>]      : if no name is given then the input file is\n"
-            << "                          rewritten\n"
-            << "    -sym <sym_file>     : symmetry file (see the manual)\n"
-            << "   [-no_group]          : do not generate symmetry subgroup\n"
-            << "   [-dont_wrap]         : by default, the volume is wrapped\n"
-            << "   [-splines]           : by default, trilinear interpolation\n";
+    << "Usage: symmetrize [Purpose and Parameters]\n"
+    << "Purpose: Symmetrize a 3D volume\n"
+    << "Parameter Values: (notice space before value)\n"
+    << "    -i <file_in>        : input 3D Xmipp file\n"
+    << "   [-o <file_out>]      : if no name is given then the input file is\n"
+    << "                          rewritten\n"
+    << "    -sym <sym_file>     : symmetry file (see the manual)\n"
+    << "   [-no_group]          : do not generate symmetry subgroup\n"
+    << "   [-dont_wrap]         : by default, the volume is wrapped\n"
+    << "   [-splines]           : by default, trilinear interpolation\n";
 }
 
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters &prm)
 {
     out << "File in:       " << prm.fn_in  << std::endl
-        << "File out:      " << prm.fn_out << std::endl
-        << "Symmetry file: " << prm.fn_sym << std::endl
-        << "Generate group:" << !prm.do_not_generate_subgroup << std::endl
-        << "Wrapping:      " << prm.wrap   << std::endl;
+    << "File out:      " << prm.fn_out << std::endl
+    << "Symmetry file: " << prm.fn_sym << std::endl
+    << "Generate group:" << !prm.do_not_generate_subgroup << std::endl
+    << "Wrapping:      " << prm.wrap   << std::endl;
     out << "Splines:       " << prm.useBsplines << std::endl;
     return out;
 }

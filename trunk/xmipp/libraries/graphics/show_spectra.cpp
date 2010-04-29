@@ -287,8 +287,8 @@ void ShowSpectra::openNewFile(const FileName &_fn)
 void ShowSpectra::selectByValues()
 {
     SpectraFilter* filter_window = new SpectraFilter(
-        FLOOR(minPixel), CEIL(maxPixel), V->theItems[0], this,
-        0, "new window", Qt::WDestructiveClose);
+                                       FLOOR(minPixel), CEIL(maxPixel), V->theItems[0], this,
+                                       0, "new window", Qt::WDestructiveClose);
     filter_window->show();
 }
 
@@ -479,9 +479,9 @@ SpectraFilter::SpectraFilter(int min, int max,
                              const std::vector<float> &_x, ShowSpectra *_show_spectra,
                              QWidget *parent, const char *name, int wflags):
 #ifdef QT3_SUPPORT
-    QWidget(parent, name, (Qt::WindowFlags) wflags)
+        QWidget(parent, name, (Qt::WindowFlags) wflags)
 #else
-    QWidget(parent, name, wflags)
+        QWidget(parent, name, wflags)
 #endif
 {
     __N = _x.size();

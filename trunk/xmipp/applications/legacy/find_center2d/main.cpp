@@ -56,7 +56,7 @@
 float coseno [1281];
 BYTE **imagen;
 float r1, r2, r3, cxp1, cxp2, cxp3, cxm1, cxm2, cxm3, rh = 1000., xc0, yc0, del,
-                                                      rbajo, ralto, zzz0;
+        rbajo, ralto, zzz0;
 int largo, lancho, indmul, in, ni, mu, ncic;
 int ir, m, mu1, mu4, ntot,  mt, idz, ncic2, ntot4;
 /*
@@ -335,19 +335,16 @@ void ergrot(double xc0, double yc0, float* zzz)
     axp3 = 0.;
     axm3 = 0.;
     for (i7 = 1; i7 <= ir; i7++) /* do 31 */
-    {
-        r += r3;
+    { r += r3;
         iz2 = ntot - m + mu4;
         iz1 = iz2 - 1;
         for (i = 1; i <= mu; i++) /* do 13 */
-        {
-            iz1 += idz;
+        {   iz1 += idz;
             iz2 += idz;
             za = 0.;
             zb = 0.;
             for (kv = 1; kv <= ncic; kv++) /* do 11 */
-            {
-                iz1 += m;
+            { iz1 += m;
                 x = xc0 + r * coseno[iz1];
                 y = yc0 + r * coseno[iz1-mu4];
                 z = conv1x(y, x);
@@ -378,8 +375,7 @@ void ergrot(double xc0, double yc0, float* zzz)
         xp1 = xp1 * xp1;
         xm1 = xp1;
         for (i = 1; i <= mu1; i++) /* do 14 */
-        {
-            l1 = 4 * i * ncic + mu4;
+        {   l1 = 4 * i * ncic + mu4;
             l2 = mu4;
             ai = a[i];
             bi = b[i];
@@ -391,8 +387,7 @@ void ergrot(double xc0, double yc0, float* zzz)
             xm3 += (ai * bi * coseno[mu4+ncic]);
             i1 = i + 1;
             for (j = i1; j <= mu; j++) /* do 15 */
-            {
-                l1 += ncic2;
+            { l1 += ncic2;
                 l2 += ncic2;
                 ai = a[i];
                 aj = a[j];
@@ -485,8 +480,7 @@ float conv1x(double y, double x)
 /* olation. For higher accuracy, use "conv3x" (available in 370 assembly  */
 /* languaje.          */
 /**************************************************************************/
-{
-    short i, j;   /* Row and column */
+{   short i, j;   /* Row and column */
     float intfila1, intfila2; /* Partial row interpolations */
     float escala;   /* Scale factor */
 

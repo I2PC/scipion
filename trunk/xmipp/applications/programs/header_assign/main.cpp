@@ -45,9 +45,9 @@ int main(int argc, char *argv[])
     {
         try
         {
-            round_shifts = checkParameter(argc, argv, "-round_shifts");
-            levels = textToInteger(getParameter(argc, argv, "-levels", "0"));
-            fn_in = getParameter(argc, argv, "-i");
+        	round_shifts = checkParameter(argc, argv, "-round_shifts");
+        	levels = textToInteger(getParameter(argc, argv, "-levels", "0"));
+        	fn_in = getParameter(argc, argv, "-i");
         }
         catch (Xmipp_error XE)
         {
@@ -59,68 +59,67 @@ int main(int argc, char *argv[])
         SF.removeObjects(MDL_ENABLED, -1 );
         std::vector< MetaDataLabel >::iterator strIt;
 
-        long int ret=SF.firstObject();
-        if(ret==MetaData::NO_OBJECTS_STORED)
-        {
-            std::cerr << "Empty inputFile File\n";
-            exit(1);
-        }
-        do
-        {
-            SF.getValue( MDL_IMAGE, fn_img);
-            if (fn_img=="") break;
-            img.read(fn_img);
-            img.clear_fFlag_flag();
-            for( strIt  = SF.activeLabels.begin();
-                 strIt != SF.activeLabels.end();
-                 strIt ++ )
-            {
-                //std::cout << MetaDataContainer::decodeLabel(*strIt) << std::endl;
+		long int ret=SF.firstObject();
+		if(ret==MetaData::NO_OBJECTS_STORED)
+		{
+			std::cerr << "Empty inputFile File\n";
+			exit(1);
+		}
+		do
+		{
+			SF.getValue( MDL_IMAGE, fn_img);
+			if (fn_img=="") break;
+			img.read(fn_img);
+			img.clear_fFlag_flag();
+			for( strIt  = SF.activeLabels.begin();
+				 strIt != SF.activeLabels.end();
+				 strIt ++ )
+			{
+				//std::cout << MetaDataContainer::decodeLabel(*strIt) << std::endl;
 
 
-                switch ((*strIt))
-                {
-                case MDL_ANGLEROT:
-                    SF.getValue( MDL_ANGLEROT, rot);
-                    img.set_rot(rot);
-                    break;
-                case MDL_ANGLETILT:
-                    SF.getValue( MDL_ANGLETILT, tilt);
-                    img.set_tilt(tilt);
-                    break;
-                case MDL_ANGLEPSI:
-                    SF.getValue( MDL_ANGLEPSI, psi);
-                    img.set_psi(psi);
-                    break;
-                case MDL_SHIFTX:
-                    SF.getValue( MDL_SHIFTX, xshift);
-                    if (levels != 0)
-                        xshift /= pow(2.0, levels);
-                    if (round_shifts)
-                        xshift = ROUND(xshift);
-                    img.set_Xoff(xshift);
-                    break;
-                case MDL_SHIFTY:
-                    SF.getValue(MDL_SHIFTY, yshift);
-                    if (levels != 0)
-                        yshift /= pow(2.0, levels);
-                    if (round_shifts)
-                        yshift = (float)ROUND(yshift);
-                    img.set_Yoff(yshift);
-                    break;
-                case MDL_WEIGHT:
-                    SF.getValue( MDL_WEIGHT, weight);
-                    img.set_weight(weight);
-                    break;
-                case MDL_FLIP:
-                    SF.getValue( MDL_FLIP, mirror);
-                    img.set_flip(mirror);
-                    break;
-                }
-            }
-            img.write(fn_img);
-        }
-        while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
+				switch ((*strIt)) {
+					case MDL_ANGLEROT:
+						SF.getValue( MDL_ANGLEROT, rot);
+						img.set_rot(rot);
+						break;
+					case MDL_ANGLETILT:
+						SF.getValue( MDL_ANGLETILT, tilt);
+						img.set_tilt(tilt);
+						break;
+					case MDL_ANGLEPSI:
+						SF.getValue( MDL_ANGLEPSI, psi);
+						img.set_psi(psi);
+						break;
+					case MDL_SHIFTX:
+						SF.getValue( MDL_SHIFTX, xshift);
+					    if (levels != 0)
+							xshift /= pow(2.0, levels);
+		                if (round_shifts)
+		                    xshift = ROUND(xshift);
+						img.set_Xoff(xshift);
+						break;
+					case MDL_SHIFTY:
+						SF.getValue(MDL_SHIFTY, yshift);
+					    if (levels != 0)
+							yshift /= pow(2.0, levels);
+		                if (round_shifts)
+		                    yshift = (float)ROUND(yshift);
+						img.set_Yoff(yshift);
+						break;
+					case MDL_WEIGHT:
+						SF.getValue( MDL_WEIGHT, weight);
+						img.set_weight(weight);
+						break;
+					case MDL_FLIP:
+						SF.getValue( MDL_FLIP, mirror);
+						img.set_flip(mirror);
+						break;
+				}
+			}
+			img.write(fn_img);
+		}
+		while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
     }
     catch (Xmipp_error XE)
     {

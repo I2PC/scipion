@@ -130,16 +130,15 @@ int main(int argc, char *argv[])
             {
                 SelLine line = SF.current();
                 if (line.Is_data())
-                {
-                    //The SelLine is not a comment
+                { //The SelLine is not a comment
                     FileName in_name = line.get_text();
                     short label = line.get_label();
                     FileName out_name = in_name.without_extension();
                     out_name = out_name.add_extension(sel_ext);
                     SF_out.insert(out_name, (SelLine::Label)label);
                     raw22spi(in_name, out_name, raw_type, force_byte,
-                             header_size, Zdim, Ydim, Xdim,
-                             generate_inf, reverse_endian);
+                        header_size, Zdim, Ydim, Xdim,
+                        generate_inf, reverse_endian);
                 }
                 else if (line.Is_comment())
                 {
@@ -154,7 +153,7 @@ int main(int argc, char *argv[])
         else if (checkParameter(argc, argv, "-i") && checkParameter(argc, argv, "-o"))
         {
             raw22spi(fn_in, fn_out, raw_type, force_byte,
-                     header_size, Zdim, Ydim, Xdim, generate_inf, reverse_endian);
+                header_size, Zdim, Ydim, Xdim, generate_inf, reverse_endian);
         }
 
     }

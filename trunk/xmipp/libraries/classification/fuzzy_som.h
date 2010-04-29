@@ -55,8 +55,8 @@ public:
      */
     xmippFuzzySOM(double _m0, double _m1, unsigned long _annSteps,
                   double _reg, double _epsilon, unsigned long _nSteps)
-        : xmippBaseAlgo<xmippFuzzyMap>(), m0(_m0), m1(_m1), annSteps(_annSteps),
-          reg(_reg), epsilon(_epsilon), somNSteps(_nSteps)
+            : xmippBaseAlgo<xmippFuzzyMap>(), m0(_m0), m1(_m1), annSteps(_annSteps),
+            reg(_reg), epsilon(_epsilon), somNSteps(_nSteps)
     {};
 
     /**
@@ -132,7 +132,7 @@ private:
 
     /** Declaration of virtual method */
     virtual void train(xmippFuzzyMap& _som, const TS& _examples) const
-    {};
+        {};
 
     double updateU(xmippFuzzyMap& _som, const TS& _examples, const double& _m);
 

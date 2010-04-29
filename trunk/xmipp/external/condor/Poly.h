@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
-              using trust Region method for high-computing load,
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
+              using trust Region method for high-computing load, 
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product,
+If you want to include this tools in any commercial product, 
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -34,16 +34,15 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 #include "Matrix.h"
 
 // ORDER BY DEGREE !
-class Polynomial
-{
+class Polynomial {
 protected:
 
     typedef struct PolynomialDataTag
     {
-        double *coeff;  // Coefficients
-        unsigned n,     // size of vector of Coefficients
-                 dim,   // Dimensions
-                 deg;   // Degree
+	    double *coeff;	// Coefficients
+	    unsigned n,     // size of vector of Coefficients
+                 dim,	// Dimensions
+	             deg;	// Degree
         int ref_count;
     } PolynomialData;
     PolynomialData *d;
@@ -51,33 +50,18 @@ protected:
     void destroyCurrentBuffer();
 
 public:
-    Polynomial()
-    {
-        init(0,0);
-    };
+    Polynomial(){ init(0,0); };
     Polynomial( unsigned Dim, unsigned deg=0, double *data=0 );
     Polynomial( unsigned Dim, double val ); // Constant polynomial
     Polynomial( MultInd& );  // Monomials
     Polynomial(char *name);
 
 
-    // Accessor
-    inline unsigned dim()
-    {
-        return d->dim;
-    };
-    inline unsigned deg()
-    {
-        return d->deg;
-    };
-    inline unsigned sz()
-    {
-        return d->n;
-    };
-    inline operator double*() const
-    {
-        return d->coeff;
-    };
+	// Accessor
+    inline unsigned dim() { return d->dim; };
+    inline unsigned deg() { return d->deg; };
+    inline unsigned sz() { return d->n; };
+    inline operator double*() const { return d->coeff; };
 
     // allow shallow copy:
     ~Polynomial();
@@ -86,33 +70,31 @@ public:
     Polynomial clone();
     void copyFrom(Polynomial a);
 
-    // Arithmetic operations
+	// Arithmetic operations
 
-    // friend Polynomial operator*( const double&, const Polynomial& );
-    Polynomial operator*( const double );
-    Polynomial operator/( const double );
-    Polynomial operator+( Polynomial );
-    Polynomial operator-( Polynomial );
+  // friend Polynomial operator*( const double&, const Polynomial& );
+	Polynomial operator*( const double );
+	Polynomial operator/( const double );
+	Polynomial operator+( Polynomial );
+	Polynomial operator-( Polynomial );
+	
+	// Unary
+	Polynomial operator-( void ); // the opposite (negative of)	
+	Polynomial operator+( void )
+		{ return *this; }
 
-    // Unary
-    Polynomial operator-( void ); // the opposite (negative of)
-    Polynomial operator+( void )
-    {
-        return *this;
-    }
+	// Assignment+Arithmetics
 
-    // Assignment+Arithmetics
+	Polynomial operator+=( Polynomial );
+	Polynomial operator-=( Polynomial );
+	Polynomial operator*=( const double );
+	Polynomial operator/=( const double );
 
-    Polynomial operator+=( Polynomial );
-    Polynomial operator-=( Polynomial );
-    Polynomial operator*=( const double );
-    Polynomial operator/=( const double );
-
-    // simple math tools
-
+	// simple math tools
+    
 //    double simpleEval( Vector P);
     double shiftedEval( Vector Point, double minusVal);
-    double operator()( Vector );
+	double operator()( Vector );
     Polynomial derivate(int i);
     void gradient(Vector P, Vector G);
     void gradientHessian(Vector P, Vector G, Matrix H);
@@ -120,18 +102,15 @@ public:
 
     // Comparison
 
-    inline int operator==( const Polynomial q)
-    {
-        return d==q.d;
-    };
+    inline int operator==( const Polynomial q) { return d==q.d; };
     int equals( Polynomial q );
 
-    // Output
-
+	// Output
+	
     void print();
     void save(char *name);
 
-    //ostream& PrintToStream( ostream& ) const;
+	//ostream& PrintToStream( ostream& ) const;
 
     //behaviour
     static const unsigned int NicePrint;
@@ -139,18 +118,9 @@ public:
     static const unsigned int Normalized;  // Use normalized monomials
 
     static unsigned int flags;
-    void       setFlag( unsigned int val )
-    {
-        flags |= val;
-    }
-    void     unsetFlag( unsigned int val )
-    {
-        flags &= ~val;
-    }
-    unsigned queryFlag( unsigned int val )
-    {
-        return flags & val;
-    }
+    void       setFlag( unsigned int val ) { flags |= val; }
+    void     unsetFlag( unsigned int val ) { flags &= ~val; }
+    unsigned queryFlag( unsigned int val ) { return flags & val; }
 
     static Polynomial emptyPolynomial;
 };
@@ -161,7 +131,7 @@ unsigned long choose( unsigned n, unsigned k );
 inline Polynomial operator*( const double& dou, Polynomial& p  )
 {
     // we can use operator * defined on Polynomial because of commutativity
-    return p * dou;
+	return p * dou;		
 }
 
-#endif  /* _MPI_POLY_H_ */
+#endif 	/* _MPI_POLY_H_ */

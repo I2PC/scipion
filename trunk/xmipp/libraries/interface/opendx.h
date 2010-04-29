@@ -41,7 +41,7 @@
     to meassure distances between points. Use the networks for these purpose.
     (To measuure distances select: Options->viewcontrol and then mode->pick,
     click in the image select picks->pick_2 and pick again in the image.)
-
+    
     */
 
 class openDX

@@ -79,7 +79,7 @@ public:
      * Parameter: _examples  A training set with the training examples.
      */
     virtual void train(DS& _ds, const TS& _examples) const
-    {};
+        {};
 
     /**
      * Method to train the algorithm.
@@ -88,7 +88,7 @@ public:
      * Parameter: _examples  A training set with the training examples.
      */
     virtual void train(DS& _ds, TS& _examples) const
-    {};
+        {};
 
     /**
      * Method to test the algorithm.

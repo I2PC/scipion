@@ -86,18 +86,18 @@ void Basis::read(const FileName &fn)
 void Basis::usage() const
 {
     std::cerr << "\nBasis parameters"
-              << "\nFor blobs:"
-              << "\n   [-r blrad=2]          blob radius"
-              << "\n   [-m blord=2]          order of Bessel function in blob"
-              << "\n   [-a blalpha=10.4]     blob parameter alpha"
-              << "\n   [-big_blobs]          blob parameters and grid relative size adjusted"
-              << "\n   [-small_blobs]           for using big, small blobs"
-              << "\n   [-visual_blobs]          or blobs optimal for direct visualization"
-              << "\nFor voxels"
-              << "\n   [-voxels]\n"
-              << "\nFor splines"
-              << "\n   [-splines]\n"
-              ;
+    << "\nFor blobs:"
+    << "\n   [-r blrad=2]          blob radius"
+    << "\n   [-m blord=2]          order of Bessel function in blob"
+    << "\n   [-a blalpha=10.4]     blob parameter alpha"
+    << "\n   [-big_blobs]          blob parameters and grid relative size adjusted"
+    << "\n   [-small_blobs]           for using big, small blobs"
+    << "\n   [-visual_blobs]          or blobs optimal for direct visualization"
+    << "\nFor voxels"
+    << "\n   [-voxels]\n"
+    << "\nFor splines"
+    << "\n   [-splines]\n"
+    ;
 }
 
 // Set sampling rate -------------------------------------------------------
@@ -115,17 +115,15 @@ void Basis::produce_side_info(const Grid &grid)
     switch (type)
     {
     case (blobs):
-        footprint_blob(blobprint, blob, BLOB_SUBSAMPLING);
+                    footprint_blob(blobprint, blob, BLOB_SUBSAMPLING);
         sum_on_grid = sum_blob_Grid(blob, grid, D);
         blobprint()  /= sum_on_grid;
         blobprint2()  = blobprint();
         blobprint2() *= blobprint();
         break;
-    case (voxels):
-        sum_on_grid = 1;
+    case (voxels):  sum_on_grid = 1;
         break;
-    case (splines):
-        sum_on_grid = sum_spatial_Bspline03_Grid(grid);
+    case (splines): sum_on_grid = sum_spatial_Bspline03_Grid(grid);
         break;
     }
 
@@ -146,8 +144,8 @@ std::ostream & operator << (std::ostream & out, const Basis &basis)
     {
     case Basis::blobs:
         out << " Blobs:         radius=" << basis.blob.radius << " pixels"
-            << " alpha=" << basis.blob.alpha
-            << " order=" << basis.blob.order << std::endl;
+        << " alpha=" << basis.blob.alpha
+        << " order=" << basis.blob.order << std::endl;
         break;
     case Basis::voxels:
         out << "Voxels\n";

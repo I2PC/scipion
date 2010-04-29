@@ -60,8 +60,7 @@ extern "C"
         UNKNOWN_FILTER = 0 /* unknown filter type */,
         ALPHA_DERICHE = 1 /* Deriche's filter (exponential (- alpha |X|)) */,
         GAUSSIAN_DERICHE = 2 /* gaussian approximation (Deriche's coefficients) */
-                       }
-                       recursiveFilterType;
+    } recursiveFilterType;
 
 
 
@@ -90,8 +89,7 @@ extern "C"
      *   of the filter is made so that the response to the
      *   signal i=x*3/6 will be 1.
      */
-    typedef enum
-    {
+    typedef enum {
         NODERIVATIVE  = -1 /* no derivative (no filtering) */,
         DERIVATIVE_0  = 0 /* smoothing */,
         SMOOTHING     = 0 /* smoothing */,
@@ -127,8 +125,8 @@ extern "C"
      * - derivativeOrder
      */
     extern void InitRecursiveCoefficients(double x, /* coefficient's value */
-                                          recursiveFilterType filterType, /* filter's type */
-                                          derivativeOrder derivative /* derivative's order */);
+                                              recursiveFilterType filterType, /* filter's type */
+                                              derivativeOrder derivative /* derivative's order */);
 
 
 
@@ -150,11 +148,11 @@ extern "C"
      * - 1 if successful
      */
     extern int RecursiveFilter1D(double *in, /* input line */
-                                 double *out, /* output line */
-                                 double *work1, /* first work array */
-                                 double *work2, /* second work array,
+                                     double *out, /* output line */
+                                     double *work1, /* first work array */
+                                     double *work2, /* second work array,
                                            could be out if out is different from in */
-                                 int dim /* lines' length */);
+                                     int dim /* lines' length */);
 
 
     /* Turn on verbose mode.

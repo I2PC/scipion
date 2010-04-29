@@ -46,9 +46,9 @@
 extern float coseno [1281];
 extern unsigned char *imagen[513];
 extern float r1, r2, r3, cxp1, cxp2, cxp3, cxm1, cxm2, cxm3, rh, xc0, yc0, del,
-       rbajo, ralto, zzz0;
+    rbajo, ralto, zzz0;
 extern int ir, m, mu, mu1, mu4, ntot, ncic, mt, idz, ncic2, ntot4, in, ni, largo,
-       lancho, indmul;
+    lancho, indmul;
 /*
 extern float conv1x (double, double);
 void busca (), suaviza (), lectur (), ergrot (double, double, float *);
@@ -139,11 +139,9 @@ e9:
         goto e22;
     x = xc0 - in * del;
     for (i = 1; i <= ind; i++) /* do 5 */
-    {
-        y = yc0 - in * del;
+    { y = yc0 - in * del;
         for (j = 1; j <= ind; j++) /*do 4 */
-        {
-            ergrot(x, y, &z);
+        {   ergrot(x, y, &z);
             /*     printf ("%10.3f%10.3f%10.5f%10.3f%10.3f AA\n", x,y,z,del,rh);*/
             printf(".");
             fflush(stdout);
@@ -160,8 +158,7 @@ e23:
     ext = -1000000.;
     for (i = 1; i <= ind; i++) /* do 7 */
         for (j = 1; j <= ind; j++) /* do 7 */
-        {
-            if (f[i][j] > ext)
+            {   if (f[i][j] > ext)
             {
                 ix = i;
                 iy = j;
@@ -191,11 +188,9 @@ e22:
     f[in1][in1] = f[ix][iy];
     x = xc0 - (in - 1) * del;
     for (i = 2; i < ind1; i++) /* do 11 */
-    {
-        y = yc0 - (in - 1) * del;
-        for (j = 2; j <= ind1; j++) /* do 12 */
-        {
-            if (i == in1 && j == in1)
+    { y = yc0 - (in - 1) * del;
+        for (j = 2;j <= ind1; j++) /* do 12 */
+            {   if (i == in1 && j == in1)
                 goto e13;
             ergrot(x, y, &z);
             /*     printf ("%10.3f%10.3f%10.5f%10.3f BB \n", x,y,z,del);*/
@@ -212,8 +207,7 @@ e13:
     y = yc0 - (in - 1) * del;
 
     for (k = 2; k <= ind1; k++) /* do 16 */
-    {
-        if (k == in1)
+        { if (k == in1)
             goto e17;
         xx = xc0 - in * del;
         ergrot(xx, y, &z);

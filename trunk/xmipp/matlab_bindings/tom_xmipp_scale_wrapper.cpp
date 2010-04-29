@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *      im_out = tom_xmipp_scale_wrapper(image,outsize,gridding)
+ *		im_out = tom_xmipp_scale_wrapper(image,outsize,gridding)
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -30,21 +30,21 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
-
+    
     int outsize[3];
     const double *p_outsize=mxGetPr(prhs[1]);
     outsize[0]=(int)p_outsize[0];
     outsize[1]=(int)p_outsize[1];
     outsize[2]=(int)p_outsize[2];
-
+    
     bool gridding = (bool)mxGetScalar(prhs[2]);
     mwSize ndims = mxGetNumberOfDimensions(prhs[0]);
-
+    
     if (ndims == 2)
     {
         Image image;
         getMatrix2D(prhs[0],image());
-
+        
         if (gridding)
         {
             Matrix2D<double> A(3, 3);
@@ -59,10 +59,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         else
         {
             image().selfScaleToSizeBSpline(3, outsize[0], outsize[1]);
-        }
+	    }
         setMatrix2D(image(),plhs[0]);
     }
-    else
+    else 
     {
         Volume volume;
         getMatrix3D(prhs[0],volume());
@@ -82,9 +82,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         else
         {
             volume().selfScaleToSizeBSpline(3, outsize[0], outsize[1], outsize[2]);
-        }
+	    }
         setMatrix3D(volume(),plhs[0]);
     }
 
-}
+}	
 

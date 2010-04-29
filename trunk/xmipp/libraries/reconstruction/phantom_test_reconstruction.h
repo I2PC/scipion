@@ -212,7 +212,7 @@ public:
     double b_avg;
     /// Stddev of b in y=ax+b
     double b_stddev;
-    /// Normalizing method. See \ref Normalize_parameters
+    /// Normalizing method. See \ref Normalize_parameters 
     int normalizing_method;
     /// Background radius
     int bg_radius;
@@ -242,7 +242,7 @@ public:
 
     /** Show parameters */
     friend std::ostream & operator << (std::ostream &out, const Recons_test_Parameters
-                                       &prm);
+                                  &prm);
 };
 
 /** Single measure on a FOM.

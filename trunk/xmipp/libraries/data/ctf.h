@@ -305,10 +305,10 @@ public:
             std::cout << "   Deltaf=" << deltaf << std::endl;
             std::cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << std::endl;
             std::cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
-                      << sine_part << std::endl;
+            << sine_part << std::endl;
             std::cout << "   Q0=" << Q0 << std::endl;
             std::cout << "   (X,Y)=(" << X << "," << Y << ") CTF without damping="
-                      << -(sine_part + Q0*cosine_part) << std::endl;
+            << -(sine_part + Q0*cosine_part) << std::endl;
         }
         return -(sine_part + Q0*cosine_part);
     }
@@ -334,10 +334,10 @@ public:
             std::cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
             std::cout << "   EdeltaR=" << EdeltaR << std::endl;
             std::cout << "   K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
-                      << std::endl;
+            << std::endl;
             std::cout << "   Total atenuation(E)= " << E << std::endl;
             std::cout << "   (X,Y)=(" << X << "," << Y << ") CTFdamp="
-                      << E << std::endl;
+            << E << std::endl;
         }
         return -K*E;
     }
@@ -365,17 +365,17 @@ public:
             std::cout << "   Deltaf=" << deltaf << std::endl;
             std::cout << "   u,u2,u4=" << u << " " << u2 << " " << u4 << std::endl;
             std::cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
-                      << sine_part << std::endl;
+            << sine_part << std::endl;
             std::cout << "   K3,Eespr=" << K3 << " " << Eespr << std::endl;
             std::cout << "   K4,Eispr=" << K4 << " " << /*Eispr <<*/ std::endl;
             std::cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
             std::cout << "   EdeltaR=" << EdeltaR << std::endl;
             std::cout << "   K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
-                      << std::endl;
+            << std::endl;
             std::cout << "   Total atenuation(E)= " << E << std::endl;
             std::cout << "   K,Q0,base_line=" << K << "," << Q0 << "," << base_line << std::endl;
             std::cout << "   (X,Y)=(" << X << "," << Y << ") CTF="
-                      << -K*(sine_part + Q0*cosine_part)*E + base_line << std::endl;
+            << -K*(sine_part + Q0*cosine_part)*E + base_line << std::endl;
         }
         return -K*(sine_part + Q0*cosine_part)*E;
     }
@@ -423,17 +423,17 @@ public:
         if (show)
         {
             std::cout << "   ellipsoid_ang=" << RAD2DEG(ellipsoid_ang) << std::endl
-                      << "   ellipsoid_sqrt_ang=" << RAD2DEG(ellipsoid_sqrt_ang) << std::endl
-                      << "   sqUp, sqVp=" << sqUp << "," << sqVp << " (" << sq << ")\n"
-                      << "   cUp, cVp=" << cUp << "," << cVp << " (" << c << ")\n"
-                      << "   sigmaUp, sigmaVp=" << sigmaUp << "," << sigmaVp << " (" << sigma << ")\n"
-                      << "   ellipsoid_ang2=" << RAD2DEG(ellipsoid_ang2) << std::endl
-                      << "   cUp2, cVp2=" << cUp2 << "," << cVp2 << " (" << c2 << ")\n"
-                      << "   sigmaUp2, sigmaVp2=" << sigmaUp2 << "," << sigmaVp2 << " (" << sigma2 << ")\n";
+            << "   ellipsoid_sqrt_ang=" << RAD2DEG(ellipsoid_sqrt_ang) << std::endl
+            << "   sqUp, sqVp=" << sqUp << "," << sqVp << " (" << sq << ")\n"
+            << "   cUp, cVp=" << cUp << "," << cVp << " (" << c << ")\n"
+            << "   sigmaUp, sigmaVp=" << sigmaUp << "," << sigmaVp << " (" << sigma << ")\n"
+            << "   ellipsoid_ang2=" << RAD2DEG(ellipsoid_ang2) << std::endl
+            << "   cUp2, cVp2=" << cUp2 << "," << cVp2 << " (" << c2 << ")\n"
+            << "   sigmaUp2, sigmaVp2=" << sigmaUp2 << "," << sigmaVp2 << " (" << sigma2 << ")\n";
             std::cout << "   (X,Y)=(" << X << "," << Y << ") (" << w << ") CTFnoise="
-                      << base_line +
-                      gaussian_K*exp(-sigma*(w - c)*(w - c)) + sqrt_K*exp(-sq*sqrt(w)) -
-                      gaussian_K2*exp(-sigma2*(w - c2)*(w - c2)) << std::endl;
+            << base_line +
+            gaussian_K*exp(-sigma*(w - c)*(w - c)) + sqrt_K*exp(-sq*sqrt(w)) -
+            gaussian_K2*exp(-sigma2*(w - c2)*(w - c2)) << std::endl;
         }
         return base_line +
                gaussian_K*exp(-sigma*(w - c)*(w - c)) + sqrt_K*exp(-sq*sqrt(w)) -
@@ -475,29 +475,28 @@ public:
     CTF Data files are text files with two columns: the first column
     is the name of a projection image, the second column is the
     name of the corresponding ctfparam file.
-
+    
     Example of use:
     @code
         CTFDat ctfdat;
-    ctfdat.read("ctfdat.txt");
-    ctfdat.goFirstLine();
-    std::cerr << "Correcting CTF phase ...\n";
-    int istep = CEIL((double)ctfdat.lineNo() / 60.0);
-    init_progress_bar(ctfdat.lineNo());
-    int i = 0;
-    while (!ctfdat.eof())
-    {
+	ctfdat.read("ctfdat.txt");
+	ctfdat.goFirstLine();
+	std::cerr << "Correcting CTF phase ...\n";
+	int istep = CEIL((double)ctfdat.lineNo() / 60.0);
+	init_progress_bar(ctfdat.lineNo());
+	int i = 0;
+	while (!ctfdat.eof())
+	{
             FileName fnProjection, fnCTF;
-        ctfdat.getCurrentLine(fnProjection,fnCTF);
+	    ctfdat.getCurrentLine(fnProjection,fnCTF);
             ...
             if (i++ % istep == 0) progress_bar(i);
-        ctfdat.nextLine();
-    }
-    progress_bar(ctfdat.lineNo());
+	    ctfdat.nextLine();
+	}
+	progress_bar(ctfdat.lineNo());
     @endcode
 */
-class CTFDat
-{
+class CTFDat {
 public:
     /// List with the projection files
     std::vector< FileName > fnProjectionList;
@@ -512,7 +511,7 @@ public:
        searchOK is true if the the key is found. If the key is not found,
        searchOK is false and the returned value is empty. */
     const FileName & getCTF(const FileName &fnProjection,
-                            bool& searchOK) const;
+      bool& searchOK) const;
 
     /// Set the CTF file for a given key
     void setCTF(const FileName &fnProjection, const FileName &fnCtf);
@@ -521,7 +520,7 @@ public:
     void append(const FileName &fnProjection, const FileName &fnCtf);
 
     /// Read the CTFDat from a file
-    void read(const FileName &fnCtfdat);
+    void read(const FileName &fnCtfdat); 
 
     /// Write the CTFDat to a file
     void write(const FileName &fnCtfdat) const;
@@ -540,10 +539,10 @@ public:
 
     /// Get current line
     void getCurrentLine(FileName& fnProjection, FileName& fnCtf);
-
+    
     /// Creates a CTFDat with a selfile for which there is a single CTF
     void createFromSelfileAndSingleCTF(MetaData &SF,
-                                       const FileName &fnCtf);
+       const FileName &fnCtf);
 };
 //@}
 #endif

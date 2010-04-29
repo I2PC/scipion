@@ -372,36 +372,36 @@ int main(int argc, char *argv[])
                     MPI_Barrier(MPI_COMM_WORLD);
                     aux_comm_t = MPI_Wtime();
                     MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(jj)()),
-                                  MULTIDIM_ARRAY(vol_basis_aux(jj)()),
-                                  MULTIDIM_SIZE(vol_basis(jj)()),
-                                  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                        MULTIDIM_ARRAY(vol_basis_aux(jj)()),
+                        MULTIDIM_SIZE(vol_basis(jj)()),
+                        MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     aux_t = MPI_Wtime() - aux_comm_t;
                     comms_t += aux_t;
                     comms_t_it += aux_t;
 
                     FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_basis(jj)())
-                    if (VOL_ELEM(GVNeq_aux(jj)(), k, i, j) == 0)
-                    {
-                        if (VOL_ELEM(vol_basis_aux(jj)(), k, i, j) == 0)
+                        if (VOL_ELEM(GVNeq_aux(jj)(), k, i, j) == 0)
                         {
-                            VOL_ELEM(vol_basis(jj)(), k, i, j) = 0;
+                            if (VOL_ELEM(vol_basis_aux(jj)(), k, i, j) == 0)
+                            {
+                                VOL_ELEM(vol_basis(jj)(), k, i, j) = 0;
+                            }
+                            else
+                            {
+                                // This case should not happen as this element
+                                // is not affected by actual projections
+
+                                std::cerr << "Error with weights, contact developers!" << std::endl;
+                                exit(0);
+                            }
                         }
                         else
                         {
-                            // This case should not happen as this element
-                            // is not affected by actual projections
-
-                            std::cerr << "Error with weights, contact developers!" << std::endl;
-                            exit(0);
+                            VOL_ELEM(GVNeq_aux(jj)(), k, i, j) =
+                                VOL_ELEM(vol_aux2(jj)(), k, i, j) +
+                                VOL_ELEM(vol_basis_aux(jj)(), k, i, j) /
+                                VOL_ELEM(GVNeq_aux(jj)(), k, i, j);
                         }
-                    }
-                    else
-                    {
-                        VOL_ELEM(GVNeq_aux(jj)(), k, i, j) =
-                            VOL_ELEM(vol_aux2(jj)(), k, i, j) +
-                            VOL_ELEM(vol_basis_aux(jj)(), k, i, j) /
-                            VOL_ELEM(GVNeq_aux(jj)(), k, i, j);
-                    }
                 }
             }
             art_prm.parallel_mode = Basic_ART_Parameters::pBiCAV; // trick undone
@@ -427,41 +427,40 @@ int main(int argc, char *argv[])
                 MPI_Barrier(MPI_COMM_WORLD);
                 aux_comm_t = MPI_Wtime();
                 MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(jj)()),
-                              MULTIDIM_ARRAY(vol_basis_aux(jj)()),
-                              MULTIDIM_SIZE(vol_basis(jj)()),
-                              MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    MULTIDIM_ARRAY(vol_basis_aux(jj)()),
+                    MULTIDIM_SIZE(vol_basis(jj)()),
+                    MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 aux_t = MPI_Wtime() - aux_comm_t;
                 comms_t += aux_t;
                 comms_t_it += aux_t;
 
                 FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_basis(jj)())
-                if (VOL_ELEM(GVNeq_aux(jj)(), k, i, j) == 0)  // Division by 0
-                {
-                    if (VOL_ELEM(vol_basis_aux(jj)(), k, i, j) == 0)
+                    if (VOL_ELEM(GVNeq_aux(jj)(), k, i, j) == 0)  // Division by 0
                     {
-                        VOL_ELEM(vol_basis(jj)(), k, i, j) = 0;
+                        if (VOL_ELEM(vol_basis_aux(jj)(), k, i, j) == 0)
+                        {
+                            VOL_ELEM(vol_basis(jj)(), k, i, j) = 0;
+                        }
+                        else
+                        {
+                            // This case should not happen as this element
+                            // is not affected by actual projections
+
+                            std::cerr << "Error with weights, contact developers!" << std::endl;
+                            exit(0);
+                        }
                     }
                     else
                     {
-                        // This case should not happen as this element
-                        // is not affected by actual projections
-
-                        std::cerr << "Error with weights, contact developers!" << std::endl;
-                        exit(0);
+                        VOL_ELEM(vol_basis(jj)(), k, i, j) =
+                            VOL_ELEM(vol_aux2(jj)(), k, i, j) +
+                            VOL_ELEM(vol_basis_aux(jj)(), k, i, j) /
+                            VOL_ELEM(GVNeq_aux(jj)(), k, i, j);
                     }
-                }
-                else
-                {
-                    VOL_ELEM(vol_basis(jj)(), k, i, j) =
-                        VOL_ELEM(vol_aux2(jj)(), k, i, j) +
-                        VOL_ELEM(vol_basis_aux(jj)(), k, i, j) /
-                        VOL_ELEM(GVNeq_aux(jj)(), k, i, j);
-                }
             }
         }
         else
-        {
-            // SIRT AND ASS
+        {   // SIRT AND ASS
 
             art_prm.numIMG = num_img_node;
 
@@ -491,9 +490,9 @@ int main(int argc, char *argv[])
                 aux_comm_t = MPI_Wtime();
 
                 MPI_Allreduce(MULTIDIM_ARRAY(vol_basis(jj)()),
-                              MULTIDIM_ARRAY(vol_basis_aux(jj)()),
-                              MULTIDIM_SIZE(vol_basis(jj)()),
-                              MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    MULTIDIM_ARRAY(vol_basis_aux(jj)()),
+                    MULTIDIM_SIZE(vol_basis(jj)()),
+                    MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
                 aux_t = MPI_Wtime() - aux_comm_t;
                 comms_t += aux_t;
@@ -545,13 +544,13 @@ int main(int argc, char *argv[])
     }
 
     int Xoutput_volume_size=(art_prm.Xoutput_volume_size==0) ?
-                            art_prm.projXdim:art_prm.Xoutput_volume_size;
+       art_prm.projXdim:art_prm.Xoutput_volume_size;
     int Youtput_volume_size=(art_prm.Youtput_volume_size==0) ?
-                            art_prm.projYdim:art_prm.Youtput_volume_size;
+       art_prm.projYdim:art_prm.Youtput_volume_size;
     int Zoutput_volume_size=(art_prm.Zoutput_volume_size==0) ?
-                            art_prm.projXdim:art_prm.Zoutput_volume_size;
+       art_prm.projXdim:art_prm.Zoutput_volume_size;
     art_prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
-                                 Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+        Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
     vol_voxels.write(art_prm.fn_root+".vol");
 
     if (art_prm.tell&TELL_SAVE_BASIS)

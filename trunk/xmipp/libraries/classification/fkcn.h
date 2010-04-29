@@ -56,7 +56,7 @@ public:
      * Parameter: _epochs Number of epochs or iterations
     */
     xmippFKCN(double _m, double _epsilon, unsigned _epochs)
-        : xmippFCMeans(_m, _epsilon, _epochs)
+            : xmippFCMeans(_m, _epsilon, _epochs)
     {
         setID() = "Fuzzy Kohonen Clustering Network";
     };

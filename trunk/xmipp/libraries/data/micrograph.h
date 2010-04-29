@@ -144,7 +144,7 @@ public:
     /** Set micrograph filename. */
     void set_micrograph_name(const FileName& fn)
     {
-        fn_micrograph = fn;
+	fn_micrograph = fn;
     }
 
     /** Save coordinates to disk. */
@@ -309,7 +309,7 @@ public:
     {
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
             // COSS: REPORT_ERROR(1, "Micrograph::(): index out of range");
-            return 0;
+	    return 0;
         if (__depth == 8)
         {
             return m8[y*Xdim+x];
@@ -381,13 +381,12 @@ public:
                     for (int j = 0; j < Xdim; j++, tmp++)
                     {
                         short int retval=m16[tmp];
-                        if (__reversed)
-                        {
-                            unsigned char *ptr=(unsigned char *)&retval, temp;
-                            SWAP(*ptr,*(ptr+1),temp);
+                        if (__reversed) {
+                        unsigned char *ptr=(unsigned char *)&retval, temp;
+                        SWAP(*ptr,*(ptr+1),temp);
                         }
-                        if(retval>_Max) _Max=retval;
-                        else if(retval<_min) _min=retval;
+        	        if(retval>_Max) _Max=retval;
+        	        else if(retval<_min) _min=retval;
                     }
                 Dmin = (double)_min;
                 Dmax = (double)_Max;
@@ -401,13 +400,13 @@ public:
                     for (int j = 0; j < Xdim; j++, tmp++)
                     {
                         unsigned short int retval=um16[tmp];
-                        if (__reversed)
+                        if (__reversed) 
                         {
-                            unsigned char *ptr=(unsigned char *)&retval, temp;
-                            SWAP(*ptr,*(ptr+1),temp);
+	                   unsigned char *ptr=(unsigned char *)&retval, temp;
+	                   SWAP(*ptr,*(ptr+1),temp);
                         }
-                        if(retval>_Max) _Max=retval;
-                        else if(retval<_min) _min=retval;
+        	        if(retval>_Max) _Max=retval;
+        	        else if(retval<_min) _min=retval;
                     }
                 Dmin = (double)_min;
                 Dmax = (double)_Max;
@@ -422,14 +421,14 @@ public:
                 for (int j = 0; j < Xdim; j++, tmp++)
                 {
                     float retval=m32[tmp];
-                    if (__reversed)
+                    if (__reversed) 
                     {
-                        unsigned char *ptr=(unsigned char *)&retval, temp;
-                        SWAP(*ptr,*(ptr+3),temp);
-                        SWAP(*(ptr+1),*(ptr+2),temp);
+	               unsigned char *ptr=(unsigned char *)&retval, temp;
+	               SWAP(*ptr,*(ptr+3),temp);
+	               SWAP(*(ptr+1),*(ptr+2),temp);
                     }
-                    if(retval>_Max) _Max=retval;
-                    else if(retval<_min) _min=retval;
+        	    if(retval>_Max) _Max=retval;
+        	    else if(retval<_min) _min=retval;
                 }
 
             Dmin = (double)_min;
@@ -458,7 +457,7 @@ public:
         if (!__scaling_valid) return(unsigned char)(*this)(x, y);
         else return(unsigned char)(__a*(*this)(x, y) + __b);
     }
-
+    
     /** Get the linear transformation for scaling micrographs */
     void getLinearTransformatioVal8(double &a, double &b) const;
 

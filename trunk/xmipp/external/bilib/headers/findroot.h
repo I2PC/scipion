@@ -61,18 +61,18 @@
   *   @endcode
 */
 extern int  RootBracket
-(
-    int(*Function)(double, void *, double *),
-    /* function to bracket */
-    void *AuxilliaryData, /* parameters used by the function */
-    double *LowerBound,  /* lower interval bound to be updated */
-    double *UpperBound,  /* upper interval bound to be updated */
-    double *LowerSample,  /* value of Function for argument LowerBound */
-    double *UpperSample,  /* value of Function for argument UpperBound */
-    double Tolerance,   /* admissible relative error */
-    int  *ValidBracket,  /* whether or not a root could be bracketed */
-    int  *Status    /* error management */
-);
+    (
+        int(*Function)(double, void *, double *),
+        /* function to bracket */
+        void *AuxilliaryData, /* parameters used by the function */
+        double *LowerBound,  /* lower interval bound to be updated */
+        double *UpperBound,  /* upper interval bound to be updated */
+        double *LowerSample,  /* value of Function for argument LowerBound */
+        double *UpperSample,  /* value of Function for argument UpperBound */
+        double Tolerance,   /* admissible relative error */
+        int  *ValidBracket,  /* whether or not a root could be bracketed */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Find a root by bisection.
@@ -129,16 +129,16 @@ extern int  RootBracket
   *   @endcode
 */
 extern int  RootFindBisection
-(
-    int(*Function)(double, void *, double *),
-    /* function, of which a root is sought */
-    void *AuxilliaryData, /* parameters used by the function */
-    double *Root,    /* returned root */
-    double LowerBound,   /* lower bound of an interval containing a root */
-    double UpperBound,   /* upper bound of an interval containing a root */
-    double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        int(*Function)(double, void *, double *),
+        /* function, of which a root is sought */
+        void *AuxilliaryData, /* parameters used by the function */
+        double *Root,    /* returned root */
+        double LowerBound,   /* lower bound of an interval containing a root */
+        double UpperBound,   /* upper bound of an interval containing a root */
+        double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Find root using Brent algorithm.
@@ -197,14 +197,14 @@ extern int  RootFindBisection
   *   @endcode
 */
 extern int  RootFindBrent
-(
-    int(*Function)(double, void *, double *),
-    /* function, of which a root is sought */
-    void *AuxilliaryData, /* parameters used by the function */
-    double *Root,    /* returned root */
-    double LowerBound,   /* lower bound of an interval containing a root */
-    double UpperBound,   /* upper bound of an interval containing a root */
-    double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        int(*Function)(double, void *, double *),
+        /* function, of which a root is sought */
+        void *AuxilliaryData, /* parameters used by the function */
+        double *Root,    /* returned root */
+        double LowerBound,   /* lower bound of an interval containing a root */
+        double UpperBound,   /* upper bound of an interval containing a root */
+        double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 //@}

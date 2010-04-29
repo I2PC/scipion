@@ -55,8 +55,8 @@ public:
      */
     xmippKerDenSOM(double _reg0, double _reg1, unsigned long _annSteps,
                    double _epsilon, unsigned long _nSteps)
-        : xmippBaseAlgo<xmippFuzzyMap>(), reg0(_reg0), reg1(_reg1), annSteps(_annSteps),
-          epsilon(_epsilon), somNSteps(_nSteps)
+            : xmippBaseAlgo<xmippFuzzyMap>(), reg0(_reg0), reg1(_reg1), annSteps(_annSteps),
+            epsilon(_epsilon), somNSteps(_nSteps)
     {};
 
     /**
@@ -135,7 +135,7 @@ protected:
 
     /** Declaration of virtual method */
     virtual void train(xmippFuzzyMap& _som, const TS& _examples) const
-    {};
+        {};
 
     /* Declaration of abstract methods */
 

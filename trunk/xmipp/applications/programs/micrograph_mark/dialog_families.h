@@ -50,7 +50,7 @@ private:
     QListBox    *__familyList;
     QVBox       *__vBoxLayout;
 #endif
-
+    
 
 public:
     // Constructor

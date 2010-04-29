@@ -284,8 +284,8 @@ void ShowSOM::saveAssignedSeparately()
 #else
                     QFileDialog::getSaveFileName(QString::null, QString::null,
 #endif
-                                                  this, "Save images",
-                                                  "Enter base filename for sel files");
+                                                 this, "Save images",
+                                                 "Enter base filename for sel files");
                 if (basename.isEmpty())
                 {
                     QMessageBox::about(this, "Warning!", "Saving aborted\n");

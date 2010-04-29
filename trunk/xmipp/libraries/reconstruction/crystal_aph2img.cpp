@@ -46,12 +46,12 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
     {
 #ifdef REMOVE
         fnaph_ref = getParameter(fh_param, "APH Ref file", 0, "",
-                                 3007, "Spot2RealSpace2D_Parameters::: APH Ref File not found");
+                              3007, "Spot2RealSpace2D_Parameters::: APH Ref File not found");
 #endif
         fnaph_in = getParameter(fh_param, "APH file", 0, NULL,
-                                3007, "Spot2RealSpace2D_Parameters::read: APH File not found");
+                             3007, "Spot2RealSpace2D_Parameters::read: APH File not found");
         fn_out = getParameter(fh_param, "Output file", 0, NULL,
-                              3007, "Spot2RealSpace2D_Parameters::read: Output File not found");
+                           3007, "Spot2RealSpace2D_Parameters::read: Output File not found");
         maxIQ = textToInteger(getParameter(fh_param, "maxIQ", 0, "6"));
         std::string aux_str = getParameter(fh_param, "Output cells no", 0, "1 1");
 #if GCC_VERSION < 30300
@@ -71,17 +71,17 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
                          "Spot2RealSpace2D_Parameters::read: Cannot read Output Cell no");
         }
         a_mag = textToFloat(getParameter(fh_param, "a_mag", 0, NULL,
-                                         3007, "Spot2RealSpace2D_Parameters::read: a_mag not found"));
+                               3007, "Spot2RealSpace2D_Parameters::read: a_mag not found"));
         b_mag = textToFloat(getParameter(fh_param, "b_mag", 0, NULL,
-                                         3007, "Spot2RealSpace2D_Parameters::read: b_mag not found"));
+                               3007, "Spot2RealSpace2D_Parameters::read: b_mag not found"));
         a_b_ang = DEG2RAD(textToFloat(getParameter(fh_param, "a_b_ang", 0, NULL,
-                                      3007, "Spot2RealSpace2D_Parameters::read: a_b_ang not found")));
+                                         3007, "Spot2RealSpace2D_Parameters::read: a_b_ang not found")));
         taxa = DEG2RAD(textToFloat(getParameter(fh_param, "taxa", 0, NULL,
-                                                3007, "Spot2RealSpace2D_Parameters::read: Taxa not found")));
+                                      3007, "Spot2RealSpace2D_Parameters::read: Taxa not found")));
         mrc_tilt = DEG2RAD(textToFloat(getParameter(fh_param, "tilt", 0, NULL,
-                                       3007, "Spot2RealSpace2D_Parameters::read: tilt not found")));
+                                          3007, "Spot2RealSpace2D_Parameters::read: tilt not found")));
         SamplingRate = textToFloat(getParameter(fh_param, "sampling rate", 0, NULL,
-                                                3007, "Spot2RealSpace2D_Parameters::read: sampling rate not found"));
+                                      3007, "Spot2RealSpace2D_Parameters::read: sampling rate not found"));
         Phase_Shift.resize(2);
         aux_str = getParameter(fh_param, "Phase Shift", 0, "180.0 180.0");
         delete is;
@@ -184,39 +184,39 @@ std::ostream& operator << (std::ostream &o, const Spot2RealSpace2D_Parameters &p
 {
     o << "APH Input          : " << prm.fnaph_in << std::endl
 #ifdef REMOVE
-      << "APH Reference      : " << prm.fnaph_ref << std::endl
+    << "APH Reference      : " << prm.fnaph_ref << std::endl
 #endif
-      << "Output Spider File : " << prm.fn_out << std::endl
-      << "Maximum IQ         : " << prm.maxIQ << std::endl
-      << "a_mag(A)           : " << prm.a_mag << std::endl
-      << "b_mag(A)           : " << prm.b_mag << std::endl
-      << "a->b angle         : " << RAD2DEG(prm.a_b_ang) << std::endl
-      << "Rotational angle   : " << RAD2DEG(prm.rot) << std::endl
-      << "Tilt angle         : " << RAD2DEG(prm.tilt) << std::endl
-      << "psi angle          : " << RAD2DEG(prm.psi) << std::endl
-      << "taxa angle         : " << RAD2DEG(prm.taxa) << std::endl
-      << "mrc_tilt angle     : " << RAD2DEG(prm.mrc_tilt) << std::endl
-      << "mrc_label          : " << prm.mrc_label << std::endl
-      << "sampling rate      : " << prm.SamplingRate << std::endl
+    << "Output Spider File : " << prm.fn_out << std::endl
+    << "Maximum IQ         : " << prm.maxIQ << std::endl
+    << "a_mag(A)           : " << prm.a_mag << std::endl
+    << "b_mag(A)           : " << prm.b_mag << std::endl
+    << "a->b angle         : " << RAD2DEG(prm.a_b_ang) << std::endl
+    << "Rotational angle   : " << RAD2DEG(prm.rot) << std::endl
+    << "Tilt angle         : " << RAD2DEG(prm.tilt) << std::endl
+    << "psi angle          : " << RAD2DEG(prm.psi) << std::endl
+    << "taxa angle         : " << RAD2DEG(prm.taxa) << std::endl
+    << "mrc_tilt angle     : " << RAD2DEG(prm.mrc_tilt) << std::endl
+    << "mrc_label          : " << prm.mrc_label << std::endl
+    << "sampling rate      : " << prm.SamplingRate << std::endl
 #ifdef REMOVE
-      << "Lattice a          : " << prm.proj_latt_vec.Col(0).transpose() << std::endl
-      << "Lattice b          : " << prm.proj_latt_vec.Col(1).transpose() << std::endl
+    << "Lattice a          : " << prm.proj_latt_vec.Col(0).transpose() << std::endl
+    << "Lattice b          : " << prm.proj_latt_vec.Col(1).transpose() << std::endl
 #endif
-      << "Ouput Layout (x,y) : " << prm.NoCells_X
-      << " x " << prm.NoCells_Y << std::endl
-      << "Phase_Shift (x,y)  : " << XX(prm.Phase_Shift) << ","
-      << YY(prm.Phase_Shift)  << std::endl
-      << "Keep Contrast      : " << prm.KeepContrast << std::endl
-      << "Cell Size (x,y)    : " << prm.CellXdim << "," << prm.CellYdim << std::endl
+    << "Ouput Layout (x,y) : " << prm.NoCells_X
+    << " x " << prm.NoCells_Y << std::endl
+    << "Phase_Shift (x,y)  : " << XX(prm.Phase_Shift) << ","
+    << YY(prm.Phase_Shift)  << std::endl
+    << "Keep Contrast      : " << prm.KeepContrast << std::endl
+    << "Cell Size (x,y)    : " << prm.CellXdim << "," << prm.CellYdim << std::endl
 #ifdef REMOVE
-      << "Crystaledge        : " << prm.aph_file.Xdim << std::endl
-      << "Crystaledge(ref)   : " << prm.aph_ref.Xdim << std::endl
+    << "Crystaledge        : " << prm.aph_file.Xdim << std::endl
+    << "Crystaledge(ref)   : " << prm.aph_ref.Xdim << std::endl
 #endif
-      << "Scale_Factor       : " << prm.Scale_Factor << std::endl
+    << "Scale_Factor       : " << prm.Scale_Factor << std::endl
 #ifdef REMOVE
-      << "Sampling Scale*    : " << prm.SamplingScale << std::endl
+    << "Sampling Scale*    : " << prm.SamplingScale << std::endl
 #endif
-      << "3D Symmetry group  : " << prm.symmetry_group << std::endl;
+    << "3D Symmetry group  : " << prm.symmetry_group << std::endl;
     return o;
 }
 
@@ -271,7 +271,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
     // When copied to FT convert degrees to radians
     double phase_shift = (prm.KeepContrast) ? 0. : 180.;
     if (phase_shift != 0 || (prm.Phase_Shift).module() != 0)
-        for (int i = 0; i < ((prm.aph_file).aph_data_vector).size(); i++)
+        for (int i = 0;i < ((prm.aph_file).aph_data_vector).size();i++)
         {
             h = (prm.aph_file.aph_data_vector[i]).h;
             k = (prm.aph_file.aph_data_vector[i]).k;
@@ -320,7 +320,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
     STARTINGY(FT) = -ksize;
     STARTINGX(FT) = -hsize;
 
-    for (int i = 0; i < prm.aph_file.aph_data_vector.size(); i++)
+    for (int i = 0;i < prm.aph_file.aph_data_vector.size();i++)
     {
         if (ABS((prm.aph_file.aph_data_vector[i]).IQ) <= prm.maxIQ &&
             (prm.aph_file.aph_data_vector[i]).amp != 0)
@@ -329,7 +329,7 @@ void ROUT_Spots2RealSpace(Spot2RealSpace2D_Parameters &prm,
             k = (prm.aph_file.aph_data_vector[i]).k;
 
             MAT_ELEM(FT, k, h) = std::polar((prm.aph_file.aph_data_vector[i]).amp,
-                                            DEG2RAD((prm.aph_file.aph_data_vector[i]).phase));
+                                       DEG2RAD((prm.aph_file.aph_data_vector[i]).phase));
             MAT_ELEM(FT, -k, -h) = std::conj(MAT_ELEM(FT, k, h));
         }
     }
@@ -437,7 +437,7 @@ void ROUT_RealSpace2Spots(RealSpace2Spots2D_Parameters &prm,
 //      }
 //         tmp_spot.zstar      = ZZ(intersection_point);
         aux_vector = vectorR3((double)tmp_spot.h,
-                              (double)tmp_spot.k, 0.);//h
+                               (double)tmp_spot.k, 0.);//h
         Vp.resize(3, 3);
         tmp_spot.zstar = ZZ((E.inv()) * Vp * aux_vector);
         prm.aph_file.aph_data_vector.push_back(tmp_spot);
@@ -477,12 +477,12 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
     try
     {
         fn_in = getParameter(fh_param, "INput file", 0, NULL,
-                             3007, "RealSpace2Spots2D_Parameters::read: Input File not found");
+                          3007, "RealSpace2Spots2D_Parameters::read: Input File not found");
         fnaph_out = getParameter(fh_param, "APH file", 0, NULL,
-                                 3007, "RealSpace2Spots2D_Parameters::read: Output File not found");
+                              3007, "RealSpace2Spots2D_Parameters::read: Output File not found");
         {
             std::string aux_str = getParameter(fh_param, "lattice_a", 0, NULL,
-                                               3007, "RealSpace2Spots2D_Parameters::read: crystal vector a not found");
+                                       3007, "RealSpace2Spots2D_Parameters::read: crystal vector a not found");
 #if GCC_VERSION < 30300
             std::istrstream *is = NULL;
             is = new std::istrstream(aux_str.c_str());
@@ -503,7 +503,7 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
         }
         {
             std::string aux_str = getParameter(fh_param, "lattice_b", 0, NULL,
-                                               3007, "RealSpace2Spots2D_Parameters::read: crystal vector b not found");
+                                       3007, "RealSpace2Spots2D_Parameters::read: crystal vector b not found");
 #if GCC_VERSION < 30300
             std::istrstream *is = NULL;
             is = new std::istrstream(aux_str.c_str());
@@ -524,9 +524,9 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
         }
         mrc_label = textToInteger(getParameter(fh_param, "mrc_label", 0, "-1"));
         taxa = (textToFloat(getParameter(fh_param, "taxa", 0, NULL,
-                                         3007, "Spot2RealSpace2D_Parameters::read: Taxa not found")));
+                               3007, "Spot2RealSpace2D_Parameters::read: Taxa not found")));
         mrc_tilt = (textToFloat(getParameter(fh_param, "tilt", 0, NULL,
-                                             3007, "Spot2RealSpace2D_Parameters::read: tilt not found")));
+                                   3007, "Spot2RealSpace2D_Parameters::read: tilt not found")));
     }
     catch (Xmipp_error XE)
     {
@@ -536,19 +536,19 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
     fclose(fh_param);
 }
 #define SHOW(str,v,i) x=v(0,i); y=v(1,i); std::cout << str << "("<< x \
-        << "," << y << ") (" << sqrt(x*x+y*y) << ")\n";
+    << "," << y << ") (" << sqrt(x*x+y*y) << ")\n";
 
 /* Show parameters --------------------------------------------------------- */
 std::ostream& operator << (std::ostream &o, const RealSpace2Spots2D_Parameters &prm)
 {
     o << "Input XMIPP File   : " << prm.fn_in << std::endl
-      << "Output APH File    : " << prm.fnaph_out << std::endl
-      << "taxa               : " << (prm.taxa) << std::endl
-      << "Tilt angle         : " << (prm.mrc_tilt) << std::endl
-      << "mrc_label          : " << prm.mrc_label << std::endl
-      << "lattice_a          : " << prm.vector_a << std::endl
-      << "lattice_b          : " << prm.vector_b << std::endl
-      ;
+    << "Output APH File    : " << prm.fnaph_out << std::endl
+    << "taxa               : " << (prm.taxa) << std::endl
+    << "Tilt angle         : " << (prm.mrc_tilt) << std::endl
+    << "mrc_label          : " << prm.mrc_label << std::endl
+    << "lattice_a          : " << prm.vector_a << std::endl
+    << "lattice_b          : " << prm.vector_b << std::endl
+    ;
     return o;
 }
 /* DFT ------------------------------------------------------------------ */

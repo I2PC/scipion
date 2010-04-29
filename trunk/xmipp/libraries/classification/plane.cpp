@@ -60,8 +60,8 @@ void xmippPlanes::getPlane(const In& _in, Out& _out, unsigned _plane) const
     xmippFeature Max = -MAXFLOAT;
     xmippFeature Min = MAXFLOAT;
 
-    for (i = 0; i < _in.width(); i++)
-        for (j = 0; j < _in.height(); j++)
+    for (i = 0;i < _in.width();i++)
+        for (j = 0;j < _in.height();j++)
         {
             if (_in.itemAtPos(SomPos(i, j))[_plane] > Max)
                 Max = _in.itemAtPos(SomPos(i, j))[_plane];

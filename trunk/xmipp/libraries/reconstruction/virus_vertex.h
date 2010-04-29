@@ -56,8 +56,8 @@ public:
     void loadIcosahedronVertex();
     /** get angles either from a document file or from an image */
     void get_angles_for_image(const FileName &fn, double &rot,
-                              double &tilt, double &psi, double &xoff, double &yoff, double &flip,
-                              double &weight);
+    double &tilt, double &psi, double &xoff, double &yoff, double &flip,
+    double &weight);
     /** Process one set of angles */
     void processAngles();
     /** Relate vertex and projection matrices   */

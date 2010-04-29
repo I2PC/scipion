@@ -206,7 +206,7 @@ void APHFileorigmerg::unasymmetrization(const double a_mag, const  double b_mag,
     default         :
         std::cerr << "APHFileorigmerg::unasymmetrization:" << std::endl;
         std::cerr << "\t\tsymmetry " << symmetry_group << " not implemented"
-                  << std::endl;
+        << std::endl;
         exit(1);
     }
 }//unasymmetrization end
@@ -390,16 +390,16 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag, const  double b_ma
 //      #define DEBUG
 #ifdef DEBUG
         std::cout << "Theorical_Z 1 =" << first.h  *  h_contrib +
-                  first.k  *  k_contrib << std::endl;
+        first.k  *  k_contrib << std::endl;
         std::cout << first ;
         std::cout << "Theorical_Z 2=" << second.h  *  h_contrib +
-                  second.k  *  k_contrib << std::endl;
+        second.k  *  k_contrib << std::endl;
         std::cout << second ;
         std::cout << "Theorical_Z 3=" << third.h  *  h_contrib +
-                  third.k  *  k_contrib << std::endl;
+        third.k  *  k_contrib << std::endl;
         std::cout << third ;
         std::cout << "Theorical_Z 4=" << fourth.h  *  h_contrib +
-                  fourth.k  *  k_contrib << std::endl;
+        fourth.k  *  k_contrib << std::endl;
         std::cout << fourth ;
 #endif
 #undef DEBUG
@@ -475,7 +475,7 @@ void APHFileorigmerg::unsymmetrice_P222_1(const double a_mag, const  double b_ma
         std::cout << "diff_z[2]" << diff_z[2] << " diff_z[3]" << diff_z[3] << std::endl;
 
         std::cout << "diff_z[0] again " << first.zstar - (first.h  *  h_contrib +
-                  first.k  *  k_contrib) << std::endl;
+                first.k  *  k_contrib) << std::endl;
         //std::cout << aph_data_vector[line_no] ;
 #endif
 #undef DEBUG

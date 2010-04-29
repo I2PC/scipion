@@ -85,8 +85,8 @@ void show_voxels_in_feat(const Volume *vol_phantom,
         if (li == selected_feat)
         {
             out << "(z=" << k << ",y=" << i << ",x=" << j << ")"
-                << "Phantom=" << pi
-                << " Recons=" << ri << std::endl;
+            << "Phantom=" << pi
+            << " Recons=" << ri << std::endl;
         }
     }
 }
@@ -252,8 +252,7 @@ void compute_sc_FOMs(
 
     // Show process
     if (tell&0x4)
-    {
-        // This is the flag SHOW_PROCESS of Prog_evaluate.h
+    { // This is the flag SHOW_PROCESS of Prog_evaluate.h
         std::cout << "   Selected feature: ";
         switch (sel_feat)
         {
@@ -276,10 +275,10 @@ void compute_sc_FOMs(
         std::cout << "   phantom range:    [" << mp << "," << Mp << "]\n";
         std::cout << "   recons range:     [" << mr << "," << Mr << "]\n";
         std::cout << "   covariance:       " << covariance << std::endl
-                  << "   phantom inf:      " << phantom_information << std::endl
-                  << "   recons inf:       " << recons_information << std::endl
-                  << "   mutual inf:       " << phantom_recons_information << std::endl
-                  << std::endl;
+        << "   phantom inf:      " << phantom_information << std::endl
+        << "   recons inf:       " << recons_information << std::endl
+        << "   mutual inf:       " << phantom_recons_information << std::endl
+        << std::endl;
     }
 }
 
@@ -557,10 +556,10 @@ void compute_hs_FOMs(Volume *vol_phantom,
 
 #ifdef DEBUG
         std::cout << "mr1=" << mr1 << "\nmr2=" << mr2 << "\nmr3=" << mr3 << std::endl
-                  << "vr1=" << vr1 << "\nvr2=" << vr2 << "\nvr3=" << vr3 << std::endl
-                  << "mp1=" << mp1 << "\nmp2=" << mp2 << "\nmp3=" << mp3 << std::endl
-                  << "vp1=" << vp1 << "\nvp2=" << vp2 << "\nvp3=" << vp3 << std::endl
-                  << "Nvr=" << Nvr;
+        << "vr1=" << vr1 << "\nvr2=" << vr2 << "\nvr3=" << vr3 << std::endl
+        << "mp1=" << mp1 << "\nmp2=" << mp2 << "\nmp3=" << mp3 << std::endl
+        << "vp1=" << vp1 << "\nvp2=" << vp2 << "\nvp3=" << vp3 << std::endl
+        << "Nvr=" << Nvr;
 #endif
         if (vr1 + vr2 + 4*vr3 != 0)
         {
@@ -576,7 +575,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
         else
         {
             std::cout << "   Watch out, there is no deviation in reconstruction \n"
-                      << "   for vertical resolution FOM\n";
+            << "   for vertical resolution FOM\n";
             hsvr_FOM = -1;
         }
     }
@@ -588,8 +587,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
 
     // Show results .........................................................
     if (tell&0x4)
-    {
-        // This is the flag SHOW_PROCESS of Prog_evaluate.h
+    { // This is the flag SHOW_PROCESS of Prog_evaluate.h
         std::cout << "Foreground " << phantom_descr(sel_feat);
         std::cout << "Background " << Back;
         std::cout << "Inner  foreground " << Inner_fore;
@@ -639,8 +637,7 @@ void compute_hs_FOMs(Volume *vol_phantom,
     }
 
     if (tell&0x8)
-    {
-        // This is the flag SAVE_HISTOGRAMS of Prog_evaluate.h
+    { // This is the flag SAVE_HISTOGRAMS of Prog_evaluate.h
         DocFile DF;
         Matrix1D<double> aux(6);
         DF.reserve(XSIZE(Hpf) + 2);
@@ -748,8 +745,7 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
 
     // Show results .........................................................
     if (tell&0x4)
-    {
-        // This is the flag SHOW_PROCESS of Prog_evaluate.h
+    { // This is the flag SHOW_PROCESS of Prog_evaluate.h
         DocFile DF;
         Matrix1D<double> aux(4);
         DF.reserve(XSIZE(RT_recons) + 2);
@@ -939,17 +935,17 @@ void compute_resolution(VolumeXmipp &vol_phantom,
     if (!spider_batch)
         REPORT_ERROR(1, "Compute resol:: Cannot open file for Spider batch");
     spider_batch
-            << "rf 3\n"
-            << vol_phantom.name().without_extension() << std::endl
-            << vol_recons .name().without_extension() << std::endl
-            << "1" << std::endl
-            << "0.001 1000" << std::endl
-            << "C" << std::endl
-            << "90" << std::endl
-            << "5" << std::endl
-            << "resolution" << std::endl
-            << "en\n"
-            ;
+    << "rf 3\n"
+    << vol_phantom.name().without_extension() << std::endl
+    << vol_recons .name().without_extension() << std::endl
+    << "1" << std::endl
+    << "0.001 1000" << std::endl
+    << "C" << std::endl
+    << "90" << std::endl
+    << "5" << std::endl
+    << "resolution" << std::endl
+    << "en\n"
+    ;
     spider_batch.close();
     char *spider_prog = getenv("SPIDER");
     if (spider_prog == NULL)
@@ -1125,7 +1121,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
     catch (Xmipp_error XE)
     {
         std::cerr << XE << std::endl
-                  << "compute_resolution: Error reading resolution, ignoring it\n";
+        << "compute_resolution: Error reading resolution, ignoring it\n";
     }
     fh_resol.close();
 
@@ -1197,7 +1193,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
     catch (Xmipp_error XE)
     {
         std::cerr << XE << std::endl
-                  << "compute_resolution: Error reading resolution, ignoring it\n";
+        << "compute_resolution: Error reading resolution, ignoring it\n";
     }
     fh_resol.close();
 

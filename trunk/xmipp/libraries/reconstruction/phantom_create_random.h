@@ -39,7 +39,7 @@
 /** Random Phantom program parameters.
     This class contains all information needed about the Random phantom
     genration  process.
-    See the user help on Random Phantom Creation
+    See the user help on Random Phantom Creation 
     for more information. */
 class Prog_Random_Phantom_Parameters
 {

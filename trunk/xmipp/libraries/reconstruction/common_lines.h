@@ -91,18 +91,18 @@ public:
 
     /** Get and prepare block */
     void getAndPrepareBlock(int i,
-                            std::vector< Matrix2D<double> > &blockImgs);
+        std::vector< Matrix2D<double> > &blockImgs);
 
     /** Show parameters */
     friend std::ostream & operator << (std::ostream &out,
-                                       const CommonLine_Parameters &prm);
+        const CommonLine_Parameters &prm);
 
     /** Qualify common lines */
     void qualifyCommonLines();
 
     /** Write results */
     void writeResults();
-
+    
     /** Run */
     void run(int rank=0);
 public:

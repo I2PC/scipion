@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *      im_out = tom_xmipp_rotate_wrapper(image,angs,axis,mode,gridding,wrap)
+ *		im_out = tom_xmipp_rotate_wrapper(image,angs,axis,mode,gridding,wrap)
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -30,7 +30,7 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
-
+   
     double angs[3];
     const double *p_angs=mxGetPr(prhs[1]);
     angs[0]=(double)p_angs[0];
@@ -41,32 +41,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     getMatrix1D(prhs[2],axis);
 
     Matrix2D<double> A3D, A2D;
-
+    
     bool gridding = (bool)mxGetScalar(prhs[4]);
     bool wrap = (bool)mxGetScalar(prhs[5]);
     mwSize ndims = mxGetNumberOfDimensions(prhs[0]);
-
+    
 
     /*mode: 1 euler, 2 align_with_Z, 3 axis, 4 tform*/
-    switch ((int)mxGetScalar(prhs[3]))
-    {
-    case 1:
-        A3D = Euler_rotation3DMatrix(angs[0], angs[1], angs[2]);
-        break;
-    case 2:
-        A3D = alignWithZ(axis);
-        break;
-    case 3:
-        A3D = rotation3DMatrix(angs[0], axis);
-        A2D = A3D;
-        A2D.window(0, 0, 2, 2);
-        break;
-    case 4:
-        getMatrix2D(prhs[6],A2D);
-        A3D = A2D;
-        break;
+    switch ((int)mxGetScalar(prhs[3])) {
+        case 1:
+            A3D = Euler_rotation3DMatrix(angs[0], angs[1], angs[2]);
+            break;
+        case 2:
+            A3D = alignWithZ(axis);
+            break;
+        case 3:
+            A3D = rotation3DMatrix(angs[0], axis);
+            A2D = A3D;
+            A2D.window(0, 0, 2, 2);
+            break;
+        case 4:
+            getMatrix2D(prhs[6],A2D);
+            A3D = A2D;
+            break;
     }
-
+    
     if (ndims == 2)
     {
         Image img, img_out;
@@ -86,7 +85,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
                 setMatrix2D(img_out(),plhs[0]);
             }
         }
-        else
+        else 
         {
             setMatrix2D(img(),plhs[0]);
         }
@@ -108,5 +107,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
             setMatrix3D(vol_out(),plhs[0]);
         }
     }
-
+    
 }

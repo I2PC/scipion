@@ -1,5 +1,5 @@
 /***************************************************************************
- *
+ * 
  * Authors:     Roberto Marabini (roberto@cnb.csic.es)
  * 00000casa
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -40,12 +40,9 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    try
-    {
+    try {
         prm.run();
-    }
-    catch (Xmipp_error XE)
-    {
+    } catch (Xmipp_error XE) {
         std::cout << XE;
     }
     exit(0);

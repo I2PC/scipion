@@ -8,13 +8,13 @@
 
     success: return(!ERROR); failure: return(ERROR); */
 extern int  SwapXyVolumeFloat
-(
-    float *VolumeSource,  /* float input data */
-    float *VolumeDestination, /* float output data */
-    long Nxy,    /* input width, output height */
-    long Nyx,    /* input height, output width */
-    long Nz     /* depth */
-);
+    (
+        float *VolumeSource,  /* float input data */
+        float *VolumeDestination, /* float output data */
+        long Nxy,    /* input width, output height */
+        long Nyx,    /* input height, output width */
+        long Nz     /* depth */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Swap the y-axis and the z-axis of a volume.
@@ -23,13 +23,13 @@ extern int  SwapXyVolumeFloat
 
     success: return(!ERROR); failure: return(ERROR); */
 extern int  SwapYzVolumeFloat
-(
-    float *VolumeSource,  /* float input data */
-    float *VolumeDestination, /* float output data */
-    long Nx,     /* width */
-    long Nyz,    /* input height, output depth */
-    long Nzy     /* input depth, output height */
-);
+    (
+        float *VolumeSource,  /* float input data */
+        float *VolumeDestination, /* float output data */
+        long Nx,     /* width */
+        long Nyz,    /* input height, output depth */
+        long Nzy     /* input depth, output height */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Swap the z-axis and the x-axis of a volume.
@@ -38,11 +38,11 @@ extern int  SwapYzVolumeFloat
 
     success: return(!ERROR); failure: return(ERROR); */
 extern int  SwapZxVolumeFloat
-(
-    float *VolumeSource,  /* float input data */
-    float *VolumeDestination, /* float output data */
-    long Nxz,    /* input width, output depth */
-    long Ny,     /* height */
-    long Nzx     /* input depth, output width */
-);
+    (
+        float *VolumeSource,  /* float input data */
+        float *VolumeDestination, /* float output data */
+        long Nxz,    /* input width, output depth */
+        long Ny,     /* height */
+        long Nzx     /* input depth, output width */
+    );
 //@}

@@ -52,8 +52,7 @@ class Prog_ml_tomo_prm;
 void * threadMLTomoExpectationSingleImage( void * data );
 
 // This structure is needed to pass parameters to threadMLTomoExpectationSingleImage
-typedef struct
-{
+typedef struct{
     int thread_id;
     int thread_num;
     Prog_ml_tomo_prm *prm;
@@ -267,14 +266,14 @@ public:
     /// Calculate probability density distribution for in-plane transformations
     void calculatePdfTranslations();
 
-    /// Get binary missing wedge (or pyramid)
+    /// Get binary missing wedge (or pyramid) 
     void getMissingRegion(Matrix3D<double> &Mmeasured,
                           Matrix2D<double> A,
                           const int missno);
 
     void maskSphericalAverageOutside(Matrix3D<double> &Min);
 
-    // Resize a volume, based on the max_resol
+    // Resize a volume, based on the max_resol 
     // if down_scale=true: go from oridim to dim
     // if down_scale=false: go from dim to oridim
     void reScaleVolume(Matrix3D<double> &Min, bool down_scale=true);
@@ -290,7 +289,7 @@ public:
                                 std::vector<Matrix3D<double> > &wsumimgs,
                                 std::vector<Matrix3D<double> > &wsumweds,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
-                                Matrix1D<double> &sumw, double &LL, double &dLL,
+                                Matrix1D<double> &sumw, double &LL, double &dLL, 
                                 double &fracweight, double &sumfracweight, double &trymindiff,
                                 int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
 
@@ -313,14 +312,14 @@ public:
     /// Update all model parameters
     void maximization(std::vector<Matrix3D<double> > &wsumimgs,
                       std::vector<Matrix3D<double> > &wsumweds,
-                      double &wsum_sigma_noise, double &wsum_sigma_offset,
-                      Matrix1D<double> &sumw, double &sumfracweight,
+                      double &wsum_sigma_noise, double &wsum_sigma_offset, 
+                      Matrix1D<double> &sumw, double &sumfracweight, 
                       double &sumw_allrefs, std::vector<Matrix1D<double> > &fsc, int iter);
 
     /// Calculate resolution by FSC
     void calculateFsc(Matrix3D<double> &M1, Matrix3D<double> &M2,
                       Matrix3D<double> &W1, Matrix3D<double> &W2,
-                      Matrix1D< double >& freq, Matrix1D< double >& fsc,
+                      Matrix1D< double >& freq, Matrix1D< double >& fsc, 
                       double &resolution);
 
     /// Apply regularization

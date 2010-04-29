@@ -1235,7 +1235,7 @@ public:
 
         // Write Grid volume ....................................................
 #define PACK_DOUBLE(v) \
-    {jj=pos%Xdim; ii=pos/Xdim; pos++; VOLVOXEL(V,sli,ii,jj)=(T)(v);}
+{jj=pos%Xdim; ii=pos/Xdim; pos++; VOLVOXEL(V,sli,ii,jj)=(T)(v);}
 #define PACK_INT(v) \
     {jj=pos%Xdim; ii=pos/Xdim; pos++; \
         temp_float = (float) (v); \
@@ -1342,7 +1342,7 @@ public:
         if ((typeid(T) == typeid(int)) && (sizeof(float) != sizeof(int)))
         {
             std::cout << "\nError: GridVolume is integer and\n"
-                      "(sizeof(float)!= sizeof(int)\n";
+            "(sizeof(float)!= sizeof(int)\n";
             exit(0);
         }
 
@@ -1432,9 +1432,9 @@ public:
 #ifdef DEBUG
             std::cout << "The read grid is \n" << sG;
             std::cout << "Volume dimensions: " << Zdim << " x " << Ydim << " x "
-                      << Xdim << std::endl;
+            << Xdim << std::endl;
             std::cout << "Volume init: " << Zinit << " x " << Yinit << " x "
-                      << Xinit << std::endl;
+            << Xinit << std::endl;
 #endif
             sli++;
 
@@ -1446,8 +1446,8 @@ public:
                     {
 #ifdef DEBUG
                         std::cout << "Reading from file position (" << sli << "," << i
-                                  << "," << j << ") to subvolume position ("
-                                  << k << "," << i << "," << j << ")\n";
+                        << "," << j << ") to subvolume position ("
+                        << k << "," << i << "," << j << ")\n";
 #endif
                         DIRECT_VOLVOXEL(*sV, k, i, j) = DIRECT_VOLVOXEL(V, sli, i, j);
                     }

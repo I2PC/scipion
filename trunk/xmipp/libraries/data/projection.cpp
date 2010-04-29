@@ -88,7 +88,7 @@ void Projection::assign(const Projection &P)
 //#define DEBUG
 void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi,
-                    const Matrix1D<double> *roffset)
+		    const Matrix1D<double> *roffset)
 {
     SPEED_UP_temps;
 
@@ -150,7 +150,7 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
             }
 
             // Express r_p in the universal coordinate system
-            if (roffset!=NULL) r_p-=*roffset;
+	    if (roffset!=NULL) r_p-=*roffset;
             M3x3_BY_V3x1(p1, P.eulert, r_p);
 
             // Compute the minimum and maximum alpha for the ray
@@ -163,28 +163,28 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
             double alpha_zmax = (z_F + 0.5 - ZZ(p1)) / ZZ(P.direction);
 
             double alpha_min = XMIPP_MAX(XMIPP_MIN(alpha_xmin, alpha_xmax),
-                                         XMIPP_MIN(alpha_ymin, alpha_ymax));
+                                   XMIPP_MIN(alpha_ymin, alpha_ymax));
             alpha_min = XMIPP_MAX(alpha_min, XMIPP_MIN(alpha_zmin, alpha_zmax));
             double alpha_max = XMIPP_MIN(XMIPP_MAX(alpha_xmin, alpha_xmax),
-                                         XMIPP_MAX(alpha_ymin, alpha_ymax));
+                                   XMIPP_MAX(alpha_ymin, alpha_ymax));
             alpha_max = XMIPP_MIN(alpha_max, XMIPP_MAX(alpha_zmin, alpha_zmax));
             if (alpha_max - alpha_min < XMIPP_EQUAL_ACCURACY) continue;
 
 #ifdef DEBUG
             std::cout << "Pixel:  " << r_p.transpose() << std::endl
-                      << "Univ:   " << p1.transpose() << std::endl
-                      << "Dir:    " << P.direction.transpose() << std::endl
-                      << "Alpha x:" << alpha_xmin << " " << alpha_xmax << std::endl
-                      << "	  " << (p1 + alpha_xmin*P.direction).transpose() << std::endl
-                      << "	  " << (p1 + alpha_xmax*P.direction).transpose() << std::endl
-                      << "Alpha y:" << alpha_ymin << " " << alpha_ymax << std::endl
-                      << "	  " << (p1 + alpha_ymin*P.direction).transpose() << std::endl
-                      << "	  " << (p1 + alpha_ymax*P.direction).transpose() << std::endl
-                      << "Alpha z:" << alpha_zmin << " " << alpha_zmax << std::endl
-                      << "	  " << (p1 + alpha_zmin*P.direction).transpose() << std::endl
-                      << "	  " << (p1 + alpha_zmax*P.direction).transpose() << std::endl
-                      << "alpha  :" << alpha_min  << " " << alpha_max  << std::endl
-                      << std::endl;
+        	      << "Univ:   " << p1.transpose() << std::endl
+        	      << "Dir:    " << P.direction.transpose() << std::endl
+        	      << "Alpha x:" << alpha_xmin << " " << alpha_xmax << std::endl
+        	      << "	  " << (p1 + alpha_xmin*P.direction).transpose() << std::endl
+        	      << "	  " << (p1 + alpha_xmax*P.direction).transpose() << std::endl
+        	      << "Alpha y:" << alpha_ymin << " " << alpha_ymax << std::endl
+        	      << "	  " << (p1 + alpha_ymin*P.direction).transpose() << std::endl
+        	      << "	  " << (p1 + alpha_ymax*P.direction).transpose() << std::endl
+        	      << "Alpha z:" << alpha_zmin << " " << alpha_zmax << std::endl
+        	      << "	  " << (p1 + alpha_zmin*P.direction).transpose() << std::endl
+        	      << "	  " << (p1 + alpha_zmax*P.direction).transpose() << std::endl
+        	      << "alpha  :" << alpha_min  << " " << alpha_max  << std::endl
+        	      << std::endl;
 #endif
 
             // Compute the first point in the volume intersecting the ray
@@ -252,11 +252,11 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
                 ZZ(v) += diff_alpha * ZZ(P.direction);
 
                 std::cout << "    Next entry point: " << v.transpose() << std::endl
-                          << "    Index: " << idx.transpose() << std::endl
-                          << "    diff_alpha: " << diff_alpha << std::endl
-                          << "    ray_sum: " << ray_sum << std::endl
-                          << "    Alfa tot: " << alpha << "alpha_max: " << alpha_max <<
-                          std::endl;
+                	  << "    Index: " << idx.transpose() << std::endl
+                	  << "    diff_alpha: " << diff_alpha << std::endl
+                	  << "    ray_sum: " << ray_sum << std::endl
+                	  << "    Alfa tot: " << alpha << "alpha_max: " << alpha_max <<
+                	  std::endl;
 #endif
             }
             while ((alpha_max - alpha) > XMIPP_EQUAL_ACCURACY);
@@ -273,9 +273,9 @@ void project_Volume(Matrix3D<double> &V, Projection &P, int Ydim, int Xdim,
 /* Project a voxel volume with respect to an offcentered axis -------------- */
 //#define DEBUG
 void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
-                                int Ydim, int Xdim, double axisRot, double axisTilt,
-                                const Matrix1D<double> &raxis, double angle, double inplaneRot,
-                                const Matrix1D<double> &rinplane)
+   int Ydim, int Xdim, double axisRot, double axisTilt,
+   const Matrix1D<double> &raxis, double angle, double inplaneRot,
+   const Matrix1D<double> &rinplane)
 {
     // Find Euler rotation matrix
     Matrix1D<double> axis;
@@ -286,23 +286,23 @@ void project_Volume_offCentered(Matrix3D<double> &V, Projection &P,
     Rinplane.resize(3,3);
     double rot, tilt, psi;
     Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
-
+    
     // Find displacement because of axis offset and inplane shift
     Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane;
 
-#ifdef DEBUG
-    std::cout << "axisRot=" << axisRot << " axisTilt=" << axisTilt
-              << " axis=" << axis.transpose() << std::endl
-              << "angle=" << angle << std::endl
-              << "Raxis\n" << Raxis
-              << "Rinplane\n" << Rinplane
-              << "Raxis*Rinplane\n" << Raxis*Rinplane
-              << "rot=" << rot << " tilt=" << tilt << " psi=" << psi
-              << std::endl;
-    Matrix2D<double> E;
-    Euler_angles2matrix(rot,tilt,psi,E);
-    std::cout << "E\n" << E << std::endl;
-#endif
+    #ifdef DEBUG
+    	std::cout << "axisRot=" << axisRot << " axisTilt=" << axisTilt
+	          << " axis=" << axis.transpose() << std::endl
+		  << "angle=" << angle << std::endl 
+		  << "Raxis\n" << Raxis
+		  << "Rinplane\n" << Rinplane
+		  << "Raxis*Rinplane\n" << Raxis*Rinplane
+		  << "rot=" << rot << " tilt=" << tilt << " psi=" << psi
+		  << std::endl;
+	Matrix2D<double> E;
+	Euler_angles2matrix(rot,tilt,psi,E);
+	std::cout << "E\n" << E << std::endl;
+    #endif
 
     project_Volume(V, P, Ydim, Xdim, rot, tilt, psi, &roffset);
 }
@@ -367,10 +367,10 @@ void singleWBP(Matrix3D<double> &V, Projection &P)
         double alpha_zmax = (z_F + 0.5 - ZZ(p1)) / ZZ(P.direction);
 
         double alpha_min = XMIPP_MAX(XMIPP_MIN(alpha_xmin, alpha_xmax),
-                                     XMIPP_MIN(alpha_ymin, alpha_ymax));
+                               XMIPP_MIN(alpha_ymin, alpha_ymax));
         alpha_min = XMIPP_MAX(alpha_min, XMIPP_MIN(alpha_zmin, alpha_zmax));
         double alpha_max = XMIPP_MIN(XMIPP_MAX(alpha_xmin, alpha_xmax),
-                                     XMIPP_MAX(alpha_ymin, alpha_ymax));
+                               XMIPP_MAX(alpha_ymin, alpha_ymax));
         alpha_max = XMIPP_MIN(alpha_max, XMIPP_MAX(alpha_zmin, alpha_zmax));
         if (alpha_max - alpha_min < XMIPP_EQUAL_ACCURACY) continue;
 
@@ -549,7 +549,7 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
     double rot, tilt, psi;
     Euler_matrix2angles(proj.euler, rot, tilt, psi);
     std::cout << "rot= "  << rot << " tilt= " << tilt
-              << " psi= " << psi << std::endl;
+    	      << " psi= " << psi << std::endl;
     std::cout << "D\n" << D << std::endl;
     std::cout << "Eulerf\n" << proj.euler << std::endl;
     std::cout << "Eulerg\n" << Eulerg << std::endl;
@@ -748,10 +748,10 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
 
 #ifdef DEBUG
                             std::cout << "    Studying: " << r.transpose()
-                                      << "--> " << rc.transpose()
-                                      << "dist (" << xc - XX(actprj)
-                                      << "," << yc - YY(actprj) << ") --> "
-                                      << foot_U << " " << foot_V << std::endl;
+                        	      << "--> " << rc.transpose()
+                        	      << "dist (" << xc - XX(actprj)
+                        	      << "," << yc - YY(actprj) << ") --> "
+                        	      << foot_U << " " << foot_V << std::endl;
                             std::cout.flush();
 #endif
                             if (IMGMATRIX(basis.blobprint).outside(foot_V, foot_U)) continue;
@@ -762,10 +762,10 @@ void project_Crystal_SimpleGrid(Volume &vol, const SimpleGrid &grid,
 #ifdef DEBUG
                             std::cout << "      After wrapping " << xw << " " << yw << std::endl;
                             std::cout << "      Value added = " << VOLVOXEL(vol, k, i, j) *
-                                      IMGPIXEL(basis.blobprint, foot_V, foot_U) << " Blob value = "
-                                      << IMGPIXEL(basis.blobprint, foot_V, foot_U)
-                                      << " Blob^2 " << IMGPIXEL(basis.blobprint2, foot_V, foot_U)
-                                      << std::endl;
+                            IMGPIXEL(basis.blobprint, foot_V, foot_U) << " Blob value = "
+                            << IMGPIXEL(basis.blobprint, foot_V, foot_U)
+                            << " Blob^2 " << IMGPIXEL(basis.blobprint2, foot_V, foot_U)
+                            << std::endl;
                             std::cout.flush();
 #endif
                             if (FORW)

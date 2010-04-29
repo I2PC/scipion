@@ -47,9 +47,9 @@
 
 TextEdit::TextEdit(QWidget *parent, const char *name)
 #ifdef QT3_SUPPORT
-    : Q3MainWindow(parent, name)
+        : Q3MainWindow(parent, name)
 #else
-    : QMainWindow(parent, name)
+        : QMainWindow(parent, name)
 #endif
 {
     setupFileActions();
@@ -280,7 +280,7 @@ void TextEdit::filePrint()
         QFont font("Courier", 10);
 #ifdef QT3_SUPPORT
         Q3SimpleRichText richText(currentEditor()->text(), font, currentEditor()->context(), currentEditor()->styleSheet(),
-                                  currentEditor()->mimeSourceFactory(), body.height());
+                                 currentEditor()->mimeSourceFactory(), body.height());
 #else
         QSimpleRichText richText(currentEditor()->text(), font, currentEditor()->context(), currentEditor()->styleSheet(),
                                  currentEditor()->mimeSourceFactory(), body.height());

@@ -35,18 +35,18 @@ void Whole2Half(const Matrix1D<std::complex<double> > &in,
     int ldim = (int)(XSIZE(in) / 2) + 1;
     out.resize(ldim);
     for (int j = 0; j < ldim; j++)
-        out(j) = in(j);
+	out(j) = in(j);
 }
 
 /** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
-void Half2Whole(const Matrix1D<std::complex<double> > &in,
-                Matrix1D<std::complex<double> > &out, int orixdim)
+void Half2Whole(const Matrix1D<std::complex<double> > &in, 
+		Matrix1D<std::complex<double> > &out, int orixdim)
 {
     out.resize(orixdim);
     for (int j = 0; j < XSIZE(in); j++)
-        out(j) = in(j);
+	out(j) = in(j);
     for (int j = XSIZE(in); j < orixdim; j++)
-        out(j) = conj(in(orixdim - j));
+	out(j) = conj(in(orixdim - j));
 }
 
 /** Convert whole -> half of (centro-symmetric) Fourier transforms 2D. -- */
@@ -97,7 +97,7 @@ void Complex2RealImag(const Matrix2D< std::complex< double > > & in,
     real.resize(in);
     imag.resize(in);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(real),
-                     MULTIDIM_ARRAY(imag), MULTIDIM_SIZE(in));
+        MULTIDIM_ARRAY(imag), MULTIDIM_SIZE(in));
 }
 
 /** Convert complex -> real,imag Fourier transforms 3D. -- */
@@ -108,7 +108,7 @@ void Complex2RealImag(const Matrix3D< std::complex< double > > & in,
     real.resize(in);
     imag.resize(in);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(real),
-                     MULTIDIM_ARRAY(imag), MULTIDIM_SIZE(in));
+        MULTIDIM_ARRAY(imag), MULTIDIM_SIZE(in));
 }
 
 /** Convert real,imag -> complex Fourier transforms 3D. -- */
@@ -118,7 +118,7 @@ void RealImag2Complex(const Matrix3D< double > & real,
 {
     out.resize(real);
     RealImag2Complex(MULTIDIM_ARRAY(real), MULTIDIM_ARRAY(imag),
-                     MULTIDIM_ARRAY(out), MULTIDIM_SIZE(real));
+        MULTIDIM_ARRAY(out), MULTIDIM_SIZE(real));
 }
 
 /** Direct Fourier Transform 1D ------------------------------------------- */
@@ -255,36 +255,36 @@ void InverseFourierTransformHalf(const Matrix2D< std::complex<double> > &in,
 
 /** Complex Direct Fourier Transform 1D ------------------------------------------- */
 void FourierTransform(const Matrix1D<std::complex<double> > &in,
-                      Matrix1D< std::complex<double> > &out)
+		      Matrix1D< std::complex<double> > &out)
 {
     int N = XSIZE(in);
     Matrix1D<double> re(N), tmpre(N), tmpim(N), im(N), cas(N);
     out.resize(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
-    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re),
-                     MULTIDIM_ARRAY(im), N);
+    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re), 
+		     MULTIDIM_ARRAY(im), N);
     DftRealImaginaryToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-                                    MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim),
-                                    MULTIDIM_ARRAY(cas), N);
+				    MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim), 
+				    MULTIDIM_ARRAY(cas), N);
     RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                      MULTIDIM_ARRAY(out), N);
 }
 
 /** Complex Inverse Fourier Transform 1D. ----------------------------------------- */
 void InverseFourierTransform(const Matrix1D< std::complex<double> > &in,
-                             Matrix1D<std::complex<double> > &out)
+			     Matrix1D<std::complex<double> > &out)
 {
     int N = XSIZE(in);
     Matrix1D<double> tmpre(N), tmpim(N), re(N), im(N), cas(N);
     out.resize(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
-    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re),
-                     MULTIDIM_ARRAY(im), N);
+    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re), 
+		     MULTIDIM_ARRAY(im), N);
     InvDftRealImaginaryToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-                                       MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim),
-                                       MULTIDIM_ARRAY(cas), N);
+				       MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim), 
+				       MULTIDIM_ARRAY(cas), N);
     RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                      MULTIDIM_ARRAY(out), N);
 }
@@ -459,7 +459,7 @@ void numerical_derivative(Matrix2D<double> &M, Matrix2D<double> &D,
     if (direction == 'x')
     {
         // For every row (values in a row are values of the X direction)
-        for (int i = STARTINGY(M); i <= FINISHINGY(M); i++)
+        for (int i = STARTINGY(M);i <= FINISHINGY(M);i++)
         {
             M.getRow(i, v);
             series_convolution(v, coefficients, ans, false);
@@ -470,7 +470,7 @@ void numerical_derivative(Matrix2D<double> &M, Matrix2D<double> &D,
     else if (direction == 'y')
     {
         // For every column (values in a column are values of the Y direction)
-        for (int i = STARTINGX(M); i <= FINISHINGX(M); i++)
+        for (int i = STARTINGX(M);i <= FINISHINGX(M);i++)
         {
             M.getCol(i, v);
             series_convolution(v, coefficients, ans, false);

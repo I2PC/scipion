@@ -106,7 +106,7 @@ int main(int argc, char **argv)
             fn_tmp = fn_oroot + ".doc";
             DFa.write(fn_tmp);
             // Check whether selfiles with reference assignment exist and append
-            for (int ref = 1; ref <= nimg; ref++)
+            for (int ref = 1;ref <= nimg;ref++)
             {
                 SFa.clear();
                 SFlog.go_beginning();
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
             sumweight = 0;
             DFo.go_beginning();
             m = 4 + l * 2;// skip headers + go to relevant line
-            for (int mm = 0; mm < m; mm++) DFo.next();
+            for (int mm = 0;mm < m;mm++) DFo.next();
             if ((DFo.get_current_line()).Is_comment())
             {
                 fn_img = ((DFo.get_current_line()).get_text()).erase(0, 3);
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
                 weight = textToInteger(getParameter(argcp, argvp, "images=", ""));
                 sumweight += weight;
                 allDFs[n].go_beginning();
-                for (int mm = 0; mm < m; mm++) allDFs[n].next();
+                for (int mm = 0;mm < m;mm++) allDFs[n].next();
                 if (allDFs[n].get_current_line().Is_comment()) fn_img2 = ((allDFs[n].get_current_line()).get_text()).erase(0, 3);
                 else REPORT_ERROR(1, "MLalign2D-log files does not have expected format");
                 img.read(fn_img2);
@@ -248,10 +248,10 @@ void Usage()
     std::cerr << "Purpose:\n";
     std::cerr << "    Combine weighted average images from parallel runs of xmipp_MLalign2D \n";
     std::cerr << "Usage: MLalign2D_combine <parameters>\n"
-              << "   -i <logselfile>  : selection file containing MLalign2D-log files of parallel runs\n"
-              << "   -o <rootname>    : rootname for output files (default: logsel-rootname)\n"
+    << "   -i <logselfile>  : selection file containing MLalign2D-log files of parallel runs\n"
+    << "   -o <rootname>    : rootname for output files (default: logsel-rootname)\n"
 
-              << std::endl;
+    << std::endl;
 }
 
 

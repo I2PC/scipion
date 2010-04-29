@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
-              using trust Region method for high-computing load,
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
+              using trust Region method for high-computing load, 
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product,
+If you want to include this tools in any commercial product, 
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -38,8 +38,8 @@ void ObjectiveFunction::saveStats(char *resultsFile, Vector vG, Matrix mH, Vecto
 {
     FILE *ff=fopen(resultsFile,"w");
     fprintf(ff,";dimension of search-space, total NFE, NFE before best point found, value OF at solution\n"
-            "%i\t%i\t(%i)\t%e\n"
-            ";Solution vector\n", dim(), nfe, nfe2, valueBest);
+               "%i\t%i\t(%i)\t%e\n"
+               ";Solution vector\n", dim(), nfe, nfe2, valueBest);
     xBest.save(ff,2);
     fprintf(ff,";Hessian matrix at the solution\n");
     mH.save(ff,3);
@@ -58,7 +58,7 @@ char ObjectiveFunction::isFeasible(Vector vx, double *d)
 {
     if (vx==Vector::emptyVector) return 1;
     if (!isConstrained) return 1;
-    int i, dim=vx.sz(), nerror;
+    int i, dim=vx.sz(), nerror; 
     char feasible=1;
     double *bbl=bl, *bbu=bu, *x=vx, t;
 
@@ -66,43 +66,27 @@ char ObjectiveFunction::isFeasible(Vector vx, double *d)
     initTolLC(vx);
 
     for (i=0; i<dim; i++)
-        if ((t=bbl[i]-x[i])>tolLC)
-        {
-            if (d) *d=mmax(*d,t);
-            else return 0;
-            feasible=0;
-        }
+        if ((t=bbl[i]-x[i])>tolLC) 
+            { if (d) *d=mmax(*d,t); else return 0; feasible=0; }
 
     for (i=0; i<dim; i++)
-        if ((t=x[i]-bbu[i])>tolLC)
-        {
-            if (d) *d=mmax(*d,t);
-            else return 0;
-            feasible=0;
-        }
+        if ((t=x[i]-bbu[i])>tolLC) 
+            { if (d) *d=mmax(*d,t); else return 0; feasible=0; }
 
     for (i=0; i<A.nLine(); i++)
-        if ((t=b[i]-A.scalarProduct(i,vx))>tolLC)
-        {
-            if (d) *d=mmax(*d,t);
-            else return 0;
-            feasible=0;
-        }
+        if ((t=b[i]-A.scalarProduct(i,vx))>tolLC) 
+            { if (d) *d=mmax(*d,t); else return 0; feasible=0; }
 
     for (i=0; i<nNLConstraints; i++)
-        if ((t=-evalNLConstraint(i,vx,&nerror))>tolNLC )
-        {
-            if (d) *d=mmax(*d,t);
-            else return 0;
-            feasible=0;
-        }
+        if ((t=-evalNLConstraint(i,vx,&nerror))>tolNLC ) 
+            { if (d) *d=mmax(*d,t); else return 0; feasible=0; }
 
 //    printf("");
     return feasible;
 }
 
 void ObjectiveFunction::endInit()
-// init linear tolerances and init variable "isConstrained"
+ // init linear tolerances and init variable "isConstrained"
 {
     int i,mdim=dim();
     double *bbl=bl, *bbu=bu;
@@ -110,22 +94,10 @@ void ObjectiveFunction::endInit()
     isConstrained=0;
     for (i=0; i<mdim; i++)
     {
-        if (bbl[i]>-INF)
-        {
-            isConstrained=1;
-            maxNormLC=mmax(maxNormLC, condorAbs(bbl[i]));
-        }
-        if (bbu[i]< INF)
-        {
-            isConstrained=1;
-            maxNormLC=mmax(maxNormLC, condorAbs(bbu[i]));
-        }
+        if (bbl[i]>-INF) {isConstrained=1; maxNormLC=mmax(maxNormLC, condorAbs(bbl[i])); }
+        if (bbu[i]< INF) {isConstrained=1; maxNormLC=mmax(maxNormLC, condorAbs(bbu[i])); }
     }
-    if (b.sz())
-    {
-        isConstrained=1;
-        maxNormLC=mmax(maxNormLC,b.LnftyNorm());
-    }
+    if (b.sz()) { isConstrained=1; maxNormLC=mmax(maxNormLC,b.LnftyNorm()); }
     tolLC=(1.0+maxNormLC)*tolRelFeasibilityForLC*(mdim*2+A.nLine());
 
     if (nNLConstraints) isConstrained=1;
@@ -156,19 +128,13 @@ void ObjectiveFunction::initTolNLC(Vector c, double delta)
 void ObjectiveFunction::updateCounter(double df, Vector vX, int nerror)
 {
     nfe++;
-    if ((dfold==INF)&&(nerror==0))
-    {
-        dfref=(1+condorAbs(df))*1e-8;
-        dfold=df;
-        nfe2=nfe;
-        return;
-    }
+    if ((dfold==INF)&&(nerror==0)) { dfref=(1+condorAbs(df))*1e-8; dfold=df; nfe2=nfe; return; }
     if (dfold-df<dfref) return;
     if (!isFeasible(vX)) return;
-
-    if (nerror==0)
+    
+    if (nerror==0) 
     {
-        nfe2=nfe;
+        nfe2=nfe;  
         dfold=df;
     }
 }
@@ -179,9 +145,7 @@ void ObjectiveFunction::setSaveFile(char *s)
     if (saveFileName) free(saveFileName);
     if (s==NULL)
     {
-        strcpy(buffer,name);
-        strcat(buffer,".dat");
-        s=buffer;
+        strcpy(buffer,name); strcat(buffer,".dat"); s=buffer;
     }
     saveFileName=(char*)malloc(strlen(s)+1);
     strcpy(saveFileName,s);
@@ -191,23 +155,12 @@ void ObjectiveFunction::setName(char *s)
 {
     char *p=s+strlen(s)-1;
     while ((*p!='.')&&(p!=s)) p--;
-    if (p==s)
-    {
-        strncpy(name,s, 8);
-        name[8]=0;
-        return;
-    }
+    if (p==s) { strncpy(name,s, 8); name[8]=0; return; }
     *p='\0';
     while ((*p!='\\')&&(*p!='/')&&(p!=s)) p--;
-    if (p==s)
-    {
-        strncpy(name,s, 8);
-        name[8]=0;
-        return;
-    }
+    if (p==s) { strncpy(name,s, 8); name[8]=0; return; }
     p++;
-    strncpy(name,p, 8);
-    name[8]=0;
+    strncpy(name,p, 8); name[8]=0;
 }
 
 void ObjectiveFunction::printStats(char cc)
@@ -219,7 +172,7 @@ void ObjectiveFunction::printStats(char cc)
     if (xOptimal.sz())
     {
         printf("Lnfty distance to the optimum: %e\n", xBest.LnftyDistance(xOptimal));
-        //   printf("Euclidian distance to the optimum: %e\n", xBest.euclidianDistance(xOptimal));
+   //   printf("Euclidian distance to the optimum: %e\n", xBest.euclidianDistance(xOptimal));
     }
     int idim=xBest.sz(),j=0;
     if (idim<20)
@@ -227,8 +180,7 @@ void ObjectiveFunction::printStats(char cc)
         double *dd=xBest;
         printf("Solution Vector is : \n[%e",dd[0]);
         for (j=1; j<idim; j++) printf(", %e",dd[j]);
-        printf("]\n");
-        j=0;
+        printf("]\n"); j=0;
     }
     if ((cc==0)||(!isConstrained)) return;
     double *dbl=bl,*dbu=bu;
@@ -253,7 +205,7 @@ void ObjectiveFunction::saveValue(Vector tmp,double valueOF, int nerror)
     if (saveFileName) data.updateSave(saveFileName);
 }
 
-int ObjectiveFunction::dim()
+int ObjectiveFunction::dim() 
 {
     int n=xStart.sz();
     if (n>0) return n;
@@ -261,10 +213,7 @@ int ObjectiveFunction::dim()
 }
 
 #ifdef NO_OPTIMIZER
-void projectionIntoFeasibleSpace(Vector vFrom, Vector vBase, ObjectiveFunction *of)
-{
-    vBase=vFrom.clone();
-}
+void projectionIntoFeasibleSpace(Vector vFrom, Vector vBase, ObjectiveFunction *of) { vBase=vFrom.clone(); }
 #else
 void projectionIntoFeasibleSpace(Vector vFrom, Vector vBase, ObjectiveFunction *of);
 #endif
@@ -298,8 +247,8 @@ void ObjectiveFunction::addClosestFeasiblePointInData(Vector vX)
     if (nerror)
     {
         printf("Unable to start.\n"
-               "Evaluation of the Obj. Funct. at the feasible starting point as failed.\n"
-               "Feasible starting point is:\n");
+            "Evaluation of the Obj. Funct. at the feasible starting point as failed.\n"
+            "Feasible starting point is:\n");
         b.print();
         exit(255);
     }
@@ -316,7 +265,7 @@ void ObjectiveFunction::initData()
         return;
     }
 
-    if (startPointIsGiven)
+    if (startPointIsGiven) 
     {
         int i=data.lineIndex(xStart);
         if (i!=-1)
@@ -341,21 +290,13 @@ void ObjectiveFunction::initData()
     {
         if (((double**)data)[i][mdim+1]) continue;
         v=((double**)data)[i][mdim];
-        if (v<best2)
-        {
-            j=i;
-            best2=v;
-        }
+        if (v<best2) { j=i; best2=v; }
         if (!isConstrained) continue;
         data.getLine(i,r,mdim);
-        if (isFeasible(r)&&(v<best))
-        {
-            k=i;
-            best=v;
-        }
+        if (isFeasible(r)&&(v<best)) { k=i; best=v; }
     }
 
-    if (!isConstrained)
+    if (!isConstrained) 
     {
         data.swapLines(0,j);
         return;
@@ -440,20 +381,11 @@ CorrectScaleOF::CorrectScaleOF(int _t, ObjectiveFunction *_of):
     if (of->isConstrained)
     {
         double *bl=of->bl, *bu=of->bu;
-        r=rescaling;
-        i=of->dim();
+        r=rescaling; i=of->dim();
         while (i--)
         {
-            if ((bl[i]>-INF)&&(bu[i]<INF))
-            {
-                r[i]=bu[i]-bl[i];
-                continue;
-            }
-            if ((r[i]==0.0 )&&(bu[i]<INF))
-            {
-                r[i]=bu[i];
-                continue;
-            }
+            if ((bl[i]>-INF)&&(bu[i]<INF)) { r[i]=bu[i]-bl[i]; continue; }
+            if ((r[i]==0.0 )&&(bu[i]<INF))  { r[i]=bu[i];       continue; }
             if (r[i]==0.0) r[i]=1.0;
         }
     }
@@ -474,19 +406,16 @@ CorrectScaleOF::CorrectScaleOF(int _t, ObjectiveFunction *_of, Vector _rescaling
 
 void CorrectScaleOF::init()
 {
-    double *xos=of->xOptimal, *xss=of->xStart, *xod, *xsd,
-            *r=rescaling, **datas=of->data, **datad,
-             *bls=of->bl, *bus=of->bu, *bld, *bud, **as=of->A, **ad;
+    double *xos=of->xOptimal, *xss=of->xStart, *xod, *xsd, 
+           *r=rescaling, **datas=of->data, **datad,
+           *bls=of->bl, *bus=of->bu, *bld, *bud, **as=of->A, **ad;
     int n=of->dim(), i=n,j;
     strcpy(name,"SCALING");
 
     xTemp.setSize(n);
-    xOptimal.setSize(n);
-    xod=xOptimal;
-    xStart.setSize(n);
-    xsd=xStart;
-    data.setSize(of->data.nLine(),n+2);
-    datad=data;
+    xOptimal.setSize(n);                xod=xOptimal; 
+    xStart.setSize(n);                  xsd=xStart;
+    data.setSize(of->data.nLine(),n+2); datad=data;
 
     while(i--)
     {
@@ -496,11 +425,7 @@ void CorrectScaleOF::init()
         while (j--) datad[j][i]=datas[j][i]/r[i];
     }
     j=data.nLine();
-    while (j--)
-    {
-        datad[j][n]=datas[j][n];
-        datad[j][n+1]=datas[j][n+1];
-    }
+    while (j--) { datad[j][n]=datas[j][n]; datad[j][n+1]=datas[j][n+1]; }
 
     startPointIsGiven=of->startPointIsGiven;
     valueOptimal=of->valueOptimal;
@@ -508,21 +433,14 @@ void CorrectScaleOF::init()
     noiseRelative=of->noiseRelative;
     objectiveConst=of->objectiveConst;
 
-    if (of->isConstrained==0)
-    {
-        isConstrained=0;
-        return;
-    }
+    if (of->isConstrained==0) { isConstrained=0; return; }
 
     // there are (box&linear) constraints: scale them !
     isConstrained=of->isConstrained;
     nNLConstraints=of->nNLConstraints;
-    bl.setSize(n);
-    bld=bl;
-    bu.setSize(n);
-    bud=bu;
-    A.setSize(of->A.nLine(),n);
-    ad=A;
+    bl.setSize(n);                      bld=bl;
+    bu.setSize(n);                      bud=bu;
+    A.setSize(of->A.nLine(),n);         ad=A;
     b=of->b;
 
     i=n;
@@ -557,7 +475,7 @@ void CorrectScaleOF::finalize(Vector vG, Matrix mH, Vector vLambda)
 
 #include "sif/SIFFunction.h"
 
-// extern elfunType elfunPARKCH_; extern groupType groupPARKCH_;
+// extern elfunType elfunPARKCH_; extern groupType groupPARKCH_; 
 extern elfunType elfunAkiva_;    extern groupType groupAkiva_;
 extern elfunType elfunRosen_;    extern groupType groupRosen_;
 extern elfunType elfunALLINITU_; extern groupType groupALLINITU_;
@@ -624,17 +542,17 @@ ObjectiveFunction *getObjectiveFunction(int i, double *rho)
     case  7: of=new NoisyQuadratic(i); break; //n=2;
     case  8: of=new SimpleQuadratic(i); break; //n=2;
 // second choice: create new random objective function
-    case  20: of=new RandomOF(i+1,n); ((RandomOF *)of)->save("test.dat"); break;
+    case  20: of=new RandomOF(i+1,n); ((RandomOF *)of)->save("test.dat"); break; 
 
     // third choice : reload from disk previous random objective function
-    case  21: of=new RandomOF(i,"test.dat"); break;
+    case  21: of=new RandomOF(i,"test.dat"); break; 
 
 #ifdef __INCLUDE_SIF__
 
     // fourth choice: use SIF file
     case 104: of= new SIFFunction(i,"sif/examples/akiva.d"     ,elfunAkiva_    ,groupAkiva_   ); break; // 2
     case 105: of= new SIFFunction(i,"sif/examples/allinitu.d"  ,elfunALLINITU_ ,groupALLINITU_); break; // 4
-    case 106: of= new SIFFunction(i,"sif/examples/stratec.d"   ,elfunSTRATEC_  ,groupSTRATEC_ ); break; // 10
+    case 106: of= new SIFFunction(i,"sif/examples/stratec.d"   ,elfunSTRATEC_  ,groupSTRATEC_ ); break; // 10 
     case 107: of= new SIFFunction(i,"sif/examples/heart.d"     ,elfunHEART_    ,groupHEART_   ); break; // 8
     case 108: of= new SIFFunction(i,"sif/examples/osborneb.d"  ,elfunOSBORNEB_ ,groupOSBORNEB_); break; // 11
     case 109: of= new SIFFunction(i,"sif/examples/vibrbeam.d"  ,elfunVIBRBEAM_ ,groupVIBRBEAM_); break; // 8
@@ -670,7 +588,7 @@ ObjectiveFunction *getObjectiveFunction(int i, double *rho)
     case 139: of= new SIFFunction(i,"sif/examples/tointpsp.d"  ,elfunTOINTPSP_ ,groupTOINTPSP_); break; // 50
     case 140: of= new SIFFunction(i,"sif/examples/3pk.d"       ,elfun3PK_      ,group3PK_     ); break; // 30
     case 141: of= new SIFFunction(i,"sif/examples/deconvu.d"   ,elfunDECONVU_  ,groupDECONVU_ ); break; // 61
-//  case 142: of= new SIFFunction(i,"sif/examples/parkch.d"    ,elfunPARKCH_   ,groupPARKCH_  ); break; // 15
+//  case 142: of= new SIFFunction(i,"sif/examples/parkch.d"    ,elfunPARKCH_   ,groupPARKCH_  ); break; // 15 
 
 #ifdef WIN32
     case 113: of= new SIFFunction(i,"sif/examples/snail.d"     ,elfunSNAIL_    ,groupSNAIL_   ); rhoEnd= 2e-4; break; // 2
@@ -696,7 +614,7 @@ ObjectiveFunction *getObjectiveFunction(int i, double *rho)
     case 210: of= new AMPLObjectiveFunction(i,"ampl/examples/hs108.nl"); rhoEnd= 1e-5; break;
     case 211: of= new AMPLObjectiveFunction(i,"ampl/examples/hs116.nl"); break;
     case 212: of= new AMPLObjectiveFunction(i,"ampl/examples/hs268.nl"); break;
-
+    
     case 250: of= new AMPLObjectiveFunction(i,"ampl/examples/rosenbr.nl" ); rhoEnd= 5e-3; break; // 2
     case 251: of= new AMPLObjectiveFunction(i,"ampl/examples/sisser.nl"  ); rhoEnd= 1e-2; break; // 2
     case 252: of= new AMPLObjectiveFunction(i,"ampl/examples/cliff.nl"   ); rhoEnd= 1e-3; break; // 2

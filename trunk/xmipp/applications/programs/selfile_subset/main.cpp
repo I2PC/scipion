@@ -56,7 +56,7 @@ int main(int argc, char **argv)
         SFin.read(fn_in);
         if (fn_root == "") fn_root = fn_in.without_extension();
         if (subsetSize == 0) subsetSize=SFin.ImgNo();
-
+        
         for (int i=0; i<Nsubsets; i++)
         {
             SFout=SFin.randomSubset(subsetSize,bootstrap);
@@ -74,12 +74,12 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cout << "Usage: split_selfile [options]\n"
-              << "    -i <selfile>            : Input selfile\n"
-              << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
-              << "                              output will be: rootname_<n>.sel\n"
-              << "  [ -subsetSize <int>]      : Number of images in the subset\n"
-              << "                              If not given, the same as the input file\n"
-              << "  [ -numberOfSubsets <int> ]: Number of subsets of this kind\n"
-              << "  [ -bootstrap ]            : Random subsets with replacement\n"
-              ;
+    << "    -i <selfile>            : Input selfile\n"
+    << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
+    << "                              output will be: rootname_<n>.sel\n"
+    << "  [ -subsetSize <int>]      : Number of images in the subset\n"
+    << "                              If not given, the same as the input file\n"
+    << "  [ -numberOfSubsets <int> ]: Number of subsets of this kind\n"
+    << "  [ -bootstrap ]            : Random subsets with replacement\n"
+    ;
 }

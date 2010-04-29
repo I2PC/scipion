@@ -188,13 +188,13 @@ int main(int argc, char **argv)
 void Usage(char *argv[])
 {
     std::cout << "Purpose:\n"
-              << "    Computes Angles from EMTilt series\n"
-              << "Usage:" << argv[0] << " -i filein -o fileout -ang_system AngSystem" <<  std::endl
-              << "\t-i               :  Input EMLatVectors file" << std::endl
-              << "\t-o               :  Output EulerAngles file" << std::endl
-              << "\t-ang_syst        :  Angular System (Euler or MRCTilt)" << std::endl
-              << "\t-space           :  Space (Real or Fourier)" << std::endl
-              ;
+    << "    Computes Angles from EMTilt series\n"
+    << "Usage:" << argv[0] << " -i filein -o fileout -ang_system AngSystem" <<  std::endl
+    << "\t-i               :  Input EMLatVectors file" << std::endl
+    << "\t-o               :  Output EulerAngles file" << std::endl
+    << "\t-ang_syst        :  Angular System (Euler or MRCTilt)" << std::endl
+    << "\t-space           :  Space (Real or Fourier)" << std::endl
+    ;
     exit(1);
 
 }

@@ -37,11 +37,11 @@
 xmippSammon::xmippSammon(const unsigned _mapped,
                          const unsigned _num_iterations ,
                          const double _learning_rate):
-    mapped(_mapped),
-    num_iterations(_num_iterations),
-    learning_rate(_learning_rate),
-    verbosity(0),
-    stress(-1)
+        mapped(_mapped),
+        num_iterations(_num_iterations),
+        learning_rate(_learning_rate),
+        verbosity(0),
+        stress(-1)
 {
     if (mapped < 1)
         throw std::invalid_argument("xmippSammon: mapped space must be > 1");

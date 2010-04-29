@@ -45,10 +45,10 @@ public:
     double mu;
     /// Output filename root
     FileName fnRoot;
-
+    
     /// This is running under MPI
     bool MPIversion;
-
+    
     /// Number of processors
     int numberOfProcessors;
 
@@ -62,7 +62,7 @@ public:
 public:
     /// Empty constructor
     Prog_IDR_ART_Parameters();
-
+    
     /// Read parameters from the command line
     void read(int argc, char **argv);
 

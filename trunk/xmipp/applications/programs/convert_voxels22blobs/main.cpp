@@ -106,17 +106,17 @@ int main(int argc, char *argv[])
 void Usage()
 {
     std::cout << "Usage: Voxels22blobs [Parameters]\n"
-              << "   (-voxels | -blobs) <file_in>       : Input file\n"
-              << "    -o <file_out>                     : of the opposite type\n"
-              << "   [-r <blob radius=2>]               : blob radius\n"
-              << "   [-m <blob order=2>]                : blob derivative order\n"
-              << "   [-a <blob alpha=10.4>]             : controls smoothness\n"
-              << "Only if voxels:\n"
-              << "   [-g <grid_relative_size=1.41>]     : size between grid samples\n"
-              << "   [-FCC | -CC]                       : by default, BCC grid\n"
-              << "   [-l <lambda=0.05>]                 : convergence rate\n"
-              << "   [-final_error <error=0.01>]        : minimum change percentage\n"
-              << "   [-R <R=-1>]                        : interest radius\n";
+    << "   (-voxels | -blobs) <file_in>       : Input file\n"
+    << "    -o <file_out>                     : of the opposite type\n"
+    << "   [-r <blob radius=2>]               : blob radius\n"
+    << "   [-m <blob order=2>]                : blob derivative order\n"
+    << "   [-a <blob alpha=10.4>]             : controls smoothness\n"
+    << "Only if voxels:\n"
+    << "   [-g <grid_relative_size=1.41>]     : size between grid samples\n"
+    << "   [-FCC | -CC]                       : by default, BCC grid\n"
+    << "   [-l <lambda=0.05>]                 : convergence rate\n"
+    << "   [-final_error <error=0.01>]        : minimum change percentage\n"
+    << "   [-R <R=-1>]                        : interest radius\n";
 }
 
 /* Menus ------------------------------------------------------------------- */

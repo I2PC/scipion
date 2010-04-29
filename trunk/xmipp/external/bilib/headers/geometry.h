@@ -14,17 +14,17 @@
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  AffineToRotationMatrix
-(
-    double *A,     /* input 4x4 homogenous affine matrix */
-    double *R,     /* output 4x4 homogenous rotation matrix */
-    double *xRotation,   /* output rotation around x-axis */
-    double *yRotation,   /* output rotation around y-axis */
-    double *zRotation,   /* output rotation around z-axis */
-    int  FirstOctant,  /* constrains the rotation */
-    double Tolerance,   /* admissible relative error */
-    long MaxIterations,  /* convergence limit */
-    int  *Status    /* error management */
-);
+    (
+        double *A,     /* input 4x4 homogenous affine matrix */
+        double *R,     /* output 4x4 homogenous rotation matrix */
+        double *xRotation,   /* output rotation around x-axis */
+        double *yRotation,   /* output rotation around y-axis */
+        double *zRotation,   /* output rotation around z-axis */
+        int  FirstOctant,  /* constrains the rotation */
+        double Tolerance,   /* admissible relative error */
+        long MaxIterations,  /* convergence limit */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Produce Euler rotation matrix (X,Y,Z).
@@ -36,12 +36,12 @@ extern int  AffineToRotationMatrix
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  GetRotationMatrix
-(
-    double *R,     /* output 4x4 homogenous matrix */
-    double xRotation,   /* rotation around x-axis */
-    double yRotation,   /* rotation around y-axis */
-    double zRotation   /* rotation around z-axis */
-);
+    (
+        double *R,     /* output 4x4 homogenous matrix */
+        double xRotation,   /* rotation around x-axis */
+        double yRotation,   /* rotation around y-axis */
+        double zRotation   /* rotation around z-axis */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Produce scaling matrix.
@@ -52,12 +52,12 @@ extern int  GetRotationMatrix
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  GetScalingMatrix
-(
-    double *S,     /* output 4x4 homogenous matrix */
-    double xScale,    /* scaling along x-axis */
-    double yScale,    /* scaling along y-axis */
-    double zScale    /* scaling along z-axis */
-);
+    (
+        double *S,     /* output 4x4 homogenous matrix */
+        double xScale,    /* scaling along x-axis */
+        double yScale,    /* scaling along y-axis */
+        double zScale    /* scaling along z-axis */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Produce a translation matrix.
@@ -68,12 +68,12 @@ extern int  GetScalingMatrix
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  GetTranslationMatrix
-(
-    double *T,     /* output 4x4 homogenous matrix */
-    double xTranslation,  /* translation along x-axis */
-    double yTranslation,  /* translation along y-axis */
-    double zTranslation  /* translation along z-axis */
-);
+    (
+        double *T,     /* output 4x4 homogenous matrix */
+        double xTranslation,  /* translation along x-axis */
+        double yTranslation,  /* translation along y-axis */
+        double zTranslation  /* translation along z-axis */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Do two lines intersect (n-D)?.
@@ -87,18 +87,18 @@ extern int  GetTranslationMatrix
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  LineToLineIntersection
-(
-    double P[],    /* 1st point on line1 */
-    double Q[],    /* 2nd point on line1 */
-    double A[],    /* 1st point on line2 */
-    double B[],    /* 2nd point on line2 */
-    double X[],    /* output intersection */
-    long Lines,    /* height of the vectors */
-    double Tolerance,   /* admissible relative error */
-    long MaxIterations,  /* convergence limit */
-    int  *Intersection,  /* resulting validity of intersection */
-    int  *Status    /* error management */
-);
+    (
+        double P[],    /* 1st point on line1 */
+        double Q[],    /* 2nd point on line1 */
+        double A[],    /* 1st point on line2 */
+        double B[],    /* 2nd point on line2 */
+        double X[],    /* output intersection */
+        long Lines,    /* height of the vectors */
+        double Tolerance,   /* admissible relative error */
+        long MaxIterations,  /* convergence limit */
+        int  *Intersection,  /* resulting validity of intersection */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Do two lines intersect (3-D)?
@@ -116,15 +116,15 @@ extern int  LineToLineIntersection
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  LineToLineIntersection3D
-(
-    double P[],    /* point on line1 */
-    double q[],    /* direction of line1 */
-    double A[],    /* point on line2 */
-    double b[],    /* direction of line2 */
-    double X[],    /* output intersection */
-    double Tolerance,   /* admissible relative error */
-    int  *Intersection  /* resulting validity of intersection */
-);
+    (
+        double P[],    /* point on line1 */
+        double q[],    /* direction of line1 */
+        double A[],    /* point on line2 */
+        double b[],    /* direction of line2 */
+        double X[],    /* output intersection */
+        double Tolerance,   /* admissible relative error */
+        int  *Intersection  /* resulting validity of intersection */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Does a line intersect a plane (n-D)?
@@ -138,19 +138,19 @@ extern int  LineToLineIntersection3D
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  LineToPlaneIntersection
-(
-    double P[],    /* 1st point on line */
-    double Q[],    /* 2nd point on line */
-    double A[],    /* 1st point on plane */
-    double B[],    /* 2nd point on plane */
-    double C[],    /* 3rd point on plane */
-    double X[],    /* output intersection */
-    long Lines,    /* height of the vectors */
-    double Tolerance,   /* admissible relative error */
-    long MaxIterations,  /* convergence limit */
-    int  *Intersection,  /* resulting validity of intersection */
-    int  *Status    /* error management */
-);
+    (
+        double P[],    /* 1st point on line */
+        double Q[],    /* 2nd point on line */
+        double A[],    /* 1st point on plane */
+        double B[],    /* 2nd point on plane */
+        double C[],    /* 3rd point on plane */
+        double X[],    /* output intersection */
+        long Lines,    /* height of the vectors */
+        double Tolerance,   /* admissible relative error */
+        long MaxIterations,  /* convergence limit */
+        int  *Intersection,  /* resulting validity of intersection */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Does a line intersect a plane (3-D)?
@@ -167,15 +167,15 @@ extern int  LineToPlaneIntersection
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  LineToPlaneIntersection3D
-(
-    double P[],    /* point on line */
-    double q[],    /* direction of line */
-    double A[],    /* point on plane */
-    double b[],    /* normal of plane */
-    double X[],    /* output intersection */
-    double Tolerance,   /* admissible relative error */
-    int  *Intersection  /* resulting validity of intersection */
-);
+    (
+        double P[],    /* point on line */
+        double q[],    /* direction of line */
+        double A[],    /* point on plane */
+        double b[],    /* normal of plane */
+        double X[],    /* output intersection */
+        double Tolerance,   /* admissible relative error */
+        int  *Intersection  /* resulting validity of intersection */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** What is the line that passes through two points (3-D)?.
@@ -188,13 +188,13 @@ extern int  LineToPlaneIntersection3D
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  PointsToLine3D
-(
-    double P[],    /* 1st point on input line */
-    double Q[],    /* 2nd point on input line */
-    double A[],    /* point on output line */
-    double b[],    /* direction of output line */
-    double Tolerance   /* admissible relative error */
-);
+    (
+        double P[],    /* 1st point on input line */
+        double Q[],    /* 2nd point on input line */
+        double A[],    /* point on output line */
+        double b[],    /* direction of output line */
+        double Tolerance   /* admissible relative error */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** What is the plane passing through 3 points (3-D)?
@@ -207,14 +207,14 @@ extern int  PointsToLine3D
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  PointsToPlane3D
-(
-    double P[],    /* 1st point on input line */
-    double Q[],    /* 2nd point on input line */
-    double R[],    /* 3rd point on input line */
-    double A[],    /* point on output plane */
-    double b[],    /* normal of output plane */
-    double Tolerance   /* admissible relative error */
-);
+    (
+        double P[],    /* 1st point on input line */
+        double Q[],    /* 2nd point on input line */
+        double R[],    /* 3rd point on input line */
+        double A[],    /* point on output plane */
+        double b[],    /* normal of output plane */
+        double Tolerance   /* admissible relative error */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Does a point belong to a line (n-D)?.
@@ -227,15 +227,15 @@ extern int  PointsToPlane3D
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  PointToLineMembership
-(
-    double P[],    /* point to test */
-    double A[],    /* 1st point on line */
-    double B[],    /* 2nd point on line */
-    long Lines,    /* height of the vectors */
-    double Tolerance,   /* admissible relative error */
-    int  *Membership,  /* resulting type of intersection */
-    int  *Status    /* error management */
-);
+    (
+        double P[],    /* point to test */
+        double A[],    /* 1st point on line */
+        double B[],    /* 2nd point on line */
+        long Lines,    /* height of the vectors */
+        double Tolerance,   /* admissible relative error */
+        int  *Membership,  /* resulting type of intersection */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Does a point belong to a line (3-D)?
@@ -251,13 +251,13 @@ extern int  PointToLineMembership
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  PointToLineMembership3D
-(
-    double P[],    /* point to test */
-    double A[],    /* point on line */
-    double b[],    /* direction of line */
-    double Tolerance,   /* admissible relative error */
-    int  *Membership   /* resulting type of intersection */
-);
+    (
+        double P[],    /* point to test */
+        double A[],    /* point on line */
+        double b[],    /* direction of line */
+        double Tolerance,   /* admissible relative error */
+        int  *Membership   /* resulting type of intersection */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Does a point belong to a plane (n-D)?.
@@ -270,17 +270,17 @@ extern int  PointToLineMembership3D
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  PointToPlaneMembership
-(
-    double P[],    /* point to test */
-    double A[],    /* 1st point on plane */
-    double B[],    /* 2nd point on plane */
-    double C[],    /* 2nd point on plane */
-    long Lines,    /* height of the vectors */
-    double Tolerance,   /* admissible relative error */
-    long MaxIterations,  /* convergence limit */
-    int  *Membership,  /* resulting type of intersection */
-    int  *Status    /* error management */
-);
+    (
+        double P[],    /* point to test */
+        double A[],    /* 1st point on plane */
+        double B[],    /* 2nd point on plane */
+        double C[],    /* 2nd point on plane */
+        long Lines,    /* height of the vectors */
+        double Tolerance,   /* admissible relative error */
+        long MaxIterations,  /* convergence limit */
+        int  *Membership,  /* resulting type of intersection */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Does a point belong to a plane (3-D)?
@@ -296,13 +296,13 @@ extern int  PointToPlaneMembership
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  PointToPlaneMembership3D
-(
-    double P[],    /* point to test */
-    double A[],    /* point on plane */
-    double b[],    /* normal of plane */
-    double Tolerance,   /* admissible relative error */
-    int  *Membership   /* resulting type of intersection */
-);
+    (
+        double P[],    /* point to test */
+        double A[],    /* point on plane */
+        double b[],    /* normal of plane */
+        double Tolerance,   /* admissible relative error */
+        int  *Membership   /* resulting type of intersection */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Project a point onto a line (n-D).
@@ -312,14 +312,14 @@ extern int  PointToPlaneMembership3D
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  ProjectPointToLine
-(
-    double P[],    /* point to project */
-    double A[],    /* 1st point on line */
-    double B[],    /* 2nd point on line */
-    double X[],    /* resulting projection */
-    long Lines,    /* height of the vectors */
-    double Tolerance   /* admissible relative error */
-);
+    (
+        double P[],    /* point to project */
+        double A[],    /* 1st point on line */
+        double B[],    /* 2nd point on line */
+        double X[],    /* resulting projection */
+        long Lines,    /* height of the vectors */
+        double Tolerance   /* admissible relative error */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Project a point onto a line (3-D).
@@ -332,13 +332,13 @@ extern int  ProjectPointToLine
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  ProjectPointToLine3D
-(
-    double P[],    /* point to project */
-    double A[],    /* point on line */
-    double b[],    /* direction of line */
-    double X[],    /* resulting projection */
-    double Tolerance   /* admissible relative error */
-);
+    (
+        double P[],    /* point to project */
+        double A[],    /* point on line */
+        double b[],    /* direction of line */
+        double X[],    /* resulting projection */
+        double Tolerance   /* admissible relative error */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Project a point onto a plane (n-D).
@@ -348,17 +348,17 @@ extern int  ProjectPointToLine3D
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  ProjectPointToPlane
-(
-    double P[],    /* point to project */
-    double A[],    /* 1st point on plane */
-    double B[],    /* 2nd point on plane */
-    double C[],    /* 3rd point on plane */
-    double X[],    /* resulting projection */
-    long Lines,    /* height of the vectors */
-    double Tolerance,   /* admissible relative error */
-    long MaxIterations,  /* convergence limit */
-    int  *Status    /* error management */
-);
+    (
+        double P[],    /* point to project */
+        double A[],    /* 1st point on plane */
+        double B[],    /* 2nd point on plane */
+        double C[],    /* 3rd point on plane */
+        double X[],    /* resulting projection */
+        long Lines,    /* height of the vectors */
+        double Tolerance,   /* admissible relative error */
+        long MaxIterations,  /* convergence limit */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Project a point onto a plane (3-D).
@@ -372,13 +372,13 @@ extern int  ProjectPointToPlane
 */
 
 extern int  ProjectPointToPlane3D
-(
-    double P[],    /* point to project */
-    double A[],    /* point on plane */
-    double b[],    /* normal of plane */
-    double X[],    /* resulting projection */
-    double Tolerance   /* admissible relative error */
-);
+    (
+        double P[],    /* point to project */
+        double A[],    /* point on plane */
+        double b[],    /* normal of plane */
+        double X[],    /* resulting projection */
+        double Tolerance   /* admissible relative error */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Are two vectors colinear (n-D)?.
@@ -392,13 +392,13 @@ extern int  ProjectPointToPlane3D
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  TestColinearVector
-(
-    double U[],    /* 1st vector */
-    double V[],    /* 2nd vector */
-    long Lines,    /* height of the vector */
-    double Tolerance,   /* admissible relative error */
-    int  *Colinear   /* resulting test of colinearity */
-);
+    (
+        double U[],    /* 1st vector */
+        double V[],    /* 2nd vector */
+        long Lines,    /* height of the vector */
+        double Tolerance,   /* admissible relative error */
+        int  *Colinear   /* resulting test of colinearity */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Are three vectors coplanar (n-D)?
@@ -412,14 +412,14 @@ extern int  TestColinearVector
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  TestCoplanarVector
-(
-    double U[],    /* 1st vector */
-    double V[],    /* 2nd vector */
-    double W[],    /* 3rd vector */
-    long Lines,    /* height of the vectors */
-    double Tolerance,   /* admissible relative error */
-    long MaxIterations,  /* convergence limit */
-    int  *Coplanar,   /* resulting test of coplanarity */
-    int  *Status    /* error management */
-);
+    (
+        double U[],    /* 1st vector */
+        double V[],    /* 2nd vector */
+        double W[],    /* 3rd vector */
+        long Lines,    /* height of the vectors */
+        double Tolerance,   /* admissible relative error */
+        long MaxIterations,  /* convergence limit */
+        int  *Coplanar,   /* resulting test of coplanarity */
+        int  *Status    /* error management */
+    );
 //@}

@@ -46,9 +46,9 @@ public:
     // Constructor. Set reference to main_widget
     QtPopupMenuMark(QtWidgetMicrograph *_parent) :
 #ifdef QT3_SUPPORT
-        Q3PopupMenu((QWidget*)_parent)
+            Q3PopupMenu((QWidget*)_parent)
 #else
-        QPopupMenu((QWidget*) _parent)
+            QPopupMenu((QWidget*) _parent)
 #endif
     {}
 

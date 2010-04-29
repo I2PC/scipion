@@ -127,8 +127,8 @@ void FourierImageXmipp_to_ImageXmipp(FourierImageXmipp &F, ImageXmipp &I)
 
 // Read stack from stack file ----------------------------------------------
 bool ImageXmippStack::readFromStack(const FileName& name,
-                                    bool reversed, bool apply_geo, bool only_apply_shifts,
-                                    bool skipHeaders)
+    bool reversed, bool apply_geo, bool only_apply_shifts,
+    bool skipHeaders)
 {
     headerXmipp header;
     FILE* fp;
@@ -149,14 +149,14 @@ bool ImageXmippStack::readFromStack(const FileName& name,
     fseek(fp, 0, SEEK_END);
     long int fileSize = ftell(fp);
     long int imageSize = header.Ydim() * header.Xdim() * 4;
-    int Nimgs = (fileSize-headerSize)/(imageSize+headerSize);
+    int Nimgs = (fileSize-headerSize)/(imageSize+headerSize);    
 
     // Read all images
     fseek(fp,headerSize,SEEK_SET);
     std::cout << "Reading " << name << std::endl;
     init_progress_bar(Nimgs);
     int istep=CEIL(Nimgs/60);
-    for (int i=0; i<Nimgs; i++)
+    for (int i=0; i<Nimgs; i++) 
     {
         ImageXmipp I;
         if (skipHeaders)
@@ -166,18 +166,18 @@ bool ImageXmippStack::readFromStack(const FileName& name,
             I.getHeader().Xdim()=header.Xdim();
             I.getHeader().reversed()=header.reversed();
             fseek(fp,header.get_header_size(),SEEK_CUR);
-        }
-        else
-        {
+	}
+	else
+	{
             if (!I.getHeader().read(fp, true, reversed, true))
                 REPORT_ERROR(1502,
-                             (std::string)"ImageXmippStack::readFromStack: Cannot read image "+
-                             integerToString(i));
+                    (std::string)"ImageXmippStack::readFromStack: Cannot read image "+
+                    integerToString(i));
         }
         if (!I.readImageContent(fp, apply_geo, only_apply_shifts))
             REPORT_ERROR(1502,
-                         (std::string)"ImageXmippStack::readFromStack: Cannot read (2) image "
-                         +integerToString(i));
+                (std::string)"ImageXmippStack::readFromStack: Cannot read (2) image "
+                +integerToString(i));
         I.rename(name.insert_before_extension(integerToString(i,5)));
         stack.push_back(I);
         if (i%istep==0) progress_bar(i);
@@ -188,7 +188,7 @@ bool ImageXmippStack::readFromStack(const FileName& name,
     fclose(fp);
     return (ret);
 }
-
+    
 // Write as stack file.-----------------------------------------------------
 void ImageXmippStack::writeAsStack(const FileName& name, bool force_reversed)
 {
@@ -202,7 +202,7 @@ void ImageXmippStack::writeAsStack(const FileName& name, bool force_reversed)
 
     getImage(0).adjust_header();
     bool reversed = (force_reversed) ?
-                    !getImage(0).getHeader().reversed():getImage(0).getHeader().reversed();
+        !getImage(0).getHeader().reversed():getImage(0).getHeader().reversed();
     headerXmipp overallHeader;
     overallHeader=getImage(0).getHeader();
     overallHeader.fIangle()=0;
@@ -215,13 +215,13 @@ void ImageXmippStack::writeAsStack(const FileName& name, bool force_reversed)
         getImage(i).getHeader().fImgnum()=i+1;
         getImage(i).write(fp, reversed);
     }
-
+    
     fclose(fp);
 }
-
+    
 // Write as selfile --------------------------------------------------------
 void ImageXmippStack::writeAsSelFile(const FileName& rootname,
-                                     bool force_reversed)
+    bool force_reversed)
 {
     SelFile SF;
     std::cout << "Writing " << rootname << std::endl;
@@ -314,7 +314,7 @@ void ImageOver::downsample(ImageT< double > *I) const
 
 // Generate the oversample image by interpolation --------------------------
 void ImageOver::oversample(ImageT < double > *I) const
-{}
+    {}
 
 /****************************************************************************/
 /* IMAGIC IMAGES                                                            */
@@ -346,8 +346,8 @@ bool ImageImagicT<std::complex<double> >::read(const FileName &name)
         float a, b;
         const unsigned size = 4;
         fseek(img_fh, imgnum*(size*2)*img_offset, SEEK_SET);
-        std::complex<double>* ptr;
-        unsigned long int n;
+    	std::complex<double>* ptr;
+	unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
         {
             // read real part of a complex number

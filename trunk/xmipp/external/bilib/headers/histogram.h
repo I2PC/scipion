@@ -13,15 +13,15 @@
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  HistogramBuild
-(
-    float *VolumeSource,  /* data to process */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    double Frequency[],  /* output vector of ordinates */
-    float Value[],   /* output vector of abscissa */
-    int  *Status    /* error management */
-);
+    (
+        float *VolumeSource,  /* data to process */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        double Frequency[],  /* output vector of ordinates */
+        float Value[],   /* output vector of abscissa */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Equalize histogram.
@@ -66,14 +66,14 @@ extern int  HistogramBuild
   * success: return(!ERROR); failure: return(ERROR)
 */
 extern int  HistogramEqualize
-(
-    double Frequency[],  /* histogram ordinates */
-    float Value[],   /* histogram abscissa */
-    float EqualizedValue[], /* output vector of abscissa */
-    long HistogramLength, /* length of the histogram */
-    long *NumberOfClasses, /* number of classes, desired -> actual */
-    double Tolerance   /* admissible relative error */
-);
+    (
+        double Frequency[],  /* histogram ordinates */
+        float Value[],   /* histogram abscissa */
+        float EqualizedValue[], /* output vector of abscissa */
+        long HistogramLength, /* length of the histogram */
+        long *NumberOfClasses, /* number of classes, desired -> actual */
+        double Tolerance   /* admissible relative error */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Get size of histogram.
@@ -82,14 +82,14 @@ extern int  HistogramEqualize
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  HistogramGetSize
-(
-    float *VolumeSource,  /* data to process */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    long *HistogramLength, /* output length of the histogram */
-    int  *Status    /* error management */
-);
+    (
+        float *VolumeSource,  /* data to process */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long *HistogramLength, /* output length of the histogram */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Histogram K means.
@@ -128,12 +128,12 @@ extern int  HistogramGetSize
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  HistogramKMeans
-(
-    double Frequency[],  /* histogram ordinates */
-    float Value[],   /* histogram abscissa */
-    float QuantizedValue[], /* output vector of abscissa */
-    long HistogramLength, /* length of the histogram */
-    long *NumberOfClasses, /* number of classes, desired -> actual */     double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        double Frequency[],  /* histogram ordinates */
+        float Value[],   /* histogram abscissa */
+        float QuantizedValue[], /* output vector of abscissa */
+        long HistogramLength, /* length of the histogram */
+        long *NumberOfClasses, /* number of classes, desired -> actual */     double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 //@}

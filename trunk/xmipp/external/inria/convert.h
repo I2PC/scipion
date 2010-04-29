@@ -36,27 +36,27 @@ extern "C"
      *   done.
      */
     extern void ConvertBuffer(void *bufferIn, /* buffer to be converted */
-                              bufferType typeIn, /* type of this buffer */
-                              void *bufferOut, /* result buffer */
-                              bufferType typeOut, /* type of this buffer */
-                              int bufferLength /* buffers' length */
-                             );
+                                  bufferType typeIn, /* type of this buffer */
+                                  void *bufferOut, /* result buffer */
+                                  bufferType typeOut, /* type of this buffer */
+                                  int bufferLength /* buffers' length */
+                                 );
 
     extern void Convert_r32_to_s8(r32 *theBuf,
-                                  s8 *resBuf,
-                                  int size);
+                                      s8 *resBuf,
+                                      int size);
 
     extern void Convert_r32_to_u8(r32 *theBuf,
-                                  u8 *resBuf,
-                                  int size);
+                                      u8 *resBuf,
+                                      int size);
 
     extern void Convert_r32_to_s16(r32 *theBuf,
-                                   s16 *resBuf,
-                                   int size);
+                                       s16 *resBuf,
+                                       int size);
 
     extern void Convert_r32_to_u16(r32 *theBuf,
-                                   u16 *resBuf,
-                                   int size);
+                                       u16 *resBuf,
+                                       int size);
 
 #ifdef __cplusplus
 }

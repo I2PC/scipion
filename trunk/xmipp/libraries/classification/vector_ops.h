@@ -174,7 +174,7 @@ template<class T> std::vector<T>& operator/=(std::vector<T>& v1, const std::vect
  */
 template <class T>
 std::vector<T> randomVector(const unsigned& _size, const T& _lower,
-                            const T& _upper)
+                       const T& _upper)
 {
     std::vector<T> v(_size);
     xmippUniform<T> u(_lower, _upper);

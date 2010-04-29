@@ -81,9 +81,9 @@ int main(int argc, char **argv)
                 i_j.resize(2*N);
                 angi_angj_d.resize(3*N);
                 MPI_Recv(&i_j[0], 2*N, MPI_INT, status.MPI_SOURCE,
-                         MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
+                    MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
                 MPI_Recv(&angi_angj_d[0], 3*N, MPI_DOUBLE, status.MPI_SOURCE,
-                         MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
+                    MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
                 for (int i=0; i<N; i++)
                 {
                     long int ii=i_j[2*i];
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
                     }
                 }
             int N=i_j.size()/2;
-            MPI_Send(&N,                1, MPI_INT,    0, 0, MPI_COMM_WORLD);
+            MPI_Send(&N,                1, MPI_INT,    0, 0, MPI_COMM_WORLD); 
             MPI_Send(&i_j[0],         2*N, MPI_INT,    0, 0, MPI_COMM_WORLD);
             MPI_Send(&angi_angj_d[0], 3*N, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         }
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     {
         std::cout << XE << std::endl;
         MPI_Finalize();
-        return 1 ;
+	return 1 ;
     }
     MPI_Finalize();
     return 0 ;

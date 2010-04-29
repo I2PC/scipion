@@ -71,7 +71,7 @@ public:
 
     /// Deltaw
     double   Deltaw;
-
+    
     /// fourier interpolation
     bool do_fourier;
     /// number of Threads used in the Fourier TRansform

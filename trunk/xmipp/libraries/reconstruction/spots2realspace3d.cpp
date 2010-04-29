@@ -37,10 +37,10 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
     try
     {
         fnaph_in = getParameter(fh_param, "APH file", 0, NULL,
-                                3007, "Spot2RealSpace3D_Parameters::read: APH File not found");
-
+                             3007, "Spot2RealSpace3D_Parameters::read: APH File not found");
+							 
         fn_out = getParameter(fh_param, "Output file", 0, NULL,
-                              3007, "Spot2RealSpace3D_Parameters::read: Output File not found");
+                           3007, "Spot2RealSpace3D_Parameters::read: Output File not found");
         NoCells.resize(3);
         string aux_str = getParameter(fh_param, "Output cells no", 0, "1 1 1");
         istrstream *is = NULL;
@@ -73,12 +73,12 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
         delete is;
         is = new istrstream(aux_str.c_str());
         SpaceGroup = textToInteger(getParameter(fh_param, "Space Group", 0, "1"));
-
-        std::cout << " fnaph_in: "<<fnaph_in<< " \n"<<std::endl;
-        std::cout << " fn_out  : "<<fn_out<< " \n"<<std::endl;
-        std::cout << " KeepContrast: "<<KeepContrast<< " \n"<<std::endl;
-        std::cout << " Space Group: "<<SpaceGroup<< " \n"<<std::endl;
-
+		
+		std::cout << " fnaph_in: "<<fnaph_in<< " \n"<<std::endl;
+		std::cout << " fn_out  : "<<fn_out<< " \n"<<std::endl;
+		std::cout << " KeepContrast: "<<KeepContrast<< " \n"<<std::endl;
+		std::cout << " Space Group: "<<SpaceGroup<< " \n"<<std::endl;
+		
         try
         {
             *is >> XX(Celldim) >> YY(Celldim) >> ZZ(Celldim);
@@ -93,7 +93,7 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
     }
     catch (Xmipp_error XE)
     {
-        std::cout << " se va por aqui 1 \n"<<std::endl;
+		std::cout << " se va por aqui 1 \n"<<std::endl;
         std::cout << XE << std::endl;
         REPORT_ERROR(3007, (std::string)"There is an error reading " + fnprm);
     }
@@ -106,11 +106,11 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
 std::ostream& operator << (std::ostream &o, const Spot2RealSpace3D_Parameters &prm)
 {
     o << "APH Input            : " << prm.fnaph_in << std::endl
-      << "Output Spider File   : " << prm.fn_out << std::endl
-      << "Ouput Layout (x,y,z) : " << prm.NoCells.transpose() << std::endl
-      << "Phase_Shift (x,y,z)  : " << prm.Phase_Shift.transpose()  << std::endl
-      << "Cell Size (x,y,z)    : " << prm.Celldim .transpose() << std::endl
-      << "Keep Contrast        : " << prm.KeepContrast << std::endl;
+    << "Output Spider File   : " << prm.fn_out << std::endl
+    << "Ouput Layout (x,y,z) : " << prm.NoCells.transpose() << std::endl
+    << "Phase_Shift (x,y,z)  : " << prm.Phase_Shift.transpose()  << std::endl
+    << "Cell Size (x,y,z)    : " << prm.Celldim .transpose() << std::endl
+    << "Keep Contrast        : " << prm.KeepContrast << std::endl;
     return o;
 }
 
@@ -149,21 +149,21 @@ void IDFT_3D(const Matrix3D< std::complex<double> > &FT, Matrix3D<double> &V1)
     init_progress_bar(-s_iz + e_iz + 1);
 
 
-    for (iz = s_iz; iz <= e_iz; iz++)
+    for (iz = s_iz;iz <= e_iz;iz++)
     {
         progress_bar(iz - s_iz);
         argz = /*- dir * */ 2.0 * PI * iz / z_dim;
-        for (iy = s_iy; iy <= e_iy; iy++)
+        for (iy = s_iy;iy <= e_iy;iy++)
         {
             argy = /* - dir * */2.0 * PI * iy / y_dim;
-            for (ix = s_ix; ix <= e_ix; ix++)
+            for (ix = s_ix;ix <= e_ix;ix++)
             {
                 argx = /*- dir * */ 2.0 * PI * ix / x_dim;
-                for (kz = s_kz; kz <= e_kz; kz++)
+                for (kz = s_kz;kz <= e_kz;kz++)
                 {
-                    for (ky = s_ky; ky <= e_ky; ky++)
+                    for (ky = s_ky;ky <= e_ky;ky++)
                     {
-                        for (kx = s_kx; kx <= e_kx; kx++)
+                        for (kx = s_kx;kx <= e_kx;kx++)
                         {
                             if (VOL_ELEM(FT, kz, ky, kx) == (std::complex<double>)0.0)
                                 continue;
@@ -198,7 +198,7 @@ void IDFT_3D(const Matrix3D< std::complex<double> > &FT, Matrix3D<double> &V1)
     }
     else
     {
-        for (i = 0; i < m; i++)
+        for (i = 0;i < m;i++)
         {
             x1[iz][iy][ix] = x2[iz][iy][ix];
             y1[iz][iy][ix] = y2[iz][iy][ix];
@@ -249,19 +249,19 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
     STARTINGX(FT) = -hsize;
 
 //  switch (prm.aph_file.Space_Group)
-    switch (prm.SpaceGroup)
+	switch (prm.SpaceGroup)	
     {
     case(1):
-        std::cout << "Detected P1 symmetry" << std::endl;
+                    std::cout << "Detected P1 symmetry" << std::endl;
         symmetrize_P1(FT, prm);
         break;
     case(75)://P4
-        std::cout << "Detected P4 symmetry" << std::endl;
+                    std::cout << "Detected P4 symmetry" << std::endl;
         symmetrize_P4(FT, prm);
         break;
-
+		
     case(90)://P4212
-        std::cout << "Detected P4212 symmetry" << std::endl;
+                    std::cout << "Detected P4212 symmetry" << std::endl;
         symmetrize_P4212(FT, prm);
         break;
     default:
@@ -278,14 +278,14 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
         YY(prm.Celldim) == -1 ||
         ZZ(prm.Celldim) == -1
        )
-    {
+{
         ZZ(prm.Celldim) = ZSIZE(FT);
         YY(prm.Celldim) = XSIZE(FT);
         XX(prm.Celldim) = YSIZE(FT);
     }
     V1().initZeros(ZZ(prm.Celldim),
-                   YY(prm.Celldim),
-                   XX(prm.Celldim));
+                    YY(prm.Celldim),
+                    XX(prm.Celldim));
     V1().setXmippOrigin();
 
 
@@ -295,21 +295,15 @@ void ROUT_Spots2RealSpace_3D(Spot2RealSpace3D_Parameters &prm,
 //ADD HERE ANY OTHER FACTOR, MAY BE AS OPTION
 
     // Any repetition?
-    int s_k = STARTINGZ(V1());
-    int e_k = FINISHINGZ(V1());
-    int s_i = STARTINGY(V1());
-    int e_i = FINISHINGY(V1());
-    int s_j = STARTINGX(V1());
-    int e_j = FINISHINGX(V1());
+    int s_k = STARTINGZ(V1()); int e_k = FINISHINGZ(V1());
+    int s_i = STARTINGY(V1()); int e_i = FINISHINGY(V1());
+    int s_j = STARTINGX(V1()); int e_j = FINISHINGX(V1());
     V1().resize(ZZ(prm.Celldim)*ZZ(prm.NoCells),
                 YY(prm.Celldim)*YY(prm.NoCells),
                 XX(prm.Celldim)*XX(prm.NoCells));
-    int s_K = STARTINGZ(V1());
-    int e_K = FINISHINGZ(V1());
-    int s_I = STARTINGY(V1());
-    int e_I = FINISHINGY(V1());
-    int s_J = STARTINGX(V1());
-    int e_J = FINISHINGX(V1());
+    int s_K = STARTINGZ(V1()); int e_K = FINISHINGZ(V1());
+    int s_I = STARTINGY(V1()); int e_I = FINISHINGY(V1());
+    int s_J = STARTINGX(V1()); int e_J = FINISHINGX(V1());
 
 
     for (int K = s_K, k = s_k; K <= e_K; K++, k++)
@@ -361,7 +355,7 @@ void symmetrize_P4(Matrix3D< std::complex<double> > &FT,
                 asymmh = h;
                 asymmk = k;
                 asymml = l;
-//  std::cout << " .. Entra a P4 y hace sus cositas: \n"<<std::endl;
+//	std::cout << " .. Entra a P4 y hace sus cositas: \n"<<std::endl;
                 /* Computing the reflection equivalent in the asymmetric unit. */
                 AsymmUnitP4(&asymmh, &asymmk, &asymml, &ip1, &ip2, &spec, &iptest);
 //std::cout << "\n (" << l <<"," << k << "," << h <<")->";
@@ -409,7 +403,7 @@ void symmetrize_P4212(Matrix3D< std::complex<double> > &FT,
                 asymmh = h;
                 asymmk = k;
                 asymml = l;
-//  std::cout << " .. Entra a P4212 y hace sus cositas: \n"<<std::endl;
+//	std::cout << " .. Entra a P4212 y hace sus cositas: \n"<<std::endl;
                 /* Computing the reflection equivalent in the asymmetric unit. */
                 AsymmUnitP4212(&asymmh, &asymmk, &asymml, &ip1, &ip2, &spec, &iptest);
 //std::cout << "\n (" << l <<"," << k << "," << h <<")->";
@@ -446,103 +440,98 @@ void symmetrize_P4212(Matrix3D< std::complex<double> > &FT,
     The asymmetric unit in P4212 involves H,K,Z >=0 and H <= K. When H < 0,
     or H==0 and K < 0, or H==K==0 and Z < 0 the Conjugate Symmetry Property
     of the DFT is applied in order to bring the reflection into the H,K >= 0
-    and make easier the subsequent processes.
+    and make easier the subsequent processes.  
                                                                               */
-
-
-
-
+																			  
+																			  
+																			  
+																			  
 
 void AsymmUnitP4(int *ih, int *ik, int *il, int *ip1, int *ip2,
-                 int *spec, int *iptest)
+                    int *spec, int *iptest)
 
 {
-    static int matrix[4][8]=
-    {
-        { -1,  0,  0, -1, -1,  0,  0, -1},
-        {  0, -1,  1,  0,  1,  0,  0,  1},
-        {  1,  0,  0,  1, -1,  0,  0, -1},
-        {  0,  1, -1,  0,  1,  0,  0,  1}
-    };
+static int matrix[4][8]={
+           { -1,  0,  0, -1, -1,  0,  0, -1},
+           {  0, -1,  1,  0,  1,  0,  0,  1},
+           {  1,  0,  0,  1, -1,  0,  0, -1},
+           {  0,  1, -1,  0,  1,  0,  0,  1}};
 
-    static int gomatrix[3] = {1, 2, 1};
+static int gomatrix[3] = {1, 2, 1};
 
-    int pass, index;
-//  std::cout << " .. Entra a AsymunitP4 y sigue haciendo sus cositas: \n"<<std::endl;
+int pass, index;
+//	std::cout << " .. Entra a AsymunitP4 y sigue haciendo sus cositas: \n"<<std::endl;
 
-    /* Initialization of ip1 and ip2. */
-    *ip1 = 1;
-    *ip2 = 0;
+/* Initialization of ip1 and ip2. */
+*ip1 = 1; *ip2 = 0;
 
-    /* The asymmetric unit in P4 involves H,K,Z >=0. In the cases in which H<0 the
-       program generates the corresponding reflection by applying the Conjugate
-       Symmetry. This is got by multiplying by matrix[0]. */
-    if(*ih < 0)                                                          /* H < 0 */
-        MatrixMult(matrix[0], ih, ik, il, ip1, ip2);
+/* The asymmetric unit in P4 involves H,K,Z >=0. In the cases in which H<0 the
+   program generates the corresponding reflection by applying the Conjugate 
+   Symmetry. This is got by multiplying by matrix[0]. */
+if(*ih < 0)                                                          /* H < 0 */
+    MatrixMult(matrix[0], ih, ik, il, ip1, ip2);
+                                                                              
+/* Bringing the current reflection into the asymmetric unit. */
+for(pass=0; pass<2;){
+    index = 0;
+    if(*ik >= 0) index ++;
+    if(*il >= 0) index += 2;
+    
+    /* <index> classifies the reflection by its indices.
+       <gomatrix> indicates which matrix will bring the reflection into the
+       unique asymmetric unit for a given index.
+       
+                   index      K>=0      Z>=0
+                   --------------------------
+                     0         NO        NO  
+                     1         YES       NO  
+                     2         NO        YES 
+                     3         YES       YES 
+                            
+                                                                              */
+    
+    if(index < 3) {
+        MatrixMult(matrix[gomatrix[index]], ih, ik, il, ip1, ip2);
 
-    /* Bringing the current reflection into the asymmetric unit. */
-    for(pass=0; pass<2;)
-    {
-        index = 0;
-        if(*ik >= 0) index ++;
-        if(*il >= 0) index += 2;
-
-        /* <index> classifies the reflection by its indices.
-           <gomatrix> indicates which matrix will bring the reflection into the
-           unique asymmetric unit for a given index.
-
-                       index      K>=0      Z>=0
-                       --------------------------
-                         0         NO        NO
-                         1         YES       NO
-                         2         NO        YES
-                         3         YES       YES
-
-                                                                                  */
-
-        if(index < 3)
-        {
-            MatrixMult(matrix[gomatrix[index]], ih, ik, il, ip1, ip2);
-
-            if(gomatrix[index] < 3) continue;
+        if(gomatrix[index] < 3) continue;
         }
-
-        if(*ih == 0 && *ik < 0)
-            MatrixMult(matrix[0], ih, ik, il, ip1, ip2);
-
-        if(*ih == 0)
-            MatrixMult(matrix[3], ih, ik, il, ip1, ip2);
-
-        pass++;
+        
+    if(*ih == 0 && *ik < 0)
+        MatrixMult(matrix[0], ih, ik, il, ip1, ip2);
+        
+    if(*ih == 0)
+        MatrixMult(matrix[3], ih, ik, il, ip1, ip2);
+            
+    pass++;
     }
 
-    /* After reflections have been placed into the asymmetric unit they are
-       examined to see if they are special reflections, ones whose phase must
-       be either real (0 or PI) or imaginary (PI/2 or 3*PI/2). */
-    CheckSpecP4(*ih, *ik, *il, spec, iptest);
+/* After reflections have been placed into the asymmetric unit they are 
+   examined to see if they are special reflections, ones whose phase must 
+   be either real (0 or PI) or imaginary (PI/2 or 3*PI/2). */
+CheckSpecP4(*ih, *ik, *il, spec, iptest);
 }
 
-
-
+																			  
+																			  
 void AsymmUnitP4212(int *ih, int *ik, int *il, int *ip1, int *ip2,
                     int *spec, int *iptest)
 
 {
     static int matrix[4][8] =
-    {
-        {-1, 0, 0, -1, -1,   0,   0, -1},
-        { 1, 0, 0, -1,  1, 180, 180, -1},
-        { 0, 1, 1,  0, -1,   0,   0,  1},
-        { 0, 1, 1,  0,  1,   0,   0, -1}
-    };
+        {
+            {-1, 0, 0, -1, -1,   0,   0, -1},
+            { 1, 0, 0, -1,  1, 180, 180, -1},
+            { 0, 1, 1,  0, -1,   0,   0,  1},
+            { 0, 1, 1,  0,  1,   0,   0, -1}
+        };
 
     static int gomatrix[7] =
-    {
-        1, 2, 1, 3, 1, 2, 1
-    };
+        {
+            1, 2, 1, 3, 1, 2, 1
+        };
 
     int pass, index;
-//  std::cout << " .. Entra a AsymunitP4212 y sigue haciendo sus cositas: \n"<<std::endl;
+//	std::cout << " .. Entra a AsymunitP4212 y sigue haciendo sus cositas: \n"<<std::endl;
 
     /* Initialization of ip1 and ip2. */
     *ip1 = 1;
@@ -610,30 +599,30 @@ void CheckSpecP4(int ih, int ik, int il, int *spec, int *iptest)
 /*
    Checks if the current reflection (H K L) is a special reflection, i.e.,
    whose phase must be either real (0 or PI) or imaginary (PI/2 or 3*PI/2).
-
+   
    It returns spec=1 if the reflection is special. Otherwise, 0.
    It returns in iptest 0 if real and 90 is imaginary.
-
+   
    Conditions checked are:
-
+   
       - Z=0 ... reflection is real.
-
+      
       Summary of special reflections.
-
+      
                  Real               Imaginary
                 ------             -----------
                 (H,K,0)
                                                                               */
 
 {
-    /* Initialization of values to return. */
-    *spec = 0;
-    *iptest = 0;
+/* Initialization of values to return. */
+*spec = 0;
+*iptest = 0;
 
-    /* Checking the conditions. */
-    if(il == 0) (*spec)++;                                               /* Real. */
+/* Checking the conditions. */
+if(il == 0) (*spec)++;                                               /* Real. */
 
-    return;
+return;
 }
 
 /*----------------------------------------------------------------------------*/

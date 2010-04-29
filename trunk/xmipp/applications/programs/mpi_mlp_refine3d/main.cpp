@@ -134,7 +134,7 @@ int main(int argc, char **argv)
             conv.clear();
             if (rank == 0)
             {
-                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
+		DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
             }
 
             // Pre-calculate pdfs
@@ -142,8 +142,8 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             ML2D_prm.sumOverAllImages(ML2D_prm.SF, ML2D_prm.Iref,
-                                      LL, sumcorr, DFo, fP_wsum_imgs,
-                                      wsum_sigma_noise, wsum_sigma_offset, sumw, sumw_mirror);
+				      LL, sumcorr, DFo, fP_wsum_imgs,
+				      wsum_sigma_noise, wsum_sigma_offset, sumw, sumw_mirror);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -158,14 +158,14 @@ int main(int argc, char **argv)
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
 
-            for (int refno = 0; refno < ML2D_prm.nr_ref; refno++)
+            for (int refno = 0;refno < ML2D_prm.nr_ref; refno++)
             {
-                convertPolarToSingleArray(fP_wsum_imgs[refno], Vaux);
-                Vsum.initZeros(Vaux);
-                MPI_Allreduce(MULTIDIM_ARRAY(Vaux), MULTIDIM_ARRAY(Vsum),
-                              MULTIDIM_SIZE(Vaux), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                convertSingleArrayToPolar(Vsum,fP_wsum_imgs[refno]);
-
+		convertPolarToSingleArray(fP_wsum_imgs[refno], Vaux);
+		Vsum.initZeros(Vaux);
+ 		MPI_Allreduce(MULTIDIM_ARRAY(Vaux), MULTIDIM_ARRAY(Vsum), 
+			      MULTIDIM_SIZE(Vaux), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		convertSingleArrayToPolar(Vsum,fP_wsum_imgs[refno]);
+		     
                 MPI_Allreduce(&sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw[refno] = aux;
 
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
 
             // Update model parameters
             ML2D_prm.updateParameters(fP_wsum_imgs, wsum_sigma_noise, wsum_sigma_offset,
-                                      sumw, sumw_mirror, sumcorr, sumw_allrefs);
+				      sumw, sumw_mirror, sumcorr, sumw_allrefs);
 
             // All nodes write out temporary DFo
             fn_tmp.compose(prm.fn_root, rank, "tmpdoc");
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
                     DFo.remove_current();
                     system(((std::string)"rm -f " + fn_tmp).c_str());
                 }
-                ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+		ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
                 prm.concatenate_selfiles(iter);
             }
             MPI_Barrier(MPI_COMM_WORLD);
@@ -251,8 +251,8 @@ int main(int argc, char **argv)
             iter++;
         } // end loop iterations
 
-        if (rank == 0)
-            ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+	if (rank == 0)
+	    ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;

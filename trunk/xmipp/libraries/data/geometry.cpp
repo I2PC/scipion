@@ -108,7 +108,7 @@ double point_line_distance_3D(const Matrix1D<double> &p,
     if (r < 0)
     {
         std::cout << "Horror: The distance of a line to a point can not be negative"
-                  << "Congratulation you have found a bug in Xmipp." << std::endl;
+        << "Congratulation you have found a bug in Xmipp." << std::endl;
         exit(0);
     }
 #endif
@@ -171,8 +171,8 @@ void least_squares_plane_fit(const std::vector<fit_point> & IN_points,
 }
 
 void least_squares_line_fit(const std::vector<fit_point2D> & IN_points,
-                            double &line_a,
-                            double &line_b)
+                             double &line_a,
+                             double &line_b)
 {
 
     double  sumx = 0.;
@@ -535,11 +535,11 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
 
 /* Euler distance ---------------------------------------------------------- */
 double Euler_distanceBetweenMatrices(const Matrix2D<double> &E1,
-                                     const Matrix2D<double> &E2)
+    const Matrix2D<double> &E2)
 {
     double retval=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(E1)
-    retval+=DIRECT_MAT_ELEM(E1,i,j)*DIRECT_MAT_ELEM(E2,i,j);
+        retval+=DIRECT_MAT_ELEM(E1,i,j)*DIRECT_MAT_ELEM(E2,i,j);
     return retval/3.0;
 }
 
@@ -590,8 +590,8 @@ void Euler_direction2angles(Matrix1D<double> &v0,
     if (fabs((cb)) > 0.999847695)/*one degree */
     {
         std::cerr << "\nWARNING: Routine Euler_direction2angles is not reliable\n"
-                  "for small tilt angles. Up to 0.001 deg it should be OK\n"
-                  "for most applications but you never know";
+                     "for small tilt angles. Up to 0.001 deg it should be OK\n"
+                     "for most applications but you never know";
     }
 
     if (fabs((cb - 1.)) < FLT_EPSILON)
@@ -600,8 +600,7 @@ void Euler_direction2angles(Matrix1D<double> &v0,
         beta = 0.;
     }
     else
-    {
-        /*1*/
+    {/*1*/
 
         aux_beta = acos(cb); /* beta between 0 and PI */
 
@@ -665,7 +664,7 @@ void Euler_direction2angles(Matrix1D<double> &v0,
 #define CHECK
 //#define DEBUG
 void Euler_matrix2angles(const Matrix2D<double> &A, double &alpha,
-                         double &beta, double &gamma)
+    	    	    	 double &beta, double &gamma)
 {
     double abs_sb, sign_sb;
 
@@ -714,10 +713,10 @@ void Euler_matrix2angles(const Matrix2D<double> &A, double &alpha,
     {
         std::cout << "---\n";
         std::cout << "Euler_matrix2angles: I have computed angles "
-                  " which doesn't match with the original matrix\n";
+        " which doesn't match with the original matrix\n";
         std::cout << "Original matrix\n" << A;
         std::cout << "Computed angles alpha=" << alpha << " beta=" << beta
-                  << " gamma=" << gamma << std::endl;
+        << " gamma=" << gamma << std::endl;
         std::cout << "New matrix\n" << Ap;
         std::cout << "---\n";
     }
@@ -726,11 +725,11 @@ void Euler_matrix2angles(const Matrix2D<double> &A, double &alpha,
 #ifdef DEBUG
     std::cout << "abs_sb " << abs_sb << std::endl;
     std::cout << "A(1,2) " << A(1, 2) << " A(0,2) " << A(0, 2) << " gamma "
-              << gamma << std::endl;
+    << gamma << std::endl;
     std::cout << "A(2,1) " << A(2, 1) << " A(2,0) " << A(2, 0) << " alpha "
-              << alpha << std::endl;
+    << alpha << std::endl;
     std::cout << "sign sb " << sign_sb << " A(2,2) " << A(2, 2)
-              << " beta " << beta << std::endl;
+    << " beta " << beta << std::endl;
 #endif
 }
 #undef CHECK
@@ -914,7 +913,7 @@ Matrix3D<double> Euler_rotate(const Matrix3D<double> &V,
 }
 
 void computeCircleAroundE(const Matrix2D<double> &E,
-                          double angCircle, double angStep, std::vector<double> &outputEulerAngles)
+    double angCircle, double angStep, std::vector<double> &outputEulerAngles)
 {
     outputEulerAngles.clear();
 
@@ -928,13 +927,13 @@ void computeCircleAroundE(const Matrix2D<double> &E,
     Matrix2D<double> sampling=rotation3DMatrix(angStep,projectionDirection);
     rotStep.resize(3,3);
     sampling.resize(3,3);
-
+    
     // Now rotate
     newEt=rotStep*newEt;
     for (double i=0; i<360; i+=angStep)
     {
         newEt=sampling*newEt;
-
+        
         // Normalize
         for (int c=0; c<3; c++)
         {
@@ -944,7 +943,7 @@ void computeCircleAroundE(const Matrix2D<double> &E,
             newEt.setCol(c,aux);
         }
         Matrix2D<double> newE=newEt.transpose();
-
+        
         double newrot, newtilt, newpsi;
         Euler_matrix2angles(newE,newrot,newtilt,newpsi);
         outputEulerAngles.push_back(newrot);

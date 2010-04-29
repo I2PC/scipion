@@ -75,7 +75,7 @@ std::ostream & operator << (std::ostream &_out, const Particle &_p)
          << _p.cost   << " "
          << _p.vec.transpose()
          << std::endl
-         ;
+    ;
     return _out;
 }
 
@@ -97,7 +97,7 @@ void Classification_model::clear()
     __particles_picked.clear();
     __micrographs_number = 0;
     __falsePositives.clear();
-
+    
     int imax = __training_particles.size();
     for (int i = 0; i < imax; i++)
         __training_particles[i].clear();
@@ -111,7 +111,7 @@ void Classification_model::import_model(const Classification_model &_model)
     for (int j = 0; j < jmax; j++)
     {
         int imax = _model.__training_particles[j].size();
-        for (int i = 0; i < imax; i++)
+	    for (int i = 0; i < imax; i++)
             addParticleTraining(_model.__training_particles[j][i], j);
     }
 
@@ -119,7 +119,7 @@ void Classification_model::import_model(const Classification_model &_model)
     int imax = _model.__micrographs_number;
     for (int i = 0; i < imax; i++)
     {
-        addParticlePicked(_model.__particles_picked[i]);
+        addParticlePicked(_model.__particles_picked[i]);    
         addMicrographScanned(_model.__micrographs_scanned[i]);
         addFalsePositives(_model.__falsePositives[i]);
     }
@@ -139,7 +139,7 @@ void Classification_model::initNaiveBayes(
     Matrix2D<double> cost(K,K);
     cost.initConstant(1);
     for (int i=0; i<XSIZE(cost); i++)
-        cost(i,i)=0;
+       cost(i,i)=0;
     cost(0,K-1)=penalization;
     __bayesNet->setCostMatrix(cost);
     __bayesClassifier=0;
@@ -153,13 +153,13 @@ void Classification_model::initNaiveBayesEnsemble(
     const std::string &newJudgeCombination)
 {
     __bayesEnsembleNet=new EnsembleNaiveBayes(features, probs, discreteLevels,
-            numberOfClassifiers, samplingFeatures, samplingIndividuals,
-            newJudgeCombination);
+        numberOfClassifiers, samplingFeatures, samplingIndividuals,
+        newJudgeCombination);
     int K=features.size();
     Matrix2D<double> cost(K,K);
     cost.initConstant(1);
     for (int i=0; i<XSIZE(cost); i++)
-        cost(i,i)=0;
+       cost(i,i)=0;
     cost(0,K-1)=penalization;
     __bayesEnsembleNet->setCostMatrix(cost);
     __bayesClassifier=1;
@@ -171,7 +171,7 @@ std::ostream & operator << (std::ostream &_out, const Classification_model &_m)
     _out << "#Already_processed_parameters...\n";
     _out << "#Micrographs_processed= " << _m.__micrographs_number << std::endl;
     _out << "#Micrographs_processed_points= ";
-
+    
     for (int i = 0; i < _m.__micrographs_number; i++)
         _out << _m.__micrographs_scanned[i] << " ";
     _out << "\n";
@@ -180,24 +180,24 @@ std::ostream & operator << (std::ostream &_out, const Classification_model &_m)
     for (int i = 0; i < _m.__micrographs_number; i++)
         _out << _m.__particles_picked[i] << " ";
     _out << "\n";
-
+    
     _out << "#FalsePos_Picked= ";
     for (int i = 0; i < _m.__micrographs_number; i++)
         _out << _m.__falsePositives[i] << " ";
     _out << "\n";
-
+       
     _out << "#Model_parameters..." << std::endl;
     _out << "#Vector_size= " << XSIZE(_m.__training_particles[0][0].vec) << std::endl;
     _out << "#Class_Number= " << _m.__classNo << std::endl;
-
+    
     for (int i = 0; i < _m.__classNo; i++)
     {
         int particlesNo = _m.__training_particles[i].size();
-        _out << "#Particles_No= " << particlesNo << std::endl;
-        for (int j = 0; j < particlesNo; j++)
-            _out << _m.__training_particles[i][j];
+	    _out << "#Particles_No= " << particlesNo << std::endl;
+	    for (int j = 0; j < particlesNo; j++)
+	        _out << _m.__training_particles[i][j];
     }
-
+    
     return _out;
 }
 
@@ -226,7 +226,7 @@ std::istream & operator >> (std::istream &_in, Classification_model &_m)
     for(int i = 0; i < _m.__micrographs_number; i++)
         _in >> _m.__particles_picked[i];
     _in >> dummy;
-
+    
     _m.__falsePositives.resize(_m.__micrographs_number);
     for(int i = 0; i < _m.__micrographs_number; i++)
         _in >> _m.__falsePositives[i];
@@ -238,13 +238,13 @@ std::istream & operator >> (std::istream &_in, Classification_model &_m)
     for (int i = 0; i < _m.__classNo; i++)
     {
         int particlesNo;
-        _in >> dummy >> particlesNo;
-        for (int j = 0; j < particlesNo; j++)
-        {
-            Particle *P = new Particle;
-            P->read(_in, vec_size);
-            _m.addParticleTraining(*P, i);
-        }
+	    _in >> dummy >> particlesNo;
+	    for (int j = 0; j < particlesNo; j++)
+	    {
+	        Particle *P = new Particle;
+                P->read(_in, vec_size);
+                _m.addParticleTraining(*P, i);
+	    }
     }
     return _in;
 }
@@ -253,7 +253,7 @@ std::istream & operator >> (std::istream &_in, Classification_model &_m)
 QtWidgetMicrograph::QtWidgetMicrograph(QtMainWidgetMark *_mainWidget,
                                        QtFiltersController *_f,
                                        Micrograph *_m) :
-    QWidget((QWidget*) _mainWidget)
+                                       QWidget((QWidget*) _mainWidget)
 {
     __filtersController              = _f;
     __m                              = NULL;
@@ -405,7 +405,7 @@ int QtWidgetMicrograph::add_family(std::vector<Particle> &_list,
     for (int i = 0; i < imax; i++)
     {
         int idx = __m->add_coord(_list.at(i).x, _list.at(i).y, ilabel,
-                                 _list.at(i).cost);
+            _list.at(i).cost);
         _list.at(i).idx = idx;
     }
     return ilabel;
@@ -486,8 +486,8 @@ void QtWidgetMicrograph::slotQuit()
 void QtWidgetMicrograph::slotChangeContrast()
 {
     AdjustContrastWidget *adjustContrast = new
-    AdjustContrastWidget(0, 255, 1.0F, this,
-                         0, "new window", Qt::WDestructiveClose);
+                                           AdjustContrastWidget(0, 255, 1.0F, this,
+                                                                0, "new window", Qt::WDestructiveClose);
     adjustContrast->show();
 }
 
@@ -502,8 +502,8 @@ void QtWidgetMicrograph::slotChangeCrop()
 void QtWidgetMicrograph::slotChangeCircleRadius()
 {
     AdjustCircleRadiustWidget *adjustCircleRadius = new
-    AdjustCircleRadiustWidget(0, 255, 10, this,
-                              0, "new window", Qt::WDestructiveClose);
+            AdjustCircleRadiustWidget(0, 255, 10, this,
+                                      0, "new window", Qt::WDestructiveClose);
     adjustCircleRadius->show();
 }
 
@@ -536,11 +536,11 @@ void QtWidgetMicrograph::automaticallySelectParticles()
     {
         ScrollParam* param_window;
         param_window = new ScrollParam(0, 1, 0.01, "Quality",
-                                       "Restrict selection", 0, "new window", Qt::WDestructiveClose);
+            "Restrict selection", 0, "new window", Qt::WDestructiveClose);
 
         // Connect its output to my input (set_spacing)
         connect( param_window, SIGNAL(new_value(float)), this,
-                 SLOT(slotRestrictSelection(float)));
+            SLOT(slotRestrictSelection(float)));
 
         // Show
         param_window->setFixedSize(300,150);
@@ -575,9 +575,9 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
         QtWidgetMicrograph *_qtwidgetmicrograph,
         QWidget *parent, const char *name, int wflags):
 #ifdef QT3_SUPPORT
-    QWidget(parent, name, (Qt::WindowFlags) wflags)
+        QWidget(parent, name, (Qt::WindowFlags) wflags)
 #else
-    QWidget(parent, name, wflags)
+        QWidget(parent, name, wflags)
 #endif
 {
     __qtwidgetmicrograph = _qtwidgetmicrograph;
@@ -683,9 +683,9 @@ void AdjustContrastWidget::scrollValueChanged(int new_val)
 CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
                        QWidget *parent, const char *name, int wflags):
 #ifdef QT3_SUPPORT
-    QWidget(parent, name, (Qt::WindowFlags) wflags)
+                       QWidget(parent, name, (Qt::WindowFlags) wflags)
 #else
-    QWidget(parent, name, wflags)
+                       QWidget(parent, name, wflags)
 #endif
 {
     __qtwidgetmicrograph = _qtwidgetmicrograph;
@@ -847,10 +847,10 @@ void CropWidget::accept()
     int w = value[2] - value[0];
     int h = value[3] - value[1];
     std::string command = (std::string)"xmipp_window_micrograph " +
-                          "-i " + __qtwidgetmicrograph->getMicrograph()->micrograph_name() +
-                          " -o " + fn_out +
-                          " -size " + integerToString(w, 0) + " " + integerToString(h, 0) +
-                          " -top_left_corner " + integerToString(value[0], 0) + " " + integerToString(value[1], 0);
+                     "-i " + __qtwidgetmicrograph->getMicrograph()->micrograph_name() +
+                     " -o " + fn_out +
+                     " -size " + integerToString(w, 0) + " " + integerToString(h, 0) +
+                     " -top_left_corner " + integerToString(value[0], 0) + " " + integerToString(value[1], 0);
     std::cout << "Executing:\n" << command << std::endl;
     system(command.c_str());
 
@@ -873,9 +873,9 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
         int start_with, QtWidgetMicrograph *_qtwidgetmicrograph,
         QWidget *parent, const char *name, int wflags):
 #ifdef QT3_SUPPORT
-    QWidget(parent, name, (Qt::WindowFlags) wflags)
+        QWidget(parent, name, (Qt::WindowFlags) wflags)
 #else
-    QWidget(parent, name, wflags)
+        QWidget(parent, name, wflags)
 #endif
 {
     __qtwidgetmicrograph = _qtwidgetmicrograph;
@@ -927,7 +927,7 @@ void AdjustCircleRadiustWidget::scrollValueChanged(int new_val)
 }
 
 // =========================================================================
-// Automatic Particle picking
+// Automatic Particle picking 
 // =========================================================================
 AutoParticlePicking::AutoParticlePicking(Micrograph *_m)
 {
@@ -966,31 +966,31 @@ void AutoParticlePicking::learnParticles(int _ellipse_radius)
 {
     if (__particle_radius==0)
         configure_auto(_ellipse_radius);
-
+        
     std::cerr << "\n------------------Learning Phase-----------------------\n";
     createMask();
-
+    
     // Find in the particle list the images to learn
     std::vector<int> all_idx;
     int num_part = __m->ParticleNo();
     for (int i = 0; i < num_part; i++)
         if (__m->coord(i).valid && __m->coord(i).label != __auto_label)
             all_idx.push_back(i);
-
+    
     // If there is nothing to learn, return
     if (all_idx.size() == 0 && !__is_model_loaded)
     {
         std::cerr << "No valid particles marked." << std::endl;
-        return;
+	return;
     }
-
+    
     // If we have already learnt or autoselected, delete the training vectors
     if (__learn_particles_done || __autoselection_done)
     {
         __training_model.clear();
         __training_model=__training_loaded_model;
     }
-
+    
     // Actually learn
     buildVectors(all_idx, __training_model);
     getAutoTruePositives(__training_model);
@@ -1006,7 +1006,7 @@ void AutoParticlePicking::learnParticles(int _ellipse_radius)
     Matrix2D<double> piece;
     while (get_corner_piece(piece, top, left, skip_y,
                             next_skip_x, next_skip_y, next_top,
-                            next_left, __piece_overlap, true))
+			    next_left, __piece_overlap, true))
     {
         top = next_top;
         left = next_left;
@@ -1016,8 +1016,8 @@ void AutoParticlePicking::learnParticles(int _ellipse_radius)
         next_posx = posx = skip_x + XSIZE(mask) / 2;
         next_posy = posy = skip_y + YSIZE(mask) / 2;
 
-        while (get_next_scanning_pos(piece, next_posx, next_posy, skip_x,
-                                     skip_y, __scan_overlap))
+        while (get_next_scanning_pos(piece, next_posx, next_posy, skip_x, 
+            skip_y, __scan_overlap))
         {
             Nscanned++;
             posx = next_posx;
@@ -1032,7 +1032,7 @@ void AutoParticlePicking::learnParticles(int _ellipse_radius)
     __training_model.addMicrographScanned(Nscanned);
     __selection_model = __training_model;
 
-    __learn_particles_done = true;
+    __learn_particles_done = true;    
     std::cerr << "Learning process finished..." << std::endl;
 }
 
@@ -1054,7 +1054,7 @@ void AutoParticlePicking::produceFeatures(
     int vec_size=0;
     for (int i=0; i<particles.size(); i++)
         if (particles[i].size()!=0) vec_size=XSIZE(particles[i][0].vec);
-
+    
     for(int j = 0; j < __classNo; j++)
     {
         int imax = particles[j].size();
@@ -1069,7 +1069,7 @@ void AutoParticlePicking::produceFeatures(
         for(int i = 0; i < imax; i++)
         {
             particles[j][i].vec.setRow();
-            _features[j].setRow(i, particles[j][i].vec);
+            _features[j].setRow(i, particles[j][i].vec);	  
         }
     }
 }
@@ -1086,18 +1086,18 @@ void AutoParticlePicking::produceClassesProbabilities(
     if (_model.__training_particles.size()>2)
         falsePositives = _model.__training_particles[2].size();
     probabilities.initZeros(__classNo);
-
+    
     for (int i = 0; i < _model.__micrographs_number; i++)
         if (i<_model.__micrographs_scanned.size())
             micrographsScanned += _model.__micrographs_scanned[i];
     micrographsScanned=XMIPP_MAX(micrographsScanned,
-                                 2*(particlesMarked+falsePositives));
+        2*(particlesMarked+falsePositives));
     int NtrainingVectors=0;
     for (int i=0; i<_model.__training_particles.size(); i++)
         NtrainingVectors+=_model.__training_particles[i].size();
     micrographsScanned=XMIPP_MAX(micrographsScanned, NtrainingVectors);
-
-    probabilities(0) = particlesMarked / micrographsScanned;
+    
+    probabilities(0) = particlesMarked / micrographsScanned;    
     probabilities(1) = (micrographsScanned - particlesMarked - falsePositives)/
                        micrographsScanned;
     probabilities(2) = falsePositives / micrographsScanned;
@@ -1119,7 +1119,7 @@ void * automaticallySelectParticlesThread(void * args)
         (autoPicking->__selection_model.__training_particles.size()==3 &&
          autoPicking->__selection_model.__training_particles[2].size()==0))
         thVotes=8;
-    //top,left corner of the piece
+     //top,left corner of the piece
     int top = 0, left = 0, next_top = 0, next_left = 0;
     // If the piece available is small then include the scanned part
     // because we need bigger image for denoising but for scanning
@@ -1134,19 +1134,19 @@ void * automaticallySelectParticlesThread(void * args)
     {
         bool isMine=(N%autoPicking->__numThreads==idThread);
         bool pieceOK=autoPicking->get_corner_piece(piece, top, left,
-                     skip_y, next_skip_x, next_skip_y, next_top, next_left,
-                     autoPicking->__piece_overlap,isMine);
+            skip_y, next_skip_x, next_skip_y, next_top, next_left,
+            autoPicking->__piece_overlap,isMine);
         if (!pieceOK) break;
         if (isMine)
         {
             if (idThread==0) std::cerr << ".";
-#ifdef DEBUG_MORE_AUTO
-            std::cerr << "thread " << idThread
-                      << " processing piece " << N << "...\n";
-            std::cerr << "    (top,left)=" << top << "," << left
-                      << " skip y,x=" << next_skip_y << "," << next_skip_x
-                      << " next=" << next_top << "," << next_left << std::endl;
-#endif
+            #ifdef DEBUG_MORE_AUTO
+                std::cerr << "thread " << idThread
+                          << " processing piece " << N << "...\n";
+                std::cerr << "    (top,left)=" << top << "," << left
+                          << " skip y,x=" << next_skip_y << "," << next_skip_x
+                          << " next=" << next_top << "," << next_left << std::endl;
+            #endif
 
             // Get a piece and prepare it
             if (!autoPicking->prepare_piece(piece, original_piece))
@@ -1161,9 +1161,9 @@ void * automaticallySelectParticlesThread(void * args)
             // Express the skip values in the reduced image
             skip_x /= autoPicking->__reduction;
             skip_y /= autoPicking->__reduction;
-#ifdef DEBUG_MORE_AUTO
-            std::cerr << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
-#endif
+            #ifdef DEBUG_MORE_AUTO
+                std::cerr << "Skip(y,x)=" << skip_y << "," << skip_x << std::endl;
+            #endif
 
             // Scan this piece
             int posx = 0, next_posx = 0, posy = 0, next_posy = 0;
@@ -1171,37 +1171,37 @@ void * automaticallySelectParticlesThread(void * args)
             next_posy = posy = skip_y + YSIZE(mask) / 2;
 
             while (autoPicking->get_next_scanning_pos(
-                       piece, next_posx, next_posy, skip_x, skip_y,
-                       autoPicking->__scan_overlap))
+                piece, next_posx, next_posy, skip_x, skip_y,
+                autoPicking->__scan_overlap))
             {
                 // COSS: Uncomment the next sentence for fast debugging
                 // if (rnd_unif(0,1)<0.98) continue;
+            
+                #ifdef DEBUG_MORE_AUTO
+                   std::cerr << "Pos(y,x)=" << posy << "," << posx
+                             << " Micro(y,x)=" << posy*autoPicking->__reduction + top
+                             << "," << posx*autoPicking->__reduction + left
+                             << " Next pos(y,x)=" << next_posy << "," << next_posx
+                             << std::endl;
+                #endif
 
-#ifdef DEBUG_MORE_AUTO
-                std::cerr << "Pos(y,x)=" << posy << "," << posx
-                          << " Micro(y,x)=" << posy*autoPicking->__reduction + top
-                          << "," << posx*autoPicking->__reduction + left
-                          << " Next pos(y,x)=" << next_posy << "," << next_posx
-                          << std::endl;
-#endif
-
-                if (autoPicking->build_vector(piece, original_piece,
-                                              posx, posy, v))
+	        if (autoPicking->build_vector(piece, original_piece,
+                    posx, posy, v))
                 {
                     double cost;
                     int votes=autoPicking->__selection_model.isParticle(v,cost);
-                    if (votes>thVotes)
-                    {
-#ifdef DEBUG_MORE_AUTO
-                        std::cout << "Particle Found: "
-                                  << left + posx * autoPicking->__reduction << ","
-                                  << top  + posy *autoPicking->__reduction
-                                  << " votes=" << votes
-                                  << std::endl;
-                        std::cout << "Press any key to continue...\n";
-                        char c;
-                        std::cin >> c;
-#endif
+	            if (votes>thVotes)
+	            {
+                        #ifdef DEBUG_MORE_AUTO
+		            std::cout << "Particle Found: "
+                                << left + posx * autoPicking->__reduction << ","
+                                << top  + posy *autoPicking->__reduction
+                                << " votes=" << votes
+                                << std::endl;
+                            std::cout << "Press any key to continue...\n";
+                            char c;
+                            std::cin >> c;
+                        #endif
 
                         // Build the Particle structure
                         Particle P;
@@ -1228,8 +1228,7 @@ void * automaticallySelectParticlesThread(void * args)
         skip_x = next_skip_x;
         skip_y = next_skip_y;
         N++;
-    }
-    while (true);
+    } while (true);
 
     int imax=threadCandidates.size();
     pthread_mutex_lock( &particleAdditionMutex );
@@ -1253,7 +1252,7 @@ int AutoParticlePicking::automaticallySelectParticles()
     __auto_candidates.resize(0);
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
-    // Get the training features and the a priori probabilities
+    // Get the training features and the a priori probabilities    
     std::vector < Matrix2D<double> > features;
     Matrix1D<double> probs;
     produceFeatures(__selection_model,features);
@@ -1261,11 +1260,11 @@ int AutoParticlePicking::automaticallySelectParticles()
 
     // Initialize classifier
     __selection_model.initNaiveBayesEnsemble(features, probs, 8,
-            __penalization, 10, 1, 1, "mm");
-#ifdef DEBUG_AUTO
-    std::cout << "Probabilities of the classes:"
-              << probs.transpose() << std::endl;
-#endif
+        __penalization, 10, 1, 1, "mm");
+    #ifdef DEBUG_AUTO
+        std::cout << "Probabilities of the classes:"
+                  << probs.transpose() << std::endl;
+    #endif
 
     // Automatically select particles with threads
     pthread_t * th_ids = new pthread_t[__numThreads];
@@ -1276,7 +1275,7 @@ int AutoParticlePicking::automaticallySelectParticles()
         th_args[nt].autoPicking = this;
         th_args[nt].idThread = nt;
         pthread_create( &th_ids[nt], NULL,
-                        automaticallySelectParticlesThread, &th_args[nt]);
+            automaticallySelectParticlesThread, &th_args[nt]);
     }
 
     // Waiting for threads to finish
@@ -1289,21 +1288,21 @@ int AutoParticlePicking::automaticallySelectParticles()
 
     // Sort particles by cost
     std::sort(__auto_candidates.begin(),__auto_candidates.end(),
-              SAscendingParticleSort());
+        SAscendingParticleSort());
 
-#ifdef DEBUG_AUTO
-    std::cerr << "Number of automatically selected particles = "
-              << __auto_candidates.size() << std::endl;
-#endif
+    #ifdef DEBUG_AUTO
+       std::cerr << "Number of automatically selected particles = " 
+                 << __auto_candidates.size() << std::endl;
+    #endif
 
     // Reject the candidates that are pointing to the same particle
     int Nalive = reject_within_distance(__auto_candidates, __particle_radius,
-                                        false);
+        false);
 
-#ifdef DEBUG_AUTO
-    std::cerr << "Number of automatically selected particles after distance rejection = "
-              << __auto_candidates.size() << std::endl;
-#endif
+    #ifdef DEBUG_AUTO
+       std::cerr << "Number of automatically selected particles after distance rejection = " 
+                 << __auto_candidates.size() << std::endl;
+    #endif
 
     // Apply a second classifier for classifying between particle
     // and false positive. For that, remove the middle class (background)
@@ -1322,10 +1321,10 @@ int AutoParticlePicking::automaticallySelectParticles()
             probs.resize(2);
             probs/=probs.sum();
             __selection_model2.initNaiveBayesEnsemble(features, probs, 8,
-                    __penalization,10,1,1,"mm");
-#ifdef DEBUG_AUTO
-            std::cout << "Second classification\n";
-#endif
+                __penalization,10,1,1,"mm");
+            #ifdef DEBUG_AUTO
+	        std::cout << "Second classification\n";
+            #endif
             imax = __auto_candidates.size();
             Nalive = 0;
             for (int i = 0; i < imax; i++)
@@ -1333,15 +1332,15 @@ int AutoParticlePicking::automaticallySelectParticles()
                 {
                     double p;
                     int votes=__selection_model2.isParticle(__auto_candidates[i].vec,p);
-                    if (votes<8)
+	            if (votes<8)
                     {
                         __auto_candidates[i].status=0;
                         __auto_candidates[i].cost=-1;
-#ifdef DEBUG_AUTO
-                        std::cout << __auto_candidates[i].x << ", "
-                                  << __auto_candidates[i].y
-                                  << " is considered as a false positive\n";
-#endif
+                        #ifdef DEBUG_AUTO
+	                    std::cout << __auto_candidates[i].x << ", "
+	                              << __auto_candidates[i].y
+                                      << " is considered as a false positive\n";
+                        #endif
                     }
                     else
                         Nalive++;
@@ -1372,18 +1371,18 @@ int AutoParticlePicking::automaticallySelectParticles()
                 Matrix2D<double> difficultParticles;
                 difficultParticles.initZeros(toKeep.size(),XSIZE(features[1]));
                 FOR_ALL_ELEMENTS_IN_MATRIX2D(difficultParticles)
-                difficultParticles(i,j)=features[1](toKeep[i],j);
+                    difficultParticles(i,j)=features[1](toKeep[i],j);
                 int NErrors=YSIZE(features[1]);
                 features.pop_back();
                 features.push_back(difficultParticles);
 
                 __selection_model3.initNaiveBayesEnsemble(features, probs, 8,
-                        __penalization, 10, 1, 1, "mm");
-#ifdef DEBUG_AUTO
-                std::cout << "Third classification: " << YSIZE(difficultParticles)
-                          << " difficult particles out of " << NErrors << "\n"
-                          << "Before filtering there were " << Nalive << " particles\n";
-#endif
+                    __penalization, 10, 1, 1, "mm");
+                #ifdef DEBUG_AUTO
+	            std::cout << "Third classification: " << YSIZE(difficultParticles)
+                              << " difficult particles out of " << NErrors << "\n"
+                              << "Before filtering there were " << Nalive << " particles\n";
+                #endif
                 imax = __auto_candidates.size();
                 Nalive = 0;
                 for (int i = 0; i < imax; i++)
@@ -1391,15 +1390,15 @@ int AutoParticlePicking::automaticallySelectParticles()
                     {
                         double p;
                         int votes=__selection_model3.isParticle(__auto_candidates[i].vec,p);
-                        if (votes<8)
+	                if (votes<8)
                         {
                             __auto_candidates[i].status=0;
                             __auto_candidates[i].cost=-1;
-#ifdef DEBUG_AUTO
-                            std::cout << __auto_candidates[i].x << ", "
-                                      << __auto_candidates[i].y
-                                      << " is considered as a false positive 2\n";
-#endif
+                            #ifdef DEBUG_AUTO
+	                        std::cout << __auto_candidates[i].x << ", "
+	                                  << __auto_candidates[i].y
+                                          << " is considered as a false positive 2\n";
+                            #endif
                         }
                         else
                             Nalive++;
@@ -1456,18 +1455,18 @@ int AutoParticlePicking::automaticallySelectParticles()
             if (__auto_candidates[i].status == 1)
             {
                 __auto_candidates[i].idx = idxMicrograph;
-#ifdef DEBUG_AUTO
-                std::cout << "Particle coords " << __auto_candidates[i].x << ", "
-                          << __auto_candidates[i].y << std::endl;
-#endif
+                #ifdef DEBUG_AUTO
+	            std::cout << "Particle coords " << __auto_candidates[i].x << ", "
+	                      << __auto_candidates[i].y << std::endl;
+                #endif
                 if (isinf(__auto_candidates[i].cost))
                     __auto_candidates[i].cost=1;
                 else
                     __auto_candidates[i].cost=
                         (__auto_candidates[i].cost-maxCost)/
                         (minCost-maxCost);
-                __m->add_coord(__auto_candidates[i].x,
-                               __auto_candidates[i].y,
+                __m->add_coord(__auto_candidates[i].x, 
+	                       __auto_candidates[i].y,
                                __auto_label,
                                __auto_candidates[i].cost);
                 idxMicrograph++;
@@ -1554,8 +1553,8 @@ void AutoParticlePicking::classifyMask()
         {
             // Classif1 is the classification for the radial mass distribution
             int radius_idx;
-            if (radius > 6) radius_idx = XMIPP_MIN(__radial_bins - 1, 1 +
-                                                       FLOOR((radius - 6) / radial_step));
+            if (radius > 6) radius_idx = XMIPP_MIN(__radial_bins - 1, 1 + 
+	                                 FLOOR((radius - 6) / radial_step));
             else            radius_idx = 0;
             (*classif1)(i, j) = radius_idx;
             Nrad(radius_idx)++;
@@ -1582,7 +1581,7 @@ void AutoParticlePicking::classifyMask()
         Matrix1D<double> *aux2 = new Matrix1D<double>;
         aux2->initZeros(__radial_bins);
         __sector.push_back(aux2);
-
+        
         Matrix1D<int> *iaux2 = new Matrix1D<int>;
         iaux2->initZeros(__radial_bins);
         __Nsector.push_back(iaux2);
@@ -1606,20 +1605,20 @@ void AutoParticlePicking::classifyMask()
         aux3->initZeros(angleBins);
         __ring.push_back(aux3);
     }
+        
+    #ifdef DEBUG_CLASSIFY
+        ImageXmipp save;
+        typeCast(*classif1, save());
+        save.write("PPPmaskClassification1.xmp");
 
-#ifdef DEBUG_CLASSIFY
-    ImageXmipp save;
-    typeCast(*classif1, save());
-    save.write("PPPmaskClassification1.xmp");
-
-    typeCast(*classif2, save());
-    save.write("PPPmaskClassification2.xmp");
-#endif
+        typeCast(*classif2, save());
+        save.write("PPPmaskClassification2.xmp");
+    #endif
 }
 
 /* Build training vectors ---------------------------------------------------*/
 void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
-                                       Classification_model &_model)
+                                      Classification_model &_model)
 {
     std::cerr << "Building " << _idx.size()
               << " particle vectors for this image. Please wait..." << std::endl;
@@ -1650,11 +1649,11 @@ void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
 
         // Denoise, reduce, reject outliers and equalize histogram
         bool success = prepare_piece(piece, original_piece);
-
+       
         if (!success) continue;
         posx = ROUND(posx / __reduction);
         posy = ROUND(posy / __reduction);
-
+       
         //make vector from this particle
         success = build_vector(piece, original_piece, posx, posy, v);
         if (success)
@@ -1703,7 +1702,7 @@ void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
 
 /* Build vector from non particles------------------------------------------ */
 void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
-        bool checkForPalsePostives)
+    bool checkForPalsePostives)
 {
     if (checkForPalsePostives)
         std::cerr << "Building automatic false positives ..." << std::endl;
@@ -1725,7 +1724,7 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
 
         // Initialize classifier
         __selection_model.initNaiveBayesEnsemble(features, probs, 8,
-                __penalization, 10, 1, 1, "mm");
+            __penalization, 10, 1, 1, "mm");
     }
 
     // top,left corner of the piece
@@ -1736,11 +1735,11 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
     // particles we skip the already scanned part
     int skip_x = 0, skip_y = 0, next_skip_x = 0, next_skip_y = 0;
     Matrix1D<double> v;
-
+    
     int N = 1, Nnonparticles=0, Nfalsepositives=0;
-
-    // We do not want any overlap for this process,since it is only for
-    // counting the non particles and calculating their features. For
+ 
+    // We do not want any overlap for this process,since it is only for 
+    // counting the non particles and calculating their features. For 
     // the process of automatic selecting we will want an overlap so we
     // do not miss any particle.
     Matrix2D<double> piece, original_piece;
@@ -1767,17 +1766,17 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
         next_posx = posx = skip_x + XSIZE(mask) / 2;
         next_posy = posy = skip_y + YSIZE(mask) / 2;
 
-        // We do not want any overlap for this process, since it is only for
-        // counting the non particles and calculating their features. For
-        // the process of automatic selecting we will want an overlap so we
-        // do not miss any particle.
+	// We do not want any overlap for this process, since it is only for
+	// counting the non particles and calculating their features. For
+	// the process of automatic selecting we will want an overlap so we
+	// do not miss any particle.
         while (get_next_scanning_pos(piece, next_posx, next_posy, skip_x,
-                                     skip_y, __learn_overlap))
+            skip_y, __learn_overlap))
         {
             // Check if there is any particle around
-            if (!anyParticle(left + posx  * __reduction,
-                             top + posy  * __reduction,
-                             XSIZE(mask) * __reduction))
+	    if (!anyParticle(left + posx  * __reduction,
+	                      top + posy  * __reduction,
+                              XSIZE(mask) * __reduction))
             {
                 if (build_vector(piece, original_piece, posx, posy, v))
                 {
@@ -1806,10 +1805,10 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
                     }
                 }
             }
-            // Go to next scanning position
+	    // Go to next scanning position
             posx = next_posx;
             posy = next_posy;
-        }
+	}
 
         // Go to next piece in the micrograph
         top = next_top;
@@ -1831,35 +1830,35 @@ bool AutoParticlePicking::anyParticle(int posx, int posy, int rect_size)
     for (int i = 0; i < num_part; i++)
     {
         if (__m->coord(i).valid && __m->coord(i).label != __auto_label)
-        {
-            int _x = selected_particles[i].X;
-            int _y = selected_particles[i].Y;
-
-            if((_x > posx - rect_size) && (_x < posx + rect_size))
-            {
-                if((_y > posy - rect_size) && (_y < posy + rect_size))
-                    return true;
-            }
-        }
+	    {
+	        int _x = selected_particles[i].X;
+                int _y = selected_particles[i].Y;
+    
+                if((_x > posx - rect_size) && (_x < posx + rect_size))
+	        {
+	            if((_y > posy - rect_size) && (_y < posy + rect_size))
+   	            return true;
+	        }   
+	    }
     }
     return false;
 }
 
 /* Build classification vector --------------------------------------------- */
 bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
-                                       const Matrix2D<double> &original_piece, int _x, int _y,
-                                       Matrix1D<double> &_result)
+    const Matrix2D<double> &original_piece, int _x, int _y,
+    Matrix1D<double> &_result)
 {
-#ifdef DEBUG_BUILDVECTOR
-    std::cout << "build_vector(" << _x << "," << _y << "," << "_result)" << std::endl;
-#endif
+    #ifdef DEBUG_BUILDVECTOR
+        std::cout << "build_vector(" << _x << "," << _y << "," << "_result)" << std::endl;
+    #endif
 
     // Resize the output and make same aliases
     int angleBins=__sector.size();
     _result.initZeros(__radial_bins*(__gray_bins-1) // radial histograms
-                      +(angleBins-1)+(angleBins-1)*angleBins // sector correlations
-                      +(2*__radial_bins-19)*angleBins // ring correlations
-                     );
+        +(angleBins-1)+(angleBins-1)*angleBins // sector correlations
+        +(2*__radial_bins-19)*angleBins // ring correlations
+        );
     const Matrix2D<int> &mask =         __mask.get_binary_mask2D();
     const Matrix2D<int> &classif1 =  (*(__mask_classification[0]));
     const Matrix2D<int> &classif2 =  (*(__mask_classification[1]));
@@ -1869,22 +1868,22 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
     if (FINISHINGX(mask) + _x > FINISHINGX(piece)) return false;
     if (FINISHINGY(mask) + _y > FINISHINGY(piece)) return false;
 
-#ifdef DEBUG_IMG_BUILDVECTOR
-    bool debug_go = false;
-    ImageXmipp save, savefg, saveOrig;
-    if (true)
-    {
-        save() = piece;
-        save.write("PPP0.xmp");
-        save().initZeros(YSIZE(mask), XSIZE(mask));
-        STARTINGY(save()) = STARTINGY(mask);
-        STARTINGX(save()) = STARTINGX(mask);
-        savefg() = save();
-        savefg().initConstant(-1);
-        saveOrig() = savefg();
-        debug_go = true;
-    }
-#endif
+    #ifdef DEBUG_IMG_BUILDVECTOR
+        bool debug_go = false;
+        ImageXmipp save, savefg, saveOrig;
+        if (true)
+        {
+            save() = piece;
+            save.write("PPP0.xmp");
+            save().initZeros(YSIZE(mask), XSIZE(mask));
+            STARTINGY(save()) = STARTINGY(mask);
+            STARTINGX(save()) = STARTINGX(mask);
+            savefg() = save();
+            savefg().initConstant(-1);
+            saveOrig() = savefg();
+            debug_go = true;
+        }
+    #endif
 
     Matrix1D<int> radial_idx(__radial_bins);
     Matrix2D<double> particle;
@@ -1927,17 +1926,17 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
         }
 
         // Get particle
-#ifdef DEBUG_IMG_BUILDVECTOR
-        if (debug_go)
-        {
-            save(i, j) = val;
-            if (foreground)
+        #ifdef DEBUG_IMG_BUILDVECTOR
+            if (debug_go)
             {
-                savefg(i, j) = val;
-                saveOrig(i, j) =  original_piece(_y+i, _x+j);
+                save(i, j) = val;
+                if (foreground) 
+	        {
+	            savefg(i, j) = val;
+	            saveOrig(i, j) =  original_piece(_y+i, _x+j);
+	        }
             }
-        }
-#endif
+        #endif
     }
 
     // Compute the sector averages and reorganize the data in rings
@@ -1953,7 +1952,7 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
         }
     }
 
-    // Compute the histogram of the radial bins and store them
+    // Compute the histogram of the radial bins and store them  
     int idx_result=0;
     for (int i = 0; i < __radial_bins; i++)
     {
@@ -1971,8 +1970,8 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
         for (int i = 0; i<angleBins; i++)
         {
             sectorCorr(i)=correlation_index(
-                              sector[i],
-                              sector[intWRAP(i+step,0,angleBins-1)]);
+                sector[i],
+                sector[intWRAP(i+step,0,angleBins-1)]);
         }
         _result(idx_result++) = sectorCorr.computeAvg();
         Matrix1D<double> sectorAutocorr;
@@ -1983,59 +1982,59 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
 
     // Compute the correlation in rings
     for (int step = 1; step<=2; step++)
-        for (int i = 8; i<__radial_bins-step; i++)
+         for (int i = 8; i<__radial_bins-step; i++)
+         {
+             Matrix1D<double> ringCorr;
+             correlation_vector_no_Fourier(ring[i],ring[i+step],ringCorr);
+             for (int j = 0; j < XSIZE(ringCorr); j++)
+                 _result(idx_result++) = ringCorr(j);
+         }
+
+    #ifdef DEBUG_IMG_BUILDVECTOR
+        if (debug_go)
         {
-            Matrix1D<double> ringCorr;
-            correlation_vector_no_Fourier(ring[i],ring[i+step],ringCorr);
-            for (int j = 0; j < XSIZE(ringCorr); j++)
-                _result(idx_result++) = ringCorr(j);
+            save.write("PPP1.xmp");
+            savefg.write("PPP2.xmp");
+            saveOrig.write("PPP3.xmp");
+
+            save().initZeros(savefg());
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
+            {
+                int idx1 = classif1(i, j);
+                if (idx1 == -1) continue;
+                int idx2 = classif2(i, j);
+                if (idx2 == -1) continue;
+                save(i,j)=sector[idx2](idx1);
+            }
+            save.write("PPP4.xmp");
+
+            save().initZeros();
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
+            {
+                int idx1 = classif1(i, j);
+                if (idx1 == -1) continue;
+                int idx2 = classif2(i, j);
+                if (idx2 == -1) continue;
+                save(i,j)=ring[idx1](idx2);
+            }
+            save.write("PPP5.xmp");
         }
+    #endif
 
-#ifdef DEBUG_IMG_BUILDVECTOR
-    if (debug_go)
-    {
-        save.write("PPP1.xmp");
-        savefg.write("PPP2.xmp");
-        saveOrig.write("PPP3.xmp");
-
-        save().initZeros(savefg());
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
-        {
-            int idx1 = classif1(i, j);
-            if (idx1 == -1) continue;
-            int idx2 = classif2(i, j);
-            if (idx2 == -1) continue;
-            save(i,j)=sector[idx2](idx1);
-        }
-        save.write("PPP4.xmp");
-
-        save().initZeros();
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(save())
-        {
-            int idx1 = classif1(i, j);
-            if (idx1 == -1) continue;
-            int idx2 = classif2(i, j);
-            if (idx2 == -1) continue;
-            save(i,j)=ring[idx1](idx2);
-        }
-        save.write("PPP5.xmp");
-    }
-#endif
-
-#ifdef DEBUG_BUILDVECTOR
-    Matrix2D<double> A;
-    A.resize(angleBins,XSIZE(sector[0]));
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
-    A(i,j)=sector[i](j);
-    A.write("PPPsector.txt");
-    std::cout << _result.transpose() << std::endl;
-#endif
-
-#if defined(DEBUG_BUILDVECTOR) || defined(DEBUG_IMG_BUILDVECTOR)
-    std::cout << "Press any key\n";
-    char c;
-    std::cin >> c;
-#endif
+    #ifdef DEBUG_BUILDVECTOR
+        Matrix2D<double> A;
+        A.resize(angleBins,XSIZE(sector[0]));
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(A)
+            A(i,j)=sector[i](j);
+        A.write("PPPsector.txt");
+        std::cout << _result.transpose() << std::endl;
+    #endif
+    
+    #if defined(DEBUG_BUILDVECTOR) || defined(DEBUG_IMG_BUILDVECTOR)
+        std::cout << "Press any key\n";
+        char c;
+        std::cin >> c;
+    #endif
     return true;
 }
 
@@ -2043,7 +2042,7 @@ bool AutoParticlePicking::build_vector(const Matrix2D<double> &piece,
 // to get the piece containing (x,y) of size xsize,ysize
 // return the position of x,y in the piece in posx,posy
 void AutoParticlePicking::get_centered_piece(Matrix2D<double> &piece,
-        int _x, int _y, int &_posx, int &_posy)
+    int _x, int _y, int &_posx, int &_posy)
 {
     piece.resize(__piece_xsize, __piece_xsize);
     int startx = _x - ROUND(__piece_xsize / 2);
@@ -2054,7 +2053,7 @@ void AutoParticlePicking::get_centered_piece(Matrix2D<double> &piece,
     __m->size(maxx, maxy);
     _posx = ROUND(__piece_xsize / 2);
     _posy = ROUND(__piece_xsize / 2);
-
+    
     // boundary adjustments
     if (startx < 0)
     {
@@ -2080,11 +2079,11 @@ void AutoParticlePicking::get_centered_piece(Matrix2D<double> &piece,
         endy = maxy - 1;
         starty = endy - __piece_xsize;
     }
-
+    
     //read the matrix from the micrograph
     for (int i = 0; i < __piece_xsize; i++)
         for (int j = 0; j < __piece_xsize; j++)
-            piece(i, j) = (*__m)(startx + j, starty + i);
+            piece(i, j) = (*__m)(startx + j, starty + i);	    
 }
 
 // Get a piece whose top-left corner is at the desired position (if possible)
@@ -2137,21 +2136,21 @@ bool AutoParticlePicking::get_corner_piece(
             for (int j = 0; j < __piece_xsize; j++)
                 piece(i, j) = (*__m)(_left + j, _top + i);
     }
-
+	    
     return true;
 }
 
 /* Prepare piece ----------------------------------------------------------- */
 static pthread_mutex_t preparePieceMutex = PTHREAD_MUTEX_INITIALIZER;
 bool AutoParticlePicking::prepare_piece(Matrix2D<double> &piece,
-                                        Matrix2D<double> &original_piece)
+    Matrix2D<double> &original_piece)
 {
     original_piece = piece;
-#ifdef DEBUG_PREPARE
-    ImageXmipp save;
-    save() = piece;
-    save.write("PPPpiece0.xmp");
-#endif
+    #ifdef DEBUG_PREPARE    
+        ImageXmipp save;
+        save() = piece;
+        save.write("PPPpiece0.xmp");
+    #endif    
 
     // Denoise the piece
     Denoising_parameters denoiser;
@@ -2163,19 +2162,19 @@ bool AutoParticlePicking::prepare_piece(Matrix2D<double> &piece,
     denoiser.produce_side_info();
     denoiser.denoise(piece);
     if (!(piece(0, 0) == piece(0, 0))) return false;
-#ifdef DEBUG_PREPARE
-    save() = piece;
-    save.write("PPPpiece1.xmp");
-#endif
+    #ifdef DEBUG_PREPARE    
+        save() = piece;
+        save.write("PPPpiece1.xmp");
+    #endif    
     if (__output_scale==0)
     {
         Matrix2D<double> auxPiece;
         piece.pyramidExpand(auxPiece);
         piece=auxPiece;
-#ifdef DEBUG_PREPARE
-        save() = piece;
-        save.write("PPPpiece1.5.xmp");
-#endif
+        #ifdef DEBUG_PREPARE    
+            save() = piece;
+            save.write("PPPpiece1.5.xmp");
+        #endif
     }
 
     // Band pass filter
@@ -2189,22 +2188,22 @@ bool AutoParticlePicking::prepare_piece(Matrix2D<double> &piece,
     Filter.generate_mask(piece);
     Filter.apply_mask_Space(piece);
     STARTINGX(piece) = STARTINGY(piece) = 0;
-#ifdef DEBUG_PREPARE
-    save() = piece;
-    save.write("PPPpiece2.xmp");
-#endif
+    #ifdef DEBUG_PREPARE    
+        save() = piece;
+        save.write("PPPpiece2.xmp");
+    #endif    
     pthread_mutex_unlock( &preparePieceMutex );
-
+    
     // Reject 5% of the outliers
     reject_outliers(piece, 5.0);
 
-    // Equalize histogram
+    // Equalize histogram    
     histogram_equalization(piece, __gray_bins);
-
-#ifdef DEBUG_PREPARE
-    save() = piece;
-    save.write("PPPpiece3.xmp");
-#endif
+    
+    #ifdef DEBUG_PREPARE    
+        save() = piece;
+        save.write("PPPpiece3.xmp");
+    #endif    
     original_piece.selfScaleToSize(YSIZE(piece), XSIZE(piece));
 
     // Reject 5% of the outliers
@@ -2212,19 +2211,19 @@ bool AutoParticlePicking::prepare_piece(Matrix2D<double> &piece,
     original_piece.statisticsAdjust(0,1);
     original_piece-=original_piece.computeAvg();
 
-#ifdef DEBUG_PREPARE
-    save() = original_piece;
-    save.write("PPPpiece4.xmp");
-#endif
+    #ifdef DEBUG_PREPARE    
+        save() = original_piece;
+        save.write("PPPpiece4.xmp");
+    #endif
     return true;
 }
 
 /* Get neighbours ---------------------------------------------------------- */
 //To get the neighbours and their positions in the piece image
 void AutoParticlePicking::find_neighbour(const Matrix2D<double> &piece,
-        std::vector<int> &_idx, int _index,
-        int _x, int _y, int _posx, int _posy, Matrix1D<char> &_visited,
-        std::vector< Matrix1D<int> > &_nbr)
+    std::vector<int> &_idx, int _index,
+    int _x, int _y, int _posx, int _posy, Matrix1D<char> &_visited,
+    std::vector< Matrix1D<int> > &_nbr)
 {
     int piece_xsize = XSIZE(piece);
     int piece_ysize = YSIZE(piece);
@@ -2283,8 +2282,8 @@ bool AutoParticlePicking::get_next_scanning_pos(
     const Matrix2D<int> &mask = __mask.get_binary_mask2D();
 
     if (_x + XSIZE(mask) / 2 > XSIZE(piece) ||
-        _y + YSIZE(mask) / 2 > YSIZE(piece))
-        return false;
+        _y + YSIZE(mask) / 2 > YSIZE(piece)) 
+	return false;
 
     if (_x == 0 && _y == 0)
     {
@@ -2295,10 +2294,10 @@ bool AutoParticlePicking::get_next_scanning_pos(
     {
         int nextx = _x + XSIZE(mask) - overlap / __reduction;
         int nexty = _y + YSIZE(mask) - overlap / __reduction;
-
-        if (nextx + (XSIZE(mask) / 2) > XSIZE(piece))
+	   
+	if (nextx + (XSIZE(mask) / 2) > XSIZE(piece))
         {
-            if (nexty + (YSIZE(mask) / 2) > YSIZE(piece))
+	    if (nexty + (YSIZE(mask) / 2) > YSIZE(piece))
             {
                 _x = nextx;
                 _y = nexty;
@@ -2372,7 +2371,7 @@ void AutoParticlePicking::move_particle(int _idx)
         double diffx=__auto_candidates[idxAuto].x - __m->coord(_idx).X;
         double diffy=__auto_candidates[idxAuto].y - __m->coord(_idx).Y;
         if (sqrt(diffx*diffx+diffy*diffy)>2*__particle_radius*0.1)
-            __rejected_particles.push_back(__auto_candidates[idxAuto]);
+             __rejected_particles.push_back(__auto_candidates[idxAuto]);
         __auto_candidates[idxAuto].x = __m->coord(_idx).X;
         __auto_candidates[idxAuto].y = __m->coord(_idx).Y;
     }
@@ -2458,7 +2457,7 @@ void AutoParticlePicking::loadModels(const FileName &fn)
               >> dummy >> __min_distance_between_particles
               >> dummy >> __scan_overlap
               >> dummy >> __penalization
-              ;
+    ;
     fh_params.close();
     __piece_overlap=2*__particle_radius;
 // COSS:    if (__particle_radius>100) __output_scale=1;
@@ -2471,7 +2470,7 @@ void AutoParticlePicking::loadModels(const FileName &fn)
     __mask.generate_2Dmask();
     __mask.get_binary_mask2D().setXmippOrigin();
     __mask_size = XSIZE(__mask.get_binary_mask2D()) * __reduction;
-
+    
     classifyMask();
 
     // Load training vectors
@@ -2480,7 +2479,7 @@ void AutoParticlePicking::loadModels(const FileName &fn)
     if (!fh_training)
         REPORT_ERROR(1, (std::string)"AutoParticlePicking::write: Cannot open file " +
                      __modelRootName + ".training" + " for input");
-
+    
     fh_training >> __training_loaded_model;
     fh_training.close();
 
@@ -2531,7 +2530,7 @@ void AutoParticlePicking::saveModels(const FileName &_fn_root)
               << "min_distance_between_particles= " << __min_distance_between_particles << std::endl
               << "particle_overlap=               " << __scan_overlap                   << std::endl
               << "penalization=                   " << __penalization                   << std::endl
-              ;
+    ;
     fh_params.close();
 
     // Save training vectors

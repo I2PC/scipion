@@ -5,73 +5,73 @@
 //@{
 /*--------------------------------------------------------------------------*/
 extern int  AllocateMatrix
-(
-    double **Matrix,   /* double output pointer */
-    long Lines,    /* width of the matrix */
-    long Columns,   /* height of the matrix */
-    int  *Status    /* error management */
-);
+    (
+        double **Matrix,   /* double output pointer */
+        long Lines,    /* width of the matrix */
+        long Columns,   /* height of the matrix */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  AllocateVector
-(
-    double *(Vector[]),  /* double output pointer */
-    long Lines,    /* height of the vector */
-    int  *Status    /* error management */
-);
+    (
+        double *(Vector[]),  /* double output pointer */
+        long Lines,    /* height of the vector */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  FreeMatrix
-(
-    double **Matrix   /* (double)matrix array */
-);
+    (
+        double **Matrix   /* (double)matrix array */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  FreeVector
-(
-    double *(Vector[])   /* (double)vector array */
-);
+    (
+        double *(Vector[])   /* (double)vector array */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Compute the Frobenius norm of the matrix A.
     The size of A is (Lines x Columns).
     success: return(!ERROR); failure: return(ERROR) */
 extern int  FrobeniusNorm
-(
-    double *A,     /* input matrix */
-    double *Norm,    /* resulting scalar norm */
-    long Lines,    /* height of the matrix A */
-    long Columns    /* width of the matrix A */
-);
+    (
+        double *A,     /* input matrix */
+        double *Norm,    /* resulting scalar norm */
+        long Lines,    /* height of the matrix A */
+        long Columns    /* width of the matrix A */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  GetIdentitySquareMatrix
-(
-    double *A,     /* output identity matrix */
-    long Size    /* height or width of the square matrix */
-);
+    (
+        double *A,     /* output identity matrix */
+        long Size    /* height or width of the square matrix */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  LinearLeastSquares
-(
-    double *A,     /* matrix */
-    long Lines,    /* height the matrix */
-    long Columns,   /* width of the matrix */
-    double B[],    /* right-hand side vector */
-    double X[],    /* resulting vector */
-    double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        double *A,     /* matrix */
+        long Lines,    /* height the matrix */
+        long Columns,   /* width of the matrix */
+        double B[],    /* right-hand side vector */
+        double X[],    /* resulting vector */
+        double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  MatrixAdd
-(
-    double *A,     /* left matrix operand */
-    double *B,     /* right matrix operand */
-    double *X,     /* resulting matrix */
-    long Lines,    /* height of the matrices */
-    long Columns    /* width of the matrices */
-);
+    (
+        double *A,     /* left matrix operand */
+        double *B,     /* right matrix operand */
+        double *X,     /* resulting matrix */
+        long Lines,    /* height of the matrices */
+        long Columns    /* width of the matrices */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Compute the condition number of the matrix A.
@@ -80,15 +80,15 @@ extern int  MatrixAdd
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  MatrixConditionNumber
-(
-    double *A,     /* input matrix */
-    long Lines,    /* height of the matrix A */
-    long Columns,   /* width of the matrix A */
-    double *ConditionNumber, /* resulting scalar condition number */
-    double Tolerance,   /* admissible relative error */
-    long MaxIterations,  /* convergence limit */
-    int  *Status    /* error management */
-);
+    (
+        double *A,     /* input matrix */
+        long Lines,    /* height of the matrix A */
+        long Columns,   /* width of the matrix A */
+        double *ConditionNumber, /* resulting scalar condition number */
+        double Tolerance,   /* admissible relative error */
+        long MaxIterations,  /* convergence limit */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Orthonormalize a matrix.
@@ -97,13 +97,13 @@ extern int  MatrixConditionNumber
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  MatrixGramSchmidtOrthonormalize
-(
-    double *A,     /* input matrix */
-    double *B,     /* resulting matrix */
-    long Lines,    /* height of the matrix A */
-    long Columns,   /* width of the matrix A */
-    double Tolerance   /* admissible relative error */
-);
+    (
+        double *A,     /* input matrix */
+        double *B,     /* resulting matrix */
+        long Lines,    /* height of the matrix A */
+        long Columns,   /* width of the matrix A */
+        double Tolerance   /* admissible relative error */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Extract a minor matrix B from the major matrix A.
@@ -114,25 +114,25 @@ extern int  MatrixGramSchmidtOrthonormalize
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  MatrixMinor
-(
-    double *A,     /* input matrix */
-    double *B,     /* smaller output matrix */
-    long Lines,    /* height of the matrix A */
-    long Columns,   /* width of the matrix A */
-    long i,     /* line to delete */
-    long j     /* column to delete */
-);
+    (
+        double *A,     /* input matrix */
+        double *B,     /* smaller output matrix */
+        long Lines,    /* height of the matrix A */
+        long Columns,   /* width of the matrix A */
+        long i,     /* line to delete */
+        long j     /* column to delete */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  MatrixMultiply
-(
-    double *A,     /* left matrix operand */
-    double *B,     /* right matrix operand */
-    double *X,     /* resulting matrix */
-    long Lines,    /* height (left and resulting) */
-    long CommonSize,   /* left width and right height */
-    long Columns    /* width (right and resulting) */
-);
+    (
+        double *A,     /* left matrix operand */
+        double *B,     /* right matrix operand */
+        double *X,     /* resulting matrix */
+        long Lines,    /* height (left and resulting) */
+        long CommonSize,   /* left width and right height */
+        long Columns    /* width (right and resulting) */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Compute the rank of the matrix A.
@@ -140,44 +140,44 @@ extern int  MatrixMultiply
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  MatrixRank
-(
-    double *A,     /* input square matrix */
-    long Lines,    /* height of the matrix A */
-    long Columns,   /* width of the matrix A */
-    long *Rank,    /* resulting scalar condition number */
-    double Tolerance,   /* admissible relative error */
-    long MaxIterations,  /* convergence limit */
-    int  *Status    /* error management */
-);
+    (
+        double *A,     /* input square matrix */
+        long Lines,    /* height of the matrix A */
+        long Columns,   /* width of the matrix A */
+        long *Rank,    /* resulting scalar condition number */
+        double Tolerance,   /* admissible relative error */
+        long MaxIterations,  /* convergence limit */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  MatrixSubtract
-(
-    double *A,     /* left matrix operand */
-    double *B,     /* right matrix operand */
-    double *X,     /* resulting matrix */
-    long Lines,    /* height of the matrices */
-    long Columns    /* width of the matrices */
-);
+    (
+        double *A,     /* left matrix operand */
+        double *B,     /* right matrix operand */
+        double *X,     /* resulting matrix */
+        long Lines,    /* height of the matrices */
+        long Columns    /* width of the matrices */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  MatrixTimesVector
-(
-    double *A,     /* left matrix operand */
-    double *B,     /* right vector operand */
-    double *X,     /* resulting vector */
-    long Lines,    /* matrix height */
-    long Columns    /* matrix width and vector height */
-);
+    (
+        double *A,     /* left matrix operand */
+        double *B,     /* right vector operand */
+        double *X,     /* resulting vector */
+        long Lines,    /* matrix height */
+        long Columns    /* matrix width and vector height */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  MatrixTranspose
-(
-    double *A,     /* input matrix */
-    double *At,    /* transposed output matrix */
-    long Lines,    /* height input, width output */
-    long Columns    /* width input, height output */
-);
+    (
+        double *A,     /* input matrix */
+        double *At,    /* transposed output matrix */
+        long Lines,    /* height input, width output */
+        long Columns    /* width input, height output */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Multiply 3 Matrices.
@@ -196,29 +196,29 @@ int  multiply_3Matrices(double *A,
                         long Columns
                        );
 
-int multiply_4Matrices( double  *A,
-                        double  *B,
-                        double  *C,
-                        double  *D,
-                        double  *X,
-                        long    Lines,
-                        long    CommonSizeH1,
-                        long    CommonSizeW1,
-                        long    CommonSizeW2,
-                        long    Columns);
+int multiply_4Matrices(	double	*A,			
+			double	*B,
+			double	*C,		
+			double	*D,		
+			double	*X,		
+			long	Lines,	
+			long	CommonSizeH1,
+			long	CommonSizeW1,
+			long	CommonSizeW2,
+			long	Columns);
 
-int multiply_5Matrices( double  *A,
-                        double  *B,
-                        double  *C,
-                        double  *D,
-                        double  *E,
-                        double  *X,
-                        long    Lines,
-                        long    CommonSizeH1,
-                        long    CommonSizeW1,
-                        long    CommonSizeW2,
-                        long    CommonSizeH2,
-                        long    Columns );
+int multiply_5Matrices(	double	*A,			
+			double	*B,
+			double	*C,
+			double	*D,
+			double	*E,
+			double	*X,
+			long	Lines,
+			long	CommonSizeH1,
+			long	CommonSizeW1,
+			long	CommonSizeW2,
+			long	CommonSizeH2,
+			long	Columns );
 
 /*--------------------------------------------------------------------------*/
 /** Decompose the (Lines x Columns) input matrix Q into an orthonormal.
@@ -231,59 +231,59 @@ int multiply_5Matrices( double  *A,
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  QRdecomposition
-(
-    double *Q,     /* in-place matrix */
-    double *R,     /* output matrix */
-    long Lines,    /* height the matrix */
-    long Columns,   /* width of the matrix */
-    double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        double *Q,     /* in-place matrix */
+        double *R,     /* output matrix */
+        long Lines,    /* height the matrix */
+        long Columns,   /* width of the matrix */
+        double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  SingularValueBackSubstitution
-(
-    double *U,     /* input matrix (in-place processing) */
-    double W[],    /* vector of singular values */
-    double *V,     /* untransposed orthogonal matrix */
-    long Lines,    /* height the matrix */
-    long Columns,   /* width of the matrix */
-    double B[],    /* input vector */
-    double X[],    /* returned solution */
-    int  *Status    /* error management */
-);
+    (
+        double *U,     /* input matrix (in-place processing) */
+        double W[],    /* vector of singular values */
+        double *V,     /* untransposed orthogonal matrix */
+        long Lines,    /* height the matrix */
+        long Columns,   /* width of the matrix */
+        double B[],    /* input vector */
+        double X[],    /* returned solution */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 #define SVDMAXITER 1000
 extern int  SingularValueDecomposition
-(
-    double *U,     /* input matrix (in-place processing) */
-    long Lines,    /* height the matrix */
-    long Columns,   /* width of the matrix */
-    double W[],    /* resulting vector of singular values */
-    double *V,     /* untransposed orthogonal matrix */
-    long MaxIterations,  /* convergence limit */
-    int  *Status    /* error management */
-);
+    (
+        double *U,     /* input matrix (in-place processing) */
+        long Lines,    /* height the matrix */
+        long Columns,   /* width of the matrix */
+        double W[],    /* resulting vector of singular values */
+        double *V,     /* untransposed orthogonal matrix */
+        long MaxIterations,  /* convergence limit */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  SquareMatrixDeterminant
-(
-    double *A,     /* input square matrix */
-    long Size,    /* height or width of the square matrix */
-    double *Determinant,  /* resulting scalar determinant */
-    int  *Status    /* error management */
-);
+    (
+        double *A,     /* input square matrix */
+        long Size,    /* height or width of the square matrix */
+        double *Determinant,  /* resulting scalar determinant */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  SquareMatrixInvertGauss
-(
-    double *Direct,   /* input matrix */
-    double *Inverse,   /* resulting matrix */
-    long Size,    /* height or width of the square matrix */
-    double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        double *Direct,   /* input matrix */
+        double *Inverse,   /* resulting matrix */
+        long Size,    /* height or width of the square matrix */
+        double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Compute one out of the 2^Size square roots B of a matrix A such that
@@ -293,14 +293,14 @@ extern int  SquareMatrixInvertGauss
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  SquareMatrixSquareRoot
-(
-    double *A,     /* input matrix */
-    double *B,     /* output matrix and initial solution */
-    long Size,    /* height or width of the square matrix */
-    double Tolerance,   /* admissible relative error */
-    long MaxIterations,  /* convergence limit */
-    int  *Status    /* error management */
-);
+    (
+        double *A,     /* input matrix */
+        double *B,     /* output matrix and initial solution */
+        long Size,    /* height or width of the square matrix */
+        double Tolerance,   /* admissible relative error */
+        long MaxIterations,  /* convergence limit */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Perform the vector cross product X = A x B.
@@ -308,28 +308,28 @@ extern int  SquareMatrixSquareRoot
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  SquareMatrixTrace
-(
-    double *A,     /* input matrix */
-    double *Trace,    /* resulting scalar trace */
-    long Size    /* height or width of the square matrix */
-);
+    (
+        double *A,     /* input matrix */
+        double *Trace,    /* resulting scalar trace */
+        long Size    /* height or width of the square matrix */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  Vector3DcrossProduct
-(
-    double A[],    /* left vector operand */
-    double B[],    /* right vector operand */
-    double X[]     /* resulting vector */
-);
+    (
+        double A[],    /* left vector operand */
+        double B[],    /* right vector operand */
+        double X[]     /* resulting vector */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  VectorAdd
-(
-    double A[],    /* left vector operand */
-    double B[],    /* right vector operand */
-    double X[],    /* resulting vector */
-    long Lines    /* height of the vectors */
-);
+    (
+        double A[],    /* left vector operand */
+        double B[],    /* right vector operand */
+        double X[],    /* resulting vector */
+        long Lines    /* height of the vectors */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Compute the angle between two vectors *(n-D).
@@ -337,13 +337,13 @@ extern int  VectorAdd
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  VectorAngle
-(
-    double A[],    /* 1st input vector */
-    double B[],    /* 2nd input vector */
-    double *Angle,    /* resulting scalar angle in rad */
-    long Lines,    /* height of the vectors */
-    double Tolerance   /* admissible relative error */
-);
+    (
+        double A[],    /* 1st input vector */
+        double B[],    /* 2nd input vector */
+        double *Angle,    /* resulting scalar angle in rad */
+        long Lines,    /* height of the vectors */
+        double Tolerance   /* admissible relative error */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Convert a vector from non-homogenous to homogenous coordinates.
@@ -352,54 +352,54 @@ extern int  VectorAngle
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  VectorHomogenize
-(
-    double A[],    /* input vector */
-    double X[],    /* output homogenous vector */
-    long Lines,    /* height of the vectors */
-    double Tolerance   /* admissible relative error */
-);
+    (
+        double A[],    /* input vector */
+        double X[],    /* output homogenous vector */
+        long Lines,    /* height of the vectors */
+        double Tolerance   /* admissible relative error */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  VectorNorm
-(
-    double A[],    /* input vector */
-    double *Norm,    /* resulting scalar norm */
-    long Lines    /* height of the vector */
-);
+    (
+        double A[],    /* input vector */
+        double *Norm,    /* resulting scalar norm */
+        long Lines    /* height of the vector */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  VectorNormalize
-(
-    double A[],    /* input vector */
-    double X[],    /* resulting normalized vector */
-    long Lines    /* height of the vector */
-);
+    (
+        double A[],    /* input vector */
+        double X[],    /* resulting normalized vector */
+        long Lines    /* height of the vector */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  VectorScalarProduct
-(
-    double A[],    /* left vector operand */
-    double B[],    /* right vector operand */
-    double *X,     /* resulting scalar product */
-    long Lines    /* height of the vector */
-);
+    (
+        double A[],    /* left vector operand */
+        double B[],    /* right vector operand */
+        double *X,     /* resulting scalar product */
+        long Lines    /* height of the vector */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  VectorScale
-(
-    double A[],    /* input vector */
-    double X[],    /* output vector */
-    double Scale,    /* scale factor */
-    long Lines    /* height of the vector */
-);
+    (
+        double A[],    /* input vector */
+        double X[],    /* output vector */
+        double Scale,    /* scale factor */
+        long Lines    /* height of the vector */
+    );
 
 /*--------------------------------------------------------------------------*/
 extern int  VectorSubtract
-(
-    double A[],    /* left vector operand */
-    double B[],    /* right vector operand */
-    double X[],    /* resulting vector */
-    long Lines    /* height of the vectors */
-);
+    (
+        double A[],    /* left vector operand */
+        double B[],    /* right vector operand */
+        double X[],    /* resulting vector */
+        long Lines    /* height of the vectors */
+    );
 //@}
 #endif

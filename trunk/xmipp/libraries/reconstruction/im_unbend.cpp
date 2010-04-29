@@ -96,7 +96,7 @@ void ImUmbend::PeaksCorresp()
 #ifdef DEBUG
     for (int kk = 0; kk < INCR_coord.size(); kk++)
         std::cout <<  INCR_coord[kk].x << " " << INCR_coord[kk].y << " "
-                  <<  INCR_coord[kk].Incrx << " " << INCR_coord[kk].Incry << std::endl;
+        <<  INCR_coord[kk].Incrx << " " << INCR_coord[kk].Incry << std::endl;
 
 #endif
 #undef DEBUG
@@ -395,7 +395,7 @@ void ImUmbend::Scattered2Regular(Matrix2D <double> & MatIncrX, Matrix2D <double>
     LatPoint TargetPt;
 
     //Interpolation to the whole grid
-    for (k = 0; k < N; k++)
+    for (k = 0;k < N;k++)
     {
         if (INCR_coord[k].Interp)
         {
@@ -411,7 +411,7 @@ void ImUmbend::Scattered2Regular(Matrix2D <double> & MatIncrX, Matrix2D <double>
     //Matrix Form
     int i, j;
     double Tx, Ty, det;
-    for (k = 0; k < N; k++)
+    for (k = 0;k < N;k++)
     {
 
         det = ExpLat.a(0) * ExpLat.b(1) - ExpLat.a(1) * ExpLat.b(0);
@@ -495,7 +495,7 @@ void ImUmbend::ShiftsInterp(LatPoint &TargetPt, std::vector <ITRIANGLE> &  LatTr
         w[0] = ((x[1] - xi) * (y[2] - yi) - (x[2] - xi) * (y[1] - yi)) / del;
 
         //Displacement Interpolation
-        for (n = 0; n < 3; n++)
+        for (n = 0;n < 3;n++)
         {
             TargetPt.Incrx = TargetPt.Incrx + Incrx[n] * w[n];
             TargetPt.Incry = TargetPt.Incry + Incry[n] * w[n];
@@ -530,21 +530,21 @@ void ImUmbend::LatTriang(std::vector <ITRIANGLE> & LatTri)
 
 
     //Sort vertixes in x increasing order
-    for (i = 0; i < N; i++)
+    for (i = 0;i < N;i++)
     {
 
         pLat[i] = INCR_coord[i];
     }
     qsort(pLat, N, sizeof(LatPoint), LatPtCompare);
     //Copy sorted values to INCR_coord vector
-    for (i = 0; i < N; i++)
+    for (i = 0;i < N;i++)
     {
         INCR_coord[i] = pLat[i];
     }
 
 
     //Set Lat. Pts Coord.
-    for (i = 0; i < N; i++)
+    for (i = 0;i < N;i++)
     {
         p[i].x = INCR_coord[i].x;
         p[i].y = INCR_coord[i].y;
@@ -556,7 +556,7 @@ void ImUmbend::LatTriang(std::vector <ITRIANGLE> & LatTri)
 
 
     //Copy Triangulation to vector format
-    for (i = 0; i < ntri; i++)
+    for (i = 0;i < ntri;i++)
     {
         LatTri.push_back(v[i]);
 #undef DEBUG
@@ -593,7 +593,7 @@ int ImUmbend::FindNearestTri(LatPoint &TargetPt, std::vector <ITRIANGLE> &  LatT
 
 
     //Nearest Triangle Computation
-    for (k = 0; k < N; k++)
+    for (k = 0;k < N;k++)
     {
 
         //Triangle Vertex position
@@ -635,7 +635,7 @@ int ImUmbend::FindNearestPt(LatPoint &TargetPt)
     MinDist = -1;
 
     //Nearest Pt is the one achieving minimum distance
-    for (k = 0; k < N; k++)
+    for (k = 0;k < N;k++)
     {
         //Distance Computation
         Dist = (TargetPt.x - INCR_coord[k].x) * (TargetPt.x - INCR_coord[k].x) + (TargetPt.y - INCR_coord[k].y) * (TargetPt.y - INCR_coord[k].y);

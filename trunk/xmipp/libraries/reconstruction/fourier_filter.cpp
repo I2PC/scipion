@@ -223,7 +223,7 @@ void FourierMask::show()
         {
         case RAISED_COSINE:
             std::cout << "Raised cosine with " << raised_w
-                      << " raised frequencies\n";
+            << " raised frequencies\n";
             break;
         case GAUSSIAN:
             std::cout << "Gaussian\n";
@@ -259,85 +259,85 @@ void FourierMask::usage()
               << "                                       The CTF phase will be corrected before applying\n"
               << "   -fourier_mask bfactor <B>         : Exponential filter (positive values for decay) \n"
               << "  [-sampling <sampling_rate>]        : If provided pass frequencies are taken in Ang \n"
-              ;
+    ;
 }
 
 /* Get mask value ---------------------------------------------------------- */
 double FourierMask::maskValue(const Matrix1D<double> &w)
 {
     double absw=w.module();
-
+    
     // Generate mask
     switch (FilterBand)
     {
-    case LOWPASS:
-        switch (FilterShape)
-        {
-        case RAISED_COSINE:
-            if (absw<w1)
-                return 1;
-            else if (absw<w1+raised_w)
-                return (1+cos(PI/raised_w*(absw-w1)))/2;
-            else return 0;
+        case LOWPASS:
+            switch (FilterShape)
+            {
+                case RAISED_COSINE:
+                    if (absw<w1)
+                        return 1;
+                    else if (absw<w1+raised_w)
+                        return (1+cos(PI/raised_w*(absw-w1)))/2;
+                    else return 0;
+                    break;
+                case GAUSSIAN:
+                    return 1/sqrt(2*PI*w1)*exp(-0.5*absw*absw/(w1*w1));
+                    break;
+                case REALGAUSSIAN:
+                    return exp(-PI*PI*absw*absw*w1*w1);
+                    break;
+            }
             break;
-        case GAUSSIAN:
-            return 1/sqrt(2*PI*w1)*exp(-0.5*absw*absw/(w1*w1));
+        case HIGHPASS:
+            switch (FilterShape)
+            {
+                case RAISED_COSINE:
+                    if (absw>w1)
+                        return 1;
+                    else if (absw>w1-raised_w)
+                        return (1+cos(PI/raised_w*(w1-absw)))/2;
+                    else return 0;
+                    break;
+            }
             break;
-        case REALGAUSSIAN:
-            return exp(-PI*PI*absw*absw*w1*w1);
+        case BANDPASS:
+            switch (FilterShape)
+            {
+                case RAISED_COSINE:
+                    if (absw>=w1 && absw<=w2)
+                        return 1;
+                    else if (absw>w1-raised_w && absw<w1)
+                        return (1+cos(PI/raised_w*(w1-absw)))/2;
+                    else if (absw<w2+raised_w && absw>w2)
+                        return (1+cos(PI/raised_w*(w2-absw)))/2;
+                    else return 0;
+                    break;
+            }
             break;
-        }
-        break;
-    case HIGHPASS:
-        switch (FilterShape)
-        {
-        case RAISED_COSINE:
-            if (absw>w1)
-                return 1;
-            else if (absw>w1-raised_w)
-                return (1+cos(PI/raised_w*(w1-absw)))/2;
-            else return 0;
+        case STOPBAND:
+            switch (FilterShape)
+            {
+                case RAISED_COSINE:
+                    if (absw>=w1 && absw<=w2)
+                        return 0;
+                    else if (absw>w1-raised_w && absw<w1)
+                        return 1-(1+cos(PI/raised_w*(w1-absw)))/2;
+                    else if (absw<w2+raised_w && absw>w2)
+                        return 1-(1+cos(PI/raised_w*(w2-absw)))/2;
+                    else return 1;
+                    break;
+            }
             break;
-        }
-        break;
-    case BANDPASS:
-        switch (FilterShape)
-        {
-        case RAISED_COSINE:
-            if (absw>=w1 && absw<=w2)
-                return 1;
-            else if (absw>w1-raised_w && absw<w1)
-                return (1+cos(PI/raised_w*(w1-absw)))/2;
-            else if (absw<w2+raised_w && absw>w2)
-                return (1+cos(PI/raised_w*(w2-absw)))/2;
-            else return 0;
+        case CTF:
+            return ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
             break;
-        }
-        break;
-    case STOPBAND:
-        switch (FilterShape)
-        {
-        case RAISED_COSINE:
-            if (absw>=w1 && absw<=w2)
-                return 0;
-            else if (absw>w1-raised_w && absw<w1)
-                return 1-(1+cos(PI/raised_w*(w1-absw)))/2;
-            else if (absw<w2+raised_w && absw>w2)
-                return 1-(1+cos(PI/raised_w*(w2-absw)))/2;
-            else return 1;
+        case CTFPOS:
+            return ABS(ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm));
             break;
-        }
-        break;
-    case CTF:
-        return ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
-        break;
-    case CTFPOS:
-        return ABS(ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm));
-        break;
-    case BFACTOR:
-        double R = absw / w2;
-        return exp( - (w1 / 4.)  * R * R);
-        break;
+        case BFACTOR:
+            double R = absw / w2;
+            return exp( - (w1 / 4.)  * R * R);
+            break;
     }
 }
 
@@ -363,7 +363,7 @@ void FourierMask::generate_mask(Matrix2D<double> &v)
 /* Generate mask ----------------------------------------------------------- */
 void FourierMask::generate_mask(Matrix3D<double> &v)
 {
-
+    
     if (do_generate_3dmask)
     {
         transformer.setReal(v);
@@ -379,43 +379,43 @@ void FourierMask::generate_mask(Matrix3D<double> &v)
         VolumeXmipp Vt;
         switch (FilterShape)
         {
-        case WEDGE:
-            BinaryWedgeMask(mask, w1, w2, A);
-            break;
-        case CONE:
-            imask.resize(v);
-            BinaryConeMask(imask,90. - w1);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
-            {
-                DIRECT_MULTIDIM_ELEM(mask,n)=(double)(DIRECT_MULTIDIM_ELEM(imask,n));
-            }
-            Vt=mask;
-            Vt.write("cone.vol");
-            break;
+            case WEDGE:
+                BinaryWedgeMask(mask, w1, w2, A);
+                break;
+            case CONE:
+                imask.resize(v);
+                BinaryConeMask(imask,90. - w1);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
+                {
+                    DIRECT_MULTIDIM_ELEM(mask,n)=(double)(DIRECT_MULTIDIM_ELEM(imask,n));
+                }
+                Vt=mask;
+                Vt.write("cone.vol");
+                break;
         }
-
+        
         // Transfer mask to maskFourier3D
         for (int z=0, ii=0, yy, zz; z<ZSIZE(maskFourier3D); z++)
         {
-            if ( z > (ZSIZE(maskFourier3D) - 1)/2 )
+            if ( z > (ZSIZE(maskFourier3D) - 1)/2 ) 
                 zz = z-ZSIZE(maskFourier3D);
-            else
+            else 
                 zz = z;
             for (int y=0; y<YSIZE(maskFourier3D); y++)
             {
-                if ( y > (YSIZE(maskFourier3D) - 1)/2 )
+                if ( y > (YSIZE(maskFourier3D) - 1)/2 ) 
                     yy = y-YSIZE(maskFourier3D);
-                else
+                else 
                     yy = y;
                 for (int xx=0; xx<XSIZE(maskFourier3D); xx++,ii++)
                 {
-                    DIRECT_MULTIDIM_ELEM(maskFourier3D,ii) =
+                    DIRECT_MULTIDIM_ELEM(maskFourier3D,ii) = 
                         VOL_ELEM(mask,zz,yy,xx);
                 }
             }
         }
     }
-}
+ }
 
 /* Apply mask -------------------------------------------------------------- */
 void FourierMask::apply_mask_Space(Matrix2D<double> &v)
@@ -423,7 +423,7 @@ void FourierMask::apply_mask_Space(Matrix2D<double> &v)
     Matrix2D< std::complex<double> > aux2D;
     transformer.FourierTransform(v, aux2D, false);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux2D)
-    DIRECT_MULTIDIM_ELEM(aux2D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier2D,n);
+        DIRECT_MULTIDIM_ELEM(aux2D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier2D,n);
     transformer.inverseFourierTransform();
 }
 
@@ -435,7 +435,7 @@ void FourierMask::apply_mask_Space(Matrix3D<double> &v)
     if (do_generate_3dmask)
     {
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux3D)
-        DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier3D,n);
+            DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier3D,n);
     }
     else
     {
@@ -467,5 +467,5 @@ double FourierMask::mask2D_power()
 void FourierMask::correct_phase()
 {
     FOR_ALL_ELEMENTS_IN_MATRIX2D(maskFourier2D)
-    if (maskFourier2D(i, j) < 0) maskFourier2D(i, j) *= -1;
+        if (maskFourier2D(i, j) < 0) maskFourier2D(i, j) *= -1;
 }

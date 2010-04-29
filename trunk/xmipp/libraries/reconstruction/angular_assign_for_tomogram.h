@@ -44,7 +44,7 @@ public:
     double corr;
     FileName fn_img;
     FileName fn_mask;
-
+    
     AlignmentTomography();
 };
 

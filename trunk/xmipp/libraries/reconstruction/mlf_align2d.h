@@ -184,7 +184,7 @@ public:
     int current_highres_limit;
 
     /// IN DEVELOPMENT
-
+    
     /// USe t-distribution instead of normal one
     /** Use t-student distribution instead of normal one */
     bool do_student;
@@ -202,7 +202,7 @@ public:
     double average_scale;
 
     /// Statistical analysis of the noise distributions
-    /** Perform Kolmogorov-Smirnov test on noise distribution */
+    /** Perform Kolmogorov-Smirnov test on noise distribution */    
     bool do_kstest;
     /** Iteration at which to write out histograms */
     int iter_write_histograms;
@@ -236,8 +236,8 @@ public:
 
     /// Calculate Wiener filter for defocus series as defined by Frank
     /// (2nd ed. formula 2.32b on p.60)
-    void updateWienerFilters(Matrix1D<double> &spectral_signal,
-                             std::vector<double> &sumw_defocus, int iter);
+    void updateWienerFilters(Matrix1D<double> &spectral_signal, 
+			     std::vector<double> &sumw_defocus, int iter);
 
     /// Vary in-plane and translational sampling rates with resolution
     void setCurrentSamplingRates(double current_probres_limit);
@@ -259,25 +259,25 @@ public:
 
     // Append a FourierTransform (in half format!) to a vector
     void appendFTtoVector(const Matrix2D<std::complex<double> > &Fin,
-                          std::vector<double> &out);
+			  std::vector<double> &out);
 
     // get a FourierTransform (in half format!) from a vector
-    void getFTfromVector(const std::vector<double> &in,
-                         const int start_point,
-                         Matrix2D<std::complex<double> > &out,
-                         bool only_real = false);
+    void getFTfromVector(const std::vector<double> &in, 
+			 const int start_point,
+			 Matrix2D<std::complex<double> > &out, 
+			 bool only_real = false);
 
     /// Fill vector of matrices with all rotations of reference
     void rotateReference(std::vector<double> &out);
 
     /// Apply reverse rotations to all matrices in vector and fill new matrix with their sum
     void reverseRotateReference(const std::vector<double> &in,
-                                std::vector<Matrix2D<double > > &out);
+				std::vector<Matrix2D<double > > &out);
 
     /// Calculate which references have projection directions close to
     /// phi and theta
     void preselectDirections(float &phi, float &theta,
-                             std::vector<double> &pdf_directions);
+			     std::vector<double> &pdf_directions);
 
     /// Pre-calculate which model and phi have significant probabilities
     /// without taking translations into account!
@@ -289,43 +289,43 @@ public:
     // Calculate the FT of a translated matrix using a phase shift in
     // Fourier space
     void fourierTranslate2D(const std::vector<double> &in,
-                            Matrix1D<double> &trans,
-                            std::vector<double> &out,
-                            int point_start = 0);
+			    Matrix1D<double> &trans,
+			    std::vector<double> &out,
+			    int point_start = 0);
 
     // If not determined yet: search optimal offsets using maxCC
     // Then for all optimal translations, calculate all translated FTs
     // for each of the flipped variants
     void calculateFourierOffsets(const Matrix2D<double> &Mimg,
-                                 const std::vector<double > &offsets,
-                                 std::vector<double>  &out,
-                                 Matrix2D<int> &Moffsets,
-                                 Matrix2D<int> &Moffsets_mirror);
+				 const std::vector<double > &offsets,
+				 std::vector<double>  &out,
+				 Matrix2D<int> &Moffsets, 
+				 Matrix2D<int> &Moffsets_mirror);
 
     /// Perform expectation step for a single image
-    void processOneImage(const Matrix2D<double> &Mimg,
-                         const int focus, bool apply_ctf,
-                         const std::vector<double> &Fref,
-                         std::vector<double> &Fwsum_imgs,
-                         std::vector<double> &Fwsum_ctfimgs,
-                         std::vector<double> &Mwsum_sigma2,
-                         double &wsum_sigma_offset,
-                         std::vector<double> &sumw,
-                         std::vector<double> &sumw2,
-                         std::vector<double> &sumwsc,
-                         std::vector<double> &sumwsc2,
-                         std::vector<double> &sumw_mirror,
-                         double &LL, double &fracweight,  double &maxweight2, double &sum_refw2,
-                         double &opt_scale, int &opt_refno, double &opt_psi,
-                         int &opt_ipsi, int &opt_iflip,
-                         Matrix1D<double> &opt_offsets,
-                         std::vector<double> &opt_offsets_ref,
-                         std::vector<double > &pdf_directions,
-                         bool do_kstest, bool write_histograms,
+    void processOneImage(const Matrix2D<double> &Mimg, 
+			 const int focus, bool apply_ctf,
+			 const std::vector<double> &Fref,
+			 std::vector<double> &Fwsum_imgs,
+			 std::vector<double> &Fwsum_ctfimgs,
+			 std::vector<double> &Mwsum_sigma2,
+			 double &wsum_sigma_offset, 
+			 std::vector<double> &sumw,
+			 std::vector<double> &sumw2,
+                         std::vector<double> &sumwsc, 
+                         std::vector<double> &sumwsc2, 
+			 std::vector<double> &sumw_mirror,
+			 double &LL, double &fracweight,  double &maxweight2, double &sum_refw2,
+			 double &opt_scale, int &opt_refno, double &opt_psi, 
+                         int &opt_ipsi, int &opt_iflip, 
+			 Matrix1D<double> &opt_offsets, 
+			 std::vector<double> &opt_offsets_ref,
+			 std::vector<double > &pdf_directions,
+                         bool do_kstest, bool write_histograms, 
                          FileName fn_img, double &KSprob);
 
     /// Perform Kolmogorov-Smirnov test
-    double performKSTest(Matrix2D<double> &Mimg,  const int focus, bool apply_ctf,
+    double performKSTest(Matrix2D<double> &Mimg,  const int focus, bool apply_ctf, 
                          FileName &fn_img, bool write_histogram,
                          std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fref,
                          double &opt_scale, int &opt_refno, int &opt_ipsi, int &opt_iflip,
@@ -333,31 +333,31 @@ public:
 
     /// Integrate over all experimental images
     void sumOverAllImages(SelFile &SF, std::vector< ImageXmippT<double> > &Iref, int iter,
-                          double &LL, double &sumcorr, DocFile &DFo,
-                          std::vector<Matrix2D<double> > &wsum_Mref,
-                          std::vector<Matrix2D<double> > &wsum_ctfMref,
-                          std::vector<std::vector<double> > &Mwsum_sigma2,
-                          double &wsum_sigma_offset,
-                          std::vector<double> &sumw,
-                          std::vector<double> &sumw2,
-                          std::vector<double> &sumwsc,
-                          std::vector<double> &sumwsc2,
-                          std::vector<double> &sumw_mirror,
-                          std::vector<double> &sumw_defocus);
+			  double &LL, double &sumcorr, DocFile &DFo,
+			  std::vector<Matrix2D<double> > &wsum_Mref,
+			  std::vector<Matrix2D<double> > &wsum_ctfMref,
+			  std::vector<std::vector<double> > &Mwsum_sigma2,
+			  double &wsum_sigma_offset, 
+			  std::vector<double> &sumw, 
+                          std::vector<double> &sumw2, 
+                          std::vector<double> &sumwsc, 
+                          std::vector<double> &sumwsc2, 
+			  std::vector<double> &sumw_mirror,
+			  std::vector<double> &sumw_defocus);
 
     /// Update all model parameters (maximization step)
     void updateParameters(std::vector<Matrix2D<double> > &wsum_Mref,
-                          std::vector<Matrix2D<double> > &wsum_ctfMref,
-                          std::vector<std::vector<double> > &Mwsum_sigma2,
-                          double &wsum_sigma_offset,
-                          std::vector<double> &sumw,
-                          std::vector<double> &sumw2,
-                          std::vector<double> &sumwsc,
-                          std::vector<double> &sumwsc2,
-                          std::vector<double> &sumw_mirror,
-                          std::vector<double> &sumw_defocus,
-                          double &sumcorr, double &sumw_allrefs,
-                          Matrix1D<double> &spectral_signal,
+			  std::vector<Matrix2D<double> > &wsum_ctfMref,
+			  std::vector<std::vector<double> > &Mwsum_sigma2,
+			  double &wsum_sigma_offset,
+			  std::vector<double> &sumw, 
+                          std::vector<double> &sumw2, 
+                          std::vector<double> &sumwsc, 
+                          std::vector<double> &sumwsc2, 
+			  std::vector<double> &sumw_mirror,
+			  std::vector<double> &sumw_defocus,
+			  double &sumcorr, double &sumw_allrefs,
+			  Matrix1D<double> &spectral_signal, 
                           int refs_per_class=1);
 
     /// check convergence
@@ -365,8 +365,8 @@ public:
 
     /// Write out reference images, selfile and logfile
     void writeOutputFiles(const int iter, DocFile &DFo,
-                          double &sumw_allrefs, double &LL, double &avecorr,
-                          std::vector<double> &conv);
+			  double &sumw_allrefs, double &LL, double &avecorr,
+			  std::vector<double> &conv);
 
 
 };

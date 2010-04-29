@@ -26,8 +26,7 @@
 #include "angular_class_average.h"
 
 // Read arguments ==========================================================
-void Prog_angular_class_average_prm::read(int argc, char **argv)
-{
+void Prog_angular_class_average_prm::read(int argc, char **argv)  {
 
     // Read command line
     DF.read(getParameter(argc, argv, "-i"));
@@ -39,7 +38,7 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)
     }
     else
     {
-        do_add = false;
+	do_add = false;
         fn_out = getParameter(argc, argv, "-o");
     }
     col_ref = textToInteger(getParameter(argc, argv, "-refno","6"));
@@ -48,7 +47,7 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)
     col_select--;
     if (checkParameter(argc, argv, "-limitR"))
     {
-        limitR = textToFloat(getParameter(argc, argv, "-limitR"));
+	limitR = textToFloat(getParameter(argc, argv, "-limitR"));
         if (limitR < -100. || limitR > 100.)
             REPORT_ERROR(1,"limitR should be a percentage: provide values between -100 and 100.");
         if (limitR > 0.)
@@ -62,23 +61,23 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)
     do_limit0=checkParameter(argc, argv, "-limit0");
     if (do_limit0)
     {
-        limit0 = textToFloat(getParameter(argc, argv, "-limit0"));
+	limit0 = textToFloat(getParameter(argc, argv, "-limit0"));
     }
     do_limitF=checkParameter(argc, argv, "-limitF");
     if (do_limitF)
     {
-        limitF = textToFloat(getParameter(argc, argv, "-limitF"));
+	limitF = textToFloat(getParameter(argc, argv, "-limitF"));
     }
-
+    
     // Perform splitting of the data?
-    do_split = checkParameter(argc, argv, "-split");
+    do_split = checkParameter(argc, argv, "-split"); 
 
     // Perform Wiener filtering of average?
     fn_wien = getParameter(argc, argv, "-wien","");
     pad = XMIPP_MAX(1.,textToFloat(getParameter(argc, argv, "-pad","1.")));
 
     // Skip writing selfiles?
-    dont_write_selfiles = checkParameter(argc, argv, "-dont_write_selfiles");
+    dont_write_selfiles = checkParameter(argc, argv, "-dont_write_selfiles"); 
 
     // Internal re-alignment of the class averages
     Ri      = textToInteger(getParameter(argc,argv,"-Ri","-1"));
@@ -90,8 +89,7 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)
 }
 
 // Show ====================================================================
-void Prog_angular_class_average_prm::show()
-{
+void Prog_angular_class_average_prm::show() {
 
     std::cerr << "  Input docfile           : "<< DF.name()<<std::endl;
     std::cerr << "  Library docfile         : "<< DFlib.name()<<std::endl;
@@ -100,11 +98,11 @@ void Prog_angular_class_average_prm::show()
     else
         std::cerr << "  Output rootname         : "<< fn_out<<std::endl;
     if (do_split)
-        std::cerr << "     -> Split data in random halves and output class averages "<<std::endl;
+	std::cerr << "     -> Split data in random halves and output class averages "<<std::endl;
     if (do_mirrors)
-        std::cerr << "     -> Take mirror operation into account "<<std::endl;
+	std::cerr << "     -> Take mirror operation into account "<<std::endl;
     if (dont_write_selfiles)
-        std::cerr << "     -> Do not write class selfiles to disc "<<std::endl;
+	std::cerr << "     -> Do not write class selfiles to disc "<<std::endl;
     // election
     if (do_limit0 || do_limitF || do_limitR0 || do_limitRF)
     {
@@ -144,8 +142,7 @@ void Prog_angular_class_average_prm::show()
 }
 
 // Usage ===================================================================
-void Prog_angular_class_average_prm::usage()
-{
+void Prog_angular_class_average_prm::usage() {
     printf("Purpose:\n");
     printf(" Makes class average images and corresponding selfiles from angular_projection_matching docfiles.\n");
     printf("Usage:\n");
@@ -155,7 +152,7 @@ void Prog_angular_class_average_prm::usage()
     printf("        -o <rootname>       : output rootname for class averages and selfiles\n");
     printf("    OR: -add_to <rootname>  : Add output to existing files\n");
     printf("       [-split ]            : Also output averages of random halves of the data\n");
-    printf("       [-wien <img=\"\"> ]    : Apply this Wiener filter to the averages\n");
+    printf("       [-wien <img=\"\"> ]    : Apply this Wiener filter to the averages\n");    
     printf("       [-pad <float=1.> ]   : Padding factor for Wiener correction\n");
     printf("       [-refno  <int=6>]    : Column number in docfile to use for class number\n");
     printf("       [-dont_write_selfiles]  : Do not write class selfiles to disc\n");
@@ -176,10 +173,9 @@ void Prog_angular_class_average_prm::usage()
 }
 
 // Side info stuff ===================================================================
-void Prog_angular_class_average_prm::produceSideInfo()
-{
+void Prog_angular_class_average_prm::produceSideInfo() {
 
-
+    
     FileName fn_tst, fn_img;
 
     // Initialize selfiles and docfiles for all class averages
@@ -194,8 +190,8 @@ void Prog_angular_class_average_prm::produceSideInfo()
     // Set up output rootnames
     if (do_split)
     {
-        fn_out1 = fn_out+"_split_1";
-        fn_out2 = fn_out+"_split_2";
+	fn_out1 = fn_out+"_split_1";
+	fn_out2 = fn_out+"_split_2";
     }
 
     // get column numbers from NewXmipp-type docfile header
@@ -214,7 +210,7 @@ void Prog_angular_class_average_prm::produceSideInfo()
     if (DF.get_current_line().Is_comment()) fn_tst = (DF.get_current_line()).get_text();
     if (strstr(fn_tst.c_str(), "Headerinfo") == NULL)
     {
-        REPORT_ERROR(1,"ERROR: Docfile is of non-NewXmipp type.");
+	REPORT_ERROR(1,"ERROR: Docfile is of non-NewXmipp type.");
     }
 
     // Read empty image with the correct dimensions
@@ -227,7 +223,7 @@ void Prog_angular_class_average_prm::produceSideInfo()
     dim = XSIZE(Iempty());
 
     // Read Wiener filter image
-    if (fn_wien!="")
+    if (fn_wien!="") 
     {
         // Get padding dimensions
         paddim = ROUND(pad * dim);
@@ -300,7 +296,7 @@ void Prog_angular_class_average_prm::produceSideInfo()
 }
 
 void Prog_angular_class_average_prm::getPolar(Matrix2D<double> &img, Polar<std::complex <double> > &fP,
-        bool conjugated, float xoff, float yoff)
+                                              bool conjugated, float xoff, float yoff)
 {
     Matrix2D<double> Maux;
     Polar<double> P;
@@ -313,14 +309,14 @@ void Prog_angular_class_average_prm::getPolar(Matrix2D<double> &img, Polar<std::
 }
 
 void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
-        ImageXmipp &avg2,
-        SelFile    &SFclass1,
-        SelFile    &SFclass2,
-        std::vector<ImageXmipp> imgs,
-        std::vector<int> splits,
-        std::vector<int> numbers,
-        int dirno,
-        double * my_output)
+                                                  ImageXmipp &avg2,
+                                                  SelFile    &SFclass1,
+                                                  SelFile    &SFclass2,
+                                                  std::vector<ImageXmipp> imgs,
+                                                  std::vector<int> splits,
+                                                  std::vector<int> numbers,
+                                                  int dirno,
+                                                  double * my_output)
 {
 
 
@@ -337,9 +333,9 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
     Mref = avg1() + avg2();
 //#define DEBUG
 #ifdef DEBUG
-    ImageXmipp It;
-    It() = Mref;
-    It.write("ref.xmp");
+        ImageXmipp It;
+        It() = Mref;
+        It.write("ref.xmp");
 #endif
 
 
@@ -354,43 +350,43 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
 
 #ifdef DEBUG
         std::cerr<<" entering iter "<<iter<<std::endl;
-#endif
+#endif      
         for (int imgno = 0; imgno < imgs.size(); imgno++)
         {
-
+            
             do_discard = false;
             maxcorr = -99.e99;
             // Rotationally align
             getPolar(imgs[imgno](),fPimg,false,(float)-imgs[imgno].Xoff(),(float)-imgs[imgno].Yoff());
             // A. Check straight image
             rotationalCorrelation(fPimg,fPref,ang,global_transformer);
-            for (int k = 0; k < XSIZE(corr); k++)
-            {
-                if (corr(k)> maxcorr)
-                {
-                    maxcorr = corr(k);
-                    opt_psi = ang(k);
+	    for (int k = 0; k < XSIZE(corr); k++)
+	    {
+		if (corr(k)> maxcorr)
+		{
+		    maxcorr = corr(k);
+		    opt_psi = ang(k);
                     opt_flip = 0.;
-                }
-            }
+		}
+	    }
 
             // B. Check mirrored image
             rotationalCorrelation(fPimg,fPrefm,ang,global_transformer);
-            for (int k = 0; k < XSIZE(corr); k++)
-            {
-                if (corr(k)> maxcorr)
-                {
-                    maxcorr = corr(k);
-                    opt_psi = realWRAP(360. - ang(k), -180., 180.);
+	    for (int k = 0; k < XSIZE(corr); k++)
+	    {
+		if (corr(k)> maxcorr)
+		{
+		    maxcorr = corr(k);
+		    opt_psi = realWRAP(360. - ang(k), -180., 180.);
                     opt_flip = 1.;
-                }
-            }
+		}
+	    }
 
             // Check max_psi_change in last iteration
             if (iter == nr_iter - 1)
             {
                 diff_psi = ABS(realWRAP(imgs[imgno].psi() - opt_psi, -180., 180.));
-                if (diff_psi > max_psi_change)
+                if (diff_psi > max_psi_change) 
                 {
                     do_discard = true;
 #ifdef DEBUG
@@ -416,10 +412,10 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
                 {
                     imgs[imgno]().rotateBSpline(3,opt_psi,Mimg,DONT_WRAP);
                 }
-                if (max_shift > 0)
+                if (max_shift > 0) 
                 {
                     best_shift(Mref,Mimg,opt_xoff,opt_yoff);
-                    if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift)
+                    if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift) 
                     {
                         new_xoff = new_yoff = 0.;
                     }
@@ -435,11 +431,11 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
                     {
                         opt_yoff = imgs[imgno].Yoff();
                         opt_xoff = imgs[imgno].Xoff();
-                        if (imgs[imgno].flip() == 1.)
+                        if (imgs[imgno].flip() == 1.)                
                             opt_xoff *= -1.;
                         diff_shift = (new_xoff - opt_xoff) * (new_xoff - opt_xoff) +
                                      (new_yoff - opt_yoff) * (new_yoff - opt_yoff);
-                        if (diff_shift > max_shift_change * max_shift_change)
+                        if (diff_shift > max_shift_change * max_shift_change) 
                         {
                             do_discard = true;
 #ifdef DEBUG
@@ -457,7 +453,7 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
                 imgs[imgno].set_flip(opt_flip);
                 imgs[imgno].set_Yoff(new_yoff);
                 imgs[imgno].set_Xoff(new_xoff);
-                if (opt_flip==1.)
+                if (opt_flip==1.)                
                     imgs[imgno].set_Xoff(-imgs[imgno].Xoff());
 
                 // Check max_shift_change in last iteration
@@ -472,12 +468,12 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
                     w2 += 1.;
                     avg2() += Mimg;
                 }
-            }
+         }
             else
             {
                 splits[imgno] = -1;
-                ccfs[imgno] = 0.;
-            }
+                ccfs[imgno] = 0.; 
+           }
         }
         Mref = avg1() + avg2();
 #ifdef DEBUG
@@ -489,7 +485,7 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
 
     avg1.set_weight(w1);
     avg2.set_weight(w2);
-
+    
     // Report the new angles, offsets and selfiles
     my_output[4] = imgs.size() * AVG_OUPUT_SIZE;
     for (int imgno = 0; imgno < imgs.size(); imgno++)
@@ -507,9 +503,9 @@ void Prog_angular_class_average_prm::reAlignClass(ImageXmipp &avg1,
         my_output[imgno * AVG_OUPUT_SIZE + 12] = imgs[imgno].flip();
         my_output[imgno * AVG_OUPUT_SIZE + 13] = ccfs[imgno];
 
-        if (splits[imgno] == 0)
+        if (splits[imgno] == 0) 
             SFclass1.insert(imgs[imgno].name());
-        else if (splits[imgno] == 1)
+        else if (splits[imgno] == 1) 
             SFclass2.insert(imgs[imgno].name());
     }
 
@@ -541,9 +537,8 @@ void Prog_angular_class_average_prm::applyWienerFilter(Matrix2D<double> &img)
 }
 
 
-void Prog_angular_class_average_prm::processOneClass(int &dirno,
-        double * my_output)
-{
+void Prog_angular_class_average_prm::processOneClass(int &dirno, 
+                                                     double * my_output) {
 
     ImageXmipp img, avg, avg1, avg2;
     FileName   fn_img, fn_tmp;
@@ -554,8 +549,8 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     Matrix2D<double> A(3,3);
     std::vector<int> exp_number, exp_split;
     std::vector<ImageXmipp> exp_imgs;
-
-
+    
+    
     // Get reference angles and preset to averages
     DFlib.locate(dirno);
     rot = DFlib(col_rot);
@@ -598,7 +593,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
                 img.set_eulerAngles((float)0., (float)0., (float)psi);
                 img.set_originOffsets(xshift, yshift);
                 if (do_mirrors) img.set_flip(mirror);
-
+                
                 if (do_split) isplit = ROUND(rnd_unif());
                 else isplit = 0;
 
@@ -614,7 +609,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
                 A = img.get_transformation_matrix();
                 if (!A.isIdentity())
                     img().selfApplyGeometryBSpline(A, 3, IS_INV,WRAP);
-
+                
                 // Add to average
                 if (isplit==0)
                 {
@@ -631,7 +626,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
             }
         }
     }
-
+	
     // Re-alignment of the class
     if (nr_iter > 0)
     {
@@ -640,8 +635,8 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
         w = w1 + w2;
         avg.set_weight(w);
         writeToDisc(avg,dirno,SFclass,fn_out,false,"ref.xmp");
-        reAlignClass(avg1, avg2, SFclass1, SFclass2,
-                     exp_imgs, exp_split, exp_number,
+        reAlignClass(avg1, avg2, SFclass1, SFclass2, 
+                     exp_imgs, exp_split, exp_number, 
                      dirno, my_output);
         w1 = avg1.weight();
         w2 = avg2.weight();
@@ -667,7 +662,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
         writeToDisc(avg1,dirno,SFclass1,fn_out1+"_class",!dont_write_selfiles);
         writeToDisc(avg2,dirno,SFclass2,fn_out2+"_class",!dont_write_selfiles);
     }
-
+    
     my_output[0] = (double)dirno;
     my_output[1] = w;
     my_output[2] = w1;
@@ -676,11 +671,11 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 }
 
 void Prog_angular_class_average_prm::writeToDisc(ImageXmipp avg,
-        int        dirno,
-        SelFile    SF,
-        FileName   fn,
-        bool       write_selfile,
-        FileName   oext)
+                                                 int        dirno,
+                                                 SelFile    SF,
+                                                 FileName   fn,
+                                                 bool       write_selfile,
+                                                 FileName   oext)
 {
     FileName   fn_tmp;
     double     w = avg.weight(), w_old;
@@ -689,7 +684,7 @@ void Prog_angular_class_average_prm::writeToDisc(ImageXmipp avg,
 
     if (w > 0.)
     {
-        avg()/=w;
+	avg()/=w;
         // Write class average to disc
         fn_tmp.compose(fn,dirno,oext);
         if (do_add && exists(fn_tmp) )
@@ -707,18 +702,18 @@ void Prog_angular_class_average_prm::writeToDisc(ImageXmipp avg,
         {
             avg.write(fn_tmp);
         }
-        // Write class selfile to disc
-        if (write_selfile)
-        {
-            fn_tmp.compose(fn,dirno,"sel");
-            if (do_add && exists(fn_tmp) )
+	// Write class selfile to disc
+	if (write_selfile)
+	{
+	    fn_tmp.compose(fn,dirno,"sel");
+            if (do_add && exists(fn_tmp) ) 
             {
                 SF.merge(fn_tmp);
                 SF.sort_by_filenames();
             }
             SF.write(fn_tmp);
-        }
-
+	}
+        
         if (ROUND(w) != SF.ImgNo())
         {
             std::cerr<<" w = "<<w<<" SF.ImgNo()= "<<SF.ImgNo()<<" dirno = "<<dirno<<std::endl;
@@ -729,11 +724,11 @@ void Prog_angular_class_average_prm::writeToDisc(ImageXmipp avg,
 
 
 void Prog_angular_class_average_prm::addClassAverage(int dirno,
-        double w,
-        double w1,
-        double w2)
+                                                     double w,
+                                                     double w1,
+                                                     double w2)
 {
-
+    
     Matrix1D<double> docline(7);
     FileName fn_tmp;
 
@@ -787,28 +782,28 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
     if (do_split)
     {
         fn_tmp=fn_out1+"_classes.sel";
-        if (do_add && exists(fn_tmp))
+        if (do_add && exists(fn_tmp)) 
             SFclasses1.merge(fn_tmp);
         SFclasses1.write(fn_tmp);
         fn_tmp=fn_out2+"_classes.sel";
-        if (do_add && exists(fn_tmp))
+        if (do_add && exists(fn_tmp)) 
             SFclasses2.merge(fn_tmp);
         SFclasses2.write(fn_tmp);
     }
 
     // Write docfiles with angles and weights of all classes
     fn_tmp=fn_out+"_classes.doc";
-    if (do_add && exists(fn_tmp))
+    if (do_add && exists(fn_tmp)) 
         DFclasses.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
     DFclasses.write(fn_tmp);
     if (do_split)
     {
         fn_tmp=fn_out1+"_classes.doc";
-        if (do_add && exists(fn_tmp))
+        if (do_add && exists(fn_tmp)) 
             DFclasses1.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
         DFclasses1.write(fn_tmp);
         fn_tmp=fn_out2+"_classes.doc";
-        if (do_add && exists(fn_tmp))
+        if (do_add && exists(fn_tmp)) 
             DFclasses2.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
         DFclasses2.write(fn_tmp);
     }
@@ -817,9 +812,9 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
     if (nr_iter > 0)
     {
         fn_tmp=fn_out+"_realigned.doc";
-        if (do_add && exists(fn_tmp))
+        if (do_add && exists(fn_tmp)) 
         {
-            // Don't do any fancy merging or sorting because those functions are really slow...
+            // Don't do any fancy merging or sorting because those functions are really slow... 
             DF.append(fn_tmp);
             DF.remove_multiple_strings("Headerinfo");
         }

@@ -129,10 +129,10 @@ void JDLFile::write()
     if (publisher_data_in != "")
     {
         fh_sh << "lcg-cr --vo " << jdl_virtualorganization
-              << " -l lfn:" << fn_data_in << ".tgz"
-              << " -d " << publisher_data_in
-              << " file:`pwd`/" << fn_data_in << ".tgz\n"
-              ;
+        << " -l lfn:" << fn_data_in << ".tgz"
+        << " -d " << publisher_data_in
+        << " file:`pwd`/" << fn_data_in << ".tgz\n"
+        ;
     }
     else
     {
@@ -147,56 +147,56 @@ void JDLFile::write()
             REPORT_ERROR(1, "JDLFile::write: Cannot open file " +
                          rankCE_jdl + " for output");
         fh_rank_jdl
-                << "Type = \"" << jdl_type << "\";\n"
-                << "JobType = \"" << jdl_jobtype << "\";\n"
-                << "VirtualOrganisation = \"" << jdl_virtualorganization << "\";\n"
-                << "Executable = \"" << job_root << "remote.sh\";\n"
-                << "StdOutput = \"" << job_root << "stdout.txt\";\n"
-                << "StdError = \"" << job_root << "stderr.txt\";\n"
-                << "InputSandbox = {\"" << job_root << "remote.sh\"};\n"
-                << "OutputSandbox = {\"" << job_root << "stdout.txt\","
-                << "\"" << job_root << "stderr.txt\"};\n"
-                << "Rank = other.GlueCEStateFreeCPUs;\n"
-                << "Requirements =(other.GlueCEPolicyMaxCPUTime >= 1440);\n"
-                ;
+        << "Type = \"" << jdl_type << "\";\n"
+        << "JobType = \"" << jdl_jobtype << "\";\n"
+        << "VirtualOrganisation = \"" << jdl_virtualorganization << "\";\n"
+        << "Executable = \"" << job_root << "remote.sh\";\n"
+        << "StdOutput = \"" << job_root << "stdout.txt\";\n"
+        << "StdError = \"" << job_root << "stderr.txt\";\n"
+        << "InputSandbox = {\"" << job_root << "remote.sh\"};\n"
+        << "OutputSandbox = {\"" << job_root << "stdout.txt\","
+        << "\"" << job_root << "stderr.txt\"};\n"
+        << "Rank = other.GlueCEStateFreeCPUs;\n"
+        << "Requirements =(other.GlueCEPolicyMaxCPUTime >= 1440);\n"
+        ;
         fh_rank_jdl.close();
 
         // Get the rank and select storage element
         fh_sh
-                << "# Get the best storage element and publish the data\n"
-                << "edg-job-list-match --rank " << rankCE_jdl << " > "
-                << rankCE_list << std::endl
-                << "lcg-infosites --vo " << jdl_virtualorganization << " closeSE > "
-                << rankSE_list << std::endl
-                << "i=11\n"
-                << "until ! [ \"$se\" == \"\" ];\n"
-                << "do\n"
-                << "   ce=`cat " << rankCE_list << " |head -$i |tail -1 |awk -F\"/\" '{print $1}'`\n"
-                << "   line=`grep -n $ce " << rankSE_list << " |head -1| awk -F\":\" '{print $1}'`\n"
-                << "   if ! [ \"$line\" = \"\"  ];\n"
-                << "   then\n"
-                << "      let line=$line+1\n"
-                << "      se=`head -$line " << rankSE_list << "|tail -1 | awk '{print $6}'`\n"
-                << "      lcg-cr --vo " << jdl_virtualorganization
-                << " -l lfn:" << fn_data_in << ".tgz -d $se file:`pwd`/" << fn_data_in << ".tgz\n"
-                << "   if [ `lcg-lr --vo " << jdl_virtualorganization << " lfn:" << fn_data_in << ".tgz` ];\n"
-                << "   then\n"
-                << "      break\n"
-                << "   else\n"
-                << "      se=\"\" \n"
-                << "   fi\n"
-                << "   fi\n"
-                << "   let i=$i+2\n"
-                << "done\n"
-                << "rm " << rankSE_list << std::endl
-                << "rm " << rankCE_list << std::endl
-                << "rm " << rankCE_jdl  << std::endl
-                << std::endl
-                << "   if [ $se == \"\" ];\n"
-                << "   then\n"
-                << "     echo \" Fail: lcg_lr: \"No such file or directory\"\"  > error_publish.txt \n"
-                << "   fi\n"
-                ;
+        << "# Get the best storage element and publish the data\n"
+        << "edg-job-list-match --rank " << rankCE_jdl << " > "
+        << rankCE_list << std::endl
+        << "lcg-infosites --vo " << jdl_virtualorganization << " closeSE > "
+        << rankSE_list << std::endl
+        << "i=11\n"
+        << "until ! [ \"$se\" == \"\" ];\n"
+        << "do\n"
+        << "   ce=`cat " << rankCE_list << " |head -$i |tail -1 |awk -F\"/\" '{print $1}'`\n"
+        << "   line=`grep -n $ce " << rankSE_list << " |head -1| awk -F\":\" '{print $1}'`\n"
+        << "   if ! [ \"$line\" = \"\"  ];\n"
+        << "   then\n"
+        << "      let line=$line+1\n"
+        << "      se=`head -$line " << rankSE_list << "|tail -1 | awk '{print $6}'`\n"
+        << "      lcg-cr --vo " << jdl_virtualorganization
+        << " -l lfn:" << fn_data_in << ".tgz -d $se file:`pwd`/" << fn_data_in << ".tgz\n"
+        << "   if [ `lcg-lr --vo " << jdl_virtualorganization << " lfn:" << fn_data_in << ".tgz` ];\n"
+        << "   then\n"
+        << "      break\n"
+        << "   else\n"
+        << "      se=\"\" \n"
+        << "   fi\n"
+        << "   fi\n"
+        << "   let i=$i+2\n"
+        << "done\n"
+        << "rm " << rankSE_list << std::endl
+        << "rm " << rankCE_list << std::endl
+        << "rm " << rankCE_jdl  << std::endl
+        << std::endl
+        << "   if [ $se == \"\" ];\n"
+        << "   then\n"
+        << "     echo \" Fail: lcg_lr: \"No such file or directory\"\"  > error_publish.txt \n"
+        << "   fi\n"
+        ;
     }
     fh_sh.close();
     system(((std::string)"chmod u+x " + job_root + "_local_in.sh").c_str());
@@ -212,8 +212,8 @@ void JDLFile::write()
     fh_sh << "export PATH=`pwd`:$PATH\n\n";
     fh_sh << "# Get the input data and programs\n";
     fh_sh << "lcg-cp --vo " << jdl_virtualorganization
-          << " lfn:" << fn_data_in << ".tgz"
-          << " file:`pwd`/" << fn_data_in << ".tgz\n";
+    << " lfn:" << fn_data_in << ".tgz"
+    << " file:`pwd`/" << fn_data_in << ".tgz\n";
     fh_sh << "tar -zxf " << fn_data_in << ".tgz\n";
     fh_sh << "rm " << fn_data_in << ".tgz\n";
     imax = running_programs.size();
@@ -271,33 +271,33 @@ void JDLFile::write()
 
     // Publish the data
     fh_sh << "# Publish the data\n"
-          ;
+    ;
     if (publisher_data_out != "")
     {
         fh_sh << "lcg-cr --vo " << jdl_virtualorganization
-              << " -l lfn:" << fn_data_out << ".tar.gz"
-              << " -d " << publisher_data_out
-              << " file:`pwd`/" << fn_data_out << ".tar.gz\n"
-              ;
+        << " -l lfn:" << fn_data_out << ".tar.gz"
+        << " -d " << publisher_data_out
+        << " file:`pwd`/" << fn_data_out << ".tar.gz\n"
+        ;
     }
     else
     {
         fh_sh << "i=1\n"
-              << "until ! [ \"$se\" == \"\" ];\n"
-              << "do\n"
-              << "se=`lcg-infosites --vo " << jdl_virtualorganization
-              << " se | grep --regexp=\"[i,f][t,r]\" | head -$i | tail -1 | awk '{print $4}'`\n"
-              << " lcg-cr --vo " << jdl_virtualorganization
-              << " -l lfn:" << fn_data_out << ".tar.gz -d $se file:`pwd`/" << fn_data_out << ".tar.gz\n"
-              << " if [ `lcg-lr --vo " << jdl_virtualorganization << " lfn:" << fn_data_in << ".tar.gz` ];\n"
-              << "   then\n"
-              << "      break\n"
-              << "   else\n"
-              << "      se=\"\" \n"
-              << "   fi\n"
-              << "   let i=$i+1\n"
-              << "done\n"
-              ;
+        << "until ! [ \"$se\" == \"\" ];\n"
+        << "do\n"
+        << "se=`lcg-infosites --vo " << jdl_virtualorganization
+        << " se | grep --regexp=\"[i,f][t,r]\" | head -$i | tail -1 | awk '{print $4}'`\n"
+        << " lcg-cr --vo " << jdl_virtualorganization
+        << " -l lfn:" << fn_data_out << ".tar.gz -d $se file:`pwd`/" << fn_data_out << ".tar.gz\n"
+        << " if [ `lcg-lr --vo " << jdl_virtualorganization << " lfn:" << fn_data_in << ".tar.gz` ];\n"
+        << "   then\n"
+        << "      break\n"
+        << "   else\n"
+        << "      se=\"\" \n"
+        << "   fi\n"
+        << "   let i=$i+1\n"
+        << "done\n"
+        ;
     }
     fh_sh.close();
     system(((std::string)"chmod u+x " + job_root + "remote.sh").c_str());
@@ -309,19 +309,19 @@ void JDLFile::write()
         REPORT_ERROR(1, (std::string)"JDLFile::write: Cannot open file " +
                      job_root + ".jdl for output");
     fh_jdl << "Type = \"" << jdl_type << "\";\n"
-           << "JobType = \"" << jdl_jobtype << "\";\n"
-           << "VirtualOrganisation = \"" << jdl_virtualorganization << "\";\n"
-           << "Executable = \"" << job_root << "remote.sh\";\n"
-           << "StdOutput = \"" << job_root << "stdout.txt\";\n"
-           << "StdError = \"" << job_root << "stderr.txt\";\n"
-           << "InputSandbox = {\"" << job_root << "remote.sh\"};\n"
-           << "OutputSandbox = {\"" << job_root << "stdout.txt\","
-           << "\"" << job_root << "stderr.txt\","
-           << "\"xmipp" << job_root << "_error_publish_out.txt\"};\n"
-           << "InputData = {\"lfn:" << fn_data_in << ".tgz\"};\n"
-           << "DataAccessProtocol= {\"gsiftp\"};\n"
-           << "Requirements =(other.GlueCEPolicyMaxCPUTime >= 1440);\n"
-           ;
+    << "JobType = \"" << jdl_jobtype << "\";\n"
+    << "VirtualOrganisation = \"" << jdl_virtualorganization << "\";\n"
+    << "Executable = \"" << job_root << "remote.sh\";\n"
+    << "StdOutput = \"" << job_root << "stdout.txt\";\n"
+    << "StdError = \"" << job_root << "stderr.txt\";\n"
+    << "InputSandbox = {\"" << job_root << "remote.sh\"};\n"
+    << "OutputSandbox = {\"" << job_root << "stdout.txt\","
+    << "\"" << job_root << "stderr.txt\","
+    << "\"xmipp" << job_root << "_error_publish_out.txt\"};\n"
+    << "InputData = {\"lfn:" << fn_data_in << ".tgz\"};\n"
+    << "DataAccessProtocol= {\"gsiftp\"};\n"
+    << "Requirements =(other.GlueCEPolicyMaxCPUTime >= 1440);\n"
+    ;
     fh_jdl.close();
 
     // Write the local out script ...........................................
@@ -334,12 +334,12 @@ void JDLFile::write()
     fh_sh << "#!/bin/csh\n";
     fh_sh << "# Get the output data and programs\n";
     fh_sh << "lcg-cp --vo " << jdl_virtualorganization
-          << " lfn:" << fn_data_out << ".tar.gz"
-          << " file:`pwd`/" << fn_data_out << ".tgz\n";
+    << " lfn:" << fn_data_out << ".tar.gz"
+    << " file:`pwd`/" << fn_data_out << ".tgz\n";
     fh_sh << "lcg-del -a --vo " << jdl_virtualorganization
-          << " lfn:" << fn_data_in << ".tgz\n";
+    << " lfn:" << fn_data_in << ".tgz\n";
     fh_sh << "lcg-del -a --vo " << jdl_virtualorganization
-          << " lfn:" << fn_data_out << ".tar.gz\n";
+    << " lfn:" << fn_data_out << ".tar.gz\n";
     if (local_output_dir == ".")
     {
         fh_sh << "tar -zxf " << fn_data_out << ".tar.gz\n";
@@ -354,8 +354,8 @@ void JDLFile::write()
     else
     {
         fh_sh << "if ( !(-e " << local_output_dir << ") ) then\n"
-              << "   mkdir " << local_output_dir << "\n"
-              << "endif\n";
+        << "   mkdir " << local_output_dir << "\n"
+        << "endif\n";
         fh_sh << "cd " << local_output_dir << std::endl;
         fh_sh << "tar -zxf ../" << fn_data_out << ".tgz\n";
         fh_sh << "cd ..\n";

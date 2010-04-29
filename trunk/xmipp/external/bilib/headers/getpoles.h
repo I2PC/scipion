@@ -9,12 +9,12 @@
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  GetBsplinePoles
-(
-    double RealPoles[],  /* returned array of poles */
-    long Degree,    /* spline degree */
-    double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        double RealPoles[],  /* returned array of poles */
+        long Degree,    /* spline degree */
+        double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Get poles of Omom.
@@ -24,10 +24,10 @@ extern int  GetBsplinePoles
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  GetOmomsPoles
-(
-    double RealPoles[],  /* returned array of poles */
-    long Degree,    /* oMoms degree */
-    double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        double RealPoles[],  /* returned array of poles */
+        long Degree,    /* oMoms degree */
+        double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 //@}

@@ -62,21 +62,21 @@ void CommonLine_Parameters::read(int argc, char **argv)
 void CommonLine_Parameters::usage()
 {
     std::cout
-            << "Usage: common_lines [Purpose and Parameters]\n"
-            << "Purpose: For every pair of images in the selfile, find the common line\n"
-            << "Parameter Values: (notice space before value)\n"
-            << "    -i <file_in>        : input selfile\n"
-            << "   [-o <file_out>]      : if no name is given, commonlines.txt\n"
-            << "   [-correlation]       : use correlation instead of correntropy\n"
-            << "   [-euclidean]         : use euclidean distance instead of correntropy\n"
-            << "   [-lpf <f=0.01>]      : low pass frequency (0<lpf<0.5)\n"
-            << "   [-hpf <f=0.35>]      : high pass frequency (lpf<hpf<0.5)\n"
-            << "                          Set both frequencies to -1 for no filter\n"
-            << "   [-stepAng <s=3>]     : angular step\n"
-            << "   [-qualify]           : assess the quality of each common line\n"
-            << "   [-mem <m=1>]         : float number with the memory available in Gb\n"
-            << "   [-thr <thr=1>]       : number of threads for each process\n"
-            ;
+        << "Usage: common_lines [Purpose and Parameters]\n"
+        << "Purpose: For every pair of images in the selfile, find the common line\n"
+        << "Parameter Values: (notice space before value)\n"
+        << "    -i <file_in>        : input selfile\n"
+        << "   [-o <file_out>]      : if no name is given, commonlines.txt\n"
+        << "   [-correlation]       : use correlation instead of correntropy\n"
+        << "   [-euclidean]         : use euclidean distance instead of correntropy\n"
+        << "   [-lpf <f=0.01>]      : low pass frequency (0<lpf<0.5)\n"
+        << "   [-hpf <f=0.35>]      : high pass frequency (lpf<hpf<0.5)\n"
+        << "                          Set both frequencies to -1 for no filter\n"
+        << "   [-stepAng <s=3>]     : angular step\n"
+        << "   [-qualify]           : assess the quality of each common line\n"
+        << "   [-mem <m=1>]         : float number with the memory available in Gb\n"
+        << "   [-thr <thr=1>]       : number of threads for each process\n"
+    ;
 }
 
 /* Side info --------------------------------------------------------------- */
@@ -90,7 +90,7 @@ void CommonLine_Parameters::produceSideInfo()
     SF.ImgSize(Ydim,Xdim);
     Nblock=FLOOR(sqrt(mem*pow(2.0,30.0)/(Ydim*(360/stepAng)*sizeof(double))));
     Nblock=XMIPP_MIN(Nblock,CEIL(((float)Nimg)/Nmpi));
-
+    
     // Ask for memory for the common line matrix
     CommonLine dummy;
     for (int i=0; i<Nimg*Nimg; i++)
@@ -127,7 +127,7 @@ struct ThreadPrepareImages
     CommonLine_Parameters * parent;
     SelFile *SFi;
     std::vector< Matrix2D<double> > *blockRTs;
-
+    
     double sigma;
 };
 
@@ -192,7 +192,7 @@ void * threadPrepareImages( void * args )
             // Compute sigma outside the largest circle
             double min_val, max_val, avg, stddev;
             computeStats_within_binary_mask(mask,I(),
-                                            min_val, max_val, avg, stddev);
+                min_val, max_val, avg, stddev);
             master->sigma+=stddev;
             Nsigma++;
 
@@ -200,13 +200,13 @@ void * threadPrepareImages( void * args )
             // And compute the DC value inside the mask
             double meanInside=0;
             FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
-            if (mask(i,j)) I(i,j)=0;
-            else meanInside+=I(i,j);
+                if (mask(i,j)) I(i,j)=0;
+                else meanInside+=I(i,j);
             meanInside/=NInsideMask;
-
+            
             // Substract the mean inside the circle
             FOR_ALL_ELEMENTS_IN_MATRIX2D(mask)
-            if (!mask(i,j)) I(i,j)-=meanInside;
+                if (!mask(i,j)) I(i,j)-=meanInside;
 
             // Compute the Radon transform
             Matrix2D<double> RT;
@@ -221,18 +221,18 @@ void * threadPrepareImages( void * args )
 }
 
 void CommonLine_Parameters::getAndPrepareBlock(int i,
-        std::vector< Matrix2D<double> > &blockRTs)
+    std::vector< Matrix2D<double> > &blockRTs)
 {
     // Get the selfile
     SelFile SFi;
     SF.chooseSubset(i*Nblock,XMIPP_MIN((i+1)*Nblock,Nimg)-1,SFi);
-
+    
     // Ask for space for all the block images
     int jmax=SFi.ImgNo();
     Matrix2D<double> dummy;
     for (int j=0; j<jmax; j++)
         blockRTs.push_back(dummy);
-
+    
     // Read and preprocess the images
     pthread_t * th_ids = new pthread_t[Nthr];
     ThreadPrepareImages * th_args = new ThreadPrepareImages[Nthr];
@@ -244,9 +244,9 @@ void CommonLine_Parameters::getAndPrepareBlock(int i,
         th_args[nt].SFi = &SFi;
         th_args[nt].blockRTs = &blockRTs;
         pthread_create( (th_ids+nt) , NULL, threadPrepareImages,
-                        (void *)(th_args+nt) );
+            (void *)(th_args+nt) );
     }
-
+		
     // Waiting for threads to finish
     sigma=0;
     for( int nt = 0 ; nt < Nthr ; nt ++ )
@@ -258,7 +258,7 @@ void CommonLine_Parameters::getAndPrepareBlock(int i,
     int Ydim, Xdim;
     SF.ImgSize(Ydim,Xdim);
     sigma*=sqrt(2.0*Xdim);
-
+    
     // Threads structures are not needed any more
     delete( th_ids );
     delete( th_args );
@@ -266,12 +266,12 @@ void CommonLine_Parameters::getAndPrepareBlock(int i,
 
 /* Process block ----------------------------------------------------------- */
 void commonLineTwoImages(std::vector< Matrix2D<double> > &RTsi, int idxi,
-                         std::vector< Matrix2D<double> >&RTsj, int idxj,
-                         CommonLine_Parameters *parent, CommonLine &result)
+    std::vector< Matrix2D<double> >&RTsj, int idxj,
+    CommonLine_Parameters *parent, CommonLine &result)
 {
     Matrix2D<double> &RTi=RTsi[idxi];
     Matrix2D<double> &RTj=RTsj[idxj];
-
+    
     result.distanceij=1e60;
     result.angi=-1;
     result.angj=-1;
@@ -288,14 +288,14 @@ void commonLineTwoImages(std::vector< Matrix2D<double> > &RTsi, int idxi,
             linej.initZeros(XSIZE(RTi));
             linej.setXmippOrigin();
             FOR_ALL_ELEMENTS_IN_MATRIX1D(linej) linej(i) = RTj(jj,i);
-
+            
             // Compute distance between the two lines
             double distance=0;
             if (parent->distance==CORRELATION)
                 distance=1-(correlation_index(linei,linej)+1)/2;
             else if (parent->distance==CORRENTROPY)
                 distance=1-fastCorrentropy(linei,linej,parent->sigma,
-                                           parent->gaussianInterpolator);
+                    parent->gaussianInterpolator);
             else if (parent->distance==EUCLIDEAN)
             {
                 FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(linei)
@@ -346,12 +346,12 @@ void * threadCompareImages( void * args )
             if (ii>=jj) continue;
             if ((ii*blockJsize+jj+1)%parent->Nthr!=master->myThreadID)
                 continue;
-
+            
             // Effectively compare the two images
             long int idx_ij=ii*parent->Nimg+jj;
             commonLineTwoImages(*(master->RTsi),i,*(master->RTsj),j,
-                                parent,parent->CLmatrix[idx_ij]);
-
+                parent,parent->CLmatrix[idx_ij]);
+            
             // Compute the symmetric element
             long int idx_ji=jj*parent->Nimg+ii;
             parent->CLmatrix[idx_ji].distanceij=parent->CLmatrix[idx_ij].distanceij;
@@ -387,13 +387,13 @@ void CommonLine_Parameters::processBlock(int i, int j)
         else
             th_args[nt].RTsj = &RTsi;
         pthread_create( (th_ids+nt) , NULL, threadCompareImages,
-                        (void *)(th_args+nt) );
+            (void *)(th_args+nt) );
     }
-
+		
     // Waiting for threads to finish
     for( int nt = 0 ; nt < Nthr ; nt ++ )
         pthread_join(*(th_ids+nt), NULL);
-
+    
     // Threads structures are not needed any more
     delete( th_ids );
     delete( th_args );
@@ -412,25 +412,25 @@ void CommonLine_Parameters::qualifyCommonLines()
         {
             // Locate the common line between k1 and k2
             long int idx12=k1*Nimg+k2;
-
+        
             // Initialize alpha_12 angle histogram
             Matrix1D<double> h;
             h.initZeros(181);
-
+            
             // Iterate over all images except k1 and k2
             for (int k3=0; k3<Nimg; k3++)
             {
                 if (k3==k1 || k3==k2) continue;
-
+                
                 // Locate the corresponding common lines
                 long int   idx13=k1*Nimg+k3;
                 long int   idx23=k2*Nimg+k3;
-
+                
                 // Compute a,b,c
                 double a=COSD(CLmatrix[idx23].angj-CLmatrix[idx13].angj);
                 double b=COSD(CLmatrix[idx23].angi-CLmatrix[idx12].angj);
                 double c=COSD(CLmatrix[idx13].angi-CLmatrix[idx12].angi);
-
+                
                 // Update histogram if necessary
                 if (1+2*a*b*c>a*a+b*b+c*c)
                 {
@@ -445,17 +445,17 @@ void CommonLine_Parameters::qualifyCommonLines()
                     }
                 }
             }
-
+            
             // Compute the histogram peak
             qualification[idx12]=h.computeMax();
             peaks(iPeak++)=qualification[idx12];
         }
-
+    
     // Compute the histogram of the peaks
     histogram1D hist;
     compute_hist(peaks,hist,400);
     hist/=hist.sum();
-
+    
     // Reevaluate the peaks
     for (int k1=0; k1<Nimg; k1++)
         for (int k2=k1+1; k2<Nimg; k2++)
@@ -494,7 +494,7 @@ void CommonLine_Parameters::writeResults()
             {
                 fh_out << j << " " << i << " "
                        << ROUND(65535*(CLmatrix[ii].distanceij-minVal)/
-                                (maxVal-minVal)) << " "
+                             (maxVal-minVal)) << " "
                        << ROUND(CLmatrix[ii].angi/stepAng) << " "
                        << ROUND(CLmatrix[ii].angj/stepAng);
                 if (qualify)

@@ -8,16 +8,16 @@
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  LinearGradient
-(
-    double InputData[],  /* input 1D data */
-    double OutputGradient[], /* output 1D gradient */
-    long SignalLength,  /* signal length */
-    long Degree,    /* degree of the spline space */
-    enum TBoundaryConvention
-    Convention,   /* boundary convention */
-    double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        double InputData[],  /* input 1D data */
+        double OutputGradient[], /* output 1D gradient */
+        long SignalLength,  /* signal length */
+        long Degree,    /* degree of the spline space */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Compute the gradient of 2D data.
@@ -29,17 +29,17 @@ extern int  LinearGradient
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  PlanarGradient
-(
-    float *InputImage,  /* input 2D data */
-    float *OutputGradient[], /* output 2D gradient array [x, y] */
-    long Nx,     /* width of the image */
-    long Ny,     /* height of the image */
-    long Degree,    /* degree of the spline space */
-    enum TBoundaryConvention
-    Convention,   /* boundary convention */
-    double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        float *InputImage,  /* input 2D data */
+        float *OutputGradient[], /* output 2D gradient array [x, y] */
+        long Nx,     /* width of the image */
+        long Ny,     /* height of the image */
+        long Degree,    /* degree of the spline space */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Compute the gradient of 3D data.
@@ -52,16 +52,16 @@ extern int  PlanarGradient
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  VolumetricGradient
-(
-    float *InputVolume,  /* input 3D data */
-    float *OutputGradient[], /* output 3D gradient array [x, y, z] */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    long Degree,    /* degree of the spline space */
-    enum TBoundaryConvention
-    Convention,   /* boundary convention */
-    double Tolerance,   /* admissible relative error */
-    int  *Status    /* error management */
-);
+    (
+        float *InputVolume,  /* input 3D data */
+        float *OutputGradient[], /* output 3D gradient array [x, y, z] */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        long Degree,    /* degree of the spline space */
+        enum TBoundaryConvention
+        Convention,   /* boundary convention */
+        double Tolerance,   /* admissible relative error */
+        int  *Status    /* error management */
+    );
 //@}

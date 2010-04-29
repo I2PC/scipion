@@ -41,31 +41,31 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
     Matrix1D<double> axis(3), shift(3);
     int pgGroup, pgOrder;
     std::vector<std::string> fileContent;
-
+    
     //check if reserved word
-
+    
     // Open file ---------------------------------------------------------
     if ((fpoii = fopen(fn_sym.c_str(), "r")) == NULL)
     {
         //check if reserved word and return group and order
         if (isSymmetryGroup(fn_sym, pgGroup, pgOrder))
-        {
-            fill_symmetry_class(fn_sym, pgGroup, pgOrder,fileContent);
+        { 
+	    fill_symmetry_class(fn_sym, pgGroup, pgOrder,fileContent);
         }
         else
             REPORT_ERROR(3005, (std::string)"SymList::read_sym_file:Can't open file: "
-                         + " or do not recognize symmetry group" + fn_sym);
+                     + " or do not recognize symmetry group" + fn_sym);
     }
     else
     {
         while (fgets(line, 79, fpoii) != NULL)
         {
             if (line[0] == ';' || line[0] == '#' || line[0] == '\0') continue;
-            fileContent.push_back(line);
-        }
+	    fileContent.push_back(line);
+	}
         fclose(fpoii);
     }
-
+    
     //reset space_group
     space_group = 0;
     // Count the number of symmetries ------------------------------------
@@ -319,10 +319,10 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
         switch (true_symNo)
         {
         case(5):
-            space_group = sym_P6;
+                        space_group = sym_P6;
             break;
         case(3):
-            space_group = sym_P4;
+                        space_group = sym_P4;
             break;
         default:
             space_group = sym_undefined;
@@ -480,11 +480,11 @@ void SymList::compute_subgroup(double accuracy)
 
         if (!found)
         {
-//#define DEBUG
+//#define DEBUG        
 #ifdef DEBUG
             std::cout << "Matrix size " << XSIZE(tried) << " "
-                      << "trying " << i << " " << j << " "
-                      << "chain length=" << new_chain_length << std::endl;
+            << "trying " << i << " " << j << " "
+            << "chain length=" << new_chain_length << std::endl;
             std::cout << "Result R\n" << newR;
 #endif
 #undef DEBUG
@@ -514,28 +514,28 @@ int  SymList::crystallographic_space_group(double mag_a, double mag_b,
         if (fabs((mag_a - mag_b)) > XMIPP_EQUAL_ACCURACY ||
             fabs(ang_a2b_deg - 90) > XMIPP_EQUAL_ACCURACY)
             std::cerr << "\nWARNING: P42 but mag_a != mag_b\n"
-                      << " or ang_a2b !=90" << std::endl;
+            << " or ang_a2b !=90" << std::endl;
         return(space_group);
         break;
     case sym_P2_122:
         if (fabs((mag_a - mag_b)) > XMIPP_EQUAL_ACCURACY ||
             fabs(ang_a2b_deg - 90) > XMIPP_EQUAL_ACCURACY)
             std::cerr << "\nWARNING: P2_122 but mag_a != mag_b\n"
-                      << " or ang_a2b !=90" << std::endl;
+            << " or ang_a2b !=90" << std::endl;
         return(space_group);
         break;
     case sym_P22_12:
         if (fabs((mag_a - mag_b)) > XMIPP_EQUAL_ACCURACY ||
             fabs(ang_a2b_deg - 90) > XMIPP_EQUAL_ACCURACY)
             std::cerr << "\nWARNING: P22_12 but mag_a != mag_b\n"
-                      << " or ang_a2b !=90" << std::endl;
+            << " or ang_a2b !=90" << std::endl;
         return(space_group);
         break;
     case sym_P42_12:
         if (fabs((mag_a - mag_b)) > XMIPP_EQUAL_ACCURACY ||
             fabs(ang_a2b_deg - 90) > XMIPP_EQUAL_ACCURACY)
             std::cerr << "\nWARNING: P42_12 but mag_a != mag_b\n"
-                      << " or ang_a2b !=90" << std::endl;
+            << " or ang_a2b !=90" << std::endl;
         return(space_group);
         break;
     case sym_P6:
@@ -543,7 +543,7 @@ int  SymList::crystallographic_space_group(double mag_a, double mag_b,
             fabs(ang_a2b_deg - 120.) > XMIPP_EQUAL_ACCURACY)
         {
             std::cerr << "\nWARNING: marked as P6 but mag_a != mag_b\n"
-                      << "or ang_a2b !=120" << std::endl;
+            << "or ang_a2b !=120" << std::endl;
             std::cerr << "\nWARNING: P1 is assumed\n";
             return(sym_P1);
         }
@@ -551,9 +551,9 @@ int  SymList::crystallographic_space_group(double mag_a, double mag_b,
         break;
     default:
         std::cerr << "\n Congratulations: you have found a bug in the\n"
-                  << "routine crystallographic_space_group or\n"
-                  << "You have called to this rotuine BEFORE reading\n"
-                  << "the symmetry info" << std::endl;
+        << "routine crystallographic_space_group or\n"
+        << "You have called to this rotuine BEFORE reading\n"
+        << "the symmetry info" << std::endl;
         exit(0);
         break;
     }//switch(space_group)  end
@@ -585,243 +585,208 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
     switch (space_group)
     {
     case(sym_undefined):
-    case(sym_P1):
-        XX(aint) =   XX(eprm_aint);
+                case(sym_P1):
+                        XX(aint) =   XX(eprm_aint);
         YY(aint) =                   YY(eprm_aint);
         XX(bint) =   XX(eprm_bint);
         YY(bint) =                   YY(eprm_bint);
         break;
-    case(sym_P2):
-        std::cerr << "\n Group P2 not implemented\n";
+    case(sym_P2):       std::cerr << "\n Group P2 not implemented\n";
         exit(1);
         break;
-    case(sym_P2_1):
-        std::cerr << "\n Group P2_1 not implemented\n";
+    case(sym_P2_1):     std::cerr << "\n Group P2_1 not implemented\n";
         exit(1);
         break;
-    case(sym_C2):
-        std::cerr << "\n Group C2 not implemented\n";
+    case(sym_C2):       std::cerr << "\n Group C2 not implemented\n";
         exit(1);
         break;
-    case(sym_P222):
-        std::cerr << "\n Group P222 not implemented\n";
+    case(sym_P222):     std::cerr << "\n Group P222 not implemented\n";
         exit(1);
         break;
     case(sym_P2_122):
-        switch (sym_no)
-        {
-        case(-1):
-            XX(aint) =   XX(eprm_aint);
-            YY(aint) =                   YY(eprm_aint);
-            XX(bint) =   XX(eprm_bint);
-            YY(bint) =                   YY(eprm_bint);
-            break;
-        case(0):
-            XX(aint) = - XX(eprm_aint);
-            YY(aint) =                 - YY(eprm_aint);
-            XX(bint) = - XX(eprm_bint);
-            YY(bint) =                 - YY(eprm_bint);
-            break;
-        case(1):
-            XX(aint) = - XX(eprm_aint);
-            YY(aint) =                 + YY(eprm_aint);
-            XX(bint) = - XX(eprm_bint);
-            YY(bint) =                 + YY(eprm_bint);
-            VECTOR_R3(shift, 0.5, 0.0, 0.0);
-            break;
-        case(2):
-            XX(aint) = + XX(eprm_aint);
-            YY(aint) =                 - YY(eprm_aint);
-            XX(bint) = + XX(eprm_bint);
-            YY(bint) =                 - YY(eprm_bint);
-            VECTOR_R3(shift, 0.5, 0.0, 0.0);
-            break;
-        }//switch P2_122 end
+                    switch (sym_no)
+            {
+            case(-1): XX(aint) =   XX(eprm_aint);
+                YY(aint) =                   YY(eprm_aint);
+                XX(bint) =   XX(eprm_bint);
+                YY(bint) =                   YY(eprm_bint);
+                break;
+            case(0):  XX(aint) = - XX(eprm_aint);
+                YY(aint) =                 - YY(eprm_aint);
+                XX(bint) = - XX(eprm_bint);
+                YY(bint) =                 - YY(eprm_bint);
+                break;
+            case(1):  XX(aint) = - XX(eprm_aint);
+                YY(aint) =                 + YY(eprm_aint);
+                XX(bint) = - XX(eprm_bint);
+                YY(bint) =                 + YY(eprm_bint);
+                VECTOR_R3(shift, 0.5, 0.0, 0.0);
+                break;
+            case(2):  XX(aint) = + XX(eprm_aint);
+                YY(aint) =                 - YY(eprm_aint);
+                XX(bint) = + XX(eprm_bint);
+                YY(bint) =                 - YY(eprm_bint);
+                VECTOR_R3(shift, 0.5, 0.0, 0.0);
+                break;
+            }//switch P2_122 end
         break;
     case(sym_P22_12):
-        switch (sym_no)
-        {
-        case(-1):
-            XX(aint) =   XX(eprm_aint);
-            YY(aint) =                   YY(eprm_aint);
-            XX(bint) =   XX(eprm_bint);
-            YY(bint) =                   YY(eprm_bint);
-            break;
-        case(0):
-            XX(aint) = - XX(eprm_aint);
-            YY(aint) =                 - YY(eprm_aint);
-            XX(bint) = - XX(eprm_bint);
-            YY(bint) =                 - YY(eprm_bint);
-            break;
-        case(1):
-            XX(aint) =   XX(eprm_aint);
-            YY(aint) =                 - YY(eprm_aint);
-            XX(bint) =   XX(eprm_bint);
-            YY(bint) =                 - YY(eprm_bint);
-            VECTOR_R3(shift, 0.0, 0.5, 0.0);
-            break;
-        case(2):
-            XX(aint) = - XX(eprm_aint);
-            YY(aint) =                  YY(eprm_aint);
-            XX(bint) = - XX(eprm_bint);
-            YY(bint) =                  YY(eprm_bint);
-            VECTOR_R3(shift, 0.0, 0.5, 0.0);
-            break;
-        }//switch P22_12 end
+                    switch (sym_no)
+            {
+            case(-1): XX(aint) =   XX(eprm_aint);
+                YY(aint) =                   YY(eprm_aint);
+                XX(bint) =   XX(eprm_bint);
+                YY(bint) =                   YY(eprm_bint);
+                break;
+            case(0):  XX(aint) = - XX(eprm_aint);
+                YY(aint) =                 - YY(eprm_aint);
+                XX(bint) = - XX(eprm_bint);
+                YY(bint) =                 - YY(eprm_bint);
+                break;
+            case(1):  XX(aint) =   XX(eprm_aint);
+                YY(aint) =                 - YY(eprm_aint);
+                XX(bint) =   XX(eprm_bint);
+                YY(bint) =                 - YY(eprm_bint);
+                VECTOR_R3(shift, 0.0, 0.5, 0.0);
+                break;
+            case(2):  XX(aint) = - XX(eprm_aint);
+                YY(aint) =                  YY(eprm_aint);
+                XX(bint) = - XX(eprm_bint);
+                YY(bint) =                  YY(eprm_bint);
+                VECTOR_R3(shift, 0.0, 0.5, 0.0);
+                break;
+            }//switch P22_12 end
         break;
 
-    case(sym_P22_12_1):
-        std::cerr << "\n Group P22_12_1 not implemented\n";
+    case(sym_P22_12_1): std::cerr << "\n Group P22_12_1 not implemented\n";
         exit(1);
         break;
     case(sym_P4):
-        switch (sym_no)
-        {
-        case(-1):
-            XX(aint) =   XX(eprm_aint);
-            YY(aint) =                   YY(eprm_aint);
-            XX(bint) =   XX(eprm_bint);
-            YY(bint) =                   YY(eprm_bint);
-            break;
-        case(0):
-            XX(aint) =                 - YY(eprm_aint);
-            YY(aint) =   XX(eprm_aint);
-            XX(bint) =                 - YY(eprm_bint);
-            YY(bint) =   XX(eprm_bint);
-            break;
-        case(1):
-            XX(aint) = - XX(eprm_aint);
-            YY(aint) =                 - YY(eprm_aint);
-            XX(bint) = - XX(eprm_bint);
-            YY(bint) =                 - YY(eprm_bint);
-            break;
-        case(2):
-            XX(aint) =                   YY(eprm_aint);
-            YY(aint) = - XX(eprm_aint);
-            XX(bint) =                   YY(eprm_bint);
-            YY(bint) = - XX(eprm_bint);
-            break;
-        }//switch P4 end
+                    switch (sym_no)
+            {
+            case(-1): XX(aint) =   XX(eprm_aint);
+                YY(aint) =                   YY(eprm_aint);
+                XX(bint) =   XX(eprm_bint);
+                YY(bint) =                   YY(eprm_bint);
+                break;
+            case(0):  XX(aint) =                 - YY(eprm_aint);
+                YY(aint) =   XX(eprm_aint);
+                XX(bint) =                 - YY(eprm_bint);
+                YY(bint) =   XX(eprm_bint);
+                break;
+            case(1):  XX(aint) = - XX(eprm_aint);
+                YY(aint) =                 - YY(eprm_aint);
+                XX(bint) = - XX(eprm_bint);
+                YY(bint) =                 - YY(eprm_bint);
+                break;
+            case(2):  XX(aint) =                   YY(eprm_aint);
+                YY(aint) = - XX(eprm_aint);
+                XX(bint) =                   YY(eprm_bint);
+                YY(bint) = - XX(eprm_bint);
+                break;
+            }//switch P4 end
         break;
-    case(sym_P422):
-        REPORT_ERROR(1, "Group P422 not implemented");
+    case(sym_P422):     REPORT_ERROR(1, "Group P422 not implemented");
         break;
     case(sym_P42_12):
-        switch (sym_no)
-        {
-        case(-1):
-            XX(aint) =   XX(eprm_aint);
-            YY(aint) =                   YY(eprm_aint);
-            XX(bint) =   XX(eprm_bint);
-            YY(bint) =                   YY(eprm_bint);
-            break;
-        case(0):
-            XX(aint) = - XX(eprm_aint);
-            YY(aint) =                 - YY(eprm_aint);
-            XX(bint) = - XX(eprm_bint);
-            YY(bint) =                 - YY(eprm_bint);
-            break;
-        case(1):
-            XX(aint) =                 + YY(eprm_aint);
-            YY(aint) = + XX(eprm_aint);
-            XX(bint) =                 + YY(eprm_bint);
-            YY(bint) = + XX(eprm_bint);
-            break;
-        case(2):
-            XX(aint) =                 - YY(eprm_aint);
-            YY(aint) = - XX(eprm_aint);
-            XX(bint) =                 - YY(eprm_bint);
-            YY(bint) = - XX(eprm_bint);
-            break;
-        case(3):
-            XX(aint) =                 + YY(eprm_aint);
-            YY(aint) = - XX(eprm_aint);
-            XX(bint) =                 + YY(eprm_bint);
-            YY(bint) = - XX(eprm_bint);
-            VECTOR_R3(shift, 0.5, 0.5, 0);
-            break;
-        case(4):
-            XX(aint) =          - YY(eprm_aint);
-            YY(aint) = + XX(eprm_aint);
-            XX(bint) =   - YY(eprm_bint);
-            YY(bint) = + XX(eprm_bint);
-            VECTOR_R3(shift, 0.5, 0.5, 0);
-            break;
-        case(5):
-            XX(aint) = - XX(eprm_aint);
-            YY(aint) =          + YY(eprm_aint);
-            XX(bint) = - XX(eprm_bint);
-            YY(bint) =          + YY(eprm_bint);
-            VECTOR_R3(shift, 0.5, 0.5, 0);
-            break;
-        case(6):
-            XX(aint) = + XX(eprm_aint);
-            YY(aint) =          - YY(eprm_aint);
-            XX(bint) = + XX(eprm_bint);
-            YY(bint) =          - YY(eprm_bint);
-            VECTOR_R3(shift, 0.5, 0.5, 0);
-            break;
-        default:
-            std::cout << "\n Wrong symmetry number "
-                      "in symmetrize_crystal_vectors, bye" << std::endl;
-            exit(1);
-            break;
+                    switch (sym_no)
+            {
+            case(-1): XX(aint) =   XX(eprm_aint);
+                YY(aint) =                   YY(eprm_aint);
+                XX(bint) =   XX(eprm_bint);
+                YY(bint) =                   YY(eprm_bint);
+                break;
+            case(0):  XX(aint) = - XX(eprm_aint);
+                YY(aint) =                 - YY(eprm_aint);
+                XX(bint) = - XX(eprm_bint);
+                YY(bint) =                 - YY(eprm_bint);
+                break;
+            case(1):  XX(aint) =                 + YY(eprm_aint);
+                YY(aint) = + XX(eprm_aint);
+                XX(bint) =                 + YY(eprm_bint);
+                YY(bint) = + XX(eprm_bint);
+                break;
+            case(2):  XX(aint) =                 - YY(eprm_aint);
+                YY(aint) = - XX(eprm_aint);
+                XX(bint) =                 - YY(eprm_bint);
+                YY(bint) = - XX(eprm_bint);
+                break;
+            case(3):  XX(aint) =                 + YY(eprm_aint);
+                YY(aint) = - XX(eprm_aint);
+                XX(bint) =                 + YY(eprm_bint);
+                YY(bint) = - XX(eprm_bint);
+                VECTOR_R3(shift, 0.5, 0.5, 0);
+                break;
+            case(4):  XX(aint) =          - YY(eprm_aint);
+                YY(aint) = + XX(eprm_aint);
+                XX(bint) =   - YY(eprm_bint);
+                YY(bint) = + XX(eprm_bint);
+                VECTOR_R3(shift, 0.5, 0.5, 0);
+                break;
+            case(5):  XX(aint) = - XX(eprm_aint);
+                YY(aint) =          + YY(eprm_aint);
+                XX(bint) = - XX(eprm_bint);
+                YY(bint) =          + YY(eprm_bint);
+                VECTOR_R3(shift, 0.5, 0.5, 0);
+                break;
+            case(6):  XX(aint) = + XX(eprm_aint);
+                YY(aint) =          - YY(eprm_aint);
+                XX(bint) = + XX(eprm_bint);
+                YY(bint) =          - YY(eprm_bint);
+                VECTOR_R3(shift, 0.5, 0.5, 0);
+                break;
+            default:
+                std::cout << "\n Wrong symmetry number "
+                "in symmetrize_crystal_vectors, bye" << std::endl;
+                exit(1);
+                break;
 
 
-        }//switch P4212 end
+            }//switch P4212 end
         break;
-    case(sym_P3):
-        std::cerr << "\n Group P3 not implemented\n";
+    case(sym_P3):       std::cerr << "\n Group P3 not implemented\n";
         exit(1);
         break;
-    case(sym_P312):
-        std::cerr << "\n Group P312 not implemented\n";
+    case(sym_P312):     std::cerr << "\n Group P312 not implemented\n";
         exit(1);
         break;
     case(sym_P6):
-        switch (sym_no)
-        {
-        case(-1):
-            XX(aint) =   XX(eprm_aint);
-            YY(aint) =                   YY(eprm_aint);
-            XX(bint) =   XX(eprm_bint);
-            YY(bint) =                   YY(eprm_bint);
-            break;
-        case(0):
-            XX(aint) =   XX(eprm_aint) - YY(eprm_aint);
-            YY(aint) =   XX(eprm_aint);
-            XX(bint) =   XX(eprm_bint) - YY(eprm_bint);
-            YY(bint) =   XX(eprm_bint);
-            break;
-        case(1):
-            XX(aint) =                 - YY(eprm_aint);
-            YY(aint) =   XX(eprm_aint) - YY(eprm_aint);
-            XX(bint) =                 - YY(eprm_bint);
-            YY(bint) =   XX(eprm_bint) - YY(eprm_bint);
-            break;
-        case(2):
-            XX(aint) = - XX(eprm_aint);
-            YY(aint) =                 - YY(eprm_aint);
-            XX(bint) = - XX(eprm_bint);
-            YY(bint) =                 - YY(eprm_bint);
-            break;
-        case(3):
-            XX(aint) = - XX(eprm_aint) + YY(eprm_aint);
-            YY(aint) = - XX(eprm_aint);
-            XX(bint) = - XX(eprm_bint) + YY(eprm_bint);
-            YY(bint) = - XX(eprm_bint);
-            break;
-        case(4):
-            XX(aint) =                 + YY(eprm_aint);
-            YY(aint) = - XX(eprm_aint) + YY(eprm_aint);
-            XX(bint) =                 + YY(eprm_bint);
-            YY(bint) = - XX(eprm_bint) + YY(eprm_bint);
-            break;
-        }//switch P6 end
+                    switch (sym_no)
+            {
+            case(-1): XX(aint) =   XX(eprm_aint);
+                YY(aint) =                   YY(eprm_aint);
+                XX(bint) =   XX(eprm_bint);
+                YY(bint) =                   YY(eprm_bint);
+                break;
+            case(0):  XX(aint) =   XX(eprm_aint) - YY(eprm_aint);
+                YY(aint) =   XX(eprm_aint);
+                XX(bint) =   XX(eprm_bint) - YY(eprm_bint);
+                YY(bint) =   XX(eprm_bint);
+                break;
+            case(1):  XX(aint) =                 - YY(eprm_aint);
+                YY(aint) =   XX(eprm_aint) - YY(eprm_aint);
+                XX(bint) =                 - YY(eprm_bint);
+                YY(bint) =   XX(eprm_bint) - YY(eprm_bint);
+                break;
+            case(2):  XX(aint) = - XX(eprm_aint);
+                YY(aint) =                 - YY(eprm_aint);
+                XX(bint) = - XX(eprm_bint);
+                YY(bint) =                 - YY(eprm_bint);
+                break;
+            case(3):  XX(aint) = - XX(eprm_aint) + YY(eprm_aint);
+                YY(aint) = - XX(eprm_aint);
+                XX(bint) = - XX(eprm_bint) + YY(eprm_bint);
+                YY(bint) = - XX(eprm_bint);
+                break;
+            case(4):  XX(aint) =                 + YY(eprm_aint);
+                YY(aint) = - XX(eprm_aint) + YY(eprm_aint);
+                XX(bint) =                 + YY(eprm_bint);
+                YY(bint) = - XX(eprm_bint) + YY(eprm_bint);
+                break;
+            }//switch P6 end
         break;
 
-    case(sym_P622):
-        std::cerr << "\n Group P622 not implemented\n";
+    case(sym_P622):     std::cerr << "\n Group P622 not implemented\n";
         exit(1);
         break;
     }
@@ -848,57 +813,48 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
     switch (eprm_space_group)
     {
     case(sym_undefined):
-    case(sym_P1):
-        break;
-    case(sym_P2):
-        std::cerr << "\n Group P2 not implemented\n";
+                case(sym_P1):
+                        break;
+    case(sym_P2):       std::cerr << "\n Group P2 not implemented\n";
         exit(1);
         break;
-    case(sym_P2_1):
-        std::cerr << "\n Group P2_1 not implemented\n";
+    case(sym_P2_1):     std::cerr << "\n Group P2_1 not implemented\n";
         exit(1);
         break;
-    case(sym_C2):
-        std::cerr << "\n Group C2 not implemented\n";
+    case(sym_C2):       std::cerr << "\n Group C2 not implemented\n";
         exit(1);
         break;
-    case(sym_P222):
-        std::cerr << "\n Group P222 not implemented\n";
+    case(sym_P222):     std::cerr << "\n Group P222 not implemented\n";
         exit(1);
         break;
     case(sym_P2_122):
-        Symmetrize_Vol(symmetry_P2_122)//already has ;
-        break;
+                    Symmetrize_Vol(symmetry_P2_122)//already has ;
+                    break;
     case(sym_P22_12):
-        Symmetrize_Vol(symmetry_P22_12)//already has ;
-        break;
-    case(sym_P22_12_1):
-        std::cerr << "\n Group P22_12_1 not implemented\n";
+                    Symmetrize_Vol(symmetry_P22_12)//already has ;
+                    break;
+    case(sym_P22_12_1): std::cerr << "\n Group P22_12_1 not implemented\n";
         exit(1);
         break;
     case(sym_P4):
-        Symmetrize_Vol(symmetry_P4)//already has ;
-        break;
-    case(sym_P422):
-        std::cerr << "\n Group P422 not implemented\n";
+                    Symmetrize_Vol(symmetry_P4)//already has ;
+                    break;
+    case(sym_P422):     std::cerr << "\n Group P422 not implemented\n";
         exit(1);
         break;
     case(sym_P42_12):
-        Symmetrize_Vol(symmetry_P42_12)//already has ;
-        break;
-    case(sym_P3):
-        std::cerr << "\n Group P3 not implemented\n";
+                    Symmetrize_Vol(symmetry_P42_12)//already has ;
+                    break;
+    case(sym_P3):       std::cerr << "\n Group P3 not implemented\n";
         exit(1);
         break;
-    case(sym_P312):
-        std::cerr << "\n Group P312 not implemented\n";
+    case(sym_P312):     std::cerr << "\n Group P312 not implemented\n";
         exit(1);
         break;
     case(sym_P6):
-        Symmetrize_Vol(symmetry_P6)//already has ;
-        break;
-    case(sym_P622):
-        std::cerr << "\n Group P622 not implemented\n";
+                    Symmetrize_Vol(symmetry_P6)//already has ;
+                    break;
+    case(sym_P622):     std::cerr << "\n Group P622 not implemented\n";
         exit(1);
         break;
     }
@@ -1031,9 +987,9 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
         exit(1);
     }
 
-    for (z = minZ; z <= maxZ; z++)
-        for (y = minY; y <= maxY; y++)
-            for (x = minX; x <= maxX; x++)
+    for (z = minZ;z <= maxZ;z++)
+        for (y = minY;y <= maxY;y++)
+            for (x = minX;x <= maxX;x++)
             {
                 //sym=-1---------------------------------------------------------
                 if (!MAT_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
@@ -1055,8 +1011,8 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }
                 x0 = xx;
                 y0 = yy;
@@ -1078,8 +1034,8 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=1 end
                 x1 = xx;
                 y1 = yy;
@@ -1101,8 +1057,8 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=2 end
                 x2 = xx;
                 y2 = yy;
@@ -1125,8 +1081,8 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
 
                 VOLVOXEL(vol, z , y , x) = VOLVOXEL(vol, z0, y0, x0) =
                                                VOLVOXEL(vol, z1, y1, x1) = VOLVOXEL(vol, z2, y2, x2) =
-                                                       (VOLVOXEL(vol, z , y , x) + VOLVOXEL(vol, z0, y0, x0) +
-                                                        VOLVOXEL(vol, z1, y1, x1) + VOLVOXEL(vol, z2, y2, x2)) / 4.0;
+                                                                               (VOLVOXEL(vol, z , y , x) + VOLVOXEL(vol, z0, y0, x0) +
+                                                                                VOLVOXEL(vol, z1, y1, x1) + VOLVOXEL(vol, z2, y2, x2)) / 4.0;
             }//for end
 }//symmetryP2_122 end
 /* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
@@ -1251,9 +1207,9 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
         exit(1);
     }
 
-    for (z = minZ; z <= maxZ; z++)
-        for (y = minY; y <= maxY; y++)
-            for (x = minX; x <= maxX; x++)
+    for (z = minZ;z <= maxZ;z++)
+        for (y = minY;y <= maxY;y++)
+            for (x = minX;x <= maxX;x++)
             {
                 //sym=-1---------------------------------------------------------
                 if (!MAT_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
@@ -1275,8 +1231,8 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }
                 x0 = xx;
                 y0 = yy;
@@ -1298,8 +1254,8 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=1 end
                 x1 = xx;
                 y1 = yy;
@@ -1321,8 +1277,8 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=2 end
                 x2 = xx;
                 y2 = yy;
@@ -1345,8 +1301,8 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
 
                 VOLVOXEL(vol, z , y , x) = VOLVOXEL(vol, z0, y0, x0) =
                                                VOLVOXEL(vol, z1, y1, x1) = VOLVOXEL(vol, z2, y2, x2) =
-                                                       (VOLVOXEL(vol, z , y , x) + VOLVOXEL(vol, z0, y0, x0) +
-                                                        VOLVOXEL(vol, z1, y1, x1) + VOLVOXEL(vol, z2, y2, x2)) / 4.0;
+                                                                               (VOLVOXEL(vol, z , y , x) + VOLVOXEL(vol, z0, y0, x0) +
+                                                                                VOLVOXEL(vol, z1, y1, x1) + VOLVOXEL(vol, z2, y2, x2)) / 4.0;
             }//for end
 }//symmetryP2_122 end
 /* Symmetrizes a simple grid with P4  symmetry --------------------------*/
@@ -1460,9 +1416,9 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
         std::cerr << "\nSimetries using FCC not implemented\n";
         exit(1);
     }
-    for (z = minZ; z <= maxZ; z++)
-        for (y = minY; y <= maxY; y++)
-            for (x = minX; x <= maxX; x++)
+    for (z = minZ;z <= maxZ;z++)
+        for (y = minY;y <= maxY;y++)
+            for (x = minX;x <= maxX;x++)
             {
                 //sym=-1---------------------------------------------------------
                 if (!MAT_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
@@ -1484,8 +1440,8 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }
                 x0 = xx;
                 y0 = yy;
@@ -1506,8 +1462,8 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=1 end
                 x1 = xx;
                 y1 = yy;
@@ -1527,8 +1483,8 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=2 end
                 x2 = xx;
                 y2 = yy;
@@ -1536,8 +1492,8 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
 
                 VOLVOXEL(vol, z , y , x) = VOLVOXEL(vol, z0, y0, x0) =
                                                VOLVOXEL(vol, z1, y1, x1) = VOLVOXEL(vol, z2, y2, x2) =
-                                                       (VOLVOXEL(vol, z , y , x) + VOLVOXEL(vol, z0, y0, x0) +
-                                                        VOLVOXEL(vol, z1, y1, x1) + VOLVOXEL(vol, z2, y2, x2)) / 4.0;
+                                                                               (VOLVOXEL(vol, z , y , x) + VOLVOXEL(vol, z0, y0, x0) +
+                                                                                VOLVOXEL(vol, z1, y1, x1) + VOLVOXEL(vol, z2, y2, x2)) / 4.0;
             }//for end
 
 }
@@ -1673,9 +1629,9 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
         exit(1);
     }
 
-    for (z = minZ; z <= maxZ; z++)
-        for (y = minY; y <= maxY; y++)
-            for (x = minX; x <= maxX; x++)
+    for (z = minZ;z <= maxZ;z++)
+        for (y = minY;y <= maxY;y++)
+            for (x = minX;x <= maxX;x++)
             {
                 //sym=-1---------------------------------------------------------
                 if (!MAT_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
@@ -1696,8 +1652,8 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }
                 x0 = xx;
                 y0 = yy;
@@ -1718,8 +1674,8 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=1 end
                 x1 = xx;
                 y1 = yy;
@@ -1741,8 +1697,8 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=2 end
                 x2 = xx;
                 y2 = yy;
@@ -1762,8 +1718,8 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=3 end
                 x3 = xx;
                 y3 = yy;
@@ -1783,8 +1739,8 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=4 end
                 x4 = xx;
                 y4 = yy;
@@ -1804,8 +1760,8 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=5 end
                 x5 = xx;
                 y5 = yy;
@@ -1826,8 +1782,8 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=6 end
                 x6 = xx;
                 y6 = yy;
@@ -1850,12 +1806,12 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
 
                 VOLVOXEL(vol, z , y , x) = VOLVOXEL(vol, z0, y0, x0) =
                                                VOLVOXEL(vol, z1, y1, x1) = VOLVOXEL(vol, z2, y2, x2) =
-                                                       VOLVOXEL(vol, z3, y3, x3) = VOLVOXEL(vol, z4, y4, x4) =
-                                                               VOLVOXEL(vol, z5, y5, x5) = VOLVOXEL(vol, z6, y6, x6) =
-                                                                       (VOLVOXEL(vol, z , y , x) + VOLVOXEL(vol, z0, y0, x0) +
-                                                                               VOLVOXEL(vol, z1, y1, x1) + VOLVOXEL(vol, z2, y2, x2) +
-                                                                               VOLVOXEL(vol, z3, y3, x3) + VOLVOXEL(vol, z4, y4, x4) +
-                                                                               VOLVOXEL(vol, z5, y5, x5) + VOLVOXEL(vol, z6, y6, x6)) / 8.0;
+                                                                               VOLVOXEL(vol, z3, y3, x3) = VOLVOXEL(vol, z4, y4, x4) =
+                                                                                                               VOLVOXEL(vol, z5, y5, x5) = VOLVOXEL(vol, z6, y6, x6) =
+                                                                                                                                               (VOLVOXEL(vol, z , y , x) + VOLVOXEL(vol, z0, y0, x0) +
+                                                                                                                                                VOLVOXEL(vol, z1, y1, x1) + VOLVOXEL(vol, z2, y2, x2) +
+                                                                                                                                                VOLVOXEL(vol, z3, y3, x3) + VOLVOXEL(vol, z4, y4, x4) +
+                                                                                                                                                VOLVOXEL(vol, z5, y5, x5) + VOLVOXEL(vol, z6, y6, x6)) / 8.0;
             }//for end
 }//symmetryP42_12 end
 /* Symmetrizes a simple grid with P6 symmetry-----------------------------*/
@@ -1972,9 +1928,9 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
         exit(1);
     }
 
-    for (z = minZ; z <= maxZ; z++)
-        for (y = minY; y <= maxY; y++)
-            for (x = minX; x <= maxX; x++)
+    for (z = minZ;z <= maxZ;z++)
+        for (y = minY;y <= maxY;y++)
+            for (x = minX;x <= maxX;x++)
             {
                 //sym=-1---------------------------------------------------------
                 if (!MAT_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
@@ -1990,8 +1946,8 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }
                 x0 = xx;
                 y0 = yy;
@@ -2007,8 +1963,8 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=1 end
                 x1 = xx;
                 y1 = yy;
@@ -2024,8 +1980,8 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=2 end
                 x2 = xx;
                 y2 = yy;
@@ -2041,8 +1997,8 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=3 end
                 x3 = xx;
                 y3 = yy;
@@ -2058,8 +2014,8 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
                     if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
-                                  << "after correction spot is still"
-                                  << "outside mask\a" << std::endl;
+                        << "after correction spot is still"
+                        << "outside mask\a" << std::endl;
                 }//sym=4 end
                 x4 = xx;
                 y4 = yy;
@@ -2088,302 +2044,301 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
 
                 VOLVOXEL(vol, z , y , x) = VOLVOXEL(vol, z0, y0, x0) =
                                                VOLVOXEL(vol, z1, y1, x1) = VOLVOXEL(vol, z2, y2, x2) =
-                                                       VOLVOXEL(vol, z3, y3, x3) = VOLVOXEL(vol, z4, y4, x4) =
-                                                               (VOLVOXEL(vol, z , y , x) + VOLVOXEL(vol, z0, y0, x0) +
-                                                                       VOLVOXEL(vol, z1, y1, x1) + VOLVOXEL(vol, z2, y2, x2) +
-                                                                       VOLVOXEL(vol, z3, y3, x3) + VOLVOXEL(vol, z4, y4, x4)) / 6.0;
+                                                                               VOLVOXEL(vol, z3, y3, x3) = VOLVOXEL(vol, z4, y4, x4) =
+                                                                                                               (VOLVOXEL(vol, z , y , x) + VOLVOXEL(vol, z0, y0, x0) +
+                                                                                                                VOLVOXEL(vol, z1, y1, x1) + VOLVOXEL(vol, z2, y2, x2) +
+                                                                                                                VOLVOXEL(vol, z3, y3, x3) + VOLVOXEL(vol, z4, y4, x4)) / 6.0;
 
             }//for end
 
 }
 #undef wrap_as_Crystal
 #undef DEBUG
-/** translate string fn_sym to symmetry group, return false
-    is translation is not possible. See URL
-    http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
-     for details  */
+    /** translate string fn_sym to symmetry group, return false
+        is translation is not possible. See URL
+        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+         for details  */
 
 bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
 {
-    char G1,G2,G3,G4;
-    char auxChar[3];
-    //each case check lenght, check first letter, second, is number
-    //Non a point group
+   char G1,G2,G3,G4;
+   char auxChar[3];
+   //each case check lenght, check first letter, second, is number
+   //Non a point group
 
-    //remove path
-    FileName fn_sym_tmp;
-    fn_sym_tmp=fn_sym.remove_directories();
-    int mySize=fn_sym_tmp.size();
-    bool return_true;
-    return_true=false;
-    auxChar[2]='\0';
-    //size maybe 4 because n maybe a 2 digit number
-    if(mySize>4 || mySize<1)
-    {
-        pgGroup=-1;
-        pgOrder=-1;
-        return false;
-    }
-    //get the group character by character
-    G1=toupper((fn_sym_tmp.c_str())[0]);
-    G2=toupper((fn_sym_tmp.c_str())[1]);
-    if (mySize > 2)
-    {
-        G3=toupper((fn_sym_tmp.c_str())[2]);
-        if(mySize > 3)
-            G4=toupper((fn_sym.c_str())[3]);
-    }
-    else
-        G4='\0';
-    //CN
-    if (mySize==2 && G1=='C' && isdigit(G2))
-    {
-        pgGroup=pg_CN;
-        pgOrder=int(G2)-48;
-        return_true=true;
-    }
-    if (mySize==3 && G1=='C' && isdigit(G2) && isdigit(G3))
-    {
-        pgGroup=pg_CN;
-        auxChar[0]=G2;
-        auxChar[1]=G3;
-        pgOrder=atoi(auxChar);
-        return_true=true;
-    }
-    //CI
-    else if (mySize==2 && G1=='C' && G2=='I')
-    {
-        pgGroup=pg_CI;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //CS
-    else if (mySize==2 && G1=='C' && G2=='S')
-    {
-        pgGroup=pg_CS;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //CNH
-    else if (mySize==3 && G1=='C' && isdigit(G2) && G3=='H')
-    {
-        pgGroup=pg_CNH;
-        pgOrder=int(G2)-48;
-        return_true=true;
-    }
-    else if (mySize==4 && G1=='C' && isdigit(G2) && isdigit(G3) && G4=='H')
-    {
-        pgGroup=pg_CNH;
-        auxChar[0]=G2;
-        auxChar[1]=G3;
-        pgOrder=atoi(auxChar);
-        return_true=true;
-    }
-    //CNV
-    else if (mySize==3 && G1=='C' && isdigit(G2) && G3=='V')
-    {
-        pgGroup=pg_CNV;
-        pgOrder=int(G2)-48;
-        return_true=true;
-    }
-    else if (mySize==4 && G1=='C' && isdigit(G2) && isdigit(G3) && G4=='V')
-    {
-        pgGroup=pg_CNV;
-        auxChar[0]=G2;
-        auxChar[1]=G3;
-        pgOrder=atoi(auxChar);
-        return_true=true;
-    }
-    //SN
-    else if (mySize==2 && G1=='S' && isdigit(G2) )
-    {
-        pgGroup=pg_SN;
-        pgOrder=int(G2)-48;
-        return_true=true;
-    }
-    else if (mySize==3 && G1=='S' && isdigit(G2) && isdigit(G3) )
-    {
-        pgGroup=pg_SN;
-        auxChar[0]=G2;
-        auxChar[1]=G3;
-        pgOrder=atoi(auxChar);
-        return_true=true;
-    }
-    //DN
-    else if (mySize==2 && G1=='D' && isdigit(G2) )
-    {
-        pgGroup=pg_DN;
-        pgOrder=int(G2)-48;
-        return_true=true;
-    }
-    if (mySize==3 && G1=='D' && isdigit(G2) && isdigit(G3))
-    {
-        pgGroup=pg_DN;
-        auxChar[0]=G2;
-        auxChar[1]=G3;
-        pgOrder=atoi(auxChar);
-        return_true=true;
-    }
-    //DNV
-    else if (mySize==3 && G1=='D' && isdigit(G2) && G3=='V')
-    {
-        pgGroup=pg_DNV;
-        pgOrder=int(G2)-48;
-        return_true=true;
-    }
-    else if (mySize==4 && G1=='D' && isdigit(G2) && isdigit(G3) && G4=='V')
-    {
-        pgGroup=pg_DNV;
-        auxChar[0]=G2;
-        auxChar[1]=G3;
-        pgOrder=atoi(auxChar);
-        return_true=true;
-    }
-    //DNH
-    else if (mySize==3 && G1=='D' && isdigit(G2) && G3=='H')
-    {
-        pgGroup=pg_DNH;
-        pgOrder=int(G2)-48;
-        return_true=true;
-    }
-    else if (mySize==4 && G1=='D' && isdigit(G2) && isdigit(G3) && G4=='H')
-    {
-        pgGroup=pg_DNH;
-        auxChar[0]=G2;
-        auxChar[1]=G3;
-        pgOrder=atoi(auxChar);
-        return_true=true;
-    }
-    //T
-    else if (mySize==1 && G1=='T')
-    {
-        pgGroup=pg_T;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //TD
-    else if (mySize==2 && G1=='T' && G2=='D')
-    {
-        pgGroup=pg_TD;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //TH
-    else if (mySize==2 && G1=='T' && G2=='H')
-    {
-        pgGroup=pg_TH;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //O
-    else if (mySize==1 && G1=='O')
-    {
-        pgGroup=pg_O;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //OH
-    else if (mySize==2 && G1=='O'&& G2=='H')
-    {
-        pgGroup=pg_OH;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I
-    else if (mySize==1 && G1=='I')
-    {
-        pgGroup=pg_I;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I1
-    else if (mySize==2 && G1=='I'&& G2=='1')
-    {
-        pgGroup=pg_I1;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I2
-    else if (mySize==2 && G1=='I'&& G2=='2')
-    {
-        pgGroup=pg_I2;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I3
-    else if (mySize==2 && G1=='I'&& G2=='3')
-    {
-        pgGroup=pg_I3;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I4
-    else if (mySize==2 && G1=='I'&& G2=='4')
-    {
-        pgGroup=pg_I4;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I5
-    else if (mySize==2 && G1=='I'&& G2=='5')
-    {
-        pgGroup=pg_I5;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //IH
-    else if (mySize==2 && G1=='I'&& G2=='H')
-    {
-        pgGroup=pg_IH;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I1H
-    else if (mySize==3 && G1=='I'&& G2=='1'&& G3=='H')
-    {
-        pgGroup=pg_I1H;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I2H
-    else if (mySize==3 && G1=='I'&& G2=='2'&& G3=='H')
-    {
-        pgGroup=pg_I2H;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I3H
-    else if (mySize==3 && G1=='I'&& G2=='3'&& G3=='H')
-    {
-        pgGroup=pg_I3H;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I4H
-    else if (mySize==3 && G1=='I'&& G2=='4'&& G3=='H')
-    {
-        pgGroup=pg_I4H;
-        pgOrder=-1;
-        return_true=true;
-    }
-    //I5H
-    else if (mySize==3 && G1=='I'&& G2=='5'&& G3=='H')
-    {
-        pgGroup=pg_I5H;
-        pgOrder=-1;
-        return_true=true;
-    }
+   //remove path
+   FileName fn_sym_tmp;
+   fn_sym_tmp=fn_sym.remove_directories(); 
+   int mySize=fn_sym_tmp.size();
+   bool return_true;
+   return_true=false;
+   auxChar[2]='\0';
+   //size maybe 4 because n maybe a 2 digit number
+   if(mySize>4 || mySize<1)
+   {
+      pgGroup=-1;
+      pgOrder=-1;
+      return false;
+   }   
+   //get the group character by character
+   G1=toupper((fn_sym_tmp.c_str())[0]);
+   G2=toupper((fn_sym_tmp.c_str())[1]);
+   if (mySize > 2)
+   {   G3=toupper((fn_sym_tmp.c_str())[2]);
+       if(mySize > 3)
+           G4=toupper((fn_sym.c_str())[3]);
+   }
+   else
+       G4='\0';    
+   //CN
+   if (mySize==2 && G1=='C' && isdigit(G2))
+   {
+       pgGroup=pg_CN;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   if (mySize==3 && G1=='C' && isdigit(G2) && isdigit(G3))
+   {
+       pgGroup=pg_CN;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //CI
+   else if (mySize==2 && G1=='C' && G2=='I')
+   {
+       pgGroup=pg_CI;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //CS
+   else if (mySize==2 && G1=='C' && G2=='S')
+   {
+       pgGroup=pg_CS;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //CNH
+   else if (mySize==3 && G1=='C' && isdigit(G2) && G3=='H')
+   {
+       pgGroup=pg_CNH;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   else if (mySize==4 && G1=='C' && isdigit(G2) && isdigit(G3) && G4=='H')
+   {
+       pgGroup=pg_CNH;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //CNV
+   else if (mySize==3 && G1=='C' && isdigit(G2) && G3=='V')
+   {
+       pgGroup=pg_CNV;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   else if (mySize==4 && G1=='C' && isdigit(G2) && isdigit(G3) && G4=='V')
+   {
+       pgGroup=pg_CNV;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //SN
+   else if (mySize==2 && G1=='S' && isdigit(G2) )
+   {
+       pgGroup=pg_SN;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   else if (mySize==3 && G1=='S' && isdigit(G2) && isdigit(G3) )
+   {
+       pgGroup=pg_SN;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //DN
+   else if (mySize==2 && G1=='D' && isdigit(G2) )
+   {
+       pgGroup=pg_DN;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   if (mySize==3 && G1=='D' && isdigit(G2) && isdigit(G3))
+   {
+       pgGroup=pg_DN;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //DNV
+   else if (mySize==3 && G1=='D' && isdigit(G2) && G3=='V')
+   {
+       pgGroup=pg_DNV;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   else if (mySize==4 && G1=='D' && isdigit(G2) && isdigit(G3) && G4=='V')
+   {
+       pgGroup=pg_DNV;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //DNH
+   else if (mySize==3 && G1=='D' && isdigit(G2) && G3=='H')
+   {
+       pgGroup=pg_DNH;
+       pgOrder=int(G2)-48;
+       return_true=true;
+   }
+   else if (mySize==4 && G1=='D' && isdigit(G2) && isdigit(G3) && G4=='H')
+   {
+       pgGroup=pg_DNH;
+       auxChar[0]=G2;
+       auxChar[1]=G3;
+       pgOrder=atoi(auxChar);
+       return_true=true;
+   }
+   //T
+   else if (mySize==1 && G1=='T')
+   {
+       pgGroup=pg_T;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //TD
+   else if (mySize==2 && G1=='T' && G2=='D')
+   {
+       pgGroup=pg_TD;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //TH
+   else if (mySize==2 && G1=='T' && G2=='H')
+   {
+       pgGroup=pg_TH;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //O
+   else if (mySize==1 && G1=='O')
+   {
+       pgGroup=pg_O;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //OH
+   else if (mySize==2 && G1=='O'&& G2=='H')
+   {
+       pgGroup=pg_OH;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I
+   else if (mySize==1 && G1=='I')
+   {
+       pgGroup=pg_I;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I1
+   else if (mySize==2 && G1=='I'&& G2=='1')
+   {
+       pgGroup=pg_I1;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I2
+   else if (mySize==2 && G1=='I'&& G2=='2')
+   {
+       pgGroup=pg_I2;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I3
+   else if (mySize==2 && G1=='I'&& G2=='3')
+   {
+       pgGroup=pg_I3;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I4
+   else if (mySize==2 && G1=='I'&& G2=='4')
+   {
+       pgGroup=pg_I4;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I5
+   else if (mySize==2 && G1=='I'&& G2=='5')
+   {
+       pgGroup=pg_I5;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //IH
+   else if (mySize==2 && G1=='I'&& G2=='H')
+   {
+       pgGroup=pg_IH;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I1H
+   else if (mySize==3 && G1=='I'&& G2=='1'&& G3=='H')
+   {
+       pgGroup=pg_I1H;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I2H
+   else if (mySize==3 && G1=='I'&& G2=='2'&& G3=='H')
+   {
+       pgGroup=pg_I2H;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I3H
+   else if (mySize==3 && G1=='I'&& G2=='3'&& G3=='H')
+   {
+       pgGroup=pg_I3H;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I4H
+   else if (mySize==3 && G1=='I'&& G2=='4'&& G3=='H')
+   {
+       pgGroup=pg_I4H;
+       pgOrder=-1;
+       return_true=true;
+   }
+   //I5H
+   else if (mySize==3 && G1=='I'&& G2=='5'&& G3=='H')
+   {
+       pgGroup=pg_I5H;
+       pgOrder=-1;
+       return_true=true;
+   }
 //#define DEBUG7
 #ifdef DEBUG7
-    std::cerr << "pgGroup" << pgGroup << " pgOrder " << pgOrder << std::endl;
+std::cerr << "pgGroup" << pgGroup << " pgOrder " << pgOrder << std::endl;
 #endif
-#undef DEBUG7
-
-    return return_true;
+#undef DEBUG7 
+   
+   return return_true;
 }
 void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
-                                  std::vector<std::string> &fileContent)
-{
+   std::vector<std::string> &fileContent)
+{   
     std::ostringstream line1;
     std::ostringstream line2;
     std::ostringstream line3;
@@ -2413,11 +2368,11 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
     else if (pgGroup == pg_SN)
     {
         int order = pgOrder / 2;
-        if(2*order != pgOrder)
-        {
+	if(2*order != pgOrder)
+	{
             std::cerr << "ERROR: order for SN group must be even" << std::endl;
             exit(0);
-        }
+	}
         line1 << "rot_axis " << order << " 0 0 1";
         line2 << "inversion ";
     }
@@ -2534,23 +2489,23 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
         exit(0);
     }
     if (line1.str().size()>0)
-        fileContent.push_back(line1.str());
+	fileContent.push_back(line1.str());
     if (line2.str().size()>0)
-        fileContent.push_back(line2.str());
+	fileContent.push_back(line2.str());
     if (line3.str().size()>0)
-        fileContent.push_back(line3.str());
+	fileContent.push_back(line3.str());
     if (line4.str().size()>0)
-        fileContent.push_back(line4.str());
+	fileContent.push_back(line4.str());
     //#define DEBUG5
-#ifdef DEBUG5
-    for (int n=0; n<fileContent.size(); n++)
-        std::cerr << fileContent[n] << std::endl;
-    std::cerr << "fileContent.size()" << fileContent.size() << std::endl;
-#endif
-#undef DEBUG5
+    #ifdef DEBUG5 
+        for (int n=0; n<fileContent.size(); n++)
+            std::cerr << fileContent[n] << std::endl;
+	std::cerr << "fileContent.size()" << fileContent.size() << std::endl;    
+    #endif
+    #undef DEBUG5   
 }
 double SymList::non_redundant_evald_sphere(int pgGroup, int pgOrder)
-{
+{   
     if (pgGroup == pg_CN)
     {
         return 4.*PI/pgOrder;
@@ -2650,10 +2605,10 @@ double SymList::non_redundant_evald_sphere(int pgGroup, int pgOrder)
     else
     {
         std::cerr << "ERROR: Symmetry group, order=" << pgGroup
-                  << " "
-                  <<  pgOrder
-                  << "is not known"
-                  << std::endl;
+                                                     << " " 
+                                                     <<  pgOrder  
+                                                     << "is not known" 
+                                                     << std::endl;
         exit(0);
     }
 }

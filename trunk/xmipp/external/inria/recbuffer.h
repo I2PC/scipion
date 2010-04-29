@@ -107,15 +107,15 @@ extern "C"
      * - InitRecursiveCoefficients
      */
     extern int RecursiveFilterOnBuffer(void *bufferIn, /* input buffer */
-                                       bufferType typeIn, /* type of the input buffer */
-                                       void *bufferOut, /* output buffer */
-                                       bufferType typeOut, /* type of the output buffer */
-                                       int *bufferDims, /* buffers' dimensions */
-                                       int *borderLengths, /* number of points to be added at both ends */
-                                       derivativeOrder *derivatives, /* order of derivatives to be computed */
-                                       float *filterCoefs, /* coefficients of the filters to be applied */
-                                       recursiveFilterType filterType /* type of the recursive filter to be applied */
-                                      );
+                                           bufferType typeIn, /* type of the input buffer */
+                                           void *bufferOut, /* output buffer */
+                                           bufferType typeOut, /* type of the output buffer */
+                                           int *bufferDims, /* buffers' dimensions */
+                                           int *borderLengths, /* number of points to be added at both ends */
+                                           derivativeOrder *derivatives, /* order of derivatives to be computed */
+                                           float *filterCoefs, /* coefficients of the filters to be applied */
+                                           recursiveFilterType filterType /* type of the recursive filter to be applied */
+                                          );
 
 
 

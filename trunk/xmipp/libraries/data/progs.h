@@ -80,7 +80,7 @@ public:
         each_image_produces_an_output = true;
         allow_time_bar = true;
         apply_geo = false;
-        quiet = false;
+	quiet = false;
     }
 
     /// Read the basic parameters defined for this class

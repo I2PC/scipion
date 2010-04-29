@@ -45,7 +45,7 @@
     @code
     Matrix2D<double> maskDilated;
     maskDilated.initZeros(mask);
-    dilate2D(mask,maskDilated,8,0,patchSize);
+    dilate2D(mask,maskDilated,8,0,patchSize);    
     @endcode
 
     Size is the size of the structuring element (box).
@@ -120,16 +120,16 @@ void dilate3D(const Matrix3D<double> &in,
 /** Gray erosion.
     The structuring element must be centered at 0. */
 void erode3D(const Matrix3D<double> &in,
-             const Matrix3D<double> &structuringElement,
-             Matrix3D<double> &out);
+              const Matrix3D<double> &structuringElement,
+              Matrix3D<double> &out);
 
 /** Sharpening.
     Width (radius in pixels), strength (as a percentange of the input range).
-
+    
     Implemented according to JGM Schavemaker, MJT Reinders, JJ Gerbrands,
     E Backer. Image sharpening by morphological filtering. Pattern Recognition
     33: 997-1012 (2000). */
 void sharpening(const Matrix3D<double> &in, double width, double strength,
-                Matrix3D<double> &out);
+              Matrix3D<double> &out);
 //@}
 #endif

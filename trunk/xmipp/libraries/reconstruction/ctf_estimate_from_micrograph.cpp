@@ -94,7 +94,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
     if (!selfile_mode)
         fh_param << "image="                << aux                  << std::endl;
     fh_param << "N_horizontal="         << N_horizontal         << std::endl
-             << "N_vertical="           << N_vertical           << std::endl;
+    << "N_vertical="           << N_vertical           << std::endl;
     if (!remove_directories) aux = selfile_fn;
     else                     aux = directory + "/" + selfile_fn.remove_directories();
     fh_param << "selfile="              << aux                  << std::endl;
@@ -106,7 +106,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
     if (piece_averaging)
     {
         fh_param << "piece_averaging=yes\n"
-                 << "Nside_piece=" << Nside_piece << std::endl;
+        << "Nside_piece=" << Nside_piece << std::endl;
     }
     if (PSD_mode == Periodogram) fh_param << "Periodogram=yes\n";
     if (dont_adjust_CTF) fh_param << "dont_adjust_CTF=yes\n";
@@ -131,11 +131,11 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
     int Xstep = (XSIZE(piece) - small_Xdim) / (Nside_piece - 1);
     int Ystep = (YSIZE(piece) - small_Ydim) / (Nside_piece - 1);
     psd.initZeros(small_piece);
-#ifdef DEBUG
-    ImageXmipp save;
-    save()=piece;
-    save.write("PPPpiece.xmp");
-#endif
+    #ifdef DEBUG
+        ImageXmipp save;
+        save()=piece;
+        save.write("PPPpiece.xmp");
+    #endif
     for (int ii = 0; ii < Nside_piece; ii++)
         for (int jj = 0; jj < Nside_piece; jj++)
         {
@@ -148,11 +148,11 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
                 for (j = 0, jb = j0; j < small_Xdim; j++, jb++)
                     DIRECT_MAT_ELEM(small_piece, i, j) =
                         DIRECT_MAT_ELEM(piece, ib, jb);
-
-#ifdef DEBUG
-            save()=small_piece;
-            save.write("PPPsmall_piece.xmp");
-#endif
+            
+            #ifdef DEBUG
+                save()=small_piece;
+                save.write("PPPsmall_piece.xmp");
+            #endif
 
             // Compute the PSD of the small piece
             Matrix2D<double> small_psd;
@@ -175,10 +175,10 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
                 small_psd *= small_Ydim * small_Xdim;
             }
 
-#ifdef DEBUG
-            save()=small_psd;
-            save.write("PPPsmall_psd.xmp");
-#endif
+            #ifdef DEBUG
+                save()=small_psd;
+                save.write("PPPsmall_psd.xmp");
+            #endif
 
             // Add to the average
             psd += small_psd;
@@ -187,23 +187,23 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(Matrix2D<double> &piece,
     // Compute the average of all the small pieces and enlarge
     psd /= (Nside_piece * Nside_piece);
 
-#ifdef DEBUG
-    save()=psd;
-    save.write("PPPpsd1.xmp");
-#endif
+    #ifdef DEBUG
+        save()=psd;
+        save.write("PPPpsd1.xmp");
+    #endif
 
     CenterFFT(psd, true);
     psd.selfScaleToSizeBSpline(3, YSIZE(piece), XSIZE(piece));
     CenterFFT(psd, false);
     psd.threshold("below", 0, 0);
 
-#ifdef DEBUG
-    save()=psd;
-    save.write("PPPpsd2.xmp");
-    std::cout << "Press any key\n";
-    char c;
-    std::cin >> c;
-#endif
+    #ifdef DEBUG
+        save()=psd;
+        save.write("PPPpsd2.xmp");
+        std::cout << "Press any key\n";
+        char c;
+        std::cin >> c;
+    #endif
 }
 #undef DEBUG
 
@@ -259,12 +259,12 @@ void Prog_assign_CTF_prm::process()
         if (SF.LineNo() != div_Number)
         {
             std::cerr << "Prog_assign_CTF_prm: number of entries in "
-                      << "pos file: " << picked_fn.c_str()
-                      << "(" << div_Number << ") "
-                      << " and sel file "
-                      << SF.name() << "(" << SF.LineNo() << ") "
-                      << "is different.\n"
-                      << "I cannot go any further sorry\n";
+            << "pos file: " << picked_fn.c_str()
+            << "(" << div_Number << ") "
+            << " and sel file "
+            << SF.name() << "(" << SF.LineNo() << ") "
+            << "is different.\n"
+            << "I cannot go any further sorry\n";
             exit(1);
         }
     }
@@ -407,7 +407,7 @@ void Prog_assign_CTF_prm::process()
         {
             if (bootstrapN!=-1)
                 REPORT_ERROR(1,
-                             "Bootstrapping is only available for micrograph averages");
+                    "Bootstrapping is only available for micrograph averages");
 
             FileName piece_fn, piece_fn_root;
             if (compute_at_particle)
@@ -429,10 +429,10 @@ void Prog_assign_CTF_prm::process()
                 {
                     XmippCTF ctfmodel;
                     double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
-                                                           ctfmodel, false);
+                        ctfmodel, false);
                     if (compute_at_particle)
                         OutputFile_ctf << piece_fn << " "
-                                       << piece_fn_root+".psd\n";
+			               << piece_fn_root+".psd\n";
                 }
             }
         }
@@ -459,7 +459,7 @@ void Prog_assign_CTF_prm::process()
             if (bootstrapN==-1)
             {
                 double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
-                                                       ctfmodel, false);
+                    ctfmodel, false);
             }
             else
             {
@@ -472,7 +472,7 @@ void Prog_assign_CTF_prm::process()
                 for (int n=0; n<bootstrapN; n++)
                 {
                     CTFs(n,31) = ROUT_Adjust_CTF(adjust_CTF_prm,
-                                                 ctfmodel, false);
+                        ctfmodel, false);
                     CTFs(n, 0)=ctfmodel.Tm;
                     CTFs(n, 1)=ctfmodel.kV;
                     CTFs(n, 2)=ctfmodel.DeltafU;
@@ -504,18 +504,18 @@ void Prog_assign_CTF_prm::process()
                     CTFs(n,28)=ctfmodel.cU2;
                     CTFs(n,29)=ctfmodel.cV2;
                     CTFs(n,30)=ctfmodel.gaussian_angle2;
-
+                    
                     std::string command=(std::string)"mv -i "+fnBase+
-                                        ".ctfparam "+fnBase+"_bootstrap_"+
-                                        integerToString(n,4)+".ctfparam";
+                        ".ctfparam "+fnBase+"_bootstrap_"+
+                        integerToString(n,4)+".ctfparam";
                     system(command.c_str());
                     command=(std::string)"mv -i "+fnBase+
-                            ".ctfmodel_quadrant "+fnBase+"_bootstrap_"+
-                            integerToString(n,4)+".ctfmodel_quadrant";
+                        ".ctfmodel_quadrant "+fnBase+"_bootstrap_"+
+                        integerToString(n,4)+".ctfmodel_quadrant";
                     system(command.c_str());
                     command=(std::string)"mv -i "+fnBase+
-                            ".ctfmodel_halfplane "+fnBase+"_bootstrap_"+
-                            integerToString(n,4)+".ctfmodel_halfplane";
+                        ".ctfmodel_halfplane "+fnBase+"_bootstrap_"+
+                        integerToString(n,4)+".ctfmodel_halfplane";
                     system(command.c_str());
 
                     progress_bar(n);
@@ -541,7 +541,7 @@ void Prog_assign_CTF_prm::process()
         }
         while (!SF.eof())
         {
-            FileName fn_img=SF.NextImg();
+	    FileName fn_img=SF.NextImg();
             if (fn_img=="") break;
             if (!selfile_mode)
             {
@@ -563,17 +563,17 @@ void Prog_assign_CTF_prm::process()
                         int idx_Y = FLOOR((double)Y / N_vertical);
                         int idx_piece = idx_Y * div_NumberX + idx_X + 1;
                         OutputFile_ctf << fn_img << " "
-                                       << PSDfn_root + integerToString(idx_piece, 5) + ".psd\n";
+			               << PSDfn_root + integerToString(idx_piece, 5) + ".psd\n";
                     }
                     else
                         OutputFile_ctf << fn_img << " "
-                                       << fn_avg.without_extension() + ".psd\n";
+			               << fn_avg.without_extension() + ".psd\n";
                 }
             }
             else
             {
                 OutputFile_ctf << fn_img << " "
-                               << fn_avg.without_extension() + ".psd\n";
+		               << fn_avg.without_extension() + ".psd\n";
             }
         }
     }

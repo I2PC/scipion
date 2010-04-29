@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         if (Is_VolumeXmipp(fn_input) || Is_ImageXmipp(fn_input) ||
             Is_FourierVolumeXmipp(fn_input) || Is_FourierImageXmipp(fn_input))
         {
-            SF.addObject();
+       	    SF.addObject();
             SF.setValue( MDL_IMAGE, fn_input);
             SF.setValue( MDL_ENABLED, 1);
         }
@@ -63,13 +63,13 @@ int main(int argc, char **argv)
     try
     {
         // Process each file -----------------------------------------------------
-        long int ret=SF.firstObject();
-        if(ret==MetaData::NO_OBJECTS_STORED)
-        {
-            std::cerr << "Empty inputFile File\n";
-            exit(1);
-        }
-        do
+		long int ret=SF.firstObject();
+		if(ret==MetaData::NO_OBJECTS_STORED)
+		{
+			std::cerr << "Empty inputFile File\n";
+			exit(1);
+		}
+		do
         {
             FileName file_name;
             SF.getValue( MDL_IMAGE, file_name);
@@ -137,8 +137,8 @@ void Usage()
     std::cerr << "    Prints to screen some of the information stored in the header\n";
 
     std::cerr << "Usage: header_print " << std::endl
-              << "    -i               : metaDataFile with images/volumes \n"
-              << "                        or individual image or volume \n"
-              ;
+    << "    -i               : metaDataFile with images/volumes \n"
+    << "                        or individual image or volume \n"
+    ;
 }
 

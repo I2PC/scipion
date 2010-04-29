@@ -30,7 +30,7 @@
 #include "basic_art.h"
 
 /**@defgroup PlainART Basic ART stuff
-   @ingroup ReconsLibrary
+   @ingroup ReconsLibrary 
    This module provides the Extra paramter structure (empty in fact)
    to run the ART process with single particles. The main function of this
    module is the single step ART process.
@@ -48,7 +48,7 @@ class Plain_ART_Parameters
 public:
     /// std::cout << eprm;
     friend std::ostream & operator << (std::ostream &o,
-                                       const Plain_ART_Parameters &eprm);
+                                  const Plain_ART_Parameters &eprm);
 
     /// Produce Plain side information from the Extra parameters
     void produce_Side_Info(const Basic_ART_Parameters &prm,

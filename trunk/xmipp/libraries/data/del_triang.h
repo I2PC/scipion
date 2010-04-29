@@ -24,8 +24,8 @@ XYZ;
 int Triangulate(int, XYZ*, ITRIANGLE*, int*);
 
 bool CircumCircle(double , double ,
-                  double , double , double , double , double , double ,
-                  double *, double *, double *);
+                 double , double , double , double , double , double ,
+                 double *, double *, double *);
 
 // Returns index of triangle in vector LatTri
 //int FindNearest(XYZ &, std::vector <XYZ> &,std::vector <ITRIANGLE> & );

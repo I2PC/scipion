@@ -27,7 +27,7 @@
 
 Prog_correct_bfactor_prm::Prog_correct_bfactor_prm()
 {
-
+    
     fit_minres    = -1.;
     fit_maxres    = -1.;
     apply_maxres  = -1.;
@@ -42,7 +42,7 @@ Prog_correct_bfactor_prm::Prog_correct_bfactor_prm()
 }
 
 void  Prog_correct_bfactor_prm::make_guinier_plot(Matrix3D< std::complex< double > > &FT1,
-        std::vector<fit_point2D> &guinier)
+                                                  std::vector<fit_point2D> &guinier)
 {
 
     Matrix1D< int >  radial_count(xsize);
@@ -104,7 +104,7 @@ void Prog_correct_bfactor_prm::get_snr_weights(std::vector<double> &snr)
     if (!fh)
         REPORT_ERROR(3008, (std::string)"Prog_correct_bfactor_prm: Cannot read file: " + fn_fsc);
 
-    // Count the number of lines
+     // Count the number of lines
     fh.peek();
     getline(fh, line);
     while (!fh.eof())
@@ -121,13 +121,13 @@ void Prog_correct_bfactor_prm::get_snr_weights(std::vector<double> &snr)
 
     if (line_no != xsize/2)
     {
-        std::cerr<<"line_no = "<<line_no <<" neq xsize/2= "<<xsize/2<<std::endl;
+        std::cerr<<"line_no = "<<line_no <<" neq xsize/2= "<<xsize/2<<std::endl; 
         REPORT_ERROR(1,"ERROR: invalid FSC file");
     }
 
 }
 void  Prog_correct_bfactor_prm::apply_snr_weights(Matrix3D< std::complex< double > > &FT1,
-        std::vector<double> &snr)
+                                                  std::vector<double> &snr)
 {
 
     Matrix1D<double> f(3);
@@ -147,7 +147,7 @@ void  Prog_correct_bfactor_prm::apply_snr_weights(Matrix3D< std::complex< double
 
 
 void  Prog_correct_bfactor_prm::apply_bfactor(Matrix3D< std::complex< double > > &FT1,
-        double bfactor)
+                                              double bfactor)
 {
 
     Matrix1D<double> f(3);
@@ -165,7 +165,7 @@ void  Prog_correct_bfactor_prm::apply_bfactor(Matrix3D< std::complex< double > >
 }
 
 void  Prog_correct_bfactor_prm::apply_allpoints(Matrix3D< std::complex< double > > &FT1,
-        std::vector<fit_point2D> &guinier_diff)
+                                                std::vector<fit_point2D> &guinier_diff)
 {
 
     Matrix1D<double> f(3);
@@ -177,7 +177,7 @@ void  Prog_correct_bfactor_prm::apply_allpoints(Matrix3D< std::complex< double >
         double R=f.module();
         if (R>0.5) continue;
         int idx=ROUND(R*xsize);
-        if (idx < guinier_diff.size() && guinier_diff[idx].w > 0.)
+        if (idx < guinier_diff.size() && guinier_diff[idx].w > 0.) 
         {
             dVkij(FT1, k, i, j) *= exp( -guinier_diff[idx].y );
         }
@@ -186,12 +186,12 @@ void  Prog_correct_bfactor_prm::apply_allpoints(Matrix3D< std::complex< double >
 
 
 
-void  Prog_correct_bfactor_prm::write_guinierfile(FileName fn_guinier,
-        std::vector<fit_point2D> &guinierin,
-        std::vector<fit_point2D> &guinierweighted,
-        std::vector<fit_point2D> &guiniernew,
-        double intercept,
-        std::vector<fit_point2D> &guinierref)
+void  Prog_correct_bfactor_prm::write_guinierfile(FileName fn_guinier, 
+                                                  std::vector<fit_point2D> &guinierin,
+                                                  std::vector<fit_point2D> &guinierweighted,
+                                                  std::vector<fit_point2D> &guiniernew,
+                                                  double intercept,
+                                                  std::vector<fit_point2D> &guinierref)
 {
     std::ofstream fh;
     fh.open((fn_guinier).c_str(), std::ios::out);
@@ -211,12 +211,12 @@ void  Prog_correct_bfactor_prm::write_guinierfile(FileName fn_guinier,
         fh << "\n"<<std::endl;
     }
     fh.close();
-
+    
 }
 
 void Prog_correct_bfactor_prm::bfactor_correction(Matrix3D< double > &m1, FileName fn_guinier)
 {
-
+    
     Matrix3D< std::complex< double > > FT1, FT2;
     XmippFftw transformer;
     double slope, intercept;

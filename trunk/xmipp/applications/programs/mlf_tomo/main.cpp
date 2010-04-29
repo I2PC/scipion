@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 
             if (prm.verb > 0) init_progress_bar(prm.Niter);
 
-            // Initiaze oldDataRefs for convergence check to all-zeros
+            // Initiaze oldDataRefs for convergence check to all-zeros 
             for (int ii=0; ii < prm.nr_ref * prm.size; ii++)
                 oldDataRefs[ii] = 0.;
 
@@ -114,9 +114,9 @@ int main(int argc, char **argv)
                 prm.reg = 0;
             else
                 prm.reg = exp(log(prm.reg0) - (log(prm.reg0) - log(XMIPP_MAX(prm.regF,0.001)))*(step-1)/(prm.reg_steps-1));
-            if (prm.verb > 0)
+            if (prm.verb > 0) 
                 std::cerr<<std::endl;
-            std::cerr << "  Sub-tomogram classification:  step "<<step<<" of "<<prm.reg_steps<<" with regularisation= "<<prm.reg<<std::endl;
+                std::cerr << "  Sub-tomogram classification:  step "<<step<<" of "<<prm.reg_steps<<" with regularisation= "<<prm.reg<<std::endl;
 
             // Iterate until convergence (or Niter) is reached
             for (int iter = prm.istart; iter <= prm.Niter; iter++)
@@ -126,14 +126,14 @@ int main(int argc, char **argv)
 
                 prm.expectation(dataRefs,
                                 dataSigma,
-                                dataWsumRefs,
+                                dataWsumRefs, 
                                 dataWsumWedsPerRef,
                                 dataWsumWedsPerGroup,
                                 dataWsumDist,
                                 dataSumWRefs,
                                 dataWsumScale,
                                 dataWsumScale2,
-                                LL,
+                                LL, 
                                 avePmax,
                                 DFo);
 
@@ -146,7 +146,7 @@ int main(int argc, char **argv)
                                  dataSumWRefs,
                                  dataWsumScale,
                                  dataWsumScale2,
-                                 sumw_allrefs,
+                                 sumw_allrefs, 
                                  avePmax);
 
                 fprintf(stderr, "\rIteration %3i of %3i AvePmax= %6.5f", iter, prm.Niter, avePmax);
@@ -161,13 +161,13 @@ int main(int argc, char **argv)
             std::cerr<<std::endl;
             if (prm.verb > 0) progress_bar(prm.Niter);
 
-            prm.writeOutputFiles(step,
+            prm.writeOutputFiles(step, 
                                  -1,
                                  dataRefs,
                                  dataWsumWedsPerRef,
                                  DFo,
-                                 sumw_allrefs,
-                                 LL,
+                                 sumw_allrefs, 
+                                 LL, 
                                  avePmax);
 
             // linear decrease of regularisation parameter
@@ -178,12 +178,12 @@ int main(int argc, char **argv)
 
         // Write out converged structures
         prm.writeOutputFiles(-1,
-                             -1,
+                             -1, 
                              dataRefs,
                              dataWsumWedsPerRef,
                              DFo,
-                             sumw_allrefs,
-                             LL,
+                             sumw_allrefs, 
+                             LL, 
                              avePmax);
 
         // Write out docfile with optimal transformation & references

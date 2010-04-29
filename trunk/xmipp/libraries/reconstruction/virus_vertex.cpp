@@ -45,32 +45,32 @@ void VirusVertex::read(int argc, char **argv)
 void VirusVertex::show()
 {
     std::cout << "input selfile:             " << fn_sel  << std::endl
-              << "output files root:         " << fn_root << std::endl
-              << "docfile :                  " << fn_doc  << std::endl
-              << "virus radius:              " << virusRadius << std::endl
-              << "minimun virus radius:      " << minVirusRadius << std::endl
-              << "outputfile dimensions:     " << dim << std::endl
-              << "symmetry:                  " << fn_sym << std::endl
-              << "verbose:                   " << verbose << std::endl
-              << "remove:                    " << removeCloseVertex<< std::endl
-              ;
+    << "output files root:         " << fn_root << std::endl
+    << "docfile :                  " << fn_doc  << std::endl
+    << "virus radius:              " << virusRadius << std::endl
+    << "minimun virus radius:      " << minVirusRadius << std::endl
+    << "outputfile dimensions:     " << dim << std::endl
+    << "symmetry:                  " << fn_sym << std::endl
+    << "verbose:                   " << verbose << std::endl
+    << "remove:                    " << removeCloseVertex<< std::endl
+    ;
 }
 
 /* Usage ------------------------------------------------------------------- */
 void VirusVertex::usage()
 {
     std::cerr << "   -sel filename             : Selfile with image names\n"
-              << "   -root filename            : Root name for output images\n"
-              << "   -doc  filename  (optional): Auxiliary file with projection angles\n"
-              << "   -radius float_number      : virus radius (distance from center\n"
-              << "                               to vertex in pixels)\n"
-              << "   -min_radius  float_number : extract vertex located at a radius greater\n"
-              << "                               than min_radius\n"
-              << "   -dim integer              : size of the extracted images (pixels)\n"
-              << "   -sym symmetry flag (i3)   : symmetry description flag\n"
-              << "   -verbose                  : set verbose mode on\n"
-              << "   -remove                   : remove vertexs if closer than 'dim'\n"
-              ;
+    << "   -root filename            : Root name for output images\n"
+    << "   -doc  filename  (optional): Auxiliary file with projection angles\n"
+    << "   -radius float_number      : virus radius (distance from center\n"
+    << "                               to vertex in pixels)\n"
+    << "   -min_radius  float_number : extract vertex located at a radius greater\n"
+    << "                               than min_radius\n"
+    << "   -dim integer              : size of the extracted images (pixels)\n"
+    << "   -sym symmetry flag (i3)   : symmetry description flag\n"
+    << "   -verbose                  : set verbose mode on\n"
+    << "   -remove                   : remove vertexs if closer than 'dim'\n"
+    ;
 }
 void VirusVertex::loadIcosahedronVertex()
 {
@@ -93,29 +93,24 @@ void VirusVertex::loadIcosahedronVertex()
         Euler_angles2matrix(0,-31.7174745559,0, A);
     }
     else if (symmetry  == pg_I1)
-    {
-        //OK
+    {//OK
         Euler_angles2matrix(0,-31.7174745559+90.,0, A);
     }
     else if (symmetry  == pg_I3)
-    {
-        //OK
+    {//OK
         A.initIdentity();
     }
     else if (symmetry  == pg_I4)
-    {
-        //OK
+    {//OK
         Euler_angles2matrix(0,-31.7174745559 *2.0,0, A);
     }
     else if (symmetry  == pg_I5)
-    {
-        //OK
+    {//OK
         std::cerr << "ERROR: Symmetry pg_I5 not implemented" << std::endl;
         exit(0);
     }
     else
-    {
-        //OK
+    {//OK
         std::cerr << "Unknown symmetry" << std::endl;
         exit(0);
     }
@@ -124,24 +119,24 @@ void VirusVertex::loadIcosahedronVertex()
         vertices_vectors[i]=A*vertices_vectors[i];
     }// for i
 #define CHIMERA
-#ifdef CHIMERA
+    #ifdef CHIMERA
     std::ofstream filestr;
     filestr.open ("sym.bild");
     for (int i = 0; i < 12; i++)
     {
         filestr    << ".color red"
-                   << std::endl
-                   << ".sphere "
-                   << XX(vertices_vectors[i]) << " "
-                   << YY(vertices_vectors[i]) << " "
-                   << ZZ(vertices_vectors[i]) << " "
-                   << " .05"
-                   << std::endl
-                   ;
+        << std::endl
+        << ".sphere "
+        << XX(vertices_vectors[i]) << " "
+        << YY(vertices_vectors[i]) << " "
+        << ZZ(vertices_vectors[i]) << " "
+        << " .05"
+        << std::endl
+        ;
     }
     filestr.close();
 #endif
-#undef CHIMERA
+    #undef CHIMERA
 }
 
 void VirusVertex::processAngles()
@@ -324,26 +319,26 @@ void VirusVertex::assignSymmetryMatricesToVertex()
     double alpha, beta, gamma;
     filestr.open ("ico.feat");
     filestr
-            << "# Phantom description file, (generated with phantom help)\n"
-            << "# General Volume Parameters:\n"
-            << "#      Xdim      Ydim      Zdim   Background_Density Scale\n"
-            << "      2    2    2    0  128\n"
-            << "# Feature Parameters: \n";
+    << "# Phantom description file, (generated with phantom help)\n"
+    << "# General Volume Parameters:\n"
+    << "#      Xdim      Ydim      Zdim   Background_Density Scale\n"
+    << "      2    2    2    0  128\n"
+    << "# Feature Parameters: \n";
 
     for (int i = 0; i < 12; i++)
     {
         Euler_direction2angles(vertices_vectors[i], alpha, beta, gamma);
         filestr
-                << "cyl + 1 "
-                << XX(vertices_vectors[i])*0.8 << " "
-                << YY(vertices_vectors[i])*0.8 << " "
-                << ZZ(vertices_vectors[i])*0.8 << " "
-                << " .1 .1 .2 "
-                << alpha << " "
-                << beta  << " "
-                << gamma << " "
-                << std::endl
-                ;
+        << "cyl + 1 "
+        << XX(vertices_vectors[i])*0.8 << " "
+        << YY(vertices_vectors[i])*0.8 << " "
+        << ZZ(vertices_vectors[i])*0.8 << " "
+        << " .1 .1 .2 "
+        << alpha << " "
+        << beta  << " "
+        << gamma << " "
+        << std::endl
+        ;
         // cyl  <+/=> <den>    <x0>     <y0>     <z0>    <xradius> <yradius> <height>               <rot> <tilt> <psi>
         // cyl + 1 15   0  0  5  5 15    0 90  0    ; Cylinder  in X
     }
@@ -352,12 +347,12 @@ void VirusVertex::assignSymmetryMatricesToVertex()
     {
         myvector = vectorR3(0., 0.15, 0.9).transpose() * R_repository[j];
         filestr
-                << "sph + 1 "
-                << XX(myvector)*0.9 << " "
-                << YY(myvector)*0.9 << " "
-                << ZZ(myvector)*0.9 << " "
-                << " .05 "
-                << std::endl;
+        << "sph + 1 "
+        << XX(myvector)*0.9 << " "
+        << YY(myvector)*0.9 << " "
+        << ZZ(myvector)*0.9 << " "
+        << " .05 "
+        << std::endl;
     }
 
 

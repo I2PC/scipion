@@ -28,23 +28,19 @@
 int main(int argc, char **argv)
 {
     Prog_Angular_CommonLine prm;
-    try
-    {
+    try {
         prm.read(argc,argv);
-    }
-    catch (Xmipp_error XE)
+    } catch (Xmipp_error XE)
     {
         std::cout << XE << std::endl;
         prm.usage();
         return 1;
     }
-    try
-    {
+    try {
         prm.show();
         prm.produceSideInfo();
         prm.run();
-    }
-    catch (Xmipp_error XE)
+    } catch (Xmipp_error XE)
     {
         std::cout << XE << std::endl;
         return 2;

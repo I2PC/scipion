@@ -62,7 +62,7 @@ void Prog_Enhance_PSD_Parameters::usage()
               << "  [-decay <freq_decay=0.02>]: Decay for the transition bands\n"
               << "  [-m1 <freq_low=0.025>]    : Low freq. for mask, max 0.5\n"
               << "  [-m2 <freq_high=0.2>      : High freq. for mask, max 0.5\n"
-              ;
+    ;
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -76,7 +76,7 @@ void Prog_Enhance_PSD_Parameters::show()
               << "Filter decay: " << decay_width << std::endl
               << "Mask w1:      " << mask_w1     << std::endl
               << "Mask w2:      " << mask_w2     << std::endl
-              ;
+    ;
 }
 
 

@@ -85,13 +85,13 @@ void Prog_Break_Sym_prm::usage()
 {
     std::cerr << "Usage:  Break_Sym [options] " << std::endl;
     std::cerr << "   -i <selfile>                : Selfile with input images \n"
-              << "   -vol <volume/selfile>       : Initial reference volume \n"
-              << "                               :  OR selfile with multiple reference volumes\n"
-              << " [ -sym <symfile> ]            : Symmetry to be broken \n"
-              << " [ -mask <volume> ]            : Limit correlation to masked region \n"
-              << " [ -o <rootname=\"breaksym\"> ]  : Output rootname \n"
-              << " [ -iter <int=100> ]           : Maximum number of iterations \n"
-              << " [ -mask_radius <rad.> ]       : Radius for masking volume (default is no masking)\n";
+    << "   -vol <volume/selfile>       : Initial reference volume \n"
+    << "                               :  OR selfile with multiple reference volumes\n"
+    << " [ -sym <symfile> ]            : Symmetry to be broken \n"
+    << " [ -mask <volume> ]            : Limit correlation to masked region \n"
+    << " [ -o <rootname=\"breaksym\"> ]  : Output rootname \n"
+    << " [ -iter <int=100> ]           : Maximum number of iterations \n"
+    << " [ -mask_radius <rad.> ]       : Radius for masking volume (default is no masking)\n";
 
 }
 // Show ======================================================================

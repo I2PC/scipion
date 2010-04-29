@@ -119,16 +119,14 @@ void cos_alz(float **x, int dim, int r1, int r2, int r3, int r4)
             if (radio < r12)
                 Re(i, j) = Im(i, j) = 0;
             else if (radio < r22)   /*** Aplicamos la ventana ***/
-            {
-                aux = (1. + cos((r2 - sqrt((double)radio)) * aux1)) * 0.5;
+            {   aux = (1. + cos((r2 - sqrt((double)radio)) * aux1)) * 0.5;
                 Re(i, j) *= aux;
                 Im(i, j) *= aux;
             }
             else if (radio < r32)
                 ;           /**** No hacemos nada, claro *****/
             else if (radio < r42)   /*** Aplicamos la ventana ***/
-            {
-                aux = (1. + cos((sqrt((double)radio) - r3) * aux2)) * 0.5;
+            {   aux = (1. + cos((sqrt((double)radio) - r3) * aux2)) * 0.5;
                 Re(i, j) *= aux;
                 Im(i, j) *= aux;
             }

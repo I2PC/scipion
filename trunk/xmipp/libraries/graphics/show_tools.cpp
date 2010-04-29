@@ -51,9 +51,9 @@ ScrollParam::ScrollParam(float min , float max, float initial_value,
                          char* prm_name, char *caption, QWidget *parent, const char *name,
                          int wFlags, int precision) :
 #ifdef QT3_SUPPORT
-    QWidget(parent, name, (Qt::WindowFlags) wFlags)
+        QWidget(parent, name, (Qt::WindowFlags) wFlags)
 #else
-    QWidget(parent, name, wFlags)
+        QWidget(parent, name, wFlags)
 #endif
 {
     std::vector<float> vmin;
@@ -71,9 +71,9 @@ ScrollParam::ScrollParam(std::vector<float> &min , std::vector<float> &max,
                          std::vector<float> &initial_value, std::vector<char *> &prm_name,
                          char *caption, QWidget *parent, const char *name, int wFlags, int precision) :
 #ifdef QT3_SUPPORT
-    QWidget(parent, name, (Qt::WindowFlags) wFlags)
+        QWidget(parent, name, (Qt::WindowFlags) wFlags)
 #else
-    QWidget(parent, name, wFlags)
+        QWidget(parent, name, wFlags)
 #endif
 {
     init(min, max, initial_value, prm_name, caption, precision);
@@ -214,9 +214,9 @@ void ScrollParam::slot_ok_clicked()
 ExclusiveParam::ExclusiveParam(std::vector<std::string> &list_values, int initial_value,
                                char *caption, QWidget *parent, const char *name, int wFlags) :
 #ifdef QT3_SUPPORT
-    QWidget(parent, name, (Qt::WindowFlags) wFlags)
+        QWidget(parent, name, (Qt::WindowFlags) wFlags)
 #else
-    QWidget(parent, name, wFlags)
+        QWidget(parent, name, wFlags)
 #endif
 {
     float my_precision = 0;
@@ -351,7 +351,7 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
     }
     double a;
     if (_max_scale - _min_scale < XMIPP_EQUAL_ACCURACY ||
-        // Sjors 17may07: prevent division by zero for constant images
+    // Sjors 17may07: prevent division by zero for constant images
         max_val - min_val < XMIPP_EQUAL_ACCURACY)
         a = 1.0;
     else
@@ -361,7 +361,7 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
     for (int y = 0; y < ydim; y++)
         for (int x = 0; x < xdim; x++)
             _qimage.setPixel(x, y, ((uint) CLIP((a*(
-                    DIRECT_MAT_ELEM(xmatrix, y, x) - min_val) + _min_scale), 0, 255)));
+                                                     DIRECT_MAT_ELEM(xmatrix, y, x) - min_val) + _min_scale), 0, 255)));
 }
 
 /* Xmipp -> Pixmap --------------------------------------------------------- */

@@ -105,36 +105,36 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             ML2D_prm.sumOverAllImages(ML2D_prm.SF, ML2D_prm.Iref, iter,
-                                      LL, sumcorr, DFo,
-                                      wsum_Mref, wsum_ctfMref,
-                                      Mwsum_sigma2, wsum_sigma_offset,
-                                      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
+				      LL, sumcorr, DFo, 
+				      wsum_Mref, wsum_ctfMref,
+				      Mwsum_sigma2, wsum_sigma_offset, 
+				      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
 
             // Update model parameters
             ML2D_prm.updateParameters(wsum_Mref, wsum_ctfMref,
-                                      Mwsum_sigma2, wsum_sigma_offset,
-                                      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
-                                      sumcorr, sumw_allrefs,
-                                      spectral_signal, prm.eachvol_end[0]+1);
+				      Mwsum_sigma2, wsum_sigma_offset, 
+				      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus, 
+				      sumcorr, sumw_allrefs,
+				      spectral_signal, prm.eachvol_end[0]+1);
 
             // Write intermediate output files
             ML2D_prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
             prm.concatenate_selfiles(iter);
 
-            // Jump out before 3D reconstruction
-            // (Useful for some parallelization protocols)
-            if (prm.skip_reconstruction)
-                exit(1);
+	    // Jump out before 3D reconstruction 
+	    // (Useful for some parallelization protocols)
+	    if (prm.skip_reconstruction)
+		exit(1);
 
             // Write noise images to disc
             prm.make_noise_images(ML2D_prm.Iref);
 
             // Reconstruct new volumes from the reference images
             for (volno = 0; volno < prm.Nvols; volno++)
-            {
+	    {
                 prm.reconstruction(argc2, argv2, iter, volno, 0);
-                prm.reconstruction(argc2, argv2, iter, volno, 1);
-                prm.reconstruction(argc2, argv2, iter, volno, 2);
+	        prm.reconstruction(argc2, argv2, iter, volno, 1);
+	        prm.reconstruction(argc2, argv2, iter, volno, 2);
             }
 
             // Update the reference volume selection file
@@ -144,8 +144,8 @@ int main(int argc, char **argv)
             prm.remake_SFvol(iter, false, false);
 
             // Calculate 3D-SSNR and new Wiener filters
-            prm.calculate_3DSSNR(spectral_signal, iter);
-            ML2D_prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
+	    prm.calculate_3DSSNR(spectral_signal, iter);
+	    ML2D_prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
 
             // Check convergence
             if (prm.check_convergence(iter))
@@ -174,8 +174,8 @@ int main(int argc, char **argv)
             iter++;
         } // end loop iterations
 
-        // Write out converged doc and logfiles
-        ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+	// Write out converged doc and logfiles
+	ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0) std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }

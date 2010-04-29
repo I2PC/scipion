@@ -65,9 +65,9 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
         {
         case 0:
             crystal_Xdim = textToInteger(firstToken(line), 3007,
-                                         "Prog_Project_Crystal::read: Error in Crystal X dimension");
+                                "Prog_Project_Crystal::read: Error in Crystal X dimension");
             crystal_Ydim = textToInteger(nextToken(), 3007,
-                                         "Prog_Project_Crystal::read: Error in Crystal Y dimension");
+                                "Prog_Project_Crystal::read: Error in Crystal Y dimension");
             lineNo++;
             crystal_Xdim = ROUND(scale * crystal_Xdim);
             crystal_Ydim = ROUND(scale * crystal_Ydim);
@@ -75,34 +75,34 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
         case 1:
             a.resize(3);
             XX(a) = scale * textToFloat(firstToken(line), 3007,
-                                        "Prog_Project_Crystal::read: Error in X component of a");
+                                 "Prog_Project_Crystal::read: Error in X component of a");
             YY(a) = scale * textToFloat(nextToken(), 3007,
-                                        "Prog_Project_Crystal::read: Error in Y component of a");
+                                 "Prog_Project_Crystal::read: Error in Y component of a");
             ZZ(a) = 0;
             lineNo++;
             break;
         case 2:
             b.resize(3);
             XX(b) = scale * textToFloat(firstToken(line), 3007,
-                                        "Prog_Project_Crystal::read: Error in X component of b");
+                                 "Prog_Project_Crystal::read: Error in X component of b");
             YY(b) = scale * textToFloat(nextToken(), 3007,
-                                        "Prog_Project_Crystal::read: Error in Y component of b");
+                                 "Prog_Project_Crystal::read: Error in Y component of b");
             ZZ(b) = 0;
             lineNo++;
             break;
         case 3:
             Nshift_dev = scale * textToFloat(firstWord(line), 3007,
-                                             "Prog_Project_Parameters::read: Error in magnitude shift noise");
+                                      "Prog_Project_Parameters::read: Error in magnitude shift noise");
             auxstr = nextToken();
             if (auxstr != NULL)
                 Nshift_avg = scale * textToFloat(auxstr, 3007,
-                                                 "Prog_Project_Parameters::read: Error in magnitude shift bias");
+                                          "Prog_Project_Parameters::read: Error in magnitude shift bias");
             else Nshift_avg = 0;
             lineNo++;
             break;
         case 4:
             disappearing_th = textToFloat(firstToken(line), 3007,
-                                          "Prog_Project_Crystal::read: Error in disappearing threshold");
+                                   "Prog_Project_Crystal::read: Error in disappearing threshold");
             lineNo++;
             break;
         case 5:
@@ -246,7 +246,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     std::cout << "proja " << proja.transpose() << std::endl;
     std::cout << "projb " << projb.transpose() << std::endl;
     std::cout << "proj_Xdim " << prm.proj_Xdim << " proj_Ydim " << prm.proj_Ydim
-              << std::endl;
+    << std::endl;
     std::cout << "A\n" << A << std::endl;
     std::cout << "Ainv\n" << Ainv << std::endl;
     std::cout << "D\n" << D << std::endl;
@@ -321,15 +321,15 @@ void project_crystal(Phantom &phantom, Projection &P,
         //coordinates, not into the projection
         //plane, so before adding them we need to project
         temp_vect = AE * vectorR3(exp_shifts_matrix_X(i, j),
-                                  exp_shifts_matrix_Y(i, j),
-                                  exp_shifts_matrix_Z(i, j));
+                                   exp_shifts_matrix_Y(i, j),
+                                   exp_shifts_matrix_Z(i, j));
         //#define DEBUG5
 #ifdef DEBUG5
         if (i > 0) exp_shifts_matrix_Z(i, j) = 65;
         else  exp_shifts_matrix_Z(i, j) = 0;
         temp_vect = AE * vectorR3(exp_shifts_matrix_X(i, j),
-                                  exp_shifts_matrix_Y(i, j),
-                                  exp_shifts_matrix_Z(i, j));
+                                   exp_shifts_matrix_Y(i, j),
+                                   exp_shifts_matrix_Z(i, j));
 #endif
 #undef DEBUG5
 
@@ -393,12 +393,12 @@ void project_crystal(Phantom &phantom, Projection &P,
         //cell_shift = cell_shift*phantom.phantom_scale;
 #ifdef DEBUG
         std::cout << "cell_shift on deformed projection plane "
-                  << cell_shift.transpose() << std::endl;
+        << cell_shift.transpose() << std::endl;
 #endif
         M3x3_BY_V3x1(cell_shift, AEinv, cell_shift);
 #ifdef DEBUG
         std::cout << "cell_shift on real space "
-                  << cell_shift.transpose() << std::endl;
+        << cell_shift.transpose() << std::endl;
 #endif
 
         Phantom aux;
@@ -439,7 +439,7 @@ void project_crystal(Phantom &phantom, Projection &P,
         cell_shift = cell_shift - ZZ(cell_shift) / ZZ(P.direction) * P.direction;
 #ifdef DEBUG
         std::cout << "cell_shift after moving to ground "
-                  << cell_shift.transpose() << std::endl;
+        << cell_shift.transpose() << std::endl;
 #endif
 
         aux.shift(XX(cell_shift), YY(cell_shift), ZZ(cell_shift));
@@ -585,7 +585,7 @@ void move_following_spiral(Matrix1D<double> &r, const Matrix2D<int> &visited)
 
 #ifdef DEBUG
     std::cout << r1 << " " << r2 << " " << r3 << " "
-              << c1 << " " << c2 << " " << c3 << std::endl;
+    << c1 << " " << c2 << " " << c3 << std::endl;
 #endif
 
 // Decide where to go
@@ -801,9 +801,9 @@ void fill_cell_positions(Projection &P,
             P().printShape();
             std::cout << std::endl;
             std::cout << "   AuxCorner1 " << auxcorner1.transpose() << std::endl
-                      << "   Origin     " << cell_shiftX(i, j) << " "
-                      << cell_shiftY(i, j) << std::endl
-                      << "   AuxCorner2 " << auxcorner2.transpose() << std::endl;
+            << "   Origin     " << cell_shiftX(i, j) << " "
+            << cell_shiftY(i, j) << std::endl
+            << "   AuxCorner2 " << auxcorner2.transpose() << std::endl;
             std::cout << "   Inside= " << cell_inside(i, j) << std::endl;
 #endif
 

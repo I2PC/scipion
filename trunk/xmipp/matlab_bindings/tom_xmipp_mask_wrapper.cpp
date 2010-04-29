@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *      mask = tom_xmipp_mask_wrapper(size,type,mode,R1,R2,pix_width,H,sigma,omega,[rectdim_x, rectdim_y, rectdim_z],[x0 y0 z0],[smin smax]);
+ *		mask = tom_xmipp_mask_wrapper(size,type,mode,R1,R2,pix_width,H,sigma,omega,[rectdim_x, rectdim_y, rectdim_z],[x0 y0 z0],[smin smax]);
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -28,10 +28,10 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-
+  
     Mask_Params maskParams;
     maskParams.fn_mask = "";
-
+    
     /** Mask Type
      *
      * The only valid types are BINARY_CIRCULAR_MASK, BINARY_CROWN_MASK,
@@ -40,56 +40,56 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
      * READ_MASK, RAISED_CROWN_MASK, BINARY_CONE_MASK, BINARY_WEDGE_MASK
      */
     maskParams.type = (int) mxGetScalar(prhs[1]);
-
+    
     /** Mode
      * The valid modes are INNER_MASK and OUTSIDE_MASK.
      */
     maskParams.mode = (int) mxGetScalar(prhs[2]);
-
+    
     /** Radius 1
      * Radius for Circular and Cylinder masks and R1 for crowns and raised
      * cosine.
      */
     maskParams.R1 = (double) mxGetScalar(prhs[3]);
-
+    
     /** Radius 2
      * R2 for crowns and raised cosine.
      */
     maskParams.R2 = (double) mxGetScalar(prhs[4]);
-
+    
     /** Pixel width
      * For raised crowns.
      */
     maskParams.pix_width = (double) mxGetScalar(prhs[5]);
-
+    
     /** Height
      * Height for cylinders.
      */
     maskParams.H = (double) mxGetScalar(prhs[6]);
-
+    
     /** Sigma
      * Sigma for gaussians.
      */
     maskParams.sigma = (double) mxGetScalar(prhs[7]);
-
+    
     /** Omega
      * Frequency for sincs
      */
     maskParams.omega = (double) mxGetScalar(prhs[8]);
-
+    
     /** Rectangular dimensions
      */
     const int *p_dim=(const int *) mxGetData(prhs[9]);
     maskParams.Xrect = (int)p_dim[0];
     maskParams.Yrect = (int)p_dim[1];
     maskParams.Zrect = (int)p_dim[2];
-
+    
     /** Z origin */
     const double *p_origin=mxGetPr(prhs[10]);
     maskParams.x0 = (double)p_origin[0];
     maskParams.y0 = (double)p_origin[1];
     maskParams.z0 = (double)p_origin[2];
-
+    
     /** Minimum scale for DWT masks
      */
     const int *p_dwtscale=(const int*) mxGetData(prhs[11]);
@@ -97,7 +97,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     maskParams.smax = (int)p_dwtscale[1];
 
     mwSize ndims = mxGetNumberOfDimensions(prhs[0]);
-    if (ndims == 2)
+    if (ndims == 2)  
     {
         Matrix2D<double> image;
         getMatrix2D(prhs[0],image);
@@ -108,7 +108,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             setMatrix2D(maskParams.get_cont_mask2D(), plhs[0]);
         }
         else
-        {
+        {            
             setMatrix2D(maskParams.get_binary_mask2D(), plhs[0]);
         }
     }
@@ -128,5 +128,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
 
-}
+}	
 

@@ -68,9 +68,9 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
 
     for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
     {
-        // Check whether to kill job
-        exit_if_not_exists(prm.fn_control);
-
+	// Check whether to kill job
+	exit_if_not_exists(prm.fn_control);
+	
         // backprojection of the weighted residual image
         sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
 
@@ -118,8 +118,8 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     dim2 = (double)YSIZE(read_proj()) * XSIZE(read_proj());
     for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
     {
-        // Check whether to kill job
-        exit_if_not_exists(prm.fn_control);
+	// Check whether to kill job
+	exit_if_not_exists(prm.fn_control);
 
         project_Volume(residual_vol, prm.basis, new_proj,
                        dummy_proj, YSIZE(read_proj()), XSIZE(read_proj()),
@@ -177,19 +177,19 @@ void ART_single_step(
     Basic_ART_Parameters    &prm,            // blob, lambda
     Plain_ART_Parameters    &eprm,           // In this case, nothing
     Projection              &theo_proj,      // Projection of the reconstruction
-    // It is outside to make it visible
-    // just if it needed for any
-    // other purpose
+                                             // It is outside to make it visible
+                                             // just if it needed for any
+                                             // other purpose
     Projection             &read_proj,       // Real projection
     int sym_no,                              // Symmetry matrix index
     Projection             &diff_proj,       // Difference between read and
-    // theoretical projection
+                                             // theoretical projection
     Projection             &corr_proj,       // Correcting projection
     Projection             &alig_proj,       // Translation alignement aux proj
     double                 &mean_error,      // Mean error over the pixels
     int                     numIMG,          // number of images in the set
-    // in SIRT the correction must
-    // be divided by this number
+                                             // in SIRT the correction must
+                                             // be divided by this number
     double                  lambda,          // Lambda to be used
     int                     act_proj,        // Projection number
     const FileName         &fn_ctf,          // CTF to apply
@@ -290,7 +290,7 @@ void ART_single_step(
             if (!null_row)
             {
                 std::cout << "pixel=" << integerToString(i, 3) << " --> "
-                          << DIRECT_MULTIDIM_ELEM(read_proj(), i) << " = ";
+                    << DIRECT_MULTIDIM_ELEM(read_proj(), i) << " = ";
                 for (int j = 0; j < XSIZE(*A); j++)
                     std::cout << DIRECT_MAT_ELEM(*A, i, j) << " ";
                 std::cout << std::endl;

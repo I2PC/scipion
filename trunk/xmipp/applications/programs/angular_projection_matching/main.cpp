@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <reconstruction/angular_projection_matching.h>
-
+ 
 
 int main(int argc, char **argv)
 {
@@ -57,17 +57,17 @@ int main(int argc, char **argv)
     try
     {
         // Process all images
-        input_images[0]=nr_images;
-        for (int i = 0; i < nr_images; i++)
-        {
-            input_images[i+1]=i;
-        }
-        prm.processSomeImages(input_images,output_values);
+	    input_images[0]=nr_images;
+	    for (int i = 0; i < nr_images; i++)
+	    {
+	        input_images[i+1]=i;
+	    }
+            prm.processSomeImages(input_images,output_values);
 
-        // Fill output docfile
-        for (int i = 0; i < nr_images; i++)
-        {
-            prm.DFexp.goToObject(ROUND(output_values[i*MY_OUPUT_SIZE+1]));
+	    // Fill output docfile
+	    for (int i = 0; i < nr_images; i++)
+	    {
+	        prm.DFexp.goToObject(ROUND(output_values[i*MY_OUPUT_SIZE+1]));
             prm.DFexp.getValue(MDL_IMAGE,fn_tmp);
 
             DFo.addObject();
@@ -78,13 +78,13 @@ int main(int argc, char **argv)
             DFo.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5]);
             DFo.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
             DFo.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
-            DFo.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
+           	DFo.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
             DFo.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
-        }
+	    }
 
-        fn_tmp=prm.fn_root + ".doc";
-        DFo.write(fn_tmp);
-        std::cerr<<"done!"<<std::endl;
+	    fn_tmp=prm.fn_root + ".doc";
+	    DFo.write(fn_tmp);
+	    std::cerr<<"done!"<<std::endl;
     }
     catch (Xmipp_error XE)
     {

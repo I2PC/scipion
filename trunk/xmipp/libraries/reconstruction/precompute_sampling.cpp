@@ -51,36 +51,36 @@ void Prog_Sampling_Parameters::read(int argc, char **argv)
 void Prog_Sampling_Parameters::usage()
 {
     std::cerr << "precompute_sampling\n"
-              << "   -o root_file_name           : Root for output files\n"
-              << "  [-sym cn]   :One of the 17 possible symmetries in\n"
-              << "                                single particle electronmicroscopy\n"
-              << "                                i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv, dnh, t, td, th, o, oh, i, ih\n"
-              << "                               : where n may change from 1 to 99\n"
-              << "  [-sampling_rate 5]           : Distance in degrees between sampling points\n"
-              << "  [-neighborhood 1]            : A sampling point is neighbor if closer than this value in degrees\n"
-              << "  [-max_tilt_angle  91]        : maximum tilt angle in degrees\n"
-              << "  [-min_tilt_angle -91]        : minimum tilt angle in degrees\n"
-              << "\n"
-              << "Example of use: Sample at 2degres and compute neighboor at "
-              << " 5 degrees for c6 symmetry\n"
-              << "   xmipp_precompute_sampling -o out -sym c6 "
-              << " -sampling_rate 2 -neighborhood 5 -max_tilt_angle 70 "
-              << " -min_tilt_angle 50 \n"
-              ;
+    << "   -o root_file_name           : Root for output files\n"
+    << "  [-sym cn]   :One of the 17 possible symmetries in\n"
+    << "                                single particle electronmicroscopy\n"
+    << "                                i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv, dnh, t, td, th, o, oh, i, ih\n"
+    << "                               : where n may change from 1 to 99\n"
+    << "  [-sampling_rate 5]           : Distance in degrees between sampling points\n"
+    << "  [-neighborhood 1]            : A sampling point is neighbor if closer than this value in degrees\n"
+    << "  [-max_tilt_angle  91]        : maximum tilt angle in degrees\n"
+    << "  [-min_tilt_angle -91]        : minimum tilt angle in degrees\n"
+    << "\n"
+    << "Example of use: Sample at 2degres and compute neighboor at "
+    << " 5 degrees for c6 symmetry\n"
+    << "   xmipp_precompute_sampling -o out -sym c6 "
+    << " -sampling_rate 2 -neighborhood 5 -max_tilt_angle 70 "
+    << " -min_tilt_angle 50 \n"
+    ;
 }
 
 /* Show -------------------------------------------------------------------- */
 void Prog_Sampling_Parameters::show()
 {
     std::cout
-            << "Sampling rate:      " << sampling    << std::endl
-            << "output files root:  " << sampling_file_root << std::endl
-            << "symmetry group:            " << fn_sym << std::endl
-            //<< "symmetry order:     " << sym_order << std::endl
-            << "neighborhood:       " << neighborhood << std::endl
-            << "max_tilt_angle:     " << max_tilt_angle << std::endl
-            << "min_tilt_angle:     " << min_tilt_angle << std::endl
-            ;
+    << "Sampling rate:      " << sampling    << std::endl
+    << "output files root:  " << sampling_file_root << std::endl
+    << "symmetry group:            " << fn_sym << std::endl
+    //<< "symmetry order:     " << sym_order << std::endl
+    << "neighborhood:       " << neighborhood << std::endl
+    << "max_tilt_angle:     " << max_tilt_angle << std::endl
+    << "min_tilt_angle:     " << min_tilt_angle << std::endl
+    ;
 }
 
 
@@ -108,8 +108,7 @@ void Prog_Sampling_Parameters::run()
 #undef DEBUG6
     //#define DEBUG6
 #ifdef DEBUG6
-    {
-        /* for sphere coverage only R is important.
+    {   /* for sphere coverage only R is important.
                   for psi L and R are important
                 */
         double rot,  tilt,  psi;
@@ -158,13 +157,13 @@ void Prog_Sampling_Parameters::run()
 #undef DEBUG6
     //#define DEBUG6
 #ifdef DEBUG6
-    for (int i = 0; i < mysampling.no_redundant_sampling_points_vector.size(); i++)
+    for (int i = 0; i < mysampling.no_redundant_sampling_points_vector.size();i++)
     {
         std::cout  << mysampling.no_redundant_sampling_points_vector[i].transpose() << " 1.2 3 " << std::endl;
-        for (int j = 0; j < mysampling.my_neighbors[i].size(); j++)
+        for (int j = 0; j < mysampling.my_neighbors[i].size();j++)
             std::cout  <<
-                       mysampling.no_redundant_sampling_points_vector[mysampling.my_neighbors[i][j]].transpose()
-                       << " 1.1 2 " << std::endl;
+            mysampling.no_redundant_sampling_points_vector[mysampling.my_neighbors[i][j]].transpose()
+            << " 1.1 2 " << std::endl;
     }
 #endif
 #undef DEBUG6

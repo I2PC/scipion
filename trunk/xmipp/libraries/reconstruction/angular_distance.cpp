@@ -48,7 +48,7 @@ void Prog_angular_distance_prm::show()
               << "Symmetry file    : " << fn_sym        << std::endl
               << "Check mirrors    : " << check_mirrors << std::endl
               << "Object rotation  : " << object_rotation<<std::endl
-              ;
+    ;
 }
 
 // usage ===================================================================
@@ -62,7 +62,7 @@ void Prog_angular_distance_prm::usage()
               << "  [-check_mirrors]           : Check if mirrored axes give better\n"
               << "  [-object_rotation]         : Use object rotations rather than projection directions\n"
               << "                               fit (Spider, APMQ)\n"
-              ;
+    ;
 }
 
 // Produce side information ================================================
@@ -80,8 +80,8 @@ void Prog_angular_distance_prm::produce_side_info()
 // 2nd angle set -----------------------------------------------------------
 #define SHOW_ANGLES(rot,tilt,psi) \
     std::cout << #rot  << "=" << rot << " " \
-              << #tilt << "=" << tilt << " " \
-              << #psi  << "=" << psi << " ";
+    << #tilt << "=" << tilt << " " \
+    << #psi  << "=" << psi << " ";
 //#define DEBUG
 double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
         double psi1, double &rot2, double &tilt2, double &psi2,
@@ -198,7 +198,7 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
 //#define DEBUG
 // Compute distance --------------------------------------------------------
 void Prog_angular_distance_prm::compute_distance(double &angular_distance,
-        double &shift_distance)
+    double &shift_distance)
 {
     MetaData DF_out;
     angular_distance = 0;
@@ -206,9 +206,9 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
 
     DF1.firstObject();
     DF2.firstObject();
-
+    
     Matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff,
-             X_diff, Y_diff, shift_diff;
+        X_diff, Y_diff, shift_diff;
     rot_diff.resize(DF1.size());
     tilt_diff.resize(rot_diff);
     psi_diff.resize(rot_diff);
@@ -287,8 +287,7 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
         shift_distance += shift_diff(i);
         DF_out.addObject();
         DF_out.setValue(MDL_COMMENT,output);
-        FileName fnImg;
-        DF1.getValue(MDL_IMAGE,fnImg);
+        FileName fnImg; DF1.getValue(MDL_IMAGE,fnImg);
         DF_out.setValue(MDL_IMAGE,fnImg);
 
         // Move to next data line

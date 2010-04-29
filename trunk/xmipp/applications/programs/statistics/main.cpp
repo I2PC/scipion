@@ -129,26 +129,26 @@ int main(int argc, char **argv)
 
                 if (volume_type == headerXmipp::VOL_XMIPP)
                     computeStats_within_binary_mask(mask3D, V, min_val, max_val,
-                                                    avg, stddev);
+                                                     avg, stddev);
                 else if (volume_type == headerXmipp::VOL_INT)
                     computeStats_within_binary_mask(mask3D, VI, min_val_int,
-                                                    max_val_int, avg, stddev);
+                                                     max_val_int, avg, stddev);
 
                 // Show information
                 std::cout << stringToString(file_name, max_length + 1);
                 std::cout << integerToString(ZSIZE(V), 4, ' ') << 'x'
-                          << integerToString(YSIZE(V), 4, ' ') << 'x'
-                          << integerToString(XSIZE(V), 4, ' ') << ' ';
+                << integerToString(YSIZE(V), 4, ' ') << 'x'
+                << integerToString(XSIZE(V), 4, ' ') << ' ';
                 if (!short_format)
                     std::cout << "min= "    << floatToString(min_val, 10) << ' '
-                              << "max= "    << floatToString(max_val, 10) << ' '
-                              << "avg= "    << floatToString(avg    , 10) << ' '
-                              << "stddev= " << floatToString(stddev , 10) << ' ';
+                    << "max= "    << floatToString(max_val, 10) << ' '
+                    << "avg= "    << floatToString(avg    , 10) << ' '
+                    << "stddev= " << floatToString(stddev , 10) << ' ';
                 else
                     std::cout << floatToString(min_val, 10) << ' '
-                              << floatToString(max_val, 10) << ' '
-                              << floatToString(avg    , 10) << ' '
-                              << floatToString(stddev , 10) << ' ';
+                    << floatToString(max_val, 10) << ' '
+                    << floatToString(avg    , 10) << ' '
+                    << floatToString(stddev , 10) << ' ';
                 Matrix1D<double> v(4);
                 v(0) = min_val;
                 v(1) = max_val;
@@ -177,54 +177,54 @@ int main(int argc, char **argv)
 
                 // Compute statistics
                 computeStats_within_binary_mask(mask2D, I, min_val, max_val,
-                                                avg, stddev);
+                                                 avg, stddev);
 
                 // Show information
                 std::cout << stringToString(file_name, max_length + 1);
                 std::cout << "    "; // Stands for the ZSIZE in volumes
                 std::cout << integerToString(YSIZE(I), 4, ' ') << 'x'
-                          << integerToString(XSIZE(I), 4, ' ') << ' ';
+                << integerToString(XSIZE(I), 4, ' ') << ' ';
                 if (!short_format)
                 {
                     std::cout << "min= "    << floatToString(min_val, 10) << ' '
-                              << "max= "    << floatToString(max_val, 10) << ' '
-                              << "avg= "    << floatToString(avg    , 10) << ' '
-                              << "stddev= " << floatToString(stddev , 10) << ' ';
+                    << "max= "    << floatToString(max_val, 10) << ' '
+                    << "avg= "    << floatToString(avg    , 10) << ' '
+                    << "stddev= " << floatToString(stddev , 10) << ' ';
                     if (show_angles)
                     {
                         std::cout << "rot= "    << floatToString(image.rot() , 10) << ' '
-                                  << "tilt= "   << floatToString(image.tilt(), 10) << ' '
-                                  << "psi= "    << floatToString(image.psi() , 10) << ' ';
+                        << "tilt= "   << floatToString(image.tilt(), 10) << ' '
+                        << "psi= "    << floatToString(image.psi() , 10) << ' ';
                         if (image.Is_flag_set() == 1.0f || image.Is_flag_set() == 2.0f)
                             std::cout << "\nrot1= "  << floatToString(image.rot1() , 10) << ' '
-                                      << "tilt1= "   << floatToString(image.tilt1(), 10) << ' '
-                                      << "psi1= "    << floatToString(image.psi1() , 10) << ' ';
+                            << "tilt1= "   << floatToString(image.tilt1(), 10) << ' '
+                            << "psi1= "    << floatToString(image.psi1() , 10) << ' ';
                         if (image.Is_flag_set() == 2.0f)
                             std::cout << "\nrot2= "    << floatToString(image.rot2() , 10) << ' '
-                                      << "tilt2= "   << floatToString(image.tilt2(), 10) << ' '
-                                      << "psi2= "    << floatToString(image.psi2() , 10) << ' ';
+                            << "tilt2= "   << floatToString(image.tilt2(), 10) << ' '
+                            << "psi2= "    << floatToString(image.psi2() , 10) << ' ';
                     }
 
                 }
                 else
                 {
                     std::cout << floatToString(min_val, 10) << ' '
-                              << floatToString(max_val, 10) << ' '
-                              << floatToString(avg    , 10) << ' '
-                              << floatToString(stddev , 10) << ' ';
+                    << floatToString(max_val, 10) << ' '
+                    << floatToString(avg    , 10) << ' '
+                    << floatToString(stddev , 10) << ' ';
                     if (show_angles)
                     {
                         std::cout << floatToString(image.rot() , 10) << ' '
-                                  << floatToString(image.tilt(), 10) << ' '
-                                  << floatToString(image.psi() , 10) << ' ';
+                        << floatToString(image.tilt(), 10) << ' '
+                        << floatToString(image.psi() , 10) << ' ';
                         if (image.Is_flag_set() == 1.0f || image.Is_flag_set() == 2.0f)
                             std::cout << floatToString(image.rot1() , 10) << ' '
-                                      << floatToString(image.tilt1(), 10) << ' '
-                                      << floatToString(image.psi1() , 10) << ' ';
+                            << floatToString(image.tilt1(), 10) << ' '
+                            << floatToString(image.psi1() , 10) << ' ';
                         if (image.Is_flag_set() == 2.0f)
                             std::cout << floatToString(image.rot2() , 10) << ' '
-                                      << floatToString(image.tilt2(), 10) << ' '
-                                      << floatToString(image.psi2() , 10) << ' ';
+                            << floatToString(image.tilt2(), 10) << ' '
+                            << floatToString(image.psi2() , 10) << ' ';
                     }
                 }
 
@@ -265,14 +265,14 @@ int main(int argc, char **argv)
             std::cout << stringToString(" ", max_length + 13);
             if (!short_format)
                 std::cout << "min= "    << floatToString(mean_min_val, 10) << ' '
-                          << "max= "    << floatToString(mean_max_val, 10) << ' '
-                          << "avg= "    << floatToString(mean_avg    , 10) << ' '
-                          << "stddev= " << floatToString(mean_stddev , 10) << ' ';
+                << "max= "    << floatToString(mean_max_val, 10) << ' '
+                << "avg= "    << floatToString(mean_avg    , 10) << ' '
+                << "stddev= " << floatToString(mean_stddev , 10) << ' ';
             else
                 std::cout << floatToString(mean_min_val, 10) << ' '
-                          << floatToString(mean_max_val, 10) << ' '
-                          << floatToString(mean_avg    , 10) << ' '
-                          << floatToString(mean_stddev , 10) << ' ';
+                << floatToString(mean_max_val, 10) << ' '
+                << floatToString(mean_avg    , 10) << ' '
+                << floatToString(mean_stddev , 10) << ' ';
             std::cout << std::endl;
         }
 
@@ -298,15 +298,15 @@ void Usage()
 {
     std::cerr << "Purpose:\n";
     std::cerr << "    Displays statistics of images or volumes \n"
-              << "      (possibly restricted to the area within a mask)\n";
+    << "      (possibly restricted to the area within a mask)\n";
     std::cerr << "Usage: statistics " << std::endl
-              << "    -i               : Selfile with images/volumes \n"
-              << "                        or individual image or volume \n"
-              << "   [-o <docfile>]    : save the statistics in this docfile\n"
-              << "   [-dont_apply_geo] : do not apply geo when the image is read\n"
-              << "   [-short_format]   : Don't show labels for statistics\n"
-              << "   [-show_angles]    : Also show angles in the image header \n"
-              << "   [-save_mask]      : save 2D and 3D masks (as \"mask2D\" or \"mask3D\") \n";
+    << "    -i               : Selfile with images/volumes \n"
+    << "                        or individual image or volume \n"
+    << "   [-o <docfile>]    : save the statistics in this docfile\n"
+    << "   [-dont_apply_geo] : do not apply geo when the image is read\n"
+    << "   [-short_format]   : Don't show labels for statistics\n"
+    << "   [-show_angles]    : Also show angles in the image header \n"
+    << "   [-save_mask]      : save 2D and 3D masks (as \"mask2D\" or \"mask3D\") \n";
 
 }
 

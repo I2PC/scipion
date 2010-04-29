@@ -40,94 +40,94 @@
 int main(int argc, char *argv[])
 {
 
-    ImageXmipp test(4,4);
-    ImageXmipp rot(4,4);
-    Matrix2D<double> I(4,4), AA(3,3);
-    Euler_angles2matrix(0,0,-90,AA);
+   ImageXmipp test(4,4);
+   ImageXmipp rot(4,4);
+   Matrix2D<double> I(4,4), AA(3,3);
+   Euler_angles2matrix(0,0,-90,AA);
+   
+   I.initIdentity();
+   test(0,0)=1;
+   test(0,1)=2;
+   test(0,2)=0;
+   test(0,3)=0;
 
-    I.initIdentity();
-    test(0,0)=1;
-    test(0,1)=2;
-    test(0,2)=0;
-    test(0,3)=0;
+   test(1,0)=3;
+   test(1,1)=4;
+   test(1,2)=0;
+   test(1,3)=0;
 
-    test(1,0)=3;
-    test(1,1)=4;
-    test(1,2)=0;
-    test(1,3)=0;
+   test(2,0)=0;
+   test(2,1)=0;
+   test(2,2)=0;
+   test(2,3)=0;
 
-    test(2,0)=0;
-    test(2,1)=0;
-    test(2,2)=0;
-    test(2,3)=0;
-
-    test(3,0)=0;
-    test(3,1)=0;
-    test(3,2)=0;
-    test(3,3)=0;
-
-    test().setXmippOrigin();
-    //BinaryWedgeMask(test(),-60.,60.,I);
-    ////test.write("before.vol");
-    std::cerr << "test" <<  test() << std::endl;
-
-    rot=test;
-    rot().selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
-
-    std::cerr << "rot real space" <<  rot() << std::endl;
-    //rot.write("rotated.vol");
-    Matrix2D<std::complex<double> > Faux, Faux2;
-    Matrix2D<double> Mr(test()), Mi(test());
-    FourierTransform(test(),Faux);
-    Mr.setXmippOrigin();
-    Mi.setXmippOrigin();
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
-    {
-        dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
-        dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
-    }
-    std::cerr << "FourierTransform" <<  Mr*4 << Mi*4 << std::endl;
-
-    //CenterOriginFFT(Faux,true);
-    ShiftFFT(Faux, 2, 2);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
-    {
-        dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
-        dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
-    }
-    std::cerr << "ShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;
-    CenterFFT(Faux, true);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
-    {
-        dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
-        dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
-    }
-    std::cerr << "CenterShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;
-
-    Mr.selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
-    Mi.selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
-    {
-        dMij(Faux,i,j) = std::complex<double>(dMij(Mr,i,j), dMij(Mi,i,j));
-    }
-    std::cerr<<"done rot in Fourier"<< Mr*4 << Mi*4 << std::endl;
-    CenterFFT(Faux, false);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
-    {
-        dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
-        dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
-    }
-    std::cerr << "Anti_CenterShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;
-    ShiftFFT(Faux, -2, -2);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
-    {
-        dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
-        dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
-    }
-    std::cerr << "Anti_ShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;
+   test(3,0)=0;
+   test(3,1)=0;
+   test(3,2)=0;
+   test(3,3)=0;
+   
+   test().setXmippOrigin();
+   //BinaryWedgeMask(test(),-60.,60.,I);
+   ////test.write("before.vol");
+   std::cerr << "test" <<  test() << std::endl;
+ 
+   rot=test;
+   rot().selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
+   
+   std::cerr << "rot real space" <<  rot() << std::endl;
+   //rot.write("rotated.vol");
+   Matrix2D<std::complex<double> > Faux, Faux2;
+   Matrix2D<double> Mr(test()), Mi(test());
+   FourierTransform(test(),Faux);
+   Mr.setXmippOrigin();
+   Mi.setXmippOrigin();
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+   {
+       dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
+       dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
+   }
+   std::cerr << "FourierTransform" <<  Mr*4 << Mi*4 << std::endl;
+   
+   //CenterOriginFFT(Faux,true);
+        ShiftFFT(Faux, 2, 2);
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+   {
+       dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
+       dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
+   }
+   std::cerr << "ShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;
+        CenterFFT(Faux, true);
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+   {
+       dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
+       dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
+   }
+   std::cerr << "CenterShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;   
+   
+   Mr.selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
+   Mi.selfApplyGeometryBSpline(AA,3,IS_NOT_INV,DONT_WRAP,0.);
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
+   {
+       dMij(Faux,i,j) = std::complex<double>(dMij(Mr,i,j), dMij(Mi,i,j));
+   }
+   std::cerr<<"done rot in Fourier"<< Mr*4 << Mi*4 << std::endl;
+        CenterFFT(Faux, false);
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+   {
+       dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
+       dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
+   }
+   std::cerr << "Anti_CenterShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;   
+        ShiftFFT(Faux, -2, -2);
+   FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+   {
+       dMij(Mr,i,j) = (dMij(Faux,i,j)).real();
+       dMij(Mi,i,j) = (dMij(Faux,i,j)).imag();
+   }
+   std::cerr << "Anti_ShiftFourierTransform" <<  Mr*4 << Mi*4 << std::endl;
 
 
-    InverseFourierTransform(Faux,test());
-    //test.write("after.vol");
-    std::cerr << "rot fourier space" <<  test() << std::endl;
+      InverseFourierTransform(Faux,test());
+   //test.write("after.vol");
+   std::cerr << "rot fourier space" <<  test() << std::endl;
 }

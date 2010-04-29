@@ -47,17 +47,17 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
     }
     if (checkParameter(argc, argv, "-show_all_ML_options"))
     {
-        if (fourier_mode)
+	if (fourier_mode)
 
-        {
-            Prog_MLFalign2D_prm MLF_prm;
-            MLF_prm.extendedUsage(true);
-        }
-        else
-        {
-            Prog_MLalign2D_prm ML_prm;
-            ML_prm.extendedUsage(true);
-        }
+	{
+	    Prog_MLFalign2D_prm MLF_prm;
+	    MLF_prm.extendedUsage(true);
+	}
+	else
+	{
+	    Prog_MLalign2D_prm ML_prm;
+	    ML_prm.extendedUsage(true);
+	}
     }
     if (checkParameter(argc, argv, "-show_all_ART_options"))
     {
@@ -99,8 +99,8 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
             cline = (DFi.get_current_line()).get_text();
             comment = comment + cline;
             // regenerate command line
-            argv2 = NULL;
-            argc2 = 0;
+	    argv2 = NULL;
+	    argc2 = 0;
             generateCommandLine(comment, argc2, argv2, copy);
             // Get number of volumes and names to generate SFvol
             if (fourier_mode) fn_root = getParameter(argc2, argv2, "-o", "mlf3d");
@@ -139,9 +139,9 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
     }
     else
     {
-        // no restart, just copy argc to argc2 and argv to argv2
-        argc2 = argc;
-        argv2 = argv;
+	// no restart, just copy argc to argc2 and argv to argv2
+	argc2 = argc;
+	argv2 = argv;
     }
 
 
@@ -197,12 +197,12 @@ void Prog_Refine3d_prm::usage()
 {
     std::cerr << "Usage:  ml_refine3d [options] " << std::endl;
     std::cerr << "   -i <selfile>                : Selfile with input images \n"
-              << "   -vol <volume/selfile>       : Initial reference volume \n"
-              << "                               :  OR selfile with multiple reference volumes\n"
-              << " [ -o <root=\"ml3d\"> ]          : Output rootname \n"
-              << " [ -ang <float=10> ]           : Angular sampling (degrees) \n"
-              << " [ -iter <int=25> ]            : Maximum number of iterations \n"
-              << " [ -more_options ]             : Show additional parameters for 3D-refinement\n";
+    << "   -vol <volume/selfile>       : Initial reference volume \n"
+    << "                               :  OR selfile with multiple reference volumes\n"
+    << " [ -o <root=\"ml3d\"> ]          : Output rootname \n"
+    << " [ -ang <float=10> ]           : Angular sampling (degrees) \n"
+    << " [ -iter <int=25> ]            : Maximum number of iterations \n"
+    << " [ -more_options ]             : Show additional parameters for 3D-refinement\n";
 
 }
 
@@ -235,17 +235,17 @@ void Prog_Refine3d_prm::extended_usage()
 {
     std::cerr << "Additional options: " << std::endl;
     std::cerr << " [ -l <float=0.2> ]            : wlsART-relaxation parameter (lambda)  \n"
-              << " [ -k <float=0.5> ]            : wlsART-relaxation parameter for residual (kappa)\n"
-              << " [ -n <int=10> ]               : Number of wlsART-iterations \n"
-              << " [ -nostart ]                  : Start wlsART reconstructions from all-zero volumes \n"
-              << " [ -sym <symfile> ]            : Symmetry group \n"
-              << " [ -filter <dig.freq.=-1> ]    : Low-pass filter volume every iteration \n"
-              << " [ -sym_mask <maskfile> ]      : Local symmetry (only inside mask) \n"
-              << " [ -tilt0 <float=-91.> ]       : Lower-value for restricted tilt angle search \n"
-              << " [ -tiltF <float=91.> ]        : Higher-value for restricted tilt angle search \n"
-              << " [ -perturb ]                  : Randomly perturb reference projection directions \n"
-              << " [ -show_all_ML_options ]      : Show all parameters for the ML-refinement\n"
-              << " [ -show_all_ART_options ]     : Show all parameters for the wlsART reconstruction \n";
+    << " [ -k <float=0.5> ]            : wlsART-relaxation parameter for residual (kappa)\n"
+    << " [ -n <int=10> ]               : Number of wlsART-iterations \n"
+    << " [ -nostart ]                  : Start wlsART reconstructions from all-zero volumes \n"
+    << " [ -sym <symfile> ]            : Symmetry group \n"
+    << " [ -filter <dig.freq.=-1> ]    : Low-pass filter volume every iteration \n"
+    << " [ -sym_mask <maskfile> ]      : Local symmetry (only inside mask) \n"
+    << " [ -tilt0 <float=-91.> ]       : Lower-value for restricted tilt angle search \n"
+    << " [ -tiltF <float=91.> ]        : Higher-value for restricted tilt angle search \n"
+    << " [ -perturb ]                  : Randomly perturb reference projection directions \n"
+    << " [ -show_all_ML_options ]      : Show all parameters for the ML-refinement\n"
+    << " [ -show_all_ART_options ]     : Show all parameters for the wlsART reconstruction \n";
     std::cerr << std::endl;
     exit(1);
 }
@@ -340,7 +340,7 @@ void Prog_Refine3d_prm::produceSideInfo(int rank)
     mysampling.SetSampling(angular);
     if (fn_symmask != "")
         fn_sym_loc="c1";
-    else
+    else 
         fn_sym_loc=fn_sym;
 
     if (!mysampling.SL.isSymmetryGroup(fn_sym_loc, symmetry, sym_order))
@@ -377,7 +377,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank, int s
     int                           nvol, nl, nr_dir, my_rank;
 
 
-    // Here all nodes fill SFlib and DFlib, but each node actually projects
+    // Here all nodes fill SFlib and DFlib, but each node actually projects 
     // only a part of the projections. In this way parallellization is obtained
 
     // Total number of projections
@@ -401,11 +401,11 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank, int s
     SFvol.go_beginning();
     while (!SFvol.eof())
     {
-
+        
         eachvol_start.push_back(nr_dir);
         vol.read(SFvol.NextImg());
         vol().setXmippOrigin();
-
+        
         for (int ilib = 0; ilib < mysampling.no_redundant_sampling_points_angles.size(); ilib++)
         {
             fn_proj.compose(fn_tmp, nr_dir + 1, "proj");
@@ -865,7 +865,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
     locsampling.SL.read_sym_file(fn_sym);
 
     if ( !(fn_sym == "c1" || fn_sym == "C1" ) || (lowpass > 0) ||
-         (fn_solv != "") || (do_prob_solvent) || (threshold_solvent != 999))
+        (fn_solv != "") || (do_prob_solvent) || (threshold_solvent != 999))
     {
 
         SFvol.go_beginning();

@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Joaquin Oton (joton@cnb.csic.es)
+ * Authors:     Joaquin Oton (joton@cnb.csic.es) 
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -191,7 +191,7 @@ void dm32raw(const FileName &fn_in,
     int depLevel=0, imCount=0, imCountF=0;
     image_data* imData;
 
-    for (int n=1; n<=nrTags; n++)
+    for (int n=1;n<=nrTags;n++)
         readTagDM3(fh_in,bigEndian, depLevel, &n, imData, imCount);
 
 
@@ -202,13 +202,11 @@ void dm32raw(const FileName &fn_in,
 
     int imIndex[imCount];
 
-    for (int n=0; n<imCount; n++)
-    {
-        // Select all images except thumbnails
+    for (int n=0;n<imCount;n++)
+    {   // Select all images except thumbnails
 
         if ((imData+n)->dataType==1 | (imData+n)->dataType==7)
-        {
-            // (thumbnail=23 / image long =7 / image short = 1)
+        { // (thumbnail=23 / image long =7 / image short = 1)
             imIndex[imCountF] = n;
             imCountF++;
         }
@@ -222,7 +220,7 @@ void dm32raw(const FileName &fn_in,
 
     int nBytes;
 
-    for (int n=0; n<imCountF; n++)
+    for (int n=0;n<imCountF;n++)
     {
         if (imCountF==1)
             fn_outF = fn_out;
@@ -352,7 +350,7 @@ int readTagDM3(FILE *fh_in,
     FREAD(tagName,ltName,1,fh_in,false); // Tag name
     tagName[ltName] = '\0';
 
-    for (int n=1; n<=depLevel; n++)
+    for (int n=1;n<=depLevel;n++)
 
         //  printf("%d.",index[n-1]);
 
@@ -369,7 +367,7 @@ int readTagDM3(FILE *fh_in,
 
             int * newIndex;
             newIndex = new int[depLevel+1];
-            for (int k=0; k<depLevel; k++)
+            for (int k=0;k<depLevel;k++)
                 newIndex[k]=index[k];
 
             if (strcmp(tagName,"ImageList")==0)    // Number of images
@@ -388,7 +386,7 @@ int readTagDM3(FILE *fh_in,
                 return 0;
             }
 
-            for (int n=1; n<=nTags; n++)
+            for (int n=1;n<=nTags;n++)
             {
                 newIndex[depLevel] = n;
                 readTagDM3(fh_in, bigEndian, depLevel,newIndex,imData,imCount);
@@ -427,11 +425,10 @@ int readTagDM3(FILE *fh_in,
                 return tagValue;
             }
             else if(nnum == 3 && info[0]==20)   // Tag array
-            {
-                /*nnum = 3
-                   info(0) = 20
-                   info(1) = number type for all values
-                   info(2) = info(nnum) = size of array*/
+            {             /*nnum = 3
+                             info(0) = 20
+                             info(1) = number type for all values
+                             info(2) = info(nnum) = size of array*/
 
                 if (strcmp(tagName,"Data")==0)    // Locating the image data
                 {
@@ -479,7 +476,7 @@ int readTagDM3(FILE *fh_in,
                 int nBytes=0, k, fieldValue;
 
 
-                for (int n=1; n<=info[3]; n++)
+                for (int n=1;n<=info[3];n++)
                 {
                     fieldValue=0;
 
@@ -516,7 +513,7 @@ int readTagDM3(FILE *fh_in,
 
                 //   printf(" = [");
 
-                for (int n=1; n<=info[2]; n++)
+                for (int n=1;n<=info[2];n++)
                 {
                     int fieldValue=0;
                     FREADTagValue(&fieldValue,info[2+2*n],1,fh_in,bigEndian);
@@ -647,7 +644,7 @@ char* sprintfTagValue(void *fieldValue, int numberType)
 
     char out[len+1];
 
-    for (int k=0; k<len; k++)
+    for (int k=0;k<len;k++)
         out[k]=str[k];
     out[len]='\0';
     return out;

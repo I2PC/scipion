@@ -79,14 +79,14 @@ void Prog_centilt_prm::usage()
     std::cerr << "Usage:  " << std::endl;
     std::cerr << "  centilt [options]" << std::endl;
     std::cerr << "   -u <selfile>             : Selfile containing untilted images \n"
-              << "   -t <selfile>             : Selfile containing tilted images \n"
-              << " [ -oext <extension> ]      : For output tilted images; if not to overwrite input\n"
-              << " [ -max_shift <float> ]     : Discard images that shift more [pix]\n"
-              << " [ -doc <docfile> ]         : write output document file with rotations & translations \n"
-              << " [ -force_x_zero ]          : Force x-shift to be zero \n"
-              << " [ -skip_stretching ]       : do not perform cosine stretching \n"
-              << " [ -skip_centering ]        : do not perform centering, i.e. only modify angles \n"
-              << std::endl;
+    << "   -t <selfile>             : Selfile containing tilted images \n"
+    << " [ -oext <extension> ]      : For output tilted images; if not to overwrite input\n"
+    << " [ -max_shift <float> ]     : Discard images that shift more [pix]\n"
+    << " [ -doc <docfile> ]         : write output document file with rotations & translations \n"
+    << " [ -force_x_zero ]          : Force x-shift to be zero \n"
+    << " [ -skip_stretching ]       : do not perform cosine stretching \n"
+    << " [ -skip_centering ]        : do not perform centering, i.e. only modify angles \n"
+    << std::endl;
 }
 
 // Center one tilted image  =====================================================
@@ -149,9 +149,9 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
     if ((max_shift < XMIPP_EQUAL_ACCURACY) || (shift < max_shift))
     {
         // Store shift in the header of the image
-        // Take rotation into account for shifts
-        It.set_Xoff(-xshift*COSD(It.psi()) - yshift*SIND(It.psi()));
-        It.set_Yoff( xshift*SIND(It.psi()) - yshift*COSD(It.psi()));
+	// Take rotation into account for shifts
+	It.set_Xoff(-xshift*COSD(It.psi()) - yshift*SIND(It.psi()));
+	It.set_Yoff( xshift*SIND(It.psi()) - yshift*COSD(It.psi()));
         It.set_Phi(Iu.psi());
         return true;
     }
@@ -322,14 +322,14 @@ void Prog_centilt_prm::usage()
     std::cerr << "Usage:  " << std::endl;
     std::cerr << "  centilt [options]" << std::endl;
     std::cerr << "   -u <metadatafile>             : Metadata File  containing untilted images \n"
-              << "   -t <metadatafile>        : Metadata File  containing tilted images \n"
-              << " [ -oext <extension> ]      : For output tilted images; if not to overwrite input\n"
-              << " [ -doc <metadata> ]        : write output document file with rotations & translations \n"
-              << " [ -max_shift <float> ]     : Discard images that shift more [pix]\n"
-              << " [ -force_x_zero ]          : Force x-shift to be zero \n"
-              << " [ -skip_stretching ]       : do not perform cosine stretching \n"
-              << " [ -skip_centering ]        : do not perform centering, i.e. only modify angles \n"
-              << std::endl;
+  		  	  << "   -t <metadatafile>        : Metadata File  containing tilted images \n"
+			  << " [ -oext <extension> ]      : For output tilted images; if not to overwrite input\n"
+			  << " [ -doc <metadata> ]        : write output document file with rotations & translations \n"
+			  << " [ -max_shift <float> ]     : Discard images that shift more [pix]\n"
+			  << " [ -force_x_zero ]          : Force x-shift to be zero \n"
+			  << " [ -skip_stretching ]       : do not perform cosine stretching \n"
+			  << " [ -skip_centering ]        : do not perform centering, i.e. only modify angles \n"
+    << std::endl;
 }
 
 // Center one tilted image  =====================================================
@@ -388,13 +388,13 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
 
     if (do_stretch) xshift *= COSD(It.Theta());
     shift = sqrt(xshift * xshift + yshift * yshift);
-
+    
     if ((max_shift < XMIPP_EQUAL_ACCURACY) || (shift < max_shift))
     {
         // Store shift in the header of the image
-        // Take rotation into account for shifts
-        It.set_Xoff(-xshift*COSD(It.psi()) - yshift*SIND(It.psi()));
-        It.set_Yoff( xshift*SIND(It.psi()) - yshift*COSD(It.psi()));
+	// Take rotation into account for shifts
+	It.set_Xoff(-xshift*COSD(It.psi()) - yshift*SIND(It.psi()));
+	It.set_Yoff( xshift*SIND(It.psi()) - yshift*COSD(It.psi()));
         It.set_Phi(Iu.psi());
         return true;
     }
@@ -422,9 +422,9 @@ void Prog_centilt_prm::centilt()
     //while (imgno < n_images)
     SFu.firstObject();
     SFt.firstObject();
-
+    
     FileName file_name;
-
+        
     do
     {
         // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
@@ -463,11 +463,11 @@ void Prog_centilt_prm::centilt()
             {
                 fn_img = fn_img.without_extension() + "." + oext;
             }
-            SFt.setValue( MDL_ANGLEROT,It.Phi() );
-            SFt.setValue( MDL_ANGLETILT,It.Theta() );
-            SFt.setValue( MDL_ANGLEPSI,It.psi() );
-            SFt.setValue( MDL_SHIFTX,It.Xoff() );
-            SFt.setValue( MDL_SHIFTY,It.Yoff() );
+			SFt.setValue( MDL_ANGLEROT,It.Phi() );
+			SFt.setValue( MDL_ANGLETILT,It.Theta() );
+			SFt.setValue( MDL_ANGLEPSI,It.psi() );
+			SFt.setValue( MDL_SHIFTX,It.Xoff() );
+	        SFt.setValue( MDL_SHIFTY,It.Yoff() );
             SFt.setValue( MDL_MAXCC,ccf );
             SFt.setValue( MDL_IMAGE,fn_img );
             SFt.setValue( MDL_ENABLED, 1);
@@ -482,10 +482,10 @@ void Prog_centilt_prm::centilt()
             SFt.setValue( MDL_SHIFTX, 0.);
             SFt.setValue( MDL_SHIFTY, 0.);
             SFt.setValue( MDL_ENABLED, -1);
-            SFt.setValue( MDL_SHIFTX,0. );
-            SFt.setValue( MDL_SHIFTY,0. );
+			SFt.setValue( MDL_SHIFTX,0. );
+	        SFt.setValue( MDL_SHIFTY,0. );
             SFt.setValue( MDL_MAXCC,0. );
-            n_discarded++;
+			n_discarded++;
         }
 
         imgno++;
@@ -503,11 +503,11 @@ void Prog_centilt_prm::centilt()
     if (oext != "") fn_img = fn_img.insert_before_extension("_" + oext);
     SFt.write(fn_img);
     if (fn_doc != "")
-    {
-        //delete all discarted images
-        SFt.removeObjects(MDL_ENABLED, -1);
-        SFt.write(fn_doc);
-    }
+        {
+            //delete all discarted images
+			SFt.removeObjects(MDL_ENABLED, -1);
+			SFt.write(fn_doc);
+        }
 }
 
 #endif

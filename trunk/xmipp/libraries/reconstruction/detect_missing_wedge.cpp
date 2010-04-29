@@ -30,11 +30,11 @@
 
 
 // Evaluate plane ----------------------------------------------------------
-double evaluatePlane(double rot, double tilt,
-                     const Matrix3D<double> *V, const Matrix3D<double> *Vmag,
-                     double maxFreq, double planeWidth, int direction,
-                     Matrix3D<double> *Vdraw=NULL,
-                     bool setPos=false, double rotPos=0, double tiltPos=0)
+double evaluatePlane(double rot, double tilt, 
+    const Matrix3D<double> *V, const Matrix3D<double> *Vmag,
+    double maxFreq, double planeWidth, int direction,
+    Matrix3D<double> *Vdraw=NULL,
+    bool setPos=false, double rotPos=0, double tiltPos=0)
 {
     if (rot<0 || rot>360 || tilt<-90 || tilt>90)
         return 0;
@@ -42,16 +42,15 @@ double evaluatePlane(double rot, double tilt,
     Matrix2D<double> E, Einv;
     Euler_angles2matrix(rot,tilt,0,E);
     Einv=E.transpose();
-
-    if (setPos)
-    {
+    
+    if (setPos) {
         Matrix2D<double> Epos;
         Euler_angles2matrix(rotPos,tiltPos,0,Epos);
         double angle=acos(E(2,0)*Epos(2,0)+E(2,1)*Epos(2,1)+E(2,2)*Epos(2,2));
         angle=RAD2DEG(angle);
         if (ABS(angle)<20 || ABS(180-angle)<20) return 0;
     }
-
+    
     int N=XMIPP_MAX(XSIZE(*Vmag),YSIZE(*Vmag)/2);
     N=XMIPP_MAX(N,ZSIZE(*Vmag)/2);
     double df=0.5/N;
@@ -67,7 +66,7 @@ double evaluatePlane(double rot, double tilt,
             for (int iz=-planeWidth; iz<=planeWidth; iz++)
             {
                 if (iz==0 || ix==0 || iy==0) continue;
-
+                
                 // Frequency in the coordinate system of the plane
                 VECTOR_R3(freq,ix*df,iy*df,iz*df);
 
@@ -114,57 +113,54 @@ double evaluatePlane(double rot, double tilt,
     else return 1e38;
     if (Npos!=0) sumPos/=Npos;
     else return 1e38;
-
+    
     return -(sumPos-sumNeg);
 }
 
 // Look for plane ----------------------------------------------------------
-class WedgeSolver: public DESolver
-{
+class WedgeSolver: public DESolver {
 public:
     WedgeSolver(int dim,int pop,
-                const Matrix3D<double> *_V, const Matrix3D<double> *_Vmag,
-                double _maxFreq, double _planeWidth, int _direction):
-        DESolver(dim,pop)
-    {
-        count=0;
-        V=_V;
-        Vmag=_Vmag;
-        maxFreq=_maxFreq;
-        planeWidth=_planeWidth;
-        direction=_direction;
-        setPos=false;
-    }
-
+        const Matrix3D<double> *_V, const Matrix3D<double> *_Vmag,
+        double _maxFreq, double _planeWidth, int _direction):
+        DESolver(dim,pop) {
+            count=0;
+            V=_V;
+            Vmag=_Vmag;
+            maxFreq=_maxFreq;
+            planeWidth=_planeWidth;
+            direction=_direction;
+            setPos=false;
+        }
+    
     ~WedgeSolver()
     {
-        V = NULL;
-        Vmag = NULL;
+    	V = NULL;
+	Vmag = NULL;
     }
-
-    double EnergyFunction(double trial[],bool &bAtSolution)
-    {
+    
+    double EnergyFunction(double trial[],bool &bAtSolution) {
         double result=evaluatePlane(trial[0],trial[1],V,Vmag,
-                                    maxFreq, planeWidth, direction, NULL, setPos, rotPos, tiltPos);
+            maxFreq, planeWidth, direction, NULL, setPos, rotPos, tiltPos);
         if (count++ % (5*nPop) == 0)
-            std::cout << "Evaluations= " << count/nPop
-                      << " energy= "     << Energy()
-                      << " rot= "        << Solution()[0]
-                      << " tilt= "       << Solution()[1]
-                      << std::endl;
-        bAtSolution=false;
-        return result;
+           std::cout << "Evaluations= " << count/nPop
+                     << " energy= "     << Energy()
+                     << " rot= "        << Solution()[0]
+                     << " tilt= "       << Solution()[1]
+                     << std::endl;
+       bAtSolution=false;
+       return result;
     }
 public:
-    int count;
-    const Matrix3D<double> *V;
-    const Matrix3D<double> *Vmag;
-    double maxFreq;
-    double planeWidth;
-    int direction;
-    bool setPos;
-    double rotPos;
-    double tiltPos;
+   int count;
+   const Matrix3D<double> *V;
+   const Matrix3D<double> *Vmag;
+   double maxFreq;
+   double planeWidth;
+   int direction;
+   bool setPos;
+   double rotPos;
+   double tiltPos;
 };
 
 //// Sjors wrapperFitness also exists in nma_alignment
@@ -176,9 +172,9 @@ double wrapperFitnessDetectMissingWedge(double *p, void* extraArgs)
 }
 
 void lookForPlane(const Matrix3D<double> *V, const Matrix3D<double> *Vmag,
-                  double maxFreq, double planeWidth, int direction,
-                  double &rot, double &tilt,
-                  bool setPos=false, double rotPos=0, double tiltPos=0)
+    double maxFreq, double planeWidth, int direction,
+    double &rot, double &tilt,
+    bool setPos=false, double rotPos=0, double tiltPos=0)
 {
     // Optimize with DE
     int length=2;
@@ -186,21 +182,21 @@ void lookForPlane(const Matrix3D<double> *V, const Matrix3D<double> *Vmag,
 
     double min_allowed[] = {0,-90};
     double max_allowed[] = {360,90};
-
+            
     WedgeSolver * solver = new WedgeSolver(length,length*Npop,V,Vmag,maxFreq,planeWidth,direction);
     solver->Setup( min_allowed, max_allowed, stBest2Bin, 0.5, 0.8);
-
+        
     if (setPos)
     {
         solver->setPos=true;
         solver->rotPos=rotPos;
         solver->tiltPos=tiltPos;
     }
-
+    
     solver->Solve(50);
-
+    
     double * bestSolution = solver->Solution();
-
+    
     // Refine with Powell
     Matrix1D<double> x(2), steps(2);
     double fitness;
@@ -213,19 +209,19 @@ void lookForPlane(const Matrix3D<double> *V, const Matrix3D<double> *Vmag,
     tilt=x(1);
 
     delete solver;
-
+    
     solver = NULL;
 }
 
 // Draw wedge --------------------------------------------------------------
 void drawWedge(double rotPos, double tiltPos, double rotNeg, double tiltNeg,
-               const Matrix3D<double> *V,
-               const Matrix3D<double> *Vmag, Matrix3D<double> *Vdraw)
+    const Matrix3D<double> *V,
+    const Matrix3D<double> *Vmag, Matrix3D<double> *Vdraw)
 {
     Matrix2D<double> Epos, Eneg;
     Euler_angles2matrix(rotPos,tiltPos,0,Epos);
     Euler_angles2matrix(rotNeg,tiltNeg,0,Eneg);
-
+    
     Matrix1D<double> freq(3), freqPos, freqNeg;
     Matrix1D<int> idx(3);
     Vdraw->initZeros(*Vmag);
@@ -264,7 +260,7 @@ void DetectMissingWedge_parameters::produceSideInfo()
     Vmag = new Matrix3D<double>();
     Vmag->resize(Vfft);
     FOR_ALL_ELEMENTS_IN_MATRIX3D(*Vmag)
-    (*Vmag)(k,i,j)=20*log10(abs(Vfft(k,i,j)));
+        (*Vmag)(k,i,j)=20*log10(abs(Vfft(k,i,j)));
 }
 
 // Show --------------------------------------------------------------------
@@ -276,7 +272,7 @@ void DetectMissingWedge_parameters::show() const
               << "Plane width:    " << planeWidth << std::endl
               << "saveMarks:      " << saveMarks  << std::endl
               << "saveMask:       " << saveMask   << std::endl
-              ;
+    ;
 }
 
 // Usage -------------------------------------------------------------------
@@ -290,7 +286,7 @@ void DetectMissingWedge_parameters::usage() const
               << "                       marks showing the two planes\n"
               << " [-saveMask]         : Save a mask for the FFT of this tomogram\n"
               << "                       1=Missing wedge, 0=non missing wedge\n"
-              ;
+    ;
 }
 
 // Run ---------------------------------------------------------------------
@@ -300,15 +296,15 @@ void DetectMissingWedge_parameters::run()
 
     // Detect one of the planes
     lookForPlane(&(*V)(), Vmag, maxFreq, planeWidth, 1, rotPos, tiltPos);
-
+    
     VolumeXmipp * Vdraw = new VolumeXmipp();
-
+    
     if (saveMarks)
     {
         (*Vdraw)()=(*Vmag);
-
-        evaluatePlane(rotPos, tiltPos, &(*V)(), Vmag, maxFreq, planeWidth,
-                      1, &(*Vdraw)());
+        
+	evaluatePlane(rotPos, tiltPos, &(*V)(), Vmag, maxFreq, planeWidth,
+            1, &(*Vdraw)());
     }
 
     // Detect the other plane
@@ -317,7 +313,7 @@ void DetectMissingWedge_parameters::run()
     if (saveMarks)
     {
         evaluatePlane(rotNeg, tiltNeg, &(*V)(), Vmag, maxFreq, planeWidth,
-                      -1, &(*Vdraw)());
+            -1, &(*Vdraw)());
         Vdraw->write(fn_root+"_marks.vol");
     }
 

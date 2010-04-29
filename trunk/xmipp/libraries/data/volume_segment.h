@@ -70,7 +70,7 @@ public:
 
     /// Show
     friend std::ostream & operator << (std::ostream &out,
-                                       const Prog_segment_prm &prm);
+        const Prog_segment_prm &prm);
 
     /// Usage
     void usage() const;

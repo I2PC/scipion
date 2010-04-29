@@ -76,7 +76,7 @@ public:
 
     /// Set of parameters for the complete adjustment of the CTF
     Matrix1D<double>     adjust;
-
+    
     /// Model simplification
     int                  modelSimplification;
 public:
@@ -107,7 +107,7 @@ public:
 /** Core of the Adjust CTF routine.
     This is the routine which does everything. It returns the fitting error
     committed in the best fit.*/
-double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
-                       bool standalone = true);
+double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel, 
+    bool standalone = true);
 //@}
 #endif

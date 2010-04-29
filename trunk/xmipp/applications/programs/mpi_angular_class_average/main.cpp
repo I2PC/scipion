@@ -30,7 +30,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <iomanip>
+#include <iomanip>  
 
 #include <data/args.h>
 #include <data/image.h>
@@ -49,21 +49,21 @@ int       output_values_size;
 
 class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
 {
-public:
+    public:
     //int rank, size, num_img_tot;
 
-    /** Number of Procesors **/
-    int nProcs;
+        /** Number of Procesors **/
+        int nProcs;
+        
+        /** Dvide the job in this number block with this number of images */
+        //int mpi_job_size;
+               
+        /** computing node number. Master=0 */
+        int rank;
 
-    /** Dvide the job in this number block with this number of images */
-    //int mpi_job_size;
-
-    /** computing node number. Master=0 */
-    int rank;
-
-    /** status after am MPI call */
-    MPI_Status status;
-
+        /** status after am MPI call */
+        MPI_Status status;
+                
     /*  constructor ------------------------------------------------------- */
     Prog_mpi_angular_class_average()
     {
@@ -94,51 +94,51 @@ public:
         //std::cerr << " [ -mpi_job_size default=-1]    : Number of images sent to a cpu in a single job \n";
         //std::cerr << "                                  10 may be a good value\n";
         //std::cerr << "                                 if  -1 the computer will fill the value for you\n";
-    }
+     }
 
 
     /* Show -------------------------------------------------------------------- */
     void show()
     {
         Prog_angular_class_average_prm::show();
-        //std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
+	    //std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
         //      ;
     }
 
     /* Pre Run --------------------------------------------------------------------- */
     void preRun()
     {
-//        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point,
+//        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point, 
 //                  1, MPI_INT, 0, MPI_COMM_WORLD);
 
         int reserve = 0;
         if (nr_iter > 0) reserve = DF.dataLineNo();
         output_values_size=AVG_OUPUT_SIZE*reserve+5;
         output_values = (double *) malloc(output_values_size*sizeof(double));
-
+        
         // Only for do_add: append input docfile to add_to docfile
         if (rank == 0 && do_add)
         {
             FileName fn_tmp=fn_out+".doc";
-            if (exists(fn_tmp))
+            if (exists(fn_tmp)) 
             {
                 DocFile DFaux = DF;
-                // Don't do any fancy merging or sorting because those functions are really slow...
+                // Don't do any fancy merging or sorting because those functions are really slow... 
                 DFaux.append(fn_tmp);
                 DFaux.remove_multiple_strings("Headerinfo");
                 DFaux.write(fn_tmp);
             }
             else
             {
-                DF.write(fn_tmp);
+                DF.write(fn_tmp); 
             }
         }
     }
 
     /* Run --------------------------------------------------------------------- */
     void run()
-    {
-
+    {   
+    
         double myw[4];
         int number_of_references_image=1;
         if (rank == 0)
@@ -146,7 +146,7 @@ public:
             FileName fn_tmp;
             int nr_ref = DFlib.dataLineNo();
             int c = XMIPP_MAX(1, nr_ref / 80);
-            init_progress_bar(nr_ref);
+            init_progress_bar(nr_ref);  
 
             int stopTagsSent =0;
             while(1)
@@ -154,40 +154,40 @@ public:
                 //Wait until any message arrives
                 //be aware that mpi_Probe will block the program untill a message is received
                 //#define DEBUG
-#ifdef DEBUG
+                #ifdef DEBUG
                 std::cerr << "Mp1 waiting for any  message " << std::endl;
-#endif
+                #endif
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-#ifdef DEBUG
+                #ifdef DEBUG
                 std::cerr << "Mp2 received tag from worker " <<  status.MPI_SOURCE << std::endl;
-#endif
+                #endif
                 // worker is free
                 // worker sends work
                 if (status.MPI_TAG == TAG_WORKFROMWORKER)
                 {
-                    MPI_Recv(output_values,
-                             output_values_size,
-                             MPI_DOUBLE,
-                             MPI_ANY_SOURCE,
+                    MPI_Recv(output_values, 
+                             output_values_size, 
+                             MPI_DOUBLE, 
+                             MPI_ANY_SOURCE, 
                              TAG_WORKFROMWORKER,
-                             MPI_COMM_WORLD,
+                             MPI_COMM_WORLD, 
                              &status);
                     double w, w1, w2;
-                    int myref_number;
+                    int myref_number;                             
                     // Output classes sel and doc files
-                    myref_number = ROUND(output_values[0]);
+                    myref_number = ROUND(output_values[0]);        
                     w  = output_values[1];
                     w1 = output_values[2];
-                    w2 = output_values[3];
+                    w2 = output_values[3]; 
                     addClassAverage(myref_number,w,w1,w2);
-#ifdef DEBUG
+                    #ifdef DEBUG
                     std::cerr << "Mr2.5 received work from worker " <<  status.MPI_SOURCE << std::endl;
-                    std::cerr << " w w1 w2 myref_number"
+                    std::cerr << " w w1 w2 myref_number" 
                               << w  << " "
                               << w1 << " "
                               << w2 << " "
-                              << myref_number <<  std::endl;
-#endif
+                              << myref_number <<  std::endl;  
+                    #endif
                     if (nr_iter > 0 )
                     {
                         int nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
@@ -208,47 +208,47 @@ public:
                             }
                         }
                     }
-
+                    
                 }//TAG_WORKFROMWORKER
                 // worker is free
                 if (status.MPI_TAG == TAG_FREEWORKER)
                 {
                     MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
                              MPI_COMM_WORLD, &status);
-#ifdef DEBUG
-                    std::cerr << "Mr3 received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE
+                    #ifdef DEBUG
+                    std::cerr << "Mr3 received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE 
                               << std::endl;
-#endif
+                    #endif
                     if(number_of_references_image>nr_ref)
                     {
                         MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
                         stopTagsSent++;
-#ifdef DEBUG
+                        #ifdef DEBUG
                         std::cerr << "Ms4 sent stop tag to worker " <<  status.MPI_SOURCE << std::endl
-                                  << std::endl;
-#endif
+                                 << std::endl;
+                        #endif
                         break;
                     }
                     else
                     {
                         //DFlib.adjust_to_data_line();
                         //dataforworker=DFlib(ABS(col_ref) - 1);
-                        MPI_Send(&number_of_references_image,
-                                 1,
-                                 MPI_INT,
-                                 status.MPI_SOURCE,
-                                 TAG_WORKFORWORKER,
+                        MPI_Send(&number_of_references_image, 
+                                 1, 
+                                 MPI_INT, 
+                                 status.MPI_SOURCE, 
+                                 TAG_WORKFORWORKER, 
                                  MPI_COMM_WORLD);
                         number_of_references_image++;//////////////////////
                         if (number_of_references_image % c == 0) progress_bar(number_of_references_image);
                         //prm.DFlib.next();
-                    }
-#ifdef DEBUG
+                    }   
+                    #ifdef DEBUG
                     std::cerr << "Ms5 sent TAG_WORKFORWORKER for " <<  status.MPI_SOURCE << std::endl
                               << std::endl;
-#endif
+                    #endif
                 }//TAG_FREEWORKER
-            }//while
+            }//while       
             progress_bar(nr_ref);
 
             while (stopTagsSent < (nProcs-1))
@@ -256,29 +256,29 @@ public:
                 MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 if (status.MPI_TAG == TAG_WORKFROMWORKER)
                 {
-                    MPI_Recv(output_values,
-                             output_values_size,
-                             MPI_DOUBLE,
-                             MPI_ANY_SOURCE,
+                    MPI_Recv(output_values, 
+                             output_values_size, 
+                             MPI_DOUBLE, 
+                             MPI_ANY_SOURCE, 
                              TAG_WORKFROMWORKER,
-                             MPI_COMM_WORLD,
+                             MPI_COMM_WORLD, 
                              &status);
                     double w, w1, w2;
-                    int myref_number;
+                    int myref_number;                             
                     // Output classes sel and doc files
-                    myref_number = ROUND(output_values[0]);
+                    myref_number = ROUND(output_values[0]);        
                     w  = output_values[1];
                     w1 = output_values[2];
-                    w2 = output_values[3];
+                    w2 = output_values[3]; 
                     addClassAverage(myref_number,w,w1,w2);
-#ifdef DEBUG
+                    #ifdef DEBUG
                     std::cerr << "Mr2.5 received work from worker " <<  status.MPI_SOURCE << std::endl;
-                    std::cerr << " w w1 w2 myref_number"
+                    std::cerr << " w w1 w2 myref_number" 
                               << w  << " "
                               << w1 << " "
                               << w2 << " "
-                              << myref_number <<  std::endl;
-#endif
+                              << myref_number <<  std::endl;  
+                    #endif
                     if (nr_iter > 0 )
                     {
                         int nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
@@ -304,13 +304,13 @@ public:
                 {
                     MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_FREEWORKER,
                              MPI_COMM_WORLD, &status);
-#ifdef DEBUG
+                    #ifdef DEBUG
                     std::cerr << "Mr received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << std::endl;
-#endif
+                    #endif
                     MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
                     stopTagsSent++;
-                }
-            }
+                }    
+            }         
 
             // Write selfiles and docfiles with all class averages
             finalWriteToDisc();
@@ -318,54 +318,54 @@ public:
         }
         else //rank !=0
         {
-            // Select only relevant part of selfile for this rank
-            // job number
-            // job size
-            // aux variable
+        // Select only relevant part of selfile for this rank
+        // job number
+        // job size
+        // aux variable
             while (1)
             {
                 MPI_Send(0, 0, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
-#ifdef DEBUG
+                #ifdef DEBUG
                 std::cerr << "W" << rank << " " << "sent TAG_FREEWORKER to master " << std::endl;
-#endif
+                #endif
                 //get your next task
                 MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-#ifdef DEBUG
+                #ifdef DEBUG
                 std::cerr << "W" << rank << " " << "probe MPI_ANY_TAG " << std::endl;
-#endif
+                #endif
                 if (status.MPI_TAG == TAG_STOP)//no more jobs exit
-                {
+                    {
                     //If I  do not read this tag
                     //master will no further process
                     //a posibility is a non-blocking send
                     MPI_Recv(0, 0, MPI_INT, 0, TAG_STOP,
-                             MPI_COMM_WORLD, &status);
+                         MPI_COMM_WORLD, &status);
                     break;
-                }
+                    }
                 if (status.MPI_TAG == TAG_WORKFORWORKER)
-                    //there is still some work to be done
-                {
+                //there is still some work to be done    
+                    {
                     //get the jobs number
-                    MPI_Recv(&number_of_references_image,
-                             1,
-                             MPI_INT,
-                             0,
-                             TAG_WORKFORWORKER,
-                             MPI_COMM_WORLD,
+                    MPI_Recv(&number_of_references_image, 
+                             1, 
+                             MPI_INT, 
+                             0, 
+                             TAG_WORKFORWORKER, 
+                             MPI_COMM_WORLD, 
                              &status);
-#ifdef DEBUG
+                    #ifdef DEBUG
                     std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
-#endif
+                    #endif
                     processOneClass(number_of_references_image, output_values);
                     MPI_Send(output_values,
                              output_values_size,
-                             MPI_DOUBLE,
+                             MPI_DOUBLE, 
                              0,
                              TAG_WORKFROMWORKER,
                              MPI_COMM_WORLD);
-                }
+                    }         
             }
-        }
+        }    
     }
 
     /* a short function to print a message and exit */
@@ -387,7 +387,7 @@ int main(int argc, char *argv[])
 
     Prog_mpi_angular_class_average prm;
     if (prm.rank == 0)
-    {
+    {    
         try
         {
             prm.read(argc, argv);
@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
     }
     MPI_Barrier(MPI_COMM_WORLD);
     if (prm.rank != 0)
-    {
+    {    
         try
         {
             prm.read(argc, argv);

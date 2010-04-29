@@ -50,7 +50,7 @@ typedef psingle V;
 
 #define LDK(x) x
 #define DVK(var, val) \
-    const V var = _mips64_lc(val)
+  const V var = _mips64_lc(val)
 
 #define VADD     _mips64_add
 #define VSUB     _mips64_sub
@@ -74,17 +74,17 @@ typedef psingle V;
 
 static inline V LDA(const R *x, INT ivs, const R *aligned_like)
 {
-    (void)aligned_like;
-    (void)ivs;
-    return _mips64_ld((V*)x);
+  (void)aligned_like;
+  (void)ivs;
+  return _mips64_ld((V*)x);
 }
 #define LD LDA
 
 static inline void STA(R *x, V v, INT ovs, const R *aligned_like)
 {
-    (void)aligned_like;
-    (void)ovs;
-    _mips64_st(x, v);
+  (void)aligned_like;
+  (void)ovs;
+  _mips64_st(x, v);
 }
 #define ST STA
 
@@ -93,9 +93,9 @@ static inline void STA(R *x, V v, INT ovs, const R *aligned_like)
 
 static inline void STN2(R *x, V v0, V v1, INT ovs)
 {
-    (void)ovs;
-    STA(x,   v0, 0, 0);
-    STA(x+2, v1, 0, 0);
+  (void)ovs;
+  STA(x,   v0, 0, 0);
+  STA(x+2, v1, 0, 0);
 }
 #else /* !USE_MULTIPLE_STORES */
 #  define STM2 STA
@@ -107,21 +107,18 @@ static inline void STN2(R *x, V v0, V v1, INT ovs)
 
 static inline void STN4(R *x, V v0, V v1, V v2, V v3, INT ovs)
 {
-    R *x_ptr = x;
-    STA(x_ptr, UNPCKL(v0,v1), 0, 0);
-    x_ptr += ovs;
-    STA(x_ptr, UNPCKL(v2,v3), 0, 0);
-    x_ptr += ovs;
-    STA(x_ptr, UNPCKH(v0,v1), 0, 0);
-    x_ptr += ovs;
-    STA(x_ptr, UNPCKH(v2,v3), 0, 0);
+     R *x_ptr = x;
+     STA(x_ptr, UNPCKL(v0,v1), 0, 0); x_ptr += ovs;
+     STA(x_ptr, UNPCKL(v2,v3), 0, 0); x_ptr += ovs;
+     STA(x_ptr, UNPCKH(v0,v1), 0, 0); x_ptr += ovs;
+     STA(x_ptr, UNPCKH(v2,v3), 0, 0);
 }
 #else /* !USE_MULTIPLE_STORES */
 static inline void STM4(R *x, V v, INT ovs, const R *aligned_like)
 {
-    (void)aligned_like; /* UNUSED */
-    STOREL(x, v);
-    STOREH(x + ovs, v);
+     (void)aligned_like; /* UNUSED */
+     STOREL(x, v);
+     STOREH(x + ovs, v);
 }
 #  define STN4(x, v0, v1, v2, v3, ovs) /* nop */
 #endif
@@ -129,9 +126,9 @@ static inline void STM4(R *x, V v, INT ovs, const R *aligned_like)
 
 static inline V VBYI(V x)
 {
-    x = VCONJ(x);
-    x = FLIP_RI(x);
-    return x;
+     x = VCONJ(x);
+     x = FLIP_RI(x);
+     return x;
 }
 
 #define VFMAI(b, c)  VADD(c, VBYI(b))
@@ -139,20 +136,20 @@ static inline V VBYI(V x)
 
 static inline V VZMUL(V tx, V sr)
 {
-    V tr = UNPCKL(tx, tx);
-    V ti = UNPCKH(tx, tx);
-    tr = VMUL(sr, tr);
-    sr = VBYI(sr);
-    return VFMA(ti,sr,tr);
+     V tr = UNPCKL(tx, tx);
+     V ti = UNPCKH(tx, tx);
+     tr = VMUL(sr, tr);
+     sr = VBYI(sr);
+     return VFMA(ti,sr,tr);
 }
 
 static inline V VZMULJ(V tx, V sr)
 {
-    V tr = UNPCKL(tx, tx);
-    V ti = UNPCKH(tx, tx);
-    tr = VMUL(sr, tr);
-    sr = VBYI(sr);
-    return VFNMS(ti,sr,tr);
+     V tr = UNPCKL(tx, tx);
+     V ti = UNPCKH(tx, tx);
+     tr = VMUL(sr, tr);
+     sr = VBYI(sr);
+     return VFNMS(ti,sr,tr);
 }
 
 /* twiddle storage #1: compact, slower */
@@ -161,53 +158,53 @@ static inline V VZMULJ(V tx, V sr)
 
 static inline V BYTW1(const R *t, V sr)
 {
-    V tx = LD(t, 1, t);
-    return VZMUL(tx, sr);
+     V tx = LD(t, 1, t);
+     return VZMUL(tx, sr);
 }
 
 static inline V BYTWJ1(const R *t, V sr)
 {
-    V tx = LD(t, 1, t);
-    return VZMULJ(tx, sr);
+     V tx = LD(t, 1, t);
+     return VZMULJ(tx, sr);
 }
 
 /* twiddle storage #2: twice the space, faster (when in cache) */
-#define VTW2(v,x)                           \
-    {TW_COS, v, x}, {TW_COS, v, x}, {TW_SIN, v, -x}, {TW_SIN, v, x}
+#define VTW2(v,x)							\
+  {TW_COS, v, x}, {TW_COS, v, x}, {TW_SIN, v, -x}, {TW_SIN, v, x}
 #define TWVL2 2
 
 static inline V BYTW2(const R *t, V sr)
 {
-    const V *twp = (const V *)t;
-    V si = FLIP_RI(sr);
-    V tr = twp[0], ti = twp[1];
-    return VFMA(tr,sr,VMUL(ti,si));
+     const V *twp = (const V *)t;
+     V si = FLIP_RI(sr);
+     V tr = twp[0], ti = twp[1];
+     return VFMA(tr,sr,VMUL(ti,si));
 }
 
 static inline V BYTWJ2(const R *t, V sr)
 {
-    const V *twp = (const V *)t;
-    V si = FLIP_RI(sr);
-    V tr = twp[0], ti = twp[1];
-    return VFNMS(ti,si, VMUL(tr,sr));
+     const V *twp = (const V *)t;
+     V si = FLIP_RI(sr);
+     V tr = twp[0], ti = twp[1];
+     return VFNMS(ti,si, VMUL(tr,sr));
 }
 
 static inline V VZMULI(V tx, V sr)
 {
-    V tr = UNPCKL(tx, tx);
-    V ti = UNPCKH(tx, tx);
-    ti = VMUL(ti, sr);
-    sr = VBYI(sr);
-    return VFMS(tr,sr,ti);
+     V tr = UNPCKL(tx, tx);
+     V ti = UNPCKH(tx, tx);
+     ti = VMUL(ti, sr);
+     sr = VBYI(sr);
+     return VFMS(tr,sr,ti);
 }
 
 static inline V VZMULIJ(V tx, V sr)
 {
-    V tr = UNPCKL(tx, tx);
-    V ti = UNPCKH(tx, tx);
-    ti = VMUL(ti, sr);
-    sr = VBYI(sr);
-    return VFMA(tr,sr,ti);
+     V tr = UNPCKL(tx, tx);
+     V ti = UNPCKH(tx, tx);
+     ti = VMUL(ti, sr);
+     sr = VBYI(sr);
+     return VFMA(tr,sr,ti);
 }
 
 /* twiddle storage #3 */
@@ -215,8 +212,8 @@ static inline V VZMULIJ(V tx, V sr)
 #define TWVL3 TWVL1
 
 /* twiddle storage for split arrays */
-#define VTWS(v,x)                           \
-    {TW_COS, v, x}, {TW_COS, v+1, x}, {TW_SIN, v, x}, {TW_SIN, v+1, x}
+#define VTWS(v,x)							\
+  {TW_COS, v, x}, {TW_COS, v+1, x}, {TW_SIN, v, x}, {TW_SIN, v+1, x}
 #define TWVLS (2 * VL)
 
 

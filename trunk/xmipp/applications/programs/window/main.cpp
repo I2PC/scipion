@@ -142,9 +142,7 @@ public:
                 }
 
             physical_coords = checkParameter(argc, argv, "-physical");
-        }
-        else if (checkParameter(argc, argv, "-crop"))
-        {
+        } else if (checkParameter(argc, argv, "-crop")) {
             crop_mode = true;
             int i = paremeterPosition(argc, argv, "-crop");
             if (i + 2 >= argc)
@@ -174,35 +172,35 @@ public:
         Prog_parameters::show();
         if (size_mode)
             std::cout << "New size: (XxYxZ)=" << sizeX << "x" << sizeY << "x"
-                      << sizeZ << std::endl;
+                << sizeZ << std::endl;
         else if (crop_mode)
             std::cout << "Crop: (XxYxZ)=" << cropX << "x" << cropY << "x"
-                      << cropZ << std::endl;
+                << cropZ << std::endl;
         else
             std::cout << "New window: from (z0,y0,x0)=(" << z0 << ","
-                      << y0 << "," << x0 << ") to (zF,yF,xF)=(" << zF << "," << yF
-                      << "," << xF << ")\n"
-                      << "Physical: " << physical_coords << std::endl;
+                << y0 << "," << x0 << ") to (zF,yF,xF)=(" << zF << "," << yF
+                << "," << xF << ")\n"
+                << "Physical: " << physical_coords << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
         std::cerr << "  [-physical]               : Use physical instead of logical\n"
-                  << "                             coordinates\n"
-                  << "  [-pad_value <val>]        : value used for padding\n"
-                  << "  [-corner_pad_value]       : use the value of the upper\n"
-                  << "                              left corner for padding\n"
-                  << "  [-average_pad_value]      : use the image average for padding\n"
-                  << "  [-r0 <x0> <y0> [<z0>]     : Window using window corners\n"
-                  << "   -rF <xF> <yF> [<zF>]]    : by default indexes are logical\n"
-                  << "  [-size <sizeX> [<sizeY>] [<sizeZ>]]: Window to a new size\n"
-                  << "                            : if only one is given, the other two\n"
-                  << "                              are supposed to be the same\n"
-                  << "  [-crop <sizeX> [<sizeY>] [<sizeZ>]]: Crop this amount of pixels in each direction\n"
-                  << "                            : if only one is given, the other two\n"
-                  << "                              are supposed to be the same\n"
-                  ;
+             << "                             coordinates\n"
+             << "  [-pad_value <val>]        : value used for padding\n"
+             << "  [-corner_pad_value]       : use the value of the upper\n"
+             << "                              left corner for padding\n"
+             << "  [-average_pad_value]      : use the image average for padding\n"
+             << "  [-r0 <x0> <y0> [<z0>]     : Window using window corners\n"
+             << "   -rF <xF> <yF> [<zF>]]    : by default indexes are logical\n"
+             << "  [-size <sizeX> [<sizeY>] [<sizeZ>]]: Window to a new size\n"
+             << "                            : if only one is given, the other two\n"
+             << "                              are supposed to be the same\n"
+             << "  [-crop <sizeX> [<sizeY>] [<sizeZ>]]: Crop this amount of pixels in each direction\n"
+             << "                            : if only one is given, the other two\n"
+             << "                              are supposed to be the same\n"
+        ;
     }
 };
 
@@ -213,21 +211,20 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
         eprm->init_value = (img()).computeAvg();
     else if (eprm->corner_pad)
         eprm->init_value = DIRECT_MAT_ELEM(img(), 0, 0);
-    if (eprm->crop_mode)
-    {
+    if (eprm->crop_mode) {
         int xl=eprm->cropX/2;
         int xr=eprm->cropX-xl;
         int yl=eprm->cropY/2;
         int yr=eprm->cropY-yl;
         img().window(STARTINGY(img())+yl,STARTINGX(img())+xl,
-                     FINISHINGY(img())-yr,FINISHINGX(img())-xr);
-    }
-    else if (!eprm->physical_coords)
-        img().window(eprm->y0, eprm->x0, eprm->yF, eprm->xF,
-                     eprm->init_value);
-    else img().window(STARTINGY(img()) + eprm->y0,
-                          STARTINGX(img()) + eprm->x0, STARTINGY(img()) + eprm->yF,
-                          STARTINGX(img()) + eprm->xF, eprm->init_value);
+            FINISHINGY(img())-yr,FINISHINGX(img())-xr);
+    } else
+        if (!eprm->physical_coords)
+            img().window(eprm->y0, eprm->x0, eprm->yF, eprm->xF,
+                eprm->init_value);
+        else img().window(STARTINGY(img()) + eprm->y0,
+            STARTINGX(img()) + eprm->x0, STARTINGY(img()) + eprm->yF,
+            STARTINGX(img()) + eprm->xF, eprm->init_value);
     return true;
 }
 
@@ -238,8 +235,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
         eprm->init_value = (vol()).computeAvg();
     else if (eprm->corner_pad)
         eprm->init_value = DIRECT_VOL_ELEM(vol(), 0, 0, 0);
-    if (eprm->crop_mode)
-    {
+    if (eprm->crop_mode) {
         int xl=eprm->cropX/2;
         int xr=eprm->cropX-xl;
         int yl=eprm->cropY/2;
@@ -247,17 +243,17 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
         int zl=eprm->cropZ/2;
         int zr=eprm->cropZ-zl;
         vol().window(STARTINGZ(vol())+zl,STARTINGY(vol())+yl,
-                     STARTINGX(vol())+xl, FINISHINGZ(vol())-zr,FINISHINGY(vol())-yr,
-                     FINISHINGX(vol())-xr);
-    }
-    else if (!eprm->physical_coords)
-        vol().window(eprm->z0, eprm->y0, eprm->x0, eprm->zF, eprm->yF,
-                     eprm->xF, eprm->init_value);
-    else vol().window(STARTINGZ(vol()) + eprm->z0,
-                          STARTINGY(vol()) + eprm->y0,
-                          STARTINGX(vol()) + eprm->x0, STARTINGZ(vol()) + eprm->zF,
-                          STARTINGY(vol()) + eprm->yF, STARTINGX(vol()) + eprm->xF,
-                          eprm->init_value);
+            STARTINGX(vol())+xl, FINISHINGZ(vol())-zr,FINISHINGY(vol())-yr,
+            FINISHINGX(vol())-xr);
+    } else
+        if (!eprm->physical_coords)
+            vol().window(eprm->z0, eprm->y0, eprm->x0, eprm->zF, eprm->yF,
+                eprm->xF, eprm->init_value);
+        else vol().window(STARTINGZ(vol()) + eprm->z0,
+                STARTINGY(vol()) + eprm->y0,
+                STARTINGX(vol()) + eprm->x0, STARTINGZ(vol()) + eprm->zF,
+                STARTINGY(vol()) + eprm->yF, STARTINGX(vol()) + eprm->xF,
+                eprm->init_value);
     return true;
 }
 

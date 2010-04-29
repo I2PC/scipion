@@ -25,22 +25,19 @@
 extern "C" {
 #endif                          /* __cplusplus */
 
-    enum {
-        REQARG, OPTARG, NOARG
-    };
+enum { REQARG, OPTARG, NOARG };
 
-    struct my_option
-    {
-        const char *long_name;
-        int argtype;
-        int short_name;
-    };
+struct my_option {
+     const char *long_name;
+     int argtype;
+     int short_name;
+};
 
-    extern int my_optind;
-    extern const char *my_optarg;
+extern int my_optind;
+extern const char *my_optarg;
 
-    extern void my_usage(const char *progname, const struct my_option *opt);
-    extern int my_getopt(int argc, char *argv[], const struct my_option *optarray);
+extern void my_usage(const char *progname, const struct my_option *opt);
+extern int my_getopt(int argc, char *argv[], const struct my_option *optarray);
 
 #ifdef __cplusplus
 }                               /* extern "C" */

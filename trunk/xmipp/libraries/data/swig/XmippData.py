@@ -750,6 +750,7 @@ class MetaDataContainer(_object):
     def valueExists(*args): return _XmippData.MetaDataContainer_valueExists(*args)
     def pairExists(*args): return _XmippData.MetaDataContainer_pairExists(*args)
     def deleteValue(*args): return _XmippData.MetaDataContainer_deleteValue(*args)
+    def writeValueToStream(*args): return _XmippData.MetaDataContainer_writeValueToStream(*args)
     def writeValueToFile(*args): return _XmippData.MetaDataContainer_writeValueToFile(*args)
     def writeValueToString(*args): return _XmippData.MetaDataContainer_writeValueToString(*args)
     __swig_getmethods__["codifyLabel"] = lambda x: _XmippData.MetaDataContainer_codifyLabel

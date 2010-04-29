@@ -408,13 +408,13 @@ void SF_main(int argc, char **argv,
                 }
 
                 if (prm->each_image_produces_an_output)
-                    SF_out.addObject();
-                SF_out.setValue( MDL_IMAGE, prm->fn_out);
-                //SF_out.setImage( prm->fn_out);
-                if (success)
-                    SF_out.setValue( MDL_ENABLED, 1);
-                else
-                    SF_out.setValue( MDL_ENABLED,-1);
+                	SF_out.addObject();
+                    SF_out.setValue( MDL_IMAGE, prm->fn_out);
+                    //SF_out.setImage( prm->fn_out);
+                    if (success)
+                    	SF_out.setValue( MDL_ENABLED, 1);
+					else
+						SF_out.setValue( MDL_ENABLED,-1);
 
                 if (i++ % istep == 0 && prm->allow_time_bar && !prm->quiet)
                     progress_bar(i);

@@ -92,12 +92,11 @@ void xmippSOM::train(xmippMap& _som, xmippCTVectors& _ts) const
             // get the best matching.
             SomIn& theBest = _som.test(*i);
             if (somNeigh == BUBBLE)
-            {
-                // Bubble
+            { // Bubble
                 // update the neighborhood around the best one
                 std::vector<unsigned> neig = _som.neighborhood(_som.codVecPos(theBest),
-                                             ceil(somRadius(t, somNSteps)));
-                for (std::vector<unsigned>::iterator it = neig.begin(); it < neig.end(); it++)
+                                        ceil(somRadius(t, somNSteps)));
+                for (std::vector<unsigned>::iterator it = neig.begin();it < neig.end();it++)
                 {
                     SomIn& v = _som.theItems[*it];
                     for (unsigned j = 0; j < v.size(); j++)
@@ -105,8 +104,7 @@ void xmippSOM::train(xmippMap& _som, xmippCTVectors& _ts) const
                 }
             }
             else
-            {
-                // Gaussian
+            { // Gaussian
                 // update all neighborhood convoluted by a gaussian
                 double radius = somRadius(t, somNSteps);
                 double alpha = somAlpha(t, somNSteps);

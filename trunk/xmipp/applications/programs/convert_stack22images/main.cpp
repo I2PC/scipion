@@ -43,10 +43,10 @@ int main(int argc, char **argv)
         fn_vol   = getParameter(argc,argv,"-vol","");
         reversed = checkParameter(argc,argv,"-reverse");
         skipHeaders = checkParameter(argc,argv,"-skipHeaders");
-
+        
         if (fn_sel=="" && fn_vol=="" || fn_stack=="" && fn_vol=="" ||
             fn_sel=="" && fn_stack=="")
-            REPORT_ERROR(1,"stack22images: Please, provide at two of -stack, -sel and -vol");
+           REPORT_ERROR(1,"stack22images: Please, provide at two of -stack, -sel and -vol");
     }
     catch (Xmipp_error XE)
     {
@@ -101,10 +101,8 @@ int main(int argc, char **argv)
                 }
                 stack.writeAsStack(fn_stack);
             }
-            // From selfile to volume or stack .................................
-        }
-        else
-        {
+        // From selfile to volume or stack .................................
+        } else {
             SF.read(fn_sel);
             if (fn_vol!="")
             {
@@ -149,5 +147,5 @@ void Usage()
               << "   [-vol volume]     : Volume with the set of images\n"
               << "   [-reverse]        : Reverse endiannness for reading the stack\n"
               << "   [-skipHeaders]    : skip headers in badly formed Spider stacks\n"
-              ;
+    ;
 }

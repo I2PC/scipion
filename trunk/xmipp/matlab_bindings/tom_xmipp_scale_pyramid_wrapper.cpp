@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *      psd = tom_xmipp_scale_pyramid_wrapper(image,operation,levels)
+ *		psd = tom_xmipp_scale_pyramid_wrapper(image,operation,levels)
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -33,7 +33,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     bool operation = (bool)mxGetScalar(prhs[1]);
     int levels = (int)mxGetScalar(prhs[2]);
     mwSize ndims = mxGetNumberOfDimensions(prhs[0]);
-
+    
     if (ndims == 2)
     {
         ImageXmipp img;
@@ -42,7 +42,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         float Xoff, Yoff;
         img.get_originOffsets(Xoff, Yoff);
         float scale_factor = (float)(pow(2.0, levels));
-
+        
         Matrix2D<double> result;
 
         if (operation == true)
@@ -50,7 +50,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
             img().pyramidExpand(result, levels);
             img.set_originOffsets(Xoff*scale_factor, Yoff*scale_factor);
         }
-        else
+        else 
         {
             img().pyramidReduce(result, levels);
             img.set_originOffsets(Xoff / scale_factor, Yoff / scale_factor);
@@ -58,12 +58,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 
         setMatrix2D(result,plhs[0]);
     }
-    else
+    else 
     {
         Volume vol;
         getMatrix3D(prhs[0],vol());
-        Matrix3D<double> result;
-
+        Matrix3D<double> result; 
+       
         if (operation == true)
         {
             vol().pyramidExpand(result, levels);
@@ -72,8 +72,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         {
             vol().pyramidReduce(result, levels);
         }
-
+        
         setMatrix3D(result,plhs[0]);
     }
-}
+}	
 

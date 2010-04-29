@@ -99,8 +99,7 @@ void fftcol(float **x, int col1, float **y, int col2,
     /************************************************************/
 
     if (n != last_size)    /* Transform size has changed */
-    {
-        if (last_size != 0)
+        {   if (last_size != 0)
             for (k = 1; k < last_m; k++)
             {
                 free((char *) sss1[k]);
@@ -110,8 +109,7 @@ void fftcol(float **x, int col1, float **y, int col2,
             }
         size = n >> 2;
         for (k = 1; k < m; k++, size >>= 1) /* Get space for new ones */
-        {
-            sss1[k] = (float *) calloc(size + 1, sizeof(float));
+        {   sss1[k] = (float *) calloc(size + 1, sizeof(float));
             sss3[k] = (float *) calloc(size + 1, sizeof(float));
             ccc1[k] = (float *) calloc(size + 1, sizeof(float));
             ccc3[k] = (float *) calloc(size + 1, sizeof(float));
@@ -371,8 +369,7 @@ void rfft(float *y, int n, int m, int kind)
 
     /******* Compute table of sines/cosines *************************************/
     if (n != last_n)    /* Transform size has changed */
-    {
-        if (last_n != 0)     /* Correct , it does not work !!! */
+        {   if (last_n != 0)     /* Correct , it does not work !!! */
             for (k = 3; k <= last_m; k++)
             {
                 free((char *) sss1[k]);
@@ -382,8 +379,7 @@ void rfft(float *y, int n, int m, int kind)
             }
         n2 = 4;
         for (k = 3; k <= m; k++) /* Get space for new ones */
-        {
-            n2 <<= 1;
+        {   n2 <<= 1;
             n8 = n2 >> 3;
             e = a = TWOPI / n2;
             sss1[k] = (float *) malloc((n8 + 1) * sizeof(float));
@@ -433,10 +429,9 @@ void rfft(float *y, int n, int m, int kind)
 
     if (kind == 0)  /* Direct transform */
         /*******************  Digit reverse  counter  *******************************/
-    {
-        j = 1;
+    {   j = 1;
         n1 = n - 1;
-        for (i = 1; i <= n1; i++)
+        for (i = 1;i <= n1;i++)
         {
             if (i < j)
             {
@@ -459,7 +454,7 @@ void rfft(float *y, int n, int m, int kind)
         id = 4;
         do
         {
-            for (i0 = is; i0 <= n; i0 += id)
+            for (i0 = is;i0 <= n;i0 += id)
             {
                 i1 = i0 + 1;
                 r1 = x[i0];
@@ -483,7 +478,7 @@ void rfft(float *y, int n, int m, int kind)
             id = n2 << 1;
             do
             {
-                for (i = is; i < n; i += id)
+                for (i = is;i < n;i += id)
                 {
                     i1 = i + 1;
                     i2 = i1 + n4;
@@ -511,7 +506,7 @@ void rfft(float *y, int n, int m, int kind)
                 id <<= 2;  /* id *= 4; */
             }
             while (is < n);
-            for (j = 2; j <= n8; j++)
+            for (j = 2;j <= n8;j++)
             {
                 cc1 = ccc1[k][j];
                 ss1 = sss1[k][j];
@@ -521,7 +516,7 @@ void rfft(float *y, int n, int m, int kind)
                 id = n2 << 1;
                 do
                 {
-                    for (i = is; i < n; i += id)
+                    for (i = is;i < n;i += id)
                     {
                         i1 = i + j;
                         i2 = i1 + n4;
@@ -573,7 +568,7 @@ void rfft(float *y, int n, int m, int kind)
     else    /*** Inverse transform ***/
     {
         n2 = n << 1;
-        for (k = 1; k < m; k++)
+        for (k = 1;k < m;k++)
         {
             is = 0;
             id = n2;
@@ -582,7 +577,7 @@ void rfft(float *y, int n, int m, int kind)
             n8 = n4 >> 1;
             do
             {
-                for (i = is; i < n; i += id)
+                for (i = is;i < n;i += id)
                 {
                     i1 = i + 1;
                     i2 = i1 + n4;
@@ -611,7 +606,7 @@ void rfft(float *y, int n, int m, int kind)
                 id <<= 2;
             }
             while (is < n - 1);
-            for (j = 2; j <= n8; j++)
+            for (j = 2;j <= n8;j++)
             {
                 cc1 = ccc1[m-k+1][j];  /*** Note that cosine table is inverted]] ***/
                 ss1 = sss1[m-k+1][j];
@@ -621,7 +616,7 @@ void rfft(float *y, int n, int m, int kind)
                 id = n2 << 1;
                 do
                 {
-                    for (i = is; i < n; i += id)
+                    for (i = is;i < n;i += id)
                     {
                         i1 = i + j;
                         i2 = i1 + n4;
@@ -661,7 +656,7 @@ void rfft(float *y, int n, int m, int kind)
         id = 4;
         do
         {
-            for (i0 = is; i0 <= n; i0 += id)
+            for (i0 = is;i0 <= n;i0 += id)
             {
                 i1 = i0 + 1;
                 r1 = x[i0];
@@ -677,7 +672,7 @@ void rfft(float *y, int n, int m, int kind)
 
         j = 1;
         n1 = n - 1;
-        for (i = 1; i <= n1; i++)
+        for (i = 1;i <= n1;i++)
         {
             if (i < j)
             {
@@ -696,7 +691,7 @@ void rfft(float *y, int n, int m, int kind)
 
         /*********** Re-scale output *****************/
         fn = n;
-        for (i = 1; i <= n; i++)
+        for (i = 1;i <= n;i++)
             x[i] /= fn;
     }
 }
@@ -709,8 +704,7 @@ void cfft(float *x, float *y, int n, int m, int sentido)
 /*  x : Real part array and column position */
 /*  y : Imaginary part array and column position */
 
-{
-    register int i0, i1;
+{   register int i0, i1;
     int n2, n4, i2, i3, id, is, i, j, k, size;
     float e, a, r1, r2, s1, s2, s3, xt, cc1, cc3, ss1, ss3;
     static float *ccc1[10], *sss1[10], *ccc3[10], *sss3[10];
@@ -725,8 +719,7 @@ void cfft(float *x, float *y, int n, int m, int sentido)
     /************************************************************/
 
     if (n != last_size)    /* Transform size has changed */
-    {
-        if (last_size != 0)
+        {   if (last_size != 0)
             for (k = 1; k < last_m; k++)
             {
                 free((char *) sss1[k]);
@@ -736,8 +729,7 @@ void cfft(float *x, float *y, int n, int m, int sentido)
             }
         size = n >> 2;
         for (k = 1; k < m; k++, size >>= 1) /* Get space for new ones */
-        {
-            sss1[k] = (float *) calloc(size + 1, sizeof(float));
+        {   sss1[k] = (float *) calloc(size + 1, sizeof(float));
             sss3[k] = (float *) calloc(size + 1, sizeof(float));
             ccc1[k] = (float *) calloc(size + 1, sizeof(float));
             ccc3[k] = (float *) calloc(size + 1, sizeof(float));

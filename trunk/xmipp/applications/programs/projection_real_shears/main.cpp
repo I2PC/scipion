@@ -1,13 +1,13 @@
 /***************************************************************************
  *
  * Authors:     Slavica JONIC (slavica.jonic@impmc.jussieu.fr, slavica.jonic@a3.epfl.ch)
- *      Jean-Noel PIOCHE (jnp95@hotmail.com)
- *
+ *		Jean-Noel PIOCHE (jnp95@hotmail.com) 
+ *		
  * Biomedical Imaging Group, EPFL (Lausanne, Suisse).
  * Structures des Assemblages Macromoléculaires, IMPMC UMR 7590 (Paris, France).
  * IUT de Reims-Châlons-Charleville (Reims, France).
  *
- * Last modifications by JNP the 12/05/2009 13:22:12
+ * Last modifications by JNP the 12/05/2009 13:22:12 
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

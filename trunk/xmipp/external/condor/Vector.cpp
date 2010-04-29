@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
-              using trust Region method for high-computing load,
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
+              using trust Region method for high-computing load, 
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product,
+If you want to include this tools in any commercial product, 
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -39,19 +39,10 @@ void Vector::alloc(int _n, int _ext)
     d->extention=_ext;
     d->ref_count=1;
 
-    if (_ext==0)
-    {
-        d->p=NULL;
-        return;
-    };
+    if (_ext==0) { d->p=NULL; return; };
 
-    d->p=(double*)malloc(_ext*sizeof(double));
-    if (d->p==NULL)
-    {
-        printf("memory allocation error\n");
-        getchar();
-        exit(253);
-    }
+    d->p=(double*)malloc(_ext*sizeof(double)); 
+    if (d->p==NULL) { printf("memory allocation error\n"); getchar(); exit(253); }
 }
 
 Vector::Vector(int n)
@@ -62,20 +53,16 @@ Vector::Vector(int n)
 
 Vector::Vector(int n, int ext)
 {
-    alloc(n,ext);
+    alloc(n,ext); 
     zero();
 };
 
 Vector::Vector(int n, double *dd, char _exte)
 {
     alloc(n,n);
-    if (dd)
+    if (dd) 
     {
-        if (_exte)
-        {
-            d->externalData=1;
-            d->p=dd;
-        }
+        if (_exte) { d->externalData=1; d->p=dd; }
         else memcpy(d->p,dd,n*sizeof(double));
     }
     else zero();
@@ -93,16 +80,11 @@ void Vector::setExternalData(int _n, double *dd)
 {
     if ((d->extention==_n)||(!d->extention))
     {
-        d->n=_n;
-        d->extention=_n;
-        d->externalData=1;
-        d->p=dd;
-    }
-    else
+        d->n=_n; d->extention=_n; d->externalData=1; d->p=dd; 
+    } else
     {
         printf("do not use this function ('setExternalData'): it's too dangerous.\n");
-        getchar();
-        exit(255);
+        getchar(); exit(255);
     }
 }
 
@@ -115,32 +97,21 @@ void Vector::zero(int i, int _n)
 
 void Vector::prepareExtend(int new_extention)
 {
-    if (d->extention<new_extention)
-    {
-        d->p=(double*)realloc(d->p,new_extention*sizeof(double));
-        if (d->p==NULL)
-        {
-            printf("memory allocation error\n");
-            getchar();
-            exit(253);
-        }
+	if (d->extention<new_extention)
+	{
+		d->p=(double*)realloc(d->p,new_extention*sizeof(double));
+        if (d->p==NULL) { printf("memory allocation error\n"); getchar(); exit(253); }
 
         // not really necessary (fill with zero's):
         memset(d->p+d->extention,0,(new_extention-d->extention)*sizeof(double));
-        d->extention=new_extention;
-    };
+    	d->extention=new_extention;
+	};
 };
 
 void Vector::setSize(int _n)
 {
     d->n=_n;
-    if (_n==0)
-    {
-        if (d->p) free(d->p);
-        d->p=NULL;
-        d->extention=0;
-        return;
-    }
+    if (_n==0) { if (d->p) free(d->p); d->p=NULL; d->extention=0; return; }
     prepareExtend(_n);
 }
 
@@ -152,59 +123,49 @@ void Vector::extend()
 
 void Vector::exactshape()
 {
-    if (d->extention!=d->n)
-    {
-        d->p=(double*)realloc(d->p,d->n*sizeof(double));
-        if (d->p==NULL)
-        {
-            printf("memory allocation error\n");
-            getchar();
-            exit(253);
-        }
-        d->extention=d->n;
-    };
+	if (d->extention!=d->n)
+	{
+		d->p=(double*)realloc(d->p,d->n*sizeof(double));
+        if (d->p==NULL) { printf("memory allocation error\n"); getchar(); exit(253); }
+		d->extention=d->n;
+	};
 };
 
 int Vector::equals( Vector Q )
 {
-    if (Q.d==d) return 1;
-    if (Q.d==emptyVector.d)
-    {
-        double *cP=d->p;
-        int i=sz();
-        while (i--) if (*(cP++)) return 0;
-        return 1;
-    }
+  if (Q.d==d) return 1;
+  if (Q.d==emptyVector.d)
+  {
+      double *cP=d->p;
+      int i=sz();
+      while (i--) if (*(cP++)) return 0;
+      return 1;
+  }
 
-    if (sz() != Q.sz()) return 0;
+  if (sz() != Q.sz()) return 0;
 
-    double *cP = d->p, *cQ = Q.d->p;
-    int i = sz();
+  double *cP = d->p, *cQ = Q.d->p;
+  int i = sz();
 
-    while( i-- )
-    {
-        if (*cP!=*cQ) return 0;
-        cP++;
-        cQ++;
-    }
+  while( i-- )
+  {
+    if (*cP!=*cQ) return 0;
+    cP++; cQ++;
+  }
 
-    return 1;
+  return 1;
 }
 
 //ostream& Vector::PrintToStream( ostream& out ) const
 void Vector::print()
 {
     int N=sz();
-    printf("[");
-    if (!N || !d->p)
-    {
-        printf("]\n");
-        return;
-    }
+	printf("[");
+	if (!N || !d->p) { printf("]\n"); return; }
 
     double *up=d->p;
-    while (--N) printf("%f,",*(up++));
-    printf("%f]\n",*up);
+	while (--N) printf("%f,",*(up++));
+	printf("%f]\n",*up);
 }
 
 Vector::~Vector()
@@ -216,7 +177,7 @@ void Vector::destroyCurrentBuffer()
 {
     if (!d) return;
     (d->ref_count) --;
-    if (d->ref_count==0)
+	if (d->ref_count==0)
     {
         if ((d->p)&&(!d->externalData)) free(d->p);
         free(d);
@@ -227,19 +188,19 @@ Vector::Vector(const Vector &A)
 {
     // shallow copy
     d=A.d;
-    (d->ref_count)++ ;
+	(d->ref_count)++ ;
 }
 
 Vector& Vector::operator=( const Vector& A )
 {
     // shallow copy
     if (this != &A)
-    {
+	{
         destroyCurrentBuffer();
         d=A.d;
-        (d->ref_count) ++ ;
-    }
-    return *this;
+		(d->ref_count) ++ ;
+	}
+	return *this;
 }
 
 Vector Vector::clone()
@@ -283,12 +244,12 @@ double Vector::euclidianDistance(Vector v)
 {
     Vector t=(*this)-v;
     return ::euclidianNorm(sz(), t.d->p);
-    /*
-        double *xp1=d->p, *xp2=v.d->p, sum=0;
-        int ni=sz();
-        while (ni--) sum+=sqr(*(xp1++)-*(xp2++));
-        return sqrt(sum);
-    */
+/*
+    double *xp1=d->p, *xp2=v.d->p, sum=0;
+    int ni=sz();
+    while (ni--) sum+=sqr(*(xp1++)-*(xp2++));
+    return sqrt(sum);
+*/
 }
 
 double Vector::LnftyDistance(Vector v)
@@ -336,9 +297,7 @@ void Vector::transposeAndMultiply(Vector vR, Matrix M)
 {
     if ((int)sz()!=M.nLine())
     {
-        printf("error in V^t * M.\n");
-        getchar();
-        exit(254);
+        printf("error in V^t * M.\n"); getchar(); exit(254);
     }
     int n=sz(), szr=M.nColumn(), i;
     vR.setSize(szr);
@@ -359,12 +318,11 @@ void Vector::diagonalizeAndMultiply(Matrix M)
     if ((int)sz()!=nl)
     {
         printf("(matrix_diagonal * matrix) error");
-        getchar();
-        exit(249);
+        getchar(); exit(249);
     }
     double **p1=M,*p2=(*this);
 
-    for (i=0; i<nl; i++)
+    for (i=0; i<nl; i++) 
         for (j=0; j<nc; j++)
             p1[i][j]*=p2[i];
 
@@ -374,10 +332,7 @@ double Vector::scalarProduct(Vector v)
 {
     double *xp1=d->p, *xp2=v.d->p, sum=0;
     int ni=sz();
-    while (ni--)
-    {
-        sum+=*(xp1++) * *(xp2++);
-    };
+    while (ni--) { sum+=*(xp1++) * *(xp2++); };
     return sum;
 }
 
@@ -412,7 +367,7 @@ Vector Vector::operator-( Vector v)
     int ni=sz();
     Vector r(sz());
     double *xp1=r.d->p, *xp2=v.d->p, *xp3=d->p;
-    while (ni--)
+    while (ni--) 
         *(xp1++)+=*(xp3++)-*(xp2++);
     return r;
 }
@@ -436,7 +391,7 @@ Vector Vector::operator+( Vector v)
     int ni=sz();
     Vector r(sz());
     double *xp1=r.d->p, *xp2=v.d->p, *xp3=d->p;
-    while (ni--)
+    while (ni--) 
         *(xp1++)+=*(xp3++)+*(xp2++);
     return r;
 }
@@ -485,12 +440,11 @@ Vector::Vector(char *filename)
 void Vector::save(char *filename, char ascii)
 {
     FILE *f;
-    if (ascii) f=fopen(filename,"w");
-    else f=fopen(filename,"wb");
+    if (ascii) f=fopen(filename,"w"); else f=fopen(filename,"wb");
     if (f==NULL)
     {
-        printf("Cannot write to '%s'\n",filename);
-        exit(255);
+		printf("Cannot write to '%s'\n",filename);
+		exit(255);
     }
     save(f,ascii);
     fclose(f);
@@ -519,7 +473,7 @@ void Vector::save(FILE *f, char ascii)
 
 void Vector::setPart(int i, Vector v, int n, int ii)
 {
-    if (n==0) n=v.sz()-ii;
+	if (n==0) n=v.sz()-ii;
     n=::mmin((int)n,(int)sz()-i);
     memcpy(d->p+i, ((double*)v)+ii, n*sizeof(double));
 }
@@ -538,16 +492,8 @@ void Vector::shift(int s)
     if (!n) return;
     double *ps=(*this), *pd=ps; // pointer source / destination
     if (s==0) return;
-    if (s>0)
-    {
-        n-=s;
-        pd+=s;
-    }
-    else
-    {
-        n+=s;
-        ps+=s;
-    }
+    if (s>0) { n-=s; pd+=s; } 
+    else { n+=s; ps+=s; }
     memmove(pd,ps,n*sizeof(double));
 }
 
@@ -557,9 +503,7 @@ void Vector::permutIn(Vector vR, VectorInt viP)
     if (!n) return;
     if (n!=viP.sz())
     {
-        printf("error in permutation IN: sizes don't agree.\n");
-        getchar();
-        exit(255);
+        printf("error in permutation IN: sizes don't agree.\n"); getchar(); exit(255);
     }
     vR.setSize(n);
     double *ps=(*this), *pd=vR; // pointer source / destination
@@ -574,9 +518,7 @@ void Vector::permutOut(Vector vR, VectorInt viP)
     if (!n) return;
     if (n!=viP.sz())
     {
-        printf("error in permutation IN: sizes don't agree.\n");
-        getchar();
-        exit(255);
+        printf("error in permutation IN: sizes don't agree.\n"); getchar(); exit(255);
     }
     vR.setSize(n);
     double *ps=(*this), *pd=vR; // pointer source / destination
@@ -590,26 +532,26 @@ void Vector::permutOut(Vector vR, VectorInt viP)
 
 char isANumber(char c)
 {
-    return (((c>='0')&&(c<='9'))||
-            (c=='.')||
-            (c=='e')||
-            (c=='E')||
-            (c=='+')||
-            (c=='-'));
+ return (((c>='0')&&(c<='9'))||
+         (c=='.')||
+         (c=='e')||
+         (c=='E')||
+         (c=='+')||
+         (c=='-'));
 }
 Vector::Vector(char *line, int gn)
 {
-    char *tline=line,*oldtline=NULL;
+	char *tline=line,*oldtline=NULL;
 
-    if (gn==0)
+    if (gn==0) 
     {
-        while ((*tline!=EOL1)&&(*tline!=EOL2))
-        {
-            while ((*tline==' ')||
-                   (*tline=='\t'))tline++;
-            if ((*tline==EOL1)||(*tline==EOL2)||(*tline==0)) break;
-            while (isANumber(*tline)) tline++;
-            gn++;
+	    while ((*tline!=EOL1)&&(*tline!=EOL2))
+	    {
+		    while ((*tline==' ')|| 
+			    (*tline=='\t'))tline++;
+		    if ((*tline==EOL1)||(*tline==EOL2)||(*tline==0)) break;
+		    while (isANumber(*tline)) tline++;
+		    gn++;
             if (oldtline==tline)
             {
                 alloc(gn-1,gn-1);
@@ -621,14 +563,10 @@ Vector::Vector(char *line, int gn)
                 //       "%s\n",line,tline);
             }
             oldtline=tline;
-        };
+	    };
     };
 
-    if (gn==0)
-    {
-        alloc(0,0);
-        return;
-    };
+	if (gn==0) { alloc(0,0); return; };
     alloc(gn,gn);
     getFromLine(line);
 };
@@ -637,15 +575,15 @@ char *Vector::getFromLine(char *line)
 {
     double *dp=d->p;
     int n=sz(),k;
-    char *tline=line, *oldtline;
-    for (k=0; k<n; k++)
+	char *tline=line, *oldtline; 
+	for (k=0; k<n; k++) 
     {
-        while ((*tline==' ')||
-               (*tline=='\t'))tline++;
-        if ((*tline==EOL1)||(*tline==EOL2))
+		while ((*tline==' ')|| 
+			    (*tline=='\t'))tline++;
+		if ((*tline==EOL1)||(*tline==EOL2)) 
         {
             setSize(k);
-            return tline;
+	        return tline;
         }
         oldtline=tline;
         while(isANumber(*tline)) tline++;
@@ -662,13 +600,9 @@ char *Vector::getFromLine(char *line)
         if (oldtline==tline)
         {
             setSize(k);
-            return tline;
+	        return tline;
         };
-        if (*tline)
-        {
-            *tline='\0';
-            tline++;
-        }
+        if (*tline) { *tline='\0'; tline++; }
         dp[k]=atof(oldtline);
     }
     return tline;
@@ -697,7 +631,7 @@ void Vector::appendToMatrixFile(char *saveFileName, char **names)
     fwrite(d->p,sizeof(double)*nc,1,f);
     unsigned nlfile;
     fseek(f,13,SEEK_SET);
-    fread(&nlfile,sizeof(int),1,f);
+    fread(&nlfile,sizeof(int),1,f); 
     nlfile++;
     fseek(f,13,SEEK_SET);
     fwrite(&nlfile, sizeof(unsigned), 1, f);

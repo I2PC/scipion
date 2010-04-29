@@ -314,10 +314,10 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
         }
 #ifdef DEBUG
         std::cout << "U="  << U.computeAvg()  << std::endl
-                  << "Hm=" << Hm.computeAvg() << std::endl
-                  << "Hn=" << Hn.computeAvg() << std::endl
-                  << "Hy=" << Hy.computeAvg() << std::endl
-                  << "hh=" << hh.computeAvg() << std::endl;
+        << "Hm=" << Hm.computeAvg() << std::endl
+        << "Hn=" << Hn.computeAvg() << std::endl
+        << "Hy=" << Hy.computeAvg() << std::endl
+        << "hh=" << hh.computeAvg() << std::endl;
 #endif
 
         // Update the sum of squared errors
@@ -332,34 +332,30 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
         msc = p * sse / ((p - gam) * (p - gam));
 #ifdef DEBUG
         std::cout << "MSC=" << msc << std::endl
-                  << "Gam=" << gam << std::endl;
+        << "Gam=" << gam << std::endl;
 #endif
 
         // Are we ready to terminate
 #define conf_thresh 10000
 #define conf_wait       2
         if (m == M)
-        {
-            // Run out of candidates
+        { // Run out of candidates
             finished = true;
             if (msc < min_msc) age = 0;
             else             age++;
         }
         else if (sse == 0)
-        {
-            // Reduced error to 0
+        { // Reduced error to 0
             finished = true;
             age = 0;
         }
         else if (sse < 0)
-        {
-            // Numerical error
+        { // Numerical error
             finished = true;
             age = 1;
         }
         else if (FmFm.computeMax() < 2.3e-16)
-        {
-            // No more significant regressors
+        { // No more significant regressors
             finished = true;
             age = 0;
         }
@@ -393,7 +389,7 @@ void RBF_train(xmippCTVectors &C, xmippCTVectors &X,
         }
 #ifdef DEBUG
         std::cout << "Finished=" << finished << std::endl
-                  << "Age=" << age << std::endl;
+        << "Age=" << age << std::endl;
 
 #endif
     } // while (!finished)

@@ -68,23 +68,23 @@ int main(int argc, char **argv)
 
         int i, j;
         arr_groups[0]=Nsub_;
-        for (i = 0; i < (Num_groups - Nres_); i++)
+        for (i = 0;i < (Num_groups - Nres_);i++)
         {
             arr_groups[i] = Nsub_;
         }
 
-        for (j = i; j < Num_groups; j++)
+        for (j = i;j < Num_groups;j++)
         {
             arr_groups[j] = Nsub_ + 1;
         }
 
         SFtmp.go_beginning();
-
-        for (i = 0; i < Num_groups; i++)
+            
+        for (i = 0;i < Num_groups;i++)
         {
             SFout.clear();
             SFout.reserve(arr_groups[i]);
-            for (j = 0; j < arr_groups[i]; j++)
+            for (j = 0;j < arr_groups[i];j++)
             {
                 SFout.insert(SFtmp.current());
                 SFtmp.NextImg();
@@ -116,11 +116,11 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cout << "Usage: split_selfile [options]\n"
-              << "    -i <selfile>            : Input selfile\n"
-              << "  [ -n <int=2> ]            : Number of output selfiles\n"
-              << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
-              << "                              output will be: rootname_<n>.sel\n"
-              << "  [ -dont_randomize ]       : Do not generate random groups\n"
-              << "  [ -dont_sort ]            : Do not sort the output sel\n"
-              ;
+    << "    -i <selfile>            : Input selfile\n"
+    << "  [ -n <int=2> ]            : Number of output selfiles\n"
+    << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
+    << "                              output will be: rootname_<n>.sel\n"
+    << "  [ -dont_randomize ]       : Do not generate random groups\n"
+    << "  [ -dont_sort ]            : Do not sort the output sel\n"
+    ;
 }

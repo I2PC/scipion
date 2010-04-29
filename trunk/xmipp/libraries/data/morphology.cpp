@@ -33,8 +33,8 @@ void dilate2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
                    int count)
 {
     int sum = 0;
-    for (int i = STARTINGY(in) + 1; i < FINISHINGY(in); i++)
-        for (int j = STARTINGX(in) + 1; j < FINISHINGX(in); j++)
+    for (int i = STARTINGY(in) + 1;i < FINISHINGY(in); i++)
+        for (int j = STARTINGX(in) + 1;j < FINISHINGX(in); j++)
         {
             if (in(i, j) == 0)
             {
@@ -42,17 +42,14 @@ void dilate2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
                 out(i, j) = 0;
                 sum = (int)(in(i - 1, j) + in(i + 1, j) + in(i, j - 1) + in(i, j + 1));
                 if (sum > count)
-                {
-                    //change the value to foreground
+                { //change the value to foreground
                     out(i, j) = 1;
                 }
                 else if (neig == 8)
-                {
-                    //8-environment
+                { //8-environment
                     sum = (int)(sum + in(i - 1, j - 1) + in(i - 1, j + 1) + in(i + 1, j - 1) + in(i + 1, j + 1));
                     if (sum > count)
-                    {
-                        //change the value to foreground
+                    { //change the value to foreground
                         out(i, j) = 1;
                     }
                 }
@@ -69,8 +66,8 @@ void erode2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
                   int count)
 {
     int sum = 0;
-    for (int i = STARTINGY(in) + 1; i < FINISHINGY(in); i++)
-        for (int j = STARTINGX(in) + 1; j < FINISHINGX(in); j++)
+    for (int i = STARTINGY(in) + 1;i < FINISHINGY(in); i++)
+        for (int j = STARTINGX(in) + 1;j < FINISHINGX(in); j++)
         {
             if (in(i, j) == 1)
             {
@@ -78,17 +75,14 @@ void erode2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
                 out(i, j) = 1;
                 sum = (int)(in(i - 1, j) + in(i + 1, j) + in(i, j - 1) + in(i, j + 1));
                 if ((4 - sum) > count)
-                {
-                    //change the value to background
+                { //change the value to background
                     out(i, j) = 0;
                 }
                 else if (neig == 8)
-                {
-                    //8-environment
+                { //8-environment
                     sum = (int)(sum + in(i - 1, j - 1) + in(i - 1, j + 1) + in(i + 1, j - 1) + in(i + 1, j + 1));
                     if ((neig - sum) > count)
-                    {
-                        //change the value to background
+                    { //change the value to background
                         out(i, j) = 0;
                     }
                 }
@@ -109,7 +103,7 @@ void dilate2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig, int c
     int i;
     tmp.resize(in);
     tmp = in;
-    for (i = 0; i < size; i++)
+    for (i = 0;i < size;i++)
     {
         dilate2D_step(tmp, out, neig, count);
         tmp = out;
@@ -123,7 +117,7 @@ void erode2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig, int co
     int i;
     tmp.resize(in);
     tmp = in;
-    for (i = 0; i < size; i++)
+    for (i = 0;i < size;i++)
     {
         erode2D_step(tmp, out, neig, count);
         tmp = out;
@@ -138,15 +132,13 @@ void closing2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
     int i;
     tmp.resize(in);
     tmp = in;
-    for (i = 0; i < size; i++)
-    {
-        //dilate
+    for (i = 0;i < size;i++)
+    { //dilate
         dilate2D_step(tmp, out, neig, count);
         tmp = out;
     }
-    for (i = 0; i < size; i++)
-    {
-        // erode
+    for (i = 0;i < size;i++)
+    { // erode
         erode2D_step(tmp, out, neig, count);
         tmp = out;
     }
@@ -159,15 +151,13 @@ void opening2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
     int i;
     tmp.resize(in);
     tmp = in;
-    for (i = 0; i < size; i++)
-    {
-        // erode
+    for (i = 0;i < size;i++)
+    { // erode
         erode2D_step(tmp, out, neig, count);
         tmp = out;
     }
-    for (i = 0; i < size; i++)
-    {
-        //dilate
+    for (i = 0;i < size;i++)
+    { //dilate
         dilate2D_step(tmp, out, neig, count);
         tmp = out;
     }
@@ -299,9 +289,9 @@ void dilate3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                    int count)
 {
     int sum = 0;
-    for (int k = STARTINGZ(in) + 1; k < FINISHINGZ(in); k++)
-        for (int i = STARTINGY(in) + 1; i < FINISHINGY(in); i++)
-            for (int j = STARTINGX(in) + 1; j < FINISHINGX(in); j++)
+    for (int k = STARTINGZ(in) + 1;k < FINISHINGZ(in); k++)
+        for (int i = STARTINGY(in) + 1;i < FINISHINGY(in); i++)
+            for (int j = STARTINGX(in) + 1;j < FINISHINGX(in); j++)
             {
                 if (in(k, i, j) == 0)
                 {
@@ -310,32 +300,27 @@ void dilate3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                     sum = (int)(in(k - 1, i, j) + in(k + 1, i, j) + in(k, i - 1, j) + in(k, i + 1, j)
                                 + in(k, i, j - 1) + in(k, i, j + 1));
                     if (sum > count)
-                    {
-                        //change the value to foreground
+                    { //change the value to foreground
                         out(k, i, j) = 1;
                     }
                     else if (neig == 18)
-                    {
-                        //18-environment
+                    { //18-environment
                         sum = (int)(sum + in(k - 1, i, j - 1) + in(k - 1, i, j + 1) + in(k + 1, i, j - 1) + in(k + 1, i, j + 1) +
                                     in(k, i + 1, j + 1) + in(k, i + 1, j - 1) + in(k, i - 1, j + 1) + in(k, i - 1, j - 1) +
                                     in(k - 1, i + 1, j) + in(k - 1, i - 1, j) + in(k + 1, i + 1, j) + in(k + 1, i - 1, j));
                         if (sum > count)
-                        {
-                            //change the value to foreground
+                        { //change the value to foreground
                             out(k, i, j) = 1;
                         }
                     }
                     else if (neig == 26)
-                    {
-                        //26-environment
+                    { //26-environment
                         sum = (int)(sum + in(k - 1, i + 1, j + 1) + in(k - 1, i + 1, j - 1) +
                                     in(k - 1, i - 1, j + 1) + in(k - 1, i - 1, j - 1) +
                                     in(k + 1, i + 1, j + 1) + in(k + 1, i + 1, j - 1) +
                                     in(k + 1, i - 1, j + 1) + in(k + 1, i - 1, j - 1));
                         if (sum > count)
-                        {
-                            //change the value to foreground
+                        { //change the value to foreground
                             out(k, i, j) = 1;
                         }
                     }
@@ -353,9 +338,9 @@ void erode3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                   int count)
 {
     int sum = 0;
-    for (int k = STARTINGZ(in) + 1; k < FINISHINGZ(in); k++)
-        for (int i = STARTINGY(in) + 1; i < FINISHINGY(in); i++)
-            for (int j = STARTINGX(in) + 1; j < FINISHINGX(in); j++)
+    for (int k = STARTINGZ(in) + 1;k < FINISHINGZ(in); k++)
+        for (int i = STARTINGY(in) + 1;i < FINISHINGY(in); i++)
+            for (int j = STARTINGX(in) + 1;j < FINISHINGX(in); j++)
             {
                 if (in(k, i, j) == 1)
                 {
@@ -365,25 +350,21 @@ void erode3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                     sum = (int)(in(k - 1, i, j) + in(k + 1, i, j) + in(k, i - 1, j) + in(k, i + 1, j)
                                 + in(k, i, j - 1) + in(k, i, j + 1));
                     if ((6 - sum) > count)
-                    {
-                        //change the value to background
+                    { //change the value to background
                         out(k, i, j) = 0;
                     }
                     else if (neig == 18)
-                    {
-                        //18-environment
+                    { //18-environment
                         sum = (int)(sum + in(k - 1, i, j - 1) + in(k - 1, i, j + 1) + in(k + 1, i, j - 1) + in(k + 1, i, j + 1) +
                                     in(k, i + 1, j + 1) + in(k, i + 1, j - 1) + in(k, i - 1, j + 1) + in(k, i - 1, j - 1) +
                                     in(k - 1, i + 1, j) + in(k - 1, i - 1, j) + in(k + 1, i + 1, j) + in(k + 1, i - 1, j));
                         if ((neig - sum) > count)
-                        {
-                            //change the value to background
+                        { //change the value to background
                             out(k, i, j) = 0;
                         }
                     }
                     else if (neig == 26)
-                    {
-                        //26-environment
+                    { //26-environment
                         sum = (int)(sum + in(k - 1, i, j - 1) + in(k - 1, i, j + 1) + in(k + 1, i, j - 1) + in(k + 1, i, j + 1) +
                                     in(k, i + 1, j + 1) + in(k, i + 1, j - 1) + in(k, i - 1, j + 1) + in(k, i - 1, j - 1) +
                                     in(k - 1, i + 1, j) + in(k - 1, i - 1, j) + in(k + 1, i + 1, j) + in(k + 1, i - 1, j) +
@@ -393,8 +374,7 @@ void erode3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
                                     in(k + 1, i - 1, j + 1) + in(k + 1, i - 1, j - 1));
 
                         if ((neig - sum) > count)
-                        {
-                            //change the value to background
+                        { //change the value to background
                             out(k, i, j) = 0;
                         }
                     }
@@ -417,7 +397,7 @@ void dilate3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig, int c
     int i;
     tmp.resize(in);
     tmp = in;
-    for (i = 0; i < size; i++)
+    for (i = 0;i < size;i++)
     {
         dilate3D_step(tmp, out, neig, count);
         tmp = out;
@@ -431,7 +411,7 @@ void erode3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig, int co
     int i;
     tmp.resize(in);
     tmp = in;
-    for (i = 0; i < size; i++)
+    for (i = 0;i < size;i++)
     {
         erode3D_step(tmp, out, neig, count);
         tmp = out;
@@ -447,15 +427,13 @@ void closing3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
     int i;
     tmp.resize(in);
     tmp = in;
-    for (i = 0; i < size; i++)
-    {
-        //dilate
+    for (i = 0;i < size;i++)
+    { //dilate
         dilate3D_step(tmp, out, neig, count);
         tmp = out;
     }
-    for (i = 0; i < size; i++)
-    {
-        // erode
+    for (i = 0;i < size;i++)
+    { // erode
         erode3D_step(tmp, out, neig, count);
         tmp = out;
     }
@@ -468,15 +446,13 @@ void opening3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
     int i;
     tmp.resize(in);
     tmp = in;
-    for (i = 0; i < size; i++)
-    {
-        // erode
+    for (i = 0;i < size;i++)
+    { // erode
         erode3D_step(tmp, out, neig, count);
         tmp = out;
     }
-    for (i = 0; i < size; i++)
-    {
-        //dilate
+    for (i = 0;i < size;i++)
+    { //dilate
         dilate3D_step(tmp, out, neig, count);
         tmp = out;
     }
@@ -494,7 +470,7 @@ void dilate3D(const Matrix3D<double> &in,
             for (int jj=0; jj<XSIZE(out); jj++)
             {
                 double maxLocal=DIRECT_VOL_ELEM(in,kk,ii,jj)+
-                                VOL_ELEM(structuringElement,0,0,0);
+                    VOL_ELEM(structuringElement,0,0,0);
                 int k0=XMIPP_MAX(0,kk+STARTINGZ(structuringElement))-kk;
                 int kF=XMIPP_MIN(ZSIZE(out)-1,kk+FINISHINGZ(structuringElement))-kk;
                 int i0=XMIPP_MAX(0,ii+STARTINGY(structuringElement))-ii;
@@ -506,7 +482,7 @@ void dilate3D(const Matrix3D<double> &in,
                         for (int j=j0; j<=jF; j++)
                         {
                             double val=DIRECT_VOL_ELEM(in,kk+k,ii+i,jj+j)+
-                                       VOL_ELEM(structuringElement,k,i,j);
+                                VOL_ELEM(structuringElement,k,i,j);
                             maxLocal=XMIPP_MAX(maxLocal,val);
                         }
                 maxLocal=XMIPP_MIN(maxLocal,maxval);
@@ -515,8 +491,8 @@ void dilate3D(const Matrix3D<double> &in,
 }
 
 void erode3D(const Matrix3D<double> &in,
-             const Matrix3D<double> &structuringElement,
-             Matrix3D<double> &out)
+              const Matrix3D<double> &structuringElement,
+              Matrix3D<double> &out)
 {
     out.initZeros(in);
     double minval=in.computeMin();
@@ -525,7 +501,7 @@ void erode3D(const Matrix3D<double> &in,
             for (int jj=0; jj<XSIZE(out); jj++)
             {
                 double minLocal=DIRECT_VOL_ELEM(in,kk,ii,jj)-
-                                VOL_ELEM(structuringElement,0,0,0);
+                    VOL_ELEM(structuringElement,0,0,0);
                 int k0=XMIPP_MAX(0,kk+STARTINGZ(structuringElement))-kk;
                 int kF=XMIPP_MIN(ZSIZE(out)-1,kk+FINISHINGZ(structuringElement))-kk;
                 int i0=XMIPP_MAX(0,ii+STARTINGY(structuringElement))-ii;
@@ -537,7 +513,7 @@ void erode3D(const Matrix3D<double> &in,
                         for (int j=j0; j<=jF; j++)
                         {
                             double val=DIRECT_VOL_ELEM(in,kk+k,ii+i,jj+j)-
-                                       VOL_ELEM(structuringElement,k,i,j);
+                                VOL_ELEM(structuringElement,k,i,j);
                             minLocal=XMIPP_MIN(minLocal,val);
                         }
                 minLocal=XMIPP_MAX(minLocal,minval);
@@ -547,13 +523,13 @@ void erode3D(const Matrix3D<double> &in,
 
 /* Sharpening -------------------------------------------------------------- */
 void sharpening(const Matrix3D<double> &in, double width, double strength,
-                Matrix3D<double> &out)
+    Matrix3D<double> &out)
 {
     // Build the quadratic kernel
     int diameter=(int)(2*width+1);
     Matrix3D<double> kernel(diameter,diameter,diameter);
     kernel.setXmippOrigin();
-
+    
     double width2=width*width;
     double minval, maxval;
     in.computeDoubleMinMax(minval,maxval);
@@ -565,17 +541,15 @@ void sharpening(const Matrix3D<double> &in, double width, double strength,
         double r2=k*k+i*i+j*j;
         kernel(k,i,j)=a*r2+c;
     }
-
+    
     // Create the dilated and eroded versions
     Matrix3D<double> dilated, eroded;
     dilate3D(in,kernel,dilated);
     erode3D(in,kernel,eroded);
     VolumeXmipp save;
-    save()=dilated;
-    save.write("PPPdilated.vol");
-    save()=eroded;
-    save.write("PPPeroded.vol");
-
+    save()=dilated; save.write("PPPdilated.vol");
+    save()=eroded; save.write("PPPeroded.vol");
+    
     // Sharpen
     out=in;
     double eps=(maxval-minval)*0.01;

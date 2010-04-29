@@ -66,7 +66,7 @@ void CCP4::write(const FileName &fn_out, const ImageXmipp &I, bool reversed,
 }
 
 void CCP4::write(const FileName &fn_out, const Tomogram &V, bool reversed,
-                 double x_length, double y_length, double z_length, bool isStack)
+    double x_length, double y_length, double z_length, bool isStack)
 {
     FILE *fp;
 
@@ -76,7 +76,7 @@ void CCP4::write(const FileName &fn_out, const Tomogram &V, bool reversed,
     float minval, maxval, avg, stddev;
     V.computeStats(minval, maxval, avg, stddev);
     fill_header3D(Xdim, Ydim, Zdim, minval, maxval, avg,
-                  reversed, x_length, y_length, z_length, isStack);
+        reversed, x_length, y_length, z_length, isStack);
 
     //open file
     if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
@@ -101,8 +101,8 @@ void CCP4::write(const FileName &fn_out, const Tomogram &V, bool reversed,
 }
 
 void CCP4::write(const FileName &fn_out, SelFile &SF, bool reversed,
-                 double x_length, double y_length, double z_length,
-                 const FileName &fn_tilt)
+    double x_length, double y_length, double z_length,
+    const FileName &fn_tilt)
 {
     // Get angles and stack min, max, avg
     int Zdim, Ydim, Xdim;
@@ -141,7 +141,7 @@ void CCP4::write(const FileName &fn_out, SelFile &SF, bool reversed,
 
     //fill mrc header and reverse if needed
     fill_header3D(Xdim, Ydim, Zdim, minval, maxval, avg,
-                  reversed, x_length, y_length, z_length, true);
+        reversed, x_length, y_length, z_length, true);
 
     //open file
     FILE *fp;
@@ -337,7 +337,7 @@ void CCP4::clear()
 /* ------------------------------------------------------------------------- */
 /** Fill mrc header from xmipp image. */
 void CCP4::fill_header_from_xmippimage(const ImageXmipp &I, bool reversed,
-                                       double x_length, double y_length, double z_length)
+    double x_length, double y_length, double z_length)
 {
     clear();
     if (IsLittleEndian())
@@ -439,8 +439,8 @@ void CCP4::fill_header_from_xmippimage(const ImageXmipp &I, bool reversed,
 /* ------------------------------------------------------------------------- */
 /** Fill mrc header from tomogram. */
 void CCP4::fill_header3D(int Xdim, int Ydim, int Zdim,
-                         float minval, float maxval, float avg, bool reversed,
-                         double x_length, double y_length, double z_length, bool isStack)
+    float minval, float maxval, float avg, bool reversed,
+    double x_length, double y_length, double z_length, bool isStack)
 {
     clear();
     (my_mrc_header.map)[0] = 'M';
@@ -467,7 +467,7 @@ void CCP4::fill_header3D(int Xdim, int Ydim, int Zdim,
         if (isStack)
         {
             my_mrc_header.nxstart = my_mrc_header.nystart =
-                                        my_mrc_header.nzstart = 0;
+                my_mrc_header.nzstart = 0;
         }
         else
         {

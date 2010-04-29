@@ -103,7 +103,7 @@
  *
  */
 void _Xmipp_error(const int nerr, const std::string& what,
-                  const std::string &file, const long line);
+    const std::string &file, const long line);
 
 /** Show message and exit
  * @ingroup ErrorHandling
@@ -153,7 +153,7 @@ public:
     long line;
 
     Xmipp_error(const int nerr, const std::string& what,
-                const std::string &fileArg, const long lineArg);
+        const std::string &fileArg, const long lineArg);
     friend std::ostream& operator<<(std::ostream& o, Xmipp_error& XE);
 };
 

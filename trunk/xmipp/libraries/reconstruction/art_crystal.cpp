@@ -140,8 +140,8 @@ void compute_integer_lattice(const Matrix1D<double> &a,
                 YY(bint) != 2*(int)(YY(bint) / 2))
             {
                 std::cout << "\nLattice connstrains for P2_122 are not satisficed"
-                          << "\nRound[mag_a/(sampling*grid_size)] must be even"
-                          << "\nPlease modify the parmeters and try again" << std::endl;
+                << "\nRound[mag_a/(sampling*grid_size)] must be even"
+                << "\nPlease modify the parmeters and try again" << std::endl;
                 exit(0);
             }
             break;
@@ -150,8 +150,8 @@ void compute_integer_lattice(const Matrix1D<double> &a,
                 YY(bint) != 2*(int)(YY(bint) / 2))
             {
                 std::cout << "\nLattice connstrains for P22_12 are not satisficed"
-                          << "\nRound[mag_a/(sampling*grid_size)] must be even"
-                          << "\nPlease modify the parmeters and try again" << std::endl;
+                << "\nRound[mag_a/(sampling*grid_size)] must be even"
+                << "\nPlease modify the parmeters and try again" << std::endl;
                 exit(0);
             }
             break;
@@ -160,8 +160,8 @@ void compute_integer_lattice(const Matrix1D<double> &a,
                 YY(bint) != 2*(int)(YY(bint) / 2))
             {
                 std::cout << "\nLattice connstrains for P4212 are not satisficed"
-                          << "\nRound[mag_a/(sampling*grid_size)] must be even"
-                          << "\nPlease modify the parmeters and try again" << std::endl;
+                << "\nRound[mag_a/(sampling*grid_size)] must be even"
+                << "\nPlease modify the parmeters and try again" << std::endl;
                 exit(0);
             }
             break;
@@ -170,9 +170,9 @@ void compute_integer_lattice(const Matrix1D<double> &a,
             break;// no check needed
         default:
             std::cerr << "\n Congratulations: you have found a bug in the\n"
-                      << "routine compute_integer_lattice or\n"
-                      << "you are using a non implemented symmetry group\n"
-                      <<  std::endl;
+            << "routine compute_integer_lattice or\n"
+            << "you are using a non implemented symmetry group\n"
+            <<  std::endl;
             exit(0);
             break;
         }//switch(space_group)  end
@@ -294,22 +294,21 @@ void Crystal_ART_Parameters::produce_Side_Info(
 
 #ifdef DEBUG_A_LOT
         std::cout << "(x,y)=(" << XX(r) << "," << YY(r) << ") " << sgn[0] << sgn[1]
-                  << sgn[2] << sgn[3] << std::endl;
+        << sgn[2] << sgn[3] << std::endl;
 #endif
 
         // Now check if point is inside
-        int inside_table[4][4] =
-        {
-            1, 1, 1, 1,
-            0, 1, 1, 1,
-            1, 0, 1, 1,
-            // 1,1,0,1, Take this side out
-            // 1,1,1,0, Take this side out
-            0, 0, 1, 1,
-            // 1,0,0,1, and their three vertices
-            // 1,1,0,0,
-            // 0,1,1,0
-        };
+        int inside_table[4][4] = {
+                                     1, 1, 1, 1,
+                                     0, 1, 1, 1,
+                                     1, 0, 1, 1,
+                                     // 1,1,0,1, Take this side out
+                                     // 1,1,1,0, Take this side out
+                                     0, 0, 1, 1,
+                                     // 1,0,0,1, and their three vertices
+                                     // 1,1,0,0,
+                                     // 0,1,1,0
+                                 };
 #define INSIDE_ACCORDING_TO(n) \
     sgn[0]==inside_table[n][0] && sgn[1]==inside_table[n][1] && \
     sgn[2]==inside_table[n][2] && sgn[3]==inside_table[n][3]
@@ -359,24 +358,24 @@ void ART_single_step(
     Basic_ART_Parameters    &prm,             // blob, lambda
     Crystal_ART_Parameters  &eprm,            // lattice vectors, ...
     Projection              &theo_proj,       // Projection of the reconstruction
-    // It is outside to make it visible
-    // just if it needed for any
-    // other purpose
+                                              // It is outside to make it visible
+                                              // just if it needed for any
+                                              // other purpose
     Projection              &read_proj,       // Real projection
     int sym_no,                               // Symmetry matrix index
     Projection              &diff_proj,       // Difference between read and
-    // theoretical projection
+                                              // theoretical projection
     Projection              &corr_proj,       // Correcting projection
     Projection              &alig_proj,       // Translation alignement aux proj
     double                  &mean_error,      // Mean error over the pixels
     int                      numIMG,          // number of images in the set
-    // in SIRT the correction must
-    // be divided by this number
+                                              // in SIRT the correction must
+                                              // be divided by this number
     double                   lambda,          // Lambda to be used
     int                      imagen_no,       // Projection number
     const FileName          &fn_ctf,          // CTF to apply
     const Matrix2D<int> *    maskPtr          // Mask to apply
-)
+    )           
 {
 // Only works for blob volumes .............................................
     if (prm.basis.type != Basis::blobs)
@@ -512,12 +511,12 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
                         eprm.a, eprm.b, a0, aF, b0, bF);
 #ifdef DEBUG
     std::cout << "Output Volume size (ZxYxX)=" << prm.Zoutput_volume_size
-              << " " << prm.Youtput_volume_size << " "
-              << prm.Xoutput_volume_size << std::endl;
+    << " " << prm.Youtput_volume_size << " "
+    << prm.Xoutput_volume_size << std::endl;
     std::cout << "corners:\n" << corner1.transpose() << std::endl
-              << corner2.transpose() << std::endl;
+    << corner2.transpose() << std::endl;
     std::cout << "a0=" << a0 << "..." << aF << std::endl
-              << "b0=" << b0 << "..." << bF << std::endl;
+    << "b0=" << b0 << "..." << bF << std::endl;
 #endif
 
     // Expand the volume to the required space
@@ -552,7 +551,7 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
                         {
 #ifdef DEBUG2
                             std::cout << "   Is copied to (" << (int)YY(r) << ","
-                                      << (int)XX(r) << ")\n";
+                            << (int)XX(r) << ")\n";
 #endif
                             // copy values if inside volume
                             for (int k = STARTINGZ(VOLMATRIX(V));

@@ -59,22 +59,22 @@ public:
 
     /// FileName of the first docfile for movements
     FileName fn_movement0;
-
+    
     /// Maximum change in angles
     double angleLimit;
-
+    
     /// Maximum change in shifts
     double shiftLimit;
 
     /// FileName of the volume for fitting
     FileName fn_vol;
-
+    
     /// First fitting radius
     double r1;
-
+    
     /// Second fitting radius
     double r2;
-
+    
     /// Percentil of the normalization
     double percentil_normalization;
 
@@ -101,13 +101,13 @@ public:
 
     // Mask for the normalization
     Matrix2D<int> ihardMask;
-
+    
     // Mask for the reconstruction
     Matrix2D<double> softMask;
 
     // Vector of which images are valid and which are not
     std::vector<bool> valid;
-
+    
     // Vector of correlations
     std::vector<double> correlations;
 public:

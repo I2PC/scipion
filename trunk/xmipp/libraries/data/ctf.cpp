@@ -122,38 +122,38 @@ void XmippCTF::write(const FileName &fn)
 void XmippCTF::Usage()
 {
     std::cerr << "  [defocusU=<DeltafU>]              : Defocus in Angstroms (Ex: -800)\n"
-              << "  [defocusV=<DeltafV=DeltafU>]      : If astigmatism\n"
-              << "  [azimuthal_angle=<ang=0>]         : Angle between X and U (degrees)\n"
-              << "  [sampling_rate=<Tm=1>]            : Angstroms/pixel\n"
-              << "  [voltage=<kV=100>]                : Accelerating voltage (kV)\n"
-              << "  [spherical_aberration=<Cs=0>]     : Milimiters. Ex: 5.6\n"
-              << "  [chromatic_aberration=<Ca=0>]     : Milimiters. Ex: 2\n"
-              << "  [energy_loss=<espr=0>]            : eV. Ex: 1\n"
-              << "  [lens_stability=<ispr=0>]         : ppm. Ex: 1\n"
-              << "  [convergence_cone=<alpha=0>]      : mrad. Ex: 0.5\n"
-              << "  [longitudinal_displace=<DeltaF=0>]: Angstrom. Ex: 100\n"
-              << "  [transversal_displace=<DeltaR=0>] : Angstrom. Ex: 3\n"
-              << "  [Q0=<Q0=0>]                       : Percentage of cosine\n"
-              << "  [K=<K=1>]                         : Global gain\n"
-              << std::endl
-              << "  [base_line=<b=0>]                 : Global base line\n"
-              << "  [gaussian_K=<K=0>]                : Gaussian gain\n"
-              << "  [sigmaU=<s=0>]                    : Gaussian width\n"
-              << "  [sigmaV=<s=0>]                    : if astigmatism\n"
-              << "  [cU=<s=0>]                        : Gaussian center (in cont. freq)\n"
-              << "  [cV=<s=0>]                        : if astigmatism\n"
-              << "  [gaussian_angle=<ang=0>]          : Angle between X and U (degrees)\n"
-              << "  [sqrt_K=<K=0>]                    : Square root gain\n"
-              << "  [sqU=<sqU=0>]                     : Square root width\n"
-              << "  [sqV=<sqV=0>]                     : if astigmatism\n"
-              << "  [sqrt_angle=<ang=0>]              : Angle between X and U (degrees)\n"
-              << "  [gaussian_K2=<K=0>]               : Second Gaussian gain\n"
-              << "  [sigmaU2=<s=0>]                   : Second Gaussian width\n"
-              << "  [sigmaV2=<s=0>]                   : if astigmatism\n"
-              << "  [cU2=<s=0>]                       : Second Gaussian center (in cont. freq)\n"
-              << "  [cV2=<s=0>]                       : if astigmatism\n"
-              << "  [gaussian_angle2=<ang=0>]         : Angle between X and U (degrees)\n"
-              ;
+    << "  [defocusV=<DeltafV=DeltafU>]      : If astigmatism\n"
+    << "  [azimuthal_angle=<ang=0>]         : Angle between X and U (degrees)\n"
+    << "  [sampling_rate=<Tm=1>]            : Angstroms/pixel\n"
+    << "  [voltage=<kV=100>]                : Accelerating voltage (kV)\n"
+    << "  [spherical_aberration=<Cs=0>]     : Milimiters. Ex: 5.6\n"
+    << "  [chromatic_aberration=<Ca=0>]     : Milimiters. Ex: 2\n"
+    << "  [energy_loss=<espr=0>]            : eV. Ex: 1\n"
+    << "  [lens_stability=<ispr=0>]         : ppm. Ex: 1\n"
+    << "  [convergence_cone=<alpha=0>]      : mrad. Ex: 0.5\n"
+    << "  [longitudinal_displace=<DeltaF=0>]: Angstrom. Ex: 100\n"
+    << "  [transversal_displace=<DeltaR=0>] : Angstrom. Ex: 3\n"
+    << "  [Q0=<Q0=0>]                       : Percentage of cosine\n"
+    << "  [K=<K=1>]                         : Global gain\n"
+    << std::endl
+    << "  [base_line=<b=0>]                 : Global base line\n"
+    << "  [gaussian_K=<K=0>]                : Gaussian gain\n"
+    << "  [sigmaU=<s=0>]                    : Gaussian width\n"
+    << "  [sigmaV=<s=0>]                    : if astigmatism\n"
+    << "  [cU=<s=0>]                        : Gaussian center (in cont. freq)\n"
+    << "  [cV=<s=0>]                        : if astigmatism\n"
+    << "  [gaussian_angle=<ang=0>]          : Angle between X and U (degrees)\n"
+    << "  [sqrt_K=<K=0>]                    : Square root gain\n"
+    << "  [sqU=<sqU=0>]                     : Square root width\n"
+    << "  [sqV=<sqV=0>]                     : if astigmatism\n"
+    << "  [sqrt_angle=<ang=0>]              : Angle between X and U (degrees)\n"
+    << "  [gaussian_K2=<K=0>]               : Second Gaussian gain\n"
+    << "  [sigmaU2=<s=0>]                   : Second Gaussian width\n"
+    << "  [sigmaV2=<s=0>]                   : if astigmatism\n"
+    << "  [cU2=<s=0>]                       : Second Gaussian center (in cont. freq)\n"
+    << "  [cV2=<s=0>]                       : if astigmatism\n"
+    << "  [gaussian_angle2=<ang=0>]         : Angle between X and U (degrees)\n"
+    ;
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -175,7 +175,7 @@ std::ostream & operator << (std::ostream &out, const XmippCTF &ctf)
             << "transversal_displace= " << ctf.DeltaR          << std::endl
             << "Q0=                   " << ctf.Q0              << std::endl
             << "K=                    " << ctf.K               << std::endl
-            ;
+        ;
     }
     if (ctf.enable_CTFnoise)
     {
@@ -196,7 +196,7 @@ std::ostream & operator << (std::ostream &out, const XmippCTF &ctf)
             << "cU2=                  " << ctf.cU2             << std::endl
             << "cV2=                  " << ctf.cV2             << std::endl
             << "gaussian_angle2=      " << ctf.gaussian_angle2 << std::endl
-            ;
+        ;
     }
     return out;
 }
@@ -304,8 +304,8 @@ void XmippCTF::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) co
         // Compute more accurate zero
 #ifdef DEBUG
         std::cout << n << " zero: w=" << w << " (" << wmax << ") freq="
-                  << (u*w).transpose()
-                  << " last_ctf=" << last_ctf << " ctf=" << ctf << " ";
+        << (u*w).transpose()
+        << " last_ctf=" << last_ctf << " ctf=" << ctf << " ";
 #endif
         w += ctf * wstep / (last_ctf - ctf);
         V2_BY_CT(freq, u, w);
@@ -352,7 +352,7 @@ void XmippCTF::Generate_CTF(int Ydim, int Xdim,
 #ifdef DEBUG
         if (i == 0)
             std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
-                      << " " << CTF(i, j) << std::endl;
+            << " " << CTF(i, j) << std::endl;
 #endif
     }
 }
@@ -383,18 +383,18 @@ bool XmippCTF::physical_meaning()
         {
             std::cout << *this << std::endl;
             std::cout << "K>=0       && base_line>=0  " << (K >= 0       && base_line >= 0) << std::endl
-                      << "kV>=50     && kV<=1000      " << (kV >= 50     && kV <= 1000)     << std::endl
-                      << "espr>=0    && espr<=20      " << (espr >= 0    && espr <= 20)     << std::endl
-                      << "ispr>=0    && ispr<=20      " << (ispr >= 0    && ispr <= 20)     << std::endl
-                      << "Cs>=0      && Cs<=20        " << (Cs >= 0      && Cs <= 20)       << std::endl
-                      << "Ca>=0      && Ca<=3         " << (Ca >= 0      && Ca <= 3)        << std::endl
-                      << "alpha>=0   && alpha<=5      " << (alpha >= 0   && alpha <= 5)     << std::endl
-                      << "DeltaF>=0  && DeltaF<=1000  " << (DeltaF >= 0  && DeltaF <= 1000) << std::endl
-                      << "DeltaR>=0  && DeltaR<=100   " << (DeltaR >= 0  && DeltaR <= 100)  << std::endl
-                      << "Q0>=-0.40  && Q0<=0       " << (Q0 >= -0.40  && Q0 <= 0)          << std::endl
-                      << "DeltafU<=0 && DeltafV<=0    " << (DeltafU <= 0 && DeltafV <= 0)   << std::endl
-                      << "CTF_at(0,0)>=0       " << (CTF_at(0, 0) >= 0)         << std::endl
-                      ;
+            << "kV>=50     && kV<=1000      " << (kV >= 50     && kV <= 1000)     << std::endl
+            << "espr>=0    && espr<=20      " << (espr >= 0    && espr <= 20)     << std::endl
+            << "ispr>=0    && ispr<=20      " << (ispr >= 0    && ispr <= 20)     << std::endl
+            << "Cs>=0      && Cs<=20        " << (Cs >= 0      && Cs <= 20)       << std::endl
+            << "Ca>=0      && Ca<=3         " << (Ca >= 0      && Ca <= 3)        << std::endl
+            << "alpha>=0   && alpha<=5      " << (alpha >= 0   && alpha <= 5)     << std::endl
+            << "DeltaF>=0  && DeltaF<=1000  " << (DeltaF >= 0  && DeltaF <= 1000) << std::endl
+            << "DeltaR>=0  && DeltaR<=100   " << (DeltaR >= 0  && DeltaR <= 100)  << std::endl
+            << "Q0>=-0.40  && Q0<=0       " << (Q0 >= -0.40  && Q0 <= 0)          << std::endl
+            << "DeltafU<=0 && DeltafV<=0    " << (DeltafU <= 0 && DeltafV <= 0)   << std::endl
+            << "CTF_at(0,0)>=0       " << (CTF_at(0, 0) >= 0)         << std::endl
+            ;
             std::cout << "CTF_at(0,0)=" << CTF_at(0, 0, true) << std::endl;
         }
 #endif
@@ -434,20 +434,20 @@ bool XmippCTF::physical_meaning()
         {
             std::cout << *this << std::endl;
             std::cout << "base_line>=0       &&        " << (base_line >= 0)           << std::endl
-                      << "gaussian_K>=0      &&        " << (gaussian_K >= 0)    << std::endl
-                      << "sigmaU>=0      && sigmaV>=0     " << (sigmaU >= 0      && sigmaV >= 0)   << std::endl
-                      << "sigmaU<=100e3      && sigmaV<=100e3       " << (sigmaU <= 100e3      && sigmaV <= 100e3)   << std::endl
-                      << "cU>=0       && cV>=0      " << (cU >= 0       && cV >= 0)   << std::endl
-                      << "sqU>=0      && sqV>=0      " << (sqU >= 0        && sqV >= 0)   << std::endl
-                      << "sqrt_K>=0      &&        " << (sqrt_K >= 0)     << std::endl
-                      << "gaussian_K2>=0     &&        " << (gaussian_K2 >= 0)    << std::endl
-                      << "sigmaU2>=0      && sigmaV2>=0     " << (sigmaU2 >= 0      && sigmaV2 >= 0)   << std::endl
-                      << "sigmaU2<=100e3     && sigmaV2<=100e3      " << (sigmaU2 <= 100e3     && sigmaV2 <= 100e3)  << std::endl
-                      << "cU2>=0       && cV2>=0      " << (cU2 >= 0      && cV2 >= 0)  << std::endl
-                      << "gaussian_angle>=0  && gaussian_angle<=90  " << (gaussian_angle >= 0  && gaussian_angle <= 90)  << std::endl
-                      << "sqrt_angle>=0      && sqrt_angle<=90      " << (sqrt_angle >= 0      && sqrt_angle <= 90)      << std::endl
-                      << "gaussian_angle2>=0 && gaussian_angle2<=90 " << (gaussian_angle2 >= 0 && gaussian_angle2 <= 90) << std::endl
-                      ;
+            << "gaussian_K>=0      &&        " << (gaussian_K >= 0)    << std::endl
+            << "sigmaU>=0      && sigmaV>=0     " << (sigmaU >= 0      && sigmaV >= 0)   << std::endl
+            << "sigmaU<=100e3      && sigmaV<=100e3       " << (sigmaU <= 100e3      && sigmaV <= 100e3)   << std::endl
+            << "cU>=0       && cV>=0      " << (cU >= 0       && cV >= 0)   << std::endl
+            << "sqU>=0      && sqV>=0      " << (sqU >= 0        && sqV >= 0)   << std::endl
+            << "sqrt_K>=0      &&        " << (sqrt_K >= 0)     << std::endl
+            << "gaussian_K2>=0     &&        " << (gaussian_K2 >= 0)    << std::endl
+            << "sigmaU2>=0      && sigmaV2>=0     " << (sigmaU2 >= 0      && sigmaV2 >= 0)   << std::endl
+            << "sigmaU2<=100e3     && sigmaV2<=100e3      " << (sigmaU2 <= 100e3     && sigmaV2 <= 100e3)  << std::endl
+            << "cU2>=0       && cV2>=0      " << (cU2 >= 0      && cV2 >= 0)  << std::endl
+            << "gaussian_angle>=0  && gaussian_angle<=90  " << (gaussian_angle >= 0  && gaussian_angle <= 90)  << std::endl
+            << "sqrt_angle>=0      && sqrt_angle<=90      " << (sqrt_angle >= 0      && sqrt_angle <= 90)      << std::endl
+            << "gaussian_angle2>=0 && gaussian_angle2<=90 " << (gaussian_angle2 >= 0 && gaussian_angle2 <= 90) << std::endl
+            ;
             if (min_sigma > 0)
                 std::cout << "ABS(sigmaU-sigmaV)/min_sigma<=3         " << (ABS(sigmaU - sigmaV) / min_sigma <= 3)     << std::endl;
             if (min_c > 0)
@@ -570,31 +570,29 @@ void XmippCTF::force_physical_meaning()
 
 /* CTFDat functions -------------------------------------------------------- */
 const FileName & CTFDat::getCTF(const FileName &fnProjection,
-                                bool& searchOK) const
+    bool& searchOK) const
 {
     int imax=fnProjectionList.size();
     for (int i=0; i<imax; ++i)
     {
-        if (fnProjectionList[i]==fnProjection)
-        {
-            searchOK=true;
-            return fnCTFList[i];
-        }
+       if (fnProjectionList[i]==fnProjection) {
+          searchOK=true;
+	  return fnCTFList[i];
+       }
     }
     searchOK=false;
     return "";
 }
 
 void CTFDat::setCTF(const FileName &fnProjection,
-                    const FileName &fnCTF)
+    const FileName &fnCTF)
 {
     int imax=fnProjectionList.size();
     for (int i=0; i<imax; ++i)
     {
-        if (fnProjectionList[i]==fnProjection)
-        {
-            fnCTFList[i]=fnCTF;
-        }
+       if (fnProjectionList[i]==fnProjection) {
+          fnCTFList[i]=fnCTF;
+       }
     }
     fnProjectionList.push_back(fnProjection);
     fnCTFList.push_back(fnCTF);
@@ -612,17 +610,17 @@ void CTFDat::read(const FileName &fnCTFdat)
     fhCtfdat.open(fnCTFdat.c_str());
     if (!fhCtfdat)
         REPORT_ERROR(1, (std::string)"CTFDat::read: Cannot open " + fnCTFdat
-                     +" for input");
+	    +" for input");
     while (!fhCtfdat.eof())
     {
         FileName fnProjection, fnCTF;
-        fhCtfdat >> fnProjection >> fnCTF;
-        // Sjors 10 jul 2007: this seems to be necessary...
-        if (fnProjection!="")
-        {
-            append(fnProjection,fnCTF);
-        }
-    }
+	fhCtfdat >> fnProjection >> fnCTF;
+	// Sjors 10 jul 2007: this seems to be necessary...
+	if (fnProjection!="")
+	{
+	    append(fnProjection,fnCTF);
+	}
+    } 
     fhCtfdat.close();
 }
 
@@ -632,7 +630,7 @@ void CTFDat::write(const FileName &fnCTFdat) const
     fhCtfdat.open(fnCTFdat.c_str());
     if (!fhCtfdat)
         REPORT_ERROR(1, (std::string)"CTFDat::write: Cannot open " + fnCTFdat
-                     +" for output");
+	    +" for output");
     int imax=fnProjectionList.size();
     for (int i=0; i<imax; ++i)
         fhCtfdat << fnProjectionList[i] << " " << fnCTFList[i] << std::endl;
@@ -643,7 +641,7 @@ void CTFDat::goFirstLine()
 {
     current=0;
 }
-
+   
 void CTFDat::nextLine()
 {
     ++current;
@@ -669,9 +667,8 @@ void CTFDat::createFromSelfileAndSingleCTF(MetaData &SF, const FileName &fnCtf)
 {
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        FileName fn_img;
-        SF.getValue(MDL_IMAGE,fn_img);
+        FileName fn_img; SF.getValue(MDL_IMAGE,fn_img);
         if (fn_img=="") break;
-        append(fn_img,fnCtf);
+    	append(fn_img,fnCtf);
     }
 }

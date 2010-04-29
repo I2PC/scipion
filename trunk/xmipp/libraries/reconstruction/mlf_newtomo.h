@@ -61,7 +61,7 @@ public:
     bool dont_recalc_fftw;
     /** Use TOM Toolbox Euler angle and translation conventions */
     bool use_tom_conventions;
-    // For all tomograms: angles, offsets and wedge parameters
+  // For all tomograms: angles, offsets and wedge parameters
     std::vector<double> img_ang1, img_ang2, img_ang3;
     std::vector<double> img_xoff, img_yoff, img_zoff;
     std::vector<double> img_th0, img_thF;
@@ -161,30 +161,30 @@ public:
     // Get Transformation matrix (acc to XMIPP or TOM conventions, depending on use_tom_conventions flag)
     // For XMIPP ang1-3 are: rot, tilt, psi
     // For TOM   ang1-3 are: phi, psi, theta
-    Matrix2D< double > getTransformationMatrix(double ang1,
-            double ang2,
-            double ang3,
-            double xoff = 0.,
-            double yoff = 0.,
-            double zoff = 0.);
-    /// Get binary missing wedge (or pyramid)
+    Matrix2D< double > getTransformationMatrix(double ang1, 
+                                               double ang2, 
+                                               double ang3, 
+                                               double xoff = 0.,
+                                               double yoff = 0.,
+                                               double zoff = 0.);
+    /// Get binary missing wedge (or pyramid) 
     void getMissingWedge(bool * measured,
                          Matrix2D<double> A,
-                         const double theta0_alongy,
+                         const double theta0_alongy, 
                          const double thetaF_alongy,
                          const double theta0_alongx = 0.,
                          const double thetaF_alongx = 0.);
 
     /// Generate initial references as averages over random subsets
     void generateInitialReferences(double * dataRefs, double * dataWsumWedsPerRef);
-
+ 
     /// Calculate FFTWs for images in a selfile and write to disc
     void calculateAllFFTWs();
 
     /// initial sigma2-estimation for fourier-mode
     void estimateInitialNoiseSpectra(double * dataSigma);
 
-    /// parameters using fourier-space likelihood functions
+   /// parameters using fourier-space likelihood functions
     void expectationSingleImage(int igroup,
                                 double * dataImg,
                                 bool   * dataMeasured,
@@ -197,8 +197,8 @@ public:
                                 double * dataSumWRefs,
                                 double * dataWsumScale,
                                 double * dataWsumScale2,
-                                int    & opt_refno,
-                                double & LL,
+                                int    & opt_refno, 
+                                double & LL, 
                                 double & Pmax,
                                 double & opt_scale);
 
@@ -238,13 +238,13 @@ public:
                           double * oldDataRefs);
 
     /// Write out reference images, selfile and logfile
-    void writeOutputFiles(int step,
-                          int iter,
+    void writeOutputFiles(int step, 
+                          int iter, 
                           double  * dataRefs,
                           double  * dataWsumWedsPerRef,
                           DocFile & DFo,
-                          double  & sumw_allrefs,
-                          double  & LL,
+                          double  & sumw_allrefs, 
+                          double  & LL, 
                           double  & avePmax);
 
 };

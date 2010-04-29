@@ -170,10 +170,10 @@ int main(int argc, char *argv[])
 #define SHOW {\
         GET_ANGLES(i+1); \
         std::cout << i << " " << rot << " " << tilt << " v[i]=" \
-                  << v[i].transpose() << std::endl; \
+        << v[i].transpose() << std::endl; \
         GET_ANGLES(j+1); \
         std::cout << j << " " << rot << " " << tilt << " v[j]=" \
-                  << v[j].transpose() << std::endl; \
+        << v[j].transpose() << std::endl; \
         std::cout << " d= " << d << std::endl << std::endl; \
     }
 
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
             if (!fh_bild)
                 EXIT_ERROR(1, (std::string)"Ang_distribution: Cannot open " + fn_ps + " for output");
             fh_bild << ".color 1 0 0" << std::endl;
-
+	    
             for (int i = 0; i < AngleNo; i++)
             {
                 // Triangle size depedent on w
@@ -222,12 +222,12 @@ int main(int argc, char *argv[])
                     r *= rmax / wmax;
                 }
                 else r = rmax;
-                fh_bild << ".sphere "
-                        << R*XX(v[i])  + shift_center << " "
-                        << R*YY(v[i])  + shift_center << " "
-                        << R*ZZ(v[i])  + shift_center << " "
-                        << r
-                        <<"\n";
+                fh_bild << ".sphere " 
+		        << R*XX(v[i])  + shift_center << " " 
+		        << R*YY(v[i])  + shift_center << " " 
+		        << R*ZZ(v[i])  + shift_center << " " 
+			<< r 
+			<<"\n";
             }
             fh_bild.close();
         }
@@ -351,29 +351,29 @@ void Usage()
     std::cout << "   ang_distribution <options>\n";
     std::cout << "   Where <options> are:\n";
     std::cout << "      (-sel <sel_file> |            : selection file with the set of images\n"
-              << "       -ang <ang_file>              : Spider document file with the angles\n"
-              << "      [-order <ang1> <ang2> <ang3>]): where ang1, ang2 and ang3 are\n"
-              << "                                      either psi, psi, tilt, tilt,\n"
-              << "                                      rot or rot. The default\n"
-              << "                                      order is rot, tilt and psi.\n"
-              << "      [-DX <-DX file out>           : DX file\n"
-              << "      [-bild <-chimera file out>    : Chimera file\n"
-              << "      [-hist <doc_file>]            : histogram of distances\n"
-              << "      [-steps <stepno=100>]         : number of divisions in the histogram\n"
-              << "      [-show_process]               : show distances.\n"
-              << "      [-ps <PS file out>]           : PS file with the topological sphere\n"
-              << "      [-R <big_sphere_radius=60>]   : sphere radius for the PS/bild file\n"
-              << "      [-r <triangle side=1.5>]      : triangle size for the PS/bild file\n"
-              << "      [-rot_view <rot angle=0>]     : rotational angle for the view\n"
-              << "      [-tilt_view <tilt angle=30>]  : tilting angle for the view\n"
-              << "      [-wcol <column number=-1>]    : generate triangles with size depending on \n"
-              << "                                      number in corresponding column of the docfile\n"
-              << "      [-shift_center <shift_center=0>]: shift coordinates center for bild file\n"
-              << "      [-up_down_correction]         : correct angles so that a semisphere\n"
-              << "                                      is shown\n"
-              << "      [-solid_sphere]               : projections in the back plane are\n"
-              << "                                      not shown\n"
-              ;
+    << "       -ang <ang_file>              : Spider document file with the angles\n"
+    << "      [-order <ang1> <ang2> <ang3>]): where ang1, ang2 and ang3 are\n"
+    << "                                      either psi, psi, tilt, tilt,\n"
+    << "                                      rot or rot. The default\n"
+    << "                                      order is rot, tilt and psi.\n"
+    << "      [-DX <-DX file out>           : DX file\n"
+    << "      [-bild <-chimera file out>    : Chimera file\n"
+    << "      [-hist <doc_file>]            : histogram of distances\n"
+    << "      [-steps <stepno=100>]         : number of divisions in the histogram\n"
+    << "      [-show_process]               : show distances.\n"
+    << "      [-ps <PS file out>]           : PS file with the topological sphere\n"
+    << "      [-R <big_sphere_radius=60>]   : sphere radius for the PS/bild file\n"
+    << "      [-r <triangle side=1.5>]      : triangle size for the PS/bild file\n"
+    << "      [-rot_view <rot angle=0>]     : rotational angle for the view\n"
+    << "      [-tilt_view <tilt angle=30>]  : tilting angle for the view\n"
+    << "      [-wcol <column number=-1>]    : generate triangles with size depending on \n"
+    << "                                      number in corresponding column of the docfile\n"
+    << "      [-shift_center <shift_center=0>]: shift coordinates center for bild file\n"
+    << "      [-up_down_correction]         : correct angles so that a semisphere\n"
+    << "                                      is shown\n"
+    << "      [-solid_sphere]               : projections in the back plane are\n"
+    << "                                      not shown\n"
+    ;
 }
 
 /* ------------------------------------------------------------------------- */

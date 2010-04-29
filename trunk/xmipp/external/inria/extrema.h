@@ -81,14 +81,14 @@ extern "C"
      *   Computing 4:9, pp 203-214, August 1991.
      */
     extern int Extract_Gradient_Maxima_2D(void *bufferIn, /* input buffer */
-                                          bufferType typeIn, /* type of the input buffer */
-                                          void *bufferOut, /* output buffer */
-                                          bufferType typeOut, /* type of the output buffer */
-                                          int *bufferDims, /* buffers' dimensions */
-                                          int *borderLengths, /* number of points to be added at both ends when filtering a line */
-                                          float *filterCoefs, /* coefficients of the filters for each direction */
-                                          recursiveFilterType filterType  /* type of the recursive filter to be used */
-                                         );
+                                              bufferType typeIn, /* type of the input buffer */
+                                              void *bufferOut, /* output buffer */
+                                              bufferType typeOut, /* type of the output buffer */
+                                              int *bufferDims, /* buffers' dimensions */
+                                              int *borderLengths, /* number of points to be added at both ends when filtering a line */
+                                              float *filterCoefs, /* coefficients of the filters for each direction */
+                                              recursiveFilterType filterType  /* type of the recursive filter to be used */
+                                             );
 
     /* 3D Edge extraction by suppression of the non-maxima of the gradient.
      *
@@ -169,14 +169,14 @@ extern "C"
                               derivativeOrder Zgradient[]);
 
     extern int Extract_Gradient_Maxima_3D(void *bufferIn, /* input buffer */
-                                          bufferType typeIn, /* type of the input buffer */
-                                          void *bufferOut, /* output buffer */
-                                          bufferType typeOut, /* type of the output buffer */
-                                          int *bufferDims, /* buffers' dimensions */
-                                          int *borderLengths, /* number of points to be added at both ends when filtering a line */
-                                          float *filterCoefs, /* coefficients of the filters for each direction */
-                                          recursiveFilterType filterType  /* type of the recursive filter to be used */
-                                         );
+                                              bufferType typeIn, /* type of the input buffer */
+                                              void *bufferOut, /* output buffer */
+                                              bufferType typeOut, /* type of the output buffer */
+                                              int *bufferDims, /* buffers' dimensions */
+                                              int *borderLengths, /* number of points to be added at both ends when filtering a line */
+                                              float *filterCoefs, /* coefficients of the filters for each direction */
+                                              recursiveFilterType filterType  /* type of the recursive filter to be used */
+                                             );
 
 
 
@@ -202,11 +202,11 @@ extern "C"
      *
      */
     extern void Remove_Gradient_NonMaxima_Slice_2D(float *maxima, /* result buffer */
-            float *gx, /* first component of the gradient */
-            float *gy, /* second component of the gradient */
-            float *norme, /* modulus of the gradient */
-            int *bufferDims /* buffers' dimensions */
-                                                  );
+                float *gx, /* first component of the gradient */
+                float *gy, /* second component of the gradient */
+                float *norme, /* modulus of the gradient */
+                int *bufferDims /* buffers' dimensions */
+                                                      );
 
 
 
@@ -240,12 +240,12 @@ extern "C"
      *   modulus of the next slice.
      */
     extern void Remove_Gradient_NonMaxima_Slice_3D(float *maxima, /* result buffer */
-            float *gx, /* first component of the gradient */
-            float *gy, /* second component of the gradient */
-            float *gz, /* third component of the gradient */
-            float **norme, /* modulus of the gradient */
-            int *bufferDims /* buffers' dimensions */
-                                                  );
+                float *gx, /* first component of the gradient */
+                float *gy, /* second component of the gradient */
+                float *gz, /* third component of the gradient */
+                float **norme, /* modulus of the gradient */
+                int *bufferDims /* buffers' dimensions */
+                                                      );
 
 
 

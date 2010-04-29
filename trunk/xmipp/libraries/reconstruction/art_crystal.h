@@ -86,7 +86,7 @@ public:
 public:
     /// std::cout << crystal_prm;
     friend std::ostream & operator << (std::ostream &o,
-                                       const Crystal_ART_Parameters &eprm);
+                                  const Crystal_ART_Parameters &eprm);
 
     /** Read special parameters from a command line.
         This function reads the parameters from a command line

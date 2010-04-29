@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *      im_out = tom_xmipp_resolution_wrapper(volume,reference,objectpixelsize)
+ *		im_out = tom_xmipp_resolution_wrapper(volume,reference,objectpixelsize)
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -30,7 +30,7 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
-
+ 
     Matrix1D<double> freq, frc, dpr, frc_noise;
 
     float sam = (float) mxGetScalar(prhs[2]);
@@ -58,11 +58,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     {
         mexErrMsgTxt(Xe.msg.c_str());
     }
-
+    
     const char *field_names[] = {"freq","dpr","frc","frc_noise"};
     mwSize dims[2] = {1, 1};
     plhs[0] = mxCreateStructArray(2, dims, NUMBER_OF_FIELDS, field_names);
-
+    
     mxArray *field1, *field2, *field3, *field4;
     setMatrix1D(freq,field1);
     mxSetField(plhs[0],0,"freq",field1);
@@ -75,7 +75,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 
     setMatrix1D(frc_noise,field4);
     mxSetField(plhs[0],0,"frc_noise",field4);
-
+   
     frc.core_deallocate();
-
+    
 }

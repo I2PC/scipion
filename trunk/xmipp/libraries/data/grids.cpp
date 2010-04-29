@@ -242,10 +242,10 @@ Grid Create_CC_grid(double relative_size, const Matrix1D<double> &corner1,
 
     Matrix1D<double> origin = (corner1 + corner2) / 2;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(origin)
-    if (ABS(ROUND(origin(i))-origin(i))<0.45)
-        origin(i)=ROUND(origin(i));
-    else
-        origin(i)=CEIL(origin(i));
+        if (ABS(ROUND(origin(i))-origin(i))<0.45)
+            origin(i)=ROUND(origin(i));
+        else
+            origin(i)=CEIL(origin(i));
     aux_grid = Create_CC_grid(relative_size, corner1, corner2, origin);
     result.add_grid(aux_grid);
     return result;
@@ -258,7 +258,7 @@ Grid Create_CC_grid(double relative_size, int Zdim, int Ydim, int Xdim)
 
     Matrix1D<double> origin =
         vectorR3((double)FLOOR(Xdim / 2.0), (double)FLOOR(Ydim / 2.0),
-                 (double)FLOOR(Zdim / 2.0));
+                  (double)FLOOR(Zdim / 2.0));
     aux_grid = Create_CC_grid(relative_size, -origin,
                               vectorR3((double)Xdim, (double)Ydim, (double)Zdim) - origin - 1, origin);
     result.add_grid(aux_grid);
@@ -430,12 +430,12 @@ SimpleGrid Create_grid_within_sphere(double relative_size,
 
 #ifdef DEBUG
     std::cout << "Sphere radius = " << R << std::endl
-              << "relative size = " << relative_size << std::endl
-              << "X module      = " << X.module() << std::endl
-              << "Y module      = " << Y.module() << std::endl
-              << "Z module      = " << Z.module() << std::endl
-              << grid
-              ;
+    << "relative size = " << relative_size << std::endl
+    << "X module      = " << X.module() << std::endl
+    << "Y module      = " << Y.module() << std::endl
+    << "Z module      = " << Z.module() << std::endl
+    << grid
+    ;
 #endif
     return grid;
 }

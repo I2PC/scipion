@@ -37,17 +37,16 @@
 
 /** Compute the affine transformation between two images. */
 double computeAffineTransformation(const Matrix2D<unsigned char> &I1,
-                                   const Matrix2D<unsigned char> &I2, int maxShift, int maxIterDE,
-                                   const FileName &fn_affine,
-                                   Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
-                                   double thresholdAffine, bool localAffine, bool isMirror,
-                                   bool checkRotation);
+    const Matrix2D<unsigned char> &I2, int maxShift, int maxIterDE,
+    const FileName &fn_affine, 
+    Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
+    double thresholdAffine, bool localAffine, bool isMirror,
+    bool checkRotation);
 
 /** Landmark class.
     A landmark is a position (x,y) and the index of the image
     from which this landmark has been taken.*/
-class Landmark
-{
+class Landmark {
 public:
     double x;
     double y;
@@ -72,24 +71,23 @@ typedef std::vector<Landmark> LandmarkChain;
 class Alignment;
 
 /** This is the main class */
-class Prog_tomograph_alignment
-{
+class Prog_tomograph_alignment {
 public:
     /// MetaData File with all images
     FileName fnSel;
-
+   
     /// MetaData File with all images at the original scale
     FileName fnSelOrig;
-
+   
     /// Output root
     FileName fnRoot;
-
+   
     /// Number of threads to use for parallel computing
     int numThreads;
-
+   
     /// Look for local affine transformation
     bool localAffine;
-
+   
     /// Use critical points
     bool useCriticalPoints;
 
@@ -105,7 +103,7 @@ public:
 
     /// Grid samples
     int gridSamples;
-
+    
     /// Maxshift percentage
     double maxShiftPercentage;
 
@@ -138,13 +136,13 @@ public:
 
     /// Correlation threshold for a good landmark
     double corrThreshold;
-
+    
     /// Show affine transformations
     bool showAffine;
-
+    
     /// Threshold affine
     double thresholdAffine;
-
+    
     /// Identify outlier micrographs
     double identifyOutliersZ;
 
@@ -159,7 +157,7 @@ public:
 
     /// Show parameters
     void show();
-
+   
     /// Usage
     void usage() const;
 
@@ -174,23 +172,23 @@ public:
 
     /// Produce information from landmarks
     void produceInformationFromLandmarks();
-
+   
     /** Refine landmark.
         ii is the index of the original image, jj is the index in the
         image at which the landmark is being refined. rii and rjj are
         the corresponding landmark positions in both images.
-
+        
         The function returns whether the landmark is accepted or not. */
     bool refineLandmark(int ii, int jj, const Matrix1D<double> &rii,
-                        Matrix1D<double> &rjj, double &maxCorr, bool tryFourier) const;
+        Matrix1D<double> &rjj, double &maxCorr, bool tryFourier) const;
 
 
     /** Refine landmark.
         The same as the previous function but an image is provided
         as pattern (ii) instead of an index and a position. */
     bool refineLandmark(const Matrix2D<double> &pieceii, int jj,
-                        Matrix1D<double> &rjj, double actualCorrThreshold,
-                        bool reversed, double &maxCorr) const;
+        Matrix1D<double> &rjj, double actualCorrThreshold,
+        bool reversed, double &maxCorr) const;
 
     /** Refine chain. */
     bool refineChain(LandmarkChain &chain, double &corrChain);
@@ -215,7 +213,7 @@ public:
 
     /// Run: do the real work
     void run();
-
+   
 public:
     // MetaData with the input images
     MetaData SF;
@@ -249,7 +247,7 @@ public:
 
     // Total number of images
     int Nimg;
-
+   
     // Element [i][j] is the transformation of coordinates of i into
     // coordinates of j
     std::vector< std::vector< Matrix2D<double> > > affineTransformations;
@@ -262,13 +260,13 @@ public:
 
     // Landmark matrix (Y component)
     Matrix2D<double> allLandmarksY;
-
+    
     // Set of all landmarks seen in image i
     std::vector< std::vector<int> > Vseti;
-
+    
     // Set of all images in which the landmark j is seen
     std::vector< std::vector<int> > Vsetj;
-
+    
     // Average of the landmarks in a given image
     std::vector< Matrix1D<double> > barpi;
 
@@ -277,13 +275,12 @@ public:
 
     // Best exhaustive alignmnet
     Alignment* bestPreviousAlignment;
-
+    
     // Show refinement
     bool showRefinement;
 };
 
-class Alignment
-{
+class Alignment {
 public:
     const Prog_tomograph_alignment *prm;
     std::vector< Matrix1D<double> > di;
@@ -309,7 +306,7 @@ public:
         rot=90;
         tilt=90;
         raxis.initZeros(3);
-
+        
         Ai.clear();
         Ait.clear();
         Aip.clear();
@@ -386,7 +383,7 @@ public:
 
     /** Compute error */
     double computeError() const;
-
+    
     /** Compute error for landmarks */
     void computeErrorForLandmarks();
 
@@ -395,8 +392,8 @@ public:
 
     /** Print an alignment */
     friend std::ostream& operator<<(std::ostream &out,
-                                    Alignment &alignment);
-
+        Alignment &alignment);
+    
 public:
     // Number of images
     int Nimg;
@@ -421,13 +418,13 @@ public:
 
     // Set of shifts due to raxis
     std::vector< Matrix1D<double> > diaxis;
-
+    
     // Set of B1i matrices
     std::vector< Matrix2D<double> > B1i;
-
+    
     // Set of B2i matrices
     std::vector< Matrix2D<double> > B2i;
-
+    
     // Matrix used for updating raxis
     Matrix2D<double> Binvraxis;
 
@@ -436,19 +433,19 @@ public:
 
     // Set of predicted landmarks (component Y)
     Matrix2D<double> allLandmarksPredictedY;
-
+    
     // Set of errors associated to each landmark
     Matrix1D<double> errorLandmark;
 };
 
 /** Compute the optimal affine transformation between two images.
-    The maximum shift is limited.
+    The maximum shift is limited. 
     A12 is the homogeneous matrix that transforms coordinates of 1
     into coordinates of 2, A21 is just the opposite.*/
 double computeAffineTransformation(const Matrix2D<double> &I1,
-                                   const Matrix2D<double> &I2, int maxShift, int maxIterDE,
-                                   Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
-                                   double thresholdAffine, bool localAffine, bool isMirror,
-                                   int pyramidLevel);
+    const Matrix2D<double> &I2, int maxShift, int maxIterDE,
+    Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
+    double thresholdAffine, bool localAffine, bool isMirror,
+    int pyramidLevel);
 //@}
 #endif

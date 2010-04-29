@@ -43,10 +43,10 @@ class PseudoAtom
 public:
     /// Location
     Matrix1D<double> location;
-
+    
     /// Intensity
     double           intensity;
-
+    
     /// Empty constructor
     PseudoAtom();
 
@@ -71,10 +71,10 @@ class Prog_Convert_Vol2Pseudo
 public:
     /// Volume to convert
     FileName fnVol;
-
+    
     /// Output volume
     FileName fnOut;
-
+    
     // Mask
     Mask_Params mask_prm;
 
@@ -83,40 +83,40 @@ public:
 
     /// Sigma
     double sigma;
-
+    
     /// Maximum error (as a percentage)
     double targetError;
 
     /// Stop criterion
     double stop;
-
+    
     /// Initial seeds
     int initialSeeds;
-
+    
     /// Grow seeds
     double growSeeds;
-
+    
     /// Allow gaussians to move
     bool allowMovement;
-
+    
     /// Allow gaussians to vary intensity
     bool allowIntensity;
 
     /// Column for the intensity (if any)
     std::string intensityColumn;
-
+    
     /// Mindistance
     double minDistance;
 
     /// Penalization
     double penalty;
-
+    
     /// Number of threads
     int numThreads;
-
+    
     /// Sampling rate
     double sampling;
-
+    
     /// N closest atoms for the distance histogram
     int Nclosest;
 
@@ -125,22 +125,22 @@ public:
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);
-
+    
     /// show parameters
     void show() const;
-
+    
     /// show usage
     void usage() const;
-
+    
     /// Prepare side info
     void produceSideInfo();
-
+    
     /// Run
     void run();
 
     /// Place seeds
     void placeSeeds(int Nseeds);
-
+    
     /// Remove seeds
     void removeSeeds(int Nseeds);
 
@@ -152,14 +152,14 @@ public:
 
     /// Draw a Gaussian on a volume
     void drawGaussian(double k, double i, double j, Matrix3D<double> &V,
-                      double intensity);
+        double intensity);
 
     /// Draw approximation
     void drawApproximation();
 
     /// Extract region around a Gaussian
     void extractRegion(int idxGaussian, Matrix3D<double> &region,
-                       bool extended=false) const;
+        bool extended=false) const;
 
     /// Insert region
     void insertRegion(const Matrix3D<double> &region);
@@ -169,34 +169,34 @@ public:
 
     /// Optimize current atoms
     void optimizeCurrentAtoms();
-
+    
     /// Optimize current atoms (thread)
     static void* optimizeCurrentAtomsThread(void * threadArgs);
-
+    
     /// Write results
     void writeResults();
 public:
     // Input volume
     VolumeXmipp Vin;
-
+    
     // Current approximation volume
     VolumeXmipp Vcurrent;
-
+    
     // Energy of the difference
     double energyDiff;
-
+    
     // Maximum percentage diffence
     double percentageDiff;
-
+    
     // Original energy
     double energyOriginal;
-
+    
     // List of atoms
     std::vector< PseudoAtom > atoms;
-
+    
     // Maximum radius
     double sigma3;
-
+    
     // Percentil 1
     double percentil1;
 
@@ -208,18 +208,18 @@ public:
 
     // Gaussian table
     Matrix1D<double> gaussianTable;
-
+    
     // Barrier
     barrier_t barrier;
-
+    
 #define KILLTHREAD -1
 #define WORKTHREAD  0
     // Thread operation code
     int threadOpCode;
-
+    
     // Pointer to thread arguments
     Prog_Convert_Vol2Pseudo_ThreadParams *threadArgs;
-
+    
     // Pointer to threads
     pthread_t *threadIds;
 };

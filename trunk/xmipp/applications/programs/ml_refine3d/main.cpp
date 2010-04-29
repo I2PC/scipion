@@ -102,10 +102,10 @@ int main(int argc, char **argv)
             ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_ITER);
             prm.concatenate_selfiles(ML2D_prm.iter);
 
-            // Jump out before 3D reconstruction
-            // (Useful for some parallelization protocols)
-            if (prm.skip_reconstruction)
-                exit(1);
+	    // Jump out before 3D reconstruction 
+	    // (Useful for some parallelization protocols)
+	    if (prm.skip_reconstruction)
+		exit(1);
 
             // Reconstruct new volumes from the reference images
             for (volno = 0; volno < prm.Nvols; volno++)
@@ -142,9 +142,9 @@ int main(int argc, char **argv)
             ML2D_prm.iter++;
         } // end loop iterations
 
-        // Write out converged doc and logfiles
+	// Write out converged doc and logfiles
         ML2D_prm.writeOutputFiles(ML2D_prm.model);
-        ML2D_prm.destroyThreads();
+    ML2D_prm.destroyThreads();
 
         if (!converged && prm.verb > 0) std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }

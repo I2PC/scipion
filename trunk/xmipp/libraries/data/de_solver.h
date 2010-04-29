@@ -47,19 +47,19 @@ typedef void(DESolver::*StrategyFunction)(int);
   *       if (count++ % (5*nPop) == 0)
   *           std::cout << "Evaluations= " << count/nPop
   *                     << " energy= " << Energy()
-  *                 << " axisRot= " << Solution()[0]
-  *                 << " axisTilt= " << Solution()[1]
-  *                 << " axisShiftX= " << Solution()[2]
-  *                 << " axisShiftY= " << Solution()[3]
-  *                 << " axisShiftZ= " << Solution()[4]
-  *             << std::endl;
+  * 	            << " axisRot= " << Solution()[0]
+  * 	            << " axisTilt= " << Solution()[1]
+  * 	            << " axisShiftX= " << Solution()[2]
+  * 	            << " axisShiftY= " << Solution()[3]
+  * 	            << " axisShiftZ= " << Solution()[4]
+  * 		    << std::endl;
   *       bAtSolution=false;
   *       return(result);
   *    }
   * private:
   *    int count;
   * };
-  *
+  *  
   * // Optimizer use:
   *        AlignmentSolver solver(length,length*Npop);
   *        solver.Setup(MULTIDIM_ARRAY(min_allowed),
@@ -68,13 +68,13 @@ typedef void(DESolver::*StrategyFunction)(int);
   *        double current_energy=solver.Energy();
   *        double* bestSolution=solver.Solution();
   * @endcode
-  */
+  */  
 class DESolver
 {
 public:
     /// Empty constructor
     DESolver(int dim, int popSize);
-
+    
     /// Destructor
     ~DESolver(void);
 

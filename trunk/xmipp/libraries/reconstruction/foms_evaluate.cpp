@@ -248,13 +248,13 @@ void EVALUATE_Side_Info::produce_Side_Info(
     {
         std::cout << "Be careful!!!, volumes with different sizes\n";
         std::cout << "Phantom:        " << vol_phantom().sliceNumber() << " x " <<
-                  vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << std::endl;
+        vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << std::endl;
         std::cout << "Reconstruction: " << vol_recons().sliceNumber() << " x " <<
-                  vol_recons().rowNumber() << " x " << vol_recons().colNumber() << std::endl;
+        vol_recons().rowNumber() << " x " << vol_recons().colNumber() << std::endl;
 
         cutToCommonSize(vol_phantom(), vol_recons());
         std::cout << "Cutting to common size " << vol_phantom().sliceNumber() << " x " <<
-                  vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << std::endl;
+        vol_phantom().rowNumber() << " x " << vol_phantom().colNumber() << std::endl;
 
         cutToCommonSize(vol_label(), vol_recons());
     }
@@ -354,8 +354,8 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
     results.scL2_FOMs.initZeros(side.num_feat + 1); // 0, 1, ..., FeatNo()
     results.scL2_FOMs.initConstant(-1);
     results.scL1_FOMs = results.scmu_FOMs = results.scdev_FOMs =
-            results.scrange_FOMs = results.sccorr_FOMs = results.scinf_FOMs =
-                                       results.scL2_FOMs;
+                                                results.scrange_FOMs = results.sccorr_FOMs = results.scinf_FOMs =
+                                                                           results.scL2_FOMs;
     if (side.descr_mode == MATH_PHANTOM)
     {
         std::cerr << "Computing Local structural consistency ...\n";
@@ -456,15 +456,15 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
     if (!(prm.tell&ONLY_STRUCTURAL))
     {
         std::cout << "Direction for dFOM: (rot=" << prm.RSrot << "," << "tilt="
-                  << prm.RStilt << ")" << std::endl;
+        << prm.RStilt << ")" << std::endl;
         std::cout << "Slice histograms  : ignoring initial " << prm.percent_mass <<
-                  "% mass\n";
+        "% mass\n";
     }
     if (prm.global_radius == 0)
         std::cout << "Global FOMs measured over the whole volume\n";
     else
         std::cout << "Global FOMs measured over a sphere of radius "
-                  << prm.global_radius << std::endl;
+        << prm.global_radius << std::endl;
     if (prm.back_mode == ENLARGE_MODE)
         std::cout << "Background mode: ENLARGE by " << prm.back_factor << std::endl;
     else
@@ -621,7 +621,7 @@ void show_FOMs(const Prog_Evaluate_Parameters &prm,
         while (sel_feat != 1000)
         {
             std::cout << "What feature do you want to see (" << -side.num_feat << ","
-                      << side.num_feat << ") (1000=finish): ";
+            << side.num_feat << ") (1000=finish): ";
             std::cin  >> sel_feat;
             if (ABS(sel_feat) <= side.num_feat)
                 switch (side.descr_mode)

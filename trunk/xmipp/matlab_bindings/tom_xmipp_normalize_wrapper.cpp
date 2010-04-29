@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *      image_out = tom_xmipp_normalize_wrapper(image,mask,method)
+ *		image_out = tom_xmipp_normalize_wrapper(image,mask,method)
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -46,10 +46,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 
     Image I;
     getMatrix2D(prhs[0],I());
-
+    
     Matrix2D<int> mask;
     getMatrix2D(prhs[1],mask);
-
+        
     switch((int)mxGetScalar(prhs[2]))
     {
     case OLDXMIPP:
@@ -67,22 +67,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     case RAMP:
         normalize_ramp(&I, mask);
         break;
-        /*case NEIGHBOUR:
-            normalize_remove_neighbours(img, bg_mask, thresh_neigh);
-            break;*/
+    /*case NEIGHBOUR:
+        normalize_remove_neighbours(img, bg_mask, thresh_neigh);
+        break;*/
     case MICHAEL:
         normalize_Michael(&I, mask);
         break;
-        /*case RANDOM:
-            a = rnd_unif(a0, aF);
-            b = rnd_unif(b0, bF);
+    /*case RANDOM:
+        a = rnd_unif(a0, aF);
+        b = rnd_unif(b0, bF);
 
-            FOR_ALL_ELEMENTS_IN_MATRIX2D((*I)())
-            (*I)(i, j) = a * (*I)(i, j) + b;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D((*I)())
+        (*I)(i, j) = a * (*I)(i, j) + b;
 
-            break;*/
+        break;*/
     }
-
+    
     setMatrix2D(I(),plhs[0]);
-}
+}	
 

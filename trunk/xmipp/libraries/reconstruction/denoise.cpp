@@ -136,7 +136,7 @@ void Denoising_parameters::show_specific()
     case BAYESIAN:
         std::cout << " Bayesian\n";
         std::cout << " SNR between " << SNR0 << " and " << SNRF << std::endl
-                  << " up to scale " << scale << std::endl;
+        << " up to scale " << scale << std::endl;
         if (white_noise)
             std::cout << " Imposing white noise\n";
         break;
@@ -148,10 +148,10 @@ void Denoising_parameters::show_specific()
         break;
     case SHAH:
         std::cout << " Shah difussion\n"
-                  << " Outer iterations " << Shah_outer << std::endl
-                  << " Inner iterations " << Shah_inner << std::endl
-                  << " Refinement interations " << Shah_refinement << std::endl
-                  << " Weight " << Shah_weight.transpose() << std::endl;
+        << " Outer iterations " << Shah_outer << std::endl
+        << " Inner iterations " << Shah_inner << std::endl
+        << " Refinement interations " << Shah_refinement << std::endl
+        << " Weight " << Shah_weight.transpose() << std::endl;
         if (Shah_edge)
             std::cout << " Generating edge image\n";
         break;
@@ -195,7 +195,7 @@ void Denoising_parameters::usage_specific()
               << "                               w3=edge smoothness (=0.02)\n"
               << "  [-only_edge]               : Produce the edge image of the diffusion\n"
               << "  [-show]                    : Show information about the process\n"
-              ;
+     ;
 }
 
 // Denoise image -----------------------------------------------------------

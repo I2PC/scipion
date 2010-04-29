@@ -75,22 +75,22 @@ void Prog_projection_neighbourhood_prm::get_angles(SelFile &SF_in, DocFile &DF_o
 void Prog_projection_neighbourhood_prm::show()
 {
     std::cerr << "Selfile                      : " << fn_sel        << std::endl
-              << "Neighbourhoods docfile       : " << fn_ref        << std::endl
-              << "Output root                  : " << fn_root_out   << std::endl
-              << "Max. neighbour distance      : " << maxdist       << std::endl
-              << "Symmetry file                : " << fn_sym        << std::endl
-              ;
+    << "Neighbourhoods docfile       : " << fn_ref        << std::endl
+    << "Output root                  : " << fn_root_out   << std::endl
+    << "Max. neighbour distance      : " << maxdist       << std::endl
+    << "Symmetry file                : " << fn_sym        << std::endl
+    ;
 }
 
 // usage ===================================================================
 void Prog_projection_neighbourhood_prm::usage()
 {
     std::cerr << "   -i     <SelFile>       : Selfile containing the images \n"
-              << "   -nbh   <DocFile>       : Document file with the defined neighbourhood directions\n"
-              << "  [-oroot <name=nbhood> ] : Rootname for output files \n"
-              << "  [-dist  <d=10>        ] : Maximum neighbourhood distance \n"
-              << "  [-sym <symmetry file> ] : Symmetry file if any\n"
-              ;
+    << "   -nbh   <DocFile>       : Document file with the defined neighbourhood directions\n"
+    << "  [-oroot <name=nbhood> ] : Rootname for output files \n"
+    << "  [-dist  <d=10>        ] : Maximum neighbourhood distance \n"
+    << "  [-sym <symmetry file> ] : Symmetry file if any\n"
+    ;
 }
 
 // Check symmetries --------------------------------------------------------

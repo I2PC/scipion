@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
-              using trust Region method for high-computing load,
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
+              using trust Region method for high-computing load, 
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product,
+If you want to include this tools in any commercial product, 
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -34,7 +34,7 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 #include "Poly.h"
 
 
-//int lagmax_(int *n, double *g, double *h__, double *rho,
+//int lagmax_(int *n, double *g, double *h__, double *rho, 
 //                    double *d__, double *v, double *vmax);
 
 Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
@@ -58,14 +58,14 @@ Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
 //    requires of order N**3 operations, but sometimes it is adequate if
 //    |Q(0)-Q(D)| is within about 0.9 of its greatest possible value. This
 //    subroutine provides such a solution in only of order N**2 operations,
-//    where the claim of accuracy has been tested by numerical experiments.
-    /*
-        int n=G.sz();
-        Vector D(n), V(n);
-        lagmax_(&n, (double *)G, *((double**)H), &rho,
-                        (double*)D, (double*)V, &VMAX);
-        return D;
-    */
+//    where the claim of accuracy has been tested by numerical experiments. 
+/*
+    int n=G.sz();
+    Vector D(n), V(n);
+    lagmax_(&n, (double *)G, *((double**)H), &rho, 
+                    (double*)D, (double*)V, &VMAX);
+    return D;
+*/
     int i,n=G.sz();
     Vector D(n);
 
@@ -73,7 +73,7 @@ Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
     D=H.multiply(V);
     double vv=V.square(),
            dd=D.square(),
-           vd=V.scalarProduct(D),
+           vd=V.scalarProduct(D), 
            dhd=D.scalarProduct(H.multiply(D)),
            *d=D, *v=V, *g=G;
 
@@ -102,18 +102,8 @@ Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
             dd2=D2.square();
             dhd2=D2.scalarProduct(H.multiply(D2));
 
-            if (condorAbs(dhd1/dd1)>condorAbs(dhd2/dd2))
-            {
-                D=D1;
-                dd=dd1;
-                dhd=dhd1;
-            }
-            else
-            {
-                D=D2;
-                dd=dd2;
-                dhd=dhd2;
-            }
+            if (condorAbs(dhd1/dd1)>condorAbs(dhd2/dd2)) { D=D1; dd=dd1; dhd=dhd1; } 
+            else { D=D2; dd=dd2; dhd=dhd2; }
             d=(double*)D;
         }
     };
@@ -125,12 +115,11 @@ Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
 //
     double gg=G.square(),
            normG=sqrt(gg),
-           gd=G.scalarProduct(D),
+           gd=G.scalarProduct(D), 
            temp=gd/gg,
            scale=sign(rho/sqrt(dd), gd*dhd);
 
-    i=n;
-    while (i--) v[i]=d[i]-temp*g[i];
+    i=n; while (i--) v[i]=d[i]-temp*g[i];
     vv=V.square();
 
     if ((normG*dd)<(0.5-2*rho*condorAbs(dhd))||(vv/dd<1e-4))
@@ -155,8 +144,7 @@ Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
     {
         cosTheta=1.0;
         sinTheta=0.0;
-    }
-    else
+    } else
     {
         theta=0.5*atan(0.5*vhg/(vhv-ghg));
         cosTheta=cos(theta);
@@ -195,16 +183,14 @@ Vector LAGMAXModified(Vector G, Matrix H, double rho,double &VMAX)
     if ((q4>q3)&&(q4>q2)&&(q4>q1))
     {
         double st1=sign(t1*t3), st2=sign(t2*t3);
-        i=n;
-        while (i--) d[i]=halfRootTwo*(st1*d[i]-st2*v[i]);
+        i=n; while (i--) d[i]=halfRootTwo*(st1*d[i]-st2*v[i]);
         VMAX=q4;
         return D;
     }
     if ((q3>q2)&&(q3>q1))
     {
         double st1=sign(t1*t3), st2=sign(t2*t3);
-        i=n;
-        while (i--) d[i]=halfRootTwo*(st1*d[i]+st2*v[i]);
+        i=n; while (i--) d[i]=halfRootTwo*(st1*d[i]+st2*v[i]);
         VMAX=q3;
         return D;
     }

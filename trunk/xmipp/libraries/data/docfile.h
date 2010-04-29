@@ -1,5 +1,5 @@
 /***************************************************************************
-*
+* 
 * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
 *
 * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -628,11 +628,11 @@ public:
      * @ingroup DocFileInfo
      *
      * If this docfile doesn't have a NewXmipp-style header ç
-     * (starting with "Headerinfo"), an error is raised.
+     * (starting with "Headerinfo"), an error is raised. 
      */
     int getColNumberFromHeader(const char * pattern);
 
-
+        
     /** Number of columns of the first data line.
      * @ingroup DocFileInfo
      *
@@ -1153,15 +1153,15 @@ public:
      * @ingroup DocFileHelpful
      *
      * This only works for NewXmipp-style docfiles.
-     * All image names in the docfile to be read and their corresponding data
-     * lines  are added at the end of the current one if the image name was
+     * All image names in the docfile to be read and their corresponding data 
+     * lines  are added at the end of the current one if the image name was 
      * not already present in the current one.
      * In case image names occur in both files, there are three modes
-     *
+     * 
      * DOCMERGE_KEEP_OLD: the dataline in the current docfile will be used
      * DOCMERGE_KEEP_NEW: the dataline in the new docfile will be used
-     * DOCMERGE_SUM_COLUMN: the dataline in the current docfile will be used,
-     *                     except for column number sumcol, whose value will
+     * DOCMERGE_SUM_COLUMN: the dataline in the current docfile will be used, 
+     *                     except for column number sumcol, whose value will 
      *                     be summed over the old and new dataline.
      *
      * @code
@@ -1201,7 +1201,7 @@ public:
      *
      * Sort entries based on alphabetical sorting of comments with filenames
      * If this docfile doesn't have a NewXmipp-style header
-     * (starting with "Headerinfo"), an error is raised.
+     * (starting with "Headerinfo"), an error is raised. 
      */
     DocFile sort_by_filenames();
 
@@ -1310,6 +1310,6 @@ void select_images(DocFile& DF,
  * The output docfile has the same order of images as the input selfile.
  */
 void get_subset_docfile(DocFile& DFin,
-                        SelFile& SF,
-                        DocFile& DFout);
+			SelFile& SF,
+			DocFile& DFout);
 #endif

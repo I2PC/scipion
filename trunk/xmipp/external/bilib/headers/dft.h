@@ -13,11 +13,11 @@
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  AmplitudePhaseToRealImaginary
-(
-    double Am2Re[],   /* (amplitude -> real) */
-    double Ph2Im[],   /* (phase -> imaginary) */
-    long SignalLength  /* signal length */
-);
+    (
+        double Am2Re[],   /* (amplitude -> real) */
+        double Ph2Im[],   /* (phase -> imaginary) */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** DFT of a complex signal.
@@ -55,14 +55,14 @@ extern int  AmplitudePhaseToRealImaginary
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  DftAmplitudePhaseToAmplitudePhase
-(
-    double Am2Am[],   /* amplitude -> amplitude */
-    double Ph2Ph[],   /* phase -> phase */
-    double *TmpRe,    /* first scratch workspace */
-    double *TmpIm,    /* second scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double Am2Am[],   /* amplitude -> amplitude */
+        double Ph2Ph[],   /* phase -> phase */
+        double *TmpRe,    /* first scratch workspace */
+        double *TmpIm,    /* second scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** DFT of a complex signal.
@@ -97,14 +97,14 @@ extern int  DftAmplitudePhaseToAmplitudePhase
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  DftAmplitudePhaseToRealImaginary
-(
-    double Am2Re[],   /* amplitude -> real */
-    double Ph2Im[],   /* phase -> imaginary */
-    double *TmpRe,    /* first scratch workspace */
-    double *TmpIm,    /* second scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double Am2Re[],   /* amplitude -> real */
+        double Ph2Im[],   /* phase -> imaginary */
+        double *TmpRe,    /* first scratch workspace */
+        double *TmpIm,    /* second scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** DFT of a complex signal.
@@ -141,14 +141,14 @@ extern int  DftAmplitudePhaseToRealImaginary
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  DftRealImaginaryToAmplitudePhase
-(
-    double Re2Am[],   /* real -> amplitude */
-    double Im2Ph[],   /* imaginary -> phase */
-    double *TmpRe,    /* first scratch workspace */
-    double *TmpIm,    /* second scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double Re2Am[],   /* real -> amplitude */
+        double Im2Ph[],   /* imaginary -> phase */
+        double *TmpRe,    /* first scratch workspace */
+        double *TmpIm,    /* second scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** DFT of a complex signal.
@@ -184,14 +184,14 @@ extern int  DftRealImaginaryToAmplitudePhase
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  DftRealImaginaryToRealImaginary
-(
-    double Re2Re[],   /* real -> real */
-    double Im2Im[],   /* imaginary -> imaginary */
-    double *TmpRe,    /* first scratch workspace */
-    double *TmpIm,    /* second scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double Re2Re[],   /* real -> real */
+        double Im2Im[],   /* imaginary -> imaginary */
+        double *TmpRe,    /* first scratch workspace */
+        double *TmpIm,    /* second scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** DFT of a real signal.
@@ -227,13 +227,13 @@ extern int  DftRealImaginaryToRealImaginary
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  DftRealToAmplitudePhase
-(
-    double R2Am[],    /* real -> amplitude */
-    double PhOut[],   /* output phase */
-    double *Tmp,    /* scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double R2Am[],    /* real -> amplitude */
+        double PhOut[],   /* output phase */
+        double *Tmp,    /* scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** DFT of a real signal.
@@ -267,13 +267,13 @@ extern int  DftRealToAmplitudePhase
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  DftRealToRealImaginary
-(
-    double R2Re[],    /* real -> real */
-    double ImOut[],   /* output imaginary */
-    double *Tmp,    /* scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double R2Re[],    /* real -> real */
+        double ImOut[],   /* output imaginary */
+        double *Tmp,    /* scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Compute the CaS array necessary for Fourier transforms.
@@ -288,10 +288,10 @@ extern int  DftRealToRealImaginary
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  GetCaS
-(
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Inverse Fourier Transform of a complex signal.
@@ -327,14 +327,14 @@ extern int  GetCaS
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  InvDftAmplitudePhaseToAmplitudePhase
-(
-    double Am2Am[],   /* amplitude -> amplitude */
-    double Ph2Ph[],   /* phase -> phase */
-    double *TmpRe,    /* first scratch workspace */
-    double *TmpIm,    /* second scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double Am2Am[],   /* amplitude -> amplitude */
+        double Ph2Ph[],   /* phase -> phase */
+        double *TmpRe,    /* first scratch workspace */
+        double *TmpIm,    /* second scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Inverse Fourier Transform of a real signal.
@@ -370,13 +370,13 @@ extern int  InvDftAmplitudePhaseToAmplitudePhase
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  InvDftAmplitudePhaseToReal
-(
-    double Am2R[],    /* amplitude -> real */
-    double PhIn[],    /* input phase */
-    double *Tmp,    /* scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double Am2R[],    /* amplitude -> real */
+        double PhIn[],    /* input phase */
+        double *Tmp,    /* scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Inverse Fourier Transform of a complex signal.
@@ -411,14 +411,14 @@ extern int  InvDftAmplitudePhaseToReal
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  InvDftAmplitudePhaseToRealImaginary
-(
-    double Am2Re[],   /* amplitude -> real */
-    double Ph2Im[],   /* phase -> imaginary */
-    double *TmpRe,    /* first scratch workspace */
-    double *TmpIm,    /* second scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double Am2Re[],   /* amplitude -> real */
+        double Ph2Im[],   /* phase -> imaginary */
+        double *TmpRe,    /* first scratch workspace */
+        double *TmpIm,    /* second scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Inverse Fourier Transform for a complex signal.
@@ -454,14 +454,14 @@ extern int  InvDftAmplitudePhaseToRealImaginary
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  InvDftRealImaginaryToAmplitudePhase
-(
-    double Re2Am[],   /* real -> amplitude */
-    double Im2Ph[],   /* imaginary -> phase */
-    double *TmpRe,    /* first scratch workspace */
-    double *TmpIm,    /* second scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double Re2Am[],   /* real -> amplitude */
+        double Im2Ph[],   /* imaginary -> phase */
+        double *TmpRe,    /* first scratch workspace */
+        double *TmpIm,    /* second scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Inverse Fourier Transform of a real signal.
@@ -497,13 +497,13 @@ extern int  InvDftRealImaginaryToAmplitudePhase
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  InvDftRealImaginaryToReal
-(
-    double Re2R[],    /* real -> real */
-    double ImIn[],    /* input imaginary */
-    double *Tmp,    /* scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double Re2R[],    /* real -> real */
+        double ImIn[],    /* input imaginary */
+        double *Tmp,    /* scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Inverse Fourier Transform of a complex signal.
@@ -538,14 +538,14 @@ extern int  InvDftRealImaginaryToReal
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  InvDftRealImaginaryToRealImaginary
-(
-    double Re2Re[],   /* real -> real */
-    double Im2Im[],   /* imaginary -> imaginary */
-    double *TmpRe,    /* first scratch workspace */
-    double *TmpIm,    /* second scratch workspace */
-    double CaS[],    /* Hartley transform coefficients */
-    long SignalLength  /* signal length */
-);
+    (
+        double Re2Re[],   /* real -> real */
+        double Im2Im[],   /* imaginary -> imaginary */
+        double *TmpRe,    /* first scratch workspace */
+        double *TmpIm,    /* second scratch workspace */
+        double CaS[],    /* Hartley transform coefficients */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Real/Imaginary --> Amplitude/Phase.
@@ -562,11 +562,11 @@ extern int  InvDftRealImaginaryToRealImaginary
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  RealImaginaryToAmplitudePhase
-(
-    double Re2Am[],   /* real -> amplitude */
-    double Im2Ph[],   /* imaginary -> phase */
-    long SignalLength  /* signal length */
-);
+    (
+        double Re2Am[],   /* real -> amplitude */
+        double Im2Ph[],   /* imaginary -> phase */
+        long SignalLength  /* signal length */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Volume Amplitude/Phase --> Real/Imaginary.
@@ -582,13 +582,13 @@ extern int  RealImaginaryToAmplitudePhase
 
    success: return(!ERROR); failure: return(ERROR); */
 extern int  VolumeAmplitudePhaseToRealImaginary
-(
-    double Am2Re[],   /* (amplitude -> real) */
-    double Ph2Im[],   /* (phase -> imaginary) */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz     /* depth of the volume */
-);
+    (
+        double Am2Re[],   /* (amplitude -> real) */
+        double Ph2Im[],   /* (phase -> imaginary) */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz     /* depth of the volume */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Direct DFT of a complex signal.
@@ -619,14 +619,14 @@ extern int  VolumeAmplitudePhaseToRealImaginary
    success: return(!ERROR); failure: return(ERROR);
    The returned value is duplicated in Status */
 extern int  VolumeDftAmplitudePhaseToAmplitudePhase
-(
-    double *Am2Am,    /* amplitude -> amplitude */
-    double *Ph2Ph,    /* phase -> phase */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Am2Am,    /* amplitude -> amplitude */
+        double *Ph2Ph,    /* phase -> phase */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the direct DFT of a complex signal.
@@ -653,14 +653,14 @@ extern int  VolumeDftAmplitudePhaseToAmplitudePhase
    success: return(!ERROR); failure: return(ERROR);
    The returned value is duplicated in Status */
 extern int  VolumeDftAmplitudePhaseToRealImaginary
-(
-    double *Am2Re,    /* amplitude -> real */
-    double *Ph2Im,    /* phase -> imaginary */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Am2Re,    /* amplitude -> real */
+        double *Ph2Im,    /* phase -> imaginary */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the direct DFT of a complex signal.
@@ -687,14 +687,14 @@ extern int  VolumeDftAmplitudePhaseToRealImaginary
    Success: return(!ERROR); failure: return(ERROR);
    The returned value is duplicated in Status */
 extern int  VolumeDftRealImaginaryToAmplitudePhase
-(
-    double *Re2Am,    /* real -> amplitude */
-    double *Im2Ph,    /* imaginary -> phase */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Re2Am,    /* real -> amplitude */
+        double *Im2Ph,    /* imaginary -> phase */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the direct DFT of a complex signal.
@@ -720,14 +720,14 @@ extern int  VolumeDftRealImaginaryToAmplitudePhase
    Success: return(!ERROR); failure: return(ERROR);.
    The returned value is duplicated in Status */
 extern int  VolumeDftRealImaginaryToRealImaginary
-(
-    double *Re2Re,    /* real -> real */
-    double *Im2Im,    /* imaginary -> imaginary */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Re2Re,    /* real -> real */
+        double *Im2Im,    /* imaginary -> imaginary */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the direct DFT of a real signal.
@@ -753,14 +753,14 @@ extern int  VolumeDftRealImaginaryToRealImaginary
    success: return(!ERROR); failure: return(ERROR);
    The returned value is duplicated in Status */
 extern int  VolumeDftRealToAmplitudePhase
-(
-    double *Re2Am,    /* real -> amplitude */
-    double *PhOut,    /* output phase */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Re2Am,    /* real -> amplitude */
+        double *PhOut,    /* output phase */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the direct DFT of a real signal.
@@ -787,14 +787,14 @@ extern int  VolumeDftRealToAmplitudePhase
     success: return(!ERROR); failure: return(ERROR);
     The returned value is duplicated in Status */
 extern int  VolumeDftRealToRealImaginary
-(
-    double *Re2Re,    /* real -> real */
-    double *ImOut,    /* output imaginary */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Re2Re,    /* real -> real */
+        double *ImOut,    /* output imaginary */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the inverse DFT of a complex signal.
@@ -823,14 +823,14 @@ extern int  VolumeDftRealToRealImaginary
     success: return(!ERROR); failure: return(ERROR);
     The returned value is duplicated in Status */
 extern int  VolumeInvDftAmplitudePhaseToAmplitudePhase
-(
-    double *Am2Am,    /* amplitude -> amplitude */
-    double *Ph2Ph,    /* phase -> phase */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Am2Am,    /* amplitude -> amplitude */
+        double *Ph2Ph,    /* phase -> phase */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the inverse DFT of a complex signal.
@@ -859,14 +859,14 @@ extern int  VolumeInvDftAmplitudePhaseToAmplitudePhase
     success: return(!ERROR); failure: return(ERROR);
     The returned value is duplicated in Status */
 extern int  VolumeInvDftAmplitudePhaseToReal
-(
-    double *Am2Re,    /* amplitude -> real */
-    double *PhIn,    /* input phase */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Am2Re,    /* amplitude -> real */
+        double *PhIn,    /* input phase */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the inverse DFT of a complex signal.
@@ -894,14 +894,14 @@ extern int  VolumeInvDftAmplitudePhaseToReal
     success: return(!ERROR); failure: return(ERROR);
     The returned value is duplicated in Status */
 extern int  VolumeInvDftAmplitudePhaseToRealImaginary
-(
-    double *Am2Re,    /* amplitude -> real */
-    double *Ph2Im,    /* phase -> imaginary */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Am2Re,    /* amplitude -> real */
+        double *Ph2Im,    /* phase -> imaginary */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the inverse DFT of a complex signal.
@@ -928,14 +928,14 @@ extern int  VolumeInvDftAmplitudePhaseToRealImaginary
     success: return(!ERROR); failure: return(ERROR);
     The returned value is duplicated in Status */
 extern int  VolumeInvDftRealImaginaryToAmplitudePhase
-(
-    double *Re2Am,    /* real -> amplitude */
-    double *Im2Ph,    /* imaginary -> phase */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Re2Am,    /* real -> amplitude */
+        double *Im2Ph,    /* imaginary -> phase */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the inverse DFT of a complex signal.
@@ -963,14 +963,14 @@ extern int  VolumeInvDftRealImaginaryToAmplitudePhase
    success: return(!ERROR); failure: return(ERROR);
    The returned value is duplicated in Status */
 extern int  VolumeInvDftRealImaginaryToReal
-(
-    double *Re2Re,    /* real -> real */
-    double *ImIn,    /* input imaginary */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Re2Re,    /* real -> real */
+        double *ImIn,    /* input imaginary */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Computes the inverse DFT of a complex signal.
@@ -997,14 +997,14 @@ extern int  VolumeInvDftRealImaginaryToReal
     success: return(!ERROR); failure: return(ERROR);
     The returned value is duplicated in Status */
 extern int  VolumeInvDftRealImaginaryToRealImaginary
-(
-    double *Re2Re,    /* real -> real */
-    double *Im2Im,    /* imaginary -> imaginary */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz,     /* depth of the volume */
-    int  *Status    /* error management */
-);
+    (
+        double *Re2Re,    /* real -> real */
+        double *Im2Im,    /* imaginary -> imaginary */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz,     /* depth of the volume */
+        int  *Status    /* error management */
+    );
 
 /*--------------------------------------------------------------------------*/
 /** Volume Real/Imaginary --> Amplitude/Phase.
@@ -1020,11 +1020,11 @@ extern int  VolumeInvDftRealImaginaryToRealImaginary
 
    success: return(!ERROR); failure: return(ERROR);*/
 extern int  VolumeRealImaginaryToAmplitudePhase
-(
-    double Re2Am[],   /* real -> amplitude */
-    double Im2Ph[],   /* imaginary -> phase */
-    long Nx,     /* width of the volume */
-    long Ny,     /* height of the volume */
-    long Nz     /* depth of the volume */
-);
+    (
+        double Re2Am[],   /* real -> amplitude */
+        double Im2Ph[],   /* imaginary -> phase */
+        long Nx,     /* width of the volume */
+        long Ny,     /* height of the volume */
+        long Nz     /* depth of the volume */
+    );
 //@}

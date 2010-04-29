@@ -165,7 +165,7 @@ void Prog_WBP_prm::get_angles_for_image(FileName fn, double &rot, double &tilt, 
         yoff   = head.fYoff();
         flip   = head.Flip();
         weight = head.Weight();
-    }
+    } 
     else
     {
         if (DF.search_comment(fn))
@@ -436,7 +436,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     Projection        proj;
     Matrix2D<double>  L(4, 4), R(4, 4), A;
     Mask_Params       mask_prm;
-    FileName          fn_img;
+    FileName          fn_img;            
 
     vol().resize(dim, dim, dim);
     vol().setXmippOrigin();
@@ -455,8 +455,8 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     imgno = 0;
     while (!SF.eof())
     {
-        // Check whether to kill job
-        exit_if_not_exists(fn_control);
+	// Check whether to kill job
+	exit_if_not_exists(fn_control);
         fn_img = SF.NextImg();
         if (fn_img=="") break;
         if (fn_doc == "")

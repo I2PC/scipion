@@ -60,7 +60,7 @@ public:
 
     /** Show parameters */
     friend std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters
-                                       &prm);
+                                  &prm);
 };
 
 /** Really symmetrize.*/

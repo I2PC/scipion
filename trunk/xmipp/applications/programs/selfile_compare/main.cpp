@@ -28,11 +28,11 @@
 
 int main(int argc, char **argv)
 {
-    std::cerr << "\n\nThis program has been remplaced by"
+    std::cerr << "\n\nThis program has been remplaced by" 
               << " metadata_utilities "
               << "check also "
-              << "metadata_operate "
-              << "and "
-              << "metadata_selfile_create"
-              << "\n\n";
+	      << "metadata_operate "
+	      << "and "
+	      << "metadata_selfile_create"
+	      << "\n\n";
 }

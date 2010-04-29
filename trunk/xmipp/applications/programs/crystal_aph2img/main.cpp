@@ -60,12 +60,12 @@ int main(int argc, char **argv)
 void Usage(char *argv[])
 {
     std::cout << "Purpose:\n"
-              << "    Perform a DISCRETE but not FAST Fourier Transform\n"
-              << "    The input is an aph (MRC) file\n"
+    << "    Perform a DISCRETE but not FAST Fourier Transform\n"
+    << "    The input is an aph (MRC) file\n"
 
-              << "Usage:" << argv[0] << " -i filename" << std::endl << std::endl
-              << "\t-i           : Parameters file" << std::endl
-              ;
+    << "Usage:" << argv[0] << " -i filename" << std::endl << std::endl
+    << "\t-i           : Parameters file" << std::endl
+    ;
     exit(1);
 
 }

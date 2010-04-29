@@ -1,7 +1,7 @@
 /*--------------------------------------------------------------------------*/
 extern int  MessageDisplay
-(
-    const char
-    *Message
-);
+    (
+        const char
+        *Message
+    );
 

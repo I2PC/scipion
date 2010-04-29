@@ -474,8 +474,8 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens,
 
 // Get parameters from the command line ====================================
 char *getParameter(int argc, char **argv, const char *param,
-                   const char *option, int _errno, const std::string &errmsg,
-                   int exit)
+                const char *option, int _errno, const std::string &errmsg,
+                int exit)
 {
     int i = 0;
 
@@ -483,31 +483,32 @@ char *getParameter(int argc, char **argv, const char *param,
         i++;
     if (i < argc - 1)
         return(argv[i+1]);
-    else if (option == NULL)
-    {
-        std::string auxstr;
-        if (_errno == -1)
+    else
+        if (option == NULL)
         {
-            _errno = 2104;
-            auxstr = (std::string)"Argument " + param + " not found or invalid argument";
+            std::string auxstr;
+            if (_errno == -1)
+            {
+                _errno = 2104;
+                auxstr = (std::string)"Argument " + param + " not found or invalid argument";
+            }
+            else
+            {
+                auxstr = errmsg;
+            }
+            if (exit)
+                EXIT_ERROR(_errno, auxstr);
+            else
+                REPORT_ERROR(_errno, auxstr);
         }
-        else
-        {
-            auxstr = errmsg;
-        }
-        if (exit)
-            EXIT_ERROR(_errno, auxstr);
-        else
-            REPORT_ERROR(_errno, auxstr);
-    }
 
     return((char *) option);
 }
 
 // Get 2 parameters ========================================================
 bool getTwoDoubleParams(int argc, char **argv, const char *param,
-                        double &v1, double &v2, double v1_def, double v2_def,
-                        int _errno, const std::string & errmsg, int exit)
+                         double &v1, double &v2, double v1_def, double v2_def,
+                         int _errno, const std::string & errmsg, int exit)
 {
     bool retval;
     int i = paremeterPosition(argc, argv, param);
@@ -540,9 +541,9 @@ bool getTwoDoubleParams(int argc, char **argv, const char *param,
 
 // Get 3 parameters ========================================================
 bool getThreeDoubleParams(int argc, char **argv, const char *param,
-                          double &v1, double &v2, double &v3,
-                          double v1_def, double v2_def, double v3_def,
-                          int _errno, const std::string & errmsg, int exit)
+                         double &v1, double &v2, double &v3,
+                         double v1_def, double v2_def, double v3_def,
+                         int _errno, const std::string & errmsg, int exit)
 {
     bool retval;
     int i = paremeterPosition(argc, argv, param);
@@ -618,9 +619,9 @@ int numComponents(const std::string &str)
 
 // Get float vector ========================================================
 Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
-                                    int dim, int _errno,
-                                    const std::string & errmsg,
-                                    int exit)
+                                  int dim, int _errno,
+                                  const std::string & errmsg,
+                                  int exit)
 {
     Matrix1D<double> aux;
     bool count_dimensionality = (dim == -1);
@@ -747,7 +748,7 @@ Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
 
 // Specific command line ===================================================
 void specificCommandLine(const std::string &prog_name, int argc, char **argv,
-                         int &argcp, char ***argvp)
+                           int &argcp, char ***argvp)
 {
     int i = 1;
     // Look for the program name
@@ -804,7 +805,7 @@ void specificCommandLine(const std::string &prog_name, int argc, char **argv,
 #define INSIDE_WORD  1
 #define OUTSIDE_WORD 2
 void generateCommandLine(const std::string &command_line, int &argcp,
-                         char ** &argvp, char* &copy)
+                           char ** &argvp, char* &copy)
 {
     int L = command_line.length();
 
@@ -898,7 +899,7 @@ void generateCommandLine(const std::string &command_line, int &argcp,
 
 // Generate command line from file =========================================
 bool generateCommandLine(FILE *fh, const char *param, int &argcp,
-                         char ** &argvp, char* &copy)
+                           char ** &argvp, char* &copy)
 {
     long actual_pos = ftell(fh);
     fseek(fh, 0, SEEK_SET);
@@ -945,7 +946,7 @@ bool generateCommandLine(FILE *fh, const char *param, int &argcp,
 
 // Get "parameter" from file ===============================================
 std::string getParameter(FILE *fh, const char *param, int skip, const char *option,
-                         int _errno, const std::string &errmsg, int exit)
+                 int _errno, const std::string &errmsg, int exit)
 {
     long actual_pos = ftell(fh);
     fseek(fh, 0, SEEK_SET);
@@ -1055,8 +1056,8 @@ bool checkParameter(FILE *fh, const char *param)
 
 // Get vector param from file ==============================================
 Matrix1D<double> getVectorParameter(FILE *fh, const char *param,
-                                    int dim, int _errno,
-                                    const std::string &errmsg, int exit)
+                                  int dim, int _errno, 
+                                  const std::string &errmsg, int exit)
 {
     int    argcp;
     char **argvp = NULL;
@@ -1072,7 +1073,7 @@ Matrix1D<double> getVectorParameter(FILE *fh, const char *param,
     else
     {
         retval = getVectorParameter(argcp, argvp, ((std::string)"-" + param).c_str(), dim,
-                                    _errno, errmsg, exit);
+                                  _errno, errmsg, exit);
         delete copy;
         return retval;
     }

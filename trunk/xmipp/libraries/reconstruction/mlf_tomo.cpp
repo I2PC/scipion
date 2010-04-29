@@ -245,9 +245,9 @@ void Prog_mlf_tomo_prm::produce_Side_info()
         FourierTransform(vol(), Faux2);
         CenterOriginFFT(Faux2, true);
 
-        Complex2RealImag(Faux2, Faux_real, Faux_imag);
-        Fref.push_back(Faux_real);
-        Fref.push_back(Faux_imag);
+	Complex2RealImag(Faux2, Faux_real, Faux_imag);
+	Fref.push_back(Faux_real);
+	Fref.push_back(Faux_imag);
 
         // Default start is all equal model fractions
         alpha_k.push_back((double)1 / SFr.ImgNo());
@@ -480,8 +480,7 @@ void Prog_mlf_tomo_prm::estimate_initial_sigma2()
     std::vector<double>   Vsum, Vavg_real, Vavg_imag;
 
     if (istart == 1)
-    {
-        // else assume the files have been read with fixed filenames, and do nothing
+    { // else assume the files have been read with fixed filenames, and do nothing
 
         if (verb > 0)
         {
@@ -759,7 +758,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
     {
         ii = pointer[iwedge][ipoint];
         (Faux).data[ii] = (Fimg).data[ii];
-        (Mwedge).data[ii] = 1.;
+	(Mwedge).data[ii] = 1.;
     }
 
     // Pre-calculate all translated versions of Fimg
@@ -792,7 +791,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                 psi = -rot + psi0 + (double)ipsi * psi_step;
                 A_rot = Euler_rotation3DMatrix(rot, tilt, psi);
                 A = A_rot * A_img;
-                for (int refno = 0; refno < nr_ref; refno++)
+                for (int refno = 0;refno < nr_ref; refno++)
                 {
                     if (alpha_k[refno] > 0.)
                     {
@@ -866,7 +865,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
             for (int ipsi = 0; ipsi < nr_psi; ipsi++)
             {
                 psi = -rot + psi0 + (double)ipsi * psi_step;
-                for (int refno = 0; refno < nr_ref; refno++)
+                for (int refno = 0;refno < nr_ref; refno++)
                 {
                     if (alpha_k[refno] > 0.)
                     {
@@ -897,7 +896,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
 
     // Accumulate weighted sums of images, sigma2 and fraction-parameters
     // and normalize them by sum_refw, such that sum over all weights is one!
-    for (int refno = 0; refno < nr_ref; refno++)
+    for (int refno = 0;refno < nr_ref; refno++)
         sumw[refno] += refw[refno] / sum_refw;
     fracweight = maxweight / sum_refw;
 
@@ -916,7 +915,7 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                 psi = -rot + psi0 + (double)ipsi * psi_step;
                 A_rot = Euler_rotation3DMatrix(rot, tilt, psi);
                 A = A_rot * A_img;
-                for (int refno = 0; refno < nr_ref; refno++)
+                for (int refno = 0;refno < nr_ref; refno++)
                 {
                     if (alpha_k[refno] > 0.)
                     {
@@ -931,12 +930,12 @@ void Prog_mlf_tomo_prm::MLF_integrate(Matrix3D<double> Mimg, Matrix2D<double> A_
                                 {
                                     std::cerr << " weight= " << weight << " sum_refw= " << sum_refw << std::endl;
                                 }
-                                // weighted sum of missing wedges
+				// weighted sum of missing wedges
                                 applyGeometryBSpline(Mrotwedge, A, Mwedge, 3, IS_NOT_INV, DONT_WRAP);
-                                FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Mrotwedge)
+				FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Mrotwedge)
                                 {
-                                    dVkij(wsum_Fweds[refno],k,i,j) += weight * dVkij(Mrotwedge,k,i,j);
-                                }
+				    dVkij(wsum_Fweds[refno],k,i,j) += weight * dVkij(Mrotwedge,k,i,j);
+				}
                                 // weighted sum of rotated and translated images
                                 applyGeometryBSpline(Frotimg_real, A, Fimg_trans[2*itrans], 3, IS_NOT_INV, DONT_WRAP);
                                 applyGeometryBSpline(Frotimg_imag, A, Fimg_trans[2*itrans+1], 3, IS_NOT_INV, DONT_WRAP);
@@ -1002,7 +1001,7 @@ void Prog_mlf_tomo_prm::sum_over_all_images(SelFile &SF,
     wsum_Fimgs.clear();
     wsum_Fweds.clear();
     sumcorr = 0.;
-    for (int refno = 0; refno < nr_ref; refno++)
+    for (int refno = 0;refno < nr_ref; refno++)
     {
         wsum_Fimgs.push_back(Mdzero);
         wsum_Fimgs.push_back(Mdzero);
@@ -1105,7 +1104,7 @@ void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_F
     Msum.initZeros(dim, dim, dim);
     Msum.setXmippOrigin();
     sumw_allrefs = 0.;
-    for (int refno = 0; refno < nr_ref; refno++)
+    for (int refno = 0;refno < nr_ref; refno++)
     {
         sumw_allrefs += sumw[refno];
     }
@@ -1117,7 +1116,7 @@ void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_F
     // Symmetrize wsum_Fimgs and wsum_Fweds (in Fourier space)
     if (fn_sym != "")
     {
-        for (int refno = 0; refno < nr_ref; refno++)
+        for (int refno = 0;refno < nr_ref; refno++)
         {
             Vaux() = wsum_Fweds[refno];
             symmetrize(SL, Vaux, Vaux2, false, false);
@@ -1135,26 +1134,26 @@ void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_F
     }
 
     // Update all Fref matrices
-    for (int refno = 0; refno < nr_ref; refno++)
+    for (int refno = 0;refno < nr_ref; refno++)
     {
         if (sumw[refno] > 0.)
         {
             Faux_real = wsum_Fimgs[2*refno] / sumw[refno];
             Faux_imag = wsum_Fimgs[2*refno+1] / sumw[refno];
             RealImag2Complex(Faux_real, Faux_imag, Fsum);
-            Mwed = wsum_Fweds[refno] / sumw[refno];
+	    Mwed = wsum_Fweds[refno] / sumw[refno];
 
-            // Do the actual imputation here
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Fsum)
-            {
-                dVkij(Fref[2*refno],k,i,j) *= (1. - dVkij(Mwed,k,i,j));
-                dVkij(Fref[2*refno],k,i,j) += dVkij(Faux_real,k,i,j);
-            }
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Fsum)
-            {
-                dVkij(Fref[2*refno+1],k,i,j) *= (1. - dVkij(Mwed,k,i,j));
-                dVkij(Fref[2*refno+1],k,i,j) += dVkij(Faux_imag,k,i,j);
-            }
+	    // Do the actual imputation here
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Fsum)
+	    {
+		dVkij(Fref[2*refno],k,i,j) *= (1. - dVkij(Mwed,k,i,j));
+		dVkij(Fref[2*refno],k,i,j) += dVkij(Faux_real,k,i,j);
+	    }
+	    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Fsum)
+	    {
+		dVkij(Fref[2*refno+1],k,i,j) *= (1. - dVkij(Mwed,k,i,j));
+		dVkij(Fref[2*refno+1],k,i,j) += dVkij(Faux_imag,k,i,j);
+	    }
         }
         else
         {
@@ -1165,7 +1164,7 @@ void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_F
 
     // Update model fractions
     if (!fix_fractions)
-        for (int refno = 0; refno < nr_ref; refno++)
+        for (int refno = 0;refno < nr_ref; refno++)
         {
             alpha_k[refno] = sumw[refno] / sumw_allrefs;
         }
@@ -1177,17 +1176,17 @@ void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_F
     // Update estimate for noise
     if (!fix_sigma_noise)
     {
-        for (int i = 0; i < resol_max; i++)
-        {
-            // STILL ADD A TERM FOR THE IMPUTATION HERE!!!
+	for (int i = 0; i < resol_max; i++)
+	{
+	    // STILL ADD A TERM FOR THE IMPUTATION HERE!!!
+	    
 
-
-            // Factor 2 because of 2D-Gaussian in Fourier space!
-            if (sum_nonzero_pixels[i] > 0.)
-                Vsigma2[i] = wsum_sigma2[i] / (2 * sum_nonzero_pixels[i]);
-            else Vsigma2[i] = 0.;
-            if (debug) std::cerr << " Vsig2= " << Vsigma2[i] << std::endl;
-        }
+	    // Factor 2 because of 2D-Gaussian in Fourier space!
+	    if (sum_nonzero_pixels[i] > 0.)
+		Vsigma2[i] = wsum_sigma2[i] / (2 * sum_nonzero_pixels[i]);
+	    else Vsigma2[i] = 0.;
+	    if (debug) std::cerr << " Vsig2= " << Vsigma2[i] << std::endl;
+	}
 
     }
 
@@ -1207,7 +1206,7 @@ void Prog_mlf_tomo_prm::post_process_references(std::vector<Matrix3D<double> > &
 
     // Calculate real-space references, dividing Fref by Fsumwedge
     Mref.clear();
-    for (int refno = 0; refno < nr_ref; refno++)
+    for (int refno = 0;refno < nr_ref; refno++)
     {
         RealImag2Complex(Fref[2*refno], Fref[2*refno+1], Faux);
         CenterOriginFFT(Faux, false);
@@ -1233,7 +1232,7 @@ void Prog_mlf_tomo_prm::post_process_references(std::vector<Matrix3D<double> > &
     // If the references have changed, update the reciprocal space vectors
     if (changed)
     {
-        for (int refno = 0; refno < nr_ref; refno++)
+        for (int refno = 0;refno < nr_ref; refno++)
         {
             FourierTransform(Mref[refno], Faux);
             CenterOriginFFT(Faux, true);
@@ -1256,7 +1255,7 @@ void Prog_mlf_tomo_prm::solvent_flattening(std::vector<Matrix3D<double> > &Mref,
         REPORT_ERROR(12, "mlf_tomo-solvent_flattening: solvent mask is not of right dimensions");
 
     solvavg = 0., sumsolv = 0.;
-    for (int refno = 0; refno < nr_ref; refno++)
+    for (int refno = 0;refno < nr_ref; refno++)
     {
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(solv())
         {
@@ -1265,7 +1264,7 @@ void Prog_mlf_tomo_prm::solvent_flattening(std::vector<Matrix3D<double> > &Mref,
         }
     }
     solvavg /= sumsolv;
-    for (int refno = 0; refno < nr_ref; refno++)
+    for (int refno = 0;refno < nr_ref; refno++)
     {
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(solv())
         {
@@ -1298,7 +1297,7 @@ void Prog_mlf_tomo_prm::write_output_files(const int iter, SelFile &SF, DocFile 
     }
 
     // Write out current reference images and fill log-file
-    for (int refno = 0; refno < nr_ref; refno++)
+    for (int refno = 0;refno < nr_ref; refno++)
     {
         // Real-space map (sumwedge-corrected!)
         fn_tmp = fn_base + "_ref";

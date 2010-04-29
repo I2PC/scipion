@@ -45,12 +45,12 @@
    FALSE if it is not a centered filter
 */
 extern int GetPyramidFilter(
-    const char *Filter,
-    long int Order,
-    double g[], long int *ng,
-    double h[], long int *nh,
-    short *FlagCentered
-);
+        const char *Filter,
+        long int Order,
+        double g[], long int *ng,
+        double h[], long int *nh,
+        short *FlagCentered
+    );
 
 /** Reduce 2D.
  Function:
@@ -68,11 +68,11 @@ extern int GetPyramidFilter(
   Filter:   g[ng] coefficients of the filter
 */
 extern int Reduce_2D(
-    double *In, long int NxIn, long int NyIn,
-    double *Out,
-    double w[], long int nw,
-    short FlagCentered
-);
+        double *In, long int NxIn, long int NyIn,
+        double *Out,
+        double w[], long int nw,
+        short FlagCentered
+    );
 
 /** Reduce 3D.
  Function:
@@ -90,11 +90,11 @@ extern int Reduce_2D(
   Filter:   g[ng] coefficients of the filter
 */
 extern int Reduce_3D(
-    double *In, long int NxIn, long int NyIn, long int NzIn,
-    double *Out,
-    double w[], long int nw,
-    short FlagCentered
-);
+        double *In, long int NxIn, long int NyIn, long int NzIn,
+        double *Out,
+        double w[], long int nw,
+        short FlagCentered
+    );
 
 /** Expand 2D.
  Function:
@@ -112,11 +112,11 @@ extern int Reduce_3D(
   Filter coef: h[nh]
 */
 extern int Expand_2D(
-    double *In, long int NxIn, long int NyIn,
-    double *Out,
-    double h[], long int nh,
-    short FlagCentered
-);
+        double *In, long int NxIn, long int NyIn,
+        double *Out,
+        double h[], long int nh,
+        short FlagCentered
+    );
 
 /** Expand 3D.
  Function:
@@ -134,11 +134,11 @@ extern int Expand_2D(
   Filter coef: h[nh]
 */
 extern int Expand_3D(
-    double *In, long int NxIn, long int NyIn, long int NzIn,
-    double *Out,
-    double h[], long int nh,
-    short FlagCentered
-);
+        double *In, long int NxIn, long int NyIn, long int NzIn,
+        double *Out,
+        double h[], long int nh,
+        short FlagCentered
+    );
 
 /** Reduce 1D.
  Purpose:
@@ -154,11 +154,11 @@ extern int Expand_3D(
   Daniel Sage, EPFL, Biomedical Imaging Group, April 1999
 */
 extern void Reduce_1D(
-    double x[], long int nx,
-    double y[],
-    double w[], long int nw,
-    short FlagCentered
-);
+        double x[], long int nx,
+        double y[],
+        double w[], long int nw,
+        short FlagCentered
+    );
 
 /** Expand 1D.
  Purpose:
@@ -174,11 +174,11 @@ extern void Reduce_1D(
   Daniel Sage, EPFL, Biomedical Imaging Group, April 1999
 */
 extern void Expand_1D(
-    double x[], long int nx,
-    double y[],
-    double w[], long int nw,
-    short FlagCentered
-);
+        double x[], long int nx,
+        double y[],
+        double w[], long int nw,
+        short FlagCentered
+    );
 
 //@}
 #endif

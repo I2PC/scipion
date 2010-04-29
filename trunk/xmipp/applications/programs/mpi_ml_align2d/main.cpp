@@ -63,13 +63,13 @@ int main(int argc, char **argv)
         {
             for (int slave = 1; slave < size; slave++)
                 MPI_Send(&prm.seed, 1, MPI_INT, slave, TAG_DOCFILE,
-                         MPI_COMM_WORLD);
+                        MPI_COMM_WORLD);
         }
         else
         {
             prm.verb = 0;
             MPI_Recv(&prm.seed, 1, MPI_INT, 0, TAG_DOCFILE, MPI_COMM_WORLD,
-                     &status);
+                    &status);
         }
 
         // Create references from random subset averages
@@ -103,8 +103,8 @@ int main(int argc, char **argv)
         for (prm.iter = prm.istart; prm.iter <= prm.Niter; prm.iter++)
         {
             if (prm.verb > 0) std::cerr
-                        << "  Multi-reference refinement:  iteration " << prm.iter
-                        << " of " << prm.Niter << std::endl;
+                    << "  Multi-reference refinement:  iteration " << prm.iter
+                    << " of " << prm.Niter << std::endl;
 
             // Save old reference images
             for (int refno = 0; refno < prm.model.n_ref; refno++)
@@ -117,38 +117,38 @@ int main(int argc, char **argv)
 
                 // Here MPI_allreduce of all wsums,LL and sumfracweight !!!
                 MPI_Allreduce(&prm.LL, &aux, 1, MPI_DOUBLE, MPI_SUM,
-                              MPI_COMM_WORLD);
+                        MPI_COMM_WORLD);
                 prm.LL = aux;
                 MPI_Allreduce(&prm.sumfracweight, &aux, 1, MPI_DOUBLE, MPI_SUM,
-                              MPI_COMM_WORLD);
+                        MPI_COMM_WORLD);
                 prm.sumfracweight = aux;
                 MPI_Allreduce(&prm.wsum_sigma_noise, &aux, 1, MPI_DOUBLE,
-                              MPI_SUM, MPI_COMM_WORLD);
+                        MPI_SUM, MPI_COMM_WORLD);
                 prm.wsum_sigma_noise = aux;
                 MPI_Allreduce(&prm.wsum_sigma_offset, &aux, 1, MPI_DOUBLE,
-                              MPI_SUM, MPI_COMM_WORLD);
+                        MPI_SUM, MPI_COMM_WORLD);
                 prm.wsum_sigma_offset = aux;
                 for (int refno = 0; refno < prm.model.n_ref; refno++)
                 {
                     MPI_Allreduce(MULTIDIM_ARRAY(prm.wsum_Mref[refno]),
-                                  MULTIDIM_ARRAY(Maux),
-                                  MULTIDIM_SIZE(prm.wsum_Mref[refno]), MPI_DOUBLE,
-                                  MPI_SUM, MPI_COMM_WORLD);
+                            MULTIDIM_ARRAY(Maux),
+                            MULTIDIM_SIZE(prm.wsum_Mref[refno]), MPI_DOUBLE,
+                            MPI_SUM, MPI_COMM_WORLD);
                     prm.wsum_Mref[refno] = Maux;
                     MPI_Allreduce(&prm.sumw[refno], &aux, 1, MPI_DOUBLE,
-                                  MPI_SUM, MPI_COMM_WORLD);
+                            MPI_SUM, MPI_COMM_WORLD);
                     prm.sumw[refno] = aux;
                     MPI_Allreduce(&prm.sumwsc2[refno], &aux, 1, MPI_DOUBLE,
-                                  MPI_SUM, MPI_COMM_WORLD);
+                            MPI_SUM, MPI_COMM_WORLD);
                     prm.sumwsc2[refno] = aux;
                     MPI_Allreduce(&prm.sumw_mirror[refno], &aux, 1, MPI_DOUBLE,
-                                  MPI_SUM, MPI_COMM_WORLD);
+                            MPI_SUM, MPI_COMM_WORLD);
                     prm.sumw_mirror[refno] = aux;
                     MPI_Allreduce(&prm.sumw2[refno], &aux, 1, MPI_DOUBLE,
-                                  MPI_SUM, MPI_COMM_WORLD);
+                            MPI_SUM, MPI_COMM_WORLD);
                     prm.sumw2[refno] = aux;
                     MPI_Allreduce(&prm.sumwsc[refno], &aux, 1, MPI_DOUBLE,
-                                  MPI_SUM, MPI_COMM_WORLD);
+                            MPI_SUM, MPI_COMM_WORLD);
                     prm.sumwsc[refno] = aux;
                 }
 
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
                     if (prm.iter > 1)
                     {
                         prm.readModel(block_model, prm.getBaseName("_block",
-                                      prm.current_block + 1));
+                                prm.current_block + 1));
                         //block_model.print();
                         prm.model.substractModel(block_model);
                     }
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
                 for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
                 {
                     prm.readModel(block_model, prm.getBaseName("_block",
-                                  prm.current_block + 1));
+                            prm.current_block + 1));
 
                     if (prm.current_block == 0)
                         prm.model = block_model;
@@ -194,23 +194,23 @@ int main(int argc, char **argv)
             // Check convergence
             converged = prm.checkConvergence();
 
-            // Write intermediate files
+            // Write intermediate files 
             if (rank != 0)
             {
                 // All slaves send docfile data to the master
                 int s_size = MULTIDIM_SIZE(prm.docfiledata);
                 MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE,
-                         MPI_COMM_WORLD);
+                        MPI_COMM_WORLD);
                 MPI_Send(MULTIDIM_ARRAY(prm.docfiledata), s_size, MPI_DOUBLE,
-                         0, TAG_DOCFILE, MPI_COMM_WORLD);
+                        0, TAG_DOCFILE, MPI_COMM_WORLD);
             }
             else
             {
-                // Master fills docfile
+                // Master fills docfile 
                 //prm.addDocfileHeaderComment();
                 // Master's own contribution
                 prm.addPartialDocfileData(prm.docfiledata, prm.myFirstImg,
-                                          prm.myLastImg);
+                        prm.myLastImg);
                 int s_size, first_img, last_img;
                 int docCounter = 1;
 
@@ -218,14 +218,14 @@ int main(int argc, char **argv)
                 {
                     // receive in order
                     MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE,
-                             MPI_COMM_WORLD, &status);
+                            MPI_COMM_WORLD, &status);
                     MPI_Recv(MULTIDIM_ARRAY(prm.docfiledata), s_size,
-                             MPI_DOUBLE, docCounter, TAG_DOCFILE,
-                             MPI_COMM_WORLD, &status);
+                            MPI_DOUBLE, docCounter, TAG_DOCFILE,
+                            MPI_COMM_WORLD, &status);
                     divide_equally(prm.nr_images_global, size, docCounter,
-                                   first_img, last_img);
+                            first_img, last_img);
                     prm.addPartialDocfileData(prm.docfiledata, first_img,
-                                              last_img);
+                            last_img);
                     docCounter++;
 
                 }
@@ -240,7 +240,7 @@ int main(int argc, char **argv)
             if (converged)
             {
                 if (prm.verb > 0) std::cerr << " Optimization converged!"
-                                                << std::endl;
+                        << std::endl;
                 break;
             }
             MPI_Barrier(MPI_COMM_WORLD);

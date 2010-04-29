@@ -74,8 +74,7 @@ int fast_fourier_trans_img(float **imgModulo, int rows, int cols)
     }
 
     for (i = 0; i < rows; i++)
-    {
-        /* multiplico por 1 y -1 alternativamente */
+    {                          /* multiplico por 1 y -1 alternativamente */
         for (j = 0; j < cols ; j++)
         {
             par *= -1.0;

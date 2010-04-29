@@ -5,11 +5,11 @@
 // CppSQLite3 - A C++ wrapper around the SQLite3 embedded database library.
 //
 // Copyright (c) 2004 Rob Groves. All Rights Reserved. rob.groves@btinternet.com
-//
+// 
 // Permission to use, copy, modify, and distribute this software and its
 // documentation for any purpose, without fee, and without a written
-// agreement, is hereby granted, provided that the above copyright notice,
-// this paragraph and the following two paragraphs appear in all copies,
+// agreement, is hereby granted, provided that the above copyright notice, 
+// this paragraph and the following two paragraphs appear in all copies, 
 // modifications, and distributions.
 //
 // IN NO EVENT SHALL THE AUTHOR BE LIABLE TO ANY PARTY FOR DIRECT,
@@ -23,10 +23,10 @@
 // ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". THE AUTHOR HAS NO OBLIGATION
 // TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 //
-// V3.0     03/08/2004  -Initial Version for sqlite3
+// V3.0		03/08/2004	-Initial Version for sqlite3
 //
-// V3.1     16/09/2004  -Implemented getXXXXField using sqlite3 functions
-//                      -Added CppSQLiteDB3::tableExists()
+// V3.1		16/09/2004	-Implemented getXXXXField using sqlite3 functions
+//						-Added CppSQLiteDB3::tableExists()
 ////////////////////////////////////////////////////////////////////////////////
 #ifndef _CppSQLite3_H_
 #define _CppSQLite3_H_
@@ -46,22 +46,16 @@ class CppSQLite3Exception
 public:
 
     CppSQLite3Exception(const int nErrCode,
-                        char* szErrMess,
-                        bool bDeleteMsg=true);
+                    char* szErrMess,
+                    bool bDeleteMsg=true);
 
     CppSQLite3Exception(const CppSQLite3Exception&  e);
 
     virtual ~CppSQLite3Exception();
 
-    const int errorCode()
-    {
-        return mnErrCode;
-    }
+    const int errorCode() { return mnErrCode; }
 
-    const char* errorMessage()
-    {
-        return mpszErrMess;
-    }
+    const char* errorMessage() { return mpszErrMess; }
 
     static const char* errorCodeAsString(int nErrCode);
 
@@ -82,10 +76,7 @@ public:
 
     const char* format(const char* szFormat, ...);
 
-    operator const char*()
-    {
-        return mpBuf;
-    }
+    operator const char*() { return mpBuf; }
 
     void clear();
 
@@ -134,9 +125,9 @@ public:
     CppSQLite3Query(const CppSQLite3Query& rQuery);
 
     CppSQLite3Query(sqlite3* pDB,
-                    sqlite3_stmt* pVM,
-                    bool bEof,
-                    bool bOwnVM=true);
+				sqlite3_stmt* pVM,
+                bool bEof,
+                bool bOwnVM=true);
 
     CppSQLite3Query& operator=(const CppSQLite3Query& rQuery);
 
@@ -178,7 +169,7 @@ private:
 
     void checkVM();
 
-    sqlite3* mpDB;
+	sqlite3* mpDB;
     sqlite3_stmt* mpVM;
     bool mbEof;
     int mnCols;
@@ -296,7 +287,7 @@ public:
 
     void close();
 
-    bool tableExists(const std::string &szTable);
+	bool tableExists(const std::string &szTable);
 
     int execDML(const std::string &szSQL);
 
@@ -310,17 +301,11 @@ public:
 
     sqlite_int64 lastRowId();
 
-    void interrupt()
-    {
-        sqlite3_interrupt(mpDB);
-    }
+    void interrupt() { sqlite3_interrupt(mpDB); }
 
     void setBusyTimeout(int nMillisecs);
 
-    static const char* SQLiteVersion()
-    {
-        return SQLITE_VERSION;
-    }
+    static const char* SQLiteVersion() { return SQLITE_VERSION; }
 
 private:
 

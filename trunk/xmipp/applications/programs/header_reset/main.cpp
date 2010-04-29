@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         fn_input = getParameter(argc, argv, "-i");
         if (Is_ImageXmipp(fn_input))
         {
-            SF.addObject();
+        	SF.addObject();
             SF.setValue( MDL_IMAGE, fn_input);
             SF.setValue( MDL_ENABLED, 1);
         }
@@ -74,12 +74,12 @@ int main(int argc, char *argv[])
             std::cerr << "Setting the tilt angles to a tilt series\n"
                       << "First angle=" << firstAngle << std::endl
                       << "Angular step=" << angularStep << std::endl;
-        long int ret=SF.firstObject();
+		long int ret=SF.firstObject();
         double angle=firstAngle;
         do
         {
             FileName fn_img;
-            SF.getValue( MDL_IMAGE, fn_img);
+            SF.getValue( MDL_IMAGE, fn_img); 
             if (fn_img=="") break;
             img.read(fn_img);
             img.clear_header();

@@ -375,9 +375,9 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const VolumeT< T >& V)
     {
         out << "Volume Name   : " << V.fn_img << std::endl
-            << "dimensions   : " << V.img.sliceNumber() << " x "
-            << V.img.rowNumber() << " x " << V.img.colNumber()
-            << "  (slices x rows x columns)" << std::endl;
+        << "dimensions   : " << V.img.sliceNumber() << " x "
+        << V.img.rowNumber() << " x " << V.img.colNumber()
+        << "  (slices x rows x columns)" << std::endl;
 
         return out;
     }
@@ -426,9 +426,9 @@ public:
     }
 
     void sumWithFile(const FileName &name,
-                     bool reversed = false,
-                     Volume_Type volume_type = VBYTE,
-                     int header_size = 0)
+              bool reversed = false,
+              Volume_Type volume_type = VBYTE,
+              int header_size = 0)
     {
         FILE* fh;
 
@@ -442,49 +442,49 @@ public:
         fclose(fh);
     }
 
-    /** Read image from disk using a file pointer.
-         * This is the core routine of the previous one.
-         */
+       /** Read image from disk using a file pointer.
+     * This is the core routine of the previous one.
+     */
     void readAndSum(FILE* fh,
-                    bool reversed,
-                    Volume_Type volume_type)
+              bool reversed,
+              Volume_Type volume_type)
     {
-        T* ptr;
+    	T* ptr;
 
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
-        switch (volume_type)
-        {
-        case VBYTE:
-            unsigned char u;
-            FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
-            *ptr = *ptr+static_cast< T >(u);
-            break;
-        case VINT:
-            int ii;
-            FREAD(&ii, sizeof(int), 1, fh, reversed);
-            *ptr = *ptr+static_cast< T >(ii);
-            break;
-            // Integers and floats need to be reversed in identical way
-        case V16:
-            unsigned short us;
-            FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
-            *ptr = *ptr+static_cast< T >(us);
-            break;
-        case VFLOAT:
-            float f;
-            FREAD(&f, sizeof(float), 1, fh, reversed);
-            *ptr = *ptr+static_cast< T >(f);
-            break;
-        case VDOUBLE:
-            double d;
-            FREAD(&d, sizeof(double), 1, fh, reversed);
-            *ptr = *ptr+static_cast< T >(d);
-            break;
-
-        default:
-            REPORT_ERROR(1503, "Invalid volume type");
-        }
+            switch (volume_type)
+            {
+            case VBYTE:
+                unsigned char u;
+                FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
+                *ptr = *ptr+static_cast< T >(u);
+                break;
+            case VINT:
+                int ii;
+                FREAD(&ii, sizeof(int), 1, fh, reversed);
+                *ptr = *ptr+static_cast< T >(ii);
+                break;
+                // Integers and floats need to be reversed in identical way
+            case V16:
+                unsigned short us;
+                FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
+                *ptr = *ptr+static_cast< T >(us);
+                break;
+            case VFLOAT:
+                float f;
+                FREAD(&f, sizeof(float), 1, fh, reversed);
+                *ptr = *ptr+static_cast< T >(f);
+                break;
+            case VDOUBLE:
+                double d;
+                FREAD(&d, sizeof(double), 1, fh, reversed);
+                *ptr = *ptr+static_cast< T >(d);
+                break;
+           
+            default:
+                REPORT_ERROR(1503, "Invalid volume type");
+            }
     }
 
     /** Read image from disk using a file pointer.
@@ -499,33 +499,33 @@ public:
     {
         img.resize(Zdim, Ydim, Xdim);
 
-        T* ptr;
+    	T* ptr;
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
-        switch (volume_type)
-        {
-        case VBYTE:
-            unsigned char u;
-            FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
-            *ptr = static_cast< T >(u);
-            break;
-        case VINT:
-            int ii;
-            FREAD(&ii, sizeof(int), 1, fh, reversed);
-            *ptr = static_cast< T >(ii);
-            break;
-            // Integers and floats need to be reversed in identical way
-        case V16:
-            unsigned short us;
-            FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
-            *ptr = static_cast< T >(us);
-            break;
-        case VFLOAT:
-            float f;
-            FREAD(&f, sizeof(float), 1, fh, reversed);
-            *ptr = static_cast< T >(f);
-            break;
-        }
+            switch (volume_type)
+            {
+            case VBYTE:
+                unsigned char u;
+                FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
+                *ptr = static_cast< T >(u);
+                break;
+            case VINT:
+                int ii;
+                FREAD(&ii, sizeof(int), 1, fh, reversed);
+                *ptr = static_cast< T >(ii);
+                break;
+                // Integers and floats need to be reversed in identical way
+            case V16:
+                unsigned short us;
+                FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
+                *ptr = static_cast< T >(us);
+                break;
+            case VFLOAT:
+                float f;
+                FREAD(&f, sizeof(float), 1, fh, reversed);
+                *ptr = static_cast< T >(f);
+                break;
+            }
     }
 
     /** Write Volume to disk.
@@ -578,10 +578,9 @@ public:
             b = min_val;
         }
 
-        T* ptr;
-        unsigned long int n;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
-        {
+    	T* ptr;
+	unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr) {
             switch (volume_type)
             {
             case VBYTE:
@@ -612,7 +611,7 @@ public:
             }
         }
     }
-
+    
     /** Write a volume as a collection of images. */
     void writeAsSelFile(const FileName &rootname) const
     {
@@ -632,7 +631,7 @@ public:
 
 // Specialization for complex numbers
 template<>
-inline
+inline 
 void VolumeT< std::complex< double > >::read(FILE* fh,
         int Zdim,
         int Ydim,
@@ -646,41 +645,41 @@ void VolumeT< std::complex< double > >::read(FILE* fh,
     unsigned long int n;
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
-    switch (volume_type)
-    {
-    case VFLOAT:
-    {
-        float a, b;
+            switch (volume_type)
+            {
+            case VFLOAT:
+                {
+                float a, b;
 
-        // read real part
-        FREAD(&a, sizeof(float), 1, fh, reversed);
+                // read real part
+                FREAD(&a, sizeof(float), 1, fh, reversed);
 
-        // read imaginary part
-        FREAD(&b, sizeof(float), 1, fh, reversed);
+                // read imaginary part
+                FREAD(&b, sizeof(float), 1, fh, reversed);
 
-        // Assign the number
-        std::complex< double > c(a, b);
-        *ptr = c;
-        break;
-    }
-    case VDOUBLE:
-    {
-        double a, b;
+                // Assign the number
+                std::complex< double > c(a, b);
+                *ptr = c;
+                break;
+                }
+            case VDOUBLE:
+                {
+                double a, b;
 
-        // read real part
-        FREAD(&a, sizeof(double), 1, fh, reversed);
+                // read real part
+                FREAD(&a, sizeof(double), 1, fh, reversed);
 
-        // read imaginary part
-        FREAD(&b, sizeof(double), 1, fh, reversed);
+                // read imaginary part
+                FREAD(&b, sizeof(double), 1, fh, reversed);
 
-        // Assign the number
-        std::complex< double > c(a, b);
-        *ptr = c;
-        break;
-    }
-    default:
-        REPORT_ERROR(1503, "Invalid volume type");
-    }
+                // Assign the number
+                std::complex< double > c(a, b);
+                *ptr = c;
+                break;
+                }
+            default:
+                REPORT_ERROR(1503, "Invalid volume type");
+            }
 }
 
 
@@ -695,41 +694,41 @@ inline void VolumeT< std::complex< double > >::readAndSum(FILE* fh,
     std::complex< double >* ptr=NULL;
     unsigned long int n;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
-    switch (volume_type)
-    {
-    case VFLOAT:
-    {
-        float a, b;
+            switch (volume_type)
+            {
+            case VFLOAT:
+                {
+                float a, b;
 
-        // read real part
-        FREAD(&a, sizeof(float), 1, fh, reversed);
+                // read real part
+                FREAD(&a, sizeof(float), 1, fh, reversed);
 
-        // read imaginary part
-        FREAD(&b, sizeof(float), 1, fh, reversed);
+                // read imaginary part
+                FREAD(&b, sizeof(float), 1, fh, reversed);
 
-        // Assign the number
-        std::complex< double > c(a, b);
-        *ptr += c;
-        break;
-    }
-    case VDOUBLE:
-    {
-        double a, b;
+                // Assign the number
+                std::complex< double > c(a, b);
+                *ptr += c;
+                break;
+                }
+            case VDOUBLE:
+                {
+                double a, b;
 
-        // read real part
-        FREAD(&a, sizeof(double), 1, fh, reversed);
+                // read real part
+                FREAD(&a, sizeof(double), 1, fh, reversed);
 
-        // read imaginary part
-        FREAD(&b, sizeof(double), 1, fh, reversed);
+                // read imaginary part
+                FREAD(&b, sizeof(double), 1, fh, reversed);
 
-        // Assign the number
-        std::complex< double > c(a, b);
-        *ptr += c;
-        break;
-    }
-    default:
-        REPORT_ERROR(1503, "Invalid volume type");
-    }
+                // Assign the number
+                std::complex< double > c(a, b);
+                *ptr += c;
+                break;
+                }
+            default:
+                REPORT_ERROR(1503, "Invalid volume type");
+            }
 }
 template<>
 inline void VolumeT< std::complex< double > >::write(FILE *fh,
@@ -740,27 +739,27 @@ inline void VolumeT< std::complex< double > >::write(FILE *fh,
     unsigned long int n;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
     {
-        switch (volume_type)
-        {
-        case VFLOAT:
-        {
-            float a, b;
-            a = static_cast< float >((*ptr).real());
-            b = static_cast< float >((*ptr).imag());
-            FWRITE(&a, sizeof(float), 1, fh, reversed);
-            FWRITE(&b, sizeof(float), 1, fh, reversed);
-            break;
-        }
-        case VDOUBLE:
-        {
-            double a, b;
-            a = static_cast< double >((*ptr).real());
-            b = static_cast< double >((*ptr).imag());
-            FWRITE(&a, sizeof(double), 1, fh, reversed);
-            FWRITE(&b, sizeof(double), 1, fh, reversed);
-            break;
-        }
-        }
+            switch (volume_type)
+            {
+            case VFLOAT:
+                {
+                float a, b;
+                a = static_cast< float >((*ptr).real());
+                b = static_cast< float >((*ptr).imag());
+                FWRITE(&a, sizeof(float), 1, fh, reversed);
+                FWRITE(&b, sizeof(float), 1, fh, reversed);
+                break;
+                }
+            case VDOUBLE:
+                {
+                double a, b;
+                a = static_cast< double >((*ptr).real());
+                b = static_cast< double >((*ptr).imag());
+                FWRITE(&a, sizeof(double), 1, fh, reversed);
+                FWRITE(&b, sizeof(double), 1, fh, reversed);
+                break;
+                }
+            }
 
     }
 }
@@ -1011,9 +1010,9 @@ public:
         header.set_header();  // Set header in a Xmipp consistent state
     }
 
-    void sumWithFile(const FileName& name,
-                     bool skip_type_check = false,
-                     bool force_reversed = false)
+        void sumWithFile(const FileName& name,
+              bool skip_type_check = false,
+              bool force_reversed = false)
     {
         FILE* fp;
 
@@ -1031,7 +1030,7 @@ public:
 
         // Read whole image and close file
         VolumeT<T>::sumWithFile(name, dummyHeader.iSlices(), dummyHeader.iYdim(), dummyHeader.iXdim(),
-                                dummyHeader.reversed(), VFLOAT, dummyHeader.get_header_size() );
+                         dummyHeader.reversed(), VFLOAT, dummyHeader.get_header_size() );
         fclose(fp);
     }
     /** Write Xmipp volume to disk.

@@ -28,8 +28,7 @@
 int main(int argc, char **argv)
 {
     Prog_Detect_Structures_Param prm;
-    try
-    {
+    try {
         prm.read(argc,argv);
     }
     catch (Xmipp_error XE)
@@ -38,8 +37,7 @@ int main(int argc, char **argv)
         prm.usage();
         return 1;
     }
-    try
-    {
+    try {
         prm.run();
     }
     catch (Xmipp_error XE)

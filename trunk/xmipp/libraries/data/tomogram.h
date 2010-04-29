@@ -164,7 +164,7 @@ public:
                 if (__reversed)
                 {
                     unsigned char* ptr = reinterpret_cast< unsigned char* >(&ret),
-                                   temp;
+                                         temp;
                     SWAP(*ptr, *(ptr + 1), temp);
                 }
 
@@ -177,7 +177,7 @@ public:
             if (__reversed)
             {
                 unsigned char* ptr = reinterpret_cast< unsigned char* >(&ret),
-                               temp;
+                                     temp;
                 SWAP(*ptr, *(ptr + 3), temp);
                 SWAP(*(ptr + 1), *(ptr + 2), temp);
             }
@@ -240,10 +240,10 @@ public:
     void set_piece(Matrix1D< int >& r0,
                    Matrix1D< int >& length,
                    Matrix3D< double >& piece);
-
+    
     /** Compute statistics */
     void computeStats(float &minval, float &maxval, float &avg, float &stddev)
-    const;
+        const;
 };
 
 #endif

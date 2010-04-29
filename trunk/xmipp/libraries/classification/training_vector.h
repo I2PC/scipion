@@ -61,8 +61,8 @@ public:
      Parameter: _calib calibration which should be true if the data set has labels
     */
     xmippCTVectors(unsigned _vecSize = 0, bool _calib = true)
-        : xmippCTSet<xmippVector, xmippLabel>(_calib),  /*varStats(_vecSize),*/
-          normalized(false)
+            : xmippCTSet<xmippVector, xmippLabel>(_calib),  /*varStats(_vecSize),*/
+            normalized(false)
     {};
 
     /**

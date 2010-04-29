@@ -90,8 +90,7 @@ void RandomizeAngles::processAngles()
             yoff = proj.Yoff();
             flip = proj.flip();
             weight = proj.weight();
-        }
-        else
+        } else
         {
             get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
         }
@@ -100,15 +99,15 @@ void RandomizeAngles::processAngles()
         int irandom;
         irandom=rnd_unif(0, SL.SymsNo()+1);
         //#define DEBUG
-#ifdef DEBUG
-        for (int h=0; h < 100000; h++)
-        {
-            irandom=rnd_unif(0, SL.SymsNo()+1);
-            fprintf(stderr,"%02d\n",irandom);
-        }
-        exit(1);
-#endif
-#undef DEBUG
+        #ifdef DEBUG
+            for (int h=0; h < 100000; h++)
+            {
+                irandom=rnd_unif(0, SL.SymsNo()+1);
+                fprintf(stderr,"%02d\n",irandom);
+            }
+            exit(1);
+        #endif
+        #undef DEBUG
         temp = euler *
                R_repository[irandom].inv();
         //temp = euler;
@@ -128,8 +127,8 @@ void RandomizeAngles::processAngles()
 }
 
 void RandomizeAngles::get_angles_for_image(const FileName &fn, double &rot,
-        double &tilt, double &psi, double &xoff, double &yoff, double &flip,
-        double &weight)
+    double &tilt, double &psi, double &xoff, double &yoff, double &flip,
+    double &weight)
 {
     if (DFangles.search_comment(fn))
     {
@@ -151,7 +150,7 @@ void RandomizeAngles::get_angles_for_image(const FileName &fn, double &rot,
     {
         REPORT_ERROR(1, (std::string)"RandomizeAnles: Cannot find " + fn + " in docfile " + fn_doc);
     }
-
+    
 }
 void RandomizeAngles::symmetryInicialization()
 {
@@ -178,16 +177,16 @@ void RandomizeAngles::run()
     //read doc and sel files file
     if (fn_doc != "")
         DFangles.read(fn_doc);
-    col_rot    = DFangles.getColNumberFromHeader("rot")    - 1;
-    col_tilt   = DFangles.getColNumberFromHeader("tilt")   - 1;
-    col_psi    = DFangles.getColNumberFromHeader("psi")    - 1;
-    col_xoff   = DFangles.getColNumberFromHeader("Xoff")   - 1;
-    col_yoff   = DFangles.getColNumberFromHeader("Yoff")   - 1;
-    col_flip   = DFangles.getColNumberFromHeader("Flip")   - 1;
-    col_weight = DFangles.getColNumberFromHeader("Weight") - 1;
+        col_rot    = DFangles.getColNumberFromHeader("rot")    - 1;
+        col_tilt   = DFangles.getColNumberFromHeader("tilt")   - 1;
+        col_psi    = DFangles.getColNumberFromHeader("psi")    - 1;
+        col_xoff   = DFangles.getColNumberFromHeader("Xoff")   - 1;
+        col_yoff   = DFangles.getColNumberFromHeader("Yoff")   - 1;
+        col_flip   = DFangles.getColNumberFromHeader("Flip")   - 1;
+        col_weight = DFangles.getColNumberFromHeader("Weight") - 1;
 
     SF.read(fn_sel);
-
+    
     //load icosahedron vertex
     symmetry=SL.read_sym_file(fn_sym, accuracy);
     symmetryInicialization();

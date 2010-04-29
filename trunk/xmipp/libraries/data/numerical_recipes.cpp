@@ -69,7 +69,7 @@ double ran1(int *idum)
         ix2 = ix1 % M2;
         ix1 = (IA1 * ix1 + IC1) % M1;
         ix3 = ix1 % M3;
-        for (j = 1; j <= 97; j++)
+        for (j = 1;j <= 97;j++)
         {
             ix1 = (IA1 * ix1 + IC1) % M1;
             ix2 = (IA2 * ix2 + IC2) % M2;
@@ -159,7 +159,7 @@ double tdev(double nu, int *idum)
 }
 
 
-// Kolmogorov-Smirnov test
+// Kolmogorov-Smirnov test 
 void ksone(double data[], int n, double(*func)(double), double * d, double * prob)
 {
     qcksrt(n, data);
@@ -173,7 +173,7 @@ void ksone(double data[], int n, double(*func)(double), double * d, double * pro
         dt = XMIPP_MAX(fabs(fo - ff), fabs(fn - ff));
         if (dt> *d) *d = dt;
         fo = fn;
-    }
+    } 
     *prob = probks(sqrt(en)*(*d));
 }
 
@@ -204,7 +204,7 @@ void indexx(int n, double arrin[], int indx[])
     int l, j, ir, indxt, i;
     double q;
 
-    for (j = 1; j <= n; j++)
+    for (j = 1;j <= n;j++)
         indx[j] = j;
     l = (n >> 1) + 1;
     ir = n;
@@ -259,10 +259,10 @@ void qcksrt(int n, double arr[])
     {
         if (ir - l < M)
         {
-            for (j = l + 1; j <= ir; j++)
+            for (j = l + 1;j <= ir;j++)
             {
                 a = arr[j];
-                for (i = j - 1; arr[i] > a && i > 0; i--)
+                for (i = j - 1;arr[i] > a && i > 0;i--)
                     arr[i+1] = arr[i];
                 arr[i+1] = a;
             }
@@ -337,12 +337,12 @@ double bessj0(double x)
                                     y * (651619640.7
                                          + y * (-11214424.18 +
                                                 y * (77392.33017 +
-                                                        y * (-184.9052456)))));
+                                                     y * (-184.9052456)))));
         ans2 = 57568490411.0 + y * (1029532985.0 +
                                     y * (9494680.718
                                          + y * (59272.64853 +
                                                 y * (267.8532712 +
-                                                        y * 1.0))));
+                                                     y * 1.0))));
         ans = ans1 / ans2;
     }
     else
@@ -354,7 +354,7 @@ double bessj0(double x)
                           + y * (-0.2073370639e-5 + y * 0.2093887211e-6)));
         ans2 = -0.1562499995e-1 + y * (0.1430488765e-3
                                        + y * (-0.6911147651e-5 + y * (0.7621095161e-6
-                                               - y * 0.934935152e-7)));
+                                                                      - y * 0.934935152e-7)));
         ans = sqrt(0.636619772 / ax) * (cos(xx) * ans1 - z * sin(xx) * ans2);
     }
     return ans;
@@ -376,8 +376,8 @@ double bessi0(double x)
         y = 3.75 / ax;
         ans = (exp(ax) / sqrt(ax)) * (0.39894228 + y * (0.1328592e-1
                                       + y * (0.225319e-2 + y * (-0.157565e-2 + y * (0.916281e-2
-                                              + y * (-0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1
-                                                      + y * 0.392377e-2))))))));
+                                                                + y * (-0.2057706e-1 + y * (0.2635537e-1 + y * (-0.1647633e-1
+                                                                                            + y * 0.392377e-2))))))));
     }
     return ans;
 }
@@ -415,7 +415,7 @@ double chebev(double a, double b, double c[], int m, double x)
     if ((x - a)*(x - b) > 0.0)
         nrerror("x not in range in routine chebev");
     y2 = 2.0 * (y = (2.0 * x - a - b) / (b - a));
-    for (j = m - 1; j >= 1; j--)
+    for (j = m - 1;j >= 1;j--)
     {
         sv = d;
         d = y2 * d - dd + c[j];
@@ -430,17 +430,17 @@ void beschb(double x, double *gam1, double *gam2, double *gampl, double *gammi)
 {
     double xx;
     static double c1[] =
-    {
-        -1.142022680371172e0, 6.516511267076e-3,
-        3.08709017308e-4, -3.470626964e-6, 6.943764e-9,
-        3.6780e-11, -1.36e-13
-    };
+        {
+            -1.142022680371172e0, 6.516511267076e-3,
+            3.08709017308e-4, -3.470626964e-6, 6.943764e-9,
+            3.6780e-11, -1.36e-13
+        };
     static double c2[] =
-    {
-        1.843740587300906e0, -0.076852840844786e0,
-        1.271927136655e-3, -4.971736704e-6, -3.3126120e-8,
-        2.42310e-10, -1.70e-13, -1.0e-15
-    };
+        {
+            1.843740587300906e0, -0.076852840844786e0,
+            1.271927136655e-3, -4.971736704e-6, -3.3126120e-8,
+            2.42310e-10, -1.70e-13, -1.0e-15
+        };
 
     xx = 8.0 * x * x - 1.0;
     *gam1 = chebev(-1.0, 1.0, c1, NUSE1, xx);
@@ -460,9 +460,9 @@ void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *r
 {
     int i, isign, l, nl;
     double a, b, br, bi, c, cr, ci, d, del, del1, den, di, dlr, dli, dr, e, f, fact, fact2,
-           fact3, ff, gam, gam1, gam2, gammi, gampl, h, p, pimu, pimu2, q, r, rjl,
-           rjl1, rjmu, rjp1, rjpl, rjtemp, ry1, rymu, rymup, rytemp, sum, sum1,
-           temp, w, x2, xi, xi2, xmu, xmu2;
+    fact3, ff, gam, gam1, gam2, gammi, gampl, h, p, pimu, pimu2, q, r, rjl,
+    rjl1, rjmu, rjp1, rjpl, rjtemp, ry1, rymu, rymup, rytemp, sum, sum1,
+    temp, w, x2, xi, xi2, xmu, xmu2;
 
     if (x <= 0.0 || xnu < 0.0)
         nrerror("bad arguments in bessjy");
@@ -479,7 +479,7 @@ void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *r
     b = xi2 * xnu;
     d = 0.0;
     c = h;
-    for (i = 1; i <= MAXIT; i++)
+    for (i = 1;i <= MAXIT;i++)
     {
         b += xi2;
         d = b - d;
@@ -503,7 +503,7 @@ void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *r
     rjl1 = rjl;
     rjp1 = rjpl;
     fact = xnu * xi;
-    for (l = nl; l >= 1; l--)
+    for (l = nl;l >= 1;l--)
     {
         rjtemp = fact * rjl + rjpl;
         fact -= xi;
@@ -533,7 +533,7 @@ void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *r
         d = -x2 * x2;
         sum = ff + r * q;
         sum1 = p;
-        for (i = 1; i <= MAXIT; i++)
+        for (i = 1;i <= MAXIT;i++)
         {
             ff = (i * ff + p + q) / (i * i - xmu2);
             c *= (d / i);
@@ -571,7 +571,7 @@ void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *r
         temp = p * dlr - q * dli;
         q = p * dli + q * dlr;
         p = temp;
-        for (i = 2; i <= MAXIT; i++)
+        for (i = 2;i <= MAXIT;i++)
         {
             a += 2 * (i - 1);
             bi += 2.0;
@@ -607,7 +607,7 @@ void bessjy(double x, double xnu, double *rj, double *ry, double *rjp, double *r
     fact = rjmu / rjl;
     *rj = rjl1 * fact;
     *rjp = rjp1 * fact;
-    for (i = 1; i <= nl; i++)
+    for (i = 1;i <= nl;i++)
     {
         rytemp = (xmu + i) * xi2 * ry1 - rymu;
         rymu = ry1;
@@ -668,17 +668,17 @@ double gammln(double xx)
 {
     double x, tmp, ser;
     static double cof[6] =
-    {
-        76.18009173, -86.50532033, 24.01409822,
-        -1.231739516, 0.120858003e-2, -0.536382e-5
-    };
+        {
+            76.18009173, -86.50532033, 24.01409822,
+            -1.231739516, 0.120858003e-2, -0.536382e-5
+        };
     int j;
 
     x = xx - 1.0;
     tmp = x + 5.5;
     tmp -= (x + 0.5) * log(tmp);
     ser = 1.0;
-    for (j = 0; j <= 5; j++)
+    for (j = 0;j <= 5;j++)
     {
         x += 1.0;
         ser += cof[j] / x;
@@ -716,7 +716,7 @@ double betacf(double a, double b, double x)
     qap = a + 1.0;
     qam = a - 1.0;
     bz = 1.0 - qab * x / qap;
-    for (m = 1; m <= ITMAX; m++)
+    for (m = 1;m <= ITMAX;m++)
     {
         em = (double) m;
         tem = em + em;
@@ -781,9 +781,9 @@ void instantiate_recipes()
 #define SIGN(a,b) ((b) > 0.0 ? fabs(a) : -fabs(a))
 #define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
 #define F1DIM(x,f) {\
-        for (int j = 1; j<=ncom; j++) \
-            xt[j] = pcom[j] + x * xicom[j]; \
-        f = (*func)(xt,prm);}
+    for (int j = 1; j<=ncom; j++) \
+        xt[j] = pcom[j] + x * xicom[j]; \
+    f = (*func)(xt,prm);}
 
 void mnbrak(double *ax, double *bx, double *cx,
             double *fa, double *fb, double *fc, double(*func)(double *, void*),
@@ -835,8 +835,7 @@ void mnbrak(double *ax, double *bx, double *cx,
             if (fu < *fc)
             {
                 SHFT(*bx, *cx, u, *cx + GOLD*(*cx - *bx))
-                double aux;
-                F1DIM(u,aux);
+                double aux; F1DIM(u,aux);
                 SHFT(*fb, *fc, fu, aux)
             }
         }
@@ -879,7 +878,7 @@ double brent(double ax, double bx, double cx, double(*func)(double *,void*),
     x = w = v = bx;
     F1DIM(x,fx);
     fw = fv = fx;
-    for (iter = 1; iter <= ITMAX; iter++)
+    for (iter = 1;iter <= ITMAX;iter++)
     {
         xm = 0.5 * (a + b);
         tol2 = 2.0 * (tol1 = tol * fabs(x) + ZEPS);
@@ -968,7 +967,7 @@ void linmin(double *p, double *xi, int n, double &fret,
     double *xicom=NULL;
     ask_Tvector(pcom, 1, n);
     ask_Tvector(xicom, 1, n);
-    for (j = 1; j <= n; j++)
+    for (j = 1;j <= n;j++)
     {
         pcom[j] = p[j];
         xicom[j] = xi[j];
@@ -978,7 +977,7 @@ void linmin(double *p, double *xi, int n, double &fret,
     bx = 2.0;
     mnbrak(&ax, &xx, &bx, &fa, &fx, &fb, func, prm, ncom, pcom, xicom);
     fret = brent(ax, xx, bx, func, prm, TOL, &xmin, ncom, pcom, xicom);
-    for (j = 1; j <= n; j++)
+    for (j = 1;j <= n;j++)
     {
         xi[j] *= xmin;
         p[j] += xi[j];
@@ -1002,10 +1001,10 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
     ask_Tvector(ptt, 1, n);
     ask_Tvector(xit, 1, n);
     fret = (*func)(p,prm);
-    for (j = 1; j <= n; j++)
+    for (j = 1;j <= n;j++)
         pt[j] = p[j];
 
-    for (iter = 1;; (iter)++)
+    for (iter = 1;;(iter)++)
     {
         /* By coss ----- */
         if (show)
@@ -1020,10 +1019,10 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
         fp = fret;
         ibig = 0;
         del = 0.0;
-        for (i = 1; i <= n; i++)
+        for (i = 1;i <= n;i++)
         {
             different_from_0 = false; // CO
-            for (j = 1; j <= n; j++)
+            for (j = 1;j <= n;j++)
             {
                 xit[j] = xi[j*n+i];
                 if (xit[j] != 0)
@@ -1066,7 +1065,7 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
         }
         if (iter == ITMAX)
             nrerror("Too many iterations in routine POWELL");
-        for (j = 1; j <= n; j++)
+        for (j = 1;j <= n;j++)
         {
             ptt[j] = 2.0 * p[j] - pt[j];
             xit[j] = p[j] - pt[j];
@@ -1075,12 +1074,12 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
         fptt = (*func)(ptt,prm);
         if (fptt < fp)
         {
-#define SQR(a) ((a)*(a))
+            #define SQR(a) ((a)*(a))
             t = 2.0 * (fp - 2.0 * fret + fptt) * SQR(fp - fret - del) - del * SQR(fp - fptt);
             if (t < 0.0)
             {
                 linmin(p, xit, n, fret, func, prm);
-                for (j = 1; j <= n; j++)
+                for (j = 1;j <= n;j++)
                     xi[j*n+ibig] = xit[j];
             }
         }
@@ -1207,17 +1206,14 @@ int _nnls_h12(
     /* Function Body */
     cl = (d1 = u[lpivot*u_dim1], fabs(d1));
     if (mode == 2)
-    {
-        /* Apply transformation I+U*(U**T)/B to cm[] */
+    { /* Apply transformation I+U*(U**T)/B to cm[] */
         if (cl <= 0.)
             return(0);
     }
     else
-    {
-        /* Construct the transformation */
+    { /* Construct the transformation */
         for (j = l1; j < m; j++)
-        {
-            /* Computing MAX */
+        { /* Computing MAX */
             d2 = (d1 = u[j*u_dim1], fabs(d1));
             if (d2 > cl)
                 cl = d2;
@@ -1923,21 +1919,21 @@ void svbksb(double *u, double *w, double *v, int m, int n, double *b, double *x)
     double s, *tmp;
 
     ask_Tvector(tmp, 1, n);
-    for (j = 1; j <= n; j++)
+    for (j = 1;j <= n;j++)
     {
         s = 0.0;
         if (w[j])
         {
-            for (i = 1; i <= m; i++)
+            for (i = 1;i <= m;i++)
                 s += u[i*n+j] * b[i];
             s /= w[j];
         }
         tmp[j] = s;
     }
-    for (j = 1; j <= n; j++)
+    for (j = 1;j <= n;j++)
     {
         s = 0.0;
-        for (jj = 1; jj <= n; jj++)
+        for (jj = 1;jj <= n;jj++)
             s += v[j*n+jj] * tmp[jj];
         x[j] = s;
     }
@@ -1965,32 +1961,32 @@ void savgol(double *c, int np, int nl, int nr, int ld, int m)
     ask_Tvector(a, 1, (m + 1)*(m + 1));
     ask_Tvector(b, 1, m + 1);
     // Set up the normal equations of the desired least-squares fit.
-    for (ipj = 0; ipj <= (m << 1); ipj++)
+    for (ipj = 0;ipj <= (m << 1);ipj++)
     {
         sum = (ipj ? 0.0 : 1.0);
-        for (k = 1; k <= nr; k++)
+        for (k = 1;k <= nr;k++)
             sum += pow((double)k, (double)ipj);
-        for (k = 1; k <= nl; k++)
+        for (k = 1;k <= nl;k++)
             sum += pow((double) - k, (double)ipj);
         mm = XMIPP_MIN(ipj, 2 * m - ipj);
-        for (imj = -mm; imj <= mm; imj += 2)
+        for (imj = -mm;imj <= mm;imj += 2)
             a[(1+(ipj+imj)/2)*(m+1)+1+(ipj-imj)/2] = sum;
     }
     // Solve them: LU decomposition.
     ludcmp(a, m + 1, indx, &d);
 
-    for (j = 1; j <= m + 1; j++)
+    for (j = 1;j <= m + 1;j++)
         b[j] = 0.0;
     b[ld+1] = 1.0;
     // Right-hand side vector is unit vector, depending on which derivative we want.
     lubksb(a, m + 1, indx, b); // Get one row of the inverse matrix.
-    for (kk = 1; kk <= np; kk++)
+    for (kk = 1;kk <= np;kk++)
         c[kk] = 0.0; // Zero the output array (it may be bigger than number of coeficients).
-    for (k = -nl; k <= nr; k++)
+    for (k = -nl;k <= nr;k++)
     {
         sum = b[1]; // Each Savitzky-Golay coeficient is the dot product of powers of an integer with the inverse matrix row.
         fac = 1.0;
-        for (mm = 1; mm <= m; mm++)
+        for (mm = 1;mm <= m;mm++)
             sum += b[mm+1] * (fac *= k);
         kk = ((np - k) % np) + 1; // Store in wrap-around order.
         c[kk] = sum;
@@ -2261,8 +2257,7 @@ inlist;
 
 #define VOID void
 
-union Multitype   /* for multiple entry points */
-{
+union Multitype { /* for multiple entry points */
     shortint h;
     integer i;
     cfsqpreal r;
@@ -2276,8 +2271,7 @@ typedef union Multitype Multitype;
 typedef long Long;
 
 struct Vardesc
-{
-    /* for Namelist */
+{ /* for Namelist */
     char *name;
     char *addr;
     Long *dims;
@@ -2459,33 +2453,33 @@ doublereal *eps1;
 
     /* Fortran I/O blocks */
     static cilist io___16 =
-    {
-        0, 0, 0, fmt_1000, 0
-    };
+        {
+            0, 0, 0, fmt_1000, 0
+        };
     static cilist io___18 =
-    {
-        0, 0, 0, fmt_1100, 0
-    };
+        {
+            0, 0, 0, fmt_1100, 0
+        };
     static cilist io___19 =
-    {
-        0, 0, 0, fmt_1200, 0
-    };
+        {
+            0, 0, 0, fmt_1200, 0
+        };
     static cilist io___20 =
-    {
-        0, 0, 0, fmt_1210, 0
-    };
+        {
+            0, 0, 0, fmt_1210, 0
+        };
     static cilist io___21 =
-    {
-        0, 0, 0, fmt_1220, 0
-    };
+        {
+            0, 0, 0, fmt_1220, 0
+        };
     static cilist io___22 =
-    {
-        0, 0, 0, fmt_1300, 0
-    };
+        {
+            0, 0, 0, fmt_1300, 0
+        };
     static cilist io___23 =
-    {
-        0, 0, 0, fmt_1400, 0
-    };
+        {
+            0, 0, 0, fmt_1400, 0
+        };
 
 
 
@@ -4427,8 +4421,7 @@ struct _parameter
 };
 
 struct _violation
-{
-    /* SIP      */
+{    /* SIP      */
     int type;
     int index;
 };
@@ -4593,7 +4586,7 @@ dir(int, int, int, int, int, int, int, int, int, int, int, int, double *,
     double *, double *, double *, double *, double *, double **, double *,
     double *, double *, double *, double **, double **, double *,
     double *, struct _violation *, void(*)(int, int, double *, double *,
-            void *), void(*)(int, int, double *, double *, void *));
+                                           void *), void(*)(int, int, double *, double *, void *));
 static void
 step1(int, int, int, int, int, int, int, int, int, int, int, int *, int *, int *,
       int *, int *, int *, int *, int *, int, double, struct _objective *,
@@ -4623,7 +4616,7 @@ static void
 update_omega(int, int, int, int *, int, int, int, int, double, double,
              struct _constraint *, struct _objective *, double *,
              struct _violation *, void(*)(int, int, double *, double *,
-                     void *), void(*)(int, int, double *, double *, void *),
+                                          void *), void(*)(int, int, double *, double *, void *),
              void(*)(int, int, double *, double *,
                      void(*)(int, int, double *, double *, void *), void *),
              void(*)(int, int, double *, double *,
@@ -4668,7 +4661,7 @@ cfsqp(nparam, nf, nfsr, nineqn, nineq, neqn, neq, ncsrl, ncsrn, mesh_pts,
       mode, iprint, miter, inform, bigbnd, eps, epseqn, udelta, bl, bu, x,
       f, g, lambda, obj, constr, gradob, gradcn, cd)
 int  nparam, nf, nfsr, neqn, nineqn, nineq, neq, ncsrl, ncsrn, mode,
-  iprint, miter, *mesh_pts, *inform;
+iprint, miter, *mesh_pts, *inform;
 double bigbnd, eps, epseqn, udelta;
 double *bl, *bu, *x, *f, *g, *lambda;
 void(* obj)(), (* constr)(), (* gradob)(), (* gradcn)();
@@ -4887,7 +4880,7 @@ void    *cd;
 */
 {
     int i, ipp, j, ncnstr, nclin, nctotl, nob, nobL, modem, nn,
-        nppram, nrowa, ncsipl1, ncsipn1, nfsip1;
+    nppram, nrowa, ncsipl1, ncsipn1, nfsip1;
     int  feasbl, feasb, prnt, Linfty;
     int *indxob, *indxcn, *mesh_pts1;
     double *signeq;
@@ -5281,8 +5274,7 @@ L910:
     free_iv(iw);
     free_dv(w);
     if (glob_prnt.info == -1)
-    {
-        /* Successful phase 1 termination  */
+    { /* Successful phase 1 termination  */
         for (i = 1; i <= nob; i++)
             cs[i].val = ob[i].val;
         nob = 0;
@@ -5411,7 +5403,7 @@ cfsqp1(miter, nparam, nob, nobL, nfsip, nineqn, neq, neqn, ncsipl, ncsipn,
        mesh_pts, ncnstr, nctotl, nrowa, feasb, epskt, epseqn, indxob,
        indxcn, param, cs, ob, signeq, obj, constr, gradob, gradcn)
 int miter, nparam, nob, nobL, nfsip, nineqn, neq, neqn, ncnstr,
-    nctotl, nrowa, feasb, ncsipl, ncsipn, *mesh_pts;
+nctotl, nrowa, feasb, ncsipl, ncsipn, *mesh_pts;
 int *indxob, *indxcn;
 double  epskt, epseqn;
 double  *signeq;
@@ -5424,9 +5416,9 @@ void(* obj)(), (* constr)(), (* gradob)(), (* gradcn)();
     int   i, iskp, nfs, ncf, ncg, nn, nstart, nrst, ncnst1;
     int   *iact, *iskip, *istore;
     double Cbar, Ck, dbar, fmax, fM, fMp, steps, d0nm, dummy,
-           sktnom, scvneq, grdftd, psf;
+    sktnom, scvneq, grdftd, psf;
     double *di, *d, *gm, *grdpsf, *penp, *bl, *bu, *clamda,
-           *cvec, *psmu, *span, *backup;
+    *cvec, *psmu, *span, *backup;
     double **hess, **hess1, **a;
     double *tempv;
     struct _violation *viol;
@@ -5684,7 +5676,7 @@ dealloc1(nparam, nrowa, a, hess, hess1, di, d, gm, grdpsf, penp, bl, bu, clamda,
 int nparam, nrowa;
 double **a, **hess, **hess1;
 double  *di, *d, *gm, *grdpsf, *penp, *bl, *bu, *clamda, *cvec, *psmu, *span,
-     *backup;
+*backup;
 int *iact, *iskip, *istore;
 #endif
 {
@@ -5722,7 +5714,7 @@ static void
 check(nparam, nf, nfsip, Linfty, nineq, nnl, neq, neqn, ncsipl, ncsipn,
       mode, modem, eps, bigbnd, param)
 int nparam, nf, nfsip, nineq, nnl, neq, neqn, ncsipl, ncsipn, mode, *modem,
-    *Linfty;
+*Linfty;
 double  bigbnd, eps;
 struct  _parameter *param;
 #endif
@@ -6096,27 +6088,28 @@ void    *cd;
                         continue;
                     }
                 }
-                else if (j == mesh_pts[index])
-                {
-                    if (cs[offset].val >= -epsilon &&
-                        cs[offset].val > cs[offset-1].val)
-                    {
-                        cs[offset].act_sip = TRUE;
-                        glob_info.tot_actg_sip++;
-                        continue;
-                    }
-                }
                 else
-                {
-                    if (cs[offset].val >= -epsilon && cs[offset].val >
-                        cs[offset-1].val && cs[offset].val >=
-                        cs[offset+1].val)
+                    if (j == mesh_pts[index])
                     {
-                        cs[offset].act_sip = TRUE;
-                        glob_info.tot_actg_sip++;
-                        continue;
+                        if (cs[offset].val >= -epsilon &&
+                            cs[offset].val > cs[offset-1].val)
+                        {
+                            cs[offset].act_sip = TRUE;
+                            glob_info.tot_actg_sip++;
+                            continue;
+                        }
                     }
-                }
+                    else
+                    {
+                        if (cs[offset].val >= -epsilon && cs[offset].val >
+                            cs[offset-1].val && cs[offset].val >=
+                            cs[offset+1].val)
+                        {
+                            cs[offset].act_sip = TRUE;
+                            glob_info.tot_actg_sip++;
+                            continue;
+                        }
+                    }
                 if (cs[offset].val >= -glob_grd.epsmac ||
                     cs[offset].mult > 0.e0 || cs[offset].d1bind)
                 {
@@ -6139,12 +6132,11 @@ void    *cd;
                 i_max = ++offset;
                 g_max = cs[i_max].val;
                 if (!cs[i_max].act_sip)
-                {
-                    /* add first point       */
+                { /* add first point       */
                     cs[i_max].act_sip = TRUE;
                     glob_info.tot_actg_sip++;
                 }
-                for (j = 2; j <= mesh_pts[glob_info.nfsip+i]; j++)
+                for (j = 2;j <= mesh_pts[glob_info.nfsip+i];j++)
                 {
                     offset++;
                     if (cs[offset].val > g_max)
@@ -6159,8 +6151,7 @@ void    *cd;
                     glob_info.tot_actg_sip++;
                 }
                 if (!cs[offset].act_sip)
-                {
-                    /* add last point          */
+                { /* add last point          */
                     cs[offset].act_sip = TRUE;
                     glob_info.tot_actg_sip++;
                 }
@@ -6172,8 +6163,7 @@ void    *cd;
             i_max = ++offset;
             g_max = cs[i_max].val;
             if (!cs[i_max].act_sip)
-            {
-                /* add first point       */
+            { /* add first point       */
                 cs[i_max].act_sip = TRUE;
                 glob_info.tot_actg_sip++;
             }
@@ -6181,7 +6171,7 @@ void    *cd;
                 index = glob_info.nfsip + glob_info.ncsipn + i;
             else
                 index = glob_info.ncsipn + i;
-            for (j = 2; j <= mesh_pts[index]; j++)
+            for (j = 2;j <= mesh_pts[index]; j++)
             {
                 offset++;
                 if (cs[offset].val > g_max)
@@ -6196,8 +6186,7 @@ void    *cd;
                 glob_info.tot_actg_sip++;
             }
             if (!cs[offset].act_sip)
-            {
-                /* add last point          */
+            { /* add last point          */
                 cs[offset].act_sip = TRUE;
                 glob_info.tot_actg_sip++;
             }
@@ -6367,12 +6356,11 @@ void    *cd;
                 else
                     g_max = fabs(ob[i_max].val);
                 if (!ob[i_max].act_sip)
-                {
-                    /* add first point       */
+                { /* add first point       */
                     ob[i_max].act_sip = TRUE;
                     glob_info.tot_actf_sip++;
                 }
-                for (j = 2; j <= mesh_pts[i]; j++)
+                for (j = 2;j <= mesh_pts[i];j++)
                 {
                     offset++;
                     if (nobL == nob)
@@ -6391,8 +6379,7 @@ void    *cd;
                     glob_info.tot_actf_sip++;
                 }
                 if (!ob[offset].act_sip)
-                {
-                    /* add last point          */
+                { /* add last point          */
                     ob[offset].act_sip = TRUE;
                     glob_info.tot_actf_sip++;
                 }
@@ -6462,12 +6449,12 @@ dir(nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn, ncnstr,
     fM, fMp, fmax, psf, grdpsf, penp, a, bl, bu, clamda, cvec, hess, hess1,
     backup, signeq, viol, obj, constr)
 int nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn, ncnstr,
-    *iskp, feasb;
+*iskp, feasb;
 int *indxob, *indxcn, *iact, *iskip, *istore;
 double *steps, epskt, epseqn, *sktnom, Ck, *d0nm, *grdftd, *fM, *fMp,
-       *fmax, *psf, *scvneq;
+*fmax, *psf, *scvneq;
 double  *di, *d, *grdpsf, *penp, **a, *bl, *bu, *clamda, *cvec, **hess,
-     **hess1, *backup, *signeq;
+**hess1, *backup, *signeq;
 struct  _constraint *cs;
 struct  _objective  *ob;
 struct  _parameter  *param;
@@ -6476,11 +6463,11 @@ void(* obj)(), (* constr)();
 #endif
 {
     int  i, j, k, kk, ncg, ncf, nqprm0, nclin0, nctot0, infoqp, nqprm1, ncl,
-      nclin1, ncc, nff, nrowa0, nrowa1, ninq, nobb, nobbL,
-      nncn, ltem1, ltem2, display, need_d1;
+    nclin1, ncc, nff, nrowa0, nrowa1, ninq, nobb, nobbL,
+    nncn, ltem1, ltem2, display, need_d1;
     double fmxl, vv, dx, dmx, dnm1, dnm, v0, v1, vk, temp1, temp2, theta,
-           rhol, rhog, rho, grdfd0, grdfd1, dummy, grdgd0, grdgd1, thrshd,
-           sign, *adummy, dnmtil, *tempv;
+    rhol, rhog, rho, grdfd0, grdfd1, dummy, grdgd0, grdgd1, thrshd,
+    sign, *adummy, dnmtil, *tempv;
 
     ncg = ncf = *iskp = 0;
     ncl = glob_info.nnineq - nineqn;
@@ -7100,7 +7087,7 @@ dqp(nparam, nqpram, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn,
     ncnstr, nctotl, nrowa, nineqn_tot, infoqp, param, di, feasb, ob,
     fmax, grdpsf, cs, a, cvec, bl, bu, clamda, hess, hess1, x, vv, job)
 int nparam, nqpram, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn,
-    ncnstr, nctotl, nrowa, nineqn_tot, *infoqp, job, feasb;
+ncnstr, nctotl, nrowa, nineqn_tot, *infoqp, job, feasb;
 double fmax, vv;
 double *di, *grdpsf, **a, *cvec, *bl, *bu, *clamda, **hess, **hess1, *x;
 struct  _constraint *cs;
@@ -7109,7 +7096,7 @@ struct  _parameter  *param;
 #endif
 {
     int i, ii, j, jj, ij, k, iout, mnn, nqnp, zero, temp1, temp2, ncnstr_used,
-        numf_used;
+    numf_used;
     int *iw_hold;
     double x0i, xdi, *bj, *htemp, *atemp;
 
@@ -7171,8 +7158,7 @@ struct  _parameter  *param;
     {
         numf_used = nob - nfsip + glob_info.tot_actf_sip;
         if (job && nfsip)
-        {
-            /* compute # objectives used for dtilde */
+        {     /* compute # objectives used for dtilde */
             numf_used = 0;
             for (i = 1; i <= nob; i++)
                 if (ob[iw[ncnstr+i]].act_sip)
@@ -7255,8 +7241,7 @@ struct  _parameter  *param;
     for (i = 1; i <= nqpram; i++)                /* Simple bounds */
         param->mult[i] = clamda[k+i];
     if (nctotl > nqnp)
-    {
-        /* Objectives    */
+    {                         /* Objectives    */
         for (i = 1; i <= numf_used; i++)
         {
             ij = ncnstr_used + i;
@@ -7297,7 +7282,7 @@ di1(nparam, nqpram, nob, nobL, nfsip, nineqn, neq, neqn, ncnstr, ncsipl,
     ncsipn, nrowa, infoqp, mode, param, d0, ob, fmax, grdpsf, cs,
     cvec, bl, bu, clamda, hess1, x, steps)
 int nparam, nqpram, nob, nobL, nfsip, nineqn, neq, neqn, ncnstr,
-    nrowa, *infoqp, mode, ncsipl, ncsipn;
+nrowa, *infoqp, mode, ncsipl, ncsipn;
 double fmax, steps;
 double *d0, *grdpsf, *cvec, *bl, *bu, *clamda, **hess1, *x;
 struct _constraint *cs;
@@ -7450,7 +7435,7 @@ step1(nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn, ncnstr,
       fM, fMp, fmax, psf, penp, steps, scvneq, xnew, x, di, d, cs, backup,
       signeq, sip_viol, obj, constr, cd)
 int  nparam, nob, nobL, nfsip, nineqn, neq, neqn, nn, ncsipl, ncsipn, ncnstr,
-  *ncg, *ncf, feasb, *iskp;
+*ncg, *ncf, feasb, *iskp;
 int *indxob, *indxcn, *iact, *iskip, *istore;
 double  grdftd, *fM, *fMp, *fmax, *steps, *scvneq, *psf;
 double  *xnew, *x, *di, *d, *penp, *backup, *signeq;
@@ -7462,7 +7447,7 @@ void    *cd;
 #endif
 {
     int i, ii, ij, jj, itry, ikeep, j, job, nlin, mnm, ltem1, ltem2, reform,
-        fbind, cdone, fdone, eqdone, display, sipldone;
+    fbind, cdone, fdone, eqdone, display, sipldone;
     double prod1, prod, dummy, fmax1, tolfe, ostep, temp, **adummy, fii;
 
     nlin = glob_info.nnineq - nineqn;
@@ -7860,11 +7845,11 @@ hessian(nparam, nob, nfsip, nobL, nineqn, neq, neqn, nn, ncsipn, ncnstr,
         cs, gm, indxob, indxcn, delta, eta, gamma, hess, hd, steps, nrst, signeq,
         span, obj, constr, gradob, gradcn, phess, psb, psmu, sip_viol)
 int nparam, nob, nobL, nineqn, neq, neqn, nn, nfsip, ncsipn, ncnstr,
-    nfs, *nstart, feasb, *nrst;
+nfs, *nstart, feasb, *nrst;
 int     *indxob, *indxcn;
 double steps, *psf, fmax, *fM, *fMp;
 double  *xnew, *grdpsf, *penp, *gm, *delta, *eta, *gamma,
-     **hess, *hd, *signeq, *span, **phess, *psb, *psmu;
+**hess, *hd, *signeq, *span, **phess, *psb, *psmu;
 struct  _constraint *cs;
 struct  _objective  *ob;
 struct  _parameter  *param;
@@ -8004,7 +7989,7 @@ void(* obj)(), (* constr)(), (* gradob)(), (* gradcn)();
     {
         if (!(feasb && steps < delta_s && ((sip_viol->type == OBJECT &&
                                             !ob[sip_viol->index].act_sip) || (sip_viol->type == CONSTR &&
-                                                    !cs[sip_viol->index].act_sip))))
+                                                                              !cs[sip_viol->index].act_sip))))
         {
             if (*nrst < (5*nparam) || steps > 0.1e0)
             {
@@ -8207,7 +8192,7 @@ static void
 out(miter, nparam, nob, nobL, nfsip, ncn, nn, nineqn, ncnstr, ncsipl, ncsipn,
     mesh_pts, x, cs, ob, fM, fmax, steps, sktnom, d0norm, feasb)
 int miter, nparam, nob, nobL, nfsip, ncn, nn, ncnstr, feasb,
-    ncsipl, ncsipn, nineqn, *mesh_pts;
+ncsipl, ncsipn, nineqn, *mesh_pts;
 double  fM, fmax, steps, sktnom, d0norm;
 double  *x;
 struct  _constraint *cs;
@@ -8740,7 +8725,7 @@ int col, nrows;
     int i;
 
     temp = make_dv(nrows);
-    for (i = 1; i <= nrows; i++)
+    for (i = 1;i <= nrows;i++)
         temp[i] = a[i][col];
     return temp;
 }
@@ -8761,7 +8746,7 @@ int n;
     double z;
 
     z = 0.e0;
-    for (i = 1; i <= n; i++)
+    for (i = 1;i <= n;i++)
         z = z + x[i] * y[i];
     return z;
 }
@@ -9337,12 +9322,12 @@ void wt1(double a[], unsigned long n, int isign,
         return;
     if (isign >= 0)
     {
-        for (nn = n; nn >= 4; nn >>= 1)
+        for (nn = n;nn >= 4;nn >>= 1)
             (*wtstep)(a, nn, isign);
     }
     else
     {
-        for (nn = 4; nn <= n; nn <<= 1)
+        for (nn = 4;nn <= n;nn <<= 1)
             (*wtstep)(a, nn, isign);
     }
 }
@@ -9354,33 +9339,33 @@ void wtn(double a[], unsigned long nn[], int ndim, int isign,
     int idim;
     double *wksp;
 
-    for (idim = 1; idim <= ndim; idim++)
+    for (idim = 1;idim <= ndim;idim++)
         ntot *= nn[idim];
     ask_Tvector(wksp, 1, ntot);
-    for (idim = 1; idim <= ndim; idim++)
+    for (idim = 1;idim <= ndim;idim++)
     {
         n = nn[idim];
         nnew = n * nprev;
         if (n > 4)
         {
-            for (i2 = 0; i2 < ntot; i2 += nnew)
+            for (i2 = 0;i2 < ntot;i2 += nnew)
             {
-                for (i1 = 1; i1 <= nprev; i1++)
+                for (i1 = 1;i1 <= nprev;i1++)
                 {
-                    for (i3 = i1 + i2, k = 1; k <= n; k++, i3 += nprev)
+                    for (i3 = i1 + i2, k = 1;k <= n;k++, i3 += nprev)
                         wksp[k] = a[i3];
                     if (isign >= 0)
                     {
-                        for (nt = n; nt >= 4; nt >>= 1)
+                        for (nt = n;nt >= 4;nt >>= 1)
                             (*wtstep)(wksp, nt, isign);
                     }
                     else
                     {
-                        for (nt = 4; nt <= n; nt <<= 1)
+                        for (nt = 4;nt <= n;nt <<= 1)
                             (*wtstep)(wksp, nt, isign);
                     }
 
-                    for (i3 = i1 + i2, k = 1; k <= n; k++, i3 += nprev)
+                    for (i3 = i1 + i2, k = 1;k <= n;k++, i3 += nprev)
                         a[i3] = wksp[k];
                 }
             }
@@ -9404,31 +9389,31 @@ void pwtset(int n)
     int k;
     float sig = -1.0;
     static double c2[3] =
-    {
-        0.0, 0.707106781186547, 0.707106781186547
-    };
+        {
+            0.0, 0.707106781186547, 0.707106781186547
+        };
     static double c4[5] =
-    {
-        0.0, 0.4829629131445341, 0.8365163037378079,
-        0.2241438680420134, -0.1294095225512604
-    };
+        {
+            0.0, 0.4829629131445341, 0.8365163037378079,
+            0.2241438680420134, -0.1294095225512604
+        };
     static double c12[13] =
-    {
-        0.0, 0.111540743350, 0.494623890398, 0.751133908021,
-        0.315250351709, -0.226264693965, -0.129766867567,
-        0.097501605587, 0.027522865530, -0.031582039318,
-        0.000553842201, 0.004777257511, -0.001077301085
-    };
+        {
+            0.0, 0.111540743350, 0.494623890398, 0.751133908021,
+            0.315250351709, -0.226264693965, -0.129766867567,
+            0.097501605587, 0.027522865530, -0.031582039318,
+            0.000553842201, 0.004777257511, -0.001077301085
+        };
     static double c20[21] =
-    {
-        0.0, 0.026670057901, 0.188176800078, 0.527201188932,
-        0.688459039454, 0.281172343661, -0.249846424327,
-        -0.195946274377, 0.127369340336, 0.093057364604,
-        -0.071394147166, -0.029457536822, 0.033212674059,
-        0.003606553567, -0.010733175483, 0.001395351747,
-        0.001992405295, -0.000685856695, -0.000116466855,
-        0.000093588670, -0.000013264203
-    };
+        {
+            0.0, 0.026670057901, 0.188176800078, 0.527201188932,
+            0.688459039454, 0.281172343661, -0.249846424327,
+            -0.195946274377, 0.127369340336, 0.093057364604,
+            -0.071394147166, -0.029457536822, 0.033212674059,
+            0.003606553567, -0.010733175483, 0.001395351747,
+            0.001992405295, -0.000685856695, -0.000116466855,
+            0.000093588670, -0.000013264203
+        };
     static double c2r[2], c4r[5], c12r[13], c20r[21];
 
     wfilt.ncof = n;
@@ -9454,7 +9439,7 @@ void pwtset(int n)
     }
     else
         nrerror("unimplemented value n in pwtset");
-    for (k = 1; k <= n; k++)
+    for (k = 1;k <= n;k++)
     {
         wfilt.cr[wfilt.ncof+1-k] = sig * wfilt.cc[k];
         sig = -sig;
@@ -9473,15 +9458,15 @@ void pwt(double a[], unsigned long n, int isign)
     nmod = wfilt.ncof * n;
     n1 = n - 1;
     nh = n >> 1;
-    for (j = 1; j <= n; j++)
+    for (j = 1;j <= n;j++)
         wksp[j] = 0.0;
     if (isign >= 0)
     {
-        for (ii = 1, i = 1; i <= n; i += 2, ii++)
+        for (ii = 1, i = 1;i <= n;i += 2, ii++)
         {
             ni = i + nmod + wfilt.ioff;
             nj = i + nmod + wfilt.joff;
-            for (k = 1; k <= wfilt.ncof; k++)
+            for (k = 1;k <= wfilt.ncof;k++)
             {
                 jf = n1 & (ni + k);
                 jr = n1 & (nj + k);
@@ -9492,13 +9477,13 @@ void pwt(double a[], unsigned long n, int isign)
     }
     else
     {
-        for (ii = 1, i = 1; i <= n; i += 2, ii++)
+        for (ii = 1, i = 1;i <= n;i += 2, ii++)
         {
             ai = a[ii];
             ai1 = a[ii+nh];
             ni = i + nmod + wfilt.ioff;
             nj = i + nmod + wfilt.joff;
-            for (k = 1; k <= wfilt.ncof; k++)
+            for (k = 1;k <= wfilt.ncof;k++)
             {
                 jf = (n1 & (ni + k)) + 1;
                 jr = (n1 & (nj + k)) + 1;
@@ -9507,7 +9492,7 @@ void pwt(double a[], unsigned long n, int isign)
             }
         }
     }
-    for (j = 1; j <= n; j++)
+    for (j = 1;j <= n;j++)
         a[j] = wksp[j];
     free_Tvector(wksp, 1, n);
 }
@@ -9533,7 +9518,7 @@ void gser(double *gamser, double a, double x, double *gln)
     {
         ap = a;
         del = sum = 1.0 / a;
-        for (n = 1; n <= ITMAX; n++)
+        for (n = 1;n <= ITMAX;n++)
         {
             ++ap;
             del *= x / ap;
@@ -9565,7 +9550,7 @@ void gcf(double *gammcf, double a, double x, double *gln)
     c = 1.0 / FPMIN;
     d = 1.0 / b;
     h = d;
-    for (i = 1; i <= ITMAX; i++)
+    for (i = 1;i <= ITMAX;i++)
     {
         an = -i * (i - a);
         b += 2.0;
@@ -9613,11 +9598,11 @@ void choldc(double *a, int n, double *p)
     int i, j, k;
     float sum;
 
-    for (i = 1; i <= n; i++)
+    for (i = 1;i <= n;i++)
     {
-        for (j = i; j <= n; j++)
+        for (j = i;j <= n;j++)
         {
-            for (sum = a[i*n+j], k = i - 1; k >= 1; k--)
+            for (sum = a[i*n+j], k = i - 1;k >= 1;k--)
                 sum -= a[i*n+k] * a[j*n+k];
             if (i == j)
             {
@@ -9636,15 +9621,15 @@ void cholsl(double *a, int n, double *p, double *b, double *x)
     int i, k;
     float sum;
 
-    for (i = 1; i <= n; i++)
+    for (i = 1;i <= n;i++)
     {
-        for (sum = b[i], k = i - 1; k >= 1; k--)
+        for (sum = b[i], k = i - 1;k >= 1;k--)
             sum -= a[i*n+k] * x[k];
         x[i] = sum / p[i];
     }
-    for (i = n; i >= 1; i--)
+    for (i = n;i >= 1;i--)
     {
-        for (sum = x[i], k = i + 1; k <= n; k++)
+        for (sum = x[i], k = i + 1;k <= n;k++)
             sum -= a[k*n+i] * x[k];
         x[i] = sum / p[i];
     }
@@ -9659,7 +9644,7 @@ void polint(double *xa, double *ya, int n, double x, double &y, double &dy)
     dif = fabs(x - xa[1]);
     ask_Tvector(c, 1, n);
     ask_Tvector(d, 1, n);
-    for (i = 1; i <= n; i++)
+    for (i = 1;i <= n;i++)
     {
         if ((dift = fabs(x - xa[i])) < dif)
         {
@@ -9670,9 +9655,9 @@ void polint(double *xa, double *ya, int n, double x, double &y, double &dy)
         d[i] = ya[i];
     }
     y = ya[ns--];
-    for (m = 1; m < n; m++)
+    for (m = 1;m < n;m++)
     {
-        for (i = 1; i <= n - m; i++)
+        for (i = 1;i <= n - m;i++)
         {
             ho = xa[i] - x;
             hp = xa[i+m] - x;
@@ -9693,8 +9678,8 @@ void polint(double *xa, double *ya, int n, double x, double &y, double &dy)
 
 /* Simulated annealing ----------------------------------------------------- */
 double amotsa(double **p, double y[], double psum[], int ndim, double pb[],
-              double *yb, double (*funk)(double []), int ihi, double *yhi, double fac,
-              double tt, int &idum)
+    double *yb, double (*funk)(double []), int ihi, double *yhi, double fac,
+    double tt, int &idum)
 {
     int j;
     double fac1,fac2,yflu,ytry,*ptry;
@@ -9702,31 +9687,28 @@ double amotsa(double **p, double y[], double psum[], int ndim, double pb[],
     ask_Tvector(ptry,1,ndim);
     fac1=(1.0-fac)/ndim;
     fac2=fac1-fac;
-    for (j=1; j<=ndim; j++)
-        ptry[j]=psum[j]*fac1-p[ihi][j]*fac2;
+    for (j=1;j<=ndim;j++)
+	ptry[j]=psum[j]*fac1-p[ihi][j]*fac2;
     ytry=(*funk)(ptry);
-    if (ytry <= *yb)
-    {
-        for (j=1; j<=ndim; j++) pb[j]=ptry[j];
-        *yb=ytry;
+    if (ytry <= *yb) {
+	for (j=1;j<=ndim;j++) pb[j]=ptry[j];
+	*yb=ytry;
     }
     yflu=ytry-tt*log(ran1(&idum));
-    if (yflu < *yhi)
-    {
-        y[ihi]=ytry;
-        *yhi=yflu;
-        for (j=1; j<=ndim; j++)
-        {
-            psum[j] += ptry[j]-p[ihi][j];
-            p[ihi][j]=ptry[j];
-        }
+    if (yflu < *yhi) {
+	y[ihi]=ytry;
+	*yhi=yflu;
+	for (j=1;j<=ndim;j++) {
+	    psum[j] += ptry[j]-p[ihi][j];
+	    p[ihi][j]=ptry[j];
+	}
     }
     free_Tvector(ptry,1,ndim);
     return yflu;
 }
 
 void amebsa(double **p, double y[], int ndim, double pb[], double *yb,
-            double ftol, double (*funk)(double []), int *iter, double temptr)
+    double ftol, double (*funk)(double []), int *iter, double temptr)
 {
     int i,ihi,ilo,j,m,n,mpts=ndim+1;
     double rtol,sum,swap,yhi,ylo,ynhi,ysave,yt,ytry,*psum;
@@ -9734,91 +9716,72 @@ void amebsa(double **p, double y[], int ndim, double pb[], double *yb,
 
     ask_Tvector(psum,1,ndim);
     double tt = -temptr;
-    for (n=1; n<=ndim; n++)
-    {
-        for (sum=0.0,m=1; m<=mpts; m++) sum += p[m][n];
+    for (n=1;n<=ndim;n++) {
+        for (sum=0.0,m=1;m<=mpts;m++) sum += p[m][n];
         psum[n]=sum;
     }
-    for (;;)
-    {
-        ilo=1;
-        ihi=2;
-        ynhi=ylo=y[1]+tt*log(ran1(&idum));
-        yhi=y[2]+tt*log(ran1(&idum));
-        if (ylo > yhi)
-        {
-            ihi=1;
-            ilo=2;
-            ynhi=yhi;
-            yhi=ylo;
-            ylo=ynhi;
-        }
-        for (i=3; i<=mpts; i++)
-        {
-            yt=y[i]+tt*log(ran1(&idum));
-            if (yt <= ylo)
-            {
-                ilo=i;
-                ylo=yt;
-            }
-            if (yt > yhi)
-            {
-                ynhi=yhi;
-                ihi=i;
-                yhi=yt;
-            }
-            else if (yt > ynhi)
-            {
-                ynhi=yt;
-            }
-        }
-        rtol=2.0*fabs(yhi-ylo)/(fabs(yhi)+fabs(ylo));
-        if (rtol < ftol || *iter < 0)
-        {
-            swap=y[1];
-            y[1]=y[ilo];
-            y[ilo]=swap;
-            for (n=1; n<=ndim; n++)
-            {
-                swap=p[1][n];
-                p[1][n]=p[ilo][n];
-                p[ilo][n]=swap;
-            }
-            break;
-        }
-        *iter -= 2;
-        ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,-1.0,tt,idum);
-        if (ytry <= ylo)
-        {
-            ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,2.0,tt,idum);
-        }
-        else if (ytry >= ynhi)
-        {
-            ysave=yhi;
-            ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,0.5,tt,idum);
-            if (ytry >= ysave)
-            {
-                for (i=1; i<=mpts; i++)
-                {
-                    if (i != ilo)
-                    {
-                        for (j=1; j<=ndim; j++)
-                        {
-                            psum[j]=0.5*(p[i][j]+p[ilo][j]);
-                            p[i][j]=psum[j];
-                        }
-                        y[i]=(*funk)(psum);
-                    }
-                }
-                *iter -= ndim;
-                for (n=1; n<=ndim; n++)
-                {
-                    for (sum=0.0,m=1; m<=mpts; m++) sum += p[m][n];
+    for (;;) {
+	ilo=1;
+	ihi=2;
+	ynhi=ylo=y[1]+tt*log(ran1(&idum));
+	yhi=y[2]+tt*log(ran1(&idum));
+	if (ylo > yhi) {
+	    ihi=1;
+	    ilo=2;
+	    ynhi=yhi;
+	    yhi=ylo;
+	    ylo=ynhi;
+	}
+	for (i=3;i<=mpts;i++) {
+	    yt=y[i]+tt*log(ran1(&idum));
+	    if (yt <= ylo) {
+		ilo=i;
+		ylo=yt;
+	    }
+	    if (yt > yhi) {
+		ynhi=yhi;
+		ihi=i;
+		yhi=yt;
+	    } else if (yt > ynhi) {
+		ynhi=yt;
+	    }
+	}
+	rtol=2.0*fabs(yhi-ylo)/(fabs(yhi)+fabs(ylo));
+	if (rtol < ftol || *iter < 0) {
+	    swap=y[1];
+	    y[1]=y[ilo];
+	    y[ilo]=swap;
+	    for (n=1;n<=ndim;n++) {
+		swap=p[1][n];
+		p[1][n]=p[ilo][n];
+		p[ilo][n]=swap;
+	    }
+	    break;
+	}
+	*iter -= 2;
+	ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,-1.0,tt,idum);
+	if (ytry <= ylo) {
+	    ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,2.0,tt,idum);
+	} else if (ytry >= ynhi) {
+	    ysave=yhi;
+	    ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,0.5,tt,idum);
+	    if (ytry >= ysave) {
+		for (i=1;i<=mpts;i++) {
+		    if (i != ilo) {
+			for (j=1;j<=ndim;j++) {
+			    psum[j]=0.5*(p[i][j]+p[ilo][j]);
+			    p[i][j]=psum[j];
+			}
+			y[i]=(*funk)(psum);
+		    }
+		}
+		*iter -= ndim;
+                for (n=1;n<=ndim;n++) {
+                    for (sum=0.0,m=1;m<=mpts;m++) sum += p[m][n];
                     psum[n]=sum;
                 }
-            }
-        }
-        else ++(*iter);
+	    }
+	} else ++(*iter);
     }
     free_Tvector(psum,1,ndim);
 }

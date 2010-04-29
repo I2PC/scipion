@@ -41,7 +41,7 @@ class QtFileMenu : public QtPopupMenuMark
     // For accepting signals and slots
     Q_OBJECT
 
-    // For changing mark type
+    // For changing mark type 
 #ifdef QT3_SUPPORT
     Q3PopupMenu *options;
 #else
@@ -69,7 +69,7 @@ public slots:
     // Show micrograph info
     void slotMicrographInfo();
 
-    // Load coords
+     // Load coords
     void slotLoadCoords();
 
     // Save coords

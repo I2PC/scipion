@@ -79,7 +79,7 @@ public:
         if (prmb.mode == BFACTOR_REF)
         {
             std::cout << "Adjust B-factor according to reference "<<prmb.fn_ref<<std::endl;
-        }
+        } 
         else if (prmb.mode == BFACTOR_ADHOC)
         {
             std::cout << "Apply ad-hoc B-factor of "<<prmb.adhocB<<" squared Angstroms"<<std::endl;
@@ -95,20 +95,20 @@ public:
     void usage()
     {
         Prog_parameters::usage();
-        std::cerr
-                << " Use one of the three following modes: \n"
-                << "  [-auto]                   : Use automated B-factor fit in flat Wilson region\n"
-                << "  [-ref <fn_ref>]           : Fit B-factor according to the reference \n"
-                << "  [-adhoc <B>]              : Use a user-provided (negative) B-factor\n"
-                << " Specific parameters: \n"
-                << "   -sampling <float>        : Pixel size (in Ang) \n"
-                << "   -maxres <float>          : High-resolution limit for B-factor correction \n"
-                << "  [-fit_minres <f=15>]      : Low-resolution  limit (in Ang) for fit in -auto or -ref \n"
-                << "  [-fit_maxres <f=maxres>]  : High-resolution limit (in Ang) for fit in -auto or -ref \n"
-                << "  [-allpoints]              : Do not fit B-factor, adjust power spectrum to reference \n"
-                << "\n"
-                << " Note: do not use the automated mode for maps with resolutions lower than 12-15 Angstroms!\n"
-                ;
+        std::cerr 
+            << " Use one of the three following modes: \n"
+            << "  [-auto]                   : Use automated B-factor fit in flat Wilson region\n"
+            << "  [-ref <fn_ref>]           : Fit B-factor according to the reference \n"
+            << "  [-adhoc <B>]              : Use a user-provided (negative) B-factor\n"
+            << " Specific parameters: \n"
+            << "   -sampling <float>        : Pixel size (in Ang) \n"
+            << "   -maxres <float>          : High-resolution limit for B-factor correction \n"
+            << "  [-fit_minres <f=15>]      : Low-resolution  limit (in Ang) for fit in -auto or -ref \n"
+            << "  [-fit_maxres <f=maxres>]  : High-resolution limit (in Ang) for fit in -auto or -ref \n"
+            << "  [-allpoints]              : Do not fit B-factor, adjust power spectrum to reference \n"
+            << "\n"
+            << " Note: do not use the automated mode for maps with resolutions lower than 12-15 Angstroms!\n"
+            ;
     }
 };
 
@@ -126,7 +126,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
     FileName fn_guinier;
     fn_guinier = prm->fn_out + ".guinier";
     eprm->prmb.bfactor_correction(vol(), fn_guinier);
-
+    
     return true;
 }
 

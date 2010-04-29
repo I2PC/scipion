@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
-              using trust Region method for high-computing load,
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
+              using trust Region method for high-computing load, 
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product,
+If you want to include this tools in any commercial product, 
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -36,30 +36,25 @@ Matrix Matrix::emptyMatrix;
 
 void Matrix::init(int _nLine, int _nColumn, int _extLine, int _extColumn,MatrixData* md)
 {
-    if (md==NULL)
+    if (md==NULL) 
     {
         d=(MatrixData*)malloc(sizeof(MatrixData));
         d->columnNames=NULL;
         d->ref_count=1;
-    }
-    else d=md;
-    d->nLine=_nLine;
-    d->nColumn=_nColumn;
-    d->extLine=_extLine;
-    d->extColumn=_extColumn;
+    } else d=md;
+    d->nLine=_nLine; d->nColumn=_nColumn; 
+    d->extLine=_extLine; d->extColumn=_extColumn;
 
     if ((_extLine>0)&&(_extColumn>0))
-    {
-        double **t,*t2;
-        t=d->p=(double**)malloc(_extLine*sizeof(double*));
-        t2=(double*)malloc(_extColumn*_extLine*sizeof(double));
-        while(_extLine--)
+	{
+	    double **t,*t2;
+    	t=d->p=(double**)malloc(_extLine*sizeof(double*));
+    	t2=(double*)malloc(_extColumn*_extLine*sizeof(double));
+	    while(_extLine--)
         {
-            *(t++)=t2;
-            t2+=_extColumn;
+            *(t++)=t2; t2+=_extColumn;
         }
-    }
-    else d->p=NULL;
+    } else d->p=NULL;
 }
 
 Matrix::Matrix(int _nLine,int _nColumn)
@@ -72,11 +67,7 @@ void Matrix::diagonal(double dd)
     zero();
     double *p=*d->p;
     int n=nLine(), i=d->extColumn+1;
-    while (n--)
-    {
-        *p=dd;
-        p+=i;
-    }
+    while (n--) { *p=dd; p+=i; }
 
 }
 
@@ -84,7 +75,7 @@ Matrix::Matrix(Vector a)
 {
     int nl=1, nc=a.sz();
     init(nl,nc,nl,nc);
-    memcpy(*d->p,a,a.sz()*sizeof(double));
+    memcpy(*d->p,a,a.sz()*sizeof(double));   
 }
 
 Matrix::Matrix(Vector a, Vector b)  // a * b^T
@@ -98,7 +89,7 @@ Matrix::Matrix(Vector a, Vector b)  // a * b^T
             pp[i][j]=pa[i]*pb[j];
 }
 
-Matrix::Matrix(int _nLine,int _nColumn,int _extLine,int _extColumn)
+Matrix::Matrix(int _nLine,int _nColumn,int _extLine,int _extColumn) 
 {
     init(_nLine,_nColumn,_extLine,_extColumn);
 };
@@ -110,22 +101,16 @@ Matrix::Matrix(const char *filename, char ascii)
     FILE *f=fopen(filename,"rb");
     if (f==NULL)
     {
-        printf("file not found.\n");
-        exit(255);
+        printf("file not found.\n"); exit(255);
     }
     if (ascii)
     {
         char line[30000];
         char *r=fgets(line,30000,f);
-        if (r==NULL)
-        {
-            init(0,0,0,0);
-            return;
-        }
+        if (r==NULL) { init(0,0,0,0); return; }
         if (line[7]!='A')
         {
-            printf("not a ASCII matrix.\n");
-            exit(255);
+            printf("not a ASCII matrix.\n"); exit(255);
         }
         fgets(line,30000,f);
         _nLine=atol(line);
@@ -144,15 +129,10 @@ Matrix::Matrix(const char *filename, char ascii)
         }
         return;
     }
-    if (fread(c, 13, sizeof(char), f)==0)
-    {
-        init(0,0,0,0);
-        return;
-    }
+    if (fread(c, 13, sizeof(char), f)==0) { init(0,0,0,0); return; }
     if (c[7]!='B')
     {
-        printf("not a binary matrix.\n");
-        exit(255);
+        printf("not a binary matrix.\n"); exit(255);
     }
     fread(&_nLine, sizeof(unsigned), 1, f);
     fread(&_nColumn, sizeof(unsigned), 1, f);
@@ -162,17 +142,16 @@ Matrix::Matrix(const char *filename, char ascii)
     if (i)
     {
         char **names=(char**)malloc(_nColumn*sizeof(char**)),
-               *n=(char*)malloc(i);
+            *n=(char*)malloc(i);
         fread(n,i,1,f);
-        for (j=0; j<_nColumn-1; j++)
+        for (j=0;j<_nColumn-1;j++)
         {
             names[j]=n;
-            while (*(n++));
+            while (*(n++)); 
         }
         names[j]=n;
         setColNames(names);
-        free(*names);
-        free(names);
+        free(*names);free(names);
     }
     if (d->nColumn*d->nLine)
         fread(*d->p,sizeof(double)*d->nColumn*d->nLine,1,f);
@@ -221,38 +200,37 @@ void Matrix::setExtSize(int _extLine, int _extColumn)
     if (_extColumn>ec)
     {
         int nc=d->nColumn,i;
-        double *tmp,*tmp2,**tmp3=d->p,*oldBuffer=*tmp3;
-
+	    double *tmp,*tmp2,**tmp3=d->p,*oldBuffer=*tmp3;
+        
         if (d->extLine<_extLine)
             tmp3=d->p=(double**)realloc(tmp3,_extLine*sizeof(double*));
         else _extLine=d->extLine;
 
         tmp2=tmp=(double *)malloc(_extLine*_extColumn*sizeof(double));
-        if (tmp==NULL)
+		if (tmp==NULL) 
         {
             printf("memory allocation error");
-            getchar();
-            exit(255);
+            getchar(); exit(255);
         }
 
         i=_extLine;
-        while (i--)
-        {
-            *(tmp3++)=tmp2;
-            tmp2+=_extColumn;
-        };
+		while (i--)
+		{
+ 		    *(tmp3++)=tmp2;
+ 		    tmp2+=_extColumn;
+		};
 
         if ((nc)&&(d->nLine))
         {
-            tmp2=oldBuffer;
+    		tmp2=oldBuffer;
             i=d->nLine;
             nc*=sizeof(double);
             while(i--)
-            {
-                memmove(tmp,tmp2,nc);
-                tmp+=_extColumn;
-                tmp2+=ec;
-            };
+		    {
+		        memmove(tmp,tmp2,nc);
+  		        tmp+=_extColumn;
+		        tmp2+=ec;
+		    };
             free(oldBuffer);
         };
         d->extLine=_extLine;
@@ -264,20 +242,19 @@ void Matrix::setExtSize(int _extLine, int _extColumn)
         int i;
         double *tmp,**tmp3;
         tmp=(double *)realloc(*d->p,_extLine*ec*sizeof(double));
-        if (tmp==NULL)
+		if (tmp==NULL) 
         {
             printf("memory allocation error");
-            getchar();
-            exit(255);
+            getchar(); exit(255);
         }
         free(d->p);
         tmp3=d->p=(double **)malloc(_extLine*sizeof(double*));
         i=_extLine;
-        while (i--)
-        {
-            *(tmp3++)=tmp;
-            tmp+=ec;
-        };
+		while (i--)
+		{
+ 		    *(tmp3++)=tmp;
+ 		    tmp+=ec;
+		};
         d->extLine=_extLine;
     }
 }
@@ -285,16 +262,15 @@ void Matrix::setExtSize(int _extLine, int _extColumn)
 void Matrix::save(char *filename,char ascii)
 {
     FILE *f;
-    if (ascii)
+    if (ascii) 
     {
-        f=fopen(filename,"w");
+        f=fopen(filename,"w"); 
         if (f==NULL)
         {
             printf("cannot save ascii Matrix into file '%s'.\n",filename);
             exit(255);
         }
-    }
-    else
+    } else 
     {
         f=fopen(filename,"wb");
         if (f==NULL)
@@ -312,7 +288,7 @@ void Matrix::save(FILE *f,char ascii)
     char *cc="CONDORMBv1.0";
     double **p=(d->p);
     int i,j;
-    if (ascii)
+    if (ascii) 
     {
         if (ascii<2) fprintf(f,"CONDORMAv1.0\n%i\n%i\n",d->nLine,d->nColumn);
         if (ascii<3)
@@ -322,8 +298,7 @@ void Matrix::save(FILE *f,char ascii)
                 for (i=0; i<d->nColumn-1; i++)
                     fprintf(f,"%s\t",d->columnNames[i]);
                 fprintf(f,"%s\n",d->columnNames[i]);
-            }
-            else fprintf(f,"null\n");
+            } else fprintf(f,"null\n");
         }
         for (i=0; i<d->nLine; i++)
         {
@@ -331,24 +306,20 @@ void Matrix::save(FILE *f,char ascii)
                 fprintf(f,"%.16e\t",p[i][j]);
             fprintf(f,"%.16e\n",p[i][j]);
         }
-    }
-    else
+    } else
     {
         fwrite(cc, sizeof(char), 13, f);
         fwrite(&d->nLine, sizeof(unsigned), 1, f);
         fwrite(&d->nColumn, sizeof(unsigned), 1, f);
         if (d->columnNames)
         {
-            j=0;
-            for (i=0; i<d->nColumn; i++) j+=(int)strlen(d->columnNames[i])+1;
+            j=0; for (i=0; i<d->nColumn; i++) j+=(int)strlen(d->columnNames[i])+1;
             fwrite(&j, sizeof(int), 1, f);
             for (i=0; i<d->nColumn; i++)
                 fwrite(d->columnNames[i],strlen(d->columnNames[i])+1,1,f);
-        }
-        else
+        } else
         {
-            j=0;
-            fwrite(&j, sizeof(int), 1, f);
+            j=0; fwrite(&j, sizeof(int), 1, f);
         }
         for (i=0; i<d->nLine; i++)
             fwrite(p[i],sizeof(double)*d->nColumn,1,f);
@@ -394,34 +365,31 @@ void Matrix::exactshape()
         i=nl;
         tmp=tmp2=*d->p;
         while(i--)
-        {
-            memmove(tmp,tmp2,nc*sizeof(double));
-            tmp+=nc;
-            tmp2+=ec;
-        };
+		{
+		    memmove(tmp,tmp2,nc*sizeof(double));
+  		    tmp+=nc;
+		    tmp2+=ec;
+		};
     }
 
     tmp=(double *)realloc(*d->p,nl*nc*sizeof(double));
-    if (tmp==NULL)
+	if (tmp==NULL) 
     {
         printf("memory allocation error");
-        getchar();
-        exit(255);
+        getchar(); exit(255);
     }
     if (tmp!=*d->p)
     {
         tmp3=d->p=(double **)realloc(d->p,nl*sizeof(double*));
         i=nl;
-        while (i--)
-        {
-            *(tmp3++)=tmp;
-            tmp+=nc;
-        };
-    }
-    else d->p=(double **)realloc(d->p,nl*sizeof(double*));
-
-    d->extLine=nl;
-    d->extColumn=nc;
+    	while (i--)
+	    {
+ 		    *(tmp3++)=tmp;
+     		tmp+=nc;
+	    };
+    } else d->p=(double **)realloc(d->p,nl*sizeof(double*));
+    
+    d->extLine=nl; d->extColumn=nc;
 };
 
 
@@ -436,8 +404,7 @@ void Matrix::print()
         for (j=0; j<d->nColumn; j++)
             if (p[i][j]>=0.0) printf(" %2.3f ",p[i][j]);
             else printf("%2.3f ",p[i][j]);
-        if (i==d->nLine-1) printf("]\n");
-        else printf(";\n");
+            if (i==d->nLine-1) printf("]\n"); else printf(";\n");
     }
     fflush(0);
 }
@@ -451,18 +418,10 @@ void Matrix::destroyCurrentBuffer()
 {
     if (!d) return;
     (d->ref_count) --;
-    if (d->ref_count==0)
+	if (d->ref_count==0)
     {
-        if (d->columnNames)
-        {
-            free(*d->columnNames);
-            free(d->columnNames);
-        }
-        if (d->p)
-        {
-            free(*d->p);
-            free(d->p);
-        }
+        if (d->columnNames) { free(*d->columnNames); free(d->columnNames); }
+        if (d->p) { free(*d->p); free(d->p); }
         free(d);
     }
 }
@@ -471,19 +430,19 @@ Matrix& Matrix::operator=( const Matrix& A )
 {
     // shallow copy
     if (this != &A)
-    {
+	{
         destroyCurrentBuffer();
         d=A.d;
-        (d->ref_count) ++ ;
-    }
-    return *this;
+		(d->ref_count) ++ ;
+	}
+	return *this;
 }
 
 Matrix::Matrix(const Matrix &A)
 {
     // shallow copy
     d=A.d;
-    (d->ref_count)++ ;
+	(d->ref_count)++ ;
 }
 
 Matrix Matrix::clone()
@@ -500,8 +459,7 @@ void Matrix::copyFrom(Matrix m)
     if ((nl!=nLine())||(nc!=nColumn()))
     {
         printf("Matrix: copyFrom: size do not agree");
-        getchar();
-        exit(254);
+        getchar(); exit(254);
     }
     if (ec==nc)
     {
@@ -581,29 +539,27 @@ void Matrix::multiplyByDiagonalMatrix(Vector v)
     if ((int)v.sz()!=nc)
     {
         printf("(matrix * matrix_diagonal) error");
-        getchar();
-        exit(249);
+        getchar(); exit(249);
     }
     double **p1=(*this),*p2=v;
 
-    for (i=0; i<nl; i++)
+    for (i=0; i<nl; i++) 
         for (j=0; j<nc; j++)
             p1[i][j]*=p2[j];
 }
 
 void Matrix::multiply(Matrix R, Matrix Bplus)
 {
-    if (Bplus.nLine()!=nColumn())
+    if (Bplus.nLine()!=nColumn()) 
     {
         printf("(matrix * matrix) error");
-        getchar();
-        exit(249);
+        getchar(); exit(249);
     }
     int i,j,k, nl=nLine(), nc=Bplus.nColumn(), n=nColumn();
     R.setSize(nl,nc);
     double sum,**p1=(*this),**p2=Bplus,**pr=R;
 
-    for (i=0; i<nl; i++)
+    for (i=0; i<nl; i++) 
         for (j=0; j<nc; j++)
         {
             sum=0;
@@ -614,17 +570,16 @@ void Matrix::multiply(Matrix R, Matrix Bplus)
 
 void Matrix::transposeAndMultiply(Matrix R, Matrix Bplus)
 {
-    if (Bplus.nLine()!=nLine())
+    if (Bplus.nLine()!=nLine()) 
     {
         printf("(matrix^t * matrix) error");
-        getchar();
-        exit(249);
+        getchar(); exit(249);
     }
     int i,j,k, nl=nColumn(), nc=Bplus.nColumn(), n=nLine();
     R.setSize(nl,nc);
     double sum,**p1=(*this),**p2=Bplus,**pr=R;
 
-    for (i=0; i<nl; i++)
+    for (i=0; i<nl; i++) 
         for (j=0; j<nc; j++)
         {
             sum=0;
@@ -635,17 +590,16 @@ void Matrix::transposeAndMultiply(Matrix R, Matrix Bplus)
 
 void Matrix::multiplyByTranspose(Matrix R, Matrix Bplus)
 {
-    if (Bplus.nColumn()!=nColumn())
+    if (Bplus.nColumn()!=nColumn()) 
     {
         printf("(matrix * matrix^t) error");
-        getchar();
-        exit(249);
+        getchar(); exit(249);
     }
     int i,j,k, nl=nLine(), nc=Bplus.nLine(), n=nColumn();
     R.setSize(nl,nc);
     double sum,**p1=(*this),**p2=Bplus,**pr=R;
 
-    for (i=0; i<nl; i++)
+    for (i=0; i<nl; i++) 
         for (j=0; j<nc; j++)
         {
             sum=0;
@@ -678,15 +632,13 @@ void Matrix::multiply(Vector rv, Vector v)
     if (nc!=(int)v.sz())
     {
         printf("matrix multiply error");
-        getchar();
-        exit(250);
+        getchar(); exit(250);
     };
     double **p=(*this), *x=v, *r=rv, sum;
 
-    for (i=0; i<nl; i++)
+    for (i=0; i<nl; i++) 
     {
-        sum=0;
-        j=nc;
+        sum=0; j=nc;
         while (j--) sum+=p[i][j]*x[j];
         r[i]=sum;
     }
@@ -699,15 +651,13 @@ void Matrix::transposeAndMultiply(Vector rv, Vector v)
     if (nc!=(int)v.sz())
     {
         printf("matrix multiply error");
-        getchar();
-        exit(250);
+        getchar(); exit(250);
     };
     double **p=(*this), *x=v, *r=rv, sum;
 
-    for (i=0; i<nl; i++)
+    for (i=0; i<nl; i++) 
     {
-        sum=0;
-        j=nc;
+        sum=0; j=nc;
         while (j--) sum+=p[j][i]*x[j];
         r[i]=sum;
     }
@@ -724,10 +674,7 @@ double Matrix::scalarProduct(int nl, Vector v)
 {
     double *x1=v, *x2=d->p[nl], sum=0;
     int n=v.sz();
-    while (n--)
-    {
-        sum+=*(x1++) * *(x2++);
-    };
+    while (n--) { sum+=*(x1++) * *(x2++); };
     return sum;
 }
 
@@ -737,8 +684,7 @@ void Matrix::addInPlace(Matrix B)
         (B.nColumn()!=nColumn()))
     {
         printf("matrix addition error");
-        getchar();
-        exit(250);
+        getchar(); exit(250);
     };
 
     int i,j, nl=nLine(), nc=nColumn();
@@ -755,8 +701,7 @@ void Matrix::addMultiplyInPlace(double d, Matrix B)
         (B.nColumn()!=nColumn()))
     {
         printf("matrix addition error");
-        getchar();
-        exit(250);
+        getchar(); exit(250);
     };
 
     int i,j, nl=nLine(), nc=nColumn();
@@ -784,8 +729,7 @@ Matrix::Matrix(MatrixTriangle A, char bTranspose)
             for (j=0; j<n; j++)
                 if (j>=i) pD[i][j]=pS[j][i];
                 else pD[i][j]=0;
-    }
-    else
+    } else
     {
         for (i=0; i<n; i++)
             for (j=0; j<n; j++)
@@ -795,7 +739,7 @@ Matrix::Matrix(MatrixTriangle A, char bTranspose)
 }
 
 bool Matrix::cholesky(MatrixTriangle matL, double lambda, double *lambdaCorrection)
-// factorize (*this)+lambda.I into L.L^t
+// factorize (*this)+lambda.I into L.L^t 
 {
     double s,s2;
     int i,j,k,n=nLine();
@@ -804,40 +748,38 @@ bool Matrix::cholesky(MatrixTriangle matL, double lambda, double *lambdaCorrecti
     double **A=(*this), **L_=matL;
     if (lambdaCorrection) *lambdaCorrection=0;
 
-    for (i=0; i<n; i++)
-    {
-        s2=A[i][i]+lambda;
-        k=i;
-        while ( k-- ) s2-=sqr(L_[i][k]);
-        if (s2<=0)
-        {
-            if (lambdaCorrection)
-            {
-                // lambdaCorrection
-                n=i+1;
-                Vector X(n); // zero everywhere
-                double *x=X, sum;
-                x[i]=1.0;
-                while(i--)
-                {
-                    sum=0.0;
-                    for (k=i+1; k<n; k++) sum-=L_[k][i]*x[k];
-                    x[i]=sum/L_[i][i];
-                }
-                *lambdaCorrection=-s2/X.euclidianNorm();
-            }
-            return false;
-        }
-        L_[i][i] = s2 = sqrt(s2);
-
-        for (j=i+1; j<n; j++)
-        {
-            s=A[i][j];
-            k=i;
-            while (k--) s-=L_[j][k]*L_[i][k];
-            L_[j][i]=s/s2;
-        }
-    }
+    for (i=0; i<n; i++) 
+	{
+       s2=A[i][i]+lambda; k=i;
+       while ( k-- ) s2-=sqr(L_[i][k]);
+       if (s2<=0) 
+       {
+           if (lambdaCorrection)
+           {
+                // lambdaCorrection 
+               n=i+1;
+               Vector X(n); // zero everywhere
+               double *x=X, sum;
+               x[i]=1.0;
+               while(i--)
+               {
+                   sum=0.0;
+                   for (k=i+1; k<n; k++) sum-=L_[k][i]*x[k];
+                   x[i]=sum/L_[i][i];
+               }
+               *lambdaCorrection=-s2/X.euclidianNorm();
+           }
+           return false;
+       }
+       L_[i][i] = s2 = sqrt(s2);
+       
+       for (j=i+1; j<n; j++) 
+       {
+           s=A[i][j]; k=i;
+           while (k--) s-=L_[j][k]*L_[i][k];
+           L_[j][i]=s/s2;
+       }
+	}
     return true;
 }
 
@@ -933,7 +875,7 @@ void Matrix::QR(Matrix Q, MatrixTriangle Rt, VectorInt vPermutation)
     char pivot=!(vPermutation==VectorInt::emptyVectorInt);
     int i,j,k,kmax,minmn;
     double ajnorm,sum,temp;
-    // data one,p05,zero /1.0d0,5.0d-2,0.0d0/
+     // data one,p05,zero /1.0d0,5.0d-2,0.0d0/
 
     const double epsmch = 1e-20; // machine precision
     int nc=nColumn(), nl=nLine();
@@ -941,8 +883,7 @@ void Matrix::QR(Matrix Q, MatrixTriangle Rt, VectorInt vPermutation)
     if (nl>nc)
     {
         printf("QR factorisation of A^t is currently not possible when number of lines is greater than number of columns.\n");
-        getchar();
-        exit(255);
+        getchar(); exit(255);
     }
 
     Vector vWA(nl), vRDiag;
@@ -955,8 +896,7 @@ void Matrix::QR(Matrix Q, MatrixTriangle Rt, VectorInt vPermutation)
         ipvt=vPermutation;
         vRDiag.setSize(nl);
         rdiag=vRDiag;
-    }
-    else rdiag=wa;
+    } else rdiag=wa; 
 
 //c
 //c     compute the initial line norms and initialize several arrays.
@@ -1004,11 +944,7 @@ void Matrix::QR(Matrix Q, MatrixTriangle Rt, VectorInt vPermutation)
 //        ajnorm = enorm(nl-j+1,a(j,j))
         ajnorm=::euclidianNorm(nc-j, &a[j][j]);
 
-        if (ajnorm==0.0)
-        {
-            rdiag[j]=0.0;
-            continue;
-        }
+        if (ajnorm==0.0) { rdiag[j]=0.0; continue; }
         if (a[j][j]<0.0) ajnorm = -ajnorm;
         for (i=j; i<nc; i++) a[j][i]=a[j][i]/ajnorm;
         a[j][j]+=1.0;
@@ -1017,11 +953,7 @@ void Matrix::QR(Matrix Q, MatrixTriangle Rt, VectorInt vPermutation)
 //c        apply the transformation to the remaining lines
 //c        and update the norms.
 //c
-        if (j>=nc)
-        {
-            rdiag[j] = -ajnorm;
-            continue;
-        }
+        if (j>=nc) { rdiag[j] = -ajnorm; continue; }
 
         for (k = j+1; k<nl; k++)
         {
@@ -1085,23 +1017,19 @@ void Matrix::addUnityInPlace(double dd)
 {
     int nn=d->extColumn+1, i=nLine();
     double *a=*d->p;
-    while (i--)
-    {
-        (*a)+=dd;
-        a+=nn;
-    };
+    while (i--) { (*a)+=dd; a+=nn; };
 }
 
 double Matrix::frobeniusNorm()
 {
 // no tested
 // same code for the Vector eucilidian norm
-    /*
-        double sum=0, *a=*p;
-        int i=nLine()*nColumn();
-        while (i--) sum+=sqr(*(a++));
-        return sqrt(sum);
-    */
+/*
+    double sum=0, *a=*p;
+    int i=nLine()*nColumn();
+    while (i--) sum+=sqr(*(a++));
+    return sqrt(sum);
+*/
     return ::euclidianNorm(nLine()*nColumn(),*d->p);
 }
 
@@ -1113,9 +1041,7 @@ double Matrix::LnftyNorm()
     double **a=(*this), *xp;
     while (nl--)
     {
-        sum=0;
-        j=nc;
-        xp=*(a++);
+        sum=0; j=nc; xp=*(a++);
         while (j--) sum+=condorAbs(*(xp++));
         m=::mmax(m,sum);
     }
@@ -1128,13 +1054,11 @@ Vector Matrix::getMaxColumn()
     int i=nColumn(),j,k=0, nl=nLine();
     while (i--)
     {
-        sum=0;
-        j=nl;
+        sum=0; j=nl;
         while(j--) sum+=sqr(a[j][i]);
         if (sum>maxSum)
         {
-            maxSum=sum;
-            k=i;
+            maxSum=sum; k=i;
         }
     }
     Vector rr(nl);
@@ -1184,11 +1108,11 @@ void Matrix::setLine(int i, Vector v, int n)
 
 void Matrix::setLines(int indexDest, Matrix Source, int indexSource, int number)
 {
-    if (!Source.nLine()) return;
-    double **dest=(*this), **sour=Source;
-    int snl=d->nColumn*sizeof(double);
+	if (!Source.nLine()) return;
+	double **dest=(*this), **sour=Source;
+	int snl=d->nColumn*sizeof(double);
     if (number==0) number=Source.nLine()-indexSource;
-    while (number--) memcpy(dest[indexDest+number], sour[indexSource+number], snl);
+	while (number--) memcpy(dest[indexDest+number], sour[indexSource+number], snl);
 }
 
 double Matrix::euclidianNorm(int i)
@@ -1198,10 +1122,8 @@ double Matrix::euclidianNorm(int i)
 
 void Matrix::getSubMatrix(Matrix R, int startL, int startC, int nl, int nc)
 {
-    if (nl==0) nl=  nLine()-startL;
-    else nl=mmin(nl,  nLine()-startL);
-    if (nc==0) nc=nColumn()-startC;
-    else nc=mmin(nc,nColumn()-startC);
+    if (nl==0) nl=  nLine()-startL; else nl=mmin(nl,  nLine()-startL);
+    if (nc==0) nc=nColumn()-startC; else nc=mmin(nc,nColumn()-startC);
     R.setSize(nl,nc);
     double **sd=(*this), **dd=R;
     while (nl--)
@@ -1223,10 +1145,10 @@ void Matrix::swapLines(int i, int j)
 
 int Matrix::lineIndex(Vector r, int nn)
 {
-    if (nn==0) nn=mmin((int)nColumn(),(int)r.sz())*sizeof(double);
+    if (nn==0) nn=mmin((int)nColumn(),(int)r.sz())*sizeof(double); 
     else nn*=sizeof(double);
 
-    int i=nLine();
+    int i=nLine();    
     double **dp=d->p, *dp2=r;
     while (i--)
         if (memcmp(dp[i],dp2,nn)==0) break;
@@ -1235,21 +1157,20 @@ int Matrix::lineIndex(Vector r, int nn)
 
 void Matrix::setColNames(char **c, int nc)
 {
-    if (c==NULL)
-    {
-        if (d->columnNames)
-        {
-            free(*d->columnNames);
-            free(d->columnNames);
-        }
-        return;
-    }
+	if (c==NULL) 
+	{
+		if (d->columnNames)
+		{
+			free(*d->columnNames); free(d->columnNames);
+		}
+		return;
+	}
     int l=0,i;
     if (nc==0) nc=d->nColumn;
     d->columnNames=(char**)malloc(nc*sizeof(char*));
     for (i=0; i<nc; i++) l+=(int)strlen(c[i])+1;
     char *t1=(char*)malloc(l);
-    for (i=0; i<nc; i++)
+    for (i=0; i<nc; i++) 
     {
         d->columnNames[i]=t1;
         strcpy(t1,c[i]);
@@ -1259,14 +1180,14 @@ void Matrix::setColNames(char **c, int nc)
 
 void Matrix::merge(Matrix m,int eliminateDoubles)
 {
-    int nc=nColumn(), nlm=m.nLine();
+	int nc=nColumn(), nlm=m.nLine();
     if (nlm==0) return;
-    if (nc!=m.nColumn())
-    {
-        printf("Merging: Size do not agree.\n");
-        exit(255);
-    }
-    int nl=nLine(),i,j;
+	if (nc!=m.nColumn())
+	{
+		printf("Merging: Size do not agree.\n");
+		exit(255);
+	}
+	int nl=nLine(),i,j;
     nc*=sizeof(double);
     double *pdi;
     for (i=0; i<nlm; i++)
@@ -1275,7 +1196,7 @@ void Matrix::merge(Matrix m,int eliminateDoubles)
         for (j=0; j<nl; j++)
             if (memcmp(d->p[j],pdi,nc)==0) break;
         if (j!=nl) continue;
-        extendLine();
+        extendLine(); 
         memcpy(d->p[nl],pdi,nc);
         nl++;
     }
@@ -1284,58 +1205,57 @@ void Matrix::merge(Matrix m,int eliminateDoubles)
 void Matrix::append(Vector tmp)
 {
     int nl=nLine(), nc=nColumn(), mdim=tmp.sz();
-    if (nc==0) setSize(1,mdim);
-    else extendLine();
+    if (nc==0) setSize(1,mdim); else extendLine();
     setLine(nl,tmp,mdim);
 }
 
 /*
 int Matrix::solve(Vector vB)
 {
-    double t;
-    int i, j, k, l, info=0;
+	double t;
+	int i, j, k, l, info=0;
     int nl=nLine(), nc=nColumns();
 
-    // gaussian elimination with partial pivoting
-    if ( nl>1 )
-    {
-        for ( k=0; k<nl-1 ; k++ )
-        {
-            // find l = pivot index
+	// gaussian elimination with partial pivoting
+	if ( nl>1 )
+	{
+		for ( k=0; k<nl-1 ; k++ )
+		{
+			// find l = pivot index
             l=k; maxp=condorAbs(x[k][k]);
             for (i=k+1; i<nl; i++)
                 if (condorAbs(x[i][k])>maxp) { maxp=condorAbs(x[i][k]); l=i; }
 
             jpvt[k] = l;
-            // zero pivot implies this column already triangularized
-            if ( maxp==0.0 ) info = k;
-            else
-            {
-                // interchange if necessary
-                if ( l!=k )
-                {
+			// zero pivot implies this column already triangularized
+			if ( maxp==0.0 ) info = k;
+			else
+			{
+				// interchange if necessary
+				if ( l!=k )
+				{
                     for (i=k; i<nc; i++)
                     {
-                        t=x[l][i];
-                        x[l][i]=x[k][k];
-                        x[k][k]=t;
+					    t=x[l][i];
+					    x[l][i]=x[k][k];
+					    x[k][k]=t;
                     }
                     t=b[l]; b[l]=b[k]; b[k]=t;
-                }
-                // compute multipliers
-                maxp=-1.0/maxp;
-                for (i=k+1; i<nc; j++ ) x[k][i]*=maxp;
+				}
+				// compute multipliers
+				maxp=-1.0/maxp;
+				for (i=k+1; i<nc; j++ ) x[k][i]*=maxp;
 
-                // row elimination
-                for (j=k+1; j<nl; j++ )
-                {
-                    t=x[k][j];
-                    for (i=k+1; i<nc; i++) x[j][i] += t*x[k][i];
-                }
-            }
-        }
-    }
-    if ( x[nl-1][nl-1]==0.0 ) info=nl-1;
-    return;
+				// row elimination 
+				for (j=k+1; j<nl; j++ )
+				{
+					t=x[k][j];
+					for (i=k+1; i<nc; i++) x[j][i] += t*x[k][i];
+				}
+	        }
+		}
+	}
+	if ( x[nl-1][nl-1]==0.0 ) info=nl-1;
+	return;
 }
 */

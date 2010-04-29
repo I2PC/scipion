@@ -96,12 +96,12 @@ void ROUT_EULER(const double rot,
     Euler_direction2angles(new_w, newrot, newtilt, newpsi);
     if (newtilt == 0.) newrot = rot;
     std::cout << std::endl
-              << "Old_rot  = " << rot  << " New_rot  = " << newrot
-              << std::endl
-              << "Old_tilt = " << tilt << " New_tilt = " << newtilt
-              << std::endl
-              << "Old_psi  = " << psi  << " New_psi  = " << newpsi
-              << std::endl;
+    << "Old_rot  = " << rot  << " New_rot  = " << newrot
+    << std::endl
+    << "Old_tilt = " << tilt << " New_tilt = " << newtilt
+    << std::endl
+    << "Old_psi  = " << psi  << " New_psi  = " << newpsi
+    << std::endl;
 
     Euler_direction(newrot, newtilt, newpsi, w);
     std::cout << "Projectionn direction made with new angles\n" << w;

@@ -28,19 +28,19 @@
 
 // Show CWD ----------------------------------------------------------------
 std::ostream & operator << (std::ostream &_out,
-                            const Cylindrical_Wave_Decomposition &_cwd)
+                       const Cylindrical_Wave_Decomposition &_cwd)
 {
     _out << "ir=" << _cwd.ir << std::endl
-         << "numin=" << _cwd.numin << std::endl
-         << "numax=" << _cwd.numax << std::endl
-         << "x0=" << _cwd.x0 << std::endl
-         << "y0=" << _cwd.y0 << std::endl
-         << "r1=" << _cwd.r1 << std::endl
-         << "r2=" << _cwd.r2 << std::endl
-         << "r3=" << _cwd.r3 << std::endl;
+    << "numin=" << _cwd.numin << std::endl
+    << "numax=" << _cwd.numax << std::endl
+    << "x0=" << _cwd.x0 << std::endl
+    << "y0=" << _cwd.y0 << std::endl
+    << "r1=" << _cwd.r1 << std::endl
+    << "r2=" << _cwd.r2 << std::endl
+    << "r3=" << _cwd.r3 << std::endl;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(_cwd.out_ampcos)
     _out << _cwd.out_ampcos(i) << " "
-         << _cwd.out_ampsin(i) << std::endl;
+    << _cwd.out_ampsin(i) << std::endl;
     return _out;
 }
 
@@ -79,7 +79,7 @@ void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
     numin1 = numin + 1;
     numax1 = numax + 1;
 
-    for (kk = numin1; kk <= numax1; kk++)
+    for (kk = numin1;kk <= numax1;kk++)
     {
         k = kk - 1;
         if (k != 0)
@@ -115,14 +115,14 @@ void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
             h = 2. * PI / ntot;
             coefca = h / PI / 2.;
         }
-        for (i = 1; i <= my5; i++)
+        for (i = 1;i <= my5;i++)
         {
             fi = i * h;
             coseno[i] = sin(fi);
         }
         coseno[my4] = 1.;
         my3 = 2 * my4;
-        for (i = 1; i <= my5; i++)
+        for (i = 1;i <= my5;i++)
         {
             coseno[my3-i] = coseno[i];
             coseno[my3+i] = -coseno[i];
@@ -134,7 +134,7 @@ void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
         coseno[ntot] = 0.;
         coseno[ntot+my4] = 1.;
         r11 = r1 - r3;
-        for (jr = 1; jr <= ir; jr++)
+        for (jr = 1;jr <= ir;jr++)
         {
             ind++;
             r = r11 + r3 * jr;
@@ -144,11 +144,11 @@ void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
             if (k != 0)
             {
                 as = bc = bs = 0.;
-                for (i = 1; i <= k; i++)
+                for (i = 1;i <= k;i++)
                 {
                     i2c = my4;
                     i2s = 0;
-                    for (j = 1; j <= my2; j++)
+                    for (j = 1;j <= my2;j++)
                     {
                         i1c++;
                         i1s++;
@@ -174,7 +174,7 @@ void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
                 ampsen[ind] = coefsa * as + coefsb * bs;
             }
             else
-                for (j = 1; j <= ntot; j++)
+                for (j = 1;j <= ntot;j++)
                 {
                     i1c++;
                     i1s++;
@@ -189,13 +189,13 @@ void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
         if (k == 0)
         {
             ac = 0.;
-            for (j = 1; j <= ir; j++)
+            for (j = 1;j <= ir;j++)
             {
                 r = r11 + j * r3;
                 ac += ampcos[j] * 2. * PI * r;
             }
             ac /= (PI * (r * r - r1 * r1));
-            for (j = 1; j <= ir; j++)
+            for (j = 1;j <= ir;j++)
                 ampcos[j] -= ac;
         }
     }
@@ -230,9 +230,9 @@ void Rotational_Spectrum::compute_rotational_spectrum(
     double xr1, double xr2, double xdr, double xr)
 {
     double *e[MAX_HARMONIC], *rv, *st, *ep[MAX_HARMONIC], *erp [MAX_HARMONIC],
-           *rp1, *rp2, *sp, *c, *s;
+    *rp1, *rp2, *sp, *c, *s;
     int i1, n, m, i, j1, k, j, ir1, ir2, ndr, nr, ncol, nvez,
-        irk, k1, k2;
+    irk, k1, k2;
 
     // Read the information from the Cylindrical Wave Decomposition .........
     if ((c = (double *) calloc(5191, sizeof(double))) == NULL ||
@@ -392,12 +392,12 @@ void Rotational_Spectrum::read(int argc, char **argv)
 void Rotational_Spectrum::usage()
 {
     std::cerr << "   -r1 <low radius>            : Integration radius\n"
-              << "   -r2 <high radius>           : Integration radius\n"
-              << "  [-rInc <increment=1>]        : Integration increment\n"
-              << "  [-x0 <x center=-1>]          : In physical units.\n"
-              << "  [-y0 <y center=-1>]          : By default, the Xmipp origin\n"
-              << "  [-low  <lower harmonic=  1>] : Lower harmonic to compute\n"
-              << "  [-high <higher harmonic=15>] : Higher harmonic to compute\n"
-              ;
+    << "   -r2 <high radius>           : Integration radius\n"
+    << "  [-rInc <increment=1>]        : Integration increment\n"
+    << "  [-x0 <x center=-1>]          : In physical units.\n"
+    << "  [-y0 <y center=-1>]          : By default, the Xmipp origin\n"
+    << "  [-low  <lower harmonic=  1>] : Lower harmonic to compute\n"
+    << "  [-high <higher harmonic=15>] : Higher harmonic to compute\n"
+    ;
 }
 
