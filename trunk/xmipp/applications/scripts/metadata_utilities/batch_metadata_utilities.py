@@ -31,45 +31,96 @@ import XmippData
 
 from copy import copy
 from optparse import Option, OptionValueError
+class Code:
+    def __init__(self):
+       self.unknown=0
+       self.union=1
+       self.inter=2
+       self.subs=3
+       self.product=4
+       self.copy=5
+       self.move=6
+       self.delete=7
+       self.select=8
+   
+    def encode(self, _string):
+       if (  _string=='-u' or _string=='--union'):
+            return self.union
+       elif (_string=='-n' or _string=='--inter' or _string=='--intersection'):
+            return self.inter
+       elif (_string=="-s" or _string == "--subs" or _string == "--substraction"):
+            return self.subs
+       elif (_string=="-p" or _string ==  "--product"or _string == "--naturalJoin"):
+            return self.product
+       elif (_string == '-c' or _string=='--copy'):
+            return self.copy
+       elif (_string == '-m' or _string=='--move'):
+            return self.move
+       elif (_string == '-d' or _string=='--delete'):
+            return self.delete
+       elif (_string == '-s' or _string=='--Select'):
+            return self.select
+       else:
+            return self.unknown
+        
+    def decode(self, _operation):
+       if (_operation==self.union):
+           return 'Union'
+       elif (_operation==self.inter):
+            return 'Intersection'
+       elif (_operation==self.subs):
+            return 'Substraction'
+       elif (_operation==self.product):
+            return 'Natural Join (product)'
+       elif (_operation==self.copy):
+            return 'Copy'
+       elif (_operation==self.move):
+            return 'Move'
+       elif (_operation==self.delete):
+            return 'Delete'
+       elif (_operation==self.select):
+            return 'Select'
+       else:
+            return 'Unknown Operation'
 
-operation=""
+_myCode=Code()
+operation=_myCode.unknown
 operationCounter=0
 
 def check_operation(option, opt_str, value, parser):
     global operation
     global operationCounter
-    if(len(opt_str)>2):
-       _operation = opt_str[2:]
-    else:
-       _operation = opt_str[1]
+    global _myCode
     if (operationCounter > 0):
         raise OptionValueError("you cannot select two operations: "+ operation + ", " +_operation)
     operationCounter += 1    
-    operation=_operation   
-    if(operation!=""):
-        print "Operation: ", operation 
+    operation=_myCode.encode(opt_str)   
+    if(operation!=_myCode.unknown):
+        print "Operation: ", _myCode.decode(operation) 
     if(value!=None):    
          setattr(parser.values, option.dest, value)
          
 def check_label(option, opt_str, value, parser):
     global operation
-    if(operation==""):
+    if(operation==_myCode.unknown):
         raise OptionValueError("select operation before %s" % opt_str)
-    _char= operation[0:1]
-    if (_char=='u' or _char=='n' or _char=='i' or _char=='s' or _char=='p'):
+    if (operation == _myCode.union or 
+        operation == _myCode.inter or
+        operation == _myCode.subs or
+        operation == _myCode.product or
+        operation == _myCode.select):
        setattr(parser.values, option.dest, value)
     else:
-       raise OptionValueError("selected option " + opt_str + " is not compatible with operation "+ operation)
+       raise OptionValueError("selected option " + opt_str + " is not compatible with operation "+ _myCode.decode(operation))
 #        
 def check_value(option, opt_str, value, parser):
     global operation
-    if(operation==""):
+    if(operation==_myCode.unknown):
         raise OptionValueError("select operation before %s" % opt_str)
-    _char= operation[0:1]
-    if (_char=='S'):
+    if (operation == _myCode.select):
        setattr(parser.values, option.dest, value)
     else:
-       raise OptionValueError("selected option " + opt_str + " is not compatible with operation "+ operation)
+       raise OptionValueError("selected option " + opt_str + " is not compatible with operation "+ _myCode.decode(operation))
 
 def command_line_options():
       """ add command line options here"""
@@ -152,8 +203,9 @@ def process_union(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS):
     MD1.union_(MD2)
     MD1.write(outMetaDataFile)
     
-def process_subs(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel,operationFlag):
+def process_subs(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel):
     #l must be given
+    global operation
     if(len(cLabel)<1):
         print " Metadata label '-l' is required"
         sys.exit()
@@ -166,17 +218,18 @@ def process_subs(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel,operat
     MD1=XmippData.MetaData(inMetaDataFile)
     MD2=XmippData.MetaData(inMetaDataFile2)
     MD3=XmippData.MetaData()
-    if(operationFlag=='s'):
+    if(operation==_myCode.subs):
         MD3.substraction(MD1,MD2,mdl.codifyLabel(cLabel))
         MD3.write(outMetaDataFile)
-    elif(operationFlag=='n' or operationFlag=='i'):
+    elif(operation==_myCode.inter):
         MD3.intersection(MD1,MD2,mdl.codifyLabel(cLabel))
         MD3.write(outMetaDataFile)
-    elif(operationFlag=='p'):
+    elif(operation==_myCode.product):
         MD1.combine(MD2,mdl.codifyLabel(cLabel))
         MD1.write(outMetaDataFile)
 
-def process_copy(inMetaDataFileS,cPath,operationFlag):
+def process_copy(inMetaDataFileS,cPath):
+    global operation
     import shutil
     if(len(cPath)<1):
         print "Product requires a Metadata label '-l'"
@@ -194,20 +247,20 @@ def process_copy(inMetaDataFileS,cPath,operationFlag):
     id=MD1.firstObject()
     ss=XmippData.stringP()
     messsage=""
-    if operationFlag=='c':
+    if (operation==_myCode.copy):
         message="copying "
-    elif operationFlag=='m':
+    elif (operation==_myCode.move):
         message="moving "
-    elif operationFlag=='d':
+    elif (operation==_myCode.delete):
         message="delete "
         
     while(id!=XmippData.MetaData.NO_MORE_OBJECTS):
          XmippData.getValueString(MD1, XmippData.MDL_IMAGE, ss,id)
-         if operationFlag=='c':
+         if (operation==_myCode.copy):
              shutil.copy(ss.value(),cPath)
-         elif operationFlag=='m':
+         elif (operation==_myCode.move):
              shutil.move(ss.value(),cPath)
-         elif operationFlag=='d':
+         elif (operation==_myCode.delete):
              os.remove(ss.value())     
          print message + ss.value() 
          id=MD1.nextObject()
@@ -222,7 +275,6 @@ def process_select(inMetaDataFileS,outMetaDataFileS,minValue,maxValue,cLabel):
 #                                    maxValue)
 #    MD2.write(outMetaDataFile)
     
-
 ##########
 ##MAIN
 ##########
@@ -239,22 +291,19 @@ maxValue
 
 
 #operate
-_char= operation[0:1]
-if(_char=='u'):
+if(operation==_myCode.union):
     process_union(inMetaDataFile,inMetaDataFile2,outMetaDataFile)
-elif(_char=='n' or _char=='i'):
-    process_subs(inMetaDataFile,inMetaDataFile2,outMetaDataFile,cLabel,_char)
-elif(_char=='s'):
-    process_subs(inMetaDataFile,inMetaDataFile2,outMetaDataFile,cLabel,_char)
-elif(_char=='p'):
-    process_subs(inMetaDataFile,inMetaDataFile2,outMetaDataFile,cLabel,_char)
-elif(_char=='c'):
-    process_copy(inMetaDataFile,cPath,_char)
-elif(_char=='m'):
-    process_copy(inMetaDataFile,cPath,_char)
-elif(_char=='d'):
-    process_copy(inMetaDataFile,cPath,_char)
-elif(_char=='S'):
+elif(operation==_myCode.inter or 
+     operation==_myCode.subs  or
+     operation==_myCode.product):
+    process_subs(inMetaDataFile,inMetaDataFile2,outMetaDataFile,cLabel)
+
+elif(operation==_myCode.copy or
+     operation==_myCode.delete or
+     operation==_myCode.move):
+    process_copy(inMetaDataFile)
+    
+elif(operation==_myCode.select):
     process_select(inMetaDataFile,outMetaDataFile,minValue,maxValue,cLabel)
 else:
     print "Error: Wrong operation:", operation
