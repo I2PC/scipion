@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *		im_corr = tom_xmipp_ctf_correct_phase(image,ctfmodel,method,epsilon)
+ *      im_corr = tom_xmipp_ctf_correct_phase(image,ctfmodel,method,epsilon)
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -30,11 +30,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
     Matrix2D<double> I;
     getMatrix2D(prhs[0],I);
-    
+
     CorrectPhaseParams prm;
     prm.epsilon = (double) mxGetScalar(prhs[2]);
     prm.method = (int) mxGetScalar(prhs[1]);
-    
+
     prm.ctf.FilterBand = CTF;
     prm.ctf.ctf.enable_CTFnoise = false;
 
@@ -43,7 +43,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     prm.ctf.ctf.kV = (double) mxGetScalar(prhs[5]);
     prm.ctf.ctf.DeltafU = (double) mxGetScalar(prhs[6]);
     prm.ctf.ctf.DeltafV = (double) mxGetScalar(prhs[7]);
-    prm.ctf.ctf.azimuthal_angle = (double) mxGetScalar(prhs[8]);    
+    prm.ctf.ctf.azimuthal_angle = (double) mxGetScalar(prhs[8]);
     prm.ctf.ctf.Cs = (double) mxGetScalar(prhs[9]);
     prm.ctf.ctf.Ca = (double) mxGetScalar(prhs[10]);
     prm.ctf.ctf.espr = (double) mxGetScalar(prhs[11]);
@@ -52,7 +52,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     prm.ctf.ctf.DeltaF = (double) mxGetScalar(prhs[14]);
     prm.ctf.ctf.DeltaR = (double) mxGetScalar(prhs[15]);
     prm.ctf.ctf.Q0 = (double) mxGetScalar(prhs[16]);
-    try 
+    try
     {
         Matrix2D< complex<double> > fft;
         FourierTransform(I, fft);
@@ -66,4 +66,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     }
 
     setMatrix2D(I,plhs[0]);
-}	
+}

@@ -129,7 +129,7 @@ public:
           << prm.dim[1] << std::endl
           << "Cristal_Search_Origen     :   " << prm.O[0] << " "
           << prm.O[1] << std::endl
-        ;
+          ;
 
         return o;
     }

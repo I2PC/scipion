@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     if (!Is_VolumeXmipp(fn_in))
     {
         std::cout << "File: " <<  fn_in << " is not an Spider volume, bye."
-        << std::endl;
+                  << std::endl;
         exit(1);
     }
     V_in.read(fn_in);
@@ -82,9 +82,9 @@ void Usage(char *argv[])
     std::cout << " to all the planes perpendicular to Z that form a volume\n\n";
     std::cout << "Usage:" << argv[0] ;
     std::cout << argv[0] << " -i input file -o outout_file"
-    << " -d00 d00 -d01 d01 -d10 d10 -d11 d11\n"
-    << "where d00, d01, d10 and d11"
-    << "are the element of the 2x2 matrix " << std::endl << std::endl;
+              << " -d00 d00 -d01 d01 -d10 d10 -d11 d11\n"
+              << "where d00, d01, d10 and d11"
+              << "are the element of the 2x2 matrix " << std::endl << std::endl;
     exit(1);
 
 }

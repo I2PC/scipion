@@ -54,7 +54,7 @@ class ShowVol: public ShowTable
 protected:
     // Volume to be represented
     VolumeXmipp V;
-    // Axis for slistd::cing. Valid values 'X', 'Y' or 'Z'
+    // Axis for slicing. Valid values 'X', 'Y' or 'Z'
     char slices;
 
     /* Init table widget.

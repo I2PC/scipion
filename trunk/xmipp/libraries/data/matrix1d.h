@@ -377,7 +377,7 @@ public:
      * // empty row vector
      * @endcode
      */
-    Matrix1D(bool column = true): MultidimArray<T>() 
+    Matrix1D(bool column = true): MultidimArray<T>()
     {
         row = ! column;
     }
@@ -423,10 +423,10 @@ public:
     /** Clear.
      * @ingroup VectorsConstructors
      */
-     void clear()
-     {
+    void clear()
+    {
         MultidimArray<T>::clear();
-     }
+    }
 
     /// @defgroup VectorsInitialization Initialization
     /// @ingroup Vectors
@@ -439,13 +439,13 @@ public:
      * You should not make any operation on this vector such that the
      * memory locations are changed
      */
-     void alias(const MultidimArray<T> &m)
-     {
-         this->row=false;
-         copyShape(m);
-         this->data=m.data;
-         this->destroyData=false;
-     }
+    void alias(const MultidimArray<T> &m)
+    {
+        this->row=false;
+        copyShape(m);
+        this->data=m.data;
+        this->destroyData=false;
+    }
 
     /** Linear initialization
      * @ingroup VectorsInitialization
@@ -582,7 +582,7 @@ public:
     template <typename T1>
     void resize(const Matrix1D<T1> &M)
     {
-    	MultidimArray<T>::resize(M);
+        MultidimArray<T>::resize(M);
     }
 
     /** Resize taking the shape from another vector which
@@ -592,7 +592,7 @@ public:
     template <typename T1>
     void resize(const MultidimArray<T1> &M)
     {
-    	MultidimArray<T>::resize(M);
+        MultidimArray<T>::resize(M);
     }
 
     /** Produce a vector suitable for working with Numerical Recipes
@@ -618,7 +618,7 @@ public:
      * This function is not ported to Python.
      */
     void killAdaptationForNumericalRecipes(T* m) const
-        {}
+    {}
 
     /** Outside
      * @ingroup VectorsSize
@@ -641,7 +641,7 @@ public:
     {
         if (XSIZE(r) < 1)
             REPORT_ERROR(1, "Outside: index vector has not got enough components");
-    
+
         return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this));
     }
 
@@ -714,16 +714,16 @@ public:
      */
     T& operator()(int i) const
     {
-        #ifdef DEBUG
-            if (i > FINISHINGX(*this) || i < STARTINGX(*this))
-                REPORT_ERROR(1003, static_cast< std::string >
-	           ("Vector subscript not defined for this vector i=")+
-	           integerToString(i));
-        #endif
+#ifdef DEBUG
+        if (i > FINISHINGX(*this) || i < STARTINGX(*this))
+            REPORT_ERROR(1003, static_cast< std::string >
+                         ("Vector subscript not defined for this vector i=")+
+                         integerToString(i));
+#endif
 
         return VEC_ELEM(*this, i);
     }
-    #undef DEBUG
+#undef DEBUG
 
     /** Interpolates the value of the 1D vector M at the point (x) knowing
      * that this vector is a set of B-spline coefficients
@@ -756,9 +756,9 @@ public:
         for (int l = l1; l <= l2; l++)
         {
             double xminusl = x - (double) l;
-	    int equivalent_l=l;
-	    if      (l<0)             equivalent_l=-l-1;
-	    else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
+            int equivalent_l=l;
+            if      (l<0)             equivalent_l=-l-1;
+            else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
             double Coeff = (double) DIRECT_VEC_ELEM(*this,equivalent_l);
             switch (SplineDegree)
             {
@@ -943,17 +943,17 @@ public:
      */
     Matrix1D<T>& operator=(const Matrix1D<T>& op1)
     {
-	if (&op1 != this)
-	{
+        if (&op1 != this)
+        {
             resize(op1);
             T* ptr=NULL;
-	    unsigned long int n;
+            unsigned long int n;
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-	    	*ptr=DIRECT_MULTIDIM_ELEM(op1,n);
+            *ptr=DIRECT_MULTIDIM_ELEM(op1,n);
             row=op1.row;
-	}
+        }
 
-	return *this;
+        return *this;
     }
 
     /** Unary minus.
@@ -965,10 +965,10 @@ public:
     Matrix1D<T> operator-() const
     {
         Matrix1D<T> tmp(*this);
-	T* ptr;
-	unsigned long int n;
+        T* ptr;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(tmp,n,ptr)
-            *ptr = -(*ptr);
+        *ptr = -(*ptr);
         return tmp;
     }
 
@@ -1033,9 +1033,9 @@ public:
      */
     void operator*=(const Matrix1D<T>& op1)
     {
-    	Matrix1D<T> tmp;
+        Matrix1D<T> tmp;
         arrayByArray(*this, op1, tmp, '*');
-	*this=tmp;
+        *this=tmp;
     }
 
     /** v3 /= v2.
@@ -1262,7 +1262,7 @@ public:
      * (L2 sense) to the values of the array shown as sample
      */
     void rangeAdjust(const Matrix1D<T> &example,
-        const Matrix1D<int> *mask=NULL)
+                     const Matrix1D<int> *mask=NULL)
     {
         MultidimArray<T>::rangeAdjust(example,mask);
     }
@@ -1272,20 +1272,20 @@ public:
       * @ingroup VectorsUtilities */
     void centerOfMass(Matrix1D< double >& center, void* mask=NULL)
     {
-	center.initZeros(1);
-	double mass = 0;
-	Matrix1D< int >* imask = (Matrix1D< int >*) mask;
+        center.initZeros(1);
+        double mass = 0;
+        Matrix1D< int >* imask = (Matrix1D< int >*) mask;
 
-	FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
-	{
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
+        {
             if ((imask == NULL || VEC_ELEM(*imask, i)) &&
-		VEC_ELEM(*this, i))
+                VEC_ELEM(*this, i))
             {
-        	XX(center) += i * VEC_ELEM(*this, i);
-        	mass += VEC_ELEM(*this, i);
+                XX(center) += i * VEC_ELEM(*this, i);
+                mass += VEC_ELEM(*this, i);
             }
-	}
-	if (mass != 0)
+        }
+        if (mass != 0)
             center /= mass;
     }
 
@@ -1405,11 +1405,11 @@ public:
         T max = VEC_ELEM(*this, imax);
 
         FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
-            if (VEC_ELEM(*this, i) > max)
-            {
-                max = VEC_ELEM(*this, i);
-                imax = i;
-            }
+        if (VEC_ELEM(*this, i) > max)
+        {
+            max = VEC_ELEM(*this, i);
+            imax = i;
+        }
     }
 
     /** Minimum element
@@ -1430,11 +1430,11 @@ public:
         T min = VEC_ELEM(*this, imin);
 
         FOR_ALL_ELEMENTS_IN_MATRIX1D(*this)
-            if (VEC_ELEM(*this, i) < min)
-            {
-                min = VEC_ELEM(*this, i);
-                imin = i;
-            }
+        if (VEC_ELEM(*this, i) < min)
+        {
+            min = VEC_ELEM(*this, i);
+            imin = i;
+        }
     }
 
     /** Show using gnuplot
@@ -1448,22 +1448,22 @@ public:
         FileName fn_tmp;
         fn_tmp.init_random(10);
         MultidimArray<T>::write(static_cast<std::string>("PPP") +
-            fn_tmp + ".txt");
+                                fn_tmp + ".txt");
 
         std::ofstream fh_gplot;
         fh_gplot.open((static_cast<std::string>("PPP") + fn_tmp +
-            ".gpl").c_str());
+                       ".gpl").c_str());
         if (!fh_gplot)
             REPORT_ERROR(1,
-            static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
-                + fn_tmp + ".gpl for output");
+                         static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
+                         + fn_tmp + ".gpl for output");
         fh_gplot << "set xlabel \"" + xlabel + "\"\n";
         fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
-        "\" w l\n";
+                 "\" w l\n";
         fh_gplot << "pause 300 \"\"\n";
         fh_gplot.close();
         system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
-            ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
+                ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
     }
 
     /** Compute numerical derivative
@@ -1477,8 +1477,8 @@ public:
     void numericalDerivative(Matrix1D<double> &result)
     {
         const double i12=1.0/12.0;
-	result.initZeros(*this);
-	for (int i=STARTINGX(*this)+2; i<=FINISHINGX(*this)-2; i++)
+        result.initZeros(*this);
+        for (int i=STARTINGX(*this)+2; i<=FINISHINGX(*this)-2; i++)
             result(i)=i12*(-(*this)(i+2)+8*(*this)(i+1)
                            -8*(*this)(i-1)+(*this)(i+2));
     }
@@ -1546,7 +1546,7 @@ T dotProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
 
     T accumulate = 0;
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v1)
-        accumulate += DIRECT_VEC_ELEM(v1,i) * DIRECT_VEC_ELEM(v2,i);
+    accumulate += DIRECT_VEC_ELEM(v1,i) * DIRECT_VEC_ELEM(v2,i);
 
     return accumulate;
 }
@@ -1592,7 +1592,7 @@ Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
  */
 template<typename T>
 void vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2,
-   Matrix1D<T> &result)
+                   Matrix1D<T> &result)
 {
     XX(result) = YY(v1) * ZZ(v2) - ZZ(v1) * YY(v2);
     YY(result) = ZZ(v1) * XX(v2) - XX(v1) * ZZ(v2);
@@ -1705,7 +1705,7 @@ void randomPermutation(int N, Matrix1D<int>& result);
   *
   * The option show forces the routine to show the convergence path
   *
-  * If your function needs extra parameters you can pass them through 
+  * If your function needs extra parameters you can pass them through
   * the void pointer prm. If you don't need this feature set it to NULL.
   *
   * Example of use:
@@ -1723,7 +1723,7 @@ void randomPermutation(int N, Matrix1D<int>& result);
 void powellOptimizer(Matrix1D< double >& p,
                      int i0, int n,
                      double(*f)(double* , void *),
-                     void *prm, 
+                     void *prm,
                      double ftol,
                      double& fret,
                      int& iter,
@@ -1731,7 +1731,7 @@ void powellOptimizer(Matrix1D< double >& p,
                      bool show = false);
 
 /** Gaussian interpolator
- * @ingroup VectorsMiscellaneous 
+ * @ingroup VectorsMiscellaneous
  *
  * This class helps to perform a quick evaluation of the N(0,1) Gaussian.
  * 1/sqrt(2*PI)*exp(-x^2)
@@ -1742,7 +1742,8 @@ void powellOptimizer(Matrix1D< double >& p,
  *  double g=GI.getValue(1.96);
  * @endcode
  */
-class GaussianInterpolator {
+class GaussianInterpolator
+{
     Matrix1D<double> v;
     double xstep;
     double xmax;
@@ -1750,13 +1751,14 @@ class GaussianInterpolator {
 public:
     /** Constructor.
         xmax is the maximum value considered by the interpolator.
-        N is the number of samples between 0 and xmax. 
+        N is the number of samples between 0 and xmax.
         If normalize is set to true, then the factor 1/sqrt(2*PI)
         is introduced. */
     void initialize(double xmax, int N, bool normalize=true);
-    
+
     /** Value */
-    inline double getValue(double x) const {
+    inline double getValue(double x) const
+    {
         x=ABS(x);
         if (x>xmax) return 0;
         else

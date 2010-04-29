@@ -169,6 +169,6 @@ int PROJECT_Tomography_Effectively_project(
     A selection file with all images is also returned (and saved if any
     name has been given in the parameters).*/
 int ROUT_Tomography_project(Prog_Project_Tomography_Parameters &prm,
-    Projection &proj, SelFile &SF);
+                            Projection &proj, SelFile &SF);
 //@}
 #endif

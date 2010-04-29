@@ -39,19 +39,19 @@ int main(int argc, char **argv)
     {
         std::cerr << XE << std::endl;
         std::cerr << "Usage: docfile_select_subset\n"
-        << "   -i   <docfile>    : Input docfile\n"
-        << "   -sel <selfile>    : Input selfile\n"
-        << "   -o   <docfile>    : Output docfile with subset in selfile\n";
+                  << "   -i   <docfile>    : Input docfile\n"
+                  << "   -sel <selfile>    : Input selfile\n"
+                  << "   -o   <docfile>    : Output docfile with subset in selfile\n";
         return 1;
     }
 
     try
     {
         DocFile DFin, DFout;
-	SelFile SF;
-	DFin.read(fn1);
-	SF.read(fn2);
-	get_subset_docfile(DFin, SF, DFout);
+        SelFile SF;
+        DFin.read(fn1);
+        SF.read(fn2);
+        get_subset_docfile(DFin, SF, DFout);
         DFout.write(fn_out);
     }
     catch (Xmipp_error XE)

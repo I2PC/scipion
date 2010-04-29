@@ -42,7 +42,7 @@ void Prog_sort_images_prm::show()
     std::cerr << "Input selfile:    " << fnSel           << std::endl
               << "Output rootname:  " << fnRoot          << std::endl
               << "Process selfiles: " << processSelfiles << std::endl
-    ;
+              ;
 }
 
 // usage ===================================================================
@@ -52,7 +52,7 @@ void Prog_sort_images_prm::usage()
               << "   -i <selfile>       : selfile of images\n"
               << "   -oroot <rootname>  : output rootname\n"
               << "  [-processSelfiles]  : process selfiles\n"
-    ;
+              ;
 }
 
 // Produce side info  ======================================================
@@ -97,14 +97,14 @@ void Prog_sort_images_prm::chooseNextImage()
         ImageXmipp Iaux;
         Iaux.read(toClassify[i]);
         Iaux().setXmippOrigin();
-        
+
         // Choose between this image and its mirror
         Matrix2D<double> I, Imirror;
         I=Iaux();
         Imirror=I;
         Imirror.selfReverseX();
         Imirror.setXmippOrigin();
-        
+
         Matrix2D<double> M;
         alignImages(lastImage(),I,M);
         alignImages(lastImage(),Imirror,M);
@@ -123,7 +123,7 @@ void Prog_sort_images_prm::chooseNextImage()
             bestIdx=i;
         }
     }
-    
+
     SFoutOriginal.insert(toClassify[bestIdx]);
     bestImage.write(fnRoot+integerToString(SFoutOriginal.ImgNo(),5)+".xmp");
     toClassify.erase(toClassify.begin()+bestIdx);
@@ -135,7 +135,7 @@ void Prog_sort_images_prm::chooseNextImage()
 void Prog_sort_images_prm::run()
 {
     std::cout << "Images to go: ";
-    while (toClassify.size()>0) 
+    while (toClassify.size()>0)
     {
         chooseNextImage();
         std::cout << toClassify.size() << " ";
@@ -144,7 +144,7 @@ void Prog_sort_images_prm::run()
     std::cout << toClassify.size() << std::endl;
     SFoutOriginal.write(fnRoot+".sel");
     SFout.write(fnRoot+"_aligned.sel");
-    
+
     if (processSelfiles)
     {
         std::ofstream fhInfo;

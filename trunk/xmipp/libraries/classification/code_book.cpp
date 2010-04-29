@@ -55,8 +55,8 @@
  * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
  */
 xmippCB::xmippCB(unsigned _n, unsigned _size, bool _cal)
-        : xmippCDSet<xmippVector, xmippLabel>(),
-        xmippCTSet<xmippVector, xmippLabel>(_cal)
+    : xmippCDSet<xmippVector, xmippLabel>(),
+      xmippCTSet<xmippVector, xmippLabel>(_cal)
 {
     // Fill vectors with zeros
     theItems.resize(_n);
@@ -84,8 +84,8 @@ xmippCB::xmippCB(unsigned _n, unsigned _size, bool _cal)
  */
 xmippCB::xmippCB(unsigned _n, unsigned _size, xmippFeature _lower,
                  xmippFeature _upper, bool _cal)
-        : xmippCDSet<xmippVector, xmippLabel>(),
-        xmippCTSet<xmippVector, xmippLabel>(_cal)
+    : xmippCDSet<xmippVector, xmippLabel>(),
+      xmippCTSet<xmippVector, xmippLabel>(_cal)
 {
     theItems.resize(_n);
     //if (calibrated())
@@ -115,7 +115,7 @@ xmippCB::xmippCB(unsigned _n, unsigned _size, xmippFeature _lower,
 */
 
 xmippCB::xmippCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs)
-        : xmippCDSet<xmippVector, xmippLabel>(), xmippCTSet<xmippVector, xmippLabel>(_ts.calibrated())
+    : xmippCDSet<xmippVector, xmippLabel>(), xmippCTSet<xmippVector, xmippLabel>(_ts.calibrated())
 {
     // Take random samples
 //    xmippUniform<unsigned> chosen( 0, _ts.size() -1 );

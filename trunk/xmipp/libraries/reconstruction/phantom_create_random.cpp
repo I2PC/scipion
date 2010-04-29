@@ -66,7 +66,7 @@ void Prog_Random_Phantom_Parameters::usage()
     std::cout << "                      The Xmipp volume can only be used for stats\n";
     std::cout << "  [-o <Realization phantom description file>]\n";
     std::cout << "  [-min_volume <min_vol>]                     minimum volume\n"
-    << "                                              for each feature\n";
+              << "                                              for each feature\n";
     std::cout << "  [-discrete]         density values are forced to be discrete\n";
     std::cout << "  [-distance d]       distance between feature centers\n";
     std::cout << "                      greater than d\n";
@@ -272,10 +272,10 @@ void generate_realization_of_random_phantom(
             if (loop_conunter > MAX_LOOP_NUMBER)
             {
                 std::cout << "\nOh My Dear after " << MAX_LOOP_NUMBER  << " iterations"
-                << "\nI simply can not get a correct feature"
-                << "\nConsider relaxing the constraints" << std::endl;
+                          << "\nI simply can not get a correct feature"
+                          << "\nConsider relaxing the constraints" << std::endl;
                 std::cout << "The troublesome feature is no: " << i / 2 <<
-                "(first one is 0)" << feat_aux << std::endl;
+                          "(first one is 0)" << feat_aux << std::endl;
                 Valid_Feature = 1;
             }
             loop_conunter++;
@@ -386,29 +386,29 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
         compute_hist(proj_area, hist_area, 300);
         volume.computeStats(avg, stddev, dummy, dummy);
         std::cout << "# Volume average: " << avg << std::endl
-        << "# Volume stddev:  " << stddev << std::endl
-        << "# Volume percentil  2.5%: " << hist_vol.percentil(2.5) << std::endl
-        << "# Volume percentil 97.5%: " << hist_vol.percentil(97.5) << std::endl
-        << hist_vol << std::endl << std::endl;
+                  << "# Volume stddev:  " << stddev << std::endl
+                  << "# Volume percentil  2.5%: " << hist_vol.percentil(2.5) << std::endl
+                  << "# Volume percentil 97.5%: " << hist_vol.percentil(97.5) << std::endl
+                  << hist_vol << std::endl << std::endl;
         proj_power.computeStats(power_avg, power_stddev, dummy, dummy);
         std::cout << "# Projection power average: " << power_avg << std::endl
-        << "# Projection power stddev:  " << power_stddev << std::endl
-        << "# Projection percentil  2.5%: " << hist_proj.percentil(2.5) << std::endl
-        << "# Projection percentil 97.5%: " << hist_proj.percentil(97.5) << std::endl
-        << hist_proj;
+                  << "# Projection power stddev:  " << power_stddev << std::endl
+                  << "# Projection percentil  2.5%: " << hist_proj.percentil(2.5) << std::endl
+                  << "# Projection percentil 97.5%: " << hist_proj.percentil(97.5) << std::endl
+                  << hist_proj;
         proj_area.computeStats(area_avg, area_stddev, dummy, dummy);
         std::cout << "# Projection area average: " << area_avg << std::endl
-        << "# Projection area stddev:  " << area_stddev << std::endl
-        << "# Area percentil  2.5%:    " << hist_area.percentil(2.5) << std::endl
-        << "# Area percentil 97.5%:    " << hist_area.percentil(97.5) << std::endl
-        << hist_area << std::endl;
+                  << "# Projection area stddev:  " << area_stddev << std::endl
+                  << "# Area percentil  2.5%:    " << hist_area.percentil(2.5) << std::endl
+                  << "# Area percentil 97.5%:    " << hist_area.percentil(97.5) << std::endl
+                  << hist_area << std::endl;
         if (prm.target_SNR != -1)
         {
             std::cout << std::endl;
             std::cout << "For an SNR of " << prm.target_SNR
-            << ", a total noise with a standard deviation of "
-            << sqrt(power_avg*power_avg*Xdim*Ydim / (prm.target_SNR*area_avg))
-            << " is needed\n";
+                      << ", a total noise with a standard deviation of "
+                      << sqrt(power_avg*power_avg*Xdim*Ydim / (prm.target_SNR*area_avg))
+                      << " is needed\n";
         }
     }
 }

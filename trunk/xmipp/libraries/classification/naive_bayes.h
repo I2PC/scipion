@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.csic.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #ifndef XMIPP__NAIVE_BAYES_HH__
@@ -50,30 +50,30 @@ class LeafNode
 {
 public:
     // The number of levels used for the discretization
-    int __discreteLevels; 
+    int __discreteLevels;
 
     // PDFs for each class
     std::vector < IrregularHistogram1D > __leafPDF;
-    
+
     // Number of classes
     int K;
-public:			
+public:
     /// Constructor
     LeafNode(const std::vector < Matrix1D<double> > &leafFeatures,
-        int _discrete_levels=8);
+             int _discrete_levels=8);
 
     /// Get number of levels
     int getNumberOfLevels();
 
     /// Assign probability to a value within the PDF of a given class
     double assignProbability(double value, int k);
-    
+
     /// Compute weight of this leaf as a classifier
     double computeWeight() const;
-    
+
     /// Show
     friend std::ostream & operator << (std::ostream &_out,
-        const LeafNode &leaf);
+                                       const LeafNode &leaf);
 };
 
 /** Naive Bayes classifier class.
@@ -94,14 +94,14 @@ public:
     // Weight of each feature
     Matrix1D<double>        __weights;
 
-    // The vector containing the Leafs (as many leafs as features)   
+    // The vector containing the Leafs (as many leafs as features)
     std::vector<LeafNode*>  __leafs;
-    
+
     // Cost matrix
     // C(i,j) is the cost of predicting class j when the true
     // class is class i.
     Matrix2D<double> __cost;
-public:	
+public:
     // Constructor
     NaiveBayes(
         const std::vector < Matrix2D<double> >  &features,
@@ -116,10 +116,10 @@ public:
 
     // Returns the class with the largest probability given a set of features
     int doInference(const Matrix1D<double> &newFeatures, double &cost);
-    
+
     /// Show
     friend std::ostream & operator << (std::ostream &_out,
-        const NaiveBayes &naive);
+                                       const NaiveBayes &naive);
 };
 
 /** Ensemble NaiveBayes classifier.
@@ -130,13 +130,13 @@ class EnsembleNaiveBayes
 public:
     // Ensemble of classifiers
     std::vector< NaiveBayes * > ensemble;
-    
+
     // Ensemble of features for each classifier
     std::vector< Matrix1D<int> > ensembleFeatures;
-    
+
     // Number of classes
     int K;
-    
+
     // Judge combination
     std::string judgeCombination;
 public:
@@ -156,7 +156,7 @@ public:
 
     // Returns the class with the largest probability given a set of features
     int doInference(const Matrix1D<double> &newFeatures, double &cost,
-        Matrix1D<int> &votes);
+                    Matrix1D<int> &votes);
 };
 //@}
 #endif

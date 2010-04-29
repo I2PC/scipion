@@ -109,7 +109,7 @@ public:
     /** Finish processing.
         Close all output files. */
     void finish_processing();
-    
+
     /** Run the algorithm on all images */
     void run();
 };

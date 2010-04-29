@@ -28,7 +28,7 @@
 
 #define TAG_DOCFILE 12
 #define TAG_DOCFILESIZE 13
- 
+
 int main(int argc, char **argv)
 {
     Prog_ml_tomo_prm prm;
@@ -129,13 +129,13 @@ int main(int argc, char **argv)
             if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
             // Save old reference images
-            for (int refno = 0;refno < prm.nr_ref; refno++) 
+            for (int refno = 0; refno < prm.nr_ref; refno++)
                 prm.Iold[refno]() = prm.Iref[refno]();
 
             // Integrate over all images
             prm.expectation(prm.SF, prm.Iref, iter,
                             LL, sumcorr, DFo, wsumimgs, wsumweds,
-                            wsum_sigma_noise, wsum_sigma_offset, 
+                            wsum_sigma_noise, wsum_sigma_offset,
                             sumw);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
             Vaux.resize(prm.nr_ref);
-            MPI_Allreduce(MULTIDIM_ARRAY(sumw), MULTIDIM_ARRAY(Vaux), 
+            MPI_Allreduce(MULTIDIM_ARRAY(sumw), MULTIDIM_ARRAY(Vaux),
                           MULTIDIM_SIZE(sumw), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             sumw = Vaux;
             for (int refno = 0; refno < 2*prm.nr_ref; refno++)
@@ -166,13 +166,13 @@ int main(int argc, char **argv)
 
             // Update model parameters
             prm.maximization(wsumimgs, wsumweds,
-                             wsum_sigma_noise, wsum_sigma_offset, 
+                             wsum_sigma_noise, wsum_sigma_offset,
                              sumw, sumcorr, sumw_allrefs, fsc, iter);
 
             // Check convergence
             converged = prm.checkConvergence(conv);
 
-            // Write intermediate files 
+            // Write intermediate files
             if (rank != 0)
             {
                 // All slaves send docfile to the master
@@ -187,7 +187,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                // Master fills docfile 
+                // Master fills docfile
                 std::ofstream myDocFile;
                 FileName fn_tmp;
                 fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
                 prm.writeOutputFiles(iter, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
             }
             MPI_Barrier(MPI_COMM_WORLD);
-            
+
             if (converged)
             {
                 if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
@@ -233,8 +233,8 @@ int main(int argc, char **argv)
             MPI_Barrier(MPI_COMM_WORLD);
 
         } // end loop iterations
-	if (rank == 0)  
-	    prm.writeOutputFiles(-1, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
+        if (rank == 0)
+            prm.writeOutputFiles(-1, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
 
     }
     catch (Xmipp_error XE)

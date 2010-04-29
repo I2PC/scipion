@@ -28,8 +28,8 @@
 int main(int argc, char *argv[])
 {
     Prog_Project_Tomography_Parameters      prog_prm;
-    Projection                      	    proj;
-    SelFile                         	    SF;
+    Projection                              proj;
+    SelFile                                 SF;
 
 // Check the command line
     try

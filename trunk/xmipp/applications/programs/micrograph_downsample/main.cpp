@@ -51,23 +51,23 @@ int main(int argc, char **argv)
 
     try
     {
-    
+
         if(!prm.do_fourier)
-           prm.generate_kernel();
+            prm.generate_kernel();
         prm.open_input_micrograph();
         prm.create_empty_output_file();
         if (smooth)
         {
-std::cerr << " 1 smooth " << std::endl;
+            std::cerr << " 1 smooth " << std::endl;
             Micrograph Mp;
             Mp.open_micrograph(prm.fn_downsampled, reversed);
-std::cerr << " 2 smooth " << std::endl;
+            std::cerr << " 2 smooth " << std::endl;
             byte rgb[256];
             for (int i = 0; i < 256; i++) rgb[i] = i;
             byte *result = SmoothResize((byte *)(prm.M.array8()),
                                         prm.Xdim, prm.Ydim, prm.Xpdim, prm.Ypdim,
                                         rgb, rgb, rgb, rgb, rgb, rgb, 256);
-std::cerr << " 3 smooth " << std::endl;
+            std::cerr << " 3 smooth " << std::endl;
 
             for (int i = 0; i < prm.Ypdim; i++)
                 for (int j = 0; j < prm.Xpdim; j++)
@@ -87,11 +87,11 @@ std::cerr << " 3 smooth " << std::endl;
 void Usage(const Prog_downsample_prm &prm)
 {
     std::cerr << "Purpose: This file allows you to downsample raw images\n"
-    << "Usage: downsample [parameters]\n"
-    << "   -i <input_file>        : Raw input file, <input_file>.inf\n"
-    << "                            must exist\n"
-    << "   -o <output_file>       : Must be different from input one\n"
-    << "  [-smooth]               : Use Smoothing for downsampling\n"
-    ;
+              << "Usage: downsample [parameters]\n"
+              << "   -i <input_file>        : Raw input file, <input_file>.inf\n"
+              << "                            must exist\n"
+              << "   -o <output_file>       : Must be different from input one\n"
+              << "  [-smooth]               : Use Smoothing for downsampling\n"
+              ;
     prm.usage();
 }

@@ -101,11 +101,11 @@ int main(int argc, char **argv)
     {
         if (rank == 0)
         {
-	    std::cout << XE;
-	    prm.usage();
-	    MPI_Finalize();
-	    exit(1);
-	}
+            std::cout << XE;
+            prm.usage();
+            MPI_Finalize();
+            exit(1);
+        }
     }
 
     try
@@ -116,22 +116,22 @@ int main(int argc, char **argv)
 
             if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
-	    // Save old reference images
+            // Save old reference images
             //for (int iref = 0;iref < prm.nr_ref; iref++) prm.Iold[iref]() = prm.Iref[iref]();
 
             DFo.clear();
             if (rank == 0)
             {
-		DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
-	    }
+                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
+            }
 
-	    // Update pdf of the translations
-	    prm.updatePdfTranslations();
+            // Update pdf of the translations
+            prm.updatePdfTranslations();
 
             // Integrate over all images
             prm.sumOverAllImages(prm.SF, prm.Iref,
-				 LL, sumcorr, DFo, fP_wsum_imgs,
-				 wsum_sigma_noise, wsum_sigma_offset, sumw, sumw_mirror);
+                                 LL, sumcorr, DFo, fP_wsum_imgs,
+                                 wsum_sigma_noise, wsum_sigma_offset, sumw, sumw_mirror);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -146,14 +146,14 @@ int main(int argc, char **argv)
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
 
-            for (int refno = 0;refno < prm.nr_ref; refno++)
+            for (int refno = 0; refno < prm.nr_ref; refno++)
             {
-		convertPolarToSingleArray(fP_wsum_imgs[refno], Vaux);
-		Vsum.initZeros(Vaux);
- 		MPI_Allreduce(MULTIDIM_ARRAY(Vaux), MULTIDIM_ARRAY(Vsum), 
-			      MULTIDIM_SIZE(Vaux), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-		convertSingleArrayToPolar(Vsum,fP_wsum_imgs[refno]);
-		     
+                convertPolarToSingleArray(fP_wsum_imgs[refno], Vaux);
+                Vsum.initZeros(Vaux);
+                MPI_Allreduce(MULTIDIM_ARRAY(Vaux), MULTIDIM_ARRAY(Vsum),
+                              MULTIDIM_SIZE(Vaux), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                convertSingleArrayToPolar(Vsum,fP_wsum_imgs[refno]);
+
                 MPI_Allreduce(&sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw[refno] = aux;
 
@@ -163,46 +163,46 @@ int main(int argc, char **argv)
 
             // Update model parameters
             prm.updateParameters(fP_wsum_imgs, wsum_sigma_noise, wsum_sigma_offset,
-                                  sumw, sumw_mirror, sumcorr, sumw_allrefs);
+                                 sumw, sumw_mirror, sumcorr, sumw_allrefs);
 
             // Check convergence
             converged = prm.checkConvergence(conv);
 
-	    // All nodes write out temporary DFo
-	    fn_img.compose(prm.fn_root, rank, "tmpdoc");
-	    DFo.write(fn_img);
+            // All nodes write out temporary DFo
+            fn_img.compose(prm.fn_root, rank, "tmpdoc");
+            DFo.write(fn_img);
             MPI_Barrier(MPI_COMM_WORLD);
 
             if (rank == 0)
             {
-		// Write out docfile with optimal transformation & references
-		DFo.clear();
-		for (int rank2 = 0; rank2 < size; rank2++)
-		{
-		    fn_img.compose(prm.fn_root, rank2, "tmpdoc");
-		    int ln = DFo.LineNo();
-		    DFo.append(fn_img);
-		    DFo.locate(DFo.get_last_key());
-		    DFo.next();
-		    DFo.remove_current();
-		    system(((std::string)"rm -f " + fn_img).c_str());
-		}
-		prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+                // Write out docfile with optimal transformation & references
+                DFo.clear();
+                for (int rank2 = 0; rank2 < size; rank2++)
+                {
+                    fn_img.compose(prm.fn_root, rank2, "tmpdoc");
+                    int ln = DFo.LineNo();
+                    DFo.append(fn_img);
+                    DFo.locate(DFo.get_last_key());
+                    DFo.next();
+                    DFo.remove_current();
+                    system(((std::string)"rm -f " + fn_img).c_str());
+                }
+                prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
             }
             MPI_Barrier(MPI_COMM_WORLD);
 
             if (converged)
             {
-		if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
-		break;
-	    }
-	    MPI_Barrier(MPI_COMM_WORLD);
+                if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
+                break;
+            }
+            MPI_Barrier(MPI_COMM_WORLD);
 
         } // end loop iterations
 
-	// Write out final files
-	if (rank == 0)  
-	    prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+        // Write out final files
+        if (rank == 0)
+            prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
     }
     catch (Xmipp_error XE)

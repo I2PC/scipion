@@ -32,15 +32,15 @@ int main(int argc, char **argv)
     CtfGroupParams prm;
     try
     {
-       prm.read(argc,argv);
-       prm.produceSideInfo();
-       prm.show();
+        prm.read(argc,argv);
+        prm.produceSideInfo();
+        prm.show();
     }
     catch (Xmipp_error XE)
     {
-       std::cerr << XE << std::endl;
-       prm.usage();
-       exit(1);
+        std::cerr << XE << std::endl;
+        prm.usage();
+        exit(1);
     }
 
     try
@@ -49,9 +49,9 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-       std::cerr << XE << std::endl;
-       prm.usage();
-       return 1;
+        std::cerr << XE << std::endl;
+        prm.usage();
+        return 1;
     }
     return 0;
 }

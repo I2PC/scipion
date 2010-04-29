@@ -41,7 +41,7 @@
 void xmippPC::reset(xmippCTVectors const &ts)
 {
     std::vector<unsigned> dummy;
-    for (unsigned i = 0;i < ts.size();i++)
+    for (unsigned i = 0; i < ts.size(); i++)
         dummy.push_back(i);
     reset(ts, dummy);
 }
@@ -66,12 +66,12 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
             listener->OnInitOperation(n);
 
         //Get the mean of the given cluster of vectors
-        for (int k = 0;k < n;k++)
+        for (int k = 0; k < n; k++)
         {
             a[k].resize(n);
             xmippFeature sum = 0.0;
             int l = 0;
-            for (std::vector<unsigned>::const_iterator i = idx.begin();i != idx.end();i++)
+            for (std::vector<unsigned>::const_iterator i = idx.begin(); i != idx.end(); i++)
             {
                 if (finite(ts.itemAt(*i)[k]))
                 {
@@ -88,13 +88,13 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
 
         if (verbosity == 1)
             listener->OnInitOperation(n);
-        for (int i = 0;i < n;i++)
+        for (int i = 0; i < n; i++)
         {
-            for (int j = 0;j <= i;j++)
+            for (int j = 0; j <= i; j++)
             {
                 xmippFeature sum = 0.0;
                 int l = 0;
-                for (std::vector<unsigned>::const_iterator it = idx.begin();it != idx.end();it++)
+                for (std::vector<unsigned>::const_iterator it = idx.begin(); it != idx.end(); it++)
                 {
                     xmippFeature d1 = ts.itemAt(*it)[i] - mean[i];
                     xmippFeature d2 = ts.itemAt(*it)[j] - mean[j];
@@ -130,7 +130,7 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
     xmippVector &d = eigenval;
     std::vector<xmippVector> &v = eigenvec;
 
-    for (int i = 0;i < n;i++)
+    for (int i = 0; i < n; i++)
     {
         v[i].resize(n);
         v[i][i] = 1.0;
@@ -145,7 +145,7 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
         listener->OnInitOperation(50);
 
     //Jacobi method (it=iterationn number)
-    for (int it = 1;it <= 50;it++)
+    for (int it = 1; it <= 50; it++)
     {
         if ((verbosity == 1) && (it == 1))
             listener->OnProgress(0);
@@ -158,7 +158,8 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
                 sm += fabs(a[iq][ip]);
         }
         if (sm == 0.0)
-        {//Done. Sort vectors
+        {
+            //Done. Sort vectors
             for (int i = 0; i < n - 1; i++)
             {
                 int k = i;
@@ -169,7 +170,8 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
                         p = d[k = j];
 
                 if (k != i)
-                {//Swap i<->k
+                {
+                    //Swap i<->k
                     d[k] = d[i];
                     d[i] = p;
                     xmippVector t = v[i];
@@ -306,7 +308,7 @@ void xmippPC::setIdentity(int n)
     eigenval.resize(n);
     fill(eigenval.begin(), eigenval.end(), 1.0);
     eigenvec.resize(n);
-    for (int i = 0;i < n;i++)
+    for (int i = 0; i < n; i++)
     {
         eigenvec[i].resize(n);
         fill(eigenvec[i].begin(), eigenvec[i].end(), 0.0);

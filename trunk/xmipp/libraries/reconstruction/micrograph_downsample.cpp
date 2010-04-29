@@ -113,7 +113,7 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
             delta = 0.02;
             Deltaw = 1.0 / 10.0;
             do_fourier=false;
-        }    
+        }
     }
     reversed = checkParameter(argc, argv, "-reverse_endian");
 }
@@ -132,7 +132,7 @@ void Prog_downsample_prm::usage() const
               << "  [-kernel pick]\n"
               << "  [-kernel sinc <delta=0.02> <Deltaw=0.1>]\n"
               << "  [-reverse_endian]       : Reverse endian\n"
-    ;
+              ;
 }
 #ifdef NEVERDEFINED
 
@@ -213,7 +213,7 @@ void Prog_downsample_prm::generate_kernel()
 void Prog_downsample_prm::create_empty_output_file()
 {
     std::cerr << "Creating empty downsampled file ...\n";
-    if (do_fourier) 
+    if (do_fourier)
     {
         Ypdim = FLOOR((double)Ydim *scale);
         Xpdim = FLOOR((double)Xdim *scale);
@@ -224,7 +224,7 @@ void Prog_downsample_prm::create_empty_output_file()
         Xpdim = FLOOR(Xdim / Xstep);
     }
     create_empty_file(fn_downsampled, ((unsigned long long)Ypdim)*
-      	 Xpdim*bitsMp / 8);
+                      Xpdim*bitsMp / 8);
 
     std::ofstream fh_downsample_inf;
     fh_downsample_inf.open((fn_downsampled + ".inf").c_str());

@@ -103,7 +103,8 @@ void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
                 auxProd *= (double) eDist(_xmippDS.theItems[j], _examples.theItems[k]);
 
             if (auxProd == 0.)
-            { // Apply k-means criterion (Data-CB) must be > 0
+            {
+                // Apply k-means criterion (Data-CB) must be > 0
                 for (j = 0; j < numClusters; j ++)
                     if (eDist(_xmippDS.theItems[j], _examples.theItems[k]) == 0.) _xmippDS.memb[k][j] = 1.0;
                     else _xmippDS.memb[k][j] =  0.0;

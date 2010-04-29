@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
-              using trust Region method for high-computing load, 
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
+              using trust Region method for high-computing load,
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,14 +19,14 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product, 
+If you want to include this tools in any commercial product,
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
 
 #include <stdio.h>
 #include <memory.h>
-//#include <crtdbg.h> 
+//#include <crtdbg.h>
 #include "Vector.h"
 #include "MultInd.h"
 #include "tools.h"
@@ -36,7 +36,7 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 const unsigned int Polynomial::NicePrint = 1;
 const unsigned int Polynomial::Warning   = 2;
 const unsigned int Polynomial::Normalized= 4;  // Use normalized monomials
-      unsigned int Polynomial::flags = Polynomial::Warning||Polynomial::NicePrint;
+unsigned int Polynomial::flags = Polynomial::Warning||Polynomial::NicePrint;
 
 Polynomial Polynomial::emptyPolynomial;
 
@@ -51,10 +51,19 @@ void Polynomial::init(int _dim, int _deg, double *data)
     d->deg=_deg;
     d->ref_count=1;
 
-    if (n==0) { d->coeff=NULL; return; };
+    if (n==0)
+    {
+        d->coeff=NULL;
+        return;
+    };
 
-    d->coeff=(double*)malloc(n*sizeof(double)); 
-    if (d->coeff==NULL) { printf("memory allocation error\n"); getchar(); exit(253); }
+    d->coeff=(double*)malloc(n*sizeof(double));
+    if (d->coeff==NULL)
+    {
+        printf("memory allocation error\n");
+        getchar();
+        exit(253);
+    }
 
     if (data) memcpy(d->coeff, data, d->n*sizeof(double));
     else memset(d->coeff, 0, d->n*sizeof(double));
@@ -63,20 +72,20 @@ void Polynomial::init(int _dim, int _deg, double *data)
 Polynomial::PolyInit( const Polynomial& p )
 { dim = p.dim; deg = p.deg; coeff=((Vector)p.coeff).clone(); }
 */
-Polynomial::Polynomial( unsigned Dim, unsigned Deg, double *data ) 
+Polynomial::Polynomial( unsigned Dim, unsigned Deg, double *data )
 {
     init(Dim,Deg,data);
 }
 
 Polynomial::Polynomial( unsigned Dim, double val ) // Constant polynomial
-{ 
-    init(Dim,0,&val); 
+{
+    init(Dim,0,&val);
 }
 
-Polynomial::Polynomial( MultInd& I ) 
+Polynomial::Polynomial( MultInd& I )
 {
     init(I.dim,I.len());
-	d->coeff[I.index()] = 1;
+    d->coeff[I.index()] = 1;
 }
 
 Polynomial::~Polynomial()
@@ -88,7 +97,7 @@ void Polynomial::destroyCurrentBuffer()
 {
     if (!d) return;
     (d->ref_count) --;
-	if (d->ref_count==0)
+    if (d->ref_count==0)
     {
         if (d->coeff) free(d->coeff);
         free(d);
@@ -99,19 +108,19 @@ Polynomial& Polynomial::operator=( const Polynomial& A )
 {
     // shallow copy
     if (this != &A)
-	{
+    {
         destroyCurrentBuffer();
         d=A.d;
-		(d->ref_count) ++ ;
-	}
-	return *this;
+        (d->ref_count) ++ ;
+    }
+    return *this;
 }
 
 Polynomial::Polynomial(const Polynomial &A)
 {
     // shallow copy
     d=A.d;
-	(d->ref_count)++ ;
+    (d->ref_count)++ ;
 }
 
 Polynomial Polynomial::clone()
@@ -127,12 +136,13 @@ void Polynomial::copyFrom(Polynomial m)
     if (m.d->dim!=d->dim)
     {
         printf("poly: copyFrom: dim do not agree");
-        getchar(); exit(254);
+        getchar();
+        exit(254);
     }
 
-    d->deg = mmax(d->deg,m.d->deg);	// New degree
+    d->deg = mmax(d->deg,m.d->deg); // New degree
     unsigned N1=sz(), N2=m.sz();
-    if (N1!=N2) 
+    if (N1!=N2)
     {
         d->coeff=(double*)realloc(d->coeff,N2*sizeof(double));
         d->n=m.d->n;
@@ -143,40 +153,42 @@ void Polynomial::copyFrom(Polynomial m)
 Polynomial Polynomial::operator*( const double t )
 {
     int i=sz();
-	Polynomial q( d->dim, d->deg );
-	double *tq = q.d->coeff, *tp = d->coeff;
+    Polynomial q( d->dim, d->deg );
+    double *tq = q.d->coeff, *tp = d->coeff;
 
-	while (i--) *(tq++) = *(tp++) * t;
-	return q;
+    while (i--) *(tq++) = *(tp++) * t;
+    return q;
 }
 
 
 Polynomial Polynomial::operator/( const double t )
 {
-	if (t == 0)
-	{
-		printf( "op/(Poly,double): Division by zero\n");
-		getchar(); exit(-1);
-	}
+    if (t == 0)
+    {
+        printf( "op/(Poly,double): Division by zero\n");
+        getchar();
+        exit(-1);
+    }
     int i=sz();
-	Polynomial q( d->dim, d->deg );
-	double *tq = q.d->coeff, *tp = d->coeff;
+    Polynomial q( d->dim, d->deg );
+    double *tq = q.d->coeff, *tp = d->coeff;
 
-	while (i--) *(tq++) = *(tp++) / t;
-	return q;
+    while (i--) *(tq++) = *(tp++) / t;
+    return q;
 }
 
 Polynomial Polynomial::operator+( Polynomial q )
 {
-	if (d->dim != q.d->dim)
-	{
-		printf( "Poly::op+ : Different dimension\n");
-		getchar(); exit(-1);
-	}
+    if (d->dim != q.d->dim)
+    {
+        printf( "Poly::op+ : Different dimension\n");
+        getchar();
+        exit(-1);
+    }
 
-	Polynomial r(d->dim,mmax(d->deg,q.d->deg));
-	unsigned N1=sz(), N2=q.sz(), Ni=mmin(N1,N2);
-	double	*tr = r, *tp = (*this), *tq = q;
+    Polynomial r(d->dim,mmax(d->deg,q.d->deg));
+    unsigned N1=sz(), N2=q.sz(), Ni=mmin(N1,N2);
+    double  *tr = r, *tp = (*this), *tq = q;
     while (Ni--) *(tr++) = *(tp++) + *(tq++);
     if (N1<N2)
     {
@@ -185,180 +197,200 @@ Polynomial Polynomial::operator+( Polynomial q )
     }
     return r;
 }
-	
+
 
 Polynomial Polynomial::operator-( Polynomial q )
 {
-	if (d->dim != q.d->dim)
-	{
-		printf("Poly::op- : Different dimension\n");
-		getchar(); exit(-1);
-	}
+    if (d->dim != q.d->dim)
+    {
+        printf("Poly::op- : Different dimension\n");
+        getchar();
+        exit(-1);
+    }
 
-	Polynomial r(d->dim,mmax(d->deg,q.d->deg));
-	unsigned N1=sz(), N2=q.sz(), Ni=mmin(N1,N2);
-	double	*tr = r, *tp = (*this), *tq = q;
+    Polynomial r(d->dim,mmax(d->deg,q.d->deg));
+    unsigned N1=sz(), N2=q.sz(), Ni=mmin(N1,N2);
+    double  *tr = r, *tp = (*this), *tq = q;
     while (Ni--) *(tr++) = *(tp++) - *(tq++);
     if (N1<N2)
     {
-        N2-=N1; while (N2--) *(tr++)=-(*(tq++));
+        N2-=N1;
+        while (N2--) *(tr++)=-(*(tq++));
     }
-	return r;
+    return r;
 }
 
 Polynomial Polynomial::operator-( void )
 {
-	unsigned Ni = sz();
+    unsigned Ni = sz();
     double *tp = (*this);
 
-	if (!Ni || !tp) return *this;	// Take it like it is ...
-	
-	Polynomial r(d->dim,d->deg);
-	double *tq = (r);
-	while( Ni-- ) *(tq++) = -(*(tp++));
-	return r;
+    if (!Ni || !tp) return *this;   // Take it like it is ...
+
+    Polynomial r(d->dim,d->deg);
+    double *tq = (r);
+    while( Ni-- ) *(tq++) = -(*(tp++));
+    return r;
 }
 
 
 Polynomial Polynomial::operator+=( Polynomial p )
 {
-	if (d->dim != p.d->dim)
-	{
-		printf("Poly::op+= : Different dimension\n");
-		getchar(); exit(-1);
-	}
+    if (d->dim != p.d->dim)
+    {
+        printf("Poly::op+= : Different dimension\n");
+        getchar();
+        exit(-1);
+    }
 
-    d->deg = mmax(d->deg,p.d->deg);	// New degree
+    d->deg = mmax(d->deg,p.d->deg); // New degree
     unsigned N1=sz(), N2=p.sz(), Ni=mmin(N1,N2);
-    if (N1<N2) 
+    if (N1<N2)
     {
         d->coeff=(double*)realloc(d->coeff,N2*sizeof(double));
         d->n=p.d->n;
     }
-	double *tt = (*this),*tp = p;
+    double *tt = (*this),*tp = p;
 
     while (Ni--) *(tt++) += *(tp++);
-    
-    if (N1<N2) 
+
+    if (N1<N2)
     {
         memcpy(tt,tp,(N2-N1)*sizeof(double));
 //        N2-=N1; while (N2--) *(tt++)=*(tp++);
     }
 
-	return *this;
+    return *this;
 }
 
 
 Polynomial Polynomial::operator-=( Polynomial p )
 {
-	if (d->dim != p.d->dim)
-	{
-		printf( "Poly::op-= : Different dimension\n");
-		getchar(); exit(-1);
-	}
+    if (d->dim != p.d->dim)
+    {
+        printf( "Poly::op-= : Different dimension\n");
+        getchar();
+        exit(-1);
+    }
 
-    d->deg = mmax(d->deg,p.d->deg);	// New degree
+    d->deg = mmax(d->deg,p.d->deg); // New degree
     unsigned N1=sz(), N2=p.sz(), Ni=mmin(N1,N2);
-    if (N1<N2) 
+    if (N1<N2)
     {
         d->coeff=(double*)realloc(d->coeff,N2*sizeof(double));
         d->n=p.d->n;
     }
-	double *tt = (*this),*tp = p;
+    double *tt = (*this),*tp = p;
 
     while (Ni--) *(tt++) -= *(tp++);
-    
-    if (N1<N2) 
+
+    if (N1<N2)
     {
-        N2-=N1; while (N2--) *(tt++)=-(*(tp++));
+        N2-=N1;
+        while (N2--) *(tt++)=-(*(tp++));
     }
 
-	return *this;
+    return *this;
 }
 
 
 Polynomial Polynomial::operator*=( const double t )
 {
     int i=sz();
-	double *tp = (*this);
+    double *tp = (*this);
 
-	while (i--) *(tp++) *=t;
-	return *this;
+    while (i--) *(tp++) *=t;
+    return *this;
 }
 
 
 Polynomial Polynomial::operator/=( const double t )
 {
-	if (t == 0)
-	{
-		printf( "Poly::op/= : Division by zero\n");
-		getchar(); exit(-1);
-	}
+    if (t == 0)
+    {
+        printf( "Poly::op/= : Division by zero\n");
+        getchar();
+        exit(-1);
+    }
 
     int i=sz();
-	double *tp = (*this);
+    double *tp = (*this);
 
-	while (i--) *(tp++) /=t;
-	return *this;
+    while (i--) *(tp++) /=t;
+    return *this;
 }
 
 int Polynomial::equals( Polynomial q )
 {
     if (d==q.d) return 1;
-	if ( (d->deg != q.d->deg) || (d->dim != q.d->dim) ) return 0;
+    if ( (d->deg != q.d->deg) || (d->dim != q.d->dim) ) return 0;
 
-	unsigned N = sz();
-	double	*tp = (*this),*tq = q;
+    unsigned N = sz();
+    double  *tp = (*this),*tq = q;
 
-	while (N--)
-		if ( *(tp++) != *(tq++) ) return 0;
+    while (N--)
+        if ( *(tp++) != *(tq++) ) return 0;
 
-	return 1;
+    return 1;
 }
 
 //ostream& Polynomial::PrintToStream( ostream& out ) const
 void Polynomial::print()
 {
-	MultInd I( d->dim );
+    MultInd I( d->dim );
     double *tt = (*this);
-	unsigned N = sz();
-	bool IsFirst=true;
-	
-	if ( !N || !tt ) { printf("[Void polynomial]\n"); return; }
+    unsigned N = sz();
+    bool IsFirst=true;
 
-    if (*tt) { IsFirst=false; printf("%f", *tt); }
-    tt++; ++I; 
-
-	for (unsigned i = 1; i < N; i++,tt++,++I)
+    if ( !N || !tt )
     {
-		if (*tt != 0)
-		{
-			if (IsFirst)
-			{
-				if (queryFlag( NicePrint ))
-				{
-                    if (*tt<0) printf("-");
-                    printf("%f x^",condorAbs(*tt)); I.print();
-				}
-				else
-				{
-                    printf("+%f x^",*tt); I.print();
-				}
-				IsFirst = false;
-				continue;
-			}
-			if (queryFlag( NicePrint ))
-			{
-                if (*tt<0) printf("-"); else printf("+");
-                printf("%f x^",condorAbs(*tt)); I.print();
-			}
-			else
-			{
-                printf("+%f x^",*tt); I.print();
-			}
+        printf("[Void polynomial]\n");
+        return;
+    }
 
-		}
-	}
+    if (*tt)
+    {
+        IsFirst=false;
+        printf("%f", *tt);
+    }
+    tt++;
+    ++I;
+
+    for (unsigned i = 1; i < N; i++,tt++,++I)
+    {
+        if (*tt != 0)
+        {
+            if (IsFirst)
+            {
+                if (queryFlag( NicePrint ))
+                {
+                    if (*tt<0) printf("-");
+                    printf("%f x^",condorAbs(*tt));
+                    I.print();
+                }
+                else
+                {
+                    printf("+%f x^",*tt);
+                    I.print();
+                }
+                IsFirst = false;
+                continue;
+            }
+            if (queryFlag( NicePrint ))
+            {
+                if (*tt<0) printf("-");
+                else printf("+");
+                printf("%f x^",condorAbs(*tt));
+                I.print();
+            }
+            else
+            {
+                printf("+%f x^",*tt);
+                I.print();
+            }
+
+        }
+    }
 }
 
 /*
@@ -390,82 +422,92 @@ double Polynomial::shiftedEval( Vector Point, double minusVal)
 // According to Pena, Sauer, "On the multivariate Horner scheme",
 //   SIAM J. Numer. Anal., to appear
 
-double Polynomial::operator()( Vector Point ) 
+double Polynomial::operator()( Vector Point )
 {
 // I didn't notice any difference in precision:
 //  return simpleEval(P);
 
-  unsigned dim=d->dim, deg=d->deg;
-  double r,r0;                             // no static here because of the 2 threads !
-  double rbuf[100];	// That should suffice // no static here because of the 2 threads !
-  double *rbufp = rbuf;
-  unsigned lsize = 100;
-  double *rptr;
-  int i,j;
+    unsigned dim=d->dim, deg=d->deg;
+    double r,r0;                             // no static here because of the 2 threads !
+    double rbuf[100]; // That should suffice // no static here because of the 2 threads !
+    double *rbufp = rbuf;
+    unsigned lsize = 100;
+    double *rptr;
+    int i,j;
 
-  if (Point==Vector::emptyVector) return *d->coeff;
+    if (Point==Vector::emptyVector) return *d->coeff;
 
-  if ( dim != (unsigned)Point.sz() )
-  {
-    printf( "Polynomial::operator()( Vector& ) : Improper size\n");
-    getchar(); exit(-1);
-  }
-
-  if ( !sz() )
-  {
-    if ( queryFlag( Warning ) )
+    if ( dim != (unsigned)Point.sz() )
     {
-      printf( "Polynomial::operator()( Vector& ) : evaluating void polynomial\n");
+        printf( "Polynomial::operator()( Vector& ) : Improper size\n");
+        getchar();
+        exit(-1);
     }
-    return 0;
-  }
 
-  if ( dim > lsize )	// Someone must be crazy !!!
-  {
-    if ( queryFlag( Warning ) )
+    if ( !sz() )
     {
-	printf( "Polynomial::operator()( Vector& ) : Warning -> 100 variables\n");
+        if ( queryFlag( Warning ) )
+        {
+            printf( "Polynomial::operator()( Vector& ) : evaluating void polynomial\n");
+        }
+        return 0;
     }
-    if ((rbufp != rbuf) && rbufp) delete rbufp;
 
-    lsize=dim;
-    rbufp = (double*)malloc(lsize*sizeof(double));	// So be it ...
-
-    if ( !rbufp )
+    if ( dim > lsize )    // Someone must be crazy !!!
     {
-      printf( "Polynomial::operator()( Vector& ) : Cannot allocate <rbufp>\n");
-      getchar(); exit( -1 );
+        if ( queryFlag( Warning ) )
+        {
+            printf( "Polynomial::operator()( Vector& ) : Warning -> 100 variables\n");
+        }
+        if ((rbufp != rbuf) && rbufp) delete rbufp;
+
+        lsize=dim;
+        rbufp = (double*)malloc(lsize*sizeof(double));  // So be it ...
+
+        if ( !rbufp )
+        {
+            printf( "Polynomial::operator()( Vector& ) : Cannot allocate <rbufp>\n");
+            getchar();
+            exit( -1 );
+        }
     }
-  }
 
-  if (deg==0) return *d->coeff;
+    if (deg==0) return *d->coeff;
 
-  // Initialize
-  MultInd *mic=cacheMultInd.get( dim, deg );
-  unsigned *nextI=mic->indexesOfCoefInLexOrder(),
-           *lcI=mic->lastChanges();
-  double *cc = (*this), *P=Point;
-  unsigned nxt, lc;
+    // Initialize
+    MultInd *mic=cacheMultInd.get( dim, deg );
+    unsigned *nextI=mic->indexesOfCoefInLexOrder(),
+              *lcI=mic->lastChanges();
+    double *cc = (*this), *P=Point;
+    unsigned nxt, lc;
 
-  // Empty buffer (all registers = 0)
-  memset(rbufp,0,dim*sizeof(double));
+    // Empty buffer (all registers = 0)
+    memset(rbufp,0,dim*sizeof(double));
 
-  r0=cc[*(nextI++)];
-  i=sz()-1;
-  while (i--)
-  {
-    nxt= *(nextI++);
-    lc = *(lcI++);
+    r0=cc[*(nextI++)];
+    i=sz()-1;
+    while (i--)
+    {
+        nxt= *(nextI++);
+        lc = *(lcI++);
 
-    r=r0; rptr=rbufp+lc; j=dim-lc;
-    while (j--) { r+=*rptr; *(rptr++)=0; }
-    rbufp[lc]=P[lc]*r; 
-    r0=cc[nxt];
-  }
-  r=r0; rptr=rbufp; i=(int)dim;
-  while (i--) r+=*(rptr++);
+        r=r0;
+        rptr=rbufp+lc;
+        j=dim-lc;
+        while (j--)
+        {
+            r+=*rptr;
+            *(rptr++)=0;
+        }
+        rbufp[lc]=P[lc]*r;
+        r0=cc[nxt];
+    }
+    r=r0;
+    rptr=rbufp;
+    i=(int)dim;
+    while (i--) r+=*(rptr++);
 
-  return r;
+    return r;
 }
 
 Polynomial Polynomial::derivate(int i)
@@ -474,23 +516,31 @@ Polynomial Polynomial::derivate(int i)
     if (deg<1) return Polynomial(dim,0.0);
 
     Polynomial r(dim, deg-1);
-	MultInd I( dim );
-	MultInd J( dim );
+    MultInd I( dim );
+    MultInd J( dim );
     double *tS=(*this), *tD=r;
-	unsigned j=sz(), k, *cc, sum,
+    unsigned j=sz(), k, *cc, sum,
              *allExpo=(unsigned*)I, *expo=allExpo+i, *firstOfJ=(unsigned*)J;
 
-    while (j--) 
-    { 
+    while (j--)
+    {
         if (*expo)
         {
             (*expo)--;
 
-            sum=0; cc=allExpo; k=dim;
+            sum=0;
+            cc=allExpo;
+            k=dim;
             while (k--) sum+=*(cc++);
-            if (sum) k=choose( sum-1+dim, dim ); else k=0;
-            J.resetCounter(); *firstOfJ=sum;
-            while (!(J==I)) { k++; J++; }
+            if (sum) k=choose( sum-1+dim, dim );
+            else k=0;
+            J.resetCounter();
+            *firstOfJ=sum;
+            while (!(J==I))
+            {
+                k++;
+                J++;
+            }
 
             (*expo)++;
             tD[k]=(*tS) * (double)*expo;
@@ -523,7 +573,7 @@ void Polynomial::gradientHessian(Vector P, Vector G, Matrix H)
     unsigned i,j;
 
     if (d->deg==2)
-    {        
+    {
         double *c=d->coeff+1;
         memcpy(r,c,dim*sizeof(double));
         c+=dim;
@@ -557,7 +607,7 @@ void Polynomial::gradientHessian(Vector P, Vector G, Matrix H)
         }
     }
 
-//    _CrtCheckMemory(); 
+//    _CrtCheckMemory();
 
     delete []tmp;
 }
@@ -567,7 +617,8 @@ void Polynomial::translate(Vector translation)
     if (d->deg>2)
     {
         printf("Translation only for polynomial of degree lower than 3.\n");
-        getchar(); exit(255);
+        getchar();
+        exit(255);
     }
     d->coeff[0]=(*this)(translation);
     if (d->deg==1) return;

@@ -32,8 +32,8 @@
 
 //#define DEBUG
 void extractTrainingPatches(const FileName &fnPDB, int patchSize,
-    int step, double Ts, double resolution1, double resolution2,
-    std::vector< Matrix1D<double> > &training)
+                            int step, double Ts, double resolution1, double resolution2,
+                            std::vector< Matrix1D<double> > &training)
 {
     // Convert PDB to volume
     Prog_PDBPhantom_Parameters pdbconverter;
@@ -41,7 +41,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     pdbconverter.fn_out="";
     pdbconverter.Ts=Ts;
     pdbconverter.run();
-    
+
     // Filter the volume to the final resolution
     Matrix3D<double> V0=pdbconverter.Vlow();
     FourierMask Filter1;
@@ -66,7 +66,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
 
     // Build the pyramid and the differences between pyramid approximations
     V0.resize(2*FLOOR(ZSIZE(V0)/2.0),2*FLOOR(YSIZE(V0)/2.0),
-        2*FLOOR(XSIZE(V0)/2.0));
+              2*FLOOR(XSIZE(V0)/2.0));
     V0R.resize(V0);
     Matrix3D<double> V1;
     V0.pyramidReduce(V1);
@@ -92,7 +92,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                 int k1=ROUND(k0/2.0);
                 int i1=ROUND(i0/2.0);
                 int j1=ROUND(j0/2.0);
-                
+
                 int idx=0;
                 double avg0=0;
                 // Copy the pixels at level 0
@@ -119,7 +119,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                             idx++;
                         }
                 avg1/=N1_3;
-                
+
                 // Copy the pixels at level 0R
                 double avg0R=0;
                 for (int kk=-L0; kk<=L0; kk++)
@@ -149,40 +149,44 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
 
     // Remove vectors with very little energy
     double energyThreshold=0.1*bestEnergy; // In fact it is 0.1^2 of the energy
-                                           // because bestEnergy is a square root
+    // because bestEnergy is a square root
     int imax=energy.size();
     for (int i=0; i<imax; i++)
         if (energy[i]>energyThreshold)
         {
             training.push_back(auxTraining[i]);
-            #ifdef DEBUG
-                VolumeXmipp save(5*3,5,5);
-                int k0=0, idx=0;
-                for (int kk=0; kk<N0; kk++)
-                    for (int ii=0; ii<N0; ii++)
-                        for (int jj=0; jj<N0; jj++)
-                            save(k0+kk,ii,jj)=
-                                DIRECT_VEC_ELEM(auxTraining[i],idx++);
-                k0=5;
-                for (int kk=0; kk<N0; kk++)
-                    for (int ii=0; ii<N0; ii++)
-                        for (int jj=0; jj<N0; jj++)
-                            save(k0+kk,ii,jj)=
-                                DIRECT_VEC_ELEM(auxTraining[i],idx++);
-                k0=10;
-                for (int kk=0; kk<N0; kk++)
-                    for (int ii=0; ii<N0; ii++)
-                        for (int jj=0; jj<N0; jj++)
-                            save(k0+kk,ii,jj)=
-                                DIRECT_VEC_ELEM(auxTraining[i],idx++);
-                std::cout << save();
-                save.write("PPPtrainingVector.vol");
-                save()=V0; save.write("PPPLevel0.vol");
-                save()=V0R; save.write("PPPLevel0_Restoration.vol");
-                save()=V1; save.write("PPPLevel1.vol");
-                std::cout << "Press any key\n";
-                char c; std::cin >> c;
-            #endif
+#ifdef DEBUG
+            VolumeXmipp save(5*3,5,5);
+            int k0=0, idx=0;
+            for (int kk=0; kk<N0; kk++)
+                for (int ii=0; ii<N0; ii++)
+                    for (int jj=0; jj<N0; jj++)
+                        save(k0+kk,ii,jj)=
+                            DIRECT_VEC_ELEM(auxTraining[i],idx++);
+            k0=5;
+            for (int kk=0; kk<N0; kk++)
+                for (int ii=0; ii<N0; ii++)
+                    for (int jj=0; jj<N0; jj++)
+                        save(k0+kk,ii,jj)=
+                            DIRECT_VEC_ELEM(auxTraining[i],idx++);
+            k0=10;
+            for (int kk=0; kk<N0; kk++)
+                for (int ii=0; ii<N0; ii++)
+                    for (int jj=0; jj<N0; jj++)
+                        save(k0+kk,ii,jj)=
+                            DIRECT_VEC_ELEM(auxTraining[i],idx++);
+            std::cout << save();
+            save.write("PPPtrainingVector.vol");
+            save()=V0;
+            save.write("PPPLevel0.vol");
+            save()=V0R;
+            save.write("PPPLevel0_Restoration.vol");
+            save()=V1;
+            save.write("PPPLevel1.vol");
+            std::cout << "Press any key\n";
+            char c;
+            std::cin >> c;
+#endif
         }
 }
 #undef DEBUG
@@ -216,7 +220,7 @@ int main(int argc, char *argv[])
         resolution2 = textToFloat(getParameter(argc,argv,"-resolution2"," 7"));
         initRandom = checkParameter(argc,argv,"-initRandom");
         projectionMethod = textToInteger(getParameter(argc,argv,
-            "-projectionMethod","1"));
+                                         "-projectionMethod","1"));
         if (projectionMethod==LASSO_PROJECTION) S=0;
         else lambda=0;
     }
@@ -238,7 +242,7 @@ int main(int argc, char *argv[])
                   << "   [-projectionMethod <m=1>]: Projection method\n"
                   << "                              1=OMP\n"
                   << "                              2=LASSO\n"
-        ;
+                  ;
         exit(1);
     }
 
@@ -258,26 +262,26 @@ int main(int argc, char *argv[])
                   << "resolution2:     " << resolution2      << std::endl
                   << "initRandom:      " << initRandom       << std::endl
                   << "projectionMethod:" << projectionMethod << std::endl
-        ;
+                  ;
 
         // Define variables
         SelFile SF;
         SF.read(fnSel);
         std::vector< Matrix1D<double> > training;
-        
+
         // Extract training patches
         while (!SF.eof())
         {
             FileName fnPDB=SF.NextImg();
             extractTrainingPatches(fnPDB, patchSize, step, Ts, resolution1,
-                resolution2, training);
+                                   resolution2, training);
         }
-        
+
         // Initialize the dictionary
         int N=XSIZE(training[0]);
         Matrix2D<double> D;
         D.initZeros(N,dictSize);
-        
+
         if (!initRandom)
         {
             // Fill the columns chosing one of the data samples randomly
@@ -289,7 +293,8 @@ int main(int argc, char *argv[])
                 do
                 {
                     selected=ROUND(rnd_unif(0,XSIZE(used)-1));
-                } while (used(selected));
+                }
+                while (used(selected));
                 used(selected)=1;
                 double inorm=1.0/training[selected].module();
                 for (int j=0; j<N; j++)

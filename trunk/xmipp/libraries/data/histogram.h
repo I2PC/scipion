@@ -331,28 +331,28 @@ public:
  *  The class provides the standard operations with histograms. */
 class IrregularHistogram1D
 {
-    public:
-        histogram1D         __hist;
-        Matrix1D<double>    __binsRightLimits;
-    public:
-        /// Initialize class
-        void init(const histogram1D &oldHistogram, const Matrix1D<int> &bins);
-        
-        /// Return the index corresponding to a certain value
-        int val2Index(double value);
-        
-        /// Normalize to be a probability density function
-        void selfNormalize();
-        
-        /// Show
-        friend std::ostream & operator << (std::ostream &_out,
-            const IrregularHistogram1D &_h);
-        
-        /// Get value
-        double operator()(int i) const;
-        
-        /// Get histogram
-        const histogram1D& getHistogram() const;
+public:
+    histogram1D         __hist;
+    Matrix1D<double>    __binsRightLimits;
+public:
+    /// Initialize class
+    void init(const histogram1D &oldHistogram, const Matrix1D<int> &bins);
+
+    /// Return the index corresponding to a certain value
+    int val2Index(double value);
+
+    /// Normalize to be a probability density function
+    void selfNormalize();
+
+    /// Show
+    friend std::ostream & operator << (std::ostream &_out,
+                                       const IrregularHistogram1D &_h);
+
+    /// Get value
+    double operator()(int i) const;
+
+    /// Get histogram
+    const histogram1D& getHistogram() const;
 };
 
 /// @defgroup HistogramFunctions1D Functions related to histograms 1D
@@ -399,7 +399,7 @@ void compute_hist(const T& v, histogram1D& hist,
 {
     hist.init(min, max, no_steps);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
-    	hist.insert_value(DIRECT_MULTIDIM_ELEM(v, n));
+    hist.insert_value(DIRECT_MULTIDIM_ELEM(v, n));
 }
 
 /** Compute histogram within a region
@@ -419,7 +419,7 @@ void compute_hist(const Matrix2D< T >& v, histogram1D& hist,
 
     Matrix1D< int > r(2);
     FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
-        hist.insert_value(v(r));
+    hist.insert_value(v(r));
 }
 
 /** Compute histogram within a region 3D
@@ -439,7 +439,7 @@ void compute_hist(const Matrix3D< T >& v, histogram1D& hist,
 
     Matrix1D< int >r(3);
     FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
-        hist.insert_value(v(r));
+    hist.insert_value(v(r));
 }
 
 /** Compute the detectability error between two pdf's
@@ -518,10 +518,10 @@ void reject_outliers(T& v, double percentil_out = 0.25)
     double effF = hist.percentil(100 - percentil_out / 2);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
-	if (DIRECT_VEC_ELEM(v,i) < eff0)
-            DIRECT_VEC_ELEM(v,i) = eff0;
-	else if (DIRECT_VEC_ELEM(v,i) > effF)
-            DIRECT_VEC_ELEM(v,i) = effF;
+    if (DIRECT_VEC_ELEM(v,i) < eff0)
+        DIRECT_VEC_ELEM(v,i) = eff0;
+    else if (DIRECT_VEC_ELEM(v,i) > effF)
+        DIRECT_VEC_ELEM(v,i) = effF;
 }
 
 /** Histogram equalization and re-quantization
@@ -541,9 +541,9 @@ void histogram_equalization(MultidimArray<T>& v, int bins = 8)
     // Compute the distribution function of the pdf
     Matrix1D< double > norm_sum(hist_steps);
     norm_sum(0) = hist(0);
-    
+
     for (int i = 1; i < hist_steps; i++)
-        norm_sum(i) = norm_sum(i - 1) + hist(i);    
+        norm_sum(i) = norm_sum(i - 1) + hist(i);
     norm_sum /= MULTIDIM_SIZE(v);
 
     // array to store the boundary pixels of bins
@@ -557,24 +557,24 @@ void histogram_equalization(MultidimArray<T>& v, int bins = 8)
             index++;
         hist.index2val((double) index, div(current_bin - 1));
     }
-    
+
     // requantize and equalize histogram
     T* ptr=NULL;
     unsigned long int n;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
     {
-    	T vi=*ptr;
-    	if (vi < div(0))
+        T vi=*ptr;
+        if (vi < div(0))
             *ptr = 0;
-	else if (vi > div(bins - 2))
+        else if (vi > div(bins - 2))
             *ptr = bins - 1;
-	else
-	{
+        else
+        {
             index = 0;
             while (vi > div(index))
-        	index++;
+                index++;
             *ptr = index;
-	}
+        }
     }
 }
 
@@ -886,7 +886,7 @@ void compute_hist(const T& v1, const T& v2,
  */
 template<typename T>
 void compute_hist(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
-    	    	  histogram2D& hist,
+                  histogram2D& hist,
                   double m1, double M1, double m2, double M2, int no_steps1,
                   int no_steps2)
 {
@@ -896,8 +896,8 @@ void compute_hist(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
     hist.init(m1, M1, no_steps1, m2, M2, no_steps2);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v1)
-    	hist.insert_value(DIRECT_MULTIDIM_ELEM(v1, n),
-	    	    	  DIRECT_MULTIDIM_ELEM(v2, n));
+    hist.insert_value(DIRECT_MULTIDIM_ELEM(v1, n),
+                      DIRECT_MULTIDIM_ELEM(v2, n));
 }
 
 #endif

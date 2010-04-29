@@ -61,7 +61,7 @@ void Series_remove_fluctuations_parameters::show() const
     std::cout << "Input series:   " << fn_sel  << std::endl
               << "Output root:    " << fn_root << std::endl
               << "Max freq (LPF): " << maxFreq << std::endl
-    ;
+              ;
 }
 
 // Usage -------------------------------------------------------------------s
@@ -71,7 +71,7 @@ void Series_remove_fluctuations_parameters::usage() const
               << "  -i <selfile>               : Input images\n"
               << " [-oroot <rootname>]         : If not given, the input is rewritten\n"
               << " [-lpf <f=0.25>]             : Max. Freq. for the low pass filter\n"
-    ;
+              ;
 }
 
 // Denoise image -----------------------------------------------------------
@@ -91,7 +91,7 @@ void Series_remove_fluctuations_parameters::run()
             line.initZeros(ZSIZE(V));
             for (int k=0; k<ZSIZE(V); k++)
                 line(k)=V(k,i,j);
-    
+
             // Fourier transform
             transformer.setReal(line);
             transformer.FourierTransform();

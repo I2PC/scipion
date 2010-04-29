@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *		psd = tom_xmipp_adjust_ctf_wrapper(image,min_freq,max_freq,ctfmodelSize,Ca,Tm,voltage,Cs,DeltafU,f1,f2,enhanced_weight)
+ *      psd = tom_xmipp_adjust_ctf_wrapper(image,min_freq,max_freq,ctfmodelSize,Ca,Tm,voltage,Cs,DeltafU,f1,f2,enhanced_weight)
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -39,22 +39,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     adjustParams.ctfmodelSize=(int) mxGetScalar(prhs[3]);
     adjustParams.initial_Ca=(double) mxGetScalar(prhs[4]);
 
-    adjustParams.initial_ctfmodel.enable_CTF = 
-       adjustParams.initial_ctfmodel.enable_CTFnoise = true;
+    adjustParams.initial_ctfmodel.enable_CTF =
+        adjustParams.initial_ctfmodel.enable_CTFnoise = true;
     adjustParams.Tm =
-       adjustParams.initial_ctfmodel.Tm = (double) mxGetScalar(prhs[5]);
+        adjustParams.initial_ctfmodel.Tm = (double) mxGetScalar(prhs[5]);
     adjustParams.initial_ctfmodel.kV = (double) mxGetScalar(prhs[6]);
     adjustParams.initial_ctfmodel.Cs = (double) mxGetScalar(prhs[7]);
-    adjustParams.initial_ctfmodel.DeltafU = 
-       adjustParams.initial_ctfmodel.DeltafV =
-       (double) mxGetScalar(prhs[8]);
-    
+    adjustParams.initial_ctfmodel.DeltafU =
+        adjustParams.initial_ctfmodel.DeltafV =
+            (double) mxGetScalar(prhs[8]);
+
     adjustParams.f1=(double) mxGetScalar(prhs[9]);
     adjustParams.f2=(double) mxGetScalar(prhs[10]);
     adjustParams.enhanced_weight=(double) mxGetScalar(prhs[11]);
 
     XmippCTF ctfmodel;
-    try 
+    try
     {
         ROUT_Adjust_CTF(adjustParams,ctfmodel,false);
     }
@@ -62,17 +62,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     {
         mexErrMsgTxt(Xe.msg.c_str());
     }
-    
+
     const char *field_names[] = {"DeltafU","DeltafV","AzimuthalAngle",
-       "kV","K","Cs","Ca","espr","ispr","alpha","DeltaF","DeltaR","Q0",
-       "base_line","sqrt_K","sqU","sqV","sqrt_angle","gaussian_K",
-       "sigmaU","sigmaV","gaussian_angle","cU","cV","gaussian_K2",
-       "sigmaU2","sigmaV2","gaussian_angle2","cU2","cV2",
-       "CTFmodelhalf","CTFmodelquadrant","zeros","Tm"};
+                                 "kV","K","Cs","Ca","espr","ispr","alpha","DeltaF","DeltaR","Q0",
+                                 "base_line","sqrt_K","sqU","sqV","sqrt_angle","gaussian_K",
+                                 "sigmaU","sigmaV","gaussian_angle","cU","cV","gaussian_K2",
+                                 "sigmaU2","sigmaV2","gaussian_angle2","cU2","cV2",
+                                 "CTFmodelhalf","CTFmodelquadrant","zeros","Tm"
+                                };
 
     mwSize dims[2] = {1, 1};
     plhs[0] = mxCreateStructArray(2, dims, NUMBER_OF_FIELDS, field_names);
-    
+
     mxArray *field1 = mxCreateDoubleMatrix(1,1,mxREAL);
     *mxGetPr(field1) = ctfmodel.DeltafU;
     mxSetField(plhs[0],0,"DeltafU",field1);
@@ -88,7 +89,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     mxArray *field4 = mxCreateDoubleMatrix(1,1,mxREAL);
     *mxGetPr(field4) = ctfmodel.kV;
     mxSetField(plhs[0],0,"kV",field4);
-    
+
     mxArray *field5 = mxCreateDoubleMatrix(1,1,mxREAL);
     *mxGetPr(field5) = ctfmodel.K;
     mxSetField(plhs[0],0,"K",field5);
@@ -108,7 +109,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     mxArray *field9 = mxCreateDoubleMatrix(1,1,mxREAL);
     *mxGetPr(field9) = ctfmodel.ispr;
     mxSetField(plhs[0],0,"ispr",field9);
-    
+
     mxArray *field10 = mxCreateDoubleMatrix(1,1,mxREAL);
     *mxGetPr(field10) = ctfmodel.alpha;
     mxSetField(plhs[0],0,"alpha",field10);
@@ -180,7 +181,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     mxArray *field27 = mxCreateDoubleMatrix(1,1,mxREAL);
     *mxGetPr(field27) = ctfmodel.sigmaV2;
     mxSetField(plhs[0],0,"sigmaV2",field27);
-    
+
     mxArray *field28 = mxCreateDoubleMatrix(1,1,mxREAL);
     *mxGetPr(field28) = ctfmodel.gaussian_angle2;
     mxSetField(plhs[0],0,"gaussian_angle2",field28);
@@ -192,28 +193,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     mxArray *field30 = mxCreateDoubleMatrix(1,1,mxREAL);
     *mxGetPr(field30) = ctfmodel.cV2;
     mxSetField(plhs[0],0,"cV2",field30);
-    
-    
+
+
     // Get the ctfmodels
     if (adjustParams.ctfmodelSize!=0)
     {
         Matrix2D<double> half;
         adjustParams.generate_model_halfplane(
-        adjustParams.ctfmodelSize,adjustParams.ctfmodelSize,half);
+            adjustParams.ctfmodelSize,adjustParams.ctfmodelSize,half);
         mxArray *field31;
         setMatrix2D(half,field31);
         mxSetField(plhs[0],0,"CTFmodelhalf",field31);
-        
+
         Matrix2D<double> quadrant;
         adjustParams.generate_model_quadrant(
-        adjustParams.ctfmodelSize,adjustParams.ctfmodelSize,quadrant);
+            adjustParams.ctfmodelSize,adjustParams.ctfmodelSize,quadrant);
         mxArray *field32;
         setMatrix2D(quadrant,field32);
         mxSetField(plhs[0],0,"CTFmodelquadrant",field32);
-        
+
         Matrix3D<double> zeros(10,100,2);
-        for (int n=0; n<ZSIZE(zeros); n++) {
-            for (int iu=0; iu<YSIZE(zeros); iu++) {
+        for (int n=0; n<ZSIZE(zeros); n++)
+        {
+            for (int iu=0; iu<YSIZE(zeros); iu++)
+            {
                 Matrix1D<double> u(2);
                 VECTOR_R2(u,cos(iu*2*PI/YSIZE(zeros)),sin(iu*2*PI/YSIZE(zeros)));
                 Matrix1D<double> contfreq(2), digfreq(2);
@@ -227,11 +230,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         }
         mxArray *field33;
         setMatrix3D(zeros,field33);
-        mxSetField(plhs[0],0,"zeros",field33);   
+        mxSetField(plhs[0],0,"zeros",field33);
     }
-    
+
     mxArray *field34 = mxCreateDoubleMatrix(1,1,mxREAL);
     *mxGetPr(field34) = adjustParams.Tm;
     mxSetField(plhs[0],0,"Tm",field34);
-    
-}	
+
+}

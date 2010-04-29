@@ -65,7 +65,7 @@ void QtImageOverviewMicrograph::exact_micrographToOverview(const int _x, const i
     else return;
 
     double ratioX = (double)mMaxX / image()->width(),
-                    ratioY = (double)mMaxY / image()->height();
+           ratioY = (double)mMaxY / image()->height();
 
     _rx = (_x / ratioX);
     _ry = (_y / ratioY);
@@ -80,7 +80,7 @@ void QtImageOverviewMicrograph::exact_overviewToMicrograph(int _x, int _y,
     else return;
 
     double ratioX = (double)mMaxX / image()->width(),
-                    ratioY = (double)mMaxY / image()->height();
+           ratioY = (double)mMaxY / image()->height();
 
     _rx = (_x * ratioX);
     _ry = (_y * ratioY);
@@ -90,7 +90,7 @@ void QtImageOverviewMicrograph::exact_overviewToMicrograph(int _x, int _y,
 QtImageOverviewMicrograph::QtImageOverviewMicrograph(QWidget *_parent,
         const char *_name,
         Qt::WFlags _f) :
-        QtImage(_parent, _name, _f)
+    QtImage(_parent, _name, _f)
 {
     __x = 0;
     __y = 0;

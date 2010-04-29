@@ -50,8 +50,8 @@ Prog_create_surface::Prog_create_surface()
 void Prog_create_surface::usage()
 {
     std::cout << "   -i <pdb file>                    : File to read data from\n"
-    << "   -o <pdb file>                    : File to write result data in\n"
-    << "   -f <string>                      : Name of the surface to map\n";
+              << "   -o <pdb file>                    : File to write result data in\n"
+              << "   -f <string>                      : Name of the surface to map\n";
 }
 
 /* Read parameters --------------------------------------------------------- */
@@ -83,30 +83,30 @@ void Prog_create_surface::read_input_file()
         {
         case 0:
             a.X() = textToFloat(firstToken(line), 3007,
-                         "Prog_Project_Parameters::read: Error in lattice vector a");
+                                "Prog_Project_Parameters::read: Error in lattice vector a");
             a.Y() = textToFloat(nextToken(), 3007,
-                         "Prog_Project_Parameters::read: Error in lattice vector a");
+                                "Prog_Project_Parameters::read: Error in lattice vector a");
             lineNo = 1;
             break;
         case 1:
             b.X() = textToFloat(firstToken(line), 3007,
-                         "Prog_Project_Parameters::read: Error in lattice vector b");
+                                "Prog_Project_Parameters::read: Error in lattice vector b");
             b.Y() = textToFloat(nextToken(), 3007,
-                         "Prog_Project_Parameters::read: Error in lattice vector b");
+                                "Prog_Project_Parameters::read: Error in lattice vector b");
             lineNo = 2;
             break;
         case 2:
             hmin = textToInteger(firstToken(line), 3007,
-                        "Prog_Project_Parameters::read: Error in the index hmax of the lattice");
+                                 "Prog_Project_Parameters::read: Error in the index hmax of the lattice");
             hmax = textToInteger(nextToken(), 3007,
-                        "Prog_Project_Parameters::read: Error in the index hmin of the lattice");
+                                 "Prog_Project_Parameters::read: Error in the index hmin of the lattice");
             lineNo = 3;
             break;
         case 3:
             kmin = textToInteger(firstToken(line), 3007,
-                        "Prog_Project_Parameters::read: Error in the index kmax of the lattice");
+                                 "Prog_Project_Parameters::read: Error in the index kmax of the lattice");
             kmax = textToInteger(nextToken(), 3007,
-                        "Prog_Project_Parameters::read: Error in the index kmin of the lattice");
+                                 "Prog_Project_Parameters::read: Error in the index kmin of the lattice");
             lineNo = 4;
             break;
         } /* switch end */
@@ -122,23 +122,27 @@ void Prog_create_surface::read_input_file()
 
 // Function to generate the cosine surface
 class Func1: public doubleFunction
-{    //actual function to be integrated
+{
+    //actual function to be integrated
 public:           //This should be in testinteg
     double x;
     double cte1, cte2, contribution_x;
     virtual double operator()()    //overloads pure virtual
-    {return sqrt(contribution_x + cte1*sin(cte2*x)*sin(cte2*x));
+    {
+        return sqrt(contribution_x + cte1*sin(cte2*x)*sin(cte2*x));
     }
 };
 
 // Function to generate the parabolic surface
 class Func2: public doubleFunction
-{   //actual function to be integrated
+{
+    //actual function to be integrated
 public:          //This should be in testinteg
     double x;
     double Aperture;
     virtual double operator()()    //overloads pure virtual
-    {return sqrt(1 + 4.*Aperture*Aperture*x*x);
+    {
+        return sqrt(1 + 4.*Aperture*Aperture*x*x);
     }
 };
 

@@ -42,7 +42,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
     if (assign_ctf_prm.compute_at_particle)
     {
         std::cerr << "QtWidgetPSD::set_assign_CTF_file: The PSDs and CTFs cannot be shown "
-        "for individual particles. See file " << fn_assign_CTF << std::endl;
+                  "for individual particles. See file " << fn_assign_CTF << std::endl;
         return;
     }
 
@@ -93,7 +93,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
         div_NumberX = CEIL((double)Xdim / assign_ctf_prm.N_horizontal);
         div_NumberY = CEIL((double)Ydim / assign_ctf_prm.N_vertical);
     }
-    
+
     // Show the selfile
     ShowSel *showsel = new ShowSel;
     showsel->apply_geo = false;

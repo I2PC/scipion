@@ -53,27 +53,27 @@ typedef __m128 V;
 #define UNPCKL _mm_unpacklo_ps
 
 #ifdef __GNUC__
-#  define DVK(var, val) const V var = __extension__ ({		\
-     static const union fvec _var = { {val, val, val, val} };	\
-     _var.v;							\
-   })
+#  define DVK(var, val) const V var = __extension__ ({      \
+        static const union fvec _var = { {val, val, val, val} };   \
+        _var.v;                            \
+    })
 #  define LDK(x) x
 
-  /* we use inline asm because gcc generates slow code for
-     _mm_loadh_pi().  gcc insists upon having an existing variable for
-     VAL, which is however never used.  Thus, it generates code to move
-     values in and out the variable.  Worse still, gcc-4.0 stores VAL on
-     the stack, causing valgrind to complain about uninitialized reads.
-  */   
+/* we use inline asm because gcc generates slow code for
+   _mm_loadh_pi().  gcc insists upon having an existing variable for
+   VAL, which is however never used.  Thus, it generates code to move
+   values in and out the variable.  Worse still, gcc-4.0 stores VAL on
+   the stack, causing valgrind to complain about uninitialized reads.
+*/
 
-  static inline V LD(const R *x, INT ivs, const R *aligned_like)
-  {
-       V var;
-       (void)aligned_like; /* UNUSED */
-       __asm__("movlps %1, %0\n\tmovhps %2, %0"
-	       : "=x"(var) : "m"(x[0]), "m"(x[ivs]));
-       return var;
-  }
+static inline V LD(const R *x, INT ivs, const R *aligned_like)
+{
+    V var;
+    (void)aligned_like; /* UNUSED */
+    __asm__("movlps %1, %0\n\tmovhps %2, %0"
+            : "=x"(var) : "m"(x[0]), "m"(x[ivs]));
+    return var;
+}
 
 #else
 
@@ -82,25 +82,27 @@ typedef __m128 V;
 # define LOADH(addr, val) _mm_loadh_pi(val, (const __m64 *)(addr))
 # define LOADL0(addr, val) _mm_loadl_pi(val, (const __m64 *)(addr))
 
-  static inline V LD(const R *x, INT ivs, const R *aligned_like)
-  {
-       V var;
-       (void)aligned_like; /* UNUSED */
-       var = LOADL0(x, var);
-       var = LOADH(x + ivs, var);
-       return var;
-  }
+static inline V LD(const R *x, INT ivs, const R *aligned_like)
+{
+    V var;
+    (void)aligned_like; /* UNUSED */
+    var = LOADL0(x, var);
+    var = LOADH(x + ivs, var);
+    return var;
+}
 
 #endif
 
-union fvec {
-     R f[4];
-     V v;
+union fvec
+{
+    R f[4];
+    V v;
 };
 
-union uvec {
-     unsigned u[4];
-     V v;
+union uvec
+{
+    unsigned u[4];
+    V v;
 };
 
 #define VFMA(a, b, c) VADD(c, VMUL(a, b))
@@ -108,38 +110,38 @@ union uvec {
 #define VFMS(a, b, c) VSUB(VMUL(a, b), c)
 
 #define SHUFVAL(fp0,fp1,fp2,fp3) \
-   (((fp3) << 6) | ((fp2) << 4) | ((fp1) << 2) | ((fp0)))
+    (((fp3) << 6) | ((fp2) << 4) | ((fp1) << 2) | ((fp0)))
 
 
 static inline V LDA(const R *x, INT ivs, const R *aligned_like)
 {
-     (void)aligned_like; /* UNUSED */
-     (void)ivs; /* UNUSED */
-     return *(const V *)x;
+    (void)aligned_like; /* UNUSED */
+    (void)ivs; /* UNUSED */
+    return *(const V *)x;
 }
 
 static inline void ST(R *x, V v, INT ovs, const R *aligned_like)
 {
-     (void)aligned_like; /* UNUSED */
-     /* WARNING: the extra_iter hack depends upon STOREL occurring
-	after STOREH */
-     STOREH(x + ovs, v);
-     STOREL(x, v);
+    (void)aligned_like; /* UNUSED */
+    /* WARNING: the extra_iter hack depends upon STOREL occurring
+        after STOREH */
+    STOREH(x + ovs, v);
+    STOREL(x, v);
 }
 
 static inline void STA(R *x, V v, INT ovs, const R *aligned_like)
 {
-     (void)aligned_like; /* UNUSED */
-     (void)ovs; /* UNUSED */
-     *(V *)x = v;
+    (void)aligned_like; /* UNUSED */
+    (void)ovs; /* UNUSED */
+    *(V *)x = v;
 }
 
 #if 0
 /* this should be faster but it isn't. */
 static inline void STN2(R *x, V v0, V v1, INT ovs)
 {
-     STA(x, SHUFPS(v0, v1, SHUFVAL(0, 1, 0, 1)), ovs, 0);
-     STA(x + ovs, SHUFPS(v0, v1, SHUFVAL(2, 3, 2, 3)), ovs, 0);
+    STA(x, SHUFPS(v0, v1, SHUFVAL(0, 1, 0, 1)), ovs, 0);
+    STA(x + ovs, SHUFPS(v0, v1, SHUFVAL(2, 3, 2, 3)), ovs, 0);
 }
 #endif
 #define STM2 ST
@@ -150,23 +152,23 @@ static inline void STN2(R *x, V v0, V v1, INT ovs)
 #ifdef VISUAL_CXX_DOES_NOT_SUCK
 static inline void STN4(R *x, V v0, V v1, V v2, V v3, INT ovs)
 {
-     V x0, x1, x2, x3;
-     x0 = UNPCKL(v0, v2);
-     x1 = UNPCKH(v0, v2);
-     x2 = UNPCKL(v1, v3);
-     x3 = UNPCKH(v1, v3);
-     STA(x, UNPCKL(x0, x2), 0, 0);
-     STA(x + ovs, UNPCKH(x0, x2), 0, 0);
-     STA(x + 2 * ovs, UNPCKL(x1, x3), 0, 0);
-     STA(x + 3 * ovs, UNPCKH(x1, x3), 0, 0);
+    V x0, x1, x2, x3;
+    x0 = UNPCKL(v0, v2);
+    x1 = UNPCKH(v0, v2);
+    x2 = UNPCKL(v1, v3);
+    x3 = UNPCKH(v1, v3);
+    STA(x, UNPCKL(x0, x2), 0, 0);
+    STA(x + ovs, UNPCKH(x0, x2), 0, 0);
+    STA(x + 2 * ovs, UNPCKL(x1, x3), 0, 0);
+    STA(x + 3 * ovs, UNPCKH(x1, x3), 0, 0);
 }
 #else /* Visual C++ sucks */
 
 /*
   Straight from the mouth of the horse:
 
-     We "reserved" the possibility of aligning arguments with 
-     __declspec(align(X)) passed by value by issuing this error. 
+     We "reserved" the possibility of aligning arguments with
+     __declspec(align(X)) passed by value by issuing this error.
 
      The first 3 parameters of type __m64 (or other MMX types) are
      passed in registers.  The rest would be passed on the stack.  We
@@ -178,76 +180,76 @@ static inline void STN4(R *x, V v0, V v1, V v2, V v3, INT ovs)
      in the future if we decided to align the arguments.
 
 
-     Hope that explains it. 
-     -- 
-     Jason Shirk, Visual C++ Compiler Team 
+     Hope that explains it.
+     --
+     Jason Shirk, Visual C++ Compiler Team
      This posting is provided AS IS with no warranties, and confers no rights
 */
 
-#define STN4(x, v0, v1, v2, v3, ovs)			\
-{							\
-     V xxx0, xxx1, xxx2, xxx3;				\
-     xxx0 = UNPCKL(v0, v2);				\
-     xxx1 = UNPCKH(v0, v2);				\
-     xxx2 = UNPCKL(v1, v3);				\
-     xxx3 = UNPCKH(v1, v3);				\
-     STA(x, UNPCKL(xxx0, xxx2), 0, 0);			\
-     STA(x + ovs, UNPCKH(xxx0, xxx2), 0, 0);		\
-     STA(x + 2 * ovs, UNPCKL(xxx1, xxx3), 0, 0);	\
-     STA(x + 3 * ovs, UNPCKH(xxx1, xxx3), 0, 0);	\
-}
+#define STN4(x, v0, v1, v2, v3, ovs)            \
+    {                           \
+        V xxx0, xxx1, xxx2, xxx3;              \
+        xxx0 = UNPCKL(v0, v2);             \
+        xxx1 = UNPCKH(v0, v2);             \
+        xxx2 = UNPCKL(v1, v3);             \
+        xxx3 = UNPCKH(v1, v3);             \
+        STA(x, UNPCKL(xxx0, xxx2), 0, 0);          \
+        STA(x + ovs, UNPCKH(xxx0, xxx2), 0, 0);        \
+        STA(x + 2 * ovs, UNPCKL(xxx1, xxx3), 0, 0);    \
+        STA(x + 3 * ovs, UNPCKH(xxx1, xxx3), 0, 0);    \
+    }
 #endif
 
 static inline V FLIP_RI(V x)
 {
-     return SHUFPS(x, x, SHUFVAL(1, 0, 3, 2));
+    return SHUFPS(x, x, SHUFVAL(1, 0, 3, 2));
 }
 
 extern const union uvec X(sse_pmpm);
 static inline V VCONJ(V x)
 {
-     return VXOR(X(sse_pmpm).v, x);
+    return VXOR(X(sse_pmpm).v, x);
 }
 
 static inline V VBYI(V x)
 {
-     return FLIP_RI(VCONJ(x));
+    return FLIP_RI(VCONJ(x));
 }
 
 static inline V VZMUL(V tx, V sr)
 {
-     V tr = SHUFPS(tx, tx, SHUFVAL(0, 0, 2, 2));
-     V ti = SHUFPS(tx, tx, SHUFVAL(1, 1, 3, 3));
-     tr = VMUL(tr, sr);
-     sr = VBYI(sr);
-     return VADD(tr, VMUL(ti, sr));
+    V tr = SHUFPS(tx, tx, SHUFVAL(0, 0, 2, 2));
+    V ti = SHUFPS(tx, tx, SHUFVAL(1, 1, 3, 3));
+    tr = VMUL(tr, sr);
+    sr = VBYI(sr);
+    return VADD(tr, VMUL(ti, sr));
 }
 
 static inline V VZMULJ(V tx, V sr)
 {
-     V tr = SHUFPS(tx, tx, SHUFVAL(0, 0, 2, 2));
-     V ti = SHUFPS(tx, tx, SHUFVAL(1, 1, 3, 3));
-     tr = VMUL(tr, sr);
-     sr = VBYI(sr);
-     return VSUB(tr, VMUL(ti, sr));
+    V tr = SHUFPS(tx, tx, SHUFVAL(0, 0, 2, 2));
+    V ti = SHUFPS(tx, tx, SHUFVAL(1, 1, 3, 3));
+    tr = VMUL(tr, sr);
+    sr = VBYI(sr);
+    return VSUB(tr, VMUL(ti, sr));
 }
 
 static inline V VZMULI(V tx, V sr)
 {
-     V tr = SHUFPS(tx, tx, SHUFVAL(0, 0, 2, 2));
-     V ti = SHUFPS(tx, tx, SHUFVAL(1, 1, 3, 3));
-     ti = VMUL(ti, sr);
-     sr = VBYI(sr);
-     return VSUB(VMUL(tr, sr), ti);
+    V tr = SHUFPS(tx, tx, SHUFVAL(0, 0, 2, 2));
+    V ti = SHUFPS(tx, tx, SHUFVAL(1, 1, 3, 3));
+    ti = VMUL(ti, sr);
+    sr = VBYI(sr);
+    return VSUB(VMUL(tr, sr), ti);
 }
 
 static inline V VZMULIJ(V tx, V sr)
 {
-     V tr = SHUFPS(tx, tx, SHUFVAL(0, 0, 2, 2));
-     V ti = SHUFPS(tx, tx, SHUFVAL(1, 1, 3, 3));
-     ti = VMUL(ti, sr);
-     sr = VBYI(sr);
-     return VADD(VMUL(tr, sr), ti);
+    V tr = SHUFPS(tx, tx, SHUFVAL(0, 0, 2, 2));
+    V ti = SHUFPS(tx, tx, SHUFVAL(1, 1, 3, 3));
+    ti = VMUL(ti, sr);
+    sr = VBYI(sr);
+    return VADD(VMUL(tr, sr), ti);
 }
 
 #define VFMAI(b, c) VADD(c, VBYI(b))
@@ -255,51 +257,51 @@ static inline V VZMULIJ(V tx, V sr)
 
 /* twiddle storage #1: compact, slower */
 #define VTW1(v,x)  \
-  {TW_COS, v, x}, {TW_COS, v+1, x}, {TW_SIN, v, x}, {TW_SIN, v+1, x}
+    {TW_COS, v, x}, {TW_COS, v+1, x}, {TW_SIN, v, x}, {TW_SIN, v+1, x}
 #define TWVL1 (VL)
 
 static inline V BYTW1(const R *t, V sr)
 {
-     const V *twp = (const V *)t;
-     V tx = twp[0];
-     V tr = UNPCKL(tx, tx);
-     V ti = UNPCKH(tx, tx);
-     tr = VMUL(tr, sr);
-     sr = VBYI(sr);
-     return VADD(tr, VMUL(ti, sr));
+    const V *twp = (const V *)t;
+    V tx = twp[0];
+    V tr = UNPCKL(tx, tx);
+    V ti = UNPCKH(tx, tx);
+    tr = VMUL(tr, sr);
+    sr = VBYI(sr);
+    return VADD(tr, VMUL(ti, sr));
 }
 
 static inline V BYTWJ1(const R *t, V sr)
 {
-     const V *twp = (const V *)t;
-     V tx = twp[0];
-     V tr = UNPCKL(tx, tx);
-     V ti = UNPCKH(tx, tx);
-     tr = VMUL(tr, sr);
-     sr = VBYI(sr);
-     return VSUB(tr, VMUL(ti, sr));
+    const V *twp = (const V *)t;
+    V tx = twp[0];
+    V tr = UNPCKL(tx, tx);
+    V ti = UNPCKH(tx, tx);
+    tr = VMUL(tr, sr);
+    sr = VBYI(sr);
+    return VSUB(tr, VMUL(ti, sr));
 }
 
 /* twiddle storage #2: twice the space, faster (when in cache) */
-#define VTW2(v,x)							\
-  {TW_COS, v, x}, {TW_COS, v, x}, {TW_COS, v+1, x}, {TW_COS, v+1, x},	\
-  {TW_SIN, v, -x}, {TW_SIN, v, x}, {TW_SIN, v+1, -x}, {TW_SIN, v+1, x}
+#define VTW2(v,x)                           \
+    {TW_COS, v, x}, {TW_COS, v, x}, {TW_COS, v+1, x}, {TW_COS, v+1, x},   \
+    {TW_SIN, v, -x}, {TW_SIN, v, x}, {TW_SIN, v+1, -x}, {TW_SIN, v+1, x}
 #define TWVL2 (2 * VL)
 
 static inline V BYTW2(const R *t, V sr)
 {
-     const V *twp = (const V *)t;
-     V si = FLIP_RI(sr);
-     V tr = twp[0], ti = twp[1];
-     return VADD(VMUL(tr, sr), VMUL(ti, si));
+    const V *twp = (const V *)t;
+    V si = FLIP_RI(sr);
+    V tr = twp[0], ti = twp[1];
+    return VADD(VMUL(tr, sr), VMUL(ti, si));
 }
 
 static inline V BYTWJ2(const R *t, V sr)
 {
-     const V *twp = (const V *)t;
-     V si = FLIP_RI(sr);
-     V tr = twp[0], ti = twp[1];
-     return VSUB(VMUL(tr, sr), VMUL(ti, si));
+    const V *twp = (const V *)t;
+    V si = FLIP_RI(sr);
+    V tr = twp[0], ti = twp[1];
+    return VSUB(VMUL(tr, sr), VMUL(ti, si));
 }
 
 /* twiddle storage #3 */
@@ -307,9 +309,9 @@ static inline V BYTWJ2(const R *t, V sr)
 #define TWVL3 (VL)
 
 /* twiddle storage for split arrays */
-#define VTWS(v,x)							\
-  {TW_COS, v, x}, {TW_COS, v+1, x}, {TW_COS, v+2, x}, {TW_COS, v+3, x},	\
-  {TW_SIN, v, x}, {TW_SIN, v+1, x}, {TW_SIN, v+2, x}, {TW_SIN, v+3, x}	
+#define VTWS(v,x)                           \
+    {TW_COS, v, x}, {TW_COS, v+1, x}, {TW_COS, v+2, x}, {TW_COS, v+3, x}, \
+    {TW_SIN, v, x}, {TW_SIN, v+1, x}, {TW_SIN, v+2, x}, {TW_SIN, v+3, x}
 #define TWVLS (2 * VL)
 
 #endif /* __SSE__ */

@@ -26,15 +26,15 @@
 
 
 
-void fourierTransformRings(Polar<double > & in, 
-                           Polar<std::complex<double> > &out, 
+void fourierTransformRings(Polar<double > & in,
+                           Polar<std::complex<double> > &out,
                            Polar_fftw_plans &plans,
                            bool conjugated)
 {
     Matrix1D<std::complex<double> > Fring;
     out.clear();
     for (int iring = 0; iring < in.getRingNo(); iring++)
-    { 
+    {
 
         plans.arrays[iring] = in.rings[iring];
         (plans.transformers[iring]).FourierTransform();
@@ -48,16 +48,16 @@ void fourierTransformRings(Polar<double > & in,
     out.ring_radius = in.ring_radius;
 }
 
-void inverseFourierTransformRings(Polar<std::complex<double> > & in, 
-                                  Polar<double > &out, 
+void inverseFourierTransformRings(Polar<std::complex<double> > & in,
+                                  Polar<double > &out,
                                   Polar_fftw_plans &plans,
                                   bool conjugated)
 {
     out.clear();
     for (int iring = 0; iring < in.getRingNo(); iring++)
-    { 
+    {
         (plans.transformers[iring]).setFourier(in.rings[iring]);
-	(plans.transformers[iring]).inverseFourierTransform(); // fReal points to plans.arrays[iring]
+        (plans.transformers[iring]).inverseFourierTransform(); // fReal points to plans.arrays[iring]
         out.rings.push_back(plans.arrays[iring]);
     }
     out.mode = in.mode;
@@ -65,15 +65,15 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
 }
 
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
-			   const Polar<std::complex<double> > &M2,
-                           Matrix1D<double> &angles, 
+                           const Polar<std::complex<double> > &M2,
+                           Matrix1D<double> &angles,
                            XmippFftw &local_transformer)
 {
 
     Matrix1D<std::complex<double> > Fsum;
     int nrings = M1.getRingNo();
     if (nrings != M2.getRingNo())
-	REPORT_ERROR(1,"rotationalCorrelation: polar structures have unequal number of rings!");
+        REPORT_ERROR(1,"rotationalCorrelation: polar structures have unequal number of rings!");
 
     // Fsum should already be set with the right size in the local_transformer
     // (i.e. through a FourierTransform of corr)
@@ -83,10 +83,10 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
     // Multiply M1 and M2 over all rings and sum
     // Assume M2 is already complex conjugated!
     for (int iring = 0; iring < nrings; iring++)
-    { 
-	double w = (2.* PI * M1.ring_radius[iring]);
+    {
+        double w = (2.* PI * M1.ring_radius[iring]);
         for (int i = 0; i < M1.getSampleNo(iring); i++)
-	    Fsum(i) += w * M1(iring,i) * M2(iring,i);
+            Fsum(i) += w * M1(iring,i) * M2(iring,i);
     }
 
     // Inverse FFT to get real-space correlations
@@ -96,14 +96,14 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
     /// FIXME: the getReal should be getComplex for complex fourier transforms....
     angles.resize(XSIZE(local_transformer.getReal()));
     for (int i = 0; i < XSIZE(angles); i++)
-	angles(i)=(double)i*360./XSIZE(angles);
+        angles(i)=(double)i*360./XSIZE(angles);
 }
 
 // Compute the normalized Polar Fourier transform --------------------------
 void normalizedPolarFourierTransform(const Matrix2D<double> &in,
-    Polar< std::complex<double> > &out, bool flag,
-    int first_ring, int last_ring, Polar_fftw_plans *&plans,
-    int BsplineOrder)
+                                     Polar< std::complex<double> > &out, bool flag,
+                                     int first_ring, int last_ring, Polar_fftw_plans *&plans,
+                                     int BsplineOrder)
 {
     Polar<double> polarIn;
     if (BsplineOrder==1)
@@ -129,11 +129,11 @@ void normalizedPolarFourierTransform(const Matrix2D<double> &in,
 
 // Best rotation -----------------------------------------------------------
 double best_rotation(const Polar< std::complex<double> > &I1,
-    const Polar< std::complex<double> > &I2, XmippFftw &local_transformer)
+                     const Polar< std::complex<double> > &I2, XmippFftw &local_transformer)
 {
     Matrix1D<double> angles;
     rotationalCorrelation(I1,I2,angles,local_transformer);
-    
+
     // Compute the maximum of correlation (inside local_transformer)
     const MultidimArray<double> &corr=local_transformer.getReal();
     int imax=0;
@@ -141,19 +141,19 @@ double best_rotation(const Polar< std::complex<double> > &I1,
     double* ptr=NULL;
     unsigned long int n;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(corr,n,ptr)
-        if (*ptr > maxval)
-        {
-            maxval = *ptr;
-            imax=n;
-        }
-    
+    if (*ptr > maxval)
+    {
+        maxval = *ptr;
+        imax=n;
+    }
+
     // Return the corresponding angle
     return angles(imax);
 }
 
 // Align rotationally ------------------------------------------------------
 void alignRotationally(Matrix2D<double> &I1, Matrix2D<double> &I2,
-    int splineOrder, int wrap)
+                       int splineOrder, int wrap)
 {
     I1.setXmippOrigin();
     I2.setXmippOrigin();
@@ -161,16 +161,16 @@ void alignRotationally(Matrix2D<double> &I1, Matrix2D<double> &I2,
     Polar_fftw_plans *plans=NULL;
     Polar< std::complex<double> > polarFourierI2, polarFourierI1;
     normalizedPolarFourierTransform(I1,polarFourierI1,false,XSIZE(I1)/5,
-        XSIZE(I1)/2,plans);
+                                    XSIZE(I1)/2,plans);
     normalizedPolarFourierTransform(I2, polarFourierI2, true, XSIZE(I2)/5,
-        XSIZE(I2)/2,plans);
+                                    XSIZE(I2)/2,plans);
 
     XmippFftw local_transformer;
     Matrix1D<double> rotationalCorr;
     rotationalCorr.resize(2*polarFourierI2.getSampleNoOuterRing()-1);
     local_transformer.setReal(rotationalCorr);
     double bestRot = best_rotation(polarFourierI1,polarFourierI2,
-        local_transformer);
+                                   local_transformer);
 
     if (splineOrder==1)
         I2.selfRotate(-bestRot,wrap);

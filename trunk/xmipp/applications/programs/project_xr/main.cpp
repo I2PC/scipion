@@ -57,19 +57,22 @@ int main(int argc, char **argv)
 
     try
     {
-        fnImgOut = getParameter(argc, argv, "-imgout");
+        fnImgIn = getParameter(argc, argv, "-i");
+
+        if (checkParameter(argc, argv, "-out"))
+            fnImgOut = getParameter(argc, argv, "-out");
+        else
+            fnImgOut = fnImgIn.without_extension().add_extension("out").add_extension("spi");
 
         psf.produceSideInfo();
 
         if (checkParameter(argc, argv, "-v"))
-        	std::cout << psf << std::endl;
+            std::cout << psf << std::endl;
 
-        if (checkParameter(argc, argv, "-vol"))
+        if (fnImgIn.get_extension()=="vol")
         {
             VolumeXmipp   phantomVol;
             ImageXmipp    imOut;
-
-            fnImgIn = getParameter(argc, argv, "-vol");
 
             phantomVol.read(fnImgIn);
 
@@ -81,12 +84,10 @@ int main(int argc, char **argv)
 
 
         }
-
-        if (checkParameter(argc, argv, "-img"))
+        else if (fnImgIn.get_extension()=="spi")
         {
-            fnImgIn = getParameter(argc, argv, "-img");
             ImageXmipp ImXmipp;
-            Matrix2D < std::complex < double > > ImgIn;
+            Matrix2D  < double > ImgIn;
 
             ImXmipp.read(fnImgIn);
             ImXmipp().setXmippOrigin();
@@ -94,7 +95,7 @@ int main(int argc, char **argv)
             ImgIn.resize(ImXmipp());
 
             FOR_ALL_ELEMENTS_IN_MATRIX2D(ImgIn)
-            ImgIn(i,j).real() = ImXmipp(i,j);
+            ImgIn(i,j) = ImXmipp(i,j);
 
             psf.generateOTF(ImgIn);
 
@@ -106,12 +107,8 @@ int main(int argc, char **argv)
 
             ImXmipp.write(fnImgOut);
         }
-
-
-        //        Matrix2D < double > Image(1280,1280);
-
-
-        //        psf.generateOTF(Image);
+        else
+            usage();
 
 
         if (checkParameter(argc, argv, "-psfout"))
@@ -132,9 +129,9 @@ int main(int argc, char **argv)
 void usage()
 {
     std::cerr << "Usage: project_xr [options]\n"
-    << "   -psf <PSF description file>      : PSF characteristic of the microscope \n"
-    << "  [-w_dir \"[X=1,Y=0]\"             : test \n"
-    << "  [-w_step <step=0.001>]          : test\n";
+              << "   -psf <PSF description file>      : PSF characteristic of the microscope \n"
+              << "   -i <Input file>                  : Image or Volume \n"
+              << "  [-out <Output file>]              : Resulting Image \n";
 }
 
 #undef DEBUG

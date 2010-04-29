@@ -659,7 +659,7 @@ void BlobCrownMask(Matrix3D<double> &mask,
     {
         BlobCircularMask(mask, r1, blob,
                          OUTSIDE_MASK, x0, y0, z0);
-        BlobCircularMask(aux, r2, blob, 
+        BlobCircularMask(aux, r2, blob,
                          INNER_MASK, x0, y0, z0);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
         {
@@ -670,7 +670,7 @@ void BlobCrownMask(Matrix3D<double> &mask,
     {
         BlobCircularMask(mask, r1, blob,
                          INNER_MASK, x0, y0, z0);
-        BlobCircularMask(aux, r2, blob, 
+        BlobCircularMask(aux, r2, blob,
                          OUTSIDE_MASK, x0, y0, z0);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(mask)
         {
@@ -1080,7 +1080,7 @@ void Mask_Params::read(int argc, char **argv)
 
         // Raised crown mask ....................................................
     }
-     else if (strcmp(argv[i+1], "blob_crown") == 0)
+    else if (strcmp(argv[i+1], "blob_crown") == 0)
     {
         if (i + 4 >= argc)
             REPORT_ERROR(3000, "Mask_Params: blob_crown mask needs two radii and a with");
@@ -1146,74 +1146,74 @@ void Mask_Params::show() const
         break;
     case BINARY_CIRCULAR_MASK:
         std::cout << "Mask type: Binary circular\n"
-        << "   R=" << R1 << std::endl;
+                  << "   R=" << R1 << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case BINARY_DWT_CIRCULAR_MASK:
         std::cout << "Mask type: Binary DWT circular\n"
-        << "   R=" << R1 << std::endl
-        << "   smin=" << smin << std::endl
-        << "   smax=" << smax << std::endl
-        << "   quadrant=" << quadrant << std::endl;
+                  << "   R=" << R1 << std::endl
+                  << "   smin=" << smin << std::endl
+                  << "   smax=" << smax << std::endl
+                  << "   quadrant=" << quadrant << std::endl;
         break;
     case BINARY_CROWN_MASK:
         std::cout << "Mask type: Binary crown\n"
-        << "   R1=" << R1 << std::endl
-        << "   R2=" << R2 << std::endl;
+                  << "   R1=" << R1 << std::endl
+                  << "   R2=" << R2 << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case BINARY_CYLINDER_MASK:
         std::cout << "Mask type: Cylinder\n"
-        << "   R1=" << R1 << std::endl;
+                  << "   R1=" << R1 << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case BINARY_FRAME_MASK:
         std::cout << "Mask type: Frame\n"
-        << "   Xrect=" << Xrect << std::endl
-        << "   Yrect=" << Yrect << std::endl;
+                  << "   Xrect=" << Xrect << std::endl
+                  << "   Yrect=" << Yrect << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case GAUSSIAN_MASK:
         std::cout << "Mask type: Gaussian\n"
-        << "   sigma=" << sigma << std::endl;
+                  << "   sigma=" << sigma << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case RAISED_COSINE_MASK:
         std::cout << "Mask type: Raised cosine\n"
-        << "   R1=" << R1 << std::endl
-        << "   R2=" << R2 << std::endl;
+                  << "   R1=" << R1 << std::endl
+                  << "   R2=" << R2 << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case RAISED_CROWN_MASK:
         std::cout << "Mask type: Raised crown\n"
-        << "   R1=" << R1 << std::endl
-        << "   R2=" << R2 << std::endl
-        << "   pixwidth=" << pix_width << std::endl;
+                  << "   R1=" << R1 << std::endl
+                  << "   R2=" << R2 << std::endl
+                  << "   pixwidth=" << pix_width << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case BLOB_CIRCULAR_MASK:
         std::cout << "Mask type: Blob circular\n"
-        << "   R1=" << R1 << std::endl
-        << "   blob radius=" << blob_radius << std::endl
-        << "   blob order="  << blob_order  << std::endl
-        << "   blob alpha="  << blob_alpha  << std::endl;
+                  << "   R1=" << R1 << std::endl
+                  << "   blob radius=" << blob_radius << std::endl
+                  << "   blob order="  << blob_order  << std::endl
+                  << "   blob alpha="  << blob_alpha  << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     case BLOB_CROWN_MASK:
         std::cout << "Mask type: Blob crown\n"
-        << "   R1=" << R1 << std::endl
-        << "   R2=" << R2 << std::endl
-        << "   blob radius=" << blob_radius << std::endl
-        << "   blob order="  << blob_order  << std::endl
-        << "   blob alpha="  << blob_alpha  << std::endl;
+                  << "   R1=" << R1 << std::endl
+                  << "   R2=" << R2 << std::endl
+                  << "   blob radius=" << blob_radius << std::endl
+                  << "   blob order="  << blob_order  << std::endl
+                  << "   blob alpha="  << blob_alpha  << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
@@ -1224,13 +1224,13 @@ void Mask_Params::show() const
         break;
     case SINC_MASK:
         std::cout << "Mask type: Sinc\n"
-        << "   w=" << omega << std::endl;
+                  << "   w=" << omega << std::endl;
         SHOW_MODE;
         SHOW_CENTER;
         break;
     default:
         std::cout << "Mask type: Read from disk\n"
-        << "   File=" << fn_mask << std::endl;
+                  << "   File=" << fn_mask << std::endl;
         break;
     }
 }
@@ -1242,52 +1242,52 @@ void Mask_Params::usage() const
     std::cerr << "   [-center <x0=0> <y0=0> <z0=0>]: Center of the mask\n";
     if (allowed_data_types & INT_MASK)
         std::cerr << "   [-mask circular <R>       : circle/sphere mask\n"
-        << "                               if R>0 => outside R\n"
-        << "                               if R<0 => inside  R\n"
-        << "   [-mask DWT_circular <R> <smin> <smax>: circle/sphere mask\n"
-        << "                               smin and smax define the scales\n"
-        << "                               to be kept\n"
-        << "   |-mask rectangular <Xrect> <Yrect> [<Zrect>]: 2D or 3D rectangle\n"
-        << "                               if X,Y,Z > 0 => outside rectangle\n"
-        << "                               if X,Y,Z < 0 => inside rectangle\n"
-        << "   |-mask crown <R1> <R2>    : 2D or 3D crown\n"
-        << "                               if R1,R2 > 0 => outside crown\n"
-        << "                               if R1,R2 < 0 => inside crown\n"
-        << "   |-mask cylinder <R> <H>   : 2D circle or 3D cylinder\n"
-        << "                               if R,H > 0 => outside cylinder\n"
-        << "                               if R,H < 0 => inside cylinder\n"
-        << "   |-mask cone <theta>       : 3D cone (parallel to Z) \n"
-        << "                               if theta > 0 => outside cone\n"
-        << "                               if theta < 0 => inside cone\n"
-        << "   |-mask wedge <th0> <thF>  : 3D missing-wedge mask for data \n"
-        << "                               collected between tilting angles \n"
-        << "                               th0 and thF (around the Y-axis) \n"
-        << "   |-mask <binary file>      : Read from file\n"
-        ;
+                  << "                               if R>0 => outside R\n"
+                  << "                               if R<0 => inside  R\n"
+                  << "   [-mask DWT_circular <R> <smin> <smax>: circle/sphere mask\n"
+                  << "                               smin and smax define the scales\n"
+                  << "                               to be kept\n"
+                  << "   |-mask rectangular <Xrect> <Yrect> [<Zrect>]: 2D or 3D rectangle\n"
+                  << "                               if X,Y,Z > 0 => outside rectangle\n"
+                  << "                               if X,Y,Z < 0 => inside rectangle\n"
+                  << "   |-mask crown <R1> <R2>    : 2D or 3D crown\n"
+                  << "                               if R1,R2 > 0 => outside crown\n"
+                  << "                               if R1,R2 < 0 => inside crown\n"
+                  << "   |-mask cylinder <R> <H>   : 2D circle or 3D cylinder\n"
+                  << "                               if R,H > 0 => outside cylinder\n"
+                  << "                               if R,H < 0 => inside cylinder\n"
+                  << "   |-mask cone <theta>       : 3D cone (parallel to Z) \n"
+                  << "                               if theta > 0 => outside cone\n"
+                  << "                               if theta < 0 => inside cone\n"
+                  << "   |-mask wedge <th0> <thF>  : 3D missing-wedge mask for data \n"
+                  << "                               collected between tilting angles \n"
+                  << "                               th0 and thF (around the Y-axis) \n"
+                  << "   |-mask <binary file>      : Read from file\n"
+                  ;
     if (allowed_data_types & DOUBLE_MASK)
         std::cerr << "   |-mask gaussian <sigma>   : 2D or 3D gaussian\n"
-        << "                               if sigma > 0 => outside gaussian\n"
-        << "                               if sigma < 0 => inside gaussian\n"
-        << "   |-mask raised_cosine <R1> <R2>: 2D or 3D raised_cosine\n"
-        << "                               if R1,R2 > 0 => outside sphere\n"
-        << "                               if R1,R2 < 0 => inside sphere\n"
-        << "   |-mask raised_crown <R1> <R2> <pixwidth>: 2D or 3D raised_crown\n"
-        << "                               if R1,R2 > 0 => outside sphere\n"
-        << "                               if R1,R2 < 0 => inside sphere\n"
-        << "   |-mask blob_circular <R1> <blob_radius>: 2D or 3D blob circular\n"
-        << "                               if blob_radius > 0 => outside sphere\n"
-        << "                               if blob_radius < 0 => inside sphere\n"
-        << "   |-mask blob_crown <R1> <R2> <blob_radius>: 2D or 3D blob_crown\n"
-        << "                               if blob_radius > 0 => outside sphere\n"
-        << "                               if blob_radius < 0 => inside sphere\n"
-        << "   [ -m <blob_order=2>       : Order of blob\n"
-        << "   [ -a <blob_alpha=10.4>    : Alpha of blob\n"
-        << "   |-mask blackman           : 2D or 3D Blackman mask\n"
-        << "                               always inside blackman\n"
-        << "   |-mask sinc <w>]          : 2D or 3D sincs\n"
-        << "                               if w > 0 => outside sinc\n"
-        << "                               if w < 0 => inside sinc\n"
-        ;
+                  << "                               if sigma > 0 => outside gaussian\n"
+                  << "                               if sigma < 0 => inside gaussian\n"
+                  << "   |-mask raised_cosine <R1> <R2>: 2D or 3D raised_cosine\n"
+                  << "                               if R1,R2 > 0 => outside sphere\n"
+                  << "                               if R1,R2 < 0 => inside sphere\n"
+                  << "   |-mask raised_crown <R1> <R2> <pixwidth>: 2D or 3D raised_crown\n"
+                  << "                               if R1,R2 > 0 => outside sphere\n"
+                  << "                               if R1,R2 < 0 => inside sphere\n"
+                  << "   |-mask blob_circular <R1> <blob_radius>: 2D or 3D blob circular\n"
+                  << "                               if blob_radius > 0 => outside sphere\n"
+                  << "                               if blob_radius < 0 => inside sphere\n"
+                  << "   |-mask blob_crown <R1> <R2> <blob_radius>: 2D or 3D blob_crown\n"
+                  << "                               if blob_radius > 0 => outside sphere\n"
+                  << "                               if blob_radius < 0 => inside sphere\n"
+                  << "   [ -m <blob_order=2>       : Order of blob\n"
+                  << "   [ -a <blob_alpha=10.4>    : Alpha of blob\n"
+                  << "   |-mask blackman           : 2D or 3D Blackman mask\n"
+                  << "                               always inside blackman\n"
+                  << "   |-mask sinc <w>]          : 2D or 3D sincs\n"
+                  << "                               if w > 0 => outside sinc\n"
+                  << "                               if w < 0 => inside sinc\n"
+                  ;
 }
 
 // Write -------------------------------------------------------------------
@@ -1397,10 +1397,10 @@ void Mask_Params::generate_2Dmask(const bool& apply_geo)
         switch (datatype())
         {
         case INT_MASK:
-	    apply_geo_binary_2D_mask(imask2D, mask_geo);
+            apply_geo_binary_2D_mask(imask2D, mask_geo);
             break;
         case DOUBLE_MASK:
-	    apply_geo_cont_2D_mask(dmask2D, mask_geo);
+            apply_geo_cont_2D_mask(dmask2D, mask_geo);
             break;
         }
     }
@@ -1414,8 +1414,8 @@ void Mask_Params::generate_3Dmask()
     blobtype blob;
     if (type==BLOB_CIRCULAR_MASK || type==BLOB_CROWN_MASK)
     {
-        blob.radius = blob_radius; 
-        blob.order = blob_order; 
+        blob.radius = blob_radius;
+        blob.order = blob_order;
         blob.alpha = blob_alpha;
     }
     AA.initIdentity();
@@ -1493,8 +1493,9 @@ void apply_geo_binary_2D_mask(Matrix2D<int> &mask,
     tmp.selfApplyGeometry(A, IS_NOT_INV, DONT_WRAP, outside);
     // The type cast gives strange results here, using round instead
     //typeCast(tmp, mask);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(mask) {
-      dMij(mask,i,j)=ROUND(dMij(tmp,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(mask)
+    {
+        dMij(mask,i,j)=ROUND(dMij(tmp,i,j));
     }
 }
 
@@ -1505,7 +1506,7 @@ void apply_geo_cont_2D_mask(Matrix2D<double> &mask,
     double outside = DIRECT_MAT_ELEM(mask, 0, 0);
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     mask.selfApplyGeometry(A, IS_NOT_INV, DONT_WRAP, outside);
- }
+}
 
 // Count with mask =========================================================
 int count_with_mask(const Matrix2D<int> &mask,
@@ -1518,16 +1519,16 @@ int count_with_mask(const Matrix2D<int> &mask,
         switch (mode)
         {
         case (COUNT_ABOVE):
-                        if (abs(MAT_ELEM(m, i, j)) >= th1)
-                            N++;
+            if (abs(MAT_ELEM(m, i, j)) >= th1)
+                N++;
             break;
         case (COUNT_BELOW):
-                        if (abs(MAT_ELEM(m, i, j)) <= th1)
-                            N++;
+            if (abs(MAT_ELEM(m, i, j)) <= th1)
+                N++;
             break;
         case (COUNT_BETWEEN):
-                        if (abs(MAT_ELEM(m, i, j)) >= th1 && abs(MAT_ELEM(m, i, j)) <= th2)
-                            N++;
+            if (abs(MAT_ELEM(m, i, j)) >= th1 && abs(MAT_ELEM(m, i, j)) <= th2)
+                N++;
             break;
         }
     return N;
@@ -1543,16 +1544,16 @@ int count_with_mask(const Matrix3D<int> &mask,
         switch (mode)
         {
         case (COUNT_ABOVE):
-                        if (abs(VOL_ELEM(m, k, i, j)) >= th1)
-                            N++;
+            if (abs(VOL_ELEM(m, k, i, j)) >= th1)
+                N++;
             break;
         case (COUNT_BELOW):
-                        if (abs(VOL_ELEM(m, k, i, j)) <= th1)
-                            N++;
+            if (abs(VOL_ELEM(m, k, i, j)) <= th1)
+                N++;
             break;
         case (COUNT_BETWEEN):
-                        if (abs(VOL_ELEM(m, k, i, j)) >= th1 && abs(VOL_ELEM(m, k, i, j)) <= th2)
-                            N++;
+            if (abs(VOL_ELEM(m, k, i, j)) >= th1 && abs(VOL_ELEM(m, k, i, j)) <= th2)
+                N++;
             break;
         }
     return N;
@@ -1560,8 +1561,8 @@ int count_with_mask(const Matrix3D<int> &mask,
 
 /* Range adjust ------------------------------------------------------------ */
 void rangeAdjust_within_mask(const Matrix2D<double> *mask,
-                              const Matrix2D<double> &m1,
-                              Matrix2D<double> &m2)
+                             const Matrix2D<double> &m1,
+                             Matrix2D<double> &m2)
 {
     Matrix2D<double> A(2, 2);
     A.initZeros();
@@ -1603,7 +1604,7 @@ void rangeAdjust_within_mask(const Matrix2D<double> *mask,
 }
 
 void rangeAdjust_within_mask(const Matrix3D<double> *mask,
-                              const Matrix3D<double> &m1, Matrix3D<double> &m2)
+                             const Matrix3D<double> &m1, Matrix3D<double> &m2)
 {
     Matrix2D<double> A(2, 2);
     A.initZeros();

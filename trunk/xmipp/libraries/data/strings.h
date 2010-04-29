@@ -1,5 +1,5 @@
 /***************************************************************************
- * 
+ *
  * Authors:     J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -31,11 +31,11 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-	
-/** Removes all occurrences of 'character' from the string no matter 
+
+/** Removes all occurrences of 'character' from the string no matter
 where they are */
 std::string removeChar( std::string str, char character );
-	
+
 /** Removes escaped symbols \n, \t, \v, \b, \r, \f, and \a */
 std::string unescape( std::string str );
 

@@ -24,15 +24,15 @@
   * @endcode
 */
 extern int  MovingAverage
-    (
-        double InputData[],  /* data to process */
-        double OutputData[],  /* result */
-        long SignalLength,  /* length of the 1D data array */
-        long KernelOrigin,  /* center of the kernel */
-        long KernelLength,  /* length of the 1D kernel */
-        enum TBoundaryConvention
-        Convention   /* boundary convention */
-    );
+(
+    double InputData[],  /* data to process */
+    double OutputData[],  /* result */
+    long SignalLength,  /* length of the 1D data array */
+    long KernelOrigin,  /* center of the kernel */
+    long KernelLength,  /* length of the 1D kernel */
+    enum TBoundaryConvention
+    Convention   /* boundary convention */
+);
 
 /*--------------------------------------------------------------------------*/
 /** Moving average (3D).
@@ -58,15 +58,15 @@ extern int  MovingAverage
  * @endcode
 */
 extern int  MovingAverageVolume
-    (
-        float *VolumeSource,  /* data to process */
-        float *VolumeDestination, /* result */
-        long Nx,     /* width of the volume */
-        long Ny,     /* height of the volume */
-        long Nz,     /* depth of the volume */
-        long KernelOrigin,  /* center of the kernel */
-        long KernelLength,  /* length of the 1D kernel */
-        enum TBoundaryConvention
-        Convention   /* boundary convention */
-    );
+(
+    float *VolumeSource,  /* data to process */
+    float *VolumeDestination, /* result */
+    long Nx,     /* width of the volume */
+    long Ny,     /* height of the volume */
+    long Nz,     /* depth of the volume */
+    long KernelOrigin,  /* center of the kernel */
+    long KernelLength,  /* length of the 1D kernel */
+    enum TBoundaryConvention
+    Convention   /* boundary convention */
+);
 //@}

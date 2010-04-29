@@ -114,7 +114,8 @@ int main(int argc, char **argv)
         std::cout << mask;       // Output Volumen Information
     }
 
-    int minXPixel = 32000, maxXPixel = 0; int minYPixel = 32000, maxYPixel = 0;
+    int minXPixel = 32000, maxXPixel = 0;
+    int minYPixel = 32000, maxYPixel = 0;
     int NewXDim, NewYDim;
     if ((!noBB) && (!nomask))
     {

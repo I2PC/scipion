@@ -129,27 +129,27 @@ double spatial_Bspline03_proj(
     double alpha_zmax = (2 - ZZ(r)) / ZZ(ur);
 
     double alpha_min = XMIPP_MAX(XMIPP_MIN(alpha_xmin, alpha_xmax),
-                           XMIPP_MIN(alpha_ymin, alpha_ymax));
+                                 XMIPP_MIN(alpha_ymin, alpha_ymax));
     alpha_min = XMIPP_MAX(alpha_min, XMIPP_MIN(alpha_zmin, alpha_zmax));
     double alpha_max = XMIPP_MIN(XMIPP_MAX(alpha_xmin, alpha_xmax),
-                           XMIPP_MAX(alpha_ymin, alpha_ymax));
+                                 XMIPP_MAX(alpha_ymin, alpha_ymax));
     alpha_max = XMIPP_MIN(alpha_max, XMIPP_MAX(alpha_zmin, alpha_zmax));
     if (alpha_max - alpha_min < XMIPP_EQUAL_ACCURACY) return 0.0;
 
 #ifdef DEBUG
     std::cout << "Pixel:  " << r.transpose() << std::endl
-    << "Dir:    " << ur.transpose() << std::endl
-    << "Alpha x:" << alpha_xmin << " " << alpha_xmax << std::endl
-    << "        " << (r + alpha_xmin*ur).transpose() << std::endl
-    << "        " << (r + alpha_xmax*ur).transpose() << std::endl
-    << "Alpha y:" << alpha_ymin << " " << alpha_ymax << std::endl
-    << "        " << (r + alpha_ymin*ur).transpose() << std::endl
-    << "        " << (r + alpha_ymax*ur).transpose() << std::endl
-    << "Alpha z:" << alpha_zmin << " " << alpha_zmax << std::endl
-    << "        " << (r + alpha_zmin*ur).transpose() << std::endl
-    << "        " << (r + alpha_zmax*ur).transpose() << std::endl
-    << "alpha  :" << alpha_min  << " " << alpha_max  << std::endl
-    << std::endl;
+              << "Dir:    " << ur.transpose() << std::endl
+              << "Alpha x:" << alpha_xmin << " " << alpha_xmax << std::endl
+              << "        " << (r + alpha_xmin*ur).transpose() << std::endl
+              << "        " << (r + alpha_xmax*ur).transpose() << std::endl
+              << "Alpha y:" << alpha_ymin << " " << alpha_ymax << std::endl
+              << "        " << (r + alpha_ymin*ur).transpose() << std::endl
+              << "        " << (r + alpha_ymax*ur).transpose() << std::endl
+              << "Alpha z:" << alpha_zmin << " " << alpha_zmax << std::endl
+              << "        " << (r + alpha_zmin*ur).transpose() << std::endl
+              << "        " << (r + alpha_zmax*ur).transpose() << std::endl
+              << "alpha  :" << alpha_min  << " " << alpha_max  << std::endl
+              << std::endl;
 #endif
 
     // Compute the first point in the volume intersecting the ray
@@ -189,13 +189,13 @@ double spatial_Bspline03_proj(
 
 #ifdef DEBUG
         std::cout << "Alpha x,y,z: " << alpha_x << " " << alpha_y
-        << " " << alpha_z << " ---> " << alpha << std::endl;
+                  << " " << alpha_z << " ---> " << alpha << std::endl;
 
         std::cout << "    Next entry point: " << v.transpose() << std::endl
-        << "    diff_alpha: " << diff_alpha << std::endl
-        << "    ray_sum: " << ray_sum << std::endl
-        << "    Alfa tot: " << alpha << "alpha_max: " << alpha_max <<
-        std::endl;
+                  << "    diff_alpha: " << diff_alpha << std::endl
+                  << "    ray_sum: " << ray_sum << std::endl
+                  << "    Alfa tot: " << alpha << "alpha_max: " << alpha_max <<
+                  std::endl;
 
 #endif
     }
@@ -268,7 +268,7 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
                 {
                     printf("Dealing spline at (%d,%d,%d) = %f\n", j, i, k, VOL_ELEM(vol_splines, k, i, j));
                     std::cout << "Center of the blob      "
-                    << act_coord.transpose() << std::endl;
+                              << act_coord.transpose() << std::endl;
                 }
 #endif
 
@@ -335,8 +335,8 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
                                 if (condition)
                                 {
                                     std::cout << "At (" << intx << ","
-                                    << inty << "," << intz << ") value="
-                                    << spline_value;
+                                              << inty << "," << intz << ") value="
+                                              << spline_value;
                                     std::cout.flush();
                                 }
 #endif
@@ -348,9 +348,9 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
                                 if (condition)
                                 {
                                     std::cout << " adding " << VOL_ELEM(vol_splines, k, i, j)
-                                    << " * " << value_spline << " = "
-                                    << VOL_ELEM(vol_splines, k, i, j)*
-                                    value_spline << std::endl;
+                                              << " * " << value_spline << " = "
+                                              << VOL_ELEM(vol_splines, k, i, j)*
+                                              value_spline << std::endl;
                                     std::cout.flush();
                                 }
 #endif

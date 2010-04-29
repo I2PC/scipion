@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     int npoints;
 
     Prog_Convert_Vol2Pseudo prm;
-    bool newMode=false; 
+    bool newMode=false;
     // Read arguments
     try
     {
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
         mask().setXmippOrigin();       // sets origin at the center of the mask.
         VolumeXmipp vol_mask(V);
 
-    //  vol_mask().resize(V());       // Resizes volumen_mask.
+        //  vol_mask().resize(V());       // Resizes volumen_mask.
         vol_mask().setXmippOrigin();   // sets origin at the center of the volumen mask.
 
 
@@ -215,7 +215,8 @@ int main(int argc, char **argv)
                                 randomCoord.push_back(v);
                             }
                             else
-                            { // !FourD
+                            {
+                                // !FourD
                                 if (minVoxel != maxVoxel)
                                     slope = (double)(maxCoord - minCoord) / (double)(maxVoxel - minVoxel);
                                 else
@@ -237,7 +238,8 @@ int main(int argc, char **argv)
 
                         }
                         else
-                        { // sampling
+                        {
+                            // sampling
                             // If sampling, then normalize the masked volume (devide by
                             // maxdensity)
                             VOLVOXEL(vol_mask, z, y, x) /= maxVoxel;
@@ -245,14 +247,16 @@ int main(int argc, char **argv)
 
                     }
                     else
-                    { // if VOLVOXEL
+                    {
+                        // if VOLVOXEL
                         VOLVOXEL(vol_mask, z, y, x) = 0;
                     }
 
                 } // for x
 
         if (sampling)
-        { // Generate "npoints" coordinates
+        {
+            // Generate "npoints" coordinates
             std::cout << std::endl << "using sampling generation......" << std::endl;
             randomize_random_generator();
             for (int i = 0; i < npoints; i++)

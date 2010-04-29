@@ -32,7 +32,7 @@
 #include <data/metadata.h>
 #include <data/funcs.h>
 
-/**@defgroup SpiderRecons Interaction with Spider 
+/**@defgroup SpiderRecons Interaction with Spider
    @ingroup ReconsLibrary */
 //@{
 /** Call SIRT in Spider.

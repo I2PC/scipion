@@ -63,18 +63,18 @@ typedef float psingle __attribute__ ((vector_size(8)));
 typedef float psingle __attribute__ ((mode (DF)));
 
 #define _mips64_alu_op2(a,b,op,asm_op) \
-({\
-  psingle r; \
-  __asm__ (asm_op " %0,%1,%2" : "=f"(r) : "f"(a), "f"(b)); \
-  r; \
-})
+    ({\
+        psingle r; \
+        __asm__ (asm_op " %0,%1,%2" : "=f"(r) : "f"(a), "f"(b)); \
+        r; \
+    })
 
 #define _mips64_alu_op3(a,b,c,s,op,asm_op) \
-({\
-  psingle r; \
-  __asm__ (asm_op " %0,%1,%2,%3" : "=f"(r) : "f"(c), "f"(a), "f"(b)); \
-  r; \
-})
+    ({\
+        psingle r; \
+        __asm__ (asm_op " %0,%1,%2,%3" : "=f"(r) : "f"(c), "f"(a), "f"(b)); \
+        r; \
+    })
 
 #endif /* USE_SIMD_INTRINSICS */
 
@@ -82,16 +82,16 @@ typedef float psingle __attribute__ ((mode (DF)));
 
 /* Wrap operations into static inline function. */
 #define _mips64_alu_op2_fn(fn,op,asm_op) \
-static inline psingle _mips64_##fn(psingle a, psingle b) \
-{ \
-  return _mips64_alu_op2(a,b,op,asm_op); \
-}
+    static inline psingle _mips64_##fn(psingle a, psingle b) \
+    { \
+        return _mips64_alu_op2(a,b,op,asm_op); \
+    }
 
 #define _mips64_alu_op3_fn(fn,s,op,asm_op) \
-static inline psingle _mips64_##fn(psingle a, psingle b, psingle c) \
-{ \
-  return _mips64_alu_op3(a,b,c,s,op,asm_op); \
-}
+    static inline psingle _mips64_##fn(psingle a, psingle b, psingle c) \
+    { \
+        return _mips64_alu_op3(a,b,c,s,op,asm_op); \
+    }
 
 
 
@@ -101,31 +101,31 @@ static inline psingle _mips64_##fn(psingle a, psingle b, psingle c) \
 
 #if USE_SIMD_INTRINSICS
 #define _mips64_ld(x) \
-({ \
-  psingle reg; \
-  reg = *x; \
-  reg; \
-})
+    ({ \
+        psingle reg; \
+        reg = *x; \
+        reg; \
+    })
 
 #define _mips64_st(x,v) \
-({ \
-  *(psingle*)(x) = v;\
-})
+    ({ \
+        *(psingle*)(x) = v;\
+    })
 
 #else /* !USE_SIMD_INTRINSICS */
 
 #define _mips64_ld(x) \
-({ \
-  psingle reg; \
-  __asm__ ("ldc1 %0,%1" : "=f"(reg) : "m"(*x)); \
-  reg; \
-})
+    ({ \
+        psingle reg; \
+        __asm__ ("ldc1 %0,%1" : "=f"(reg) : "m"(*x)); \
+        reg; \
+    })
 
 #define _mips64_st(x,v) \
-({ \
-  psingle reg = v; \
-  __asm__ ("sdc1 %1,%0" : "=m"(*x) : "f"(reg)); \
-})
+    ({ \
+        psingle reg = v; \
+        __asm__ ("sdc1 %1,%0" : "=m"(*x) : "f"(reg)); \
+    })
 
 #endif /* USE_SIMD_INTRINSICS */
 
@@ -136,12 +136,12 @@ static inline psingle _mips64_##fn(psingle a, psingle b, psingle c) \
 ****************************************************************************/
 
 #if USE_INLINE_FUNCTIONS
-  _mips64_alu_op2_fn(add,+,"add.ps")
-  _mips64_alu_op2_fn(sub,-,"sub.ps")
-  _mips64_alu_op2_fn(mul,*,"mul.ps")
-  _mips64_alu_op3_fn(madd,,+,"madd.ps")
-  _mips64_alu_op3_fn(msub,,-,"msub.ps")
-  _mips64_alu_op3_fn(nmsub,-,-,"nmsub.ps")
+_mips64_alu_op2_fn(add,+,"add.ps")
+_mips64_alu_op2_fn(sub,-,"sub.ps")
+_mips64_alu_op2_fn(mul,*,"mul.ps")
+_mips64_alu_op3_fn(madd,,+,"madd.ps")
+_mips64_alu_op3_fn(msub,,-,"msub.ps")
+_mips64_alu_op3_fn(nmsub,-,-,"nmsub.ps")
 #else
 #  define _mips64_add(a,b)     _mips64_alu_op2(a,b,+,"add.ps")
 #  define _mips64_sub(a,b)     _mips64_alu_op2(a,b,-,"sub.ps")
@@ -171,47 +171,47 @@ static inline psingle _mips64_##fn(psingle a, psingle b, psingle c) \
 static inline psingle _mips64_sl(float *a, psingle b)
 {
 #if USE_BIG_ENDIAN
-  float b_lo = __builtin_mips_cvt_s_pu(b);
+    float b_lo = __builtin_mips_cvt_s_pu(b);
 #else
-  float b_lo = __builtin_mips_cvt_s_pl(b);
+    float b_lo = __builtin_mips_cvt_s_pl(b);
 #endif
-  *a = b_lo;
+    *a = b_lo;
 }
 static inline psingle _mips64_su(float *a,psingle b)
 {
 #if USE_BIG_ENDIAN
-  float b_hi = __builtin_mips_cvt_s_pl(b);
+    float b_hi = __builtin_mips_cvt_s_pl(b);
 #else
-  float b_hi = __builtin_mips_cvt_s_pu(b);
+    float b_hi = __builtin_mips_cvt_s_pu(b);
 #endif
-  *a = b_hi;
+    *a = b_hi;
 }
 
 static inline psingle _mips64_shuffle(psingle a)
 {
-  psingle res;
+    psingle res;
 
-  res = __builtin_mips_plu_ps(a,a);
-  return res;
+    res = __builtin_mips_plu_ps(a,a);
+    return res;
 }
 
 #define _mips64_lc(c) \
-({ \
-  psingle v = {c,c};\
-  v; \
-})
+    ({ \
+        psingle v = {c,c};\
+        v; \
+    })
 
 static inline psingle _mips64_chs_i(psingle v)
 {
 #if USE_BIG_ENDIAN
-  static psingle change_sign = {1.0, -1.0};
+    static psingle change_sign = {1.0, -1.0};
 #else
-  static psingle change_sign = {-1.0, 1.0};
+    static psingle change_sign = {-1.0, 1.0};
 #endif
 
-  v = v * change_sign;
+    v = v * change_sign;
 
-  return v;
+    return v;
 }
 
 #else /* !USE_SIMD_INTRINSICS */
@@ -226,47 +226,47 @@ static inline psingle _mips64_chs_i(psingle v)
 
 
 #define _mips64_sl(a,b) \
-({ \
-  float b_lo; \
-  __asm__ ("cvt.s.pu %0,%1"    : "=f"(b_lo) : "f"(b)); \
-  *(a) = b_lo; \
-})
+    ({ \
+        float b_lo; \
+        __asm__ ("cvt.s.pu %0,%1"    : "=f"(b_lo) : "f"(b)); \
+        *(a) = b_lo; \
+    })
 
 #define _mips64_su(a,b) \
-({ \
-  float b_up; \
-  __asm__ ("cvt.s.pl %0,%1"    : "=f"(b_up) : "f"(b)); \
-  *(a) = b_up; \
-})
+    ({ \
+        float b_up; \
+        __asm__ ("cvt.s.pl %0,%1"    : "=f"(b_up) : "f"(b)); \
+        *(a) = b_up; \
+    })
 
 #define _mips64_shuffle(v) \
-({ \
-  psingle res; \
-  __asm__("plu.ps %0,%1,%2" : "=f"(res) : "f"(v), "f"(v)); \
-  res; \
-})
+    ({ \
+        psingle res; \
+        __asm__("plu.ps %0,%1,%2" : "=f"(res) : "f"(v), "f"(v)); \
+        res; \
+    })
 
 #define _mips64_lc(c) \
-({ \
-  V r; \
-  float c_f=c; \
-  __asm__ ("cvt.ps.s %0,%1,%2" : "=f"(r) : "f"(c_f), "f"(c_f)); \
-  r; \
-})
+    ({ \
+        V r; \
+        float c_f=c; \
+        __asm__ ("cvt.ps.s %0,%1,%2" : "=f"(r) : "f"(c_f), "f"(c_f)); \
+        r; \
+    })
 
 typedef union
 {
-  float f[2];
-  psingle ps;
+    float f[2];
+    psingle ps;
 } pstof;
 
 #define _mips64_chs_i(v) \
-({ \
-  static pstof my_pstof = { {1.0, -1.0} }; \
-  psingle r; \
-  __asm__("mul.ps %0,%1,%2" : "=f"(r) : "f"(v), "f"(my_pstof.ps)); \
-  r; \
-})
+    ({ \
+        static pstof my_pstof = { {1.0, -1.0} }; \
+        psingle r; \
+        __asm__("mul.ps %0,%1,%2" : "=f"(r) : "f"(v), "f"(my_pstof.ps)); \
+        r; \
+    })
 
 #endif /* USE_SIMD_INTRINSICS */
 

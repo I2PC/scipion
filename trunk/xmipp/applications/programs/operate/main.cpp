@@ -30,23 +30,23 @@ void Usage(void);
 bool check_for_operation(int argc, char **argv, char *operation,
                          FileName &fn, int &operand_type);
 void compute(int operation, int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+             const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
 void operate_plus(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+                  const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
 void operate_minus(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+                   const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
 void multiplication(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+                    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
 void division(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+              const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
 void operate_min(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+                 const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
 void operate_max(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+                 const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
 void operate_which_min(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+                       const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
 void operate_which_max(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
+                       const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
 void log10(int operand_type1, const FileName &fn_1,const FileName &fn_out);
 void forcePositive(int operand_type1, const FileName &fn_1,const FileName &fn_out);
 void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out);
@@ -67,7 +67,7 @@ void radial_avg(int operand_type1, const FileName &fn_1, const FileName &fn_out)
 #define    MULTIPLICATION     3
 #define    DIVISION           4
 #define    LOG10              5
-#define    SQRT               6 
+#define    SQRT               6
 #define    SLICE              7
 #define    COLUMN             8
 #define    ROW                9
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
 }
 
 bool check_for_operation(int argc, char **argv, char *operation,
-    FileName &fn, int &operand_type)
+                         FileName &fn, int &operand_type)
 {
     if (checkParameter(argc, argv, operation))
     {
@@ -172,7 +172,7 @@ bool check_for_operation(int argc, char **argv, char *operation,
 
 // Insert new functions here and create its operations as in plus() or log10(), for example
 void compute(int operation, int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
+             const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
 {
     switch (operation)
     {
@@ -225,7 +225,7 @@ void compute(int operation, int operand_type1, int operand_type2,
 }
 
 void operate_plus(int operand_type1, int operand_type2, const FileName &fn_1,
-    const FileName &fn_2, const FileName &fn_out)
+                  const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -308,7 +308,7 @@ void operate_plus(int operand_type1, int operand_type2, const FileName &fn_1,
 }
 
 void operate_minus(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
+                   const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -391,7 +391,7 @@ void operate_minus(int operand_type1, int operand_type2,
 }
 
 void multiplication(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
+                    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -450,7 +450,7 @@ void multiplication(int operand_type1, int operand_type2,
         Op1.read(fn_1);
         out.read(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k, i, j) = Op1(k, i, j) * out(k, i, j);
+        out(k, i, j) = Op1(k, i, j) * out(k, i, j);
         if (fn_out=="") out.write("result.vol");
         else out.write(fn_out);
     }
@@ -475,7 +475,7 @@ void multiplication(int operand_type1, int operand_type2,
 }
 
 void division(int operand_type1, int operand_type2,
-    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
+              const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -483,7 +483,7 @@ void division(int operand_type1, int operand_type2,
         out.read(fn_2, false, false, true);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i, j) = number1 / out(i, j);
+        out(i, j) = number1 / out(i, j);
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_2);
@@ -506,7 +506,7 @@ void division(int operand_type1, int operand_type2,
         Op1.read(fn_1, false, false, true);
         out.read(fn_2, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i, j) = Op1(i, j) / out(i, j);
+        out(i, j) = Op1(i, j) / out(i, j);
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_1);
@@ -518,7 +518,7 @@ void division(int operand_type1, int operand_type2,
         out.read(fn_2);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k, i, j) = number1 / out(k, i, j);
+        out(k, i, j) = number1 / out(k, i, j);
         if (fn_out=="") out.write(fn_2);
         else out.write(fn_out);
     }
@@ -537,7 +537,7 @@ void division(int operand_type1, int operand_type2,
         Op1.read(fn_1);
         out.read(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k, i, j) = Op1(k, i, j) / out(k, i, j);
+        out(k, i, j) = Op1(k, i, j) / out(k, i, j);
         if (fn_out=="") out.write("result.vol");
         else out.write(fn_out);
     }
@@ -562,7 +562,7 @@ void division(int operand_type1, int operand_type2,
 }
 
 void operate_max(int operand_type1, int operand_type2, const FileName &fn_1,
-    const FileName &fn_2, const FileName &fn_out)
+                 const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -570,7 +570,7 @@ void operate_max(int operand_type1, int operand_type2, const FileName &fn_1,
         out.read(fn_2, false, false, true);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=XMIPP_MAX(out(i,j),number1);
+        out(i,j)=XMIPP_MAX(out(i,j),number1);
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_2);
@@ -582,7 +582,7 @@ void operate_max(int operand_type1, int operand_type2, const FileName &fn_1,
         out.read(fn_1, false, false, true);
         double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=XMIPP_MAX(out(i,j),number2);
+        out(i,j)=XMIPP_MAX(out(i,j),number2);
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_1);
@@ -594,7 +594,7 @@ void operate_max(int operand_type1, int operand_type2, const FileName &fn_1,
         Op1.read(fn_1, false, false, true);
         out.read(fn_2, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=XMIPP_MAX(out(i,j),Op1(i,j));
+        out(i,j)=XMIPP_MAX(out(i,j),Op1(i,j));
         out() = Op1() + out();
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
@@ -607,7 +607,7 @@ void operate_max(int operand_type1, int operand_type2, const FileName &fn_1,
         out.read(fn_2);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=XMIPP_MAX(out(k,i,j),number1);
+        out(k,i,j)=XMIPP_MAX(out(k,i,j),number1);
         if (fn_out=="") out.write(fn_2);
         else out.write(fn_out);
     }
@@ -617,7 +617,7 @@ void operate_max(int operand_type1, int operand_type2, const FileName &fn_1,
         out.read(fn_1);
         double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=XMIPP_MAX(out(k,i,j),number2);
+        out(k,i,j)=XMIPP_MAX(out(k,i,j),number2);
         if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
@@ -627,7 +627,7 @@ void operate_max(int operand_type1, int operand_type2, const FileName &fn_1,
         Op1.read(fn_1);
         out.read(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=XMIPP_MAX(out(k,i,j),Op1(k,i,j));
+        out(k,i,j)=XMIPP_MAX(out(k,i,j),Op1(k,i,j));
         if (fn_out=="") out.write("result.vol");
         else out.write(fn_out);
     }
@@ -652,7 +652,7 @@ void operate_max(int operand_type1, int operand_type2, const FileName &fn_1,
 }
 
 void operate_min(int operand_type1, int operand_type2, const FileName &fn_1,
-    const FileName &fn_2, const FileName &fn_out)
+                 const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -660,7 +660,7 @@ void operate_min(int operand_type1, int operand_type2, const FileName &fn_1,
         out.read(fn_2, false, false, true);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=XMIPP_MIN(out(i,j),number1);
+        out(i,j)=XMIPP_MIN(out(i,j),number1);
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_2);
@@ -672,7 +672,7 @@ void operate_min(int operand_type1, int operand_type2, const FileName &fn_1,
         out.read(fn_1, false, false, true);
         double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=XMIPP_MIN(out(i,j),number2);
+        out(i,j)=XMIPP_MIN(out(i,j),number2);
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_1);
@@ -684,7 +684,7 @@ void operate_min(int operand_type1, int operand_type2, const FileName &fn_1,
         Op1.read(fn_1, false, false, true);
         out.read(fn_2, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=XMIPP_MIN(out(i,j),Op1(i,j));
+        out(i,j)=XMIPP_MIN(out(i,j),Op1(i,j));
         out() = Op1() + out();
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
@@ -697,7 +697,7 @@ void operate_min(int operand_type1, int operand_type2, const FileName &fn_1,
         out.read(fn_2);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=XMIPP_MIN(out(k,i,j),number1);
+        out(k,i,j)=XMIPP_MIN(out(k,i,j),number1);
         if (fn_out=="") out.write(fn_2);
         else out.write(fn_out);
     }
@@ -707,7 +707,7 @@ void operate_min(int operand_type1, int operand_type2, const FileName &fn_1,
         out.read(fn_1);
         double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=XMIPP_MIN(out(k,i,j),number2);
+        out(k,i,j)=XMIPP_MIN(out(k,i,j),number2);
         if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
@@ -717,7 +717,7 @@ void operate_min(int operand_type1, int operand_type2, const FileName &fn_1,
         Op1.read(fn_1);
         out.read(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=XMIPP_MIN(out(k,i,j),Op1(k,i,j));
+        out(k,i,j)=XMIPP_MIN(out(k,i,j),Op1(k,i,j));
         if (fn_out=="") out.write("result.vol");
         else out.write(fn_out);
     }
@@ -742,7 +742,7 @@ void operate_min(int operand_type1, int operand_type2, const FileName &fn_1,
 }
 
 void operate_which_max(int operand_type1, int operand_type2, const FileName &fn_1,
-    const FileName &fn_2, const FileName &fn_out)
+                       const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -750,7 +750,7 @@ void operate_which_max(int operand_type1, int operand_type2, const FileName &fn_
         out.read(fn_2, false, false, true);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=(number1>out(i,j))?0:1;
+        out(i,j)=(number1>out(i,j))?0:1;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_2);
@@ -762,7 +762,7 @@ void operate_which_max(int operand_type1, int operand_type2, const FileName &fn_
         out.read(fn_1, false, false, true);
         double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=(out(i,j)>number2)?0:1;
+        out(i,j)=(out(i,j)>number2)?0:1;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_1);
@@ -774,7 +774,7 @@ void operate_which_max(int operand_type1, int operand_type2, const FileName &fn_
         Op1.read(fn_1, false, false, true);
         out.read(fn_2, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=(Op1(i,j)>out(i,j))?0:1;
+        out(i,j)=(Op1(i,j)>out(i,j))?0:1;
         out() = Op1() + out();
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
@@ -787,7 +787,7 @@ void operate_which_max(int operand_type1, int operand_type2, const FileName &fn_
         out.read(fn_2);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=(number1>out(k,i,j))?0:1;
+        out(k,i,j)=(number1>out(k,i,j))?0:1;
         if (fn_out=="") out.write(fn_2);
         else out.write(fn_out);
     }
@@ -797,7 +797,7 @@ void operate_which_max(int operand_type1, int operand_type2, const FileName &fn_
         out.read(fn_1);
         double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=(out(k,i,j)>number2)?0:1;
+        out(k,i,j)=(out(k,i,j)>number2)?0:1;
         if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
@@ -807,7 +807,7 @@ void operate_which_max(int operand_type1, int operand_type2, const FileName &fn_
         Op1.read(fn_1);
         out.read(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=(Op1(k,i,j)>out(k,i,j))?0:1;
+        out(k,i,j)=(Op1(k,i,j)>out(k,i,j))?0:1;
         if (fn_out=="") out.write("result.vol");
         else out.write(fn_out);
     }
@@ -832,7 +832,7 @@ void operate_which_max(int operand_type1, int operand_type2, const FileName &fn_
 }
 
 void operate_which_min(int operand_type1, int operand_type2, const FileName &fn_1,
-    const FileName &fn_2, const FileName &fn_out)
+                       const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == NUMBER && operand_type2 == IMAGE)
     {
@@ -840,7 +840,7 @@ void operate_which_min(int operand_type1, int operand_type2, const FileName &fn_
         out.read(fn_2, false, false, true);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=(number1<out(i,j))?0:1;
+        out(i,j)=(number1<out(i,j))?0:1;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_2);
@@ -852,7 +852,7 @@ void operate_which_min(int operand_type1, int operand_type2, const FileName &fn_
         out.read(fn_1, false, false, true);
         double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=(out(i,j)<number2)?0:1;
+        out(i,j)=(out(i,j)<number2)?0:1;
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_1);
@@ -864,7 +864,7 @@ void operate_which_min(int operand_type1, int operand_type2, const FileName &fn_
         Op1.read(fn_1, false, false, true);
         out.read(fn_2, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i,j)=(Op1(i,j)<out(i,j))?0:1;
+        out(i,j)=(Op1(i,j)<out(i,j))?0:1;
         out() = Op1() + out();
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
@@ -877,7 +877,7 @@ void operate_which_min(int operand_type1, int operand_type2, const FileName &fn_
         out.read(fn_2);
         double number1 = textToFloat(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=(number1<out(k,i,j))?0:1;
+        out(k,i,j)=(number1<out(k,i,j))?0:1;
         if (fn_out=="") out.write(fn_2);
         else out.write(fn_out);
     }
@@ -887,7 +887,7 @@ void operate_which_min(int operand_type1, int operand_type2, const FileName &fn_
         out.read(fn_1);
         double number2 = textToFloat(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=(out(k,i,j)<number2)?0:1;
+        out(k,i,j)=(out(k,i,j)<number2)?0:1;
         if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
@@ -897,7 +897,7 @@ void operate_which_min(int operand_type1, int operand_type2, const FileName &fn_
         Op1.read(fn_1);
         out.read(fn_2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k,i,j)=(Op1(k,i,j)<out(k,i,j))?0:1;
+        out(k,i,j)=(Op1(k,i,j)<out(k,i,j))?0:1;
         if (fn_out=="") out.write("result.vol");
         else out.write(fn_out);
     }
@@ -928,7 +928,7 @@ void log10(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         ImageXmipp out;
         out.read(fn_1, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i, j) = log10(out(i, j));
+        out(i, j) = log10(out(i, j));
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_1);
@@ -939,7 +939,7 @@ void log10(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         VolumeXmipp out;
         out.read(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k, i, j) = log10(out(k, i, j));
+        out(k, i, j) = log10(out(k, i, j));
         if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
@@ -964,7 +964,7 @@ void log10(int operand_type1, const FileName &fn_1, const FileName &fn_out)
 }
 
 void forcePositive(int operand_type1, const FileName &fn_1,
-    const FileName &fn_out)
+                   const FileName &fn_out)
 {
     if (operand_type1 == IMAGE)
     {
@@ -974,34 +974,35 @@ void forcePositive(int operand_type1, const FileName &fn_1,
         do
         {
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-                if (out(i, j)<=0)
+            if (out(i, j)<=0)
+            {
+                std::vector<double> neighbours;
+                for (int ii=-2; ii<=2; ii++)
                 {
-                    std::vector<double> neighbours;
-                    for (int ii=-2; ii<=2; ii++)
+                    int iii=i+ii;
+                    if (iii<0 || iii>=YSIZE(out())) continue;
+                    for (int jj=-2; jj<=2; jj++)
                     {
-                        int iii=i+ii;
-                        if (iii<0 || iii>=YSIZE(out())) continue;
-                        for (int jj=-2; jj<=2; jj++)
-                        {
-                            int jjj=j+jj;
-                            if (jjj<0 || jjj>=XSIZE(out())) continue;
-                            double val=out(iii,jjj);
-                            if (val>0) neighbours.push_back(val);
-                        }
-                    }
-                    int N=neighbours.size();
-                    if (N==0)
-                        negativeRemaining=true;
-                    else
-                    {
-                        std::sort(neighbours.begin(),neighbours.end());
-                        if (N%2==0)
-                            out(i,j)=0.5*(neighbours[N/2-1]+neighbours[N/2]);
-                        else
-                            out(i,j)=neighbours[N/2];
+                        int jjj=j+jj;
+                        if (jjj<0 || jjj>=XSIZE(out())) continue;
+                        double val=out(iii,jjj);
+                        if (val>0) neighbours.push_back(val);
                     }
                 }
-        } while (negativeRemaining);
+                int N=neighbours.size();
+                if (N==0)
+                    negativeRemaining=true;
+                else
+                {
+                    std::sort(neighbours.begin(),neighbours.end());
+                    if (N%2==0)
+                        out(i,j)=0.5*(neighbours[N/2-1]+neighbours[N/2]);
+                    else
+                        out(i,j)=neighbours[N/2];
+                }
+            }
+        }
+        while (negativeRemaining);
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_1);
@@ -1015,40 +1016,41 @@ void forcePositive(int operand_type1, const FileName &fn_1,
         do
         {
             FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-                if (out(k, i, j)<=0)
+            if (out(k, i, j)<=0)
+            {
+                std::vector<double> neighbours;
+                for (int kk=-2; kk<=2; kk++)
                 {
-                    std::vector<double> neighbours;
-                    for (int kk=-2; kk<=2; kk++)
+                    int kkk=k+kk;
+                    if (kkk<0 || kkk>=ZSIZE(out())) continue;
+                    for (int ii=-2; ii<=2; ii++)
                     {
-                        int kkk=k+kk;
-                        if (kkk<0 || kkk>=ZSIZE(out())) continue;
-                        for (int ii=-2; ii<=2; ii++)
+                        int iii=i+ii;
+                        if (iii<0 || iii>=YSIZE(out())) continue;
+                        for (int jj=-2; jj<=2; jj++)
                         {
-                            int iii=i+ii;
-                            if (iii<0 || iii>=YSIZE(out())) continue;
-                            for (int jj=-2; jj<=2; jj++)
-                            {
-                                int jjj=j+jj;
-                                if (jjj<0 || jjj>=XSIZE(out())) continue;
-                                double val=out(kkk,iii,jjj);
-                                if (val>0) neighbours.push_back(val);
-                            }
-                        }
-                        int N=neighbours.size();
-                        if (N==0)
-                            negativeRemaining=true;
-                        else
-                        {
-                            std::sort(neighbours.begin(),neighbours.end());
-                            if (N%2==0)
-                                out(k,i,j)=0.5*(neighbours[N/2-1]+
-                                    neighbours[N/2]);
-                            else
-                                out(k,i,j)=neighbours[N/2];
+                            int jjj=j+jj;
+                            if (jjj<0 || jjj>=XSIZE(out())) continue;
+                            double val=out(kkk,iii,jjj);
+                            if (val>0) neighbours.push_back(val);
                         }
                     }
+                    int N=neighbours.size();
+                    if (N==0)
+                        negativeRemaining=true;
+                    else
+                    {
+                        std::sort(neighbours.begin(),neighbours.end());
+                        if (N%2==0)
+                            out(k,i,j)=0.5*(neighbours[N/2-1]+
+                                            neighbours[N/2]);
+                        else
+                            out(k,i,j)=neighbours[N/2];
+                    }
                 }
-        } while (negativeRemaining);
+            }
+        }
+        while (negativeRemaining);
         if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
@@ -1079,7 +1081,7 @@ void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         ImageXmipp out;
         out.read(fn_1, false, false, true);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
-            out(i, j) = sqrt(out(i, j));
+        out(i, j) = sqrt(out(i, j));
         out.set_originOffsets(0., 0.);
         out.set_eulerAngles(0., 0., 0.);
         if (fn_out=="") out.write(fn_1);
@@ -1090,7 +1092,7 @@ void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         VolumeXmipp out;
         out.read(fn_1);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
-            out(k, i, j) = sqrt(out(k, i, j));
+        out(k, i, j) = sqrt(out(k, i, j));
         if (fn_out=="") out.write(fn_1);
         else out.write(fn_out);
     }
@@ -1115,7 +1117,7 @@ void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out)
 }
 
 void extract_slice(int operand_type1, int operand_type2, const FileName &fn_1,
-    const FileName &fn_2, const FileName &fn_out)
+                   const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == VOLUME && operand_type2 == NUMBER)
     {
@@ -1129,8 +1131,8 @@ void extract_slice(int operand_type1, int operand_type2, const FileName &fn_1,
             // Resize image
             out().resize(Op1().rowNumber(), Op1().colNumber());
             // Copy
-            for (int i = STARTINGY(Op1());i <= FINISHINGY(Op1());i++)
-                for (int j = STARTINGX(Op1());j <= FINISHINGX(Op1());j++)
+            for (int i = STARTINGY(Op1()); i <= FINISHINGY(Op1()); i++)
+                for (int j = STARTINGX(Op1()); j <= FINISHINGX(Op1()); j++)
                     out(i, j) = Op1(number2, i, j);
             // Save
             out.write(fn_out);
@@ -1139,7 +1141,7 @@ void extract_slice(int operand_type1, int operand_type2, const FileName &fn_1,
 }
 
 void extract_column(int operand_type1, int operand_type2, const FileName &fn_1,
-    const FileName &fn_2, const FileName &fn_out)
+                    const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == VOLUME && operand_type2 == NUMBER)
     {
@@ -1153,8 +1155,8 @@ void extract_column(int operand_type1, int operand_type2, const FileName &fn_1,
             // Resize image
             out().resize(Op1().sliceNumber(), Op1().rowNumber());
             // Copy
-            for (int k = STARTINGZ(Op1());k <= FINISHINGZ(Op1());k++)
-                for (int i = STARTINGY(Op1());i <= FINISHINGY(Op1());i++)
+            for (int k = STARTINGZ(Op1()); k <= FINISHINGZ(Op1()); k++)
+                for (int i = STARTINGY(Op1()); i <= FINISHINGY(Op1()); i++)
                     out(k, i) = Op1(k, i, number2);
             // Save
             out.write(fn_out);
@@ -1172,7 +1174,7 @@ void extract_column(int operand_type1, int operand_type2, const FileName &fn_1,
             // Resize image
             out().resize(Op1().rowNumber(), 1);
             // Copy
-            for (int i = STARTINGY(Op1());i <= FINISHINGY(Op1());i++)
+            for (int i = STARTINGY(Op1()); i <= FINISHINGY(Op1()); i++)
             {
                 out(i, 0) = Op1(i, number2);
                 // For 1D output: also write in text format to screen
@@ -1186,7 +1188,7 @@ void extract_column(int operand_type1, int operand_type2, const FileName &fn_1,
 
 
 void extract_row(int operand_type1, int operand_type2, const FileName &fn_1,
-    const FileName &fn_2, const FileName &fn_out)
+                 const FileName &fn_2, const FileName &fn_out)
 {
     if (operand_type1 == VOLUME && operand_type2 == NUMBER)
     {
@@ -1200,8 +1202,8 @@ void extract_row(int operand_type1, int operand_type2, const FileName &fn_1,
             // Resize image
             out().resize(Op1().sliceNumber(), Op1().colNumber());
             // Copy
-            for (int k = STARTINGZ(Op1());k <= FINISHINGZ(Op1());k++)
-                for (int j = STARTINGX(Op1());j <= FINISHINGX(Op1());j++)
+            for (int k = STARTINGZ(Op1()); k <= FINISHINGZ(Op1()); k++)
+                for (int j = STARTINGX(Op1()); j <= FINISHINGX(Op1()); j++)
                     out(k, j) = Op1(k, number2, j);
             // Save
             out.write(fn_out);
@@ -1219,7 +1221,7 @@ void extract_row(int operand_type1, int operand_type2, const FileName &fn_1,
             // Resize image
             out().resize(1, Op1().colNumber());
             // Copy
-            for (int j = STARTINGX(Op1());j <= FINISHINGX(Op1());j++)
+            for (int j = STARTINGX(Op1()); j <= FINISHINGX(Op1()); j++)
             {
                 out(0, j) = Op1(number2, j);
                 // For 1D output: also write in text format to screen
@@ -1289,33 +1291,33 @@ void radial_avg(int operand_type1, const FileName &fn_1, const FileName &fn_out)
 void Usage()
 {
     std::cout  << " A simple Xmipp images calculator. Binary and unary operations\n"
-    << " Parameters:\n"
-    << " -i xmipp image, selfile or volume. This is the input to the program. \n"
-    << "                                    Only image selfiles are allowed\n"
-    << "[-o <file> / -oext <extension>]     If no output is given, the input\n"
-    << "                                    images are rewritten.\n"
-    << "\n"
-    << " CURRENTLY SUPPORTED OPERATIONS \n"
-    << "================================\n"
-    << " -plus <file or value>    Sums two images, volumes or adds a numerical value to an image\n"
-    << " -minus <file or value>   Substracts two images, volumes or substracts a numerical value to an image\n"
-    << " -mult <file or value>    Multiplies two images, volumes, or multiplies per a given number\n"
-    << " -divide <file or value>  Divides two images, volumes, or divides per a given number\n"
-    << " -min <file or value>     Minimum of two images, volumes, or number (pixel-wise)\n"
-    << " -max <file or value>     Maximum of two images, volumes, or number (pixel-wise)\n"
-    << " -which_min <file or value> Returns 0 if the first argument is the minimum of the two (pixel-wise)\n"
-    << " -which_max <file or value> Returns 0 if the first argument is the maximum of the two (pixel-wise)\n"
-    << " -log10                   Computes the logarithm of an image\n"
-    << " -sqrt                    Computes the square root of an image\n"
-    << " -slice  <value>          Extracts a given slice from a volume\n"
-    << " -column <value>          Extracts a given column from a image or volume\n"
-    << " -row    <value>          Extracts a given row from a image or volume\n"
-    << " -radial_avg              Compute the radial average of an image\n"
-    << " EXAMPLES \n"
-    << "==========\n"
-    << "operate -i image1 -plus image2 -o image3\n"
-    << "operate -i image1 -mult image2 -o image3\n"
-    << "operate -i image1 -divide 2 -o image3\n"
-    << "operate -i image1 -sqrt -o image3\n"
-    ;
+               << " Parameters:\n"
+               << " -i xmipp image, selfile or volume. This is the input to the program. \n"
+               << "                                    Only image selfiles are allowed\n"
+               << "[-o <file> / -oext <extension>]     If no output is given, the input\n"
+               << "                                    images are rewritten.\n"
+               << "\n"
+               << " CURRENTLY SUPPORTED OPERATIONS \n"
+               << "================================\n"
+               << " -plus <file or value>    Sums two images, volumes or adds a numerical value to an image\n"
+               << " -minus <file or value>   Substracts two images, volumes or substracts a numerical value to an image\n"
+               << " -mult <file or value>    Multiplies two images, volumes, or multiplies per a given number\n"
+               << " -divide <file or value>  Divides two images, volumes, or divides per a given number\n"
+               << " -min <file or value>     Minimum of two images, volumes, or number (pixel-wise)\n"
+               << " -max <file or value>     Maximum of two images, volumes, or number (pixel-wise)\n"
+               << " -which_min <file or value> Returns 0 if the first argument is the minimum of the two (pixel-wise)\n"
+               << " -which_max <file or value> Returns 0 if the first argument is the maximum of the two (pixel-wise)\n"
+               << " -log10                   Computes the logarithm of an image\n"
+               << " -sqrt                    Computes the square root of an image\n"
+               << " -slice  <value>          Extracts a given slice from a volume\n"
+               << " -column <value>          Extracts a given column from a image or volume\n"
+               << " -row    <value>          Extracts a given row from a image or volume\n"
+               << " -radial_avg              Compute the radial average of an image\n"
+               << " EXAMPLES \n"
+               << "==========\n"
+               << "operate -i image1 -plus image2 -o image3\n"
+               << "operate -i image1 -mult image2 -o image3\n"
+               << "operate -i image1 -divide 2 -o image3\n"
+               << "operate -i image1 -sqrt -o image3\n"
+               ;
 }

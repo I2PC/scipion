@@ -108,7 +108,7 @@ void vuelta_imagen(unsigned int ** image, int rows, int cols)
     unsigned int new, *pnew, *pn;
 
     pnew = &new;
-    for (i = 0 ; i < rows;i++)
+    for (i = 0 ; i < rows; i++)
     {
         pn = (unsigned int *) image[i];
         for (j = 0; j < cols; j++)
@@ -185,7 +185,8 @@ int image_io(char **image, char **image_geo, int row, int col, char *name,
 /* rdwr, format:   Read/write, kind of image                            */
 /* norma       :   Flag for normalize                                   */
 
-{   int i, j, k;                    /* Counters                             */
+{
+    int i, j, k;                    /* Counters                             */
     int fichero;                    /* File handle                          */
     int oflag, pmode = 0;           /* Open options (see library reference) */
     int size;                       /* Size of element to read/write        */
@@ -697,7 +698,8 @@ void busca_maximos(float **imagen, int fil, int col,
             for (j = 0; j < col; j++)
                 if ((aux = imagen[i][j]) > maximo && aux < maxi[k-1])
                     /******* No a los m ximos anteriores ********/
-                {   continua = TRUE;
+                {
+                    continua = TRUE;
                     if (i == 0)         /**** Para no salirnos de madre ****/
                         ini_f = 0;
                     else

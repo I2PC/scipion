@@ -25,15 +25,15 @@
 
 FFTW_VOIDFUNC F77(plan_with_nthreads, PLAN_WITH_NTHREADS)(int *nthreads)
 {
-     X(plan_with_nthreads)(*nthreads);
+    X(plan_with_nthreads)(*nthreads);
 }
 
 FFTW_VOIDFUNC F77(init_threads, INIT_THREADS)(int *okay)
 {
-     *okay = X(init_threads)();
+    *okay = X(init_threads)();
 }
 
 FFTW_VOIDFUNC F77(cleanup_threads, CLEANUP_THREADS)(void)
 {
-     X(cleanup_threads)();
+    X(cleanup_threads)();
 }

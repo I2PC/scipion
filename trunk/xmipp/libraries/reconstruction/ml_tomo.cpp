@@ -99,9 +99,9 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     }
     else
     {
-	// no restart, just copy argc to argc2 and argv to argv2
-	argc2 = argc;
-	argv2 = argv;	
+        // no restart, just copy argc to argc2 and argv to argv2
+        argc2 = argc;
+        argv2 = argv;
         for (int i = 1; i < argc2; i++)
         {
             cline = cline + (std::string)argv2[i] + " ";
@@ -111,8 +111,8 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     // Read command line
     if (checkParameter(argc2, argv2, "-more_options"))
     {
-	usage();
-	extendedUsage();
+        usage();
+        extendedUsage();
     }
     nr_ref = textToInteger(getParameter(argc2, argv2, "-nref", "0"));
     fn_ref = getParameter(argc2, argv2, "-ref", "");
@@ -138,7 +138,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
 
     // Adjust power spectra
     do_adjust_spectra = checkParameter(argc2, argv2, "-adjust_spectra");
-    
+
     // Low-pass filter
     do_filter = checkParameter(argc2, argv2, "-filter");
     do_ini_filter = checkParameter(argc2, argv2, "-ini_filter");
@@ -167,7 +167,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     fn_mask = getParameter(argc2, argv2, "-mask", "");
     do_only_average = checkParameter(argc2, argv2, "-only_average");
 
-    // Missing data structures 
+    // Missing data structures
     fn_missing = getParameter(argc2, argv2, "-missing","");
     dim = textToInteger(getParameter(argc2, argv2, "-dim", "-1"));
     maxres = textToFloat(getParameter(argc2, argv2, "-maxres", "0.5"));
@@ -202,14 +202,14 @@ void Prog_ml_tomo_prm::show()
         std::cerr << "  Output rootname         : " << fn_root << std::endl;
         if (!(dont_align || do_only_average))
         {
-             std::cerr << "  Angular sampling rate   : " << angular_sampling<< " degrees"<<std::endl;
+            std::cerr << "  Angular sampling rate   : " << angular_sampling<< " degrees"<<std::endl;
             if (ang_search > 0.)
             {
                 std::cerr << "  Local angular searches  : "<<ang_search<<" degrees"<<std::endl;
                 if (!do_limit_rotrange)
                     std::cerr << "                          : but with complete rot searches"<<std::endl;
             }
-            if (limit_trans >= 0.) 
+            if (limit_trans >= 0.)
                 std::cerr << "  Maximum allowed shifts  : "<<limit_trans<<" pixels"<<std::endl;
         }
         std::cerr << "  Symmetry group          : " << fn_sym<<std::endl;
@@ -243,7 +243,7 @@ void Prog_ml_tomo_prm::show()
         {
             std::cerr << "  -> Skip alignment and classification, only calculate weighted average "<<std::endl;
         }
-        if (!do_ml) 
+        if (!do_ml)
         {
             std::cerr << "  -> Use constrained correlation coefficient instead of ML-imputation approach." << std::endl;
         }
@@ -306,7 +306,7 @@ void Prog_ml_tomo_prm::usage()
     std::cerr << " [ -perturb ]                  : Apply random perturbations to angular sampling in each iteration\n";
     std::cerr << " [ -dim <int> ]                : Use downscaled (in fourier space) images of this size \n";
     std::cerr << " [ -maxres <float=0.5> ]       : Maximum resolution (in pixel^-1) to use \n";
-    std::cerr << " [ -thr <int=1> ]              : Number of shared-memory threads to use in parallel \n"; 
+    std::cerr << " [ -thr <int=1> ]              : Number of shared-memory threads to use in parallel \n";
     std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
@@ -412,7 +412,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
     else
     {
         if (!dont_align)
-            REPORT_ERROR(1,"ERROR: option -mask is only valid in combination with -dont_align"); 
+            REPORT_ERROR(1,"ERROR: option -mask is only valid in combination with -dont_align");
         Imask.read(fn_mask);
         if (Imask().computeMin() < 0. || Imask().computeMax() > 1.)
             REPORT_ERROR(1,"ERROR: mask should have values within the range [0,1]");
@@ -435,15 +435,15 @@ void Prog_ml_tomo_prm::produceSideInfo()
     RaisedCosineMask(cosine_mask, r_maxres - 2, r_maxres, INNER_MASK);
     int yy, zz;
     int dimb = (dim - 1)/2;
-    for ( int z=0, ii=0; z<dim; z++ ) 
+    for ( int z=0, ii=0; z<dim; z++ )
     {
         if ( z > dimb ) zz = z-dim;
         else zz = z;
-        for ( int y=0; y<dim; y++ ) 
+        for ( int y=0; y<dim; y++ )
         {
             if ( y > dimb ) yy = y-dim;
             else yy = y;
-            for ( int xx=0; xx<hdim + 1; xx++, ii++ ) 
+            for ( int xx=0; xx<hdim + 1; xx++, ii++ )
             {
                 if (xx <= FINISHINGX(cosine_mask))
                 {
@@ -478,10 +478,10 @@ void Prog_ml_tomo_prm::produceSideInfo()
         mysampling.Compute_sampling_points(false, // half sphere?
                                            tilt_rangeF,
                                            tilt_range0);
-        mysampling.remove_redundant_points_exhaustive(symmetry, 
-                                                      sym_order, 
-                                                      false, // half sphere?
-                                                      0.75 * angular_sampling);
+        mysampling.remove_redundant_points_exhaustive(symmetry,
+                sym_order,
+                false, // half sphere?
+                0.75 * angular_sampling);
         if (psi_sampling < 0)
             psi_sampling = angular_sampling;
     }
@@ -529,19 +529,19 @@ void Prog_ml_tomo_prm::produceSideInfo()
         FileName fn_tst;
         DFm.read(fn_missing);
         DFm.go_beginning();
-        if (DFm.get_current_line().Is_comment()) 
+        if (DFm.get_current_line().Is_comment())
         {
             fn_tst = (DFm.get_current_line()).get_text();
             if (strstr(fn_tst.c_str(), "Wedgeinfo") == NULL)
                 REPORT_ERROR(1,"Missing wedge info file does not have a header starting with:\n ; Wedgeinfo");
-            
+
             int n = 0;
             int nmax = DFm.dataLineNo();
             while (n < nmax)
             {
                 n++;
                 DFm.next();
-                if (DFm.get_current_line().Is_comment()) 
+                if (DFm.get_current_line().Is_comment())
                     fn_tst = (DFm.get_current_line()).get_text();
                 DFm.adjust_to_data_line();
 
@@ -636,7 +636,7 @@ void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
     {
         fn_img=SF.NextImg();
         if (fn_img=="") break;
-        if (!DF.search_comment(fn_img)) 
+        if (!DF.search_comment(fn_img))
         {
             std::cerr << "ERROR% "<<fn_img<<" not found in document file"<<std::endl;
             exit(0);
@@ -678,7 +678,7 @@ void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
     {
         fn_img=SFtmp.NextImg();
         if (fn_img=="") break;
-        if (!DF.search_comment(fn_img)) 
+        if (!DF.search_comment(fn_img))
         {
             std::cerr << "ERROR% "<<fn_img<<" not found in document file"<<std::endl;
             exit(0);
@@ -769,7 +769,7 @@ void Prog_ml_tomo_prm::preparePowerSpectraAdjustment()
     fn_out = fn_root+"_adjust_spectra.txt";
     fh.open((fn_out).c_str(), std::ios::out);
     if (!fh) REPORT_ERROR(1, (std::string)"Prog_ml_tomo_prm: Cannot write file: " + fn_out);
-    
+
     fh<<"# dig. freq.   AVG  series 1-n... \n";
     for (int idx = 0; idx < vsize; idx++)
     {
@@ -838,7 +838,8 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         init_progress_bar(SF.ImgNo());
     }
 
-    if (fn_doc!="") {
+    if (fn_doc!="")
+    {
         DF.read(fn_doc);
     }
 
@@ -861,7 +862,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
         Msumwedge2.initZeros();
         SFtmp.go_beginning();
         SFtmp.jump_lines(Nsub*refno);
-        if (refno == nr_ref - 1) 
+        if (refno == nr_ref - 1)
             Nsub = SFtmp.ImgNo() - refno * Nsub;
         for (int nn = 0; nn < Nsub; nn++)
         {
@@ -870,7 +871,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             {
                 // Going through the docfile again here is a bit dirty coding...
                 // Now do nothing, leave DF pointer at relevant position and read below
-                if (!DF.search_comment(fn_tmp)) 
+                if (!DF.search_comment(fn_tmp))
                 {
                     std::cerr << "ERROR% "<<fn_tmp<<" not found in document file"<<std::endl;
                     exit(0);
@@ -905,7 +906,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
                 Iave1() += Itmp();
             else
                 Iave2() += Itmp();
-            if (do_missing) 
+            if (do_missing)
             {
                 missno = (int)(DF(7)) - 1;
                 getMissingRegion(Mmissing, my_A, missno);
@@ -933,7 +934,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             {
                 if (DIRECT_MULTIDIM_ELEM(Msumwedge1,n) > noimp_threshold)
                 {
-                    DIRECT_MULTIDIM_ELEM(Fave,n) /= 
+                    DIRECT_MULTIDIM_ELEM(Fave,n) /=
                         DIRECT_MULTIDIM_ELEM(Msumwedge1,n);
                 }
                 else
@@ -1022,17 +1023,18 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     }
 
     // Read in docfile with wedge info, optimal angles, etc.
-    if (fn_doc!="") {
+    if (fn_doc!="")
+    {
         DF.read(fn_doc);
         SF.go_beginning();
         int imgno = 0;
         DFsub.clear();
-        while (!SF.eof()) 
+        while (!SF.eof())
         {
             fn_tmp=SF.NextImg();
             if (fn_tmp=="") break;
             DF.go_beginning();
-            if (DF.search_comment(fn_tmp)) 
+            if (DF.search_comment(fn_tmp))
             {
                 // Get missing wedge type
                 if (do_missing)
@@ -1046,7 +1048,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                     DL=DF.get_current_line();
                     DFsub.append_line(DL);
                     imgs_optrot[imgno]=DL[0]; // for limited psi searches Take img_rot, because that is -ref_psi
-                    if (dont_align || do_only_average) 
+                    if (dont_align || do_only_average)
                     {
                         imgs_optangno[imgno]=DFsub.dataLineNo()-1;
                         imgs_optoffsets[imgno](0)=DL[3];
@@ -1059,8 +1061,8 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                             imgs_optrefno[imgno]=aux;
                     }
                 }
-            } 
-            else 
+            }
+            else
             {
                 std::cerr << "ERROR% "<<fn_tmp
                           <<" not found in document file"
@@ -1190,16 +1192,16 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
                 img() *= Imask();
             }
             reScaleVolume(img(),true);
-            
+
             // From now on we will assume that all references are omasked, so enforce this here
             maskSphericalAverageOutside(img());
-            
+
             // Rotate some arbitrary (off-axis) angle and rotate back again to remove high frequencies
             // that will be affected by the interpolation due to rotation
             // This makes that the A2 values of the rotated references are much less sensitive to rotation
-            img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_NOT_INV, 
+            img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_NOT_INV,
                                      DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(),0) );
-            img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_INV, 
+            img().selfApplyGeometry( Euler_rotation3DMatrix(32., 61., 53.), IS_INV,
                                      DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(),0) );
             Iref.push_back(img);
             Iold.push_back(img);
@@ -1247,12 +1249,12 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
 #ifdef DEBUG_GENERAL
     std::cerr<<"nr images= "<<SF.ImgNo()<<std::endl;
     std::cerr<<"do_generate_refs ="<<do_generate_refs<<std::endl;
-    std::cerr<<"nr_ref= "<<nr_ref<<std::endl; 
+    std::cerr<<"nr_ref= "<<nr_ref<<std::endl;
     std::cerr<<"nr_miss= "<<nr_miss<<std::endl;
     std::cerr<<"dim= "<<dim<<std::endl;
     std::cerr<<"Finished produceSideInfo"<<std::endl;
-    std::cerr<<"nr_ang= "<<nr_ang<<std::endl; 
-    std::cerr<<"nr_psi= "<<nr_psi<<std::endl; 
+    std::cerr<<"nr_ang= "<<nr_ang<<std::endl;
+    std::cerr<<"nr_psi= "<<nr_psi<<std::endl;
 #endif
 
 #ifdef DEBUG
@@ -1282,7 +1284,7 @@ void Prog_ml_tomo_prm::perturbAngularSampling()
 
     for (int angno = 0; angno < nr_ang; angno++)
     {
-        Euler_apply_transf(I, R, 
+        Euler_apply_transf(I, R,
                            all_angle_info[angno].rot_ori,
                            all_angle_info[angno].tilt_ori,
                            all_angle_info[angno].psi_ori,
@@ -1290,15 +1292,15 @@ void Prog_ml_tomo_prm::perturbAngularSampling()
                            all_angle_info[angno].tilt,
                            all_angle_info[angno].psi);
         all_angle_info[angno].A = Euler_rotation3DMatrix(all_angle_info[angno].rot,
-                                                         all_angle_info[angno].tilt,
-                                                         all_angle_info[angno].psi);
+                                  all_angle_info[angno].tilt,
+                                  all_angle_info[angno].psi);
     }
 
 }
 
 void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
-                                       Matrix2D<double> A,
-                                       const int missno)
+                                        Matrix2D<double> A,
+                                        const int missno)
 {
 
     if (missno < 0)
@@ -1318,7 +1320,7 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
         do_limit_x = true;
         do_limit_y = false;
         do_cone    = false;
-         // TODO: Make this more logical!!
+        // TODO: Make this more logical!!
         tg0_y = -tan(PI * (-90. - all_missing_info[missno].thyF) / 180.);
         tgF_y = -tan(PI * (90. - all_missing_info[missno].thy0) / 180.);
     }
@@ -1345,7 +1347,8 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
         do_limit_x = false;
         do_limit_y = false;
         do_cone    = true;
-        tg = -tan(PI * (-90. - all_missing_info[missno].thy0) / 180.);    }
+        tg = -tan(PI * (-90. - all_missing_info[missno].thy0) / 180.);
+    }
     else
     {
         REPORT_ERROR(1,"bug: unrecognized type of missing region");
@@ -1366,15 +1369,18 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
 
     int zz, yy;
     int dimb = (dim - 1)/2;
-    for ( int z=0, ii=0; z<dim; z++ ) {
-        if ( z > dimb ) 
+    for ( int z=0, ii=0; z<dim; z++ )
+    {
+        if ( z > dimb )
             zz = z-dim;
-        else 
+        else
             zz = z;
-        for ( int y=0; y<dim; y++ ) {
+        for ( int y=0; y<dim; y++ )
+        {
             if ( y > dimb ) yy = y-dim;
             else yy = y;
-            for ( int xx=0; xx<hdim + 1; xx++, ii++ ) {
+            for ( int xx=0; xx<hdim + 1; xx++, ii++ )
+            {
 
                 double maskvalue= DIRECT_MULTIDIM_ELEM(fourier_imask,ii);
                 if (maskvalue < XMIPP_EQUAL_ACCURACY)
@@ -1455,15 +1461,15 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
     ori.write("oriwedge.fft");
     test().initZeros();
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(test())
-        if (j<hdim+1)
-            DIRECT_VOL_ELEM(test(),k,i,j)=
-                DIRECT_VOL_ELEM(ori(),k,i,j);
-        else
-            DIRECT_VOL_ELEM(test(),k,i,j)=
-                DIRECT_VOL_ELEM(ori(),
-                                (dim-k)%dim,
-                                (dim-i)%dim,
-                                dim-j);
+    if (j<hdim+1)
+        DIRECT_VOL_ELEM(test(),k,i,j)=
+            DIRECT_VOL_ELEM(ori(),k,i,j);
+    else
+        DIRECT_VOL_ELEM(test(),k,i,j)=
+            DIRECT_VOL_ELEM(ori(),
+                            (dim-k)%dim,
+                            (dim-i)%dim,
+                            dim-j);
     test.write("wedge.ftt");
     CenterFFT(test(),true);
     test.write("Fwedge.vol");
@@ -1471,7 +1477,7 @@ void Prog_ml_tomo_prm::getMissingRegion(Matrix3D<double> &Mmissing,
     Matrix3D<int> ress(dim,dim,dim);
     ress.setXmippOrigin();
     BinaryWedgeMask(test(),all_missing_info[missno].thy0, all_missing_info[missno].thyF, A);
-    test.write("Mwedge.vol");    
+    test.write("Mwedge.vol");
 #endif
 
 }
@@ -1527,7 +1533,7 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
     VolumeXmipp Vt;
     Vt()=P_phi;
     Vt.write("pdf.vol");
-#endif 
+#endif
 
 #ifdef  DEBUG
     std::cerr<<"finished calculatePdfTranslations"<<std::endl;
@@ -1623,7 +1629,7 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin, double resolution)
         double raised_w=0.02;
         double w1=resolution;
         double w2=w1+raised_w;
-        
+
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
         {
             FFT_IDX2DIGFREQ(k,ZSIZE(Vin()),ZZ(w));
@@ -1644,7 +1650,7 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin, double resolution)
     maskSphericalAverageOutside(Vin());
 
     // Apply symmetry
-    if (mysampling.SL.SymsNo() > 0) 
+    if (mysampling.SL.SymsNo() > 0)
     {
         // Note that for no-imputation this is not correct!
         // One would have to symmetrize the missing wedges and the sum of the images separately
@@ -1663,7 +1669,7 @@ void Prog_ml_tomo_prm::postProcessVolume(VolumeXmipp &Vin, double resolution)
             R(3, 0) = sh(0) * dim;
             R(3, 1) = sh(1) * dim;
             R(3, 2) = sh(2) * dim;
-            applyGeometry(Vaux(), R.transpose(), Vin(), IS_NOT_INV, 
+            applyGeometry(Vaux(), R.transpose(), Vin(), IS_NOT_INV,
                           DONT_WRAP, DIRECT_MULTIDIM_ELEM(Vin(),0));
             Vsym() += Vaux();
         }
@@ -1685,7 +1691,7 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
 
 #ifdef DEBUG
     std::cerr<<"start precalculateA2"<<std::endl;
-    TimeStamp t0; 
+    TimeStamp t0;
     time_config();
     annotate_time(&t0);
 #endif
@@ -1705,9 +1711,9 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
         for (int angno = 0; angno < nr_ang; angno++)
         {
             A_rot_inv = ((all_angle_info[angno]).A).inv();
-            // use DONT_WRAP and put density of first element outside 
+            // use DONT_WRAP and put density of first element outside
             // i.e. assume volume has been processed with omask
-            applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV, 
+            applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV,
                           DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
 //#define DEBUG_PRECALC_A2_ROTATE
 #ifdef DEBUG_PRECALC_A2_ROTATE
@@ -1717,16 +1723,16 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
             Vt()=Iref[refno]();
             Vt.write("ref.vol");
             std::cerr<<" angles= "<<(all_angle_info[angno]).rot<<" "<<(all_angle_info[angno]).tilt<<" "<<(all_angle_info[angno]).psi<<std::endl;
-            std::cerr<<" Written volume rot.vol and ref.vol, press any key to continue ..."<<std::endl; 
+            std::cerr<<" Written volume rot.vol and ref.vol, press any key to continue ..."<<std::endl;
             char c;
             std::cin >> c;
 #endif
             AA = Maux.sum2();
-            if (angno==0) 
+            if (angno==0)
                 stdAA = AA;
-            if (AA > 0) 
+            if (AA > 0)
                 corr = sqrt(stdAA / AA);
-            else 
+            else
                 corr = 1.;
             corrA2.push_back(corr);
             Maux *= corr;
@@ -1776,7 +1782,7 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< VolumeXmippT<double> > &Iref)
 
 #ifdef DEBUG
     std::cerr<<"finished precalculateA2"<<std::endl;
-    print_elapsed_time(t0); 
+    print_elapsed_time(t0);
 #endif
 }
 
@@ -1788,13 +1794,13 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     std::vector<Matrix3D<double> > &wsumimgs,
     std::vector<Matrix3D<double> > &wsumweds,
     double &wsum_sigma_noise, double &wsum_sigma_offset,
-    Matrix1D<double> &sumw, double &LL, double &dLL, double &fracweight, double &sumfracweight, 
+    Matrix1D<double> &sumw, double &LL, double &dLL, double &fracweight, double &sumfracweight,
     double &trymindiff, int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets)
 {
 
 #ifdef DEBUG
     std::cerr<<"start expectationSingleImage"<<std::endl;
-    TimeStamp t0, t1; 
+    TimeStamp t0, t1;
     time_config();
     annotate_time(&t0);
     annotate_time(&t1);
@@ -1857,7 +1863,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         A_rot = (all_angle_info[opt_angno]).A;
         A_rot_inv = A_rot.inv();
         applyGeometry(Mmask, A_rot_inv, Imask(), IS_NOT_INV, DONT_WRAP, 0.);
-        Maux *= Mmask; 
+        Maux *= Mmask;
     }
     // Calculate the unrotated Fourier transform with enforced wedge of Mimg (store in Fimg0)
     // also calculate myXi2;
@@ -1884,10 +1890,10 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     // That way: Pmax will be one and all other probabilities will be [0,1>
     // But to find mindiff I first have to loop over all hidden variables...
     // Fortunately, there is some flexibility as the reliable domain of the exp-functions goes from -700 to 700.
-    // Therefore, make a first guess for mindiff (trymindiff) and check whether the difference 
+    // Therefore, make a first guess for mindiff (trymindiff) and check whether the difference
     // with the real mindiff is not larger than 500 (to be on the save side).
-    // If that is the case: OK; if not: do the entire loop again. 
-    // The efficiency of this will depend on trymindiff. 
+    // If that is the case: OK; if not: do the entire loop again.
+    // The efficiency of this will depend on trymindiff.
     // First cycle use trymindiff = trymindiff_factor * 0.5 * Xi2
     // From then on: use mindiff from the previous iteration
     if (trymindiff < 0.)
@@ -1904,13 +1910,13 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         mysumweds.clear();
         for (int refno = 0; refno < nr_ref; refno++)
         {
-            mysumimgs.push_back(Mzero2); 
+            mysumimgs.push_back(Mzero2);
             if (do_missing)
-                mysumweds.push_back(Mzero); 
+                mysumweds.push_back(Mzero);
         }
         refw.initZeros(nr_ref);
         // The real stuff: now loop over all orientations, references and translations
-        // Start the loop over all refno at old_optangno (=opt_angno from the previous iteration). 
+        // Start the loop over all refno at old_optangno (=opt_angno from the previous iteration).
         // This will speed-up things because we will find Pmax probably right away,
         // and this will make the if-statement that checks SIGNIFICANT_WEIGHT_LOW
         // effective right from the start
@@ -1930,7 +1936,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     // Otherwise the is_a_neighbour construction may give errors:
                     // -150 0 150 and -100 0 150 would be considered as equal, since
                     // the distance between (-150,0) and (-100,0) is zero AND
-                    // the distance between 150 and 150 is also zero... 
+                    // the distance between 150 and 150 is also zero...
                     if (ABS(realWRAP(all_angle_info[angno].tilt, -90., 90.)) < 1.1 * ang_search)
                         is_within_rotrange=true;
                     else if (ABS(realWRAP(old_rot - (all_angle_info[angno]).rot,-180.,180.)) <= ang_search)
@@ -1962,7 +1968,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 A_rot = (all_angle_info[angno]).A;
                 A_rot_inv = A_rot.inv();
 
-                // Start the loop over all refno at old_optrefno (=opt_refno from the previous iteration). 
+                // Start the loop over all refno at old_optrefno (=opt_refno from the previous iteration).
                 // This will speed-up things because we will find Pmax probably right away,
                 // and this will make the if-statement that checks SIGNIFICANT_WEIGHT_LOW
                 // effective right from the start
@@ -1970,11 +1976,11 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 {
                     int refno = rr;
                     if (refno >= nr_ref) refno-= nr_ref;
-                    
+
                     fracpdf = alpha_k(refno)*(1./nr_ang);
                     // Now (inverse) rotate the reference and calculate its Fourier transform
                     // Use DONT_WRAP and assume map has been omasked
-                    applyGeometry(Maux2, A_rot_inv, Iref[refno](), IS_NOT_INV, 
+                    applyGeometry(Maux2, A_rot_inv, Iref[refno](), IS_NOT_INV,
                                   DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
                     mycorrAA = corrA2[refno*nr_ang + angno];
                     Maux = Maux2 * mycorrAA;
@@ -1987,13 +1993,13 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     // A. Backward FFT to calculate weights in real-space
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
                     {
-                        dVkij(Faux,k,i,j) = 
-                            dVkij(Fimg0,k,i,j) * 
+                        dVkij(Faux,k,i,j) =
+                            dVkij(Fimg0,k,i,j) *
                             conj(dVkij(Faux,k,i,j));
                     }
                     local_transformer.inverseFourierTransform();
                     CenterFFT(Maux, true);
-                    
+
                     // B. Calculate weights for each pixel within sigdim (Mweight)
                     my_sumweight = my_maxweight = 0.;
                     FOR_ALL_ELEMENTS_IN_MATRIX3D(Mweight)
@@ -2014,10 +2020,12 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                             std::cerr<<"A2_plus_Xi2= "<<A2_plus_Xi2<<" myA2= "<<myA2<<" myXi2= "<<myXi2<<std::endl;
                             std::cerr.flush();
                             VolumeXmipp tt;
-                            tt()=Maux; tt.write("Maux.vol");
-                            tt()=Mweight; tt.write("Mweight.vol");
+                            tt()=Maux;
+                            tt.write("Maux.vol");
+                            tt()=Mweight;
+                            tt.write("Mweight.vol");
                             std::cerr<<"Ainv= "<<A_rot_inv<<std::endl;
-                            std::cerr<<"A= "<<A_rot_inv.inv()<<std::endl;                            
+                            std::cerr<<"A= "<<A_rot_inv.inv()<<std::endl;
                             exit(1);
                         }
 #endif
@@ -2045,7 +2053,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                             opt_angno = angno;
                             opt_refno = refno;
                         }
-                        
+
                     } // close for over all elements in Mweight
 
                     // C. only for significant settings, store weighted sums
@@ -2054,7 +2062,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
 //#define DEBUG_EXP_A2
 #ifdef DEBUG_EXP_A2
                         std::cout<<" imgno= "<<imgno<<" refno= "<<refno<<" angno= "<<angno<<" A2= "<<myA2<<" <<Xi2= "<<myXi2<<" my_maxweight= "<<my_maxweight<<std::endl;
-#endif 
+#endif
                         sum_refw += my_sumweight;
                         refw(refno) += my_sumweight;
                         // Back from smaller Mweight to original size of Maux
@@ -2072,14 +2080,14 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                         }
                         local_transformer.inverseFourierTransform();
                         maskSphericalAverageOutside(Maux);
-                        Maux.selfApplyGeometry(A_rot, IS_NOT_INV, 
+                        Maux.selfApplyGeometry(A_rot, IS_NOT_INV,
                                                DONT_WRAP, DIRECT_MULTIDIM_ELEM(Maux,0));
                         if (do_missing)
                         {
                             // Store sum of wedges!
                             getMissingRegion(Mmissing, A_rot, missno);
                             mysumweds[refno] += my_sumweight * Mmissing;
-                            
+
                             // Again enforce missing region to avoid filling it with artifacts from the rotation
                             local_transformer.FourierTransform();
                             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
@@ -2094,9 +2102,9 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                 } // close for refno
             } // close if is_a_neighbor
         } // close for angno
-            
+
         // Now check whether our trymindiff was OK.
-        // The limit of the exp-function lies around 
+        // The limit of the exp-function lies around
         // exp(700)=1.01423e+304, exp(800)=inf; exp(-700) = 9.85968e-305; exp(-800) = 0
         // Use 500 to be on the save side?
         if (ABS((mindiff - trymindiff) / sigma_noise2) > 500.)
@@ -2153,28 +2161,28 @@ void Prog_ml_tomo_prm::expectationSingleImage(
         {
             wsumweds[iran_fsc*nr_ref + refno] += mysumweds[refno] / sum_refw;
         }
-   }
+    }
 
     // 1st term: log(refw_i)
     // 2nd term: for subtracting mindiff
     // 3rd term: for (sqrt(2pi)*sigma_noise)^-1 term in formula (12) Sigworth (1998)
     // TODO: check this!!
     if (do_missing)
- 
-        dLL = log(sum_refw) 
-            - my_mindiff / sigma_noise2 
-            - miss_nr_pixels[missno] * log( sqrt(2. * PI * sigma_noise2));
+
+        dLL = log(sum_refw)
+              - my_mindiff / sigma_noise2
+              - miss_nr_pixels[missno] * log( sqrt(2. * PI * sigma_noise2));
     else
-        dLL = log(sum_refw) 
-            - my_mindiff / sigma_noise2 
-            - ddim3 * log( sqrt(2. * PI * sigma_noise2));
+        dLL = log(sum_refw)
+              - my_mindiff / sigma_noise2
+              - ddim3 * log( sqrt(2. * PI * sigma_noise2));
     LL += dLL;
 
     pthread_mutex_unlock(  &mltomo_weightedsum_update_mutex );
 
 #ifdef DEBUG
     std::cerr<<"finished expectationSingleImage"<<std::endl;
-    print_elapsed_time(t0); 
+    print_elapsed_time(t0);
 #endif
 }
 
@@ -2189,7 +2197,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
 {
 #ifdef DEBUG
     std::cerr<<"start maxConstrainedCorrSingleImage"<<std::endl;
-    TimeStamp t0, t1; 
+    TimeStamp t0, t1;
     time_config();
     annotate_time(&t0);
     annotate_time(&t1);
@@ -2224,7 +2232,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
         A_rot = (all_angle_info[opt_angno]).A;
         A_rot_inv = A_rot.inv();
         applyGeometry(Mmask, A_rot_inv, Imask(), IS_NOT_INV, DONT_WRAP, 0.);
-        Maux *= Mmask; 
+        Maux *= Mmask;
     }
     // Calculate the unrotated Fourier transform with enforced wedge of Mimg (store in Fimg0)
     // Note that from here on local_transformer will act on Maux <-> Faux
@@ -2241,13 +2249,13 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
             DIRECT_MULTIDIM_ELEM(Faux,n) *= DIRECT_MULTIDIM_ELEM(Mmissing,n);
         }
         // BE CAREFUL: inverseFourierTransform messes up Faux!!
-        Fimg0 = Faux;        
+        Fimg0 = Faux;
         local_transformer.inverseFourierTransform();
     }
     else
         Fimg0 = Faux;
     Mimg0 = Maux;
-    
+
     if (do_only_average)
     {
         maxcorr = 1.;
@@ -2267,7 +2275,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
         {
             int angno = aa;
             if (angno >= nr_ang) angno -= nr_ang;
-            
+
             // See whether this image is in the neighborhoood for this imgno
             if (ang_search > 0.)
             {
@@ -2278,7 +2286,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
                     // Otherwise the is_a_neighbour construction may give errors:
                     // -150 0 150 and -100 0 150 would be considered as equal, since
                     // the distance between (-150,0) and (-100,0) is zero AND
-                    // the distance between 150 and 150 is also zero... 
+                    // the distance between 150 and 150 is also zero...
                     if (ABS(realWRAP(all_angle_info[angno].tilt, -90., 90.)) < 1.1 * ang_search)
                         is_within_rotrange=true;
                     else if (ABS(realWRAP(old_rot - (all_angle_info[angno]).rot,-180.,180.)) <= ang_search)
@@ -2286,7 +2294,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
                     else
                         is_within_rotrange=false;
                 }
-                
+
                 if (!do_limit_rotrange || is_within_rotrange)
                 {
                     for (int i = 0; i < mysampling.my_neighbors[imgno].size(); i++)
@@ -2303,22 +2311,22 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
             {
                 is_a_neighbor = true;
             }
-            
+
             // If it is in the neighborhoood: proceed
             if (is_a_neighbor)
             {
                 A_rot = (all_angle_info[angno]).A;
                 A_rot_inv = A_rot.inv();
-                
+
                 // Loop over all references
                 for (int rr = old_optrefno; rr < old_optrefno+nr_ref; rr++)
                 {
                     int refno = rr;
                     if (refno >= nr_ref) refno-= nr_ref;
-                    
+
                     // Now (inverse) rotate the reference and calculate its Fourier transform
                     // Use DONT_WRAP because the reference has been omasked
-                    applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV, 
+                    applyGeometry(Maux, A_rot_inv, Iref[refno](), IS_NOT_INV,
                                   DONT_WRAP, DIRECT_MULTIDIM_ELEM(Iref[refno](),0));
                     local_transformer.FourierTransform();
                     if (do_missing)
@@ -2337,17 +2345,17 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
                     // Calculate stddev of (wedge-inforced) reference
                     Mref = Maux;
                     ref_stddev = Mref.computeStddev();
-                    
+
                     // Calculate correlation matrix via backward FFT
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
                     {
-                        dVkij(Faux,k,i,j) = 
-                            dVkij(Fimg0,k,i,j) * 
+                        dVkij(Faux,k,i,j) =
+                            dVkij(Fimg0,k,i,j) *
                             conj(dVkij(Fref,k,i,j));
                     }
                     local_transformer.inverseFourierTransform();
                     CenterFFT(Maux, true);
-                    
+
                     if (dont_align)
                     {
                         corr = VOL_ELEM(Maux,0,0,0) / (img_stddev * ref_stddev);
@@ -2389,7 +2397,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     Mimg0.selfTranslate(opt_offsets, DONT_WRAP);
     A_rot = (all_angle_info[opt_angno]).A;
     maskSphericalAverageOutside(Mimg0);
-    Mimg0.selfApplyGeometry(A_rot, IS_NOT_INV, 
+    Mimg0.selfApplyGeometry(A_rot, IS_NOT_INV,
                             DONT_WRAP, DIRECT_MULTIDIM_ELEM(Mimg0,0));
     maxCC = maxcorr;
 
@@ -2424,7 +2432,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
 
 #ifdef DEBUG
     std::cerr<<"finished expectationSingleImage"<<std::endl;
-    print_elapsed_time(t0); 
+    print_elapsed_time(t0);
 #endif
 
 }
@@ -2480,7 +2488,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
         myLast = myFirst + Npart - 1;
     }
     myNum = myLast - myFirst + 1;
-            
+
     if (prm->verb > 0 && thread_id==0) init_progress_bar(myNum);
 
     // Loop over all images
@@ -2531,16 +2539,16 @@ void * threadMLTomoExpectationSingleImage( void * data )
         if (prm->do_ml)
         {
             // A. Use maximum likelihood approach
-            (*prm).expectationSingleImage(img(), imgno, missno, old_rot, *Iref, *wsumimgs, *wsumweds, 
-                                          *wsum_sigma_noise, *wsum_sigma_offset, 
-                                          *sumw, *LL, dLL, fracweight, *sumfracweight, 
+            (*prm).expectationSingleImage(img(), imgno, missno, old_rot, *Iref, *wsumimgs, *wsumweds,
+                                          *wsum_sigma_noise, *wsum_sigma_offset,
+                                          *sumw, *LL, dLL, fracweight, *sumfracweight,
                                           trymindiff, opt_refno, opt_angno, opt_offsets);
         }
         else
         {
             // B. Use constrained correlation coefficient approach
-            (*prm).maxConstrainedCorrSingleImage(img(), imgno, missno, old_rot, *Iref, 
-                                                 *wsumimgs, *wsumweds, *sumw, fracweight, *sumfracweight, 
+            (*prm).maxConstrainedCorrSingleImage(img(), imgno, missno, old_rot, *Iref,
+                                                 *wsumimgs, *wsumweds, *sumw, fracweight, *sumfracweight,
                                                  opt_refno, opt_angno, opt_offsets);
         }
 
@@ -2548,7 +2556,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
         prm->imgs_trymindiff[imgno] = trymindiff;
         prm->imgs_optrefno[imgno] = opt_refno;
         prm->imgs_optangno[imgno] = opt_angno;
-       
+
         // Output docfile
         (*docfiledata)[imgno](0) = (prm->all_angle_info[opt_angno]).rot;     // rot
         (*docfiledata)[imgno](1) = (prm->all_angle_info[opt_angno]).tilt;    // tilt
@@ -2583,29 +2591,29 @@ void * threadMLTomoExpectationSingleImage( void * data )
 }
 
 void Prog_ml_tomo_prm::expectation(
-        SelFile &SF, std::vector< VolumeXmippT<double> > &Iref, int iter,
-        double &LL, double &sumfracweight, DocFile &DFo,
-        std::vector<Matrix3D<double> > &wsumimgs,
-        std::vector<Matrix3D<double> > &wsumweds,
-        double &wsum_sigma_noise, double &wsum_sigma_offset, 
-	Matrix1D<double> &sumw)
+    SelFile &SF, std::vector< VolumeXmippT<double> > &Iref, int iter,
+    double &LL, double &sumfracweight, DocFile &DFo,
+    std::vector<Matrix3D<double> > &wsumimgs,
+    std::vector<Matrix3D<double> > &wsumweds,
+    double &wsum_sigma_noise, double &wsum_sigma_offset,
+    Matrix1D<double> &sumw)
 {
 
 #ifdef DEBUG
     std::cerr<<"start expectation"<<std::endl;
-#endif 
+#endif
 
     Matrix1D<double> dataline(MLTOMODATALINELENGTH);
     Matrix3D<double> Mzero(dim,dim,hdim+1), Mzero2(dim,dim,dim);
     std::vector<Matrix1D<double> > docfiledata;
     bool fill_real_space;
     int num_img_tot;
-    
-    // Perturb all angles 
+
+    // Perturb all angles
     // (Note that each mpi process will have a different random perturbation)
     if (do_perturb)
         perturbAngularSampling();
-    
+
     if (do_ml)
     {
         // Precalculate A2-values for all references
@@ -2674,7 +2682,7 @@ void Prog_ml_tomo_prm::expectation(
 
 #ifdef DEBUG
     std::cerr<<"finished expectation"<<std::endl;
-#endif 
+#endif
 
 }
 
@@ -2682,13 +2690,13 @@ void Prog_ml_tomo_prm::expectation(
 void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                                     std::vector<Matrix3D<double> > &wsumweds,
                                     double &wsum_sigma_noise, double &wsum_sigma_offset,
-                                    Matrix1D<double> &sumw, double &sumfracweight, 
+                                    Matrix1D<double> &sumw, double &sumfracweight,
                                     double &sumw_allrefs, std::vector<Matrix1D<double> > &fsc,
                                     int iter)
 {
 #ifdef DEBUG
     std::cerr<<"started maximization"<<std::endl;
-#endif 
+#endif
 
     Matrix1D<double> rmean_sigma2, rmean_signal2;
     Matrix1D<int> center(3), radial_count;
@@ -2716,7 +2724,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     // Update the reference images
     sumw_allrefs = 0.;
     Msumallwedges.initZeros();
-    for (int refno=0;refno<nr_ref; refno++)
+    for (int refno=0; refno<nr_ref; refno++)
     {
         sumw_allrefs += sumw(refno);
         transformer.FourierTransform(wsumimgs[refno],Fwsumimgs,true);
@@ -2735,25 +2743,25 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
                         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                         {
                             // Impute old reference for missing pixels
-                            DIRECT_MULTIDIM_ELEM(Faux,n) *= 
+                            DIRECT_MULTIDIM_ELEM(Faux,n) *=
                                 (1. - DIRECT_MULTIDIM_ELEM(wsumweds[refno],n) / sumw(refno));
                             // And sum the weighted sum for observed pixels
-                            DIRECT_MULTIDIM_ELEM(Faux,n) += 
+                            DIRECT_MULTIDIM_ELEM(Faux,n) +=
                                 (DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumw(refno));
                         }
                     }
                 }
                 // else do nothing (i.e. impute old reference completely
             }
-            else 
+            else
             {
-                // no imputation: divide by number of times a pixel has been observed 
+                // no imputation: divide by number of times a pixel has been observed
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                 {
                     if (DIRECT_MULTIDIM_ELEM(wsumweds[refno],n) > noimp_threshold)
                     {
-                        DIRECT_MULTIDIM_ELEM(Faux,n) = 
-                            DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / 
+                        DIRECT_MULTIDIM_ELEM(Faux,n) =
+                            DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) /
                             DIRECT_MULTIDIM_ELEM(wsumweds[refno],n);
                         // TODO:  CHECK THE FOLLOWING LINE!!
                         DIRECT_MULTIDIM_ELEM(Faux,n) *= sumw(refno) / sumw(refno);
@@ -2769,26 +2777,26 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
         {
             // No missing data
             if (sumw(refno) > 0.)
-            {   
-                // if no missing data: calculate straightforward average, 
+            {
+                // if no missing data: calculate straightforward average,
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                 {
-                    DIRECT_MULTIDIM_ELEM(Faux,n) = 
+                    DIRECT_MULTIDIM_ELEM(Faux,n) =
                         DIRECT_MULTIDIM_ELEM(Fwsumimgs,n) / sumw(refno);
                 }
             }
         }
         // Back to real space
         transformer.inverseFourierTransform(Faux,Iref[refno]());
-    }  
+    }
 
     // Average fracweight
     sumfracweight /= sumw_allrefs;
-    
+
     // Update the model fractions
     if (!fix_fractions)
     {
-        for (int refno=0;refno<nr_ref; refno++)
+        for (int refno=0; refno<nr_ref; refno++)
         {
             if (sumw(refno) > 0.)
                 alpha_k(refno) = sumw(refno) / sumw_allrefs;
@@ -2798,7 +2806,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
     }
 
     // Update sigma of the origin offsets
-    if (!fix_sigma_offset) 
+    if (!fix_sigma_offset)
     {
         sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
     }
@@ -2841,7 +2849,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
             if (do_impute)
             {
                 for (int iter2 = 0; iter2 < Niter2; iter2++)
-                {                
+                {
                     sigma_noise *= sigma_noise;
                     sigma_noise *= sumw_allrefs*sum_complete_fourier - sum_complete_wedge ;
                     sigma_noise += wsum_sigma_noise;
@@ -2859,7 +2867,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
         }
         // Correct sigma_noise for number of pixels within the mask
         if (do_mask)
-            sigma_noise *= ddim3/nr_mask_pixels; 
+            sigma_noise *= ddim3/nr_mask_pixels;
     }
 
     // post-process reference volumes
@@ -2876,15 +2884,15 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
 
 #ifdef DEBUG
     std::cerr<<"finished maximization"<<std::endl;
-#endif 
+#endif
 }
 
 void Prog_ml_tomo_prm::calculateFsc(Matrix3D<double> &M1, Matrix3D<double> &M2,
                                     Matrix3D<double> &W1, Matrix3D<double> &W2,
-                                    Matrix1D<double> &freq, Matrix1D<double> &fsc, 
+                                    Matrix1D<double> &freq, Matrix1D<double> &fsc,
                                     double &resolution)
 {
-    
+
     Matrix3D< std::complex< double > > FT1, FT2;
     XmippFftw transformer1, transformer2;
     transformer1.FourierTransform(M1, FT1, false);
@@ -2929,9 +2937,9 @@ void Prog_ml_tomo_prm::calculateFsc(Matrix3D<double> &M1, Matrix3D<double> &M2,
     {
         freq(i) = (double) i / (XSIZE(M1) * pixel_size);
         if(num(i)!=0)
-           fsc(i) = num(i)/sqrt(den1(i)*den2(i));
+            fsc(i) = num(i)/sqrt(den1(i)*den2(i));
         else
-           fsc(i) = 0;
+            fsc(i) = 0;
     }
 
     // Find resolution limit acc. to FSC=0.5 criterion
@@ -2957,7 +2965,7 @@ void Prog_ml_tomo_prm::calculateFsc(Matrix3D<double> &M1, Matrix3D<double> &M2,
 bool Prog_ml_tomo_prm::regularize(int iter)
 {
 
-    // Update regularization constant in a linear manner    
+    // Update regularization constant in a linear manner
     reg_current = reg0 - (double)iter*(reg0-regF)/(double)reg_steps;
     reg_current = XMIPP_MAX(reg_current, regF);
 
@@ -2965,7 +2973,7 @@ bool Prog_ml_tomo_prm::regularize(int iter)
     {
 #ifdef DEBUG
         std::cerr<<"start regularize"<<std::endl;
-#endif 
+#endif
         // Write out original volumes (before regularization)
         FileName fnt;
         for (int refno = 0; refno < nr_ref; refno++)
@@ -2988,7 +2996,7 @@ bool Prog_ml_tomo_prm::regularize(int iter)
         // and sum of squared differences between all references
         for (int refno = 0; refno < nr_ref; refno++)
         {
-            if (refno==0) 
+            if (refno==0)
                 Mavg = Iref[refno]();
             else
                 Mavg += Iref[refno]();
@@ -3042,7 +3050,7 @@ bool Prog_ml_tomo_prm::regularize(int iter)
 
 #ifdef DEBUG
         std::cerr<<"finished regularize"<<std::endl;
-#endif 
+#endif
     }
 }
 // Check convergence
@@ -3051,7 +3059,7 @@ bool Prog_ml_tomo_prm::checkConvergence(std::vector<double> &conv)
 
 #ifdef DEBUG
     std::cerr<<"started checkConvergence"<<std::endl;
-#endif 
+#endif
     bool converged = true;
     double convv;
     Matrix3D<double> Maux;
@@ -3060,7 +3068,7 @@ bool Prog_ml_tomo_prm::checkConvergence(std::vector<double> &conv)
     Maux.setXmippOrigin();
 
     conv.clear();
-    for (int refno=0;refno<nr_ref; refno++)
+    for (int refno=0; refno<nr_ref; refno++)
     {
         if (alpha_k(refno) > 0.)
         {
@@ -3080,13 +3088,13 @@ bool Prog_ml_tomo_prm::checkConvergence(std::vector<double> &conv)
 
 #ifdef DEBUG
     std::cerr<<"finished checkConvergence"<<std::endl;
-#endif 
+#endif
     return converged;
 }
 
 void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
                                         std::vector<Matrix3D<double> > &wsumweds,
-                                        double &sumw_allrefs, double &LL, double &avefracweight, 
+                                        double &sumw_allrefs, double &LL, double &avefracweight,
                                         std::vector<double> &conv, std::vector<Matrix1D<double> > &fsc)
 {
 
@@ -3109,7 +3117,7 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
     }
 
     // Write out current reference images and fill sel & log-file
-    for (int refno=0;refno<nr_ref; refno++)
+    for (int refno=0; refno<nr_ref; refno++)
     {
         fn_tmp = fn_base + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
@@ -3131,15 +3139,15 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
             Vt().initZeros();
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vt())
-                if (j<hdim+1)
-                    DIRECT_VOL_ELEM(Vt(),k,i,j)=
-                        DIRECT_VOL_ELEM(wsumweds[refno],k,i,j) / sumw_allrefs;
-                else
-                    DIRECT_VOL_ELEM(Vt(),k,i,j)=
-                        DIRECT_VOL_ELEM(wsumweds[refno],
-                                        (dim-k)%dim,
-                                        (dim-i)%dim,
-                                        dim-j) / sumw_allrefs;
+            if (j<hdim+1)
+                DIRECT_VOL_ELEM(Vt(),k,i,j)=
+                    DIRECT_VOL_ELEM(wsumweds[refno],k,i,j) / sumw_allrefs;
+            else
+                DIRECT_VOL_ELEM(Vt(),k,i,j)=
+                    DIRECT_VOL_ELEM(wsumweds[refno],
+                                    (dim-k)%dim,
+                                    (dim-i)%dim,
+                                    dim-j) / sumw_allrefs;
 
             CenterFFT(Vt(),true);
             reScaleVolume(Vt(),false);
@@ -3155,7 +3163,7 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
     fn_tmp = fn_base + ".fsc";
     fh.open((fn_tmp).c_str(), std::ios::out);
     if (!fh) REPORT_ERROR(1, (std::string)"Prog_ml_tomo_prm: Cannot write file: " + fn_tmp);
-    
+
     fh<<"# freq. FSC refno 1-n... \n";
     for (int idx = 1; idx < hdim + 1; idx++)
     {
@@ -3191,7 +3199,7 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter, DocFile &DFo,
 
         // Also write out selfiles of all experimental images,
         // classified according to optimal reference image
-        for (int refno = 0;refno < nr_ref; refno++)
+        for (int refno = 0; refno < nr_ref; refno++)
         {
             DFo.go_beginning();
             SFo.clear();

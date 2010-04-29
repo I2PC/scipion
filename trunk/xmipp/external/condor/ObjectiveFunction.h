@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
-              using trust Region method for high-computing load, 
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
+              using trust Region method for high-computing load,
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product, 
+If you want to include this tools in any commercial product,
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -31,16 +31,16 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 #include "Vector.h"
 #include "Matrix.h"
 
-#define INF 1.7E+308 
+#define INF 1.7E+308
 
 class ObjectiveFunction
 {
-  public:
+public:
     friend class CorrectScaleOF;
 
     char name[9], startPointIsGiven;
     Vector xStart, xBest, xOptimal;
-    // xOptimal is the theoretical exact solution of the optimization problem 
+    // xOptimal is the theoretical exact solution of the optimization problem
     //          if this value is set, it is used by printstat. It's an optional value to set.
     // xBest is the solution given by the optimization algorithm.
     double valueOptimal, valueBest, noiseAbsolute, noiseRelative, objectiveConst;
@@ -60,11 +60,11 @@ class ObjectiveFunction
     // CONSTRAINTS:
     // for lower/upper bounds (box constraints)
     Vector bl, bu;
-    
-	// for linear constraints Ax>=b
-	Matrix A;
-	Vector b;
-    
+
+    // for linear constraints Ax>=b
+    Matrix A;
+    Vector b;
+
     // for non-linear constraints
     virtual double evalNLConstraint(int j, Vector v, int *nerror)=0;
     virtual Vector evalGradNLConstraint(int j, Vector v, int *nerror);
@@ -74,19 +74,22 @@ class ObjectiveFunction
     double tolRelFeasibilityForNLC, tolNLC;
     double tolRelFeasibilityForLC, tolLC;
 
-    ObjectiveFunction() : startPointIsGiven(0), valueOptimal(INF), valueBest(INF), noiseAbsolute(0.0), 
-           noiseRelative(0.0), objectiveConst(0.0), nNLConstraints(0), 
-           isConstrained(1), tolRelFeasibilityForNLC(1e-9), tolNLC(1e-6), 
-           tolRelFeasibilityForLC(1e-6), tolLC(1e-8), 
-           saveFileName(NULL), dfold(INF), maxNormLC(0.0), maxNormNLC(0.0), nfe(0), nfe2(0) { };
-    virtual ~ObjectiveFunction(){ if (saveFileName) free(saveFileName); };
+    ObjectiveFunction() : startPointIsGiven(0), valueOptimal(INF), valueBest(INF), noiseAbsolute(0.0),
+        noiseRelative(0.0), objectiveConst(0.0), nNLConstraints(0),
+        isConstrained(1), tolRelFeasibilityForNLC(1e-9), tolNLC(1e-6),
+        tolRelFeasibilityForLC(1e-6), tolLC(1e-8),
+        saveFileName(NULL), dfold(INF), maxNormLC(0.0), maxNormNLC(0.0), nfe(0), nfe2(0) { };
+    virtual ~ObjectiveFunction()
+    {
+        if (saveFileName) free(saveFileName);
+    };
     virtual double eval(Vector v, int *nerror)=0;
     int dim();
     void initData();
     virtual void saveValue(Vector tmp,double valueOF, int nerror);
     virtual void printStats(char cc=1);
     void saveStats(char *filename, Vector vG, Matrix mH, Vector vLambda);
-    virtual void finalize(Vector vG, Matrix mH, Vector vLambda){};
+    virtual void finalize(Vector vG, Matrix mH, Vector vLambda) {};
     void setName(char *s);
     void setSaveFile(char *b=NULL);
     void updateCounter(double df, Vector vX, int nerror=0);
@@ -95,8 +98,14 @@ class ObjectiveFunction
     void endInit();
     void initTolLC(Vector vX);
     void initTolNLC(Vector c, double delta);
-    virtual int getNFE() { return nfe; }
-    virtual int getNFE2() { return nfe2; }
+    virtual int getNFE()
+    {
+        return nfe;
+    }
+    virtual int getNFE2()
+    {
+        return nfe2;
+    }
 
 private:
     char *saveFileName;
@@ -108,31 +117,49 @@ protected:
 
 class UnconstrainedObjectiveFunction : public ObjectiveFunction
 {
-  public:
-    UnconstrainedObjectiveFunction(): ObjectiveFunction(){ isConstrained=0; }
+public:
+    UnconstrainedObjectiveFunction(): ObjectiveFunction()
+    {
+        isConstrained=0;
+    }
     ~UnconstrainedObjectiveFunction() {};
 
-    virtual double evalNLConstraint(int j, Vector v, int *nerror=NULL){ return 0; };
-    virtual Vector evalGradNLConstraint(int j, Vector v, int *nerror=NULL){ return Vector::emptyVector; };
-    virtual void evalGradNLConstraint(int j, Vector v, Vector result, int *nerror=NULL) { result=Vector::emptyVector; };
+    virtual double evalNLConstraint(int j, Vector v, int *nerror=NULL)
+    {
+        return 0;
+    };
+    virtual Vector evalGradNLConstraint(int j, Vector v, int *nerror=NULL)
+    {
+        return Vector::emptyVector;
+    };
+    virtual void evalGradNLConstraint(int j, Vector v, Vector result, int *nerror=NULL)
+    {
+        result=Vector::emptyVector;
+    };
 };
 
 
 class CorrectScaleOF: public ObjectiveFunction
 {
-  public:
+public:
     Vector rescaling;
     CorrectScaleOF(int _t, ObjectiveFunction *_of, Vector _rescaling);
     CorrectScaleOF(int _t, ObjectiveFunction *_of);
-    ~CorrectScaleOF(){};
+    ~CorrectScaleOF() {};
     void saveValue(Vector X,double valueOF,int nerror);
     double eval(Vector v, int *nerror=NULL);
     virtual double evalNLConstraint(int j, Vector v, int *nerror=NULL);
     virtual void evalGradNLConstraint(int j, Vector v, Vector result, int *nerror=NULL);
     virtual void finalize(Vector vG, Matrix mH, Vector vLambda);
-    virtual int getNFE() { return of->nfe; }
-    virtual int getNFE2() { return of->nfe2; }
-  private:
+    virtual int getNFE()
+    {
+        return of->nfe;
+    }
+    virtual int getNFE2()
+    {
+        return of->nfe2;
+    }
+private:
     void init();
     ObjectiveFunction *of;
     Vector xTemp;

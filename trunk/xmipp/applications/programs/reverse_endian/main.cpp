@@ -159,15 +159,15 @@ void Usage()
 {
     std::cerr << "Purpose:\n";
     std::cerr << "    Reverse the little/big endian status of the input files\n"
-    << "    Floats are written in the native format for the machine running\n"
-    << "    the program\n";
+              << "    Floats are written in the native format for the machine running\n"
+              << "    the program\n";
 
     std::cerr << "Usage: reverse_endian <parameters>\n"
-    << "   -i <image or volume> [-o <image_out or volume_out]\n"
-    << "   -i <selfile> [-oext <output extension>]\n"
-    << "   [-force change the little/big endian status\n"
-    << "           even if the results is not the native machine format]\n"
-    << std::endl;
+              << "   -i <image or volume> [-o <image_out or volume_out]\n"
+              << "   -i <selfile> [-oext <output extension>]\n"
+              << "   [-force change the little/big endian status\n"
+              << "           even if the results is not the native machine format]\n"
+              << std::endl;
 }
 
 

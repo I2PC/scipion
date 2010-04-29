@@ -3,7 +3,7 @@
  * Authors: Sjors H.W. Scheres (scheres@cnb.csic.es)
  *
  *  This code is strongly based on ideas by Pawel Penczek & Zhengfan
- *  Yang as implemented in SPARX at the University of Texas - Houston 
+ *  Yang as implemented in SPARX at the University of Texas - Houston
  *  Medical School
  *
  *  see P. A. Penczek, R. Renka, and H. Schomberg,
@@ -45,7 +45,7 @@
 #define DONT_KEEP_TRANSFORM false
 #define KEEP_TRANSFORM true
 
-/// @defgroup Polar Polar coordinates 
+/// @defgroup Polar Polar coordinates
 /// @ingroup DataLibrary
 //@{
 
@@ -80,12 +80,12 @@ public:
     Polar()
     {
         fn_pol = "";
-	ring_radius.clear();
-	rings.clear();
-	mode = FULL_CIRCLES;
-	oversample = 1.;
+        ring_radius.clear();
+        rings.clear();
+        mode = FULL_CIRCLES;
+        oversample = 1.;
     }
-    
+
     /** Copy constructor
      *
      * @code
@@ -96,18 +96,18 @@ public:
     {
         rings = P.rings;
         fn_pol = P.fn_pol;
-	ring_radius = P.ring_radius;
-	mode = P.mode;
-	oversample = P.oversample;
+        ring_radius = P.ring_radius;
+        mode = P.mode;
+        oversample = P.oversample;
     }
 
     /** Destructor.
      */
-     ~Polar()
-     {
-         rings.clear();
-         ring_radius.clear(); 
-     }
+    ~Polar()
+    {
+        rings.clear();
+        ring_radius.clear();
+    }
 
     /** Assignment
      */
@@ -117,22 +117,22 @@ public:
         {
             fn_pol = P.fn_pol;
             rings = P.rings;
-	    ring_radius = P.ring_radius;
-	    mode = P.mode;
-	    oversample = P.oversample;
+            ring_radius = P.ring_radius;
+            mode = P.mode;
+            oversample = P.oversample;
         }
         return *this;
     }
-  
+
     /** Subtract a constant pixel-by-pixel
      */
     Polar& operator-(const T val) const
     {
-	Polar<T> result;
-	result = *(this);
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		result(i,j) -= val;
+        Polar<T> result;
+        result = *(this);
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                result(i,j) -= val;
 
         return result;
     }
@@ -141,11 +141,11 @@ public:
      */
     Polar& operator+(const T val)
     {
-	Polar<T> result;
-	result = *(this);
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		result(i,j) += val;
+        Polar<T> result;
+        result = *(this);
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                result(i,j) += val;
 
         return result;
     }
@@ -154,11 +154,11 @@ public:
      */
     Polar& operator*(const T val)
     {
-	Polar<T> result;
-	result = *(this);
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		result(i,j) *= val;
+        Polar<T> result;
+        result = *(this);
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                result(i,j) *= val;
 
         return result;
     }
@@ -167,11 +167,11 @@ public:
      */
     Polar& operator/(const T val)
     {
-	Polar<T> result;
-	result = *(this);
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		result(i,j) /= val;
+        Polar<T> result;
+        result = *(this);
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                result(i,j) /= val;
 
         return result;
     }
@@ -180,72 +180,72 @@ public:
      */
     void operator-=(const T val)
     {
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		(*(this))(i,j) -= val;
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                (*(this))(i,j) -= val;
     }
 
     /** Add a constant pixel-by-pixel
      */
     void operator+=(const T val)
     {
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		(*(this))(i,j) += val;
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                (*(this))(i,j) += val;
     }
 
     /** Multiply by a constant pixel-by-pixel
      */
     void operator*=(const T val)
     {
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		(*(this))(i,j) *= val;
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                (*(this))(i,j) *= val;
     }
 
     /** Divide by a constant pixel-by-pixel
      */
     void operator/=(const T val)
     {
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		(*(this))(i,j) /= val;
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                (*(this))(i,j) /= val;
     }
 
     /** Subtract two polars pixel-by-pixel
      */
     Polar& operator-=(const Polar<T> in)
     {
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		(*(this))(i,j) -= in(i,j);
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                (*(this))(i,j) -= in(i,j);
     }
 
-     /** Add two polars pixel-by-pixel
-     */
+    /** Add two polars pixel-by-pixel
+    */
     Polar& operator+=(const Polar<T> in)
     {
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		(*(this))(i,j) += in(i,j);
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                (*(this))(i,j) += in(i,j);
     }
 
-     /** Multiply two polars pixel-by-pixel
-     */
+    /** Multiply two polars pixel-by-pixel
+    */
     Polar& operator*=(const Polar<T> in)
     {
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		(*(this))(i,j) *= in(i,j);
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                (*(this))(i,j) *= in(i,j);
     }
 
-     /** Divide two polars pixel-by-pixel
-     */
+    /** Divide two polars pixel-by-pixel
+    */
     Polar& operator/=(const Polar<T> in)
     {
-	for (int i = 0; i < rings.size(); i++)
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-		(*(this))(i,j) /= in(i,j);
+        for (int i = 0; i < rings.size(); i++)
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+                (*(this))(i,j) /= in(i,j);
 
     }
 
@@ -275,9 +275,9 @@ public:
     {
         fn_pol = "";
         rings.clear();
-	ring_radius.clear();
-	mode = FULL_CIRCLES;
-	oversample = 1.;
+        ring_radius.clear();
+        mode = FULL_CIRCLES;
+        oversample = 1.;
     }
 
     /** Name access
@@ -296,7 +296,7 @@ public:
 
     /** Number of rings access
      *
-     * This function is used to know the number of rings in the polar. 
+     * This function is used to know the number of rings in the polar.
      *
      * @code
      * std::cout << "Number of rings: " << P.getRingNo() << std::endl;
@@ -309,9 +309,9 @@ public:
 
     /** Mode access
      *
-     * This function is used to know the "mode" of the polar. 
+     * This function is used to know the "mode" of the polar.
      *
-     * There are two modes: 
+     * There are two modes:
      * FULL_CIRCLES = 0 (used for asymmetric functions)
      * HALF_CIRCLES = 0 (used for symmetric functions, e.g. Fourier transforms)
      *
@@ -326,7 +326,7 @@ public:
 
     /** Oversample access
      *
-     * This function is used to know the oversampling factor of the polar. 
+     * This function is used to know the oversampling factor of the polar.
      *
      * Oversample = 1 means there is no oversampling
      * Oversample > 1 means oversampling
@@ -440,7 +440,7 @@ public:
      */
     T& operator()(int r, int f) const
     {
-	return rings[r](f);
+        return rings[r](f);
     }
 
     /** Pixel access
@@ -466,128 +466,128 @@ public:
      */
     T computeSum(bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
     {
-	T aux, sum = 0.;
-	double twopi, w, N = 0;
+        T aux, sum = 0.;
+        double twopi, w, N = 0;
 
-	if (mode == FULL_CIRCLES)
-	    twopi = 2.*PI;
-	else if (mode == HALF_CIRCLES)
-	    twopi = PI;
-	else
-	    REPORT_ERROR(1,"Incorrect mode for computeSum");
+        if (mode == FULL_CIRCLES)
+            twopi = 2.*PI;
+        else if (mode == HALF_CIRCLES)
+            twopi = PI;
+        else
+            REPORT_ERROR(1,"Incorrect mode for computeSum");
 
-	for (int i = 0; i < rings.size(); i++)
-	{
-	    // take varying sampling into account
-	    w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-	    {
-		aux = rings[i](j);
-		sum += w * aux;
-		N += w;
-	    }
-	}
-	if (N != 0. && average)
-	    sum = sum / N;
+        for (int i = 0; i < rings.size(); i++)
+        {
+            // take varying sampling into account
+            w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+            {
+                aux = rings[i](j);
+                sum += w * aux;
+                N += w;
+            }
+        }
+        if (N != 0. && average)
+            sum = sum / N;
 
-	return sum;
+        return sum;
     }
- 
+
     /** Compute squared-sum or average squared-sum of all pixels in polar rings.
      */
     T computeSum2(bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
     {
-	T aux, sum2 = 0.;
-	double twopi, w, N = 0;
+        T aux, sum2 = 0.;
+        double twopi, w, N = 0;
 
-	if (mode == FULL_CIRCLES)
-	    twopi = 2.*PI;
-	else if (mode == HALF_CIRCLES)
-	    twopi = PI;
-	else
-	    REPORT_ERROR(1,"Incorrect mode for computeSum2");
+        if (mode == FULL_CIRCLES)
+            twopi = 2.*PI;
+        else if (mode == HALF_CIRCLES)
+            twopi = PI;
+        else
+            REPORT_ERROR(1,"Incorrect mode for computeSum2");
 
-	for (int i = 0; i < rings.size(); i++)
-	{
-	    // take varying sampling into account
-	    w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
-	    for (int j = 0; j < XSIZE(rings[i]); j++)
-	    {
-		aux = rings[i](j) * rings[i](j);
-		sum2 += w * aux;
-		N += w;
-	    }
-	}
-	if (N != 0. && average)
-	    sum2 = sum2 / N;
+        for (int i = 0; i < rings.size(); i++)
+        {
+            // take varying sampling into account
+            w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
+            for (int j = 0; j < XSIZE(rings[i]); j++)
+            {
+                aux = rings[i](j) * rings[i](j);
+                sum2 += w * aux;
+                N += w;
+            }
+        }
+        if (N != 0. && average)
+            sum2 = sum2 / N;
 
-	return sum2;
+        return sum2;
     }
- 
-   /** Get Cartesian Coordinates of the Polar sampling
-     *
-     * The output of this function can be used to calculate Voronoi
-     * areas, lists of neighbours etc.
-     *
-     * To deal with the borders of the polar structure (a maximum of)
-     * "extra_shell" extra rings are calculated on the inside and outside
-     * of the polar structure. 
-     *
-     */
+
+    /** Get Cartesian Coordinates of the Polar sampling
+      *
+      * The output of this function can be used to calculate Voronoi
+      * areas, lists of neighbours etc.
+      *
+      * To deal with the borders of the polar structure (a maximum of)
+      * "extra_shell" extra rings are calculated on the inside and outside
+      * of the polar structure.
+      *
+      */
     void getCartesianCoordinates(std::vector<double> &x,
-				 std::vector<double> &y,
-				 std::vector<T> &data,
-				 const double extra_shell = GRIDDING_K/2)
+                                 std::vector<double> &y,
+                                 std::vector<T> &data,
+                                 const double extra_shell = GRIDDING_K/2)
     {
-	double                     twopi, dphi,radius;
-	int                        nsam;
+        double                     twopi, dphi,radius;
+        int                        nsam;
 
-	// Only for full circles for now!
-	if (mode != FULL_CIRCLES)
-	    REPORT_ERROR(1,"VoronoiArea only implemented for FULL_CIRCLES mode of Polar");
-	else
-	    twopi = 2.*PI;
+        // Only for full circles for now!
+        if (mode != FULL_CIRCLES)
+            REPORT_ERROR(1,"VoronoiArea only implemented for FULL_CIRCLES mode of Polar");
+        else
+            twopi = 2.*PI;
 
-	// First fill the vector with the originally sampled coordinates
-	x.clear();
-	y.clear();
-	data.clear();
-	for (int i = 0; i < rings.size(); i++)
-	{
-	    nsam = XSIZE(rings[i]);
-	    dphi = twopi/(double)nsam;
-	    radius = ring_radius[i];
-	    for (int j = 0; j < nsam; j++)
-	    {
-		x.push_back(radius*sin(j*dphi));
-		y.push_back(radius*cos(j*dphi));
-		data.push_back(rings[i](j));
-	    }
-	}
+        // First fill the vector with the originally sampled coordinates
+        x.clear();
+        y.clear();
+        data.clear();
+        for (int i = 0; i < rings.size(); i++)
+        {
+            nsam = XSIZE(rings[i]);
+            dphi = twopi/(double)nsam;
+            radius = ring_radius[i];
+            for (int j = 0; j < nsam; j++)
+            {
+                x.push_back(radius*sin(j*dphi));
+                y.push_back(radius*cos(j*dphi));
+                data.push_back(rings[i](j));
+            }
+        }
 
-	// Add additional points on the inside and outside of the rings
-	// Add a maximum of "extra_shell" rings
-	// Set data to zero here
-	double first_ring  = ring_radius[0];
-	double last_ring   = ring_radius[rings.size()-1];
-	double outer       = last_ring + extra_shell;
-	double inner       = XMIPP_MAX(0.,first_ring - extra_shell);
-	for (radius = 0.; radius < outer; radius +=1.)
-	{
-	    if ( (radius >= inner && radius < first_ring) ||
-		 ( radius <= outer && radius > last_ring) )
-	    {
-		nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
-		nsam = XMIPP_MAX(1, nsam);
-		dphi = twopi / (double)nsam;
-		for (int j = 0; j < nsam; j++)
-		{
-		    x.push_back(radius*sin(j*dphi));
-		    y.push_back(radius*cos(j*dphi));
-		    data.push_back(0.);
-		}
-	    }
-	}
+        // Add additional points on the inside and outside of the rings
+        // Add a maximum of "extra_shell" rings
+        // Set data to zero here
+        double first_ring  = ring_radius[0];
+        double last_ring   = ring_radius[rings.size()-1];
+        double outer       = last_ring + extra_shell;
+        double inner       = XMIPP_MAX(0.,first_ring - extra_shell);
+        for (radius = 0.; radius < outer; radius +=1.)
+        {
+            if ( (radius >= inner && radius < first_ring) ||
+                 ( radius <= outer && radius > last_ring) )
+            {
+                nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
+                nsam = XMIPP_MAX(1, nsam);
+                dphi = twopi / (double)nsam;
+                for (int j = 0; j < nsam; j++)
+                {
+                    x.push_back(radius*sin(j*dphi));
+                    y.push_back(radius*cos(j*dphi));
+                    data.push_back(0.);
+                }
+            }
+        }
 
     }
 
@@ -604,57 +604,57 @@ public:
      * @endcode
      *
      */
-    void getPolarFromCartesianGridding(const Matrix2D<T> &M1, KaiserBessel &kb, 
-				       int first_ring, int last_ring, 
-				       double xoff = 0., double yoff = 0.,
-				       double oversample1 = 1., int mode1 = FULL_CIRCLES)
+    void getPolarFromCartesianGridding(const Matrix2D<T> &M1, KaiserBessel &kb,
+                                       int first_ring, int last_ring,
+                                       double xoff = 0., double yoff = 0.,
+                                       double oversample1 = 1., int mode1 = FULL_CIRCLES)
     {
-	int nsam;
-	int nring = last_ring - first_ring + 1;
-	double radius, twopi, dphi, phi; 
-	double xp, yp, minxp, maxxp, minyp, maxyp;
+        int nsam;
+        int nring = last_ring - first_ring + 1;
+        double radius, twopi, dphi, phi;
+        double xp, yp, minxp, maxxp, minyp, maxyp;
 
-	Matrix1D<T> Mring;
-	rings.clear();
-	ring_radius.clear();
-	mode = mode1;
-	oversample = oversample1;
+        Matrix1D<T> Mring;
+        rings.clear();
+        ring_radius.clear();
+        mode = mode1;
+        oversample = oversample1;
 
-	if (mode == FULL_CIRCLES)
-	    twopi = 2.*PI;
-	else if (mode == HALF_CIRCLES)
-	    twopi = PI;
-	else
-	    REPORT_ERROR(1,"Incorrect mode for getPolarFromCartesian");
-	
+        if (mode == FULL_CIRCLES)
+            twopi = 2.*PI;
+        else if (mode == HALF_CIRCLES)
+            twopi = PI;
+        else
+            REPORT_ERROR(1,"Incorrect mode for getPolarFromCartesian");
 
-	// Take 2x oversize M1 dims into account for calculating the limits 
-	minxp = FIRST_XMIPP_INDEX(XSIZE(M1)/2);
-	minyp = FIRST_XMIPP_INDEX(YSIZE(M1)/2);
-	maxxp = LAST_XMIPP_INDEX(XSIZE(M1)/2);
-	maxyp = LAST_XMIPP_INDEX(YSIZE(M1)/2);
 
-	// Loop over all polar coordinates
-	for (int iring = first_ring, ii = 0; iring <= last_ring; iring++, ii++)
-	{
-	    radius = (double) iring;
-	    // Non-constant sampling!! (always even for convenient Half2Whole of FTs)
-	    nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
-	    nsam = XMIPP_MAX(1, nsam);
-	    dphi = twopi / (double)nsam;
-	    Mring.resize(nsam);
-	    for (int iphi = 0; iphi < nsam; iphi++)
-	    {
-		// from polar to original cartesian coordinates
-		phi = iphi * dphi;
-		xp = sin(phi) * radius;
-		yp = cos(phi) * radius;
+        // Take 2x oversize M1 dims into account for calculating the limits
+        minxp = FIRST_XMIPP_INDEX(XSIZE(M1)/2);
+        minyp = FIRST_XMIPP_INDEX(YSIZE(M1)/2);
+        maxxp = LAST_XMIPP_INDEX(XSIZE(M1)/2);
+        maxyp = LAST_XMIPP_INDEX(YSIZE(M1)/2);
 
-		// Origin offsets
-		xp += xoff;
-		yp += yoff; 
+        // Loop over all polar coordinates
+        for (int iring = first_ring, ii = 0; iring <= last_ring; iring++, ii++)
+        {
+            radius = (double) iring;
+            // Non-constant sampling!! (always even for convenient Half2Whole of FTs)
+            nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
+            nsam = XMIPP_MAX(1, nsam);
+            dphi = twopi / (double)nsam;
+            Mring.resize(nsam);
+            for (int iphi = 0; iphi < nsam; iphi++)
+            {
+                // from polar to original cartesian coordinates
+                phi = iphi * dphi;
+                xp = sin(phi) * radius;
+                yp = cos(phi) * radius;
 
-		// Wrap coordinates
+                // Origin offsets
+                xp += xoff;
+                yp += yoff;
+
+                // Wrap coordinates
                 if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
                     xp > maxxp + XMIPP_EQUAL_ACCURACY)
                     xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
@@ -662,12 +662,12 @@ public:
                     yp > maxyp + XMIPP_EQUAL_ACCURACY)
                     yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
 
-		// Perform the convolution interpolation
-		Mring(iphi) = (T) interpolatedElementReverseGridding(M1,xp,yp,kb);
-	    }
-	    rings.push_back(Mring);
-	    ring_radius.push_back(radius);
-	}
+                // Perform the convolution interpolation
+                Mring(iphi) = (T) interpolatedElementReverseGridding(M1,xp,yp,kb);
+            }
+            rings.push_back(Mring);
+            ring_radius.push_back(radius);
+        }
 
     }
 
@@ -683,57 +683,57 @@ public:
      * @endcode
      *
      */
-    void getPolarFromCartesianBSpline(const Matrix2D<T> &M1, 
-				     int first_ring, int last_ring, int BsplineOrder=3,
-				     double xoff = 0., double yoff = 0.,
-				     double oversample1 = 1., int mode1 = FULL_CIRCLES)
+    void getPolarFromCartesianBSpline(const Matrix2D<T> &M1,
+                                      int first_ring, int last_ring, int BsplineOrder=3,
+                                      double xoff = 0., double yoff = 0.,
+                                      double oversample1 = 1., int mode1 = FULL_CIRCLES)
     {
-	int nsam;
-	int nring = last_ring - first_ring + 1;
-	double radius, twopi, dphi, phi; 
-	double xp, yp, minxp, maxxp, minyp, maxyp;
+        int nsam;
+        int nring = last_ring - first_ring + 1;
+        double radius, twopi, dphi, phi;
+        double xp, yp, minxp, maxxp, minyp, maxyp;
 
-	Matrix1D<T> Mring;
-	rings.clear();
-	ring_radius.clear();
-	mode = mode1;
-	oversample = oversample1;
+        Matrix1D<T> Mring;
+        rings.clear();
+        ring_radius.clear();
+        mode = mode1;
+        oversample = oversample1;
 
-	if (mode == FULL_CIRCLES)
-	    twopi = 2.*PI;
-	else if (mode == HALF_CIRCLES)
-	    twopi = PI;
-	else
-	    REPORT_ERROR(1,"Incorrect mode for getPolarFromCartesian");
-	
+        if (mode == FULL_CIRCLES)
+            twopi = 2.*PI;
+        else if (mode == HALF_CIRCLES)
+            twopi = PI;
+        else
+            REPORT_ERROR(1,"Incorrect mode for getPolarFromCartesian");
 
-	// Limits of the matrix (not oversized!)
-	minxp = FIRST_XMIPP_INDEX(XSIZE(M1));
-	minyp = FIRST_XMIPP_INDEX(YSIZE(M1));
-	maxxp = LAST_XMIPP_INDEX(XSIZE(M1));
-	maxyp = LAST_XMIPP_INDEX(YSIZE(M1));
 
-	// Loop over all polar coordinates
-	for (int iring = first_ring; iring <= last_ring; iring++)
-	{
-	    radius = (double) iring;
-	    // Non-constant sampling!! (always even for convenient Half2Whole of FTs)
-	    nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
-	    nsam = XMIPP_MAX(1, nsam);
-	    dphi = twopi / (double)nsam;
-	    Mring.resize(nsam);
-	    for (int iphi = 0; iphi < nsam; iphi++)
-	    {
-		// from polar to original cartesian coordinates
-		phi = iphi * dphi;
-		xp = sin(phi) * radius;
-		yp = cos(phi) * radius;
+        // Limits of the matrix (not oversized!)
+        minxp = FIRST_XMIPP_INDEX(XSIZE(M1));
+        minyp = FIRST_XMIPP_INDEX(YSIZE(M1));
+        maxxp = LAST_XMIPP_INDEX(XSIZE(M1));
+        maxyp = LAST_XMIPP_INDEX(YSIZE(M1));
 
-		// Origin offsets
-		xp += xoff;
-		yp += yoff; 
+        // Loop over all polar coordinates
+        for (int iring = first_ring; iring <= last_ring; iring++)
+        {
+            radius = (double) iring;
+            // Non-constant sampling!! (always even for convenient Half2Whole of FTs)
+            nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
+            nsam = XMIPP_MAX(1, nsam);
+            dphi = twopi / (double)nsam;
+            Mring.resize(nsam);
+            for (int iphi = 0; iphi < nsam; iphi++)
+            {
+                // from polar to original cartesian coordinates
+                phi = iphi * dphi;
+                xp = sin(phi) * radius;
+                yp = cos(phi) * radius;
 
-		// Wrap coordinates
+                // Origin offsets
+                xp += xoff;
+                yp += yoff;
+
+                // Wrap coordinates
                 if (xp < minxp - XMIPP_EQUAL_ACCURACY ||
                     xp > maxxp + XMIPP_EQUAL_ACCURACY)
                     xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
@@ -741,15 +741,15 @@ public:
                     yp > maxyp + XMIPP_EQUAL_ACCURACY)
                     yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
 
-		// Perform the convolution interpolation
+                // Perform the convolution interpolation
                 if (BsplineOrder==1)
                     Mring(iphi) = (T) M1.interpolatedElement(xp,yp);
                 else
                     Mring(iphi) = (T) M1.interpolatedElementBSpline(xp,yp,BsplineOrder);
-	    }
-	    rings.push_back(Mring);
-	    ring_radius.push_back(radius);
-	}
+            }
+            rings.push_back(Mring);
+            ring_radius.push_back(radius);
+        }
     }
 
     /** Precalculate a vector with FFTW plans for all rings
@@ -760,7 +760,7 @@ public:
         (out.transformers).resize(rings.size());
         (out.arrays).resize(rings.size());
         for (int iring = 0; iring < rings.size(); iring++)
-        { 
+        {
             (out.arrays)[iring] = rings[iring];
             ((out.transformers)[iring]).setReal((out.arrays)[iring]);
         }
@@ -775,12 +775,12 @@ public:
  *
  *  Note that the Polar_fftw_plans may be re-used for polars of the same size
  * They should initially be calculated as in the example below
- * 
+ *
  * @code
  * Matrix1D<double> angles, corr;
  * Polar_fftw_plans plans;
  * Polar<std::complex<double> > F1, F2;
- * 
+ *
  * M1.calculateFftwPlans(plans); // M1 is a Polar<double>
  * fourierTransformRings(M1, F1, plans, false);
  * fourierTransformRings(M1, F2, plans, true);// complex conjugated
@@ -788,8 +788,8 @@ public:
  *
  *
  */
-void fourierTransformRings(Polar<double > & in, 
-                           Polar<std::complex<double> > &out, 
+void fourierTransformRings(Polar<double > & in,
+                           Polar<std::complex<double> > &out,
                            Polar_fftw_plans &plans,
                            bool conjugated = DONT_CONJUGATE);
 
@@ -800,12 +800,12 @@ void fourierTransformRings(Polar<double > & in,
  *
  * Note that the Polar_fftw_plans may be re-used for polars of the same size
  * They should initially be calculated as in the example below
- * 
+ *
  * @code
  * Matrix1D<double> angles, corr;
  * Polar_fftw_plans plans;
  * Polar<std::complex<double> > F1, F2;
- * 
+ *
  * M1.calculateFftwPlans(plans); // M1 is a Polar<double>
  * fourierTransformRings(M1, F1, plans);
  * inverseFourierTransformRings(F1, M1, plans);
@@ -813,8 +813,8 @@ void fourierTransformRings(Polar<double > & in,
  *
  *
  */
-void inverseFourierTransformRings(Polar<std::complex<double> > & in, 
-                                  Polar<double > &out, 
+void inverseFourierTransformRings(Polar<std::complex<double> > & in,
+                                  Polar<double > &out,
                                   Polar_fftw_plans &plans,
                                   bool conjugated = DONT_CONJUGATE);
 
@@ -822,20 +822,20 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
  *
  *  This function returns the rotational cross-correlation
  *  function of two complex Polars M1 and M2 using the
- *  cross-correlation convolution theorem. 
+ *  cross-correlation convolution theorem.
  *
  *  Note that the local_transformer should have corr (with the right size)
  *  already in its fReal, and a Fourier Transform already calculated
- * 
+ *
  * @code
  * Matrix1D<double> angles, corr;
  * XmippFftw local_transformer;
  * Polar_fftw_plans plans;
  * Polar<std::complex<double> > F1, F2;
- * 
+ *
  * // M1 and M2 are already Polar<double>
  *
- * M1.calculateFftwPlans(plans); 
+ * M1.calculateFftwPlans(plans);
  * fourierTransformRings(M1, F1, plans, false);
  * fourierTransformRings(M1, F2, plans, true);// complex conjugated
  * corr.resize(M1.getSampleNoOuterRing());
@@ -849,24 +849,24 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
  *
  */
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
-			   const Polar<std::complex<double> > &M2,
-                           Matrix1D<double> &angles, 
+                           const Polar<std::complex<double> > &M2,
+                           Matrix1D<double> &angles,
                            XmippFftw &local_transformer);
 
 /** Compute a normalized polar Fourier transform of the input image.
     If plans is NULL, they are computed and returned. */
 void normalizedPolarFourierTransform(const Matrix2D<double> &in,
-    Polar< std::complex<double> > &out, bool flag,
-    int first_ring, int last_ring, Polar_fftw_plans *&plans,
-    int BsplineOrder=3);
+                                     Polar< std::complex<double> > &out, bool flag,
+                                     int first_ring, int last_ring, Polar_fftw_plans *&plans,
+                                     int BsplineOrder=3);
 
 /** Best rotation between two normalized polar Fourier transforms. */
 double best_rotation(const Polar< std::complex<double> > &I1,
-    const Polar< std::complex<double> > &I2, XmippFftw &local_transformer);
+                     const Polar< std::complex<double> > &I2, XmippFftw &local_transformer);
 
 /** Align I2 rotationally to I1 */
 void alignRotationally(Matrix2D<double> &I1, Matrix2D<double> &I2,
-    int splineOrder=1, int wrap=WRAP);
+                       int splineOrder=1, int wrap=WRAP);
 
 //@}
 #endif

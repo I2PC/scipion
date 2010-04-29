@@ -71,7 +71,7 @@ int main(int argc, char **argv)
         if (rank == 0)
         {
             std::cerr << "Fourier pixels for which the threshold was not reached: "
-            << (float)(iaux*100.) / (num_img_tot*prm.dim*prm.dim) << " %" << std::endl;
+                      << (float)(iaux*100.) / (num_img_tot*prm.dim*prm.dim) << " %" << std::endl;
             vol.write(prm.fn_out);
         }
 

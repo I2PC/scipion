@@ -35,7 +35,7 @@ void VirusEulerMatrices::read(const FileName &fn)
     int            i;
 
     //alloc Memory
-    for (i = 0;i < Vir_Eq_Views;i++)
+    for (i = 0; i < Vir_Eq_Views; i++)
         E_Matrices[i].resize(3, 3);
 
     // Open file

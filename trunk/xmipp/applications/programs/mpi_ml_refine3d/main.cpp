@@ -28,7 +28,7 @@
 #include <reconstruction/ml_refine3d.h>
 #define TAG_DOCFILE 12
 #define TAG_DOCFILESIZE 13
- 
+
 
 int main(int argc, char **argv)
 {
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
             ML2D_prm.wsum_sigma_noise = aux;
             MPI_Allreduce(&ML2D_prm.wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             ML2D_prm.wsum_sigma_offset = aux;
-            for (int refno = 0;refno < ML2D_prm.model.n_ref; refno++)
+            for (int refno = 0; refno < ML2D_prm.model.n_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(ML2D_prm.wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
                               MULTIDIM_SIZE(ML2D_prm.wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -170,9 +170,9 @@ int main(int argc, char **argv)
 
             // Update model parameters
             ML2D_prm.maximization(ML2D_prm.model, prm.eachvol_end[0]+1);
-            
 
-            // Write intermediate files 
+
+            // Write intermediate files
             if (rank != 0)
             {
                 // All slaves send docfile to the master
@@ -187,7 +187,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                // Master fills docfile 
+                // Master fills docfile
                 std::ofstream myDocFile;
                 FileName fn_tmp;
                 fn_tmp.compose(prm.fn_root + "_it",ML2D_prm.iter,"doc");
@@ -270,10 +270,10 @@ int main(int argc, char **argv)
             ML2D_prm.iter++;
         } // end loop iterations
 
-	if (rank == 0)
-	{
-	    ML2D_prm.writeOutputFiles(ML2D_prm.model);
-	}
+        if (rank == 0)
+        {
+            ML2D_prm.writeOutputFiles(ML2D_prm.model);
+        }
 
         if (!converged && prm.verb > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;

@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *		im_out = tom_xmipp_mirror_wrapper(image,[x,y,z])
+ *      im_out = tom_xmipp_mirror_wrapper(image,[x,y,z])
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -33,7 +33,7 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
-   
+
     bool flipx;
     bool flipy;
     bool flipz;
@@ -43,14 +43,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     flipz=(bool)p_flip[2];
 
     mwSize ndims = mxGetNumberOfDimensions(prhs[0]);
-    
+
     if (ndims == 2)
     {
         Image img;
         getMatrix2D(prhs[0],img());
         if (flipx) img().selfReverseX();
         if (flipy) img().selfReverseY();
-        setMatrix2D(img(),plhs[0]);     
+        setMatrix2D(img(),plhs[0]);
     }
     else
     {
@@ -59,7 +59,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         if (flipx) vol().selfReverseX();
         if (flipy) vol().selfReverseY();
         if (flipz) vol().selfReverseZ();
-        setMatrix3D(vol(),plhs[0]);     
+        setMatrix3D(vol(),plhs[0]);
     }
-    
+
 }

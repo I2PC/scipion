@@ -49,7 +49,7 @@ void Prog_Microscope_Parameters::usage()
               << "  [-low_pass <w=0>]         : low pass filter for noise before CTF\n"
               << "  [-noise <stddev=0>]       : noise to be added\n"
               << "  [-after_ctf_noise]        : generate noise after the CTF\n"
-    ;
+              ;
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -63,7 +63,7 @@ void Prog_Microscope_Parameters::show()
               << "Low pass freq: " << low_pass_before_CTF << std::endl
               << "After CTF noise: " << after_ctf_noise << std::endl
               << "Defocus change: " << defocus_change << std::endl
-    ;
+              ;
 }
 
 

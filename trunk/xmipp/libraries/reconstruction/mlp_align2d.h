@@ -173,7 +173,7 @@ public:
      * phi and theta
      */
     void preselectDirections(float &phi, float &theta,
-			     std::vector<double> &pdf_directions);
+                             std::vector<double> &pdf_directions);
 
     /** Update PDF of the translation
      *
@@ -187,10 +187,10 @@ public:
      * (interpolation based on reverse gridding)
      */
     void calculateFtRingsAllRefs(const std::vector< ImageXmippT<double> > &Iref,
-				 std::vector< Polar< std::complex <double> > > &fP_refs,
-				 Polar< std::complex <double> > &fP_zero,
-				 std::vector< double > &sum2_refs,
-				 const int &first, const int &last);
+                                 std::vector< Polar< std::complex <double> > > &fP_refs,
+                                 Polar< std::complex <double> > &fP_zero,
+                                 std::vector< double > &sum2_refs,
+                                 const int &first, const int &last);
 
     /** Prepare experimental image
      *
@@ -199,9 +199,9 @@ public:
      * (interpolation based on reverse gridding)
      */
     void calculateFtRingsAllTransImg(const  ImageXmippT<double>  &Iexp,
-				     std::vector< Polar< std::complex <double> > > &fP_trans,
-				     std::vector< Polar< std::complex <double> > > &fPm_trans,
-				     double &Xi2, const int &first, const int &last);
+                                     std::vector< Polar< std::complex <double> > > &fP_trans,
+                                     std::vector< Polar< std::complex <double> > > &fPm_trans,
+                                     double &Xi2, const int &first, const int &last);
 
 
     /** MLP integration over all refs, rots and trans
@@ -211,32 +211,32 @@ public:
      *
      */
     void processOneImage(const ImageXmippT<double> &img,
-			 const std::vector < Polar <std::complex <double> >  > &fP_refs,
-			 const std::vector < double > &sum2_refs,
-			 const std::vector < double > &pdf_directions,
-			 std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
-			 double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			 std::vector < double > &sumw, std::vector < double > &sumw_mirror,
-			 double &LL, double &fracweight,
-			 int &opt_refno, double &opt_psi, double &opt_flip, 
-			 double &opt_xoff, double &opt_yoff);
+                         const std::vector < Polar <std::complex <double> >  > &fP_refs,
+                         const std::vector < double > &sum2_refs,
+                         const std::vector < double > &pdf_directions,
+                         std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
+                         double &wsum_sigma_noise, double &wsum_sigma_offset,
+                         std::vector < double > &sumw, std::vector < double > &sumw_mirror,
+                         double &LL, double &fracweight,
+                         int &opt_refno, double &opt_psi, double &opt_flip,
+                         double &opt_xoff, double &opt_yoff);
 
     /** The actual loop over all images
      */
     void sumOverAllImages(SelFile &SF, const std::vector< ImageXmippT<double> > &Iref,
-			  double &LL, double &sumcorr, DocFile &DFo,
-			  std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
-			  double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			  std::vector <double> &sumw, std::vector <double> &sumw_mirror);
+                          double &LL, double &sumcorr, DocFile &DFo,
+                          std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
+                          double &wsum_sigma_noise, double &wsum_sigma_offset,
+                          std::vector <double> &sumw, std::vector <double> &sumw_mirror);
 
     /** Update all model parameters
      * Here the maximization step of the EM-algorithm is performed.
      *
      */
     void updateParameters(std::vector < Polar <std::complex <double> > > &fP_wsum_imgs,
-			  double &wsum_sigma_noise, double &wsum_sigma_offset, 
-			  std::vector <double> &sumw, std::vector <double> &sumw_mirror,
-			  double &sumcorr, double &sumw_allrefs);
+                          double &wsum_sigma_noise, double &wsum_sigma_offset,
+                          std::vector <double> &sumw, std::vector <double> &sumw_mirror,
+                          double &sumcorr, double &sumw_allrefs);
 
     /** Convergence check
      * Convergence is based on signal change in the cartesian-sampled images
@@ -249,8 +249,8 @@ public:
      *
      */
     void writeOutputFiles(const int iter, DocFile &DFo,
-                            double &sumw_allrefs, double &LL, double &avecorr,
-                            std::vector<double> &conv);
+                          double &sumw_allrefs, double &LL, double &avecorr,
+                          std::vector<double> &conv);
 
 };
 //@}

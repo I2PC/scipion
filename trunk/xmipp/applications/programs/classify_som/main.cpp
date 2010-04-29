@@ -120,11 +120,10 @@ main(int argc, char** argv)
 
         if (checkParameter(argc, argv, "-radius"))
             radius_0 = textToFloat(getParameter(argc, argv, "-radius"));
+        else if (xdim > ydim)
+            radius_0 = xdim;
         else
-            if (xdim > ydim)
-                radius_0 = xdim;
-            else
-                radius_0 = ydim;
+            radius_0 = ydim;
 
         iter = textToInteger(getParameter(argc, argv, "-iter", "10000"));
         verb = textToInteger(getParameter(argc, argv, "-verb", "0"));

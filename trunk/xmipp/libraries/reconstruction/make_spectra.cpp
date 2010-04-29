@@ -69,7 +69,7 @@ void Prog_make_spectra_prm::usage()
 void Prog_make_spectra_prm::usage_specific()
 {
     std::cerr << "   -o <fn_out>                 : Output file with the spectra\n"
-    ;
+              ;
     rot_spt.usage();
 }
 

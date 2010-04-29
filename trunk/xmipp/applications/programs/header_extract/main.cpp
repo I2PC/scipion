@@ -42,13 +42,13 @@ int main(int argc, char *argv[])
 // Check command line options ===========================================
     try
     {
-        
-        fn_in  = getParameter(argc, argv, "-i"); 
-	    if (checkParameter(argc, argv, "-o"))
+
+        fn_in  = getParameter(argc, argv, "-i");
+        if (checkParameter(argc, argv, "-o"))
             fn_out = getParameter(argc, argv, "-o");
-	    else
-	        fn_out = fn_in;   
-            round_shifts = checkParameter(argc, argv, "-round_shifts");
+        else
+            fn_out = fn_in;
+        round_shifts = checkParameter(argc, argv, "-round_shifts");
     }
     catch (Xmipp_error XE)
     {
@@ -61,15 +61,15 @@ int main(int argc, char *argv[])
     try
     {
 
-	    long int ret=SF.firstObject();
-	    if(ret==MetaData::NO_OBJECTS_STORED)
-	    {
-	        std::cerr << "Empty inputFile File\n";
-	        exit(1);
-	    }
-	    do
+        long int ret=SF.firstObject();
+        if(ret==MetaData::NO_OBJECTS_STORED)
         {
-	        SF.getValue(MDL_IMAGE,fn_img);
+            std::cerr << "Empty inputFile File\n";
+            exit(1);
+        }
+        do
+        {
+            SF.getValue(MDL_IMAGE,fn_img);
             if (fn_img=="") break;
             head.read(fn_img);
             head.get_originOffsets( xx, yy );
@@ -78,16 +78,16 @@ int main(int argc, char *argv[])
                 xx = (float)ROUND(xx);
                 yy = (float)ROUND(yy);
             }
-	        SF.setValue(MDL_ANGLEROT,  (double) head.Phi());
-	        SF.setValue(MDL_ANGLETILT, (double) head.Theta());
-    	    SF.setValue(MDL_ANGLEPSI,  (double) head.Psi());
-	        SF.setValue(MDL_SHIFTX,    (double) xx );
-	        SF.setValue(MDL_SHIFTY,    (double) yy );
-	        SF.setValue(MDL_WEIGHT,    (double) head.Weight());
-	        SF.setValue(MDL_FLIP,      (bool)   head.Flip());
+            SF.setValue(MDL_ANGLEROT,  (double) head.Phi());
+            SF.setValue(MDL_ANGLETILT, (double) head.Theta());
+            SF.setValue(MDL_ANGLEPSI,  (double) head.Psi());
+            SF.setValue(MDL_SHIFTX,    (double) xx );
+            SF.setValue(MDL_SHIFTY,    (double) yy );
+            SF.setValue(MDL_WEIGHT,    (double) head.Weight());
+            SF.setValue(MDL_FLIP,      (bool)   head.Flip());
         }
         while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
-	
+
         SF.write(fn_out);
     }
     catch (Xmipp_error XE)
@@ -106,7 +106,7 @@ void Usage()
     std::cout << "    header_extract \n";
     std::cout <<              "        -i <selfile>       : input selfile\n";
     std::cout << (std::string)"       [-o <docfile> ]     : output metaData file, by default data\n" +
-                              "                             is stored in input metaData file\n";
+              "                             is stored in input metaData file\n";
     std::cout <<              "       [-round_shifts]     : Round shifts to integers \n";
     exit(1);
 }

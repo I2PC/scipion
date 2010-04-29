@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
-              using trust Region method for high-computing load, 
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
+              using trust Region method for high-computing load,
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product, 
+If you want to include this tools in any commercial product,
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -36,13 +36,13 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 
 class Matrix
 {
-  protected:  
+protected:
     typedef struct MatrixDataTag
     {
-       char **columnNames;
-       int nLine ,nColumn, extColumn, extLine;
-       int ref_count;
-       double **p;
+        char **columnNames;
+        int nLine ,nColumn, extColumn, extLine;
+        int ref_count;
+        double **p;
     } MatrixData;
     MatrixData *d;
 
@@ -50,10 +50,10 @@ class Matrix
     void setExtSize(int _extLine, int _extColumn);
     void destroyCurrentBuffer();
 
-  public:
-    
+public:
+
 // creation & management of Matrix:
-    Matrix(int _ligne=0,int _nColumn=0); 
+    Matrix(int _ligne=0,int _nColumn=0);
     Matrix(int _ligne,int _nColumn, int _extLine,int _extColumn);
     Matrix(const char *filename, char ascii=0);
     Matrix(Vector a, Vector b);  // a * b^T
@@ -78,12 +78,30 @@ class Matrix
     void copyFrom(Matrix a);
 
 // accessor method
-    inline bool operator==( const Matrix& A ) { return (A.d==d);}
-    inline int nLine()   { return d->nLine; };
-    inline int nColumn() { return d->nColumn; };
-    inline char **getColumnNames() { return d->columnNames; }
-    inline double *operator [](int i) { return d->p[i]; };
-    inline operator double**() const { return d->p; };
+    inline bool operator==( const Matrix& A )
+    {
+        return (A.d==d);
+    }
+    inline int nLine()
+    {
+        return d->nLine;
+    };
+    inline int nColumn()
+    {
+        return d->nColumn;
+    };
+    inline char **getColumnNames()
+    {
+        return d->columnNames;
+    }
+    inline double *operator [](int i)
+    {
+        return d->p[i];
+    };
+    inline operator double**() const
+    {
+        return d->p;
+    };
     Vector getLine(int i, int n=0, int startCol=0);
     void getLine(int i, Vector r, int n=0, int startCol=0);
     Vector getColumn(int i, int n=0);
@@ -93,7 +111,7 @@ class Matrix
     void setLines(int indexDest, Matrix Source, int indexSource=0, int number=0);
     void swapLines(int i, int j);
     int lineIndex(Vector r, int nn=0);
-	void merge(Matrix m, int eliminateDoubles=1);
+    void merge(Matrix m, int eliminateDoubles=1);
     void append(Vector tmp);
 
 // simple math tools:
@@ -106,7 +124,7 @@ class Matrix
     void multiply(Matrix R, Matrix a); // result in R
     void transposeAndMultiply(Matrix R, Matrix a);// result in R
     void multiplyByTranspose(Matrix R, Matrix a); // result in R
-    void multiplyByDiagonalMatrix(Vector v);    
+    void multiplyByDiagonalMatrix(Vector v);
     Vector multiply(Vector v);
     void addInPlace(Matrix B);
     void addMultiplyInPlace(double d, Matrix B);
@@ -120,11 +138,11 @@ class Matrix
     Matrix(MatrixTriangle A, char bTranspose=0);
     bool cholesky(MatrixTriangle matL, double lambda=0, double *lambdaCorrection=NULL);
     void choleskySolveInPlace(Vector b);
-    void QR(Matrix Q=Matrix::emptyMatrix, MatrixTriangle R=MatrixTriangle::emptyMatrixTriangle, 
-                        VectorInt permutation=VectorInt::emptyVectorInt);
+    void QR(Matrix Q=Matrix::emptyMatrix, MatrixTriangle R=MatrixTriangle::emptyMatrixTriangle,
+            VectorInt permutation=VectorInt::emptyVectorInt);
 #endif
 
-	double frobeniusNorm();
+    double frobeniusNorm();
     double LnftyNorm();
     double euclidianNorm(int i);
     Vector getMaxColumn();

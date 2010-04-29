@@ -43,7 +43,7 @@
 /* Constructor ------------------------------------------------------------- */
 QtFiltersController::QtFiltersController(QWidget *_parent,
         const Micrograph *_M) :
-        QWidget(_parent)
+    QWidget(_parent)
 {
     __M = _M;
 

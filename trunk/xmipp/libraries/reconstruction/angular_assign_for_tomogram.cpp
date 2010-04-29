@@ -67,27 +67,27 @@ void Prog_angular_predict_tomography_prm::show()
               << "Max tilt change:    " << max_tilt_change  << " step: " << tilt_step << std::endl
               << "Max psi change:     " << max_psi_change   << " step: " << psi_step << std::endl
               << "Max shift change:   " << max_shift_change << " step: " << shift_step << std::endl
-    ;
+              ;
 }
 
 // usage ===================================================================
 void Prog_angular_predict_tomography_prm::usage()
 {
     std::cerr
-        << "   -ref <volume>             : Reference volume\n"
-        << "   -sel <selfile>            : Images to align\n"
-        << "   -oroot <rootname>         : rootname for the output\n"
-        << "  [-masksel <selfile>]       : Mask of regions not to be used in the alignment\n"
-        << "  [-max_rot_change <ang=5>]  : Maximum change allowed in rot\n"
-        << "  [-max_tilt_change <ang=2>] : Maximum change allowed in tilt\n"
-        << "  [-max_psi_change <ang=5>]  : Maximum change allowed in psi\n"
-        << "  [-max_shift_change <r=10>] : Maximum change allowed in shift\n"
-        << "  [-rot_step <ang=1>]        : Rot search step\n"
-        << "  [-tilt_step <ang=1>]       : Tilt search step\n"
-        << "  [-psi_step <ang=3>]        : Psi search step\n"
-        << "  [-shift_step <r=2>]        : Step in shift in pixels\n"
-        << "  [-adjustGray]              : Adjust also gray values\n"
-    ;
+            << "   -ref <volume>             : Reference volume\n"
+            << "   -sel <selfile>            : Images to align\n"
+            << "   -oroot <rootname>         : rootname for the output\n"
+            << "  [-masksel <selfile>]       : Mask of regions not to be used in the alignment\n"
+            << "  [-max_rot_change <ang=5>]  : Maximum change allowed in rot\n"
+            << "  [-max_tilt_change <ang=2>] : Maximum change allowed in tilt\n"
+            << "  [-max_psi_change <ang=5>]  : Maximum change allowed in psi\n"
+            << "  [-max_shift_change <r=10>] : Maximum change allowed in shift\n"
+            << "  [-rot_step <ang=1>]        : Rot search step\n"
+            << "  [-tilt_step <ang=1>]       : Tilt search step\n"
+            << "  [-psi_step <ang=3>]        : Psi search step\n"
+            << "  [-shift_step <r=2>]        : Step in shift in pixels\n"
+            << "  [-adjustGray]              : Adjust also gray values\n"
+            ;
 }
 
 // Produce side information ================================================
@@ -103,7 +103,8 @@ void Prog_angular_predict_tomography_prm::produce_side_info()
         if (SF.ImgNo()!=SFmask.ImgNo())
             REPORT_ERROR(1,"The number of images in -sel and -masksel differs");
     }
-    while (!SF.eof()) {
+    while (!SF.eof())
+    {
         AlignmentTomography dummy;
         ImageXmipp I, Imask;
         Matrix2D<int> mask;
@@ -117,7 +118,7 @@ void Prog_angular_predict_tomography_prm::produce_side_info()
         dummy.fn_img=I.name();
         Projection theo;
         project_Volume(V(), theo, YSIZE(V()), XSIZE(V()),
-            dummy.rot, dummy.tilt, dummy.psi);
+                       dummy.rot, dummy.tilt, dummy.psi);
         I().selfTranslate(vectorR2(dummy.x,dummy.y),DONT_WRAP);
         if (fn_masksel!="")
         {
@@ -151,11 +152,11 @@ void Prog_angular_predict_tomography_prm::predict_angles(int i)
     double tiltF=list_of_assigned[i].tilt+max_tilt_change;
     if (i>0)
         tilt0=XMIPP_MAX(tilt0,
-            (list_of_assigned[i].tilt+list_of_assigned[i-1].tilt)/2);
+                        (list_of_assigned[i].tilt+list_of_assigned[i-1].tilt)/2);
     if (i<list_of_assigned.size()-1)
         tiltF=XMIPP_MIN(tiltF,
-            (list_of_assigned[i].tilt+list_of_assigned[i+1].tilt)/2);
-    
+                        (list_of_assigned[i].tilt+list_of_assigned[i+1].tilt)/2);
+
     for (double rot = rot0; rot <= rotF; rot += rot_step)
         for (double tilt = tilt0; tilt <= tiltF; tilt += tilt_step)
         {
@@ -164,7 +165,7 @@ void Prog_angular_predict_tomography_prm::predict_angles(int i)
             project_Volume(V(), theo, YSIZE(V()), XSIZE(V()), rot, tilt, 0);
             double theo_avg, theo_stddev, min_val, max_val;
             computeStats_within_binary_mask(mask, theo(),
-                theo_avg, theo_stddev, min_val, max_val);
+                                            theo_avg, theo_stddev, min_val, max_val);
             theo() -= theo_avg;
 
             // Compare it to all possible rotations and shifts
@@ -210,15 +211,15 @@ void Prog_angular_predict_tomography_prm::predict_angles(int i)
                         // Compute the correlation index
                         double read_avg, read_stddev;
                         computeStats_within_binary_mask(mask, Ip(),
-                            read_avg, read_stddev, min_val, max_val);
+                                                        read_avg, read_stddev, min_val, max_val);
                         double correlation_index = 0;
                         double N=0;
                         FOR_ALL_ELEMENTS_IN_MATRIX2D(Ip())
-                            if (Imaskp(i,j))
-                            {
-                                correlation_index += (Ip(i, j) - read_avg) * theo(i, j);
-                                N++;
-                            }
+                        if (Imaskp(i,j))
+                        {
+                            correlation_index += (Ip(i, j) - read_avg) * theo(i, j);
+                            N++;
+                        }
                         correlation_index /= N;
                         correlation_index /= read_stddev * theo_stddev;
 
@@ -269,7 +270,7 @@ void Prog_angular_predict_tomography_prm::run()
 
         // Get angles and shifts
         predict_angles(i);
-    
+
         // Store them in the output docfile
         Matrix1D<double> v(6);
         v(0) = list_of_assigned[i].rot;
@@ -301,7 +302,7 @@ void Prog_angular_predict_tomography_prm::run()
         {
             Projection theo;
             project_Volume(V(), theo, YSIZE(V()), XSIZE(V()),
-                v(0), v(1), v(2));
+                           v(0), v(1), v(2));
             I().rangeAdjust(theo(),maskPtr);
         }
 
@@ -310,10 +311,10 @@ void Prog_angular_predict_tomography_prm::run()
         I.set_originOffsets(0,0);
         Imask.set_eulerAngles(v(0), v(1), v(2));
         Imask.set_originOffsets(0,0);
-        
+
         I.write(fn_out+"_img_"+integerToString(i,4)+".xmp");
         I.write(fn_out+"_mask_"+integerToString(i,4)+".xmp");
-        
+
         SFOimg.append(fn_out+"_img_"+integerToString(i,4)+".xmp");
         SFOmask.append(fn_out+"_mask_"+integerToString(i,4)+".xmp");
     }

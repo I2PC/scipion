@@ -28,18 +28,24 @@
 int main(int argc, char **argv)
 {
     Prog_angular_predict_prm prm;
-    try {
+    try
+    {
         prm.read(argc,argv);
-    } catch (Xmipp_error XE) {
+    }
+    catch (Xmipp_error XE)
+    {
         std::cout << XE;
         prm.usage();
         exit(1);
     }
-    try {
+    try
+    {
         prm.produce_side_info();
         prm.show();
         prm.run();
-    } catch (Xmipp_error XE) {
+    }
+    catch (Xmipp_error XE)
+    {
         std::cout << XE;
         exit(1);
     }

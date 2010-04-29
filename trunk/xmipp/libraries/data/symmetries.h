@@ -35,7 +35,7 @@
 #include "grids.h"
 
 /**@defgroup SymmetryLists Symmetry handling
-   @ingroup DataLibrary 
+   @ingroup DataLibrary
     The symmetry lists are, simply, lists of 2D matrices. It's the way of
     taking symmetry into account in the reconstruction programs. The
     symmetry list must contain matrices which express equivalent views to
@@ -163,16 +163,16 @@ public:
     }
 
     /** translate string fn_sym to symmetry group, return false
-        is translation is not possible. See 
+        is translation is not possible. See
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
          for details. It also fill the symmetry information  */
     bool isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder);
 
     /** fill fileContect with symmetry information*/
-void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
-   std::vector<std::string> &fileContent);
+    void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
+                             std::vector<std::string> &fileContent);
 
-    
+
     /** Create Symmetry List from a Symmetry file.
         All the subgroup elements are computed automatically.
         \\ Ex: SymList SL("sym.txt"); */
@@ -227,7 +227,7 @@ void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
     /** Read a symmetry file into a symmetry list.
         The former symmetry list is overwritten with the new one. All the
         subgroup members are added to the list. If the accuracy is negative
-        then the subgroup is not generated. return symmetry group 
+        then the subgroup is not generated. return symmetry group
         \\ Ex: SL.read_sym_file("sym.txt");*/
     int read_sym_file(FileName fn_sym, double accuracy = SYM_ACCURACY);
 
@@ -277,7 +277,7 @@ void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
     }
 
     /** Guess Crystallographic space group.
-        Return the 
+        Return the
         http://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen number. So
         far it has only been implemented for P1 (1), P2122 & P2212 (17), P4 (75),
         P4212 (90) and P6 (168).
@@ -287,9 +287,9 @@ void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
     int  crystallographic_space_group(double mag_a,
                                       double mag_b,
                                       double ang_a2b_deg) const;
-/** Retuen the area of the non redundant part of the Ewald sphere
-*/
-double  non_redundant_evald_sphere(int pgGroup, int pgOrder);
+    /** Retuen the area of the non redundant part of the Ewald sphere
+    */
+    double  non_redundant_evald_sphere(int pgGroup, int pgOrder);
 };
 
 /** Applies to the crystal vectors de n-th symmetry  matrix, It also

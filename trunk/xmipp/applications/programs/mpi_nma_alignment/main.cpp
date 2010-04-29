@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:  Slavica Jonic slavica.jonic@impmc.jussieu.fr  
+ * Authors:  Slavica Jonic slavica.jonic@impmc.jussieu.fr
  *           Carlos Oscar Sanchez Sorzano coss.eps@ceu.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     try
     {
         // Read input parameters
-	prm.MPIversion=true;
+        prm.MPIversion=true;
         prm.read(argc, argv);
     }
     catch (Xmipp_error XE)
@@ -71,21 +71,22 @@ int main(int argc, char **argv)
         // Make the alignment, rank=0 receives all the assignments
         // The rest of the ranks compute the angular parameters for their
         // assigned images
-	
-	int numberofparam = 7 + prm.modeList.size();
-	
+
+        int numberofparam = 7 + prm.modeList.size();
+
         double v[numberofparam];
         if (rank == 0)
         {
             int i=0;
-FOR_ALL_OBJECTS_IN_METADATA(SF_in){
-   FileName fnImg;
-   SF_in.getValue(MDL_IMAGE,fnImg);
-   prm.img_names.push_back(fnImg);
-Matrix1D<double> dummy;
-   prm.listAssignments.push_back(dummy);
-   i++;
-}
+            FOR_ALL_OBJECTS_IN_METADATA(SF_in)
+            {
+                FileName fnImg;
+                SF_in.getValue(MDL_IMAGE,fnImg);
+                prm.img_names.push_back(fnImg);
+                Matrix1D<double> dummy;
+                prm.listAssignments.push_back(dummy);
+                i++;
+            }
             int toGo = imgNbr;
             MPI_Status status;
             //std::cerr << "Assigning modes and angles ...\n";
@@ -95,11 +96,11 @@ Matrix1D<double> dummy;
                 MPI_Recv(v, numberofparam, MPI_DOUBLE, MPI_ANY_SOURCE,
                          MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 int i = (int)v[0];
-		Matrix1D<double> aux(numberofparam-1);
+                Matrix1D<double> aux(numberofparam-1);
 
-	        for (int j=1; j<numberofparam; j++)
+                for (int j=1; j<numberofparam; j++)
                     aux(j-1)=v[j];
-		prm.listAssignments[i]=aux;
+                prm.listAssignments[i]=aux;
                 toGo--;
             }
             progress_bar(imgNbr);
@@ -112,14 +113,14 @@ Matrix1D<double> dummy;
                 ImageXmipp I;
                 FileName tempname;
                 SF_in.getValue(MDL_IMAGE,tempname,i);
-                
+
                 I.read(tempname, false, false, false);
                 I().setXmippOrigin();
                 prm.assignParameters(I);
 
                 // Send the alignment parameters to the master
                 v[0] = i;
-		for (int j=1; j<numberofparam; j++)
+                for (int j=1; j<numberofparam; j++)
                 {
                     v[j]=prm.parameters(j-1);
                 }
@@ -136,6 +137,6 @@ Matrix1D<double> dummy;
     {
         std::cout << XE << std::endl;
         MPI_Finalize();
-	return 1 ;
+        return 1 ;
     }
 }

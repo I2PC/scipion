@@ -77,7 +77,8 @@ class ImageViewer : public QWidget
 {
     Q_OBJECT
 public:
-    typedef enum {
+    typedef enum
+    {
         Normal_mode,
         PSD_mode,
         CTF_mode

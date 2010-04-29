@@ -52,7 +52,7 @@ public:
      * Parameter: _nSteps     Number of training steps
      */
     xmippBatchSOM(Descent& _radius,  unsigned long _nSteps)
-            : xmippSOM(_radius, _radius, BUBBLE, _nSteps)
+        : xmippSOM(_radius, _radius, BUBBLE, _nSteps)
     {};
 
     /**

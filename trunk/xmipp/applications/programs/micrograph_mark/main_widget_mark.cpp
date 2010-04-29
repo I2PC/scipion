@@ -242,7 +242,7 @@ void QtMainWidgetMark::add_point(const Particle_coords &U,
 
 #ifdef _DEBUG
     std::cout << "Adding point U(" << U.X << "," << U.Y << ") T(" << T.X << ","
-    << T.Y << ")\n";
+              << T.Y << ")\n";
     std::cout << "A at input" << __Au << "B at input" << __Bt;
 #endif
     // Adjust untilted dependent matrix
@@ -473,7 +473,7 @@ void QtMainWidgetMark::compute_alphas()
     Matrix1D<double> steps(3);
     steps.initConstant(1);
     powellOptimizer(angles, 1, 3, &matrix_fitness, NULL,
-                     0.001, fitness, iter, steps, false);
+                    0.001, fitness, iter, steps, false);
     __alpha_u = angles(0);
     __alpha_t = angles(1);
     __gamma = angles(2);
@@ -491,7 +491,7 @@ void QtMainWidgetMark::write_angles()
     FileName fn = __mWidget->getMicrograph()->micrograph_name();
     fn = fn.without_extension();
     fn = fn.add_extension("ang");
-    
+
     std::ofstream out;
     out.open(fn.c_str(), std::ios::out);
     if (!out)
@@ -506,11 +506,11 @@ void QtMainWidgetMark::write_angles()
     fn = fn.add_extension("mat");
     out.open(fn.c_str(), std::ios::out);
     if (!out)
-	REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_angles: Cannot open "
-		     + fn + " for output\n");
+        REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_angles: Cannot open "
+                     + fn + " for output\n");
     out << __Put;
     out.close();
-    
+
 }
 
 /* Draw tilt axes ---------------------------------------------------------- */
@@ -544,7 +544,7 @@ void QtMainWidgetMark::generated(bool _this_is_tilted,
                 SFUntilted.set_current(SelLine::DISCARDED);
                 SFTilted.set_current(SelLine::DISCARDED);
                 std::cerr << "Images " << SFUntilted.get_current_file() << " and "
-                << SFTilted.get_current_file() << " are discarded\n";
+                          << SFTilted.get_current_file() << " are discarded\n";
             }
             SFUntilted.next();
             SFTilted.next();
@@ -560,7 +560,7 @@ void QtMainWidgetMark::slotAddCoordTilted(int _muX, int _muY, int _f)
 }
 
 void QtMainWidgetMark::slotAddCoordTilted(int _muX, int _muY, int _f,
-    double _cost)
+        double _cost)
 {
     int mtX, mtY;
 
@@ -579,7 +579,7 @@ void QtMainWidgetMark::slotAddCoordUntilted(int _muX, int _muY, int _f)
 }
 
 void QtMainWidgetMark::slotAddCoordUntilted(int _mtX, int _mtY, int _f,
-    double _cost)
+        double _cost)
 {
     int muX, muY;
 

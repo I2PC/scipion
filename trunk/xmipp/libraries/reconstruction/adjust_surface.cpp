@@ -128,24 +128,24 @@ void Prog_Adjust_Surface_Parameters::usage() const
 {
     std::cout << "\nUsage:\n";
     std::cout << "adjust_surface\n"
-    << "   -i <Input surface>             : Xmipp image\n"
-    << "  [-o <Output surface>]           : Output scaled surface\n"
-    << "   -vol <volume to fit>           : volume to be fitted\n"
-    << "  [-exhaustive]                   : Do exhaustive search\n"
-    << "  [-apply]                        : Apply best combination to surface\n"
-    << "  [-ztop <ztop0> <ztopF> <step>]  : Range to search top value\n"
-    << "  [-zbottom <zbottom0> <zbottomF> <step>]: Range to search bottom value\n"
-    << "  [-ang <ang0=0> <angF=0> <step=1>]: Range to search angle\n"
-    << "  [-scaleX <sc0=0> <scF=0> <step=1>]: Range to search scaleX\n"
-    << "  [-scaleY <sc0=0> <scF=0> <step=1>]: Range to search scaleY\n"
-    << "  [-shift <x0=0><y0=0><dist=0><step=1>]: maximum allowed shift\n"
-    << "  [-bottom_surface]               : by default, a top surface\n"
-    << "                                    is adjusted\n"
-    << "  [-corr_2D]                      : Apply 2D correlation method\n"
-    << "  [-corr_grad]                    : Apply Gradient correlation method\n"
-    << "  [-phantom]                      : Surface is coming from a phantom\n"
-    << "  [-manual_order]                 : The heights are given manually\n"
-    ;
+              << "   -i <Input surface>             : Xmipp image\n"
+              << "  [-o <Output surface>]           : Output scaled surface\n"
+              << "   -vol <volume to fit>           : volume to be fitted\n"
+              << "  [-exhaustive]                   : Do exhaustive search\n"
+              << "  [-apply]                        : Apply best combination to surface\n"
+              << "  [-ztop <ztop0> <ztopF> <step>]  : Range to search top value\n"
+              << "  [-zbottom <zbottom0> <zbottomF> <step>]: Range to search bottom value\n"
+              << "  [-ang <ang0=0> <angF=0> <step=1>]: Range to search angle\n"
+              << "  [-scaleX <sc0=0> <scF=0> <step=1>]: Range to search scaleX\n"
+              << "  [-scaleY <sc0=0> <scF=0> <step=1>]: Range to search scaleY\n"
+              << "  [-shift <x0=0><y0=0><dist=0><step=1>]: maximum allowed shift\n"
+              << "  [-bottom_surface]               : by default, a top surface\n"
+              << "                                    is adjusted\n"
+              << "  [-corr_2D]                      : Apply 2D correlation method\n"
+              << "  [-corr_grad]                    : Apply Gradient correlation method\n"
+              << "  [-phantom]                      : Surface is coming from a phantom\n"
+              << "  [-manual_order]                 : The heights are given manually\n"
+              ;
 }
 
 /* Produce side information ================================================ */
@@ -436,8 +436,8 @@ double correlate_surface_and_volume_gradients(const Image *surf,
                 retval += ABS(dotProduct(grad_in_V, grad_in_Vsurf));
 #ifdef DEBUG
                 std::cout << "(" << k << "," << i << "," << j << ") in V="
-                << grad_in_V.transpose() << " in surf "
-                << grad_in_Vsurf.transpose() << std::endl;
+                          << grad_in_V.transpose() << " in surf "
+                          << grad_in_Vsurf.transpose() << std::endl;
 #endif
             }
         }
@@ -526,7 +526,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
 {
     int best_ktop, best_kbottom;
     double best_corr = 0, corr, best_shiftx, best_shifty, best_ang, best_scaleX,
-                       best_scaleY;
+           best_scaleY;
 
     gasprm = &prm;
     prm.p.resize(7);
@@ -582,8 +582,8 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
                                     }
 
                                     std::cout << prm.p(0) << " " << prm.p(1) << " " << prm.p(2) << " "
-                                    << prm.p(3) << " " << prm.p(4) << " " << prm.p(5) << " "
-                                    << prm.p(6) << " " << corr << std::endl;
+                                              << prm.p(3) << " " << prm.p(4) << " " << prm.p(5) << " "
+                                              << prm.p(6) << " " << corr << std::endl;
                                     if (prm.tell & MANUAL_ORDER)
                                     {
                                         std::cout << "Press any key\n";
@@ -609,7 +609,7 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
         steps.initConstant(1);
         int iter = 0;
         powellOptimizer(prm.p, 1, 7, &eval_surface, NULL,
-                         0.01, corr, iter, steps, true);
+                        0.01, corr, iter, steps, true);
         best_corr = corr;
         best_ktop = ROUND(prm.p(3));
         best_kbottom = ROUND(prm.p(4));
@@ -622,13 +622,13 @@ void ROUT_adjust_surface(Prog_Adjust_Surface_Parameters &prm)
 
     // Apply best correlation
     std::cout << "Best correlation found for\n"
-    << "  shiftx = " << best_shiftx  << std::endl
-    << "  shifty = " << best_shifty  << std::endl
-    << "  ang    = " << best_ang     << std::endl
-    << "  ktop   = " << best_ktop    << std::endl
-    << "  kbottom= " << best_kbottom << std::endl
-    << "  scaleX = " << best_scaleX  << std::endl
-    << "  scaleY = " << best_scaleY  << std::endl;
+              << "  shiftx = " << best_shiftx  << std::endl
+              << "  shifty = " << best_shifty  << std::endl
+              << "  ang    = " << best_ang     << std::endl
+              << "  ktop   = " << best_ktop    << std::endl
+              << "  kbottom= " << best_kbottom << std::endl
+              << "  scaleX = " << best_scaleX  << std::endl
+              << "  scaleY = " << best_scaleY  << std::endl;
     if (prm.apply)
     {
         prm.wsurface().resize(prm.surface());

@@ -28,7 +28,7 @@
 void Usage(char *argv[]);
 
 int main(int argc, char **argv)
- {
+{
 
     Prog_micrograph_phase_flipping prm;
 
@@ -62,12 +62,12 @@ int main(int argc, char **argv)
 void Usage(char *argv[])
 {
     std::cout << "Purpose:\n"
-    << "    flip micrograph fase\n"
-    << "Usage: "<< argv[0] 
-    << "\n"
-    << " -i <input_micrograph>            : Either 8, 16 or 32 bits\n"
-    << " -o <output_micrograph>           : Spider Format\n"
-    << " -ctf <ctf_param_file>            : CTf param file\n"
-    << " -reverse_endian                  : assumme no native endianess\n"
-    << std::endl;
+              << "    flip micrograph fase\n"
+              << "Usage: "<< argv[0]
+              << "\n"
+              << " -i <input_micrograph>            : Either 8, 16 or 32 bits\n"
+              << " -o <output_micrograph>           : Spider Format\n"
+              << " -ctf <ctf_param_file>            : CTf param file\n"
+              << " -reverse_endian                  : assumme no native endianess\n"
+              << std::endl;
 }

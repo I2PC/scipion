@@ -94,7 +94,7 @@ int main(int argc, char **argv)
             NOTE 2: a and b are the crystal vectors in real space
         */
 #define SHOW(str,v,i) x=v(0,i); y=v(1,i); std::cout << str << "("<< x \
-    << "," << y << ") (" << sqrt(x*x+y*y) << ")\n";
+        << "," << y << ") (" << sqrt(x*x+y*y) << ")\n";
         if (op == "RF")
         {
             Euler_angles2matrix(rot, tilt, psi, E2D);
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
             double gammap = RAD2DEG(atan2(vectorProduct(a, b).module(),
                                           dotProduct(a, b)));
             std::cout << "Angle from ap* to bp*="
-            << gammap << std::endl;
+                      << gammap << std::endl;
         }
         else if (op == "FR")
         {
@@ -174,17 +174,17 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cout << "Purpose: This program allows you to compute the lattice vectors\n"
-    << "         in the reciprocal space (Real-->Fourier & Fourier-->Real)\n"
-    << "Usage: lattice_vectors [options]\n"
-    << "  -lattice_a [xa,ya]             : First lattice vector\n"
-    << "  -lattice_b [xb,yb]             : Second lattice vector\n"
-    << " [-crystal_size <size=1024>      : Crystal size\n"
-    << " [-ang <rot=0> <tilt=0> <psi=0>] : Projection angle\n"
-    << " [-op <op=RF>]                   : RF -> Real space to Fourier space\n"
-    << "                                   PR -> Projected space to Real space\n"
-    << "                                   FR -> Fourier space to Real space\n"
+              << "         in the reciprocal space (Real-->Fourier & Fourier-->Real)\n"
+              << "Usage: lattice_vectors [options]\n"
+              << "  -lattice_a [xa,ya]             : First lattice vector\n"
+              << "  -lattice_b [xb,yb]             : Second lattice vector\n"
+              << " [-crystal_size <size=1024>      : Crystal size\n"
+              << " [-ang <rot=0> <tilt=0> <psi=0>] : Projection angle\n"
+              << " [-op <op=RF>]                   : RF -> Real space to Fourier space\n"
+              << "                                   PR -> Projected space to Real space\n"
+              << "                                   FR -> Fourier space to Real space\n"
 //        << " [-MRC]                          : data coming from Spectra\n"
-    ;
+              ;
 }
 
 /* Menus ------------------------------------------------------------------- */

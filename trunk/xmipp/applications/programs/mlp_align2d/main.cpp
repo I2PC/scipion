@@ -76,38 +76,38 @@ int main(int argc, char **argv)
 
             if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
-            for (int iref = 0;iref < prm.nr_ref; iref++) prm.Iold[iref]() = prm.Iref[iref]();
+            for (int iref = 0; iref < prm.nr_ref; iref++) prm.Iold[iref]() = prm.Iref[iref]();
 
             DFo.clear();
-	    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
-	    
-	    // Update pdf of the translations
-	    prm.updatePdfTranslations();
+            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8)");
 
-	    // Integrate over all images
+            // Update pdf of the translations
+            prm.updatePdfTranslations();
+
+            // Integrate over all images
             prm.sumOverAllImages(prm.SF, prm.Iref,
-				 LL, sumcorr, DFo, fP_wsum_imgs,
-				 wsum_sigma_noise, wsum_sigma_offset, sumw, sumw_mirror);
+                                 LL, sumcorr, DFo, fP_wsum_imgs,
+                                 wsum_sigma_noise, wsum_sigma_offset, sumw, sumw_mirror);
 
             // Update model parameters
             prm.updateParameters(fP_wsum_imgs, wsum_sigma_noise, wsum_sigma_offset,
-                                  sumw, sumw_mirror, sumcorr, sumw_allrefs);
+                                 sumw, sumw_mirror, sumcorr, sumw_allrefs);
 
             // Check convergence
             converged = prm.checkConvergence(conv);
 
-	    // Output files
-	    prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+            // Output files
+            prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
 
             if (converged)
             {
-		if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
-		break;
-	    }
+                if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
+                break;
+            }
 
         } // end loop iterations
 
-	// Write out final files
+        // Write out final files
         prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
     }

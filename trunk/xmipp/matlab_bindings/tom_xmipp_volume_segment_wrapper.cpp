@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *		im_out = tom_xmipp_volume_segment_wrapper(volume,sampling_rate,mass,masstype,en_threshold,threshold,wang_radius,probabilistic)
+ *      im_out = tom_xmipp_volume_segment_wrapper(volume,sampling_rate,mass,masstype,en_threshold,threshold,wang_radius,probabilistic)
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -38,38 +38,38 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     getMatrix3D(prhs[0],vol());
     prm.V = vol;
     prm.fn_mask = "";
-    prm.sampling_rate = (double) mxGetScalar(prhs[1]); 
+    prm.sampling_rate = (double) mxGetScalar(prhs[1]);
     double sampling_rate3 = prm.sampling_rate * prm.sampling_rate * prm.sampling_rate;
 
-    double mass = (double) mxGetScalar(prhs[2]); 
-    int masstype = (int) mxGetScalar(prhs[3]);  
+    double mass = (double) mxGetScalar(prhs[2]);
+    int masstype = (int) mxGetScalar(prhs[3]);
 
     switch (masstype)
     {
-        case VOXEL_MASS:
-            prm.voxel_mass = mass;
-            break;
-        case DALTON_MASS:
-            prm.voxel_mass = mass * 1.207 / sampling_rate3;
-            break;
-        case AA_MASS:
-            prm.voxel_mass = mass * 110 * 1.207 / sampling_rate3;
+    case VOXEL_MASS:
+        prm.voxel_mass = mass;
+        break;
+    case DALTON_MASS:
+        prm.voxel_mass = mass * 1.207 / sampling_rate3;
+        break;
+    case AA_MASS:
+        prm.voxel_mass = mass * 110 * 1.207 / sampling_rate3;
     }
- 
+
     int en_threshold = (int) mxGetScalar(prhs[4]);
     if (en_threshold)
         prm.en_threshold = true;
     else
         prm.en_threshold = false;
-         
-    prm.threshold = (double) mxGetScalar(prhs[5]); 
-    prm.wang_radius = (int) mxGetScalar(prhs[6]);     
+
+    prm.threshold = (double) mxGetScalar(prhs[5]);
+    prm.wang_radius = (int) mxGetScalar(prhs[6]);
     int do_prob = (int) mxGetScalar(prhs[7]);
     if (do_prob)
         prm.do_prob = true;
     else
         prm.do_prob = false;
-    
+
     VolumeXmipp mask;
     try
     {
@@ -77,9 +77,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     }
     catch (Xmipp_error Xe)
     {
-       mexErrMsgTxt(Xe.msg.c_str());
+        mexErrMsgTxt(Xe.msg.c_str());
     }
 
     setMatrix3D(mask(),plhs[0]);
-    
+
 }

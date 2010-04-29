@@ -337,13 +337,16 @@ void xmippFCB::hardPartition()
 {
 
     for (unsigned k = 1; k < membVectors(); k++)
-    {    // Number of input vectors
+    {
+        // Number of input vectors
         double maxMemb = 0;
         unsigned maxIndex = membClusters();         // Impossible cluster index
         for (unsigned i = 0; i < membClusters(); i++)
-        { // Number of clusters
+        {
+            // Number of clusters
             if (maxMemb < memb[k][i])
-            {     // Always find the maximum
+            {
+                // Always find the maximum
                 if (maxIndex != membClusters())
                     memb[k][maxIndex] = 0.0;    // Previous maximum index set to 0
                 maxMemb = memb[k][i];
@@ -386,15 +389,18 @@ xmippFCB::TS xmippFCB::alphaCore(TS _ts, double _alpha, unsigned _cluster) const
         throw std::runtime_error(msg.str());
     }
     for (unsigned k = 1; k < membVectors(); k++)
-    {     // Number of input vectors
+    {
+        // Number of input vectors
 
         double maxMemb = memb[k][_cluster];
         unsigned maxIndex = _cluster;                 // Impossible cluster index
         for (unsigned i = 0; i < membClusters(); i++)
-        {   // Number of clusters
+        {
+            // Number of clusters
             if (i != _cluster)
                 if (maxMemb < memb[k][i])
-                {      // Always find the maximum
+                {
+                    // Always find the maximum
                     maxMemb = memb[k][i];
                     maxIndex = i;
                 }

@@ -64,11 +64,12 @@ double integrateNewtonCotes(double(*f)(double),
 //**********************************************************
 
 double Trapeze::operator()()
-{   //adapted from qtrap
+{
+    //adapted from qtrap
     double s,olds;
     int j;
     olds = -1.0e30;
-    for (j = 1;j <= JMAX;j++)
+    for (j = 1; j <= JMAX; j++)
     {
         s = Trap(j);    //changed; Trap is integrating fcn
         if (fabs(s - olds) <= EPS*fabs(olds))
@@ -84,7 +85,8 @@ double Trapeze::operator()()
 
 
 double Trapeze::Trap(int n)
-{ //adapted from trapzd
+{
+    //adapted from trapzd
     double tnm, sum, del;
     int j, it;
     if (n == 1)
@@ -98,12 +100,12 @@ double Trapeze::Trap(int n)
     }
     else
     {
-        for (it = 1, j = 1;j < n - 1;j++)
+        for (it = 1, j = 1; j < n - 1; j++)
             it <<= 1;
         tnm = it;
         del = (b - a) / tnm;
         x = a + 0.5 * del;
-        for (sum = 0.0, j = 1;j <= it;j++, x += del)
+        for (sum = 0.0, j = 1; j <= it; j++, x += del)
             sum += func(); //changed
         s = 0.5 * (s + (b - a) * sum / tnm);
         return s;
@@ -117,15 +119,17 @@ double Trapeze::Trap(int n)
 #define K 5
 
 double Romberg::operator()()
-{  //adapted from qromb
+{
+    //adapted from qromb
     int j;
     double ss,dss, h[JMAXP+2], s[JMAXP+2];
     h[1] = 1.0;
-    for (j = 1;j <= JMAXP;j++)
+    for (j = 1; j <= JMAXP; j++)
     {
         s[j] = midpnt(j); //changed; midpnt is integrating
         if (j >= K)
-        {     //function
+        {
+            //function
             polint(&h[j-K], &s[j-K], K, 0.0, ss, dss);
             if (fabs(dss) <= EPS*fabs(ss))
                 return ss;
@@ -141,7 +145,8 @@ double Romberg::operator()()
 // The midpnt function is used in the Romberg::operator only
 //*
 double Romberg::midpnt(int n)
-{   //adapted from midpoint
+{
+    //adapted from midpoint
     double tnm, sum, del, ddel;
     int it, j;
     if (n == 1)
@@ -151,14 +156,14 @@ double Romberg::midpnt(int n)
     }
     else
     {
-        for (it = 1, j = 1;j < n - 1;j++)
+        for (it = 1, j = 1; j < n - 1; j++)
             it *= 3;
         tnm = it;
         del = (b - a) / (3.0 * tnm);
         ddel = del + del;
         x = a + 0.5 * del;
         sum = 0.0;
-        for (j = 1;j <= it;j++)
+        for (j = 1; j <= it; j++)
         {
             sum += func();   //changed; evaluate func
             x += ddel;    //changed; set x

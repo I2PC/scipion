@@ -57,9 +57,9 @@ void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style)
         //if (!SF_in.Is_COMMENT())
         {
             bool enabled;
-            
+
             SF_in.getValue( MDL_ENABLED, enabled );
-            
+
             if ( enabled ==1)
             {
                 if (!new_style) aux(0) = 1;
@@ -69,7 +69,11 @@ void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style)
             else
             {
                 if (!new_style) aux(0) = 0;
-                else            {store = false; i++;}
+                else
+                {
+                    store = false;
+                    i++;
+                }
             }
             if (store) DF_out.append_data_line(aux);
         }
@@ -88,11 +92,11 @@ void extract_angles(MetaData &SF_in, DocFile &DF_out,
     checkAngle(ang3);
 
     DF_out.clear();
-    
+
     FileName auxFn;
-    
+
     SF_in.getValue( MDL_IMAGE, auxFn );
-    
+
     DF_out.append_comment((std::string)"Angles for " + auxFn +
                           ".   Angle order: " + ang1 + " " + ang2 + " " + ang3);
 
@@ -102,35 +106,38 @@ void extract_angles(MetaData &SF_in, DocFile &DF_out,
     init_progress_bar(SF_in.size());
     do
     {
-    	if (fromMetadata)
-    	{
-    		double rot; SF_in.getValue(MDL_ANGLEROT,rot);
-    		double tilt; SF_in.getValue(MDL_ANGLETILT,tilt);
-    		double psi; SF_in.getValue(MDL_ANGLEPSI,psi);
-			DF_out.append_angles(rot, tilt, psi,
-								 ang1, ang2, ang3);
-    	}
-    	else
-    	{
-			// Read image
-			ImageXmipp P;
-			FileName fn_img;
-			SF_in.getValue( MDL_IMAGE, fn_img);
-			if (fn_img=="") break;
-			P.read(fn_img);
-			if (P.Is_flag_set() == 0 || P.Is_flag_set() > 2)
-				DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
-									 ang1, ang2, ang3);
-			else if (P.Is_flag_set() == 1)
-				DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
-									 P.rot1(), P.tilt1(), P.psi1(),
-									 ang1, ang2, ang3);
-			else if (P.Is_flag_set() == 2)
-				DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
-									 P.rot1(), P.tilt1(), P.psi1(),
-									 P.rot2(), P.tilt2(), P.psi2(),
-									 ang1, ang2, ang3);
-    	}
+        if (fromMetadata)
+        {
+            double rot;
+            SF_in.getValue(MDL_ANGLEROT,rot);
+            double tilt;
+            SF_in.getValue(MDL_ANGLETILT,tilt);
+            double psi;
+            SF_in.getValue(MDL_ANGLEPSI,psi);
+            DF_out.append_angles(rot, tilt, psi,
+                                 ang1, ang2, ang3);
+        }
+        else
+        {
+            // Read image
+            ImageXmipp P;
+            FileName fn_img;
+            SF_in.getValue( MDL_IMAGE, fn_img);
+            if (fn_img=="") break;
+            P.read(fn_img);
+            if (P.Is_flag_set() == 0 || P.Is_flag_set() > 2)
+                DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
+                                     ang1, ang2, ang3);
+            else if (P.Is_flag_set() == 1)
+                DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
+                                     P.rot1(), P.tilt1(), P.psi1(),
+                                     ang1, ang2, ang3);
+            else if (P.Is_flag_set() == 2)
+                DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
+                                     P.rot1(), P.tilt1(), P.psi1(),
+                                     P.rot2(), P.tilt2(), P.psi2(),
+                                     ang1, ang2, ang3);
+        }
         i++;
         if (i % 10 == 0) progress_bar(i);
     }
@@ -199,7 +206,7 @@ void rename_for_Spider(MetaData &SF_in, MetaData &SF_out, const FileName &fn_roo
 
     do
     {
-    	SF_in.getValue( MDL_IMAGE, fn_in);
+        SF_in.getValue( MDL_IMAGE, fn_in);
         if (fn_in=="") break;
         fn_out = fn_root + integerToString(counter, 5);
         if (out_ext == "") fn_out = fn_out.add_extension(fn_in.get_extension());
@@ -264,17 +271,17 @@ void radon_transform(VolumeXmipp &V_in, const FileName &fn_out,
     if (!spider_batch)
         REPORT_ERROR(1, "3D_Radon_transform:: Cannot open file for Spider batch");
     spider_batch
-    << "rm 3d\n"
-    << "superfeo\n"
-    << "n\n"
-    << "n\n"
-    << output_size << std::endl
-    << "superfeo2\n"
-    << Delta_rot << " " << Delta_tilt << std::endl
-    << FLOOR(0.5*XSIZE(V_in())) << std::endl
-    << "n\n"
-    << "en\n"
-    ;
+            << "rm 3d\n"
+            << "superfeo\n"
+            << "n\n"
+            << "n\n"
+            << output_size << std::endl
+            << "superfeo2\n"
+            << Delta_rot << " " << Delta_tilt << std::endl
+            << FLOOR(0.5*XSIZE(V_in())) << std::endl
+            << "n\n"
+            << "en\n"
+            ;
     spider_batch.close();
 
     char *spider_prog = getenv("SPIDER");
@@ -300,17 +307,17 @@ void radon_transform(ImageXmipp &I_in, const FileName &fn_out,
     if (!spider_batch)
         REPORT_ERROR(1, "2D_Radon_transform:: Cannot open file for Spider batch");
     spider_batch
-    << "rm 2d\n"
-    << "superfeo\n"
-    << "-90 88\n"
-    << Delta_ang << std::endl
-    << "superfeo2\n"
-    << output_size << std::endl
-    << FLOOR(0.5*XSIZE(I_in())) << std::endl
-    << "0 0\n"
-    << "n\n"
-    << "en\n"
-    ;
+            << "rm 2d\n"
+            << "superfeo\n"
+            << "-90 88\n"
+            << Delta_ang << std::endl
+            << "superfeo2\n"
+            << output_size << std::endl
+            << FLOOR(0.5*XSIZE(I_in())) << std::endl
+            << "0 0\n"
+            << "n\n"
+            << "en\n"
+            ;
     spider_batch.close();
 
     char *spider_prog = getenv("SPIDER");
@@ -334,23 +341,23 @@ void Fourier_transform_of_Radon_transform(const FileName &fn_in,
     if (!spider_batch)
         REPORT_ERROR(1, "Fourier_Radon_transform:: Cannot open file for Spider batch");
     spider_batch
-    << "rm ft\n"
-    << "superfeo\n"
-    << "n\n"
-    << "*\n"
-    << "superfeo2\n"
-    << "y\n"
-    << "2\n"
-    << "m\n"
-    << "8\n"
-    << "5\n"
-    << cutoff_freq << std::endl
-    << Fermi_temperature << std::endl
-    << "a\n"
-    << "n\n"
-    << "n\n"
-    << "en\n"
-    ;
+            << "rm ft\n"
+            << "superfeo\n"
+            << "n\n"
+            << "*\n"
+            << "superfeo2\n"
+            << "y\n"
+            << "2\n"
+            << "m\n"
+            << "8\n"
+            << "5\n"
+            << cutoff_freq << std::endl
+            << Fermi_temperature << std::endl
+            << "a\n"
+            << "n\n"
+            << "n\n"
+            << "en\n"
+            ;
     spider_batch.close();
 
     char *spider_prog = getenv("SPIDER");
@@ -391,58 +398,58 @@ void Angular_refinement_Radon(const FileName &fn_vol, const FileName &fn_sel,
 #ifdef NEVER_DEFINED
     /* This is for spider V03.7 */
     spider_batch
-    << "rm orfsf\n"
-    << "0 0\n"
-    << "*\n"
-    << "*\n"
-    << fn_vol.without_extension() << std::endl
-    << fn_first.without_extension() << std::endl
-    << first_image << "-" << last_image << std::endl
-    << "0 0\n"
-    << "0\n"
-    << "peak00001\n"
-    << "s\n"
-    << max_shift << std::endl
-    << "s\n"
-    << "1\n"
-    << tilt0 << " " << tiltF << std::endl
-    << tilt_step << std::endl
-    << rot0 << " " << rotF << std::endl
-    << rot_step << std::endl
-    << psi0 << " " << psiF << std::endl
-    << psi_step << std::endl
-    << "n\n"
-    << fn_report << std::endl
-    << "en\n"
-    ;
+            << "rm orfsf\n"
+            << "0 0\n"
+            << "*\n"
+            << "*\n"
+            << fn_vol.without_extension() << std::endl
+            << fn_first.without_extension() << std::endl
+            << first_image << "-" << last_image << std::endl
+            << "0 0\n"
+            << "0\n"
+            << "peak00001\n"
+            << "s\n"
+            << max_shift << std::endl
+            << "s\n"
+            << "1\n"
+            << tilt0 << " " << tiltF << std::endl
+            << tilt_step << std::endl
+            << rot0 << " " << rotF << std::endl
+            << rot_step << std::endl
+            << psi0 << " " << psiF << std::endl
+            << psi_step << std::endl
+            << "n\n"
+            << fn_report << std::endl
+            << "en\n"
+            ;
 #endif
     spider_batch
-    << "rm orfsfs\n"
-    << "0 0\n"
-    << "E\n"
-    << "0\n"
-    << "*\n"
-    << "*\n"
-    << fn_vol.without_extension() << std::endl
-    << fn_first.without_extension() << std::endl
-    << first_image << "-" << last_image << std::endl
-    << "0 0\n"
-    << "0\n"
-    << "peak00001\n"
-    << "s\n"
-    << max_shift << std::endl
-    << "s\n"
-    << "1\n"
-    << tilt0 << " " << tiltF << std::endl
-    << tilt_step << std::endl
-    << rot0 << " " << rotF << std::endl
-    << rot_step << std::endl
-    << psi0 << " " << psiF << std::endl
-    << psi_step << std::endl
-    << "n\n"
-    << fn_report << std::endl
-    << "en\n"
-    ;
+            << "rm orfsfs\n"
+            << "0 0\n"
+            << "E\n"
+            << "0\n"
+            << "*\n"
+            << "*\n"
+            << fn_vol.without_extension() << std::endl
+            << fn_first.without_extension() << std::endl
+            << first_image << "-" << last_image << std::endl
+            << "0 0\n"
+            << "0\n"
+            << "peak00001\n"
+            << "s\n"
+            << max_shift << std::endl
+            << "s\n"
+            << "1\n"
+            << tilt0 << " " << tiltF << std::endl
+            << tilt_step << std::endl
+            << rot0 << " " << rotF << std::endl
+            << rot_step << std::endl
+            << psi0 << " " << psiF << std::endl
+            << psi_step << std::endl
+            << "n\n"
+            << fn_report << std::endl
+            << "en\n"
+            ;
     spider_batch.close();
 
     char *spider_prog = getenv("SPIDER");
@@ -518,89 +525,89 @@ void Angular_refinement_Matching(const FileName &fn_vol,
         REPORT_ERROR(1, "Angular refinement:: Cannot open file for Spider batch");
     spider_batch
     // If the output document file for reference angles exists, delete it
-    << "iq fi x88\n"
-    << "refangles\n" // This is the name of the docfile
-    << "if (x88.eq.1) then\n"
-    << "   de\n"
-    << "   refangles\n"
-    << "endif\n"
-    << std::endl
+            << "iq fi x88\n"
+            << "refangles\n" // This is the name of the docfile
+            << "if (x88.eq.1) then\n"
+            << "   de\n"
+            << "   refangles\n"
+            << "endif\n"
+            << std::endl
 
-    // If the output document file for the projection list exists, delete it
-    << "iq fi x88\n"
-    << "projlist\n" // This is the name of the docfile
-    << "if (x88.eq.1) then\n"
-    << "   de\n"
-    << "   projlist\n"
-    << "endif\n"
-    << std::endl
+            // If the output document file for the projection list exists, delete it
+            << "iq fi x88\n"
+            << "projlist\n" // This is the name of the docfile
+            << "if (x88.eq.1) then\n"
+            << "   de\n"
+            << "   projlist\n"
+            << "endif\n"
+            << std::endl
 
-    // Generate an even angular distribution
-    // spaced after the tilt_step
-    << "vo ea,x83\n"
-    << tilt_step << std::endl
-    << "0,0\n"
-    << "0,0\n"
-    << "refangles\n"
-    << "x83=x83-1\n"
-    << std::endl
+            // Generate an even angular distribution
+            // spaced after the tilt_step
+            << "vo ea,x83\n"
+            << tilt_step << std::endl
+            << "0,0\n"
+            << "0,0\n"
+            << "refangles\n"
+            << "x83=x83-1\n"
+            << std::endl
 
-    // Create a list with the projection numbers
-    //<< "doc create\n"
-    //<< "projlist\n"
-    //<< "1\n"
-    //<< "1-x83\n"
-    //<< std::endl
-    << "do lb1 I=1,x83\n"
-    << "   sd x0,x0\n"
-    << "   projlist\n"
-    << "lb1\n"
-    << std::endl
+            // Create a list with the projection numbers
+            //<< "doc create\n"
+            //<< "projlist\n"
+            //<< "1\n"
+            //<< "1-x83\n"
+            //<< std::endl
+            << "do lb1 I=1,x83\n"
+            << "   sd x0,x0\n"
+            << "   projlist\n"
+            << "lb1\n"
+            << std::endl
 
-    // Create projections
-    << "pj 3q\n"
-    << fn_vol.without_extension() << std::endl
-    << Xdim*0.69 << std::endl // Radius
-    << "projlist\n"
-    << "refangles\n"
-    << "ideal****\n"
-    << std::endl
+            // Create projections
+            << "pj 3q\n"
+            << fn_vol.without_extension() << std::endl
+            << Xdim*0.69 << std::endl // Radius
+            << "projlist\n"
+            << "refangles\n"
+            << "ideal****\n"
+            << std::endl
 
-    // Create individual selfiles for each projection
-    << "x20=" << last_image << std::endl
-    << "do lb2 I=1,x20\n"
-    << "   ud x0,x55\n"
-    << "   experimentalsel\n"
-    << "lb2\n"
+            // Create individual selfiles for each projection
+            << "x20=" << last_image << std::endl
+            << "do lb2 I=1,x20\n"
+            << "   ud x0,x55\n"
+            << "   experimentalsel\n"
+            << "lb2\n"
 
-    // If the output document file for the projection list exists, delete it
-    << "iq fi x88\n"
-    << "apmq\n" // This is the name of the docfile
-    << "if (x88.eq.1) then\n"
-    << "   de\n"
-    << "   apmq\n"
-    << "endif\n"
-    << std::endl
+            // If the output document file for the projection list exists, delete it
+            << "iq fi x88\n"
+            << "apmq\n" // This is the name of the docfile
+            << "if (x88.eq.1) then\n"
+            << "   de\n"
+            << "   apmq\n"
+            << "endif\n"
+            << std::endl
 
-    // Effectively refine
-    << "ap mq\n"
-    << "ideal****\n"
-    << "projlist\n"
-    <<  max_shift << "," << shift_step << std::endl
-    << first_ring << "," << last_ring << std::endl
-    << "kk*****\n"
-    << "1-" << last_image << std::endl
-    << "apmq\n"
-    << std::endl
+            // Effectively refine
+            << "ap mq\n"
+            << "ideal****\n"
+            << "projlist\n"
+            <<  max_shift << "," << shift_step << std::endl
+            << first_ring << "," << last_ring << std::endl
+            << "kk*****\n"
+            << "1-" << last_image << std::endl
+            << "apmq\n"
+            << std::endl
 
-    // Delete reference projections
-    << std::endl
-    << "do lb4 x12=1,x83\n"
-    << "   de\n"
-    << "   ideal{****x12}\n"
-    << "lb4\n"
-    << "en\n"
-    ;
+            // Delete reference projections
+            << std::endl
+            << "do lb4 x12=1,x83\n"
+            << "   de\n"
+            << "   ideal{****x12}\n"
+            << "lb4\n"
+            << "en\n"
+            ;
     spider_batch.close();
 
     char *spider_prog = getenv("SPIDER");

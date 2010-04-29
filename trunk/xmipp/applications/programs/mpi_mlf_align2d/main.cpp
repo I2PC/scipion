@@ -128,7 +128,7 @@ int main(int argc, char **argv)
             if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
             // Save old reference images
-            for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
+            for (int refno = 0; refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
 
             // Initialize
             DFo.clear();
@@ -138,9 +138,9 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             prm.sumOverAllImages(prm.SF, prm.Iref, iter,
-				 LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
-				 Mwsum_sigma2, wsum_sigma_offset, 
-				 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
+                                 LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
+                                 Mwsum_sigma2, wsum_sigma_offset,
+                                 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
 
             // Here MPI_allreduce of all wsums,LL and sumcorr !!!
             MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -155,27 +155,27 @@ int main(int argc, char **argv)
                 MPI_Allreduce(MULTIDIM_ARRAY(prm.sumhist), MULTIDIM_ARRAY(Vaux),
                               MULTIDIM_SIZE(prm.sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
-                    DIRECT_MULTIDIM_ELEM(prm.sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+                DIRECT_MULTIDIM_ELEM(prm.sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
                 for (int ires = 0; ires < prm.hdim; ires++)
                 {
                     Vaux.resize(prm.sumhist);
                     MPI_Allreduce(MULTIDIM_ARRAY(prm.resolhist[ires]), MULTIDIM_ARRAY(Vaux),
                                   MULTIDIM_SIZE(prm.resolhist[ires]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
-                        DIRECT_MULTIDIM_ELEM(prm.resolhist[ires], n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+                    DIRECT_MULTIDIM_ELEM(prm.resolhist[ires], n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
                 }
             }
-            for (int refno = 0;refno < prm.n_ref; refno++)
+            for (int refno = 0; refno < prm.n_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
                               MULTIDIM_SIZE(wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 wsum_Mref[refno] = Maux;
-		if (prm.do_ctf_correction)
-		{
-		    MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
-				  MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-		    wsum_ctfMref[refno] = Maux;
-		}
+                if (prm.do_ctf_correction)
+                {
+                    MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
+                                  MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    wsum_ctfMref[refno] = Maux;
+                }
                 MPI_Allreduce(&sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw[refno] = aux;
                 MPI_Allreduce(&sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -187,31 +187,31 @@ int main(int argc, char **argv)
                 MPI_Allreduce(&sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 sumw_mirror[refno] = aux;
             }
-	    for (int ifocus = 0;ifocus < prm.nr_focus;ifocus++)
-	    {
-		for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++) 
-		{
-		    MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-		    Mwsum_sigma2[ifocus][ii] = aux;
-		}
+            for (int ifocus = 0; ifocus < prm.nr_focus; ifocus++)
+            {
+                for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++)
+                {
+                    MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    Mwsum_sigma2[ifocus][ii] = aux;
+                }
                 if (prm.do_student)
                 {
                     MPI_Allreduce(&sumw_defocus[ifocus], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     sumw_defocus[ifocus] = aux;
                 }
-	    }
+            }
 
             // Update model parameters
             prm.updateParameters(wsum_Mref, wsum_ctfMref,
-				 Mwsum_sigma2, wsum_sigma_offset, 
-				 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus, 
-				 sumcorr, sumw_allrefs,
-				 spectral_signal);
+                                 Mwsum_sigma2, wsum_sigma_offset,
+                                 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
+                                 sumcorr, sumw_allrefs,
+                                 spectral_signal);
 
             // Check convergence
             converged = prm.checkConvergence(conv);
 
-            // Write intermediate files 
+            // Write intermediate files
             if (rank != 0)
             {
                 // All slaves send docfile to the master
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                // Master fills docfile 
+                // Master fills docfile
                 std::ofstream myDocFile;
                 FileName fn_tmp;
                 fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
             MPI_Barrier(MPI_COMM_WORLD);
 
             // Calculate new wiener filters
-	    prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
+            prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
 
             if (converged)
             {
@@ -271,8 +271,8 @@ int main(int argc, char **argv)
 
         } // end loop iterations
 
-	if (rank == 0)  
-	    prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+        if (rank == 0)
+            prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
     }
     catch (Xmipp_error XE)

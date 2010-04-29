@@ -35,7 +35,7 @@
 /** @defgroup FourierW FFTW Fourier transforms
   * @ingroup DataLibrary
   */
- 
+
 /** Fourier Transformer class.
  * @ingroup FourierW
  *
@@ -60,7 +60,7 @@ public:
     /** Real array, in fact a pointer to the user array is stored. */
     MultidimArray<double> *fReal;
 
-     /** Complex array, in fact a pointer to the user array is stored. */
+    /** Complex array, in fact a pointer to the user array is stored. */
     MultidimArray<std::complex<double> > *fComplex;
 
     /** Fourier array  */
@@ -89,8 +89,8 @@ public:
     /** Set Number of threads
      * This function, which should be called once, performs any
      * one-time initialization required to use threads on your
-     * system. 
-     * 
+     * system.
+     *
      *  The nthreads argument indicates the number of threads you
      *  want FFTW to use (or actually, the maximum number). All
      *  plans subsequently created with any planner routine will use
@@ -140,7 +140,7 @@ public:
 
         threadsSetOn=false;
     }
-    
+
     /** Compute the Fourier transform of a Matrix1D, 2D and 3D.
         If getCopy is false, an alias to the transformed data is returned.
         This is a faster option since a copy of all the data is avoided,
@@ -148,13 +148,13 @@ public:
         change the data.
         */
     template <typename T, typename T1>
-        void FourierTransform(T& v, T1& V, bool getCopy=true)
-        {
-            setReal(v);
-            Transform(FFTW_FORWARD);
-            if (getCopy) getFourierCopy(V);
-            else         getFourierAlias(V);
-        }
+    void FourierTransform(T& v, T1& V, bool getCopy=true)
+    {
+        setReal(v);
+        Transform(FFTW_FORWARD);
+        if (getCopy) getFourierCopy(V);
+        else         getFourierAlias(V);
+    }
 
     /** Compute the Fourier transform.
         The data is taken from the matrix with which the object was
@@ -178,79 +178,86 @@ public:
         matrix is already resized to the right size before entering
         in this function. */
     template <typename T, typename T1>
-        void inverseFourierTransform(T& V, T1& v)
-        {
-            setReal(v);
-            setFourier(V);
-            Transform(FFTW_BACKWARD);
-        }
+    void inverseFourierTransform(T& V, T1& v)
+    {
+        setReal(v);
+        setFourier(V);
+        Transform(FFTW_BACKWARD);
+    }
 
     /** Get Fourier coefficients. */
     template <typename T>
-        void getFourierAlias(T& V) {V.alias(fFourier); return;}
+    void getFourierAlias(T& V)
+    {
+        V.alias(fFourier);
+        return;
+    }
 
     /** Get Fourier coefficients. */
     template <typename T>
-        void getFourierCopy(T& V) {
-            V.resize(fFourier);
-            memcpy(MULTIDIM_ARRAY(V),MULTIDIM_ARRAY(fFourier),
-                MULTIDIM_SIZE(fFourier)*2*sizeof(double));
-        }
+    void getFourierCopy(T& V)
+    {
+        V.resize(fFourier);
+        memcpy(MULTIDIM_ARRAY(V),MULTIDIM_ARRAY(fFourier),
+               MULTIDIM_SIZE(fFourier)*2*sizeof(double));
+    }
 
     /** Return a complete Fourier transform (two halves).
     */
     template <typename T>
-        void getCompleteFourier(T& V) {
-            V.resize(*fReal);
-            int ndim=3;
-            if (ZSIZE(*fReal)==1)
-            {
-                ndim=2;
-                if (YSIZE(*fReal)==1)
-                    ndim=1;
-            }
-            switch (ndim)
-            {
-                case 1:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(V)
-                        if (i<XSIZE(fFourier))
-                            DIRECT_VEC_ELEM(V,i)=DIRECT_VEC_ELEM(fFourier,i);
-                        else
-                            DIRECT_VEC_ELEM(V,i)=
-                                conj(DIRECT_VEC_ELEM(fFourier,
-                                    XSIZE(*fReal)-i));
-                    break;
-                case 2:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(V)
-                        if (j<XSIZE(fFourier))
-                            DIRECT_MAT_ELEM(V,i,j)=
-                                DIRECT_MAT_ELEM(fFourier,i,j);
-                        else
-                            DIRECT_MAT_ELEM(V,i,j)=
-                                conj(DIRECT_MAT_ELEM(fFourier,
-                                    (YSIZE(*fReal)-i)%YSIZE(*fReal),
-                                     XSIZE(*fReal)-j));
-                    break;
-                case 3:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V)
-                        if (j<XSIZE(fFourier))
-                            DIRECT_VOL_ELEM(V,k,i,j)=
-                                DIRECT_VOL_ELEM(fFourier,k,i,j);
-                        else
-                            DIRECT_VOL_ELEM(V,k,i,j)=
-                                conj(DIRECT_VOL_ELEM(fFourier,
-                                    (ZSIZE(*fReal)-k)%ZSIZE(*fReal),
-                                    (YSIZE(*fReal)-i)%YSIZE(*fReal),
-                                     XSIZE(*fReal)-j));
-                    break;
-            }
+    void getCompleteFourier(T& V)
+    {
+        V.resize(*fReal);
+        int ndim=3;
+        if (ZSIZE(*fReal)==1)
+        {
+            ndim=2;
+            if (YSIZE(*fReal)==1)
+                ndim=1;
         }
+        switch (ndim)
+        {
+        case 1:
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(V)
+            if (i<XSIZE(fFourier))
+                DIRECT_VEC_ELEM(V,i)=DIRECT_VEC_ELEM(fFourier,i);
+            else
+                DIRECT_VEC_ELEM(V,i)=
+                    conj(DIRECT_VEC_ELEM(fFourier,
+                                         XSIZE(*fReal)-i));
+            break;
+        case 2:
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(V)
+            if (j<XSIZE(fFourier))
+                DIRECT_MAT_ELEM(V,i,j)=
+                    DIRECT_MAT_ELEM(fFourier,i,j);
+            else
+                DIRECT_MAT_ELEM(V,i,j)=
+                    conj(DIRECT_MAT_ELEM(fFourier,
+                                         (YSIZE(*fReal)-i)%YSIZE(*fReal),
+                                         XSIZE(*fReal)-j));
+            break;
+        case 3:
+            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V)
+            if (j<XSIZE(fFourier))
+                DIRECT_VOL_ELEM(V,k,i,j)=
+                    DIRECT_VOL_ELEM(fFourier,k,i,j);
+            else
+                DIRECT_VOL_ELEM(V,k,i,j)=
+                    conj(DIRECT_VOL_ELEM(fFourier,
+                                         (ZSIZE(*fReal)-k)%ZSIZE(*fReal),
+                                         (YSIZE(*fReal)-i)%YSIZE(*fReal),
+                                         XSIZE(*fReal)-j));
+            break;
+        }
+    }
 
     /** Set one half of the FT in fFourier from the input complete Fourier transform (two halves).
         The fReal and fFourier already should have the right sizes
     */
     template <typename T>
-        void setFromCompleteFourier(T& V) {
+    void setFromCompleteFourier(T& V)
+    {
         int ndim=3;
         if (ZSIZE(*fReal)==1)
         {
@@ -262,15 +269,15 @@ public:
         {
         case 1:
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(fFourier)
-                DIRECT_VEC_ELEM(fFourier,i)=DIRECT_VEC_ELEM(V,i);
+            DIRECT_VEC_ELEM(fFourier,i)=DIRECT_VEC_ELEM(V,i);
             break;
         case 2:
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(fFourier)
-                DIRECT_MAT_ELEM(fFourier,i,j) = DIRECT_MAT_ELEM(V,i,j); 
+            DIRECT_MAT_ELEM(fFourier,i,j) = DIRECT_MAT_ELEM(V,i,j);
             break;
         case 3:
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(fFourier)
-                DIRECT_VOL_ELEM(fFourier,k,i,j) = DIRECT_VOL_ELEM(V,k,i,j);
+            DIRECT_VOL_ELEM(fFourier,k,i,j) = DIRECT_VOL_ELEM(V,k,i,j);
             break;
         }
     }
@@ -374,7 +381,7 @@ void auto_correlation_vector(const Matrix1D< T > & Img, Matrix1D< double >& R)
     // Multiply FFT1 * FFT1'
     double dSize=XSIZE(Img);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
-        FFT1(i) *= dSize * conj(FFT1(i));
+    FFT1(i) *= dSize * conj(FFT1(i));
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
@@ -405,7 +412,7 @@ void correlation_vector(const Matrix1D< T > & m1,
     // Multiply FFT1 * FFT2'
     double dSize=XSIZE(m1);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
-        FFT1(i) *= dSize * conj(FFT2(i));
+    FFT1(i) *= dSize * conj(FFT2(i));
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
@@ -419,19 +426,19 @@ void correlation_vector(const Matrix1D< T > & m1,
  *
  *  The results are the same as the previous ones but this function
  *  is threadsafe while the previous one is not.
- *  
+ *
  *  It is assumed that the two vectors v1, and v2 are of the same size. */
 template <class T>
 void correlation_vector_no_Fourier(const Matrix1D<T> &v1, const Matrix1D<T> &v2,
-    Matrix1D<T> &result)
+                                   Matrix1D<T> &result)
 {
     result.initZeros(v1);
     result.setXmippOrigin();
     int N=XSIZE(v1)-1;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(result)
-        for (int k=0; k<XSIZE(v1); k++)
-            result(i)+=DIRECT_VEC_ELEM(v1,intWRAP(k+i,0,N))*
-                       DIRECT_VEC_ELEM(v2,k);
+    for (int k=0; k<XSIZE(v1); k++)
+        result(i)+=DIRECT_VEC_ELEM(v1,intWRAP(k+i,0,N))*
+                   DIRECT_VEC_ELEM(v2,k);
     STARTINGX(result)=0;
 }
 
@@ -458,7 +465,7 @@ void correlation_matrix(const Matrix2D< T > & m1,
     // Multiply FFT1 * FFT2'
     double dSize=MULTIDIM_SIZE(R);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT1)
-        FFT1(i, j) *= dSize * conj(FFT2(i, j));
+    FFT1(i, j) *= dSize * conj(FFT2(i, j));
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
@@ -485,7 +492,7 @@ void auto_correlation_matrix(const Matrix2D< T > & Img, Matrix2D< double >& R)
     // Multiply FFT1 * FFT1'
     double dSize=MULTIDIM_SIZE(Img);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT1)
-        FFT1(i, j) *= dSize * conj(FFT1(i, j));
+    FFT1(i, j) *= dSize * conj(FFT1(i, j));
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
@@ -517,14 +524,14 @@ void frc_dpr(Matrix3D< double > & m1,
              Matrix1D< double >& frc_noise,
              Matrix1D< double >& dpr,
              bool skipdpr=false);
-/** 
+/**
  * Scale matrix using Fourier transform
- *  
+ *
  * @param Ydim output size
  * @param Xdim output size
  * @param Mpmem matrix to scale
  * @param nThreads number of threads
- */ 
+ */
 void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem, int nthreads=1);
 
 
@@ -534,36 +541,36 @@ void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem, int nthr
 #define POWER_SPECTRUM 0
 #define AMPLITUDE_SPECTRUM 1
 
-void getSpectrum(Matrix3D<double> &Min, 
+void getSpectrum(Matrix3D<double> &Min,
                  Matrix1D<double> &spectrum,
                  int spectrum_type=AMPLITUDE_SPECTRUM);
 
 /** Divide the input map in Fourier-space by the spectrum provided.
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void divideBySpectrum(Matrix3D<double> &Min, 
+void divideBySpectrum(Matrix3D<double> &Min,
                       Matrix1D<double> &spectrum,
                       bool leave_origin_intact=false);
 
 /** Multiply the input map in Fourier-space by the spectrum provided.
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void multiplyBySpectrum(Matrix3D<double> &Min, 
+void multiplyBySpectrum(Matrix3D<double> &Min,
                         Matrix1D<double> &spectrum,
                         bool leave_origin_intact=false);
 
-/** Perform a whitening of the amplitude/power spectrum of a 3D map 
+/** Perform a whitening of the amplitude/power spectrum of a 3D map
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void whitenSpectrum(Matrix3D<double> &Min, 
-                    Matrix3D<double> &Mout, 
+void whitenSpectrum(Matrix3D<double> &Min,
+                    Matrix3D<double> &Mout,
                     int spectrum_type=AMPLITUDE_SPECTRUM,
                     bool leave_origin_intact=false);
 
 /** Adapts Min to have the same spectrum as spectrum_ref
     If only_amplitudes==true, the amplitude rather than the power spectrum will be equalized
 */
-void adaptSpectrum(Matrix3D<double> &Min, 
+void adaptSpectrum(Matrix3D<double> &Min,
                    Matrix3D<double> &Mout,
                    const Matrix1D<double> spectrum_ref,
                    int spectrum_type=AMPLITUDE_SPECTRUM,

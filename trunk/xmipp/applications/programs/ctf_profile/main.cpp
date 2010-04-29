@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 
     // Show parameters
     std::cout << "# File: " << fn_ctf << std::endl
-    << "# Direction: " << w_dir.transpose() << std::endl;
+              << "# Direction: " << w_dir.transpose() << std::endl;
 
     // Show profile
     try
@@ -74,8 +74,8 @@ int main(int argc, char **argv)
             double cont_freq = current_w.module();
             double cont_freq_A = (cont_freq == 0) ? 0 : 1 / cont_freq;
             std::cout << w << " " << cont_freq << " " << cont_freq_A << " "
-            << CTF_pure << " " << CTF_noise << " " << CTF_pure*CTF_pure + CTF_noise
-            << std::endl;
+                      << CTF_pure << " " << CTF_noise << " " << CTF_pure*CTF_pure + CTF_noise
+                      << std::endl;
         }
     }
     catch (Xmipp_error XE)
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cerr << "Usage: CTF_profile [options]\n"
-    << "   -i <CTF description file>      : CTF to plot\n"
-    << "  [-w_dir \"[X=1,Y=0]\"             : Frequency direction\n"
-    << "  [-w_step <step=0.001>]          : Normalized to 0.5\n";
+              << "   -i <CTF description file>      : CTF to plot\n"
+              << "  [-w_dir \"[X=1,Y=0]\"             : Frequency direction\n"
+              << "  [-w_step <step=0.001>]          : Normalized to 0.5\n";
 }

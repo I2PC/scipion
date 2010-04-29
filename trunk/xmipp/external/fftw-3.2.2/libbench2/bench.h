@@ -56,7 +56,7 @@ extern void ovtpvt(const char *format, ...);
 extern void ovtpvt_err(const char *format, ...);
 
 extern void fftaccuracy(int n, bench_complex *a, bench_complex *ffta,
-			int sign, double err[6]);
+                        int sign, double err[6]);
 extern void fftaccuracy_done(void);
 
 extern void caset(bench_complex *A, int n, bench_complex x);

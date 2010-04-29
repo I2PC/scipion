@@ -72,22 +72,22 @@ public:
         std::cout << "Performing a ";
         switch (operation)
         {
-            case DILATION       :
-                std::cout << "Dilation\n";
-                break;
-            case EROSION       :
-                std::cout << "Erosion\n";
-                break;
-            case OPENING       :
-                std::cout << "Opening\n";
-                break;
-            case CLOSING       :
-                std::cout << "Closing\n";
-                break;
-            case SHARPENING    :
-                std::cout << "Sharpening\n"
-                          << "Width = " << width << std::endl
-                          << "Strength = " << strength << std::endl;
+        case DILATION       :
+            std::cout << "Dilation\n";
+            break;
+        case EROSION       :
+            std::cout << "Erosion\n";
+            break;
+        case OPENING       :
+            std::cout << "Opening\n";
+            break;
+        case CLOSING       :
+            std::cout << "Closing\n";
+            break;
+        case SHARPENING    :
+            std::cout << "Sharpening\n"
+                      << "Width = " << width << std::endl
+                      << "Strength = " << strength << std::endl;
         }
         if (operation!=SHARPENING)
             std::cout << "Size=" << size << std::endl
@@ -109,7 +109,7 @@ public:
                   << "                       distinct value\n"
                   << "  [-sharp <w> <s>]   : Sharpening with width (suggested 1 or 2)\n"
                   << "                       and strength (suggested 0.1-1.0)\n"
-        ;
+                  ;
     }
 };
 
@@ -126,20 +126,20 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
                   << " pixels set to 1\n";
     switch (eprm->operation)
     {
-        case DILATION:
-            dilate2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case EROSION:
-            erode2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case OPENING:
-            opening2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case CLOSING:
-            closing2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case SHARPENING:
-            REPORT_ERROR(1,"Sharpening has not been implemented for images");
+    case DILATION:
+        dilate2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+        break;
+    case EROSION:
+        erode2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+        break;
+    case OPENING:
+        opening2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+        break;
+    case CLOSING:
+        closing2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+        break;
+    case SHARPENING:
+        REPORT_ERROR(1,"Sharpening has not been implemented for images");
     }
 
     img() = retval();
@@ -159,20 +159,20 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
                   << " voxels set to 1\n";
     switch (eprm->operation)
     {
-        case DILATION:
-            dilate3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case EROSION:
-            erode3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case OPENING:
-            opening3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case CLOSING:
-            closing3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case SHARPENING:
-            sharpening(vol(),eprm->width, eprm->strength, retval());
+    case DILATION:
+        dilate3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
+        break;
+    case EROSION:
+        erode3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
+        break;
+    case OPENING:
+        opening3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
+        break;
+    case CLOSING:
+        closing3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
+        break;
+    case SHARPENING:
+        sharpening(vol(),eprm->width, eprm->strength, retval());
     }
 
     vol() = retval();

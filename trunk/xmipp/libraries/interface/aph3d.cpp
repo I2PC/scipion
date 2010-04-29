@@ -217,15 +217,15 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
             switch (Space_Group)
             {
             case(1):
-                            break;
+                break;
             case(90)://P4212
-                            if (h > k || h < 0 || l < 0)
-                    {
-                        std::cerr << "\nHORROR reflection outside the assymetric unit\n"
-                        << "(h,k,l)=" << h << " " << k << " " << l << std::endl;
-                        exit(1);
-                        break;
-                    }
+                if (h > k || h < 0 || l < 0)
+                {
+                    std::cerr << "\nHORROR reflection outside the assymetric unit\n"
+                              << "(h,k,l)=" << h << " " << k << " " << l << std::endl;
+                    exit(1);
+                    break;
+                }
             }//switch end
         }
         catch (Xmipp_error XE)

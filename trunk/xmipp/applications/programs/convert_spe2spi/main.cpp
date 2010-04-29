@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
     FileName       fn_sel;   // input selfile
     FileName       fn_oext;  // output extension
-    
+
     bool           reverse_endian;
 
     /* Parameters ============================================================== */
@@ -137,8 +137,12 @@ void spe2spi(const FileName &fn_in, const FileName &fn_out,
     FILE *fh_in=fopen(fn_in.c_str(), "rb");
     if (!fh_in)
         REPORT_ERROR(1,(std::string)"Cannot find "+fn_in);
-    fseek(fh_in,42,SEEK_SET); FREAD(&aux,2,1,fh_in,reverse_endian); Xdim=aux;
-    fseek(fh_in,656,SEEK_SET); FREAD(&aux,2,1,fh_in,reverse_endian); Ydim=aux;
+    fseek(fh_in,42,SEEK_SET);
+    FREAD(&aux,2,1,fh_in,reverse_endian);
+    Xdim=aux;
+    fseek(fh_in,656,SEEK_SET);
+    FREAD(&aux,2,1,fh_in,reverse_endian);
+    Ydim=aux;
     fclose(fh_in);
 
     ImageXmipp Ix;

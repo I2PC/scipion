@@ -39,16 +39,16 @@ class CorrectAmplitude2DParams
 public:
     /// ctfdat
     FileName fnCtfdat;
-    
+
     /// Relaxation factor
     double beta;
-    
+
     /// Number of iterations
     int Niterations;
 
     /// Side Info: CTF
     FourierMask ctf;
-    
+
     /// Side Info: ctfdat
     CTFDat ctfdat;
 public:

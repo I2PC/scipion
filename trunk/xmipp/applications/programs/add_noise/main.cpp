@@ -87,7 +87,7 @@ public:
         Prog_parameters::show();
         if (gaussian)
             std::cout << "Noise avg=" << noise_avg << std::endl
-            << "Noise stddev=" << noise_stddev << std::endl;
+                      << "Noise stddev=" << noise_stddev << std::endl;
         else if (student)
             std::cout << "Degrees of freedom= "<<df<< std::endl
                       << "Noise avg=" << noise_avg << std::endl
@@ -105,11 +105,11 @@ public:
     {
         Prog_parameters::usage();
         std::cerr
-            << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
-            << "  [-student <df> <stddev> [<avg>=0]] : t-student noise parameters\n"
-            << "  [-uniform  <min> <max>]   : Uniform noise parameters\n"
-            << "  [-limit0 <float> ]        : Crop noise histogram below this value \n"
-            << "  [-limitF <float> ]        : Crop noise histogram above this value \n";
+                << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
+                << "  [-student <df> <stddev> [<avg>=0]] : t-student noise parameters\n"
+                << "  [-uniform  <min> <max>]   : Uniform noise parameters\n"
+                << "  [-limit0 <float> ]        : Crop noise histogram below this value \n"
+                << "  [-limitF <float> ]        : Crop noise histogram above this value \n";
     }
 };
 
@@ -124,14 +124,14 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
         img().addNoise(eprm->noise_min, eprm->noise_max, "uniform");
     if (eprm->do_limit0)
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(img())
-        {
-            dMij(img(),i,j) = XMIPP_MAX(dMij(img(),i,j),eprm->limit0);
-        }
+    {
+        dMij(img(),i,j) = XMIPP_MAX(dMij(img(),i,j),eprm->limit0);
+    }
     if (eprm->do_limitF)
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(img())
-        {
-            dMij(img(),i,j) = XMIPP_MIN(dMij(img(),i,j),eprm->limitF);
-        }
+    {
+        dMij(img(),i,j) = XMIPP_MIN(dMij(img(),i,j),eprm->limitF);
+    }
 
     return true;
 }
@@ -147,14 +147,14 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
         vol().addNoise(eprm->noise_min, eprm->noise_max, "uniform");
     if (eprm->do_limit0)
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(vol())
-        {
-            dVkij(vol(),k,i,j) = XMIPP_MAX(dVkij(vol(),k,i,j),eprm->limit0);
-        }
+    {
+        dVkij(vol(),k,i,j) = XMIPP_MAX(dVkij(vol(),k,i,j),eprm->limit0);
+    }
     if (eprm->do_limitF)
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(vol())
-        {
-            dVkij(vol(),k,i,j) = XMIPP_MIN(dVkij(vol(),k,i,j),eprm->limitF);
-        }
+    {
+        dVkij(vol(),k,i,j) = XMIPP_MIN(dVkij(vol(),k,i,j),eprm->limitF);
+    }
     return true;
 }
 

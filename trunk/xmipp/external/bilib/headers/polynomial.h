@@ -10,11 +10,11 @@
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  PolynomialDifferentiation
-    (
-        double a[],    /* input polynomial coefficients */
-        long Degree,    /* degree of the input polynomial */
-        double b[]     /* resulting coefficients */
-    );
+(
+    double a[],    /* input polynomial coefficients */
+    long Degree,    /* degree of the input polynomial */
+    double b[]     /* resulting coefficients */
+);
 
 /*--------------------------------------------------------------------------*/
 /** Evaluates a polynomial: result = a[0] + Sum a[k] x^k.
@@ -23,12 +23,12 @@ extern int  PolynomialDifferentiation
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  PolynomialEvaluation
-    (
-        double x,     /* argument */
-        double a[],    /* polynomial coefficients */
-        long Degree,    /* degree of the polynomial */
-        double *Result    /* resulting value */
-    );
+(
+    double x,     /* argument */
+    double a[],    /* polynomial coefficients */
+    long Degree,    /* degree of the polynomial */
+    double *Result    /* resulting value */
+);
 
 /*--------------------------------------------------------------------------*/
 /** Polynomial multuplication.
@@ -44,13 +44,13 @@ extern int  PolynomialEvaluation
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  PolynomialMultiplication
-    (
-        double a1[],    /* 1st input polynomial coefficients */
-        long Degree1,   /* degree of the 1st input polynomial */
-        double a2[],    /* 2nd input polynomial coefficients */
-        long Degree2,   /* degree of the 2nd input polynomial */
-        double b[]     /* resulting coefficients */
-    );
+(
+    double a1[],    /* 1st input polynomial coefficients */
+    long Degree1,   /* degree of the 1st input polynomial */
+    double a2[],    /* 2nd input polynomial coefficients */
+    long Degree2,   /* degree of the 2nd input polynomial */
+    double b[]     /* resulting coefficients */
+);
 
 /*--------------------------------------------------------------------------*/
 /** Primitive of the polynomial p(t) = (a[0] + Sum a[k] t^k).
@@ -61,11 +61,11 @@ extern int  PolynomialMultiplication
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  PolynomialPrimitive
-    (
-        double a[],    /* input polynomial coefficients */
-        long Degree,    /* degree of the input polynomial */
-        double b[]     /* resulting coefficients */
-    );
+(
+    double a[],    /* input polynomial coefficients */
+    long Degree,    /* degree of the input polynomial */
+    double b[]     /* resulting coefficients */
+);
 
 /*--------------------------------------------------------------------------*/
 /** Find the real roots of the polynomial p(x) = (a[0] + Sum a[k] x^k).
@@ -78,27 +78,27 @@ extern int  PolynomialPrimitive
 
     success: return(!ERROR); failure: return(ERROR) */
 extern int  PolynomialRealRoots
-    (
-        double a[],    /* polynomial coefficients */
-        long Degree,    /* degree of the polynomial */
-        double RealRoot[],   /* resulting real roots */
-        long *RealRootNumber, /* number of real roots */
-        double Tolerance,   /* admissible relative error */
-        int  *Status    /* error management */
-    );
+(
+    double a[],    /* polynomial coefficients */
+    long Degree,    /* degree of the polynomial */
+    double RealRoot[],   /* resulting real roots */
+    long *RealRootNumber, /* number of real roots */
+    double Tolerance,   /* admissible relative error */
+    int  *Status    /* error management */
+);
 
 /*--------------------------------------------------------------------------*/
 /** Returns the sign of x with Sign(0) = 0. */
 extern double Sign
-    (
-        double x     /* argument */
-    );
+(
+    double x     /* argument */
+);
 
 /*--------------------------------------------------------------------------*/
 /** Computes the one-sided power function. xPlus(0, 0) = 1/2 */
 extern double xPlus
-    (
-        double x,     /* argument */
-        double p     /* power */
-    );
+(
+    double x,     /* argument */
+    double p     /* power */
+);
 //@}

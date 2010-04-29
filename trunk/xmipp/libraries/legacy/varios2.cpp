@@ -99,7 +99,7 @@ void cornor(float **imag1, int nf1, int nc1, float **corr, int nf2, int nc2, dou
             sum1[0] += suma * suma - aux * aux;
         }
         corr[i][0] /= (float) sqrt(sum1[0] * sum_masc);
-        for (j = 1; j < nc3;j++)
+        for (j = 1; j < nc3; j++)
         {
             suma = sum2[j] - sum2[j-1] + sum1[j-1];
             aux = imag1[i-1][j-1];
@@ -132,7 +132,8 @@ void transforma(float **im_in, float **im_out, int fil, int col, double matriz[3
 /****             | b e 0 |                             ***/
 /****             | c f 1 |                             ***/
 
-{    int i, j, k, l, fil1, col1;
+{
+    int i, j, k, l, fil1, col1;
     float xprima, yprima, cen_fil, cen_col;
     float valor1, valor2, scalex, scaley, y, x, scale1;
     float mat00, mat01;
@@ -165,13 +166,15 @@ void transforma(float **im_in, float **im_out, int fil, int col, double matriz[3
             im_out[i][j] = 0.;
 
     for (i = 0; i < fil1; i++)  /*** Vamos al rev‚s (del final al origen) ***/
-    {   y = i - cen_fil;
+    {
+        y = i - cen_fil;
         x = -cen_col;
         xprima = x * matriz[0][0] + y * matriz[1][0] + matriz[2][0] + cen_col;
         yprima = x * matriz[0][1] + y * matriz[1][1] + matriz[2][1] + cen_fil;
         /**** este es el punto inicial ****/
         for (j = 0; j < col1; j++)
-        {   /**** El nuevo punto es xprima, yprima ****/
+        {
+            /**** El nuevo punto es xprima, yprima ****/
             /***** Ahora, a interpolar           ****/
             k = (int)yprima;
             l = (int)xprima;

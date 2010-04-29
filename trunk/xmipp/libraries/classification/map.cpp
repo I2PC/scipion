@@ -42,7 +42,7 @@
  */
 xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
                    const unsigned& _height, const unsigned& _size)
-        : xmippCB(_width*_height, _size, false), somWidth(_width), somHeight(_height)
+    : xmippCB(_width*_height, _size, false), somWidth(_width), somHeight(_height)
 {
     if (_layout == "HEXA")
     {
@@ -71,7 +71,7 @@ xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
 xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
                    const unsigned& _height, const unsigned& _size, const double& _lower,
                    const double& _upper)
-        : xmippCB(_width*_height, _size, _lower, _upper, false), somWidth(_width), somHeight(_height)
+    : xmippCB(_width*_height, _size, _lower, _upper, false), somWidth(_width), somHeight(_height)
 {
     if (_layout == "HEXA")
     {
@@ -102,8 +102,8 @@ xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
 xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
                    const unsigned& _height, const xmippCTVectors& _ts,
                    const bool _use_rand_cvs)
-        : xmippCB(_width*_height, _ts, _use_rand_cvs),
-        somWidth(_width), somHeight(_height)
+    : xmippCB(_width*_height, _ts, _use_rand_cvs),
+      somWidth(_width), somHeight(_height)
 {
     if (_layout == "HEXA")
     {
@@ -236,14 +236,14 @@ xmippLabel& xmippMap::targetAtPos(const SomPos& _pos)
     {
         std::ostringstream msg;
         msg << "The S.O.M. is not calibrated. No target at position ("
-        << _pos.first << ", " << _pos.second << ")";
+            << _pos.first << ", " << _pos.second << ")";
         throw std::out_of_range(msg.str());
     }
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
         std::ostringstream msg;
         msg << "Out of range. No target at position (" << _pos.first << ", "
-        << _pos.second << ")";
+            << _pos.second << ")";
         throw std::out_of_range(msg.str());
     }
 
@@ -261,14 +261,14 @@ const xmippLabel& xmippMap::targetAtPos(const SomPos& _pos) const
     {
         std::ostringstream msg;
         msg << "The S.O.M. is not calibrated. No target at position ("
-        << _pos.first << ", " << _pos.second << ")";
+            << _pos.first << ", " << _pos.second << ")";
         throw std::out_of_range(msg.str());
     }
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
         std::ostringstream msg;
         msg << "Out of range. No target at position (" << _pos.first << ", "
-        << _pos.second << ")";
+            << _pos.second << ")";
         throw std::out_of_range(msg.str());
     }
 
@@ -353,7 +353,7 @@ SomPos xmippMap::applyPos(const SomIn& _in)
 void xmippMap::printSelf(std::ostream& _os) const
 {
     _os << itemAt(0).size() << " " <<
-    somLayout->id() << " " << somWidth << " " << somHeight << " gaussian" << std::endl;
+        somLayout->id() << " " << somWidth << " " << somHeight << " gaussian" << std::endl;
     writeItems(_os);
 };
 
@@ -455,7 +455,7 @@ void xmippMap::loadObject(std::istream& _is)
  * Parameter: _radius  Radius of neighbohood
  */
 std::vector<unsigned> Layout::neighborhood(const xmippMap* _som, const SomPos& _center,
-                                      double _radius) const
+        double _radius) const
 {
     std::vector<unsigned> neig;
 
@@ -477,7 +477,7 @@ std::vector<unsigned> Layout::neighborhood(const xmippMap* _som, const SomPos& _
  * Parameter: _radius  Radius of neighbohood
  */
 std::vector<unsigned> Layout::neighborhood(const xmippFuzzyMap* _som, const SomPos& _center,
-                                      double _radius) const
+        double _radius) const
 {
     std::vector<unsigned> neig;
 
@@ -759,7 +759,7 @@ double HEXALayout::numNeig(const xmippFuzzyMap* _som, const SomPos& _center) con
 xmippFuzzyMap::xmippFuzzyMap(const std::string& _layout,  unsigned _width,
                              const unsigned& _height, const unsigned& _size, const double& _lower,
                              const double& _upper)
-        : xmippFCB(_width*_height, _size, 0, _lower, _upper, false), somWidth(_width), somHeight(_height)
+    : xmippFCB(_width*_height, _size, 0, _lower, _upper, false), somWidth(_width), somHeight(_height)
 {
     if (_layout == "HEXA")
     {
@@ -789,7 +789,7 @@ xmippFuzzyMap::xmippFuzzyMap(const std::string& _layout,  unsigned _width,
 xmippFuzzyMap::xmippFuzzyMap(const std::string& _layout,  unsigned _width,
                              const unsigned& _height, const xmippCTVectors& _ts,
                              const bool _use_rand_cvs)
-        : xmippFCB(_width*_height, _ts, _use_rand_cvs), somWidth(_width), somHeight(_height)
+    : xmippFCB(_width*_height, _ts, _use_rand_cvs), somWidth(_width), somHeight(_height)
 {
     if (_layout == "HEXA")
     {
@@ -942,14 +942,14 @@ xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos)
     {
         std::ostringstream msg;
         msg << "The S.O.M. is not calibrated. No target at position ("
-        << _pos.first << ", " << _pos.second << ")";
+            << _pos.first << ", " << _pos.second << ")";
         throw std::out_of_range(msg.str());
     }
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
         std::ostringstream msg;
         msg << "Out of range. No target at position (" << _pos.first << ", "
-        << _pos.second << ")";
+            << _pos.second << ")";
         throw std::out_of_range(msg.str());
     }
 
@@ -967,14 +967,14 @@ const xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos) const
     {
         std::ostringstream msg;
         msg << "The S.O.M. is not calibrated. No target at position ("
-        << _pos.first << ", " << _pos.second << ")";
+            << _pos.first << ", " << _pos.second << ")";
         throw std::out_of_range(msg.str());
     }
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
         std::ostringstream msg;
         msg << "Out of range. No target at position (" << _pos.first << ", "
-        << _pos.second << ")";
+            << _pos.second << ")";
         throw std::out_of_range(msg.str());
     }
 
@@ -1059,7 +1059,7 @@ SomPos xmippFuzzyMap::applyPos(const unsigned& _in)
 void xmippFuzzyMap::printSelf(std::ostream& _os) const
 {
     _os << itemAt(0).size() << " " <<
-    somLayout->id() << " " << somWidth << " " << somHeight << " gaussian" << std::endl;
+        somLayout->id() << " " << somWidth << " " << somHeight << " gaussian" << std::endl;
     writeItems(_os);
 };
 

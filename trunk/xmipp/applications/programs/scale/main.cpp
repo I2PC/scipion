@@ -95,28 +95,28 @@ int main(int argc, char **argv)
                 ydim=YSIZE(image())*factor;
                 xdim=XSIZE(image())*factor;
             }
-            
-	    //if (gridding)
-	    //{
-		//KaiserBessel kb;
-		//Matrix2D<double> Maux;
-		//produceReverseGriddingMatrix2D(image(),Maux,kb);
-		//DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
-		//DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
-		//applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
-	    //}
+
+            //if (gridding)
+            //{
+            //KaiserBessel kb;
+            //Matrix2D<double> Maux;
+            //produceReverseGriddingMatrix2D(image(),Maux,kb);
+            //DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
+            //DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
+            //applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
+            //}
             if (fourier)
             {
                 selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
             }
             else if (linear)
             {
-		image().selfScaleToSize(ydim, xdim);
+                image().selfScaleToSize(ydim, xdim);
             }
-	    else
-	    {
-		image().selfScaleToSizeBSpline(3, ydim, xdim);
-	    }
+            else
+            {
+                image().selfScaleToSizeBSpline(3, ydim, xdim);
+            }
             if (fn_out == "") image.write(fn_input);
             else            image.write(fn_out);
 
@@ -131,29 +131,29 @@ int main(int argc, char **argv)
                 ydim=YSIZE(volume())*factor;
                 xdim=XSIZE(volume())*factor;
             }
-	    if (gridding)
-	    {
-		KaiserBessel kb;
-		Matrix3D<double> Maux;
-		produceReverseGriddingMatrix3D(volume(),Maux,kb);
-		DIRECT_MAT_ELEM(B, 0, 0) = (double) xdim / (double) XSIZE(volume());
-		DIRECT_MAT_ELEM(B, 1, 1) = (double) ydim / (double) YSIZE(volume());
-		DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
-		applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
-	    }
+            if (gridding)
+            {
+                KaiserBessel kb;
+                Matrix3D<double> Maux;
+                produceReverseGriddingMatrix3D(volume(),Maux,kb);
+                DIRECT_MAT_ELEM(B, 0, 0) = (double) xdim / (double) XSIZE(volume());
+                DIRECT_MAT_ELEM(B, 1, 1) = (double) ydim / (double) YSIZE(volume());
+                DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
+                applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
+            }
             else if (linear)
             {
-		volume().selfScaleToSize(zdim, ydim, xdim);
+                volume().selfScaleToSize(zdim, ydim, xdim);
             }
-	    else
-	    {
-		volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
-	    }
+            else
+            {
+                volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
+            }
             if (fn_out == "") volume.write(fn_input);
             else            volume.write(fn_out);
 
         }
-	// Scale a selection file ------------------------------------------------
+        // Scale a selection file ------------------------------------------------
         else
         {
             SF.read(fn_input);
@@ -178,27 +178,27 @@ int main(int argc, char **argv)
                         ydim=YSIZE(image())*factor;
                         xdim=XSIZE(image())*factor;
                     }
-        	    if (fourier)
-        	    {
-                	selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
-        	    }
-		    /*if (gridding)
-		    {
-			KaiserBessel kb;
-			Matrix2D<double> Maux;
-			produceReverseGriddingMatrix2D(image(),Maux,kb);
-			DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
-			DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
-			applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
-		    }*/
+                    if (fourier)
+                    {
+                        selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
+                    }
+                    /*if (gridding)
+                    {
+                    KaiserBessel kb;
+                    Matrix2D<double> Maux;
+                    produceReverseGriddingMatrix2D(image(),Maux,kb);
+                    DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
+                    DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
+                    applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
+                    }*/
                     else if (linear)
                     {
-			image().selfScaleToSize(ydim, xdim);
+                        image().selfScaleToSize(ydim, xdim);
                     }
-		    else
-		    {
-			image().selfScaleToSizeBSpline(3, ydim, xdim);
-		    }
+                    else
+                    {
+                        image().selfScaleToSizeBSpline(3, ydim, xdim);
+                    }
                     image.write(fn_out);
                     // Process a volume ...............................................
                 }
@@ -211,24 +211,24 @@ int main(int argc, char **argv)
                         ydim=YSIZE(volume())*factor;
                         xdim=XSIZE(volume())*factor;
                     }
-		    if (gridding)
-		    {
-			KaiserBessel kb;
-			Matrix3D<double> Maux;
-			produceReverseGriddingMatrix3D(volume(),Maux,kb);
-			DIRECT_MAT_ELEM(B, 0, 0) = (double) xdim / (double) XSIZE(volume());
-			DIRECT_MAT_ELEM(B, 1, 1) = (double) ydim / (double) YSIZE(volume());
-			DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
-			applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
-		    }
+                    if (gridding)
+                    {
+                        KaiserBessel kb;
+                        Matrix3D<double> Maux;
+                        produceReverseGriddingMatrix3D(volume(),Maux,kb);
+                        DIRECT_MAT_ELEM(B, 0, 0) = (double) xdim / (double) XSIZE(volume());
+                        DIRECT_MAT_ELEM(B, 1, 1) = (double) ydim / (double) YSIZE(volume());
+                        DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
+                        applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
+                    }
                     else if (linear)
                     {
-			volume().selfScaleToSize(zdim, ydim, xdim);
+                        volume().selfScaleToSize(zdim, ydim, xdim);
                     }
-		    else
-		    {
-			volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
-		    }
+                    else
+                    {
+                        volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
+                    }
                     volume.write(fn_out);
                     // Not a Spider file ..............................................
                 }
@@ -257,15 +257,15 @@ void Usage()
     std::cerr << "    Scale images/volumes to a given size\n";
 
     std::cerr << "Usage: scale <parameters>\n"
-    << "   -i <image or volume> [-o <image_out or volume_out]\n"
-    << "   -i <selfile> [-oext <output extension>]\n"
-    << "  [-xdim <new x dimension>]\n"
-    << "  [-ydim <new y dimension=new x dimension>]\n"
-    << "  [-zdim <new z dimension=new x dimension>]\n"
-    << "  [-factor <scale factor>]\n"
-    //<< "  [-gridding]       : Use reverse gridding for interpolation\n"
-    << "  [-linear]         : Use bilinear/trilinear interpolation\n"
-    << "  [-fourier]        : Use padding/windowing in Fourier Space (only for 2D)\n"
-    << "  [-thr n]          : Use n threads, only implemented for fourier interpolation\n";
-    
+              << "   -i <image or volume> [-o <image_out or volume_out]\n"
+              << "   -i <selfile> [-oext <output extension>]\n"
+              << "  [-xdim <new x dimension>]\n"
+              << "  [-ydim <new y dimension=new x dimension>]\n"
+              << "  [-zdim <new z dimension=new x dimension>]\n"
+              << "  [-factor <scale factor>]\n"
+              //<< "  [-gridding]       : Use reverse gridding for interpolation\n"
+              << "  [-linear]         : Use bilinear/trilinear interpolation\n"
+              << "  [-fourier]        : Use padding/windowing in Fourier Space (only for 2D)\n"
+              << "  [-thr n]          : Use n threads, only implemented for fourier interpolation\n";
+
 }

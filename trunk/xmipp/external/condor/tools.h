@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
-              using trust Region method for high-computing load, 
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
+              using trust Region method for high-computing load,
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,12 +19,12 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product, 
+If you want to include this tools in any commercial product,
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
 //
-//	Header file for tools
+//  Header file for tools
 //
 
 
@@ -36,20 +36,20 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 //#define SWAP(a,b) {tempr=(a); (a)=(b); (b)=tempr;}
 
 #define maxDWORD 4294967295 //2^32-1;
-#define INF 1.7E+308 
+#define INF 1.7E+308
 #define EOL 10
 #ifndef PI
-    #define PI 3.1415926535897932384626433832795
+#define PI 3.1415926535897932384626433832795
 #endif
 #define ROOT2 1.41421356
- 
+
 inline double condorAbs( const double t1 )
 {
-	return t1 > 0.0 ? t1 : -t1;
+    return t1 > 0.0 ? t1 : -t1;
 }
 
 inline double sign( const double a )
- // equivalent to sign(1,a)
+// equivalent to sign(1,a)
 {
     return a<0?-1:1;
 }
@@ -67,37 +67,37 @@ inline double isInt( const double a)
 
 inline double mmin( const double t1, const double t2 )
 {
-	return t1 < t2 ? t1 : t2;
+    return t1 < t2 ? t1 : t2;
 }
 
 inline unsigned mmin( const unsigned t1, const unsigned t2 )
 {
-	return t1 < t2 ? t1 : t2;
+    return t1 < t2 ? t1 : t2;
 }
 
 inline int mmin( const int t1, const int t2 )
 {
-	return t1 < t2 ? t1 : t2;
+    return t1 < t2 ? t1 : t2;
 }
 
 inline double mmax( const double t1, const double t2 )
 {
-	return t1 > t2 ? t1 : t2;
+    return t1 > t2 ? t1 : t2;
 }
 
 inline unsigned mmax( const unsigned t1, const unsigned t2 )
 {
-	return t1 > t2 ? t1 : t2;
+    return t1 > t2 ? t1 : t2;
 }
 
 inline int mmax( int t1, int t2 )
 {
-	return t1 > t2 ? t1 : t2;
+    return t1 > t2 ? t1 : t2;
 }
 
 inline double sqr( const double& t )
 {
-	return t*t;
+    return t*t;
 }
 
 inline double round (double a)
@@ -127,5 +127,5 @@ const char *skipLine(const char *l);
 const char *skipSpaces(const char *l);
 void deleteFile(const char *l);
 
-#endif 	/* _MPI_TOOLS_H_ */
+#endif  /* _MPI_TOOLS_H_ */
 

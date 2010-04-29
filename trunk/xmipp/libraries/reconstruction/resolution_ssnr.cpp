@@ -58,16 +58,16 @@ void Prog_SSNR_prm::read(int argc, char **argv)
 std::ostream & operator << (std::ostream &out, const Prog_SSNR_prm &prm)
 {
     out << "Signal:         " << prm.fn_S       << std::endl
-    << "Noise:          " << prm.fn_N       << std::endl
-    << "Signal selfile: " << prm.fn_Ssel    << std::endl
-    << "Noise  selfile: " << prm.fn_Nsel    << std::endl
-    << "Volumetric SSNR:" << prm.fn_VSSNR   << std::endl
-    << "Output images:  " << prm.fn_out     << std::endl
-    << "Ring width:     " << prm.ring_width << std::endl
-    << "Sampling rate:  " << prm.Tm         << std::endl
-    << "Generate VSSNR: " << prm.generate_VSSNR << std::endl
-    << "Radial average: " << prm.radial_avg << std::endl
-    ;
+        << "Noise:          " << prm.fn_N       << std::endl
+        << "Signal selfile: " << prm.fn_Ssel    << std::endl
+        << "Noise  selfile: " << prm.fn_Nsel    << std::endl
+        << "Volumetric SSNR:" << prm.fn_VSSNR   << std::endl
+        << "Output images:  " << prm.fn_out     << std::endl
+        << "Ring width:     " << prm.ring_width << std::endl
+        << "Sampling rate:  " << prm.Tm         << std::endl
+        << "Generate VSSNR: " << prm.generate_VSSNR << std::endl
+        << "Radial average: " << prm.radial_avg << std::endl
+        ;
     return out;
 }
 
@@ -75,34 +75,34 @@ std::ostream & operator << (std::ostream &out, const Prog_SSNR_prm &prm)
 void Prog_SSNR_prm::usage() const
 {
     std::cerr << " SSNR Estimation ------------------------------------------------\n"
-    << "SSNR\n"
-    << "   -S <Volume|Selfile>   : Signal volume or its projections\n"
-    << "   -N <Volume|Selfile>   : Noise volume or its projections\n"
-    << "   -selS <Selfile>       : Selfile with experimental images\n"
-    << "   -selN <Selfile>       : Selfile with noise images\n"
-    << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
-    << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
-    << "  [-o <SSNR file=\"\">]    : Output file\n"
-    << " VSSNR Estimation -----------------------------------------------\n"
-    << "SSNR\n"
-    << "   -generate_VSSNR       : generate VSSNR\n"
-    << "   -S <Volume|Selfile>   : Signal volume or its projections\n"
-    << "   -N <Volume|Selfile>   : Noise volume or its projections\n"
-    << "   -selS <Selfile>       : Selfile with experimental images\n"
-    << "   -selN <Selfile>       : Selfile with noise images\n"
-    << "   -VSSNR <fn_vol>       : Volume with the Volumetric SSNR\n"
-    << "  [-oimages <fn_root>]   : Root name for individual SSNR estimations\n"
-    << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
-    << "  [-min_power <th=1e-10>]: Minimum power\n"
-    << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
-    << " Estimation by radial averaging ---------------------------------\n"
-    << " SSNR -radial_avg\n"
-    << "   -VSSNR <fn_vol>       : Volume with the Volumetric SSNR\n"
-    << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
-    << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
-    << "  [-min_power <th=1e-10>]: Minimum power\n"
-    << "  [-o <SSNR file=\"\">]    : Output file\n"
-    ;
+              << "SSNR\n"
+              << "   -S <Volume|Selfile>   : Signal volume or its projections\n"
+              << "   -N <Volume|Selfile>   : Noise volume or its projections\n"
+              << "   -selS <Selfile>       : Selfile with experimental images\n"
+              << "   -selN <Selfile>       : Selfile with noise images\n"
+              << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
+              << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
+              << "  [-o <SSNR file=\"\">]    : Output file\n"
+              << " VSSNR Estimation -----------------------------------------------\n"
+              << "SSNR\n"
+              << "   -generate_VSSNR       : generate VSSNR\n"
+              << "   -S <Volume|Selfile>   : Signal volume or its projections\n"
+              << "   -N <Volume|Selfile>   : Noise volume or its projections\n"
+              << "   -selS <Selfile>       : Selfile with experimental images\n"
+              << "   -selN <Selfile>       : Selfile with noise images\n"
+              << "   -VSSNR <fn_vol>       : Volume with the Volumetric SSNR\n"
+              << "  [-oimages <fn_root>]   : Root name for individual SSNR estimations\n"
+              << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
+              << "  [-min_power <th=1e-10>]: Minimum power\n"
+              << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
+              << " Estimation by radial averaging ---------------------------------\n"
+              << " SSNR -radial_avg\n"
+              << "   -VSSNR <fn_vol>       : Volume with the Volumetric SSNR\n"
+              << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
+              << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
+              << "  [-min_power <th=1e-10>]: Minimum power\n"
+              << "  [-o <SSNR file=\"\">]    : Output file\n"
+              ;
 }
 
 // Produce side Info -------------------------------------------------------
@@ -163,12 +163,12 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
 {
     // These vectors are for 1D
     Matrix1D<double> S_S21D((int)(XSIZE(S()) / 2 - ring_width)),
-    S_N21D((int)(XSIZE(S()) / 2 - ring_width)),
-    K1D((int)(XSIZE(S()) / 2 - ring_width)),
-    S_SSNR1D;
+             S_N21D((int)(XSIZE(S()) / 2 - ring_width)),
+             K1D((int)(XSIZE(S()) / 2 - ring_width)),
+             S_SSNR1D;
     Matrix1D<double> N_S21D((int)(XSIZE(S()) / 2 - ring_width)),
-    N_N21D((int)(XSIZE(S()) / 2 - ring_width)),
-    N_SSNR1D;
+             N_N21D((int)(XSIZE(S()) / 2 - ring_width)),
+             N_SSNR1D;
 
     // Selfile of the 2D images
     SelFile SF_individual;
@@ -218,30 +218,50 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         Is() -= Iths();
         In() -= Ithn();
 
-        Matrix2D< std::complex<double> > FFT_Is;   FourierTransform(Is(), FFT_Is);
-        Matrix2D< std::complex<double> > FFT_Iths; FourierTransform(Iths(), FFT_Iths);
-        Matrix2D< std::complex<double> > FFT_In;   FourierTransform(In(), FFT_In);
-        Matrix2D< std::complex<double> > FFT_Ithn; FourierTransform(Ithn(), FFT_Ithn);
+        Matrix2D< std::complex<double> > FFT_Is;
+        FourierTransform(Is(), FFT_Is);
+        Matrix2D< std::complex<double> > FFT_Iths;
+        FourierTransform(Iths(), FFT_Iths);
+        Matrix2D< std::complex<double> > FFT_In;
+        FourierTransform(In(), FFT_In);
+        Matrix2D< std::complex<double> > FFT_Ithn;
+        FourierTransform(Ithn(), FFT_Ithn);
 
 #ifdef DEBUG
         ImageXmippT < std::complex<double> > savec;
-        savec() = FFT_Is;   savec.write("PPPFFTread_signal.xmp");
-        savec() = FFT_In;   savec.write("PPPFFTread_noise.xmp");
-        savec() = FFT_Iths; savec.write("PPPFFTtheo_signal.xmp");
-        savec() = FFT_Ithn; savec.write("PPPFFTtheo_noise.xmp");
+        savec() = FFT_Is;
+        savec.write("PPPFFTread_signal.xmp");
+        savec() = FFT_In;
+        savec.write("PPPFFTread_noise.xmp");
+        savec() = FFT_Iths;
+        savec.write("PPPFFTtheo_signal.xmp");
+        savec() = FFT_Ithn;
+        savec.write("PPPFFTtheo_noise.xmp");
 #endif
 
         // Compute the amplitudes
-        ImageXmipp S2s; FFT_magnitude(FFT_Iths, S2s()); S2s() *= S2s();
-        ImageXmipp N2s; FFT_magnitude(FFT_Is  , N2s()); N2s() *= N2s();
-        ImageXmipp S2n; FFT_magnitude(FFT_Ithn, S2n()); S2n() *= S2n();
-        ImageXmipp N2n; FFT_magnitude(FFT_In  , N2n()); N2n() *= N2n();
+        ImageXmipp S2s;
+        FFT_magnitude(FFT_Iths, S2s());
+        S2s() *= S2s();
+        ImageXmipp N2s;
+        FFT_magnitude(FFT_Is  , N2s());
+        N2s() *= N2s();
+        ImageXmipp S2n;
+        FFT_magnitude(FFT_Ithn, S2n());
+        S2n() *= S2n();
+        ImageXmipp N2n;
+        FFT_magnitude(FFT_In  , N2n());
+        N2n() *= N2n();
 
 #ifdef DEBUG
-        save() = S2s(); save.write("PPPS2s.xmp");
-        save() = N2s(); save.write("PPPN2s.xmp");
-        save() = S2n(); save.write("PPPS2n.xmp");
-        save() = N2n(); save.write("PPPN2n.xmp");
+        save() = S2s();
+        save.write("PPPS2s.xmp");
+        save() = N2s();
+        save.write("PPPN2s.xmp");
+        save() = S2n();
+        save.write("PPPS2n.xmp");
+        save() = N2n();
+        save.write("PPPN2n.xmp");
 #endif
 
         if (dim == 2)

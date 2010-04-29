@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
-              using trust Region method for high-computing load, 
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
+              using trust Region method for high-computing load,
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product, 
+If you want to include this tools in any commercial product,
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -31,9 +31,9 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 
 class VectorChar
 {
-  protected:
+protected:
     int np,extention;
-  public: 
+public:
     char *p;
     const int &n;
 
@@ -49,21 +49,27 @@ class VectorChar
     void setSize(int _n);
     void exactshape();
     void print();
-    
+
     // only use the following method at your own risks!
     void prepareExtend(int new_extention);
-    
+
 //    int &operator [](int i) { return p[i]; };
-    inline int sz() {return np;};
+    inline int sz()
+    {
+        return np;
+    };
     char operator==( const VectorChar& );
-	VectorChar& operator=( const VectorChar& P );
-    operator char*() const { return p; };
+    VectorChar& operator=( const VectorChar& P );
+    operator char*() const
+    {
+        return p;
+    };
 //    operator unsigned*() const { return (unsigned*)p; };
 //    int &operator[]( unsigned i) {return p[i];};
 
     void set(char c);
 
-  private:
+private:
     void alloc();
 
 };

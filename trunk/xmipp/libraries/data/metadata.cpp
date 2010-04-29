@@ -1,5 +1,5 @@
 /***************************************************************************
- * 
+ *
  * Authors:      J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -511,8 +511,8 @@ void MetaData::toDataBase(const FileName & DBname,
                 else if (isVector(*strIt))
                 {
                     std::cerr
-                    << "SQLLITE does not support vectors, skipping vector labeled "
-                    << label << std::endl;
+                            << "SQLLITE does not support vectors, skipping vector labeled "
+                            << label << std::endl;
                 }
             }
         }//end table creation
@@ -817,9 +817,9 @@ void MetaData::read(FileName fileName,
     {
         readOldDocFile(&infile, labelsVector);
         std::cerr
-        << (std::string) "WARNING: ** You are using an old file format (DOCFILE) which is going "
-        + "to be deprecated in next Xmipp release **"
-        << std::endl;
+                << (std::string) "WARNING: ** You are using an old file format (DOCFILE) which is going "
+                + "to be deprecated in next Xmipp release **"
+                << std::endl;
     }
     else
     {
@@ -833,9 +833,9 @@ void MetaData::read(FileName fileName,
         {
             readOldSelFile(&infile);
             std::cerr
-            << (std::string) "WARNING: ** You are using an old file format (SELFILE) which is going "
-            + "to be deprecated in next Xmipp release **"
-            << std::endl;
+                    << (std::string) "WARNING: ** You are using an old file format (SELFILE) which is going "
+                    + "to be deprecated in next Xmipp release **"
+                    << std::endl;
         }
     }
 
@@ -891,7 +891,7 @@ void MetaData::write(const std::string &fileName)
                 (It->second)->getValue(MDL_COMMENT, entryComment);
                 if (entryComment != std::string(""))
                     outfile << "; "
-                    << entryComment << std::endl;
+                            << entryComment << std::endl;
             }
 
             for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)

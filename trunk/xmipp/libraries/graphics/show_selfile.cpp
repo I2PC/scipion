@@ -97,8 +97,8 @@ void ShowSel::initWithFile(int _numRows, int _numCols,
     {
         NumCols = FLOOR(900.0 / projXdim);
         NumRows = FLOOR(700.0 / projYdim);
-	if (NumRows==0) NumRows=1;
-	if (NumCols==0) NumCols=1;
+        if (NumRows==0) NumRows=1;
+        if (NumCols==0) NumCols=1;
     }
     initTable();
     initRightclickMenubar();
@@ -366,8 +366,8 @@ void ShowSel::producePixmapAt(int i)
         If.read(imgnames[i]);
         FFT_magnitude(If(), I());
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
-            MAT_ELEM(I(), i, j) =
-                log10(1 + MAT_ELEM(I(), i, j) * MAT_ELEM(I(), i, j));
+        MAT_ELEM(I(), i, j) =
+            log10(1 + MAT_ELEM(I(), i, j) * MAT_ELEM(I(), i, j));
     }
     else
         // Unknown image
@@ -445,9 +445,8 @@ void ShowSel::saveSelFileDiscarded()
             saveFile = true;
             SFNew.insert(imgnames[i], SelLine::DISCARDED);
         }
-        else
-            if (selstatus[i]) SFNew.insert(imgnames[i], SelLine::ACTIVE);
-            else     SFNew.insert(imgnames[i], SelLine::DISCARDED);
+        else if (selstatus[i]) SFNew.insert(imgnames[i], SelLine::ACTIVE);
+        else     SFNew.insert(imgnames[i], SelLine::DISCARDED);
     }
     if (saveFile) writeSelFile(SFNew);
     else QMessageBox::about(this, "Error!", "No images selected\n");
@@ -518,9 +517,9 @@ void ShowSel::writeSelFile(SelFile &_SF, bool overwrite)
     else
     {
 #ifdef QT3_SUPPORT
-         QString newfilename = Q3FileDialog::getSaveFileName(
+        QString newfilename = Q3FileDialog::getSaveFileName(
 #else
-         QString newfilename = QFileDialog::getSaveFileName(    
+        QString newfilename = QFileDialog::getSaveFileName(
 #endif
                                   selfile_fn.c_str(), "*.sel", this, "Sel files");
         if (!newfilename.isEmpty())
@@ -672,7 +671,8 @@ void ShowSel::editCTFmodel()
 
     FileName fn_param;
     if (fn_assign != "")
-    { // Single micrograph with or without pieces
+    {
+        // Single micrograph with or without pieces
         // Read the Assign CTF parameters
         Prog_assign_CTF_prm assign_ctf_prm;
         assign_ctf_prm.read(fn_assign);
@@ -706,7 +706,8 @@ void ShowSel::editCTFmodel()
         }
     }
     else
-    {   // Multiple micrographs all with micrograph_averaging
+    {
+        // Multiple micrographs all with micrograph_averaging
         // Get the assign filename
         SelFile SF_assign;
         SF_assign.read(fn_assign_sel);
@@ -750,46 +751,47 @@ void ShowSel::recomputeCTFmodel()
     Prog_assign_CTF_prm assign_ctf_prm;
     if (fn_assign!="")
     {
-	try
-	{
+        try
+        {
             assign_ctf_prm.read(fn_assign);
-	}
-	catch (Xmipp_error XE)
-	{
+        }
+        catch (Xmipp_error XE)
+        {
             std::cout << XE;
             std::cout << "It seems that " << fn_assign << " is not the parameter file"
-            << " that you used to estimate the CTFs\n";
+                      << " that you used to estimate the CTFs\n";
             return;
-	}
+        }
 
-	// Get the PSD name
-	FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
-	if (assign_ctf_prm.compute_at_particle)
-	{
+        // Get the PSD name
+        FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
+        if (assign_ctf_prm.compute_at_particle)
+        {
             int i = indexOf(currentRow(), currentColumn());
             fn_psd = imgnames[i].without_extension() + ".psd";
-	}
-	else if (assign_ctf_prm.micrograph_averaging)
-	{
+        }
+        else if (assign_ctf_prm.micrograph_averaging)
+        {
             // If it is the average of the micrograph
             if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-        	fn_psd = fn_root + "_ARMAavg.psd";
+                fn_psd = fn_root + "_ARMAavg.psd";
             else fn_psd = fn_root + "_Periodogramavg.psd";
-	}
-	else
-	{
+        }
+        else
+        {
             // If the micrograph was divided into pieces
             if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-        	fn_psd = fn_root + "_ARMA";
+                fn_psd = fn_root + "_ARMA";
             else fn_psd = fn_root + "_Periodogram";
             // Get the piece to recompute
             int i = indexOf(currentRow(), currentColumn()) + 1;
             fn_psd += integerToString(i, 5);
             fn_psd += ".psd";
-	}
+        }
     }
     else
-    {   // Multiple micrographs all with micrograph_averaging
+    {
+        // Multiple micrographs all with micrograph_averaging
         // Get the assign filename
         SelFile SF_assign;
         SF_assign.read(fn_assign_sel);

@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Manuel Sanchez Pau 
+ * Authors:     Manuel Sanchez Pau
  *              Carlos Oscar Sanchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -37,32 +37,33 @@
 //@{
 
 /** Class with the parameters for detect structures */
-class Prog_Detect_Structures_Param {
+class Prog_Detect_Structures_Param
+{
 public:
     /// Volume to filter
     FileName fnIn;
-    
+
     /// Volume to filter
     FileName fnOut;
-    
+
     /// Filter type
     std::string filterType;
-    
+
     /// Initial width
     double sigma0;
-    
+
     /// Final width
     double sigmaF;
-    
+
     /// Width step
     double sigmaStep;
-    
+
     /// Angular step
     double angStep;
 
     /// Remove background
     bool removeBackground;
-    
+
     /// Remove missing wedge
     bool removeMissingWedge;
 
@@ -77,20 +78,20 @@ public:
 
     /// Plane 2 tilt
     double tilt2;
-    
+
     /// Concurrent threads to be spawned
     int threads;
 
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);
-    
+
     /// Show parameters
     void show() const;
-    
+
     /// Usage
     void usage() const;
-    
+
     /// Run
     void run();
 };

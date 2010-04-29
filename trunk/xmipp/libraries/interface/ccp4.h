@@ -177,8 +177,8 @@ public:
 
     /** write a ccp4 stack from a selfile */
     void write(const FileName &fn_out, SelFile &SF, bool reversed,
-        double x_length, double y_length, double z_length,
-        const FileName &fn_tilt);
+               double x_length, double y_length, double z_length,
+               const FileName &fn_tilt);
 
     /** read  a ccp4 2D file*/
     void read(const FileName &fn_out,  ImageXmipp &I, bool reversed = false);

@@ -47,17 +47,17 @@ void normalize_Near_OldXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
     double avgbg, stddevbg, minbg, maxbg;
     I.computeStats(avg, stddev, min, max);
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
-                                     stddevbg);
+                                    stddevbg);
     I -= avg;
     I /= stddevbg;
 }
 
 void normalize_OldXmipp_decomposition(Matrix2D<double> &I, const Matrix2D<int> &bg_mask,
-                                     const Matrix2D<double> *mask)
+                                      const Matrix2D<double> *mask)
 {
     double avgbg, stddevbg, minbg, maxbg;
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
-                                     stddevbg);
+                                    stddevbg);
     I -= avgbg;
     I /= stddevbg;
     if (mask != NULL)
@@ -67,7 +67,7 @@ void normalize_OldXmipp_decomposition(Matrix2D<double> &I, const Matrix2D<int> &
 
 //#define DEBUG
 void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
-    double &sigmai, bool tiltMask, bool tomography0, double mu0, double sigma0)
+                          double &sigmai, bool tiltMask, bool tomography0, double mu0, double sigma0)
 {
     const int L=2;
     double Npiece=(2*L+1)*(2*L+1);
@@ -77,10 +77,10 @@ void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
     Matrix2D<int> mask;
     mask.initZeros(I);
     int Xdimtilt=XMIPP_MIN(FLOOR(0.5*(XSIZE(I)*cos(DEG2RAD(tilt)))),
-        0.5*(XSIZE(I)-(2*L+1)));
+                           0.5*(XSIZE(I)-(2*L+1)));
     double N=0;
     for (int i=STARTINGY(I)+L; i<=FINISHINGY(I)-L; i++)
-        for (int j=-Xdimtilt+L; j<=Xdimtilt-L;j++)
+        for (int j=-Xdimtilt+L; j<=Xdimtilt-L; j++)
         {
             mask(i,j)=1;
             N++;
@@ -103,7 +103,7 @@ void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
             }
         meanPiece/=Npiece;
         variancePiece=variancePiece/(Npiece-1)-
-            Npiece/(Npiece-1)*meanPiece*meanPiece;
+                      Npiece/(Npiece-1)*meanPiece*meanPiece;
         localVariance(i,j)=variancePiece;
         meanVariance+=variancePiece;
     }
@@ -125,13 +125,16 @@ void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
                 mask(i,j)=0;
         }
     }
-    #ifdef DEBUG
-        ImageXmipp save;
-        save()=I; save.write("PPP.xmp");
-        typeCast(mask,save()); save.write("PPPmask.xmp");
-        std::cout << "Press any key\n";
-        char c; std::cin >> c;
-    #endif
+#ifdef DEBUG
+    ImageXmipp save;
+    save()=I;
+    save.write("PPP.xmp");
+    typeCast(mask,save());
+    save.write("PPPmask.xmp");
+    std::cout << "Press any key\n";
+    char c;
+    std::cin >> c;
+#endif
 
     // Compute the statistics again in the reduced mask
     double avg, stddev, min, max;
@@ -141,22 +144,22 @@ void normalize_tomography(Matrix2D<double> &I, double tilt, double &mui,
     {
         double adjustedStddev=sigma0*cosTilt;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
-            if (!tiltMask || ABS(j)<Xdimtilt)
-                I(i,j)=(I(i,j)/cosTilt-mu0)/adjustedStddev;
-            else if (tiltMask)
-                I(i,j)=0;
+        if (!tiltMask || ABS(j)<Xdimtilt)
+            I(i,j)=(I(i,j)/cosTilt-mu0)/adjustedStddev;
+        else if (tiltMask)
+            I(i,j)=0;
     }
     else
     {
         double adjustedStddev=sqrt(meanVariance)*cosTilt;
         adjustedStddev=stddev*cosTilt;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
-            if (!tiltMask || ABS(j)<Xdimtilt)
-                I(i,j)=(I(i,j)-avg)/adjustedStddev;
-            else if (tiltMask)
-                I(i,j)=0;
+        if (!tiltMask || ABS(j)<Xdimtilt)
+            I(i,j)=(I(i,j)-avg)/adjustedStddev;
+        else if (tiltMask)
+            I(i,j)=0;
     }
-    
+
     // Prepare values for returning
     mui=avg;
     sigmai=sqrt(meanVariance);
@@ -169,14 +172,15 @@ void normalize_Michael(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
     double avgbg, stddevbg, minbg, maxbg;
     I.computeStats(avg, stddev, min, max);
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
-                                     stddevbg);
+                                    stddevbg);
     if (avgbg > 0)
     {
         I -= avgbg;
         I /= avgbg;
     }
     else
-    { // To avoid the contrast inversion
+    {
+        // To avoid the contrast inversion
         I -= (avgbg - min);
         I /= (avgbg - min);
     }
@@ -186,7 +190,7 @@ void normalize_NewXmipp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
 {
     double avgbg, stddevbg, minbg, maxbg;
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
-                                     stddevbg);
+                                    stddevbg);
     I -= avgbg;
     I /= stddevbg;
 }
@@ -197,7 +201,7 @@ void normalize_NewXmipp2(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
     double avgbg, stddevbg, minbg, maxbg;
     I.computeStats(avg, stddev, min, max);
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
-                                     stddevbg);
+                                    stddevbg);
     I -= avgbg;
     I /= ABS(avg - avgbg);
 }
@@ -231,13 +235,13 @@ void normalize_ramp(Matrix2D<double> &I, const Matrix2D<int> &bg_mask)
     }
     // Divide by the remaining std.dev. in the background region
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
-                                     stddevbg);
+                                    stddevbg);
     I /= stddevbg;
 
 }
 
-void normalize_remove_neighbours(Matrix2D<double> &I, 
-				 const Matrix2D<int> &bg_mask,
+void normalize_remove_neighbours(Matrix2D<double> &I,
+                                 const Matrix2D<int> &bg_mask,
                                  const double &threshold)
 {
     fit_point          onepoint;
@@ -251,7 +255,7 @@ void normalize_remove_neighbours(Matrix2D<double> &I,
     // Fit a least squares plane through the background pixels
     allpoints.clear();
     I.setXmippOrigin();
-    
+
     // Get initial statistics
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,stddevbg);
 
@@ -260,15 +264,15 @@ void normalize_remove_neighbours(Matrix2D<double> &I,
     {
         if (MAT_ELEM(bg_mask, i, j))
         {
-	    if ( ABS(avgbg - MAT_ELEM(I, i, j)) < threshold * stddevbg)
-	    {
-		onepoint.x = j;
-		onepoint.y = i;
-		onepoint.z = MAT_ELEM(I, i, j);
-		onepoint.w = 1.;
-		allpoints.push_back(onepoint);
-	    }
-	}
+            if ( ABS(avgbg - MAT_ELEM(I, i, j)) < threshold * stddevbg)
+            {
+                onepoint.x = j;
+                onepoint.y = i;
+                onepoint.z = MAT_ELEM(I, i, j);
+                onepoint.w = 1.;
+                allpoints.push_back(onepoint);
+            }
+        }
     }
     least_squares_plane_fit(allpoints, pA, pB, pC);
 
@@ -278,37 +282,37 @@ void normalize_remove_neighbours(Matrix2D<double> &I,
         MAT_ELEM(I, i, j) -= pA * j + pB * i + pC;
     }
 
-    // Get std.dev. of the background pixels within +/- threshold*sigma 
+    // Get std.dev. of the background pixels within +/- threshold*sigma
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
     {
         if (MAT_ELEM(bg_mask, i, j))
         {
-	    if ( ABS(MAT_ELEM(I, i, j)) < threshold * stddevbg)
-	    {
-		N++;
-		sum1 +=  (double) MAT_ELEM(I, i, j);
-		sum2 += ((double) MAT_ELEM(I, i, j)) * 
-		    ((double) MAT_ELEM(I, i, j));
-	    }
-	}
+            if ( ABS(MAT_ELEM(I, i, j)) < threshold * stddevbg)
+            {
+                N++;
+                sum1 +=  (double) MAT_ELEM(I, i, j);
+                sum2 += ((double) MAT_ELEM(I, i, j)) *
+                        ((double) MAT_ELEM(I, i, j));
+            }
+        }
     }
     // average and standard deviation
     aux = sum1 / (double) N;
     newstddev = sqrt(ABS(sum2 / N - aux*aux) * N / (N - 1));
 
-    // Replace pixels outside +/- threshold*sigma by samples from 
+    // Replace pixels outside +/- threshold*sigma by samples from
     // a gaussian with avg-plane and newstddev
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
     {
         if (MAT_ELEM(bg_mask, i, j))
         {
-	    if ( ABS(MAT_ELEM(I, i, j)) > threshold * stddevbg)
-	    {
-		// get local average
-		aux = pA * j + pB * i + pC;
-		MAT_ELEM(I, i, j)=rnd_gaus(aux, newstddev );
-	    }
-	}
+            if ( ABS(MAT_ELEM(I, i, j)) > threshold * stddevbg)
+            {
+                // get local average
+                aux = pA * j + pB * i + pC;
+                MAT_ELEM(I, i, j)=rnd_gaus(aux, newstddev );
+            }
+        }
     }
 
     // Divide the entire image by the new background
@@ -447,21 +451,23 @@ void Normalize_parameters::produce_side_info()
         {
             mask_prm.generate_2Dmask(Ydim, Xdim);
             bg_mask = mask_prm.imask2D;
-	    // backup a copy of the mask for apply_geo mode
-	    bg_mask_bck = bg_mask;
+            // backup a copy of the mask for apply_geo mode
+            bg_mask_bck = bg_mask;
         }
-        
-        // Get the parameters from the 0 degrees 
+
+        // Get the parameters from the 0 degrees
         if (method==TOMOGRAPHY0)
         {
             // Look for the image at 0 degrees
             SelFile SF;
-            try {
+            try
+            {
                 SF.read(fn_in);
-            } catch (Xmipp_error XE)
+            }
+            catch (Xmipp_error XE)
             {
                 REPORT_ERROR(1,(std::string)"There is a problem opening the selfile"+
-                    fn_in+". Make sure it is a correct selfile");
+                             fn_in+". Make sure it is a correct selfile");
             }
             SF.go_first_ACTIVE();
             double bestTilt=1000;
@@ -480,7 +486,7 @@ void Normalize_parameters::produce_side_info()
             }
             if (bestImage=="")
                 REPORT_ERROR(1,"Cannot find the image at 0 degrees");
-            
+
             // Compute the mu0 and sigma0 for this image
             ImageXmipp I(bestImage);
             normalize_tomography(I(), I.tilt(), mu0, sigma0, tiltMask);
@@ -528,13 +534,13 @@ void Normalize_parameters::show()
             break;
         case RANDOM:
             std::cout << "Random a=[" << a0 << "," << aF << "], " << "b=[" <<
-            b0 << "," << bF << "]\n";
+                      b0 << "," << bF << "]\n";
             break;
         }
 
         if (method == NEWXMIPP || method == NEWXMIPP2 ||
-            method == NEAR_OLDXMIPP || method == MICHAEL || 
-	    method == RAMP || method == NEIGHBOUR)
+            method == NEAR_OLDXMIPP || method == MICHAEL ||
+            method == RAMP || method == NEIGHBOUR)
         {
             std::cout << "Background mode: ";
             switch (background_mode)
@@ -545,12 +551,12 @@ void Normalize_parameters::show()
             case FRAME:
                 std::cout << "Frame, width=" << r << std::endl;
                 std::cout << "Apply transformation to mask: " << apply_geo <<
-                std::endl;
+                          std::endl;
                 break;
             case CIRCLE:
                 std::cout << "Circle, radius=" << r << std::endl;
                 std::cout << "Apply transformation to mask: " << apply_geo <<
-                std::endl;
+                          std::endl;
                 break;
             }
         }
@@ -563,11 +569,11 @@ void Normalize_parameters::show()
 
         if (remove_black_dust)
             std::cout << "Remove black dust particles, using threshold " <<
-            floatToString(thresh_black_dust) << std::endl;
+                      floatToString(thresh_black_dust) << std::endl;
 
         if (remove_white_dust)
             std::cout << "Remove white dust particles, using threshold " <<
-            floatToString(thresh_white_dust) << std::endl;
+                      floatToString(thresh_white_dust) << std::endl;
     }
     else
     {
@@ -586,33 +592,33 @@ void Normalize_parameters::usage()
     Prog_parameters::usage();
 
     std::cerr << "NORMALIZATION OF VOLUMES\n"
-    << "  [-vol]                    : Activate this mode\n"
-    << "  [-invert]                 : Invert contrast \n";
+              << "  [-vol]                    : Activate this mode\n"
+              << "  [-invert]                 : Invert contrast \n";
 
     std::cerr << "NORMALIZATION OF IMAGES\n"
-    << "  [-method <mth=NewXmipp>   : Normalizing method. Valid ones are:\n"
-    << "                              OldXmipp, Near_OldXmipp, NewXmipp, Tomography, Tomography0\n"
-    << "                              NewXmipp2, Michael, None, Random, Ramp, Neighbour\n"
-    << "                              Methods NewXmipp, Michael, Near_OldXmipp\n"
-    << "                              and Ramp need a background mask:\n"
-    << "  [-background frame <r>  | : Rectangular background of r pixels\n"
-    << "   -background circle <r> | : Circular background outside radius=r\n"
-    << "   -mask <options>]           Use an alternative type of background mask\n"
-    << "                               (see xmipp_mask for options) \n"
-    << "  [-invert]                 : Invert contrast \n"
-    << "  [-remove_black_dust]      : Remove black dust particles \n"
-    << "  [-remove_white_dust]      : Remove white dust particles \n"
-    << "  [-thr_black_dust=-3.5]    : Sigma threshold for black dust particles \n"
-    << "  [-thr_white_dust=3.5]     : Sigma threshold for white dust particles \n"
-    << "  [-thr_neigh]              : Sigma threshold for neighbour removal \n"
-    << "  [-prm a0 aF b0 bF]        : Only in random mode. y=ax+b\n"
-    << "  [-tiltMask]               : Apply a mask depending on the tilt\n";
+              << "  [-method <mth=NewXmipp>   : Normalizing method. Valid ones are:\n"
+              << "                              OldXmipp, Near_OldXmipp, NewXmipp, Tomography, Tomography0\n"
+              << "                              NewXmipp2, Michael, None, Random, Ramp, Neighbour\n"
+              << "                              Methods NewXmipp, Michael, Near_OldXmipp\n"
+              << "                              and Ramp need a background mask:\n"
+              << "  [-background frame <r>  | : Rectangular background of r pixels\n"
+              << "   -background circle <r> | : Circular background outside radius=r\n"
+              << "   -mask <options>]           Use an alternative type of background mask\n"
+              << "                               (see xmipp_mask for options) \n"
+              << "  [-invert]                 : Invert contrast \n"
+              << "  [-remove_black_dust]      : Remove black dust particles \n"
+              << "  [-remove_white_dust]      : Remove white dust particles \n"
+              << "  [-thr_black_dust=-3.5]    : Sigma threshold for black dust particles \n"
+              << "  [-thr_white_dust=3.5]     : Sigma threshold for white dust particles \n"
+              << "  [-thr_neigh]              : Sigma threshold for neighbour removal \n"
+              << "  [-prm a0 aF b0 bF]        : Only in random mode. y=ax+b\n"
+              << "  [-tiltMask]               : Apply a mask depending on the tilt\n";
 }
 
 void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
 {
     Matrix2D< double > tmp;
-    // get copy of the mask 
+    // get copy of the mask
     tmp.resize(bg_mask_bck);
     typeCast(bg_mask_bck, tmp);
 
@@ -620,18 +626,18 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
 
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     tmp.selfApplyGeometryBSpline(img.get_transformation_matrix(), 3, IS_NOT_INV,
-                                DONT_WRAP, outside);
+                                 DONT_WRAP, outside);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(bg_mask)
-        dMij(bg_mask,i,j)=ROUND(dMij(tmp,i,j));
+    dMij(bg_mask,i,j)=ROUND(dMij(tmp,i,j));
 }
 
 void Normalize_parameters::apply(ImageXmipp &img)
 {
     double a, b;
     if (invert_contrast)
-	img() *= -1.;
-    
+        img() *= -1.;
+
     if (remove_black_dust || remove_white_dust)
     {
         double avg, stddev, min, max, zz;
@@ -684,7 +690,7 @@ void Normalize_parameters::apply(ImageXmipp &img)
         break;
     case TOMOGRAPHY0:
         normalize_tomography(img(), img.tilt(), mui, sigmai, tiltMask,
-            true, mu0, sigma0);
+                             true, mu0, sigma0);
         break;
     case MICHAEL:
         normalize_Michael(img(), bg_mask);
@@ -693,7 +699,7 @@ void Normalize_parameters::apply(ImageXmipp &img)
         a = rnd_unif(a0, aF);
         b = rnd_unif(b0, bF);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
-            img(i, j) = a * img(i, j) + b;
+        img(i, j) = a * img(i, j) + b;
         break;
     }
 }

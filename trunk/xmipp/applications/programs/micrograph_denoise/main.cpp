@@ -131,8 +131,8 @@ int main(int argc, char **argv)
 
 #ifdef DEBUG
                 std::cout << "(I,J)=(" << I << "," << J << ") (i0,j0)=("
-                << i0 << "," << j0 << ") (iF,jF)=("
-                << iF << "," << jF << ")\n";
+                          << i0 << "," << j0 << ") (iF,jF)=("
+                          << iF << "," << jF << ")\n";
 #endif
 
                 // Read piece from file
@@ -175,12 +175,12 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cout << "Purpose:\n"
-    << "    Denoise a microgrograph\n"
-    << "Usage: denoising_micrograph\n"
-    << "   -i <input_micrograph>     : Either 8 or 16 bits\n"
-    << "   -o <output_micrograph>    : It will be rewritten\n"
-    << "  [-window_size <n=128>]     : Size of the window\n"
-    << std::endl;
+              << "    Denoise a microgrograph\n"
+              << "Usage: denoising_micrograph\n"
+              << "   -i <input_micrograph>     : Either 8 or 16 bits\n"
+              << "   -o <output_micrograph>    : It will be rewritten\n"
+              << "  [-window_size <n=128>]     : Size of the window\n"
+              << std::endl;
     Denoising_parameters prm;
     prm.usage_specific();
 }

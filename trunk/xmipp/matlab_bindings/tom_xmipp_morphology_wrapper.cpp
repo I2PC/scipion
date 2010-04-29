@@ -4,7 +4,7 @@
  *
  * The calling syntax is:
  *
- *		im_out = tom_xmipp_morphology_wrapper(image,operation,size,count,neig)
+ *      im_out = tom_xmipp_morphology_wrapper(image,operation,size,count,neig)
  *
  * Electron Tomography toolbox of the
  * Max-Planck-Institute for Biochemistry
@@ -30,18 +30,18 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
-    #define DILATION 1
-    #define EROSION  2
-    #define OPENING  3
-    #define CLOSING  4
-     
+#define DILATION 1
+#define EROSION  2
+#define OPENING  3
+#define CLOSING  4
+
     int operation = (int) mxGetScalar(prhs[1]);
     int size = (int) mxGetScalar(prhs[2]);
     int count = (int) mxGetScalar(prhs[3]);
     int neig = (int) mxGetScalar(prhs[4]);
-    
+
     mwSize ndims = mxGetNumberOfDimensions(prhs[0]);
-    
+
     if (ndims == 2)
     {
         Image img, img_out;
@@ -63,15 +63,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
             closing2D(img(),img_out(),neig,count,size);
             break;
         }
-        
-        setMatrix2D(img_out(),plhs[0]);     
+
+        setMatrix2D(img_out(),plhs[0]);
     }
     else
     {
         Volume vol, vol_out;
         getMatrix3D(prhs[0],vol());
         vol_out = vol();
-        
+
         switch (operation)
         {
         case DILATION:
@@ -87,8 +87,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
             closing3D(vol(),vol_out(),neig,count,size);
             break;
         }
-        
-        setMatrix3D(vol_out(),plhs[0]);     
+
+        setMatrix3D(vol_out(),plhs[0]);
     }
-    
+
 }

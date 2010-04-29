@@ -17,9 +17,9 @@
 void usage()
 {
     std::cerr << "edit\n"
-    << "   -i <filenames>    : Files to open\n"
-    << "  [-remove]          : Remove the files after finishing\n"
-    ;
+              << "   -i <filenames>    : Files to open\n"
+              << "  [-remove]          : Remove the files after finishing\n"
+              ;
 }
 
 int main(int argc, char ** argv)

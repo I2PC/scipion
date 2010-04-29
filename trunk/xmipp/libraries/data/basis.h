@@ -167,7 +167,7 @@ public:
     /** Projection at a given direction (u) with a given point (r). */
     double projection_at(const Matrix1D<double> &u, const Matrix1D<double> &r)
     const
-{
+    {
         const double p0 = 1.0 / (2 * PIXEL_SUBSAMPLING) - 0.5;
         const double pStep = 1.0 / PIXEL_SUBSAMPLING;
         const double pAvg = 1.0 / (PIXEL_SUBSAMPLING * PIXEL_SUBSAMPLING);
@@ -176,29 +176,29 @@ public:
         int i, j;
         switch (type)
         {
-            case (blobs):
-                module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
-                return blob_proj(module_r, blob);
-                break;
-            case (voxels):
+        case (blobs):
+            module_r = sqrt(XX(r) * XX(r) + YY(r) * YY(r) + ZZ(r) * ZZ(r));
+            return blob_proj(module_r, blob);
+            break;
+        case (voxels):
+        {
+            double retval = 0;
+            ZZ(aux) = ZZ(r);
+            for (i = 0, px = p0; i < PIXEL_SUBSAMPLING; i++, px += pStep)
             {
-                double retval = 0;
-                ZZ(aux) = ZZ(r);
-                for (i = 0, px = p0; i < PIXEL_SUBSAMPLING; i++, px += pStep)
+                XX(aux) = XX(r) + px;
+                for (j = 0, py = p0; j < PIXEL_SUBSAMPLING; j++, py += pStep)
                 {
-                    XX(aux) = XX(r) + px;
-                    for (j = 0, py = p0; j < PIXEL_SUBSAMPLING; j++, py += pStep)
-                    {
-                        YY(aux) = YY(r) + py;
-                        retval += intersection_unit_cube(u, aux);
-                    }
+                    YY(aux) = YY(r) + py;
+                    retval += intersection_unit_cube(u, aux);
                 }
-                return retval*pAvg;
-                break;
             }
-            case (splines):
-                return spatial_Bspline03_proj(r, u);
-                break;
+            return retval*pAvg;
+            break;
+        }
+        case (splines):
+            return spatial_Bspline03_proj(r, u);
+            break;
         }
         return 0.0;
     }

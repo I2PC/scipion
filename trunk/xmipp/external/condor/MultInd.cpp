@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
-              using trust Region method for high-computing load, 
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
+              using trust Region method for high-computing load,
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,13 +19,13 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product, 
+If you want to include this tools in any commercial product,
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
 
 //
-//	Multiindex
+//  Multiindex
 //
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,8 +43,11 @@ MultIndCache cacheMultInd;
 
 MultInd& MultInd::operator=( const MultInd &p )
 {
-    dim=p.dim; deg=p.deg; next=NULL; 
-    lastChangesV=p.lastChangesV; indexesOfCoefInLexOrderV=p.indexesOfCoefInLexOrderV;
+    dim=p.dim;
+    deg=p.deg;
+    next=NULL;
+    lastChangesV=p.lastChangesV;
+    indexesOfCoefInLexOrderV=p.indexesOfCoefInLexOrderV;
     indexV=p.indexV;
     standardInit();
     if (deg==0) memcpy(coeffDeg,p.coeffDeg,dim*sizeof(unsigned));
@@ -57,22 +60,23 @@ void MultInd::standardInit()
     {
         coeffDeg=(unsigned*)malloc(dim*sizeof(unsigned));
         coeffLex=NULL;
-    } else
+    }
+    else
     {
         coeffDeg=buffer;
         coeffLex=buffer+dim;
     };
 }
 
-MultInd::MultInd( unsigned _dim, unsigned _deg): 
+MultInd::MultInd( unsigned _dim, unsigned _deg):
     dim(_dim), deg(_deg), next(NULL)
 {
     standardInit();
-    fullInit(); 
+    fullInit();
     resetCounter();
 }
 
-MultInd::MultInd(unsigned d):  dim(d), deg(0), next(NULL) 
+MultInd::MultInd(unsigned d):  dim(d), deg(0), next(NULL)
 {
     standardInit();
     resetCounter();
@@ -85,12 +89,16 @@ MultInd::~MultInd()
 
 void MultInd::print()
 {
-	printf("[");
-	if (!dim) { printf("]"); return; }
+    printf("[");
+    if (!dim)
+    {
+        printf("]");
+        return;
+    }
 
     unsigned N=dim,*up=coeffDeg;
-	while (--N) printf("%i,",*(up++));
-	printf("%i]",*up);
+    while (--N) printf("%i,",*(up++));
+    printf("%i]",*up);
 }
 
 unsigned MultInd::len()
@@ -117,23 +125,28 @@ void MultInd::fullInit()
     indexesOfCoefInLexOrderV.setSize(n);
 
     memset(coeffLex+1,0,d*sizeof(int));
-	*coeffLex=deg;
+    *coeffLex=deg;
 
     for (i=0; i<n; i++)
     {
-        sum=0; ccLex=coeffLex; j=dim;
+        sum=0;
+        ccLex=coeffLex;
+        j=dim;
         while (j--) sum+=*(ccLex++);
-        if (sum) k=choose( sum+d, dim ); else k=0;
+        if (sum) k=choose( sum+d, dim );
+        else k=0;
 
         resetCounter();
         *coeffDeg=sum;
 
         while(1)
         {
-            ccLex=coeffLex; ccDeg=coeffDeg;
-    	    for ( j=d; j>0 ; j--, ccLex++, ccDeg++ ) if (*ccLex != *ccDeg) break;
+            ccLex=coeffLex;
+            ccDeg=coeffDeg;
+            for ( j=d; j>0 ; j--, ccLex++, ccDeg++ ) if (*ccLex != *ccDeg) break;
             if (*ccLex >= *ccDeg) break;
-            ++(*this); k++;
+            ++(*this);
+            k++;
         }
 
         indexesOfCoefInLexOrderV[i]=k;
@@ -143,21 +156,22 @@ void MultInd::fullInit()
         // lexical order ++ :
         if (coeffLex[d])
         {
-           lastChangesV[i]=d;
-           coeffLex[d]--;
-        } else
-        for (j=d-1; j>=0; j--)
-        {
-	        if (coeffLex[j])
-	        {
-	          lastChangesV[i]=j;
-	          sum=--coeffLex[j];
-	          for (k=0; k<(unsigned)j; k++) sum+=coeffLex[k];
-	          coeffLex[++j]=degree-sum;
-	          for (k=j+1; k<=d; k++) coeffLex[k]=0;
-	          break;
-	        }
+            lastChangesV[i]=d;
+            coeffLex[d]--;
         }
+        else
+            for (j=d-1; j>=0; j--)
+            {
+                if (coeffLex[j])
+                {
+                    lastChangesV[i]=j;
+                    sum=--coeffLex[j];
+                    for (k=0; k<(unsigned)j; k++) sum+=coeffLex[k];
+                    coeffLex[++j]=degree-sum;
+                    for (k=j+1; k<=d; k++) coeffLex[k]=0;
+                    break;
+                }
+            }
     }
 }
 
@@ -166,36 +180,36 @@ void MultInd::resetCounter()
     indexV=0;
     memset(coeffDeg,0,dim*sizeof(unsigned));
 }
-	
+
 MultInd& MultInd::operator++()
 {
-	unsigned *cc = coeffDeg;
+    unsigned *cc = coeffDeg;
     int n=dim, pos, i;
 
-	if (!n || !cc) return *this;
+    if (!n || !cc) return *this;
 
-	for (pos = n-2; pos >= 0; pos--)
-	{
-		if (cc[pos])	// Gotcha
-		{
-		  cc[pos]--;
-		  cc[++pos]++;
-		  for (i = pos+1; i < n;i++)
-		  {
-		    cc[pos] += cc[i];
-		    cc[i] = 0;
-		  }
-          indexV++;
-		  return *this;
-		}
-	}
+    for (pos = n-2; pos >= 0; pos--)
+    {
+        if (cc[pos])    // Gotcha
+        {
+            cc[pos]--;
+            cc[++pos]++;
+            for (i = pos+1; i < n; i++)
+            {
+                cc[pos] += cc[i];
+                cc[i] = 0;
+            }
+            indexV++;
+            return *this;
+        }
+    }
 
-	(*cc)++;
-	for ( i = 1; i < n; i++)
-	{
-		*cc += cc[i];
-		cc[i] = 0;
-	}
+    (*cc)++;
+    for ( i = 1; i < n; i++)
+    {
+        *cc += cc[i];
+        cc[i] = 0;
+    }
 
     indexV++;
     return *this;
@@ -203,25 +217,27 @@ MultInd& MultInd::operator++()
 
 unsigned *MultInd::lastChanges()
 {
-    if (deg==0) 
+    if (deg==0)
     {
         printf("use MultIndCache to instanciate MultInd");
-        getchar(); exit(252);
+        getchar();
+        exit(252);
     }
     return (unsigned*)lastChangesV.d->p;
 }
 
 unsigned *MultInd::indexesOfCoefInLexOrder()
 {
-    if (deg==0) 
+    if (deg==0)
     {
         printf("use MultIndCache to instanciate MultInd");
-        getchar(); exit(252);
+        getchar();
+        exit(252);
     }
     return (unsigned*)indexesOfCoefInLexOrderV.d->p;
 }
 
-MultIndCache::MultIndCache(): head(NULL) 
+MultIndCache::MultIndCache(): head(NULL)
 {
     MultInd::maxDim=100;
     MultInd::buffer=(unsigned*)malloc(MultInd::maxDim*2*sizeof(unsigned));
@@ -244,7 +260,8 @@ MultInd *MultIndCache::get(unsigned _dim, unsigned _deg )
     if (_deg==0)
     {
         printf("use normal constructor of MultiInd");
-        getchar(); exit(252);
+        getchar();
+        exit(252);
     }
     if (_dim>MultInd::maxDim)
     {

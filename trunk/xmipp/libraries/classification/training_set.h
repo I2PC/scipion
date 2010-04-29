@@ -83,7 +83,7 @@ public:
      * Parameter: _n: Number of items that the trained set should contain
      */
     xmippCTSet(const bool& _calib = true, unsigned _n = 0)
-            :/* splitTrainingSet(), */theItems(_n), /*theTargets(_n), */isCalibrated(_calib), nTargets(0)
+        :/* splitTrainingSet(), */theItems(_n), /*theTargets(_n), */isCalibrated(_calib), nTargets(0)
     {};
 
     /**
@@ -511,11 +511,10 @@ protected:
                             // check for next line "<"
                             if (c == '<')
                                 target = Target();
+                            else if (_is)
+                                _is >> target;
                             else
-                                if (_is)
-                                    _is >> target;
-                                else
-                                    target = Target();
+                                target = Target();
                         }
                         catch (std::exception&)
                         {

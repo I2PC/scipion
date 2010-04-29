@@ -67,7 +67,7 @@ int main(int argc, char **argv)
             automatic_range = false;
         }
         else automatic_range = true;
-        
+
         if (fn_sel!="" && automatic_range)
             REPORT_ERROR(1,"Error: only use selfile in combination with fixed range!");
 
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
                 histb += hist;
             }
         }
-        
+
         if (do_normalize)
             histb /= (histb.sum() * histb.step_size);
 
@@ -158,12 +158,12 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cout << "histogram [Parameters]:\n"
-    << "   -i <File_in> / -sel <selfile> : Input Xmipp Volume, Image or selfile\n"
-    << "  [-o <File_out>]              : Text file with histogram\n"
-    << "  [-range <m> <M>]             : range for the histogram\n"
-    << "                                 by default, it is automatic\n"
-    << "  [-steps <N=100>]             : number of subdivisions\n"
-    << "  [-norm]                      : normalize histogram \n";
+              << "   -i <File_in> / -sel <selfile> : Input Xmipp Volume, Image or selfile\n"
+              << "  [-o <File_out>]              : Text file with histogram\n"
+              << "  [-range <m> <M>]             : range for the histogram\n"
+              << "                                 by default, it is automatic\n"
+              << "  [-steps <N=100>]             : number of subdivisions\n"
+              << "  [-norm]                      : normalize histogram \n";
 }
 
 /* Menus ------------------------------------------------------------------- */

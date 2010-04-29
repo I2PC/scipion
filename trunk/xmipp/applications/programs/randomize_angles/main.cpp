@@ -40,9 +40,12 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    try {
+    try
+    {
         prm.run();
-    } catch (Xmipp_error XE) {
+    }
+    catch (Xmipp_error XE)
+    {
         std::cout << XE;
     }
     exit(0);

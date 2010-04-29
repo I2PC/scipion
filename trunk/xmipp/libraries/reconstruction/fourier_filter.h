@@ -48,7 +48,7 @@
       Filter.apply_mask_Space(I());
       I.write("filtered_image.xmp");
    @endcode
-   
+
    For volumes you the mask is computed on the fly and
    in this way memory is saved (unless do_generate_3dmask == true).
 */
@@ -87,7 +87,7 @@ public:
 
     /** CTF parameters. */
     XmippCTF ctf;
-    
+
     /** Correct phase before applying CTF */
     bool correctPhase;
 
@@ -139,7 +139,7 @@ public:
 
     /** Get the power of the 2D mask. */
     double mask2D_power();
-    
+
     /** Correct phase */
     void correct_phase();
 public:

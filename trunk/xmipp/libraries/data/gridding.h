@@ -3,7 +3,7 @@
  * Authors: Sjors H.W. Scheres (scheres@cnb.csic.es)
  *
  *  Part of this code is strongly based on ideas by Pawel Penczek & Zhengfan
- *  Yang as implemented in SPARX at the University of Texas - Houston 
+ *  Yang as implemented in SPARX at the University of Texas - Houston
  *  Medical School
  *
  *  see P. A. Penczek, R. Renka, and H. Schomberg,
@@ -56,20 +56,20 @@
  *  Produces a 2D Fourier-space matrix2d for reverse-gridding
  *  interpolation from a Fourier-space matrix2d
  */
-void produceReverseGriddingFourierMatrix2D(const Matrix2D< std::complex < double> > &in, 
-					   Matrix2D< std::complex < double > > &out,
-					   KaiserBessel &kb);
+void produceReverseGriddingFourierMatrix2D(const Matrix2D< std::complex < double> > &in,
+        Matrix2D< std::complex < double > > &out,
+        KaiserBessel &kb);
 
 /** Produce a complex Matrix2D for reverse gridding from a real Matrix2D
  * @ingroup ReverseGridding
  *
  *  Produces a 2D Fourier-space matrix2d for reverse-gridding
- *  interpolation from a real-space matrix2d 
+ *  interpolation from a real-space matrix2d
  *  This real-space matrix2d should have the Xmipp origin set!
  */
-void produceReverseGriddingFourierMatrix2D(const Matrix2D< double > &in, 
-					   Matrix2D< std::complex< double > > &out,
-					   KaiserBessel &kb);
+void produceReverseGriddingFourierMatrix2D(const Matrix2D< double > &in,
+        Matrix2D< std::complex< double > > &out,
+        KaiserBessel &kb);
 
 /** Produce a real Matrix2D for reverse gridding from a real Matrix2D
  * @ingroup ReverseGridding
@@ -77,9 +77,9 @@ void produceReverseGriddingFourierMatrix2D(const Matrix2D< double > &in,
  *  Produces a 2D real-space matrix2d for reverse-gridding interpolation
  *  from a real-space matrix2d
  */
-void produceReverseGriddingMatrix2D(const Matrix2D< double > &in, 
-				    Matrix2D< double > &out,
-				    KaiserBessel &kb);
+void produceReverseGriddingMatrix2D(const Matrix2D< double > &in,
+                                    Matrix2D< double > &out,
+                                    KaiserBessel &kb);
 
 /** Produce a complex Matrix3D for reverse gridding from a complex Matrix2D
  * @ingroup ReverseGridding
@@ -87,20 +87,20 @@ void produceReverseGriddingMatrix2D(const Matrix2D< double > &in,
  *  Produces a 3D Fourier-space matrix3d for reverse-gridding
  *  interpolation from a Fourier-space matrix3d
  */
-void produceReverseGriddingFourierMatrix3D(Matrix3D< std::complex < double > > &in, 
-					   Matrix3D< std::complex < double > > &out,
-					   KaiserBessel &kb);
+void produceReverseGriddingFourierMatrix3D(Matrix3D< std::complex < double > > &in,
+        Matrix3D< std::complex < double > > &out,
+        KaiserBessel &kb);
 
 /** Produce a complex Matrix3D for reverse gridding from a real Matrix2D
  * @ingroup ReverseGridding
  *
  *  Produces a 3D Fourier-space matrix3d for reverse-gridding
- *  interpolation from a real-space matrix3d 
+ *  interpolation from a real-space matrix3d
  *  This real-space matrix3d should have the Xmipp origin set!
  */
-void produceReverseGriddingFourierMatrix3D(const Matrix3D< double > &in, 
-					   Matrix3D< std::complex< double > > &out,
-					   KaiserBessel &kb);
+void produceReverseGriddingFourierMatrix3D(const Matrix3D< double > &in,
+        Matrix3D< std::complex< double > > &out,
+        KaiserBessel &kb);
 
 /** Produce a real Matrix3D for reverse gridding from a real Matrix2D
  * @ingroup ReverseGridding
@@ -108,9 +108,9 @@ void produceReverseGriddingFourierMatrix3D(const Matrix3D< double > &in,
  *  Produces a 3D real-space matrix3d for reverse-gridding
  *  interpolation from a real-space matrix3d
  */
-void produceReverseGriddingMatrix3D(const Matrix3D< double > &in, 
-				    Matrix3D< double > &out,
-				    KaiserBessel &kb);
+void produceReverseGriddingMatrix3D(const Matrix3D< double > &in,
+                                    Matrix3D< double > &out,
+                                    KaiserBessel &kb);
 
 /** Reverse-gridding based interpolation in a 2D matrix
  * @ingroup ReverseGridding
@@ -137,11 +137,11 @@ T interpolatedElementReverseGridding(const Matrix2D<T> &in, double x, double y, 
     // size of this image:
     int nx = XSIZE(in);
     int ny = YSIZE(in);
-    
+
     // Go from logical to physical coordinates in the small image
     x -= FIRST_XMIPP_INDEX(nx/GRIDDING_NPAD);
     y -= FIRST_XMIPP_INDEX(ny/GRIDDING_NPAD);
-    
+
     // Get the convolution window parameters
     int K = kb.get_window_size();
     int kbmin = -K/2;
@@ -149,12 +149,12 @@ T interpolatedElementReverseGridding(const Matrix2D<T> &in, double x, double y, 
     int kbc = kbmax+1;
     T pixel = 0.;
     double w = 0.;
-    
+
     x = fmod(2*x, double(nx));
     y = fmod(2*y, double(ny));
     int inxold = int(ROUND(x));
     int inyold = int(ROUND(y));
-    
+
     double tablex1 = kb.i0win_tab(x-inxold+3);
     double tablex2 = kb.i0win_tab(x-inxold+2);
     double tablex3 = kb.i0win_tab(x-inxold+1);
@@ -169,105 +169,108 @@ T interpolatedElementReverseGridding(const Matrix2D<T> &in, double x, double y, 
     double tabley4 = kb.i0win_tab(y-inyold);
     double tabley5 = kb.i0win_tab(y-inyold-1);
     double tabley6 = kb.i0win_tab(y-inyold-2);
-    double tabley7 = kb.i0win_tab(y-inyold-3); 
-	
+    double tabley7 = kb.i0win_tab(y-inyold-3);
+
     int x1, x2, x3, x4, x5, x6, x7, y1, y2, y3, y4, y5, y6, y7;
-	
-    if ( inxold <= kbc || inxold >=nx-kbc-2 || 
-	 inyold <= kbc || inyold >=ny-kbc-2 )  {
-	x1 = (inxold-3)%nx;
-	x2 = (inxold-2)%nx;
-	x3 = (inxold-1)%nx;
-	x4 = (inxold  )%nx;
-	x5 = (inxold+1)%nx;
-	x6 = (inxold+2)%nx;
-	x7 = (inxold+3)%nx;
 
-	y1 = ((inyold-3)%ny);
-	y2 = ((inyold-2)%ny);
-	y3 = ((inyold-1)%ny);
-	y4 = ((inyold  )%ny);
-	y5 = ((inyold+1)%ny);
-	y6 = ((inyold+2)%ny);
-	y7 = ((inyold+3)%ny);
-    } else {
-	x1 = inxold-3;
-	x2 = inxold-2;
-	x3 = inxold-1;
-	x4 = inxold;
-	x5 = inxold+1;
-	x6 = inxold+2;
-	x7 = inxold+3;
+    if ( inxold <= kbc || inxold >=nx-kbc-2 ||
+         inyold <= kbc || inyold >=ny-kbc-2 )
+    {
+        x1 = (inxold-3)%nx;
+        x2 = (inxold-2)%nx;
+        x3 = (inxold-1)%nx;
+        x4 = (inxold  )%nx;
+        x5 = (inxold+1)%nx;
+        x6 = (inxold+2)%nx;
+        x7 = (inxold+3)%nx;
 
-	y1 = inyold-3;
-	y2 = inyold-2;
-	y3 = inyold-1;
-	y4 = inyold;
-	y5 = inyold+1;
-	y6 = inyold+2;
-	y7 = inyold+3;
+        y1 = ((inyold-3)%ny);
+        y2 = ((inyold-2)%ny);
+        y3 = ((inyold-1)%ny);
+        y4 = ((inyold  )%ny);
+        y5 = ((inyold+1)%ny);
+        y6 = ((inyold+2)%ny);
+        y7 = ((inyold+3)%ny);
     }
-    
+    else
+    {
+        x1 = inxold-3;
+        x2 = inxold-2;
+        x3 = inxold-1;
+        x4 = inxold;
+        x5 = inxold+1;
+        x6 = inxold+2;
+        x7 = inxold+3;
+
+        y1 = inyold-3;
+        y2 = inyold-2;
+        y3 = inyold-1;
+        y4 = inyold;
+        y5 = inyold+1;
+        y6 = inyold+2;
+        y7 = inyold+3;
+    }
+
     // The actual convolution
     pixel = ( DIRECT_MAT_ELEM(in,y1,x1)*tablex1 +
-              DIRECT_MAT_ELEM(in,y1,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y1,x2)*tablex2 +
               DIRECT_MAT_ELEM(in,y1,x3)*tablex3 +
-	      DIRECT_MAT_ELEM(in,y1,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y1,x4)*tablex4 +
               DIRECT_MAT_ELEM(in,y1,x5)*tablex5 +
               DIRECT_MAT_ELEM(in,y1,x6)*tablex6 +
-	      DIRECT_MAT_ELEM(in,y1,x7)*tablex7 ) * tabley1 +
+              DIRECT_MAT_ELEM(in,y1,x7)*tablex7 ) * tabley1 +
 
             ( DIRECT_MAT_ELEM(in,y2,x1)*tablex1 +
-              DIRECT_MAT_ELEM(in,y2,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y2,x2)*tablex2 +
               DIRECT_MAT_ELEM(in,y2,x3)*tablex3 +
-	      DIRECT_MAT_ELEM(in,y2,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y2,x4)*tablex4 +
               DIRECT_MAT_ELEM(in,y2,x5)*tablex5 +
               DIRECT_MAT_ELEM(in,y2,x6)*tablex6 +
-	      DIRECT_MAT_ELEM(in,y2,x7)*tablex7 ) * tabley2 +
+              DIRECT_MAT_ELEM(in,y2,x7)*tablex7 ) * tabley2 +
 
             ( DIRECT_MAT_ELEM(in,y3,x1)*tablex1 +
-              DIRECT_MAT_ELEM(in,y3,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y3,x2)*tablex2 +
               DIRECT_MAT_ELEM(in,y3,x3)*tablex3 +
-	      DIRECT_MAT_ELEM(in,y3,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y3,x4)*tablex4 +
               DIRECT_MAT_ELEM(in,y3,x5)*tablex5 +
               DIRECT_MAT_ELEM(in,y3,x6)*tablex6 +
-	      DIRECT_MAT_ELEM(in,y3,x7)*tablex7 ) * tabley3 +
+              DIRECT_MAT_ELEM(in,y3,x7)*tablex7 ) * tabley3 +
 
             ( DIRECT_MAT_ELEM(in,y4,x1)*tablex1 +
-              DIRECT_MAT_ELEM(in,y4,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y4,x2)*tablex2 +
               DIRECT_MAT_ELEM(in,y4,x3)*tablex3 +
-	      DIRECT_MAT_ELEM(in,y4,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y4,x4)*tablex4 +
               DIRECT_MAT_ELEM(in,y4,x5)*tablex5 +
               DIRECT_MAT_ELEM(in,y4,x6)*tablex6 +
-	      DIRECT_MAT_ELEM(in,y4,x7)*tablex7 ) * tabley4 +
+              DIRECT_MAT_ELEM(in,y4,x7)*tablex7 ) * tabley4 +
 
             ( DIRECT_MAT_ELEM(in,y5,x1)*tablex1 +
-              DIRECT_MAT_ELEM(in,y5,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y5,x2)*tablex2 +
               DIRECT_MAT_ELEM(in,y5,x3)*tablex3 +
-	      DIRECT_MAT_ELEM(in,y5,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y5,x4)*tablex4 +
               DIRECT_MAT_ELEM(in,y5,x5)*tablex5 +
               DIRECT_MAT_ELEM(in,y5,x6)*tablex6 +
-	      DIRECT_MAT_ELEM(in,y5,x7)*tablex7 ) * tabley5 +
+              DIRECT_MAT_ELEM(in,y5,x7)*tablex7 ) * tabley5 +
 
             ( DIRECT_MAT_ELEM(in,y6,x1)*tablex1 +
-              DIRECT_MAT_ELEM(in,y6,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y6,x2)*tablex2 +
               DIRECT_MAT_ELEM(in,y6,x3)*tablex3 +
-	      DIRECT_MAT_ELEM(in,y6,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y6,x4)*tablex4 +
               DIRECT_MAT_ELEM(in,y6,x5)*tablex5 +
               DIRECT_MAT_ELEM(in,y6,x6)*tablex6 +
-	      DIRECT_MAT_ELEM(in,y6,x7)*tablex7 ) * tabley6 +
+              DIRECT_MAT_ELEM(in,y6,x7)*tablex7 ) * tabley6 +
 
             ( DIRECT_MAT_ELEM(in,y7,x1)*tablex1 +
-              DIRECT_MAT_ELEM(in,y7,x2)*tablex2 + 
+              DIRECT_MAT_ELEM(in,y7,x2)*tablex2 +
               DIRECT_MAT_ELEM(in,y7,x3)*tablex3 +
-	      DIRECT_MAT_ELEM(in,y7,x4)*tablex4 +
+              DIRECT_MAT_ELEM(in,y7,x4)*tablex4 +
               DIRECT_MAT_ELEM(in,y7,x5)*tablex5 +
               DIRECT_MAT_ELEM(in,y7,x6)*tablex6 +
-	      DIRECT_MAT_ELEM(in,y7,x7)*tablex7 ) * tabley7;
-    
+              DIRECT_MAT_ELEM(in,y7,x7)*tablex7 ) * tabley7;
+
     w = (tablex1+tablex2+tablex3+tablex4+tablex5+tablex6+tablex7) *
-	(tabley1+tabley2+tabley3+tabley4+tabley5+tabley6+tabley7);	
-    
+        (tabley1+tabley2+tabley3+tabley4+tabley5+tabley6+tabley7);
+
     return pixel/w;
 
 }
@@ -298,12 +301,12 @@ T interpolatedElementReverseGridding(Matrix3D<T> &in, double x, double y, double
     int nx = XSIZE(in);
     int ny = YSIZE(in);
     int nz = ZSIZE(in);
-    
+
     // Go from logical to physical coordinates in the small image
     x -= FIRST_XMIPP_INDEX(nx/GRIDDING_NPAD);
     y -= FIRST_XMIPP_INDEX(ny/GRIDDING_NPAD);
     z -= FIRST_XMIPP_INDEX(nz/GRIDDING_NPAD);
-    
+
     // Get the convolution window parameters
     int K = kb.get_window_size();
     int kbmin = -K/2;
@@ -311,14 +314,14 @@ T interpolatedElementReverseGridding(Matrix3D<T> &in, double x, double y, double
     int kbc = kbmax+1;
     double pixel =0.;
     double w=0.;
-    
+
     x = fmod(2*x, double(nx));
     y = fmod(2*y, double(ny));
     z = fmod(2*z, double(nz));
     int inxold = int(ROUND(x));
     int inyold = int(ROUND(y));
     int inzold = int(ROUND(z));
-    
+
     double tablex1 = kb.i0win_tab(x-inxold+3);
     double tablex2 = kb.i0win_tab(x-inxold+2);
     double tablex3 = kb.i0win_tab(x-inxold+1);
@@ -333,426 +336,429 @@ T interpolatedElementReverseGridding(Matrix3D<T> &in, double x, double y, double
     double tabley4 = kb.i0win_tab(y-inyold);
     double tabley5 = kb.i0win_tab(y-inyold-1);
     double tabley6 = kb.i0win_tab(y-inyold-2);
-    double tabley7 = kb.i0win_tab(y-inyold-3); 
-	
+    double tabley7 = kb.i0win_tab(y-inyold-3);
+
     double tablez1 = kb.i0win_tab(z-inzold+3);
     double tablez2 = kb.i0win_tab(z-inzold+2);
     double tablez3 = kb.i0win_tab(z-inzold+1);
     double tablez4 = kb.i0win_tab(z-inzold);
     double tablez5 = kb.i0win_tab(z-inzold-1);
     double tablez6 = kb.i0win_tab(z-inzold-2);
-    double tablez7 = kb.i0win_tab(z-inzold-3); 
+    double tablez7 = kb.i0win_tab(z-inzold-3);
 
     int x1, x2, x3, x4, x5, x6, x7, y1, y2, y3, y4, y5, y6, y7, z1, z2, z3, z4, z5, z6, z7;
-	
-    if ( inxold <= kbc || inxold >=nx-kbc-2 || 
-	 inyold <= kbc || inyold >=ny-kbc-2 || 
-	 inzold <= kbc || inzold >= nz-kbc-2 )  {
-	x1 = (inxold-3)%nx;
-	x2 = (inxold-2)%nx;
-	x3 = (inxold-1)%nx;
-	x4 = (inxold  )%nx;
-	x5 = (inxold+1)%nx;
-	x6 = (inxold+2)%nx;
-	x7 = (inxold+3)%nx;
 
-	y1 = ((inyold-3)%ny);
-	y2 = ((inyold-2)%ny);
-	y3 = ((inyold-1)%ny);
-	y4 = ((inyold  )%ny);
-	y5 = ((inyold+1)%ny);
-	y6 = ((inyold+2)%ny);
-	y7 = ((inyold+3)%ny);
+    if ( inxold <= kbc || inxold >=nx-kbc-2 ||
+         inyold <= kbc || inyold >=ny-kbc-2 ||
+         inzold <= kbc || inzold >= nz-kbc-2 )
+    {
+        x1 = (inxold-3)%nx;
+        x2 = (inxold-2)%nx;
+        x3 = (inxold-1)%nx;
+        x4 = (inxold  )%nx;
+        x5 = (inxold+1)%nx;
+        x6 = (inxold+2)%nx;
+        x7 = (inxold+3)%nx;
 
-	z1 = ((inzold-3)%nz);
-	z2 = ((inzold-2)%nz);
-	z3 = ((inzold-1)%nz);
-	z4 = ((inzold  )%nz);
-	z5 = ((inzold+1)%nz);
-	z6 = ((inzold+2)%nz);
-	z7 = ((inzold+3)%nz);
-    } else {
-	x1 = inxold-3;
-	x2 = inxold-2;
-	x3 = inxold-1;
-	x4 = inxold;
-	x5 = inxold+1;
-	x6 = inxold+2;
-	x7 = inxold+3;
+        y1 = ((inyold-3)%ny);
+        y2 = ((inyold-2)%ny);
+        y3 = ((inyold-1)%ny);
+        y4 = ((inyold  )%ny);
+        y5 = ((inyold+1)%ny);
+        y6 = ((inyold+2)%ny);
+        y7 = ((inyold+3)%ny);
 
-	y1 = inyold-3;
-	y2 = inyold-2;
-	y3 = inyold-1;
-	y4 = inyold;
-	y5 = inyold+1;
-	y6 = inyold+2;
-	y7 = inyold+3;
-
-	z1 = inzold-3;
-	z2 = inzold-2;
-	z3 = inzold-1;
-	z4 = inzold;
-	z5 = inzold+1;
-	z6 = inzold+2;          
-	z7 = inzold+3;
+        z1 = ((inzold-3)%nz);
+        z2 = ((inzold-2)%nz);
+        z3 = ((inzold-1)%nz);
+        z4 = ((inzold  )%nz);
+        z5 = ((inzold+1)%nz);
+        z6 = ((inzold+2)%nz);
+        z7 = ((inzold+3)%nz);
     }
-    
+    else
+    {
+        x1 = inxold-3;
+        x2 = inxold-2;
+        x3 = inxold-1;
+        x4 = inxold;
+        x5 = inxold+1;
+        x6 = inxold+2;
+        x7 = inxold+3;
+
+        y1 = inyold-3;
+        y2 = inyold-2;
+        y3 = inyold-1;
+        y4 = inyold;
+        y5 = inyold+1;
+        y6 = inyold+2;
+        y7 = inyold+3;
+
+        z1 = inzold-3;
+        z2 = inzold-2;
+        z3 = inzold-1;
+        z4 = inzold;
+        z5 = inzold+1;
+        z6 = inzold+2;
+        z7 = inzold+3;
+    }
+
     // The actual convolution
     // COSS: This is a bad idea
     pixel =(( DIRECT_VOL_ELEM(in,z1,y1,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z1,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y1,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z1,y1,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z1,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y1,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z1,y1,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z1,y1,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z1,y1,x7)*tablex7 ) * tabley1 +
+              DIRECT_VOL_ELEM(in,z1,y1,x7)*tablex7 ) * tabley1 +
             ( DIRECT_VOL_ELEM(in,z1,y2,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z1,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y2,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z1,y2,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z1,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y2,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z1,y2,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z1,y2,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z1,y2,x7)*tablex7 ) * tabley2 +
+              DIRECT_VOL_ELEM(in,z1,y2,x7)*tablex7 ) * tabley2 +
             ( DIRECT_VOL_ELEM(in,z1,y3,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z1,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y3,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z1,y3,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z1,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y3,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z1,y3,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z1,y3,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z1,y3,x7)*tablex7 ) * tabley3 +
+              DIRECT_VOL_ELEM(in,z1,y3,x7)*tablex7 ) * tabley3 +
             ( DIRECT_VOL_ELEM(in,z1,y4,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z1,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y4,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z1,y4,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z1,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y4,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z1,y4,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z1,y4,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z1,y4,x7)*tablex7 ) * tabley4 +
+              DIRECT_VOL_ELEM(in,z1,y4,x7)*tablex7 ) * tabley4 +
             ( DIRECT_VOL_ELEM(in,z1,y5,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z1,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y5,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z1,y5,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z1,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y5,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z1,y5,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z1,y5,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z1,y5,x7)*tablex7 ) * tabley5 +
+              DIRECT_VOL_ELEM(in,z1,y5,x7)*tablex7 ) * tabley5 +
             ( DIRECT_VOL_ELEM(in,z1,y6,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z1,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y6,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z1,y6,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z1,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y6,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z1,y6,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z1,y6,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z1,y6,x7)*tablex7 ) * tabley6 +
+              DIRECT_VOL_ELEM(in,z1,y6,x7)*tablex7 ) * tabley6 +
             ( DIRECT_VOL_ELEM(in,z1,y7,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z1,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z1,y7,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z1,y7,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z1,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z1,y7,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z1,y7,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z1,y7,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z1,y7,x7)*tablex7 ) * tabley7 ) * tablez1 +
+              DIRECT_VOL_ELEM(in,z1,y7,x7)*tablex7 ) * tabley7 ) * tablez1 +
 
            (( DIRECT_VOL_ELEM(in,z2,y1,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z2,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y1,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z2,y1,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z2,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y1,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z2,y1,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z2,y1,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z2,y1,x7)*tablex7 ) * tabley1 +
+              DIRECT_VOL_ELEM(in,z2,y1,x7)*tablex7 ) * tabley1 +
             ( DIRECT_VOL_ELEM(in,z2,y2,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z2,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y2,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z2,y2,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z2,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y2,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z2,y2,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z2,y2,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z2,y2,x7)*tablex7 ) * tabley2 +
+              DIRECT_VOL_ELEM(in,z2,y2,x7)*tablex7 ) * tabley2 +
             ( DIRECT_VOL_ELEM(in,z2,y3,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z2,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y3,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z2,y3,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z2,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y3,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z2,y3,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z2,y3,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z2,y3,x7)*tablex7 ) * tabley3 +
+              DIRECT_VOL_ELEM(in,z2,y3,x7)*tablex7 ) * tabley3 +
             ( DIRECT_VOL_ELEM(in,z2,y4,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z2,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y4,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z2,y4,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z2,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y4,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z2,y4,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z2,y4,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z2,y4,x7)*tablex7 ) * tabley4 +
+              DIRECT_VOL_ELEM(in,z2,y4,x7)*tablex7 ) * tabley4 +
             ( DIRECT_VOL_ELEM(in,z2,y5,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z2,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y5,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z2,y5,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z2,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y5,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z2,y5,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z2,y5,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z2,y5,x7)*tablex7 ) * tabley5 +
+              DIRECT_VOL_ELEM(in,z2,y5,x7)*tablex7 ) * tabley5 +
             ( DIRECT_VOL_ELEM(in,z2,y6,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z2,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y6,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z2,y6,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z2,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y6,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z2,y6,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z2,y6,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z2,y6,x7)*tablex7 ) * tabley6 +
+              DIRECT_VOL_ELEM(in,z2,y6,x7)*tablex7 ) * tabley6 +
             ( DIRECT_VOL_ELEM(in,z2,y7,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z2,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z2,y7,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z2,y7,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z2,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z2,y7,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z2,y7,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z2,y7,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z2,y7,x7)*tablex7 ) * tabley7 ) * tablez2 +
+              DIRECT_VOL_ELEM(in,z2,y7,x7)*tablex7 ) * tabley7 ) * tablez2 +
 
            (( DIRECT_VOL_ELEM(in,z3,y1,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z3,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y1,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z3,y1,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z3,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y1,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z3,y1,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z3,y1,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z3,y1,x7)*tablex7 ) * tabley1 +
+              DIRECT_VOL_ELEM(in,z3,y1,x7)*tablex7 ) * tabley1 +
             ( DIRECT_VOL_ELEM(in,z3,y2,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z3,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y2,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z3,y2,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z3,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y2,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z3,y2,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z3,y2,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z3,y2,x7)*tablex7 ) * tabley2 +
+              DIRECT_VOL_ELEM(in,z3,y2,x7)*tablex7 ) * tabley2 +
             ( DIRECT_VOL_ELEM(in,z3,y3,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z3,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y3,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z3,y3,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z3,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y3,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z3,y3,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z3,y3,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z3,y3,x7)*tablex7 ) * tabley3 +
+              DIRECT_VOL_ELEM(in,z3,y3,x7)*tablex7 ) * tabley3 +
             ( DIRECT_VOL_ELEM(in,z3,y4,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z3,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y4,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z3,y4,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z3,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y4,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z3,y4,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z3,y4,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z3,y4,x7)*tablex7 ) * tabley4 +
+              DIRECT_VOL_ELEM(in,z3,y4,x7)*tablex7 ) * tabley4 +
             ( DIRECT_VOL_ELEM(in,z3,y5,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z3,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y5,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z3,y5,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z3,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y5,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z3,y5,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z3,y5,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z3,y5,x7)*tablex7 ) * tabley5 +
+              DIRECT_VOL_ELEM(in,z3,y5,x7)*tablex7 ) * tabley5 +
             ( DIRECT_VOL_ELEM(in,z3,y6,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z3,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y6,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z3,y6,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z3,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y6,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z3,y6,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z3,y6,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z3,y6,x7)*tablex7 ) * tabley6 +
+              DIRECT_VOL_ELEM(in,z3,y6,x7)*tablex7 ) * tabley6 +
             ( DIRECT_VOL_ELEM(in,z3,y7,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z3,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z3,y7,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z3,y7,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z3,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z3,y7,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z3,y7,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z3,y7,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z3,y7,x7)*tablex7 ) * tabley7 ) * tablez3 +
+              DIRECT_VOL_ELEM(in,z3,y7,x7)*tablex7 ) * tabley7 ) * tablez3 +
 
            (( DIRECT_VOL_ELEM(in,z4,y1,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z4,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y1,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z4,y1,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z4,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y1,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z4,y1,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z4,y1,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z4,y1,x7)*tablex7 ) * tabley1 +
+              DIRECT_VOL_ELEM(in,z4,y1,x7)*tablex7 ) * tabley1 +
             ( DIRECT_VOL_ELEM(in,z4,y2,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z4,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y2,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z4,y2,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z4,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y2,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z4,y2,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z4,y2,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z4,y2,x7)*tablex7 ) * tabley2 +
+              DIRECT_VOL_ELEM(in,z4,y2,x7)*tablex7 ) * tabley2 +
             ( DIRECT_VOL_ELEM(in,z4,y3,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z4,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y3,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z4,y3,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z4,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y3,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z4,y3,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z4,y3,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z4,y3,x7)*tablex7 ) * tabley3 +
+              DIRECT_VOL_ELEM(in,z4,y3,x7)*tablex7 ) * tabley3 +
             ( DIRECT_VOL_ELEM(in,z4,y4,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z4,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y4,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z4,y4,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z4,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y4,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z4,y4,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z4,y4,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z4,y4,x7)*tablex7 ) * tabley4 +
+              DIRECT_VOL_ELEM(in,z4,y4,x7)*tablex7 ) * tabley4 +
             ( DIRECT_VOL_ELEM(in,z4,y5,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z4,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y5,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z4,y5,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z4,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y5,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z4,y5,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z4,y5,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z4,y5,x7)*tablex7 ) * tabley5 +
+              DIRECT_VOL_ELEM(in,z4,y5,x7)*tablex7 ) * tabley5 +
             ( DIRECT_VOL_ELEM(in,z4,y6,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z4,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y6,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z4,y6,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z4,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y6,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z4,y6,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z4,y6,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z4,y6,x7)*tablex7 ) * tabley6 +
+              DIRECT_VOL_ELEM(in,z4,y6,x7)*tablex7 ) * tabley6 +
             ( DIRECT_VOL_ELEM(in,z4,y7,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z4,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z4,y7,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z4,y7,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z4,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z4,y7,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z4,y7,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z4,y7,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z4,y7,x7)*tablex7 ) * tabley7 ) * tablez4 +
+              DIRECT_VOL_ELEM(in,z4,y7,x7)*tablex7 ) * tabley7 ) * tablez4 +
 
            (( DIRECT_VOL_ELEM(in,z5,y1,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z5,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y1,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z5,y1,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z5,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y1,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z5,y1,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z5,y1,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z5,y1,x7)*tablex7 ) * tabley1 +
+              DIRECT_VOL_ELEM(in,z5,y1,x7)*tablex7 ) * tabley1 +
             ( DIRECT_VOL_ELEM(in,z5,y2,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z5,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y2,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z5,y2,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z5,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y2,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z5,y2,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z5,y2,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z5,y2,x7)*tablex7 ) * tabley2 +
+              DIRECT_VOL_ELEM(in,z5,y2,x7)*tablex7 ) * tabley2 +
             ( DIRECT_VOL_ELEM(in,z5,y3,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z5,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y3,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z5,y3,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z5,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y3,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z5,y3,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z5,y3,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z5,y3,x7)*tablex7 ) * tabley3 +
+              DIRECT_VOL_ELEM(in,z5,y3,x7)*tablex7 ) * tabley3 +
             ( DIRECT_VOL_ELEM(in,z5,y4,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z5,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y4,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z5,y4,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z5,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y4,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z5,y4,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z5,y4,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z5,y4,x7)*tablex7 ) * tabley4 +
+              DIRECT_VOL_ELEM(in,z5,y4,x7)*tablex7 ) * tabley4 +
             ( DIRECT_VOL_ELEM(in,z5,y5,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z5,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y5,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z5,y5,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z5,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y5,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z5,y5,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z5,y5,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z5,y5,x7)*tablex7 ) * tabley5 +
+              DIRECT_VOL_ELEM(in,z5,y5,x7)*tablex7 ) * tabley5 +
             ( DIRECT_VOL_ELEM(in,z5,y6,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z5,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y6,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z5,y6,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z5,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y6,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z5,y6,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z5,y6,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z5,y6,x7)*tablex7 ) * tabley6 +
+              DIRECT_VOL_ELEM(in,z5,y6,x7)*tablex7 ) * tabley6 +
             ( DIRECT_VOL_ELEM(in,z5,y7,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z5,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z5,y7,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z5,y7,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z5,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z5,y7,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z5,y7,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z5,y7,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z5,y7,x7)*tablex7 ) * tabley7 ) * tablez5 +
+              DIRECT_VOL_ELEM(in,z5,y7,x7)*tablex7 ) * tabley7 ) * tablez5 +
 
            (( DIRECT_VOL_ELEM(in,z6,y1,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z6,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y1,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z6,y1,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z6,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y1,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z6,y1,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z6,y1,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z6,y1,x7)*tablex7 ) * tabley1 +
+              DIRECT_VOL_ELEM(in,z6,y1,x7)*tablex7 ) * tabley1 +
             ( DIRECT_VOL_ELEM(in,z6,y2,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z6,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y2,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z6,y2,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z6,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y2,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z6,y2,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z6,y2,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z6,y2,x7)*tablex7 ) * tabley2 +
+              DIRECT_VOL_ELEM(in,z6,y2,x7)*tablex7 ) * tabley2 +
             ( DIRECT_VOL_ELEM(in,z6,y3,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z6,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y3,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z6,y3,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z6,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y3,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z6,y3,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z6,y3,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z6,y3,x7)*tablex7 ) * tabley3 +
+              DIRECT_VOL_ELEM(in,z6,y3,x7)*tablex7 ) * tabley3 +
             ( DIRECT_VOL_ELEM(in,z6,y4,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z6,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y4,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z6,y4,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z6,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y4,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z6,y4,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z6,y4,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z6,y4,x7)*tablex7 ) * tabley4 +
+              DIRECT_VOL_ELEM(in,z6,y4,x7)*tablex7 ) * tabley4 +
             ( DIRECT_VOL_ELEM(in,z6,y5,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z6,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y5,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z6,y5,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z6,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y5,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z6,y5,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z6,y5,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z6,y5,x7)*tablex7 ) * tabley5 +
+              DIRECT_VOL_ELEM(in,z6,y5,x7)*tablex7 ) * tabley5 +
             ( DIRECT_VOL_ELEM(in,z6,y6,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z6,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y6,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z6,y6,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z6,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y6,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z6,y6,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z6,y6,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z6,y6,x7)*tablex7 ) * tabley6 +
+              DIRECT_VOL_ELEM(in,z6,y6,x7)*tablex7 ) * tabley6 +
             ( DIRECT_VOL_ELEM(in,z6,y7,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z6,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z6,y7,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z6,y7,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z6,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z6,y7,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z6,y7,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z6,y7,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z6,y7,x7)*tablex7 ) * tabley7 ) * tablez6 +
+              DIRECT_VOL_ELEM(in,z6,y7,x7)*tablex7 ) * tabley7 ) * tablez6 +
 
            (( DIRECT_VOL_ELEM(in,z7,y1,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z7,y1,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y1,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z7,y1,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z7,y1,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y1,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z7,y1,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z7,y1,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z7,y1,x7)*tablex7 ) * tabley1 +
+              DIRECT_VOL_ELEM(in,z7,y1,x7)*tablex7 ) * tabley1 +
             ( DIRECT_VOL_ELEM(in,z7,y2,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z7,y2,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y2,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z7,y2,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z7,y2,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y2,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z7,y2,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z7,y2,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z7,y2,x7)*tablex7 ) * tabley2 +
+              DIRECT_VOL_ELEM(in,z7,y2,x7)*tablex7 ) * tabley2 +
             ( DIRECT_VOL_ELEM(in,z7,y3,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z7,y3,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y3,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z7,y3,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z7,y3,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y3,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z7,y3,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z7,y3,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z7,y3,x7)*tablex7 ) * tabley3 +
+              DIRECT_VOL_ELEM(in,z7,y3,x7)*tablex7 ) * tabley3 +
             ( DIRECT_VOL_ELEM(in,z7,y4,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z7,y4,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y4,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z7,y4,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z7,y4,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y4,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z7,y4,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z7,y4,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z7,y4,x7)*tablex7 ) * tabley4 +
+              DIRECT_VOL_ELEM(in,z7,y4,x7)*tablex7 ) * tabley4 +
             ( DIRECT_VOL_ELEM(in,z7,y5,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z7,y5,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y5,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z7,y5,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z7,y5,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y5,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z7,y5,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z7,y5,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z7,y5,x7)*tablex7 ) * tabley5 +
+              DIRECT_VOL_ELEM(in,z7,y5,x7)*tablex7 ) * tabley5 +
             ( DIRECT_VOL_ELEM(in,z7,y6,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z7,y6,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y6,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z7,y6,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z7,y6,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y6,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z7,y6,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z7,y6,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z7,y6,x7)*tablex7 ) * tabley6 +
+              DIRECT_VOL_ELEM(in,z7,y6,x7)*tablex7 ) * tabley6 +
             ( DIRECT_VOL_ELEM(in,z7,y7,x1)*tablex1 +
-              DIRECT_VOL_ELEM(in,z7,y7,x2)*tablex2 + 
+              DIRECT_VOL_ELEM(in,z7,y7,x2)*tablex2 +
               DIRECT_VOL_ELEM(in,z7,y7,x3)*tablex3 +
-	      DIRECT_VOL_ELEM(in,z7,y7,x4)*tablex4 +
+              DIRECT_VOL_ELEM(in,z7,y7,x4)*tablex4 +
               DIRECT_VOL_ELEM(in,z7,y7,x5)*tablex5 +
               DIRECT_VOL_ELEM(in,z7,y7,x6)*tablex6 +
-	      DIRECT_VOL_ELEM(in,z7,y7,x7)*tablex7 ) * tabley7 ) * tablez7;
+              DIRECT_VOL_ELEM(in,z7,y7,x7)*tablex7 ) * tabley7 ) * tablez7;
 
     w = (tablex1+tablex2+tablex3+tablex4+tablex5+tablex6+tablex7) *
-	(tabley1+tabley2+tabley3+tabley4+tabley5+tabley6+tabley7) *
-	(tablez1+tablez2+tablez3+tablez4+tablez5+tablez6+tablez7);	
-    
+        (tabley1+tabley2+tabley3+tabley4+tabley5+tabley6+tabley7) *
+        (tablez1+tablez2+tablez3+tablez4+tablez5+tablez6+tablez7);
+
     return pixel/w;
 
 }
@@ -804,10 +810,10 @@ T interpolatedElementReverseGridding(Matrix3D<T> &in, double x, double y, double
  * @endcode
  */
 template<typename T>
-void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A, 
-				  const Matrix2D<T> &M1, 
-				  const KaiserBessel &kb, bool inv, bool wrap, 
-				  int nx = 0, int ny = 0, T outside = (T) 0)
+void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A,
+                                  const Matrix2D<T> &M1,
+                                  const KaiserBessel &kb, bool inv, bool wrap,
+                                  int nx = 0, int ny = 0, T outside = (T) 0)
 {
     int m1, n1, m2, n2;
     double x, y, xp, yp;
@@ -823,12 +829,12 @@ void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A,
         return;
     }
 
-    // For scalings the output matrix is explicitly resized to the final size 
+    // For scalings the output matrix is explicitly resized to the final size
     // Otherwise, just take half the size of the gridding image
-    if (nx == 0) 
-	nx = XSIZE(M1) / GRIDDING_NPAD;
-    if (ny == 0) 
-	ny = XSIZE(M1) / GRIDDING_NPAD;
+    if (nx == 0)
+        nx = XSIZE(M1) / GRIDDING_NPAD;
+    if (ny == 0)
+        ny = XSIZE(M1) / GRIDDING_NPAD;
     M2.resize(ny, nx);
     M2.setXmippOrigin();
 
@@ -838,7 +844,7 @@ void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A,
     // Find center and limits of image
     cen_y  = (int)(YSIZE(M2) / 2);
     cen_x  = (int)(XSIZE(M2) / 2);
-    // Take 2x oversize M1 dims into account for calculating the limits 
+    // Take 2x oversize M1 dims into account for calculating the limits
     minxp  = FIRST_XMIPP_INDEX(XSIZE(M1)/2);
     minyp  = FIRST_XMIPP_INDEX(YSIZE(M1)/2);
     maxxp  = LAST_XMIPP_INDEX(XSIZE(M1)/2);
@@ -892,10 +898,10 @@ void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A,
 
             if (interp)
                 dMij(M2, i, j) = interpolatedElementReverseGridding(M1,xp,yp,kb);
-	    else
-		dMij(M2, i, j) = outside;
+            else
+                dMij(M2, i, j) = outside;
 
-          // Compute new point inside input image
+            // Compute new point inside input image
             xp += dMij(A, 0, 0);
             yp += dMij(A, 1, 0);
         }
@@ -923,10 +929,10 @@ void applyGeometryReverseGridding(Matrix2D<T> &M2, Matrix2D< double > A,
  * @endcode
  */
 template<typename T>
-void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A, 
-				  Matrix3D<T> &V1, const KaiserBessel &kb, 
-				  bool inv, bool wrap, 
-				  int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
+void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A,
+                                  Matrix3D<T> &V1, const KaiserBessel &kb,
+                                  bool inv, bool wrap,
+                                  int nx = 0, int ny = 0, int nz = 0, T outside = (T) 0)
 {
     int m1, n1, o1, m2, n2, o2;
     double x, y, z, xp, yp, zp;
@@ -942,14 +948,14 @@ void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A,
         return;
     }
 
-    // For scalings the output matrix is explicitly resized to the final size 
+    // For scalings the output matrix is explicitly resized to the final size
     // Otherwise, just take half the size of the gridding image
-    if (nx == 0) 
-	nx = XSIZE(V1) / GRIDDING_NPAD;
-    if (ny == 0) 
-	ny = XSIZE(V1) / GRIDDING_NPAD;
-    if (nz == 0) 
-	nz = ZSIZE(V1) / GRIDDING_NPAD;
+    if (nx == 0)
+        nx = XSIZE(V1) / GRIDDING_NPAD;
+    if (ny == 0)
+        ny = XSIZE(V1) / GRIDDING_NPAD;
+    if (nz == 0)
+        nz = ZSIZE(V1) / GRIDDING_NPAD;
     V2.resize(nz, ny, nx);
     V2.setXmippOrigin();
 
@@ -960,7 +966,7 @@ void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A,
     cen_z = (int)(V2.zdim / 2);
     cen_y = (int)(V2.ydim / 2);
     cen_x = (int)(V2.xdim / 2);
-    // Take 2x oversize M1 dims into account for calculating the limits 
+    // Take 2x oversize M1 dims into account for calculating the limits
     minxp  = FIRST_XMIPP_INDEX(XSIZE(V1)/2);
     minyp  = FIRST_XMIPP_INDEX(YSIZE(V1)/2);
     minzp  = FIRST_XMIPP_INDEX(ZSIZE(V1)/2);
@@ -1060,9 +1066,9 @@ void applyGeometryReverseGridding(Matrix3D<T> &V2, Matrix2D< double > A,
  *
  */
 void approximateVoronoiArea(std::vector<double> &voronoi_area,
-			    const std::vector<double> &xin,
-                            const std::vector<double> &yin, 
-			    const double oversample = 10.);
+                            const std::vector<double> &xin,
+                            const std::vector<double> &yin,
+                            const double oversample = 10.);
 
 /** Interpolate Cartesian coordinates from any irregularly sampled grid
  * @ingroup ForwardGridding
@@ -1088,11 +1094,11 @@ void approximateVoronoiArea(std::vector<double> &voronoi_area,
  */
 template <typename T>
 Matrix2D<T> interpolateCartesianFromArbitrarySampling(const int xdim, const int ydim,
-						      const std::vector<double> &xin, 
-						      const std::vector<double> &yin,
-						      const std::vector<T> &data, 
-						      const std::vector<double> &voronoi_area,
-						      const KaiserBessel &kb)
+        const std::vector<double> &xin,
+        const std::vector<double> &yin,
+        const std::vector<T> &data,
+        const std::vector<double> &voronoi_area,
+        const KaiserBessel &kb)
 {
 
     double wx,wy, xx, yy, dx, dy, r, w, sumw;
@@ -1101,7 +1107,7 @@ Matrix2D<T> interpolateCartesianFromArbitrarySampling(const int xdim, const int 
     // Oversample result GRIDDING_NPAD times
     result.initZeros(GRIDDING_NPAD*xdim, GRIDDING_NPAD*ydim);
     result.setXmippOrigin();
-    
+
     // 1. Convolution interpolation
     // Loop over all cartesian coordinates: add all sampled points
     // within the window in x or y to the result, multiplied with the
@@ -1109,26 +1115,26 @@ Matrix2D<T> interpolateCartesianFromArbitrarySampling(const int xdim, const int 
     double window_size = (double)(kb.get_window_size()/2);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
     {
-	xx = (double) j;
-	yy = (double) i;
-	sumw = 0.;
-	for (int ii = 0; ii < xin.size(); ii++)
-	{
-	    dx = GRIDDING_NPAD*xin[ii] - xx;
-	    if (ABS(dx) < window_size)
-	    { 		
-		dy = GRIDDING_NPAD*yin[ii] - yy;
-		if (ABS(dy) < window_size)
-		{
-		    // Gridding weight
-		    w = voronoi_area[ii] * kb.i0win_tab(dx) *  kb.i0win_tab(dy);
-		    MAT_ELEM(result,i,j) += data[ii] * w;
-		    sumw += w;
-		}
-	    }
-	}
-	if (sumw > 0.) 
-	    MAT_ELEM(result,i,j) /= sumw;
+        xx = (double) j;
+        yy = (double) i;
+        sumw = 0.;
+        for (int ii = 0; ii < xin.size(); ii++)
+        {
+            dx = GRIDDING_NPAD*xin[ii] - xx;
+            if (ABS(dx) < window_size)
+            {
+                dy = GRIDDING_NPAD*yin[ii] - yy;
+                if (ABS(dy) < window_size)
+                {
+                    // Gridding weight
+                    w = voronoi_area[ii] * kb.i0win_tab(dx) *  kb.i0win_tab(dy);
+                    MAT_ELEM(result,i,j) += data[ii] * w;
+                    sumw += w;
+                }
+            }
+        }
+        if (sumw > 0.)
+            MAT_ELEM(result,i,j) /= sumw;
     }
 
     return result;
@@ -1138,12 +1144,12 @@ Matrix2D<T> interpolateCartesianFromArbitrarySampling(const int xdim, const int 
 /** Finish forward gridding after interpolateCartesianFromArbitrarySampling
  * @ingroup ForwardGridding
  *
- *  Produces a 2D real-space matrix2d after having performed 
+ *  Produces a 2D real-space matrix2d after having performed
  *  interpolateCartesianFromArbitrarySampling for real-space coordinates.
  */
-void produceForwardGriddingMatrix2D(const Matrix2D< double > &in, 
-				    Matrix2D< double > &out,
-				    KaiserBessel &kb);
+void produceForwardGriddingMatrix2D(const Matrix2D< double > &in,
+                                    Matrix2D< double > &out,
+                                    KaiserBessel &kb);
 
 /** Finish forward gridding after interpolateCartesianFromArbitrarySampling
  * @ingroup ForwardGridding
@@ -1151,10 +1157,10 @@ void produceForwardGriddingMatrix2D(const Matrix2D< double > &in,
  *  Produces a 2D real-space matrix2d after having performed
  *  interpolateCartesianFromArbitrarySampling for fourier-space coordinates.
  */
-void produceForwardGriddingMatrix2D(const Matrix2D< std::complex<double > > &in, 
-				    Matrix2D< double > &out,
-				    KaiserBessel &kb,
-				    bool is_centered = true);
+void produceForwardGriddingMatrix2D(const Matrix2D< std::complex<double > > &in,
+                                    Matrix2D< double > &out,
+                                    KaiserBessel &kb,
+                                    bool is_centered = true);
 
 /** Finish forward gridding after interpolateCartesianFromArbitrarySampling
  * @ingroup ForwardGridding
@@ -1162,10 +1168,10 @@ void produceForwardGriddingMatrix2D(const Matrix2D< std::complex<double > > &in,
  *  Produces a 2D fourier-space matrix2d after having performed
  *  interpolateCartesianFromArbitrarySampling for fourier-space coordinates.
  */
-void produceForwardGriddingFourierMatrix2D(const Matrix2D< std::complex<double > > &in, 
-					   Matrix2D< std::complex<double > > &out,
-					   KaiserBessel &kb,
-					   bool is_centered = true);
+void produceForwardGriddingFourierMatrix2D(const Matrix2D< std::complex<double > > &in,
+        Matrix2D< std::complex<double > > &out,
+        KaiserBessel &kb,
+        bool is_centered = true);
 
 
 #endif

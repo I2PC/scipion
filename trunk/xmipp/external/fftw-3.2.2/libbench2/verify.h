@@ -23,10 +23,11 @@
 typedef bench_real R;
 typedef bench_complex C;
 
-typedef struct dofft_closure_s {
-     void (*apply)(struct dofft_closure_s *k,
-		   bench_complex *in, bench_complex *out);
-     int recopy_input;
+typedef struct dofft_closure_s
+{
+    void (*apply)(struct dofft_closure_s *k,
+                  bench_complex *in, bench_complex *out);
+    int recopy_input;
 } dofft_closure;
 
 double dmax(double x, double y);
@@ -45,49 +46,50 @@ void ascale(C *a, C alpha, int n);
 double acmp(C *a, C *b, int n, const char *test, double tol);
 double mydrand(void);
 double impulse(dofft_closure *k,
-	       int n, int vecn, 
-	       C *inA, C *inB, C *inC,
-	       C *outA, C *outB, C *outC,
-	       C *tmp, int rounds, double tol);
+               int n, int vecn,
+               C *inA, C *inB, C *inC,
+               C *outA, C *outB, C *outC,
+               C *tmp, int rounds, double tol);
 double linear(dofft_closure *k, int realp,
-	      int n, C *inA, C *inB, C *inC, C *outA,
-	      C *outB, C *outC, C *tmp, int rounds, double tol);
+              int n, C *inA, C *inB, C *inC, C *outA,
+              C *outB, C *outC, C *tmp, int rounds, double tol);
 void preserves_input(dofft_closure *k, aconstrain constrain,
                      int n, C *inA, C *inB, C *outB, int rounds);
 
 enum { TIME_SHIFT, FREQ_SHIFT };
 double tf_shift(dofft_closure *k, int realp, const bench_tensor *sz,
-		int n, int vecn, double sign,
-		C *inA, C *inB, C *outA, C *outB, C *tmp,
-		int rounds, double tol, int which_shift);
+                int n, int vecn, double sign,
+                C *inA, C *inB, C *outA, C *outB, C *tmp,
+                int rounds, double tol, int which_shift);
 
-typedef struct dotens2_closure_s {
-     void (*apply)(struct dotens2_closure_s *k, 
-		   int indx0, int ondx0, int indx1, int ondx1);
+typedef struct dotens2_closure_s
+{
+    void (*apply)(struct dotens2_closure_s *k,
+                  int indx0, int ondx0, int indx1, int ondx1);
 } dotens2_closure;
 
-void bench_dotens2(const bench_tensor *sz0, 
-		   const bench_tensor *sz1, dotens2_closure *k);
+void bench_dotens2(const bench_tensor *sz0,
+                   const bench_tensor *sz1, dotens2_closure *k);
 
 void accuracy_test(dofft_closure *k, aconstrain constrain,
-		   int sign, int n, C *a, C *b, int rounds, int impulse_rounds,
-		   double t[6]);
+                   int sign, int n, C *a, C *b, int rounds, int impulse_rounds,
+                   double t[6]);
 
 void accuracy_dft(bench_problem *p, int rounds, int impulse_rounds,
-		  double t[6]);
+                  double t[6]);
 void accuracy_rdft2(bench_problem *p, int rounds, int impulse_rounds,
-		    double t[6]);
+                    double t[6]);
 void accuracy_r2r(bench_problem *p, int rounds, int impulse_rounds,
-		  double t[6]);
+                  double t[6]);
 
 #if defined(BENCHFFT_LDOUBLE) && HAVE_COSL
-   typedef long double trigreal;
+typedef long double trigreal;
 #  define COS cosl
 #  define SIN sinl
 #  define TAN tanl
 #  define KTRIG(x) (x##L)
 #else
-   typedef double trigreal;
+typedef double trigreal;
 #  define COS cos
 #  define SIN sin
 #  define TAN tan

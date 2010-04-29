@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
-              using trust Region method for high-computing load, 
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
+              using trust Region method for high-computing load,
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,13 +19,13 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product, 
+If you want to include this tools in any commercial product,
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
 
 //
-//	class Multiindex
+//  class Multiindex
 //
 #ifndef _INCLUDE_MULTIND_H_
 #define _INCLUDE_MULTIND_H_
@@ -34,12 +34,13 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 
 class MultInd;
 
-class MultIndCache {
-  public:
+class MultIndCache
+{
+public:
     MultIndCache();
     ~MultIndCache();
     MultInd *get(unsigned _dim, unsigned _deg);
-  private:
+private:
     MultInd *head;
 };
 
@@ -47,28 +48,38 @@ class MultIndCache {
 extern MultIndCache cacheMultInd;
 #endif
 
-class MultInd {
-friend class MultIndCache;
+class MultInd
+{
+    friend class MultIndCache;
 public:
     unsigned dim, deg;
 
     unsigned *lastChanges();
     unsigned *indexesOfCoefInLexOrder();
-    
+
     MultInd(unsigned d=0);
     ~MultInd();
 
     void resetCounter();
     MultInd& operator++();       // prefix
-    MultInd& operator++( int ) { return this->operator++(); } // postfix
+    MultInd& operator++( int )
+    {
+        return this->operator++();    // postfix
+    }
 //    unsigned &operator[]( unsigned i) {return coeffDeg[i];};
-    inline operator unsigned*() const { return coeffDeg; };
+    inline operator unsigned*() const
+    {
+        return coeffDeg;
+    };
     MultInd& operator=( const MultInd &P );
     bool operator==( const MultInd& m );
-    unsigned index() {return indexV;};
+    unsigned index()
+    {
+        return indexV;
+    };
     unsigned len();
-  
-  // Print it
+
+    // Print it
     void print();
 
 private:
@@ -78,11 +89,11 @@ private:
 
     VectorInt lastChangesV, indexesOfCoefInLexOrderV;
     unsigned *coeffDeg, *coeffLex, indexV;
-    
+
     static unsigned *buffer, maxDim;
     // to do the cache:
     MultInd *next;
 };
 
 
-#endif 
+#endif

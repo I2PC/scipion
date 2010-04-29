@@ -82,7 +82,7 @@ int main(int argc, char **argv)
             if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
             // Save old reference images
-            for (int refno = 0;refno < prm.nr_ref; refno++) 
+            for (int refno = 0; refno < prm.nr_ref; refno++)
                 prm.Iold[refno]() = prm.Iref[refno]();
 
             DFo.clear();
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
             // Update model parameters
             prm.maximization(wsumimgs, wsumweds,
-                             wsum_sigma_noise, wsum_sigma_offset, 
+                             wsum_sigma_noise, wsum_sigma_offset,
                              sumw, sumcorr, sumw_allrefs, fsc, iter);
 
             // Check convergence

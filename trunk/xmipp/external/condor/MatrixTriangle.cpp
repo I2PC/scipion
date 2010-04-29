@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
-              using trust Region method for high-computing load, 
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
+              using trust Region method for high-computing load,
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product, 
+If you want to include this tools in any commercial product,
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -31,19 +31,23 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 MatrixTriangle::MatrixTriangle(int _n)
 {
     d=(MatrixTriangleData*)malloc(sizeof(MatrixTriangleData));
-    d->n=_n; d->ext=_n;
+    d->n=_n;
+    d->ext=_n;
     d->ref_count=1;
     if (_n>0)
-	{
-	    double **t,*t2;
+    {
+        double **t,*t2;
         int i=1;
-    	t=d->p=(double**)malloc(_n*sizeof(double*));
-    	t2=(double*)malloc((_n+1)*_n/2*sizeof(double));
-	    while(_n--)
+        t=d->p=(double**)malloc(_n*sizeof(double*));
+        t2=(double*)malloc((_n+1)*_n/2*sizeof(double));
+        while(_n--)
         {
-            *(t++)=t2; t2+=i; i++;
+            *(t++)=t2;
+            t2+=i;
+            i++;
         }
-    } else d->p=NULL;
+    }
+    else d->p=NULL;
 }
 
 void MatrixTriangle::setSize(int _n)
@@ -52,20 +56,23 @@ void MatrixTriangle::setSize(int _n)
     if (_n>d->ext)
     {
         d->ext=_n;
-	    double **t,*t2;
+        double **t,*t2;
         if (!d->p)
         {
-    	    t2=(double*)malloc((_n+1)*_n/2*sizeof(double));
+            t2=(double*)malloc((_n+1)*_n/2*sizeof(double));
             t=d->p=(double**)malloc(_n*sizeof(double));
-        } else
+        }
+        else
         {
-    	    t2=(double*)realloc(*d->p,(_n+1)*_n/2*sizeof(double));
+            t2=(double*)realloc(*d->p,(_n+1)*_n/2*sizeof(double));
             t=d->p=(double**)realloc(d->p,_n*sizeof(double));
         }
         int i=1;
-	    while(_n--)
+        while(_n--)
         {
-            *(t++)=t2; t2+=i; i++;
+            *(t++)=t2;
+            t2+=i;
+            i++;
         }
     }
 }
@@ -77,11 +84,14 @@ void MatrixTriangle::solveInPlace(Vector b)
 
     if ((int)b.sz()!=n)
     {
-        printf("error in matrixtriangle solve.\n"); getchar(); exit(254);
+        printf("error in matrixtriangle solve.\n");
+        getchar();
+        exit(254);
     }
     for (i=0; i<n; i++)
     {
-        sum=x[i]; k=i;
+        sum=x[i];
+        k=i;
         while (k--) sum-=a[i][k]*x[k];
         x[i]=sum/a[i][i];
     }
@@ -107,7 +117,7 @@ void MatrixTriangle::invert()
     for (i=0; i<n; i++)
     {
         a[i][i]=1/a[i][i];
-        for (j=i+1; j<n; j++) 
+        for (j=i+1; j<n; j++)
         {
             sum=0;
             for (k=i; k<j; k++) sum-=a[j][k]*a[k][i];
@@ -126,9 +136,11 @@ void MatrixTriangle::LINPACK(Vector &R)
     {
         if (L[i][i]==0) w[i]=1.0;
 
-        sum=0; j=i-1;
+        sum=0;
+        j=i-1;
         if (i) while (j--) sum+=L[i][j]*w[j];
-        if (((1.0-sum)/L[i][i])>((-1.0-sum)/L[i][i])) w[i]=1.0; else w[i]=-1.0;
+        if (((1.0-sum)/L[i][i])>((-1.0-sum)/L[i][i])) w[i]=1.0;
+        else w[i]=-1.0;
     }
     solveTransposInPlace(R);
     R.multiply(1/R.euclidianNorm());
@@ -144,9 +156,13 @@ void MatrixTriangle::destroyCurrentBuffer()
 {
     if (!d) return;
     (d->ref_count) --;
-	if (d->ref_count==0)
+    if (d->ref_count==0)
     {
-        if (d->p) { free(*d->p); free(d->p); }
+        if (d->p)
+        {
+            free(*d->p);
+            free(d->p);
+        }
         free(d);
     };
 }
@@ -155,19 +171,19 @@ MatrixTriangle::MatrixTriangle(const MatrixTriangle &A)
 {
     // shallow copy
     d=A.d;
-	(d->ref_count)++ ;
+    (d->ref_count)++ ;
 }
 
 MatrixTriangle& MatrixTriangle::operator=( const MatrixTriangle& A )
 {
     // shallow copy
     if (this != &A)
-	{
+    {
         destroyCurrentBuffer();
         d=A.d;
-		(d->ref_count) ++ ;
-	}
-	return *this;
+        (d->ref_count) ++ ;
+    }
+    return *this;
 }
 
 MatrixTriangle MatrixTriangle::clone()

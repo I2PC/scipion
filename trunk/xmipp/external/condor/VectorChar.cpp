@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
-              using trust Region method for high-computing load, 
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
+              using trust Region method for high-computing load,
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product, 
+If you want to include this tools in any commercial product,
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -31,8 +31,12 @@ you can contact the author at fvandenb@iridia.ulb.ac.be
 
 void VectorChar::alloc()
 {
-    if (extention==0) { p=NULL; return; };
-    CHECK(p=(char*)malloc(extention*sizeof(char))); 
+    if (extention==0)
+    {
+        p=NULL;
+        return;
+    };
+    CHECK(p=(char*)malloc(extention*sizeof(char)));
 }
 
 VectorChar::VectorChar(int _n): np(_n), extention(_n), n(np)
@@ -53,7 +57,7 @@ VectorChar::VectorChar(VectorChar *v): np(v->n), extention(v->n), n(np)
     memcpy(p,v->p,n*sizeof(char));
 }
 
-VectorChar::VectorChar(int _n, char *d): np(_n), extention(_n), n(np) 
+VectorChar::VectorChar(int _n, char *d): np(_n), extention(_n), n(np)
 {
     alloc();
     if (d) memcpy(p,d,_n*sizeof(char));
@@ -62,18 +66,23 @@ VectorChar::VectorChar(int _n, char *d): np(_n), extention(_n), n(np)
 
 void VectorChar::prepareExtend(int new_extention)
 {
-	if (extention<new_extention)
-	{
-		CHECK(p=(char*)realloc(p,new_extention*sizeof(char)));
+    if (extention<new_extention)
+    {
+        CHECK(p=(char*)realloc(p,new_extention*sizeof(char)));
         memset(p+extention,0,(new_extention-extention)*sizeof(char));
-    	extention=new_extention;
-	};
+        extention=new_extention;
+    };
 };
 
 void VectorChar::setSize(int _n)
 {
     np=_n;
-    if (_n==0) { free(p); p=NULL; return; }
+    if (_n==0)
+    {
+        free(p);
+        p=NULL;
+        return;
+    }
     prepareExtend(_n);
 }
 
@@ -85,11 +94,11 @@ void VectorChar::extend()
 
 void VectorChar::exactshape()
 {
-	if (extention!=0)
-	{
-		CHECK(p=(char*)realloc(p,n*sizeof(char)));
-		extention=np;
-	};
+    if (extention!=0)
+    {
+        CHECK(p=(char*)realloc(p,n*sizeof(char)));
+        extention=np;
+    };
 };
 
 VectorChar::~VectorChar()
@@ -99,18 +108,19 @@ VectorChar::~VectorChar()
 
 char VectorChar::operator==( const VectorChar& Q )
 {
-  if (n != Q.n) return 0;
+    if (n != Q.n) return 0;
 
-  char *cP = p, *cQ = Q.p;
-  int i = n;
+    char *cP = p, *cQ = Q.p;
+    int i = n;
 
-  while( i-- )
-  {
-    if (*cP!=*cQ) return 0;
-    cP++; cQ++;
-  }
+    while( i-- )
+    {
+        if (*cP!=*cQ) return 0;
+        cP++;
+        cQ++;
+    }
 
-  return 1;
+    return 1;
 }
 
 VectorChar& VectorChar::operator=( const VectorChar& P )
@@ -118,7 +128,8 @@ VectorChar& VectorChar::operator=( const VectorChar& P )
     if (extention<P.n)
     {
         extention=P.n;
-        free(p); alloc();
+        free(p);
+        alloc();
     }
     np=P.n;
     memcpy(p,P.p,n*sizeof(char));
@@ -134,13 +145,17 @@ VectorChar::VectorChar( const VectorChar& P ): np(P.n), extention(P.n), n(np)
 //ostream& VectorChar::PrintToStream( ostream& out ) const
 void VectorChar::print()
 {
-	printf("[");
-	if (!n || !p) { printf("]"); return; }
+    printf("[");
+    if (!n || !p)
+    {
+        printf("]");
+        return;
+    }
 
     int N=n;
     char *up=p;
-	while (--N) printf("%i,",*(up++));
-	printf("%i]",*up);
+    while (--N) printf("%i,",*(up++));
+    printf("%i]",*up);
 }
 
 void VectorChar::set(char c)

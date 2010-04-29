@@ -65,7 +65,7 @@ void Prog_mlf_tomo_prm::read(int argc, char **argv)
     som_ydim = textToInteger(getParameter(argc, argv, "-ydim", "4"));
     do_norm = checkParameter(argc, argv, "-norm");
     do_scale = checkParameter(argc, argv, "-scale");
-   
+
     ang= textToFloat(getParameter(argc, argv, "-ang", "0"));
 }
 
@@ -179,7 +179,7 @@ void Prog_mlf_tomo_prm::produceSideInfo()
     if (fn_ref != "")
     {
         // A. User-provided reference(s)
-        if (Is_VolumeXmipp(fn_ref)) 
+        if (Is_VolumeXmipp(fn_ref))
         {
             nr_ref = 1;
             SFr.insert(fn_ref);
@@ -189,7 +189,7 @@ void Prog_mlf_tomo_prm::produceSideInfo()
             SFr.read(fn_ref);
             nr_ref = SFr.ImgNo();
         }
-    }     
+    }
     else if (do_som)
     {
         nr_ref = som_xdim * som_ydim;
@@ -201,7 +201,7 @@ void Prog_mlf_tomo_prm::produceSideInfo()
     initializeRegularizationMatrix(false);
 
     // Read SymList
-    //if (fn_sym!="") 
+    //if (fn_sym!="")
     //    SL.read_sym_file(fn_sym);
     //else
     //    SL.read_sym_file("c1");
@@ -233,13 +233,16 @@ void Prog_mlf_tomo_prm::produceSideInfo()
     int zz, yy;
     double sz,sy,sx,res;
     hsize = 0;
-    for ( int z=0, ii=0; z<Zdim; z++ ) {
+    for ( int z=0, ii=0; z<Zdim; z++ )
+    {
         if ( z > (Zdim - 1)/2 ) zz = z-Zdim;
         else zz = z;
-        for ( int y=0; y<Ydim; y++ ) {
+        for ( int y=0; y<Ydim; y++ )
+        {
             if ( y > (Ydim - 1)/2 ) yy = y-Ydim;
             else yy = y;
-            for ( int xx=0; xx<Xdim/2 + 1; xx++,ii++ ) {
+            for ( int xx=0; xx<Xdim/2 + 1; xx++,ii++ )
+            {
                 // Think about non-cubic volumes here: resolution in dig.freq.
                 sx = (double)xx / (double)Xdim;
                 sy = (double)yy / (double)Ydim;
@@ -296,11 +299,11 @@ void Prog_mlf_tomo_prm::produceSideInfo()
     // Initialize optimal scales to one.
     if (do_scale)
     {
-	imgs_scale.clear();
+        imgs_scale.clear();
         for (int i = 0; i < SFi.ImgNo(); i++)
-	    imgs_scale.push_back(1.);
+            imgs_scale.push_back(1.);
         for (int i = 0; i < nr_ref; i++)
-	    refs_avgscale.push_back(1.);
+            refs_avgscale.push_back(1.);
         average_scale = 1.;
     }
 
@@ -368,15 +371,16 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
     bool found;
 
     // Store tomogram angles, offset vectors and missing wedge parameters
-    if (fn_doc!="") {
+    if (fn_doc!="")
+    {
         DF.read(fn_doc);
         SFi.go_beginning();
-        while (!SFi.eof()) 
+        while (!SFi.eof())
         {
             fn_vol=SFi.NextImg();
             if (fn_vol=="") break;
             DF.go_beginning();
-            if (DF.search_comment(fn_vol)) 
+            if (DF.search_comment(fn_vol))
             {
                 img_ang1.push_back(DF(0));
                 img_ang2.push_back(DF(1));
@@ -386,8 +390,8 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
                 img_zoff.push_back(DF(5));
                 img_th0.push_back( DF(6));
                 img_thF.push_back( DF(7));
-            } 
-            else 
+            }
+            else
             {
                 std::cerr << "ERROR% "<<fn_vol
                           <<" not found in document file"
@@ -395,11 +399,11 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
                 exit(0);
             }
         }
-    } 
-    else 
+    }
+    else
     {
         SFi.go_beginning();
-        while (!SFi.eof()) 
+        while (!SFi.eof())
         {
             FileName fnAux=SFi.NextImg();
             if (fnAux=="") break;
@@ -420,13 +424,13 @@ void Prog_mlf_tomo_prm::produceSideInfo2()
 }
 
 
-/// Get Transformation matrix 
-Matrix2D< double > Prog_mlf_tomo_prm::getTransformationMatrix(double ang1, 
-                                                              double ang2, 
-                                                              double ang3, 
-                                                              double xoff, /* = 0. */
-                                                              double yoff, /* = 0. */
-                                                              double zoff) /* = 0. */
+/// Get Transformation matrix
+Matrix2D< double > Prog_mlf_tomo_prm::getTransformationMatrix(double ang1,
+        double ang2,
+        double ang3,
+        double xoff, /* = 0. */
+        double yoff, /* = 0. */
+        double zoff) /* = 0. */
 {
     Matrix2D<double>  A(4,4);
     if (use_tom_conventions)
@@ -455,8 +459,8 @@ Matrix2D< double > Prog_mlf_tomo_prm::getTransformationMatrix(double ang1,
         A(1, 0) =  sinpsi*cosphi+costheta*cospsi*sinphi;
         A(2, 0) =  sintheta*sinphi;
         A(0, 1) = -cospsi*sinphi-costheta*sinpsi*cosphi;
-        A(1, 1) = -sinpsi*sinphi+costheta*cospsi*cosphi; 
-        A(2, 1) =  sintheta*cosphi; 
+        A(1, 1) = -sinpsi*sinphi+costheta*cospsi*cosphi;
+        A(2, 1) =  sintheta*cosphi;
         A(0, 2) =  sintheta*sinpsi;
         A(1, 2) = -sintheta*cospsi;
         A(2, 2) =  costheta;
@@ -467,31 +471,31 @@ Matrix2D< double > Prog_mlf_tomo_prm::getTransformationMatrix(double ang1,
 
 //#define DEBUG_TOM_CONVENTIONS
 #ifdef  DEBUG_TOM_CONVENTIONS
-/*
-XMIPP  =      TOM
-rot    =      90. + psi
-tilt   =      -theta 
-psi    =      -90 + phi
-xoff   =      -x
-yoff   =      -y
-zoff   =      -z
-*/
-            Matrix2D<double> B=A;
-            double r,t,p;
-            B.resize(3,3);
-            std::cerr<<"------"<<std::endl;
-            std::cerr<< "angles TOM= "<<ang1<<" "<<ang2<<" "<<ang3<<std::endl;
-            std::cerr<< "angles XMIPP= "<<90. + ang2<<" "<<-ang3<<" "<<-90. + ang1<<std::endl;
-            std::cerr<<"TOM matrix = "<<B<<std::endl;
-            Euler_angles2matrix(90. + ang2, -ang3, -90. + ang1, B);
-            std::cerr<<"XMIPP matrix = "<<B<<std::endl;
-            Euler_matrix2angles(B,r,t,p);
-            std::cerr<<"angle XMIPP again= "<<r<<" "<<t<<" "<<p<<std::endl;
-            B=B.transpose();
-            std::cerr<<"XMIPP transposed matrix = "<<B<<std::endl;
-            Euler_matrix2angles(B,r,t,p);
-            std::cerr<<"angles XMIPP transposed matrix= "<<r<<" "<<t<<" "<<p<<std::endl;
-          
+        /*
+        XMIPP  =      TOM
+        rot    =      90. + psi
+        tilt   =      -theta
+        psi    =      -90 + phi
+        xoff   =      -x
+        yoff   =      -y
+        zoff   =      -z
+        */
+        Matrix2D<double> B=A;
+        double r,t,p;
+        B.resize(3,3);
+        std::cerr<<"------"<<std::endl;
+        std::cerr<< "angles TOM= "<<ang1<<" "<<ang2<<" "<<ang3<<std::endl;
+        std::cerr<< "angles XMIPP= "<<90. + ang2<<" "<<-ang3<<" "<<-90. + ang1<<std::endl;
+        std::cerr<<"TOM matrix = "<<B<<std::endl;
+        Euler_angles2matrix(90. + ang2, -ang3, -90. + ang1, B);
+        std::cerr<<"XMIPP matrix = "<<B<<std::endl;
+        Euler_matrix2angles(B,r,t,p);
+        std::cerr<<"angle XMIPP again= "<<r<<" "<<t<<" "<<p<<std::endl;
+        B=B.transpose();
+        std::cerr<<"XMIPP transposed matrix = "<<B<<std::endl;
+        Euler_matrix2angles(B,r,t,p);
+        std::cerr<<"angles XMIPP transposed matrix= "<<r<<" "<<t<<" "<<p<<std::endl;
+
 #endif
 
     }
@@ -507,11 +511,11 @@ zoff   =      -z
 
     return A;
 }
- 
-/// Get binary missing wedge (or pyramid) 
+
+/// Get binary missing wedge (or pyramid)
 void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
                                         Matrix2D<double> A,
-                                        const double theta0_alongy, 
+                                        const double theta0_alongy,
                                         const double thetaF_alongy,
                                         const double theta0_alongx /*= 0.*/,
                                         const double thetaF_alongx /*= 0.*/)
@@ -541,15 +545,18 @@ void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
 #endif
 
     int zz, yy;
-    for ( int z=0, i=0, ii=0; z<Zdim; z++ ) {
-        if ( z > (Zdim - 1)/2 ) 
+    for ( int z=0, i=0, ii=0; z<Zdim; z++ )
+    {
+        if ( z > (Zdim - 1)/2 )
             zz = z-Zdim;
-        else 
+        else
             zz = z;
-        for ( int y=0; y<Ydim; y++ ) {
+        for ( int y=0; y<Ydim; y++ )
+        {
             if ( y > (Ydim - 1)/2 ) yy = y-Ydim;
             else yy = y;
-            for ( int xx=0; xx<Xdim/2 + 1; xx++,ii++ ) {
+            for ( int xx=0; xx<Xdim/2 + 1; xx++,ii++ )
+            {
                 // Only concerned with those components within resolution limits
                 if (is_in_range[ii])
                 {
@@ -562,18 +569,18 @@ void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
                     limxF = tgF_y * zp;
                     limy0 = tg0_x * zp;
                     limyF = tgF_x * zp;
-                    
+
                     if (zp >= 0)
                     {
                         if ((xp <= limx0 || xp >= limxF) && (yp <= limy0 || yp >= limyF))
-                            measured[i] = true; 
+                            measured[i] = true;
                         else
                             measured[i] = false;
                     }
                     else
                     {
-                         if ((xp <= limxF || xp >= limx0) && (yp <= limyF || yp >= limy0))
-                            measured[i] = true; 
+                        if ((xp <= limxF || xp >= limx0) && (yp <= limyF || yp >= limy0))
+                            measured[i] = true;
                         else
                             measured[i] = false;
                     }
@@ -584,11 +591,11 @@ void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
                     std::cerr<<"limx0, limxF= "<<limx0<<" "<<limxF<<std::endl;
                     if (measured[i])
                         std::cerr<<"true"<<std::endl;
-                    else 
+                    else
                         std::cerr<<"false"<<std::endl;
 #endif
                     i++;
-                } 
+                }
             }
         }
     }
@@ -597,9 +604,9 @@ void Prog_mlf_tomo_prm::getMissingWedge(bool * measured,
     VolumeXmipp test(Xdim,Ydim,Zdim), rot(Xdim,Ydim,Zdim);
     test().initZeros();
 
-    for(int i=0,ii=0,iii=0;i<Zdim;i++)
-        for(int j=0;j<Ydim;j++)
-            for(int k=0;k<Xdim/2 + 1; k++,ii++)
+    for(int i=0,ii=0,iii=0; i<Zdim; i++)
+        for(int j=0; j<Ydim; j++)
+            for(int k=0; k<Xdim/2 + 1; k++,ii++)
                 if (is_in_range[ii])
                 {
                     if (measured[iii])
@@ -644,7 +651,7 @@ void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * da
     {
         // A. User-provided reference(s)
 
-        // Read Xmipp volumes and calculate their FTTws        
+        // Read Xmipp volumes and calculate their FTTws
         std::complex<double> *DATAREFS, *REF;
         DATAREFS  = (std::complex<double> *) dataRefs;
         VolumeXmipp vol;
@@ -666,7 +673,7 @@ void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * da
             REF = (std::complex<double> *) forwfftw.fOut;
             for (int i = 0, ii=0; i< fftw_hsize; i++)
             {
-                if (is_in_range[i]) 
+                if (is_in_range[i])
                 {
                     DATAREFS[refno*hsize + ii] = REF[i];
                     ii++;
@@ -720,7 +727,7 @@ void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * da
             IMG =  (std::complex<double> *) forwfftw.fOut;
             // Get only points within resolution range
             for (int i = 0, ii=0; i < fftw_hsize; i++)
-                if (is_in_range[i]) 
+                if (is_in_range[i])
                 {
                     DATAPRIOR[ii] = IMG[i];
                     ii++;
@@ -758,7 +765,7 @@ void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * da
             IMG =  (std::complex<double> *) backfftw.fIn;
             // Get only points within resolution range
             for (int i = 0, ii=0; i < fftw_hsize; i++)
-                if (is_in_range[i]) 
+                if (is_in_range[i])
                 {
                     DATAIMG[ii] = IMG[i];
                     ii++;
@@ -813,9 +820,9 @@ void Prog_mlf_tomo_prm::generateInitialReferences(double * dataRefs, double * da
     for (int refno=0; refno < nr_ref; refno++)
     {
         test().initZeros();
-        for(int i=0,ii=0,iii=0;i<Zdim;i++)
-            for(int j=0;j<Ydim;j++)
-                for(int k=0;k<Xdim/2 + 1; k++,ii++)
+        for(int i=0,ii=0,iii=0; i<Zdim; i++)
+            for(int j=0; j<Ydim; j++)
+                for(int k=0; k<Xdim/2 + 1; k++,ii++)
                     if (is_in_range[ii])
                     {
                         test(i,j,k)=dataWsumWedsPerRef[refno*hsize + iii];
@@ -933,8 +940,8 @@ void Prog_mlf_tomo_prm::calculateAllFFTWs()
     {
         // Write out normal average map of all subtomograms
         ave() /= (double)imgno;
-        fno = fn_root + "_average.vol"; 
-        std::cerr<<" Writing normal average of all subtomograms as "<<fno<<std::endl; 
+        fno = fn_root + "_average.vol";
+        std::cerr<<" Writing normal average of all subtomograms as "<<fno<<std::endl;
         ave.write(fno);
     }
 
@@ -993,10 +1000,10 @@ void Prog_mlf_tomo_prm::estimateInitialNoiseSpectra(double * dataSigma)
                 sum2[igg*hsize+ii] += abs(IMG[i]) * abs(IMG[i]);
                 ii++;
             }
-        } 
+        }
     }
 
-    // Subtract squared amplitudes of the average subtomogram 
+    // Subtract squared amplitudes of the average subtomogram
     // to prevent overestimated noise at low resolutions
     for (int ig = 0; ig < nr_group; ig++)
     {
@@ -1023,7 +1030,7 @@ void Prog_mlf_tomo_prm::estimateInitialNoiseSpectra(double * dataSigma)
 
         // Now store in dataSigma structure
         for (int i = 0, ii=0; i< fftw_hsize; i++)
-            if (is_in_range[i]) 
+            if (is_in_range[i])
             {
                 dataSigma[ig * hsize + ii] = 2. * ave[i]; // Store already TWO SIGMA^2
                 ii++;
@@ -1039,21 +1046,21 @@ void Prog_mlf_tomo_prm::estimateInitialNoiseSpectra(double * dataSigma)
 // Here perform the main probability-weighted integration over all
 // rotations, translations and classes of the given image
 void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
-                                               double * dataImg,
-                                               bool   * dataMeasured,
-                                               double * dataRefs,
-                                               double * dataSigma,
-                                               double * dataWsumRefs,
-                                               double * dataWsumWedsPerRef,
-                                               double * dataWsumWedsPerGroup,
-                                               double * dataWsumDist,
-                                               double * dataSumWRefs,
-                                               double * dataWsumScale,
-                                               double * dataWsumScale2,
-                                               int    & opt_refno, 
-                                               double & LL, 
-                                               double & Pmax,
-                                               double & opt_scale )
+        double * dataImg,
+        bool   * dataMeasured,
+        double * dataRefs,
+        double * dataSigma,
+        double * dataWsumRefs,
+        double * dataWsumWedsPerRef,
+        double * dataWsumWedsPerGroup,
+        double * dataWsumDist,
+        double * dataSumWRefs,
+        double * dataWsumScale,
+        double * dataWsumScale2,
+        int    & opt_refno,
+        double & LL,
+        double & Pmax,
+        double & opt_scale )
 
 {
 
@@ -1067,7 +1074,7 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
     DATAREFS     = (std::complex<double> *) dataRefs;
     DATAWSUMREFS = (std::complex<double> *) dataWsumRefs;
 
-    if (!do_scale) 
+    if (!do_scale)
     {
         opt_scale = 1.;
         ref_scale = 1.;
@@ -1085,8 +1092,8 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
             {
                 aux = abs(DATAIMG[i] - ref_scale * DATAREFS[iiref]);
                 diff2 += (aux * aux)/dataSigma[iig];
-//#define DEBUG_ALOT_EXPSINGLE 
-#ifdef DEBUG_ALOT_EXPSINGLE                
+//#define DEBUG_ALOT_EXPSINGLE
+#ifdef DEBUG_ALOT_EXPSINGLE
                 std::cerr<<i<<" abs2= "<<aux<<" "<<DATAIMG[i]<<" "<<DATAREFS[iiref]<<" sigma2= "<<dataSigma[iig]<<" diff2= "<<diff2<<" mindiff2= "<<mindiff2<<std::endl;
 #endif
             }
@@ -1136,17 +1143,17 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
 
     // Store Pmax/sumP
     Pmax = maxweight / sumweight;
-//#define DEBUG_EXPSINGLE 
-#ifdef DEBUG_EXPSINGLE                
+//#define DEBUG_EXPSINGLE
+#ifdef DEBUG_EXPSINGLE
     std::cerr<<"Pmax= "<<Pmax<<" mindiff2= "<<mindiff2<<std::endl;
 #endif
 
-    
+
     // Then, store the sum of all weights
     for (int refno = 0; refno < nr_ref; refno++)
     {
         weight = weights[refno] / sumweight;
-#ifdef DEBUG_EXPSINGLE                
+#ifdef DEBUG_EXPSINGLE
         std::cerr<<" refno= "<<refno<<" w= "<< weight<<" ";
 #endif
         if (weight > SIGNIFICANT_WEIGHT_LOW)
@@ -1169,7 +1176,7 @@ void Prog_mlf_tomo_prm::expectationSingleImage(int igroup,
             }
         }
     }
-    
+
     // Precalculate normalization constant for LL update
     double logsigma2 = 0.;
     for (int i = 0; i < hsize; i++)
@@ -1272,7 +1279,7 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
     std::cerr<<"inverse XMIPP matrix= "<<A_img.inv();
     exit(0);
 
-#endif 
+#endif
 
     // Loop over all images
     imgno = 0;
@@ -1283,7 +1290,7 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
     {
         // Get the group
         SL = SFi.current();
-        igroup = SL.get_number() - 1;        
+        igroup = SL.get_number() - 1;
         fn = SFi.NextImg();
         if (fn=="") break;
 
@@ -1296,54 +1303,54 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
         backfftw.read(fn + ".fftw");
         // Get only points within resolution range
         for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
-            if (is_in_range[i/2]) 
+            if (is_in_range[i/2])
             {
                 dataImg[ii] = backfftw.fIn[i];
                 ii++;
             }
 
         // Get optimal internal scale factor for this subtomogram
-	if (do_scale)
+        if (do_scale)
             opt_scale = imgs_scale[imgno];
 
         // get missing wedge
         getMissingWedge(dataMeasured,A_img,th0,thF);
 
-//#define EXP_DEBUG_WEDGE 
+//#define EXP_DEBUG_WEDGE
 #ifdef EXP_DEBUG_WEDGE
-    VolumeXmipp img(Xdim,Ydim,Zdim), wed(Xdim,Ydim,Zdim);
-    img().initZeros();
-    wed().initZeros();
+        VolumeXmipp img(Xdim,Ydim,Zdim), wed(Xdim,Ydim,Zdim);
+        img().initZeros();
+        wed().initZeros();
 
-    std::complex<double> * iaux;
-    iaux = (std::complex<double> *) dataImg;
-    for(int i=0,ii=0,iii=0;i<Zdim;i++)
-        for(int j=0;j<Ydim;j++)
-            for(int k=0;k<Xdim/2 + 1; k++,ii++)
-                if (is_in_range[ii])
-                {
-                    img(i,j,k)=abs(iaux[iii]);
-                    if (dataMeasured[iii])
+        std::complex<double> * iaux;
+        iaux = (std::complex<double> *) dataImg;
+        for(int i=0,ii=0,iii=0; i<Zdim; i++)
+            for(int j=0; j<Ydim; j++)
+                for(int k=0; k<Xdim/2 + 1; k++,ii++)
+                    if (is_in_range[ii])
                     {
-                        wed(i,j,k)=1.;
+                        img(i,j,k)=abs(iaux[iii]);
+                        if (dataMeasured[iii])
+                        {
+                            wed(i,j,k)=1.;
+                        }
+                        iii++;
                     }
-                    iii++;
-                }
-    CenterFFT(wed(),true);
-    CenterFFT(img(),true);
-    wed.write("wed.ftt");
-    img.write("img.ftt");
-    std::cerr<<" Euler angles= "<<img_ang1[imgno]<<" "<<img_ang2[imgno]<<" "<<img_ang3[imgno]<<std::endl;
-    std::cerr<<" Wedge angles= "<<th0<<" "<<thF<<std::endl;
-    std::cerr<<"EXP_DEBUG_WEDGE: wrote wed.fft and img.fft for subtomogram "<<fn<<std::endl;
-    std::cerr<<"Press any key to continue.. "<<std::endl;
-    char a;
-    std::cin >>a;
+        CenterFFT(wed(),true);
+        CenterFFT(img(),true);
+        wed.write("wed.ftt");
+        img.write("img.ftt");
+        std::cerr<<" Euler angles= "<<img_ang1[imgno]<<" "<<img_ang2[imgno]<<" "<<img_ang3[imgno]<<std::endl;
+        std::cerr<<" Wedge angles= "<<th0<<" "<<thF<<std::endl;
+        std::cerr<<"EXP_DEBUG_WEDGE: wrote wed.fft and img.fft for subtomogram "<<fn<<std::endl;
+        std::cerr<<"Press any key to continue.. "<<std::endl;
+        char a;
+        std::cin >>a;
 #endif
 
-        // Perform expectation step 
+        // Perform expectation step
         expectationSingleImage(igroup,
-                               dataImg, 
+                               dataImg,
                                dataMeasured,
                                dataRefs,
                                dataSigma,
@@ -1354,14 +1361,14 @@ void Prog_mlf_tomo_prm::expectation(double * dataRefs,
                                dataSumWRefs,
                                dataWsumScale,
                                dataWsumScale2,
-                               opt_refno, 
-                               LL, 
+                               opt_refno,
+                               LL,
                                Pmax,
                                opt_scale);
 
-	// Store optimal scale in memory
-	if (do_scale)
-	    imgs_scale[imgno] = opt_scale;
+        // Store optimal scale in memory
+        if (do_scale)
+            imgs_scale[imgno] = opt_scale;
 
         // Output to docfile                            XMIPP or  TOM
         dataline(0)=img_ang1[imgno];                 // rot   or  phi
@@ -1412,7 +1419,7 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
     DATAREFS     = (std::complex<double> *) dataRefs;
     DATAWSUMREFS = (std::complex<double> *) dataWsumRefs;
     sumw_allrefs = 0;
-    for (int refno = 0;refno < nr_ref; refno++)
+    for (int refno = 0; refno < nr_ref; refno++)
     {
         sumw_allrefs += dataSumWRefs[refno];
         if (do_impute)
@@ -1426,7 +1433,7 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
                     //if (i==0) std::cerr<<abs(DATAREFS[ii])<<" "<<dataWsumWedsPerRef[ii]<<" "<<dataSumWRefs[refno]<<" "<<abs(DATAWSUMREFS[ii])/ dataSumWRefs[refno]<<" ";
                     DATAREFS[ii] *= 1. - (dataWsumWedsPerRef[ii] / dataSumWRefs[refno]);
                     // And sum the weighted sum for observed pixels
-                    
+
                     //DATAREFS[ii] += DATAWSUMREFS[ii] / dataSumWRefs[refno];
                     DATAREFS[ii] += DATAWSUMREFS[ii] / dataWsumScale2[refno];
                     //if (i==0) std::cerr<<" new= "<<abs(DATAREFS[ii]) <<std::endl;
@@ -1444,8 +1451,8 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
                 */
             }
         }
-        else // No imputation: divide by number of times a pixel has been observed 
-        { 
+        else // No imputation: divide by number of times a pixel has been observed
+        {
             for (int i = 0; i < hsize; i++)
             {
                 int ii = refno * hsize + i;
@@ -1462,7 +1469,7 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
     }
 
     // Adjust average scale
-    if (do_scale) 
+    if (do_scale)
     {
         for (int refno = 0; refno < nr_ref; refno++)
         {
@@ -1494,7 +1501,7 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
     Matrix1D<int> radial_count;
     double *ave;
     ave = new double [fftw_hsize];
-    
+
     // TODO replace sumw_allrefs by number of images per group!!!
     for (int ig = 0; ig < nr_group; ig++)
     {
@@ -1534,12 +1541,12 @@ void Prog_mlf_tomo_prm::maximization(double * dataRefs,
         }
 
         // If I am not imputing, then just taking a radial average here will go WRONG!!
-        if (do_ravg_sigma) 
+        if (do_ravg_sigma)
             forwfftw.fftwRadialAverage(ave, sigma_noise[ig], radial_count, true, true);
 
         // Now store again in dataSigma structure
         for (int i = 0, ii=0; i< fftw_hsize; i++)
-            if (is_in_range[i]) 
+            if (is_in_range[i])
             {
                 dataSigma[ig * hsize + ii] = 2. * ave[i]; // Store again TWO SIGMA^2
                 ii++;
@@ -1587,9 +1594,9 @@ void Prog_mlf_tomo_prm::regularise(double * dataRefs,
         DATAREFS = (std::complex<double> *)dataRefs;
         // Initialize
         for (int i=0; i< nr_ref * size; i++)
-            regRef[i] = 0.; 
+            regRef[i] = 0.;
         for (int i=0; i< nr_ref * hsize; i++)
-            regSigma[i] = 0.; 
+            regSigma[i] = 0.;
 
         // First, calculate averages of updated references and the squared distance between them
         for (int refno = 0; refno < nr_ref; refno++)
@@ -1598,7 +1605,7 @@ void Prog_mlf_tomo_prm::regularise(double * dataRefs,
             {
                 for (int i=0; i< size; i++)
                     regRef[refno*size + i] += dMij(som_reg_matrix,refno,refno2) * dataRefs[refno2*size + i];
-                        
+
                 for (int i=0; i< hsize; i++)
                 {
                     double aux = abs(DATAREFS[refno*hsize + i] - DATAREFS[refno2*hsize + i]);
@@ -1644,9 +1651,9 @@ void Prog_mlf_tomo_prm::regularise(double * dataRefs,
 
 }
 
-    // Convergence check
+// Convergence check
 bool Prog_mlf_tomo_prm::checkConvergence(double * dataRefs,
-                                         double * oldDataRefs)
+        double * oldDataRefs)
 {
 
     double * dataOut;
@@ -1671,14 +1678,14 @@ bool Prog_mlf_tomo_prm::checkConvergence(double * dataRefs,
         // Set points within resolution range
         for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
         {
-            if (is_in_range[i/2]) 
+            if (is_in_range[i/2])
             {
                 dataOut[i] = oldDataRefs[refno*size + ii] - dataRefs[refno*size + ii];
                 ii++;
             }
             else
             {
-               dataOut[i] = 0.;
+                dataOut[i] = 0.;
             }
         }
         // Somehow only setpoints within resolution limits
@@ -1710,17 +1717,17 @@ bool Prog_mlf_tomo_prm::checkConvergence(double * dataRefs,
 
     return converged;
 
-}        
+}
 
 
 void Prog_mlf_tomo_prm::writeOutputFiles(int step,
-                                         int iter, 
-                                         double  * dataRefs,
-                                         double  * dataWsumWedsPerRef,
-                                         DocFile & DFo,
-                                         double  & sumw_allrefs, 
-                                         double  & LL, 
-                                         double  & avePmax)
+        int iter,
+        double  * dataRefs,
+        double  * dataWsumWedsPerRef,
+        DocFile & DFo,
+        double  & sumw_allrefs,
+        double  & LL,
+        double  & avePmax)
 {
 
 #ifdef DEBUG
@@ -1766,14 +1773,14 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int step,
         // Set points within resolution range
         for (int i = 0, ii=0; i< 2*fftw_hsize; i++)
         {
-            if (is_in_range[i/2]) 
+            if (is_in_range[i/2])
             {
                 dataOut[i] = dataRefs[refno*size + ii];
                 ii++;
             }
             else
             {
-               dataOut[i] = 0.;
+                dataOut[i] = 0.;
             }
         }
         // Somehow only setpoints within resolution limits
@@ -1791,9 +1798,9 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int step,
         {
             // Also write out sum of wedges
             vol().initZeros();
-            for(int i=0,ii=0,iii=0;i<Zdim;i++)
-                for(int j=0;j<Ydim;j++)
-                    for(int k=0;k<Xdim/2 + 1; k++,ii++)
+            for(int i=0,ii=0,iii=0; i<Zdim; i++)
+                for(int j=0; j<Ydim; j++)
+                    for(int k=0; k<Xdim/2 + 1; k++,ii++)
                         if (is_in_range[ii])
                         {
                             vol(i,j,k)=dataWsumWedsPerRef[refno*hsize + iii];
@@ -1806,7 +1813,7 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int step,
             vol.write(fn_tmp);
         }
     }
-    
+
     // Write out sel & log-file
     fn_tmp = fn_base + ".sel";
     SFo.write(fn_tmp);
@@ -1825,8 +1832,8 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int step,
     {
         for (int ig = 0; ig < nr_group; ig++)
         {
-	    fn_tmp = fn_base;
-            if (nr_group > 1) 
+            fn_tmp = fn_base;
+            if (nr_group > 1)
             {
                 fn_tmp.compose(fn_tmp+"_gr", ig + 1, "");
             }
@@ -1838,7 +1845,7 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int step,
                 fh << (double)irr/Xdim << " " << dVi(sigma_noise[ig], irr) << "\n";
             }
             fh.close();
-	}
+        }
     }
 
     if (iter != 0)
@@ -1846,9 +1853,9 @@ void Prog_mlf_tomo_prm::writeOutputFiles(int step,
         // Write out docfile with optimal transformation & references
         fn_tmp=fn_base + ".doc";
         DFo.write(fn_tmp);
-        
+
         // Write out class selfiles
-        for (int refno = 0;refno < nr_ref; refno++)
+        for (int refno = 0; refno < nr_ref; refno++)
         {
             DFo.go_beginning();
             SFo.clear();

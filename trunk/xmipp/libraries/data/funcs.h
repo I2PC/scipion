@@ -130,7 +130,7 @@ public:
  *      J. Opt. Soc. Am. _21_, 449 (2004)
  *
  *  The I0 version can be tabulated and interpolated upon
- *  demand, but the max error needs to be checked.  The 
+ *  demand, but the max error needs to be checked.  The
  *  "vtable" parameter corresponds to the maximum value of x
  *  for which the I0 window is non-zero.  Setting "vtable"
  *  different from "v" corresponds to a change in units of x.
@@ -139,7 +139,7 @@ public:
  *  intervals.
  *
  *  The get_kbsinh_win and get_kbi0_win functions return
- *  single-argument function objects, which is what a 
+ *  single-argument function objects, which is what a
  *  generic routine is likely to want.
  *
  * @code
@@ -148,7 +148,7 @@ public:
  *  double tablex1 = kb.i0win_tab(delx-inxold+3);
  * @endcode
  */
-class KaiserBessel 
+class KaiserBessel
 {
 protected:
     double alpha, v, r; /** Kaiser-Bessel parameters */
@@ -160,7 +160,7 @@ protected:
     double dtable; /** table spastd::cing */
     double alphar; /** alpha*r */
     double fac; /** 2*pi*alpha*r*v */
-    double vadjust; 
+    double vadjust;
     double facadj; /** 2*pi*alpha*r*vadjust */
     virtual void build_I0table(); /** Tabulate I0 window for speed */
     double fltb;
@@ -171,16 +171,17 @@ public:
 
     /** Constructor with parameters */
     KaiserBessel(double alpha_, int K, double r_,
-		 double v_, int N_, double vtable_=0., 
-		 int ntable_ = 5999);
+                 double v_, int N_, double vtable_=0.,
+                 int ntable_ = 5999);
 
     /** Destructor */
     virtual ~KaiserBessel() {};
 
     /** Compute the maximum error in the table */
     double I0table_maxerror();
-    std::vector<double> dump_table() {
-	return i0table;
+    std::vector<double> dump_table()
+    {
+        return i0table;
     }
 
     /** Kaiser-Bessel Sinh window function */
@@ -190,14 +191,19 @@ public:
     virtual double i0win(double x) const;
 
     /** Kaiser-Bessel I0 window function (uses table lookup) */
-    inline double i0win_tab(double x) const {
-	double xt;
-	if(x<0.) xt = -x*fltb+0.5; else xt = x*fltb+0.5;
-	return i0table[ (int) xt];
+    inline double i0win_tab(double x) const
+    {
+        double xt;
+        if(x<0.) xt = -x*fltb+0.5;
+        else xt = x*fltb+0.5;
+        return i0table[ (int) xt];
     }
 
     /** Return the size of the I0 window */
-    int get_window_size() const { return K; }
+    int get_window_size() const
+    {
+        return K;
+    }
 };
 
 /** Solve second degree equation
@@ -239,12 +245,12 @@ double tstudent1D(double x, double df, double sigma, double mu = 0);
  * This function returns the value of the CDF of a univariate gaussian function at the
  * point x.
  */
-double cdf_gauss(double x); 
+double cdf_gauss(double x);
 
 /** Cumulative distribution function for a t-distribution
  * @ingroup NumericalFunctions
  *
- * This function returns the value of the CDF of a univariate t-distribution 
+ * This function returns the value of the CDF of a univariate t-distribution
  * with k degrees of freedom  at the point t.
  *  Adapted by Sjors from: http://www.alglib.net/specialfunctions/distributions/student.php
  */
@@ -253,8 +259,8 @@ double cdf_tstudent(int k, double t);
 /** Cumulative distribution function for a Snedecor's F-distribution.
  * @ingroup NumericalFunctions
  *
- * This function returns the value of the CDF of a univariate Snedecor's 
- * F-distribution 
+ * This function returns the value of the CDF of a univariate Snedecor's
+ * F-distribution
  * with d1, d2 degrees of freedom  at the point x.
  */
 double cdf_FSnedecor(int d1, int d2, double x);
@@ -262,8 +268,8 @@ double cdf_FSnedecor(int d1, int d2, double x);
 /** Inverse Cumulative distribution function for a Snedecor's F-distribution.
  * @ingroup NumericalFunctions
  *
- * This function returns the value of the ICDF of a univariate Snedecor's 
- * F-distribution 
+ * This function returns the value of the ICDF of a univariate Snedecor's
+ * F-distribution
  * with d1, d2 degrees of freedom with probability p, i.e., it returns
  * x such that CDF(d1,d2,x)=p
  */
@@ -912,7 +918,7 @@ public:
      * @endcode
      */
     FileName substitute_extension(const std::string& ext1,
-        const std::string& ext2) const;
+                                  const std::string& ext2) const;
 
     /** Without a substring
      * @ingroup FilenameManipulators
@@ -949,11 +955,12 @@ public:
  *
  * This function is not ported to Python.
  */
-class FileNameComparison {
+class FileNameComparison
+{
 public:
     bool operator ()(const FileName &fn1, const FileName &fn2)
     {
-    	return fn1<fn2;
+        return fn1<fn2;
     }
 };
 
@@ -968,7 +975,7 @@ public:
 int exists(const FileName& fn);
 
 /** This function raised an ERROR if the filename if not empty and if
- * the corresponding file does not exist. 
+ * the corresponding file does not exist.
  * This may be useful to have a better (killing) control on (mpi-regulated) jobs
  * @ingroup Filenames
  *

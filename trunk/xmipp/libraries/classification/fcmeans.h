@@ -58,9 +58,9 @@ public:
      * Parameter: _epochs Number of epochs or iterations
     */
     xmippFCMeans(double _m, double _epsilon, unsigned _epochs)
-            : xmippBaseAlgo< xmippFCB >("xmippFCMeans"),
-            m(_m), epsilon(_epsilon),
-            epochs(_epochs)
+        : xmippBaseAlgo< xmippFCB >("xmippFCMeans"),
+          m(_m), epsilon(_epsilon),
+          epochs(_epochs)
     {};
 
 

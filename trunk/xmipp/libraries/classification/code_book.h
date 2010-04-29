@@ -69,7 +69,7 @@ public:
      * Parameter: _calib   Calibrated or not, that is, a CB with class labels or not
      */
     xmippCB(const bool& _calib = false) : xmippCDSet<xmippVector, xmippLabel>(),
-            xmippCTSet<xmippVector, xmippLabel>(_calib)
+        xmippCTSet<xmippVector, xmippLabel>(_calib)
     {};
 
 

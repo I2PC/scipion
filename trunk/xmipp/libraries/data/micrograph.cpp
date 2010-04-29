@@ -284,17 +284,18 @@ void Micrograph::compute_8_bit_scaling()
             */
         }
     }
-    #ifdef DEBUG
-        std::cout << "minval=" << minval << " maxval=" << maxval << std::endl;
-    #endif
-    
+#ifdef DEBUG
+    std::cout << "minval=" << minval << " maxval=" << maxval << std::endl;
+#endif
+
     // Compute output range
     float minF, maxF;
     if (maxval - minval < 32)
     {
         minF = 0;
         maxF = 255;
-    } else if (minval < 0)
+    }
+    else if (minval < 0)
     {
         minF = 0;
         maxF = XMIPP_MIN(255, maxval - minval);
@@ -309,17 +310,17 @@ void Micrograph::compute_8_bit_scaling()
         minF = minval;
         maxF = maxval;
     }
-    #ifdef DEBUG
-        std::cout << "minF=" << minF << " maxF=" << maxF << std::endl;
-    #endif
+#ifdef DEBUG
+    std::cout << "minF=" << minF << " maxF=" << maxF << std::endl;
+#endif
 
     // Compute scaling
     __a = (maxF - minF) / (maxval - minval);
     __b = minF - __a * minval;
     __scaling_valid = true;
-    #ifdef DEBUG
-        std::cerr <<  "__a  " << __a  << "__b" << __b << std::endl;
-    #endif
+#ifdef DEBUG
+    std::cerr <<  "__a  " << __a  << "__b" << __b << std::endl;
+#endif
 }
 #undef DEBUG
 
@@ -351,7 +352,7 @@ void Micrograph::write_as_8_bits(const FileName &fn8bits)
     Mp.open_micrograph(fn8bits, false);
     for (int y=0; y<Ydim; y++)
         for (int x=0; x<Xdim; x++)
-           Mp.set_val(x,y,val8(x,y));
+            Mp.set_val(x,y,val8(x,y));
     Mp.close_micrograph();
 }
 
@@ -427,17 +428,17 @@ void Micrograph::transform_coordinates(const Matrix2D<double> &M)
 {
     Matrix1D<double> m(3);
     SPEED_UP_temps;
-    
+
     int imax = coords.size();
     for (int i = 0; i < imax; i++)
     {
-	if (coords[i].valid)
-	{
-	    VECTOR_R3(m,coords[i].X, coords[i].Y,1);
-	    M3x3_BY_V3x1(m, M, m);
-	    coords[i].X=(int)XX(m);
-	    coords[i].Y=(int)YY(m);
-	}
+        if (coords[i].valid)
+        {
+            VECTOR_R3(m,coords[i].X, coords[i].Y,1);
+            M3x3_BY_V3x1(m, M, m);
+            coords[i].X=(int)XX(m);
+            coords[i].Y=(int)YY(m);
+        }
     }
 }
 
@@ -447,11 +448,11 @@ void Micrograph::scale_coordinates(const double &c)
     int imax = coords.size();
     for (int i = 0; i < imax; i++)
     {
-	if (coords[i].valid)
-	{
-	    coords[i].X = (int)coords[i].X*c;
-	    coords[i].Y = (int)coords[i].Y*c;
-	}
+        if (coords[i].valid)
+        {
+            coords[i].X = (int)coords[i].X*c;
+            coords[i].Y = (int)coords[i].Y*c;
+        }
     }
 
 }
@@ -477,32 +478,31 @@ int Micrograph::scissor(const Particle_coords &P, ImageT<double> &result,
         result().initZeros();
         retval = 0;
     }
-    else
-        if (!only_check)
-        {
-            for (int i = i0; i <= iF; i++)
-                for (int j = j0; j <= jF; j++)
+    else if (!only_check)
+    {
+        for (int i = i0; i <= iF; i++)
+            for (int j = j0; j <= jF; j++)
+            {
+                if (compute_transmitance)
                 {
-                    if (compute_transmitance)
-                    {
-                        if ((*this)(j, i) < 1)
-                            temp = (*this)(j, i);
-                        else
-                            temp = log10((double)(*this)(j, i));
-                        if (compute_inverse)
-                            result(i - i0, j - j0) = (Dmax - temp) / range;
-                        else
-                            result(i - i0, j - j0) = (temp - Dmin) / range;
-                    }
+                    if ((*this)(j, i) < 1)
+                        temp = (*this)(j, i);
                     else
-                    {
-                        if (compute_inverse)
-                            result(i - i0, j - j0) = (Dmax - (*this)(j, i)) / range;
-                        else
-                            result(i - i0, j - j0) = (*this)(j, i);
-                    }
+                        temp = log10((double)(*this)(j, i));
+                    if (compute_inverse)
+                        result(i - i0, j - j0) = (Dmax - temp) / range;
+                    else
+                        result(i - i0, j - j0) = (temp - Dmin) / range;
                 }
-        }
+                else
+                {
+                    if (compute_inverse)
+                        result(i - i0, j - j0) = (Dmax - (*this)(j, i)) / range;
+                    else
+                        result(i - i0, j - j0) = (*this)(j, i);
+                }
+            }
+    }
     return retval;
 }
 
@@ -673,7 +673,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         Matrix2D<double> Mmem(Ydim,Xdim);
         Matrix2D<std::complex<double> > MmemFourier;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(Mmem)
-            Mmem(i,j)=(double)M(j,i);
+        Mmem(i,j)=(double)M(j,i);
 
         // Perform the Fourier transform
         XmippFftw transformerM;
@@ -715,7 +715,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
             pixval=Mpmem(i,j);
             if (Mp.depth() != 32)
                 Mp.set_val(j, i, FLOOR(a*(pixval*scale + b)));
-             else
+            else
                 Mp.set_val(j, i, pixval);
         }
     }
@@ -732,7 +732,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
             else if (M.depth() == 32)
                 scale = 1;
             if(do_fourier)
-            init_progress_bar(yF / Ystep);
+                init_progress_bar(yF / Ystep);
             for (ii = 0, y = y0; y < yF; y += Ystep, ii++)
             {
                 for (jj = 0, x = x0; x < xF; x += Xstep, jj++)

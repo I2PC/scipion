@@ -104,12 +104,12 @@ int main(int argc, char *argv[])
 void Usage()
 {
     std::cerr << "Usage: select_images\n"
-    << "   -doc <docfile>        : Input document file\n"
-    << "  [-sel <selfile>]       : Corresponding selfile (only for non-NewXmipp docfiles)\n"
-    << "  [-o  <docroot.sel>]    : Output selfile. By default, the docfile root + .sel\n"
-    << "  [-col <col=1>]         : Column of the docfile (first column is 1) \n"
-    << "  [-limit0 <limit0>]     : Values below this are discarded\n"
-    << "  [-limitF <limitF>]     : Values above this are discarded\n"
-    << "  [-clean]               : Remove discarded images from the selfile \n"
-    ;
+              << "   -doc <docfile>        : Input document file\n"
+              << "  [-sel <selfile>]       : Corresponding selfile (only for non-NewXmipp docfiles)\n"
+              << "  [-o  <docroot.sel>]    : Output selfile. By default, the docfile root + .sel\n"
+              << "  [-col <col=1>]         : Column of the docfile (first column is 1) \n"
+              << "  [-limit0 <limit0>]     : Values below this are discarded\n"
+              << "  [-limitF <limitF>]     : Values above this are discarded\n"
+              << "  [-clean]               : Remove discarded images from the selfile \n"
+              ;
 }

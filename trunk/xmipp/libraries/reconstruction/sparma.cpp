@@ -78,10 +78,10 @@ void ARMA_parameters::write(const FileName &fn_prm, bool rewrite)
     if (fn_filter != "")
         fh_param << "ARMAfile=" << fn_filter << std::endl;
     fh_param << "N_AR="     << N_AR      << std::endl
-    << "M_AR="     << M_AR      << std::endl
-    << "N_MA="     << N_MA      << std::endl
-    << "M_MA="     << M_MA      << std::endl
-    ;
+             << "M_AR="     << M_AR      << std::endl
+             << "N_MA="     << N_MA      << std::endl
+             << "M_MA="     << M_MA      << std::endl
+             ;
     fh_param << std::endl;
     fh_param.close();
 }
@@ -262,7 +262,7 @@ void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
     long NumberOfMAParameters = MAParameters.rowNumber();
     long NumberOfARParameters = ARParameters.rowNumber();
     Matrix2D<int> iMAParameters(NumberOfMAParameters, 2),
-    iARParameters(NumberOfARParameters, 2);
+             iARParameters(NumberOfARParameters, 2);
     for (long n = 0 ; n < NumberOfMAParameters; n++)
     {
         DIRECT_MAT_ELEM(iMAParameters, n, 0) = (int)DIRECT_MAT_ELEM(MAParameters, n, 0);
@@ -273,8 +273,8 @@ void ARMAFilter(Matrix2D<double> &Img, Matrix2D< double > &Filter,
         DIRECT_MAT_ELEM(iARParameters, n, 0) = (int)DIRECT_MAT_ELEM(ARParameters, n, 0);
         DIRECT_MAT_ELEM(iARParameters, n, 1) = (int)DIRECT_MAT_ELEM(ARParameters, n, 1);
     }
-    for (int i = 0;i < sizeY;i++)
-        for (int j = 0;j < (sizeX / 2);j++)
+    for (int i = 0; i < sizeY; i++)
+        for (int j = 0; j < (sizeX / 2); j++)
         {
             // Compute dDigitalFreq
             XX(dDigitalFreq) = j / (double)sizeX;

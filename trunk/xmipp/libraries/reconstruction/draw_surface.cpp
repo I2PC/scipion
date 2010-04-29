@@ -46,11 +46,11 @@ void Prog_Draw_Surface_Parameters::read(int argc, char **argv)
 void Prog_Draw_Surface_Parameters::usage() const
 {
     std::cerr << "Usage: draw_surface [parameters]\n"
-    << "   -i <volume>                   : volume where drawing surface\n"
-    << "   -s <surface>                  : image with a surface coded\n"
-    << "  [-o <output volume>]           : if not given the same as input\n"
-    << "  [-ztop <zmin> -zbottom <zmax>] : force surface to be in this range\n"
-    << "  [-color <density=2>]           : density value for surface\n";
+              << "   -i <volume>                   : volume where drawing surface\n"
+              << "   -s <surface>                  : image with a surface coded\n"
+              << "  [-o <output volume>]           : if not given the same as input\n"
+              << "  [-ztop <zmin> -zbottom <zmax>] : force surface to be in this range\n"
+              << "  [-color <density=2>]           : density value for surface\n";
 }
 
 /* Produce side information ------------------------------------------------ */

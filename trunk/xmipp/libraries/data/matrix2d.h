@@ -38,11 +38,11 @@
 #ifndef SWIG
 template<typename T>
 void multiplyElements(const Matrix2D<T>& op1, const Matrix2D<T>& op2,
-    Matrix2D<T>& result);
+                      Matrix2D<T>& result);
 
 template<typename T>
 void multiplyMatrix(const Matrix2D<T>& op1, const Matrix2D<T>& op2,
-	Matrix2D<T>& result);
+                    Matrix2D<T>& result);
 
 template<typename T>
 void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result);
@@ -76,20 +76,20 @@ void svbksb(Matrix2D< double >& u,
 
 template<typename T>
 void applyGeometry(Matrix2D<T>& m2,
-                const Matrix2D< double > &A,
-                const Matrix2D<T>& m1,
-                bool inv,
-                bool wrap,
-                T outside = (T) 0);
+                   const Matrix2D< double > &A,
+                   const Matrix2D<T>& m1,
+                   bool inv,
+                   bool wrap,
+                   T outside = (T) 0);
 
 template<typename T>
 void applyGeometryBSpline(Matrix2D<T>& m2,
-                        const Matrix2D< double > &A,
-                        const Matrix2D<T>& m1,
-                        int Splinedegree,
-                        bool inv,
-                        bool wrap,
-                        T outside = (T) 0);
+                          const Matrix2D< double > &A,
+                          const Matrix2D<T>& m1,
+                          int Splinedegree,
+                          bool inv,
+                          bool wrap,
+                          T outside = (T) 0);
 
 Matrix2D< double > rotation2DMatrix(double ang);
 
@@ -399,7 +399,7 @@ int bestPrecision(float F, int _width);
         dMij(Ainv, 2, 1) = -(dMij(A, 2, 1)*dMij(A, 0, 0)-dMij(A, 2, 0)*dMij(A, 0, 1)); \
         dMij(Ainv, 2, 2) =   dMij(A, 1, 1)*dMij(A, 0, 0)-dMij(A, 1, 0)*dMij(A, 0, 1); \
         spduptmp0 = 1.0 / (dMij(A, 0, 0)*dMij(Ainv, 0, 0)+dMij(A, 1, 0)*dMij(Ainv, 0, 1)+\
-            dMij(A, 2, 0)*dMij(Ainv, 0, 2)); \
+                           dMij(A, 2, 0)*dMij(Ainv, 0, 2)); \
         M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
 //@}
 
@@ -445,7 +445,7 @@ public:
      */
     Matrix2D(int Ydim, int Xdim): MultidimArray<T>()
     {
-    	resize(Ydim,Xdim);
+        resize(Ydim,Xdim);
     }
 
     /** Copy constructor
@@ -466,10 +466,10 @@ public:
     /** Clear.
      * @ingroup MatricesConstructors
      */
-     void clear()
-     {
+    void clear()
+    {
         MultidimArray<T>::clear();
-     }
+    }
 
     /// @defgroup MatricesInitialization Initialization
     /// @ingroup Matrices
@@ -482,12 +482,12 @@ public:
      * You should not make any operation on this matrix such that the
      * memory locations are changed
      */
-     void alias(const MultidimArray<T> &m)
-     {
-         copyShape(m);
-         this->data=m.data;
-         this->destroyData=false;
-     }
+    void alias(const MultidimArray<T> &m)
+    {
+        copyShape(m);
+        this->data=m.data;
+        this->destroyData=false;
+    }
 
     /** Identity matrix of current size
      * @ingroup MatricesInitialization
@@ -538,7 +538,7 @@ public:
 
         resize(Ydim, Xdim);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-	        DIRECT_MAT_ELEM(*this, i, j) = (T)(i == j);
+        DIRECT_MAT_ELEM(*this, i, j) = (T)(i == j);
     }
 
     /** Zero initialisation with a new dimension
@@ -713,7 +713,7 @@ public:
      */
     void resize(int Ydim, int Xdim)
     {
-    	MultidimArray<T>::resize(1, Ydim, Xdim);
+        MultidimArray<T>::resize(1, Ydim, Xdim);
     }
 
     /** Resize taking the shape from another matrix
@@ -722,7 +722,7 @@ public:
     template <typename T1>
     void resize(const Matrix2D<T1> &M)
     {
-    	MultidimArray<T>::resize(M);
+        MultidimArray<T>::resize(M);
     }
 
     /** Resize taking the shape from another matrix which
@@ -732,7 +732,7 @@ public:
     template <typename T1>
     void resize(const MultidimArray<T1> &M)
     {
-    	MultidimArray<T>::resize(M);
+        MultidimArray<T>::resize(M);
     }
 
     /** Produce an array suitable for working with Numerical Recipes
@@ -748,7 +748,7 @@ public:
         ask_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
 
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(*this)
-            m[i+1][j+1] = DIRECT_MAT_ELEM(*this, i, j);
+        m[i+1][j+1] = DIRECT_MAT_ELEM(*this, i, j);
 
         return m;
     }
@@ -793,7 +793,7 @@ public:
      * Nothing needs to be done in fact.
      */
     void killAdaptationForNumericalRecipes2(T** m) const
-        {}
+    {}
 
     /** Outside
      * @ingroup MatricesSize
@@ -817,7 +817,7 @@ public:
     {
         if (XSIZE(r) < 2)
             REPORT_ERROR(1, "Outside: index vector has not got enough components");
-    
+
         return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this) ||
                 YY(r) < STARTINGY(*this) || YY(r) > FINISHINGY(*this));
     }
@@ -870,7 +870,7 @@ public:
     */
     void printShape(std::ostream& out=std::cout) const
     {
-	out << "Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
+        out << "Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
             << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
             << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
     }
@@ -898,19 +898,19 @@ public:
      */
     T& operator()(int i, int j) const
     {
-        #ifdef DEBUG
-            if (i < STARTINGY(*this) || i > FINISHINGY(*this))
-                REPORT_ERROR(1103, static_cast< std::string >
-	           ("Matrix subscript (i) out of range i=")+integerToString(i));
+#ifdef DEBUG
+        if (i < STARTINGY(*this) || i > FINISHINGY(*this))
+            REPORT_ERROR(1103, static_cast< std::string >
+                         ("Matrix subscript (i) out of range i=")+integerToString(i));
 
-            if (j < STARTINGX(*this) || j > FINISHINGX(*this))
-                REPORT_ERROR(1103, static_cast< std::string >
-	    	    ("Matrix subscript (j) out of range j=")+integerToString(j));
-        #endif
+        if (j < STARTINGX(*this) || j > FINISHINGX(*this))
+            REPORT_ERROR(1103, static_cast< std::string >
+                         ("Matrix subscript (j) out of range j=")+integerToString(j));
+#endif
 
         return MAT_ELEM(*this, i, j);
     }
-    #undef DEBUG
+#undef DEBUG
 
     /** Get the pixel at (i, j)
      * @ingroup MatricesMemory
@@ -1020,17 +1020,17 @@ public:
         double columns = 0.0;
         for (int m = m1; m <= m2; m++)
         {
-	    int equivalent_m=m;
-	    if      (m<0)             equivalent_m=-m-1;
-	    else if (m>=YSIZE(*this)) equivalent_m=2*YSIZE(*this)-m-1;
+            int equivalent_m=m;
+            if      (m<0)             equivalent_m=-m-1;
+            else if (m>=YSIZE(*this)) equivalent_m=2*YSIZE(*this)-m-1;
             int row_m = XSIZE(*this) * equivalent_m;
             double rows = 0.0;
             for (int l = l1; l <= l2; l++)
             {
                 double xminusl = x - (double) l;
-		int equivalent_l=l;
-		if      (l<0)             equivalent_l=-l-1;
-		else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
+                int equivalent_l=l;
+                if      (l<0)             equivalent_l=-l-1;
+                else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
                 double Coeff = (double) DIRECT_MAT_ELEM(*this,equivalent_m,equivalent_l);
                 switch (SplineDegree)
                 {
@@ -1322,16 +1322,16 @@ public:
      */
     Matrix2D<T>& operator=(const Matrix2D<T>& op1)
     {
-	if (&op1 != this)
-	{
+        if (&op1 != this)
+        {
             resize(op1);
             T* ptr=NULL;
-	    unsigned long int n;
+            unsigned long int n;
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-	    	*ptr=DIRECT_MULTIDIM_ELEM(op1,n);
-	}
+            *ptr=DIRECT_MULTIDIM_ELEM(op1,n);
+        }
 
-	return *this;
+        return *this;
     }
 
     /** Unary minus.
@@ -1343,10 +1343,10 @@ public:
     Matrix2D<T> operator-() const
     {
         Matrix2D<T> tmp(*this);
-	T* ptr;
-	unsigned long int n;
+        T* ptr;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(tmp,n,ptr)
-            *ptr = -(*ptr);
+        *ptr = -(*ptr);
         return tmp;
     }
 
@@ -1411,9 +1411,9 @@ public:
      */
     void operator*=(const Matrix2D<T>& op1)
     {
-    	Matrix2D<T> tmp;
+        Matrix2D<T> tmp;
         multiplyElements(*this, op1, tmp);
-	*this=tmp;
+        *this=tmp;
     }
 
     /** v3 /= v2.
@@ -1564,7 +1564,7 @@ public:
         Matrix2D<T> result(XSIZE(*this), YSIZE(*this));
 
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(result)
-            DIRECT_MAT_ELEM(result, i, j) = DIRECT_MAT_ELEM(*this, j, i);
+        DIRECT_MAT_ELEM(result, i, j) = DIRECT_MAT_ELEM(*this, j, i);
 
         STARTINGX(result) = STARTINGX(*this);
         STARTINGY(result) = STARTINGY(*this);
@@ -1639,7 +1639,7 @@ public:
         svdcmp(*this, u, w, v); // *this = U * W * V^t
 
         double tol = MultidimArray<T>::computeMax() *
-            XMIPP_MAX(XSIZE(*this),YSIZE(*this)) * 1e-14;
+                     XMIPP_MAX(XSIZE(*this),YSIZE(*this)) * 1e-14;
         result.initZeros(XSIZE(*this), YSIZE(*this));
 
         // Compute W^-1
@@ -1660,14 +1660,14 @@ public:
 
         // Compute V*W^-1
         FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
-            DIRECT_MAT_ELEM(v, i, j) *= DIRECT_VEC_ELEM(w, j);
+        DIRECT_MAT_ELEM(v, i, j) *= DIRECT_VEC_ELEM(w, j);
 
         // Compute Inverse
         for (int i = 0; i < XSIZE(*this); i++)
             for (int j = 0; j < YSIZE(*this); j++)
                 for (int k = 0; k < XSIZE(*this); k++)
                     DIRECT_MAT_ELEM(result, i, j) += (T)
-                        (DIRECT_MAT_ELEM(v, i, k) * DIRECT_MAT_ELEM(u, j, k));
+                                                     (DIRECT_MAT_ELEM(v, i, k) * DIRECT_MAT_ELEM(u, j, k));
     }
 
     /** Inverse of a matrix
@@ -1692,7 +1692,7 @@ public:
      * @endcode
      */
     friend void solve<>(const Matrix2D<T>& A, const Matrix1D<T>& b,
-        Matrix1D<T>& result);
+                        Matrix1D<T>& result);
 
     /** Solve equation system.
      * @ingroup MatricesUtilities
@@ -1701,7 +1701,7 @@ public:
      * must be a square matrix.
      */
     friend void solve<>(const Matrix2D<T>& A, const Matrix2D<T>& b,
-        Matrix2D<T>& result);
+                        Matrix2D<T>& result);
 
     /** Put a window to matrix
      * @ingroup MatricesUtilities
@@ -1744,23 +1744,23 @@ public:
      */
     void centerOfMass(Matrix1D< double >& center, void* mask=NULL)
     {
-		center.initZeros(2);
-		double mass = 0;
-		Matrix2D< int>* imask = (Matrix2D< int >*) mask;
+        center.initZeros(2);
+        double mass = 0;
+        Matrix2D< int>* imask = (Matrix2D< int >*) mask;
 
-		FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-		{
-            	if ((imask == NULL || MAT_ELEM(*imask, i, j)) &&
-			MAT_ELEM(*this, i, j) > 0)
-            	{
-        		XX(center) += j * MAT_ELEM(*this, i, j);
-        		YY(center) += i * MAT_ELEM(*this, i, j);
-        		mass += MAT_ELEM(*this, i, j);
-            	}
-		}
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+        {
+            if ((imask == NULL || MAT_ELEM(*imask, i, j)) &&
+                MAT_ELEM(*this, i, j) > 0)
+            {
+                XX(center) += j * MAT_ELEM(*this, i, j);
+                YY(center) += i * MAT_ELEM(*this, i, j);
+                mass += MAT_ELEM(*this, i, j);
+            }
+        }
 
-		if (mass != 0)
-            	center /= mass;
+        if (mass != 0)
+            center /= mass;
     }
 
     /** Adjust the range of the array to a given one within a mask.
@@ -1769,7 +1769,7 @@ public:
      * A linear operation is performed on the values of the array such that
      * after it, the values of the array are comprissed between the two values
      * set. The actual array is modified itself. The linear transformation
-	 * is computed within the mask, but it is applied everywhere.
+     * is computed within the mask, but it is applied everywhere.
      *
      * @code
      * v.rangeAdjust(0, 1, mask);
@@ -1783,24 +1783,24 @@ public:
             return;
 
         double min0, max0;
-		bool first=true;
-		FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-		{
-			if (mask(i,j))
-			{
-				T val=(*this)(i,j);
-				if (first)
-				{
-					min0=max0=(double)val;
-					first=false;
-				}
-				else
-				{
-					min0=XMIPP_MIN(min0,val);
-					max0=XMIPP_MAX(max0,val);
-				}
-			}
-		}
+        bool first=true;
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+        {
+            if (mask(i,j))
+            {
+                T val=(*this)(i,j);
+                if (first)
+                {
+                    min0=max0=(double)val;
+                    first=false;
+                }
+                else
+                {
+                    min0=XMIPP_MIN(min0,val);
+                    max0=XMIPP_MAX(max0,val);
+                }
+            }
+        }
 
         // If max0==min0, it means that the vector is a constant one, so the
         // only possible transformation is to a fixed minF
@@ -1812,10 +1812,10 @@ public:
             slope = 0;
 
         T* ptr=NULL;
-	    unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = minF + static_cast< T >(slope *
-                static_cast< double >(*ptr - min0));
+        *ptr = minF + static_cast< T >(slope *
+                                       static_cast< double >(*ptr - min0));
     }
 
     /** Adjust the range of the array to a given one.
@@ -1843,7 +1843,7 @@ public:
      * (L2 sense) to the values of the array shown as sample
      */
     void rangeAdjust(const Matrix2D<T> &example,
-        const Matrix2D<int> *mask=NULL)
+                     const Matrix2D<int> *mask=NULL)
     {
         MultidimArray<T>::rangeAdjust(example,mask);
     }
@@ -1853,47 +1853,47 @@ public:
      */
     void computeStats(double& avg, double& stddev, T& minval, T& maxval) const
     {
-    	MultidimArray<T>::computeStats(avg, stddev, minval, maxval);
+        MultidimArray<T>::computeStats(avg, stddev, minval, maxval);
     }
-    
+
     /** Compute statistics within region.
      * @ingroup MatricesUtilities
      *
      * The region is specified by two corners.
      */
     void computeStats(double& avg,
-                       double& stddev,
-                       T& min_val,
-                       T& max_val,
-                       const Matrix1D< int >& corner1,
-                       const Matrix1D< int >& corner2) const
+                      double& stddev,
+                      T& min_val,
+                      T& max_val,
+                      const Matrix1D< int >& corner1,
+                      const Matrix1D< int >& corner2) const
     {
-	min_val = max_val = (*this)(corner1);
+        min_val = max_val = (*this)(corner1);
 
-	Matrix1D< double > r(3);
-	double N = 0, sum = 0, sum2 = 0;
+        Matrix1D< double > r(3);
+        double N = 0, sum = 0, sum2 = 0;
 
-	FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
-	{
+        FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+        {
             sum += (*this)(r);
             sum2 += (*this)(r) * (*this)(r);
             N++;
 
             if ((*this)(r) < min_val)
-        	min_val = (*this)(r);
+                min_val = (*this)(r);
             else if ((*this)(r) > max_val)
-        	max_val = (*this)(r);
-	}
+                max_val = (*this)(r);
+        }
 
-	if (N != 0)
-	{
+        if (N != 0)
+        {
             avg = sum / N;
             stddev = sqrt(sum2 / N - avg * avg);
-	}
-	else
-	{
+        }
+        else
+        {
             avg = stddev = 0;
-	}
+        }
     }
 
     /** @defgroup MatricesGeometrical Geometrical Transformations
@@ -1961,15 +1961,15 @@ public:
      * @endcode
      */
     friend void applyGeometry<>(Matrix2D<T>& m2, const Matrix2D< double > &A,
-                             const Matrix2D<T>& m1, bool inv, bool wrap,
-                             T outside);
+                                const Matrix2D<T>& m1, bool inv, bool wrap,
+                                T outside);
 
     /** Apply geom with B-spline interpolation
      * @ingroup MatricesGeometrical
      */
     friend void applyGeometryBSpline<>(Matrix2D<T>& m2, const Matrix2D< double > &A,
-                                     const Matrix2D<T>& m1, int Splinedegree,
-                                     bool inv, bool wrap, T outside);
+                                       const Matrix2D<T>& m1, int Splinedegree,
+                                       bool inv, bool wrap, T outside);
 
     /** Self apply geom
      * @ingroup MatricesGeometrical
@@ -1977,7 +1977,7 @@ public:
      * Same as the previous one, but the result is kept in this object
      */
     void selfApplyGeometry(const Matrix2D< double > &A, bool inv, bool wrap,
-                         T outside = (T) 0)
+                           T outside = (T) 0)
     {
         Matrix2D<T> aux;
         applyGeometry(aux, A, *this, inv, wrap, outside);
@@ -1989,7 +1989,7 @@ public:
      *@ingroup MatricesGeometrical
      */
     void selfApplyGeometryBSpline(const Matrix2D< double > &A, int SplineDegree,
-                                 bool inv, bool wrap, T outside = (T) 0)
+                                  bool inv, bool wrap, T outside = (T) 0)
     {
         Matrix2D<T> aux;
         applyGeometryBSpline(aux, A, *this, SplineDegree, inv, wrap, outside);
@@ -2039,7 +2039,7 @@ public:
      * @endcode
      */
     void rotateBSpline(int Splinedegree,
-                        double ang, Matrix2D<T>& result, bool wrap = DONT_WRAP) const
+                       double ang, Matrix2D<T>& result, bool wrap = DONT_WRAP) const
     {
         Matrix2D< double > temp = rotation2DMatrix(ang);
         applyGeometryBSpline(result, temp, *this, Splinedegree, IS_NOT_INV, wrap);
@@ -2099,8 +2099,8 @@ public:
      * @endcode
      */
     void translateBSpline(int Splinedegree,
-                           const Matrix1D< double >& v, Matrix2D<T>& result,
-                           bool wrap = WRAP) const
+                          const Matrix1D< double >& v, Matrix2D<T>& result,
+                          bool wrap = WRAP) const
     {
         Matrix2D< double > temp = translation2DMatrix(v);
         applyGeometryBSpline(result, temp, *this, Splinedegree, IS_NOT_INV, wrap);
@@ -2197,7 +2197,7 @@ public:
      * @endcode
      */
     void scaleToSizeBSpline(int Splinedegree,
-                               int Ydim, int Xdim, Matrix2D<T>& result) const
+                            int Ydim, int Xdim, Matrix2D<T>& result) const
     {
         Matrix2D< double > temp(3, 3);
         result.resize(Ydim, Xdim);
@@ -2377,7 +2377,7 @@ public:
      * @endcode
      */
     friend void multiplyElements(const Matrix2D<T>& op1, const Matrix2D<T>& op2,
-        Matrix2D<T>& result)
+                                 Matrix2D<T>& result)
     {
         arrayByArray(op1, op2, result, '*');
     }
@@ -2487,12 +2487,12 @@ public:
         T maxval = MAT_ELEM(*this, imax, jmax);
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-            if (MAT_ELEM(*this, i, j) > maxval)
-            {
-                maxval = MAT_ELEM(*this, i, j);
-                imax = i;
-                jmax = j;
-            }
+        if (MAT_ELEM(*this, i, j) > maxval)
+        {
+            maxval = MAT_ELEM(*this, i, j);
+            imax = i;
+            jmax = j;
+        }
     }
 
     /** Minimum element
@@ -2513,12 +2513,12 @@ public:
         T minval = MAT_ELEM(*this, imin, jmin);
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-            if (MAT_ELEM(*this, i, j) > minval)
-            {
-                minval = MAT_ELEM(*this, i, j);
-                imin = i;
-                jmin = j;
-            }
+        if (MAT_ELEM(*this, i, j) > minval)
+        {
+            minval = MAT_ELEM(*this, i, j);
+            imin = i;
+            jmin = j;
+        }
     }
 };
 
@@ -2803,7 +2803,7 @@ void radialAverage(const Matrix2D< T >& m,
  * The norm of the vector Ax-b is returned.
  */
 double solveNonNegative(const Matrix2D< double >& A, const Matrix1D< double >& b,
-                    Matrix1D< double >& result);
+                        Matrix1D< double >& result);
 
 /** Solve equation system, symmetric positive-definite matrix
  * @ingroup MatricesMisc
@@ -2813,8 +2813,8 @@ double solveNonNegative(const Matrix2D< double >& A, const Matrix1D< double >& b
  * Cholesky factorization and backsubstitution (see Numerical Recipes).
  */
 void solveViaCholesky(const Matrix2D< double >& A,
-                        const Matrix1D< double >& b,
-                        Matrix1D< double >& result);
+                      const Matrix1D< double >& b,
+                      Matrix1D< double >& result);
 
 /** Evaluate quadratic form
  * @ingroup MatricesMisc
@@ -2827,8 +2827,8 @@ void solveViaCholesky(const Matrix2D< double >& A,
  * dimensions.
  */
 void evaluateQuadratic(const Matrix1D< double >& x, const Matrix1D< double >& c,
-                    const Matrix2D< double >& H, double& val,
-                    Matrix1D< double >& grad);
+                       const Matrix2D< double >& H, double& val,
+                       Matrix1D< double >& grad);
 
 /** Solves Quadratic programming subproblem
  * @ingroup MatricesMisc
@@ -2840,10 +2840,10 @@ void evaluateQuadratic(const Matrix1D< double >& x, const Matrix1D< double >& c,
  * @endcode
  */
 void quadraticProgramming(const Matrix2D< double >& C, const Matrix1D< double >& d,
-              const Matrix2D< double >& A, const Matrix1D< double >& b,
-              const Matrix2D< double >& Aeq, const Matrix1D< double >& beq,
-              Matrix1D< double >& bl, Matrix1D< double >& bu,
-              Matrix1D< double >& x);
+                          const Matrix2D< double >& A, const Matrix1D< double >& b,
+                          const Matrix2D< double >& Aeq, const Matrix1D< double >& beq,
+                          Matrix1D< double >& bl, Matrix1D< double >& bu,
+                          Matrix1D< double >& x);
 
 
 /** Solves the least square problem
@@ -2856,24 +2856,24 @@ void quadraticProgramming(const Matrix2D< double >& C, const Matrix1D< double >&
  * @endcode
  */
 void leastSquare(const Matrix2D< double >& C, const Matrix1D< double >& d,
-            const Matrix2D< double >& A, const Matrix1D< double >& b,
-            const Matrix2D< double >& Aeq, const Matrix1D< double >& beq,
-            Matrix1D< double >& bl, Matrix1D< double >& bu,
-            Matrix1D< double >& x);
+                 const Matrix2D< double >& A, const Matrix1D< double >& b,
+                 const Matrix2D< double >& Aeq, const Matrix1D< double >& beq,
+                 Matrix1D< double >& bl, Matrix1D< double >& bu,
+                 Matrix1D< double >& x);
 
 /** Solves the regularized least squares problem
  * @ingroup MatricesMisc
  *
  * @code
- * min Norm(A*x-d) + lambda * norm (G*x) 
+ * min Norm(A*x-d) + lambda * norm (G*x)
  * @endcode
  *
  * Give an empty G matrix (NULL matrix) if G is the identity matrix
  * If AtA is not a NULL matrix, then the product AtA is not computed.
  */
 void regularizedLeastSquare(const Matrix2D< double >& A,
-    const Matrix1D< double >& d, double lambda,
-    const Matrix2D< double >& G, Matrix1D< double >& x);
+                            const Matrix1D< double >& d, double lambda,
+                            const Matrix2D< double >& G, Matrix1D< double >& x);
 
 /// Show matrix
 template<typename T>
@@ -2886,10 +2886,10 @@ std::ostream& operator<<(std::ostream& ostrm, const Matrix2D<T>& v)
         ostrm << std::endl;
         double max_val = ABS(DIRECT_MAT_ELEM(v, 0, 0));
 
-    	T* ptr;
-	unsigned long int n;
+        T* ptr;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
-            max_val = XMIPP_MAX(max_val, ABS(*ptr));
+        max_val = XMIPP_MAX(max_val, ABS(*ptr));
 
         int prec = bestPrecision(max_val, 10);
 
@@ -2908,7 +2908,7 @@ std::ostream& operator<<(std::ostream& ostrm, const Matrix2D<T>& v)
 
 // Specialization for complex matrices
 std::ostream& operator<<(std::ostream& ostrm,
-    const Matrix2D< std::complex<double> >& v);
+                         const Matrix2D< std::complex<double> >& v);
 
 // TODO Document
 template<typename T>
@@ -2938,7 +2938,7 @@ void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
 // TODO Document
 template<typename T>
 void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
-                  Matrix1D< double >& result, double tolerance)
+                Matrix1D< double >& result, double tolerance)
 {
     if (XSIZE(A) == 0)
         REPORT_ERROR(1108, "Solve: Matrix is empty");
@@ -3053,7 +3053,7 @@ void svdcmp(const Matrix2D< T >& a,
 //#define DEBUG_APPLYGEO
 template<typename T>
 void applyGeometry(Matrix2D<T>& M2, const Matrix2D< double > &A, const Matrix2D<T>& M1, bool inv,
-                bool wrap, T outside)
+                   bool wrap, T outside)
 {
     int m1, n1, m2, n2;
     double x, y, xp, yp;
@@ -3255,13 +3255,13 @@ void applyGeometry(Matrix2D<T>& M2, const Matrix2D< double > &A, const Matrix2D<
 // Special case for complex numbers
 template <>
 void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
-    const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
-    int Splinedegree, bool inv, bool wrap, std::complex<double> outside);
+                          const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
+                          int Splinedegree, bool inv, bool wrap, std::complex<double> outside);
 
 //#define DEBUG
 template<typename T>
 void applyGeometryBSpline(Matrix2D<T>& M2, const Matrix2D< double > &A,
-    const Matrix2D<T>& M1, int Splinedegree, bool inv, bool wrap, T outside)
+                          const Matrix2D<T>& M1, int Splinedegree, bool inv, bool wrap, T outside)
 {
     int m1, n1, m2, n2;
     double x, y, xp, yp;

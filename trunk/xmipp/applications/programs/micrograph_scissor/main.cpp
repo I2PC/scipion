@@ -65,7 +65,7 @@ int main(int argc, char **argv)
             fn_tilted     = getParameter(argc, argv, "-tilted");
         }
         fn_transform = getParameter(argc, argv, "-transform","");
-	down_transform = textToFloat(getParameter(argc, argv, "-down_transform","1"));
+        down_transform = textToFloat(getParameter(argc, argv, "-down_transform","1"));
     }
     catch (Xmipp_error XE)
     {
@@ -81,20 +81,20 @@ int main(int argc, char **argv)
             m.open_micrograph(fn_micrograph, reverse_endian);
             m.set_window_size(Xdim, Ydim);
             m.read_coordinates(0, fn_pos);
-	    if (fn_transform!="")
-	    {
-		if (down_transform != 1.)
-		    m.scale_coordinates(1./down_transform);
-		std::ifstream fh_transform;
-		fh_transform.open(fn_transform.c_str());
-		if (!fh_transform)
-		    REPORT_ERROR(1, (std::string)"Scissor: Cannot open file" + fn_transform);
-		fh_transform >> Mtransform;
-		fh_transform.close();
-		m.transform_coordinates(Mtransform);
-		if (down_transform != 1.)
-		    m.scale_coordinates(down_transform);
-	    }
+            if (fn_transform!="")
+            {
+                if (down_transform != 1.)
+                    m.scale_coordinates(1./down_transform);
+                std::ifstream fh_transform;
+                fh_transform.open(fn_transform.c_str());
+                if (!fh_transform)
+                    REPORT_ERROR(1, (std::string)"Scissor: Cannot open file" + fn_transform);
+                fh_transform >> Mtransform;
+                fh_transform.close();
+                m.transform_coordinates(Mtransform);
+                if (down_transform != 1.)
+                    m.scale_coordinates(down_transform);
+            }
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
@@ -147,30 +147,30 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cerr << "Purpose: Cut the images marked with xmipp_mark\n"
-    << "Usage: scissor [options]\n"
-    << "For single images -------------------------\n"
-    << "   -i <input micrograph>      : From which the images will be cutted\n"
-    << "  [-orig <original micrograph>: unless this parameter is specified\n"
-    << "   -root <root name>          : for the cutted images\n"
-    << "   -pos <position file>       : order X,Y\n"
-    << "                                from transmitance\n"
-    << "  [-transform <.mat-file>]    : transform all coordinates according to this 3x3 matrix\n"
-    << "  [-down_transform <int=1>]   : the transformation matrix was determined with this downsampling rate\n"
-    << "  [-alpha <ang>]              : Angle from Y axis to tilt axis\n"
-    << "                                as it comes out from xmipp_mark\n"
-    << "For image pairs ---------------------------\n"
-    << "   -i <untilted micrograph>   : From which the images will be cutted\n"
-    << "   -tilted <tilted micrograph>: From which the images will be cutted\n"
-    << "   -root <root name>          : for the cutted images\n"
-    << "   -root_tilted <root name>   : for the tilted cutted images\n"
-    << "For both ----------------------------------\n"
-    << "   -Xdim <window X dim>       : in pixels\n"
-    << "  [-Ydim <window Y dim>]      : if not given Ydim=Xdim\n"
-    << "  [-start <N=1>]              : Number of the first image\n"
-    << "  [-reverse_endian]           : of the input micrographs\n"
-    << "  [-invert]                   : Invert contrast\n"
-    << "  [-log]                      : Compute optical density\n"
-    ;
+              << "Usage: scissor [options]\n"
+              << "For single images -------------------------\n"
+              << "   -i <input micrograph>      : From which the images will be cutted\n"
+              << "  [-orig <original micrograph>: unless this parameter is specified\n"
+              << "   -root <root name>          : for the cutted images\n"
+              << "   -pos <position file>       : order X,Y\n"
+              << "                                from transmitance\n"
+              << "  [-transform <.mat-file>]    : transform all coordinates according to this 3x3 matrix\n"
+              << "  [-down_transform <int=1>]   : the transformation matrix was determined with this downsampling rate\n"
+              << "  [-alpha <ang>]              : Angle from Y axis to tilt axis\n"
+              << "                                as it comes out from xmipp_mark\n"
+              << "For image pairs ---------------------------\n"
+              << "   -i <untilted micrograph>   : From which the images will be cutted\n"
+              << "   -tilted <tilted micrograph>: From which the images will be cutted\n"
+              << "   -root <root name>          : for the cutted images\n"
+              << "   -root_tilted <root name>   : for the tilted cutted images\n"
+              << "For both ----------------------------------\n"
+              << "   -Xdim <window X dim>       : in pixels\n"
+              << "  [-Ydim <window Y dim>]      : if not given Ydim=Xdim\n"
+              << "  [-start <N=1>]              : Number of the first image\n"
+              << "  [-reverse_endian]           : of the input micrographs\n"
+              << "  [-invert]                   : Invert contrast\n"
+              << "  [-log]                      : Compute optical density\n"
+              ;
 }
 
 /* Colimate menu =========================================================== */

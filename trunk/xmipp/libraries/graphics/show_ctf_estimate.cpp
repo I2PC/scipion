@@ -35,7 +35,7 @@
 // Constructor -------------------------------------------------------------
 AssignCTFViewer::AssignCTFViewer(const FileName &_fn_psd,
                                  Prog_assign_CTF_prm &_assign_ctf_prm):
-        ImageViewer(_fn_psd.c_str(), false)
+    ImageViewer(_fn_psd.c_str(), false)
 {
     // Get input parameters .................................................
     assign_ctf_prm = _assign_ctf_prm;
@@ -204,10 +204,10 @@ void AssignCTFViewer::okToProceed()
 
     // Write adjust_CTF parameters
     fh_adjust_param
-    << "psd=         " << fn_psd             << std::endl
-    << "min_freq=    " << current_prm[0] / 100 << std::endl
-    << "max_freq=    " << current_prm[1] / 100 << std::endl
-    ;
+            << "psd=         " << fn_psd             << std::endl
+            << "min_freq=    " << current_prm[0] / 100 << std::endl
+            << "max_freq=    " << current_prm[1] / 100 << std::endl
+            ;
     if (!assign_ctf_prm.adjust_CTF_prm.modelSimplification)
         fh_adjust_param << "radial_noise=yes\n";
     fh_adjust_param << "defocus_range=4000\n";
@@ -216,14 +216,14 @@ void AssignCTFViewer::okToProceed()
 
     // Write CTF parameters
     fh_adjust_param
-    << "voltage=             " << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.kV << std::endl
-    << "spherical_aberration=" << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.Cs << std::endl
-    << "sampling_rate=       " << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.Tm << std::endl
-    << "defocusU=            " << current_prm[2]*1000              << std::endl
-    << "defocusV=            " << current_prm[3]*1000              << std::endl
-    << "azimuthal_angle=     " << current_prm[4]                   << std::endl
-    << "ctfmodelSize=        " << assign_ctf_prm.adjust_CTF_prm.ctfmodelSize      << std::endl
-    ;
+            << "voltage=             " << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.kV << std::endl
+            << "spherical_aberration=" << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.Cs << std::endl
+            << "sampling_rate=       " << assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.Tm << std::endl
+            << "defocusU=            " << current_prm[2]*1000              << std::endl
+            << "defocusV=            " << current_prm[3]*1000              << std::endl
+            << "azimuthal_angle=     " << current_prm[4]                   << std::endl
+            << "ctfmodelSize=        " << assign_ctf_prm.adjust_CTF_prm.ctfmodelSize      << std::endl
+            ;
 
     fh_adjust_param.close();
 

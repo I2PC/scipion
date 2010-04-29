@@ -64,8 +64,8 @@ protected:
 
     // Some menu items to enable/disable them
     int mi_showgrid,    mi_hidegrid,
-    mi_showXlegend, mi_hideXlegend,
-    mi_showYlegend, mi_hideYlegend;
+        mi_showXlegend, mi_hideXlegend,
+        mi_showYlegend, mi_hideYlegend;
 
     /* Initialization.
        Sets V = NULL; and then calls to ShowSel::init() */

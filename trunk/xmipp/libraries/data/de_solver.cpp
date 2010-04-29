@@ -6,11 +6,11 @@
 #define CopyVector(a,b) memcpy((a),(b),nDim*sizeof(double))
 
 DESolver::DESolver(int dim, int popSize) :
-        nDim(dim), nPop(popSize),
-        generations(0), strategy(stRand1Exp),
-        scale(0.7), probability(0.5), bestEnergy(0.0),
-        trialSolution(0), bestSolution(0),
-        popEnergy(0), population(0)
+    nDim(dim), nPop(popSize),
+    generations(0), strategy(stRand1Exp),
+    scale(0.7), probability(0.5), bestEnergy(0.0),
+    trialSolution(0), bestSolution(0),
+    popEnergy(0), population(0)
 {
     trialSolution = new double[nDim];
     bestSolution  = new double[nDim];
@@ -48,11 +48,11 @@ void DESolver::Setup(double min[], double max[],
     for (i = 0; i < nPop; i++)
     {
         for (j = 0; j < nDim; j++)
-	{
-		population[i*nDim+j] = rnd_unif(min[j], max[j]);
-		//Element(population, i, j) = rnd_unif(min[j], max[j]);
-	}
-	
+        {
+            population[i*nDim+j] = rnd_unif(min[j], max[j]);
+            //Element(population, i, j) = rnd_unif(min[j], max[j]);
+        }
+
         popEnergy[i] = 1.0E20;
     }
 
@@ -110,7 +110,7 @@ bool DESolver::Solve(int maxGenerations)
     bool bAtSolution = false;
     int generation;
 
-    for (generation = 0;(generation < maxGenerations) && !bAtSolution;generation++)
+    for (generation = 0; (generation < maxGenerations) && !bAtSolution; generation++)
         for (int candidate = 0; candidate < nPop; candidate++)
         {
             (this->*calcTrialSolution)(candidate);

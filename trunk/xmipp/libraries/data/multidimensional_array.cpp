@@ -27,7 +27,7 @@
 
 template<>
 std::ostream& operator<<(std::ostream& ostrm,
-    const MultidimArray< std::complex<double> >& v)
+                         const MultidimArray< std::complex<double> >& v)
 {
     if (v.xdim == 0)
         ostrm << "NULL Array\n";

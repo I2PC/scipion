@@ -34,8 +34,8 @@
 struct TransfMat
 {
     float Sx,           /* Scale: Scale factor for X axis. */
-    Hy,     /* Shear: transform along X axis. */
-    Tx;     /* Translation: Offset in X axis. */
+          Hy,     /* Shear: transform along X axis. */
+          Tx;     /* Translation: Offset in X axis. */
 }
 ;                  /* Structure for Transformation Matrix. */
 
@@ -123,12 +123,13 @@ int main(int argc, char **argv)
         VOLMATRIX(volume_out).resize(maxz - minz + 1, ny, newnx);
         std::cout << " Skewing file with gama= " << gamma << std::endl;
 
-        for (z = minz;z <= (maxz); z++)
+        for (z = minz; z <= (maxz); z++)
         {
             for (y = 0, sheartransY = transformatrix.Tx,
                  skewnx = (int) floor(nx * transformatrix.Sx);
                  y < ny; y++, sheartransY += transformatrix.Hy)
-            {/*skew line */
+            {
+                /*skew line */
                 register int skewx, xa, xb;
                 int skewx0, skewx1, skewxn;
                 float x, *ptrline;
@@ -168,14 +169,14 @@ int main(int argc, char **argv)
                                     VOLVOXEL(volume_in, z, y, 0));
                     }
                     if (skewx0)
-                        for (i = 0;i < skewx0;i++)
+                        for (i = 0; i < skewx0; i++)
                             VOLVOXEL(volume_out, z - minz, y, i) =
                                 VOLVOXEL(volume_out, z - minz, y, i + skewnx);
                 }
 
                 if (skewxn + 1 < newnx)
                 {
-                    for (i = 0;i < (newnx - skewxn - 1);i++)
+                    for (i = 0; i < (newnx - skewxn - 1); i++)
                         VOLVOXEL(volume_out, z - minz, y, i + skewxn + 1) =
                             VOLVOXEL(volume_out, z - minz, y, i + (skewxn + 1 - skewnx));
 

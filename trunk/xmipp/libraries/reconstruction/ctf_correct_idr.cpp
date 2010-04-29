@@ -53,20 +53,20 @@ void Prog_IDR_ART_Parameters::produce_side_info()
 void Prog_IDR_ART_Parameters::show()
 {
     std::cout << "Input volume: " << fn_vol << std::endl
-	      << "CTFDat: " << fn_ctfdat << std::endl
+              << "CTFDat: " << fn_ctfdat << std::endl
               << "Oroot: " << fnRoot << std::endl
               << "Relaxation factor: " << mu << std::endl
-    ;
+              ;
 }
 
 void Prog_IDR_ART_Parameters::Usage()
 {
     std::cerr << "Usage: IDR\n"
-	      << "   -vol <volume>        : Voxel volume with the current reconstruction\n"
-	      << "   -ctfdat <ctfdat>     : List of projections and CTFs\n"
+              << "   -vol <volume>        : Voxel volume with the current reconstruction\n"
+              << "   -ctfdat <ctfdat>     : List of projections and CTFs\n"
               << "   -oroot <root>        : Rootname of the output files\n"
-	      << "  [-mu <mu=1.8>]        : Relaxation factor\n"
-    ;
+              << "  [-mu <mu=1.8>]        : Relaxation factor\n"
+              ;
 }
 
 /* IDR correction ---------------------------------------------------------- */
@@ -85,17 +85,17 @@ void Prog_IDR_ART_Parameters::IDR_correction()
     ctfdat.goFirstLine();
     while (!ctfdat.eof())
     {
-    	FileName fn_img, fn_ctf;
-	ctfdat.getCurrentLine(fn_img,fn_ctf);
-	if (fn_img!="" && (imgs%numberOfProcessors==MPIrank))
-	{
+        FileName fn_img, fn_ctf;
+        ctfdat.getCurrentLine(fn_img,fn_ctf);
+        if (fn_img!="" && (imgs%numberOfProcessors==MPIrank))
+        {
             // Read current input image
             Ireal.read(fn_img);
-	    Ireal().selfTranslateBSpline(3,vectorR2(Ireal.Xoff(),Ireal.Yoff()));
+            Ireal().selfTranslateBSpline(3,vectorR2(Ireal.Xoff(),Ireal.Yoff()));
 
             // Project the volume in the same direction
             project_Volume(V(), Itheo, YSIZE(Ireal()), XSIZE(Ireal()),
-                	   Ireal.rot(), Ireal.tilt(), Ireal.psi());
+                           Ireal.rot(), Ireal.tilt(), Ireal.psi());
 
             // Copy to theo_CTF and resize
             Itheo_CTF() = Itheo();
@@ -106,7 +106,7 @@ void Prog_IDR_ART_Parameters::IDR_correction()
                                LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
 
             // Read CTF file
-	    FourierMask ctf;
+            FourierMask ctf;
             ctf.FilterBand = CTF;
             ctf.ctf.read(fn_ctf);
             ctf.ctf.enable_CTFnoise = false;
@@ -130,8 +130,8 @@ void Prog_IDR_ART_Parameters::IDR_correction()
 
             // Apply IDR process
             FOR_ALL_ELEMENTS_IN_MATRIX2D(Ireal())
-        	IMGPIXEL(Itheo, i, j) = mu * IMGPIXEL(Ireal, i, j) +
-                                	(IMGPIXEL(Itheo, i, j) - mu * IMGPIXEL(Itheo_CTF, i, j));
+            IMGPIXEL(Itheo, i, j) = mu * IMGPIXEL(Ireal, i, j) +
+                                    (IMGPIXEL(Itheo, i, j) - mu * IMGPIXEL(Itheo_CTF, i, j));
 
             // Save output image
             Itheo.write(fnRoot+integerToString(imgs,6)+".xmp");
@@ -145,10 +145,10 @@ void Prog_IDR_ART_Parameters::IDR_correction()
             char c;
             std::cin >> c;
 #endif
-    	}
+        }
 
         if (imgs++ % istep == 0 && MPIrank==0) progress_bar(imgs);
-	ctfdat.nextLine();
+        ctfdat.nextLine();
     }
     if (MPIrank==0) progress_bar(ctfdat.lineNo());
 }

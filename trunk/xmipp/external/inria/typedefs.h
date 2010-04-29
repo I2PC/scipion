@@ -16,15 +16,16 @@ extern "C"
      */
     typedef enum {
         TYPE_UNKNOWN /* unknown type */,
-        UCHAR  /* unsigned char */,
-        SCHAR  /* signed char */,
-        USHORT /* unsigned short int */,
-        SSHORT /* signed short int */,
-        INT    /* signed int */,
-        ULINT  /* unsigned long int */,
-        FLOAT  /* float */,
-        DOUBLE  /* double */
-    } ImageType, bufferType;
+                     UCHAR  /* unsigned char */,
+                     SCHAR  /* signed char */,
+                     USHORT /* unsigned short int */,
+                     SSHORT /* signed short int */,
+                     INT    /* signed int */,
+                     ULINT  /* unsigned long int */,
+                     FLOAT  /* float */,
+                     DOUBLE  /* double */
+                 }
+                 ImageType, bufferType;
 
     typedef short int          s8;
     /*Quite esto porque daba un warning en convert.c line:319 (asig -128 a char)*/
@@ -42,7 +43,8 @@ extern "C"
 
     /* Typedef Booleen
      */
-    typedef enum {
+    typedef enum
+    {
         False = 0,
         True = 1
     } typeBoolean;

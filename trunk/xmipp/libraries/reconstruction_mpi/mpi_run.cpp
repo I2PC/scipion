@@ -57,18 +57,18 @@ void Prog_MPI_Run_Parameters::read(int argc, char **argv)
 void Prog_MPI_Run_Parameters::usage()
 {
     std::cerr << "MPI_Run\n"
-    << "   -i <command file>    : File with commands to send to mpirun\n"
-    << "\n"
-    << "Example of use:\n"
-    << "   xmipp_mpi_run -i commandd_file\n"
-    ;
+              << "   -i <command file>    : File with commands to send to mpirun\n"
+              << "\n"
+              << "Example of use:\n"
+              << "   xmipp_mpi_run -i commandd_file\n"
+              ;
 }
 
 /* Show -------------------------------------------------------------------- */
 void Prog_MPI_Run_Parameters::show()
 {
     std::cout << "Commands  file:           " << fn_commands << std::endl
-    ;
+              ;
 }
 
 

@@ -6,21 +6,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.csic.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #include "kSVD.h"
@@ -29,12 +29,12 @@
 /* Orthogonal Matching Pursuit                                               */
 /* ------------------------------------------------------------------------- */
 double orthogonalMatchingPursuit(const Matrix1D<double> &x,
-    const Matrix2D<double> &D, int S, Matrix1D<double> &alpha)
+                                 const Matrix2D<double> &D, int S, Matrix1D<double> &alpha)
 {
     // Compute approximation error
     double approximationError=0;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(x)
-        approximationError+=x(i)*x(i);
+    approximationError+=x(i)*x(i);
     double errorLimit=approximationError*1e-10;
 
     // Initialize the number of available atoms
@@ -43,13 +43,15 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
     Matrix1D<int> availableAtoms;
     availableAtoms.initZeros(K);
     availableAtoms.initConstant(1);
-    
+
     // Compute the projection of x onto each of the atoms and look for the
     // maximum
     Matrix1D<double> c, w, e, u;
     c.initZeros(K);
-    e.initZeros(K); e.initConstant(1);
-    u.initZeros(K); u.initConstant(1);
+    e.initZeros(K);
+    e.initConstant(1);
+    u.initZeros(K);
+    u.initConstant(1);
 
     // Compute dot product between x and di
     int km=0;
@@ -58,7 +60,7 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
     {
         for (int j=0; j<N; j++)
             DIRECT_VEC_ELEM(c,k)+=DIRECT_MAT_ELEM(D,j,k)*DIRECT_VEC_ELEM(x,j);
-        
+
         // Check if this is the maximum
         if (ABS(c(k))>ckm)
         {
@@ -66,11 +68,11 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
             ckm=ABS(c(k));
         }
     }
-    
+
     // Delete Js from the available indexes and update the approximation error
     availableAtoms(km)=0;
     approximationError-=ckm*ckm;
-    
+
     // Annotate Jk
     std::vector<int> J;
     int s=0;
@@ -89,20 +91,20 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
         {
             // If already used, skip it
             if (!availableAtoms(k)) continue;
-        
+
             // Compute the product between the atoms km and k
             double aux=0;
             for (int j=0; j<N; j++)
                 aux+=DIRECT_MAT_ELEM(D,j,km)*DIRECT_MAT_ELEM(D,j,k);
             DIRECT_MAT_ELEM(R,s,k)=aux;
-            
+
             // Readjust R
             for (int n=0; n<s; n++)
                 DIRECT_MAT_ELEM(R,s,k)-=DIRECT_MAT_ELEM(R,n,km)*
-                    DIRECT_MAT_ELEM(R,n,k);
+                                        DIRECT_MAT_ELEM(R,n,k);
             if (DIRECT_VEC_ELEM(u,km)>XMIPP_EQUAL_ACCURACY)
                 DIRECT_MAT_ELEM(R,s,k)/=DIRECT_VEC_ELEM(u,km);
-            
+
             // Update the rest of variables
             c(k)=c(k)*u(k)-c(km)*R(s,k);
             e(k)-=R(s,k)*R(s,k);
@@ -116,7 +118,7 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
                 ckm=ABS(c(k));
             }
         }
-        
+
         // Delete km from the available indexes and update the approximation error
         km=nextKm;
         J.push_back(km);
@@ -136,7 +138,7 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
         if (R(k,Jk)!=0) c(Jk)/=R(k,Jk);
         alpha(Jk)=c(Jk);
     }
-    
+
     return sqrt(ABS(approximationError));
 }
 
@@ -144,11 +146,11 @@ double orthogonalMatchingPursuit(const Matrix1D<double> &x,
 /* Lasso (shooting)                                                          */
 /* ------------------------------------------------------------------------- */
 double lasso(const Matrix1D<double> &x,
-    const Matrix2D<double> &D, 
-    const Matrix2D<double> &DtD,
-    const Matrix2D<double> &DtDlambdaInv,
-    double lambda, Matrix1D<double> &alpha,
-    const int maxIter, const double tol)
+             const Matrix2D<double> &D,
+             const Matrix2D<double> &DtD,
+             const Matrix2D<double> &DtDlambdaInv,
+             double lambda, Matrix1D<double> &alpha,
+             const int maxIter, const double tol)
 {
     int K=XSIZE(D);
     int N=YSIZE(D);
@@ -157,16 +159,16 @@ double lasso(const Matrix1D<double> &x,
     // Compute D^t*x
     Matrix1D<double> Dtx(K);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(Dtx)
-        // Compute the dot product of the i-th column of D and x
-        for (int k=0; k<YSIZE(D); k++)
-            DIRECT_VEC_ELEM(Dtx,i)+=
-                DIRECT_MAT_ELEM(D,k,i)*DIRECT_VEC_ELEM(x,k);
+    // Compute the dot product of the i-th column of D and x
+    for (int k=0; k<YSIZE(D); k++)
+        DIRECT_VEC_ELEM(Dtx,i)+=
+            DIRECT_MAT_ELEM(D,k,i)*DIRECT_VEC_ELEM(x,k);
 
     // Now multiply DtdLambdaInv * D^t * x
     alpha.initZeros(K);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(DtDlambdaInv)
-        DIRECT_VEC_ELEM(alpha,i)+=DIRECT_MAT_ELEM(DtDlambdaInv,i,j)*
-            DIRECT_VEC_ELEM(Dtx,j);
+    DIRECT_VEC_ELEM(alpha,i)+=DIRECT_MAT_ELEM(DtDlambdaInv,i,j)*
+                              DIRECT_VEC_ELEM(Dtx,j);
 
     // Iterate over alpha
     Matrix1D<double> alphaOld;
@@ -176,7 +178,7 @@ double lasso(const Matrix1D<double> &x,
     {
         // Keep the current alpha
         alphaOld=alpha;
-        
+
         // Update alpha
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(alpha)
         {
@@ -190,7 +192,7 @@ double lasso(const Matrix1D<double> &x,
             else
                 DIRECT_VEC_ELEM(alpha,i)=(-lambda-S)/DtD(i,i);
         }
-        
+
         // Prepare for next iteration
         iter++;
         double normDiff=0, normAlpha=0;
@@ -202,7 +204,7 @@ double lasso(const Matrix1D<double> &x,
         }
         finished=(iter>=maxIter) || normDiff/normAlpha<tol;
     }
-    
+
     // Compute the approximation error
     Matrix1D<double> xp(XSIZE(x));
     for (int j=0; j<XSIZE(D); j++)
@@ -217,7 +219,7 @@ double lasso(const Matrix1D<double> &x,
         double diff=DIRECT_VEC_ELEM(xp,i)-DIRECT_VEC_ELEM(x,i);
         approximationError+=diff*diff;
     }
-    
+
     return sqrt(ABS(approximationError));
 }
 
@@ -226,9 +228,9 @@ double lasso(const Matrix1D<double> &x,
 /* ------------------------------------------------------------------------- */
 //#define DEBUG
 double kSVD(const std::vector< Matrix1D<double> > &X, int S,
-    Matrix2D<double> &D, std::vector< Matrix1D<double> > &Alpha,
-    bool keepFirstColumn, int maxIter, double minChange,
-    int projectionMethod, double lambda)
+            Matrix2D<double> &D, std::vector< Matrix1D<double> > &Alpha,
+            bool keepFirstColumn, int maxIter, double minChange,
+            int projectionMethod, double lambda)
 {
     int Nvectors=X.size();
     int K=XSIZE(D); // Number of atoms
@@ -257,7 +259,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
     power.initZeros(Nvectors);
     for (int n=0; n<Nvectors; n++)
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(X[n])
-            power(n)+=DIRECT_VEC_ELEM(X[n],i)*DIRECT_VEC_ELEM(X[n],i);
+        power(n)+=DIRECT_VEC_ELEM(X[n],i)*DIRECT_VEC_ELEM(X[n],i);
     double avgPower=power.computeAvg();
 
     // Perform kSVD
@@ -266,17 +268,18 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
     error.initZeros(Nvectors);
     double previousError=0, currentError=0;
     bool limitAchieved=false;
-    do {
+    do
+    {
         // Sparse coding step
         Matrix2D<double> DtD, DtDlambda, DtDlambdaInv;
         if (projectionMethod==LASSO_PROJECTION)
         {
             DtD.initZeros(K,K);
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(DtD)
-                // Compute the dot product between the columns i and j of D
-                for (int k=0; k<YSIZE(D); k++)
-                    DIRECT_MAT_ELEM(DtD,i,j)+=
-                        DIRECT_MAT_ELEM(D,k,i)*DIRECT_MAT_ELEM(D,k,j);
+            // Compute the dot product between the columns i and j of D
+            for (int k=0; k<YSIZE(D); k++)
+                DIRECT_MAT_ELEM(DtD,i,j)+=
+                    DIRECT_MAT_ELEM(D,k,i)*DIRECT_MAT_ELEM(D,k,j);
             DtDlambda=DtD;
             for (int i=0; i<K; i++)
                 DIRECT_MAT_ELEM(DtDlambda,i,i)+=lambda;
@@ -291,7 +294,7 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
                 error(n)=lasso(X[n],D,DtD,DtDlambdaInv,lambda,Alpha[n]);
             else
                 error(n)=orthogonalMatchingPursuit(X[n],D,S,Alpha[n]);
-            
+
             // Check which are the atoms this vector is using
             for (int k=0; k<K; k++)
                 if (Alpha[n](k)!=0)
@@ -307,11 +310,11 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
             int countNonZeros=0;
             for (int n=0; n<Nvectors; n++)
                 FOR_ALL_ELEMENTS_IN_MATRIX1D(Alpha[n])
-                    if (Alpha[n](i)!=0) countNonZeros++;
+                if (Alpha[n](i)!=0) countNonZeros++;
             std::cout << "Average sparsity = " << (double)countNonZeros/
-                Nvectors << std::endl;
+                      Nvectors << std::endl;
         }
-        
+
         // Codebook update
         Matrix2D<double> EkR, U, V;
         Matrix1D<double> xp, W;
@@ -374,15 +377,15 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
                     DIRECT_VEC_ELEM(Alpha[n],k)=DIRECT_MAT_ELEM(V,nk,0)*W0;
                 }
 
-                #ifdef DEBUG
-                    for (int n=0; n<Nvectors; n++)
-                    {
-                        Matrix1D<double> xp=D*Alpha[n];
-                        std::cout << "x= " << X[n].transpose() << std::endl
-                                  << "xp=" << xp.transpose() << std::endl
-                                  << "diff norm=" << (X[n]-xp).module() << std::endl;
-                    }
-                #endif
+#ifdef DEBUG
+                for (int n=0; n<Nvectors; n++)
+                {
+                    Matrix1D<double> xp=D*Alpha[n];
+                    std::cout << "x= " << X[n].transpose() << std::endl
+                              << "xp=" << xp.transpose() << std::endl
+                              << "diff norm=" << (X[n]-xp).module() << std::endl;
+                }
+#endif
             }
             else if (Nk==0)
             {
@@ -396,18 +399,20 @@ double kSVD(const std::vector< Matrix1D<double> > &X, int S,
             progress_bar(k);
         }
         progress_bar(K);
-        
+
         // Prepare for next iteration
         iterations++;
         currentError=error.computeAvg();
         if (previousError==0) previousError=currentError;
-        else {
+        else
+        {
             limitAchieved=
                 ABS((previousError-currentError)/previousError)<minChange;
             std::cout << "Change=" << ((previousError-currentError)/previousError) << std::endl;
             previousError=currentError;
         }
-    } while (iterations<maxIter && !limitAchieved);
+    }
+    while (iterations<maxIter && !limitAchieved);
 
     return currentError;
 }

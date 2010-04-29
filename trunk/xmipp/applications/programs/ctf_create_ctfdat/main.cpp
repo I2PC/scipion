@@ -63,11 +63,11 @@ int main(int argc, char **argv)
                   << "                           or three columns (defocusU, defocusV, azimuth_angle)\n"
                   << " MODE 2: \n"
                   << "   -ctfs <selfile>       : Selfile of CTF param files for each micropgrah \n"
-            ;
+                  ;
         return 1;
     }
 
-    
+
     try
     {
         SelFile SFsel, SFind, SFctf;
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
         if (do_mode2)
         {
             SFctf.read(fn_ctf);
-        } 
+        }
         else
         {
             // Write param files for each micrograph to disc and make an internal SFctf
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
             int ii = 0;
             DFdef.read(fn_doc);
             ctf.read(fn_param);
-            ctf.enable_CTF = true; 
+            ctf.enable_CTF = true;
             ctf.enable_CTFnoise = false;
 
             if (SFsel.ImgNo() != DFdef.dataLineNo())
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
                     defU = defV = DL[0];
                     azi = 0.;
                 }
-                else 
+                else
                 {
                     defU = DL[0];
                     defV = DL[1];
@@ -154,5 +154,5 @@ int main(int argc, char **argv)
         std::cerr << XE << std::endl;
         return 2;
     }
-     return 0;
+    return 0;
 }

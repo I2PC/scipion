@@ -71,7 +71,7 @@ int main(int argc, char **argv)
             if (prm.verb > 0)
                 std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
 
-            for (int refno = 0;refno < prm.model.n_ref; refno++)
+            for (int refno = 0; refno < prm.model.n_ref; refno++)
                 prm.Iold[refno]() = prm.model.Iref[refno]();
 
             for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
             {
                 if (prm.verb > 0)
                     std::cerr << " Optimization converged!"
-                    << std::endl;
+                              << std::endl;
 
                 break;
             }

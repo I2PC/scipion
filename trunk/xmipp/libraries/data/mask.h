@@ -1231,8 +1231,8 @@ public:
  */
 template<typename T>
 void computeStats_within_binary_mask(const Matrix2D< int >& mask,
-                                      const Matrix2D< T >& m, T& min_val,
-                                      T& max_val, double& avg, double& stddev)
+                                     const Matrix2D< T >& m, T& min_val,
+                                     T& max_val, double& avg, double& stddev)
 {
     SPEED_UP_temps;
     double sum1 = 0;
@@ -1383,9 +1383,9 @@ void apply_cont_mask(const Matrix2D< double >& mask, const Matrix2D< T >& m_in,
  */
 template<typename T>
 void computeStats_within_binary_mask(const Matrix3D< int >& mask,
-                                      const Matrix3D< T >& m, T& min_val,
-                                      T& max_val,
-                                      double& avg, double& stddev)
+                                     const Matrix3D< T >& m, T& min_val,
+                                     T& max_val,
+                                     double& avg, double& stddev)
 {
     SPEED_UP_temps;
     double sum1 = 0;
@@ -1608,18 +1608,18 @@ int count_with_mask(const Matrix2D< int >& mask,
         switch (mode)
         {
         case (COUNT_ABOVE):
-                        if (MAT_ELEM(m, i, j) >= th1)
-                            N++;
+            if (MAT_ELEM(m, i, j) >= th1)
+                N++;
             break;
 
         case (COUNT_BELOW):
-                        if (MAT_ELEM(m, i, j) <= th1)
-                            N++;
+            if (MAT_ELEM(m, i, j) <= th1)
+                N++;
             break;
 
         case (COUNT_BETWEEN):
-                        if (MAT_ELEM(m, i, j) >= th1 && MAT_ELEM(m, i, j) <= th2)
-                            N++;
+            if (MAT_ELEM(m, i, j) >= th1 && MAT_ELEM(m, i, j) <= th2)
+                N++;
             break;
         }
     return N;
@@ -1652,18 +1652,18 @@ int count_with_mask(const Matrix3D< int >& mask,
         switch (mode)
         {
         case (COUNT_ABOVE):
-                        if (VOL_ELEM(m, k, i, j) >= th1)
-                            N++;
+            if (VOL_ELEM(m, k, i, j) >= th1)
+                N++;
             break;
 
         case (COUNT_BELOW):
-                        if (VOL_ELEM(m, k, i, j) <= th1)
-                            N++;
+            if (VOL_ELEM(m, k, i, j) <= th1)
+                N++;
             break;
 
         case (COUNT_BETWEEN):
-                        if (VOL_ELEM(m, k, i, j) >= th1 && VOL_ELEM(m, k, i, j) <= th2)
-                            N++;
+            if (VOL_ELEM(m, k, i, j) >= th1 && VOL_ELEM(m, k, i, j) <= th2)
+                N++;
             break;
         }
     return N;
@@ -1684,7 +1684,7 @@ void invert_binary_mask(Matrix2D< T >& mask)
     T* ptr=NULL;
     unsigned long int n;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(mask,n,ptr)
-        *ptr = 1-(*ptr);
+    *ptr = 1-(*ptr);
 }
 
 /** Invert binary mask (3D)
@@ -1698,7 +1698,7 @@ void invert_binary_mask(Matrix3D< T >& mask)
     T* ptr=NULL;
     unsigned long int n;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(mask,n,ptr)
-    	*ptr = 1-(*ptr);
+    *ptr = 1-(*ptr);
 }
 
 /** Range adjust within binary mask
@@ -1709,8 +1709,8 @@ void invert_binary_mask(Matrix3D< T >& mask)
  * mask is provided then all voxels are used.
  */
 void rangeAdjust_within_mask(const Matrix2D< double >* mask,
-                              const Matrix2D< double >& m1,
-                              Matrix2D< double >& m2);
+                             const Matrix2D< double >& m1,
+                             Matrix2D< double >& m2);
 
 /** Range adjust within binary mask
  * @ingroup MasksTools
@@ -1720,7 +1720,7 @@ void rangeAdjust_within_mask(const Matrix2D< double >* mask,
  * mask is provided then all voxels are used.
  */
 void rangeAdjust_within_mask(const Matrix3D< double >* mask,
-                              const Matrix3D< double >& m1,
-                              Matrix3D< double >& m2);
+                             const Matrix3D< double >& m1,
+                             Matrix3D< double >& m2);
 
 #endif

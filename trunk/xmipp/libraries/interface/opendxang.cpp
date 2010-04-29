@@ -41,7 +41,7 @@ void openDXang::openDXangFile(FileName openDXangname_aux)
     if (fh_out_data.fail())
     {
         std::cerr << "Cant open file: "
-        << data_name.c_str() << std::endl;
+                  << data_name.c_str() << std::endl;
         exit(0);
     }
 
@@ -78,21 +78,21 @@ openDXang::~openDXang()
     if (fh_out_header.fail())
     {
         std::cerr << "Cant open file: "
-        << header_name.c_str() << std::endl;
+                  << header_name.c_str() << std::endl;
         exit(0);
     }
 
 //write right number of point
     openDXang::fh_out_header << "file = " << openDXang::openDXangname.c_str() << ".data"
-    << "\n"
-    << "points = " << openDXang::number_of_elements
-    << "\n"
-    << "format = ascii\n"
-    << "interleaving = field\n"
-    << "field = locations\n"
-    << "structure = 3-vector\n"
-    << "type = float\n\n"
-    << "end" << std::endl;
+                             << "\n"
+                             << "points = " << openDXang::number_of_elements
+                             << "\n"
+                             << "format = ascii\n"
+                             << "interleaving = field\n"
+                             << "field = locations\n"
+                             << "structure = 3-vector\n"
+                             << "type = float\n\n"
+                             << "end" << std::endl;
 
 
 

@@ -104,7 +104,7 @@ MetaDataContainer::MetaDataContainer(MetaDataContainer &MDc)
 }
 
 void MetaDataContainer::addValue(const std::string &name,
-        const std::string &value)
+                                 const std::string &value)
 {
     MetaDataLabel lCode = codifyLabel(name);
     std::istringstream i(value);
@@ -421,163 +421,163 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
 {
     switch (inputLabel)
     {
-        case MDL_ANGLEROT:
-            return std::string("angleRot");
-            break;
-        case MDL_ANGLETILT:
-            return std::string("angleTilt");
-            break;
-        case MDL_ANGLEPSI:
-            return std::string("anglePsi");
-            break;
-        case MDL_ANGLEROT2:
-            return std::string("angleRot2");
-            break;
-        case MDL_ANGLETILT2:
-            return std::string("angleTilt2");
-            break;
-        case MDL_ANGLEPSI2:
-            return std::string("anglePsi2");
-            break;
-        case MDL_IMAGE:
-            return std::string("image");
-            break;
-        case MDL_COMMENT:
-            return std::string("comment");
-            break;
-        case MDL_MICROGRAPH:
-            return std::string("micrograph");
-            break;
-        case MDL_CTFMODEL:
-            return std::string("CTFModel");
-            break;
-        case MDL_SCALE:
-            return std::string("scale");
-            break;
-        case MDL_INTSCALE:
-            return std::string("intScale");
-            break;
-        case MDL_MODELFRAC:
-            return std::string("modelFraction");
-            break;
-        case MDL_MIRRORFRAC:
-            return std::string("mirrorFraction");
-            break;
-        case MDL_LL:
-            return std::string("logLikelihood");
-            break;
-        case MDL_SIGNALCHANGE:
-            return std::string("signalChange");
-            break;
-        case MDL_WROBUST:
-            return std::string("wRobust");
-            break;
-        case MDL_BGMEAN:
-            return std::string("bgMean");
-            break;
-        case MDL_SHIFTX:
-            return std::string("shiftX");
-            break;
-        case MDL_SHIFTY:
-            return std::string("shiftY");
-            break;
-        case MDL_SHIFTZ:
-            return std::string("shiftZ");
-            break;
-        case MDL_X:
-            return std::string("X");
-            break;
-        case MDL_Y:
-            return std::string("Y");
-            break;
-        case MDL_Z:
-            return std::string("Z");
-            break;
-        case MDL_ENABLED:
-            return std::string("enabled");
-            break;
-        case MDL_ORIGINX:
-            return std::string("originX");
-            break;
-        case MDL_ORIGINY:
-            return std::string("originY");
-            break;
-        case MDL_ORIGINZ:
-            return std::string("originZ");
-            break;
-        case MDL_WEIGHT:
-            return std::string("weight");
-            break;
-        case MDL_OBJID:
-            return std::string("objId");
-            break;
-        case MDL_FLIP:
-            return std::string("flip");
-            break;
-        case MDL_REF:
-            return std::string("ref");
-            break;
-        case MDL_MAXCC:
-            return std::string("maxCC");
-            break;
-        case MDL_COST:
-            return std::string("cost");
-            break;
-        case MDL_SERIE:
-            return std::string("serie");
-            break;
-        case MDL_PMAX:
-            return std::string("pMax");
-            break;
-        case MDL_CTFINPUTPARAMS:
-            return std::string("CTFInputParams");
-            break;
-        case MDL_PERIODOGRAM:
-            return std::string("periodogram");
-            break;
-        case MDL_NMA:
-            return std::string("NMADisplacements");
-            break;
-        case MDL_SAMPLINGRATE:
-            return std::string("sampling_rate");
-            break;
-        case MDL_VOLTAGE:
-            return std::string("voltage");
-            break;
-        case MDL_DEFOCUSU:
-            return std::string("defocusU");
-            break;
-        case MDL_DEFOCUSV:
-            return std::string("defocusV");
-            break;
-        case MDL_ITER:
-            return std::string("iterationNumber");
-            break;
-        case MDL_BLOCK:
-            return std::string("blockNumber");
-            break;
-        case MDL_IMGMD:
-            return std::string("imageMetaData");
-            break;
-        case MDL_REFMD:
-            return std::string("referenceMetaData");
-            break;
-        case MDL_SIGMANOISE:
-            return std::string("sigmaNoise");
-            break;
-        case MDL_SIGMAOFFSET:
-            return std::string("sigmaOffset");
-            break;
-        case MDL_SUMWEIGHT:
-            return std::string("sumWeight");
-            break;
-        case MDL_RANDOMSEED:
-            return std::string("randomSeed");
-            break;
+    case MDL_ANGLEROT:
+        return std::string("angleRot");
+        break;
+    case MDL_ANGLETILT:
+        return std::string("angleTilt");
+        break;
+    case MDL_ANGLEPSI:
+        return std::string("anglePsi");
+        break;
+    case MDL_ANGLEROT2:
+        return std::string("angleRot2");
+        break;
+    case MDL_ANGLETILT2:
+        return std::string("angleTilt2");
+        break;
+    case MDL_ANGLEPSI2:
+        return std::string("anglePsi2");
+        break;
+    case MDL_IMAGE:
+        return std::string("image");
+        break;
+    case MDL_COMMENT:
+        return std::string("comment");
+        break;
+    case MDL_MICROGRAPH:
+        return std::string("micrograph");
+        break;
+    case MDL_CTFMODEL:
+        return std::string("CTFModel");
+        break;
+    case MDL_SCALE:
+        return std::string("scale");
+        break;
+    case MDL_INTSCALE:
+        return std::string("intScale");
+        break;
+    case MDL_MODELFRAC:
+        return std::string("modelFraction");
+        break;
+    case MDL_MIRRORFRAC:
+        return std::string("mirrorFraction");
+        break;
+    case MDL_LL:
+        return std::string("logLikelihood");
+        break;
+    case MDL_SIGNALCHANGE:
+        return std::string("signalChange");
+        break;
+    case MDL_WROBUST:
+        return std::string("wRobust");
+        break;
+    case MDL_BGMEAN:
+        return std::string("bgMean");
+        break;
+    case MDL_SHIFTX:
+        return std::string("shiftX");
+        break;
+    case MDL_SHIFTY:
+        return std::string("shiftY");
+        break;
+    case MDL_SHIFTZ:
+        return std::string("shiftZ");
+        break;
+    case MDL_X:
+        return std::string("X");
+        break;
+    case MDL_Y:
+        return std::string("Y");
+        break;
+    case MDL_Z:
+        return std::string("Z");
+        break;
+    case MDL_ENABLED:
+        return std::string("enabled");
+        break;
+    case MDL_ORIGINX:
+        return std::string("originX");
+        break;
+    case MDL_ORIGINY:
+        return std::string("originY");
+        break;
+    case MDL_ORIGINZ:
+        return std::string("originZ");
+        break;
+    case MDL_WEIGHT:
+        return std::string("weight");
+        break;
+    case MDL_OBJID:
+        return std::string("objId");
+        break;
+    case MDL_FLIP:
+        return std::string("flip");
+        break;
+    case MDL_REF:
+        return std::string("ref");
+        break;
+    case MDL_MAXCC:
+        return std::string("maxCC");
+        break;
+    case MDL_COST:
+        return std::string("cost");
+        break;
+    case MDL_SERIE:
+        return std::string("serie");
+        break;
+    case MDL_PMAX:
+        return std::string("pMax");
+        break;
+    case MDL_CTFINPUTPARAMS:
+        return std::string("CTFInputParams");
+        break;
+    case MDL_PERIODOGRAM:
+        return std::string("periodogram");
+        break;
+    case MDL_NMA:
+        return std::string("NMADisplacements");
+        break;
+    case MDL_SAMPLINGRATE:
+        return std::string("sampling_rate");
+        break;
+    case MDL_VOLTAGE:
+        return std::string("voltage");
+        break;
+    case MDL_DEFOCUSU:
+        return std::string("defocusU");
+        break;
+    case MDL_DEFOCUSV:
+        return std::string("defocusV");
+        break;
+    case MDL_ITER:
+        return std::string("iterationNumber");
+        break;
+    case MDL_BLOCK:
+        return std::string("blockNumber");
+        break;
+    case MDL_IMGMD:
+        return std::string("imageMetaData");
+        break;
+    case MDL_REFMD:
+        return std::string("referenceMetaData");
+        break;
+    case MDL_SIGMANOISE:
+        return std::string("sigmaNoise");
+        break;
+    case MDL_SIGMAOFFSET:
+        return std::string("sigmaOffset");
+        break;
+    case MDL_SUMWEIGHT:
+        return std::string("sumWeight");
+        break;
+    case MDL_RANDOMSEED:
+        return std::string("randomSeed");
+        break;
 
-        default:
-            return std::string("");
-            break;
+    default:
+        return std::string("");
+        break;
     }
 }
 
@@ -608,7 +608,7 @@ bool MetaDataContainer::writeValueToStream(std::ostream &outstream,
         else if (isVector(inputLabel))
         {
             const std::vector<double> &myVector =
-                    *((std::vector<double>*) (getVoidPtr(inputLabel)));
+                *((std::vector<double>*) (getVoidPtr(inputLabel)));
             int imax = myVector.size();
             outstream << "** ";
             for (int i = 0; i < imax; i++)

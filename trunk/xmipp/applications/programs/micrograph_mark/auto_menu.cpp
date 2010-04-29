@@ -46,7 +46,7 @@
 
 /* Constructor ------------------------------------------------------------- */
 QtAutoMenu::QtAutoMenu(QtWidgetMicrograph* _parent) :
-        QtPopupMenuMark(_parent)
+    QtPopupMenuMark(_parent)
 {
     insertItem("AutoSelect", this, SLOT(slotAutoSelectParticles()), Qt::Key_F2);
     insertItem("Save model as", this, SLOT(slotSaveModels()));

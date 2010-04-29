@@ -51,17 +51,17 @@ int main(int argc, char **argv)
         if (prm.do_add)
         {
             FileName fn_tmp=prm.fn_out+".doc";
-            if (exists(fn_tmp)) 
+            if (exists(fn_tmp))
             {
                 DocFile DFaux = prm.DF;
-                // Don't do any fancy merging or sorting because those functions are really slow... 
+                // Don't do any fancy merging or sorting because those functions are really slow...
                 DFaux.append(fn_tmp);
                 DFaux.remove_multiple_strings("Headerinfo");
                 DFaux.write(fn_tmp);
             }
             else
             {
-                prm.DF.write(fn_tmp); 
+                prm.DF.write(fn_tmp);
             }
         }
     }
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     // Making class averages
     try
     {
-       
+
         // Reserve memory for output from class realignment
         if (prm.nr_iter > 0) reserve = prm.DF.dataLineNo();
         else reserve = 0;
@@ -86,12 +86,12 @@ int main(int argc, char **argv)
         init_progress_bar(nr_ref);
 
         // Loop over all classes
-        
+
         for (int dirno = 1; dirno <= nr_ref; dirno++)
-        {   
+        {
             // Do the actual work
             prm.processOneClass(dirno, output_values);
-            
+
             // Output classes sel and doc files
             w = output_values[1];
             w1 = output_values[2];
@@ -119,12 +119,12 @@ int main(int argc, char **argv)
                     }
                 }
             }
-            
+
             progress_bar(dirno);
-            
+
         }
         progress_bar(nr_ref);
-        
+
         // Write selfiles and docfiles with all class averages
         prm.finalWriteToDisc();
 
@@ -133,5 +133,5 @@ int main(int argc, char **argv)
     {
         std::cout << XE;
     }
-    
+
 }

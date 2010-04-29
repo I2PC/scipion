@@ -615,7 +615,7 @@ void Plotter::drawGrid(QPainter *painter)
     light.setColor(Qt::white);
     quiteDark.setColor(Qt::black);
 
-    for (int i = 0;i <= settings.numXTicks;i++)
+    for (int i = 0; i <= settings.numXTicks; i++)
     {
         int x = rect.left() + (i * (rect.width() - 1) / settings.numXTicks);
 
@@ -643,7 +643,7 @@ void Plotter::drawGrid(QPainter *painter)
         */
     }
 
-    for (int j = 0; j <= settings.numYTicks;++j)
+    for (int j = 0; j <= settings.numYTicks; ++j)
     {
         int y = rect.bottom() - (j * (rect.height() - 1) / settings.numYTicks);
         double label = settings.minY + (j * settings.spanY() / settings.numYTicks);

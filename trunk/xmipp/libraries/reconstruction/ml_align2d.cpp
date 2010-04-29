@@ -156,48 +156,48 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         if (!ML3D)
         {
             std::cerr
-            << " -----------------------------------------------------------------"
-            << std::endl;
+                    << " -----------------------------------------------------------------"
+                    << std::endl;
             std::cerr
-            << " | Read more about this program in the following publications:   |"
-            << std::endl;
+                    << " | Read more about this program in the following publications:   |"
+                    << std::endl;
             std::cerr
-            << " |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |"
-            << std::endl;
+                    << " |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |"
+                    << std::endl;
             std::cerr
-            << " |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |"
-            << std::endl;
+                    << " |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |"
+                    << std::endl;
             std::cerr
-            << " |                                                               |"
-            << std::endl;
+                    << " |                                                               |"
+                    << std::endl;
             std::cerr
-            << " |  *** Please cite them if this program is of use to you! ***   |"
-            << std::endl;
+                    << " |  *** Please cite them if this program is of use to you! ***   |"
+                    << std::endl;
             std::cerr
-            << " -----------------------------------------------------------------"
-            << std::endl;
+                    << " -----------------------------------------------------------------"
+                    << std::endl;
         }
 
         std::cerr << "--> Maximum-likelihood multi-reference refinement "
-        << std::endl;
+                  << std::endl;
         std::cerr << "  Input images            : " << fn_img << " ("
-        << nr_images_global << ")" << std::endl;
+                  << nr_images_global << ")" << std::endl;
 
         if (fn_ref != "")
             std::cerr << "  Reference image(s)      : " << fn_ref << std::endl;
         else
             std::cerr << "  Number of references:   : " << model.n_ref
-            << std::endl;
+                      << std::endl;
 
         std::cerr << "  Output rootname         : " << fn_root << std::endl;
 
         std::cerr << "  Stopping criterium      : " << eps << std::endl;
 
         std::cerr << "  initial sigma noise     : " << model.sigma_noise
-        << std::endl;
+                  << std::endl;
 
         std::cerr << "  initial sigma offset    : " << model.sigma_offset
-        << std::endl;
+                  << std::endl;
 
         std::cerr << "  Psi sampling interval   : " << psi_step << std::endl;
 
@@ -208,80 +208,80 @@ void Prog_MLalign2D_prm::show(bool ML3D)
 
         if (fn_frac != "")
             std::cerr << "  Initial model fractions : "
-            << fn_frac << std::endl;
+                      << fn_frac << std::endl;
 
         if (fast_mode)
         {
             std::cerr
-            << "  -> Use fast, reduced search-space approach with C = "
-            << C_fast << std::endl;
+                    << "  -> Use fast, reduced search-space approach with C = "
+                    << C_fast << std::endl;
 
             if (zero_offsets)
                 std::cerr
-                << "    + Start from all-zero translations" << std::endl;
+                        << "    + Start from all-zero translations" << std::endl;
         }
 
         if (search_rot < 180.)
             std::cerr
-            << "    + Limit orientational search to +/- " << search_rot
-            << " degrees" << std::endl;
+                    << "    + Limit orientational search to +/- " << search_rot
+                    << " degrees" << std::endl;
 
         if (save_mem1)
             std::cerr
-            << "  -> Save_memory A: recalculate real-space rotations in -fast"
-            << std::endl;
+                    << "  -> Save_memory A: recalculate real-space rotations in -fast"
+                    << std::endl;
 
         if (save_mem2)
             std::cerr
-            << "  -> Save_memory B: limit translations to 3 sigma_offset "
-            << std::endl;
+                    << "  -> Save_memory B: limit translations to 3 sigma_offset "
+                    << std::endl;
 
         if (fix_fractions)
         {
             std::cerr << "  -> Do not update estimates of model fractions."
-            << std::endl;
+                      << std::endl;
         }
 
         if (fix_sigma_offset)
         {
             std::cerr << "  -> Do not update sigma-estimate of origin offsets."
-            << std::endl;
+                      << std::endl;
         }
 
         if (fix_sigma_noise)
         {
             std::cerr << "  -> Do not update sigma-estimate of noise."
-            << std::endl;
+                      << std::endl;
         }
 
         if (model.do_student)
         {
             std::cerr << "  -> Use t-student distribution with df = " << df
-            << std::endl;
+                      << std::endl;
 
             if (model.do_student_sigma_trick)
             {
                 std::cerr << "  -> Use sigma-trick for t-student distributions"
-                << std::endl;
+                          << std::endl;
             }
         }
 
         if (do_norm)
         {
             std::cerr
-            << "  -> Refine normalization for each experimental image"
-            << std::endl;
+                    << "  -> Refine normalization for each experimental image"
+                    << std::endl;
         }
 
         if (threads > 1)
         {
             std::cerr << "  -> Using " << threads << " parallel threads"
-            << std::endl;
+                      << std::endl;
         }
 
         std::cerr
-        << " -----------------------------------------------------------------"
-        << std::endl;
+                << " -----------------------------------------------------------------"
+                << std::endl;
 
     }
 
@@ -292,20 +292,20 @@ void Prog_MLalign2D_prm::usage()
 {
     std::cerr << "Usage:  ml_align2d [options] " << std::endl;
     std::cerr
-    << "   -i <selfile>                : Selfile with input images \n";
+            << "   -i <selfile>                : Selfile with input images \n";
     std::cerr
-    << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
+            << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
     std::cerr
-    << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
+            << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
     std::cerr
-    << " [ -o <rootname> ]             : Output rootname (default = \"ml2d\")\n";
+            << " [ -o <rootname> ]             : Output rootname (default = \"ml2d\")\n";
     std::cerr
-    << " [ -mirror ]                   : Also check mirror image of each reference \n";
+            << " [ -mirror ]                   : Also check mirror image of each reference \n";
     std::cerr
-    << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n";
+            << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n";
     std::cerr << " [ -thr <N=1> ]                : Use N parallel threads \n";
     std::cerr
-    << " [ -more_options ]             : Show all possible input parameters \n";
+            << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
 // Extended usage ===================================================================
@@ -314,48 +314,48 @@ void Prog_MLalign2D_prm::extendedUsage(bool ML3D)
     std::cerr << "Additional options: " << std::endl;
     std::cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
     std::cerr
-    << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
+            << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
     std::cerr
-    << " [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]\n";
+            << " [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]\n";
     std::cerr
-    << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
+            << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
     std::cerr
-    << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
+            << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
     std::cerr
-    << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
+            << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
     std::cerr
-    << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n";
+            << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n";
     std::cerr
-    << " [ -zero_offsets ]             : Kick-start the fast algorithm from all-zero offsets \n";
+            << " [ -zero_offsets ]             : Kick-start the fast algorithm from all-zero offsets \n";
 
     if (!ML3D)
         std::cerr
-        << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
+                << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
 
     if (!ML3D)
         std::cerr
-        << " [ -istart <int> ]             : number of initial iteration \n";
+                << " [ -istart <int> ]             : number of initial iteration \n";
 
     std::cerr
-    << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
+            << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
 
     std::cerr
-    << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
+            << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
 
     std::cerr
-    << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
+            << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
 
     std::cerr
-    << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
+            << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
 
     std::cerr
-    << " [ -student ]                  : Use t-distributed instead of Gaussian model for the noise \n";
+            << " [ -student ]                  : Use t-distributed instead of Gaussian model for the noise \n";
 
     std::cerr
-    << " [ -df <int=6> ]               : Degrees of freedom for the t-distribution \n";
+            << " [ -df <int=6> ]               : Degrees of freedom for the t-distribution \n";
 
     std::cerr
-    << " [ -norm ]                     : Refined normalization parameters for each particle \n";
+            << " [ -norm ]                     : Refined normalization parameters for each particle \n";
 
     std::cerr << std::endl;
 
@@ -682,8 +682,8 @@ void Prog_MLalign2D_prm::generateInitialReferences()
     if (verb > 0)
     {
         std::cerr
-        << "  Generating initial references by averaging over random subsets"
-        << std::endl;
+                << "  Generating initial references by averaging over random subsets"
+                << std::endl;
         init_progress_bar(model.n_ref);
     }
 
@@ -1062,9 +1062,9 @@ void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
         {
             std::cout << std::endl;
             std::cout << "scale= " << opt_scale << " changes to " << wsum_sc
-            / wsum_sc2 << std::endl;
+                      / wsum_sc2 << std::endl;
             std::cout << "bgmean= " << bgmean << " changes to "
-            << Maux2.computeAvg() << std::endl;
+                      << Maux2.computeAvg() << std::endl;
         }
 
         // non-ML update of bgmean (this is much cheaper than true-ML update...)
@@ -1508,7 +1508,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     double local_mindiff, local_wsum_corr, local_wsum_offset;
     double local_wsum_sc, local_wsum_sc2, local_maxweight, local_maxweight2;
     int local_iopty, local_ioptx, local_iopt_psi, local_iopt_flip,
-    local_opt_refno;
+        local_opt_refno;
 
     //TODO: this will not be here
     Matrix2D<double> Maux, Mweight;

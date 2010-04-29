@@ -58,17 +58,17 @@ static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
 
 struct ImageThreadParams
 {
-	int myThreadID;
-	Prog_RecFourier_prm * parent;
-        Matrix2D< std::complex<double> > *paddedFourier;
-	Matrix2D< std::complex<double> > *localPaddedFourier;
-        Matrix2D<double> * symmetry;
-        int read;
-        Matrix2D<double> * localAInv;
-        int imageIndex;
-        MetaData * docFile;
-        double weight;
-        double localweight;
+    int myThreadID;
+    Prog_RecFourier_prm * parent;
+    Matrix2D< std::complex<double> > *paddedFourier;
+    Matrix2D< std::complex<double> > *localPaddedFourier;
+    Matrix2D<double> * symmetry;
+    int read;
+    Matrix2D<double> * localAInv;
+    int imageIndex;
+    MetaData * docFile;
+    double weight;
+    double localweight;
 };
 
 /** Fourier reconstruction parameters. */
@@ -104,41 +104,41 @@ public:
 
     /// Number of iterations for the weight
     int NiterWeight;
-    
+
     /// Number of threads to use in parallel to process a single image
     int numThreads;
-    
+
     /// IDs for the threads
     pthread_t * th_ids;
-    
+
     /// Contains parameters passed to each thread
     ImageThreadParams * th_args;
-    
+
     /// Tells the threads what to do next
     int threadOpCode;
-    
+
     /// Number of rows already processed on an image
     int rowsProcessed;
-    
+
     /// Defines what a thread should do
     static void * processImageThread( void * threadArgs );
-    
+
     /// Controls mutual exclusion on critical zones of code
     pthread_mutex_t workLoadMutex;
-    
+
     /// To create a barrier synchronization for threads
     barrier_t barrier;
-    
+
     /// A status array for each row in an image (processing, processed,etc..)
     int * statusArray;
-    
+
     /// How many image rows are processed at a time by a single thread.
     int thrWidth;
-	
+
 public: // Internal members
     // Size of the original images
     int imgSize;
-    
+
     // Padded volume size
     int volPadSizeX;
     int volPadSizeY;
@@ -148,7 +148,7 @@ public: // Internal members
     Matrix1D<double>  Fourier_blob_table;
 
     // Table with blob values, squared samplinf
-     Matrix1D<double> blobTableSqrt, fourierBlobTableSqrt;
+    Matrix1D<double> blobTableSqrt, fourierBlobTableSqrt;
 
     // Inverse of the delta and deltaFourier used in the tables
     //double iDelta,
@@ -158,7 +158,7 @@ public: // Internal members
     double maxResolution2;
 
     // Definition of the blob
-    struct blobtype blob; 
+    struct blobtype blob;
 
     // vector with R symmetry matrices
     std::vector <Matrix2D<double> > R_repository;
@@ -198,13 +198,13 @@ public:
 
     /// Get angles (either from reading the header or from a docfile)
     void get_angles_for_image(const FileName &fn, double &rot, double &tilt,
-        double &psi, double &xoff, double &yoff, double &flip, double &weight, MetaData * docFile);
+                              double &psi, double &xoff, double &yoff, double &flip, double &weight, MetaData * docFile);
 
-    /// Main Loop 
+    /// Main Loop
     void run();
-    
+
     void finishComputations( FileName out_name );
-    
+
     /// Process one image
     void processImages( int firstImageIndex, int lastImageIndex, bool saveFSC=false ); //const FileName &fn_img);
 

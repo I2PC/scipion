@@ -118,8 +118,8 @@ std::ostream& operator<<(std::ostream& o, const DocLine& line)
     switch (line.line_type)
     {
     case (DocLine::DATALINE):
-                    // Print a data line
-                    sprintf(aux, "%5d ", line.key);
+        // Print a data line
+        sprintf(aux, "%5d ", line.key);
         o << aux;
         sprintf(aux, "%-2d", line.data.size());
         o << aux;
@@ -127,7 +127,7 @@ std::ostream& operator<<(std::ostream& o, const DocLine& line)
         int imax;
         imax = line.data.size();
         for (int i = 0; i < imax; i++)
-{
+        {
             sprintf(aux, " % 10.5f", line.data[i]);
             o << aux;
         }
@@ -136,8 +136,8 @@ std::ostream& operator<<(std::ostream& o, const DocLine& line)
         break;
 
     case (DocLine::COMMENT):
-                    // Print a comment
-                    o << line.text << std::endl;
+        // Print a comment
+        o << line.text << std::endl;
         break;
     }
 
@@ -176,14 +176,14 @@ void DocLine::read(std::istream& in)
 
         key = textToInteger(nextToken(line, i), 1602, "Error reading key");
         param_no = textToInteger(nextToken(line, i), 1602,
-                        "Error reading number parameters");
+                                 "Error reading number parameters");
         std::string auxline = line;
 
         try
         {
             // Try unfixed mode first
             readFloatList(line, i, param_no, data, 1602,
-                            "Error reading doc file line");
+                          "Error reading doc file line");
         }
         catch (Xmipp_error e)
         {
@@ -398,22 +398,22 @@ void DocFile::read(const FileName& name, int overriding)
         catch (Xmipp_error e)
         {
             std::cout << "Doc File: Line " << line_no <<
-            " is skipped due to an error\n";
+                      " is skipped due to an error\n";
         }
 #endif
 
         switch (temp.line_type)
         {
         case (DocLine::NOT_ASSIGNED):
-                        break; // Line with an error
+            break; // Line with an error
 
         case (DocLine::DATALINE):
-                        no_lines++;
+            no_lines++;
             m.push_back(temp);
             break;
 
         case (DocLine::COMMENT):
-                        m.push_back(temp);
+            m.push_back(temp);
             break;
         }
 
@@ -500,14 +500,14 @@ int DocFile::remove_multiple_strings(std::string pattern)
     {
         if ((*current_line).Is_comment())
         {
-            if (((*current_line).get_text()).find(pattern) < 
-		((*current_line).get_text()).size() )
-	    {
-		if (found_once)
-		{
-		    remove_current();
-		}
-		found_once = true;
+            if (((*current_line).get_text()).find(pattern) <
+                ((*current_line).get_text()).size() )
+            {
+                if (found_once)
+                {
+                    remove_current();
+                }
+                found_once = true;
             }
         }
         next();
@@ -573,9 +573,9 @@ int DocFile::getColNumberFromHeader(const char * pattern)
         {
             std::vector<std::string> tokens;
             tokenize(header,tokens," \t()");
-            for (int i = 0; i < tokens.size(); i++) 
+            for (int i = 0; i < tokens.size(); i++)
             {
-                if (strstr(tokens[i].c_str(), pattern) != NULL) 
+                if (strstr(tokens[i].c_str(), pattern) != NULL)
                 {
                     return textToInteger(tokens[i+1]);
                 }
@@ -852,10 +852,10 @@ void DocFile::get_image(int key, ImageXmipp &I, bool apply_geo)
     DocLine DL = get_current_line();
     previous();
     FileName fn_img;
-    if (get_current_line().Is_comment()) 
-	fn_img = ((get_current_line()).get_text()).erase(0, 3);
+    if (get_current_line().Is_comment())
+        fn_img = ((get_current_line()).get_text()).erase(0, 3);
     else
-	REPORT_ERROR(1,"The docfile provided is not of type Alignment");
+        REPORT_ERROR(1,"The docfile provided is not of type Alignment");
 
     // Read actual image
     I.read(fn_img);
@@ -873,7 +873,7 @@ void DocFile::get_image(int key, ImageXmipp &I, bool apply_geo)
     {
         Matrix2D<double> A = I.get_transformation_matrix(true);
         if (!A.isIdentity())
-	    I().selfApplyGeometryBSpline(A, 3, IS_INV, WRAP);
+            I().selfApplyGeometryBSpline(A, 3, IS_INV, WRAP);
     }
 }
 
@@ -884,10 +884,10 @@ FileName DocFile::get_imagename(int key)
     DocLine DL = get_current_line();
     previous();
     FileName fn_img;
-    if (get_current_line().Is_comment()) 
-	fn_img = ((get_current_line()).get_text()).erase(0, 3);
+    if (get_current_line().Is_comment())
+        fn_img = ((get_current_line()).get_text()).erase(0, 3);
     else
-	REPORT_ERROR(1,"The docfile provided is not of type Alignment");
+        REPORT_ERROR(1,"The docfile provided is not of type Alignment");
     return fn_img;
 }
 
@@ -1338,7 +1338,7 @@ void DocFile::merge(DocFile& DF, int mode, int sumcol)
                 std::cerr<<"image name = "<<fn_img;
                 REPORT_ERROR(1,"Image occured in two docfiles to be merged");
             }
-        }        
+        }
         else
         {
             // Just add new line at the end of the file
@@ -1379,7 +1379,7 @@ DocFile DocFile::sort_by_filenames()
     SelFile SF1, SF2;
     FileName fn_img, head;
     DocLine DL;
-    
+
     // Copy header
     go_beginning();
     head = (*current_line).get_text();
@@ -1531,30 +1531,30 @@ void get_subset_docfile(DocFile& DFin, SelFile& SF, DocFile& DFout)
     DFout.clear();
     DFin.go_beginning();
     DL = DFin.get_current_line();
-    if (DL.Is_comment()) 
-	fn_tmp = DL.get_text();
+    if (DL.Is_comment())
+        fn_tmp = DL.get_text();
     if (strstr(fn_tmp.c_str(), "Headerinfo") == NULL)
-	REPORT_ERROR(1607,"Input docfile is not of NewXmipp-style");
+        REPORT_ERROR(1607,"Input docfile is not of NewXmipp-style");
     else
-	// append the same header to DFout
-	DFout.append_comment(fn_tmp.without(" ; "));
+        // append the same header to DFout
+        DFout.append_comment(fn_tmp.without(" ; "));
 
     SF.go_beginning();
     while (!SF.eof())
     {
-	fn_tmp = SF.NextImg();
+        fn_tmp = SF.NextImg();
         if (fn_tmp=="") continue;
-	if (DFin.search_comment(fn_tmp))
-	{
+        if (DFin.search_comment(fn_tmp))
+        {
             DFout.append_comment(fn_tmp);
-	    DL=DFin.get_current_line();
+            DL=DFin.get_current_line();
             DFout.append_line(DL);
-	}
-	else
-	{
-	    REPORT_ERROR(1608, (std::string)"Docfile: Cannot find " + fn_tmp + " in docfile ");
-	}
+        }
+        else
+        {
+            REPORT_ERROR(1608, (std::string)"Docfile: Cannot find " + fn_tmp + " in docfile ");
+        }
     }
-    
+
 }
 

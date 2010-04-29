@@ -28,23 +28,29 @@
 int main(int argc, char **argv)
 {
     Prog_Phantom_Create_Micrograph_Parameters prm;
-    
-    try {
+
+    try
+    {
         prm.read(argc,argv);
-    } catch (Xmipp_error XE) {
+    }
+    catch (Xmipp_error XE)
+    {
         std::cout << XE << std::endl;
         prm.usage();
         exit(1);
     }
-    
-    try {
+
+    try
+    {
         prm.show();
         prm.produce_side_info();
         prm.run();
-    } catch (Xmipp_error XE) {
+    }
+    catch (Xmipp_error XE)
+    {
         std::cout << XE << std::endl;
         exit(1);
     }
-    
+
     return 0;
 }

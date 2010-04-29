@@ -1,5 +1,5 @@
 /***************************************************************************
- * 
+ *
  * Authors:     J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -27,73 +27,73 @@
 
 std::string removeChar( std::string str, char character )
 {
-	std::string temp;
-			
-	for( unsigned int i = 0 ; i < str.length( ) ; i++ )
-	{
-		if ( str[ i ] != character ) 
-			temp += str[ i ];
-	}
-	
-	return temp;
+    std::string temp;
+
+    for( unsigned int i = 0 ; i < str.length( ) ; i++ )
+    {
+        if ( str[ i ] != character )
+            temp += str[ i ];
+    }
+
+    return temp;
 }
 
 std::string unescape( std::string str )
 {
-	std::string temp;
+    std::string temp;
 
-	for( unsigned int i = 0 ; i < str.length( ) ; i++ )
-	{
-		char current_char = str[ i ];
-			
-		if( current_char != '\n' && current_char != '\t' && 
-			current_char != '\v' && current_char != '\b' &&
-			current_char != '\r' && current_char != '\f' &&
-			current_char != '\a' )
-		{
-			temp += str[ i ];
-		}	
-	}
-	
-	return temp;
+    for( unsigned int i = 0 ; i < str.length( ) ; i++ )
+    {
+        char current_char = str[ i ];
+
+        if( current_char != '\n' && current_char != '\t' &&
+            current_char != '\v' && current_char != '\b' &&
+            current_char != '\r' && current_char != '\f' &&
+            current_char != '\a' )
+        {
+            temp += str[ i ];
+        }
+    }
+
+    return temp;
 }
 
 std::string simplify( std::string str )
 {
-	std::string temp;
-	
-	// First, unescape string
-	str = unescape( str );
-	
-	// Remove spaces from the beginning
-	int pos = str.find_first_not_of( ' ' );
-	str.erase( 0, pos );
-	
-	// Trim the rest of spaces
-	for( unsigned int i = 0 ; i < str.length( ) ; )
-	{
-		temp += str[ i ];
-		
-		if ( str[ i ] == ' ' )
-		{			
-			while( str[ i ] == ' ' )
-			{
-				i++;
-			}
-		}
-		else
-		{
-			i++;
-		}
-	}
-	
-	// Remove space left at the end of the string 
-	// if needed
-	if( temp[ temp.size( ) - 1 ] == ' ' )
-	{
-		temp.resize( temp.size() - 1 );
-	}
-	
-	return temp;
+    std::string temp;
+
+    // First, unescape string
+    str = unescape( str );
+
+    // Remove spaces from the beginning
+    int pos = str.find_first_not_of( ' ' );
+    str.erase( 0, pos );
+
+    // Trim the rest of spaces
+    for( unsigned int i = 0 ; i < str.length( ) ; )
+    {
+        temp += str[ i ];
+
+        if ( str[ i ] == ' ' )
+        {
+            while( str[ i ] == ' ' )
+            {
+                i++;
+            }
+        }
+        else
+        {
+            i++;
+        }
+    }
+
+    // Remove space left at the end of the string
+    // if needed
+    if( temp[ temp.size( ) - 1 ] == ' ' )
+    {
+        temp.resize( temp.size() - 1 );
+    }
+
+    return temp;
 }
 

@@ -75,24 +75,27 @@ int main(int argc, char *argv[])
     try
     {
         if (Is_ImageXmipp(fn_in))
-        {//is this a spider image?
+        {
+            //is this a spider image?
             ImageXmipp I;
             I.read(fn_in);
             mrcimage.write(fn_out, I, reverse_endian, x_length, y_length, z_length);
         }
         else if (Is_VolumeXmipp(fn_in))
-        {//is this a spider volume?
+        {
+            //is this a spider volume?
             Tomogram tomogram;
             tomogram.open_tomogram(fn_in,reverse_endian);
             mrcimage.write(fn_out, tomogram, reverse_endian,
-                x_length, y_length, z_length);
+                           x_length, y_length, z_length);
         }
         else if (fn_in.get_extension()=="sel")
-        {// is this a selfile?
+        {
+            // is this a selfile?
             SelFile SF;
             SF.read(fn_in);
             mrcimage.write(fn_out, SF, reverse_endian,
-                x_length, y_length, z_length, fn_tilt);
+                           x_length, y_length, z_length, fn_tilt);
         }
         else
         {
@@ -113,7 +116,7 @@ int main(int argc, char *argv[])
                         float tilt;
                         if (fh_tilt.eof())
                             REPORT_ERROR(1,(std::string)"Not enough angles in "+
-                                fn_tilt);
+                                         fn_tilt);
                         fh_tilt >> tilt;
                         ImageXmipp I;
                         V().getSlice(k,I());

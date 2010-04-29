@@ -39,7 +39,8 @@
 
 ///  Ways the training set can be used
 typedef enum {CIRCLE, ELLIPSE,  RECTANGLE, SQUARE, RING, ELLIPRING,
-              RECTFRAME, SQUFRAME, POLYGON} maskType;
+              RECTFRAME, SQUFRAME, POLYGON
+             } maskType;
 
 /**@name maskFigure*/
 //@{
@@ -58,7 +59,7 @@ public:
     *   Parameter: _cy: Y-coordinate
     */
     maskFigure(QPaintDevice* _paintDevice, QPixmap* _pixmap, int _width, int _height):
-            QPainter(_paintDevice), pixmap(_pixmap)
+        QPainter(_paintDevice), pixmap(_pixmap)
     {
         width = _width;
         height = _height;
@@ -234,7 +235,7 @@ public:
     *   Parameter: _yradius: radius of the ellipse
     */
     maskEllipse(int _cx = 0, int _cy = 0, int _xradius = 1, int _yradius = 1): maskFigure(_cx, _cy), rxradius(_xradius), ryradius(_yradius)
-{};
+    {};
 
     /** maskCircle destructor
     */
@@ -482,10 +483,10 @@ public:
     virtual void print(float scalex, float scaley)
     {
         std::cout << "(Origin_x,Origin_y): (" << rcx / scalex << ", "
-        << rcy / scaley << ")" << std::endl;
+                  << rcy / scaley << ")" << std::endl;
 
         std::cout << "(Radius_x,Radius_y): (" << rxradius / scalex << ", "
-        << ryradius / scaley << ")" << std::endl;
+                  << ryradius / scaley << ")" << std::endl;
     }
 
 protected:
@@ -612,7 +613,7 @@ public:
     *   Parameter: _rheight: height of the rectangle
     */
     maskRectangle(int _cx = 0, int _cy = 0, int _rwidth = 1, int _rheight = 1): maskFigure(_cx, _cy), rrwidth(_rwidth), rrheight(_rheight)
-{};
+    {};
 
     /** maskRectangle destructor
     */
@@ -856,10 +857,10 @@ public:
     virtual void print(float scalex, float scaley)
     {
         std::cout << "(Origin_x,Origin_y): (" << rcx / scalex << ", "
-        << rcy / scaley << ")" << std::endl;
+                  << rcy / scaley << ")" << std::endl;
 
         std::cout << "(half_width,half_height): (" << rrwidth / scalex << ", "
-        << rrheight / scaley << ")" << std::endl;
+                  << rrheight / scaley << ")" << std::endl;
     }
 
 protected:
@@ -1180,8 +1181,8 @@ public:
     {
         maskEllipse::print(scalex, scaley);
         std::cout << "(innerXradius,innerYradius): (" << innerXradius / scalex << ", "
-        << innerYradius / scaley << ")"
-        << std::endl;
+                  << innerYradius / scaley << ")"
+                  << std::endl;
     }
 
 
@@ -1466,9 +1467,9 @@ public:
     {
         maskRectangle::print(scalex, scaley);
         std::cout << "(half_innerwidth,"
-        "half_innerheight): (" << innerwidth / scalex << ", "
-        << innerheight / scaley << ")"
-        << std::endl;
+                  "half_innerheight): (" << innerwidth / scalex << ", "
+                  << innerheight / scaley << ")"
+                  << std::endl;
     }
 
 
@@ -1803,8 +1804,8 @@ public:
         std::cout << "List of points\n";
         for (int i = 0; i < list_of_points.size(); i++)
             std::cout << "Point " << i << " (X,Y)=("
-            << XX(list_of_points[i]) / scalex << ","
-            << YY(list_of_points[i]) / scaley << ")\n";
+                      << XX(list_of_points[i]) / scalex << ","
+                      << YY(list_of_points[i]) / scaley << ")\n";
     }
 
 protected:
@@ -1881,7 +1882,7 @@ private:
     QWidget    *helpmsg;
     QLabel     *status;
     int         circle, rect, ellip, squ, ring, ellipring, rectframe,
-    squframe, si, polygon; // Menu item ids
+      squframe, si, polygon; // Menu item ids
     void Init();
     bool  xmipp2Qt(ImageT<double> &_image);
     bool  Qt2xmipp(QImage _image);

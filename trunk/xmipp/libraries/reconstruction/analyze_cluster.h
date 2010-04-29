@@ -52,10 +52,10 @@ public:
 
     /** Number of iterations */
     int Niter;
-    
+
     /** Distance Threshold */
     double distThreshold;
-    
+
     /** Don't mask*/
     bool dontMask;
 public:
@@ -70,16 +70,16 @@ public:
 
     // Set of images assigned to the class
     std::vector< Matrix1D<float> * > Iclass;
-    
+
     // Set of images assigned to the class
     std::vector< Matrix1D<float> * > Iclassorig;
-    
+
     // Set of basis functions
     std::vector< Matrix1D<double> * > PCAbasis;
 
     // Set of distances
     Matrix1D<double> distance;
-    
+
     // Number of pixels in the mask
     int Npixels;
 public:

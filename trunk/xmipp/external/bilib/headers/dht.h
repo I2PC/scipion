@@ -23,12 +23,12 @@
     success: return(!ERROR); failure: return(ERROR);
 */
 extern int  DiscreteHartleyTransform
-    (
-        double Data[],    /* signal */
-        double *ScratchBuffer,  /* scratch buffer */
-        double CaS[],    /* coefficients */
-        long SignalLength,  /* signal length */
-        int  Forward    /* direction */
-    );
+(
+    double Data[],    /* signal */
+    double *ScratchBuffer,  /* scratch buffer */
+    double CaS[],    /* coefficients */
+    long SignalLength,  /* signal length */
+    int  Forward    /* direction */
+);
 //@}
 

@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Manuel Sanchez Pau 
+ * Authors:     Manuel Sanchez Pau
  *              Carlos Oscar Sanchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -58,24 +58,24 @@ void Prog_Detect_Structures_Param::read(int argc, char **argv)
         rot2  = textToFloat(argv[i+3]);
         tilt2 = textToFloat(argv[i+4]);
     }
-    
+
     threads=textToInteger(getParameter(argc,argv,"-thr","1"));
 }
 
 void Prog_Detect_Structures_Param::show() const
 {
     std::cout
-        << "Input volume:         " << fnIn               << std::endl
-        << "Output rootname:      " << fnOut              << std::endl
-        << "Filter type:          " << filterType         << std::endl
-        << "Sigma0:               " << sigma0             << std::endl
-        << "SigmaF:               " << sigmaF             << std::endl
-        << "SigmaStep:            " << sigmaStep          << std::endl
-        << "AngStep:              " << angStep            << std::endl
-        << "Remove Background:    " << removeBackground   << std::endl
-        << "Remove Missing Wedge: " << removeMissingWedge << std::endl
-        << "Using Threads:        " << threads            << std::endl
-    ;
+            << "Input volume:         " << fnIn               << std::endl
+            << "Output rootname:      " << fnOut              << std::endl
+            << "Filter type:          " << filterType         << std::endl
+            << "Sigma0:               " << sigma0             << std::endl
+            << "SigmaF:               " << sigmaF             << std::endl
+            << "SigmaStep:            " << sigmaStep          << std::endl
+            << "AngStep:              " << angStep            << std::endl
+            << "Remove Background:    " << removeBackground   << std::endl
+            << "Remove Missing Wedge: " << removeMissingWedge << std::endl
+            << "Using Threads:        " << threads            << std::endl
+            ;
     if (removeMissingWedge)
         std::cout << "Plane 1: " << rot1 << " " << tilt1 << std::endl
                   << "Plane 2: " << rot2 << " " << tilt2 << std::endl;
@@ -84,16 +84,16 @@ void Prog_Detect_Structures_Param::show() const
 void Prog_Detect_Structures_Param::usage() const
 {
     std::cout << "Usage:\n"
-        << "    -i <volume>         : Input volume\n"
-        << "    -oroot <rootname>   : Output rootname\n"
-        << "    -type <string>      : Filter type: wall or filament\n"
-        << "   [-sigma0 <s=1>]      : Initial width\n"
-        << "   [-sigmaF <s=-1>]     : Final width\n"
-        << "   [-sigmaStep <s=-1>]  : Width step\n"
-        << "   [-angStep <ang=5>]   : Angular step\n"
-        << "   [-removeBackground]  : Remove background\n"
-        << "   [-missing <rot1> <tilt1> <rot2> <tilt2>] : Remove missing wedge\n"
-		<< "   [-thr <t=1>]         : Number of parallel threads to use\n";
+              << "    -i <volume>         : Input volume\n"
+              << "    -oroot <rootname>   : Output rootname\n"
+              << "    -type <string>      : Filter type: wall or filament\n"
+              << "   [-sigma0 <s=1>]      : Initial width\n"
+              << "   [-sigmaF <s=-1>]     : Final width\n"
+              << "   [-sigmaStep <s=-1>]  : Width step\n"
+              << "   [-angStep <ang=5>]   : Angular step\n"
+              << "   [-removeBackground]  : Remove background\n"
+              << "   [-missing <rot1> <tilt1> <rot2> <tilt2>] : Remove missing wedge\n"
+              << "   [-thr <t=1>]         : Number of parallel threads to use\n";
 }
 
 void Prog_Detect_Structures_Param::run()
@@ -113,14 +113,14 @@ void Prog_Detect_Structures_Param::run()
             MW->rotNeg=rot2;
             MW->tiltNeg=tilt2;
         }
-        
+
         Steerable *filter;
-        
+
         if( filterType == "wall" )
             filter=new Steerable(sigma,Vaux(),angStep, FT_WALLS ,MW, threads);
         else
             filter=new Steerable(sigma,Vaux(),angStep, FT_FILAMENTS ,MW, threads);
-        
+
         // Compute energy percentage
         double totalEnergy=Vaux().sum2();
         Vaux()*=Vaux();
@@ -134,18 +134,18 @@ void Prog_Detect_Structures_Param::run()
         }
         else
             FOR_ALL_ELEMENTS_IN_MATRIX3D(Vout())
+        {
+            double vout=Vout(k,i,j);
+            double vaux=Vaux(k,i,j);
+            if (vout<vaux)
             {
-                double vout=Vout(k,i,j);
-                double vaux=Vaux(k,i,j);
-                if (vout<vaux)
-                {
-                    Vout(k,i,j)=vaux;
-                    Vsigma(k,i,j)=sigma;
-                }
+                Vout(k,i,j)=vaux;
+                Vsigma(k,i,j)=sigma;
             }
+        }
         delete filter;
     }
-    
+
     // Limit the maximum energy (<99.5%)
     histogram1D hist;
     hist.clear();
@@ -162,8 +162,8 @@ void Prog_Detect_Structures_Param::run()
         EntropyOtsuSegmentation(Voutmask);
         dilate3D(Voutmask,Vout(),18,0,2);
         FOR_ALL_ELEMENTS_IN_MATRIX3D(Voutmask)
-            if (Vout(k,i,j)<0.5)
-                Vsigma(k,i,j)=0;
+        if (Vout(k,i,j)<0.5)
+            Vsigma(k,i,j)=0;
     }
     Vsigma.write(fnOut+"_width.vol");
 }

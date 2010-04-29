@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
                 }
 
                 std::cout << "Image number " << o << " contains " << number_elements
-                << " pixels set to 1\n";
+                          << " pixels set to 1\n";
             }
         }
         else if (Is_VolumeXmipp(fn_in))
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
                 }
 
                 std::cout << "Volume number " << o << " contains " << number_elements
-                << " voxels set to 1\n";
+                          << " voxels set to 1\n";
             }
         }
         else
@@ -124,10 +124,10 @@ int main(int argc, char *argv[])
 void Usage()
 {
     std::cerr << "Usage: separate_objects\n"
-    << "   -i <fn_in>                      : Input image or volume\n"
-    << "  [-o <fn_root>]                   : Root filename for output\n"
-    << "                                     By default, the input name\n"
-    << "  [-invert]                        : Produce inverse masks\n"
-    << "  [-min_size <size=0>]             : Save if size is greater than this\n"
-    ;
+              << "   -i <fn_in>                      : Input image or volume\n"
+              << "  [-o <fn_root>]                   : Root filename for output\n"
+              << "                                     By default, the input name\n"
+              << "  [-invert]                        : Produce inverse masks\n"
+              << "  [-min_size <size=0>]             : Save if size is greater than this\n"
+              ;
 }

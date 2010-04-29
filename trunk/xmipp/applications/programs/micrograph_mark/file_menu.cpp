@@ -51,7 +51,7 @@
 
 /* Constructor ------------------------------------------------------------- */
 QtFileMenu::QtFileMenu(QtWidgetMicrograph* _parent) :
-        QtPopupMenuMark(_parent)
+    QtPopupMenuMark(_parent)
 {
     __coordinates_are_saved = TRUE;
 
@@ -95,13 +95,13 @@ void QtFileMenu::doOption(int item)
     {
         options->setItemChecked(circle, true);
         options->setItemChecked(square, false);
-	((QtWidgetMicrograph*)parentWidget())->changeMarkType(MARK_CIRCLE);
+        ((QtWidgetMicrograph*)parentWidget())->changeMarkType(MARK_CIRCLE);
     }
     else if (item == square)
     {
         options->setItemChecked(circle, false);
         options->setItemChecked(square, true);
-	((QtWidgetMicrograph*)parentWidget())->changeMarkType(MARK_SQUARE);
+        ((QtWidgetMicrograph*)parentWidget())->changeMarkType(MARK_SQUARE);
     }
 }
 
@@ -117,7 +117,7 @@ void QtFileMenu::slotChangeCircleRadius()
 void QtFileMenu::slotShowFamilies()
 {
     ((QtMainWidgetMark*) ((QtWidgetMicrograph*)parentWidget())->parentWidget())
-        ->showFamilies();
+    ->showFamilies();
 }
 
 /* Show Micrograph info ---------------------------------------------------- */
@@ -130,9 +130,9 @@ void QtFileMenu::slotMicrographInfo()
     m->size(Xdim,Ydim);
     std::string message = (std::string)"Micrograph name: "+m->micrograph_name();
     message+=(std::string)"\nSize YxX: "+integerToString(Ydim)+"x"+
-        integerToString(Xdim);
+             integerToString(Xdim);
     QMessageBox helpmsg((QString)"Information", (QString) message.c_str(),
-        QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, false);
+                        QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, false);
     helpmsg.exec();
 }
 
@@ -162,7 +162,7 @@ void QtFileMenu::slotLoadCoords()
             int i=fn.find(micrographName+".");
             if (i!=-1)
                 familyName=fn.substr(i+micrographName.length()+1,
-                    fn.length()-(i+micrographName.length()+1));
+                                     fn.length()-(i+micrographName.length()+1));
             else familyName=fn.get_extension().c_str();
             emit signalAddFamily(familyName.c_str());
 
@@ -191,7 +191,8 @@ void QtFileMenu::slotSaveCoords()
                                      "&Yes", "&No",
                                      0,      // Enter == button 0
                                      1))
-    { // Escape == button 1
+    {
+        // Escape == button 1
     case 0: // Yes clicked, Alt-Y or Enter pressed.
         break;
     case 1: // No clicked or Alt-N pressed or ESC
@@ -248,12 +249,12 @@ void QtFileMenu::slotGenerateImages()
         startingIndexLineEdit.setText("1");
         QLabel    originalM("Original micrograph: ", &qgrid);
         QLineEdit originalMLineEdit(&qgrid);
-	// Sjors & Roberto: 25jan08
-	// Here we need the name of the original micrograph, as we
-	// might have a 8bit version in memory because this gives
-	// nicer visualization with the XVsmooth routines
-	// Also see our explanation in main.cpp
-	FileName fnt = (((QtWidgetMicrograph*)parentWidget())->getMicrograph())->micrograph_name();
+        // Sjors & Roberto: 25jan08
+        // Here we need the name of the original micrograph, as we
+        // might have a 8bit version in memory because this gives
+        // nicer visualization with the XVsmooth routines
+        // Also see our explanation in main.cpp
+        FileName fnt = (((QtWidgetMicrograph*)parentWidget())->getMicrograph())->micrograph_name();
         originalMLineEdit.setText(fnt.c_str());
         QRadioButton  computeTransmitance("Transmitance -> O.D.  ", &qgrid);
         QRadioButton  computeInverse("Invert", &qgrid);
@@ -321,7 +322,8 @@ void QtFileMenu::slotSaveAngles()
                                      "&Yes", "&No",
                                      0,      // Enter == button 0
                                      1))
-    { // Escape == button 1
+    {
+        // Escape == button 1
     case 0: // Yes clicked, Alt-Y or Enter pressed.
         break;
     case 1: // No clicked or Alt-N pressed or ESC
@@ -352,7 +354,8 @@ void QtFileMenu::slotQuit()
                                          "&Save", "&Don't Save", "&Cancel",
                                          0,      // Enter == button 0
                                          2))
-        { // Escape == button 2
+        {
+            // Escape == button 2
         case 0: // Save clicked, Alt-S or Enter pressed.
             slotSaveCoords();
             exit(0);

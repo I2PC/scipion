@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     {
         prm.read(argc, argv);
 
-	// Silence all slaves
+        // Silence all slaves
         if (rank != 0) prm.verb = 0;
 
         prm.produce_Side_info();
@@ -99,8 +99,8 @@ int main(int argc, char **argv)
             DFo.clear();
             if (rank == 0)
             {
-		DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedNo (7) Ref (8), Pmax/sumP (9)");
-	    }
+                DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), WedNo (7) Ref (8), Pmax/sumP (9)");
+            }
 
             // Integrate over all images
             prm.sum_over_all_images(prm.SF, wsum_Mref, wsum_Mwedge, sum_nonzero_pixels, wsum_sigma2,
@@ -113,14 +113,14 @@ int main(int argc, char **argv)
             sumcorr = aux;
             MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
             wsum_sigma_offset = aux;
-	    for (int ires = 0; ires < prm.resol_max; ires++)
-	    {
+            for (int ires = 0; ires < prm.resol_max; ires++)
+            {
                 MPI_Allreduce(&wsum_sigma2[ires], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-		wsum_sigma2[ires] = aux;
+                wsum_sigma2[ires] = aux;
                 MPI_Allreduce(&sum_nonzero_pixels[ires], &iaux, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-		sum_nonzero_pixel[ires] = iaux;
-	    }
-            for (int refno = 0;refno < prm.n_ref; refno++)
+                sum_nonzero_pixel[ires] = iaux;
+            }
+            for (int refno = 0; refno < prm.n_ref; refno++)
             {
                 MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[2*refno]), MULTIDIM_ARRAY(Maux),
                               MULTIDIM_SIZE(wsum_Mref[2*refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -143,45 +143,45 @@ int main(int argc, char **argv)
             // Do some post-processing and calculate real-space references
             prm.post_process_references(Mref);
 
-	    // All nodes write out temporary DFo
-	    fn_img.compose(prm.fn_root, rank, "tmpdoc");
-	    DFo.write(fn_img);
+            // All nodes write out temporary DFo
+            fn_img.compose(prm.fn_root, rank, "tmpdoc");
+            DFo.write(fn_img);
             MPI_Barrier(MPI_COMM_WORLD);
 
             if (rank == 0)
             {
-		// Write out docfile with optimal transformation & references
-		DFo.clear();
-		for (int rank2 = 0; rank2 < size; rank2++)
-		{
-		    fn_img.compose(prm.fn_root, rank2, "tmpdoc");
-		    int ln = DFo.LineNo();
-		    DFo.append(fn_img);
-		    DFo.locate(DFo.get_last_key());
-		    DFo.next();
-		    DFo.remove_current();
-		    system(((std::string)"rm -f " + fn_img).c_str());
-		}
-		fn_tmp = prm.fn_root + "_it";
-		fn_tmp.compose(fn_tmp, iter, "doc");
-		DFo.write(fn_tmp);
+                // Write out docfile with optimal transformation & references
+                DFo.clear();
+                for (int rank2 = 0; rank2 < size; rank2++)
+                {
+                    fn_img.compose(prm.fn_root, rank2, "tmpdoc");
+                    int ln = DFo.LineNo();
+                    DFo.append(fn_img);
+                    DFo.locate(DFo.get_last_key());
+                    DFo.next();
+                    DFo.remove_current();
+                    system(((std::string)"rm -f " + fn_img).c_str());
+                }
+                fn_tmp = prm.fn_root + "_it";
+                fn_tmp.compose(fn_tmp, iter, "doc");
+                DFo.write(fn_tmp);
 
-		// Write rest of output files
-		prm.write_output_files(iter, SFa, DFf, Mref, sumw_allrefs, sumw, LL, sumcorr);
-	    }
+                // Write rest of output files
+                prm.write_output_files(iter, SFa, DFf, Mref, sumw_allrefs, sumw, LL, sumcorr);
+            }
 
 
         } // end loop iterations
 
-	if (rank == 0)  
-	{
-	    // Write out converged structures
-	    prm.write_output_files(-1, SFa, DFf, Mref, sumw_allrefs, sumw, LL, sumcorr);
+        if (rank == 0)
+        {
+            // Write out converged structures
+            prm.write_output_files(-1, SFa, DFf, Mref, sumw_allrefs, sumw, LL, sumcorr);
 
-	    // Write out docfile with optimal transformation & references
-	    fn_img = prm.fn_root + ".doc";
-	    DFo.write(fn_img);
-	}
+            // Write out docfile with optimal transformation & references
+            fn_img = prm.fn_root + ".doc";
+            DFo.write(fn_img);
+        }
 
     }
 

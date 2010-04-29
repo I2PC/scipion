@@ -93,7 +93,7 @@ void Basic_ART_Parameters::default_values()
     max_tilt           = 10.e6;
     grid_relative_size = 1.41;
     fn_control         = "";
-	
+
     threads            = 1;
 }
 
@@ -140,12 +140,12 @@ void Basic_ART_Parameters::default_values()
     WLS                = CHECK_PARAM("WLS"); \
     kappa_list  =  GET_VECTOR_PARAM("k",-1); \
     if (XSIZE(kappa_list)==0)                                              \
-    {kappa_list.resize(1); kappa_list.initConstant(0.5);}               \
+        {kappa_list.resize(1); kappa_list.initConstant(0.5);}               \
     no_it              = textToInteger(GET_PARAM_WITH_DEF("n",         "1"       )); \
     stop_at            = textToInteger(GET_PARAM_WITH_DEF("stop_at",   "0"       )); \
     lambda_list        =        GET_VECTOR_PARAM("l",         -1);          \
     if (XSIZE(lambda_list)==0)                                              \
-    {lambda_list.resize(1); lambda_list.initConstant(0.01);}               \
+        {lambda_list.resize(1); lambda_list.initConstant(0.01);}               \
     sampling           = textToFloat(GET_PARAM_WITH_DEF("sampling",  "1."        )); \
     sym_each           = textToInteger(GET_PARAM_WITH_DEF("sym_each",  "0"         )); \
     max_tilt           = textToFloat(GET_PARAM_WITH_DEF("max_tilt",  "10E6"      )); \
@@ -277,116 +277,116 @@ void Basic_ART_Parameters::read(const FileName &fn)
 void Basic_ART_Parameters::usage()
 {
     std::cerr
-    << "Usage: art [Options and Parameters]"
-    << "\nOptions:"
-    << "\nParameter Values: (note space before value)"
-    << "\n    -i selfile           full name of sel file"
-    << "\n   [-o name]             name of output files, extensions are added"
-    << "\n   [-sym symmfile]       Use a symmetry file"
-    << "\n   [-n noit=1]           number of iterations"
-    << "\n   [-l lambda=0.01]      relaxation factor (recommended range 0.0 - 0.1)"
-    << "\n   [-more_help]          show all parameters"
-    << "\n"
-    ;
+            << "Usage: art [Options and Parameters]"
+            << "\nOptions:"
+            << "\nParameter Values: (note space before value)"
+            << "\n    -i selfile           full name of sel file"
+            << "\n   [-o name]             name of output files, extensions are added"
+            << "\n   [-sym symmfile]       Use a symmetry file"
+            << "\n   [-n noit=1]           number of iterations"
+            << "\n   [-l lambda=0.01]      relaxation factor (recommended range 0.0 - 0.1)"
+            << "\n   [-more_help]          show all parameters"
+            << "\n"
+            ;
 }
 
 void Basic_ART_Parameters::usage_more()
 {
     std::cerr
-    << "Usage: art [Options and Parameters]"
-    << "\nOptions:"
-    << "\nParameter Values: (note space before value)"
-    << "\nI/O parameters"
-    << "\n    -i selfile           full name of sel file"
-    << "\n   [-o name]             name of output files, extensions are added"
-    << "\n   [-CTF name]           name of a sel file with CTFs"
-    << "\n   [-unmatched]          apply unmatched forward/backward projectors"
-    << "\n   [-start basisvolume]  Start from basisvolume"
-    << "\n   [-sym symmfile]       Use a symmetry file"
-    << "\n   [-sym_each n]         Force the reconstruction to be symmetric"
-    << "\n                         each n projections"
-    << "\n   [-max_tilt n]         Skip projection with absolute tilt angle"
-    << "\n                         greater than n\n"
-    << "\n   [-ref_trans_after n]  Refine the translation alignment"
-    << "\n                         after n projections."
-    << "\n   [-ref_trans_step n]   Max displacement in translation alignment"
-    << "\n                         This is a double."
-    << "\n   [-force_sym <n=0>]    Force the reconstruction to be symmetric"
-    << "\n                         n times at each projection"
-    << "\n   [-no_group]           Do not generate symmetry subgroup"
-    << "\n   [-no_symproj]         Do not use symmetrized projections"
-    << "\n   [-sparse <eps=-1>]    Sparsity threshold"
-    << "\n   [-diffusion <eps=-1>] Diffusion weight"
-    << "\n   [-surface surf_mask]  Use this file as a surface mask"
-    << "\n   [-POCS_freq <f=1>]    Impose POCS conditions every <f> projections"
-    << "\n   [-known_volume <vol=-1>] Volume of the reconstruction"
-    << "\n   [-POCS_positivity]    Apply positivity constraint"
-    << "\n   [-goldmask value]     Pixels below this value are not considered for reconstruction"
-    << "\n   [-shiftedTomograms]   Remove border pixels created by alignment of tomograms"
-    << "\n   [-dont_apply_shifts]  Do not apply shifts as stored in the 2D-image headers"
-    << "\n   [-variability]        Perform variability analysis"
-    << "\n   [-noisy_reconstruction] Perform a companion noisy reconstruction"
-    << "\n   [-ray_length <r=-1>]  In basis units\n"
-    ;
+            << "Usage: art [Options and Parameters]"
+            << "\nOptions:"
+            << "\nParameter Values: (note space before value)"
+            << "\nI/O parameters"
+            << "\n    -i selfile           full name of sel file"
+            << "\n   [-o name]             name of output files, extensions are added"
+            << "\n   [-CTF name]           name of a sel file with CTFs"
+            << "\n   [-unmatched]          apply unmatched forward/backward projectors"
+            << "\n   [-start basisvolume]  Start from basisvolume"
+            << "\n   [-sym symmfile]       Use a symmetry file"
+            << "\n   [-sym_each n]         Force the reconstruction to be symmetric"
+            << "\n                         each n projections"
+            << "\n   [-max_tilt n]         Skip projection with absolute tilt angle"
+            << "\n                         greater than n\n"
+            << "\n   [-ref_trans_after n]  Refine the translation alignment"
+            << "\n                         after n projections."
+            << "\n   [-ref_trans_step n]   Max displacement in translation alignment"
+            << "\n                         This is a double."
+            << "\n   [-force_sym <n=0>]    Force the reconstruction to be symmetric"
+            << "\n                         n times at each projection"
+            << "\n   [-no_group]           Do not generate symmetry subgroup"
+            << "\n   [-no_symproj]         Do not use symmetrized projections"
+            << "\n   [-sparse <eps=-1>]    Sparsity threshold"
+            << "\n   [-diffusion <eps=-1>] Diffusion weight"
+            << "\n   [-surface surf_mask]  Use this file as a surface mask"
+            << "\n   [-POCS_freq <f=1>]    Impose POCS conditions every <f> projections"
+            << "\n   [-known_volume <vol=-1>] Volume of the reconstruction"
+            << "\n   [-POCS_positivity]    Apply positivity constraint"
+            << "\n   [-goldmask value]     Pixels below this value are not considered for reconstruction"
+            << "\n   [-shiftedTomograms]   Remove border pixels created by alignment of tomograms"
+            << "\n   [-dont_apply_shifts]  Do not apply shifts as stored in the 2D-image headers"
+            << "\n   [-variability]        Perform variability analysis"
+            << "\n   [-noisy_reconstruction] Perform a companion noisy reconstruction"
+            << "\n   [-ray_length <r=-1>]  In basis units\n"
+            ;
     std::cerr
-    << "\nIteration parameters"
-    << "\n   [-n noit=1]           number of iterations"
-    << "\n   [-stop_at stop_at=0]  number of images presented"
-    << "\n   [-l lambda=0.01 |     relaxation factor (recommended range 0.0 - 0.1)"
-    << "\n    -l [lambda0, lambda1, ...]"
-    << "\n   [-CAVK|-CAV]          by default, ARTK is applied"
-    << "\n   [-sort_last N=2]      Use -1 to sort with all previous projections"
-    << "\n   [-random_sort]        by default, perpendicular sort is used for ART"
-    << "\n   [-no_sort]            No sort must be applied"
-    << "\n   [-WLS]                Perform weighted least squares ART"
-    << "\n   [-k kappa=0.5 |       Relaxation factor for WLS residual "
-    << "\n    -k [kappa0, kappa1, ...]\n"
-    << "\nParallel parameters"
-    << "\n                         by default, sequential ART is applied"
-	<< "\n	 [-thr N=1]			   Number of threads to use. NOTE: Not available when using MPI."
-    << "\n   [-SIRT]               Simultaneous Iterative Reconstruction Technique"
-    << "\n   [-pSIRT]              Parallel (MPI) Simultaneous Iterative Reconstruction Technique"
-    << "\n   [-pfSIRT]             Parallel (MPI) False Simultaneous Iterative Reconstruction Technique (Faster convergence than pSIRT)"
-    << "\n   [-pSART]              Parallel (MPI) Simultaneous ART\n"
-    << "\n   [-pAVSP]              Parallel (MPI) Average Strings\n"
-    << "\n   [-pBiCAV]             Parallel (MPI) Block Iterative CAV\n"
-    << "\n   [-pCAV]               Parallel (MPI) CAV\n"
-    << "\n   [-block_size <n=1>]   Number of projections to each block (SART and BiCAV)\n"
-    << "\n   [-CAVARTK]            Component Averaging Variant of Block ART\n"
-    << "\nGrid parameters"
-    << "\n   [-g gridsz=1.41]      relative grid size"
-    << "\n                         if gridsz =  -1 => gridsz=2^(1/2)"
-    << "\n                                      -2 => gridsz=2^(1/3)"
-    << "\n   [-FCC]                 use a FCC grid instead of a BCC"
-    << "\n   [-SC]                  use a SC grid instead of a BCC"
-    << "\n   [-R interest_sphere=-1] Radius of the interest sphere"
-    << "\n   [-ext proj_ext=0]     projection extension"
-    << "\n   [-output_size Zsize Ysize Xsize] output volume size in PIXELS\n"
-    << "\n   [-sampling=1]         sampling rate,  affects to -r, -g, -R and"
-    << "\n                          -ref_trans_step"
-    << "\n                         Also to -mod_a and mod_b when processing"
-    << "\n                         crystals"
-    ;
+            << "\nIteration parameters"
+            << "\n   [-n noit=1]           number of iterations"
+            << "\n   [-stop_at stop_at=0]  number of images presented"
+            << "\n   [-l lambda=0.01 |     relaxation factor (recommended range 0.0 - 0.1)"
+            << "\n    -l [lambda0, lambda1, ...]"
+            << "\n   [-CAVK|-CAV]          by default, ARTK is applied"
+            << "\n   [-sort_last N=2]      Use -1 to sort with all previous projections"
+            << "\n   [-random_sort]        by default, perpendicular sort is used for ART"
+            << "\n   [-no_sort]            No sort must be applied"
+            << "\n   [-WLS]                Perform weighted least squares ART"
+            << "\n   [-k kappa=0.5 |       Relaxation factor for WLS residual "
+            << "\n    -k [kappa0, kappa1, ...]\n"
+            << "\nParallel parameters"
+            << "\n                         by default, sequential ART is applied"
+            << "\n	 [-thr N=1]			   Number of threads to use. NOTE: Not available when using MPI."
+            << "\n   [-SIRT]               Simultaneous Iterative Reconstruction Technique"
+            << "\n   [-pSIRT]              Parallel (MPI) Simultaneous Iterative Reconstruction Technique"
+            << "\n   [-pfSIRT]             Parallel (MPI) False Simultaneous Iterative Reconstruction Technique (Faster convergence than pSIRT)"
+            << "\n   [-pSART]              Parallel (MPI) Simultaneous ART\n"
+            << "\n   [-pAVSP]              Parallel (MPI) Average Strings\n"
+            << "\n   [-pBiCAV]             Parallel (MPI) Block Iterative CAV\n"
+            << "\n   [-pCAV]               Parallel (MPI) CAV\n"
+            << "\n   [-block_size <n=1>]   Number of projections to each block (SART and BiCAV)\n"
+            << "\n   [-CAVARTK]            Component Averaging Variant of Block ART\n"
+            << "\nGrid parameters"
+            << "\n   [-g gridsz=1.41]      relative grid size"
+            << "\n                         if gridsz =  -1 => gridsz=2^(1/2)"
+            << "\n                                      -2 => gridsz=2^(1/3)"
+            << "\n   [-FCC]                 use a FCC grid instead of a BCC"
+            << "\n   [-SC]                  use a SC grid instead of a BCC"
+            << "\n   [-R interest_sphere=-1] Radius of the interest sphere"
+            << "\n   [-ext proj_ext=0]     projection extension"
+            << "\n   [-output_size Zsize Ysize Xsize] output volume size in PIXELS\n"
+            << "\n   [-sampling=1]         sampling rate,  affects to -r, -g, -R and"
+            << "\n                          -ref_trans_step"
+            << "\n                         Also to -mod_a and mod_b when processing"
+            << "\n                         crystals"
+            ;
     basis.usage();
     std::cerr
-    << "\nDebugging options"
-    << "\n   [-print_system_matrix]print the matrix of the system Ax=b"
-    << "\n   [-show_iv <n=10>]     show volumes/images as the reconstruction goes"
-    << "\n                         the volume is update every <n> projections\n"
-    << "\n   [-show_error]         show error for each projection"
-    << "\n   [-show_stats]         give some statistical information during the process"
-    << "\n   [-save_at_each_step]  save intermidiate projections"
-    << "\n                             PPPtheo, PPPread, PPPcorr, PPPdiff"
-    << "\n                             PPPbasis.basis, PPPvol.vol"
-    << "\n                             PPPvolPOCS1, PPPvolPOCS2, PPPvolPOCS3"
-    << "\n   [-save_intermidiate <n>] save intermidiate volumes (every <n> projections)"
-    << "\n                             <fnroot>it<no_it>proj<no_projs>.vol"
-    << "\n   [-save_basis]         every time you have to save a volume, save it"
-    << "\n                         also in basis"
-    << "\n   [-manual_order]       manual selection of projection order"
-    << "\n   [-only_sym]           skip all those symmetries different from -1"
-    << "\n"
-    ;
+            << "\nDebugging options"
+            << "\n   [-print_system_matrix]print the matrix of the system Ax=b"
+            << "\n   [-show_iv <n=10>]     show volumes/images as the reconstruction goes"
+            << "\n                         the volume is update every <n> projections\n"
+            << "\n   [-show_error]         show error for each projection"
+            << "\n   [-show_stats]         give some statistical information during the process"
+            << "\n   [-save_at_each_step]  save intermidiate projections"
+            << "\n                             PPPtheo, PPPread, PPPcorr, PPPdiff"
+            << "\n                             PPPbasis.basis, PPPvol.vol"
+            << "\n                             PPPvolPOCS1, PPPvolPOCS2, PPPvolPOCS3"
+            << "\n   [-save_intermidiate <n>] save intermidiate volumes (every <n> projections)"
+            << "\n                             <fnroot>it<no_it>proj<no_projs>.vol"
+            << "\n   [-save_basis]         every time you have to save a volume, save it"
+            << "\n                         also in basis"
+            << "\n   [-manual_order]       manual selection of projection order"
+            << "\n   [-only_sym]           skip all those symmetries different from -1"
+            << "\n"
+            ;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -440,11 +440,11 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
             {
                 VEC_ELEM(product, j) +=
                     ABS(dotProduct(v.Row(VEC_ELEM(ordered_list, i - 1)),
-		    	v.Row(j)));
+                                   v.Row(j)));
                 if (N != -1 && i > N)
                     VEC_ELEM(product, j) -=
                         ABS(dotProduct(v.Row(VEC_ELEM(ordered_list, i - N - 1)),
-			    v.Row(j)));
+                                       v.Row(j)));
                 if (VEC_ELEM(product, j) < min_prod)
                 {
                     min_prod = VEC_ELEM(product, j);
@@ -606,7 +606,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     if (level >= FULL)
     {
         build_recons_info(selfile, selctf, fn_ctf, SL, IMG_Inf,
-            do_not_use_symproj);
+                          do_not_use_symproj);
 
         if (!(tell&TELL_MANUAL_ORDER))
             if (parallel_mode == SIRT ||
@@ -673,9 +673,9 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                                           (double)projXdim / 2);
                     else
                         corner = vectorR3(
-                            (double)Xoutput_volume_size / 2,
-                            (double)Youtput_volume_size / 2,
-                            (double)Zoutput_volume_size / 2);
+                                     (double)Xoutput_volume_size / 2,
+                                     (double)Youtput_volume_size / 2,
+                                     (double)Zoutput_volume_size / 2);
                 }
                 else
                 {
@@ -726,7 +726,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 
     /* Basis side info --------------------------------------------------------- */
     if (level >= BASIC)
-	{
+    {
         basis.set_D(D);
         basis.produce_side_info(vol_basis0.grid());
     }
@@ -779,7 +779,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
             Nunk++;
         }
         std::cerr << "There are " << Neq << " equations and " << Nunk
-        << " unknowns (redundancy=" << 100.0 - 100.0*Nunk / Neq << ")\n";
+                  << " unknowns (redundancy=" << 100.0 - 100.0*Nunk / Neq << ")\n";
     }
 }
 

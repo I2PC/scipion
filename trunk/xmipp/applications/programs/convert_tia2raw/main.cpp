@@ -32,21 +32,21 @@ struct DataHeader
 {
     short int endianess, SeriesID, SeriesVersion;
     int DATA_TYPE_ID, TagTypeID, TotalNumberElements, NUMBER_IMAGES,
-    OFFSET_ARRAY_OFFSET, numberdimensions, * pDATA_OFFSET;
+        OFFSET_ARRAY_OFFSET, numberdimensions, * pDATA_OFFSET;
 };
 
 struct ImDataHeader
 {
-    short int DATA_TYPE, 				//DataType
-    DATA_TYPE_SIZE;
-    int  	   CalibrationElementX,    //CalibrationElementX
-    CalibrationElementY,    //CalibrationElementY
-    IMAGE_WIDTH,            //ArraySizeX
-    IMAGE_HEIGHT;           //ArraySizeY
-    double    CalibrationOffsetX, 	//CalibrationOffsetX
-    PIXEL_WIDTH,         	//CalibrationDeltaX
-    CalibrationOffsetY,  	//CalibrationOffsetY
-    PIXEL_HEIGHT;           //CalibrationDeltaY
+    short int DATA_TYPE,                //DataType
+          DATA_TYPE_SIZE;
+    int        CalibrationElementX,    //CalibrationElementX
+      CalibrationElementY,    //CalibrationElementY
+      IMAGE_WIDTH,            //ArraySizeX
+      IMAGE_HEIGHT;           //ArraySizeY
+    double    CalibrationOffsetX,   //CalibrationOffsetX
+         PIXEL_WIDTH,            //CalibrationDeltaX
+         CalibrationOffsetY,     //CalibrationOffsetY
+         PIXEL_HEIGHT;           //CalibrationDeltaY
     std::string     DATA_TYPE_SIZE_STRING;
     bool      isSigned;
 
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     FileName fn_out; // output file
     FileName fn_sel; // input selfile
     FileName fn_oext; // output extension
-    float	 dStddev; // Standard Desv
+    float    dStddev; // Standard Desv
 
 
     if (IsBigEndian())
@@ -227,7 +227,7 @@ void tia2raw(const FileName &fn_in, const FileName &fn_out, float dStddev)
     /* Loop through the images  ===================================================== */
 
 
-    for (int n=0;n<Header.NUMBER_IMAGES;n++)
+    for (int n=0; n<Header.NUMBER_IMAGES; n++)
     {
         fprintf(stderr,"\nOPEN IMAGE No: %d of %d",n+1, Header.NUMBER_IMAGES);
 
@@ -283,7 +283,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
     {
         FREAD(imBuffer, sizeof(short int), BUFFSIZE,fh_in, false);
 
-        for (int n=0;n<BUFFSIZE;n++)
+        for (int n=0; n<BUFFSIZE; n++)
         {
             temp = (double) imBuffer[n];
             avg += temp;
@@ -295,7 +295,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
     {
         FREAD(imBuffer, sizeof(short int), valuesLeft,fh_in, false);
 
-        for (int n=0;n<valuesLeft;n++)
+        for (int n=0; n<valuesLeft; n++)
         {
             temp = (double) imBuffer[n];
             avg += temp;
@@ -325,7 +325,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
     {
         FREAD(imBuffer, sizeof(short int), BUFFSIZE,fh_in, false);
 
-        for (int n=0;n<BUFFSIZE;n++)
+        for (int n=0; n<BUFFSIZE; n++)
         {
             if(imBuffer[n]<low)
                 imBuffer[n]=low;
@@ -341,7 +341,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
     {
         FREAD(imBuffer, sizeof(short int), valuesLeft,fh_in, false);
 
-        for (int n=0;n<valuesLeft;n++)
+        for (int n=0; n<valuesLeft; n++)
         {
             if(imBuffer[n]<low)
                 imBuffer[n]=low;
@@ -404,7 +404,7 @@ void printHeader(DataHeader Header)
     fprintf(stderr,"\n OFFSET_ARRAY_OFFSET: %d ", Header.OFFSET_ARRAY_OFFSET);
     fprintf(stderr,"\n numberdimensions: %d ", Header.numberdimensions);
 
-    for (int n=0;n<Header.NUMBER_IMAGES;n++)
+    for (int n=0; n<Header.NUMBER_IMAGES; n++)
         fprintf(stderr,"\n DATA_OFFSET [%d]= %d",n, Header.pDATA_OFFSET[n]);
 
 

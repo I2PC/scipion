@@ -596,7 +596,7 @@ public:
      * Parameter: _radius  Radius of neighbohood
      */
     std::vector<unsigned> neighborhood(const xmippMap* _som, const SomPos& _center,
-                                  double _radius) const;
+                                       double _radius) const;
 
 
     /**
@@ -606,7 +606,7 @@ public:
      * Parameter: _radius  Radius of neighbohood
      */
     std::vector<unsigned> neighborhood(const xmippFuzzyMap* _som, const SomPos& _center,
-                                  double _radius) const;
+                                       double _radius) const;
 
 
 

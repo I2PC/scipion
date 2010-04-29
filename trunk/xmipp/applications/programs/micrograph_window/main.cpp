@@ -114,13 +114,13 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cout << "Purpose:\n"
-    << "    Reduce size of input image\n"
-    << "Usage: window_micrograph\n"
-    << " -i <input_micrograph>            : Either 8, 16 or 32 bits\n"
-    << " -o <output_micrograph>           : It will be rewritten\n"
-    << " -size <new Xdim> <new Ydim>      : In pixels\n"
-    << "[-top_left_corner <X=0,Y=0>]      : In pixels\n"
-    << std::endl;
+              << "    Reduce size of input image\n"
+              << "Usage: window_micrograph\n"
+              << " -i <input_micrograph>            : Either 8, 16 or 32 bits\n"
+              << " -o <output_micrograph>           : It will be rewritten\n"
+              << " -size <new Xdim> <new Ydim>      : In pixels\n"
+              << "[-top_left_corner <X=0,Y=0>]      : In pixels\n"
+              << std::endl;
 }
 
 /* Colimate menu =========================================================== */

@@ -195,13 +195,13 @@ class SelFile
 
     // Find a specific image name in a list of sellines
     std::vector< SelLine >::iterator find(const std::string& img_name);
-    
+
     // Move the current_line to the next line with this label
     void adjust_to_label(SelLine::Label label);
 public:
     // @defgroup SelFilesConstructors Selfile constructors
     // @ingroup SelFiles
-    
+
     /** Empty constructor.
      * @ingroup SelFilesConstructors
      *
@@ -371,7 +371,7 @@ public:
     void mpi_select_part(int rank, int size, int& num_img_tot);
 
     /** For MPI-parallelized runs: select relevant part of selfile for that
-     * rank. 
+     * rank.
      * I just do not undertand the previous function
      * @ingroup SelFilesDisk
      */

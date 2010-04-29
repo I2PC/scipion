@@ -30,9 +30,9 @@
 #include <data/selfile.h>
 
 void writeFiles(const FileName &fnRoot,
-    const Matrix1D<double> freq, const Matrix1D<double> frc, 
-    const Matrix1D<double> frc_noise, const Matrix1D<double> dpr,
-    bool do_dpr,float max_sam)
+                const Matrix1D<double> freq, const Matrix1D<double> frc,
+                const Matrix1D<double> frc_noise, const Matrix1D<double> dpr,
+                bool do_dpr,float max_sam)
 {
     FileName fn_dpr, fn_frc;
     std::ofstream outDpr;
@@ -153,7 +153,7 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 }
 
 int main(int argc, char **argv)
-{   
+{
     bool do_dpr=checkParameter(argc, argv, "-do_dpr");
     float max_sam = textToFloat(getParameter(argc, argv, "-max_sam","-1"));
     if (!checkParameter(argc, argv, "-set_of_images"))

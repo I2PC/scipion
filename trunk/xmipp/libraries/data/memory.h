@@ -70,7 +70,7 @@ template <class T> void ask_Tmatrix(T ** &m, int nrl, int nrh,
         if (!m) REPORT_ERROR(1, "allocation failure 1 in matrix()");
         m -= nrl;
 
-        for (int i = nrl;i <= nrh;i++)
+        for (int i = nrl; i <= nrh; i++)
         {
             m[i] = (T *) malloc((unsigned)(nch - ncl + 1) * sizeof(T));
             if (!m[i]) REPORT_ERROR(1, "allocation failure 2 in matrix()");
@@ -87,7 +87,7 @@ template <class T> void free_Tmatrix(T ** &m, int nrl, int nrh,
 {
     if (m != NULL)
     {
-        for (int i = nrh;i >= nrl;i--) free((char*)(m[i] + ncl));
+        for (int i = nrh; i >= nrl; i--) free((char*)(m[i] + ncl));
         free((char*)(m + nrl));
         m = NULL;
     }
@@ -106,13 +106,13 @@ template <class T> void ask_Tvolume(T *** &m, int nsl, int nsh, int nrl,
         if (!m) REPORT_ERROR(1, "allocation failure 1 in matrix()");
         m -= nsl;
 
-        for (int k = nsl;k <= nsh;k++)
+        for (int k = nsl; k <= nsh; k++)
         {
             m[k] = (T **) malloc((unsigned)(nrh - nrl + 1) * sizeof(T*));
             if (!m[k]) REPORT_ERROR(1, "allocation failure 2 in matrix()");
             m[k] -= nrl;
 
-            for (int i = nrl;i <= nrh;i++)
+            for (int i = nrl; i <= nrh; i++)
             {
                 m[k][i] = (T *) malloc((unsigned)(nch - ncl + 1) * sizeof(T));
                 if (!m[k][i]) REPORT_ERROR(1, "allocation failure 2 in matrix()");
@@ -130,9 +130,9 @@ template <class T> void free_Tvolume(T *** &m, int nsl, int nsh,
 {
     if (m != NULL)
     {
-        for (int k = nsh;k >= nsl;k--)
+        for (int k = nsh; k >= nsl; k--)
         {
-            for (int i = nrh;i >= nrl;i--) free((char*)(m[k][i] + ncl));
+            for (int i = nrh; i >= nrl; i--) free((char*)(m[k][i] + ncl));
             free((char*)(m[k] + nrl));
         }
         free((char*)(m + nsl));

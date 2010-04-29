@@ -143,7 +143,7 @@ void ShowTable::annotateTime(const FileName &_fn)
     struct stat info;
     if (stat(_fn.c_str(), &info))
         std::cerr << "ShowTable::annotateTime: Cannot get time of file "
-        << _fn << std::endl;
+                  << _fn << std::endl;
     modification_time = info.st_mtime;
 }
 
@@ -206,7 +206,7 @@ void ShowTable::initTable()
     // Make Table connections
     connect(this, SIGNAL(clicked(int, int, int, const QPoint &)),
             this, SLOT(contentsMousePressEvent(int, int, int,
-                                               const QPoint &)));
+                       const QPoint &)));
 
     connect(this, SIGNAL(doubleClicked(int, int, int, const QPoint &)),
             this, SLOT(contentsMouseDoubleClickEvent(int, int, int, const QPoint &)));
@@ -323,7 +323,8 @@ void ShowTable::drawFrameAndLabel(QPainter *p, int row, int col, int i,
 
     // Draw frame
     if (cellMarks[i])
-    { // if the cell is marked
+    {
+        // if the cell is marked
         QPen pen;
         pen.setColor(Qt::red);
         pen.setWidth(3);
@@ -364,7 +365,7 @@ void ShowTable::scale_and_normalize(Matrix2D<double> &I, bool normalize,
     // Care about size
     if (currScale != 100)
         I.selfScaleToSize((int)(currScale / 100*projYdim),
-                             (int)(currScale / 100*projXdim));
+                          (int)(currScale / 100*projXdim));
 
     // Care about the normalization
     minGray = 0;
@@ -417,7 +418,8 @@ void ShowTable::contentsMousePressEvent(int row, int col, int button,
 void ShowTable::keyPressEvent(QKeyEvent* e)
 {
     switch (e->key())
-    { // Look at the key code
+    {
+        // Look at the key code
     case Qt::Key_F1:
         menubar->exec();
         break;

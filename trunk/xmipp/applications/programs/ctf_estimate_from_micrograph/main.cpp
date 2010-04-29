@@ -40,8 +40,8 @@
 void Usage()
 {
     std::cerr << "This program generates and assigns a CTF to a selfile of particles.\n"
-    << "   -i <parameters file>         : Name of the file of parameters with all info for the program.\n"
-    ;
+              << "   -i <parameters file>         : Name of the file of parameters with all info for the program.\n"
+              ;
 }
 
 /****************************************************************************

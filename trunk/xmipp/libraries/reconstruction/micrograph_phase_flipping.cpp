@@ -29,10 +29,10 @@
 void Prog_micrograph_phase_flipping::show(void)
 {
     std::cout
-        << "input_micrograph:      " << fn_in    << std::endl
-        << "output_micrograph:     " << fn_out << std::endl
-        << "ctf_param_file:        " << fnt_ctf << std::endl
-    ;
+            << "input_micrograph:      " << fn_in    << std::endl
+            << "output_micrograph:     " << fn_out << std::endl
+            << "ctf_param_file:        " << fnt_ctf << std::endl
+            ;
 }
 
 void Prog_micrograph_phase_flipping::run(void)
@@ -45,8 +45,8 @@ void Prog_micrograph_phase_flipping::run(void)
     // Read the micrograph in an array of doubles
     ImageXmipp M_inmem(Ydim,Xdim);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(M_inmem())
-        M_inmem(i,j)=(double)M_in(j,i);
-    
+    M_inmem(i,j)=(double)M_in(j,i);
+
     // Perform the Fourier transform
     XmippFftw transformer;
     Matrix2D< std::complex<double> > M_inFourier;
@@ -70,7 +70,7 @@ void Prog_micrograph_phase_flipping::run(void)
             M_inFourier(i,j)*=-1;
         }
     }
-    
+
     // Perform inverse Fourier transform and finish
     transformer.inverseFourierTransform();
     M_inmem.write(fn_out);

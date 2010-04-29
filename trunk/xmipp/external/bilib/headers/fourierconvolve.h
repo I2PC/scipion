@@ -9,14 +9,14 @@
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  ManyConvolveFourier
-    (
-        double Data[],    /* data for in-place processing */
-        double KernelDht[],  /* discrete Hartley transform of the kernel */
-        double CaS[],    /* Hartley transform coefficients */
-        double *ScratchBuffer,  /* scratch buffer */
-        long SignalLength,  /* signal length */
-        double Shift    /* additional translation */
-    );
+(
+    double Data[],    /* data for in-place processing */
+    double KernelDht[],  /* discrete Hartley transform of the kernel */
+    double CaS[],    /* Hartley transform coefficients */
+    double *ScratchBuffer,  /* scratch buffer */
+    long SignalLength,  /* signal length */
+    double Shift    /* additional translation */
+);
 
 /*--------------------------------------------------------------------------*/
 /** Fourier convolution with a symmetric kernel.
@@ -26,14 +26,14 @@ extern int  ManyConvolveFourier
     success: return(!ERROR); failure: return(ERROR)
 */
 extern int  ManyConvolveFourierSymmetricKernel
-    (
-        double Data[],    /* data for in-place processing */
-        double KernelDht[],  /* discrete Hartley transform of the kernel */
-        double CaS[],    /* Hartley transform coefficients */
-        double *ScratchBuffer,  /* scratch buffer */
-        long SignalLength,  /* signal length */
-        double Shift    /* additional translation */
-    );
+(
+    double Data[],    /* data for in-place processing */
+    double KernelDht[],  /* discrete Hartley transform of the kernel */
+    double CaS[],    /* Hartley transform coefficients */
+    double *ScratchBuffer,  /* scratch buffer */
+    long SignalLength,  /* signal length */
+    double Shift    /* additional translation */
+);
 
 /*--------------------------------------------------------------------------*/
 /** Fourier convolution 1D.
@@ -62,13 +62,13 @@ extern int  ManyConvolveFourierSymmetricKernel
     The returned value is duplicated in Status
 */
 extern int  OneConvolveFourier
-    (
-        double Data[],    /* data for in-place processing */
-        double Kernel[],   /* kernel for in-place processing */
-        long SignalLength,  /* signal length */
-        double Shift,    /* additional translation */
-        int  *Status    /* error management */
-    );
+(
+    double Data[],    /* data for in-place processing */
+    double Kernel[],   /* kernel for in-place processing */
+    long SignalLength,  /* signal length */
+    double Shift,    /* additional translation */
+    int  *Status    /* error management */
+);
 
 /*--------------------------------------------------------------------------*/
 /** Fourier convolution with a symmetrical kernel.
@@ -105,11 +105,11 @@ extern int  OneConvolveFourier
     The returned value is duplicated in Status
 */
 extern int  OneConvolveFourierSymmetricKernel
-    (
-        double Data[],    /* data for in-place processing */
-        double SymmetricKernel[], /* symmetric kernel for in-place processing */
-        long SignalLength,  /* signal length */
-        double Shift,    /* additional translation */
-        int  *Status    /* error management */
-    );
+(
+    double Data[],    /* data for in-place processing */
+    double SymmetricKernel[], /* symmetric kernel for in-place processing */
+    long SignalLength,  /* signal length */
+    double Shift,    /* additional translation */
+    int  *Status    /* error management */
+);
 //@}

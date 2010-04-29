@@ -28,10 +28,10 @@
 #include <data/args.h>
 #include <data/funcs.h>
 #ifndef METADATA
-  #include <data/docfile.h>
-  #include <data/selfile.h>
+#include <data/docfile.h>
+#include <data/selfile.h>
 #else
-  #include <data/metadata.h>
+#include <data/metadata.h>
 #endif
 #include <data/image.h>
 #include <data/geometry.h>
@@ -48,7 +48,7 @@ public:
 #ifndef METADATA
     SelFile SFu, SFt;
 #else
-	MetaData SFu, SFt;
+    MetaData SFu, SFt;
 #endif
     /**  Filename output document file */
     FileName fn_doc;

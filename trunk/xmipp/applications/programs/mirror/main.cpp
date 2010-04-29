@@ -46,16 +46,16 @@ public:
     {
         Prog_parameters::show();
         std::cout << "FlipX = " << flipX << std::endl
-        << "FlipY = " << flipY << std::endl
-        << "FlipZ = " << flipZ << std::endl;
+                  << "FlipY = " << flipY << std::endl
+                  << "FlipZ = " << flipZ << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
         std::cerr << "  [-flipX]                  : Flip along X\n"
-        << "  [-flipY]                  : Flip along Y\n"
-        << "  [-flipZ]                  : Flip along Z\n";
+                  << "  [-flipY]                  : Flip along Y\n"
+                  << "  [-flipZ]                  : Flip along Z\n";
     }
 };
 

@@ -56,7 +56,7 @@ public:
      */
     xmippTStudentKerDenSOM(double _reg0, double _reg1, unsigned long _annSteps,
                            double _epsilon, unsigned long _nSteps, int _df = 3)
-            : xmippKerDenSOM(_reg0, _reg1, _annSteps, _epsilon, _nSteps), df(_df)
+        : xmippKerDenSOM(_reg0, _reg1, _annSteps, _epsilon, _nSteps), df(_df)
     {};
 
     /**

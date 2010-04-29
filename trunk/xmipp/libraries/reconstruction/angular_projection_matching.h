@@ -51,7 +51,8 @@ class Prog_angular_projection_matching_prm;
 void * threadRotationallyAlignOneImage( void * data );
 
 // This structure is needed to pass parameters to threadRotationallyAlignOneImage
-typedef struct{
+typedef struct
+{
     int thread_id;
     int thread_num;
     Prog_angular_projection_matching_prm *prm;
@@ -59,7 +60,7 @@ typedef struct{
     int *this_image;
     int *opt_refno;
     double *opt_psi;
-    double *opt_flip; 
+    double *opt_flip;
     double *maxcorr;
 } structThreadRotationallyAlignOneImage ;
 
@@ -67,7 +68,8 @@ typedef struct{
    @ingroup ReconsLibraryPrograms */
 //@{
 /** projection_matching parameters. */
-class Prog_angular_projection_matching_prm {
+class Prog_angular_projection_matching_prm
+{
 public:
 
     /** Filenames */
@@ -83,14 +85,14 @@ public:
     /** Inner and outer radii to limit the rotational search */
     int Ri, Ro;
     /** Verbose level:
-	1: gives progress bar (=default)
-	0: gives no output to screen at all */
+    1: gives progress bar (=default)
+    0: gives no output to screen at all */
     int verb;
     /** Available memory for storage of all references (in Gb) */
     double avail_memory;
     /** Maximum number of references to store in memory */
     int max_nr_refs_in_memory;
-    /** Maximum number of references that can be stored in memory 
+    /** Maximum number of references that can be stored in memory
     The difference between this and the previous varible is that
     the previous one is the MIN(max_nr_refs_in_memory, number of references)
     */
@@ -133,46 +135,46 @@ public:
     barrier_t thread_barrier;
 
 public:
-  /// Read arguments from command line
-  void read(int argc, char **argv);
+    /// Read arguments from command line
+    void read(int argc, char **argv);
 
-  /// Show
-  void show();
+    /// Show
+    void show();
 
-  /// Usage
-  void usage();
+    /// Usage
+    void usage();
 
-  /// Extended Usage
-  void extendedUsage();
+    /// Extended Usage
+    void extendedUsage();
 
-  /** Make shiftmask and calculate nr_psi */
-  void produceSideInfo();
+    /** Make shiftmask and calculate nr_psi */
+    void produceSideInfo();
 
-  /** Rotational alignment using polar coordinates 
-   *  The input image is assumed to be in FTs of polar rings 
-   */
-  void rotationallyAlignOneImage(Matrix2D<double> &img, int imgno, int &opt_samplenr,
-				 double &opt_psi, double &opt_flip, double &maxcorr);
+    /** Rotational alignment using polar coordinates
+     *  The input image is assumed to be in FTs of polar rings
+     */
+    void rotationallyAlignOneImage(Matrix2D<double> &img, int imgno, int &opt_samplenr,
+                                   double &opt_psi, double &opt_flip, double &maxcorr);
 
-  /** Translational alignment using cartesian coordinates 
-   *  The optimal direction is re-projected from the volume
-   */
-  void translationallyAlignOneImage(Matrix2D<double> &img,
-                                    const int &samplenr, const double &psi, const double &opt_flip,
-                                    double &opt_xoff, double &opt_yoff, double &maxcorr);
+    /** Translational alignment using cartesian coordinates
+     *  The optimal direction is re-projected from the volume
+     */
+    void translationallyAlignOneImage(Matrix2D<double> &img,
+                                      const int &samplenr, const double &psi, const double &opt_flip,
+                                      double &opt_xoff, double &opt_yoff, double &maxcorr);
 
-  /** Get pointer to the current reference image 
-      If this image wasn't stored in memory yet, read it from disc and
-      store FT of the polar transform as well as the original image */
-  int getCurrentReference(int refno, Polar_fftw_plans &local_plans);
+    /** Get pointer to the current reference image
+        If this image wasn't stored in memory yet, read it from disc and
+        store FT of the polar transform as well as the original image */
+    int getCurrentReference(int refno, Polar_fftw_plans &local_plans);
 
-  /** Loop over all images */
-  void processSomeImages(int * my_images, double * my_output);
+    /** Loop over all images */
+    void processSomeImages(int * my_images, double * my_output);
 
-  /** Read current image into memory and translate accoring to
-      previous optimal Xoff and Yoff */
-  void getCurrentImage(int imgno, ImageXmipp &img);
+    /** Read current image into memory and translate accoring to
+        previous optimal Xoff and Yoff */
+    void getCurrentImage(int imgno, ImageXmipp &img);
 
-};				
+};
 //@}
 #endif

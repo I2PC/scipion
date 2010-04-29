@@ -7,21 +7,21 @@
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or   
- * (at your option) any later version.                                 
- *                                                                     
- * This program is distributed in the hope that it will be useful,     
- * but WITHOUT ANY WARRANTY; without even the implied warranty of      
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the       
- * GNU General Public License for more details.                        
- *                                                                     
- * You should have received a copy of the GNU General Public License   
- * along with this program; if not, write to the Free Software         
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA            
- * 02111-1307  USA                                                     
- *                                                                     
- *  All comments concerning this program package may be sent to the    
- *  e-mail address 'xmipp@cnb.csic.es'                                  
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
 #include "naive_bayes.h"
@@ -41,18 +41,18 @@ bool debugging = true;
 // Split several histograms within the indexes l0 and lF so that
 // the entropy after division is maximized
 int splitHistogramsUsingEntropy(const std::vector<histogram1D> &hist,
-    int l0, int lF)
+                                int l0, int lF)
 {
     // Number of classes
     int K = hist.size();
-    
+
     // Set everything outside l0 and lF to zero, and make it a PDF
     std::vector<histogram1D> histNorm;
     for (int k = 0; k < K; k++)
     {
         histogram1D histaux = hist[k];
         for (int l = 0; l < XSIZE(histaux); l++)
-            if (l < l0 || l > lF) 
+            if (l < l0 || l > lF)
                 histaux(l) = 0;
         histaux /= histaux.sum();
         histNorm.push_back(histaux);
@@ -77,12 +77,12 @@ int splitHistogramsUsingEntropy(const std::vector<histogram1D> &hist,
         // Compute the entropy of the clases if we split by l
         double entropy = 0;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(p)
-            if (p(i, j) != 0) entropy -= p(i, j) * log10(p(i, j));
+        if (p(i, j) != 0) entropy -= p(i, j) * log10(p(i, j));
 
-        #ifdef DEBUG_SPLITTING_USING_ENTROPY
-            std::cout << "Splitting at "  << l << " entropy=" << entropy
-                      << std::endl;
-        #endif
+#ifdef DEBUG_SPLITTING_USING_ENTROPY
+        std::cout << "Splitting at "  << l << " entropy=" << entropy
+                  << std::endl;
+#endif
 
         // Check if this is the maximum
         if (entropy > maxEntropy)
@@ -90,10 +90,10 @@ int splitHistogramsUsingEntropy(const std::vector<histogram1D> &hist,
             maxEntropy = entropy;
             lmaxEntropy = l;
         }
-         
+
         // Move to next split point
         l++;
-        
+
         // Update probabilities of being l<=l0 and l>l0
         for (int k = 0; k < K; k++)
         {
@@ -101,12 +101,12 @@ int splitHistogramsUsingEntropy(const std::vector<histogram1D> &hist,
             p(k, 1) -= histNorm[k](l);
         }
     }
-    
-    #ifdef DEBUG_SPLITTING_USING_ENTROPY
-        std::cout << "Finally in l=[" << l0 << "," << lF
-                  << " Max Entropy:" << maxEntropy
-                  << " lmax=" << lmaxEntropy << std::endl;
-    #endif
+
+#ifdef DEBUG_SPLITTING_USING_ENTROPY
+    std::cout << "Finally in l=[" << l0 << "," << lF
+              << " Max Entropy:" << maxEntropy
+              << " lmax=" << lmaxEntropy << std::endl;
+#endif
 
     // If the point giving the maximum entropy is too much on the extreme,
     // substitute it by the middle point
@@ -117,8 +117,8 @@ int splitHistogramsUsingEntropy(const std::vector<histogram1D> &hist,
 }
 
 /* Constructor ------------------------------------------------------------- */
-LeafNode::LeafNode(const std::vector < Matrix1D<double> > &leafFeatures, 
-    int discrete_levels)
+LeafNode::LeafNode(const std::vector < Matrix1D<double> > &leafFeatures,
+                   int discrete_levels)
 {
     __discreteLevels = discrete_levels;
     K = leafFeatures.size();
@@ -162,13 +162,13 @@ LeafNode::LeafNode(const std::vector < Matrix1D<double> > &leafFeatures,
             Matrix1D<int> currentInterval = intervals.front();
             intervals.pop();
             int lsplit = splitHistogramsUsingEntropy(hist,
-                currentInterval(0), currentInterval(1));
+                         currentInterval(0), currentInterval(1));
             VECTOR_R2(limits,currentInterval(0),lsplit);
             splittedIntervals.push(limits);
             VECTOR_R2(limits,lsplit+1, currentInterval(1));
             splittedIntervals.push(limits);
         }
-        
+
         // Copy the splitted intervals to the interval list
         while (!splittedIntervals.empty())
         {
@@ -183,7 +183,7 @@ LeafNode::LeafNode(const std::vector < Matrix1D<double> > &leafFeatures,
     for (int i=0; i<imax; i++)
     {
         newBins(i) = intervals.front()(1);
-        intervals.pop(); 
+        intervals.pop();
     }
 
     // Compute now the irregular histograms
@@ -192,7 +192,7 @@ LeafNode::LeafNode(const std::vector < Matrix1D<double> > &leafFeatures,
         IrregularHistogram1D irregHist;
         irregHist.init(hist[k], newBins);
         irregHist.selfNormalize();
-        __leafPDF.push_back(irregHist);    
+        __leafPDF.push_back(irregHist);
     }
 }
 
@@ -218,8 +218,8 @@ double LeafNode::computeWeight() const
         {
             if (k1==k2) continue;
             retval+=KLDistance(
-                __leafPDF[k1].getHistogram(),
-                __leafPDF[k2].getHistogram());
+                        __leafPDF[k1].getHistogram(),
+                        __leafPDF[k2].getHistogram());
         }
     return (retval/(K*K-K));
 }
@@ -241,7 +241,7 @@ NaiveBayes::NaiveBayes(
     const std::vector< Matrix2D<double> > &features,
     const Matrix1D<double> &priorProbs,
     int discreteLevels)
-{ 
+{
     K = features.size();
     Nfeatures=XSIZE(features[0]);
     __priorProbsLog10 = priorProbs;
@@ -250,23 +250,23 @@ NaiveBayes::NaiveBayes(
 
     // Build a leafnode for each feature and assign a weight
     __weights.initZeros(Nfeatures);
-    std::vector < Matrix1D<double> > aux(K);	
+    std::vector < Matrix1D<double> > aux(K);
     for (int f=0; f<Nfeatures; f++)
     {
         for (int k=0; k<K; k++)
             features[k].getCol(f, aux[k]);
         __leafs.push_back(new LeafNode(aux,discreteLevels));
         __weights(f)=__leafs[f]->computeWeight();
-        #ifdef DEBUG_WEIGHTS
-            if(debugging == true)
-            {
-                std::cout << "Node " << f << std::endl
-                          << *(__leafs[f]) << std::endl;
-            }
-        #endif            
+#ifdef DEBUG_WEIGHTS
+        if(debugging == true)
+        {
+            std::cout << "Node " << f << std::endl
+                      << *(__leafs[f]) << std::endl;
+        }
+#endif
     }
     __weights /= __weights.computeMax();
-    
+
     // Set default cost matrix
     __cost.resize(K,K);
     __cost.initConstant(1);
@@ -276,8 +276,8 @@ NaiveBayes::NaiveBayes(
 /* Destructor -------------------------------------------------------------- */
 NaiveBayes::~NaiveBayes()
 {
-   for (int i = 0; i < __leafs.size(); i++)
-      delete __leafs[i];
+    for (int i = 0; i < __leafs.size(); i++)
+        delete __leafs[i];
 }
 
 /* Set cost matrix --------------------------------------------------------- */
@@ -290,39 +290,39 @@ void NaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 
 /* Do inference ------------------------------------------------------------ */
 int NaiveBayes::doInference(const Matrix1D<double> &newFeatures,
-    double &cost)
+                            double &cost)
 {
     Matrix1D<double> classesProbs;
     classesProbs = __priorProbsLog10;
     for(int f=0; f<Nfeatures; f++)
         for (int k=0; k<K; k++)
         {
-      	    double p = __leafs[f]->assignProbability(newFeatures(f), k);
-            
+            double p = __leafs[f]->assignProbability(newFeatures(f), k);
+
             if (ABS(p) < 1e-2) classesProbs(k) += -2*__weights(f);
             else               classesProbs(k) += __weights(f)*std::log10(p);
 
-            #ifdef DEBUG_FINE_CLASSIFICATION
-                if(debugging == true)
-                {
-                    std::cout << "Feature " << f
-                              << " Probability for class " << k << " = "
-                              << classesProbs(k) << " increase= " << p 
-                              << std::endl;
-                    char c;
+#ifdef DEBUG_FINE_CLASSIFICATION
+            if(debugging == true)
+            {
+                std::cout << "Feature " << f
+                          << " Probability for class " << k << " = "
+                          << classesProbs(k) << " increase= " << p
+                          << std::endl;
+                char c;
 // COSS                    std::cin >> c;
 //                    if (c=='q') debugging = false;
-                }
-            #endif        	        
+            }
+#endif
         }
     classesProbs-=classesProbs.computeMax();
 //    std::cout << "classesProbs " << classesProbs.transpose() << std::endl;
-    
+
     for (int k=0; k<K; k++)
         classesProbs(k)=pow(10.0,classesProbs(k));
     classesProbs/=classesProbs.sum();
 //    std::cout << "classesProbs norm " << classesProbs.transpose() << std::endl;
-    
+
     Matrix1D<double> allCosts;
     allCosts=__cost*classesProbs;
     for (int k=0; k<K; k++)
@@ -338,19 +338,19 @@ int NaiveBayes::doInference(const Matrix1D<double> &newFeatures,
             bestk=k;
         }
 
-    #ifdef DEBUG_CLASSIFICATION
-        if(debugging == true)
-        {
-            for (int k=0; k<K; k++)
-                classesProbs(k)=log10(classesProbs(k));
-            std::cout << "Class probababilities=" << classesProbs.transpose()
-                      << "\n  costs=" << allCosts.transpose()
-                      << "  best class=" << bestk << std::endl;
-            char c;
-            // COSS std::cin >> c;
-            // if (c=='q') debugging = false;
-        }
-    #endif
+#ifdef DEBUG_CLASSIFICATION
+    if(debugging == true)
+    {
+        for (int k=0; k<K; k++)
+            classesProbs(k)=log10(classesProbs(k));
+        std::cout << "Class probababilities=" << classesProbs.transpose()
+                  << "\n  costs=" << allCosts.transpose()
+                  << "  best class=" << bestk << std::endl;
+        char c;
+        // COSS std::cin >> c;
+        // if (c=='q') debugging = false;
+    }
+#endif
     return bestk;
 }
 
@@ -367,7 +367,7 @@ std::ostream & operator << (std::ostream &_out, const NaiveBayes &naive)
 EnsembleNaiveBayes::EnsembleNaiveBayes(
     const std::vector < Matrix2D<double> >  &features,
     const Matrix1D<double> &priorProbs,
-    int discreteLevels, int numberOfClassifiers, 
+    int discreteLevels, int numberOfClassifiers,
     double samplingFeatures, double samplingIndividuals,
     const std::string &newJudgeCombination)
 {
@@ -380,7 +380,7 @@ EnsembleNaiveBayes::EnsembleNaiveBayes(
         // Produce the set of features for this subclassifier
         Matrix1D<int> subFeatures(NsubFeatures);
         FOR_ALL_ELEMENTS_IN_MATRIX1D(subFeatures)
-            subFeatures(i)=ROUND(rnd_unif(0,NFeatures-1));
+        subFeatures(i)=ROUND(rnd_unif(0,NFeatures-1));
 
         // Container for the new training sample
         std::vector< Matrix2D<double> >  newFeatures;
@@ -392,16 +392,16 @@ EnsembleNaiveBayes::EnsembleNaiveBayes(
             int NsubIndividuals=CEIL(NIndividuals*samplingIndividuals);
             Matrix1D<int> subIndividuals(NsubIndividuals);
             FOR_ALL_ELEMENTS_IN_MATRIX1D(subIndividuals)
-                subIndividuals(i)=ROUND(rnd_unif(0,NsubIndividuals-1));
+            subIndividuals(i)=ROUND(rnd_unif(0,NsubIndividuals-1));
 
             Matrix2D<double> newFeaturesK;
             newFeaturesK.initZeros(NsubIndividuals,NsubFeatures);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(newFeaturesK)
-                newFeaturesK(i,j)=features[k](subIndividuals(i),subFeatures(j));
-            
+            newFeaturesK(i,j)=features[k](subIndividuals(i),subFeatures(j));
+
             newFeatures.push_back(newFeaturesK);
         }
-        
+
         // Create a Naive Bayes classifier with this data
         NaiveBayes *nb=new NaiveBayes(newFeatures, priorProbs, discreteLevels);
         ensemble.push_back(nb);
@@ -427,14 +427,16 @@ void EnsembleNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 
 /* Do inference ------------------------------------------------------------ */
 int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
-    double &cost, Matrix1D<int> &votes)
+                                    double &cost, Matrix1D<int> &votes)
 {
 
     int nmax=ensemble.size();
     Matrix1D<double> minCost, maxCost;
     votes.initZeros(K);
-    minCost.initZeros(K); minCost.initConstant(1);
-    maxCost.initZeros(K); maxCost.initConstant(1);
+    minCost.initZeros(K);
+    minCost.initConstant(1);
+    maxCost.initZeros(K);
+    maxCost.initConstant(1);
     double bestMinCost=0;
     int bestClass;
     Matrix1D<double> newFeaturesn;
@@ -443,7 +445,7 @@ int EnsembleNaiveBayes::doInference(const Matrix1D<double> &newFeatures,
         double costn;
         newFeaturesn.initZeros(XSIZE(ensembleFeatures[n]));
         FOR_ALL_ELEMENTS_IN_MATRIX1D(newFeaturesn)
-            newFeaturesn(i)=newFeatures(ensembleFeatures[n](i));
+        newFeaturesn(i)=newFeatures(ensembleFeatures[n](i));
         int k=ensemble[n]->doInference(newFeaturesn, costn);
         votes(k)++;
         if (minCost(k)>0 || minCost(k)>costn) minCost(k)=costn;

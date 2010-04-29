@@ -39,7 +39,7 @@ class DetectMissingWedge_parameters
 public:
     /// Input volume
     FileName fn_vol;
-    
+
     /// Plane width
     double planeWidth;
 
@@ -48,7 +48,7 @@ public:
 
     /// Save marks
     bool saveMarks;
-    
+
     /// Save mask
     bool saveMask;
 public:
@@ -57,7 +57,7 @@ public:
 
     // Magnitude of the input volume
     Matrix3D<double> *Vmag;
-    
+
     // Angles of the first plane
     double rotPos, tiltPos;
 

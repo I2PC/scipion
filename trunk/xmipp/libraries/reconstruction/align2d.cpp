@@ -120,22 +120,22 @@ void Prog_align2d_prm::usage()
     std::cerr << "Usage:  " << std::endl;
     std::cerr << "  align2d [options]" << std::endl;
     std::cerr << "   -i <selfile>             : Selfile containing images to be aligned \n"
-    << " [ -ref <image> ]           : reference image; if none: piramidal combination of subset of images \n"
-    << " [ -oext <extension> ]      : For output images & selfile; if none: input will be overwritten \n"
-    << " [ -iter <int=1> ]          : Number of iterations to perform \n"
-    << " [ -Ri <inner radius=0> ]   : Region between radii Ri and Ro will be considered \n"
-    << " [ -Ro <outer radius=dim/2>]     for rotational correlation\n"
-    << " [ -filter <resol.> ]       : Fourier-filter images to expected resolution [Ang] \n"
-    << " [ -sampling <pix. size> ]  : Sampling rate, i.e. pixel size [Ang]; required for filtering. \n"
-    << " [ -max_shift <float> ]     : Discard images that shift more in the last iteration [pix]\n"
-    << " [ -max_rot <float> ]       : Discard images that rotate more in the last iteration [deg]\n"
-    << " [ -doc <docfile> ]         : write output document file with rotations & translations \n"
-    << " [ -only_trans ]            : Skip rotational alignment \n"
-    << " [ -only_rot ]              : Skip translational alignment \n"
-    << " [ -complete ]              : Use complete-search alignment \n"
-    << " [ -psi_step <float=10>]    : Sampling interval to search rotation [deg] \n"
+              << " [ -ref <image> ]           : reference image; if none: piramidal combination of subset of images \n"
+              << " [ -oext <extension> ]      : For output images & selfile; if none: input will be overwritten \n"
+              << " [ -iter <int=1> ]          : Number of iterations to perform \n"
+              << " [ -Ri <inner radius=0> ]   : Region between radii Ri and Ro will be considered \n"
+              << " [ -Ro <outer radius=dim/2>]     for rotational correlation\n"
+              << " [ -filter <resol.> ]       : Fourier-filter images to expected resolution [Ang] \n"
+              << " [ -sampling <pix. size> ]  : Sampling rate, i.e. pixel size [Ang]; required for filtering. \n"
+              << " [ -max_shift <float> ]     : Discard images that shift more in the last iteration [pix]\n"
+              << " [ -max_rot <float> ]       : Discard images that rotate more in the last iteration [deg]\n"
+              << " [ -doc <docfile> ]         : write output document file with rotations & translations \n"
+              << " [ -only_trans ]            : Skip rotational alignment \n"
+              << " [ -only_rot ]              : Skip translational alignment \n"
+              << " [ -complete ]              : Use complete-search alignment \n"
+              << " [ -psi_step <float=10>]    : Sampling interval to search rotation [deg] \n"
 
-    << std::endl;
+              << std::endl;
 }
 
 // Rotational alignment ========================================================
@@ -437,7 +437,7 @@ void Prog_align2d_prm::do_pspc()
 
     // Copy n_piram to a new temporary array of ImageXmipp
     std::vector<ImageXmipp>  imgpspc;
-    for (imgno = 0;imgno < n_piram;imgno++) imgpspc.push_back(images[imgno]);
+    for (imgno = 0; imgno < n_piram; imgno++) imgpspc.push_back(images[imgno]);
 
     std::cerr << "  Piramidal combination of " << n_piram << " images" << std::endl;
     init_progress_bar(n_piram);
@@ -712,7 +712,7 @@ void Prog_align2d_prm::align2d()
         fmask.FilterShape = RAISED_COSINE;
         fmask.FilterBand = LOWPASS;
         fmask.generate_mask(images[0]());
-        for (int imgno = 0;imgno < n_images;imgno++)
+        for (int imgno = 0; imgno < n_images; imgno++)
             fmask.apply_mask_Space(images[imgno]());
     }
 
@@ -920,22 +920,22 @@ void Prog_align2d_prm::usage()
     std::cerr << "Usage:  " << std::endl;
     std::cerr << "  align2d [options]" << std::endl;
     std::cerr << "   -i <selfile>             : Selfile containing images to be aligned \n"
-    << " [ -ref <image> ]           : reference image; if none: piramidal combination of subset of images \n"
-    << " [ -oext <extension> ]      : For output images & selfile; if none: input will be overwritten \n"
-    << " [ -iter <int=1> ]          : Number of iterations to perform \n"
-    << " [ -Ri <inner radius=0> ]   : Region between radii Ri and Ro will be considered \n"
-    << " [ -Ro <outer radius=dim/2>]     for rotational correlation\n"
-    << " [ -filter <resol.> ]       : Fourier-filter images to expected resolution [Ang] \n"
-    << " [ -sampling <pix. size> ]  : Sampling rate, i.e. pixel size [Ang]; required for filtering. \n"
-    << " [ -max_shift <float> ]     : Discard images that shift more in the last iteration [pix]\n"
-    << " [ -max_rot <float> ]       : Discard images that rotate more in the last iteration [deg]\n"
-    << " [ -doc <docfile> ]         : write output document file with rotations & translations \n"
-    << " [ -only_trans ]            : Skip rotational alignment \n"
-    << " [ -only_rot ]              : Skip translational alignment \n"
-    << " [ -complete ]              : Use complete-search alignment \n"
-    << " [ -psi_step <float=10>]    : Sampling interval to search rotation [deg] \n"
+              << " [ -ref <image> ]           : reference image; if none: piramidal combination of subset of images \n"
+              << " [ -oext <extension> ]      : For output images & selfile; if none: input will be overwritten \n"
+              << " [ -iter <int=1> ]          : Number of iterations to perform \n"
+              << " [ -Ri <inner radius=0> ]   : Region between radii Ri and Ro will be considered \n"
+              << " [ -Ro <outer radius=dim/2>]     for rotational correlation\n"
+              << " [ -filter <resol.> ]       : Fourier-filter images to expected resolution [Ang] \n"
+              << " [ -sampling <pix. size> ]  : Sampling rate, i.e. pixel size [Ang]; required for filtering. \n"
+              << " [ -max_shift <float> ]     : Discard images that shift more in the last iteration [pix]\n"
+              << " [ -max_rot <float> ]       : Discard images that rotate more in the last iteration [deg]\n"
+              << " [ -doc <docfile> ]         : write output document file with rotations & translations \n"
+              << " [ -only_trans ]            : Skip rotational alignment \n"
+              << " [ -only_rot ]              : Skip translational alignment \n"
+              << " [ -complete ]              : Use complete-search alignment \n"
+              << " [ -psi_step <float=10>]    : Sampling interval to search rotation [deg] \n"
 
-    << std::endl;
+              << std::endl;
 }
 
 // Rotational alignment ========================================================
@@ -1081,7 +1081,7 @@ bool Prog_align2d_prm::align_trans(ImageXmippT<double> &img, const Matrix2D<doub
                 sumcorr += MAT_ELEM(Mcorr, i_actual, j_actual);
             }
         }
-    
+
     //if  (sumcorr  !=  sumcorr)
     xmax /= sumcorr;
     ymax /= sumcorr;
@@ -1095,7 +1095,7 @@ bool Prog_align2d_prm::align_trans(ImageXmippT<double> &img, const Matrix2D<doub
     {
         yshift=xshift=0.f;
     }
-    //The following code is not portable but 
+    //The following code is not portable but
     // I do not know a better why to detect nans
 #ifdef isnan
     if (!isnormal(xmax) || !isnormal(ymax))
@@ -1104,12 +1104,12 @@ bool Prog_align2d_prm::align_trans(ImageXmippT<double> &img, const Matrix2D<doub
         yshift = 0.f;
     }
 #else
-    if((xshift>(float)dim && xshift<(float)dim) ||
-       (yshift>(float)dim && yshift<(float)dim))
-    {
-        yshift=xshift=0.f;
-    }   
-#endif    
+if((xshift>(float)dim && xshift<(float)dim) ||
+   (yshift>(float)dim && yshift<(float)dim))
+{
+    yshift=xshift=0.f;
+}
+#endif
     Maux.clear();
     Mcorr.clear();
 
@@ -1220,10 +1220,10 @@ void Prog_align2d_prm::do_pspc()
 
     // Calculate average image of non-aligned images to center pspc-reference
     ImageXmipp med, sig;
-   double min, max;
+    double min, max;
 
-   get_statistics(SF,med, sig, min, max, true);
-   med().setXmippOrigin();
+    get_statistics(SF,med, sig, min, max, true);
+    med().setXmippOrigin();
 
     // Use piramidal combination of images to construct an initial reference
     nlev = SF.size();
@@ -1238,7 +1238,7 @@ void Prog_align2d_prm::do_pspc()
 
     // Copy n_piram to a new temporary array of ImageXmipp
     std::vector<ImageXmipp>  imgpspc;
-    for (imgno = 0;imgno < n_piram;imgno++) imgpspc.push_back(images[imgno]);
+    for (imgno = 0; imgno < n_piram; imgno++) imgpspc.push_back(images[imgno]);
 
     std::cerr << "  Piramidal combination of " << n_piram << " images" << std::endl;
     init_progress_bar(n_piram);
@@ -1515,7 +1515,7 @@ void Prog_align2d_prm::align2d()
         fmask.FilterShape = RAISED_COSINE;
         fmask.FilterBand = LOWPASS;
         fmask.generate_mask(images[0]());
-        for (int imgno = 0;imgno < n_images;imgno++)
+        for (int imgno = 0; imgno < n_images; imgno++)
             fmask.apply_mask_Space(images[imgno]());
     }
 
@@ -1599,13 +1599,13 @@ void Prog_align2d_prm::align2d()
     // Write out docfile
     if (fn_doc != "")
     {
-    	MetaData           DFo;
+        MetaData           DFo;
         for (int imgno = 0; imgno < n_images; imgno++)
         {
             DFo.addObject();
             DFo.setImage(images[imgno].name());
             DFo.setEnabled(1);
-        	DFo.setAngleRot(images[imgno].Phi());
+            DFo.setAngleRot(images[imgno].Phi());
             DFo.setAngleTilt(images[imgno].Theta());
             DFo.setAnglePsi(images[imgno].psi());
             DFo.setShiftX(images[imgno].Xoff());

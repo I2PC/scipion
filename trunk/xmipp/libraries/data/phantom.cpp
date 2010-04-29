@@ -584,10 +584,10 @@ double Blob::density_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) co
 /* Point inside a Gaussian ------------------------------------------------- */
 int Gaussian::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 {
-        V3_MINUS_V3(aux,r,Center);
-        if (XX(aux)*XX(aux) + YY(aux)*YY(aux) +ZZ(aux)*ZZ(aux) <= 16*sigma*sigma)
-            return 1;
-        return 0;
+    V3_MINUS_V3(aux,r,Center);
+    if (XX(aux)*XX(aux) + YY(aux)*YY(aux) +ZZ(aux)*ZZ(aux) <= 16*sigma*sigma)
+        return 1;
+    return 0;
 }
 
 /* Density inside a Gaussian ----------------------------------------------- */
@@ -698,7 +698,7 @@ int Cone::point_inside(const Matrix1D<double> &r, Matrix1D<double> &aux) const
 #define DEBUG_SHOW \
     if (ZZ(r)==0 && YY(r)==0) \
         std::cout << "Point (z=" << ZZ(aux1) << ",y=" << YY(aux1) << ",x=" \
-        << XX(aux1) << ") inside=" << inside << std::endl;
+                  << XX(aux1) << ") inside=" << inside << std::endl;
 #else
 #define DEBUG_SHOW
 #endif
@@ -1189,7 +1189,7 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
     VECTOR_R3(corner2, -max_distance, -max_distance, -max_distance);
 #ifdef DEBUG_LITTLE
     std::cout << "Corner1 : " << corner1.transpose() << std::endl
-    << "Corner2 : " << corner2.transpose() << std::endl;
+              << "Corner2 : " << corner2.transpose() << std::endl;
 #endif
 
     box_enclosing(corner1, corner2, VP, corner1, corner2);
@@ -1197,7 +1197,7 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
 //      rectangle_enclosing(corner1,corner2,*A,corner1,corner2);
 #ifdef DEBUG_LITTLE
     std::cout << "Corner1 moves to : " << corner1.transpose() << std::endl
-    << "Corner2 moves to : " << corner2.transpose() << std::endl;
+              << "Corner2 moves to : " << corner2.transpose() << std::endl;
 #endif
 //   }
 
@@ -1205,7 +1205,7 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
     V3_PLUS_V3(corner2, origin, corner2);
 #ifdef DEBUG_LITTLE
     std::cout << "Corner1 finally is : " << corner1.transpose() << std::endl
-    << "Corner2 finally is : " << corner2.transpose() << std::endl;
+              << "Corner2 finally is : " << corner2.transpose() << std::endl;
 #endif
     /*
        Matrix1D<double> corner1_debug(2),corner2_debug(2);
@@ -1291,7 +1291,7 @@ void Feature::project_to(Projection &P, const Matrix2D<double> &VP,
             length /= (SUBSAMPLING * SUBSAMPLING);
 #ifdef DEBUG
             std::cout << "Final value added at position (" << u << "," << v << ")="
-            << length << std::endl;
+                      << length << std::endl;
 #endif
 
             // Add at the correspondant pixel the found intersection ,,,,,,,,,,
@@ -2179,8 +2179,8 @@ void Phantom::project_to(Projection &P, int Ydim, int Xdim,
 {
 #ifdef DEBUG
     std::cout << "Ydim=" << Ydim << " Xdim=" << Xdim << std::endl
-    << "rot=" << rot << " tilt=" << tilt << " psi=" << psi << std::endl
-    << "A\n" << A;
+              << "rot=" << rot << " tilt=" << tilt << " psi=" << psi << std::endl
+              << "A\n" << A;
 #endif
     // Initialise projection
     P.adapt_to_size(Ydim, Xdim);
@@ -2290,23 +2290,22 @@ const
                         }
                     }
                 // or you reach the end of the volume
+                else if (direction == POS_NEG)
+                {
+                    k--;
+                    if (k < FIRST_XMIPP_INDEX(zdim))
+                    {
+                        finished = true;
+                    }
+                }
                 else
-                    if (direction == POS_NEG)
+                {
+                    k++;
+                    if (k > LAST_XMIPP_INDEX(zdim))
                     {
-                        k--;
-                        if (k < FIRST_XMIPP_INDEX(zdim))
-                        {
-                            finished = true;
-                        }
+                        finished = true;
                     }
-                    else
-                    {
-                        k++;
-                        if (k > LAST_XMIPP_INDEX(zdim))
-                        {
-                            finished = true;
-                        }
-                    }
+                }
             }
         }
 

@@ -48,30 +48,30 @@ void CorrectAmplitude3DParams::show()
               << "Wiener constant:                   " << wienConst << std::endl
               << "Output rootname:                   " << fnOut << std::endl
               << "Phase flipped:                     " << isFlipped << std::endl
-	      << "Number of images in:               " << fnNrImgs << std::endl
-	;
+              << "Number of images in:               " << fnNrImgs << std::endl
+              ;
     if (minResol>0)
     {
-	std::cout << "Apply Wiener filter only beyond:   " << minResol << " Angstroms" << std::endl;
+        std::cout << "Apply Wiener filter only beyond:   " << minResol << " Angstroms" << std::endl;
     }
     if (fnEnvs!="")
     {
-	std::cout << "Envelopes in file:                 " << fnEnvs << std::endl;
+        std::cout << "Envelopes in file:                 " << fnEnvs << std::endl;
     }
-    
+
 }
 
 /* Usage ------------------------------------------------------------------- */
 void CorrectAmplitude3DParams::usage()
 {
     std::cerr << "   -ctfdat <CTF datfile>               : 2-column ASCII file with name of volume and CTF param for each defocus group\n"
-	      << "   -nr_imgs <docfile>                  : Docfile with number of images in each defocus group\n"
+              << "   -nr_imgs <docfile>                  : Docfile with number of images in each defocus group\n"
               << "  [-o \"wiener\"]                        : Output rootname \n"
               << "  [-minres <Ang>]                      : Apply Wiener filter only beyond this resolution (in Angstrom)\n"
               << "  [-phase_flipped]                     : Use this if the maps were reconstructed from phase corrected images \n"
               << "  [-wc <0.05>]                         : Wiener constant (to be multiplied by the total number of images) \n"
 //              << "  [-env <selfile>]                     : selfile to ASCII files with envelope for each defocus group\n"
-    ;
+              ;
 }
 
 /* Produce Side information ------------------------------------------------ */
@@ -92,18 +92,18 @@ void CorrectAmplitude3DParams::produceSideInfo()
     // Read the envelopes
     if (fnEnvs!="")
     {
-	SFenv.read(fnEnvs);
-	if (SFenv.LineNo()!=ctfdat.lineNo())
-	{
-	    REPORT_ERROR(1, "CTFdat and envelope selfile have unequal number of entries.");
-	}
+        SFenv.read(fnEnvs);
+        if (SFenv.LineNo()!=ctfdat.lineNo())
+        {
+            REPORT_ERROR(1, "CTFdat and envelope selfile have unequal number of entries.");
+        }
     }
 
     // Read the docfile with the number of images per group
     DFimgs.read(fnNrImgs);
     if (DFimgs.LineNo()!=ctfdat.lineNo())
     {
-	REPORT_ERROR(1, "CTFdat and docfile with number of images per group have unequal number of entries.");
+        REPORT_ERROR(1, "CTFdat and docfile with number of images per group have unequal number of entries.");
     }
 
 }
@@ -111,9 +111,9 @@ void CorrectAmplitude3DParams::produceSideInfo()
 
 /* Make 3D CTF ------------------------------------------------------------- */
 void CorrectAmplitude3DParams::generateCTF1D(const FileName &fnCTF, const double nr_steps,
-				       Matrix1D<double> &CTF1D)
+        Matrix1D<double> &CTF1D)
 {
-    // Read the CTF 
+    // Read the CTF
     ctf.FilterBand = CTF;
     ctf.ctf.enable_CTFnoise = false;
     ctf.ctf.read(fnCTF);
@@ -125,18 +125,18 @@ void CorrectAmplitude3DParams::generateCTF1D(const FileName &fnCTF, const double
     double res = 0.;
 
     res=0.;
-    for (int step=0; step < nr_steps; step++) 
+    for (int step=0; step < nr_steps; step++)
     {
-	if ( (minResol < 0) || (1./res < minResol) )
-	{
-	    CTF1D(step)=ctf.ctf.CTF_at(res, 0);
-	    if (isFlipped) CTF1D(step)=ABS(CTF1D(step));
-	}
-	else
-	{
-	    CTF1D(step)=1.;
-	}
-	res+=stepsize;
+        if ( (minResol < 0) || (1./res < minResol) )
+        {
+            CTF1D(step)=ctf.ctf.CTF_at(res, 0);
+            if (isFlipped) CTF1D(step)=ABS(CTF1D(step));
+        }
+        else
+        {
+            CTF1D(step)=1.;
+        }
+        res+=stepsize;
     }
 
 }
@@ -164,69 +164,69 @@ void CorrectAmplitude3DParams::generateWienerFilters()
     ctfdat.goFirstLine();
     while (!ctfdat.eof())
     {
-	// Calculate 1D CTF
+        // Calculate 1D CTF
         FileName fnVol, fnCTF;
-	ctfdat.getCurrentLine(fnVol,fnCTF);
-	generateCTF1D(fnCTF,nr_steps,CTF1D);
-	Vctfs1D.push_back(CTF1D);
+        ctfdat.getCurrentLine(fnVol,fnCTF);
+        generateCTF1D(fnCTF,nr_steps,CTF1D);
+        Vctfs1D.push_back(CTF1D);
 
-	// Get the number of images contributing to this group
-	DFimgs.search(ii+1);
-	tot_nr_imgs += DFimgs(0);
+        // Get the number of images contributing to this group
+        DFimgs.search(ii+1);
+        tot_nr_imgs += DFimgs(0);
 
-	// Calculate denominator of the Wiener filter
-	if (ii==0) 
-	{
-	    sumterm.resize(CTF1D);
-	}
-	FOR_ALL_ELEMENTS_IN_MATRIX1D(sumterm) 
-	{
-	    sumterm(i) += DFimgs(0) * CTF1D(i) * CTF1D(i);
-	}
-	ctfdat.nextLine();
-	ii++;
+        // Calculate denominator of the Wiener filter
+        if (ii==0)
+        {
+            sumterm.resize(CTF1D);
+        }
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(sumterm)
+        {
+            sumterm(i) += DFimgs(0) * CTF1D(i) * CTF1D(i);
+        }
+        ctfdat.nextLine();
+        ii++;
     }
 
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(sumterm) 
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(sumterm)
     {
-	// Find min and max values of the sumterm
-	if (sumterm(i)>maxsum) maxsum=sumterm(i);
-	if (sumterm(i)<minsum) minsum=sumterm(i);
-	// Add (normalized) Wiener filter constant
-	sumterm(i) += tot_nr_imgs*wienConst;
+        // Find min and max values of the sumterm
+        if (sumterm(i)>maxsum) maxsum=sumterm(i);
+        if (sumterm(i)<minsum) minsum=sumterm(i);
+        // Add (normalized) Wiener filter constant
+        sumterm(i) += tot_nr_imgs*wienConst;
     }
 
     int iimax = ii;
     // Fill the Wiener filter vector
-    for (ii=0; ii<iimax; ii++) 
+    for (ii=0; ii<iimax; ii++)
     {
-	// Get the number of images contributing to this group
-	DFimgs.search(ii+1);
+        // Get the number of images contributing to this group
+        DFimgs.search(ii+1);
 
-	FOR_ALL_ELEMENTS_IN_MATRIX1D(CTF1D) 
-	{
-	    CTF1D(i) = DFimgs(0) * Vctfs1D[ii](i) / sumterm(i);
-	    if (CTF1D(i)>maxwien) maxwien=CTF1D(i);
-	    if (CTF1D(i)<minwien) minwien=CTF1D(i);
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(CTF1D)
+        {
+            CTF1D(i) = DFimgs(0) * Vctfs1D[ii](i) / sumterm(i);
+            if (CTF1D(i)>maxwien) maxwien=CTF1D(i);
+            if (CTF1D(i)<minwien) minwien=CTF1D(i);
 
-	}
-	Vwien1D.push_back(CTF1D);
+        }
+        Vwien1D.push_back(CTF1D);
 
-	// Write CTF and Wiener filter curves to disc
-	fn_tmp = fnOut + "_wien";
-	fn_tmp.compose(fn_tmp, ii+1, "txt");
-	fh.open((fn_tmp).c_str(), std::ios::out);
-	if (!fh) REPORT_ERROR(1, (std::string)"Error: Cannot write file: " + fn_tmp);
-	for (int step = 0; step < nr_steps; step++) 
-	{
-	    res = (step * sqrt(3.) ) / 
-		(OVERSAMPLE * sqrt( (double) (Zdim*Zdim + Ydim*Ydim + Xdim*Xdim) ) );
-	    if (res<=0.5)
-	    {
-		fh << res << " " << Vwien1D[ii](step) << " " << Vctfs1D[ii](step) << "\n";
-	    }
-	}
-	fh.close();
+        // Write CTF and Wiener filter curves to disc
+        fn_tmp = fnOut + "_wien";
+        fn_tmp.compose(fn_tmp, ii+1, "txt");
+        fh.open((fn_tmp).c_str(), std::ios::out);
+        if (!fh) REPORT_ERROR(1, (std::string)"Error: Cannot write file: " + fn_tmp);
+        for (int step = 0; step < nr_steps; step++)
+        {
+            res = (step * sqrt(3.) ) /
+                  (OVERSAMPLE * sqrt( (double) (Zdim*Zdim + Ydim*Ydim + Xdim*Xdim) ) );
+            if (res<=0.5)
+            {
+                fh << res << " " << Vwien1D[ii](step) << " " << Vctfs1D[ii](step) << "\n";
+            }
+        }
+        fh.close();
     }
 
     // Some output to screen
@@ -241,7 +241,7 @@ void CorrectAmplitude3DParams::generateWienerFilters()
     std::cerr <<" ---------------------------------------------------"<<std::endl;
 
 }
-	
+
 /* Make deconvolved volume -------------------------------------------------- */
 void CorrectAmplitude3DParams::generateVolumes()
 {
@@ -257,26 +257,26 @@ void CorrectAmplitude3DParams::generateVolumes()
     ctfdat.goFirstLine();
     while (!ctfdat.eof())
     {
-	ctfdat.getCurrentLine(fnVol,fnCTF);
-	V.read(fnVol);
-	FourierTransform(V(),fft);
-	if (ii == 0)
-	{
-	    fft_out.resize(fft);
-	}
-	FOR_ALL_ELEMENTS_IN_MATRIX3D(fft)
-	{
-	    XX(idx) = j;
-	    YY(idx) = i;
-	    ZZ(idx) = k;
-	    FFT_idx2digfreq(fft, idx, freq);
-	    ires= ROUND(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim*Xdim+YY(freq)*YY(freq)*Ydim*Ydim+ZZ(freq)*ZZ(freq*Zdim*Zdim)));
-	    fft_out(k,i,j)+=(Vwien1D[ii])(ires)*fft(k,i,j);
-	}
-	ctfdat.nextLine();
-	ii++;
+        ctfdat.getCurrentLine(fnVol,fnCTF);
+        V.read(fnVol);
+        FourierTransform(V(),fft);
+        if (ii == 0)
+        {
+            fft_out.resize(fft);
+        }
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(fft)
+        {
+            XX(idx) = j;
+            YY(idx) = i;
+            ZZ(idx) = k;
+            FFT_idx2digfreq(fft, idx, freq);
+            ires= ROUND(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim*Xdim+YY(freq)*YY(freq)*Ydim*Ydim+ZZ(freq)*ZZ(freq*Zdim*Zdim)));
+            fft_out(k,i,j)+=(Vwien1D[ii])(ires)*fft(k,i,j);
+        }
+        ctfdat.nextLine();
+        ii++;
     }
-    
+
     // Inverse Fourier Transform
     InverseFourierTransform(fft_out,V());
     fnVol=fnOut+"_deconvolved.vol";
@@ -287,23 +287,23 @@ void CorrectAmplitude3DParams::generateVolumes()
     ctfdat.goFirstLine();
     while (!ctfdat.eof())
     {
-	ctfdat.getCurrentLine(fnVol,fnCTF);
-	FOR_ALL_ELEMENTS_IN_MATRIX3D(fft)
-	{
-	    XX(idx) = j;
-	    YY(idx) = i;
-	    ZZ(idx) = k;
-	    FFT_idx2digfreq(fft, idx, freq);
-	    ires= ROUND(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim*Xdim+YY(freq)*YY(freq)*Ydim*Ydim+ZZ(freq)*ZZ(freq*Zdim*Zdim)));
-	    fft(k,i,j)=Vctfs1D[ii](ires)*fft_out(k,i,j);
-	}
-	ctfdat.nextLine();
-	ii++;
+        ctfdat.getCurrentLine(fnVol,fnCTF);
+        FOR_ALL_ELEMENTS_IN_MATRIX3D(fft)
+        {
+            XX(idx) = j;
+            YY(idx) = i;
+            ZZ(idx) = k;
+            FFT_idx2digfreq(fft, idx, freq);
+            ires= ROUND(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim*Xdim+YY(freq)*YY(freq)*Ydim*Ydim+ZZ(freq)*ZZ(freq*Zdim*Zdim)));
+            fft(k,i,j)=Vctfs1D[ii](ires)*fft_out(k,i,j);
+        }
+        ctfdat.nextLine();
+        ii++;
 
-	fnVol=fnOut+"_ctffiltered_group";
-	fnVol.compose(fnVol,ii,"vol");
-	InverseFourierTransform(fft,V());
-	V.write(fnVol);
+        fnVol=fnOut+"_ctffiltered_group";
+        fnVol.compose(fnVol,ii,"vol");
+        InverseFourierTransform(fft,V());
+        V.write(fnVol);
     }
 
 }
@@ -312,10 +312,10 @@ void CorrectAmplitude3DParams::generateVolumes()
 void CorrectAmplitude3DParams::run()
 {
 
-    // Calculate the filters 
+    // Calculate the filters
     generateWienerFilters();
 
     // Calculate the deconvolved and CTF-filtered volumes
     generateVolumes();
-    
+
 }

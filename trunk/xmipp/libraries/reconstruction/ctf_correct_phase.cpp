@@ -65,8 +65,9 @@ void CorrectPhaseParams::run()
     while (!ctfdat.eof())
     {
         FileName fnProjection, fnCTF;
-	ctfdat.getCurrentLine(fnProjection,fnCTF);
-	if (fnProjection!="") {
+        ctfdat.getCurrentLine(fnProjection,fnCTF);
+        if (fnProjection!="")
+        {
             // Read input image and compute its Fourier transform
             ImageXmipp I;
             I.read(fnProjection);
@@ -81,14 +82,14 @@ void CorrectPhaseParams::run()
 
             // Apply the phase correction
             FOR_ALL_ELEMENTS_IN_MATRIX2D(fft)
-                if (ctf.maskFourier2D(i, j)<0) fft(i, j) *= -1;
+            if (ctf.maskFourier2D(i, j)<0) fft(i, j) *= -1;
 
             // Go back to real space
             transformer.inverseFourierTransform();
             I.write();
-	}
+        }
         if (i++ % istep == 0) progress_bar(i);
-	ctfdat.nextLine();
+        ctfdat.nextLine();
     }
     progress_bar(ctfdat.lineNo());
 }

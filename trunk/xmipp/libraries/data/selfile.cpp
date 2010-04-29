@@ -82,10 +82,10 @@ std::ostream& operator << (std::ostream& o, const SelLine &SFL)
     switch (SFL.line_type)
     {
     case (SelLine::DATALINE):
-                    o << SFL.text << " " << SFL.label << std::endl;
+        o << SFL.text << " " << SFL.label << std::endl;
         break;
     case (SelLine::COMMENT):
-                    o << SFL.text << std::endl;
+        o << SFL.text << std::endl;
         break;
     }
     return o;
@@ -280,14 +280,15 @@ void SelFile::read(const FileName &sel_name, int overriding)
             }
             switch (temp.line_type)
             {
-            case (SelLine::NOT_ASSIGNED): break; // Line with an error
+            case (SelLine::NOT_ASSIGNED):
+                break; // Line with an error
             case (SelLine::DATALINE):
-                            if (temp.label != SelLine::DISCARDED)
-                                no_imgs++;
+                if (temp.label != SelLine::DISCARDED)
+                    no_imgs++;
                 text_line.push_back(temp);
                 break;
             case (SelLine::COMMENT):
-                            text_line.push_back(temp);
+                text_line.push_back(temp);
                 break;
             }
             line_no++;
@@ -424,7 +425,7 @@ void SelFile::split_in_two(SelFile &SF1, SelFile &SF2)
     SF2.reserve(N);
     int half = N / 2;
     SFtmp.go_beginning();
-    for (int i = 0;i < N; i++)
+    for (int i = 0; i < N; i++)
     {
         if (i < half)
             SF1.insert(SFtmp.current());
@@ -460,7 +461,7 @@ void SelFile::split_in_N(int N, std::vector<SelFile> &SF)
 
     // Distribute images
     int n = 0;
-    for (int i = 0;i < Nimg; i++)
+    for (int i = 0; i < Nimg; i++)
     {
         SF[n].insert(SFtmp.current());
         n = (n + 1) % N;
@@ -507,11 +508,12 @@ void SelFile::mpi_select_part(int rank, int size, int &num_img_tot)
 
 }
 /* Select only part of the selfile for parallel MPI-runs ------------------ */
-void SelFile::mpi_select_part2(int jobNumber, 
-                               int numberJobs, 
+void SelFile::mpi_select_part2(int jobNumber,
+                               int numberJobs,
                                int &totalNumImg,
                                int mpi_job_size)
-{   // jobNumber process number
+{
+    // jobNumber process number
     // total number of processes
     // total number of images
 
@@ -603,7 +605,7 @@ void SelFile::jump(int how_many, SelLine::Label label)
 /* Find an image (inside the list) ----------------------------------------- */
 // It returns a pointer to past-last element if the image is not inside
 std::vector<SelLine>::iterator find(std::vector<SelLine> &text,
-    const std::string &img_name)
+                                    const std::string &img_name)
 {
     std::vector<SelLine>::iterator current = text.begin();
     std::vector<SelLine>::iterator last    = text.end();
@@ -985,18 +987,18 @@ SelFile SelFile::randomSubset(int subsetN, bool withReplacement)
     SelFile result;
     int N=ImgNo();
     if (N==0) return result;
-    
+
     // Generate the set of random indexes
     Matrix1D<int> idx;
     if (withReplacement)
     {
         idx.initZeros(N);
         FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-            idx(i)=ROUND(rnd_unif(0,N-1));
+        idx(i)=ROUND(rnd_unif(0,N-1));
     }
     else
         randomPermutation(N,idx);
-    
+
     // Generate the random subset
     int i=0;
     while (i<subsetN)
@@ -1006,7 +1008,7 @@ SelFile SelFile::randomSubset(int subsetN, bool withReplacement)
         while (!text_line[ii].Is_data() &&
                !text_line[ii].get_label()==SelLine::ACTIVE)
             ii=(ii+1)%N;
-        
+
         // Insert the image
         result.insert(text_line[ii].get_text());
         i++;
@@ -1077,11 +1079,10 @@ SelFile compare(SelFile &SF1, SelFile &SF2, const int mode)
         found = SF2.find((*current).text);
         if (found == last_SF)
             only_in_SF1.push_back(*current);
+        else if ((*found).label == SelLine::DISCARDED)
+            only_in_SF1.push_back(*current);
         else
-            if ((*found).label == SelLine::DISCARDED)
-                only_in_SF1.push_back(*current);
-            else
-                in_both.push_back(*current);
+            in_both.push_back(*current);
         current++;
     }
 
@@ -1118,90 +1119,90 @@ SelFile compare(SelFile &SF1, SelFile &SF2, const int mode)
     // Write Statistics
     if (mode < 0)
     {
-	temp.line_type = SelLine::COMMENT;
-	temp.label = SelLine::DISCARDED;
-	temp.text = "# Statistics of comparison";
-	result.text_line.push_back(temp);
-	temp.text = "# -------------------------------------------------------------";
-	result.text_line.push_back(temp);
-	sprintf(str, "%6d", SF1.no_imgs);
-	temp.text = "# File 1: " + SF1.fn_sel + "(VALID: " + str;
-	sprintf(str, "%6d", SF1_discarded);
-	temp.text += (std::string) " DISCARDED: " + str + ")";
-	result.text_line.push_back(temp);
-	sprintf(str, "%6d", SF2.no_imgs);
-	temp.text = "# File 2: " + SF2.fn_sel + "(VALID: " + str;
-	sprintf(str, "%6d", SF2_discarded);
-	temp.text += (std::string) " DISCARDED: " + str + ")";
-	result.text_line.push_back(temp);
-	temp.text = "";
-	result.text_line.push_back(temp);
-	sprintf(str, "%6d", in_both.size());
-	temp.text = (std::string)"# Matching Files: " + str;
-	result.text_line.push_back(temp);
-	sprintf(str, "%6d", only_in_SF1.size());
-	temp.text = (std::string)"# Only in file 1: " + str;
-	result.text_line.push_back(temp);
-	sprintf(str, "%6d", only_in_SF2.size());
-	temp.text = (std::string)"# Only in file 2: " + str;
-	result.text_line.push_back(temp);
-	temp.text = "# -------------------------------------------------------------";
-	result.text_line.push_back(temp);
+        temp.line_type = SelLine::COMMENT;
+        temp.label = SelLine::DISCARDED;
+        temp.text = "# Statistics of comparison";
+        result.text_line.push_back(temp);
+        temp.text = "# -------------------------------------------------------------";
+        result.text_line.push_back(temp);
+        sprintf(str, "%6d", SF1.no_imgs);
+        temp.text = "# File 1: " + SF1.fn_sel + "(VALID: " + str;
+        sprintf(str, "%6d", SF1_discarded);
+        temp.text += (std::string) " DISCARDED: " + str + ")";
+        result.text_line.push_back(temp);
+        sprintf(str, "%6d", SF2.no_imgs);
+        temp.text = "# File 2: " + SF2.fn_sel + "(VALID: " + str;
+        sprintf(str, "%6d", SF2_discarded);
+        temp.text += (std::string) " DISCARDED: " + str + ")";
+        result.text_line.push_back(temp);
+        temp.text = "";
+        result.text_line.push_back(temp);
+        sprintf(str, "%6d", in_both.size());
+        temp.text = (std::string)"# Matching Files: " + str;
+        result.text_line.push_back(temp);
+        sprintf(str, "%6d", only_in_SF1.size());
+        temp.text = (std::string)"# Only in file 1: " + str;
+        result.text_line.push_back(temp);
+        sprintf(str, "%6d", only_in_SF2.size());
+        temp.text = (std::string)"# Only in file 2: " + str;
+        result.text_line.push_back(temp);
+        temp.text = "# -------------------------------------------------------------";
+        result.text_line.push_back(temp);
 
-	// Write files in both
-	temp.text = "";
-	result.text_line.push_back(temp);
-	temp.text = "# Files in both .sel files";
-	result.text_line.push_back(temp);
+        // Write files in both
+        temp.text = "";
+        result.text_line.push_back(temp);
+        temp.text = "# Files in both .sel files";
+        result.text_line.push_back(temp);
     }
-    if (mode<0 || mode==0) 
+    if (mode<0 || mode==0)
     {
-	current = in_both.begin();
-	last    = in_both.end();
-	while (current != last)
-	    result.text_line.push_back(*current++);
-    }
-
-    if (mode<0)
-    {
-	// Write files only in Sel File 1
-	temp.text = "";
-	result.text_line.push_back(temp);
-	temp.text = "# Files only in the first file";
-	result.text_line.push_back(temp);
-    }
-    if (mode<0 || mode==1) 
-    {
-	current = only_in_SF1.begin();
-	last    = only_in_SF1.end();
-	while (current != last)
-	    result.text_line.push_back(*current++);
+        current = in_both.begin();
+        last    = in_both.end();
+        while (current != last)
+            result.text_line.push_back(*current++);
     }
 
     if (mode<0)
     {
-	// Write files only in Sel File 2
-	temp.text = "";
-	result.text_line.push_back(temp);
-	temp.text = "# Files only in the second file";
-	result.text_line.push_back(temp);
+        // Write files only in Sel File 1
+        temp.text = "";
+        result.text_line.push_back(temp);
+        temp.text = "# Files only in the first file";
+        result.text_line.push_back(temp);
     }
-    if (mode<0 || mode==2) 
+    if (mode<0 || mode==1)
     {
-	current = only_in_SF2.begin();
-	last    = only_in_SF2.end();
-	while (current != last)
-	    result.text_line.push_back(*current++);
+        current = only_in_SF1.begin();
+        last    = only_in_SF1.end();
+        while (current != last)
+            result.text_line.push_back(*current++);
+    }
+
+    if (mode<0)
+    {
+        // Write files only in Sel File 2
+        temp.text = "";
+        result.text_line.push_back(temp);
+        temp.text = "# Files only in the second file";
+        result.text_line.push_back(temp);
+    }
+    if (mode<0 || mode==2)
+    {
+        current = only_in_SF2.begin();
+        last    = only_in_SF2.end();
+        while (current != last)
+            result.text_line.push_back(*current++);
     }
     // Adjust the remaining fields
-    if (mode<0) 
-	result.no_imgs = in_both.size() + only_in_SF1.size() + only_in_SF2.size();
-    else if (mode==0) 
-	result.no_imgs = in_both.size();
+    if (mode<0)
+        result.no_imgs = in_both.size() + only_in_SF1.size() + only_in_SF2.size();
+    else if (mode==0)
+        result.no_imgs = in_both.size();
     else if (mode==1)
-	result.no_imgs = only_in_SF1.size();
+        result.no_imgs = only_in_SF1.size();
     else if (mode==2)
-	result.no_imgs = only_in_SF2.size();
+        result.no_imgs = only_in_SF2.size();
     result.current_line = result.text_line.begin();
 
     return result;

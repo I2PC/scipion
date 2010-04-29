@@ -110,7 +110,7 @@ void region_growing(const Matrix3D< double >& V_in,
   * This is useful if the image coordinates represent angles
   */
 void distance_transform(const Matrix2D<int> &in,
-    Matrix2D<int> &out, bool wrap=false);
+                        Matrix2D<int> &out, bool wrap=false);
 
 /** Label a binary image
  * @ingroup Filters
@@ -374,9 +374,9 @@ double correlation_index(const Matrix2D< T >& x,
     else
     {
         computeStats_within_binary_mask(*mask, x, dummy, dummy, mean_x,
-                                         stddev_x);
+                                        stddev_x);
         computeStats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
-                                         stddev_y);
+                                        stddev_y);
     }
     if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
         ABS(stddev_y)<XMIPP_EQUAL_ACCURACY) return 0;
@@ -448,9 +448,9 @@ double correlation_index(const Matrix3D< T >& x,
     else
     {
         computeStats_within_binary_mask(*mask, x, dummy, dummy, mean_x,
-                                         stddev_x);
+                                        stddev_x);
         computeStats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
-                                         stddev_y);
+                                        stddev_y);
     }
     if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
         ABS(stddev_y)<XMIPP_EQUAL_ACCURACY) return 0;
@@ -500,7 +500,7 @@ double correlation_index(const Matrix3D< T >& x,
  */
 template <typename T>
 double correntropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
-    double sigma)
+                   double sigma)
 {
     double retval=0;
     double K=-0.5/(sigma*sigma);
@@ -518,12 +518,12 @@ double correntropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
  */
 template <typename T>
 double fastCorrentropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
-    double sigma, const GaussianInterpolator &G)
+                       double sigma, const GaussianInterpolator &G)
 {
     double retval=0;
     double isigma=1.0/sigma;
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(x)
-        retval+=G.getValue(isigma*(DIRECT_VEC_ELEM(x,i)-DIRECT_VEC_ELEM(y,i)));
+    retval+=G.getValue(isigma*(DIRECT_VEC_ELEM(x,i)-DIRECT_VEC_ELEM(y,i)));
     retval/=XSIZE(x);
     return retval;
 }
@@ -533,7 +533,7 @@ double fastCorrentropy(const Matrix1D<T> &x, const Matrix1D<T> &y,
  */
 template <typename T>
 double correntropy(const Matrix2D<T> &x, const Matrix2D<T> &y,
-    double sigma)
+                   double sigma)
 {
     double retval=0;
     double K=-0.5/(sigma*sigma);
@@ -551,7 +551,7 @@ double correntropy(const Matrix2D<T> &x, const Matrix2D<T> &y,
  */
 template <typename T>
 double correntropy(const Matrix3D<T> &x, const Matrix3D<T> &y,
-    double sigma)
+                   double sigma)
 {
     double retval=0;
     double K=-0.5/(sigma*sigma);
@@ -571,7 +571,7 @@ double correntropy(const Matrix3D<T> &x, const Matrix3D<T> &y,
  * images. You can restrict the shift to a region defined by a mask (the maximum
  * will be sought where the mask is 1).
  *
- * To apply these results you must shift I1 by (-shiftX,-shiftY) or 
+ * To apply these results you must shift I1 by (-shiftX,-shiftY) or
  * I2 by (shiftX, shiftY)
  */
 void best_shift(const Matrix2D< double >& I1,
@@ -588,9 +588,9 @@ void best_shift(const Matrix2D< double >& I1,
  * will be sought where the mask is 1).
  */
 void best_nonwrapping_shift(const Matrix2D< double >& I1,
-                const Matrix2D< double >& I2,
-                double& shiftX,
-                double& shiftY);
+                            const Matrix2D< double >& I2,
+                            double& shiftX,
+                            double& shiftY);
 
 /** Align two images
 * @ingroup Filters
@@ -612,8 +612,8 @@ void alignImages(const Matrix2D< double >& Iref,
  * G(r,mu,sigma)=exp(-0.5 * (r-mu)^t sigma^-1 (r-mu))
  */
 double unnormalizedGaussian2D(const Matrix1D<double> &r,
-    const Matrix1D<double> &mu,
-    const Matrix2D<double> &sigmainv);
+                              const Matrix1D<double> &mu,
+                              const Matrix2D<double> &sigmainv);
 
 /** Fit Gaussian spot to an image.
  * @ingroup Filters
@@ -625,8 +625,8 @@ double unnormalizedGaussian2D(const Matrix1D<double> &r,
  * You can choose the number of iterations for the estiamtion.
  */
 void estimateGaussian2D(const Matrix2D<double> &I,
-    double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
-    bool estimateMu=true, int iterations=10);
+                        double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
+                        bool estimateMu=true, int iterations=10);
 
 /** euclidian_distance 1D
  * @ingroup Filters
@@ -1410,25 +1410,21 @@ void median(Matrix1D< T >& x, Matrix1D< T >& y, T& m)
                 m = y(1);
             else
                 m = x(2);
+        else if (x(1) < y(2))
+            m = y(2);
         else
-            if (x(1) < y(2))
-                m = y(2);
-            else
-                m = x(1);
+            m = x(1);
+    else if (x(0) < y(2))
+        if (x(1) < y(2))
+            m = y(2);
+        else
+            m = x(1);
+    else if (x(0) < y(3))
+        m = y(3);
+    else if (x(0) < y(4))
+        m = x(0);
     else
-        if (x(0) < y(2))
-            if (x(1) < y(2))
-                m = y(2);
-            else
-                m = x(1);
-        else
-            if (x(0) < y(3))
-                m = y(3);
-            else
-                if (x(0) < y(4))
-                    m = x(0);
-                else
-                    m = y(4);
+        m = y(4);
 }
 
 /** Median_filter with a 3x3 window
@@ -1547,8 +1543,8 @@ void Smoothing_Shah(Matrix2D< double >& img,
  * The function returns the value of the regularization term.
  */
 double tomographicDiffusion(Matrix3D< double >& V,
-    const Matrix1D< double >& alpha, double lambda);
- 
+                            const Matrix1D< double >& alpha, double lambda);
+
 /** Rotational invariant moments
  * @ingroup Filters
  *

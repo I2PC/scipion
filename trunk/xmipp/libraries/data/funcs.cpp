@@ -37,9 +37,9 @@
 /* Numerical functions ----------------------------------------------------- */
 // Kaiser-Bessel constructor
 KaiserBessel::KaiserBessel(double alpha_, int K_, double r_, double v_,
-			   int N_, double vtable_, int ntable_) 
-    : alpha(alpha_), v(v_), r(r_), N(N_), K(K_), vtable(vtable_), 
-      ntable(ntable_) 
+                           int N_, double vtable_, int ntable_)
+    : alpha(alpha_), v(v_), r(r_), N(N_), K(K_), vtable(vtable_),
+      ntable(ntable_)
 {
     // Default values are alpha=1.25, K=6, r=0.5, v = K/2
     if (0.f == v) v = double(K)/2;
@@ -52,7 +52,7 @@ KaiserBessel::KaiserBessel(double alpha_, int K_, double r_, double v_,
 }
 
 // Kaiser-Bessel I0 window function
-double KaiserBessel::i0win(double x) const 
+double KaiserBessel::i0win(double x) const
 {
     double val0 = double(bessi0(facadj));
     double absx = fabs(x);
@@ -63,68 +63,71 @@ double KaiserBessel::i0win(double x) const
 }
 
 // Tabulate I0 window for speed
-void KaiserBessel::build_I0table() 
+void KaiserBessel::build_I0table()
 {
     i0table.resize(ntable+1); // i0table[0:ntable]
     int ltab = int(ROUND(double(ntable)/1.25f));
     fltb = double(ltab)/(K/2);
     //double val0 = gsl_sf_bessel_I0(facadj);
     double val0 = bessi0(facadj);
-    for (int i=ltab+1; i <= ntable; i++) 
-	i0table[i] = 0.f;
-    for (int i=0; i <= ltab; i++) 
+    for (int i=ltab+1; i <= ntable; i++)
+        i0table[i] = 0.f;
+    for (int i=0; i <= ltab; i++)
     {
-	double s = double(i)/fltb/N;
-	if (s < vadjust) {
-	    double rt = sqrt(1.f - pow(s/vadjust, 2));
-	    //i0table[i] = gsl_sf_bessel_I0(facadj*rt)/val0;
-	    i0table[i] = bessi0(facadj*rt)/val0;
-	} else {
-	    i0table[i] = 0.f;
-	}
+        double s = double(i)/fltb/N;
+        if (s < vadjust)
+        {
+            double rt = sqrt(1.f - pow(s/vadjust, 2));
+            //i0table[i] = gsl_sf_bessel_I0(facadj*rt)/val0;
+            i0table[i] = bessi0(facadj*rt)/val0;
+        }
+        else
+        {
+            i0table[i] = 0.f;
+        }
     }
 }
 
-// Compute the maximum error in the table 
-double KaiserBessel::I0table_maxerror() 
+// Compute the maximum error in the table
+double KaiserBessel::I0table_maxerror()
 {
     double maxdiff = 0.f;
-    for (int i = 1; i <= ntable; i++) 
+    for (int i = 1; i <= ntable; i++)
     {
-	double diff = fabs(i0table[i] - i0table[i-1]);
-	if (diff > maxdiff) 
-	    maxdiff = diff;
+        double diff = fabs(i0table[i] - i0table[i-1]);
+        if (diff > maxdiff)
+            maxdiff = diff;
     }
     return maxdiff;
 }
 
 // Kaiser-Bessel Sinh window function
-double KaiserBessel::sinhwin(double x) const 
+double KaiserBessel::sinhwin(double x) const
 {
     double val0 = sinh(fac)/fac;
     double absx = fabs(x);
-    if (0.0 == x) 
+    if (0.0 == x)
     {
-	double res = 1.0f;
-	return res;
-    } 
-    else if (absx == alphar) 
+        double res = 1.0f;
+        return res;
+    }
+    else if (absx == alphar)
     {
-	return 1.0f/val0;
-    } 
-    else if (absx < alphar) 
+        return 1.0f/val0;
+    }
+    else if (absx < alphar)
     {
-	double rt = sqrt(1.0f - pow((x/alphar), 2));
-	double facrt = fac*rt;
-	double res = (sinh(facrt)/facrt)/val0;
-	return res;
-    } 
-    else 
+        double rt = sqrt(1.0f - pow((x/alphar), 2));
+        double facrt = fac*rt;
+        double res = (sinh(facrt)/facrt)/val0;
+        return res;
+    }
+    else
     {
-	double rt = sqrt(pow((x/alphar),2) - 1.f);
-	double facrt = fac*rt;
-	double res = (sin(facrt)/facrt)/val0;
-	return res;
+        double rt = sqrt(pow((x/alphar),2) - 1.f);
+        double facrt = fac*rt;
+        double res = (sin(facrt)/facrt)/val0;
+        return res;
     }
 }
 
@@ -169,7 +172,7 @@ double tstudent1D(double x, double df, double sigma, double mu)
     double norm = exp(gammln((df+1.)/2.)) / exp(gammln(df/2.));
     norm /= sqrt(df*PI*sigma*sigma);
     return norm * pow((1 + (x/sigma)*(x/sigma)/df),-((df+1.)/2.));
-                                               
+
 }
 
 double gaussian2D(double x, double y, double sigmaX, double sigmaY,
@@ -321,7 +324,8 @@ double icdf_FSnedecor(int d1, int d2, double p)
     double pl=cdf_FSnedecor(d1,d2,xl);
     double pr=cdf_FSnedecor(d1,d2,xr);
     double xm, pm;
-    do {
+    do
+    {
         xm=(xl+xr)*0.5;
         pm=cdf_FSnedecor(d1,d2,xm);
         if (pm>p)
@@ -334,7 +338,8 @@ double icdf_FSnedecor(int d1, int d2, double p)
             xl=xm;
             pl=pm;
         }
-    } while (ABS(pm-p)/p>0.001);
+    }
+    while (ABS(pm-p)/p>0.001);
     return xm;
 }
 
@@ -349,7 +354,7 @@ void  init_random_generator(int seed)
     if (seed != -1)
     {
         // Prevent seeds larger than 65000
-        seed %=0xffff; 
+        seed %=0xffff;
         for (int i = 0; i < seed; i++)
             ran1(&idum);
     }
@@ -547,16 +552,16 @@ int exists(const FileName &fn)
     return 1;
 }
 
-/* Exit program if filename is not empry and file does not exist ----------- */ 
+/* Exit program if filename is not empry and file does not exist ----------- */
 void exit_if_not_exists(const FileName &fn)
 {
     if (fn != "")
     {
-	if (!exists(fn))
-	{
-	    std::cerr << "Control file " << fn << " does not exist: exiting...";
-	    exit(1);
-	}
+        if (!exists(fn))
+        {
+            std::cerr << "Control file " << fn << " does not exist: exiting...";
+            exit(1);
+        }
     }
 }
 

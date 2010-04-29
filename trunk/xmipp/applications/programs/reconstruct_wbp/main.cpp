@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
         if (prm.verb > 0)
             std::cerr << "Fourier pixels for which the threshold was not reached: "
-            << (float)(prm.count_thr*100.) / (prm.SF.ImgNo()*prm.dim*prm.dim) << " %" << std::endl;
+                      << (float)(prm.count_thr*100.) / (prm.SF.ImgNo()*prm.dim*prm.dim) << " %" << std::endl;
 
         vol.write(prm.fn_out);
 

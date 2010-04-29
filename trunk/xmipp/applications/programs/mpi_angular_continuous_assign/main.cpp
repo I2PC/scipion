@@ -128,6 +128,6 @@ int main(int argc, char **argv)
     {
         std::cout << XE << std::endl;
         MPI_Finalize();
-	return 1 ;
+        return 1 ;
     }
 }

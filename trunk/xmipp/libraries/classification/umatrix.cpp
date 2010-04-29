@@ -296,7 +296,8 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 if (in.calibrated())
                     out.targetAtPos(SomPos(i, j)) = in.targetAtPos(SomPos(i / 2, j / 2));
             } // for i
-    } else
+    }
+    else
         // Hexagonal Topology
 
     {
@@ -461,8 +462,8 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
     xmippFeature Max = -MAXFLOAT;
     xmippFeature Min = MAXFLOAT;
 
-    for (i = 0;i < out.width();i++)
-        for (j = 0;j < out.height();j++)
+    for (i = 0; i < out.width(); i++)
+        for (j = 0; j < out.height(); j++)
         {
             if (out.itemAtPos(SomPos(i, j))[0] > Max)
                 Max = out.itemAtPos(SomPos(i, j))[0];
@@ -473,8 +474,8 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
     xmippFeature bw = Max - Min;
 
     /* scale values to [0,1] */
-    for (i = 0;i < out.width();i++)
-        for (j = 0;j < out.height();j++)
+    for (i = 0; i < out.width(); i++)
+        for (j = 0; j < out.height(); j++)
             out.itemAtPos(SomPos(i, j))[0] = 1.0 - (out.itemAtPos(SomPos(i, j))[0] - Min) / bw;
 
 
@@ -499,8 +500,8 @@ void xmippUmatrix::medianSmoothing(Out& out) const
     /* rectangular topology */
     if (out.layout() == "RECT")
     {
-        for (j = 0;j < out.height();j++)
-            for (i = 0;i < out.width();i++)
+        for (j = 0; j < out.height(); j++)
+            for (i = 0; i < out.width(); i++)
                 if (i && j && (j < out.height() - 1) && (i < out.width() - 1))
                 {
                     std::vector<xmippFeature> v;
@@ -587,8 +588,8 @@ void xmippUmatrix::medianSmoothing(Out& out) const
         /* hexagonal topology */
     {
         /*else*/
-        for (j = 1;j < out.height() - 1;j++)
-            for (i = 1;i < out.width() - 1;i++)
+        for (j = 1; j < out.height() - 1; j++)
+            for (i = 1; i < out.width() - 1; i++)
                 /* Non-borders */
             {
                 if ((j % 4) == 1)
@@ -646,7 +647,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
         /* north border */
         j = 0;
-        for (i = 1;i < out.width() - 1;i++)
+        for (i = 1; i < out.width() - 1; i++)
         {
             std::vector<xmippFeature> v;
             v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -659,7 +660,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
         }
         /*south border*/
         j = out.height() - 1;
-        for (i = 1;i < out.width() - 1;i++)
+        for (i = 1; i < out.width() - 1; i++)
         {
             if ((j % 4) == 1)
             {
@@ -708,7 +709,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
         }
         /*east border*/
         i = out.width() - 1;
-        for (j = 1;j < out.height() - 1;j++)
+        for (j = 1; j < out.height() - 1; j++)
         {
             if ((j % 4) == 1)
             {
@@ -756,7 +757,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
         }
         i = 0;
-        for (j = 1;j < out.height() - 1;j++)
+        for (j = 1; j < out.height() - 1; j++)
 
             /*west border*/
         {
@@ -853,8 +854,8 @@ void xmippUmatrix::averageSmoothing(Out& out) const
     /* rectangular topology */
     if (out.layout() == "RECT")
     {
-        for (j = 0;j < out.height();j++)
-            for (i = 0;i < out.width();i++)
+        for (j = 0; j < out.height(); j++)
+            for (i = 0; i < out.width(); i++)
                 if (i && j && (j < out.height() - 1) && (i < out.width() - 1))
                 {
                     /* Non borders */
@@ -920,8 +921,8 @@ void xmippUmatrix::averageSmoothing(Out& out) const
         /* hexagonal topology */
     {
         /*else*/
-        for (j = 1;j < out.height() - 1;j++)
-            for (i = 1;i < out.width() - 1;i++)
+        for (j = 1; j < out.height() - 1; j++)
+            for (i = 1; i < out.width() - 1; i++)
                 /* Non-borders */
             {
                 if ((j % 4) == 1)
@@ -967,7 +968,7 @@ void xmippUmatrix::averageSmoothing(Out& out) const
             }
         /* north border */
         j = 0;
-        for (i = 1;i < out.width() - 1;i++)
+        for (i = 1; i < out.width() - 1; i++)
             out.itemAtPos(SomPos(i, j))[0] = (out.itemAtPos(SomPos(i - 1, j))[0] +
                                               out.itemAtPos(SomPos(i, j))[0] +
                                               out.itemAtPos(SomPos(i + 1, j))[0] +
@@ -975,7 +976,7 @@ void xmippUmatrix::averageSmoothing(Out& out) const
                                               out.itemAtPos(SomPos(i, j + 1))[0]) / 5.0;
         /*south border*/
         j = out.height() - 1;
-        for (i = 1;i < out.width() - 1;i++)
+        for (i = 1; i < out.width() - 1; i++)
         {
             if ((j % 4) == 1)
             {
@@ -1012,7 +1013,7 @@ void xmippUmatrix::averageSmoothing(Out& out) const
         }
         /*east border*/
         i = out.width() - 1;
-        for (j = 1;j < out.height() - 1;j++)
+        for (j = 1; j < out.height() - 1; j++)
         {
             if ((j % 4) == 1)
             {
@@ -1048,7 +1049,7 @@ void xmippUmatrix::averageSmoothing(Out& out) const
             }
         }
         i = 0;
-        for (j = 1;j < out.height() - 1;j++)
+        for (j = 1; j < out.height() - 1; j++)
 
             /*west border*/
         {

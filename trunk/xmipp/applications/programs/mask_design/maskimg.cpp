@@ -129,12 +129,13 @@ void maskImg::Init()
 /****************************************************/
 maskImg::maskImg(QWidget *parent, const char *name, int wFlags)
 #ifdef QT3_SUPPORT
-                : QWidget(parent, name, (Qt::WindowFlags) wFlags),
+    : QWidget(parent, name, (Qt::WindowFlags) wFlags),
 #else
-                : QWidget(parent, name, wFlags),
+    :
+    QWidget(parent, name, wFlags),
 #endif
-        filename(0),
-        helpmsg(0)
+      filename(0),
+      helpmsg(0)
 {
     Init();
     typeOfMask = CIRCLE;
@@ -144,12 +145,13 @@ maskImg::maskImg(QWidget *parent, const char *name, int wFlags)
 
 maskImg::maskImg(QWidget *parent, QImage *_image, maskType _typeOfMask, const char *name, int wFlags)
 #ifdef QT3_SUPPORT
-        : QWidget(parent, name, (Qt::WindowFlags) wFlags),
+    : QWidget(parent, name, (Qt::WindowFlags) wFlags),
 #else
-        : QWidget(parent, name, wFlags),
+    :
+    QWidget(parent, name, wFlags),
 #endif
-        filename(0),
-        helpmsg(0)
+      filename(0),
+      helpmsg(0)
 {
     Init();
     filename = name;
@@ -180,12 +182,13 @@ maskImg::maskImg(QWidget *parent, QImage *_image, maskType _typeOfMask, const ch
 
 maskImg::maskImg(QWidget *parent, ImageT<double> *_image, maskType _typeOfMask, const char *name, int wFlags)
 #ifdef QT3_SUPPORT
-        : QWidget(parent, name, (Qt::WindowFlags) wFlags),
+    : QWidget(parent, name, (Qt::WindowFlags) wFlags),
 #else
-        : QWidget(parent, name, wFlags),
+    :
+    QWidget(parent, name, wFlags),
 #endif
-        filename(0),
-        helpmsg(0)
+      filename(0),
+      helpmsg(0)
 {
     Init();
     filename = name;
@@ -767,7 +770,8 @@ void maskImg::scale()
 
     QApplication::setOverrideCursor(Qt::waitCursor);   // this might take time
     if (width() == pm.width() && h == pm.height())
-    {      // no need to scale if widget
+    {
+        // no need to scale if widget
         pmScaled = pm;    // size equals pixmap size
     }
     else
@@ -804,7 +808,8 @@ void maskImg::resizeEvent(QResizeEvent *)
 
     int h = height() - status->height();
     if (width() != pmScaled.width() || h != pmScaled.height())
-    {      // if new size,
+    {
+        // if new size,
         scale();    // scale pmScaled to window
         updateStatus();
     }
@@ -892,7 +897,8 @@ void maskImg::mouseMoveEvent(QMouseEvent *e)
 void maskImg::keyPressEvent(QKeyEvent* e)
 {
     switch (e->key())
-    {   // Look at the key code
+    {
+        // Look at the key code
     case Qt::Key_Escape:
         if (typeOfMask == POLYGON)
         {
@@ -902,54 +908,63 @@ void maskImg::keyPressEvent(QKeyEvent* e)
         break;
     case Qt::Key_R:
         if (e->state() == Qt::ControlButton)
-        { // If 'Ctrol R' key,
+        {
+            // If 'Ctrol R' key,
             xmippImage().moveOriginTo(-xmippImage().startingY(), -xmippImage().startingX());// sets origin at the upper left corner
         }
         break;
     case Qt::Key_O:    // Xmipp origin
         if (e->state() == Qt::ControlButton)
-        { // If 'Ctrol N' key,
+        {
+            // If 'Ctrol N' key,
             xmippImage().setXmippOrigin(); // sets origin at the center of the iamge.
         }
         break;
     case Qt::Key_Q:    // Quit program
         if (e->state() == Qt::ControlButton)
-        { // If 'Ctrol Q' key,
+        {
+            // If 'Ctrol Q' key,
             close();                      // Exit
         }
         break;
     case Qt::Key_N:    // Natural size (original size)
         if (e->state() == Qt::ControlButton)
-        { // If 'Ctrol N' key,
+        {
+            // If 'Ctrol N' key,
             resize(xmippImage().colNumber(), xmippImage().rowNumber() + status->height());
         }
         break;
     case Qt::Key_M:
     case Qt::Key_Minus:    // Half size
         if (e->state() == Qt::ControlButton)
-        { // If 'Ctrol-' key
+        {
+            // If 'Ctrol-' key
             if (width() > pm.width() / 3)
                 resize(width() / 2, height() / 2 + status->height() / 2 + 1);
         }
         else if (e->state() == Qt::AltButton)
-        { // If 'CtrolShift+' key,
+        {
+            // If 'CtrolShift+' key,
             theMaskFigure->decreaseArea();
         }
         break;
     case Qt::Key_P:
     case Qt::Key_Plus:           // Double size
         if (e->state() == Qt::ControlButton)
-        { // If 'Ctrol+' key,
+        {
+            // If 'Ctrol+' key,
             resize(width()*2, height()*2 - status->height());
         }
         else if (e->state() == Qt::AltButton)
-        { // If 'CtrolShift+' key,
+        {
+            // If 'CtrolShift+' key,
             theMaskFigure->increaseArea();
         }
         break;
     case Qt::Key_A:        // Aspect ratio
         if (e->state() == Qt::ControlButton)
-        { // If 'Ctrol+' key,
+        {
+            // If 'Ctrol+' key,
             double ratio = (double) xmippImage().colNumber() / (double) xmippImage().rowNumber();
             resize((int)width(), (int)(width() / ratio + status->height()));
         }
@@ -995,7 +1010,8 @@ void maskImg::keyPressEvent(QKeyEvent* e)
 void maskImg::paintEvent(QPaintEvent *e)
 {
     if (pm.size() != QSize(0, 0))
-    {  // is an image loaded?
+    {
+        // is an image loaded?
         QPainter painter(this);
         painter.setClipRect(e->rect());
         painter.drawPixmap(0, 0, pmScaled);

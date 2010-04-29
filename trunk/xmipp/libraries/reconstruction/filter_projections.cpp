@@ -108,7 +108,7 @@ void Prog_Filter_Projections_Parameters::read(int argc, char **argv)
         fn_vol="";
         r1=r2=percentil_normalization=-1;
     }
-    
+
     Nthreads=textToInteger(getParameter(argc,argv,"-thr","1"));
 }
 
@@ -116,37 +116,37 @@ void Prog_Filter_Projections_Parameters::read(int argc, char **argv)
 void Prog_Filter_Projections_Parameters::usage()
 {
     std::cerr
-        << "Usage:\n"
-        << "  -i <docfile>                          : Name of the input docfile\n"
-        << "  -o <rootname>                         : Name of the output docfile and selfile\n"
-        << "  [-filter_score <docfile> <percentil>] : The lower percentil is removed\n"
-        << "                                        : This file is produced by xmipp_angular_discrete_assign\n"
-        << "  [-filter_cost <docfile> <percentil>]  : The higher percentil is removed\n"
-        << "                                        : This file is produced by xmipp_angular_continuous_assign\n"
-        << "  [-filter_movement <docfile0> <angleLimit> <shiftLimit>]:\n"
-        << "                                        : Particles moving more than a certain limit are not considered\n"
-        << "  [-filter_normalization <volume> <r0> <rF> <percentil> : The worse fitting particles will be removed\n"
-        << "  [-thr <N=1>]                          : Number of threads available\n"
-    ;
+            << "Usage:\n"
+            << "  -i <docfile>                          : Name of the input docfile\n"
+            << "  -o <rootname>                         : Name of the output docfile and selfile\n"
+            << "  [-filter_score <docfile> <percentil>] : The lower percentil is removed\n"
+            << "                                        : This file is produced by xmipp_angular_discrete_assign\n"
+            << "  [-filter_cost <docfile> <percentil>]  : The higher percentil is removed\n"
+            << "                                        : This file is produced by xmipp_angular_continuous_assign\n"
+            << "  [-filter_movement <docfile0> <angleLimit> <shiftLimit>]:\n"
+            << "                                        : Particles moving more than a certain limit are not considered\n"
+            << "  [-filter_normalization <volume> <r0> <rF> <percentil> : The worse fitting particles will be removed\n"
+            << "  [-thr <N=1>]                          : Number of threads available\n"
+            ;
 }
 
 /* Show -------------------------------------------------------------------- */
 void Prog_Filter_Projections_Parameters::show()
 {
     std::cout
-        << "Filter score docfile: " << fn_score
-        << " percentil=" << percentil_score << std::endl
-        << "Filter cost docfile: " << fn_cost
-        << " percentil=" << percentil_cost << std::endl
-        << "Filter movement docfile0: " << fn_movement0
-        << " angleLimit=" << angleLimit
-        << " shiftLimit=" << shiftLimit << std::endl
-        << "Filter normalization volume: " << fn_vol
-        << " r1=" << r1
-        << " r2=" << r2
-        << " percentil=" << percentil_normalization << std::endl
-        << "Number of threads=" << Nthreads << std::endl
-    ;
+            << "Filter score docfile: " << fn_score
+            << " percentil=" << percentil_score << std::endl
+            << "Filter cost docfile: " << fn_cost
+            << " percentil=" << percentil_cost << std::endl
+            << "Filter movement docfile0: " << fn_movement0
+            << " angleLimit=" << angleLimit
+            << " shiftLimit=" << shiftLimit << std::endl
+            << "Filter normalization volume: " << fn_vol
+            << " r1=" << r1
+            << " r2=" << r2
+            << " percentil=" << percentil_normalization << std::endl
+            << "Number of threads=" << Nthreads << std::endl
+            ;
 }
 
 /* Produce side information ------------------------------------------------ */
@@ -181,10 +181,10 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
     {
         V.read(fn_vol);
         V().setXmippOrigin();
-        
+
         ImageXmipp I(DF_in.get_imagename(1));
         I().setXmippOrigin();
-        
+
         Mask_Params aux;
         aux.type = BINARY_CIRCULAR_MASK;
         aux.mode = INNER_MASK;
@@ -195,7 +195,7 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
         ihardMask=aux.imask2D;
         dhardMask.setXmippOrigin();
         ihardMask.setXmippOrigin();
-        
+
         Mask_Params aux2;
         aux2.type = RAISED_COSINE_MASK;
         aux2.mode = INNER_MASK;
@@ -206,7 +206,7 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
         softMask=aux2.dmask2D;
         softMask.setXmippOrigin();
     }
-    
+
     valid.resize(Nimg);
     correlations.resize(Nimg);
     for (int i=0; i<Nimg; i++)
@@ -217,7 +217,8 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
 }
 
 /* Filter by normalization ------------------------------------------------- */
-struct FilterByNormalizationParams {
+struct FilterByNormalizationParams
+{
     Prog_Filter_Projections_Parameters *prm;
     int idThread;
 };
@@ -231,14 +232,14 @@ void * filterByNormalizationThread(void *args)
         (FilterByNormalizationParams *)args;
     Prog_Filter_Projections_Parameters *prm=argsprm->prm;
     int idThread=argsprm->idThread;
-    
+
     // Make a local copy of DF_in (this is because of the threads)
     DocFile DF_in_local=prm->DF_in;
-    
+
     // Create a local copy of the correlations observed
     std::vector<double> local_correlations;
     local_correlations.resize(prm->valid.size());
-    
+
     // Evaluate all projections corresponding to this thread
     int Nimg=prm->valid.size();
     if (idThread==0)
@@ -257,11 +258,11 @@ void * filterByNormalizationThread(void *args)
             I().selfTranslateBSpline(3,vectorR2(I.Xoff(),I.Yoff()));
             I.set_Xoff(0.0f);
             I.set_Yoff(0.0f);
-        
+
             // Get the corresponding theoretical projection
             Projection P;
             project_Volume(prm->V(), P, YSIZE(I()), XSIZE(I()),
-                I.rot(), I.tilt(), I.psi());
+                           I.rot(), I.tilt(), I.psi());
 
             // Compute correlation within mask
             local_correlations[i]=correlation_index(P(),I(),&(prm->ihardMask));
@@ -271,10 +272,10 @@ void * filterByNormalizationThread(void *args)
             P()-=I();
             double min_val, max_val, avg, stddev;
             computeStats_within_binary_mask(prm->ihardMask, P(),
-                min_val, max_val, avg, stddev);
+                                            min_val, max_val, avg, stddev);
             I()+=avg;
             I()*=1/stddev;
-            
+
             // Mask the image with a raised cosine
             I()*=prm->softMask;
 
@@ -284,20 +285,20 @@ void * filterByNormalizationThread(void *args)
         }
     }
     if (idThread==0) progress_bar(Nimg);
-    
+
     // Dump the results onto the parent correlation vector
     pthread_mutex_lock( &correlationMutex );
     for (int i=0; i<Nimg; i++)
         if (local_correlations[i]>-2)
             prm->correlations[i]=local_correlations[i];
-    pthread_mutex_unlock( &correlationMutex );        
+    pthread_mutex_unlock( &correlationMutex );
 }
 
 /* Run --------------------------------------------------------------------- */
 void Prog_Filter_Projections_Parameters::run()
 {
     int Nimg=valid.size();
-    
+
     // Filter by score .....................................................
     if (percentil_score>0)
     {
@@ -311,10 +312,10 @@ void Prog_Filter_Projections_Parameters::run()
         double threshold=Hscore.percentil(percentil_score);
         std::cout << "Score threshold=" << threshold << std::endl;
         FOR_ALL_ELEMENTS_IN_MATRIX1D(score)
-            if (score(i)<threshold)
-                valid[i]=false;
+        if (score(i)<threshold)
+            valid[i]=false;
     }
-    
+
     // Filter by cost .....................................................
     if (percentil_cost>0)
     {
@@ -328,10 +329,10 @@ void Prog_Filter_Projections_Parameters::run()
         double threshold=Hcost.percentil(100-percentil_cost);
         std::cout << "Cost threshold=" << threshold << std::endl;
         FOR_ALL_ELEMENTS_IN_MATRIX1D(cost)
-            if (cost(i)>threshold)
-                valid[i]=false;
+        if (cost(i)>threshold)
+            valid[i]=false;
     }
-    
+
     // Filter by movement ..................................................
     if (angleLimit>0)
     {
@@ -351,10 +352,10 @@ void Prog_Filter_Projections_Parameters::run()
             double psiF    = DF_in(2);
             double shiftXF = DF_in(3);
             double shiftYF = DF_in(4);
-            
+
             double diffX=shiftXF-shiftX0;
             double diffY=shiftYF-shiftY0;
-            
+
             Matrix2D<double> E0, EF;
             Euler_angles2matrix(rot0,tilt0,psi0,E0);
             Euler_angles2matrix(rotF,tiltF,psiF,EF);
@@ -380,7 +381,7 @@ void Prog_Filter_Projections_Parameters::run()
             th_args[nt].prm = this;
             th_args[nt].idThread = nt;
             pthread_create( &th_ids[nt], NULL,
-                filterByNormalizationThread, &th_args[nt]);
+                            filterByNormalizationThread, &th_args[nt]);
         }
 
         // Waiting for threads to finish
@@ -401,12 +402,12 @@ void Prog_Filter_Projections_Parameters::run()
                 else if (tanh(correlations[i]+eps)<=0) valid[i]=false;
                 else validCorrelations.push_back(correlations[i]);
             }
-        
+
         // Filter by low correlations
         Matrix1D<double> vcorrelations;
         vcorrelations.resize(validCorrelations.size());
         FOR_ALL_ELEMENTS_IN_MATRIX1D(vcorrelations)
-            vcorrelations(i)=validCorrelations[i];
+        vcorrelations(i)=validCorrelations[i];
         histogram1D Hcorr;
         compute_hist(vcorrelations,Hcorr,200);
         double threshold=Hcorr.percentil(percentil_normalization);

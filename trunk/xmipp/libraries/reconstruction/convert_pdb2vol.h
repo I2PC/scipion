@@ -50,16 +50,16 @@ public:
 
     /** Final size in pixels */
     int output_dim;
-    
+
     /** Use blobs instead of scattering factors */
     bool useBlobs;
 
     /** Use poor Gaussian instead of scattering factors */
     bool usePoorGaussian;
-    
+
     /** Use fixed Gaussian instead of scattering factors */
     bool useFixedGaussian;
-    
+
     /** Center the PDB */
     bool doCenter;
 
@@ -122,7 +122,7 @@ public:
 
     /* Atom weight and radius */
     void atomBlobDescription(const std::string &_element,
-        double &weight, double &radius) const;
+                             double &weight, double &radius) const;
 
     /* Protein geometry */
     void compute_protein_geometry();

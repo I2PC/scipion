@@ -81,7 +81,7 @@ void Prog_angular_predict_prm::show()
               << "Pick: " << pick << std::endl
               << "Show level: " << tell << std::endl
               << "5D search: " << search5D << std::endl
-    ;
+              ;
 }
 
 // usage ===================================================================
@@ -98,7 +98,7 @@ void Prog_angular_predict_prm::usage()
               << "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
               << "  [-shift_step <r=1>]       : Step in shift in pixels\n"
               << "  [-more_help]              : Show all options\n"
-    ;
+              ;
     if (extended_usage) more_usage();
 }
 
@@ -115,7 +115,7 @@ void Prog_angular_predict_prm::more_usage()
               << "                              the angles are selected\n"
               << "  [-quiet]                  : Do not show any output\n"
               << "  [-5D]                     : Perform a 5D search instead of 3D+2D\n"
-    ;
+              ;
 }
 
 // Produce side information ================================================
@@ -191,11 +191,11 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
             Mask.generate_2Dmask();
 
             FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mask.imask2D)
-                if (DIRECT_MAT_ELEM(Mask.imask2D, i, j))
-                {
-                    Mask_no(i, j) = m;
-                    SBsize(m)++;
-                }
+            if (DIRECT_MAT_ELEM(Mask.imask2D, i, j))
+            {
+                Mask_no(i, j) = m;
+                SBsize(m)++;
+            }
 
             m++;
         }
@@ -226,7 +226,8 @@ void Prog_angular_predict_prm::produce_library(int rank)
     }
     library_power.initZeros(number_of_imgs, SBNo);
 
-    if (rank==0) {
+    if (rank==0)
+    {
         if (!quiet)
         {
             std::cerr << "Generating reference library ...\n";
@@ -283,7 +284,7 @@ void Prog_angular_predict_prm::build_ref_candidate_list(const ImageXmipp &I,
             candidate_list[i] = (ang_distance <= max_proj_change);
 #ifdef DEBUG
             std::cout << "(" << I.rot() << "," << I.tilt() << ") and ("
-            << rot[i] << "," << tilt[i] << ") --> " << ang_distance << std::endl;
+                      << rot[i] << "," << tilt[i] << ") --> " << ang_distance << std::endl;
 #endif
         }
     }
@@ -319,7 +320,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
             if (tell & TELL_ROT_TILT)
             {
                 std::cout << "Candidate " << i << " corr= " << cumulative_corr[i]
-                << " rot= " << rot[i] << " tilt= " << tilt[i] << std::endl;
+                          << " rot= " << rot[i] << " tilt= " << tilt[i] << std::endl;
             }
         }
     }
@@ -353,8 +354,10 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 
     // Make DWT of the input image and build vectors for comparison
     std::vector<Matrix1D<double> * > Idwt;
-    Matrix1D<double> x_power(SBNo); x_power.initZeros();
-    Matrix1D<int> SBidx(SBNo); SBidx.initZeros();
+    Matrix1D<double> x_power(SBNo);
+    x_power.initZeros();
+    Matrix1D<int> SBidx(SBNo);
+    SBidx.initZeros();
     for (int m = 0; m < SBNo; m++)
     {
         Matrix1D<double> *subband = new Matrix1D<double>;
@@ -383,11 +386,11 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
         // Show image name
         if (tell & TELL_ROT_TILT)
             std::cout << "# " << I.name() << " m=" << m
-            << " current rot="  << I.rot()
-            << " current tilt=" << I.tilt() << std::endl;
+                      << " current rot="  << I.rot()
+                      << " current tilt=" << I.tilt() << std::endl;
         refine_candidate_list_with_correlation(m, *(Idwt[m]),
                                                candidate_list, cumulative_corr,
-					       x_power, sumxy, th_discard);
+                                               x_power, sumxy, th_discard);
     }
 
     // Select the maximum
@@ -409,7 +412,7 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
     if (N_max == 0)
     {
         if (!quiet) std::cerr << "Predict_angles: Empty candidate list for image "
-                              << I.name() << std::endl;
+                                  << I.name() << std::endl;
         assigned_rot = I.rot();
         assigned_tilt = I.tilt();
         return 0;
@@ -667,7 +670,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
         double &assigned_rot, double &assigned_tilt, double &assigned_psi)
 {
     double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
-    best_score = 0, best_rate;
+           best_score = 0, best_rate;
 
     ImageXmipp Ip;
     Ip = I;
@@ -694,7 +697,7 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     // Search in the psi-shift space
     int N_trials = 0;
     std::vector<double> vshiftX, vshiftY, vpsi, vrot, vtilt, vcorr,
-    vproj_error, vproj_compact, vang_jump, vscore;
+        vproj_error, vproj_compact, vang_jump, vscore;
     std::vector<int>    vref_idx;
 
     double backup_max_shift_change = max_shift_change;
@@ -942,9 +945,9 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
         ImageXmipp Iref;
         Iref.read(library_name[vref_idx[ibest]]);
         Iref().setXmippOrigin();
-	//Sjors: without rotating the reference, this will go wrong!
-	Iref().selfRotate(-vpsi[ibest]);
-	if (Xoff == 0 && Yoff == 0) Ip() = I();
+        //Sjors: without rotating the reference, this will go wrong!
+        Iref().selfRotate(-vpsi[ibest]);
+        if (Xoff == 0 && Yoff == 0) Ip() = I();
         else
         {
             VECTOR_R2(shift, Xoff, Yoff);
@@ -1006,7 +1009,8 @@ void Prog_angular_predict_prm::finish_processing()
     for (int i = 0; i < p; i++)
     {
         DF.addObject();
-        std::string fn; DFexp.getValue(MDL_IMAGE, fn);
+        std::string fn;
+        DFexp.getValue(MDL_IMAGE, fn);
         DF.setValue(MDL_IMAGE,     fn);
         DF.setValue(MDL_ANGLEROT,  predicted_rot[i]);
         DF.setValue(MDL_ANGLETILT, predicted_tilt[i]);
@@ -1036,6 +1040,6 @@ void Prog_angular_predict_prm::run()
         if (!quiet && n%10==0) progress_bar(n);
     }
     if (!quiet) progress_bar(Nimg);
-    
+
     finish_processing();
 }

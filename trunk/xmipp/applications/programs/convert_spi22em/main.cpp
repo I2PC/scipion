@@ -57,7 +57,8 @@ int main(int argc, char *argv[])
     try
     {
         if (Is_VolumeXmipp(fn_in))
-        { //is this a spider volume
+        {
+            //is this a spider volume
             V.read(fn_in);
             emdata.write(fn_out, V, reverse_endian);
         }

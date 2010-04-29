@@ -90,7 +90,7 @@ public:
 
     /** std::cout << prm; */
     friend std::ostream & operator << (std::ostream &out,
-                                  const Prog_Evaluate_FSCs_Parameters &prm);
+                                       const Prog_Evaluate_FSCs_Parameters &prm);
 
     /** Produce side information.
         An exception might be thrown if some data cannot be accessed.*/

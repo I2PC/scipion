@@ -57,10 +57,10 @@ public:
 
     /** maximun tilt angle */
     double max_tilt_angle;
-    
+
     /** minimum tilt angle */
     double min_tilt_angle;
-    
+
     /** root for output files */
     FileName output_file_root;
 
@@ -74,54 +74,54 @@ public:
         Use projection shears as projection method. */
     bool shears;
 #ifdef NEVERDEFINED
-    /** vector with valid proyection directions after looking for 
-        directions close to experimental data. 
+    /** vector with valid proyection directions after looking for
+        directions close to experimental data.
          */
     std::vector <Matrix1D<double> > close_points_angles;
 #endif
-    /** filename with experimental images angles. 
+    /** filename with experimental images angles.
         This information is used to generate only angles close to experimental
         images */
     FileName FnexperimentalImages;
-    
+
     /** enabled angular_distance */
     bool angular_distance_bool;
 
     /** remove points far away from experimental data */
     bool remove_points_far_away_from_experimental_data_bool;
-    
+
     /** enabled angular_distance */
     double angular_distance;
 
     /** enabled angular_distance */
     bool compute_closer_sampling_point_bool;
-    
-    /** enable is neighbors must be computed */ 
+
+    /** enable is neighbors must be computed */
     bool compute_neighbors_bool;
-   
-   /** Symmetry. One of the 17 possible symmetries in
-       single particle electron microscopy.
-        */
+
+    /** Symmetry. One of the 17 possible symmetries in
+        single particle electron microscopy.
+         */
     int symmetry;
 
     /// symmetry file for sampling
     FileName        fn_sym;
 
     /// symmetry file for heighbors computation
-     FileName        fn_sym_neigh;
+    FileName        fn_sym_neigh;
 
     /** For infinite groups symmetry order*/
     int sym_order;
-    
+
     /** Input volume name */
     FileName input_volume;
-    
+
     /**volume to be projecte */
     VolumeXmipp inputVol;
-    
+
     /** projection x dim */
     int Xdim;
-    
+
     /** projection y dim */
     int Ydim;
     /** If true there will be only one neighbour per sampling
@@ -153,9 +153,9 @@ public:
     /** Run. */
     void run();
 
-	/** Create separate sampling files for subsets of the -experimental_images docfile */
+    /** Create separate sampling files for subsets of the -experimental_images docfile */
     void createGroupSamplingFiles(void);
-    
+
     /** get all directions related by symmetry to (1,0,0)  */
     void get_sym_vectors(std::vector< Matrix1D<double > > &sym_points);
 

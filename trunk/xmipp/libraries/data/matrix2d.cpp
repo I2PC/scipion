@@ -43,7 +43,7 @@ void svbksb(Matrix2D<double> &u, Matrix1D<double> &w, Matrix2D<double> &v,
 
 /* Solve Cx=d, nonnegative x */
 double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
-                    Matrix1D<double> &result)
+                        Matrix1D<double> &result)
 {
     if (XSIZE(C) == 0)
         REPORT_ERROR(1108, "Solve_nonneg: Matrix is empty");
@@ -54,7 +54,7 @@ double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
 
     Matrix2D<double> Ct(XSIZE(C), YSIZE(C)); // Ct=C^t
     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Ct)
-        DIRECT_MAT_ELEM(Ct, i, j) = DIRECT_MAT_ELEM(C, j, i);
+    DIRECT_MAT_ELEM(Ct, i, j) = DIRECT_MAT_ELEM(C, j, i);
 
     result.initZeros(YSIZE(Ct));
     double rnorm;
@@ -73,7 +73,7 @@ double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
 
 /* Solve Ax=b, A definite positive and symmetric --------------------------- */
 void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
-                        Matrix1D<double> &result)
+                      Matrix1D<double> &result)
 {
     Matrix2D<double> Ap = A;
     Matrix1D<double> p(XSIZE(A));
@@ -88,8 +88,8 @@ void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
 // Special case for complex numbers
 template <>
 void applyGeometryBSpline(Matrix2D< std::complex<double> > &M2,
-                        const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
-                        int Splinedegree, bool inv, bool wrap, std::complex<double> outside)
+                          const Matrix2D<double> &A, const Matrix2D< std::complex<double> > &M1,
+                          int Splinedegree, bool inv, bool wrap, std::complex<double> outside)
 {
     Matrix2D<double> re, im, rotre, rotim;
     double outre, outim;
@@ -136,8 +136,8 @@ bool Matrix2D< std::complex<double> >::isDiagonal() const
     if (XSIZE(*this) != YSIZE(*this))
         return false;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
-        if (i != j && abs(DIRECT_MAT_ELEM(*this, i, j)) > XMIPP_EQUAL_ACCURACY)
-            return false;
+    if (i != j && abs(DIRECT_MAT_ELEM(*this, i, j)) > XMIPP_EQUAL_ACCURACY)
+        return false;
     return true;
 }
 
@@ -255,7 +255,8 @@ Matrix2D<double> alignWithZ(const Matrix1D<double> &axis)
 
     A(3, 3) = 1;
     if (proj_mod > XMIPP_EQUAL_ACCURACY)
-    { // proj_mod!=0
+    {
+        // proj_mod!=0
         // Build Matrix A, which makes the turning axis coincident with Z
         A(0, 0) = proj_mod;
         A(0, 1) = -XX(Axis) * YY(Axis) / proj_mod;
@@ -326,7 +327,7 @@ Matrix2D<double> scale3DMatrix(const Matrix1D<double> &sc)
 
 // Show a complex matrix ---------------------------------------------------
 std::ostream& operator<<(std::ostream& ostrm,
-    const Matrix2D< std::complex<double> >& v)
+                         const Matrix2D< std::complex<double> >& v)
 {
     if (XSIZE(v) == 0 || YSIZE(v) == 0)
         ostrm << "NULL matrix\n";
@@ -345,7 +346,7 @@ std::ostream& operator<<(std::ostream& ostrm,
 
 /* Quadratic form ---------------------------------------------------------- */
 void evaluateQuadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
-                    const Matrix2D<double> &H, double &val, Matrix1D<double> &grad)
+                       const Matrix2D<double> &H, double &val, Matrix1D<double> &grad)
 {
     if (XSIZE(x) != XSIZE(c))
         REPORT_ERROR(1102, "Eval_quadratic: Not compatible sizes in x and c");
@@ -393,11 +394,11 @@ void quadraticProgramming_obj32(int nparam, int j, double* x, double* fj, void* 
     CDAB* in = (CDAB *)cd;
     Matrix2D<double> X(nparam,1);
     for (int i=0; i<nparam; ++i)
-       X(i,0)=x[i];
+        X(i,0)=x[i];
     Matrix2D<double> result;
     result = 0.5 * X.transpose() * in->C * X + in->D.transpose() * X;
 
-    *fj = result(0, 0);    
+    *fj = result(0, 0);
 }
 
 /* To calculate the value of the jth constraint */
@@ -416,7 +417,7 @@ void quadraticProgramming_grob32(int nparam, int j, double* x, double* gradfj, v
     CDAB* in = (CDAB *)cd;
     Matrix2D<double> X(1,nparam);
     for (int i=0; i<nparam; ++i)
-       X(0,i)=x[i];
+        X(0,i)=x[i];
 
     Matrix2D<double> gradient;
     gradient = in->C * X + in->D;
@@ -442,10 +443,10 @@ void quadraticProgramming_grcn32(int nparam, int j, double *x, double *gradgj, v
 
 **************************************************************************/
 void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
-              const Matrix2D<double> &A,   const Matrix1D<double> &b,
-              const Matrix2D<double> &Aeq, const Matrix1D<double> &beq,
-              Matrix1D<double> &bl,        Matrix1D<double> &bu,
-              Matrix1D<double> &x)
+                          const Matrix2D<double> &A,   const Matrix1D<double> &b,
+                          const Matrix2D<double> &Aeq, const Matrix1D<double> &beq,
+                          Matrix1D<double> &bl,        Matrix1D<double> &bu,
+                          Matrix1D<double> &x)
 {
     CDAB prm;
     prm.C = C;
@@ -536,28 +537,28 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
                                        bl<=x<=bu
 **************************************************************************/
 void leastSquare(const Matrix2D<double> &C, const Matrix1D<double> &d,
-            const Matrix2D<double> &A,   const Matrix1D<double> &b,
-            const Matrix2D<double> &Aeq, const Matrix1D<double> &beq,
-            Matrix1D<double> &bl,        Matrix1D<double> &bu,
-            Matrix1D<double> &x)
+                 const Matrix2D<double> &A,   const Matrix1D<double> &b,
+                 const Matrix2D<double> &Aeq, const Matrix1D<double> &beq,
+                 Matrix1D<double> &bl,        Matrix1D<double> &bu,
+                 Matrix1D<double> &x)
 {
     // Convert d to Matrix2D for multiplication
-    Matrix2D<double> P;    
+    Matrix2D<double> P;
     P.fromVector(d);
     P = -2 * P.transpose() * C;
     P = P.transpose();
-    
+
     //Convert back to vector for passing it to quadraticProgramming
     Matrix1D<double> newd;
     P.toVector(newd);
 
-    quadraticProgramming(C.transpose()*C, newd, A, b, Aeq, beq, bl, bu, x);    
+    quadraticProgramming(C.transpose()*C, newd, A, b, Aeq, beq, bl, bu, x);
 }
 
 /* Regularized least squares ----------------------------------------------- */
 void regularizedLeastSquare(const Matrix2D< double >& A,
-    const Matrix1D< double >& d, double lambda,
-    const Matrix2D< double >& G, Matrix1D< double >& x)
+                            const Matrix1D< double >& d, double lambda,
+                            const Matrix2D< double >& G, Matrix1D< double >& x)
 {
     int Nd=YSIZE(A); // Number of data samples
     int Nx=XSIZE(A); // Number of variables
@@ -565,10 +566,10 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
     Matrix2D<double> X(Nx,Nx); // X=(A^t * A +lambda *G^t G)
     // Compute A^t*A
     FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
-        // Compute the dot product of the i-th and j-th columns of A
-        for (int k=0; k<YSIZE(A); k++)
-            DIRECT_MAT_ELEM(X,i,j)+=
-                DIRECT_MAT_ELEM(A,k,i)*DIRECT_MAT_ELEM(A,k,j);
+    // Compute the dot product of the i-th and j-th columns of A
+    for (int k=0; k<YSIZE(A); k++)
+        DIRECT_MAT_ELEM(X,i,j)+=
+            DIRECT_MAT_ELEM(A,k,i)*DIRECT_MAT_ELEM(A,k,j);
 
     // Compute lambda*G^t*G
     if (XSIZE(G)==0)
@@ -576,18 +577,18 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
             DIRECT_MAT_ELEM(X,i,i)+=lambda;
     else
         FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
-            // Compute the dot product of the i-th and j-th columns of G
-            for (int k=0; k<YSIZE(G); k++)
-                DIRECT_MAT_ELEM(X,i,j)+=
-                    DIRECT_MAT_ELEM(G,k,i)*DIRECT_MAT_ELEM(G,k,j);
+        // Compute the dot product of the i-th and j-th columns of G
+        for (int k=0; k<YSIZE(G); k++)
+            DIRECT_MAT_ELEM(X,i,j)+=
+                DIRECT_MAT_ELEM(G,k,i)*DIRECT_MAT_ELEM(G,k,j);
 
     // Compute A^t*d
     Matrix1D<double> Atd(Nx);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(Atd)
-        // Compute the dot product of the i-th column of A and d
-        for (int k=0; k<YSIZE(A); k++)
-            DIRECT_VEC_ELEM(Atd,i)+=
-                DIRECT_MAT_ELEM(A,k,i)*DIRECT_VEC_ELEM(d,k);
+    // Compute the dot product of the i-th column of A and d
+    for (int k=0; k<YSIZE(A); k++)
+        DIRECT_VEC_ELEM(Atd,i)+=
+            DIRECT_MAT_ELEM(A,k,i)*DIRECT_VEC_ELEM(d,k);
 
     // Compute the inverse of X
     Matrix2D<double> Xinv;
@@ -596,6 +597,6 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
     // Now multiply Xinv * A^t * d
     x.initZeros(Nx);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(Xinv)
-        DIRECT_VEC_ELEM(x,i)+=DIRECT_MAT_ELEM(Xinv,i,j)*
-            DIRECT_VEC_ELEM(Atd,j);
+    DIRECT_VEC_ELEM(x,i)+=DIRECT_MAT_ELEM(Xinv,i,j)*
+                          DIRECT_VEC_ELEM(Atd,j);
 }

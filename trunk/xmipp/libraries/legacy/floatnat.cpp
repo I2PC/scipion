@@ -151,7 +151,7 @@ void InterpBilinear(BYTE **iimage, BYTE **img, int nrow, int ncol, int nrow2,   
     incx = 1. / scalex;
     incy = 1. / scaley;
 
-    for (i = 0;i < nrow2; i++)
+    for (i = 0; i < nrow2; i++)
     {
         isy = starty;
         ii = (int)isy;
@@ -306,7 +306,7 @@ void tira_matriz(unsigned char *tira, unsigned char **matriz, int nrow, int ncol
     register int i, f, c;
 
     for (f = 0, i = 0; f < nrow; f++)
-        for (c = 0; c < ncol;c++)
+        for (c = 0; c < ncol; c++)
         {
             matriz[f][c] = tira[i];
             i++;
@@ -335,7 +335,7 @@ void matriz_tira(unsigned char **matriz, unsigned char *tira,
     if (flag == 0)
     {
         for (f = 0, i = 0; f < nrow; f++)
-            for (c = 0; c < ncol;c++)
+            for (c = 0; c < ncol; c++)
             {
                 if (matriz[f][c] < minC)     minC = matriz[f][c];
                 else if (matriz[f][c] > maxC)  maxC = matriz[f][c];
@@ -379,7 +379,7 @@ void matriz_tira(unsigned char **matriz, unsigned char *tira,
         escala = (float)(MAX_GREY / (float)(maxC - minC));
 
     for (f = 0, i = 0; f < nrow; f++)
-        for (c = 0; c < ncol;c++)
+        for (c = 0; c < ncol; c++)
         {
             tira[i] = pixel = ((unsigned char)((matriz[f][c] - minC) * escala))
                               + (unsigned char)5;

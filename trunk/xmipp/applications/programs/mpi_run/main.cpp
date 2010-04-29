@@ -38,18 +38,18 @@
 //#define TAG_BYE    3
 class Prog_MPI_Run_Parameters
 {
-    public:
-        /** PDB file */
-        FileName fn_commands;
+public:
+    /** PDB file */
+    FileName fn_commands;
 
-        /** Number of Procesors **/
-        int nprocs;
+    /** Number of Procesors **/
+    int nprocs;
 
-        /** computing node number. Master=0 */
-        int rank;
+    /** computing node number. Master=0 */
+    int rank;
 
-        /** status after am MPI call */
-        MPI_Status status;
+    /** status after am MPI call */
+    MPI_Status status;
     /** Empty constructor */
     //Prog_MPI_Run_Parameters(int argc, char **argv);
 
@@ -82,17 +82,17 @@ class Prog_MPI_Run_Parameters
 
     /** Replace substrings of a std::string by other std::strings */
     std::string replaceAll(
-      std::string result, 
-      const std::string& replaceWhat, 
-      const std::string& replaceWithWhat)
+        std::string result,
+        const std::string& replaceWhat,
+        const std::string& replaceWithWhat)
     {
-      while(1)
-      {
-	const int pos = result.find(replaceWhat);
-	if (pos==-1) break;
-	result.replace(pos,replaceWhat.size(),replaceWithWhat);
-      }
-      return result;
+        while(1)
+        {
+            const int pos = result.find(replaceWhat);
+            if (pos==-1) break;
+            result.replace(pos,replaceWhat.size(),replaceWithWhat);
+        }
+        return result;
     }
 
     /* Read parameters --------------------------------------------------------- */
@@ -105,23 +105,23 @@ class Prog_MPI_Run_Parameters
     void usage()
     {
         std::cerr << "MPI_Run\n"
-        << "   -i <command file>    : File with commands to send to mpirun\n"
-        << "\n"
-        << "Example of use:\n"
-        << "   xmipp_mpi_run -i commandd_file\n"
-        ;
+                  << "   -i <command file>    : File with commands to send to mpirun\n"
+                  << "\n"
+                  << "Example of use:\n"
+                  << "   xmipp_mpi_run -i commandd_file\n"
+                  ;
     }
 
     /* Show -------------------------------------------------------------------- */
     void show()
     {
         std::cout << "Commands  file:           " << fn_commands << std::endl
-        ;
+                  ;
     }
 
 
     /* Run --------------------------------------------------------------------- */
-    #define MAX_LINE 2048
+#define MAX_LINE 2048
     char szline[MAX_LINE+1];
     void run()
     {
@@ -141,10 +141,10 @@ class Prog_MPI_Run_Parameters
                          MPI_COMM_WORLD, &status);
                 number_of_node_waiting++;
                 getline(fh_in, line);
-		line=replaceAll(line,"MPI_NEWLINE","\n");
+                line=replaceAll(line,"MPI_NEWLINE","\n");
                 strcpy(szline, line.c_str());
 
-		std::string::size_type loc = line.find("MPI_Barrier", 0);
+                std::string::size_type loc = line.find("MPI_Barrier", 0);
                 if (loc != std::string::npos)
                 {
                     while (number_of_node_waiting < (nprocs - 1))
@@ -180,7 +180,7 @@ class Prog_MPI_Run_Parameters
             for (int i = 1; i < nprocs; i++)
             {
                 MPI_Send(0, 0, MPI_INT, i, TAG_STOP, MPI_COMM_WORLD);
-		//MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_BYE,
+                //MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, TAG_BYE,
                 //                 MPI_COMM_WORLD, &status);
             }
 
@@ -209,15 +209,15 @@ class Prog_MPI_Run_Parameters
                     MPI_Recv(&szline, MAX_LINE, MPI_CHAR, 0, TAG_WORK, MPI_COMM_WORLD, &status);
                     //do the job
                     if(strlen(szline)<1)
-		    {
-			std::cerr << "less than 1 " << strlen(szline) << std::endl;
-			continue;
+                    {
+                        std::cerr << "less than 1 " << strlen(szline) << std::endl;
+                        continue;
                     }
-		    else
-                	system(szline);
+                    else
+                        system(szline);
                 }
-		else
-		    std::cerr << "WRONG TAG RECEIVED" << std::endl;
+                else
+                    std::cerr << "WRONG TAG RECEIVED" << std::endl;
 
             }
         }

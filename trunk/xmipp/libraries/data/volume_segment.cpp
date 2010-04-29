@@ -62,7 +62,7 @@ std::ostream & operator << (std::ostream &out, const Prog_segment_prm &prm)
         << "Otsu         : " << prm.otsu          << std::endl
         << "Wang radius  : " << prm.wang_radius   << std::endl
         << "Probabilistic: " << prm.do_prob       << std::endl
-    ;
+        ;
     return out;
 }
 
@@ -70,16 +70,16 @@ std::ostream & operator << (std::ostream &out, const Prog_segment_prm &prm)
 void Prog_segment_prm::usage() const
 {
     std::cerr << "   -i <input volume>       : Volume to segment\n"
-    << "  [-voxel_mass  <mass>  |  : Mass in voxels\n"
-    << "   [-dalton_mass <mass> |  : Mass in daltons\n"
-    << "    -aa_mass     <mass>]   : Mass in aminoacids\n"
-    << "   -sampling_rate <Tm>]    : Sampling rate (A/pix)\n"
-    << "  [-o <output mask=\"\">]    : Output mask\n"
-    << "  [-threshold <th=-1>]     : Thresholding method\n"
-    << "  [-otsu]                  : Otsu's method segmentation\n"
-    << "  [-wang <rad=3>]          : Radius [pix] for B.C. Wang cone\n"
-    << "  [-prob]                  : Calculate probabilistic solvent mask\n"
-    ;
+              << "  [-voxel_mass  <mass>  |  : Mass in voxels\n"
+              << "   [-dalton_mass <mass> |  : Mass in daltons\n"
+              << "    -aa_mass     <mass>]   : Mass in aminoacids\n"
+              << "   -sampling_rate <Tm>]    : Sampling rate (A/pix)\n"
+              << "  [-o <output mask=\"\">]    : Output mask\n"
+              << "  [-threshold <th=-1>]     : Thresholding method\n"
+              << "  [-otsu]                  : Otsu's method segmentation\n"
+              << "  [-wang <rad=3>]          : Radius [pix] for B.C. Wang cone\n"
+              << "  [-prob]                  : Calculate probabilistic solvent mask\n"
+              ;
 }
 
 // Produce side information ================================================
@@ -284,7 +284,7 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
                 double th_med = (th_min + th_max) * 0.5;
                 double mass_med = segment_threshold(&V, &mask, th_med, do_prob);
                 std::cout << "Threshold= " << th_med
-                << " mass of the main piece= " << mass_med << std::endl;
+                          << " mass of the main piece= " << mass_med << std::endl;
                 if (ABS(mass_med - voxel_mass) / voxel_mass < 0.001)
                 {
                     ok = true;
@@ -310,7 +310,7 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
             // Perform a single thresholding
             double mass_med = segment_threshold(&V, &mask, threshold, do_prob);
             std::cout << "Threshold= " << threshold
-            << " mass of the main piece= " << mass_med << std::endl;
+                      << " mass of the main piece= " << mass_med << std::endl;
             ok = true;
         }
     }
@@ -334,7 +334,7 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
         // Terwilliger-like calculation of P(solv|x) through P(x|solv) & P(x|prot)
         probabilistic_solvent(&V, &mask);
     }
-    
+
     // Save mask if necessary
     if (fn_mask != "" && (ok || do_prob))
         mask.write(fn_mask);

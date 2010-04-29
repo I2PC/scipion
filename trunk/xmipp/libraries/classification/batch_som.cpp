@@ -72,7 +72,7 @@ void xmippBatchSOM::train(xmippMap& _som, const xmippCTVectors& _ts) const
             long total = 0;
             // Collects a list of the input vectors assigned to the neighborhood
             std::vector<unsigned> neig = _som.neighborhood(_som.indexToPos(it), ceil(somRadius(t, somNSteps)));
-            for (std::vector<unsigned>::iterator itt = neig.begin();itt < neig.end();itt++)
+            for (std::vector<unsigned>::iterator itt = neig.begin(); itt < neig.end(); itt++)
             {
                 tmpVector =  _som.classifAt(*itt);
                 for (unsigned j = 0 ; j < tmpVector.size() ; j++)

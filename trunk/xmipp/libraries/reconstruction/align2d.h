@@ -30,10 +30,10 @@
 #include <data/args.h>
 #include <data/funcs.h>
 #ifndef METADATA
-  #include <data/docfile.h>
-  #include <data/selfile.h>
+#include <data/docfile.h>
+#include <data/selfile.h>
 #else
-  #include <data/metadata.h>
+#include <data/metadata.h>
 #endif
 #include <data/metadata.h>
 #include <data/image.h>
@@ -93,7 +93,7 @@ public:
 #ifndef METADATA
     SelFile SF;
 #else
-	MetaData SF;
+    MetaData SF;
 #endif
     // Stack of input images
     std::vector<ImageXmipp>  images;

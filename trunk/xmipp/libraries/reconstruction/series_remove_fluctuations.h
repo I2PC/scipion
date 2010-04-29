@@ -39,16 +39,16 @@ class Series_remove_fluctuations_parameters
 public:
     /// Input images
     FileName fn_sel;
-    
+
     /// Rootname for the output
     FileName fn_root;
-    
+
     /// Cutoff frequency of the lowpass filter (<0.5)
     double maxFreq;
 public:
     // Selfile with the input mages
     SelFile SF;
-    
+
     // Volume for holding the whole tilt series
     Matrix3D<double> V;
 

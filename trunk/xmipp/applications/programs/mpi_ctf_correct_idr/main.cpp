@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     // Read Parameters
     try
     {
-	idr_art_prm.MPIversion=true;
+        idr_art_prm.MPIversion=true;
         idr_art_prm.numberOfProcessors=NProcessors;
         idr_art_prm.MPIrank=rank;
         idr_art_prm.read(argc, argv);

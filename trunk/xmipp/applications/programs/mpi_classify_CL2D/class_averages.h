@@ -36,7 +36,8 @@
    @ingroup ReconsLibraryPrograms */
 //@{
 /** VQProjection class */
-class VQProjection {
+class VQProjection
+{
 public:
     // Use correlation instead of correntropy
     bool useCorrelation;
@@ -46,7 +47,7 @@ public:
 
     // Classical Multiref
     bool classicalMultiref;
-    
+
     // Gaussian interpolator
     const GaussianInterpolator *gaussianInterpolator;
 
@@ -55,7 +56,7 @@ public:
 
     // Projection
     Matrix2D<double> P;
-    
+
     // Update for next iteration
     Matrix2D<double> Pupdate;
 
@@ -67,7 +68,7 @@ public:
 
     // Local transformer for the best rotation
     XmippFftw local_transformer;
-    
+
     // Plans for the best_rotation
     Polar_fftw_plans *plans;
 
@@ -94,12 +95,12 @@ public:
 public:
 
     int sendMPI(int d_rank);
-    
+
     int receiveMPI(int s_rank);
 
     /** Update projection. */
     void updateProjection(const Matrix2D<double> &I,
-        double corrCode, int idx);
+                          double corrCode, int idx);
 
     /** Update non-projection */
     inline void updateNonProjection(double corrCode)
@@ -112,44 +113,45 @@ public:
 
     /** Compute different transforms */
     void computeTransforms();
-    
+
     /** Compute the fit of the input image with this node.
         The input image is rotationally and translationally aligned
         (2 iterations), to make it fit with the node. */
     void fitBasic(Matrix2D<double> &I, double sigma, double &corrCode);
 
     /** Compute the fit of the input image with this node (check mirrors). */
-    void fit(Matrix2D<double> &I, 
-        double sigma, bool noMirror, double &corrCode, double &likelihood);
+    void fit(Matrix2D<double> &I,
+             double sigma, bool noMirror, double &corrCode, double &likelihood);
 
     /// Look for K-nearest neighbours
     void lookForNeighbours(const std::vector<VQProjection *> listP,
-        double sigma, bool noMirror, int K);
-    
+                           double sigma, bool noMirror, int K);
+
     /// Show
     void show() const;
 };
 
 struct SDescendingClusterSort
 {
-     bool operator()(VQProjection* const& rpStart, VQProjection* const& rpEnd)
-     {
-          return rpStart->currentListImg.size() > rpEnd->currentListImg.size();
-     }
+    bool operator()(VQProjection* const& rpStart, VQProjection* const& rpEnd)
+    {
+        return rpStart->currentListImg.size() > rpEnd->currentListImg.size();
+    }
 };
 
 /** Class for a VQ */
-class VQ {
+class VQ
+{
 public:
     /// Mask for the background
     Matrix2D<int> mask;
 
     /// List of nodes
     std::vector<VQProjection *> P;
-    
+
     /// Number of neighbours
     int Nneighbours;
-    
+
     /// Minimum size of a node
     double PminSize;
 
@@ -173,10 +175,10 @@ public:
 
     /// Classical Multiref
     bool classicalMultiref;
-    
+
     /// Align original images
     bool alignImages;
-    
+
     /// Maximum number of iterations
     int Niter;
 
@@ -187,20 +189,20 @@ public:
     SelFile *SF;
 
     std::vector< FileName > SFv;
-    
+
     // Current assignment
     Matrix1D<int> currentAssignment;
-    
+
     // Gaussian interpolator
     GaussianInterpolator gaussianInterpolator;
 public:
     /// Initialize
     void initialize(SelFile &_SF, int _Niter,  int _Nneighbours,
-        double _PminSize, std::vector< Matrix2D<double> > _codes0,
-        int _Ncodes0, bool _noMirror, bool verbose, bool _corrSplit, 
-        bool _useCorrelation, bool _useFixedCorrentropy, 
-        bool _classicalMultiref, bool _alignImages, bool _fast, int rank);
-    
+                    double _PminSize, std::vector< Matrix2D<double> > _codes0,
+                    int _Ncodes0, bool _noMirror, bool verbose, bool _corrSplit,
+                    bool _useCorrelation, bool _useFixedCorrentropy,
+                    bool _classicalMultiref, bool _alignImages, bool _fast, int rank);
+
     /// Write the nodes
     void write(const FileName &fnRoot, bool final=false) const;
 
@@ -208,8 +210,8 @@ public:
         The image is rotationally and translationally aligned with
         the best node. */
     void lookNode(Matrix2D<double> &I, int idx, int oldnode, int &newnode,
-        double &corrCode, double &likelihood);
-    
+                  double &corrCode, double &likelihood);
+
     /** Update non codes. */
     void updateNonCode(Matrix2D<double> &I, int newnode);
 
@@ -225,19 +227,20 @@ public:
 
     /** Split node */
     void splitNode(VQProjection *node,
-        VQProjection *&node1, VQProjection *&node2, int rank,
-	std::vector<int> &finalAssignment) const;
+                   VQProjection *&node1, VQProjection *&node2, int rank,
+                   std::vector<int> &finalAssignment) const;
 
     /** Split the widest node */
     void splitFirstNode(int rank);
 };
 
 /** VQ parameters. */
-class Prog_VQ_prm {
+class Prog_VQ_prm
+{
 public:
     /// Input selfile with the images to quantify
     FileName fnSel;
-    
+
     /// Input selfile with initial codes
     FileName fnCodes0;
 
@@ -258,7 +261,7 @@ public:
 
     /// Minimum size of a node
     double PminSize;
-    
+
     /// Use Correlation instead of Correntropy
     bool useCorrelation;
 
@@ -267,16 +270,16 @@ public:
 
     /// Classical Multiref
     bool classicalMultiref;
-    
+
     /// Align original images
     bool alignImages;
-    
+
     /// Fast
     bool fast;
-    
+
     /// CorrSplit
     bool corrSplit;
-    
+
     /// No mirror
     bool noMirror;
 
@@ -285,22 +288,22 @@ public:
 
     /// Read
     void read(int argc, char** argv);
-    
+
     /// Show
     void show() const;
-    
+
     /// Usage
     void usage() const;
-    
+
     /// Produce side info
     void produce_side_info(int rank);
-    
+
     /// Run
     void run(int rank);
 public:
     // Selfile with all the input images
     SelFile SF;
-    
+
     // Structure for the classes
     VQ vq;
 };

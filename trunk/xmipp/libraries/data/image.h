@@ -44,9 +44,9 @@
 // use other clases type
 
 template<typename T>
-    class ImageImagicT;
+class ImageImagicT;
 template<typename T>
-    class ImageXmippT;
+class ImageXmippT;
 
 // String that identifies a selline as an Imagic image
 static const char* IMAGIC_TAG = "imagic:";
@@ -433,30 +433,30 @@ public:
               Image_Type image_type)
     {
         img.resize(Ydim, Xdim);
-    
-    	T* ptr;
-	unsigned long int n;
+
+        T* ptr;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
-            switch (image_type)
-            {
-            case IBYTE:
-        	unsigned char u;
-        	FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
-        	*ptr = static_cast< T >(u);
-        	break;
+        switch (image_type)
+        {
+        case IBYTE:
+            unsigned char u;
+            FREAD(&u, sizeof(unsigned char), 1, fh, reversed);
+            *ptr = static_cast< T >(u);
+            break;
 
-            case I16:
-        	unsigned short us;
-        	FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
-        	*ptr = static_cast< T >(us);
-        	break;
+        case I16:
+            unsigned short us;
+            FREAD(&us, sizeof(unsigned short), 1, fh, reversed);
+            *ptr = static_cast< T >(us);
+            break;
 
-            case IFLOAT:
-        	float f;
-        	FREAD(&f, sizeof(float), 1, fh, reversed);
-        	*ptr = static_cast< T >(f);
-        	break;
-            }
+        case IFLOAT:
+            float f;
+            FREAD(&f, sizeof(float), 1, fh, reversed);
+            *ptr = static_cast< T >(f);
+            break;
+        }
         return (true);
     }
 
@@ -544,29 +544,29 @@ public:
             b = min_val;
         }
 
-    	T* ptr;
-	unsigned long int n;
+        T* ptr;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(img,n,ptr)
-            switch (image_type)
-            {
-            case IBYTE:
-        	unsigned char u;
-        	u = static_cast< unsigned char > (ROUND(a * (*ptr - b)));
-        	FWRITE(&u, sizeof(unsigned char), 1, fh, reversed);
-        	break;
+        switch (image_type)
+        {
+        case IBYTE:
+            unsigned char u;
+            u = static_cast< unsigned char > (ROUND(a * (*ptr - b)));
+            FWRITE(&u, sizeof(unsigned char), 1, fh, reversed);
+            break;
 
-            case I16:
-        	unsigned short us;
-        	us = static_cast< unsigned short > (ROUND(a * (*ptr - b)));
-        	FWRITE(&us, sizeof(unsigned short), 1, fh, reversed);
-        	break;
+        case I16:
+            unsigned short us;
+            us = static_cast< unsigned short > (ROUND(a * (*ptr - b)));
+            FWRITE(&us, sizeof(unsigned short), 1, fh, reversed);
+            break;
 
-            case IFLOAT:
-        	float f;
-        	f = static_cast< float > (*ptr);
-        	FWRITE(&f, sizeof(float), 1, fh, reversed);
-        	break;
-            }
+        case IFLOAT:
+            float f;
+            f = static_cast< float > (*ptr);
+            FWRITE(&f, sizeof(float), 1, fh, reversed);
+            break;
+        }
     }
 };
 
@@ -845,7 +845,7 @@ public:
                          ImageT<T>::fn_img + " not found");
 
         bool ret=readImageHeaderAndContent(fp, skip_type_check, reversed,
-            apply_geo, only_apply_shifts);
+                                           apply_geo, only_apply_shifts);
 
         fclose(fp);
         return (ret);
@@ -854,7 +854,7 @@ public:
     /** Read image (header+content) from the current position in the file.
         Returns true if the image could be read. */
     bool readImageHeaderAndContent(FILE *fp, bool skip_type_check,
-        bool reversed, bool apply_geo, bool only_apply_shifts)
+                                   bool reversed, bool apply_geo, bool only_apply_shifts)
     {
         // Read header
         if (!header.read(fp, skip_type_check, reversed))
@@ -869,7 +869,7 @@ public:
     /** Read image content from the current position in the file.
         Returns true if the image could be read. */
     bool readImageContent(FILE *fp, bool apply_geo,
-        bool only_apply_shifts)
+                          bool only_apply_shifts)
     {
         bool ret;
         if ((ret = ImageT< T >::read(fp, header.fIform(), header.iYdim(),
@@ -917,7 +917,7 @@ public:
         write(fp,force_reversed);
         fclose(fp);
     }
-    
+
     /** Write Xmipp image to disk given a file pointer. */
     virtual void write(FILE *fp, bool force_reversed = false)
     {
@@ -1559,7 +1559,8 @@ void FourierImageXmipp_to_ImageXmipp(FourierImageXmipp& F, ImageXmipp& I);
 /** Image stack.
  * @ingroup Images
 */
-class ImageXmippStack {
+class ImageXmippStack
+{
 public:
     /** Filename. */
     FileName fn;
@@ -1571,32 +1572,44 @@ public:
     /** Read from stack file.
      */
     bool readFromStack(const FileName& name,
-              bool reversed = false, bool apply_geo = false,
-              bool only_apply_shifts = false,
-              bool skipHeaders = false);
-    
+                       bool reversed = false, bool apply_geo = false,
+                       bool only_apply_shifts = false,
+                       bool skipHeaders = false);
+
     /** Number of images in the stack. */
-    int ImgNo() const {return stack.size();}
+    int ImgNo() const
+    {
+        return stack.size();
+    }
 
     /** Get image i. */
-    ImageXmipp& getImage(int i) {return stack[i];}
+    ImageXmipp& getImage(int i)
+    {
+        return stack[i];
+    }
 
     /** Set image i. */
-    void setImage(int i, const ImageXmipp &I) {stack[i]=I;}
+    void setImage(int i, const ImageXmipp &I)
+    {
+        stack[i]=I;
+    }
 
     /** Append image. */
-    void appendImage(const ImageXmipp &I) {stack.push_back(I);}
+    void appendImage(const ImageXmipp &I)
+    {
+        stack.push_back(I);
+    }
 
     /** Write as stack file.
     */
     void writeAsStack(const FileName& name = "", bool force_reversed = false);
-    
+
     /** Write as selfile.
         All the images are numbered as 1, 2, ...
         At the end a selfile called "rootname.sel" is written.
     */
     void writeAsSelFile(const FileName& rootname, bool force_reversed = false);
-    
+
     /** Write as volume. */
     void writeAsVolume(const FileName& name="", bool force_reversed = false);
 };
@@ -1990,7 +2003,7 @@ public:
 //@{
 /* Extensions for the Imagic header and image files
  */
- #ifndef SWIG
+#ifndef SWIG
 static const char* IMAGIC_HEADER_EXT = "hed";
 static const char* IMAGIC_IMAGE_EXT = "img";
 
@@ -2005,19 +2018,19 @@ static const char IMAGIC_TAG_SEP = ':';
 /* Constants for the offset into the Imagic header file
  */
 static const unsigned IMAGIC_IFOL_OFFSET = 4, IMAGIC_IXLP_OFFSET = 48,
-        IMAGIC_IYLP_OFFSET = 52, IMAGIC_TYPE_OFFSET = 56, IMAGIC_WORD_LEN = 4,
-                             IMAGIC_RECORD_LEN = 1024;
+                      IMAGIC_IYLP_OFFSET = 52, IMAGIC_TYPE_OFFSET = 56, IMAGIC_WORD_LEN = 4,
+                      IMAGIC_RECORD_LEN = 1024;
 
 /* Constants defining the Imagic header and some of its fields
  */
 static const unsigned int IMAGIC_HEADER_BLOCK_SIZE = 256;
 static const unsigned int IMAGIC_IDX_IMN = 0, IMAGIC_IDX_IFOL = 1,
-        IMAGIC_IDX_NHFR = 3, IMAGIC_IDX_NDATE = 5, IMAGIC_IDX_NMONTH = 4,
-                                                // These seem reversed in the spec
-                                                IMAGIC_IDX_NYEAR = 6, IMAGIC_IDX_NHOUR = 7, IMAGIC_IDX_NMINUT = 8,
-                                                                   IMAGIC_IDX_NSEC = 9, IMAGIC_IDX_NPIX2 = 10, IMAGIC_IDX_NPIXEL = 11,
-                                                                                                           IMAGIC_IDX_IXLP1 = 12, IMAGIC_IDX_IYLP1 = 13, IMAGIC_IDX_TYPE = 14,
-                                                                                                                              IMAGIC_IDX_NAME = 29, IMAGIC_IDX_NAMELEN = 80, IMAGIC_IDX_ARCHTYPE = 68;
+                          IMAGIC_IDX_NHFR = 3, IMAGIC_IDX_NDATE = 5, IMAGIC_IDX_NMONTH = 4,
+                          // These seem reversed in the spec
+                          IMAGIC_IDX_NYEAR = 6, IMAGIC_IDX_NHOUR = 7, IMAGIC_IDX_NMINUT = 8,
+                          IMAGIC_IDX_NSEC = 9, IMAGIC_IDX_NPIX2 = 10, IMAGIC_IDX_NPIXEL = 11,
+                          IMAGIC_IDX_IXLP1 = 12, IMAGIC_IDX_IYLP1 = 13, IMAGIC_IDX_TYPE = 14,
+                          IMAGIC_IDX_NAME = 29, IMAGIC_IDX_NAMELEN = 80, IMAGIC_IDX_ARCHTYPE = 68;
 
 /** Types of Imagic files
  *
@@ -2058,7 +2071,7 @@ public:
     /** Constructor with size
      */
     ImageImagicT(int Ydim, int Xdim) :
-            ImageT< T >(Ydim, Xdim)
+        ImageT< T >(Ydim, Xdim)
     {
         name_parsed = false;
     }
@@ -2181,8 +2194,8 @@ public:
         // Read the image data
         ImageT<T>::img.resize(img_info.ysize, img_info.xsize);
         const bool reversed = false;
-	T* ptr;
-    	unsigned long int n;
+        T* ptr;
+        unsigned long int n;
         switch (img_info.img_types[imgnum])
         {
         case IMAGIC_REAL:
@@ -2424,8 +2437,8 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
             fwrite(header_block, sizeof(header_block), 1, imagic_hed);
 
             // Write the image data to the .img file
-    	    T* ptr=NULL;
-    	    unsigned long int n;
+            T* ptr=NULL;
+            unsigned long int n;
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr((*image)(),n,ptr)
             {
                 switch (img_type)

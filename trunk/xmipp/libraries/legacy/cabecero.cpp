@@ -151,8 +151,8 @@ int IsInfogeo(double matriz[3][3])
 {
     int i, j;
 
-    for (i = 0;i < 3;i++)
-        for (j = 0;j < 3;j++)
+    for (i = 0; i < 3; i++)
+        for (j = 0; j < 3; j++)
             if (matriz[i][j] != 0.)  return 1;
 
     return 0;
@@ -169,7 +169,7 @@ void ceroCabecero(void)
     BYTE *punt;
 
     punt = (BYTE *) & cabecero;
-    for (i = 0; i < 1024;i++) *punt++ = 0;
+    for (i = 0; i < 1024; i++) *punt++ = 0;
     /** *(punt+i)='\0'; Esto es mas lento **/
 }
 

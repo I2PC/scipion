@@ -368,9 +368,9 @@ public:
         FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(*this)
         {
             double mod = sqrt(
-	    	DIRECT_MULTIDIM_ELEM(__X,n) * DIRECT_MULTIDIM_ELEM(__X,n) + 
-		DIRECT_MULTIDIM_ELEM(__Y,n) * DIRECT_MULTIDIM_ELEM(__Y,n) + 
-		DIRECT_MULTIDIM_ELEM(__Z,n) * DIRECT_MULTIDIM_ELEM(__Z,n));
+                             DIRECT_MULTIDIM_ELEM(__X,n) * DIRECT_MULTIDIM_ELEM(__X,n) +
+                             DIRECT_MULTIDIM_ELEM(__Y,n) * DIRECT_MULTIDIM_ELEM(__Y,n) +
+                             DIRECT_MULTIDIM_ELEM(__Z,n) * DIRECT_MULTIDIM_ELEM(__Z,n));
             DIRECT_MULTIDIM_ELEM(__X,n) /= mod;
             DIRECT_MULTIDIM_ELEM(__Y,n) /= mod;
             DIRECT_MULTIDIM_ELEM(__Z,n) /= mod;
@@ -387,10 +387,10 @@ public:
         result.resize(__X);
 
         FOR_ALL_ELEMENTS_IN_MULTIDIM_VECTORIAL_MATRIX3D(*this)
-            DIRECT_MULTIDIM_ELEM(result,  n) = sqrt(
-	    	DIRECT_MULTIDIM_ELEM(__X,n) * DIRECT_MULTIDIM_ELEM(__X,n) + 
-		DIRECT_MULTIDIM_ELEM(__Y,n) * DIRECT_MULTIDIM_ELEM(__Y,n) + 
-		DIRECT_MULTIDIM_ELEM(__Z,n) * DIRECT_MULTIDIM_ELEM(__Z,n));
+        DIRECT_MULTIDIM_ELEM(result,  n) = sqrt(
+                                               DIRECT_MULTIDIM_ELEM(__X,n) * DIRECT_MULTIDIM_ELEM(__X,n) +
+                                               DIRECT_MULTIDIM_ELEM(__Y,n) * DIRECT_MULTIDIM_ELEM(__Y,n) +
+                                               DIRECT_MULTIDIM_ELEM(__Z,n) * DIRECT_MULTIDIM_ELEM(__Z,n));
     }
 
     /** Write.

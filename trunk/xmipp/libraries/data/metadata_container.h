@@ -259,7 +259,7 @@ public:
         if (It != values.end())
         {
             if (ABS( *((T *)(It->second)) - value )
-                    < XMIPP_EQUAL_ACCURACY)
+                < XMIPP_EQUAL_ACCURACY)
             {
                 return true;
             }

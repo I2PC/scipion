@@ -129,7 +129,7 @@ public:
 
     /** std::cout << prm; */
     friend std::ostream & operator << (std::ostream &out,
-                                  const Prog_Evaluate_Parameters &prm);
+                                       const Prog_Evaluate_Parameters &prm);
 };
 
 /** Evaluate program Side information.

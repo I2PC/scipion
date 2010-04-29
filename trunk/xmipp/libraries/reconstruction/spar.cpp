@@ -48,9 +48,9 @@ double ComputeTermA(Matrix1D<double> &dDigitalFreq, Matrix2D<double> &ARParamete
     double A = 0;
 
 
-    for (int p = STARTINGY(ARParameters);p <= FINISHINGY(ARParameters);p++)
+    for (int p = STARTINGY(ARParameters); p <= FINISHINGY(ARParameters); p++)
     {
-        for (int q = STARTINGX(ARParameters);q <= FINISHINGX(ARParameters);q++)
+        for (int q = STARTINGX(ARParameters); q <= FINISHINGX(ARParameters); q++)
         {
             // The term for (p,q)=(0,0) is not part of the AR model. It
             // contains sigma.
@@ -84,9 +84,9 @@ double ComputeTermB(Matrix1D<double> &dDigitalFreq, Matrix2D<double> &ARParamete
 {
     double B = 0;
 
-    for (int p = STARTINGY(ARParameters);p <= FINISHINGY(ARParameters);p++)
+    for (int p = STARTINGY(ARParameters); p <= FINISHINGY(ARParameters); p++)
     {
-        for (int q = STARTINGX(ARParameters);q <= FINISHINGX(ARParameters);q++)
+        for (int q = STARTINGX(ARParameters); q <= FINISHINGX(ARParameters); q++)
         {
             // The term for (p,q)=(0,0) is not part of the AR model. It
             // contains sigma.
@@ -212,7 +212,7 @@ double CausalAR(Matrix2D<double> &Img,
     eq = 0; // equation number
     for (int l = lF; l >= l0; l--)
     {
-        for (int m = mF;m >= m0; m--)
+        for (int m = mF; m >= m0; m--)
         {
             // This line is included to avoid points not in the NSHP.
             if (l == 0 && m != 0 && SGN(m) != SGN(orderR))
@@ -357,7 +357,7 @@ double NonCausalAR(Matrix2D<double> &Img,
     eq = 0; // equation number
     for (int l = lF; l >= l0; l--)
     {
-        for (int m = mF;m >= m0; m--)
+        for (int m = mF; m >= m0; m--)
         {
             // take the independet terms from the correlation matrix
             Indep_terms(eq) = (-1.0) * R(l, m);
@@ -453,7 +453,7 @@ void ARFilter(Matrix2D<double> &Img, Matrix2D< std::complex<double> > &Filter,
 
         double sigma = sqrt(MAT_ELEM(ARParameters, 0, 0));
         Filter(i, j) = std::complex<double> (sigma * (1 + A) / ((1 + A) * (1 + A) + B * B),
-                                        sigma * (-B) / ((1 + A) * (1 + A) + B * B));
+                                             sigma * (-B) / ((1 + A) * (1 + A) + B * B));
 
 #ifdef DEBUG
         filelog << "A " << A << " B " << B << " po " << abs(Filter(i, j)) << std::endl ;

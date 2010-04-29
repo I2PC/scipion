@@ -87,7 +87,7 @@ public:
         wrap = !checkParameter(argc, argv, "-dont_wrap");
         gridding = checkParameter(argc, argv, "-gridding");
         write_matrix = checkParameter(argc, argv, "-write_matrix");
-        
+
         if (checkParameter(argc, argv, "-inverse"))
         {
             A3D=A3D.inv();
@@ -122,18 +122,18 @@ public:
         Prog_parameters::show();
         if (Euler_mode)
             std::cout << "Euler angles (rot, tilt, psi): " << rot << " " << tilt
-            << " " << psi << std::endl;
+                      << " " << psi << std::endl;
         else if (Align_mode)
             std::cout << "Aligning " << axis.transpose() << " with Z\n";
         else if (Axis_mode)
             std::cout << "Rotating " << ang << " degrees around " << axis.transpose()
-		 << std::endl;
-       if (!wrap)
-	   std::cout << "Do not wrap."<<std::endl;
-       if (gridding)
-	   std::cout << "Use reverse gridding for interpolation."<<std::endl;
-       if (write_matrix)
-	   std::cout << "Write out transformation matrix to the screen."<<std::endl;
+                      << std::endl;
+        if (!wrap)
+            std::cout << "Do not wrap."<<std::endl;
+        if (gridding)
+            std::cout << "Use reverse gridding for interpolation."<<std::endl;
+        if (write_matrix)
+            std::cout << "Write out transformation matrix to the screen."<<std::endl;
 
     }
 
@@ -141,21 +141,21 @@ public:
     {
         Prog_parameters::usage();
         std::cerr << "  [-euler <rot> <tilt> <psi>        : Rotate with these Euler angles\n"
-        << "  [-alignWithZ \"[<x>,<y>,<z>]\"]     : Align (x,y,z) with Z\n"
-        << "                                      Notice that brackets for the\n"
-        << "                                      vector must be written and do not\n"
-        << "                                      represent optional parameters\n"
-        << "  [-axis \"[<x>,<y>,<z>]\" -ang <ang>]: Rotate <ang> degrees around (x,y,z),\n"
-        << "                                      by default (0,0,1)\n"
-        << "  [-inverse ]                       : Use the inverse rotation \n"
-        << "  [-dont_wrap]                      : By default, the image/volume is wrapped\n"
-        << "  [-write_matrix]                   : Print transformation matrix to screen\n"
-	<< "  [-gridding]                       : Use reverse gridding for interpolation\n"
-        << "\n"
-        << " OR rather than rotating image/volume(s), rotate all angles in a docfile\n"
-        << "  [-doc <docfile>]                  : Input docfile \n"
-        << "  [-o <output docfile>]             : Output docfile \n"
-        << "  [-cols <rot=1 tilt=2 psi=3> ]     : Columns for rot, tilt and psi in the docfile\n";    
+                  << "  [-alignWithZ \"[<x>,<y>,<z>]\"]     : Align (x,y,z) with Z\n"
+                  << "                                      Notice that brackets for the\n"
+                  << "                                      vector must be written and do not\n"
+                  << "                                      represent optional parameters\n"
+                  << "  [-axis \"[<x>,<y>,<z>]\" -ang <ang>]: Rotate <ang> degrees around (x,y,z),\n"
+                  << "                                      by default (0,0,1)\n"
+                  << "  [-inverse ]                       : Use the inverse rotation \n"
+                  << "  [-dont_wrap]                      : By default, the image/volume is wrapped\n"
+                  << "  [-write_matrix]                   : Print transformation matrix to screen\n"
+                  << "  [-gridding]                       : Use reverse gridding for interpolation\n"
+                  << "\n"
+                  << " OR rather than rotating image/volume(s), rotate all angles in a docfile\n"
+                  << "  [-doc <docfile>]                  : Input docfile \n"
+                  << "  [-o <output docfile>]             : Output docfile \n"
+                  << "  [-cols <rot=1 tilt=2 psi=3> ]     : Columns for rot, tilt and psi in the docfile\n";
 
     }
 
@@ -197,17 +197,17 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     {
         if (eprm->write_matrix)
             std::cerr<<"Transformation matrix = "<<eprm->A2D<<std::endl;
-	if (eprm->gridding)
-	{
-	    KaiserBessel kb;
-	    produceReverseGriddingMatrix2D(img(),img_out(),kb);
-	    applyGeometryReverseGridding(img(), eprm->A2D, img_out(), kb, IS_NOT_INV, eprm->wrap);
-	}
-	else
-	{
-	    applyGeometryBSpline(img_out(), eprm->A2D, img(), 3, IS_NOT_INV, eprm->wrap);
-	    img() = img_out();
-	}
+        if (eprm->gridding)
+        {
+            KaiserBessel kb;
+            produceReverseGriddingMatrix2D(img(),img_out(),kb);
+            applyGeometryReverseGridding(img(), eprm->A2D, img_out(), kb, IS_NOT_INV, eprm->wrap);
+        }
+        else
+        {
+            applyGeometryBSpline(img_out(), eprm->A2D, img(), 3, IS_NOT_INV, eprm->wrap);
+            img() = img_out();
+        }
     }
     return true;
 }
@@ -220,14 +220,14 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
         std::cerr<<"Transformation matrix = "<<eprm->A3D<<std::endl;
     if (eprm->gridding)
     {
-	KaiserBessel kb;
-	produceReverseGriddingMatrix3D(vol(),vol_out(),kb);
-	applyGeometryReverseGridding(vol(), eprm->A3D, vol_out(), kb, IS_NOT_INV, eprm->wrap);
+        KaiserBessel kb;
+        produceReverseGriddingMatrix3D(vol(),vol_out(),kb);
+        applyGeometryReverseGridding(vol(), eprm->A3D, vol_out(), kb, IS_NOT_INV, eprm->wrap);
     }
     else
     {
-	applyGeometryBSpline(vol_out(), eprm->A3D, vol(), 3, IS_NOT_INV, eprm->wrap);
-	vol() = vol_out();
+        applyGeometryBSpline(vol_out(), eprm->A3D, vol(), 3, IS_NOT_INV, eprm->wrap);
+        vol() = vol_out();
     }
     return true;
 }

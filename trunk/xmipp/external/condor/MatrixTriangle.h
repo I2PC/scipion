@@ -1,7 +1,7 @@
 /*
 
-CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization 
-              using trust Region method for high-computing load, 
+CONDOR 1.06 - COnstrained, Non-linear, Direct, parallel Optimization
+              using trust Region method for high-computing load,
               noisy functions
 Copyright (C) 2004 Frank Vanden Berghen
 
@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-If you want to include this tools in any commercial product, 
+If you want to include this tools in any commercial product,
 you can contact the author at fvandenb@iridia.ulb.ac.be
 
 */
@@ -33,19 +33,19 @@ class Matrix;
 
 class MatrixTriangle // lower triangular
 {
-  friend class Matrix;
-  protected:
+    friend class Matrix;
+protected:
     void destroyCurrentBuffer();
     typedef struct MatrixTriangleDataTag
     {
-       int n;
-       int ext;
-       int ref_count;
-       double **p;
+        int n;
+        int ext;
+        int ref_count;
+        double **p;
     } MatrixTriangleData;
     MatrixTriangleData *d;
 
-  public:
+public:
 
 // creation & management of Matrix:
     MatrixTriangle(int _n=0);
@@ -59,17 +59,29 @@ class MatrixTriangle // lower triangular
     void copyFrom(MatrixTriangle r);
 
 // accessor method
-    inline bool operator==( const MatrixTriangle& A ) { return (A.d==d);}
-    inline int nLine() { return d->n; };
-    inline double *operator [](int i) { return d->p[i]; };
-    inline operator double**() const { return d->p; };
-    
+    inline bool operator==( const MatrixTriangle& A )
+    {
+        return (A.d==d);
+    }
+    inline int nLine()
+    {
+        return d->n;
+    };
+    inline double *operator [](int i)
+    {
+        return d->p[i];
+    };
+    inline operator double**() const
+    {
+        return d->p;
+    };
+
 // simple math tools:
     void solveInPlace(Vector b);
     void solveTransposInPlace(Vector y);
     //void invert();
     void LINPACK(Vector &u);
-    
+
 // default return matrix in case of problem in a function
     static MatrixTriangle emptyMatrixTriangle;
 };

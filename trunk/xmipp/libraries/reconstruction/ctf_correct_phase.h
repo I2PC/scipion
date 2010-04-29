@@ -42,7 +42,7 @@ public:
 
     /// Side Info: CTF
     FourierMask ctf;
-    
+
     /// Side Info: ctfdat
     CTFDat ctfdat;
 public:
