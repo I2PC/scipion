@@ -758,12 +758,30 @@ void MetaData::combine(MetaData & other, MetaDataLabel thisLabel)
 
     MetaDataContainer * aux, *aux2;
     std::string value1, value2;
+    std::string value;
 
+    std::vector<MetaDataLabel>::iterator strIt;
+    //init everything with zeros, this should not be needed by write is not properlly writting
+    //FIXIT
+    for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
+         = nextObject())
+    {
+        aux = getObject();
+        for (strIt = other.activeLabels.begin(); strIt != other.activeLabels.end(); strIt++)
+        {
+            MetaDataLabel mdl = *strIt;
+            value="0";
+            if(thisLabel!=mdl)
+                setValue(MetaDataContainer::decodeLabel(mdl), value);
+        }
+    }
+    bool notFound;
     for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
          = nextObject())
     {
         aux = getObject();
         aux->writeValueToString(value1, thisLabel);
+        notFound=true;
         for (long int IDother = other.firstObject(); IDother != NO_MORE_OBJECTS; IDother
              = other.nextObject())
         {
@@ -772,23 +790,21 @@ void MetaData::combine(MetaData & other, MetaDataLabel thisLabel)
 
             if (value2 == value1)
             {
-                for (MetaDataLabel mdl =
-                         static_cast<MetaDataLabel> (MDL_FIRST_LABEL); mdl
-                     <= MDL_LAST_LABEL; mdl = MetaDataLabel(mdl + 1))
-                {
-                    if (aux2->
-                        valueExists(mdl))
-                    {
-                        std::string value;
-
-                        aux2->writeValueToString(value, mdl);
-
-                        setValue(MetaDataContainer::decodeLabel(mdl), value);
-                    }
+                for (strIt = other.activeLabels.begin(); strIt != other.activeLabels.end(); strIt++)
+               {
+                    MetaDataLabel mdl = *strIt;
+                    aux2->writeValueToString(value, mdl);
+                    setValue(MetaDataContainer::decodeLabel(mdl), value);
                 }
+                notFound=false;
                 break;
             }
         }
+        if(notFound)
+            std::cerr << "WARNING: no match found for label '"
+            << MetaDataContainer::decodeLabel(thisLabel)
+            << "' entry='" << value1
+            << "' unknown values filled with 0" << std::endl;
     }
 }
 
