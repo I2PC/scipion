@@ -86,12 +86,13 @@ int main(int argc, char **argv)
 
         // Some output to screen
         if (rank == 0)
+        {
             prm.show();
-
-        prm.estimateInitialNoiseSpectra();
+            prm.estimateInitialNoiseSpectra();
+        }
         // And produce selfile-specific side-info
         prm.produceSideInfo2(1, size, rank);
-        MPI_Barrier(MPI_COMM_WORLD);
+		MPI_Barrier(MPI_COMM_WORLD);
 
     }
     catch (Xmipp_error XE)

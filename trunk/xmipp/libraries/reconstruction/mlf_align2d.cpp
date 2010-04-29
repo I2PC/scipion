@@ -623,7 +623,15 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
     //This will differ from nr_images_global if MPI
     nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg,
                                      myLastImg);
+//#define DEBUG
+#ifdef DEBUG
 
+    std::cerr << "nr_images_local= "<< nr_images_local<<std::endl;
+    std::cerr << "myFirstImg= "<< myFirstImg<<std::endl;
+    std::cerr << "myLastImg= "<< myLastImg<<std::endl;
+    std::cerr <<"size="<<size<<"rank="<<rank<<std::endl;
+
+#endif
     //--------Setup for Docfile -----------
     docfiledata.resize(nr_images_local, DATALINELENGTH);
 
@@ -651,7 +659,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
         imgs_offsets.push_back(Vdum);
         for (int refno = 0; refno < idum; refno++)
         {
-            imgs_offsets[imgno].push_back(0.);
+            imgs_offsets[IMG_LOCAL_INDEX].push_back(0.);
         }
     }
 
@@ -715,7 +723,6 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
         }
     }
 
-
     Matrix2D<std::complex<double> >   Faux;
     Matrix2D<double>             Maux;
     Matrix1D<double>             dum, rmean_signal2, spectral_signal;
@@ -762,7 +769,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
     // Read in Vsig-vectors with fixed file names
     FOR_ALL_DEFOCUS_GROUPS()
     {
-        fn_tmp = fn_root + "_it";
+    	fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, istart - 1, "");
         fn_tmp += "_ctf";
         if (nr_focus > 1)
