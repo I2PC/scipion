@@ -157,6 +157,11 @@ public:
     // pointed by the class iterator is used
     bool setValue(const std::string &name, const std::string &value,
                   long int objectID = -1);
+    bool setValue(const std::string &name, const float &value,
+                  long int objectID = -1){
+    	std::cerr << "Do not use setValue with floats, use double"<< std::endl;
+    	std::cerr << "Floats are banned from metadata class"<< std::endl;
+    }
 
     void readOldSelFile(std::ifstream *infile);
     void readOldDocFile(std::ifstream *infile,
