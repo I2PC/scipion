@@ -1226,7 +1226,7 @@ void MetaData::fillMetaData(MetaData &MD, std::vector<long int> objectsToAdd)
     for (int i = 0; i < objectsToAdd.size(); i++)
     {
         long int idx = this->addObject();
-        this->objects[idx] = new MetaDataContainer(*(MD.objects[i]));
+        this->objects[idx] = new MetaDataContainer(*(MD.objects[objectsToAdd[i]]));
     }
     this->objectsIterator = this->objects.begin();
 }
