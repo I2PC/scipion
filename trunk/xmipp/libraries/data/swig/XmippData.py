@@ -637,7 +637,6 @@ class MetaData(_object):
     def read(*args): return _XmippData.MetaData_read(*args)
     def toDataBase(*args): return _XmippData.MetaData_toDataBase(*args)
     def fromDataBase(*args): return _XmippData.MetaData_fromDataBase(*args)
-    def getRandomOrderedObjects(*args): return _XmippData.MetaData_getRandomOrderedObjects(*args)
     __swig_setmethods__["activeLabels"] = _XmippData.MetaData_activeLabels_set
     __swig_getmethods__["activeLabels"] = _XmippData.MetaData_activeLabels_get
     if _newclass:activeLabels = _swig_property(_XmippData.MetaData_activeLabels_get, _XmippData.MetaData_activeLabels_set)
@@ -671,6 +670,7 @@ class MetaData(_object):
     def detectObjects(*args): return _XmippData.MetaData_detectObjects(*args)
     def randomize(*args): return _XmippData.MetaData_randomize(*args)
     def sort(*args): return _XmippData.MetaData_sort(*args)
+    def fillWithNextNObjects(*args): return _XmippData.MetaData_fillWithNextNObjects(*args)
 MetaData_swigregister = _XmippData.MetaData_swigregister
 MetaData_swigregister(MetaData)
 
@@ -729,6 +729,8 @@ MDL_SIGMANOISE = _XmippData.MDL_SIGMANOISE
 MDL_SIGMAOFFSET = _XmippData.MDL_SIGMAOFFSET
 MDL_SUMWEIGHT = _XmippData.MDL_SUMWEIGHT
 MDL_RANDOMSEED = _XmippData.MDL_RANDOMSEED
+MDL_DEFGROUP = _XmippData.MDL_DEFGROUP
+MDL_KSTEST = _XmippData.MDL_KSTEST
 MDL_LAST_LABEL = _XmippData.MDL_LAST_LABEL
 isString = _XmippData.isString
 isDouble = _XmippData.isDouble

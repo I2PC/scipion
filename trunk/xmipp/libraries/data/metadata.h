@@ -38,6 +38,7 @@
 #include <time.h>
 #include <stdio.h>
 #include "cppsqlite3.h"
+#include <sstream>
 
 /// @defgroup MetaData Metadata management
 /// @ingroup DataLibrary
@@ -67,8 +68,6 @@ class MetaData
     // usual
     std::map<std::string, long int> fastStringSearch;
     MetaDataLabel fastStringSearchLabel;
-
-    std::vector<long int> randomOrderedObjects;
 
     std::string path; ///< A parameter stored on MetaData Files
     std::string comment; ///< A general comment for the MetaData file
@@ -180,8 +179,8 @@ public:
      *
      */
     void fromDataBase(const FileName & DBname, const std::string & tableName,
+					MetaDataLabel sortLabel=MDL_OBJID,
                       std::vector<MetaDataLabel> * labelsVector = NULL);
-    std::vector<long int> & getRandomOrderedObjects();
 
     /** What labels have been read from a docfile/metadata file
      *   and/or will be stored on a new metadata file when "save" is
@@ -438,9 +437,16 @@ public:
      */
     void randomize(MetaData &MDin);
     /*
-     * Sort this metadata, by
+     * Sort this metadata, by label
+     * dirty implementation using sqlite
      */
-    void sort(MetaDataLabel name);
+
+    void sort(MetaData MDin, MetaDataLabel sortlabel);
+
+    /** Fill metadata with N entries from MD starting at start
+     *
+     */
+    void fillWithNextNObjects (MetaData &MD, long int start, long int numberObjects);
 
 
 };
@@ -470,3 +476,5 @@ void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim);
              kkkk=kkkk_metadata.nextObject())
 #endif
 //Write for partial metadatas
+//better sort
+//error in metadata_split when there is one one comment

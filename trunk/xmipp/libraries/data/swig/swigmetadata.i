@@ -282,4 +282,20 @@ MDo.setValue(XmippData.MDL_SIGMAOFFSET, 22345.8888);
 MDo.setValue(XmippData.MDL_SUMWEIGHT, 0.555);
 
 MDo.write("rowformat.doc")
+
+=========================
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+import XmippData
+
+inMetaDataFile   = XmippData.FileName('rand.doc')
+outMetaDataFile  = XmippData.FileName('kk.doc')
+MD1=XmippData.MetaData(inMetaDataFile)
+MD2=XmippData.MetaData()
+
+MD2.randomize(MD1)
+
+MD2.write(outMetaDataFile)
+
 */

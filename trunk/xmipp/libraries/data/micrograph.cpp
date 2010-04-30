@@ -819,4 +819,5 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         }
         progress_bar(yF / Ystep);
     }
+
 }
