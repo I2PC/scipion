@@ -161,6 +161,7 @@ public:
                   long int objectID = -1){
     	std::cerr << "Do not use setValue with floats, use double"<< std::endl;
     	std::cerr << "Floats are banned from metadata class"<< std::endl;
+    	exit(1);
     }
 
     void readOldSelFile(std::ifstream *infile);
@@ -456,4 +457,4 @@ void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim);
              kkkk != MetaData::NO_MORE_OBJECTS; \
              kkkk=kkkk_metadata.nextObject())
 #endif
-
+//Write for partial metadatas
