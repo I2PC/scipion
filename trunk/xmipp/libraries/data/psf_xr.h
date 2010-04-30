@@ -116,50 +116,50 @@ public:
         Matrix2D<std::complex<double> > ImFT;
         XmippFftw transformer;
 
-//        Im.setXmippOrigin();
 #define DEBUG
 #ifdef DEBUG
 
         ImageXmipp _Im;
         _Im().resize(Im);
-        _Im().setXmippOrigin();
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Im)
-        _Im(i,j) = abs(Im(i,j));
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Im)
+        dMij(_Im(),i,j) = abs(dMij(Im,i,j));
 
         _Im.write(("psfxr-Imin.spi"));
 #endif
 
         transformer.FourierTransform(Im, ImFT, false);
 
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(ImFT)
-        ImFT(i,j) *= OTF(i,j);
+#ifdef DEBUG
 
-        transformer.inverseFourierTransform();
+        _Im().resize(ImFT);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ImFT)
+        dMij(_Im(),i,j) = abs(dMij(ImFT,i,j));
+        _Im.write(("psfxr-imft1.spi"));
+#endif
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ImFT)
+        dMij(ImFT,i,j) *= dMij(OTF,i,j);
 
 #ifdef DEBUG
 
-//        FOR_ALL_ELEMENTS_IN_MATRIX2D(OTF)
-//			_Im(i,j) = abs(OTF(i,j));
-//        _Im.write(("apply-otf.spi"));
-
-        CenterOriginFFT(ImFT, 1);
         _Im().resize(ImFT);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(ImFT)
-			_Im(i,j) = abs(ImFT(i,j));
-
-        _Im.write(("psfxr-imft.spi"));
-
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ImFT)
+        dMij(_Im(),i,j) = abs(dMij(ImFT,i,j));
+        _Im.write(("psfxr-imft2.spi"));
 #endif
+
+        transformer.inverseFourierTransform();
 
         //        CenterOriginFFT(Im, 1);
 
 #ifdef DEBUG
-        _Im().resize(Im);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Im)
-        _Im(i,j) = abs(Im(i,j));
 
+        _Im().resize(Im);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Im)
+        dMij(_Im(),i,j) = abs(dMij(Im,i,j));
         _Im.write(("psfxr-imout.spi"));
 #endif
+
     }
 
     /// Generate OTF image.

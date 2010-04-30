@@ -35,8 +35,6 @@ int main(int argc, char **argv)
     FileName fnPSF, fnPSFOut, fnImgIn, fnImgOut;
     XmippXRPSF psf;
 
-#define DEBUG
-
     try
     {
         if (checkParameter(argc, argv, "-psf"))
@@ -46,6 +44,12 @@ int main(int argc, char **argv)
         }
         else
             psf.clear();
+
+        if (checkParameter(argc, argv, "-debug"))
+        {
+#define DEBUG
+        }
+
 
     }
     catch (Xmipp_error &XE)
