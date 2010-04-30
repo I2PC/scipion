@@ -98,9 +98,6 @@ public:
     /// Usage for ML mode
     void usage();
 
-    /// Extended Usage
-    void extendedUsage();
-
     /// Setup lots of stuff
     void produceSideInfo();
 
