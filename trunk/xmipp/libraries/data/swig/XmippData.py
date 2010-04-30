@@ -669,6 +669,8 @@ class MetaData(_object):
     def size(*args): return _XmippData.MetaData_size(*args)
     def getFilename(*args): return _XmippData.MetaData_getFilename(*args)
     def detectObjects(*args): return _XmippData.MetaData_detectObjects(*args)
+    def randomize(*args): return _XmippData.MetaData_randomize(*args)
+    def sort(*args): return _XmippData.MetaData_sort(*args)
 MetaData_swigregister = _XmippData.MetaData_swigregister
 MetaData_swigregister(MetaData)
 
