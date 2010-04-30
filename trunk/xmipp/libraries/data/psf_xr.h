@@ -81,6 +81,8 @@ public:
     /// object space Z sampling rate
     double dzo;
 
+    double Nox, Noy, dxl, dyl;
+
 
 
     /** Empty constructor. */
@@ -116,7 +118,7 @@ public:
         Matrix2D<std::complex<double> > ImFT;
         XmippFftw transformer;
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
         ImageXmipp _Im;

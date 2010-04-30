@@ -98,6 +98,7 @@ std::ostream & operator <<(std::ostream &out, const XmippXRPSF &psf)
     << "Lens Radius=          " << psf.Rlens * 1e6 << " um" << std::endl
     << "Zo=                   " << psf.Zo * 1e3 << " mm" << std::endl
     << "Zi=                   " << psf.Zi * 1e3 << " mm" << std::endl
+    << "sampling_rate_im_sp=  " << psf.dxi * 1e6 << " um" << std::endl
     << "Minimum Resolution=   " << psf.dxiMax * 1e6 << " um" << std::endl
     ;
 
@@ -149,28 +150,28 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
     /// REMEMBER TO INCLUDE AND/OR ANALYZE THE MINIMUM RESOLUTION CONDITION !!!! ////
 
 
-    double Nx = Im.xdim, Ny = Im.ydim;
+//    double Nx = Im.xdim, Ny = Im.ydim;
     double focalEquiv = 1/(1/(Z + DeltaZo) - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
-    double dxl = lambda*Zi / (Nx * dxi); // Pixel X-size en the plane of lens aperture
-    double dyl = lambda*Zi / (Ny * dxi); // Pixel Y-size en the plane of lens aperture
-
-#ifdef DEBUG
-
-    std::cout << std::endl;
-    std::cout << "XmippXRPSF::GenerateOTF - Parameters:" << std::endl;
-    std::cout << "Nx = " << Nx << "   Ny = " << Ny << std::endl;
-    std::cout << "dxl = " << dxl << "   dyl = " << dyl << std::endl;
-    std::cout << "Equivalent focal = " << focalEquiv << std::endl;
-    std::cout << "Discrete X-Radius in pixels = " << Rlens / dxl  << std::endl;
-    std::cout << "Discrete Y-Radius in pixels = " << Rlens / dyl  << std::endl;
-    std::cout << std::endl;
-#endif
+//    double dxl = lambda*Zi / (Nx * dxi); // Pixel X-size en the plane of lens aperture
+//    double dyl = lambda*Zi / (Ny * dxi); // Pixel Y-size en the plane of lens aperture
+//
+//#ifdef DEBUG
+//
+//    std::cout << std::endl;
+//    std::cout << "XmippXRPSF::GenerateOTF - Parameters:" << std::endl;
+//    std::cout << "Nx = " << Nx << "   Ny = " << Ny << std::endl;
+//    std::cout << "dxl = " << dxl << "   dyl = " << dyl << std::endl;
+//    std::cout << "Equivalent focal = " << focalEquiv << std::endl;
+//    std::cout << "Discrete X-Radius in pixels = " << Rlens / dxl  << std::endl;
+//    std::cout << "Discrete Y-Radius in pixels = " << Rlens / dyl  << std::endl;
+//    std::cout << std::endl;
+//#endif
 
     Matrix2D< std::complex<double> > OTFTemp, PSFi;
     XmippFftw transformer;
     //    Mask_Params mask_prm; TODO do we have to include masks using this method?
 
-    OTFTemp.resize(Ny,Nx);
+    OTFTemp.resize(Noy,Nox);
     lensPD(OTFTemp, focalEquiv, lambda, dxl, dyl);
 
     //    OTFTemp.window(-128,-128,127,255,10);
@@ -263,6 +264,21 @@ void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, do
 
 void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
 {
+
+	psf.Nox = vol().xdim;
+	psf.Noy = vol().ydim;
+	psf.dxl = psf.lambda*psf.Zi / (psf.Nox * psf.dxi); // Pixel X-size en the plane of lens aperture
+	psf.dyl = psf.lambda*psf.Zi / (psf.Noy * psf.dxi); // Pixel Y-size en the plane of lens aperture
+
+	    std::cout << std::endl;
+	    std::cout << "XmippXRPSF::Project:" << std::endl;
+	    std::cout << "Nx = " << psf.Nox << "   Ny = " << psf.Noy << std::endl;
+	    std::cout << "dxl = " << psf.dxl << "   dyl = " << psf.dyl << std::endl;
+	    std::cout << "Discrete X-Radius in pixels = " << psf.Rlens / psf.dxl  << std::endl;
+	    std::cout << "Discrete Y-Radius in pixels = " << psf.Rlens / psf.dyl  << std::endl;
+	    std::cout << std::endl;
+
+
     imOut() = Matrix2D<double> (vol().ydim, vol().xdim);
     imOut().initZeros();
     //    imOut()+= 1;
@@ -275,20 +291,21 @@ void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
 
     vol().setXmippOrigin();
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     ImageXmipp _Im(imOut);
 #endif
+
+    init_progress_bar(vol().zdim-1);
 
     for (int k=((vol()).zinit); k<=((vol()).zinit + (vol()).zdim - 1); k++)
     {
         FOR_ALL_ELEMENTS_IN_MATRIX2D(intExp)
         {
             intExp(i, j) = intExp(i, j) + vol(k, i, j);
-            imTemp(i, j) = 1/(exp(intExp(i,j)*psf.dzo))*vol(k,i,j)*psf.dzo;
-            //            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
-            //            _Im(i,j) = imTemp(i,j);
+            imTemp(i, j) = (exp(-intExp(i,j)*psf.dzo))*vol(k,i,j)*psf.dzo;
+//            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
         }
 #ifdef DEBUG
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imTemp)
@@ -314,7 +331,8 @@ void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
         FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imTemp)
         dMij(imOut(),i,j) += dMij(imTemp,i,j);
 
-        imOut.write("psfxr-imout.spi");
+        //        imOut.write("psfxr-imout.spi");
+        progress_bar(k - vol().zinit);
 
     }
 

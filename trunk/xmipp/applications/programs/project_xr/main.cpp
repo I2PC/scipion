@@ -45,10 +45,7 @@ int main(int argc, char **argv)
         else
             psf.clear();
 
-        if (checkParameter(argc, argv, "-debug"))
-        {
 #define DEBUG
-        }
 
 
     }
