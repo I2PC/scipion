@@ -121,7 +121,10 @@ class visualize_ML2D_class:
                     if (words3[i]=='-eps'):
                         conv=float(words3[i+1])/1000.
                 # get iteration
-                iter=int(words2[6])-1
+                if (words1[1].find('MLF') < 0):
+                    iter=int(words2[6])-1
+                else:
+                    iter=int(words2[4])-1
                 # get data
                 newlines1.append(str(iter)+' '+words1[7]+'\n')
                 newlines2.append(str(iter)+' '+words1[9]+'\n')
