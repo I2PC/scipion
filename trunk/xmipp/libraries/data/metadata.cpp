@@ -1275,6 +1275,9 @@ MetaDataContainer * MetaData::getObject(long int objectID)
     return aux;
 }
 
+// Allows a fast search for pairs where the value is
+// a string, i.e. looking for filenames which is quite
+// usual
 long int MetaData::fastSearch(MetaDataLabel name, std::string value,
                               bool recompute)
 {

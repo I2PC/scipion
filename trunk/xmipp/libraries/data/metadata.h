@@ -225,9 +225,9 @@ public:
 
     void writeValueToString(std::string & result,
                             const std::string & inputLabel);
-    /* give objID of object with value value in label name.
-     * if metadata has been modified set  recompute to true
-     *
+    /** Allows a fast search for pairs where the value is
+     a string, i.e. looking for filenames which is quite
+     usual.
      */
     long int fastSearch(MetaDataLabel name, std::string value, bool recompute =
                             false);

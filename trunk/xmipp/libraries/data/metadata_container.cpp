@@ -179,7 +179,7 @@ bool MetaDataContainer::valueExists(MetaDataLabel name)
         return true;
     }
 }
-
+//A template exists for pairexists different from string
 bool MetaDataContainer::pairExists(MetaDataLabel name, const std::string &value)
 {
     // Traverse all the structure looking for objects
