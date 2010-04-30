@@ -416,6 +416,7 @@ ReconsSources = [
     'sparma.cpp',
     'surface.cpp',
     'symmetrize.cpp',
+    'tomo_extract_subvolume.cpp',
     'volume_foms.cpp',
     'volume_labelling.cpp']
 
@@ -608,6 +609,7 @@ AddXmippProgram('statistics')
 AddXmippProgram('convert_stack22images')
 AddXmippProgram('symmetrize', ['XmippRecons'])
 AddXmippProgram('threshold')
+AddXmippProgram('tomo_extract_subvolume', ['XmippRecons'])
 AddXmippProgram('try_symmetry')
 AddXmippProgram('volume_segment')
 AddXmippProgram('window')

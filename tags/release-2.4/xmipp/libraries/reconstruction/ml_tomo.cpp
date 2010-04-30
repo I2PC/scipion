@@ -194,7 +194,7 @@ void Prog_ml_tomo_prm::show()
         // To screen
         std::cerr << " -----------------------------------------------------------------" << std::endl;
         std::cerr << " | Read more about this program in the following publication:    |" << std::endl;
-        std::cerr << " |  Scheres ea. in preparation                                   |" << std::endl;
+        std::cerr << " |  Scheres ea.  (2009) Structure, 17, 1563-1572                 |" << std::endl;
         std::cerr << " |                                                               |" << std::endl;
         std::cerr << " |   *** Please cite it if this program is of use to you! ***    |" << std::endl;
         std::cerr << " -----------------------------------------------------------------" << std::endl;

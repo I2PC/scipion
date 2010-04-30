@@ -23,11 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/extract_subvolume.h>
+#include <reconstruction/tomo_extract_subvolume.h>
 
 int main(int argc, char **argv)
 {
-    Prog_extract_subvolume_prm prm;
+    Prog_tomo_extract_subvolume_prm prm;
 
     // Get input parameters
     try
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        std::cout << XE;
+        std::cerr << XE;
         prm.usage();
         exit(0);
     }

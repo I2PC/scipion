@@ -30,11 +30,6 @@
 void Prog_tomo_extract_subvolume_prm::read(int argc, char **argv)
 {
     // Read command line
-    if (checkParameter(argc, argv, "-more_options"))
-    {
-	usage();
-	extendedUsage();
-    }
     fn_doc = getParameter(argc, argv, "-doc", "");
     fn_sym = getParameter(argc, argv, "-sym", "c1");
     fn_root = getParameter(argc, argv, "-o", "subvolume");
@@ -63,8 +58,9 @@ void Prog_tomo_extract_subvolume_prm::show()
     {
         // To screen
         std::cerr << " -----------------------------------------------------------------" << std::endl;
-        std::cerr << " | Read more about this program in the following publication:    |" << std::endl;
-        std::cerr << " |  Scheres ea. in preparation                                   |" << std::endl;
+        std::cerr << " | This program works closely together with xmipp_ml_tomo        |" << std::endl;
+        std::cerr << " | Read more about that program in the following publication:    |" << std::endl;
+        std::cerr << " |  Scheres ea. (2009) Structure, 17, 1563-1572                  |" << std::endl;
         std::cerr << " |                                                               |" << std::endl;
         std::cerr << " |   *** Please cite it if this program is of use to you! ***    |" << std::endl;
         std::cerr << " -----------------------------------------------------------------" << std::endl;
@@ -98,14 +94,6 @@ void Prog_tomo_extract_subvolume_prm::usage()
     std::cerr << " [ -sym <symgroup=c1> ]        : Symmetry group \n";
     std::cerr << " [ -mindist <1.> ]             : Minimum distance between subvolumes \n";
     //std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
-}
-
-// Extended usage ===================================================================
-void Prog_tomo_extract_subvolume_prm::extendedUsage()
-{
-    std::cerr << "Additional options: " << std::endl;
-    std::cerr << std::endl;
-    exit(1);
 }
 
 // Set up a lot of general stuff
