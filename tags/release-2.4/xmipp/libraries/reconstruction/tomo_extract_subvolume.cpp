@@ -228,6 +228,8 @@ void Prog_tomo_extract_subvolume_prm::processImages(int imgno_start, int imgno_e
             DLout[5] = 0.;
             DFout.append_comment(fn_out);
             DFout.append_line(DLout);
+
+            SFout.insert(fn_out);
         }
         
     }

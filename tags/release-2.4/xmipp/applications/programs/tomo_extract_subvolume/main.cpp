@@ -37,6 +37,7 @@ int main(int argc, char **argv)
         prm.show();
         prm.processImages(0,prm.nr_exp_images);
         prm.DFout.write(prm.fn_root+".doc");
+        prm.SFout.write(prm.fn_root+".sel");
 
     }
     catch (Xmipp_error XE)

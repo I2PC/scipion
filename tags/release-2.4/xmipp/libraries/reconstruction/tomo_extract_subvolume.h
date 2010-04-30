@@ -71,9 +71,12 @@ public:
     // Docfile with input volumes names and their alignment parameters
     DocFile DF;
 
-    // Docfile with output volumes names and their alignment parameters
+    // Docfile with output subvolumes names and their alignment parameters
     // This file can be fed directly to ml_tomo again...
     DocFile DFout;
+
+    // Selfile with output subvolumes
+    SelFile SFout;
 
     /** Minimum distance between unique subvolumes */
     double mindist;
