@@ -42,7 +42,7 @@ class Code:
        self.move=6
        self.delete=7
        self.select=8
-   
+       
     def encode(self, _string):
        if (  _string=='-u' or _string=='--union'):
             return self.union
@@ -103,7 +103,7 @@ def check_operation(option, opt_str, value, parser):
 def check_label(option, opt_str, value, parser):
     global operation
     if(operation==_myCode.unknown):
-        raise OptionValueError("select operation before %s" % opt_str)
+        raise OptionValueError("select operation (--product,--select, etc.) before option '%s'" % opt_str)
     if (operation == _myCode.union or 
         operation == _myCode.inter or
         operation == _myCode.subs or
@@ -116,7 +116,7 @@ def check_label(option, opt_str, value, parser):
 def check_value(option, opt_str, value, parser):
     global operation
     if(operation==_myCode.unknown):
-        raise OptionValueError("select operation before %s" % opt_str)
+        raise OptionValueError("select operation (--product,--select, etc.) before option '%s'" % opt_str)
     if (operation == _myCode.select):
        setattr(parser.values, option.dest, value)
     else:
@@ -167,9 +167,12 @@ Example:
             action="callback", callback=check_operation,
             help="delete files in metadata file")
 
-      parser.add_option("-S", "--Select", dest="cLabel",
-            default="", type="string",action="callback", callback=check_operation,
-            help="select entries with CLabel in the range given by --minvalue --maxvalue (only works with DOUBLES)")
+      parser.add_option('-S', '--Select',
+                  nargs=0,
+                  action="callback",callback=check_operation,
+                  help="select entries with CLabel in the range given by --minvalue --maxvalue (only works with DOUBLES)"
+                  )
+
       parser.add_option("-v", "--minValue", dest="minValue",
             default=0., type="float",action="callback", callback=check_value,
             help="copy files in metadata file to new directory")
@@ -185,6 +188,10 @@ Example:
       #overwrite file	  
       if(len(options.outMetaDataFile) < 1):
              options.outMetaDataFile = options.inMetaDataFile    
+
+#      print options.iSelect
+#      if options.iSelect:
+#          check_operation('--Select', '--Select', None, parser)
     
       return(options.inMetaDataFile,
              options.outMetaDataFile,
@@ -231,16 +238,17 @@ def process_subs(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel):
 def process_copy(inMetaDataFileS,cPath):
     global operation
     import shutil
-    if(len(cPath)<1):
-        print "Product requires a Metadata label '-l'"
-        sys.exit()
-    _char= cPath[0:1]
-    if(_char=='-'):
-        print "Invalid directory name ", cPath 
-        sys.exit()
-    #create directory
-    if not os.path.exists(cPath):
-         os.makedirs(cPath)
+    if operation!=_myCode.delete:
+        if(len(cPath)<1 ):
+            print "Product requires a Metadata label '-l'"
+            sys.exit()
+        _char= cPath[0:1]
+        if(_char=='-'):
+            print "Invalid directory name ", cPath 
+            sys.exit()
+        #create directory
+        if not os.path.exists(cPath):
+             os.makedirs(cPath)
     #loop
     inMetaDataFile   = XmippData.FileName(inMetaDataFileS)
     MD1=XmippData.MetaData(inMetaDataFile)
@@ -265,15 +273,16 @@ def process_copy(inMetaDataFileS,cPath):
          print message + ss.value() 
          id=MD1.nextObject()
 def process_select(inMetaDataFileS,outMetaDataFileS,minValue,maxValue,cLabel):
-     print "NOT IMPLEMENTED (YET)"
-#    inMetaDataFile   = XmippData.FileName(inMetaDataFileS)
-#    outMetaDataFile  = XmippData.FileName(outMetaDataFileS)
-#    MD1=XmippData.MetaData(inMetaDataFile)
-#    MD2=XmippData.MetaData()
-#    mdl=XmippData.MetaDataContainer()
-#    XmippData.addObjectsInRangeDouble(MD1,MD2,mdl.codifyLabel(cLabel),minValue,
-#                                    maxValue)
-#    MD2.write(outMetaDataFile)
+    print "Inside SELECT"
+    inMetaDataFile   = XmippData.FileName(inMetaDataFileS)
+    outMetaDataFile  = XmippData.FileName(outMetaDataFileS)
+    print inMetaDataFile,outMetaDataFile
+    MD1=XmippData.MetaData(inMetaDataFile)
+    MD2=XmippData.MetaData()
+    mdl=XmippData.MetaDataContainer()
+    XmippData.addObjectsInRangeDouble(MD1,MD2,mdl.codifyLabel(cLabel),minValue,
+                                    maxValue)
+    MD2.write(outMetaDataFile)
     
 ##########
 ##MAIN
@@ -289,7 +298,7 @@ minValue,
 maxValue
 ) = command_line_options()
 
-
+print "1",inMetaDataFile,"2",outMetaDataFile,"3",inMetaDataFile2
 #operate
 if(operation==_myCode.union):
     process_union(inMetaDataFile,inMetaDataFile2,outMetaDataFile)
@@ -301,7 +310,7 @@ elif(operation==_myCode.inter or
 elif(operation==_myCode.copy or
      operation==_myCode.delete or
      operation==_myCode.move):
-    process_copy(inMetaDataFile)
+    process_copy(inMetaDataFile,cPath)
     
 elif(operation==_myCode.select):
     process_select(inMetaDataFile,outMetaDataFile,minValue,maxValue,cLabel)
