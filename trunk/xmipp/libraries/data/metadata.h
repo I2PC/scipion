@@ -225,7 +225,10 @@ public:
 
     void writeValueToString(std::string & result,
                             const std::string & inputLabel);
-
+    /* give objID of object with value value in label name.
+     * if metadata has been modified set  recompute to true
+     *
+     */
     long int fastSearch(MetaDataLabel name, std::string value, bool recompute =
                             false);
 
@@ -429,6 +432,15 @@ public:
     {
         MDout.getValue( name,  value, objectID);
     }
+
+    /*
+     * Randomize this metadata, MDin is input
+     */
+    void randomize(MetaData &MDin);
+    /*
+     * Sort this metadata, by
+     */
+    void sort(MetaDataLabel name);
 
 
 };

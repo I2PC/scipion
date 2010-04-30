@@ -1323,8 +1323,29 @@ long int MetaData::fastSearch(MetaDataLabel name, std::string value,
             result = -1; // Not found
         }
     }
-
     return result;
+}
+//Randomize
+void MetaData::randomize(MetaData &MDin)
+{
+    std::vector<long int> v;
+    //v.reserve(objects.size());
+    std::map<long int, MetaDataContainer *>::iterator it;
+    for (it = MDin.objects.begin(); it
+         != MDin.objects.end(); it++)
+    {
+        v.push_back(it->first);
+    }
+    random_shuffle(v.begin(), v.end());
+    int i=0;
+
+    this->activeLabels = MDin.activeLabels;
+
+    for (it = MDin.objects.begin(); it != MDin.objects.end(); it++)
+    {
+        long int idx = this->addObject(v[i++]);
+        objects[idx] = new MetaDataContainer(*(it->second));
+    }
 }
 
 /* Statistics -------------------------------------------------------------- */
