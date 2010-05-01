@@ -447,6 +447,12 @@ public:
      */
     void fillWithNextNObjects (MetaData &MD, long int start, long int numberObjects);
 
+    /** Returns the maximum length of string file in the metadatafile.
+     * @ingroup MetaDataInfo
+     *
+     */
+
+    int MaxStringLength( MetaDataLabel thisLabel);
 
 };
 /** Compute images metadata estatistics
@@ -465,6 +471,12 @@ void get_statistics(MetaData MT, Image& _ave, Image& _sd, double& _min,
 void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim);
 #endif
 */
+
+
+
+
+
+
 /** For all objects.
  @code
  FOR_ALL_OBJECTS_IN_METADATA(metadata) {

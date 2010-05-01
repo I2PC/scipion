@@ -32,6 +32,7 @@
 #include <cstdio>
 #include <typeinfo>
 
+#include "image.h"
 #include "funcs.h"
 #include "matrix3d.h"
 #include "header.h"

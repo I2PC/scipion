@@ -319,6 +319,128 @@ stringP_swigregister = _XmippData.stringP_swigregister
 stringP_swigregister(stringP)
 stringP_frompointer = _XmippData.stringP_frompointer
 
+class string(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, string, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, string, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _XmippData.new_string(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_string
+    __del__ = lambda self : None;
+string_swigregister = _XmippData.string_swigregister
+string_swigregister(string)
+
+class Tabsinc(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Tabsinc, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Tabsinc, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _XmippData.new_Tabsinc(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_Tabsinc
+    __del__ = lambda self : None;
+    def __call__(*args): return _XmippData.Tabsinc___call__(*args)
+    def filltable(*args): return _XmippData.Tabsinc_filltable(*args)
+Tabsinc_swigregister = _XmippData.Tabsinc_swigregister
+Tabsinc_swigregister(Tabsinc)
+
+class KaiserBessel(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, KaiserBessel, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, KaiserBessel, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _XmippData.new_KaiserBessel(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_KaiserBessel
+    __del__ = lambda self : None;
+    def I0table_maxerror(*args): return _XmippData.KaiserBessel_I0table_maxerror(*args)
+    def dump_table(*args): return _XmippData.KaiserBessel_dump_table(*args)
+    def sinhwin(*args): return _XmippData.KaiserBessel_sinhwin(*args)
+    def i0win(*args): return _XmippData.KaiserBessel_i0win(*args)
+    def i0win_tab(*args): return _XmippData.KaiserBessel_i0win_tab(*args)
+    def get_window_size(*args): return _XmippData.KaiserBessel_get_window_size(*args)
+KaiserBessel_swigregister = _XmippData.KaiserBessel_swigregister
+KaiserBessel_swigregister(KaiserBessel)
+
+cdf_gauss = _XmippData.cdf_gauss
+cdf_tstudent = _XmippData.cdf_tstudent
+cdf_FSnedecor = _XmippData.cdf_FSnedecor
+icdf_FSnedecor = _XmippData.icdf_FSnedecor
+log2 = _XmippData.log2
+randomize_random_generator = _XmippData.randomize_random_generator
+student_outside_probb = _XmippData.student_outside_probb
+student_within_t0 = _XmippData.student_within_t0
+student_outside_t0 = _XmippData.student_outside_t0
+student_up_to_t0 = _XmippData.student_up_to_t0
+student_from_t0 = _XmippData.student_from_t0
+chi2_up_to_t0 = _XmippData.chi2_up_to_t0
+chi2_from_t0 = _XmippData.chi2_from_t0
+rnd_log = _XmippData.rnd_log
+class FileName(string):
+    __swig_setmethods__ = {}
+    for _s in [string]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
+    __setattr__ = lambda self, name, value: _swig_setattr(self, FileName, name, value)
+    __swig_getmethods__ = {}
+    for _s in [string]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
+    __getattr__ = lambda self, name: _swig_getattr(self, FileName, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _XmippData.new_FileName(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def compose(*args): return _XmippData.FileName_compose(*args)
+    def get_root(*args): return _XmippData.FileName_get_root(*args)
+    def get_baseName(*args): return _XmippData.FileName_get_baseName(*args)
+    def get_number(*args): return _XmippData.FileName_get_number(*args)
+    def get_extension(*args): return _XmippData.FileName_get_extension(*args)
+    def init_random(*args): return _XmippData.FileName_init_random(*args)
+    def add_prefix(*args): return _XmippData.FileName_add_prefix(*args)
+    def add_extension(*args): return _XmippData.FileName_add_extension(*args)
+    def without_extension(*args): return _XmippData.FileName_without_extension(*args)
+    def without_root(*args): return _XmippData.FileName_without_root(*args)
+    def insert_before_extension(*args): return _XmippData.FileName_insert_before_extension(*args)
+    def remove_extension(*args): return _XmippData.FileName_remove_extension(*args)
+    def remove_all_extensions(*args): return _XmippData.FileName_remove_all_extensions(*args)
+    def substitute_extension(*args): return _XmippData.FileName_substitute_extension(*args)
+    def without(*args): return _XmippData.FileName_without(*args)
+    def remove_until_prefix(*args): return _XmippData.FileName_remove_until_prefix(*args)
+    def remove_directories(*args): return _XmippData.FileName_remove_directories(*args)
+    def __str__(*args): return _XmippData.FileName___str__(*args)
+    __swig_destroy__ = _XmippData.delete_FileName
+    __del__ = lambda self : None;
+FileName_swigregister = _XmippData.FileName_swigregister
+FileName_swigregister(FileName)
+solve_2nd_degree_eq = _XmippData.solve_2nd_degree_eq
+gaussian1D = _XmippData.gaussian1D
+tstudent1D = _XmippData.tstudent1D
+gaussian2D = _XmippData.gaussian2D
+init_random_generator = _XmippData.init_random_generator
+rnd_unif = _XmippData.rnd_unif
+rnd_student_t = _XmippData.rnd_student_t
+rnd_gaus = _XmippData.rnd_gaus
+gaus_within_x0 = _XmippData.gaus_within_x0
+gaus_outside_x0 = _XmippData.gaus_outside_x0
+gaus_up_to_x0 = _XmippData.gaus_up_to_x0
+gaus_from_x0 = _XmippData.gaus_from_x0
+
+exists = _XmippData.exists
+xmippBaseDir = _XmippData.xmippBaseDir
+init_progress_bar = _XmippData.init_progress_bar
+progress_bar = _XmippData.progress_bar
+TimeMessage = _XmippData.TimeMessage
+IsBigEndian = _XmippData.IsBigEndian
+IsLittleEndian = _XmippData.IsLittleEndian
+divide_equally = _XmippData.divide_equally
 checkAngle = _XmippData.checkAngle
 CPPSQLITE_ERROR = _XmippData.CPPSQLITE_ERROR
 class CppSQLite3Table(_object):
@@ -346,6 +468,8 @@ class CppSQLite3Table(_object):
     def finalize(*args): return _XmippData.CppSQLite3Table_finalize(*args)
 CppSQLite3Table_swigregister = _XmippData.CppSQLite3Table_swigregister
 CppSQLite3Table_swigregister(CppSQLite3Table)
+wait_until_stable_size = _XmippData.wait_until_stable_size
+create_empty_file = _XmippData.create_empty_file
 
 class CppSQLite3DB(_object):
     __swig_setmethods__ = {}
@@ -434,6 +558,7 @@ class MetaData(_object):
     def randomize(*args): return _XmippData.MetaData_randomize(*args)
     def sort(*args): return _XmippData.MetaData_sort(*args)
     def fillWithNextNObjects(*args): return _XmippData.MetaData_fillWithNextNObjects(*args)
+    def MaxStringLength(*args): return _XmippData.MetaData_MaxStringLength(*args)
 MetaData_swigregister = _XmippData.MetaData_swigregister
 MetaData_swigregister(MetaData)
 
@@ -478,6 +603,10 @@ MDL_Y = _XmippData.MDL_Y
 MDL_Z = _XmippData.MDL_Z
 MDL_WEIGHT = _XmippData.MDL_WEIGHT
 MDL_OBJID = _XmippData.MDL_OBJID
+MDL_MAX = _XmippData.MDL_MAX
+MDL_MIN = _XmippData.MDL_MIN
+MDL_STDDEV = _XmippData.MDL_STDDEV
+MDL_AVG = _XmippData.MDL_AVG
 MDL_SAMPLINGRATE = _XmippData.MDL_SAMPLINGRATE
 MDL_VOLTAGE = _XmippData.MDL_VOLTAGE
 MDL_DEFOCUSU = _XmippData.MDL_DEFOCUSU

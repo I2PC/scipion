@@ -1483,4 +1483,22 @@ void MetaData::sort(MetaData MDin, MetaDataLabel sortlabel)
     if(remove ( tmpFileName ) == -1)
         std::cerr << "canot remove file " << tmpFileName <<std::endl;
 }
+int MetaData::MaxStringLength( MetaDataLabel thisLabel)
+{
+    if (!isString(thisLabel))
+    {
+        REPORT_ERROR(1,"MaxFileNameLength only works for strings");
+    }
+    std::string ss;
+    int max_length =0,length;
+    std::map<long int, MetaDataContainer *>::iterator it;
+    for (it = objects.begin(); it != objects.end(); it++)
+    {
+    	(it->second)->getValue(thisLabel, ss);
+    	length = ss.length();
+        if ( length > max_length)
+        	max_length = length;
+    }
+    return max_length;
+}
 

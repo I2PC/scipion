@@ -90,6 +90,10 @@ enum MetaDataLabel
     MDL_Z, // Z component (double)
     MDL_WEIGHT, // Weight assigned to the image (double)
     MDL_OBJID, // object id (int)
+    MDL_MAX, //maximum value (double)
+    MDL_MIN, //minimum value (double)
+    MDL_STDDEV, //stdandard deviation value (double)
+    MDL_AVG, //average value (double)
     //add row only label at the end of the enum
     MDL_SAMPLINGRATE, // sampling rate (double)
     MDL_VOLTAGE, // microscope voltage (double)
@@ -161,7 +165,9 @@ inline bool isDouble(MetaDataLabel lCode)
         lCode == MDL_MIRRORFRAC   || lCode == MDL_VOLTAGE      || lCode == MDL_DEFOCUSU    ||
         lCode == MDL_DEFOCUSV     || lCode == MDL_LL           || lCode == MDL_WROBUST     ||
         lCode == MDL_SIGNALCHANGE || lCode == MDL_SIGMANOISE   || lCode == MDL_SIGMAOFFSET ||
-        lCode == MDL_SUMWEIGHT || lCode == MDL_KSTEST)
+        lCode == MDL_SUMWEIGHT    || lCode == MDL_KSTEST       || lCode == MDL_MAX         ||
+        lCode == MDL_MIN          || lCode == MDL_STDDEV       || lCode == MDL_AVG
+        )
         return true;
     else
         return false;
