@@ -110,7 +110,7 @@ $result=PyInt_FromLong((long)*$1);
 
 // All interfaces being ported
 %include swigfuncs.i
-%include swigdocfile.i
+//%include swigdocfile.i
 %include swigargs.i
 %include swigsqllite.i
 %include swigmetadata.i

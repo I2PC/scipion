@@ -441,121 +441,6 @@ TimeMessage = _XmippData.TimeMessage
 IsBigEndian = _XmippData.IsBigEndian
 IsLittleEndian = _XmippData.IsLittleEndian
 divide_equally = _XmippData.divide_equally
-class DocLine(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, DocLine, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, DocLine, name)
-    __repr__ = _swig_repr
-    NOT_CONSIDERED = _XmippData.DocLine_NOT_CONSIDERED
-    NOT_ASSIGNED = _XmippData.DocLine_NOT_ASSIGNED
-    DATALINE = _XmippData.DocLine_DATALINE
-    COMMENT = _XmippData.DocLine_COMMENT
-    def __init__(self, *args): 
-        this = _XmippData.new_DocLine(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def assign(*args): return _XmippData.DocLine_assign(*args)
-    def get(*args): return _XmippData.DocLine_get(*args)
-    def set(*args): return _XmippData.DocLine_set(*args)
-    def get_text(*args): return _XmippData.DocLine_get_text(*args)
-    def get_key(*args): return _XmippData.DocLine_get_key(*args)
-    def get_no_components(*args): return _XmippData.DocLine_get_no_components(*args)
-    def clear(*args): return _XmippData.DocLine_clear(*args)
-    def Is_comment(*args): return _XmippData.DocLine_Is_comment(*args)
-    def Is_data(*args): return _XmippData.DocLine_Is_data(*args)
-    def set_type(*args): return _XmippData.DocLine_set_type(*args)
-    def read(*args): return _XmippData.DocLine_read(*args)
-    def __str__(*args): return _XmippData.DocLine___str__(*args)
-    __swig_destroy__ = _XmippData.delete_DocLine
-    __del__ = lambda self : None;
-DocLine_swigregister = _XmippData.DocLine_swigregister
-DocLine_swigregister(DocLine)
-wait_until_stable_size = _XmippData.wait_until_stable_size
-create_empty_file = _XmippData.create_empty_file
-
-class DocFile(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, DocFile, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, DocFile, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
-        this = _XmippData.new_DocFile(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def clear(*args): return _XmippData.DocFile_clear(*args)
-    def reserve(*args): return _XmippData.DocFile_reserve(*args)
-    def assign(*args): return _XmippData.DocFile_assign(*args)
-    def debug(*args): return _XmippData.DocFile_debug(*args)
-    def read(*args): return _XmippData.DocFile_read(*args)
-    def append(*args): return _XmippData.DocFile_append(*args)
-    def write(*args): return _XmippData.DocFile_write(*args)
-    def go_beginning(*args): return _XmippData.DocFile_go_beginning(*args)
-    def go_first_data_line(*args): return _XmippData.DocFile_go_first_data_line(*args)
-    def adjust_to_data_line(*args): return _XmippData.DocFile_adjust_to_data_line(*args)
-    def next(*args): return _XmippData.DocFile_next(*args)
-    def previous(*args): return _XmippData.DocFile_previous(*args)
-    def next_data_line(*args): return _XmippData.DocFile_next_data_line(*args)
-    def jump(*args): return _XmippData.DocFile_jump(*args)
-    def search(*args): return _XmippData.DocFile_search(*args)
-    def search_comment(*args): return _XmippData.DocFile_search_comment(*args)
-    def remove_multiple_strings(*args): return _XmippData.DocFile_remove_multiple_strings(*args)
-    def get_selfile(*args): return _XmippData.DocFile_get_selfile(*args)
-    def locate(*args): return _XmippData.DocFile_locate(*args)
-    def eof(*args): return _XmippData.DocFile_eof(*args)
-    def name(*args): return _XmippData.DocFile_name(*args)
-    def exists(*args): return _XmippData.DocFile_exists(*args)
-    def getColNumberFromHeader(*args): return _XmippData.DocFile_getColNumberFromHeader(*args)
-    def FirstLine_colNumber(*args): return _XmippData.DocFile_FirstLine_colNumber(*args)
-    def dataLineNo(*args): return _XmippData.DocFile_dataLineNo(*args)
-    def LineNo(*args): return _XmippData.DocFile_LineNo(*args)
-    def get_last_key(*args): return _XmippData.DocFile_get_last_key(*args)
-    def get_current_key(*args): return _XmippData.DocFile_get_current_key(*args)
-    def FirstKey(*args): return _XmippData.DocFile_FirstKey(*args)
-    def set_FirstKey(*args): return _XmippData.DocFile_set_FirstKey(*args)
-    def get_current_valNo(*args): return _XmippData.DocFile_get_current_valNo(*args)
-    def __call__(*args): return _XmippData.DocFile___call__(*args)
-    def get_angles(*args): return _XmippData.DocFile_get_angles(*args)
-    def get_angles1(*args): return _XmippData.DocFile_get_angles1(*args)
-    def get_angles2(*args): return _XmippData.DocFile_get_angles2(*args)
-    def set_angles(*args): return _XmippData.DocFile_set_angles(*args)
-    def get_image(*args): return _XmippData.DocFile_get_image(*args)
-    def get_imagename(*args): return _XmippData.DocFile_get_imagename(*args)
-    def set(*args): return _XmippData.DocFile_set(*args)
-    def get_current_line(*args): return _XmippData.DocFile_get_current_line(*args)
-    def renum(*args): return _XmippData.DocFile_renum(*args)
-    def remove(*args): return _XmippData.DocFile_remove(*args)
-    def remove_current(*args): return _XmippData.DocFile_remove_current(*args)
-    def insert_data_line(*args): return _XmippData.DocFile_insert_data_line(*args)
-    def insert_comment(*args): return _XmippData.DocFile_insert_comment(*args)
-    def insert_line(*args): return _XmippData.DocFile_insert_line(*args)
-    def append_data_line(*args): return _XmippData.DocFile_append_data_line(*args)
-    def append_angles(*args): return _XmippData.DocFile_append_angles(*args)
-    def append_comment(*args): return _XmippData.DocFile_append_comment(*args)
-    def append_line(*args): return _XmippData.DocFile_append_line(*args)
-    def clean_comments(*args): return _XmippData.DocFile_clean_comments(*args)
-    def randomize(*args): return _XmippData.DocFile_randomize(*args)
-    def perturb_column(*args): return _XmippData.DocFile_perturb_column(*args)
-    def merge(*args): return _XmippData.DocFile_merge(*args)
-    def random_discard(*args): return _XmippData.DocFile_random_discard(*args)
-    def sort_by_filenames(*args): return _XmippData.DocFile_sort_by_filenames(*args)
-    def col(*args): return _XmippData.DocFile_col(*args)
-    def row(*args): return _XmippData.DocFile_row(*args)
-    def setCol(*args): return _XmippData.DocFile_setCol(*args)
-    def __str__(*args): return _XmippData.DocFile___str__(*args)
-    __swig_destroy__ = _XmippData.delete_DocFile
-    __del__ = lambda self : None;
-DocFile_swigregister = _XmippData.DocFile_swigregister
-DocFile_swigregister(DocFile)
-DOCMERGE_KEEP_OLD = _XmippData.DOCMERGE_KEEP_OLD
-DOCMERGE_KEEP_NEW = _XmippData.DOCMERGE_KEEP_NEW
-DOCMERGE_SUM_COLUMN = _XmippData.DOCMERGE_SUM_COLUMN
-DOCMERGE_ERROR = _XmippData.DOCMERGE_ERROR
-
-read_Euler_document_file = _XmippData.read_Euler_document_file
-select_images = _XmippData.select_images
-get_subset_docfile = _XmippData.get_subset_docfile
 checkAngle = _XmippData.checkAngle
 CPPSQLITE_ERROR = _XmippData.CPPSQLITE_ERROR
 class CppSQLite3Table(_object):
@@ -583,6 +468,8 @@ class CppSQLite3Table(_object):
     def finalize(*args): return _XmippData.CppSQLite3Table_finalize(*args)
 CppSQLite3Table_swigregister = _XmippData.CppSQLite3Table_swigregister
 CppSQLite3Table_swigregister(CppSQLite3Table)
+wait_until_stable_size = _XmippData.wait_until_stable_size
+create_empty_file = _XmippData.create_empty_file
 
 class CppSQLite3DB(_object):
     __swig_setmethods__ = {}
