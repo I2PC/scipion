@@ -463,7 +463,7 @@ ReconsInterfaceSources = [
 #    'phantom_test_reconstruction.cpp',
 #    'project.cpp',
 #    'recons_spider.cpp',
-     'dummy.cpp']
+     'dummy1.cpp']
 
 #remove dinamic mpi library since it is very problematic
 # ReconstrunctionMPI

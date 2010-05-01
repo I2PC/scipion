@@ -1384,6 +1384,7 @@ void MetaData::randomize(MetaData &MDin)
     }
 }
 
+#ifdef NEVERDEFINE
 /* Statistics -------------------------------------------------------------- */
 void get_statistics(MetaData MT_in, Image& _ave, Image& _sd, double& _min,
                     double& _max, bool apply_geo)
@@ -1464,6 +1465,7 @@ void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
     Xdim = img().xdim;
 
 }
+#endif
 
 /* Very dirty sort function
  *

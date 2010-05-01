@@ -2038,7 +2038,8 @@ struct ImageImagicinfo
 
 /** Looks at an IMAGIC header file for information about the images it contains
  */
-const ImageImagicinfo ImagicGetImgInfo(const FileName& hed_fname);
+//ROB
+//const ImageImagicinfo ImagicGetImgInfo(const FileName& hed_fname);
 
 /** Imagic Image class
  */
@@ -2163,7 +2164,8 @@ public:
     bool read(const FileName& name)
     {
         rename(name);
-        ImageImagicinfo img_info = ImagicGetImgInfo(getHedFname());
+        //ROB
+        //ImageImagicinfo img_info = ImagicGetImgInfo(getHedFname());
 
         FileName img_fname = getImgFname();
         if (img_fname == "")
