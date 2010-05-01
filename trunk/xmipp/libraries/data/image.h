@@ -2039,7 +2039,7 @@ struct ImageImagicinfo
 /** Looks at an IMAGIC header file for information about the images it contains
  */
 //ROB
-//const ImageImagicinfo ImagicGetImgInfo(const FileName& hed_fname);
+const ImageImagicinfo ImagicGetImgInfo(const FileName& hed_fname);
 
 /** Imagic Image class
  */
@@ -2165,7 +2165,7 @@ public:
     {
         rename(name);
         //ROB
-        //ImageImagicinfo img_info = ImagicGetImgInfo(getHedFname());
+        ImageImagicinfo img_info = ImagicGetImgInfo(getHedFname());
 
         FileName img_fname = getImgFname();
         if (img_fname == "")
@@ -2313,7 +2313,7 @@ protected:
 
 /** Alias for ImageImagic type
  */
-typedef ImageImagicT< double > ImageImagic;
+//typedef ImageImagicT< double > ImageImagic;
 
 
 /** Creates a string of the format 'imagic:hedfname:num' suitable for use as an
@@ -2336,6 +2336,7 @@ inline std::string ImagicMakeName(const char* hed_fname, unsigned int imgnum)
 /** Creates a new Imagic header/image file pair, filling it with the data
  * pointed to by the vector parameter
  */
+/*
 template<typename T>
 bool ImagicWriteImagicFile(const FileName& hed_fname,
                            const std::vector< ImageT< T >* > & imgs,
@@ -2468,10 +2469,12 @@ bool ImagicWriteImagicFile(const FileName& hed_fname,
 
     return true;
 }
-
+*/
 // Specialized function to read images with complex numbers in them
+/*
 template<>
 bool ImageImagicT< std::complex< double > >::read(const FileName&);
+*/
 //@}
 #endif
 #endif
