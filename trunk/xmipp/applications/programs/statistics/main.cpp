@@ -25,8 +25,7 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 #include <data/volume.h>
 #include <data/mask.h>
 #include <cstdio>
@@ -36,8 +35,8 @@ void Usage();
 int main(int argc, char **argv)
 {
     FileName        fn_input, fn_stats;
-    SelFile         SF;
-    DocFile         DF_stats;
+    MetaData        SF;
+    MetaData        DF_stats;
     ImageXmipp      image;
     VolumeXmippT<double> volume;
     VolumeXmippT<int>    volume_int;
@@ -58,7 +57,10 @@ int main(int argc, char **argv)
         fn_input = getParameter(argc, argv, "-i");
         if (Is_VolumeXmipp(fn_input) || Is_ImageXmipp(fn_input))
         {
-            SF.insert(fn_input, SelLine::ACTIVE);
+            SF.addObject();
+            SF.setValue( MDL_IMAGE, fn_input);
+            SF.setValue( MDL_ENABLED, 1);
+            //SF.insert(fn_input, SelLine::ACTIVE);
         }
         else
             SF.read(fn_input);
@@ -80,16 +82,15 @@ int main(int argc, char **argv)
 
     try
     {
-        DF_stats.append_comment((std::string)"# Statistics of " + fn_input);
-        DF_stats.append_comment("# min max avg stddev");
-
+        DF_stats.setComment((std::string)"# Statistics of " + fn_input);
         // Get maximum filename size ---------------------------------------------
-        int max_length = SF.MaxFileNameLength();
+        int max_length = SF.MaxStringLength(MDL_IMAGE);
 
         // Process each file -----------------------------------------------------
 #define V VOLMATRIX(volume)
 #define VI VOLMATRIX(volume_int)
 #define I IMGMATRIX(image)
+
         double min_val, max_val, avg, stddev;
         int min_val_int, max_val_int;
         double mean_min_val = 0, mean_max_val = 0, mean_avg = 0, mean_stddev = 0;
@@ -98,15 +99,23 @@ int main(int argc, char **argv)
         if (short_format)
         {
             std::cout << "Format: Name ZxYxX min max avg stddev ";
-            if (show_angles) std::cout << " <rot tilt psi>";
+            if (show_angles)
+                std::cout << " <rot tilt psi>";
             std::cout << '>' << std::endl;
         }
 
-        SF.go_beginning();
-        while (!SF.eof())
+        long int ret=SF.firstObject();
+        if(ret==MetaData::NO_OBJECTS_STORED)
         {
-            FileName file_name = SF.NextImg();
-            if (file_name=="") break;
+            std::cerr << "Empty inputFile File\n";
+            exit(1);
+        }
+        FileName file_name;
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
+        {
+            SF.getValue(MDL_IMAGE, file_name);
+            if (file_name=="")
+                break;
 
             // For volumes ........................................................
             if ((volume_type = Is_VolumeXmipp(file_name)))
@@ -129,10 +138,10 @@ int main(int argc, char **argv)
 
                 if (volume_type == headerXmipp::VOL_XMIPP)
                     computeStats_within_binary_mask(mask3D, V, min_val, max_val,
-                                                     avg, stddev);
+                                                    avg, stddev);
                 else if (volume_type == headerXmipp::VOL_INT)
                     computeStats_within_binary_mask(mask3D, VI, min_val_int,
-                                                     max_val_int, avg, stddev);
+                                                    max_val_int, avg, stddev);
 
                 // Show information
                 std::cout << stringToString(file_name, max_length + 1);
@@ -149,12 +158,16 @@ int main(int argc, char **argv)
                     << floatToString(max_val, 10) << ' '
                     << floatToString(avg    , 10) << ' '
                     << floatToString(stddev , 10) << ' ';
-                Matrix1D<double> v(4);
-                v(0) = min_val;
-                v(1) = max_val;
-                v(2) = avg;
-                v(3) = stddev;
-                DF_stats.append_data_line(v);
+                //Matrix1D<double> v(4);
+                //v(0) = min_val;
+                //v(1) = max_val;
+                //v(2) = avg;
+                //v(3) = stddev;
+                DF_stats.addObject();
+                DF_stats.setValue(MDL_MIN,min_val);
+                DF_stats.setValue(MDL_MAX,max_val);
+                DF_stats.setValue(MDL_AVG,avg);
+                DF_stats.setValue(MDL_STDDEV,stddev);
 
                 // Total statistics
                 N++;
@@ -177,7 +190,7 @@ int main(int argc, char **argv)
 
                 // Compute statistics
                 computeStats_within_binary_mask(mask2D, I, min_val, max_val,
-                                                 avg, stddev);
+                                                avg, stddev);
 
                 // Show information
                 std::cout << stringToString(file_name, max_length + 1);
@@ -228,12 +241,17 @@ int main(int argc, char **argv)
                     }
                 }
 
-                Matrix1D<double> v(4);
-                v(0) = min_val;
-                v(1) = max_val;
-                v(2) = avg;
-                v(3) = stddev;
-                DF_stats.append_data_line(v);
+                //Matrix1D<double> v(4);
+                //v(0) = min_val;
+                //v(1) = max_val;
+                //v(2) = avg;
+                //v(3) = stddev;
+                //DF_stats.append_data_line(v);
+                DF_stats.addObject();
+                DF_stats.setValue(MDL_MIN,min_val);
+                DF_stats.setValue(MDL_MAX,max_val);
+                DF_stats.setValue(MDL_AVG,avg);
+                DF_stats.setValue(MDL_STDDEV,stddev);
 
                 // Total statistics
                 N++;
@@ -250,7 +268,7 @@ int main(int argc, char **argv)
             // Finish information .................................................
             std::cout << std::endl;
 
-        } // while
+        }
 
         // Show total statistics ------------------------------------------------
         std::cout << "==================================================\n";
@@ -284,7 +302,8 @@ int main(int argc, char **argv)
         }
 
         // Save statistics ------------------------------------------------------
-        if (fn_stats != "") DF_stats.write(fn_stats);
+        if (fn_stats != "")
+            DF_stats.write(fn_stats);
     }
     catch (Xmipp_error XE)
     {
@@ -302,7 +321,7 @@ void Usage()
     std::cerr << "Usage: statistics " << std::endl
     << "    -i               : Selfile with images/volumes \n"
     << "                        or individual image or volume \n"
-    << "   [-o <docfile>]    : save the statistics in this docfile\n"
+    << "   [-o <metadata>]   : save the statistics in this metadata file\n"
     << "   [-dont_apply_geo] : do not apply geo when the image is read\n"
     << "   [-short_format]   : Don't show labels for statistics\n"
     << "   [-show_angles]    : Also show angles in the image header \n"
