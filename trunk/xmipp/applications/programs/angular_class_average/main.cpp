@@ -28,10 +28,39 @@
 #include <data/selfile.h>
 #include <data/docfile.h>
 #include <reconstruction/angular_class_average.h>
+#include <data/metadata.h>
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
+/*
+	MetaDataContainer mdc1;
+	mdc1.addValue(MDL_IMAGE,std::string("imag"));
+	mdc1.addValue(MDL_ANGLEPSI,2.3);
+	std::cerr<<"before" << std::endl;
+	MetaDataContainer mdc2 (mdc1);
+    double * resultd = (double *)mdc2.getValue( MDL_ANGLEPSI );
+	std::cout<< "psi1= " << *resultd<<std::endl;
+	mdc1.addValue(MDL_ANGLEPSI,3.14);
+    resultd = (double *)mdc2.getValue( MDL_ANGLEPSI );
+	std::cout<< "psi2= " << *resultd <<std::endl;
+    resultd = (double *)mdc1.getValue( MDL_ANGLEPSI );
+	std::cout<< "mdc1.psi2= " << *resultd <<std::endl;
+
+	//std::string * results = (std::string *)mdc2.getValue( MDL_IMAGE );
+	//std::cout<< "image= " << *results;
+
+	MetaData MD1,MD2;
+	FileName infile("a.doc");
+	MD1.read(infile);
+    MD2=MD1;
+    MD1.setAnglePsi(3.1234);
+    MD2.write("cc.doc");
+    MD1.write("ccc.doc");
+	exit(1);
+
+*/
+
     Prog_angular_class_average_prm  prm;
 
     int              i, nmax, nr_ref, nr_images, reserve;

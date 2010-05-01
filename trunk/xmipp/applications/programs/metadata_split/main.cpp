@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/args.h>
 
 void Usage();
@@ -31,8 +31,8 @@ void Usage();
 int main(int argc, char **argv)
 {
     FileName fn_in, fn_out, fn_root;
-    SelFile  SFin, SFout, SFtmp, SFtmp2;
-    SelLine  line;
+    std::string sortLabel;
+    MetaData  SFin, SFout, SFtmp, SFtmp2;
     bool     dont_randomize;
     bool     dont_sort;
     int N;
@@ -44,7 +44,10 @@ int main(int argc, char **argv)
         fn_root = getParameter(argc, argv, "-o", "");
         dont_randomize = checkParameter(argc, argv, "-dont_randomize");
         dont_sort      = checkParameter(argc, argv, "-dont_sort");
-        if (fn_root == "") fn_root = fn_in.without_extension();
+        if(!dont_sort)
+            sortLabel = getParameter(argc, argv, "-l","image");
+        if (fn_root == "")
+            fn_root = fn_in.without_extension();
         SFin.read(fn_in);
     }
     catch (Xmipp_error)
@@ -55,43 +58,31 @@ int main(int argc, char **argv)
 
     try
     {
-        if (!dont_randomize) SFtmp = SFin.randomize();
-        else                 SFtmp = SFin;
-        int Num_images = (int)SFtmp.ImgNo();
+        if (!dont_randomize)
+        {
+        	std::cerr << "randomizing" << std::endl;
+            SFtmp.randomize(SFin);
+            SFtmp.write("test.xmd");
+        }
+        else
+            SFtmp = SFin;
+
+        int Num_images = (int)SFtmp.size();
         int Num_groups = N;
-        if (Num_groups > Num_images) Num_groups = Num_images;
+        if (Num_groups > Num_images)
+            Num_groups = Num_images;
+        int imagesGroup = ceil((double)Num_images / Num_groups);
 
-        int Nsub_ = (int)Num_images / N;
-        int Nres_ = Num_images % N;
 
-        int arr_groups[Num_groups];
-
-        int i, j;
-        arr_groups[0]=Nsub_;
-        for (i = 0;i < (Num_groups - Nres_);i++)
-        {
-            arr_groups[i] = Nsub_;
-        }
-
-        for (j = i;j < Num_groups;j++)
-        {
-            arr_groups[j] = Nsub_ + 1;
-        }
-
-        SFtmp.go_beginning();
-            
-        for (i = 0;i < Num_groups;i++)
+        for (int i = 0;i < Num_groups;i++)
         {
             SFout.clear();
-            SFout.reserve(arr_groups[i]);
-            for (j = 0;j < arr_groups[i];j++)
-            {
-                SFout.insert(SFtmp.current());
-                SFtmp.NextImg();
-            }
+            SFout.fillWithNextNObjects(SFtmp,i*imagesGroup,imagesGroup);
+
             if (!dont_sort)
             {
-                SFtmp2 = SFout.sort_by_filenames();
+            	std::cerr << "Sorting metada set: "<< i  <<std::endl;
+                SFtmp2.sort(SFout,MetaDataContainer::codifyLabel(sortLabel));
                 SFout  = SFtmp2;
             }
             fn_out = fn_root;
@@ -100,7 +91,7 @@ int main(int argc, char **argv)
                 std::string num = "_" + integerToString(i + 1);
                 fn_out +=  num;
             }
-            fn_out += ".sel";
+            fn_out += ".xmd";
             SFout.write(fn_out);
         }
 
@@ -116,11 +107,12 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cout << "Usage: split_selfile [options]\n"
-    << "    -i <selfile>            : Input selfile\n"
-    << "  [ -n <int=2> ]            : Number of output selfiles\n"
-    << "  [ -o <rootname=selfile> ] : Rootname for output selfiles\n"
-    << "                              output will be: rootname_<n>.sel\n"
+    << "    -i <selfile>            : Input MetaData File\n"
+    << "  [ -n <int=2> ]            : Number of output MetaDatas\n"
+    << "  [ -o <rootname=metadata> ]: Rootname for output MetaDatas\n"
+    << "                              output will be: rootname_<n>.xpd\n"
     << "  [ -dont_randomize ]       : Do not generate random groups\n"
-    << "  [ -dont_sort ]            : Do not sort the output sel\n"
+    << "  [ -dont_sort ]            : Do not sort the output MetaData\n"
+    << "  [ -l <image>]     : sort using label sortLabel, default image\n"
     ;
 }
