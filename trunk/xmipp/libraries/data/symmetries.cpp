@@ -798,7 +798,7 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
             X(vol_in(i),vol_in.grid(i),eprm_aint,eprm_bint,mask,i, \
               grid_type);\
     }
-
+#ifdef ROBRESTOREWHENPOSSIBLE
 // Symmetrize_crystal_volume==========================================
 //IMPORTANT: matrix orden should match the one used in "read_sym_file"
 //if not the wrong angles are assigned to the different matrices
@@ -861,10 +861,12 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 
 
 }//symmetrize_crystal_vectors end
+#endif
 #define put_inside(j,j_min,j_max,jint)  \
     if( (j) < (j_min) ) { (j) = (j) + (jint);}\
     else if( (j) > (j_max) ) { (j) = (j) - (jint);};
 
+#ifdef ROBRESTOREWHENPOSSIBLE
 /* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
 
 void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
@@ -2052,6 +2054,7 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
             }//for end
 
 }
+#endif
 #undef wrap_as_Crystal
 #undef DEBUG
     /** translate string fn_sym to symmetry group, return false
