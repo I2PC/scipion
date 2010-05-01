@@ -455,28 +455,6 @@ public:
     int MaxStringLength( MetaDataLabel thisLabel);
 
 };
-/** Compute images metadata estatistics
- * This use to be part of Metadata but should not
- */
-
-/* ROB
-#include "image.h"
-void get_statistics(MetaData MT, Image& _ave, Image& _sd, double& _min,
-                    double& _max, bool apply_geo);
-*/
-/** Get image size
- *
- */
-/*
-void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim);
-#endif
-*/
-
-
-
-
-
-
 /** For all objects.
  @code
  FOR_ALL_OBJECTS_IN_METADATA(metadata) {
@@ -484,11 +462,37 @@ void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim);
  }
  @endcode
  */
+//Write for partial metadatas
+//better sort
+//error in metadata_split when there is one one comment
+
 #define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
         for(long int kkkk = kkkk_metadata.firstObject(); \
              kkkk != MetaData::NO_MORE_OBJECTS; \
              kkkk=kkkk_metadata.nextObject())
 #endif
-//Write for partial metadatas
-//better sort
-//error in metadata_split when there is one one comment
+
+
+//Function related with metadata
+
+#ifndef METADATAEXTRA_H
+#define METADATAEXTRA_H
+
+/** Compute images metadata estatistics
+ * This use to be part of Metadata but should not
+ */
+
+#include "image.h"
+void get_statistics(MetaData MT, Image& _ave, Image& _sd, double& _min,
+                    double& _max, bool apply_geo);
+
+/** Get image size
+ *
+ */
+static int null_object=0;
+
+void ImgSize(MetaData MD, int &Xdim, int &Ydim=null_object,
+		                             int &Zdim=null_object,
+		                             int &Ndim=null_object);
+
+#endif

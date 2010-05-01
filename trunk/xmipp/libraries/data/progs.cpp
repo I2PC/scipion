@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "progs.h"
-#include "selfile.h"
+#include "metadata.h"
 #include "args.h"
 
 /* Common functions -------------------------------------------------------- */
@@ -61,7 +61,7 @@ void Prog_parameters::show()
 
 void Prog_parameters::usage()
 {
-    std::cerr << "   -i <input file>          : either an image/volume or a selection file\n";
+    std::cerr << "   -i <input file>          : either an image/volume or a metadata file\n";
     if (each_image_produces_an_output)
     {
         std::cerr << "  [-o <output file>]        : if wanted in case of a single image\n"
@@ -93,10 +93,10 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
     }
     else
     {
-        SelFile SF;
+        MetaData SF;
         SF.read(fn_in);
         Zdim = 1;
-        SF.ImgSize(Ydim, Xdim);
+        ImgSize(SF,Xdim, Ydim,Zdim,Zdim);
     }
 }
 
@@ -108,9 +108,9 @@ int Prog_parameters::get_images_to_process()
         return 1;
     else
     {
-        SelFile SF;
+        MetaData SF;
         SF.read(fn_in);
-        return SF.ImgNo();
+        return SF.size();
     }
 }
 

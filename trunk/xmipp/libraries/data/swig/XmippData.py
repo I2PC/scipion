@@ -562,6 +562,7 @@ class MetaData(_object):
 MetaData_swigregister = _XmippData.MetaData_swigregister
 MetaData_swigregister(MetaData)
 
+get_statistics = _XmippData.get_statistics
 MDL_UNDEFINED = _XmippData.MDL_UNDEFINED
 MDL_FIRST_LABEL = _XmippData.MDL_FIRST_LABEL
 MDL_ANGLEPSI = _XmippData.MDL_ANGLEPSI
@@ -655,6 +656,8 @@ class MetaDataContainer(_object):
     if _newclass:isValidLabel = staticmethod(_XmippData.MetaDataContainer_isValidLabel)
 MetaDataContainer_swigregister = _XmippData.MetaDataContainer_swigregister
 MetaDataContainer_swigregister(MetaDataContainer)
+cvar = _XmippData.cvar
+ImgSize = _XmippData.ImgSize
 MetaDataContainer_codifyLabel = _XmippData.MetaDataContainer_codifyLabel
 MetaDataContainer_decodeLabel = _XmippData.MetaDataContainer_decodeLabel
 MetaDataContainer_isValidLabel = _XmippData.MetaDataContainer_isValidLabel

@@ -27,7 +27,7 @@
 #include "micrograph.h"
 #include "mask.h"
 #include "normalize.h"
-#include "selfile.h"
+#include "metadata.h"
 
 #include <string>
 #include <iostream>
@@ -455,20 +455,21 @@ void Normalize_parameters::produce_side_info()
         if (method==TOMOGRAPHY0)
         {
             // Look for the image at 0 degrees
-            SelFile SF;
+            MetaData SF;
             try {
                 SF.read(fn_in);
+                SF.removeObjects(MDL_ENABLED, -1);
             } catch (Xmipp_error XE)
             {
-                REPORT_ERROR(1,(std::string)"There is a problem opening the selfile"+
-                    fn_in+". Make sure it is a correct selfile");
+                REPORT_ERROR(1,(std::string)"There is a problem opening the metadata"+
+                    fn_in+". Make sure it is a correct metadata file");
             }
-            SF.go_first_ACTIVE();
             double bestTilt=1000;
             FileName bestImage;
-            while (!SF.eof())
+            FileName fn_img;
+            FOR_ALL_OBJECTS_IN_METADATA(SF)
             {
-                FileName fn_img=SF.NextImg();
+                SF.getValue(MDL_IMAGE,fn_img);
                 if (fn_img=="") break;
                 ImageXmipp I;
                 I.read(fn_img);

@@ -1384,7 +1384,6 @@ void MetaData::randomize(MetaData &MDin)
     }
 }
 
-#ifdef NEVERDEFINE
 /* Statistics -------------------------------------------------------------- */
 void get_statistics(MetaData MT_in, Image& _ave, Image& _sd, double& _min,
                     double& _max, bool apply_geo)
@@ -1461,11 +1460,15 @@ void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
     MD.getValue(MDL_IMAGE, fn_img);
     ImageXmipp img;
     img.read(fn_img);
-    Ydim = img().ydim;
     Xdim = img().xdim;
+    if (Ydim!=null_object)
+    	Ydim = img().ydim;
+//    if (Zdim!=null_object)
+//    	zdim = img().zdim;
+//    if (Ndim!=null_object)
+//    	Ndim = img().ndim;
 
 }
-#endif
 
 /* Very dirty sort function
  *
