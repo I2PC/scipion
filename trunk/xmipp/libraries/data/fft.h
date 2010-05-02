@@ -32,7 +32,6 @@
 #include "matrix2d.h"
 #include "matrix3d.h"
 
-#include "selfile.h"
 #include "funcs.h"
 
 /** @defgroup Fourier Fourier transforms
