@@ -378,7 +378,7 @@ ReconsSources = [
     'adjust_volume_grey_levels.cpp',
     'align2d.cpp',
     'align_tilt_pairs.cpp',
-#    'analyze_cluster.cpp',
+    'analyze_cluster.cpp',
     'angular_assign_for_tilt_series.cpp',
 #    'angular_assign_for_tomogram.cpp',
 #    'angular_commonline.cpp',
@@ -395,7 +395,7 @@ ReconsSources = [
 #    'break_symmetry.cpp',
 #    'common_lines.cpp',
 #    'convert_vol2pseudo.cpp',
-#    'correct_bfactor.cpp',
+    'correct_bfactor.cpp',
 #    'create_projection_library.cpp',
 #    'crystal_create_surface.cpp',
 #    'ctf_correct_amplitude2d.cpp',
@@ -519,8 +519,8 @@ AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
 #AddXmippProgram('angular_project_library', ['XmippRecons'])
 AddXmippProgram('average')
 #AddXmippProgram('break_symmetry', ['XmippRecons'])
-#AddXmippProgram('center_image')
-#AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
+AddXmippProgram('center_image')
+AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
 #AddXmippProgram('classify_batch_som', ['XmippClassif'])
 #AddXmippProgram('classify_CL2D_sort_images', ['XmippRecons'])
 #AddXmippProgram('classify_fcmeans', ['XmippClassif'])
@@ -547,7 +547,7 @@ AddXmippProgram('average')
 #AddXmippProgram('convert_vol2pseudo', ['XmippRecons'])
 #AddXmippProgram('convert_voxels22blobs', ['XmippRecons'])
 #AddXmippProgram('convert_tia2raw')
-#AddXmippProgram('correct_bfactor', ['XmippRecons'])
+AddXmippProgram('correct_bfactor', ['XmippRecons'])
 #AddXmippProgram('correlation')
 #AddXmippProgram('crystal_angular_projection_matching',	['XmippRecons'])
 #AddXmippProgram('crystal_aph2img', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
