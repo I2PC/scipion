@@ -26,7 +26,6 @@
 #include <data/progs.h>
 #include <data/args.h>
 #include <data/geometry.h>
-#include <data/docfile.h>
 #include <data/gridding.h>
 
 class Rotate_parameters: public Prog_parameters
