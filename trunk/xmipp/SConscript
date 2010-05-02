@@ -379,8 +379,8 @@ ReconsSources = [
     'align2d.cpp',
     'align_tilt_pairs.cpp',
 #    'analyze_cluster.cpp',
-#    'angular_assign_for_tomogram.cpp',
     'angular_assign_for_tilt_series.cpp',
+#    'angular_assign_for_tomogram.cpp',
 #    'angular_commonline.cpp',
 #    'angular_continuous_assign.cpp',
 #    'angular_discrete_assign.cpp',
@@ -517,7 +517,7 @@ AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
 #AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 #AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 #AddXmippProgram('angular_project_library', ['XmippRecons'])
-#AddXmippProgram('average')
+AddXmippProgram('average')
 #AddXmippProgram('break_symmetry', ['XmippRecons'])
 #AddXmippProgram('center_image')
 #AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
