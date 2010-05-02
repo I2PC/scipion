@@ -500,7 +500,7 @@ AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 
 # Src (apps)
 
-#AddXmippProgram('add_noise')
+AddXmippProgram('add_noise')
 AddXmippProgram('adapt_for_spider', ['XmippInterface'])
 #AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
 #AddXmippProgram('align2d', ['XmippRecons'])
