@@ -466,6 +466,8 @@ public:
 //better sort
 //error in metadata_split when there is one one comment
 
+//convert pos to metadata
+
 #define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
         for(long int kkkk = kkkk_metadata.firstObject(); \
              kkkk != MetaData::NO_MORE_OBJECTS; \
