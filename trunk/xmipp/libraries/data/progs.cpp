@@ -77,6 +77,7 @@ void Prog_parameters::usage()
 
 void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
 {
+	std::cerr << "fn_in " << fn_in <<std::endl;
     if (Is_ImageXmipp(fn_in))
     {
         ImageXmipp I(fn_in);

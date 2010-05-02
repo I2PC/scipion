@@ -629,6 +629,7 @@ void Normalize_parameters::apply_geo_mask(ImageXmipp& img)
 
 void Normalize_parameters::apply(ImageXmipp &img)
 {
+std::cerr << "apply" <<std::endl;
     double a, b;
     if (invert_contrast)
 	img() *= -1.;
@@ -637,7 +638,7 @@ void Normalize_parameters::apply(ImageXmipp &img)
     {
         double avg, stddev, min, max, zz;
         img().computeStats(avg, stddev, min, max);
-
+std::cerr << "avg stddev min max " <<avg << " " << stddev << " " <<  min << " " <<  max << " " <<std::endl;
         if ((min - avg) / stddev < thresh_black_dust && remove_black_dust)
         {
             FOR_ALL_ELEMENTS_IN_MATRIX2D(img())

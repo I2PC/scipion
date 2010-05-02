@@ -1455,6 +1455,7 @@ void get_statistics(MetaData MT_in, Image& _ave, Image& _sd, double& _min,
 
 void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
 {
+	std::cerr << "i" <<std::endl;
     MD.firstObject();
     FileName fn_img;
     MD.getValue(MDL_IMAGE, fn_img);
