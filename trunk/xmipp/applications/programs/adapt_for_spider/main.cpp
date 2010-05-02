@@ -101,8 +101,8 @@ try {
 // Usage -------------------------------------------------------------------
 void Usage() {
    std::cerr << "Usage: adapt_for_Spider rename            : Generate correlative names\n"
-        << "            -i metaData File              : Input Xmipp selection file\n"
-        << "            -o metaData file              : Output Xmipp SelFile\n"
+        << "            -i metaData File              : Input Xmipp metadata file\n"
+        << "            -o metaData file              : Output Xmipp metadata\n"
         << "            -oroot <root_name>            : root name for output images\n"
         << "            [-oext <output extension="">  : if nothing is provided the same\n"
         << "                                            as the original images' one is used\n" 

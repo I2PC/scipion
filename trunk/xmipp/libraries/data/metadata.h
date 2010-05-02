@@ -462,9 +462,9 @@ public:
  }
  @endcode
  */
-//Write for partial metadatas
+//Write for partial metadatas- read use NULL
 //better sort
-//error in metadata_split when there is one one comment
+//error in metadata_split when there is only one comment
 
 //convert pos to metadata
 

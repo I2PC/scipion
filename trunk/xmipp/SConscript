@@ -462,7 +462,7 @@ ReconsInterfaceSources = [
 #    'im_unbend.cpp',
 #    'phantom_test_reconstruction.cpp',
 #    'project.cpp',
-#    'recons_spider.cpp',
+     'recons_spider.cpp',
      'dummy1.cpp']
 
 #remove dinamic mpi library since it is very problematic
@@ -501,7 +501,7 @@ AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 # Src (apps)
 
 #AddXmippProgram('add_noise')
-#AddXmippProgram('adapt_for_spider', ['XmippInterface'])
+AddXmippProgram('adapt_for_spider', ['XmippInterface'])
 #AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
 #AddXmippProgram('align2d', ['XmippRecons'])
 #AddXmippProgram('align_tilt_pairs', ['XmippRecons'])

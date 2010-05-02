@@ -31,9 +31,9 @@
 #include <string.h>
 #include <algorithm>
 
-#include "funcs.h"
+#include <data/funcs.h>
 #include "selfile.h"
-#include "image.h"
+#include <data/image.h>
 
 /*****************************************************************************/
 /* SEL FILE LINE                                                 */
@@ -321,7 +321,7 @@ void SelFile::write(const FileName &sel_name)
     if (strcmp(sel_name.c_str(), "") != 0)
         fn_sel = sel_name;
     // Don't use sel_name=="" because it wastes memory
-
+#ifdef NEVEREVERROB
     if (sel_name.find(IMAGIC_TAG) == 0)
     {
         // Write Imagic selfile
@@ -340,6 +340,7 @@ void SelFile::write(const FileName &sel_name)
             delete(*i);
     }
     else
+#endif
     {
         // Write Xmipp selfile
         // Open file

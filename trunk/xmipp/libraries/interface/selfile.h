@@ -28,8 +28,8 @@
 #include <string>
 #include <vector>
 
-#include "funcs.h"
-#include "image.h"
+#include <data/funcs.h>
+#include <data/image.h>
 
 // Forward declaration
 class SelFile;

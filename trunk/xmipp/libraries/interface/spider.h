@@ -33,7 +33,7 @@
 
 #include <data/funcs.h>
 //include <data/selfile.h>
-#include <data/docfile.h>
+#include <interface/docfile.h>
 #include <data/volume.h>
 #include <data/image.h>
 

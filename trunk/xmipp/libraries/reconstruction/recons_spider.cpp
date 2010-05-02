@@ -26,7 +26,7 @@
 
 #include <fstream>
 
-#include <data/docfile.h>
+#include <interface/docfile.h>
 #include <interface/spider.h>
 
 #include "recons_spider.h"
