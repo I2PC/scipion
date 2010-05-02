@@ -25,7 +25,6 @@
 
 #include <data/args.h>
 #include <data/image.h>
-#include <data/selfile.h>
 #include <data/metadata.h>
 
 void Usage();

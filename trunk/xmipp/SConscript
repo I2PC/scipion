@@ -404,7 +404,7 @@ ReconsSources = [
 #    'ctf_correct_phase.cpp',
 #    'ctf_estimate_from_micrograph.cpp',
 #    'ctf_group.cpp',
-#    'denoise.cpp',
+    'denoise.cpp',
 #    'detect_missing_wedge.cpp',
 #    'detect_structures.cpp',
 #    'directions.cpp',
@@ -548,7 +548,7 @@ AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
 #AddXmippProgram('convert_voxels22blobs', ['XmippRecons'])
 #AddXmippProgram('convert_tia2raw')
 AddXmippProgram('correct_bfactor', ['XmippRecons'])
-#AddXmippProgram('correlation')
+AddXmippProgram('correlation')
 #AddXmippProgram('crystal_angular_projection_matching',	['XmippRecons'])
 #AddXmippProgram('crystal_aph2img', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('crystal_create_surface', ['XmippRecons'])
@@ -567,7 +567,7 @@ AddXmippProgram('correct_bfactor', ['XmippRecons'])
 #AddXmippProgram('ctf_profile')
 #AddXmippProgram('ctf_group', ['XmippRecons'])
 #AddXmippProgram('common_lines', ['XmippRecons'])
-#AddXmippProgram('denoise', ['XmippRecons'])
+AddXmippProgram('denoise', ['XmippRecons'])
 #AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
 #AddXmippProgram('docfile_append')
@@ -576,13 +576,13 @@ AddXmippProgram('correct_bfactor', ['XmippRecons'])
 #AddXmippProgram('filter_projections', ['XmippRecons'])
 #AddXmippProgram('find_center3d')
 #AddXmippProgram('foms_evaluate', ['XmippRecons'])
-#AddXmippProgram('fourier_filter', ['XmippRecons'])
-#AddXmippProgram('fourier_transform')
-#AddXmippProgram('header_apply')
-#AddXmippProgram('header_assign')
+AddXmippProgram('fourier_filter', ['XmippRecons'])
+AddXmippProgram('fourier_transform')
+AddXmippProgram('header_apply')
+AddXmippProgram('header_assign')
 AddXmippProgram('header_extract')
-#AddXmippProgram('header_print')
-#AddXmippProgram('header_reset')
+AddXmippProgram('header_print')
+AddXmippProgram('header_reset')
 #AddXmippProgram('histogram')
 #AddXmippProgram('make_spectra', ['XmippRecons'])
 #AddXmippProgram('mask')
