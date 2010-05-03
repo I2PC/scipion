@@ -421,7 +421,7 @@ ReconsSources = [
 ##    'ml_align3d.cpp',
 #    'mlf_align2d.cpp',
 #    'ml_refine3d.cpp',
-#    'ml_tomo.cpp',
+##    'ml_tomo.cpp',
     'nma_alignment.cpp',
 #    'phantom_create_micrograph.cpp',
 #    'phantom_create_random.cpp',
@@ -430,7 +430,7 @@ ReconsSources = [
 #    'projectTomography.cpp',
 #    'project_crystal.cpp',
 #    'projection_real_shears.cpp',
-    'psd_enhance.cpp'
+    'psd_enhance.cpp',
 #    'psd_sort.cpp',
 #    'radon.cpp',
 #    'recons_misc.cpp',
@@ -448,6 +448,7 @@ ReconsSources = [
 ##   'virus_vertex',
 #    'volume_foms.cpp',
 #    'volume_labelling.cpp'
+     'dummy.cpp'
 ]
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
@@ -461,8 +462,8 @@ ReconsInterfaceSources = [
 #    'im_unbend.cpp',
 #    'phantom_test_reconstruction.cpp',
 #    'project.cpp',
-     'recons_spider.cpp'
-]
+     'recons_spider.cpp',
+     'dummy1.cpp']
 
 #remove dinamic mpi library since it is very problematic
 # ReconstrunctionMPI
@@ -530,7 +531,7 @@ AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
 #AddXmippProgram('classify_pca', ['XmippClassif'])
 #AddXmippProgram('classify_project_pca', ['XmippClassif'])
 #AddXmippProgram('classify_sammon_projection', ['XmippClassif'])
-AddXmippProgram('classify_som',['XmippClassif'])
+#AddXmippProgram('classify_som',['XmippClassif'])
 #AddXmippProgram('convert_data2descr', ['XmippClassif'])
 #AddXmippProgram('convert_data2img', ['XmippClassif'])
 #AddXmippProgram('convert_data2pdb', ['XmippClassif'])
@@ -664,7 +665,6 @@ AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
 AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
 # AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
-#AddBatch('move_along_NMAmode', 'applications/scripts/move_along_NMAmode','.pl')
 
 # Protocols
 AddProtocol('arg.py', 'applications/scripts/protocols')
@@ -843,11 +843,11 @@ if int(env['gui']):
         AddQtProgram(name, 'applications/programs/' + name, '*.cpp', [], mocs,
     	    finalIncludePath, finalLibPath, finalLibs, [], [])
 
-    AddXmippQtProgram('edit')
-    AddXmippQtProgram('ctf_view', [], ['XmippRecons'])
-    AddXmippQtProgram('micrograph_mark', ['popup_menu_mark.h'])
-    AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
-    AddXmippQtProgram('mask_design', [], ['XmippClassif'])
+#    AddXmippQtProgram('edit')
+#    AddXmippQtProgram('ctf_view', [], ['XmippRecons'])
+#    AddXmippQtProgram('micrograph_mark', ['popup_menu_mark.h'])
+#    AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
+#    AddXmippQtProgram('mask_design', [], ['XmippClassif'])
 
 if int(env['matlab']):
     import os
