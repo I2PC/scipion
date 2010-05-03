@@ -430,7 +430,7 @@ ReconsSources = [
 #    'projectTomography.cpp',
 #    'project_crystal.cpp',
 #    'projection_real_shears.cpp',
-    'psd_enhance.cpp',
+    'psd_enhance.cpp'
 #    'psd_sort.cpp',
 #    'radon.cpp',
 #    'recons_misc.cpp',
@@ -448,7 +448,6 @@ ReconsSources = [
 ##   'virus_vertex',
 #    'volume_foms.cpp',
 #    'volume_labelling.cpp'
-     'dummy.cpp'
 ]
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
@@ -462,8 +461,8 @@ ReconsInterfaceSources = [
 #    'im_unbend.cpp',
 #    'phantom_test_reconstruction.cpp',
 #    'project.cpp',
-     'recons_spider.cpp',
-     'dummy1.cpp']
+     'recons_spider.cpp'
+]
 
 #remove dinamic mpi library since it is very problematic
 # ReconstrunctionMPI
