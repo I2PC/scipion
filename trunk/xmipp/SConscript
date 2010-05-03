@@ -475,8 +475,8 @@ ReconsInterfaceSources = [
 
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
-#AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
-#    ['#libraries',  '#'],['lib'],['XmippExternal','XmippData'])
+AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
+    ['#libraries',  '#'],['lib'],['XmippExternal','XmippData'])
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
