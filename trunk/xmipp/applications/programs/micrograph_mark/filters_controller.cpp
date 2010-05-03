@@ -83,7 +83,7 @@ void QtFiltersController::applyFilters(QImage *_img)
     if (__filterList.size() == 0) return;
 
     QtImageConverter  converter;
-    Image            *xmippImg;
+    Image<double>   (*xmippImg);
     QImage           *qtImg;
 
     xmippImg = converter.qt2xmipp(_img);

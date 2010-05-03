@@ -161,29 +161,31 @@ public:
     int isParticle(const Matrix1D<double> &new_features, double &cost)
     {
         
-        int retval;
+        MultidimArray<double> features(new_features);
+
+    	int retval;
         if (__bayesClassifier==0)
         {
-            if (__bayesNet->doInference(new_features,cost)==0)
+            if (__bayesNet->doInference(features,cost)==0)
                 retval=1;
         }
         else
         {
-            Matrix1D<int> votes;
-            __bayesEnsembleNet->doInference(new_features,cost,votes);
+            MultidimArray<int> votes;
+            __bayesEnsembleNet->doInference(features,cost,votes);
             retval=votes(0);
         }
         return retval;
     }
     
     //init the naive bayesian network
-    void initNaiveBayes(const std::vector < Matrix2D<double> > 
-			&features, const Matrix1D<double> &probs,
+    void initNaiveBayes(const std::vector < MultidimArray<double> >
+			&features, const MultidimArray<double> &probs,
                         int discreteLevels, double penalization);
 
     //init the naive bayesian network
-    void initNaiveBayesEnsemble(const std::vector < Matrix2D<double> > 
-			&features, const Matrix1D<double> &probs,
+    void initNaiveBayesEnsemble(const std::vector < MultidimArray<double> >
+			&features, const MultidimArray<double> &probs,
                         int discreteLevels, double penalization,
                         int numberOfClassifiers,
                         double samplingFeatures, double samplingIndividuals,
@@ -236,11 +238,11 @@ public:
     std::vector<Particle>      __auto_candidates;
     std::vector<Particle>      __rejected_particles;
     bool                       __is_model_loaded;
-    std::vector < Matrix2D<int> * >    __mask_classification;
-    std::vector < Matrix1D<int> * >    __radial_val;
-    std::vector < Matrix1D<double> * > __sector;
-    std::vector < Matrix1D<double> * > __ring;
-    std::vector < Matrix1D<int> * >    __Nsector;
+    std::vector < MultidimArray<int> * >    __mask_classification;
+    std::vector < MultidimArray<int> * >    __radial_val;
+    std::vector < MultidimArray<double> * > __sector;
+    std::vector < MultidimArray<double> * > __ring;
+    std::vector < MultidimArray<int> * >    __Nsector;
 public:
     /// Empty constructor
     AutoParticlePicking(Micrograph *_m);
@@ -276,13 +278,13 @@ public:
     // a reduced version of a piece in the micrograph)
     // (0,0) is the top-left corner
     // Returns true if the vector is successfully built
-    bool build_vector(const Matrix2D<double> &piece,
-        const Matrix2D<double> &original_piece,
+    bool build_vector(const MultidimArray<double> &piece,
+        const MultidimArray<double> &original_piece,
         int _x, int _y, Matrix1D<double> &_result);
 
     // Get a piece of the micrograph centered at position x,y (if possible)
     // the position of (x,y) in the piece is returned in (posx, posy)
-    void get_centered_piece(Matrix2D<double> &piece,
+    void get_centered_piece(MultidimArray<double> &piece,
         int _x, int _y, int &_posx, int &_posy);
 
     // Get a piece whose top-left corner is at the desired position (if possible)
@@ -295,7 +297,7 @@ public:
     // right and bottom boundaries of the micrograph, where the pieces
     // need to be shifted in order to fit with the required size.
     // The overlap parameter defines what piece overlap we want.
-    bool get_corner_piece(Matrix2D<double> &piece,
+    bool get_corner_piece(MultidimArray<double> &piece,
         int _top, int _left, int _skip_y,
         int &_next_skip_x, int &_next_skip_y, int &_next_top,
         int &_next_left, int overlap, bool copyPiece);
@@ -304,16 +306,16 @@ public:
     // Returns true, if successful. False if unsuccessful (skip this piece)
     // Usually, it is unsuccessful if the denoising fails to work because
     // some "weird" features of the piece
-    bool prepare_piece(Matrix2D<double> &piece,
-        Matrix2D<double> &original_piece);
+    bool prepare_piece(MultidimArray<double> &piece,
+        MultidimArray<double> &original_piece);
 
     //To get the neighbours of the particle at position (x,y) in the micrograph
     // (with actual coordinates in the piece posx,posy)
     // and their positions in the piece image
-    void find_neighbour(const Matrix2D<double> &piece,
+    void find_neighbour(const MultidimArray<double> &piece,
                         std::vector<int> &_idx, int _index,
                         int _x, int _y,
-                        int _posx, int _posy, Matrix1D<char> &_visited,
+                        int _posx, int _posy, MultidimArray<char> &_visited,
                         std::vector< Matrix1D<int> > &_nbr);
 
     // Automatically Select Particles
@@ -331,7 +333,7 @@ public:
     // Initialize _x,_y to 0,0 to scan the full piece (even if there are skips).
     // The overlap parameter defines what particle overlap we want.
     bool get_next_scanning_pos(
-        const Matrix2D<double> &piece,
+        const MultidimArray<double> &piece,
         int &_x, int &_y, int _skip_x, int _skip_y, int overlap);
 
     // Run over the list sorted by distances. If two particles are within
@@ -357,11 +359,11 @@ public:
 
     // Get Features of the classification model
     void produceFeatures(const Classification_model &_model,
-        std::vector < Matrix2D<double> > &_features);
+        std::vector < MultidimArray<double> > &_features);
 
     // Get classes probabilities
     void produceClassesProbabilities(const Classification_model &_model,
-        Matrix1D<double> &probabilities);
+        MultidimArray<double> &probabilities);
     
     // Get false positives automatically selected
     void getAutoFalsePositives(Classification_model &_training_model);

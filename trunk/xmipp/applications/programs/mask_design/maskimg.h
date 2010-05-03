@@ -1837,7 +1837,7 @@ class maskImg : public QWidget
     QPixmap pmScaled;  // the scaled pixmap
 public:
     maskImg(QWidget *parent = 0, const char *name = 0, int wFlags = 0);
-    maskImg(QWidget *parent = 0, ImageT<double> *_image = 0, maskType _typeOfMask = CIRCLE, const char *name = 0, int wFlags = 0);
+    maskImg(QWidget *parent = 0, Image<double> *_image = 0, maskType _typeOfMask = CIRCLE, const char *name = 0, int wFlags = 0);
     maskImg(QWidget *parent = 0, QImage *_image = 0, maskType _typeOfMask = CIRCLE, const char *name = 0, int wFlags = 0);
     ~maskImg();
 
@@ -1845,7 +1845,7 @@ public:
     bool        apply_geo;
     std::string saveasname;
     bool loadImage(const char *fileName);
-    Image xmippImage;    // Xmipp Image
+    Image<double> xmippImage;    // Xmipp Image
 
 protected:
     void paintEvent(QPaintEvent *);
@@ -1883,7 +1883,7 @@ private:
     int         circle, rect, ellip, squ, ring, ellipring, rectframe,
     squframe, si, polygon; // Menu item ids
     void Init();
-    bool  xmipp2Qt(ImageT<double> &_image);
+    bool  xmipp2Qt(Image<double> &_image);
     bool  Qt2xmipp(QImage _image);
     bool  showImage();
     void updateStatus();
@@ -1891,7 +1891,7 @@ private:
     int  pickx, picky;
     int  clickx, clicky;
     static  maskImg* other;
-    Image       mask;
+    Image<double>       mask;
     maskType    typeOfMask;
     int         cx, cy, w, h, KEYevent;
     maskFigure* theMaskFigure;

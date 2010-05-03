@@ -130,12 +130,12 @@ int main(int argc, char **argv)
         {
             app=new QApplication(argc, argv);
             if (fnRawTilted == "")
+            {
                 mainWidget = new QtMainWidgetMark(&m);
-            else
-                mainWidget = new QtMainWidgetMark(&m, &mTilted);
-            // Sjors 26apr2010: always set autoPicking to prevent problems with tilt pairs...
-            mainWidget->untilted_widget()->
-                setAutoParticlePicking(autoPicking);
+                mainWidget->untilted_widget()->
+                    setAutoParticlePicking(autoPicking);
+            }
+            else mainWidget = new QtMainWidgetMark(&m, &mTilted);
         }
 
         // Check if the PSDs must be shown ...................................

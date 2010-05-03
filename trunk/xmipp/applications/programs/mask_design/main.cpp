@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     {
         std::cout << "Calculating average and SD images from sel file......" << std::endl;
         SelFile SF((FileName) selname);
-        Image ave, sd;
+        Image<double> ave, sd;
         double min, max;
         SF.get_statistics(ave, sd, min, max, apply_geo);
         maskImg* w;

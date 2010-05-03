@@ -31,7 +31,6 @@
 #include <graphics/show_spectra.h>
 #include <graphics/show_som.h>
 #include <graphics/show_spectra_som.h>
-#include <graphics/show_cl2d.h>
 
 #include <qapplication.h>
 
@@ -47,14 +46,12 @@ void Usage();
 #define MODE_CTF      7
 #define MODE_PSDSEL   8
 #define MODE_CTFSEL   9
-#define MODE_CL2D    10
 
 int main(int argc, char **argv)
 {
     int numCols, numRows, mode, ifirst;
     FileName fn_dat, fn_assign, fn_assignsel;
     bool poll, apply_geo = true, common_normalization = false;
-    std::string filterSuffix;
 
     try
     {
@@ -94,12 +91,6 @@ int main(int argc, char **argv)
         {
             mode = MODE_SOM;
             ifirst = paremeterPosition(argc, argv, "-som");
-        }
-        else if (checkParameter(argc, argv, "-cl2d"))
-        {
-            mode = MODE_CL2D;
-            ifirst = paremeterPosition(argc, argv, "-cl2d");
-            filterSuffix = getParameter(argc,argv,"-filterSuffix","");
         }
         else if (checkParameter(argc, argv, "-psd"))
         {
@@ -153,7 +144,8 @@ int main(int argc, char **argv)
                             fn = fn.substr(0, fn.length() - 1);
                         if (exists(fn.c_str()))
                         {
-                            VolumeXmipp V(fn);
+                            Image<double> V;
+                            V.read(fn);
                             double maux, Maux;
                             V().computeDoubleMinMax(maux, Maux);
                             if (i == ifirst + 1)
@@ -171,9 +163,10 @@ int main(int argc, char **argv)
                 }
                 else
                 {
-                    if (mode == MODE_IMG)
+                    if (mode == MODE_IMG )
                     {
-                        ImageXmipp I(argv[i]);
+                        Image<double> I;
+                        I.read(argv[i]);
                         double maux, Maux;
                         I().computeDoubleMinMax(maux, Maux);
                         if (i == ifirst + 1)
@@ -191,31 +184,11 @@ int main(int argc, char **argv)
                     {
                         // Not implemented
                     }
-                    else if (mode == MODE_VOL)
-                    {
-                        VolumeXmipp V(argv[i]);
-                        double maux, Maux;
-                        V().computeDoubleMinMax(maux, Maux);
-                        if (i == ifirst + 1)
-                        {
-                            m = maux;
-                            M = Maux;
-                        }
-                        else
-                        {
-                            m = XMIPP_MIN(m, maux);
-                            M = XMIPP_MAX(M, Maux);
-                        }
-                    }
                     else if (mode == MODE_SPECT)
                     {
                         // Not implemented
                     }
                     else if (mode == MODE_SOM)
-                    {
-                        // Not implemented
-                    }
-                    else if (mode == MODE_CL2D)
                     {
                         // Not implemented
                     }
@@ -247,7 +220,6 @@ int main(int argc, char **argv)
                 {
                 case MODE_IMG:
                     fn = argv[i];
-                    if (fn.find("imagic:") != -1) break;
                     std::cerr << argv[i] << " is not a valid filename\n";
                     continue;
                 case MODE_PSDSEL:
@@ -275,8 +247,6 @@ int main(int argc, char **argv)
                 case MODE_SPECT:
                     continue;
                 case MODE_SOM:
-                    break;
-                case MODE_CL2D:
                     break;
                 case MODE_SPECTSOM:
                     break;
@@ -359,15 +329,6 @@ int main(int argc, char **argv)
                 showsom->show();
                 shown++;
             }
-            else if (mode == MODE_CL2D)
-            {
-                ShowCL2D *showcl2d = new ShowCL2D;
-                showcl2d->apply_geo = apply_geo;
-                showcl2d->filterSuffix = filterSuffix;
-                showcl2d->initWithFile(argv[i]);
-                showcl2d->show();
-                shown++;
-            }
             else if (mode == MODE_SPECTSOM)
             {
                 ShowSpectraSOM *showspectrasom = new ShowSpectraSOM;
@@ -404,8 +365,6 @@ void Usage()
     << "                            to see slices in that direction\n"
     << "    -spect <datafile>     : Spectra .dat file\n"
     << "    -som <SOM rootname>   : SOM images\n"
-    << "    -cl2d <CL2D rootname> : CL2D images\n"
-    << "      [-filterSuffix <s>] : Filter suffix for the CL2D\n"
     << "    -spectsom <SOM root>  : SOM spectra\n"
     << "       -din <Original.dat>: Original data\n"
     << "   [-w]                   : width (default: 10)\n"

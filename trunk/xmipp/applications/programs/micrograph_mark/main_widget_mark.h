@@ -36,6 +36,7 @@
 #endif
 
 #include <data/micrograph.h>
+#include <data/numerical_tools.h>
 
 /* Forward declarations ---------------------------------------------------- */
 class QtWidgetMicrograph;

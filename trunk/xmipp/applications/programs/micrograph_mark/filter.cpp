@@ -46,7 +46,7 @@ QtFilter::QtFilter(const Micrograph *_M)
 /* Invert Contrast  -------------------------------------------------------- */
 QString QtInvertContrastFilter::name = "Invert contrast";
 
-void QtInvertContrastFilter::apply(Image *_img)
+void QtInvertContrastFilter::apply(Image<double> *_img)
 {
     if (_img != NULL)
     {
@@ -58,7 +58,7 @@ void QtInvertContrastFilter::apply(Image *_img)
 /* Enhance Contrast  ------------------------------------------------------- */
 QString QtEnhanceContrastFilter::name = "Enhance contrast";
 
-void QtEnhanceContrastFilter::apply(Image *_img)
+void QtEnhanceContrastFilter::apply(Image<double> *_img)
 {
     if (_img != NULL)
     {
@@ -69,7 +69,7 @@ void QtEnhanceContrastFilter::apply(Image *_img)
 /* Substract background ---------------------------------------------------- */
 QString QtSubstractBackgroundFilter::name = "Substract background";
 
-void QtSubstractBackgroundFilter::apply(Image *_img)
+void QtSubstractBackgroundFilter::apply(Image<double> *_img)
 {
     if (_img != NULL)
     {
@@ -81,7 +81,7 @@ void QtSubstractBackgroundFilter::apply(Image *_img)
 /* Remove Outliers --------------------------------------------------------- */
 QString QtRemoveOutlierFilter::name = "Remove Outlier values";
 
-void QtRemoveOutlierFilter::apply(Image *_img)
+void QtRemoveOutlierFilter::apply(Image<double> *_img)
 {
     if (_img != NULL)
     {
@@ -107,15 +107,15 @@ QtLowPassFilter::QtLowPassFilter(const Micrograph *_M): QtFilter(_M)
     filter.w1 = QInputDialog::getDouble("LowPass filter", "Digital freq.(<1/2)", 0.2);
 }
 
-void QtLowPassFilter::apply(Image *_img)
+void QtLowPassFilter::apply(Image<double> *_img)
 {
     if (_img != NULL)
     {
         (*_img)().setXmippOrigin();
         filter.generate_mask((*_img)());
         filter.apply_mask_Space((*_img)());
-        FOR_ALL_ELEMENTS_IN_MATRIX2D((*_img)())
-        (*_img)(i, j) = CLIP((*_img)(i, j), 0, 255);
+        FOR_ALL_ELEMENTS_IN_ARRAY2D((*_img)())
+        (*_img)()(i, j) = CLIP((*_img)()(i, j), 0, 255);
         STARTINGX((*_img)()) = 0;
         STARTINGY((*_img)()) = 0;
     }
@@ -133,7 +133,7 @@ QtHighPassFilter::QtHighPassFilter(const Micrograph *_M): QtFilter(_M)
     filter.w1 = QInputDialog::getDouble("HighPass filter" , "Digital freq.(<1/2)", 0.2);
 }
 
-void QtHighPassFilter::apply(Image *_img)
+void QtHighPassFilter::apply(Image<double> *_img)
 {
     if (_img != NULL)
     {
