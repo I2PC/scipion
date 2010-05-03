@@ -375,18 +375,18 @@ AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'],
 ReconsSources = [
 #    'adjust_ctf.cpp',
 #    'adjust_surface.cpp',
-    'adjust_volume_grey_levels.cpp',
-    'align2d.cpp',
-    'align_tilt_pairs.cpp',
-    'analyze_cluster.cpp',
-    'angular_assign_for_tilt_series.cpp',
+#    'adjust_volume_grey_levels.cpp',
+#    'align2d.cpp',
+#    'align_tilt_pairs.cpp',
+#    'analyze_cluster.cpp',
+#    'angular_assign_for_tilt_series.cpp',
 #    'angular_assign_for_tomogram.cpp',
 #    'angular_commonline.cpp',
 #    'angular_continuous_assign.cpp',
 #    'angular_discrete_assign.cpp',
 #    'angular_distance.cpp',
 #    'angular_neighbourhood.cpp',
-    'angular_projection_matching.cpp',
+#    'angular_projection_matching.cpp',
 #    'angular_class_average.cpp',
 #    'angular_project_library.cpp',
 #    'crystal_angular_projection_matching.cpp',
@@ -395,7 +395,7 @@ ReconsSources = [
 #    'break_symmetry.cpp',
 #    'common_lines.cpp',
 #    'convert_vol2pseudo.cpp',
-    'correct_bfactor.cpp',
+#    'correct_bfactor.cpp',
 #    'create_projection_library.cpp',
 #    'crystal_create_surface.cpp',
 #    'ctf_correct_amplitude2d.cpp',
@@ -404,7 +404,7 @@ ReconsSources = [
 #    'ctf_correct_phase.cpp',
 #    'ctf_estimate_from_micrograph.cpp',
 #    'ctf_group.cpp',
-    'denoise.cpp',
+#    'denoise.cpp',
 #    'detect_missing_wedge.cpp',
 #    'detect_structures.cpp',
 #    'directions.cpp',
@@ -413,8 +413,8 @@ ReconsSources = [
 #    'evaluate_fscs.cpp',
 #    'filter_projections.cpp',
 #    'foms_evaluate.cpp',
-    'fourier_filter.cpp',
-    'make_spectra.cpp',
+    'fourier_filter.cpp'
+#    'make_spectra.cpp',
 #    'micrograph_phase_flipping.cpp',
 #    'micrograph_downsample.cpp',
 #    'ml_align2d.cpp',
@@ -422,17 +422,18 @@ ReconsSources = [
 #    'mlf_align2d.cpp',
 #    'ml_refine3d.cpp',
 ##    'ml_tomo.cpp',
-    'nma_alignment.cpp',
+#    'nma_alignment.cpp',
 #    'phantom_create_micrograph.cpp',
 #    'phantom_create_random.cpp',
-    'phantom_simulate_microscope.cpp',
+#    'phantom_simulate_microscope.cpp',
 #    'precompute_sampling.cpp',
 #    'projectTomography.cpp',
 #    'project_crystal.cpp',
 #    'projection_real_shears.cpp',
-    'psd_enhance.cpp'
+#    'psd_enhance.cpp'
 #    'psd_sort.cpp',
 #    'radon.cpp',
+#    'range_adjust.cpp',
 #    'recons_misc.cpp',
 #    'reconstruct_art.cpp',
 #    'reconstruct_wbp.cpp',
@@ -447,11 +448,12 @@ ReconsSources = [
 #    'symmetrize.cpp',
 ##   'virus_vertex',
 #    'volume_foms.cpp',
-#    'volume_labelling.cpp'
+#    'volume_labelling.cpp',
+#    'volume_segment.cpp'
 ]
 
-AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
-           ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
+#AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
+#           ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
 
 # ReconsInterface
 ReconsInterfaceSources = [
@@ -461,7 +463,7 @@ ReconsInterfaceSources = [
 #    'im_unbend.cpp',
 #    'phantom_test_reconstruction.cpp',
 #    'project.cpp',
-     'recons_spider.cpp'
+#     'recons_spider.cpp'
 ]
 
 #remove dinamic mpi library since it is very problematic
@@ -473,21 +475,21 @@ ReconsInterfaceSources = [
 
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
-AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
-    ['#libraries',  '#'],['lib'],['XmippExternal','XmippData'])
+#AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
+#    ['#libraries',  '#'],['lib'],['XmippExternal','XmippData'])
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
-AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
-    ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
+#AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
+#    ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
 
 # Recons Interface
-AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
-           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
+#AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
+#           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
 
 # OldXmipp
 OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
-AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
+#AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 
 # --- Programs
 
@@ -500,26 +502,26 @@ AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 # Src (apps)
 
 AddXmippProgram('add_noise')
-AddXmippProgram('adapt_for_spider', ['XmippInterface'])
-AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
-AddXmippProgram('align2d', ['XmippRecons'])
-AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
-AddXmippProgram('align_volumes')
-AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
+#AddXmippProgram('adapt_for_spider', ['XmippInterface'])
+#AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
+#AddXmippProgram('align2d', ['XmippRecons'])
+#AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
+#AddXmippProgram('align_volumes')
+#AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
 #AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
 #AddXmippProgram('angular_class_average', ['XmippRecons'])
 #AddXmippProgram('angular_commonline', ['XmippRecons'])
 #AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
 #AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
 #AddXmippProgram('angular_distance', ['XmippRecons'])
-AddXmippProgram('angular_distribution_show', ['XmippInterface'])
+#AddXmippProgram('angular_distribution_show', ['XmippInterface'])
 #AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
-AddXmippProgram('angular_projection_matching', ['XmippRecons'])
+#AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 #AddXmippProgram('angular_project_library', ['XmippRecons'])
-AddXmippProgram('average')
+#AddXmippProgram('average')
 #AddXmippProgram('break_symmetry', ['XmippRecons'])
-AddXmippProgram('center_image')
-AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
+#AddXmippProgram('center_image')
+#AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
 #AddXmippProgram('classify_batch_som', ['XmippClassif'])
 #AddXmippProgram('classify_CL2D_sort_images', ['XmippRecons'])
 #AddXmippProgram('classify_fcmeans', ['XmippClassif'])
@@ -546,8 +548,8 @@ AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
 #AddXmippProgram('convert_vol2pseudo', ['XmippRecons'])
 #AddXmippProgram('convert_voxels22blobs', ['XmippRecons'])
 #AddXmippProgram('convert_tia2raw')
-AddXmippProgram('correct_bfactor', ['XmippRecons'])
-AddXmippProgram('correlation')
+#AddXmippProgram('correct_bfactor', ['XmippRecons'])
+#AddXmippProgram('correlation')
 #AddXmippProgram('crystal_angular_projection_matching',	['XmippRecons'])
 #AddXmippProgram('crystal_aph2img', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('crystal_create_surface', ['XmippRecons'])
@@ -557,7 +559,7 @@ AddXmippProgram('correlation')
 #AddXmippProgram('crystal_skew')
 #AddXmippProgram('crystal_unbend', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('ctf_correct_amplitude2d', ['XmippRecons'])
-##AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
+#AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
 #AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
 #AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
 #AddXmippProgram('ctf_correct_phase', ['XmippRecons'])
@@ -566,7 +568,7 @@ AddXmippProgram('correlation')
 #AddXmippProgram('ctf_profile')
 #AddXmippProgram('ctf_group', ['XmippRecons'])
 #AddXmippProgram('common_lines', ['XmippRecons'])
-AddXmippProgram('denoise', ['XmippRecons'])
+#AddXmippProgram('denoise', ['XmippRecons'])
 #AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
 #AddXmippProgram('docfile_append')
@@ -575,22 +577,22 @@ AddXmippProgram('denoise', ['XmippRecons'])
 #AddXmippProgram('filter_projections', ['XmippRecons'])
 #AddXmippProgram('find_center3d')
 #AddXmippProgram('foms_evaluate', ['XmippRecons'])
-AddXmippProgram('fourier_filter', ['XmippRecons'])
-AddXmippProgram('fourier_transform')
-AddXmippProgram('header_apply')
-AddXmippProgram('header_assign')
-AddXmippProgram('header_extract')
-AddXmippProgram('header_print')
-AddXmippProgram('header_reset')
+#AddXmippProgram('fourier_filter', ['XmippRecons'])
+#AddXmippProgram('fourier_transform')
+#AddXmippProgram('header_apply')
+#AddXmippProgram('header_assign')
+#AddXmippProgram('header_extract')
+#AddXmippProgram('header_print')
+#AddXmippProgram('header_reset')
 #AddXmippProgram('histogram')
-AddXmippProgram('make_spectra', ['XmippRecons'])
+#AddXmippProgram('make_spectra', ['XmippRecons'])
 #AddXmippProgram('mask')
 #AddXmippProgram('micrograph_denoise', ['XmippRecons'])
 #AddXmippProgram('micrograph_downsample', ['XmippRecons'])
 #AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
-AddXmippProgram('micrograph_scissor')
+#AddXmippProgram('micrograph_scissor')
 #AddXmippProgram('micrograph_window')
-AddXmippProgram('mirror')
+#AddXmippProgram('mirror')
 #AddXmippProgram('ml_align2d', ['XmippRecons'])
 ##AddXmippProgram('ml_align3d', ['XmippRecons'])
 #AddXmippProgram('mlf_align2d', ['XmippRecons'])
@@ -599,16 +601,16 @@ AddXmippProgram('mirror')
 #AddXmippProgram('mlf_refine3d', ['XmippRecons'])
 ##AddXmippProgram('mlf_tomo', ['XmippRecons'])
 ##AddXmippProgram('ml_tomo', ['XmippRecons'])
-AddXmippProgram('morphology')
-AddXmippProgram('nma_alignment', ['XmippRecons'])
-AddXmippProgram('normalize')
+#AddXmippProgram('morphology')
+#AddXmippProgram('nma_alignment', ['XmippRecons'])
+#AddXmippProgram('normalize')
 #AddXmippProgram('operate')
 #AddXmippProgram('pdb_dictionary', ['XmippRecons_Interface','XmippRecons','XmippClassif','XmippInterface'])
 #AddXmippProgram('pdb_project_on_dictionary', ['XmippRecons','XmippClassif'])
 #AddXmippProgram('phantom_create', ['XmippRecons'])
 #AddXmippProgram('phantom_create_micrograph', ['XmippRecons'])
 #AddXmippProgram('phantom_create_random', ['XmippRecons'])
-AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
+#AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
 #AddXmippProgram('phantom_test_reconstruction', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('phantom_transform', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('precompute_sampling', ['XmippRecons'])
@@ -616,9 +618,9 @@ AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
 #AddXmippProgram('project_tomography', ['XmippRecons'])
 #AddXmippProgram('projection_real_shears', ['XmippRecons'])
 #AddXmippProgram('project_xr')
-AddXmippProgram('psd_enhance', ['XmippRecons'])
+#AddXmippProgram('psd_enhance', ['XmippRecons'])
 #AddXmippProgram('psd_sort', ['XmippRecons'])
-AddXmippProgram('range_adjust')
+#AddXmippProgram('range_adjust')
 #AddXmippProgram('reconstruct_art', ['XmippRecons'])
 #AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 #AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
@@ -627,24 +629,24 @@ AddXmippProgram('range_adjust')
 #AddXmippProgram('reverse_endian')
 #AddXmippProgram('rotate')
 #AddXmippProgram('scale')
-AddXmippProgram('scale_pyramid')
+#AddXmippProgram('scale_pyramid')
 #AddXmippProgram('selfile_compare')
-AddXmippProgram('metadata_split')
+#AddXmippProgram('metadata_split')
 #AddXmippProgram('selfile_statistics')
 #AddXmippProgram('selfile_subset')
 #AddXmippProgram('separate_objects')
 #AddXmippProgram('series_remove_fluctuations', ['XmippRecons'])
 #AddXmippProgram('shift')
 #AddXmippProgram('sort_by_statistics')
-AddXmippProgram('statistics')
+#AddXmippProgram('statistics')
 #AddXmippProgram('convert_stack22images')
 #AddXmippProgram('symmetrize', ['XmippRecons'])
 #AddXmippProgram('threshold')
-AddXmippProgram('try_symmetry')
+#AddXmippProgram('try_symmetry')
 ##AddXmippProgram('test_sql', ['XmippRecons'])
 ##AddXmippProgram('virus_vertex', ['XmippRecons'])
 #AddXmippProgram('volume_segment')
-AddXmippProgram('window')
+#AddXmippProgram('window')
 
 # --- Scripts
 
@@ -707,11 +709,11 @@ AddProtocol('protocol_rotspectra.py', 'applications/scripts/protocols')
 AddProtocol('protocol_setup.py', 'applications/scripts/protocols')
 
 # MPI
-if int(env['mpi']):
+#if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
+#    AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_common_lines', ['XmippRecons'])
@@ -725,7 +727,7 @@ if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_run', ['XmippRecons'])
+#   AddXmippMPIProgram('mpi_run', ['XmippRecons'])
 
 # TIFF
 # Tiff2Raw

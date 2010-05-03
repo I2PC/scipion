@@ -24,7 +24,7 @@
 #include "training_vector.h"
 
 #include <data/funcs.h>
-#include <data/matrix2d.h>
+#include <data/multidim_array.h>
 
 /**@defgroup RMClasess RM classes
    @ingroup ClassificationLibrary */
@@ -84,7 +84,7 @@ public:
 
 private:
     std::string matdist; // Matrix distribution (sparse or gaussian)
-    Matrix2D<double> RM;
+    MultidimArray<double> RM;
     xmippBaseListener* listener;   // Listener class
 
 

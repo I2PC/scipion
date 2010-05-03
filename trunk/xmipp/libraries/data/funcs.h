@@ -148,7 +148,7 @@ public:
  *  double tablex1 = kb.i0win_tab(delx-inxold+3);
  * @endcode
  */
-class KaiserBessel 
+class KaiserBessel
 {
 protected:
     double alpha, v, r; /** Kaiser-Bessel parameters */
@@ -160,27 +160,31 @@ protected:
     double dtable; /** table spastd::cing */
     double alphar; /** alpha*r */
     double fac; /** 2*pi*alpha*r*v */
-    double vadjust; 
+    double vadjust;
     double facadj; /** 2*pi*alpha*r*vadjust */
     virtual void build_I0table(); /** Tabulate I0 window for speed */
     double fltb;
 
 public:
     /** Empty constructor */
-    KaiserBessel() { }
+    KaiserBessel()
+    { }
 
     /** Constructor with parameters */
     KaiserBessel(double alpha_, int K, double r_,
-		 double v_, int N_, double vtable_=0., 
-		 int ntable_ = 5999);
+                 double v_, int N_, double vtable_=0.,
+                 int ntable_ = 5999);
 
     /** Destructor */
-    virtual ~KaiserBessel() {};
+    virtual ~KaiserBessel()
+    {}
+    ;
 
     /** Compute the maximum error in the table */
     double I0table_maxerror();
-    std::vector<double> dump_table() {
-	return i0table;
+    std::vector<double> dump_table()
+    {
+        return i0table;
     }
 
     /** Kaiser-Bessel Sinh window function */
@@ -190,14 +194,21 @@ public:
     virtual double i0win(double x) const;
 
     /** Kaiser-Bessel I0 window function (uses table lookup) */
-    inline double i0win_tab(double x) const {
-	double xt;
-	if(x<0.) xt = -x*fltb+0.5; else xt = x*fltb+0.5;
-	return i0table[ (int) xt];
+    inline double i0win_tab(double x) const
+    {
+        double xt;
+        if(x<0.)
+            xt = -x*fltb+0.5;
+        else
+            xt = x*fltb+0.5;
+        return i0table[ (int) xt];
     }
 
     /** Return the size of the I0 window */
-    int get_window_size() const { return K; }
+    int get_window_size() const
+    {
+        return K;
+    }
 };
 
 /** Solve second degree equation
@@ -239,7 +250,7 @@ double tstudent1D(double x, double df, double sigma, double mu = 0);
  * This function returns the value of the CDF of a univariate gaussian function at the
  * point x.
  */
-double cdf_gauss(double x); 
+double cdf_gauss(double x);
 
 /** Cumulative distribution function for a t-distribution
  * @ingroup NumericalFunctions
@@ -765,6 +776,67 @@ public:
      */
     FileName get_root() const;
 
+    /** Change all characters for lowercases
+     * @ingroup FilenameComposing
+     *
+     * @code
+     * FileName fn_proj("g1tA00001");
+     * fn_proj = fn_proj.to_lowercase(); // fn_proj = "g1ta00001"
+     * @endcode
+     */
+    FileName to_lowercase() const;
+
+    /** Change all characters for uppercases
+     * @ingroup FilenameComposing
+     *
+     * @code
+     * FileName fn_proj("g1tA00001");
+     * fn_proj = fn_proj.to_uppercase(); // fn_proj = "G1Ta00001"
+     * @endcode
+     */
+    FileName to_uppercase() const;
+
+    /** Check whether the filename contains the argument substring
+     *
+     * @code
+     * FileName fn_proj("g1ta00001.raw#d=f");
+     * if (fn_proj.contains("raw) )  // true
+     */
+    bool contains(const std::string& str) const;
+
+    /** Return substring before first instance of argument (as in Bsoft)
+     *
+      * @code
+     * FileName fn_proj("g1ta00001.raw#d=f");
+     * fn_proj = fn_proj.before_first_of("#"); // fn_proj = "g1ta00001.raw"
+     */
+    FileName before_first_of(const std::string& str) const;
+
+    /** Return substring before last instance of argument (as in Bsoft)
+     *
+      * @code
+     * FileName fn_proj("g1ta00001.raw#d=f");
+     * fn_proj = fn_proj.before_last_of("#"); // fn_proj = "g1ta00001.raw"
+     */
+    FileName before_last_of(const std::string& str) const;
+
+
+    /** Return substring after first instance of argument (as in Bsoft)
+     *
+      * @code
+     * FileName fn_proj("g1ta00001.raw#d=f");
+     * fn_proj = fn_proj.after_first_of("#"); // fn_proj = "d=f"
+     */
+    FileName after_first_of(const std::string& str) const;
+
+    /** Return substring after last instance of argument (as in Bsoft)
+     *
+      * @code
+     * FileName fn_proj("g1ta00001.raw#d=f");
+     * fn_proj = fn_proj.after_last_of("#"); // fn_proj = "d=f"
+     */
+    FileName after_last_of(const std::string& str) const;
+
     /** Get the base name from a filename
      * @ingroup FilenameComposing
      */
@@ -895,6 +967,41 @@ public:
      */
     FileName remove_all_extensions() const;
 
+    /** Get image format identifier (as in Bsoft)
+     * @ingroup FilenameManipulators
+     *
+     * @code
+     * fn_proj = "g1ta00001.xmp";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "xmp"
+     * fn_proj = "g1ta00001.nor:spi";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "spi"
+     * fn_proj = "input.file#d=f#x=120,120,55#h=1024";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "raw"
+     * @endcode
+     */
+    FileName get_file_format() const;
+
+    /** Is this file a MetaData file?
+     * @ingroup FilenameManipulators
+     * Returns true if the get_file_format extension == "sel", "doc" or "xmd"
+     * Otherwise, the file is opened and checked for the occurence of "XMIPP_3 *" in its first line
+     */
+    bool isMetaData() const;
+
+    /** Clean image FileName (as in Bsoft)
+     * @ingroup FilenameManipulators
+     *
+     * @code
+     * fn_proj = "g1ta00001.xmp";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "g1ta00001.xmp"
+     * fn_proj = "g1ta00001.nor:spi";
+     * fn_proj = fn_proj.clean_image_name(); // fn_proj == "g1ta00001.nor"
+     * fn_proj = "input.file#d=f#x=120,120,55#h=1024";
+     * fn_proj = fn_proj.clean_image_name(); // fn_proj == "input.file"
+     * @endcode
+     */
+    //FileName clean_image_name() const;
+
     /** Substitute ext1 by ext2
      * @ingroup FilenameManipulators
      *
@@ -912,7 +1019,7 @@ public:
      * @endcode
      */
     FileName substitute_extension(const std::string& ext1,
-        const std::string& ext2) const;
+                                  const std::string& ext2) const;
 
     /** Without a substring
      * @ingroup FilenameManipulators
@@ -949,11 +1056,12 @@ public:
  *
  * This function is not ported to Python.
  */
-class FileNameComparison {
+class FileNameComparison
+{
 public:
     bool operator ()(const FileName &fn1, const FileName &fn2)
     {
-    	return fn1<fn2;
+        return fn1<fn2;
     }
 };
 
@@ -1413,6 +1521,20 @@ size_t FWRITE(const void* src,
 
 void ByteSwap(unsigned char* b, int n);
 
+/************************************************************************
+@Function: swapbytes from bsoft
+@Description:
+        Swaps bytes.
+@Algorithm:
+        Byte swapping is done in place.
+@Arguments:
+        char* v                         a pointer to the bytes.
+        unsigned long n         the number of bytes to swap.
+@Returns:
+        void                            -.
+**************************************************************************/
+void swapbytes(char* v, unsigned long n);
+
 /** Returns 1 if machine is big endian else 0
  * @ingroup LittleBigEndian
  */
@@ -1645,16 +1767,4 @@ private:
                                       (double) MaxInteger);
     }
 };
-
-/** Divides a number into most equally groups
- *
- * For example you want to distribute N jobs between M workers
- * so each worker will have N/M jobs and some of them(N % M first)
- * will have N/M + 1 jobs
- * So for the worker 'rank' will be computed the first and last job to do
- * Return the number of jobs assigned, that could be N/M + 1 or N/M
- *
- */
-int divide_equally(int N, int size, int rank, int &first, int &last);
-
 #endif

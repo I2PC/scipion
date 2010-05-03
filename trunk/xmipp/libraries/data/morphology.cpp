@@ -29,7 +29,7 @@
 #include <vector>
 
 /* Dilate/Erode 2D steps --------------------------------------------------- */
-void dilate2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
+void dilate2D_step(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                    int count)
 {
     int sum = 0;
@@ -62,7 +62,7 @@ void dilate2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
         }
 }
 
-void erode2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
+void erode2D_step(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                   int count)
 {
     int sum = 0;
@@ -96,10 +96,10 @@ void erode2D_step(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
 }
 
 /* Dilate/Erode 2D --------------------------------------------------------- */
-void dilate2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig, int count,
+void dilate2D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig, int count,
               int size)
 {
-    Matrix2D<double> tmp;
+    MultidimArray<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -110,10 +110,10 @@ void dilate2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig, int c
     }
 }
 
-void erode2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig, int count,
+void erode2D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig, int count,
              int size)
 {
-    Matrix2D<double> tmp;
+    MultidimArray<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -125,10 +125,10 @@ void erode2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig, int co
 }
 
 /* Opening and closing 2D -------------------------------------------------- */
-void closing2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
+void closing2D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                int count, int size)
 {
-    Matrix2D<double> tmp;
+    MultidimArray<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -144,10 +144,10 @@ void closing2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
     }
 }
 
-void opening2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
+void opening2D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                int count, int size)
 {
-    Matrix2D<double> tmp;
+    MultidimArray<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -164,12 +164,12 @@ void opening2D(const Matrix2D<double> &in, Matrix2D<double> &out, int neig,
 }
 
 /* Border ------------------------------------------------------------------ */
-void border(const Matrix2D<double> &img, Matrix2D<double> &border)
+void border(const MultidimArray<double> &img, MultidimArray<double> &border)
 {
     /*
     border.initZeros(img);
     erode2D(img,border,8,0,1);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(border)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(border)
        border(i,j)=img(i,j)-border(i,j);
     */
     border.initZeros(img);
@@ -193,10 +193,10 @@ void border(const Matrix2D<double> &img, Matrix2D<double> &border)
 }
 
 /* Simplified Border ------------------------------------------------------- */
-void simplify_border(const Matrix2D<double> &border,
-                     Matrix2D<double> &simplified_border)
+void simplify_border(const MultidimArray<double> &border,
+                     MultidimArray<double> &simplified_border)
 {
-    Matrix2D<double> aux;
+    MultidimArray<double> aux;
     aux.initZeros(border);
     for (int i = STARTINGY(border) + 1; i <= FINISHINGY(border) - 1; i++)
         for (int j = STARTINGX(border) + 1; j <= FINISHINGX(border) - 1; j++)
@@ -238,14 +238,14 @@ void simplify_border(const Matrix2D<double> &border,
 }
 
 /* Random convex hull ------------------------------------------------------ */
-void random_convex_hull(const Matrix2D<double> &img, Matrix2D<double> &hull,
+void random_convex_hull(const MultidimArray<double> &img, MultidimArray<double> &hull,
                         long N)
 {
     hull = img;
 
     std::vector<int> full_tx, full_ty;
     // Build the list of points
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(img)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(img)
     if (img(i, j) > 0)
     {
         full_tx.push_back(j);
@@ -276,7 +276,7 @@ void random_convex_hull(const Matrix2D<double> &img, Matrix2D<double> &hull,
         fill_triangle(hull, tx, ty, 1);
     }
     /*
-    Matrix2D<double> aux;
+    MultidimArray<double> aux;
     aux.initZeros(hull);
     closing2D(hull,aux,8,0,1);
     hull=aux;
@@ -285,7 +285,7 @@ void random_convex_hull(const Matrix2D<double> &img, Matrix2D<double> &hull,
 }
 
 /* Dilate/erode 3D steps --------------------------------------------------- */
-void dilate3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
+void dilate3D_step(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                    int count)
 {
     int sum = 0;
@@ -334,7 +334,7 @@ void dilate3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
             }
 }
 
-void erode3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
+void erode3D_step(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                   int count)
 {
     int sum = 0;
@@ -390,10 +390,10 @@ void erode3D_step(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
 }
 
 /* Dilate/Erode 3D --------------------------------------------------------- */
-void dilate3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig, int count,
+void dilate3D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig, int count,
               int size)
 {
-    Matrix3D<double> tmp;
+    MultidimArray<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -404,10 +404,10 @@ void dilate3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig, int c
     }
 }
 
-void erode3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig, int count,
+void erode3D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig, int count,
              int size)
 {
-    Matrix3D<double> tmp;
+    MultidimArray<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -420,10 +420,10 @@ void erode3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig, int co
 }
 
 /* Opening/Closing 3D ------------------------------------------------------ */
-void closing3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
+void closing3D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                int count, int size)
 {
-    Matrix3D<double> tmp;
+    MultidimArray<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -439,10 +439,10 @@ void closing3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
     }
 }
 
-void opening3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
+void opening3D(const MultidimArray<double> &in, MultidimArray<double> &out, int neig,
                int count, int size)
 {
-    Matrix3D<double> tmp;
+    MultidimArray<double> tmp;
     int i;
     tmp.resize(in);
     tmp = in;
@@ -459,9 +459,9 @@ void opening3D(const Matrix3D<double> &in, Matrix3D<double> &out, int neig,
 }
 
 // Grey operations ---------------------------------------------------------
-void dilate3D(const Matrix3D<double> &in,
-              const Matrix3D<double> &structuringElement,
-              Matrix3D<double> &out)
+void dilate3D(const MultidimArray<double> &in,
+              const MultidimArray<double> &structuringElement,
+              MultidimArray<double> &out)
 {
     out.initZeros(in);
     double maxval=in.computeMax();
@@ -469,8 +469,8 @@ void dilate3D(const Matrix3D<double> &in,
         for (int ii=0; ii<YSIZE(out); ii++)
             for (int jj=0; jj<XSIZE(out); jj++)
             {
-                double maxLocal=DIRECT_VOL_ELEM(in,kk,ii,jj)+
-                    VOL_ELEM(structuringElement,0,0,0);
+                double maxLocal=DIRECT_A3D_ELEM(in,kk,ii,jj)+
+                    A3D_ELEM(structuringElement,0,0,0);
                 int k0=XMIPP_MAX(0,kk+STARTINGZ(structuringElement))-kk;
                 int kF=XMIPP_MIN(ZSIZE(out)-1,kk+FINISHINGZ(structuringElement))-kk;
                 int i0=XMIPP_MAX(0,ii+STARTINGY(structuringElement))-ii;
@@ -481,18 +481,18 @@ void dilate3D(const Matrix3D<double> &in,
                     for (int i=i0; i<=iF; i++)
                         for (int j=j0; j<=jF; j++)
                         {
-                            double val=DIRECT_VOL_ELEM(in,kk+k,ii+i,jj+j)+
-                                VOL_ELEM(structuringElement,k,i,j);
+                            double val=DIRECT_A3D_ELEM(in,kk+k,ii+i,jj+j)+
+                                A3D_ELEM(structuringElement,k,i,j);
                             maxLocal=XMIPP_MAX(maxLocal,val);
                         }
                 maxLocal=XMIPP_MIN(maxLocal,maxval);
-                DIRECT_VOL_ELEM(out,kk,ii,jj)=maxLocal;
+                DIRECT_A3D_ELEM(out,kk,ii,jj)=maxLocal;
             }
 }
 
-void erode3D(const Matrix3D<double> &in,
-              const Matrix3D<double> &structuringElement,
-              Matrix3D<double> &out)
+void erode3D(const MultidimArray<double> &in,
+              const MultidimArray<double> &structuringElement,
+              MultidimArray<double> &out)
 {
     out.initZeros(in);
     double minval=in.computeMin();
@@ -500,8 +500,8 @@ void erode3D(const Matrix3D<double> &in,
         for (int ii=0; ii<YSIZE(out); ii++)
             for (int jj=0; jj<XSIZE(out); jj++)
             {
-                double minLocal=DIRECT_VOL_ELEM(in,kk,ii,jj)-
-                    VOL_ELEM(structuringElement,0,0,0);
+                double minLocal=DIRECT_A3D_ELEM(in,kk,ii,jj)-
+                    A3D_ELEM(structuringElement,0,0,0);
                 int k0=XMIPP_MAX(0,kk+STARTINGZ(structuringElement))-kk;
                 int kF=XMIPP_MIN(ZSIZE(out)-1,kk+FINISHINGZ(structuringElement))-kk;
                 int i0=XMIPP_MAX(0,ii+STARTINGY(structuringElement))-ii;
@@ -512,22 +512,22 @@ void erode3D(const Matrix3D<double> &in,
                     for (int i=i0; i<=iF; i++)
                         for (int j=j0; j<=jF; j++)
                         {
-                            double val=DIRECT_VOL_ELEM(in,kk+k,ii+i,jj+j)-
-                                VOL_ELEM(structuringElement,k,i,j);
+                            double val=DIRECT_A3D_ELEM(in,kk+k,ii+i,jj+j)-
+                                A3D_ELEM(structuringElement,k,i,j);
                             minLocal=XMIPP_MIN(minLocal,val);
                         }
                 minLocal=XMIPP_MAX(minLocal,minval);
-                DIRECT_VOL_ELEM(out,kk,ii,jj)=minLocal;
+                DIRECT_A3D_ELEM(out,kk,ii,jj)=minLocal;
             }
 }
 
 /* Sharpening -------------------------------------------------------------- */
-void sharpening(const Matrix3D<double> &in, double width, double strength,
-    Matrix3D<double> &out)
+void sharpening(const MultidimArray<double> &in, double width, double strength,
+    MultidimArray<double> &out)
 {
     // Build the quadratic kernel
     int diameter=(int)(2*width+1);
-    Matrix3D<double> kernel(diameter,diameter,diameter);
+    MultidimArray<double> kernel(diameter,diameter,diameter);
     kernel.setXmippOrigin();
     
     double width2=width*width;
@@ -536,24 +536,24 @@ void sharpening(const Matrix3D<double> &in, double width, double strength,
     double c=minval+(maxval-minval)*strength/100;
     double a=(minval-c)/width2;
 
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(kernel)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(kernel)
     {
         double r2=k*k+i*i+j*j;
         kernel(k,i,j)=a*r2+c;
     }
     
     // Create the dilated and eroded versions
-    Matrix3D<double> dilated, eroded;
+    MultidimArray<double> dilated, eroded;
     dilate3D(in,kernel,dilated);
     erode3D(in,kernel,eroded);
-    VolumeXmipp save;
+    Image<double> save;
     save()=dilated; save.write("PPPdilated.vol");
     save()=eroded; save.write("PPPeroded.vol");
     
     // Sharpen
     out=in;
     double eps=(maxval-minval)*0.01;
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(in)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(in)
     {
         double threshold=0.5*(dilated(k,i,j)+eroded(k,i,j));
         if      (in(k,i,j)>threshold+eps)  out(k,i,j)=dilated(k,i,j);

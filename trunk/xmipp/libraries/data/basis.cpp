@@ -158,7 +158,7 @@ std::ostream & operator << (std::ostream & out, const Basis &basis)
 }
 
 // Change to voxels --------------------------------------------------------
-void Basis::changeToVoxels(GridVolume &vol_basis, Matrix3D<double> *vol_voxels,
+void Basis::changeToVoxels(GridVolume &vol_basis, MultidimArray<double> *vol_voxels,
                            int Zdim, int Ydim, int Xdim, int threads ) const
 {
     int xdiff, ydiff, zdiff;
@@ -187,9 +187,9 @@ void Basis::changeToVoxels(GridVolume &vol_basis, Matrix3D<double> *vol_voxels,
 }
 
 // Change from voxels ------------------------------------------------------
-void Basis::changeFromVoxels(const Matrix3D<double> &vol_voxels,
+void Basis::changeFromVoxels(const MultidimArray<double> &vol_voxels,
                              GridVolume &vol_basis, int grid_type, double grid_relative_size,
-                             const Matrix3D<double> *vol_mask,
+                             const MultidimArray<double> *vol_mask,
                              const Matrix2D<double> *D, double R, int threads) const
 {
     Grid grid;
@@ -211,11 +211,11 @@ void Basis::changeFromVoxels(const Matrix3D<double> &vol_voxels,
         vol_basis.adapt_to_grid(grid);
         vol_basis(0)() = vol_voxels;
         if (R != -1)
-            FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_voxels)
-            if (k*k + i*i + j*j > R2) vol_basis(0)(k, i, j) = 0;
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_voxels)
+                if (k*k + i*i + j*j > R2) vol_basis(0)()(k, i, j) = 0;
         if (vol_mask != NULL)
-            FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_voxels)
-            if ((*vol_mask)(k, i, j) == 0) vol_basis(0)(k, i, j) = 0;
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_voxels)
+                if ((*vol_mask)(k, i, j) == 0) vol_basis(0)()(k, i, j) = 0;
         break;
     case splines:
         /* TODO */

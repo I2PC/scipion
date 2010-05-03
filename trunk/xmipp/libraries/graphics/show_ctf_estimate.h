@@ -75,7 +75,7 @@ public:
     std::vector<float> current_prm;
 
     // Backup of the original image
-    Matrix2D<double> xmippImage_backup;
+    MultidimArray<double> xmippImage_backup;
 public slots:
     // Set a new set of parameters
     void set_prm(std::vector<float> new_prm);

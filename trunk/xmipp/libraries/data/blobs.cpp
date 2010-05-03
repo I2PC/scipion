@@ -183,9 +183,9 @@ double sum_blob_SimpleGrid(const struct blobtype &blob, const SimpleGrid &grid,
 // Compute the sum in the points inside the grid
 // The integer part of the vectors is taken for not picking points
 // just in the border of the blob, which we know they are 0.
-    for (i = (int)corner1.X(); i <= (int)corner2.X(); i++)
-        for (j = (int)corner1.Y(); j <= (int)corner2.Y(); j++)
-            for (k = (int)corner1.Z(); k <= (int)corner2.Z(); k++)
+    for (i = (int)XX(corner1); i <= (int)XX(corner2); i++)
+        for (j = (int)YY(corner1); j <= (int)YY(corner2); j++)
+            for (k = (int)ZZ(corner1); k <= (int)ZZ(corner2); k++)
             {
                 VECTOR_R3(gr, i, j, k);
                 grid.grid2universe(gr, ur);
@@ -346,8 +346,9 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
     retval.order = 2;
     int alpha_size = FLOOR((alpha_F - alpha_0) / inc_alpha + 1);
     int a_size = FLOOR((a_F - a_0) / inc_a + 1);
-    ImageXmipp att(alpha_size, a_size);
-    ImageXmipp ops(alpha_size, a_size);
+    Image<double> att, ops;
+    att().resize(alpha_size, a_size);
+    ops().resize(alpha_size, a_size);
     int i, j, best_i, best_j;
     double a, alpha, best_a = -1, best_alpha = -1;
     double best_ops = 1e10, best_att = 0;
@@ -356,20 +357,22 @@ blobtype best_blob(double alpha_0, double alpha_F, double inc_alpha,
         {
             retval.radius = a;
             retval.alpha = alpha;
-            att(i, j) = blob_att(w, retval);
-            ops(i, j) = blob_ops(w, retval);
+            A2D_ELEM(att(), i, j) = blob_att(w, retval);
+            A2D_ELEM(ops(), i, j) = blob_ops(w, retval);
             if (j > 0)
                 for (int n = target_length - 1; n >= 0; n--)
-                    if (att(i, j - 1) > target_att[n] && att(i, j) < target_att[n])
+                    if (A2D_ELEM(att(), i, j - 1) > target_att[n] && 
+                        A2D_ELEM(att(), i, j) < target_att[n])
                     {
-                        att(i, j) = 0;
-                        if (ops(i, j - 1) < best_ops && att(i, j - 1) >= best_att)
+                        A2D_ELEM(att(), i, j) = 0;
+                        if (A2D_ELEM(ops(), i, j - 1) < best_ops && 
+                            A2D_ELEM(att(), i, j - 1) >= best_att)
                         {
                             best_i = i;
                             best_j = j - 1;
                             best_alpha = alpha;
                             best_a = a - inc_a;
-                            best_ops = ops(i, j - 1);
+                            best_ops = A2D_ELEM(ops(), i, j - 1);
                             best_att = target_att[n];
                         }
                     }
@@ -421,14 +424,14 @@ void * blobs2voxels_SimpleGrid( void * data )
 {
 	ThreadBlobsToVoxels * thread_data = (ThreadBlobsToVoxels *) data;
 	
-	const Matrix3D<double> *vol_blobs = thread_data->vol_blobs;
+	const MultidimArray<double> *vol_blobs = thread_data->vol_blobs;
 	const SimpleGrid *grid = thread_data->grid;
 	const struct blobtype *blob = thread_data->blob;
-	Matrix3D<double> *vol_voxels = thread_data->vol_voxels;
+	MultidimArray<double> *vol_voxels = thread_data->vol_voxels;
 	const Matrix2D<double> *D = thread_data->D;
 	int istep = thread_data->istep;
-	Matrix3D<double> *vol_corr = thread_data->vol_corr;
-	const Matrix3D<double> *vol_mask = thread_data->vol_mask;;
+	MultidimArray<double> *vol_corr = thread_data->vol_corr;
+	const MultidimArray<double> *vol_mask = thread_data->vol_mask;;
 	bool FORW = thread_data->FORW;
 	int eq_mode = thread_data->eq_mode;
 	
@@ -452,7 +455,7 @@ void * blobs2voxels_SimpleGrid( void * data )
     Matrix1D<double> corner2(3), corner1(3); // Coord: Corners of the
     // blob in the voxel volume
     Matrix1D<double> gcurrent(3);            // Position in g of current point
-    Matrix1D<double> blob_table;             // Something like a blobprint
+    MultidimArray<double> blob_table;             // Something like a blobprint
     // but with the values of the
     // blob in space
     double         d;                        // Distance between the center
@@ -496,12 +499,12 @@ void * blobs2voxels_SimpleGrid( void * data )
     blob_table.resize((int)(blob->radius*istep + 1));
     for (i = 0; i < blob_table.xdim; i++)
     {
-        VEC_ELEM(blob_table, i) = kaiser_value((double)i/istep, blob->radius, blob->alpha, blob->order);
+        A1D_ELEM(blob_table, i) = kaiser_value((double)i/istep, blob->radius, blob->alpha, blob->order);
 
 #ifdef DEBUG_MORE
         if (condition)
             std::cout << "Blob (" << i << ") r=" << (double)i / istep <<
-            " val= " << VEC_ELEM(blob_table, i) << std::endl;
+            " val= " << A1D_ELEM(blob_table, i) << std::endl;
 #endif
     }
 	
@@ -567,7 +570,7 @@ void * blobs2voxels_SimpleGrid( void * data )
 #ifdef DEBUG
                 if (condition)
                 {
-                    printf("Dealing blob at (%d,%d,%d) = %f\n", j, i, k, VOL_ELEM(*vol_blobs, k, i, j));
+                    printf("Dealing blob at (%d,%d,%d) = %f\n", j, i, k, A3D_ELEM(*vol_blobs, k, i, j));
                     std::cout << "Center of the blob      "
                     << act_coord.transpose() << std::endl;
                 }
@@ -665,7 +668,7 @@ void * blobs2voxels_SimpleGrid( void * data )
                             {
                                 int iz = (int)intz, iy = (int)inty, ix = (int)intx;
                                 if (vol_mask != NULL)
-                                    if (!VOL_ELEM(*vol_mask, iz, iy, ix)) continue;
+                                    if (!A3D_ELEM(*vol_mask, iz, iy, ix)) continue;
 								
                                 // Compute distance to the center of the blob
                                 VECTOR_R3(gcurrent, intx, inty, intz);
@@ -693,27 +696,27 @@ void * blobs2voxels_SimpleGrid( void * data )
 								
                                 if (FORW)
                                 {
-                                    VOL_ELEM(*vol_voxels, iz, iy, ix) +=
-									VOL_ELEM(*vol_blobs, k, i, j) *
-									VEC_ELEM(blob_table, id);
+                                    A3D_ELEM(*vol_voxels, iz, iy, ix) +=
+									A3D_ELEM(*vol_blobs, k, i, j) *
+									A1D_ELEM(blob_table, id);
 #ifdef DEBUG_MORE
                                     if (condition)
                                     {
-                                        std::cout << " adding " << VOL_ELEM(*vol_blobs, k, i, j)
-                                        << " * " << VEC_ELEM(blob_table, id) << " = "
-                                        << VOL_ELEM(*vol_blobs, k, i, j)*
-                                        VEC_ELEM(blob_table, id) << std::endl;
+                                        std::cout << " adding " << A3D_ELEM(*vol_blobs, k, i, j)
+                                        << " * " << A1D_ELEM(blob_table, id) << " = "
+                                        << A3D_ELEM(*vol_blobs, k, i, j)*
+                                        A1D_ELEM(blob_table, id) << std::endl;
                                         std::cout.flush();
                                     }
 #endif
                                     if (vol_corr != NULL)
-                                        VOL_ELEM(*vol_corr, iz, iy, ix) +=
-						VEC_ELEM(blob_table, id) * VEC_ELEM(blob_table, id);
+                                        A3D_ELEM(*vol_corr, iz, iy, ix) +=
+						A1D_ELEM(blob_table, id) * A1D_ELEM(blob_table, id);
                                 }
                                 else
                                 {
-                                    double contrib = VOL_ELEM(*vol_corr, iz, iy, ix) *
-									VEC_ELEM(blob_table, id);
+                                    double contrib = A3D_ELEM(*vol_corr, iz, iy, ix) *
+									A1D_ELEM(blob_table, id);
                                     switch (eq_mode)
                                     {
 										case VARTK:
@@ -729,8 +732,8 @@ void * blobs2voxels_SimpleGrid( void * data )
 #ifdef DEBUG_MORE
                                     if (condition)
                                     {
-                                        std::cout << " adding " << VOL_ELEM(*vol_corr, iz, iy, ix)
-                                        << " * " << VEC_ELEM(blob_table, id) << " = "
+                                        std::cout << " adding " << A3D_ELEM(*vol_corr, iz, iy, ix)
+                                        << " * " << A1D_ELEM(blob_table, id) << " = "
                                         << contrib << std::endl;
                                         std::cout.flush();
                                     }
@@ -740,24 +743,24 @@ void * blobs2voxels_SimpleGrid( void * data )
                     if (N_eq == 0) N_eq = 1;
                     if (!FORW)
                     {
-                        VOL_ELEM(*vol_blobs, k, i, j) += vol_correction / N_eq;
+                        A3D_ELEM(*vol_blobs, k, i, j) += vol_correction / N_eq;
 #ifdef DEBUG_MORE
                         std::cout << " correction= " << vol_correction << std::endl
                         << " Number of eqs= " << N_eq << std::endl
                         << " Blob after correction= "
-                        << VOL_ELEM(*vol_blobs, k, i, j) << std::endl;
+                        << A3D_ELEM(*vol_blobs, k, i, j) << std::endl;
 #endif
                     }
                 }
 				
                 // Prepare for next iteration
-                XX(act_coord) = XX(act_coord) + grid->relative_size * MAT_ELEM(grid->basis, 0, 0);
-                YY(act_coord) = YY(act_coord) + grid->relative_size * MAT_ELEM(grid->basis, 1, 0);
-                ZZ(act_coord) = ZZ(act_coord) + grid->relative_size * MAT_ELEM(grid->basis, 2, 0);
+                XX(act_coord) = XX(act_coord) + grid->relative_size * (grid->basis)( 0, 0);
+                YY(act_coord) = YY(act_coord) + grid->relative_size * (grid->basis)( 1, 0);
+                ZZ(act_coord) = ZZ(act_coord) + grid->relative_size * (grid->basis)( 2, 0);
             }
-            XX(beginY) = XX(beginY) + grid->relative_size * MAT_ELEM(grid->basis, 0, 1);
-            YY(beginY) = YY(beginY) + grid->relative_size * MAT_ELEM(grid->basis, 1, 1);
-            ZZ(beginY) = ZZ(beginY) + grid->relative_size * MAT_ELEM(grid->basis, 2, 1);
+            XX(beginY) = XX(beginY) + grid->relative_size * (grid->basis)( 0, 1);
+            YY(beginY) = YY(beginY) + grid->relative_size * (grid->basis)( 1, 1);
+            ZZ(beginY) = ZZ(beginY) + grid->relative_size * (grid->basis)( 2, 1);
         }
 		
 		pthread_mutex_lock(&blobs_conv_mutex);
@@ -804,8 +807,8 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 
     // Add blob radius in each direction, and find the furthest integer
     // samples => compute size
-    Gcorner1 -= blob.radius; Gcorner1.selfCEILnD();
-    Gcorner2 += blob.radius; Gcorner2.selfFLOORnD();
+    Gcorner1 -= blob.radius; Gcorner1.selfCEIL();
+    Gcorner2 += blob.radius; Gcorner2.selfFLOOR();
 
     XX(size) = (int)XX(Gcorner2) - (int)XX(Gcorner1) + 1;
     YY(size) = (int)YY(Gcorner2) - (int)YY(Gcorner1) + 1;
@@ -859,7 +862,7 @@ void voxel_volume_shape(const GridVolume &vol_blobs,
 /* Blobs -> Voxels for a Grid ---------------------------------------------- */
 //#define DEBUG
 void blobs2voxels(const GridVolume &vol_blobs,
-                  const struct blobtype &blob, Matrix3D<double> *vol_voxels,
+                  const struct blobtype &blob, MultidimArray<double> *vol_voxels,
                   const Matrix2D<double> *D, int threads, int Zdim, int Ydim, int Xdim)
 {
 
@@ -923,7 +926,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
         std::cout << "So far vol stats: ";
         (*vol_voxels).printStats();
         std::cout << std::endl;
-        VolumeXmipp save;
+        Image<double> save;
         save() = *vol_voxels;
         save.write((std::string)"PPPvoxels" + integerToString(i));
 #endif
@@ -933,8 +936,8 @@ void blobs2voxels(const GridVolume &vol_blobs,
 
     // Now normalise the resulting volume ..................................
     double inorm = 1.0 / sum_blob_Grid(blob, vol_blobs.grid(), D); // Aqui tambien hay que multiplicar ****!!!!
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
-    VOL_ELEM(*vol_voxels, k, i, j) *= inorm;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(*vol_voxels)
+    A3D_ELEM(*vol_voxels, k, i, j) *= inorm;
 
     // Set voxels outside interest region to minimum value .................
     double R = vol_blobs.grid(0).get_interest_radius();
@@ -943,16 +946,16 @@ void blobs2voxels(const GridVolume &vol_blobs,
         double R2 = (R - 6) * (R - 6);
 
         // Compute minimum value within sphere
-        double min_val = VOL_ELEM(*vol_voxels, 0, 0, 0);
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
+        double min_val = A3D_ELEM(*vol_voxels, 0, 0, 0);
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(*vol_voxels)
         if (j*j + i*i + k*k <= R2 - 4)
-            min_val = XMIPP_MIN(min_val, VOL_ELEM(*vol_voxels, k, i, j));
+            min_val = XMIPP_MIN(min_val, A3D_ELEM(*vol_voxels, k, i, j));
 
         // Substitute minimum value
         R2 = (R - 2) * (R - 2);
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(*vol_voxels)
         if (j*j + i*i + k*k >= R2)
-            VOL_ELEM(*vol_voxels, k, i, j) = min_val;
+            A3D_ELEM(*vol_voxels, k, i, j) = min_val;
     }
 }
 #undef DEBUG
@@ -960,7 +963,7 @@ void blobs2voxels(const GridVolume &vol_blobs,
 /* Blobs -> Coefs ---------------------------------------------------------- */
 //#define DEBUG
 void blobs2space_coefficients(const GridVolume &vol_blobs,
-                              const struct blobtype &blob, Matrix3D<double> *vol_coefs)
+                              const struct blobtype &blob, MultidimArray<double> *vol_coefs)
 {
 
     // Compute vol_coefs shape
@@ -996,8 +999,10 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
                     VECTOR_R3(grid_index, j, i, k);
                     vol_blobs.grid(n).grid2universe(grid_index, univ_position);
                     V3_BY_CT(coef_position, univ_position, 1.0 / g_2);
-                    (*vol_coefs)((int)ZZ(coef_position), (int)YY(coef_position),
-                                 (int)XX(coef_position)) = vol_blobs(n)(k, i, j);
+                    A3D_ELEM((*vol_coefs), 
+                        (int)ZZ(coef_position), 
+                        (int)YY(coef_position),
+                        (int)XX(coef_position) ) = A3D_ELEM(vol_blobs(n)(), k, i, j);
 #ifdef DEBUG
                     std::cout << "Blob value at (" << j << "," << i << ","
                     << k << ") (" << XX(univ_position)
@@ -1005,7 +1010,7 @@ void blobs2space_coefficients(const GridVolume &vol_blobs,
                     << ZZ(univ_position) << ") ("
                     << XX(coef_position) << "," << YY(coef_position) << ","
                     << ZZ(coef_position) << ") --> "
-                    << vol_blobs(n)((int)k, (int)i, (int)j) << std::endl;
+                    << A3D_ELEM(vol_blobs(n)(), (int)k, (int)i, (int)j) << std::endl;
 #endif
                 }
     }
@@ -1025,10 +1030,10 @@ void ART_voxels2blobs_single_step(
     const struct blobtype &blob,        // blob
     const Matrix2D<double> *D,          // deformation matrix
     double lambda,                      // ART lambda
-    Matrix3D<double> *theo_vol,         // Theoretical volume
-    const Matrix3D<double> *read_vol,   // Volume we want to translate to blobs
-    Matrix3D<double> *corr_vol,         // Normalizing volume
-    const Matrix3D<double> *mask_vol,   // Mask volume, 1 if that voxel must
+    MultidimArray<double> *theo_vol,         // Theoretical volume
+    const MultidimArray<double> *read_vol,   // Volume we want to translate to blobs
+    MultidimArray<double> *corr_vol,         // Normalizing volume
+    const MultidimArray<double> *mask_vol,   // Mask volume, 1 if that voxel must
     // be counted as a true equation
     double &mean_error,                 // Output mean error
     double &max_error,                  // Output maximum error in a voxel
@@ -1106,11 +1111,11 @@ void ART_voxels2blobs_single_step(
 
     // Now normalise the resulting volume ..................................
     double norm = sum_blob_Grid(blob, vol_in.grid(), D); // Aqui tambien hay que multiplicar ****!!!!
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(*theo_vol)
-    VOL_ELEM(*theo_vol, k, i, j) /= norm;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(*theo_vol)
+    A3D_ELEM(*theo_vol, k, i, j) /= norm;
 
 #ifdef DEBUG
-    VolumeXmipp save, save2;
+    Image<double> save, save2;
     save() = *theo_vol;
     save.write("PPPtheovol.vol");
     std::cout << "Theo stats:";
@@ -1124,27 +1129,27 @@ void ART_voxels2blobs_single_step(
     // Compute differences ..................................................
     mean_error = 0;
     double read_val;
-    if (read_vol != NULL) read_val = VOL_ELEM(*read_vol, 0, 0, 0);
+    if (read_vol != NULL) read_val = A3D_ELEM(*read_vol, 0, 0, 0);
     else                read_val = 0;
-    max_error = ABS(read_val - VOL_ELEM(*theo_vol, 0, 0, 0));
+    max_error = ABS(read_val - A3D_ELEM(*theo_vol, 0, 0, 0));
 
     double diff;
     int N = 0;
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(*theo_vol)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(*theo_vol)
     {
         // Compute difference volume and error
-        if (read_vol != NULL) read_val = VOL_ELEM(*read_vol, k, i, j);
+        if (read_vol != NULL) read_val = A3D_ELEM(*read_vol, k, i, j);
         else                read_val = 0;
 
         if (mask_vol == NULL)
         {
-            diff = read_val - VOL_ELEM(*theo_vol, k, i, j);
+            diff = read_val - A3D_ELEM(*theo_vol, k, i, j);
             N++;
         }
         else
-            if (VOL_ELEM(*mask_vol, k, i, j) == 1)
+            if (A3D_ELEM(*mask_vol, k, i, j) == 1)
             {
-                diff = read_val - VOL_ELEM(*theo_vol, k, i, j);
+                diff = read_val - A3D_ELEM(*theo_vol, k, i, j);
                 N++;
             }
             else
@@ -1159,10 +1164,10 @@ void ART_voxels2blobs_single_step(
 
 
         // Compute the correction volume
-        if (ABS(VOL_ELEM(*corr_vol, k, i, j)) < 1e-2)
-            VOL_ELEM(*corr_vol, k, i, j) = SGN(VOL_ELEM(*corr_vol, k, i, j));
-        VOL_ELEM(*corr_vol, k, i, j) =
-            lambda * diff / VOL_ELEM(*corr_vol, k, i, j);
+        if (ABS(A3D_ELEM(*corr_vol, k, i, j)) < 1e-2)
+            A3D_ELEM(*corr_vol, k, i, j) = SGN(A3D_ELEM(*corr_vol, k, i, j));
+        A3D_ELEM(*corr_vol, k, i, j) =
+            lambda * diff / A3D_ELEM(*corr_vol, k, i, j);
     }
 #ifdef DEBUG
     save.write("PPPdiffvol.vol");
@@ -1232,14 +1237,14 @@ void ART_voxels2blobs_single_step(
 #undef DEBUG
 
 //#define DEBUG
-void voxels2blobs(const Matrix3D<double> *vol_voxels,
+void voxels2blobs(const MultidimArray<double> *vol_voxels,
                   const struct blobtype &blob,
                   GridVolume &vol_blobs, int grid_type, double grid_relative_size,
-                  double lambda, const Matrix3D<double> *vol_mask,
+                  double lambda, const MultidimArray<double> *vol_mask,
                   const Matrix2D<double> *D, double final_error_change,
                   int tell, double R, int threads)
 {
-    VolumeXmipp theo_vol, corr_vol;
+    Image<double> theo_vol, corr_vol;
     double mean_error, mean_error_1, max_error;
     int it = 1;
 

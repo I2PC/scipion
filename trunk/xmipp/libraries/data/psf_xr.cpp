@@ -131,20 +131,20 @@ void XmippXRPSF::produceSideInfo()
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
-//void XmippXRPSF::applyOTF(Matrix2D<double> &I) const
+//void XmippXRPSF::applyOTF(MultidimArray<double> &I) const
 //{
 //}
 
 /* Generate the Intensity PSF for a specific XR microscope configuration     ------------- */
 /* Generate OTF Image ------------------------------------------------------ */
 
-void XmippXRPSF::generateOTF(Matrix2D<std::complex<double> > &Im)
+void XmippXRPSF::generateOTF(MultidimArray<std::complex<double> > &Im)
 {
-    Matrix2D<double> I2(Im.ydim,Im.xdim);
+    MultidimArray<double> I2(Im.ydim,Im.xdim);
     generateOTF(I2);
 }
 
-void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
+void XmippXRPSF::generateOTF(MultidimArray<double> &Im)
 {
 //#define DEBUG
     /// REMEMBER TO INCLUDE AND/OR ANALYZE THE MINIMUM RESOLUTION CONDITION !!!! ////
@@ -167,7 +167,7 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
 //    std::cout << std::endl;
 //#endif
 
-    Matrix2D< std::complex<double> > OTFTemp, PSFi;
+    MultidimArray< std::complex<double> > OTFTemp, PSFi;
     XmippFftw transformer;
     //    Mask_Params mask_prm; TODO do we have to include masks using this method?
 
@@ -177,7 +177,7 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
     //    OTFTemp.window(-128,-128,127,255,10);
 
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(OTFTemp)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(OTFTemp)
     {
         if (sqrt(double(i*i)*dyl*dyl + double(j*j)*dxl*dxl) > Rlens)
             OTFTemp(i,j)=0;
@@ -185,10 +185,10 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
     }
 
 #ifdef DEBUG
-    ImageXmipp _Im;
+    Image<double> _Im;
     _Im().resize(OTFTemp);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(OTFTemp)
-    dMij(_Im(),i,j) = abs(dMij(OTFTemp,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
+    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
     _Im.write("psfxr-lens.spi");
 #endif
 
@@ -197,21 +197,24 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
     //    CenterOriginFFT(PSFi, 1);
     double norm=0;
 
-    //     FOR_ALL_ELEMENTS_IN_MATRIX2D(LPDFT)
+    //     FOR_ALL_ELEMENTS_IN_ARRAY2D(LPDFT)
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
     {
         PSFi.data[n] = abs(PSFi.data[n]);
         PSFi.data[n] *= PSFi.data[n];
         norm +=  PSFi.data[n].real();
     }
-    PSFi /= norm;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
+    {
+    	PSFi.data[n] /= norm;
+    }
 
     transformer.inverseFourierTransform();
 
     OTF.resize(OTFTemp.ydim, OTFTemp.xdim/2+1);
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(OTF)
-    dMij(OTF,i,j) = dMij(OTFTemp,i,j);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
+    dAij(OTF,i,j) = dAij(OTFTemp,i,j);
 
 
 
@@ -220,32 +223,32 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
 
     //    CenterOriginFFT(OTFTemp,1);
     _Im().resize(OTFTemp);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(OTFTemp)
-    dMij(_Im(),i,j) = abs(dMij(OTFTemp,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
+    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
     _Im.write("psfxr-otf1.spi");
     //    CenterOriginFFT(OTFTemp,0);
     _Im().resize(OTF);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(OTF)
-    dMij(_Im(),i,j) = abs(dMij(OTF,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
+    dAij(_Im(),i,j) = abs(dAij(OTF,i,j));
     _Im.write("psfxr-otf2.spi");
 
     //    CenterOriginFFT(PSFi,1);
     _Im().resize(PSFi);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(PSFi)
-    dMij(_Im(),i,j) = abs(dMij(PSFi,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
+    dAij(_Im(),i,j) = abs(dAij(PSFi,i,j));
     _Im.write("psfxr-psfi.spi");
 #endif
 }
 
 /* Generate the quadratic phase distribution of an ideal lens ------------- */
-void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy)
+void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy)
 {
 
     double Lx0 = Im.xdim * dx, Ly0 = Im.ydim * dy, x, y, phase;
 
     Im.setXmippOrigin();
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(Im)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(Im)
     {
         /// For indices in standard fashion
         //   x = (double) j * dx + (dx - Lx0) / 2;
@@ -262,7 +265,7 @@ void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, do
     }
 }
 
-void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
+void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
 {
 
 	psf.Nox = vol().xdim;
@@ -279,12 +282,12 @@ void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
 	    std::cout << std::endl;
 
 
-    imOut() = Matrix2D<double> (vol().ydim, vol().xdim);
+    imOut() = MultidimArray<double> (vol().ydim, vol().xdim);
     imOut().initZeros();
     //    imOut()+= 1;
     imOut().setXmippOrigin();
 
-    Matrix2D<double> imTemp(imOut()), intExp(imOut());
+    MultidimArray<double> imTemp(imOut()), intExp(imOut());
     intExp.initZeros();
     intExp.setXmippOrigin();
     imTemp.setXmippOrigin();
@@ -294,22 +297,22 @@ void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
     //#define DEBUG
 #ifdef DEBUG
 
-    ImageXmipp _Im(imOut);
+    Image<double> _Im(imOut);
 #endif
 
     init_progress_bar(vol().zdim-1);
 
     for (int k=((vol()).zinit); k<=((vol()).zinit + (vol()).zdim - 1); k++)
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(intExp)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
         {
             intExp(i, j) = intExp(i, j) + vol(k, i, j);
             imTemp(i, j) = (exp(-intExp(i,j)*psf.dzo))*vol(k,i,j)*psf.dzo;
 //            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
         }
 #ifdef DEBUG
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imTemp)
-        dMij(_Im(),i,j) = dMij(imTemp,i,j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
+        dAij(_Im(),i,j) = dAij(imTemp,i,j);
         _Im.write("psfxr-imTemp.spi");
 #endif
 
@@ -318,18 +321,18 @@ void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
 
 #ifdef DEBUG
 
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(intExp)
-        dMij(_Im(),i,j) = dMij(intExp,i,j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(intExp)
+        dAij(_Im(),i,j) = dAij(intExp,i,j);
         _Im.write("psfxr-intExp.spi");
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imTemp)
-        dMij(_Im(),i,j) = dMij(imTemp,i,j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
+        dAij(_Im(),i,j) = dAij(imTemp,i,j);
         _Im.write("psfxr-imTemp2.spi");
 #endif
 
         psf.applyOTF(imTemp);
 
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imTemp)
-        dMij(imOut(),i,j) += dMij(imTemp,i,j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
+        dAij(imOut(),i,j) += dAij(imTemp,i,j);
 
         //        imOut.write("psfxr-imout.spi");
         progress_bar(k - vol().zinit);

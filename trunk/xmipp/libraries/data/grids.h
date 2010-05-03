@@ -31,7 +31,7 @@
 
 #include <vector>
 
-#include "volume.h"
+#include "image.h"
 #include "geometry.h"
 #include "args.h"
 
@@ -788,7 +788,7 @@ Grid Create_FCC_grid(double relative_size, double R);
 template <class T> class GridVolumeT
 {
 // Structure ---------------------------------------------------------------
-    std::vector<VolumeT<T> * > LV;               // List of volumes
+    std::vector<Image<T> * > LV;               // List of volumes
     Grid                 G;                 // Grid associated to this volume
 
 public:
@@ -825,7 +825,7 @@ public:
             G = RV.G;
             for (int i = 0; i < RV.VolumesNo(); i++)
             {
-                VolumeT<T>  *V = new VolumeT<T>;
+                Image<T>  *V = new Image<T>;
                 *V = RV(i);
                 LV.push_back(V);
             }
@@ -863,12 +863,12 @@ public:
 
         // Generate a volume for each subgrid
         int                        Zdim, Ydim, Xdim;
-        VolumeT<T> *               Vol_aux;
+        Image<T> *                 Vol_aux;
         for (int i = 0; i < G.GridsNo(); i++)
         {
             SimpleGrid & grid = G(i);
             grid.getSize(Zdim, Ydim, Xdim);
-            Vol_aux = new VolumeT<T>;
+            Vol_aux = new Image<T>;
             (*Vol_aux)().resize(Zdim, Ydim, Xdim);  // Using this function
             // after empty creation the volume
             // is zero-valued.
@@ -886,8 +886,8 @@ public:
     void resize(const Matrix1D<double> &corner1,
                 const Matrix1D<double> &corner2)
     {
-        VolumeT<T> *         Vol_aux;
-        std::vector<VolumeT<T> * > LV_aux;
+        Image<T> *         Vol_aux;
+        std::vector<Image<T> * > LV_aux;
 
         for (int n = 0; n < G.GridsNo(); n++)
         {
@@ -895,24 +895,23 @@ public:
 
             // Resize grid
             grid.universe2grid(corner1, grid.lowest);
-            grid.lowest.selfFLOORnD();
+            grid.lowest.selfFLOOR();
             grid.universe2grid(corner2, grid.highest);
-            grid.highest.selfCEILnD();
+            grid.highest.selfCEIL();
 
             // Resize auxiliary volume
             int Zdim, Ydim, Xdim;
             grid.getSize(Zdim, Ydim, Xdim);
-            Vol_aux = new VolumeT<T>;
+            Vol_aux = new Image<T>;
             (*Vol_aux)().resize(Zdim, Ydim, Xdim);
             STARTINGX((*Vol_aux)()) = (int) XX(grid.lowest); // This values are already
             STARTINGY((*Vol_aux)()) = (int) YY(grid.lowest); // integer although they
             STARTINGZ((*Vol_aux)()) = (int) ZZ(grid.lowest); // are stored as float
 
             // Copy values in common
-            VolumeT<T> * origin = LV[n];
+            Image<T> * origin = LV[n];
             SPEED_UP_temps;
-            FOR_ALL_ELEMENTS_IN_COMMON_IN_MATRIX3D
-            (VOLMATRIX(*Vol_aux), VOLMATRIX(*origin))
+            FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(VOLMATRIX(*Vol_aux), VOLMATRIX(*origin))
             {
                 VOLVOXEL(*Vol_aux, k, i, j) = VOLVOXEL(*origin, k, i, j);
             }
@@ -937,8 +936,8 @@ public:
             grid = GV.grid(n);
             G.add_grid(grid);
 
-            VolumeT<T> *Vol_aux;
-            Vol_aux = new VolumeT<T>;
+            Image<T> *Vol_aux;
+            Vol_aux = new Image<T>;
             (*Vol_aux)().resize(GV(n)());
             LV.push_back(Vol_aux);
         }
@@ -960,7 +959,7 @@ public:
 
     /** Access to one of the volumes in the list.
         The first volume is the number 0. */
-    VolumeT<T> & operator()(int n)
+    Image<T> & operator()(int n)
     {
         if (n>LV.size())
             REPORT_ERROR(3002, "The Grid Volume hasn't got so many Simple Volumes");
@@ -968,14 +967,14 @@ public:
     }
 
     /** Another function for access to one of the volumes in the list.*/
-    void get_volume(int n, VolumeT<T> &V)
+    void get_volume(int n, Image<T> &V)
     {
         V = (*this)(n);
     }
 
     /** Constant access to a volume in the list.
         The first volume is the number 0. */
-    const VolumeT<T> & operator()(int n) const
+    const Image<T> & operator()(int n) const
     {
         if (n>LV.size())
             REPORT_ERROR(3002, "The Grid Volume hasn't got so many Simple Volumes");
@@ -1073,7 +1072,7 @@ public:
 
 #define GRIDVOL_BY_GRIDVOL(op) \
     GridVolumeT<T> result; \
-    VolumeT<T> * Vol_aux; \
+    Image<T> * Vol_aux; \
     \
     if (VolumesNo()!=GV.VolumesNo()) \
         REPORT_ERROR(3004,(std::string)"GridVolume::"+op+": Different number of subvolumes");\
@@ -1083,7 +1082,7 @@ public:
     \
     for (int i=0; i<VolumesNo(); i++) { \
         try { \
-            Vol_aux = new VolumeT<T>; \
+            Vol_aux = new Image<T>; \
             arrayByArray((*this)(i)(),GV(i)(),(*Vol_aux)(),op); \
             result.LV.push_back(Vol_aux); \
         } catch (Xmipp_error XE) {\
@@ -1205,7 +1204,7 @@ public:
         is too small to hold the control information of each layer. */
     void write(const FileName &fn) const
     {
-        VolumeXmippT<T>    V;
+        Image<T>    V;
         float temp_float;
         size_t floatsize;
         const std::type_info &typeinfoT = typeid(T); // We need to know what kind
@@ -1221,7 +1220,7 @@ public:
         int Zdim = 0, Ydim = 0, Xdim = 0;
         for (int v = 0; v < VolumesNo(); v++)
         {
-            const VolumeT<T> & this_vol = (*this)(v);
+            const Image<T> & this_vol = (*this)(v);
             Zdim += ZSIZE(this_vol());
             Ydim = XMIPP_MAX(Ydim, YSIZE(this_vol()));
             Xdim = XMIPP_MAX(Xdim, XSIZE(this_vol()));
@@ -1250,7 +1249,7 @@ public:
 
             // Choose grid and volume
             const SimpleGrid & this_grid = grid(v);
-            const VolumeT<T> & this_vol = (*this)(v);
+            const Image<T> & this_vol = (*this)(v);
 
             // Store Grid data ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
             pos = 0;
@@ -1258,11 +1257,11 @@ public:
             if (typeinfoT == typeinfoD)
             {
                 for (i = 0; i < 3; i++)
-                    for (j = 0; j < 3; j++) PACK_DOUBLE(MAT_ELEM(this_grid.basis  , i, j));
-                for (i = 0; i < 3; i++)    PACK_DOUBLE(VEC_ELEM(this_grid.lowest , i));
-                for (i = 0; i < 3; i++)    PACK_DOUBLE(VEC_ELEM(this_grid.highest, i));
+                    for (j = 0; j < 3; j++) PACK_DOUBLE((this_grid.basis)(i, j));
+                for (i = 0; i < 3; i++)    PACK_DOUBLE((this_grid.lowest)(i));
+                for (i = 0; i < 3; i++)    PACK_DOUBLE((this_grid.highest)(i));
                 PACK_DOUBLE(this_grid.relative_size);
-                for (i = 0; i < 3; i++)    PACK_DOUBLE(VEC_ELEM(this_grid.origin, i));
+                for (i = 0; i < 3; i++)    PACK_DOUBLE((this_grid.origin)(i));
                 PACK_DOUBLE(this_grid.R2);
 
                 // Store volume control ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -1282,11 +1281,11 @@ public:
                                  "GridVolume is integer and (sizeof(float)!= sizeof(int)");
 
                 for (i = 0; i < 3; i++)
-                    for (j = 0; j < 3; j++) PACK_INT(MAT_ELEM(this_grid.basis  , i, j));
-                for (i = 0; i < 3; i++)    PACK_INT(VEC_ELEM(this_grid.lowest , i));
-                for (i = 0; i < 3; i++)    PACK_INT(VEC_ELEM(this_grid.highest, i));
+                    for (j = 0; j < 3; j++) PACK_INT((this_grid.basis)(i, j));
+                for (i = 0; i < 3; i++)    PACK_INT((this_grid.lowest)(i));
+                for (i = 0; i < 3; i++)    PACK_INT((this_grid.highest)(i));
                 PACK_INT(this_grid.relative_size);
-                for (i = 0; i < 3; i++)    PACK_INT(VEC_ELEM(this_grid.origin, i));
+                for (i = 0; i < 3; i++)    PACK_INT((this_grid.origin)(i));
                 PACK_INT(this_grid.R2);
 
                 // Store volume control ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -1324,8 +1323,8 @@ public:
         \ref VolumeXmipp::read routine. */
     void read(const FileName &fn)
     {
-        VolumeXmippT<T>    V;
-        VolumeT<T>      * sV;
+        Image<T>       V;
+        Image<T>       * sV;
         SimpleGrid     sG;
         int            sli = 0;
 
@@ -1375,11 +1374,11 @@ public:
             if (typeinfoT == typeinfoD)
             {
                 for (i = 0; i < 3; i++)
-                    for (j = 0; j < 3; j++) UNPACK_DOUBLE(MAT_ELEM(sG.basis  , i, j), double);
-                for (i = 0; i < 3; i++)    UNPACK_DOUBLE(VEC_ELEM(sG.lowest , i), int);
-                for (i = 0; i < 3; i++)    UNPACK_DOUBLE(VEC_ELEM(sG.highest, i), int);
+                    for (j = 0; j < 3; j++) UNPACK_DOUBLE((sG.basis)(i, j), double);
+                for (i = 0; i < 3; i++)    UNPACK_DOUBLE((sG.lowest)(i), int);
+                for (i = 0; i < 3; i++)    UNPACK_DOUBLE((sG.highest)(i), int);
                 UNPACK_DOUBLE(sG.relative_size, double);
-                for (i = 0; i < 3; i++)    UNPACK_DOUBLE(VEC_ELEM(sG.origin, i), double);
+                for (i = 0; i < 3; i++)    UNPACK_DOUBLE((sG.origin)(i), double);
                 UNPACK_DOUBLE(sG.R2, double);
             }
             else if (typeinfoT == typeinfoI)
@@ -1391,11 +1390,11 @@ public:
                                  "GridVolume is integer and (sizeof(float)!= sizeof(int)");
 
                 for (i = 0; i < 3; i++)
-                    for (j = 0; j < 3; j++) UNPACK_INT(MAT_ELEM(sG.basis  , i, j), double);
-                for (i = 0; i < 3; i++)    UNPACK_INT(VEC_ELEM(sG.lowest , i), int);
-                for (i = 0; i < 3; i++)    UNPACK_INT(VEC_ELEM(sG.highest, i), int);
+                    for (j = 0; j < 3; j++) UNPACK_INT((sG.basis)(i, j), double);
+                for (i = 0; i < 3; i++)    UNPACK_INT((sG.lowest)(i), int);
+                for (i = 0; i < 3; i++)    UNPACK_INT((sG.highest)(i), int);
                 UNPACK_INT(sG.relative_size, double);
-                for (i = 0; i < 3; i++)    UNPACK_INT(VEC_ELEM(sG.origin, i), double);
+                for (i = 0; i < 3; i++)    UNPACK_INT((sG.origin)(i), double);
                 UNPACK_INT(sG.R2, double);
             }
             sG.inv_basis = sG.basis.inv();
@@ -1424,7 +1423,7 @@ public:
             }
 
             // Set volume size and origin
-            sV = new VolumeT<T>;
+            sV = new Image<T>;
             VOLMATRIX(*sV).initZeros(Zdim, Ydim, Xdim);
             STARTINGZ(VOLMATRIX(*sV)) = Zinit;
             STARTINGY(VOLMATRIX(*sV)) = Yinit;

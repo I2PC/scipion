@@ -26,7 +26,7 @@
 #ifndef VECTORIAL_H
 #define VECTORIAL_H
 
-#include "volume.h"
+#include "multidim_array.h"
 
 /// @defgroup Vectorial Vector volumes
 /// @ingroup MultidimensionalArrays
@@ -41,7 +41,7 @@
  * An (k,i,j) position is available inside the loop.
  */
 #define FOR_ALL_ELEMENTS_IN_VECTORIAL_MATRIX3D(v) \
-    FOR_ALL_ELEMENTS_IN_MATRIX3D((v).__X)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D((v).__X)
 
 /** For all elements in a multidim array fashion.
  * @ingroup VectorialSpeedUp
@@ -54,7 +54,7 @@
 /** Vectorial volume.
  * @ingroup Vectorial
  *
- * A vectorial volume is a "normal" Matrix3D whose elements are vectors
+ * A vectorial volume is a "normal" MultidimArray whose elements are vectors
  * instead of single elements are doubles, floats, ... You can access
  * independently to any of the three components as a whole volume, ie, a
  * volume with all the X components, another with all Y components, ... or
@@ -65,12 +65,12 @@
  * You can perform arithmetic operations on these vectors, and other common
  * operations such as resize, printShape, ...
  */
-class Vectorial_Matrix3D
+class Vectorial_MultidimArray
 {
     // The 3 components
-    Matrix3D< double > __X;
-    Matrix3D< double > __Y;
-    Matrix3D< double > __Z;
+    MultidimArray< double > __X;
+    MultidimArray< double > __Y;
+    MultidimArray< double > __Z;
 
 public:
     /// @defgroup VectorialShape Shape
@@ -89,7 +89,7 @@ public:
     /** Resize with pattern.
      * @ingroup VectorialShape
      */
-    void resize(const Matrix3D< double >& V)
+    void resize(const MultidimArray< double >& V)
     {
         __X.resize(V);
         __Y.resize(V);
@@ -141,7 +141,7 @@ public:
      * @ingroup VectorialAccess
      *
      * The returned vector is a column 3x1 vector. The integer position are
-     * logical indexes inside the Matrix3D.
+     * logical indexes inside the MultidimArray.
      */
     Matrix1D< double > vector_at(int k, int i, int j) const
     {
@@ -166,9 +166,9 @@ public:
     /** Constant access to X component.
      * @ingroup VectorialAccess
      *
-     * X components are a Matrix3D.
+     * X components are a MultidimArray.
      */
-    const Matrix3D< double >& X() const
+    const MultidimArray< double >& X() const
     {
         return __X;
     }
@@ -176,7 +176,7 @@ public:
     /** Access to X components.
      * @ingroup VectorialAccess
      */
-    Matrix3D< double >& X()
+    MultidimArray< double >& X()
     {
         return __X;
     }
@@ -184,7 +184,7 @@ public:
     /** Get the X components.
      * @ingroup VectorialAccess
      */
-    void get_X(Matrix3D< double >& _XXX)
+    void get_X(MultidimArray< double >& _XXX)
     {
         _XXX = __X;
     }
@@ -192,7 +192,7 @@ public:
     /** Set the X components.
      * @ingroup VectorialAccess
      */
-    void set_X(const Matrix3D< double >& _XXX)
+    void set_X(const MultidimArray< double >& _XXX)
     {
         __X = _XXX;
     }
@@ -200,7 +200,7 @@ public:
     /** Constant access to Y component.
      * @ingroup VectorialAccess
      */
-    const Matrix3D< double >& Y() const
+    const MultidimArray< double >& Y() const
     {
         return __Y;
     }
@@ -208,7 +208,7 @@ public:
     /** Access to Y components.
      * @ingroup VectorialAccess
      */
-    Matrix3D< double >& Y()
+    MultidimArray< double >& Y()
     {
         return __Y;
     }
@@ -216,7 +216,7 @@ public:
     /** Get the Y components.
      * @ingroup VectorialAccess
      */
-    void get_Y(Matrix3D< double >& _Y)
+    void get_Y(MultidimArray< double >& _Y)
     {
         _Y = __Y;
     }
@@ -224,7 +224,7 @@ public:
     /** Set the Y components.
      * @ingroup VectorialAccess
      */
-    void set_Y(const Matrix3D< double >& _Y)
+    void set_Y(const MultidimArray< double >& _Y)
     {
         __Y = _Y;
     }
@@ -232,7 +232,7 @@ public:
     /** Constant access to Z component.
      * @ingroup VectorialAccess
      */
-    const Matrix3D< double >& Z() const
+    const MultidimArray< double >& Z() const
     {
         return __Z;
     }
@@ -240,7 +240,7 @@ public:
     /** Access to Z components.
      * @ingroup VectorialAccess
      */
-    Matrix3D< double >& Z()
+    MultidimArray< double >& Z()
     {
         return __Z;
     }
@@ -248,7 +248,7 @@ public:
     /** Get the Z components.
      * @ingroup VectorialAccess
      */
-    void get_Z(Matrix3D< double >& _Z)
+    void get_Z(MultidimArray< double >& _Z)
     {
         _Z = __Z;
     }
@@ -256,7 +256,7 @@ public:
     /** Set the Z components.
      * @ingroup VectorialAccess
      */
-    void set_Z(const Matrix3D< double >& _Z)
+    void set_Z(const MultidimArray< double >& _Z)
     {
         __Z = _Z;
     }
@@ -266,7 +266,7 @@ public:
      */
     double X(int k, int i, int j) const
     {
-        return VOL_ELEM(__X, k, i, j);
+        return A3D_ELEM(__X, k, i, j);
     }
 
     /** Access to a particular X component.
@@ -274,7 +274,7 @@ public:
      */
     double& X(int k, int i, int j)
     {
-        return VOL_ELEM(__X, k, i, j);
+        return A3D_ELEM(__X, k, i, j);
     }
 
     /** Get the X component at (k,i,j).
@@ -298,7 +298,7 @@ public:
      */
     double Y(int k, int i, int j) const
     {
-        return VOL_ELEM(__Y, k, i, j);
+        return A3D_ELEM(__Y, k, i, j);
     }
 
     /** Access to a particular Y component.
@@ -306,7 +306,7 @@ public:
      */
     double& Y(int k, int i, int j)
     {
-        return VOL_ELEM(__Y, k, i, j);
+        return A3D_ELEM(__Y, k, i, j);
     }
 
     /** Get the Y component at (k,i,j).
@@ -330,7 +330,7 @@ public:
      */
     double Z(int k, int i, int j) const
     {
-        return VOL_ELEM(__Z, k, i, j);
+        return A3D_ELEM(__Z, k, i, j);
     }
 
     /** Access to a particular Z component.
@@ -338,7 +338,7 @@ public:
      */
     double& Z(int k, int i, int j)
     {
-        return VOL_ELEM(__Z, k, i, j);
+        return A3D_ELEM(__Z, k, i, j);
     }
 
     /** Get the Z component at (k,i,j).
@@ -382,7 +382,7 @@ public:
      *
      * A volume with all vector modules at each position is returned.
      */
-    void module(Matrix3D< double >& result) const
+    void module(MultidimArray< double >& result) const
     {
         result.resize(__X);
 
@@ -422,9 +422,9 @@ public:
     /** v3=v1+v2.
      * @ingroup VectorialArithmetic
      */
-    Vectorial_Matrix3D operator+(const Vectorial_Matrix3D& op1) const
+    Vectorial_MultidimArray operator+(const Vectorial_MultidimArray& op1) const
     {
-        Vectorial_Matrix3D temp;
+        Vectorial_MultidimArray temp;
         OPERATION(arrayByArray, *this, op1, temp, '+');
         return temp;
     }
@@ -432,9 +432,9 @@ public:
     /** v3=v1-v2.
      * @ingroup VectorialAritmetic
      */
-    Vectorial_Matrix3D operator-(const Vectorial_Matrix3D& op1) const
+    Vectorial_MultidimArray operator-(const Vectorial_MultidimArray& op1) const
     {
-        Vectorial_Matrix3D temp;
+        Vectorial_MultidimArray temp;
         OPERATION(arrayByArray, *this, op1, temp, '-');
         return temp;
     }
@@ -442,9 +442,9 @@ public:
     /** v3=v1*v2.
      * @ingroup VectorialAritmetic
      */
-    Vectorial_Matrix3D operator*(const Vectorial_Matrix3D& op1) const
+    Vectorial_MultidimArray operator*(const Vectorial_MultidimArray& op1) const
     {
-        Vectorial_Matrix3D temp;
+        Vectorial_MultidimArray temp;
         OPERATION(arrayByArray, *this, op1, temp, '*');
         return temp;
     }
@@ -452,9 +452,9 @@ public:
     /** v3=v1/v2.
      * @ingroup VectorialAritmetic
      */
-    Vectorial_Matrix3D operator/(const Vectorial_Matrix3D& op1) const
+    Vectorial_MultidimArray operator/(const Vectorial_MultidimArray& op1) const
     {
-        Vectorial_Matrix3D temp;
+        Vectorial_MultidimArray temp;
         OPERATION(arrayByArray, *this, op1, temp, '/');
         return temp;
     }
@@ -462,9 +462,9 @@ public:
     /** v3=v1^v2.
      * @ingroup VectorialAritmetic
      */
-    Vectorial_Matrix3D operator^(const Vectorial_Matrix3D& op1) const
+    Vectorial_MultidimArray operator^(const Vectorial_MultidimArray& op1) const
     {
-        Vectorial_Matrix3D temp;
+        Vectorial_MultidimArray temp;
         OPERATION(arrayByArray, *this, op1, temp, '^');
         return temp;
     }
@@ -472,7 +472,7 @@ public:
     /** v3+=v2.
      * @ingroup VectorialAritmetic
      */
-    void operator+=(const Vectorial_Matrix3D& op1)
+    void operator+=(const Vectorial_MultidimArray& op1)
     {
         OPERATION(arrayByArray, *this, op1, *this, '+');
     }
@@ -480,7 +480,7 @@ public:
     /** v3-=v2.
      * @ingroup VectorialAritmetic
      */
-    void operator-=(const Vectorial_Matrix3D& op1)
+    void operator-=(const Vectorial_MultidimArray& op1)
     {
         OPERATION(arrayByArray, *this, op1, *this, '-');
     }
@@ -488,7 +488,7 @@ public:
     /** v3*=v2.
      * @ingroup VectorialAritmetic
      */
-    void operator*=(const Vectorial_Matrix3D& op1)
+    void operator*=(const Vectorial_MultidimArray& op1)
     {
         OPERATION(arrayByArray, *this, op1, *this, '*');
     }
@@ -496,7 +496,7 @@ public:
     /** v3/=v2.
      * @ingroup VectorialAritmetic
      */
-    void operator/= (const Vectorial_Matrix3D& op1)
+    void operator/= (const Vectorial_MultidimArray& op1)
     {
         OPERATION(arrayByArray, *this, op1, *this, '/');
     }
@@ -504,7 +504,7 @@ public:
     /** v3^=v2.
      * @ingroup VectorialAritmetic
      */
-    void operator^=(const Vectorial_Matrix3D& op1)
+    void operator^=(const Vectorial_MultidimArray& op1)
     {
         OPERATION(arrayByArray, *this, op1, *this, '^');
     }
@@ -518,9 +518,9 @@ public:
     /** v3=v1+k.
      * @ingroup VectorialAritmetic
      */
-    Vectorial_Matrix3D operator+(double op1) const
+    Vectorial_MultidimArray operator+(double op1) const
     {
-        Vectorial_Matrix3D temp;
+        Vectorial_MultidimArray temp;
         OPERATION(arrayByScalar, *this, op1, temp, '+');
         return temp;
     }
@@ -528,9 +528,9 @@ public:
     /** v3=v1-k.
      * @ingroup VectorialAritmetic
      */
-    Vectorial_Matrix3D operator-(double op1) const
+    Vectorial_MultidimArray operator-(double op1) const
     {
-        Vectorial_Matrix3D temp;
+        Vectorial_MultidimArray temp;
         OPERATION(arrayByScalar, *this, op1, temp, '-');
         return temp;
     }
@@ -538,9 +538,9 @@ public:
     /** v3=v1*k.
      * @ingroup VectorialAritmetic
      */
-    Vectorial_Matrix3D operator*(double op1) const
+    Vectorial_MultidimArray operator*(double op1) const
     {
-        Vectorial_Matrix3D temp;
+        Vectorial_MultidimArray temp;
         OPERATION(arrayByScalar, *this, op1, temp, '*');
         return temp;
     }
@@ -548,9 +548,9 @@ public:
     /** v3=v1/k.
      * @ingroup VectorialAritmetic
      */
-    Vectorial_Matrix3D operator/(double op1) const
+    Vectorial_MultidimArray operator/(double op1) const
     {
-        Vectorial_Matrix3D temp;
+        Vectorial_MultidimArray temp;
         OPERATION(arrayByScalar, *this, op1, temp, '/');
         return temp;
     }
@@ -558,9 +558,9 @@ public:
     /** v3=v1^k.
      * @ingroup VectorialAritmetic
      */
-    Vectorial_Matrix3D operator^(double op1) const
+    Vectorial_MultidimArray operator^(double op1) const
     {
-        Vectorial_Matrix3D temp;
+        Vectorial_MultidimArray temp;
         OPERATION(arrayByScalar, *this, op1, temp, '^');
         return temp;
     }
@@ -605,7 +605,7 @@ public:
         OPERATION(arrayByScalar, *this, op1, *this, '^');
     }
 
-#undef Vectorial_Matrix3D
+#undef Vectorial_MultidimArray
 
 };
 

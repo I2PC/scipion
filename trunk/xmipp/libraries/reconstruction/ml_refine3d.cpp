@@ -47,17 +47,17 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
     }
     if (checkParameter(argc, argv, "-show_all_ML_options"))
     {
-	if (fourier_mode)
+        if (fourier_mode)
 
-	{
-	    Prog_MLFalign2D_prm MLF_prm;
-	    MLF_prm.extendedUsage(true);
-	}
-	else
-	{
-	    Prog_MLalign2D_prm ML_prm;
-	    ML_prm.extendedUsage(true);
-	}
+        {
+            Prog_MLFalign2D_prm MLF_prm;
+            MLF_prm.extendedUsage(true);
+        }
+        else
+        {
+            Prog_MLalign2D_prm ML_prm;
+            ML_prm.extendedUsage(true);
+        }
     }
     if (checkParameter(argc, argv, "-show_all_ART_options"))
     {
@@ -99,26 +99,31 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
             cline = (DFi.get_current_line()).get_text();
             comment = comment + cline;
             // regenerate command line
-	    argv2 = NULL;
-	    argc2 = 0;
+            argv2 = NULL;
+            argc2 = 0;
             generateCommandLine(comment, argc2, argv2, copy);
             // Get number of volumes and names to generate SFvol
-            if (fourier_mode) fn_root = getParameter(argc2, argv2, "-o", "mlf3d");
-            else fn_root = getParameter(argc2, argv2, "-o", "ml3d");
+            if (fourier_mode)
+                fn_root = getParameter(argc2, argv2, "-o", "mlf3d");
+            else
+                fn_root = getParameter(argc2, argv2, "-o", "ml3d");
             fn_vol = getParameter(argc2, argv2, "-vol");
             istart = textToInteger(getParameter(argc2, argv2, "-istart"));
             if (Is_VolumeXmipp(fn_vol))
             {
-                SFvol.reserve(1);
-                SFvol.insert(fn_vol);
+                SFvol.clear();
+                SFvol.addObject();
+                SFvol.setValue(MDL_IMAGE, fn_vol);
+                SFvol.setValue(MDL_ENABLED, 1);
             }
             else
             {
                 SFvol.read(fn_vol);
             }
-            Nvols = SFvol.ImgNo();
+            SFvol.removeObjects(MDL_ENABLED, -1);
+            Nvols = SFvol.size();
+
             SFvol.clear();
-            SFvol.go_beginning();
             for (int ivol = 0; ivol < Nvols; ivol++)
             {
                 fn_tmp = fn_root + "_it";
@@ -129,8 +134,10 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
                     fn_tmp.compose(fn_tmp, ivol + 1, "");
                 }
                 fn_tmp += ".vol";
-                SFvol.insert(fn_tmp);
-            }
+                SFvol.addObject();
+                SFvol.setValue(MDL_IMAGE, fn_tmp);
+                SFvol.setValue(MDL_ENABLED, 1):
+                    }
             fn_vol = fn_root + "_it";
             fn_vol.compose(fn_vol, istart - 1, "");
             fn_vol += "_restart.sel";
@@ -138,31 +145,36 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
         }
     }
     else
-    {
-	// no restart, just copy argc to argc2 and argv to argv2
-	argc2 = argc;
-	argv2 = argv;
+{
+        // no restart, just copy argc to argc2 and argv to argv2
+        argc2 = argc;
+        argv2 = argv;
     }
 
 
     //Read Refine3d parameters
     fn_sel = getParameter(argc2, argv2, "-i");
-    if (fourier_mode) fn_root = getParameter(argc2, argv2, "-o", "mlf3d");
-    else fn_root = getParameter(argc2, argv2, "-o", "ml3d");
+    if (fourier_mode)
+        fn_root = getParameter(argc2, argv2, "-o", "mlf3d");
+    else
+        fn_root = getParameter(argc2, argv2, "-o", "ml3d");
     if (!do_restart)
     {
         // Fill volume selfile
         fn_vol = getParameter(argc2, argv2, "-vol");
+        SFvol.clear();
         if (Is_VolumeXmipp(fn_vol))
         {
-            SFvol.reserve(1);
-            SFvol.insert(fn_vol);
+            SFvol.addObject();
+            SFvol.setValue(MDL_IMAGE, fn_vol);
+            SFvol.setValue(MDL_ENABLED, 1);
         }
         else
         {
             SFvol.read(fn_vol);
         }
-        Nvols = SFvol.ImgNo();
+        SFvol.removeObjects(MDL_ENABLED, -1);
+        Nvols = SFvol.size();
     }
 
     angular = textToFloat(getParameter(argc2, argv2, "-ang", "10"));
@@ -188,7 +200,8 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
     skip_reconstruction = checkParameter(argc2, argv2, "-skip_reconstruction");
 
     // Checks
-    if (lowpass > 0.5) REPORT_ERROR(1, "Digital frequency for low-pass filter should be smaller than 0.5");
+    if (lowpass > 0.5)
+        REPORT_ERROR(1, "Digital frequency for low-pass filter should be smaller than 0.5");
 
 }
 
@@ -210,12 +223,11 @@ void Prog_Refine3d_prm::usage()
 void Prog_Refine3d_prm::MLF_usage()
 {
     std::cerr << "Usage:  mlf_refine3d [options] " << std::endl;
-    std::cerr << "   -i <selfile>                : Selfile with all input images \n";
-    std::cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images \n";
-    std::cerr << "      OR -no_ctf                   OR do not use any CTF correction \n";
-    std::cerr << "   -vol <volume/selfile>        : Initial reference volume \n";
-    std::cerr << "                               :  OR selfile with multiple reference volumes\n";
+    std::cerr << "   -i <selfile>                : Input metadata file with all input images \n";
+    std::cerr << "   -vol <volume/selfile>       : Initial reference volume \n";
+    std::cerr << "                               :  OR metadata file with multiple reference volumes\n";
     std::cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
+    std::cerr << " [ -no_ctf ]                   : Do not use any CTF correction \n";
     std::cerr << " [ -ang <float=10> ]           : Angular sampling (degrees) \n";
     std::cerr << " [ -iter <int=25>  ]           : Maximum number of iterations \n";
     std::cerr << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n";
@@ -340,7 +352,7 @@ void Prog_Refine3d_prm::produceSideInfo(int rank)
     mysampling.SetSampling(angular);
     if (fn_symmask != "")
         fn_sym_loc="c1";
-    else 
+    else
         fn_sym_loc=fn_sym;
 
     if (!mysampling.SL.isSymmetryGroup(fn_sym_loc, symmetry, sym_order))
@@ -352,22 +364,25 @@ void Prog_Refine3d_prm::produceSideInfo(int rank)
     //Only the master creates a docfile with the library angles
     if (rank == 0)
     {
-        DocFile  DFlib;
+        MetaData  DFlib;
         for (int ilib = 0; ilib < mysampling.no_redundant_sampling_points_angles.size(); ilib++)
         {
             double rot=XX(mysampling.no_redundant_sampling_points_angles[ilib]);
             double tilt=YY(mysampling.no_redundant_sampling_points_angles[ilib]);
             double psi = 0.;
-            DFlib.append_angles(rot,tilt,psi,"rot","tilt","psi");
+            DFlib.addObject();
+            DFlib.setValue(MDL_ANGLEROT, rot);
+            DFlib.setValue(MDL_ANGLETILT, tilt);
+            DFlib.setValue(MDL_ANGLEPSI, psi);
         }
-        FileName fn_tmp = fn_root + "_lib.doc";
+        FileName fn_tmp = fn_root + "_lib.xmd";
         DFlib.write(fn_tmp);
     }
 
 }
 
 // Projection of the reference (blob) volume =================================
-void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank, int size)
+void Prog_Refine3d_prm::project_reference_volume(MetaData &SFlib, int rank, int size)
 {
 
     VolumeXmipp                   vol;
@@ -377,7 +392,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank, int s
     int                           nvol, nl, nr_dir, my_rank;
 
 
-    // Here all nodes fill SFlib and DFlib, but each node actually projects 
+    // Here all nodes fill SFlib and DFlib, but each node actually projects
     // only a part of the projections. In this way parallellization is obtained
 
     // Total number of projections
@@ -398,14 +413,15 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank, int s
     nvol = 0;
     nr_dir = 0;
     fn_tmp = fn_root + "_lib";
-    SFvol.go_beginning();
-    while (!SFvol.eof())
+    SFvol.firstObject();
+    FOR_ALL_OBJECTS_IN_METADATA(SFvol)
     {
-        
+
         eachvol_start.push_back(nr_dir);
-        vol.read(SFvol.NextImg());
+        SFvol.getValue(MDL_IMAGE, fn_tmp);
+        vol.read(fn_tmp);
         vol().setXmippOrigin();
-        
+
         for (int ilib = 0; ilib < mysampling.no_redundant_sampling_points_angles.size(); ilib++)
         {
             fn_proj.compose(fn_tmp, nr_dir + 1, "proj");
@@ -422,9 +438,17 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank, int s
             }
 
             // But all ranks gather the information in SFlib (and in eachvol_end and eachvol_start)
-            SFlib.insert(fn_proj, SelLine::ACTIVE);
+            SFlib.addObject();
+            SFlib.setValue(MDL_IMAGE, fn_proj);
+            SFlib.setValue(MDL_ENABLED, 1);
+            SFlib.setValue(MDL_ANGLEROT, rot);
+            SFlib.setValue(MDL_ANGLETILT, tilt);
+            SFlib.setValue(MDL_ANGLEPSI, psi);
+            // New for metadata: store which volume in SFlib
+            SFlib.setValue(MDL_REF, nvol);
             nr_dir++;
-            if (verb > 0 && (nr_dir % XMIPP_MAX(1, nl / 60) == 0)) progress_bar(nr_dir);
+            if (verb > 0 && (nr_dir % XMIPP_MAX(1, nl / 60) == 0))
+                progress_bar(nr_dir);
         }
         eachvol_end.push_back(nr_dir - 1);
         nvol++;
@@ -438,7 +462,7 @@ void Prog_Refine3d_prm::project_reference_volume(SelFile &SFlib, int rank, int s
     // Only the master write the complete SFlib
     if (rank == 0)
     {
-        fn_tmp = fn_root + "_lib.sel";
+        fn_tmp = fn_root + "_lib.xmd";
         SFlib.write(fn_tmp);
     }
 
@@ -450,7 +474,7 @@ void Prog_Refine3d_prm::make_noise_images(std::vector<ImageXmipp> &Iref)
 
     ImageXmipp img;
     FileName   fn_img;
-    SelFile    SFt;
+    MetaData    SFt;
 
     SFt.clear();
     for (int i = 0; i < Iref.size(); i++)
@@ -458,13 +482,21 @@ void Prog_Refine3d_prm::make_noise_images(std::vector<ImageXmipp> &Iref)
         img = Iref[i];
         img().initZeros();
         img().addNoise(0, 1, "gaussian");
-        if (Iref[i].weight() > 1.) img() /= sqrt(Iref[i].weight());
+        if (Iref[i].weight() > 1.)
+            img() /= sqrt(Iref[i].weight());
         fn_img = fn_root + "_noise";
         fn_img.compose(fn_img, i, "xmp");
         img.write(fn_img);
-        SFt.insert(fn_img);
+        SFt.addObject();
+        SFt.setValue(MDL_IMAGE, fn_img);
+        SFt.setValue(MDL_ENABLED, 1);
+        //New for metadata: store angles and weights in metadata
+        SFlib.setValue(MDL_ANGLEROT, Iref[i].rot());
+        SFlib.setValue(MDL_ANGLETILT, Iref[i].tilt());
+        SFlib.setValue(MDL_ANGLEPSI, Iref[i].psi());
+        SFlib.setValue(MDL_WEIGHT, Iref[i].weight());
     }
-    fn_img = fn_root + "_noise.sel";
+    fn_img = fn_root + "_noise.xmd";
     SFt.write(fn_img);
 
 }
@@ -476,10 +508,12 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
 
     VolumeXmipp            new_vol;
     FileName               fn_tmp, fn_insel, fn_blob;
-    SelFile                SFall, SFone;
+    MetaData                SFall, SFone;
 
-    if (noise == 1) fn_tmp = fn_root + "_noise";
-    else if (noise == 2) fn_tmp = fn_root + "_cref";
+    if (noise == 1)
+        fn_tmp = fn_root + "_noise";
+    else if (noise == 2)
+        fn_tmp = fn_root + "_cref";
     else
     {
         fn_tmp = fn_root + "_it";
@@ -489,11 +523,12 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
             fn_blob = fn_root + "_it";
             fn_blob.compose(fn_blob, iter - 1, "");
         }
-        else fn_blob = "";
+        else
+            fn_blob = "";
     }
 
     // Setup selfile for reconstruction
-    fn_insel = fn_tmp + ".sel";
+    fn_insel = fn_tmp + "_img.xmd";
     if (Nvols > 1)
     {
         fn_tmp += "_vol";
@@ -505,6 +540,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         }
         // Select only relevant projections to reconstruct
         SFall.read(fn_insel);
+        /// FIXME UNTIL HERE ..... rethink how to do this...
         SFall.go_beginning();
         for (int nr = eachvol_start[volno]; nr <= eachvol_end[volno]; nr++)
         {
@@ -517,21 +553,25 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
     }
     else
     {
-        if (fn_blob != "") fn_blob += ".basis";
+        if (fn_blob != "")
+            fn_blob += ".basis";
     }
 
     if (reconstruct_fourier)
     {
         // read command line (fn_sym, angular etc.)
         Prog_RecFourier_prm   fourier_prm;
-        if (verb > 0) std::cerr << "--> Fourier-interpolation reconstruction " << std::endl;
+        if (verb > 0)
+            std::cerr << "--> Fourier-interpolation reconstruction " << std::endl;
         fourier_prm.read(argc, argv);
         fourier_prm.fn_sel = fn_insel;
+        // TODO: check how this is done now with metadata....
         fourier_prm.fn_doc="";
         fourier_prm.do_weights = true;
         fourier_prm.fn_out = fn_tmp + ".vol";
         fourier_prm.verb = verb;
-        if (volno > 0) fourier_prm.verb = 0;
+        if (volno > 0)
+            fourier_prm.verb = 0;
         fourier_prm.show();
         fourier_prm.produce_Side_info();
         fourier_prm.run();
@@ -543,12 +583,14 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         Plain_ART_Parameters   dummy;
         GridVolume             new_blobs;
         GridVolume             start_blobs;
-        if (verb > 0) std::cerr << "--> weighted least-squares ART reconstruction " << std::endl;
+        if (verb > 0)
+            std::cerr << "--> weighted least-squares ART reconstruction " << std::endl;
 
         // Read ART parameters from command line & I/O with outer loop of Refine3d
         art_prm.read(argc, argv);
         art_prm.WLS = true;
-        if (fn_symmask != "") art_prm.fn_sym = "";
+        if (fn_symmask != "")
+            art_prm.fn_sym = "";
         if (!checkParameter(argc, argv, "-n"))
             art_prm.no_it = 10;
         if (!checkParameter(argc, argv, "-l"))
@@ -578,14 +620,15 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
 
     }
 
-    if (verb > 0) std::cerr << " -----------------------------------------------------------------" << std::endl;
+    if (verb > 0)
+        std::cerr << " -----------------------------------------------------------------" << std::endl;
 
 }
 
 void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int iter)
 {
 
-    SelFile                     SFnoise;
+    MetaData                    SFnoise;
     Matrix2D<std::complex<double> >  Faux;
     headerXmipp                 head;
     VolumeXmipp                 vol, nvol;
@@ -593,13 +636,13 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
     Matrix1D<double>            alpha_signal, alpha_noise, input_signal, avg_alphaS, avg_alphaN;
     Matrix2D<double>            alpha_T, alpha_N, Msignal, Maux, Mone, mask;
     Projection                  proj;
-    int                         c, dim;
+    int                         c, dim, idum;
     double                      ssnr, issnr, alpha, resol, volweight, sum;
     Matrix1D<int>               center(2), radial_count;
 
     // Read in noise reconstruction and calculate alpha's
-    SFnoise.read(fn_root + "_noise.sel");
-    SFnoise.ImgSize(dim, dim);
+    SFnoise.read(fn_root + "_noise.xmd");
+    ImgSize(Fnoise,dim, idum, idum, idum);
 
     center.initZeros();
     proj().resize(dim, dim);
@@ -645,8 +688,10 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
             SFnoise.jump_lines(nr);
             head.read(SFnoise.get_current_file());
             // alpha denominator
-            if (c == 0) alpha_N = Mone * head.Weight();
-            else alpha_N += Mone * head.Weight();
+            if (c == 0)
+                alpha_N = Mone * head.Weight();
+            else
+                alpha_N += Mone * head.Weight();
             // alpha nominator
             project_Volume(nvol(), proj, dim, dim, head.Phi(), head.Theta(), head.Psi());
             apply_cont_mask(mask, proj(), proj());
@@ -655,8 +700,10 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
             CenterFFT(Maux, true);
             Maux.setXmippOrigin();
             Maux *= Maux;
-            if (c == 0) alpha_T = Maux * head.Weight();
-            else alpha_T += Maux * head.Weight();
+            if (c == 0)
+                alpha_T = Maux * head.Weight();
+            else
+                alpha_T += Maux * head.Weight();
             // input signal
             project_Volume(vol(), proj, dim, dim, head.Phi(), head.Theta(), head.Psi());
             apply_cont_mask(mask, proj(), proj());
@@ -665,11 +712,14 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
             CenterFFT(Maux, true);
             Maux.setXmippOrigin();
             Maux *= Maux;
-            if (c == 0) Msignal = Maux * head.Weight();
-            else Msignal += Maux * head.Weight();
+            if (c == 0)
+                Msignal = Maux * head.Weight();
+            else
+                Msignal += Maux * head.Weight();
             volweight += head.Weight();
             c++;
-            if (c % XMIPP_MAX(1, SFnoise.ImgNo() / 60) == 0 && verb > 0) progress_bar(c);
+            if (c % XMIPP_MAX(1, SFnoise.ImgNo() / 60) == 0 && verb > 0)
+                progress_bar(c);
         }
 
         alpha_T.setXmippOrigin();
@@ -702,7 +752,8 @@ void Prog_Refine3d_prm::calculate_3DSSNR(Matrix1D<double> &spectral_signal, int 
             avg_alphaS += alpha_signal;
         }
     }
-    if (verb > 0) progress_bar(SFnoise.ImgNo());
+    if (verb > 0)
+        progress_bar(SFnoise.ImgNo());
     spectral_signal /= (double)Nvols;
     avg_alphaN /= (double)Nvols;
     avg_alphaS /= (double)Nvols;
@@ -759,7 +810,8 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise)
                 fn_tmp2 = fn_tmp + "_vol";
                 fn_tmp2.compose(fn_tmp2, volno + 1, "vol");
             }
-            else fn_tmp2 = fn_tmp + ".vol";
+            else
+                fn_tmp2 = fn_tmp + ".vol";
             ref_vol.write(fn_tmp2);
             volno++;
         }
@@ -865,7 +917,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
     locsampling.SL.read_sym_file(fn_sym);
 
     if ( !(fn_sym == "c1" || fn_sym == "C1" ) || (lowpass > 0) ||
-        (fn_solv != "") || (do_prob_solvent) || (threshold_solvent != 999))
+         (fn_solv != "") || (do_prob_solvent) || (threshold_solvent != 999))
     {
 
         SFvol.go_beginning();
@@ -943,7 +995,8 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
                     // The following is because binarize() seems buggy
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vsolv())
                     {
-                        if (dVkij(Vsolv(), k, i, j) != 0.) dVkij(Vsolv(), k, i, j) = 1.;
+                        if (dVkij(Vsolv(), k, i, j) != 0.)
+                            dVkij(Vsolv(), k, i, j) = 1.;
                     }
                 }
                 else if (fn_solv != "")
@@ -960,7 +1013,8 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
                     // The following is because binarize() seems buggy
                     FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Vsolv())
                     {
-                        if (dVkij(Vsolv(), k, i, j) != 0.) dVkij(Vsolv(), k, i, j) = 1.;
+                        if (dVkij(Vsolv(), k, i, j) != 0.)
+                            dVkij(Vsolv(), k, i, j) = 1.;
                     }
                 }
                 if (do_deblob_solvent)
@@ -1022,7 +1076,8 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
             vol.write(fn_vol);
 
         }
-        if (verb > 0) std::cerr << " -----------------------------------------------------------------" << std::endl;
+        if (verb > 0)
+            std::cerr << " -----------------------------------------------------------------" << std::endl;
     }
 
 }
@@ -1039,7 +1094,8 @@ bool Prog_Refine3d_prm::check_convergence(int iter)
     int                    dim;
     bool                   converged = true;
 
-    if (verb > 0) std::cerr << "--> checking convergence " << std::endl;
+    if (verb > 0)
+        std::cerr << "--> checking convergence " << std::endl;
 
     for (int volno = 0; volno < Nvols; volno++)
     {
@@ -1051,7 +1107,8 @@ bool Prog_Refine3d_prm::check_convergence(int iter)
             fn_vol += "_vol";
             fn_vol.compose(fn_vol, volno + 1, "vol");
         }
-        else fn_vol += ".vol";
+        else
+            fn_vol += ".vol";
         vol.read(fn_vol);
         vol().setXmippOrigin();
         dim = vol().rowNumber();
@@ -1070,14 +1127,16 @@ bool Prog_Refine3d_prm::check_convergence(int iter)
             fn_tmp += "_vol";
             fn_tmp.compose(fn_tmp, volno + 1, "vol");
         }
-        else fn_tmp += ".vol";
+        else
+            fn_tmp += ".vol";
         old_vol.read(fn_tmp);
         diff_vol() = vol() - old_vol();
         mask_prm.apply_mask(old_vol(), old_vol());
         mask_prm.apply_mask(diff_vol(), diff_vol());
         change = diff_vol().sum2();
         signal = old_vol().sum2();
-        if (change / signal > eps) converged = false;
+        if (change / signal > eps)
+            converged = false;
         if (verb > 0)
         {
             if (Nvols > 1)

@@ -23,10 +23,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <data/args.h>
+#include <data/morphology.h>
+#include <data/filters.h>
 #include "volume_segment.h"
-#include "args.h"
-#include "morphology.h"
-#include "filters.h"
 
 // Read arguments ==========================================================
 void Prog_segment_prm::read(int argc, char **argv)

@@ -27,26 +27,14 @@
 #ifndef STEERABLE_H
 #define STEERABLE_H
 
-#include "matrix3d.h"
-#include "threads.h"
+#include "multidim_array.h"
 #include <vector>
-#include <time.h>
-
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static std::vector<int> status_array;
-
-enum filterType
-{
-    FT_WALLS,
-    FT_FILAMENTS
-};
 
 /// @defgroup MissingWedge Missing wedge
 /// @ingroup DataLibrary
 ///@{
 class MissingWedge
 {
-
 public:
     /// Rot of the positive plane
     double rotPos;
@@ -68,7 +56,7 @@ public:
     }
 
     /// Remove wedge
-    void removeWedge(Matrix3D<double> &V) const;
+    void removeWedge(MultidimArray<double> &V) const;
 };
 ///@}
 
@@ -76,79 +64,45 @@ public:
 /// @ingroup DataLibrary
 ///@{
 
-// Forward declaration
-class Steerable;
-
-struct SteerableThreadArgs
-{
-	Steerable * parent;
-	unsigned int myThreadID;
-    unsigned int numThreads;
-    Matrix3D<double> * Vout;
-    const Matrix3D<double> * Vin;
-    std::vector< Matrix1D<double> > * hx;
-    std::vector< Matrix1D<double> > * hy;
-    std::vector< Matrix1D<double> > * hz;
-    std::vector< Matrix3D<double> > * basis;
-};
-
-struct FilterThreadArgs
-{	
-	unsigned int myThreadID;
-    unsigned int numThreads;
-    filterType filter;
-    Matrix3D<double> * Vtomograph;
-    std::vector< Matrix3D<double> > * basis;
-    double deltaAng;
-};
-
 /** Class for performing steerable filters */
 class Steerable
 {
-
 public:
     // Basis functions for the steerability
-    std::vector< Matrix3D<double> > basis;
+    std::vector< MultidimArray<double> > basis;
 
     // Missing wedge
     const MissingWedge *MW;
 public:
-
-    /// Work to be done by a single thread
-    static void * processSteerableThread( void * parameters );
-    static void * filterThread( void * parameters );
-
     /** Constructor.
        Sigma controls the width of the filter,
        deltaAng controls the accuracy of the final filtering.
        Vtomograph is the volume to filter.
        filterType is wall or filament. */
-    Steerable(double sigma, Matrix3D<double> &Vtomograph, 
-        double deltaAng, 
-        filterType type,
-        const MissingWedge *_MW,
-		unsigned int numThreads = 1);
+    Steerable(double sigma, MultidimArray<double> &Vtomograph,
+        double deltaAng, const std::string &filterType,
+        const MissingWedge *_MW);
     
     /** This function is the one really filtering */
-    void buildBasis(const Matrix3D<double> &Vtomograph, double sigma, unsigned int numThreads);
+    void buildBasis(const MultidimArray<double> &Vtomograph, double sigma);
 
     /** Internal function for the generation of 1D filters. */
     void generate1DFilters(double sigma,
-        const Matrix3D<double> &Vtomograph,
-        std::vector< Matrix1D<double> > &hx,
-        std::vector< Matrix1D<double> > &hy,
-        std::vector< Matrix1D<double> > &hz);
+        const MultidimArray<double> &Vtomograph,
+        std::vector< MultidimArray<double> > &hx,
+        std::vector< MultidimArray<double> > &hy,
+        std::vector< MultidimArray<double> > &hz);
 
     /** Internal function for the generation of 3D filters. */
-    void generate3DFilter(Matrix3D<double>& h3D,
-	std::vector< Matrix1D<double> > &hx,
-	std::vector< Matrix1D<double> > &hy,
-	std::vector< Matrix1D<double> > &hz);
+    void generate3DFilter(MultidimArray<double>& h3D,
+	std::vector< MultidimArray<double> > &hx,
+	std::vector< MultidimArray<double> > &hy,
+	std::vector< MultidimArray<double> > &hz);
 
     /** Internal function for filtering */
-//    void singleFilter(const Matrix3D<double>& Vin,
-//        Matrix1D<double> &hx, Matrix1D<double> &hy, 
-//        Matrix1D<double> &hz, Matrix3D<double> &Vout);
+    void singleFilter(const MultidimArray<double>& Vin,
+        MultidimArray<double> &hx, MultidimArray<double> &hy,
+        MultidimArray<double> &hz, MultidimArray<double> &Vout);
 };
 ///@}
 #endif

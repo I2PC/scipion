@@ -30,6 +30,7 @@
 
 #include "wavelet.h"
 #include "args.h"
+#include "numerical_tools.h"
 #include "histogram.h"
 #include "mask.h"
 
@@ -38,217 +39,21 @@
 
 /* Wavelet ----------------------------------------------------------------- */
 
-// Bilib wavelets ----------------------------------------------------------
-/* Wavelet transform ------------------------------------------------------- */
-void Bilib_DWT(const Matrix1D<double> &input,
-               Matrix1D<double> &result, int iterations, int isign)
+void Bilib_DWT(const MultidimArray<double> &input,
+               MultidimArray<double> &result, int iterations, int isign)
 {
     if (iterations < 1)
-        REPORT_ERROR(1, "Bilib_DWT 2D: iterations must be >=1");
+        REPORT_ERROR(1, "Bilib_DWT: iterations must be >=1");
     int size_multiple = (int)pow(2.0, (double) iterations);
     if (XSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
-                     (std::string)"Bilib_DWT 1D: Xsize must be a multiple of " +
+                     (std::string)"Bilib_DWT: Xsize must be a multiple of " +
                      integerToString(size_multiple));
-
-    result.initZeros(input);
-    TWaveletStruct TW;
-    if (isign == 1)
-        TW.Operation = "Analysis";
-    else if (isign == -1)
-        TW.Operation = "Synthesis";
-    else
-        REPORT_ERROR(1, (std::string)"waveletTransform 1D: unrecognized isign");
-    TW.Filter = "Orthonormal Spline";
-    TW.BoundaryConditions = "Mirror";
-    TW.Order = "3";
-    TW.Alpha = 0;
-
-    if (isign == 1)
-    {
-        // First iteration
-        TW.Input = MULTIDIM_ARRAY(input);
-        TW.NxOutput = TW.NxInput = XSIZE(input);
-        TW.NyOutput = TW.NyInput = 1;
-        TW.NzOutput = TW.NzInput = 1;
-        TW.Output = MULTIDIM_ARRAY(result);
-        Wavelet(&TW);
-
-        // Subsequent iterations
-        for (int i = 1; i < iterations; i++)
-        {
-            // Size of the Lowest subband
-            int xsize = XSIZE(input) / (int)pow(2.0, (double)i);
-
-            // Pick the Lowest subband
-            Matrix1D<double> input_aux(xsize), result_aux(xsize);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
-            	DIRECT_VEC_ELEM(input_aux, i) = DIRECT_VEC_ELEM(result, i);
-
-            // DWT
-            TW.Input = MULTIDIM_ARRAY(input_aux);
-            TW.NxOutput = TW.NxInput = XSIZE(input_aux);
-            TW.NyOutput = TW.NyInput = 1;
-            TW.NzOutput = TW.NzInput = 1;
-            TW.Output = MULTIDIM_ARRAY(result_aux);
-            Wavelet(&TW);
-
-            // Return the subband to the output
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
-            	DIRECT_VEC_ELEM(result, i) = DIRECT_VEC_ELEM(result_aux, i);
-        }
-    }
-    else if (isign == -1)
-    {
-        // Subsequent iterations
-        for (int i = iterations - 1; i >= 1; i--)
-        {
-            // Size of the Lowest subband
-            int xsize = XSIZE(input) / (int)pow(2.0, (double)i);
-
-            // Pick the Lowest subband
-            Matrix1D<double> input_aux(xsize), result_aux(xsize);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
-            DIRECT_VEC_ELEM(input_aux, i) = DIRECT_VEC_ELEM(input, i);
-
-            // DWT
-            TW.Input = MULTIDIM_ARRAY(input_aux);
-            TW.NxOutput = TW.NxInput = XSIZE(input_aux);
-            TW.NyOutput = TW.NyInput = 1;
-            TW.NzOutput = TW.NzInput = 1;
-            TW.Output = MULTIDIM_ARRAY(result_aux);
-            Wavelet(&TW);
-
-            // Return the subband to the output
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(input_aux)
-            DIRECT_VEC_ELEM(input, i) = DIRECT_VEC_ELEM(result_aux, i);
-        }
-
-        // First iteration
-        TW.Input = MULTIDIM_ARRAY(input);
-        TW.NxOutput = TW.NxInput = XSIZE(input);
-        TW.NyOutput = TW.NyInput = 1;
-        TW.NzOutput = TW.NzInput = 1;
-        TW.Output = MULTIDIM_ARRAY(result);
-        Wavelet(&TW);
-    }
-}
-
-void Bilib_DWT(const Matrix2D<double> &input,
-               Matrix2D<double> &result, int iterations, int isign)
-{
-    if (iterations < 1)
-        REPORT_ERROR(1, "Bilib_DWT 2D: iterations must be >=1");
-    int size_multiple = (int)pow(2.0, (double) iterations);
-    if (XSIZE(input) % size_multiple != 0)
-        REPORT_ERROR(1,
-                     (std::string)"Bilib_DWT 2D: Xsize must be a multiple of " +
-                     integerToString(size_multiple));
-    if (YSIZE(input) % size_multiple != 0)
+    if (YSIZE(input) > 1 && YSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
                      (std::string)"Bilib_DWT 2D: Ysize must be a multiple of " +
                      integerToString(size_multiple));
-
-    result.initZeros(input);
-    TWaveletStruct TW;
-    if (isign == 1)
-        TW.Operation = "Analysis";
-    else if (isign == -1)
-        TW.Operation = "Synthesis";
-    else
-        REPORT_ERROR(1, (std::string)"waveletTransform 1D: unrecognized isign");
-    TW.Filter = "Orthonormal Spline";
-    TW.BoundaryConditions = "Mirror";
-    TW.Order = "3";
-    TW.Alpha = 0;
-
-    if (isign == 1)
-    {
-        // First iteration
-        TW.Input = MULTIDIM_ARRAY(input);
-        TW.NxOutput = TW.NxInput = XSIZE(input);
-        TW.NyOutput = TW.NyInput = YSIZE(input);
-        TW.NzOutput = TW.NzInput = 1;
-        TW.Output = MULTIDIM_ARRAY(result);
-        Wavelet(&TW);
-
-        // Subsequent iterations
-        for (int i = 1; i < iterations; i++)
-        {
-            // Size of the Lowest subband
-            int xsize = XSIZE(input) / (int)pow(2.0, (double)i);
-            int ysize = YSIZE(input) / (int)pow(2.0, (double)i);
-
-            // Pick the Lowest subband
-            Matrix2D<double> input_aux(ysize, xsize), result_aux(ysize, xsize);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            	DIRECT_MAT_ELEM(input_aux, i, j) = DIRECT_MAT_ELEM(result, i, j);
-
-            // DWT
-            TW.Input = MULTIDIM_ARRAY(input_aux);
-            TW.NxOutput = TW.NxInput = XSIZE(input_aux);
-            TW.NyOutput = TW.NyInput = YSIZE(input_aux);
-            TW.NzOutput = TW.NzInput = 1;
-            TW.Output = MULTIDIM_ARRAY(result_aux);
-            Wavelet(&TW);
-
-            // Return the subband to the output
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            	DIRECT_MAT_ELEM(result, i, j) = DIRECT_MAT_ELEM(result_aux, i, j);
-        }
-    }
-    else if (isign == -1)
-    {
-        // Subsequent iterations
-        for (int i = iterations - 1; i >= 1; i--)
-        {
-            // Size of the Lowest subband
-            int xsize = XSIZE(input) / (int)pow(2.0, (double)i);
-            int ysize = YSIZE(input) / (int)pow(2.0, (double)i);
-
-            // Pick the Lowest subband
-            Matrix2D<double> input_aux(ysize, xsize), result_aux(ysize, xsize);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-                DIRECT_MAT_ELEM(input_aux, i, j) = DIRECT_MAT_ELEM(input, i, j);
-
-            // DWT
-            TW.Input = MULTIDIM_ARRAY(input_aux);
-            TW.NxOutput = TW.NxInput = XSIZE(input_aux);
-            TW.NyOutput = TW.NyInput = YSIZE(input_aux);
-            TW.NzOutput = TW.NzInput = 1;
-            TW.Output = MULTIDIM_ARRAY(result_aux);
-            Wavelet(&TW);
-
-            // Return the subband to the output
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(input_aux)
-            	DIRECT_MAT_ELEM(input, i, j) = DIRECT_MAT_ELEM(result_aux, i, j);
-        }
-
-        // First iteration
-        TW.Input = MULTIDIM_ARRAY(input);
-        TW.NxOutput = TW.NxInput = XSIZE(input);
-        TW.NyOutput = TW.NyInput = YSIZE(input);
-        TW.NzOutput = TW.NzInput = 1;
-        TW.Output = MULTIDIM_ARRAY(result);
-        Wavelet(&TW);
-    }
-}
-
-void Bilib_DWT(const Matrix3D<double> &input,
-               Matrix3D<double> &result, int iterations, int isign)
-{
-    if (iterations < 1)
-        REPORT_ERROR(1, "Bilib_DWT 2D: iterations must be >=1");
-    int size_multiple = (int)pow(2.0, (double) iterations);
-    if (XSIZE(input) % size_multiple != 0)
-        REPORT_ERROR(1,
-                     (std::string)"Bilib_DWT 3D: Xsize must be a multiple of " +
-                     integerToString(size_multiple));
-    if (YSIZE(input) % size_multiple != 0)
-        REPORT_ERROR(1,
-                     (std::string)"Bilib_DWT 3D: Ysize must be a multiple of " +
-                     integerToString(size_multiple));
-    if (ZSIZE(input) % size_multiple != 0)
+    if (ZSIZE(input) > 1 && ZSIZE(input) % size_multiple != 0)
         REPORT_ERROR(1,
                      (std::string)"Bilib_DWT 3D: Zsize must be a multiple of " +
                      integerToString(size_multiple));
@@ -260,7 +65,7 @@ void Bilib_DWT(const Matrix3D<double> &input,
     else if (isign == -1)
         TW.Operation = "Synthesis";
     else
-        REPORT_ERROR(1, (std::string)"waveletTransform 1D: unrecognized isign");
+        REPORT_ERROR(1, (std::string)"waveletTransform: unrecognized isign");
     TW.Filter = "Orthonormal Spline";
     TW.BoundaryConditions = "Mirror";
     TW.Order = "1";
@@ -280,15 +85,16 @@ void Bilib_DWT(const Matrix3D<double> &input,
         for (int i = 1; i < iterations; i++)
         {
             // Size of the Lowest subband
-            int xsize = XSIZE(input) / (int)pow(2.0, (double)i);
-            int ysize = YSIZE(input) / (int)pow(2.0, (double)i);
-            int zsize = ZSIZE(input) / (int)pow(2.0, (double)i);
+            int xsize = XMIPP_MAX(1, XSIZE(input) / (int)pow(2.0, (double)i));
+            int ysize = XMIPP_MAX(1, YSIZE(input) / (int)pow(2.0, (double)i));
+            int zsize = XMIPP_MAX(1, ZSIZE(input) / (int)pow(2.0, (double)i));
 
             // Pick the Lowest subband
-            Matrix3D<double> input_aux(zsize, ysize, xsize),
-            	    	     result_aux(zsize, ysize, xsize);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-                DIRECT_VOL_ELEM(input_aux, k, i, j) = DIRECT_VOL_ELEM(result, k, i, j);
+            MultidimArray<double> input_aux, result_aux;
+            input_aux.resize(zsize, ysize, xsize);
+            result_aux.resize(zsize, ysize, xsize);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(input_aux)
+                DIRECT_A3D_ELEM(input_aux, k, i, j) = DIRECT_A3D_ELEM(result, k, i, j);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -299,8 +105,8 @@ void Bilib_DWT(const Matrix3D<double> &input,
             Wavelet(&TW);
 
             // Return the subband to the output
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-                DIRECT_VOL_ELEM(result, k, i, j) = DIRECT_VOL_ELEM(result_aux, k, i, j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(input_aux)
+                DIRECT_A3D_ELEM(result, k, i, j) = DIRECT_A3D_ELEM(result_aux, k, i, j);
         }
     }
     else if (isign == -1)
@@ -309,15 +115,16 @@ void Bilib_DWT(const Matrix3D<double> &input,
         for (int i = iterations - 1; i >= 1; i--)
         {
             // Size of the Lowest subband
-            int xsize = XSIZE(input) / (int)pow(2.0, (double)i);
-            int ysize = YSIZE(input) / (int)pow(2.0, (double)i);
-            int zsize = ZSIZE(input) / (int)pow(2.0, (double)i);
+            int xsize = XMIPP_MAX(1, XSIZE(input) / (int)pow(2.0, (double)i));
+            int ysize = XMIPP_MAX(1, YSIZE(input) / (int)pow(2.0, (double)i));
+            int zsize = XMIPP_MAX(1, ZSIZE(input) / (int)pow(2.0, (double)i));
 
             // Pick the Lowest subband
-            Matrix3D<double> input_aux(zsize, ysize, xsize),
-            result_aux(zsize, ysize, xsize);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-                DIRECT_VOL_ELEM(input_aux, k, i, j) = DIRECT_VOL_ELEM(input, k, i, j);
+            MultidimArray<double> input_aux, result_aux;
+            input_aux.resize(zsize, ysize, xsize);
+            result_aux.resize(zsize, ysize, xsize);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(input_aux)
+                DIRECT_A3D_ELEM(input_aux, k, i, j) = DIRECT_A3D_ELEM(input, k, i, j);
 
             // DWT
             TW.Input = MULTIDIM_ARRAY(input_aux);
@@ -328,8 +135,8 @@ void Bilib_DWT(const Matrix3D<double> &input,
             Wavelet(&TW);
 
             // Return the subband to the output
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(input_aux)
-                DIRECT_VOL_ELEM(input, k, i, j) = DIRECT_VOL_ELEM(result_aux, k, i, j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(input_aux)
+                DIRECT_A3D_ELEM(input, k, i, j) = DIRECT_A3D_ELEM(result_aux, k, i, j);
         }
 
         // First iteration
@@ -348,26 +155,15 @@ void set_DWT_type(int DWT_type)
     pwtset(DWT_type);
 }
 
-// IDWT --------------------------------------------------------------------
-void IDWT(const Matrix1D<double> &v, Matrix1D<double> &result)
-{
-    DWT(v, result, -1);
-}
-
-void IDWT(const Matrix2D<double> &v, Matrix2D<double> &result)
-{
-    DWT(v, result, -1);
-}
-
-void IDWT(const Matrix3D<double> &v, Matrix3D<double> &result)
+void IDWT(const MultidimArray<double> &v, MultidimArray<double> &result)
 {
     DWT(v, result, -1);
 }
 
 // Lowpass DWT -------------------------------------------------------------
-void DWT_lowpass(const Matrix2D<double> &v, Matrix2D<double> &result)
+void DWT_lowpass2D(const MultidimArray<double> &v, MultidimArray<double> &result)
 {
-    Matrix2D<double> dwt, aux;
+    MultidimArray<double> dwt, aux;
     result.initZeros(YSIZE(v), XSIZE(v) / 2);
     DWT(v, dwt);
     int Nx = Get_Max_Scale(XSIZE(v));
@@ -381,7 +177,7 @@ void DWT_lowpass(const Matrix2D<double> &v, Matrix2D<double> &result)
         SelectDWTBlock(s, v, "01", x1, x2, y1, y2);
         for (y = y1, i = 0; y <= y2; y++, i++)
             for (x = x1, j = 0; x <= x2; x++, j++)
-                result(y, x) = aux(i, j);
+                A2D_ELEM(result, y, x) = A2D_ELEM(aux, i, j);
     }
 }
 
@@ -484,17 +280,17 @@ void Get_Scale_Quadrant(int size_x, int size_y, int size_z,
 }
 
 // Clean quadrant ----------------------------------------------------------
-void clean_quadrant(Matrix2D<double> &I, int scale, const std::string &quadrant)
+void clean_quadrant2D(MultidimArray<double> &I, int scale, const std::string &quadrant)
 {
     int x1, y1, x2, y2;
     Matrix1D<int> corner1(2), corner2(2);
     Matrix1D<double> r(2);
-    SelectDWTBlock(scale, I, quadrant, XX(corner1), XX(corner2),
-                   YY(corner1), YY(corner2));
-    FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2) I(r) = 0;
+    SelectDWTBlock(scale, I, quadrant, XX(corner1), XX(corner2), YY(corner1), YY(corner2));
+    FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2) 
+        I(r) = 0;
 }
 
-void clean_quadrant(Matrix3D<double> &I, int scale, const std::string &quadrant)
+void clean_quadrant3D(MultidimArray<double> &I, int scale, const std::string &quadrant)
 {
     int x1, y1, z1, x2, y2, z2;
     SelectDWTBlock(scale, I, quadrant, x1, x2, y1, y2, z1, z2);
@@ -502,37 +298,24 @@ void clean_quadrant(Matrix3D<double> &I, int scale, const std::string &quadrant)
     Matrix1D<double> r(3);
     SelectDWTBlock(scale, I, quadrant, XX(corner1), XX(corner2),
                    YY(corner1), YY(corner2), ZZ(corner1), ZZ(corner2));
-    FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2) I(r) = 0;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(corner1, corner2) I(r) = 0;
 }
 
-// Soft thresholding -------------------------------------------------------
-void soft_thresholding(Matrix2D<double> &I, double th)
+void soft_thresholding(MultidimArray<double> &I, double th)
 {
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(I)
-    if (ABS(I(i, j)) > th)
-        if (I(i, j) > 0)
-            I(i, j) -= th;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(I)
+        if (ABS(A3D_ELEM(I, k, i, j)) > th)
+        if (A3D_ELEM(I, k, i, j) > 0)
+            A3D_ELEM(I, k, i, j) -= th;
         else
-            I(i, j) += th;
+            A3D_ELEM(I, k, i, j) += th;
     else
-        I(i, j) = 0;
-}
-
-void soft_thresholding(Matrix3D<double> &I, double th)
-{
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(I)
-    if (ABS(I(k, i, j)) > th)
-        if (I(k, i, j) > 0)
-            I(k, i, j) -= th;
-        else
-            I(k, i, j) += th;
-    else
-        I(k, i, j) = 0;
+        A3D_ELEM(I, k, i, j) = 0;
 }
 
 // Adaptive soft thresholding ----------------------------------------------
-void adaptive_soft_thresholding_block(Matrix2D<double> &I, int scale,
-                                      const std::string &quadrant, double sigma)
+void adaptive_soft_thresholding_block2D(MultidimArray<double> &I, int scale,
+                                        const std::string &quadrant, double sigma)
 {
     // Compute block variance
     Matrix1D<int> corner1(2), corner2(2);
@@ -544,7 +327,7 @@ void adaptive_soft_thresholding_block(Matrix2D<double> &I, int scale,
 
     // Now denoise
     double th = sigma * sigma / stddev;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
     {
         if (ABS(I(r)) > th)
             if (I(r) > 0)
@@ -556,7 +339,7 @@ void adaptive_soft_thresholding_block(Matrix2D<double> &I, int scale,
     }
 }
 
-double compute_noise_power(Matrix2D<double> &I)
+double compute_noise_power(MultidimArray<double> &I)
 {
     // Compute histogram of the absolute values of the DWT coefficients
     // at scale=0
@@ -569,35 +352,35 @@ double compute_noise_power(Matrix2D<double> &I)
     Matrix1D<double> r(2);
     SelectDWTBlock(0, I, "01",
                    XX(corner1), XX(corner2), YY(corner1), YY(corner2));
-    FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
     hist.insert_value(ABS(I(r)));
 
     SelectDWTBlock(0, I, "10",
                    XX(corner1), XX(corner2), YY(corner1), YY(corner2));
-    FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
     hist.insert_value(ABS(I(r)));
 
     SelectDWTBlock(0, I, "11",
                    XX(corner1), XX(corner2), YY(corner1), YY(corner2));
-    FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
     hist.insert_value(ABS(I(r)));
 
     return hist.percentil(50) / 0.6745;
 }
 
-void adaptive_soft_thresholding(Matrix2D<double> &I, int scale)
+void adaptive_soft_thresholding2D(MultidimArray<double> &I, int scale)
 {
     double sigma = compute_noise_power(I);
     for (int s = 0; s <= scale; s++)
     {
-        adaptive_soft_thresholding_block(I, s, "01", sigma);
-        adaptive_soft_thresholding_block(I, s, "10", sigma);
-        adaptive_soft_thresholding_block(I, s, "11", sigma);
+        adaptive_soft_thresholding_block2D(I, s, "01", sigma);
+        adaptive_soft_thresholding_block2D(I, s, "10", sigma);
+        adaptive_soft_thresholding_block2D(I, s, "11", sigma);
     }
 }
 
 // Keep central part -------------------------------------------------------
-void DWT_keep_central_part(Matrix2D<double> &I, double R)
+void DWT_keep_central_part(MultidimArray<double> &I, double R)
 {
     Mask_Params mask(INT_MASK);
     mask.type = BINARY_DWT_CIRCULAR_MASK;
@@ -609,13 +392,13 @@ void DWT_keep_central_part(Matrix2D<double> &I, double R)
     mask.smax = Get_Max_Scale(XSIZE(I));
     mask.quadrant = "xx";
     mask.resize(I);
-    mask.generate_2Dmask();
+    mask.generate_mask();
     mask.apply_mask(I, I);
 }
 
 // Bayesian Wiener filtering -----------------------------------------------
 //DWT_Bijaoui_denoise_LL -- Bijaoui denoising at a perticular scale.
-void DWT_Bijaoui_denoise_LL(Matrix2D<double> &WI, int scale,
+void DWT_Bijaoui_denoise_LL2D(MultidimArray<double> &WI, int scale,
                             const std::string &orientation,
                             double mu, double S, double N)
 {
@@ -626,11 +409,11 @@ void DWT_Bijaoui_denoise_LL(Matrix2D<double> &WI, int scale,
     double S_N = S / SN;
     if (S < 1e-6 && N < 1e-6)
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(x0, xF) WI(r) = 0;
+        FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(x0, xF) WI(r) = 0;
     }
     else
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(x0, xF)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(x0, xF)
         {
             double y = WI(r);
             double ymu = y - mu;
@@ -643,7 +426,7 @@ void DWT_Bijaoui_denoise_LL(Matrix2D<double> &WI, int scale,
     }
 }
 
-void DWT_Bijaoui_denoise_LL(Matrix3D<double> &WI, int scale,
+void DWT_Bijaoui_denoise_LL3D(MultidimArray<double> &WI, int scale,
                             const std::string &orientation,
                             double mu, double S, double N)
 {
@@ -655,11 +438,11 @@ void DWT_Bijaoui_denoise_LL(Matrix3D<double> &WI, int scale,
     double S_N = S / SN;
     if (S < 1e-6 && N < 1e-6)
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(x0, xF) WI(r) = 0;
+        FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(x0, xF) WI(r) = 0;
     }
     else
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(x0, xF)
+        FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(x0, xF)
         {
             double y = WI(r);
             double ymu = y - mu;
@@ -686,7 +469,7 @@ void bayesian_solve_eq_system(
     Matrix1D<double> &estimatedS)
 {
 
-    int scale_dim = XSIZE(power);
+    int scale_dim = power.size();
 
     Matrix2D<double> A;
     int extra_constraints = 0;
@@ -727,8 +510,8 @@ void bayesian_solve_eq_system(
     if (white_noise)
         for (int i = 0; i < scale_dim - 1; i++)
         {
-            A(YSIZE(A) - (scale_dim - 1) + i, i)  = -1.01;
-            A(YSIZE(A) - (scale_dim - 1) + i, i + 1) = 1;
+            A(A.mdimy - (scale_dim - 1) + i, i)  = -1.01;
+            A(A.mdimy - (scale_dim - 1) + i, i + 1) = 1;
         }
 
     //initialize the matrix b
@@ -802,7 +585,7 @@ void bayesian_solve_eq_system(
 #undef DEBUG
 
 //#define DEBUG
-Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_scale,
+Matrix1D<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int allowed_scale,
         double SNR0, double SNRF, bool white_noise, int tell, bool denoise)
 {
     /*Calculate the power of the wavelet transformed image */
@@ -827,7 +610,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
     //init the scale vector
     Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
-    int scale_dim = XSIZE(scale);
+    int scale_dim = scale.size();
 
     //define some vectors
     Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
@@ -836,13 +619,13 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
     orientation.push_back("01");
     orientation.push_back("10");
     orientation.push_back("11");
-    for (int j = 0;j < XSIZE(scale);j++)
+    for (int j = 0;j < scale.size();j++)
     {
         for (int k = 0; k < orientation.size(); k++)
         {
             SelectDWTBlock(scale(j), WI, orientation[k],
                            XX(x0), XX(xF), YY(x0), YY(xF));
-            FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(x0, xF)
+            FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(x0, xF)
             {
                 power(j) += WI(r) * WI(r);
                 average(j) += WI(r);
@@ -856,7 +639,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
     double power_rest = 0.0;
     int Ncoefs_rest = 0;
     SelectDWTBlock(scale(scale_dim - 1), WI, "00", XX(x0), XX(xF), YY(x0), YY(xF));
-    FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(x0, xF)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(x0, xF)
     power_rest += WI(r) * WI(r);
     Ncoefs_rest = (int)pow(2.0, 2 * (max_scale - 1 - scale(scale_dim - 1)));
 
@@ -892,13 +675,13 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix2D<double> &WI, int allowed_sca
 
     /* Apply the Bijaoui denoising to all scales >= allowed_scale */
     if (denoise)
-        bayesian_wiener_filtering(WI, allowed_scale, estimatedS);
+        bayesian_wiener_filtering2D(WI, allowed_scale, estimatedS);
 
     return estimatedS;
 }
 #undef DEBUG
 
-void bayesian_wiener_filtering(Matrix2D<double> &WI,
+void bayesian_wiener_filtering2D(MultidimArray<double> &WI,
                                int allowed_scale, Matrix1D<double> &estimatedS)
 {
     std::vector<std::string> orientation;
@@ -910,18 +693,19 @@ void bayesian_wiener_filtering(Matrix2D<double> &WI,
     Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
 
-    for (int i = 0;i < XSIZE(scale);i++)
+    for (int i = 0;i < scale.size();i++)
     {
         double N = estimatedS(i);
-        double S = estimatedS(i + XSIZE(scale));
+        double S = estimatedS(i + scale.size());
         for (int k = 0; k < orientation.size(); k++)
-            DWT_Bijaoui_denoise_LL(WI, scale(i), orientation[k], 0, S, N);
+            DWT_Bijaoui_denoise_LL2D(WI, scale(i), orientation[k], 0, S, N);
     }
 }
 
 //#define DEBUG
-Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_scale,
-        double SNR0, double SNRF, bool white_noise, int tell, bool denoise)
+Matrix1D<double> bayesian_wiener_filtering3D(MultidimArray<double> &WI, int allowed_scale,
+                                                  double SNR0, double SNRF, bool white_noise, 
+                                                  int tell, bool denoise)
 {
     /*Calculate the power of the wavelet transformed image */
     double powerI = WI.sum2();
@@ -945,7 +729,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
     //init the scale vector
     Matrix1D<int> scale(allowed_scale + 1);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
-    int scale_dim = XSIZE(scale);
+    int scale_dim = scale.size();
 
     //define some vectors
     Matrix1D<double> power(scale_dim), average(scale_dim), Ncoefs(scale_dim);
@@ -958,13 +742,13 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
     orientation.push_back("101");
     orientation.push_back("110");
     orientation.push_back("111");
-    for (int j = 0;j < XSIZE(scale);j++)
+    for (int j = 0;j < scale.size();j++)
     {
         for (int k = 0; k < orientation.size(); k++)
         {
             SelectDWTBlock(scale(j), WI, orientation[k],
                            XX(x0), XX(xF), YY(x0), YY(xF), ZZ(x0), ZZ(xF));
-            FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(x0, xF)
+            FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(x0, xF)
             {
                 power(j) += WI(r) * WI(r);
                 average(j) += WI(r);
@@ -979,7 +763,7 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
     int Ncoefs_rest = 0;
     SelectDWTBlock(scale(scale_dim - 1), WI, "000", XX(x0), XX(xF), YY(x0), YY(xF),
                    ZZ(x0), ZZ(xF));
-    FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(x0, xF)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D_BETWEEN(x0, xF)
     power_rest += WI(r) * WI(r);
     Ncoefs_rest = (int)pow(2.0, 3 * (max_scale - 1 - scale(scale_dim - 1)));
 
@@ -1014,12 +798,12 @@ Matrix1D<double> bayesian_wiener_filtering(Matrix3D<double> &WI, int allowed_sca
 
     /* Apply the Bijaoui denoising to all scales >= allowed_scale */
     if (denoise)
-        bayesian_wiener_filtering(WI, allowed_scale, estimatedS);
+        bayesian_wiener_filtering3D(WI, allowed_scale, estimatedS);
     return estimatedS;
 }
 #undef DEBUG
 
-void bayesian_wiener_filtering(Matrix3D<double> &WI,
+void bayesian_wiener_filtering3D(MultidimArray<double> &WI,
                                int allowed_scale, Matrix1D<double> &estimatedS)
 {
     std::vector<std::string> orientation;
@@ -1032,14 +816,14 @@ void bayesian_wiener_filtering(Matrix3D<double> &WI,
     orientation.push_back("111");
 
     int max_scale = ROUND(log(double(XSIZE(WI))) / log(2.0));
-    Matrix1D<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(scale) scale(i) = i;
+    MultidimArray<int> scale(XMIPP_MIN(allowed_scale + 1, max_scale - 1));
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(scale) scale(i) = i;
 
     for (int i = 0;i < XSIZE(scale);i++)
     {
         double N = estimatedS(i);
         double S = estimatedS(i + XSIZE(scale));
         for (int k = 0; k < orientation.size(); k++)
-            DWT_Bijaoui_denoise_LL(WI, scale(i), orientation[k], 0, S, N);
+            DWT_Bijaoui_denoise_LL3D(WI, scale(i), orientation[k], 0, S, N);
     }
 }

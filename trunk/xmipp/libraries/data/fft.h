@@ -28,10 +28,7 @@
 
 #include <complex>
 
-#include "matrix1d.h"
-#include "matrix2d.h"
-#include "matrix3d.h"
-
+#include "multidim_array.h"
 #include "funcs.h"
 
 /** @defgroup Fourier Fourier transforms
@@ -81,16 +78,16 @@
 template <typename T>
 void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 {
-    if (XSIZE(idx) < 1 || XSIZE(idx) > 3)
+    if (idx.size() < 1 || idx.size() > 3)
         REPORT_ERROR(1, "FFT_idx2digfreq: Index is not of the correct size");
 
-    freq.resize(XSIZE(idx));
+    freq.resize(idx.size());
 
     int size[3];
     v.getSize(size);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-        FFT_IDX2DIGFREQ(VEC_ELEM(idx, i), size[i], VEC_ELEM(freq, i));
+        FFT_IDX2DIGFREQ(idx(i), size[i], freq(i));
 }
 
 /** Frequency to index
@@ -104,16 +101,16 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 template <typename T>
 void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
 {
-    if (XSIZE(freq) < 1 || XSIZE(freq) > 3)
+    if (freq.size() < 1 || freq.size() > 3)
         REPORT_ERROR(1, "digfreq2FFT_idx: freq is not of the correct size");
 
-    idx.resize(XSIZE(freq));
+    idx.resize(freq.size());
 
     int size[3];
     v.getSize(size);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-        DIGFREQ2FFT_IDX(VEC_ELEM(freq, i), size[i], VEC_ELEM(idx, i));
+        DIGFREQ2FFT_IDX(freq(i), size[i], idx(i));
 }
 
 /** Digital to Continuous frequency
@@ -126,7 +123,9 @@ inline void digfreq2contfreq(const Matrix1D< double >& digfreq,
                              Matrix1D< double >& contfreq,
                              double pixel_size)
 {
-    contfreq = digfreq / pixel_size;
+    contfreq.resize(digfreq);
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(digfreq)
+		contfreq(i) = digfreq(i) / pixel_size;
 }
 
 /** Continuous to Digital frequency
@@ -139,59 +138,41 @@ inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
                              Matrix1D< double >& digfreq,
                              double pixel_size)
 {
-    digfreq = contfreq * pixel_size;
+    digfreq.resize(contfreq);
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(contfreq)
+		digfreq(i) = contfreq(i) * pixel_size;
 }
 
 /** @defgroup FourierFormat Format conversions
  * @ingroup Fourier
  */
 
-/** Conversion from whole -> half 1D
+/** Conversion from whole -> half 
  * @ingroup FourierFormat
  */
-void Whole2Half(const Matrix1D< std::complex < double > > & in,
-                Matrix1D< std::complex < double > > & out);
+void Whole2Half(const MultidimArray< std::complex < double > > & in,
+                MultidimArray< std::complex < double > > & out);
 
-/** Conversion from half -> whole 1D
+/** Conversion from half -> whole 
  * @ingroup FourierFormat
  */
-void Half2Whole(const Matrix1D< std::complex < double > > & in,
-                Matrix1D< std::complex< double > > & out,
-                int orixdim);
+void Half2Whole(const MultidimArray< std::complex < double > > & in,
+                MultidimArray< std::complex< double > > & out,
+                int oridim);
 
-/** Conversion from whole -> half 2D
+/** Conversion from complex -> real,imag
  * @ingroup FourierFormat
  */
-void Whole2Half(const Matrix2D< std::complex < double > > & in,
-                Matrix2D< std::complex < double > > & out);
+void Complex2RealImag(const MultidimArray< std::complex < double > > & in,
+                      MultidimArray< double > & real,
+                      MultidimArray< double > & imag);
 
-/** Conversion from half -> whole 2D
+/** Conversion from real,imag -> complex
  * @ingroup FourierFormat
  */
-void Half2Whole(const Matrix2D< std::complex < double > > & in,
-                Matrix2D< std::complex< double > > & out,
-                int oriydim);
-
-/** Conversion from complex -> real,imag 3D
- * @ingroup FourierFormat
- */
-void Complex2RealImag(const Matrix3D< std::complex < double > > & in,
-                      Matrix3D< double > & real,
-                      Matrix3D< double > & imag);
-
-/** Conversion from complex -> real,imag 2D
- * @ingroup FourierFormat
- */
-void Complex2RealImag(const Matrix2D< std::complex < double > > & in,
-                      Matrix2D< double > & real,
-                      Matrix2D< double > & imag);
-
-/** Conversion from real,imag -> complex 3D
- * @ingroup FourierFormat
- */
-void RealImag2Complex(const Matrix3D< double > & real,
-                      const Matrix3D< double > & imag,
-                      Matrix3D< std::complex < double > > & out);
+void RealImag2Complex(const MultidimArray< double > & real,
+                      const MultidimArray< double > & imag,
+                      MultidimArray< std::complex < double > > & out);
 
 /** @defgroup FourierTransforms Fourier Transforms
  * @ingroup Fourier
@@ -227,31 +208,31 @@ void RealImag2Complex(const Matrix3D< double > & real,
  * 
  * int main() {
  *     try {
- *     	 Matrix1D<double> x(65);
+ *     	 MultidimArray<double> x(65);
  * 	 x.setXmippOrigin();
  * 	 double T=0.5;
  * 	 double T1=6;
  * 	 int N1=(int)CEIL(T1/T);
  * 
  * 	 // Fill x with a pulse from -N1 to N1 (-T1 to T1 in continuous)
- * 	 FOR_ALL_ELEMENTS_IN_MATRIX1D(x)
+ * 	 FOR_ALL_ELEMENTS_IN_ARRAY1D(x)
  * 	    if (ABS(i)<=N1) x(i)=1;
  * 
  * 	 // Compute the Fourier transform
- * 	 Matrix1D< std::complex<double> > X;
- * 	 Matrix1D<double> Xmag;
+ * 	 MultidimArray< std::complex<double> > X;
+ * 	 MultidimArray<double> Xmag;
  * 	 FourierTransform(x,X);
  * 	 FFT_magnitude(X,Xmag);
  * 
  * 	 // Compute the frequency axes
- * 	 Matrix1D<double> contfreq(XSIZE(X)), digfreq(XSIZE(X));
- *          FOR_ALL_ELEMENTS_IN_MATRIX1D(X)
+ * 	 MultidimArray<double> contfreq(XSIZE(X)), digfreq(XSIZE(X));
+ *          FOR_ALL_ELEMENTS_IN_ARRAY1D(X)
  *              FFT_IDX2DIGFREQ(i,XSIZE(X),digfreq(i));
  * 	 digfreq*=2*PI;
  * 	 contfreq=digfreq/T;
  * 
  * 	 // Show all Fourier transforms
- * 	 FOR_ALL_ELEMENTS_IN_MATRIX1D(X) {
+ * 	 FOR_ALL_ELEMENTS_IN_ARRAY1D(X) {
  * 	     if (digfreq(i)>=0)
  *                 std::cout << digfreq(i) << " " << contfreq(i) << " "
  * 		          << XSIZE(X)*Xmag(i) << " "
@@ -267,293 +248,227 @@ void RealImag2Complex(const Matrix3D< double > & real,
  * @endcode
  */
 
-/** Direct Fourier Transform 1D
+/** Direct Fourier Transform
  * @ingroup FourierTransforms
  */
-void FourierTransform(const Matrix1D< double >& in,
-                      Matrix1D< std::complex< double > > & out);
+void FourierTransform(const MultidimArray< double >& in,
+                      MultidimArray< std::complex< double > > & out);
 
-/** Direct Fourier Transform 2D
+/** Inverse Fourier Transform
  * @ingroup FourierTransforms
  */
-void FourierTransform(const Matrix2D< double >& in,
-                      Matrix2D< std::complex< double > > & out);
+void InverseFourierTransform(const MultidimArray< std::complex< double > > & in,
+                             MultidimArray< double >& out);
 
-/** Direct Fourier Transform 3D
+/** Direct Fourier Transform, output half of (centro-symmetric) transform
  * @ingroup FourierTransforms
  */
-void FourierTransform(const Matrix3D< double >& in,
-                      Matrix3D< std::complex< double > > & out);
-
-/** Inverse Fourier Transform 1D
- * @ingroup FourierTransforms
- */
-void InverseFourierTransform(const Matrix1D< std::complex< double > > & in,
-                             Matrix1D< double >& out);
-
-/** Inverse Fourier Transform 2D
- * @ingroup FourierTransforms
- */
-void InverseFourierTransform(const Matrix2D< std::complex< double > > & in,
-                             Matrix2D< double >& out);
-
-/** Inverse Fourier Transform 3D
- * @ingroup FourierTransforms
- */
-void InverseFourierTransform(const Matrix3D< std::complex< double > > & in,
-                             Matrix3D< double >& out);
-
-/** Direct Fourier Transform 1D, output half of (centro-symmetric) transform
- * @ingroup FourierTransforms
- */
-void FourierTransformHalf(const Matrix1D< double >& in,
-                          Matrix1D< std::complex< double > > & out);
-
-/** Direct Fourier Transform 2D, output half of (centro-symmetric) transform
- * @ingroup FourierTransforms
- */
-void FourierTransformHalf(const Matrix2D< double >& in,
-                          Matrix2D< std::complex< double > > & out);
+void FourierTransformHalf(const MultidimArray< double >& in,
+                          MultidimArray< std::complex< double > > & out);
 
 /** Inverse Fourier Transform 1D, input half of (centro-symmetric) transform
  * @ingroup FourierTransforms
  */
-void InverseFourierTransformHalf(const Matrix1D< std::complex< double > > & in,
-                                 Matrix1D< double >& out,
-                                 int orixdim);
-
-
-/** Inverse Fourier Transform 2D, input half of (centro-symmetric) transform
- * @ingroup FourierTransforms
- */
-void InverseFourierTransformHalf(const Matrix2D< std::complex< double > > & in,
-                                 Matrix2D< double >& out,
-                                 int oriydim);
-
-/** Complex Direct Fourier Transform 1D
- * @ingroup FourierTransforms
- */
-void FourierTransform(const Matrix1D< std::complex< double > >& in,
-                      Matrix1D< std::complex< double > > & out);
-
-/** Complex Inverse Fourier Transform 1D
- * @ingroup FourierTransforms
- */
-void InverseFourierTransform(const Matrix1D< std::complex< double > > & in,
-                             Matrix1D< std::complex< double > >& out);
-
-/** Complex Direct Fourier Transform 1D, output half of (centro-symmetric) transform
- * @ingroup FourierTransforms
- */
-void FourierTransformHalf(const Matrix1D<std::complex<double> > &in,
-                          Matrix1D< std::complex<double> > &out);
-
-/** Complex Inverse Fourier Transform 1D, input half of (centro-symmetric) transform
- * @ingroup FourierTransforms
- */
-void InverseFourierTransformHalf(const Matrix1D< std::complex<double> > &in,
-                                 Matrix1D<std::complex<double> > &out, 
-				 int orixdim);
-
+void InverseFourierTransformHalf(const MultidimArray< std::complex< double > > & in,
+                                 MultidimArray< double >& out,
+                                 int oridim);
 
 /** @defgroup FourierOperations Operations with the Fourier Transforms
  * @ingroup Fourier
  */
 
-/** CenterFFT 1D
+/** CenterFFT
  * @ingroup FourierOperations
  */
 template <typename T>
-void CenterFFT(Matrix1D< T >& v, bool forward)
+void CenterFFT(MultidimArray< T >& v, bool forward)
 {
-    Matrix1D< T > aux;
-    int l, shift;
-
-    l = XSIZE(v);
-    aux.resize(l);
-    shift = (int)(l / 2);
-
-    if (!forward)
-        shift = -shift;
-
-    // Shift the input in an auxiliar vector
-    for (int i = 0; i < l; i++)
+    if ( v.getDim() == 1 )
     {
-        int ip = i + shift;
+        // 1D
+        MultidimArray< T > aux;
+        int l, shift;
+        
+        l = XSIZE(v);
+        aux.resize(l);
+        shift = (int)(l / 2);
+        
+        if (!forward)
+            shift = -shift;
 
-        if (ip < 0)
-            ip += l;
-        else if (ip >= l)
-            ip -= l;
-
-        aux(ip) = DIRECT_VEC_ELEM(v, i);
-    }
-
-    // Copy the vector
-    for (int i = 0; i < l; i++)
-        DIRECT_VEC_ELEM(v, i) = DIRECT_VEC_ELEM(aux, i);
-}
-
-/** CenterFFT 2D
- * @ingroup FourierOperations
- */
-template <typename T>
-void CenterFFT(Matrix2D< T >& v, bool forward)
-{
-    Matrix1D< T > aux;
-    int l, shift;
-
-    // Shift in the X direction
-    l = XSIZE(v);
-    aux.resize(l);
-    shift = (int)(l / 2);
-
-    if (!forward)
-        shift = -shift;
-
-    for (int i = 0; i < YSIZE(v); i++)
-    {
-        // Shift the input in an auxiliar vector
-        for (int j = 0; j < l; j++)
-        {
-            int jp = j + shift;
-
-            if (jp < 0)
-                jp += l;
-            else if (jp >= l)
-                jp -= l;
-
-            aux(jp) = DIRECT_MAT_ELEM(v, i, j);
-        }
-
-        // Copy the vector
-        for (int j = 0; j < l; j++)
-            DIRECT_MAT_ELEM(v, i, j) = DIRECT_VEC_ELEM(aux, j);
-    }
-
-    // Shift in the Y direction
-    l = YSIZE(v);
-    aux.resize(l);
-    shift = (int)(l / 2);
-
-    if (!forward)
-        shift = -shift;
-
-    for (int j = 0; j < XSIZE(v); j++)
-    {
         // Shift the input in an auxiliar vector
         for (int i = 0; i < l; i++)
         {
             int ip = i + shift;
-
+            
             if (ip < 0)
                 ip += l;
             else if (ip >= l)
                 ip -= l;
 
-            aux(ip) = DIRECT_MAT_ELEM(v, i, j);
+            aux(ip) = DIRECT_A1D_ELEM(v, i);
         }
 
         // Copy the vector
         for (int i = 0; i < l; i++)
-            DIRECT_MAT_ELEM(v, i, j) = DIRECT_VEC_ELEM(aux, i);
+            DIRECT_A1D_ELEM(v, i) = DIRECT_A1D_ELEM(aux, i);
     }
-}
+    else if ( v.getDim() == 2 )
+    {
+        // 2D
+        MultidimArray< T > aux;
+        int l, shift;
+        
+        // Shift in the X direction
+        l = XSIZE(v);
+        aux.resize(l);
+        shift = (int)(l / 2);
+        
+        if (!forward)
+            shift = -shift;
 
-/** CenterFFT 3D
- * @ingroup FourierOperations
- */
-template <class T>
-void CenterFFT(Matrix3D< T >& v, bool forward)
-{
-    Matrix1D< T > aux;
-    int l, shift;
-
-    // Shift in the X direction
-    l = XSIZE(v);
-    aux.resize(l);
-    shift = (int)(l / 2);
-
-    if (!forward)
-        shift = -shift;
-
-    for (int k = 0; k < ZSIZE(v); k++)
         for (int i = 0; i < YSIZE(v); i++)
         {
             // Shift the input in an auxiliar vector
             for (int j = 0; j < l; j++)
             {
                 int jp = j + shift;
-
+                
                 if (jp < 0)
                     jp += l;
                 else if (jp >= l)
                     jp -= l;
-
-                aux(jp) = DIRECT_VOL_ELEM(v, k, i, j);
+                
+                aux(jp) = DIRECT_A2D_ELEM(v, i, j);
             }
-
+            
             // Copy the vector
             for (int j = 0; j < l; j++)
-                DIRECT_VOL_ELEM(v, k, i, j) = DIRECT_VEC_ELEM(aux, j);
+                DIRECT_A2D_ELEM(v, i, j) = DIRECT_A1D_ELEM(aux, j);
         }
-
-    // Shift in the Y direction
-    l = YSIZE(v);
-    aux.resize(l);
-    shift = (int)(l / 2);
-
-    if (!forward)
-        shift = -shift;
-
-    for (int k = 0; k < ZSIZE(v); k++)
+        
+        // Shift in the Y direction
+        l = YSIZE(v);
+        aux.resize(l);
+        shift = (int)(l / 2);
+        
+        if (!forward)
+            shift = -shift;
+        
         for (int j = 0; j < XSIZE(v); j++)
         {
             // Shift the input in an auxiliar vector
             for (int i = 0; i < l; i++)
             {
                 int ip = i + shift;
-
+                
                 if (ip < 0)
                     ip += l;
                 else if (ip >= l)
                     ip -= l;
-
-                aux(ip) = DIRECT_VOL_ELEM(v, k, i, j);
+                
+                aux(ip) = DIRECT_A2D_ELEM(v, i, j);
             }
-
+            
             // Copy the vector
             for (int i = 0; i < l; i++)
-                DIRECT_VOL_ELEM(v, k, i, j) = DIRECT_VEC_ELEM(aux, i);
+                DIRECT_A2D_ELEM(v, i, j) = DIRECT_A1D_ELEM(aux, i);
         }
+    }
+    else if ( v.getDim() == 3 )
+    {
+        // 3D
+        MultidimArray< T > aux;
+        int l, shift;
 
-    // Shift in the Z direction
-    l = ZSIZE(v);
-    aux.resize(l);
-    shift = (int)(l / 2);
+        // Shift in the X direction
+        l = XSIZE(v);
+        aux.resize(l);
+        shift = (int)(l / 2);
+        
+        if (!forward)
+            shift = -shift;
 
-    if (!forward)
-        shift = -shift;
-
-    for (int i = 0; i < YSIZE(v); i++)
-        for (int j = 0; j < XSIZE(v); j++)
-        {
-            // Shift the input in an auxiliar vector
-            for (int k = 0; k < l; k++)
+        for (int k = 0; k < ZSIZE(v); k++)
+            for (int i = 0; i < YSIZE(v); i++)
             {
-                int kp = k + shift;
-                if (kp < 0)
-                    kp += l;
-                else if (kp >= l)
-                    kp -= l;
+                // Shift the input in an auxiliar vector
+                for (int j = 0; j < l; j++)
+                {
+                    int jp = j + shift;
 
-                aux(kp) = DIRECT_VOL_ELEM(v, k, i, j);
+                    if (jp < 0)
+                        jp += l;
+                    else if (jp >= l)
+                        jp -= l;
+
+                    aux(jp) = DIRECT_A3D_ELEM(v, k, i, j);
+                }
+                
+                // Copy the vector
+                for (int j = 0; j < l; j++)
+                    DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, j);
             }
 
-            // Copy the vector
-            for (int k = 0; k < l; k++)
-                DIRECT_VOL_ELEM(v, k, i, j) = DIRECT_VEC_ELEM(aux, k);
-        }
+        // Shift in the Y direction
+        l = YSIZE(v);
+        aux.resize(l);
+        shift = (int)(l / 2);
+        
+        if (!forward)
+            shift = -shift;
+        
+        for (int k = 0; k < ZSIZE(v); k++)
+            for (int j = 0; j < XSIZE(v); j++)
+            {
+                // Shift the input in an auxiliar vector
+                for (int i = 0; i < l; i++)
+                {
+                    int ip = i + shift;
+                    
+                    if (ip < 0)
+                        ip += l;
+                    else if (ip >= l)
+                        ip -= l;
+                    
+                    aux(ip) = DIRECT_A3D_ELEM(v, k, i, j);
+                }
+                
+                // Copy the vector
+                for (int i = 0; i < l; i++)
+                    DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, i);
+            }
+        
+        // Shift in the Z direction
+        l = ZSIZE(v);
+        aux.resize(l);
+        shift = (int)(l / 2);
+        
+        if (!forward)
+            shift = -shift;
+        
+        for (int i = 0; i < YSIZE(v); i++)
+            for (int j = 0; j < XSIZE(v); j++)
+            {
+                // Shift the input in an auxiliar vector
+                for (int k = 0; k < l; k++)
+                {
+                    int kp = k + shift;
+                    if (kp < 0)
+                        kp += l;
+                    else if (kp >= l)
+                        kp -= l;
+                    
+                    aux(kp) = DIRECT_A3D_ELEM(v, k, i, j);
+                }
+                
+                // Copy the vector
+                for (int k = 0; k < l; k++)
+                    DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, k);
+            }
+    }
+    else
+        REPORT_ERROR(1,"CenterFFT ERROR: Dimension should be 1, 2 or 3");
 }
 
 /** FFT shift 1D
@@ -562,7 +477,7 @@ void CenterFFT(Matrix3D< T >& v, bool forward)
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
  */
-void ShiftFFT(Matrix1D< std::complex< double > > & v, double xshift);
+void ShiftFFT(MultidimArray< std::complex< double > > & v, double xshift);
 
 /** FFT shift 2D
  * @ingroup FourierOperations
@@ -570,7 +485,7 @@ void ShiftFFT(Matrix1D< std::complex< double > > & v, double xshift);
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
  */
-void ShiftFFT(Matrix2D< std::complex< double > > & v, double xshift, double yshift);
+void ShiftFFT(MultidimArray< std::complex< double > > & v, double xshift, double yshift);
 
 /** FFT shift 3D
  * @ingroup FourierOperations
@@ -578,133 +493,17 @@ void ShiftFFT(Matrix2D< std::complex< double > > & v, double xshift, double yshi
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
  */
-void ShiftFFT(Matrix3D< std::complex< double > > & v,
+void ShiftFFT(MultidimArray< std::complex< double > > & v,
               double xshift,
               double yshift,
               double zshift);
 
-/** Place the origin of the 1D FFT at the center of the vector and back
+/** Place the origin of the FFT at the center of the vector and back
  * @ingroup FourierOperations
  *
  * Changes the real and the fourier space origin
  */
-void CenterOriginFFT(Matrix1D< std::complex< double > > & v, bool forward);
+void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward);
 
-/** Place the origin of the 2D FFT at the center of the image and back
- * @ingroup FourierOperations
- *
- * Changes the real and the fourier space origin
- */
-void CenterOriginFFT(Matrix2D< std::complex< double > > & v, bool forward);
-
-/** Place the origin of the 3D FFT at the center of the volume and back
- * @ingroup FourierOperations
- *
- * Changes the real and the fourier space origin
- */
-void CenterOriginFFT(Matrix3D< std::complex< double > > & v, bool forward);
-
-/** Series convolution function.
- * @ingroup FourierOperations
- *
- * Gives the convolution of two series given as Xmipp Vectors. Result is stored
- * in result vector. Fast calcuation of the convolution result using Fast
- * Fourier Transform. If FullConvolution -set by default to FALSE- is TRUE the
- * full convolution series is returned. Otherwise the convolution vector refers
- * only to the valid values, whose number is the greater dimension of the two
- * series.
- *
- * Note: Complex numbers are allowed
- */
-template <typename T>
-void series_convolution(Matrix1D< T >& series1,
-                        Matrix1D< T >& series2,
-                        Matrix1D< T >& result,
-                        bool FullConvolution = false)
-{
-    // Store dimension of series
-    int dim1 = XSIZE(series1);
-    int dim2 = XSIZE(series2);
-
-    // Resize series to the size of the resulting series
-    // (Zeros are stored in the expanded values)
-    series1.resize(dim1 + dim2 - 1);
-    series2.resize(series1);
-    result.resize(series1);
-
-    // Fourier Transform the two series
-    Matrix1D< std::complex< double> > FFT1;
-    FourierTransform(series1, FFT1);
-
-    Matrix1D< std::complex< double > > FFT2;
-    FourierTransform(series2, FFT2);
-
-    // Multiply the vectors element by element to do the convolution in the
-    // Fourier space
-    double dSize=XSIZE(series1);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
-        FFT1(i) *= dSize * FFT2(i);
-
-    // Recover the convolution result by inverse FFT
-    InverseFourierTransform(FFT1, result);
-
-    // Restore the dimensions
-    series1.resize(dim1);
-    series2.resize(dim2);
-
-    // If the full convolution is required, nothing more remains to be done.
-    // Otherwise, if the valid values are required, return the central ones
-    if (!FullConvolution)
-    {
-        // First get the maximum dimension of the series, which is the dimension
-        // of the result
-        int dim = XMIPP_MAX(dim1, dim2);
-
-        // Determine the number of values to discard
-        int discard = XSIZE(result) - dim;
-
-        // Divide it by two as we have to discard them in both sides of the
-        // vector
-        discard /= 2;  // Integer division is intended
-
-        // Copy required values (simple displacement of values)
-        for (int i = STARTINGX(result); i < STARTINGX(result) + dim; i++)
-            result(i) = result(i + discard);
-
-        // And finally resize to discard not copied values
-        result.resize(dim);
-    }
-}
-
-/** Numerical_derivative
- * @ingroup FourierOperations
- *
- * This function computes the numerical derivative of a matrix in Y direction
- * (rows) or X direction (columns) of a given matrix, using a Savitzky-Golay
- * filter on every row or column, and then convolving.
- *
- * Input matrix is M, result is stored in D, direction can have values of 'x' or
- *  'y'. Order is the derivative order. Window size and polynomial order are
- * parameters for the Savitzky-Golay filter that define the number of points
- * forward (+window_size) and backward (-window_size) considered to calculate
- * the filter, and the degree of the polynomial to interpolate these values,
- * respectively.
- *
- * Default values are window_size=2 and polynomial_order=4, which are equivalent
- * to a 5-point algorithm to calculate the derivate and give good results. But
- * they can be changed provided that polynomial_order <= 2*window_size.
- *
- * As one can expect, the values of the matrix in a border of size window_size
- * are not accurate ones, as there aren't enough points to perform the
- * estimation. As a rule of thumb, the greater the window, the more the
- * filtering and the less the precission of the derivatives, and the greater the
- * order of the polynomial, the greater the precision.
- */
-void numerical_derivative(Matrix2D< double >& M,
-                          Matrix2D< double >& D,
-                          char direction,
-                          int order,
-                          int window_size = 2,
-                          int polynomial_order = 4);
 
 #endif

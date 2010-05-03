@@ -26,6 +26,8 @@
 #include "args.h"
 
 #include <stdio.h>
+#include <fstream>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -37,13 +39,15 @@
 /* Numerical functions ----------------------------------------------------- */
 // Kaiser-Bessel constructor
 KaiserBessel::KaiserBessel(double alpha_, int K_, double r_, double v_,
-			   int N_, double vtable_, int ntable_) 
-    : alpha(alpha_), v(v_), r(r_), N(N_), K(K_), vtable(vtable_), 
-      ntable(ntable_) 
+                           int N_, double vtable_, int ntable_)
+        : alpha(alpha_), v(v_), r(r_), N(N_), K(K_), vtable(vtable_),
+        ntable(ntable_)
 {
     // Default values are alpha=1.25, K=6, r=0.5, v = K/2
-    if (0.f == v) v = double(K)/2;
-    if (0.f == vtable) vtable = v;
+    if (0.f == v)
+        v = double(K)/2;
+    if (0.f == vtable)
+        vtable = v;
     alphar = alpha*r;
     fac = static_cast<double>(2.*PI)*alphar*v;
     vadjust = 1.0f*v;
@@ -52,79 +56,83 @@ KaiserBessel::KaiserBessel(double alpha_, int K_, double r_, double v_,
 }
 
 // Kaiser-Bessel I0 window function
-double KaiserBessel::i0win(double x) const 
+double KaiserBessel::i0win(double x) const
 {
     double val0 = double(bessi0(facadj));
     double absx = fabs(x);
-    if (absx > vadjust) return 0.f;
+    if (absx > vadjust)
+        return 0.f;
     double rt = sqrt(1.f - pow(absx/vadjust, 2));
     double res = bessi0(facadj*rt)/val0;
     return res;
 }
 
 // Tabulate I0 window for speed
-void KaiserBessel::build_I0table() 
+void KaiserBessel::build_I0table()
 {
     i0table.resize(ntable+1); // i0table[0:ntable]
     int ltab = int(ROUND(double(ntable)/1.25f));
     fltb = double(ltab)/(K/2);
     //double val0 = gsl_sf_bessel_I0(facadj);
     double val0 = bessi0(facadj);
-    for (int i=ltab+1; i <= ntable; i++) 
-	i0table[i] = 0.f;
-    for (int i=0; i <= ltab; i++) 
+    for (int i=ltab+1; i <= ntable; i++)
+        i0table[i] = 0.f;
+    for (int i=0; i <= ltab; i++)
     {
-	double s = double(i)/fltb/N;
-	if (s < vadjust) {
-	    double rt = sqrt(1.f - pow(s/vadjust, 2));
-	    //i0table[i] = gsl_sf_bessel_I0(facadj*rt)/val0;
-	    i0table[i] = bessi0(facadj*rt)/val0;
-	} else {
-	    i0table[i] = 0.f;
-	}
+        double s = double(i)/fltb/N;
+        if (s < vadjust)
+        {
+            double rt = sqrt(1.f - pow(s/vadjust, 2));
+            //i0table[i] = gsl_sf_bessel_I0(facadj*rt)/val0;
+            i0table[i] = bessi0(facadj*rt)/val0;
+        }
+        else
+        {
+            i0table[i] = 0.f;
+        }
     }
 }
 
-// Compute the maximum error in the table 
-double KaiserBessel::I0table_maxerror() 
+// Compute the maximum error in the table
+double KaiserBessel::I0table_maxerror()
 {
     double maxdiff = 0.f;
-    for (int i = 1; i <= ntable; i++) 
+    for (int i = 1; i <= ntable; i++)
     {
-	double diff = fabs(i0table[i] - i0table[i-1]);
-	if (diff > maxdiff) 
-	    maxdiff = diff;
+        double diff = fabs(i0table[i] - i0table[i-1]);
+        if (diff > maxdiff)
+            maxdiff = diff;
     }
     return maxdiff;
 }
 
 // Kaiser-Bessel Sinh window function
-double KaiserBessel::sinhwin(double x) const 
+double KaiserBessel::sinhwin(double x) const
 {
     double val0 = sinh(fac)/fac;
     double absx = fabs(x);
-    if (0.0 == x) 
+    if (0.0 == x)
     {
-	double res = 1.0f;
-	return res;
-    } 
-    else if (absx == alphar) 
+        double res = 1.0f;
+        return res;
+    }
+    else if (absx == alphar)
     {
-	return 1.0f/val0;
-    } 
-    else if (absx < alphar) 
+        return 1.0f/val0;
+    }
+    else if (absx < alphar)
     {
-	double rt = sqrt(1.0f - pow((x/alphar), 2));
-	double facrt = fac*rt;
-	double res = (sinh(facrt)/facrt)/val0;
-	return res;
-    } 
-    else 
+        double rt = sqrt(1.0f - pow((x/alphar), 2));
+        double facrt = fac*rt;
+        double res = (sinh(facrt)/facrt)/val0;
+        return res;
+    }
+    else
     {
-	double rt = sqrt(pow((x/alphar),2) - 1.f);
-	double facrt = fac*rt;
-	double res = (sin(facrt)/facrt)/val0;
-	return res;
+        double rt = sqrt(pow((x/alphar),2) - 1.f);
+        double facrt = fac*rt;
+        double res = (sin(facrt)/facrt)/val0;
+        return res;
     }
 }
 
@@ -169,7 +177,7 @@ double tstudent1D(double x, double df, double sigma, double mu)
     double norm = exp(gammln((df+1.)/2.)) / exp(gammln(df/2.));
     norm /= sqrt(df*PI*sigma*sigma);
     return norm * pow((1 + (x/sigma)*(x/sigma)/df),-((df+1.)/2.));
-                                               
+
 }
 
 double gaussian2D(double x, double y, double sigmaX, double sigmaY,
@@ -321,7 +329,8 @@ double icdf_FSnedecor(int d1, int d2, double p)
     double pl=cdf_FSnedecor(d1,d2,xl);
     double pr=cdf_FSnedecor(d1,d2,xr);
     double xm, pm;
-    do {
+    do
+    {
         xm=(xl+xr)*0.5;
         pm=cdf_FSnedecor(d1,d2,xm);
         if (pm>p)
@@ -334,7 +343,8 @@ double icdf_FSnedecor(int d1, int d2, double p)
             xl=xm;
             pl=pm;
         }
-    } while (ABS(pm-p)/p>0.001);
+    }
+    while (ABS(pm-p)/p>0.001);
     return xm;
 }
 
@@ -349,7 +359,7 @@ void  init_random_generator(int seed)
     if (seed != -1)
     {
         // Prevent seeds larger than 65000
-        seed %=0xffff; 
+        seed %=0xffff;
         for (int i = 0; i < seed; i++)
             ran1(&idum);
     }
@@ -547,16 +557,16 @@ int exists(const FileName &fn)
     return 1;
 }
 
-/* Exit program if filename is not empry and file does not exist ----------- */ 
+/* Exit program if filename is not empry and file does not exist ----------- */
 void exit_if_not_exists(const FileName &fn)
 {
     if (fn != "")
     {
-	if (!exists(fn))
-	{
-	    std::cerr << "Control file " << fn << " does not exist: exiting...";
-	    exit(1);
-	}
+        if (!exists(fn))
+        {
+            std::cerr << "Control file " << fn << " does not exist: exiting...";
+            exit(1);
+        }
     }
 }
 
@@ -662,6 +672,74 @@ FileName FileName::get_root() const
         if (point - root_end > FILENAMENUMBERLENGTH)
             root_end = point - FILENAMENUMBERLENGTH - 1;
     return (FileName) substr(0, root_end + 1);
+}
+
+// Convert to lower case characters .........................................
+FileName FileName::to_lowercase() const
+{
+    FileName result = *this;
+    for(unsigned int i=0;i<result.length();i++)
+        result[i] = tolower(result[i]);
+    return result;
+}
+
+// Convert to upper case characters .........................................
+FileName FileName::to_uppercase() const
+{
+    FileName result = *this;
+    for(unsigned int i=0;i<result.length();i++)
+        result[i] = toupper(result[i]);
+    return result;
+}
+
+// Is substring present?
+bool FileName::contains(const std::string& str) const
+{
+    int point = rfind(str);
+    if (point > -1)
+        return true;
+    else
+        return false;
+}
+
+// Get substring before first instance of str
+FileName FileName::before_first_of(const std::string& str) const
+{
+    int point = find_first_of(str);
+    if (point > -1)
+        return substr(0, point);
+    else
+        return *this;
+}
+
+// Get substring before last instance of str
+FileName FileName::before_last_of(const std::string& str) const
+{
+    int point = find_last_of(str);
+    if (point > -1)
+        return substr(0, point);
+    else
+        return *this;
+}
+
+// Get substring after first instance of str
+FileName FileName::after_first_of(const std::string& str) const
+{
+    int point = find_first_of(str);
+    if (point > -1)
+        return substr(point + 1);
+    else
+        return *this;
+}
+
+// Get substring after last instance of str
+FileName FileName::after_last_of(const std::string& str) const
+{
+    int point = find_last_of(str);
+    if (point > -1)
+        return substr(point + 1);
+    else
+        return *this;
 }
 
 // Get the base name of a filename .........................................
@@ -810,6 +888,51 @@ FileName FileName::remove_all_extensions() const
         return substr(0, first);
 }
 
+FileName FileName::get_file_format() const
+{
+    int first;
+    FileName result;
+    if ( find("#", 0) > -1 )
+        return "raw";
+    else if ( first = find(":", 0) > -1 )
+        result = substr(first + 1) ;
+    else
+        result = substr(find_last_of('.') + 1);
+
+    return result.to_lowercase();
+
+}
+
+bool FileName::isMetaData() const
+{
+    FileName ext = get_file_format();
+    //
+    if (ext=="sel" || ext=="xmd" || ext=="doc")
+    {
+    	return true;
+    }
+    else
+    {
+        std::ifstream infile(data(), std::ios_base::in);
+        std::string line;
+
+        if (infile.fail())
+        {
+            REPORT_ERROR( 200, (std::string) "File " + *this + " does not exits" );
+        }
+
+        // Search for Headerinfo, if present we are processing an old-styled docfile
+        // else we are processing a new Xmipp MetaData file
+        getline(infile, line, '\n');
+        int pos = line.find("XMIPP_3 * ");
+
+        if (pos != std::string::npos) // xmipp_3 token found
+            return true;
+        else
+            return false;
+    }
+}
+
 // Substitute one extension by other .......................................
 FileName FileName::substitute_extension(const std::string &ext1,
                                         const std::string &ext2) const
@@ -925,7 +1048,7 @@ void print_elapsed_time(TimeStamp &time, bool _IN_SECS)
         sysTime /= XmippTICKS;
     }
     std::cout << "Elapsed time: User(" << userTime << ") System(" << sysTime
-              << ")\n";
+    << ")\n";
 }
 
 // Calculate elapsed time since last annotation .............................
@@ -1154,6 +1277,18 @@ void ByteSwap(unsigned char * b, int n)
     }
 }
 
+// Bsoft function
+void swapbytes(char* v, unsigned long n)
+{
+    char            t;
+    for ( int i=0; i<n/2; i++ )
+    {
+        t = v[i];
+        v[i] = v[n-1-i];
+        v[n-1-i] = t;
+    }
+}
+
 /** Returns true if machine is little endian else false */
 bool IsLittleEndian(void)
 {
@@ -1166,24 +1301,4 @@ bool IsBigEndian(void)
 {
     static const unsigned long ul = 0x01000000;
     return ((int)(*((unsigned char *) &ul)))!=0;
-}
-
-/** Divides a number into most equally groups */
-int divide_equally(int N, int size, int rank, int &first, int &last)
-{
-    int jobs_per_worker = N / size;
-    int jobs_resting = N % size;
-
-    if (rank < jobs_resting)
-    {
-        first = rank * (jobs_per_worker + 1);
-        last = first + jobs_per_worker;
-    }
-    else
-    {
-        first = rank * jobs_per_worker + jobs_resting;
-        last = first + jobs_per_worker - 1;
-    }
-
-    return last - first + 1;
 }

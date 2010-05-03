@@ -87,10 +87,10 @@ public:
     ImageViewer(const char *name = 0, bool _check_file_change = false);
 
     /** Constructor with a pointer to an Image */
-    ImageViewer(ImageT<double> *_image = 0, const char *name = 0);
+    ImageViewer(Image<double> *_image = 0, const char *name = 0);
 
     /** Constructor with a pointer to a Fourier Xmipp Image */
-    ImageViewer(FourierImageXmipp *_FFTimage = 0, const char *name = 0);
+    ImageViewer(Image<std::complex<double> > *_FFTimage = 0, const char *name = 0);
 
     /** Constructor with a pointer to QImage */
     ImageViewer(QImage *_image = 0, const char *name = 0);
@@ -107,7 +107,7 @@ public:
 
     /** Load matrix.
         Load the image from a matrix provided */
-    bool loadMatrix(Matrix2D<double> &_matrix,
+    bool loadMatrix(MultidimArray<double> &_matrix,
                     double _minGray = 0, double _maxGray = 0,
                     TLoadMode load_mode = ImageViewer::Normal_mode);
 
@@ -150,8 +150,8 @@ protected:
     int  alloc_context;
     bool convertEvent(QMouseEvent* e, int& x, int& y);
     const char* filename;
-    Image xmippImage;  // Xmipp Image
-    Matrix2D< std::complex<double> > xmippImageFourier; // Fourier image
+    Image<double> xmippImage;  // Xmipp Image
+    MultidimArray< std::complex<double> > xmippImageFourier; // Fourier image
     double      minGray;                // Minimum value of the image
     double      maxGray;                // Maximum value of the image
     QImage image;   // the loaded image
@@ -190,10 +190,10 @@ protected:
     int  ss, si, pi, ravg, profile, sfft, line_setup, editctfmodel;
     int         recomputectfmodel, enhancePSD;
     void Init();
-    bool  xmipp2Qt(ImageT<double>& _image);
+    bool  xmipp2Qt(Image<double>& _image);
     bool  Qt2xmipp(QImage &_image);
     bool  showImage();
-    void  generateFFTImage(Matrix2D<double> &out);
+    void  generateFFTImage(MultidimArray<double> &out);
     void updateStatus();
     bool  reconvertImage();
     void        refineProfileLine();

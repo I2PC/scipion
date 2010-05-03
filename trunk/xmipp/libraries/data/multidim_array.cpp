@@ -23,29 +23,36 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "multidimensional_array.h"
+#include "multidim_array.h"
 
-template<>
+
+// Show a complex array ---------------------------------------------------
 std::ostream& operator<<(std::ostream& ostrm,
     const MultidimArray< std::complex<double> >& v)
 {
     if (v.xdim == 0)
-        ostrm << "NULL Array\n";
+        ostrm << "NULL MultidimArray\n";
     else
         ostrm << std::endl;
 
-    for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
+    for (int l = 0; l < NSIZE(v); l++)
     {
-        ostrm << "Slice No. " << k << std::endl;
-        for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
+        if (NSIZE(v)>1) ostrm << "Image No. " << l << std::endl;
+        for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
         {
-            for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
+            if (ZSIZE(v)>1) ostrm << "Slice No. " << k << std::endl;
+            for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
             {
-                ostrm << VOL_ELEM(v, k, i, j) << ' ';
+                for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
+                    ostrm << A3D_ELEM(v, k, i, j) << ' ';
+                ostrm << std::endl;
             }
-            ostrm << std::endl;
         }
     }
 
     return ostrm;
 }
+
+
+
+

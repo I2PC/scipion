@@ -400,6 +400,13 @@ class FileName(string):
         except: self.this = this
     def compose(*args): return _XmippData.FileName_compose(*args)
     def get_root(*args): return _XmippData.FileName_get_root(*args)
+    def to_lowercase(*args): return _XmippData.FileName_to_lowercase(*args)
+    def to_uppercase(*args): return _XmippData.FileName_to_uppercase(*args)
+    def contains(*args): return _XmippData.FileName_contains(*args)
+    def before_first_of(*args): return _XmippData.FileName_before_first_of(*args)
+    def before_last_of(*args): return _XmippData.FileName_before_last_of(*args)
+    def after_first_of(*args): return _XmippData.FileName_after_first_of(*args)
+    def after_last_of(*args): return _XmippData.FileName_after_last_of(*args)
     def get_baseName(*args): return _XmippData.FileName_get_baseName(*args)
     def get_number(*args): return _XmippData.FileName_get_number(*args)
     def get_extension(*args): return _XmippData.FileName_get_extension(*args)
@@ -411,6 +418,8 @@ class FileName(string):
     def insert_before_extension(*args): return _XmippData.FileName_insert_before_extension(*args)
     def remove_extension(*args): return _XmippData.FileName_remove_extension(*args)
     def remove_all_extensions(*args): return _XmippData.FileName_remove_all_extensions(*args)
+    def get_file_format(*args): return _XmippData.FileName_get_file_format(*args)
+    def isMetaData(*args): return _XmippData.FileName_isMetaData(*args)
     def substitute_extension(*args): return _XmippData.FileName_substitute_extension(*args)
     def without(*args): return _XmippData.FileName_without(*args)
     def remove_until_prefix(*args): return _XmippData.FileName_remove_until_prefix(*args)
@@ -438,9 +447,9 @@ xmippBaseDir = _XmippData.xmippBaseDir
 init_progress_bar = _XmippData.init_progress_bar
 progress_bar = _XmippData.progress_bar
 TimeMessage = _XmippData.TimeMessage
+swapbytes = _XmippData.swapbytes
 IsBigEndian = _XmippData.IsBigEndian
 IsLittleEndian = _XmippData.IsLittleEndian
-divide_equally = _XmippData.divide_equally
 checkAngle = _XmippData.checkAngle
 CPPSQLITE_ERROR = _XmippData.CPPSQLITE_ERROR
 class CppSQLite3Table(_object):

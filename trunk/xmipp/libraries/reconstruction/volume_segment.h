@@ -25,8 +25,8 @@
 #ifndef _PROG_SEGMENT
 #define _PROG_SEGMENT
 
-#include "funcs.h"
-#include "volume.h"
+#include <data/funcs.h>
+#include <data/multidimensional_array>
 
 ///@defgroup VolumeSegment Volume segmentation
 ///@ingroup DataLibraryPrograms

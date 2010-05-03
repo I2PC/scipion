@@ -239,10 +239,10 @@ void XmippFftw::enforceHermitianSymmetry()
             {
                 int isym=intWRAP(-i,0,YSIZE(*fReal)-1);
                 std::complex<double> mean=0.5*(
-                    DIRECT_MAT_ELEM(fFourier,i,0)+
-                    conj(DIRECT_MAT_ELEM(fFourier,isym,0)));
-                DIRECT_MAT_ELEM(fFourier,i,0)=mean;
-                DIRECT_MAT_ELEM(fFourier,isym,0)=conj(mean);
+                    DIRECT_A2D_ELEM(fFourier,i,0)+
+                    conj(DIRECT_A2D_ELEM(fFourier,isym,0)));
+                DIRECT_A2D_ELEM(fFourier,i,0)=mean;
+                DIRECT_A2D_ELEM(fFourier,isym,0)=conj(mean);
             }
             break;
         case 3:
@@ -253,115 +253,64 @@ void XmippFftw::enforceHermitianSymmetry()
                 {
                     int isym=intWRAP(-i,0,YSIZE(*fReal)-1);
                     std::complex<double> mean=0.5*(
-                        DIRECT_VOL_ELEM(fFourier,k,i,0)+
-                        conj(DIRECT_VOL_ELEM(fFourier,ksym,isym,0)));
-                    DIRECT_VOL_ELEM(fFourier,k,i,0)=mean;
-                    DIRECT_VOL_ELEM(fFourier,ksym,isym,0)=conj(mean);
+                        DIRECT_A3D_ELEM(fFourier,k,i,0)+
+                        conj(DIRECT_A3D_ELEM(fFourier,ksym,isym,0)));
+                    DIRECT_A3D_ELEM(fFourier,k,i,0)=mean;
+                    DIRECT_A3D_ELEM(fFourier,ksym,isym,0)=conj(mean);
                 }
             }
             for (int k=1; k<=zHalf; k++)
             {
                 int ksym=intWRAP(-k,0,ZSIZE(*fReal)-1);
                 std::complex<double> mean=0.5*(
-                    DIRECT_VOL_ELEM(fFourier,k,0,0)+
-                    conj(DIRECT_VOL_ELEM(fFourier,ksym,0,0)));
-                DIRECT_VOL_ELEM(fFourier,k,0,0)=mean;
-                DIRECT_VOL_ELEM(fFourier,ksym,0,0)=conj(mean);
+                    DIRECT_A3D_ELEM(fFourier,k,0,0)+
+                    conj(DIRECT_A3D_ELEM(fFourier,ksym,0,0)));
+                DIRECT_A3D_ELEM(fFourier,k,0,0)=mean;
+                DIRECT_A3D_ELEM(fFourier,ksym,0,0)=conj(mean);
             }
             break;
     }
 }
 
-/* FFT Magnitude 1D. ------------------------------------------------------- */
-void FFT_magnitude(const Matrix1D< std::complex<double> > &v,
-                   Matrix1D<double> &mag)
+/* FFT Magnitude  ------------------------------------------------------- */
+void FFT_magnitude(const MultidimArray< std::complex<double> > &v,
+                   MultidimArray<double> &mag)
 {
     mag.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(v) mag(i) = abs(v(i));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v) mag(n) = abs(v(n));
 }
 
-void FFT_magnitude(const Matrix2D< std::complex<double> > &v,
-                   Matrix2D<double> &mag)
-{
-    mag.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(v) mag(i, j) = abs(v(i, j));
-}
-
-void FFT_magnitude(const Matrix3D< std::complex<double> > &v,
-                   Matrix3D<double> &mag)
-{
-    mag.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(v) mag(k, i, j) = abs(v(k, i, j));
-}
-
-/* FFT Phase 1D. ------------------------------------------------------- */
-void FFT_phase(const Matrix1D< std::complex<double> > &v,
-               Matrix1D<double> &phase)
+/* FFT Phase ------------------------------------------------------- */
+void FFT_phase(const MultidimArray< std::complex<double> > &v,
+                MultidimArray<double> &phase)
 {
     phase.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(v) phase(i) = atan2(v(i).imag(), v(i).real());
-}
-
-void FFT_phase(const Matrix2D< std::complex<double> > &v,
-               Matrix2D<double> &phase)
-{
-    phase.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(v) phase(i, j) = atan2(v(i, j).imag(), v(i, j).real());
-}
-
-void FFT_phase(const Matrix3D< std::complex<double> > &v,
-               Matrix3D<double> &phase)
-{
-    phase.resize(v);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(v) phase(k, i, j) = atan2(v(k, i, j).imag(),
-            v(k, i, j).real());
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v) phase(n) = atan2(v(n).imag(), v(n).real());
 }
 
 // Fourier ring correlation -----------------------------------------------
-void frc_dpr(Matrix2D< double > & m1,
-             Matrix2D< double > & m2,
+void frc_dpr(MultidimArray< double > & m1,
+             MultidimArray< double > & m2,
              double sampling_rate,
-             Matrix1D< double >& freq,
-             Matrix1D< double >& frc,
-             Matrix1D< double >& frc_noise,
-             Matrix1D< double >& dpr,
+             MultidimArray< double >& freq,
+             MultidimArray< double >& frc,
+             MultidimArray< double >& frc_noise,
+             MultidimArray< double >& dpr,
              bool skipdpr)
 {
     if (!m1.sameShape(m2))
-        REPORT_ERROR(1,"Matrices have different shapes!");
+        REPORT_ERROR(1,"MultidimArrays have different shapes!");
 
-    Matrix2D< std::complex< double > > FT1;
+    MultidimArray< std::complex< double > > FT1;
     XmippFftw transformer1;
     transformer1.FourierTransform(m1, FT1, false);
 
-    Matrix2D< std::complex< double > > FT2;
+    MultidimArray< std::complex< double > > FT2;
     XmippFftw transformer2;
     transformer2.FourierTransform(m2, FT2, false);
-/*
-std::cout << STARTINGY(FT1) << "," << FINISHINGY(FT1) << std::endl;
-std::cout << STARTINGX(FT1) << "," << FINISHINGX(FT1) << std::endl;
 
-std::cout << STARTINGY(m1) << "," << FINISHINGY(m1) << std::endl;
-std::cout << STARTINGX(m1) << "," << FINISHINGX(m1) << std::endl;
-
-    for (int i=STARTINGY(FT1); i<=FINISHINGY(FT1); i++)
-    {
-        for (int j=STARTINGX(FT1); j<=FINISHINGX(FT1); j++)
-	{
-		FT1(i,j)=std::complex< double >( m1(i-128,j-128), 0.0 );
-	}
-    }
-
-    for (int i=STARTINGY(FT2); i<=FINISHINGY(FT2); i++)
-    {
-        for (int j=STARTINGX(FT2); j<=FINISHINGX(FT2); j++)
-	{
-		FT2(i,j)=std::complex< double >( m2(i-128,j-128), 0.0 );
-	}
-    }*/
-
-    Matrix1D< int > radial_count(XSIZE(m1)/2+1);
-    Matrix1D<double> num, den1, den2, den_dpr;
+    MultidimArray< int > radial_count(XSIZE(m1)/2+1);
+    MultidimArray<double> num, den1, den2;
     Matrix1D<double> f(3);
     num.initZeros(radial_count);
     den1.initZeros(radial_count);
@@ -371,23 +320,20 @@ std::cout << STARTINGX(m1) << "," << FINISHINGX(m1) << std::endl;
     //since atan2 is called many times
     //untill atan2 is changed by a table let us make dpr an option
     if (skipdpr)
-    {
         dpr.initZeros(radial_count);
-        den_dpr.initZeros(radial_count);
-    }
     freq.initZeros(radial_count);
     frc.initZeros(radial_count);
     frc_noise.initZeros(radial_count);
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(FT1)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FT1)
     {
         FFT_IDX2DIGFREQ(j,XSIZE(m1),XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(m1),YY(f));
         double R=f.module();
         if (R>0.5) continue;
         int idx=ROUND(R*XSIZE(m1));
-        std::complex<double> z1=dMij(FT1, i, j);
-        std::complex<double> z2=dMij(FT2, i, j);
+        std::complex<double> z1=dAij(FT1, i, j);
+        std::complex<double> z2=dAij(FT2, i, j);
         double absz1=abs(z1);
         double absz2=abs(z2);
         num(idx)+=real(conj(z1) * z2);
@@ -397,102 +343,27 @@ std::cout << STARTINGX(m1) << "," << FINISHINGX(m1) << std::endl;
         {
             double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
                     (atan2(z2.imag(), z2.real()))),-180, 180);
-            dpr(idx)+=((absz1+absz2)*phaseDiff*phaseDiff);
-            den_dpr(idx)+=(absz1+absz2);
+            dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
         }
         radial_count(idx)++;
     }
 
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(freq)
     {
         freq(i) = (double) i / (XSIZE(m1) * sampling_rate);
         frc(i) = num(i)/sqrt(den1(i)*den2(i));
         frc_noise(i) = 2 / sqrt((double) radial_count(i));
         if (skipdpr)
-        	dpr(i)=sqrt(dpr(i) / den_dpr(i));
+            dpr(i)/=radial_count(i);
     }
 }
 
-void frc_dpr(Matrix3D< double > & m1,
-             Matrix3D< double > & m2, double sampling_rate,
-             Matrix1D< double >& freq,
-             Matrix1D< double >& frc,
-             Matrix1D< double >& frc_noise,
-             Matrix1D< double >& dpr,
-             bool skipdpr)
-{
-    if (!m1.sameShape(m2))
-        REPORT_ERROR(1,"Volumes have different shapes!");
-
-    Matrix3D< std::complex< double > > FT1;
-    XmippFftw transformer1;
-    transformer1.FourierTransform(m1, FT1, false);
-
-    Matrix3D< std::complex< double > > FT2;
-    XmippFftw transformer2;
-    transformer2.FourierTransform(m2, FT2, false);
-
-    Matrix1D< int > radial_count(XSIZE(m1)/2+1);
-    Matrix1D<double> num, den1, den2, den_dpr, f(3);
-    num.initZeros(radial_count);
-    den1.initZeros(radial_count);
-    den2.initZeros(radial_count);
-
-    if (skipdpr)
-    {
-        dpr.initZeros(radial_count);
-        den_dpr.initZeros(radial_count);
-    }
-    freq.initZeros(radial_count);
-    frc.initZeros(radial_count);
-    frc_noise.initZeros(radial_count);
-
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(FT1)
-    {
-        FFT_IDX2DIGFREQ(j,XSIZE(m1),XX(f));
-        FFT_IDX2DIGFREQ(i,YSIZE(m1),YY(f));
-        FFT_IDX2DIGFREQ(k,ZSIZE(m1),ZZ(f));
-        double R=f.module();
-        if (R>0.5) continue;
-        int idx=ROUND(R*XSIZE(m1));
-        std::complex<double> z1=dVkij(FT1, k, i, j);
-        std::complex<double> z2=dVkij(FT2, k, i, j);
-        double absz1=abs(z1);
-        double absz2=abs(z2);
-        num(idx)+=real(conj(z1) * z2);
-        den1(idx)+= absz1*absz1;
-        den2(idx)+= absz2*absz2;
-        if (skipdpr)
-        {    
-            double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
-                    (atan2(z2.imag(), z2.real()))),-180, 180);
-            dpr(idx)+=((absz1+absz2)*phaseDiff*phaseDiff);
-            den_dpr(idx)+=(absz1+absz2);
-        }
-        radial_count(idx)++;
-    }
-
-    frc.initZeros(radial_count);
-    frc_noise.resize(radial_count);
-    freq.resize(radial_count);
-
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
-    {
-        freq(i) = (double) i / (XSIZE(m1) * sampling_rate);
-        if(num(i)!=0)
-           frc(i) = num(i)/sqrt(den1(i)*den2(i));
-        else
-           frc(i) = 0;
-        frc_noise(i) = 2 / sqrt((double) radial_count(i));
-        if (skipdpr)
-        	dpr(i)=sqrt(dpr(i) / den_dpr(i));
-    }
-}
-void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem,int nThreads) 
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int nThreads)
  {
+
      //Mmem = *this
      //memory for fourier transform output
-     Matrix2D<std::complex<double> > MmemFourier;
+     MultidimArray<std::complex<double> > MmemFourier;
      // Perform the Fourier transform
      XmippFftw transformerM;
      transformerM.setThreadsNumber(nThreads);
@@ -500,7 +371,7 @@ void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem,int nThre
 
      // Create space for the downsampled image and its Fourier transform
      Mpmem.resize(Ydim, Xdim);
-     Matrix2D<std::complex<double> > MpmemFourier;
+     MultidimArray<std::complex<double> > MpmemFourier;
      XmippFftw transformerMp;
      transformerMp.setReal(Mpmem);
      transformerMp.getFourierAlias(MpmemFourier);
@@ -525,19 +396,22 @@ void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem,int nThre
  }
 
 
-void getSpectrum(Matrix3D<double> &Min, 
-                 Matrix1D<double> &spectrum,
+void getSpectrum(MultidimArray<double> &Min,
+                 MultidimArray<double> &spectrum,
                  int spectrum_type)
 {
-    Matrix3D<std::complex<double> > Faux;
+    Min.checkDimension(3);
+
+    MultidimArray<std::complex<double> > Faux;
     int xsize = XSIZE(Min);
-    Matrix1D<double> f(3), count(xsize);
+    Matrix1D<double> f(3);
+    MultidimArray<double> count(xsize);
     XmippFftw transformer;
 
     spectrum.initZeros(xsize);
     count.initZeros();
     transformer.FourierTransform(Min, Faux, false);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(Faux)
     {
         FFT_IDX2DIGFREQ(j,xsize,XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(Faux),YY(f));
@@ -546,9 +420,9 @@ void getSpectrum(Matrix3D<double> &Min,
         //if (R>0.5) continue;
         int idx=ROUND(R*xsize);
         if (spectrum_type == AMPLITUDE_SPECTRUM)
-            spectrum(idx) += abs(dVkij(Faux, k, i, j));
+            spectrum(idx) += abs(dAkij(Faux, k, i, j));
         else
-            spectrum(idx) += abs(dVkij(Faux, k, i, j)) * abs(dVkij(Faux, k, i, j));
+            spectrum(idx) += abs(dAkij(Faux, k, i, j)) * abs(dAkij(Faux, k, i, j));
         count(idx) += 1.;
     }
     for (int i = 0; i < xsize; i++)
@@ -556,28 +430,33 @@ void getSpectrum(Matrix3D<double> &Min,
             spectrum(i) /= count(i);
 }
 
-void divideBySpectrum(Matrix3D<double> &Min, 
-                      Matrix1D<double> &spectrum,
+void divideBySpectrum(MultidimArray<double> &Min,
+                      MultidimArray<double> &spectrum,
                       bool leave_origin_intact)
 {
     
-    Matrix1D<double> div_spec(spectrum);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(spectrum)
+    Min.checkDimension(3);
+
+    MultidimArray<double> div_spec(spectrum);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(spectrum)
     {
-        if (ABS(dVi(spectrum,i)) > 0.)
-            dVi(div_spec,i) = 1./dVi(spectrum,i);
+        if (ABS(dAi(spectrum,i)) > 0.)
+            dAi(div_spec,i) = 1./dAi(spectrum,i);
         else
-            dVi(div_spec,i) = 1.;
+            dAi(div_spec,i) = 1.;
     }
     multiplyBySpectrum(Min,div_spec,leave_origin_intact);
 }
 
-void multiplyBySpectrum(Matrix3D<double> &Min, 
-                        Matrix1D<double> &spectrum,
+void multiplyBySpectrum(MultidimArray<double> &Min,
+                        MultidimArray<double> &spectrum,
                         bool leave_origin_intact)
 {
-    Matrix3D<std::complex<double> > Faux;
-    Matrix1D<double> f(3), lspectrum;
+    Min.checkDimension(3);
+
+    MultidimArray<std::complex<double> > Faux;
+    Matrix1D<double> f(3);
+    MultidimArray<double> lspectrum;
     XmippFftw transformer;
     double dim3 = XSIZE(Min)*YSIZE(Min)*ZSIZE(Min);
 
@@ -585,7 +464,7 @@ void multiplyBySpectrum(Matrix3D<double> &Min,
     lspectrum=spectrum;
     if (leave_origin_intact)
         lspectrum(0)=1.;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(Faux)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(Faux)
     {
         FFT_IDX2DIGFREQ(j,XSIZE(Min), XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(Faux),YY(f));
@@ -593,36 +472,39 @@ void multiplyBySpectrum(Matrix3D<double> &Min,
         double R=f.module();
         //if (R > 0.5) continue;
         int idx=ROUND(R*XSIZE(Min));
-        dVkij(Faux, k, i, j) *=  lspectrum(idx) * dim3;
+        dAkij(Faux, k, i, j) *=  lspectrum(idx) * dim3;
     }
     transformer.inverseFourierTransform();
 
 }
 
 
-void whitenSpectrum(Matrix3D<double> &Min, 
-                    Matrix3D<double> &Mout, 
+void whitenSpectrum(MultidimArray<double> &Min,
+                    MultidimArray<double> &Mout,
                     int spectrum_type,
                     bool leave_origin_intact)
 {
+    Min.checkDimension(3);
 
-    Matrix1D<double> spectrum;
+    MultidimArray<double> spectrum;
     getSpectrum(Min,spectrum,spectrum_type);
     Mout=Min;
     divideBySpectrum(Mout,spectrum,leave_origin_intact);
 
 }
 
-void adaptSpectrum(Matrix3D<double> &Min, 
-                   Matrix3D<double> &Mout,
-                   const Matrix1D<double> spectrum_ref,
+void adaptSpectrum(MultidimArray<double> &Min,
+                   MultidimArray<double> &Mout,
+                   const MultidimArray<double> spectrum_ref,
                    int spectrum_type,
                    bool leave_origin_intact)
 {
     
-    Matrix1D<double> spectrum;
+    Min.checkDimension(3);
+
+    MultidimArray<double> spectrum;
     getSpectrum(Min,spectrum,spectrum_type);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(spectrum)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(spectrum)
     {
         if (spectrum(i) > 0.)
             spectrum(i) = spectrum_ref(i)/spectrum(i);

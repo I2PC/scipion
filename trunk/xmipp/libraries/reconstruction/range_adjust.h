@@ -26,10 +26,10 @@
 #ifndef RANGEADJUST_H
 #define RANGEADJUST_H
 
-#include "progs.h"
-#include "image.h"
-#include "volume.h"
-#include "mask.h"
+#include <data/progs.h>
+#include <data/image.h>
+#include <data/mask.h>
+#include <data/args.h>
 
 /// @defgroup RangeAdjust Adjust grey level range of images and volumes
 /// @ingroup DataLibraryPrograms

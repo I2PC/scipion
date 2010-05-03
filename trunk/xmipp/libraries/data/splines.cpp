@@ -30,12 +30,12 @@
 double Bspline03LUT(double x)
 {
     static bool firstCall = true;
-    static Matrix1D<double> table(BSPLINE03_SUBSAMPLING);
+    static MultidimArray<double> table(BSPLINE03_SUBSAMPLING);
     static const double deltax = 2.0 / BSPLINE03_SUBSAMPLING;
     static const double ideltax = 1.0 / deltax;
     if (firstCall)
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(table)
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(table)
         table(i) = Bspline03(i * deltax);
         firstCall = false;
     }
@@ -61,9 +61,9 @@ double sum_spatial_Bspline03_SimpleGrid(const SimpleGrid &grid)
 // Compute the sum in the points inside the grid
 // The integer part of the vectors is taken for not picking points
 // just in the border of the spline, which we know they are 0.
-    for (i = (int)corner1.X(); i <= (int)corner2.X(); i++)
-        for (j = (int)corner1.Y(); j <= (int)corner2.Y(); j++)
-            for (k = (int)corner1.Z(); k <= (int)corner2.Z(); k++)
+    for (i = (int)XX(corner1); i <= (int)XX(corner2); i++)
+        for (j = (int)YY(corner1); j <= (int)YY(corner2); j++)
+            for (k = (int)ZZ(corner1); k <= (int)ZZ(corner2); k++)
             {
                 VECTOR_R3(gr, i, j, k);
                 grid.grid2universe(gr, ur);
@@ -205,10 +205,10 @@ double spatial_Bspline03_proj(
 #undef DEBUG
 
 /* Splines -> Voxels for a SimpleGrid -------------------------------------- */
-void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
+void spatial_Bspline032voxels_SimpleGrid(const MultidimArray<double> &vol_splines,
         const SimpleGrid &grid,
-        Matrix3D<double> *vol_voxels,
-        const Matrix3D<double> *vol_mask = NULL)
+        MultidimArray<double> *vol_voxels,
+        const MultidimArray<double> *vol_mask = NULL)
 {
     Matrix1D<double> act_coord(3);           // Coord: Actual position inside
     // the voxel volume without deforming
@@ -266,7 +266,7 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
 #ifdef DEBUG
                 if (condition)
                 {
-                    printf("Dealing spline at (%d,%d,%d) = %f\n", j, i, k, VOL_ELEM(vol_splines, k, i, j));
+                    printf("Dealing spline at (%d,%d,%d) = %f\n", j, i, k, A3D_ELEM(vol_splines, k, i, j));
                     std::cout << "Center of the blob      "
                     << act_coord.transpose() << std::endl;
                 }
@@ -325,7 +325,7 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
                             {
                                 int iz = (int)intz, iy = (int)inty, ix = (int)intx;
                                 if (vol_mask != NULL)
-                                    if (!VOL_ELEM(*vol_mask, iz, iy, ix)) continue;
+                                    if (!A3D_ELEM(*vol_mask, iz, iy, ix)) continue;
 
                                 // Compute the spline value at this point
                                 VECTOR_R3(gcurrent, intx, inty, intz);
@@ -342,14 +342,14 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
 #endif
 
                                 // Add at that position the corresponding spline value
-                                VOL_ELEM(*vol_voxels, iz, iy, ix) +=
-                                    VOL_ELEM(vol_splines, k, i, j) * spline_value;
+                                A3D_ELEM(*vol_voxels, iz, iy, ix) +=
+                                    A3D_ELEM(vol_splines, k, i, j) * spline_value;
 #ifdef DEBUG_MORE
                                 if (condition)
                                 {
-                                    std::cout << " adding " << VOL_ELEM(vol_splines, k, i, j)
+                                    std::cout << " adding " << A3D_ELEM(vol_splines, k, i, j)
                                     << " * " << value_spline << " = "
-                                    << VOL_ELEM(vol_splines, k, i, j)*
+                                    << A3D_ELEM(vol_splines, k, i, j)*
                                     value_spline << std::endl;
                                     std::cout.flush();
                                 }
@@ -358,17 +358,17 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
                 }
 
                 // Prepare for next iteration
-                XX(act_coord) = XX(act_coord) + grid.relative_size * MAT_ELEM(grid.basis, 0, 0);
-                YY(act_coord) = YY(act_coord) + grid.relative_size * MAT_ELEM(grid.basis, 1, 0);
-                ZZ(act_coord) = ZZ(act_coord) + grid.relative_size * MAT_ELEM(grid.basis, 2, 0);
+                XX(act_coord) = XX(act_coord) + grid.relative_size * grid.basis(0, 0);
+                YY(act_coord) = YY(act_coord) + grid.relative_size * grid.basis(1, 0);
+                ZZ(act_coord) = ZZ(act_coord) + grid.relative_size * grid.basis(2, 0);
             }
-            XX(beginY) = XX(beginY) + grid.relative_size * MAT_ELEM(grid.basis, 0, 1);
-            YY(beginY) = YY(beginY) + grid.relative_size * MAT_ELEM(grid.basis, 1, 1);
-            ZZ(beginY) = ZZ(beginY) + grid.relative_size * MAT_ELEM(grid.basis, 2, 1);
+            XX(beginY) = XX(beginY) + grid.relative_size * grid.basis(0, 1);
+            YY(beginY) = YY(beginY) + grid.relative_size * grid.basis(1, 1);
+            ZZ(beginY) = ZZ(beginY) + grid.relative_size * grid.basis(2, 1);
         }
-        XX(beginZ) = XX(beginZ) + grid.relative_size * MAT_ELEM(grid.basis, 0, 2);
-        YY(beginZ) = YY(beginZ) + grid.relative_size * MAT_ELEM(grid.basis, 1, 2);
-        ZZ(beginZ) = ZZ(beginZ) + grid.relative_size * MAT_ELEM(grid.basis, 2, 2);
+        XX(beginZ) = XX(beginZ) + grid.relative_size * grid.basis(0, 2);
+        YY(beginZ) = YY(beginZ) + grid.relative_size * grid.basis(1, 2);
+        ZZ(beginZ) = ZZ(beginZ) + grid.relative_size * grid.basis(2, 2);
     }
 }
 #undef x0
@@ -383,7 +383,7 @@ void spatial_Bspline032voxels_SimpleGrid(const Matrix3D<double> &vol_splines,
 /* Splines -> Voxels for a Grid -------------------------------------------- */
 //#define DEBUG
 void spatial_Bspline032voxels(const GridVolume &vol_splines,
-                              Matrix3D<double> *vol_voxels, int Zdim, int Ydim, int Xdim)
+                              MultidimArray<double> *vol_voxels, int Zdim, int Ydim, int Xdim)
 {
     // Resize and set starting corner .......................................
     if (Zdim == 0 || Ydim == 0 || Xdim == 0)
@@ -422,8 +422,8 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
 
     // Now normalise the resulting volume ..................................
     double inorm = 1.0 / sum_spatial_Bspline03_Grid(vol_splines.grid());
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
-    VOL_ELEM(*vol_voxels, k, i, j) *= inorm;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(*vol_voxels)
+    A3D_ELEM(*vol_voxels, k, i, j) *= inorm;
 
     // Set voxels outside interest region to minimum value .................
     double R = vol_splines.grid(0).get_interest_radius();
@@ -432,16 +432,16 @@ void spatial_Bspline032voxels(const GridVolume &vol_splines,
         double R2 = (R - 6) * (R - 6);
 
         // Compute minimum value within sphere
-        double min_val = VOL_ELEM(*vol_voxels, 0, 0, 0);
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
+        double min_val = A3D_ELEM(*vol_voxels, 0, 0, 0);
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(*vol_voxels)
         if (j*j + i*i + k*k <= R2 - 4)
-            min_val = XMIPP_MIN(min_val, VOL_ELEM(*vol_voxels, k, i, j));
+            min_val = XMIPP_MIN(min_val, A3D_ELEM(*vol_voxels, k, i, j));
 
         // Substitute minimum value
         R2 = (R - 2) * (R - 2);
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(*vol_voxels)
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(*vol_voxels)
         if (j*j + i*i + k*k >= R2)
-            VOL_ELEM(*vol_voxels, k, i, j) = min_val;
+            A3D_ELEM(*vol_voxels, k, i, j) = min_val;
     }
 }
 #undef DEBUG

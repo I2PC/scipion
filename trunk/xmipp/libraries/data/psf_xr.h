@@ -27,9 +27,8 @@
 #define _PSF_XR_HH
 
 #include "fftw.h"
-#include "matrix2d.h"
+#include "multidim_array.h"
 #include "image.h"
-#include "volume.h"
 #include <complex>
 
 
@@ -44,7 +43,7 @@ class XmippXRPSF
 {
 public:
     // Current OTF
-    Matrix2D< std::complex<double> > OTF;
+    MultidimArray< std::complex<double> > OTF;
 
     /* RX Microscope configuration */
     /// Lens Aperture Radius
@@ -113,18 +112,18 @@ public:
 
     /// Apply OTF to an image
     template <typename T>
-    void applyOTF(Matrix2D<T> &Im)
+    void applyOTF(MultidimArray<T> &Im)
     {
-        Matrix2D<std::complex<double> > ImFT;
+        MultidimArray<std::complex<double> > ImFT;
         XmippFftw transformer;
 
 //#define DEBUG
 #ifdef DEBUG
 
-        ImageXmipp _Im;
+        Image<double> _Im;
         _Im().resize(Im);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Im)
-        dMij(_Im(),i,j) = abs(dMij(Im,i,j));
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
+        dAij(_Im(),i,j) = abs(dAij(Im,i,j));
 
         _Im.write(("psfxr-Imin.spi"));
 #endif
@@ -134,19 +133,19 @@ public:
 #ifdef DEBUG
 
         _Im().resize(ImFT);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ImFT)
-        dMij(_Im(),i,j) = abs(dMij(ImFT,i,j));
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
+        dAij(_Im(),i,j) = abs(dAij(ImFT,i,j));
         _Im.write(("psfxr-imft1.spi"));
 #endif
 
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ImFT)
-        dMij(ImFT,i,j) *= dMij(OTF,i,j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
+        dAij(ImFT,i,j) *= dAij(OTF,i,j);
 
 #ifdef DEBUG
 
         _Im().resize(ImFT);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ImFT)
-        dMij(_Im(),i,j) = abs(dMij(ImFT,i,j));
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
+        dAij(_Im(),i,j) = abs(dAij(ImFT,i,j));
         _Im.write(("psfxr-imft2.spi"));
 #endif
 
@@ -157,27 +156,27 @@ public:
 #ifdef DEBUG
 
         _Im().resize(Im);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Im)
-        dMij(_Im(),i,j) = abs(dMij(Im,i,j));
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
+        dAij(_Im(),i,j) = abs(dAij(Im,i,j));
         _Im.write(("psfxr-imout.spi"));
 #endif
 
     }
 
     /// Generate OTF image.
-    void generateOTF(Matrix2D<double> &Im) ;
+    void generateOTF(MultidimArray<double> &Im) ;
 
-    void generateOTF(Matrix2D<std::complex<double> > &Im) ;
+    void generateOTF(MultidimArray<std::complex<double> > &Im) ;
 
 };
 
 
 /// Generate the quadratic phase distribution of a ideal lens
-void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
+void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
 
 
 /// Generate projection for an X-ray microscope... TBC
-void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut);
+void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut);
 
 
 

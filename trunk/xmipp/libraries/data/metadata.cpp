@@ -1385,7 +1385,7 @@ void MetaData::randomize(MetaData &MDin)
 }
 
 /* Statistics -------------------------------------------------------------- */
-void get_statistics(MetaData MT_in, Image& _ave, Image& _sd, double& _min,
+void get_statistics(MetaData MT_in, Image<double> & _ave, Image<double> & _sd, double& _min,
                     double& _max, bool apply_geo)
 {
     MetaData MT(MT_in); //copy constructor so original MT is not changed
@@ -1408,23 +1408,23 @@ void get_statistics(MetaData MT_in, Image& _ave, Image& _sd, double& _min,
         MT.getValue(MDL_ENABLED, _enabled);
         if (_enabled == (-1) || image_name == "")
             continue;
-        Image *image = Image::LoadImage(image_name, apply_geo); // reads image
+        Image<double> image;
+        image.read(image_name);
         double min, max, avg, stddev;
-        (*image)().computeStats(avg, stddev, min, max);
+        image().computeStats(avg, stddev, min, max);
         if (_min > min)
             _min = min;
         if (_max < max)
             _max = max;
         if (first)
         {
-            _ave = *image;
+            _ave = image;
             first = false;
         }
         else
         {
-            _ave() += (*image)();
+            _ave() += image();
         }
-        delete image;
         n++;
     }
     while (MT.nextObject() != MetaData::NO_MORE_OBJECTS);
@@ -1441,34 +1441,26 @@ void get_statistics(MetaData MT_in, Image& _ave, Image& _sd, double& _min,
         MT.getValue(MDL_ENABLED, _enabled);
         if (_enabled == (-1) || image_name == "")
             continue;
-        Image *image = Image::LoadImage(image_name, apply_geo); // reads image
-        Image tmpImg;
-        tmpImg() = (((*image)() - _ave()));
+
+        Image<double> image, tmpImg;
+        image.read(image_name);
+        tmpImg() = ((image() - _ave()));
         tmpImg() *= tmpImg();
         _sd() += tmpImg();
-        delete image;
     }
     while (MT.nextObject() != MetaData::NO_MORE_OBJECTS);
     _sd() /= (n - 1);
-    _sd().selfSQRTnD();
+    _sd().selfSQRT();
 }
 
 void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
 {
-	std::cerr << "i" <<std::endl;
-    MD.firstObject();
+	MD.firstObject();
     FileName fn_img;
+    Image<double> img;
     MD.getValue(MDL_IMAGE, fn_img);
-    ImageXmipp img;
-    img.read(fn_img);
-    Xdim = img().xdim;
-    if (Ydim!=null_object)
-    	Ydim = img().ydim;
-//    if (Zdim!=null_object)
-//    	zdim = img().zdim;
-//    if (Ndim!=null_object)
-//    	Ndim = img().ndim;
-
+    img.read(fn_img, false);
+    img.getDimensions(Xdim, Ydim, Zdim, Ndim);
 }
 
 /* Very dirty sort function

@@ -391,9 +391,10 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
               i < sampling_points_vector.size();
               i++)
 	 {
-             sampling_points_vector[i].addNoise(0.0, sampling_noise, "gaussian");
-	     sampling_points_vector[i].selfNormalize();
-	 }
+    		FOR_ALL_ELEMENTS_IN_MATRIX1D(sampling_points_vector[i])
+				(sampling_points_vector[i])(i) += rnd_gaus(0., sampling_noise);
+			sampling_points_vector[i].selfNormalize();
+    	}
     }
 
 //#define DEBUG3

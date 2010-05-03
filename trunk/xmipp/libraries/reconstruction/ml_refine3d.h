@@ -64,7 +64,7 @@ public:
     // Filename for reference volume, symmetry file and output rootname
     FileName fn_sel, fn_vol, fn_sym, fn_root, fn_solv, fn_iter, fn_symmask;
     // Selfile with reference volumes
-    SelFile SFvol;
+    MetaData SFvol;
     // Number of volumes to refine
     int Nvols;
     // vector with integers which projections are valid for which volume
@@ -129,7 +129,7 @@ public:
     void produceSideInfo(int rank = 0);
 
     /// Project the reference volume in evenly sampled directions
-    void project_reference_volume(SelFile &SFlib, int rank = 0, int size = 1) ;
+    void project_reference_volume(MetaData &SFlib, int rank = 0, int size = 1) ;
 
     /// (For mpi-version only:) calculate noise averages and write to disc
     void make_noise_images(std::vector<ImageXmipp> &Iref) ;

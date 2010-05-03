@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "align_tilt_pairs.h"
-
+#define METADATA
 
 // Read arguments ==========================================================
 void Prog_centilt_prm::read(int argc, char **argv)
@@ -33,10 +33,10 @@ void Prog_centilt_prm::read(int argc, char **argv)
 
     // metaData File with untilted images
     fn_sel = getParameter(argc, argv, "-u");
-    SFu.read(fn_sel,NULL);
+    SFu.read(fn_sel);
     // metaData file with tilted images
     fn_sel = getParameter(argc, argv, "-t");
-    SFt.read(fn_sel,NULL);
+    SFt.read(fn_sel);
     if (SFu.size() != SFt.size())
         REPORT_ERROR(1, "Unequal number of active images in untilted and tilted metadata files");
     // Extension if not to overwrite input images

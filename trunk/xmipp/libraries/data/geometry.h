@@ -26,7 +26,8 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#include "matrix3d.h"
+#include "multidim_array.h"
+#include "transformations.h"
 
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.19209e-07
@@ -298,7 +299,7 @@ public:
      *
      * The logical indexes of this matrix go from Y=[m0...mF] and X=[l0...lF]
      */
-    Matrix2D< double > c_ml;
+    MultidimArray< double > c_ml;
 
     /// Evaluate the model at the point (x,y)
     inline double evaluate(double x, double y) const
@@ -853,23 +854,13 @@ Matrix2D< double > Euler_rotation3DMatrix(double rot, double tilt, double psi);
 /** Rotate a volume after 3 Euler angles
  * @ingroup EulerOperations
  *
- * The following prototype of the function is faster.
- */
-Matrix3D< double > Euler_rotate(const Matrix3D< double >& V,
-                                double rot,
-                                double tilt,
-                                double psi);
-
-/** Rotate a volume after 3 Euler angles
- * @ingroup EulerOperations
- *
  * Input and output volumes cannot be the same one.
  */
-void Euler_rotate(const Matrix3D< double >& V,
+void Euler_rotate(const MultidimArray< double >& V,
                   double rot,
                   double tilt,
                   double psi,
-                  Matrix3D< double >& result);
+                  MultidimArray< double >& result);
 
 /** Compute circle around Euler matrix
  * @ingroup EulerOperations
@@ -924,5 +915,9 @@ double intersection_unit_cylinder(const Matrix1D< double >& u,
  */
 double intersection_unit_cube(const Matrix1D< double >& u,
                               const Matrix1D< double >& r);
+
+
+
+
 
 #endif

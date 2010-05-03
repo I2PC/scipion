@@ -29,7 +29,7 @@
 
 #include "show_table.h"
 
-#include <data/volume.h>
+#include <data/image.h>
 
 #ifdef QT3_SUPPORT
 //Added by qt3to4:
@@ -53,7 +53,7 @@ class ShowVol: public ShowTable
     Q_OBJECT;
 protected:
     // Volume to be represented
-    VolumeXmipp V;
+    Image<double> V;
     // Axis for slistd::cing. Valid values 'X', 'Y' or 'Z'
     char slices;
 

@@ -25,7 +25,6 @@
 
 #include "args.h"
 #include "gcc_version.h"
-#include "matrix1d.h"
 
 #include <cstdio>
 #include <cmath>

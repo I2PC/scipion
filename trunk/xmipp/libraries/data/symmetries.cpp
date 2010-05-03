@@ -128,11 +128,11 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             auxstr = nextToken();
             fold = textToInteger(auxstr);
             auxstr = nextToken();
-            axis.X() = textToDouble(auxstr);
+            XX(axis) = textToDouble(auxstr);
             auxstr = nextToken();
-            axis.Y() = textToDouble(auxstr);
+            YY(axis) = textToDouble(auxstr);
             auxstr = nextToken();
-            axis.Z() = textToDouble(auxstr);
+            ZZ(axis) = textToDouble(auxstr);
             ang_incr = 360. / fold;
             L.initIdentity();
             for (j = 1, rot_ang = ang_incr; j < fold; j++, rot_ang += ang_incr)
@@ -160,11 +160,11 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
         else if (strcmp(auxstr, "mirror_plane") == 0)
         {
             auxstr = nextToken();
-            axis.X() = textToFloat(auxstr);
+            XX(axis) = textToFloat(auxstr);
             auxstr = nextToken();
-            axis.Y() = textToFloat(auxstr);
+            YY(axis) = textToFloat(auxstr);
             auxstr = nextToken();
-            axis.Z() = textToFloat(auxstr);
+            ZZ(axis) = textToFloat(auxstr);
             L.initIdentity();
             L(2, 2) = -1;
             Matrix2D<double> A = alignWithZ(axis);
@@ -346,8 +346,8 @@ const
     for (k = 4 * i; k < 4*i + 4; k++)
         for (l = 0; l < 4; l++)
         {
-            DIRECT_MAT_ELEM(L, k - 4*i, l) = DIRECT_MAT_ELEM(__L, k, l);
-            DIRECT_MAT_ELEM(R, k - 4*i, l) = DIRECT_MAT_ELEM(__R, k, l);
+            L(k - 4*i, l) = __L(k, l);
+            R(k - 4*i, l) = __R(k, l);
         }
 }
 
@@ -359,8 +359,8 @@ void SymList::set_matrices(int i, const Matrix2D<double> &L,
     for (k = 4 * i; k < 4*i + 4; k++)
         for (l = 0; l < 4; l++)
         {
-            DIRECT_MAT_ELEM(__L, k, l) = DIRECT_MAT_ELEM(L, k - 4 * i, l);
-            DIRECT_MAT_ELEM(__R, k, l) = DIRECT_MAT_ELEM(R, k - 4 * i, l);
+            __L(k, l) = L(k - 4 * i, l);
+            __R(k, l) = R(k - 4 * i, l);
         }
 }
 
@@ -368,25 +368,25 @@ void SymList::set_matrices(int i, const Matrix2D<double> &L,
 void SymList::get_shift(int i, Matrix1D<double> &shift) const
 {
     shift.resize(3);
-    XX(shift) = DIRECT_MAT_ELEM(__shift, i, 0);
-    YY(shift) = DIRECT_MAT_ELEM(__shift, i, 1);
-    ZZ(shift) = DIRECT_MAT_ELEM(__shift, i, 2);
+    XX(shift) = __shift(i, 0);
+    YY(shift) = __shift(i, 1);
+    ZZ(shift) = __shift(i, 2);
 }
 
 void SymList::set_shift(int i, const Matrix1D<double> &shift)
 {
-    if (XSIZE(shift) != 3)
+    if (shift.size() != 3)
         REPORT_ERROR(1002, "SymList::add_shift: Shift vector is not 3x1");
-    DIRECT_MAT_ELEM(__shift, i, 0) = XX(shift);
-    DIRECT_MAT_ELEM(__shift, i, 1) = YY(shift);
-    DIRECT_MAT_ELEM(__shift, i, 2) = ZZ(shift);
+    __shift(i, 0) = XX(shift);
+    __shift(i, 1) = YY(shift);
+    __shift(i, 2) = ZZ(shift);
 }
 
 void SymList::add_shift(const Matrix1D<double> &shift)
 {
-    if (XSIZE(shift) != 3)
+    if (shift.size() != 3)
         REPORT_ERROR(1002, "SymList::add_shift: Shift vector is not 3x1");
-    int i = YSIZE(__shift);
+    int i = __shift.Xdim();
     __shift.resize(i + 1, 3);
     set_shift(i, shift);
 }
@@ -395,17 +395,17 @@ void SymList::add_shift(const Matrix1D<double> &shift)
 void SymList::add_matrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
                            int chain_length)
 {
-    if (XSIZE(L) != 4 || YSIZE(L) != 4 || XSIZE(R) != 4 || YSIZE(R) != 4)
+    if (L.Xdim() != 4 || L.Ydim() != 4 || R.Xdim() != 4 || R.Ydim() != 4)
         REPORT_ERROR(1002, "SymList::add_matrix: Transformation matrix is not 4x4");
     if (TrueSymsNo() == SymsNo())
     {
-        __L.resize(__L.ydim + 4, 4);
-        __R.resize(__R.ydim + 4, 4);
-        __chain_length.resize(__chain_length.xdim + 1);
+        __L.resize(__L.Ydim() + 4, 4);
+        __R.resize(__R.Ydim() + 4, 4);
+        __chain_length.resize(__chain_length.size() + 1);
     }
 
     set_matrices(true_symNo, L, R);
-    __chain_length(XSIZE(__chain_length) - 1) = chain_length;
+    __chain_length(__chain_length.size() - 1) = chain_length;
     true_symNo++;
 }
 
@@ -415,9 +415,9 @@ bool found_not_tried(const Matrix2D<int> &tried, int &i, int &j,
 {
     i = j = 0;
     int n = 0;
-    while (n != YSIZE(tried))
+    while (n != tried.Ydim())
     {
-        if (MAT_ELEM(tried, i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
+        if (tried(i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
             return true;
         if (i != n)
         {
@@ -490,7 +490,7 @@ void SymList::compute_subgroup(double accuracy)
 #undef DEBUG
             add_matrices(newL, newR, new_chain_length);
             add_shift(shift);
-            tried.resize(YSIZE(tried) + 1, XSIZE(tried) + 1);
+            tried.resize(tried.Ydim() + 1, tried.Xdim() + 1);
         }
     }
 }
@@ -798,7 +798,7 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
             X(vol_in(i),vol_in.grid(i),eprm_aint,eprm_bint,mask,i, \
               grid_type);\
     }
-#ifdef ROBRESTOREWHENPOSSIBLE
+
 // Symmetrize_crystal_volume==========================================
 //IMPORTANT: matrix orden should match the one used in "read_sym_file"
 //if not the wrong angles are assigned to the different matrices
@@ -806,7 +806,7 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
                                const Matrix1D<double> &eprm_aint,
                                const Matrix1D<double> &eprm_bint,
                                int eprm_space_group,
-                               const Matrix2D<int> &mask, int grid_type)
+                               const MultidimArray<int> &mask, int grid_type)
 {
 //SO FAR ONLY THE GRID CENTERED IN 0,0,0 IS SYMMETRIZED, THE OTHER
 //ONE SINCE REQUIRE INTERPOLATION IS IGNORED
@@ -861,18 +861,16 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
 
 
 }//symmetrize_crystal_vectors end
-#endif
 #define put_inside(j,j_min,j_max,jint)  \
     if( (j) < (j_min) ) { (j) = (j) + (jint);}\
     else if( (j) > (j_max) ) { (j) = (j) - (jint);};
 
-#ifdef ROBRESTOREWHENPOSSIBLE
 /* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
 
-void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
+void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const Matrix2D<int> &mask, int volume_no,
+                     const MultidimArray<int> &mask, int volume_no,
                      int grid_type)
 {
 
@@ -994,7 +992,7 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
             for (x = minX;x <= maxX;x++)
             {
                 //sym=-1---------------------------------------------------------
-                if (!MAT_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
+                if (!A2D_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
                     continue;
 
                 //sym=0 ---------------------------------------------------------
@@ -1007,11 +1005,11 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                     xx--;
                     yy--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1030,11 +1028,11 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                     xx--;
                     zz--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1053,11 +1051,11 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
                     yy--;
                     zz--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1089,10 +1087,10 @@ void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
 }//symmetryP2_122 end
 /* Symmetrizes a simple grid with P2_122 symmetry--------------------------*/
 
-void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
+void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const Matrix2D<int> &mask, int volume_no,
+                     const MultidimArray<int> &mask, int volume_no,
                      int grid_type)
 {
 
@@ -1214,7 +1212,7 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
             for (x = minX;x <= maxX;x++)
             {
                 //sym=-1---------------------------------------------------------
-                if (!MAT_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
+                if (!A2D_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
                     continue;
 
                 //sym=0 ---------------------------------------------------------
@@ -1227,11 +1225,11 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                     xx--;
                     yy--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1250,11 +1248,11 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                     yy--;
                     zz--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1273,11 +1271,11 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
                     xx--;
                     zz--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1308,10 +1306,10 @@ void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
             }//for end
 }//symmetryP2_122 end
 /* Symmetrizes a simple grid with P4  symmetry --------------------------*/
-void symmetry_P4(Volume &vol, const SimpleGrid &grid,
+void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
-                 const Matrix2D<int> &mask, int volume_no, int grid_type)
+                 const MultidimArray<int> &mask, int volume_no, int grid_type)
 {
     int ZZ_lowest = (int) ZZ(grid.lowest);
     int YY_lowest = STARTINGY(mask);
@@ -1423,7 +1421,7 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
             for (x = minX;x <= maxX;x++)
             {
                 //sym=-1---------------------------------------------------------
-                if (!MAT_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
+                if (!A2D_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
                     continue;
 
                 //sym=0 ---------------------------------------------------------
@@ -1436,11 +1434,11 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                 {
                     xx--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1458,11 +1456,11 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                     xx--;
                     yy--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1479,11 +1477,11 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
                 {
                     yy--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1501,10 +1499,10 @@ void symmetry_P4(Volume &vol, const SimpleGrid &grid,
 }
 /* Symmetrizes a simple grid with P4212 symmetry--------------------------*/
 
-void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
+void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const Matrix2D<int> &mask, int volume_no,
+                     const MultidimArray<int> &mask, int volume_no,
                      int grid_type)
 {
 
@@ -1636,7 +1634,7 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
             for (x = minX;x <= maxX;x++)
             {
                 //sym=-1---------------------------------------------------------
-                if (!MAT_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
+                if (!A2D_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
                     continue;
 
                 //sym=0 ---------------------------------------------------------
@@ -1648,11 +1646,11 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     xx--;
                     yy--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1670,11 +1668,11 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                 {
                     zz--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1693,11 +1691,11 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     yy--;
                     zz--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1714,11 +1712,11 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                 {
                     yy--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1735,11 +1733,11 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                 {
                     xx--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1756,11 +1754,11 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     xx--;
                     zz--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1778,11 +1776,11 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
                     yy--;
                     zz--;
                 }
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1817,10 +1815,10 @@ void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
             }//for end
 }//symmetryP42_12 end
 /* Symmetrizes a simple grid with P6 symmetry-----------------------------*/
-void symmetry_P6(Volume &vol, const SimpleGrid &grid,
+void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
-                 const Matrix2D<int> &mask, int volume_no,
+                 const MultidimArray<int> &mask, int volume_no,
                  int grid_type)
 {
 
@@ -1935,18 +1933,18 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
             for (x = minX;x <= maxX;x++)
             {
                 //sym=-1---------------------------------------------------------
-                if (!MAT_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
+                if (!A2D_ELEM(mask, y, x) || z < ZZ_lowest || z > ZZ_highest)
                     continue;
 
                 //sym=0 ---------------------------------------------------------
                 xx = x - y;
                 yy = x;
                 zz = z;
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1959,11 +1957,11 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                 xx = -y;
                 yy = x - y;
                 zz = z;
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1976,11 +1974,11 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                 xx = -x;
                 yy = -y;
                 zz = z;
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -1993,11 +1991,11 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                 xx = -x + y;
                 yy = -x;
                 zz = z;
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -2010,11 +2008,11 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
                 xx = + y;
                 yy = -x + y;
                 zz = z;
-                if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                 {
                     put_inside(xx, XX_lowest, XX_highest, XXaint)
                     put_inside(yy, YY_lowest, YY_highest, YYbint)
-                    if (!MAT_ELEM(mask, yy, xx) || mask.outside(yy, xx))
+                    if (!A2D_ELEM(mask, yy, xx) || mask.outside(yy, xx))
                         std::cerr << "ERROR in symmetry_P function"
                         << "after correction spot is still"
                         << "outside mask\a" << std::endl;
@@ -2054,7 +2052,6 @@ void symmetry_P6(Volume &vol, const SimpleGrid &grid,
             }//for end
 
 }
-#endif
 #undef wrap_as_Crystal
 #undef DEBUG
     /** translate string fn_sym to symmetry group, return false

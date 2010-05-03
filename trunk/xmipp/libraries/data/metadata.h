@@ -485,7 +485,7 @@ public:
  */
 
 #include "image.h"
-void get_statistics(MetaData MT, Image& _ave, Image& _sd, double& _min,
+void get_statistics(MetaData MT, Image<double> & _ave, Image<double> & _sd, double& _min,
                     double& _max, bool apply_geo);
 
 /** Get image size

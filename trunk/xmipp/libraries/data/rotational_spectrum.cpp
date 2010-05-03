@@ -38,7 +38,7 @@ std::ostream & operator << (std::ostream &_out,
     << "r1=" << _cwd.r1 << std::endl
     << "r2=" << _cwd.r2 << std::endl
     << "r3=" << _cwd.r3 << std::endl;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(_cwd.out_ampcos)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(_cwd.out_ampcos)
     _out << _cwd.out_ampcos(i) << " "
     << _cwd.out_ampsin(i) << std::endl;
     return _out;
@@ -46,14 +46,14 @@ std::ostream & operator << (std::ostream &_out,
 
 // Interpolate image value -------------------------------------------------
 double Cylindrical_Wave_Decomposition::interpolate(
-    Matrix2D<double> &img, double y, double x)
+    MultidimArray<double> &img, double y, double x)
 {
     y = y - 1; // Since Fortran starts indexing at 1
     x = x - 1;
     int iy = (int)y; /* Trunc the x, y coordinates to int */
     int ix = (int)x;
     double scale =  y - iy;
-    double *ptr_yx = &DIRECT_MAT_ELEM(img, iy, ix);
+    double *ptr_yx = &DIRECT_A2D_ELEM(img, iy, ix);
     double *ptr_y1x = ptr_yx + XSIZE(img);
     double introw1 = *ptr_yx  + scale * (*(ptr_yx + 1)  - *ptr_yx);
     double introw2 = *ptr_y1x + scale * (*(ptr_y1x + 1) - *ptr_y1x);
@@ -61,7 +61,7 @@ double Cylindrical_Wave_Decomposition::interpolate(
 }
 
 // Compute CWD -------------------------------------------------------------
-void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
+void Cylindrical_Wave_Decomposition::compute_cwd(MultidimArray<double> &img)
 {
     double coseno[1281], ampcos[5191], ampsen[5191];
     double ac, as, bc, bs, b1, coefca, coefcb, coefsa, coefsb;
@@ -202,10 +202,10 @@ void Cylindrical_Wave_Decomposition::compute_cwd(Matrix2D<double> &img)
 
     out_ampcos.initZeros((numax - numin + 1)*ir);
     out_ampsin = out_ampcos;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(out_ampcos)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(out_ampcos)
     {
-        VEC_ELEM(out_ampcos, i) = ampcos[i+1];
-        VEC_ELEM(out_ampsin, i) = ampsen[i+1];
+        A1D_ELEM(out_ampcos, i) = ampcos[i+1];
+        A1D_ELEM(out_ampsin, i) = ampsen[i+1];
     }
 }
 
@@ -247,10 +247,10 @@ void Rotational_Spectrum::compute_rotational_spectrum(
     double rl  = cwd.r1;
     double rh  = cwd.r2;
     double dr  = cwd.r3;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(cwd.out_ampcos)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(cwd.out_ampcos)
     {
-        c[i+1] = VEC_ELEM(cwd.out_ampcos, i);
-        s[i+1] = VEC_ELEM(cwd.out_ampsin, i);
+        c[i+1] = A1D_ELEM(cwd.out_ampcos, i);
+        s[i+1] = A1D_ELEM(cwd.out_ampsin, i);
     }
 
     n = numax - numin + 1;
@@ -357,7 +357,7 @@ void Rotational_Spectrum::compute_rotational_spectrum(
 }
 
 // Compute spectrum --------------------------------------------------------
-void Rotational_Spectrum::compute_rotational_spectrum(Matrix2D<double> &img,
+void Rotational_Spectrum::compute_rotational_spectrum(MultidimArray<double> &img,
         double xr1, double xr2, double xdr, double xr)
 {
     // Compute the cylindrical wave decomposition

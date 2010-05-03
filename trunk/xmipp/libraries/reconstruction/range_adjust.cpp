@@ -24,7 +24,6 @@
  ***************************************************************************/
 
 #include "range_adjust.h"
-#include "args.h"
 
 /* Read parameters --------------------------------------------------------- */
 void Prog_Range_adjust_Parameters::read(int argc, char **argv)

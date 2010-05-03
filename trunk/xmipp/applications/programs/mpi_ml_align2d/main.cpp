@@ -230,8 +230,6 @@ int main(int argc, char **argv)
 
                 }
 
-                //Renumber docfile
-                prm.DFo.renum();
                 // Output all intermediate files
                 prm.writeOutputFiles(prm.model, OUT_ITER);
             }

@@ -38,8 +38,7 @@ int main(int argc, char **argv)
     Matrix2D<double> P_phi, Mr2, Maux;
     std::vector<std::vector<double> > Mwsum_sigma2;
     FileName fn_img, fn_tmp;
-    Matrix1D<double> oneline(0), spectral_signal;
-    DocFile DFo;
+    Matrix1D<double> spectral_signal;
 
     Prog_MLFalign2D_prm prm;
 
@@ -50,17 +49,6 @@ int main(int argc, char **argv)
         prm.produceSideInfo();
         prm.show();
         prm.estimateInitialNoiseSpectra();
-        if (prm.fn_ref == "")
-        {
-            if (prm.n_ref != 0)
-            {
-                prm.generateInitialReferences();
-            }
-            else
-            {
-                REPORT_ERROR(1, "Please provide -ref or -nref");
-            }
-        }
         prm.produceSideInfo2();
     }
     catch (Xmipp_error XE)
@@ -83,20 +71,17 @@ int main(int argc, char **argv)
 
             for (int refno = 0;refno < prm.n_ref; refno++) prm.Iold[refno]() = prm.Iref[refno]();
 
-            DFo.clear();
-	    DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Ref (6), Flip (7), Pmax/sumP (8), w_robust (9), scale (10), KSprob (11)");
-
             // Pre-calculate pdfs
             prm.calculateInPlanePDF();
 
             // Integrate over all images
-            prm.sumOverAllImages(prm.SF, prm.Iref, iter,
-				 LL, sumcorr, DFo, wsum_Mref, wsum_ctfMref,
+            prm.expectation(prm.Iref, iter,
+				 LL, sumcorr, wsum_Mref, wsum_ctfMref,
 				 Mwsum_sigma2, wsum_sigma_offset, 
 				 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
 
             // Update model parameters
-            prm.updateParameters(wsum_Mref, wsum_ctfMref,
+            prm.maximization(wsum_Mref, wsum_ctfMref,
 				 Mwsum_sigma2,wsum_sigma_offset, 
 				 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
 				 sumcorr, sumw_allrefs,
@@ -105,10 +90,11 @@ int main(int argc, char **argv)
             // Check convergence
             converged = prm.checkConvergence(conv);
 
-            prm.writeOutputFiles(iter, DFo, sumw_allrefs, LL, sumcorr, conv);
+            prm.addPartialDocfileData(prm.docfiledata, prm.myFirstImg, prm.myLastImg);
+            prm.writeOutputFiles(iter, sumw_allrefs, LL, sumcorr, conv);
 
             // Calculate new wiener filters
-	    prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
+            prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
 
             if (converged)
             {
@@ -117,7 +103,7 @@ int main(int argc, char **argv)
 	    }
 
         } // end loop iterations
-        prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+        prm.writeOutputFiles(-1, sumw_allrefs, LL, sumcorr, conv);
 
     }
     catch (Xmipp_error XE)

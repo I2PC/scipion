@@ -49,7 +49,7 @@
 #endif
 
 #include <data/funcs.h>
-#include <data/matrix2d.h>
+#include <data/multidim_array.h>
 #include <data/selfile.h>
 
 #include <iostream>
@@ -226,7 +226,7 @@ protected:
     virtual void producePixmapAt(int i) = 0;
     /* Scale to currScale and produce the output minGray and maxGray
        for an ImageXmipp. This function is used by producePixmapAt.*/
-    virtual void scale_and_normalize(Matrix2D<double> &I, bool normalize,
+    virtual void scale_and_normalize(MultidimArray<double> &I, bool normalize,
                                      int &minGray, int &maxGray);
     /* How to check if the pixmap is old or not */
     virtual void insert_content_in_queue(int i)

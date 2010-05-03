@@ -28,11 +28,11 @@
 #ifndef _SYMMETRIES_HH
 #define _SYMMETRIES_HH
 
+#include "matrix1d.h"
 #include "matrix2d.h"
 #include "funcs.h"
-//#include "volume.h"
 #include "args.h"
-//#include "grids.h"
+#include "grids.h"
 
 /**@defgroup SymmetryLists Symmetry handling
    @ingroup DataLibrary 
@@ -106,7 +106,7 @@
     within this first numIMG images of the image we want to symmetrize The
     first image in the list is the number 0 */
 #define SYMINDEX(SL, sym_no, i, numIMG) \
-    numIMG+SL.__L.ydim/4*i+sym_no
+    numIMG+SL.__L.mdimy/4*i+sym_no
 
 /** Symmetry List class.
     Internally the symmetry list class is implemented as a single 2D matrix,
@@ -264,7 +264,7 @@ void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
         @endcode */
     int SymsNo() const
     {
-        return __L.ydim / 4;
+        return __L.Ydim() / 4;
     }
 
     /** Number of symmetry matrices which generated the structure.
@@ -315,57 +315,49 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
 
 /** Symmetrizes a crystal volume.
  */
-/** ROB restrore when possible
+
 void symmetrize_crystal_volume(GridVolume &vol,
                                const Matrix1D<double> &eprm_aint,
                                const Matrix1D<double> &eprm_bint,
-                               int eprm_space_group, const Matrix2D<int> &mask,
+                               int eprm_space_group, const MultidimArray<int> &mask,
                                int grid_type);
-**/
+
 /** Symmetrizes a simple grid with P2_122  symmetry
 */
-/** ROB restrore when possible
-void symmetry_P2_122(Volume &vol, const SimpleGrid &grid,
+void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const Matrix2D<int> &mask, int volume_no,
+                     const MultidimArray<int> &mask, int volume_no,
                      int grid_type);
-*/
 /** Symmetrizes a simple grid with P22_12  symmetry
 */
-/** ROB restrore when possible
-void symmetry_P22_12(Volume &vol, const SimpleGrid &grid,
+void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const Matrix2D<int> &mask, int volume_no,
+                     const MultidimArray<int> &mask, int volume_no,
                      int grid_type);
 /** Symmetrizes a simple grid with P4  symmetry
 */
-/** ROB restrore when possible
-void symmetry_P4(Volume &vol, const SimpleGrid &grid,
+void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
-                 const Matrix2D<int> &mask, int volume_no,
+                 const MultidimArray<int> &mask, int volume_no,
                  int grid_type);
-**/
 /** Symmetrizes a simple grid with P4212 symmetry
 */
-/** ROB restrore when possible
-void symmetry_P42_12(Volume &vol, const SimpleGrid &grid,
+void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_aint,
                      const Matrix1D<double> &eprm_bint,
-                     const Matrix2D<int> &mask, int volume_no,
+                     const MultidimArray<int> &mask, int volume_no,
                      int grid_type);
-*/
 /** Symmetrizes a simple grid with P6 symmetry
 */
-/** ROB restrore when possible
-void symmetry_P6(Volume &vol, const SimpleGrid &grid,
+void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_aint,
                  const Matrix1D<double> &eprm_bint,
-                 const Matrix2D<int> &mask, int volume_no,
+                 const MultidimArray<int> &mask, int volume_no,
                  int grid_type);
-*/
+
 
 //@}
 #endif

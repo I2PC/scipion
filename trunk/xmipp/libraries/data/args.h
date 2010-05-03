@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include "matrix1d.h"
 //ROB
 #include <string.h>
 
@@ -594,7 +595,7 @@ void readFloatList(const char* str,
             REPORT_ERROR(_errno, errmsg);
         }
 
-        DIRECT_VEC_ELEM(v, i) = valueF;
+        v(i) = valueF;
         if (i != N - 1)
             token = nextToken();
     }
@@ -754,12 +755,12 @@ int numComponents(const std::string& str);
  * flag then no brackets are needed
  */
 Matrix1D< double > getVectorParameter(int argc,
-                                    char** argv,
-                                    const char* param,
-                                    int dim = 2,
-                                    int _errno = -1,
-                                    const std::string & errmsg = "",
-                                    int exit = 0);
+                                      char** argv,
+                                      const char* param,
+                                      int dim = 2,
+                                      int _errno = -1,
+                                      const std::string & errmsg = "",
+                                      int exit = 0);
 
 /** Get specific command line.
  * @ingroup CommandLineFunctions

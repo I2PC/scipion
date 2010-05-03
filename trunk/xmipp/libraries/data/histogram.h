@@ -27,9 +27,7 @@
 #ifndef HISTOGRAM_H
 #define HISTOGRAM_H
 
-#include "matrix1d.h"
-#include "matrix2d.h"
-#include "matrix3d.h"
+#include "multidim_array.h"
 
 /// @defgroup Histograms Histograms
 /// @ingroup DataLibrary
@@ -76,7 +74,7 @@
  * @code
  * // Variable definition
  * histogram1D hist;
- * Matrix2D A(50, 50);
+ * MultidimArray<double> A(50, 50);
  * double min_val, max_val;
  * double eff0, effF;
  *
@@ -91,7 +89,7 @@
  * // Histogram computation
  * for (int i=STARTINGY(A); i<=FINISHINGY(A); i++)
  *     for (int j=STARTINGX(A); j<=FINISHINGX(A); j++)
- *         hist.insert_value(MAT_ELEM(A,i,j));
+ *         hist.insert_value(A2D_ELEM(A,i,j));
  *
  * // Effective range computation
  * eff0 = hist.percentil(2.5);
@@ -101,7 +99,7 @@
  *     << " to " << effF << std::endl;
  * @endcode
  */
-class histogram1D: public Matrix1D< double >
+class histogram1D: public MultidimArray< double >
 {
 public:
     // Structure
@@ -333,10 +331,10 @@ class IrregularHistogram1D
 {
     public:
         histogram1D         __hist;
-        Matrix1D<double>    __binsRightLimits;
+        MultidimArray<double>    __binsRightLimits;
     public:
         /// Initialize class
-        void init(const histogram1D &oldHistogram, const Matrix1D<int> &bins);
+        void init(const histogram1D &oldHistogram, const MultidimArray<int> &bins);
         
         /// Return the index corresponding to a certain value
         int val2Index(double value);
@@ -402,43 +400,23 @@ void compute_hist(const T& v, histogram1D& hist,
     	hist.insert_value(DIRECT_MULTIDIM_ELEM(v, n));
 }
 
-/** Compute histogram within a region
+/** Compute histogram within a region (2D or 3D)
  * @ingroup HistogramFunctions1D
  *
  * The region is defined by its corners
  */
 template<typename T>
-void compute_hist(const Matrix2D< T >& v, histogram1D& hist,
-                  const Matrix1D< int >& corner1,
-                  const Matrix1D< int >& corner2,
-                  int no_steps = 100)
+void compute_hist(const MultidimArray< T >& v, histogram1D& hist,
+                    const Matrix1D< int >& corner1,
+                    const Matrix1D< int >& corner2,
+                    int no_steps = 100)
 {
     double min, max;
     v.computeDoubleMinMax(min, max, corner1, corner2);
     hist.init(min, max, no_steps);
 
     Matrix1D< int > r(2);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D_BETWEEN(corner1, corner2)
-        hist.insert_value(v(r));
-}
-
-/** Compute histogram within a region 3D
- * @ingroup HistogramFunctions1D
- *
- * The region is defined by the corners (k0, i0, j0) and (kF, iF, jF).
- */
-template<typename T>
-void compute_hist(const Matrix3D< T >& v, histogram1D& hist,
-                  const Matrix1D< int >& corner1,
-                  const Matrix1D< int >& corner2,
-                  int no_steps = 100)
-{
-    double min, max;
-    v.computeDoubleMinMax(min, max, corner1, corner2);
-    hist.init(min, max, no_steps);
-
-    Matrix1D< int >r(3);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D_BETWEEN(corner1, corner2)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
         hist.insert_value(v(r));
 }
 
@@ -517,11 +495,11 @@ void reject_outliers(T& v, double percentil_out = 0.25)
     double eff0 = hist.percentil(percentil_out / 2);
     double effF = hist.percentil(100 - percentil_out / 2);
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(v)
-	if (DIRECT_VEC_ELEM(v,i) < eff0)
-            DIRECT_VEC_ELEM(v,i) = eff0;
-	else if (DIRECT_VEC_ELEM(v,i) > effF)
-            DIRECT_VEC_ELEM(v,i) = effF;
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
+	if (DIRECT_A1D_ELEM(v,i) < eff0)
+            DIRECT_A1D_ELEM(v,i) = eff0;
+	else if (DIRECT_A1D_ELEM(v,i) > effF)
+            DIRECT_A1D_ELEM(v,i) = effF;
 }
 
 /** Histogram equalization and re-quantization
@@ -539,15 +517,15 @@ void histogram_equalization(MultidimArray<T>& v, int bins = 8)
     compute_hist(v, hist, hist_steps);
 
     // Compute the distribution function of the pdf
-    Matrix1D< double > norm_sum(hist_steps);
+    MultidimArray<double> norm_sum(hist_steps);
     norm_sum(0) = hist(0);
-    
+
     for (int i = 1; i < hist_steps; i++)
-        norm_sum(i) = norm_sum(i - 1) + hist(i);    
+        norm_sum(i) = norm_sum(i - 1) + hist(i);
     norm_sum /= MULTIDIM_SIZE(v);
 
     // array to store the boundary pixels of bins
-    Matrix1D< double > div(bins - 1);
+    MultidimArray< double > div(bins - 1);
     int index = 0;
 
     for (int current_bin = 1; current_bin < bins; current_bin++)
@@ -597,7 +575,7 @@ void histogram_equalization(MultidimArray<T>& v, int bins = 8)
  * histograms 1D.
  *
  */
-class histogram2D : public Matrix2D< double >
+class histogram2D : public MultidimArray< double >
 {
 public:
     // Structure

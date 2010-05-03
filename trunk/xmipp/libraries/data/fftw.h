@@ -29,7 +29,7 @@
 
 #include <complex>
 #include "../../external/fftw-3.2.2/api/fftw3.h"
-#include "matrix3d.h"
+#include "multidim_array.h"
 #include "fft.h"
 
 /** @defgroup FourierW FFTW Fourier transforms
@@ -46,11 +46,11 @@
  * Here you have an example of use
  * @code
  * XmippFftw transformer;
- * Matrix3D< std::complex<double> > Vfft;
+ * MultidimArray< std::complex<double> > Vfft;
  * transformer.FourierTransform(V(),Vfft,false);
- * Matrix3D<double> Vmag;
+ * MultidimArray<double> Vmag;
  * Vmag.resize(Vfft);
- * FOR_ALL_ELEMENTS_IN_MATRIX3D(Vmag)
+ * FOR_ALL_ELEMENTS_IN_ARRAY3D(Vmag)
  *     Vmag(k,i,j)=20*log10(abs(Vfft(k,i,j)));
  * @endcode
  */
@@ -141,7 +141,7 @@ public:
         threadsSetOn=false;
     }
     
-    /** Compute the Fourier transform of a Matrix1D, 2D and 3D.
+    /** Compute the Fourier transform of a MultidimArray, 2D and 3D.
         If getCopy is false, an alias to the transformed data is returned.
         This is a faster option since a copy of all the data is avoided,
         but you need to be careful that an inverse Fourier transform may
@@ -212,33 +212,33 @@ public:
             switch (ndim)
             {
                 case 1:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(V)
+                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(V)
                         if (i<XSIZE(fFourier))
-                            DIRECT_VEC_ELEM(V,i)=DIRECT_VEC_ELEM(fFourier,i);
+                            DIRECT_A1D_ELEM(V,i)=DIRECT_A1D_ELEM(fFourier,i);
                         else
-                            DIRECT_VEC_ELEM(V,i)=
-                                conj(DIRECT_VEC_ELEM(fFourier,
+                            DIRECT_A1D_ELEM(V,i)=
+                                conj(DIRECT_A1D_ELEM(fFourier,
                                     XSIZE(*fReal)-i));
                     break;
                 case 2:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(V)
+                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(V)
                         if (j<XSIZE(fFourier))
-                            DIRECT_MAT_ELEM(V,i,j)=
-                                DIRECT_MAT_ELEM(fFourier,i,j);
+                            DIRECT_A2D_ELEM(V,i,j)=
+                                DIRECT_A2D_ELEM(fFourier,i,j);
                         else
-                            DIRECT_MAT_ELEM(V,i,j)=
-                                conj(DIRECT_MAT_ELEM(fFourier,
+                            DIRECT_A2D_ELEM(V,i,j)=
+                                conj(DIRECT_A2D_ELEM(fFourier,
                                     (YSIZE(*fReal)-i)%YSIZE(*fReal),
                                      XSIZE(*fReal)-j));
                     break;
                 case 3:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(V)
+                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V)
                         if (j<XSIZE(fFourier))
-                            DIRECT_VOL_ELEM(V,k,i,j)=
-                                DIRECT_VOL_ELEM(fFourier,k,i,j);
+                            DIRECT_A3D_ELEM(V,k,i,j)=
+                                DIRECT_A3D_ELEM(fFourier,k,i,j);
                         else
-                            DIRECT_VOL_ELEM(V,k,i,j)=
-                                conj(DIRECT_VOL_ELEM(fFourier,
+                            DIRECT_A3D_ELEM(V,k,i,j)=
+                                conj(DIRECT_A3D_ELEM(fFourier,
                                     (ZSIZE(*fReal)-k)%ZSIZE(*fReal),
                                     (YSIZE(*fReal)-i)%YSIZE(*fReal),
                                      XSIZE(*fReal)-j));
@@ -261,16 +261,16 @@ public:
         switch (ndim)
         {
         case 1:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(fFourier)
-                DIRECT_VEC_ELEM(fFourier,i)=DIRECT_VEC_ELEM(V,i);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(fFourier)
+                DIRECT_A1D_ELEM(fFourier,i)=DIRECT_A1D_ELEM(V,i);
             break;
         case 2:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(fFourier)
-                DIRECT_MAT_ELEM(fFourier,i,j) = DIRECT_MAT_ELEM(V,i,j); 
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(fFourier)
+                DIRECT_A2D_ELEM(fFourier,i,j) = DIRECT_A2D_ELEM(V,i,j); 
             break;
         case 3:
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX3D(fFourier)
-                DIRECT_VOL_ELEM(fFourier,k,i,j) = DIRECT_VOL_ELEM(V,k,i,j);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(fFourier)
+                DIRECT_A3D_ELEM(fFourier,k,i,j) = DIRECT_A3D_ELEM(V,k,i,j);
             break;
         }
     }
@@ -323,38 +323,14 @@ public:
 /** FFT Magnitude 1D
  * @ingroup FourierOperations
  */
-void FFT_magnitude(const Matrix1D< std::complex< double > > & v,
-                   Matrix1D< double >& mag);
-
-/** FFT Magnitude 2D
- * @ingroup FourierOperations
- */
-void FFT_magnitude(const Matrix2D< std::complex< double > > & v,
-                   Matrix2D< double >& mag);
-
-/** FFT Magnitude 3D
- * @ingroup FourierOperations
- */
-void FFT_magnitude(const Matrix3D< std::complex< double > > & v,
-                   Matrix3D< double >& mag);
+void FFT_magnitude(const MultidimArray< std::complex< double > > & v,
+                   MultidimArray< double >& mag);
 
 /** FFT Phase 1D
  * @ingroup FourierOperations
  */
-void FFT_phase(const Matrix1D< std::complex< double > > & v,
-               Matrix1D< double >& phase);
-
-/** FFT Phase 2D
- * @ingroup FourierOperations
- */
-void FFT_phase(const Matrix2D< std::complex< double > > & v,
-               Matrix2D< double >& phase);
-
-/** FFT Phase 3D
- * @ingroup FourierOperations
- */
-void FFT_phase(const Matrix3D< std::complex< double > > & v,
-               Matrix3D< double >& phase);
+void FFT_phase(const MultidimArray< std::complex< double > > & v,
+               MultidimArray< double >& phase);
 
 /** Autocorrelation function of a Xmipp vector
  * @ingroup FourierOperations
@@ -363,17 +339,19 @@ void FFT_phase(const Matrix3D< std::complex< double > > & v,
  * Fourier Transform. (Using the correlation theorem)
  */
 template <typename T>
-void auto_correlation_vector(const Matrix1D< T > & Img, Matrix1D< double >& R)
+void auto_correlation_vector(const MultidimArray< T > & Img, MultidimArray< double >& R)
 {
+    Img.checkDimension(1);
+
     // Compute the Fourier Transform
-    Matrix1D< std::complex< double > > FFT1;
+    MultidimArray< std::complex< double > > FFT1;
     XmippFftw transformer1;
     R=Img;
     transformer1.FourierTransform(R, FFT1, false);
 
     // Multiply FFT1 * FFT1'
     double dSize=XSIZE(Img);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(FFT1)
         FFT1(i) *= dSize * conj(FFT1(i));
 
     // Invert the product, in order to obtain the correlation image
@@ -391,20 +369,23 @@ void auto_correlation_vector(const Matrix1D< T > & Img, Matrix1D< double >& R)
  * resized
  */
 template <typename T>
-void correlation_vector(const Matrix1D< T > & m1,
-                        const Matrix1D< T > & m2,
-                        Matrix1D< double >& R)
+void correlation_vector(const MultidimArray< T > & m1,
+                        const MultidimArray< T > & m2,
+                        MultidimArray< double >& R)
 {
+    m1.checkDimension(2);
+    m2.checkDimension(2);
+
     // Compute the Fourier Transforms
-    Matrix1D< std::complex< double > > FFT1, FFT2;
+    MultidimArray< std::complex< double > > FFT1, FFT2;
     XmippFftw transformer1, transformer2;
     R=m1;
     transformer1.FourierTransform(R, FFT1, false);
-    transformer2.FourierTransform((Matrix1D<T> &)m2, FFT2, false);
+    transformer2.FourierTransform((MultidimArray<T> &)m2, FFT2, false);
 
     // Multiply FFT1 * FFT2'
     double dSize=XSIZE(m1);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(FFT1)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(FFT1)
         FFT1(i) *= dSize * conj(FFT2(i));
 
     // Invert the product, in order to obtain the correlation image
@@ -422,21 +403,24 @@ void correlation_vector(const Matrix1D< T > & m1,
  *  
  *  It is assumed that the two vectors v1, and v2 are of the same size. */
 template <class T>
-void correlation_vector_no_Fourier(const Matrix1D<T> &v1, const Matrix1D<T> &v2,
-    Matrix1D<T> &result)
+void correlation_vector_no_Fourier(const MultidimArray<T> &v1, const MultidimArray<T> &v2,
+    MultidimArray<T> &result)
 {
+    v1.checkDimension(1);
+    v2.checkDimension(1);
+
     result.initZeros(v1);
     result.setXmippOrigin();
     int N=XSIZE(v1)-1;
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(result)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(result)
         for (int k=0; k<XSIZE(v1); k++)
-            result(i)+=DIRECT_VEC_ELEM(v1,intWRAP(k+i,0,N))*
-                       DIRECT_VEC_ELEM(v2,k);
+            result(i)+=DIRECT_A1D_ELEM(v1,intWRAP(k+i,0,N))*
+                       DIRECT_A1D_ELEM(v2,k);
     STARTINGX(result)=0;
 }
 
 
-/** Correlation of two matrices
+/** Correlation of two nD images
  * @ingroup FourierOperations
  *
  * Fast calcuation of the correlation matrix on two matrices using Fast Fourier
@@ -444,21 +428,21 @@ void correlation_vector_no_Fourier(const Matrix1D<T> &v1, const Matrix1D<T> &v2,
  * resized
  */
 template <typename T>
-void correlation_matrix(const Matrix2D< T > & m1,
-                        const Matrix2D< T > & m2,
-                        Matrix2D< double >& R)
+void correlation_matrix(const MultidimArray< T > & m1,
+                        const MultidimArray< T > & m2,
+                        MultidimArray< double >& R)
 {
     // Compute the Fourier Transforms
-    Matrix2D< std::complex< double > > FFT1, FFT2;
+    MultidimArray< std::complex< double > > FFT1, FFT2;
     XmippFftw transformer1, transformer2;
     R=m1;
     transformer1.FourierTransform(R, FFT1, false);
-    transformer2.FourierTransform((Matrix2D<T> &)m2, FFT2, false);
+    transformer2.FourierTransform((MultidimArray<T> &)m2, FFT2, false);
 
     // Multiply FFT1 * FFT2'
     double dSize=MULTIDIM_SIZE(R);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT1)
-        FFT1(i, j) *= dSize * conj(FFT2(i, j));
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(FFT1)
+        FFT1(k, i, j) *= dSize * conj(FFT2(k, i, j));
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
@@ -467,25 +451,25 @@ void correlation_matrix(const Matrix2D< T > & m1,
     CenterFFT(R, true);
 }
 
-/** Autocorrelation function of a Xmipp matrix
+/** Autocorrelation function of an image
  * @ingroup FourierOperations
  *
  * Fast calcuation of the autocorrelation matrix of a given one using Fast
  * Fourier Transform. (Using the correlation theorem)
  */
 template <typename T>
-void auto_correlation_matrix(const Matrix2D< T > & Img, Matrix2D< double >& R)
+void auto_correlation_matrix(const MultidimArray< T > & Img, MultidimArray< double >& R)
 {
     // Compute the Fourier Transform
-    Matrix2D< std::complex< double > > FFT1;
+    MultidimArray< std::complex< double > > FFT1;
     XmippFftw transformer1;
     R=Img;
     transformer1.FourierTransform(R, FFT1);
 
     // Multiply FFT1 * FFT1'
     double dSize=MULTIDIM_SIZE(Img);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(FFT1)
-        FFT1(i, j) *= dSize * conj(FFT1(i, j));
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(FFT1)
+        FFT1(k, i, j) *= dSize * conj(FFT1(k, i, j));
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
@@ -494,28 +478,16 @@ void auto_correlation_matrix(const Matrix2D< T > & Img, Matrix2D< double >& R)
     CenterFFT(R, true);
 }
 
-/** Fourier-Ring-Correlation between two 2D-matrices using FFT
+/** Fourier-Ring-Correlation between two multidimArrays using FFT
  * @ingroup FourierOperations
  */
-void frc_dpr(Matrix2D< double > & m1,
-             Matrix2D< double > & m2,
+void frc_dpr(MultidimArray< double > & m1,
+             MultidimArray< double > & m2,
              double sampling_rate,
-             Matrix1D< double >& freq,
-             Matrix1D< double >& frc,
-             Matrix1D< double >& frc_noise,
-             Matrix1D< double >& dpr,
-             bool skipdpr=false);
-
-/** Fourier-Ring-Correlation between two 3D-matrices using FFT
- * @ingroup FourierOperations
- */
-void frc_dpr(Matrix3D< double > & m1,
-             Matrix3D< double > & m2,
-             double sampling_rate,
-             Matrix1D< double >& freq,
-             Matrix1D< double >& frc,
-             Matrix1D< double >& frc_noise,
-             Matrix1D< double >& dpr,
+             MultidimArray< double >& freq,
+             MultidimArray< double >& frc,
+             MultidimArray< double >& frc_noise,
+             MultidimArray< double >& dpr,
              bool skipdpr=false);
 /** 
  * Scale matrix using Fourier transform
@@ -525,7 +497,7 @@ void frc_dpr(Matrix3D< double > & m1,
  * @param Mpmem matrix to scale
  * @param nThreads number of threads
  */ 
-void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem, int nthreads=1);
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem, int nthreads=1);
 
 
 /** Get the amplitude or power spectrum of the map in Fourier space
@@ -534,38 +506,38 @@ void selfScaleToSizeFourier(int Ydim, int Xdim,Matrix2D<double>& Mpmem, int nthr
 #define POWER_SPECTRUM 0
 #define AMPLITUDE_SPECTRUM 1
 
-void getSpectrum(Matrix3D<double> &Min, 
-                 Matrix1D<double> &spectrum,
+void getSpectrum(MultidimArray<double> &Min,
+                 MultidimArray<double> &spectrum,
                  int spectrum_type=AMPLITUDE_SPECTRUM);
 
 /** Divide the input map in Fourier-space by the spectrum provided.
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void divideBySpectrum(Matrix3D<double> &Min, 
-                      Matrix1D<double> &spectrum,
+void divideBySpectrum(MultidimArray<double> &Min,
+                      MultidimArray<double> &spectrum,
                       bool leave_origin_intact=false);
 
 /** Multiply the input map in Fourier-space by the spectrum provided.
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void multiplyBySpectrum(Matrix3D<double> &Min, 
-                        Matrix1D<double> &spectrum,
+void multiplyBySpectrum(MultidimArray<double> &Min,
+                        MultidimArray<double> &spectrum,
                         bool leave_origin_intact=false);
 
 /** Perform a whitening of the amplitude/power spectrum of a 3D map 
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
-void whitenSpectrum(Matrix3D<double> &Min, 
-                    Matrix3D<double> &Mout, 
+void whitenSpectrum(MultidimArray<double> &Min,
+                    MultidimArray<double> &Mout,
                     int spectrum_type=AMPLITUDE_SPECTRUM,
                     bool leave_origin_intact=false);
 
 /** Adapts Min to have the same spectrum as spectrum_ref
     If only_amplitudes==true, the amplitude rather than the power spectrum will be equalized
 */
-void adaptSpectrum(Matrix3D<double> &Min, 
-                   Matrix3D<double> &Mout,
-                   const Matrix1D<double> spectrum_ref,
+void adaptSpectrum(MultidimArray<double> &Min,
+                   MultidimArray<double> &Mout,
+                   const MultidimArray<double> spectrum_ref,
                    int spectrum_type=AMPLITUDE_SPECTRUM,
                    bool leave_origin_intact=false);
 
