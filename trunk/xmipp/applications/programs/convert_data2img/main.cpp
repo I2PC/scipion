@@ -41,13 +41,13 @@ int main(int argc, char **argv)
 //  char *fname, *iname, *bmname, *imgName, *ext;
     FileName fname, iname, bmname, imgName, ext;
     std::string selname, basename;
-    ImageXmipp mask;
+    Image<int> mask;
     std::vector < std::vector <float> > dataPoints;
     std::vector < std::string > labels;
     bool nomask = false;
     bool noBB = true;
     FileName  tmpN;
-    int rows, cols;
+    int rows, cols, planes;
 
 
     // Read arguments
@@ -67,6 +67,7 @@ int main(int argc, char **argv)
             nomask = true;
             rows = textToInteger(getParameter(argc, argv, "-rows"));
             cols = textToInteger(getParameter(argc, argv, "-cols"));
+            planes = textToInteger(getParameter(argc, argv, "-planes"));
         }
         if (checkParameter(argc, argv, "-noBB"))
             noBB = true;
@@ -84,6 +85,7 @@ int main(int argc, char **argv)
         std::cout << "[-nomask]      : set if the mask is not going to be used" << std::endl;
         std::cout << "[-rows]        : Number of rows if the mask is not going to be used" << std::endl;
         std::cout << "[-cols]        : Number of columns if the mask is not going to be used" << std::endl;
+        std::cout << "[-planes]      : Number of planes if the mask is not going to be used" << std::endl;
         exit(1);
     }
 
@@ -96,6 +98,7 @@ int main(int argc, char **argv)
         std::cout << "No mask is going to be used" << std::endl;
         std::cout << "Number of rows of the generated images: " << rows << std::endl;
         std::cout << "Number of columns of the generated images: " << cols << std::endl;
+        std::cout << "Number of planes of the generated images: " << planes << std::endl;
     }
 //  if (!noBB)
 //     std::cout << "Generated images will be inside the mask's bounding box" << std::endl;
@@ -111,31 +114,38 @@ int main(int argc, char **argv)
         mask().rangeAdjust(0, 1);   // just in case
         if (noBB)
             mask().setXmippOrigin();   // sets origin at the center of the mask.
-        std::cout << mask;       // Output Volumen Information
+        mask().printShape();
     }
 
-    int minXPixel = 32000, maxXPixel = 0; int minYPixel = 32000, maxYPixel = 0;
-    int NewXDim, NewYDim;
+    int minXPixel = 32000, maxXPixel = 0;
+    int minYPixel = 32000, maxYPixel = 0;
+    int minZPixel = 32000, maxZPixel = 0;
+    int NewXDim, NewYDim, NewZDim;
     if ((!noBB) && (!nomask))
     {
         std::cout << std::endl << "Calculating the mask's minimum bounding box...." << std::endl;
-        for (int y = 0; y < mask().rowNumber(); y++)
-            for (int x = 0; x < mask().colNumber(); x++)
-            {
-                // Checks if pixel is zero (it's outside the binary mask)
-                if (mask(y, x) != 0)
-                {
-                    if (y < minYPixel) minYPixel = y;
-                    if (x < minXPixel) minXPixel = x;
-                    if (y > maxYPixel) maxYPixel = y;
-                    if (x > maxXPixel) maxXPixel = x;
-                }
-            } // for x
+        for (int z = 0; z < ZSIZE(mask()); z++)
+            for (int y = 0; y < YSIZE(mask()); y++)
+				for (int x = 0; x < XSIZE(mask()); x++)
+				{
+					// Checks if pixel is zero (it's outside the binary mask)
+					if (mask()(z, y, x) != 0)
+					{
+						if (z < minZPixel) minZPixel = z;
+						if (y < minYPixel) minYPixel = y;
+						if (x < minXPixel) minXPixel = x;
+						if (z < maxZPixel) maxZPixel = z;
+						if (y > maxYPixel) maxYPixel = y;
+						if (x > maxXPixel) maxXPixel = x;
+					}
+				} // for x
         NewXDim = (maxXPixel - minXPixel) +  1;
         NewYDim = (maxYPixel - minYPixel) +  1;
+        NewZDim = (maxZPixel - minZPixel) +  1;
         std::cout << "minX = " << minXPixel << " maxX = " << maxXPixel << " DimX = " << NewXDim << std::endl;
         std::cout << "minY = " << minYPixel << " maxY = " << maxYPixel << " DimY= " << NewYDim << std::endl;
-        mask().moveOriginTo(minYPixel + NewYDim / 2, minXPixel + NewXDim / 2);   // sets origin at the center of the mask.
+        std::cout << "minZ = " << minZPixel << " maxZ = " << maxZPixel << " DimZ= " << NewZDim << std::endl;
+        mask().moveOriginTo(minZPixel + NewZDim / 2, minYPixel + NewYDim / 2, minXPixel + NewXDim / 2);   // sets origin at the center of the mask.
     }
 
     std::cout << std::endl << "Reading input file...." << std::endl;
@@ -157,7 +167,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    if (nomask && (rows*cols != ts.theItems[0].size()))
+    if (nomask && (rows*cols*planes != ts.theItems[0].size()))
     {
         std::cerr << argv[0] << ": Images size doesn't coincide with data file " << std::endl;
         exit(EXIT_FAILURE);
@@ -167,40 +177,42 @@ int main(int argc, char **argv)
 
     for (int i = 0; i < ts.size(); i++)
     {
-        ImageXmipp image;
+        Image<double> image;
         if (nomask)
-            image().resize(rows, cols);   // creates image
+            image().resize(planes, rows, cols);   // creates image
         else
         {
             if (noBB)
                 image().resize(mask());         // creates image
             else
-                image().resize(NewYDim, NewXDim);
+                image().resize(NewZDim, NewYDim, NewXDim);
         }
         image().setXmippOrigin();       // sets origin at the center of the image.
         int counter = 0;
         double minVal = MAXFLOAT;
-        for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
-            for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++)
-            {
-                // Checks if pixel is different from zero (it's inside the binary mask)
-                if (!noBB || nomask || mask(y, x) != 0)
-                {
-                    image(y, x) = (double) ts.theItems[i][counter];
-                    if (ts.theItems[i][counter] < minVal)
-                        minVal = ts.theItems[i][counter];
-                    counter++;
-                }
-            } // for x
+        for (int z = STARTINGZ(image()); z <= FINISHINGZ(image()); z++)
+			for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
+				for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++)
+				{
+					// Checks if pixel is different from zero (it's inside the binary mask)
+					if (!noBB || nomask || mask()(z, y, x) != 0)
+					{
+						image()(z, y, x) = (double) ts.theItems[i][counter];
+						if (ts.theItems[i][counter] < minVal)
+							minVal = ts.theItems[i][counter];
+						counter++;
+					}
+				} // for x
         if (!nomask && noBB)
         {
-            for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
-                for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++)
-                {
-                    // Checks if pixel is zero (it's outside the binary mask)
-                    if (nomask || mask(y, x) == 0)
-                        image(y, x) = (double) minVal;
-                } // for x
+        	for (int z = STARTINGZ(image()); z <= FINISHINGZ(image()); z++)
+        		for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
+					for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++)
+					{
+						// Checks if pixel is zero (it's outside the binary mask)
+						if (nomask || mask()(z, y, x) == 0)
+							image()(z, y, x) = (double) minVal;
+					} // for x
         } // if nomask.
 
         tmpN = (std::string) imgName + integerToString(i) + (std::string) "." + (std::string) ext;
