@@ -77,8 +77,6 @@ int main(int argc, char **argv)
 
             phantomVol.read(fnImgIn);
 
-            std::cout << phantomVol().zdim << std::endl;
-
             project_xr(psf, phantomVol, imOut);
 
             imOut.write(fnImgOut);
@@ -132,7 +130,9 @@ void usage()
     std::cerr << "Usage: project_xr [options]\n"
               << "   -psf <PSF description file>      : PSF characteristic of the microscope \n"
               << "   -i <Input file>                  : Image or Volume \n"
-              << "  [-out <Output file>]              : Resulting Image \n";
+              << "  [-out <Output file>]              : Resulting Image \n"
+              << "  [-psfout <Output file>]           : Save the PSF characteristic of the microscope \n"
+			  << "  [-v]                              : Verbose mode    \n";
 }
 
 #undef DEBUG

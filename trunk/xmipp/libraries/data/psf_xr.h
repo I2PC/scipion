@@ -27,9 +27,20 @@
 #define _PSF_XR_HH
 
 #include "fftw.h"
-#include "multidim_array.h"
+#include "matrix2d.h"
 #include "image.h"
+#include "volume.h"
 #include <complex>
+
+
+/// This enum defines which method should be used to
+/// correct the limitation due to Nyquist limit in diffraction
+enum psfxrAdjust
+{
+	PSFXR_STD, /// Standard mode, nothing changes
+	PSFXR_INT, /// Increasing the image size by Interpolating
+	PSFXR_ZPAD /// Increasing the image size by Zeropadding
+};
 
 
 /**@defgroup PSFXRSupport X-Ray PSF support classes
@@ -43,7 +54,7 @@ class XmippXRPSF
 {
 public:
     // Current OTF
-    MultidimArray< std::complex<double> > OTF;
+    Matrix2D< std::complex<double> > OTF;
 
     /* RX Microscope configuration */
     /// Lens Aperture Radius
@@ -54,9 +65,20 @@ public:
     double Z;
     /// Image plane (CCD position)
     double Zi;
+
+
+
+    /// Size of the input image (object plane size)
+    double Nox, Noy;
     /* Minimum resolution condition.
      The same for both axis x-y, due to the simmetry of the lens aperture */
     double dxiMax;
+    /// Pixel size in lens plane
+    double dxl, dyl;
+
+    /// Parameters to change image size to avoid Nyquist limit
+    psfxrAdjust AdjustType;
+    double npMin;
 
 public:
     /// Lambda
@@ -73,14 +95,16 @@ public:
     /// Z axis global shift
     double DeltaZo;
 
+
+
     /// object space XY-plane sampling rate
     double dxo;
     /// Image space XY-plane sampling rate
     double dxi;
     /// object space Z sampling rate
     double dzo;
-
-    double Nox, Noy, dxl, dyl;
+    /// Size of the image in image plane, to be rescaled if needed
+    double Nix, Niy;
 
 
 
@@ -112,18 +136,18 @@ public:
 
     /// Apply OTF to an image
     template <typename T>
-    void applyOTF(MultidimArray<T> &Im)
+    void applyOTF(Matrix2D<T> &Im)
     {
-        MultidimArray<std::complex<double> > ImFT;
+        Matrix2D<std::complex<double> > ImFT;
         XmippFftw transformer;
 
 //#define DEBUG
 #ifdef DEBUG
 
-        Image<double> _Im;
+        ImageXmipp _Im;
         _Im().resize(Im);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
-        dAij(_Im(),i,j) = abs(dAij(Im,i,j));
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Im)
+        dMij(_Im(),i,j) = abs(dMij(Im,i,j));
 
         _Im.write(("psfxr-Imin.spi"));
 #endif
@@ -133,19 +157,19 @@ public:
 #ifdef DEBUG
 
         _Im().resize(ImFT);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
-        dAij(_Im(),i,j) = abs(dAij(ImFT,i,j));
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ImFT)
+        dMij(_Im(),i,j) = abs(dMij(ImFT,i,j));
         _Im.write(("psfxr-imft1.spi"));
 #endif
 
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
-        dAij(ImFT,i,j) *= dAij(OTF,i,j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ImFT)
+        dMij(ImFT,i,j) *= dMij(OTF,i,j);
 
 #ifdef DEBUG
 
         _Im().resize(ImFT);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
-        dAij(_Im(),i,j) = abs(dAij(ImFT,i,j));
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(ImFT)
+        dMij(_Im(),i,j) = abs(dMij(ImFT,i,j));
         _Im.write(("psfxr-imft2.spi"));
 #endif
 
@@ -156,27 +180,32 @@ public:
 #ifdef DEBUG
 
         _Im().resize(Im);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
-        dAij(_Im(),i,j) = abs(dAij(Im,i,j));
+        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Im)
+        dMij(_Im(),i,j) = abs(dMij(Im,i,j));
         _Im.write(("psfxr-imout.spi"));
 #endif
 
     }
 
     /// Generate OTF image.
-    void generateOTF(MultidimArray<double> &Im) ;
+    void generateOTF(Matrix2D<double> &Im) ;
 
-    void generateOTF(MultidimArray<std::complex<double> > &Im) ;
+    void generateOTF(Matrix2D<std::complex<double> > &Im) ;
+
+    /// Calculate if a rescaling of the images is needed due to the limitations of the system parameters
+    void adjustParam(ImageXmipp &Im) ;
+
+    void adjustParam(VolumeXmipp &Vol) ;
 
 };
 
 
 /// Generate the quadratic phase distribution of a ideal lens
-void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
+void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
 
 
 /// Generate projection for an X-ray microscope... TBC
-void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut);
+void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut);
 
 
 
