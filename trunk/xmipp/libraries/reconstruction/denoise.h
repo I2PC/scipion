@@ -176,16 +176,12 @@ public:
 
     /** Denoise an image.
      */
-    void denoise(Matrix2D< double >& img);
-
-    /** Denoise a volume.
-     */
-    void denoise(Matrix3D< double >& vol);
+    void denoise(MultidimArray< double >& img);
 
     /** Denoise a volume using a precalculated estimate of the bayesian
      * parameters.
      */
-    void denoise_avg_bayesian(Matrix3D< double >& vol);
+    void denoise_avg_bayesian(MultidimArray< double >& vol);
 };
 
 #endif

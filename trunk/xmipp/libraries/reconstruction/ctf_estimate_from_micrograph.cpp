@@ -28,7 +28,7 @@
 
 #include <data/args.h>
 #include <data/micrograph.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
 #include <data/fft.h>
 
@@ -47,7 +47,8 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
     reversed          = checkParameter(fh_param, "reverse endian");
     N_horizontal      = textToInteger(getParameter(fh_param, "N_horizontal", 0));
     N_vertical        = textToInteger(getParameter(fh_param, "N_vertical", 0, "-1"));
-    if (N_vertical == -1) N_vertical = N_horizontal;
+    if (N_vertical == -1)
+        N_vertical = N_horizontal;
 
     compute_at_particle  = checkParameter(fh_param, "compute_at_particle");
     micrograph_averaging = checkParameter(fh_param, "micrograph_averaging");
@@ -55,7 +56,8 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
     Nside_piece          = textToInteger(getParameter(fh_param, "Nside_piece", 0, "5"));
     if (checkParameter(fh_param, "periodogram"))
         PSD_mode = Periodogram;
-    else PSD_mode = ARMA;
+    else
+        PSD_mode = ARMA;
     dont_adjust_CTF      = checkParameter(fh_param, "dont_adjust_CTF");
     bootstrapN           = textToInteger(getParameter(fh_param, "bootstrapN", 0, "-1"));
 
@@ -63,18 +65,24 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
     {
         image_fn          = getParameter(fh_param, "image", 0, "");
         selfile_mode = image_fn == "";
-        if (selfile_mode) micrograph_averaging = true;
-        if (selfile_mode) selfile_fn = getParameter(fh_param, "selfile", 0);
-        else              selfile_fn = getParameter(fh_param, "selfile", 0, "");
+        if (selfile_mode)
+            micrograph_averaging = true;
+        if (selfile_mode)
+            selfile_fn = getParameter(fh_param, "selfile", 0);
+        else
+            selfile_fn = getParameter(fh_param, "selfile", 0, "");
         picked_fn         = getParameter(fh_param, "picked", 0, "");
         FileName fn_root  = image_fn.without_extension();
-        if (PSD_mode == ARMA) PSDfn_root = fn_root + "_ARMA";
-        else                PSDfn_root = fn_root + "_Periodogram";
+        if (PSD_mode == ARMA)
+            PSDfn_root = fn_root + "_ARMA";
+        else
+            PSDfn_root = fn_root + "_Periodogram";
     }
     fclose(fh_param);
 
     // Read ARMA parameters from input file
-    if (PSD_mode == ARMA) ARMA_prm.read(fn_prm);
+    if (PSD_mode == ARMA)
+        ARMA_prm.read(fn_prm);
 }
 
 /* Write parameters ========================================================= */
@@ -89,28 +97,39 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
     fh_param << "# Assign CTF parameters\n";
     std::string aux;
     bool remove_directories = directory != "";
-    if (!remove_directories) aux = image_fn;
-    else                     aux = directory + "/" + image_fn.remove_directories();
+    if (!remove_directories)
+        aux = image_fn;
+    else
+        aux = directory + "/" + image_fn.remove_directories();
     if (!selfile_mode)
         fh_param << "image="                << aux                  << std::endl;
     fh_param << "N_horizontal="         << N_horizontal         << std::endl
     << "N_vertical="           << N_vertical           << std::endl;
-    if (!remove_directories) aux = selfile_fn;
-    else                     aux = directory + "/" + selfile_fn.remove_directories();
+    if (!remove_directories)
+        aux = selfile_fn;
+    else
+        aux = directory + "/" + selfile_fn.remove_directories();
     fh_param << "selfile="              << aux                  << std::endl;
-    if (!remove_directories) aux = picked_fn;
-    else                     aux = directory + "/" + picked_fn.remove_directories();
+    if (!remove_directories)
+        aux = picked_fn;
+    else
+        aux = directory + "/" + picked_fn.remove_directories();
     fh_param << "picked="               << aux                  << std::endl;
-    if (compute_at_particle) fh_param << "compute_at_particle=yes\n";
-    if (micrograph_averaging) fh_param << "micrograph_averaging=yes\n";
+    if (compute_at_particle)
+        fh_param << "compute_at_particle=yes\n";
+    if (micrograph_averaging)
+        fh_param << "micrograph_averaging=yes\n";
     if (piece_averaging)
     {
         fh_param << "piece_averaging=yes\n"
         << "Nside_piece=" << Nside_piece << std::endl;
     }
-    if (PSD_mode == Periodogram) fh_param << "Periodogram=yes\n";
-    if (dont_adjust_CTF) fh_param << "dont_adjust_CTF=yes\n";
-    if (bootstrapN>-1) fh_param << "bootstrapN=" << bootstrapN << std::endl;
+    if (PSD_mode == Periodogram)
+        fh_param << "Periodogram=yes\n";
+    if (dont_adjust_CTF)
+        fh_param << "dont_adjust_CTF=yes\n";
+    if (bootstrapN>-1)
+        fh_param << "bootstrapN=" << bootstrapN << std::endl;
 
     fh_param << std::endl;
     fh_param.close();
@@ -131,11 +150,13 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
     int Xstep = (XSIZE(piece) - small_Xdim) / (Nside_piece - 1);
     int Ystep = (YSIZE(piece) - small_Ydim) / (Nside_piece - 1);
     psd.initZeros(small_piece);
-    #ifdef DEBUG
-        Image<double> save;
-        save()=piece;
-        save.write("PPPpiece.xmp");
-    #endif
+#ifdef DEBUG
+
+    Image<double> save;
+    save()=piece;
+    save.write("PPPpiece.xmp");
+#endif
+
     for (int ii = 0; ii < Nside_piece; ii++)
         for (int jj = 0; jj < Nside_piece; jj++)
         {
@@ -148,11 +169,12 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
                 for (j = 0, jb = j0; j < small_Xdim; j++, jb++)
                     DIRECT_A2D_ELEM(small_piece, i, j) =
                         DIRECT_A2D_ELEM(piece, ib, jb);
-            
-            #ifdef DEBUG
-                save()=small_piece;
-                save.write("PPPsmall_piece.xmp");
-            #endif
+
+#ifdef DEBUG
+
+            save()=small_piece;
+            save.write("PPPsmall_piece.xmp");
+#endif
 
             // Compute the PSD of the small piece
             MultidimArray<double> small_psd;
@@ -175,10 +197,10 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
                 small_psd *= small_Ydim * small_Xdim;
             }
 
-            #ifdef DEBUG
-                save()=small_psd;
-                save.write("PPPsmall_psd.xmp");
-            #endif
+#ifdef DEBUG
+            save()=small_psd;
+            save.write("PPPsmall_psd.xmp");
+#endif
 
             // Add to the average
             psd += small_psd;
@@ -187,10 +209,11 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
     // Compute the average of all the small pieces and enlarge
     psd /= (Nside_piece * Nside_piece);
 
-    #ifdef DEBUG
-        save()=psd;
-        save.write("PPPpsd1.xmp");
-    #endif
+#ifdef DEBUG
+
+    save()=psd;
+    save.write("PPPpsd1.xmp");
+#endif
 
 
     CenterFFT(psd, true);
@@ -198,13 +221,14 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
     CenterFFT(psd, false);
     psd.threshold("below", 0, 0);
 
-    #ifdef DEBUG
-        save()=psd;
-        save.write("PPPpsd2.xmp");
-        std::cout << "Press any key\n";
-        char c;
-        std::cin >> c;
-    #endif
+#ifdef DEBUG
+
+    save()=psd;
+    save.write("PPPpsd2.xmp");
+    std::cout << "Press any key\n";
+    char c;
+    std::cin >> c;
+#endif
 }
 #undef DEBUG
 
@@ -215,18 +239,26 @@ void Prog_assign_CTF_prm::process()
     // Open input files -----------------------------------------------------
     // Open coordinates
     std::ifstream PosFile; // File with picked coordinates
-    if (picked_fn != "") PosFile.open(picked_fn.c_str());
+    if (picked_fn != "")
+        PosFile.open(picked_fn.c_str());
 
     // Open selfile with images
-    SelFile SF; // Selfile
-    if (selfile_fn != "") SF.read(selfile_fn);
+    MetaData SF; // Selfile
+    if (selfile_fn != "")
+    {
+        SF.read(selfile_fn);
+        SF.removeObjects(MDL_ENABLED,-1);
+    }
 
     // Open the selfile for the CTFs, if there is a selfile of particles
     FileName fn_root;
-    if (!selfile_mode) fn_root = image_fn.remove_all_extensions();
-    else               fn_root = selfile_fn.remove_all_extensions();
+    if (!selfile_mode)
+        fn_root = image_fn.remove_all_extensions();
+    else
+        fn_root = selfile_fn.remove_all_extensions();
     std::ofstream OutputFile_ctf;
-    if (selfile_fn != "") OutputFile_ctf.open(
+    if (selfile_fn != "")
+        OutputFile_ctf.open(
             (selfile_fn.without_extension() + ".ctfdat").c_str());
 
     // Open the micrograph
@@ -246,24 +278,28 @@ void Prog_assign_CTF_prm::process()
     if (compute_at_particle)
     {
         // Check if sel file is empty
-        if (SF.LineNo() == 0)
-            REPORT_ERROR(1, (std::string)"Prog_assign_CTF_prm: sel file " + SF.name() +
+        if (SF.size() == 0)
+        {
+            REPORT_ERROR(1, (std::string)"Prog_assign_CTF_prm: sel file " + SF.getFilename() +
                          "is empty ");
+        }
 
         // Count the number of lines in the Position file
         std::string line;
         PosFile.clear();
         PosFile.seekg(0, std::ios::beg);
-        while (getline(PosFile, line)) if (line[0] != '#') div_Number++;
+        while (getline(PosFile, line))
+            if (line[0] != '#')
+                div_Number++;
 
         // check that the number of entries in the pos file is the right one
-        if (SF.LineNo() != div_Number)
+        if (SF.size() != div_Number)
         {
             std::cerr << "Prog_assign_CTF_prm: number of entries in "
             << "pos file: " << picked_fn.c_str()
             << "(" << div_Number << ") "
             << " and sel file "
-            << SF.name() << "(" << SF.LineNo() << ") "
+            << SF.getFilename() << "(" << SF.size() << ") "
             << "is different.\n"
             << "I cannot go any further sorry\n";
             exit(1);
@@ -278,7 +314,8 @@ void Prog_assign_CTF_prm::process()
             div_NumberY = CEIL((double)Ydim / (N_vertical  / 2)) - 1;
             div_Number = div_NumberX * div_NumberY;
         }
-        else div_Number = SF.ImgNo();
+        else
+            div_Number = SF.size();
     }
     else
     {
@@ -291,15 +328,17 @@ void Prog_assign_CTF_prm::process()
     // Process each piece ---------------------------------------------------
     PosFile.clear();
     PosFile.seekg(0, std::ios::beg); // Start of file
-    SF.go_beginning();
+    SF.firstObject();
     Image<double> psd_avg;
     std::cerr << "Computing models of each piece ...\n";
     init_progress_bar(div_Number);
 
     // Prepare these filenames in case they are needed
     FileName fn_avg, fn_avg_model;
-    if (micrograph_averaging && PSD_mode == ARMA) fn_avg = fn_root + "_ARMAavg.psd";
-    else if (micrograph_averaging && PSD_mode == Periodogram) fn_avg = fn_root + "_Periodogramavg.psd";
+    if (micrograph_averaging && PSD_mode == ARMA)
+        fn_avg = fn_root + "_ARMAavg.psd";
+    else if (micrograph_averaging && PSD_mode == Periodogram)
+        fn_avg = fn_root + "_Periodogramavg.psd";
     int N = 1;    // Index of current piece
     int i = 0, j = 0; // top-left corner of the current piece
     while (N <= div_Number)
@@ -310,24 +349,32 @@ void Prog_assign_CTF_prm::process()
             // Read position of the particle
             std::string line;
             getline(PosFile, line);
-            while (line[0] == '#') getline(PosFile, line);
+            while (line[0] == '#')
+                getline(PosFile, line);
             float fi, fj;
             sscanf(line.c_str(), "%f %f", &fj, &fi);
             i = (int) fi;
             j = (int) fj;
 #ifdef DEBUG
+
             std::cout << "line" << line << std::endl;
             std::cout << "read from file (j,i)= (" << j << "," << i << ")" << std::endl;
-            std::cout << "Particle file name: " << SF.get_current_file() << std::endl;
+            FileName fnt;
+            SF.getValue(MDL_IMAGE,fnt);
+            std::cout << "Particle file name: " <<  fnt << std::endl;
 #endif
 
             // j,i are the window center, we need the top-left corner
             j -= (int)(N_horizontal / 2);
             i -= (int)(N_vertical / 2);
-            if (i < 0) i = 0;
-            if (j < 0) j = 0;
-            if (i > Ydim - N_horizontal) i = Ydim - N_horizontal - 1;
-            if (j > Xdim - N_vertical)   j = Xdim - N_vertical - 1;
+            if (i < 0)
+                i = 0;
+            if (j < 0)
+                j = 0;
+            if (i > Ydim - N_horizontal)
+                i = Ydim - N_horizontal - 1;
+            if (j > Xdim - N_vertical)
+                j = Xdim - N_vertical - 1;
         }
         else
         {
@@ -347,8 +394,10 @@ void Prog_assign_CTF_prm::process()
         // test if the full piece is inside the micrograph
         if (!selfile_mode)
         {
-            if (i + N_vertical > Ydim)   i = Ydim - N_vertical;
-            if (j + N_horizontal > Xdim) j = Xdim - N_horizontal;
+            if (i + N_vertical > Ydim)
+                i = Ydim - N_vertical;
+            if (j + N_horizontal > Xdim)
+                j = Xdim - N_horizontal;
         }
 
         // Extract micrograph piece ..........................................
@@ -362,7 +411,9 @@ void Prog_assign_CTF_prm::process()
         else
         {
             Image<double> I;
-            I.read(SF.get_current_file());
+            FileName fni;
+            SF.getValue(MDL_IMAGE, fni);
+            I.read(fni);
             piece = I();
         }
         piece.statisticsAdjust(0, 1);
@@ -388,18 +439,22 @@ void Prog_assign_CTF_prm::process()
                 psd() *= psd();
                 psd() *= N_vertical * N_horizontal;
             }
-        else PSD_piece_by_averaging(piece, psd());
+        else
+            PSD_piece_by_averaging(piece, psd());
 
         // Perform averaging if applicable ...................................
         if (micrograph_averaging)
         {
-            if (N == 1) psd_avg() = psd();
-            else      psd_avg() += psd();
+            if (N == 1)
+                psd_avg() = psd();
+            else
+                psd_avg() += psd();
             if (micrograph_averaging && PSD_mode == ARMA)
             {
                 psd_avg.write(fn_avg);
-                if (N == 1) system(((std::string)"xmipp_show -psd " +
-                                        fn_avg + " -poll &").c_str());
+                if (N == 1)
+                    system(((std::string)"xmipp_show -psd " +
+                            fn_avg + " -poll &").c_str());
             }
         }
 
@@ -408,14 +463,14 @@ void Prog_assign_CTF_prm::process()
         {
             if (bootstrapN!=-1)
                 REPORT_ERROR(1,
-                    "Bootstrapping is only available for micrograph averages");
+                             "Bootstrapping is only available for micrograph averages");
 
             FileName piece_fn, piece_fn_root;
             if (compute_at_particle)
             {
-                piece_fn = SF.get_current_file();
+                SF.getValue(MDL_IMAGE, piece_fn);
                 piece_fn_root = piece_fn.get_baseName();
-                SF.next();
+                SF.nextObject();
             }
             else
                 piece_fn_root = PSDfn_root + integerToString(N, 5);
@@ -430,17 +485,18 @@ void Prog_assign_CTF_prm::process()
                 {
                     XmippCTF ctfmodel;
                     double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
-                        ctfmodel, false);
+                                                           ctfmodel, false);
                     if (compute_at_particle)
                         OutputFile_ctf << piece_fn << " "
-			               << piece_fn_root+".psd\n";
+                        << piece_fn_root+".psd\n";
                 }
             }
         }
 
         // Increment the division counter
         progress_bar(++N);
-        if (selfile_mode) SF.NextImg();
+        if (selfile_mode)
+            SF.nextObject();
     }
     M_in.close_micrograph();
     progress_bar(div_Number);
@@ -460,7 +516,7 @@ void Prog_assign_CTF_prm::process()
             if (bootstrapN==-1)
             {
                 double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
-                    ctfmodel, false);
+                                                       ctfmodel, false);
             }
             else
             {
@@ -473,7 +529,7 @@ void Prog_assign_CTF_prm::process()
                 for (int n=0; n<bootstrapN; n++)
                 {
                     CTFs(n,31) = ROUT_Adjust_CTF(adjust_CTF_prm,
-                        ctfmodel, false);
+                                                 ctfmodel, false);
                     CTFs(n, 0)=ctfmodel.Tm;
                     CTFs(n, 1)=ctfmodel.kV;
                     CTFs(n, 2)=ctfmodel.DeltafU;
@@ -505,18 +561,18 @@ void Prog_assign_CTF_prm::process()
                     CTFs(n,28)=ctfmodel.cU2;
                     CTFs(n,29)=ctfmodel.cV2;
                     CTFs(n,30)=ctfmodel.gaussian_angle2;
-                    
+
                     std::string command=(std::string)"mv -i "+fnBase+
-                        ".ctfparam "+fnBase+"_bootstrap_"+
-                        integerToString(n,4)+".ctfparam";
+                                        ".ctfparam "+fnBase+"_bootstrap_"+
+                                        integerToString(n,4)+".ctfparam";
                     system(command.c_str());
                     command=(std::string)"mv -i "+fnBase+
-                        ".ctfmodel_quadrant "+fnBase+"_bootstrap_"+
-                        integerToString(n,4)+".ctfmodel_quadrant";
+                            ".ctfmodel_quadrant "+fnBase+"_bootstrap_"+
+                            integerToString(n,4)+".ctfmodel_quadrant";
                     system(command.c_str());
                     command=(std::string)"mv -i "+fnBase+
-                        ".ctfmodel_halfplane "+fnBase+"_bootstrap_"+
-                        integerToString(n,4)+".ctfmodel_halfplane";
+                            ".ctfmodel_halfplane "+fnBase+"_bootstrap_"+
+                            integerToString(n,4)+".ctfmodel_halfplane";
                     system(command.c_str());
 
                     progress_bar(n);
@@ -531,7 +587,7 @@ void Prog_assign_CTF_prm::process()
     if (!compute_at_particle && selfile_fn != "" && !dont_adjust_CTF)
     {
         // Process the Selfile
-        SF.go_beginning();
+        SF.firstObject();
         if (!selfile_mode)
         {
             PosFile.close();
@@ -540,44 +596,44 @@ void Prog_assign_CTF_prm::process()
                 REPORT_ERROR(1, (std::string)"Prog_assign_CTF_prm::process: Could not open " +
                              picked_fn + " for reading");
         }
-        while (!SF.eof())
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-	    FileName fn_img=SF.NextImg();
-            if (fn_img=="") break;
+            FileName fn_img;
+            SF.getValue(MDL_IMAGE, fn_img);
             if (!selfile_mode)
             {
                 std::string line;
                 getline(PosFile, line);
-                while (line[0] == '#') getline(PosFile, line);
-                if (SF.Is_ACTIVE())
+                while (line[0] == '#')
+                    getline(PosFile, line);
+                if (!micrograph_averaging)
                 {
-                    if (!micrograph_averaging)
-                    {
-                        // Read coordinates of the particle
-                        float fX, fY;
-                        sscanf(line.c_str(), "%f %f", &fX, &fY);
-                        int Y = (int) fY;
-                        int X = (int) fX;
+                    // Read coordinates of the particle
+                    float fX, fY;
+                    sscanf(line.c_str(), "%f %f", &fX, &fY);
+                    int Y = (int) fY;
+                    int X = (int) fX;
 
-                        // Decide which is its piece
-                        int idx_X = FLOOR((double)X / N_horizontal);
-                        int idx_Y = FLOOR((double)Y / N_vertical);
-                        int idx_piece = idx_Y * div_NumberX + idx_X + 1;
-                        OutputFile_ctf << fn_img << " "
-			               << PSDfn_root + integerToString(idx_piece, 5) + ".psd\n";
-                    }
-                    else
-                        OutputFile_ctf << fn_img << " "
-			               << fn_avg.without_extension() + ".psd\n";
+                    // Decide which is its piece
+                    int idx_X = FLOOR((double)X / N_horizontal);
+                    int idx_Y = FLOOR((double)Y / N_vertical);
+                    int idx_piece = idx_Y * div_NumberX + idx_X + 1;
+                    OutputFile_ctf << fn_img << " "
+                    << PSDfn_root + integerToString(idx_piece, 5) + ".psd\n";
                 }
+                else
+                    OutputFile_ctf << fn_img << " "
+                    << fn_avg.without_extension() + ".psd\n";
+
             }
             else
             {
                 OutputFile_ctf << fn_img << " "
-		               << fn_avg.without_extension() + ".psd\n";
+                << fn_avg.without_extension() + ".psd\n";
             }
         }
     }
-    if (selfile_fn != "") OutputFile_ctf.close();
+    if (selfile_fn != "")
+        OutputFile_ctf.close();
     PosFile.close();
 }

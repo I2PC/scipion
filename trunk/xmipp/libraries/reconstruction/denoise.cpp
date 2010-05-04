@@ -198,129 +198,138 @@ void Denoising_parameters::usage_specific()
      ;
 }
 
-// Denoise image -----------------------------------------------------------
-void Denoising_parameters::denoise(Matrix2D<double> &img)
+// Denoise volume ----------------------------------------------------------
+void Denoising_parameters::denoise(MultidimArray<double> &img)
 {
-    if (denoising_type == BAYESIAN && adjust_range)
-        img.rangeAdjust(0, 1);
-    if (denoising_type != SHAH)
+    if (img.getDim()==2)
     {
+        // 2D image denoising
+    	if (denoising_type == BAYESIAN && adjust_range)
+            img.rangeAdjust(0, 1);
+        if (denoising_type != SHAH)
+        {
+            double size2 = log10((double)XSIZE(img)) / log10(2.0);
+            if (ABS(size2 - ROUND(size2)) > 1e-6)
+                REPORT_ERROR(1, "Denoising::denoise: Input image must be of a size power of 2");
+            size2 = log10((double)YSIZE(img)) / log10(2.0);
+            if (ABS(size2 - ROUND(size2)) > 1e-6)
+                REPORT_ERROR(1, "Denoising::denoise: Input image must be of a size power of 2");
+            DWT(img, img);
+        }
+        double th;
+        MultidimArray<double> surface_strength, edge_strength;
+        histogram1D hist;
+        switch (denoising_type)
+        {
+        case REMOVE_SCALE:
+            clean_quadrant2D(img, scale, "01");
+            clean_quadrant2D(img, scale, "10");
+            clean_quadrant2D(img, scale, "11");
+            break;
+        case SOFT_THRESHOLDING:
+            compute_hist(img, hist, 100);
+            soft_thresholding(img, hist.percentil(threshold));
+            break;
+        case BAYESIAN:
+            estimatedS = bayesian_wiener_filtering2D(img, scale, SNR0, SNRF,
+                                                   white_noise, tell, !dont_denoise);
+            break;
+        case ADAPTIVE_SOFT:
+            adaptive_soft_thresholding2D(img, scale);
+            break;
+        case CENTRAL:
+            DWT_keep_central_part(img, R);
+            break;
+        case SHAH:
+            Smoothing_Shah(img, surface_strength, edge_strength,
+                           Shah_weight, Shah_outer, Shah_inner,
+                           Shah_refinement, adjust_range);
+            if (Shah_edge)
+                img = edge_strength;
+            else
+                img = surface_strength;
+            break;
+        }
+        if (denoising_type != SHAH)
+        {
+            if (output_scale != 0)
+            {
+                int reduction = (int)pow(2.0, output_scale);
+                img.resize(YSIZE(img) / reduction, XSIZE(img) / reduction);
+            }
+            IDWT(img, img);
+        }
+
+
+    }
+    else
+    {
+    	// 3D image denoising
+    	if (denoising_type == SHAH)
+        {
+            std::cerr << "Shah denoising is not implemented for volumes\n";
+            return;
+        }
         double size2 = log10((double)XSIZE(img)) / log10(2.0);
         if (ABS(size2 - ROUND(size2)) > 1e-6)
-            REPORT_ERROR(1, "Denoising::denoise: Input image must be of a size power of 2");
+            REPORT_ERROR(1, "Denoising::denoise: Input volume must be of a size power of 2");
         size2 = log10((double)YSIZE(img)) / log10(2.0);
         if (ABS(size2 - ROUND(size2)) > 1e-6)
-            REPORT_ERROR(1, "Denoising::denoise: Input image must be of a size power of 2");
+            REPORT_ERROR(1, "Denoising::denoise: Input volume must be of a size power of 2");
+        size2 = log10((double)ZSIZE(img)) / log10(2.0);
+        if (ABS(size2 - ROUND(size2)) > 1e-6)
+            REPORT_ERROR(1, "Denoising::denoise: Input volume must be of a size power of 2");
+
         DWT(img, img);
-    }
-    double th;
-    Matrix2D<double> surface_strength, edge_strength;
-    histogram1D hist;
-    switch (denoising_type)
-    {
-    case REMOVE_SCALE:
-        clean_quadrant(img, scale, "01");
-        clean_quadrant(img, scale, "10");
-        clean_quadrant(img, scale, "11");
-        break;
-    case SOFT_THRESHOLDING:
-        compute_hist(img, hist, 100);
-        soft_thresholding(img, hist.percentil(threshold));
-        break;
-    case BAYESIAN:
-        estimatedS = bayesian_wiener_filtering(img, scale, SNR0, SNRF,
-                                               white_noise, tell, !dont_denoise);
-        break;
-    case ADAPTIVE_SOFT:
-        adaptive_soft_thresholding(img, scale);
-        break;
-    case CENTRAL:
-        DWT_keep_central_part(img, R);
-        break;
-    case SHAH:
-        Smoothing_Shah(img, surface_strength, edge_strength,
-                       Shah_weight, Shah_outer, Shah_inner,
-                       Shah_refinement, adjust_range);
-        if (Shah_edge)
-            img = edge_strength;
-        else
-            img = surface_strength;
-        break;
-    }
-    if (denoising_type != SHAH)
-    {
+        double th;
+        histogram1D hist;
+        switch (denoising_type)
+        {
+        case REMOVE_SCALE:
+            clean_quadrant3D(img, scale, "001");
+            clean_quadrant3D(img, scale, "010");
+            clean_quadrant3D(img, scale, "011");
+            clean_quadrant3D(img, scale, "100");
+            clean_quadrant3D(img, scale, "101");
+            clean_quadrant3D(img, scale, "110");
+            clean_quadrant3D(img, scale, "111");
+            break;
+        case SOFT_THRESHOLDING:
+            compute_hist(img, hist, 100);
+            soft_thresholding(img, hist.percentil(threshold));
+            break;
+        case BAYESIAN:
+            estimatedS = bayesian_wiener_filtering3D(img, scale, SNR0, SNRF,
+                                                   white_noise, tell, !dont_denoise);
+            break;
+        case ADAPTIVE_SOFT:
+            std::cout << "Adaptive soft-thresholding not implemented for imgumes\n";
+            break;
+        case CENTRAL:
+            std::cout << "Keep central part not implemented for volumes\n";
+            break;
+        case SHAH:
+            std::cout << "Shah Difussion not implemented for volumes\n";
+            break;
+        }
+
         if (output_scale != 0)
         {
             int reduction = (int)pow(2.0, output_scale);
-            img.resize(YSIZE(img) / reduction, XSIZE(img) / reduction);
+            img.resize(ZSIZE(img) / reduction, YSIZE(img) / reduction, XSIZE(img) / reduction);
         }
         IDWT(img, img);
+
     }
+
+
+
 }
 
-// Denoise volume ----------------------------------------------------------
-void Denoising_parameters::denoise(Matrix3D<double> &vol)
-{
-    if (denoising_type == SHAH)
-    {
-        std::cerr << "Shah denoising is not implemented for volumes\n";
-        return;
-    }
-    double size2 = log10((double)XSIZE(vol)) / log10(2.0);
-    if (ABS(size2 - ROUND(size2)) > 1e-6)
-        REPORT_ERROR(1, "Denoising::denoise: Input volume must be of a size power of 2");
-    size2 = log10((double)YSIZE(vol)) / log10(2.0);
-    if (ABS(size2 - ROUND(size2)) > 1e-6)
-        REPORT_ERROR(1, "Denoising::denoise: Input volume must be of a size power of 2");
-    size2 = log10((double)ZSIZE(vol)) / log10(2.0);
-    if (ABS(size2 - ROUND(size2)) > 1e-6)
-        REPORT_ERROR(1, "Denoising::denoise: Input volume must be of a size power of 2");
-
-    DWT(vol, vol);
-    double th;
-    histogram1D hist;
-    switch (denoising_type)
-    {
-    case REMOVE_SCALE:
-        clean_quadrant(vol, scale, "001");
-        clean_quadrant(vol, scale, "010");
-        clean_quadrant(vol, scale, "011");
-        clean_quadrant(vol, scale, "100");
-        clean_quadrant(vol, scale, "101");
-        clean_quadrant(vol, scale, "110");
-        clean_quadrant(vol, scale, "111");
-        break;
-    case SOFT_THRESHOLDING:
-        compute_hist(vol, hist, 100);
-        soft_thresholding(vol, hist.percentil(threshold));
-        break;
-    case BAYESIAN:
-        estimatedS = bayesian_wiener_filtering(vol, scale, SNR0, SNRF,
-                                               white_noise, tell, !dont_denoise);
-        break;
-    case ADAPTIVE_SOFT:
-        std::cout << "Adaptive soft-thresholding not implemented for volumes\n";
-        break;
-    case CENTRAL:
-        std::cout << "Keep central part not implemented for volumes\n";
-        break;
-    case SHAH:
-        std::cout << "Shah Difussion not implemented for volumes\n";
-        break;
-    }
-
-    if (output_scale != 0)
-    {
-        int reduction = (int)pow(2.0, output_scale);
-        vol.resize(ZSIZE(vol) / reduction, YSIZE(vol) / reduction, XSIZE(vol) / reduction);
-    }
-    IDWT(vol, vol);
-}
-
-void Denoising_parameters::denoise_avg_bayesian(Matrix3D<double> &vol)
+void Denoising_parameters::denoise_avg_bayesian(MultidimArray<double> &vol)
 {
     DWT(vol, vol);
-    bayesian_wiener_filtering(vol, scale, estimatedS);
+    bayesian_wiener_filtering3D(vol, scale, estimatedS);
 
     if (output_scale != 0)
     {
