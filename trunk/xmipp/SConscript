@@ -417,7 +417,7 @@ ReconsSources = [
 #    'make_spectra.cpp',
 #    'micrograph_phase_flipping.cpp',
 #    'micrograph_downsample.cpp',
-#    'ml_align2d.cpp',
+    'ml_align2d.cpp',
 ##    'ml_align3d.cpp',
 #    'mlf_align2d.cpp',
 #    'ml_refine3d.cpp',
@@ -577,7 +577,7 @@ AddXmippProgram('add_noise')
 #AddXmippProgram('filter_projections', ['XmippRecons'])
 #AddXmippProgram('find_center3d')
 #AddXmippProgram('foms_evaluate', ['XmippRecons'])
-#AddXmippProgram('fourier_filter', ['XmippRecons'])
+AddXmippProgram('fourier_filter', ['XmippRecons'])
 #AddXmippProgram('fourier_transform')
 #AddXmippProgram('header_apply')
 #AddXmippProgram('header_assign')
@@ -593,7 +593,7 @@ AddXmippProgram('add_noise')
 #AddXmippProgram('micrograph_scissor'),roberto
 #AddXmippProgram('micrograph_window')
 #AddXmippProgram('mirror') sjors
-#AddXmippProgram('ml_align2d', ['XmippRecons']) sjors
+AddXmippProgram('ml_align2d', ['XmippRecons'])
 ##AddXmippProgram('ml_align3d', ['XmippRecons']) sjors
 #AddXmippProgram('mlf_align2d', ['XmippRecons']) sjors
 #AddXmippProgram('ml_align2d_combine', ['XmippRecons']) sjors
@@ -709,7 +709,7 @@ AddProtocol('protocol_rotspectra.py', 'applications/scripts/protocols')
 AddProtocol('protocol_setup.py', 'applications/scripts/protocols')
 
 # MPI
-#if int(env['mpi']):
+if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
@@ -718,7 +718,7 @@ AddProtocol('protocol_setup.py', 'applications/scripts/protocols')
 #    AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_common_lines', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])sjors
+    AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
 #    # AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])sjors
 #    AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])sjors
 #    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])sjors

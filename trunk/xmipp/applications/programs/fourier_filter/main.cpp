@@ -32,7 +32,7 @@ class FourierFilter_parameters: public Prog_parameters
 public:
     FourierMask fmask;
     bool        first;
-    int         dim;
+
 public:
     void read(int argc, char **argv)
     {
@@ -54,7 +54,7 @@ public:
     }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     FourierFilter_parameters *eprm = (FourierFilter_parameters *) prm;
     if (eprm->first)
@@ -63,25 +63,11 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
         eprm->first = false;
     }
     eprm->fmask.apply_mask_Space(img());
-    eprm->dim = 2;
-    return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    FourierFilter_parameters *eprm = (FourierFilter_parameters *) prm;
-    if (eprm->first)
-    {
-        eprm->fmask.generate_mask(vol());
-        eprm->first = false;
-    }
-    eprm->fmask.apply_mask_Space(vol());
-    eprm->dim = 3;
     return true;
 }
 
 int main(int argc, char **argv)
 {
     FourierFilter_parameters prm;
-    SF_main(argc, argv, &prm, (void *)&process_img, (void *)&process_vol);
+    SF_main(argc, argv, &prm, (void *)&process_img);
 }
