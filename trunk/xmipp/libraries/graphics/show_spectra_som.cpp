@@ -258,14 +258,18 @@ void ShowSpectraSOM::initRightclickMenubar()
 }
 
 /* Extract represented.----------------------------------------------------- */
-void ShowSpectraSOM::extractRepresented(SelFile &SF_represented)
+void ShowSpectraSOM::extractRepresented(MetaData &SF_represented)
 {
     for (int i = 0; i < listSize; i++)
         if (cellMarks[i])
         {
             int jmax = SFcv[i].size();
             for (int j = 0; j < jmax; j++)
-                SF_represented.insert((SFcv[i])[j], SelLine::ACTIVE);
+            {
+            	SF_represented.addObject();
+            	SF_represented.setValue(MDL_IMAGE, (SFcv[i])[j]);
+            	SF_represented.setValue(MDL_ENABLED, 1);
+            }
         }
 }
 
@@ -298,9 +302,9 @@ void ShowSpectraSOM::extractRepresented(xmippCTVectors &_v_represented)
 /* Save assigned images ---------------------------------------------------- */
 void ShowSpectraSOM::saveAssigned()
 {
-    SelFile SFNew;
+    MetaData SFNew;
     extractRepresented(SFNew);
-    if (SFNew.ImgNo()) writeSelFile(SFNew);
+    if (SFNew.size()) writeSelFile(SFNew);
     else QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
@@ -354,9 +358,9 @@ const char * ShowSpectraSOM::cellLabel(int i) const
 /* Show Average and SD of the represented images --------------------------- */
 void ShowSpectraSOM::showRepresentedImagesStats()
 {
-    SelFile SFNew;
+    MetaData SFNew;
     extractRepresented(SFNew);
-    if (SFNew.ImgNo()) ShowTable::showStats(SFNew, apply_geo);
+    if (SFNew.size()) ShowTable::showStats(SFNew, apply_geo);
     else QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
@@ -377,9 +381,9 @@ void ShowSpectraSOM::showRepresentedSpectraStats()
 /* Show assigned sel ------------------------------------------------------- */
 void ShowSpectraSOM::showRepresentedSel()
 {
-    SelFile SFNew;
+    MetaData SFNew;
     extractRepresented(SFNew);
-    if (SFNew.ImgNo())
+    if (SFNew.size())
     {
         ShowSel *showsel = new ShowSel;
         showsel->initWithObject(10, 10, SFNew, "Represented images");

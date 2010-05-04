@@ -82,16 +82,16 @@ void Prog_Enhance_PSD_Parameters::show()
 
 /* Apply ------------------------------------------------------------------- */
 //#define DEBUG
-void Prog_Enhance_PSD_Parameters::apply(Matrix2D<double> &PSD)
+void Prog_Enhance_PSD_Parameters::apply(MultidimArray<double> &PSD)
 {
     // Take the logarithm
     if (take_log)
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(PSD)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
         PSD(i, j) = log10(1 + PSD(i, j));
 
     // Remove single outliers
     if (center) CenterFFT(PSD, true);
-    Matrix2D<double> aux;
+    MultidimArray<double> aux;
     median_filter3x3(PSD, aux);
     PSD = aux;
     CenterFFT(PSD, false);
@@ -114,11 +114,11 @@ void Prog_Enhance_PSD_Parameters::apply(Matrix2D<double> &PSD)
     CenterFFT(PSD, false);
 
     // Mask the input PSD
-    Matrix2D<int> mask;
+    MultidimArray<int> mask;
     mask.resize(PSD);
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(PSD)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
     {
         XX(idx) = j;
         YY(idx) = i;
@@ -131,11 +131,11 @@ void Prog_Enhance_PSD_Parameters::apply(Matrix2D<double> &PSD)
     //and normalize the PSD image
     double min_val, max_val, avg, stddev;
     computeStats_within_binary_mask(mask, PSD, min_val, max_val, avg, stddev);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(PSD)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
     if (mask(i, j)) PSD(i, j) = (PSD(i, j) - avg) / stddev;
 
     // Mask again
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(PSD)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
     {
         XX(idx) = j;
         YY(idx) = i;

@@ -106,12 +106,12 @@ void ShowSel::initWithFile(int _numRows, int _numCols,
 }
 
 void ShowSel::initWithObject(int _numRows, int _numCols,
-                             SelFile &_SF, const char *_title)
+                             MetaData &_SF, const char *_title)
 {
     init();
     fn = "";
     setCaption(_title);
-    _SF.go_first_ACTIVE();
+    _SF.firstObject();
     readObject(_SF);
     NumRows = _numRows;
     NumCols = _numCols;
@@ -131,21 +131,22 @@ void ShowSel::readFile(const FileName &_fn, double _minGray, double _maxGray)
 
 void ShowSel::readSelFile(const FileName &_fn, double _minGray, double _maxGray)
 {
-    SelFile         SF(_fn);
+    MetaData         SF(_fn);
     annotateTime(_fn);
     readObject(SF, _minGray, _maxGray);
 }
 
-void ShowSel::readObject(SelFile &SF, double _minGray, double _maxGray)
+void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
 {
-    listSize        = SF.ImgNo();
-    if (!showonlyactive)   listSize += SF.ImgNo(SelLine::DISCARDED);
+	if (showonlyactive)
+		SF.removeObjects(MDL_ENABLED, -1);
+	listSize        = SF.size();
     if (listSize == 0)
         REPORT_ERROR(1, "ShowSel::readFile: Input selfile is empty");
     imgnames        = new FileName[listSize];
     selstatus       = new bool[listSize];
     initContents();
-    SF.ImgSize(projYdim, projXdim);
+    ImgSize(SF, projXdim, projYdim);
     if (load_mode == PSD_mode && NumRows != -1 && NumCols != -1)
     {
         // Scale to make the images fit into a reasonable window
@@ -160,15 +161,11 @@ void ShowSel::readObject(SelFile &SF, double _minGray, double _maxGray)
     minPixel = _minGray;
     maxPixel = _maxGray;
     int i = 0;
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        if (SF.Is_ACTIVE() || !showonlyactive)
-        {
-            imgnames[i] = SF.get_current_file();
-            selstatus[i] = SF.Is_ACTIVE();
-            i++;
-        }
-        SF.next();
+    	SF.getValue(MDL_IMAGE, imgnames[i]);
+    	SF.getValue(MDL_ENABLED, selstatus[i]);
+        i++;
     }
 }
 
@@ -433,20 +430,30 @@ void ShowSel::openNewFile(const FileName &_fn)
 // This function saves the sel file with the selected images as discarded.
 void ShowSel::saveSelFileDiscarded()
 {
-    SelFile SFNew;
+    MetaData SFnew;
     bool saveFile = false;
     for (int i = 0; i < listSize; i++)
     {
+        SFnew.addObject();
+        SFnew.setValue(MDL_IMAGE,imgnames[i]);
         if (cellMarks[i])
         {
             saveFile = true;
-            SFNew.insert(imgnames[i], SelLine::DISCARDED);
+            SFnew.setValue(MDL_ENABLED,-1);
         }
         else
-            if (selstatus[i]) SFNew.insert(imgnames[i], SelLine::ACTIVE);
-            else     SFNew.insert(imgnames[i], SelLine::DISCARDED);
+        {
+            if (selstatus[i])
+			{
+                SFnew.setValue(MDL_ENABLED,1);
+			}
+            else
+            {
+                SFnew.setValue(MDL_ENABLED,-1);
+            }
+        }
     }
-    if (saveFile) writeSelFile(SFNew);
+    if (saveFile) writeSelFile(SFnew);
     else QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
@@ -454,36 +461,40 @@ void ShowSel::saveSelFileDiscarded()
   the rest of the sel file as discarded. */
 void ShowSel::saveSelFileActive()
 {
-    SelFile SFNew;
+    MetaData SFnew;
     bool saveFile = false;
     for (int i = 0; i < listSize; i++)
     {
+        SFnew.addObject();
+        SFnew.setValue(MDL_IMAGE,imgnames[i]);
         if (cellMarks[i])
         {
             saveFile = true;
-            SFNew.insert(imgnames[i], SelLine::ACTIVE);
+            SFnew.setValue(MDL_ENABLED,1);
         }
         else
-            SFNew.insert(imgnames[i], SelLine::DISCARDED);
+        	SFnew.setValue(MDL_ENABLED,-1);
     }
-    if (saveFile) writeSelFile(SFNew);
+    if (saveFile) writeSelFile(SFnew);
     else QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 /* This function saves a new sel file with the selected images as active.*/
 void ShowSel::saveSelFileNew()
 {
-    SelFile SFNew;
+    MetaData SFnew;
     bool saveFile = false;
     for (int i = 0; i < listSize; i++)
     {
+        SFnew.addObject();
+        SFnew.setValue(MDL_IMAGE,imgnames[i]);
         if (cellMarks[i])
         {
             saveFile = true;
-            SFNew.insert(imgnames[i], SelLine::ACTIVE);
+            SFnew.setValue(MDL_ENABLED,1);
         }
     }
-    if (saveFile) writeSelFile(SFNew);
+    if (saveFile) writeSelFile(SFnew);
     else QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
@@ -491,23 +502,25 @@ void ShowSel::saveSelFileNew()
    It does not ask for filename, it overwrites present selfile*/
 void ShowSel::saveSelFileNewOverwrite()
 {
-    SelFile SFNew;
+    MetaData SFnew;
     bool saveFile = false;
     for (int i = 0; i < listSize; i++)
     {
+        SFnew.addObject();
+        SFnew.setValue(MDL_IMAGE,imgnames[i]);
         if (cellMarks[i])
         {
             saveFile = true;
-            SFNew.insert(imgnames[i], SelLine::ACTIVE);
+            SFnew.setValue(MDL_ENABLED,1);
         }
     }
-    if (saveFile) writeSelFile(SFNew, true);
+    if (saveFile) writeSelFile(SFnew, true);
     else QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 /* Save a Selfile.
    Make all possible checkings */
-void ShowSel::writeSelFile(SelFile &_SF, bool overwrite)
+void ShowSel::writeSelFile(MetaData &_SF, bool overwrite)
 {
 
     if (overwrite)
@@ -575,11 +588,17 @@ void ShowSel::changeLabels()
 // Show statistics ---------------------------------------------------------
 void ShowSel::showStats()
 {
-    SelFile SFNew;
+    MetaData SFnew;
     for (int i = 0; i < listSize; i++)
+    {
+        SFnew.addObject();
+        SFnew.setValue(MDL_IMAGE,imgnames[i]);
         if (cellMarks[i])
-            SFNew.insert(imgnames[i], SelLine::ACTIVE);
-    if (SFNew.ImgNo()) ShowTable::showStats(SFNew, apply_geo);
+        	SFnew.setValue(MDL_ENABLED,1);
+        else
+        	SFnew.setValue(MDL_ENABLED,-1);
+    }
+    if (SFnew.size()) ShowTable::showStats(SFnew, apply_geo);
     else QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
@@ -590,19 +609,17 @@ void ShowSel::showSelStats()
     int active = 0;
     int discarded = 0;
     int commented = 0;
-    SelFile SF(fn);
-    while (!SF.eof())
+    int enabled;
+    MetaData SF(fn);
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        // Get file
-        if (SF.Is_ACTIVE())
-            active++;
-        else if (SF.Is_DISCARDED())
-            discarded++;
-        else if (SF.Is_COMMENT())
-            commented++;
-        SF.next();
-        total++;
-    }  // while
+    	SF.getValue(MDL_ENABLED, enabled);
+    	if (enabled==1)
+    		active++;
+    	else if (enabled==-1)
+    		discarded++;
+    	total++;
+    }
     QString tmpS, Str1;
     Str1 = "Sel File Name : ";
     Str1 += fn.c_str();
@@ -624,13 +641,6 @@ void ShowSel::showSelStats()
     tmpS.setNum((float) discarded*100.0 / (float) total , 'f', 2);
     Str1 += tmpS;
     Str1 += "%)\n";
-    Str1 += "Commented image: ";
-    tmpS.setNum(commented);
-    Str1 += tmpS;
-    Str1 += " (";
-    tmpS.setNum((float) commented*100.0 / (float) total , 'f', 2);
-    Str1 += tmpS;
-    Str1 += "%)";
     QMessageBox::about((QWidget*)this, "Sel File Statistics", Str1);
 }
 
@@ -705,10 +715,10 @@ void ShowSel::editCTFmodel()
     else
     {   // Multiple micrographs all with micrograph_averaging
         // Get the assign filename
-        SelFile SF_assign;
+        MetaData SF_assign;
         SF_assign.read(fn_assign_sel);
-        SF_assign.jump(indexOf(currentRow(), currentColumn()));
-        FileName fn_assign = SF_assign.get_current_file();
+        FileName fn_assign;
+        SF_assign.getValue(MDL_IMAGE, fn_assign,indexOf(currentRow(), currentColumn()));
 
         // Read the corresponding assignment parameter file
         Prog_assign_CTF_prm assign_ctf_prm;
@@ -788,10 +798,10 @@ void ShowSel::recomputeCTFmodel()
     else
     {   // Multiple micrographs all with micrograph_averaging
         // Get the assign filename
-        SelFile SF_assign;
+        MetaData SF_assign;
         SF_assign.read(fn_assign_sel);
-        SF_assign.jump(indexOf(currentRow(), currentColumn()));
-        FileName fn_assign = SF_assign.get_current_file();
+        FileName fn_assign;
+        SF_assign.getValue(MDL_IMAGE, fn_assign,indexOf(currentRow(), currentColumn()));
 
         // Read the corresponding assignment parameter file
         assign_ctf_prm.read(fn_assign);

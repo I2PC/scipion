@@ -120,7 +120,7 @@ public:
     /** union of  metadata objects, result in calling metadata object
      * union is a reserved word so I called this method union_
      */
-    void union_(MetaData &MD);
+    void union_(MetaData &MD, MetaDataLabel thisLabel=MDL_OBJID);
 
     /** intersects two metadata objects, result in "calling" metadata
      */

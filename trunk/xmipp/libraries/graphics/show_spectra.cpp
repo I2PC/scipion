@@ -126,7 +126,7 @@ void ShowSpectra::initFromVectors()
     for (long i = 0; i < V->size(); i++)
     {
         imgnames[i] = V->theTargets[i];
-        selstatus[i] = SelLine::ACTIVE;
+        selstatus[i] = true;
     }
 }
 

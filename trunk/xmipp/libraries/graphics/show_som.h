@@ -42,7 +42,7 @@ public:
     bool        apply_geo;
 protected:
     // Array of selfiles, a selfile for each codevector
-    SelFile *SFcv;
+    MetaData *SFcv;
     // Histogram of images assigned
     std::string  *hisAssigned;
     // Errors within group
@@ -63,7 +63,7 @@ protected:
 
     /* Extract the represented images to a SelFile.
        The selfile is not cleared at the beginning. */
-    virtual void extractRepresented(SelFile &SF_represented);
+    virtual void extractRepresented(MetaData &SF_represented);
 
     /* Initialize right click menubar */
     virtual void initRightclickMenubar();

@@ -29,7 +29,7 @@
 
 #include "show_table.h"
 
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/fft.h>
 
 #ifdef QT3_SUPPORT
@@ -37,10 +37,10 @@
 #include <QMouseEvent>
 #endif
 
-/**@defgroup ShowSelfile Show Selection File
+/**@defgroup ShowSelfile Show Collection of images in MetaData File
    @ingroup GraphicsLibrary */
 //@{
-/** Class to show selfiles.
+/** Class to show multiple 2D images in metadata files.
     Example of use:
     @code
        ShowSel *showsel = new ShowSel;
@@ -105,7 +105,7 @@ protected:
     virtual void compute_global_normalization_params();
     /* Write SelFile, opens a GUI for the file selection and checks if the
        output filename exists. If it does, it asks for confirmation.*/
-    virtual void writeSelFile(SelFile &_SF, bool overwrite = false);
+    virtual void writeSelFile(MetaData &_SF, bool overwrite = false);
     /* Cell label depending on labeltype */
     virtual const char* cellLabel(int i) const;
     /* Initialize right click menubar */
@@ -126,7 +126,7 @@ protected:
     virtual void readSelFile(const FileName &_fn,
                              double _minGray = 0, double _maxGray = 0);
     /* Read a SelFile object */
-    virtual void readObject(SelFile &SF,
+    virtual void readObject(MetaData &SF,
                             double _minGray = 0, double _maxGray = 0);
     /* Update the label with the filename at cell i*/
     virtual void updateStatus(int i);
@@ -181,7 +181,7 @@ public:
 
     /** Initialize with a Selfile. */
     virtual void initWithObject(int _numRows, int _numCols,
-                                SelFile &_SF, const char *_title);
+                                MetaData &_SF, const char *_title);
 
     /** For CTF mode, set assign CTF file. */
     void setAssignCTFfile(const FileName &_fn_assign);

@@ -50,7 +50,7 @@
 
 #include <data/funcs.h>
 #include <data/multidim_array.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 
 #include <iostream>
 #include <list>
@@ -237,7 +237,7 @@ protected:
     {};
 
     /* Show the average and SD of a Selfile */
-    void showStats(SelFile &SF, bool apply_geo = FALSE);
+    void showStats(MetaData &SF, bool apply_geo = FALSE);
 
     /* Make a temp file */
     std::string makeTempFile(int &fd);

@@ -71,7 +71,7 @@ void ShowCL2D::readFile(const FileName &_fn_root,
     fn = _fn_root;
     setCaption(fn.c_str()+filterSuffix);
     readSelFile(_fn_root + ".sel");
-    SFcv=new SelFile[listSize];
+    SFcv=new MetaData[listSize];
     hisAssigned=new std::string[listSize];
     for (int i=0; i<listSize; i++)
     {
@@ -79,7 +79,7 @@ void ShowCL2D::readFile(const FileName &_fn_root,
         if (exists(fnCV+filterSuffix+".sel"))
         {
         	SFcv[i].read(fnCV+filterSuffix+".sel");
-			hisAssigned[i]=integerToString(SFcv[i].ImgNo());
+			hisAssigned[i]=integerToString(SFcv[i].size());
         }
         else
         {
@@ -140,28 +140,28 @@ void ShowCL2D::initRightclickMenubar()
 }
 
 /* Extract represented .---------------------------------------------------- */
-void ShowCL2D::extractRepresented(SelFile &SF_represented)
+void ShowCL2D::extractRepresented(MetaData &SF_represented)
 {
     for (int i = 0; i < listSize; i++)
     {
         if (cellMarks[i])
-            SF_represented.merge(SFcv[i]);
+            SF_represented.union_(SFcv[i]);
     }
 }
 
 void ShowCL2D::saveAssigned()
 {
-    SelFile SFNew;
+    MetaData SFNew;
     extractRepresented(SFNew);
-    if (SFNew.ImgNo() != 0) writeSelFile(SFNew);
+    if (SFNew.size() != 0) writeSelFile(SFNew);
     else QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 void ShowCL2D::showAssigned()
 {
-    SelFile SFNew;
+    MetaData SFNew;
     extractRepresented(SFNew);
-    if (SFNew.ImgNo())
+    if (SFNew.size())
     {
         ShowSel *showsel = new ShowSel;
         showsel->initWithObject(10, 10, SFNew, "Represented images");

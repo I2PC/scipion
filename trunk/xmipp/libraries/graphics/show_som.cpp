@@ -182,7 +182,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
                 infStr += "\n";
             }
 
-            SFcv = new SelFile[listSize];
+            SFcv = new MetaData[listSize];
             while (!fh_class.eof())
             {
                 int row, col;
@@ -190,8 +190,10 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
                 fh_class >> col >> row >> tmp;
                 getline(fh_class, line);
                 int i = row * NumCols + col;
-                SFcv[i].insert(firstToken(line), SelLine::ACTIVE);
-            }
+                SFcv[i].addObject();
+                SFcv[i].setValue(MDL_IMAGE, firstToken(line));
+                SFcv[i].setValue(MDL_ENABLED, 1);
+			}
         }
         fh_class.close();
     }
@@ -253,20 +255,20 @@ void ShowSOM::initRightclickMenubar()
 }
 
 /* Extract represented .---------------------------------------------------- */
-void ShowSOM::extractRepresented(SelFile &SF_represented)
+void ShowSOM::extractRepresented(MetaData &SF_represented)
 {
     for (int i = 0; i < listSize; i++)
     {
         if (cellMarks[i])
-            SF_represented.merge(SFcv[i]);
+            SF_represented.union_(SFcv[i], MDL_IMAGE);
     }
 }
 
 void ShowSOM::saveAssigned()
 {
-    SelFile SFNew;
+    MetaData SFNew;
     extractRepresented(SFNew);
-    if (SFNew.ImgNo() != 0) writeSelFile(SFNew);
+    if (SFNew.size() != 0) writeSelFile(SFNew);
     else QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
@@ -274,7 +276,7 @@ void ShowSOM::saveAssignedSeparately()
 {
     QString basename;
     for (int i = 0; i < listSize; i++)
-        if (cellMarks[i] && SFcv[i].ImgNo() > 0)
+        if (cellMarks[i] && SFcv[i].size() > 0)
         {
             if (basename.isNull())
             {
@@ -366,9 +368,9 @@ const char * ShowSOM::cellLabel(int i) const
 /* Show Average and SD of the represented images --------------------------- */
 void ShowSOM::showRepresentedStats()
 {
-    SelFile SFNew;
+    MetaData SFNew;
     extractRepresented(SFNew);
-    if (SFNew.ImgNo()) ShowTable::showStats(SFNew, apply_geo);
+    if (SFNew.size()) ShowTable::showStats(SFNew, apply_geo);
     else QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
@@ -398,7 +400,7 @@ void ShowSOM::showRepresentedAverageTogether()
     }
 
     // Create a blank Selfile for the averages images.
-    SelFile SFAvgs;
+    MetaData SFAvgs;
 
     // Go back through cells and add images to list
     for (int i = 0; i < listSize; i++)
@@ -406,13 +408,12 @@ void ShowSOM::showRepresentedAverageTogether()
         if (cellMarks[i])
         {
             Image<double> _ave;
-            if (SFcv[i].ImgNo())
+            if (SFcv[i].size())
             {
                 Image<double> _sd;
                 double _minPixel, _maxPixel;
-                SelFile SFNew(SFcv[i]);
-                SFNew.go_beginning();
-                SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel, apply_geo);
+                MetaData SFnew(SFcv[i]);
+                get_statistics(SFnew, _ave, _sd, _minPixel, _maxPixel, apply_geo);
             }
             else
                 _ave = Image<double>(projXdim, projYdim);
@@ -426,7 +427,9 @@ void ShowSOM::showRepresentedAverageTogether()
             std::string tmpImgfile = makeTempFile(tempfd);
             // Add that image file to the SelFile and save it
             xm_ave.write(tmpImgfile);
-            SFAvgs.insert(tmpImgfile);
+            SFAvgs.addObject();
+            SFAvgs.setValue(MDL_IMAGE,tmpImgfile);
+            SFAvgs.setValue(MDL_ENABLED,1);
             ::close(tempfd);
             /*
             int r, c;
@@ -438,7 +441,7 @@ void ShowSOM::showRepresentedAverageTogether()
         }
     }
 
-    if (SFAvgs.ImgNo())
+    if (SFAvgs.size())
     {
         ShowSel *showsel = new ShowSel;
         showsel->initWithObject(NumRows, NumCols, SFAvgs, "Averages of assigned images");
@@ -453,9 +456,9 @@ void ShowSOM::showRepresentedAverageTogether()
 /* Show assigned sel ------------------------------------------------------- */
 void ShowSOM::showRepresentedSel()
 {
-    SelFile SFNew;
+    MetaData SFNew;
     extractRepresented(SFNew);
-    if (SFNew.ImgNo())
+    if (SFNew.size())
     {
         ShowSel *showsel = new ShowSel;
         showsel->initWithObject(10, 10, SFNew, "Represented images");
@@ -473,14 +476,14 @@ void ShowSOM::showErrorImage()
     if (row < 0 || col < 0) return;
     int i = indexOf(row, col);
 
-    SelFile SFNew;
-    SFNew.merge(SFcv[i]);
-    if (SFNew.ImgNo())
+    MetaData SFNew;
+    SFNew.union_(SFcv[i], MDL_IMAGE);
+    if (SFNew.size())
     {
         // Compute the average of the images assigned to that cell
         Image<double> _ave, _sd;
         double _minPixel, _maxPixel;
-        SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel, apply_geo);
+        get_statistics(SFNew, _ave, _sd, _minPixel, _maxPixel, apply_geo);
 
         // Load the cell code vector
         Image<double> image, error_image;

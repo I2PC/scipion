@@ -72,7 +72,7 @@ protected:
 
     /* Extract the represented images to a list.
        The SelFile is not cleared at the beginning. */
-    virtual void extractRepresented(SelFile &SF_represented);
+    virtual void extractRepresented(MetaData &SF_represented);
 
     /* Extract the represented spectra to a list.
        The xmippCTVector is not cleared at the beginning. */
