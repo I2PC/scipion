@@ -61,6 +61,7 @@ int main(int argc, char **argv)
         //Send "master" seed to slaves for same randomization
         if (IS_MASTER)
         {
+            prm.verb = 1;
             for (int slave = 1; slave < size; slave++)
                 MPI_Send(&prm.seed, 1, MPI_INT, slave, TAG_DOCFILE,
                         MPI_COMM_WORLD);
@@ -84,7 +85,7 @@ int main(int argc, char **argv)
     }
     catch (Xmipp_error XE)
     {
-        if (rank == 0)
+        if (IS_MASTER)
         {
             std::cout << XE;
             prm.usage();
@@ -230,6 +231,8 @@ int main(int argc, char **argv)
 
                 }
 
+                //Renumber docfile
+                //prm.DFo.renum();
                 // Output all intermediate files
                 prm.writeOutputFiles(prm.model, OUT_ITER);
             }
