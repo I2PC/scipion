@@ -230,32 +230,32 @@ void Plotter::zoomIn()
 }
 
 /* Set curve --------------------------------------------------------------- */
-void Plotter::setCurveData(int id, const Matrix1D<double> &Y)
+void Plotter::setCurveData1D(int id, const MultidimArray<double> &Y)
 {
-    Matrix2D<double> data(XSIZE(Y), 2);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(Y)
+    MultidimArray<double> data(XSIZE(Y), 2);
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(Y)
     {
         data(i, 0) = i;
         data(i, 1) = Y(i);
     }
-    setCurveData(id, data);
+    setCurveData2D(id, data);
 }
 
-void Plotter::setCurveData(int id, const Matrix1D<double> &X,
-                           const Matrix1D<double> &Y)
+void Plotter::setCurveData1D(int id, const MultidimArray<double> &X,
+                           const MultidimArray<double> &Y)
 {
     if (XSIZE(X) != XSIZE(Y))
         REPORT_ERROR(1, "Plotter::setCurveData: X and Y have different sizes");
-    Matrix2D<double> data(XSIZE(Y), 2);
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(Y)
+    MultidimArray<double> data(XSIZE(Y), 2);
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(Y)
     {
         data(i, 0) = X(i);
         data(i, 1) = Y(i);
     }
-    setCurveData(id, data);
+    setCurveData2D(id, data);
 }
 
-void Plotter::setCurveData(int id, const Matrix2D<double> &data)
+void Plotter::setCurveData2D(int id, const MultidimArray<double> &data)
 {
     std::cout << "Setting id=" << id << std::endl;
 
@@ -672,14 +672,14 @@ void Plotter::drawCurves(QPainter *painter)
     QRect rect(Margin , Margin , width() - 2 *Margin, height() - 2*Margin);
     painter->setClipRect(rect.x() + 1, rect.y() + 1, rect.width() - 2, rect.height() - 2);
 
-    std::map <int, Matrix2D<double> > ::const_iterator it = curveMap.begin();
+    std::map <int, MultidimArray<double> > ::const_iterator it = curveMap.begin();
     while (it != curveMap.end())
     {
         // The first member of the it value gives us the ID
         int id = (*it).first;
         if (curveActive[id])
         {
-            const Matrix2D<double> &data = (*it).second;
+            const MultidimArray<double> &data = (*it).second;
             int numPoints = 0;
             int maxPoints = YSIZE(data);
 #ifdef QT3_SUPPORT

@@ -405,22 +405,22 @@ void ShowSOM::showRepresentedAverageTogether()
     {
         if (cellMarks[i])
         {
-            Image _ave;
+            Image<double> _ave;
             if (SFcv[i].ImgNo())
             {
-                Image _sd;
+                Image<double> _sd;
                 double _minPixel, _maxPixel;
                 SelFile SFNew(SFcv[i]);
                 SFNew.go_beginning();
                 SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel, apply_geo);
             }
             else
-                _ave = Image(projXdim, projYdim);
+                _ave = Image<double>(projXdim, projYdim);
 
             // Write _ave to a temp file
-            // Need to convert it to ImageXmipp because Selfile can't handle plain
+            // Need to convert it to Image<double> because Selfile can't handle plain
             // Image files when it is being read back in.
-            ImageXmipp xm_ave;
+            Image<double> xm_ave;
             xm_ave = _ave;
             int tempfd;
             std::string tmpImgfile = makeTempFile(tempfd);
@@ -478,24 +478,18 @@ void ShowSOM::showErrorImage()
     if (SFNew.ImgNo())
     {
         // Compute the average of the images assigned to that cell
-        Image _ave, _sd;
+        Image<double> _ave, _sd;
         double _minPixel, _maxPixel;
         SFNew.get_statistics(_ave, _sd, _minPixel, _maxPixel, apply_geo);
 
         // Load the cell code vector
-        Image *image = Image::LoadImage(imgnames[i]), error_image;
-        if (!image)
-            QMessageBox::about(this, "Error", (QString) "Error loading image " +
-                               imgnames[i].c_str() + "!");
-        else
-        {
-            // Compute and show the error
-            error_image() = _ave() - (*image)();
-            delete image;
-            ImageViewer *w = new ImageViewer(&error_image, "Error image");
-            w->show();
-        }
-    }
+        Image<double> image, error_image;
+        image.read(imgnames[i]);
+        // Compute and show the error
+        error_image() = _ave() - image();
+        ImageViewer *w = new ImageViewer(&error_image, "Error image");
+        w->show();
+	}
     else
         QMessageBox::about(this, "Error!", "No images selected\n");
 }

@@ -160,7 +160,7 @@ void ShowVol::producePixmapAt(int i)
         log_i = i + STARTINGZ(V());
         break;
     }
-    Image I;
+    Image<double> I;
     V().getSlice(log_i, I(), slices);
 
     int minGray, maxGray;
@@ -224,7 +224,7 @@ void ShowVol::updateStatus(int k, int i, int j)
     {
         moremsg.sprintf("(%d,%d,%d)=(%d,%d,%d)= %.3f",
                         k, i, j, k_log, i_log, j_log,
-                        V(k_log, i_log, j_log));
+                        V()(k_log, i_log, j_log));
         message += moremsg;
     }
     status->setText(message);

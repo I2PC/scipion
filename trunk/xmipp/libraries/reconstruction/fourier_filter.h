@@ -27,8 +27,7 @@
 #define _FOURIER_FILTER_HH
 
 #include <data/ctf.h>
-
-#include <data/matrix3d.h>
+#include <data/multidim_array.h>
 #include <data/fftw.h>
 
 /**@defgroup FourierMasks Masks in Fourier space
@@ -125,20 +124,14 @@ public:
         in each direction is 0.5 */
     double maskValue(const Matrix1D<double> &w);
 
-    /** Generate 2D mask. */
-    void generate_mask(Matrix2D<double> &mask);
-
-    /** Apply mask in 2D. */
-    void apply_mask_Space(Matrix2D<double> &v);
-
-    /** Generate 3D mask. */
-    void generate_mask(Matrix3D<double> &mask);
+    /** Generate nD mask. */
+    void generate_mask(MultidimArray<double> &mask);
 
     /** Apply mask in 3D. */
-    void apply_mask_Space(Matrix3D<double> &v);
+    void apply_mask_Space(MultidimArray<double> &v);
 
-    /** Get the power of the 2D mask. */
-    double mask2D_power();
+    /** Get the power of the nD mask. */
+    double mask_power();
     
     /** Correct phase */
     void correct_phase();
@@ -146,11 +139,8 @@ public:
     // Auxiliary vector for representing frequency values
     Matrix1D<double> w;
 
-    // Auxiliary mask for the filter in 2D
-    Matrix2D<double> maskFourier2D;
-
     // Auxiliary mask for the filter in 3D
-    Matrix3D<double> maskFourier3D;
+    MultidimArray<double> maskFourier;
 
     // Transformer
     XmippFftw transformer;

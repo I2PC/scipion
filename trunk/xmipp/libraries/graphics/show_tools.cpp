@@ -316,20 +316,20 @@ void ExclusiveParam::exclusiveValueChanged()
 }
 
 /* Qimage -> Xmipp --------------------------------------------------------- */
-void Qt2xmipp(QImage &_qimage, Image &_ximage)
+void Qt2xmipp(QImage &_qimage, Image<double> &_ximage)
 {
     _ximage().resize(_qimage.height(), _qimage.width());
     for (int y = 0; y < _qimage.width(); y++)
         for (int x = 0; x < _qimage.height(); x++)
-            _ximage(x, y) = (double) _qimage.pixelIndex(y, x);
+            _ximage()(x, y) = (double) _qimage.pixelIndex(y, x);
 }
 
 /* Xmipp -> QImage --------------------------------------------------------- */
-void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
+void xmipp2Qt(Image<double>& _ximage, QImage &_qimage, int _min_scale,
               int _max_scale, double _m, double _M)
 {
     // Creates a Qt Image to hold Xmipp Image
-    _qimage.create(_ximage().colNumber(), _ximage().rowNumber(), 8, 256);
+    _qimage.create(XSIZE(_ximage()), YSIZE(_ximage()), 8, 256);
 
     // Sets Graylevel Palette.
     for (int i = 0; i < 256; i++)
@@ -339,7 +339,7 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
         _qimage.setColor(i, c.rgb());
     }
 
-    const Matrix2D<double> &xmatrix = _ximage();
+    const MultidimArray<double> &xmatrix = _ximage();
     int xdim = XSIZE(xmatrix);
     int ydim = YSIZE(xmatrix);
     double min_val, max_val;
@@ -361,11 +361,11 @@ void xmipp2Qt(Image& _ximage, QImage &_qimage, int _min_scale,
     for (int y = 0; y < ydim; y++)
         for (int x = 0; x < xdim; x++)
             _qimage.setPixel(x, y, ((uint) CLIP((a*(
-                                                     DIRECT_MAT_ELEM(xmatrix, y, x) - min_val) + _min_scale), 0, 255)));
+                                                     DIRECT_A2D_ELEM(xmatrix, y, x) - min_val) + _min_scale), 0, 255)));
 }
 
 /* Xmipp -> Pixmap --------------------------------------------------------- */
-void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
+void xmipp2Pixmap(Image<double> &xmippImage, QPixmap* pixmap,
                   int _minScale, int _maxScale, double _m, double _M)
 {
     QImage tmpImage;
@@ -374,22 +374,22 @@ void xmipp2Pixmap(Image &xmippImage, QPixmap* pixmap,
 }
 
 /* Xmipp image -> Xmipp PSD ------------------------------------------------ */
-void xmipp2PSD(const Matrix2D<double> &input, Matrix2D<double> &output)
+void xmipp2PSD(const MultidimArray<double> &input, MultidimArray<double> &output)
 {
     output = input;
     CenterFFT(output, true);
     double min_val = output.computeMax();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(output)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
     if (output(i, j) > 0 && output(i, j) < min_val) min_val = output(i, j);
     min_val = 10 * log10(min_val);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(output)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
     if (output(i, j) > 0) output(i, j) = 10 * log10(output(i, j));
     else               output(i, j) = min_val;
     reject_outliers(output);
 }
 
 /* Xmipp image -> Xmipp CTF ------------------------------------------------ */
-void xmipp2CTF(const Matrix2D<double> &input, Matrix2D<double> &output)
+void xmipp2CTF(const MultidimArray<double> &input, MultidimArray<double> &output)
 {
     output = input;
     CenterFFT(output, true);
@@ -400,7 +400,7 @@ void xmipp2CTF(const Matrix2D<double> &input, Matrix2D<double> &output)
     bool first = true;
     int Xdim = XSIZE(output);
     int Ydim = YSIZE(output);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(output)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
     {
         if ((i < Ydim / 2 && j >= Xdim / 2) || (i >= Ydim / 2 && j < Xdim / 2))
         {
@@ -414,9 +414,9 @@ void xmipp2CTF(const Matrix2D<double> &input, Matrix2D<double> &output)
             }
         }
     }
-    Matrix2D<double> left(YSIZE(output), XSIZE(output));
+    MultidimArray<double> left(YSIZE(output), XSIZE(output));
     min_val = 10 * log10(min_val);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(output)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
     {
         if ((i < Ydim / 2 && j >= Xdim / 2) || (i >= Ydim / 2 && j < Xdim / 2))
         {
@@ -428,7 +428,7 @@ void xmipp2CTF(const Matrix2D<double> &input, Matrix2D<double> &output)
     reject_outliers(left);
 
     // Join both parts
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(output)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
     if ((i < Ydim / 2 && j >= Xdim / 2) || (i >= Ydim / 2 && j < Xdim / 2))
         output(i, j) = left(i, j);
     else output(i, j) = ABS(output(i, j));
