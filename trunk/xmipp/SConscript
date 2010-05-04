@@ -590,7 +590,7 @@ AddXmippProgram('add_noise')
 #AddXmippProgram('micrograph_denoise', ['XmippRecons'])
 #AddXmippProgram('micrograph_downsample', ['XmippRecons'])
 #AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
-#AddXmippProgram('micrograph_scissor')
+#AddXmippProgram('micrograph_scissor'),roberto
 #AddXmippProgram('micrograph_window')
 #AddXmippProgram('mirror') sjors
 #AddXmippProgram('ml_align2d', ['XmippRecons']) sjors
