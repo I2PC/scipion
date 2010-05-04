@@ -211,7 +211,6 @@ public:
     FileName fn_img, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_oext, fn_scratch, fn_control;
     /** Command line */
     std::string cline;
-    double sigma_noise2;
     /** Flag for checking mirror images of all references */
     bool do_mirror;
     /** Flag whether to fix estimates for model fractions */

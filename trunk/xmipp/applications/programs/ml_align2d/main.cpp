@@ -74,6 +74,8 @@ int main(int argc, char **argv)
             for (int refno = 0;refno < prm.model.n_ref; refno++)
                 prm.Iold[refno]() = prm.model.Iref[refno]();
 
+            bool special_first = !prm.do_first_iem && prm.iter == 1;
+
             for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
             {
 #ifdef TIMING
@@ -93,7 +95,7 @@ int main(int argc, char **argv)
                 }
                 else //do IEM
                 {
-                    if (prm.do_first_iem || prm.iter > 1)
+                    if (!special_first)
                     {
 
                         prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
@@ -102,7 +104,7 @@ int main(int argc, char **argv)
                     prm.maximization(block_model);
                     prm.writeOutputFiles(block_model, OUT_BLOCK);
 
-                    if (prm.do_first_iem || prm.iter > 1)
+                    if (!special_first)
                     {
                         prm.model.addModel(block_model);
                     }
@@ -114,7 +116,7 @@ int main(int argc, char **argv)
 
             }//close for blocks
 
-            if (prm.blocks > 1 && prm.iter == 1)
+            if (prm.blocks > 1 && special_first)
             {
                 for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
                 {
