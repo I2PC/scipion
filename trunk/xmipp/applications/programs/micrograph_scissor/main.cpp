@@ -48,7 +48,8 @@ int main(int argc, char **argv)
         Xdim          = textToInteger(getParameter(argc, argv, "-Xdim"));
         if (checkParameter(argc, argv, "-Ydim"))
             Ydim       = textToInteger(getParameter(argc, argv, "-Ydim"));
-        else Ydim = Xdim;
+        else
+            Ydim = Xdim;
         startN        = textToInteger(getParameter(argc, argv, "-start", "1"));
         reverse_endian = checkParameter(argc, argv, "-reverse_endian");
         compute_inverse = checkParameter(argc, argv, "-invert");
@@ -65,7 +66,7 @@ int main(int argc, char **argv)
             fn_tilted     = getParameter(argc, argv, "-tilted");
         }
         fn_transform = getParameter(argc, argv, "-transform","");
-	down_transform = textToFloat(getParameter(argc, argv, "-down_transform","1"));
+        down_transform = textToFloat(getParameter(argc, argv, "-down_transform","1"));
     }
     catch (Xmipp_error XE)
     {
@@ -81,20 +82,20 @@ int main(int argc, char **argv)
             m.open_micrograph(fn_micrograph, reverse_endian);
             m.set_window_size(Xdim, Ydim);
             m.read_coordinates(0, fn_pos);
-	    if (fn_transform!="")
-	    {
-		if (down_transform != 1.)
-		    m.scale_coordinates(1./down_transform);
-		std::ifstream fh_transform;
-		fh_transform.open(fn_transform.c_str());
-		if (!fh_transform)
-		    REPORT_ERROR(1, (std::string)"Scissor: Cannot open file" + fn_transform);
-		fh_transform >> Mtransform;
-		fh_transform.close();
-		m.transform_coordinates(Mtransform);
-		if (down_transform != 1.)
-		    m.scale_coordinates(down_transform);
-	    }
+            if (fn_transform!="")
+            {
+                if (down_transform != 1.)
+                    m.scale_coordinates(1./down_transform);
+                std::ifstream fh_transform;
+                fh_transform.open(fn_transform.c_str());
+                if (!fh_transform)
+                    REPORT_ERROR(1, (std::string)"Scissor: Cannot open file" + fn_transform);
+                fh_transform >> Mtransform;
+                fh_transform.close();
+                m.transform_coordinates(Mtransform);
+                if (down_transform != 1.)
+                    m.scale_coordinates(down_transform);
+            }
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);

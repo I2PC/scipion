@@ -347,14 +347,9 @@ void MetaData::read(std::ifstream *infile,
                             aux += value + " ";
                     value = aux;
                 }
-                std::cerr << "line" << line <<std::endl;
-                std::cerr << "label" << MetaDataContainer::decodeLabel(
-                        activeLabels[labelPosition - counterIgnored])
-                << " " <<activeLabels[labelPosition - counterIgnored]  << std::endl;
 
                 setValue(MetaDataContainer::decodeLabel(
                              activeLabels[labelPosition - counterIgnored]), value);
-                std::cerr << "value" << value <<std::endl;
                 labelPosition++;
             }
         }

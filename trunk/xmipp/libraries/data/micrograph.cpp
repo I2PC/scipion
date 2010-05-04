@@ -378,8 +378,6 @@ void Micrograph::write_coordinates(int label, const FileName &_fn_coords)
     for (int i = 0; i < imax; i++)
     {
         MD.addObject();
-        x=coords[i].X;
-        y=coords[i].Y;
         MD.setValue(MDL_XINT,coords[i].X);
         MD.setValue(MDL_YINT,coords[i].Y);
     }
@@ -408,9 +406,8 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
     	int x,y;
-    	MD.getValue(MDL_XINT,x); aux.X=x;
-    	MD.getValue(MDL_YINT,y); aux.Y=y;
-    	std::cerr << "x y " << x << " " << y <<std::endl;
+    	MD.getValue(MDL_XINT,aux.X); //aux.X=x;
+    	MD.getValue(MDL_YINT,aux.Y); //aux.Y=y;
         coords.push_back(aux);
     }
 }

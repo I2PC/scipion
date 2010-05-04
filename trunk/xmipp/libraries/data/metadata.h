@@ -436,7 +436,6 @@ public:
     {
         MDout.getValue( name,  value, objectID);
     }
-
     /*
      * Randomize this metadata, MDin is input
      */
