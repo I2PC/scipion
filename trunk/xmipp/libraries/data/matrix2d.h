@@ -61,8 +61,8 @@
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX2D(m) \
-    for (int i=0; i<=(m).mdimy; i++) \
-        for (int j=0; j<=(m).mdimx; j++)
+    for (int i=0; i<(m).mdimy; i++) \
+        for (int j=0; j<(m).mdimx; j++)
 
 /** Access to a matrix element
  * @ingroup MatricesSizeShape
@@ -786,7 +786,6 @@ public:
             for (int j = 0; j < op1.mdimx; j++)
                 for (int k = 0; k < mdimx; k++)
                     result(i, j) += (*this)(i, k) * op1(k, j);
-
         return result;
     }
 
@@ -1298,12 +1297,11 @@ public:
      */
     Matrix2D<T> transpose() const
     {
-        T aux;
         Matrix2D<T> result(mdimx, mdimy);
-
         FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
-        result(i, j) = (*this)(j, i);
-
+        {
+        	result(i, j) = (*this)(j, i);
+        }
         return result;
     }
 
