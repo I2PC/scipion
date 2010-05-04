@@ -35,6 +35,7 @@
 #include "multidim_array.h"
 #include "image.h"
 #include "fftw.h"
+#include "metadata.h"
 
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
