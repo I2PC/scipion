@@ -85,10 +85,11 @@ int main(int argc, char **argv)
     else
     {
         std::cout << "Calculating average and SD images from sel file......" << std::endl;
-        SelFile SF((FileName) selname);
+        MetaData SF((FileName) selname);
+        SF.removeObjects(MDL_ENABLED,-1);
         Image<double> ave, sd;
         double min, max;
-        SF.get_statistics(ave, sd, min, max, apply_geo);
+        get_statistics(SF, ave, sd, min, max, apply_geo);
         maskImg* w;
         if (sdflag)
             w = new maskImg(NULL, &sd, CIRCLE, selname.c_str(), Qt::WDestructiveClose);

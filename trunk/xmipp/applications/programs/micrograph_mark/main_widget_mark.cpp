@@ -32,7 +32,7 @@
 
 #include <data/matrix2d.h>
 #include <data/geometry.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 
 #ifdef QT3_SUPPORT
 #include <q3accel.h>
@@ -86,14 +86,18 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
     __untilted_generated = false;
 
 #ifdef QT3_SUPPORT
+
     __gridLayout         = new Q3GridLayout(this, 1, 2, 0);
 #else
+
     __gridLayout         = new QGridLayout(this, 1, 2, 0);
 #endif
+
     __filtersController  = new QtFiltersController(this , _m);
 
     __mWidget            = new QtWidgetMicrograph(this, __filtersController);
-    if (_mTilted == NULL) __mTiltedWidget = NULL;
+    if (_mTilted == NULL)
+        __mTiltedWidget = NULL;
     else
     {
         __mTiltedWidget = new QtWidgetMicrograph(this, __filtersController);
@@ -104,10 +108,12 @@ QtMainWidgetMark::QtMainWidgetMark(Micrograph *_m, Micrograph *_mTilted)
     __familyDialog->setCaption("Families");
 
 #ifdef QT3_SUPPORT
+
     __ctrlPlus    = new Q3Accel(this);
     __ctrlMinus   = new Q3Accel(this);
     __otherCtrl   = new Q3Accel(this);
 #else
+
     __ctrlPlus    = new QAccel(this);
     __ctrlMinus   = new QAccel(this);
     __otherCtrl   = new QAccel(this);
@@ -217,14 +223,16 @@ QtMainWidgetMark::~QtMainWidgetMark()
     delete __familyDialog;
     delete __filtersController;
     delete __mWidget;
-    if (__mTiltedWidget != NULL) delete __mTiltedWidget;
+    if (__mTiltedWidget != NULL)
+        delete __mTiltedWidget;
 }
 
 // Open all windows --------------------------------------------------------
 void QtMainWidgetMark::openAllWindows()
 {
     __mWidget->openAllWindows();
-    if (__mTiltedWidget != NULL) __mTiltedWidget->openAllWindows();
+    if (__mTiltedWidget != NULL)
+        __mTiltedWidget->openAllWindows();
     show();
 }
 
@@ -241,6 +249,7 @@ void QtMainWidgetMark::add_point(const Particle_coords &U,
     __Nu++; // Number of particles
 
 #ifdef _DEBUG
+
     std::cout << "Adding point U(" << U.X << "," << U.Y << ") T(" << T.X << ","
     << T.Y << ")\n";
     std::cout << "A at input" << __Au << "B at input" << __Bt;
@@ -268,6 +277,7 @@ void QtMainWidgetMark::add_point(const Particle_coords &U,
     __Bt(2, 2) = __Au(2, 2);
 
 #ifdef _DEBUG
+
     std::cout << "A at output" << __Au << "B at output" << __Bt;
 #endif
 }
@@ -369,7 +379,8 @@ void QtMainWidgetMark::compute_gamma()
 #define MAX_AREA   250000
     __gamma = 0;
     // If there is no tilted image there is nothing to do
-    if (__mTiltedWidget == NULL) return;
+    if (__mTiltedWidget == NULL)
+        return;
 
     int step = CEIL(pow((double)__Nu * __Nu * __Nu / TRIANGLE_NO, 1.0 / 3));
     Matrix1D<int> iju(2), iku(2), ijt(2), ikt(2); // From i to j in untilted
@@ -395,7 +406,8 @@ void QtMainWidgetMark::compute_gamma()
         VECTOR_R2(iku, Mu->coord(k).X - Mu->coord(i).X,
                   Mu->coord(k).Y - Mu->coord(i).Y);
         double untilted_area = ABS(dotProduct(iju, iku)/*/2*/);
-        if (untilted_area < MIN_AREA) continue; // For numerical stability
+        if (untilted_area < MIN_AREA)
+            continue; // For numerical stability
 
         // Compute area of the same triangle in the tilted micrograph
         VECTOR_R2(ijt, Mt->coord(j).X - Mt->coord(i).X,
@@ -403,13 +415,16 @@ void QtMainWidgetMark::compute_gamma()
         VECTOR_R2(ikt, Mt->coord(k).X - Mt->coord(i).X,
                   Mt->coord(k).Y - Mt->coord(i).Y);
         double tilted_area = ABS(dotProduct(ijt, ikt)/*/2*/);
-        if (tilted_area < MIN_AREA) continue; // For numerical stability
-        if (tilted_area > MAX_AREA) continue; // micrograph are not perfect
+        if (tilted_area < MIN_AREA)
+            continue; // For numerical stability
+        if (tilted_area > MAX_AREA)
+            continue; // micrograph are not perfect
         // sheets so avoid
         // very far away particles
 
         // Now we know that tilted_area=untilted_area*cos(gamma)
-        if (tilted_area > untilted_area) continue; // There are user errors
+        if (tilted_area > untilted_area)
+            continue; // There are user errors
         // In the point selection
         __gamma += acos(tilted_area / untilted_area);
         triang++;
@@ -441,7 +456,8 @@ void QtMainWidgetMark::compute_alphas()
 {
     __alpha_u = __alpha_t = 0;
     // If there is no tilted image there is nothing to do
-    if (__mTiltedWidget == NULL) return;
+    if (__mTiltedWidget == NULL)
+        return;
 
     MultidimArray<double> angles(3);
     angles.initZeros();
@@ -473,7 +489,7 @@ void QtMainWidgetMark::compute_alphas()
     MultidimArray<double> steps(3);
     steps.initConstant(1);
     powellOptimizer(angles, 1, 3, &matrix_fitness, NULL,
-                     0.001, fitness, iter, steps, false);
+                    0.001, fitness, iter, steps, false);
     __alpha_u = angles(0);
     __alpha_t = angles(1);
     __gamma = angles(2);
@@ -482,7 +498,8 @@ void QtMainWidgetMark::compute_alphas()
 /* Write angles in file ---------------------------------------------------- */
 void QtMainWidgetMark::write_angles()
 {
-    if (!there_is_tilted()) return;
+    if (!there_is_tilted())
+        return;
     recalculate_passing_matrix();
     compute_gamma();
     compute_alphas();
@@ -491,14 +508,14 @@ void QtMainWidgetMark::write_angles()
     FileName fn = __mWidget->getMicrograph()->micrograph_name();
     fn = fn.without_extension();
     fn = fn.add_extension("ang");
-    
+
     std::ofstream out;
     out.open(fn.c_str(), std::ios::out);
     if (!out)
         REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_angles: Cannot open "
                      + fn + " for output\n");
     out << "# alpha_u alpha_t gamma\n"
-        << __alpha_u << " " << __alpha_t << " " << __gamma << std::endl;
+    << __alpha_u << " " << __alpha_t << " " << __gamma << std::endl;
     out.close();
 
     // Also write out 3x3 transformation matrix
@@ -506,11 +523,11 @@ void QtMainWidgetMark::write_angles()
     fn = fn.add_extension("mat");
     out.open(fn.c_str(), std::ios::out);
     if (!out)
-	REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_angles: Cannot open "
-		     + fn + " for output\n");
+        REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_angles: Cannot open "
+                     + fn + " for output\n");
     out << __Put;
     out.close();
-    
+
 }
 
 /* Draw tilt axes ---------------------------------------------------------- */
@@ -524,31 +541,41 @@ void QtMainWidgetMark::draw_axes()
 void QtMainWidgetMark::generated(bool _this_is_tilted,
                                  const std::string &_label)
 {
-    std::cerr << "Balancing both selfiles ...\n";
-    if (_this_is_tilted)   __tilted_generated = true;
-    else                 __untilted_generated = true;
+    std::cerr << "Balancing both metadatafiles ...\n";
+    if (_this_is_tilted)
+        __tilted_generated = true;
+    else
+        __untilted_generated = true;
     if (__untilted_generated && __tilted_generated)
     {
         FileName fn_untilted =
             __mWidget->getMicrograph()->micrograph_name() + "." + _label + ".sel";
         FileName fn_tilted =
             __mTiltedWidget->getMicrograph()->micrograph_name() + "." + _label + ".sel";
-        SelFile SFUntilted(fn_untilted);
-        SelFile SFTilted(fn_tilted);
-        SFUntilted.go_beginning();
-        SFTilted.go_beginning();
-        while (!SFUntilted.eof() && !SFTilted.eof())
+        MetaData SFUntilted(fn_untilted);
+        MetaData SFTilted(fn_tilted);
+        SFUntilted.firstObject();
+        SFTilted.firstObject();
+        if (SFUntilted.size() == 0 || SFTilted.size() == 0)
+			REPORT_ERROR(2,"Error: empty selfiles...");
+        do
         {
-            if (SFUntilted.Is_DISCARDED() || SFTilted.Is_DISCARDED())
+            int stat1, stat2;
+            SFUntilted.getValue(MDL_ENABLED, stat1);
+            SFTilted.getValue(MDL_ENABLED, stat2);
+        	if (stat1 == -1 || stat2 == -1)
             {
-                SFUntilted.set_current(SelLine::DISCARDED);
-                SFTilted.set_current(SelLine::DISCARDED);
-                std::cerr << "Images " << SFUntilted.get_current_file() << " and "
-                << SFTilted.get_current_file() << " are discarded\n";
+                FileName fn1, fn2;
+        		SFUntilted.setValue(MDL_ENABLED, -1);
+                SFTilted.setValue(MDL_ENABLED, -1);
+                SFUntilted.getValue(MDL_IMAGE, fn1);
+                SFTilted.getValue(MDL_IMAGE, fn2);
+
+                std::cerr << "Images " << fn1 << " and " << fn2 << " are discarded\n";
             }
-            SFUntilted.next();
-            SFTilted.next();
         }
+        while (!(SFUntilted.nextObject()!=MetaData::NO_MORE_OBJECTS) &&
+               !(SFTilted.nextObject()  !=MetaData::NO_MORE_OBJECTS) );
         SFUntilted.write(fn_untilted);
         SFTilted.write(fn_tilted);
     }
@@ -560,7 +587,7 @@ void QtMainWidgetMark::slotAddCoordTilted(int _muX, int _muY, int _f)
 }
 
 void QtMainWidgetMark::slotAddCoordTilted(int _muX, int _muY, int _f,
-    double _cost)
+        double _cost)
 {
     int mtX, mtY;
 
@@ -579,7 +606,7 @@ void QtMainWidgetMark::slotAddCoordUntilted(int _muX, int _muY, int _f)
 }
 
 void QtMainWidgetMark::slotAddCoordUntilted(int _mtX, int _mtY, int _f,
-    double _cost)
+        double _cost)
 {
     int muX, muY;
 

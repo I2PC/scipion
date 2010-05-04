@@ -652,17 +652,17 @@ void CTFViewer::refreshCurves()
 void CTFViewer::recomputeCurves()
 {
     int angle = spinBoxAngle->value();
-    Matrix2D<double> data;
+    MultidimArray<double> data;
     getCTFcurve("pure", angle, data);
-    plotter.setCurveData(1, data);
+    plotter.setCurveData2D(1, data);
     getCTFcurve("damping", angle, data);
-    plotter.setCurveData(2, data);
+    plotter.setCurveData2D(2, data);
     getCTFcurve("background", angle, data);
-    plotter.setCurveData(3, data);
+    plotter.setCurveData2D(3, data);
     if (psdPresent)
     {
         getExperimentalCurve(angle, data);
-        plotter.setCurveData(4, data);
+        plotter.setCurveData2D(4, data);
     }
     setPlotSettings();
     refreshCurves();
@@ -723,7 +723,7 @@ void CTFViewer::setPlotSettings()
 
 // Get CTF curve -----------------------------------------------------------
 void CTFViewer::getCTFcurve(const std::string &type, int angle,
-                            Matrix2D<double> &data, int Nsamples)
+                            MultidimArray<double> &data, int Nsamples)
 {
     double sampling_rate = ctf.Tm; // in Angstroms/pixel
     double fmax = 1.0 / (2.0 * sampling_rate);
@@ -785,7 +785,7 @@ void CTFViewer::setImageViewer()
 }
 
 // Get experimental curve --------------------------------------------------
-void CTFViewer::getExperimentalCurve(int angle, Matrix2D<double> &data,
+void CTFViewer::getExperimentalCurve(int angle, MultidimArray<double> &data,
                                      int Nsamples)
 {
     if (!psdPresent) return;
@@ -803,7 +803,7 @@ void CTFViewer::getExperimentalCurve(int angle, Matrix2D<double> &data,
      for (double t = 0; t < t_max; t += Ts, i++)
      {
          data(i, 0) = t * 1.0 / (XSIZE(I()) * sampling_rate);
-         data(i, 1) = I().interpolatedElement(t * cos_ang, t * sin_ang);
+         data(i, 1) = I().interpolatedElement2D(t * cos_ang, t * sin_ang);
          if (TenLog->isOn()) data(i, 1) = 10 * log10(data(i, 1));
          if (i == Nmax) break;
      }
@@ -815,7 +815,7 @@ void CTFViewer::generate_ctfmodel()
     ctf.Produce_Side_Info();
 
     // Get the image size from the .ctfmodel
-    ImageXmipp model;
+    Image<double> model;
     model.read(fn_root + ".ctfmodel_halfplane");
     int Ydim = YSIZE(model());
     int Xdim = XSIZE(model());
@@ -823,21 +823,21 @@ void CTFViewer::generate_ctfmodel()
     // Substitute the left part by the CTF model
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
     double minval=1e38, maxval=-1e38;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(model())
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(model())
     {
         if (j < Xdim / 2) continue;
         XX(freq) = ((double)j-Xdim/2.0)/Xdim;
         YY(freq) = ((double)i-Ydim/2.0)/Xdim;
         digfreq2contfreq(freq, freq, ctf.Tm);
-        model(i, j) = ctf.CTFpure_at(XX(freq), YY(freq));
-	model(i,j)*=model(i,j);
-    	minval=XMIPP_MIN(minval,model(i,j));
-    	maxval=XMIPP_MAX(maxval,model(i,j));
+        model()(i, j) = ctf.CTFpure_at(XX(freq), YY(freq));
+        model()(i,j)*=model()(i,j);
+    	minval=XMIPP_MIN(minval,model()(i,j));
+    	maxval=XMIPP_MAX(maxval,model()(i,j));
     }
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(model())
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(model())
     {
         if (j < Xdim / 2) continue;
-	model(i,j)=(model(i,j)-minval)/(maxval-minval);
+        model()(i,j)=(model()(i,j)-minval)/(maxval-minval);
     }
 
     // Recompute curves

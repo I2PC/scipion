@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Javier Rodríguez Fernández (javrodri@gmail.com)
+ * Authors:     Javier Rodrï¿½guez Fernï¿½ndez (javrodri@gmail.com)
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Universidad San Pablo CEU (Monteprincipe, Madrid)
@@ -85,7 +85,7 @@ public:
     // CTF valid
     bool ctf_valid;
     // Image model shown in the imageViewer
-    ImageXmipp I;
+    Image<double> I;
     // Widget to show the Image
     ImageViewer *imageViewer;
     // Filename root of the model being visualized
@@ -140,9 +140,9 @@ private:
     // Function to create a Curve for CTF
     // Valid types are "pure", "damping", "noise"
     void getCTFcurve(const std::string &type, int angle,
-                     Matrix2D<double> &curve, int Nsamples = 200);
+                     MultidimArray<double> &curve, int Nsamples = 200);
     // Function to create the curve for the experimental curve
-    void getExperimentalCurve(int angle, Matrix2D<double> &curve,
+    void getExperimentalCurve(int angle, MultidimArray<double> &curve,
                               int Nsamples = 200);
     // Function to make the CTFModel of the image,
     // used when any Variable change. It regenerates the curves

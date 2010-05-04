@@ -34,7 +34,7 @@
 #include <QKeyEvent>
 #endif
 
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
 
 ///  Ways the training set can be used
