@@ -191,7 +191,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
                 getline(fh_class, line);
                 int i = row * NumCols + col;
                 SFcv[i].addObject();
-                SFcv[i].setValue(MDL_IMAGE, firstToken(line));
+                SFcv[i].setValue(MDL_IMAGE, (std::string)firstToken(line));
                 SFcv[i].setValue(MDL_ENABLED, 1);
 			}
         }
@@ -257,9 +257,9 @@ void ShowSOM::initRightclickMenubar()
 /* Extract represented .---------------------------------------------------- */
 void ShowSOM::extractRepresented(MetaData &SF_represented)
 {
-    for (int i = 0; i < listSize; i++)
+	for (int i = 0; i < listSize; i++)
     {
-        if (cellMarks[i])
+		if (cellMarks[i])
             SF_represented.union_(SFcv[i], MDL_IMAGE);
     }
 }

@@ -107,6 +107,14 @@ void MetaData::union_(MetaData &MD, MetaDataLabel thisLabel)
         REPORT_ERROR( -1, "Row formatted MetaData can not be added" );
     }
 
+    if (this->size() == 0)
+    {
+    	*this = MD;
+    	return;
+    }
+    else if (MD.size()==0)
+    	return;
+
     //this->activeLabels = minuend.activeLabels;
     MetaDataContainer * aux, *aux2;
     std::string value1, value2;
@@ -147,6 +155,18 @@ void MetaData::intersection(MetaData &minuend, MetaData &subtrahend,
     {
         REPORT_ERROR( -1, "Row formatted MetaData can not be substracted" );
     }
+
+    if (minuend.size() == 0)
+    {
+    	*this = minuend;
+		return;
+    }
+    if (subtrahend.size() == 0)
+    {
+    	*this = subtrahend;
+    	return;
+    }
+
     this->activeLabels = minuend.activeLabels;
     MetaDataContainer * aux, *aux2;
     std::string value1, value2;
@@ -181,6 +201,13 @@ void MetaData::substraction(MetaData &minuend, MetaData &subtrahend,
     {
         REPORT_ERROR( -1, "Row formatted MetaData can not be substracted" );
     }
+
+    if (minuend.size() == 0 || subtrahend.size() == 0)
+    {
+    	*this = minuend;
+		return;
+    }
+
     this->activeLabels = minuend.activeLabels;
     MetaDataContainer * aux, *aux2;
     std::string value1, value2;

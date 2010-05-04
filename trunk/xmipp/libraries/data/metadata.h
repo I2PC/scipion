@@ -161,6 +161,12 @@ public:
     	std::cerr << "Floats are banned from metadata class"<< std::endl;
     	exit(1);
     }
+    bool setValue(const std::string &name, const char &value,
+                  long int objectID = -1){
+    	std::cerr << "Do not use setValue with char, use string"<< std::endl;
+    	std::cerr << "chars are banned from metadata class"<< std::endl;
+    	exit(1);
+    }
 
     void readOldSelFile(std::ifstream *infile);
     void readOldDocFile(std::ifstream *infile,
