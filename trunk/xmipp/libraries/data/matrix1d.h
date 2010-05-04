@@ -68,7 +68,7 @@ template <typename T> class Matrix2D;
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_MATRIX1D(v) \
-    for (int i=0; i<=v.vdim; i++)
+    for (int i=0; i<v.vdim; i++)
 
 /** Access to X component
  * @ingroup Vectors
