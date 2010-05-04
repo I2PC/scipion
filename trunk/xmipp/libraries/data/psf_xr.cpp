@@ -93,13 +93,13 @@ std::ostream & operator <<(std::ostream &out, const XmippXRPSF &psf)
     << "magnification=        " << psf.Ms << std::endl
     << "sampling_rate=        " << psf.dxo * 1e9 << " nm" << std::endl
     << "z_sampling_rate=      " << psf.dzo * 1e9 << " nm" << std::endl
-    << "z_axis_shift=         " << psf.DeltaZo * 1e6 << " um" << std::endl
+    << "DeltaZo=              " << psf.DeltaZo * 1e6 << " um" << std::endl
     << std::endl
     << "Lens Radius=          " << psf.Rlens * 1e6 << " um" << std::endl
     << "Zo=                   " << psf.Zo * 1e3 << " mm" << std::endl
     << "Zi=                   " << psf.Zi * 1e3 << " mm" << std::endl
-    << "dxi=                  " << psf.dxi * 1e6 << " um" << std::endl
-    << "dxiMax=               " << psf.dxiMax * 1e6 << " um" << std::endl
+    << "sampling_rate_im_sp=  " << psf.dxi * 1e6 << " um" << std::endl
+    << "Minimum Resolution=   " << psf.dxiMax * 1e6 << " um" << std::endl
     ;
 
     return out;
@@ -114,7 +114,6 @@ void XmippXRPSF::clear()
     Ms = 2304;
     dzo = dxo = 1e-9;
     DeltaZo = 0;
-    npMin = 5;
 }
 
 /* Produce Side Information ------------------------------------------------ */
@@ -132,20 +131,20 @@ void XmippXRPSF::produceSideInfo()
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
-//void XmippXRPSF::applyOTF(Matrix2D<double> &I) const
+//void XmippXRPSF::applyOTF(MultidimArray<double> &I) const
 //{
 //}
 
 /* Generate the Intensity PSF for a specific XR microscope configuration     ------------- */
 /* Generate OTF Image ------------------------------------------------------ */
 
-void XmippXRPSF::generateOTF(Matrix2D<std::complex<double> > &Im)
+void XmippXRPSF::generateOTF(MultidimArray<std::complex<double> > &Im)
 {
-    Matrix2D<double> I2(Im.ydim,Im.xdim);
+    MultidimArray<double> I2(Im.ydim,Im.xdim);
     generateOTF(I2);
 }
 
-void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
+void XmippXRPSF::generateOTF(MultidimArray<double> &Im)
 {
 //#define DEBUG
     /// REMEMBER TO INCLUDE AND/OR ANALYZE THE MINIMUM RESOLUTION CONDITION !!!! ////
@@ -168,17 +167,17 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
 //    std::cout << std::endl;
 //#endif
 
-    Matrix2D< std::complex<double> > OTFTemp, PSFi;
+    MultidimArray< std::complex<double> > OTFTemp, PSFi;
     XmippFftw transformer;
     //    Mask_Params mask_prm; TODO do we have to include masks using this method?
 
-    OTFTemp.resize(Niy,Nix);
+    OTFTemp.resize(Noy,Nox);
     lensPD(OTFTemp, focalEquiv, lambda, dxl, dyl);
 
     //    OTFTemp.window(-128,-128,127,255,10);
 
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(OTFTemp)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(OTFTemp)
     {
         if (sqrt(double(i*i)*dyl*dyl + double(j*j)*dxl*dxl) > Rlens)
             OTFTemp(i,j)=0;
@@ -186,10 +185,10 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
     }
 
 #ifdef DEBUG
-    ImageXmipp _Im;
+    Image<double> _Im;
     _Im().resize(OTFTemp);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(OTFTemp)
-    dMij(_Im(),i,j) = abs(dMij(OTFTemp,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
+    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
     _Im.write("psfxr-lens.spi");
 #endif
 
@@ -198,21 +197,24 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
     //    CenterOriginFFT(PSFi, 1);
     double norm=0;
 
-    //     FOR_ALL_ELEMENTS_IN_MATRIX2D(LPDFT)
+    //     FOR_ALL_ELEMENTS_IN_ARRAY2D(LPDFT)
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
     {
         PSFi.data[n] = abs(PSFi.data[n]);
         PSFi.data[n] *= PSFi.data[n];
         norm +=  PSFi.data[n].real();
     }
-    PSFi /= norm;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
+    {
+    	PSFi.data[n] /= norm;
+    }
 
     transformer.inverseFourierTransform();
 
     OTF.resize(OTFTemp.ydim, OTFTemp.xdim/2+1);
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(OTF)
-    dMij(OTF,i,j) = dMij(OTFTemp,i,j);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
+    dAij(OTF,i,j) = dAij(OTFTemp,i,j);
 
 
 
@@ -221,83 +223,32 @@ void XmippXRPSF::generateOTF(Matrix2D<double> &Im)
 
     //    CenterOriginFFT(OTFTemp,1);
     _Im().resize(OTFTemp);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(OTFTemp)
-    dMij(_Im(),i,j) = abs(dMij(OTFTemp,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
+    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
     _Im.write("psfxr-otf1.spi");
     //    CenterOriginFFT(OTFTemp,0);
     _Im().resize(OTF);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(OTF)
-    dMij(_Im(),i,j) = abs(dMij(OTF,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
+    dAij(_Im(),i,j) = abs(dAij(OTF,i,j));
     _Im.write("psfxr-otf2.spi");
 
     //    CenterOriginFFT(PSFi,1);
     _Im().resize(PSFi);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(PSFi)
-    dMij(_Im(),i,j) = abs(dMij(PSFi,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
+    dAij(_Im(),i,j) = abs(dAij(PSFi,i,j));
     _Im.write("psfxr-psfi.spi");
 #endif
 }
 
-void XmippXRPSF::adjustParam(ImageXmipp &Im)
-{
-
-}
-
-void XmippXRPSF::adjustParam(VolumeXmipp &vol)
-{
-
-	Nox = vol().xdim;
-	Noy = vol().ydim;
-
-	if (dxi>dxiMax) /// Lens Radius in pixels higher than image
-	{
-		Nix = ceil(Nox * dxi/dxiMax);
-		Niy = ceil(Noy * dxi/dxiMax);
-
-		dxi *= Nox/Nix;
-
-		AdjustType = PSFXR_INT;
-	}
-	else
-	{
-		Nix = Nox;
-		Niy = Noy;
-		AdjustType = PSFXR_STD;
-
-		if (dxi < npMin/Nox * dxiMax)
-		{
-			Nix = ceil(npMin * dxiMax/dxi);
-			AdjustType = PSFXR_ZPAD;
-		}
-		if (dxi < npMin/Noy * dxiMax)
-		{
-			Niy = ceil(npMin * dxiMax/dxi);
-			AdjustType = PSFXR_ZPAD;
-		}
-	}
-
-	dxl = lambda*Zi / (Nix * dxi); // Pixel X-size en the plane of lens aperture
-	dyl = lambda*Zi / (Niy * dxi); // Pixel Y-size en the plane of lens aperture
-
-	    std::cout << std::endl;
-	    std::cout << "XmippXRPSF::Project adjust:" << std::endl;
-	    std::cout << "Nox = " << Nox << "   Noy = " << Noy << "   Nz = " << vol().zdim << std::endl;
-	    std::cout << "Nix = " << Nix << "   Niy = " << Niy << std::endl;
-	    std::cout << "dxl = " << dxl << "   dyl = " << dyl << std::endl;
-	    std::cout << "Discrete X-Diameter in pixels = " << 2*Rlens / dxl  << std::endl;
-	    std::cout << "Discrete Y-Diameter in pixels = " << 2*Rlens / dyl  << std::endl;
-	    std::cout << std::endl;
-}
-
 /* Generate the quadratic phase distribution of an ideal lens ------------- */
-void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy)
+void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy)
 {
 
     double Lx0 = Im.xdim * dx, Ly0 = Im.ydim * dy, x, y, phase;
 
     Im.setXmippOrigin();
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(Im)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(Im)
     {
         /// For indices in standard fashion
         //   x = (double) j * dx + (dx - Lx0) / 2;
@@ -314,107 +265,81 @@ void lensPD(Matrix2D<std::complex<double> > &Im, double Flens, double lambda, do
     }
 }
 
-void project_xr(XmippXRPSF &psf, VolumeXmipp &vol, ImageXmipp &imOut)
+void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
 {
 
-	psf.adjustParam(vol);
+	psf.Nox = vol().xdim;
+	psf.Noy = vol().ydim;
+	psf.dxl = psf.lambda*psf.Zi / (psf.Nox * psf.dxi); // Pixel X-size en the plane of lens aperture
+	psf.dyl = psf.lambda*psf.Zi / (psf.Noy * psf.dxi); // Pixel Y-size en the plane of lens aperture
 
-    imOut() = Matrix2D<double> (psf.Niy, psf.Nix);
+	    std::cout << std::endl;
+	    std::cout << "XmippXRPSF::Project:" << std::endl;
+	    std::cout << "Nx = " << psf.Nox << "   Ny = " << psf.Noy << std::endl;
+	    std::cout << "dxl = " << psf.dxl << "   dyl = " << psf.dyl << std::endl;
+	    std::cout << "Discrete X-Radius in pixels = " << psf.Rlens / psf.dxl  << std::endl;
+	    std::cout << "Discrete Y-Radius in pixels = " << psf.Rlens / psf.dyl  << std::endl;
+	    std::cout << std::endl;
+
+
+    imOut() = MultidimArray<double> (vol().ydim, vol().xdim);
     imOut().initZeros();
+    //    imOut()+= 1;
     imOut().setXmippOrigin();
 
-    Matrix2D<double> imTemp(psf.Noy, psf.Nox), intExp(psf.Noy, psf.Nox), imTempSc(imOut()), *imTempP;
+    MultidimArray<double> imTemp(imOut()), intExp(imOut());
     intExp.initZeros();
-    imTemp.initZeros();
-    imTempSc.initZeros();
     intExp.setXmippOrigin();
     imTemp.setXmippOrigin();
-    imTempSc.setXmippOrigin();
 
     vol().setXmippOrigin();
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
-    ImageXmipp _Im(imOut);
+    Image<double> _Im(imOut);
 #endif
 
     init_progress_bar(vol().zdim-1);
 
     for (int k=((vol()).zinit); k<=((vol()).zinit + (vol()).zdim - 1); k++)
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(intExp)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
         {
             intExp(i, j) = intExp(i, j) + vol(k, i, j);
             imTemp(i, j) = (exp(-intExp(i,j)*psf.dzo))*vol(k,i,j)*psf.dzo;
 //            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
         }
 #ifdef DEBUG
-        _Im().resize(imTemp);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(imTemp)
-        dMij(_Im(),i,j) = dMij(imTemp,i,j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
+        dAij(_Im(),i,j) = dAij(imTemp,i,j);
         _Im.write("psfxr-imTemp.spi");
 #endif
 
         psf.Z = psf.Zo - k*psf.dzo;
-
-        switch (psf.AdjustType)
-		{
-			case PSFXR_INT:
-				imTempP = &imTempSc;
-		        imTemp.scaleToSize(psf.Niy, psf.Nix, *imTempP);
-				break;
-
-			case PSFXR_STD:
-				imTempP = &imTemp;
-				break;
-
-			case PSFXR_ZPAD:
-//				(*imTempSc).resize(imTemp);
-				imTempSc = imTemp;
-				imTempSc.window(-ROUND(psf.Niy/2)+1,-ROUND(psf.Nix/2)+1,ROUND(psf.Niy/2)-1,ROUND(psf.Nix/2)-1);
-				imTempP = &imTempSc;
-				break;
-		}
-
-        psf.generateOTF(*imTempP);
-
-
-
+        psf.generateOTF(imTemp);
 
 #ifdef DEBUG
-        _Im().resize(intExp);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(intExp)
-        dMij(_Im(),i,j) = dMij(intExp,i,j);
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(intExp)
+        dAij(_Im(),i,j) = dAij(intExp,i,j);
         _Im.write("psfxr-intExp.spi");
-        _Im().resize(*imTempSc);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(*imTempSc)
-        dMij(_Im(),i,j) = dMij(*imTempSc,i,j);
-        _Im.write("psfxr-imTempEsc.spi");
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
+        dAij(_Im(),i,j) = dAij(imTemp,i,j);
+        _Im.write("psfxr-imTemp2.spi");
 #endif
 
-        psf.applyOTF(*imTempP);
+        psf.applyOTF(imTemp);
 
-#ifdef DEBUG
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(*imTempSc)
-        dMij(_Im(),i,j) = dMij(*imTempSc,i,j);
-        _Im.write("psfxr-imTempEsc2.spi");
-#endif
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
+        dAij(imOut(),i,j) += dAij(imTemp,i,j);
 
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(*imTempP)
-        dMij(imOut(),i,j) += dMij(*imTempP,i,j);
-
-//        imOut.write("psfxr-imout.spi");
-
+        //        imOut.write("psfxr-imout.spi");
         progress_bar(k - vol().zinit);
+
     }
 
     imOut() = 1-imOut();
-//            imOut.write("psfxr-imout.spi");
-
-    imOut().selfScaleToSize(psf.Noy, psf.Nox);
-
-//    imOut.write("psfxr-imout2.spi");
 
 }
 
