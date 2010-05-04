@@ -35,8 +35,8 @@ int main(int argc, char **argv)
 
     int c, nn, imgno, opt_refno, iaux;
     double aux, convv;
-    Matrix2D<double> Maux;
-    Matrix1D<double> Vaux;
+    MultidimArray<double> Maux;
+    MultidimArray<double> Vaux;
     FileName fn_img;
     // For parallelization
     int rank, size, num_img_tot;

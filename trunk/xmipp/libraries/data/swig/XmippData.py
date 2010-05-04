@@ -450,6 +450,7 @@ TimeMessage = _XmippData.TimeMessage
 swapbytes = _XmippData.swapbytes
 IsBigEndian = _XmippData.IsBigEndian
 IsLittleEndian = _XmippData.IsLittleEndian
+divide_equally = _XmippData.divide_equally
 checkAngle = _XmippData.checkAngle
 CPPSQLITE_ERROR = _XmippData.CPPSQLITE_ERROR
 class CppSQLite3Table(_object):
