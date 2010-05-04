@@ -593,14 +593,14 @@ AddXmippProgram('add_noise')
 #AddXmippProgram('micrograph_scissor')
 #AddXmippProgram('micrograph_window')
 #AddXmippProgram('mirror')
-#AddXmippProgram('ml_align2d', ['XmippRecons'])
-##AddXmippProgram('ml_align3d', ['XmippRecons'])
-#AddXmippProgram('mlf_align2d', ['XmippRecons'])
-#AddXmippProgram('ml_align2d_combine', ['XmippRecons'])
-#AddXmippProgram('ml_refine3d', ['XmippRecons'])
-#AddXmippProgram('mlf_refine3d', ['XmippRecons'])
-##AddXmippProgram('mlf_tomo', ['XmippRecons'])
-##AddXmippProgram('ml_tomo', ['XmippRecons'])
+#AddXmippProgram('ml_align2d', ['XmippRecons']) sjors
+##AddXmippProgram('ml_align3d', ['XmippRecons']) sjors
+#AddXmippProgram('mlf_align2d', ['XmippRecons']) sjors
+#AddXmippProgram('ml_align2d_combine', ['XmippRecons']) sjors
+#AddXmippProgram('ml_refine3d', ['XmippRecons']) sjors
+#AddXmippProgram('mlf_refine3d', ['XmippRecons']) sjors
+##AddXmippProgram('mlf_tomo', ['XmippRecons']) sjors
+##AddXmippProgram('ml_tomo', ['XmippRecons']) sjors
 #AddXmippProgram('morphology')
 #AddXmippProgram('nma_alignment', ['XmippRecons'])
 #AddXmippProgram('normalize')
