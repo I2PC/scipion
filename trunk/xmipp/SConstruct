@@ -293,12 +293,13 @@ elif (ARGUMENTS['mode'] == 'compile'):
 
     # debug?
     if int(env['debug']):
+        #nobody uses pg so I comment it ROB
         env.Append(CXXFLAGS = ['-g'])
         env.Append(CXXFLAGS = ['-O0'])
-        env.Append(CXXFLAGS = ['-pg'])
+        #env.Append(CXXFLAGS = ['-pg'])
         env.Append(CCFLAGS = ['-g'])
-        env.Append(CCFLAGS = ['-pg'])
-        env.Append(LINKFLAGS = ['-pg'])
+        #env.Append(CCFLAGS = ['-pg'])
+        #env.Append(LINKFLAGS = ['-pg'])
     else:
         # "safe" optimization
         env.Append(CXXFLAGS = ['-O2'])
