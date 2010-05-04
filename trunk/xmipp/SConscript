@@ -373,7 +373,7 @@ AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'],
             
 # Reconstruction
 ReconsSources = [
-#    'adjust_ctf.cpp',
+    'adjust_ctf.cpp',
 #    'adjust_surface.cpp',
 #    'adjust_volume_grey_levels.cpp',
 #    'align2d.cpp',
@@ -402,9 +402,9 @@ ReconsSources = [
 #    'ctf_correct_amplitude3d.cpp',
 #    'ctf_correct_idr.cpp',
 #    'ctf_correct_phase.cpp',
-#    'ctf_estimate_from_micrograph.cpp',
+    'ctf_estimate_from_micrograph.cpp',
 #    'ctf_group.cpp',
-#    'denoise.cpp',
+    'denoise.cpp',
 #    'detect_missing_wedge.cpp',
 #    'detect_structures.cpp',
 #    'directions.cpp',
@@ -413,7 +413,7 @@ ReconsSources = [
 #    'evaluate_fscs.cpp',
 #    'filter_projections.cpp',
 #    'foms_evaluate.cpp',
-    'fourier_filter.cpp'
+    'fourier_filter.cpp',
 #    'make_spectra.cpp',
 #    'micrograph_phase_flipping.cpp',
 #    'micrograph_downsample.cpp',
@@ -430,7 +430,7 @@ ReconsSources = [
 #    'projectTomography.cpp',
 #    'project_crystal.cpp',
 #    'projection_real_shears.cpp',
-#    'psd_enhance.cpp'
+    'psd_enhance.cpp',
 #    'psd_sort.cpp',
 #    'radon.cpp',
 #    'range_adjust.cpp',
@@ -442,8 +442,8 @@ ReconsSources = [
 #    'resolution_ssnr.cpp',
 #    'series_remove_fluctuations.cpp',
 #    'sort_images.cpp',
-#    'spar.cpp',
-#    'sparma.cpp',
+    'spar.cpp',
+    'sparma.cpp'
 #    'surface.cpp',
 #    'symmetrize.cpp',
 ##   'virus_vertex',
@@ -452,8 +452,8 @@ ReconsSources = [
 #    'volume_segment.cpp'
 ]
 
-#AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
-#           ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
+AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
+           ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
 
 # ReconsInterface
 ReconsInterfaceSources = [
@@ -844,11 +844,11 @@ if int(env['gui']):
         AddQtProgram(name, 'applications/programs/' + name, '*.cpp', [], mocs,
     	    finalIncludePath, finalLibPath, finalLibs, [], [])
 
-#    AddXmippQtProgram('edit')
-#    AddXmippQtProgram('ctf_view', [], ['XmippRecons'])
-#    AddXmippQtProgram('micrograph_mark', ['popup_menu_mark.h'])
-#    AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
-#    AddXmippQtProgram('mask_design', [], ['XmippClassif'])
+    AddXmippQtProgram('edit')
+    AddXmippQtProgram('ctf_view', [], ['XmippRecons'])
+    AddXmippQtProgram('micrograph_mark', ['popup_menu_mark.h'])
+    AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
+    AddXmippQtProgram('mask_design', [], ['XmippClassif'])
 
 if int(env['matlab']):
     import os
