@@ -518,26 +518,26 @@ AddXmippProgram('add_noise')
 #AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 #AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 #AddXmippProgram('angular_project_library', ['XmippRecons'])
-#AddXmippProgram('average')
+#AddXmippProgram('average') sjors
 #AddXmippProgram('break_symmetry', ['XmippRecons'])
 #AddXmippProgram('center_image')
-#AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
-#AddXmippProgram('classify_batch_som', ['XmippClassif'])
+#AddXmippProgram('classify_analyze_cluster', ['XmippRecons']) sjors
+#AddXmippProgram('classify_batch_som', ['XmippClassif']) sjors
 #AddXmippProgram('classify_CL2D_sort_images', ['XmippRecons'])
-#AddXmippProgram('classify_fcmeans', ['XmippClassif'])
-#AddXmippProgram('classify_fkcn', ['XmippClassif'])
-#AddXmippProgram('classify_fsom',  ['XmippClassif'])
-#AddXmippProgram('classify_kcmeans', ['XmippClassif'])
-#AddXmippProgram('classify_kerdensom', ['XmippClassif'])
-#AddXmippProgram('classify_pca', ['XmippClassif'])
-#AddXmippProgram('classify_project_pca', ['XmippClassif'])
-#AddXmippProgram('classify_sammon_projection', ['XmippClassif'])
-#AddXmippProgram('classify_som',['XmippClassif'])
-#AddXmippProgram('convert_data2descr', ['XmippClassif'])
-#AddXmippProgram('convert_data2img', ['XmippClassif'])
-#AddXmippProgram('convert_data2pdb', ['XmippClassif'])
+#AddXmippProgram('classify_fcmeans', ['XmippClassif']) sjors
+#AddXmippProgram('classify_fkcn', ['XmippClassif']) sjors
+#AddXmippProgram('classify_fsom',  ['XmippClassif']) sjors
+#AddXmippProgram('classify_kcmeans', ['XmippClassif']) sjors
+#AddXmippProgram('classify_kerdensom', ['XmippClassif']) sjors
+#AddXmippProgram('classify_pca', ['XmippClassif']) sjors
+#AddXmippProgram('classify_project_pca', ['XmippClassif']) sjors
+#AddXmippProgram('classify_sammon_projection', ['XmippClassif']) sjors
+#AddXmippProgram('classify_som',['XmippClassif']) sjors
+#AddXmippProgram('convert_data2descr', ['XmippClassif']) sjors
+#AddXmippProgram('convert_data2img', ['XmippClassif']) sjors
+#AddXmippProgram('convert_data2pdb', ['XmippClassif']) sjors
 #AddXmippProgram('convert_data2vol', ['XmippClassif'])
-#AddXmippProgram('convert_img2data')
+#AddXmippProgram('convert_img2data') sjors
 #AddXmippProgram('convert_pdb2vol', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('convert_raw22spi')
 #AddXmippProgram('convert_spe2spi')
@@ -582,7 +582,7 @@ AddXmippProgram('add_noise')
 #AddXmippProgram('header_apply')
 #AddXmippProgram('header_assign')
 #AddXmippProgram('header_extract')
-#AddXmippProgram('header_print')
+#AddXmippProgram('header_print') sjors
 #AddXmippProgram('header_reset')
 #AddXmippProgram('histogram')
 #AddXmippProgram('make_spectra', ['XmippRecons'])
@@ -592,7 +592,7 @@ AddXmippProgram('add_noise')
 #AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 #AddXmippProgram('micrograph_scissor')
 #AddXmippProgram('micrograph_window')
-#AddXmippProgram('mirror')
+#AddXmippProgram('mirror') sjors
 #AddXmippProgram('ml_align2d', ['XmippRecons']) sjors
 ##AddXmippProgram('ml_align3d', ['XmippRecons']) sjors
 #AddXmippProgram('mlf_align2d', ['XmippRecons']) sjors
@@ -603,7 +603,7 @@ AddXmippProgram('add_noise')
 ##AddXmippProgram('ml_tomo', ['XmippRecons']) sjors
 #AddXmippProgram('morphology')
 #AddXmippProgram('nma_alignment', ['XmippRecons'])
-#AddXmippProgram('normalize')
+#AddXmippProgram('normalize') sjors
 #AddXmippProgram('operate')
 #AddXmippProgram('pdb_dictionary', ['XmippRecons_Interface','XmippRecons','XmippClassif','XmippInterface'])
 #AddXmippProgram('pdb_project_on_dictionary', ['XmippRecons','XmippClassif'])
@@ -638,7 +638,7 @@ AddXmippProgram('add_noise')
 #AddXmippProgram('series_remove_fluctuations', ['XmippRecons'])
 #AddXmippProgram('shift')
 #AddXmippProgram('sort_by_statistics')
-#AddXmippProgram('statistics')
+#AddXmippProgram('statistics') sjors
 #AddXmippProgram('convert_stack22images')
 #AddXmippProgram('symmetrize', ['XmippRecons'])
 #AddXmippProgram('threshold')
@@ -718,11 +718,11 @@ AddProtocol('protocol_setup.py', 'applications/scripts/protocols')
 #    AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_common_lines', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
-#    # AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
+#    AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])sjors
+#    # AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])sjors
+#    AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])sjors
+#    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])sjors
+#    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons']sjors)
 #    AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
