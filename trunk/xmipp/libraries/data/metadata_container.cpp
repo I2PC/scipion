@@ -306,6 +306,18 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_ENABLED;
     }
+    else if (strLabel == "Xcoor" || strLabel == "<X position>")
+    {
+        return MDL_XINT;
+    }
+    else if (strLabel == "Ycoor" || strLabel == "<Y position>")
+    {
+        return MDL_YINT;
+    }
+    else if (strLabel == "Zcoor")
+    {
+        return MDL_ZINT;
+    }
     else if (strLabel == "originX")
     {
         return MDL_ORIGINX;
@@ -500,6 +512,15 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
             break;
         case MDL_Z:
             return std::string("Z");
+            break;
+        case MDL_XINT:
+            return std::string("Xcoor");
+            break;
+        case MDL_YINT:
+            return std::string("Ycoor");
+            break;
+        case MDL_ZINT:
+            return std::string("Zcoor");
             break;
         case MDL_ENABLED:
             return std::string("enabled");

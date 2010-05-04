@@ -74,7 +74,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
     ///// FIXME READING SPIDER FORMAT!!!!
     /*
     if (Is_ImageXmipp(fn_micrograph))
-    {
+{
         headerXmipp     header;
         header.read(fn_micrograph);
         float fXdim, fYdim;
@@ -84,31 +84,31 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
         __offset = header.get_header_size();
         __depth = 32;
         reversed = header.reversed();
-    }
+}
     else
-    {
+{
     */
-        fn_inf = fn_micrograph.add_extension("inf");
-        FILE *fh_inf = fopen(fn_inf.c_str(), "r");
-        if (!fh_inf)
-            REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: Cannot find " +
-                         fn_inf);
-        Xdim = textToInteger(getParameter(fh_inf, "Xdim"));
-        Ydim = textToInteger(getParameter(fh_inf, "Ydim"));
-        __depth = textToInteger(getParameter(fh_inf, "bitspersample"));
-        if (checkParameter(fh_inf, "offset"))
-            __offset = textToInteger(getParameter(fh_inf, "offset"));
-        else
-            __offset = 0;
-        if (checkParameter(fh_inf, "is_signed"))
-            __is_signed = (getParameter(fh_inf, "is_signed") == "true" ||
-                           getParameter(fh_inf, "is_signed") == "TRUE");
-        else
-            __is_signed = false;
-        fclose(fh_inf);
-        /*
-    }
-        */
+    fn_inf = fn_micrograph.add_extension("inf");
+    FILE *fh_inf = fopen(fn_inf.c_str(), "r");
+    if (!fh_inf)
+        REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: Cannot find " +
+                     fn_inf);
+    Xdim = textToInteger(getParameter(fh_inf, "Xdim"));
+    Ydim = textToInteger(getParameter(fh_inf, "Ydim"));
+    __depth = textToInteger(getParameter(fh_inf, "bitspersample"));
+    if (checkParameter(fh_inf, "offset"))
+        __offset = textToInteger(getParameter(fh_inf, "offset"));
+    else
+        __offset = 0;
+    if (checkParameter(fh_inf, "is_signed"))
+        __is_signed = (getParameter(fh_inf, "is_signed") == "true" ||
+                       getParameter(fh_inf, "is_signed") == "TRUE");
+    else
+        __is_signed = false;
+    fclose(fh_inf);
+    /*
+}
+    */
 
     // Open micrograph and map
     fh_micrograph = open(fn_micrograph.c_str(), O_RDWR, S_IREAD | S_IWRITE);
@@ -136,7 +136,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
            if (read_length!=length)
               REPORT_ERROR(1,(std::string)"Micrograph::open_micrograph: cannot read "+
                  _fn_micrograph+" in memory");
-        } */
+    } */
         break;
     case 16:
         /* if (!in_core) { */
@@ -158,7 +158,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
                 case ENOTSUP:   std::cout << "ENOTSUP:  \n"; break;
                 case ENXIO:     std::cout << "ENXIO:    \n"; break;
                 case EOVERFLOW: std::cout << "EOVERFLOW:\n"; break;
-                }
+            }
                 */
                 REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: cannot map " +
                              _fn_micrograph + " in memory");
@@ -186,7 +186,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
                 case ENOTSUP:   std::cout << "ENOTSUP:  \n"; break;
                 case ENXIO:     std::cout << "ENXIO:    \n"; break;
                 case EOVERFLOW: std::cout << "EOVERFLOW:\n"; break;
-                }
+            }
                 */
                 REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: cannot map " +
                              _fn_micrograph + " in memory");
@@ -201,7 +201,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
            if (read(fh_micrograph,m16,length)!=length)
               REPORT_ERROR(1,(std::string)"Micrograph::open_micrograph: cannot read "+
                  _fn_micrograph+" in memory");
-        } */
+    } */
         break;
     case 32:
         // Map file in memory
@@ -260,7 +260,7 @@ void Micrograph::close_micrograph()
         /* } else {
            if      (__depth== 8) delete m8;
            else if (__depth==16) delete m16;
-        } */
+    } */
     }
 }
 
@@ -370,16 +370,20 @@ void Micrograph::write_coordinates(int label, const FileName &_fn_coords)
     std::ofstream fh;
     if (_fn_coords != "")
         fn_coords = _fn_coords;
-    fh.open(fn_coords.c_str(), std::ios::out);
-    if (!fh)
-        REPORT_ERROR(1, (std::string)"Micrograph::write: File " + fn_coords +
-                     " cannot be openned for output");
+
+    MetaData MD;
+    MD.setComment((std::string)"Selected Coordinates for file " + fn_coords);
     int imax = coords.size();
-    fh << "# <X position> <Y position>\n";
+    int x,y;
     for (int i = 0; i < imax; i++)
-        if (coords[i].valid && coords[i].label == label)
-            fh << coords[i].X << " " << coords[i].Y << std::endl;
-    fh.close();
+    {
+        MD.addObject();
+        x=coords[i].X;
+        y=coords[i].Y;
+        MD.setValue(MDL_XINT,coords[i].X);
+        MD.setValue(MDL_YINT,coords[i].Y);
+    }
+    MD.write(fn_coords);
 }
 
 /* Read coordinates from disk ---------------------------------------------- */
@@ -390,45 +394,25 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
     std::string    line;
 
     fn_coords = _fn_coords;
-    fh.open(fn_coords.c_str(), std::ios::in);
-    if (!fh)
-        REPORT_ERROR(1, (std::string)"Micrograph::read: File " + fn_coords + " not found");
 
-    // Count the number of lines
-    fh.peek();
-    while (!fh.eof())
-    {
-        getline(fh, line);
-        if (line.length() > 0 && line[0] != '#' && line[0] != ';')
-            line_no++;
-        fh.peek();
-    }
-    fh.close();
-    fh.clear();
+    MetaData MD;
+    MD.read(fn_coords);
+    line_no = MD.size();
 
     // Resize coordinate list and read
-    fh.open(fn_coords.c_str(), std::ios::in);
     coords.reserve(line_no);
     struct Particle_coords aux;
     aux.valid = true;
     aux.label = label;
     aux.cost = 1;
-    fh.peek();
-    while (!fh.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-        getline(fh, line);
-        if (line.length() > 0 && line[0] != '#' && line[0] != ';')
-        {
-            int converted_elements = sscanf(line.c_str(), "%d %d",
-                                            &aux.X, &aux.Y);
-            if (converted_elements != 2)
-                std::cerr << "Ignoring line: " << line << std::endl;
-            else
-                coords.push_back(aux);
-        }
-        fh.peek();
+    	int x,y;
+    	MD.getValue(MDL_XINT,x); aux.X=x;
+    	MD.getValue(MDL_YINT,y); aux.Y=y;
+    	std::cerr << "x y " << x << " " << y <<std::endl;
+        coords.push_back(aux);
     }
-    fh.close();
 }
 
 /* Transform all coordinates ---------------------------------------------- */
@@ -436,17 +420,17 @@ void Micrograph::transform_coordinates(const Matrix2D<double> &M)
 {
     Matrix1D<double> m(3);
     SPEED_UP_temps;
-    
+
     int imax = coords.size();
     for (int i = 0; i < imax; i++)
     {
-	if (coords[i].valid)
-	{
-	    VECTOR_R3(m,coords[i].X, coords[i].Y,1);
-	    M3x3_BY_V3x1(m, M, m);
-	    coords[i].X=(int)XX(m);
-	    coords[i].Y=(int)YY(m);
-	}
+        if (coords[i].valid)
+        {
+            VECTOR_R3(m,coords[i].X, coords[i].Y,1);
+            M3x3_BY_V3x1(m, M, m);
+            coords[i].X=(int)XX(m);
+            coords[i].Y=(int)YY(m);
+        }
     }
 }
 
@@ -456,11 +440,11 @@ void Micrograph::scale_coordinates(const double &c)
     int imax = coords.size();
     for (int i = 0; i < imax; i++)
     {
-	if (coords[i].valid)
-	{
-	    coords[i].X = (int)coords[i].X*c;
-	    coords[i].Y = (int)coords[i].Y*c;
-	}
+        if (coords[i].valid)
+        {
+            coords[i].X = (int)coords[i].X*c;
+            coords[i].Y = (int)coords[i].Y*c;
+        }
     }
 
 }
@@ -569,7 +553,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     // Scissor all particles
     if (ang != 0)
         std::cout << "Angle from Y axis to tilt axis " << ang << std::endl
-                  << "   applying apropriate rotation\n";
+        << "   applying apropriate rotation\n";
     int i = starting_index;
     int nmax = ParticleNo();
     for (int n = 0; n < nmax; n++)
@@ -580,7 +564,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             if (!M->scissor(coords[n], (Image<double> &) I, Dmin, Dmax, scaleX, scaleY))
             {
                 std::cout << "Particle " << fn_out << " is very near the border, "
-                          << "corresponding image is set to blank\n";
+                << "corresponding image is set to blank\n";
                 SF.setValue( MDL_IMAGE, fn_out);
                 SF.setValue( MDL_ENABLED, 1);
             }
@@ -590,7 +574,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
                 SF.setValue( MDL_ENABLED, 1);
             }
             //  if (ang!=0) I().rotate(-ang);
-            /// FIXME: HEADER MODIFICATION 
+            /// FIXME: HEADER MODIFICATION
             /*
             I.set_rot((float)ang);
             I.set_tilt((float)tilt);
@@ -624,7 +608,7 @@ int Micrograph::search_coord_near(int x, int y, int prec) const
     int prec2 = prec * prec;
     for (int i = 0; i < imax; i++)
         if ((coords[i].X - x)*(coords[i].X - x) + (coords[i].Y - y)*(coords[i].Y - y) < prec2
-            && coords[i].valid)
+                && coords[i].valid)
             return i;
     return -1;
 }
@@ -690,7 +674,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         MultidimArray<double> Mmem(Ydim,Xdim);
         MultidimArray<std::complex<double> > MmemFourier;
         FOR_ALL_ELEMENTS_IN_ARRAY2D(Mmem)
-            Mmem(i,j)=(double)M(j,i);
+        Mmem(i,j)=(double)M(j,i);
 
         // Perform the Fourier transform
         XmippFftw transformerM;
@@ -732,7 +716,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
             pixval=Mpmem(i,j);
             if (Mp.depth() != 32)
                 Mp.set_val(j, i, FLOOR(a*(pixval*scale + b)));
-             else
+            else
                 Mp.set_val(j, i, pixval);
         }
     }
@@ -749,7 +733,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
             else if (M.depth() == 32)
                 scale = 1;
             if(do_fourier)
-            init_progress_bar(yF / Ystep);
+                init_progress_bar(yF / Ystep);
             for (ii = 0, y = y0; y < yF; y += Ystep, ii++)
             {
                 for (jj = 0, x = x0; x < xF; x += Xstep, jj++)

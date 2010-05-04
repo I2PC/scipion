@@ -45,21 +45,16 @@ mD=XmippData.MetaData();
 id=mD.addObject();
 valor=10.3
 #fill an object data
-XmippData.setValueString( mD, XmippData.MDL_IMAGE, "image0001.xmp")
-XmippData.setValueDoblue( mD, XmippData.MDL_ANGLEPSI, valor)
-XmippData.setValueDoblue( mD, XmippData.MDL_ANGLEROT, 123.2)
+ss=XmippData.stringP()
+dd=XmippData.doubleP()
+dd2=XmippData.doubleP()
+ss.assign( "image0001.xmp")
+dd.assign(10.3)
+dd2.assign(22.3)
+XmippData.setValueString( mD, XmippData.MDL_IMAGE, ss)
+XmippData.setValueDouble( mD, XmippData.MDL_ANGLEPSI, dd)
+XmippData.setValueDouble( mD, XmippData.MDL_ANGLEROT, dd2)
 
-id=mD.addObject();
-XmippData.setValueString( mD, XmippData.MDL_IMAGE, "image0002.xmp")
-XmippData.setValueDoblue( mD, XmippData.MDL_ANGLEPSI, valor*2.)
-XmippData.setValueDoblue( mD, XmippData.MDL_ANGLEROT, 124.2)
-
-mD.write(outFile)
-
-#modify first added object
-XmippData.setValueDouble(mD, XmippData.MDL_ANGLEROT, 444.2)
-
-mD.write("prueba2.doc")
 
 mD2=XmippData.MetaData();
 
@@ -70,7 +65,12 @@ getValueString( mD2,XmippData.MDL_IMAGE, ss)
 ss.value()
 getValueDouble( mD2, XmippData.MDL_ANGLEPSI, dd)
 dd.value()
-
+ii=XmippData.intP()
+ii.assign(1)
+XmippData.setValueInt( mD2, XmippData.MDL_ENABLED, ii)
+ii.assign(0)
+XmippData.getValueInt( mD2,XmippData.MDL_ENABLED, ii)
+print ii.value()
 
 
 ==================

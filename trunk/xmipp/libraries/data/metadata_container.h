@@ -88,6 +88,9 @@ enum MetaDataLabel
     MDL_X, // X component (double)
     MDL_Y, // Y component (double)
     MDL_Z, // Z component (double)
+    MDL_XINT, // X component (int)
+    MDL_YINT, // Y component (int)
+    MDL_ZINT, // Z component (int)
     MDL_WEIGHT, // Weight assigned to the image (double)
     MDL_OBJID, // object id (int)
     MDL_MAX, //maximum value (double)
@@ -191,8 +194,11 @@ inline bool isBool(MetaDataLabel lCode)
 
 inline bool isInt(MetaDataLabel lCode)
 {
-    if (lCode == MDL_REF || lCode == MDL_ENABLED || lCode == MDL_OBJID || lCode
-        == MDL_ITER || lCode == MDL_BLOCK ||lCode == MDL_RANDOMSEED || lCode == MDL_DEFGROUP)
+    if (lCode == MDL_REF      || lCode == MDL_ENABLED || lCode == MDL_OBJID      ||
+    	lCode == MDL_ITER     || lCode == MDL_BLOCK   || lCode == MDL_RANDOMSEED ||
+    	lCode == MDL_DEFGROUP || lCode == MDL_XINT    || lCode == MDL_YINT       ||
+    	lCode == MDL_ZINT
+    	)
         return true;
     else
         return false;
