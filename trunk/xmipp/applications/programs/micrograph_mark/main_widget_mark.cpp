@@ -508,26 +508,16 @@ void QtMainWidgetMark::write_angles()
     FileName fn = __mWidget->getMicrograph()->micrograph_name();
     fn = fn.without_extension();
     fn = fn.add_extension("ang");
-
-    std::ofstream out;
-    out.open(fn.c_str(), std::ios::out);
-    if (!out)
-        REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_angles: Cannot open "
-                     + fn + " for output\n");
-    out << "# alpha_u alpha_t gamma\n"
-    << __alpha_u << " " << __alpha_t << " " << __gamma << std::endl;
-    out.close();
-
-    // Also write out 3x3 transformation matrix
-    fn = fn.without_extension();
-    fn = fn.add_extension("mat");
-    out.open(fn.c_str(), std::ios::out);
-    if (!out)
-        REPORT_ERROR(1, (std::string)"QtMainWidgetMark::write_angles: Cannot open "
-                     + fn + " for output\n");
-    out << __Put;
-    out.close();
-
+    MetaData MD;
+    MD.setColumnFormat(false);
+    MD.addObject();
+    MD.setComment("Rot first micrograph, rot second, tilt angle and transformation matrix");
+    MD.setValue(MDL_ANGLEPSI,__alpha_u);
+    MD.setValue(MDL_ANGLEPSI2,__alpha_t);
+    MD.setValue(MDL_ANGLETILT,__gamma);
+    std::vector<double> myVector ( &__Put.mdata[0], &__Put.mdata[9] );
+    MD.setValue(MDL_TRANSFORMATIONMTRIX,myVector);
+    MD.write(fn);
 }
 
 /* Draw tilt axes ---------------------------------------------------------- */

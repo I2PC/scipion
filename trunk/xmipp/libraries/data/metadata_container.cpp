@@ -374,6 +374,10 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_NMA;
     }
+    else if (strLabel == "transMat")
+    {
+        return MDL_TRANSFORMATIONMTRIX;
+    }
     else if (strLabel == "sampling_rate")
     {
         return MDL_SAMPLINGRATE;
@@ -566,6 +570,9 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
             break;
         case MDL_NMA:
             return std::string("NMADisplacements");
+            break;
+        case MDL_TRANSFORMATIONMTRIX:
+            return std::string("transMat");
             break;
         case MDL_SAMPLINGRATE:
             return std::string("sampling_rate");

@@ -65,9 +65,7 @@ int main(int argc, char **argv)
             fn_root_tilted = getParameter(argc, argv, "-root_tilted");
             fn_tilted     = getParameter(argc, argv, "-tilted");
         }
-#ifdef NEVERDEFINED
         fn_transform = getParameter(argc, argv, "-transform","");
-#endif
         down_transform = textToFloat(getParameter(argc, argv, "-down_transform","1"));
     }
     catch (Xmipp_error XE)
@@ -84,23 +82,37 @@ int main(int argc, char **argv)
             m.open_micrograph(fn_micrograph, reverse_endian);
             m.set_window_size(Xdim, Ydim);
             m.read_coordinates(0, fn_pos);
-#ifdef NEVERDEFINED
             if (fn_transform!="")
             {
+            	std::cerr << "here" <<std::endl;
                 if (down_transform != 1.)
                     m.scale_coordinates(1./down_transform);
-                std::ifstream fh_transform;
-                fh_transform.open(fn_transform.c_str());
-                if (!fh_transform)
-                    REPORT_ERROR(1, (std::string)"Scissor: Cannot open file" + fn_transform);
-                std::cerr << "fh_transform" << fh_transform <<std::endl;
-                fh_transform >> Mtransform;
-                fh_transform.close();
+                //std::ifstream fh_transform;
+                //fh_transform.open(fn_transform.c_str());
+                //if (!fh_transform)
+                //    REPORT_ERROR(1, (std::string)"Scissor: Cannot open file" + fn_transform);
+                //std::cerr << "fh_transform" << fh_transform <<std::endl;
+                //fh_transform >> Mtransform;
+                //fh_transform.close();
+            	std::cerr << "there" <<std::endl;
+
+                MetaData MD;
+                MD.read(fn_transform);
+                std::vector<double> myVector;
+                myVector.resize(9);
+            	std::cerr << "before" <<std::endl;
+                MD.getValue(MDL_TRANSFORMATIONMTRIX,myVector,0);
+            	std::cerr << "after filename " <<fn_transform << " " << MD.size()<<std::endl;
+            	// I suppose this is the most general way to
+            	// convert a vector to an array.
+            	copy( myVector.begin(), myVector.end(), Mtransform.mdata);
+                std::cerr << "myVector " << myVector[0] <<std::endl;
+
                 m.transform_coordinates(Mtransform);
+                std::cerr << Mtransform <<std::endl;
                 if (down_transform != 1.)
                     m.scale_coordinates(down_transform);
             }
-#endif
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
@@ -160,9 +172,7 @@ void Usage()
     << "   -root <root name>          : for the cutted images\n"
     << "   -pos <position file>       : order X,Y\n"
     << "                                from transmitance\n"
-#ifdef NEVERDEFINED
     << "  [-transform <.mat-file>]    : transform all coordinates according to this 3x3 matrix\n"
-#endif
     << "  [-down_transform <int=1>]   : the transformation matrix was determined with this downsampling rate\n"
     << "  [-alpha <ang>]              : Angle from Y axis to tilt axis\n"
     << "                                as it comes out from xmipp_mark\n"

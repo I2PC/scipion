@@ -66,7 +66,7 @@ enum MetaDataLabel
     MDL_MAXCC, // Cross-correlation for the image (double)
     MDL_COST, // Cost for the image (double)
     MDL_MICROGRAPH, // Name of a micrograph (std::string)
-    MDL_NMA, // Normal mode displacements
+    MDL_NMA, // Normal mode displacements (vector double)
     MDL_ORIGINX, // Origin for the image in the X axis (double)
     MDL_ORIGINY, // Origin for the image in the Y axis (double)
     MDL_ORIGINZ, // Origin for the image in the Z axis (double)
@@ -102,9 +102,9 @@ enum MetaDataLabel
     MDL_VOLTAGE, // microscope voltage (double)
     MDL_DEFOCUSU, // microscope defocus U direction (double)
     MDL_DEFOCUSV, // microscope defocus V direction (double)
-    MDL_IMGMD, // Name of Metadata file for all images
-    MDL_REFMD, // Name of Metadata file for all references
-    MDL_ITER, // Current iteration number
+    MDL_IMGMD, // Name of Metadata file for all images (string)
+    MDL_REFMD, // Name of Metadata file for all references(string)
+    MDL_ITER, // Current iteration number (int)
     MDL_BLOCK, // Current block number (for incremental EM)
     MDL_SIGMANOISE, // Standard deviation of the noise in ML model
     MDL_SIGMAOFFSET, // Standard deviation of the offsets in ML model
@@ -112,6 +112,7 @@ enum MetaDataLabel
     MDL_RANDOMSEED, // Seed for random number generator
     MDL_DEFGROUP, // Defocus group
     MDL_KSTEST, //KS-test statistics
+    MDL_TRANSFORMATIONMTRIX, // transformation matrix(vector double)
     /*
      MDL_azimuthal_angle=      72.3493
      MDL_spherical_aberration= 5.6
@@ -178,7 +179,7 @@ inline bool isDouble(MetaDataLabel lCode)
 
 inline bool isVector(MetaDataLabel lCode)
 {
-    if (lCode == MDL_NMA)
+    if (lCode == MDL_NMA || lCode == MDL_TRANSFORMATIONMTRIX)
         return true;
     else
         return false;
