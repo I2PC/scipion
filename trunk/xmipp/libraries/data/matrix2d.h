@@ -1292,7 +1292,7 @@ public:
         {
             bool all_zeros = true;
             for (int j = 0; j < mdimx; j++)
-                if (ABS((*this)(i, j)) > XMIPP_EQUAL_ACCURACY)
+                if (ABS(MAT_ELEM((*this),i, j)) > XMIPP_EQUAL_ACCURACY)
                 {
                     all_zeros = false;
                     break;
@@ -1310,7 +1310,7 @@ public:
 
         // Calculate determinant
         for (int i = 0; i < mdimx; i++)
-            d *= (T) LU(i , i);
+            d *= (T) MAT_ELEM(LU,i , i);
 
         return d;
     }
