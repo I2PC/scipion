@@ -260,7 +260,9 @@ void applyGeometry(int SplineDegree,
 
     if (A.isIdentity())
     {
-        V1.getImage(n, V2);
+    	//ROB why call getImage?
+        //V1.getImage(n, V2);
+    	V2=V1;
         return;
     }
 
