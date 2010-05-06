@@ -470,8 +470,7 @@ public:
 //Write for partial metadatas- read use NULL
 //better sort
 //error in metadata_split when there is only one comment
-
-//convert pos to metadata
+//COMMENT
 
 #define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
         for(long int kkkk = kkkk_metadata.firstObject(); \

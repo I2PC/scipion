@@ -305,6 +305,7 @@ void MetaData::read(std::ifstream *infile,
         // Read data and fill structures accordingly
         while (getline(*infile, line, '\n'))
         {
+        	std::cerr << "getline" << line <<std::endl;
             if (line[0] == '\0' || line[0] == '#')
                 continue;
 
@@ -327,6 +328,7 @@ void MetaData::read(std::ifstream *infile,
 
             while (os2 >> value)
             {
+            	std::cerr << "value" << value <<std::endl;
                 if (std::find(ignoreLabels.begin(), ignoreLabels.end(),
                               labelPosition) != ignoreLabels.end())
                 {
@@ -346,7 +348,8 @@ void MetaData::read(std::ifstream *infile,
                         else
                             aux += value + " ";
                     value = aux;
-                }
+                	std::cerr << "is vector value" << value << std::endl;
+               }
 
                 setValue(MetaDataContainer::decodeLabel(
                              activeLabels[labelPosition - counterIgnored]), value);
@@ -371,9 +374,15 @@ void MetaData::read(std::ifstream *infile,
             std::stringstream os(line);
 
             os >> newLabel;
-            os >> value;
-
             MetaDataLabel label = MetaDataContainer::codifyLabel(newLabel);
+            if(!isVector(label))
+            	os >> value;
+            else
+			{
+            	std::vector<std::string> v;
+            	Tokenize(line,v,(std::string)"**");
+            	value = v[1];
+			}
             if (label != MDL_UNDEFINED)
             {
                 activeLabels.push_back(label);

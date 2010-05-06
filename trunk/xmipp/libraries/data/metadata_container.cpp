@@ -142,6 +142,9 @@ void MetaDataContainer::addValue(const std::string &name,
     {
         std::vector<double> vectorValue;
         double val;
+        std::string ss;
+        i >> ss;
+
         while (i >> val)
             vectorValue.push_back(val);
         addValue(lCode, vectorValue);

@@ -31,11 +31,11 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-	
-/** Removes all occurrences of 'character' from the string no matter 
+
+/** Removes all occurrences of 'character' from the string no matter
 where they are */
 std::string removeChar( std::string str, char character );
-	
+
 /** Removes escaped symbols \n, \t, \v, \b, \r, \f, and \a */
 std::string unescape( std::string str );
 
@@ -44,5 +44,11 @@ as well as escaped characters
 and simplifies the rest of groups of white spaces of the string to
 a single white space */
 std::string simplify( std::string str );
+/**
+ *
+ */
+void Tokenize(const std::string& str,
+              std::vector<std::string>& tokens,
+              const std::string& delimiters = " ");
 
 #endif

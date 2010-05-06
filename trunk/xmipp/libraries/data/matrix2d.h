@@ -1103,6 +1103,23 @@ public:
         }
     }
 
+    /**Copy  matrix to  stl::vector
+     *
+     */
+    void copyToVector(std::vector<T> &v)
+    {
+        v.assign(mdata, mdata+mdim);
+    }
+    /**Copy  stl::vector  to matrix
+      *
+      */
+     void copyFromVector(std::vector<T> &v,int Xdim, int Ydim)
+     {
+         resize(Ydim, Xdim);
+         copy( v.begin(), v.begin()+v.size(), mdata);
+     }
+
+
     /** Get row
      * @ingroup MultidimMemory
      *
