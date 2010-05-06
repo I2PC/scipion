@@ -401,13 +401,13 @@ public:
      */
     void write(const FileName& fn) const
     {
-        VolumeXmipp V;
+        Image<double> V;
 
-        V = __X;
+        V() = __X;
         V.write(fn.insert_before_extension("_X"));
-        V = __Y;
+        V() = __Y;
         V.write(fn.insert_before_extension("_Y"));
-        V = __Z;
+        V() = __Z;
         V.write(fn.insert_before_extension("_Z"));
     }
 
@@ -604,9 +604,6 @@ public:
     {
         OPERATION(arrayByScalar, *this, op1, *this, '^');
     }
-
-#undef Vectorial_MultidimArray
-
 };
 
 
