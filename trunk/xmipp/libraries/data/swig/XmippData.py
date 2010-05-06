@@ -725,7 +725,83 @@ vectorm_swigregister(vectorm)
 addObjectsInRangeInt = _XmippData.addObjectsInRangeInt
 addObjectsInRangeDouble = _XmippData.addObjectsInRangeDouble
 addObjectsInRangeBool = _XmippData.addObjectsInRangeBool
-
+svbksb = _XmippData.svbksb
+class Matrix2Dd(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Matrix2Dd, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Matrix2Dd, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["mdata"] = _XmippData.Matrix2Dd_mdata_set
+    __swig_getmethods__["mdata"] = _XmippData.Matrix2Dd_mdata_get
+    if _newclass:mdata = _swig_property(_XmippData.Matrix2Dd_mdata_get, _XmippData.Matrix2Dd_mdata_set)
+    __swig_setmethods__["destroyData"] = _XmippData.Matrix2Dd_destroyData_set
+    __swig_getmethods__["destroyData"] = _XmippData.Matrix2Dd_destroyData_get
+    if _newclass:destroyData = _swig_property(_XmippData.Matrix2Dd_destroyData_get, _XmippData.Matrix2Dd_destroyData_set)
+    __swig_setmethods__["mdimx"] = _XmippData.Matrix2Dd_mdimx_set
+    __swig_getmethods__["mdimx"] = _XmippData.Matrix2Dd_mdimx_get
+    if _newclass:mdimx = _swig_property(_XmippData.Matrix2Dd_mdimx_get, _XmippData.Matrix2Dd_mdimx_set)
+    __swig_setmethods__["mdimy"] = _XmippData.Matrix2Dd_mdimy_set
+    __swig_getmethods__["mdimy"] = _XmippData.Matrix2Dd_mdimy_get
+    if _newclass:mdimy = _swig_property(_XmippData.Matrix2Dd_mdimy_get, _XmippData.Matrix2Dd_mdimy_set)
+    __swig_setmethods__["mdim"] = _XmippData.Matrix2Dd_mdim_set
+    __swig_getmethods__["mdim"] = _XmippData.Matrix2Dd_mdim_get
+    if _newclass:mdim = _swig_property(_XmippData.Matrix2Dd_mdim_get, _XmippData.Matrix2Dd_mdim_set)
+    def __init__(self, *args): 
+        this = _XmippData.new_Matrix2Dd(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_Matrix2Dd
+    __del__ = lambda self : None;
+    def clear(*args): return _XmippData.Matrix2Dd_clear(*args)
+    def coreInit(*args): return _XmippData.Matrix2Dd_coreInit(*args)
+    def coreAllocate(*args): return _XmippData.Matrix2Dd_coreAllocate(*args)
+    def coreDeallocate(*args): return _XmippData.Matrix2Dd_coreDeallocate(*args)
+    def resize(*args): return _XmippData.Matrix2Dd_resize(*args)
+    def initConstant(*args): return _XmippData.Matrix2Dd_initConstant(*args)
+    def initZeros(*args): return _XmippData.Matrix2Dd_initZeros(*args)
+    def initIdentity(*args): return _XmippData.Matrix2Dd_initIdentity(*args)
+    def Xdim(*args): return _XmippData.Matrix2Dd_Xdim(*args)
+    def Ydim(*args): return _XmippData.Matrix2Dd_Ydim(*args)
+    def __call__(*args): return _XmippData.Matrix2Dd___call__(*args)
+    def setVal(*args): return _XmippData.Matrix2Dd_setVal(*args)
+    def getVal(*args): return _XmippData.Matrix2Dd_getVal(*args)
+    def assign(*args): return _XmippData.Matrix2Dd_assign(*args)
+    def __div__(*args): return _XmippData.Matrix2Dd___div__(*args)
+    def __imul__(*args): return _XmippData.Matrix2Dd___imul__(*args)
+    def __idiv__(*args): return _XmippData.Matrix2Dd___idiv__(*args)
+    def __mul__(*args): return _XmippData.Matrix2Dd___mul__(*args)
+    def __add__(*args): return _XmippData.Matrix2Dd___add__(*args)
+    def __sub__(*args): return _XmippData.Matrix2Dd___sub__(*args)
+    def computeMax(*args): return _XmippData.Matrix2Dd_computeMax(*args)
+    def computeMin(*args): return _XmippData.Matrix2Dd_computeMin(*args)
+    def adaptForNumericalRecipes(*args): return _XmippData.Matrix2Dd_adaptForNumericalRecipes(*args)
+    def adaptForNumericalRecipes2(*args): return _XmippData.Matrix2Dd_adaptForNumericalRecipes2(*args)
+    def loadFromNumericalRecipes(*args): return _XmippData.Matrix2Dd_loadFromNumericalRecipes(*args)
+    def killAdaptationForNumericalRecipes(*args): return _XmippData.Matrix2Dd_killAdaptationForNumericalRecipes(*args)
+    def killAdaptationForNumericalRecipes2(*args): return _XmippData.Matrix2Dd_killAdaptationForNumericalRecipes2(*args)
+    def isDiagonal(*args): return _XmippData.Matrix2Dd_isDiagonal(*args)
+    def isScalar(*args): return _XmippData.Matrix2Dd_isScalar(*args)
+    def isIdentity(*args): return _XmippData.Matrix2Dd_isIdentity(*args)
+    def rowNumber(*args): return _XmippData.Matrix2Dd_rowNumber(*args)
+    def colNumber(*args): return _XmippData.Matrix2Dd_colNumber(*args)
+    def equal(*args): return _XmippData.Matrix2Dd_equal(*args)
+    def fromVector(*args): return _XmippData.Matrix2Dd_fromVector(*args)
+    def toVector(*args): return _XmippData.Matrix2Dd_toVector(*args)
+    def copyToVector(*args): return _XmippData.Matrix2Dd_copyToVector(*args)
+    def copyFromVector(*args): return _XmippData.Matrix2Dd_copyFromVector(*args)
+    def getRow(*args): return _XmippData.Matrix2Dd_getRow(*args)
+    def Row(*args): return _XmippData.Matrix2Dd_Row(*args)
+    def getCol(*args): return _XmippData.Matrix2Dd_getCol(*args)
+    def Col(*args): return _XmippData.Matrix2Dd_Col(*args)
+    def setRow(*args): return _XmippData.Matrix2Dd_setRow(*args)
+    def setCol(*args): return _XmippData.Matrix2Dd_setCol(*args)
+    def det(*args): return _XmippData.Matrix2Dd_det(*args)
+    def transpose(*args): return _XmippData.Matrix2Dd_transpose(*args)
+    def inv(*args): return _XmippData.Matrix2Dd_inv(*args)
+    def __str__(*args): return _XmippData.Matrix2Dd___str__(*args)
+Matrix2Dd_swigregister = _XmippData.Matrix2Dd_swigregister
+Matrix2Dd_swigregister(Matrix2Dd)
 setValueBool = _XmippData.setValueBool
 setValueInt = _XmippData.setValueInt
 setValueDouble = _XmippData.setValueDouble
@@ -734,4 +810,87 @@ getValueBool = _XmippData.getValueBool
 getValueInt = _XmippData.getValueInt
 getValueDouble = _XmippData.getValueDouble
 getValueString = _XmippData.getValueString
+
+class Matrix2Di(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Matrix2Di, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Matrix2Di, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["mdata"] = _XmippData.Matrix2Di_mdata_set
+    __swig_getmethods__["mdata"] = _XmippData.Matrix2Di_mdata_get
+    if _newclass:mdata = _swig_property(_XmippData.Matrix2Di_mdata_get, _XmippData.Matrix2Di_mdata_set)
+    __swig_setmethods__["destroyData"] = _XmippData.Matrix2Di_destroyData_set
+    __swig_getmethods__["destroyData"] = _XmippData.Matrix2Di_destroyData_get
+    if _newclass:destroyData = _swig_property(_XmippData.Matrix2Di_destroyData_get, _XmippData.Matrix2Di_destroyData_set)
+    __swig_setmethods__["mdimx"] = _XmippData.Matrix2Di_mdimx_set
+    __swig_getmethods__["mdimx"] = _XmippData.Matrix2Di_mdimx_get
+    if _newclass:mdimx = _swig_property(_XmippData.Matrix2Di_mdimx_get, _XmippData.Matrix2Di_mdimx_set)
+    __swig_setmethods__["mdimy"] = _XmippData.Matrix2Di_mdimy_set
+    __swig_getmethods__["mdimy"] = _XmippData.Matrix2Di_mdimy_get
+    if _newclass:mdimy = _swig_property(_XmippData.Matrix2Di_mdimy_get, _XmippData.Matrix2Di_mdimy_set)
+    __swig_setmethods__["mdim"] = _XmippData.Matrix2Di_mdim_set
+    __swig_getmethods__["mdim"] = _XmippData.Matrix2Di_mdim_get
+    if _newclass:mdim = _swig_property(_XmippData.Matrix2Di_mdim_get, _XmippData.Matrix2Di_mdim_set)
+    def __init__(self, *args): 
+        this = _XmippData.new_Matrix2Di(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_Matrix2Di
+    __del__ = lambda self : None;
+    def clear(*args): return _XmippData.Matrix2Di_clear(*args)
+    def coreInit(*args): return _XmippData.Matrix2Di_coreInit(*args)
+    def coreAllocate(*args): return _XmippData.Matrix2Di_coreAllocate(*args)
+    def coreDeallocate(*args): return _XmippData.Matrix2Di_coreDeallocate(*args)
+    def resize(*args): return _XmippData.Matrix2Di_resize(*args)
+    def initConstant(*args): return _XmippData.Matrix2Di_initConstant(*args)
+    def initZeros(*args): return _XmippData.Matrix2Di_initZeros(*args)
+    def initIdentity(*args): return _XmippData.Matrix2Di_initIdentity(*args)
+    def Xdim(*args): return _XmippData.Matrix2Di_Xdim(*args)
+    def Ydim(*args): return _XmippData.Matrix2Di_Ydim(*args)
+    def __call__(*args): return _XmippData.Matrix2Di___call__(*args)
+    def setVal(*args): return _XmippData.Matrix2Di_setVal(*args)
+    def getVal(*args): return _XmippData.Matrix2Di_getVal(*args)
+    def assign(*args): return _XmippData.Matrix2Di_assign(*args)
+    def __div__(*args): return _XmippData.Matrix2Di___div__(*args)
+    def __imul__(*args): return _XmippData.Matrix2Di___imul__(*args)
+    def __idiv__(*args): return _XmippData.Matrix2Di___idiv__(*args)
+    def __mul__(*args): return _XmippData.Matrix2Di___mul__(*args)
+    def __add__(*args): return _XmippData.Matrix2Di___add__(*args)
+    def __sub__(*args): return _XmippData.Matrix2Di___sub__(*args)
+    def computeMax(*args): return _XmippData.Matrix2Di_computeMax(*args)
+    def computeMin(*args): return _XmippData.Matrix2Di_computeMin(*args)
+    def adaptForNumericalRecipes(*args): return _XmippData.Matrix2Di_adaptForNumericalRecipes(*args)
+    def adaptForNumericalRecipes2(*args): return _XmippData.Matrix2Di_adaptForNumericalRecipes2(*args)
+    def loadFromNumericalRecipes(*args): return _XmippData.Matrix2Di_loadFromNumericalRecipes(*args)
+    def killAdaptationForNumericalRecipes(*args): return _XmippData.Matrix2Di_killAdaptationForNumericalRecipes(*args)
+    def killAdaptationForNumericalRecipes2(*args): return _XmippData.Matrix2Di_killAdaptationForNumericalRecipes2(*args)
+    def isDiagonal(*args): return _XmippData.Matrix2Di_isDiagonal(*args)
+    def isScalar(*args): return _XmippData.Matrix2Di_isScalar(*args)
+    def isIdentity(*args): return _XmippData.Matrix2Di_isIdentity(*args)
+    def rowNumber(*args): return _XmippData.Matrix2Di_rowNumber(*args)
+    def colNumber(*args): return _XmippData.Matrix2Di_colNumber(*args)
+    def equal(*args): return _XmippData.Matrix2Di_equal(*args)
+    def fromVector(*args): return _XmippData.Matrix2Di_fromVector(*args)
+    def toVector(*args): return _XmippData.Matrix2Di_toVector(*args)
+    def copyToVector(*args): return _XmippData.Matrix2Di_copyToVector(*args)
+    def copyFromVector(*args): return _XmippData.Matrix2Di_copyFromVector(*args)
+    def getRow(*args): return _XmippData.Matrix2Di_getRow(*args)
+    def Row(*args): return _XmippData.Matrix2Di_Row(*args)
+    def getCol(*args): return _XmippData.Matrix2Di_getCol(*args)
+    def Col(*args): return _XmippData.Matrix2Di_Col(*args)
+    def setRow(*args): return _XmippData.Matrix2Di_setRow(*args)
+    def setCol(*args): return _XmippData.Matrix2Di_setCol(*args)
+    def det(*args): return _XmippData.Matrix2Di_det(*args)
+    def transpose(*args): return _XmippData.Matrix2Di_transpose(*args)
+    def inv(*args): return _XmippData.Matrix2Di_inv(*args)
+    def __str__(*args): return _XmippData.Matrix2Di___str__(*args)
+Matrix2Di_swigregister = _XmippData.Matrix2Di_swigregister
+Matrix2Di_swigregister(Matrix2Di)
+mul = _XmippData.mul
+
+Matrix2D=Matrix2Dd
+Matrix2D=Matrix2Di
+
+
 

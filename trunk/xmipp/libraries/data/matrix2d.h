@@ -664,6 +664,19 @@ public:
     {
         return mdata[i*mdimx + j];
     }
+    /** Parenthesis operator for phyton
+    */
+    void setVal(T val,int y, int x)
+    {
+        MAT_ELEM((*this),y,x)=val;
+    }
+    /** Parenthesis operator for phyton
+    */
+
+    T getVal( int y, int x)
+    {
+        return MAT_ELEM((*this),y,x);
+    }
 
     /** Assignment.
      * @ingroup VectorOperators
@@ -945,7 +958,7 @@ public:
         for (int i = 0; i < mdimy; i++)
             for (int j = 0; j < mdimx; j++)
                 if (i != j && ABS((*this)(i, j)) >
-                    XMIPP_EQUAL_ACCURACY)
+                        XMIPP_EQUAL_ACCURACY)
                     return false;
         return true;
     }
@@ -963,7 +976,7 @@ public:
 
         for (int i = 1; i < mdimy; i++)
             if (ABS((*this)(i, i) - (*this)(0, 0))
-                > XMIPP_EQUAL_ACCURACY)
+                    > XMIPP_EQUAL_ACCURACY)
                 return false;
 
         return true;
@@ -1113,11 +1126,11 @@ public:
     /**Copy  stl::vector  to matrix
       *
       */
-     void copyFromVector(std::vector<T> &v,int Xdim, int Ydim)
-     {
-         resize(Ydim, Xdim);
-         copy( v.begin(), v.begin()+v.size(), mdata);
-     }
+    void copyFromVector(std::vector<T> &v,int Xdim, int Ydim)
+    {
+        resize(Ydim, Xdim);
+        copy( v.begin(), v.begin()+v.size(), mdata);
+    }
 
 
     /** Get row
@@ -1317,7 +1330,7 @@ public:
         Matrix2D<T> result(mdimx, mdimy);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
         {
-        	result(i, j) = (*this)(j, i);
+            result(i, j) = (*this)(j, i);
         }
         return result;
     }
@@ -1350,30 +1363,29 @@ public:
 
         // Compute W^-1
         bool invertible = false;
-        for (int i = 0; i < w.size(); i++)
+        FOR_ALL_ELEMENTS_IN_MATRIX1D(w)
         {
-            if (ABS(w(i)) > tol)
+            if (ABS(VEC_ELEM(w,i)) > tol)
             {
-                w(i) = 1.0 / w(i);
+                VEC_ELEM(w,i) = 1.0 / VEC_ELEM(w,i);
                 invertible = true;
             }
             else
-                w(i) = 0.0;
+                VEC_ELEM(w,i) = 0.0;
         }
 
         if (!invertible)
             return;
 
         // Compute V*W^-1
-        for (int i = 0; i < v.mdimy; i++)
-            for (int j = 0; j < v.mdimx; j++)
-                v(i,j) = w(j);
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(v)
+        MAT_ELEM(v,i,j) *= VEC_ELEM(w,j);
 
         // Compute Inverse
         for (int i = 0; i < mdimx; i++)
             for (int j = 0; j < mdimy; j++)
                 for (int k = 0; k < mdimx; k++)
-                    result(i,j) += (T) v(i,k) * u(j,k);
+                	MAT_ELEM(result,i,j) += (T) MAT_ELEM(v,i,k) * MAT_ELEM(u,j,k);
     }
 
     /** Inverse of a matrix

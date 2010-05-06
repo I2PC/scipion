@@ -17,7 +17,7 @@
     bool wrap, T outside);
 %rename(solveLinear) solve<>;
 
-%import swigmultidimensional_array.i
+//%import swigmultidimensional_array.i
 
 %include "../matrix2d.h"
 PRINT(Matrix2D)
@@ -31,53 +31,66 @@ PRINT(Matrix2D)
     Matrix2D=Matrix2Di
 %}
 
-%template(multiplyMatrix) multiplyMatrix<double>;
-%template(multiplyMatrix) multiplyMatrix<int>;
-%template(solve) solve<double>;
-%template(solveBySVD) solveBySVD<double>;
+//%template(multiplyMatrix) multiplyMatrix<double>;
+//%template(multiplyMatrix) multiplyMatrix<int>;
+//%template(solve) solve<double>;
+//%template(solveBySVD) solveBySVD<double>;
 %template(ludcmp) ludcmp<double>;
 %template(lubksb) lubksb<double>;
-%template(svdcmp) svdcmp<double>;
-%template(applyGeometry) applyGeometry<double>;
-%template(applyGeometry) applyGeometry<int>;
-%template(applyGeometryBSpline) applyGeometryBSpline<double>;
-%template(applyGeometryBSpline) applyGeometryBSpline<int>;
-%template(cutToCommonSize) cutToCommonSize<double>;
-%template(cutToCommonSize) cutToCommonSize<int>;
-%template(radialAverage) radialAverage<double>;
-%template(radialAverage) radialAverage<int>;
+//%template(svdcmp) svdcmp<double>;
+//%template(applyGeometry) applyGeometry<double>;
+//%template(applyGeometry) applyGeometry<int>;
+//%template(applyGeometryBSpline) applyGeometryBSpline<double>;
+//%template(applyGeometryBSpline) applyGeometryBSpline<int>;
+//%template(cutToCommonSize) cutToCommonSize<double>;
+//%template(cutToCommonSize) cutToCommonSize<int>;
+//%template(radialAverage) radialAverage<double>;
+//%template(radialAverage) radialAverage<int>;
+//%template(getVal) Matrix2D::getValSwig<double>;
+//%template(setVal) Matrix2D::setValSwig<double>;
 
 /*
 python
 import XmippData
 
-M=XmippData.Matrix2D()
-print M
-M=XmippData.Matrix2D(6,3)
-print M
-Maux=XmippData.Matrix2D(M)
-print Maux
+M=XmippData.Matrix2Dd(3,3)
 
-M=XmippData.Matrix2D(3,3)
-M.initIdentity()
-print M
-M.initIdentity(4)
-print M
-M.initIdentity(2,3)
-print M
 
-M=XmippData.Matrix2D(3,3)
-M.initZeros(6,3)
+M.setVal(1.,0,0)
+M.setVal(0.,0,1)
+M.setVal(5.,0,2)
+
+M.setVal(2.,1,0)
+M.setVal(1.,1,1)
+M.setVal(6.,1,2)
+
+M.setVal(3.,2,0)
+M.setVal(4.,2,1)
+M.setVal(0.,2,2)
+
 print M
 
-M1=XmippData.Matrix1Di()
+Minv=XmippData.Matrix2Dd()
+Minv=M.inv()
+print Minv
+
+Mp=M*Minv
+
+print Mp
+
+
+
+
+
+======================
 M1.initLinear(0,2,1)
 print M1
 M.fromVector(M1)
 print M
 M1.initZeros(3)
 print M1
-M.toVector(M1)
+M.toVector(M1)M.setVal(3.,2,0)
+
 print M1
 
 M.outside(1,1)
@@ -90,7 +103,6 @@ M.printShape()
 Maux.sameShape(M)
 
 M=XmippData.Matrix2Dd(3,3)
-M.setXmippOrigin()
 M(0,0)
 M.setPixel(0,0,1.5)
 print M

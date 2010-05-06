@@ -260,7 +260,10 @@ template <typename T> class Matrix2D;
         YY(a) = YY(b) * (c); \
         ZZ(a) = ZZ(b) * (c); }
 
-
+/** Direct access to vector element
+ *
+ */
+#define VEC_ELEM(v,i) ((v).vdata[(i)])
 
 template<typename T>
 class Matrix1D

@@ -115,7 +115,7 @@ $result=PyInt_FromLong((long)*$1);
 %include swigmetadata.i
 //%include swigmultidimensional_array.i
 //%include swigmatrix1d.i
-//%include swigmatrix2d.i
+%include swigmatrix2d.i
 //%include swigmatrix3d.i
 //%include swigimage.i
 //%include swiggeometry.i

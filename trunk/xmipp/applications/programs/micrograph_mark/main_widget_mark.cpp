@@ -515,7 +515,8 @@ void QtMainWidgetMark::write_angles()
     MD.setValue(MDL_ANGLEPSI,__alpha_u);
     MD.setValue(MDL_ANGLEPSI2,__alpha_t);
     MD.setValue(MDL_ANGLETILT,__gamma);
-    std::vector<double> myVector ( &__Put.mdata[0], &__Put.mdata[9] );
+    std::vector<double> myVector;// ( &__Put.mdata[0], &__Put.mdata[9] );
+    __Put.copyToVector(myVector);
     MD.setValue(MDL_TRANSFORMATIONMTRIX,myVector);
     MD.write(fn);
 }

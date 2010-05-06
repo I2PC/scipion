@@ -100,14 +100,13 @@ int main(int argc, char **argv)
                 MD.read(fn_transform);
                 std::vector<double> myVector;
                 myVector.resize(9);
-            	std::cerr << "before" <<std::endl;
+            	std::cerr << "before " << fn_transform<<std::endl;
                 MD.getValue(MDL_TRANSFORMATIONMTRIX,myVector,0);
+                MD.write("aa");
             	std::cerr << "after filename " <<fn_transform << " " << MD.size()<<std::endl;
-            	// I suppose this is the most general way to
-            	// convert a vector to an array.
-            	copy( myVector.begin(), myVector.end(), Mtransform.mdata);
                 std::cerr << "myVector " << myVector[0] <<std::endl;
-
+            	copy( myVector.begin(), myVector.end(), Mtransform.mdata);
+                Mtransform.copyFromVector(myVector,Mtransform.mdimx,Mtransform.mdimy);
                 m.transform_coordinates(Mtransform);
                 std::cerr << Mtransform <<std::endl;
                 if (down_transform != 1.)
