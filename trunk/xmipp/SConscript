@@ -374,7 +374,7 @@ AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'],
 # Reconstruction
 ReconsSources = [
     'adjust_ctf.cpp',
-#    'adjust_volume_grey_levels.cpp',
+#   'adjust_volume_grey_levels.cpp',
 #    'align2d.cpp',
 #    'align_tilt_pairs.cpp',
 #    'analyze_cluster.cpp',
@@ -441,7 +441,6 @@ ReconsSources = [
 #    'resolution_ssnr.cpp',
 #    'series_remove_fluctuations.cpp',
 #    'sort_images.cpp',
-    'spar.cpp',
     'sparma.cpp'
 #    'surface.cpp',
 #    'symmetrize.cpp',
