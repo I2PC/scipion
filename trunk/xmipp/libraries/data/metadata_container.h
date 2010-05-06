@@ -113,17 +113,17 @@ enum MetaDataLabel
     MDL_DEFGROUP, // Defocus group
     MDL_KSTEST, //KS-test statistics
     MDL_TRANSFORMATIONMTRIX, // transformation matrix(vector double)
-    /*
-     MDL_azimuthal_angle=      72.3493
-     MDL_spherical_aberration= 5.6
+    MDL_AZIMUTALANGLE, //ctf definition azimutal angle
+    MDL_SPHERICALABERRATION, //ctf definition azimutal angle
+    MDL_Q0,//ctf definition Q0
+    MDL_K,// //ctf definition K
+     /*
      MDL_chromatic_aberration= 1.99957
      MDL_energy_loss=          0.0240301
      MDL_lens_stability=       0
      MDL_convergence_cone=     0.000329129
      MDL_longitudinal_displace=8.66588e-05
      MDL_transversal_displace= 4.14845
-     MDL_Q0=                   -0.1
-     MDL_K=                    2.13333
      MDL_gaussian_K=           2.58626
      MDL_sigmaU=               100000
      MDL_sigmaV=               85359.1
@@ -170,7 +170,9 @@ inline bool isDouble(MetaDataLabel lCode)
         lCode == MDL_DEFOCUSV     || lCode == MDL_LL           || lCode == MDL_WROBUST     ||
         lCode == MDL_SIGNALCHANGE || lCode == MDL_SIGMANOISE   || lCode == MDL_SIGMAOFFSET ||
         lCode == MDL_SUMWEIGHT    || lCode == MDL_KSTEST       || lCode == MDL_MAX         ||
-        lCode == MDL_MIN          || lCode == MDL_STDDEV       || lCode == MDL_AVG
+        lCode == MDL_MIN          || lCode == MDL_STDDEV       || lCode == MDL_AVG         ||
+        lCode == MDL_AZIMUTALANGLE|| lCode == MDL_SPHERICALABERRATION || lCode == MDL_Q0   ||
+        lCode == MDL_K
         )
         return true;
     else

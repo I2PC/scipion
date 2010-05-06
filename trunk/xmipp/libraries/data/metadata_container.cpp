@@ -264,7 +264,6 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_MIRRORFRAC;
     }
-
     else if (strLabel == "logLikelihood")
     {
         return MDL_LL;
@@ -349,7 +348,27 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_REF;
     }
-    else if (strLabel == "maxCC")
+    else if (strLabel == "avg" )
+    {
+        return MDL_AVG;
+    }
+    else if (strLabel == "azimutalAngle" )
+    {
+        return MDL_AZIMUTALANGLE;
+    }
+    else if (strLabel == "azimutalAngle" )
+    {
+        return MDL_SPHERICALABERRATION;
+    }
+    else if (strLabel == "azimutalAngle" )
+    {
+        return MDL_Q0;
+    }
+    else if (strLabel == "Q0" )
+    {
+        return MDL_K;
+    }
+    else if (strLabel == "K")
     {
         return MDL_MAXCC;
     }
@@ -552,6 +571,21 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
             break;
         case MDL_REF:
             return std::string("ref");
+            break;
+        case MDL_AVG:
+            return std::string("avg");
+            break;
+        case MDL_AZIMUTALANGLE:
+            return std::string("azimutalAngle");
+            break;
+        case MDL_SPHERICALABERRATION:
+            return std::string("sphericalAberration");
+            break;
+        case MDL_Q0:
+            return std::string("Q0");
+            break;
+        case MDL_K:
+            return std::string("K");
             break;
         case MDL_MAXCC:
             return std::string("maxCC");
