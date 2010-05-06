@@ -69,6 +69,7 @@ M.setVal(4.,2,1)
 M.setVal(0.,2,2)
 
 print M
+print M.transpose()
 
 Minv=XmippData.Matrix2Dd()
 Minv=M.inv()

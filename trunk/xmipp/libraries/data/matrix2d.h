@@ -1330,7 +1330,7 @@ public:
         Matrix2D<T> result(mdimx, mdimy);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
         {
-            result(i, j) = (*this)(j, i);
+        	MAT_ELEM(result,i,j) = MAT_ELEM((*this),j,i);
         }
         return result;
     }
