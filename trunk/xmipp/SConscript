@@ -427,6 +427,7 @@ ReconsSources = [
 #    'phantom_simulate_microscope.cpp',
 #    'precompute_sampling.cpp',
 #    'projectTomography.cpp',
+     'project_XR.cpp',
 #    'project_crystal.cpp',
 #    'projection_real_shears.cpp',
     'psd_enhance.cpp',
@@ -615,7 +616,7 @@ AddXmippProgram('ml_align2d', ['XmippRecons'])
 #AddXmippProgram('project', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('project_tomography', ['XmippRecons'])
 #AddXmippProgram('projection_real_shears', ['XmippRecons'])
-#AddXmippProgram('project_xr')
+AddXmippProgram('project_xr', ['XmippRecons'])
 #AddXmippProgram('psd_enhance', ['XmippRecons'])
 #AddXmippProgram('psd_sort', ['XmippRecons'])
 #AddXmippProgram('range_adjust')
