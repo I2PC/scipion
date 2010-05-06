@@ -32,6 +32,16 @@
 #include <complex>
 
 
+/// This enum defines which method should be used to
+/// correct the limitation due to Nyquist limit in diffraction
+enum psfxrAdjust
+{
+	PSFXR_STD, /// Standard mode, image size does not changes
+	PSFXR_INT, /// Increasing the image size by Interpolating
+	PSFXR_ZPAD /// Increasing the image size by Zeropadding
+};
+
+
 /**@defgroup PSFXRSupport X-Ray PSF support classes
  @ingroup DataLibrary */
 //@{
@@ -54,9 +64,20 @@ public:
     double Z;
     /// Image plane (CCD position)
     double Zi;
+
+
+
+    /// Size of the input image (object plane size)
+    double Nox, Noy;
     /* Minimum resolution condition.
      The same for both axis x-y, due to the simmetry of the lens aperture */
     double dxiMax;
+    /// Pixel size in lens plane
+    double dxl, dyl;
+
+    /// Parameters to change image size to avoid Nyquist limit
+    psfxrAdjust AdjustType;
+    double npMin;
 
 public:
     /// Lambda
@@ -73,14 +94,16 @@ public:
     /// Z axis global shift
     double DeltaZo;
 
+
+
     /// object space XY-plane sampling rate
     double dxo;
     /// Image space XY-plane sampling rate
     double dxi;
     /// object space Z sampling rate
     double dzo;
-
-    double Nox, Noy, dxl, dyl;
+    /// Size of the image in image plane, to be rescaled if needed
+    double Nix, Niy;
 
 
 
@@ -167,6 +190,9 @@ public:
     void generateOTF(MultidimArray<double> &Im) ;
 
     void generateOTF(MultidimArray<std::complex<double> > &Im) ;
+
+    /// Calculate if a rescaling of the images is needed due to the limitations of the system parameters
+    void adjustParam(Image<double> &Vol) ;
 
 };
 

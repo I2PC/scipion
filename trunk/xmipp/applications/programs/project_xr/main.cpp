@@ -24,116 +24,36 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/psf_xr.h>
-#include <data/args.h>
 
+#include <reconstruction/project_XR.h>
 
-void usage();
-
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
-    FileName fnPSF, fnPSFOut, fnImgIn, fnImgOut;
-    XmippXRPSF psf;
+    Prog_Project_XR_Parameters      prog_prm;
+    Projection                           proj;
+    MetaData                              SF;
 
+    // Check the command line
     try
     {
-        if (checkParameter(argc, argv, "-psf"))
-        {
-            fnPSF = getParameter(argc, argv, "-psf");
-            psf.read(fnPSF);
-        }
-        else
-            psf.clear();
-
-#define DEBUG
-
-
+        prog_prm.read(argc, argv);
     }
     catch (Xmipp_error &XE)
     {
-        std::cerr << XE << std::endl;
-        psf.usage();
-        return 1;
+        std::cout << XE;
+        prog_prm.usage();
+        exit(1);
     }
 
     try
     {
-        fnImgIn = getParameter(argc, argv, "-i");
-
-        if (checkParameter(argc, argv, "-out"))
-            fnImgOut = getParameter(argc, argv, "-out");
-        else
-            fnImgOut = fnImgIn.without_extension().add_extension("out").add_extension("spi");
-
-        psf.produceSideInfo();
-
-        if (checkParameter(argc, argv, "-v"))
-            std::cout << psf << std::endl;
-
-        if (fnImgIn.get_extension()=="vol")
-        {
-            VolumeXmipp   phantomVol;
-            ImageXmipp    imOut;
-
-            phantomVol.read(fnImgIn);
-
-            project_xr(psf, phantomVol, imOut);
-
-            imOut.write(fnImgOut);
-
-
-        }
-        else if (fnImgIn.get_extension()=="spi")
-        {
-            ImageXmipp ImXmipp;
-            Matrix2D  < double > ImgIn;
-
-            ImXmipp.read(fnImgIn);
-            ImXmipp().setXmippOrigin();
-
-            ImgIn.resize(ImXmipp());
-
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(ImgIn)
-            ImgIn(i,j) = ImXmipp(i,j);
-
-            psf.generateOTF(ImgIn);
-
-            psf.applyOTF(ImgIn);
-
-
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(ImgIn)
-            ImXmipp(i,j) = abs(ImgIn(i,j));
-
-            ImXmipp.write(fnImgOut);
-        }
-        else
-            usage();
-
-
-        if (checkParameter(argc, argv, "-psfout"))
-        {
-            fnPSFOut = getParameter(argc, argv, "-psfout");
-            psf.write(fnPSFOut);
-        }
+        // Really project
+        ROUT_XR_project(prog_prm, proj, SF);
     }
-    catch (Xmipp_error &XE)
+    catch (Xmipp_error XE)
     {
-        std::cerr << XE << std::endl;
-        usage();
-        return 1;
+        std::cout << XE;
     }
     return 0;
 }
-
-void usage()
-{
-    std::cerr << "Usage: project_xr [options]\n"
-              << "   -psf <PSF description file>      : PSF characteristic of the microscope \n"
-              << "   -i <Input file>                  : Image or Volume \n"
-              << "  [-out <Output file>]              : Resulting Image \n"
-              << "  [-psfout <Output file>]           : Save the PSF characteristic of the microscope \n"
-			  << "  [-v]                              : Verbose mode    \n";
-}
-
-#undef DEBUG
 
