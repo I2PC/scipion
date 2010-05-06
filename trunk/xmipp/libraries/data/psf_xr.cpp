@@ -38,7 +38,6 @@ void XmippXRPSF::read(const FileName &fn)
     	clear();
     	return;
     }
-    std::cerr << fn << std::endl;
     if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
         REPORT_ERROR(1,
                      (std::string)"XmippXROTF::read: There is a problem "
@@ -322,7 +321,7 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
 {
 
-	psf.adjustParam(vol);
+//	psf.adjustParam(vol);
 
     imOut() = MultidimArray<double> (psf.Niy, psf.Nix);
     imOut().initZeros();
@@ -344,7 +343,7 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
     Image<double> _Im(imOut);
 #endif
 
-    init_progress_bar(vol().zdim-1);
+//    init_progress_bar(vol().zdim-1);
 
     for (int k=((vol()).zinit); k<=((vol()).zinit + (vol()).zdim - 1); k++)
     {
@@ -392,17 +391,17 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(intExp)
         dAij(_Im(),i,j) = dAij(intExp,i,j);
         _Im.write("psfxr-intExp.spi");
-        _Im().resize(*imTempSc);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
-        dAij(_Im(),i,j) = dAij(*imTempSc,i,j);
+        _Im().resize(*imTempP);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+        dAij(_Im(),i,j) = dAij(*imTempP,i,j);
         _Im.write("psfxr-imTempEsc.spi");
 #endif
 
         psf.applyOTF(*imTempP);
 
 #ifdef DEBUG
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempSc)
-        dAij(_Im(),i,j) = dAij(*imTempSc,i,j);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+        dAij(_Im(),i,j) = dAij(*imTempP,i,j);
         _Im.write("psfxr-imTempEsc2.spi");
 #endif
 
@@ -411,15 +410,24 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
 
 //        imOut.write("psfxr-imout.spi");
 
-        progress_bar(k - vol().zinit);
+//        progress_bar(k - vol().zinit);
     }
 
     imOut() = 1-imOut();
 //            imOut.write("psfxr-imout.spi");
 
-//    imOut().selfScaleToSize(psf.Noy, psf.Nox);
-    selfScaleToSize(LINEAR,imOut(), psf.Nox, psf.Noy);
 
+    switch (psf.AdjustType)
+    		{
+    			case PSFXR_INT:
+    				//    imOut().selfScaleToSize(psf.Noy, psf.Nox);
+    			    selfScaleToSize(LINEAR,imOut(), psf.Nox, psf.Noy);
+    				break;
+
+    			case PSFXR_ZPAD:
+    				imOut().window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
+    				break;
+    		}
 //    imOut.write("psfxr-imout2.spi");
 
 }

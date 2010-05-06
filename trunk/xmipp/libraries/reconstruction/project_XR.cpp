@@ -229,9 +229,10 @@ int PROJECT_XR_Effectively_project(
         proj.setEulerAngles(movements(0)+movements(3),
                                      movements(1)+movements(4),movements(2)+movements(5));
 
-         DF_movements.setValue(MDL_ANGLEROT2,movements(0)+movements(3));
-         DF_movements.setValue(MDL_ANGLETILT2,movements(1)+movements(4));
-         DF_movements.setValue(MDL_ANGLEPSI2,movements(2)+movements(5));
+        DF_movements.addObject();
+        DF_movements.setValue(MDL_ANGLEROT2,movements(0)+movements(3));
+        DF_movements.setValue(MDL_ANGLETILT2,movements(1)+movements(4));
+        DF_movements.setValue(MDL_ANGLEPSI2,movements(2)+movements(5));
 
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
@@ -290,21 +291,14 @@ void project_xr_Volume_offCentered(MultidimArray<double> &V, XmippXRPSF &psf, Pr
     std::cout << "E\n" << E << std::endl;
 #endif
 
-    //    project_Volume(V, P, Ydim, Xdim, rot, tilt, psi, &roffset);
-
-
     // Rotate volume ....................................................
-    Matrix2D<double> rotationMatrix;
-    Image<double> volTemp, projP;
+    Image<double> volTemp;
 
-    Euler_angles2matrix(rot, tilt, psi, rotationMatrix);
+//    applyGeometry(LINEAR,volTemp(), V, Euler_rotation3DMatrix(rot, tilt, psi), IS_NOT_INV, DONT_WRAP);
+    Euler_rotate(V, rot, tilt, psi, volTemp());
 
-//    applyGeometry(LINEAR,volTemp(),V,rotationMatrix, IS_NOT_INV, DONT_WRAP);
-//    projP.data.data=P.data.data;
-
-    volTemp()=V;
-    project_xr(psf,volTemp,projP);
-    P()=projP();
+    //the really really final project routine, I swear by Snoopy.
+    project_xr(psf,volTemp,P);
 
 
 }
@@ -317,13 +311,16 @@ int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
 
     // Read projection parameters and produce side information
     Projection_XR_Parameters proj_prm;
-    XmippXRPSF psf;
-    PROJECT_XR_Side_Info side;
     proj_prm.read(prm.fn_proj_param);
     proj_prm.tell=prm.tell;
+    PROJECT_XR_Side_Info side;
+    side.produce_Side_Info(proj_prm, prm);
+
+    // Read Microscope optics parameters and produce side information
+    XmippXRPSF psf;
     psf.read(prm.fn_psf_xr);
     psf.produceSideInfo();
-    side.produce_Side_Info(proj_prm, prm);
+    psf.adjustParam(side.phantomVol);
 
     // Project
     int ProjNo = 0;
