@@ -26,8 +26,8 @@
 #  define _PROG_ADJUST_VOLUME_HH
 
 #include <data/funcs.h>
-#include <data/volume.h>
 #include <data/metadata.h>
+#include <data/multidim_array.h>
 
 /**@defgroup AdjustVolumeProgram adjust_volume_grey_values (Adjust volume grey values to a set of projections)
    @ingroup ReconsLibraryPrograms */
@@ -50,7 +50,7 @@ public:
     double probb_eval;
 public:
     // Input volume
-    Matrix3D<double> V;
+    MultidimArray<double> V;
     // SelFile
     MetaData SF;
 public:
@@ -78,7 +78,7 @@ public:
 
     /** Apply.
         This is the function that really does the job */
-    void apply(Matrix3D<double> &output_volume);
+    void apply(MultidimArray<double> &output_volume);
 
     /** Run.
         Calls apply and save the result. */

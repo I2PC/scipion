@@ -374,7 +374,7 @@ AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'],
 # Reconstruction
 ReconsSources = [
     'adjust_ctf.cpp',
-#   'adjust_volume_grey_levels.cpp',
+    'adjust_volume_grey_levels.cpp',
 #    'align2d.cpp',
 #    'align_tilt_pairs.cpp',
 #    'analyze_cluster.cpp',
@@ -501,7 +501,7 @@ OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
 
 AddXmippProgram('add_noise')
 #AddXmippProgram('adapt_for_spider', ['XmippInterface'])
-#AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
+AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
 #AddXmippProgram('align2d', ['XmippRecons'])
 #AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 #AddXmippProgram('align_volumes')

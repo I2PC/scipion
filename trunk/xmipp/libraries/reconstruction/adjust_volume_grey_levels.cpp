@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "adjust_volume_grey_levels.h"
+#include <data/numerical_tools.h>
 #include <data/projection.h>
 
 #include <data/args.h>
@@ -66,7 +67,7 @@ void Prog_Adjust_Volume_Parameters::show()
 void Prog_Adjust_Volume_Parameters::produce_side_info()
 {
     // Read input volume
-    VolumeXmipp IV;
+    Image<double> IV;
     IV.read(fn_vol);
     V = IV();
     V.setXmippOrigin();
@@ -89,8 +90,8 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
     if (a <= 0) return 1e38;
 
     // Transform the volume
-    Matrix3D<double> aux = V;
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(aux) aux(k, i, j) = a * aux(k, i, j) + b;
+    MultidimArray<double> aux = V;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(aux) aux(k, i, j) = a * aux(k, i, j) + b;
 
     // Compute the mismatching
     double retval = 0;
@@ -115,7 +116,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
         if (x > probb_eval) continue;
         N++;
 
-        ImageXmipp I;
+        Image<double> I;
         I.read(fn);
         I().setXmippOrigin();
 
@@ -125,7 +126,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
                        I.rot(), I.tilt(), I.psi());
 
         // Compute the difference
-        Matrix2D<double> diff;
+        MultidimArray<double> diff;
         diff = I() - P();
         retval += diff.sum2();
 
@@ -146,7 +147,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
 #undef DEBUG
 
 /* Apply ------------------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
+void Prog_Adjust_Volume_Parameters::apply(MultidimArray<double> &out)
 {
     // Compute the average power and average value of all the projections
     double sum = 0, sum2 = 0, N = 0;
@@ -168,7 +169,7 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
         FileName fn;
         SF.getValue( MDL_IMAGE, fn);
         if (fn=="") break;
-        ImageXmipp I;
+        Image<double> I;
         I.read(fn);
         projXdim = XSIZE(I());
         projYdim = YSIZE(I());
@@ -223,7 +224,7 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
     // Optimize
     if (optimize)
     {
-        Matrix1D<double> p(2), steps(2);
+        MultidimArray<double> p(2), steps(2);
         p(0) = a;
         p(1) = b;
         steps.initConstant(1);
@@ -238,14 +239,14 @@ void Prog_Adjust_Volume_Parameters::apply(Matrix3D<double> &out)
 
     // Apply the transformation
     out = V;
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(V) out(k, i, j) = a * V(k, i, j) + b;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(V) out(k, i, j) = a * V(k, i, j) + b;
 }
 
 /* Run --------------------------------------------------------------------- */
 void Prog_Adjust_Volume_Parameters::run()
 {
-    VolumeXmipp out;
+    Image<double> out;
     apply(out());
     if (fn_out == "") out.write(fn_vol);
-    else            out.write(fn_out);
+    else              out.write(fn_out);
 }
