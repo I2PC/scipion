@@ -98,7 +98,7 @@ template <typename T> class Matrix2D;
  * val = ZZ(v);
  * @endcode
  */
-#define ZZ(v) (v).vdata[1]
+#define ZZ(v) (v).vdata[2]
 
 /** Creates vector in R2
  * @ingroup Vectors
