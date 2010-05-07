@@ -645,7 +645,7 @@ AddXmippProgram('project_xr', ['XmippRecons'])
 #AddXmippProgram('test_sql')
 ##AddXmippProgram('virus_vertex', ['XmippRecons'])
 #AddXmippProgram('volume_segment')
-#AddXmippProgram('window')
+AddXmippProgram('window')
 
 # --- Scripts
 
