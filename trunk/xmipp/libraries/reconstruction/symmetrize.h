@@ -26,8 +26,9 @@
 #  define _PROG_SYMMETRIZE_HH
 
 #include <data/funcs.h>
-#include <data/volume.h>
+#include <data/image.h>
 #include <data/mask.h>
+//#include <data/matrix3d.h >
 
 #include <data/symmetries.h>
 
@@ -60,17 +61,21 @@ public:
 
     /** Show parameters */
     friend std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters
-                                  &prm);
+                                       &prm);
 };
 
 /** Really symmetrize.*/
-void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
+void symmetrize(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
+                int Splinedegree=LINEAR,bool wrap=true, bool show_progress=false,
+                bool do_outside_avg=false);
+#ifdef NEVERDEFINED
+void symmetrize(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
                 bool wrap = true, bool show_progress = false);
 
 /** Really symmetrize using Bsplines */
-void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
+void symmetrize_Bspline(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
                         int Splinedegree, bool wrap, bool do_outside_avg);
-
+#endif
 /** Main program */
 void ROUT_symmetrize(const Symmetrize_Parameters &prm);
 //@}
