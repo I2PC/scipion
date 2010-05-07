@@ -289,7 +289,7 @@ public:
 
     /** Specific read functions for different file formats
     */
-#include "rwSPIDER.h"
+     #include "rwSPIDER.h"
      #include "rwMRC.h"
 
     /** Is this file an image
