@@ -68,13 +68,27 @@ std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters &prm)
 
 /* Really symmetrize ------------------------------------------------------- */
 //#define DEBUG
-void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
-                bool wrap, bool show_progress)
+void symmetrize(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
+		        int Splinedegree,bool wrap, bool show_progress, bool do_outside_avg)
 {
     Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
-    VolumeXmipp V_aux, V_aux2;
+    Image<double> V_aux, V_aux2;
     Matrix1D<double> sh(3);
+    double dum, avg = 0.;
+
     V_out = V_in;
+    if (do_outside_avg)
+    {
+        MultidimArray<int> mask;
+        int rad;
+        mask.resize(V_in());
+        mask.setXmippOrigin();
+        rad = XMIPP_MIN(V_in().ydim/*rowNumber()*/, V_in().xdim/*colNumber()*/);
+        rad = XMIPP_MIN(rad, V_in().zdim/*sliceNumber()*/);
+        BinaryCircularMask(mask, rad / 2, OUTSIDE_MASK);
+        computeStats_within_binary_mask(mask, V_in(), dum, dum, avg, dum);
+    }
+
     if (show_progress)
     {
         std::cerr << "Symmetrizing ...\n";
@@ -86,13 +100,15 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
         SL.get_matrices(i, L, R);
 
         SL.get_shift(i, sh);
-        R(3, 0) = sh(0) * V_aux().colNumber();
-        R(3, 1) = sh(1) * V_aux().rowNumber();
-        R(3, 2) = sh(2) * V_aux().sliceNumber();
+        R(3, 0) = sh(0) * V_aux().xdim;//colNumber();
+        R(3, 1) = sh(1) * V_aux().ydim;//rowNumber();
+        R(3, 2) = sh(2) * V_aux().zdim;//sliceNumber();
 
         /* *** CO: I don't know why the compiler doesn't allow me
            to reuse V_in !!!, this is very memory wasting */
-        applyGeometry(V_aux(), R.transpose(), V_in(), IS_NOT_INV, wrap);
+
+        applyGeometry(Splinedegree,V_aux(), V_in(), R.transpose(), IS_NOT_INV, wrap);
+//#define DEBUG
 #ifdef DEBUG
 
         V_aux.write((std::string)"PPPsym_" + integerToString(i) + ".vol");
@@ -111,26 +127,27 @@ void symmetrize(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
 }
 #undef DEBUG
 
+#ifdef NEVERDEFINED
 /* Really symmetrize using Bsplines ------------------------------------------------ */
 //#define DEBUG
-void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out,
+void symmetrize_Bspline(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
                         int Splinedegree, bool wrap, bool do_outside_avg)
 {
 
     Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
-    VolumeXmipp V_aux, V_aux2;
+    Image<double> V_aux, V_aux2;
     Matrix1D<double> sh(3);
     double dum, avg = 0.;
 
     if (do_outside_avg)
     {
-        Matrix3D<int> mask;
+        MultidimArray<int> mask;
         int rad;
         mask.resize(V_in());
         mask.setXmippOrigin();
-        rad = XMIPP_MIN(V_in().rowNumber(), V_in().colNumber());
-        rad = XMIPP_MIN(rad, V_in().sliceNumber());
-        BinarySphericalMask(mask, rad / 2, OUTSIDE_MASK);
+        rad = XMIPP_MIN(V_in().ydim/*rowNumber()*/, V_in().xdim/*colNumber()*/);
+        rad = XMIPP_MIN(rad, V_in().zdim/*sliceNumber()*/);
+        BinaryCircularMask(mask, rad / 2, OUTSIDE_MASK);
         computeStats_within_binary_mask(mask, V_in(), dum, dum, avg, dum);
     }
 
@@ -141,11 +158,15 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
         SL.get_matrices(i, L, R);
 
         SL.get_shift(i, sh);
-        R(3, 0) = sh(0) * V_aux().colNumber();
-        R(3, 1) = sh(1) * V_aux().rowNumber();
-        R(3, 2) = sh(2) * V_aux().sliceNumber();
+        //R(3, 0) = sh(0) * V_aux().colNumber();
+        //R(3, 1) = sh(1) * V_aux().rowNumber();
+        //R(3, 2) = sh(2) * V_aux().sliceNumber();
+        R(3, 0) = sh(0) * V_aux().xdim;//colNumber();
+        R(3, 1) = sh(1) * V_aux().ydim;//rowNumber();
+        R(3, 2) = sh(2) * V_aux().zdim;//sliceNumber();
 
-        applyGeometryBSpline(V_aux(), R.transpose(), V_in(), Splinedegree, IS_NOT_INV, wrap, avg);
+        //applyGeometryBSpline(V_aux(), R.transpose(), V_in(), Splinedegree, IS_NOT_INV, wrap, avg);
+        applyGeometry(Splinedegree,V_aux(), V_in(), R.transpose(), IS_NOT_INV, wrap);
         arrayByArray(V_out(), V_aux(), V_out(), '+');
 
 #ifdef DEBUG
@@ -158,14 +179,15 @@ void symmetrize_Bspline(const SymList &SL, VolumeXmipp &V_in, VolumeXmipp &V_out
 
 }
 #undef DEBUG
+#endif
 
 /* Main program ------------------------------------------------------------ */
 void ROUT_symmetrize(const Symmetrize_Parameters &prm)
 {
-    SymList         SL;
-    VolumeXmipp     V_in;
-    VolumeXmipp     V_out;
-    FileName        fn_out;
+    SymList           SL;
+    Image<double>     V_in;
+    Image<double>     V_out;
+    FileName          fn_out;
 
     double accuracy = (prm.do_not_generate_subgroup) ? -1 : 1e-6;
     SL.read_sym_file(prm.fn_sym, accuracy);
@@ -174,9 +196,9 @@ void ROUT_symmetrize(const Symmetrize_Parameters &prm)
 
     std::cerr << prm;
     if (!prm.useBsplines)
-        symmetrize(SL, V_in, V_out, prm.wrap, true);
+        symmetrize(SL, V_in, V_out, LINEAR,    prm.wrap, true,false);
     else
-        symmetrize_Bspline(SL, V_in, V_out, 3, prm.wrap, true);
+    	symmetrize(SL, V_in, V_out, 3, prm.wrap, true,true);
     if (prm.fn_out == "")
         fn_out = V_in.name();
     else
