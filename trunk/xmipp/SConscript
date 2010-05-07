@@ -442,9 +442,9 @@ ReconsSources = [
 #    'resolution_ssnr.cpp',
 #    'series_remove_fluctuations.cpp',
 #    'sort_images.cpp',
-    'sparma.cpp'
+    'sparma.cpp',
 #    'surface.cpp',
-#    'symmetrize.cpp',
+    'symmetrize.cpp',
 ##   'virus_vertex',
 #    'volume_foms.cpp',
 #    'volume_labelling.cpp',
@@ -639,7 +639,7 @@ AddXmippProgram('project_xr', ['XmippRecons'])
 #AddXmippProgram('sort_by_statistics')
 #AddXmippProgram('statistics') sjors
 #AddXmippProgram('convert_stack22images')
-#AddXmippProgram('symmetrize', ['XmippRecons'])
+AddXmippProgram('symmetrize', ['XmippRecons'])
 #AddXmippProgram('threshold')
 #AddXmippProgram('try_symmetry')
 #AddXmippProgram('test_sql')
