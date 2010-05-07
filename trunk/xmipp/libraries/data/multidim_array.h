@@ -614,19 +614,20 @@ extern std::string floatToString(float F, int _width, int _prec);
 
 
 // Forward declarations ====================================================
-template<typename T> class MultidimArray;
+template<typename T>
+class MultidimArray;
 
 template<typename T>
 void coreArrayByScalar(const MultidimArray<T>& op1, const T& op2,
-    MultidimArray<T>& result, char operation);
+                       MultidimArray<T>& result, char operation);
 
 template<typename T>
 void coreScalarByArray(const T& op1, const MultidimArray<T>& op2,
-    MultidimArray<T>& result, char operation);
+                       MultidimArray<T>& result, char operation);
 
 template<typename T>
 void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
-    MultidimArray<T>& result, char operation);
+                      MultidimArray<T>& result, char operation);
 
 /* MultidimArray aliases
  * @ingroup MultidimensionalArrays
@@ -687,6 +688,9 @@ public:
     // X init
     int xinit;
 
+    //Alloc memory or map to a file
+    bool mmapOn;
+
 public:
     /// @defgroup MultidimArrayConstructors Constructors
     /// @ingroup MultidimensionalArrays
@@ -699,7 +703,7 @@ public:
     {
         coreInit();
     }
-    
+
     /** Size constructor with 4D size.
      * @ingroup MultidimArrayConstructors
      * The Size constructor creates an array with memory associated,
@@ -742,7 +746,7 @@ public:
     {
         coreInit();
         resize(1, 1, 1, Xdim);
-     }
+    }
 
     /** Copy constructor
      * @ingroup MultidimArrayConstructors
@@ -770,25 +774,25 @@ public:
         coreInit();
         resize(1, 1, 1, V.size());
         for (int i = 0; i < V.size(); i++)
-        	(*this)(i) = V(i);
-     }
+            (*this)(i) = V(i);
+    }
 
     /** Destructor.
      * @ingroup MultidimArrayConstructors
      */
-     ~MultidimArray()
-     {
+    ~MultidimArray()
+    {
         coreDeallocate();
-     }
+    }
 
     /** Clear.
      * @ingroup MultidimArrayConstructors
      */
-     void clear()
-     {
+    void clear()
+    {
         coreDeallocate();
         coreInit();
-     }
+    }
 
     /// @defgroup MultidimArrayCore Core memory operations for MultidimArrays
     /// @ingroup MultidimensionalArrays
@@ -911,13 +915,13 @@ public:
       *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
       *
       */
-     void setXdim(int Xdim)
-     {
-         xdim = Xdim;
-         yxdim=ydim*xdim;
-         zyxdim=zdim*yxdim;
-         nzyxdim=ndim*zyxdim;
-     }
+    void setXdim(int Xdim)
+    {
+        xdim = Xdim;
+        yxdim=ydim*xdim;
+        zyxdim=zdim*yxdim;
+        nzyxdim=ndim*zyxdim;
+    }
 
 
     /** Core deallocate.
@@ -960,12 +964,12 @@ public:
      * You should not make any operation on this volume such that the
      * memory locations are changed
      */
-     void alias(const MultidimArray<T> &m)
-     {
-         copyShape(m);
-         this->data=m.data;
-         this->destroyData=false;
-     }
+    void alias(const MultidimArray<T> &m)
+    {
+        copyShape(m);
+        this->data=m.data;
+        this->destroyData=false;
+    }
 
     /** Resize to a given size
      * @ingroup MultidimSize
@@ -981,11 +985,11 @@ public:
      */
     void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
-    	if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
-            Zdim == ZSIZE(*this) && Ndim == NSIZE(*this) && data !=NULL)
+        if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
+                Zdim == ZSIZE(*this) && Ndim == NSIZE(*this) && data !=NULL)
             return;
 
-    	if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0 || Ndim <= 0)
+        if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0 || Ndim <= 0)
         {
             clear();
             return;
@@ -995,24 +999,27 @@ public:
         // (This can happen for reading of images...)
         // In that case, initialize data to zeros.
         if (NZYXSIZE(*this) > 0 && data == NULL)
-        	coreAllocate();
+        {
+            coreAllocate();
+            return;
+        }
 
         // Ask for memory
         size_t YXdim=Ydim*Xdim;
         size_t ZYXdim=Zdim*YXdim;
         size_t NZYXdim=Ndim*ZYXdim;
-	
-		T * new_data;
 
-		try
-		{
-			new_data = new T [NZYXdim];
-		}
-		catch (std::bad_alloc &)
-		{
-			REPORT_ERROR(1001, "Allocate: No space left");
-		}
-	
+        T * new_data;
+
+        try
+        {
+            new_data = new T [NZYXdim];
+        }
+        catch (std::bad_alloc &)
+        {
+            REPORT_ERROR(1001, "Allocate: No space left");
+        }
+
         // Copy needed elements, fill with 0 if necessary
         for (unsigned long int l = 0; l < Ndim; l++)
             for (int k = 0; k < Zdim; k++)
@@ -1101,8 +1108,8 @@ public:
     template<typename T1>
     void resize(const MultidimArray<T1> &v)
     {
-        if (NSIZE(*this) != NSIZE(v) || XSIZE(*this) != XSIZE(v) || 
-            YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v) || data==NULL)
+        if (NSIZE(*this) != NSIZE(v) || XSIZE(*this) != XSIZE(v) ||
+                YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v) || data==NULL)
             resize(NSIZE(v), ZSIZE(v), YSIZE(v), XSIZE(v));
 
         STARTINGX(*this) = STARTINGX(v);
@@ -1152,7 +1159,7 @@ public:
             return 3;
         if (YSIZE(*this) > 1)
             return 2;
-        else 
+        else
             return 1;
     }
 
@@ -1168,7 +1175,7 @@ public:
         if (getDim() != dim)
         {
             std::cerr<<" Check for dimension: "  << dim <<std::endl;
-            std::cerr << "MultidimArray shape: "; 
+            std::cerr << "MultidimArray shape: ";
             printShape(std::cerr);
             std::cerr << std::endl;
             std::cerr << "Check called from file "<<file<<" line "<<line<<std::endl;
@@ -1231,8 +1238,8 @@ public:
             for (int i = y0; i <= yF; i++)
                 for (int j = x0; j <= xF; j++)
                     if ((k >= STARTINGZ(*this) && k <= FINISHINGZ(*this)) &&
-                        (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
-                        (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
+                            (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
+                            (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
                         A3D_ELEM(result, k, i, j) = NZYX_ELEM(*this, n, k, i, j);
                     else
                         A3D_ELEM(result, k, i, j) = init_value;
@@ -1268,7 +1275,7 @@ public:
 
         FOR_ALL_ELEMENTS_IN_ARRAY2D(result)
         if (j >= STARTINGX(*this) && j <= FINISHINGX(*this) &&
-            i >= STARTINGY(*this) && i <= FINISHINGY(*this))
+                i >= STARTINGY(*this) && i <= FINISHINGY(*this))
             A2D_ELEM(result, i, j) = NZYX_ELEM(*this, n, 0, i, j);
         else
             A2D_ELEM(result, i, j) = init_value;
@@ -1324,24 +1331,24 @@ public:
     {
         if (NSIZE(*this) > 1)
             out << " Number of images = "<<NSIZE(*this);
-                
+
         int dim = getDim();
         if (dim == 3)
             out<< " Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x" << XSIZE(*this)
-               << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
-               << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
-               << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+            << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
+            << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
+            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
         else if (dim == 2)
             out<< " Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
-               << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
-               << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+            << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
+            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
         else if (dim == 1)
             out<< " Size(X): " << XSIZE(*this)
-               << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
         else
             out << " Empty MultidimArray!";
         out<<"\n";
-            
+
     }
 
     /** Same shape.
@@ -1412,7 +1419,7 @@ public:
             REPORT_ERROR(1, "Outside: index vector has not got enough components");
         }
         else if (r.size()==1)
-        {    
+        {
             return (XX(r) < STARTINGX(*this) || XX(r) > FINISHINGX(*this));
         }
         else if (r.size()==2)
@@ -1463,37 +1470,37 @@ public:
         return A3D_ELEM((*this), ZZ(v), YY(v), XX(v));
     }
 
-     /** 4D element access via index.
-     * @ingroup MultidimMemory
-     *
-     * Returns the value of a matrix logical position. In our example we could
-     * access from v(0, 0,-2,-1) to v(0, 1,2,1). The elements can be used either by
-     * value or by reference. An exception is thrown if the index is outside
-     * the logical range. Be careful that the argument order is (Z,Y,X).
-     *
-     * @code
-     * V(0, 0, -2, 1) = 1;
-     * val = V(0, 0, -2, 1);
-     * @endcode
-     */
+    /** 4D element access via index.
+    * @ingroup MultidimMemory
+    *
+    * Returns the value of a matrix logical position. In our example we could
+    * access from v(0, 0,-2,-1) to v(0, 1,2,1). The elements can be used either by
+    * value or by reference. An exception is thrown if the index is outside
+    * the logical range. Be careful that the argument order is (Z,Y,X).
+    *
+    * @code
+    * V(0, 0, -2, 1) = 1;
+    * val = V(0, 0, -2, 1);
+    * @endcode
+    */
     T& operator()(unsigned long n, int k, int i, int j) const
     {
         return NZYX_ELEM(*this, n, k, i, j);
     }
 
-     /** 3D element access via index.
-     * @ingroup MultidimMemory
-     *
-     * Returns the value of a matrix logical position. In our example we could
-     * access from v(0,-2,-1) to v(1,2,1). The elements can be used either by
-     * value or by reference. An exception is thrown if the index is outside
-     * the logical range. Be careful that the argument order is (Z,Y,X).
-     *
-     * @code
-     * V(0, -2, 1) = 1;
-     * val = V(0, -2, 1);
-     * @endcode
-     */
+    /** 3D element access via index.
+    * @ingroup MultidimMemory
+    *
+    * Returns the value of a matrix logical position. In our example we could
+    * access from v(0,-2,-1) to v(1,2,1). The elements can be used either by
+    * value or by reference. An exception is thrown if the index is outside
+    * the logical range. Be careful that the argument order is (Z,Y,X).
+    *
+    * @code
+    * V(0, -2, 1) = 1;
+    * val = V(0, -2, 1);
+    * @endcode
+    */
     T& operator()(int k, int i, int j) const
     {
         return A3D_ELEM(*this, k, i, j);
@@ -1533,7 +1540,7 @@ public:
      */
     T& operator()(int i) const
     {
-       return A1D_ELEM(*this, i);
+        return A1D_ELEM(*this, i);
     }
 
 
@@ -1558,8 +1565,8 @@ public:
 
         M.resize(1, ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(M)
-            DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
-        
+        DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+
         STARTINGX(M) = STARTINGX(*this);
         STARTINGY(M) = STARTINGY(*this);
         STARTINGZ(M) = STARTINGZ(*this);
@@ -1597,7 +1604,7 @@ public:
             k = k - STARTINGZ(*this);
             M.resize(1, 1, YSIZE(*this), XSIZE(*this));
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
-                DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+            DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGY(*this);
             break;
@@ -1609,7 +1616,7 @@ public:
             k = k - STARTINGY(*this);
             M.resize(ZSIZE(*this), XSIZE(*this));
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
-                DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, k, j);
+            DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, k, j);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
@@ -1621,7 +1628,7 @@ public:
             k = k - STARTINGX(*this);
             M.resize(ZSIZE(*this), YSIZE(*this));
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
-                DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, j, k);
+            DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, j, k);
             STARTINGX(M) = STARTINGY(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
@@ -1658,7 +1665,7 @@ public:
         k = k - STARTINGZ(*this);
 
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(v)
-            DIRECT_NZYX_ELEM(*this, n, k, i, j) = DIRECT_A2D_ELEM(v, i, j);
+        DIRECT_NZYX_ELEM(*this, n, k, i, j) = DIRECT_A2D_ELEM(v, i, j);
     }
 
     /** Get Column
@@ -1779,7 +1786,7 @@ public:
      * @endcode
      */
     void toPhysical(int k_log, int i_log, int j_log,
-                          int& k_phys, int& i_phys, int& j_phys) const
+                    int& k_phys, int& i_phys, int& j_phys) const
     {
         k_phys = k_log - STARTINGZ(*this);
         i_phys = i_log - STARTINGY(*this);
@@ -1796,7 +1803,7 @@ public:
      * @endcode
      */
     void toLogical(int k_phys, int i_phys, int j_phys,
-                          int& k_log, int& i_log, int& j_log) const
+                   int& k_log, int& i_log, int& j_log) const
     {
         k_log = k_phys + STARTINGZ(*this);
         i_log = i_phys + STARTINGY(*this);
@@ -1929,7 +1936,7 @@ public:
      *
      * (x,y,z) are in logical coordinates.
      */
-    T interpolatedElementBSpline3D(double x, double y, double z, 
+    T interpolatedElementBSpline3D(double x, double y, double z,
                                    int SplineDegree = 3, unsigned long n = 0)
     {
         int SplineDegree_1 = SplineDegree - 1;
@@ -1953,24 +1960,32 @@ public:
         int n2 = n1 + SplineDegree;
 
         double zyxsum = 0.0;
-        for (int nn = n1; nn <= n2; nn++) {
-	    int equivalent_n=n;
-	    if      (nn<0)             equivalent_n=-nn-1;
-	    else if (nn>=ZSIZE(*this)) equivalent_n=2*ZSIZE(*this)-nn-1;
+        for (int nn = n1; nn <= n2; nn++)
+        {
+            int equivalent_n=n;
+            if      (nn<0)
+                equivalent_n=-nn-1;
+            else if (nn>=ZSIZE(*this))
+                equivalent_n=2*ZSIZE(*this)-nn-1;
             double yxsum = 0.0;
-            for (int m = m1; m <= m2; m++) {
-		int equivalent_m=m;
-		if      (m<0)             equivalent_m=-m-1;
-		else if (m>=YSIZE(*this)) equivalent_m=2*YSIZE(*this)-m-1;
+            for (int m = m1; m <= m2; m++)
+            {
+                int equivalent_m=m;
+                if      (m<0)
+                    equivalent_m=-m-1;
+                else if (m>=YSIZE(*this))
+                    equivalent_m=2*YSIZE(*this)-m-1;
                 double xsum = 0.0;
                 for (int l = l1; l <= l2; l++)
                 {
                     double xminusl = x - (double) l;
-		    int equivalent_l=l;
-		    if      (l<0)             equivalent_l=-l-1;
-		    else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
-                    double Coeff = (double) DIRECT_NZYX_ELEM(*this, n, 
-                        equivalent_n,equivalent_m,equivalent_l);
+                    int equivalent_l=l;
+                    if      (l<0)
+                        equivalent_l=-l-1;
+                    else if (l>=XSIZE(*this))
+                        equivalent_l=2*XSIZE(*this)-l-1;
+                    double Coeff = (double) DIRECT_NZYX_ELEM(*this, n,
+                                   equivalent_n,equivalent_m,equivalent_l);
                     switch (SplineDegree)
                     {
                     case 2:
@@ -2028,7 +2043,7 @@ public:
                     yxsum += xsum * Bspline09(yminusm);
                     break;
                 }
-	    }
+            }
 
             double zminusn = z - (double) n;
             switch (SplineDegree)
@@ -2058,7 +2073,7 @@ public:
                 zyxsum += yxsum * Bspline09(zminusn);
                 break;
             }
-	}
+        }
 
         return (T) zyxsum;
     }
@@ -2080,7 +2095,7 @@ public:
      * 0.5,3);
      * @endcode
      */
-    inline T interpolatedElementBSpline2D(double x, double y, int SplineDegree = 3, 
+    inline T interpolatedElementBSpline2D(double x, double y, int SplineDegree = 3,
                                           unsigned long n = 0) const
     {
         int SplineDegree_1 = SplineDegree - 1;
@@ -2099,17 +2114,21 @@ public:
         double columns = 0.0;
         for (int m = m1; m <= m2; m++)
         {
-	    int equivalent_m=m;
-	    if      (m<0)             equivalent_m=-m-1;
-	    else if (m>=YSIZE(*this)) equivalent_m=2*YSIZE(*this)-m-1;
+            int equivalent_m=m;
+            if      (m<0)
+                equivalent_m=-m-1;
+            else if (m>=YSIZE(*this))
+                equivalent_m=2*YSIZE(*this)-m-1;
             int row_m = XSIZE(*this) * equivalent_m;
             double rows = 0.0;
             for (int l = l1; l <= l2; l++)
             {
                 double xminusl = x - (double) l;
-		int equivalent_l=l;
-		if      (l<0)             equivalent_l=-l-1;
-		else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
+                int equivalent_l=l;
+                if      (l<0)
+                    equivalent_l=-l-1;
+                else if (l>=XSIZE(*this))
+                    equivalent_l=2*XSIZE(*this)-l-1;
                 double Coeff = (double) DIRECT_NZYX_ELEM(*this, n, 0, equivalent_m,equivalent_l);
                 switch (SplineDegree)
                 {
@@ -2217,9 +2236,11 @@ public:
         for (int l = l1; l <= l2; l++)
         {
             double xminusl = x - (double) l;
-	    int equivalent_l=l;
-	    if      (l<0)             equivalent_l=-l-1;
-	    else if (l>=XSIZE(*this)) equivalent_l=2*XSIZE(*this)-l-1;
+            int equivalent_l=l;
+            if      (l<0)
+                equivalent_l=-l-1;
+            else if (l>=XSIZE(*this))
+                equivalent_l=2*XSIZE(*this)-l-1;
             double Coeff = (double) DIRECT_NZYX_ELEM(*this, n, 0, 0, equivalent_l);
             switch (SplineDegree)
             {
@@ -2287,32 +2308,32 @@ public:
       * only need to move the logical starting of the array.
       *
       */
-     void moveOriginTo(int k, int i, int j)
-     {
-         zinit = k + FIRST_XMIPP_INDEX(zdim);
-         yinit = i + FIRST_XMIPP_INDEX(ydim);
-         xinit = j + FIRST_XMIPP_INDEX(xdim);
-     }
+    void moveOriginTo(int k, int i, int j)
+    {
+        zinit = k + FIRST_XMIPP_INDEX(zdim);
+        yinit = i + FIRST_XMIPP_INDEX(ydim);
+        xinit = j + FIRST_XMIPP_INDEX(xdim);
+    }
 
-     /** Move origin to.
-       * @ingroup MultidimSize
-       *
-       * This function adjust logical indexes such that the Xmipp origin of the
-       * array moves to the specified position. For instance, an array whose x
-       * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
-       * go from 3 to 5. This is very useful for convolution operations where you
-       * only need to move the logical starting of the array.
-       *
-       */
-      void moveOriginTo(int i, int j)
-      {
-          yinit = i + FIRST_XMIPP_INDEX(ydim);
-          xinit = j + FIRST_XMIPP_INDEX(xdim);
-      }
+    /** Move origin to.
+      * @ingroup MultidimSize
+      *
+      * This function adjust logical indexes such that the Xmipp origin of the
+      * array moves to the specified position. For instance, an array whose x
+      * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
+      * go from 3 to 5. This is very useful for convolution operations where you
+      * only need to move the logical starting of the array.
+      *
+      */
+    void moveOriginTo(int i, int j)
+    {
+        yinit = i + FIRST_XMIPP_INDEX(ydim);
+        xinit = j + FIRST_XMIPP_INDEX(xdim);
+    }
 
-   /** Returns the first valid logical Z index.
-     * @ingroup MultidimSize
-     */
+    /** Returns the first valid logical Z index.
+      * @ingroup MultidimSize
+      */
     int startingZ() const
     {
         return zinit;
@@ -2371,7 +2392,7 @@ public:
         ask_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
 
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*this)
-            m[k+1][i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+        m[k+1][i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, k, i, j);
 
         return m;
     }
@@ -2397,7 +2418,7 @@ public:
         ask_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
 
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*this)
-            m[i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, 0, i, j);
+        m[i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, 0, i, j);
 
         return m;
     }
@@ -2522,10 +2543,10 @@ public:
         T maxval = data[0];
 
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            if (*ptr > maxval)
-                maxval = *ptr;
+        if (*ptr > maxval)
+            maxval = *ptr;
 
         return maxval;
     }
@@ -2543,10 +2564,10 @@ public:
         T minval = data[0];
 
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            if (*ptr < minval)
-                minval = *ptr;
+        if (*ptr < minval)
+            minval = *ptr;
 
         return minval;
     }
@@ -2573,14 +2594,14 @@ public:
 
 
         FOR_ALL_NZYX_ELEMENTS_IN_MULTIDIMARRAY(*this)
-            if (NZYX_ELEM(*this, l, k, i, j) > minval)
-            {
-                minval = NZYX_ELEM(*this, l, k, i, j);
-                lmin = l;
-                kmin = k;
-                imin = i;
-                jmin = j;
-            }
+        if (NZYX_ELEM(*this, l, k, i, j) > minval)
+        {
+            minval = NZYX_ELEM(*this, l, k, i, j);
+            lmin = l;
+            kmin = k;
+            imin = i;
+            jmin = j;
+        }
 
     }
 
@@ -2635,14 +2656,14 @@ public:
         T maxval = NZYX_ELEM(*this, lmax, kmax, imax, jmax);
 
         FOR_ALL_NZYX_ELEMENTS_IN_MULTIDIMARRAY(*this)
-            if (NZYX_ELEM(*this, l, k, i, j) > maxval)
-            {
-                maxval = NZYX_ELEM(*this, l, k, i, j);
-                lmax = l;
-                kmax = k;
-                imax = i;
-                jmax = j;
-            }
+        if (NZYX_ELEM(*this, l, k, i, j) > maxval)
+        {
+            maxval = NZYX_ELEM(*this, l, k, i, j);
+            lmax = l;
+            kmax = k;
+            imax = i;
+            jmax = j;
+        }
     }
 
     /** 3D Indices for the maximum element.
@@ -2691,7 +2712,7 @@ public:
         minval = maxval = static_cast< double >(data[0]);
 
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
             if (*ptr < minval)
@@ -2716,9 +2737,9 @@ public:
         double sum = 0;
 
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            sum += static_cast< double >(*ptr);
+        sum += static_cast< double >(*ptr);
 
         return sum / NZYXSIZE(*this);
     }
@@ -2738,7 +2759,7 @@ public:
         double avg = 0, stddev = 0;
 
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
             avg += static_cast< double >(*ptr);
@@ -2773,7 +2794,7 @@ public:
         minval = maxval = data[0];
 
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
             avg += static_cast< double >(*ptr);
@@ -2808,40 +2829,40 @@ public:
      * Note that this function only works for the 0th image in a multi-image array...
      */
     void computeStats(double& avg,
-    		double& stddev,
-    		T& min_val,
-    		T& max_val,
-    		Matrix1D< int >& corner1,
-    		Matrix1D< int >& corner2,
-    		unsigned long n = 0)
+                      double& stddev,
+                      T& min_val,
+                      T& max_val,
+                      Matrix1D< int >& corner1,
+                      Matrix1D< int >& corner2,
+                      unsigned long n = 0)
     {
-    	(*this).checkDimension(2);
-    	min_val = max_val = NZYX_ELEM((*this), n, 0, YY(corner1), XX(corner1));
+        (*this).checkDimension(2);
+        min_val = max_val = NZYX_ELEM((*this), n, 0, YY(corner1), XX(corner1));
 
-    	Matrix1D< double > r(3);
-    	double N = 0, sum = 0, sum2 = 0;
+        Matrix1D< double > r(3);
+        double N = 0, sum = 0, sum2 = 0;
 
-    	FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
-    	{
-    			sum += (*this)(r);
-    			sum2 += (*this)(r) * (*this)(r);
-    			N++;
+        FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
+        {
+            sum += (*this)(r);
+            sum2 += (*this)(r) * (*this)(r);
+            N++;
 
-    			if ((*this)(r) < min_val)
-    			min_val = (*this)(r);
-    			else if ((*this)(r) > max_val)
-    			max_val = (*this)(r);
-    	}
+            if ((*this)(r) < min_val)
+                min_val = (*this)(r);
+            else if ((*this)(r) > max_val)
+                max_val = (*this)(r);
+        }
 
-    	if (N != 0)
-    	{
-    			avg = sum / N;
-    			stddev = sqrt(sum2 / N - avg * avg);
-    	}
-    	else
-    	{
-    			avg = stddev = 0;
-    	}
+        if (N != 0)
+        {
+            avg = sum / N;
+            stddev = sqrt(sum2 / N - avg * avg);
+        }
+        else
+        {
+            avg = stddev = 0;
+        }
     }
 
     /** IsCorner (in 2D or 3D matrix)
@@ -2895,7 +2916,7 @@ public:
         MultidimArray< double > temp;
         temp.resize(*this);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*this)
-            DIRECT_MULTIDIM_ELEM(temp,n)=DIRECT_MULTIDIM_ELEM(*this,n);
+        DIRECT_MULTIDIM_ELEM(temp,n)=DIRECT_MULTIDIM_ELEM(*this,n);
 
         // Sort indexes
         double* temp_array = MULTIDIM_ARRAY(temp)-1;
@@ -2941,8 +2962,8 @@ public:
         T* ptr=NULL;
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = minF + static_cast< T >(slope *
-                static_cast< double >(*ptr - min0));
+        *ptr = minF + static_cast< T >(slope *
+                                       static_cast< double >(*ptr - min0));
     }
 
     /** Adjust the range of the array to a given one within a mask.
@@ -2951,7 +2972,7 @@ public:
      * A linear operation is performed on the values of the array such that
      * after it, the values of the array are comprissed between the two values
      * set. The actual array is modified itself. The linear transformation
-	 * is computed within the mask, but it is applied everywhere.
+    * is computed within the mask, but it is applied everywhere.
      *
      * @code
      * v.rangeAdjust(0, 1, mask);
@@ -2986,7 +3007,7 @@ public:
                 }
             }
             ptrMask++;
-       }
+        }
 
         // If max0==min0, it means that the vector is a constant one, so the
         // only possible transformation is to a fixed minF
@@ -2998,8 +3019,8 @@ public:
             slope = 0;
 
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = minF + static_cast< T >(slope *
-                static_cast< double >(*ptr - min0));
+        *ptr = minF + static_cast< T >(slope *
+                                       static_cast< double >(*ptr - min0));
     }
 
     /** Adjust the range of the array to the range of another array in
@@ -3011,16 +3032,17 @@ public:
      * (L2 sense) to the values of the array shown as sample
      */
     void rangeAdjust(const MultidimArray<T> &example,
-        const MultidimArray<int> *mask=NULL)
+                     const MultidimArray<int> *mask=NULL)
     {
         if (NZYXSIZE(*this) <= 0)
             return;
-        
+
         // y=a+bx
         double sumx=0, sumy=0, sumxy=0, sumx2=0;
         double* ptrExample=MULTIDIM_ARRAY(example);
         int* ptrMask=NULL;
-        if (mask!=NULL) ptrMask=MULTIDIM_ARRAY(*mask);
+        if (mask!=NULL)
+            ptrMask=MULTIDIM_ARRAY(*mask);
         double* ptr=NULL;
         unsigned long int n;
         double N=0;
@@ -3028,7 +3050,8 @@ public:
         {
             bool process=true;
             if (mask!=NULL)
-                if (*ptrMask==0) process=false;
+                if (*ptrMask==0)
+                    process=false;
             if (process)
             {
                 double x=*ptr;
@@ -3040,12 +3063,13 @@ public:
                 N++;
             }
             ptrExample++;
-            if (mask!=NULL) ptrMask++;
+            if (mask!=NULL)
+                ptrMask++;
         }
         double a=(sumy*sumx2-sumx*sumxy)/(N*sumx2-sumx*sumx);
         double b=(N*sumxy-sumx*sumy)/(N*sumx2-sumx*sumx);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = static_cast< double >(a+b * static_cast< double > (*ptr));
+        *ptr = static_cast< double >(a+b * static_cast< double > (*ptr));
     }
 
     /** Adjust the average and stddev of the array to given values.
@@ -3080,9 +3104,9 @@ public:
         b = static_cast< double >(avgF) - a * static_cast< double >(avg0);
 
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = static_cast< T >(a * static_cast< double > (*ptr) + b);
+        *ptr = static_cast< T >(a * static_cast< double > (*ptr) + b);
     }
 
     /// @defgroup Arithmethic Arithmethic operations
@@ -3109,9 +3133,9 @@ public:
      * It assumes that the result is already resized.
      */
     friend void coreArrayByArray<>(const MultidimArray<T>& op1,
-        const MultidimArray<T>& op2, MultidimArray<T>& result,
-        char operation);
-    
+                                   const MultidimArray<T>& op2, MultidimArray<T>& result,
+                                   char operation);
+
     /** Array by array
      * @ingroup ArrayByArray
      *
@@ -3123,8 +3147,8 @@ public:
      *
      */
     friend void arrayByArray(const MultidimArray<T>& op1,
-        const MultidimArray<T>& op2, MultidimArray<T>& result,
-        char operation)
+                             const MultidimArray<T>& op2, MultidimArray<T>& result,
+                             char operation)
     {
         if (!op1.sameShape(op2))
             REPORT_ERROR(1007,
@@ -3231,9 +3255,9 @@ public:
      * This function is not ported to Python.
      */
     friend void arrayByScalar(const MultidimArray<T>& op1,
-                                T op2,
-                                MultidimArray<T>& result,
-                                char operation)
+                              T op2,
+                              MultidimArray<T>& result,
+                              char operation)
     {
         result.resize(op1);
         coreArrayByScalar(op1, op2, result, operation);
@@ -3356,9 +3380,9 @@ public:
      * This function is not ported to Python.
      */
     friend void scalarByArray(T op1,
-                                const MultidimArray<T>& op2,
-                                MultidimArray<T>& result,
-                                char operation)
+                              const MultidimArray<T>& op2,
+                              MultidimArray<T>& result,
+                              char operation)
     {
         result.resize(op2);
         coreScalarByArray(op1, op2, result, operation);
@@ -3433,9 +3457,9 @@ public:
     void initConstant(T val)
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = val;
+        *ptr = val;
     }
 
     /** Initialize to zeros following a pattern.
@@ -3528,38 +3552,38 @@ public:
      * v1.initLinear(0, 10, 6, "steps"); // v1=[0 2 4 6 8 10]
      * @endcode
      */
-		/*
-    void initLinear(T minF, T maxF, int n = 1, const std::string& mode = "incr")
-    {
-        double slope;
-        int steps;
+    /*
+      void initLinear(T minF, T maxF, int n = 1, const std::string& mode = "incr")
+      {
+          double slope;
+          int steps;
 
-        checkDimension(1);
+          checkDimension(1);
 
-        if (mode == "incr")
-        {
-            steps = 1 + (int) FLOOR((double) ABS((maxF - minF)) / ((double) n));
-            slope = n * SGN(maxF - minF);
-        }
-        else if (mode == "steps")
-        {
-            steps = n;
-            slope = (maxF - minF) / (steps - 1);
-        }
-        else
-            REPORT_ERROR(1005, "Init_linear: Mode not supported (" + mode +
-                         ")");
+          if (mode == "incr")
+          {
+              steps = 1 + (int) FLOOR((double) ABS((maxF - minF)) / ((double) n));
+              slope = n * SGN(maxF - minF);
+          }
+          else if (mode == "steps")
+          {
+              steps = n;
+              slope = (maxF - minF) / (steps - 1);
+          }
+          else
+              REPORT_ERROR(1005, "Init_linear: Mode not supported (" + mode +
+                           ")");
 
-        if (steps == 0)
-            clear();
-        else
-        {
-            resize(steps);
-            for (int i = 0; i < steps; i++)
-                A1D_ELEM(*this, i) = (T)((double) minF + slope * i);
-        }
-    }
-	*/
+          if (steps == 0)
+              clear();
+          else
+          {
+              resize(steps);
+              for (int i = 0; i < steps; i++)
+                  A1D_ELEM(*this, i) = (T)((double) minF + slope * i);
+          }
+      }
+    */
 
     /** Initialize with random values.
      * @ingroup Initialization
@@ -3586,13 +3610,13 @@ public:
     void initRandom(double op1, double op2, const std::string& mode = "uniform")
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         if (mode == "uniform")
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-                *ptr = static_cast< T >(rnd_unif(op1, op2));
+            *ptr = static_cast< T >(rnd_unif(op1, op2));
         else if (mode == "gaussian")
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-                *ptr = static_cast< T >(rnd_gaus(op1, op2));
+            *ptr = static_cast< T >(rnd_gaus(op1, op2));
         else
             REPORT_ERROR(1005,
                          static_cast< std::string >("InitRandom: Mode not supported (" +
@@ -3632,16 +3656,16 @@ public:
                   double df = 3) const
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         if (mode == "uniform")
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-                *ptr += static_cast< T >(rnd_unif(op1, op2));
+            *ptr += static_cast< T >(rnd_unif(op1, op2));
         else if (mode == "gaussian")
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-                *ptr += static_cast< T >(rnd_gaus(op1, op2));
+            *ptr += static_cast< T >(rnd_gaus(op1, op2));
         else if (mode == "student")
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-                *ptr += static_cast< T >(rnd_student_t(df, op1, op2));
+            *ptr += static_cast< T >(rnd_student_t(df, op1, op2));
         else
             REPORT_ERROR(1005,
                          static_cast< std::string >("AddNoise: Mode not supported (" +
@@ -3660,24 +3684,24 @@ public:
      */
     void centerOfMass(Matrix1D< double >& center, void * mask=NULL, unsigned long n = 0)
     {
-	center.initZeros(3);
-	double mass = 0;
-	MultidimArray< int >* imask = (MultidimArray< int >*) mask;
+        center.initZeros(3);
+        double mass = 0;
+        MultidimArray< int >* imask = (MultidimArray< int >*) mask;
 
-	FOR_ALL_ELEMENTS_IN_ARRAY3D(*this)
-	{
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(*this)
+        {
             if ((imask == NULL || NZYX_ELEM(*imask, n, k, i, j)) &&
-		A3D_ELEM(*this, k, i, j) > 0)
+                    A3D_ELEM(*this, k, i, j) > 0)
             {
-        	XX(center) += j * NZYX_ELEM(*this, n, k, i, j);
-        	YY(center) += i * NZYX_ELEM(*this, n, k, i, j);
-        	ZZ(center) += k * NZYX_ELEM(*this, n, k, i, j);
+                XX(center) += j * NZYX_ELEM(*this, n, k, i, j);
+                YY(center) += i * NZYX_ELEM(*this, n, k, i, j);
+                ZZ(center) += k * NZYX_ELEM(*this, n, k, i, j);
 
-        	mass += NZYX_ELEM(*this, n, k, i, j);
+                mass += NZYX_ELEM(*this, n, k, i, j);
             }
-	}
+        }
 
-	if (mass != 0)
+        if (mass != 0)
             center /= mass;
     }
 
@@ -3693,9 +3717,9 @@ public:
      */
     MultidimArray<T> sort() const
     {
-    	checkDimension(1);
+        checkDimension(1);
 
-    	MultidimArray<T> temp;
+        MultidimArray<T> temp;
         MultidimArray< double > aux;
 
         if (xdim == 0)
@@ -3727,9 +3751,9 @@ public:
      */
     MultidimArray< int > indexSort() const
     {
-    	checkDimension(1);
+        checkDimension(1);
 
-    	MultidimArray< int >   indx;
+        MultidimArray< int >   indx;
         MultidimArray< double > temp;
 
         if (xdim == 0)
@@ -3787,10 +3811,10 @@ public:
      * // will be substituted by its nearest border
      * @endcode
      */
-    void threshold(const std::string& type, 
-	           T a, 
-	           T b,
-	           MultidimArray<int> * mask = NULL )
+    void threshold(const std::string& type,
+                   T a,
+                   T b,
+                   MultidimArray<int> * mask = NULL )
     {
         int mode;
 
@@ -3810,37 +3834,37 @@ public:
                                                     type + ")"));
 
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
-	    if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
-	    {
-	        switch (mode)
-	        {
-	        case 1:
-		    if (ABS(*ptr) > a)
-		        *ptr = SGN(*ptr) * b;
-		    break;
-	        case 2:
-		    if (ABS(*ptr) < a)
-		        *ptr = SGN(*ptr) * b;
-		    break;
-	        case 3:
-		    if (*ptr > a)
-		        *ptr = b;
-		    break;
-	        case 4:
-		    if (*ptr < a)
-		        *ptr = b;
-		    break;
-	        case 5:
-		    if (*ptr < a)
-		        *ptr = a;
-		    else if (*ptr > b)
-		        *ptr = b;
-		    break;
-	        }
-	    }
+            if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
+            {
+                switch (mode)
+                {
+                case 1:
+                    if (ABS(*ptr) > a)
+                        *ptr = SGN(*ptr) * b;
+                    break;
+                case 2:
+                    if (ABS(*ptr) < a)
+                        *ptr = SGN(*ptr) * b;
+                    break;
+                case 3:
+                    if (*ptr > a)
+                        *ptr = b;
+                    break;
+                case 4:
+                    if (*ptr < a)
+                        *ptr = b;
+                    break;
+                case 5:
+                    if (*ptr < a)
+                        *ptr = a;
+                    else if (*ptr > b)
+                        *ptr = b;
+                    break;
+                }
+            }
         }
     }
 
@@ -3850,10 +3874,10 @@ public:
      * This function returns the number of elements meeting the threshold
      * condition.
      */
-    unsigned long countThreshold(const std::string& type, 
-		         T a, 
-		         T b,
-		         MultidimArray<int> * mask = NULL )
+    unsigned long countThreshold(const std::string& type,
+                                 T a,
+                                 T b,
+                                 MultidimArray<int> * mask = NULL )
     {
         int mode;
 
@@ -3875,34 +3899,34 @@ public:
         unsigned long ret = 0;
 
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-	    if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
-	    {
-	        switch (mode)
-	        {
-	        case 1:
-		    if (ABS(*ptr) > a)
-		        ret++;
-		    break;
-	        case 2:
-		    if (ABS(*ptr) < a)
-		        ret++;
-		    break;
-	        case 3:
-		    if (*ptr > a)
-		        ret++;
-		    break;
-	        case 4:
-		    if (*ptr < a)
-		        ret++;
-		    break;
-	        case 5:
-		    if (*ptr >= a && *ptr <= b)
-		        ret++;
-		    break;
-	        }
-	    }
+        if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
+        {
+            switch (mode)
+            {
+            case 1:
+                if (ABS(*ptr) > a)
+                    ret++;
+                break;
+            case 2:
+                if (ABS(*ptr) < a)
+                    ret++;
+                break;
+            case 3:
+                if (*ptr > a)
+                    ret++;
+                break;
+            case 4:
+                if (*ptr < a)
+                    ret++;
+                break;
+            case 5:
+                if (*ptr >= a && *ptr <= b)
+                    ret++;
+                break;
+            }
+        }
         return ret;
     }
 
@@ -3919,11 +3943,11 @@ public:
                     MultidimArray<int> * mask = NULL )
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-	    if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
-	        if (ABS(*ptr - oldv) <= accuracy)
-		    *ptr = newv;
+        if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
+            if (ABS(*ptr - oldv) <= accuracy)
+                *ptr = newv;
 
     }
 
@@ -3935,17 +3959,17 @@ public:
      * to the old value.  Set it to 0 for perfect accuracy.
      */
     void randomSubstitute(T oldv,
-		           T avgv,
-		           T sigv,
-		           double accuracy = XMIPP_EQUAL_ACCURACY,
-		           MultidimArray<int> * mask = NULL )
+                          T avgv,
+                          T sigv,
+                          double accuracy = XMIPP_EQUAL_ACCURACY,
+                          MultidimArray<int> * mask = NULL )
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-	    if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
-	        if (ABS(*ptr - oldv) <= accuracy)
-		    *ptr = rnd_gaus(avgv, sigv);
+        if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
+            if (ABS(*ptr - oldv) <= accuracy)
+                *ptr = rnd_gaus(avgv, sigv);
 
     }
 
@@ -3956,18 +3980,18 @@ public:
      * than val+accuracy by 1 and the rest are set to 0. Use threshold to get a
      * very powerful binarization.
      */
-    void binarize(double val = 0, 
-	          double accuracy = XMIPP_EQUAL_ACCURACY,
-	          MultidimArray<int> * mask = NULL )
+    void binarize(double val = 0,
+                  double accuracy = XMIPP_EQUAL_ACCURACY,
+                  MultidimArray<int> * mask = NULL )
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-	    if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
-	        if (*ptr <= val + accuracy)
-		    *ptr = 0;
-	        else
-		    *ptr = 1;
+        if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
+            if (*ptr <= val + accuracy)
+                *ptr = 0;
+            else
+                *ptr = 1;
 
     }
 
@@ -3979,9 +4003,9 @@ public:
     void selfROUND()
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = ROUND(*ptr);
+        *ptr = ROUND(*ptr);
     }
 
     /** CEILING
@@ -3993,9 +4017,9 @@ public:
     void selfCEIL()
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = CEIL(*ptr);
+        *ptr = CEIL(*ptr);
     }
 
     /** FLOOR
@@ -4007,9 +4031,9 @@ public:
     void selfFLOOR()
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = FLOOR(*ptr);
+        *ptr = FLOOR(*ptr);
     }
 
     /** ABS
@@ -4020,9 +4044,9 @@ public:
     void selfABS()
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = ABS(*ptr);
+        *ptr = ABS(*ptr);
     }
 
     /** MAX
@@ -4033,16 +4057,16 @@ public:
      * not an exception is thrown
      */
     friend void MAX(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
-        MultidimArray<T>& result)
+                    MultidimArray<T>& result)
     {
         if (!v1.sameShape(v2))
             REPORT_ERROR(1007, "MAX: arrays of different shape");
 
         result.resize(v1);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(result)
-            DIRECT_MULTIDIM_ELEM(result,n) = XMIPP_MAX(
-                DIRECT_MULTIDIM_ELEM(v1,n),
-                DIRECT_MULTIDIM_ELEM(v2,n));
+        DIRECT_MULTIDIM_ELEM(result,n) = XMIPP_MAX(
+                                             DIRECT_MULTIDIM_ELEM(v1,n),
+                                             DIRECT_MULTIDIM_ELEM(v2,n));
     }
 
     /** MIN
@@ -4053,16 +4077,16 @@ public:
      * not an exception is thrown
      */
     friend void MIN(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
-        MultidimArray<T>& result)
+                    MultidimArray<T>& result)
     {
         if (!v1.sameShape(v2))
             REPORT_ERROR(1007, "MIN: arrays of different shape");
 
         result.resize(v1);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(result)
-            DIRECT_MULTIDIM_ELEM(result,n) = XMIPP_MIN(
-                DIRECT_MULTIDIM_ELEM(v1,n),
-                DIRECT_MULTIDIM_ELEM(v2,n));
+        DIRECT_MULTIDIM_ELEM(result,n) = XMIPP_MIN(
+                                             DIRECT_MULTIDIM_ELEM(v1,n),
+                                             DIRECT_MULTIDIM_ELEM(v2,n));
     }
 
     /** Sqrt.
@@ -4074,9 +4098,9 @@ public:
     void selfSQRT()
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = static_cast< T >(sqrt(static_cast< double >(*ptr)));
+        *ptr = static_cast< T >(sqrt(static_cast< double >(*ptr)));
     }
 
     /** Sum of matrix values.
@@ -4092,9 +4116,9 @@ public:
     {
         double sum = 0;
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            sum += *ptr;
+        sum += *ptr;
         return sum;
     }
 
@@ -4112,9 +4136,9 @@ public:
     {
         double sum = 0;
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            sum += *ptr * *ptr;
+        sum += *ptr * *ptr;
         return sum;
     }
 
@@ -4126,9 +4150,9 @@ public:
     void selfLog10()
     {
         T* ptr=NULL;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
-            *ptr = static_cast< T >(log10(static_cast< double >(*ptr)));
+        *ptr = static_cast< T >(log10(static_cast< double >(*ptr)));
     }
 
     /** Reverse matrix values over X axis, keep in this object.
@@ -4261,11 +4285,11 @@ public:
     {
         if (&op1 != this)
         {
-        	resize(op1);
+            resize(op1);
             T *ptr;
             unsigned long int n;
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(op1,n,ptr)
-                DIRECT_MULTIDIM_ELEM(*this,n) = *ptr;
+            DIRECT_MULTIDIM_ELEM(*this,n) = *ptr;
         }
         return *this;
     }
@@ -4285,9 +4309,9 @@ public:
     {
         MultidimArray<T> tmp(*this);
         T* ptr;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(tmp,n,ptr)
-            *ptr = -(*ptr);
+        *ptr = -(*ptr);
         return tmp;
     }
 
@@ -4307,9 +4331,9 @@ public:
     friend std::istream& operator>>(std::istream& in, MultidimArray<T>& v)
     {
         T* ptr;
-	unsigned long int n;
+        unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
-            in >> *ptr;
+        in >> *ptr;
         return in;
     }
 
@@ -4320,14 +4344,14 @@ public:
      * than the argument and the same values (within accuracy).
      */
     bool equal(const MultidimArray<T>& op,
-    	double accuracy = XMIPP_EQUAL_ACCURACY) const
+               double accuracy = XMIPP_EQUAL_ACCURACY) const
     {
         if (!sameShape(op) || data==NULL || op.data == NULL)
             return false;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*this)
-            if (ABS(DIRECT_MULTIDIM_ELEM(*this,n) -
-                    DIRECT_MULTIDIM_ELEM(op,n)) > accuracy)
-                return false;
+        if (ABS(DIRECT_MULTIDIM_ELEM(*this,n) -
+                DIRECT_MULTIDIM_ELEM(op,n)) > accuracy)
+            return false;
         return true;
     }
 
@@ -4343,7 +4367,7 @@ public:
                  MultidimArray< double >& profile) const
     {
         checkDimension(2);
-    	profile.initZeros(N);
+        profile.initZeros(N);
         double tx_step = (double)(xF - x0) / (N - 1);
         double ty_step = (double)(yF - y0) / (N - 1);
         double tx = x0, ty = y0;
@@ -4364,27 +4388,27 @@ public:
      */
     void showWithGnuPlot(const std::string& xlabel, const std::string& title)
     {
-    	checkDimension(1);
+        checkDimension(1);
 
-    	FileName fn_tmp;
+        FileName fn_tmp;
         fn_tmp.init_random(10);
         MultidimArray<T>::write(static_cast<std::string>("PPP") +
-            fn_tmp + ".txt");
+                                fn_tmp + ".txt");
 
         std::ofstream fh_gplot;
         fh_gplot.open((static_cast<std::string>("PPP") + fn_tmp +
-            ".gpl").c_str());
+                       ".gpl").c_str());
         if (!fh_gplot)
             REPORT_ERROR(1,
-            static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
-                + fn_tmp + ".gpl for output");
+                         static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
+                         + fn_tmp + ".gpl for output");
         fh_gplot << "set xlabel \"" + xlabel + "\"\n";
         fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
         "\" w l\n";
         fh_gplot << "pause 300 \"\"\n";
         fh_gplot.close();
         system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
-            ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
+                ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
     }
 
     /** Edit with xmipp_editor.
@@ -4424,7 +4448,7 @@ public:
         out.close();
     }
 
-////////////// VECTORS
+    ////////////// VECTORS
     /// @defgroup VectorsUtilities
     /// @ingroup Vectors
 
@@ -4456,28 +4480,28 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, long n = -1)
         T1* ptr1=NULL;
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v1,n,ptr1)
-            DIRECT_MULTIDIM_ELEM(v2,n) = static_cast< T2 >(*ptr1);
+        DIRECT_MULTIDIM_ELEM(v2,n) = static_cast< T2 >(*ptr1);
     }
     else
     {
         v2.resize(ZSIZE(v1),YSIZE(v1),XSIZE(v1));
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(v2)
-            DIRECT_A3D_ELEM(v2,k,i,j) = static_cast< T2 >DIRECT_NZYX_ELEM(v1,n,k,i,j);
+        DIRECT_A3D_ELEM(v2,k,i,j) = static_cast< T2 >DIRECT_NZYX_ELEM(v1,n,k,i,j);
     }
 
 }
 
 template <typename T>
 void coreArrayByArray(const MultidimArray<T>& op1,
-    const MultidimArray<T>& op2, MultidimArray<T>& result,
-    char operation)
+                      const MultidimArray<T>& op2, MultidimArray<T>& result,
+                      char operation)
 {
     T* ptrResult=NULL;
     T* ptrOp1=NULL;
     T* ptrOp2=NULL;
     unsigned long int n;
     for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data;
-	n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
+            n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
         switch (operation)
         {
         case '+':
@@ -4497,15 +4521,15 @@ void coreArrayByArray(const MultidimArray<T>& op1,
 
 template <typename T>
 void coreArrayByScalar(const MultidimArray<T>& op1,
-                            const T& op2,
-                            MultidimArray<T>& result,
-                            char operation)
+                       const T& op2,
+                       MultidimArray<T>& result,
+                       char operation)
 {
     T* ptrResult=NULL;
     T* ptrOp1=NULL;
     unsigned long int n;
     for (n=0, ptrResult=result.data, ptrOp1=op1.data;
-         n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+            n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
         switch (operation)
         {
         case '+':
@@ -4525,15 +4549,15 @@ void coreArrayByScalar(const MultidimArray<T>& op1,
 
 template <typename T>
 void coreScalarByArray(const T& op1,
-                         const MultidimArray<T>& op2,
-                         MultidimArray<T>& result,
-                         char operation)
+                       const MultidimArray<T>& op2,
+                       MultidimArray<T>& result,
+                       char operation)
 {
     T* ptrResult=NULL;
     T* ptrOp2=NULL;
     unsigned long int n;
     for (n=0, ptrResult=result.data, ptrOp2=op2.data;
-         n<op2.zyxdim; ++n, ++ptrResult, ++ptrOp2)
+            n<op2.zyxdim; ++n, ++ptrResult, ++ptrOp2)
         switch (operation)
         {
         case '+':
@@ -4618,7 +4642,7 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
     T* ptr;
     unsigned long int n;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
-    	max_val = XMIPP_MAX(max_val, ABS(*ptr));
+    max_val = XMIPP_MAX(max_val, ABS(*ptr));
 
     int prec = bestPrecision(max_val, 10);
 
@@ -4626,16 +4650,18 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
     {
         for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
             ostrm << floatToString((double) A3D_ELEM(v, 0, 0, j), 10, prec)
-                  << std::endl;
+            << std::endl;
     }
     else
     {
         for (int l = 0; l < NSIZE(v); l++)
         {
-            if (NSIZE(v)>1) ostrm << "Image No. " << l << std::endl;
+            if (NSIZE(v)>1)
+                ostrm << "Image No. " << l << std::endl;
             for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
             {
-                if (ZSIZE(v)>1) ostrm << "Slice No. " << k << std::endl;
+                if (ZSIZE(v)>1)
+                    ostrm << "Slice No. " << k << std::endl;
                 for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
                 {
                     for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
