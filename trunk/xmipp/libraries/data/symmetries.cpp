@@ -386,7 +386,7 @@ void SymList::add_shift(const Matrix1D<double> &shift)
 {
     if (shift.size() != 3)
         REPORT_ERROR(1002, "SymList::add_shift: Shift vector is not 3x1");
-    int i = __shift.Xdim();
+    int i = __shift.Ydim();
     __shift.resize(i + 1, 3);
     set_shift(i, shift);
 }
@@ -480,12 +480,14 @@ void SymList::compute_subgroup(double accuracy)
 
         if (!found)
         {
-//#define DEBUG        
+//#define DEBUG
 #ifdef DEBUG
-            std::cout << "Matrix size " << XSIZE(tried) << " "
+           /* std::cout << "Matrix size " << tried.Xdim() << " "
             << "trying " << i << " " << j << " "
             << "chain length=" << new_chain_length << std::endl;
-            std::cout << "Result R\n" << newR;
+            std::cout << "Result R Sh\n" << newR << shift;
+            */
+        	std::cerr << "shift" << __shift <<std::endl;
 #endif
 #undef DEBUG
             add_matrices(newL, newR, new_chain_length);
