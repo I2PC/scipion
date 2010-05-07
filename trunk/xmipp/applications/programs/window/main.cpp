@@ -25,6 +25,7 @@
 
 #include <data/progs.h>
 #include <data/args.h>
+#include <data/image.h>
 
 class Window_parameters: public Prog_parameters
 {
@@ -60,14 +61,18 @@ public:
         if (checkParameter(argc, argv, "-corner_pad_value"))
         {
             corner_pad = true;
-            if (wrong_parameters > 0)  wrong_parameters = -1;
-            else  wrong_parameters = 1;
+            if (wrong_parameters > 0)
+                wrong_parameters = -1;
+            else
+                wrong_parameters = 1;
         }
         if (checkParameter(argc, argv, "-average_pad_value"))
         {
             average_pad = true;
-            if (wrong_parameters > 0)  wrong_parameters = -1;
-            else  wrong_parameters = 1;
+            if (wrong_parameters > 0)
+                wrong_parameters = -1;
+            else
+                wrong_parameters = 1;
         }
         if (wrong_parameters == -1)
             REPORT_ERROR(1, "incompatible options");
@@ -91,7 +96,8 @@ public:
                 sizeY = textToInteger(argv[i+2]);
                 sizeX = textToInteger(argv[i+1]);
             }
-            else REPORT_ERROR(1, "Not enough parameters after -size");
+            else
+                REPORT_ERROR(1, "Not enough parameters after -size");
 
             x0 = FIRST_XMIPP_INDEX(sizeX);
             y0 = FIRST_XMIPP_INDEX(sizeY);
@@ -106,7 +112,8 @@ public:
             size_mode = false;
             // Get r0
             int i = paremeterPosition(argc, argv, "-r0");
-            if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -r0");
+            if (i + 2 >= argc)
+                REPORT_ERROR(1, "Not enough parameters after -r0");
             else
             {
                 x0 = textToInteger(argv[i+1]);
@@ -124,8 +131,10 @@ public:
 
             // Get rF
             i = paremeterPosition(argc, argv, "-rF");
-            if (i == -1) REPORT_ERROR(1, "-rF not present");
-            if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -rF");
+            if (i == -1)
+                REPORT_ERROR(1, "-rF not present");
+            if (i + 2 >= argc)
+                REPORT_ERROR(1, "Not enough parameters after -rF");
             else
             {
                 xF = textToInteger(argv[i+1]);
@@ -142,7 +151,9 @@ public:
                 }
 
             physical_coords = checkParameter(argc, argv, "-physical");
-        } else if (checkParameter(argc, argv, "-crop")) {
+        }
+        else if (checkParameter(argc, argv, "-crop"))
+        {
             crop_mode = true;
             int i = paremeterPosition(argc, argv, "-crop");
             if (i + 2 >= argc)
@@ -160,7 +171,8 @@ public:
                 cropY = textToInteger(argv[i+2]);
                 cropX = textToInteger(argv[i+1]);
             }
-            else REPORT_ERROR(1, "Not enough parameters after -crop");
+            else
+                REPORT_ERROR(1, "Not enough parameters after -crop");
         }
 
         else
@@ -172,93 +184,79 @@ public:
         Prog_parameters::show();
         if (size_mode)
             std::cout << "New size: (XxYxZ)=" << sizeX << "x" << sizeY << "x"
-                << sizeZ << std::endl;
+            << sizeZ << std::endl;
         else if (crop_mode)
             std::cout << "Crop: (XxYxZ)=" << cropX << "x" << cropY << "x"
-                << cropZ << std::endl;
+            << cropZ << std::endl;
         else
             std::cout << "New window: from (z0,y0,x0)=(" << z0 << ","
-                << y0 << "," << x0 << ") to (zF,yF,xF)=(" << zF << "," << yF
-                << "," << xF << ")\n"
-                << "Physical: " << physical_coords << std::endl;
+            << y0 << "," << x0 << ") to (zF,yF,xF)=(" << zF << "," << yF
+            << "," << xF << ")\n"
+            << "Physical: " << physical_coords << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
         std::cerr << "  [-physical]               : Use physical instead of logical\n"
-             << "                             coordinates\n"
-             << "  [-pad_value <val>]        : value used for padding\n"
-             << "  [-corner_pad_value]       : use the value of the upper\n"
-             << "                              left corner for padding\n"
-             << "  [-average_pad_value]      : use the image average for padding\n"
-             << "  [-r0 <x0> <y0> [<z0>]     : Window using window corners\n"
-             << "   -rF <xF> <yF> [<zF>]]    : by default indexes are logical\n"
-             << "  [-size <sizeX> [<sizeY>] [<sizeZ>]]: Window to a new size\n"
-             << "                            : if only one is given, the other two\n"
-             << "                              are supposed to be the same\n"
-             << "  [-crop <sizeX> [<sizeY>] [<sizeZ>]]: Crop this amount of pixels in each direction\n"
-             << "                            : if only one is given, the other two\n"
-             << "                              are supposed to be the same\n"
+        << "                             coordinates\n"
+        << "  [-pad_value <val>]        : value used for padding\n"
+        << "  [-corner_pad_value]       : use the value of the upper\n"
+        << "                              left corner for padding\n"
+        << "  [-average_pad_value]      : use the image average for padding\n"
+        << "  [-r0 <x0> <y0> [<z0>]     : Window using window corners\n"
+        << "   -rF <xF> <yF> [<zF>]]    : by default indexes are logical\n"
+        << "  [-size <sizeX> [<sizeY>] [<sizeZ>]]: Window to a new size\n"
+        << "                            : if only one is given, the other two\n"
+        << "                              are supposed to be the same\n"
+        << "  [-crop <sizeX> [<sizeY>] [<sizeZ>]]: Crop this amount of pixels in each direction\n"
+        << "                            : if only one is given, the other two\n"
+        << "                              are supposed to be the same\n"
         ;
     }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
+
     Window_parameters *eprm = (Window_parameters *) prm;
     if (eprm->average_pad)
         eprm->init_value = (img()).computeAvg();
     else if (eprm->corner_pad)
-        eprm->init_value = DIRECT_MAT_ELEM(img(), 0, 0);
-    if (eprm->crop_mode) {
-        int xl=eprm->cropX/2;
-        int xr=eprm->cropX-xl;
-        int yl=eprm->cropY/2;
-        int yr=eprm->cropY-yl;
-        img().window(STARTINGY(img())+yl,STARTINGX(img())+xl,
-            FINISHINGY(img())-yr,FINISHINGX(img())-xr);
-    } else
-        if (!eprm->physical_coords)
-            img().window(eprm->y0, eprm->x0, eprm->yF, eprm->xF,
-                eprm->init_value);
-        else img().window(STARTINGY(img()) + eprm->y0,
-            STARTINGX(img()) + eprm->x0, STARTINGY(img()) + eprm->yF,
-            STARTINGX(img()) + eprm->xF, eprm->init_value);
-    return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    Window_parameters *eprm = (Window_parameters *) prm;
-    if (eprm->average_pad)
-        eprm->init_value = (vol()).computeAvg();
-    else if (eprm->corner_pad)
-        eprm->init_value = DIRECT_VOL_ELEM(vol(), 0, 0, 0);
-    if (eprm->crop_mode) {
+        eprm->init_value = DIRECT_MULTIDIM_ELEM(img(), 0);
+    if (eprm->crop_mode)
+    {
         int xl=eprm->cropX/2;
         int xr=eprm->cropX-xl;
         int yl=eprm->cropY/2;
         int yr=eprm->cropY-yl;
         int zl=eprm->cropZ/2;
         int zr=eprm->cropZ-zl;
-        vol().window(STARTINGZ(vol())+zl,STARTINGY(vol())+yl,
-            STARTINGX(vol())+xl, FINISHINGZ(vol())-zr,FINISHINGY(vol())-yr,
-            FINISHINGX(vol())-xr);
-    } else
+        //call to a generic 4D function;
+        img().window(0,  STARTINGZ(img())+zl, STARTINGY(img())+yl,  STARTINGX(img())+xl,
+        		     0, FINISHINGZ(img())-zr,FINISHINGY(img())-yr, FINISHINGX(img())-xr);
+    }
+    else
         if (!eprm->physical_coords)
-            vol().window(eprm->z0, eprm->y0, eprm->x0, eprm->zF, eprm->yF,
-                eprm->xF, eprm->init_value);
-        else vol().window(STARTINGZ(vol()) + eprm->z0,
-                STARTINGY(vol()) + eprm->y0,
-                STARTINGX(vol()) + eprm->x0, STARTINGZ(vol()) + eprm->zF,
-                STARTINGY(vol()) + eprm->yF, STARTINGX(vol()) + eprm->xF,
-                eprm->init_value);
+        {
+            img().window(0, eprm->z0, eprm->y0, eprm->x0,
+            		     0, eprm->zF, eprm->yF,eprm->xF,
+            		     eprm->init_value);
+        }
+        else
+        {
+            img().window(0,STARTINGZ(img()) + eprm->z0,
+                         STARTINGY(img()) + eprm->y0,
+                         STARTINGX(img()) + eprm->x0,
+                         0,STARTINGZ(img()) + eprm->zF,
+                         STARTINGY(img()) + eprm->yF, STARTINGX(img()) + eprm->xF,
+                         eprm->init_value);
+        }
     return true;
 }
 
 int main(int argc, char **argv)
 {
     Window_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
