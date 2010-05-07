@@ -1199,7 +1199,38 @@ public:
         size[2] = zdim;
         size[3] = ndim;
     }
+    /** Generic window routine (dim independent)
+     * @ingroup MultidimSize
+     *
+     * This function will call to 3D,2D or 1D specific window routines
+     */
+    void window(int n0,int z0, int y0, int x0,
+                int nF,int zF, int yF, int xF,
+                T init_value = 0, unsigned long n = 0)
+    {
+        {
+            REPORT_ERROR(1,"stack windowing not implemented");
+        }
+        if (this->zdim >1)
+        {//call 3Dwindow
+            window( z0,  y0,  x0,
+                    zF,  yF,  xF,
+                    init_value ,n );
+        }
+        else if (this->ydim >1)
+        {//call 2Dwindow
+            window( y0,  x0,
+                    yF,  xF,
+                    init_value ,  n );
 
+        }
+        else if (this->xdim >1)
+        {//call 1Dwindow
+            window( x0,
+                    xF,
+                    init_value = 0,  n );
+        }
+    }
     /** Put a 3D window to the nth volume
      * @ingroup MultidimSize
      *
