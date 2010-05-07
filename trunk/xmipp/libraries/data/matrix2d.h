@@ -433,7 +433,8 @@ public:
      */
     void resize(int Ydim, int Xdim)
     {
-        if (Xdim == mdimx && Ydim == mdimy)
+
+    	if (Xdim == mdimx && Ydim == mdimy)
             return;
 
         if (Xdim <= 0 || Ydim <= 0)
@@ -441,7 +442,6 @@ public:
             clear();
             return;
         }
-
 
         T * new_mdata;
         size_t YXdim=Ydim*Xdim;
