@@ -109,11 +109,11 @@ void MetaData::union_(MetaData &MD, MetaDataLabel thisLabel)
 
     if (this->size() == 0)
     {
-    	*this = MD;
-    	return;
+        *this = MD;
+        return;
     }
     else if (MD.size()==0)
-    	return;
+        return;
 
     //this->activeLabels = minuend.activeLabels;
     MetaDataContainer * aux, *aux2;
@@ -121,13 +121,13 @@ void MetaData::union_(MetaData &MD, MetaDataLabel thisLabel)
     std::map<long int, MetaDataContainer *>::iterator itMinuend;
     bool add;
     for (itMinuend = MD.objects.begin(); itMinuend
-         != MD.objects.end(); itMinuend++)
+            != MD.objects.end(); itMinuend++)
     {
         aux = MD.getObject(itMinuend->first);
         aux->writeValueToString(value1, thisLabel);
         add=true;
         for (long int idSubtrahendr = this->firstObject(); idSubtrahendr
-             != NO_MORE_OBJECTS; idSubtrahendr = this->nextObject())
+                != NO_MORE_OBJECTS; idSubtrahendr = this->nextObject())
         {
             aux2 = this->getObject(idSubtrahendr);
             aux2->writeValueToString(value2, thisLabel);
@@ -158,13 +158,13 @@ void MetaData::intersection(MetaData &minuend, MetaData &subtrahend,
 
     if (minuend.size() == 0)
     {
-    	*this = minuend;
-		return;
+        *this = minuend;
+        return;
     }
     if (subtrahend.size() == 0)
     {
-    	*this = subtrahend;
-    	return;
+        *this = subtrahend;
+        return;
     }
 
     this->activeLabels = minuend.activeLabels;
@@ -172,12 +172,12 @@ void MetaData::intersection(MetaData &minuend, MetaData &subtrahend,
     std::string value1, value2;
     std::map<long int, MetaDataContainer *>::iterator itMinuend;
     for (itMinuend = minuend.objects.begin(); itMinuend
-         != minuend.objects.end(); itMinuend++)
+            != minuend.objects.end(); itMinuend++)
     {
         aux = minuend.getObject(itMinuend->first);
         aux->writeValueToString(value1, thisLabel);
         for (long int idSubtrahendr = subtrahend.firstObject(); idSubtrahendr
-             != NO_MORE_OBJECTS; idSubtrahendr = subtrahend.nextObject())
+                != NO_MORE_OBJECTS; idSubtrahendr = subtrahend.nextObject())
         {
             aux2 = subtrahend.getObject(idSubtrahendr);
             aux2->writeValueToString(value2, thisLabel);
@@ -204,8 +204,8 @@ void MetaData::substraction(MetaData &minuend, MetaData &subtrahend,
 
     if (minuend.size() == 0 || subtrahend.size() == 0)
     {
-    	*this = minuend;
-		return;
+        *this = minuend;
+        return;
     }
 
     this->activeLabels = minuend.activeLabels;
@@ -213,13 +213,13 @@ void MetaData::substraction(MetaData &minuend, MetaData &subtrahend,
     std::string value1, value2;
     std::map<long int, MetaDataContainer *>::iterator itMinuend;
     for (itMinuend = minuend.objects.begin(); itMinuend
-         != minuend.objects.end(); itMinuend++)
+            != minuend.objects.end(); itMinuend++)
     {
         aux = minuend.getObject(itMinuend->first);
         aux->writeValueToString(value1, thisLabel);
         bool doSave = false;
         for (long int idSubtrahendr = subtrahend.firstObject(); idSubtrahendr
-             != NO_MORE_OBJECTS; idSubtrahendr = subtrahend.nextObject())
+                != NO_MORE_OBJECTS; idSubtrahendr = subtrahend.nextObject())
         {
             aux2 = subtrahend.getObject(idSubtrahendr);
             aux2->writeValueToString(value2, thisLabel);
@@ -337,7 +337,7 @@ void MetaData::read(std::ifstream *infile,
                 }
 
                 if (isVector(activeLabels[labelPosition - counterIgnored])
-                    && value == "**")
+                        && value == "**")
                 {
                     std::string aux;
                     while (os2 >> value)
@@ -346,8 +346,8 @@ void MetaData::read(std::ifstream *infile,
                         else
                             aux += value + " ";
                     value = aux;
-                	std::cerr << "is vector value" << value << std::endl;
-               }
+                    std::cerr << "is vector value" << value << std::endl;
+                }
 
                 setValue(MetaDataContainer::decodeLabel(
                              activeLabels[labelPosition - counterIgnored]), value);
@@ -374,13 +374,13 @@ void MetaData::read(std::ifstream *infile,
             os >> newLabel;
             MetaDataLabel label = MetaDataContainer::codifyLabel(newLabel);
             if(!isVector(label))
-            	os >> value;
+                os >> value;
             else
-			{
-            	std::vector<std::string> v;
-            	Tokenize(line,v,(std::string)"**");
-            	value = v[1];
-			}
+            {
+                std::vector<std::string> v;
+                Tokenize(line,v,(std::string)"**");
+                value = v[1];
+            }
             if (label != MDL_UNDEFINED)
             {
                 activeLabels.push_back(label);
@@ -616,7 +616,7 @@ void MetaData::toDataBase(const FileName & DBname,
         CppSQLite3Statement stmt = db.compileStatement(sqlCommandInsert);
 
         for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
-             = nextObject())
+                = nextObject())
         {
             stmt.bind(1, (int) IDthis);
             labelsCounter = 1;
@@ -724,7 +724,7 @@ void MetaData::fromDataBase(const FileName & DBname,
         {
             _labelsVector.push_back(MDL_OBJID);
             for (strIt = (*labelsVector).begin(); strIt
-                 != (*labelsVector).end(); strIt++)
+                    != (*labelsVector).end(); strIt++)
             {
                 _labelsVector.push_back(*strIt);
             }
@@ -761,7 +761,7 @@ void MetaData::fromDataBase(const FileName & DBname,
                 _objID++;
             addObject(_objID);
             for (strIt = (_labelsVector).begin() + 1; strIt
-                 != (_labelsVector).end(); strIt++)
+                    != (_labelsVector).end(); strIt++)
             {
                 if (isDouble(*strIt))
                 {
@@ -820,7 +820,7 @@ void MetaData::combineWithFiles(MetaDataLabel thisLabel)
     MetaDataContainer * auxMetaDataContainer;
 
     for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
-         = nextObject())
+            = nextObject())
     {
         MetaDataContainer * aux = getObject();
 
@@ -833,7 +833,7 @@ void MetaData::combineWithFiles(MetaDataLabel thisLabel)
         auxMetaDataContainer = auxMetaData.getObject();
 
         for (MetaDataLabel mdl = MDL_FIRST_LABEL; mdl <= MDL_LAST_LABEL; mdl
-             = MetaDataLabel(mdl + 1))
+                = MetaDataLabel(mdl + 1))
         {
             if (auxMetaDataContainer->valueExists(mdl))
             {
@@ -861,7 +861,7 @@ void MetaData::combine(MetaData & other, MetaDataLabel thisLabel)
     //init everything with zeros, this should not be needed by write is not properlly writting
     //FIXIT
     for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
-         = nextObject())
+            = nextObject())
     {
         aux = getObject();
         for (strIt = other.activeLabels.begin(); strIt != other.activeLabels.end(); strIt++)
@@ -874,13 +874,13 @@ void MetaData::combine(MetaData & other, MetaDataLabel thisLabel)
     }
     bool notFound;
     for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
-         = nextObject())
+            = nextObject())
     {
         aux = getObject();
         aux->writeValueToString(value1, thisLabel);
         notFound=true;
         for (long int IDother = other.firstObject(); IDother != NO_MORE_OBJECTS; IDother
-             = other.nextObject())
+                = other.nextObject())
         {
             aux2 = other.getObject();
             aux2->writeValueToString(value2, thisLabel);
@@ -1426,7 +1426,7 @@ void MetaData::randomize(MetaData &MDin)
     //v.reserve(objects.size());
     std::map<long int, MetaDataContainer *>::iterator it;
     for (it = MDin.objects.begin(); it
-         != MDin.objects.end(); it++)
+            != MDin.objects.end(); it++)
     {
         v.push_back(it->first);
     }
@@ -1521,21 +1521,70 @@ void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
     img.getDimensions(Xdim, Ydim, Zdim, Ndim);
 }
 
+void MetaData::split_in_two(MetaData &SF1, MetaData &SF2,MetaDataLabel label)
+{
+    if (!isColumnFormat)
+    {
+        REPORT_ERROR( -1, "Row formatted MetaData cannot be splitted in two" );
+    }
+
+    MetaData SFtmp;
+    SFtmp.randomize(*this);
+    SFtmp.firstObject();
+
+    SF1.clear();
+    SF2.clear();
+    if(inFile.length()<1)
+    {
+        SF1.setComment("Splitted in half from file " + inFile);
+        SF2.setComment("Splited in half from file " + inFile);
+    }
+    SF2.isColumnFormat = SF1.isColumnFormat = SFtmp.isColumnFormat;
+    SF2.fastStringSearchLabel =SF1.fastStringSearchLabel = MDL_UNDEFINED;
+    SF2.activeLabels =SF1.activeLabels = SFtmp.activeLabels;
+    SF2.isColumnFormat = SFtmp.isColumnFormat;
+
+    //objects, define iterator
+    std::map<long int, MetaDataContainer *>::iterator objIt;
+    for (objIt = SFtmp.objects.begin(); objIt != SFtmp.objects.end(); objIt++)
+    {
+        long int idx = SF1.addObject();
+        SF1.objects[idx] = new MetaDataContainer(*(objIt->second));
+        objIt++;
+        if(objIt == SFtmp.objects.end())
+            break;
+        else
+        {
+            idx = SF2.addObject();
+            SF2.objects[idx] = new MetaDataContainer(*(objIt->second));
+        }
+    }
+    if(label!=MDL_UNDEFINED)
+    {
+        SF1.sort(SF1,label);
+        SF2.sort(SF2,label);
+    }
+}
+
+
 /* Very dirty sort function
- *
+ * this and MDin can be the same
  */
 
-void MetaData::sort(MetaData MDin, MetaDataLabel sortlabel)
+void MetaData::sort(MetaData & MDin, MetaDataLabel sortlabel)
 {
+	if(sortlabel==MDL_UNDEFINED)
+		return;
     char tmpFileName[40];
     tmpnam(tmpFileName);
     std::string tempTable;
     tempTable="tempTable";
 
     MDin.toDataBase( tmpFileName,tempTable);
+    this->clear();
     this->fromDataBase( tmpFileName, tempTable,sortlabel);
     if(remove ( tmpFileName ) == -1)
-        std::cerr << "canot remove file " << tmpFileName <<std::endl;
+        std::cerr << "cannot remove file " << tmpFileName <<std::endl;
 }
 int MetaData::MaxStringLength( MetaDataLabel thisLabel)
 {

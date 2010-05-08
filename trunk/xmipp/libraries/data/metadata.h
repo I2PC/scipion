@@ -445,7 +445,12 @@ public:
      * dirty implementation using sqlite
      */
 
-    void sort(MetaData MDin, MetaDataLabel sortlabel);
+    void sort(MetaData & MDin, MetaDataLabel sortlabel);
+
+    /** Split metadata into two random halves
+     *
+     */
+    void split_in_two(MetaData &SF1, MetaData &SF2,MetaDataLabel sortlabel=MDL_UNDEFINED);
 
     /** Fill metadata with N entries from MD starting at start
      *
