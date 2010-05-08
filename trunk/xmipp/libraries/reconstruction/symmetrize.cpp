@@ -76,7 +76,6 @@ void symmetrize(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
     Matrix1D<double> sh(3);
     double dum, avg = 0.;
 
-    V_out = V_in;
     if (do_outside_avg)
     {
         MultidimArray<int> mask;
@@ -88,6 +87,7 @@ void symmetrize(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
         BinaryCircularMask(mask, rad / 2, OUTSIDE_MASK);
         computeStats_within_binary_mask(mask, V_in(), dum, dum, avg, dum);
     }
+    V_out = V_in;
 
     if (show_progress)
     {
@@ -107,7 +107,7 @@ void symmetrize(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
         /* *** CO: I don't know why the compiler doesn't allow me
            to reuse V_in !!!, this is very memory wasting */
 
-        applyGeometry(Splinedegree,V_aux(), V_in(), R.transpose(), IS_NOT_INV, wrap);
+        applyGeometry(Splinedegree,V_aux(), V_in(), R.transpose(), IS_NOT_INV, wrap, avg);
 //#define DEBUG
 #ifdef DEBUG
 
@@ -196,7 +196,7 @@ void ROUT_symmetrize(const Symmetrize_Parameters &prm)
 
     std::cerr << prm;
     if (!prm.useBsplines)
-        symmetrize(SL, V_in, V_out, LINEAR,    prm.wrap, true,false);
+        symmetrize(SL, V_in, V_out, LINEAR, prm.wrap, true,false);
     else
     	symmetrize(SL, V_in, V_out, 3, prm.wrap, true,true);
     if (prm.fn_out == "")
@@ -205,3 +205,4 @@ void ROUT_symmetrize(const Symmetrize_Parameters &prm)
         fn_out = prm.fn_out;
     V_out.write(fn_out);
 }
+
