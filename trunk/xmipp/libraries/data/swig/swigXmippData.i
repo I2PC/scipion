@@ -8,8 +8,8 @@
 %include "std_vector.i"
 
 namespace std {
-   %template(vectori) vector<int>;
-   %template(vectord) vector<double>;
+   %template(vectori)  vector<int>;
+   %template(vectord)  vector<double>;
    %template(vectorli) vector<long int>;
 };
 
@@ -113,11 +113,12 @@ $result=PyInt_FromLong((long)*$1);
 %include swigargs.i
 %include swigsqllite.i
 %include swigmetadata.i
+%include swigmultidim_array.i
 //%include swigmultidimensional_array.i
 //%include swigmatrix1d.i
 %include swigmatrix2d.i
 //%include swigmatrix3d.i
-//%include swigimage.i
+%include swigimage.i
 //%include swiggeometry.i
 //%include swigmicrograph.i
 

@@ -20,6 +20,7 @@
 //%import swigmultidimensional_array.i
 
 %include "../matrix2d.h"
+
 PRINT(Matrix2D)
 
 %template(Matrix2Dd) Matrix2D<double>;

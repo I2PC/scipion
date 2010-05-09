@@ -526,6 +526,7 @@ class MetaData(_object):
     def substraction(*args): return _XmippData.MetaData_substraction(*args)
     __swig_destroy__ = _XmippData.delete_MetaData
     __del__ = lambda self : None;
+    def getObject(*args): return _XmippData.MetaData_getObject(*args)
     def setColumnFormat(*args): return _XmippData.MetaData_setColumnFormat(*args)
     def getColumnFormat(*args): return _XmippData.MetaData_getColumnFormat(*args)
     def setValue(*args): return _XmippData.MetaData_setValue(*args)
@@ -567,6 +568,7 @@ class MetaData(_object):
     def detectObjects(*args): return _XmippData.MetaData_detectObjects(*args)
     def randomize(*args): return _XmippData.MetaData_randomize(*args)
     def sort(*args): return _XmippData.MetaData_sort(*args)
+    def split_in_two(*args): return _XmippData.MetaData_split_in_two(*args)
     def fillWithNextNObjects(*args): return _XmippData.MetaData_fillWithNextNObjects(*args)
     def MaxStringLength(*args): return _XmippData.MetaData_MaxStringLength(*args)
 MetaData_swigregister = _XmippData.MetaData_swigregister
@@ -621,6 +623,11 @@ MDL_MAX = _XmippData.MDL_MAX
 MDL_MIN = _XmippData.MDL_MIN
 MDL_STDDEV = _XmippData.MDL_STDDEV
 MDL_AVG = _XmippData.MDL_AVG
+MDL_RESOLUTIONFOURIER = _XmippData.MDL_RESOLUTIONFOURIER
+MDL_RESOLUTIONREAL = _XmippData.MDL_RESOLUTIONREAL
+MDL_FRC = _XmippData.MDL_FRC
+MDL_FRCRANDOMNOISE = _XmippData.MDL_FRCRANDOMNOISE
+MDL_DPR = _XmippData.MDL_DPR
 MDL_SAMPLINGRATE = _XmippData.MDL_SAMPLINGRATE
 MDL_VOLTAGE = _XmippData.MDL_VOLTAGE
 MDL_DEFOCUSU = _XmippData.MDL_DEFOCUSU
@@ -636,6 +643,10 @@ MDL_RANDOMSEED = _XmippData.MDL_RANDOMSEED
 MDL_DEFGROUP = _XmippData.MDL_DEFGROUP
 MDL_KSTEST = _XmippData.MDL_KSTEST
 MDL_TRANSFORMATIONMTRIX = _XmippData.MDL_TRANSFORMATIONMTRIX
+MDL_AZIMUTALANGLE = _XmippData.MDL_AZIMUTALANGLE
+MDL_SPHERICALABERRATION = _XmippData.MDL_SPHERICALABERRATION
+MDL_Q0 = _XmippData.MDL_Q0
+MDL_K = _XmippData.MDL_K
 MDL_LAST_LABEL = _XmippData.MDL_LAST_LABEL
 isString = _XmippData.isString
 isDouble = _XmippData.isDouble
@@ -725,6 +736,342 @@ vectorm_swigregister(vectorm)
 addObjectsInRangeInt = _XmippData.addObjectsInRangeInt
 addObjectsInRangeDouble = _XmippData.addObjectsInRangeDouble
 addObjectsInRangeBool = _XmippData.addObjectsInRangeBool
+bestPrecision = _XmippData.bestPrecision
+floatToString = _XmippData.floatToString
+class MultidimArrayd(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, MultidimArrayd, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, MultidimArrayd, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["data"] = _XmippData.MultidimArrayd_data_set
+    __swig_getmethods__["data"] = _XmippData.MultidimArrayd_data_get
+    if _newclass:data = _swig_property(_XmippData.MultidimArrayd_data_get, _XmippData.MultidimArrayd_data_set)
+    __swig_setmethods__["destroyData"] = _XmippData.MultidimArrayd_destroyData_set
+    __swig_getmethods__["destroyData"] = _XmippData.MultidimArrayd_destroyData_get
+    if _newclass:destroyData = _swig_property(_XmippData.MultidimArrayd_destroyData_get, _XmippData.MultidimArrayd_destroyData_set)
+    __swig_setmethods__["ndim"] = _XmippData.MultidimArrayd_ndim_set
+    __swig_getmethods__["ndim"] = _XmippData.MultidimArrayd_ndim_get
+    if _newclass:ndim = _swig_property(_XmippData.MultidimArrayd_ndim_get, _XmippData.MultidimArrayd_ndim_set)
+    __swig_setmethods__["zdim"] = _XmippData.MultidimArrayd_zdim_set
+    __swig_getmethods__["zdim"] = _XmippData.MultidimArrayd_zdim_get
+    if _newclass:zdim = _swig_property(_XmippData.MultidimArrayd_zdim_get, _XmippData.MultidimArrayd_zdim_set)
+    __swig_setmethods__["ydim"] = _XmippData.MultidimArrayd_ydim_set
+    __swig_getmethods__["ydim"] = _XmippData.MultidimArrayd_ydim_get
+    if _newclass:ydim = _swig_property(_XmippData.MultidimArrayd_ydim_get, _XmippData.MultidimArrayd_ydim_set)
+    __swig_setmethods__["xdim"] = _XmippData.MultidimArrayd_xdim_set
+    __swig_getmethods__["xdim"] = _XmippData.MultidimArrayd_xdim_get
+    if _newclass:xdim = _swig_property(_XmippData.MultidimArrayd_xdim_get, _XmippData.MultidimArrayd_xdim_set)
+    __swig_setmethods__["yxdim"] = _XmippData.MultidimArrayd_yxdim_set
+    __swig_getmethods__["yxdim"] = _XmippData.MultidimArrayd_yxdim_get
+    if _newclass:yxdim = _swig_property(_XmippData.MultidimArrayd_yxdim_get, _XmippData.MultidimArrayd_yxdim_set)
+    __swig_setmethods__["zyxdim"] = _XmippData.MultidimArrayd_zyxdim_set
+    __swig_getmethods__["zyxdim"] = _XmippData.MultidimArrayd_zyxdim_get
+    if _newclass:zyxdim = _swig_property(_XmippData.MultidimArrayd_zyxdim_get, _XmippData.MultidimArrayd_zyxdim_set)
+    __swig_setmethods__["nzyxdim"] = _XmippData.MultidimArrayd_nzyxdim_set
+    __swig_getmethods__["nzyxdim"] = _XmippData.MultidimArrayd_nzyxdim_get
+    if _newclass:nzyxdim = _swig_property(_XmippData.MultidimArrayd_nzyxdim_get, _XmippData.MultidimArrayd_nzyxdim_set)
+    __swig_setmethods__["zinit"] = _XmippData.MultidimArrayd_zinit_set
+    __swig_getmethods__["zinit"] = _XmippData.MultidimArrayd_zinit_get
+    if _newclass:zinit = _swig_property(_XmippData.MultidimArrayd_zinit_get, _XmippData.MultidimArrayd_zinit_set)
+    __swig_setmethods__["yinit"] = _XmippData.MultidimArrayd_yinit_set
+    __swig_getmethods__["yinit"] = _XmippData.MultidimArrayd_yinit_get
+    if _newclass:yinit = _swig_property(_XmippData.MultidimArrayd_yinit_get, _XmippData.MultidimArrayd_yinit_set)
+    __swig_setmethods__["xinit"] = _XmippData.MultidimArrayd_xinit_set
+    __swig_getmethods__["xinit"] = _XmippData.MultidimArrayd_xinit_get
+    if _newclass:xinit = _swig_property(_XmippData.MultidimArrayd_xinit_get, _XmippData.MultidimArrayd_xinit_set)
+    __swig_setmethods__["mmapOn"] = _XmippData.MultidimArrayd_mmapOn_set
+    __swig_getmethods__["mmapOn"] = _XmippData.MultidimArrayd_mmapOn_get
+    if _newclass:mmapOn = _swig_property(_XmippData.MultidimArrayd_mmapOn_get, _XmippData.MultidimArrayd_mmapOn_set)
+    def __init__(self, *args): 
+        this = _XmippData.new_MultidimArrayd(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_MultidimArrayd
+    __del__ = lambda self : None;
+    def clear(*args): return _XmippData.MultidimArrayd_clear(*args)
+    def coreInit(*args): return _XmippData.MultidimArrayd_coreInit(*args)
+    def coreAllocate(*args): return _XmippData.MultidimArrayd_coreAllocate(*args)
+    def setDimensions(*args): return _XmippData.MultidimArrayd_setDimensions(*args)
+    def setNdim(*args): return _XmippData.MultidimArrayd_setNdim(*args)
+    def setZdim(*args): return _XmippData.MultidimArrayd_setZdim(*args)
+    def setYdim(*args): return _XmippData.MultidimArrayd_setYdim(*args)
+    def setXdim(*args): return _XmippData.MultidimArrayd_setXdim(*args)
+    def coreDeallocate(*args): return _XmippData.MultidimArrayd_coreDeallocate(*args)
+    def copyShape(*args): return _XmippData.MultidimArrayd_copyShape(*args)
+    def alias(*args): return _XmippData.MultidimArrayd_alias(*args)
+    def resize(*args): return _XmippData.MultidimArrayd_resize(*args)
+    def getDimensions(*args): return _XmippData.MultidimArrayd_getDimensions(*args)
+    def getDim(*args): return _XmippData.MultidimArrayd_getDim(*args)
+    def checkDimensionWithDebug(*args): return _XmippData.MultidimArrayd_checkDimensionWithDebug(*args)
+    def getSize(*args): return _XmippData.MultidimArrayd_getSize(*args)
+    def window(*args): return _XmippData.MultidimArrayd_window(*args)
+    def printShape(*args): return _XmippData.MultidimArrayd_printShape(*args)
+    def outside(*args): return _XmippData.MultidimArrayd_outside(*args)
+    def __call__(*args): return _XmippData.MultidimArrayd___call__(*args)
+    def getImage(*args): return _XmippData.MultidimArrayd_getImage(*args)
+    def getSlice(*args): return _XmippData.MultidimArrayd_getSlice(*args)
+    def setSlice(*args): return _XmippData.MultidimArrayd_setSlice(*args)
+    def rowNumber(*args): return _XmippData.MultidimArrayd_rowNumber(*args)
+    def colNumber(*args): return _XmippData.MultidimArrayd_colNumber(*args)
+    def getCol(*args): return _XmippData.MultidimArrayd_getCol(*args)
+    def setCol(*args): return _XmippData.MultidimArrayd_setCol(*args)
+    def getRow(*args): return _XmippData.MultidimArrayd_getRow(*args)
+    def setRow(*args): return _XmippData.MultidimArrayd_setRow(*args)
+    def toPhysical(*args): return _XmippData.MultidimArrayd_toPhysical(*args)
+    def toLogical(*args): return _XmippData.MultidimArrayd_toLogical(*args)
+    def interpolatedElement3D(*args): return _XmippData.MultidimArrayd_interpolatedElement3D(*args)
+    def interpolatedElement2D(*args): return _XmippData.MultidimArrayd_interpolatedElement2D(*args)
+    def interpolatedElementBSpline3D(*args): return _XmippData.MultidimArrayd_interpolatedElementBSpline3D(*args)
+    def interpolatedElementBSpline2D(*args): return _XmippData.MultidimArrayd_interpolatedElementBSpline2D(*args)
+    def interpolatedElementBSpline1D(*args): return _XmippData.MultidimArrayd_interpolatedElementBSpline1D(*args)
+    def setXmippOrigin(*args): return _XmippData.MultidimArrayd_setXmippOrigin(*args)
+    def moveOriginTo(*args): return _XmippData.MultidimArrayd_moveOriginTo(*args)
+    def startingZ(*args): return _XmippData.MultidimArrayd_startingZ(*args)
+    def finishingZ(*args): return _XmippData.MultidimArrayd_finishingZ(*args)
+    def startingY(*args): return _XmippData.MultidimArrayd_startingY(*args)
+    def finishingY(*args): return _XmippData.MultidimArrayd_finishingY(*args)
+    def startingX(*args): return _XmippData.MultidimArrayd_startingX(*args)
+    def finishingX(*args): return _XmippData.MultidimArrayd_finishingX(*args)
+    def adaptForNumericalRecipes3D(*args): return _XmippData.MultidimArrayd_adaptForNumericalRecipes3D(*args)
+    def killAdaptationForNumericalRecipes3D(*args): return _XmippData.MultidimArrayd_killAdaptationForNumericalRecipes3D(*args)
+    def adaptForNumericalRecipes2D(*args): return _XmippData.MultidimArrayd_adaptForNumericalRecipes2D(*args)
+    def adaptForNumericalRecipes22D(*args): return _XmippData.MultidimArrayd_adaptForNumericalRecipes22D(*args)
+    def loadFromNumericalRecipes2D(*args): return _XmippData.MultidimArrayd_loadFromNumericalRecipes2D(*args)
+    def killAdaptationForNumericalRecipes2D(*args): return _XmippData.MultidimArrayd_killAdaptationForNumericalRecipes2D(*args)
+    def killAdaptationForNumericalRecipes22D(*args): return _XmippData.MultidimArrayd_killAdaptationForNumericalRecipes22D(*args)
+    def adaptForNumericalRecipes1D(*args): return _XmippData.MultidimArrayd_adaptForNumericalRecipes1D(*args)
+    def killAdaptationForNumericalRecipes1D(*args): return _XmippData.MultidimArrayd_killAdaptationForNumericalRecipes1D(*args)
+    def printStats(*args): return _XmippData.MultidimArrayd_printStats(*args)
+    def computeMax(*args): return _XmippData.MultidimArrayd_computeMax(*args)
+    def computeMin(*args): return _XmippData.MultidimArrayd_computeMin(*args)
+    def minIndex(*args): return _XmippData.MultidimArrayd_minIndex(*args)
+    def maxIndex(*args): return _XmippData.MultidimArrayd_maxIndex(*args)
+    def computeDoubleMinMax(*args): return _XmippData.MultidimArrayd_computeDoubleMinMax(*args)
+    def computeAvg(*args): return _XmippData.MultidimArrayd_computeAvg(*args)
+    def computeStddev(*args): return _XmippData.MultidimArrayd_computeStddev(*args)
+    def computeStats(*args): return _XmippData.MultidimArrayd_computeStats(*args)
+    def computeMedian(*args): return _XmippData.MultidimArrayd_computeMedian(*args)
+    def rangeAdjust(*args): return _XmippData.MultidimArrayd_rangeAdjust(*args)
+    def statisticsAdjust(*args): return _XmippData.MultidimArrayd_statisticsAdjust(*args)
+    def __add__(*args): return _XmippData.MultidimArrayd___add__(*args)
+    def __sub__(*args): return _XmippData.MultidimArrayd___sub__(*args)
+    def __mul__(*args): return _XmippData.MultidimArrayd___mul__(*args)
+    def __div__(*args): return _XmippData.MultidimArrayd___div__(*args)
+    def __iadd__(*args): return _XmippData.MultidimArrayd___iadd__(*args)
+    def __isub__(*args): return _XmippData.MultidimArrayd___isub__(*args)
+    def __imul__(*args): return _XmippData.MultidimArrayd___imul__(*args)
+    def __idiv__(*args): return _XmippData.MultidimArrayd___idiv__(*args)
+    def initConstant(*args): return _XmippData.MultidimArrayd_initConstant(*args)
+    def initZeros(*args): return _XmippData.MultidimArrayd_initZeros(*args)
+    def initRandom(*args): return _XmippData.MultidimArrayd_initRandom(*args)
+    def addNoise(*args): return _XmippData.MultidimArrayd_addNoise(*args)
+    def centerOfMass(*args): return _XmippData.MultidimArrayd_centerOfMass(*args)
+    def sort(*args): return _XmippData.MultidimArrayd_sort(*args)
+    def indexSort(*args): return _XmippData.MultidimArrayd_indexSort(*args)
+    def threshold(*args): return _XmippData.MultidimArrayd_threshold(*args)
+    def countThreshold(*args): return _XmippData.MultidimArrayd_countThreshold(*args)
+    def substitute(*args): return _XmippData.MultidimArrayd_substitute(*args)
+    def randomSubstitute(*args): return _XmippData.MultidimArrayd_randomSubstitute(*args)
+    def binarize(*args): return _XmippData.MultidimArrayd_binarize(*args)
+    def selfROUND(*args): return _XmippData.MultidimArrayd_selfROUND(*args)
+    def selfCEIL(*args): return _XmippData.MultidimArrayd_selfCEIL(*args)
+    def selfFLOOR(*args): return _XmippData.MultidimArrayd_selfFLOOR(*args)
+    def selfABS(*args): return _XmippData.MultidimArrayd_selfABS(*args)
+    def selfSQRT(*args): return _XmippData.MultidimArrayd_selfSQRT(*args)
+    def sum(*args): return _XmippData.MultidimArrayd_sum(*args)
+    def sum2(*args): return _XmippData.MultidimArrayd_sum2(*args)
+    def selfLog10(*args): return _XmippData.MultidimArrayd_selfLog10(*args)
+    def selfReverseX(*args): return _XmippData.MultidimArrayd_selfReverseX(*args)
+    def selfReverseY(*args): return _XmippData.MultidimArrayd_selfReverseY(*args)
+    def selfReverseZ(*args): return _XmippData.MultidimArrayd_selfReverseZ(*args)
+    def assign(*args): return _XmippData.MultidimArrayd_assign(*args)
+    def __neg__(*args): return _XmippData.MultidimArrayd___neg__(*args)
+    def equal(*args): return _XmippData.MultidimArrayd_equal(*args)
+    def profile(*args): return _XmippData.MultidimArrayd_profile(*args)
+    def showWithGnuPlot(*args): return _XmippData.MultidimArrayd_showWithGnuPlot(*args)
+    def edit(*args): return _XmippData.MultidimArrayd_edit(*args)
+    def write(*args): return _XmippData.MultidimArrayd_write(*args)
+    def __str__(*args): return _XmippData.MultidimArrayd___str__(*args)
+MultidimArrayd_swigregister = _XmippData.MultidimArrayd_swigregister
+MultidimArrayd_swigregister(MultidimArrayd)
+setValueBool = _XmippData.setValueBool
+setValueInt = _XmippData.setValueInt
+setValueDouble = _XmippData.setValueDouble
+setValueString = _XmippData.setValueString
+getValueBool = _XmippData.getValueBool
+getValueInt = _XmippData.getValueInt
+getValueDouble = _XmippData.getValueDouble
+getValueString = _XmippData.getValueString
+
+class MultidimArrayi(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, MultidimArrayi, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, MultidimArrayi, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["data"] = _XmippData.MultidimArrayi_data_set
+    __swig_getmethods__["data"] = _XmippData.MultidimArrayi_data_get
+    if _newclass:data = _swig_property(_XmippData.MultidimArrayi_data_get, _XmippData.MultidimArrayi_data_set)
+    __swig_setmethods__["destroyData"] = _XmippData.MultidimArrayi_destroyData_set
+    __swig_getmethods__["destroyData"] = _XmippData.MultidimArrayi_destroyData_get
+    if _newclass:destroyData = _swig_property(_XmippData.MultidimArrayi_destroyData_get, _XmippData.MultidimArrayi_destroyData_set)
+    __swig_setmethods__["ndim"] = _XmippData.MultidimArrayi_ndim_set
+    __swig_getmethods__["ndim"] = _XmippData.MultidimArrayi_ndim_get
+    if _newclass:ndim = _swig_property(_XmippData.MultidimArrayi_ndim_get, _XmippData.MultidimArrayi_ndim_set)
+    __swig_setmethods__["zdim"] = _XmippData.MultidimArrayi_zdim_set
+    __swig_getmethods__["zdim"] = _XmippData.MultidimArrayi_zdim_get
+    if _newclass:zdim = _swig_property(_XmippData.MultidimArrayi_zdim_get, _XmippData.MultidimArrayi_zdim_set)
+    __swig_setmethods__["ydim"] = _XmippData.MultidimArrayi_ydim_set
+    __swig_getmethods__["ydim"] = _XmippData.MultidimArrayi_ydim_get
+    if _newclass:ydim = _swig_property(_XmippData.MultidimArrayi_ydim_get, _XmippData.MultidimArrayi_ydim_set)
+    __swig_setmethods__["xdim"] = _XmippData.MultidimArrayi_xdim_set
+    __swig_getmethods__["xdim"] = _XmippData.MultidimArrayi_xdim_get
+    if _newclass:xdim = _swig_property(_XmippData.MultidimArrayi_xdim_get, _XmippData.MultidimArrayi_xdim_set)
+    __swig_setmethods__["yxdim"] = _XmippData.MultidimArrayi_yxdim_set
+    __swig_getmethods__["yxdim"] = _XmippData.MultidimArrayi_yxdim_get
+    if _newclass:yxdim = _swig_property(_XmippData.MultidimArrayi_yxdim_get, _XmippData.MultidimArrayi_yxdim_set)
+    __swig_setmethods__["zyxdim"] = _XmippData.MultidimArrayi_zyxdim_set
+    __swig_getmethods__["zyxdim"] = _XmippData.MultidimArrayi_zyxdim_get
+    if _newclass:zyxdim = _swig_property(_XmippData.MultidimArrayi_zyxdim_get, _XmippData.MultidimArrayi_zyxdim_set)
+    __swig_setmethods__["nzyxdim"] = _XmippData.MultidimArrayi_nzyxdim_set
+    __swig_getmethods__["nzyxdim"] = _XmippData.MultidimArrayi_nzyxdim_get
+    if _newclass:nzyxdim = _swig_property(_XmippData.MultidimArrayi_nzyxdim_get, _XmippData.MultidimArrayi_nzyxdim_set)
+    __swig_setmethods__["zinit"] = _XmippData.MultidimArrayi_zinit_set
+    __swig_getmethods__["zinit"] = _XmippData.MultidimArrayi_zinit_get
+    if _newclass:zinit = _swig_property(_XmippData.MultidimArrayi_zinit_get, _XmippData.MultidimArrayi_zinit_set)
+    __swig_setmethods__["yinit"] = _XmippData.MultidimArrayi_yinit_set
+    __swig_getmethods__["yinit"] = _XmippData.MultidimArrayi_yinit_get
+    if _newclass:yinit = _swig_property(_XmippData.MultidimArrayi_yinit_get, _XmippData.MultidimArrayi_yinit_set)
+    __swig_setmethods__["xinit"] = _XmippData.MultidimArrayi_xinit_set
+    __swig_getmethods__["xinit"] = _XmippData.MultidimArrayi_xinit_get
+    if _newclass:xinit = _swig_property(_XmippData.MultidimArrayi_xinit_get, _XmippData.MultidimArrayi_xinit_set)
+    __swig_setmethods__["mmapOn"] = _XmippData.MultidimArrayi_mmapOn_set
+    __swig_getmethods__["mmapOn"] = _XmippData.MultidimArrayi_mmapOn_get
+    if _newclass:mmapOn = _swig_property(_XmippData.MultidimArrayi_mmapOn_get, _XmippData.MultidimArrayi_mmapOn_set)
+    def __init__(self, *args): 
+        this = _XmippData.new_MultidimArrayi(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_MultidimArrayi
+    __del__ = lambda self : None;
+    def clear(*args): return _XmippData.MultidimArrayi_clear(*args)
+    def coreInit(*args): return _XmippData.MultidimArrayi_coreInit(*args)
+    def coreAllocate(*args): return _XmippData.MultidimArrayi_coreAllocate(*args)
+    def setDimensions(*args): return _XmippData.MultidimArrayi_setDimensions(*args)
+    def setNdim(*args): return _XmippData.MultidimArrayi_setNdim(*args)
+    def setZdim(*args): return _XmippData.MultidimArrayi_setZdim(*args)
+    def setYdim(*args): return _XmippData.MultidimArrayi_setYdim(*args)
+    def setXdim(*args): return _XmippData.MultidimArrayi_setXdim(*args)
+    def coreDeallocate(*args): return _XmippData.MultidimArrayi_coreDeallocate(*args)
+    def copyShape(*args): return _XmippData.MultidimArrayi_copyShape(*args)
+    def alias(*args): return _XmippData.MultidimArrayi_alias(*args)
+    def resize(*args): return _XmippData.MultidimArrayi_resize(*args)
+    def getDimensions(*args): return _XmippData.MultidimArrayi_getDimensions(*args)
+    def getDim(*args): return _XmippData.MultidimArrayi_getDim(*args)
+    def checkDimensionWithDebug(*args): return _XmippData.MultidimArrayi_checkDimensionWithDebug(*args)
+    def getSize(*args): return _XmippData.MultidimArrayi_getSize(*args)
+    def window(*args): return _XmippData.MultidimArrayi_window(*args)
+    def printShape(*args): return _XmippData.MultidimArrayi_printShape(*args)
+    def outside(*args): return _XmippData.MultidimArrayi_outside(*args)
+    def __call__(*args): return _XmippData.MultidimArrayi___call__(*args)
+    def getImage(*args): return _XmippData.MultidimArrayi_getImage(*args)
+    def getSlice(*args): return _XmippData.MultidimArrayi_getSlice(*args)
+    def setSlice(*args): return _XmippData.MultidimArrayi_setSlice(*args)
+    def rowNumber(*args): return _XmippData.MultidimArrayi_rowNumber(*args)
+    def colNumber(*args): return _XmippData.MultidimArrayi_colNumber(*args)
+    def getCol(*args): return _XmippData.MultidimArrayi_getCol(*args)
+    def setCol(*args): return _XmippData.MultidimArrayi_setCol(*args)
+    def getRow(*args): return _XmippData.MultidimArrayi_getRow(*args)
+    def setRow(*args): return _XmippData.MultidimArrayi_setRow(*args)
+    def toPhysical(*args): return _XmippData.MultidimArrayi_toPhysical(*args)
+    def toLogical(*args): return _XmippData.MultidimArrayi_toLogical(*args)
+    def interpolatedElement3D(*args): return _XmippData.MultidimArrayi_interpolatedElement3D(*args)
+    def interpolatedElement2D(*args): return _XmippData.MultidimArrayi_interpolatedElement2D(*args)
+    def interpolatedElementBSpline3D(*args): return _XmippData.MultidimArrayi_interpolatedElementBSpline3D(*args)
+    def interpolatedElementBSpline2D(*args): return _XmippData.MultidimArrayi_interpolatedElementBSpline2D(*args)
+    def interpolatedElementBSpline1D(*args): return _XmippData.MultidimArrayi_interpolatedElementBSpline1D(*args)
+    def setXmippOrigin(*args): return _XmippData.MultidimArrayi_setXmippOrigin(*args)
+    def moveOriginTo(*args): return _XmippData.MultidimArrayi_moveOriginTo(*args)
+    def startingZ(*args): return _XmippData.MultidimArrayi_startingZ(*args)
+    def finishingZ(*args): return _XmippData.MultidimArrayi_finishingZ(*args)
+    def startingY(*args): return _XmippData.MultidimArrayi_startingY(*args)
+    def finishingY(*args): return _XmippData.MultidimArrayi_finishingY(*args)
+    def startingX(*args): return _XmippData.MultidimArrayi_startingX(*args)
+    def finishingX(*args): return _XmippData.MultidimArrayi_finishingX(*args)
+    def adaptForNumericalRecipes3D(*args): return _XmippData.MultidimArrayi_adaptForNumericalRecipes3D(*args)
+    def killAdaptationForNumericalRecipes3D(*args): return _XmippData.MultidimArrayi_killAdaptationForNumericalRecipes3D(*args)
+    def adaptForNumericalRecipes2D(*args): return _XmippData.MultidimArrayi_adaptForNumericalRecipes2D(*args)
+    def adaptForNumericalRecipes22D(*args): return _XmippData.MultidimArrayi_adaptForNumericalRecipes22D(*args)
+    def loadFromNumericalRecipes2D(*args): return _XmippData.MultidimArrayi_loadFromNumericalRecipes2D(*args)
+    def killAdaptationForNumericalRecipes2D(*args): return _XmippData.MultidimArrayi_killAdaptationForNumericalRecipes2D(*args)
+    def killAdaptationForNumericalRecipes22D(*args): return _XmippData.MultidimArrayi_killAdaptationForNumericalRecipes22D(*args)
+    def adaptForNumericalRecipes1D(*args): return _XmippData.MultidimArrayi_adaptForNumericalRecipes1D(*args)
+    def killAdaptationForNumericalRecipes1D(*args): return _XmippData.MultidimArrayi_killAdaptationForNumericalRecipes1D(*args)
+    def printStats(*args): return _XmippData.MultidimArrayi_printStats(*args)
+    def computeMax(*args): return _XmippData.MultidimArrayi_computeMax(*args)
+    def computeMin(*args): return _XmippData.MultidimArrayi_computeMin(*args)
+    def minIndex(*args): return _XmippData.MultidimArrayi_minIndex(*args)
+    def maxIndex(*args): return _XmippData.MultidimArrayi_maxIndex(*args)
+    def computeDoubleMinMax(*args): return _XmippData.MultidimArrayi_computeDoubleMinMax(*args)
+    def computeAvg(*args): return _XmippData.MultidimArrayi_computeAvg(*args)
+    def computeStddev(*args): return _XmippData.MultidimArrayi_computeStddev(*args)
+    def computeStats(*args): return _XmippData.MultidimArrayi_computeStats(*args)
+    def computeMedian(*args): return _XmippData.MultidimArrayi_computeMedian(*args)
+    def rangeAdjust(*args): return _XmippData.MultidimArrayi_rangeAdjust(*args)
+    def statisticsAdjust(*args): return _XmippData.MultidimArrayi_statisticsAdjust(*args)
+    def __add__(*args): return _XmippData.MultidimArrayi___add__(*args)
+    def __sub__(*args): return _XmippData.MultidimArrayi___sub__(*args)
+    def __mul__(*args): return _XmippData.MultidimArrayi___mul__(*args)
+    def __div__(*args): return _XmippData.MultidimArrayi___div__(*args)
+    def __iadd__(*args): return _XmippData.MultidimArrayi___iadd__(*args)
+    def __isub__(*args): return _XmippData.MultidimArrayi___isub__(*args)
+    def __imul__(*args): return _XmippData.MultidimArrayi___imul__(*args)
+    def __idiv__(*args): return _XmippData.MultidimArrayi___idiv__(*args)
+    def initConstant(*args): return _XmippData.MultidimArrayi_initConstant(*args)
+    def initZeros(*args): return _XmippData.MultidimArrayi_initZeros(*args)
+    def initRandom(*args): return _XmippData.MultidimArrayi_initRandom(*args)
+    def addNoise(*args): return _XmippData.MultidimArrayi_addNoise(*args)
+    def centerOfMass(*args): return _XmippData.MultidimArrayi_centerOfMass(*args)
+    def sort(*args): return _XmippData.MultidimArrayi_sort(*args)
+    def indexSort(*args): return _XmippData.MultidimArrayi_indexSort(*args)
+    def threshold(*args): return _XmippData.MultidimArrayi_threshold(*args)
+    def countThreshold(*args): return _XmippData.MultidimArrayi_countThreshold(*args)
+    def substitute(*args): return _XmippData.MultidimArrayi_substitute(*args)
+    def randomSubstitute(*args): return _XmippData.MultidimArrayi_randomSubstitute(*args)
+    def binarize(*args): return _XmippData.MultidimArrayi_binarize(*args)
+    def selfROUND(*args): return _XmippData.MultidimArrayi_selfROUND(*args)
+    def selfCEIL(*args): return _XmippData.MultidimArrayi_selfCEIL(*args)
+    def selfFLOOR(*args): return _XmippData.MultidimArrayi_selfFLOOR(*args)
+    def selfABS(*args): return _XmippData.MultidimArrayi_selfABS(*args)
+    def selfSQRT(*args): return _XmippData.MultidimArrayi_selfSQRT(*args)
+    def sum(*args): return _XmippData.MultidimArrayi_sum(*args)
+    def sum2(*args): return _XmippData.MultidimArrayi_sum2(*args)
+    def selfLog10(*args): return _XmippData.MultidimArrayi_selfLog10(*args)
+    def selfReverseX(*args): return _XmippData.MultidimArrayi_selfReverseX(*args)
+    def selfReverseY(*args): return _XmippData.MultidimArrayi_selfReverseY(*args)
+    def selfReverseZ(*args): return _XmippData.MultidimArrayi_selfReverseZ(*args)
+    def assign(*args): return _XmippData.MultidimArrayi_assign(*args)
+    def __neg__(*args): return _XmippData.MultidimArrayi___neg__(*args)
+    def equal(*args): return _XmippData.MultidimArrayi_equal(*args)
+    def profile(*args): return _XmippData.MultidimArrayi_profile(*args)
+    def showWithGnuPlot(*args): return _XmippData.MultidimArrayi_showWithGnuPlot(*args)
+    def edit(*args): return _XmippData.MultidimArrayi_edit(*args)
+    def write(*args): return _XmippData.MultidimArrayi_write(*args)
+    def __str__(*args): return _XmippData.MultidimArrayi___str__(*args)
+MultidimArrayi_swigregister = _XmippData.MultidimArrayi_swigregister
+MultidimArrayi_swigregister(MultidimArrayi)
+arrayByScalar = _XmippData.arrayByScalar
+scalarByArray = _XmippData.scalarByArray
+add = _XmippData.add
+sub = _XmippData.sub
+div = _XmippData.div
+MAX = _XmippData.MAX
+MIN = _XmippData.MIN
+
+MultidimArray=MultidimArrayd
+MultidimArray=MultidimArrayi
+
 svbksb = _XmippData.svbksb
 class Matrix2Dd(_object):
     __swig_setmethods__ = {}
@@ -802,14 +1149,6 @@ class Matrix2Dd(_object):
     def __str__(*args): return _XmippData.Matrix2Dd___str__(*args)
 Matrix2Dd_swigregister = _XmippData.Matrix2Dd_swigregister
 Matrix2Dd_swigregister(Matrix2Dd)
-setValueBool = _XmippData.setValueBool
-setValueInt = _XmippData.setValueInt
-setValueDouble = _XmippData.setValueDouble
-setValueString = _XmippData.setValueString
-getValueBool = _XmippData.getValueBool
-getValueInt = _XmippData.getValueInt
-getValueDouble = _XmippData.getValueDouble
-getValueString = _XmippData.getValueString
 
 class Matrix2Di(_object):
     __swig_setmethods__ = {}
@@ -891,6 +1230,181 @@ mul = _XmippData.mul
 
 Matrix2D=Matrix2Dd
 Matrix2D=Matrix2Di
+
+NoTransform = _XmippData.NoTransform
+Standard = _XmippData.Standard
+Centered = _XmippData.Centered
+Hermitian = _XmippData.Hermitian
+CentHerm = _XmippData.CentHerm
+Unknown_Type = _XmippData.Unknown_Type
+UChar = _XmippData.UChar
+SChar = _XmippData.SChar
+UShort = _XmippData.UShort
+Short = _XmippData.Short
+Int = _XmippData.Int
+Long = _XmippData.Long
+Float = _XmippData.Float
+Double = _XmippData.Double
+ComplexShort = _XmippData.ComplexShort
+ComplexInt = _XmippData.ComplexInt
+ComplexFloat = _XmippData.ComplexFloat
+ComplexDouble = _XmippData.ComplexDouble
+gettypesize = _XmippData.gettypesize
+SWAPTRIG = _XmippData.SWAPTRIG
+class SubImage(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, SubImage, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, SubImage, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["shiftX"] = _XmippData.SubImage_shiftX_set
+    __swig_getmethods__["shiftX"] = _XmippData.SubImage_shiftX_get
+    if _newclass:shiftX = _swig_property(_XmippData.SubImage_shiftX_get, _XmippData.SubImage_shiftX_set)
+    __swig_setmethods__["shiftY"] = _XmippData.SubImage_shiftY_set
+    __swig_getmethods__["shiftY"] = _XmippData.SubImage_shiftY_get
+    if _newclass:shiftY = _swig_property(_XmippData.SubImage_shiftY_get, _XmippData.SubImage_shiftY_set)
+    __swig_setmethods__["shiftZ"] = _XmippData.SubImage_shiftZ_set
+    __swig_getmethods__["shiftZ"] = _XmippData.SubImage_shiftZ_get
+    if _newclass:shiftZ = _swig_property(_XmippData.SubImage_shiftZ_get, _XmippData.SubImage_shiftZ_set)
+    __swig_setmethods__["angleRot"] = _XmippData.SubImage_angleRot_set
+    __swig_getmethods__["angleRot"] = _XmippData.SubImage_angleRot_get
+    if _newclass:angleRot = _swig_property(_XmippData.SubImage_angleRot_get, _XmippData.SubImage_angleRot_set)
+    __swig_setmethods__["angleTilt"] = _XmippData.SubImage_angleTilt_set
+    __swig_getmethods__["angleTilt"] = _XmippData.SubImage_angleTilt_get
+    if _newclass:angleTilt = _swig_property(_XmippData.SubImage_angleTilt_get, _XmippData.SubImage_angleTilt_set)
+    __swig_setmethods__["anglePsi"] = _XmippData.SubImage_anglePsi_set
+    __swig_getmethods__["anglePsi"] = _XmippData.SubImage_anglePsi_get
+    if _newclass:anglePsi = _swig_property(_XmippData.SubImage_anglePsi_get, _XmippData.SubImage_anglePsi_set)
+    __swig_setmethods__["weight"] = _XmippData.SubImage_weight_set
+    __swig_getmethods__["weight"] = _XmippData.SubImage_weight_get
+    if _newclass:weight = _swig_property(_XmippData.SubImage_weight_get, _XmippData.SubImage_weight_set)
+    __swig_setmethods__["flip"] = _XmippData.SubImage_flip_set
+    __swig_getmethods__["flip"] = _XmippData.SubImage_flip_get
+    if _newclass:flip = _swig_property(_XmippData.SubImage_flip_get, _XmippData.SubImage_flip_set)
+    def __init__(self, *args): 
+        this = _XmippData.new_SubImage(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def emptyInit(*args): return _XmippData.SubImage_emptyInit(*args)
+    __swig_destroy__ = _XmippData.delete_SubImage
+    __del__ = lambda self : None;
+SubImage_swigregister = _XmippData.SubImage_swigregister
+SubImage_swigregister(SubImage)
+
+class Imaged(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Imaged, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Imaged, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["image"] = _XmippData.Imaged_image_set
+    __swig_getmethods__["image"] = _XmippData.Imaged_image_get
+    if _newclass:image = _swig_property(_XmippData.Imaged_image_get, _XmippData.Imaged_image_set)
+    __swig_setmethods__["data"] = _XmippData.Imaged_data_set
+    __swig_getmethods__["data"] = _XmippData.Imaged_data_get
+    if _newclass:data = _swig_property(_XmippData.Imaged_data_get, _XmippData.Imaged_data_set)
+    def __init__(self, *args): 
+        this = _XmippData.new_Imaged(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def clear(*args): return _XmippData.Imaged_clear(*args)
+    def isComplexT(*args): return _XmippData.Imaged_isComplexT(*args)
+    def isComplex(*args): return _XmippData.Imaged_isComplex(*args)
+    __swig_destroy__ = _XmippData.delete_Imaged
+    __del__ = lambda self : None;
+    def isImage(*args): return _XmippData.Imaged_isImage(*args)
+    def isRealImage(*args): return _XmippData.Imaged_isRealImage(*args)
+    def isComplexImage(*args): return _XmippData.Imaged_isComplexImage(*args)
+    def rename(*args): return _XmippData.Imaged_rename(*args)
+    def read(*args): return _XmippData.Imaged_read(*args)
+    def write(*args): return _XmippData.Imaged_write(*args)
+    def castPage2T(*args): return _XmippData.Imaged_castPage2T(*args)
+    def castPage2Datatype(*args): return _XmippData.Imaged_castPage2Datatype(*args)
+    def writePageAsDatatype(*args): return _XmippData.Imaged_writePageAsDatatype(*args)
+    def swapPage(*args): return _XmippData.Imaged_swapPage(*args)
+    def readData(*args): return _XmippData.Imaged_readData(*args)
+    def __call__(*args): return _XmippData.Imaged___call__(*args)
+    def name(*args): return _XmippData.Imaged_name(*args)
+    def getDimensions(*args): return _XmippData.Imaged_getDimensions(*args)
+    def getSize(*args): return _XmippData.Imaged_getSize(*args)
+    def getHeaderInfo(*args): return _XmippData.Imaged_getHeaderInfo(*args)
+    def rot(*args): return _XmippData.Imaged_rot(*args)
+    def tilt(*args): return _XmippData.Imaged_tilt(*args)
+    def psi(*args): return _XmippData.Imaged_psi(*args)
+    def Xoff(*args): return _XmippData.Imaged_Xoff(*args)
+    def Yoff(*args): return _XmippData.Imaged_Yoff(*args)
+    def Zoff(*args): return _XmippData.Imaged_Zoff(*args)
+    def weight(*args): return _XmippData.Imaged_weight(*args)
+    def flip(*args): return _XmippData.Imaged_flip(*args)
+    def setName(*args): return _XmippData.Imaged_setName(*args)
+    def setEulerAngles(*args): return _XmippData.Imaged_setEulerAngles(*args)
+    def setShifts(*args): return _XmippData.Imaged_setShifts(*args)
+    def setFlip(*args): return _XmippData.Imaged_setFlip(*args)
+    def setWeight(*args): return _XmippData.Imaged_setWeight(*args)
+    def getTransformationMatrix(*args): return _XmippData.Imaged_getTransformationMatrix(*args)
+    def __str__(*args): return _XmippData.Imaged___str__(*args)
+Imaged_swigregister = _XmippData.Imaged_swigregister
+Imaged_swigregister(Imaged)
+
+class Imagei(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Imagei, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Imagei, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["image"] = _XmippData.Imagei_image_set
+    __swig_getmethods__["image"] = _XmippData.Imagei_image_get
+    if _newclass:image = _swig_property(_XmippData.Imagei_image_get, _XmippData.Imagei_image_set)
+    __swig_setmethods__["data"] = _XmippData.Imagei_data_set
+    __swig_getmethods__["data"] = _XmippData.Imagei_data_get
+    if _newclass:data = _swig_property(_XmippData.Imagei_data_get, _XmippData.Imagei_data_set)
+    def __init__(self, *args): 
+        this = _XmippData.new_Imagei(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def clear(*args): return _XmippData.Imagei_clear(*args)
+    def isComplexT(*args): return _XmippData.Imagei_isComplexT(*args)
+    def isComplex(*args): return _XmippData.Imagei_isComplex(*args)
+    __swig_destroy__ = _XmippData.delete_Imagei
+    __del__ = lambda self : None;
+    def isImage(*args): return _XmippData.Imagei_isImage(*args)
+    def isRealImage(*args): return _XmippData.Imagei_isRealImage(*args)
+    def isComplexImage(*args): return _XmippData.Imagei_isComplexImage(*args)
+    def rename(*args): return _XmippData.Imagei_rename(*args)
+    def read(*args): return _XmippData.Imagei_read(*args)
+    def write(*args): return _XmippData.Imagei_write(*args)
+    def castPage2T(*args): return _XmippData.Imagei_castPage2T(*args)
+    def castPage2Datatype(*args): return _XmippData.Imagei_castPage2Datatype(*args)
+    def writePageAsDatatype(*args): return _XmippData.Imagei_writePageAsDatatype(*args)
+    def swapPage(*args): return _XmippData.Imagei_swapPage(*args)
+    def readData(*args): return _XmippData.Imagei_readData(*args)
+    def __call__(*args): return _XmippData.Imagei___call__(*args)
+    def name(*args): return _XmippData.Imagei_name(*args)
+    def getDimensions(*args): return _XmippData.Imagei_getDimensions(*args)
+    def getSize(*args): return _XmippData.Imagei_getSize(*args)
+    def getHeaderInfo(*args): return _XmippData.Imagei_getHeaderInfo(*args)
+    def rot(*args): return _XmippData.Imagei_rot(*args)
+    def tilt(*args): return _XmippData.Imagei_tilt(*args)
+    def psi(*args): return _XmippData.Imagei_psi(*args)
+    def Xoff(*args): return _XmippData.Imagei_Xoff(*args)
+    def Yoff(*args): return _XmippData.Imagei_Yoff(*args)
+    def Zoff(*args): return _XmippData.Imagei_Zoff(*args)
+    def weight(*args): return _XmippData.Imagei_weight(*args)
+    def flip(*args): return _XmippData.Imagei_flip(*args)
+    def setName(*args): return _XmippData.Imagei_setName(*args)
+    def setEulerAngles(*args): return _XmippData.Imagei_setEulerAngles(*args)
+    def setShifts(*args): return _XmippData.Imagei_setShifts(*args)
+    def setFlip(*args): return _XmippData.Imagei_setFlip(*args)
+    def setWeight(*args): return _XmippData.Imagei_setWeight(*args)
+    def getTransformationMatrix(*args): return _XmippData.Imagei_getTransformationMatrix(*args)
+    def __str__(*args): return _XmippData.Imagei___str__(*args)
+Imagei_swigregister = _XmippData.Imagei_swigregister
+Imagei_swigregister(Imagei)
+
+ImageT=ImageTd
+ImageT=ImageTi
+ImageXmippT=ImageXmippTd
+ImageXmippT=ImageXmippTi
 
 
 

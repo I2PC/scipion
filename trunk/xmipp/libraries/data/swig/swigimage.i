@@ -15,12 +15,12 @@
 %ignore ImageXmippT::readImageContent;
 %ignore ImageXmippT::write(FILE *fp, bool force_reversed);
 
-class Image {};
+//class Image {};
 %include "../image.h"
-PRINT(ImageT)
-%template(ImageTd) ImageT<double>;
-%template(ImageTi) ImageT<int>;
-
+PRINT(Image)
+%template(Imaged) Image<double>;
+%template(Imagei) Image<int>;
+/*
 %extend ImageXmippT {
    %template(set_eulerAngles)  set_eulerAngles<double>;
    %template(set_eulerAngles1) set_eulerAngles1<double>;
@@ -29,10 +29,7 @@ PRINT(ImageT)
    %template(get_eulerAngles1) get_eulerAngles1<double>;
    %template(get_eulerAngles2) get_eulerAngles2<double>;
 };
-
-PRINT(ImageXmippT)
-%template(ImageXmippTd) ImageXmippT<double>;
-%template(ImageXmippTi) ImageXmippT<int>;
+*/
 
 %pythoncode
 %{
