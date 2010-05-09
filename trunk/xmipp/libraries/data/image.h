@@ -35,6 +35,7 @@
 #include "memory.h"
 #include "multidim_array.h"
 #include "transformations.h"
+#include "metadata_container.h"
 
 typedef enum TransformType {
     NoTransform = 0,        // No transform
@@ -165,6 +166,10 @@ public:
 }
 ;
 
+//dummy vectors for default function inizialization
+static MetaDataContainer emptyMetaDataContainer;
+static std::vector<MetaDataLabel> emptyVector;
+
 /** Template class for images
  * @ingroup Images
  *
@@ -289,7 +294,7 @@ public:
 
     /** Specific read functions for different file formats
     */
-     #include "rwSPIDER.h"
+#include "rwSPIDER.h"
      #include "rwMRC.h"
 
     /** Is this file an image
@@ -332,7 +337,9 @@ public:
     /** General read function
      */
     int read(const FileName name, bool readdata=true, int select_img=-1,
-             bool apply_geo = false, bool only_apply_shifts = false)
+             bool apply_geo = false, bool only_apply_shifts = false,
+             MetaDataContainer & mDContainer=emptyMetaDataContainer,
+             std::vector<MetaDataLabel> &activeLabels=emptyVector)
     {
         int err = 0;
 
@@ -360,6 +367,45 @@ public:
             err = readMRC();
         else
             err = readSPIDER(select_img);
+        //fill structure with metadata
+        if(activeLabels.size()>0)
+        {
+            std::vector<MetaDataLabel>::iterator strIt;
+            for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
+            {
+                switch (*strIt)
+                {
+                case MDL_SHIFTX:
+                    mDContainer.getValue(MDL_SHIFTX,image->shiftX);
+                    break;
+                case MDL_SHIFTY:
+                    mDContainer.getValue(MDL_SHIFTY,image->shiftY);
+                    break;
+                case MDL_SHIFTZ:
+                    mDContainer.getValue(MDL_SHIFTZ,image->shiftZ);
+                    break;
+                case MDL_ANGLEROT:
+                    mDContainer.getValue(MDL_ANGLEROT,image->angleRot);
+                    break;
+                case MDL_ANGLETILT:
+                    mDContainer.getValue(MDL_ANGLETILT,image->angleTilt);
+                    break;
+                case MDL_ANGLEPSI:
+                    mDContainer.getValue(MDL_ANGLEPSI,image->anglePsi);
+                    break;
+                case MDL_WEIGHT:
+                    mDContainer.getValue(MDL_WEIGHT,image->weight);
+                    break;
+                case MDL_FLIP:
+                    mDContainer.getValue(MDL_FLIP,image->flip);
+                    break;
+                default:
+                    REPORT_ERROR(1,(std::string) "Not supported label " +
+                                 MetaDataContainer::decodeLabel(*strIt));
+                    break;
+                }
+            }
+        }
 
         //err = readMRC(*this, imgno);
         /*
