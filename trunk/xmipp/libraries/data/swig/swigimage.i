@@ -3,17 +3,7 @@
 %}
 
 /* ignore funcs for overload*/
-%ignore ImageImagicT;
-%ignore ImageImagicinfo;
-%ignore IMAGIC_TAG;
-%ignore ImageOver;
-%ignore ImageT::read(FILE*& fh, float fIform, int Ydim, int Xdim, bool reversed,
-              Image_Type image_type);
-%ignore ImageT::LoadImage;
-%ignore ImageT::write(FILE*& fh, bool reversed, Image_Type image_type);
-%ignore ImageXmippT::readImageHeaderAndContent;
-%ignore ImageXmippT::readImageContent;
-%ignore ImageXmippT::write(FILE *fp, bool force_reversed);
+//%ignore ImageImagicT;
 
 //class Image {};
 %include "../image.h"
@@ -30,7 +20,7 @@ PRINT(Image)
    %template(get_eulerAngles2) get_eulerAngles2<double>;
 };
 */
-
+/*
 %pythoncode
 %{
     ImageT=ImageTd
@@ -38,10 +28,30 @@ PRINT(Image)
     ImageXmippT=ImageXmippTd
     ImageXmippT=ImageXmippTi
 %}
-
+*/
 /*
 python
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
 import XmippData
+mD=XmippData.MetaData();
+selFile=XmippData.FileName('sum.doc')
+ss=XmippData.stringP()
+mD.read(selFile)
+XmippData.getValueString( mD,XmippData.MDL_IMAGE, ss)
+inFile=XmippData.FileName(ss)
+_image=XmippData.Imaged()
+mdc=XmippData.MetaDataContainer()
+mdc = mD.getObject()
+vv=XmippData.vectorm()
+vv.append(XmippData.MDL_IMAGE)
+vv.append(XmippData.MDL_ANGLEROT)
+vv.append(XmippData.MDL_ANGLETILT)
+vv.append(XmippData.MDL_ANGLEPSI)
+_image.read(inFile,True,-1,True,False,mdc,vv)
+print ss.value()
 
-
+outFile=XmippData.FileName('kk.xmp')
+_image.write(outFile)
 */

@@ -373,6 +373,7 @@ public:
             std::vector<MetaDataLabel>::iterator strIt;
             for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
             {
+            	std::cerr << "label " << *strIt <<std::endl;
                 switch (*strIt)
                 {
                 case MDL_SHIFTX:
@@ -398,10 +399,6 @@ public:
                     break;
                 case MDL_FLIP:
                     mDContainer.getValue(MDL_FLIP,image->flip);
-                    break;
-                default:
-                    REPORT_ERROR(1,(std::string) "Not supported label " +
-                                 MetaDataContainer::decodeLabel(*strIt));
                     break;
                 }
             }

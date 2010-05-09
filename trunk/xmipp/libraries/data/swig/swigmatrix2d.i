@@ -52,6 +52,9 @@ PRINT(Matrix2D)
 
 /*
 python
+import os,glob,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
 import XmippData
 
 M=XmippData.Matrix2Dd(3,3)
