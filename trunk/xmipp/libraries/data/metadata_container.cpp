@@ -575,6 +575,21 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
         case MDL_AVG:
             return std::string("avg");
             break;
+        case MDL_RESOLUTIONFOURIER:
+            return std::string("Resol. [1/Ang]");
+            break;
+        case MDL_RESOLUTIONREAL:
+            return std::string("Resol. [1/Ang]");
+            break;
+        case MDL_FRC:
+            return std::string("FRC");
+            break;
+        case MDL_FRCRANDOMNOISE:
+            return std::string("FRC_random_noise");
+            break;
+        case MDL_DPR:
+            return std::string("DPR");
+            break;
         case MDL_AZIMUTALANGLE:
             return std::string("azimutalAngle");
             break;

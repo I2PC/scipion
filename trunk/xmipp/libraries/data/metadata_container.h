@@ -97,6 +97,11 @@ enum MetaDataLabel
     MDL_MIN, //minimum value (double)
     MDL_STDDEV, //stdandard deviation value (double)
     MDL_AVG, //average value (double)
+    MDL_RESOLUTIONFOURIER,//resolution in 1/A (double)
+    MDL_RESOLUTIONREAL,//resolution in A (double)
+    MDL_FRC,//Fourier shell correlation (double)
+    MDL_FRCRANDOMNOISE,//Fourier shell correlation noise (double)
+    MDL_DPR,//differential phase residual (double)
     //add row only label at the end of the enum
     MDL_SAMPLINGRATE, // sampling rate (double)
     MDL_VOLTAGE, // microscope voltage (double)
@@ -172,7 +177,8 @@ inline bool isDouble(MetaDataLabel lCode)
         lCode == MDL_SUMWEIGHT    || lCode == MDL_KSTEST       || lCode == MDL_MAX         ||
         lCode == MDL_MIN          || lCode == MDL_STDDEV       || lCode == MDL_AVG         ||
         lCode == MDL_AZIMUTALANGLE|| lCode == MDL_SPHERICALABERRATION || lCode == MDL_Q0   ||
-        lCode == MDL_K
+        lCode == MDL_K            || lCode == MDL_RESOLUTIONFOURIER   || lCode == MDL_RESOLUTIONREAL ||
+        lCode == MDL_FRC          || lCode == MDL_FRCRANDOMNOISE      || lCode == MDL_DPR
         )
         return true;
     else
