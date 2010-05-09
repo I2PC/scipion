@@ -34,6 +34,7 @@
 #include "matrix1d.h"
 #include "matrix2d.h"
 
+
 extern int bestPrecision(float F, int _width);
 extern std::string floatToString(float F, int _width, int _prec);
 
@@ -1698,6 +1699,23 @@ public:
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(v)
         DIRECT_NZYX_ELEM(*this, n, k, i, j) = DIRECT_A2D_ELEM(v, i, j);
     }
+    
+    /** Returns Y dimension.
+     * @ingroup MultidimMemory
+     */
+    int rowNumber() const
+    {
+        return ydim;
+    }
+
+    /** Returns X dimension.
+     * @ingroup MultidimMemory
+     */
+    int colNumber() const
+    {
+        return xdim;
+    }
+
 
     /** Get Column
      * @ingroup MultidimMemory
@@ -2643,7 +2661,8 @@ public:
      */
     void minIndex(int& kmin, int& imin, int& jmin) const
     {
-        minIndex(0,kmin,imin,jmin);
+    	int zeroInt=0;
+        minIndex(zeroInt,kmin,imin,jmin);
     }
 
     /** 2D Indices for the minimum element.
@@ -2653,7 +2672,8 @@ public:
      */
     void minIndex(int& imin, int& jmin) const
     {
-        minIndex(0,0,imin,jmin);
+    	int zeroInt=0;
+        minIndex(zeroInt,zeroInt,imin,jmin);
     }
 
     /** 1D Indices for the minimum element.
@@ -2663,7 +2683,8 @@ public:
      */
     void minIndex(int& jmin) const
     {
-        minIndex(0,0,0,jmin);
+    	int zeroInt=0;
+        minIndex(zeroInt,zeroInt,zeroInt,jmin);
     }
 
     /** 4D Indices for the maximum element.
@@ -2902,6 +2923,10 @@ public:
      * TRUE if the logical index given is a corner of the definition region of this
      * array.
      */
+     
+     //ROB Comment YY,XX is for matrix1d not multidim array
+     //I comment this routine till is properlly rewritten
+#ifdef    isCorner  
     bool isCorner(const Matrix1D< double >& v) const
     {
         if (v.size() < 2)
@@ -2925,7 +2950,7 @@ public:
             REPORT_ERROR(1, "isCorner: index vector has too many components");
 
     }
-
+#endif
     /** Median
      * @ingroup Statistics
      *
@@ -3062,6 +3087,10 @@ public:
      * after it, the values of the self array are as similar as possible
      * (L2 sense) to the values of the array shown as sample
      */
+     
+     //As written this will only work for T=double
+     //nevertheless since this is used is better
+     //to use T than double or will create problem for int multidim arrays
     void rangeAdjust(const MultidimArray<T> &example,
                      const MultidimArray<int> *mask=NULL)
     {
@@ -3070,11 +3099,12 @@ public:
 
         // y=a+bx
         double sumx=0, sumy=0, sumxy=0, sumx2=0;
-        double* ptrExample=MULTIDIM_ARRAY(example);
+	
+        T* ptrExample=MULTIDIM_ARRAY(example);
         int* ptrMask=NULL;
         if (mask!=NULL)
             ptrMask=MULTIDIM_ARRAY(*mask);
-        double* ptr=NULL;
+        T* ptr=NULL;
         unsigned long int n;
         double N=0;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
@@ -3085,8 +3115,8 @@ public:
                     process=false;
             if (process)
             {
-                double x=*ptr;
-                double y=*ptrExample;
+                T x=*ptr;
+                T y=*ptrExample;
                 sumy+=y;
                 sumxy+=x*y;
                 sumx+=x;
