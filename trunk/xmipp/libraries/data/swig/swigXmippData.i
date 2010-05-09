@@ -113,13 +113,9 @@ $result=PyInt_FromLong((long)*$1);
 %include swigargs.i
 %include swigsqllite.i
 %include swigmetadata.i
-%include swigmultidim_array.i
-//%include swigmultidimensional_array.i
-//%include swigmatrix1d.i
-%include swigmatrix2d.i
-//%include swigmatrix3d.i
-%include swigimage.i
-//%include swiggeometry.i
-//%include swigmicrograph.i
+//next three includes work but they are not active by default
+//%include swigmultidim_array.i
+//%include swigmatrix2d.i
+//%include swigimage.i
 
 // rm libraries/data/swig/_XmippData.so libraries/data/swig/XmippData.py libraries/data/swig/XmippData_wrap.os libraries/data/swig/XmippData_wrap.cc lib/_XmippData.so lib/XmippData.py ; ./scons.compile
