@@ -1467,7 +1467,10 @@ void get_statistics(MetaData MT_in, Image<double> & _ave, Image<double> & _sd, d
         if (_enabled == (-1) || image_name == "")
             continue;
         Image<double> image;
-        image.read(image_name);
+        MetaDataContainer * aux = MT.getObject();
+        image.read(image_name,true,
+                   -1,apply_geo,
+                   false,*aux, MT.activeLabels);
         double min, max, avg, stddev;
         image().computeStats(avg, stddev, min, max);
         if (_min > min)
@@ -1573,8 +1576,8 @@ void MetaData::split_in_two(MetaData &SF1, MetaData &SF2,MetaDataLabel label)
 
 void MetaData::sort(MetaData & MDin, MetaDataLabel sortlabel)
 {
-	if(sortlabel==MDL_UNDEFINED)
-		return;
+    if(sortlabel==MDL_UNDEFINED)
+        return;
     char tmpFileName[40];
     tmpnam(tmpFileName);
     std::string tempTable;
