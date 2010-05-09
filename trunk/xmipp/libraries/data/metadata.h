@@ -71,7 +71,6 @@ class MetaData
     std::string path; ///< A parameter stored on MetaData Files
     std::string comment; ///< A general comment for the MetaData file
 
-    MetaDataContainer * getObject(long int objectID = -1);
     void read(std::ifstream *infile, std::vector<MetaDataLabel> * labelsVector);
 
     bool isColumnFormat; ///< Format for the file, column or row formatted
@@ -139,6 +138,11 @@ public:
      */
     ~MetaData();
 
+    /* get metadatacontainer for current metadata object
+     *
+     */
+    MetaDataContainer * getObject(long int objectID = -1);
+
     /** Set to false for row format (parameter files)
      *  set to true  for column format (this is the default) (docfiles)
      *
@@ -156,16 +160,18 @@ public:
     bool setValue(const std::string &name, const std::string &value,
                   long int objectID = -1);
     bool setValue(const std::string &name, const float &value,
-                  long int objectID = -1){
-    	std::cerr << "Do not use setValue with floats, use double"<< std::endl;
-    	std::cerr << "Floats are banned from metadata class"<< std::endl;
-    	exit(1);
+                  long int objectID = -1)
+    {
+        std::cerr << "Do not use setValue with floats, use double"<< std::endl;
+        std::cerr << "Floats are banned from metadata class"<< std::endl;
+        exit(1);
     }
     bool setValue(const std::string &name, const char &value,
-                  long int objectID = -1){
-    	std::cerr << "Do not use setValue with char, use string"<< std::endl;
-    	std::cerr << "chars are banned from metadata class"<< std::endl;
-    	exit(1);
+                  long int objectID = -1)
+    {
+        std::cerr << "Do not use setValue with char, use string"<< std::endl;
+        std::cerr << "chars are banned from metadata class"<< std::endl;
+        exit(1);
     }
 
     void readOldSelFile(std::ifstream *infile);
@@ -184,7 +190,7 @@ public:
      *
      */
     void fromDataBase(const FileName & DBname, const std::string & tableName,
-					MetaDataLabel sortLabel=MDL_OBJID,
+                      MetaDataLabel sortLabel=MDL_OBJID,
                       std::vector<MetaDataLabel> * labelsVector = NULL);
 
     /** What labels have been read from a docfile/metadata file
@@ -503,7 +509,7 @@ void get_statistics(MetaData MT, Image<double> & _ave, Image<double> & _sd, doub
 static int null_object=-1;
 
 void ImgSize(MetaData MD, int &Xdim, int &Ydim=null_object,
-		                             int &Zdim=null_object,
-		                             int &Ndim=null_object);
+             int &Zdim=null_object,
+             int &Ndim=null_object);
 
 #endif
