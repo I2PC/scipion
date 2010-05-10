@@ -623,7 +623,7 @@ AddXmippProgram('project_xr', ['XmippRecons'])
 #AddXmippProgram('reconstruct_art', ['XmippRecons'])
 #AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 #AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
-#AddXmippProgram('resolution_fsc')
+##########AddXmippProgram('resolution_fsc') Roberto
 #AddXmippProgram('resolution_ssnr', ['XmippRecons'])
 #AddXmippProgram('reverse_endian')
 #AddXmippProgram('rotate')
