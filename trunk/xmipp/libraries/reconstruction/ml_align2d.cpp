@@ -1262,21 +1262,19 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
 
     FOR_ALL_THREAD_REFNO()
     {
-        computeStats_within_binary_mask(omask, model.Iref[refno](), dum,
+    	computeStats_within_binary_mask(omask, model.Iref[refno](), dum,
                                         dum, avg, dum);
-
         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
             refnoipsi = refno * nr_psi + ipsi;
             // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
             psi = (double) (ipsi * psi_max / nr_psi) + SMALLANGLE;
-            rotate(BSPLINE3, Maux, model.Iref[refno](), psi, WRAP);
+            rotate(BSPLINE3, Maux, model.Iref[refno](), psi, 'Z', WRAP);
             apply_binary_mask(mask, Maux, Maux, avg);
             // Normalize the magnitude of the rotated references to 1st rot of that ref
             // This is necessary because interpolation due to rotation can lead to lower overall Fref
             // This would result in lower probabilities for those rotations
             AA = Maux.sum2();
-
             if (ipsi == 0)
             {
                 stdAA = AA;
@@ -1339,7 +1337,7 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
             CenterFFT(Maux3, true);
             computeStats_within_binary_mask(omask, Maux3, dum, dum, avg,
                                             dum);
-            rotate(BSPLINE3, Maux2, Maux3, -psi, WRAP);
+            rotate(BSPLINE3, Maux2, Maux3, -psi, 'Z', WRAP);
             apply_binary_mask(mask, Maux2, Maux2, avg);
             wsum_Mref[refno] += Maux2;
         }
@@ -2303,7 +2301,7 @@ void Prog_MLalign2D_prm::addPartialDocfileData(MultidimArray<double> data,
         MDimg.setValue(MDL_ANGLEPSI, dAij(data, index, 2), img_id[imgno]);
         MDimg.setValue(MDL_SHIFTX, dAij(data, index, 3), img_id[imgno]);
         MDimg.setValue(MDL_SHIFTY, dAij(data, index, 4), img_id[imgno]);
-        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5) + 1), img_id[imgno]);
+        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5)), img_id[imgno]);
         if (do_mirror)
         {
             MDimg.setValue(MDL_FLIP, dAij(data, index, 6) != 0., img_id[imgno]);
