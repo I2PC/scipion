@@ -1034,8 +1034,8 @@ public:
                         unsigned long n = 0)
     {
         (image[n]).angleRot = rot;
-        (image[n]).angleTilt = rot;
-        (image[n]).anglePsi = rot;
+        (image[n]).angleTilt = tilt;
+        (image[n]).anglePsi = psi;
     }
 
     /** Set origin offsets in image header
