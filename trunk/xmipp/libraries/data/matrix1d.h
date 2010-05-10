@@ -1213,7 +1213,7 @@ public:
     }
 
     /** Read from an ASCII file.
-     * @ingroup Operators
+     * @ingroup VectorsUtilities
      *
      * The array must be previously resized to the correct size.
      */
@@ -1233,7 +1233,7 @@ public:
 
 
     /** Input from input stream.
-     * @ingroup Operators
+     * @ingroup VectorsUtilities
      *
      * Actual size of the array is used to know how many values must be read.
      *
@@ -1253,23 +1253,46 @@ public:
 		return in;
     }
 
-    /** Write to an ASCII file.
-     * @ingroup Operators
+    /** Produce a 1D array suitable for working with Numerical Recipes
+     * @ingroup VectorsUtilities
+     *
+     * This function must be used only as a preparation for routines which need
+     * that the first physical index is 1 and not 0 as it usually is in C. In
+     * fact the vector provided for Numerical recipes is exactly this same one
+     * but with the indexes changed.
+     *
+     * This function is not ported to Python.
      */
-    /*
+    T* adaptForNumericalRecipes1D() const
+    {
+        return MATRIX1D_ARRAY(*this) - 1;
+    }
+
+    /** Kill a 1D array produced for Numerical Recipes.
+     * @ingroup VectorsUtilities
+     *
+     * Nothing needs to be done in fact.
+     *
+     * This function is not ported to Python.
+     */
+    void killAdaptationForNumericalRecipes1D(T* m) const
+        {}
+
+    /** Write to an ASCII file.
+     * @ingroup VectorsUtilities
+     */
     void write(const FileName& fn) const
     {
         std::ofstream out;
         out.open(fn.c_str(), std::ios::out);
         if (!out)
             REPORT_ERROR(1,
-                         static_cast< std::string >("MultidimArray::write: File " + fn
+                         static_cast< std::string >("Matrix1D::write: File " + fn
                                                     + " cannot be opened for output"));
 
         out << *this;
         out.close();
     }
-	*/
 
     /** Edit with xmipp_editor.
      * @ingroup Operators
@@ -1293,9 +1316,6 @@ public:
                                            " -remove &").c_str()));
     }
     */
-
-
-
 };
 
  template<typename T>
