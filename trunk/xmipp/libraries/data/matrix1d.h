@@ -70,6 +70,12 @@ template <typename T> class Matrix2D;
 #define FOR_ALL_ELEMENTS_IN_MATRIX1D(v) \
     for (int i=0; i<v.vdim; i++)
 
+/** X dimension of the matrix
+ * @ingroup MatricesSizeShape
+ */
+#define VEC_XSIZE(m) ((m).vdim)
+
+
 /** Access to X component
  * @ingroup Vectors
  *
@@ -800,6 +806,22 @@ public:
         return tmp;
     }
 
+    /** Vector summation
+     * @ingroup VectorsUtilities
+     *
+     * @code
+     * A += B;
+     * @endcode
+     */
+    void operator+=(const Matrix1D<T>& op1) const
+    {
+        if (vdim != op1.vdim)
+            REPORT_ERROR(1102, "Not same sizes in vector summation");
+
+        for (int i = 0; i < vdim; i++)
+        	vdata[i] += op1.vdata[i];
+    }
+
     /** v3 = k - v2.
      * @ingroup VectorsUtilities
      */
@@ -809,6 +831,22 @@ public:
         for (int i=0; i < op2.vdim; i++)
         	tmp.vdata[i] = op1 - op2.vdata[i];
         return tmp;
+    }
+
+    /** Vector substraction
+     * @ingroup VectorsUtilities
+     *
+     * @code
+     * A -= B;
+     * @endcode
+     */
+    void operator-=(const Matrix1D<T>& op1) const
+    {
+        if (vdim != op1.vdim)
+            REPORT_ERROR(1102, "Not same sizes in vector summation");
+
+        for (int i = 0; i < vdim; i++)
+        	vdata[i] -= op1.vdata[i];
     }
 
     /** v3 *= k.

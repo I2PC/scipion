@@ -73,8 +73,17 @@
  * val = MAT_ELEM(m, 0, 0);
  * @endcode
  */
-
 #define MAT_ELEM(m,i,j) ((m).mdata[(i)*(m).mdimx+(j)])
+
+/** X dimension of the matrix
+ * @ingroup MatricesSizeShape
+ */
+#define MAT_XSIZE(m) ((m).mdimx)
+
+/** Y dimension of the matrix
+ * @ingroup MatricesSizeShape
+ */
+#define MAT_YSIZE(m) ((m).mdimy)
 
 /** Matrix element: Element access
  * @ingroup MatricesSizeShape
@@ -823,6 +832,23 @@ public:
         return result;
     }
 
+    /** Matrix summation
+     * @ingroup MatricesAlgebraic
+     *
+     * @code
+     * A += B;
+     * @endcode
+     */
+    void operator+=(const Matrix2D<T>& op1) const
+    {
+        if (mdimx != op1.mdimx || mdimy != op1.mdimy)
+            REPORT_ERROR(1102, "Not same sizes in matrix summation");
+
+        for (int i = 0; i < mdimy; i++)
+            for (int j = 0; j < mdimx; j++)
+                MAT_ELEM(*this,i, j) += MAT_ELEM(op1, i, j);
+    }
+
     /** Matrix subtraction
      * @ingroup MatricesAlgebraic
      *
@@ -842,6 +868,23 @@ public:
                 result(i, j) = (*this)(i, j) - op1(i, j);
 
         return result;
+    }
+
+    /** Matrix substraction
+     * @ingroup MatricesAlgebraic
+     *
+     * @code
+     * A -= B;
+     * @endcode
+     */
+    void operator-=(const Matrix2D<T>& op1) const
+    {
+        if (mdimx != op1.mdimx || mdimy != op1.mdimy)
+            REPORT_ERROR(1102, "Not same sizes in matrix summation");
+
+        for (int i = 0; i < mdimy; i++)
+            for (int j = 0; j < mdimx; j++)
+                MAT_ELEM(*this,i, j) -= MAT_ELEM(op1, i, j);
     }
 
     /** Maximum of the values in the array.
