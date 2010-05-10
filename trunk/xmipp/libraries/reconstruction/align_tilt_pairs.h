@@ -65,7 +65,7 @@ public:
     void usage();
 
     /// Center one tilted image
-    bool center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It, double &ccf);
+    bool center_tilted_image(const Image<double> &Iu, Image<double> &It, double &ccf);
 
     /// Main routine
     void centilt();

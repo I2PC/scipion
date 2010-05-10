@@ -79,21 +79,22 @@ void Prog_centilt_prm::usage()
     std::cerr << "Usage:  " << std::endl;
     std::cerr << "  centilt [options]" << std::endl;
     std::cerr << "   -u <metadatafile>             : Metadata File  containing untilted images \n"
-  		  	  << "   -t <metadatafile>        : Metadata File  containing tilted images \n"
-			  << " [ -oext <extension> ]      : For output tilted images; if not to overwrite input\n"
-			  << " [ -doc <metadata> ]        : write output document file with rotations & translations \n"
-			  << " [ -max_shift <float> ]     : Discard images that shift more [pix]\n"
-			  << " [ -force_x_zero ]          : Force x-shift to be zero \n"
-			  << " [ -skip_stretching ]       : do not perform cosine stretching \n"
-			  << " [ -skip_centering ]        : do not perform centering, i.e. only modify angles \n"
+    << "   -t <metadatafile>        : Metadata File  containing tilted images \n"
+    << " [ -oext <extension> ]      : For output tilted images; if not to overwrite input\n"
+    << " [ -doc <metadata> ]        : write output document file with rotations & translations \n"
+    << " [ -max_shift <float> ]     : Discard images that shift more [pix]\n"
+    << " [ -force_x_zero ]          : Force x-shift to be zero \n"
+    << " [ -skip_stretching ]       : do not perform cosine stretching \n"
+    << " [ -skip_centering ]        : do not perform centering, i.e. only modify angles \n"
     << std::endl;
 }
 
 // Center one tilted image  =====================================================
-bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It, double &ccf)
+bool Prog_centilt_prm::center_tilted_image(const Image<double> &Iu, Image<double> &It, double &ccf)
 {
 
-    Matrix2D<double> A(3, 3), Maux(It()), Mcorr(It());
+    Matrix2D<double> A(3, 3);
+    MultidimArray<double> Maux(It()), Mcorr(It());
     int              n_max = -1;
     bool             neighbourhood = true;
     int              imax, jmax, i_actual, j_actual, x_zero = 1;
@@ -104,34 +105,37 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
     {
         // Cosine stretching, store stretched image in Maux
         A.initIdentity();
-        A(0, 0) = COSD(It.Theta());
+        A(0, 0) = COSD(It.rot());
         Maux.initZeros();
-        applyGeometry(Maux, A, It(), IS_INV, DONT_WRAP);
+        applyGeometry(LINEAR, Maux, It(), A, IS_INV, DONT_WRAP);
     }
-    else Maux = It();
+    else
+        Maux = It();
 
     // Calculate cross-correlation
     correlation_matrix(Maux, Iu(), Mcorr);
     if (force_x_zero)
     {
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(Mcorr)
         {
-            if (j != 0) MAT_ELEM(Mcorr, i, j) = 0.;
+            if (j != 0)
+                A2D_ELEM(Mcorr, i, j) = 0.;
         }
     }
     Mcorr.maxIndex(imax, jmax);
-    maxcorr = MAT_ELEM(Mcorr, imax, jmax);
+    maxcorr = A2D_ELEM(Mcorr, imax, jmax);
 
     if (force_x_zero)
     {
         x_zero = 0;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mcorr)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(Mcorr)
         {
-            if (j != 0) MAT_ELEM(Mcorr, i, j) = 0.;
+            if (j != 0)
+                A2D_ELEM(Mcorr, i, j) = 0.;
         }
     }
     Mcorr.maxIndex(imax, jmax);
-    maxcorr = MAT_ELEM(Mcorr, imax, jmax);
+    maxcorr = A2D_ELEM(Mcorr, imax, jmax);
     xshift = (float) jmax;
     yshift = (float) imax;
 
@@ -139,23 +143,25 @@ bool Prog_centilt_prm::center_tilted_image(const ImageXmipp &Iu, ImageXmipp &It,
     A.initIdentity();
     A(0, 2) = xshift;
     A(1, 2) = yshift;
-    Maux.selfApplyGeometry(A, IS_INV, DONT_WRAP);
+    selfApplyGeometry(LINEAR, Maux, A, IS_INV, DONT_WRAP);
     Maux.setXmippOrigin();
     ccf = correlation_index(Iu(), Maux);
 
-    if (do_stretch) xshift *= COSD(It.Theta());
+    if (do_stretch)
+        xshift *= COSD(It.rot());
     shift = sqrt(xshift * xshift + yshift * yshift);
-    
+
     if ((max_shift < XMIPP_EQUAL_ACCURACY) || (shift < max_shift))
     {
         // Store shift in the header of the image
-	// Take rotation into account for shifts
-	It.set_Xoff(-xshift*COSD(It.psi()) - yshift*SIND(It.psi()));
-	It.set_Yoff( xshift*SIND(It.psi()) - yshift*COSD(It.psi()));
-        It.set_Phi(Iu.psi());
+        // Take rotation into account for shifts
+        It.setShifts(-xshift*COSD(It.psi()) - yshift*SIND(It.psi()),
+                     xshift*SIND(It.psi()) - yshift*COSD(It.psi()));
+        It.setRot(Iu.psi());
         return true;
     }
-    else return false;
+    else
+        return false;
 }
 
 // Main program  ===============================================================
@@ -163,8 +169,9 @@ void Prog_centilt_prm::centilt()
 {
 
     FileName          fn_img;
-    ImageXmipp        Iu, It;
-    Matrix2D<double>  Maux, A(3, 3);
+    Image<double>     Iu, It;
+    MultidimArray<double> Maux;
+    Matrix2D<double>  A(3, 3);
     double            ccf, outside;
     bool              OK;
     int               imgno, barf, n_images, n_discarded;
@@ -179,9 +186,9 @@ void Prog_centilt_prm::centilt()
     //while (imgno < n_images)
     SFu.firstObject();
     SFt.firstObject();
-    
+
     FileName file_name;
-        
+
     do
     {
         // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
@@ -189,11 +196,11 @@ void Prog_centilt_prm::centilt()
         Iu.read( file_name);
 
         Iu().setXmippOrigin();
-        Euler_angles2matrix(Iu.Phi(), 0., 0., A);
+        Euler_angles2matrix(Iu.rot(), 0., 0., A);
         A(0, 2) = -Iu.Xoff();
         A(1, 2) = -Iu.Yoff();
-        outside = dMij(Iu(), 0, 0);
-        Iu().selfApplyGeometry(A, IS_INV, DONT_WRAP, outside);
+        outside = dAij(Iu(), 0, 0);
+        selfApplyGeometry(LINEAR, Iu(), A, IS_INV, DONT_WRAP, outside);
 
         // Read in tilted image and apply Psi (align tilt-axis with y-axis) and shifts if present
         SFt.getValue( MDL_IMAGE, file_name);
@@ -202,16 +209,17 @@ void Prog_centilt_prm::centilt()
         Maux.resize(It());
         Maux = It();
         Euler_angles2matrix(0., 0., It.psi(), A);
-        outside = dMij(It(), 0, 0);
-        It().selfApplyGeometry(A, IS_INV, DONT_WRAP, outside);
+        outside = dAij(It(), 0, 0);
+        selfApplyGeometry(LINEAR, It(), A, IS_INV, DONT_WRAP, outside);
         It().setXmippOrigin();
 
-        if (do_center) OK = center_tilted_image(Iu, It, ccf);
+        if (do_center)
+            OK = center_tilted_image(Iu, It, ccf);
         else
         {
             OK = true;
             ccf = 1.;
-            It.set_Phi(Iu.psi());
+            It.setRot(Iu.psi());
         }
         if (OK)
         {
@@ -220,11 +228,11 @@ void Prog_centilt_prm::centilt()
             {
                 fn_img = fn_img.without_extension() + "." + oext;
             }
-			SFt.setValue( MDL_ANGLEROT,It.Phi() );
-			SFt.setValue( MDL_ANGLETILT,It.Theta() );
-			SFt.setValue( MDL_ANGLEPSI,It.psi() );
-			SFt.setValue( MDL_SHIFTX,It.Xoff() );
-	        SFt.setValue( MDL_SHIFTY,It.Yoff() );
+            SFt.setValue( MDL_ANGLEROT,It.rot() );
+            SFt.setValue( MDL_ANGLETILT,It.tilt() );
+            SFt.setValue( MDL_ANGLEPSI,It.psi() );
+            SFt.setValue( MDL_SHIFTX,It.Xoff() );
+            SFt.setValue( MDL_SHIFTY,It.Yoff() );
             SFt.setValue( MDL_MAXCC,ccf );
             SFt.setValue( MDL_IMAGE,fn_img );
             SFt.setValue( MDL_ENABLED, 1);
@@ -239,31 +247,34 @@ void Prog_centilt_prm::centilt()
             SFt.setValue( MDL_SHIFTX, 0.);
             SFt.setValue( MDL_SHIFTY, 0.);
             SFt.setValue( MDL_ENABLED, -1);
-			SFt.setValue( MDL_SHIFTX,0. );
-	        SFt.setValue( MDL_SHIFTY,0. );
+            SFt.setValue( MDL_SHIFTX,0. );
+            SFt.setValue( MDL_SHIFTY,0. );
             SFt.setValue( MDL_MAXCC,0. );
-			n_discarded++;
+            n_discarded++;
         }
 
         imgno++;
-        if (imgno % barf == 0) progress_bar(imgno);
+        if (imgno % barf == 0)
+            progress_bar(imgno);
         SFu.nextObject();
     }
     while (SFt.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
     progress_bar(n_images);
-    if (max_shift > 0) std::cerr << "  Discarded " << n_discarded << " tilted images that shifted too much" << std::endl;
+    if (max_shift > 0)
+        std::cerr << "  Discarded " << n_discarded << " tilted images that shifted too much" << std::endl;
 
 
     // Write out selfile
     fn_img = SFt.getFilename();
-    if (oext != "") fn_img = fn_img.insert_before_extension("_" + oext);
+    if (oext != "")
+        fn_img = fn_img.insert_before_extension("_" + oext);
     SFt.write(fn_img);
     if (fn_doc != "")
-        {
-            //delete all discarted images
-			SFt.removeObjects(MDL_ENABLED, -1);
-			SFt.write(fn_doc);
-        }
+    {
+        //delete all discarted images
+        SFt.removeObjects(MDL_ENABLED, -1);
+        SFt.write(fn_doc);
+    }
 }
 
