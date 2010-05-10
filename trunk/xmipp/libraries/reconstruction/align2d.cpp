@@ -748,7 +748,7 @@ void Prog_align2d_prm::align2d()
     // Get Reference (either from file or from piramidal combination of images)
     if (fn_ref != "")
     {
-        Iref.read(fn_ref, false, false, true);
+        Iref.read(fn_ref, false, -1, true);
     }
     else
         do_pspc();
