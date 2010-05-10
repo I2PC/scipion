@@ -86,14 +86,14 @@ void randomPermutation(int N, MultidimArray<int>& result);
   * @endcode
   *
   */
-void powellOptimizer(MultidimArray< double >& p,
+void powellOptimizer(Matrix1D< double >& p,
                      int i0, int n,
                      double(*f)(double* , void *),
                      void *prm, 
                      double ftol,
                      double& fret,
                      int& iter,
-                     const MultidimArray< double >& steps,
+                     const Matrix1D< double >& steps,
                      bool show = false);
 
 /** Gaussian interpolator

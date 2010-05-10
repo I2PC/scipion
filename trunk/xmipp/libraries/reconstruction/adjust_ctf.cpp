@@ -53,7 +53,7 @@ namespace AdjustCTF {
     // Some aliases
     Adjust_CTF_Parameters *global_prm;
     MultidimArray<double>      *f;               // The CTF to model
-    MultidimArray<double>      *global_adjust;   // Current theoretical adjustment
+    Matrix1D<double>           *global_adjust;   // Current theoretical adjustment
 
     // Frequency of each point in digital units
     MultidimArray<double>       global_x_digfreq;
@@ -453,7 +453,7 @@ void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
 
 #define COPY_ctfmodel_TO_CURRENT_GUESS \
     assign_parameters_from_CTF(global_ctfmodel, \
-                               MULTIDIM_ARRAY(*global_adjust),0,ALL_CTF_PARAMETERS, \
+                               MATRIX1D_ARRAY(*global_adjust),0,ALL_CTF_PARAMETERS, \
                                global_prm->modelSimplification);
 
 /* Read parameters --------------------------------------------------------- */
@@ -583,7 +583,7 @@ void Adjust_CTF_Parameters::Usage()
 void Adjust_CTF_Parameters::produce_side_info()
 {
     adjust.resize(ALL_CTF_PARAMETERS);
-    assign_parameters_from_CTF(initial_ctfmodel, MULTIDIM_ARRAY(adjust), 0,
+    assign_parameters_from_CTF(initial_ctfmodel, MATRIX1D_ARRAY(adjust), 0,
                                ALL_CTF_PARAMETERS, true);
 
     // Read the CTF file, supposed to be the uncentered squared amplitudes
@@ -701,7 +701,7 @@ void generate_model_so_far(Image<double> &I, bool apply_log = false)
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
 
-    assign_CTF_from_parameters(MULTIDIM_ARRAY(*global_adjust), global_ctfmodel,
+    assign_CTF_from_parameters(MATRIX1D_ARRAY(*global_adjust), global_ctfmodel,
                                0, ALL_CTF_PARAMETERS, global_prm->modelSimplification);
     global_ctfmodel.Produce_Side_Info();
 
@@ -842,7 +842,7 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
     model.rangeAdjust(0, 1);
 
     // Generate the CTF model
-    assign_CTF_from_parameters(MULTIDIM_ARRAY(*global_adjust), global_ctfmodel,
+    assign_CTF_from_parameters(MATRIX1D_ARRAY(*global_adjust), global_ctfmodel,
                                0, ALL_CTF_PARAMETERS, global_prm->modelSimplification);
     global_ctfmodel.Produce_Side_Info();
     // Write the two model quadrants
@@ -889,7 +889,7 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
     model.rangeAdjust(0, 1);
 
     // The left part is the CTF model
-    assign_CTF_from_parameters(MULTIDIM_ARRAY(*global_adjust), global_ctfmodel,
+    assign_CTF_from_parameters(MATRIX1D_ARRAY(*global_adjust), global_ctfmodel,
                                0, CTF_PARAMETERS, global_prm->modelSimplification);
     global_ctfmodel.Produce_Side_Info();
 
@@ -1302,7 +1302,7 @@ void estimate_background_sqrt_parameters()
 
     // Now optimize .........................................................
     double fitness;
-    MultidimArray<double> steps;
+    Matrix1D<double> steps;
     steps.resize(SQRT_CTF_PARAMETERS);
     steps.initConstant(0);
     steps(0) = steps(1) = steps(2) = 1;
@@ -1704,7 +1704,7 @@ void estimate_envelope_parameters()
     global_penalize = false;
     int iter;
     double fitness;
-    MultidimArray<double> steps;
+    Matrix1D<double> steps;
     steps.resize(ENVELOPE_PARAMETERS);
     steps.initConstant(1);
     steps(1) = 0; // Do not optimize Cs
@@ -1808,7 +1808,7 @@ void estimate_defoci()
     }
 
     double K_so_far = global_ctfmodel.K;
-    MultidimArray<double> steps(DEFOCUS_PARAMETERS);
+    Matrix1D<double> steps(DEFOCUS_PARAMETERS);
     steps.initConstant(1);
     steps(3) = 0; // Do not optimize kV
     steps(4) = 0; // Do not optimize K
@@ -2009,7 +2009,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
     // Some variables needed by all steps
     int iter;
     double fitness;
-    MultidimArray<double> steps;
+    Matrix1D<double> steps;
 
     /************************************************************************
       STEPs 1, 2, 3 and 4:  Find background which best fits the CTF

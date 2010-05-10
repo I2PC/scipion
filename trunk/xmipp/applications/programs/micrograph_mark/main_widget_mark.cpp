@@ -459,7 +459,7 @@ void QtMainWidgetMark::compute_alphas()
     if (__mTiltedWidget == NULL)
         return;
 
-    MultidimArray<double> angles(3);
+    Matrix1D<double> angles(3);
     angles.initZeros();
     double fitness;
     int iter;
@@ -486,7 +486,7 @@ void QtMainWidgetMark::compute_alphas()
     angles(2) = __gamma;
 
     // Fine search
-    MultidimArray<double> steps(3);
+    Matrix1D<double> steps(3);
     steps.initConstant(1);
     powellOptimizer(angles, 1, 3, &matrix_fitness, NULL,
                     0.001, fitness, iter, steps, false);

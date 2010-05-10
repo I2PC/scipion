@@ -224,7 +224,7 @@ void Prog_Adjust_Volume_Parameters::apply(MultidimArray<double> &out)
     // Optimize
     if (optimize)
     {
-        MultidimArray<double> p(2), steps(2);
+        Matrix1D<double> p(2), steps(2);
         p(0) = a;
         p(1) = b;
         steps.initConstant(1);

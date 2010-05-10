@@ -75,7 +75,7 @@ public:
     double               enhanced_weight;
 
     /// Set of parameters for the complete adjustment of the CTF
-    MultidimArray<double>     adjust;
+    Matrix1D<double>     adjust;
     
     /// Model simplification
     int                  modelSimplification;
