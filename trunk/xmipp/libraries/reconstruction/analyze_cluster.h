@@ -63,22 +63,22 @@ public:
     std::vector< FileName > classfile;
 
     // Image holding current reference
-    ImageXmipp Iref;
+    Image<double> Iref;
 
     // Mask of the background
-    Matrix2D<int> mask;
+    MultidimArray<int> mask;
 
     // Set of images assigned to the class
-    std::vector< Matrix1D<float> * > Iclass;
+    std::vector< MultidimArray<float> * > Iclass;
     
     // Set of images assigned to the class
-    std::vector< Matrix1D<float> * > Iclassorig;
+    std::vector< MultidimArray<float> * > Iclassorig;
     
     // Set of basis functions
-    std::vector< Matrix1D<double> * > PCAbasis;
+    std::vector< MultidimArray<double> * > PCAbasis;
 
     // Set of distances
-    Matrix1D<double> distance;
+    MultidimArray<double> distance;
     
     // Number of pixels in the mask
     int Npixels;

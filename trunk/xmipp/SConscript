@@ -377,7 +377,7 @@ ReconsSources = [
     'adjust_volume_grey_levels.cpp',
     'align2d.cpp',
     'align_tilt_pairs.cpp',
-#    'analyze_cluster.cpp',
+    'analyze_cluster.cpp',
 #    'angular_assign_for_tilt_series.cpp',
 #    'angular_assign_for_tomogram.cpp',
 #    'angular_commonline.cpp',
@@ -520,7 +520,7 @@ AddXmippProgram('align_volumes')
 #AddXmippProgram('average') sjors
 #AddXmippProgram('break_symmetry', ['XmippRecons'])
 #AddXmippProgram('center_image')
-#AddXmippProgram('classify_analyze_cluster', ['XmippRecons']) sjors
+AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
 #AddXmippProgram('classify_batch_som', ['XmippClassif']) sjors
 #AddXmippProgram('classify_CL2D_sort_images', ['XmippRecons'])
 #AddXmippProgram('classify_fcmeans', ['XmippClassif']) sjors
