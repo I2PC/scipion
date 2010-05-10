@@ -2011,11 +2011,11 @@ public:
         double zyxsum = 0.0;
         for (int nn = n1; nn <= n2; nn++)
         {
-            int equivalent_n=n;
+            int equivalent_nn=nn;
             if      (nn<0)
-                equivalent_n=-nn-1;
+                equivalent_nn=-nn-1;
             else if (nn>=ZSIZE(*this))
-                equivalent_n=2*ZSIZE(*this)-nn-1;
+                equivalent_nn=2*ZSIZE(*this)-nn-1;
             double yxsum = 0.0;
             for (int m = m1; m <= m2; m++)
             {
@@ -2034,7 +2034,7 @@ public:
                     else if (l>=XSIZE(*this))
                         equivalent_l=2*XSIZE(*this)-l-1;
                     double Coeff = (double) DIRECT_NZYX_ELEM(*this, n,
-                                   equivalent_n,equivalent_m,equivalent_l);
+                                   equivalent_nn,equivalent_m,equivalent_l);
                     switch (SplineDegree)
                     {
                     case 2:
@@ -2094,7 +2094,7 @@ public:
                 }
             }
 
-            double zminusn = z - (double) n;
+            double zminusn = z - (double) nn;
             switch (SplineDegree)
             {
             case 2:
