@@ -1038,6 +1038,24 @@ public:
         (image[n]).anglePsi = psi;
     }
 
+    /** Set Rotation angle to image */
+    void setRot(double rot, unsigned long n = 0)
+    {
+        (image[n]).angleRot = rot;
+    }
+
+    /** Set Tilt angle to image */
+    void setTilt(double tilt, unsigned long n = 0)
+    {
+        (image[n]).angleTilt = tilt;
+    }
+
+    /** Set Rotation angle to image */
+    void setPsi(double psi, unsigned long n = 0)
+    {
+        (image[n]).anglePsi = psi;
+    }
+
     /** Set origin offsets in image header
      *
      */
