@@ -157,7 +157,7 @@ void substract_background_rolling_ball(MultidimArray<double> &I, int radius)
     
     // Now rescale the background
     MultidimArray<double> bgEnlarged;
-    scaleToSize(1, Irolled, bgEnlarged, YSIZE(I),XSIZE(I));
+    scaleToSize(LINEAR, bgEnlarged, Irolled, XSIZE(I), YSIZE(I));
     bgEnlarged.copyShape(I);
     I-=bgEnlarged;
 }
@@ -173,7 +173,6 @@ void region_growing2D(const MultidimArray<double> &I_in, MultidimArray<double> &
                       int i, int j,
                       float stop_colour, float filling_colour, bool less, int neighbourhood)
 {
-
     I_in.checkDimension(2);
 
     std::list<int> iNeighbours;   /* A list for neighbour pixels */
