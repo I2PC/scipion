@@ -31,7 +31,6 @@
 #include <data/metadata.h>
 #include <data/metadata.h>
 #include <data/image.h>
-#include <data/header.h>
 #include <vector>
 
 /**@defgroup Align2DProgram align2d (Align a set of 2D images)
@@ -83,16 +82,16 @@ public:
     float psi_interval;
 
 public:
-    // SelFile images
-	MetaData SF;
+    // SelFile with the input images
+    MetaData SF;
     // Stack of input images
-    std::vector<ImageXmipp>  images;
+    std::vector< Image<double> >  images;
     // Stack of optimal correlations for all images
     std::vector<double>  corr;
     // Boolean for successful alignment of image
     std::vector<bool>  success;
     // Image holding current reference
-    ImageXmipp Iref;
+    Image<double> Iref;
 
 public:
     /// Read argument from command line
@@ -105,14 +104,14 @@ public:
     void usage();
 
     /// Rotational alignment of an image
-    bool align_rot(ImageXmippT<double> &img, const Matrix2D<double> &Mref,
+    bool align_rot(Image<double> &img, const MultidimArray<double> &Mref,
                    const float &max_rot, const float &Rin, const float &Rout, const double &outside = 0.);
 
     /// Translational alignment of an image
-    bool align_trans(ImageXmippT<double> &img, const Matrix2D<double> &Mref, const float &max_shift, const double &outside = 0.);
+    bool align_trans(Image<double> &img, const MultidimArray<double> &Mref, const float &max_shift, const double &outside = 0.);
 
     /// Alignment by complete search of rotations and translations
-    bool align_complete_search(ImageXmippT<double> &img, const Matrix2D<double> &Mref,
+    bool align_complete_search(Image<double> &img, const MultidimArray<double> &Mref,
                                const float &max_shift, const float &max_rot, const float &psi_interval,
                                const float &Rin, const float &Rout, const double &outside = 0.);
 
@@ -123,7 +122,7 @@ public:
     void refinement();
 
     /// Calculate optimal correlation for in document file
-    void calc_correlation(const Matrix2D<double> &Mref, const float &Rin, const float &Rout);
+    void calc_correlation(const MultidimArray<double> &Mref, const float &Rin, const float &Rout);
 
     /// Main routine
     void align2d();
