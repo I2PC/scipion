@@ -302,7 +302,7 @@ public:
      *  Check whether a real-space image can be read
      *
      */
-    bool isImage(const FileName name)
+    bool isImage(const FileName &name)
     {
         return !read(name, false);
     }
@@ -312,7 +312,7 @@ public:
      *  Check whether a real-space image can be read
      *
      */
-    bool isRealImage(const FileName name)
+    bool isRealImage(const FileName &name)
     {
         return (isImage(name) && !isComplex());
     }
@@ -322,21 +322,21 @@ public:
      *  Check whether a fourier-space (complex) image can be read
      *
      */
-    bool isComplexImage(const FileName name)
+    bool isComplexImage(const FileName &name)
     {
         return (isImage(name) && isComplex());
     }
 
     /** Rename the image
       */
-    void rename (const FileName name)
+    void rename (const FileName &name)
     {
         filename = name;
     }
 
     /** General read function
      */
-    int read(const FileName name, bool readdata=true, int select_img=-1,
+    int read(const FileName &name, bool readdata=true, int select_img=-1,
              bool apply_geo = false, bool only_apply_shifts = false,
              MetaDataContainer & mDContainer=emptyMetaDataContainer,
              std::vector<MetaDataLabel> &activeLabels=emptyVector)
@@ -901,7 +901,7 @@ public:
      * std::cout << "Image name = " << I.name() << std::endl;
      * @endcode
      */
-    FileName name() const
+    const FileName & name() const
     {
         return filename;
     }
@@ -1022,7 +1022,7 @@ public:
     /** Set file name
      *
      */
-    void setName(const FileName _filename)
+    void setName(const FileName &_filename)
     {
         filename = _filename;
     }
