@@ -166,14 +166,13 @@ int readMRC()
     spacegroup = header->ispg;
 
     // Allocating the single sub-image and setting its origin
-    image = new SubImage [1];
-    if (image == NULL)
-        REPORT_ERROR(1001, "Allocate: No space left for subimage structure");
-    image->shiftX = -header->xOrigin/ux; // New header
-    image->shiftY = -header->yOrigin/uy;
-    image->shiftZ = -header->zOrigin/uz;
-    image->angleRot = image->angleTilt = image->anglePsi = image->flip = 0.;
-    image->weight = 1.;
+    image.resize(1);
+    image[0].shiftX = -header->xOrigin/ux; // New header
+    image[0].shiftY = -header->yOrigin/uy;
+    image[0].shiftZ = -header->zOrigin/uz;
+    image[0].angleRot = image[0].angleTilt = image[0].anglePsi = 0.;
+    image[0].flip = false;
+    image[0].weight = 1.;
 
     freeMemory(header, sizeof(MRChead));
 
@@ -229,12 +228,12 @@ int writeMRC()
     header->a = ua;
     header->b = ub;
     header->c = uc;
-    header->nxStart = (int) (-image->shiftX - 0.5);
-    header->nyStart = (int) (-image->shiftY - 0.5);
-    header->nzStart = (int) (-image->shiftZ - 0.5);
-    header->xOrigin = -image->shiftX*ux;
-    header->yOrigin = -image->shiftY*uy;
-    header->zOrigin = -image->shiftZ*uz;
+    header->nxStart = (int) (-image[0].shiftX - 0.5);
+    header->nyStart = (int) (-image[0].shiftY - 0.5);
+    header->nzStart = (int) (-image[0].shiftZ - 0.5);
+    header->xOrigin = -image[0].shiftX*ux;
+    header->yOrigin = -image[0].shiftY*uy;
+    header->zOrigin = -image[0].shiftZ*uz;
 
     // This is a band-aid to overcome the limitations of the image format
     if ( fabs(ua - ux*header->mx) > 0.001 ||

@@ -181,7 +181,7 @@ class Image
 {
 public:
 
-    SubImage*           image;      // Sub-images
+	std::vector<SubImage> image;    // Sub-images
     MultidimArray<T>    data;       // The image data array
     // FIXME: why cant this one be private as well?
 private:
@@ -214,8 +214,8 @@ public:
      */
     Image()
     {
-        image = NULL;
         clear();
+        image.resize(1);
     }
 
     /** Constructor with size
@@ -229,12 +229,9 @@ public:
      */
     Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1)
     {
-        image = NULL;
         clear();
         data.resize(Ndim, Zdim, Ydim, Xdim);
-        image = new SubImage [Ndim];
-        if (image == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left for subimage structure");
+        image.resize(Ndim);
     }
 
     /** Clear.
@@ -260,13 +257,7 @@ public:
         ua = ub = uc = 1.;
         alf, bet, gam = DEG2RAD(90.);
         spacegroup = 1;
-        // delete subimage structure if present
-        if (image != NULL)
-            delete[] image;
-        // and put a single empty copy
-        image = new SubImage [1];
-        if (image == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left for subimage structure");
+        image.clear();
     }
 
     /** Check whether image is complex based on T
@@ -294,7 +285,7 @@ public:
 
     /** Specific read functions for different file formats
     */
-#include "rwSPIDER.h"
+	 #include "rwSPIDER.h"
      #include "rwMRC.h"
 
     /** Is this file an image
@@ -373,32 +364,32 @@ public:
             std::vector<MetaDataLabel>::iterator strIt;
             for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
             {
-            	std::cerr << "label " << *strIt <<std::endl;
+                std::cerr << "label " << *strIt <<std::endl;
                 switch (*strIt)
                 {
                 case MDL_SHIFTX:
-                    mDContainer.getValue(MDL_SHIFTX,image->shiftX);
+                    mDContainer.getValue(MDL_SHIFTX,image[0].shiftX);
                     break;
                 case MDL_SHIFTY:
-                    mDContainer.getValue(MDL_SHIFTY,image->shiftY);
+                    mDContainer.getValue(MDL_SHIFTY,image[0].shiftY);
                     break;
                 case MDL_SHIFTZ:
-                    mDContainer.getValue(MDL_SHIFTZ,image->shiftZ);
+                    mDContainer.getValue(MDL_SHIFTZ,image[0].shiftZ);
                     break;
                 case MDL_ANGLEROT:
-                    mDContainer.getValue(MDL_ANGLEROT,image->angleRot);
+                    mDContainer.getValue(MDL_ANGLEROT,image[0].angleRot);
                     break;
                 case MDL_ANGLETILT:
-                    mDContainer.getValue(MDL_ANGLETILT,image->angleTilt);
+                    mDContainer.getValue(MDL_ANGLETILT,image[0].angleTilt);
                     break;
                 case MDL_ANGLEPSI:
-                    mDContainer.getValue(MDL_ANGLEPSI,image->anglePsi);
+                    mDContainer.getValue(MDL_ANGLEPSI,image[0].anglePsi);
                     break;
                 case MDL_WEIGHT:
-                    mDContainer.getValue(MDL_WEIGHT,image->weight);
+                    mDContainer.getValue(MDL_WEIGHT,image[0].weight);
                     break;
                 case MDL_FLIP:
-                    mDContainer.getValue(MDL_FLIP,image->flip);
+                    mDContainer.getValue(MDL_FLIP,image[0].flip);
                     break;
                 }
             }
@@ -858,20 +849,19 @@ public:
         return data;
     }
 
-
     /** Pixel access
-     *
-     * This operator is used to access a pixel within a 2D image. This is a
-     * logical access, so you could access to negative positions if the image
-     * has been defined so (see the general explanation for the class).
-     *
-     * @code
-     * std::cout << "Grey level of pixel (-3,-3) of the image = " << I(-3, -3)
-     * << std::endl;
-     *
-     * I(-3, -3) = I(-3, -2);
-     * @endcode
-     */
+    *
+    * This operator is used to access a pixel within a 2D image. This is a
+    * logical access, so you could access to negative positions if the image
+    * has been defined so (see the general explanation for the class).
+    *
+    * @code
+    * std::cout << "Grey level of pixel (-3,-3) of the image = " << I(-3, -3)
+    * << std::endl;
+    *
+    * I(-3, -3) = I(-3, -2);
+    * @endcode
+    */
     T& operator()(int i, int j) const
     {
         return A2D_ELEM(data, i, j);
@@ -1078,7 +1068,7 @@ public:
     /** Set Weight in image header
     *
     */
-    void setWeight(bool _weight, unsigned long n = 0)
+    void setWeight(double _weight, unsigned long n = 0)
     {
         (image[n]).weight = _weight;
     }

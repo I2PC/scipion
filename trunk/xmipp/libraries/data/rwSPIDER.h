@@ -184,15 +184,15 @@ int  readSPIDER(int img_select)
         i = img_select;
     }
 
-    image = new SubImage [Ndim];
-    image->shiftX = header->xoff;
-    image->shiftY = header->yoff;
-    image->shiftZ = header->zoff;
-    image->angleRot  = header->phi;
-    image->angleTilt = header->theta;
-    image->anglePsi  = header->gamma;
-    image->weight = header->weight;
-    image->flip = header->flip;
+    image.resize(Ndim);
+    image[0].shiftX = header->xoff;
+    image[0].shiftY = header->yoff;
+    image[0].shiftZ = header->zoff;
+    image[0].angleRot  = header->phi;
+    image[0].angleTilt = header->theta;
+    image[0].anglePsi  = header->gamma;
+    image[0].weight = header->weight;
+    image[0].flip = (header->flip != 0.);
 
     if ( header->istack > 0 ) {
         offset += offset;
@@ -212,7 +212,7 @@ int  readSPIDER(int img_select)
             image[j].angleTilt = header->theta;
             image[j].anglePsi  = header->gamma;
             image[j].weight = header->weight;
-            image[j].flip = header->flip;
+            image[j].flip = (header->flip != 0.);
         }
     }
 
@@ -311,14 +311,14 @@ int 	writeSPIDER()
         header->maxim = 1;
     }
 	
-    header->xoff = image->shiftX;
-    header->yoff = image->shiftY;
-    header->zoff = image->shiftZ;
-    header->phi  = image->angleRot;
-    header->theta = image->angleTilt;
-    header->gamma = image->anglePsi;
-    header->weight = image->weight;
-    header->flip = image->flip;
+    header->xoff = image[0].shiftX;
+    header->yoff = image[0].shiftY;
+    header->zoff = image[0].shiftZ;
+    header->phi  = image[0].angleRot;
+    header->theta = image[0].angleTilt;
+    header->gamma = image[0].anglePsi;
+    header->weight = image[0].weight;
+    header->flip = image[0].flip ? 1. : 0.;
 
     // Set time and date
     time_t timer;
