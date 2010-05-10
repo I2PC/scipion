@@ -65,7 +65,6 @@ while ((load = getThreadRefnoJob(refno)) > 0) \
 //For MPI
 #define IS_MASTER (rank == 0)
 
-//#define TIMING
 #ifdef TIMING
 //testing time...
 
@@ -212,6 +211,7 @@ public:
     FileName fn_img, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_oext, fn_scratch, fn_control;
     /** Command line */
     std::string cline;
+    double sigma_noise2;
     /** Flag for checking mirror images of all references */
     bool do_mirror;
     /** Flag whether to fix estimates for model fractions */
@@ -290,9 +290,6 @@ public:
     /** For initial guess of mindiff */
     double trymindiff_factor;
 
-    /// Students t-distribution
-    /** Use t-student distribution instead of normal one */
-    bool do_student;
     /** Degrees of freedom for the t-student distribution */
     double df, df2, dfsigma2;
     /** Do sigma-division trick in student-t*/
