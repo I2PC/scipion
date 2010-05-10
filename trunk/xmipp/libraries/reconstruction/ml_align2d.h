@@ -292,8 +292,6 @@ public:
 
     /** Degrees of freedom for the t-student distribution */
     double df, df2, dfsigma2;
-    /** Do sigma-division trick in student-t*/
-    bool do_student_sigma_trick;
 
     /// Re-normalize internally
     /** Flag to refine normalization of each experimental image */

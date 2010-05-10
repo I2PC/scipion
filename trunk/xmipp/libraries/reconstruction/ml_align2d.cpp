@@ -1092,7 +1092,6 @@ void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
 
     awakeThreads(TH_ESI_UPDATE_REFNO, 0, refno_load_param);
 
-    std::cerr<<"expectationSingleImage sigma_noise2= "<<sigma_noise2<<" sigma_noise= "<<model.sigma_noise<<std::endl;
     if (!model.do_student)
         // 1st term: log(refw_i)
         // 2nd term: for subtracting mindiff
@@ -1517,7 +1516,6 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     MultidimArray<double> Maux, Mweight;
     MultidimArray<std::complex<double> > Faux, Fzero(dim, hdim + 1);
     XmippFftw local_transformer;
-    std::cerr<<"doThreadExpectationSingleImageRefno sigma_noise2= "<<sigma_noise2<<" sigma_noise= "<<model.sigma_noise<<std::endl;
 
     // Setup matrices
     Maux.resize(dim, dim);
