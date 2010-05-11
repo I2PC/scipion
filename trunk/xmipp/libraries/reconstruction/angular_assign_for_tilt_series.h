@@ -36,8 +36,8 @@
 //@{
 
 /** Compute the affine transformation between two images. */
-double computeAffineTransformation(const Matrix2D<unsigned char> &I1,
-    const Matrix2D<unsigned char> &I2, int maxShift, int maxIterDE,
+double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
+    const MultidimArray<unsigned char> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine, 
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
     double thresholdAffine, bool localAffine, bool isMirror,
@@ -186,7 +186,7 @@ public:
     /** Refine landmark.
         The same as the previous function but an image is provided
         as pattern (ii) instead of an index and a position. */
-    bool refineLandmark(const Matrix2D<double> &pieceii, int jj,
+    bool refineLandmark(const MultidimArray<double> &pieceii, int jj,
         Matrix1D<double> &rjj, double actualCorrThreshold,
         bool reversed, double &maxCorr) const;
 
@@ -222,10 +222,10 @@ public:
     MetaData SForig;
 
     // List of image pointers
-    std::vector < Matrix2D<unsigned char> *> img;
+    std::vector < MultidimArray<unsigned char> *> img;
 
     // List of mask pointers
-    std::vector < Matrix2D<unsigned char> *> maskImg;
+    std::vector < MultidimArray<unsigned char> *> maskImg;
 
     // Index of the image closest to 0 degrees in tilt
     int iMinTilt;
@@ -294,8 +294,8 @@ public:
     Alignment(const Prog_tomograph_alignment *_prm)
     {
         prm=_prm;
-        Nimg=XSIZE(_prm->allLandmarksX);
-        Nlandmark=YSIZE(_prm->allLandmarksX);
+        Nimg=MAT_XSIZE(_prm->allLandmarksX);
+        Nlandmark=MAT_YSIZE(_prm->allLandmarksX);
         clear();
     }
 
@@ -435,15 +435,15 @@ public:
     Matrix2D<double> allLandmarksPredictedY;
     
     // Set of errors associated to each landmark
-    Matrix1D<double> errorLandmark;
+    MultidimArray<double> errorLandmark;
 };
 
 /** Compute the optimal affine transformation between two images.
     The maximum shift is limited. 
     A12 is the homogeneous matrix that transforms coordinates of 1
     into coordinates of 2, A21 is just the opposite.*/
-double computeAffineTransformation(const Matrix2D<double> &I1,
-    const Matrix2D<double> &I2, int maxShift, int maxIterDE,
+double computeAffineTransformation(const MultidimArray<double> &I1,
+    const MultidimArray<double> &I2, int maxShift, int maxIterDE,
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
     double thresholdAffine, bool localAffine, bool isMirror,
     int pyramidLevel);
