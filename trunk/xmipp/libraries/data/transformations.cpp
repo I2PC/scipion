@@ -203,7 +203,7 @@ void applyGeometry(int SplineDegree,
                    MultidimArray< std::complex<double> > &V2,
                    const MultidimArray< std::complex<double> > &V1,
                    const Matrix2D<double> &A, bool inv,
-                   bool wrap, std::complex<double> outside, unsigned long n)
+                   bool wrap, std::complex<double> outside)
 {
 
     if (SplineDegree > 1)
@@ -215,7 +215,7 @@ void applyGeometry(int SplineDegree,
         im.resize(ZSIZE(V1), YSIZE(V1), XSIZE(V1));
         outre = outside.real();
         outim = outside.imag();
-        V1.getImage(n, oneImg);
+        oneImg=V1;
         Complex2RealImag(MULTIDIM_ARRAY(oneImg),
                          MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                          MULTIDIM_SIZE(oneImg));
@@ -226,7 +226,7 @@ void applyGeometry(int SplineDegree,
                          MULTIDIM_ARRAY(V2), MULTIDIM_SIZE(re));
     }
     else
-        applyGeometry(SplineDegree, V2, V1, A, inv, wrap, outside, n);
+        applyGeometry(SplineDegree, V2, V1, A, inv, wrap, outside);
 
 
 }
@@ -235,17 +235,16 @@ void applyGeometry(int SplineDegree,
 void selfApplyGeometry(int Splinedegree,
                        MultidimArray< std::complex<double> > &V1,
                        const Matrix2D<double> &A, bool inv,
-                       bool wrap, std::complex<double> outside, unsigned long n)
+                       bool wrap, std::complex<double> outside)
 {
     MultidimArray<std::complex<double> > aux = V1;
-    applyGeometry(Splinedegree, V1, aux, A, inv, wrap, outside, n);
+    applyGeometry(Splinedegree, V1, aux, A, inv, wrap, outside);
 }
 
 // Special case for complex arrays
 void produceSplineCoefficients(int SplineDegree,
                                MultidimArray< double > &coeffs,
-                               const MultidimArray< std::complex<double> > &V1,
-                               unsigned long n)
+                               const MultidimArray< std::complex<double> > &V1)
 {
     // TODO Implement
     REPORT_ERROR(222,"Spline coefficients of a complex matrix is not implemented.");
@@ -255,7 +254,6 @@ void produceImageFromSplineCoefficients(int SplineDegree,
                                         MultidimArray< double >& img,
                                         const MultidimArray< double > &coeffs)
 {
-
     img.initZeros(ZSIZE(coeffs), YSIZE(coeffs), XSIZE(coeffs));
     STARTINGX(img) = STARTINGX(coeffs);
     STARTINGY(img) = STARTINGY(coeffs);
@@ -279,8 +277,7 @@ void produceImageFromSplineCoefficients(int SplineDegree,
 void scaleToSize(int SplineDegree,
                  MultidimArray< std::complex<double> > &V2,
                  const MultidimArray< std::complex<double> > &V1,
-                 int Xdim, int Ydim, int Zdim,
-                 unsigned long n)
+                 int Xdim, int Ydim, int Zdim)
 {
     if (SplineDegree > 1)
     {
@@ -290,7 +287,7 @@ void scaleToSize(int SplineDegree,
         re.resize(ZSIZE(V1), YSIZE(V1), XSIZE(V1));
         im.resize(ZSIZE(V1), YSIZE(V1), XSIZE(V1));
 
-        V1.getImage(n, oneImg);
+        oneImg=V1;
         Complex2RealImag(MULTIDIM_ARRAY(oneImg),
                          MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                          MULTIDIM_SIZE(oneImg));
@@ -302,16 +299,15 @@ void scaleToSize(int SplineDegree,
                          MULTIDIM_ARRAY(V2), MULTIDIM_SIZE(re));
     }
     else
-        scaleToSize(SplineDegree, V2, V1, Xdim, Ydim, Zdim, n);
+        scaleToSize(SplineDegree, V2, V1, Xdim, Ydim, Zdim);
 
 }
 
 // Special case for complex arrays
 void selfScaleToSize(int SplineDegree,
                      MultidimArray< std::complex<double> > &V1,
-                     int Xdim, int Ydim, int Zdim,
-                     unsigned long n)
+                     int Xdim, int Ydim, int Zdim)
 {
     MultidimArray<std::complex<double> > aux;
-    scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim, n);
+    scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim);
 }
