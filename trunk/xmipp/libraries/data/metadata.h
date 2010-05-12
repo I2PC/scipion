@@ -141,7 +141,7 @@ public:
     /* get metadatacontainer for current metadata object
      *
      */
-    MetaDataContainer * getObject(long int objectID = -1);
+    MetaDataContainer * getObject(long int objectID = -1) const;
 
     /** Set to false for row format (parameter files)
      *  set to true  for column format (this is the default) (docfiles)
@@ -229,7 +229,7 @@ public:
 
     void write(const std::string &fileName);
 
-    bool isEmpty();
+    bool isEmpty() const;
 
     void clear();
 
@@ -364,7 +364,7 @@ public:
 
     template<class T>
     bool getValue(MetaDataLabel name, T &value,
-                  long int objectID = -1)
+                  long int objectID = -1) const
     {
         MetaDataContainer * aux = getObject(objectID);
         if (!aux->valueExists(name))
@@ -490,8 +490,8 @@ public:
 #endif
 
 
-//Function related with metadata
-
+#ifdef NEVERDEFINED
+//Functions related with metadata
 #ifndef METADATAEXTRA_H
 #define METADATAEXTRA_H
 
@@ -512,4 +512,5 @@ void ImgSize(MetaData MD, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              int &Ndim=null_object);
 
+#endif
 #endif
