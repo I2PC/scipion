@@ -27,6 +27,7 @@
 
 #include <mpi.h>
 #include <data/metadata.h>
+#include <data/metadata_extension.h>
 #include <data/polar.h>
 #include <data/fftw.h>
 #include <data/histogram.h>
