@@ -28,6 +28,7 @@
 #include <data/funcs.h>
 #include <data/progs.h>
 #include <data/metadata.h>
+#include <data/metadata_extension.h>
 #include <data/image.h>
 #include <classification/pca.h>
 
