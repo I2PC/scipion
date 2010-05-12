@@ -26,8 +26,7 @@
 #define _PROG_PROJECTION_NEIGHBOURHOOD
 
 #include <data/funcs.h>
-#include <data/docfile.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 
 #include <data/symmetries.h>
 
@@ -51,11 +50,11 @@ public:
 
 public:
     // DocFile images
-    DocFile DF1;
+    MetaData DF1;
     // DocFile nbhoods
-    DocFile DF2;
+    MetaData DF2;
     // SelFile images
-    SelFile SF1;
+    MetaData SF1;
     // Symmetry List
     SymList SL;
 public:
@@ -70,7 +69,7 @@ public:
     void usage();
 
     /// Extract angles
-    void get_angles(SelFile &SF_in, DocFile &DF_out);
+    void get_angles(MetaData &SF_in, MetaData &DF_out);
 
     /** Check symmetries.
         Given two sets of angles, this function modifies set 2 so that

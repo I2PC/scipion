@@ -28,7 +28,6 @@
 #include <data/args.h>
 #include <data/funcs.h>
 #include <data/image.h>
-#include <data/header.h>
 
 // Read arguments ==========================================================
 void Prog_projection_neighbourhood_prm::read(int argc, char **argv)
@@ -42,33 +41,30 @@ void Prog_projection_neighbourhood_prm::read(int argc, char **argv)
     if (fn_sym != "") SL.read_sym_file(fn_sym);
     DF2.read(fn_ref);
     SF1.read(fn_sel);
-    if (DF2.FirstLine_colNumber() < 2)
-    {
-        REPORT_ERROR(1, "Projection Neighbourhood: Neighbourhoods docfile has less than 2 columns.");
-    }
 }
 
 // Extract angles ==========================================================
-void Prog_projection_neighbourhood_prm::get_angles(SelFile &SF_in, DocFile &DF_out)
+void Prog_projection_neighbourhood_prm::get_angles(MetaData &SF_in, MetaData &DF_out)
 {
     DF_out.clear();
     int i = 0;
-    double phi, theta, psi;
     time_config();
     std::cerr << "Extracting angles ...\n";
-    init_progress_bar(SF_in.ImgNo());
-    while (!SF_in.eof())
+    init_progress_bar(SF_in.size());
+    FOR_ALL_OBJECTS_IN_METADATA(SF_in)
     {
-        headerXmipp H;
-        FileName fn_img=SF_in.NextImg();
-        if (fn_img=="") break;
-        H.read(fn_img);
-        H.get_eulerAngles(phi, theta, psi);
-        DF_out.append_angles(phi, theta, psi, "rot", "tilt", "psi");
+        Image<double> H;
+        FileName fn_img;
+        SF_in.getValue(MDL_IMAGE,fn_img);
+        H.read(fn_img,false);
+        DF_out.addObject();
+        DF_out.setValue(MDL_ANGLEROT,H.rot());
+        DF_out.setValue(MDL_ANGLETILT,H.tilt());
+        DF_out.setValue(MDL_ANGLEPSI,H.psi());
         i++;
         if (i % 10 == 0) progress_bar(i);
     }
-    progress_bar(SF_in.ImgNo());
+    progress_bar(SF_in.size());
 }
 
 // Show ====================================================================
@@ -97,7 +93,6 @@ void Prog_projection_neighbourhood_prm::usage()
 //#define DEBUG
 double Prog_projection_neighbourhood_prm::check_symmetries(double rot1, double tilt1, double &rot2, double &tilt2)
 {
-
     int imax = SL.SymsNo() + 1;
     Matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
     double best_ang_dist = 9999;
@@ -163,37 +158,33 @@ void Prog_projection_neighbourhood_prm::compute_neighbourhood()
     double rot2, tilt2;
     double distp;
     int i = 0;
-    SelFile SF_out;
-    SelLine selline;
+    MetaData SF_out;
 
     get_angles(SF1, DF1);
     std::cerr << "Calculating ...\n";
-    DF2.go_first_data_line();
-    while (!DF2.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(DF2)
     {
         // Read reference projection direction
-        rot1 = realWRAP(DF2(0), -180, 180);
-        tilt1 = realWRAP(DF2(1), -180, 180);
-        SF_out.reserve(DF1.LineNo());
-        SF_out.go_beginning();
+    	double auxrot; DF2.getValue(MDL_ANGLEROT,auxrot);
+    	double auxtilt; DF2.getValue(MDL_ANGLEROT,auxtilt);
+        rot1 = realWRAP(auxrot, -180, 180);
+        tilt1 = realWRAP(auxtilt, -180, 180);
 
-        DF1.go_first_data_line();
-        while (!DF1.eof())
+        FOR_ALL_OBJECTS_IN_METADATA(DF1)
         {
             // Read assigned angles from document file
-            rot2 = realWRAP(DF1(0), -180, 180);
-            tilt2 = realWRAP(DF1(1), -180, 180);
+        	DF1.getValue(MDL_ANGLEROT,auxrot);
+        	DF1.getValue(MDL_ANGLEROT,auxtilt);
+            rot2 = realWRAP(auxrot, -180, 180);
+            tilt2 = realWRAP(auxtilt, -180, 180);
             distp = check_symmetries(rot1, tilt1, rot2, tilt2);
             // Fill the output result
             if (distp <= maxdist)
             {
-                SF1.go_beginning();
-                SF1.jump(DF1.get_current_key() - 1);
-                selline = SF1.current();
-                SF_out.insert(selline);
+            	FileName fnClosest;
+            	DF1.getValue(MDL_IMAGE,fnClosest);
+                SF_out.setValue(MDL_IMAGE,fnClosest);
             }
-            // Move to next data line
-            DF1.next_data_line();
         }
         // finished reading all particles for this neighbourhood
         i++;
@@ -201,7 +192,6 @@ void Prog_projection_neighbourhood_prm::compute_neighbourhood()
         fn_sel_out.compose(fn_root_out, i, "sel");
         SF_out.write(fn_sel_out);
         SF_out.clear();
-        DF2.next_data_line();
     }
     return;
 }

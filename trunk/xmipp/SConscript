@@ -384,7 +384,7 @@ ReconsSources = [
     'angular_continuous_assign.cpp',
     'angular_discrete_assign.cpp',
     'angular_distance.cpp',
-#    'angular_neighbourhood.cpp',
+    'angular_neighbourhood.cpp',
 #    'angular_projection_matching.cpp',
 #    'angular_class_average.cpp',
 #    'angular_project_library.cpp',
@@ -513,7 +513,7 @@ AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
 AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
 AddXmippProgram('angular_distance', ['XmippRecons'])
 #AddXmippProgram('angular_distribution_show', ['XmippInterface'])
-#AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
+AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 #AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 #AddXmippProgram('angular_project_library', ['XmippRecons'])
 #AddXmippProgram('average') sjors
