@@ -26,8 +26,8 @@
 #define _PROG_ANGULAR_PREDICT_TOMOGRPAHY
 
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/volume.h>
+#include <data/metadata.h>
+#include <data/image.h>
 
 /**@defgroup AngularPredictTomography angular_assign_for_tomogram (Discrete angular assignment for tomography)
    @ingroup ReconsLibraryPrograms */
@@ -56,8 +56,6 @@ public:
     FileName fn_ref;
     /** Filename of the images */
     FileName fn_sel;
-    /** Filename of the masks */
-    FileName fn_masksel;
     /** Root filename for the output */
     FileName fn_out;
     /** Maximum rotation change. */
@@ -79,7 +77,7 @@ public:
     /** Adjust gray */
     bool adjustGray;
 public:
-    VolumeXmipp V;
+    Image<double> V;
     std::vector<AlignmentTomography> list_of_assigned;
 public:
     /// Read argument from command line
