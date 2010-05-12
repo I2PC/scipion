@@ -99,7 +99,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
     DF_initial.read(fn_ang);
 
     // Read the reference volume
-    VolumeXmipp V;
+    Image<double> V;
     V.read(fn_ref);
     V().setXmippOrigin();
 
@@ -119,18 +119,18 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
     mask_Real3D.type = mask_Real.type = GAUSSIAN_MASK;
     mask_Real3D.mode = mask_Real.mode = INNER_MASK;
     mask_Real3D.sigma = mask_Real.sigma = gaussian_Real_sigma * XSIZE(V());
-    mask_Real3D.generate_3Dmask(V());
-    mask_Real  .generate_2Dmask(YSIZE(V()), XSIZE(V()));
-    mask_Real3D.get_cont_mask3D() *= sqrt(2 * PI) * gaussian_Real_sigma * XSIZE(V());
-    mask_Real  .get_cont_mask2D() *= sqrt(2 * PI) * gaussian_Real_sigma * XSIZE(V());
+    mask_Real3D.generate_mask(V());
+    mask_Real  .generate_mask(YSIZE(V()), XSIZE(V()));
+    mask_Real3D.get_cont_mask() *= sqrt(2 * PI) * gaussian_Real_sigma * XSIZE(V());
+    mask_Real  .get_cont_mask() *= sqrt(2 * PI) * gaussian_Real_sigma * XSIZE(V());
 
     // Prepare the weight function in Fourier space
     mask_Fourier.type = GAUSSIAN_MASK;
     mask_Fourier.mode = INNER_MASK;
     mask_Fourier.sigma = gaussian_DFT_sigma * XSIZE(V());
-    mask_Fourier.generate_2Dmask(YSIZE(V()), XSIZE(V()));
-    mask_Fourier.get_cont_mask2D() *= sqrt(2 * PI) * gaussian_DFT_sigma * XSIZE(V());
-    mask_Fourier.get_cont_mask2D()(0, 0) = 0;
+    mask_Fourier.generate_mask(YSIZE(V()), XSIZE(V()));
+    mask_Fourier.get_cont_mask() *= sqrt(2 * PI) * gaussian_DFT_sigma * XSIZE(V());
+    mask_Fourier.get_cont_mask()(0, 0) = 0;
 
     // Weight the input volume in real space
     mask_Real3D.apply_mask(V(), V());
@@ -148,7 +148,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
 }
 
 // Predict =================================================================
-double Prog_angular_predict_continuous_prm::predict_angles(ImageXmipp &I,
+double Prog_angular_predict_continuous_prm::predict_angles(Image<double> &I,
         double &shiftX, double &shiftY,
         double &rot, double &tilt, double &psi)
 {
@@ -166,7 +166,7 @@ double Prog_angular_predict_continuous_prm::predict_angles(ImageXmipp &I,
     pose(4) = -shiftY; // for Slavica
     mask_Real.apply_mask(I(), I());
     double cost = CSTSplineAssignment(reDFTVolume, imDFTVolume,
-        I(), mask_Fourier.get_cont_mask2D(), pose, max_no_iter);
+        I(), mask_Fourier.get_cont_mask(), pose, max_no_iter);
 
     Matrix2D<double> Eold, Enew;
     Euler_angles2matrix(old_rot,old_tilt,old_psi,Eold);
@@ -241,7 +241,7 @@ void Prog_angular_predict_continuous_prm::run()
     FOR_ALL_OBJECTS_IN_METADATA(DF_initial)
     {
         FileName fnImg; DF_initial.getValue(MDL_IMAGE,fnImg);
-        ImageXmipp img; img.read(fnImg);
+        Image<double> img; img.read(fnImg);
         double shiftX = img.Xoff();
         double shiftY = img.Yoff();
         double rot    = img.rot();
@@ -260,10 +260,10 @@ void Prog_angular_predict_continuous_prm::run()
 /* Interface to Slavica's routines                                           */
 /* ------------------------------------------------------------------------- */
 double CSTSplineAssignment(
-    Matrix3D<double> &ReDFTVolume,
-    Matrix3D<double> &ImDFTVolume,
-    Matrix2D<double> &image,
-    Matrix2D<double> &weight,
+    MultidimArray<double> &ReDFTVolume,
+    MultidimArray<double> &ImDFTVolume,
+    MultidimArray<double> &image,
+    MultidimArray<double> &weight,
     Matrix1D<double> &pose_parameters,
     int               max_no_iter
 )
@@ -284,7 +284,7 @@ double CSTSplineAssignment(
 
     // Perform the DFT of the input image
     int Status;
-    Matrix2D<double> realImg(image), imagImg;
+    MultidimArray<double> realImg(image), imagImg;
     CenterFFT(realImg, false);
     imagImg.resize(image);
     VolumeDftRealToRealImaginary(MULTIDIM_ARRAY(realImg),
@@ -309,18 +309,18 @@ double CSTSplineAssignment(
     // Set the sampling rates
     Matrix1D<double> sampling_rate(3);
     sampling_rate.initConstant(1);
-    Data.VoxelSize      = MULTIDIM_ARRAY(sampling_rate);
+    Data.VoxelSize      = MATRIX1D_ARRAY(sampling_rate);
     Data.nx_VoxelSize   = 3;
-    Data.PixelSize      = MULTIDIM_ARRAY(sampling_rate);
+    Data.PixelSize      = MATRIX1D_ARRAY(sampling_rate);
     Data.nx_PixelSize   = 2;
 
     // Set the initial pose parameters
-    Data.Parameters     = MULTIDIM_ARRAY(pose_parameters);
+    Data.Parameters     = MATRIX1D_ARRAY(pose_parameters);
     Data.nx_Parameters  = 5;
 
     // Set the final pose parameters.
     Matrix2D<double> output_pose(5, max_no_iter + 1);
-    Data.OutputParameters = MULTIDIM_ARRAY(output_pose);
+    Data.OutputParameters = MATRIX2D_ARRAY(output_pose);
     Data.nx_OutputParameters = max_no_iter + 1;
     Data.ny_OutputParameters = 5;
 
@@ -329,18 +329,18 @@ double CSTSplineAssignment(
     	    	     Failures(max_no_iter + 1);
     long             NumberIterPerformed, NumberSuccPerformed,
     NumberFailPerformed;
-    Data.Cost             = MULTIDIM_ARRAY(Cost);
+    Data.Cost             = MATRIX1D_ARRAY(Cost);
     Data.nx_Cost          = max_no_iter + 1;
-    Data.TimePerIter      = MULTIDIM_ARRAY(TimePerIter);
+    Data.TimePerIter      = MATRIX1D_ARRAY(TimePerIter);
     Data.nx_TimePerIter   = max_no_iter + 1;
     Data.NumberIterPerformed = &NumberIterPerformed;
     Data.NumberSuccPerformed = &NumberSuccPerformed;
     Data.NumberFailPerformed = &NumberFailPerformed;
-    Data.Failures            = MULTIDIM_ARRAY(Failures);
+    Data.Failures            = MATRIX1D_ARRAY(Failures);
     Data.nx_Failures         = max_no_iter + 1;
 
     // Set the parameters for the extracted central slice
-    Matrix3D<double> dftProj(2, YSIZE(image), XSIZE(image));
+    MultidimArray<double> dftProj(2, YSIZE(image), XSIZE(image));
     Data.dftProj          = MULTIDIM_ARRAY(dftProj);
     Data.nx_dftProj       = XSIZE(image);
     Data.ny_dftProj       = YSIZE(image);

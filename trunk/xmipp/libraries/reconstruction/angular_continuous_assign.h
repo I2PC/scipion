@@ -28,10 +28,9 @@
 #define _PROG_ANGULAR_PREDICT_CONTINUOUS
 
 #include <data/progs.h>
-#include <data/matrix3d.h>
-#include <data/matrix2d.h>
-#include <data/matrix1d.h>
+#include <data/image.h>
 #include <data/mask.h>
+#include <data/metadata.h>
 
 /**@defgroup AngularPredictContinuous angular_continuous_assign (Continuous angular assignment)
    @ingroup ReconsLibraryPrograms */
@@ -60,9 +59,9 @@ public:
     double max_angular_change;
 public:
     // Real part of the Fourier transform
-    Matrix3D<double> reDFTVolume;
+    MultidimArray<double> reDFTVolume;
     // Imaginary part of the Fourier transform
-    Matrix3D<double> imDFTVolume;
+    MultidimArray<double> imDFTVolume;
     // DocFile with the initial guess
     MetaData         DF_initial;
     // Weighting mask in Fourier space
@@ -102,7 +101,7 @@ public:
     /** Predict angles and shift.
         At the input the pose parameters must have an initial guess of the
         parameters. At the output they have the estimated pose.*/
-    double predict_angles(ImageXmipp &I,
+    double predict_angles(Image<double> &I,
                           double &shiftX, double &shiftY,
                           double &rot, double &tilt, double &psi);
 
@@ -122,10 +121,10 @@ public:
     by CST Spline Assignment. The maximum number of iterations
     controls the optimization process. */
 double CSTSplineAssignment(
-    Matrix3D<double> &ReDFTVolume,
-    Matrix3D<double> &ImDFTVolume,
-    Matrix2D<double> &image,
-    Matrix2D<double> &weight,
+    MultidimArray<double> &ReDFTVolume,
+    MultidimArray<double> &ImDFTVolume,
+    MultidimArray<double> &image,
+    MultidimArray<double> &weight,
     Matrix1D<double> &pose_parameters,
     int               max_no_iter = 60
 );
