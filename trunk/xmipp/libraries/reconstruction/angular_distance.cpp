@@ -207,7 +207,7 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
     DF1.firstObject();
     DF2.firstObject();
     
-    Matrix1D<double> rot_diff, tilt_diff, psi_diff, vec_diff,
+    MultidimArray<double> rot_diff, tilt_diff, psi_diff, vec_diff,
         X_diff, Y_diff, shift_diff;
     rot_diff.resize(DF1.size());
     tilt_diff.resize(rot_diff);

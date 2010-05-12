@@ -382,8 +382,8 @@ ReconsSources = [
     'angular_assign_for_tomogram.cpp',
     'angular_commonline.cpp',
     'angular_continuous_assign.cpp',
-#    'angular_discrete_assign.cpp',
-#    'angular_distance.cpp',
+    'angular_discrete_assign.cpp',
+    'angular_distance.cpp',
 #    'angular_neighbourhood.cpp',
 #    'angular_projection_matching.cpp',
 #    'angular_class_average.cpp',
@@ -511,8 +511,8 @@ AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
 #AddXmippProgram('angular_class_average', ['XmippRecons'])
 AddXmippProgram('angular_commonline', ['XmippRecons'])
 AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
-#AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
-#AddXmippProgram('angular_distance', ['XmippRecons'])
+AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
+AddXmippProgram('angular_distance', ['XmippRecons'])
 #AddXmippProgram('angular_distribution_show', ['XmippInterface'])
 #AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 #AddXmippProgram('angular_projection_matching', ['XmippRecons'])
@@ -709,8 +709,8 @@ AddProtocol('protocol_setup.py', 'applications/scripts/protocols')
 # MPI
 if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_angular_discrete_assign', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])

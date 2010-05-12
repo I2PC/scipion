@@ -101,7 +101,8 @@ int main(int argc, char **argv)
                 {
                     std::string fnImg;
                     prm.DFexp.getValue(MDL_IMAGE,fnImg);
-                    ImageXmipp img(fnImg);
+                    Image<double> img;
+                    img.read(fnImg);
                     double shiftX, shiftY, psi, rot, tilt;
                     double corr = prm.predict_angles(img, shiftX, shiftY, rot, tilt, psi);
 

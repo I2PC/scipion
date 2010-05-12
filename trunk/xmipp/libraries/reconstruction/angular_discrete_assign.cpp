@@ -43,7 +43,8 @@ Prog_angular_predict_prm::Prog_angular_predict_prm()
 void Prog_angular_predict_prm::read(int argc, char **argv)
 {
     extended_usage = checkParameter(argc, argv, "-more_help");
-    if (extended_usage) REPORT_ERROR(1, "");
+    if (extended_usage)
+        REPORT_ERROR(1, "");
     fn_ref = getParameter(argc, argv, "-ref");
     fn_exp = getParameter(argc, argv, "-i");
     fn_out_ang = getParameter(argc, argv, "-oang");
@@ -58,9 +59,12 @@ void Prog_angular_predict_prm::read(int argc, char **argv)
     smax = textToInteger(getParameter(argc, argv, "-smax", "-1"));
     pick = textToInteger(getParameter(argc, argv, "-pick", "1"));
     tell = 0;
-    if (checkParameter(argc, argv, "-show_rot_tilt")) tell |= TELL_ROT_TILT;
-    if (checkParameter(argc, argv, "-show_psi_shift")) tell |= TELL_PSI_SHIFT;
-    if (checkParameter(argc, argv, "-show_options")) tell |= TELL_OPTIONS;
+    if (checkParameter(argc, argv, "-show_rot_tilt"))
+        tell |= TELL_ROT_TILT;
+    if (checkParameter(argc, argv, "-show_psi_shift"))
+        tell |= TELL_PSI_SHIFT;
+    if (checkParameter(argc, argv, "-show_options"))
+        tell |= TELL_OPTIONS;
     quiet = checkParameter(argc,argv,"-quiet");
     search5D = checkParameter(argc, argv, "-5D");
 }
@@ -68,19 +72,20 @@ void Prog_angular_predict_prm::read(int argc, char **argv)
 // Show ====================================================================
 void Prog_angular_predict_prm::show()
 {
-    if (quiet) return;
+    if (quiet)
+        return;
     std::cout << "Reference images: " << fn_ref << std::endl
-              << "Input angular file: " << fn_exp << std::endl
-              << "Ouput angular file: " << fn_out_ang << std::endl
-              << "Max proj change: " << max_proj_change << std::endl
-              << "Max psi change: " << max_psi_change << " step: " << psi_step << std::endl
-              << "Max shift change: " << max_shift_change << " step: " << shift_step << std::endl
-              << "Keep %: " << th_discard << std::endl
-              << "smin: " << smin << std::endl
-              << "smax: " << smax << std::endl
-              << "Pick: " << pick << std::endl
-              << "Show level: " << tell << std::endl
-              << "5D search: " << search5D << std::endl
+    << "Input angular file: " << fn_exp << std::endl
+    << "Ouput angular file: " << fn_out_ang << std::endl
+    << "Max proj change: " << max_proj_change << std::endl
+    << "Max psi change: " << max_psi_change << " step: " << psi_step << std::endl
+    << "Max shift change: " << max_shift_change << " step: " << shift_step << std::endl
+    << "Keep %: " << th_discard << std::endl
+    << "smin: " << smin << std::endl
+    << "smax: " << smax << std::endl
+    << "Pick: " << pick << std::endl
+    << "Show level: " << tell << std::endl
+    << "5D search: " << search5D << std::endl
     ;
 }
 
@@ -88,33 +93,34 @@ void Prog_angular_predict_prm::show()
 void Prog_angular_predict_prm::usage()
 {
     std::cerr << "Usage:\n"
-              << "   -ref <selfile>           : Selfile with the reference images\n"
-              << "   -i <docfile>             : Docfile with input angles\n"
-              << "   -oang <angle file>       : DocFile with output angles\n"
-              << "  [-sym <symmetry file>]    : Symmetry file if any\n"
-              << "  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt\n"
-              << "  [-max_psi_change <ang=-1>]: Maximum change allowed in psi\n"
-              << "  [-max_shift_change <r=0>] : Maximum change allowed in shift\n"
-              << "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
-              << "  [-shift_step <r=1>]       : Step in shift in pixels\n"
-              << "  [-more_help]              : Show all options\n"
+    << "   -ref <selfile>           : Selfile with the reference images\n"
+    << "   -i <docfile>             : Docfile with input angles\n"
+    << "   -oang <angle file>       : DocFile with output angles\n"
+    << "  [-sym <symmetry file>]    : Symmetry file if any\n"
+    << "  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt\n"
+    << "  [-max_psi_change <ang=-1>]: Maximum change allowed in psi\n"
+    << "  [-max_shift_change <r=0>] : Maximum change allowed in shift\n"
+    << "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
+    << "  [-shift_step <r=1>]       : Step in shift in pixels\n"
+    << "  [-more_help]              : Show all options\n"
     ;
-    if (extended_usage) more_usage();
+    if (extended_usage)
+        more_usage();
 }
 
 void Prog_angular_predict_prm::more_usage()
 {
     std::cerr << "  [-keep <th=50%>]          : How many images are kept each round\n"
-              << "  [-smin <s=1>]             : Finest scale to consider (lowest value=0)\n"
-              << "  [-smax <s=-1>]            : Coarsest scale to consider (highest value=log2(Xdim))\n"
-              << "  [-pick <mth=1>]           : 0 --> maximum of the first group\n"
-              << "                              1 --> maximum of the most populated\n"
-              << "  [-show_rot_tilt]          : Show the rot-tilt process\n"
-              << "  [-show_psi_shift]         : Show the psi-shift process\n"
-              << "  [-show_options]           : Show final options among which\n"
-              << "                              the angles are selected\n"
-              << "  [-quiet]                  : Do not show any output\n"
-              << "  [-5D]                     : Perform a 5D search instead of 3D+2D\n"
+    << "  [-smin <s=1>]             : Finest scale to consider (lowest value=0)\n"
+    << "  [-smax <s=-1>]            : Coarsest scale to consider (highest value=log2(Xdim))\n"
+    << "  [-pick <mth=1>]           : 0 --> maximum of the first group\n"
+    << "                              1 --> maximum of the most populated\n"
+    << "  [-show_rot_tilt]          : Show the rot-tilt process\n"
+    << "  [-show_psi_shift]         : Show the psi-shift process\n"
+    << "  [-show_options]           : Show final options among which\n"
+    << "                              the angles are selected\n"
+    << "  [-quiet]                  : Do not show any output\n"
+    << "  [-5D]                     : Perform a 5D search instead of 3D+2D\n"
     ;
 }
 
@@ -124,7 +130,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
     // Read input reference image names
     SF_ref.read(fn_ref);
     int refYdim, refXdim;
-    SF_ref.ImgSize(refYdim, refXdim);
+    ImgSize(SF_ref,refYdim, refXdim);
     if (refYdim != NEXT_POWER_OF_2(refYdim) || refXdim != NEXT_POWER_OF_2(refXdim))
         REPORT_ERROR(1, "Prog_angular_predict_prm::produce_side_info: "
                      "reference images must be of a size that is power of 2");
@@ -166,11 +172,12 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
 
     // Build mask for subbands
     int Ydim, Xdim;
-    SF_ref.ImgSize(Ydim, Xdim);
+    ImgSize(SF_ref,Ydim, Xdim);
     Mask_no.resize(Ydim, Xdim);
     Mask_no.initConstant(-1);
 
-    if (smax == -1) smax = Get_Max_Scale(Ydim) - 3;
+    if (smax == -1)
+        smax = Get_Max_Scale(Ydim) - 3;
     SBNo = (smax - smin + 1) * 3 + 1;
     SBsize.resize(SBNo);
 
@@ -184,18 +191,20 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
     {
         for (int q = 0; q <= 3; q++)
         {
-            if (q == 0 && s != smax) continue;
+            if (q == 0 && s != smax)
+                continue;
             Mask.smin = s;
             Mask.smax = s;
             Mask.quadrant = Quadrant2D(q);
-            Mask.generate_2Dmask();
+            Mask.generate_mask();
 
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mask.imask2D)
-                if (DIRECT_MAT_ELEM(Mask.imask2D, i, j))
-                {
-                    Mask_no(i, j) = m;
-                    SBsize(m)++;
-                }
+            const MultidimArray<int> imask2D=Mask.get_binary_mask();
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imask2D)
+            if (DIRECT_A2D_ELEM(imask2D, i, j))
+            {
+                Mask_no(i, j) = m;
+                SBsize(m)++;
+            }
 
             m++;
         }
@@ -211,22 +220,22 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
 // Produce library -----------------------------------------------------------
 void Prog_angular_predict_prm::produce_library(int rank)
 {
-    ImageXmipp I;
-    int number_of_imgs = SF_ref.ImgNo();
-    SF_ref.go_first_ACTIVE();
+    Image<double> I;
+    int number_of_imgs = SF_ref.size();
     set_DWT_type(DAUB12);
 
     // Create space for all the DWT coefficients of the library
     Matrix1D<int> SBidx(SBNo);
     for (int m = 0; m < SBNo; m++)
     {
-        Matrix2D<double> *subband = new Matrix2D<double>;
+        MultidimArray<double> *subband = new MultidimArray<double>;
         subband->resize(number_of_imgs, SBsize(m));
         library.push_back(subband);
     }
     library_power.initZeros(number_of_imgs, SBNo);
 
-    if (rank==0) {
+    if (rank==0)
+    {
         if (!quiet)
         {
             std::cerr << "Generating reference library ...\n";
@@ -234,10 +243,12 @@ void Prog_angular_predict_prm::produce_library(int rank)
         }
     }
     int n = 0, nstep = XMIPP_MAX(1, number_of_imgs / 60); // For progress bar
-    while (!SF_ref.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF_ref)
     {
-        FileName fn_img=SF_ref.NextImg();
-        if (fn_img=="") break;
+        FileName fn_img;
+        SF_ref.getValue(MDL_IMAGE,fn_img);
+        if (fn_img=="")
+            break;
         I.read(fn_img, false, false, true, true);
         library_name.push_back(I.name());
 
@@ -245,25 +256,28 @@ void Prog_angular_predict_prm::produce_library(int rank)
         I().statisticsAdjust(0, 1);
         DWT(I(), I());
         SBidx.initZeros();
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mask_no)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(Mask_no)
         {
             int m = Mask_no(i, j);
             if (m != -1)
             {
                 double coef = I(i, j), coef2 = coef * coef;
                 (*library[m])(n, SBidx(m)++) = coef;
-                for (int mp = m; mp < SBNo; mp++) library_power(n, mp) += coef2;
+                for (int mp = m; mp < SBNo; mp++)
+                    library_power(n, mp) += coef2;
             }
         }
 
         // Prepare for next iteration
-        if (++n % nstep == 0 && rank==0 && !quiet) progress_bar(n);
+        if (++n % nstep == 0 && rank==0 && !quiet)
+            progress_bar(n);
     }
-    if (rank==0 && !quiet) progress_bar(SF_ref.ImgNo());
+    if (rank==0 && !quiet)
+        progress_bar(SF_ref.size());
 }
 
 // Build candidate list ------------------------------------------------------
-void Prog_angular_predict_prm::build_ref_candidate_list(const ImageXmipp &I,
+void Prog_angular_predict_prm::build_ref_candidate_list(const Image<double> &I,
         std::vector<bool> &candidate_list, std::vector<double> &cumulative_corr,
         std::vector<double> &sumxy)
 {
@@ -282,9 +296,11 @@ void Prog_angular_predict_prm::build_ref_candidate_list(const ImageXmipp &I,
                                       I.rot(), I.tilt(), 0, dummy_rot, dummy_tilt, dummy_psi, true);
             candidate_list[i] = (ang_distance <= max_proj_change);
 #ifdef DEBUG
+
             std::cout << "(" << I.rot() << "," << I.tilt() << ") and ("
             << rot[i] << "," << tilt[i] << ") --> " << ang_distance << std::endl;
 #endif
+
         }
     }
 }
@@ -302,7 +318,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
 
     int dimp = SBsize(m);
     int imax = candidate_list.size();
-    Matrix2D<double> *library_m = library[m];
+    MultidimArray<double> *library_m = library[m];
     for (int i = 0; i < imax; i++)
     {
         if (candidate_list[i])
@@ -336,7 +352,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
 }
 
 // Predict rot and tilt ----------------------------------------------------
-double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
+double Prog_angular_predict_prm::predict_rot_tilt_angles(Image<double> &I,
         double &assigned_rot, double &assigned_tilt, int &best_ref_idx)
 {
     if (XSIZE(I()) != NEXT_POWER_OF_2(XSIZE(I())) ||
@@ -353,8 +369,10 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 
     // Make DWT of the input image and build vectors for comparison
     std::vector<Matrix1D<double> * > Idwt;
-    Matrix1D<double> x_power(SBNo); x_power.initZeros();
-    Matrix1D<int> SBidx(SBNo); SBidx.initZeros();
+    Matrix1D<double> x_power(SBNo);
+    x_power.initZeros();
+    Matrix1D<int> SBidx(SBNo);
+    SBidx.initZeros();
     for (int m = 0; m < SBNo; m++)
     {
         Matrix1D<double> *subband = new Matrix1D<double>;
@@ -364,14 +382,15 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
 
     I().statisticsAdjust(0, 1);
     DWT(I(), I());
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mask_no)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mask_no)
     {
         int m = Mask_no(i, j);
         if (m != -1)
         {
-            double coef = DIRECT_IMGPIXEL(I, i, j), coef2 = coef * coef;
+            double coef = I(i, j), coef2 = coef * coef;
             (*(Idwt[m]))(SBidx(m)++) = coef;
-            for (int mp = m; mp < SBNo; mp++) x_power(mp) += coef2;
+            for (int mp = m; mp < SBNo; mp++)
+                x_power(mp) += coef2;
         }
     }
 
@@ -387,7 +406,7 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
             << " current tilt=" << I.tilt() << std::endl;
         refine_candidate_list_with_correlation(m, *(Idwt[m]),
                                                candidate_list, cumulative_corr,
-					       x_power, sumxy, th_discard);
+                                               x_power, sumxy, th_discard);
     }
 
     // Select the maximum
@@ -402,14 +421,16 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
                 first = false;
                 N_max = 1;
             }
-            else if (cumulative_corr[i] > cumulative_corr[best_i]) best_i = i;
+            else if (cumulative_corr[i] > cumulative_corr[best_i])
+                best_i = i;
             else if (cumulative_corr[i] == cumulative_corr[best_i])
                 N_max++;
 
     if (N_max == 0)
     {
-        if (!quiet) std::cerr << "Predict_angles: Empty candidate list for image "
-                              << I.name() << std::endl;
+        if (!quiet)
+            std::cerr << "Predict_angles: Empty candidate list for image "
+            << I.name() << std::endl;
         assigned_rot = I.rot();
         assigned_tilt = I.tilt();
         return 0;
@@ -429,7 +450,8 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(ImageXmipp &I,
     }
 
     // Free asked memory
-    for (int m = 0; m < SBNo; m++) delete Idwt[m];
+    for (int m = 0; m < SBNo; m++)
+        delete Idwt[m];
 
     assigned_rot    = rot[best_i];
     assigned_tilt   = tilt[best_i];
@@ -449,8 +471,10 @@ double Prog_angular_predict_prm::evaluate_candidates(
     min_score = max_score = vscore[0];
     for (int i = 1; i < imax; i++)
     {
-        if (vscore[i] < min_score) min_score = vscore [i];
-        if (vscore[i] > max_score) max_score = vscore [i];
+        if (vscore[i] < min_score)
+            min_score = vscore [i];
+        if (vscore[i] > max_score)
+            max_score = vscore [i];
     }
 
     // Divide the correlation segment in as many pieces as candidates
@@ -461,18 +485,20 @@ double Prog_angular_predict_prm::evaluate_candidates(
     {
         int i = candidate_idx[j];
         int points;
-        if (score_step != 0) points = FLOOR((vscore[i] - min_score) / score_step);
-        else               points = 10;
+        if (score_step != 0)
+            points = FLOOR((vscore[i] - min_score) / score_step);
+        else
+            points = 10;
         if (tell & TELL_PSI_SHIFT)
             std::cout << "Candidate (" << i << ") score=" << vscore[i]
-                      << " points=" << points << std::endl;
+            << " points=" << points << std::endl;
         candidate_rate[j] += weight * points;
     }
 
     if (tell & TELL_PSI_SHIFT)
         std::cout << "Evaluation:" << candidate_rate << std::endl
-                  << "Threshold for obtaining a 7 in score: "
-                  << min_score + 7*score_step << std::endl;
+        << "Threshold for obtaining a 7 in score: "
+        << min_score + 7*score_step << std::endl;
     return min_score + 7*score_step;
 }
 
@@ -487,8 +513,10 @@ void Prog_angular_predict_prm::group_views(const std::vector<double> &vrot,
     {
         int i = candidate_idx[best_idx[j]];
 #ifdef DEBUG
+
         std::cout << "Looking for a group for image " << best_idx[j] << std::endl;
 #endif
+
         double roti = vrot[i];
         double tilti = vtilt[i];
         double psii = vpsi[i];
@@ -504,9 +532,11 @@ void Prog_angular_predict_prm::group_views(const std::vector<double> &vrot,
                 double ang_distance = distance_prm.check_symmetries(
                                           vrot[ip], vtilt[ip], vpsi[ip], roti, tilti, psii, false);
 #ifdef DEBUG
+
                 std::cout << "   comparing with " << groups[g][jp] << " d="
-                          << ang_distance << std::endl;
+                << ang_distance << std::endl;
 #endif
+
                 if (ang_distance > 15)
                 {
                     fits = false;
@@ -547,7 +577,8 @@ void Prog_angular_predict_prm::group_views(const std::vector<double> &vrot,
     {
         groups.clear();
         std::vector<int> group;
-        for (int j = 0; j < best_idx.size(); j++) group.push_back(best_idx[j]);
+        for (int j = 0; j < best_idx.size(); j++)
+            group.push_back(best_idx[j]);
         groups.push_back(group);
     }
 }
@@ -601,8 +632,10 @@ int Prog_angular_predict_prm::pick_view(int method,
         // Check that there are not two groups with the same score
         int groups_with_max_rate = 0;
         for (int g = 0; g < groups.size(); g++)
-            if (group_rate[g] == best_group_rate) groups_with_max_rate++;
+            if (group_rate[g] == best_group_rate)
+                groups_with_max_rate++;
 #ifdef DEBUG
+
         if (groups_with_max_rate > 1)
         {
             std::cout << "There are two groups with maximum rate\n";
@@ -662,14 +695,14 @@ int Prog_angular_predict_prm::pick_view(int method,
 
 // Predict shift and psi -----------------------------------------------------
 //#define DEBUG
-double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
+double Prog_angular_predict_prm::predict_angles(Image<double> &I,
         double &assigned_shiftX, double &assigned_shiftY,
         double &assigned_rot, double &assigned_tilt, double &assigned_psi)
 {
     double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
     best_score = 0, best_rate;
 
-    ImageXmipp Ip;
+    Image<double> Ip;
     Ip = I;
     Matrix1D<double> shift(2);
 
@@ -698,32 +731,37 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     std::vector<int>    vref_idx;
 
     double backup_max_shift_change = max_shift_change;
-    if (!search5D) max_shift_change = 0;
+    if (!search5D)
+        max_shift_change = 0;
 
 #ifdef DEBUG
+
     I.write("PPPoriginal.xmp");
 #endif
+
     for (double shiftX = Xoff - max_shift_change; shiftX <= Xoff + max_shift_change; shiftX += shift_step)
         for (double shiftY = Yoff - max_shift_change; shiftY <= Yoff + max_shift_change; shiftY += shift_step)
         {
-            if ((shiftX - Xoff)*(shiftX - Xoff) + (shiftY - Yoff)*(shiftY - Yoff) > R2) continue;
+            if ((shiftX - Xoff)*(shiftX - Xoff) + (shiftY - Yoff)*(shiftY - Yoff) > R2)
+                continue;
             for (double psi = psi0; psi <= psiF; psi += psi_step)
             {
                 N_trials++;
 
                 // Shift image if necessary
-                if (shiftX == 0 && shiftY == 0) Ip() = I();
+                if (shiftX == 0 && shiftY == 0)
+                    Ip() = I();
                 else
                 {
                     VECTOR_R2(shift, shiftX, shiftY);
-                    I().translate(shift, Ip(), WRAP);
+                    translate(LINEAR,Ip(),I(),shift,WRAP);
                 }
 
                 // Rotate image if necessary
                 // Adding 2 is a trick to avoid that the 0, 90, 180 and 270
                 // are treated in a different way
-                Ip().selfRotate(psi + 2, WRAP);
-                Ip().selfRotate(-2, WRAP);
+                selfRotate(LINEAR,Ip(),psi + 2, WRAP);
+                selfRotate(LINEAR,Ip(),-2, WRAP);
 
                 // Project the resulting image onto the visible space
                 double proj_error = 0.0, proj_compact = 0.0;
@@ -752,8 +790,9 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
                 vref_idx.push_back(best_ref_idx);
 
 #ifdef DEBUG
+
                 Ip.write("PPPafter_denoising.xmp");
-                ImageXmipp Iref((std::string)"ref" + integerToString(best_ref_idx + 1, 6) + ".xmp");
+                Image<double> Iref((std::string)"ref" + integerToString(best_ref_idx + 1, 6) + ".xmp");
                 Iref.write("PPPref.xmp");
                 std::cerr << "corrp=" << corrp << "\nPress any key\n";
                 char c;
@@ -770,16 +809,22 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     for (int i = 1; i < N_trials; i++)
     {
         // Compute extrema of projection error
-        if (vproj_error[i] < min_proj_error) min_proj_error = vproj_error[i];
-        if (vproj_error[i] > max_proj_error) max_proj_error = vproj_error[i];
+        if (vproj_error[i] < min_proj_error)
+            min_proj_error = vproj_error[i];
+        if (vproj_error[i] > max_proj_error)
+            max_proj_error = vproj_error[i];
 
         // Compute extrema of correlation
-        if (vcorr[i] < min_corr) min_corr = vcorr[i];
-        if (vcorr[i] > max_corr) max_corr = vcorr[i];
+        if (vcorr[i] < min_corr)
+            min_corr = vcorr[i];
+        if (vcorr[i] > max_corr)
+            max_corr = vcorr[i];
 
         // Compute extrema of projection error
-        if (vproj_compact[i] < min_proj_compact) min_proj_compact = vproj_compact[i];
-        if (vproj_compact[i] > max_proj_compact) max_proj_compact = vproj_compact[i];
+        if (vproj_compact[i] < min_proj_compact)
+            min_proj_compact = vproj_compact[i];
+        if (vproj_compact[i] > max_proj_compact)
+            max_proj_compact = vproj_compact[i];
     }
 
     // Score each projection
@@ -792,17 +837,17 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
         vscore.push_back(vcorr[i]);
         if (tell & TELL_PSI_SHIFT)
             std::cout << "i=" << i
-                      << " shiftX= " << vshiftX[i] << " shiftY= " << vshiftY[i]
-                      << " psi= "          << vpsi[i]
-                      << " rot= "          << vrot[i]
-                      << " tilt= "         << vtilt[i]
-                      << " score= "        << vscore[i]
-                      << " corr= "         << vcorr[i]
-                      << " proj_error= "   << vproj_error[i]
-                      << " proj_compact= " << vproj_compact[i]
-                      << " refidx= "       << vref_idx[i]
-                      << " ang_jump= "     << vang_jump[i]
-                      << std::endl;
+            << " shiftX= " << vshiftX[i] << " shiftY= " << vshiftY[i]
+            << " psi= "          << vpsi[i]
+            << " rot= "          << vrot[i]
+            << " tilt= "         << vtilt[i]
+            << " score= "        << vscore[i]
+            << " corr= "         << vcorr[i]
+            << " proj_error= "   << vproj_error[i]
+            << " proj_compact= " << vproj_compact[i]
+            << " refidx= "       << vref_idx[i]
+            << " ang_jump= "     << vang_jump[i]
+            << std::endl;
     }
 
     // Is the psi range circular?
@@ -812,33 +857,40 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     // Compute minimum and maximum of the correlation and projection error
     double avg_score_maxima = 0;
     std::vector<int> local_maxima;
-    if (tell & TELL_PSI_SHIFT) std::cout << "Local maxima\n";
+    if (tell & TELL_PSI_SHIFT)
+        std::cout << "Local maxima\n";
     for (int i = 0; i < N_trials; i++)
     {
         // Look for the left and right sample
         int il = i - 1, ir = i + 1;
-        if (i == 0 && circular) il = N_trials - 1;
+        if (i == 0 && circular)
+            il = N_trials - 1;
         else if (i == N_trials - 1)
-            if (circular) ir = 0;
-            else ir = -1;
+            if (circular)
+                ir = 0;
+            else
+                ir = -1;
 
         // Check if the error is a local minimum of the projection error
         // or a local maxima of the correlation
         bool is_local_maxima = true;
         if (il != -1)
-            if (vscore[il] >= vscore[i]) is_local_maxima = false;
+            if (vscore[il] >= vscore[i])
+                is_local_maxima = false;
         if (ir != -1)
-            if (vscore[ir] >= vscore[i]) is_local_maxima = false;
+            if (vscore[ir] >= vscore[i])
+                is_local_maxima = false;
 
         // It is a local minimum
-        if (is_local_maxima /*|| visible_space*/) avg_score_maxima += vscore[i];
+        if (is_local_maxima /*|| visible_space*/)
+            avg_score_maxima += vscore[i];
         if (is_local_maxima /*|| visible_space*/)
         {
             local_maxima.push_back(i);
             if (tell & TELL_PSI_SHIFT)
                 std::cout << "i= " << i
-                          << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-                          << vtilt[i] << " score= " << vscore[i] << std::endl;
+                << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
+                << vtilt[i] << " score= " << vscore[i] << std::endl;
         }
     }
     avg_score_maxima /= local_maxima.size();
@@ -849,7 +901,8 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     int jmax = local_maxima.size();
     std::vector<int> candidate_local_maxima;
     std::vector<double> candidate_rate;
-    if (tell & TELL_PSI_SHIFT) std::cout << "Keeping ...\n";
+    if (tell & TELL_PSI_SHIFT)
+        std::cout << "Keeping ...\n";
     for (int j = 0; j < jmax; j++)
     {
         int i = local_maxima[j];
@@ -859,8 +912,8 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
             candidate_rate.push_back(0);
             if (tell & TELL_PSI_SHIFT)
                 std::cout << "i= " << i
-                          << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-                          << vtilt[i] << " score= " << vscore[i] << std::endl;
+                << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
+                << vtilt[i] << " score= " << vscore[i] << std::endl;
         }
     }
     jmax = candidate_local_maxima.size();
@@ -869,10 +922,12 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     evaluate_candidates(vscore, candidate_local_maxima, candidate_rate, 1);
 
     // Sort the candidates
-    if (tell & TELL_PSI_SHIFT) std::cout << "\nSelecting image\n";
-    Matrix1D<double> score(jmax);
-    for (int j = 0; j < jmax; j++) score(j) = vscore[candidate_local_maxima[j]];
-    Matrix1D<int> idx_score = score.indexSort();
+    if (tell & TELL_PSI_SHIFT)
+        std::cout << "\nSelecting image\n";
+    MultidimArray<double> score(jmax);
+    for (int j = 0; j < jmax; j++)
+        score(j) = vscore[candidate_local_maxima[j]];
+    MultidimArray<int> idx_score = score.indexSort();
 
     if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS))
     {
@@ -884,15 +939,15 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
             double score = candidate_rate[jp];
             int i = candidate_local_maxima[jp];
             std::cout << "i= " << i
-                      << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
-                      << vtilt[i]
-                      << " score= " << vscore[i]
-                      << " corr= " << vcorr[i]
-                      << " error= " << vproj_error[i]
-                      << " compact= " << vproj_compact[i]
-                      << " angjump= " << vang_jump[i]
-                      << " rate=" << candidate_rate[jp]
-                      << " reference image #=" << vref_idx[i] + 1 << std::endl;
+            << " psi= " << vpsi[i] << " rot= " << vrot[i] << " tilt= "
+            << vtilt[i]
+            << " score= " << vscore[i]
+            << " corr= " << vcorr[i]
+            << " error= " << vproj_error[i]
+            << " compact= " << vproj_compact[i]
+            << " angjump= " << vang_jump[i]
+            << " rate=" << candidate_rate[jp]
+            << " reference image #=" << vref_idx[i] + 1 << std::endl;
         }
         std::cout << std::endl;
         std::cout.flush();
@@ -939,16 +994,16 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     // Is it a 3D+2D search?
     if (!search5D)
     {
-        ImageXmipp Iref;
+        Image<double> Iref;
         Iref.read(library_name[vref_idx[ibest]]);
         Iref().setXmippOrigin();
-	//Sjors: without rotating the reference, this will go wrong!
-	Iref().selfRotate(-vpsi[ibest]);
-	if (Xoff == 0 && Yoff == 0) Ip() = I();
+        selfRotate(LINEAR,Iref(),-vpsi[ibest]);
+        if (Xoff == 0 && Yoff == 0)
+            Ip() = I();
         else
         {
             VECTOR_R2(shift, Xoff, Yoff);
-            I().translate(shift, Ip(), WRAP);
+            translate(LINEAR,Ip(),I(),shift,WRAP);
         }
 
         double shiftX, shiftY;
@@ -974,13 +1029,14 @@ double Prog_angular_predict_prm::predict_angles(ImageXmipp &I,
     if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS))
     {
         std::cout << "Originally it had, psi=" << I.psi() << " rot=" << I.rot()
-                  << " tilt=" << I.tilt() << std::endl;
+        << " tilt=" << I.tilt() << std::endl;
         std::cout << "Finally I choose: ";
-        if (tell & TELL_PSI_SHIFT) std::cout << jbest << "\n";
+        if (tell & TELL_PSI_SHIFT)
+            std::cout << jbest << "\n";
         std::cout << "psi= " << best_psi << " rot= " << best_rot << " tilt= "
-                  << best_tilt << " shiftX=" << best_shiftX
-                  << " shiftY=" << best_shiftY << " score= " << best_score
-                  << " rate= " << best_rate << std::endl << std::endl;
+        << best_tilt << " shiftX=" << best_shiftX
+        << " shiftY=" << best_shiftY << " score= " << best_score
+        << " rate= " << best_rate << std::endl << std::endl;
     }
 
     // Save results
@@ -1006,7 +1062,8 @@ void Prog_angular_predict_prm::finish_processing()
     for (int i = 0; i < p; i++)
     {
         DF.addObject();
-        std::string fn; DFexp.getValue(MDL_IMAGE, fn);
+        std::string fn;
+        DFexp.getValue(MDL_IMAGE, fn);
         DF.setValue(MDL_IMAGE,     fn);
         DF.setValue(MDL_ANGLEROT,  predicted_rot[i]);
         DF.setValue(MDL_ANGLETILT, predicted_tilt[i]);
@@ -1023,19 +1080,23 @@ void Prog_angular_predict_prm::finish_processing()
 void Prog_angular_predict_prm::run()
 {
     int Nimg=DFexp.size();
-    if (!quiet) init_progress_bar(Nimg);
+    if (!quiet)
+        init_progress_bar(Nimg);
     int n=0;
     FOR_ALL_OBJECTS_IN_METADATA(DFexp)
     {
         std::string fnImg;
         DFexp.getValue(MDL_IMAGE,fnImg);
-        ImageXmipp img(fnImg);
+        Image<double> img;
+        img.read(fnImg);
         double shiftX, shiftY, psi, rot, tilt;
         double corr = predict_angles(img, shiftX, shiftY, rot, tilt, psi);
         n++;
-        if (!quiet && n%10==0) progress_bar(n);
+        if (!quiet && n%10==0)
+            progress_bar(n);
     }
-    if (!quiet) progress_bar(Nimg);
-    
+    if (!quiet)
+        progress_bar(Nimg);
+
     finish_processing();
 }

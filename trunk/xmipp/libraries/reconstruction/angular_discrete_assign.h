@@ -27,8 +27,8 @@
 
 #include <data/funcs.h>
 #include <data/progs.h>
-#include <data/selfile.h>
 #include <data/metadata.h>
+#include <data/image.h>
 #include <classification/pca.h>
 
 #include "angular_distance.h"
@@ -97,18 +97,18 @@ public:
     // Subband size
     Matrix1D<int> SBsize;
     // Selfile with the reference projections
-    SelFile SF_ref;
+    MetaData SF_ref;
     // Mask disitribution of DWT coefficients.
     // It is created when the training sets
-    Matrix2D<int> Mask_no;
+    MultidimArray<int> Mask_no;
     // Vector with all the DWT coefficients of the
     // library
-    std::vector<Matrix2D<double> * > library;
+    std::vector<MultidimArray<double> * > library;
     // Vector with all the names of the library images
     std::vector<FileName> library_name;
     // Power of the library images at different
     // subbands
-    Matrix2D<double> library_power;
+    MultidimArray<double> library_power;
     // Vector with the rotational angles of the library
     std::vector<double> rot;
     // Vector with the tilting angles of the library
@@ -164,7 +164,7 @@ public:
 
         The list size is the total number of reference images. For each
         image the list is true if it is still a candidate.*/
-    void build_ref_candidate_list(const ImageXmipp &I,
+    void build_ref_candidate_list(const Image<double> &I,
                                   std::vector<bool> &candidate_list, std::vector<double> &cumulative_corr,
                                   std::vector<double> &sumxy);
 
@@ -212,13 +212,13 @@ public:
         correlation. The index of the best matching reference image is also
         returned. The function predict shift and psi angle calls this
         one for evaluating each possible combination.*/
-    double predict_rot_tilt_angles(ImageXmipp &I,
+    double predict_rot_tilt_angles(Image<double> &I,
                                    double &assigned_rot, double &assigned_tilt, int &best_ref_idx);
 
     /** Predict angles and shift.
         This function searches in the shift-psi space and for each combination
         it correlates with the whole reference set. */
-    double predict_angles(ImageXmipp &I,
+    double predict_angles(Image<double> &I,
                           double &assigned_shiftX, double &assigned_shiftY,
                           double &assigned_rot, double &assigned_tilt, double &assigned_psi);
 
