@@ -59,9 +59,9 @@ class sortJunkThread(Thread):
                         lastShown=toShow
                 sys.stdout.flush()
                 fnClass=className[0:className.rfind('.sel')]
-                os.system("xmipp_selfile_compare -i1 "+\
-                    fnRoot+"_F1_good.sel -i2 "+fnClass+\
-                    ".sel -method both -o "+fnClass+"_F1.sel")
+                os.system("xmipp_metadata_utilities -i "+\
+                    fnRoot+"_F1_good.sel -n "+fnClass+\
+                    ".sel -o "+fnClass+"_F1.sel")
                 os.system("xmipp_classify_analyze_cluster -i "+fnClass+"_F1.sel -ref "+\
                     fnClass+".xmp -dontMask >& /dev/null")
                 fh=open(fnClass+"_F1_score.txt");
@@ -263,8 +263,8 @@ class purifyCoresThread(Thread):
                 os.system("mv -f "+fnClass+"_F1234_pca.xmp "+fnClass+"_F12345.xmp")
                 os.system("mv -f "+fnClass+"_F1234_pcabasis_00.xmp "+fnClass+"_F12345_pcabasis_01.xmp")
                 os.system("mv -f "+fnClass+"_F1234_pcabasis_01.xmp "+fnClass+"_F12345_pcabasis_00.xmp")
-                os.system("xmipp_selfile_compare -i1 "+fnClass+".sel "+\
-                    "-i2 "+fnClass+"_F12345.sel -method file1 -o "+\
+                os.system("xmipp_metadata_utilities -i "+fnClass+".sel "+\
+                    "-n "+fnClass+"_F12345.sel -o "+\
                     fnClass+"_F12345_outliers.sel");
             idx=idx+1
         if (self.myId==0):
