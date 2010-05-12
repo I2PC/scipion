@@ -441,7 +441,7 @@ ReconsSources = [
 #    'refinement.cpp',
 #    'resolution_ssnr.cpp',
 #    'series_remove_fluctuations.cpp',
-#    'sort_images.cpp',
+    'sort_images.cpp',
     'sparma.cpp',
 #    'surface.cpp',
     'symmetrize.cpp',
@@ -522,7 +522,7 @@ AddXmippProgram('angular_commonline', ['XmippRecons'])
 #AddXmippProgram('center_image')
 AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
 #AddXmippProgram('classify_batch_som', ['XmippClassif']) sjors
-#AddXmippProgram('classify_CL2D_sort_images', ['XmippRecons'])
+AddXmippProgram('classify_CL2D_sort_images', ['XmippRecons'])
 #AddXmippProgram('classify_fcmeans', ['XmippClassif']) sjors
 #AddXmippProgram('classify_fkcn', ['XmippClassif']) sjors
 #AddXmippProgram('classify_fsom',  ['XmippClassif']) sjors

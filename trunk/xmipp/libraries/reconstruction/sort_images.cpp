@@ -60,22 +60,28 @@ void Prog_sort_images_prm::usage()
 void Prog_sort_images_prm::produceSideInfo()
 {
     // Read input selfile and reference
-    SelFile SF;
+    MetaData SF;
     SF.read(fnSel);
     int idx=0;
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         if (idx==0)
         {
-            FileName fnFirst=SF.NextImg();
-            SFoutOriginal.insert(fnFirst);
+            FileName fnFirst;
+            SF.getValue(MDL_IMAGE,fnFirst);
+            SFoutOriginal.addObject();
+            SFoutOriginal.setValue(MDL_IMAGE,fnFirst);
             lastImage.read(fnFirst);
             centerImage(lastImage());
             lastImage.write(fnRoot+integerToString(1,5)+".xmp");
-            SFout.insert(lastImage.name());
+            SFout.setValue(MDL_IMAGE,lastImage.name());
         }
         else
-            toClassify.push_back(SF.NextImg());
+        {
+            FileName fnFirst;
+            SF.getValue(MDL_IMAGE,fnFirst);
+            toClassify.push_back(fnFirst);
+        }
         idx++;
     }
 
@@ -89,17 +95,17 @@ void Prog_sort_images_prm::produceSideInfo()
 void Prog_sort_images_prm::chooseNextImage()
 {
     int imax=toClassify.size();
-    ImageXmipp bestImage;
+    Image<double> bestImage;
     double bestCorr=-1;
     int bestIdx=-1;
     for (int i=0; i<imax; i++)
     {
-        ImageXmipp Iaux;
+        Image<double> Iaux;
         Iaux.read(toClassify[i]);
         Iaux().setXmippOrigin();
         
         // Choose between this image and its mirror
-        Matrix2D<double> I, Imirror;
+        MultidimArray<double> I, Imirror;
         I=Iaux();
         Imirror=I;
         Imirror.selfReverseX();
@@ -124,11 +130,13 @@ void Prog_sort_images_prm::chooseNextImage()
         }
     }
     
-    SFoutOriginal.insert(toClassify[bestIdx]);
-    bestImage.write(fnRoot+integerToString(SFoutOriginal.ImgNo(),5)+".xmp");
+    SFoutOriginal.addObject();
+    SFoutOriginal.setValue(MDL_IMAGE,toClassify[bestIdx]);
+    bestImage.write(fnRoot+integerToString(SFoutOriginal.size(),5)+".xmp");
     toClassify.erase(toClassify.begin()+bestIdx);
     lastImage=bestImage;
-    SFout.insert(bestImage.name());
+    SFout.addObject();
+    SFout.setValue(MDL_IMAGE,bestImage.name());
 }
 
 // Run  ====================================================================
@@ -147,22 +155,20 @@ void Prog_sort_images_prm::run()
     
     if (processSelfiles)
     {
-        std::ofstream fhInfo;
-        fhInfo.open((fnRoot+"_info.txt").c_str());
-        if (!fhInfo)
-            REPORT_ERROR(1,(std::string)"Cannot open "+fnRoot+"_info.txt for output");
-        SFout.go_first_ACTIVE();
-        SFoutOriginal.go_first_ACTIVE();
-        while (!SFout.eof())
+        MetaData SFInfo;
+        FOR_ALL_OBJECTS_IN_METADATA(SFout)
         {
-            FileName fnOutOrig=SFoutOriginal.NextImg();
-            FileName fnOut=SFout.NextImg();
+            FileName fnOutOrig; SFoutOriginal.getValue(MDL_IMAGE,fnOutOrig);
+            FileName fnOut; SFout.getValue(MDL_IMAGE,fnOut);
             FileName fnSel=fnOutOrig.without_extension()+".sel";
-            SelFile SFaux;
+            MetaData SFaux;
             SFaux.read(fnSel);
-            fhInfo << fnOut << " " << fnOutOrig << " " << fnSel << " "
-                   << SFaux.ImgNo() << std::endl;
+            SFInfo.addObject();
+            SFInfo.setValue(MDL_IMAGE,fnOut);
+            SFInfo.setValue(MDL_IMAGE_ORIGINAL,fnOutOrig);
+            SFInfo.setValue(MDL_IMAGE_CLASS_GROUP,fnSel);
+            SFInfo.setValue(MDL_IMAGE_CLASS_COUNT,SFaux.size());
         }
-        fhInfo.close();
+        SFInfo.write(fnRoot+"_info.txt");
     }
 }

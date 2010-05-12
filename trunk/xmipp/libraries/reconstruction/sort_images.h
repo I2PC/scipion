@@ -26,7 +26,7 @@
 #define _PROG_SORT_IMAGES
 
 #include <data/funcs.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 
 /**@defgroup SortImagesProgram sort images
    @ingroup ReconsLibraryPrograms */
@@ -45,19 +45,19 @@ public:
     bool processSelfiles;
 public:
     // Output selfile
-    SelFile SFout;
+    MetaData SFout;
 
     // Output selfile
-    SelFile SFoutOriginal;
+    MetaData SFoutOriginal;
 
     // SelFile images
     std::vector< FileName > toClassify;
 
     // Image holding current reference
-    ImageXmipp lastImage;
+    Image<double> lastImage;
 
     // Mask of the background
-    Matrix2D<int> mask;
+    MultidimArray<int> mask;
 public:
     /// Read argument from command line
     void read(int argc, char **argv);
