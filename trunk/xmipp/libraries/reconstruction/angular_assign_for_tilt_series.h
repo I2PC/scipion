@@ -28,6 +28,7 @@
 #include <vector>
 #include <data/matrix1d.h>
 #include <data/metadata.h>
+#include <data/metadata_extension.h>
 #include <pthread.h>
 
 /**@defgroup AngularAssignTiltSeries angular_assign_for_tilt_series
