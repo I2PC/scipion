@@ -47,20 +47,20 @@
 #ifndef _RADON_HH
 #define _RADON_HH
 
-#include <data/volume.h>
+#include <data/image.h>
 
 /**@defgroup RadonTransform radon (Radon transform)
    @ingroup ReconsLibraryPrograms */
 /** Radon transform of a volume along a direction */
-void Radon_Transform(Volume *vol, double rot, double psi,
-                     Matrix1D<double> &RT);
+void Radon_Transform(const MultidimArray<double> &vol, double rot, double psi,
+		MultidimArray<double> &RT);
 
 /** Radon transform of a piece of volume along a direction */
-void Local_Radon_Transform(Volume *vol, double rot, double tilt,
-                           int label, Volume *vol_label, Matrix1D<double> &RT,
-                           Matrix1D<double> &RT_n);
+void Local_Radon_Transform(const MultidimArray<double> &vol, double rot, double tilt,
+                           int label, const MultidimArray<double> &vol_label,
+                           MultidimArray<double> &RT, MultidimArray<double> &RT_n);
 
 /** Radon transform of an image. */
-void Radon_Transform(const Matrix2D<double> &I, double rot_step,
-                     Matrix2D<double> &RT);
+void Radon_Transform(const MultidimArray<double> &I, double rot_step,
+		MultidimArray<double> &RT);
 #endif
