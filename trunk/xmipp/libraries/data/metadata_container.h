@@ -110,6 +110,9 @@ enum MetaDataLabel
     MDL_DPR,//differential phase residual (double)
     //add row only label at the end of the enum
     MDL_SAMPLINGRATE, // sampling rate (double)
+    MDL_SAMPLINGRATEX, // sampling rate (double)
+    MDL_SAMPLINGRATEY, // sampling rate (double)
+    MDL_SAMPLINGRATEZ, // sampling rate (double)
     MDL_VOLTAGE, // microscope voltage (double)
     MDL_DEFOCUSU, // microscope defocus U direction (double)
     MDL_DEFOCUSV, // microscope defocus V direction (double)
@@ -157,6 +160,11 @@ enum MetaDataLabel
     // it is here for looping purposes
 };
 
+//useful to init values to zero
+static double zeroD=0.;
+static double    oneD=1.;
+static bool  falseb=false;
+
 inline bool isString(MetaDataLabel lCode)
 {
     if (lCode == MDL_COMMENT  || lCode == MDL_IMAGE          || lCode == MDL_MICROGRAPH  ||
@@ -186,7 +194,8 @@ inline bool isDouble(MetaDataLabel lCode)
         lCode == MDL_MIN          || lCode == MDL_STDDEV       || lCode == MDL_AVG         ||
         lCode == MDL_AZIMUTALANGLE|| lCode == MDL_SPHERICALABERRATION || lCode == MDL_Q0   ||
         lCode == MDL_K            || lCode == MDL_RESOLUTIONFOURIER   || lCode == MDL_RESOLUTIONREAL ||
-        lCode == MDL_FRC          || lCode == MDL_FRCRANDOMNOISE      || lCode == MDL_DPR
+        lCode == MDL_FRC          || lCode == MDL_FRCRANDOMNOISE      || lCode == MDL_DPR  ||
+        lCode == MDL_SAMPLINGRATEX|| lCode == MDL_SAMPLINGRATEY       || lCode == MDL_SAMPLINGRATEZ
         )
         return true;
     else
@@ -225,12 +234,13 @@ class MetaDataContainer
 {
     /** Container for pairs "name" and value. Note that void * allows to use
      mixed types */
-    std::map<MetaDataLabel, void *> values;
+    ////std::map<MetaDataLabel, void *> values;
 
     void insertVoidPtr(MetaDataLabel name, void * value);
     void * getVoidPtr(MetaDataLabel name);
 
 public:
+    std::map<MetaDataLabel, void *> values;
 
     /**Assignment operator
      *
@@ -257,6 +267,13 @@ public:
         insertVoidPtr(name, newValue);
     }
 
+    /** clean metadatacontainer
+     *
+     */
+    void clear(void)
+    {
+    	values.clear();
+    }
     template<class T>
     void getValue(MetaDataLabel name, T &value)
     {
