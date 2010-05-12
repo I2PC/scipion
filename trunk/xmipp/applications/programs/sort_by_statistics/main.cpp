@@ -26,6 +26,7 @@
 #include <data/image.h>
 #include <data/fftw.h>
 #include <data/args.h>
+#include <data/metadata.h>
 
 #include <vector>
 
@@ -42,7 +43,7 @@ public:
     double avg_ampl2_1, avg_ampl2_2, avg_ampl2_3, avg_ampl2_4;
     double sig_ampl2_1, sig_ampl2_2, sig_ampl2_3, sig_ampl2_4;
     std::vector<FileName> names;
-    Matrix1D<double> zscore;
+    MultidimArray<double> zscore;
     std::vector<std::vector<double> > values;
     FileName fn_out;
 
@@ -61,21 +62,20 @@ public:
         ;
     }
 
-    void process_selfile(SelFile &SF, bool do_means, bool do_values)
+    void process_selfile(MetaData &SF, bool do_means, bool do_values)
     {
-
         FileName fn;
-        ImageXmipp img;
+        Image<double> img;
         int imgno, dim, nr_imgs;
         double mean, stddev, minval, maxval;
         double nlowpix, nhighpix, nradlow, nradhigh;
         double sum_quadsig, sum2_quadsig, sum_quadmean, sum2_quadmean;
         double ampl2_1, ampl2_2, ampl2_3, ampl2_4;
         std::vector<double> dum;
-        Matrix2D<double> Mrad, ampl2;
-        Matrix2D<std::complex<double> > IMG;
-        Matrix1D<int> radial_count, center(2);
-        Matrix1D<double> rmean_ampl2;
+        MultidimArray<double> Mrad, ampl2, rmean_ampl2;
+        MultidimArray<std::complex<double> > IMG;
+        MultidimArray<int> radial_count;
+        Matrix1D<int> center(2);
         center.initZeros();
 
         if (do_means && !do_values)
@@ -83,14 +83,12 @@ public:
         else
             std::cerr << " Sorting particle set ..." << std::endl;
 
-        SF.ImgSize(dim, dim);
+        ImgSize(SF, dim, dim);
         Mrad.resize(dim, dim);
         Mrad.setXmippOrigin();
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(Mrad)
-        {
-            Mrad(i, j) = sqrt((double)(i * i + j * j));
-        }
-        nr_imgs = SF.ImgNo();
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(Mrad)
+        Mrad(i, j) = sqrt((double)(i * i + j * j));
+        nr_imgs = SF.size();
         init_progress_bar(nr_imgs);
         int c = XMIPP_MAX(1, nr_imgs / 60);
 
@@ -113,10 +111,9 @@ public:
         }
 
         imgno = 0;
-        while (!SF.eof())
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            fn = SF.NextImg();
-            if (fn=="") break;
+            SF.getValue(MDL_IMAGE,fn);
             img.read(fn);
             img().setXmippOrigin();
 
@@ -126,28 +123,33 @@ public:
             // Number of low or high-valued pixels
             nhighpix = nlowpix = 0.;
             nradhigh = nradlow = 0.;
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(img())
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(img())
             {
-                if (dMij(img(), i, j) > stddev) nhighpix += 1.;
-                if (dMij(img(), i, j) < -stddev) nlowpix += 1.;
-                if (dMij(img(), i, j) > stddev) nradhigh += dMij(Mrad, i, j);
-                if (dMij(img(), i, j) < -stddev) nradlow += dMij(Mrad, i, j);
+                if (dAij(img(), i, j) > stddev)
+                    nhighpix += 1.;
+                if (dAij(img(), i, j) < -stddev)
+                    nlowpix += 1.;
+                if (dAij(img(), i, j) > stddev)
+                    nradhigh += dAij(Mrad, i, j);
+                if (dAij(img(), i, j) < -stddev)
+                    nradlow += dAij(Mrad, i, j);
             }
 
             // Quadrant statistics
             quadrant_stats(img, sum_quadsig, sum2_quadsig, sum_quadmean, sum2_quadmean);
 
             // Fourier-space stats
-            FourierTransform(img(), IMG);
+            XmippFftw transformer;
+            transformer.FourierTransform(img(),IMG,false);
             FFT_magnitude(IMG, ampl2);
             CenterFFT(ampl2, true);
             ampl2 *= ampl2;
             rmean_ampl2.initZeros();
             radialAverage(ampl2, center, rmean_ampl2, radial_count);
-            ampl2_1 = dVi(rmean_ampl2, 1);
-            ampl2_2 = dVi(rmean_ampl2, 2);
-            ampl2_3 = dVi(rmean_ampl2, 3);
-            ampl2_4 = dVi(rmean_ampl2, 4);
+            ampl2_1 = dAi(rmean_ampl2, 1);
+            ampl2_2 = dAi(rmean_ampl2, 2);
+            ampl2_3 = dAi(rmean_ampl2, 3);
+            ampl2_4 = dAi(rmean_ampl2, 4);
 
             if (do_means)
             {
@@ -200,7 +202,8 @@ public:
                 values[imgno].push_back(ampl2_4);
             }
 
-            if (imgno % c == 0) progress_bar(imgno);
+            if (imgno % c == 0)
+                progress_bar(imgno);
             imgno++;
 
         }
@@ -244,79 +247,93 @@ public:
             zscore.resize(nr_imgs);
             for (imgno = 0; imgno < nr_imgs; imgno++)
             {
-		if (sig_mean > 0.)
-		    values[imgno][0] = ABS(avg_mean - values[imgno][0]) / sig_mean;
-		else
-		    values[imgno][0] = 0.;
-		if (sig_sig > 0.)
-		    values[imgno][1] = ABS(values[imgno][1] - avg_sig) / sig_sig;
-		else
-		    values[imgno][1] = 0.;
-		if (sig_min > 0.)
-		    values[imgno][2] = ABS(values[imgno][2] - avg_min) / sig_min;
-		else
-		    values[imgno][2] = 0.;
-		if (sig_max > 0.)
-		    values[imgno][3] = ABS(values[imgno][3] - avg_max) / sig_max;
-		else
-		    values[imgno][3] = 0.;
-		if (sig_nhighpix > 0.)
-		    values[imgno][4] = ABS(values[imgno][4] - avg_nhighpix) / sig_nhighpix;
-		else
-		    values[imgno][4] = 0.;
-		if (sig_nlowpix > 0.)
-		    values[imgno][5] = ABS(values[imgno][5] - avg_nlowpix) / sig_nlowpix;
-		else
-		    values[imgno][5] = 0.;
-		if (sig_nradhigh > 0.)
-		    values[imgno][6] = ABS(values[imgno][6] - avg_nradhigh) / sig_nradhigh;
-		else
-		    values[imgno][6] = 0.;
-		if (sig_nradlow > 0.)
-		    values[imgno][7] = ABS(values[imgno][7] - avg_nradlow) / sig_nradlow;
-		else
-		    values[imgno][7] = 0.;
-		if (sig_sigquad > 0.)
-		    values[imgno][8] = ABS(values[imgno][8] - avg_sigquad) / sig_sigquad;
-		else
-		    values[imgno][8] = 0.;
-		if (sig_meanquad > 0.)
-		    values[imgno][9] = ABS(values[imgno][9] - avg_meanquad) / sig_meanquad;
-		else
-		    values[imgno][9] = 0.;
-		if (sig_ampl2_1 > 0.)
-		    values[imgno][10] = ABS(values[imgno][10] - avg_ampl2_1) / sig_ampl2_1;
- 		else
-		    values[imgno][10] = 0.;
-		if (sig_ampl2_2 > 0.)
-		    values[imgno][11] = ABS(values[imgno][11] - avg_ampl2_2) / sig_ampl2_2;
-		else
-		    values[imgno][11] = 0.;
-		if (sig_ampl2_3 > 0.)
-		    values[imgno][12] = ABS(values[imgno][12] - avg_ampl2_3) / sig_ampl2_3;
-		else
-		    values[imgno][12] = 0.;
-		if (sig_ampl2_4 > 0.)
-		    values[imgno][13] = ABS(values[imgno][13] - avg_ampl2_4) / sig_ampl2_4;
-		else
-		    values[imgno][13] = 0.;
+                if (sig_mean > 0.)
+                    values[imgno][0] = ABS(avg_mean - values[imgno][0]) / sig_mean;
+                else
+                    values[imgno][0] = 0.;
+                if (sig_sig > 0.)
+                    values[imgno][1] = ABS(values[imgno][1] - avg_sig) / sig_sig;
+                else
+                    values[imgno][1] = 0.;
+                if (sig_min > 0.)
+                    values[imgno][2] = ABS(values[imgno][2] - avg_min) / sig_min;
+                else
+                    values[imgno][2] = 0.;
+                if (sig_max > 0.)
+                    values[imgno][3] = ABS(values[imgno][3] - avg_max) / sig_max;
+                else
+                    values[imgno][3] = 0.;
+                if (sig_nhighpix > 0.)
+                    values[imgno][4] = ABS(values[imgno][4] - avg_nhighpix) / sig_nhighpix;
+                else
+                    values[imgno][4] = 0.;
+                if (sig_nlowpix > 0.)
+                    values[imgno][5] = ABS(values[imgno][5] - avg_nlowpix) / sig_nlowpix;
+                else
+                    values[imgno][5] = 0.;
+                if (sig_nradhigh > 0.)
+                    values[imgno][6] = ABS(values[imgno][6] - avg_nradhigh) / sig_nradhigh;
+                else
+                    values[imgno][6] = 0.;
+                if (sig_nradlow > 0.)
+                    values[imgno][7] = ABS(values[imgno][7] - avg_nradlow) / sig_nradlow;
+                else
+                    values[imgno][7] = 0.;
+                if (sig_sigquad > 0.)
+                    values[imgno][8] = ABS(values[imgno][8] - avg_sigquad) / sig_sigquad;
+                else
+                    values[imgno][8] = 0.;
+                if (sig_meanquad > 0.)
+                    values[imgno][9] = ABS(values[imgno][9] - avg_meanquad) / sig_meanquad;
+                else
+                    values[imgno][9] = 0.;
+                if (sig_ampl2_1 > 0.)
+                    values[imgno][10] = ABS(values[imgno][10] - avg_ampl2_1) / sig_ampl2_1;
+                else
+                    values[imgno][10] = 0.;
+                if (sig_ampl2_2 > 0.)
+                    values[imgno][11] = ABS(values[imgno][11] - avg_ampl2_2) / sig_ampl2_2;
+                else
+                    values[imgno][11] = 0.;
+                if (sig_ampl2_3 > 0.)
+                    values[imgno][12] = ABS(values[imgno][12] - avg_ampl2_3) / sig_ampl2_3;
+                else
+                    values[imgno][12] = 0.;
+                if (sig_ampl2_4 > 0.)
+                    values[imgno][13] = ABS(values[imgno][13] - avg_ampl2_4) / sig_ampl2_4;
+                else
+                    values[imgno][13] = 0.;
 
                 if (cutoff > 0.)
                 {
-                    if (values[imgno][0] < cutoff) values[imgno][0] = 0.;
-                    if (values[imgno][1] < cutoff) values[imgno][1] = 0.;
-                    if (values[imgno][2] < cutoff) values[imgno][2] = 0.;
-                    if (values[imgno][3] < cutoff) values[imgno][3] = 0.;
-                    if (values[imgno][4] < cutoff) values[imgno][4] = 0.;
-                    if (values[imgno][5] < cutoff) values[imgno][5] = 0.;
-                    if (values[imgno][6] < cutoff) values[imgno][6] = 0.;
-                    if (values[imgno][7] < cutoff) values[imgno][7] = 0.;
-                    if (values[imgno][8] < cutoff) values[imgno][8] = 0.;
-                    if (values[imgno][9] < cutoff) values[imgno][9] = 0.;
-                    if (values[imgno][10] < cutoff) values[imgno][10] = 0.;
-                    if (values[imgno][11] < cutoff) values[imgno][11] = 0.;
-                    if (values[imgno][12] < cutoff) values[imgno][12] = 0.;
-                    if (values[imgno][13] < cutoff) values[imgno][13] = 0.;
+                    if (values[imgno][0] < cutoff)
+                        values[imgno][0] = 0.;
+                    if (values[imgno][1] < cutoff)
+                        values[imgno][1] = 0.;
+                    if (values[imgno][2] < cutoff)
+                        values[imgno][2] = 0.;
+                    if (values[imgno][3] < cutoff)
+                        values[imgno][3] = 0.;
+                    if (values[imgno][4] < cutoff)
+                        values[imgno][4] = 0.;
+                    if (values[imgno][5] < cutoff)
+                        values[imgno][5] = 0.;
+                    if (values[imgno][6] < cutoff)
+                        values[imgno][6] = 0.;
+                    if (values[imgno][7] < cutoff)
+                        values[imgno][7] = 0.;
+                    if (values[imgno][8] < cutoff)
+                        values[imgno][8] = 0.;
+                    if (values[imgno][9] < cutoff)
+                        values[imgno][9] = 0.;
+                    if (values[imgno][10] < cutoff)
+                        values[imgno][10] = 0.;
+                    if (values[imgno][11] < cutoff)
+                        values[imgno][11] = 0.;
+                    if (values[imgno][12] < cutoff)
+                        values[imgno][12] = 0.;
+                    if (values[imgno][13] < cutoff)
+                        values[imgno][13] = 0.;
                 }
                 zscore(imgno) = values[imgno][0] + values[imgno][1] + values[imgno][2] +
                                 values[imgno][3] + values[imgno][4] + values[imgno][5] +
@@ -327,7 +344,7 @@ public:
         }
     }
 
-    void quadrant_stats(ImageXmipp &img,
+    void quadrant_stats(Image<double> &img,
                         double &sum_quadsig, double &sum2_quadsig,
                         double &sum_quadmean, double &sum2_quadmean)
     {
@@ -378,34 +395,31 @@ public:
         sum2_quadsig = sqrt(sum2_quadsig / 4. - sum_quadsig * sum_quadsig);
         sum_quadmean /= 4.;
         sum2_quadmean = sqrt(sum2_quadmean / 4. - sum_quadmean * sum_quadmean);
-
     }
-
 };
+
 /**************************************************************************
         Main
 /**************************************************************************/
-
 int main(int argc, char **argv)
 {
-
-    SelFile SF, SFout, SFtrain, SFoutGood;
+    MetaData SF, SFout, SFtrain, SFoutGood;
     int imgno, dim, nr_imgs, isort;
 
-    Matrix1D<int> sorted;
+    MultidimArray<int> sorted;
     FileName fn, fn_train;
     std::ofstream fh_zsum, fh_zind;
 
     sort_junk_parameters prm;
-
     try
     {
         fn = getParameter(argc, argv, "-i");
         SF.read(fn);
-        nr_imgs = SF.ImgNo();
+        nr_imgs = SF.size();
         prm.fn_out = getParameter(argc, argv, "-o", "sort_junk");
         fn_train = getParameter(argc, argv, "-train", "");
-        if (fn_train != "") SFtrain.read(fn_train);
+        if (fn_train != "")
+            SFtrain.read(fn_train);
         prm.cutoff = textToFloat(getParameter(argc, argv, "-zcut", "-1"));
     }
     catch (Xmipp_error XE)
@@ -433,9 +447,13 @@ int main(int argc, char **argv)
     for (imgno = 0; imgno < nr_imgs; imgno++)
     {
         isort = sorted(imgno) - 1;
-        SFout.insert(prm.names[isort]);
+        SFout.addObject();
+        SFout.setValue(MDL_IMAGE,prm.names[isort]);
         if (prm.zscore(isort)/14.<prm.cutoff && prm.cutoff>0)
-            SFoutGood.insert(prm.names[isort]);
+        {
+            SFoutGood.addObject();
+            SFoutGood.setValue(MDL_IMAGE,prm.names[isort]);
+        }
         fh_zsum << prm.zscore(isort)/14. << "   " << prm.names[isort] << std::endl;
         fh_zind << prm.names[isort]
         << " : " << prm.values[isort][0]
@@ -456,5 +474,6 @@ int main(int argc, char **argv)
     fh_zsum.close();
     fh_zind.close();
     SFout.write(prm.fn_out + ".sel");
-    if (prm.cutoff>0) SFoutGood.write(prm.fn_out + "_good.sel");
+    if (prm.cutoff>0)
+        SFoutGood.write(prm.fn_out + "_good.sel");
 }
