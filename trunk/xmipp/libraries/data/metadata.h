@@ -141,7 +141,7 @@ public:
     /* get metadatacontainer for current metadata object
      *
      */
-    MetaDataContainer * getObject(long int objectID = -1) const;
+    MetaDataContainer * getObject(long int objectID = -1) ;
 
     /** Set to false for row format (parameter files)
      *  set to true  for column format (this is the default) (docfiles)
@@ -229,7 +229,7 @@ public:
 
     void write(const std::string &fileName);
 
-    bool isEmpty() const;
+    bool isEmpty();
 
     void clear();
 
@@ -364,7 +364,7 @@ public:
 
     template<class T>
     bool getValue(MetaDataLabel name, T &value,
-                  long int objectID = -1) const
+                  long int objectID = -1) 
     {
         MetaDataContainer * aux = getObject(objectID);
         if (!aux->valueExists(name))
