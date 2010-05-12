@@ -29,7 +29,7 @@
 
 #include "show_table.h"
 
-#include <data/metadata.h>
+#include <data/metadata_extension.h>
 #include <data/metadata_extension.h>
 #include <data/fft.h>
 

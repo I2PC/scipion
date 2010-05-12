@@ -150,12 +150,14 @@ int  readSPIDER(int img_select)
     }
 
     offset = (int) header->labbyt;
-    min = header->fmin;
-    max = header->fmax;
-    avg = header->av;
-    std = header->sig;
-    ux = uy = uz = header->scale;
-		
+    MDc.addValue(MDL_MIN,(double)header->fmin);
+    MDc.addValue(MDL_MAX,(double)header->fmax);
+    MDc.addValue(MDL_AVG,(double)header->av);
+    MDc.addValue(MDL_STDDEV,(double)header->sig);
+    MDc.addValue(MDL_SAMPLINGRATEX,(double)header->scale);
+    MDc.addValue(MDL_SAMPLINGRATEY,(double)header->scale);
+    MDc.addValue(MDL_SAMPLINGRATEZ,(double)header->scale);
+
     size_t header_size = offset;
     size_t image_size = header_size + ZYXSIZE(data)*sizeof(float);
     size_t pad = offset;
@@ -184,15 +186,21 @@ int  readSPIDER(int img_select)
         i = img_select;
     }
 
-    image.resize(Ndim);
-    image[0].shiftX = header->xoff;
-    image[0].shiftY = header->yoff;
-    image[0].shiftZ = header->zoff;
-    image[0].angleRot  = header->phi;
-    image[0].angleTilt = header->theta;
-    image[0].anglePsi  = header->gamma;
-    image[0].weight = header->weight;
-    image[0].flip = (header->flip != 0.);
+    MD.addObject();
+    MD.setValue(MDL_ORIGINX,  (double)header->xoff);
+    MD.setValue(MDL_ORIGINY,  (double)header->yoff);
+    MD.setValue(MDL_ORIGINZ,  (double)header->zoff);
+    MD.setValue(MDL_ANGLEROT, (double)header->phi);
+    MD.setValue(MDL_ANGLETILT,(double)header->theta);
+    MD.setValue(MDL_ANGLEPSI, (double)header->gamma);
+    MD.setValue(MDL_WEIGHT,   (double)header->weight);
+    bool baux;
+    if(header->flip == 1)
+    	baux=true;
+    else
+    	baux=false;
+    MD.setValue(MDL_FLIP,     baux);
+
 
     if ( header->istack > 0 ) {
         offset += offset;
@@ -204,15 +212,17 @@ int  readSPIDER(int img_select)
             if ( swap ) 
                 for ( b = (char *) header; b<hend; b+=4 ) 
                     swapbytes(b, 4);
-            j = ( Ndim > 1 )? j = i: 0;
-            image[j].shiftX = header->xoff;
-            image[j].shiftY = header->yoff;
-            image[j].shiftZ = header->zoff;
-            image[j].angleRot  = header->phi;
-            image[j].angleTilt = header->theta;
-            image[j].anglePsi  = header->gamma;
-            image[j].weight = header->weight;
-            image[j].flip = (header->flip != 0.);
+            //j = ( Ndim > 1 )? j = i: 0;
+            MD.addObject();//I think first image is readed twice
+                           //test with spider stack
+            MD.setValue(MDL_ORIGINX,header->xoff);
+            MD.setValue(MDL_ORIGINY,header->yoff);
+            MD.setValue(MDL_ORIGINZ,header->zoff);
+            MD.setValue(MDL_ANGLEROT,header->phi);
+            MD.setValue(MDL_ANGLETILT,header->theta);
+            MD.setValue(MDL_ANGLEPSI,header->gamma);
+            MD.setValue(MDL_WEIGHT,header->weight);
+            MD.setValue(MDL_FLIP,header->flip);
         }
     }
 
@@ -291,11 +301,13 @@ int 	writeSPIDER()
         else
             header->iform = -22 + (int)header->nsam%2;   // 3D Fourier transform
     }
+    double aux;
+    bool baux;
     header->imami = 1;
-    header->fmin = min;
-    header->fmax = max;
-    header->av = avg;
-    header->sig = std;
+    MDc.getValue(MDL_MIN,aux);    header->fmin = (float)aux;
+    MDc.getValue(MDL_MAX,aux);    header->fmax = (float)aux;
+    MDc.getValue(MDL_AVG,aux);    header->av   = (float)aux;
+    MDc.getValue(MDL_STDDEV,aux); header->sig  = (float)aux;
 	
     // For multi-image files
     if (NSIZE(data) > 1 )
@@ -310,15 +322,15 @@ int 	writeSPIDER()
         header->inuse = 0;
         header->maxim = 1;
     }
-	
-    header->xoff = image[0].shiftX;
-    header->yoff = image[0].shiftY;
-    header->zoff = image[0].shiftZ;
-    header->phi  = image[0].angleRot;
-    header->theta = image[0].angleTilt;
-    header->gamma = image[0].anglePsi;
-    header->weight = image[0].weight;
-    header->flip = image[0].flip ? 1. : 0.;
+	MD.firstObject();
+    MD.getValue(MDL_ORIGINX,  aux); header->xoff  =(float)aux;
+    MD.getValue(MDL_ORIGINY,  aux); header->yoff  =(float)aux;
+    MD.getValue(MDL_ORIGINZ,  aux); header->zoff  =(float)aux;
+    MD.getValue(MDL_ANGLEROT, aux); header->phi   =(float)aux;
+    MD.getValue(MDL_ANGLETILT,aux); header->theta =(float)aux;
+    MD.getValue(MDL_ANGLEPSI, aux); header->gamma =(float)aux;
+    MD.getValue(MDL_WEIGHT,   aux); header->weight=(float)aux;
+    MD.getValue(MDL_FLIP,    baux); header->flip  =(float)baux;
 
     // Set time and date
     time_t timer;
@@ -365,15 +377,17 @@ int 	writeSPIDER()
 		header->maxim = 0;
 		for ( size_t i=0; i<NSIZE(data); i++ )
         {
-            header->imgnum = i + 1;
-            header->xoff = image[i].shiftX;
-            header->yoff = image[i].shiftY;
-            header->zoff = image[i].shiftZ;
-            header->phi  = image[i].angleRot;
-            header->theta = image[i].angleTilt;
-            header->gamma = image[i].anglePsi;
-            header->weight = image[i].weight;
-            header->flip = image[i].flip;
+            //header->imgnum = i + 1;
+			MD.nextObject();
+            MD.getValue(MDL_ORIGINX,  aux); header->xoff  =(float)aux;
+            MD.getValue(MDL_ORIGINY,  aux); header->yoff  =(float)aux;
+            MD.getValue(MDL_ORIGINZ,  aux); header->zoff  =(float)aux;
+            MD.getValue(MDL_ANGLEROT, aux); header->phi   =(float)aux;
+            MD.getValue(MDL_ANGLETILT,aux); header->theta =(float)aux;
+            MD.getValue(MDL_ANGLEPSI, aux); header->gamma =(float)aux;
+            MD.getValue(MDL_WEIGHT,   aux); header->weight=(float)aux;
+            MD.getValue(MDL_FLIP,    baux); header->flip  =(float)baux;
+
 
             fwrite( header, offset, 1, fimg );
             if (isComplexT())

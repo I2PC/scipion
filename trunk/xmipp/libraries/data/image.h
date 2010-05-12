@@ -35,7 +35,7 @@
 #include "memory.h"
 #include "multidim_array.h"
 #include "transformations.h"
-#include "metadata_container.h"
+#include "metadata.h"
 
 typedef enum TransformType {
     NoTransform = 0,        // No transform
@@ -116,59 +116,9 @@ unsigned long   gettypesize(DataType type);
 #define DIRECT_IMGPIXEL(I, i, j) DIRECT_A2D_ELEM(((I).data), (i), (j))
 #define IMGMATRIX(I) ((I).data)
 
-
-/** Template class for subimage header information
- * @ingroup Images
- *
- * The header information of subimages is handled in a way similar to Bsoft
- * In this way, a multi-image image can hold assignments for all individual images
- * 
- */
-class SubImage
-{
-public:
-    double shiftX, shiftY, shiftZ;        // Origin
-    double angleRot, angleTilt, anglePsi; // Euler angles
-    double weight;                   // Weight
-    bool   flip;                          // Apply mirror operation
-
-public:
-
-    /** Empty constructor
-     *
-     * An empty SubImage is created.
-     *
-     * @code
-     * SubImage I;
-     * @endcode
-     */
-    SubImage()
-    {
-        emptyInit();
-    }
-
-    /** emptyInit.
-     * Initialize offsets and angles to 0 and weight to 1.
-     */
-    void emptyInit()
-    {
-        shiftX = shiftY = shiftZ = 0.;
-        angleRot = angleTilt = anglePsi = 0.;
-        weight = 1.;
-        flip = false;
-    }
-
-    /** Destructor.
-     */
-    ~SubImage()
-    {}
-
-}
-;
-
 //dummy vectors for default function inizialization
-static MetaDataContainer emptyMetaDataContainer;
-static std::vector<MetaDataLabel> emptyVector;
+//static MetaDataContainer emptyMetaDataContainer;
+//static std::vector<MetaDataLabel> emptyVector;
 
 /** Template class for images
  * @ingroup Images
@@ -181,9 +131,10 @@ class Image
 {
 public:
 
-	std::vector<SubImage> image;    // Sub-images
     MultidimArray<T>    data;       // The image data array
     // FIXME: why cant this one be private as well?
+    MetaData MD;
+    MetaDataContainer MDc;
 private:
     FileName            filename;   // File name
     int           dataflag; // Flag to force reading of the data
@@ -191,6 +142,7 @@ private:
     unsigned long offset;  // Data offset
     int                swap;       // Perform byte swapping upon reading
     TransformType  transform;  // Transform type
+    /*
     double    min, max; // Limits
     double    avg, std; // Average and standard deviation
     double    smin, smax; // Limits for display
@@ -202,6 +154,7 @@ private:
     double    alf, bet, gam; // Unit cell angles (radian)
     unsigned int  spacegroup; // Space group
 
+    */
 
 public:
     /** Empty constructor
@@ -215,7 +168,6 @@ public:
     Image()
     {
         clear();
-        image.resize(1);
     }
 
     /** Constructor with size
@@ -231,7 +183,7 @@ public:
     {
         clear();
         data.resize(Ndim, Zdim, Ydim, Xdim);
-        image.resize(Ndim);
+        //image.resize(Ndim);
     }
 
     /** Clear.
@@ -249,15 +201,7 @@ public:
         filename = "";
         offset = 0;
         swap = 0;
-        min = max = avg = 0.;
-        std = -1.;
-        scale = shift = 1.;
-        resolution = 0.;
-        ux = uy = uz = 1.;
-        ua = ub = uc = 1.;
-        alf, bet, gam = DEG2RAD(90.);
-        spacegroup = 1;
-        image.clear();
+        MD.clear();
     }
 
     /** Check whether image is complex based on T
@@ -276,7 +220,9 @@ public:
     }
 
     /** Destructor.
+     *
      */
+
     ~Image()
     {
         clear();
@@ -285,8 +231,8 @@ public:
 
     /** Specific read functions for different file formats
     */
-	 #include "rwSPIDER.h"
-     #include "rwMRC.h"
+#include "rwSPIDER.h"
+#include "rwMRC.h"
 
     /** Is this file an image
      *
@@ -328,9 +274,7 @@ public:
     /** General read function
      */
     int read(const FileName &name, bool readdata=true, int select_img=-1,
-             bool apply_geo = false, bool only_apply_shifts = false,
-             MetaDataContainer & mDContainer=emptyMetaDataContainer,
-             std::vector<MetaDataLabel> &activeLabels=emptyVector)
+             bool apply_geo = false, bool only_apply_shifts = false)
     {
         int err = 0;
 
@@ -359,41 +303,49 @@ public:
         else
             err = readSPIDER(select_img);
         //fill structure with metadata
-        if(activeLabels.size()>0)
-        {
-            std::vector<MetaDataLabel>::iterator strIt;
-            for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
-            {
-                std::cerr << "label " << *strIt <<std::endl;
-                switch (*strIt)
+        //define an iteratoR for SubImage*           image;
+        //CHANGE SubImage*           image BY vector<SubImage> image?
+        /**Move to another function
+                if(activeLabels.size()>0)
                 {
-                case MDL_SHIFTX:
-                    mDContainer.getValue(MDL_SHIFTX,image[0].shiftX);
-                    break;
-                case MDL_SHIFTY:
-                    mDContainer.getValue(MDL_SHIFTY,image[0].shiftY);
-                    break;
-                case MDL_SHIFTZ:
-                    mDContainer.getValue(MDL_SHIFTZ,image[0].shiftZ);
-                    break;
-                case MDL_ANGLEROT:
-                    mDContainer.getValue(MDL_ANGLEROT,image[0].angleRot);
-                    break;
-                case MDL_ANGLETILT:
-                    mDContainer.getValue(MDL_ANGLETILT,image[0].angleTilt);
-                    break;
-                case MDL_ANGLEPSI:
-                    mDContainer.getValue(MDL_ANGLEPSI,image[0].anglePsi);
-                    break;
-                case MDL_WEIGHT:
-                    mDContainer.getValue(MDL_WEIGHT,image[0].weight);
-                    break;
-                case MDL_FLIP:
-                    mDContainer.getValue(MDL_FLIP,image[0].flip);
-                    break;
+                    std::vector<MetaDataLabel>::iterator strIt;
+                    for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
+                    {
+                        //std::cerr << "label " << *strIt <<std::endl;
+
+                        switch (*strIt)
+                        {
+                        case MDL_SHIFTX:
+                            mDContainer.getValue(MDL_SHIFTX,image[0].shiftX);
+                            break;
+                        case MDL_SHIFTY:
+                            mDContainer.getValue(MDL_SHIFTY,image[0].shiftY);
+                            break;
+                        case MDL_SHIFTZ:
+                            mDContainer.getValue(MDL_SHIFTZ,image[0].shiftZ);
+                            break;
+                        case MDL_ANGLEROT:
+                            mDContainer.getValue(MDL_ANGLEROT,image[0].angleRot);
+                            break;
+                        case MDL_ANGLETILT:
+                            mDContainer.getValue(MDL_ANGLETILT,image[0].angleTilt);
+                            break;
+                        case MDL_ANGLEPSI:
+                            mDContainer.getValue(MDL_ANGLEPSI,image[0].anglePsi);
+                            break;
+                        case MDL_WEIGHT:
+                            mDContainer.getValue(MDL_WEIGHT,image[0].weight);
+                            break;
+                        case MDL_FLIP:
+                            mDContainer.getValue(MDL_FLIP,image[0].flip);
+                            break;
+                        }
+                    }
                 }
-            }
-        }
+        **/
+        //apply geo has not been defined for volumes
+        if(this->data.getDim()>2)
+            apply_geo=false;
 
         //err = readMRC(*this, imgno);
         /*
@@ -927,9 +879,11 @@ public:
     * std::cout << "First Euler angle " << I.rot() << std::endl;
     * @endcode
     */
-    double rot(unsigned long n = 0) const
+    double rot(const long int n = -1) const
     {
-        return (image[n]).angleRot;
+        double dummy;
+        MD.getValue(MDL_ANGLEROT,dummy,n);
+        return (dummy);
     }
 
     /** Get Tilt angle
@@ -938,9 +892,11 @@ public:
      * std::cout << "Second Euler angle " << I.tilt() << std::endl;
      * @endcode
      */
-    double tilt(unsigned long n = 0) const
+    double tilt(const long int n = -1) const
     {
-        return (image[n]).angleTilt;
+        double dummy;
+        MD.getValue(MDL_ANGLETILT,dummy,n);
+        return (dummy);
     }
 
     /** Get Psi angle
@@ -949,9 +905,11 @@ public:
      * std::cout << "Third Euler angle " << I.psi() << std::endl;
      * @endcode
      */
-    double psi(unsigned long n = 0) const
+    double psi(const long int n = -1) const
     {
-        return (image[n]).anglePsi;
+        double dummy;
+        MD.getValue(MDL_ANGLEPSI,dummy,n);
+        return (dummy);
     }
 
     /** Get Xoff
@@ -960,9 +918,11 @@ public:
      * std::cout << "Origin offset in X " << I.Xoff() << std::endl;
      * @endcode
      */
-    double Xoff(unsigned long n = 0) const
+    double Xoff(const long int n = -1)
     {
-        return (image[n]).shiftX;
+        double dummy;
+        MD.getValue(MDL_ORIGINX,dummy,n);
+        return (dummy);
     }
 
     /** Get Yoff
@@ -971,9 +931,11 @@ public:
      * std::cout << "Origin offset in Y " << I.Yoff() << std::endl;
      * @endcode
      */
-    double Yoff(unsigned long n = 0) const
+    double Yoff(const long int n = -1)
     {
-        return (image[n]).shiftY;
+        double dummy;
+        MD.getValue(MDL_ORIGINY,dummy,n);
+        return (dummy);
     }
 
     /** Get Zoff
@@ -982,9 +944,11 @@ public:
      * std::cout << "Origin offset in Z " << I.Zoff() << std::endl;
      * @endcode
      */
-    double Zoff(unsigned long n = 0) const
+    double Zoff(const long int n = -1)
     {
-        return (image[n]).shiftZ;
+        double dummy;
+        MD.getValue(MDL_ORIGINZ,dummy,n);
+        return (dummy);
     }
 
     /** Get Weight
@@ -993,9 +957,11 @@ public:
     * std::cout << "weight= " << I.weight() << std::endl;
     * @endcode
     */
-    double weight(unsigned long n = 0) const
+    double weight(const long int n = -1) const
     {
-        return (image[n]).weight;
+        double dummy;
+        MD.getValue(MDL_WEIGHT,dummy,n);
+        return (dummy);
     }
 
     /** Get Flip
@@ -1004,9 +970,11 @@ public:
     * std::cout << "flip= " << flip() << std::endl;
     * @endcode
     */
-    bool flip(unsigned long n = 0) const
+    bool flip(const long int n = -1) const
     {
-        return (image[n]).flip;
+        double dummy;
+        MD.getValue(MDL_FLIP,dummy,n);
+        return (dummy);
     }
 
     /** Set file name
@@ -1021,29 +989,29 @@ public:
      *
      */
     void setEulerAngles(double rot, double tilt, double psi,
-                        unsigned long n = 0)
+    		long int n = -1)
     {
-        (image[n]).angleRot = rot;
-        (image[n]).angleTilt = tilt;
-        (image[n]).anglePsi = psi;
+        MD.setValue(MDL_ANGLEROT,rot,n);
+        MD.setValue(MDL_ANGLETILT,tilt,n);
+        MD.setValue(MDL_ANGLEPSI,psi,n);
     }
 
     /** Set Rotation angle to image */
-    void setRot(double rot, unsigned long n = 0)
+    void setRot(double rot, long int n = -1)
     {
-        (image[n]).angleRot = rot;
+        MD.setValue(MDL_ANGLEROT,rot,n);
     }
 
     /** Set Tilt angle to image */
-    void setTilt(double tilt, unsigned long n = 0)
+    void setTilt(double tilt, long int n = -1)
     {
-        (image[n]).angleTilt = tilt;
+        MD.setValue(MDL_ANGLETILT,tilt,n);
     }
 
     /** Set Rotation angle to image */
-    void setPsi(double psi, unsigned long n = 0)
+    void setPsi(double psi, long int n = -1)
     {
-        (image[n]).anglePsi = psi;
+        MD.setValue(MDL_ANGLEPSI,psi,n);
     }
 
     /** Set origin offsets in image header
@@ -1052,40 +1020,45 @@ public:
     void setShifts(double xoff, double yoff, double zoff = 0.,
                    unsigned long n = 0)
     {
-        (image[n]).shiftX = xoff;
-        (image[n]).shiftY = yoff;
-        (image[n]).shiftZ = zoff;
+        MD.setValue(MDL_ORIGINX,xoff,n);
+        MD.setValue(MDL_ORIGINY,yoff,n);
+        MD.setValue(MDL_ORIGINZ,zoff,n);
     }
 
     /** Set flip in image header
      *
      */
-    void setFlip(bool _flip, unsigned long n = 0)
+    void setFlip(bool _flip, long int n = -1)
     {
-        (image[n]).flip = _flip;
+        MD.setValue(MDL_FLIP,_flip,n);
     }
 
     /** Set Weight in image header
     *
     */
-    void setWeight(double _weight, unsigned long n = 0)
+    void setWeight(double _weight, long int n = -1)
     {
-        (image[n]).weight = _weight;
+        MD.setValue(MDL_WEIGHT,_weight,n);
     }
 
     /** Get geometric transformation matrix from 2D-image headerq
       */
     Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false,
-            unsigned long n = 0)
+    		long int n = -1)
     {
         // This has only been implemented for 2D images...
         (*this)().checkDimension(2);
 
-        double phi = realWRAP((image[n]).angleRot, 0., 360.);
-        double psi = realWRAP((image[n]).anglePsi, -180, 180);
-        double theta = realWRAP((image[n]).angleTilt, 0., 360);
-        double xoff = (image[n]).shiftX;
-        double yoff = (image[n]).shiftY;
+        double phi,psi,theta,xoff,yoff;
+        bool flip;
+        MD.getValue(MDL_ANGLEROT,phi,n);
+        phi = realWRAP(phi, 0., 360.);
+        MD.getValue(MDL_ANGLETILT,theta,n);
+        theta = realWRAP(theta, 0., 360.);
+        MD.getValue(MDL_ANGLEPSI,psi,n);
+        psi = realWRAP(psi, 0., 360.);
+        MD.getValue(MDL_ORIGINX,xoff,n);
+        MD.getValue(MDL_ORIGINY,yoff,n);
 
         Matrix2D< double > A(3, 3);
         A.initIdentity();
@@ -1119,7 +1092,8 @@ public:
         }
 
         // Also for only_apply_shifts: mirror if necessary!
-        if ((image[n]).flip)
+        MD.getValue(MDL_FLIP,flip,n);
+        if (flip)
         {
             A(0, 0) = -A(0, 0);
             A(0, 1) = -A(0, 1);

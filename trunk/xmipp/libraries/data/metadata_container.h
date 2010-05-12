@@ -247,14 +247,14 @@ public:
     /**Assignment operator
      *
      */
-    MetaDataContainer& operator =(MetaDataContainer &MDc);
+    MetaDataContainer& operator =(const MetaDataContainer &MDc);
 
     /** Constructor */
     MetaDataContainer();
     /** Copy constructor
      *
      */
-    MetaDataContainer(MetaDataContainer &MDc);
+    MetaDataContainer(const MetaDataContainer &MDc);
 
     /** Destructor */
     ~MetaDataContainer();
@@ -277,7 +277,7 @@ public:
     	values.clear();
     }
     template<class T>
-    void getValue(MetaDataLabel name, T &value)
+    void getValue( const MetaDataLabel name, T &value)
     {
         std::map<MetaDataLabel, void *>::iterator element;
 

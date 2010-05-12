@@ -107,14 +107,14 @@ public:
      *
      * Created a new metadata by copying all data from an existing MetaData object.
      */
-    MetaData(MetaData & c);
+    MetaData(const MetaData & c);
 
     /** Assignment operator
      * @ingroup MetaDataConstructors
      *
      * Copies MetaData from an existing MetaData object.
      */
-    MetaData& operator =(MetaData &MD);
+    MetaData& operator =(const MetaData &MD);
 
     /** union of  metadata objects, result in calling metadata object
      * union is a reserved word so I called this method union_
@@ -141,7 +141,7 @@ public:
     /* get metadatacontainer for current metadata object
      *
      */
-    MetaDataContainer * getObject(long int objectID = -1) ;
+    MetaDataContainer * getObject(long int objectID = -1) const;
 
     /** Set to false for row format (parameter files)
      *  set to true  for column format (this is the default) (docfiles)
@@ -229,7 +229,7 @@ public:
 
     void write(const std::string &fileName);
 
-    bool isEmpty();
+    bool isEmpty() const;
 
     void clear();
 
@@ -267,10 +267,10 @@ public:
     /**Set Header Comment
      * will appear in second line
      */
-    void setComment(std::string Comment = "");
+    void setComment(const std::string Comment = "");
 
-    std::string getPath();
-    std::string getComment();
+    std::string getPath()   const ;
+    std::string getComment() const;
 
     size_t size(void)
     {
@@ -364,7 +364,7 @@ public:
 
     template<class T>
     bool getValue(MetaDataLabel name, T &value,
-                  long int objectID = -1) 
+                  long int objectID = -1) const
     {
         MetaDataContainer * aux = getObject(objectID);
         if (!aux->valueExists(name))

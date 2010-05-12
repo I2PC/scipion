@@ -30,7 +30,7 @@ MetaData::MetaData()
     clear();
 }
 
-MetaData::MetaData(MetaData &MD)
+MetaData::MetaData(const MetaData &MD)
 {
     clear();
     this->setComment(MD.getComment());
@@ -41,7 +41,7 @@ MetaData::MetaData(MetaData &MD)
     this->activeLabels = MD.activeLabels;
 
     //objects, define iterator
-    std::map<long int, MetaDataContainer *>::iterator objIt;
+    std::map<long int, MetaDataContainer *>::const_iterator objIt;
     for (objIt = MD.objects.begin(); objIt != MD.objects.end(); objIt++)
     {
         long int idx = this->addObject();
@@ -75,7 +75,7 @@ void MetaData::fillWithNextNObjects (MetaData &MD, long int start, long int numb
     this->objectsIterator = objects.begin();
 }
 
-MetaData& MetaData::operator =(MetaData &MD)
+MetaData& MetaData::operator =(const MetaData &MD)
 {
     if (this != &MD)
     {
@@ -88,7 +88,7 @@ MetaData& MetaData::operator =(MetaData &MD)
         this->activeLabels = MD.activeLabels;
 
         //objects, define iterator
-        std::map<long int, MetaDataContainer *>::iterator objIt;
+        std::map<long int, MetaDataContainer *>::const_iterator objIt;
         for (objIt = MD.objects.begin(); objIt != MD.objects.end(); objIt++)
         {
             long int idx = this->addObject();
@@ -1044,7 +1044,7 @@ MetaData::~MetaData()
     clear();
 }
 
-bool MetaData::isEmpty()
+bool MetaData::isEmpty() const
 {
     return objects.empty();
 }
@@ -1082,12 +1082,12 @@ void MetaData::setPath(std::string newPath)
     }
 }
 
-std::string MetaData::getPath()
+std::string MetaData::getPath() const
 {
     return path;
 }
 
-void MetaData::setComment(std::string newComment)
+void MetaData::setComment(const std::string newComment)
 {
     if (newComment == "")
     {
@@ -1099,7 +1099,7 @@ void MetaData::setComment(std::string newComment)
     }
 }
 
-std::string MetaData::getComment()
+std::string MetaData::getComment() const
 {
     return comment;
 }
@@ -1342,7 +1342,7 @@ bool MetaData::detectObjects(MetaDataLabel name, int value)
 }
 
 
-MetaDataContainer * MetaData::getObject(long int objectID)
+MetaDataContainer * MetaData::getObject(long int objectID) const
 {
     if (isEmpty())
     {
@@ -1355,7 +1355,7 @@ MetaDataContainer * MetaData::getObject(long int objectID)
     if (objectID == -1)
         aux = objectsIterator->second;
     else
-        aux = objects[objectID];
+        aux = objectsIterator->second; //objects[objectID];
 
     if (aux == NULL)
     {
@@ -1471,7 +1471,7 @@ void get_statistics(MetaData MT_in, Image<double> & _ave, Image<double> & _sd, d
         MetaDataContainer * aux = MT.getObject();
         image.read(image_name,true,
                    -1,apply_geo,
-                   false,*aux, MT.activeLabels);
+                   false);
         double min, max, avg, stddev;
         image().computeStats(avg, stddev, min, max);
         if (_min > min)

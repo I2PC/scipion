@@ -32,14 +32,14 @@ MetaDataContainer::~MetaDataContainer()
 {
 }
 ;
-MetaDataContainer& MetaDataContainer::operator =(MetaDataContainer &MDc)
+MetaDataContainer& MetaDataContainer::operator =(const MetaDataContainer &MDc)
 {
 
     if (this != &MDc)
     {
         void * aux;
         MetaDataLabel lCode;
-        std::map<MetaDataLabel, void *>::iterator It;
+        std::map<MetaDataLabel, void *>::const_iterator It;
         for (It = (MDc.values).begin(); It != (MDc.values).end(); It++)
         {
             aux = It->second;
@@ -70,11 +70,11 @@ MetaDataContainer& MetaDataContainer::operator =(MetaDataContainer &MDc)
     }
     return *this;
 }
-MetaDataContainer::MetaDataContainer(MetaDataContainer &MDc)
+MetaDataContainer::MetaDataContainer(const MetaDataContainer &MDc)
 {
     void * aux;
     MetaDataLabel lCode;
-    std::map<MetaDataLabel, void *>::iterator It;
+    std::map<MetaDataLabel, void *>::const_iterator It;
     for (It = (MDc.values).begin(); It != (MDc.values).end(); It++)
     {
         aux = It->second;

@@ -30,7 +30,7 @@
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/metadata.h>
+#include <data/metadata_extension.h>
 #include <data/metadata_extension.h>
 #include <data/image.h>
 #include <data/geometry.h>

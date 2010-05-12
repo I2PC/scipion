@@ -23,7 +23,7 @@
 #include <data/micrograph.h>
 #include <data/image.h>
 #include <reconstruction/fourier_filter.h>
-
+#include <data/metadata_extension.h>
 #include <qstring.h>
 
 /* Filters generic class --------------------------------------------------- */
