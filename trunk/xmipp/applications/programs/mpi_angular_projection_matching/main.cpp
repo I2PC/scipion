@@ -36,7 +36,6 @@
 
 #include <data/args.h>
 #include <reconstruction/angular_projection_matching.h>
-#include <data/header.h>
 #include <data/sampling.h>
 #include <data/symmetries.h>
 

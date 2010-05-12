@@ -32,7 +32,6 @@
 #include <data/image.h>
 #include <data/filters.h>
 #include <data/mask.h>
-#include <data/gridding.h>
 #include <data/polar.h>
 #include <data/fftw.h>
 #include <data/threads.h>
@@ -55,7 +54,7 @@ typedef struct{
     int thread_id;
     int thread_num;
     Prog_angular_projection_matching_prm *prm;
-    Matrix2D<double> *img;
+    MultidimArray<double> *img;
     int *this_image;
     int *opt_refno;
     double *opt_psi;
@@ -105,7 +104,7 @@ public:
     /** Array with Polars of references and of translated images and their mirrors */
     Polar<std::complex<double> >   *fP_ref, *fP_img, *fPm_img;
     /** Array with reference images */
-    Matrix2D<double> *proj_ref;
+    MultidimArray<double> *proj_ref;
     /** Global plans for fftw transformers of all polar rings */
     Polar_fftw_plans global_plans;
     /** vector with stddevs for all reference projections */
@@ -122,7 +121,7 @@ public:
     /** 5D-search: actual displacement vectors */
     std::vector<int> search5d_xoff, search5d_yoff;
     /** CTF image */
-    Matrix2D<double> Mctf;
+    MultidimArray<double> Mctf;
     /** Are the experimental images phase flipped? */
     bool phase_flipped;
     /** Threads */
@@ -157,7 +156,7 @@ public:
   /** Translational alignment using cartesian coordinates 
    *  The optimal direction is re-projected from the volume
    */
-  void translationallyAlignOneImage(Matrix2D<double> &img,
+  void translationallyAlignOneImage(MultidimArray<double> &img,
                                     const int &samplenr, const double &psi, const double &opt_flip,
                                     double &opt_xoff, double &opt_yoff, double &maxcorr);
 
@@ -171,7 +170,7 @@ public:
 
   /** Read current image into memory and translate accoring to
       previous optimal Xoff and Yoff */
-  void getCurrentImage(int imgno, ImageXmipp &img);
+  void getCurrentImage(int imgno, Image<double> &img);
 
 };				
 //@}
