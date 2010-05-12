@@ -35,6 +35,7 @@
 #endif
 
 #include <data/metadata.h>
+#include <data/metadata_extension.h>
 #include <data/image.h>
 
 ///  Ways the training set can be used

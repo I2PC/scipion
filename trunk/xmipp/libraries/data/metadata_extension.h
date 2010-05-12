@@ -9,6 +9,7 @@
 #define METADATA_EXTENSION_H_
 
 #include "image.h"
+#include "metadata.h"
 void get_statistics(MetaData MT, Image<double> & _ave, Image<double> & _sd, double& _min,
                     double& _max, bool apply_geo);
 

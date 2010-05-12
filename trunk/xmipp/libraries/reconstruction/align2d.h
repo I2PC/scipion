@@ -28,7 +28,7 @@
 #include <data/fftw.h>
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/metadata.h>
+#include <data/metadata_extension.h>
 #include <data/metadata.h>
 #include <data/image.h>
 #include <vector>

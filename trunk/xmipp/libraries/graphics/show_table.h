@@ -51,6 +51,7 @@
 #include <data/funcs.h>
 #include <data/multidim_array.h>
 #include <data/metadata.h>
+#include <data/metadata_extension.h>
 
 #include <iostream>
 #include <list>
