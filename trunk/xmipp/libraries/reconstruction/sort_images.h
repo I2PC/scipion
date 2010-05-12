@@ -27,6 +27,7 @@
 
 #include <data/funcs.h>
 #include <data/metadata.h>
+#include <data/image.h>
 
 /**@defgroup SortImagesProgram sort images
    @ingroup ReconsLibraryPrograms */
