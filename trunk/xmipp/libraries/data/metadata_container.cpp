@@ -300,6 +300,10 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_BGMEAN;
     }
+    else if (strLabel == "symNo")
+    {
+        return MDL_SYMNO;
+    }
     else if (strLabel == "shiftX" || strLabel == "Xoff")
     {
         return MDL_SHIFTX;
@@ -367,6 +371,10 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     else if (strLabel == "ref" || strLabel == "Ref")
     {
         return MDL_REF;
+    }
+    else if (strLabel == "ref3d")
+    {
+        return MDL_REF3D;
     }
     else if (strLabel == "avg" )
     {
@@ -580,6 +588,9 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
         case MDL_BGMEAN:
             return std::string("bgMean");
             break;
+        case MDL_SYMNO:
+            return std::string("symNo");
+            break;
         case MDL_SHIFTX:
             return std::string("shiftX");
             break;
@@ -630,6 +641,9 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
             break;
         case MDL_REF:
             return std::string("ref");
+            break;
+        case MDL_REF3D:
+            return std::string("ref3d");
             break;
         case MDL_AVG:
             return std::string("avg");

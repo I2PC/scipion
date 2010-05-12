@@ -79,6 +79,7 @@ enum MetaDataLabel
     MDL_PERIODOGRAM, // A periodogram's file name (std::string)
     MDL_PMAX, // Maximum value of normalized probability function (now called "Pmax/sumP") (double)
     MDL_REF, // Class to which the image belongs (int)
+    MDL_REF3D, // 3D Class to which the image belongs (int)
     MDL_SCALE, // scaling factor for an image or volume (double)
     MDL_BGMEAN, // Mean background value for an image
     MDL_INTSCALE, // Intensity scale for an image
@@ -87,6 +88,7 @@ enum MetaDataLabel
     MDL_LL, // contribution of an image to log-likelihood value
     MDL_WROBUST, // Weight of t-student distribution in robust Maximum likelihood
     MDL_SIGNALCHANGE, // Signal change for an image
+    MDL_SYMNO, // Symmetry number for a projection (used in ART)
     MDL_SERIE, // A collection of micrographs, e.g. a tilt serie (std::string)
     MDL_SHIFTX, // Shift for the image in the X axis (double)
     MDL_SHIFTY, // Shift for the image in the Y axis (double)
@@ -223,7 +225,8 @@ inline bool isInt(MetaDataLabel lCode)
     if (lCode == MDL_REF      || lCode == MDL_ENABLED || lCode == MDL_OBJID      ||
     	lCode == MDL_ITER     || lCode == MDL_BLOCK   || lCode == MDL_RANDOMSEED ||
     	lCode == MDL_DEFGROUP || lCode == MDL_XINT    || lCode == MDL_YINT       ||
-    	lCode == MDL_ZINT     || lCode == MDL_IMAGE_CLASS_COUNT
+    	lCode == MDL_ZINT     || lCode == MDL_IMAGE_CLASS_COUNT || lCode == MDL_REF3D ||
+    	lCode == MDL_SYMNO
     	)
         return true;
     else
