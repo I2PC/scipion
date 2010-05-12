@@ -987,7 +987,7 @@ public:
     void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
         if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
-                Zdim == ZSIZE(*this) && Ndim == NSIZE(*this) && data !=NULL)
+            Zdim == ZSIZE(*this) && Ndim == NSIZE(*this) && data !=NULL)
             return;
 
         if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0 || Ndim <= 0)
@@ -1110,7 +1110,7 @@ public:
     void resize(const MultidimArray<T1> &v)
     {
         if (NSIZE(*this) != NSIZE(v) || XSIZE(*this) != XSIZE(v) ||
-                YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v) || data==NULL)
+            YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v) || data==NULL)
             resize(NSIZE(v), ZSIZE(v), YSIZE(v), XSIZE(v));
 
         STARTINGX(*this) = STARTINGX(v);
@@ -1270,8 +1270,8 @@ public:
             for (int i = y0; i <= yF; i++)
                 for (int j = x0; j <= xF; j++)
                     if ((k >= STARTINGZ(*this) && k <= FINISHINGZ(*this)) &&
-                            (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
-                            (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
+                        (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
+                        (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
                         A3D_ELEM(result, k, i, j) = NZYX_ELEM(*this, n, k, i, j);
                     else
                         A3D_ELEM(result, k, i, j) = init_value;
@@ -1307,7 +1307,7 @@ public:
 
         FOR_ALL_ELEMENTS_IN_ARRAY2D(result)
         if (j >= STARTINGX(*this) && j <= FINISHINGX(*this) &&
-                i >= STARTINGY(*this) && i <= FINISHINGY(*this))
+            i >= STARTINGY(*this) && i <= FINISHINGY(*this))
             A2D_ELEM(result, i, j) = NZYX_ELEM(*this, n, 0, i, j);
         else
             A2D_ELEM(result, i, j) = init_value;
@@ -1699,7 +1699,7 @@ public:
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(v)
         DIRECT_NZYX_ELEM(*this, n, k, i, j) = DIRECT_A2D_ELEM(v, i, j);
     }
-    
+
     /** Returns Y dimension.
      * @ingroup MultidimMemory
      */
@@ -2661,7 +2661,7 @@ public:
      */
     void minIndex(int& kmin, int& imin, int& jmin) const
     {
-    	int zeroInt=0;
+        int zeroInt=0;
         minIndex(zeroInt,kmin,imin,jmin);
     }
 
@@ -2672,7 +2672,7 @@ public:
      */
     void minIndex(int& imin, int& jmin) const
     {
-    	int zeroInt=0;
+        int zeroInt=0;
         minIndex(zeroInt,zeroInt,imin,jmin);
     }
 
@@ -2683,7 +2683,7 @@ public:
      */
     void minIndex(int& jmin) const
     {
-    	int zeroInt=0;
+        int zeroInt=0;
         minIndex(zeroInt,zeroInt,zeroInt,jmin);
     }
 
@@ -2923,10 +2923,10 @@ public:
      * TRUE if the logical index given is a corner of the definition region of this
      * array.
      */
-     
-     //ROB Comment YY,XX is for matrix1d not multidim array
-     //I comment this routine till is properlly rewritten
-#ifdef    isCorner  
+
+    //ROB Comment YY,XX is for matrix1d not multidim array
+    //I comment this routine till is properlly rewritten
+#ifdef    isCorner
     bool isCorner(const Matrix1D< double >& v) const
     {
         if (v.size() < 2)
@@ -3087,10 +3087,10 @@ public:
      * after it, the values of the self array are as similar as possible
      * (L2 sense) to the values of the array shown as sample
      */
-     
-     //As written this will only work for T=double
-     //nevertheless since this is used is better
-     //to use T than double or will create problem for int multidim arrays
+
+    //As written this will only work for T=double
+    //nevertheless since this is used is better
+    //to use T than double or will create problem for int multidim arrays
     void rangeAdjust(const MultidimArray<T> &example,
                      const MultidimArray<int> *mask=NULL)
     {
@@ -3099,7 +3099,7 @@ public:
 
         // y=a+bx
         double sumx=0, sumy=0, sumxy=0, sumx2=0;
-	
+
         T* ptrExample=MULTIDIM_ARRAY(example);
         int* ptrMask=NULL;
         if (mask!=NULL)
@@ -3613,38 +3613,36 @@ public:
      * v1.initLinear(0, 10, 6, "steps"); // v1=[0 2 4 6 8 10]
      * @endcode
      */
-    /*
-      void initLinear(T minF, T maxF, int n = 1, const std::string& mode = "incr")
-      {
-          double slope;
-          int steps;
+    void initLinear(T minF, T maxF, int n = 1, const std::string& mode = "incr")
+    {
+        double slope;
+        int steps;
 
-          checkDimension(1);
+        checkDimension(1);
 
-          if (mode == "incr")
-          {
-              steps = 1 + (int) FLOOR((double) ABS((maxF - minF)) / ((double) n));
-              slope = n * SGN(maxF - minF);
-          }
-          else if (mode == "steps")
-          {
-              steps = n;
-              slope = (maxF - minF) / (steps - 1);
-          }
-          else
-              REPORT_ERROR(1005, "Init_linear: Mode not supported (" + mode +
-                           ")");
+        if (mode == "incr")
+        {
+            steps = 1 + (int) FLOOR((double) ABS((maxF - minF)) / ((double) n));
+            slope = n * SGN(maxF - minF);
+        }
+        else if (mode == "steps")
+        {
+            steps = n;
+            slope = (maxF - minF) / (steps - 1);
+        }
+        else
+            REPORT_ERROR(1005, "Init_linear: Mode not supported (" + mode +
+                         ")");
 
-          if (steps == 0)
-              clear();
-          else
-          {
-              resize(steps);
-              for (int i = 0; i < steps; i++)
-                  A1D_ELEM(*this, i) = (T)((double) minF + slope * i);
-          }
-      }
-    */
+        if (steps == 0)
+            clear();
+        else
+        {
+            resize(steps);
+            for (int i = 0; i < steps; i++)
+                A1D_ELEM(*this, i) = (T)((double) minF + slope * i);
+        }
+    }
 
     /** Initialize with random values.
      * @ingroup Initialization
@@ -3752,7 +3750,7 @@ public:
         FOR_ALL_ELEMENTS_IN_ARRAY3D(*this)
         {
             if ((imask == NULL || NZYX_ELEM(*imask, n, k, i, j)) &&
-                    A3D_ELEM(*this, k, i, j) > 0)
+                A3D_ELEM(*this, k, i, j) > 0)
             {
                 XX(center) += j * NZYX_ELEM(*this, n, k, i, j);
                 YY(center) += i * NZYX_ELEM(*this, n, k, i, j);
@@ -4562,7 +4560,7 @@ void coreArrayByArray(const MultidimArray<T>& op1,
     T* ptrOp2=NULL;
     unsigned long int n;
     for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data;
-            n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
+         n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
         switch (operation)
         {
         case '+':
@@ -4590,7 +4588,7 @@ void coreArrayByScalar(const MultidimArray<T>& op1,
     T* ptrOp1=NULL;
     unsigned long int n;
     for (n=0, ptrResult=result.data, ptrOp1=op1.data;
-            n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+         n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
         switch (operation)
         {
         case '+':
@@ -4618,7 +4616,7 @@ void coreScalarByArray(const T& op1,
     T* ptrOp2=NULL;
     unsigned long int n;
     for (n=0, ptrResult=result.data, ptrOp2=op2.data;
-            n<op2.zyxdim; ++n, ++ptrResult, ++ptrOp2)
+         n<op2.zyxdim; ++n, ++ptrResult, ++ptrOp2)
         switch (operation)
         {
         case '+':
