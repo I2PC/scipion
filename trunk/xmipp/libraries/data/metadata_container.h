@@ -234,13 +234,12 @@ class MetaDataContainer
 {
     /** Container for pairs "name" and value. Note that void * allows to use
      mixed types */
-    ////std::map<MetaDataLabel, void *> values;
+    std::map<MetaDataLabel, void *> values;
 
     void insertVoidPtr(MetaDataLabel name, void * value);
     void * getVoidPtr(MetaDataLabel name);
 
 public:
-    std::map<MetaDataLabel, void *> values;
 
     /**Assignment operator
      *
