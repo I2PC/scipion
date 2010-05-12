@@ -27,6 +27,7 @@
 #include <data/funcs.h>
 
 #include <data/metadata.h>
+#include <data/metadata_extensions.h>
 #include <data/image.h>
 #include <data/geometry.h>
 #include <data/filters.h>
