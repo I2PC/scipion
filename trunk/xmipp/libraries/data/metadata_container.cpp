@@ -240,6 +240,14 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_IMAGE;
     }
+    else if (strLabel == "original_image")
+    {
+        return MDL_IMAGE_ORIGINAL;
+    }
+    else if (strLabel == "mask")
+    {
+        return MDL_MASK;
+    }
     else if (strLabel == "micrograph")
     {
         return MDL_MICROGRAPH;
@@ -487,6 +495,12 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
             break;
         case MDL_IMAGE:
             return std::string("image");
+            break;
+        case MDL_IMAGE_ORIGINAL:
+            return std::string("original_image");
+            break;
+        case MDL_MASK:
+            return std::string("mask");
             break;
         case MDL_COMMENT:
             return std::string("comment");

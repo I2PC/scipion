@@ -63,6 +63,8 @@ enum MetaDataLabel
     MDL_ENABLED, // Is this image enabled? (int [-1 or 1])
     MDL_FLIP, // Flip the image? (bool)
     MDL_IMAGE, // Name of an image (std::string)
+    MDL_IMAGE_ORIGINAL, // Name of an image from which MDL_IMAGE is coming from
+    MDL_MASK, // Name of a mask associated to image
     MDL_MAXCC, // Cross-correlation for the image (double)
     MDL_COST, // Cost for the image (double)
     MDL_MICROGRAPH, // Name of a micrograph (std::string)
@@ -155,7 +157,8 @@ inline bool isString(MetaDataLabel lCode)
 {
     if (lCode == MDL_COMMENT  || lCode == MDL_IMAGE          || lCode == MDL_MICROGRAPH  ||
         lCode == MDL_CTFMODEL || lCode == MDL_CTFINPUTPARAMS || lCode == MDL_PERIODOGRAM ||
-        lCode == MDL_SERIE    || lCode == MDL_IMGMD          || lCode == MDL_REFMD)
+        lCode == MDL_SERIE    || lCode == MDL_IMGMD          || lCode == MDL_REFMD ||
+    	lCode == MDL_IMAGE_ORIGINAL || lCode == MDL_MASK)
         return true;
     else
         return false;
