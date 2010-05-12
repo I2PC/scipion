@@ -3832,6 +3832,7 @@ public:
         // Sort indexes
         double* temp_array = temp.adaptForNumericalRecipes1D();
         int* indx_array = indx.adaptForNumericalRecipes1D();
+        indexx(XSIZE(*this), temp_array, indx_array);
 
         return indx;
     }
