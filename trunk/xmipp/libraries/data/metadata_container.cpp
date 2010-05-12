@@ -244,6 +244,18 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_IMAGE_ORIGINAL;
     }
+    else if (strLabel == "class_representative")
+    {
+        return MDL_IMAGE_CLASS;
+    }
+    else if (strLabel == "class_group")
+    {
+        return MDL_IMAGE_CLASS_GROUP;
+    }
+    else if (strLabel == "class_count")
+    {
+        return MDL_IMAGE_CLASS_COUNT;
+    }
     else if (strLabel == "mask")
     {
         return MDL_MASK;
@@ -498,6 +510,15 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
             break;
         case MDL_IMAGE_ORIGINAL:
             return std::string("original_image");
+            break;
+        case MDL_IMAGE_CLASS:
+            return std::string("class_representative");
+            break;
+        case MDL_IMAGE_CLASS_GROUP:
+            return std::string("class_group");
+            break;
+        case MDL_IMAGE_CLASS_COUNT:
+            return std::string("class_count");
             break;
         case MDL_MASK:
             return std::string("mask");

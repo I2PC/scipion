@@ -64,6 +64,10 @@ enum MetaDataLabel
     MDL_FLIP, // Flip the image? (bool)
     MDL_IMAGE, // Name of an image (std::string)
     MDL_IMAGE_ORIGINAL, // Name of an image from which MDL_IMAGE is coming from
+    MDL_IMAGE_CLASS, // Name of the class representative for this image
+    MDL_IMAGE_CLASS_GROUP, // Name of the class group for this image (metadata with all the
+                           // images assigned to that class)
+    MDL_IMAGE_CLASS_COUNT, // Number of images assigned to the same class as this image
     MDL_MASK, // Name of a mask associated to image
     MDL_MAXCC, // Cross-correlation for the image (double)
     MDL_COST, // Cost for the image (double)
@@ -158,7 +162,8 @@ inline bool isString(MetaDataLabel lCode)
     if (lCode == MDL_COMMENT  || lCode == MDL_IMAGE          || lCode == MDL_MICROGRAPH  ||
         lCode == MDL_CTFMODEL || lCode == MDL_CTFINPUTPARAMS || lCode == MDL_PERIODOGRAM ||
         lCode == MDL_SERIE    || lCode == MDL_IMGMD          || lCode == MDL_REFMD ||
-    	lCode == MDL_IMAGE_ORIGINAL || lCode == MDL_MASK)
+    	lCode == MDL_IMAGE_ORIGINAL || lCode == MDL_MASK     || lCode == MDL_IMAGE_CLASS ||
+    	lCode == MDL_IMAGE_CLASS_GROUP)
         return true;
     else
         return false;
@@ -209,7 +214,7 @@ inline bool isInt(MetaDataLabel lCode)
     if (lCode == MDL_REF      || lCode == MDL_ENABLED || lCode == MDL_OBJID      ||
     	lCode == MDL_ITER     || lCode == MDL_BLOCK   || lCode == MDL_RANDOMSEED ||
     	lCode == MDL_DEFGROUP || lCode == MDL_XINT    || lCode == MDL_YINT       ||
-    	lCode == MDL_ZINT
+    	lCode == MDL_ZINT     || lCode == MDL_IMAGE_CLASS_COUNT
     	)
         return true;
     else
