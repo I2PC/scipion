@@ -8,7 +8,7 @@ char*  askMemory(unsigned long memsize)
         return(NULL);
     }
 	
-    if ( ( ptr = (char *) malloc(memsize*sizeof(char)) ) == NULL ) { 
+    if ( ( ptr = (char *) calloc(1,memsize*sizeof(char)) ) == NULL ) {
         std::cerr<<"Memory allocation of %ld bytes failed, memsize= "<< memsize<<std::endl;
         REPORT_ERROR(2, "Error in askMemory");
         return(NULL); 
