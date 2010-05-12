@@ -424,6 +424,18 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_SAMPLINGRATE;
     }
+    else if (strLabel == "sampling_rateX")
+    {
+        return MDL_SAMPLINGRATEX;
+    }
+    else if (strLabel == "sampling_rateY")
+    {
+        return MDL_SAMPLINGRATEY;
+    }
+    else if (strLabel == "sampling_rateZ")
+    {
+        return MDL_SAMPLINGRATEZ;
+    }
     else if (strLabel == "voltage")
     {
         return MDL_VOLTAGE;
@@ -475,6 +487,18 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     else if (strLabel == "defocusGroup")
     {
         return MDL_DEFGROUP;
+    }
+    else if (strLabel == "min")
+    {
+        return MDL_MIN;
+    }
+    else if (strLabel == "max")
+    {
+        return MDL_MAX;
+    }
+    else if (strLabel == "stddev")
+    {
+        return MDL_STDDEV;
     }
 
     else
@@ -664,6 +688,15 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
         case MDL_SAMPLINGRATE:
             return std::string("sampling_rate");
             break;
+        case MDL_SAMPLINGRATEX:
+            return std::string("sampling_rateX");
+            break;
+        case MDL_SAMPLINGRATEY:
+            return std::string("sampling_rateY");
+            break;
+        case MDL_SAMPLINGRATEZ:
+            return std::string("sampling_rateZ");
+            break;
         case MDL_VOLTAGE:
             return std::string("voltage");
             break;
@@ -702,6 +735,15 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
             break;
         case MDL_KSTEST:
             return std::string("KStest");
+            break;
+        case MDL_MIN:
+            return std::string("min");
+            break;
+        case MDL_MAX:
+            return std::string("max");
+            break;
+        case MDL_STDDEV:
+            return std::string("stddev");
             break;
 
         default:
