@@ -1,7 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Ignacio Fernandez Moreno (hellmoon666@gmail.com)
- *              Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es)
+ * Authors:     Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es)
  *
  * Universidad San Pablo C.E.U.
  *
@@ -28,8 +27,8 @@
 #define _PROG_ANGULAR_COMMON_LINES
 
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/de_solver.h>
+#include <data/metadata.h>
+#include <data/numerical_tools.h>
 #include <data/matrix2d.h>
 #include <vector>
 #include <data/symmetries.h>
@@ -53,17 +52,17 @@ public:
     const Prog_Angular_CommonLine *parent;
     const Matrix1D<int> * alreadyOptimized;
     const Matrix1D<double> * currentSolution;
-    const Matrix1D<int> * imgIdx;
+    const MultidimArray<int> * imgIdx;
     
     Matrix1D<double> imgAvgCorrelation;
     Matrix1D<double> imgMinCorrelation;
-    Matrix2D<double> correlationMatrix;
+    MultidimArray<double> correlationMatrix;
 public:
     // Constructor
     EulerSolver(int dim, int pop,
         const Matrix1D<int> &newAlreadyOptimized,
         const Matrix1D<double> &newCurrentSolution,
-        const Matrix1D<int> &newImgIdx,
+        const MultidimArray<int> &newImgIdx,
         const Prog_Angular_CommonLine *newParent);
 
     // Energy function for the solver
@@ -123,26 +122,26 @@ public:
     double trySolution(const Matrix1D<double> &solution);
     
     /** Compute clusters */
-    double computeClusters(const Matrix2D<double> &correlationMatrix,
+    double computeClusters(const MultidimArray<double> &correlationMatrix,
         std::vector< std::vector<int> > &clusters, 
-        Matrix2D<double> &worseCorrelationMatrix,
-        Matrix2D<double> &bestCorrelationMatrix, bool show=false) const;
+        MultidimArray<double> &worseCorrelationMatrix,
+        MultidimArray<double> &bestCorrelationMatrix, bool show=false) const;
 
     /** Split the alignment in two clusters and find an image to remove */
     std::vector<int> removeViaClusters(
-        const Matrix2D<double> &correlationMatrix);
+        const MultidimArray<double> &correlationMatrix);
 
     /** Run */
     void run();
 public:
     // Selfile with images
-    SelFile SF;
+    MetaData SF;
     
     // Optimizer
     EulerSolver *solver;
     
     // Input images
-    std::vector< Matrix2D<double> > img;
+    std::vector< MultidimArray<double> > img;
     
     // Initial solution
     Matrix1D<double> initialSolution;
@@ -161,7 +160,7 @@ public:
     Matrix1D<double> currentImgMinCorrelation;
     
     // Correlation between any pair of images
-    Matrix2D<double> currentCorrelationMatrix;
+    MultidimArray<double> currentCorrelationMatrix;
     
     // Best line in image i matching with image j
     Matrix2D<int> bestLine;
@@ -173,7 +172,7 @@ public:
     SymList SL;
 
     // Radon transform of the images
-    std::vector< std::vector< Matrix1D<double> > > radon;
+    std::vector< std::vector< MultidimArray<double> > > radon;
 
     // Left matrices for the symmetry transformations
     std::vector< Matrix2D<double> > L;
