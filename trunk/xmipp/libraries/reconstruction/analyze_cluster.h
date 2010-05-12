@@ -27,6 +27,7 @@
 
 #include <data/funcs.h>
 #include <data/metadata.h>
+#include <data/metadata_extension.h>
 
 /**@defgroup AnalyzeClusterProgram analyze cluster
    @ingroup ReconsLibraryPrograms */
