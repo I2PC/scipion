@@ -26,10 +26,11 @@
 #define _PROG_VQ_PROJECTIONS
 
 #include <mpi.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/polar.h>
 #include <data/fftw.h>
 #include <data/histogram.h>
+#include <data/numerical_tools.h>
 #include <vector>
 
 /**@defgroup VQforProjections
@@ -51,19 +52,19 @@ public:
     const GaussianInterpolator *gaussianInterpolator;
 
     // Mask of the background
-    const Matrix2D<int> *mask;
+    const MultidimArray<int> *mask;
 
     // Projection
-    Matrix2D<double> P;
+    MultidimArray<double> P;
     
     // Update for next iteration
-    Matrix2D<double> Pupdate;
+    MultidimArray<double> Pupdate;
 
     // Polar Fourier transform of the projection at full size
     Polar<std::complex <double> > polarFourierP;
 
     // Rotational correlation for best_rotation
-    Matrix1D<double> rotationalCorr;
+    MultidimArray<double> rotationalCorr;
 
     // Local transformer for the best rotation
     XmippFftw local_transformer;
@@ -98,7 +99,7 @@ public:
     int receiveMPI(int s_rank);
 
     /** Update projection. */
-    void updateProjection(const Matrix2D<double> &I,
+    void updateProjection(const MultidimArray<double> &I,
         double corrCode, int idx);
 
     /** Update non-projection */
@@ -116,10 +117,10 @@ public:
     /** Compute the fit of the input image with this node.
         The input image is rotationally and translationally aligned
         (2 iterations), to make it fit with the node. */
-    void fitBasic(Matrix2D<double> &I, double sigma, double &corrCode);
+    void fitBasic(MultidimArray<double> &I, double sigma, double &corrCode);
 
     /** Compute the fit of the input image with this node (check mirrors). */
-    void fit(Matrix2D<double> &I, 
+    void fit(MultidimArray<double> &I,
         double sigma, bool noMirror, double &corrCode, double &likelihood);
 
     /// Look for K-nearest neighbours
@@ -142,7 +143,7 @@ struct SDescendingClusterSort
 class VQ {
 public:
     /// Mask for the background
-    Matrix2D<int> mask;
+	MultidimArray<int> mask;
 
     /// List of nodes
     std::vector<VQProjection *> P;
@@ -184,7 +185,7 @@ public:
     double sigma;
 
     // SelFile with the images
-    SelFile *SF;
+    MetaData *SF;
 
     std::vector< FileName > SFv;
     
@@ -195,8 +196,8 @@ public:
     GaussianInterpolator gaussianInterpolator;
 public:
     /// Initialize
-    void initialize(SelFile &_SF, int _Niter,  int _Nneighbours,
-        double _PminSize, std::vector< Matrix2D<double> > _codes0,
+    void initialize(MetaData &_SF, int _Niter,  int _Nneighbours,
+        double _PminSize, std::vector< MultidimArray<double> > _codes0,
         int _Ncodes0, bool _noMirror, bool verbose, bool _corrSplit, 
         bool _useCorrelation, bool _useFixedCorrentropy, 
         bool _classicalMultiref, bool _alignImages, bool _fast, int rank);
@@ -207,11 +208,11 @@ public:
     /** Look for a node suitable for this image.
         The image is rotationally and translationally aligned with
         the best node. */
-    void lookNode(Matrix2D<double> &I, int idx, int oldnode, int &newnode,
+    void lookNode(MultidimArray<double> &I, int idx, int oldnode, int &newnode,
         double &corrCode, double &likelihood);
     
     /** Update non codes. */
-    void updateNonCode(Matrix2D<double> &I, int newnode);
+    void updateNonCode(MultidimArray<double> &I, int newnode);
 
     /** Transfer all updates */
     void transferUpdates();
@@ -299,7 +300,7 @@ public:
     void run(int rank);
 public:
     // Selfile with all the input images
-    SelFile SF;
+    MetaData SF;
     
     // Structure for the classes
     VQ vq;
