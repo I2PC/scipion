@@ -24,6 +24,7 @@
  ***************************************************************************/
 #include "progs.h"
 #include "metadata.h"
+#include "metadata_extension.h"
 #include "args.h"
 
 /* Common functions -------------------------------------------------------- */
