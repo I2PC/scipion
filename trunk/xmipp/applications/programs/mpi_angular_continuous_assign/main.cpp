@@ -98,7 +98,8 @@ int main(int argc, char **argv)
                 {
                     FileName fnImg;
                     prm.DF_initial.getValue(MDL_IMAGE,fnImg,key);
-                    ImageXmipp img(fnImg);
+                    Image<double> img;
+                    img.read(fnImg);
                     double shiftX = img.Xoff();
                     double shiftY = img.Yoff();
                     double rot    = img.rot();
