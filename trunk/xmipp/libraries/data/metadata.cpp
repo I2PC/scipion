@@ -1515,7 +1515,7 @@ void get_statistics(MetaData MT_in, Image<double> & _ave, Image<double> & _sd, d
     _sd().selfSQRT();
 }
 
-void ImgSize(MetaData MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
+void ImgSize(MetaData &MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
 {
     if (MD.firstObject() != MetaData::NO_OBJECTS_STORED)
     {

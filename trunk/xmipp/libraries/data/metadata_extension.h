@@ -18,7 +18,7 @@ void get_statistics(MetaData MT, Image<double> & _ave, Image<double> & _sd, doub
  */
 static int null_object=-1;
 
-void ImgSize(MetaData MD, int &Xdim, int &Ydim=null_object,
+void ImgSize(MetaData &MD, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              int &Ndim=null_object);
 
