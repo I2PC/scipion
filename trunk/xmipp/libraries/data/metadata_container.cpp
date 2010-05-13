@@ -264,6 +264,14 @@ MetaDataLabel MetaDataContainer::codifyLabel(std::string strLabel)
     {
         return MDL_MICROGRAPH;
     }
+    else if  (strLabel == "missingRegionNumber")
+    {
+    	return MDL_MISSINGREGION_NR;
+    }
+    else if  (strLabel == "missingRegionType")
+    {
+    	return MDL_MISSINGREGION_TYPE;
+    }
     else if (strLabel == "CTFModel")
     {
         return MDL_CTFMODEL;
@@ -561,6 +569,12 @@ std::string MetaDataContainer::decodeLabel(MetaDataLabel inputLabel)
         case MDL_MICROGRAPH:
             return std::string("micrograph");
             break;
+        case MDL_MISSINGREGION_NR:
+        	return std::string("missingRegionNumber");
+        	break;
+        case MDL_MISSINGREGION_TYPE:
+        	return std::string("missingRegionType");
+        	break;
         case MDL_CTFMODEL:
             return std::string("CTFModel");
             break;

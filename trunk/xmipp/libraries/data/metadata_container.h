@@ -72,6 +72,8 @@ enum MetaDataLabel
     MDL_MAXCC, // Cross-correlation for the image (double)
     MDL_COST, // Cost for the image (double)
     MDL_MICROGRAPH, // Name of a micrograph (std::string)
+    MDL_MISSINGREGION_NR, // Number of missing region in subtomogram
+    MDL_MISSINGREGION_TYPE, // Type of missing region in subtomogram
     MDL_NMA, // Normal mode displacements (vector double)
     MDL_ORIGINX, // Origin for the image in the X axis (double)
     MDL_ORIGINY, // Origin for the image in the Y axis (double)
@@ -173,7 +175,7 @@ inline bool isString(MetaDataLabel lCode)
         lCode == MDL_CTFMODEL || lCode == MDL_CTFINPUTPARAMS || lCode == MDL_PERIODOGRAM ||
         lCode == MDL_SERIE    || lCode == MDL_IMGMD          || lCode == MDL_REFMD ||
     	lCode == MDL_IMAGE_ORIGINAL || lCode == MDL_MASK     || lCode == MDL_IMAGE_CLASS ||
-    	lCode == MDL_IMAGE_CLASS_GROUP)
+    	lCode == MDL_IMAGE_CLASS_GROUP || lCode == MDL_MISSINGREGION_TYPE)
         return true;
     else
         return false;
@@ -226,7 +228,7 @@ inline bool isInt(MetaDataLabel lCode)
     	lCode == MDL_ITER     || lCode == MDL_BLOCK   || lCode == MDL_RANDOMSEED ||
     	lCode == MDL_DEFGROUP || lCode == MDL_XINT    || lCode == MDL_YINT       ||
     	lCode == MDL_ZINT     || lCode == MDL_IMAGE_CLASS_COUNT || lCode == MDL_REF3D ||
-    	lCode == MDL_SYMNO
+    	lCode == MDL_SYMNO || lCode == MDL_MISSINGREGION_NR
     	)
         return true;
     else
