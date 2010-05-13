@@ -390,7 +390,7 @@ ReconsSources = [
 #    'angular_project_library.cpp',
 #    'crystal_angular_projection_matching.cpp',
 #    'art_crystal.cpp',
-#    'basic_art.cpp',
+    'basic_art.cpp',
 #    'break_symmetry.cpp',
 #    'common_lines.cpp',
 #    'convert_vol2pseudo.cpp',
@@ -406,7 +406,7 @@ ReconsSources = [
     'denoise.cpp',
 #    'detect_missing_wedge.cpp',
 #    'detect_structures.cpp',
-#    'directions.cpp',
+    'directions.cpp',
 #    'draw_surface.cpp',
 #    'euler.cpp,'
 #    'evaluate_fscs.cpp',
@@ -418,7 +418,7 @@ ReconsSources = [
     'ml_align2d.cpp',
 ##    'ml_align3d.cpp',
 #    'mlf_align2d.cpp',
-#    'ml_refine3d.cpp',
+    'ml_refine3d.cpp',
 ##    'ml_tomo.cpp',
 #    'nma_alignment.cpp',
 #    'phantom_create_micrograph.cpp',
@@ -433,11 +433,11 @@ ReconsSources = [
 #    'psd_sort.cpp',
     'radon.cpp',
 #    'range_adjust.cpp',
-#    'recons_misc.cpp',
-#    'reconstruct_art.cpp',
+    'recons_misc.cpp',
+    'reconstruct_art.cpp',
 #    'reconstruct_wbp.cpp',
 #    'reconstruct_fourier.cpp',
-#    'refinement.cpp',
+    'refinement.cpp',
 #    'resolution_ssnr.cpp',
 #    'series_remove_fluctuations.cpp',
     'sort_images.cpp',
@@ -447,7 +447,7 @@ ReconsSources = [
 ##   'virus_vertex',
 #    'volume_foms.cpp',
 #    'volume_labelling.cpp',
-#    'volume_segment.cpp'
+    'volume_segment.cpp'
 ]
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
@@ -594,7 +594,7 @@ AddXmippProgram('ml_align2d', ['XmippRecons'])
 ##AddXmippProgram('ml_align3d', ['XmippRecons']) sjors
 #AddXmippProgram('mlf_align2d', ['XmippRecons']) sjors
 #AddXmippProgram('ml_align2d_combine', ['XmippRecons']) sjors
-#AddXmippProgram('ml_refine3d', ['XmippRecons']) sjors
+AddXmippProgram('ml_refine3d', ['XmippRecons'])
 #AddXmippProgram('mlf_refine3d', ['XmippRecons']) sjors
 ##AddXmippProgram('mlf_tomo', ['XmippRecons']) sjors
 ##AddXmippProgram('ml_tomo', ['XmippRecons']) sjors
@@ -624,7 +624,7 @@ AddXmippProgram('project_xr', ['XmippRecons'])
 ##########AddXmippProgram('resolution_fsc') Roberto
 #AddXmippProgram('resolution_ssnr', ['XmippRecons'])
 #AddXmippProgram('reverse_endian')
-#AddXmippProgram('rotate')
+AddXmippProgram('rotate')
 #AddXmippProgram('scale')
 #AddXmippProgram('scale_pyramid')
 #AddXmippProgram('metadata_split')
