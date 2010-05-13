@@ -110,11 +110,10 @@ struct SPIDERhead
 int  readSPIDER(int img_select)
 {
 //#define DEBUG
+#undef DEBUG
 #ifdef DEBUG
     printf("DEBUG readSPIDER: Reading Spider file\n");
 #endif
-    //#define DEBUG
-#undef DEBUG
 
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
