@@ -489,28 +489,4 @@ public:
              kkkk=(kkkk_metadata).nextObject())
 #endif
 
-
-#ifdef NEVERDEFINED
-//Functions related with metadata
-#ifndef METADATAEXTRA_H
-#define METADATAEXTRA_H
-
-/** Compute images metadata estatistics
- * This used to be part of Metadata but should not
- */
-
-#include "image.h"
-void get_statistics(MetaData MT, Image<double> & _ave, Image<double> & _sd, double& _min,
-                    double& _max, bool apply_geo);
-
-/** Get image size
- *
- */
-static int null_object=-1;
-
-void ImgSize(MetaData MD, int &Xdim, int &Ydim=null_object,
-             int &Zdim=null_object,
-             int &Ndim=null_object);
-
-#endif
 #endif
