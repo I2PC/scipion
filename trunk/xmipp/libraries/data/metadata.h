@@ -488,5 +488,3 @@ public:
              kkkk != MetaData::NO_MORE_OBJECTS; \
              kkkk=(kkkk_metadata).nextObject())
 #endif
-
-#endif
