@@ -27,7 +27,7 @@
 #include <data/args.h>
 #include <data/geometry.h>
 
-class Statis_parameters: public Prog_parameters
+class Average_parameters: public Prog_parameters
 {
 public:
     Image<double>  sumI, sumI2;
@@ -36,7 +36,7 @@ public:
     bool        set_weight, weighted_avg, more_options, only_avg, keep_first_header, is_first;
     
 public:
-    Statis_parameters()
+    Average_parameters()
     {
         nI = nV = 0;
 	is_first = true;
@@ -75,7 +75,7 @@ public:
 
 bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
-    Statis_parameters *eprm = (Statis_parameters *) prm;
+    Average_parameters *eprm = (Average_parameters *) prm;
     if (eprm->keep_first_header)
     {
 	if (eprm->is_first)
@@ -113,7 +113,7 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
     return true;
 }
 
-void Statis_parameters::final_process()
+void Average_parameters::final_process()
 {
     FileName fnt, fn_root = fn_in.without_extension();
     if (nI != 0)
@@ -156,7 +156,7 @@ void Statis_parameters::final_process()
 
 int main(int argc, char **argv)
 {
-    Statis_parameters prm;
+    Average_parameters prm;
     prm.each_image_produces_an_output = false;
     // Set default action for application of header transformation
     prm.apply_geo = true;
