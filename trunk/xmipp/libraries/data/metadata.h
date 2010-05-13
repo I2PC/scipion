@@ -422,6 +422,11 @@ public:
         }
     }
 
+    bool valueExists(MetaDataLabel name)
+    {
+    	return MetaDataContainer::valueExists(name);
+    }
+
     /**Add object with metadata label name in the range given by minvalue and maxvalue
      * This template function may be accessed from swig
      *
