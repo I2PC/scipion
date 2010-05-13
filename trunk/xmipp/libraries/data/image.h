@@ -111,7 +111,7 @@ unsigned long   gettypesize(DataType type);
  *     DIRECT_VOLVOXEL(V, 0, 0, 0) << std::endl;
  * @endcode
  */
-#define DIRECT_VOLVOXEL(V, k, i, j) DIRECT_A3D_ELEM(((V).img), (k), (i), (j))
+#define DIRECT_VOLVOXEL(I, k, i, j) DIRECT_A3D_ELEM(((I).data), (k), (i), (j))
 
 #define DIRECT_IMGPIXEL(I, i, j) DIRECT_A2D_ELEM(((I).data), (i), (j))
 #define IMGMATRIX(I) ((I).data)
@@ -996,7 +996,18 @@ public:
         MD.setValue(MDL_ANGLEPSI,psi,n);
     }
 
-    /** Set Rotation angle to image */
+    /** Get Euler angles from image header
+     *
+     */
+    void getEulerAngles(double &rot, double &tilt, double &psi,
+    		long int n = -1)
+    {
+        MD.getValue(MDL_ANGLEROT,rot,n);
+        MD.getValue(MDL_ANGLETILT,tilt,n);
+        MD.getValue(MDL_ANGLEPSI,psi,n);
+    }
+
+   /** Set Rotation angle to image */
     void setRot(double rot, long int n = -1)
     {
         MD.setValue(MDL_ANGLEROT,rot,n);
