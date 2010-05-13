@@ -348,6 +348,35 @@ public:
     }
 
     template<class T>
+    long int goToFirstObject(MetaDataLabel name, T value)
+    {
+        // Traverse all the structure looking for objects
+        // that satisfy search criteria
+
+        std::map<long int, MetaDataContainer *>::iterator It;
+
+        MetaDataContainer * aux;
+
+        if (!objects.empty())
+        {
+        	for (It = objects.begin(); It != objects.end(); It++)
+
+            {
+                aux = It->second;
+
+                if (aux->pairExists(name, value))
+                {
+                    objectsIterator = It;
+                    return It->first;
+                }
+            }
+            return NO_OBJECT_FOUND;
+        }
+        else
+            return NO_OBJECTS_STORED;
+    }
+
+    template<class T>
     void removeObjects(MetaDataLabel name, const T &value)
     {
         std::vector<long int> toRemove = findObjects(name, value);
@@ -424,7 +453,7 @@ public:
 
     bool valueExists(MetaDataLabel name)
     {
-    	return MetaDataContainer::valueExists(name);
+        return (objectsIterator->second)->valueExists(name);
     }
 
     /**Add object with metadata label name in the range given by minvalue and maxvalue
