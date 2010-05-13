@@ -393,16 +393,16 @@ void Basic_ART_Parameters::usage_more()
 /* Sort_perpendicular                                                        */
 /* ------------------------------------------------------------------------- */
 void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
-                        Matrix1D<int> &ordered_list, int N)
+                        MultidimArray<int> &ordered_list, int N)
 {
     int   i, j, k;
-    Matrix1D<short> chosen(numIMG);     // 1 if that image has been already
+    MultidimArray<short> chosen(numIMG);     // 1 if that image has been already
     // chosen
     double min_prod;
     int   min_prod_proj;
     Matrix2D<double> v(numIMG, 3);
     Matrix2D<double> euler;
-    Matrix1D<double> product(numIMG);
+    MultidimArray<double> product(numIMG);
 
     // Initialisation
     ordered_list.resize(numIMG);
@@ -410,7 +410,7 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
     {
         Matrix1D<double> z;
         // Initially no image is chosen
-        VEC_ELEM(chosen, i) = 0;
+        A1D_ELEM(chosen, i) = 0;
 
         // Compute the Euler matrix for each image and keep only
         // the third row of each one
@@ -424,8 +424,8 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
 
     // Pick first projection as the first one to be presented
     i = 0;
-    VEC_ELEM(chosen, i) = 1;
-    VEC_ELEM(ordered_list, 0) = i;
+    A1D_ELEM(chosen, i) = 1;
+    A1D_ELEM(ordered_list, 0) = i;
 
     // Choose the rest of projections
     std::cerr << "Sorting projections ...\n";
@@ -436,25 +436,25 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
         // chosen one, and select that which has minimum product
         min_prod = MAXFLOAT;
         for (j = 0; j < numIMG; j++)
-            if (!VEC_ELEM(chosen, j))
+            if (!A1D_ELEM(chosen, j))
             {
-                VEC_ELEM(product, j) +=
-                    ABS(dotProduct(v.Row(VEC_ELEM(ordered_list, i - 1)),
+                A1D_ELEM(product, j) +=
+                    ABS(dotProduct(v.Row(A1D_ELEM(ordered_list, i - 1)),
 		    	v.Row(j)));
                 if (N != -1 && i > N)
-                    VEC_ELEM(product, j) -=
-                        ABS(dotProduct(v.Row(VEC_ELEM(ordered_list, i - N - 1)),
+                    A1D_ELEM(product, j) -=
+                        ABS(dotProduct(v.Row(A1D_ELEM(ordered_list, i - N - 1)),
 			    v.Row(j)));
-                if (VEC_ELEM(product, j) < min_prod)
+                if (A1D_ELEM(product, j) < min_prod)
                 {
-                    min_prod = VEC_ELEM(product, j);
+                    min_prod = A1D_ELEM(product, j);
                     min_prod_proj = j;
                 }
             }
 
         // Store the chosen vector and mark it as chosen
-        VEC_ELEM(ordered_list, i) = min_prod_proj;
-        VEC_ELEM(chosen, min_prod_proj) = 1;
+        A1D_ELEM(ordered_list, i) = min_prod_proj;
+        A1D_ELEM(chosen, min_prod_proj) = 1;
 
         // The progress bar is updated only every 10 images
         if (i % 10 == 0) progress_bar(i);
@@ -468,7 +468,7 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
 /* ------------------------------------------------------------------------- */
 /* No Sort                                                                   */
 /* ------------------------------------------------------------------------- */
-void no_sort(int numIMG, Matrix1D<int> &ordered_list)
+void no_sort(int numIMG, MultidimArray<int> &ordered_list)
 {
     ordered_list.initLinear(0, numIMG - 1);
 }
@@ -476,10 +476,10 @@ void no_sort(int numIMG, Matrix1D<int> &ordered_list)
 /* ------------------------------------------------------------------------- */
 /* Random Sort                                                               */
 /* ------------------------------------------------------------------------- */
-void sort_randomly(int numIMG, Matrix1D<int> &ordered_list)
+void sort_randomly(int numIMG, MultidimArray<int> &ordered_list)
 {
     int i;
-    Matrix1D<int> chosen;
+    MultidimArray<int> chosen;
 
     // Initialisation
     ordered_list.resize(numIMG);
@@ -506,8 +506,8 @@ void sort_randomly(int numIMG, Matrix1D<int> &ordered_list)
         }
 
         // Annotate this image
-        VEC_ELEM(ordered_list, i - 1) = ptr;
-        VEC_ELEM(chosen, ptr) = 1;
+        A1D_ELEM(ordered_list, i - 1) = ptr;
+        A1D_ELEM(chosen, ptr) = 1;
 
         // The progress bar is updated only every 10 images
         if (i % 10 == 0) progress_bar(i);
@@ -525,7 +525,7 @@ void sort_randomly(int numIMG, Matrix1D<int> &ordered_list)
 void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         int rank)
 {
-    SelFile     selfile, selctf;
+    MetaData     selfile, selctf;
 
     /* If checking the variability --------------------------------------------- */
     if (variability_analysis)
@@ -547,37 +547,35 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         //take into account weights here
         if (WLS)
         {
-            SelFile SF_aux;
-            headerXmipp       head;
+            MetaData SF_aux;
+            double weight=0.;
             SF_aux.read(fn_sel);
-            SF_aux.go_beginning();
-            while (!SF_aux.eof())
-            {
-                head.read(SF_aux.get_current_file());
-                if (head.Weight() != 0.)
-                {
-                    selfile.insert(SF_aux.current());
-                }
-                SF_aux.NextImg();
-            }
-            if (selfile.ImgNo() == 0)
+            SF_aux.removeObjects(MDL_ENABLED, -1);
+            selfile.clear();
+            selfile.fillMetaData( SF_aux, SF_aux.findObjectsInRange(MDL_WEIGHT, 1e-9, 99e99) );
+            if (selfile.size() == 0)
             {
                 std::cerr << "there is no input file with weight!=0" << std::endl;
                 exit(1);
             }
         }
         else
+        {
             selfile.read(fn_sel);
-        trueIMG = selfile.ImgNo();
+            selfile.removeObjects(MDL_ENABLED, -1);
+        }
+        trueIMG = selfile.size();
         if (trueIMG == 0) REPORT_ERROR(3008, "Produce_Basic_ART_Side_Info: No images !!");
-        selfile.ImgSize(projYdim, projXdim);
+        int idum;
+        ImgSize(selfile, projXdim, projYdim, idum, idum);
     }
 
     /* Get the CTF correction file ----------------------------------------- */
     if (fn_ctf != "")
     {
         selctf.read(fn_ctf);
-        if (selctf.ImgNo() != selfile.ImgNo())
+        selctf.removeObjects(MDL_ENABLED, -1);
+        if (selctf.size() != selfile.size())
             REPORT_ERROR(1, "Basic_ART_Parameters: The number of images in "
                          "the ctf and original selfiles do not match");
     }
@@ -596,7 +594,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     {
         if (fn_surface_mask != "")
         {
-            surface_mask = new VolumeXmipp;
+            surface_mask = new Image<double>;
             surface_mask->read(fn_surface_mask);
             (*surface_mask)().setXmippOrigin();
         }
@@ -753,7 +751,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
     for (int act_proj = 0; act_proj < numProjs_node ; act_proj++)
     {
         read_proj.read(IMG_Inf[ordered_list(act_proj)].fn_proj, apply_shifts);
-        read_proj.moveOriginTo_center();
+        read_proj().setXmippOrigin();
 
         // Projection extension? .........................................
         if (proj_ext != 0)
@@ -773,7 +771,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
         progress_bar(numIMG);
         long int Neq = 0, Nunk = 0;
         for (int n = 0; n < GVNeq->VolumesNo(); n++)
-            FOR_ALL_ELEMENTS_IN_MATRIX3D((*GVNeq)(n)())
+            FOR_ALL_ELEMENTS_IN_ARRAY3D((*GVNeq)(n)())
         {
             Neq += (*GVNeq)(n)(k, i, j);
             Nunk++;

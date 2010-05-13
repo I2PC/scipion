@@ -27,7 +27,7 @@
 #define _DIRECTIONS_H
 
 #include <data/funcs.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 
 #include <data/symmetries.h>
 
@@ -46,14 +46,14 @@ double distance_directions(double rot1, double tilt1,
                            bool include_mirrors);
 
 /// Make even distribution, taking symmetry into account
-void make_even_distribution(DocFile &DF, double sampling,
+void make_even_distribution(MetaData &DF, double sampling,
                             SymList &SL, bool include_mirror);
 
 /// Select a user-provided tilt range
-void limit_tilt_range(DocFile &DF, double tilt_range0, double tilt_rangeF);
+void limit_tilt_range(MetaData &DF, double tilt_range0, double tilt_rangeF);
 
 /// Determine which of the entries in DFlib is closest to [rot1,tilt1]
 int find_nearest_direction(double rot1, double tilt1,
-                           DocFile &DFlib, int col_rot, int col_tilt, SymList &SL);
+                           MetaData &DFlib, SymList &SL);
 //@}
 #endif

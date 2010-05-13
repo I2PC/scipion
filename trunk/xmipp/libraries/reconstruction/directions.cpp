@@ -113,14 +113,13 @@ double distance_directions(double rot1, double tilt1,
 
 }
 // Fill DF with evenly distributed rot & tilt =================================
-void make_even_distribution(DocFile &DF, double sampling,
+void make_even_distribution(MetaData &DF, double sampling,
                             SymList &SL, bool include_mirror)
 {
 
     int rot_nstep, tilt_nstep = ROUND(180. / sampling) + 1;
-    double rotp, tiltp, psip, rot_sam, tilt, rot, tilt_sam, psi = 0.;
+    double dfrot, dftilt, rotp, tiltp, psip, rot_sam, tilt, rot, tilt_sam, psi = 0.;
     bool append;
-    Matrix1D<double> dataline(3);
     tilt_sam = (180. / tilt_nstep);
 
     DF.clear();
@@ -135,22 +134,22 @@ void make_even_distribution(DocFile &DF, double sampling,
         {
             // Check whether by symmetry or mirror the angle has been included already
             append = true;
-            DF.go_first_data_line();
-            while (!DF.eof())
+            FOR_ALL_OBJECTS_IN_METADATA(DF)
             {
-                if (!directions_are_unique(rot, tilt, DF(0), DF(1), rot_sam, tilt_sam, SL, include_mirror))
+            	DF.getValue(MDL_ANGLEROT, dfrot);
+            	DF.getValue(MDL_ANGLETILT, dftilt);
+            	if (!directions_are_unique(rot, tilt, dfrot, dftilt, rot_sam, tilt_sam, SL, include_mirror))
                 {
                     append = false;
                     break;
                 }
-                DF.next_data_line();
             }
             if (append)
             {
-                dataline(0) = rot;
-                dataline(1) = tilt;
-                dataline(2) = 0.;
-                DF.append_data_line(dataline);
+            	DF.addObject();
+            	DF.setValue(MDL_ANGLEROT, rot);
+            	DF.setValue(MDL_ANGLETILT, tilt);
+            	DF.setValue(MDL_ANGLEROT, 0.);
             }
         }
     }
@@ -158,45 +157,31 @@ void make_even_distribution(DocFile &DF, double sampling,
 
 }
 
-void limit_tilt_range(DocFile &DF, double tilt_range0, double tilt_rangeF)
+void limit_tilt_range(MetaData &DF, double tilt_range0, double tilt_rangeF)
 {
 
-    // Select use-provided tilt range
-    double tilt;
-    DocLine DL;
-    DocFile Dt;
-    DF.go_first_data_line();
-    while (!DF.eof())
-    {
-        DL = DF.get_current_line();
-        tilt = DF(1);
-        if (tilt >= tilt_range0 && tilt <= tilt_rangeF)
-        {
-            Dt.append_line(DL);
-        }
-        DF.next_data_line();
-    }
-    DF = Dt;
-    Dt.clear();
-
+    MetaData DFaux;
+    DFaux.fillMetaData(DF, DF.findObjectsInRange(MDL_ANGLETILT, tilt_range0, tilt_rangeF));
+	DF = DFaux;
 }
 
 
 int find_nearest_direction(double rot1, double tilt1,
-                           DocFile &DFlib, int col_rot, int col_tilt, SymList &SL)
+                           MetaData &DFlib, SymList &SL)
 {
 
     int               dir, optdir;
     double            dist, mindist;
-    double            newrot, newtilt, newpsi;
+    double            newrot, newtilt, newpsi, dfrot, dftilt;
     Matrix2D<double>  L(4, 4), R(4, 4);
 
-    DFlib.go_first_data_line();
     optdir = dir = 1;
     mindist = 9999.;
-    while (!DFlib.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(DFlib)
     {
-        dist = distance_directions(rot1, tilt1, DFlib(col_rot), DFlib(col_tilt), false);
+        DFlib.getValue(MDL_ANGLEROT, dfrot);
+        DFlib.getValue(MDL_ANGLETILT, dftilt);
+    	dist = distance_directions(rot1, tilt1, dfrot, dftilt, false);
         if (dist < mindist)
         {
             mindist = dist;
@@ -208,7 +193,7 @@ int find_nearest_direction(double rot1, double tilt1,
             L.resize(3, 3);
             R.resize(3, 3);
             Euler_apply_transf(L, R, rot1, tilt1, 0., newrot, newtilt, newpsi);
-            dist = distance_directions(newrot, newtilt, DFlib(col_rot), DFlib(col_tilt), false);
+            dist = distance_directions(newrot, newtilt, dfrot, dftilt, false);
             if (dist < mindist)
             {
                 mindist = dist;
@@ -216,7 +201,6 @@ int find_nearest_direction(double rot1, double tilt1,
             }
         }
 
-        DFlib.next_data_line();
         dir++;
     }
 

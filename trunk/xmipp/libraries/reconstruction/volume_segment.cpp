@@ -103,10 +103,10 @@ void Prog_segment_prm::produce_side_info()
 // Segment with a given threshold and compute the number of voxels in the
 // biggest piece
 //#define DEBUG
-double segment_threshold(const Volume *V_in, Volume *V_out,
+double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
                          double threshold, bool do_prob)
 {
-    Volume aux;
+    Image<double> aux;
 
     // Binarize input volume
     (*V_out)() = (*V_in)();
@@ -115,7 +115,7 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
 
 #ifdef DEBUG
     std::cout << threshold << std::endl;
-    VolumeXmipp save;
+    Image<double> save;
     save() = (*V_in)();
     save.write("PPP0.vol");
     save() = (*V_out)();
@@ -136,9 +136,9 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
     }
 
     // Count the number of different objects
-    int no_comp = label_volume((*V_out)(), aux());
+    int no_comp = label_image3D((*V_out)(), aux());
     Matrix1D<double> count(no_comp + 1);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(aux())
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(aux())
     count((int)aux(k, i, j))++;
 
 #ifdef DEBUG
@@ -154,13 +154,13 @@ double segment_threshold(const Volume *V_in, Volume *V_out,
     count.maxIndex(imax);
 
     // Select the mask with only that piece
-    FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_out)())
+    FOR_ALL_ELEMENTS_IN_ARRAY3D((*V_out)())
     (*V_out)(k, i, j) = aux(k, i, j) == imax;
 
     return count(imax);
 }
 
-void wang_smoothing(const Volume *V_in, Volume *V_out, int radius)
+void wang_smoothing(const Image<double> *V_in, Image<double> *V_out, int radius)
 {
 
     int r2, radius2 = radius * radius;
@@ -168,10 +168,10 @@ void wang_smoothing(const Volume *V_in, Volume *V_out, int radius)
 
     (*V_out)().resize((*V_in)());
 
-    FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_in)())
+    FOR_ALL_ELEMENTS_IN_ARRAY3D((*V_in)())
     {
         sumw = 0.;
-        VOL_ELEM((*V_out)(), k, i, j) = 0.;
+        A3D_ELEM((*V_out)(), k, i, j) = 0.;
         for (int kp = k - radius; kp < k + radius; kp++)
         {
             if (kp > STARTINGZ((*V_in)()) && kp < FINISHINGZ((*V_in)()))
@@ -185,10 +185,10 @@ void wang_smoothing(const Volume *V_in, Volume *V_out, int radius)
                             if (jp > STARTINGX((*V_in)()) && jp < FINISHINGX((*V_in)()))
                             {
                                 r2 = (kp - k) * (kp - k) + (ip - i) * (ip - i) + (jp - j) * (jp - j);
-                                if ((r2 < radius2) && (VOL_ELEM((*V_in)(), kp, ip, jp) > 0.))
+                                if ((r2 < radius2) && (A3D_ELEM((*V_in)(), kp, ip, jp) > 0.))
                                 {
                                     weight = 1. - sqrt((double)(r2 / radius2));
-                                    VOL_ELEM((*V_out)(), k, i, j) += weight * XMIPP_MAX(0., VOL_ELEM((*V_in)(), kp, ip, jp));
+                                    A3D_ELEM((*V_out)(), k, i, j) += weight * XMIPP_MAX(0., A3D_ELEM((*V_in)(), kp, ip, jp));
                                     sumw += weight;
                                 }
                             }
@@ -198,15 +198,15 @@ void wang_smoothing(const Volume *V_in, Volume *V_out, int radius)
             }
         }
         if (sumw > 0.)
-            VOL_ELEM((*V_out)(), k, i, j) /= sumw;
+            A3D_ELEM((*V_out)(), k, i, j) /= sumw;
         else
-            VOL_ELEM((*V_out)(), k, i, j) = 0.;
+            A3D_ELEM((*V_out)(), k, i, j) = 0.;
     }
 
 }
 
 
-void probabilistic_solvent(Volume *V_in, Volume *V_out)
+void probabilistic_solvent(Image<double> *V_in, Image<double> *V_out)
 {
 
     // Calculate mean and sigma for protein and solvent regions
@@ -219,10 +219,10 @@ void probabilistic_solvent(Volume *V_in, Volume *V_out)
     (*V_out)().setXmippOrigin();
 
     Np = sump = sum2p = Ns = sums = sum2s = 0.;
-    FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_in)())
+    FOR_ALL_ELEMENTS_IN_ARRAY3D((*V_in)())
     {
-        aux = VOL_ELEM((*V_in)(), k, i, j);
-        if (VOL_ELEM((*V_out)(), k, i, j) < 0.5)
+        aux = A3D_ELEM((*V_in)(), k, i, j);
+        if (A3D_ELEM((*V_out)(), k, i, j) < 0.5)
         {
             sums += aux;
             sum2s += aux * aux;
@@ -251,19 +251,19 @@ void probabilistic_solvent(Volume *V_in, Volume *V_out)
 
     // Terwilliger-like calculation of P(x|solv) & P(x|prot)
     // Bayes: P(prot|x)= P(x|prot)/{P(x|prot)+P(x|solv)}
-    FOR_ALL_ELEMENTS_IN_MATRIX3D((*V_in)())
+    FOR_ALL_ELEMENTS_IN_ARRAY3D((*V_in)())
     {
-        aux = VOL_ELEM((*V_in)(), k, i, j) - avgs;
+        aux = A3D_ELEM((*V_in)(), k, i, j) - avgs;
         p_solv = solv_frac * exp(-aux * aux / (2 * sigs));
-        aux = VOL_ELEM((*V_in)(), k, i, j) - avgp;
+        aux = A3D_ELEM((*V_in)(), k, i, j) - avgp;
         p_prot = prot_frac * exp(-aux * aux / (2 * sigp));
-        VOL_ELEM((*V_out)(), k, i, j) = p_prot / (p_prot + p_solv);
+        A3D_ELEM((*V_out)(), k, i, j) = p_prot / (p_prot + p_solv);
     }
 
 }
 
 // Really segment ==========================================================
-void Prog_segment_prm::segment(VolumeXmipp &mask)
+void Prog_segment_prm::segment(Image<double> &mask)
 {
     double th_min, th_max, val_min, val_max;
     V().computeDoubleMinMax(val_min, val_max);
@@ -327,7 +327,7 @@ void Prog_segment_prm::segment(VolumeXmipp &mask)
         // Wang-Leslie like modification of the input volume
         if (wang_radius >= 3)
         {
-            VolumeXmipp Vwang;
+            Image<double> Vwang;
             wang_smoothing(&V, &Vwang, wang_radius);
             V = Vwang;
         }

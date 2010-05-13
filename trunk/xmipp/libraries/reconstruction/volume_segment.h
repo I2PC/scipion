@@ -26,7 +26,7 @@
 #define _PROG_SEGMENT
 
 #include <data/funcs.h>
-#include <data/multidimensional_array>
+#include <data/multidim_array.h>
 
 ///@defgroup VolumeSegment Volume segmentation
 ///@ingroup DataLibraryPrograms
@@ -63,7 +63,7 @@ public:
 
 public:
     // Input volume
-    VolumeXmipp V;
+    Image<double> V;
 public:
     /// Read argument from command line
     void read(int argc, char **argv);
@@ -83,7 +83,7 @@ public:
 
     /** Really compute the mask. If a mask name is given then it is
         written to disk.*/
-    void segment(VolumeXmipp &mask);
+    void segment(Image<double> &mask);
 };
 //@}
 #endif

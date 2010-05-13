@@ -31,7 +31,7 @@
 #include <data/wavelet.h>
 
 /* Fill Reconstruction info structure -------------------------------------- */
-void build_recons_info(SelFile &selfile, SelFile &selctf, 
+void build_recons_info(MetaData &selfile, MetaData &selctf,
                        const FileName &fn_ctf, const SymList &SL,
                        Recons_info * &IMG_Inf, bool do_not_use_symproj)
 {
@@ -42,11 +42,13 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
     bool              is_there_ctf = false;
     bool              is_ctf_unique = false;
 
-    int trueIMG = selfile.ImgNo();
-    selfile.go_first_ACTIVE();
+    int trueIMG = selfile.size();
+    selfile.firstObject();
     int numIMG;
-    if (!do_not_use_symproj) numIMG = trueIMG * (SL.SymsNo() + 1);
-    else numIMG = trueIMG;
+    if (!do_not_use_symproj)
+        numIMG = trueIMG * (SL.SymsNo() + 1);
+    else
+        numIMG = trueIMG;
 
     // The next two ifs check whether there is a CTF file, and
     // whether it is unique
@@ -54,40 +56,46 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
     {
         is_there_ctf = true;
         is_ctf_unique = true;
-        if (fn_ctf.get_extension() == "sel")
+        if (fn_ctf.isMetaData())
         {
             is_ctf_unique = false;
-            int truectf = selctf.ImgNo();
-            selctf.go_first_ACTIVE();
+            int truectf = selctf.size();
+            selctf.firstObject();
             int numctf = truectf * (SL.SymsNo() + 1);
             if (numctf != numIMG)
                 REPORT_ERROR(9696, "Number of CTF and image files differ");
         }
     }
 
-    if (IMG_Inf != NULL) delete [] IMG_Inf;
+    if (IMG_Inf != NULL)
+        delete [] IMG_Inf;
     if ((IMG_Inf = new Recons_info[numIMG]) == NULL)
         REPORT_ERROR(3008, "Build_Recons_Info: No memory for the sorting");
 
     int i = 0; // It will account for the number of valid projections processed
     std::cerr << "Reading angle information ...\n";
     init_progress_bar(trueIMG);
-    while (!selfile.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(selfile)
     {
-        fn_proj = selfile.NextImg();
-        if (fn_proj=="") break;
-        if (is_there_ctf && !is_ctf_unique) fn_ctf1 = selctf.NextImg();
+        selfile.getValue(MDL_IMAGE,fn_proj);
+        if (is_there_ctf && !is_ctf_unique)
+        {
+        	selctf.nextObject();
+        	selctf.getValue(MDL_CTFMODEL,fn_ctf1);
+        }
         if (fn_proj != "")
         {
             read_proj.read(fn_proj);
 
             // Filling structure
             IMG_Inf[i].fn_proj = fn_proj;
-            if (is_ctf_unique) IMG_Inf[i].fn_ctf = fn_ctf;
-            else if (is_there_ctf)  IMG_Inf[i].fn_ctf = fn_ctf1;
+            if (is_ctf_unique)
+                IMG_Inf[i].fn_ctf = fn_ctf;
+            else if (is_there_ctf)
+                IMG_Inf[i].fn_ctf = fn_ctf1;
             IMG_Inf[i].sym     = -1;
             IMG_Inf[i].seed    = ROUND(65535 * rnd_unif());
-            read_proj.get_eulerAngles(IMG_Inf[i].rot, IMG_Inf[i].tilt, IMG_Inf[i].psi);
+            read_proj.getEulerAngles(IMG_Inf[i].rot, IMG_Inf[i].tilt, IMG_Inf[i].psi);
             EULER_CLIPPING(IMG_Inf[i].rot, IMG_Inf[i].tilt, IMG_Inf[i].psi);
 
             // Any symmetry?
@@ -98,8 +106,10 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
                     int sym_index = SYMINDEX(SL, j, i, trueIMG);
                     IMG_Inf[sym_index].fn_proj = IMG_Inf[i].fn_proj;
                     IMG_Inf[sym_index].seed   = IMG_Inf[i].seed;
-                    if (is_ctf_unique)     IMG_Inf[sym_index].fn_ctf = fn_ctf;
-                    else if (is_there_ctf) IMG_Inf[sym_index].fn_ctf = IMG_Inf[i].fn_ctf;
+                    if (is_ctf_unique)
+                        IMG_Inf[sym_index].fn_ctf = fn_ctf;
+                    else if (is_there_ctf)
+                        IMG_Inf[sym_index].fn_ctf = IMG_Inf[i].fn_ctf;
                     IMG_Inf[sym_index].sym = j;
                     SL.get_matrices(j, L, R);
                     L.resize(3, 3); // Erase last row and column
@@ -117,7 +127,8 @@ void build_recons_info(SelFile &selfile, SelFile &selctf,
         }
 
         i ++; // I have processed one more image
-        if (i % 25 == 0) progress_bar(i);
+        if (i % 25 == 0)
+            progress_bar(i);
     }
     progress_bar(trueIMG);
 }
@@ -145,7 +156,7 @@ void VariabilityClass::newIteration()
 void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
                                        Projection &read_proj)
 {
-    VolumeXmipp vol_voxels;
+    Image<double> vol_voxels;
 
     // Convert from basis to voxels
     prm->basis.changeToVoxels(*ptr_vol_out, &(vol_voxels()),
@@ -154,21 +165,26 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
     N++;
 
     // Make the DWT
-    Matrix3D<double> DWTV;
+    MultidimArray<double> DWTV;
 #ifdef MODE7
+
     int DWT_iterations = 2;
     int keep_from_iteration = 0;
 #endif
 #ifdef MODE8
+
     int DWT_iterations = 2;
     int keep_from_iteration = 0;
 #endif
 #ifdef MODE15
+
     int DWT_iterations = 2;
     int keep_from_iteration = 0;
 #endif
+
     Bilib_DWT(vol_voxels(), DWTV, DWT_iterations);
 #ifdef DEBUG
+
     vol_voxels.write("PPPVariability.vol");
     char c;
     std::cout << "Press any key\n";
@@ -187,14 +203,15 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
 #define DEBUG
 void VariabilityClass::finishAnalysis()
 {
-    if (VA.size() == 0) return;
+    if (VA.size() == 0)
+        return;
 
     // Coocurrence matrix
     int nmax = VA.size();
-    Matrix2D<int> coocurrence(nmax, nmax);
+    MultidimArray<int> coocurrence(nmax, nmax);
 
     // Study each voxel
-    VolumeXmipp SignificantT2, SignificantMaxRatio, SignificantMinRatio;
+    Image<double> SignificantT2, SignificantMaxRatio, SignificantMinRatio;
     int zsize = ZSIZE(VA[0]) / 2;
     int ysize = YSIZE(VA[0]) / 2;
     int xsize = XSIZE(VA[0]) / 2;
@@ -216,7 +233,8 @@ void VariabilityClass::finishAnalysis()
 #ifdef MODE15
 #define NFEATURES 15
 #endif
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(SignificantT2())
+
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(SignificantT2())
     {
         // Save the data for this voxel
         std::ofstream fh_dat;
@@ -232,6 +250,7 @@ void VariabilityClass::finishAnalysis()
             Matrix1D<double> v_aux(NFEATURES);
 
 #ifdef MODE7
+
             v_aux(0) = VA[n](k,      i, j + xsize);
             v_aux(1) = VA[n](k, i + ysize,      j);
             v_aux(2) = VA[n](k, i + ysize, j + xsize);
@@ -241,6 +260,7 @@ void VariabilityClass::finishAnalysis()
             v_aux(6) = VA[n](k + zsize, i + ysize, j + xsize);
 #endif
 #ifdef MODE8
+
             v_aux(0) = VA[n](k,      i,      j);
             v_aux(1) = VA[n](k,      i, j + xsize);
             v_aux(2) = VA[n](k, i + ysize,      j);
@@ -251,6 +271,7 @@ void VariabilityClass::finishAnalysis()
             v_aux(7) = VA[n](k + zsize, i + ysize, j + xsize);
 #endif
 #ifdef MODE15
+
             v_aux(0) = VA[n](k / 2, i / 2,    j / 2);
             v_aux(1) = VA[n](k / 2, i / 2, j / 2 + xsize2);
             v_aux(2) = VA[n](k / 2, i / 2 + ysize2,    j / 2);
@@ -267,6 +288,7 @@ void VariabilityClass::finishAnalysis()
             v_aux(13) = VA[n](k + zsize, i + ysize,      j);
             v_aux(14) = VA[n](k + zsize, i + ysize, j + xsize);
 #endif
+
             v_aux = v_aux * v_aux;
             // COSS: Doesn't work: v_aux=v_aux.sort();
 
@@ -309,8 +331,9 @@ void VariabilityClass::finishAnalysis()
         int N0 = 0;
         GET_RESULTS(fh_0, "PPP.0", avg0, covariance0, N0, idx0);
 #ifdef DEBUG
+
         std::cout << "Class 0 is:\n";
-        for (int n = 0; n < XSIZE(idx0); n++)
+        for (int n = 0; n < idx0.size(); n++)
         {
             if (idx0(n))
             {
@@ -327,8 +350,9 @@ void VariabilityClass::finishAnalysis()
         int N1 = 0;
         GET_RESULTS(fh_1, "PPP.1", avg1, covariance1, N1, idx1);
 #ifdef DEBUG
+
         std::cout << "Class 1 is:\n";
-        for (int n = 0; n < XSIZE(idx1); n++)
+        for (int n = 0; n < idx1.size(); n++)
         {
             if (idx1(n))
             {
@@ -347,8 +371,8 @@ void VariabilityClass::finishAnalysis()
                          ((N0 - 1) * covariance0 + (N1 - 1) * covariance1);
             covariance *= (1.0 / N0 + 1.0 / N1);
             aux.fromVector(avg_diff);
-            T2 = (double)(N0 + N1 - XSIZE(avg_diff) - 1) /
-                 ((N0 + N1 - 2) * XSIZE(avg_diff)) *
+            T2 = (double)(N0 + N1 - avg_diff.size() - 1) /
+                 ((N0 + N1 - 2) * avg_diff.size()) *
                  aux.transpose() * covariance.inv() * aux;
         }
         else
@@ -370,13 +394,15 @@ void VariabilityClass::finishAnalysis()
         }
 
         // Analysis of the coocurrences
-        for (int n = 0; n < XSIZE(idx0); n++)
-            for (int np = n + 1; np < XSIZE(idx0); np++)
-                if (idx0(n) && idx0(np)) coocurrence(n, np)++;
+        for (int n = 0; n < idx0.size(); n++)
+            for (int np = n + 1; np < idx0.size(); np++)
+                if (idx0(n) && idx0(np))
+                    coocurrence(n, np)++;
 
-        for (int n = 0; n < XSIZE(idx1); n++)
-            for (int np = n + 1; np < XSIZE(idx1); np++)
-                if (idx1(n) && idx1(np)) coocurrence(n, np)++;
+        for (int n = 0; n < idx1.size(); n++)
+            for (int np = n + 1; np < idx1.size(); np++)
+                if (idx1(n) && idx1(np))
+                    coocurrence(n, np)++;
 
         // Keep results
         SignificantT2(k, i, j) = T2(0, 0);
@@ -389,7 +415,9 @@ void VariabilityClass::finishAnalysis()
         std::cout << "T2 for this classification is " << T2(0, 0) << std::endl;
         std::cout << "Eigenvalues are " << eigenvalues.transpose() << std::endl;
 #endif
-        if (++counter % nxny == 0) progress_bar(counter);
+
+        if (++counter % nxny == 0)
+            progress_bar(counter);
     }
     progress_bar(MULTIDIM_SIZE(SignificantT2()));
     SignificantT2.write(prm->fn_root + "_variability.vol");
@@ -400,7 +428,7 @@ void VariabilityClass::finishAnalysis()
     for (int n = 0; n < nmax; n++)
         for (int np = n + 1; np < nmax; np++)
             coocurrence(np, n) = coocurrence(n, np);
-    ImageXmipp save;
+    Image<double> save;
     typeCast(coocurrence, save());
     save.write(prm->fn_root + "_coocurrence.xmp");
 }
@@ -443,12 +471,12 @@ void POCSClass::newProjection()
 /* Apply ................................................................... */
 void POCSClass::apply(GridVolume &vol_basis, int it, int images)
 {
-    VolumeXmipp vol_POCS, theo_POCS_vol, corr_POCS_vol, vol_voxels;
+    Image<double> vol_POCS, theo_POCS_vol, corr_POCS_vol, vol_voxels;
 
     if (apply_POCS && POCS_i % POCS_freq == 0)
     {
-        VolumeXmipp vol_aux;
-        VolumeXmipp *desired_volume = NULL;
+        Image<double> vol_aux;
+        Image<double> *desired_volume = NULL;
 
         // Compute the corresponding voxel volume
         prm->basis.changeToVoxels(vol_basis, &(vol_voxels()),
@@ -494,9 +522,9 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         if (prm->known_volume != -1)
         {
             histogram1D hist;
-            Matrix3D<int> aux_mask;
+            MultidimArray<int> aux_mask;
             aux_mask.resize(vol_POCS());
-            FOR_ALL_ELEMENTS_IN_MATRIX3D(aux_mask)
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(aux_mask)
             aux_mask(k, i, j) = 1 - (int)vol_POCS(k, i, j);
             long mask_voxels = vol_POCS().countThreshold("below", 0.5, 0);
             compute_hist_within_binary_mask(
@@ -505,8 +533,9 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             known_percentage = XMIPP_MIN(100, 100 * prm->known_volume / mask_voxels);
             double threshold;
             threshold = hist.percentil(100 - known_percentage);
-            FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_voxels())
-            if (vol_voxels(k, i, j) < threshold) vol_POCS(k, i, j) = 1;
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_voxels())
+            if (vol_voxels(k, i, j) < threshold)
+                vol_POCS(k, i, j) = 1;
         }
         if (prm->tell&TELL_SAVE_AT_EACH_STEP)
         {
@@ -522,7 +551,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         int bg = (int) vol_POCS().sum();
         int fg = MULTIDIM_SIZE(vol_POCS()) - bg;
         int relax = 0, posi = 0;
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_voxels())
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_voxels())
         if (vol_POCS(k, i, j) == 1 && vol_voxels(k, i, j) < 0)
         {
             vol_POCS(k, i, j) = 0;
@@ -551,8 +580,9 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                                              POCS_mean_error, POCS_max_error, VARTK);
             else
             {
-                FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_POCS())
-                if (vol_POCS(k, i, j) == 1)(*desired_volume)(k, i, j) = 0;
+                FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_POCS())
+                if (vol_POCS(k, i, j) == 1)
+                    (*desired_volume)(k, i, j) = 0;
                 for (int i = 0; i < prm->force_sym; i++)
                 {
                     ART_voxels2blobs_single_step(vol_basis, &vol_basis,
@@ -570,13 +600,14 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         case Basis::voxels:
             if (desired_volume == NULL)
             {
-                FOR_ALL_ELEMENTS_IN_MATRIX3D(vol_POCS())
-                if (vol_POCS(k, i, j)) vol_basis(0)(k, i, j) = 0;
+                FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_POCS())
+                if (vol_POCS(k, i, j))
+                    vol_basis(0)(k, i, j) = 0;
             }
             else
             {
                 vol_basis(0)().initZeros();
-                FOR_ALL_ELEMENTS_IN_MATRIX3D((*desired_volume)())
+                FOR_ALL_ELEMENTS_IN_ARRAY3D((*desired_volume)())
                 vol_basis(0)(k, i, j) = (*desired_volume)(k, i, j);
             }
             POCS_mean_error = -1;
@@ -601,8 +632,10 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
             {
             case POCS_measuring:
 #ifdef DEBUG_POCS
+
                 std::cout << "M:" << POCS_vec_i << " " << POCS_mean_error << std::endl;
 #endif
+
                 POCS_errors(POCS_vec_i++) = POCS_mean_error;
                 if (POCS_vec_i == POCS_N_measure)
                 {
@@ -612,18 +645,22 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                     POCS_freq++;
                     POCS_state = POCS_use;
 #ifdef DEBUG_POCS
+
                     std::cerr << "1: Changing to " << POCS_freq << std::endl;
 #endif
+
                 }
                 break;
             case POCS_use:
                 POCS_used++;
                 POCS_errors.computeStats(POCS_avg,
-                                          POCS_stddev, dummy, POCS_min);
+                                         POCS_stddev, dummy, POCS_min);
 #ifdef DEBUG_POCS
+
                 std::cout << "Reference errors: " << POCS_errors.transpose() << std::endl;
                 std::cout << "Checking " << ABS(POCS_mean_error - POCS_avg) << " " << 1.2*1.96*POCS_stddev << std::endl;
 #endif
+
                 if (ABS(POCS_mean_error - POCS_avg) < 1.2*1.96*POCS_stddev)
                 {
                     if (POCS_mean_error < POCS_avg)
@@ -645,8 +682,10 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                     { // increase frequency
                         POCS_freq++;
 #ifdef DEBUG_POCS
+
                         std::cerr << "2: Changing to " << POCS_freq << std::endl;
 #endif
+
                         POCS_used = 0;
                     }
                 }
@@ -658,8 +697,10 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                         POCS_freq = prm->POCS_freq + 1;
                         POCS_used = 0;
 #ifdef DEBUG_POCS
+
                         std::cerr << "3: Changing to " << POCS_freq << std::endl;
 #endif
+
                     }
                     else if (POCS_used > 2)
                     {
@@ -668,15 +709,17 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
                         POCS_used = 0;
                         POCS_state = POCS_lowering;
 #ifdef DEBUG_POCS
+
                         std::cerr << "Lowering\n";
 #endif
+
                     }
                 }
                 break;
             case POCS_lowering:
                 // Lower the POCS error before measuring again
                 POCS_errors.computeStats(POCS_avg,
-                                          POCS_stddev, POCS_max, dummy);
+                                         POCS_stddev, POCS_max, dummy);
                 POCS_used++;
                 if (POCS_mean_error < POCS_max || POCS_used > 2*POCS_N_measure)
                 {

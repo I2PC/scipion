@@ -27,9 +27,8 @@
 #define _REFINEMENT_HH
 
 #include <data/image.h>
-#include <data/volume.h>
 #include <data/funcs.h>
-#include <data/matrix2d.h>
+#include <data/multidim_array.h>
 #include <data/fftw.h>
 
 #include <data/projection.h>
@@ -57,9 +56,9 @@ void calculate_and_find_correlation_max_proj(Projection const &proj1,
    Note: The neighborhood is circular
 */
 template <class T>
-void calculate_and_find_correlation_max_mat(Matrix2D<T> const &mat1,
-        Matrix2D<T> const &mat2,
-        Matrix2D<T> & mat_temp,
+void calculate_and_find_correlation_max_mat(MultidimArray<T> const &mat1,
+        MultidimArray<T> const &mat2,
+        MultidimArray<T> & mat_temp,
         double &shift_X, double &shift_Y,
         double const max_step)
 {
@@ -74,14 +73,14 @@ void calculate_and_find_correlation_max_mat(Matrix2D<T> const &mat1,
     int max_step_int = (int)ROUND(max_step);
     int imax, jmax;
 
-    Matrix2D<int> window(2*max_step_int + 1, 2*max_step_int + 1);
+    MultidimArray<int> window(2*max_step_int + 1, 2*max_step_int + 1);
     window.setXmippOrigin();
 
     T temp_max = -100000000;
     SPEED_UP_temps;//speedup temporal variables
 
     //******* search for the maximun with pixel acuraccy **************/
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(window)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(window)
     {
         if (temp_max < mat_temp(i, j))
         {

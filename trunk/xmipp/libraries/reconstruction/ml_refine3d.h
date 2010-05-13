@@ -29,27 +29,25 @@
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
-#include <data/volume.h>
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/morphology.h>
-#include <data/volume_segment.h>
 #include <data/grids.h>
 #include <data/blobs.h>
-
 #include <data/symmetries.h>
 #include <data/sampling.h>
 #include <data/projection.h>
 #include "directions.h"
 #include "reconstruct_art.h"
-#include "reconstruct_wbp.h"
-#include "reconstruct_fourier.h"
+// FIXME:
+//#include "reconstruct_fourier.h"
 #include "ml_align2d.h"
-#include "mlf_align2d.h"
+//FIXME:
+//#include "mlf_align2d.h"
 #include "symmetrize.h"
+#include "volume_segment.h"
 
 #include <vector>
 
@@ -67,8 +65,6 @@ public:
     MetaData SFvol;
     // Number of volumes to refine
     int Nvols;
-    // vector with integers which projections are valid for which volume
-    std::vector<int> eachvol_start, eachvol_end;
     // Iteration numbers
     int istart, Niter;
     // Verbosity flag
@@ -79,8 +75,8 @@ public:
     double angular;
     /// File handler for the history file
     std::ofstream fh_hist;
-    // Use WBP or fourier-interpolation instead of WLS-ART for reconstruction in ML
-    bool reconstruct_wbp, reconstruct_fourier;
+    // Use fourier-interpolation instead of WLS-ART for reconstruction in ML
+    bool reconstruct_fourier;
     // Low-pass filter digital frequency
     double lowpass;
     // For user-provided tilt range
@@ -106,6 +102,8 @@ public:
     XmippSampling mysampling;
     // Symmetry setup
     int symmetry, sym_order;
+    // Number of reference projections per 3D model
+    int nr_projections;
 
 
 public:
@@ -132,14 +130,14 @@ public:
     void project_reference_volume(MetaData &SFlib, int rank = 0, int size = 1) ;
 
     /// (For mpi-version only:) calculate noise averages and write to disc
-    void make_noise_images(std::vector<ImageXmipp> &Iref) ;
+    void make_noise_images(std::vector<Image<double>  > &Iref) ;
 
-    /// reconstruction by (weighted ART) or WBP
+    /// reconstruction by (weighted ART) or Fourier interpolation
     void reconstruction(int argc, char **argv,
                         int iter, int volno, int noise = 0);
 
     /// Calculate 3D SSNR according to Unser ea. (2005)
-    void calculate_3DSSNR(Matrix1D<double> &spectral_signal, int iter);
+    void calculate_3DSSNR(MultidimArray<double> &spectral_signal, int iter);
 
     /// After reconstruction update reference volume selfile
     void remake_SFvol(int iter, bool rewrite = false, bool include_noise = false) ;

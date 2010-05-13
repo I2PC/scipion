@@ -27,8 +27,8 @@
 
 #include <fstream>
 
-#include <data/volume.h>
-#include <data/selfile.h>
+#include <data/image.h>
+#include <data/metadata_extension.h>
 
 #include "refinement.h"
 #include <data/grids.h>
@@ -72,7 +72,7 @@ public:
     int no_it;
 
     /// Relaxation parameter
-    Matrix1D<double> lambda_list;
+    MultidimArray<double> lambda_list;
 
     /** Valid methods are ART, pCAV, pAVSP, pSART, pBiCAV, pSIRT and pfSIRT
         for parallel computation. This variable establish the way that particles are
@@ -103,7 +103,7 @@ public:
     bool WLS;
 
     /** Relaxation parameter for WLS residual volume */
-    Matrix1D<double> kappa_list;
+    MultidimArray<double> kappa_list;
 
     /** Vector containing all residual images for wlsART */
     std::vector<Projection> residual_imgs;
@@ -310,7 +310,7 @@ public:
     Recons_info     *IMG_Inf;
 
     /// Order in which projections will be presented to algorithm
-    Matrix1D<int>   ordered_list;
+    MultidimArray<int>   ordered_list;
 
     /// Total number of images to process (taking symmetries into account)
     int             numIMG;
@@ -336,7 +336,7 @@ public:
 
     /** Surface mask.
         The volume is supposed to be 0 where the mask is 1. */
-    VolumeXmipp *surface_mask;
+    Image<double> *surface_mask;
 
     /** POCS frequency.
         POCS restrictions are imposed every (this value) projections.
@@ -451,15 +451,15 @@ public:
    If N!=-1 then the product is done only with the last N images. A very
    useful value is N=2*/
 void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
-                        Matrix1D<int> &ordered_list, int N = 2);
+                        MultidimArray<int> &ordered_list, int N = 2);
 
 /** No projection sorting at all.
     This function directly returns the same order as in the selection file */
-void no_sort(int numIMG, Matrix1D<int> &ordered_list);
+void no_sort(int numIMG, MultidimArray<int> &ordered_list);
 
 /** Randomize the projections.
    This function sorts randomly a number of images given by numIMG. */
-void sort_randomly(int numIMG, Matrix1D<int> &ordered_list);
+void sort_randomly(int numIMG, MultidimArray<int> &ordered_list);
 
 /** Write first part of ART history.
     This function writes all ART parameters, projection angles, symmetry
@@ -505,7 +505,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
     are generated as if the ART program had been called. */
 template <class Extra_ART_Parameters>
 void Basic_ROUT_Art(Basic_ART_Parameters &prm,
-                    Extra_ART_Parameters &eprm, VolumeXmipp &vol_voxels,
+                    Extra_ART_Parameters &eprm, Image<double> &vol_voxels,
                     GridVolume &vol_basis);
 
 /** Reconstruction information.
@@ -528,11 +528,11 @@ struct Recons_info
     /// CTF filename
     FileName fn_ctf;
     /// Rotational angle
-    float  rot;
+    double  rot;
     /// Tilting angle
-    float  tilt;
+    double  tilt;
     /// Psi angle
-    float  psi;
+    double  psi;
     /** Symmetry number.
         This number express to which symmetry matrix this projection
         is related to (-1: without symmetry, 0: using symmetry matrix 0,
@@ -548,7 +548,7 @@ struct Recons_info
 /** Build from a Selection File and a Symmetry List.
     The result is stored in the Recons_info array which should point
     to NULL when it is not initialized. */
-void build_recons_info(SelFile &selfile, SelFile &selctf,
+void build_recons_info(MetaData &selfile, MetaData &selctf,
     const FileName &fn_ctf, const SymList &SL, Recons_info * &IMG_Inf,
     bool do_not_use_symproj);
 
@@ -565,7 +565,7 @@ public:
     Basic_ART_Parameters *prm;
 
     /// Vector of training vectors
-    std::vector < Matrix3D<double> > VA;
+    std::vector < MultidimArray<double> > VA;
 
     /// Number of updates so far
     int N;
@@ -610,7 +610,7 @@ public:
     int Youtput_volume_size;
     int Xoutput_volume_size;
     bool apply_POCS;
-    Matrix1D<double> POCS_errors;
+    MultidimArray<double> POCS_errors;
     Basic_ART_Parameters *prm;
 
     /// Constructor

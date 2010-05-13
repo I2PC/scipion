@@ -56,8 +56,8 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     ImageOver        *footprint = (ImageOver *) & prm.basis.blobprint;
     ImageOver        *footprint2 = (ImageOver *) & prm.basis.blobprint2;
     Matrix2D<double> *A = NULL;
-    std::vector<Matrix2D<double> > newres_imgs;
-    Matrix2D<int>    mask;
+    std::vector<MultidimArray<double> > newres_imgs;
+    MultidimArray<int>    mask;
 
     residual_vol.resize(vol_basis);
     residual_vol.initZeros();
@@ -77,7 +77,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
         read_proj = prm.residual_imgs[iact_proj];
         read_proj() *= sqrtweight;
         dummy_proj().resize(read_proj());
-        dummy_proj.set_angles(prm.IMG_Inf[iact_proj].rot,
+        dummy_proj.setEulerAngles(prm.IMG_Inf[iact_proj].rot,
                               prm.IMG_Inf[iact_proj].tilt,
                               prm.IMG_Inf[iact_proj].psi);
 
@@ -94,7 +94,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     if (!(prm.tell&TELL_SHOW_ERROR)) progress_bar(prm.numIMG);
 
     // Convert to voxels: solely for output of power of residual volume
-    VolumeXmipp      residual_vox;
+    Image<double>      residual_vox;
     int Xoutput_volume_size = (prm.Xoutput_volume_size == 0) ?
                               prm.projXdim : prm.Xoutput_volume_size;
     int Youtput_volume_size = (prm.Youtput_volume_size == 0) ?
@@ -131,10 +131,10 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
         sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
 
         // Next lines like normalization in [EHL] (2.18)?
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(new_proj())
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(new_proj())
         {
-            dMij(dummy_proj(), i, j) = XMIPP_MAX(1., dMij(dummy_proj(), i, j)); // to avoid division by zero
-            dMij(new_proj(), i, j) /= dMij(dummy_proj(), i, j);
+            dAij(dummy_proj(), i, j) = XMIPP_MAX(1., dAij(dummy_proj(), i, j)); // to avoid division by zero
+            dAij(new_proj(), i, j) /= dAij(dummy_proj(), i, j);
         }
         new_proj() *= sqrtweight * kappa;
 
@@ -193,7 +193,7 @@ void ART_single_step(
     double                  lambda,          // Lambda to be used
     int                     act_proj,        // Projection number
     const FileName         &fn_ctf,          // CTF to apply
-    const Matrix2D<int>    *maskPtr)         // Mask to apply
+    const MultidimArray<int>    *maskPtr)         // Mask to apply
 {
 // Prepare to work with CTF ................................................
     FourierMask ctf;
@@ -241,7 +241,7 @@ void ART_single_step(
             FIRST_XMIPP_INDEX(finalsize), FIRST_XMIPP_INDEX(finalsize),
             LAST_XMIPP_INDEX(finalsize), LAST_XMIPP_INDEX(finalsize));
 #ifdef DEBUG
-        ImageXmipp save;
+        Image<double> save;
         save() = (*footprint)();
         save.write("PPPfootprint.xmp");
 #endif
@@ -275,14 +275,12 @@ void ART_single_step(
     if (prm.print_system_matrix)
     {
         std::cout << "Equation system (Ax=b) ----------------------\n";
-        std::cout << "Size: ";
-        A->printShape();
-        std::cout << std::endl;
-        for (int i = 0; i < YSIZE(*A); i++)
+        std::cout << "Size: "<< (*A).mdimx <<"x"<<(*A).mdimy<< std::endl;
+        for (int i = 0; i < (*A).mdimy; i++)
         {
             bool null_row = true;
-            for (int j = 0; j < YSIZE(*A); j++)
-                if (DIRECT_MAT_ELEM(*A, i, j) != 0)
+            for (int j = 0; j < (*A).mdimy; j++)
+                if (MAT_ELEM(*A, i, j) != 0)
                 {
                     null_row = false;
                     break;
@@ -291,8 +289,8 @@ void ART_single_step(
             {
                 std::cout << "pixel=" << integerToString(i, 3) << " --> "
                     << DIRECT_MULTIDIM_ELEM(read_proj(), i) << " = ";
-                for (int j = 0; j < XSIZE(*A); j++)
-                    std::cout << DIRECT_MAT_ELEM(*A, i, j) << " ";
+                for (int j = 0; j < (*A).mdimx; j++)
+                    std::cout << MAT_ELEM(*A, i, j) << " ";
                 std::cout << std::endl;
             }
         }
@@ -312,7 +310,7 @@ void ART_single_step(
         weight = read_proj.weight() / prm.sum_weight;
         sqrtweight = sqrt(weight);
 
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(read_proj))
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
         {
             // Compute difference image and error
             IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
@@ -335,7 +333,7 @@ void ART_single_step(
     else
     {
         long int Nmean=0;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(read_proj))
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
         {
             if (maskPtr!=NULL)
                 if ((*maskPtr)(i,j)<0.5) continue;

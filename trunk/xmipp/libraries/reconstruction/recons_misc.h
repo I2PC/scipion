@@ -27,7 +27,7 @@
 #define _RECONS_MISC_HH
 
 #include <data/funcs.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 
 #include <data/symmetries.h>
 #include <data/projection.h>
