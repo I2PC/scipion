@@ -516,26 +516,25 @@ AddXmippProgram('angular_distance', ['XmippRecons'])
 AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 #AddXmippProgram('angular_project_library', ['XmippRecons'])
-#AddXmippProgram('average') sjors
+AddXmippProgram('average')
 #AddXmippProgram('break_symmetry', ['XmippRecons'])
 #AddXmippProgram('center_image')
 AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
-#AddXmippProgram('classify_batch_som', ['XmippClassif']) sjors
+AddXmippProgram('classify_batch_som', ['XmippClassif'])
 AddXmippProgram('classify_CL2D_sort_images', ['XmippRecons'])
-#AddXmippProgram('classify_fcmeans', ['XmippClassif']) sjors
-#AddXmippProgram('classify_fkcn', ['XmippClassif']) sjors
-#AddXmippProgram('classify_fsom',  ['XmippClassif']) sjors
-#AddXmippProgram('classify_kcmeans', ['XmippClassif']) sjors
-#AddXmippProgram('classify_kerdensom', ['XmippClassif']) sjors
-#AddXmippProgram('classify_pca', ['XmippClassif']) sjors
-#AddXmippProgram('classify_project_pca', ['XmippClassif']) sjors
-#AddXmippProgram('classify_sammon_projection', ['XmippClassif']) sjors
-#AddXmippProgram('classify_som',['XmippClassif']) sjors
-#AddXmippProgram('convert_data2descr', ['XmippClassif']) sjors
-#AddXmippProgram('convert_data2img', ['XmippClassif']) sjors
-#AddXmippProgram('convert_data2pdb', ['XmippClassif']) sjors
-#AddXmippProgram('convert_data2vol', ['XmippClassif'])
-#AddXmippProgram('convert_img2data') sjors
+AddXmippProgram('classify_fcmeans', ['XmippClassif'])
+AddXmippProgram('classify_fkcn', ['XmippClassif'])
+AddXmippProgram('classify_fsom',  ['XmippClassif'])
+AddXmippProgram('classify_kcmeans', ['XmippClassif'])
+AddXmippProgram('classify_kerdensom', ['XmippClassif'])
+AddXmippProgram('classify_pca', ['XmippClassif'])
+AddXmippProgram('classify_project_pca', ['XmippClassif'])
+AddXmippProgram('classify_sammon_projection', ['XmippClassif'])
+AddXmippProgram('classify_som',['XmippClassif'])
+AddXmippProgram('convert_data2descr', ['XmippClassif'])
+AddXmippProgram('convert_data2img', ['XmippClassif'])
+AddXmippProgram('convert_data2pdb', ['XmippClassif'])
+AddXmippProgram('convert_img2data')
 #AddXmippProgram('convert_pdb2vol', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('convert_raw22spi')
 #AddXmippProgram('convert_spe2spi')
@@ -579,7 +578,7 @@ AddXmippProgram('fourier_filter', ['XmippRecons'])
 #AddXmippProgram('header_apply')
 #AddXmippProgram('header_assign')
 #AddXmippProgram('header_extract')
-#AddXmippProgram('header_print') sjors
+AddXmippProgram('header_print')
 #AddXmippProgram('header_reset')
 #AddXmippProgram('histogram')
 #AddXmippProgram('make_spectra', ['XmippRecons'])
@@ -589,18 +588,15 @@ AddXmippProgram('fourier_filter', ['XmippRecons'])
 #AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 AddXmippProgram('micrograph_scissor'),
 #AddXmippProgram('micrograph_window')
-#AddXmippProgram('mirror') sjors
+AddXmippProgram('mirror')
 AddXmippProgram('ml_align2d', ['XmippRecons'])
-##AddXmippProgram('ml_align3d', ['XmippRecons']) sjors
 #AddXmippProgram('mlf_align2d', ['XmippRecons']) sjors
-#AddXmippProgram('ml_align2d_combine', ['XmippRecons']) sjors
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
 #AddXmippProgram('mlf_refine3d', ['XmippRecons']) sjors
-##AddXmippProgram('mlf_tomo', ['XmippRecons']) sjors
-##AddXmippProgram('ml_tomo', ['XmippRecons']) sjors
+#AddXmippProgram('ml_tomo', ['XmippRecons']) sjors
 #AddXmippProgram('morphology')
 #AddXmippProgram('nma_alignment', ['XmippRecons'])
-#AddXmippProgram('normalize') sjors
+AddXmippProgram('normalize')
 #AddXmippProgram('operate')
 #AddXmippProgram('pdb_dictionary', ['XmippRecons_Interface','XmippRecons','XmippClassif','XmippInterface'])
 #AddXmippProgram('pdb_project_on_dictionary', ['XmippRecons','XmippClassif'])
@@ -634,7 +630,7 @@ AddXmippProgram('rotate')
 #AddXmippProgram('series_remove_fluctuations', ['XmippRecons'])
 #AddXmippProgram('shift')
 AddXmippProgram('sort_by_statistics')
-#AddXmippProgram('statistics') sjors
+AddXmippProgram('statistics')
 #AddXmippProgram('convert_stack22images')
 AddXmippProgram('symmetrize', ['XmippRecons'])
 #AddXmippProgram('threshold')
