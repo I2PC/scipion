@@ -99,10 +99,10 @@ public:
     void set_angles(double _rot, double _tilt, double _psi);
 
     /** Read a Projection from file.
-     *
-     * When a projection is read, the Euler matrices and perpendicular
-     * direction is computed and stored in the Projection structure.
-     */
+      *
+      * When a projection is read, the Euler matrices and perpendicular
+      * direction is computed and stored in the Projection structure.
+      */
     void read(const FileName& fn, const bool& apply_shifts = false);
 
     /** Assignment.
@@ -118,23 +118,25 @@ public:
 // structure is needed to pass parameters from the master thread to the
 // working threads as they run as a function which does not accept passed
 // parameters other than a void * structure.
-typedef struct {
-        int thread_id;
-        int threads_count;
-        Image<double> * vol;
-        const SimpleGrid * grid;
-        const Basis * basis;
-        Projection * global_proj;
-        Projection * global_norm_proj;
-        int FORW;
-        int eq_mode;
-        const Image<int> *VNeq;
-        Matrix2D<double> *M;
-        const MultidimArray<int> *mask;
-        double ray_length;  
-        double rot,tilt,psi;
-	bool destroy;
-} project_thread_params;
+typedef struct
+{
+    int thread_id;
+    int threads_count;
+    Image<double> * vol;
+    const SimpleGrid * grid;
+    const Basis * basis;
+    Projection * global_proj;
+    Projection * global_norm_proj;
+    int FORW;
+    int eq_mode;
+    const Image<int> *VNeq;
+    Matrix2D<double> *M;
+    const MultidimArray<int> *mask;
+    double ray_length;
+    double rot,tilt,psi;
+    bool destroy;
+}
+project_thread_params;
 
 extern project_thread_params * project_threads;
 
@@ -144,7 +146,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                         const Basis *basis,
                         Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
                         const Image<int> *VNeq, Matrix2D<double> *M,
-			const MultidimArray<int> *mask=NULL,
+                        const MultidimArray<int> *mask=NULL,
                         double ray_length = -1.0,
                         int thread_id = -1, int num_threads = 1);
 
@@ -191,6 +193,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
 
     M is the matrix corresponding to the projection process.
     */
+/*
 template <class T>
 void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
                     Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
@@ -198,6 +201,7 @@ void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
                     GridVolumeT<int> *GVNeq = NULL, Matrix2D<double> *M = NULL,
                     const Matrix2D<int> *mask=NULL,
                     double ray_length = -1, int threads = 1);
+*/
 
 /** From voxel volumes.
 
@@ -215,7 +219,7 @@ void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
  */
 void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi,
-		    const Matrix1D<double> *roffset=NULL);
+                    const Matrix1D<double> *roffset=NULL);
 
 /** From voxel volumes, off-centered tilt axis.
     This routine projects a volume that is rotating (angle) degrees
@@ -228,14 +232,14 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
     
     The projection model is rproj=H Rinplane Raxis r + 
                                   Rinplane (I-Raxis) raxis + rinplane
-				  
+
     Where Raxis is the 3D rotation matrix given by the axis and
     the angle.
 */
 void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
-   int Ydim, int Xdim, double axisRot, double axisTilt,
-   const Matrix1D<double> &raxis, double angle, double inplaneRot,
-   const Matrix1D<double> &rinplane);
+                                int Ydim, int Xdim, double axisRot, double axisTilt,
+                                const Matrix1D<double> &raxis, double angle, double inplaneRot,
+                                const Matrix1D<double> &rinplane);
 
 /** Projects a single particle into a voxels volume by updating its components this way:
 
@@ -323,98 +327,99 @@ const int ART_PIXEL_SUBSAMPLING = 2;
 
 template <class T>
 void *project_SimpleGridThread( void * params )
-{	
-	project_thread_params * thread_data = (project_thread_params *)params;
-	
-	Image<T> * vol;
-	const SimpleGrid * grid;
-	
-	int thread_id = thread_data->thread_id;
-	int threads_count = thread_data->threads_count;
-		
-	const Basis * basis;
-	
-	Projection * proj;
-	Projection * norm_proj;
-	
-	Projection * forw_proj = new Projection();
-	Projection * forw_norm_proj = new Projection();
-	
-	Projection * global_proj;
-	Projection * global_norm_proj;
-	
-	int FORW;
-	int eq_mode;
-	const Image<int> *VNeq=NULL;        
-	Matrix2D<double> *M=NULL;
-        const MultidimArray<int> *mask=NULL;
-	double ray_length;
-	
-	double rot,tilt,psi;
-	
-	do
-	{
-        	barrier_wait( &project_barrier );
-		
-		if( thread_data->destroy == true )
-			break;
-		
-		vol = thread_data->vol;
-		grid = thread_data->grid;
-		basis = thread_data->basis;
-		FORW = thread_data->FORW;
-		eq_mode = thread_data->eq_mode;
-		VNeq = thread_data->VNeq;
-		M = thread_data->M;
-		mask = thread_data->mask;
-		ray_length = thread_data->ray_length;
-		global_proj = thread_data->global_proj;
-		global_norm_proj = thread_data->global_norm_proj;
-		
-		rot = thread_data->rot;
-		tilt = thread_data->tilt;
-		psi = thread_data->psi;
-		
-		if( FORW )
-		{
-			proj = forw_proj;
-			norm_proj = forw_norm_proj;
-			
-			proj->reset(YSIZE( (*global_proj)() ), XSIZE( (*global_proj)() ));
-			proj->set_angles(rot, tilt, psi);
-			(*norm_proj)().initZeros((*proj)());
-                }
-		else
-		{
-			proj = global_proj;
-			norm_proj = global_norm_proj;
-		}
-                
-		project_SimpleGrid( vol, grid,
-                        basis,
-                        proj, 
-			norm_proj, FORW, eq_mode,
-                        VNeq, M, mask,
-			ray_length,
-			thread_id,
-			threads_count
-      			);
-		
-		if( FORW )
-		{
-                
-			pthread_mutex_lock( &project_mutex );
+{
+    project_thread_params * thread_data = (project_thread_params *)params;
 
-			(*global_proj)() = (*global_proj)() + (*proj)();
-			(*global_norm_proj)() = (*global_norm_proj)() + (*norm_proj)();
-			
-			pthread_mutex_unlock( &project_mutex );
-		}
-		
-		barrier_wait( &project_barrier );
-	}while(1);
-	
-	return (void *)NULL;
+    Image<T> * vol;
+    const SimpleGrid * grid;
+
+    int thread_id = thread_data->thread_id;
+    int threads_count = thread_data->threads_count;
+
+    const Basis * basis;
+
+    Projection * proj;
+    Projection * norm_proj;
+
+    Projection * forw_proj = new Projection();
+    Projection * forw_norm_proj = new Projection();
+
+    Projection * global_proj;
+    Projection * global_norm_proj;
+
+    int FORW;
+    int eq_mode;
+    const Image<int> *VNeq=NULL;
+    Matrix2D<double> *M=NULL;
+    const MultidimArray<int> *mask=NULL;
+    double ray_length;
+
+    double rot,tilt,psi;
+
+    do
+    {
+        barrier_wait( &project_barrier );
+
+        if( thread_data->destroy == true )
+            break;
+
+        vol = thread_data->vol;
+        grid = thread_data->grid;
+        basis = thread_data->basis;
+        FORW = thread_data->FORW;
+        eq_mode = thread_data->eq_mode;
+        VNeq = thread_data->VNeq;
+        M = thread_data->M;
+        mask = thread_data->mask;
+        ray_length = thread_data->ray_length;
+        global_proj = thread_data->global_proj;
+        global_norm_proj = thread_data->global_norm_proj;
+
+        rot = thread_data->rot;
+        tilt = thread_data->tilt;
+        psi = thread_data->psi;
+
+        if( FORW )
+        {
+            proj = forw_proj;
+            norm_proj = forw_norm_proj;
+
+            proj->reset(YSIZE( (*global_proj)() ), XSIZE( (*global_proj)() ));
+            proj->set_angles(rot, tilt, psi);
+            (*norm_proj)().initZeros((*proj)());
+        }
+        else
+        {
+            proj = global_proj;
+            norm_proj = global_norm_proj;
+        }
+
+        project_SimpleGrid( vol, grid,
+                            basis,
+                            proj,
+                            norm_proj, FORW, eq_mode,
+                            VNeq, M, mask,
+                            ray_length,
+                            thread_id,
+                            threads_count
+                          );
+
+        if( FORW )
+        {
+
+            pthread_mutex_lock( &project_mutex );
+
+            (*global_proj)() = (*global_proj)() + (*proj)();
+            (*global_norm_proj)() = (*global_norm_proj)() + (*norm_proj)();
+
+            pthread_mutex_unlock( &project_mutex );
+        }
+
+        barrier_wait( &project_barrier );
+    }
+    while(1);
+
+    return (void *)NULL;
 }
 
 //#define DEBUG
@@ -425,7 +430,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                         Projection *proj, Projection *norm_proj, int FORW, int eq_mode,
                         const Image<int> *VNeq, Matrix2D<double> *M,
                         const MultidimArray<int> *mask,
-                        double ray_length, 
+                        double ray_length,
                         int thread_id, int numthreads)
 {
     Matrix1D<double> zero(3);                // Origin (0,0,0)
@@ -545,11 +550,12 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     int XX_highest = (int) XX(grid->highest);
 
     beginZ = XX_lowest * prjX + YY_lowest * prjY + ZZ_lowest * prjZ + prjOrigin;
-	
+
     // Check if in VSSNR
     bool VSSNR_mode = (ray_length == basis->max_length());
 
 #ifdef DEBUG_LITTLE
+
     int condition;
     condition = thread_id==1;
     if (condition)
@@ -642,6 +648,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                     YY_corner2 = FLOOR(XMIPP_MIN(FINISHINGY(IMGMATRIX(*proj)), YY(actprj) + YY_footprint_size));
 
 #ifdef DEBUG
+
                     if (condition)
                     {
                         std::cout << "Clipped and rounded Corner 1 " << XX_corner1
@@ -660,7 +667,8 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                             OVER2IMG(basis->blobprint, (double)YY_corner1 - YY(actprj),
                                      (double)XX_corner1 - XX(actprj), foot_V1, foot_U1);
 
-                        if (!FORW) vol_corr = 0;
+                        if (!FORW)
+                            vol_corr = 0;
 
                         // Effectively project this basis
                         // N_eq=(YY_corner2-YY_corner1+1)*(XX_corner2-XX_corner1+1);
@@ -673,10 +681,11 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                             {
                                 bool proceed=true;
                                 if (mask!=NULL)
-                                    if ((*mask)(y,x)<0.5) proceed=false;
+                                    if ((*mask)(y,x)<0.5)
+                                        proceed=false;
                                 if (proceed)
                                 {
-    #ifdef DEBUG
+#ifdef DEBUG
                                     if (condition)
                                     {
                                         std::cout << "Position in projection (" << x << ","
@@ -691,8 +700,8 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                             fflush(stdout);
                                         }
                                     }
-    #endif
-		                 double a, a2;
+#endif
+                                    double a, a2;
                                     // Check if volumetric interpolation (i.e., SSNR)
                                     if (VSSNR_mode)
                                     {
@@ -730,17 +739,21 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                                 VECTOR_R3(prjPix, x, y, 0);
                                                 // Express the point in a local coordinate system
                                                 M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
-    #ifdef DEBUG
+#ifdef DEBUG
+
                                                 if (condition)
                                                     std::cout << " in volume coord ("
                                                     << prjPix.transpose() << ")";
-    #endif
+#endif
+
                                                 V3_MINUS_V3(prjPix, prjPix, univ_position);
-    #ifdef DEBUG
+#ifdef DEBUG
+
                                                 if (condition)
                                                     std::cout << " in voxel coord ("
                                                     << prjPix.transpose() << ")";
-    #endif
+#endif
+
                                                 a = basis->projection_at(prjDir, prjPix);
                                                 a2 = a * a;
                                             }
@@ -755,53 +768,67 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                                 int ii, jj;
                                                 double px, py;
                                                 a = 0;
-    #ifdef DEBUG
-                                                if (condition) std::cout << std::endl;
-    #endif
+#ifdef DEBUG
+
+                                                if (condition)
+                                                    std::cout << std::endl;
+#endif
+
                                                 for (ii = 0, px = p0; ii < ART_PIXEL_SUBSAMPLING; ii++, px += pStep)
                                                     for (jj = 0, py = p0; jj < ART_PIXEL_SUBSAMPLING; jj++, py += pStep)
                                                     {
-    #ifdef DEBUG
+#ifdef DEBUG
                                                         if (condition)
                                                             std::cout << "    subsampling (" << ii << ","
                                                             << jj << ") ";
-    #endif
+#endif
+
                                                         SPEED_UP_temps;
-                                                       // Get the pixel in universal coordinates
+                                                        // Get the pixel in universal coordinates
                                                         VECTOR_R3(prjPix, x + px, y + py, 0);
                                                         // Express the point in a local coordinate system
                                                         M3x3_BY_V3x1(prjPix, proj->eulert, prjPix);
-    #ifdef DEBUG
+#ifdef DEBUG
+
                                                         if (condition)
                                                             std::cout << " in volume coord ("
                                                             << prjPix.transpose() << ")";
-    #endif
+#endif
+
                                                         V3_MINUS_V3(prjPix, prjPix, univ_position);
-    #ifdef DEBUG
+#ifdef DEBUG
+
                                                         if (condition)
                                                             std::cout << " in voxel coord ("
                                                             << prjPix.transpose() << ")";
-    #endif 
+#endif
+
                                                         a += basis->projection_at(prjDir, prjPix);
-    #ifdef DEBUG
+#ifdef DEBUG
+
                                                         if (condition)
                                                             std::cout << " partial a="
                                                             << basis->projection_at(prjDir, prjPix)
                                                             << std::endl;
-    #endif
+#endif
+
                                                     }
                                                 a *= pAvg;
                                                 a2 = a * a;
-    #ifdef DEBUG
+#ifdef DEBUG
+
                                                 if (condition)
                                                     std::cout << "   Finally ";
-    #endif
+#endif
+
                                             }
                                         }
                                     }
-    #ifdef DEBUG
-                                    if (condition) std::cout << "=" << a << " , " << a2;
-    #endif
+#ifdef DEBUG
+                                    if (condition)
+                                        std::cout << "=" << a << " , " << a2;
+#endif
+
                                     if (FORW)
                                     {
                                         switch (eq_mode)
@@ -828,31 +855,35 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                         case CAV:
                                             IMGPIXEL(*proj, y, x) += VOLVOXEL(*vol, k, i, j) * a;
                                             IMGPIXEL(*norm_proj, y, x) += a2 *
-                                                                         VOLVOXEL(*VNeq, k, i, j);
+                                                                          VOLVOXEL(*VNeq, k, i, j);
                                             break;
                                         }
 
-    #ifdef DEBUG
+#ifdef DEBUG
                                         if (condition)
                                         {
                                             std::cout << " proj= " << IMGPIXEL(*proj, y, x)
                                             << " norm_proj=" << IMGPIXEL(*norm_proj, y, x) << std::endl;
                                             std::cout.flush();
                                         }
-    #endif
+#endif
+
                                     }
                                     else
                                     {
                                         vol_corr += IMGPIXEL(*norm_proj, y, x) * a;
-                                        if (a != 0) N_eq++;
-    #ifdef DEBUG
+                                        if (a != 0)
+                                            N_eq++;
+#ifdef DEBUG
+
                                         if (condition)
                                         {
                                             std::cout << " corr_img= " << IMGPIXEL(*norm_proj, y, x)
                                             << " correction=" << vol_corr << std::endl;
                                             std::cout.flush();
                                         }
-    #endif
+#endif
+
                                     }
                                 }
                                 // Prepare for next operation
@@ -870,7 +901,8 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                 correction = (T) vol_corr;
                                 break;
                             case CAVARTK:
-                                if (N_eq != 0) correction = (T)(vol_corr / N_eq);
+                                if (N_eq != 0)
+                                    correction = (T)(vol_corr / N_eq);
                                 break;
                             case CAVK:
                             case CAV:
@@ -880,6 +912,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                             VOLVOXEL(*vol, k, i, j) += correction;
 
 #ifdef DEBUG
+
                             if (condition)
                             {
                                 printf("\nFinal value at (%d,%d,%d) ", j, i, k);
@@ -887,6 +920,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                 std::cout.flush();
                             }
 #endif
+
                         }
                     } // If not collapsed
                     number_of_basis++;
@@ -920,15 +954,15 @@ void project_Volume(
     int              Xdim,
     double rot, double tilt, double psi,  // Euler angles
     int              FORW,                // 1 if we are projecting a volume
-                                          //   norm_proj is calculated
-                                          // 0 if we are backprojecting
-                                          //   norm_proj must be valid
+    //   norm_proj is calculated
+    // 0 if we are backprojecting
+    //   norm_proj must be valid
     int              eq_mode,             // ARTK, CAVARTK, CAVK or CAV
     GridVolumeT<int> *GVNeq,              // Number of equations per blob
     Matrix2D<double> *M,                  // System matrix
-    const Matrix2D<int> *mask,            // mask(i,j)=0 => do not update this pixel
-    double            ray_length,	  // Ray length of the projection
-    int               threads)         
+    const MultidimArray<int> *mask,            // mask(i,j)=0 => do not update this pixel
+    double            ray_length,   // Ray length of the projection
+    int               threads)
 {
     // If projecting forward initialise projections
     if (FORW)
@@ -937,23 +971,23 @@ void project_Volume(
         proj.set_angles(rot, tilt, psi);
         norm_proj().initZeros(proj());
     }
-	
-	if( threads > 1 )
-	{
-		for( int c = 0 ; c < threads ; c++ )
-		{
-			project_threads[c].global_proj = &proj;
-			project_threads[c].global_norm_proj = &norm_proj;
-			project_threads[c].FORW = FORW;   
-			project_threads[c].eq_mode = eq_mode;
-			project_threads[c].basis = &basis;
-			project_threads[c].M = M;
-			project_threads[c].rot = rot;
-			project_threads[c].tilt = tilt;
-			project_threads[c].psi = psi;
-			project_threads[c].ray_length = ray_length;
-		}
-	}
+
+    if( threads > 1 )
+    {
+        for( int c = 0 ; c < threads ; c++ )
+        {
+            project_threads[c].global_proj = &proj;
+            project_threads[c].global_norm_proj = &norm_proj;
+            project_threads[c].FORW = FORW;
+            project_threads[c].eq_mode = eq_mode;
+            project_threads[c].basis = &basis;
+            project_threads[c].M = M;
+            project_threads[c].rot = rot;
+            project_threads[c].tilt = tilt;
+            project_threads[c].psi = psi;
+            project_threads[c].ray_length = ray_length;
+        }
+    }
 
 
 #ifdef DEBUG_LITTLE
@@ -971,39 +1005,44 @@ void project_Volume(
     for (int i = 0; i < vol.VolumesNo(); i++)
     {
         Image<int> *VNeq;
-        if (GVNeq != NULL)   VNeq = &((*GVNeq)(i));
-        else VNeq = NULL;
-        
-		if( threads > 1 )
-		{
-			for( int c = 0 ; c < threads ; c++ )
-			{
-				project_threads[c].vol = &(vol(i));
-				project_threads[c].grid = &(vol.grid(i));
-				project_threads[c].VNeq = VNeq;
-                                project_threads[c].mask = mask;
-			}
-			
-			barrier_wait( &project_barrier );  
-        
-			// Here is being processed the volume by the threads
-        
-			barrier_wait( &project_barrier );
-		}
-		else
-		{
-			// create no thread to do the job
-			project_SimpleGrid(&(vol(i)), &(vol.grid(i)), &basis,
-			                   &proj, &norm_proj, FORW, eq_mode,
-                                           VNeq, M, mask, ray_length);
-		}
-	
+        if (GVNeq != NULL)
+            VNeq = &((*GVNeq)(i));
+        else
+            VNeq = NULL;
+
+        if( threads > 1 )
+        {
+            for( int c = 0 ; c < threads ; c++ )
+            {
+                project_threads[c].vol = &(vol(i));
+                project_threads[c].grid = &(vol.grid(i));
+                project_threads[c].VNeq = VNeq;
+                project_threads[c].mask = mask;
+            }
+
+            barrier_wait( &project_barrier );
+
+            // Here is being processed the volume by the threads
+
+            barrier_wait( &project_barrier );
+        }
+        else
+        {
+            // create no thread to do the job
+            project_SimpleGrid(&(vol(i)), &(vol.grid(i)), &basis,
+                               &proj, &norm_proj, FORW, eq_mode,
+                               VNeq, M, mask, ray_length);
+        }
+
 #ifdef DEBUG
         Image<double> save;
         save = norm_proj;
-        if (FORW) save.write((std::string)"PPPnorm_FORW" + (char)(48 + i));
-        else      save.write((std::string)"PPPnorm_BACK" + (char)(48 + i));
+        if (FORW)
+            save.write((std::string)"PPPnorm_FORW" + (char)(48 + i));
+        else
+            save.write((std::string)"PPPnorm_BACK" + (char)(48 + i));
 #endif
+
     }
 }
 #undef DEBUG_LITTLE
