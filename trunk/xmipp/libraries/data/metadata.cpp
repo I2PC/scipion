@@ -1342,7 +1342,7 @@ bool MetaData::detectObjects(MetaDataLabel name, int value)
 }
 
 
-MetaDataContainer * MetaData::getObject(long int objectID) const
+MetaDataContainer * MetaData::getObject(const long int objectID) const
 {
     if (isEmpty())
     {
@@ -1355,7 +1355,7 @@ MetaDataContainer * MetaData::getObject(long int objectID) const
     if (objectID == -1)
         aux = objectsIterator->second;
     else
-        aux = objects[objectID];
+        aux = objects.at(objectID);
 
     if (aux == NULL)
     {
