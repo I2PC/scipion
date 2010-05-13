@@ -57,8 +57,8 @@ int main(int argc, char **argv)
         ML2D_prm.fn_ref = prm.fn_root + "_lib.xmd";
         // Project volume and read lots of stuff into memory
         prm.project_reference_volume(ML2D_prm.MDref);
+        ML2D_prm.produceSideInfo();
         ML2D_prm.produceSideInfo2();
-        ML2D_prm.show(true);
 
         // Initialize some stuff
         ML2D_prm.Iold.clear(); // To save memory
