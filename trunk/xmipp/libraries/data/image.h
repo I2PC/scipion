@@ -918,7 +918,7 @@ public:
      * std::cout << "Origin offset in X " << I.Xoff() << std::endl;
      * @endcode
      */
-    double Xoff(const long int n = -1)
+    double Xoff(const long int n = -1) const
     {
         double dummy;
         MD.getValue(MDL_ORIGINX,dummy,n);
@@ -931,7 +931,7 @@ public:
      * std::cout << "Origin offset in Y " << I.Yoff() << std::endl;
      * @endcode
      */
-    double Yoff(const long int n = -1)
+    double Yoff(const long int n = -1) const
     {
         double dummy;
         MD.getValue(MDL_ORIGINY,dummy,n);
@@ -944,7 +944,7 @@ public:
      * std::cout << "Origin offset in Z " << I.Zoff() << std::endl;
      * @endcode
      */
-    double Zoff(const long int n = -1)
+    double Zoff(const long int n = -1) const
     {
         double dummy;
         MD.getValue(MDL_ORIGINZ,dummy,n);
