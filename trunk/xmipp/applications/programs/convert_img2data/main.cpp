@@ -24,8 +24,9 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/transformations.h>
+#include <data/image.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -38,7 +39,7 @@ int main(int argc, char **argv)
     FILE *fp;
     float tmpR;
     char *fname, *iname, *bmname;
-    std::string selname;
+    FileName selname, image_name;
     Image<int> mask;
     std::vector < std::vector <float> > dataPoints;
     std::vector < std::string > labels;
@@ -98,15 +99,17 @@ int main(int argc, char **argv)
 
         std::cout << "generating data......" << std::endl;
 
-        SelFile SF((FileName) selname);
         // Read Sel file
-        while (!SF.eof())
+        MetaData SF;
+        Image<double> image;
+        SF.read(selname);
+        SF.removeObjects(MDL_ENABLED, -1);
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            std::string image_name = SF.NextImg();
-            if (image_name=="") break;
-            if (verb)
+            SF.getValue(MDL_IMAGE,image_name);
+        	if (verb)
                 std::cout << "generating points for image " << image_name << "......" << std::endl;
-            Image<double> image;
+
             image.read(image_name, true, -1, apply_geo);     // reads image
 
             // Extract the data
@@ -151,7 +154,7 @@ int main(int argc, char **argv)
 
             labels.push_back(image_name);
             dataPoints.push_back(imagePoints);
-        } // while
+        } // close loop over metadata objects
 
         std::cout << std::endl << "Saving points......" << std::endl;
         fp = fopen(fname, "w");

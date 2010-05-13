@@ -42,7 +42,7 @@ void Usage(char **argv);
 
 /* Main function -============================================================= */
 
-main(int argc, char** argv)
+int main(int argc, char** argv)
 {
 
 

@@ -26,7 +26,7 @@
 
 #include <data/args.h>
 #include <data/metadata.h>
-#include <data/volume.h>
+#include <data/image.h>
 #include <data/mask.h>
 #include <cstdio>
 
@@ -37,33 +37,30 @@ int main(int argc, char **argv)
     FileName        fn_input, fn_stats;
     MetaData        SF;
     MetaData        DF_stats;
-    ImageXmipp      image;
-    VolumeXmippT<double> volume;
-    VolumeXmippT<int>    volume_int;
+    Image<double>  image;
 
-    headerXmipp     header;
     Mask_Params     mask_prm(INT_MASK);
     int             short_format;     // True if a short line is to be shown
     int             save_mask;        // True if the masks must be saved
     int             repair;           // True if headers are initialized
     bool            show_angles;      // True if angles are to be shown in stats
     bool            apply_geo;        // True if the header must be taken into account
-    Matrix2D<int>   mask2D;
-    Matrix3D<int>   mask3D;
-    int             volume_type;
+    MultidimArray<int>   mask;
+
     // Read arguments --------------------------------------------------------
     try
     {
         fn_input = getParameter(argc, argv, "-i");
-        if (Is_VolumeXmipp(fn_input) || Is_ImageXmipp(fn_input))
+        if (fn_input.isMetaData())
+        {
+            SF.read(fn_input);
+        }
+        else
         {
             SF.addObject();
             SF.setValue( MDL_IMAGE, fn_input);
             SF.setValue( MDL_ENABLED, 1);
-            //SF.insert(fn_input, SelLine::ACTIVE);
         }
-        else
-            SF.read(fn_input);
 
         mask_prm.read(argc, argv);
         fn_stats     = getParameter(argc, argv, "-o", "");
@@ -87,10 +84,6 @@ int main(int argc, char **argv)
         int max_length = SF.MaxStringLength(MDL_IMAGE);
 
         // Process each file -----------------------------------------------------
-#define V VOLMATRIX(volume)
-#define VI VOLMATRIX(volume_int)
-#define I IMGMATRIX(image)
-
         double min_val, max_val, avg, stddev;
         int min_val_int, max_val_int;
         double mean_min_val = 0, mean_max_val = 0, mean_avg = 0, mean_stddev = 0;
@@ -114,161 +107,63 @@ int main(int argc, char **argv)
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             SF.getValue(MDL_IMAGE, file_name);
-            if (file_name=="")
-                break;
+            image.read(file_name);
+            image().setXmippOrigin();
 
-            // For volumes ........................................................
-            if ((volume_type = Is_VolumeXmipp(file_name)))
+            // Generate mask if necessary
+            mask_prm.generate_mask(image());
+            mask = mask_prm.get_binary_mask();
+
+            computeStats_within_binary_mask(mask, image(), min_val, max_val,
+                                            avg, stddev);
+            // Show information
+            std::cout << stringToString(file_name, max_length + 1);
+            if (ZSIZE(image()) > 1)
+                std::cout << integerToString(ZSIZE(image()), 4, ' ') << 'x'
+                << integerToString(YSIZE(image()), 4, ' ') << 'x'
+                << integerToString(XSIZE(image()), 4, ' ') << ' ';
+            else
+                std::cout << integerToString(YSIZE(image()), 4, ' ') << 'x'
+                << integerToString(XSIZE(image()), 4, ' ') << ' ';
+
+            if (!short_format)
             {
-                // Read file
-                if (volume_type == headerXmipp::VOL_XMIPP)
+                std::cout << "min= "    << floatToString(min_val, 10) << ' '
+                << "max= "    << floatToString(max_val, 10) << ' '
+                << "avg= "    << floatToString(avg    , 10) << ' '
+                << "stddev= " << floatToString(stddev , 10) << ' ';
+                if (show_angles)
                 {
-                    volume.read(file_name);
-                    volume().setXmippOrigin();
+                    std::cout << "rot= "    << floatToString(image.rot() , 10) << ' '
+                    << "tilt= "   << floatToString(image.tilt(), 10) << ' '
+                    << "psi= "    << floatToString(image.psi() , 10) << ' ';
                 }
-                else if (volume_type == headerXmipp::VOL_INT)
-                {
-                    volume_int.read(file_name);
-                    volume_int().setXmippOrigin();
-                }
-
-                // Generate mask if necessary
-                mask_prm.generate_3Dmask(V);
-                const Matrix3D<int> &mask3D = mask_prm.get_binary_mask3D();
-
-                if (volume_type == headerXmipp::VOL_XMIPP)
-                    computeStats_within_binary_mask(mask3D, V, min_val, max_val,
-                                                    avg, stddev);
-                else if (volume_type == headerXmipp::VOL_INT)
-                    computeStats_within_binary_mask(mask3D, VI, min_val_int,
-                                                    max_val_int, avg, stddev);
-
-                // Show information
-                std::cout << stringToString(file_name, max_length + 1);
-                std::cout << integerToString(ZSIZE(V), 4, ' ') << 'x'
-                << integerToString(YSIZE(V), 4, ' ') << 'x'
-                << integerToString(XSIZE(V), 4, ' ') << ' ';
-                if (!short_format)
-                    std::cout << "min= "    << floatToString(min_val, 10) << ' '
-                    << "max= "    << floatToString(max_val, 10) << ' '
-                    << "avg= "    << floatToString(avg    , 10) << ' '
-                    << "stddev= " << floatToString(stddev , 10) << ' ';
-                else
-                    std::cout << floatToString(min_val, 10) << ' '
-                    << floatToString(max_val, 10) << ' '
-                    << floatToString(avg    , 10) << ' '
-                    << floatToString(stddev , 10) << ' ';
-                //Matrix1D<double> v(4);
-                //v(0) = min_val;
-                //v(1) = max_val;
-                //v(2) = avg;
-                //v(3) = stddev;
-                DF_stats.addObject();
-                DF_stats.setValue(MDL_MIN,min_val);
-                DF_stats.setValue(MDL_MAX,max_val);
-                DF_stats.setValue(MDL_AVG,avg);
-                DF_stats.setValue(MDL_STDDEV,stddev);
-
-                // Total statistics
-                N++;
-                mean_min_val += min_val;
-                mean_max_val += max_val;
-                mean_avg     += avg;
-                mean_stddev  += stddev;
-
-                // For images .........................................................
-            }
-            else if (Is_ImageXmipp(file_name))
-            {
-                // Read the image applying the header
-                image.read(file_name, false, false, apply_geo);
-                image().setXmippOrigin();
-
-                // Generate mask if necessary
-                mask_prm.generate_2Dmask(I);
-                const Matrix2D<int> &mask2D = mask_prm.get_binary_mask2D();
-
-                // Compute statistics
-                computeStats_within_binary_mask(mask2D, I, min_val, max_val,
-                                                avg, stddev);
-
-                // Show information
-                std::cout << stringToString(file_name, max_length + 1);
-                std::cout << "    "; // Stands for the ZSIZE in volumes
-                std::cout << integerToString(YSIZE(I), 4, ' ') << 'x'
-                << integerToString(XSIZE(I), 4, ' ') << ' ';
-                if (!short_format)
-                {
-                    std::cout << "min= "    << floatToString(min_val, 10) << ' '
-                    << "max= "    << floatToString(max_val, 10) << ' '
-                    << "avg= "    << floatToString(avg    , 10) << ' '
-                    << "stddev= " << floatToString(stddev , 10) << ' ';
-                    if (show_angles)
-                    {
-                        std::cout << "rot= "    << floatToString(image.rot() , 10) << ' '
-                        << "tilt= "   << floatToString(image.tilt(), 10) << ' '
-                        << "psi= "    << floatToString(image.psi() , 10) << ' ';
-                        if (image.Is_flag_set() == 1.0f || image.Is_flag_set() == 2.0f)
-                            std::cout << "\nrot1= "  << floatToString(image.rot1() , 10) << ' '
-                            << "tilt1= "   << floatToString(image.tilt1(), 10) << ' '
-                            << "psi1= "    << floatToString(image.psi1() , 10) << ' ';
-                        if (image.Is_flag_set() == 2.0f)
-                            std::cout << "\nrot2= "    << floatToString(image.rot2() , 10) << ' '
-                            << "tilt2= "   << floatToString(image.tilt2(), 10) << ' '
-                            << "psi2= "    << floatToString(image.psi2() , 10) << ' ';
-                    }
-
-                }
-                else
-                {
-                    std::cout << floatToString(min_val, 10) << ' '
-                    << floatToString(max_val, 10) << ' '
-                    << floatToString(avg    , 10) << ' '
-                    << floatToString(stddev , 10) << ' ';
-                    if (show_angles)
-                    {
-                        std::cout << floatToString(image.rot() , 10) << ' '
-                        << floatToString(image.tilt(), 10) << ' '
-                        << floatToString(image.psi() , 10) << ' ';
-                        if (image.Is_flag_set() == 1.0f || image.Is_flag_set() == 2.0f)
-                            std::cout << floatToString(image.rot1() , 10) << ' '
-                            << floatToString(image.tilt1(), 10) << ' '
-                            << floatToString(image.psi1() , 10) << ' ';
-                        if (image.Is_flag_set() == 2.0f)
-                            std::cout << floatToString(image.rot2() , 10) << ' '
-                            << floatToString(image.tilt2(), 10) << ' '
-                            << floatToString(image.psi2() , 10) << ' ';
-                    }
-                }
-
-                //Matrix1D<double> v(4);
-                //v(0) = min_val;
-                //v(1) = max_val;
-                //v(2) = avg;
-                //v(3) = stddev;
-                //DF_stats.append_data_line(v);
-                DF_stats.addObject();
-                DF_stats.setValue(MDL_MIN,min_val);
-                DF_stats.setValue(MDL_MAX,max_val);
-                DF_stats.setValue(MDL_AVG,avg);
-                DF_stats.setValue(MDL_STDDEV,stddev);
-
-                // Total statistics
-                N++;
-                mean_min_val += min_val;
-                mean_max_val += max_val;
-                mean_avg     += avg;
-                mean_stddev  += stddev;
-
-                // Is not an Spider file ..............................................
             }
             else
-                std::cout << file_name << " is not a Spider image nor a volume... ";
+            {
+                std::cout << floatToString(min_val, 10) << ' '
+                << floatToString(max_val, 10) << ' '
+                << floatToString(avg    , 10) << ' '
+                << floatToString(stddev , 10) << ' ';
+            }
+
+            DF_stats.addObject();
+            DF_stats.setValue(MDL_MIN,min_val);
+            DF_stats.setValue(MDL_MAX,max_val);
+            DF_stats.setValue(MDL_AVG,avg);
+            DF_stats.setValue(MDL_STDDEV,stddev);
+
+            // Total statistics
+            N++;
+            mean_min_val += min_val;
+            mean_max_val += max_val;
+            mean_avg     += avg;
+            mean_stddev  += stddev;
 
             // Finish information .................................................
             std::cout << std::endl;
 
-        }
+        } // while
 
         // Show total statistics ------------------------------------------------
         std::cout << "==================================================\n";
@@ -297,8 +192,7 @@ int main(int argc, char **argv)
         // Save masks -----------------------------------------------------------
         if (save_mask)
         {
-            mask_prm.write_2Dmask("mask2D");
-            mask_prm.write_3Dmask("mask3D");
+            mask_prm.write_mask("mask");
         }
 
         // Save statistics ------------------------------------------------------
@@ -328,5 +222,4 @@ void Usage()
     << "   [-save_mask]      : save 2D and 3D masks (as \"mask2D\" or \"mask3D\") \n";
 
 }
-
 

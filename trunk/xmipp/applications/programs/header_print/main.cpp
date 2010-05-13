@@ -25,7 +25,6 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/volume.h>
 #include <cstdio>
 #include <data/image.h>
 #include <data/metadata.h>
@@ -34,23 +33,22 @@ void Usage();
 int main(int argc, char **argv)
 {
     FileName        fn_input;
-    headerXmipp     header;
-    MetaData SF;
+    MetaData        SF;
+    Image<double>  image;
 
     // Read arguments --------------------------------------------------------
     try
     {
         fn_input = getParameter(argc, argv, "-i");
-        if (Is_VolumeXmipp(fn_input) || Is_ImageXmipp(fn_input) ||
-            Is_FourierVolumeXmipp(fn_input) || Is_FourierImageXmipp(fn_input))
+        if (fn_input.isMetaData())
+        {
+        	SF.read(fn_input);
+        }
+        else
         {
        	    SF.addObject();
             SF.setValue( MDL_IMAGE, fn_input);
             SF.setValue( MDL_ENABLED, 1);
-        }
-        else
-        {
-            SF.read( fn_input ,NULL);
         }
     }
     catch (Xmipp_error XE)
@@ -62,6 +60,7 @@ int main(int argc, char **argv)
 
     try
     {
+
         // Process each file -----------------------------------------------------
 		long int ret=SF.firstObject();
 		if(ret==MetaData::NO_OBJECTS_STORED)
@@ -76,47 +75,10 @@ int main(int argc, char **argv)
 
             if (file_name=="") break;
 
-            // For volumes ........................................................
-            if (Is_VolumeXmipp(file_name))
-            {
-                header.read(file_name);
-                std::cout << "FileName     : " << file_name << std::endl;
-                std::cout << header;
-
-                // For images .........................................................
-            }
-            else if (Is_ImageXmipp(file_name))
-            {
-
-                header.read(file_name);
-                std::cout << "FileName     : " << file_name << std::endl;
-                std::cout << header;
-                std::cout << std::endl;
-
-                // For fourier volumes .................................................
-            }
-            else if (Is_FourierVolumeXmipp(file_name))
-            {
-                header.read(file_name);
-                std::cout << "FileName     : " << file_name << std::endl;
-                std::cout << header;
-
-                // For fourier images .................................................
-            }
-            else if (Is_FourierImageXmipp(file_name))
-            {
-                header.read(file_name);
-                std::cout << "FileName     : " << file_name << std::endl;
-                std::cout << header;
-
-                // Is not an Spider file ..............................................
-            }
-            else
-                std::cout << file_name << " is not a Spider File";
-
-            // Finish information .................................................
-            std::cout << std::endl;
-
+            std::cout << "FileName     : " << file_name << std::endl;
+			image.read(file_name, false, -1, false);
+			std::cout << image;
+			std::cout << std::endl;
         } // while
         while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
