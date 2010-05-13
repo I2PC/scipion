@@ -1347,7 +1347,7 @@ MetaDataContainer * MetaData::getObject(long int objectID) const
     if (isEmpty())
     {
         // The objects map is empty, error
-        REPORT_ERROR( -1, "Requested objecID not found (no objects stored). Exiting... ");
+        REPORT_ERROR( -1, "Requested objectID not found (no objects stored). Exiting... ");
     }
 
     MetaDataContainer * aux;
@@ -1355,12 +1355,12 @@ MetaDataContainer * MetaData::getObject(long int objectID) const
     if (objectID == -1)
         aux = objectsIterator->second;
     else
-        aux = objectsIterator->second; //objects[objectID];
+        aux = objects[objectID];
 
     if (aux == NULL)
     {
         // This objectID does not exist, finish execution
-        REPORT_ERROR( -1, "Requested objecID not found. Exiting... ");
+        REPORT_ERROR( -1, "Requested objectID not found. Exiting... ");
     }
 
     return aux;
