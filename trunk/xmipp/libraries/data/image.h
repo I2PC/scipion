@@ -134,7 +134,7 @@ public:
     MultidimArray<T>    data;       // The image data array
     // FIXME: why cant this one be private as well?
     MetaData MD;
-    MetaDataContainer MDc;
+    MetaData MDMainHeader;
 private:
     FileName            filename;   // File name
     int           dataflag; // Flag to force reading of the data

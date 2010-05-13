@@ -109,8 +109,13 @@ struct SPIDERhead
 **************************************************************************/
 int  readSPIDER(int img_select)
 {
+//#define DEBUG
+#ifdef DEBUG
+    printf("DEBUG readSPIDER: Reading Spider file\n");
+#endif
     //#define DEBUG
 #undef DEBUG
+
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
         REPORT_ERROR(1,"rwSPIDER: cannot read image.");
@@ -153,13 +158,15 @@ int  readSPIDER(int img_select)
     }
 
     offset = (int) header->labbyt;
-    MDc.addValue(MDL_MIN,(double)header->fmin);
-    MDc.addValue(MDL_MAX,(double)header->fmax);
-    MDc.addValue(MDL_AVG,(double)header->av);
-    MDc.addValue(MDL_STDDEV,(double)header->sig);
-    MDc.addValue(MDL_SAMPLINGRATEX,(double)header->scale);
-    MDc.addValue(MDL_SAMPLINGRATEY,(double)header->scale);
-    MDc.addValue(MDL_SAMPLINGRATEZ,(double)header->scale);
+    MDMainHeader.clear();
+    MDMainHeader.addObject();
+    MDMainHeader.setValue(MDL_MIN,(double)header->fmin);
+    MDMainHeader.setValue(MDL_MAX,(double)header->fmax);
+    MDMainHeader.setValue(MDL_AVG,(double)header->av);
+    MDMainHeader.setValue(MDL_STDDEV,(double)header->sig);
+    MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)header->scale);
+    MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)header->scale);
+    MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->scale);
 
     size_t header_size = offset;
     size_t image_size = header_size + ZYXSIZE(data)*sizeof(float);
@@ -189,7 +196,7 @@ int  readSPIDER(int img_select)
         Ndim = 1;
         i = img_select;
     }
-
+    MD.clear();
     MD.addObject();
     MD.setValue(MDL_ORIGINX,  (double)header->xoff);
     MD.setValue(MDL_ORIGINY,  (double)header->yoff);
@@ -260,10 +267,12 @@ int  readSPIDER(int img_select)
 **************************************************************************/
 int  writeSPIDER()
 {
-    //#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     printf("DEBUG writeSPIDER: Writing Spider file\n");
+    printf("DEBUG writeSPIDER: File %s\n", filename.c_str());
 #endif
+#undef DEBUG
 
     float  lenbyt = sizeof(float)*XSIZE(data);  // Record length (in bytes)
     float  labrec = floor(SPIDERSIZE/lenbyt); // # header records
@@ -333,23 +342,17 @@ int  writeSPIDER()
         }
     **/
 
-    if (MDc.isValidLabel(MDL_MIN))
+    if (MDMainHeader.firstObject() != MetaData::NO_OBJECTS_STORED)
     {
-        MDc.getValue(MDL_MIN,aux); header->fmin = (float)aux;
+        if(MDMainHeader.getValue(MDL_MIN,   aux))
+            header->fmin = (float)aux;
+        if(MDMainHeader.getValue(MDL_MAX,   aux))
+            header->fmax = (float)aux;
+        if(MDMainHeader.getValue(MDL_AVG,   aux))
+            header->av   = (float)aux;
+        if(MDMainHeader.getValue(MDL_STDDEV,aux))
+            header->sig  = (float)aux;
     }
-    if (MDc.isValidLabel(MDL_MAX))
-    {
-        MDc.getValue(MDL_MAX,aux); header->fmax = (float)aux;
-    }
-    if (MDc.isValidLabel(MDL_AVG))
-    {
-        MDc.getValue(MDL_AVG,aux); header->av = (float)aux;
-    }
-    if (MDc.isValidLabel(MDL_STDDEV))
-    {
-        MDc.getValue(MDL_STDDEV,aux); header->sig = (float)aux;
-    }
-
     // For multi-image files
     if (NSIZE(data) > 1 )
     {
@@ -364,24 +367,25 @@ int  writeSPIDER()
         header->maxim = 1;
     }
 
-    MD.firstObject();
-    if(MD.getValue(MDL_ORIGINX,  aux))
-        header->xoff  =(float)aux;
-    if(MD.getValue(MDL_ORIGINY,  aux))
-        header->yoff  =(float)aux;
-    if(MD.getValue(MDL_ORIGINZ,  aux))
-        header->zoff  =(float)aux;
-    if(MD.getValue(MDL_ANGLEROT, aux))
-        header->phi   =(float)aux;
-    if(MD.getValue(MDL_ANGLETILT,aux))
-        header->theta =(float)aux;
-    if(MD.getValue(MDL_ANGLEPSI, aux))
-        header->gamma =(float)aux;
-    if(MD.getValue(MDL_WEIGHT,   aux))
-        header->weight=(float)aux;
-    if(MD.getValue(MDL_FLIP,    baux))
-        header->flip  =(float)baux;
-
+    if (MD.firstObject() != MetaData::NO_OBJECTS_STORED)
+    {
+        if(MD.getValue(MDL_ORIGINX,  aux))
+            header->xoff  =(float)aux;
+        if(MD.getValue(MDL_ORIGINY,  aux))
+            header->yoff  =(float)aux;
+        if(MD.getValue(MDL_ORIGINZ,  aux))
+            header->zoff  =(float)aux;
+        if(MD.getValue(MDL_ANGLEROT, aux))
+            header->phi   =(float)aux;
+        if(MD.getValue(MDL_ANGLETILT,aux))
+            header->theta =(float)aux;
+        if(MD.getValue(MDL_ANGLEPSI, aux))
+            header->gamma =(float)aux;
+        if(MD.getValue(MDL_WEIGHT,   aux))
+            header->weight=(float)aux;
+        if(MD.getValue(MDL_FLIP,    baux))
+            header->flip  =(float)baux;
+    }
     // Set time and date
     time_t timer;
     time ( &timer );
@@ -431,25 +435,27 @@ int  writeSPIDER()
         for ( size_t i=0; i<NSIZE(data); i++ )
         {
             //header->imgnum = i + 1;
-            MD.nextObject();
+            long int next_result = MD.nextObject();
+            if (next_result != MetaData::NO_OBJECTS_STORED && next_result != MetaData::NO_MORE_OBJECTS)
+            {
+                if(MD.getValue(MDL_ORIGINX,  aux))
+                    header->xoff  =(float)aux;
+                if(MD.getValue(MDL_ORIGINY,  aux))
+                    header->yoff  =(float)aux;
+                if(MD.getValue(MDL_ORIGINZ,  aux))
+                    header->zoff  =(float)aux;
+                if(MD.getValue(MDL_ANGLEROT, aux))
+                    header->phi   =(float)aux;
+                if(MD.getValue(MDL_ANGLETILT,aux))
+                    header->theta =(float)aux;
+                if(MD.getValue(MDL_ANGLEPSI, aux))
+                    header->gamma =(float)aux;
+                if(MD.getValue(MDL_WEIGHT,   aux))
+                    header->weight=(float)aux;
+                if(MD.getValue(MDL_FLIP,    baux))
+                    header->flip  =(float)baux;
 
-            if(MD.getValue(MDL_ORIGINX,  aux))
-                header->xoff  =(float)aux;
-            if(MD.getValue(MDL_ORIGINY,  aux))
-                header->yoff  =(float)aux;
-            if(MD.getValue(MDL_ORIGINZ,  aux))
-                header->zoff  =(float)aux;
-            if(MD.getValue(MDL_ANGLEROT, aux))
-                header->phi   =(float)aux;
-            if(MD.getValue(MDL_ANGLETILT,aux))
-                header->theta =(float)aux;
-            if(MD.getValue(MDL_ANGLEPSI, aux))
-                header->gamma =(float)aux;
-            if(MD.getValue(MDL_WEIGHT,   aux))
-                header->weight=(float)aux;
-            if(MD.getValue(MDL_FLIP,    baux))
-                header->flip  =(float)baux;
-
+            }
 
             fwrite( header, offset, 1, fimg );
             if (isComplexT())

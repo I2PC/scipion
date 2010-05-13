@@ -148,16 +148,18 @@ int readMRC()
             data.setXdim(XSIZE(data) + 1);     // Quick fix for odd x-size maps
     }
 
-    MDc.addValue(MDL_MIN,(double)header->amin);
-    MDc.addValue(MDL_MAX,(double)header->amax);
-    MDc.addValue(MDL_AVG,(double)header->amean);
-    MDc.addValue(MDL_STDDEV,(double)header->arms);
+    MDMainHeader.clear();
+    MDMainHeader.addObject();
+    MDMainHeader.setValue(MDL_MIN,(double)header->amin);
+    MDMainHeader.setValue(MDL_MAX,(double)header->amax);
+    MDMainHeader.setValue(MDL_AVG,(double)header->amean);
+    MDMainHeader.setValue(MDL_STDDEV,(double)header->arms);
     if ( header->mx )//ux
-        MDc.addValue(MDL_SAMPLINGRATEX,(double)header->a/header->mx);
+        MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)header->a/header->mx);
     if ( header->my )//yx
-        MDc.addValue(MDL_SAMPLINGRATEY,(double)header->b/header->my);
+        MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)header->b/header->my);
     if ( header->mz )//zx
-        MDc.addValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
+        MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
     //min = header->amin;
     //max = header->amax;
     //avg = header->amean;
@@ -184,20 +186,25 @@ int readMRC()
     */
     // Allocating the single sub-image and setting its origin
     //image.resize(1);
+    MD.clear();
     MD.addObject();
     double aux;
-    MDc.getValue(MDL_SAMPLINGRATEX,aux);
-    aux = -header->xOrigin/aux;
-    MD.setValue(MDL_ORIGINX, aux);
+    if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
+    {
+        aux = -header->xOrigin/aux;
+        MD.setValue(MDL_ORIGINX, aux);
+    }
+    if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
+    {
+        aux = -header->yOrigin/aux;
+        MD.setValue(MDL_ORIGINY, aux);
+    }
 
-    MDc.getValue(MDL_SAMPLINGRATEY,aux);
-    aux = -header->yOrigin/aux;
-    MD.setValue(MDL_ORIGINY, aux);
-
-    MDc.getValue(MDL_SAMPLINGRATEZ,aux);
-    aux = -header->zOrigin/aux;
-    MD.setValue(MDL_ORIGINZ, aux);
-
+    if(MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux))
+    {
+        aux = -header->zOrigin/aux;
+        MD.setValue(MDL_ORIGINZ, aux);
+    }
     MD.setValue(MDL_ANGLEROT, zeroD);
     MD.setValue(MDL_ANGLETILT,zeroD);
     MD.setValue(MDL_ANGLEPSI, zeroD);
@@ -233,8 +240,8 @@ int writeMRC()
 
     // Convert T to datatype
     if ( typeid(T) == typeid(double) ||
-            typeid(T) == typeid(float) ||
-            typeid(T) == typeid(int) )
+         typeid(T) == typeid(float) ||
+         typeid(T) == typeid(int) )
         header->mode = 2;
     else if ( typeid(T) == typeid(unsigned char) ||
               typeid(T) == typeid(signed char) )
@@ -253,67 +260,35 @@ int writeMRC()
     header->mapr = 2;
     header->maps = 3;
     double aux,aux2;
-    MDc.getValue(MDL_MIN, aux);
-    header->amin  = (float)aux;
-    MDc.getValue(MDL_MAX, aux);
-    header->amax  = (float)aux;
-    MDc.getValue(MDL_AVG, aux);
-    header->amean = (float)aux;
-    MDc.getValue(MDL_STDDEV, aux);
-    header->arms  = (float)aux;
 
     header->a = 0.;// ua;
     header->b = 0.;// ub;
     header->c = 0.;// uc;
-    MDc.getValue(MDL_ORIGINX, aux);
-    header->nxStart = (int)(aux-0.5);
-    if (MDc.valueExists(MDL_SAMPLINGRATEX))//header is init to zero
-    {
-        MDc.getValue(MDL_SAMPLINGRATEX, aux2);
-        header->xOrigin = (float)(aux*aux2);
-    }
-    MDc.getValue(MDL_ORIGINY, aux);
-    header->nyStart = (int)(aux-0.5);
-    if (MDc.valueExists(MDL_SAMPLINGRATEY))//header is init to zero
-    {
-        MDc.getValue(MDL_SAMPLINGRATEY, aux2);
-        header->yOrigin = (float)(aux*aux2);
-    }
-    MDc.getValue(MDL_ORIGINZ, aux);
-    header->nzStart = (int)(aux-0.5);
-    if (MDc.valueExists(MDL_SAMPLINGRATEZ))//header is init to zero
-    {
-        MDc.getValue(MDL_SAMPLINGRATEZ, aux2);
-        header->zOrigin = (float)(aux*aux2);
-    }
-    //header->nxStart = (int) (-image->shiftX - 0.5);
-    //header->nyStart = (int) (-image->shiftY - 0.5);
-    //header->nzStart = (int) (-image->shiftZ - 0.5);
-    //header->xOrigin = -image->shiftX*ux;
-    //header->yOrigin = -image->shiftY*uy;
-    //header->zOrigin = -image->shiftZ*uz;
-    /* NOT NEEDED UNLESS HE ADD UNIT CELL INFORMATION
-        // This is a band-aid to overcome the limitations of the image format
-        if ( fabs(ua - ux*header->mx) > 0.001 ||
-             fabs(ub - uy*header->my) > 0.001 ||
-             fabs(uc - uz*header->mz) > 0.001 )
-        {
-            header->a = ux*header->mx;
-            header->b = uy*header->my;
-            header->c = uz*header->mz;
-            //#define DEBUG
-    #ifdef DEBUG
 
-            fprintf(stderr, "Warning: Resetting the unit cell to: %g %g %g A\n",
-                    header->a, header->b, header->c );
-    #endif
+    if (MDMainHeader.firstObject() != MetaData::NO_OBJECTS_STORED)
+    {
+        if(MDMainHeader.getValue(MDL_MIN, aux))
+            header->amin  = (float)aux;
+        if(MDMainHeader.getValue(MDL_MAX, aux))
+            header->amax  = (float)aux;
+        if(MDMainHeader.getValue(MDL_AVG, aux))
+            header->amean = (float)aux;
+        if(MDMainHeader.getValue(MDL_STDDEV, aux))
+            header->arms  = (float)aux;
+        if(MDMainHeader.getValue(MDL_ORIGINX, aux))
+            header->nxStart = (int)(aux-0.5);
+        if (MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux2))//header is init to zero
+            header->xOrigin = (float)(aux*aux2);
+        if (MDMainHeader.getValue(MDL_ORIGINY, aux))
+            header->nyStart = (int)(aux-0.5);
+        if (MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux2))//header is init to zero
+            header->yOrigin = (float)(aux*aux2);
+        if (MDMainHeader.getValue(MDL_ORIGINZ, aux))
+            header->nzStart = (int)(aux-0.5);
+        if (MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux2))//header is init to zero
+            header->zOrigin = (float)(aux*aux2);
+    }
 
-        }
-    */
-    //header->alpha = alf*180/M_PI;
-    //header->beta =  bet*180/M_PI;
-    //header->gamma = gam*180/M_PI;
-    //header->ispg =  spacegroup;
     header->nsymbt = 0;
     header->nlabl = 10; // or zero?
     //strncpy(header->labels, p->label.c_str(), 799);
@@ -337,8 +312,8 @@ int writeMRC()
 
     // Write 3D map
     if ( typeid(T) == typeid(double) ||
-            typeid(T) == typeid(float) ||
-            typeid(T) == typeid(int) )
+         typeid(T) == typeid(float) ||
+         typeid(T) == typeid(int) )
     {
         writePageAsDatatype(fimg, Float, datasize_n);
     }
