@@ -310,7 +310,7 @@ public:
 
             if (aux->valueExists(name))
             {
-                double value;
+                T value;
                 aux->getValue(name, value);
 
                 if (value >= minValue && value <= maxValue)
@@ -359,7 +359,7 @@ public:
 
         if (!objects.empty())
         {
-        	for (It = objects.begin(); It != objects.end(); It++)
+            for (It = objects.begin(); It != objects.end(); It++)
 
             {
                 aux = It->second;
