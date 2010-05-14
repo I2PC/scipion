@@ -148,6 +148,32 @@ void MetaData::union_(MetaData &MD, MDLabel thisLabel)
     this->objectsIterator = this->objects.begin();
 }
 
+void MetaData::unionAll(MetaData &MD)
+{
+    if (!isColumnFormat)
+    {
+        REPORT_ERROR( -1, "Row formatted MetaData can not be added" );
+    }
+
+    if (this->size() == 0)
+    {
+        *this = MD;
+        return;
+    }
+    else if (MD.size()==0)
+        return;
+
+    std::map<long int, MetaDataContainer *>::iterator itMinuend;
+    for (itMinuend = MD.objects.begin(); itMinuend
+            != MD.objects.end(); itMinuend++)
+    {
+        long int idx = this->addObject();
+        this->objects[idx]
+        = new MetaDataContainer(*(itMinuend->second));
+    }
+    this->objectsIterator = this->objects.begin();
+}
+
 void MetaData::merge(const FileName &fn)
 {
 	MetaData aux;
@@ -545,14 +571,18 @@ void MetaData::setColumnFormat(bool column)
     isColumnFormat = column;
 }
 
-void MetaData::toDataBase(const FileName & DBname,
+void MetaData::toDataBase(CppSQLite3DB &db,
+                          const FileName & DBname,
                           const std::string & tableName,
-                          std::vector<MDLabel> * labelsVector)
+                          const std::vector<MDLabel> * labelsVector,
+                          bool OpenDb,
+                          bool CloseDb
+                         )
 {
     try
     {
-        CppSQLite3DB db;
-        db.open(DBname, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+        if(OpenDb)
+            db.open(DBname, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
 
         int labelsCounter = 0;
         std::string sqlCommandCreate = "create table ";
@@ -677,17 +707,21 @@ void MetaData::toDataBase(const FileName & DBname,
             stmt.reset();
         }
         db.execDML("commit transaction;");
-        db.close();
+        if(CloseDb)
+            db.close();
     }
     catch (CppSQLite3Exception& e)
     {
         REPORT_ERROR( e.errorCode(), e.errorMessage());
     }
 }
-void MetaData::fromDataBase(const FileName & DBname,
+void MetaData::fromDataBase(CppSQLite3DB &db,
+                            const FileName & DBname,
                             const std::string & tableName,
-                            MDLabel sortLabel,
-                            std::vector<MDLabel> * labelsVector
+                            const MDLabel sortLabel,
+                            std::vector<MDLabel> * labelsVector,
+                            bool OpenDb,
+                            bool CloseDb
                            )
 {
     //check that database and table exits
@@ -699,8 +733,8 @@ void MetaData::fromDataBase(const FileName & DBname,
         std::vector<MDLabel>::iterator strIt;
         if (!exists(DBname))
             REPORT_ERROR( 1, (std::string)"database "+ DBname + " does not exists");
-        CppSQLite3DB db;
-        db.open(DBname, SQLITE_OPEN_READONLY);
+        if(OpenDb)
+            db.open(DBname, SQLITE_OPEN_READONLY);
         if (!db.tableExists(tableName))
             REPORT_ERROR( 1, (std::string)"table "+ tableName + " does not exists");
         clear();
@@ -808,7 +842,8 @@ void MetaData::fromDataBase(const FileName & DBname,
         }
 
         //        CppSQLite3Table t = db.getTable(sqlCommand);
-        db.close();
+        if(CloseDb)
+            db.close();
     }
     catch (CppSQLite3Exception& e)
     {
@@ -1568,18 +1603,131 @@ void MetaData::split_in_two(MetaData &SF1, MetaData &SF2,MDLabel label)
 
 void MetaData::sort(MetaData & MDin, MDLabel sortlabel)
 {
+    CppSQLite3DB db;
     if(sortlabel==MDL_UNDEFINED)
         return;
-    char tmpFileName[40];
-    tmpnam(tmpFileName);
     std::string tempTable;
     tempTable="tempTable";
-
-    MDin.toDataBase( tmpFileName,tempTable);
+    //"" means temporary in memory database
+    MDin.toDataBase( db,"",tempTable,NULL,true,false);
     this->clear();
-    this->fromDataBase( tmpFileName, tempTable,sortlabel);
-    if(remove ( tmpFileName ) == -1)
-        std::cerr << "cannot remove file " << tmpFileName <<std::endl;
+    this->fromDataBase( db,"", tempTable,sortlabel,NULL,false,true);
+    db.close();
+    //    if(remove ( tmpFileName ) == -1)
+    //        std::cerr << "cannot remove file " << tmpFileName <<std::endl;
+}
+
+void MetaData::aggregate(MetaData MDIn,
+                         MDLabel aggregateLabel,
+                         MDLabel entryLabel,
+                         MDLabel operationLabel)
+{
+    CppSQLite3DB db;
+    if(aggregateLabel ==MDL_UNDEFINED ||
+            operationLabel ==MDL_UNDEFINED ||
+            entryLabel     ==MDL_UNDEFINED)
+        return;
+    //check is valid operation
+    if(operationLabel  != MDL_AVG &&
+            operationLabel != MDL_COUNT&&
+            operationLabel != MDL_MAX &&
+            operationLabel != MDL_MIN &&
+            operationLabel != MDL_SUM)
+        REPORT_ERROR(1,"invalid operation:" +MDL::label2Str(operationLabel) +" in aggregate");
+    std::string tempTable;
+    tempTable="tempTable";
+    this->clear();
+    try
+    {
+        std::vector<MDLabel> _labelsVector;
+        std::string sqlCommand;
+        std::vector<MDLabel>::iterator strIt;
+        //convert to database in memory
+        MDIn.toDataBase(db,"",tempTable,NULL,true,false);
+        _labelsVector.push_back(aggregateLabel);
+        _labelsVector.push_back(operationLabel);
+
+        //Order by...
+
+        sqlCommand  = (std::string)"select ";
+        sqlCommand += MDL::label2Str(aggregateLabel);
+        sqlCommand += (std::string)", ";
+        if(operationLabel==MDL_AVG)
+            sqlCommand += "avg(";
+        else if(operationLabel==MDL_COUNT)
+            sqlCommand += "count(";
+        else if(operationLabel==MDL_MAX)
+            sqlCommand += "max(";
+        else if(operationLabel==MDL_MIN)
+            sqlCommand += "min(";
+        else if(operationLabel==MDL_SUM)
+            sqlCommand += "total(";
+        else
+            REPORT_ERROR(1,"invalid operation selected in MetaData::aggregate");
+
+        sqlCommand += MDL::label2Str(entryLabel);
+        sqlCommand += (std::string)") ";
+        sqlCommand += " as " + MDL::label2Str(operationLabel);
+        sqlCommand += (std::string) " from " + tempTable;
+        sqlCommand += " group by ";
+        sqlCommand += MDL::label2Str(aggregateLabel) + " ";
+        sqlCommand += " order by " ;
+        sqlCommand += MDL::label2Str(aggregateLabel) +";";
+
+        //std::cerr << "sqlCommand: " << sqlCommand <<std::endl;
+
+        CppSQLite3Query q = db.execQuery(sqlCommand);
+        int labelsCounter;
+
+        while (!q.eof())
+        {
+            labelsCounter = -1;
+            addObject();
+            for (strIt = (_labelsVector).begin() ; strIt
+                    != (_labelsVector).end(); strIt++)
+            {
+                if (MDL::isDouble(*strIt))
+                {
+                    labelsCounter++;
+                    double value;
+                    value = q.getFloatField(labelsCounter);
+                    setValue(*strIt, value);
+                }
+                else if (MDL::isInt(*strIt))
+                {
+                    labelsCounter++;
+                    int value;
+                    value = q.getIntField(labelsCounter);
+                    setValue(*strIt, value);
+                }
+                else if (MDL::isString(*strIt))
+                {
+                    labelsCounter++;
+                    std::string value;
+                    value.assign(q.getStringField(labelsCounter));
+                    setValue(*strIt, value);
+                }
+                else if (MDL::isBool(*strIt))
+                {
+                    labelsCounter++;
+                    int value;
+                    value = q.getIntField(labelsCounter);
+                    bool value2 = (bool) value;
+                    setValue(*strIt, value2);
+                }
+                else
+                {
+                    REPORT_ERROR( 1, (std::string)"unknown type in fromDataBase routine");
+                }
+            }
+            q.nextRow();
+        }
+        db.close();
+    }
+    catch (CppSQLite3Exception& e)
+    {
+        REPORT_ERROR( e.errorCode(), e.errorMessage());
+    }
 }
 int MetaData::MaxStringLength( MDLabel thisLabel)
 {

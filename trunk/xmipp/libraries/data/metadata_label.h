@@ -53,6 +53,7 @@ enum MDLabel
     MDL_BLOCK, // Current block number (for incremental EM)
     MDL_COMMENT, // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
     MDL_COST, // Cost for the image (double)
+    MDL_COUNT, // Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
     MDL_CTFINPUTPARAMS, // Parameters file for the CTF Model (std::string)
     MDL_CTFMODEL, // Name for the CTF Model (std::string)
     MDL_DEFGROUP, // Defocus group
@@ -111,6 +112,7 @@ enum MDLabel
     MDL_SIGNALCHANGE, // Signal change for an image
     MDL_SPHERICALABERRATION, //ctf definition azimutal angle
     MDL_STDDEV, //stdandard deviation value (double)
+    MDL_SUM, // Sum of elements of a given type (double) [this is a genereic type do not use to transfer information to another program]
     MDL_SUMWEIGHT, // Sum of all weights in ML model
     MDL_SYMNO, // Symmetry number for a projection (used in ART)
     MDL_TRANSFORMATIONMTRIX, // transformation matrix(vector double)
@@ -198,88 +200,90 @@ private:
     StaticInitialization()
     {
         ///==== Add labels entries from here in the SAME ORDER as declared in ENUM ==========
-        MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", "psi");
-        MDL::addLabel(MDL_ANGLEROT, LABEL_DOUBLE, "angleRot", "rot");
-        MDL::addLabel(MDL_ANGLETILT, LABEL_DOUBLE, "angleTilt", "tilt");
         MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", "psi2");
+        MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", "psi");
         MDL::addLabel(MDL_ANGLEROT2, LABEL_DOUBLE, "angleRot2", "rot2");
+        MDL::addLabel(MDL_ANGLEROT, LABEL_DOUBLE, "angleRot", "rot");
         MDL::addLabel(MDL_ANGLETILT2, LABEL_DOUBLE, "angleTilt2", "tilt2");
+        MDL::addLabel(MDL_ANGLETILT, LABEL_DOUBLE, "angleTilt", "tilt");
+        MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
+        MDL::addLabel(MDL_AZIMUTALANGLE, LABEL_DOUBLE, "azimutalAngle");
+        MDL::addLabel(MDL_BGMEAN, LABEL_DOUBLE, "bgMean");
+        MDL::addLabel(MDL_BLOCK, LABEL_INT, "blockNumber");
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
+        MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
+        MDL::addLabel(MDL_COUNT, LABEL_INT, "count");
         MDL::addLabel(MDL_CTFINPUTPARAMS, LABEL_STRING, "CTFInputParams");
         MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel");
+        MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
+        MDL::addLabel(MDL_DEFOCUSU, LABEL_DOUBLE, "defocusU");
+        MDL::addLabel(MDL_DEFOCUSV, LABEL_DOUBLE, "defocusV");
+        MDL::addLabel(MDL_DPR, LABEL_DOUBLE, "DPR");
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", "Flip");
+        MDL::addLabel(MDL_FRC, LABEL_DOUBLE, "FRC");
+        MDL::addLabel(MDL_FRCRANDOMNOISE, LABEL_DOUBLE, "FRC_random_noise");
+        MDL::addLabel(MDL_IMAGE_CLASS_COUNT, LABEL_INT, "class_count");
+        MDL::addLabel(MDL_IMAGE_CLASS_GROUP, LABEL_STRING, "class_group");
+        MDL::addLabel(MDL_IMAGE_CLASS, LABEL_STRING, "class_representative");
         MDL::addLabel(MDL_IMAGE, LABEL_STRING, "image");
         MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "original_image");
-        MDL::addLabel(MDL_IMAGE_CLASS, LABEL_STRING, "class_representative");
-        MDL::addLabel(MDL_IMAGE_CLASS_GROUP, LABEL_STRING, "class_group");
-        MDL::addLabel(MDL_IMAGE_CLASS_COUNT, LABEL_INT, "class_count");
+        MDL::addLabel(MDL_IMGMD, LABEL_STRING, "imageMetaData");
+        MDL::addLabel(MDL_INTSCALE, LABEL_DOUBLE, "intScale");
+        MDL::addLabel(MDL_ITER, LABEL_INT, "iterationNumber");
+        MDL::addLabel(MDL_K, LABEL_DOUBLE, "K");
+        MDL::addLabel(MDL_KSTEST, LABEL_DOUBLE, "KStest");
+        MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood");
         MDL::addLabel(MDL_MASK, LABEL_STRING, "mask");
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
-        MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
+        MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
         MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph");
+        MDL::addLabel(MDL_MIN, LABEL_DOUBLE, "min");
+        MDL::addLabel(MDL_MIRRORFRAC, LABEL_DOUBLE, "mirrorFraction");
         MDL::addLabel(MDL_MISSINGREGION_NR, LABEL_INT, "missingRegionNumber");
         MDL::addLabel(MDL_MISSINGREGION_TYPE, LABEL_STRING, "missingRegionType");
+        MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
+        MDL::addLabel(MDL_OBJID, LABEL_INT, "objId");
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
         MDL::addLabel(MDL_PERIODOGRAM, LABEL_STRING, "periodogram");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", "Pmax", "sumP");
-        MDL::addLabel(MDL_REF, LABEL_INT, "ref", "Ref");
+        MDL::addLabel(MDL_Q0, LABEL_DOUBLE, "Q0");
+        MDL::addLabel(MDL_RANDOMSEED, LABEL_INT, "randomSeed");
         MDL::addLabel(MDL_REF3D, LABEL_INT, "ref3d");
-        MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale", "Scale");
-        MDL::addLabel(MDL_BGMEAN, LABEL_DOUBLE, "bgMean");
-        MDL::addLabel(MDL_INTSCALE, LABEL_DOUBLE, "intScale");
-        MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
-        MDL::addLabel(MDL_MIRRORFRAC, LABEL_DOUBLE, "mirrorFraction");
-        MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood");
-        MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
-        MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");
-        MDL::addLabel(MDL_SYMNO, LABEL_INT, "symNo");
-        MDL::addLabel(MDL_SERIE, LABEL_STRING, "serie");
-        MDL::addLabel(MDL_SHIFTX, LABEL_DOUBLE, "shiftX", "Xoff");
-        MDL::addLabel(MDL_SHIFTY, LABEL_DOUBLE, "shiftY", "Yoff");
-        MDL::addLabel(MDL_SHIFTZ, LABEL_DOUBLE, "shiftZ", "Zoff");
-        MDL::addLabel(MDL_X, LABEL_DOUBLE, "X");
-        MDL::addLabel(MDL_Y, LABEL_DOUBLE, "Y");
-        MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");
-        MDL::addLabel(MDL_XINT, LABEL_INT, "Xcoor", "<X position>");
-        MDL::addLabel(MDL_YINT, LABEL_INT, "Ycoor", "<Y position>");
-        MDL::addLabel(MDL_ZINT, LABEL_INT, "Zcoor");
-        MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight", "Weight");
-        MDL::addLabel(MDL_OBJID, LABEL_INT, "objId");
-        MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
-        MDL::addLabel(MDL_MIN, LABEL_DOUBLE, "min");
-        MDL::addLabel(MDL_STDDEV, LABEL_DOUBLE, "stddev");
-        MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
+        MDL::addLabel(MDL_REF, LABEL_INT, "ref", "Ref");
+        MDL::addLabel(MDL_REFMD, LABEL_STRING, "referenceMetaData");
         MDL::addLabel(MDL_RESOLUTIONFOURIER, LABEL_DOUBLE, "Resol. [1/Ang]");
         MDL::addLabel(MDL_RESOLUTIONREAL, LABEL_DOUBLE, "Resol. [1/Ang]");
-        MDL::addLabel(MDL_FRC, LABEL_DOUBLE, "FRC");
-        MDL::addLabel(MDL_FRCRANDOMNOISE, LABEL_DOUBLE, "FRC_random_noise");
-        MDL::addLabel(MDL_DPR, LABEL_DOUBLE, "DPR");
         MDL::addLabel(MDL_SAMPLINGRATE, LABEL_DOUBLE, "sampling_rate");
         MDL::addLabel(MDL_SAMPLINGRATEX, LABEL_DOUBLE, "sampling_rateX");
         MDL::addLabel(MDL_SAMPLINGRATEY, LABEL_DOUBLE, "sampling_rateY");
         MDL::addLabel(MDL_SAMPLINGRATEZ, LABEL_DOUBLE, "sampling_rateZ");
-        MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
-        MDL::addLabel(MDL_DEFOCUSU, LABEL_DOUBLE, "defocusU");
-        MDL::addLabel(MDL_DEFOCUSV, LABEL_DOUBLE, "defocusV");
-        MDL::addLabel(MDL_IMGMD, LABEL_STRING, "imageMetaData");
-        MDL::addLabel(MDL_REFMD, LABEL_STRING, "referenceMetaData");
-        MDL::addLabel(MDL_ITER, LABEL_INT, "iterationNumber");
-        MDL::addLabel(MDL_BLOCK, LABEL_INT, "blockNumber");
+        MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale", "Scale");
+        MDL::addLabel(MDL_SERIE, LABEL_STRING, "serie");
+        MDL::addLabel(MDL_SHIFTX, LABEL_DOUBLE, "shiftX", "Xoff");
+        MDL::addLabel(MDL_SHIFTY, LABEL_DOUBLE, "shiftY", "Yoff");
+        MDL::addLabel(MDL_SHIFTZ, LABEL_DOUBLE, "shiftZ", "Zoff");
         MDL::addLabel(MDL_SIGMANOISE, LABEL_DOUBLE, "sigmaNoise");
         MDL::addLabel(MDL_SIGMAOFFSET, LABEL_DOUBLE, "sigmaOffset");
-        MDL::addLabel(MDL_SUMWEIGHT, LABEL_DOUBLE, "sumWeight");
-        MDL::addLabel(MDL_RANDOMSEED, LABEL_INT, "randomSeed");
-        MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
-        MDL::addLabel(MDL_KSTEST, LABEL_DOUBLE, "KStest");
-        MDL::addLabel(MDL_TRANSFORMATIONMTRIX, LABEL_VECTOR, "transMat");
-        MDL::addLabel(MDL_AZIMUTALANGLE, LABEL_DOUBLE, "azimutalAngle");
+        MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");
         MDL::addLabel(MDL_SPHERICALABERRATION, LABEL_DOUBLE, "sphericalAberration");
-        MDL::addLabel(MDL_Q0, LABEL_DOUBLE, "Q0");
-        MDL::addLabel(MDL_K, LABEL_DOUBLE, "K");
+        MDL::addLabel(MDL_STDDEV, LABEL_DOUBLE, "stddev");
+        MDL::addLabel(MDL_SUM, LABEL_DOUBLE, "sum");
+        MDL::addLabel(MDL_SUMWEIGHT, LABEL_DOUBLE, "sumWeight");
+        MDL::addLabel(MDL_SYMNO, LABEL_INT, "symNo");
+        MDL::addLabel(MDL_TRANSFORMATIONMTRIX, LABEL_VECTOR, "transMat");
+        MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
+        MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight", "Weight");
+        MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
+        MDL::addLabel(MDL_XINT, LABEL_INT, "Xcoor", "<X position>");
+        MDL::addLabel(MDL_X, LABEL_DOUBLE, "X");
+        MDL::addLabel(MDL_YINT, LABEL_INT, "Ycoor", "<Y position>");
+        MDL::addLabel(MDL_Y, LABEL_DOUBLE, "Y");
+        MDL::addLabel(MDL_ZINT, LABEL_INT, "Zcoor");
+        MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");
     }
 
     ~StaticInitialization()

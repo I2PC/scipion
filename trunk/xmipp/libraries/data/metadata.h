@@ -123,6 +123,35 @@ public:
      */
     void union_(MetaData &MD, MDLabel thisLabel=MDL_OBJID);
 
+    /** union of  metadata objects, result in calling metadata object
+     * Repetion are allowed
+     */
+    void unionAll(MetaData &MD);
+
+    /** Aggregate metadata objects, result in calling metadata object
+     * thisLabel label is used for aggregation, second. Valid operations are:
+     *
+     * avg:  The avg function returns the average value of all  operationLabel within a group.
+      The result of avg is always a floating point value as long as at there
+      is at least one non-NULL input even if all inputs are integers.
+       The result of avg is NULL if and only if there are no non-NULL inputs.
+
+      count: The count function returns a count of the number of times that operationLabel is in a group.
+
+      max       The max aggregate function returns the maximum value of all values in the group.
+
+      min       The min aggregate function returns the minimum  value of all values in the group.
+
+     sum The total aggregate functions return sum of all values in the group.
+     If there are no non-NULL input rows then returns 0.0.
+
+     The result of total() is always a floating point value.
+     */
+    void aggregate(MetaData MDIn,
+                             MDLabel aggregateLabel,
+                             MDLabel entryLabel,
+                             MDLabel operationLabel);
+
     /** merge of a metadata
      * This function reads another metadata and makes a union to this one
      */
@@ -196,16 +225,24 @@ public:
 
     /**convert metafile to table in database
      *
+     * DBname "" creates temporary database in memory
      */
-    void toDataBase(const FileName & DBname,
-                    const std::string & tableName = "",
-                    std::vector<MDLabel> * labelsVector = NULL);
+    void toDataBase(CppSQLite3DB &db,
+                    const FileName & DBname,
+                    const std::string & tableName,
+                    const std::vector<MDLabel> * labelsVector = NULL,
+                    bool OpenDb=true,
+                    bool CloseDb=true);
     /**Convert table from database in metadata
      *
      */
-    void fromDataBase(const FileName & DBname, const std::string & tableName,
+    void fromDataBase(CppSQLite3DB &db,
+                      const FileName & DBname,
+                      const std::string & tableName,
                       MDLabel sortLabel=MDL_OBJID,
-                      std::vector<MDLabel> * labelsVector = NULL);
+                      std::vector<MDLabel> * labelsVector = NULL,
+                      bool OpenDb=false,
+                      bool CloseDb=true);
 
     /** What labels have been read from a docfile/metadata file
      *   and/or will be stored on a new metadata file when "save" is
