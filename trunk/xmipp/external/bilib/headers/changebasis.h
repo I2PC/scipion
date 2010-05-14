@@ -1,5 +1,9 @@
 #ifndef _CHANGEBASIS
 #define _CHANGEBASIS
+
+#include "../types/tsplinebasis.h"
+#include "../types/tboundaryconvention.h"
+
 /*--------------------------------------------------------------------------*/
 /**@defgroup SplineTransform Spline transform
    @ingroup BilibLibrary */
