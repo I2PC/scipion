@@ -283,7 +283,7 @@ public:
      */
     int read(const FileName &name, bool readdata=true, int select_img=-1,
              bool apply_geo = false, bool only_apply_shifts = false,
-             MetaData docFile=emptyMetaData,
+             const MetaData &docFile= emptyMetaData,
              std::vector<MetaDataLabel> &activeLabels = emptyVector )
     {
         int err = 0;
