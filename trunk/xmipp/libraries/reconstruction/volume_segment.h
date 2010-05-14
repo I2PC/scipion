@@ -27,6 +27,7 @@
 
 #include <data/funcs.h>
 #include <data/multidim_array.h>
+#include <data/image.h>
 
 ///@defgroup VolumeSegment Volume segmentation
 ///@ingroup DataLibraryPrograms
