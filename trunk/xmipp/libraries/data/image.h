@@ -37,6 +37,9 @@
 #include "transformations.h"
 #include "metadata.h"
 
+static std::vector<MetaDataLabel> emptyVector;
+static MetaData emptyMetaData;
+
 typedef enum TransformType {
     NoTransform = 0,        // No transform
     Standard = 1,           // Standard transform: origin = (0,0,0)
@@ -133,8 +136,8 @@ public:
 
     MultidimArray<T>    data;       // The image data array
     // FIXME: why cant this one be private as well?
-    MetaData MD;
-    MetaData MDMainHeader;
+    MetaData MD;//data for each subimage
+    MetaData MDMainHeader;//data for the file
 private:
     FileName            filename;   // File name
     int           dataflag; // Flag to force reading of the data
@@ -202,6 +205,7 @@ public:
         offset = 0;
         swap = 0;
         MD.clear();
+        MDMainHeader.clear();
     }
 
     /** Check whether image is complex based on T
@@ -274,10 +278,11 @@ public:
     /** General read function
      */
     int read(const FileName &name, bool readdata=true, int select_img=-1,
-             bool apply_geo = false, bool only_apply_shifts = false)
+             bool apply_geo = false, bool only_apply_shifts = false,
+             MetaData docFile=emptyMetaData,
+             std::vector<MetaDataLabel> &activeLabels = emptyVector )
     {
         int err = 0;
-
         // Check whether to read the data or only the header
         if ( readdata )
             dataflag = 1;
@@ -302,47 +307,50 @@ public:
             err = readMRC();
         else
             err = readSPIDER(select_img);
-        //fill structure with metadata
-        //define an iteratoR for SubImage*           image;
-        //CHANGE SubImage*           image BY vector<SubImage> image?
-        /**Move to another function
-                if(activeLabels.size()>0)
-                {
-                    std::vector<MetaDataLabel>::iterator strIt;
-                    for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
-                    {
-                        //std::cerr << "label " << *strIt <<std::endl;
+        //get metadata conainer
+        //add to MDheader
+        //apply geo
 
-                        switch (*strIt)
-                        {
-                        case MDL_SHIFTX:
-                            mDContainer.getValue(MDL_SHIFTX,image[0].shiftX);
-                            break;
-                        case MDL_SHIFTY:
-                            mDContainer.getValue(MDL_SHIFTY,image[0].shiftY);
-                            break;
-                        case MDL_SHIFTZ:
-                            mDContainer.getValue(MDL_SHIFTZ,image[0].shiftZ);
-                            break;
-                        case MDL_ANGLEROT:
-                            mDContainer.getValue(MDL_ANGLEROT,image[0].angleRot);
-                            break;
-                        case MDL_ANGLETILT:
-                            mDContainer.getValue(MDL_ANGLETILT,image[0].angleTilt);
-                            break;
-                        case MDL_ANGLEPSI:
-                            mDContainer.getValue(MDL_ANGLEPSI,image[0].anglePsi);
-                            break;
-                        case MDL_WEIGHT:
-                            mDContainer.getValue(MDL_WEIGHT,image[0].weight);
-                            break;
-                        case MDL_FLIP:
-                            mDContainer.getValue(MDL_FLIP,image[0].flip);
-                            break;
-                        }
-                    }
-                }
-        **/
+        //This implementation does not handle stacks,
+        //whenever we implement them I will update
+
+        if(activeLabels.empty() && !(docFile.isEmpty()))
+            activeLabels = docFile.activeLabels;
+        std::vector<MetaDataLabel>::iterator strIt;
+        for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
+        {
+            if (isDouble(*strIt))
+            {
+            	double dd;
+                docFile.getValue(*strIt,dd);
+                MD.setValue(*strIt,dd);
+            }
+            else if (isString(*strIt))
+            {
+            	std::string ss;
+                docFile.getValue(*strIt,ss);
+                MD.setValue(*strIt,ss);
+            }
+            else if (isInt(*strIt))
+            {
+            	int ii;
+                docFile.getValue(*strIt,ii);
+                MD.setValue(*strIt,ii);
+            }
+            else if (isBool(*strIt))
+            {
+            	bool bb;
+                docFile.getValue(*strIt,bb);
+                MD.setValue(*strIt,bb);
+            }
+            else if (isVector(*strIt))
+            {
+            	std::vector<double> vv;
+                docFile.getValue(*strIt,vv);
+                MD.setValue(*strIt,vv);
+            }
+        }
+
         //apply geo has not been defined for volumes
         if(this->data.getDim()>2)
             apply_geo=false;
@@ -989,7 +997,7 @@ public:
      *
      */
     void setEulerAngles(double rot, double tilt, double psi,
-    		long int n = -1)
+                        long int n = -1)
     {
         MD.setValue(MDL_ANGLEROT,rot,n);
         MD.setValue(MDL_ANGLETILT,tilt,n);
@@ -1000,14 +1008,14 @@ public:
      *
      */
     void getEulerAngles(double &rot, double &tilt, double &psi,
-    		long int n = -1)
+                        long int n = -1)
     {
         MD.getValue(MDL_ANGLEROT,rot,n);
         MD.getValue(MDL_ANGLETILT,tilt,n);
         MD.getValue(MDL_ANGLEPSI,psi,n);
     }
 
-   /** Set Rotation angle to image */
+    /** Set Rotation angle to image */
     void setRot(double rot, long int n = -1)
     {
         MD.setValue(MDL_ANGLEROT,rot,n);
@@ -1055,7 +1063,7 @@ public:
     /** Get geometric transformation matrix from 2D-image headerq
       */
     Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false,
-    		long int n = -1)
+            long int n = -1)
     {
         // This has only been implemented for 2D images...
         (*this)().checkDimension(2);
