@@ -3619,8 +3619,6 @@ public:
         double slope;
         int steps;
 
-        checkDimension(1);
-
         if (mode == "incr")
         {
             steps = 1 + (int) FLOOR((double) ABS((maxF - minF)) / ((double) n));
