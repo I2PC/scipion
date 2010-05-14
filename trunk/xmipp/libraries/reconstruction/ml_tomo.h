@@ -30,8 +30,7 @@
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
+#include <data/metadata_extension.h>
 #include <data/image.h>
 #include <data/geometry.h>
 #include <data/filters.h>
@@ -56,17 +55,17 @@ typedef struct{
     int thread_id;
     int thread_num;
     Prog_ml_tomo_prm *prm;
-    SelFile *SF;
+    MetaData *MDimg;
     int *iter;
     double *wsum_sigma_noise;
     double *wsum_sigma_offset;
     double *sumfracweight;
     double *LL;
-    std::vector<Matrix3D<double> > *wsumimgs;
-    std::vector<Matrix3D<double> > *wsumweds;
-    std::vector<VolumeXmippT<double> > *Iref;
-    std::vector<Matrix1D<double> > *docfiledata;
-    Matrix1D<double> *sumw;
+    std::vector<MultidimArray<double> > *wsumimgs;
+    std::vector<MultidimArray<double> > *wsumweds;
+    std::vector<Image<double> > *Iref;
+    std::vector<MultidimArray<double> > *docfiledata;
+    MultidimArray<double> *sumw;
 } structThreadExpectationSingleImage ;
 
 /**@defgroup ml_tomo ml_align2d (Maximum likelihood in 2D)
@@ -85,7 +84,7 @@ public:
     /** sigma-value for origin offsets */
     double sigma_offset;
     /** Vector containing estimated fraction for each model */
-    Matrix1D<double> alpha_k;
+    MultidimArray<double> alpha_k;
     /** Flag whether to fix estimates for model fractions */
     bool fix_fractions;
     /** Flag whether to fix estimate for sigma of origin offset */
@@ -113,12 +112,14 @@ public:
     int verb;
     /** Stopping criterium */
     double eps;
-    /** SelFile images (working, test and reference set) */
-    SelFile SF, SFr;
+    /** SelFile images, references and missingregions */
+    MetaData MDimg, MDref, MDmissing;
+    /** Flag whether md_contains_angles */
+    bool mdimg_contains_angles;
     /** Vector for images to hold references (new & old) */
-    std::vector < VolumeXmippT<double> > Iref, Iold, Iwed;
+    std::vector < Image<double> > Iref, Iold, Iwed;
     /** Matrices for calculating PDF of (in-plane) translations */
-    Matrix3D<double> P_phi, Mr2;
+    MultidimArray<double> P_phi, Mr2;
     /** Flag for generation of initial models from random subsets */
     bool do_generate_refs;
 
@@ -157,7 +158,7 @@ public:
     int nr_miss;
     /** Maximum resolution (dig.freq.) */
     double maxres, scale_factor;
-    Matrix3D<double> fourier_mask, fourier_imask, real_mask, real_omask;
+    MultidimArray<double> fourier_mask, fourier_imask, real_mask, real_omask;
 
     /** Do not search any rotation/translation, only classify */
     bool dont_align;
@@ -167,7 +168,7 @@ public:
     /** Classify only in defined mask */
     bool do_mask;
     /** Volume with the mask */
-    VolumeXmippT<double> Imask;
+    Image<double> Imask;
     /** Number of non-zero voxels in the mask */
     double nr_mask_pixels;
     /** Just apply optimal rotations and use weighted-averaging to get class averages */
@@ -177,24 +178,7 @@ public:
     bool do_adjust_spectra;
     /** Arrays with power spectra for each tilt series */
     double *spectra_series;
-
-    // Missing data information
-#define MISSING_WEDGE_Y 0
-#define MISSING_WEDGE_X 1
-#define MISSING_PYRAMID 2
-#define MISSING_CONE 3
-    struct missing_info
-    {
-        int type;
-        double thy0;
-        double thyF;
-        double thx0;
-        double thxF;
-    };
-    typedef std::vector<missing_info> All_missing_info;
-    All_missing_info all_missing_info;
-
-    // Angular samnpling information
+    // Angular sampling information
     struct angle_info
     {
         int direction;
@@ -256,7 +240,7 @@ public:
     void preparePowerSpectraAdjustment();
 
     /// Apply power spectra Adjustment to a single fourier transform
-    void applyPowerSpectraAdjustment(Matrix3D<std::complex<double> > &M, int missno);
+    void applyPowerSpectraAdjustment(MultidimArray<std::complex<double> > &M, int missno);
 
     /// Generate initial references from random subset averages
     void generateInitialReferences();
@@ -272,59 +256,59 @@ public:
     void calculatePdfTranslations();
 
     /// Get binary missing wedge (or pyramid) 
-    void getMissingRegion(Matrix3D<double> &Mmeasured,
+    void getMissingRegion(MultidimArray<double> &Mmeasured,
                           Matrix2D<double> A,
                           const int missno);
 
-    void maskSphericalAverageOutside(Matrix3D<double> &Min);
+    void maskSphericalAverageOutside(MultidimArray<double> &Min);
 
     // Resize a volume, based on the max_resol 
     // if down_scale=true: go from oridim to dim
     // if down_scale=false: go from dim to oridim
-    void reScaleVolume(Matrix3D<double> &Min, bool down_scale=true);
+    void reScaleVolume(MultidimArray<double> &Min, bool down_scale=true);
 
-    void postProcessVolume(VolumeXmipp &Vin, double resolution = -1.);
+    void postProcessVolume(Image<double> &Vin, double resolution = -1.);
 
     /// Fill vector of matrices with all rotations of reference
-    void precalculateA2(std::vector< VolumeXmippT<double> > &Iref);
+    void precalculateA2(std::vector< Image<double> > &Iref);
 
     /// ML-integration over all hidden parameters
-    void expectationSingleImage(Matrix3D<double> &Mimg, int imgno, int missno, double old_rot,
-                                std::vector<VolumeXmippT<double> > &Iref,
-                                std::vector<Matrix3D<double> > &wsumimgs,
-                                std::vector<Matrix3D<double> > &wsumweds,
+    void expectationSingleImage(MultidimArray<double> &Mimg, int imgno, int missno, double old_rot,
+                                std::vector<Image<double> > &Iref,
+                                std::vector<MultidimArray<double> > &wsumimgs,
+                                std::vector<MultidimArray<double> > &wsumweds,
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
-                                Matrix1D<double> &sumw, double &LL, double &dLL, 
+                                MultidimArray<double> &sumw, double &LL, double &dLL,
                                 double &fracweight, double &sumfracweight, double &trymindiff,
-                                int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
+                                int &opt_refno, int &opt_angno, MultidimArray<double> &opt_offsets);
 
     /// Maximum constrained correlation search over all hidden parameters
-    void maxConstrainedCorrSingleImage(Matrix3D<double> &Mimg, int imgno, int missno, double old_rot,
-                                       std::vector<VolumeXmippT<double> > &Iref,
-                                       std::vector<Matrix3D<double> > &wsumimgs,
-                                       std::vector<Matrix3D<double> > &wsumweds,
-                                       Matrix1D<double> &sumw, double &maxCC, double &sumCC,
+    void maxConstrainedCorrSingleImage(MultidimArray<double> &Mimg, int imgno, int missno, double old_rot,
+                                       std::vector<Image<double> > &Iref,
+                                       std::vector<MultidimArray<double> > &wsumimgs,
+                                       std::vector<MultidimArray<double> > &wsumweds,
+                                       MultidimArray<double> &sumw, double &maxCC, double &sumCC,
                                        int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
 
     /// Integrate over all experimental images
-    void expectation(SelFile &SF, std::vector< VolumeXmippT<double> > &Iref, int iter,
+    void expectation(SelFile &MDimg, std::vector< Image<double> > &Iref, int iter,
                      double &LL, double &sumfracweight, DocFile &DFo,
-                     std::vector<Matrix3D<double> > &wsumimgs,
-                     std::vector<Matrix3D<double> > &wsumweds,
+                     std::vector<MultidimArray<double> > &wsumimgs,
+                     std::vector<MultidimArray<double> > &wsumweds,
                      double &wsum_sigma_noise, double &wsum_sigma_offset,
-                     Matrix1D<double> &sumw);
+                     MultidimArray<double> &sumw);
 
     /// Update all model parameters
-    void maximization(std::vector<Matrix3D<double> > &wsumimgs,
-                      std::vector<Matrix3D<double> > &wsumweds,
+    void maximization(std::vector<MultidimArray<double> > &wsumimgs,
+                      std::vector<MultidimArray<double> > &wsumweds,
                       double &wsum_sigma_noise, double &wsum_sigma_offset, 
-                      Matrix1D<double> &sumw, double &sumfracweight, 
-                      double &sumw_allrefs, std::vector<Matrix1D<double> > &fsc, int iter);
+                      MultidimArray<double> &sumw, double &sumfracweight,
+                      double &sumw_allrefs, std::vector<MultidimArray<double> > &fsc, int iter);
 
     /// Calculate resolution by FSC
-    void calculateFsc(Matrix3D<double> &M1, Matrix3D<double> &M2,
-                      Matrix3D<double> &W1, Matrix3D<double> &W2,
-                      Matrix1D< double >& freq, Matrix1D< double >& fsc, 
+    void calculateFsc(MultidimArray<double> &M1, MultidimArray<double> &M2,
+                      MultidimArray<double> &W1, MultidimArray<double> &W2,
+                      MultidimArray< double >& freq, MultidimArray< double >& fsc,
                       double &resolution);
 
     /// Apply regularization
@@ -335,9 +319,9 @@ public:
 
     /// Write out reference images, selfile and logfile
     void writeOutputFiles(const int iter, DocFile &DFo,
-                          std::vector<Matrix3D<double> > &wsumweds,
+                          std::vector<MultidimArray<double> > &wsumweds,
                           double &sumw_allrefs, double &LL, double &avefracweight,
-                          std::vector<double> &conv, std::vector<Matrix1D<double> > &fsc);
+                          std::vector<double> &conv, std::vector<MultidimArray<double> > &fsc);
 
 };
 //@}
