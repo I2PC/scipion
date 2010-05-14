@@ -289,6 +289,7 @@ public:
      * This can be much faster than 'countObjects' as it stops iterating once the first
      * object has been found.
      */
+    template<class T>
     bool detectObjects(MetaDataLabel name, T value)
     {
         bool result = false;
