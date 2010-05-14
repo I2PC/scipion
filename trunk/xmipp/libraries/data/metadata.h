@@ -39,6 +39,8 @@
 #include "cppsqlite3.h"
 #include <sstream>
 
+//empty vector used for inizialization
+
 /// @defgroup MetaData Metadata management
 /// @ingroup DataLibrary
 
