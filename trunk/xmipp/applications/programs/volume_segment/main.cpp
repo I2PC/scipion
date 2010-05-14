@@ -23,7 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/volume_segment.h>
+#include <data/image.h>
+#include <reconstruction/volume_segment.h>
 
 void Usage(const Prog_segment_prm &prm);
 
@@ -47,7 +48,7 @@ int main(int argc, char **argv)
     // Really segment
     try
     {
-        VolumeXmipp mask;
+        Image<double> mask;
         prm.produce_side_info();
         prm.segment(mask);
     }
