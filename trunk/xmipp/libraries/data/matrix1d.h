@@ -979,7 +979,7 @@ public:
     {
         Matrix1D<T> tmp(*this);
         for (int i=0; i < vdim; i++)
-         	tmp.vdata[i] - vdata[i];
+         	tmp.vdata[i] = - vdata[i];
         return tmp;
     }
 
