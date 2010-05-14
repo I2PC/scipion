@@ -1322,26 +1322,6 @@ void MetaData::fillMetaData(MetaData &MD, std::vector<long int> objectsToAdd)
     this->objectsIterator = this->objects.begin();
 }
 
-bool MetaData::detectObjects(MetaDataLabel name, int value)
-{
-    bool result = false;
-    // Traverse all the structure looking for objects
-    // that satisfy search criteria
-    MetaDataContainer * aux;
-    std::map<long int, MetaDataContainer *>::iterator It;
-    for (It = objects.begin(); It != objects.end(); It++)
-    {
-        aux = It->second;
-        if (aux->pairExists(name, value))
-        {
-            result = true;
-            break;
-        }
-    }
-    return result;
-}
-
-
 MetaDataContainer * MetaData::getObject(const long int objectID) const
 {
     if (isEmpty())
