@@ -616,7 +616,8 @@ AddXmippProgram('project_xr', ['XmippRecons'])
 #AddXmippProgram('psd_enhance', ['XmippRecons'])
 #AddXmippProgram('psd_sort', ['XmippRecons'])
 #AddXmippProgram('range_adjust')
-#AddXmippProgram('reconstruct_art', ['XmippRecons'])
+#Sjors: note that crystal stuff in ART is not working yet....
+AddXmippProgram('reconstruct_art', ['XmippRecons']) 
 #AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 #AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
 ##########AddXmippProgram('resolution_fsc') Roberto
@@ -640,7 +641,7 @@ AddXmippProgram('symmetrize', ['XmippRecons'])
 #AddXmippProgram('try_symmetry')
 #AddXmippProgram('test_sql')
 ##AddXmippProgram('virus_vertex', ['XmippRecons'])
-#AddXmippProgram('volume_segment')
+AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('window')
 
 # --- Scripts
