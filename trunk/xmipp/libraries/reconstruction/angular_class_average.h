@@ -29,8 +29,7 @@
 #include <data/fftw.h>
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
 #include <data/filters.h>
 #include <data/mask.h>
@@ -43,16 +42,17 @@
    @ingroup ReconsLibraryPrograms */
 //@{
 /** angular_class_average parameters. */
-class Prog_angular_class_average_prm {
+class Prog_angular_class_average_prm
+{
 
 public:
 
     /** Input and library docfiles */
-    DocFile          DF, DFlib;
+    MetaData         DF, DFlib;
     /** Output rootnames */
     FileName         fn_out, fn_out1, fn_out2, fn_wien;
     /** Column numbers */
-    int              col_rot, col_tilt, col_psi, col_xshift, col_yshift, col_mirror, col_select, col_ref;          
+    std::string      col_select;
     /** Upper and lower absolute and relative selection limits */
     double           limit0, limitF, limitR;
     /** Flags wether to use limit0, limitF and limitR selection */
@@ -66,17 +66,17 @@ public:
     /** Padding factor */
     double           pad;
     /** One empty image with correct dimensions */
-    ImageXmipp       Iempty;
+    Image<double>    Iempty;
     /** Skip writing of selfiles */
     bool             dont_write_selfiles;
     /** Add output to existing files */
     bool             do_add;
     /** Wiener filter image */
-    Matrix2D<double> Mwien;
+    MultidimArray<double> Mwien;
     /** Selfiles containing all class averages */
-    SelFile          SFclasses, SFclasses1, SFclasses2;
+    MetaData         SFclasses, SFclasses1, SFclasses2;
     /** Docfiles containing information about all class averages */
-    DocFile          DFclasses, DFclasses1, DFclasses2;
+    MetaData         DFclasses, DFclasses1, DFclasses2;
 
     /** Re-alignment of classes */
 
@@ -93,61 +93,59 @@ public:
     /** transformers for all rings */
     Polar_fftw_plans global_plans;
     XmippFftw global_transformer;
-    Matrix1D<double> corr;
+    MultidimArray<double> corr;
 
 public:
-  /// Read arguments from command line
-  void read(int argc, char **argv);
+    /// Read arguments from command line
+    void read(int argc, char **argv);
 
-  /// Show
-  void show();
+    /// Show
+    void show();
 
-  /// Usage
-  void usage();
+    /// Usage
+    void usage();
 
-  /** Make shiftmask and calculate nr_psi */
-  void produceSideInfo();
+    /** Make shiftmask and calculate nr_psi */
+    void produceSideInfo();
 
-  /** Convert from cartesian to FT of polar coordinates */
-  void getPolar(Matrix2D<double> &img, Polar<std::complex <double> > &fP, 
-                bool conjugated=false, float xoff = 0., float yoff = 0.);
+    /** Convert from cartesian to FT of polar coordinates */
+    void getPolar(MultidimArray<double> &img, Polar<std::complex <double> > &fP,
+                  bool conjugated=false, float xoff = 0., float yoff = 0.);
 
-  /** Re-align all images in a class */
-  void reAlignClass(ImageXmipp &avg1,
-                    ImageXmipp &avg2,
-                    SelFile    &SFclass1,
-                    SelFile    &SFclass2,
-                    std::vector<ImageXmipp> imgs,
-                    std::vector<int> splits,
-                    std::vector<int> numbers,
-                    int dirno,
-                    double * my_output);
+    /** Re-align all images in a class */
+    void reAlignClass(Image<double> &avg1,
+                      Image<double> &avg2,
+                      MetaData      &SFclass1,
+                      MetaData      &SFclass2,
+                      std::vector< Image<double> > imgs,
+                      std::vector<int> splits,
+                      std::vector<int> numbers,
+                      int dirno,
+                      double * my_output);
 
-  /** Apply Wiener filter */
-  void applyWienerFilter(Matrix2D<double> &img);
+    /** Apply Wiener filter */
+    void applyWienerFilter(MultidimArray<double> &img);
 
-  /** Process a single class */
-  void processOneClass(int &dirno, 
-                       double * my_output);
+    /** Process a single class */
+    void processOneClass(int &dirno,
+                         double * my_output);
 
-  /** Write average and selfiles to disc */
-  void writeToDisc(ImageXmipp avg,
-                   int        dirno,
-                   SelFile    SF,
-                   FileName   fn,                                                 
-                   bool       write_selfile,
-                   FileName   oext="xmp");
+    /** Write average and selfiles to disc */
+    void writeToDisc(Image<double> avg,
+                     int        dirno,
+                     MetaData   SF,
+                     FileName   fn,
+                     bool       write_selfile,
+                     FileName   oext="xmp");
 
-  /** Add an image to the selfile and docfile of all class averages */
-  void addClassAverage(int dirno,
-                       double w,
-                       double w1,
-                       double w2);
+    /** Add an image to the selfile and docfile of all class averages */
+    void addClassAverage(int dirno,
+                         double w,
+                         double w1,
+                         double w2);
 
-  /** Write selfile and docfile of all class averages to disc */
-  void finalWriteToDisc();
- 
-
+    /** Write selfile and docfile of all class averages to disc */
+    void finalWriteToDisc();
 };
 //@}
 #endif

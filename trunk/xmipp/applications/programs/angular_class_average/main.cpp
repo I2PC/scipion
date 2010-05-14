@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     // Making class averages
     try
     {
-       
+
         // Reserve memory for output from class realignment
         if (prm.nr_iter > 0) reserve = prm.DF.dataLineNo();
         else reserve = 0;
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
         init_progress_bar(nr_ref);
 
         // Loop over all classes
-        
+
         for (int dirno = 1; dirno <= nr_ref; dirno++)
         {   
             // Do the actual work
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
                     }
                 }
             }
-            
+
             progress_bar(dirno);
             
         }
@@ -162,5 +162,5 @@ int main(int argc, char **argv)
     {
         std::cout << XE;
     }
-    
+
 }
