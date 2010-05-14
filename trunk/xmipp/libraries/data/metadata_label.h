@@ -197,8 +197,6 @@ class StaticInitialization
 private:
     StaticInitialization()
     {
-        std::cerr << "Static initialization..." << std::endl;
-
         ///==== Add labels entries from here in the SAME ORDER as declared in ENUM ==========
         MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", "psi");
         MDL::addLabel(MDL_ANGLEROT, LABEL_DOUBLE, "angleRot", "rot");
@@ -286,7 +284,6 @@ private:
 
     ~StaticInitialization()
     {
-        std::cerr << "Leaving life..." <<std::endl;
     }
     friend class MDL;
 };
