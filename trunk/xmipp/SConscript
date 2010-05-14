@@ -408,6 +408,7 @@ ReconsSources = [
 #    'detect_structures.cpp',
     'directions.cpp',
 #    'draw_surface.cpp',
+    'enhance_contrast.cpp',
 #    'euler.cpp,'
 #    'evaluate_fscs.cpp',
 #    'filter_projections.cpp',
@@ -571,6 +572,7 @@ AddXmippProgram('convert_img2data')
 #AddXmippProgram('docfile_append')
 #AddXmippProgram('docfile_select_subset')
 #AddXmippProgram('docfile_histogram')
+AddXmippProgram('enhance_contrast', ['XmippRecons'])
 #AddXmippProgram('filter_projections', ['XmippRecons'])
 #AddXmippProgram('find_center3d')
 AddXmippProgram('fourier_filter', ['XmippRecons'])
@@ -623,6 +625,7 @@ AddXmippProgram('project_xr', ['XmippRecons'])
 AddXmippProgram('rotate')
 #AddXmippProgram('scale')
 #AddXmippProgram('scale_pyramid')
+AddXmippProgram('mean_shift')
 #AddXmippProgram('metadata_split')
 #AddXmippProgram('selfile_statistics')
 #AddXmippProgram('selfile_subset')

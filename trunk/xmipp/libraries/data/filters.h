@@ -31,6 +31,8 @@
 #include "image.h"
 #include "mask.h"
 #include "numerical_tools.h"
+#include "morphology.h"
+#include <queue>
 
 /// @defgroup Filters Filters
 /// @ingroup DataLibrary
@@ -54,6 +56,17 @@ void substract_background_plane(MultidimArray<double> &I);
  */
 void substract_background_rolling_ball(MultidimArray<double> &I, int radius);
 
+/** Detect background
+ * @ingroup Filters
+ * This function recieves a Matrix3D vol, and try to find the background
+ * assuming that all the outside planes contain background, and apply
+ * interval confidence, were alpha is the probabity to fail.
+ * Mask is of the same size of vol, and is the solutión, mask have
+ * value 1 if background else value 0
+*/
+void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &mask, double alpha,
+		double &final_mean);
+        
 /** Constrast enhancement
  * @ingroup Filters
  *

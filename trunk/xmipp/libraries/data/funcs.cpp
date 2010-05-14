@@ -194,6 +194,29 @@ double gaussian2D(double x, double y, double sigmaX, double sigmaY,
                                             (yp / sigmaY)*(yp / sigmaY)));
 }
 
+/* ICDF Gaussian ----------------------------------------------------------- */
+double icdf_gauss(double p)
+{
+    const double c[] = {2.515517, 0.802853, 0.010328};
+    const double d[] = {1.432788, 0.189269, 0.001308};
+    if (p < 0.5)
+    {
+        // F^-1(p) = - G^-1(p)
+    	double t=sqrt(-2.0*log(p));
+    	double z=t - ((c[2]*t + c[1])*t + c[0]) /
+                (((d[2]*t + d[1])*t + d[0])*t + 1.0);
+        return -z;
+    }
+    else
+    {
+        // F^-1(p) = G^-1(1-p)
+    	double t=sqrt(-2.0*log(1-p));
+    	double z=t - ((c[2]*t + c[1])*t + c[0]) /
+                (((d[2]*t + d[1])*t + d[0])*t + 1.0);
+        return z;
+    }
+}
+
 /* CDF Gaussian ------------------------------------------------------------ */
 double cdf_gauss(double x)
 {

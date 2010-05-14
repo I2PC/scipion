@@ -244,6 +244,16 @@ double gaussian1D(double x, double sigma, double mu = 0);
  */
 double tstudent1D(double x, double df, double sigma, double mu = 0);
 
+/** Inverse Cumulative distribution function for a Gaussian
+ * @ingroup NumericalFunctions
+ *
+ * This function returns the z of a N(0,1) such that the probability below z is p
+ *
+ * The function employs an fast approximation to z which is valid up to 1e-4.
+ * See http://www.johndcook.com/normal_cdf_inverse.html
+ */
+double icdf_gauss(double p);
+
 /** Cumulative distribution function for a Gaussian
  * @ingroup NumericalFunctions
  *
@@ -295,6 +305,8 @@ double gaussian2D(double x,
                   double ang,
                   double muX = 0,
                   double muY = 0);
+
+
 
 /// @defgroup MiscellaneousFunctions Miscellaneous functions
 /// @ingroup GeneralFunctions
@@ -431,6 +443,49 @@ void Complex2AmplPhase(const std::complex< double >* _complex,
         *aux_phase++ = atan2(im, re);
     }
 }
+
+/** Compute statistics of a std::vector
+ * @ingroup NumericalFunctions
+ */
+template <class T>
+void computeStats(const std::vector<T> &V, double& avg, double& stddev,
+	T& minval, T& maxval)
+{
+    if (V.size()<= 0) return;
+
+    avg = 0;
+    stddev = 0;
+
+    minval = maxval = V[0];
+
+    unsigned long int n, nmax;
+    nmax=V.size();
+    for (n=0; n<nmax; n++)
+    {
+    	double val=V[n];
+        avg += val;
+        stddev += val * val;
+
+        if (val > maxval)
+            maxval = val;
+        else if (val < minval)
+            minval = val;
+    }
+
+    avg /= nmax;
+
+    if (nmax > 1)
+    {
+        stddev = stddev / nmax - avg * avg;
+        stddev *= nmax / (nmax - 1);
+
+        // Foreseeing numerical instabilities
+        stddev = sqrt(static_cast< double >(ABS(stddev)));
+    }
+    else
+        stddev = 0;
+}
+
 
 /** @defgroup RandomFunctions Random functions
  * @ingroup GeneralFunctions

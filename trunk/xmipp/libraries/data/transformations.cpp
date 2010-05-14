@@ -311,3 +311,429 @@ void selfScaleToSize(int SplineDegree,
     MultidimArray<std::complex<double> > aux;
     scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim);
 }
+
+    /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
+	 * that this image is a set of B-spline coefficients. And making the diff
+	 * of x, such->  V=sum(Coef diff(Bx) By Bz)
+	 * ¡¡Only for BSplines of degree 3!!
+	 * @ingroup VolumesMemory
+	 *
+	 * (x,y,z) are in logical coordinates.
+	 */
+	double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, double y, double z,
+								   int SplineDegree)
+	{
+		int SplineDegree_1 = SplineDegree - 1;
+
+		// Logical to physical
+		z -= STARTINGZ(vol);
+		y -= STARTINGY(vol);
+		x -= STARTINGX(vol);
+
+		int lmax = XSIZE(vol);
+		int mmax = YSIZE(vol);
+		int nmax = ZSIZE(vol);
+
+		int l1 = CEIL(x - SplineDegree_1);
+		int l2 = l1 + SplineDegree;
+
+		int m1 = CEIL(y - SplineDegree_1);
+		int m2 = m1 + SplineDegree;
+
+		int n1 = CEIL(z - SplineDegree_1);
+		int n2 = n1 + SplineDegree;
+
+		double zyxsum = 0.0;
+		for (int n = n1; n <= n2; n++) {
+		int equivalent_n=n;
+		if      (n<0)             equivalent_n=-n-1;
+		else if (n>=ZSIZE(vol)) equivalent_n=2*ZSIZE(vol)-n-1;
+			double yxsum = 0.0;
+			for (int m = m1; m <= m2; m++) {
+		int equivalent_m=m;
+		if      (m<0)             equivalent_m=-m-1;
+		else if (m>=YSIZE(vol)) equivalent_m=2*YSIZE(vol)-m-1;
+				double xsum = 0.0;
+				for (int l = l1; l <= l2; l++)
+				{
+					double xminusl = x - (double) l;
+			int equivalent_l=l;
+			if      (l<0)             equivalent_l=-l-1;
+			else if (l>=XSIZE(vol)) equivalent_l=2*XSIZE(vol)-l-1;
+					double Coeff = (double) DIRECT_A3D_ELEM(vol,
+						equivalent_n,equivalent_m,equivalent_l);
+					switch (SplineDegree)
+					{
+					case 2:
+						xsum += Coeff * Bspline02(xminusl);
+						break;
+					case 3:
+						xsum += Coeff * Bspline03Diff1(xminusl);
+						break;
+					case 4:
+						xsum += Coeff * Bspline04(xminusl);
+						break;
+					case 5:
+						xsum += Coeff * Bspline05(xminusl);
+						break;
+					case 6:
+						xsum += Coeff * Bspline06(xminusl);
+						break;
+					case 7:
+						xsum += Coeff * Bspline07(xminusl);
+						break;
+					case 8:
+						xsum += Coeff * Bspline08(xminusl);
+						break;
+					case 9:
+						xsum += Coeff * Bspline09(xminusl);
+						break;
+					}
+				}
+
+				double yminusm = y - (double) m;
+				switch (SplineDegree)
+				{
+				case 2:
+					yxsum += xsum * Bspline02(yminusm);
+					break;
+				case 3:
+					yxsum += xsum * Bspline03(yminusm);
+					break;
+				case 4:
+					yxsum += xsum * Bspline04(yminusm);
+					break;
+				case 5:
+					yxsum += xsum * Bspline05(yminusm);
+					break;
+				case 6:
+					yxsum += xsum * Bspline06(yminusm);
+					break;
+				case 7:
+					yxsum += xsum * Bspline07(yminusm);
+					break;
+				case 8:
+					yxsum += xsum * Bspline08(yminusm);
+					break;
+				case 9:
+					yxsum += xsum * Bspline09(yminusm);
+					break;
+				}
+		}
+
+			double zminusn = z - (double) n;
+			switch (SplineDegree)
+			{
+			case 2:
+				zyxsum += yxsum * Bspline02(zminusn);
+				break;
+			case 3:
+				zyxsum += yxsum * Bspline03(zminusn);
+				break;
+			case 4:
+				zyxsum += yxsum * Bspline04(zminusn);
+				break;
+			case 5:
+				zyxsum += yxsum * Bspline05(zminusn);
+				break;
+			case 6:
+				zyxsum += yxsum * Bspline06(zminusn);
+				break;
+			case 7:
+				zyxsum += yxsum * Bspline07(zminusn);
+				break;
+			case 8:
+				zyxsum += yxsum * Bspline08(zminusn);
+				break;
+			case 9:
+				zyxsum += yxsum * Bspline09(zminusn);
+				break;
+			}
+	}
+
+		return zyxsum;
+	}
+
+	/** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
+	 * that this image is a set of B-spline coefficients. And making the diff
+	 * of y, such->  V=sum(Coef Bx diff(By) Bz)
+	 * ¡¡Only for BSplines of degree 3!!
+	 * @ingroup VolumesMemory
+	 *
+	 * (x,y,z) are in logical coordinates.
+	 */
+    double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, double y, double z,
+								   int SplineDegree)
+	{
+		int SplineDegree_1 = SplineDegree - 1;
+
+		// Logical to physical
+		z -= STARTINGZ(vol);
+		y -= STARTINGY(vol);
+		x -= STARTINGX(vol);
+
+		int lmax = XSIZE(vol);
+		int mmax = YSIZE(vol);
+		int nmax = ZSIZE(vol);
+
+		int l1 = CEIL(x - SplineDegree_1);
+		int l2 = l1 + SplineDegree;
+
+		int m1 = CEIL(y - SplineDegree_1);
+		int m2 = m1 + SplineDegree;
+
+		int n1 = CEIL(z - SplineDegree_1);
+		int n2 = n1 + SplineDegree;
+
+		double zyxsum = 0.0;
+		for (int n = n1; n <= n2; n++) {
+		int equivalent_n=n;
+		if      (n<0)             equivalent_n=-n-1;
+		else if (n>=ZSIZE(vol)) equivalent_n=2*ZSIZE(vol)-n-1;
+			double yxsum = 0.0;
+			for (int m = m1; m <= m2; m++) {
+		int equivalent_m=m;
+		if      (m<0)             equivalent_m=-m-1;
+		else if (m>=YSIZE(vol)) equivalent_m=2*YSIZE(vol)-m-1;
+				double xsum = 0.0;
+				for (int l = l1; l <= l2; l++)
+				{
+					double xminusl = x - (double) l;
+			int equivalent_l=l;
+			if      (l<0)             equivalent_l=-l-1;
+			else if (l>=XSIZE(vol)) equivalent_l=2*XSIZE(vol)-l-1;
+					double Coeff = (double) DIRECT_A3D_ELEM(vol,
+						equivalent_n,equivalent_m,equivalent_l);
+					switch (SplineDegree)
+					{
+					case 2:
+						xsum += Coeff * Bspline02(xminusl);
+						break;
+					case 3:
+						xsum += Coeff * Bspline03(xminusl);
+						break;
+					case 4:
+						xsum += Coeff * Bspline04(xminusl);
+						break;
+					case 5:
+						xsum += Coeff * Bspline05(xminusl);
+						break;
+					case 6:
+						xsum += Coeff * Bspline06(xminusl);
+						break;
+					case 7:
+						xsum += Coeff * Bspline07(xminusl);
+						break;
+					case 8:
+						xsum += Coeff * Bspline08(xminusl);
+						break;
+					case 9:
+						xsum += Coeff * Bspline09(xminusl);
+						break;
+					}
+				}
+
+				double yminusm = y - (double) m;
+				switch (SplineDegree)
+				{
+				case 2:
+					yxsum += xsum * Bspline02(yminusm);
+					break;
+				case 3:
+					yxsum += xsum * Bspline03Diff1(yminusm);
+					break;
+				case 4:
+					yxsum += xsum * Bspline04(yminusm);
+					break;
+				case 5:
+					yxsum += xsum * Bspline05(yminusm);
+					break;
+				case 6:
+					yxsum += xsum * Bspline06(yminusm);
+					break;
+				case 7:
+					yxsum += xsum * Bspline07(yminusm);
+					break;
+				case 8:
+					yxsum += xsum * Bspline08(yminusm);
+					break;
+				case 9:
+					yxsum += xsum * Bspline09(yminusm);
+					break;
+				}
+		}
+
+			double zminusn = z - (double) n;
+			switch (SplineDegree)
+			{
+			case 2:
+				zyxsum += yxsum * Bspline02(zminusn);
+				break;
+			case 3:
+				zyxsum += yxsum * Bspline03(zminusn);
+				break;
+			case 4:
+				zyxsum += yxsum * Bspline04(zminusn);
+				break;
+			case 5:
+				zyxsum += yxsum * Bspline05(zminusn);
+				break;
+			case 6:
+				zyxsum += yxsum * Bspline06(zminusn);
+				break;
+			case 7:
+				zyxsum += yxsum * Bspline07(zminusn);
+				break;
+			case 8:
+				zyxsum += yxsum * Bspline08(zminusn);
+				break;
+			case 9:
+				zyxsum += yxsum * Bspline09(zminusn);
+				break;
+			}
+	}
+
+		return zyxsum;
+	}
+
+	/** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
+	 * that this image is a set of B-spline coefficients. And making the diff
+	 * of z, such->  V=sum(Coef Bx By diff(Bz))
+	 * ¡¡Only for BSplines of degree 3!!
+	 * @ingroup VolumesMemory
+	 *
+	 * (x,y,z) are in logical coordinates.
+	 */
+	double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, double y, double z,
+								   int SplineDegree)
+	{
+		int SplineDegree_1 = SplineDegree - 1;
+
+		// Logical to physical
+		z -= STARTINGZ(vol);
+		y -= STARTINGY(vol);
+		x -= STARTINGX(vol);
+
+		int lmax = XSIZE(vol);
+		int mmax = YSIZE(vol);
+		int nmax = ZSIZE(vol);
+
+		int l1 = CEIL(x - SplineDegree_1);
+		int l2 = l1 + SplineDegree;
+
+		int m1 = CEIL(y - SplineDegree_1);
+		int m2 = m1 + SplineDegree;
+
+		int n1 = CEIL(z - SplineDegree_1);
+		int n2 = n1 + SplineDegree;
+
+		double zyxsum = 0.0;
+		for (int n = n1; n <= n2; n++) {
+		int equivalent_n=n;
+		if      (n<0)             equivalent_n=-n-1;
+		else if (n>=ZSIZE(vol)) equivalent_n=2*ZSIZE(vol)-n-1;
+			double yxsum = 0.0;
+			for (int m = m1; m <= m2; m++) {
+		int equivalent_m=m;
+		if      (m<0)             equivalent_m=-m-1;
+		else if (m>=YSIZE(vol)) equivalent_m=2*YSIZE(vol)-m-1;
+				double xsum = 0.0;
+				for (int l = l1; l <= l2; l++)
+				{
+					double xminusl = x - (double) l;
+			int equivalent_l=l;
+			if      (l<0)             equivalent_l=-l-1;
+			else if (l>=XSIZE(vol)) equivalent_l=2*XSIZE(vol)-l-1;
+					double Coeff = (double) DIRECT_A3D_ELEM(vol,
+						equivalent_n,equivalent_m,equivalent_l);
+					switch (SplineDegree)
+					{
+					case 2:
+						xsum += Coeff * Bspline02(xminusl);
+						break;
+					case 3:
+						xsum += Coeff * Bspline03(xminusl);
+						break;
+					case 4:
+						xsum += Coeff * Bspline04(xminusl);
+						break;
+					case 5:
+						xsum += Coeff * Bspline05(xminusl);
+						break;
+					case 6:
+						xsum += Coeff * Bspline06(xminusl);
+						break;
+					case 7:
+						xsum += Coeff * Bspline07(xminusl);
+						break;
+					case 8:
+						xsum += Coeff * Bspline08(xminusl);
+						break;
+					case 9:
+						xsum += Coeff * Bspline09(xminusl);
+						break;
+					}
+				}
+
+				double yminusm = y - (double) m;
+				switch (SplineDegree)
+				{
+				case 2:
+					yxsum += xsum * Bspline02(yminusm);
+					break;
+				case 3:
+					yxsum += xsum * Bspline03(yminusm);
+					break;
+				case 4:
+					yxsum += xsum * Bspline04(yminusm);
+					break;
+				case 5:
+					yxsum += xsum * Bspline05(yminusm);
+					break;
+				case 6:
+					yxsum += xsum * Bspline06(yminusm);
+					break;
+				case 7:
+					yxsum += xsum * Bspline07(yminusm);
+					break;
+				case 8:
+					yxsum += xsum * Bspline08(yminusm);
+					break;
+				case 9:
+					yxsum += xsum * Bspline09(yminusm);
+					break;
+				}
+		}
+
+			double zminusn = z - (double) n;
+			switch (SplineDegree)
+			{
+			case 2:
+				zyxsum += yxsum * Bspline02(zminusn);
+				break;
+			case 3:
+				zyxsum += yxsum * Bspline03Diff1(zminusn);
+				break;
+			case 4:
+				zyxsum += yxsum * Bspline04(zminusn);
+				break;
+			case 5:
+				zyxsum += yxsum * Bspline05(zminusn);
+				break;
+			case 6:
+				zyxsum += yxsum * Bspline06(zminusn);
+				break;
+			case 7:
+				zyxsum += yxsum * Bspline07(zminusn);
+				break;
+			case 8:
+				zyxsum += yxsum * Bspline08(zminusn);
+				break;
+			case 9:
+				zyxsum += yxsum * Bspline09(zminusn);
+				break;
+			}
+	}
+
+		return zyxsum;
+	}

@@ -162,6 +162,132 @@ void substract_background_rolling_ball(MultidimArray<double> &I, int radius)
     I-=bgEnlarged;
 }
 
+/* Detect background ------------------------------------------------------ */
+void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &mask,
+	double alpha,double &final_mean)
+{
+
+	// 2.1.-Background detection------------------------------------------
+		MultidimArray<double> bg; // We create the volumen with
+		bg.resize(vol);		  // -1:not visited 0:mol 1:background
+		bg.initConstant(-1);  // -2:in the list
+
+		// Ponemos las seis caras de esta variable como visitadas e inicializamos
+		// la cola de píxeles por visitar
+		std::queue<int> list_for_compute;  // Lista del modo [x1,y1,z1,...,xi,yi,zi]
+										// que contiene los pixeles por procesar
+		std::vector<double> bg_values; // Vector con los valores del background
+		int xdim=XSIZE(bg);
+		int ydim=YSIZE(bg);
+		int zdim=ZSIZE(bg);
+		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(bg)
+		{
+			if(j==0 || j==xdim-1 || i==0 || i==ydim-1 || k==0 || k==zdim-1)
+			{   // Visited coord
+				DIRECT_A3D_ELEM(bg,k,i,j)=1;
+				// We introduce the values of the background
+				bg_values.push_back(DIRECT_A3D_ELEM(vol,k,i,j));
+
+			}
+			if( (j==1 || j==xdim-2) && (i!=0) && (i!=ydim-1) && (k!=0) && (k!=zdim-1) )
+			{   // Coord for compute for x
+				list_for_compute.push(j);
+				list_for_compute.push(i);
+				list_for_compute.push(k);
+			}
+			if( (i==1 || i==ydim-2) && (j>1) && (j<xdim-2) && (k!=0) && (k!=zdim-1) )
+			{   // Coord for compute for y
+				list_for_compute.push(j);
+				list_for_compute.push(i);
+				list_for_compute.push(k);
+			}
+			if( (k==1 || k==zdim-2) && (j>1) && (j<xdim-2) && (i>1) && (i<ydim-2) )
+			{   // Coord for compute for y
+				list_for_compute.push(j);
+				list_for_compute.push(i);
+				list_for_compute.push(k);
+			}
+		} // end of FOR_ALL_ELEMENTS
+
+		// We work until the list_for_compute is empty
+		int n=250; //each 250 pixels renew stats
+		int cont=250; //We start here for compute stat for first time
+		double A; // A and B are numbers such the interval of confidence is [A,B]
+		double B; //
+		float z=icdf_gauss(1-alpha/2);
+		while(!list_for_compute.empty())
+		{
+
+			//We compute stat when is needed
+			if(cont==n)
+			{
+				// Calculamos los estadísticos
+				double avg, stddev, minval, maxval;
+				computeStats(bg_values,avg,stddev,minval,maxval);
+				final_mean=avg;
+				// Calculamos el intervalo de confianza
+				A=avg-(z*stddev);
+				B=avg+(z*stddev);
+				cont=0; // aumentamos el contador
+				//std::cout << "Pulsa una tecla\n";
+				//		char c; std::cin >> c;
+			} // end of if
+			// Now we start to take coords from the list_for_compute
+			int x_coord=list_for_compute.front(); list_for_compute.pop();
+			int y_coord=list_for_compute.front(); list_for_compute.pop();
+			int z_coord=list_for_compute.front(); list_for_compute.pop();
+			// Is visited
+			DIRECT_A3D_ELEM(bg,z_coord,y_coord,x_coord)=-2;
+			//We take the value
+			double value=DIRECT_A3D_ELEM(vol,z_coord,y_coord,x_coord);
+			// We see if is background or not
+			if (A<=value && value<=B)
+			{
+				// We now is background
+				DIRECT_A3D_ELEM(bg,z_coord,y_coord,x_coord)=1;
+				// We introduce the values of the background
+			    bg_values.push_back(value);
+			    // We update the cont variable
+			    cont++;
+
+
+			    // We add his neighbours in the list_for_compute
+			    for(int xx=x_coord-1;xx<=x_coord+1;xx++)
+			    	for(int yy=y_coord-1;yy<=y_coord+1;yy++)
+			    		for(int zz=z_coord-1;zz<=z_coord+1;zz++)
+			    			//We see if it has been visited
+			    			if (DIRECT_A3D_ELEM(bg,zz,yy,xx)==-1)  // not visited
+			    			{
+			    				// So we include it in the list
+			    				list_for_compute.push(xx);
+			    				list_for_compute.push(yy);
+			    				list_for_compute.push(zz);
+			    				// Is in the list
+			    				DIRECT_A3D_ELEM(bg,zz,yy,xx)=-2;
+			    			}
+			} // end of if
+			else
+			{
+			   // Isn't background
+				DIRECT_A3D_ELEM(bg,z_coord,y_coord,x_coord)=0;
+			}
+		} // end of while
+		// Now we change not visited for mol
+		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(bg)
+			if (DIRECT_A3D_ELEM(bg,k,i,j)==-1)
+				DIRECT_A3D_ELEM(bg,k,i,j)=0;
+
+		// End of 2.1-----------------------------------------------------------
+
+		// 2.2.-Matematical Morphology
+		MultidimArray<double> bg_mm; // We create the output volumen
+		bg_mm.resize(vol);
+		closing3D(bg,bg_mm,26,0,1);
+		// Output
+	    //typeCast(bg_mm,mask);
+		mask=bg_mm;
+}
+
 /* Contranst enhancement --------------------------------------------------- */
 void contrast_enhancement(Image<double> *I)
 {

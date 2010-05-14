@@ -2829,6 +2829,7 @@ public:
         return stddev;
     }
 
+
     /** Compute statistics.
      * @ingroup Statistics
      *
