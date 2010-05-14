@@ -64,20 +64,18 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
 
     // Calculate volume from all backprojected residual images
     std::cerr << "Backprojection of residual images " << std::endl;
-    if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        init_progress_bar(prm.numIMG);
 
     for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
     {
-	// Check whether to kill job
-	exit_if_not_exists(prm.fn_control);
-	
         // backprojection of the weighted residual image
         sqrtweight = sqrt(prm.residual_imgs[iact_proj].weight() / prm.sum_weight);
-
         read_proj = prm.residual_imgs[iact_proj];
         read_proj() *= sqrtweight;
         dummy_proj().resize(read_proj());
-        dummy_proj.setEulerAngles(prm.IMG_Inf[iact_proj].rot,
+
+        dummy_proj.set_angles(prm.IMG_Inf[iact_proj].rot,
                               prm.IMG_Inf[iact_proj].tilt,
                               prm.IMG_Inf[iact_proj].psi);
 
@@ -89,9 +87,11 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
                        prm.GVNeq, NULL, NULL, prm.ray_length, prm.threads);
 
         if (!(prm.tell&TELL_SHOW_ERROR))
-            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0) progress_bar(iact_proj);
+            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0)
+                progress_bar(iact_proj);
     }
-    if (!(prm.tell&TELL_SHOW_ERROR)) progress_bar(prm.numIMG);
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        progress_bar(prm.numIMG);
 
     // Convert to voxels: solely for output of power of residual volume
     Image<double>      residual_vox;
@@ -107,7 +107,8 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     residual_vox.clear();
 
     std::cerr << "Projection of residual volume; kappa = " << kappa << std::endl;
-    if (!(prm.tell&TELL_SHOW_ERROR)) init_progress_bar(prm.numIMG);
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        init_progress_bar(prm.numIMG);
 
     // Now that we have the residual volume: project in all directions
     pow_residual_imgs = 0.;
@@ -118,9 +119,6 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     dim2 = (double)YSIZE(read_proj()) * XSIZE(read_proj());
     for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
     {
-	// Check whether to kill job
-	exit_if_not_exists(prm.fn_control);
-
         project_Volume(residual_vol, prm.basis, new_proj,
                        dummy_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                        prm.IMG_Inf[iact_proj].rot,
@@ -158,13 +156,15 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
         */
 
         if (!(prm.tell&TELL_SHOW_ERROR))
-            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0) progress_bar(iact_proj);
+            if (iact_proj % XMIPP_MAX(1, prm.numIMG / 60) == 0)
+                progress_bar(iact_proj);
     }
 
     pow_residual_imgs /= dim2;
     newres_imgs.clear();
 
-    if (!(prm.tell&TELL_SHOW_ERROR)) progress_bar(prm.numIMG);
+    if (!(prm.tell&TELL_SHOW_ERROR))
+        progress_bar(prm.numIMG);
 
 }
 
@@ -177,25 +177,25 @@ void ART_single_step(
     Basic_ART_Parameters    &prm,            // blob, lambda
     Plain_ART_Parameters    &eprm,           // In this case, nothing
     Projection              &theo_proj,      // Projection of the reconstruction
-                                             // It is outside to make it visible
-                                             // just if it needed for any
-                                             // other purpose
+    // It is outside to make it visible
+    // just if it needed for any
+    // other purpose
     Projection             &read_proj,       // Real projection
     int sym_no,                              // Symmetry matrix index
     Projection             &diff_proj,       // Difference between read and
-                                             // theoretical projection
+    // theoretical projection
     Projection             &corr_proj,       // Correcting projection
     Projection             &alig_proj,       // Translation alignement aux proj
     double                 &mean_error,      // Mean error over the pixels
     int                     numIMG,          // number of images in the set
-                                             // in SIRT the correction must
-                                             // be divided by this number
+    // in SIRT the correction must
+    // be divided by this number
     double                  lambda,          // Lambda to be used
     int                     act_proj,        // Projection number
     const FileName         &fn_ctf,          // CTF to apply
     const MultidimArray<int>    *maskPtr)         // Mask to apply
 {
-// Prepare to work with CTF ................................................
+    // Prepare to work with CTF ................................................
     FourierMask ctf;
     ImageOver *footprint = (ImageOver *) & prm.basis.blobprint;
     ImageOver *footprint2 = (ImageOver *) & prm.basis.blobprint2;
@@ -241,6 +241,7 @@ void ART_single_step(
             FIRST_XMIPP_INDEX(finalsize), FIRST_XMIPP_INDEX(finalsize),
             LAST_XMIPP_INDEX(finalsize), LAST_XMIPP_INDEX(finalsize));
 #ifdef DEBUG
+
         Image<double> save;
         save() = (*footprint)();
         save.write("PPPfootprint.xmp");
@@ -251,11 +252,12 @@ void ART_single_step(
         (*footprint2)() *= (*footprint2)();
     }
 
-// Project structure .......................................................
+    // Project structure .......................................................
     // The correction image is reused in this call to store the normalising
     // projection, ie, the projection of an all-1 volume
     Matrix2D<double> *A = NULL;
-    if (prm.print_system_matrix) A = new Matrix2D<double>;
+    if (prm.print_system_matrix)
+        A = new Matrix2D<double>;
     corr_proj().initZeros();
     project_Volume(vol_in, prm.basis, theo_proj,
                    corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
@@ -267,9 +269,6 @@ void ART_single_step(
         ctf.generate_mask(theo_proj());
         ctf.apply_mask_Space(theo_proj());
     }
-
-    // Check whether to kill job
-    exit_if_not_exists(prm.fn_control);
 
     // Print system matrix
     if (prm.print_system_matrix)
@@ -288,7 +287,7 @@ void ART_single_step(
             if (!null_row)
             {
                 std::cout << "pixel=" << integerToString(i, 3) << " --> "
-                    << DIRECT_MULTIDIM_ELEM(read_proj(), i) << " = ";
+                << DIRECT_MULTIDIM_ELEM(read_proj(), i) << " = ";
                 for (int j = 0; j < (*A).mdimx; j++)
                     std::cout << MAT_ELEM(*A, i, j) << " ";
                 std::cout << std::endl;
@@ -336,7 +335,8 @@ void ART_single_step(
         FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
         {
             if (maskPtr!=NULL)
-                if ((*maskPtr)(i,j)<0.5) continue;
+                if ((*maskPtr)(i,j)<0.5)
+                    continue;
             // Compute difference image and error
             IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
             mean_error += IMGPIXEL(diff_proj, i, j) * IMGPIXEL(diff_proj, i, j);
