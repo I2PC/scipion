@@ -558,12 +558,12 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
 
     int condition;
     condition = thread_id==1;
-    if (condition)
+    if (condition || numthreads==1)
     {
         std::cout << "Equation mode " << eq_mode << std::endl;
         std::cout << "Footprint size " << YY_footprint_size << "x"
         << XX_footprint_size << std::endl;
-        std::cout << "rot=" << proj->Phi() << " tilt=" << proj->Theta()
+        std::cout << "rot=" << proj->rot() << " tilt=" << proj->tilt()
         << " psi=" << proj->psi() << std::endl;
         std::cout << "Euler matrix " << proj->euler;
         std::cout << "Projection direction " << prjDir << std::endl;
@@ -723,6 +723,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
                                             // Projection of a blob
                                             a = IMGPIXEL(basis->blobprint, foot_V, foot_U);
                                             a2 = IMGPIXEL(basis->blobprint2, foot_V, foot_U);
+
                                         }
                                         else
                                         {
@@ -964,7 +965,8 @@ void project_Volume(
     double            ray_length,   // Ray length of the projection
     int               threads)
 {
-    // If projecting forward initialise projections
+
+	// If projecting forward initialise projections
     if (FORW)
     {
         proj.reset(Ydim, Xdim);
@@ -1028,7 +1030,7 @@ void project_Volume(
         }
         else
         {
-            // create no thread to do the job
+          // create no thread to do the job
             project_SimpleGrid(&(vol(i)), &(vol.grid(i)), &basis,
                                &proj, &norm_proj, FORW, eq_mode,
                                VNeq, M, mask, ray_length);
