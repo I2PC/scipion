@@ -1053,7 +1053,9 @@ int Projection_real_shears::write_projection_file(int numFile)
     //Projection save
     proj.write(fn_proj);
 
-    SF.insert(fn_proj, SelLine::ACTIVE);
+    SF.addObject();
+    SF.setValue(MDL_IMAGE,fn_proj);
+    SF.setValue(MDL_ENABLED,true);
 
     if(display) progress_bar(numFile);
 
@@ -1063,40 +1065,18 @@ int Projection_real_shears::write_projection_file(int numFile)
 ///Reads a DocLine and fills Data fields. Returns possibles errors.
 int Projection_real_shears::read_a_DocLine()
 {
-    DocLine dl = DF.get_current_line(); // This is a data line of the fn_angle file 
+    double rot     ;
+    double tilt    ;
+    double psi     ;
+    double shiftX=0;
+    double shiftY=0;
 
-    double rot    ; 
-    double tilt   ; 
-    double psi    ;
-    double shiftX ;
-    double shiftY ;
+    DF.getValue(MDL_SHIFTX,shiftX);
+    DF.getValue(MDL_SHIFTY,shiftY);
 
-    //If the line is a comment
-    if(dl.Is_comment())
-    {
-        DF.next_data_line();
-        return (!ERROR);
-    }
-    else if(dl.get_no_components()<3) //If there aren't enough parameters
-    {
-        REPORT_ERROR(1, "Projection_real_shears::ROUT_project_real_shears: "
-                     "Error returned by do_oneProjection : too few arguments from the angle file");
-        return (ERROR);
-    }
-    else if(dl.get_no_components()==3) //If there are angles parameters but not shifts parameters
-    {
-        shiftX = 0.;
-        shiftY = 0.;
-    }
-    else
-    {
-        shiftX = dl[3];
-        shiftY = dl[4];
-    }
-
-    rot    = dl[0]; 
-    tilt   = dl[1]; 
-    psi    = dl[2]; 
+    DF.getValue(MDL_ANGLEROT,rot);
+    DF.getValue(MDL_ANGLETILT,tilt);
+    DF.getValue(MDL_ANGLEPSI,psi);
 
     Data.InitPsiThetaPhi[2] = -DEG2RAD(rot);
     Data.InitPsiThetaPhi[1] = -DEG2RAD(tilt);
@@ -1197,10 +1177,11 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
 }
 
 /// Prepare a volume to be projected
-void prepareStructVolume(const Matrix3D<double> &V, VolumeStruct &Data)
+void prepareStructVolume(const MultidimArray<double> &V, VolumeStruct &Data)
 {
     int z, y, x;
-    V.getDimension(z, y, x);
+    unsigned long int n;
+    V.getDimensions(x,y,z,n);
     Data.nx_Volume = x;
     Data.ny_Volume = y;
     Data.nz_Volume = z;
@@ -1219,18 +1200,17 @@ void prepareStructVolume(const Matrix3D<double> &V, VolumeStruct &Data)
 int Projection_real_shears::start_to_process()
 {
     read(fn_proj_param);
-
-    DF = DocFile(fn_angle);  // Reads the fn_angle file
+    DF.read(fn_angle);
 
     //Configure the time for the progress bar
     if(display)
     {
         time_config();
-        init_progress_bar(DF.dataLineNo());
+        init_progress_bar(DF.size());
     }
 
     //Reads the reference volume
-    VolumeXmipp V;
+    Image<double> V;
     V.read(fnPhantom);
     prepareStructVolume(V(),Data);
 
@@ -1240,11 +1220,8 @@ int Projection_real_shears::start_to_process()
         std::cout<<"\n\tThe program will only keep the volume dimensions.\n"<<std::endl;
     }
 
-    SF.clear();
-    SF.reserve(DF.dataLineNo());
-
     num_file = starting;
-    DF.go_first_data_line();
+    DF.firstObject();
 
     return (!ERROR);
 }
@@ -1258,7 +1235,7 @@ int Projection_real_shears::finish_to_process()
     //SelFile save
     if(display)
     {
-        progress_bar(DF.dataLineNo());
+        progress_bar(DF.size());
 
         if (fn_sel_file == "") //If the name of the output file is not specified
         {
@@ -1284,7 +1261,7 @@ int Projection_real_shears::ROUT_project_real_shears()
     if(start_to_process() == ERROR)
         return (ERROR);
 
-    while(!DF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(DF)
     {
         if(read_a_DocLine() == ERROR)
             return (ERROR);
@@ -1296,7 +1273,6 @@ int Projection_real_shears::ROUT_project_real_shears()
             return (ERROR);
 
         num_file++;
-        DF.next_data_line();
     }
 
     if(finish_to_process() == ERROR)

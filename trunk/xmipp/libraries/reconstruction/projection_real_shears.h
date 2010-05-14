@@ -47,7 +47,7 @@
  ****************************************************************************/ 
 #include <external/bilib/configs.h> 
 #include <external/bilib/headers/messagedisplay.h> 
-#include <data/selfile.h> 
+#include <data/metadata.h>
  
 /***************************************************************************** 
  *    Toolbox includes 
@@ -60,10 +60,9 @@
 /***************************************************************************** 
  *    New toolbox includes 
  ****************************************************************************/
-#include <data/docfile.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/projection.h>
-#include <data/volume.h>
+#include <data/image.h>
 
 
 #ifndef DBL_EPSILON
@@ -93,7 +92,7 @@ typedef struct
 } VolumeStruct;
 
 /// Prepare a volume to be projected
-void prepareStructVolume(const Matrix3D<double> &V, VolumeStruct &Data);
+void prepareStructVolume(const MultidimArray<double> &V, VolumeStruct &Data);
 
 /// Make projection
 void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
@@ -152,9 +151,9 @@ class Projection_real_shears
         ///Projection to save
         Projection proj;
         ///Selection file to fill and save
-        SelFile SF;
+        MetaData SF;
         ///Content of the angle file
-        DocFile DF;
+        MetaData DF;
         ///Basics Data for projections
         VolumeStruct Data;
 

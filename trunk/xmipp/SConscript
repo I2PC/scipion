@@ -386,7 +386,7 @@ ReconsSources = [
     'angular_distance.cpp',
     'angular_neighbourhood.cpp',
     'angular_projection_matching.cpp',
-#    'angular_class_average.cpp',
+#    'angular_class_average.cpp', coss
 #    'angular_project_library.cpp',
 #    'crystal_angular_projection_matching.cpp',
 #    'art_crystal.cpp',
@@ -429,7 +429,7 @@ ReconsSources = [
 #    'projectTomography.cpp',
      'project_XR.cpp',
 #    'project_crystal.cpp',
-#    'projection_real_shears.cpp',
+    'projection_real_shears.cpp',
     'psd_enhance.cpp',
 #    'psd_sort.cpp',
     'radon.cpp',
@@ -508,7 +508,7 @@ AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('align_volumes')
 AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
-#AddXmippProgram('angular_class_average', ['XmippRecons'])
+# AddXmippProgram('angular_class_average', ['XmippRecons']) coss
 AddXmippProgram('angular_commonline', ['XmippRecons'])
 AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
 AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
@@ -611,7 +611,7 @@ AddXmippProgram('normalize')
 #AddXmippProgram('precompute_sampling', ['XmippRecons'])
 #AddXmippProgram('project', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('project_tomography', ['XmippRecons'])
-#AddXmippProgram('projection_real_shears', ['XmippRecons'])
+AddXmippProgram('projection_real_shears', ['XmippRecons'])
 AddXmippProgram('project_xr', ['XmippRecons'])
 #AddXmippProgram('psd_enhance', ['XmippRecons'])
 #AddXmippProgram('psd_sort', ['XmippRecons'])
@@ -719,7 +719,7 @@ if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])sjors
 #    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])sjors
 #    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons']sjors)
-#    AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
