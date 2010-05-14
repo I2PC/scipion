@@ -42,16 +42,25 @@ mD.read(selFile)
 XmippData.getValueString( mD,XmippData.MDL_IMAGE, ss)
 inFile=XmippData.FileName(ss)
 _image=XmippData.Imaged()
-mdc=XmippData.MetaDataContainer()
-mdc = mD.getObject()
+_image.read(inFile)
+dd=XmippData.doubleP()
+
+#mdc=XmippData.MetaDataContainer()
+#mdc = mD.getObject()
+
+
+
+
 vv=XmippData.vectorm()
 vv.append(XmippData.MDL_IMAGE)
 vv.append(XmippData.MDL_ANGLEROT)
 vv.append(XmippData.MDL_ANGLETILT)
-vv.append(XmippData.MDL_ANGLEPSI)
-_image.read(inFile,True,-1,True,False,mdc,vv)
-print ss.value()
 
+##################################vv.append(XmippData.MDL_ANGLEPSI)
+
+_image.read(inFile,True,-1,True,False,mD,vv)
+print ss.value()
+XmippData.getValueDouble( _image.MD,XmippData.MDL_ANGLETILT,dd)
 outFile=XmippData.FileName('kk.xmp')
 _image.write(outFile)
 */
