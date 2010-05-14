@@ -46,8 +46,8 @@
  * digital frequency (-1/2 to 1/2)
  */
 #define FFT_IDX2DIGFREQ(idx, size, freq) \
-    freq = ((double) ((idx) < ((size) >> 1)) ? (idx) : -(size) + (idx)) / \
-           (double)(size);
+    freq = (size<=1)? 0:(((double) ((idx) < ((size) >> 1)) ? (idx) : -(size) + (idx)) / \
+           (double)(size));
 
 /** Frequency to index (int)
  * @ingroup FourierConverters
