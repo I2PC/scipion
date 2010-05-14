@@ -372,6 +372,7 @@ class KaiserBessel(_object):
 KaiserBessel_swigregister = _XmippData.KaiserBessel_swigregister
 KaiserBessel_swigregister(KaiserBessel)
 
+icdf_gauss = _XmippData.icdf_gauss
 cdf_gauss = _XmippData.cdf_gauss
 cdf_tstudent = _XmippData.cdf_tstudent
 cdf_FSnedecor = _XmippData.cdf_FSnedecor
@@ -522,6 +523,10 @@ class MetaData(_object):
         except: self.this = this
     def assign(*args): return _XmippData.MetaData_assign(*args)
     def union_(*args): return _XmippData.MetaData_union_(*args)
+    def merge(*args): return _XmippData.MetaData_merge(*args)
+    KEEP_OLD = _XmippData.MetaData_KEEP_OLD
+    KEEP_NEW = _XmippData.MetaData_KEEP_NEW
+    SUM = _XmippData.MetaData_SUM
     def intersection(*args): return _XmippData.MetaData_intersection(*args)
     def substraction(*args): return _XmippData.MetaData_substraction(*args)
     __swig_destroy__ = _XmippData.delete_MetaData
@@ -565,7 +570,6 @@ class MetaData(_object):
     def getComment(*args): return _XmippData.MetaData_getComment(*args)
     def size(*args): return _XmippData.MetaData_size(*args)
     def getFilename(*args): return _XmippData.MetaData_getFilename(*args)
-    def detectObjects(*args): return _XmippData.MetaData_detectObjects(*args)
     def valueExists(*args): return _XmippData.MetaData_valueExists(*args)
     def randomize(*args): return _XmippData.MetaData_randomize(*args)
     def sort(*args): return _XmippData.MetaData_sort(*args)
@@ -575,91 +579,6 @@ class MetaData(_object):
 MetaData_swigregister = _XmippData.MetaData_swigregister
 MetaData_swigregister(MetaData)
 
-MDL_UNDEFINED = _XmippData.MDL_UNDEFINED
-MDL_FIRST_LABEL = _XmippData.MDL_FIRST_LABEL
-MDL_ANGLEPSI = _XmippData.MDL_ANGLEPSI
-MDL_ANGLEROT = _XmippData.MDL_ANGLEROT
-MDL_ANGLETILT = _XmippData.MDL_ANGLETILT
-MDL_ANGLEPSI2 = _XmippData.MDL_ANGLEPSI2
-MDL_ANGLEROT2 = _XmippData.MDL_ANGLEROT2
-MDL_ANGLETILT2 = _XmippData.MDL_ANGLETILT2
-MDL_COMMENT = _XmippData.MDL_COMMENT
-MDL_CTFINPUTPARAMS = _XmippData.MDL_CTFINPUTPARAMS
-MDL_CTFMODEL = _XmippData.MDL_CTFMODEL
-MDL_ENABLED = _XmippData.MDL_ENABLED
-MDL_FLIP = _XmippData.MDL_FLIP
-MDL_IMAGE = _XmippData.MDL_IMAGE
-MDL_IMAGE_ORIGINAL = _XmippData.MDL_IMAGE_ORIGINAL
-MDL_IMAGE_CLASS = _XmippData.MDL_IMAGE_CLASS
-MDL_IMAGE_CLASS_GROUP = _XmippData.MDL_IMAGE_CLASS_GROUP
-MDL_IMAGE_CLASS_COUNT = _XmippData.MDL_IMAGE_CLASS_COUNT
-MDL_MASK = _XmippData.MDL_MASK
-MDL_MAXCC = _XmippData.MDL_MAXCC
-MDL_COST = _XmippData.MDL_COST
-MDL_MICROGRAPH = _XmippData.MDL_MICROGRAPH
-MDL_MISSINGREGION_NR = _XmippData.MDL_MISSINGREGION_NR
-MDL_MISSINGREGION_TYPE = _XmippData.MDL_MISSINGREGION_TYPE
-MDL_NMA = _XmippData.MDL_NMA
-MDL_ORIGINX = _XmippData.MDL_ORIGINX
-MDL_ORIGINY = _XmippData.MDL_ORIGINY
-MDL_ORIGINZ = _XmippData.MDL_ORIGINZ
-MDL_PERIODOGRAM = _XmippData.MDL_PERIODOGRAM
-MDL_PMAX = _XmippData.MDL_PMAX
-MDL_REF = _XmippData.MDL_REF
-MDL_REF3D = _XmippData.MDL_REF3D
-MDL_SCALE = _XmippData.MDL_SCALE
-MDL_BGMEAN = _XmippData.MDL_BGMEAN
-MDL_INTSCALE = _XmippData.MDL_INTSCALE
-MDL_MODELFRAC = _XmippData.MDL_MODELFRAC
-MDL_MIRRORFRAC = _XmippData.MDL_MIRRORFRAC
-MDL_LL = _XmippData.MDL_LL
-MDL_WROBUST = _XmippData.MDL_WROBUST
-MDL_SIGNALCHANGE = _XmippData.MDL_SIGNALCHANGE
-MDL_SYMNO = _XmippData.MDL_SYMNO
-MDL_SERIE = _XmippData.MDL_SERIE
-MDL_SHIFTX = _XmippData.MDL_SHIFTX
-MDL_SHIFTY = _XmippData.MDL_SHIFTY
-MDL_SHIFTZ = _XmippData.MDL_SHIFTZ
-MDL_X = _XmippData.MDL_X
-MDL_Y = _XmippData.MDL_Y
-MDL_Z = _XmippData.MDL_Z
-MDL_XINT = _XmippData.MDL_XINT
-MDL_YINT = _XmippData.MDL_YINT
-MDL_ZINT = _XmippData.MDL_ZINT
-MDL_WEIGHT = _XmippData.MDL_WEIGHT
-MDL_OBJID = _XmippData.MDL_OBJID
-MDL_MAX = _XmippData.MDL_MAX
-MDL_MIN = _XmippData.MDL_MIN
-MDL_STDDEV = _XmippData.MDL_STDDEV
-MDL_AVG = _XmippData.MDL_AVG
-MDL_RESOLUTIONFOURIER = _XmippData.MDL_RESOLUTIONFOURIER
-MDL_RESOLUTIONREAL = _XmippData.MDL_RESOLUTIONREAL
-MDL_FRC = _XmippData.MDL_FRC
-MDL_FRCRANDOMNOISE = _XmippData.MDL_FRCRANDOMNOISE
-MDL_DPR = _XmippData.MDL_DPR
-MDL_SAMPLINGRATE = _XmippData.MDL_SAMPLINGRATE
-MDL_SAMPLINGRATEX = _XmippData.MDL_SAMPLINGRATEX
-MDL_SAMPLINGRATEY = _XmippData.MDL_SAMPLINGRATEY
-MDL_SAMPLINGRATEZ = _XmippData.MDL_SAMPLINGRATEZ
-MDL_VOLTAGE = _XmippData.MDL_VOLTAGE
-MDL_DEFOCUSU = _XmippData.MDL_DEFOCUSU
-MDL_DEFOCUSV = _XmippData.MDL_DEFOCUSV
-MDL_IMGMD = _XmippData.MDL_IMGMD
-MDL_REFMD = _XmippData.MDL_REFMD
-MDL_ITER = _XmippData.MDL_ITER
-MDL_BLOCK = _XmippData.MDL_BLOCK
-MDL_SIGMANOISE = _XmippData.MDL_SIGMANOISE
-MDL_SIGMAOFFSET = _XmippData.MDL_SIGMAOFFSET
-MDL_SUMWEIGHT = _XmippData.MDL_SUMWEIGHT
-MDL_RANDOMSEED = _XmippData.MDL_RANDOMSEED
-MDL_DEFGROUP = _XmippData.MDL_DEFGROUP
-MDL_KSTEST = _XmippData.MDL_KSTEST
-MDL_TRANSFORMATIONMTRIX = _XmippData.MDL_TRANSFORMATIONMTRIX
-MDL_AZIMUTALANGLE = _XmippData.MDL_AZIMUTALANGLE
-MDL_SPHERICALABERRATION = _XmippData.MDL_SPHERICALABERRATION
-MDL_Q0 = _XmippData.MDL_Q0
-MDL_K = _XmippData.MDL_K
-MDL_LAST_LABEL = _XmippData.MDL_LAST_LABEL
 isString = _XmippData.isString
 isDouble = _XmippData.isDouble
 isVector = _XmippData.isVector
