@@ -33,7 +33,6 @@ Prog_angular_project_library_Parameters::Prog_angular_project_library_Parameters
     mysampling.SetSampling(1);
 }
 
-
 /* Read parameters --------------------------------------------------------- */
 void Prog_angular_project_library_Parameters::read(int argc, char **argv)
 {

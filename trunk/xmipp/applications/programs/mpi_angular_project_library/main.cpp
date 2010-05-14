@@ -36,7 +36,6 @@
 
 #include <data/args.h>
 #include <reconstruction/angular_project_library.h>
-#include <data/header.h>
 
 #define TAG_WORKFORWORKER   0
 #define TAG_STOP   1
@@ -328,7 +327,7 @@ std::cerr << "Sent jobNo " <<  i << std::endl;
         //only rank 0 create sel file
         if(rank==0)
             {
-            SelFile  mySF;
+            MetaData  mySF;
             FileName fn_temp;
             int myCounter=0;
 
@@ -336,7 +335,8 @@ std::cerr << "Sent jobNo " <<  i << std::endl;
                for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
                { 
                 fn_temp.compose(output_file_root, ++myCounter,"xmp");
-                mySF.insert(fn_temp);
+                mySF.addObject();
+                mySF.setValue(MDL_IMAGE,fn_temp);
                }
             fn_temp=output_file_root+".sel";   
             mySF.write(fn_temp);         

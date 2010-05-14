@@ -32,7 +32,7 @@
 #include <iostream>
 #include <string>
 #include <data/projection.h>
-#include <data/volume.h>
+#include <data/image.h>
 #include <data/funcs.h>
 #include "projection_real_shears.h"
 
@@ -117,7 +117,7 @@ public:
     FileName input_volume;
     
     /**volume to be projecte */
-    VolumeXmipp inputVol;
+    Image<double> inputVol;
     
     /** projection x dim */
     int Xdim;
