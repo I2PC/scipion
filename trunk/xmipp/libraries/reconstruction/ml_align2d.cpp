@@ -1956,10 +1956,6 @@ void Prog_MLalign2D_prm::expectation()
     // Loop over all images
     FOR_ALL_LOCAL_IMAGES()
     {
-        //if (img_blocks[IMG_LOCAL_INDEX] == current_block)
-        //if (img_blocks[imgno] == current_block)
-        std::cerr << "IMG_BLOCK(imgno)="<< IMG_BLOCK(imgno)<<"current_block= "<<current_block<<std::endl;
-
     	if (IMG_BLOCK(imgno) == current_block)
         {
 #ifdef TIMING
