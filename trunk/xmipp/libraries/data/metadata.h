@@ -123,6 +123,18 @@ public:
      */
     void union_(MetaData &MD, MetaDataLabel thisLabel=MDL_OBJID);
 
+    /** merge of a metadata
+     * This function reads another metadata and makes a union to this one
+     */
+    void merge(const FileName &fn);
+
+    /** Aggregate modes */
+    enum AggregateMode {
+    	KEEP_OLD,
+    	KEEP_NEW,
+    	SUM
+    };
+
     /** intersects two metadata objects, result in "calling" metadata
      */
     void intersection(MetaData & minuend, MetaData & ,

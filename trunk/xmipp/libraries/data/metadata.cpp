@@ -148,6 +148,13 @@ void MetaData::union_(MetaData &MD, MetaDataLabel thisLabel)
     this->objectsIterator = this->objects.begin();
 }
 
+void MetaData::merge(const FileName &fn)
+{
+	MetaData aux;
+	aux.read(fn);
+	union_(aux);
+}
+
 void MetaData::intersection(MetaData &minuend, MetaData &subtrahend,
                             MetaDataLabel thisLabel)
 {
