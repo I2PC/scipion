@@ -378,6 +378,9 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
     myFirstImg = 0;
     myLastImg = nr_images_global - 1;
 
+    //Initialize blocks
+    current_block=0;
+
     // Create a vector of ovjectIDs, which may be randomized later on
     img_id.resize(nr_images_global, 0);
     int i = 0;
@@ -412,7 +415,7 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
 
             if (IS_MASTER)
             {
-                if (!do_ML3D) show();
+                show(do_ML3D);
                 generateInitialReferences();
             }
         }
@@ -774,6 +777,9 @@ void Prog_MLalign2D_prm::generateInitialReferences()
 // Calculate probability density function of all in-plane transformations phi
 void Prog_MLalign2D_prm::calculatePdfInplane()
 {
+#ifdef DEBUG
+	std::cerr << "Entering calculatePdfInplane" <<std::endl;
+#endif
 
     double x, y, r2, pdfpix, sum;
     P_phi.resize(dim, dim);
@@ -811,6 +817,9 @@ void Prog_MLalign2D_prm::calculatePdfInplane()
 
     // Normalization
     P_phi /= sum;
+#ifdef DEBUG
+	std::cerr << "Leaving calculatePdfInplane" <<std::endl;
+#endif
 
 }
 
@@ -1949,7 +1958,9 @@ void Prog_MLalign2D_prm::expectation()
     {
         //if (img_blocks[IMG_LOCAL_INDEX] == current_block)
         //if (img_blocks[imgno] == current_block)
-        if (IMG_BLOCK(imgno) == current_block)
+        std::cerr << "IMG_BLOCK(imgno)="<< IMG_BLOCK(imgno)<<"current_block= "<<current_block<<std::endl;
+
+    	if (IMG_BLOCK(imgno) == current_block)
         {
 #ifdef TIMING
             timer.tic(FOR_F1);
@@ -2289,6 +2300,10 @@ bool Prog_MLalign2D_prm::checkConvergence()
 void Prog_MLalign2D_prm::addPartialDocfileData(MultidimArray<double> data,
         int first, int last)
 {
+#ifdef DEBUG
+	std::cerr << "Entering addPartialDocfileData" <<std::endl;
+#endif
+
     Matrix1D<double> dataline(DATALINELENGTH);
     int index;
 
@@ -2318,6 +2333,10 @@ void Prog_MLalign2D_prm::addPartialDocfileData(MultidimArray<double> data,
             MDimg.setValue(MDL_WROBUST, dAij(data, index, 11), img_id[imgno]);
         }
     }
+
+#ifdef DEBUG
+	std::cerr << "Leaving addPartialDocfileData" <<std::endl;
+#endif
 }//close function addDocfileData
 
 void Prog_MLalign2D_prm::writeDocfile(FileName fn_base)
@@ -2382,7 +2401,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
         if (do_mirror)
             MDref.setValue(MDL_MIRRORFRAC,
                          model.mirror_fraction[refno]);
-        if (no_block)
+        if (no_block && !do_ML3D)
             MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
         if (write_norm)
             MDref.setValue(MDL_INTSCALE, model.scale[refno]);

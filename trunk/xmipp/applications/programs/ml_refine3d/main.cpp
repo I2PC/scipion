@@ -93,6 +93,7 @@ int main(int argc, char **argv)
             ML2D_prm.maximization(ML2D_prm.model, prm.nr_projections);
 
             // Write intermediate output files
+            ML2D_prm.addPartialDocfileData(ML2D_prm.docfiledata, ML2D_prm.myFirstImg, ML2D_prm.myLastImg);
             ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_ITER);
             prm.concatenate_selfiles(ML2D_prm.iter);
 
@@ -138,6 +139,7 @@ int main(int argc, char **argv)
         } // end loop iterations
 
         // Write out converged doc and logfiles
+        ML2D_prm.addPartialDocfileData(ML2D_prm.docfiledata, ML2D_prm.myFirstImg, ML2D_prm.myLastImg);
         ML2D_prm.writeOutputFiles(ML2D_prm.model);
         ML2D_prm.destroyThreads();
 

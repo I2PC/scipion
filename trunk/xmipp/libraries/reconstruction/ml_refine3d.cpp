@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "ml_refine3d.h"
-
+//#define DEBUG
 
 // Read ===================================================================
 void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
@@ -396,6 +396,8 @@ void Prog_Refine3d_prm::project_reference_volume(MetaData &SFlib, int rank, int 
     nvol = 0;
     nr_dir = 0;
     fn_tmp = fn_root + "_lib";
+    SFvol.write("tt.xmd");
+
     FOR_ALL_OBJECTS_IN_METADATA(SFvol)
     {
         SFvol.getValue(MDL_IMAGE, fn_tmp);
@@ -412,10 +414,10 @@ void Prog_Refine3d_prm::project_reference_volume(MetaData &SFlib, int rank, int 
             my_rank = nr_dir % size;
             if (rank == my_rank)
             {
-                project_Volume(vol(), proj, vol().rowNumber(), vol().colNumber(), rot, tilt, psi);
-                proj.setEulerAngles(rot, tilt, psi);
+            	project_Volume(vol(), proj, vol().rowNumber(), vol().colNumber(), rot, tilt, psi);
+            	proj.setEulerAngles(rot, tilt, psi);
                 proj.write(fn_proj);
-            }
+			}
 
             // But all ranks gather the information in SFlib (and in eachvol_end and eachvol_start)
             SFlib.addObject();
@@ -535,27 +537,27 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
     if (reconstruct_fourier)
     {
 
-    	REPORT_ERROR(1,"temporarily deactivated option for -fourier; until newimage and metadata done");
+        REPORT_ERROR(1,"temporarily deactivated option for -fourier; until newimage and metadata done");
 
-    	/*
-        // read command line (fn_sym, angular etc.)
-        Prog_RecFourier_prm   fourier_prm;
-        if (verb > 0)
-            std::cerr << "--> Fourier-interpolation reconstruction " << std::endl;
-        fourier_prm.read(argc, argv);
-        fourier_prm.fn_sel = fn_insel;
-        // TODO: check how this is done now with metadata....
-        fourier_prm.fn_doc="";
-        fourier_prm.do_weights = true;
-        fourier_prm.fn_out = fn_tmp + ".vol";
-        fourier_prm.verb = verb;
-        if (volno > 0)
-            fourier_prm.verb = 0;
-        fourier_prm.show();
-        fourier_prm.produce_Side_info();
-        fourier_prm.run();
-        new_vol=fourier_prm.Vout;
-        */
+        /*
+           // read command line (fn_sym, angular etc.)
+           Prog_RecFourier_prm   fourier_prm;
+           if (verb > 0)
+               std::cerr << "--> Fourier-interpolation reconstruction " << std::endl;
+           fourier_prm.read(argc, argv);
+           fourier_prm.fn_sel = fn_insel;
+           // TODO: check how this is done now with metadata....
+           fourier_prm.fn_doc="";
+           fourier_prm.do_weights = true;
+           fourier_prm.fn_out = fn_tmp + ".vol";
+           fourier_prm.verb = verb;
+           if (volno > 0)
+               fourier_prm.verb = 0;
+           fourier_prm.show();
+           fourier_prm.produce_Side_info();
+           fourier_prm.run();
+           new_vol=fourier_prm.Vout;
+           */
     }
     else // use wlsART
     {
@@ -663,8 +665,8 @@ void Prog_Refine3d_prm::calculate_3DSSNR(MultidimArray<double> &spectral_signal,
         MDnoise_one.fillMetaData( MDnoise_all, MDnoise_all.findObjects(MDL_REF3D, volno + 1) );
 
         c = 0;
-		volweight = 0.;
-		FOR_ALL_OBJECTS_IN_METADATA(MDnoise_one)
+        volweight = 0.;
+        FOR_ALL_OBJECTS_IN_METADATA(MDnoise_one)
         {
             MDnoise_one.getValue(MDL_WEIGHT, weight);
             MDnoise_one.getValue(MDL_ANGLEROT, rot);
@@ -783,9 +785,9 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise)
     if (rewrite)
     {
         FOR_ALL_OBJECTS_IN_METADATA(SFvol)
-		{
-        	SFvol.getValue(MDL_IMAGE, fn_vol);
-        	ref_vol.read(fn_vol);
+        {
+            SFvol.getValue(MDL_IMAGE, fn_vol);
+            ref_vol.read(fn_vol);
             ref_vol().setXmippOrigin();
             if (Nvols > 1)
             {
@@ -870,25 +872,32 @@ void Prog_Refine3d_prm::remake_SFvol(int iter, bool rewrite, bool include_noise)
 // Concatenate MLalign2D selfiles ==============================================
 void Prog_Refine3d_prm::concatenate_selfiles(int iter)
 {
+#ifdef DEBUG
+	std::cerr << "Entering concatenate_selfiles" <<std::endl;
+#endif
 
-    FileName fn_tmp, fn_class;
+	FileName fn_tmp, fn_class;
     MetaData MDin, MDout;
     fn_tmp = fn_root + "_it";
-    fn_tmp.compose(fn_class, iter, "");
+    fn_tmp.compose(fn_tmp, iter, "");
     MDin.read(fn_tmp + "_img.xmd");
 
     int minval, maxval;
     // Concatenate all hard-classification selfiles
     for (int volno = 0; volno < Nvols; volno++)
     {
-    	minval = volno * nr_projections + 1;
-    	maxval = (volno + 1) * nr_projections;
-    	MDout.clear();
-    	MDout.fillMetaData(MDin, MDin.findObjectsInRange(MDL_REF, minval, maxval));
-    	fn_class = fn_tmp + "_class_vol";
-        fn_class.compose(fn_class, volno + 1, "_img.xmd");
+        minval = volno * nr_projections + 1;
+        maxval = (volno + 1) * nr_projections;
+        MDout.clear();
+        MDout.fillMetaData(MDin, MDin.findObjectsInRange(MDL_REF, minval, maxval));
+        fn_class = fn_tmp + "_class_vol";
+        fn_class.compose(fn_class, volno + 1, "");
+        fn_class += "_img.xmd";
         MDout.write(fn_class);
     }
+#ifdef DEBUG
+	std::cerr << "Leaving concatenate_selfiles" <<std::endl;
+#endif
 
 }
 
@@ -914,9 +923,9 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
     {
 
         FOR_ALL_OBJECTS_IN_METADATA(SFvol)
-		{
-        	SFvol.getValue(MDL_IMAGE, fn_vol);
-        	// Read corresponding volume from disc
+        {
+            SFvol.getValue(MDL_IMAGE, fn_vol);
+            // Read corresponding volume from disc
             vol.read(fn_vol);
             vol().setXmippOrigin();
             dim = vol().rowNumber();
