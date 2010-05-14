@@ -37,7 +37,7 @@
 #include "transformations.h"
 #include "metadata.h"
 
-static std::vector<MetaDataLabel> emptyVector;
+static std::vector<MDLabel> emptyVector;
 static MetaData emptyMetaData;
 
 typedef enum TransformType {
@@ -121,7 +121,7 @@ unsigned long   gettypesize(DataType type);
 
 //dummy vectors for default function inizialization
 //static MetaDataContainer emptyMetaDataContainer;
-//static std::vector<MetaDataLabel> emptyVector;
+//static std::vector<MDLabel> emptyVector;
 
 /** Template class for images
  * @ingroup Images
@@ -284,7 +284,7 @@ public:
     int read(const FileName &name, bool readdata=true, int select_img=-1,
              bool apply_geo = false, bool only_apply_shifts = false,
              const MetaData &docFile= emptyMetaData,
-             std::vector<MetaDataLabel> &activeLabels = emptyVector )
+             std::vector<MDLabel> &activeLabels = emptyVector )
     {
         int err = 0;
         // Check whether to read the data or only the header
@@ -320,34 +320,34 @@ public:
 
         if(activeLabels.empty() && !(docFile.isEmpty()))
             activeLabels = docFile.activeLabels;
-        std::vector<MetaDataLabel>::iterator strIt;
+        std::vector<MDLabel>::iterator strIt;
         for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
         {
-            if (isDouble(*strIt))
+            if (MDL::isDouble(*strIt))
             {
             	double dd;
                 docFile.getValue(*strIt,dd);
                 MD.setValue(*strIt,dd);
             }
-            else if (isString(*strIt))
+            else if (MDL::isString(*strIt))
             {
             	std::string ss;
                 docFile.getValue(*strIt,ss);
                 MD.setValue(*strIt,ss);
             }
-            else if (isInt(*strIt))
+            else if (MDL::isInt(*strIt))
             {
             	int ii;
                 docFile.getValue(*strIt,ii);
                 MD.setValue(*strIt,ii);
             }
-            else if (isBool(*strIt))
+            else if (MDL::isBool(*strIt))
             {
             	bool bb;
                 docFile.getValue(*strIt,bb);
                 MD.setValue(*strIt,bb);
             }
-            else if (isVector(*strIt))
+            else if (MDL::isVector(*strIt))
             {
             	std::vector<double> vv;
                 docFile.getValue(*strIt,vv);

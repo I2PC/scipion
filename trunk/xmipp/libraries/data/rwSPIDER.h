@@ -321,7 +321,7 @@ int  writeSPIDER()
     bool baux;
     header->imami = 1;
     /**
-        std::vector< MetaDataLabel >::iterator strIt;
+        std::vector< MDLabel >::iterator strIt;
         for( strIt  = SF.activeLabels.begin(); strIt != SF.activeLabels.end(); strIt ++ )
         {
             switch ((*strIt)) {

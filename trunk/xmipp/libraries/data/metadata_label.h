@@ -140,15 +140,15 @@ public:
     // This enum defines what MetaDataLabels this class can manage, if
     // you need a new one add it here and modify affected methods:
     //
-    //  - static MetaDataLabel codifyLabel( std::string strLabel );
-    // - static std::string decodeLabel( MetaDataLabel inputLabel );
-    // - void writeValuesToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
+    //  - static MDLabel codifyLabel( std::string strLabel );
+    // - static std::string MDL::label2Str( MDLabel inputLabel );
+    // - void writeValuesToFile( std::ofstream &outfile, MDLabel inputLabel );
     // - void addValue( std::string name, std::string value );
     //
     // Keep this special structure (using MDL_FIRSTLABEL and MDL_LAST_LABEL) so the
     // programmer can iterate through it like this:
     //
-    //  for( MetaDataLabel mdl = MDL_FIRST_LABEL ; mdl < MDL_LAST_LABEL ; MetaDataLabel( mdl+1 ) )
+    //  for( MDLabel mdl = MDL_FIRST_LABEL ; mdl < MDL_LAST_LABEL ; MDLabel( mdl+1 ) )
     //
 
 static MDLabel str2Label(std::string labelName);

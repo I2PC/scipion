@@ -100,7 +100,7 @@ MetaData& MetaData::operator =(const MetaData &MD)
     return *this;
 }
 
-void MetaData::union_(MetaData &MD, MetaDataLabel thisLabel)
+void MetaData::union_(MetaData &MD, MDLabel thisLabel)
 {
     if (!isColumnFormat)
     {
@@ -156,7 +156,7 @@ void MetaData::merge(const FileName &fn)
 }
 
 void MetaData::intersection(MetaData &minuend, MetaData &subtrahend,
-                            MetaDataLabel thisLabel)
+                            MDLabel thisLabel)
 {
     if (!isColumnFormat)
     {
@@ -202,7 +202,7 @@ void MetaData::intersection(MetaData &minuend, MetaData &subtrahend,
 }
 
 void MetaData::substraction(MetaData &minuend, MetaData &subtrahend,
-                            MetaDataLabel thisLabel)
+                            MDLabel thisLabel)
 {
     if (!isColumnFormat)
     {
@@ -251,7 +251,7 @@ void MetaData::substraction(MetaData &minuend, MetaData &subtrahend,
 }
 
 void MetaData::read(std::ifstream *infile,
-                    std::vector<MetaDataLabel> * labelsVector)
+                    std::vector<MDLabel> * labelsVector)
 {
     infile->seekg(0, std::ios::beg);
     std::string line;
@@ -299,7 +299,7 @@ void MetaData::read(std::ifstream *infile,
 
         while (os >> newLabel)
         {
-            MetaDataLabel label = MetaDataContainer::codifyLabel(newLabel);
+            MDLabel label = MDL::str2Label(newLabel);
 
             if (label == MDL_UNDEFINED)
                 ignoreLabels.push_back(labelPosition);
@@ -343,7 +343,7 @@ void MetaData::read(std::ifstream *infile,
                     continue;
                 }
 
-                if (isVector(activeLabels[labelPosition - counterIgnored])
+                if (MDL::isVector(activeLabels[labelPosition - counterIgnored])
                     && value == "**")
                 {
                     std::string aux;
@@ -356,7 +356,7 @@ void MetaData::read(std::ifstream *infile,
                     std::cerr << "is vector value" << value << std::endl;
                 }
 
-                setValue(MetaDataContainer::decodeLabel(
+                setValue(MDL::label2Str(
                              activeLabels[labelPosition - counterIgnored]), value);
                 labelPosition++;
             }
@@ -379,8 +379,8 @@ void MetaData::read(std::ifstream *infile,
             std::stringstream os(line);
 
             os >> newLabel;
-            MetaDataLabel label = MetaDataContainer::codifyLabel(newLabel);
-            if(!isVector(label))
+            MDLabel label = MDL::str2Label(newLabel);
+            if(!MDL::isVector(label))
                 os >> value;
             else
             {
@@ -398,7 +398,7 @@ void MetaData::read(std::ifstream *infile,
 }
 
 void MetaData::readOldDocFile(std::ifstream *infile,
-                              std::vector<MetaDataLabel> * labelsVector)
+                              std::vector<MDLabel> * labelsVector)
 {
     bool saveName = true;
     infile->seekg(0, std::ios::beg);
@@ -418,7 +418,7 @@ void MetaData::readOldDocFile(std::ifstream *infile,
     // for the new format it must be added by hand, if necessary
     if (labelsVector != NULL)
     {
-        std::vector<MetaDataLabel>::iterator location;
+        std::vector<MDLabel>::iterator location;
 
         location = std::find(labelsVector->begin(), labelsVector->end(),
                              MDL_IMAGE);
@@ -455,19 +455,19 @@ void MetaData::readOldDocFile(std::ifstream *infile,
 
         if (labelsVector != NULL)
         {
-            std::vector<MetaDataLabel>::iterator location;
+            std::vector<MDLabel>::iterator location;
 
             location = std::find(labelsVector->begin(), labelsVector->end(),
-                                 MetaDataContainer::codifyLabel(newLabel));
+                                 MDL::str2Label(newLabel));
 
             if (location != labelsVector->end())
             {
-                activeLabels.push_back(MetaDataContainer::codifyLabel(newLabel));
+                activeLabels.push_back(MDL::str2Label(newLabel));
             }
         }
         else
         {
-            activeLabels.push_back(MetaDataContainer::codifyLabel(newLabel));
+            activeLabels.push_back(MDL::str2Label(newLabel));
         }
     }
 
@@ -495,10 +495,10 @@ void MetaData::readOldDocFile(std::ifstream *infile,
                 if (counter >= 2) // Discard two first numbers
                 {
                     if (saveName)
-                        setValue(MetaDataContainer::decodeLabel(
+                        setValue(MDL::label2Str(
                                      activeLabels[counter - 1]), value);
                     else
-                        setValue(MetaDataContainer::decodeLabel(
+                        setValue(MDL::label2Str(
                                      activeLabels[counter - 2]), value);
                 }
                 counter++;
@@ -535,7 +535,7 @@ void MetaData::readOldSelFile(std::ifstream *infile)
     }
 }
 
-MetaData::MetaData(FileName fileName, std::vector<MetaDataLabel> * labelsVector)
+MetaData::MetaData(FileName fileName, std::vector<MDLabel> * labelsVector)
 {
     read(fileName, labelsVector);
 }
@@ -547,7 +547,7 @@ void MetaData::setColumnFormat(bool column)
 
 void MetaData::toDataBase(const FileName & DBname,
                           const std::string & tableName,
-                          std::vector<MetaDataLabel> * labelsVector)
+                          std::vector<MDLabel> * labelsVector)
 {
     try
     {
@@ -567,36 +567,36 @@ void MetaData::toDataBase(const FileName & DBname,
         else
             sqlCommandCreate += tableName;
         sqlCommandCreate += "(objId int primary key,";
-        std::vector<MetaDataLabel>::iterator strIt;
+        std::vector<MDLabel>::iterator strIt;
         std::string sqlCommandInsert = "insert into " + tableName + "(objId,";
         for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
         {
             if (labelsVector == NULL || std::find(labelsVector->begin(),
                                                   labelsVector->end(), *strIt) != labelsVector->end())
             {
-                std::string label = MetaDataContainer::decodeLabel(*strIt);
+                std::string label = MDL::label2Str(*strIt);
                 sqlCommandInsert += label + ",";
-                if (isDouble(*strIt))
+                if (MDL::isDouble(*strIt))
                 {
                     sqlCommandCreate += label + " double,";
                     labelsCounter++;
                 }
-                else if (isString(*strIt))
+                else if (MDL::isString(*strIt))
                 {
                     sqlCommandCreate += label + " text,";
                     labelsCounter++;
                 }
-                else if (isInt(*strIt))
+                else if (MDL::isInt(*strIt))
                 {
                     sqlCommandCreate += label + " int,";
                     labelsCounter++;
                 }
-                else if (isBool(*strIt))
+                else if (MDL::isBool(*strIt))
                 {
                     sqlCommandCreate += label + " int,";
                     labelsCounter++;
                 }
-                else if (isVector(*strIt))
+                else if (MDL::isVector(*strIt))
                 {
                     std::cerr
                     << "SQLLITE does not support vectors, skipping vector labeled "
@@ -619,7 +619,7 @@ void MetaData::toDataBase(const FileName & DBname,
             db.execDML(sqlCommandCreate);
 
         db.execDML("begin transaction;");
-        //std::vector<MetaDataLabel>::iterator strIt;
+        //std::vector<MDLabel>::iterator strIt;
         CppSQLite3Statement stmt = db.compileStatement(sqlCommandInsert);
 
         for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
@@ -643,28 +643,28 @@ void MetaData::toDataBase(const FileName & DBname,
                 if (labelsVector == NULL || std::find(labelsVector->begin(),
                                                       labelsVector->end(), *strIt) != labelsVector->end())
                 {
-                    if (isDouble(*strIt))
+                    if (MDL::isDouble(*strIt))
                     {
                         labelsCounter++;
                         double value;
                         getValue(*strIt, value);
                         stmt.bind(labelsCounter, value);
                     }
-                    else if (isString(*strIt))
+                    else if (MDL::isString(*strIt))
                     {
                         labelsCounter++;
                         std::string value;
                         getValue(*strIt, value);
                         stmt.bind(labelsCounter, value.c_str());
                     }
-                    else if (isInt(*strIt))
+                    else if (MDL::isInt(*strIt))
                     {
                         labelsCounter++;
                         int value;
                         getValue(*strIt, value);
                         stmt.bind(labelsCounter, value);
                     }
-                    else if (isBool(*strIt))
+                    else if (MDL::isBool(*strIt))
                     {
                         labelsCounter++;
                         bool value;
@@ -686,17 +686,17 @@ void MetaData::toDataBase(const FileName & DBname,
 }
 void MetaData::fromDataBase(const FileName & DBname,
                             const std::string & tableName,
-                            MetaDataLabel sortLabel,
-                            std::vector<MetaDataLabel> * labelsVector
+                            MDLabel sortLabel,
+                            std::vector<MDLabel> * labelsVector
                            )
 {
     //check that database and table exits
     try
     {
         std::ostringstream stm;
-        std::vector<MetaDataLabel> _labelsVector;
+        std::vector<MDLabel> _labelsVector;
         std::string sqlCommand;
-        std::vector<MetaDataLabel>::iterator strIt;
+        std::vector<MDLabel>::iterator strIt;
         if (!exists(DBname))
             REPORT_ERROR( 1, (std::string)"database "+ DBname + " does not exists");
         CppSQLite3DB db;
@@ -722,7 +722,7 @@ void MetaData::fromDataBase(const FileName & DBname,
             CppSQLite3Query q = db.execQuery(sqlCommand);
             while (!q.eof())
             {
-                _labelsVector.push_back(MetaDataContainer::codifyLabel(
+                _labelsVector.push_back(MDL::str2Label(
                                             q.fieldValue(1)));
                 q.nextRow();
             }
@@ -741,14 +741,14 @@ void MetaData::fromDataBase(const FileName & DBname,
         strIt = std::find(_labelsVector.begin(), _labelsVector.end(), sortLabel);
         int _order=1;
         if (strIt == _labelsVector.end())
-            REPORT_ERROR(1,"label" + MetaDataContainer::decodeLabel(*strIt)+ "does not exists");
+            REPORT_ERROR(1,"label" + MDL::label2Str(*strIt)+ "does not exists");
         else
             _order += std::distance(_labelsVector.begin(), strIt);
 
         sqlCommand = "select ";
         for (strIt = (_labelsVector).begin(); strIt != (_labelsVector).end(); strIt++)
         {
-            sqlCommand += MetaDataContainer::decodeLabel(*strIt) + ",";
+            sqlCommand += MDL::label2Str(*strIt) + ",";
         }
         sqlCommand.erase(sqlCommand.end() - 1);
         sqlCommand += (std::string) " from " + tableName;
@@ -770,28 +770,28 @@ void MetaData::fromDataBase(const FileName & DBname,
             for (strIt = (_labelsVector).begin() + 1; strIt
                  != (_labelsVector).end(); strIt++)
             {
-                if (isDouble(*strIt))
+                if (MDL::isDouble(*strIt))
                 {
                     labelsCounter++;
                     double value;
                     value = q.getFloatField(labelsCounter);
                     setValue(*strIt, value);
                 }
-                else if (isInt(*strIt))
+                else if (MDL::isInt(*strIt))
                 {
                     labelsCounter++;
                     int value;
                     value = q.getIntField(labelsCounter);
                     setValue(*strIt, value);
                 }
-                else if (isString(*strIt))
+                else if (MDL::isString(*strIt))
                 {
                     labelsCounter++;
                     std::string value;
                     value.assign(q.getStringField(labelsCounter));
                     setValue(*strIt, value);
                 }
-                else if (isBool(*strIt))
+                else if (MDL::isBool(*strIt))
                 {
                     labelsCounter++;
                     int value;
@@ -816,7 +816,7 @@ void MetaData::fromDataBase(const FileName & DBname,
     }
 
 }
-void MetaData::combineWithFiles(MetaDataLabel thisLabel)
+void MetaData::combineWithFiles(MDLabel thisLabel)
 {
     if (!isColumnFormat)
     {
@@ -839,8 +839,8 @@ void MetaData::combineWithFiles(MetaDataLabel thisLabel)
         auxMetaData.read(fileName);
         auxMetaDataContainer = auxMetaData.getObject();
 
-        for (MetaDataLabel mdl = MDL_FIRST_LABEL; mdl <= MDL_LAST_LABEL; mdl
-             = MetaDataLabel(mdl + 1))
+        for (MDLabel mdl = MDL_FIRST_LABEL; mdl <= MDL_LAST_LABEL; mdl
+             = MDLabel(mdl + 1))
         {
             if (auxMetaDataContainer->valueExists(mdl))
             {
@@ -848,12 +848,12 @@ void MetaData::combineWithFiles(MetaDataLabel thisLabel)
 
                 auxMetaDataContainer->writeValueToString(value, mdl);
 
-                setValue(MetaDataContainer::decodeLabel(mdl), value);
+                setValue(MDL::label2Str(mdl), value);
             }
         }
     }
 }
-void MetaData::combine(MetaData & other, MetaDataLabel thisLabel)
+void MetaData::combine(MetaData & other, MDLabel thisLabel)
 {
     if (!isColumnFormat)
     {
@@ -864,7 +864,7 @@ void MetaData::combine(MetaData & other, MetaDataLabel thisLabel)
     std::string value1, value2;
     std::string value;
 
-    std::vector<MetaDataLabel>::iterator strIt;
+    std::vector<MDLabel>::iterator strIt;
     //init everything with zeros, this should not be needed by write is not properlly writting
     //FIXIT
     for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
@@ -873,10 +873,10 @@ void MetaData::combine(MetaData & other, MetaDataLabel thisLabel)
         aux = getObject();
         for (strIt = other.activeLabels.begin(); strIt != other.activeLabels.end(); strIt++)
         {
-            MetaDataLabel mdl = *strIt;
+            MDLabel mdl = *strIt;
             value="0";
             if(thisLabel!=mdl)
-                setValue(MetaDataContainer::decodeLabel(mdl), value);
+                setValue(MDL::label2Str(mdl), value);
         }
     }
     bool notFound;
@@ -896,9 +896,9 @@ void MetaData::combine(MetaData & other, MetaDataLabel thisLabel)
             {
                 for (strIt = other.activeLabels.begin(); strIt != other.activeLabels.end(); strIt++)
                 {
-                    MetaDataLabel mdl = *strIt;
+                    MDLabel mdl = *strIt;
                     aux2->writeValueToString(value, mdl);
-                    setValue(MetaDataContainer::decodeLabel(mdl), value);
+                    setValue(MDL::label2Str(mdl), value);
                 }
                 notFound=false;
                 break;
@@ -906,14 +906,14 @@ void MetaData::combine(MetaData & other, MetaDataLabel thisLabel)
         }
         if(notFound)
             std::cerr << "WARNING: no match found for label '"
-            << MetaDataContainer::decodeLabel(thisLabel)
+            << MDL::label2Str(thisLabel)
             << "' entry='" << value1
             << "' unknown values filled with 0" << std::endl;
     }
 }
 
 void MetaData::read(FileName fileName,
-                    std::vector<MetaDataLabel> * labelsVector)
+                    std::vector<MDLabel> * labelsVector)
 {
     clear();
     inFile = fileName;
@@ -968,7 +968,7 @@ void MetaData::writeValueToString(std::string & result,
                                   const std::string &inputLabel)
 {
     MetaDataContainer * aux = getObject();
-    aux->writeValueToString(result, MetaDataContainer::codifyLabel(inputLabel));
+    aux->writeValueToString(result, MDL::str2Label(inputLabel));
 }
 
 void MetaData::write(const std::string &fileName)
@@ -988,7 +988,7 @@ void MetaData::write(const std::string &fileName)
     outfile << std::endl;
 
     std::map<long int, MetaDataContainer *>::iterator It;
-    std::vector<MetaDataLabel>::iterator strIt;
+    std::vector<MDLabel>::iterator strIt;
 
     if (isColumnFormat)
     {
@@ -997,7 +997,7 @@ void MetaData::write(const std::string &fileName)
         {
             if (*strIt != MDL_COMMENT)
             {
-                outfile << MetaDataContainer::decodeLabel(*strIt);
+                outfile << MDL::label2Str(*strIt);
                 outfile << " ";
             }
         }
@@ -1037,7 +1037,7 @@ void MetaData::write(const std::string &fileName)
             if (*strIt != MDL_COMMENT)
             {
                 outfile.width(20);
-                outfile << MetaDataContainer::decodeLabel(*strIt);
+                outfile << MDL::label2Str(*strIt);
                 outfile << " ";
                 object->writeValueToFile(outfile, *strIt);
                 outfile << std::endl;
@@ -1139,11 +1139,11 @@ long int MetaData::addObject(long int objectID)
     }
 
     // Set default values for the existing labels
-    std::vector<MetaDataLabel>::iterator It;
+    std::vector<MDLabel>::iterator It;
     for (It = activeLabels.begin(); It != activeLabels.end(); It++)
     {
         (objectsIterator->second)->addValue(
-            MetaDataContainer::decodeLabel(*It), std::string(""));
+            MDL::label2Str(*It), std::string(""));
     }
 
     return result;
@@ -1244,9 +1244,9 @@ bool MetaData::setValue(const std::string &name, const std::string &value,
 {
     long int auxID;
 
-    MetaDataLabel label = MetaDataContainer::codifyLabel(name);
+    MDLabel label = MDL::str2Label(name);
 
-    if (!objects.empty() && MetaDataContainer::isValidLabel(label))
+    if (!objects.empty() && MDL::isValidLabel(label))
     {
         if (objectID == -1)
         {
@@ -1262,7 +1262,7 @@ bool MetaData::setValue(const std::string &name, const std::string &value,
         // Check whether label is correct (belongs to the enum in the metadata_container header
         // and whether it is present in the activeLabels vector. If not, add it to all the other
         // objects with default values
-        std::vector<MetaDataLabel>::iterator location;
+        std::vector<MDLabel>::iterator location;
         std::map<long int, MetaDataContainer *>::iterator It;
 
         location = std::find(activeLabels.begin(), activeLabels.end(), label);
@@ -1356,7 +1356,7 @@ MetaDataContainer * MetaData::getObject(const long int objectID) const
 // Allows a fast search for pairs where the value is
 // a string, i.e. looking for filenames which is quite
 // usual
-long int MetaData::fastSearch(MetaDataLabel name, std::string value,
+long int MetaData::fastSearch(MDLabel name, std::string value,
                               bool recompute)
 {
     long int result;
@@ -1516,7 +1516,7 @@ void ImgSize(MetaData &MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
         REPORT_ERROR(-1, "Can not read image size from empty metadata");
 }
 
-void MetaData::split_in_two(MetaData &SF1, MetaData &SF2,MetaDataLabel label)
+void MetaData::split_in_two(MetaData &SF1, MetaData &SF2,MDLabel label)
 {
     if (!isColumnFormat)
     {
@@ -1566,7 +1566,7 @@ void MetaData::split_in_two(MetaData &SF1, MetaData &SF2,MetaDataLabel label)
  * this and MDin can be the same
  */
 
-void MetaData::sort(MetaData & MDin, MetaDataLabel sortlabel)
+void MetaData::sort(MetaData & MDin, MDLabel sortlabel)
 {
     if(sortlabel==MDL_UNDEFINED)
         return;
@@ -1581,9 +1581,9 @@ void MetaData::sort(MetaData & MDin, MetaDataLabel sortlabel)
     if(remove ( tmpFileName ) == -1)
         std::cerr << "cannot remove file " << tmpFileName <<std::endl;
 }
-int MetaData::MaxStringLength( MetaDataLabel thisLabel)
+int MetaData::MaxStringLength( MDLabel thisLabel)
 {
-    if (!isString(thisLabel))
+    if (!MDL::isString(thisLabel))
     {
         REPORT_ERROR(1,"MaxFileNameLength only works for strings");
     }

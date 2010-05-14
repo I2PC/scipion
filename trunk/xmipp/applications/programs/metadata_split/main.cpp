@@ -82,7 +82,7 @@ int main(int argc, char **argv)
             if (!dont_sort)
             {
             	std::cerr << "Sorting metada set: "<< i  <<std::endl;
-                SFtmp2.sort(SFout,MetaDataContainer::codifyLabel(sortLabel));
+                SFtmp2.sort(SFout,MDL::str2Label(sortLabel));
                 SFout  = SFtmp2;
             }
             fn_out = fn_root;

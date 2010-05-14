@@ -40,42 +40,14 @@ static double zeroD=0.;
 static double    oneD=1.;
 static bool  falseb=false;
 
-//FIXME: For now keeping compatibility
-typedef MDLabel MetaDataLabel;
-
-inline bool isString(MetaDataLabel lCode)
-{
-    return MDL::isString(lCode);
-}
-
-inline bool isDouble(MetaDataLabel lCode)
-{
-    return MDL::isDouble(lCode);
-}
-
-inline bool isVector(MetaDataLabel lCode)
-{
-   return MDL::isVector(lCode);
-}
-
-inline bool isBool(MetaDataLabel lCode)
-{
-    return MDL::isBool(lCode);
-}
-
-inline bool isInt(MetaDataLabel lCode)
-{
-    return MDL::isInt(lCode);
-}
-
 class MetaDataContainer
 {
     /** Container for pairs "name" and value. Note that void * allows to use
      mixed types */
-    std::map<MetaDataLabel, void *> values;
+    std::map<MDLabel, void *> values;
 
-    void insertVoidPtr(MetaDataLabel name, void * value);
-    void * getVoidPtr(MetaDataLabel name);
+    void insertVoidPtr(MDLabel name, void * value);
+    void * getVoidPtr(MDLabel name);
 
 public:
 
@@ -98,7 +70,7 @@ public:
     void addValue(const std::string &name, const std::string &value);
 
     template<class T>
-    void addValue(MetaDataLabel name, const T &value)
+    void addValue(MDLabel name, const T &value)
     {
         void * newValue = (void *) (new T(value));
         insertVoidPtr(name, newValue);
@@ -112,32 +84,32 @@ public:
     	values.clear();
     }
     template<class T>
-    void getValue( const MetaDataLabel name, T &value)
+    void getValue( const MDLabel name, T &value)
     {
-        std::map<MetaDataLabel, void *>::iterator element;
+        std::map<MDLabel, void *>::iterator element;
 
         element = values.find(name);
 
         if (element == values.end())
         {
-            REPORT_ERROR(1,(std::string) "Label(int) " + decodeLabel(name) + " not found\n" );
+            REPORT_ERROR(1,(std::string) "Label(int) " + MDL::label2Str(name) + " not found\n" );
         }
         else
         {
             value = *((T *) element->second);
         }
     }
-    bool valueExists(MetaDataLabel name);
+    bool valueExists(MDLabel name);
 
     //string is not part of the template because - is not defined for string
-    bool pairExists(MetaDataLabel name, const std::string &value);
+    bool pairExists(MDLabel name, const std::string &value);
 
     template<class T>
-    bool pairExists(MetaDataLabel name, T value)
+    bool pairExists(MDLabel name, T value)
     {
         // Traverse all the structure looking for objects
         // that satisfy search criteria
-        std::map<MetaDataLabel, void *>::iterator It;
+        std::map<MDLabel, void *>::iterator It;
 
         It = values.find(name);
 
@@ -155,16 +127,11 @@ public:
 
 
 
-    void deleteValue(MetaDataLabel name);
+    void deleteValue(MDLabel name);
 
-    bool writeValueToStream(std::ostream &outstream, MetaDataLabel inputLabel);
-    bool writeValueToFile(std::ofstream &outfile, MetaDataLabel inputLabel);
-    bool writeValueToString(std::string &outString, MetaDataLabel inputLabel);
-
-    static MetaDataLabel codifyLabel(std::string strLabel);
-    static std::string decodeLabel(MetaDataLabel inputLabel);
-    static bool isValidLabel(MetaDataLabel inputLabel);
-    static bool isValidLabel(std::string inputLabel);
+    bool writeValueToStream(std::ostream &outstream, MDLabel inputLabel);
+    bool writeValueToFile(std::ofstream &outfile, MDLabel inputLabel);
+    bool writeValueToString(std::string &outString, MDLabel inputLabel);
 };
 
 #endif
