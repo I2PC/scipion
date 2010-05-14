@@ -1399,7 +1399,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
         Iaux.window(
             -ROUND(0.45*YSIZE(Ifiltered)),-ROUND(0.45*XSIZE(Ifiltered)),
             ROUND(0.45*YSIZE(Ifiltered)), ROUND(0.45*XSIZE(Ifiltered)));
-        histogram1D hist;
+        Histogram1D hist;
         compute_hist(Iaux, hist, 400);
         double th=hist.percentil(2);
         std::vector< Matrix1D<double> > Q;
@@ -2427,7 +2427,7 @@ void Prog_tomograph_alignment::removeOutlierLandmarks(
     std::cout << "Removing outliers ...\n";
 
     // Compute threshold for outliers
-    histogram1D hist;
+    Histogram1D hist;
     compute_hist(alignment.errorLandmark, hist, 100);
     double threshold0=hist.percentil(10);
     double thresholdF=hist.percentil(90);

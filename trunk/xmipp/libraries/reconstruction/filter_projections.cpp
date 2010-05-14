@@ -306,7 +306,7 @@ void Prog_Filter_Projections_Parameters::run()
         if (col_score<0)
             REPORT_ERROR(1,"Column Score not found in the score docfile");
         Matrix1D<double> score=DF_score.col(col_score);
-        histogram1D Hscore;
+        Histogram1D Hscore;
         compute_hist(score,Hscore,200);
         double threshold=Hscore.percentil(percentil_score);
         std::cout << "Score threshold=" << threshold << std::endl;
@@ -323,7 +323,7 @@ void Prog_Filter_Projections_Parameters::run()
         if (col_cost<0)
             REPORT_ERROR(1,"Column Cost not found in the cost docfile");
         Matrix1D<double> cost=DF_cost.col(col_cost);
-        histogram1D Hcost;
+        Histogram1D Hcost;
         compute_hist(cost,Hcost,200);
         double threshold=Hcost.percentil(100-percentil_cost);
         std::cout << "Cost threshold=" << threshold << std::endl;
@@ -407,7 +407,7 @@ void Prog_Filter_Projections_Parameters::run()
         vcorrelations.resize(validCorrelations.size());
         FOR_ALL_ELEMENTS_IN_MATRIX1D(vcorrelations)
             vcorrelations(i)=validCorrelations[i];
-        histogram1D Hcorr;
+        Histogram1D Hcorr;
         compute_hist(vcorrelations,Hcorr,200);
         double threshold=Hcorr.percentil(percentil_normalization);
         std::cout << "Normalization threshold=" << threshold << std::endl;

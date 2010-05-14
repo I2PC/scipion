@@ -1402,7 +1402,7 @@ void VQ::splitNode(VQProjection *node,
             double corrThreshold;
             if (it==1 && (corrSplit || imax<0.5*Ninitial))
             {
-                histogram1D hist;
+                Histogram1D hist;
                 compute_hist(corrList,hist,100);
                 corrThreshold=hist.percentil(50);
             }

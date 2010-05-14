@@ -86,10 +86,10 @@ public:
     std::vector<double> nextNonClassCorr;
 
     // Histogram of the correlations of the current class members
-    histogram1D histClass;
+    Histogram1D histClass;
 
     // Histogram of the correlations of the current non-class members
-    histogram1D histNonClass;
+    Histogram1D histNonClass;
 
     // List of neighbour indexes
     std::vector<int> neighboursIdx;

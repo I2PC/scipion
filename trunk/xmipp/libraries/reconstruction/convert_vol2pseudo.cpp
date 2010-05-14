@@ -155,7 +155,7 @@ void Prog_Convert_Vol2Pseudo::produceSideInfo()
     }
     energyOriginal/=N;
     
-    histogram1D hist;
+    Histogram1D hist;
     if (useMask)
         compute_hist_within_binary_mask(mask_prm.imask3D, Vin(), hist,
             minval, maxval, 200);
@@ -671,7 +671,7 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     intensities.initZeros(atoms.size());
     FOR_ALL_ELEMENTS_IN_MATRIX1D(intensities)
         intensities(i)=atoms[i].intensity;
-    histogram1D hist;
+    Histogram1D hist;
     compute_hist(intensities, hist, 0, intensities.computeMax(), 100);
     hist.write(fnOut+"_approximation.hist");
 

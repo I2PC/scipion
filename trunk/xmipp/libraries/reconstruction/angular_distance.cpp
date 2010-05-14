@@ -300,7 +300,7 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
     if (fn_ang_out != "")
     {
         DF_out.write(fn_ang_out + "_merge.txt");
-        histogram1D hist;
+        Histogram1D hist;
         compute_hist(rot_diff, hist, 100);
         hist.write(fn_ang_out + "_rot_diff_hist.txt");
         compute_hist(tilt_diff, hist, 100);

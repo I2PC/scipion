@@ -218,7 +218,7 @@ void Denoising_parameters::denoise(MultidimArray<double> &img)
         }
         double th;
         MultidimArray<double> surface_strength, edge_strength;
-        histogram1D hist;
+        Histogram1D hist;
         switch (denoising_type)
         {
         case REMOVE_SCALE:
@@ -282,7 +282,7 @@ void Denoising_parameters::denoise(MultidimArray<double> &img)
 
         DWT(img, img);
         double th;
-        histogram1D hist;
+        Histogram1D hist;
         switch (denoising_type)
         {
         case REMOVE_SCALE:

@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
                     }
                 }
 
-            histogram1D dist_hist;
+            Histogram1D dist_hist;
             double min, max;
             dist.computeDoubleMinMax(min, max);
             dist_hist.init(min, max, steps);

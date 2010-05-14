@@ -313,7 +313,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
     Matrix1D<double> &x_power, std::vector<double> &sumxy,
     double th)
 {
-    histogram1D hist;
+    Histogram1D hist;
     hist.init(-1, 1, 201);
 
     int dimp = SBsize(m);

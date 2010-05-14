@@ -40,17 +40,17 @@ bool debugging = true;
 /* Split histograms -------------------------------------------------------- */
 // Split several histograms within the indexes l0 and lF so that
 // the entropy after division is maximized
-int splitHistogramsUsingEntropy(const std::vector<histogram1D> &hist,
+int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
     int l0, int lF)
 {
     // Number of classes
     int K = hist.size();
     
     // Set everything outside l0 and lF to zero, and make it a PDF
-    std::vector<histogram1D> histNorm;
+    std::vector<Histogram1D> histNorm;
     for (int k = 0; k < K; k++)
     {
-        histogram1D histaux = hist[k];
+        Histogram1D histaux = hist[k];
         for (int l = 0; l < XSIZE(histaux); l++)
             if (l < l0 || l > lF) 
                 histaux(l) = 0;
@@ -142,7 +142,7 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
     }
 
     // Compute the PDF of each class
-    std::vector<histogram1D> hist(K);
+    std::vector<Histogram1D> hist(K);
     for (int k=0; k<K; k++)
     {
         compute_hist(leafFeatures[k], hist[k], minval, maxval, 100);

@@ -1958,7 +1958,7 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
     int idx_result=0;
     for (int i = 0; i < __radial_bins; i++)
     {
-        histogram1D hist;
+        Histogram1D hist;
         compute_hist(radial_val[i], hist, 0, __gray_bins - 1, __gray_bins);
         for (int j = 0; j < __gray_bins - 1; j++)
             _result(idx_result++) = hist(j);

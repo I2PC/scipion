@@ -343,7 +343,7 @@ double compute_noise_power(MultidimArray<double> &I)
 {
     // Compute histogram of the absolute values of the DWT coefficients
     // at scale=0
-    histogram1D hist;
+    Histogram1D hist;
     double avg, stddev, min_val, max_val;
     I.computeStats(avg, stddev, min_val, max_val);
     hist.init(0, XMIPP_MAX(ABS(min_val), ABS(max_val)), 100);

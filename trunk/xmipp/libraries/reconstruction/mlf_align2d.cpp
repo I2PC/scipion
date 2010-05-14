@@ -2194,7 +2194,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 
         if (write_histograms)
         {
-            histogram1D     hist;
+            Histogram1D     hist;
             double          val;
             hist.init(HISTMIN, HISTMAX, HISTSTEPS);
             compute_hist(diff,hist,HISTMIN, HISTMAX, HISTSTEPS);

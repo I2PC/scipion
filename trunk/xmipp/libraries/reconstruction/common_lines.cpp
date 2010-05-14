@@ -452,7 +452,7 @@ void CommonLine_Parameters::qualifyCommonLines()
         }
     
     // Compute the histogram of the peaks
-    histogram1D hist;
+    Histogram1D hist;
     compute_hist(peaks,hist,400);
     hist/=hist.sum();
     

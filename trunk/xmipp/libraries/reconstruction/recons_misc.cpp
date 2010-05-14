@@ -521,7 +521,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         // Apply volume constraint
         if (prm->known_volume != -1)
         {
-            histogram1D hist;
+            Histogram1D hist;
             MultidimArray<int> aux_mask;
             aux_mask.resize(vol_POCS());
             FOR_ALL_ELEMENTS_IN_ARRAY3D(aux_mask)

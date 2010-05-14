@@ -380,7 +380,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
             if (n % 30 == 0) progress_bar(n);
         }
         progress_bar(prm.N_stats);
-        histogram1D hist_vol, hist_proj, hist_area;
+        Histogram1D hist_vol, hist_proj, hist_area;
         compute_hist(volume, hist_vol, 300);
         compute_hist(proj_power, hist_proj, 300);
         compute_hist(proj_area, hist_area, 300);

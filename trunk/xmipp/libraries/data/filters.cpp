@@ -173,7 +173,7 @@ void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &
 		bg.initConstant(-1);  // -2:in the list
 
 		// Ponemos las seis caras de esta variable como visitadas e inicializamos
-		// la cola de píxeles por visitar
+		// la cola de pï¿½xeles por visitar
 		std::queue<int> list_for_compute;  // Lista del modo [x1,y1,z1,...,xi,yi,zi]
 										// que contiene los pixeles por procesar
 		std::vector<double> bg_values; // Vector con los valores del background
@@ -221,7 +221,7 @@ void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &
 			//We compute stat when is needed
 			if(cont==n)
 			{
-				// Calculamos los estadísticos
+				// Calculamos los estadï¿½sticos
 				double avg, stddev, minval, maxval;
 				computeStats(bg_values,avg,stddev,minval,maxval);
 				final_mean=avg;
@@ -613,7 +613,7 @@ void OtsuSegmentation(MultidimArray<double> &V)
     V.checkDimension(3);
 
     // Compute the probability density function
-    histogram1D hist;
+    Histogram1D hist;
     hist.clear();
     compute_hist(V,hist,200);
     hist/=hist.sum();
@@ -658,7 +658,7 @@ void EntropySegmentation(MultidimArray<double> &V)
     V.checkDimension(3);
 
     // Compute the probability density function
-    histogram1D hist;
+    Histogram1D hist;
     hist.clear();
     compute_hist(V,hist,200);
     hist/=hist.sum();
@@ -719,7 +719,7 @@ void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil)
     V.checkDimension(3);
 
     // Compute the probability density function
-    histogram1D hist;
+    Histogram1D hist;
     hist.clear();
     compute_hist(V,hist,200);
     hist/=hist.sum();
@@ -1063,7 +1063,7 @@ void estimateGaussian2D(const MultidimArray<double> &I,
     MultidimArray<double> z(I);
 
     // Estimate b
-    histogram1D hist;
+    Histogram1D hist;
     compute_hist(z,hist,100);
     b=hist.percentil(5);
 

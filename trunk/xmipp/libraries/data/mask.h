@@ -894,7 +894,7 @@ void apply_cont_mask(const MultidimArray< double >& mask, const MultidimArray< T
  */
 template<typename T>
 void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
-                                     MultidimArray< T >& v, histogram1D &hist,
+                                     MultidimArray< T >& v, Histogram1D &hist,
                                      int no_steps)
 {
     T min_val, max_val;
@@ -915,7 +915,7 @@ void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
  */
 template<typename T>
 void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
-                                     const MultidimArray< T >& v, histogram1D& hist,
+                                     const MultidimArray< T >& v, Histogram1D& hist,
                                      T min, T max, int no_steps)
 {
     SPEED_UP_temps;

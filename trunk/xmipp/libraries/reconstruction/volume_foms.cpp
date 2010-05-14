@@ -210,7 +210,7 @@ void compute_sc_FOMs(
     }
 
     // Compute mutual information FOM
-    histogram1D hist_phantom, hist_recons;
+    Histogram1D hist_phantom, hist_recons;
     histogram2D hist_phantom_recons;
     hist_phantom.init(mp, Mp, 200);
     hist_recons.init(mr, Mr, 200);
@@ -308,8 +308,8 @@ void compute_hs_FOMs(Volume *vol_phantom,
     double phantom_confidence_o, recons_confidence_o;
 
     // Histogram detection error variables .................................
-    histogram1D Hpf, Hpb;    // Phantom fore and background histograms
-    histogram1D Hrf, Hrb;    // Reconstruction for and background histograms
+    Histogram1D Hpf, Hpb;    // Phantom fore and background histograms
+    Histogram1D Hrf, Hrb;    // Reconstruction for and background histograms
     double min, max;
     (*vol_phantom)().computeDoubleMinMax(min, max);
     Hpf.init(min, max, 100);
@@ -682,7 +682,7 @@ void compute_dr_FOMs(const Volume *vol_phantom, const Volume *vol_recons,
     // Auxiliar variables ...................................................
     Matrix3D<double> rot_phantom, rot_recons, rot_mask;
     Matrix1D<double> RT_phantom, RT_recons, RTno;
-    histogram1D      hist_recons;
+    Histogram1D      hist_recons;
 
     // Rotate volumes .......................................................
     // to align the given direction with Z axis

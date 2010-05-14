@@ -220,8 +220,8 @@ public:
     /** Iteration at which to write out histograms */
     int iter_write_histograms;
     /** Average histogram */
-    histogram1D sumhist;
-    std::vector<histogram1D > resolhist;
+    Histogram1D sumhist;
+    std::vector<Histogram1D > resolhist;
 
     /** debug flag */
     int debug;

@@ -61,7 +61,7 @@ void substract_background_rolling_ball(MultidimArray<double> &I, int radius);
  * This function recieves a Matrix3D vol, and try to find the background
  * assuming that all the outside planes contain background, and apply
  * interval confidence, were alpha is the probabity to fail.
- * Mask is of the same size of vol, and is the solutión, mask have
+ * Mask is of the same size of vol, and is the solutiï¿½n, mask have
  * value 1 if background else value 0
 */
 void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &mask, double alpha,
@@ -480,7 +480,7 @@ double mutual_information(const MultidimArray< T >& x,
     SPEED_UP_temps;
 
     long n = 0;
-    histogram1D histx, histy;
+    Histogram1D histx, histy;
     histogram2D histxy;
     MultidimArray< T > aux_x, aux_y;
     MultidimArray< double > mx, my;

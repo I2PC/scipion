@@ -85,7 +85,7 @@ void QtRemoveOutlierFilter::apply(Image<double> *_img)
 {
     if (_img != NULL)
     {
-        histogram1D h;
+        Histogram1D h;
         compute_hist(I, h, 100);
         double th = h.percentil(5);
         I.threshold("below", th, th);

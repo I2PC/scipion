@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     double           m, M, m2, M2;      // range for histogram
     int              automatic_range, automatic_range2;
     int              StepsNo, StepsNo2;
-    histogram1D      hist;
+    Histogram1D      hist;
     histogram2D      hist2;
     Matrix1D<double> C, C2;
     double           percentil;

@@ -73,7 +73,7 @@
  *
  * @code
  * // Variable definition
- * histogram1D hist;
+ * Histogram1D hist;
  * MultidimArray<double> A(50, 50);
  * double min_val, max_val;
  * double eff0, effF;
@@ -99,7 +99,7 @@
  *     << " to " << effF << std::endl;
  * @endcode
  */
-class histogram1D: public MultidimArray< double >
+class Histogram1D: public MultidimArray< double >
 {
 public:
     // Structure
@@ -114,10 +114,10 @@ public:
      * initialise it with init.
      *
      * @code
-     * histogram1D hist;
+     * Histogram1D hist;
      * @endcode
      */
-    histogram1D()
+    Histogram1D()
     {
         clear();
     }
@@ -127,10 +127,10 @@ public:
      * Makes an exact copy of the given histogram into another histogram.
      *
      * @code
-     * histogram1D hist2(hist1);
+     * Histogram1D hist2(hist1);
      * @endcode
      */
-    histogram1D(const histogram1D& H)
+    Histogram1D(const Histogram1D& H)
     {
         clear();
         *this = H;
@@ -147,10 +147,10 @@ public:
     void clear();
 
     /** Assignment */
-    histogram1D& operator=(const histogram1D& H);
+    Histogram1D& operator=(const Histogram1D& H);
 
     /** Another function for assignament.*/
-    void assign(const histogram1D& H);
+    void assign(const Histogram1D& H);
 
     /** Initialisation of the histogram
      *
@@ -215,7 +215,7 @@ public:
      * The first column is the value associated to each histogram measure. The
      * second one is the histogram measure.
      */
-    friend std::ostream& operator<<(std::ostream& o, const histogram1D& hist);
+    friend std::ostream& operator<<(std::ostream& o, const Histogram1D& hist);
 
     /** Write an histogram to disk.
      */
@@ -330,11 +330,11 @@ public:
 class IrregularHistogram1D
 {
     public:
-        histogram1D         __hist;
+        Histogram1D         __hist;
         MultidimArray<double>    __binsRightLimits;
     public:
         /// Initialize class
-        void init(const histogram1D &oldHistogram, const MultidimArray<int> &bins);
+        void init(const Histogram1D &oldHistogram, const MultidimArray<int> &bins);
         
         /// Return the index corresponding to a certain value
         int val2Index(double value);
@@ -350,7 +350,7 @@ class IrregularHistogram1D
         double operator()(int i) const;
         
         /// Get histogram
-        const histogram1D& getHistogram() const;
+        const Histogram1D& getHistogram() const;
 };
 
 /// @defgroup HistogramFunctions1D Functions related to histograms 1D
@@ -365,12 +365,12 @@ class IrregularHistogram1D
  * and dimension. The number of steps must always be given.
  *
  * @code
- * histogram1D hist;
+ * Histogram1D hist;
  * compute_hist(v, hist, 100);
  * @endcode
  */
 template<typename T>
-void compute_hist(T& array, histogram1D& hist, int no_steps)
+void compute_hist(T& array, Histogram1D& hist, int no_steps)
 {
     double min, max;
     array.computeDoubleMinMax(min, max);
@@ -387,12 +387,12 @@ void compute_hist(T& array, histogram1D& hist, int no_steps)
  * ...). The number of steps must always be given.
  *
  * @code
- * histogram1D hist;
+ * Histogram1D hist;
  * compute_hist(v, hist, 0, 1, 100);
  * @endcode
  */
 template<typename T>
-void compute_hist(const T& v, histogram1D& hist,
+void compute_hist(const T& v, Histogram1D& hist,
                   double min, double max, int no_steps)
 {
     hist.init(min, max, no_steps);
@@ -406,7 +406,7 @@ void compute_hist(const T& v, histogram1D& hist,
  * The region is defined by its corners
  */
 template<typename T>
-void compute_hist(const MultidimArray< T >& v, histogram1D& hist,
+void compute_hist(const MultidimArray< T >& v, Histogram1D& hist,
                     const Matrix1D< int >& corner1,
                     const Matrix1D< int >& corner2,
                     int no_steps = 100)
@@ -440,7 +440,7 @@ void compute_hist(const MultidimArray< T >& v, histogram1D& hist,
  * detect_error = detectability_error(hist1, hist2);
  * @endcode
  */
-double detectability_error(const histogram1D& h1, const histogram1D& h2);
+double detectability_error(const Histogram1D& h1, const Histogram1D& h2);
 
 /** Compute the Kullback-Leibler distance between two pdf's
  * @ingroup HistogramFunctions1D
@@ -451,7 +451,7 @@ double detectability_error(const histogram1D& h1, const histogram1D& h2);
  * distance = KLDistance(hist1, hist2);
  * @endcode
  */
-double KLDistance(const histogram1D& h1, const histogram1D& h2);
+double KLDistance(const Histogram1D& h1, const Histogram1D& h2);
 
 /** Returns the effective range of a multidimensional array
  * @ingroup HistogramFunctions1D
@@ -475,7 +475,7 @@ double KLDistance(const histogram1D& h1, const histogram1D& h2);
 template<typename T>
 double effective_range(const T& v, double percentil_out = 0.25)
 {
-    histogram1D hist;
+    Histogram1D hist;
     compute_hist(v, hist, 200);
     double min_val = hist.percentil(percentil_out / 2);
     double max_val = hist.percentil(100 - percentil_out / 2);
@@ -490,7 +490,7 @@ double effective_range(const T& v, double percentil_out = 0.25)
 template<typename T>
 void reject_outliers(T& v, double percentil_out = 0.25)
 {
-    histogram1D hist;
+    Histogram1D hist;
     compute_hist(v, hist, 200);
     double eff0 = hist.percentil(percentil_out / 2);
     double effF = hist.percentil(100 - percentil_out / 2);
@@ -513,7 +513,7 @@ template<typename T>
 void histogram_equalization(MultidimArray<T>& v, int bins = 8)
 {
     const int hist_steps = 200;
-    histogram1D hist;
+    Histogram1D hist;
     compute_hist(v, hist, hist_steps);
 
     // Compute the distribution function of the pdf

@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     bool            automatic_range, do_normalize, is_first = true;
     double          m, M; // range for histogram
     int             StepsNo;
-    histogram1D     hist, histb;
+    Histogram1D     hist, histb;
 #define         V VOLMATRIX(volume)
 #define         I IMGMATRIX(image)
 

@@ -34,7 +34,7 @@
 /* HISTOGRAMS 1D                                                             */
 /* ------------------------------------------------------------------------- */
 /* Clear ------------------------------------------------------------------- */
-void histogram1D::clear()
+void Histogram1D::clear()
 {
     hmin = 0;
     hmax = 0;
@@ -44,7 +44,7 @@ void histogram1D::clear()
 }
 
 /* Assignment -------------------------------------------------------------- */
-histogram1D & histogram1D::operator =(const histogram1D &H)
+Histogram1D & Histogram1D::operator =(const Histogram1D &H)
 {
     if (this != &H)
     {
@@ -58,12 +58,12 @@ histogram1D & histogram1D::operator =(const histogram1D &H)
 }
 
 /* Another function for assignament ---------------------------------------- */
-void histogram1D::assign(const histogram1D &H)
+void Histogram1D::assign(const Histogram1D &H)
 {
     *this = H;
 }
 /* Initialize -------------------------------------------------------------- */
-void histogram1D::init(double min_val, double max_val, int n_steps)
+void Histogram1D::init(double min_val, double max_val, int n_steps)
 {
     hmin = min_val;
     hmax = max_val;
@@ -74,7 +74,7 @@ void histogram1D::init(double min_val, double max_val, int n_steps)
 
 /* Insert value ------------------------------------------------------------ */
 //#define DEBUG
-void histogram1D::insert_value(double val)
+void Histogram1D::insert_value(double val)
 {
     int i;
     val2index(val, i);
@@ -91,7 +91,7 @@ void histogram1D::insert_value(double val)
 #undef DEBUG
 
 /* std::cout << hist ------------------------------------------------------------ */
-std::ostream& operator << (std::ostream &o, const histogram1D &hist)
+std::ostream& operator << (std::ostream &o, const Histogram1D &hist)
 {
     MultidimArray<double> aux;
     aux.resize(hist.stepNo(), 2);
@@ -105,7 +105,7 @@ std::ostream& operator << (std::ostream &o, const histogram1D &hist)
 }
 
 /* Write to file ----------------------------------------------------------- */
-void histogram1D::write(const FileName &fn)
+void Histogram1D::write(const FileName &fn)
 {
     std::ofstream  fh;
     fh.open(fn.c_str(), std::ios::out);
@@ -119,7 +119,7 @@ void histogram1D::write(const FileName &fn)
 /* Percentil --------------------------------------------------------------- */
 /* This function returns the value of the variable under which the mass% of
    the histogram is comprised */
-double histogram1D::percentil(double percent_mass)
+double Histogram1D::percentil(double percent_mass)
 {
     int i = 0;
     double acc = 0;
@@ -174,7 +174,7 @@ double histogram1D::percentil(double percent_mass)
 }
 
 /* Mass below -------------------------------------------------------------- */
-double histogram1D::mass_below(double value)
+double Histogram1D::mass_below(double value)
 {
     // Trivial cases
     if (value <= hmin)
@@ -197,7 +197,7 @@ double histogram1D::mass_below(double value)
 }
 
 /* Entropy ----------------------------------------------------------------- */
-double histogram1D::entropy() const
+double Histogram1D::entropy() const
 {
     MultidimArray<double> p;
     p.initZeros(XSIZE(*this));
@@ -222,7 +222,7 @@ double histogram1D::entropy() const
 // the detection error for using both, ie, the probability that given a sample
 // I would assign it to class 1 when it belongs to class 2 and viceversa.
 // This is computed by the calculation of the overlapping areas.
-double detectability_error(const histogram1D &h1, const histogram1D &h2)
+double detectability_error(const Histogram1D &h1, const Histogram1D &h2)
 {
     double hmin, hmax;
     double step;
@@ -273,7 +273,7 @@ double detectability_error(const histogram1D &h1, const histogram1D &h2)
 }
 
 /* Kullback Leibler distance ----------------------------------------------- */
-double KLDistance(const histogram1D& h1, const histogram1D& h2)
+double KLDistance(const Histogram1D& h1, const Histogram1D& h2)
 {
     if (XSIZE(h1)!=XSIZE(h2))
         REPORT_ERROR(1,"KLDistance: Histograms of different sizes");
@@ -288,7 +288,7 @@ double KLDistance(const histogram1D& h1, const histogram1D& h2)
 /* IRREGULAR HISTOGRAMS                                                      */
 /* ------------------------------------------------------------------------- */
 /* Initialization ---------------------------------------------------------- */
-void IrregularHistogram1D::init(const histogram1D &hist,
+void IrregularHistogram1D::init(const Histogram1D &hist,
     const MultidimArray<int> &bins)
 {
     int steps_no = XSIZE(bins);
@@ -339,7 +339,7 @@ double IrregularHistogram1D::operator()(int i) const
 }
 
 /* Get value --------------------------------------------------------------- */
-const histogram1D& IrregularHistogram1D::getHistogram() const
+const Histogram1D& IrregularHistogram1D::getHistogram() const
 {
     return __hist;
 }

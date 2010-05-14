@@ -331,7 +331,7 @@ void compute_FOMs(const Prog_Evaluate_Parameters &prm,
                   EVALUATE_Side_Info &side, EVALUATE_results &results)
 {
     Matrix1D<double> feat_voxels;
-    histogram1D hist_recons;
+    Histogram1D hist_recons;
 
     /* Structural consistency FOMs --------------------------------------------- */
     // Global measures
