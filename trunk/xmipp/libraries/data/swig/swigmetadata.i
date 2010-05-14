@@ -1,14 +1,16 @@
 %{
 #include "../metadata.h"
 #include "../metadata_container.h"
+#include "../metadata_label.h"
 %}
 //Python does not have float/double variable, just reals that will be cast to double
-%ignore MetaDataContainer::addValue( MetaDataLabel name, float value );
-%ignore MetaDataContainer::pairExists( MetaDataLabel name, float value );
+%ignore MetaDataContainer::addValue( MDLabel name, float value );
+%ignore MetaDataContainer::pairExists( MDLabel name, float value );
 %include ../metadata.h
 %include ../metadata_container.h
+%include ../metadata_label.h
 namespace std {
-   %template(vectorm) vector<MetaDataLabel>;
+   %template(vectorm) vector<MDLabel>;
    
 };
 
