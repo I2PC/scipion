@@ -120,28 +120,39 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
                                    "-no_sigma_trick");
     trymindiff_factor = textToFloat(getParameter(argc2, argv2,
                                     "-trymindiff_factor", "0.9"));
+
+    // Random seed to use for image randomization and creation
+    // of initial references and blocks order
+    // could be passed for restart or for debugging
     seed = textToInteger(getParameter(argc2, argv2, "-random_seed", "-1"));
+    if (seed == -1)
+        seed = time(NULL);
+    else if (!do_restart)
+        std::cerr << "WARNING: *** Using a non random seed and not in restarting ***" <<std::endl;
+
     // Only for interaction with refine3d:
     search_rot = textToFloat(getParameter(argc2, argv2, "-search_rot", "999."));
     //IEM stuff
     blocks = textToInteger(getParameter(argc2, argv2, "-iem", "1"));
+    //This is for do the first iteration on IEM starting from random blocks
+    do_first_iem = checkParameter(argc2, argv2, "-do_first_iem");
+    //Weight of image selected reference in 'generateInitialReferences'
+    ref_weight = textToFloat(getParameter(argc2, argv2, "-ref_weight", "1"));
+    if (ref_weight < 0 || ref_weight > 1)
+        REPORT_ERROR(3333,"Ref weight should be beetwen 0 and 1");
 
     // Now reset some stuff for restart
     if (do_restart)
     {
         fn_img = restart_imgmd;
         fn_ref = restart_refmd;
-        model.n_ref = 0; // JUst to be sure (not strictly necessary)
+        model.n_ref = 0; // Just to be sure (not strictly necessary)
         model.sigma_noise = restart_noise;
         model.sigma_offset = restart_offset;
         seed = restart_seed;
         istart = restart_iter + 1;
     }
 
-    // FIXME: check this also for restart always set to false??
-    do_first_iem = false;
-    if (seed == -1)
-        seed = time(NULL);
 }
 
 // Show ====================================================================
@@ -152,7 +163,6 @@ void Prog_MLalign2D_prm::show(bool ML3D)
     {
 
         // To screen
-
         if (!ML3D)
         {
             std::cerr
@@ -277,6 +287,13 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         {
             std::cerr << "  -> Using " << threads << " parallel threads"
             << std::endl;
+        }
+
+        if (blocks > 1)
+        {
+            std::cerr << "  -> Doing IEM with " << blocks << " blocks" <<std::endl;
+            if (do_first_iem)
+                std::cerr << "   - Also doing first IEM iter" <<std::endl;
         }
 
         std::cerr
@@ -405,6 +422,8 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
         dfsigma2 = df * sigma_noise2;
     }
 
+    show();
+
     if (fn_ref == "")
     {
         if (model.n_ref > 0)
@@ -415,7 +434,7 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
 
             if (IS_MASTER)
             {
-                show(do_ML3D);
+            	show(do_ML3D);
                 generateInitialReferences();
             }
         }
@@ -433,7 +452,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
     // Read in all reference images in memory
     if (fn_ref.isMetaData())
     {
-        MDref.read(fn_ref);
+    	MDref.read(fn_ref);
     }
     else
     {
@@ -453,7 +472,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
         // Default start is all equal model fractions
         model.alpha_k[refno] = (double) 1 / model.n_ref;
         model.Iref[refno].setWeight(model.alpha_k[refno]
-                                    * (double) nr_images_global);
+                                     * (double) nr_images_global);
         // Default start is half-half mirrored images
         model.mirror_fraction[refno] = (do_mirror ? 0.5 : 0.);
         refno++;
@@ -628,8 +647,8 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
                 MDimg.getValue(MDL_SHIFTX, yy);
                 for (int refno = 0; refno < idum; refno++)
                 {
-                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xx;
-                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yy;
+                	imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xx;
+                	imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yy;
                 }
             }
             if (model.do_norm)
@@ -676,9 +695,11 @@ void Prog_MLalign2D_prm::randomizeImagesOrder()
 void Prog_MLalign2D_prm::generateInitialReferences()
 {
 
-    Image<double> IRef(model.dim, model.dim), ITemp;
-    std::vector<Model_MLalign2D> models(blocks);
-    MetaData MDgen;
+    Image<double> ITemp;
+    std::vector<Image<double> > IRef(model.n_ref);
+    std::vector<double> weights(model.n_ref);
+    std::vector<Model_MLalign2D> models;
+    MDref.clear();
 
     FileName fn_tmp;
     randomizeImagesOrder();
@@ -691,27 +712,37 @@ void Prog_MLalign2D_prm::generateInitialReferences()
         init_progress_bar(model.n_ref);
     }
 
-    if (blocks > 1)
+    if (blocks > 1 && do_first_iem)
     {
+        models.resize(blocks);
         //Initialize blocks for first iteration
+        //FIXME: THIS loop could be avoided, moved to the second one
         for (int b = 0; b < blocks; b++)
         {
             models[b].setNRef(model.n_ref);
             for (int refno = 0; refno < model.n_ref; refno++)
             {
                 // Default start is all equal model fractions
-                models[b].alpha_k[refno] = (double) 1 / model.n_ref;
-                models[b].Iref[refno].setWeight(models[b].alpha_k[refno]
-                                                * (double) nr_images_global);
+                models[b].alpha_k[refno] = 0;
                 // Default start is half-half mirrored images
                 models[b].mirror_fraction[refno] = (do_mirror ? 0.5 : 0.);
-                models[b].Iref[refno]().initZeros(IRef());
+                models[b].Iref[refno]().initZeros(IRef[refno]());
                 models[b].Iref[refno]().setXmippOrigin();
             }
             models[b].sigma_noise = model.sigma_noise;
             models[b].sigma_offset = model.sigma_offset;
+            models[b].dim = model.dim;
+            models[b].sumw_allrefs = 0;
         }
-        do_first_iem = true;
+    }
+
+
+    for (int refno = 0; refno < model.n_ref; refno++)
+    {
+        IRef[refno]().resize(model.dim, model.dim);
+        IRef[refno]().initZeros();
+        IRef[refno]().setXmippOrigin();
+        weights[refno] = 0.;
     }
 
     int nsub, first, last;
@@ -720,57 +751,80 @@ void Prog_MLalign2D_prm::generateInitialReferences()
         nsub
         = divide_equally(nr_images_global, model.n_ref, refno, first,
                          last);
-        //Clear images
-        IRef().initZeros();
-        IRef().setXmippOrigin();
 
         for (int imgno = first; imgno <= last; imgno++)
         {
             MDimg.getValue(MDL_IMAGE, fn_tmp, img_id[imgno]);
             ITemp.read(fn_tmp);
             ITemp().setXmippOrigin();
-            IRef() += ITemp();
+
+            //FIXME: This is only valid for 2 references
+            IRef[refno]() += ITemp() * ref_weight;
+            weights[refno] += ref_weight;
+            IRef[1 - refno]() += ITemp() * (1 - ref_weight);
+            weights[1 - refno] += 1 - ref_weight;
 
             //Create random blocks for use in the first iem iteration
-            if (blocks > 1)
+            if (blocks > 1 && do_first_iem)
             {
-                models[IMG_BLOCK(imgno)].Iref[refno]() += ITemp();
+                models[IMG_BLOCK(imgno)].Iref[refno]() += ITemp() * ref_weight;
+                models[IMG_BLOCK(imgno)].Iref[1 - refno]() += ITemp() * (1 - ref_weight);
+                //Store weights in alpha_k
+                models[IMG_BLOCK(imgno)].alpha_k[refno] += ref_weight;
+                models[IMG_BLOCK(imgno)].alpha_k[1 - refno] += 1 - ref_weight;
+
                 models[IMG_BLOCK(imgno)].sumw_allrefs += 1;
             }
         }
 
+        if (verb > 0)
+            progress_bar(refno);
+    }//close for refno
+
+    //Write ref to disk
+    for (int refno = 0; refno < model.n_ref; refno++)
+    {
         fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, 0, "");
         fn_tmp = fn_tmp + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp = fn_tmp + ".xmp";
 
-        IRef() /= nsub;
-        IRef.write(fn_tmp);
-        MDgen.addObject();
-        MDgen.setValue(MDL_IMAGE, fn_tmp);
-        MDgen.setValue(MDL_ENABLED, 1);
+        IRef[refno]() /= weights[refno];
+        IRef[refno].write(fn_tmp);
+        MDref.addObject();
+        MDref.setValue(MDL_IMAGE, fn_tmp);
+        MDref.setValue(MDL_ENABLED, 1);
 
-        if (verb > 0)
-            progress_bar(refno);
-    }//close for refno
+    }
 
-    if (blocks > 1)
+    if (blocks > 1 && do_first_iem)
     {
         for (current_block = 0; current_block < blocks; current_block++)
         {
+            double sumw_allrefs = models[current_block].sumw_allrefs;
+
             for (int refno = 0; refno < model.n_ref; refno++)
-                models[current_block].Iref[refno]()
-                /= models[current_block].sumw_allrefs;
+            {
+                models[current_block].Iref[refno]() /= sumw_allrefs;
+                //Weights were stored in alphak
+                models[current_block].Iref[refno].setWeight(models[current_block].alpha_k[refno]);
+                models[current_block].alpha_k[refno] /= sumw_allrefs;
+            }
+
+            if (current_block == 0)
+                model = models[current_block];
+            else
+                model.addModel(models[current_block]);
             writeOutputFiles(models[current_block], OUT_BLOCK);
         }
-        exit(1);
+        //exit(1);
     }
 
     if (verb > 0)
         progress_bar(model.n_ref);
 
-    MDgen.write(fn_ref);
+    MDref.write(fn_ref);
 
 }//close function generateInitialReferences
 
@@ -1271,7 +1325,7 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
 
     FOR_ALL_THREAD_REFNO()
     {
-        computeStats_within_binary_mask(omask, model.Iref[refno](), dum,
+    	computeStats_within_binary_mask(omask, model.Iref[refno](), dum,
                                         dum, avg, dum);
         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
@@ -2269,7 +2323,7 @@ bool Prog_MLalign2D_prm::checkConvergence()
         if (model.Iref[refno].weight() > 0.)
         {
             Maux = Iold[refno]() * Iold[refno]();
-            convv = 1. / (Maux.computeAvg());
+        	convv = 1. / (Maux.computeAvg());
             Maux = Iold[refno]() - model.Iref[refno]();
             Maux = Maux * Maux;
             convv *= Maux.computeAvg();
@@ -2382,31 +2436,34 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
 
 
     // Write out current reference images and fill sel & log-file
-    // Re-use the MDref metadata that were read in produceSideInfo2
-    // This way. MLD_ANGLEROT, MDL_ANGLETILT, MDL_REF etc are treated ok for do_ML3D
-    int refno=0;
-    FOR_ALL_OBJECTS_IN_METADATA(MDref)
+    MDo.clear();
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
         fn_tmp = fn_base + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "xmp");
         Itmp = model.Iref[refno];
         Itmp.write(fn_tmp);
-        MDref.setValue(MDL_IMAGE, fn_tmp);
-        MDref.setValue(MDL_ENABLED, 1);
-        MDref.setValue(MDL_WEIGHT, (double)Itmp.weight());
+        MDo.addObject();
+        MDo.setValue(MDL_IMAGE, fn_tmp);
+        MDo.setValue(MDL_ENABLED, 1);
+        MDo.setValue(MDL_WEIGHT, (double)Itmp.weight());
         if (do_mirror)
-            MDref.setValue(MDL_MIRRORFRAC,
+            MDo.setValue(MDL_MIRRORFRAC,
                          model.mirror_fraction[refno]);
-        if (no_block && !do_ML3D)
-            MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
+        if (no_block)
+            MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
         if (write_norm)
-            MDref.setValue(MDL_INTSCALE, model.scale[refno]);
-        refno++;
+            MDo.setValue(MDL_INTSCALE, model.scale[refno]);
+        if (do_ML3D)
+        {
+            MDo.setValue(MDL_ANGLEROT, Itmp.rot());
+            MDo.setValue(MDL_ANGLETILT, Itmp.tilt());
+        }
     }
 
 
     fn_tmp = fn_base + "_ref.xmd";
-    MDref.write(fn_tmp);
+    MDo.write(fn_tmp);
 
     // Write out log-file
     MDo.clear();

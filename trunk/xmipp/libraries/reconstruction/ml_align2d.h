@@ -41,6 +41,7 @@
 #include <vector>
 #include <sys/time.h>
 
+
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLANGLE 1.75
 #define DATALINELENGTH 12
@@ -362,6 +363,8 @@ public:
     int seed;
     //To check when to do the first iem iteration
     bool do_first_iem;
+    //Weight of image selected reference in 'generateInitialReferences'
+    double ref_weight;
 
 #ifdef TIMING
     JMTimer timer;
@@ -464,7 +467,7 @@ public:
 
     /// Read model from file
     void readModel(Model_MLalign2D &model, FileName fn_base);
-
+    void foo();
     /// Get base name based on fn_root and some number
     FileName getBaseName(std::string suffix = "", int number = -1);
 

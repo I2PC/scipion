@@ -153,7 +153,7 @@ public:
     /**Get column format info.
      *
      */
-    bool getColumnFormat()
+    bool getColumnFormat() const
     {
         return isColumnFormat;
     }

@@ -25,6 +25,9 @@
 
 #include <reconstruction/ml_align2d.h>
 
+//FIXME: ONLY for test new approach in metadata_label.h
+#include <data/metadata_label.h>
+
 int main(int argc, char **argv)
 {
     int c, nn, imgno, opt_refno;
@@ -101,6 +104,7 @@ int main(int argc, char **argv)
                         prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
                         prm.model.substractModel(block_model);
                     }
+                    std::cerr << "Maximizating block " << prm.current_block <<std::endl;
                     prm.maximization(block_model);
                     prm.writeOutputFiles(block_model, OUT_BLOCK);
 

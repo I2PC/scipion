@@ -33,206 +33,39 @@
 #include <sstream>
 #include <fstream>
 #include "funcs.h"
-
-// This enum defines what MetaDataLabels this class can manage, if
-// you need a new one add it here and modify affected methods:
-//
-//  - static MetaDataLabel codifyLabel( std::string strLabel );
-// - static std::string decodeLabel( MetaDataLabel inputLabel );
-// - void writeValuesToFile( std::ofstream &outfile, MetaDataLabel inputLabel );
-// - void addValue( std::string name, std::string value );
-//
-// Keep this special structure (using MDL_FIRSTLABEL and MDL_LAST_LABEL) so the
-// programmer can iterate through it like this:
-//
-//  for( MetaDataLabel mdl = MDL_FIRST_LABEL ; mdl < MDL_LAST_LABEL ; MetaDataLabel( mdl+1 ) )
-//
-enum MetaDataLabel
-{
-    MDL_UNDEFINED = -1,
-    MDL_FIRST_LABEL,
-    MDL_ANGLEPSI = MDL_FIRST_LABEL, // Psi angle of an image (double)
-    MDL_ANGLEROT, // Rotation angle of an image (double)
-    MDL_ANGLETILT, // Tilting angle of an image (double)
-    MDL_ANGLEPSI2, // Psi angle of an image (double)
-    MDL_ANGLEROT2, // Rotation angle of an image (double)
-    MDL_ANGLETILT2, // Tilting angle of an image (double)
-    MDL_COMMENT, // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
-    MDL_CTFINPUTPARAMS, // Parameters file for the CTF Model (std::string)
-    MDL_CTFMODEL, // Name for the CTF Model (std::string)
-    MDL_ENABLED, // Is this image enabled? (int [-1 or 1])
-    MDL_FLIP, // Flip the image? (bool)
-    MDL_IMAGE, // Name of an image (std::string)
-    MDL_IMAGE_ORIGINAL, // Name of an image from which MDL_IMAGE is coming from
-    MDL_IMAGE_CLASS, // Name of the class representative for this image
-    MDL_IMAGE_CLASS_GROUP, // Name of the class group for this image (metadata with all the
-                           // images assigned to that class)
-    MDL_IMAGE_CLASS_COUNT, // Number of images assigned to the same class as this image
-    MDL_MASK, // Name of a mask associated to image
-    MDL_MAXCC, // Cross-correlation for the image (double)
-    MDL_COST, // Cost for the image (double)
-    MDL_MICROGRAPH, // Name of a micrograph (std::string)
-    MDL_MISSINGREGION_NR, // Number of missing region in subtomogram
-    MDL_MISSINGREGION_TYPE, // Type of missing region in subtomogram
-    MDL_NMA, // Normal mode displacements (vector double)
-    MDL_ORIGINX, // Origin for the image in the X axis (double)
-    MDL_ORIGINY, // Origin for the image in the Y axis (double)
-    MDL_ORIGINZ, // Origin for the image in the Z axis (double)
-    MDL_PERIODOGRAM, // A periodogram's file name (std::string)
-    MDL_PMAX, // Maximum value of normalized probability function (now called "Pmax/sumP") (double)
-    MDL_REF, // Class to which the image belongs (int)
-    MDL_REF3D, // 3D Class to which the image belongs (int)
-    MDL_SCALE, // scaling factor for an image or volume (double)
-    MDL_BGMEAN, // Mean background value for an image
-    MDL_INTSCALE, // Intensity scale for an image
-    MDL_MODELFRAC, // Model fraction (alpha_k) for a Maximum Likelihood model
-    MDL_MIRRORFRAC, // Mirror fraction for a Maximum Likelihood model
-    MDL_LL, // contribution of an image to log-likelihood value
-    MDL_WROBUST, // Weight of t-student distribution in robust Maximum likelihood
-    MDL_SIGNALCHANGE, // Signal change for an image
-    MDL_SYMNO, // Symmetry number for a projection (used in ART)
-    MDL_SERIE, // A collection of micrographs, e.g. a tilt serie (std::string)
-    MDL_SHIFTX, // Shift for the image in the X axis (double)
-    MDL_SHIFTY, // Shift for the image in the Y axis (double)
-    MDL_SHIFTZ, // Shift for the image in the Z axis (double)
-    MDL_X, // X component (double)
-    MDL_Y, // Y component (double)
-    MDL_Z, // Z component (double)
-    MDL_XINT, // X component (int)
-    MDL_YINT, // Y component (int)
-    MDL_ZINT, // Z component (int)
-    MDL_WEIGHT, // Weight assigned to the image (double)
-    MDL_OBJID, // object id (int)
-    MDL_MAX, //maximum value (double)
-    MDL_MIN, //minimum value (double)
-    MDL_STDDEV, //stdandard deviation value (double)
-    MDL_AVG, //average value (double)
-    MDL_RESOLUTIONFOURIER,//resolution in 1/A (double)
-    MDL_RESOLUTIONREAL,//resolution in A (double)
-    MDL_FRC,//Fourier shell correlation (double)
-    MDL_FRCRANDOMNOISE,//Fourier shell correlation noise (double)
-    MDL_DPR,//differential phase residual (double)
-    //add row only label at the end of the enum
-    MDL_SAMPLINGRATE, // sampling rate (double)
-    MDL_SAMPLINGRATEX, // sampling rate (double)
-    MDL_SAMPLINGRATEY, // sampling rate (double)
-    MDL_SAMPLINGRATEZ, // sampling rate (double)
-    MDL_VOLTAGE, // microscope voltage (double)
-    MDL_DEFOCUSU, // microscope defocus U direction (double)
-    MDL_DEFOCUSV, // microscope defocus V direction (double)
-    MDL_IMGMD, // Name of Metadata file for all images (string)
-    MDL_REFMD, // Name of Metadata file for all references(string)
-    MDL_ITER, // Current iteration number (int)
-    MDL_BLOCK, // Current block number (for incremental EM)
-    MDL_SIGMANOISE, // Standard deviation of the noise in ML model
-    MDL_SIGMAOFFSET, // Standard deviation of the offsets in ML model
-    MDL_SUMWEIGHT, // Sum of all weights in ML model
-    MDL_RANDOMSEED, // Seed for random number generator
-    MDL_DEFGROUP, // Defocus group
-    MDL_KSTEST, //KS-test statistics
-    MDL_TRANSFORMATIONMTRIX, // transformation matrix(vector double)
-    MDL_AZIMUTALANGLE, //ctf definition azimutal angle
-    MDL_SPHERICALABERRATION, //ctf definition azimutal angle
-    MDL_Q0,//ctf definition Q0
-    MDL_K,// //ctf definition K
-     /*
-     MDL_chromatic_aberration= 1.99957
-     MDL_energy_loss=          0.0240301
-     MDL_lens_stability=       0
-     MDL_convergence_cone=     0.000329129
-     MDL_longitudinal_displace=8.66588e-05
-     MDL_transversal_displace= 4.14845
-     MDL_gaussian_K=           2.58626
-     MDL_sigmaU=               100000
-     MDL_sigmaV=               85359.1
-     MDL_cU=                   0.00332111
-     MDL_cV=                   0.0132845
-     MDL_gaussian_angle=       2.32559e-11
-     MDL_sqrt_K=               70.1711
-     MDL_sqU=                  20.3219
-     MDL_sqV=                  19.1215
-     MDL_sqrt_angle=           67.1273
-     MDL_base_line=            0.368481
-     MDL_gaussian_K2=          0.24108
-     MDL_sigmaU2=              6489.64
-     MDL_sigmaV2=              5825.19
-     MDL_cU2=                  0.06172
-     MDL_cV2=                  0.0586838
-     MDL_gaussian_angle2=      90
-     */
-    MDL_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
-    // it is here for looping purposes
-};
+#include "metadata_label.h"
 
 //useful to init values to zero
 static double zeroD=0.;
 static double    oneD=1.;
 static bool  falseb=false;
 
+//FIXME: For now keeping compatibility
+typedef MDLabel MetaDataLabel;
+
 inline bool isString(MetaDataLabel lCode)
 {
-    if (lCode == MDL_COMMENT  || lCode == MDL_IMAGE          || lCode == MDL_MICROGRAPH  ||
-        lCode == MDL_CTFMODEL || lCode == MDL_CTFINPUTPARAMS || lCode == MDL_PERIODOGRAM ||
-        lCode == MDL_SERIE    || lCode == MDL_IMGMD          || lCode == MDL_REFMD ||
-    	lCode == MDL_IMAGE_ORIGINAL || lCode == MDL_MASK     || lCode == MDL_IMAGE_CLASS ||
-    	lCode == MDL_IMAGE_CLASS_GROUP || lCode == MDL_MISSINGREGION_TYPE)
-        return true;
-    else
-        return false;
+    return MDL::isString(lCode);
 }
 
 inline bool isDouble(MetaDataLabel lCode)
 {
-    if (lCode == MDL_ANGLEROT     || lCode == MDL_ANGLETILT    || lCode == MDL_ANGLEPSI    ||
-        lCode == MDL_ANGLEROT2    || lCode == MDL_ANGLETILT2   || lCode == MDL_ANGLEPSI2   ||
-        lCode == MDL_SHIFTX       || lCode == MDL_SHIFTY       || lCode == MDL_SHIFTZ      ||
-        lCode == MDL_ORIGINX      || lCode == MDL_ORIGINY      || lCode == MDL_ORIGINZ     ||
-        lCode == MDL_X            || lCode == MDL_Y            || lCode == MDL_Z           ||
-        lCode == MDL_WEIGHT       || lCode == MDL_MAXCC        || lCode == MDL_PMAX        ||
-        lCode == MDL_SCALE        || lCode == MDL_COST         || lCode == MDL_BGMEAN      ||
-        lCode == MDL_INTSCALE     || lCode == MDL_SAMPLINGRATE || lCode == MDL_MODELFRAC   ||
-        lCode == MDL_MIRRORFRAC   || lCode == MDL_VOLTAGE      || lCode == MDL_DEFOCUSU    ||
-        lCode == MDL_DEFOCUSV     || lCode == MDL_LL           || lCode == MDL_WROBUST     ||
-        lCode == MDL_SIGNALCHANGE || lCode == MDL_SIGMANOISE   || lCode == MDL_SIGMAOFFSET ||
-        lCode == MDL_SUMWEIGHT    || lCode == MDL_KSTEST       || lCode == MDL_MAX         ||
-        lCode == MDL_MIN          || lCode == MDL_STDDEV       || lCode == MDL_AVG         ||
-        lCode == MDL_AZIMUTALANGLE|| lCode == MDL_SPHERICALABERRATION || lCode == MDL_Q0   ||
-        lCode == MDL_K            || lCode == MDL_RESOLUTIONFOURIER   || lCode == MDL_RESOLUTIONREAL ||
-        lCode == MDL_FRC          || lCode == MDL_FRCRANDOMNOISE      || lCode == MDL_DPR  ||
-        lCode == MDL_SAMPLINGRATEX|| lCode == MDL_SAMPLINGRATEY       || lCode == MDL_SAMPLINGRATEZ
-        )
-        return true;
-    else
-        return false;
+    return MDL::isDouble(lCode);
 }
 
 inline bool isVector(MetaDataLabel lCode)
 {
-    if (lCode == MDL_NMA || lCode == MDL_TRANSFORMATIONMTRIX)
-        return true;
-    else
-        return false;
+   return MDL::isVector(lCode);
 }
 
 inline bool isBool(MetaDataLabel lCode)
 {
-    if (lCode == MDL_FLIP)
-        return true;
-    else
-        return false;
+    return MDL::isBool(lCode);
 }
 
 inline bool isInt(MetaDataLabel lCode)
 {
-    if (lCode == MDL_REF      || lCode == MDL_ENABLED || lCode == MDL_OBJID      ||
-    	lCode == MDL_ITER     || lCode == MDL_BLOCK   || lCode == MDL_RANDOMSEED ||
-    	lCode == MDL_DEFGROUP || lCode == MDL_XINT    || lCode == MDL_YINT       ||
-    	lCode == MDL_ZINT     || lCode == MDL_IMAGE_CLASS_COUNT || lCode == MDL_REF3D ||
-    	lCode == MDL_SYMNO || lCode == MDL_MISSINGREGION_NR
-    	)
-        return true;
-    else
-        return false;
+    return MDL::isInt(lCode);
 }
 
 class MetaDataContainer
