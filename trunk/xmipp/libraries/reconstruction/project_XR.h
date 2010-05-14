@@ -28,8 +28,6 @@
 
 
 #include <data/funcs.h>
-//#include <data/docfile.h>
-//#include <data/selfile.h>
 #include <data/metadata.h>
 #include <data/projection.h>
 #include <data/psf_xr.h>
@@ -178,6 +176,8 @@ int PROJECT_XR_Effectively_project(
 
     Where Raxis is the 3D rotation matrix given by the axis and
     the angle.
+
+    Off-centered not implemented. Rotations are around volume center
 */
 void project_xr_Volume_offCentered(MultidimArray<double> &V,XmippXRPSF &psf, Projection &P,
    int Ydim, int Xdim, double axisRot, double axisTilt,

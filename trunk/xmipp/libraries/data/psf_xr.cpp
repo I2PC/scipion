@@ -120,7 +120,7 @@ void XmippXRPSF::clear()
     Ms = 2304;
     dzo = dxo = 1e-9;
     DeltaZo = 0;
-    npMin = 5;
+    pupileSizeMin = 5;
 }
 
 /* Produce Side Information ------------------------------------------------ */
@@ -268,14 +268,14 @@ void XmippXRPSF::adjustParam(Image<double> &vol)
 		Niy = Noy;
 		AdjustType = PSFXR_STD;
 
-		if (dxi < npMin/Nox * dxiMax)
+		if (dxi < pupileSizeMin/Nox * dxiMax)
 		{
-			Nix = ceil(npMin * dxiMax/dxi);
+			Nix = ceil(pupileSizeMin * dxiMax/dxi);
 			AdjustType = PSFXR_ZPAD;
 		}
-		if (dxi < npMin/Noy * dxiMax)
+		if (dxi < pupileSizeMin/Noy * dxiMax)
 		{
-			Niy = ceil(npMin * dxiMax/dxi);
+			Niy = ceil(pupileSizeMin * dxiMax/dxi);
 			AdjustType = PSFXR_ZPAD;
 		}
 	}

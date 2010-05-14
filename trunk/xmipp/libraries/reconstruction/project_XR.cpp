@@ -274,7 +274,7 @@ void project_xr_Volume_offCentered(MultidimArray<double> &V, XmippXRPSF &psf, Pr
     Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
 
     // Find displacement because of axis offset and inplane shift
-    Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane;
+    // Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane; // Actually not implemented
 
 #ifdef DEBUG
 

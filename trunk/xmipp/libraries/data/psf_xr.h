@@ -32,20 +32,61 @@
 #include <complex>
 
 
-/// This enum defines which method should be used to
-/// correct the limitation due to Nyquist limit in diffraction
+/** This enum defines which method should be used to
+ correct the constraint due to Nyquist limit in diffraction. */
 enum psfxrAdjust
 {
-	PSFXR_STD, /// Standard mode, image size does not changes
-	PSFXR_INT, /// Increasing the image size by Interpolating
-	PSFXR_ZPAD /// Increasing the image size by Zeropadding
+    PSFXR_STD, /// Standard mode, image size does not changes
+    PSFXR_INT, /// Increasing the image size by Interpolating
+    PSFXR_ZPAD /// Increasing the image size by Zeropadding
 };
 
 
-/**@defgroup PSFXRSupport X-Ray PSF support classes
+/**@defgroup PSFXRSupport X-Ray Microscope PSF support classes
  @ingroup DataLibrary */
 //@{
 /** X-ray PSF class.
+ * Here goes how to filter an image with the Point Spread Function of a X-ray microscope optics
+
+ @code
+
+	#include <data/psf_xr.h>
+
+
+	int main(int argc, char **argv)
+	{
+		FileName fnPSF, fn_input,fn_output;
+		XmippXRPSF psf;
+
+	/// Read the microscope parameters
+
+	if (checkParameter(argc, argv, "-psf"))
+	{
+		fnPSF = getParameter(argc, argv, "-psf");
+		psf.read(fnPSF);
+	}
+	else
+		psf.clear(); /// Use a default reference microscope
+
+
+	fn_input = getParameter(argc, argv, "-i");
+
+	psf.produceSideInfo();
+
+	Image<double>   inputVol, imOut;
+
+	inputVol.read(fn_input);
+	psf.adjustParam(inputVol);
+	project_xr(psf, inputVol, imOut);
+
+	if (checkParameter(argc, argv, "-out"))
+		fn_output = getParameter(argc, argv, "-out");
+	else
+		fn_output = file_name.without_extension().add_extension("out").add_extension("spi");
+
+	imOut.write(fn_output);
+	}
+ @endcode
 
 
  */
@@ -65,11 +106,10 @@ public:
     /// Image plane (CCD position)
     double Zi;
 
-
-
+    /* Digital Parameters */
     /// Size of the input image (object plane size)
     double Nox, Noy;
-    /* Minimum resolution condition.
+    /* Maximum pixel size in image plane (Minimum resolution condition).
      The same for both axis x-y, due to the simmetry of the lens aperture */
     double dxiMax;
     /// Pixel size in lens plane
@@ -77,15 +117,15 @@ public:
 
     /// Parameters to change image size to avoid Nyquist limit
     psfxrAdjust AdjustType;
-    double npMin;
+    /// Minimum diameter size of the microscope pupile in the lens plane, measured in pixels
+    double pupileSizeMin;
 
 public:
-    /// Lambda
+    /// Lambda of illumination
     double lambda;
 
     /* RX Microscope configuration */
-
-    /// Focal length in mm
+    /// Focal length
     double Flens;
     /// Number of zones in zone plate
     double Nzp;
@@ -95,7 +135,7 @@ public:
     double DeltaZo;
 
 
-
+    /* Digital Parameters */
     /// object space XY-plane sampling rate
     double dxo;
     /// Image space XY-plane sampling rate
@@ -133,14 +173,14 @@ public:
     /// Produce Side information
     void produceSideInfo();
 
-    /// Apply OTF to an image
+    /// Apply the OTF to the image, by means of the convolution
     template <typename T>
     void applyOTF(MultidimArray<T> &Im)
     {
         MultidimArray<std::complex<double> > ImFT;
         XmippFftw transformer;
 
-//#define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
 
         Image<double> _Im;
@@ -186,12 +226,12 @@ public:
 
     }
 
-    /// Generate OTF image.
+    /// Generate the Optical Transfer Function (OTF) according to Microscope and Im parameters.
     void generateOTF(MultidimArray<double> &Im) ;
 
     void generateOTF(MultidimArray<std::complex<double> > &Im) ;
 
-    /// Calculate if a rescaling of the images is needed due to the limitations of the system parameters
+    /// Calculate if a resize of the X-Y plane is needed to avoid the Nyquist Limit
     void adjustParam(Image<double> &Vol) ;
 
 };
@@ -201,10 +241,8 @@ public:
 void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
 
 
-/// Generate projection for an X-ray microscope... TBC
+/// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
 void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut);
-
-
 
 //@}
 #endif
