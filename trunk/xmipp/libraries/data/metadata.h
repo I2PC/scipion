@@ -131,18 +131,18 @@ public:
     /** Aggregate metadata objects, result in calling metadata object
      * thisLabel label is used for aggregation, second. Valid operations are:
      *
-     * avg:  The avg function returns the average value of all  operationLabel within a group.
+     * MDL_AVG:  The avg function returns the average value of all  operationLabel within a group.
       The result of avg is always a floating point value as long as at there
       is at least one non-NULL input even if all inputs are integers.
        The result of avg is NULL if and only if there are no non-NULL inputs.
 
-      count: The count function returns a count of the number of times that operationLabel is in a group.
+      MDL_COUNT: The count function returns a count of the number of times that operationLabel is in a group.
 
-      max       The max aggregate function returns the maximum value of all values in the group.
+      MDL_MAX       The max aggregate function returns the maximum value of all values in the group.
 
-      min       The min aggregate function returns the minimum  value of all values in the group.
+      MDL_MIN       The min aggregate function returns the minimum  value of all values in the group.
 
-     sum The total aggregate functions return sum of all values in the group.
+     MDL_SUM The total aggregate functions return sum of all values in the group.
      If there are no non-NULL input rows then returns 0.0.
 
      The result of total() is always a floating point value.

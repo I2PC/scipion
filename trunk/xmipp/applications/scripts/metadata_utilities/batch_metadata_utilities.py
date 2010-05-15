@@ -42,7 +42,8 @@ class Code:
        self.move=6
        self.delete=7
        self.select=8
-       
+       self.sort=9
+
     def encode(self, _string):
        if (  _string=='-u'   or _string == '--union'):
             return self.union
@@ -58,8 +59,10 @@ class Code:
             return self.move
        elif (_string == '-d' or _string == '--delete'):
             return self.delete
-       elif (_string == '-s' or _string == '--Select'):
+       elif (_string == '-S' or _string == '--select'):
             return self.select
+       elif (_string == '-x' or _string   == '--sort'):
+            return self.sort
        else:
             return self.unknown
         
@@ -80,6 +83,8 @@ class Code:
             return 'Delete'
        elif (_operation==self.select):
             return 'Select'
+       elif (_operation==self.sort):
+            return 'Sort'
        else:
             return 'Unknown Operation'
 
@@ -108,7 +113,8 @@ def check_label(option, opt_str, value, parser):
         operation == _myCode.inter or
         operation == _myCode.subs or
         operation == _myCode.product or
-        operation == _myCode.select):
+        operation == _myCode.select or
+	operation == _myCode.sort):
        setattr(parser.values, option.dest, value)
     else:
        raise OptionValueError("selected option " + opt_str + " is not compatible with operation "+ _myCode.decode(operation))
@@ -143,7 +149,8 @@ Example:
       
       parser.add_option("-u","--union", dest="inMetaDataFile2",
 			default="", type="string",action="callback", callback=check_operation,
-			help="add two metadata files (repetitions are allowed)")
+			help="""add two metadata files (repetitions are not allowed label given by
+			-l --this label is optional""")
       parser.add_option("-n","--inter", "--intersection", dest="inMetaDataFile2",
             default="", type="string",action="callback", callback=check_operation,
             help="intersect two metadata files")
@@ -167,7 +174,7 @@ Example:
             action="callback", callback=check_operation,
             help="delete files in metadata file")
 
-      parser.add_option('-S', '--Select',
+      parser.add_option('-S', '--select',
                   nargs=0,
                   action="callback",callback=check_operation,
                   help="select entries with CLabel in the range given by --minvalue --maxvalue (only works with DOUBLES)"
@@ -180,7 +187,11 @@ Example:
             default=0., type="float",action="callback", callback=check_value,
             help="copy files in metadata file to new directory")
 
-            
+      parser.add_option("-x", "--sort",
+                        nargs=0,
+			action="callback", callback=check_operation,
+			help="sort output metadata file by label given in the option -l")	    
+           
       (options, args) = parser.parse_args()
       if(len(options.inMetaDataFile) < 1):
           parser.print_help()
@@ -201,13 +212,27 @@ Example:
              options.minValue,
              options.maxValue)
 	     
-def process_union(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS):
+def process_union(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel):
     inMetaDataFile   = XmippData.FileName(inMetaDataFileS)
     inMetaDataFile2  = XmippData.FileName(inMetaDataFile2S)
     outMetaDataFile  = XmippData.FileName(outMetaDataFileS)
     MD1=XmippData.MetaData(inMetaDataFile)
     MD2=XmippData.MetaData(inMetaDataFile2)
-    MD1.union_(MD2)
+    if(len(cLabel)<1):
+        MD1.unionAll(MD2)
+    else:
+        MD1.union_(MD2,XmippData.MDL.str2Label(cLabel))
+    MD1.write(outMetaDataFile)
+    
+def process_sort(inMetaDataFileS,outMetaDataFileS,cLabel):
+    print "sorting"
+    if(len(cLabel)<1):
+        print " Metadata label '-l' is required"
+        sys.exit()
+    inMetaDataFile   = XmippData.FileName(inMetaDataFileS)
+    outMetaDataFile  = XmippData.FileName(outMetaDataFileS)
+    MD1=XmippData.MetaData(inMetaDataFile)
+    MD1.sort(MD1,XmippData.MDL.str2Label(cLabel))
     MD1.write(outMetaDataFile)
     
 def process_subs(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel):
@@ -273,7 +298,6 @@ def process_copy(inMetaDataFileS,cPath):
          print message + ss.value() 
          id=MD1.nextObject()
 def process_select(inMetaDataFileS,outMetaDataFileS,minValue,maxValue,cLabel):
-    print "Inside SELECT"
     inMetaDataFile   = XmippData.FileName(inMetaDataFileS)
     outMetaDataFile  = XmippData.FileName(outMetaDataFileS)
     print inMetaDataFile,outMetaDataFile
@@ -301,7 +325,7 @@ maxValue
 #print "1",inMetaDataFile,"2",outMetaDataFile,"3",inMetaDataFile2
 #operate
 if(operation==_myCode.union):
-    process_union(inMetaDataFile,inMetaDataFile2,outMetaDataFile)
+    process_union(inMetaDataFile,inMetaDataFile2,outMetaDataFile,cLabel)
 elif(operation==_myCode.inter or 
      operation==_myCode.subs  or
      operation==_myCode.product):
@@ -314,7 +338,11 @@ elif(operation==_myCode.copy or
     
 elif(operation==_myCode.select):
     process_select(inMetaDataFile,outMetaDataFile,minValue,maxValue,cLabel)
+    
+elif(operation==_myCode.sort):
+    process_sort(inMetaDataFile,outMetaDataFile,cLabel)    
+    
 else:
     print "Error: Wrong operation:", operation
     
-
+    
