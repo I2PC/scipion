@@ -44,21 +44,21 @@ class Code:
        self.select=8
        
     def encode(self, _string):
-       if (  _string=='-u' or _string=='--union'):
+       if (  _string=='-u'   or _string == '--union'):
             return self.union
-       elif (_string=='-n' or _string=='--inter' or _string=='--intersection'):
+       elif (_string=='-n'   or _string == '--inter' or _string=='--intersection'):
             return self.inter
-       elif (_string=="-s" or _string == "--subs" or _string == "--substraction"):
+       elif (_string=="-s"   or _string == "--subs" or _string == "--substraction"):
             return self.subs
-       elif (_string=="-p" or _string ==  "--product"or _string == "--naturalJoin"):
+       elif (_string=="-p"   or _string == "--product"or _string == "--naturalJoin"):
             return self.product
-       elif (_string == '-c' or _string=='--copy'):
+       elif (_string == '-c' or _string == '--copy'):
             return self.copy
-       elif (_string == '-m' or _string=='--move'):
+       elif (_string == '-m' or _string == '--move'):
             return self.move
-       elif (_string == '-d' or _string=='--delete'):
+       elif (_string == '-d' or _string == '--delete'):
             return self.delete
-       elif (_string == '-s' or _string=='--Select'):
+       elif (_string == '-s' or _string == '--Select'):
             return self.select
        else:
             return self.unknown
@@ -127,10 +127,10 @@ def command_line_options():
       import optparse
       _usage = """usage: %prog [options]
 Example:
-   operate_metadata  -i i1.doc --union i2.doc -o result.doc" 
-   operate_metadata  -i i1.doc -o result.doc --copy /home/roberto/kk" 
-   operate_metadata  -i i1.doc -o result.doc --naturalJoin i2.doc -l angleROT" 
-   operate_metadata  -i i1.doc -o result.doc --select angleROT --minValue 0 --maxValue 23" 
+   xmipp_metadata_utilities  -i i1.doc --union i2.doc -o result.doc" 
+   xmipp_metadata_utilities  -i i1.doc -o result.doc --copy /home/roberto/kk" 
+   xmipp_metadata_utilities  -i i1.doc -o result.doc --naturalJoin i2.doc -l angleROT" 
+   xmipp_metadata_utilities  -i i1.doc -o result.doc --select angleROT --minValue 0 --maxValue 23" 
    """
       global operation
       parser = optparse.OptionParser(_usage)
