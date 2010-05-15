@@ -75,7 +75,7 @@ Example:
 def fill_array(expression):
     _array=[]
     for i in range(XmippData.MDL_FIRST_LABEL,XmippData.MDL_LAST_LABEL):
-        _label=XmippData.MetaDataContainer.decodeLabel(i)
+        _label=XmippData.MDL.label2Str(i)
         if(expression.find(_label) != -1):
 	    _array.append(_label)
     return _array
