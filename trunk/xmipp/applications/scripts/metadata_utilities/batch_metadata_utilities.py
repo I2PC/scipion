@@ -226,13 +226,13 @@ def process_subs(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel):
     MD2=XmippData.MetaData(inMetaDataFile2)
     MD3=XmippData.MetaData()
     if(operation==_myCode.subs):
-        MD3.substraction(MD1,MD2,mdl.codifyLabel(cLabel))
+        MD3.substraction(MD1,MD2,XmippData.MDL.str2Label(cLabel))
         MD3.write(outMetaDataFile)
     elif(operation==_myCode.inter):
-        MD3.intersection(MD1,MD2,mdl.codifyLabel(cLabel))
+        MD3.intersection(MD1,MD2,XmippData.MDL.str2Label(cLabel))
         MD3.write(outMetaDataFile)
     elif(operation==_myCode.product):
-        MD1.combine(MD2,mdl.codifyLabel(cLabel))
+        MD1.combine(MD2,mdl.cXmippData.MDL.str2Label(cLabel))
         MD1.write(outMetaDataFile)
 
 def process_copy(inMetaDataFileS,cPath):
@@ -280,7 +280,7 @@ def process_select(inMetaDataFileS,outMetaDataFileS,minValue,maxValue,cLabel):
     MD1=XmippData.MetaData(inMetaDataFile)
     MD2=XmippData.MetaData()
     mdl=XmippData.MetaDataContainer()
-    XmippData.addObjectsInRangeDouble(MD1,MD2,mdl.codifyLabel(cLabel),minValue,
+    XmippData.addObjectsInRangeDouble(MD1,MD2,XmippData.MDL.str2Label(cLabel),minValue,
                                     maxValue)
     MD2.write(outMetaDataFile)
     
@@ -298,7 +298,7 @@ minValue,
 maxValue
 ) = command_line_options()
 
-print "1",inMetaDataFile,"2",outMetaDataFile,"3",inMetaDataFile2
+#print "1",inMetaDataFile,"2",outMetaDataFile,"3",inMetaDataFile2
 #operate
 if(operation==_myCode.union):
     process_union(inMetaDataFile,inMetaDataFile2,outMetaDataFile)
