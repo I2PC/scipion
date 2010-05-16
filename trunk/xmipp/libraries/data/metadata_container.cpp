@@ -32,7 +32,8 @@ MetaDataContainer::~MetaDataContainer()
 {
 }
 ;
-MetaDataContainer& MetaDataContainer::operator =(const MetaDataContainer &MDc)
+
+void MetaDataContainer::copy(const MetaDataContainer &MDc)
 {
 
     if (this != &MDc)
@@ -68,39 +69,17 @@ MetaDataContainer& MetaDataContainer::operator =(const MetaDataContainer &MDc)
 
         }
     }
+}
+
+MetaDataContainer& MetaDataContainer::operator =(const MetaDataContainer &MDc)
+{
+    copy(MDc);
     return *this;
 }
+
 MetaDataContainer::MetaDataContainer(const MetaDataContainer &MDc)
 {
-    void * aux;
-    MDLabel lCode;
-    std::map<MDLabel, void *>::const_iterator It;
-    for (It = (MDc.values).begin(); It != (MDc.values).end(); It++)
-    {
-        aux = It->second;
-        lCode = It->first;
-
-        if (MDL::isDouble(lCode))
-        {
-            addValue(lCode, *((double *) aux));
-        }
-        else if (MDL::isString(lCode))
-        {
-            addValue(lCode, *((std::string *) aux));
-        }
-        else if (MDL::isInt(lCode))
-        {
-            addValue(lCode, *((int *) aux));
-        }
-        else if (MDL::isBool(lCode))
-        {
-            addValue(lCode, *((bool *) aux));
-        }
-        else if (MDL::isVector(lCode))
-        {
-            addValue(lCode, *((std::vector<double> *) aux));
-        }
-    }
+    copy(MDc);
 }
 
 void MetaDataContainer::addValue(const std::string &name,

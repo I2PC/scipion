@@ -48,6 +48,7 @@ class MetaDataContainer
 
     void insertVoidPtr(MDLabel name, void * value);
     void * getVoidPtr(MDLabel name);
+    void copy(const MetaDataContainer &MDc);
 
 public:
 
