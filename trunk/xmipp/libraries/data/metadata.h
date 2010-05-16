@@ -553,7 +553,6 @@ public:
      * Sort this metadata, by label
      * dirty implementation using sqlite
      */
-
     void sort(MetaData & MDin, MDLabel sortlabel);
 
     /** Split metadata into two random halves

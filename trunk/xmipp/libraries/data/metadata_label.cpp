@@ -39,47 +39,47 @@ void MDL::addLabel(MDLabel label, MDLabelType type, std::string name, std::strin
         names[name3] = label;
 }//close function addLable
 
-MDLabel  MDL::str2Label(std::string labelName)
+MDLabel  MDL::str2Label(const std::string &labelName)
 {
     if (names.find(labelName) == names.end())
         return MDL_UNDEFINED;
     return names[labelName];
 }//close function str2Label
 
-std::string  MDL::label2Str(MDLabel label)
+std::string  MDL::label2Str(const MDLabel &label)
 {
     if (data.find(label) == data.end())
             return "";
     return data[label].str;
 }//close function label2Str
 
-bool MDL::isInt(MDLabel label)
+bool MDL::isInt(const MDLabel &label)
 {
     return (data[label].type == LABEL_INT);
 }
-bool MDL::isBool(MDLabel label)
+bool MDL::isBool(const MDLabel &label)
 {
     return (data[label].type == LABEL_BOOL);
 }
-bool MDL::isString(MDLabel label)
+bool MDL::isString(const MDLabel &label)
 {
     return (data[label].type == LABEL_STRING);
 }
-bool MDL::isDouble(MDLabel label)
+bool MDL::isDouble(const MDLabel &label)
 {
     return (data[label].type == LABEL_DOUBLE);
 }
-bool MDL::isVector(MDLabel label)
+bool MDL::isVector(const MDLabel &label)
 {
     return (data[label].type == LABEL_VECTOR);
 }
 
-bool MDL::isValidLabel(MDLabel label)
+bool MDL::isValidLabel(const MDLabel &label)
 {
     return (label > MDL_UNDEFINED && label < MDL_LAST_LABEL);
 }
 
-bool MDL::isValidLabel(std::string labelName)
+bool MDL::isValidLabel(const std::string &labelName)
 {
     MDLabel label = MDL::str2Label(labelName);
     return MDL::isValidLabel(label);

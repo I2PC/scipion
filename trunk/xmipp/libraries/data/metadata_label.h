@@ -153,16 +153,16 @@ public:
     //  for( MDLabel mdl = MDL_FIRST_LABEL ; mdl < MDL_LAST_LABEL ; MDLabel( mdl+1 ) )
     //
 
-static MDLabel str2Label(std::string labelName);
-static std::string label2Str(MDLabel label);
+static MDLabel str2Label(const std::string &labelName);
+static std::string label2Str(const MDLabel &label);
 
-static bool isInt(MDLabel label);
-static bool isBool(MDLabel label);
-static bool isString(MDLabel label);
-static bool isDouble(MDLabel label);
-static bool isVector(MDLabel label);
-static bool isValidLabel(MDLabel label);
-static bool isValidLabel(std::string labelName);
+static bool isInt(const MDLabel &label);
+static bool isBool(const MDLabel &label);
+static bool isString(const MDLabel &label);
+static bool isDouble(const MDLabel &label);
+static bool isVector(const MDLabel &label);
+static bool isValidLabel(const MDLabel &label);
+static bool isValidLabel(const std::string &labelName);
 
 private:
     static std::map<MDLabel, MDLabelData> data;
