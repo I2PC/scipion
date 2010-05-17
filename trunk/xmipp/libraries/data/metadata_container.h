@@ -106,7 +106,7 @@ public:
     bool pairExists(MDLabel name, const std::string &value);
 
     template<class T>
-    bool pairExists(MDLabel name, T value)
+    bool pairExists(MDLabel name, const T& value)
     {
         // Traverse all the structure looking for objects
         // that satisfy search criteria
@@ -125,8 +125,6 @@ public:
 
         return false;
     }
-
-
 
     void deleteValue(MDLabel name);
 
