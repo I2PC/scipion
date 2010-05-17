@@ -27,25 +27,21 @@
 
 int main(int argc, char **argv)
 {
-
-    VolumeXmipp vol;
+    Image<double> vol;
     Prog_WBP_prm prm;
 
     try
     {
-
         prm.read(argc, argv);
         prm.show();
         prm.produce_Side_info();
-        prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol);
+        prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol());
 
         if (prm.verb > 0)
             std::cerr << "Fourier pixels for which the threshold was not reached: "
-            << (float)(prm.count_thr*100.) / (prm.SF.ImgNo()*prm.dim*prm.dim) << " %" << std::endl;
+            << (float)(prm.count_thr*100.) / (prm.SF.size()*prm.dim*prm.dim) << " %" << std::endl;
 
         vol.write(prm.fn_out);
-
-
     }
     catch (Xmipp_error XE)
     {
@@ -53,6 +49,5 @@ int main(int argc, char **argv)
         prm.usage();
         exit(0);
     }
-
-
+    exit(1);
 }

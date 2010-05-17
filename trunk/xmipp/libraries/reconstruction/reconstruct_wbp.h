@@ -26,8 +26,7 @@
 #include <data/fft.h>
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
 #include <data/projection.h>
 #include <data/filters.h>
@@ -53,12 +52,8 @@ class Prog_WBP_prm
 public:
     /** Filenames */
     FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control;
-    /** SelFile containing all projections */
-    SelFile SF;
-    /** DocFile containing all angles */
-    DocFile DF;
-    /** Column numbers in the docfile */
-    int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;
+    /** SelFile containing all projections and angles */
+    MetaData SF;
     /** Lower threshold for the filter */
     double threshold;
     /** Counter for how many times the threshold was not reached */
@@ -97,25 +92,24 @@ public:
     void produce_Side_info() ;
 
     /// Get angles (either from reading the header or from a docfile)
-    void get_angles_for_image(FileName fn, double &rot, double &tilt, double &psi,
+    void get_angles_for_image(const FileName &fn, double &rot, double &tilt, double &psi,
                               double &xoff, double &yoff, double &flip, double &weight);
 
     /// Fill array with transformation matrices needed for arbitrary geometry filter
-    void get_all_matrices(SelFile &SF) ;
+    void get_all_matrices(MetaData &SF) ;
 
     /// Fill array with transformation matrices for representative
     /// evenly sampled projection directions
-    void get_sampled_matrices(SelFile &SF) ;
+    void get_sampled_matrices(MetaData &SF) ;
 
     // Simple (i.e. unfiltered) backprojection of a single image
-    void simple_backprojection(Projection &img, VolumeXmipp &vol,
+    void simple_backprojection(Projection &img, MultidimArray<double> &vol,
                                int diameter) ;
 
     // Calculate the filter and apply it to a projection
     void filter_one_image(Projection &proj);
 
     // Calculate the filter for arbitrary tilt geometry in 2D and apply
-    void apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &vol) ;
-
+    void apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<double> &vol) ;
 };
 //@}

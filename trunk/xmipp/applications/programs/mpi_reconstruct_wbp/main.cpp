@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     // For parallelization
     int           rank, size, num_img_tot;
     // For program
-    VolumeXmipp   vol, aux;
+    Image<double>   vol, aux;
     Prog_WBP_prm  prm;
     int           iaux;
 
@@ -44,14 +44,11 @@ int main(int argc, char **argv)
 
     try
     {
-
         // Read command line & produce side info
         prm.read(argc, argv);
         if (rank == 0) prm.show();
         else
-        {
             prm.verb = 0;
-        }
 
         // First produce the filter and then cut selfile in smaller parts
         prm.produce_Side_info();
@@ -60,7 +57,7 @@ int main(int argc, char **argv)
         prm.SF.mpi_select_part(rank, size, num_img_tot);
 
         // Actual backprojection
-        prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol);
+        prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol());
 
         aux().resize(vol());
         MPI_Allreduce(MULTIDIM_ARRAY(vol()), MULTIDIM_ARRAY(aux()),
@@ -74,7 +71,6 @@ int main(int argc, char **argv)
             << (float)(iaux*100.) / (num_img_tot*prm.dim*prm.dim) << " %" << std::endl;
             vol.write(prm.fn_out);
         }
-
     }
     catch (Xmipp_error XE)
     {
@@ -89,6 +85,5 @@ int main(int argc, char **argv)
 
     MPI_Finalize();
     return 0;
-
 }
 

@@ -24,11 +24,11 @@
  ***************************************************************************/
 
 #include "reconstruct_wbp.h"
+#include <data/metadata_extension.h>
 
 // Read arguments ==========================================================
 void Prog_WBP_prm::read(int argc, char **argv)
 {
-
     fn_sel = getParameter(argc, argv, "-i");
     fn_doc = getParameter(argc, argv, "-doc","");
     fn_out =  getParameter(argc, argv, "-o", "wbp.vol");
@@ -43,13 +43,11 @@ void Prog_WBP_prm::read(int argc, char **argv)
 
     // For improved killing control
     fn_control = getParameter(argc, argv, "-control", "");
-
 }
 
 // Show ====================================================================
 void Prog_WBP_prm::show()
 {
-
     if (verb > 0)
     {
         // To screen
@@ -73,13 +71,11 @@ void Prog_WBP_prm::show()
             std::cerr << " --> Use weights stored in the image headers" << std::endl;
         std::cerr << " -----------------------------------------------------------------" << std::endl;
     }
-
 }
 
 // Usage ====================================================================
 void Prog_WBP_prm::usage()
 {
-
     // To screen
     std::cerr << "  Usage:\n";
     std::cerr << "  WBP <options>\n";
@@ -93,109 +89,88 @@ void Prog_WBP_prm::usage()
     std::cerr << " [ -use_each_image]            : Use each image instead of sampled representatives for filter \n";
     std::cerr << " [ -weight]                    : Use weights stored in image headers \n";
     std::cerr << " -----------------------------------------------------------------" << std::endl;
-
 }
 
 void Prog_WBP_prm::produce_Side_info()
 {
-
     // Read-in stuff
     //remove images with weight=0
     double dum, weight;
 
-    // Read docfile and get column numbers
-    if (fn_doc != "")
-    {
-        DF.read(fn_doc);
-        col_rot    = DF.getColNumberFromHeader("rot")  - 1;
-        col_tilt   = DF.getColNumberFromHeader("tilt") - 1;
-        col_psi    = DF.getColNumberFromHeader("psi")  - 1;
-        col_xoff   = DF.getColNumberFromHeader("Xoff") - 1;
-        col_yoff   = DF.getColNumberFromHeader("Yoff") - 1;
-        col_flip   = DF.getColNumberFromHeader("Flip") - 1;
-        if (do_weights)
-            col_weight = DF.getColNumberFromHeader("Weight") - 1;
-    }
-
     //remove images with weight=0
     if (do_weights)
     {
-        SelFile SF_aux;
+        MetaData SF_aux;
         SF_aux.read(fn_sel);
-        SF_aux.go_beginning();
-        while (!SF_aux.eof())
+        FOR_ALL_OBJECTS_IN_METADATA(SF_aux);
         {
-            get_angles_for_image(SF_aux.get_current_file(), dum, dum, dum, dum, dum, dum, weight);
+            SF_aux.getValue(MDL_WEIGHT,weight);
             if (weight != 0)
             {
-                SF.insert(SF_aux.current());
+                SF.addObject();
+                FileName fnImg;
+                SF_aux.getValue(MDL_IMAGE,fnImg);
+                SF.setValue(MDL_IMAGE,fnImg);
             }
-            SF_aux.NextImg();
         }
-        if (SF.ImgNo() == 0)
-        {
-            std::cerr << "there is no input file with weight!=0" << std::endl;
-            exit(1);
-        }
+        if (SF.size() == 0)
+            REPORT_ERROR(1,"there is no input file with weight!=0");
     }
     else
         SF.read(fn_sel);
 
-    SF.ImgSize(dim, dim);
-    if (fn_sym != "") SL.read_sym_file(fn_sym);
-    if (diameter == 0) diameter = dim;
+    ImgSize(SF,dim, dim);
+    if (fn_sym != "")
+        SL.read_sym_file(fn_sym);
+    if (diameter == 0)
+        diameter = dim;
 
     // Fill arrays of transformation matrices
-    if (do_all_matrices) get_all_matrices(SF);
-    else get_sampled_matrices(SF);
+    if (do_all_matrices)
+        get_all_matrices(SF);
+    else
+        get_sampled_matrices(SF);
 
 }
 
-void Prog_WBP_prm::get_angles_for_image(FileName fn, double &rot, double &tilt, double &psi,
+void Prog_WBP_prm::get_angles_for_image(const FileName &fn, double &rot, double &tilt, double &psi,
                                         double &xoff, double &yoff, double &flip, double &weight)
 {
     if (fn_doc == "")
     {
-        headerXmipp      head;
-        head.read(fn);
-        rot    = head.Phi();
-        tilt   = head.Theta();
-        psi    = head.Psi();
-        xoff   = head.fXoff();
-        yoff   = head.fYoff();
-        flip   = head.Flip();
-        weight = head.Weight();
-    } 
+        Image<double> I;
+        I.read(fn,false);
+        rot    = I.rot();
+        tilt   = I.tilt();
+        psi    = I.psi();
+        xoff   = I.Xoff();
+        yoff   = I.Yoff();
+        flip   = I.flip();
+        weight = I.weight();
+    }
     else
     {
-        if (DF.search_comment(fn))
+        unsigned long int id=SF.goToFirstObject(MDL_IMAGE,(std::string)fn);
+        if (id!=MetaData::NO_OBJECT_FOUND && id!=MetaData::NO_OBJECTS_STORED)
         {
-            rot    = DF(col_rot);
-            tilt   = DF(col_tilt);
-            psi    = DF(col_psi);
-            xoff   = DF(col_xoff);
-            yoff   = DF(col_yoff);
-            if (col_flip < 0)
-                flip   = 0.;
-            else
-                flip   = DF(col_flip);
-            if (col_weight < 0)
-                weight = 0.;
-            else
-                weight = DF(col_weight);
+            SF.getValue(MDL_ANGLEROT,rot);
+            SF.getValue(MDL_ANGLETILT,tilt);
+            SF.getValue(MDL_ANGLEPSI,psi);
+            SF.getValue(MDL_SHIFTX,xoff);
+            SF.getValue(MDL_SHIFTY,yoff);
+            flip=0;
+            SF.getValue(MDL_FLIP,flip);
+            weight=0;
+            SF.getValue(MDL_WEIGHT,flip);
         }
         else
-        {
-            REPORT_ERROR(1, (std::string)"Prog_WBP_prm: Cannot find " + fn + " in docfile " + fn_doc);
-        }
+            REPORT_ERROR(1, (std::string)"Cannot find " + fn + " in docfile " + fn_doc);
     }
 }
 
-
-void Prog_WBP_prm::get_sampled_matrices(SelFile &SF)
+void Prog_WBP_prm::get_sampled_matrices(MetaData &SF)
 {
-
-    DocFile           DFlib, DFcp, DF;
+    MetaData          DFlib;
     FileName          fn_tmp;
     Matrix2D<double>  A(3, 3);
     Matrix2D<double>  L(4, 4), R(4, 4);
@@ -203,35 +178,41 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF)
     int               NN, dir, optdir;
     std::vector<double>    count_imgs;
 
-    if (verb > 0) std::cerr << "--> Sampling the filter ..." << std::endl;
+    if (verb > 0)
+        std::cerr << "--> Sampling the filter ..." << std::endl;
 
     // Create an (asymmetric part of an) even projection direction distribution
     make_even_distribution(DFlib, sampling, SL, true);
-    NN = DFlib.LineNo() + 1;
+    NN = DFlib.size();
     count_imgs.resize(NN);
     // Each experimental image contributes to the nearest of these directions
-    SF.go_beginning();
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        FileName fn_img=SF.NextImg();
-        if (fn_img=="") break;
+        FileName fn_img;
+        SF.getValue(MDL_IMAGE,fn_img);
         get_angles_for_image(fn_img, rot, tilt, dum, dum, dum, dum, weight);
+        int idx=find_nearest_direction(rot,tilt,DFlib,SL);
         if (do_weights)
-            count_imgs[find_nearest_direction(rot,tilt,DFlib,0,1,SL)] += weight;
-        else count_imgs[find_nearest_direction(rot,tilt,DFlib,0,1,SL)] += 1.;
+            count_imgs[idx] += weight;
+        else
+            count_imgs[idx] += 1.;
     }
 
     // Now calculate transformation matrices for all representative directions
     no_mats = 0;
-    for (int i = 1; i < NN; i++) if (count_imgs[i] > 0.) no_mats += SL.SymsNo() + 1;
+    for (int i = 0; i < NN; i++)
+        if (count_imgs[i] > 0.)
+            no_mats += SL.SymsNo() + 1;
     mat_g = (column*)malloc(no_mats * sizeof(column));
 
     no_mats = 0;
-    for (int i = 1; i < NN; i++)
+    for (int i = 0; i < NN; i++)
     {
         if (count_imgs[i] > 0.)
         {
-            DFlib.get_angles(i, newrot, newtilt, newpsi, "rot", "tilt", "psi");
+            DFlib.getValue(MDL_ANGLEROT,newrot,i);
+            DFlib.getValue(MDL_ANGLETILT,newtilt,i);
+            DFlib.getValue(MDL_ANGLEPSI,newpsi,i);
             Euler_angles2matrix(newrot, -newtilt, newpsi, A);
             mat_g[no_mats].zero = A(2, 0);
             mat_g[no_mats].one = A(2, 1);
@@ -239,6 +220,7 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF)
             mat_g[no_mats].count = count_imgs[i];
             totimgs += mat_g[no_mats].count;
             no_mats++;
+
             // Expand symmetric directions
             for (int j = 0; j < SL.SymsNo(); j++)
             {
@@ -259,36 +241,35 @@ void Prog_WBP_prm::get_sampled_matrices(SelFile &SF)
 
     // Adjust relative threshold
     threshold *= totimgs;
-
 }
 
 // Fill array with transformation matrices needed for arbitrary geometry filter
-void Prog_WBP_prm::get_all_matrices(SelFile &SF)
+void Prog_WBP_prm::get_all_matrices(MetaData &SF)
 {
-
     Matrix2D<double> A(3, 3);
     Matrix2D<double> L(4, 4), R(4, 4);
     double           rot, tilt, psi, weight, dum, newrot, newtilt, newpsi, totimgs = 0.;
     int              NN;
 
-    SF.go_beginning();
     no_mats = 0;
 
-    NN = SF.ImgNo();
+    NN = SF.size();
     NN *= (SL.SymsNo() + 1);
     mat_g = (column*)malloc(NN * sizeof(column));
 
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        FileName fn_img=SF.NextImg();
-        if (fn_img=="") break;
+        FileName fn_img;
+        SF.getValue(MDL_IMAGE,fn_img);
         get_angles_for_image(fn_img, rot, tilt, psi, dum, dum, dum, weight);
         Euler_angles2matrix(rot, -tilt, psi, A);
         mat_g[no_mats].zero = A(2, 0);
         mat_g[no_mats].one = A(2, 1);
         mat_g[no_mats].two = A(2, 2);
-        if (do_weights) mat_g[no_mats].count = weight;
-        else mat_g[no_mats].count = 1.;
+        if (do_weights)
+            mat_g[no_mats].count = weight;
+        else
+            mat_g[no_mats].count = 1.;
         totimgs += mat_g[no_mats].count;
         no_mats++;
         // Also add symmetry-related projection directions
@@ -302,8 +283,10 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF)
             mat_g[no_mats].zero = A(2, 0);
             mat_g[no_mats].one = A(2, 1);
             mat_g[no_mats].two = A(2, 2);
-            if (do_weights) mat_g[no_mats].count = weight;
-            else mat_g[no_mats].count = 1.;
+            if (do_weights)
+                mat_g[no_mats].count = weight;
+            else
+                mat_g[no_mats].count = 1.;
             totimgs += mat_g[no_mats].count;
             no_mats++;
         }
@@ -314,7 +297,7 @@ void Prog_WBP_prm::get_all_matrices(SelFile &SF)
 }
 
 // Simple backprojection of a single image
-void Prog_WBP_prm::simple_backprojection(Projection &img, VolumeXmipp &vol,
+void Prog_WBP_prm::simple_backprojection(Projection &img, MultidimArray<double> &vol,
         int diameter)
 {
     int i, j, k, l, m;
@@ -357,22 +340,22 @@ void Prog_WBP_prm::simple_backprojection(Projection &img, VolumeXmipp &vol,
                 scalex = xp - m;
                 scaley = yp - l;
                 scale1 = 1. - scalex;
-                value1 = scalex * dMij(img(), l, m + 1) + scale1 * dMij(img(), l, m);
-                value2 = scalex * dMij(img(), l + 1, m + 1) + scale1 * dMij(img(), l + 1, m);
+                value1 = scalex * dAij(img(), l, m + 1) + scale1 * dAij(img(), l, m);
+                value2 = scalex * dAij(img(), l + 1, m + 1) + scale1 * dAij(img(), l + 1, m);
                 value  = scaley * value2 + (1. - scaley) * value1;
-                dVkij(vol(), i, j, k) += value;
-
+                dAkij(vol, i, j, k) += value;
             }
         }
     }
-
-
 }
 
 // Calculate the filter in 2D and apply ======================================
 void Prog_WBP_prm::filter_one_image(Projection &proj)
 {
-    FourierImageXmipp IMG;
+    Image<double> save;
+    save()=proj(); save.write("PPPwbp2_before.xmp");
+
+    MultidimArray< std::complex<double> > IMG;
     Matrix2D<double>  A(3, 3);
     float             factor, argum, weight, x, y;
 
@@ -383,8 +366,8 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)
 
     Euler_angles2matrix(proj.rot(), -proj.tilt(), proj.psi(), A);
     A = A.inv();
-    FourierTransform(proj(), IMG());
-    CenterFFT(IMG(), true);
+    FourierTransform(proj(), IMG);
+    CenterFFT(IMG, true);
 
     // loop over all transformation matrices
     for (int k = 0; k < no_mats; k++)
@@ -397,8 +380,7 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)
                        A(2, 1) * mat_g[k].two;
     }
 
-
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(IMG())
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(IMG)
     {
         y = (float)i;
         x = (float)j;
@@ -414,21 +396,21 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)
         if (weight < threshold)
         {
             count_thr++;
-            MAT_ELEM(IMG(), i, j) /= (threshold * factor);
+            A2D_ELEM(IMG, i, j) /= (threshold * factor);
         }
         else
         {
-            MAT_ELEM(IMG(), i, j) /= (weight * factor);
+            A2D_ELEM(IMG, i, j) /= (weight * factor);
         }
     }
 
     // Calculate back-projection with the filtered projection
-    CenterFFT(IMG(), false);
-    InverseFourierTransform(IMG(), proj());
+    CenterFFT(IMG, false);
+    InverseFourierTransform(IMG, proj());
 }
 
 // Calculate the filter in 2D and apply ======================================
-void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &vol)
+void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<double> &vol)
 {
 
     int               c, nn, imgno;
@@ -436,29 +418,29 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
     Projection        proj;
     Matrix2D<double>  L(4, 4), R(4, 4), A;
     Mask_Params       mask_prm;
-    FileName          fn_img;            
+    FileName          fn_img;
 
-    vol().resize(dim, dim, dim);
-    vol().setXmippOrigin();
-    vol().initZeros();
+    vol.resize(dim, dim, dim);
+    vol.setXmippOrigin();
+    vol.initZeros();
     count_thr = 0;
 
     // Initialize time bar
-    if (verb > 0) std::cerr << "--> Back-projecting ..." << std::endl;
-    nn = SF.ImgNo();
-    if (verb > 0) init_progress_bar(nn);
+    if (verb > 0)
+        std::cerr << "--> Back-projecting ..." << std::endl;
+    nn = SF.size();
+    if (verb > 0)
+        init_progress_bar(nn);
     c = XMIPP_MAX(1, nn / 60);
 
     mat_f = (column*)malloc(no_mats * sizeof(column));
 
-    SF.go_beginning();
     imgno = 0;
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-	// Check whether to kill job
-	exit_if_not_exists(fn_control);
-        fn_img = SF.NextImg();
-        if (fn_img=="") break;
+        // Check whether to kill job
+        exit_if_not_exists(fn_control);
+        SF.getValue(MDL_IMAGE,fn_img);
         if (fn_doc == "")
         {
             proj.read(fn_img, true);
@@ -467,46 +449,48 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(SelFile &SF, VolumeXmipp &v
         {
             proj.read(fn_img, false);
             get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
-            proj.set_rot(rot);
-            proj.set_tilt(tilt);
-            proj.set_psi(psi);
-            proj.set_Xoff(xoff);
-            proj.set_Yoff(yoff);
-            proj.set_flip(flip);
-            proj.set_weight(weight);
-            A = proj.get_transformation_matrix(true);
+            proj.setRot(rot);
+            proj.setTilt(tilt);
+            proj.setPsi(psi);
+            proj.setShifts(xoff,yoff);
+            proj.setFlip(flip);
+            proj.setWeight(weight);
+            A = proj.getTransformationMatrix(true);
             if (!A.isIdentity())
-                proj().selfApplyGeometryBSpline(A, 3, IS_INV, WRAP);
+                selfApplyGeometry(BSPLINE3, proj(), A, IS_INV, WRAP);
         }
-        if (do_weights)  proj() *= proj.weight();
+        if (do_weights)
+            proj() *= proj.weight();
         proj().setXmippOrigin();
         filter_one_image(proj);
         simple_backprojection(proj, vol, diameter);
 
-        if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
+        if (verb > 0)
+            if (imgno % c == 0)
+                progress_bar(imgno);
         imgno++;
 
     }
-    if (verb > 0) progress_bar(nn);
+    if (verb > 0)
+        progress_bar(nn);
 
     // Symmetrize if necessary
     if (fn_sym != "")
     {
-        VolumeXmipp Vaux;
-        Vaux().resize(vol());
+        MultidimArray<double> Vaux;
+        Vaux.resize(vol);
         symmetrize(SL, vol, Vaux);
         vol = Vaux;
-        vol() *= (SL.SymsNo() + 1);
+        vol *= (SL.SymsNo() + 1);
         mask_prm.mode = INNER_MASK;
         mask_prm.R1 = diameter / 2.;
         mask_prm.type = BINARY_CIRCULAR_MASK;
-        mask_prm.generate_3Dmask(vol());
-        mask_prm.apply_mask(vol(), vol(), 0.);
+        mask_prm.generate_mask(vol);
+        mask_prm.apply_mask(vol, vol, 0.);
     }
 
     // free memory
     free(mat_g);
     free(mat_f);
-
 }
 
