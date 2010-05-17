@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 {
 
     int                         iter;
-    std::vector<SelFile>             SFout;
+    std::vector<MetaData>       SFout;
     double                      avecorr;
     FileName                    fn_tmp;
     Prog_Break_Sym_prm          prm;
@@ -37,7 +37,6 @@ int main(int argc, char **argv)
     // Get input parameters
     try
     {
-
         // Read command line
         prm.read(argc, argv);
         prm.show();
@@ -52,7 +51,6 @@ int main(int argc, char **argv)
 
     try
     {
-
         // Loop over all iterations
         iter = prm.istart;
         while (iter <= prm.Niter)
@@ -77,7 +75,6 @@ int main(int argc, char **argv)
 
             iter++;
         } // end loop iterations
-
     }
     catch (Xmipp_error XE)
     {

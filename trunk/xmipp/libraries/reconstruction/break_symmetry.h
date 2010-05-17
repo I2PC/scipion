@@ -25,17 +25,14 @@
 
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
-#include <data/volume.h>
 #include <data/filters.h>
 #include <data/mask.h>
 
 #include <data/symmetries.h>
 #include <data/projection.h>
 #include "directions.h"
-#include "reconstruct_wbp.h"
 #include "symmetrize.h"
 
 #include <vector>
@@ -51,7 +48,7 @@ public:
     // Various filenames
     FileName fn_sel, fn_vol, fn_sym, fn_root, fn_mask, fn_iter;
     // Selfile with experimental images or reference volumes
-    SelFile SF, SFvol;
+    MetaData SF, SFvol;
     // Symmetry list
     SymList SL;
     // Verbosity flag
@@ -69,9 +66,9 @@ public:
     // File handler for the history file
     std::ofstream fh_hist;
     // Reference volumes
-    std::vector<Matrix3D<double> > vols;
+    std::vector< MultidimArray<double> > vols;
     // Mask
-    VolumeXmipp mask;
+    Image<double> mask;
 
 public:
 
@@ -85,13 +82,13 @@ public:
     void show();
 
     /// Project the reference volume in evenly sampled directions
-    void process_one_image(ImageXmipp &img, int &opt_vol, int &opt_sym, double &maxcorr);
+    void process_one_image(Image<double> &img, int &opt_vol, int &opt_sym, double &maxcorr);
 
     /// Process various images
-    void process_selfile(SelFile &SF, std::vector<SelFile> &SFout, double &avecorr);
+    void process_selfile(MetaData &SF, std::vector<MetaData> &SFout, double &avecorr);
 
     /// reconstruction by (weighted ART) or WBP
-    void reconstruction(int argc, char **argv, SelFile &SF, int iter, int volno);
+    void reconstruction(int argc, char **argv, MetaData &SF, int iter, int volno);
 
 };
 //@}

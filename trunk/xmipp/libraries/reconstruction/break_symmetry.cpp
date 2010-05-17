@@ -23,29 +23,27 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <data/metadata_extension.h>
 #include "break_symmetry.h"
-
+#include "reconstruct_wbp.h"
 
 // Read ===================================================================
 void Prog_Break_Sym_prm::read(int argc, char **argv)
 {
-
     //Read Break_Sym parameters
     fn_sel = getParameter(argc, argv, "-i");
     fn_root = getParameter(argc, argv, "-o", "breaksym");
     fn_vol = getParameter(argc, argv, "-vol");
     fn_mask = getParameter(argc, argv, "-mask", "");
     // Fill volume selfile
-    if (Is_VolumeXmipp(fn_vol))
+    if (!fn_vol.isMetaData())
     {
-        SFvol.reserve(1);
-        SFvol.insert(fn_vol);
+        SFvol.addObject();
+        SFvol.setValue(MDL_IMAGE,fn_vol);
     }
     else
-    {
         SFvol.read(fn_vol);
-    }
-    Nvols = SFvol.ImgNo();
+    Nvols = SFvol.size();
 
     fn_sym = getParameter(argc, argv, "-sym");
     mask_radius = textToFloat(getParameter(argc, argv, "-mask_radius", "-1"));
@@ -57,15 +55,14 @@ void Prog_Break_Sym_prm::read(int argc, char **argv)
 
     // Read stuff into memory
     SF.read(fn_sel);
-    SF.ImgSize(dim, dim);
+    ImgSize(SF, dim, dim);
     SL.read_sym_file(fn_sym);
-    VolumeXmipp vol;
+    Image<double> vol;
     Nvols = 0;
-    SFvol.go_beginning();
-    while ((!SFvol.eof()))
+    FOR_ALL_OBJECTS_IN_METADATA(SFvol)
     {
-        FileName fn_img=SFvol.NextImg();
-        if (fn_img=="") break;
+        FileName fn_img;
+        SFvol.getValue(MDL_IMAGE,fn_img);
         vol.read(fn_img);
         vol().setXmippOrigin();
         vols.push_back(vol());
@@ -75,9 +72,8 @@ void Prog_Break_Sym_prm::read(int argc, char **argv)
     {
         vol.read(fn_mask);
         mask().resize(vol());
-        symmetrize(SL, vol, mask);
+        symmetrize(SL, vol(), mask());
     }
-
 }
 
 // Usage ===================================================================
@@ -97,7 +93,6 @@ void Prog_Break_Sym_prm::usage()
 // Show ======================================================================
 void Prog_Break_Sym_prm::show()
 {
-
     if (verb > 0)
     {
         // To screen
@@ -111,7 +106,7 @@ void Prog_Break_Sym_prm::show()
             std::cerr << " Selfile with references  : " << fn_vol << std::endl;
             std::cerr << "   with # of volumes      : " << Nvols << std::endl;
         }
-        std::cerr << " Experimental images:     : " << SF.name() << " (" << SF.ImgNo() << ")" << std::endl;
+        std::cerr << " Experimental images:     : " << SF.getFilename() << " (" << SF.size() << ")" << std::endl;
         std::cerr << " Symmetry file:           : " << fn_sym << std::endl;
         std::cerr << " Output rootname          : " << fn_root << std::endl;
         std::cerr << " Convergence criterion    : " << eps << std::endl;
@@ -134,23 +129,20 @@ void Prog_Break_Sym_prm::show()
             fh_hist << " Selfile with references  : " << fn_vol << std::endl;
             fh_hist << "   with # of volumes      : " << Nvols << std::endl;
         }
-        fh_hist << " Experimental images:     : " << SF.name() << " (" << SF.ImgNo() << ")" << std::endl;
+        fh_hist << " Experimental images:     : " << SF.getFilename() << " (" << SF.size() << ")" << std::endl;
         fh_hist << " Symmetry file:           : " << fn_sym << std::endl;
         fh_hist << " Output rootname          : " << fn_root << std::endl;
         fh_hist << " Convergence criterion    : " << eps << std::endl;
         if (mask_radius > 0)
             fh_hist << " Mask radius              : " << mask_radius << std::endl;
         fh_hist << " =================================================================" << std::endl;
-
     }
-
 }
 
 // Projection of the reference (blob) volume =================================
-void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
+void Prog_Break_Sym_prm::process_one_image(Image<double> &img, int &opt_vol,
         int &opt_sym, double &maxcorr)
 {
-
     double rot, tilt, psi, newrot, newtilt, newpsi;
     double Xsq, Asq, corr;
     double opt_rot, opt_tilt, opt_psi;
@@ -162,9 +154,8 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
     psi = img.psi();
     maxcorr = -999.;
 
-    ImageXmipp Itmp;
+    Image<double> Itmp;
     FileName fnt;
-
 
     if (fn_mask != "")
     {
@@ -180,10 +171,12 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
 
     // Pre-calculate Xsq:
     Xsq = 0.;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(img())
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(img())
     {
-        if (i*i + j*j > dim*dim / 4) MAT_ELEM(projmask(), i, j) = 0.;
-        if (MAT_ELEM(projmask(), i, j) > 0.) Xsq += MAT_ELEM(img(), i, j) * MAT_ELEM(img(), i, j);
+        if (i*i + j*j > dim*dim / 4)
+            A2D_ELEM(projmask(), i, j) = 0.;
+        if (A2D_ELEM(projmask(), i, j) > 0.)
+            Xsq += A2D_ELEM(img(), i, j) * A2D_ELEM(img(), i, j);
     }
     if (verb > 1)
     {
@@ -193,20 +186,20 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
 
     for (int volno = 0; volno < Nvols; volno++)
     {
-
         project_Volume(vols[volno], proj, dim, dim, rot, tilt, psi);
         proj().setXmippOrigin();
         corr = Asq = 0.;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(proj())
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(proj())
         {
-            if (dMij(projmask(), i, j) > 0.)
+            if (dAij(projmask(), i, j) > 0.)
             {
-                corr += dMij(proj(), i, j) * dMij(img(), i, j);
-                Asq += dMij(proj(), i, j) * dMij(proj(), i, j);
+                corr += dAij(proj(), i, j) * dAij(img(), i, j);
+                Asq += dAij(proj(), i, j) * dAij(proj(), i, j);
             }
         }
         corr /= sqrt(Asq) * sqrt(Xsq);
-        if (verb > 1) std::cout << " " << corr;
+        if (verb > 1)
+            std::cout << " " << corr;
         if (corr > maxcorr)
         {
             maxcorr = corr;
@@ -239,16 +232,17 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
             }
 
             corr = Asq = 0.;
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(proj())
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(proj())
             {
-                if (dMij(projmask(), i, j) > 0.)
+                if (dAij(projmask(), i, j) > 0.)
                 {
-                    corr += dMij(proj(), i, j) * dMij(img(), i, j);
-                    Asq += dMij(proj(), i, j) * dMij(proj(), i, j);
+                    corr += dAij(proj(), i, j) * dAij(img(), i, j);
+                    Asq += dAij(proj(), i, j) * dAij(proj(), i, j);
                 }
             }
             corr /= sqrt(Asq) * sqrt(Xsq);
-            if (verb > 1) std::cout << " " << corr;
+            if (verb > 1)
+                std::cout << " " << corr;
             if (corr > maxcorr)
             {
                 maxcorr = corr;
@@ -261,9 +255,9 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
         }
     }
 
-    // Read image again because of aplied shifts
+    // Read image again because of applied shifts
     img.read(img.name());
-    img.set_eulerAngles(opt_rot, opt_tilt, opt_psi);
+    img.setEulerAngles(opt_rot, opt_tilt, opt_psi);
     img.write(img.name());
     if (verb > 1)
     {
@@ -273,56 +267,57 @@ void Prog_Break_Sym_prm::process_one_image(ImageXmipp &img, int &opt_vol,
 }
 
 // Projection of the reference (blob) volume =================================
-void Prog_Break_Sym_prm::process_selfile(SelFile &SF, std::vector<SelFile> &SFout, double &avecorr)
+void Prog_Break_Sym_prm::process_selfile(MetaData &SF, std::vector<MetaData> &SFout,
+    double &avecorr)
 {
-
-    ImageXmipp img;
-    SelFile SFtmp;
+    Image<double> img;
+    MetaData SFtmp;
     FileName fn_img;
     double maxcorr;
     int c, nn, imgno, opt_vol, opt_sym;
 
     // Initialize
-    nn = SF.ImgNo();
-    if (verb > 0) init_progress_bar(nn);
+    nn = SF.size();
+    if (verb > 0)
+        init_progress_bar(nn);
     c = XMIPP_MAX(1, nn / 60);
 
     SFout.clear();
     for (int volno = 0; volno < Nvols; volno++)
-    {
         SFout.push_back(SFtmp);
-    }
 
     avecorr = 0.;
     imgno = 0;
-    SF.go_beginning();
-    while ((!SF.eof()))
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        fn_img = SF.NextImg();
-        if (fn_img=="") break;
+        SF.getValue(MDL_IMAGE,fn_img);
+
         // read image, only applying the shifts
         img.read(fn_img, false, false, false, true);
         img().setXmippOrigin();
 
         process_one_image(img, opt_vol, opt_sym, maxcorr);
-        SFout[opt_vol].insert(fn_img, SelLine::ACTIVE);
+        SFout[opt_vol].addObject();
+        SFout[opt_vol].setValue(MDL_IMAGE,fn_img);
+        SFout[opt_vol].setValue(MDL_ENABLED,true);
 
         avecorr += maxcorr;
-        if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
+        if (verb > 0)
+            if (imgno % c == 0)
+                progress_bar(imgno);
         imgno++;
     }
-    if (verb > 0) progress_bar(nn);
+    if (verb > 0)
+        progress_bar(nn);
     avecorr /= (double)imgno;
-
 }
 
 
 // Reconstruction using the ML-weights ==========================================
-void Prog_Break_Sym_prm::reconstruction(int argc, char **argv, SelFile &SF,
+void Prog_Break_Sym_prm::reconstruction(int argc, char **argv, MetaData &SF,
                                         int iter, int volno)
 {
-
-    VolumeXmipp            new_vol;
+    Image<double>          new_vol;
     FileName               fn_tmp, fn_insel;
 
     // Setup selfile for reconstruction
@@ -336,23 +331,25 @@ void Prog_Break_Sym_prm::reconstruction(int argc, char **argv, SelFile &SF,
     fn_insel = fn_tmp + ".sel";
     SF.write(fn_insel);
 
-    Prog_WBP_prm           wbp_prm;
-    if (verb > 0) std::cerr << "--> WBP reconstruction " << std::endl;
+    Prog_WBP_prm wbp_prm;
+    if (verb > 0)
+        std::cerr << "--> WBP reconstruction " << std::endl;
 
     // read command line (fn_sym, angular etc.)
     wbp_prm.read(argc, argv);
-    if (mask_radius > 0) wbp_prm.diameter = (int)mask_radius * 2;
+    if (mask_radius > 0)
+        wbp_prm.diameter = (int)mask_radius * 2;
 
     wbp_prm.fn_sel = fn_insel;
     wbp_prm.fn_sym = "";
     wbp_prm.show();
     wbp_prm.fn_out = fn_tmp + ".vol";
     wbp_prm.produce_Side_info();
-    wbp_prm.apply_2Dfilter_arbitrary_geometry(wbp_prm.SF, new_vol);
+    wbp_prm.apply_2Dfilter_arbitrary_geometry(wbp_prm.SF, new_vol());
     new_vol.write(wbp_prm.fn_out);
     vols[volno] = new_vol();
 
-    if (verb > 0) std::cerr << " =================================================================" << std::endl;
-
+    if (verb > 0)
+        std::cerr << " =================================================================" << std::endl;
 }
 
