@@ -116,7 +116,6 @@ double distance_directions(double rot1, double tilt1,
 void make_even_distribution(MetaData &DF, double sampling,
                             SymList &SL, bool include_mirror)
 {
-
     int rot_nstep, tilt_nstep = ROUND(180. / sampling) + 1;
     double dfrot, dftilt, rotp, tiltp, psip, rot_sam, tilt, rot, tilt_sam, psi = 0.;
     bool append;
@@ -153,8 +152,6 @@ void make_even_distribution(MetaData &DF, double sampling,
             }
         }
     }
-
-
 }
 
 void limit_tilt_range(MetaData &DF, double tilt_range0, double tilt_rangeF)
