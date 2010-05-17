@@ -523,6 +523,8 @@ class MetaData(_object):
         except: self.this = this
     def assign(*args): return _XmippData.MetaData_assign(*args)
     def union_(*args): return _XmippData.MetaData_union_(*args)
+    def unionAll(*args): return _XmippData.MetaData_unionAll(*args)
+    def aggregate(*args): return _XmippData.MetaData_aggregate(*args)
     def merge(*args): return _XmippData.MetaData_merge(*args)
     KEEP_OLD = _XmippData.MetaData_KEEP_OLD
     KEEP_NEW = _XmippData.MetaData_KEEP_NEW
@@ -579,11 +581,6 @@ class MetaData(_object):
 MetaData_swigregister = _XmippData.MetaData_swigregister
 MetaData_swigregister(MetaData)
 
-isString = _XmippData.isString
-isDouble = _XmippData.isDouble
-isVector = _XmippData.isVector
-isBool = _XmippData.isBool
-isInt = _XmippData.isInt
 class MetaDataContainer(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, MetaDataContainer, name, value)
@@ -605,18 +602,172 @@ class MetaDataContainer(_object):
     def writeValueToStream(*args): return _XmippData.MetaDataContainer_writeValueToStream(*args)
     def writeValueToFile(*args): return _XmippData.MetaDataContainer_writeValueToFile(*args)
     def writeValueToString(*args): return _XmippData.MetaDataContainer_writeValueToString(*args)
-    __swig_getmethods__["codifyLabel"] = lambda x: _XmippData.MetaDataContainer_codifyLabel
-    if _newclass:codifyLabel = staticmethod(_XmippData.MetaDataContainer_codifyLabel)
-    __swig_getmethods__["decodeLabel"] = lambda x: _XmippData.MetaDataContainer_decodeLabel
-    if _newclass:decodeLabel = staticmethod(_XmippData.MetaDataContainer_decodeLabel)
-    __swig_getmethods__["isValidLabel"] = lambda x: _XmippData.MetaDataContainer_isValidLabel
-    if _newclass:isValidLabel = staticmethod(_XmippData.MetaDataContainer_isValidLabel)
 MetaDataContainer_swigregister = _XmippData.MetaDataContainer_swigregister
 MetaDataContainer_swigregister(MetaDataContainer)
 cvar = _XmippData.cvar
-MetaDataContainer_codifyLabel = _XmippData.MetaDataContainer_codifyLabel
-MetaDataContainer_decodeLabel = _XmippData.MetaDataContainer_decodeLabel
-MetaDataContainer_isValidLabel = _XmippData.MetaDataContainer_isValidLabel
+
+MDL_UNDEFINED = _XmippData.MDL_UNDEFINED
+MDL_FIRST_LABEL = _XmippData.MDL_FIRST_LABEL
+MDL_ANGLEPSI2 = _XmippData.MDL_ANGLEPSI2
+MDL_ANGLEPSI = _XmippData.MDL_ANGLEPSI
+MDL_ANGLEROT2 = _XmippData.MDL_ANGLEROT2
+MDL_ANGLEROT = _XmippData.MDL_ANGLEROT
+MDL_ANGLETILT2 = _XmippData.MDL_ANGLETILT2
+MDL_ANGLETILT = _XmippData.MDL_ANGLETILT
+MDL_AVG = _XmippData.MDL_AVG
+MDL_AZIMUTALANGLE = _XmippData.MDL_AZIMUTALANGLE
+MDL_BGMEAN = _XmippData.MDL_BGMEAN
+MDL_BLOCK = _XmippData.MDL_BLOCK
+MDL_COMMENT = _XmippData.MDL_COMMENT
+MDL_COST = _XmippData.MDL_COST
+MDL_COUNT = _XmippData.MDL_COUNT
+MDL_CTFINPUTPARAMS = _XmippData.MDL_CTFINPUTPARAMS
+MDL_CTFMODEL = _XmippData.MDL_CTFMODEL
+MDL_DEFGROUP = _XmippData.MDL_DEFGROUP
+MDL_DEFOCUSU = _XmippData.MDL_DEFOCUSU
+MDL_DEFOCUSV = _XmippData.MDL_DEFOCUSV
+MDL_DPR = _XmippData.MDL_DPR
+MDL_ENABLED = _XmippData.MDL_ENABLED
+MDL_FLIP = _XmippData.MDL_FLIP
+MDL_FRC = _XmippData.MDL_FRC
+MDL_FRCRANDOMNOISE = _XmippData.MDL_FRCRANDOMNOISE
+MDL_IMAGE_CLASS_COUNT = _XmippData.MDL_IMAGE_CLASS_COUNT
+MDL_IMAGE_CLASS_GROUP = _XmippData.MDL_IMAGE_CLASS_GROUP
+MDL_IMAGE_CLASS = _XmippData.MDL_IMAGE_CLASS
+MDL_IMAGE = _XmippData.MDL_IMAGE
+MDL_IMAGE_ORIGINAL = _XmippData.MDL_IMAGE_ORIGINAL
+MDL_IMGMD = _XmippData.MDL_IMGMD
+MDL_INTSCALE = _XmippData.MDL_INTSCALE
+MDL_ITER = _XmippData.MDL_ITER
+MDL_K = _XmippData.MDL_K
+MDL_KSTEST = _XmippData.MDL_KSTEST
+MDL_LL = _XmippData.MDL_LL
+MDL_MASK = _XmippData.MDL_MASK
+MDL_MAXCC = _XmippData.MDL_MAXCC
+MDL_MAX = _XmippData.MDL_MAX
+MDL_MICROGRAPH = _XmippData.MDL_MICROGRAPH
+MDL_MIN = _XmippData.MDL_MIN
+MDL_MIRRORFRAC = _XmippData.MDL_MIRRORFRAC
+MDL_MISSINGREGION_NR = _XmippData.MDL_MISSINGREGION_NR
+MDL_MISSINGREGION_TYPE = _XmippData.MDL_MISSINGREGION_TYPE
+MDL_MODELFRAC = _XmippData.MDL_MODELFRAC
+MDL_NMA = _XmippData.MDL_NMA
+MDL_OBJID = _XmippData.MDL_OBJID
+MDL_ORIGINX = _XmippData.MDL_ORIGINX
+MDL_ORIGINY = _XmippData.MDL_ORIGINY
+MDL_ORIGINZ = _XmippData.MDL_ORIGINZ
+MDL_PERIODOGRAM = _XmippData.MDL_PERIODOGRAM
+MDL_PMAX = _XmippData.MDL_PMAX
+MDL_Q0 = _XmippData.MDL_Q0
+MDL_RANDOMSEED = _XmippData.MDL_RANDOMSEED
+MDL_REF3D = _XmippData.MDL_REF3D
+MDL_REF = _XmippData.MDL_REF
+MDL_REFMD = _XmippData.MDL_REFMD
+MDL_RESOLUTIONFOURIER = _XmippData.MDL_RESOLUTIONFOURIER
+MDL_RESOLUTIONREAL = _XmippData.MDL_RESOLUTIONREAL
+MDL_SAMPLINGRATE = _XmippData.MDL_SAMPLINGRATE
+MDL_SAMPLINGRATEX = _XmippData.MDL_SAMPLINGRATEX
+MDL_SAMPLINGRATEY = _XmippData.MDL_SAMPLINGRATEY
+MDL_SAMPLINGRATEZ = _XmippData.MDL_SAMPLINGRATEZ
+MDL_SCALE = _XmippData.MDL_SCALE
+MDL_SERIE = _XmippData.MDL_SERIE
+MDL_SHIFTX = _XmippData.MDL_SHIFTX
+MDL_SHIFTY = _XmippData.MDL_SHIFTY
+MDL_SHIFTZ = _XmippData.MDL_SHIFTZ
+MDL_SIGMANOISE = _XmippData.MDL_SIGMANOISE
+MDL_SIGMAOFFSET = _XmippData.MDL_SIGMAOFFSET
+MDL_SIGNALCHANGE = _XmippData.MDL_SIGNALCHANGE
+MDL_SPHERICALABERRATION = _XmippData.MDL_SPHERICALABERRATION
+MDL_STDDEV = _XmippData.MDL_STDDEV
+MDL_SUM = _XmippData.MDL_SUM
+MDL_SUMWEIGHT = _XmippData.MDL_SUMWEIGHT
+MDL_SYMNO = _XmippData.MDL_SYMNO
+MDL_TRANSFORMATIONMTRIX = _XmippData.MDL_TRANSFORMATIONMTRIX
+MDL_VOLTAGE = _XmippData.MDL_VOLTAGE
+MDL_WEIGHT = _XmippData.MDL_WEIGHT
+MDL_WROBUST = _XmippData.MDL_WROBUST
+MDL_XINT = _XmippData.MDL_XINT
+MDL_X = _XmippData.MDL_X
+MDL_YINT = _XmippData.MDL_YINT
+MDL_Y = _XmippData.MDL_Y
+MDL_ZINT = _XmippData.MDL_ZINT
+MDL_Z = _XmippData.MDL_Z
+MDL_LAST_LABEL = _XmippData.MDL_LAST_LABEL
+LABEL_INT = _XmippData.LABEL_INT
+LABEL_BOOL = _XmippData.LABEL_BOOL
+LABEL_DOUBLE = _XmippData.LABEL_DOUBLE
+LABEL_FLOAT = _XmippData.LABEL_FLOAT
+LABEL_STRING = _XmippData.LABEL_STRING
+LABEL_VECTOR = _XmippData.LABEL_VECTOR
+class MDL(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, MDL, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, MDL, name)
+    __repr__ = _swig_repr
+    __swig_getmethods__["str2Label"] = lambda x: _XmippData.MDL_str2Label
+    if _newclass:str2Label = staticmethod(_XmippData.MDL_str2Label)
+    __swig_getmethods__["label2Str"] = lambda x: _XmippData.MDL_label2Str
+    if _newclass:label2Str = staticmethod(_XmippData.MDL_label2Str)
+    __swig_getmethods__["isInt"] = lambda x: _XmippData.MDL_isInt
+    if _newclass:isInt = staticmethod(_XmippData.MDL_isInt)
+    __swig_getmethods__["isBool"] = lambda x: _XmippData.MDL_isBool
+    if _newclass:isBool = staticmethod(_XmippData.MDL_isBool)
+    __swig_getmethods__["isString"] = lambda x: _XmippData.MDL_isString
+    if _newclass:isString = staticmethod(_XmippData.MDL_isString)
+    __swig_getmethods__["isDouble"] = lambda x: _XmippData.MDL_isDouble
+    if _newclass:isDouble = staticmethod(_XmippData.MDL_isDouble)
+    __swig_getmethods__["isVector"] = lambda x: _XmippData.MDL_isVector
+    if _newclass:isVector = staticmethod(_XmippData.MDL_isVector)
+    __swig_getmethods__["isValidLabel"] = lambda x: _XmippData.MDL_isValidLabel
+    if _newclass:isValidLabel = staticmethod(_XmippData.MDL_isValidLabel)
+    def __init__(self, *args): 
+        this = _XmippData.new_MDL(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_MDL
+    __del__ = lambda self : None;
+MDL_swigregister = _XmippData.MDL_swigregister
+MDL_swigregister(MDL)
+MDL_str2Label = _XmippData.MDL_str2Label
+MDL_label2Str = _XmippData.MDL_label2Str
+MDL_isInt = _XmippData.MDL_isInt
+MDL_isBool = _XmippData.MDL_isBool
+MDL_isString = _XmippData.MDL_isString
+MDL_isDouble = _XmippData.MDL_isDouble
+MDL_isVector = _XmippData.MDL_isVector
+MDL_isValidLabel = _XmippData.MDL_isValidLabel
+
+class MDLabelData(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, MDLabelData, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, MDLabelData, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["type"] = _XmippData.MDLabelData_type_set
+    __swig_getmethods__["type"] = _XmippData.MDLabelData_type_get
+    if _newclass:type = _swig_property(_XmippData.MDLabelData_type_get, _XmippData.MDLabelData_type_set)
+    __swig_setmethods__["str"] = _XmippData.MDLabelData_str_set
+    __swig_getmethods__["str"] = _XmippData.MDLabelData_str_get
+    if _newclass:str = _swig_property(_XmippData.MDLabelData_str_get, _XmippData.MDLabelData_str_set)
+    def __init__(self, *args): 
+        this = _XmippData.new_MDLabelData(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_MDLabelData
+    __del__ = lambda self : None;
+MDLabelData_swigregister = _XmippData.MDLabelData_swigregister
+MDLabelData_swigregister(MDLabelData)
+
+class StaticInitialization(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, StaticInitialization, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, StaticInitialization, name)
+    def __init__(self, *args, **kwargs): raise AttributeError, "No constructor defined"
+    __repr__ = _swig_repr
+StaticInitialization_swigregister = _XmippData.StaticInitialization_swigregister
+StaticInitialization_swigregister(StaticInitialization)
 
 class vectorm(_object):
     __swig_setmethods__ = {}

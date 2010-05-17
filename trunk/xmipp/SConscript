@@ -407,7 +407,6 @@ ReconsSources = [
 #    'detect_missing_wedge.cpp',
 #    'detect_structures.cpp',
     'directions.cpp',
-#    'draw_surface.cpp',
     'enhance_contrast.cpp',
 #    'euler.cpp,'
 #    'evaluate_fscs.cpp',
