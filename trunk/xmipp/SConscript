@@ -388,7 +388,6 @@ ReconsSources = [
     'angular_projection_matching.cpp',
 #    'angular_class_average.cpp', coss
     'angular_project_library.cpp',
-#    'crystal_angular_projection_matching.cpp',
 #    'art_crystal.cpp',
     'basic_art.cpp',
 #    'common_lines.cpp',
@@ -545,7 +544,6 @@ AddXmippProgram('convert_img2data')
 #AddXmippProgram('convert_tia2raw')
 #AddXmippProgram('correct_bfactor', ['XmippRecons'])
 #AddXmippProgram('correlation')
-#AddXmippProgram('crystal_angular_projection_matching',	['XmippRecons'])
 #AddXmippProgram('crystal_aph2img', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('crystal_create_surface', ['XmippRecons'])
 #AddXmippProgram('crystal_euler2mrc', ['XmippInterface'])
