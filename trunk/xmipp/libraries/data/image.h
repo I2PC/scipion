@@ -1048,6 +1048,27 @@ public:
         MD.setValue(MDL_ORIGINZ,zoff,n);
     }
 
+    /** Set X offset in image header
+     */
+    void setXoff(double xoff, unsigned long n = 0)
+    {
+        MD.setValue(MDL_ORIGINX,xoff,n);
+    }
+
+    /** Set Y offset in image header
+     */
+    void setYoff(double yoff, unsigned long n = 0)
+    {
+        MD.setValue(MDL_ORIGINY,yoff,n);
+    }
+
+    /** Set Z offset in image header
+     */
+    void setZoff(double zoff, unsigned long n = 0)
+    {
+        MD.setValue(MDL_ORIGINZ,zoff,n);
+    }
+
     /** Set flip in image header
      *
      */
