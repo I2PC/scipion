@@ -121,13 +121,13 @@ void MetaData::union_(MetaData &MD, MDLabel thisLabel)
     std::map<long int, MetaDataContainer *>::iterator itMinuend;
     bool add;
     for (itMinuend = MD.objects.begin(); itMinuend
-            != MD.objects.end(); itMinuend++)
+         != MD.objects.end(); itMinuend++)
     {
         aux = MD.getObject(itMinuend->first);
         aux->writeValueToString(value1, thisLabel);
         add=true;
         for (long int idSubtrahendr = this->firstObject(); idSubtrahendr
-                != NO_MORE_OBJECTS; idSubtrahendr = this->nextObject())
+             != NO_MORE_OBJECTS; idSubtrahendr = this->nextObject())
         {
             aux2 = this->getObject(idSubtrahendr);
             aux2->writeValueToString(value2, thisLabel);
@@ -165,7 +165,7 @@ void MetaData::unionAll(MetaData &MD)
 
     std::map<long int, MetaDataContainer *>::iterator itMinuend;
     for (itMinuend = MD.objects.begin(); itMinuend
-            != MD.objects.end(); itMinuend++)
+         != MD.objects.end(); itMinuend++)
     {
         long int idx = this->addObject();
         this->objects[idx]
@@ -205,12 +205,12 @@ void MetaData::intersection(MetaData &minuend, MetaData &subtrahend,
     std::string value1, value2;
     std::map<long int, MetaDataContainer *>::iterator itMinuend;
     for (itMinuend = minuend.objects.begin(); itMinuend
-            != minuend.objects.end(); itMinuend++)
+         != minuend.objects.end(); itMinuend++)
     {
         aux = minuend.getObject(itMinuend->first);
         aux->writeValueToString(value1, thisLabel);
         for (long int idSubtrahendr = subtrahend.firstObject(); idSubtrahendr
-                != NO_MORE_OBJECTS; idSubtrahendr = subtrahend.nextObject())
+             != NO_MORE_OBJECTS; idSubtrahendr = subtrahend.nextObject())
         {
             aux2 = subtrahend.getObject(idSubtrahendr);
             aux2->writeValueToString(value2, thisLabel);
@@ -246,13 +246,13 @@ void MetaData::substraction(MetaData &minuend, MetaData &subtrahend,
     std::string value1, value2;
     std::map<long int, MetaDataContainer *>::iterator itMinuend;
     for (itMinuend = minuend.objects.begin(); itMinuend
-            != minuend.objects.end(); itMinuend++)
+         != minuend.objects.end(); itMinuend++)
     {
         aux = minuend.getObject(itMinuend->first);
         aux->writeValueToString(value1, thisLabel);
         bool doSave = false;
         for (long int idSubtrahendr = subtrahend.firstObject(); idSubtrahendr
-                != NO_MORE_OBJECTS; idSubtrahendr = subtrahend.nextObject())
+             != NO_MORE_OBJECTS; idSubtrahendr = subtrahend.nextObject())
         {
             aux2 = subtrahend.getObject(idSubtrahendr);
             aux2->writeValueToString(value2, thisLabel);
@@ -370,7 +370,7 @@ void MetaData::read(std::ifstream *infile,
                 }
 
                 if (MDL::isVector(activeLabels[labelPosition - counterIgnored])
-                        && value == "**")
+                    && value == "**")
                 {
                     std::string aux;
                     while (os2 >> value)
@@ -653,7 +653,7 @@ void MetaData::toDataBase(CppSQLite3DB &db,
         CppSQLite3Statement stmt = db.compileStatement(sqlCommandInsert);
 
         for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
-                = nextObject())
+             = nextObject())
         {
             stmt.bind(1, (int) IDthis);
             labelsCounter = 1;
@@ -767,7 +767,7 @@ void MetaData::fromDataBase(CppSQLite3DB &db,
         {
             _labelsVector.push_back(MDL_OBJID);
             for (strIt = (*labelsVector).begin(); strIt
-                    != (*labelsVector).end(); strIt++)
+                 != (*labelsVector).end(); strIt++)
             {
                 _labelsVector.push_back(*strIt);
             }
@@ -804,7 +804,7 @@ void MetaData::fromDataBase(CppSQLite3DB &db,
                 _objID++;
             addObject(_objID);
             for (strIt = (_labelsVector).begin() + 1; strIt
-                    != (_labelsVector).end(); strIt++)
+                 != (_labelsVector).end(); strIt++)
             {
                 if (MDL::isDouble(*strIt))
                 {
@@ -864,7 +864,7 @@ void MetaData::combineWithFiles(MDLabel thisLabel)
     MetaDataContainer * auxMetaDataContainer;
 
     for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
-            = nextObject())
+         = nextObject())
     {
         MetaDataContainer * aux = getObject();
 
@@ -877,7 +877,7 @@ void MetaData::combineWithFiles(MDLabel thisLabel)
         auxMetaDataContainer = auxMetaData.getObject();
 
         for (MDLabel mdl = MDL_FIRST_LABEL; mdl <= MDL_LAST_LABEL; mdl
-                = MDLabel(mdl + 1))
+             = MDLabel(mdl + 1))
         {
             if (auxMetaDataContainer->valueExists(mdl))
             {
@@ -905,7 +905,7 @@ void MetaData::combine(MetaData & other, MDLabel thisLabel)
     //init everything with zeros, this should not be needed by write is not properlly writting
     //FIXIT
     for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
-            = nextObject())
+         = nextObject())
     {
         aux = getObject();
         for (strIt = other.activeLabels.begin(); strIt != other.activeLabels.end(); strIt++)
@@ -918,13 +918,13 @@ void MetaData::combine(MetaData & other, MDLabel thisLabel)
     }
     bool notFound;
     for (long int IDthis = firstObject(); IDthis != NO_MORE_OBJECTS; IDthis
-            = nextObject())
+         = nextObject())
     {
         aux = getObject();
         aux->writeValueToString(value1, thisLabel);
         notFound=true;
         for (long int IDother = other.firstObject(); IDother != NO_MORE_OBJECTS; IDother
-                = other.nextObject())
+             = other.nextObject())
         {
             aux2 = other.getObject();
             aux2->writeValueToString(value2, thisLabel);
@@ -1450,7 +1450,7 @@ void MetaData::randomize(MetaData &MDin)
     //v.reserve(objects.size());
     std::map<long int, MetaDataContainer *>::iterator it;
     for (it = MDin.objects.begin(); it
-            != MDin.objects.end(); it++)
+         != MDin.objects.end(); it++)
     {
         v.push_back(it->first);
     }
@@ -1598,10 +1598,30 @@ void MetaData::split_in_two(MetaData &SF1, MetaData &SF2,MDLabel label)
     }
 }
 
+void MetaData::mpi_select_part(int rank, int size, int &num_img_tot)
+{
+    num_img_tot = (*this).size();
+    int remaining = num_img_tot % size;
+    int Npart = (int)(num_img_tot - remaining) / size;
+    int myFirst, myLast;
+    if (rank < remaining)
+    {
+        myFirst = rank * (Npart + 1);
+        myLast = myFirst + Npart;
+    }
+    else
+    {
+        myFirst = rank * Npart + remaining;
+        myLast = myFirst + Npart - 1;
+    }
 
-/* Very dirty sort function
- * this and MDin can be the same
- */
+    // Now discard all images in Selfile that are outside myFirst-myLast
+    for (int nr = num_img_tot-1; nr >=0; nr--)
+    {
+        if (nr<myFirst || nr>myLast)
+            removeObject(nr);
+    }
+}
 
 void MetaData::sort(MetaData & MDin, MDLabel sortlabel)
 {
@@ -1626,15 +1646,15 @@ void MetaData::aggregate(MetaData MDIn,
 {
     CppSQLite3DB db;
     if(aggregateLabel ==MDL_UNDEFINED ||
-            operationLabel ==MDL_UNDEFINED ||
-            entryLabel     ==MDL_UNDEFINED)
+       operationLabel ==MDL_UNDEFINED ||
+       entryLabel     ==MDL_UNDEFINED)
         return;
     //check is valid operation
     if(operationLabel  != MDL_AVG &&
-            operationLabel != MDL_COUNT&&
-            operationLabel != MDL_MAX &&
-            operationLabel != MDL_MIN &&
-            operationLabel != MDL_SUM)
+       operationLabel != MDL_COUNT&&
+       operationLabel != MDL_MAX &&
+       operationLabel != MDL_MIN &&
+       operationLabel != MDL_SUM)
         REPORT_ERROR(1,"invalid operation:" +MDL::label2Str(operationLabel) +" in aggregate");
     std::string tempTable;
     tempTable="tempTable";
@@ -1686,7 +1706,7 @@ void MetaData::aggregate(MetaData MDIn,
             labelsCounter = -1;
             addObject();
             for (strIt = (_labelsVector).begin() ; strIt
-                    != (_labelsVector).end(); strIt++)
+                 != (_labelsVector).end(); strIt++)
             {
                 if (MDL::isDouble(*strIt))
                 {

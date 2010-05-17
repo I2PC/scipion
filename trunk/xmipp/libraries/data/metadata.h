@@ -394,7 +394,7 @@ public:
 
     template<class T>
     std::vector<long int> findObjects(MDLabel name,
-                                      T value)
+                                      const T &value)
     {
         std::vector<long int> result;
 
@@ -417,7 +417,7 @@ public:
     }
 
     template<class T>
-    long int goToFirstObject(MDLabel name, T value)
+    long int goToFirstObject(MDLabel name, const T &value)
     {
         // Traverse all the structure looking for objects
         // that satisfy search criteria
@@ -558,7 +558,12 @@ public:
     /** Split metadata into two random halves
      *
      */
-    void split_in_two(MetaData &SF1, MetaData &SF2,MDLabel sortlabel=MDL_UNDEFINED);
+    void split_in_two(MetaData &SF1, MetaData &SF2, MDLabel sortlabel=MDL_UNDEFINED);
+
+    /** Select only a piece of this MetaData for MPI executions
+     *
+     */
+    void mpi_select_part(int rank, int size, int &num_img_tot);
 
     /** Fill metadata with N entries from MD starting at start
      *
@@ -587,6 +592,6 @@ public:
 
 #define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
         for(long int kkkk = (kkkk_metadata).firstObject(); \
-             kkkk != MetaData::NO_MORE_OBJECTS; \
+             kkkk != MetaData::NO_MORE_OBJECTS && kkkk!= MetaData::NO_OBJECTS_STORED; \
              kkkk=(kkkk_metadata).nextObject())
 #endif
