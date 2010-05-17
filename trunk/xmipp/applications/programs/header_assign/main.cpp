@@ -23,7 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-
 #include <data/args.h>
 #include <data/image.h>
 #include <data/metadata.h>
@@ -34,10 +33,10 @@ void Usage();
 int main(int argc, char *argv[])
 {
     double          rot, tilt, psi, xshift, yshift;
-    double           weight;
+    double          weight;
     bool            mirror;
     FileName        fn_img, fn_out, fn_in;
-    ImageXmipp      img;
+    Image<double>   img;
     int             levels,round_shifts;
 
 // Check command line options ===========================================
@@ -70,26 +69,22 @@ int main(int argc, char *argv[])
 			SF.getValue( MDL_IMAGE, fn_img);
 			if (fn_img=="") break;
 			img.read(fn_img);
-			img.clear_fFlag_flag();
 			for( strIt  = SF.activeLabels.begin();
 				 strIt != SF.activeLabels.end();
 				 strIt ++ )
 			{
-				//std::cout << MetaDataContainer::decodeLabel(*strIt) << std::endl;
-
-
 				switch ((*strIt)) {
 					case MDL_ANGLEROT:
 						SF.getValue( MDL_ANGLEROT, rot);
-						img.set_rot(rot);
+						img.setRot(rot);
 						break;
 					case MDL_ANGLETILT:
 						SF.getValue( MDL_ANGLETILT, tilt);
-						img.set_tilt(tilt);
+						img.setTilt(tilt);
 						break;
 					case MDL_ANGLEPSI:
 						SF.getValue( MDL_ANGLEPSI, psi);
-						img.set_psi(psi);
+						img.setPsi(psi);
 						break;
 					case MDL_SHIFTX:
 						SF.getValue( MDL_SHIFTX, xshift);
@@ -97,7 +92,7 @@ int main(int argc, char *argv[])
 							xshift /= pow(2.0, levels);
 		                if (round_shifts)
 		                    xshift = ROUND(xshift);
-						img.set_Xoff(xshift);
+						img.setXoff(xshift);
 						break;
 					case MDL_SHIFTY:
 						SF.getValue(MDL_SHIFTY, yshift);
@@ -105,15 +100,15 @@ int main(int argc, char *argv[])
 							yshift /= pow(2.0, levels);
 		                if (round_shifts)
 		                    yshift = (float)ROUND(yshift);
-						img.set_Yoff(yshift);
+						img.setYoff(yshift);
 						break;
 					case MDL_WEIGHT:
 						SF.getValue( MDL_WEIGHT, weight);
-						img.set_weight(weight);
+						img.setWeight(weight);
 						break;
 					case MDL_FLIP:
 						SF.getValue( MDL_FLIP, mirror);
-						img.set_flip(mirror);
+						img.setFlip(mirror);
 						break;
 				}
 			}
@@ -125,7 +120,6 @@ int main(int argc, char *argv[])
     {
         std::cout << XE;
     }
-
 }
 
 /* Usage ------------------------------------------------------------------- */
