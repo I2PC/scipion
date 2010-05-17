@@ -391,7 +391,6 @@ ReconsSources = [
 #    'crystal_angular_projection_matching.cpp',
 #    'art_crystal.cpp',
     'basic_art.cpp',
-#    'break_symmetry.cpp',
 #    'common_lines.cpp',
 #    'convert_vol2pseudo.cpp',
 #    'correct_bfactor.cpp',
@@ -435,7 +434,7 @@ ReconsSources = [
 #    'range_adjust.cpp',
     'recons_misc.cpp',
     'reconstruct_art.cpp',
-#    'reconstruct_wbp.cpp',
+    'reconstruct_wbp.cpp',
 #    'reconstruct_fourier.cpp',
     'refinement.cpp',
 #    'resolution_ssnr.cpp',
@@ -517,7 +516,6 @@ AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 AddXmippProgram('angular_project_library', ['XmippRecons'])
 AddXmippProgram('average')
-#AddXmippProgram('break_symmetry', ['XmippRecons'])
 #AddXmippProgram('center_image')
 AddXmippProgram('classify_analyze_cluster', ['XmippRecons'])
 AddXmippProgram('classify_batch_som', ['XmippClassif'])
@@ -577,7 +575,7 @@ AddXmippProgram('enhance_contrast', ['XmippRecons'])
 AddXmippProgram('fourier_filter', ['XmippRecons'])
 #AddXmippProgram('fourier_transform')
 #AddXmippProgram('header_apply')
-#AddXmippProgram('header_assign')
+AddXmippProgram('header_assign')
 #AddXmippProgram('header_extract')
 AddXmippProgram('header_print')
 #AddXmippProgram('header_reset')
@@ -617,7 +615,7 @@ AddXmippProgram('project_xr', ['XmippRecons'])
 #AddXmippProgram('range_adjust')
 #Sjors: note that crystal stuff in ART is not working yet....
 AddXmippProgram('reconstruct_art', ['XmippRecons']) 
-#AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
+AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 #AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
 ##########AddXmippProgram('resolution_fsc') Roberto
 #AddXmippProgram('resolution_ssnr', ['XmippRecons'])
@@ -720,7 +718,7 @@ if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons']sjors)
     AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
 #   AddXmippMPIProgram('mpi_run', ['XmippRecons'])
 
