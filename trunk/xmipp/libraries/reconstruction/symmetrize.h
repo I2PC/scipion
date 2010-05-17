@@ -65,17 +65,10 @@ public:
 };
 
 /** Really symmetrize.*/
-void symmetrize(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
-                int Splinedegree=LINEAR,bool wrap=true, bool show_progress=false,
+void symmetrize(const SymList &SL, MultidimArray<double> &V_in, MultidimArray<double> &V_out,
+                int Splinedegree=LINEAR, bool wrap=true, bool show_progress=false,
                 bool do_outside_avg=false);
-#ifdef NEVERDEFINED
-void symmetrize(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
-                bool wrap = true, bool show_progress = false);
 
-/** Really symmetrize using Bsplines */
-void symmetrize_Bspline(const SymList &SL, Image<double> &V_in, Image<double> &V_out,
-                        int Splinedegree, bool wrap, bool do_outside_avg);
-#endif
 /** Main program */
 void ROUT_symmetrize(const Symmetrize_Parameters &prm);
 //@}
