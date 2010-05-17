@@ -576,6 +576,7 @@ class MetaData(_object):
     def randomize(*args): return _XmippData.MetaData_randomize(*args)
     def sort(*args): return _XmippData.MetaData_sort(*args)
     def split_in_two(*args): return _XmippData.MetaData_split_in_two(*args)
+    def mpi_select_part(*args): return _XmippData.MetaData_mpi_select_part(*args)
     def fillWithNextNObjects(*args): return _XmippData.MetaData_fillWithNextNObjects(*args)
     def MaxStringLength(*args): return _XmippData.MetaData_MaxStringLength(*args)
 MetaData_swigregister = _XmippData.MetaData_swigregister
