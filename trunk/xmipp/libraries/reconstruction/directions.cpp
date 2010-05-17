@@ -148,7 +148,7 @@ void make_even_distribution(MetaData &DF, double sampling,
             	DF.addObject();
             	DF.setValue(MDL_ANGLEROT, rot);
             	DF.setValue(MDL_ANGLETILT, tilt);
-            	DF.setValue(MDL_ANGLEROT, 0.);
+            	DF.setValue(MDL_ANGLEPSI, 0.);
             }
         }
     }
@@ -172,7 +172,7 @@ int find_nearest_direction(double rot1, double tilt1,
     double            newrot, newtilt, newpsi, dfrot, dftilt;
     Matrix2D<double>  L(4, 4), R(4, 4);
 
-    optdir = dir = 1;
+    optdir = dir = 0;
     mindist = 9999.;
     FOR_ALL_OBJECTS_IN_METADATA(DFlib)
     {
