@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+import Image
+import sys
+
+# --------------------------------------------------------------------
+if __name__ == "__main__":
+
+    if not sys.argv[1:]:
+        print "Usage: xmipp_convert_img2jpg <image.spi> <image.jpg>"
+        sys.exit()
+    args = sys.argv[1:]
+
+    if (len(args)>=2):
+        fnImg=sys.argv[1];
+        fnJpg=sys.argv[2];
+
+    im=Image.open(fnImg).convert2byte()
+    im.save(fnJpg,format="JPEG")

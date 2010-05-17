@@ -1,0 +1,7 @@
+These are bindings for xmipp functions to be used in Matlab without the need of writing and reading doc/sel/spi files.
+In order to use these Bindings, you must have a version of Matlab (http://www.matlab.com) installed. The
+scons script searches at the default location /usr/local/matlab, you can set any other location by using the
+scons environment variable MATLAB_DIR.
+
+For more information about the TOM toolbox, see http://www.biochem.mpg.de/tom
+

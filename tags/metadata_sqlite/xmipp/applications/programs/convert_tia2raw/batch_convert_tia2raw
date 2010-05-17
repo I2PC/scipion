@@ -1,0 +1,244 @@
+#!/usr/bin/env python
+class tiaconvert:
+    """ convert tia images to raw
+       Author:Roberto Marabini, September 2009
+       
+convert  *.ser-files to raw.  Data format is described at
+ Dr. Chris Boothroyd website 
+(http://www.microscopy.cen.dtu.dk/~cbb/info/TIAformat/index.html)
+
+    """
+    def __init__(self,filename,outfilename,dStddev):
+      import sys
+      import os
+      import struct
+    
+      self.readMainHeader(filename)      
+      #self.print_header()
+      
+      #####
+      #LOOP THROUG THe IMAGES
+      ######
+      count = 0
+      while (count < self.NUMBER_IMAGES):
+        print "OPEN IMAGE No:", count , "of ", self.NUMBER_IMAGES,"\n"
+        self.OpenImage(filename,outfilename,self.DATA_OFFSET[count],count,dStddev)
+        count += 1
+
+
+    def OpenImage(self,filename,outfilename,position,count,dStddev):
+       import sys
+       import os
+       import struct
+       
+       ser_data_fh = open(filename,'rb')
+       ser_data_fh.seek(position)
+       # reading calibration values
+       self.CalibrationOffsetX  = struct.unpack('d', ser_data_fh.read(8))[0]#CalibrationOffsetX
+       self.PIXEL_WIDTH         = struct.unpack('d', ser_data_fh.read(8))[0]#CalibrationDeltaX
+       self.CalibrationElementX = struct.unpack('i', ser_data_fh.read(4))[0]# CalibrationElementX
+       self.CalibrationOffsetY  = struct.unpack('d', ser_data_fh.read(8))[0]#CalibrationOffsetY
+       self.PIXEL_HEIGHT        = struct.unpack('d', ser_data_fh.read(8))[0]#CalibrationDeltaY
+       self.CalibrationElementY = struct.unpack('i', ser_data_fh.read(4))[0]#CalibrationElementY
+       self.DATA_TYPE           = struct.unpack('h', ser_data_fh.read(2))[0]#DataType
+       self.IMAGE_WIDTH         = struct.unpack('i', ser_data_fh.read(4))[0]#ArraySizeX
+       self.IMAGE_HEIGHT        = struct.unpack('i', ser_data_fh.read(4))[0]#ArraySizeY	
+       ser_data_fh.close();
+       self.setDataType()
+       self.saveRawImage(filename,outfilename,position+50,count,dStddev)
+       
+    def saveRawImage(self,filename,outfilename,position,ImageNum,dStddev):
+        import sys
+        import os
+        import struct
+	import math
+	import Numeric as N
+	import array
+
+        inFh = open(filename,'rb')
+        inFh.seek(position)
+
+        if(self.NUMBER_IMAGES==1):
+             outFh = open(outfilename,'wb')
+        else:
+	     outFh = open(outfilename + '_' + str(ImageNum) + ".raw",'wb')
+	size = self.IMAGE_HEIGHT * self.IMAGE_WIDTH
+	binvalues = array.array('h')
+        binvalues.fromfile(inFh, size)
+
+	avg = 0.
+	stddev = 0.
+	temp = 0.
+        count = 0
+        while(count < size):
+	    temp = float(binvalues[count])
+	    avg += temp
+	    stddev += temp * temp
+            count +=1
+
+        avg /= (self.IMAGE_HEIGHT*self.IMAGE_WIDTH)
+        stddev = stddev / (self.IMAGE_HEIGHT*self.IMAGE_WIDTH) - avg * avg;
+        stddev *= (self.IMAGE_HEIGHT*self.IMAGE_WIDTH) / ((self.IMAGE_HEIGHT*self.IMAGE_WIDTH) - 1);
+        stddev = math.sqrt(stddev);
+	print "\nstd, avg:",stddev,avg
+        low  = int(avg - 5 * stddev)
+	high = int(avg + 5 * stddev)#poner la std que se le pasa
+	count = 0
+	while(count < size):
+	    temp = binvalues[count]
+	    if(temp < low): 
+	        binvalues[count]=low
+	    elif(temp>high): 
+	        binvalues[count]=high
+            count +=1
+	
+        binvalues.tofile(outFh)
+        inFh.close();
+        outFh.close();
+        if(self.NUMBER_IMAGES==1):
+             inInfFh = open(outfilename+".inf",'w')
+        else:
+	     inInfFh = open(outfilename + '_' + str(ImageNum) + ".raw.inf",'w')
+        inInfFh.write("# Bits per sample")
+        inInfFh.write("\nbitspersample= " + str (self._DATA_TYPE_SIZE*8) )
+        inInfFh.write("\n# Samples per pixel")
+        inInfFh.write("\nsamplesperpixel= 1")
+        inInfFh.write("\n# Image width")
+        inInfFh.write("\nXdim= " + str (self.IMAGE_WIDTH))
+        inInfFh.write("\n# Image length")
+        inInfFh.write("\nYdim= " + str (self.IMAGE_HEIGHT))
+        inInfFh.write("\n# offset in bytes (Optional, zero by default)")
+        inInfFh.write("\noffset= 0")
+        inInfFh.write("\n# Is a signed or Unsigned int (Optional, by default true)")
+        if(self._isSigned):
+            inInfFh.write("\nis_signed = true")
+        else:
+            inInfFh.write("\nis_signed = false")
+        inInfFh.write( "\n#CalibrationOffsetX "  +str(self.CalibrationOffsetX)+
+           "\n#" +"PIXEL_WIDTH "           +str(self.PIXEL_WIDTH)+
+           "\n#" +"CalibrationElementX "   +str(self.CalibrationElementX)+
+           "\n#" +"CalibrationOffsetY "    +str(self.CalibrationOffsetY)+
+           "\n#" +"PIXEL_HEIGHT "          +str(self.PIXEL_HEIGHT)+
+           "\n#" +"CalibrationElementY "   +str(self.CalibrationElementY)+
+           "\n#" +"DATA_TYPE "             +str(self._DATA_TYPE_SIZE_STRING)+
+           "\n#" +"IMAGE_WIDTH "           +str(self.IMAGE_WIDTH)+
+           "\n#" +"IMAGE_HEIGHT "          +str(self.IMAGE_HEIGHT)+
+           "\n#" +"DATA_TYPE_SIZE"         +str(self._DATA_TYPE_SIZE))
+
+        inInfFh.close()
+
+    def check_endianess(self):
+      if(self.endianess==18761): return 1
+      return 0
+
+    def readMainHeader(self,filename):
+       import sys
+       import os
+       import struct
+
+       format_little = '<3h6i'
+
+       fsize = struct.calcsize(format_little)
+       ser_data_fh = open(filename,'rb')
+       raw_data = ser_data_fh.read(fsize)
+       data =struct.unpack(format_little,raw_data)
+       self.endianess = data[0]
+       return_value = self.check_endianess()
+       if(return_value==0):
+         print 'Wrong endianess, I only work with little endian'
+         sys.exit(1)
+       self.SeriesID            = data[1]#short
+       self.SeriesVersion       = data[2]#short
+       self.DATA_TYPE_ID        = data[3]#int type of stored data 0x4120->1D; 0x4122->2D
+       self.TagTypeID           = data[4]#int
+       self.TotalNumberElements = data[5]#int
+       self.NUMBER_IMAGES       = data[6]#int number data sets
+       self.OFFSET_ARRAY_OFFSET = data[7]#Offset to the data array offset
+       self.numberdimensions    = data[8]
+       if(self.DATA_TYPE_ID!=16674):
+         print 'ERROR: This script only process images in real space'
+         sys.exit(1)
+
+       count = 0
+       self.DATA_OFFSET = []
+       ser_data_fh.seek(self.OFFSET_ARRAY_OFFSET)#data offset array - header format
+       while (count < self.NUMBER_IMAGES):
+            self.DATA_OFFSET.append(struct.unpack('i', ser_data_fh.read(4))[0])
+            count = count + 1
+       ser_data_fh.close()
+
+    def setDataType(self):
+        auxString='Unknown'
+        self._isSigned=0
+        if(self.DATA_TYPE==1): 
+            auxString = 'GRAY8'
+            dataType =8
+        elif(self.DATA_TYPE==2): 
+            auxString = 'GRAY16_UNSIGNED'
+            dataType =16
+        elif(self.DATA_TYPE==3): 
+            auxString = 'GRAY32_UNSIGNED'
+            dataType =32
+        elif(self.DATA_TYPE==4): 
+            auxString = 'GRAY8'
+            dataType =8
+        elif(self.DATA_TYPE==5): 
+            auxString = 'GRAY16_SIGNED'
+            dataType =16
+            self._isSigned=1
+        elif(self.DATA_TYPE==6): 
+            auxString = 'GRAY32_INT'
+            dataType =32
+        elif(self.DATA_TYPE==7): 
+            auxString = 'GRAY32_FLOAT'
+            dataType =32
+        elif(self.DATA_TYPE==8): 
+            auxString = 'GRAY64_DOUBLE'
+            dataType =64
+
+        self._DATA_TYPE_SIZE = dataType/8
+        self._DATA_TYPE_SIZE_STRING = auxString
+
+    def print_header(self):
+       print "SeriesID " ,           self.SeriesID,\
+             "\n" +"SeriesVersion ",	    self.SeriesVersion,	\
+             "\n" +"DATA_TYPE_ID ",	    self.DATA_TYPE_ID,	\
+             "\n" +"TagTypeID ",  	    self.TagTypeID,	\
+             "\n" +"TotalNumberElements ",self.TotalNumberElements, \
+             "\n" +"NUMBER_IMAGES ",	    self.NUMBER_IMAGES,	   \
+             "\n" +"OFFSET_ARRAY_OFFSET ",self.OFFSET_ARRAY_OFFSET,\
+             "\n" +"numberdimensions ",self.numberdimensions
+       count = 0
+       while (count < self.NUMBER_IMAGES):
+           print "\nDATA_OFFSET [", count,"]=", self.DATA_OFFSET[count]
+           count = count + 1
+def command_line_options(parser):
+      """ add command line options here"""
+      parser.add_option("-i", "--ImageIn", dest="szInputImageName",
+			default='missing_entry', type="string",
+			help="Input 3D Map name")	    
+      parser.add_option("-o", "--OutRootName", dest="szImageOutRootName",
+			default="OUT", type="string",
+			help="""Root Name for Output Files (Default OUT)
+			        If the .ser file contains a single image 
+				this is the name of the outfile
+			""")	    
+      parser.add_option("-s", "--stddev", dest="dStddev",
+			default="5.", type="float",
+			help="Cut values above (below) s standard deviation (default=5)")	    
+       
+if __name__ == '__main__':
+   import optparse
+   parser = optparse.OptionParser("usage: %prog [options] ")
+   command_line_options(parser)
+
+   (options, args)     = parser.parse_args()
+
+   szInputImageName   = options.szInputImageName
+   szImageOutRootName = options.szImageOutRootName
+   dStddev            = options.dStddev
+   if (szInputImageName=='missing_entry'):
+	 parser.print_help()
+         parser.error("missing -i parametter")
+
+   tiaConvert=tiaconvert(szInputImageName,szImageOutRootName,dStddev)

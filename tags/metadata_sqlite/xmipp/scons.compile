@@ -1,0 +1,6 @@
+#!/bin/sh
+
+echo "** Use scons.compile --help to show a help message"
+
+# Call local SCONS to compile
+python scons/scons.py mode=compile "$@"
