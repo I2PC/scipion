@@ -2400,7 +2400,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     FileName fn_tmp;
     Image<double> Itmp;
     MetaData MDo;
-    bool write_img_xmd, write_refs_log;
+    bool write_img_xmd, write_refs_log, write_conv=do_ML3D;
     bool write_norm = model.do_norm;
 
     switch (outputType)
@@ -2408,6 +2408,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     case OUT_BLOCK:
         write_img_xmd = false;
         write_refs_log = true;
+        write_conv = false;
         // Sjors 18may2010: why not write scales in blocks? We need this now, don't we?
         //write_norm = false;
         fn_base = getBaseName("_block", current_block + 1);
@@ -2420,7 +2421,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     case OUT_FINAL:
         write_img_xmd = true;
         write_refs_log = true;
-       fn_base = fn_root;
+        fn_base = fn_root;
         break;
     case OUT_IMGS:
         write_img_xmd = true;
@@ -2430,6 +2431,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     case OUT_REFS:
         write_img_xmd = false;
         write_refs_log = true;
+        write_conv = false;
         fn_base = getBaseName("_it", iter);
         break;
     }
@@ -2457,32 +2459,30 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     if (write_refs_log)
     {
         // Write out current reference images and fill sel & log-file
-        MDo.clear();
-        for (int refno = 0; refno < model.n_ref; refno++)
-        {
+    	// Re-use the MDref metadata that were read in produceSideInfo2
+    	// This way. MLD_ANGLEROT, MDL_ANGLETILT, MDL_REF etc are treated ok for do_ML3D
+    	int refno=0;
+    	FOR_ALL_OBJECTS_IN_METADATA(MDref)
+    	{
             fn_tmp = fn_base + "_ref";
             fn_tmp.compose(fn_tmp, refno + 1, "xmp");
             Itmp = model.Iref[refno];
             Itmp.write(fn_tmp);
-            MDo.addObject();
-            MDo.setValue(MDL_IMAGE, fn_tmp);
-            MDo.setValue(MDL_ENABLED, 1);
-            MDo.setValue(MDL_WEIGHT, (double)Itmp.weight());
+            MDref.setValue(MDL_IMAGE, fn_tmp);
+            MDref.setValue(MDL_ENABLED, 1);
+            MDref.setValue(MDL_WEIGHT, (double)Itmp.weight());
             if (do_mirror)
-                MDo.setValue(MDL_MIRRORFRAC,
+                MDref.setValue(MDL_MIRRORFRAC,
                              model.mirror_fraction[refno]);
-            if (no_block)
-                MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
+            if (write_conv)
+                MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
             if (write_norm)
-                MDo.setValue(MDL_INTSCALE, model.scale[refno]);
-            if (do_ML3D)
-            {
-                MDo.setValue(MDL_ANGLEROT, Itmp.rot());
-                MDo.setValue(MDL_ANGLETILT, Itmp.tilt());
-            }
+                MDref.setValue(MDL_INTSCALE, model.scale[refno]);
+            refno++;
         }
         fn_tmp = fn_base + "_ref.xmd";
-        MDo.write(fn_tmp);
+        MDref.write(fn_tmp);
+
         // Write out log-file
         MDo.clear();
         MDo.setColumnFormat(false);
