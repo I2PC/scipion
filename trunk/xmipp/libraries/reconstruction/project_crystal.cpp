@@ -44,7 +44,7 @@ Crystal_Projection_Parameters::Crystal_Projection_Parameters()
 }
 
 /* Read Crystal Projection Parameters ====================================== */
-void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
+void Crystal_Projection_Parameters::read(const FileName &fn_crystal, double scale)
 {
     FILE    *fh_param;
     char    line[201];
@@ -58,16 +58,19 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
 
     while (fgets(line, 200, fh_param) != NULL)
     {
-        if (line[0] == 0)    continue;
-        if (line[0] == '#')  continue;
-        if (line[0] == '\n') continue;
+        if (line[0] == 0)
+            continue;
+        if (line[0] == '#')
+            continue;
+        if (line[0] == '\n')
+            continue;
         switch (lineNo)
         {
         case 0:
             crystal_Xdim = textToInteger(firstToken(line), 3007,
-                                "Prog_Project_Crystal::read: Error in Crystal X dimension");
+                                         "Prog_Project_Crystal::read: Error in Crystal X dimension");
             crystal_Ydim = textToInteger(nextToken(), 3007,
-                                "Prog_Project_Crystal::read: Error in Crystal Y dimension");
+                                         "Prog_Project_Crystal::read: Error in Crystal Y dimension");
             lineNo++;
             crystal_Xdim = ROUND(scale * crystal_Xdim);
             crystal_Ydim = ROUND(scale * crystal_Ydim);
@@ -75,34 +78,35 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
         case 1:
             a.resize(3);
             XX(a) = scale * textToFloat(firstToken(line), 3007,
-                                 "Prog_Project_Crystal::read: Error in X component of a");
+                                        "Prog_Project_Crystal::read: Error in X component of a");
             YY(a) = scale * textToFloat(nextToken(), 3007,
-                                 "Prog_Project_Crystal::read: Error in Y component of a");
+                                        "Prog_Project_Crystal::read: Error in Y component of a");
             ZZ(a) = 0;
             lineNo++;
             break;
         case 2:
             b.resize(3);
             XX(b) = scale * textToFloat(firstToken(line), 3007,
-                                 "Prog_Project_Crystal::read: Error in X component of b");
+                                        "Prog_Project_Crystal::read: Error in X component of b");
             YY(b) = scale * textToFloat(nextToken(), 3007,
-                                 "Prog_Project_Crystal::read: Error in Y component of b");
+                                        "Prog_Project_Crystal::read: Error in Y component of b");
             ZZ(b) = 0;
             lineNo++;
             break;
         case 3:
             Nshift_dev = scale * textToFloat(firstWord(line), 3007,
-                                      "Prog_Project_Parameters::read: Error in magnitude shift noise");
+                                             "Prog_Project_Parameters::read: Error in magnitude shift noise");
             auxstr = nextToken();
             if (auxstr != NULL)
                 Nshift_avg = scale * textToFloat(auxstr, 3007,
-                                          "Prog_Project_Parameters::read: Error in magnitude shift bias");
-            else Nshift_avg = 0;
+                                                 "Prog_Project_Parameters::read: Error in magnitude shift bias");
+            else
+                Nshift_avg = 0;
             lineNo++;
             break;
         case 4:
             disappearing_th = textToFloat(firstToken(line), 3007,
-                                   "Prog_Project_Crystal::read: Error in disappearing threshold");
+                                          "Prog_Project_Crystal::read: Error in disappearing threshold");
             lineNo++;
             break;
         case 5:
@@ -127,7 +131,7 @@ void Crystal_Projection_Parameters::read(FileName fn_crystal, double scale)
 }
 
 /* Write =================================================================== */
-void Crystal_Projection_Parameters::write(FileName fn_crystal)
+void Crystal_Projection_Parameters::write(const FileName &fn_crystal)
 {
     FILE *fh_param;
 
@@ -145,17 +149,21 @@ void Crystal_Projection_Parameters::write(FileName fn_crystal)
 
     fprintf(fh_param, "#     Noise (and bias) applied to the magnitude shift\n");
     fprintf(fh_param, "%f ", Nshift_dev);
-    if (Nshift_avg != 0) fprintf(fh_param, "%f \n", Nshift_avg);
-    else fprintf(fh_param, "\n");
+    if (Nshift_avg != 0)
+        fprintf(fh_param, "%f \n", Nshift_avg);
+    else
+        fprintf(fh_param, "\n");
 
     fprintf(fh_param, "# Disappearing threshold\n");
     fprintf(fh_param, "%f\n", disappearing_th);
 
     fprintf(fh_param, "# Orthogonal Projections\n");
-    if (orthogonal) fprintf(fh_param, "Yes\n");
-    else            fprintf(fh_param, "No\n");
+    if (orthogonal)
+        fprintf(fh_param, "Yes\n");
+    else
+        fprintf(fh_param, "No\n");
 
-//   fprintf(fh_param,"# Grid relative size\n");
+    //   fprintf(fh_param,"# Grid relative size\n");
 
     fprintf(fh_param, "# File with shifts for each unit cell\n");
     fprintf(fh_param, "%s", fn_shift.c_str());
@@ -173,13 +181,14 @@ void project_crystal(Phantom &phantom, Projection &P,
 {
     SPEED_UP_temps;
     //Scale crystal output
-//   int aux_crystal_Ydim = ROUND(prm_crystal.crystal_Ydim
-//         *phantom.phantom_scale);
-//   int aux_crystal_Xdim = ROUND(prm_crystal.crystal_Xdim
-//                                       *phantom.phantom_scale);
+    //   int aux_crystal_Ydim = ROUND(prm_crystal.crystal_Ydim
+    //         *phantom.phantom_scale);
+    //   int aux_crystal_Xdim = ROUND(prm_crystal.crystal_Xdim
+    //                                       *phantom.phantom_scale);
 
     // Initialize whole crystal projection
-    P.adapt_to_size(prm_crystal.crystal_Ydim, prm_crystal.crystal_Xdim);
+    P().initZeros(prm_crystal.crystal_Ydim, prm_crystal.crystal_Xdim);
+    P().setXmippOrigin();
 
     // Compute lattice vectors in the projection plane
     P.set_angles(rot, tilt, psi);
@@ -257,6 +266,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     Matrix1D<double> aprojd = A * proja;
     Matrix1D<double> bprojd = A * projb;
 #ifdef DEBUG
+
     std::cout << "aprojd " << aprojd.transpose() << std::endl;
     std::cout << "bprojd " << bprojd.transpose() << std::endl;
 #endif
@@ -278,23 +288,26 @@ void project_crystal(Phantom &phantom, Projection &P,
     YY(corner2) = LAST_XMIPP_INDEX(prm.proj_Ydim);
     // Now deform
 #ifdef DEBUG
+
     std::cout << "corner1 before deformation " << corner1.transpose() << std::endl;
     std::cout << "corner2 before deformation " << corner2.transpose() << std::endl;
 #endif
+
     rectangle_enclosing(corner1, corner2, A2D, corner1, corner2);
 #ifdef DEBUG
+
     std::cout << "corner1 after deformation " << corner1.transpose() << std::endl;
     std::cout << "corner2 after deformation " << corner2.transpose() << std::endl;
 #endif
 
-    Matrix2D<double> cell_shiftX, cell_shiftY, cell_shiftZ;
-    Matrix2D<int>    cell_inside;
-    Matrix2D<double> exp_shifts_matrix_X;
-    Matrix2D<double> exp_shifts_matrix_Y;
-    Matrix2D<double> exp_shifts_matrix_Z;
-    Matrix2D<double> exp_normal_shifts_matrix_X;
-    Matrix2D<double> exp_normal_shifts_matrix_Y;
-    Matrix2D<double> exp_normal_shifts_matrix_Z;
+    MultidimArray<double> cell_shiftX, cell_shiftY, cell_shiftZ;
+    MultidimArray<int>    cell_inside;
+    MultidimArray<double> exp_shifts_matrix_X;
+    MultidimArray<double> exp_shifts_matrix_Y;
+    MultidimArray<double> exp_shifts_matrix_Z;
+    MultidimArray<double> exp_normal_shifts_matrix_X;
+    MultidimArray<double> exp_normal_shifts_matrix_Y;
+    MultidimArray<double> exp_normal_shifts_matrix_Z;
 
     fill_cell_positions(P, proja, projb, aprojd, bprojd, corner1, corner2,
                         prm_crystal, cell_shiftX, cell_shiftY, cell_shiftZ, cell_inside,
@@ -315,21 +328,24 @@ void project_crystal(Phantom &phantom, Projection &P,
     // add the shifts to the already compute values
     Matrix1D<double> temp_vect(3);
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(exp_shifts_matrix_X)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(exp_shifts_matrix_X)
     {
         //these experimental shift are in phantom
         //coordinates, not into the projection
         //plane, so before adding them we need to project
         temp_vect = AE * vectorR3(exp_shifts_matrix_X(i, j),
-                                   exp_shifts_matrix_Y(i, j),
-                                   exp_shifts_matrix_Z(i, j));
+                                  exp_shifts_matrix_Y(i, j),
+                                  exp_shifts_matrix_Z(i, j));
         //#define DEBUG5
 #ifdef DEBUG5
-        if (i > 0) exp_shifts_matrix_Z(i, j) = 65;
-        else  exp_shifts_matrix_Z(i, j) = 0;
+
+        if (i > 0)
+            exp_shifts_matrix_Z(i, j) = 65;
+        else
+            exp_shifts_matrix_Z(i, j) = 0;
         temp_vect = AE * vectorR3(exp_shifts_matrix_X(i, j),
-                                   exp_shifts_matrix_Y(i, j),
-                                   exp_shifts_matrix_Z(i, j));
+                                  exp_shifts_matrix_Y(i, j),
+                                  exp_shifts_matrix_Z(i, j));
 #endif
 #undef DEBUG5
 
@@ -362,9 +378,11 @@ void project_crystal(Phantom &phantom, Projection &P,
         projection_direction.selfTranspose();
         density_factor = (projection_direction * Dinv).module();
 #ifdef DEBUG
+
         std::cout << "projection_direction" << projection_direction << std::endl;
         std::cout << "projection_direction*A" << projection_direction*A << std::endl;
 #endif
+
     }
 #ifdef DEBUG
     std::cout << "X proyectado=" << (AE*vectorR3(1.0, 0.0, 0.0)).transpose() << std::endl;
@@ -379,8 +397,8 @@ void project_crystal(Phantom &phantom, Projection &P,
 #endif
 
     // Project all cells
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(cell_inside)
-//      if (cell_inside(i,j) && rnd_unif(0,1)<prm_crystal.disappearing_th) {
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(cell_inside)
+    //      if (cell_inside(i,j) && rnd_unif(0,1)<prm_crystal.disappearing_th) {
     if (cell_inside(i, j))
     {
         // Shift the phantom
@@ -392,11 +410,14 @@ void project_crystal(Phantom &phantom, Projection &P,
         //SHIFT still pending
         //cell_shift = cell_shift*phantom.phantom_scale;
 #ifdef DEBUG
+
         std::cout << "cell_shift on deformed projection plane "
         << cell_shift.transpose() << std::endl;
 #endif
+
         M3x3_BY_V3x1(cell_shift, AEinv, cell_shift);
 #ifdef DEBUG
+
         std::cout << "cell_shift on real space "
         << cell_shift.transpose() << std::endl;
 #endif
@@ -438,6 +459,7 @@ void project_crystal(Phantom &phantom, Projection &P,
 
         cell_shift = cell_shift - ZZ(cell_shift) / ZZ(P.direction) * P.direction;
 #ifdef DEBUG
+
         std::cout << "cell_shift after moving to ground "
         << cell_shift.transpose() << std::endl;
 #endif
@@ -450,12 +472,14 @@ void project_crystal(Phantom &phantom, Projection &P,
 
         P() = P() * density_factor;
 #ifdef DEBUG_MORE
+
         std::cout << "After Projecting ...\n" << aux << std::endl;
         P.write("inter");
         std::cout << "Hit any key\n";
         char c;
         std::cin >> c;
 #endif
+
     }
 
 }
@@ -529,7 +553,7 @@ void find_crystal_limits(
 
    This function supposes that r is inside the matrix
 */
-void move_following_spiral(Matrix1D<double> &r, const Matrix2D<int> &visited)
+void move_following_spiral(Matrix1D<double> &r, const MultidimArray<int> &visited)
 {
     int r1 = 0, r2 = 0, r3 = 0, c1 = 0, c2 = 0, c3 = 0;
 
@@ -539,7 +563,7 @@ void move_following_spiral(Matrix1D<double> &r, const Matrix2D<int> &visited)
 #define yF FINISHINGY(visited)
 #define i  (int)YY(r)
 #define j  (int)XX(r)
-// Compute row and column sums
+    // Compute row and column sums
     if (i > y0 && j > x0)
     {
         r1 += visited(i - 1, j - 1);
@@ -588,7 +612,7 @@ void move_following_spiral(Matrix1D<double> &r, const Matrix2D<int> &visited)
     << c1 << " " << c2 << " " << c3 << std::endl;
 #endif
 
-// Decide where to go
+    // Decide where to go
     if (r1 == 0 && r2 == 1 && r3 == 0 && c1 == 0 && c2 == 1 && c3 == 0)
     {
         YY(r)--;
@@ -660,13 +684,13 @@ void fill_cell_positions(Projection &P,
                          Matrix1D<double> &aprojd,  Matrix1D<double> &bprojd,
                          Matrix1D<double> &corner1, Matrix1D<double> &corner2,
                          const Crystal_Projection_Parameters &prm_crystal,
-                         Matrix2D<double> &cell_shiftX,
-                         Matrix2D<double> &cell_shiftY,
-                         Matrix2D<double> &cell_shiftZ,
-                         Matrix2D<int>    &cell_inside,
-                         Matrix2D<double> &exp_shifts_matrix_X,
-                         Matrix2D<double> &exp_shifts_matrix_Y,
-                         Matrix2D<double> &exp_shifts_matrix_Z)
+                         MultidimArray<double> &cell_shiftX,
+                         MultidimArray<double> &cell_shiftY,
+                         MultidimArray<double> &cell_shiftZ,
+                         MultidimArray<int>    &cell_inside,
+                         MultidimArray<double> &exp_shifts_matrix_X,
+                         MultidimArray<double> &exp_shifts_matrix_Y,
+                         MultidimArray<double> &exp_shifts_matrix_Z)
 {
 
     // Compute crystal limits
@@ -676,6 +700,7 @@ void fill_cell_positions(Projection &P,
                         corner1, corner2, aprojd, bprojd, iamin, iamax, ibmin, ibmax);
 
 #ifdef DEBUG
+
     P().printShape();
     std::cout << std::endl;
     std::cout << "aprojd=" << aproj.transpose() << std::endl;
@@ -684,7 +709,7 @@ void fill_cell_positions(Projection &P,
 #endif
 
     // Compute weight table in the undeformed space
-    Matrix2D<double> weight(3, 3);
+    MultidimArray<double> weight(3, 3);
     STARTINGX(weight) = -1;
     STARTINGY(weight) = -1;
     weight(0, 0) = 0;
@@ -705,12 +730,13 @@ void fill_cell_positions(Projection &P,
     STARTINGY(cell_inside) = ibmin;
 
     // Visited has got one cell more than the rest in all directions
-    Matrix2D<int> visited;
+    MultidimArray<int> visited;
     int visited_size = XMIPP_MAX(iamax - iamin + 1, ibmax - ibmin + 1) + 2;
     visited.initZeros(visited_size, visited_size);
     STARTINGX(visited) = iamin - (visited_size - (iamax - iamin + 1) + 1) / 2;
     STARTINGY(visited) = ibmin - (visited_size - (ibmax - ibmin + 1) + 1) / 2;
 #ifdef DEBUG
+
     std::cout << "weight=" << weight;
     std::cout << "cell_shiftX shape ";
     cell_shiftX.printShape();
@@ -729,10 +755,12 @@ void fill_cell_positions(Projection &P,
     Matrix1D<double> r(2), ri(2), sh(2);
     r.initZeros();
 #define INDEX(r) (int)YY(r),(int)XX(r)
+
     while (!visited.isCorner(r))
     {
         visited(INDEX(r)) = true;
 #ifdef DEBUG
+
         std::cout << "   Visiting " << r.transpose() << std::endl;
 #endif
 
@@ -751,7 +779,8 @@ void fill_cell_positions(Projection &P,
                     total_shiftY += weight(INDEX(sh)) * cell_shiftY(INDEX(ri));
                 }
             }
-        if (total_weight == 0) total_weight = 1;
+        if (total_weight == 0)
+            total_weight = 1;
         if (!cell_shiftX.outside(r))
         {
             cell_shiftX(INDEX(r)) = rnd_gaus(prm_crystal.Nshift_avg,
@@ -772,7 +801,7 @@ void fill_cell_positions(Projection &P,
     // The previous shifts are relative to the final position, now
     // express the real final position
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(visited)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(visited)
     {
         if (!cell_shiftX.outside(i, j))
         {
@@ -792,10 +821,11 @@ void fill_cell_positions(Projection &P,
                  XMIPP_MIN(FINISHINGY(P()),YY(auxcorner2))) &&
                 (XMIPP_MAX(STARTINGX (P()),XX(auxcorner1))<=
                  XMIPP_MIN(FINISHINGX(P()),XX(auxcorner2)));
-//TEMPORAL FIX FOR PHANTOM AS BIG AS THE WHOLE CRYSTAL
+            //TEMPORAL FIX FOR PHANTOM AS BIG AS THE WHOLE CRYSTAL
             cell_inside(i, j) = 1;
-//ROBERTO
+            //ROBERTO
 #ifdef DEBUG
+
             std::cout << "(i,j)=(" << i << "," << j << ")\n";
             std::cout << "   Projection shape ";
             P().printShape();
@@ -813,18 +843,17 @@ void fill_cell_positions(Projection &P,
 
 /* Fill aux matrix with experimental shifs to add to unit cell
    projection********************************************************/
-
 void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
-                       Matrix2D<int>    &cell_inside,
-                       Matrix2D<double> &exp_shifts_matrix_X,
-                       Matrix2D<double> &exp_shifts_matrix_Y,
-                       Matrix2D<double> &exp_shifts_matrix_Z,
-                       Matrix2D<double> &exp_normal_shifts_matrix_X,
-                       Matrix2D<double> &exp_normal_shifts_matrix_Y,
-                       Matrix2D<double> &exp_normal_shifts_matrix_Z,
+                       MultidimArray<int>    &cell_inside,
+                       MultidimArray<double> &exp_shifts_matrix_X,
+                       MultidimArray<double> &exp_shifts_matrix_Y,
+                       MultidimArray<double> &exp_shifts_matrix_Z,
+                       MultidimArray<double> &exp_normal_shifts_matrix_X,
+                       MultidimArray<double> &exp_normal_shifts_matrix_Y,
+                       MultidimArray<double> &exp_normal_shifts_matrix_Z,
                        double phantom_scale)
 {
-    DocFile        aux_DF_shift;//crystal_param is cont
+    MetaData aux_DF_shift; //crystal_param is cont
     aux_DF_shift = prm_crystal.DF_shift;
     exp_shifts_matrix_X.resize(cell_inside);
     exp_shifts_matrix_X.initZeros();
@@ -842,6 +871,7 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
 
     //#define DEBUG2
 #ifdef DEBUG2
+
     std::cout << aux_DF_shift;
     std::cout << "exp_shifts_matrix_X shape" << std::endl;
     exp_shifts_matrix_X.printShape();
@@ -849,31 +879,24 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
 #endif
 #undef DEBUG2
     //fill matrix with docfile data
-    aux_DF_shift.go_first_data_line();
     int max_x, max_y, max_z, min_x , min_y, min_z;
 
-    while (!aux_DF_shift.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(aux_DF_shift)
     {
         //Check that we are not outside the matrix
-        if (!exp_shifts_matrix_X.outside(ROUND(aux_DF_shift(1)),
-                                         ROUND(aux_DF_shift(0))
-                                        ))
+    	int xcell, ycell;
+    	aux_DF_shift.getValue(MDL_CELLX,xcell);
+    	aux_DF_shift.getValue(MDL_CELLY,ycell);
+        if (!exp_shifts_matrix_X.outside(xcell,ycell))
         {
-            exp_shifts_matrix_X(ROUND(aux_DF_shift(1)), ROUND(aux_DF_shift(0)))
-            = aux_DF_shift(4);
-            exp_shifts_matrix_Y(ROUND(aux_DF_shift(1)), ROUND(aux_DF_shift(0)))
-            = aux_DF_shift(5);
-            exp_shifts_matrix_Z(ROUND(aux_DF_shift(1)), ROUND(aux_DF_shift(0)))
-            = aux_DF_shift(6) * phantom_scale;
+        	aux_DF_shift.getValue(MDL_SHIFTX,exp_shifts_matrix_X(ycell, xcell));
+        	aux_DF_shift.getValue(MDL_SHIFTY,exp_shifts_matrix_Y(ycell, xcell));
+        	aux_DF_shift.getValue(MDL_SHIFTZ,exp_shifts_matrix_Z(ycell, xcell));
 
-            exp_normal_shifts_matrix_X(ROUND(aux_DF_shift(1)), ROUND(aux_DF_shift(0)))
-            = aux_DF_shift(7);
-            exp_normal_shifts_matrix_Y(ROUND(aux_DF_shift(1)), ROUND(aux_DF_shift(0)))
-            = aux_DF_shift(8);
-            exp_normal_shifts_matrix_Z(ROUND(aux_DF_shift(1)), ROUND(aux_DF_shift(0)))
-            = aux_DF_shift(9);
+        	aux_DF_shift.getValue(MDL_SHIFT_CRYSTALX,exp_normal_shifts_matrix_X(ycell, xcell));
+        	aux_DF_shift.getValue(MDL_SHIFT_CRYSTALY,exp_normal_shifts_matrix_Y(ycell, xcell));
+        	aux_DF_shift.getValue(MDL_SHIFT_CRYSTALZ,exp_normal_shifts_matrix_Z(ycell, xcell));
         }
-        aux_DF_shift.next_data_line();
     }
     //#define DEBUG2
 #ifdef DEBUG2
@@ -882,6 +905,5 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
     std::cout << "exp_shifts_matrix_Z" << exp_shifts_matrix_Z;
 #endif
 #undef DEBUG2
-
 }
 

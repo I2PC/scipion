@@ -25,13 +25,12 @@
 #ifndef _PROG_ART_CRYSTAL_HH
 #  define _PROG_ART_CRYSTAL_HH
 
+#include <data/image.h>
 #include <data/matrix1d.h>
 #include <data/matrix2d.h>
-#include <data/matrix3d.h>
-#include <data/image.h>
+#include <data/symmetries.h>
 
 #include "reconstruct_art.h"
-#include <data/symmetries.h>
 
 /**@defgroup ARTCrystal art_crystal (ART for crystals)
    @ingroup ReconsLibraryPrograms */
@@ -82,7 +81,7 @@ public:
         (a-b)/2, (a+b)/2. The reconstruction will be only performed for
         the basis inside this mask. Be careful that this is a 2D mask for a 3D
         reconstruction. */
-    Matrix2D<int> unit_cell_mask;
+    MultidimArray<int> unit_cell_mask;
 public:
     /// std::cout << crystal_prm;
     friend std::ostream & operator << (std::ostream &o,
@@ -161,7 +160,6 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
 void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
                     const Crystal_ART_Parameters &eprm,
                     int grid_type);
-
 //@}
 
 #endif

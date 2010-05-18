@@ -69,7 +69,6 @@ void Crystal_ART_Parameters::read(int argc, char **argv,
     {
         throw(XE);
     }
-
 }
 
 /* Usage =================================================================== */
@@ -101,7 +100,6 @@ std::ostream & operator << (std::ostream &o, const Crystal_ART_Parameters &eprm)
     return o;
 }
 
-/* Compute integer lattice ================================================= */
 /* Compute integer lattice ================================================= */
 void compute_integer_lattice(const Matrix1D<double> &a,
                              const Matrix1D<double> &b,
@@ -259,7 +257,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
     Matrix1D<double> r1(3), r2(3);
     for (int n = 0; n < vol_basis0.VolumesNo(); n++)
     {
-        Volume &V = vol_basis0(n);
+        Image<double> &V = vol_basis0(n);
         ZZ(r1) = XMIPP_MIN(ZZ(r1), STARTINGZ(V()));
         ZZ(r2) = XMIPP_MAX(ZZ(r2), FINISHINGZ(V()));
     }
@@ -273,7 +271,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
 
     // Fill the unit cell mask
     Matrix1D<double> r(2);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(unit_cell_mask)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(unit_cell_mask)
     {
         // Position vector of actual BCC element been considered
         YY(r) = i;
@@ -293,6 +291,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
         sgn[3] = SGN0_VEC_PRODUCT(c4r, bi);
 
 #ifdef DEBUG_A_LOT
+
         std::cout << "(x,y)=(" << XX(r) << "," << YY(r) << ") " << sgn[0] << sgn[1]
         << sgn[2] << sgn[3] << std::endl;
 #endif
@@ -312,13 +311,16 @@ void Crystal_ART_Parameters::produce_Side_Info(
 #define INSIDE_ACCORDING_TO(n) \
     sgn[0]==inside_table[n][0] && sgn[1]==inside_table[n][1] && \
     sgn[2]==inside_table[n][2] && sgn[3]==inside_table[n][3]
+
         for (int n = 0; n < 4; n++)
             if (INSIDE_ACCORDING_TO(n))
             {
                 unit_cell_mask(i, j) = 1;
 #ifdef DEBUG_A_LOT
+
                 std::cout << "    Inside\n";
 #endif
+
                 break;
             }
     }
@@ -358,31 +360,31 @@ void ART_single_step(
     Basic_ART_Parameters    &prm,             // blob, lambda
     Crystal_ART_Parameters  &eprm,            // lattice vectors, ...
     Projection              &theo_proj,       // Projection of the reconstruction
-                                              // It is outside to make it visible
-                                              // just if it needed for any
-                                              // other purpose
+    // It is outside to make it visible
+    // just if it needed for any
+    // other purpose
     Projection              &read_proj,       // Real projection
     int sym_no,                               // Symmetry matrix index
     Projection              &diff_proj,       // Difference between read and
-                                              // theoretical projection
+    // theoretical projection
     Projection              &corr_proj,       // Correcting projection
     Projection              &alig_proj,       // Translation alignement aux proj
     double                  &mean_error,      // Mean error over the pixels
     int                      numIMG,          // number of images in the set
-                                              // in SIRT the correction must
-                                              // be divided by this number
+    // in SIRT the correction must
+    // be divided by this number
     double                   lambda,          // Lambda to be used
     int                      imagen_no,       // Projection number
-    const FileName          &fn_ctf,          // CTF to apply
-    const Matrix2D<int> *    maskPtr          // Mask to apply
-    )           
+    const FileName           &fn_ctf,         // CTF to apply
+    const MultidimArray<int> *maskPtr         // Mask to apply
+)
 {
-// Only works for blob volumes .............................................
+    // Only works for blob volumes .............................................
     if (prm.basis.type != Basis::blobs)
         REPORT_ERROR(1,
                      "ART_single_step: This function only works with blob volumes");
 
-// Compute lattice vectors to be used ......................................
+    // Compute lattice vectors to be used ......................................
     Matrix1D<double> aint, bint, shift;
     aint.resize(2);
     bint.resize(2);
@@ -391,7 +393,7 @@ void ART_single_step(
 
     symmetrize_crystal_vectors(aint, bint, shift, eprm.space_group, sym_no,
                                eprm.aint, eprm.bint);
-// Project structure .......................................................
+    // Project structure .......................................................
     // The correction image is reused in this call to store the normalising
     // projection, ie, the projection of an all-1 volume
 
@@ -402,8 +404,9 @@ void ART_single_step(
                            FORWARD, prm.eq_mode);
     double shift_X, shift_Y;
 
-//   #define DEBUG_SHIFT
+    //   #define DEBUG_SHIFT
 #ifdef DEBUG_SHIFT
+
     Matrix2D<double> A(3, 3);
     A.initIdentity();
     dMij(A, 0, 2) =  8;
@@ -415,6 +418,7 @@ void ART_single_step(
     applyGeometry(IMGMATRIX(read_proj), A, IMGMATRIX(theo_proj), IS_NOT_INV, WRAP);
 #endif
 #undef DEBUG_SHIFT
+
     if (prm.ref_trans_after != -1    &&
         imagen_no > prm.ref_trans_after && imagen_no != 0)
     {
@@ -433,16 +437,17 @@ void ART_single_step(
         dMij(Correction, 0, 2) =  - shift_X;
         dMij(Correction, 1, 2) =  - shift_Y;
         //copy theo_proj to a temporal matrix
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(theo_proj())
-        dMij(alig_proj(), i, j) = dMij(read_proj(), i, j);
-        applyGeometry(IMGMATRIX(read_proj), Correction, IMGMATRIX(alig_proj), IS_NOT_INV, WRAP);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(theo_proj())
+        dAij(alig_proj(), i, j) = dAij(read_proj(), i, j);
+        applyGeometry(LINEAR, IMGMATRIX(alig_proj), IMGMATRIX(read_proj), Correction,
+        		IS_NOT_INV, WRAP);
     }
-// Now compute differences .................................................
+    // Now compute differences .................................................
     double applied_lambda = lambda / numIMG; // In ART mode, numIMG=1
     mean_error = 0;
     diff_proj().resize(read_proj());
 
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(IMGMATRIX(read_proj))
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(IMGMATRIX(read_proj))
     {
         // Compute difference image and error
         IMGPIXEL(diff_proj, i, j) = IMGPIXEL(read_proj, i, j) - IMGPIXEL(theo_proj, i, j);
@@ -456,7 +461,7 @@ void ART_single_step(
     }
     mean_error /= XSIZE(diff_proj()) * YSIZE(diff_proj());
 
-// Backprojection of correction plane ......................................
+    // Backprojection of correction plane ......................................
     project_Crystal_Volume(*vol_out, prm.basis, theo_proj,
                            corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                            read_proj.rot(), read_proj.tilt(), read_proj.psi(), shift,
@@ -489,6 +494,7 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
 {
     std::cerr << "Replicating unit cell ...\n";
 #ifdef DEBUG
+
     ImageXmipp save;
     save = vol(0)().getSlice(0);
     save.write("inter_before_filling.xmp");
@@ -510,6 +516,7 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
     find_crystal_limits(corner1, corner2, zero, zero,
                         eprm.a, eprm.b, a0, aF, b0, bF);
 #ifdef DEBUG
+
     std::cout << "Output Volume size (ZxYxX)=" << prm.Zoutput_volume_size
     << " " << prm.Youtput_volume_size << " "
     << prm.Xoutput_volume_size << std::endl;
@@ -532,18 +539,20 @@ void expand_to_fill_space(const Basic_ART_Parameters &prm,
     Matrix1D<double> r(3);
     for (int n = 0; n < vol.VolumesNo(); n++)
     {
-        Volume &V = vol(n);
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(eprm.unit_cell_mask)
+        Image<double> &V = vol(n);
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(eprm.unit_cell_mask)
         {
-            if (MAT_ELEM(eprm.unit_cell_mask, i, j))
+            if (A2D_ELEM(eprm.unit_cell_mask, i, j))
             {
 #ifdef DEBUG2
                 std::cout << "(y,x)=(" << i << "," << j << ") is inside\n";
 #endif
+
                 for (int ii = b0; ii <= bF; ii++)
                     for (int jj = a0; jj <= aF; jj++)
                     {
-                        if (jj == 0 && ii == 0) continue;
+                        if (jj == 0 && ii == 0)
+                            continue;
                         XX(r) = j + ii * XX(eprm.bint) + jj * XX(eprm.aint);
                         YY(r) = i + ii * YY(eprm.bint) + jj * YY(eprm.aint);
                         ZZ(r) = STARTINGZ(VOLMATRIX(V));

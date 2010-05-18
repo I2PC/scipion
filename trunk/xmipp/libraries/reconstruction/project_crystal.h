@@ -75,9 +75,9 @@ public:
     /// file with shifts
     FileName fn_shift;
     /// Document File for shifts. Order: H K x_SHIFT y_SHIFT z_SHIFT
-    DocFile        DF_shift;
+    MetaData DF_shift;
     /// is doc file with shifts available
-    bool        DF_shift_bool;
+    bool     DF_shift_bool;
 
 public:
     /** Empty constructor*/
@@ -86,13 +86,13 @@ public:
     /** Read projection parameters from a file.
         An exception is thrown if the file is not found or any of the
         parameters is not found in the right place.*/
-    void read(FileName fn_crystal, double scale = 1.0);
+    void read(const FileName &fn_crystal, double scale = 1.0);
 
     /** Write projection parameters to a file.
         The projection parameters are written into a file wth the same
         structure as always. If the file cannot be openned for output
         an exception is thrown. */
-    void write(FileName fn_crystal);
+    void write(const FileName &fn_crystal);
 };
 
 /* Project as crystal ------------------------------------------------------ */
@@ -131,7 +131,7 @@ void find_crystal_limits(
 
    r is the actual position in the matrix.
 */
-void move_following_spiral(Matrix1D<double> &r, const Matrix2D<int> &visited);
+void move_following_spiral(Matrix1D<double> &r, const MultidimArray<int> &visited);
 
 /** Fill cell positions.
     This function returns the random shifts corresponding to all cells that
@@ -148,24 +148,25 @@ void fill_cell_positions(Projection &P,
                          Matrix1D<double> &aprojd,  Matrix1D<double> &bprojd,
                          Matrix1D<double> &corner1, Matrix1D<double> &corner2,
                          const Crystal_Projection_Parameters &prm_crystal,
-                         Matrix2D<double> &cell_shiftX, Matrix2D<double> &cell_shiftY,
-                         Matrix2D<double> &cell_shiftZ,
-                         Matrix2D<int> &cell_inside,   Matrix2D<double> &exp_shifts_matrix_X,
-                         Matrix2D<double> &exp_shifts_matrix_Y,
-                         Matrix2D<double> &exp_shifts_matrix_Z);
+                         MultidimArray<double> &cell_shiftX, MultidimArray<double> &cell_shiftY,
+                         MultidimArray<double> &cell_shiftZ,
+                         MultidimArray<int> &cell_inside,
+                         MultidimArray<double> &exp_shifts_matrix_X,
+                         MultidimArray<double> &exp_shifts_matrix_Y,
+                         MultidimArray<double> &exp_shifts_matrix_Z);
 /** Fill auxiliary matrix with experimental shifts.
     the values 3D shifts stored in the doc file DF_shift are
     transfer to two 2D matrices
 
 */
 void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
-                       Matrix2D<int>    &cell_inside,
-                       Matrix2D<double> &exp_shifts_matrix_X,
-                       Matrix2D<double> &exp_shifts_matrix_Y,
-                       Matrix2D<double> &exp_shifts_matrix_Z,
-                       Matrix2D<double> &exp_normal_shifts_matrix_X,
-                       Matrix2D<double> &exp_normal_shifts_matrix_Y,
-                       Matrix2D<double> &exp_normal_shifts_matrix_Z,
+                       MultidimArray<int>    &cell_inside,
+                       MultidimArray<double> &exp_shifts_matrix_X,
+                       MultidimArray<double> &exp_shifts_matrix_Y,
+                       MultidimArray<double> &exp_shifts_matrix_Z,
+                       MultidimArray<double> &exp_normal_shifts_matrix_X,
+                       MultidimArray<double> &exp_normal_shifts_matrix_Y,
+                       MultidimArray<double> &exp_normal_shifts_matrix_Z,
                        double param_file_scale);
 
 //@}
