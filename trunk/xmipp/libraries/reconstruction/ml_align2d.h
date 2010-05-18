@@ -136,7 +136,8 @@ public:
 #define OUT_BLOCK 0
 #define OUT_ITER  1
 #define OUT_FINAL 2
-
+#define OUT_REFS 3
+#define OUT_IMGS 4
 
 // This structure is needed to pass parameters to the threads
 typedef struct{
