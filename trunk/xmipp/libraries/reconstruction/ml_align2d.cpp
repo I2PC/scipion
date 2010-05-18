@@ -551,6 +551,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
         sigdim = 2 * CEIL(model.sigma_offset * 6);
     sigdim++; // (to get uneven number)
     sigdim = XMIPP_MIN(dim, sigdim);
+
     //Some vectors and matrixes initialization
     refw.resize(model.n_ref);
     refw2.resize(model.n_ref);
@@ -2192,8 +2193,7 @@ void Prog_MLalign2D_prm::expectation()
 }
 
 // Update all model parameters
-void Prog_MLalign2D_prm::maximization(Model_MLalign2D &model,
-                                      int refs_per_class)
+void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
 {
 
 #ifdef DEBUG
@@ -2209,57 +2209,57 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &model,
     int c;
 
     // Update the reference images
-    model.sumw_allrefs = 0.;
-    model.dim = dim;
+    local_model.sumw_allrefs = 0.;
+    local_model.dim = dim;
 
-    for (int refno = 0; refno < model.n_ref; refno++)
+    for (int refno = 0; refno < local_model.n_ref; refno++)
     {
         if (sumw[refno] > 0.)
         {
             double weight = sumw[refno];
-            if (model.do_student)
+            if (local_model.do_student)
             {
                 weight = sumw2[refno];
-                model.sumw_allrefs2 += sumw2[refno];
+                local_model.sumw_allrefs2 += sumw2[refno];
             }
-            model.Iref[refno]() = wsum_Mref[refno];
-            model.Iref[refno]() /= sumwsc2[refno];
-            model.sumw_allrefs += sumw[refno];
-            model.Iref[refno].setWeight(weight);
+            local_model.Iref[refno]() = wsum_Mref[refno];
+            local_model.Iref[refno]() /= sumwsc2[refno];
+            local_model.sumw_allrefs += sumw[refno];
+            local_model.Iref[refno].setWeight(weight);
         }
         else
         {
-            model.Iref[refno].setWeight(0.);
-            model.Iref[refno]().initZeros(dim, dim);
-            model.Iref[refno]().setXmippOrigin();
+            local_model.Iref[refno].setWeight(0.);
+            local_model.Iref[refno]().initZeros(dim, dim);
+            local_model.Iref[refno]().setXmippOrigin();
         }
 
         // Adjust average scale (nr_classes will be smaller than model.n_ref for the 3D case!)
-        model.updateScale(refno, sumwsc[refno], sumw[refno]);
+        local_model.updateScale(refno, sumwsc[refno], sumw[refno]);
 
     }
 
     // Update the model fractions
     if (!fix_fractions)
-        for (int refno = 0; refno < model.n_ref; refno++)
-            model.updateFractions(refno, sumw[refno], sumw_mirror[refno],
-                                  model.sumw_allrefs);
+        for (int refno = 0; refno < local_model.n_ref; refno++)
+            local_model.updateFractions(refno, sumw[refno], sumw_mirror[refno],
+                                  local_model.sumw_allrefs);
 
     // Average height of the probability distribution at its maximum
-    model.updateAvePmax(sumfracweight);
+    local_model.updateAvePmax(sumfracweight);
 
     // Update sigma of the origin offsets
     if (!fix_sigma_offset)
-        model.updateSigmaOffset(wsum_sigma_offset);
+        local_model.updateSigmaOffset(wsum_sigma_offset);
 
     // Update the noise parameters
     if (!fix_sigma_noise)
     {
-        model.updateSigmaNoise(wsum_sigma_noise);
-        sigma_noise2 = model.sigma_noise * model.sigma_noise;
+        local_model.updateSigmaNoise(wsum_sigma_noise);
+        sigma_noise2 = local_model.sigma_noise * local_model.sigma_noise;
     }
 
-    model.LL = LL;
+    local_model.LL = LL;
     //model.print();
 
 #ifdef DEBUG
@@ -2276,13 +2276,14 @@ void Prog_MLalign2D_prm::correctScaleAverage(int refs_per_class)
     std::vector<double> wsum_scale(nr_classes), sumw_scale(nr_classes);
     ldiv_t temp;
     average_scale = 0.;
+
     for (int refno = 0; refno < model.n_ref; refno++)
     {
-        average_scale += sumwsc[refno];
+        average_scale += model.get_sumwsc(refno);
         temp = ldiv(refno, refs_per_class);
         iclass = ROUND(temp.quot);
-        wsum_scale[iclass] += sumwsc[refno];
-        sumw_scale[iclass] += sumw[refno];
+        wsum_scale[iclass] += model.get_sumwsc(refno);
+        sumw_scale[iclass] += model.get_sumw(refno);
     }
     for (int refno = 0; refno < model.n_ref; refno++)
     {
@@ -2575,7 +2576,7 @@ void Model_MLalign2D::combineModel(Model_MLalign2D model, int sign)
 {
     if (n_ref != model.n_ref)
     {
-        REPORT_ERROR(5000, "Can not add models with diferent 'n_ref'");
+        REPORT_ERROR(5000, "Can not add models with different 'n_ref'");
         exit(1);
     }
 

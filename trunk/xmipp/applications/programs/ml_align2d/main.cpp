@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         Model_MLalign2D block_model(prm.model.n_ref);
 
         // Loop over all iterations
-        for (prm.iter = prm.istart; prm.iter <= prm.Niter; prm.iter++)
+        for (prm.iter = prm.istart; !converged && prm.iter <= prm.Niter; prm.iter++)
         {
 #ifdef TIMING
             prm.timer.tic(ITER);
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
                         prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
                         prm.model.substractModel(block_model);
                     }
-                    std::cerr << "Maximizating block " << prm.current_block <<std::endl;
+                    std::cerr << "Maximizing block " << prm.current_block <<std::endl;
                     prm.maximization(block_model);
                     prm.writeOutputFiles(block_model, OUT_BLOCK);
 
@@ -113,6 +113,9 @@ int main(int argc, char **argv)
                         prm.model.addModel(block_model);
                     }
                 }
+
+                if (prm.do_norm)
+                    prm.correctScaleAverage();
 
 #ifdef TIMING
                 prm.timer.toc(ITER_M);
@@ -132,23 +135,13 @@ int main(int argc, char **argv)
                 }
             }
 
-            if (prm.do_norm)
-                prm.correctScaleAverage();
             // Check convergence
             converged = prm.checkConvergence();
+
             // Write output files
-            //prm.addDocfileHeaderComment();
             prm.addPartialDocfileData(prm.docfiledata, prm.myFirstImg, prm.myLastImg);
             prm.writeOutputFiles(prm.model, OUT_ITER);
 
-            if (converged)
-            {
-                if (prm.verb > 0)
-                    std::cerr << " Optimization converged!"
-                    << std::endl;
-
-                break;
-            }
 
 #ifdef TIMING
             std::cout << "-------------------- ITER: " << prm.iter << " ----------------------" << std::endl;
@@ -158,6 +151,9 @@ int main(int argc, char **argv)
 #endif
 
         } // end loop iterations
+
+        if (converged && prm.verb > 0)
+            std::cerr << " Optimization converged!" << std::endl;
 
         prm.writeOutputFiles(prm.model);
         prm.destroyThreads();

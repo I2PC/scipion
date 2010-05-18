@@ -31,6 +31,8 @@ int main(int argc, char **argv)
     char                        **argv2=NULL;
     Prog_Refine3d_prm           prm;
     Prog_MLalign2D_prm          ML2D_prm;
+    bool                       converged=false;
+    FileName                    fnt;
 
     // Set to false for ML3D
     prm.fourier_mode = false;
@@ -76,75 +78,97 @@ int main(int argc, char **argv)
     {
 
         // Loop over all iterations
-        ML2D_prm.iter = prm.istart;
-        while (!converged && ML2D_prm.iter <= prm.Niter)
+        for (ML2D_prm.iter = ML2D_prm.istart; !converged && ML2D_prm.iter <= ML2D_prm.Niter; ML2D_prm.iter++)
         {
-
             if (prm.verb > 0)
+                std::cerr << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
+
+            bool special_first = !ML2D_prm.do_first_iem && ML2D_prm.iter == 1;
+
+            for (ML2D_prm.current_block = 0; ML2D_prm.current_block < ML2D_prm.blocks; ML2D_prm.current_block++)
             {
-                std::cerr        << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
-                prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
-            }
+                // Project volumes
+                if (ML2D_prm.iter > ML2D_prm.istart || ML2D_prm.current_block > 0)
+                {
+                    prm.project_reference_volume(ML2D_prm.MDref);
+                    c = 0;
+                    // Read new references from disc (I could just as well keep them in memory, maybe...)
+                    FOR_ALL_OBJECTS_IN_METADATA(ML2D_prm.MDref)
+                    {
+                        ML2D_prm.MDref.getValue(MDL_IMAGE, fnt);
+                        ML2D_prm.model.Iref[c].read(fnt);
+                        ML2D_prm.model.Iref[c]().setXmippOrigin();
+                        c++;
+                    }
+                }
 
-            // Integrate over all images
-            ML2D_prm.expectation();
+                // Integrate over all images
+                ML2D_prm.expectation();
 
-            // Update model parameters
-            ML2D_prm.maximization(ML2D_prm.model, prm.nr_projections);
+                // Update model parameters
+                if (ML2D_prm.blocks == 1) //ie not IEM
+                {
+                    ML2D_prm.maximization(ML2D_prm.model);
+                }
+                else //do IEM
+                {
+                    if (!special_first)
+                    {
 
-            // Write intermediate output files
+                        ML2D_prm.readModel(block_model, ML2D_prm.getBaseName("_block", ML2D_prm.current_block + 1));
+                        ML2D_prm.model.substractModel(block_model);
+                    }
+                    std::cerr << "Maximizing block " << ML2D_prm.current_block <<std::endl;
+                    ML2D_prm.maximization(block_model);
+                    ML2D_prm.writeOutputFiles(block_model, OUT_BLOCK);
+
+                    if (!special_first)
+                    {
+                        ML2D_prm.model.addModel(block_model);
+                    }
+                }
+
+                if (ML2D_prm.do_norm)
+                    ML2D_prm.correctScaleAverage(prm.nr_projections);
+
+                // Jump out before 3D reconstruction
+                // (Useful for some parallelization protocols)
+                if (prm.skip_reconstruction)
+                    exit(1);
+
+                // Reconstruct new volumes from the reference images
+                for (volno = 0; volno < prm.Nvols; volno++)
+                    prm.reconstruction(argc2, argv2, ML2D_prm.iter, volno, 0);
+
+                // Update the reference volume selection file
+                // and post-process the volumes
+                prm.remake_SFvol(ML2D_prm.iter, false, false);
+                prm.post_process_volumes(argc2, argv2);
+
+            } // end loop blocks
+
+            // Check convergence
+            converged = prm.check_convergence(ML2D_prm.iter);
+
+            // Write output ML2D files
             ML2D_prm.addPartialDocfileData(ML2D_prm.docfiledata, ML2D_prm.myFirstImg, ML2D_prm.myLastImg);
             ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_ITER);
             prm.concatenate_selfiles(ML2D_prm.iter);
 
-            // Jump out before 3D reconstruction
-            // (Useful for some parallelization protocols)
-            if (prm.skip_reconstruction)
-                exit(1);
-
-            // Reconstruct new volumes from the reference images
-            for (volno = 0; volno < prm.Nvols; volno++)
-                prm.reconstruction(argc2, argv2, ML2D_prm.iter, volno, 0);
-
-            // Update the reference volume selection file
-            // and post-process the volumes (for -FS also the noise volumes!)
-            prm.remake_SFvol(ML2D_prm.iter, false, false);
-            prm.post_process_volumes(argc2, argv2);
-            prm.remake_SFvol(ML2D_prm.iter, false, false);
-
-            // Check convergence
-            if (prm.check_convergence(ML2D_prm.iter))
-            {
-                converged = 1;
-                if (prm.verb > 0)
-                    std::cerr << "--> Optimization converged!" << std::endl;
-            }
-
-            // Re-project volumes
-            if (!converged && ML2D_prm.iter + 1 <= prm.Niter)
-            {
-                FileName fnt;
-                prm.project_reference_volume(ML2D_prm.MDref);
-                c = 0;
-                // Read new references from disc (I could just as well keep them in memory, maybe...)
-                FOR_ALL_OBJECTS_IN_METADATA(ML2D_prm.MDref)
-                {
-                	ML2D_prm.MDref.getValue(MDL_IMAGE, fnt);
-                    ML2D_prm.model.Iref[c].read(fnt);
-                    ML2D_prm.model.Iref[c]().setXmippOrigin();
-                    c++;
-                }
-            }
-            ML2D_prm.iter++;
         } // end loop iterations
 
-        // Write out converged doc and logfiles
-        ML2D_prm.addPartialDocfileData(ML2D_prm.docfiledata, ML2D_prm.myFirstImg, ML2D_prm.myLastImg);
+        if (prm.verb > 0)
+        {
+        	if (converged)
+            	std::cerr << "--> Optimization converged!" << std::endl;
+        	else
+                std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
+        }
+
+        // Write converged output ML2D files
         ML2D_prm.writeOutputFiles(ML2D_prm.model);
         ML2D_prm.destroyThreads();
 
-        if (!converged && prm.verb > 0)
-            std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }
     catch (Xmipp_error XE)
     {

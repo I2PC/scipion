@@ -446,7 +446,7 @@ public:
     void expectation();
 
     /// Update all model parameters
-    void maximization(Model_MLalign2D &model, int refs_per_class=1);
+    void maximization(Model_MLalign2D &model);
 
     /// Correct references scale
     void correctScaleAverage(int refs_per_class=1);
