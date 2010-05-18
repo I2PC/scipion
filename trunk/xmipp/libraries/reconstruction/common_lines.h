@@ -27,7 +27,9 @@
 #  define _PROG_COMMONLINES_HH
 
 #include <data/funcs.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
+#include <data/multidim_array.h>
+#include <data/numerical_tools.h>
 #include <iostream>
 
 /**@defgroup CommonLinesProgram Common Lines (find common lines between projections)
@@ -91,7 +93,7 @@ public:
 
     /** Get and prepare block */
     void getAndPrepareBlock(int i,
-        std::vector< Matrix2D<double> > &blockImgs);
+        std::vector< MultidimArray<double> > &blockImgs);
 
     /** Show parameters */
     friend std::ostream & operator << (std::ostream &out,
@@ -110,7 +112,7 @@ public:
     int Nblock;
 
     // Input selfile
-    SelFile SF;
+    MetaData SF;
 
     // Number of images
     int Nimg;

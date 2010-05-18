@@ -390,7 +390,7 @@ ReconsSources = [
     'angular_project_library.cpp',
     'art_crystal.cpp',
     'basic_art.cpp',
-#    'common_lines.cpp',
+    'common_lines.cpp',
 #    'convert_vol2pseudo.cpp',
 #    'correct_bfactor.cpp',
 #    'create_projection_library.cpp',
@@ -561,7 +561,7 @@ AddXmippProgram('convert_pdb2vol', ['XmippRecons_Interface','XmippRecons','Xmipp
 #AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 #AddXmippProgram('ctf_profile')
 #AddXmippProgram('ctf_group', ['XmippRecons'])
-#AddXmippProgram('common_lines', ['XmippRecons'])
+AddXmippProgram('common_lines', ['XmippRecons'])
 #AddXmippProgram('denoise', ['XmippRecons'])
 #AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
@@ -708,7 +708,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_common_lines', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_common_lines', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
 #    # AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])sjors

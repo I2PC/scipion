@@ -562,6 +562,7 @@ class MetaData(_object):
     def writeValueToString(*args): return _XmippData.MetaData_writeValueToString(*args)
     def fastSearch(*args): return _XmippData.MetaData_fastSearch(*args)
     def fillMetaData(*args): return _XmippData.MetaData_fillMetaData(*args)
+    def importObjects(*args): return _XmippData.MetaData_importObjects(*args)
     def combine(*args): return _XmippData.MetaData_combine(*args)
     def combineWithFiles(*args): return _XmippData.MetaData_combineWithFiles(*args)
     def removeObjects(*args): return _XmippData.MetaData_removeObjects(*args)
