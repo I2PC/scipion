@@ -51,6 +51,8 @@ enum MDLabel
     MDL_AZIMUTALANGLE, //ctf definition azimutal angle
     MDL_BGMEAN, // Mean background value for an image
     MDL_BLOCK, // Current block number (for incremental EM)
+    MDL_CELLX, // Cell location for crystals
+    MDL_CELLY, // Cell location for crystals
     MDL_COMMENT, // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
     MDL_COST, // Cost for the image (double)
     MDL_COUNT, // Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
@@ -107,6 +109,9 @@ enum MDLabel
     MDL_SHIFTX, // Shift for the image in the X axis (double)
     MDL_SHIFTY, // Shift for the image in the Y axis (double)
     MDL_SHIFTZ, // Shift for the image in the Z axis (double)
+    MDL_SHIFT_CRYSTALX, // Shift for the image in the X axis (double) for crystals
+    MDL_SHIFT_CRYSTALY, // Shift for the image in the Y axis (double) for crystals
+    MDL_SHIFT_CRYSTALZ, // Shift for the image in the Z axis (double) for crystals
     MDL_SIGMANOISE, // Standard deviation of the noise in ML model
     MDL_SIGMAOFFSET, // Standard deviation of the offsets in ML model
     MDL_SIGNALCHANGE, // Signal change for an image
@@ -210,6 +215,8 @@ private:
         MDL::addLabel(MDL_AZIMUTALANGLE, LABEL_DOUBLE, "azimutalAngle");
         MDL::addLabel(MDL_BGMEAN, LABEL_DOUBLE, "bgMean");
         MDL::addLabel(MDL_BLOCK, LABEL_INT, "blockNumber");
+        MDL::addLabel(MDL_CELLX, LABEL_INT, "cellX");
+        MDL::addLabel(MDL_CELLY, LABEL_INT, "cellY");
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
         MDL::addLabel(MDL_COUNT, LABEL_INT, "count");
