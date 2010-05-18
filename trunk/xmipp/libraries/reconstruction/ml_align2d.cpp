@@ -434,7 +434,7 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
 
             if (IS_MASTER)
             {
-            	show(do_ML3D);
+                show(do_ML3D);
                 generateInitialReferences();
             }
         }
@@ -452,7 +452,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
     // Read in all reference images in memory
     if (fn_ref.isMetaData())
     {
-    	MDref.read(fn_ref);
+        MDref.read(fn_ref);
     }
     else
     {
@@ -472,7 +472,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
         // Default start is all equal model fractions
         model.alpha_k[refno] = (double) 1 / model.n_ref;
         model.Iref[refno].setWeight(model.alpha_k[refno]
-                                     * (double) nr_images_global);
+                                    * (double) nr_images_global);
         // Default start is half-half mirrored images
         model.mirror_fraction[refno] = (do_mirror ? 0.5 : 0.);
         refno++;
@@ -648,8 +648,8 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
                 MDimg.getValue(MDL_SHIFTX, yy);
                 for (int refno = 0; refno < idum; refno++)
                 {
-                	imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xx;
-                	imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yy;
+                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xx;
+                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yy;
                 }
             }
             if (model.do_norm)
@@ -833,7 +833,7 @@ void Prog_MLalign2D_prm::generateInitialReferences()
 void Prog_MLalign2D_prm::calculatePdfInplane()
 {
 #ifdef DEBUG
-	std::cerr << "Entering calculatePdfInplane" <<std::endl;
+    std::cerr << "Entering calculatePdfInplane" <<std::endl;
 #endif
 
     double x, y, r2, pdfpix, sum;
@@ -873,7 +873,8 @@ void Prog_MLalign2D_prm::calculatePdfInplane()
     // Normalization
     P_phi /= sum;
 #ifdef DEBUG
-	std::cerr << "Leaving calculatePdfInplane" <<std::endl;
+
+    std::cerr << "Leaving calculatePdfInplane" <<std::endl;
 #endif
 
 }
@@ -1326,7 +1327,7 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
 
     FOR_ALL_THREAD_REFNO()
     {
-    	computeStats_within_binary_mask(omask, model.Iref[refno](), dum,
+        computeStats_within_binary_mask(omask, model.Iref[refno](), dum,
                                         dum, avg, dum);
         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
@@ -2011,7 +2012,7 @@ void Prog_MLalign2D_prm::expectation()
     // Loop over all images
     FOR_ALL_LOCAL_IMAGES()
     {
-    	if (IMG_BLOCK(imgno) == current_block)
+        if (IMG_BLOCK(imgno) == current_block)
         {
 #ifdef TIMING
             timer.tic(FOR_F1);
@@ -2243,7 +2244,7 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
     if (!fix_fractions)
         for (int refno = 0; refno < local_model.n_ref; refno++)
             local_model.updateFractions(refno, sumw[refno], sumw_mirror[refno],
-                                  local_model.sumw_allrefs);
+                                        local_model.sumw_allrefs);
 
     // Average height of the probability distribution at its maximum
     local_model.updateAvePmax(sumfracweight);
@@ -2324,7 +2325,7 @@ bool Prog_MLalign2D_prm::checkConvergence()
         if (model.Iref[refno].weight() > 0.)
         {
             Maux = Iold[refno]() * Iold[refno]();
-        	convv = 1. / (Maux.computeAvg());
+            convv = 1. / (Maux.computeAvg());
             Maux = Iold[refno]() - model.Iref[refno]();
             Maux = Maux * Maux;
             convv *= Maux.computeAvg();
@@ -2352,7 +2353,7 @@ void Prog_MLalign2D_prm::addPartialDocfileData(MultidimArray<double> data,
         int first, int last)
 {
 #ifdef DEBUG
-	std::cerr << "Entering addPartialDocfileData" <<std::endl;
+    std::cerr << "Entering addPartialDocfileData" <<std::endl;
 #endif
 
     Matrix1D<double> dataline(DATALINELENGTH);
@@ -2386,7 +2387,7 @@ void Prog_MLalign2D_prm::addPartialDocfileData(MultidimArray<double> data,
     }
 
 #ifdef DEBUG
-	std::cerr << "Leaving addPartialDocfileData" <<std::endl;
+    std::cerr << "Leaving addPartialDocfileData" <<std::endl;
 #endif
 }//close function addDocfileData
 
@@ -2399,25 +2400,42 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     FileName fn_tmp;
     Image<double> Itmp;
     MetaData MDo;
+    bool write_img_xmd, write_refs_log;
+    bool write_norm = model.do_norm;
 
     switch (outputType)
     {
     case OUT_BLOCK:
+        write_img_xmd = false;
+        write_refs_log = true;
+        // Sjors 18may2010: why not write scales in blocks? We need this now, don't we?
+        //write_norm = false;
         fn_base = getBaseName("_block", current_block + 1);
         break;
     case OUT_ITER:
+        write_img_xmd = true;
+        write_refs_log = true;
         fn_base = getBaseName("_it", iter);
         break;
     case OUT_FINAL:
-        fn_base = fn_root;
+        write_img_xmd = true;
+        write_refs_log = true;
+       fn_base = fn_root;
+        break;
+    case OUT_IMGS:
+        write_img_xmd = true;
+        write_refs_log = false;
+        fn_base = getBaseName("_it", iter);
+        break;
+    case OUT_REFS:
+        write_img_xmd = false;
+        write_refs_log = true;
+        fn_base = getBaseName("_it", iter);
         break;
     }
 
-    bool no_block = outputType != OUT_BLOCK;
-    bool write_norm = model.do_norm && no_block;
-
     //Write image metadata files, except when writing blocks only
-    if (no_block)
+    if (write_img_xmd)
     {
         fn_tmp = fn_base + "_img.xmd";
         MDimg.write(fn_tmp);
@@ -2436,58 +2454,58 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     }
 
 
-    // Write out current reference images and fill sel & log-file
-    MDo.clear();
-    for (int refno = 0; refno < model.n_ref; refno++)
+    if (write_refs_log)
     {
-        fn_tmp = fn_base + "_ref";
-        fn_tmp.compose(fn_tmp, refno + 1, "xmp");
-        Itmp = model.Iref[refno];
-        Itmp.write(fn_tmp);
-        MDo.addObject();
-        MDo.setValue(MDL_IMAGE, fn_tmp);
-        MDo.setValue(MDL_ENABLED, 1);
-        MDo.setValue(MDL_WEIGHT, (double)Itmp.weight());
-        if (do_mirror)
-            MDo.setValue(MDL_MIRRORFRAC,
-                         model.mirror_fraction[refno]);
-        if (no_block)
-            MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
-        if (write_norm)
-            MDo.setValue(MDL_INTSCALE, model.scale[refno]);
-        if (do_ML3D)
+        // Write out current reference images and fill sel & log-file
+        MDo.clear();
+        for (int refno = 0; refno < model.n_ref; refno++)
         {
-            MDo.setValue(MDL_ANGLEROT, Itmp.rot());
-            MDo.setValue(MDL_ANGLETILT, Itmp.tilt());
+            fn_tmp = fn_base + "_ref";
+            fn_tmp.compose(fn_tmp, refno + 1, "xmp");
+            Itmp = model.Iref[refno];
+            Itmp.write(fn_tmp);
+            MDo.addObject();
+            MDo.setValue(MDL_IMAGE, fn_tmp);
+            MDo.setValue(MDL_ENABLED, 1);
+            MDo.setValue(MDL_WEIGHT, (double)Itmp.weight());
+            if (do_mirror)
+                MDo.setValue(MDL_MIRRORFRAC,
+                             model.mirror_fraction[refno]);
+            if (no_block)
+                MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
+            if (write_norm)
+                MDo.setValue(MDL_INTSCALE, model.scale[refno]);
+            if (do_ML3D)
+            {
+                MDo.setValue(MDL_ANGLEROT, Itmp.rot());
+                MDo.setValue(MDL_ANGLETILT, Itmp.tilt());
+            }
         }
+        fn_tmp = fn_base + "_ref.xmd";
+        MDo.write(fn_tmp);
+        // Write out log-file
+        MDo.clear();
+        MDo.setColumnFormat(false);
+        MDo.setComment(cline);
+        MDo.addObject();
+        MDo.setValue(MDL_LL, model.LL);
+        MDo.setValue(MDL_PMAX, model.avePmax);
+        MDo.setValue(MDL_SIGMANOISE, model.sigma_noise);
+        MDo.setValue(MDL_SIGMAOFFSET, model.sigma_offset);
+        MDo.setValue(MDL_RANDOMSEED, seed);
+        if (write_norm)
+        {
+            MDo.setValue(MDL_INTSCALE, average_scale);
+        }
+        MDo.setValue(MDL_ITER, iter);
+        fn_tmp = fn_base + "_img.xmd";
+        MDo.setValue(MDL_IMGMD, fn_tmp);
+        fn_tmp = fn_base + "_ref.xmd";
+        MDo.setValue(MDL_REFMD, fn_tmp);
+
+        fn_tmp = fn_base + "_log.xmd";
+        MDo.write(fn_tmp);
     }
-
-
-    fn_tmp = fn_base + "_ref.xmd";
-    MDo.write(fn_tmp);
-
-    // Write out log-file
-    MDo.clear();
-    MDo.setColumnFormat(false);
-    MDo.setComment(cline);
-    MDo.addObject();
-    MDo.setValue(MDL_LL, model.LL);
-    MDo.setValue(MDL_PMAX, model.avePmax);
-    MDo.setValue(MDL_SIGMANOISE, model.sigma_noise);
-    MDo.setValue(MDL_SIGMAOFFSET, model.sigma_offset);
-    MDo.setValue(MDL_RANDOMSEED, seed);
-    if (write_norm)
-    {
-        MDo.setValue(MDL_INTSCALE, average_scale);
-    }
-    MDo.setValue(MDL_ITER, iter);
-    fn_tmp = fn_base + "_img.xmd";
-    MDo.setValue(MDL_IMGMD, fn_tmp);
-    fn_tmp = fn_base + "_ref.xmd";
-    MDo.setValue(MDL_REFMD, fn_tmp);
-
-    fn_tmp = fn_base + "_log.xmd";
-    MDo.write(fn_tmp);
 
 }//close function writeModel
 
