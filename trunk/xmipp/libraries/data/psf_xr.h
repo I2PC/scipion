@@ -105,6 +105,8 @@ public:
     double Z;
     /// Image plane (CCD position)
     double Zi;
+    /// Depth of focus. Only for information pourposes
+    double DoF;
 
     /* Digital Parameters */
     /// Size of the input image (object plane size)
@@ -114,6 +116,8 @@ public:
     double dxiMax;
     /// Pixel size in lens plane
     double dxl, dyl;
+    /// Z limits around Zo in the psf generation due to Nyquist Limit
+    double deltaZMaxX, deltaZMaxY;
 
     /// Parameters to change image size to avoid Nyquist limit
     psfxrAdjust AdjustType;
@@ -129,6 +133,8 @@ public:
     double Flens;
     /// Number of zones in zone plate
     double Nzp;
+    /// Outermost zone width
+    double deltaR;
     /// Magnification
     double Ms;
     /// Z axis global shift
@@ -144,6 +150,9 @@ public:
     double dzo;
     /// Size of the image in image plane, to be rescaled if needed
     double Nix, Niy;
+
+    /// Switch to control verbose mode
+    bool verbose;
 
 
 

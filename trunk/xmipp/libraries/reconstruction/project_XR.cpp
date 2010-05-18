@@ -35,6 +35,7 @@ void Prog_Project_XR_Parameters::read(int argc, char **argv)
     fn_sel_file   = getParameter(argc, argv, "-o", "");
     fn_psf_xr   = getParameter(argc, argv, "-psf", "");
     only_create_angles = checkParameter(argc, argv, "-only_create_angles");
+    verbose = checkParameter(argc, argv, "-v");
     tell=0;
     if (checkParameter(argc, argv, "-show_angles"))
         tell |= TELL_SHOW_ANGLES;
@@ -194,10 +195,11 @@ int PROJECT_XR_Effectively_project(
     std::cerr << "Projecting ...\n";
     if (!(prm.tell&TELL_SHOW_ANGLES))
         init_progress_bar(expectedNumProjs);
-//    SF.reserve(expectedNumProjs);
+    //    SF.reserve(expectedNumProjs);
     MetaData DF_movements;
     DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     Matrix1D<double> movements(8);
+    double rot, tilt,psi;
 
     int idx=prm.starting;
     for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
@@ -216,23 +218,27 @@ int PROJECT_XR_Effectively_project(
 
         // Really project ....................................................
         project_xr_Volume_offCentered(side.phantomVol(), psf, proj,prm.proj_Ydim, prm.proj_Xdim,
-                                   prm.axisRot, prm.axisTilt, prm.raxis, angle, 0, inPlaneShift);
+                                      prm.axisRot, prm.axisTilt, prm.raxis, angle, 0, inPlaneShift);
 
 
         // Add noise in angles and voxels ....................................
-        movements(0)=proj.rot();
-        movements(1)=proj.tilt();
-        movements(2)=proj.psi();
-        movements(3)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
-        movements(4)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
-        movements(5)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
-        proj.setEulerAngles(movements(0)+movements(3),
-                                     movements(1)+movements(4),movements(2)+movements(5));
+        proj.getEulerAngles(rot,tilt,psi);
+        rot += rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+        tilt += rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+        psi += rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+        //        movements(0)=proj.rot();
+        //        movements(1)=proj.tilt();
+        //        movements(2)=proj.psi();
+        //        movements(3)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+        //        movements(4)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+        //        movements(5)=rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+
+        proj.setEulerAngles(rot, tilt, psi);
 
         DF_movements.addObject();
-        DF_movements.setValue(MDL_ANGLEROT2,movements(0)+movements(3));
-        DF_movements.setValue(MDL_ANGLETILT2,movements(1)+movements(4));
-        DF_movements.setValue(MDL_ANGLEPSI2,movements(2)+movements(5));
+        DF_movements.setValue(MDL_ANGLEROT,rot);
+        DF_movements.setValue(MDL_ANGLETILT,tilt);
+        DF_movements.setValue(MDL_ANGLEPSI,psi);
 
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
@@ -240,7 +246,7 @@ int PROJECT_XR_Effectively_project(
         if (prm.tell&TELL_SHOW_ANGLES)
             std::cout << idx << "\t" << proj.rot() << "\t"
             << proj.tilt() << "\t" << proj.psi() << std::endl;
-        else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60)) == 0)
+        else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60))  == 0)
             progress_bar(numProjs);
         proj.write(fn_proj);
         numProjs++;
@@ -248,8 +254,8 @@ int PROJECT_XR_Effectively_project(
         SF.addObject();
         SF.setValue(MDL_IMAGE,fn_proj);
         SF.setValue(MDL_ENABLED,1);
-//        SF.insert(fn_proj, SelLine::ACTIVE);
-//        DF_movements.append_data_line(movements);
+        //        SF.insert(fn_proj, SelLine::ACTIVE);
+        //        DF_movements.append_data_line(movements);
     }
     if (!(prm.tell&TELL_SHOW_ANGLES))
         progress_bar(expectedNumProjs);
@@ -272,6 +278,7 @@ void project_xr_Volume_offCentered(MultidimArray<double> &V, XmippXRPSF &psf, Pr
     Rinplane.resize(3,3);
     double rot, tilt, psi;
     Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
+    P.setEulerAngles(rot,tilt,psi);
 
     // Find displacement because of axis offset and inplane shift
     // Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane; // Actually not implemented
@@ -294,7 +301,7 @@ void project_xr_Volume_offCentered(MultidimArray<double> &V, XmippXRPSF &psf, Pr
     // Rotate volume ....................................................
     Image<double> volTemp;
 
-//    applyGeometry(LINEAR,volTemp(), V, Euler_rotation3DMatrix(rot, tilt, psi), IS_NOT_INV, DONT_WRAP);
+    //    applyGeometry(LINEAR,volTemp(), V, Euler_rotation3DMatrix(rot, tilt, psi), IS_NOT_INV, DONT_WRAP);
     Euler_rotate(V, rot, tilt, psi, volTemp());
 
     //the really really final project routine, I swear by Snoopy.
@@ -318,6 +325,7 @@ int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
 
     // Read Microscope optics parameters and produce side information
     XmippXRPSF psf;
+    psf.verbose = prm.verbose;
     psf.read(prm.fn_psf_xr);
     psf.produceSideInfo();
     psf.adjustParam(side.phantomVol);
@@ -335,7 +343,7 @@ int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
     }
     else
     {
-//        std::cout << side.DF;
+        //        std::cout << side.DF;
     }
     return ProjNo;
 }

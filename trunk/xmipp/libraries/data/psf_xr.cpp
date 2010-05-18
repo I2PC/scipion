@@ -35,8 +35,8 @@ void XmippXRPSF::read(const FileName &fn)
 
     if (fn == "")
     {
-    	clear();
-    	return;
+        clear();
+        return;
     }
     if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
         REPORT_ERROR(1,
@@ -46,7 +46,7 @@ void XmippXRPSF::read(const FileName &fn)
     try
     {
         lambda = textToFloat(getParameter(fh_param, "lambda", 0, "2.43"))* 1e-9;
-        Flens = textToFloat(getParameter(fh_param, "focal_length", 0, "1.4742")) * 1e-3;
+        deltaR = textToFloat(getParameter(fh_param, "outer_zone_width", 0, "40")) * 1e-9;
         Nzp = textToFloat(getParameter(fh_param, "zones_number", 0, "560"));
         Ms = textToFloat(getParameter(fh_param, "magnification", 0, "2304"));
         dxo = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1")) *1e-9;
@@ -93,17 +93,22 @@ void XmippXRPSF::usage()
 std::ostream & operator <<(std::ostream &out, const XmippXRPSF &psf)
 {
 
-    out << "lambda=               " << psf.lambda * 1e9 << " nm" << std::endl
-    << "focal_length=         " << psf.Flens * 1e3 << " mm" << std::endl
+    out     << std::endl
+    << "XmippXRPSF:: X-Ray Microscope parameters:" << std::endl
+    << "lambda=               " << psf.lambda * 1e9 << " nm" << std::endl
     << "zones_number=         " << psf.Nzp << std::endl
+    << "outer_zone_width=     " << psf.deltaR * 1e9 << " nm" << std::endl
     << "magnification=        " << psf.Ms << std::endl
     << "sampling_rate=        " << psf.dxo * 1e9 << " nm" << std::endl
     << "z_sampling_rate=      " << psf.dzo * 1e9 << " nm" << std::endl
     << "z_axis_shift=         " << psf.DeltaZo * 1e6 << " um" << std::endl
     << std::endl
+    << "focal_length=         " << psf.Flens * 1e3 << " mm" << std::endl
     << "Lens Radius=          " << psf.Rlens * 1e6 << " um" << std::endl
     << "Zo=                   " << psf.Zo * 1e3 << " mm" << std::endl
     << "Zi=                   " << psf.Zi * 1e3 << " mm" << std::endl
+    << "Depth_of_Focus=       " << psf.DoF * 1e6 << " um" << std::endl
+    << std::endl
     << "dxi=                  " << psf.dxi * 1e6 << " um" << std::endl
     << "dxiMax=               " << psf.dxiMax * 1e6 << " um" << std::endl
     ;
@@ -115,7 +120,8 @@ std::ostream & operator <<(std::ostream &out, const XmippXRPSF &psf)
 void XmippXRPSF::clear()
 {
     lambda = 2.43e-9;
-    Flens = 1.4742e-3;
+    //    Flens = 1.4742e-3;
+    deltaR = 40e-9;
     Nzp = 560;
     Ms = 2304;
     dzo = dxo = 1e-9;
@@ -127,14 +133,20 @@ void XmippXRPSF::clear()
 void XmippXRPSF::produceSideInfo()
 {
     /// Calculation of the rest of microscope parameters
-    Rlens = sqrt(Nzp * lambda * Flens);
+    Flens = (4*Nzp*deltaR*deltaR)/lambda;
+    //    Rlens = sqrt(Nzp * lambda * Flens);
+    Rlens = 4 * Nzp * deltaR;
     Zo = (1 + 1 / Ms) * Flens;
     Zi = Zo * Ms;
     dxi = dxo * Ms;
     dxiMax = lambda * Zi / (2 * Rlens);
+    DoF = 4*deltaR*deltaR/lambda;
 
     //        Z = 0.99999*Zo;
-    Z = Zo;
+    //    Z = Zo;
+
+    if (verbose)
+        std::cout << *this << std::endl;
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
@@ -153,26 +165,27 @@ void XmippXRPSF::generateOTF(MultidimArray<std::complex<double> > &Im)
 
 void XmippXRPSF::generateOTF(MultidimArray<double> &Im)
 {
-//#define DEBUG
+    //#define DEBUG
     /// REMEMBER TO INCLUDE AND/OR ANALYZE THE MINIMUM RESOLUTION CONDITION !!!! ////
 
 
-//    double Nx = Im.xdim, Ny = Im.ydim;
+    //    double Nx = Im.xdim, Ny = Im.ydim;
     double focalEquiv = 1/(1/(Z + DeltaZo) - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
-//    double dxl = lambda*Zi / (Nx * dxi); // Pixel X-size en the plane of lens aperture
-//    double dyl = lambda*Zi / (Ny * dxi); // Pixel Y-size en the plane of lens aperture
-//
-//#ifdef DEBUG
-//
-//    std::cout << std::endl;
-//    std::cout << "XmippXRPSF::GenerateOTF - Parameters:" << std::endl;
-//    std::cout << "Nx = " << Nx << "   Ny = " << Ny << std::endl;
-//    std::cout << "dxl = " << dxl << "   dyl = " << dyl << std::endl;
-//    std::cout << "Equivalent focal = " << focalEquiv << std::endl;
-//    std::cout << "Discrete X-Radius in pixels = " << Rlens / dxl  << std::endl;
-//    std::cout << "Discrete Y-Radius in pixels = " << Rlens / dyl  << std::endl;
-//    std::cout << std::endl;
-//#endif
+    //    double dxl = lambda*Zi / (Nx * dxi); // Pixel X-size en the plane of lens aperture
+    //    double dyl = lambda*Zi / (Ny * dxi); // Pixel Y-size en the plane of lens aperture
+
+
+    //#ifdef DEBUG
+    //
+    //    std::cout << std::endl;
+    //    std::cout << "XmippXRPSF::GenerateOTF - Parameters:" << std::endl;
+    //    std::cout << "Nx = " << Nx << "   Ny = " << Ny << std::endl;
+    //    std::cout << "dxl = " << dxl << "   dyl = " << dyl << std::endl;
+    //    std::cout << "Equivalent focal = " << focalEquiv << std::endl;
+    //    std::cout << "Discrete X-Radius in pixels = " << Rlens / dxl  << std::endl;
+    //    std::cout << "Discrete Y-Radius in pixels = " << Rlens / dyl  << std::endl;
+    //    std::cout << std::endl;
+    //#endif
 
     MultidimArray< std::complex<double> > OTFTemp, PSFi;
     XmippFftw transformer;
@@ -213,7 +226,7 @@ void XmippXRPSF::generateOTF(MultidimArray<double> &Im)
     }
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
     {
-    	PSFi.data[n] /= norm;
+        PSFi.data[n] /= norm;
     }
 
     transformer.inverseFourierTransform();
@@ -250,47 +263,84 @@ void XmippXRPSF::generateOTF(MultidimArray<double> &Im)
 void XmippXRPSF::adjustParam(Image<double> &vol)
 {
 
-	Nox = vol().xdim;
-	Noy = vol().ydim;
+    Nox = vol().xdim;
+    Noy = vol().ydim;
 
-	if (dxi>dxiMax) /// Lens Radius in pixels higher than image
-	{
-		Nix = ceil(Nox * dxi/dxiMax);
-		Niy = ceil(Noy * dxi/dxiMax);
+    dxl = lambda*Zi / (Nox * dxi); // Pixel X-size en the plane of lens aperture
+    dyl = lambda*Zi / (Noy * dxi); // Pixel Y-size en the plane of lens aperture
 
-		dxi *= Nox/Nix;
+    deltaZMaxX = Zo*(1 - (Rlens*2*dxl)/(Rlens*2*dxl + Zo*lambda));
+    deltaZMaxY = Zo*(1 - (Rlens*2*dyl)/(Rlens*2*dyl + Zo*lambda));
 
-		AdjustType = PSFXR_INT;
-	}
-	else
-	{
-		Nix = Nox;
-		Niy = Noy;
-		AdjustType = PSFXR_STD;
 
-		if (dxi < pupileSizeMin/Nox * dxiMax)
-		{
-			Nix = ceil(pupileSizeMin * dxiMax/dxi);
-			AdjustType = PSFXR_ZPAD;
-		}
-		if (dxi < pupileSizeMin/Noy * dxiMax)
-		{
-			Niy = ceil(pupileSizeMin * dxiMax/dxi);
-			AdjustType = PSFXR_ZPAD;
-		}
-	}
+    if (verbose)
+    {
+        std::cout << std::endl;
+        std::cout << "XmippXRPSF::Param adjust:" << std::endl;
+        std::cout << "Nox = " << Nox << "   Noy = " << Noy << "   Nz = " << vol().zdim << std::endl;
+        std::cout << "Larger volume Z plane = " << (ABS(DeltaZo)+vol().zdim/2*dzo)*1e6 << " um" << std::endl;
+        std::cout << "Larger discrete Z plane (x,y) = (" << deltaZMaxX*1e6 << ", " << deltaZMaxY*1e6 << ") um" << std::endl;
+    }
 
-	dxl = lambda*Zi / (Nix * dxi); // Pixel X-size en the plane of lens aperture
-	dyl = lambda*Zi / (Niy * dxi); // Pixel Y-size en the plane of lens aperture
+    if (dxi>dxiMax) /// Lens Radius in pixels higher than image
+    {
+        Nix = ceil(Nox * dxi/dxiMax);
+        Niy = ceil(Noy * dxi/dxiMax);
 
-	    std::cout << std::endl;
-	    std::cout << "XmippXRPSF::Project adjust:" << std::endl;
-	    std::cout << "Nox = " << Nox << "   Noy = " << Noy << "   Nz = " << vol().zdim << std::endl;
-	    std::cout << "Nix = " << Nix << "   Niy = " << Niy << std::endl;
-	    std::cout << "dxl = " << dxl << "   dyl = " << dyl << std::endl;
-	    std::cout << "Discrete X-Diameter in pixels = " << 2*Rlens / dxl  << std::endl;
-	    std::cout << "Discrete Y-Diameter in pixels = " << 2*Rlens / dyl  << std::endl;
-	    std::cout << std::endl;
+        dxi *= Nox/Nix;
+
+        AdjustType = PSFXR_INT;
+
+        if (verbose)
+        	std::cout << "XmippXRPSF: Image plane sampling too small: increasing resolution" << std::endl;
+
+    }
+    else
+    {
+        Nix = Nox;
+        Niy = Noy;
+        AdjustType = PSFXR_STD;
+
+        if (dxi < pupileSizeMin/Nox * dxiMax)
+        {
+            Nix = ceil(pupileSizeMin * dxiMax/dxi);
+            AdjustType = PSFXR_ZPAD;
+        }
+        if (dxi < pupileSizeMin/Noy * dxiMax)
+        {
+            Niy = ceil(pupileSizeMin * dxiMax/dxi);
+            AdjustType = PSFXR_ZPAD;
+        }
+        if (deltaZMaxX < ABS(DeltaZo)+vol().zdim/2*dzo)
+        {
+            Nix = ceil(Zi*Rlens*2*(ABS(DeltaZo)+vol().zdim/2*dzo)/(Zo*dxi*(Zo+ABS(DeltaZo)+vol().zdim/2*dzo)));
+            AdjustType = PSFXR_ZPAD;
+        }
+        if (deltaZMaxY < ABS(DeltaZo)+vol().zdim/2*dzo)
+        {
+            Niy = ceil(Zi*Rlens*2*(ABS(DeltaZo)+vol().zdim/2*dzo)/(Zo*dxi*(Zo+ABS(DeltaZo)+vol().zdim/2*dzo)));
+            AdjustType = PSFXR_ZPAD;
+        }
+    }
+
+    dxl = lambda*Zi / (Nix * dxi); // Pixel X-size en the plane of lens aperture
+    dyl = lambda*Zi / (Niy * dxi); // Pixel Y-size en the plane of lens aperture
+
+    if (verbose)
+    {
+        if (AdjustType!=PSFXR_STD)
+        {
+        	if (AdjustType==PSFXR_ZPAD)
+            	std::cout << "XmippXRPSF: Image plane size too small: increasing size" << std::endl;
+        	std::cout << "New slice dimensions:  " <<  "Nix = " << Nix << "   Niy = " << Niy << std::endl;
+        }
+        std::cout << "dxl = " << dxl*1e6 << " um  -   dyl = " << dyl*1e6 << " um" << std::endl;
+        std::cout << "Pupile X-Diameter in pixels = " << ceil(2*Rlens / dxl)  << std::endl;
+        std::cout << "Pupile Y-Diameter in pixels = " << ceil(2*Rlens / dyl)  << std::endl;
+        std::cout << std::endl;
+    }
+
+
 }
 
 /* Generate the quadratic phase distribution of an ideal lens ------------- */
@@ -321,7 +371,7 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
 {
 
-//	psf.adjustParam(vol);
+    // psf.adjustParam(vol);
 
     imOut() = MultidimArray<double> (psf.Niy, psf.Nix);
     imOut().initZeros();
@@ -337,7 +387,7 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
 
     vol().setXmippOrigin();
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im(imOut);
@@ -351,7 +401,7 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
         {
             intExp(i, j) = intExp(i, j) + vol(k, i, j);
             imTemp(i, j) = (exp(-intExp(i,j)*psf.dzo))*vol(k,i,j)*psf.dzo;
-//            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
+            //            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
         }
 #ifdef DEBUG
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
@@ -362,24 +412,24 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
         psf.Z = psf.Zo - k*psf.dzo;
 
         switch (psf.AdjustType)
-		{
-			case PSFXR_INT:
-				imTempP = &imTempSc;
-				scaleToSize(LINEAR,*imTempP,imTemp,psf.Nix,psf.Niy);
-//		        imTemp.scaleToSize(psf.Niy, psf.Nix, *imTempP);
-				break;
+        {
+        case PSFXR_INT:
+            imTempP = &imTempSc;
+            scaleToSize(LINEAR,*imTempP,imTemp,psf.Nix,psf.Niy);
+            //          imTemp.scaleToSize(psf.Niy, psf.Nix, *imTempP);
+            break;
 
-			case PSFXR_STD:
-				imTempP = &imTemp;
-				break;
+        case PSFXR_STD:
+            imTempP = &imTemp;
+            break;
 
-			case PSFXR_ZPAD:
-//				(*imTempSc).resize(imTemp);
-				imTempSc = imTemp;
-				imTempSc.window(-ROUND(psf.Niy/2)+1,-ROUND(psf.Nix/2)+1,ROUND(psf.Niy/2)-1,ROUND(psf.Nix/2)-1);
-				imTempP = &imTempSc;
-				break;
-		}
+        case PSFXR_ZPAD:
+            //    (*imTempSc).resize(imTemp);
+            imTempSc = imTemp;
+            imTempSc.window(-ROUND(psf.Niy/2)+1,-ROUND(psf.Nix/2)+1,ROUND(psf.Niy/2)-1,ROUND(psf.Nix/2)-1);
+            imTempP = &imTempSc;
+            break;
+        }
 
         psf.generateOTF(*imTempP);
 
@@ -387,8 +437,9 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
 
 
 #ifdef DEBUG
+
         _Im().resize(intExp);
-       FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(intExp)
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(intExp)
         dAij(_Im(),i,j) = dAij(intExp,i,j);
         _Im.write("psfxr-intExp.spi");
         _Im().resize(*imTempP);
@@ -400,6 +451,7 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
         psf.applyOTF(*imTempP);
 
 #ifdef DEBUG
+
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
         dAij(_Im(),i,j) = dAij(*imTempP,i,j);
         _Im.write("psfxr-imTempEsc2.spi");
@@ -408,27 +460,27 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
         dAij(imOut(),i,j) += dAij(*imTempP,i,j);
 
-//        imOut.write("psfxr-imout.spi");
+        //        imOut.write("psfxr-imout.spi");
 
         progress_bar(k - vol().zinit);
     }
 
     imOut() = 1-imOut();
-//            imOut.write("psfxr-imout.spi");
+    //            imOut.write("psfxr-imout.spi");
 
 
     switch (psf.AdjustType)
-    		{
-    			case PSFXR_INT:
-    				//    imOut().selfScaleToSize(psf.Noy, psf.Nox);
-    			    selfScaleToSize(LINEAR,imOut(), psf.Nox, psf.Noy);
-    				break;
+    {
+    case PSFXR_INT:
+        //    imOut().selfScaleToSize(psf.Noy, psf.Nox);
+        selfScaleToSize(LINEAR,imOut(), psf.Nox, psf.Noy);
+        break;
 
-    			case PSFXR_ZPAD:
-    				imOut().window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
-    				break;
-    		}
-//    imOut.write("psfxr-imout2.spi");
+    case PSFXR_ZPAD:
+        imOut().window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
+        break;
+    }
+    //    imOut.write("psfxr-imout2.spi");
 
 }
 

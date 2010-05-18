@@ -51,6 +51,8 @@ public:
     FileName fn_psf_xr;
     /// Only create angles, do not project
     bool only_create_angles;
+    /// Activate verbose mode;
+    bool verbose;
 
 #define TELL_SHOW_ANGLES 0x1
     /** Debugging variable.
