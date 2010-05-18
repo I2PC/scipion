@@ -2176,7 +2176,7 @@ void Phantom::project_to(Projection &P, int Ydim, int Xdim,
     << "A\n" << A;
 #endif
     // Initialise projection
-    P().resize(Ydim, Xdim);
+    P().initZeros(Ydim, Xdim);
     P().setXmippOrigin();
     P.set_angles(rot, tilt, psi);
 
