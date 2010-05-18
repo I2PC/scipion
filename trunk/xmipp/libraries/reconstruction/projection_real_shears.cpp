@@ -1055,7 +1055,7 @@ int Projection_real_shears::write_projection_file(int numFile)
 
     SF.addObject();
     SF.setValue(MDL_IMAGE,fn_proj);
-    SF.setValue(MDL_ENABLED,true);
+    SF.setValue(MDL_ENABLED,1);
 
     if(display) progress_bar(numFile);
 
