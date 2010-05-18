@@ -65,8 +65,8 @@ void substract_background_rolling_ball(MultidimArray<double> &I, int radius);
  * value 1 if background else value 0
 */
 void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &mask, double alpha,
-		double &final_mean);
-        
+                       double &final_mean);
+
 /** Constrast enhancement
  * @ingroup Filters
  *
@@ -123,7 +123,7 @@ void region_growing3D(const MultidimArray< double >& V_in,
   * This is useful if the image coordinates represent angles
   */
 void distance_transform(const MultidimArray<int> &in,
-    MultidimArray<int> &out, bool wrap=false);
+                        MultidimArray<int> &out, bool wrap=false);
 
 /** Label a binary image
  * @ingroup Filters
@@ -277,12 +277,13 @@ double correlation_index(const MultidimArray< T >& x,
     else
     {
         computeStats_within_binary_mask(*mask, x, dummy, dummy, mean_x,
-                                         stddev_x);
+                                        stddev_x);
         computeStats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
-                                         stddev_y);
+                                        stddev_y);
     }
     if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
-        ABS(stddev_y)<XMIPP_EQUAL_ACCURACY) return 0;
+        ABS(stddev_y)<XMIPP_EQUAL_ACCURACY)
+        return 0;
 
     // If contributions are desired. Please, be careful interpreting individual
     // contributions to the covariance! One pixel value afect others.
@@ -329,15 +330,13 @@ double correlation_index(const MultidimArray< T >& x,
  */
 template <typename T>
 double fastCorrentropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
-    double sigma, const GaussianInterpolator &G)
+                       double sigma, const GaussianInterpolator &G)
 {
-    if ( !(x.checkDimension(1) && y.checkDimension(1)) )
-        REPORT_ERROR(1,"fastCorrentropy ERROR: both arguments should be 1D");
-
     double retval=0;
     double isigma=1.0/sigma;
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(x)
-        retval+=G.getValue(isigma*(DIRECT_A1D_ELEM(x,i)-DIRECT_A1D_ELEM(y,i)));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(x)
+    retval+=G.getValue(isigma*(DIRECT_MULTIDIM_ELEM(x,n)-
+                               DIRECT_MULTIDIM_ELEM(y,n)));
     retval/=XSIZE(x);
     return retval;
 }
@@ -347,13 +346,13 @@ double fastCorrentropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
  */
 template <typename T>
 double correntropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
-    double sigma)
+                   double sigma)
 {
     double retval=0;
     double K=-0.5/(sigma*sigma);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(x)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(x)
     {
-        double diff=DIRECT_A3D_ELEM(x,k,i,j)-DIRECT_A3D_ELEM(y,k,i,j);
+        double diff=DIRECT_MULTIDIM_ELEM(x,n)-DIRECT_MULTIDIM_ELEM(y,n);
         retval+=exp(K*diff*diff);
     }
     retval/=XSIZE(x)*YSIZE(x)*ZSIZE(x);
@@ -384,9 +383,9 @@ void best_shift(const MultidimArray< double >& I1,
  * will be sought where the mask is 1).
  */
 void best_nonwrapping_shift(const MultidimArray< double >& I1,
-                const MultidimArray< double >& I2,
-                double& shiftX,
-                double& shiftY);
+                            const MultidimArray< double >& I2,
+                            double& shiftX,
+                            double& shiftY);
 
 /** Align two images
 * @ingroup Filters
@@ -408,8 +407,8 @@ void alignImages(const MultidimArray< double >& Iref,
  * G(r,mu,sigma)=exp(-0.5 * (r-mu)^t sigma^-1 (r-mu))
  */
 double unnormalizedGaussian2D(const Matrix1D<double> &r,
-    const Matrix1D<double> &mu,
-    const Matrix2D<double> &sigmainv);
+                              const Matrix1D<double> &mu,
+                              const Matrix2D<double> &sigmainv);
 
 /** Fit Gaussian spot to an image.
  * @ingroup Filters
@@ -421,8 +420,8 @@ double unnormalizedGaussian2D(const Matrix1D<double> &r,
  * You can choose the number of iterations for the estiamtion.
  */
 void estimateGaussian2D(const MultidimArray<double> &I,
-    double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
-    bool estimateMu=true, int iterations=10);
+                        double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
+                        bool estimateMu=true, int iterations=10);
 
 /** euclidian distance nD
  * @ingroup Filters
@@ -1023,8 +1022,8 @@ void Smoothing_Shah(MultidimArray< double >& img,
  * The function returns the value of the regularization term.
  */
 double tomographicDiffusion(MultidimArray< double >& V,
-    const Matrix1D< double >& alpha, double lambda);
- 
+                            const Matrix1D< double >& alpha, double lambda);
+
 /** Rotational invariant moments
  * @ingroup Filters
  *
