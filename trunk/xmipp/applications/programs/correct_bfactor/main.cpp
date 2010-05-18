@@ -112,16 +112,9 @@ public:
     }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &vol, const Prog_parameters *prm)
 {
-    Correct_Bfactor_parameters *eprm = (Correct_Bfactor_parameters *) prm;
-    REPORT_ERROR(1,"B-factor correction for 2D images not implemented yet");
-
-    return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
+    vol().checkDimensionWithDebug(3,__FILE__,__LINE__);
     Correct_Bfactor_parameters *eprm = (Correct_Bfactor_parameters *) prm;
     FileName fn_guinier;
     fn_guinier = prm->fn_out + ".guinier";
@@ -133,6 +126,6 @@ bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 int main(int argc, char **argv)
 {
     Correct_Bfactor_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
 
