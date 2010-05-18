@@ -1366,6 +1366,30 @@ void MetaData::fillMetaData(MetaData &MD, std::vector<long int> objectsToAdd)
     this->objectsIterator = this->objects.begin();
 }
 
+void MetaData::importObjects(MetaData &base, int first, int last)
+{
+    if (!isColumnFormat)
+    {
+        REPORT_ERROR( -1, "Row formatted MetaData can not be added" );
+    }
+
+    activeLabels = base.activeLabels;
+    if (base.size()==0)
+    {
+        clear();
+        return;
+    }
+
+    first=XMIPP_MIN(first,base.size());
+    last=XMIPP_MIN(last,base.size());
+    for (int i = first; i <=last; i++)
+    {
+        long int idx = addObject();
+        this->objects[idx] = new MetaDataContainer(*(base.objects[i]));
+    }
+    objectsIterator = objects.begin();
+}
+
 MetaDataContainer * MetaData::getObject(const long int objectID) const
 {
     if (isEmpty())

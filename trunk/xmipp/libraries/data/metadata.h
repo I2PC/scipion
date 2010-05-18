@@ -298,6 +298,11 @@ public:
      */
     void fillMetaData(MetaData &base, std::vector<long int> objectsToAdd);
 
+    /** This method chooses a subset within a metadata.
+     * The first object is number 0.
+     */
+    void importObjects(MetaData &base, int first, int last);
+
     void combine(MetaData & other, MDLabel thisLabel = MDL_UNDEFINED);
     void combineWithFiles(MDLabel thisLabel);
 
@@ -359,7 +364,6 @@ public:
         }
         return result;
     }
-
 
     template<class T>
     std::vector<long int> findObjectsInRange(MDLabel name, T minValue, T maxValue)
