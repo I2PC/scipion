@@ -112,10 +112,10 @@ public:
     Matrix1D<double> centerOfMass, limit;
 
     /* Volume at a high sampling rate */
-    VolumeXmipp Vhigh;
+    Image<double> Vhigh;
 
     /* Volume at a low sampling rate */
-    VolumeXmipp Vlow;
+    Image<double> Vlow;
 
     /* Blob properties at the high sampling rate */
     void blob_properties() const;

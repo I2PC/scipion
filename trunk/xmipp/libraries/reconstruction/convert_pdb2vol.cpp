@@ -63,7 +63,7 @@ Prog_PDBPhantom_Parameters::Prog_PDBPhantom_Parameters()
     periodicTable(6, 1) = atomCharge("Fe");
 
     // Correct the atom weights by the blob weight
-    for (int i = 0; i < YSIZE(periodicTable); i++)
+    for (int i = 0; i < MAT_YSIZE(periodicTable); i++)
     {
         periodicTable(i, 1) /=
             basvolume(periodicTable(i, 0) / highTs, blob.alpha, blob.order, 3);
@@ -351,14 +351,14 @@ void Prog_PDBPhantom_Parameters::create_protein_at_low_sampling_rate()
 
     // Use Bsplines pyramid if possible
     int levels = FLOOR(log10((double)M) / log10(2.0) + XMIPP_EQUAL_ACCURACY);
-    Vhigh().pyramidReduce(Vlow(), levels);
+    pyramidReduce(BSPLINE3, Vlow(), Vhigh(), levels);
     current_Ts *= pow(2.0, levels);
     Vhigh.clear();
 
     // Now scale using Bsplines
     int new_output_dim = CEIL(XSIZE(Vlow()) * current_Ts / Ts);
-    Vlow().scaleToSizeBSpline(3, new_output_dim, new_output_dim, new_output_dim,
-                              Vhigh());
+    scaleToSize(BSPLINE3, Vhigh(), Vlow(),
+                       new_output_dim, new_output_dim, new_output_dim);
     Vlow() = Vhigh();
     Vlow().setXmippOrigin();
 
