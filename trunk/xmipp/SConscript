@@ -394,7 +394,6 @@ ReconsSources = [
     'convert_vol2pseudo.cpp',
     'correct_bfactor.cpp',
     'create_projection_library.cpp',
-#    'crystal_create_surface.cpp',
 #    'ctf_correct_amplitude2d.cpp',
 #    'ctf_correct_amplitude3d.cpp',
 #    'ctf_correct_idr.cpp',
@@ -546,7 +545,6 @@ AddXmippProgram('convert_vol2pseudo', ['XmippRecons'])
 AddXmippProgram('correct_bfactor', ['XmippRecons'])
 #AddXmippProgram('correlation')
 #AddXmippProgram('crystal_aph2img', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
-#AddXmippProgram('crystal_create_surface', ['XmippRecons'])
 #AddXmippProgram('crystal_euler2mrc', ['XmippInterface'])
 #AddXmippProgram('crystal_lattice_vectors')
 #AddXmippProgram('crystal_shear')
