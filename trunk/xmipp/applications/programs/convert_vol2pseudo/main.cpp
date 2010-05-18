@@ -23,7 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/volume.h>
 #include <data/args.h>
 #include <reconstruction/convert_vol2pseudo.h>
 
@@ -44,7 +43,7 @@ int main(int argc, char **argv)
     float minVoxel, maxVoxel, slope;
     float minCoord, maxCoord;
     int tmpCoord;
-    VolumeXmipp mask/*, vol_mask*/;
+    Image<double> mask/*, vol_mask*/;
     coordinates randomCoord;
     bool sampling = true;
     bool nomask = false;
@@ -52,7 +51,7 @@ int main(int argc, char **argv)
     int npoints;
 
     Prog_Convert_Vol2Pseudo prm;
-    bool newMode=false; 
+    bool newMode=false;
     // Read arguments
     try
     {
@@ -130,7 +129,8 @@ int main(int argc, char **argv)
         // Read spider volumen
 
         std::cout << std::endl << "reading volume " << vname << "......" << std::endl << std::endl;
-        VolumeXmipp V(vname);    // Reads the volumen
+        Image<double> V;     // Reads the volumen
+        V.read(vname);
         std::cout << V;      // Output Volumen Information
 
         // Read spider mask
@@ -144,15 +144,12 @@ int main(int argc, char **argv)
 
 
         // Extract the data
-
         V().setXmippOrigin();          // sets origin at the center of the volume.
         mask().setXmippOrigin();       // sets origin at the center of the mask.
-        VolumeXmipp vol_mask(V);
+        Image<double> vol_mask(V);
 
-    //  vol_mask().resize(V());       // Resizes volumen_mask.
+        //  vol_mask().resize(V());       // Resizes volumen_mask.
         vol_mask().setXmippOrigin();   // sets origin at the center of the volumen mask.
-
-
         std::cout << std::endl << "Finding minimum and maximum......" << std::endl;
 
         // Find Minimum and Maximum density values inside the mask.
@@ -264,7 +261,8 @@ int main(int argc, char **argv)
                     X = (int) rnd_unif(STARTINGX(vol_mask()), FINISHINGX(vol_mask()));
                     Y = (int) rnd_unif(STARTINGY(vol_mask()), FINISHINGY(vol_mask()));
                     Z = (int) rnd_unif(STARTINGZ(vol_mask()), FINISHINGZ(vol_mask()));
-                    if (VOLVOXEL(vol_mask, Z, Y, X) > rnd_unif()) found = true;
+                    if (VOLVOXEL(vol_mask, Z, Y, X) > rnd_unif())
+                        found = true;
                 }
                 while (!found);
                 std::vector <float> v;

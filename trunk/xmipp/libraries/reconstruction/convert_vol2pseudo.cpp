@@ -134,19 +134,20 @@ void Prog_Convert_Vol2Pseudo::produceSideInfo()
         fnOut=fnVol.without_extension();
     
     Vcurrent().initZeros(Vin());
-    mask_prm.generate_3Dmask(Vin());
+    mask_prm.generate_mask(Vin());
     
     sigma3=3*sigma;
     gaussianTable.resize(CEIL(sigma3*sqrt(3.0)*1000));
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(gaussianTable)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(gaussianTable)
         gaussianTable(i)=gaussian1D(i/1000.0,sigma);
     
     energyOriginal=0;
     double N=0;
     double minval=1e38, maxval=-1e38;
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(Vin())
+    const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(Vin())
     {
-        if (useMask && mask_prm.imask3D(k,i,j)==0) continue;
+        if (useMask && iMask3D(k,i,j)==0) continue;
         double v=Vin(k,i,j);
         energyOriginal+=v*v;
         minval=XMIPP_MIN(minval,v);
@@ -157,7 +158,7 @@ void Prog_Convert_Vol2Pseudo::produceSideInfo()
     
     Histogram1D hist;
     if (useMask)
-        compute_hist_within_binary_mask(mask_prm.imask3D, Vin(), hist,
+        compute_hist_within_binary_mask(iMask3D, Vin(), hist,
             minval, maxval, 200);
     else
         compute_hist(Vin(), hist, minval, maxval, 200);
@@ -193,21 +194,22 @@ void Prog_Convert_Vol2Pseudo::placeSeeds(int Nseeds)
     Filter.generate_mask(Vin());
     Filter.do_generate_3dmask=false;
  
-    Matrix3D<double> Vdiff=Vin();
+    MultidimArray<double> Vdiff=Vin();
     Vdiff-=Vcurrent();
     Filter.apply_mask_Space(Vdiff);
     
     // Place all seeds
     int rmax=3*sigma;
+    const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
     for (int n=0; n<Nseeds; n++)
     {
         // Look for the maximum error
         bool first=true;
         int kmax, imax, jmax;
         double maxVal;
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(Vdiff)
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(Vdiff)
         {
-            if (useMask && mask_prm.imask3D(k,i,j)==0) continue;
+            if (useMask && iMask3D(k,i,j)==0) continue;
             if (first || Vdiff(k,i,j)>maxVal)
             {
                 kmax=k;
@@ -264,7 +266,7 @@ void Prog_Convert_Vol2Pseudo::removeSeeds(int Nseeds)
     }        
     
     // Remove atoms from regions in which the error is too negative
-    Matrix3D<double> Vdiff=Vin();
+    MultidimArray<double> Vdiff=Vin();
     Vdiff-=Vcurrent();
     int alreadyRemoved=0;
     double vmin=Vdiff.computeMin();
@@ -279,11 +281,12 @@ void Prog_Convert_Vol2Pseudo::removeSeeds(int Nseeds)
                 // Search for a point within a negative region
                 bool found=false;
                 int kneg, ineg, jneg;
+                const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
                 for (int k=STARTINGZ(Vdiff); k<=FINISHINGZ(Vdiff) && !found; k++)
                     for (int i=STARTINGY(Vdiff); i<=FINISHINGY(Vdiff) && !found; i++)
                         for (int j=STARTINGX(Vdiff); j<=FINISHINGX(Vdiff) && !found; j++)
                         {
-                            if (useMask && mask_prm.imask3D(k,i,j)==0) continue;
+                            if (useMask && iMask3D(k,i,j)==0) continue;
                             if (Vdiff(k,i,j)<v)
                             {
                                 kneg=k;
@@ -390,9 +393,10 @@ void Prog_Convert_Vol2Pseudo::drawApproximation()
     energyDiff=0;
     double N=0;
     percentageDiff=0;
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(Vcurrent())
+    const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(Vcurrent())
     {
-        if (useMask && mask_prm.imask3D(k,i,j)==0) continue;
+        if (useMask && iMask3D(k,i,j)==0) continue;
         double Vinv=Vin(k,i,j);
         if (Vinv<=0) continue;
         double vdiff=Vinv-Vcurrent(k,i,j);
@@ -407,7 +411,7 @@ void Prog_Convert_Vol2Pseudo::drawApproximation()
 
 /* Gaussian operations ----------------------------------------------------- */
 double Prog_Convert_Vol2Pseudo::computeAverage(int k, int i, int j,
-    Matrix3D<double> &V)
+		MultidimArray<double> &V)
 {
     int k0=XMIPP_MAX(STARTINGZ(V),k-sigma3);
     int i0=XMIPP_MAX(STARTINGY(V),i-sigma3);
@@ -424,7 +428,7 @@ double Prog_Convert_Vol2Pseudo::computeAverage(int k, int i, int j,
 }
 
 void Prog_Convert_Vol2Pseudo::drawGaussian(double k, double i, double j,
-    Matrix3D<double> &V, double intensity)
+		MultidimArray<double> &V, double intensity)
 {
     int k0=CEIL(XMIPP_MAX(STARTINGZ(V),k-sigma3));
     int i0=CEIL(XMIPP_MAX(STARTINGY(V),i-sigma3));
@@ -442,14 +446,14 @@ void Prog_Convert_Vol2Pseudo::drawGaussian(double k, double i, double j,
             {
                 double r=sqrt(diffiikk2+(jj-j)*(jj-j));
                 V(kk,ii,jj)+=intensity*
-                    DIRECT_VEC_ELEM(gaussianTable,ROUND(r*1000));
+                    DIRECT_A1D_ELEM(gaussianTable,ROUND(r*1000));
             }
         }
     }
 }
 
 void Prog_Convert_Vol2Pseudo::extractRegion(int idxGaussian,
-    Matrix3D<double> &region, bool extended) const
+		MultidimArray<double> &region, bool extended) const
 {
     double k=atoms[idxGaussian].location(0);
     double i=atoms[idxGaussian].location(1);
@@ -476,16 +480,17 @@ void Prog_Convert_Vol2Pseudo::extractRegion(int idxGaussian,
                 region(k,i,j)=Vcurrent(k,i,j);
 }
 
-double Prog_Convert_Vol2Pseudo::evaluateRegion(const Matrix3D<double> &region)
+double Prog_Convert_Vol2Pseudo::evaluateRegion(const MultidimArray<double> &region)
     const 
 {
     double avgDiff=0;
     double N=0;
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(region)
+    const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(region)
     {
         double Vinv=Vin(k,i,j);
         if (Vinv<=0) continue;
-        if (useMask && mask_prm.imask3D(k,i,j)==0) continue;
+        if (useMask && iMask3D(k,i,j)==0) continue;
         double vdiff=region(k,i,j)-Vinv;
         double vperc=(vdiff<0)?-vdiff:penalty*vdiff;
         avgDiff+=vperc;
@@ -494,10 +499,10 @@ double Prog_Convert_Vol2Pseudo::evaluateRegion(const Matrix3D<double> &region)
     return avgDiff/(N*range);
 }
 
-void Prog_Convert_Vol2Pseudo::insertRegion(const Matrix3D<double> &region)
+void Prog_Convert_Vol2Pseudo::insertRegion(const MultidimArray<double> &region)
 {
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(region)
-        Vcurrent(k,i,j)=VOL_ELEM(region,k,i,j);
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(region)
+        Vcurrent(k,i,j)=A3D_ELEM(region,k,i,j);
 }
 
 /* Optimize ---------------------------------------------------------------- */
@@ -512,7 +517,7 @@ void* Prog_Convert_Vol2Pseudo::optimizeCurrentAtomsThread(
     std::vector< PseudoAtom > &atoms=parent->atoms;
     bool allowIntensity=parent->allowIntensity;
     bool allowMovement=parent->allowMovement;
-    Matrix3D<double> region, regionBackup;
+    MultidimArray<double> region, regionBackup;
     
     barrier_t *barrier=&(parent->barrier);
     do
@@ -667,9 +672,9 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     Vcurrent.write(fnOut+"_approximation.vol");
 
     // Compute the histogram of intensities
-    Matrix1D<double> intensities;
+    MultidimArray<double> intensities;
     intensities.initZeros(atoms.size());
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(intensities)
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(intensities)
         intensities(i)=atoms[i].intensity;
     Histogram1D hist;
     compute_hist(intensities, hist, 0, intensities.computeMax(), 100);
@@ -677,7 +682,7 @@ void Prog_Convert_Vol2Pseudo::writeResults()
 
     // Compute the histogram of distances
     int Natoms=atoms.size();
-    Matrix1D<double> NclosestDistances;
+    MultidimArray<double> NclosestDistances;
     NclosestDistances.resize((Natoms-1)*Nclosest);
     for (int i=0; i<Natoms; i++)
     {
@@ -714,11 +719,12 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     hist.write(fnOut+"_distance.hist");
 
     // Save the difference
-    VolumeXmipp Vdiff;
+    Image<double> Vdiff;
     Vdiff()=Vin()-Vcurrent();
-    if (useMask && XSIZE(mask_prm.imask3D)!=0)
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(Vdiff())
-            if (!mask_prm.imask3D(k,i,j))
+    const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
+    if (useMask && XSIZE(iMask3D)!=0)
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(Vdiff())
+            if (!iMask3D(k,i,j))
                 Vdiff(k,i,j)=0;
     Vdiff.write(fnOut+"_rawDiff.vol");
     

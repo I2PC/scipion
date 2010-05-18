@@ -27,7 +27,7 @@
 #ifndef _CONVERT_VOL2PSEUDO_HH
 #define _CONVERT_VOL2PSEUDO_HH
 
-#include <data/volume.h>
+#include <data/image.h>
 #include <data/mask.h>
 #include <data/threads.h>
 #include <vector>
@@ -148,24 +148,24 @@ public:
     void removeTooCloseSeeds();
 
     /// Compute average of a volume
-    double computeAverage(int k, int i, int j, Matrix3D<double> &V);
+    double computeAverage(int k, int i, int j, MultidimArray<double> &V);
 
     /// Draw a Gaussian on a volume
-    void drawGaussian(double k, double i, double j, Matrix3D<double> &V,
+    void drawGaussian(double k, double i, double j, MultidimArray<double> &V,
         double intensity);
 
     /// Draw approximation
     void drawApproximation();
 
     /// Extract region around a Gaussian
-    void extractRegion(int idxGaussian, Matrix3D<double> &region,
+    void extractRegion(int idxGaussian, MultidimArray<double> &region,
         bool extended=false) const;
 
     /// Insert region
-    void insertRegion(const Matrix3D<double> &region);
+    void insertRegion(const MultidimArray<double> &region);
 
     /// Evaluate region
-    double evaluateRegion(const Matrix3D<double> &region) const;
+    double evaluateRegion(const MultidimArray<double> &region) const;
 
     /// Optimize current atoms
     void optimizeCurrentAtoms();
@@ -177,10 +177,10 @@ public:
     void writeResults();
 public:
     // Input volume
-    VolumeXmipp Vin;
+    Image<double> Vin;
     
     // Current approximation volume
-    VolumeXmipp Vcurrent;
+    Image<double> Vcurrent;
     
     // Energy of the difference
     double energyDiff;
@@ -207,7 +207,7 @@ public:
     double smallAtom;
 
     // Gaussian table
-    Matrix1D<double> gaussianTable;
+    MultidimArray<double> gaussianTable;
     
     // Barrier
     barrier_t barrier;
