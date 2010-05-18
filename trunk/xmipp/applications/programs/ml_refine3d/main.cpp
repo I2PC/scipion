@@ -128,8 +128,12 @@ int main(int argc, char **argv)
                     }
                 }
 
+				// Apply average scale correction
                 if (ML2D_prm.do_norm)
                     ML2D_prm.correctScaleAverage(prm.nr_projections);
+
+                // Write out 2D reference images (to be used in reconstruction)
+                ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_REFS);
 
                 // Jump out before 3D reconstruction
                 // (Useful for some parallelization protocols)
@@ -152,7 +156,7 @@ int main(int argc, char **argv)
 
             // Write output ML2D files
             ML2D_prm.addPartialDocfileData(ML2D_prm.docfiledata, ML2D_prm.myFirstImg, ML2D_prm.myLastImg);
-            ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_ITER);
+            ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_IMGS);
             prm.concatenate_selfiles(ML2D_prm.iter);
 
         } // end loop iterations
