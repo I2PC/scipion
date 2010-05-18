@@ -815,36 +815,23 @@ const
 /* Draw in                                                                   */
 /* ------------------------------------------------------------------------- */
 /* Corners ----------------------------------------------------------------- */
-void Feature::corners(const Image<double> *V, Matrix1D<double> &corner1,
+void Feature::corners(const MultidimArray<double> &V, Matrix1D<double> &corner1,
                       Matrix1D<double> &corner2)
 {
     corner1.resize(3);
     corner2.resize(3);
-    XX(corner1) = XMIPP_MAX(FLOOR(XX(Center) - max_distance), STARTINGX(VOLMATRIX(*V)));
-    YY(corner1) = XMIPP_MAX(FLOOR(YY(Center) - max_distance), STARTINGY(VOLMATRIX(*V)));
-    ZZ(corner1) = XMIPP_MAX(FLOOR(ZZ(Center) - max_distance), STARTINGZ(VOLMATRIX(*V)));
-    XX(corner2) = XMIPP_MIN(CEIL(XX(Center) + max_distance), FINISHINGX(VOLMATRIX(*V)));
-    YY(corner2) = XMIPP_MIN(CEIL(YY(Center) + max_distance), FINISHINGY(VOLMATRIX(*V)));
-    ZZ(corner2) = XMIPP_MIN(CEIL(ZZ(Center) + max_distance), FINISHINGZ(VOLMATRIX(*V)));
-
-#ifdef PORSI
-    array_by_scalar(Center, max_distance, corner1, '-');
-    array_by_scalar(Center, max_distance, corner2, '+');
-    corner1 = FLOORnD(corner1);
-    corner2 = CEILnD(corner2);
-    XX(corner1) = XMIPP_MAX(XX(corner1), STARTINGX(VOLMATRIX(*V)));
-    YY(corner1) = XMIPP_MAX(YY(corner1), STARTINGY(VOLMATRIX(*V)));
-    ZZ(corner1) = XMIPP_MAX(ZZ(corner1), STARTINGZ(VOLMATRIX(*V)));
-    XX(corner2) = XMIPP_MIN(XX(corner2), FINISHINGX(VOLMATRIX(*V)));
-    YY(corner2) = XMIPP_MIN(YY(corner2), FINISHINGY(VOLMATRIX(*V)));
-    ZZ(corner2) = XMIPP_MIN(ZZ(corner2), FINISHINGZ(VOLMATRIX(*V)));
-#endif
+    XX(corner1) = XMIPP_MAX(FLOOR(XX(Center) - max_distance), STARTINGX(V));
+    YY(corner1) = XMIPP_MAX(FLOOR(YY(Center) - max_distance), STARTINGY(V));
+    ZZ(corner1) = XMIPP_MAX(FLOOR(ZZ(Center) - max_distance), STARTINGZ(V));
+    XX(corner2) = XMIPP_MIN(CEIL(XX(Center) + max_distance), FINISHINGX(V));
+    YY(corner2) = XMIPP_MIN(CEIL(YY(Center) + max_distance), FINISHINGY(V));
+    ZZ(corner2) = XMIPP_MIN(CEIL(ZZ(Center) + max_distance), FINISHINGZ(V));
 }
 
 /* Draw a feature ---------------------------------------------------------- */
 //#define DEBUG
-#define Vr VOLVOXEL((*V),(int)ZZ(r),(int)YY(r),(int)XX(r))
-void Feature::draw_in(Image<double> *V, int colour_mode, double colour)
+#define Vr A3D_ELEM(V,(int)ZZ(r),(int)YY(r),(int)XX(r))
+void Feature::draw_in(MultidimArray<double> &V, int colour_mode, double colour)
 {
     Matrix1D<double>   aux1(3), aux2(3), corner1(3), corner2(3), r(3);
     int               add;
@@ -888,7 +875,7 @@ void Feature::draw_in(Image<double> *V, int colour_mode, double colour)
             else     Vr  = XMIPP_MAX(drawing_colour, Vr);
 #ifdef DEBUG
             if (condition)
-                std::cout << "   V(r)=" << VOLVOXEL((*V), (int)ZZ(r), (int)YY(r), (int)XX(r));
+                std::cout << "   V(r)=" << VOLVOXEL(V, (int)ZZ(r), (int)YY(r), (int)XX(r));
 #endif
         }
 #ifdef DEBUG
@@ -900,7 +887,7 @@ void Feature::draw_in(Image<double> *V, int colour_mode, double colour)
 #undef DEBUG
 
 /* Sketch a feature -------------------------------------------------------- */
-void Feature::sketch_in(Image<double> *V, double colour)
+void Feature::sketch_in(MultidimArray<double> &V, double colour)
 {
     Matrix1D<double>   aux1(3), aux2(3), corner1(3), corner2(3), r(3);
     int               inside;
@@ -910,7 +897,7 @@ void Feature::sketch_in(Image<double> *V, double colour)
     {
         inside = voxel_inside(r, aux1, aux2);
         if (inside != 0 && inside != 8)
-            VOLVOXEL((*V), (int)ZZ(r), (int)YY(r), (int)XX(r)) = colour;
+            A3D_ELEM(V, (int)ZZ(r), (int)YY(r), (int)XX(r)) = colour;
     }
 }
 
@@ -2112,22 +2099,22 @@ int Phantom::any_feature_intersects_sphere(const Matrix1D<double> &r,
 
 /* Draw a Phantom ---------------------------------------------------------- */
 // Always suppose CC grid
-void Phantom::draw_in(Image<double> *V)
+void Phantom::draw_in(MultidimArray<double> &V)
 {
-    (*V)().resize(zdim, ydim, xdim);
-    (*V)().setXmippOrigin();
-    (*V)().initConstant(Background_Density);
+    V.resize(zdim, ydim, xdim);
+    V.setXmippOrigin();
+    V.initConstant(Background_Density);
     for (int i = 0; i < VF.size(); i++) VF[i]->draw_in(V);
 }
 
 /* Label a Phantom --------------------------------------------------------- */
 // Always suppose CC grid
-void Phantom::label(Image<double> *V)
+void Phantom::label(MultidimArray<double> &V)
 {
     Matrix1D<double> r(3), aux1(3), aux2(3);
-    (*V)().resize(zdim, ydim, xdim);
-    (*V)().setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(VOLMATRIX(*V))
+    V.resize(zdim, ydim, xdim);
+    V.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
     {
         ZZ(r) = k;
         YY(r) = i;
@@ -2137,18 +2124,18 @@ void Phantom::label(Image<double> *V)
         // inside the feature, if not set it to border.
         if (sel_feat != 0)
             if (VF[sel_feat-1]->voxel_inside(r, aux1, aux2) != 8) sel_feat = -sel_feat;
-        VOLVOXEL(*V, k, i, j) = sel_feat;
+        A3D_ELEM(V, k, i, j) = sel_feat;
     }
 }
 
 /* Sketch a Phantom -------------------------------------------------------- */
 // Always suppose CC grid
-void Phantom::sketch_in(Image<double> *V, int clean, double colour)
+void Phantom::sketch_in(MultidimArray<double> &V, int clean, double colour)
 {
     if (clean) 
     {
-        (*V)().resize(zdim, ydim, xdim);
-        (*V)().setXmippOrigin();
+        V.resize(zdim, ydim, xdim);
+        V.setXmippOrigin();
     }
     for (int i = 0; i < VF.size(); i++) VF[i]->sketch_in(V, colour);
 }

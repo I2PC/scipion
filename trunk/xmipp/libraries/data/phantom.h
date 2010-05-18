@@ -275,7 +275,7 @@ public:
         return intersection(direction, passing_point, r, u);
     }
 
-    /** Volume of the feature in (voxel units)³ , VIRTUAL!!!.
+    /** Volume of the feature in (voxel units)ï¿½ , VIRTUAL!!!.
         This function returns the volume of each feature supposing that a voxel
         is of size 1x1x1. */
     virtual double volume() const = 0;
@@ -320,7 +320,7 @@ public:
                     ...
         }
         @endcode*/
-    void corners(const Image<double> *V, Matrix1D<double> &corner1,
+    void corners(const MultidimArray<double> &V, Matrix1D<double> &corner1,
                  Matrix1D<double> &corner2);
 
 #define INTERNAL 0
@@ -344,12 +344,12 @@ public:
         The volume is not cleaned at the beginning.
         \\ Ex:
         @code
-        f.draw_in(&V)              --> Internal density
-        f.draw_in(&V,INTERNAL,0.5) --> Internal density, 0.5 is discarded
-        f.draw_in(&V,EXTERNAL,0.5) --> External density=0.5
+        f.draw_in(V)              --> Internal density
+        f.draw_in(V,INTERNAL,0.5) --> Internal density, 0.5 is discarded
+        f.draw_in(V,EXTERNAL,0.5) --> External density=0.5
         @endcode
     */
-    void draw_in(Image<double> *V, int color_mode = INTERNAL, double colour = -1);
+    void draw_in(MultidimArray<double> &V, int color_mode = INTERNAL, double colour = -1);
 
     /** Draw the surface of the feature.
         This function draws the surface of the feature at the given volume.
@@ -357,7 +357,7 @@ public:
         inside the feature meets 1<=n<=7. The default gray_level with which
         voxels will be drawn is 2 (normally higher than the usual volume grey
         levels, and the behaviour of the voxels drawn is Assign. */
-    void sketch_in(Image<double> *V, double colour = 2);
+    void sketch_in(MultidimArray<double> &V, double colour = 2);
 
     /** Shift.
         Shift the feature a given amount of voxels. The new center is the old
@@ -1543,7 +1543,7 @@ public:
         The volume is cleaned, resized to the phantom size and its origin
         is set at the center of the volume. Then every feature is drawn into
         the volume */
-    void draw_in(Image<double> *V);
+    void draw_in(MultidimArray<double> &V);
 
     /** Label a volume after the phantom.
         The volume is cleaned, resized to the phantom size and its origin
@@ -1552,7 +1552,7 @@ public:
         the border for first feature density -1,
         the first feature has got density 1, the second 2 and its border -2,
         ... */
-    void label(Image<double> *V);
+    void label(MultidimArray<double> &V);
 
 #define DONT_CLEAN 0
 #define CLEAN      1
@@ -1564,7 +1564,7 @@ public:
         to the labels CLEAN or DONT_CLEAN (by default). The grey level for
         those voxels can be defined (by default, 2) and the colour is
         assigned */
-    void sketch_in(Image<double> *V, int clean = DONT_CLEAN, double colour = 2);
+    void sketch_in(MultidimArray<double> &V, int clean = DONT_CLEAN, double colour = 2);
 
     /** Shift.
         Shift all features in the phantom a given amount of voxels. See
