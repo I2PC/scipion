@@ -221,7 +221,7 @@ void Prog_angular_class_average_prm::produceSideInfo()
     if (do_limitR0 || do_limitRF)
     {
         std::vector<double> vals;
-        MetaDataLabel codifyLabel=MetaDataContainer::codifyLabel(col_select);
+        MDLabel codifyLabel=MDL::str2Label(col_select);
         FOR_ALL_OBJECTS_IN_METADATA(DF)
         {
             double auxval;
@@ -556,7 +556,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
         {
             bool is_selected = true;
             double auxval;
-            DF.getValue(MetaDataContainer::codifyLabel(col_select),auxval);
+            DF.getValue(MDL::str2Label(col_select),auxval);
             if (do_limit0)
             {
                 if (auxval < limit0)
@@ -785,18 +785,33 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
     // Write docfiles with angles and weights of all classes
     fn_tmp=fn_out+"_classes.doc";
     if (do_add && exists(fn_tmp))
-        DFclasses.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
-    DFclasses.write(fn_tmp);
+    {
+		MetaData MDaux;
+		MDaux.read(fn_tmp);
+		MDaux.unionAll(SFclasses);
+		SFclasses.aggregate(MDaux,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
+    }
+    SFclasses.write(fn_tmp);
     if (do_split)
     {
         fn_tmp=fn_out1+"_classes.doc";
         if (do_add && exists(fn_tmp))
-            DFclasses1.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
-        DFclasses1.write(fn_tmp);
+        {
+    		MetaData MDaux;
+    		MDaux.read(fn_tmp);
+    		MDaux.unionAll(SFclasses1);
+    		SFclasses1.aggregate(MDaux,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
+        }
+        SFclasses1.write(fn_tmp);
         fn_tmp=fn_out2+"_classes.doc";
         if (do_add && exists(fn_tmp))
-            DFclasses2.merge(fn_tmp,DOCMERGE_SUM_COLUMN,5);
-        DFclasses2.write(fn_tmp);
+        {
+    		MetaData MDaux;
+    		MDaux.read(fn_tmp);
+    		MDaux.unionAll(SFclasses2);
+    		SFclasses2.aggregate(MDaux,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
+        }
+        SFclasses2.write(fn_tmp);
     }
 
     // Write docfile with data for all realigned individual images

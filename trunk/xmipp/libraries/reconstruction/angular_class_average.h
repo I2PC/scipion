@@ -75,8 +75,6 @@ public:
     MultidimArray<double> Mwien;
     /** Selfiles containing all class averages */
     MetaData         SFclasses, SFclasses1, SFclasses2;
-    /** Docfiles containing information about all class averages */
-    MetaData         DFclasses, DFclasses1, DFclasses2;
 
     /** Re-alignment of classes */
 

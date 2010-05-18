@@ -25,42 +25,12 @@
 
 #include <data/args.h>
 #include <data/image.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
-#include <reconstruction/angular_class_average.h>
 #include <data/metadata.h>
+#include <reconstruction/angular_class_average.h>
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
-/*
-	MetaDataContainer mdc1;
-	mdc1.addValue(MDL_IMAGE,std::string("imag"));
-	mdc1.addValue(MDL_ANGLEPSI,2.3);
-	std::cerr<<"before" << std::endl;
-	MetaDataContainer mdc2 (mdc1);
-    double * resultd = (double *)mdc2.getValue( MDL_ANGLEPSI );
-	std::cout<< "psi1= " << *resultd<<std::endl;
-	mdc1.addValue(MDL_ANGLEPSI,3.14);
-    resultd = (double *)mdc2.getValue( MDL_ANGLEPSI );
-	std::cout<< "psi2= " << *resultd <<std::endl;
-    resultd = (double *)mdc1.getValue( MDL_ANGLEPSI );
-	std::cout<< "mdc1.psi2= " << *resultd <<std::endl;
-
-	//std::string * results = (std::string *)mdc2.getValue( MDL_IMAGE );
-	//std::cout<< "image= " << *results;
-
-	MetaData MD1,MD2;
-	FileName infile("a.doc");
-	MD1.read(infile);
-    MD2=MD1;
-    MD1.setAnglePsi(3.1234);
-    MD2.write("cc.doc");
-    MD1.write("ccc.doc");
-	exit(1);
-
-*/
-
     Prog_angular_class_average_prm  prm;
 
     int              i, nmax, nr_ref, nr_images, reserve;
@@ -82,10 +52,9 @@ int main(int argc, char **argv)
             FileName fn_tmp=prm.fn_out+".doc";
             if (exists(fn_tmp)) 
             {
-                DocFile DFaux = prm.DF;
+                MetaData DFaux = prm.DF;
                 // Don't do any fancy merging or sorting because those functions are really slow... 
-                DFaux.append(fn_tmp);
-                DFaux.remove_multiple_strings("Headerinfo");
+                DFaux.merge(fn_tmp);
                 DFaux.write(fn_tmp);
             }
             else
@@ -107,11 +76,11 @@ int main(int argc, char **argv)
     {
 
         // Reserve memory for output from class realignment
-        if (prm.nr_iter > 0) reserve = prm.DF.dataLineNo();
+        if (prm.nr_iter > 0) reserve = prm.DF.size();
         else reserve = 0;
         double output_values[AVG_OUPUT_SIZE*reserve+1];
 
-        nr_ref = prm.DFlib.dataLineNo();
+        nr_ref = prm.DFlib.size();
         init_progress_bar(nr_ref);
 
         // Loop over all classes
@@ -136,15 +105,15 @@ int main(int argc, char **argv)
                     int this_image = ROUND(output_values[i*AVG_OUPUT_SIZE+5]);
                     if (!(this_image < 0))
                     {
-                        prm.DF.locate(this_image);
-                        prm.DF.set(0,output_values[i*AVG_OUPUT_SIZE+6]);
-                        prm.DF.set(1,output_values[i*AVG_OUPUT_SIZE+7]);
-                        prm.DF.set(2,output_values[i*AVG_OUPUT_SIZE+8]);
-                        prm.DF.set(3,output_values[i*AVG_OUPUT_SIZE+9]);
-                        prm.DF.set(4,output_values[i*AVG_OUPUT_SIZE+10]);
-                        prm.DF.set(5,output_values[i*AVG_OUPUT_SIZE+11]);
-                        prm.DF.set(6,output_values[i*AVG_OUPUT_SIZE+12]);
-                        prm.DF.set(7,output_values[i*AVG_OUPUT_SIZE+13]);
+                        prm.DF.goToFirstObject(MDL_IMAGE,this_image);
+                        prm.DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6]);
+                        prm.DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7]);
+                        prm.DF.setValue(MDL_ANGLEPSI,output_values[i*AVG_OUPUT_SIZE+8]);
+                        prm.DF.setValue(MDL_SHIFTX,output_values[i*AVG_OUPUT_SIZE+9]);
+                        prm.DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10]);
+                        prm.DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11]);
+                        prm.DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12]);
+                        prm.DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+13]);
                     }
                 }
             }
@@ -156,11 +125,9 @@ int main(int argc, char **argv)
         
         // Write selfiles and docfiles with all class averages
         prm.finalWriteToDisc();
-
     }
     catch (Xmipp_error XE)
     {
         std::cout << XE;
     }
-
 }
