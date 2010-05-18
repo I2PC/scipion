@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     FileName          fn_phantom;
     FileName          fn_vol;
     Phantom           phantom;
-    VolumeXmipp       vol;
+    Image<double>     vol;
 
     // Read Parameters ......................................................
     try
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
         phantom.read(fn_phantom);
 
         // Generate volume and write .........................................
-        phantom.draw_in(&vol);
+        phantom.draw_in(vol());
         vol.write(fn_vol);
     }
     catch (Xmipp_error XE)
@@ -81,34 +81,3 @@ void Usage(char *argv[])
         , argv[0]);
     exit(1);
 }
-
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Create_phantom {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Create_phantom/Help/create_phantom.html";
-      help="Produces a 3D volume from a phantom mathematical description";
-      OPEN MENU menu_create_phantom;
-      COMMAND LINES {
- + usual: create_phantom -i $FILE_IN -o $FILE_OUT
-      }
-      PARAMETER DEFINITIONS {
-        $FILE_IN {
-    label="Phantom Description file";
-    help="This file has got a complex structure, better see
-                 the Web help";
-    type=file existing;
- }
-        $FILE_OUT {
-    label="Output Volume file";
-    help="Xmipp format";
-    type=file;
- }
-      }
-   }
-
-   MENU menu_create_phantom {
-      "Compulsory variables"
-      $FILE_IN
-      $FILE_OUT
-   }
-*/
