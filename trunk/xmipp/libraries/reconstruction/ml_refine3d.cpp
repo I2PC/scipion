@@ -372,7 +372,7 @@ void Prog_Refine3d_prm::project_reference_volume(MetaData &SFlib, int rank, int 
 {
 
     Image<double>                vol;
-    FileName                      fn_proj, fn_tmp;
+    FileName                      fn_proj, fn_tmp, fn_vol;
     Projection                    proj;
     double                       rot, tilt, psi = 0.;
     int                           nvol, nl, nr_dir, my_rank;
@@ -396,12 +396,11 @@ void Prog_Refine3d_prm::project_reference_volume(MetaData &SFlib, int rank, int 
     nvol = 0;
     nr_dir = 0;
     fn_tmp = fn_root + "_lib";
-    SFvol.write("tt.xmd");
 
     FOR_ALL_OBJECTS_IN_METADATA(SFvol)
     {
-        SFvol.getValue(MDL_IMAGE, fn_tmp);
-        vol.read(fn_tmp);
+        SFvol.getValue(MDL_IMAGE, fn_vol);
+        vol.read(fn_vol);
         vol().setXmippOrigin();
 
         for (int ilib = 0; ilib < nr_projections; ilib++)
