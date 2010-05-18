@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     int                         c, volno, converged = 0, argc2 = 0;
     char                        **argv2=NULL;
     double                      convv, aux;
-    FileName                    fnt;
+    FileName                     fnt;
 
     // For parallelization
     int rank, size, num_img_tot;
@@ -71,6 +71,10 @@ int main(int argc, char **argv)
         else
             prm.remake_SFvol(prm.istart - 1, false, false);
         MPI_Barrier(MPI_COMM_WORLD);
+
+        // Check that there are enough computing nodes
+        if (prm.Nvols > size)
+        	REPORT_ERROR(1, "mpi_MLrefine3D requires that you use more MPI nodes than reference volumes");
 
         // Read and set general MLalign2D-stuff
         ML2D_prm.read(argc2, argv2, true);
@@ -194,8 +198,14 @@ int main(int argc, char **argv)
                     }
                 }
 
+				// Apply average scale correction
                 if (ML2D_prm.do_norm)
                     ML2D_prm.correctScaleAverage(prm.nr_projections);
+
+                // Write out 2D reference images (to be used in reconstruction)
+                if (IS_MASTER)
+                    ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_REFS);
+                MPI_Barrier(MPI_COMM_WORLD);
 
                 // Jump out before 3D reconstruction
                 // (Useful for some parallelization protocols)
@@ -263,7 +273,7 @@ int main(int argc, char **argv)
                 }
 
                 // Output all intermediate files
-                ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_ITER);
+                ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_IMGS);
                 prm.concatenate_selfiles(ML2D_prm.iter);
             }
             MPI_Barrier(MPI_COMM_WORLD);
