@@ -31,7 +31,7 @@
 /* Read from command line ================================================== */
 void Prog_Project_XR_Parameters::read(int argc, char **argv)
 {
-    fn_proj_param = getParameter(argc, argv, "-i");
+    fn_proj_param = getParameter(argc, argv, "-i", "");
     fn_sel_file   = getParameter(argc, argv, "-o", "");
     fn_psf_xr   = getParameter(argc, argv, "-psf", "");
     only_create_angles = checkParameter(argc, argv, "-only_create_angles");
@@ -64,6 +64,11 @@ void Projection_XR_Parameters::read(const FileName &fn_proj_param)
     char    line[201];
     int     lineNo = 0;
     char    *auxstr;
+
+    if (fn_proj_param=="")
+    	REPORT_ERROR(3005,
+                        (std::string)"Projection_XR_Parameters::read: There is no parameters file.");
+
 
     if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
         REPORT_ERROR(3005,
@@ -194,7 +199,7 @@ int PROJECT_XR_Effectively_project(
     SF.clear();
     std::cerr << "Projecting ...\n";
     if (!(prm.tell&TELL_SHOW_ANGLES))
-        init_progress_bar(expectedNumProjs);
+        init_progress_bar(expectedNumProjs*side.phantomVol().zdim);
     //    SF.reserve(expectedNumProjs);
     MetaData DF_movements;
     DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
@@ -316,6 +321,13 @@ int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
 {
     randomize_random_generator();
 
+    // Read Microscope optics parameters and produce side information
+    XmippXRPSF psf;
+    psf.verbose = prm.verbose;
+    psf.read(prm.fn_psf_xr);
+    psf.produceSideInfo();
+
+
     // Read projection parameters and produce side information
     Projection_XR_Parameters proj_prm;
     proj_prm.read(prm.fn_proj_param);
@@ -323,11 +335,7 @@ int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
     PROJECT_XR_Side_Info side;
     side.produce_Side_Info(proj_prm, prm);
 
-    // Read Microscope optics parameters and produce side information
-    XmippXRPSF psf;
-    psf.verbose = prm.verbose;
-    psf.read(prm.fn_psf_xr);
-    psf.produceSideInfo();
+
     psf.adjustParam(side.phantomVol);
 
     // Project
