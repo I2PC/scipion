@@ -198,7 +198,7 @@ int main(int argc, char **argv)
             converged = prm.checkConvergence();
 
             // Write intermediate files 
-            if (rank != 0)
+            if (!IS_MASTER)
             {
                 // All slaves send docfile data to the master
                 int s_size = MULTIDIM_SIZE(prm.docfiledata);

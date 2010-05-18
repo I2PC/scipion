@@ -31,7 +31,6 @@ int main(int argc, char **argv)
     char                        **argv2=NULL;
     Prog_Refine3d_prm           prm;
     Prog_MLalign2D_prm          ML2D_prm;
-    bool                       converged=false;
     FileName                    fnt;
 
     // Set to false for ML3D
@@ -76,6 +75,7 @@ int main(int argc, char **argv)
 
     try
     {
+        Model_MLalign2D block_model(ML2D_prm.model.n_ref);
 
         // Loop over all iterations
         for (ML2D_prm.iter = ML2D_prm.istart; !converged && ML2D_prm.iter <= ML2D_prm.Niter; ML2D_prm.iter++)
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
             } // end loop blocks
 
             // Check convergence
-            converged = prm.check_convergence(ML2D_prm.iter);
+            converged = (prm.check_convergence(ML2D_prm.iter)) ? 1 :0;
 
             // Write output ML2D files
             ML2D_prm.addPartialDocfileData(ML2D_prm.docfiledata, ML2D_prm.myFirstImg, ML2D_prm.myLastImg);
