@@ -715,6 +715,13 @@ public:
 
     /** Get binary mask
      */
+    const MultidimArray< int >& get_binary_mask() const
+    {
+        return imask;
+    }
+
+    /** Get binary mask
+     */
     MultidimArray< int >& get_binary_mask()
     {
         return imask;
@@ -725,6 +732,13 @@ public:
     void set_binary_mask(MultidimArray< int >& _imask)
     {
         imask = _imask;
+    }
+
+    /** Get continuous mask
+     */
+    const MultidimArray< double >& get_cont_mask() const
+    {
+        return dmask;
     }
 
     /** Get continuous mask
