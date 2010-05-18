@@ -2927,31 +2927,30 @@ public:
 
     //ROB Comment YY,XX is for matrix1d not multidim array
     //I comment this routine till is properlly rewritten
-#ifdef    isCorner
     bool isCorner(const Matrix1D< double >& v) const
     {
         if (v.size() < 2)
             REPORT_ERROR(1, "isCorner: index vector has got not enough components");
 
         else if (XSIZE(*this)==2)
-            return ((XX(*this) == STARTINGX(*this)  && YY(*this) == STARTINGY(*this))  ||
-                    (XX(*this) == STARTINGX(*this)  && YY(*this) == FINISHINGY(*this)) ||
-                    (XX(*this) == FINISHINGX(*this) && YY(*this) == STARTINGY(*this))  ||
-                    (XX(*this) == FINISHINGX(*this) && YY(*this) == FINISHINGY(*this)));
+            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this)) ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this))  ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this)));
         else if (XSIZE(*this)==3)
-            return ((XX(*this) == STARTINGX(*this)  && YY(*this) == STARTINGY(*this) && ZZ(*this) == STARTINGZ(*this)) ||
-                    (XX(*this) == STARTINGX(*this)  && YY(*this) == FINISHINGY(*this) && ZZ(*this) == STARTINGZ(*this)) ||
-                    (XX(*this) == FINISHINGX(*this) && YY(*this) == STARTINGY(*this) && ZZ(*this) == STARTINGZ(*this))  ||
-                    (XX(*this) == FINISHINGX(*this) && YY(*this) == FINISHINGY(*this) && ZZ(*this) == STARTINGZ(*this)) ||
-                    (XX(*this) == STARTINGX(*this)  && YY(*this) == STARTINGY(*this) && ZZ(*this) == FINISHINGZ(*this)) ||
-                    (XX(*this) == STARTINGX(*this)  && YY(*this) == FINISHINGY(*this) && ZZ(*this) == FINISHINGZ(*this)) ||
-                    (XX(*this) == FINISHINGX(*this) && YY(*this) == STARTINGY(*this) && ZZ(*this) == FINISHINGZ(*this))  ||
-                    (XX(*this) == FINISHINGX(*this) && YY(*this) == FINISHINGY(*this) && ZZ(*this) == FINISHINGZ(*this)));
+            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this)) ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this))  ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this)) ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)) ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this))  ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
         else
             REPORT_ERROR(1, "isCorner: index vector has too many components");
 
     }
-#endif
+
     /** Median
      * @ingroup Statistics
      *
