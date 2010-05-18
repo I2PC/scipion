@@ -76,11 +76,25 @@ void EnhanceContrast_parameters::usage()
 // Enhance volume ----------------------------------------------------------
 void EnhanceContrast_parameters::enhance(MultidimArray<double> &vol)
 {
-
 	// 1.-Scale volume between 0 and 255----------------------------------
 	double minVal, maxVal;
 	vol.computeDoubleMinMax(minVal,maxVal);
 	vol.rangeAdjust(0,255);
+
+    double vol_avg = vol.computeAvg();
+
+    // Padd volume with two new rows and cols
+    if( FINISHINGZ(vol) - STARTINGZ(vol) > 0 )
+    {
+        vol.window( STARTINGZ(vol)-2,STARTINGY(vol)-2,STARTINGX(vol)-2,
+                    FINISHINGZ(vol)+2, FINISHINGY(vol)+2,FINISHINGX(vol)+2, vol_avg );
+    }
+    else
+    {
+        vol.window( STARTINGZ(vol),STARTINGY(vol)-2,STARTINGX(vol)-2,
+                    FINISHINGZ(vol), FINISHINGY(vol)+2,FINISHINGX(vol)+2, vol_avg );
+    }
+    
 	Image<double> save;
     #ifdef DEBUG
 	save()=vol; save.write("PPP1_init.vol");
@@ -311,6 +325,18 @@ void EnhanceContrast_parameters::enhance(MultidimArray<double> &vol)
 		#ifdef DEBUG
 		save()=vol_f; save.write("PPP6_vol_f.vol");
 		#endif
+    
+        // Unpadd volume with two new rows and cols
+        if( FINISHINGZ(vol_f) - STARTINGZ(vol_f) > 0 )
+        {
+            vol_f.window( STARTINGZ(vol_f)+2,STARTINGY(vol_f)+2,STARTINGX(vol_f)+2,
+                       FINISHINGZ(vol_f)-2, FINISHINGY(vol_f)-2,FINISHINGX(vol_f)-2 );
+        }
+        else
+        {
+            vol_f.window( STARTINGZ(vol_f),STARTINGY(vol_f)+2,STARTINGX(vol_f)+2,
+                       FINISHINGZ(vol_f), FINISHINGY(vol_f)-2,FINISHINGX(vol_f)-2 );
+        }
 
 		//6.-Re-Scale (now we put the original values diferent from [0-255])
 		double x_s,x_ns;
