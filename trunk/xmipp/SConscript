@@ -393,7 +393,7 @@ ReconsSources = [
     'common_lines.cpp',
     'convert_vol2pseudo.cpp',
     'correct_bfactor.cpp',
-#    'create_projection_library.cpp',
+    'create_projection_library.cpp',
 #    'crystal_create_surface.cpp',
 #    'ctf_correct_amplitude2d.cpp',
 #    'ctf_correct_amplitude3d.cpp',

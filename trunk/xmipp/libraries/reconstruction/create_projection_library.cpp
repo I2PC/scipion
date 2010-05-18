@@ -298,14 +298,15 @@ void Prog_create_projection_library_Parameters::run()
         printf ("project_angle_vector after %.2lf seconds\n", time_dif );
     #endif
                  
-    SelFile  mySF;
+    MetaData  mySF;
     FileName fn_temp;
     int myCounter=0;
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
        for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
        {    
 	   fn_temp.compose(output_file_root, ++myCounter,"xmp");
-	   mySF.insert(fn_temp);
+	   mySF.addObject();
+	   mySF.setValue(MDL_IMAGE,fn_temp);
        }
     fn_temp=output_file_root+".sel";   
     mySF.write(fn_temp);         
