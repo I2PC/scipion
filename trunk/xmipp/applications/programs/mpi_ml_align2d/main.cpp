@@ -101,11 +101,10 @@ int main(int argc, char **argv)
         Model_MLalign2D block_model(prm.model.n_ref);
 
         // Loop over all iterations
-        for (prm.iter = prm.istart; prm.iter <= prm.Niter; prm.iter++)
+        for (prm.iter = prm.istart; !converged && prm.iter <= prm.Niter; prm.iter++)
         {
-            if (prm.verb > 0) std::cerr
-                    << "  Multi-reference refinement:  iteration " << prm.iter
-                    << " of " << prm.Niter << std::endl;
+            if (prm.verb > 0)
+                 std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
 
             // Save old reference images
             for (int refno = 0; refno < prm.model.n_ref; refno++)
@@ -175,6 +174,10 @@ int main(int argc, char **argv)
                         prm.model.addModel(block_model);
                     }
                 }
+
+                if (prm.do_norm)
+                    prm.correctScaleAverage();
+
             }//close for blocks
 
             if (prm.blocks > 1 && prm.iter == 1)
@@ -191,7 +194,6 @@ int main(int argc, char **argv)
                 }
             }
 
-            if (prm.do_norm) prm.correctScaleAverage();
             // Check convergence
             converged = prm.checkConvergence();
 
@@ -238,18 +240,14 @@ int main(int argc, char **argv)
             }
             MPI_Barrier( MPI_COMM_WORLD);
 
-            if (converged)
-            {
-                if (prm.verb > 0) std::cerr << " Optimization converged!"
-                        << std::endl;
-                break;
-            }
-            MPI_Barrier(MPI_COMM_WORLD);
-
         } // end loop iterations
+
+
 
         if (rank == 0)
         {
+            if (converged && prm.verb > 0)
+                std::cerr << " Optimization converged!" << std::endl;
             //Write final output files
             prm.writeOutputFiles(prm.model);
         }
