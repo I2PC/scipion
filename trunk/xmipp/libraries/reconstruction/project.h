@@ -26,7 +26,6 @@
 #define _PROG_PROJECTION_HH
 
 #include <data/funcs.h>
-#include <data/docfile.h>
 #include <data/metadata.h>
 #include <data/projection.h>
 #include <interface/pdb.h>
@@ -135,13 +134,13 @@ class Projection_Parameters
 public:
     /** Phantom filename.
         It can be a Xmipp volume or a mathematically defined phantom. */
-    FileName fnPhantom;
+    FileName     fnPhantom;
     /// Starting name for all projections
-    std::string   fnProjectionSeed;
+    std::string  fnProjectionSeed;
     /// First projection number. By default, 1.
-    int      starting;
+    int          starting;
     /// Extension for projection filenames. This is optional
-    std::string   fn_projection_extension;
+    std::string  fn_projection_extension;
 
     /// Projection Xdim
     int      proj_Xdim;
@@ -162,12 +161,6 @@ public:
 
     /// Document filename
     FileName fn_angle;
-    /// First number in the document file is "rot","tilt" or "psi"
-    std::string   ang1;
-    /// Second number in the document file is "rot","tilt" or "psi"
-    std::string   ang2;
-    /// Third number in the document file is "rot","tilt" or "psi"
-    std::string   ang3;
 
     /// Bias to be applied to each pixel grey value */
     double    Npixel_avg;
@@ -205,13 +198,13 @@ class PROJECT_Side_Info
 {
 public:
     /// Document File for the projecting angles. Order: rot, tilt, psi
-    DocFile        DF;
+    MetaData       DF;
     /// Types of phantom: voxel, Xmipp, PDB
     enum PhantomType {VOXEL, XMIPP, PDB};
     /// Projecting from a voxel volume, Xmipp description or PDB?
     PhantomType    phantomMode;
     /// Phantom Xmipp volume
-    VolumeXmipp    phantomVol;
+    Image<double>  phantomVol;
     /// Phantom mathematical description
     Phantom        phantomDescr;
     /// Phantom PDB
@@ -244,7 +237,7 @@ public:
     projection set. The current line of the document file is set to
     the beginning of the file.
 */
-int PROJECT_Assign_angles(DocFile &DF, const Projection_Parameters &prm);
+int PROJECT_Assign_angles(MetaData &DF, const Projection_Parameters &prm);
 
 /* Effectively project ----------------------------------------------------- */
 /** Effectively project.
@@ -256,7 +249,8 @@ int PROJECT_Assign_angles(DocFile &DF, const Projection_Parameters &prm);
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
 int PROJECT_Effectively_project(const Projection_Parameters &prm,
-                                PROJECT_Side_Info &side, const Crystal_Projection_Parameters &prm_crystal,
+                                PROJECT_Side_Info &side,
+                                const Crystal_Projection_Parameters &prm_crystal,
                                 Projection &proj, MetaData &SF);
 
 /* Main routine ------------------------------------------------------------ */

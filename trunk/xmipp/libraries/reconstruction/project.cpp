@@ -36,7 +36,7 @@ void Prog_Project_Parameters::read(int argc, char **argv)
     fn_crystal    = getParameter(argc, argv, "-crystal", "");
     fn_sym        = getParameter(argc, argv, "-sym", "");
     samplingRate  = textToDouble(
-    	    	    	getParameter(argc, argv, "-sampling_rate", "1"));
+                        getParameter(argc, argv, "-sampling_rate", "1"));
     only_create_angles = checkParameter(argc, argv, "-only_create_angles");
     if (checkParameter(argc, argv, "-show_angles"))
         tell |= TELL_SHOW_ANGLES;
@@ -50,7 +50,7 @@ void Prog_Project_Parameters::usage()
            "       [-o <sel_file>]\n"
            "       [-show_angles]\n"
            "       [-sym <sym_file>]\n"
-	   "       [-sampling_rate <Ts=1>\n"
+           "       [-sampling_rate <Ts=1>\n"
            "       [-only_create_angles]\n"
            "       [-crystal <crystal_parameters_file>]\n");
     printf(
@@ -61,9 +61,9 @@ void Prog_Project_Parameters::usage()
         "\t                    projections\n");
     printf(
         "\t<sym_file>:         This is a symmetry description file, used\n"
-	"\t                    for computing the assymetric projection unit\n");
+        "\t                    for computing the assymetric projection unit\n");
     printf(
-    	"\t<Ts>:               It is only used for PDB projections\n");
+        "\t<Ts>:               It is only used for PDB projections\n");
 }
 
 /* Projection parameters from program parameters =========================== */
@@ -77,10 +77,14 @@ void Projection_Parameters::from_prog_params(
 /* Read Projection Parameters ============================================== */
 int translate_randomness(char * str)
 {
-    if (str == NULL)                     return ANGLE_RANGE_DETERMINISTIC;
-    if (strcmp(str, "random_group") == 0) return ANGLE_RANGE_RANDOM_GROUPS;
-    if (strcmp(str, "random") == 0)       return ANGLE_RANGE_RANDOM;
-    if (strcmp(str, "even") == 0)         return ANGLE_EVENLY;
+    if (str == NULL)
+        return ANGLE_RANGE_DETERMINISTIC;
+    if (strcmp(str, "random_group") == 0)
+        return ANGLE_RANGE_RANDOM_GROUPS;
+    if (strcmp(str, "random") == 0)
+        return ANGLE_RANGE_RANDOM;
+    if (strcmp(str, "even") == 0)
+        return ANGLE_EVENLY;
     REPORT_ERROR(3007,
                  (std::string)"Prog_Project_Parameters::read: Not recognized randomness: "
                  + str);
@@ -99,60 +103,46 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
                      "opening the file " + fn_proj_param);
     while (fgets(line, 200, fh_param) != NULL)
     {
-        if (line[0] == 0)    continue;
-        if (line[0] == '#')  continue;
-        if (line[0] == '\n') continue;
+        if (line[0] == 0)
+            continue;
+        if (line[0] == '#')
+            continue;
+        if (line[0] == '\n')
+            continue;
         switch (lineNo)
         {
         case 0:
             fnPhantom = firstWord(line, 3007,
-                                    "Prog_Project_Parameters::read: Phantom name not found");
+                                  "Prog_Project_Parameters::read: Phantom name not found");
             lineNo = 1;
             break;
         case 1:
             fnProjectionSeed =
                 firstWord(line, 3007,
-                           "Prog_Project_Parameters::read: Error in Projection seed");
+                          "Prog_Project_Parameters::read: Error in Projection seed");
             // Next two parameters are optional
             auxstr = nextToken();
-            if (auxstr != NULL) starting =
+            if (auxstr != NULL)
+                starting =
                     textToInteger(auxstr, 3007,
-                         "Prog_Project_Parameters::read: Error in First "
-                         "projection number");
+                                  "Prog_Project_Parameters::read: Error in First "
+                                  "projection number");
             fn_projection_extension = nextToken();
             lineNo = 2;
             break;
         case 2:
             proj_Xdim = textToInteger(firstToken(line), 3007,
-                             "Prog_Project_Parameters::read: Error in X dimension");
+                                      "Prog_Project_Parameters::read: Error in X dimension");
             proj_Ydim = textToInteger(nextToken(), 3007,
-                             "Prog_Project_Parameters::read: Error in Y dimension");
+                                      "Prog_Project_Parameters::read: Error in Y dimension");
             lineNo = 3;
             break;
         case 3:
             // Angle file
             fn_angle = firstWord(line);
-            if (fn_angle == "NULL") ;
-            else if (exists(fn_angle))
-            {
-                // Angle source file
-                try
-                {
-                    ang1 = nextWord();
-                    checkAngle(ang1);
-                    ang2 = nextWord();
-                    checkAngle(ang2);
-                    ang3 = nextWord();
-                    checkAngle(ang3);
-                }
-                catch (Xmipp_error XE)
-                {
-                    REPORT_ERROR(3007,
-                                 (std::string)"An angle order description is "
-                                 + "missing for file: " + fn_angle);
-                }
-            }
-            else
+            if (fn_angle == "NULL")
+                ;
+            else if (!exists(fn_angle))
                 REPORT_ERROR(3007, (std::string)"Prog_Project_Parameters::read: "
                              "file " + fn_angle + " doesn't exist");
             lineNo = 4;
@@ -164,7 +154,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
             {
                 enable_angle_range = true;
                 rot_range.ang0 = textToFloat(auxstr, 3007,
-                                      "Prog_Project_Parameters::read: Error in Rotational Init");
+                                             "Prog_Project_Parameters::read: Error in Rotational Init");
                 auxstr = nextToken();
                 if (auxstr == NULL)
                 {
@@ -176,11 +166,12 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
                 else
                 {
                     rot_range.angF = textToFloat(auxstr, 3007,
-                                          "Prog_Project_Parameters::read: Error in Rotational Final");
+                                                 "Prog_Project_Parameters::read: Error in Rotational Final");
                     rot_range.samples = textToInteger(nextToken(), 3007,
-                                             "Prog_Project_Parameters::read: Error in Rotational "
-                                             "Samples");
-                    if (rot_range.ang0 == rot_range.angF) rot_range.samples = 1;
+                                                      "Prog_Project_Parameters::read: Error in Rotational "
+                                                      "Samples");
+                    if (rot_range.ang0 == rot_range.angF)
+                        rot_range.samples = 1;
                     rot_range.randomness = translate_randomness(nextToken());
                 }
                 lineNo = 5;
@@ -193,7 +184,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
             break;
         case 5:
             tilt_range.ang0 = textToFloat(firstToken(line), 3007,
-                                   "Prog_Project_Parameters::read: Error in Tilting Init");
+                                          "Prog_Project_Parameters::read: Error in Tilting Init");
             auxstr = nextToken();
             if (auxstr == NULL)
             {
@@ -205,17 +196,18 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
             else
             {
                 tilt_range.angF = textToFloat(auxstr, 3007,
-                                       "Prog_Project_Parameters::read: Error in Tilting Final");
+                                              "Prog_Project_Parameters::read: Error in Tilting Final");
                 tilt_range.samples = textToInteger(nextToken(), 3007,
-                                          "Prog_Project_Parameters::read: Error in Tilting Samples");
-                if (tilt_range.ang0 == tilt_range.angF) tilt_range.samples = 1;
+                                                   "Prog_Project_Parameters::read: Error in Tilting Samples");
+                if (tilt_range.ang0 == tilt_range.angF)
+                    tilt_range.samples = 1;
                 tilt_range.randomness = translate_randomness(nextToken());
             }
             lineNo = 6;
             break;
         case 6:
             psi_range.ang0 = textToFloat(firstToken(line), 3007,
-                                  "Prog_Project_Parameters::read: Error in Psi Init");
+                                         "Prog_Project_Parameters::read: Error in Psi Init");
             auxstr = nextToken();
             if (auxstr == NULL)
             {
@@ -227,62 +219,68 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
             else
             {
                 psi_range.angF = textToFloat(auxstr, 3007,
-                                      "Prog_Project_Parameters::read: Error in Psi Final");
+                                             "Prog_Project_Parameters::read: Error in Psi Final");
                 psi_range.samples = textToInteger(nextToken(), 3007,
-                                         "Prog_Project_Parameters::read: Error in Psi Samples");
-                if (psi_range.ang0 == psi_range.angF) psi_range.samples = 1;
+                                                  "Prog_Project_Parameters::read: Error in Psi Samples");
+                if (psi_range.ang0 == psi_range.angF)
+                    psi_range.samples = 1;
                 psi_range.randomness = translate_randomness(nextToken());
             }
             lineNo = 7;
             break;
         case 7:
             rot_range.Ndev = textToFloat(firstWord(line), 3007,
-                                  "Prog_Project_Parameters::read: Error in Rotational noise");
+                                         "Prog_Project_Parameters::read: Error in Rotational noise");
             auxstr = nextToken();
             if (auxstr != NULL)
                 rot_range.Navg = textToFloat(auxstr, 3007,
-                                      "Prog_Project_Parameters::read: Error in Rotational bias");
-            else rot_range.Navg = 0;
+                                             "Prog_Project_Parameters::read: Error in Rotational bias");
+            else
+                rot_range.Navg = 0;
             lineNo = 8;
             break;
         case 8:
             tilt_range.Ndev = textToFloat(firstWord(line), 3007,
-                                   "Prog_Project_Parameters::read: Error in tilting noise");
+                                          "Prog_Project_Parameters::read: Error in tilting noise");
             auxstr = nextToken();
             if (auxstr != NULL)
                 tilt_range.Navg = textToFloat(auxstr, 3007,
-                                       "Prog_Project_Parameters::read: Error in tilting bias");
-            else tilt_range.Navg = 0;
+                                              "Prog_Project_Parameters::read: Error in tilting bias");
+            else
+                tilt_range.Navg = 0;
             lineNo = 9;
             break;
         case 9:
             psi_range.Ndev = textToFloat(firstWord(line), 3007,
-                                  "Prog_Project_Parameters::read: Error in psi noise");
+                                         "Prog_Project_Parameters::read: Error in psi noise");
             auxstr = nextToken();
             if (auxstr != NULL)
                 psi_range.Navg = textToFloat(auxstr, 3007,
-                                      "Prog_Project_Parameters::read: Error in psi bias");
-            else psi_range.Navg = 0;
+                                             "Prog_Project_Parameters::read: Error in psi bias");
+            else
+                psi_range.Navg = 0;
             lineNo = 10;
             break;
         case 10:
             Npixel_dev = textToFloat(firstWord(line), 3007,
-                              "Prog_Project_Parameters::read: Error in pixel noise");
+                                     "Prog_Project_Parameters::read: Error in pixel noise");
             auxstr = nextToken();
             if (auxstr != NULL)
                 Npixel_avg = textToFloat(auxstr, 3007,
-                                  "Prog_Project_Parameters::read: Error in pixel bias");
-            else Npixel_avg = 0;
+                                         "Prog_Project_Parameters::read: Error in pixel bias");
+            else
+                Npixel_avg = 0;
             lineNo = 11;
             break;
         case 11:
             Ncenter_dev = textToFloat(firstWord(line), 3007,
-                               "Prog_Project_Parameters::read: Error in center noise");
+                                      "Prog_Project_Parameters::read: Error in center noise");
             auxstr = nextToken();
             if (auxstr != NULL)
                 Ncenter_avg = textToFloat(auxstr, 3007,
-                                   "Prog_Project_Parameters::read: Error in center bias");
-            else Ncenter_avg = 0;
+                                          "Prog_Project_Parameters::read: Error in center bias");
+            else
+                Ncenter_avg = 0;
             lineNo = 12;
             break;
         } /* switch end */
@@ -323,13 +321,7 @@ void Projection_Parameters::write(const FileName &fn_proj_param) const
 
     fprintf(fh_param,
             "# Angle Definitions ---------------------------------------------\n");
-    if (fn_angle != "")
-    {
-        fprintf(fh_param,
-                "%s %s %s %s\n", fn_angle.c_str(), ang1.c_str(), ang2.c_str(),
-                ang3.c_str());
-    }
-    else
+    if (fn_angle == "")
     {
         fprintf(fh_param, "%d ", rot_range.ang0);
         if (rot_range.angF != rot_range.ang0)
@@ -399,32 +391,42 @@ void Projection_Parameters::write(const FileName &fn_proj_param) const
     fprintf(fh_param,
             "#     noise (and bias) applied to rotational angle\n");
     fprintf(fh_param, "%f ", rot_range.Ndev);
-    if (rot_range.Navg != 0) fprintf(fh_param, "%f \n", rot_range.Navg);
-    else fprintf(fh_param, "\n");
+    if (rot_range.Navg != 0)
+        fprintf(fh_param, "%f \n", rot_range.Navg);
+    else
+        fprintf(fh_param, "\n");
 
     fprintf(fh_param,
             "#     noise (and bias) applied to tilting angle\n");
     fprintf(fh_param, "%f ", tilt_range.Ndev);
-    if (tilt_range.Navg != 0) fprintf(fh_param, "%f \n", tilt_range.Navg);
-    else fprintf(fh_param, "\n");
+    if (tilt_range.Navg != 0)
+        fprintf(fh_param, "%f \n", tilt_range.Navg);
+    else
+        fprintf(fh_param, "\n");
 
     fprintf(fh_param,
             "#     noise (and bias) applied to psi angle\n");
     fprintf(fh_param, "%f ", psi_range.Ndev);
-    if (psi_range.Navg != 0) fprintf(fh_param, "%f \n", psi_range.Navg);
-    else fprintf(fh_param, "\n");
+    if (psi_range.Navg != 0)
+        fprintf(fh_param, "%f \n", psi_range.Navg);
+    else
+        fprintf(fh_param, "\n");
 
     fprintf(fh_param,
             "#     Noise (and bias) applied to pixels\n");
     fprintf(fh_param, "%f ", Npixel_dev);
-    if (Npixel_avg != 0) fprintf(fh_param, "%f \n", Npixel_avg);
-    else fprintf(fh_param, "\n");
+    if (Npixel_avg != 0)
+        fprintf(fh_param, "%f \n", Npixel_avg);
+    else
+        fprintf(fh_param, "\n");
 
     fprintf(fh_param,
             "#     Noise (and bias) applied to particle center coordenates\n");
     fprintf(fh_param, "%f ", Ncenter_dev);
-    if (Ncenter_avg != 0) fprintf(fh_param, "%f \n", Ncenter_avg);
-    else fprintf(fh_param, "\n");
+    if (Ncenter_avg != 0)
+        fprintf(fh_param, "%f \n", Ncenter_avg);
+    else
+        fprintf(fh_param, "\n");
 
     fclose(fh_param);
 }
@@ -439,7 +441,7 @@ void Projection_Parameters::write(const FileName &fn_proj_param) const
 #define Npsi  prm.psi_range.samples
 #define proj_number(base,irot,itilt,ipsi) base+irot*Ntilt*Npsi+itilt*Npsi+ipsi
 void generate_angles(int ExtProjs, const Angle_range &range,
-                     DocFile &DF, char ang_name, const Projection_Parameters &prm)
+                     MetaData &DF, char ang_name, const Projection_Parameters &prm)
 {
     double ang;
     int   N1, N2;
@@ -485,7 +487,8 @@ void generate_angles(int ExtProjs, const Angle_range &range,
             if (range.samples > 1)
                 ang = range.ang0 +
                       (range.angF - range.ang0) / (double)(range.samples - 1) * i;
-            else ang = range.ang0;
+            else
+                ang = range.ang0;
         }
         else
         {
@@ -500,7 +503,6 @@ void generate_angles(int ExtProjs, const Angle_range &range,
                 break;
             }
         }
-
 
         // Copy this angle to those projections belonging to this group .....
         // If there is any group
@@ -527,25 +529,62 @@ void generate_angles(int ExtProjs, const Angle_range &range,
                     switch (ang_name)
                     {
                     case 'r':
-                        iproj = proj_number(ExtProjs, i, j, k) + DF.FirstKey();
+                        iproj = proj_number(ExtProjs, i, j, k)+prm.starting;
                         break;
                     case 't':
-                        iproj = proj_number(ExtProjs, j, i, k) + DF.FirstKey();
+                        iproj = proj_number(ExtProjs, j, i, k)+prm.starting;
                         break;
                     case 'p':
-                        iproj = proj_number(ExtProjs, j, k, i) + DF.FirstKey();
+                        iproj = proj_number(ExtProjs, j, k, i)+prm.starting;
                         break;
                     }
-                    DF.set(iproj, idx, ang);
+                    unsigned long int idx=DF.goToFirstObject(MDL_OBJID,iproj);
+                    if (idx==MetaData::NO_OBJECTS_STORED || idx==MetaData::NO_OBJECT_FOUND)
+                    {
+                        DF.addObject();
+                        DF.setValue(MDL_OBJID,iproj);
+                    }
+                    switch (idx)
+                    {
+                    case 0:
+                        DF.setValue(MDL_ANGLEROT,ang);
+                        break;
+                    case 1:
+                        DF.setValue(MDL_ANGLETILT,ang);
+                        break;
+                    case 2:
+                        DF.setValue(MDL_ANGLEPSI,ang);
+                        break;
+                    }
                 }
         }
         else
-            DF.set(ExtProjs + i + DF.FirstKey(), idx, ang);
+        {
+            int iproj=ExtProjs + i + prm.starting;
+            unsigned long int dfidx=DF.goToFirstObject(MDL_OBJID,iproj);
+            if (dfidx==MetaData::NO_OBJECTS_STORED || dfidx==MetaData::NO_OBJECT_FOUND)
+            {
+                DF.addObject();
+                DF.setValue(MDL_OBJID,iproj);
+            }
+            switch (idx)
+            {
+            case 0:
+                DF.setValue(MDL_ANGLEROT,ang);
+                break;
+            case 1:
+                DF.setValue(MDL_ANGLETILT,ang);
+                break;
+            case 2:
+                DF.setValue(MDL_ANGLEPSI,ang);
+                break;
+            }
+        }
     }
 }
 
 /* Generate evenly distributed angles ====================================== */
-void generate_even_angles(int ExtProjs, int Nrottilt, DocFile &DF,
+void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
                           const Projection_Parameters &prm)
 {
     // We will run over the tilt angle in a deterministic way
@@ -564,8 +603,10 @@ void generate_even_angles(int ExtProjs, int Nrottilt, DocFile &DF,
                       (double)(Ntilt - 1) * i;
         // Now compute the corresponding rotational angles
         double rot_step;
-        if (tilt != 0 && tilt != 180) rot_step = rot_step_at_equator / sin(DEG2RAD(tilt));
-        else rot_step = prm.rot_range.angF - prm.rot_range.ang0 + 1;
+        if (tilt != 0 && tilt != 180)
+            rot_step = rot_step_at_equator / sin(DEG2RAD(tilt));
+        else
+            rot_step = prm.rot_range.angF - prm.rot_range.ang0 + 1;
         for (double rot = prm.rot_range.ang0; rot <= prm.rot_range.angF; rot += rot_step)
         {
             // Copy this angle to those projections belonging to this group .....
@@ -580,15 +621,22 @@ void generate_even_angles(int ExtProjs, int Nrottilt, DocFile &DF,
                         psi = prm.psi_range.ang0 +
                               (prm.psi_range.angF - prm.psi_range.ang0) /
                               (double)(prm.psi_range.samples - 1) * k;
-                    else psi = prm.psi_range.ang0;
+                    else
+                        psi = prm.psi_range.ang0;
                 }
                 else
                     psi = rnd_unif(prm.psi_range.ang0, prm.psi_range.angF);
 
-                int iproj = ExtProjs + N + Nrottilt * k + DF.FirstKey();
-                DF.set(iproj, 0, rot);
-                DF.set(iproj, 1, tilt);
-                DF.set(iproj, 2, psi);
+                int iproj = ExtProjs + N + Nrottilt * k;
+                unsigned long int idx=DF.goToFirstObject(MDL_OBJID,iproj);
+                if (idx==MetaData::NO_OBJECTS_STORED || idx==MetaData::NO_OBJECT_FOUND)
+                {
+                    DF.addObject();
+                    DF.setValue(MDL_OBJID,iproj);
+                }
+                DF.setValue(MDL_ANGLEROT,rot);
+                DF.setValue(MDL_ANGLETILT,tilt);
+                DF.setValue(MDL_ANGLEPSI,psi);
             }
             N++;
         }
@@ -608,8 +656,10 @@ int count_even_angles(const Projection_Parameters &prm)
                       (prm.tilt_range.angF - prm.tilt_range.ang0) /
                       (double)(Ntilt - 1) * i;
         double rot_step;
-        if (tilt != 0 && tilt != 180) rot_step = rot_step_at_equator / sin(DEG2RAD(tilt));
-        else rot_step = prm.rot_range.angF - prm.rot_range.ang0 + 1;
+        if (tilt != 0 && tilt != 180)
+            rot_step = rot_step_at_equator / sin(DEG2RAD(tilt));
+        else
+            rot_step = prm.rot_range.angF - prm.rot_range.ang0 + 1;
         for (double rot = prm.rot_range.ang0; rot <= prm.rot_range.angF; rot += rot_step)
             N++;
     }
@@ -620,22 +670,20 @@ int count_even_angles(const Projection_Parameters &prm)
 }
 
 /* Assign angles =========================================================== */
-int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
+int Assign_angles(MetaData &DF, const Projection_Parameters &prm,
                   const FileName &fn_sym)
 {
     int ExtProjs = 0, IntProjs = 0;    // External and internal projections
     int Nrottilt;                      // Number of evenly distributed
-    // projections
 
-    DF.clear();
-    DF.set_FirstKey(prm.starting);
-
-// External generation mode
+    // External generation mode
     if (prm.fn_angle != "NULL")
-        ExtProjs = read_Euler_document_file(prm.fn_angle,
-                                            prm.ang1, prm.ang2, prm.ang3, DF);
+    {
+        DF.read(prm.fn_angle);
+        ExtProjs = DF.size();
+    }
 
-// Internal generation mode
+    // Internal generation mode
     if (prm.enable_angle_range)
     {
         randomize_random_generator();
@@ -651,7 +699,6 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
             else
                 IntProjs = 0;
         }
-        DF.append_data_line(IntProjs);  // Create lines for the angles
         if (prm.rot_range.randomness != ANGLE_EVENLY)
         {
             generate_angles(ExtProjs, prm.rot_range,  DF, 'r', prm);
@@ -661,42 +708,32 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
         else
         {
             if (fn_sym == "")
-            {
                 generate_even_angles(ExtProjs, Nrottilt, DF, prm);
-                // Clear empty entries
-                DF.go_first_data_line();
-                std::vector<int> to_remove;
-                while (!DF.eof())
-                {
-                    if (DF.get_current_line().get_no_components() == 0)
-                        to_remove.push_back(DF.get_current_key());
-                    DF.next_data_line();
-                }
-                int imax = to_remove.size();
-                for (int i = imax - 1; i >= 0; i--) DF.remove(to_remove[i]);
-                DF.renum();
-            }
             else
             {
                 SymList SL;
-                if (fn_sym != "") SL.read_sym_file(fn_sym);
-                DocFile DF_aux;
+                if (fn_sym != "")
+                    SL.read_sym_file(fn_sym);
+                MetaData DF_aux;
                 double rot_step_at_equator = (prm.rot_range.angF - prm.rot_range.ang0) /
                                              (double)(Nrot - 1);
                 make_even_distribution(DF_aux, rot_step_at_equator, SL, true);
-                DF_aux.go_first_data_line();
-                while (!DF_aux.eof())
+                FOR_ALL_OBJECTS_IN_METADATA(DF_aux)
                 {
-                    DocLine line = DF_aux.get_current_line();
-                    DF.append_line(line);
-                    DF_aux.next_data_line();
+                    double rot,tilt,psi;
+                    DF_aux.getValue(MDL_ANGLEROT,rot);
+                    DF_aux.getValue(MDL_ANGLETILT,tilt);
+                    DF_aux.getValue(MDL_ANGLEPSI,psi);
+                    DF.addObject();
+                    DF.setValue(MDL_ANGLEROT,rot);
+                    DF.setValue(MDL_ANGLETILT,tilt);
+                    DF.setValue(MDL_ANGLEPSI,psi);
                 }
             }
         }
     }
 
-// Exit
-    DF.go_first_data_line();
+    // Exit
     return ExtProjs + IntProjs;
 }
 
@@ -704,64 +741,68 @@ int Assign_angles(DocFile &DF, const Projection_Parameters &prm,
 void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm,
         const Prog_Project_Parameters &prog_prm)
 {
-// Generate Projection angles
+    // Generate Projection angles
     Assign_angles(DF, prm, prog_prm.fn_sym);
 
-// Load Phantom and set working mode
-    if (Is_VolumeXmipp(prm.fnPhantom))
+    // Load Phantom and set working mode
+    if (prm.fnPhantom.get_extension()=="descr")
+    {
+        phantomDescr.read(prm.fnPhantom);
+        phantomMode = XMIPP;
+    }
+    else if (prm.fnPhantom.get_extension()=="pdb")
+    {
+        phantomPDB.read(prm.fnPhantom);
+        const double highTs=1.0/12.0;
+        int M=ROUND(prog_prm.samplingRate/highTs);
+        interpolator.setup(M,prog_prm.samplingRate/M,true);
+        phantomMode = PDB;
+    }
+    else
     {
         phantomVol.read(prm.fnPhantom);
         phantomVol().setXmippOrigin();
         phantomMode = VOXEL;
-    }
-    else if (prm.fnPhantom.get_extension()=="pdb")
-    {
-    	phantomPDB.read(prm.fnPhantom);
-	const double highTs=1.0/12.0;
-	int M=ROUND(prog_prm.samplingRate/highTs);
-	interpolator.setup(M,prog_prm.samplingRate/M,true);
-    	phantomMode = PDB;
-    }
-    else
-    {
-        phantomDescr.read(prm.fnPhantom);
-        phantomMode = XMIPP;
     }
 }
 
 /* Effectively project ===================================================== */
 int PROJECT_Effectively_project(const Projection_Parameters &prm,
                                 PROJECT_Side_Info &side,
-				const Crystal_Projection_Parameters &prm_crystal,
+                                const Crystal_Projection_Parameters &prm_crystal,
                                 Projection &proj, MetaData &SF)
 {
     int NumProjs = 0;
     SF.clear();
     std::cerr << "Projecting ...\n";
-    if (!(prm.tell&TELL_SHOW_ANGLES)) init_progress_bar(side.DF.dataLineNo());
+    if (!(prm.tell&TELL_SHOW_ANGLES))
+        init_progress_bar(side.DF.size());
     MetaData DF_movements;
     DF_movements.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
 
-    while (!side.DF.eof())
+    int projIdx=prm.starting;
+    FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
         double rot, tilt, psi;         // Actual projecting angles
         FileName fn_proj;              // Projection name
-        fn_proj.compose(prm.fnProjectionSeed, side.DF.get_current_key(),
-                        prm.fn_projection_extension);
+        fn_proj.compose(prm.fnProjectionSeed, projIdx++, prm.fn_projection_extension);
         DF_movements.addObject();
         DF_movements.setValue(MDL_IMAGE,fn_proj);
         DF_movements.setValue(MDL_ENABLED,1);
 
         // Choose angles .....................................................
-        if (prm.tell&TELL_SHOW_ANGLES) side.DF.show_line(std::cout);
-        else if ((NumProjs % XMIPP_MAX(1, side.DF.dataLineNo() / 60)) == 0)
-            progress_bar(NumProjs);
-        rot  = side.DF(0);
-        tilt = side.DF(1);
-        psi  = side.DF(2);
+        side.DF.getValue(MDL_ANGLEROT,rot);
+        side.DF.getValue(MDL_ANGLETILT,tilt);
+        side.DF.getValue(MDL_ANGLEPSI,psi);
         DF_movements.setValue(MDL_ANGLEROT,rot);
         DF_movements.setValue(MDL_ANGLETILT,tilt);
         DF_movements.setValue(MDL_ANGLEPSI,psi);
+        if (prm.tell&TELL_SHOW_ANGLES)
+        {
+            std::cout << rot << "\t" << tilt << "\t" << psi << std::endl;
+        }
+        else if ((NumProjs % XMIPP_MAX(1, side.DF.size() / 60)) == 0)
+            progress_bar(NumProjs);
 
         // Choose Center displacement ........................................
         double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
@@ -774,18 +815,18 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         {
             project_Volume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
                            rot, tilt, psi);
-            IMGMATRIX(proj).selfTranslate(vectorR2(shiftX, shiftY));
+            selfTranslate(LINEAR,IMGMATRIX(proj),vectorR2(shiftX, shiftY));
         }
-	else if (side.phantomMode==PROJECT_Side_Info::PDB)
-	{
-	    PDBPhantom aux;
-	    aux=side.phantomPDB;
-	    aux.shift(shiftX,shiftY,0);
-	    projectPDB(side.phantomPDB, side.interpolator,
-	               proj, prm.proj_Ydim, prm.proj_Xdim,
+        else if (side.phantomMode==PROJECT_Side_Info::PDB)
+        {
+            PDBPhantom aux;
+            aux=side.phantomPDB;
+            aux.shift(shiftX,shiftY,0);
+            projectPDB(side.phantomPDB, side.interpolator,
+                       proj, prm.proj_Ydim, prm.proj_Xdim,
                        rot, tilt, psi);
         }
-	else if (side.phantomMode==PROJECT_Side_Info::XMIPP)
+        else if (side.phantomMode==PROJECT_Side_Info::XMIPP)
         {
             Phantom aux;
             aux = side.phantomDescr;
@@ -810,8 +851,8 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         DF_movements.setValue(MDL_ANGLEROT2,rot);
         DF_movements.setValue(MDL_ANGLETILT2,tilt);
         DF_movements.setValue(MDL_ANGLEPSI2,psi);
-        proj.set_eulerAngles(rot, tilt, psi);
-        proj.set_originOffsets(-shiftX,-shiftY);
+        proj.setEulerAngles(rot, tilt, psi);
+        proj.setShifts(-shiftX,-shiftY);
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
         // Save ..............................................................
@@ -820,10 +861,9 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         SF.addObject();
         SF.setValue(MDL_IMAGE,fn_proj);
         SF.setValue(MDL_ENABLED,1);
-
-        side.DF.next_data_line();
     }
-    if (!(prm.tell&TELL_SHOW_ANGLES)) progress_bar(side.DF.dataLineNo());
+    if (!(prm.tell&TELL_SHOW_ANGLES))
+        progress_bar(side.DF.size());
 
     DF_movements.write(prm.fnProjectionSeed + "_movements.txt");
     return NumProjs;
@@ -833,7 +873,7 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
 int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, MetaData &SF)
 {
     randomize_random_generator();
-// Read projection parameters and produce side information
+    // Read projection parameters and produce side information
     Projection_Parameters proj_prm;
     PROJECT_Side_Info side;
     proj_prm.from_prog_params(prm);
@@ -849,39 +889,36 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, MetaData &SF)
         // format h, k, shift_X shift_Y shift_Z
         if (crystal_proj_prm.DF_shift_bool == true)
             crystal_proj_prm.DF_shift.read(crystal_proj_prm.fn_shift);
-        (crystal_proj_prm.DF_shift).go_first_data_line();
         double my_scale = (side.phantomDescr).phantom_scale;
-        double my_aux;
-        while (!(crystal_proj_prm.DF_shift).eof())
+        FOR_ALL_OBJECTS_IN_METADATA(crystal_proj_prm.DF_shift)
         {
-            //Check that we are not outside the matrix
-            my_aux = (crystal_proj_prm.DF_shift)(2) *  my_scale;
-            (crystal_proj_prm.DF_shift).set(2, my_aux);
-            my_aux = (crystal_proj_prm.DF_shift)(3) *  my_scale;
-            (crystal_proj_prm.DF_shift).set(3, my_aux);
+        	double xcell, ycell;
+        	crystal_proj_prm.DF_shift.getValue(MDL_CELLX,xcell);
+        	crystal_proj_prm.DF_shift.getValue(MDL_CELLY,ycell);
+        	crystal_proj_prm.DF_shift.setValue(MDL_CELLX,xcell*my_scale);
+        	crystal_proj_prm.DF_shift.setValue(MDL_CELLY,ycell*my_scale);
 
-            my_aux = (crystal_proj_prm.DF_shift)(4) *  my_scale;
-            (crystal_proj_prm.DF_shift).set(4, my_aux);
-            my_aux = (crystal_proj_prm.DF_shift)(5) *  my_scale;
-            (crystal_proj_prm.DF_shift).set(5, my_aux);
-            my_aux = (crystal_proj_prm.DF_shift)(6) *  my_scale;
-            (crystal_proj_prm.DF_shift).set(6, my_aux);
+        	double x,y,z;
+        	crystal_proj_prm.DF_shift.getValue(MDL_SHIFTX,x);
+        	crystal_proj_prm.DF_shift.getValue(MDL_SHIFTY,y);
+        	crystal_proj_prm.DF_shift.getValue(MDL_SHIFTZ,z);
+        	crystal_proj_prm.DF_shift.setValue(MDL_SHIFTX,x*my_scale);
+        	crystal_proj_prm.DF_shift.setValue(MDL_SHIFTY,y*my_scale);
+        	crystal_proj_prm.DF_shift.setValue(MDL_SHIFTZ,z*my_scale);
 
-            my_aux = (crystal_proj_prm.DF_shift)(7) *  my_scale;
-            (crystal_proj_prm.DF_shift).set(7, my_aux);
-            my_aux = (crystal_proj_prm.DF_shift)(8) *  my_scale;
-            (crystal_proj_prm.DF_shift).set(8, my_aux);
-            my_aux = (crystal_proj_prm.DF_shift)(9) *  my_scale;
-            (crystal_proj_prm.DF_shift).set(9, my_aux);
-
-            (crystal_proj_prm.DF_shift).next_data_line();
+        	crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALX,x);
+        	crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALY,y);
+        	crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALZ,z);
+        	crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALX,x*my_scale);
+        	crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALY,y*my_scale);
+        	crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALZ,z*my_scale);
         }
     }
 
     //#define DEBUG1
 #ifdef DEBUG1
     if (crystal_proj_prm.DF_shift_bool == true)
-        crystal_proj_prm.DF_shift.write("BEBUG1_shifts");
+        crystal_proj_prm.DF_shift.write("DEBUG1_shifts");
 #endif
 #undef DEBUG1
 
@@ -892,11 +929,12 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, MetaData &SF)
         ProjNo = PROJECT_Effectively_project(proj_prm, side, crystal_proj_prm,
                                              proj, SF);
         // Save SelFile
-        if (prm.fn_sel_file != "") SF.write(prm.fn_sel_file);
+        if (prm.fn_sel_file != "")
+            SF.write(prm.fn_sel_file);
     }
     else
     {
-        std::cout << side.DF;
+        side.DF.write("/dev/stdout");
     }
     return ProjNo;
 }

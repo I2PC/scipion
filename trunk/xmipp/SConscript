@@ -388,7 +388,7 @@ ReconsSources = [
     'angular_projection_matching.cpp',
 #    'angular_class_average.cpp', coss
     'angular_project_library.cpp',
-#    'art_crystal.cpp',
+    'art_crystal.cpp',
     'basic_art.cpp',
 #    'common_lines.cpp',
 #    'convert_vol2pseudo.cpp',
@@ -425,7 +425,7 @@ ReconsSources = [
 #    'precompute_sampling.cpp',
 #    'projectTomography.cpp',
      'project_XR.cpp',
-#    'project_crystal.cpp',
+    'project_crystal.cpp',
     'projection_real_shears.cpp',
     'psd_enhance.cpp',
 #    'psd_sort.cpp',
@@ -458,7 +458,7 @@ ReconsInterfaceSources = [
 #    'crystal_unbend.cpp',
 #    'im_unbend.cpp',
 #    'phantom_test_reconstruction.cpp',
-#    'project.cpp',
+    'project.cpp',
 #     'recons_spider.cpp'
 ]
 
@@ -475,13 +475,14 @@ AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
     ['#libraries',  '#'],['lib'],['XmippExternal','XmippData'])
 
 # Interface
-InterfaceSources = Glob('libraries/interface', '*.cpp', [])
-#AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
-#    ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
+#InterfaceSources = Glob('libraries/interface', '*.cpp', [])
+InterfaceSources=["pdb.cpp"]
+AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
+    ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
 
 # Recons Interface
-#AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
-#           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
+AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
+           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
 
 # OldXmipp
 OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
@@ -597,14 +598,14 @@ AddXmippProgram('normalize')
 #AddXmippProgram('operate')
 #AddXmippProgram('pdb_dictionary', ['XmippRecons_Interface','XmippRecons','XmippClassif','XmippInterface'])
 #AddXmippProgram('pdb_project_on_dictionary', ['XmippRecons','XmippClassif'])
-#AddXmippProgram('phantom_create', ['XmippRecons'])
+AddXmippProgram('phantom_create', ['XmippRecons'])
 #AddXmippProgram('phantom_create_micrograph', ['XmippRecons'])
 #AddXmippProgram('phantom_create_random', ['XmippRecons'])
 #AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
 #AddXmippProgram('phantom_test_reconstruction', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('phantom_transform', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('precompute_sampling', ['XmippRecons'])
-#AddXmippProgram('project', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
+AddXmippProgram('project', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('project_tomography', ['XmippRecons'])
 AddXmippProgram('projection_real_shears', ['XmippRecons'])
 AddXmippProgram('project_xr', ['XmippRecons'])
