@@ -31,11 +31,14 @@
 /* Read from command line ================================================== */
 void Prog_Project_XR_Parameters::read(int argc, char **argv)
 {
-    fn_proj_param = getParameter(argc, argv, "-i", "");
+    verbose = checkParameter(argc, argv, "-v");
+    if (verbose)
+    	fn_proj_param = getParameter(argc, argv, "-i", "");
+	else
+		fn_proj_param = getParameter(argc, argv, "-i");
     fn_sel_file   = getParameter(argc, argv, "-o", "");
     fn_psf_xr   = getParameter(argc, argv, "-psf", "");
     only_create_angles = checkParameter(argc, argv, "-only_create_angles");
-    verbose = checkParameter(argc, argv, "-v");
     tell=0;
     if (checkParameter(argc, argv, "-show_angles"))
         tell |= TELL_SHOW_ANGLES;
