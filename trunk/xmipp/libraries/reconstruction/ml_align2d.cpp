@@ -2443,7 +2443,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     FileName fn_tmp;
     Image<double> Itmp;
     MetaData MDo;
-    bool write_img_xmd, write_refs_log, write_conv=do_ML3D;
+    bool write_img_xmd, write_refs_log, write_conv=!do_ML3D;
     bool write_norm = model.do_norm;
 
     switch (outputType)
@@ -2511,6 +2511,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
             fn_tmp.compose(fn_tmp, refno + 1, "xmp");
             Itmp = model.Iref[refno];
             Itmp.write(fn_tmp);
+
             MDref.setValue(MDL_IMAGE, fn_tmp);
             MDref.setValue(MDL_ENABLED, 1);
             MDref.setValue(MDL_WEIGHT, (double)Itmp.weight());
@@ -2518,7 +2519,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
                 MDref.setValue(MDL_MIRRORFRAC,
                                model.mirror_fraction[refno]);
             if (write_conv)
-                MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
+            	MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
             if (write_norm)
                 MDref.setValue(MDL_INTSCALE, model.scale[refno]);
             refno++;
