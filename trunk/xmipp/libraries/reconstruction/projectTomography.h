@@ -26,8 +26,7 @@
 #define _PROG_PROJECTION_TOMOGRAPHY_HH
 
 #include <data/funcs.h>
-#include <data/docfile.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/projection.h>
 
 /**@defgroup ProjectionTomographyProgram projectTomograpy (project for tilt series)
@@ -132,9 +131,9 @@ class PROJECT_Tomography_Side_Info
 {
 public:
     /// Document File for the projecting angles. Order: rot, tilt, psi
-    DocFile        DF;
+    MetaData        DF;
     /// Phantom Xmipp volume
-    VolumeXmipp    phantomVol;
+    Image<double>    phantomVol;
 public:
     /** Produce Project Side information.
         This function produce the side information from the project
@@ -153,7 +152,7 @@ public:
     A selection file with all images is also returned.*/
 int PROJECT_Tomography_Effectively_project(
     const Projection_Tomography_Parameters &prm,
-    PROJECT_Tomography_Side_Info &side, Projection &proj, SelFile &SF);
+    PROJECT_Tomography_Side_Info &side, Projection &proj, MetaData &SF);
 
 /* Main routine ------------------------------------------------------------ */
 /** Main Project routine.
@@ -169,6 +168,6 @@ int PROJECT_Tomography_Effectively_project(
     A selection file with all images is also returned (and saved if any
     name has been given in the parameters).*/
 int ROUT_Tomography_project(Prog_Project_Tomography_Parameters &prm,
-    Projection &proj, SelFile &SF);
+    Projection &proj, MetaData &SF);
 //@}
 #endif
