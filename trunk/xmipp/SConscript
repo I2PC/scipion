@@ -411,7 +411,7 @@ ReconsSources = [
     'fourier_filter.cpp',
 #    'make_spectra.cpp',
 #    'micrograph_phase_flipping.cpp',
-#    'micrograph_downsample.cpp',
+    'micrograph_downsample.cpp',
     'ml_align2d.cpp',
 ##    'ml_align3d.cpp',
 #    'mlf_align2d.cpp',
@@ -555,7 +555,7 @@ AddXmippProgram('correct_bfactor', ['XmippRecons'])
 #AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
 #AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
 #AddXmippProgram('ctf_correct_phase', ['XmippRecons'])
-#AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
+AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 #AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 #AddXmippProgram('ctf_profile')
 #AddXmippProgram('ctf_group', ['XmippRecons'])
@@ -581,7 +581,7 @@ AddXmippProgram('header_print')
 #AddXmippProgram('mask')
 AddXmippProgram('mean_shift')
 #AddXmippProgram('micrograph_denoise', ['XmippRecons'])
-#AddXmippProgram('micrograph_downsample', ['XmippRecons'])
+AddXmippProgram('micrograph_downsample', ['XmippRecons'])
 #AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 AddXmippProgram('micrograph_scissor'),
 #AddXmippProgram('micrograph_window')
