@@ -55,21 +55,16 @@ public:
     }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Center_parameters *eprm = (Center_parameters *) prm;
+    img().checkDimensionWithDebug(2,__FILE__,__LINE__);
     centerImage(img(),eprm->Niter,eprm->limitShift);
     return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    std::cerr << "This function is not implemented for volumes\n";
-    return false;
 }
 
 int main(int argc, char **argv)
 {
     Center_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
