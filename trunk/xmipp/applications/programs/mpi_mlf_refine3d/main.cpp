@@ -75,13 +75,16 @@ int main(int argc, char **argv)
             prm.show();
             prm.remake_SFvol(prm.istart - 1, true, false);
         }
-        else prm.remake_SFvol(prm.istart - 1, false, false);
+        else
+            prm.remake_SFvol(prm.istart - 1, false, false);
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Read and set general MLalign2D-stuff
         ML2D_prm.read(argc2, argv2, true);
-        if (rank != 0) ML2D_prm.verb = prm.verb = 0;
-        if (!checkParameter(argc2, argv2, "-psi_step")) ML2D_prm.psi_step = prm.angular;
+        if (rank != 0)
+            ML2D_prm.verb = prm.verb = 0;
+        if (!checkParameter(argc2, argv2, "-psi_step"))
+            ML2D_prm.psi_step = prm.angular;
         ML2D_prm.fn_root = prm.fn_root;
         ML2D_prm.fast_mode = true;
         ML2D_prm.do_mirror = true;
@@ -89,17 +92,14 @@ int main(int argc, char **argv)
         ML2D_prm.write_selfiles = true;
         ML2D_prm.fn_ref = prm.fn_root + "_lib.sel";
 
-        // Check that there are enough computing nodes
-        if (3*prm.Nvols > size)
-            REPORT_ERROR(1, "mpi_mlf_refine3d requires that you use three times more CPUs than reference volumes");
-
         // Project the reference volume
         prm.project_reference_volume(ML2D_prm.SFr, rank, size);
         MPI_Barrier(MPI_COMM_WORLD);
 
         // All nodes produce general side-info
         ML2D_prm.produceSideInfo();
-        if (rank == 0) ML2D_prm.estimateInitialNoiseSpectra();
+        if (rank == 0)
+            ML2D_prm.estimateInitialNoiseSpectra();
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Select only relevant part of selfile for this rank
@@ -110,7 +110,8 @@ int main(int argc, char **argv)
         ML2D_prm.Iold.clear(); // To save memory
 
         // Some output to screen
-        if (rank == 0) ML2D_prm.show(true);
+        if (rank == 0)
+            ML2D_prm.show(true);
 
     }
     catch (Xmipp_error XE)
@@ -129,7 +130,8 @@ int main(int argc, char **argv)
         // Initialize some additional stuff
         Maux.resize(ML2D_prm.dim, ML2D_prm.dim);
         Maux.setXmippOrigin();
-        for (int refno = 0; refno < ML2D_prm.n_ref; refno++) conv.push_back(-1.);
+        for (int refno = 0; refno < ML2D_prm.n_ref; refno++)
+            conv.push_back(-1.);
 
         // Loop over all iterations
         iter = prm.istart;
@@ -151,10 +153,10 @@ int main(int argc, char **argv)
 
             // Integrate over all images
             ML2D_prm.sumOverAllImages(ML2D_prm.SF, ML2D_prm.Iref, iter,
-				      LL, sumcorr, DFo, 
-				      wsum_Mref, wsum_ctfMref,
-				      Mwsum_sigma2, wsum_sigma_offset, 
-				      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
+                                      LL, sumcorr, DFo,
+                                      wsum_Mref, wsum_ctfMref,
+                                      Mwsum_sigma2, wsum_sigma_offset,
+                                      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
 
             // Here MPI_allreduce of all weighted sums, LL, etc.
             // All nodes need the answer to calculate internally
@@ -171,37 +173,37 @@ int main(int argc, char **argv)
                 MPI_Allreduce(MULTIDIM_ARRAY(ML2D_prm.sumhist), MULTIDIM_ARRAY(Vaux),
                               MULTIDIM_SIZE(ML2D_prm.sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
-                    DIRECT_MULTIDIM_ELEM(ML2D_prm.sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+                DIRECT_MULTIDIM_ELEM(ML2D_prm.sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
                 for (int ires = 0; ires < ML2D_prm.hdim; ires++)
                 {
                     Vaux.resize(ML2D_prm.sumhist);
                     MPI_Allreduce(MULTIDIM_ARRAY(ML2D_prm.resolhist[ires]), MULTIDIM_ARRAY(Vaux),
                                   MULTIDIM_SIZE(ML2D_prm.resolhist[ires]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
-                        DIRECT_MULTIDIM_ELEM(ML2D_prm.resolhist[ires], n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+                    DIRECT_MULTIDIM_ELEM(ML2D_prm.resolhist[ires], n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
                 }
             }
-	    for (int ifocus = 0; ifocus < ML2D_prm.nr_focus; ifocus++)
-	    {
-		for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++)
-		{
-		    MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-		    Mwsum_sigma2[ifocus][ii] = aux;
-		}
+            for (int ifocus = 0; ifocus < ML2D_prm.nr_focus; ifocus++)
+            {
+                for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++)
+                {
+                    MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    Mwsum_sigma2[ifocus][ii] = aux;
+                }
                 if (ML2D_prm.do_student)
                 {
                     MPI_Allreduce(&sumw_defocus[ifocus], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                     sumw_defocus[ifocus] = aux;
                 }
-	    }
-	    for (int refno = 0;refno < ML2D_prm.n_ref; refno++)
-	    {
-		if (ML2D_prm.do_ctf_correction)
-		{
-		    MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
-				  MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-		    wsum_ctfMref[refno] = Maux;
-		}
+            }
+            for (int refno = 0;refno < ML2D_prm.n_ref; refno++)
+            {
+                if (ML2D_prm.do_ctf_correction)
+                {
+                    MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
+                                  MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                    wsum_ctfMref[refno] = Maux;
+                }
                 MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
                               MULTIDIM_SIZE(wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 wsum_Mref[refno] = Maux;
@@ -219,12 +221,12 @@ int main(int argc, char **argv)
 
             // Update model parameters
             ML2D_prm.updateParameters(wsum_Mref, wsum_ctfMref,
-				      Mwsum_sigma2, wsum_sigma_offset, 
-				      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus, 
-				      sumcorr, sumw_allrefs,
-				      spectral_signal, prm.eachvol_end[0]+1);
+                                      Mwsum_sigma2, wsum_sigma_offset,
+                                      sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
+                                      sumcorr, sumw_allrefs,
+                                      spectral_signal, prm.eachvol_end[0]+1);
 
-            // Write intermediate files 
+            // Write intermediate files
             if (rank != 0)
             {
                 // All slaves send docfile to the master
@@ -239,7 +241,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                // Master fills docfile 
+                // Master fills docfile
                 std::ofstream myDocFile;
                 FileName fn_tmp;
                 fn_tmp.compose(prm.fn_root + "_it",iter,"doc");
@@ -277,22 +279,22 @@ int main(int argc, char **argv)
             // Reconstruct the new reference volumes also in parallel
             // Assume that the number of processors is larger than the
             // number of volumes to reconstruct ...
-            if (rank < prm.Nvols)
-                // new reference reconstruction
-                prm.reconstruction(argc2, argv2, iter, rank, 0);
-            else if (rank >= prm.Nvols && rank < 2*prm.Nvols)
-                // noise reconstruction
-                prm.reconstruction(argc2, argv2, iter, rank % prm.Nvols, 1);
-            else if (rank >= 2*prm.Nvols && rank < 3*prm.Nvols)
-                // ctf-corrupted reconstruction
-                prm.reconstruction(argc2, argv2, iter, rank % prm.Nvols, 2);
+            for (volno = 0; volno < prm.Nvols; volno++)
+                for (int nn=0; nn < 3; nn++)
+                {
+                    // nn=0: new reference reconstruction
+                    // nn=1: noise reconstruction
+                    // nn=2: ctf-corrupted reconstruction
+                    if (rank == (volno * 3 + nn) % size)
+                        prm.reconstruction(argc2, argv2, ML2D_prm.iter, volno, nn);
+                }
             MPI_Barrier(MPI_COMM_WORLD);
 
             // Only the master does post-processing & convergence check (i.e. sequentially)
             if (rank == 0)
             {
 
-                // Solvent flattening and/or symmetrization (if requested)
+                // Solvent flattening and/or symmetrizing (if requested)
                 prm.remake_SFvol(iter, false, true);
                 prm.post_process_volumes(argc2, argv2);
 
@@ -303,7 +305,8 @@ int main(int argc, char **argv)
                 if (prm.check_convergence(iter))
                 {
                     converged = 1;
-                    if (prm.verb > 0) std::cerr << "--> Optimization converged!" << std::endl;
+                    if (prm.verb > 0)
+                        std::cerr << "--> Optimization converged!" << std::endl;
                 }
 
             }
@@ -315,7 +318,7 @@ int main(int argc, char **argv)
 
             // Update filenames in SFvol (now without noise volumes!)
             prm.remake_SFvol(iter, false, false);
-	    ML2D_prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
+            ML2D_prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
 
             if (!converged && iter + 1 <= prm.Niter)
             {
@@ -327,7 +330,8 @@ int main(int argc, char **argv)
                 while (!ML2D_prm.SFr.eof())
                 {
                     FileName fn_img=ML2D_prm.SFr.NextImg();
-                    if (fn_img=="") break;
+                    if (fn_img=="")
+                        break;
                     ML2D_prm.Iref[c].read(fn_img, false, false, false, false);
                     ML2D_prm.Iref[c]().setXmippOrigin();
                     c++;
@@ -337,8 +341,8 @@ int main(int argc, char **argv)
             iter++;
         } // end loop iterations
 
-	if (rank == 0)
-	    ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
+        if (rank == 0)
+            ML2D_prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
         if (!converged && prm.verb > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
