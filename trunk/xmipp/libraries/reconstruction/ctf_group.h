@@ -27,8 +27,6 @@
 #define _CTF_GROUP_HH
 
 #include <data/args.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
 #include <data/filters.h>
 #include "fourier_filter.h"
 #include <data/ctf.h>
@@ -77,10 +75,10 @@ public:
     double wiener_constant;
 
     /// Matrix with denominator term of Wiener filter
-    Matrix2D<double> Mwien;
+    MultidimArray<double> Mwien;
 
     // Vector with 1D CTF profiles for all micrographs and all groups
-    std::vector<Matrix2D<double> > mics_ctf2d, groups_ctf2d;
+    std::vector<MultidimArray<double> > mics_ctf2d, groups_ctf2d;
 
     // Vector with average defocus value per micrograph and per group
     std::vector<double> mics_defocus;
