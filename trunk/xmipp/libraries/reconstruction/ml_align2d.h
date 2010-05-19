@@ -449,8 +449,11 @@ public:
     /// Update all model parameters
     void maximization(Model_MLalign2D &model);
 
+    /// Update all model parameters, adapted for IEM blocks use
+    void maximizationBlocks(int refs_per_class = 1);
+
     /// Correct references scale
-    void correctScaleAverage(int refs_per_class=1);
+    void correctScaleAverage(int refs_per_class = 1);
 
     /// check convergence
     bool checkConvergence();

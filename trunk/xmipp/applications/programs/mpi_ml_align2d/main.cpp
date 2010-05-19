@@ -154,47 +154,9 @@ int main(int argc, char **argv)
                     prm.sumwsc[refno] = aux;
                 }
 
-                if (prm.blocks == 1) //ie not IEM
-                {
-                    prm.maximization(prm.model);
-                }
-                else //do IEM
-                {
-                    if (!special_first)
-                    {
-                        prm.readModel(block_model, prm.getBaseName("_block",
-                                prm.current_block + 1));
-                        //block_model.print();
-                        prm.model.substractModel(block_model);
-                    }
-                    prm.maximization(block_model);
-
-                    if (rank == 0) prm.writeOutputFiles(block_model, OUT_BLOCK);
-
-                    if (!special_first)
-                    {
-                        prm.model.addModel(block_model);
-                    }
-                }
-
-                if (prm.do_norm)
-                    prm.correctScaleAverage();
+                prm.maximizationBlocks();
 
             }//close for blocks
-
-            if (prm.blocks > 1 && !special_first)
-            {
-                for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
-                {
-                    prm.readModel(block_model, prm.getBaseName("_block",
-                            prm.current_block + 1));
-
-                    if (prm.current_block == 0)
-                        prm.model = block_model;
-                    else
-                        prm.model.addModel(block_model);
-                }
-            }
 
             // Check convergence
             converged = prm.checkConvergence();

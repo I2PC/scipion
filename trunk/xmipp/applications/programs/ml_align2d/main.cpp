@@ -92,48 +92,13 @@ int main(int argc, char **argv)
                 prm.timer.tic(ITER_M);
 #endif
 
-                if (prm.blocks == 1) //ie not IEM
-                {
-                    prm.maximization(prm.model);
-                }
-                else //do IEM
-                {
-                    if (!special_first)
-                    {
-
-                        prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
-                        prm.model.substractModel(block_model);
-                    }
-                    std::cerr << "Maximizing block " << prm.current_block <<std::endl;
-                    prm.maximization(block_model);
-                    prm.writeOutputFiles(block_model, OUT_BLOCK);
-
-                    if (!special_first)
-                    {
-                        prm.model.addModel(block_model);
-                    }
-                }
-
-                if (prm.do_norm)
-                    prm.correctScaleAverage();
+                prm.maximizationBlocks();
 
 #ifdef TIMING
                 prm.timer.toc(ITER_M);
 #endif
 
             }//close for blocks
-
-            if (prm.blocks > 1 && special_first)
-            {
-                for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
-                {
-                    prm.readModel(block_model, prm.getBaseName("_block", prm.current_block + 1));
-                    if (prm.current_block == 0)
-                        prm.model = block_model;
-                    else
-                        prm.model.addModel(block_model);
-                }
-            }
 
             // Check convergence
             converged = prm.checkConvergence();

@@ -138,6 +138,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     do_first_iem = checkParameter(argc2, argv2, "-do_first_iem");
     //Weight of image selected reference in 'generateInitialReferences'
     ref_weight = textToFloat(getParameter(argc2, argv2, "-ref_weight", "1"));
+
     if (ref_weight < 0 || ref_weight > 1)
         REPORT_ERROR(3333,"Ref weight should be beetwen 0 and 1");
 
@@ -746,6 +747,8 @@ void Prog_MLalign2D_prm::generateInitialReferences()
         weights[refno] = 0.;
     }
 
+    std::cerr << "HOLA1: After some init" <<std::endl;
+
     int nsub, first, last;
     for (int refno = 0; refno < model.n_ref; refno++)
     {
@@ -765,9 +768,14 @@ void Prog_MLalign2D_prm::generateInitialReferences()
             IRef[1 - refno]() += ITemp() * (1 - ref_weight);
             weights[1 - refno] += 1 - ref_weight;
 
+            std::cerr << "HOLA1.2: After some updating..." <<std::endl;
+
             //Create random blocks for use in the first iem iteration
             if (blocks > 1 && do_first_iem)
             {
+                std::cerr << "xsize:" << XSIZE(ITemp()) << "ysize: " << YSIZE(ITemp()) <<std::endl;
+                std::cerr << "1 xsize:" << XSIZE(models[IMG_BLOCK(imgno)].Iref[refno]()) << "1 ysize: " << YSIZE(models[IMG_BLOCK(imgno)].Iref[refno]()) <<std::endl;
+
                 models[IMG_BLOCK(imgno)].Iref[refno]() += ITemp() * ref_weight;
                 models[IMG_BLOCK(imgno)].Iref[1 - refno]() += ITemp() * (1 - ref_weight);
                 //Store weights in alpha_k
@@ -782,6 +790,7 @@ void Prog_MLalign2D_prm::generateInitialReferences()
             progress_bar(refno);
     }//close for refno
 
+    std::cerr << "HOLA1.5: After some updating..." <<std::endl;
     //Write ref to disk
     for (int refno = 0; refno < model.n_ref; refno++)
     {
@@ -798,6 +807,8 @@ void Prog_MLalign2D_prm::generateInitialReferences()
         MDref.setValue(MDL_ENABLED, 1);
 
     }
+
+    std::cerr << "HOLA2: After some updating..." <<std::endl;
 
     if (blocks > 1 && do_first_iem)
     {
@@ -2270,6 +2281,38 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
 #endif
 }//close function maximization
 
+void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
+{
+    bool special_first = !do_first_iem && iter == 1;
+    Model_MLalign2D block_model(model.n_ref);
+
+    if (blocks == 1) //ie not IEM, normal maximization
+    {
+        maximization(model);
+    }
+    else //do IEM
+    {
+        if (!special_first)
+        {
+
+            readModel(block_model, getBaseName("_block", current_block + 1));
+            model.substractModel(block_model);
+        }
+
+        //std::cerr << "Maximizing block " << current_block <<std::endl;
+        maximization(block_model);
+        writeOutputFiles(block_model, OUT_BLOCK);
+
+        if (special_first && current_block == 0)
+            model = block_model;
+        else
+            model.addModel(block_model);
+    }
+
+    if (do_norm)
+        correctScaleAverage(refs_per_class);
+}//close function maximizationBlocks
+
 void Prog_MLalign2D_prm::correctScaleAverage(int refs_per_class)
 {
 
@@ -2459,11 +2502,11 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     if (write_refs_log)
     {
         // Write out current reference images and fill sel & log-file
-    	// Re-use the MDref metadata that were read in produceSideInfo2
-    	// This way. MLD_ANGLEROT, MDL_ANGLETILT, MDL_REF etc are treated ok for do_ML3D
-    	int refno=0;
-    	FOR_ALL_OBJECTS_IN_METADATA(MDref)
-    	{
+        // Re-use the MDref metadata that were read in produceSideInfo2
+        // This way. MLD_ANGLEROT, MDL_ANGLETILT, MDL_REF etc are treated ok for do_ML3D
+        int refno=0;
+        FOR_ALL_OBJECTS_IN_METADATA(MDref)
+        {
             fn_tmp = fn_base + "_ref";
             fn_tmp.compose(fn_tmp, refno + 1, "xmp");
             Itmp = model.Iref[refno];
@@ -2473,7 +2516,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
             MDref.setValue(MDL_WEIGHT, (double)Itmp.weight());
             if (do_mirror)
                 MDref.setValue(MDL_MIRRORFRAC,
-                             model.mirror_fraction[refno]);
+                               model.mirror_fraction[refno]);
             if (write_conv)
                 MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
             if (write_norm)
@@ -2735,6 +2778,7 @@ void Model_MLalign2D::print()
     std::cerr << "wsum_sigma_noise: " << get_wsum_sigma_noise() << std::endl;
     std::cerr << "sigma_offset: " << sigma_offset << std::endl;
     std::cerr << "sigma_noise: " << sigma_noise << std::endl;
+    std::cerr << "LL: " << LL << std::endl;
 
     for (int refno = 0; refno < n_ref; refno++)
     {

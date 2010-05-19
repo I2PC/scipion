@@ -105,32 +105,7 @@ int main(int argc, char **argv)
                 // Integrate over all images
                 ML2D_prm.expectation();
 
-                // Update model parameters
-                if (ML2D_prm.blocks == 1) //ie not IEM
-                {
-                    ML2D_prm.maximization(ML2D_prm.model);
-                }
-                else //do IEM
-                {
-                    if (!special_first)
-                    {
-
-                        ML2D_prm.readModel(block_model, ML2D_prm.getBaseName("_block", ML2D_prm.current_block + 1));
-                        ML2D_prm.model.substractModel(block_model);
-                    }
-                    std::cerr << "Maximizing block " << ML2D_prm.current_block <<std::endl;
-                    ML2D_prm.maximization(block_model);
-                    ML2D_prm.writeOutputFiles(block_model, OUT_BLOCK);
-
-                    if (!special_first)
-                    {
-                        ML2D_prm.model.addModel(block_model);
-                    }
-                }
-
-				// Apply average scale correction
-                if (ML2D_prm.do_norm)
-                    ML2D_prm.correctScaleAverage(prm.nr_projections);
+                ML2D_prm.maximizationBlocks(prm.nr_projections);
 
                 // Write out 2D reference images (to be used in reconstruction)
                 ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_REFS);
