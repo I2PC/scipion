@@ -458,7 +458,7 @@ ReconsSources = [
 #    'resolution_ssnr.cpp',
 #    'series_remove_fluctuations.cpp',
 #    'sort_images.cpp',
-    'spar.cpp',
+##    'spar.cpp', ROMAN --> NO EXISTE
     'sparma.cpp'
 #    'surface.cpp',
 #    'symmetrize.cpp',
