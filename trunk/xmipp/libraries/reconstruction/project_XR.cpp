@@ -52,7 +52,7 @@ void Prog_Project_XR_Parameters::usage()
            "       [-psf <psf_param_file>]\n"
            "       [-o <sel_file>]\n"
            "       [-show_angles]\n"
-           "       [-v]\n
+           "       [-v]\n"
            "       [-only_create_angles]\n");
            printf(
        "\tWhere:\n"
