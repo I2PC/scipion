@@ -28,7 +28,7 @@
 
 #include "fourier_filter.h"
 
-#include <data/selfile.h>
+#include <data/metadata.h>
 
 /**@defgroup CorrectAmplitude2D ctf_correct_phase (CTF Phase correction)
    @ingroup ReconsLibraryPrograms */
@@ -50,7 +50,7 @@ public:
     FourierMask ctf;
     
     /// Side Info: ctfdat
-    CTFDat ctfdat;
+    MetaData ctfdat;
 public:
     /** Read parameters from command line. */
     void read(int argc, char **argv);

@@ -40,16 +40,16 @@ void CorrectAmplitude2DParams::read(int argc, char **argv)
 void CorrectAmplitude2DParams::show()
 {
     std::cout << "Ctfdat:     " << fnCtfdat << std::endl
-              << "Relaxation: " << beta << std::endl
-              << "Iterations: " << Niterations << std::endl;
+    << "Relaxation: " << beta << std::endl
+    << "Iterations: " << Niterations << std::endl;
 }
 
 /* Usage ------------------------------------------------------------------- */
 void CorrectAmplitude2DParams::usage()
 {
     std::cerr << "   -ctfdat <CTF descr file or selfile> : list of particles and CTFs\n"
-              << "  [-relax <beta=1>]                    : relaxation factor\n"
-              << "  [-iterations <N=300>]                : number of iterations\n"
+    << "  [-relax <beta=1>]                    : relaxation factor\n"
+    << "  [-iterations <N=300>]                : number of iterations\n"
     ;
 }
 
@@ -62,47 +62,59 @@ void CorrectAmplitude2DParams::produceSideInfo()
 /* Correct a set of images ------------------------------------------------- */
 void CorrectAmplitude2DParams::run()
 {
-    Matrix2D< std::complex<double> > fft;
+    MultidimArray< std::complex<double> > fft;
     XmippFftw transformer;
-    ctfdat.goFirstLine();
     std::cerr << "Correcting CTF amplitude in 2D ...\n";
-    int istep = CEIL((double)ctfdat.lineNo() / 60.0);
-    init_progress_bar(ctfdat.lineNo());
+    int istep = CEIL((double)ctfdat.size() / 60.0);
+    init_progress_bar(ctfdat.size());
     int i = 0;
-    while (!ctfdat.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
         FileName fnProjection, fnCTF;
-	ctfdat.getCurrentLine(fnProjection,fnCTF);
-	if (fnProjection!="") {
-            // Read input image and compute its Fourier transform
-            ImageXmipp I;
-            I.read(fnProjection);
-            transformer.FourierTransform(I(), fft, false);
+        if (!ctfdat.getValue(MDL_IMAGE,fnProjection))
+            REPORT_ERROR(1,(std::string)"Cannot find images in "+fnCtfdat);
+        if (!ctfdat.getValue(MDL_CTFMODEL,fnCTF))
+            REPORT_ERROR(1,(std::string)"Cannot find CTF for "+fnProjection);
 
-            // Read the CTF
-            ctf.FilterBand = CTF;
-            ctf.ctf.enable_CTFnoise = false;
-            ctf.ctf.read(fnCTF);
-            ctf.ctf.Produce_Side_Info();
-            ctf.generate_mask(I());
+        // Read input image and compute its Fourier transform
+        Image<double> I;
+        I.read(fnProjection);
+        transformer.FourierTransform(I(), fft, false);
 
-            // Apply the amplitude correction
-            // See Biemond, Lagendijk, Merserau. Iterative methods for image
-            // deblurring. Proc. IEEE 78, 856-883. 1990.
-            Matrix2D< std::complex<double> > f;
-            f=fft;
-            for (int n=0; n<Niterations; n++)
-                FOR_ALL_ELEMENTS_IN_MATRIX2D(f)
-                    f(i,j)=f(i,j)+beta*ctf.maskFourier2D(i, j)*
-                        (fft(i,j)-ctf.maskFourier2D(i, j)*f(i,j));
-            fft=f;
+        // Read the CTF
+        ctf.FilterBand = CTF;
+        ctf.ctf.enable_CTFnoise = false;
+        ctf.ctf.read(fnCTF);
+        ctf.ctf.Produce_Side_Info();
 
-            // Go back to real space
-            transformer.inverseFourierTransform();
-            I.write();
-	}
-        if (i++ % istep == 0) progress_bar(i);
-	ctfdat.nextLine();
+        // Apply the amplitude correction
+        // See Biemond, Lagendijk, Merserau. Iterative methods for image
+        // deblurring. Proc. IEEE 78, 856-883. 1990.
+        MultidimArray< std::complex<double> > f;
+        MultidimArray<double> ctfMask;
+        Matrix1D<double> w(2);
+        f=fft;
+        ctfMask.initZeros(f);
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(f)
+        {
+            FFT_IDX2DIGFREQ(i,YSIZE(I()),YY(w));
+            FFT_IDX2DIGFREQ(j,XSIZE(I()),XX(w));
+            ctfMask(i,j)=ctf.maskValue(w);
+        }
+        for (int n=0; n<Niterations; n++)
+        {
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(f)
+            DIRECT_MULTIDIM_ELEM(f,n)+=beta*DIRECT_MULTIDIM_ELEM(ctfMask,n)*
+                                       (DIRECT_MULTIDIM_ELEM(f,n)-
+                                        DIRECT_MULTIDIM_ELEM(ctfMask,n)*DIRECT_MULTIDIM_ELEM(f,n));
+        }
+        fft=f;
+
+        // Go back to real space
+        transformer.inverseFourierTransform();
+        I.write();
+        if (i++ % istep == 0)
+            progress_bar(i);
     }
-    progress_bar(ctfdat.lineNo());
+    progress_bar(ctfdat.size());
 }

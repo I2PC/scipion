@@ -85,8 +85,8 @@ void CorrectPhaseParams::run()
         Matrix1D<double> w(2);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(fft)
         {
-            FFT_IDX2DIGFREQ(i,YSIZE(fft),YY(w));
-            FFT_IDX2DIGFREQ(j,XSIZE(fft),XX(w));
+            FFT_IDX2DIGFREQ(i,YSIZE(I()),YY(w));
+            FFT_IDX2DIGFREQ(j,XSIZE(I()),XX(w));
             if (ctf.maskValue(w)<0)
                 fft(i, j) *= -1;
         }
