@@ -27,6 +27,7 @@
 
 #include <data/args.h>
 #include <data/fftw.h>
+#include <data/metadata.h>
 
 /* Read parameters from command line. -------------------------------------- */
 void CorrectPhaseParams::read(int argc, char **argv)
@@ -55,40 +56,47 @@ void CorrectPhaseParams::produceSideInfo()
 /* Correct a set of images ------------------------------------------------- */
 void CorrectPhaseParams::run()
 {
-    Matrix2D< std::complex<double> > fft;
+    MultidimArray< std::complex<double> > fft;
     XmippFftw transformer;
-    ctfdat.goFirstLine();
     std::cerr << "Correcting CTF phase ...\n";
-    int istep = CEIL((double)ctfdat.lineNo() / 60.0);
-    init_progress_bar(ctfdat.lineNo());
+    int istep = CEIL((double)ctfdat.size() / 60.0);
+    init_progress_bar(ctfdat.size());
     int i = 0;
-    while (!ctfdat.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
         FileName fnProjection, fnCTF;
-	ctfdat.getCurrentLine(fnProjection,fnCTF);
-	if (fnProjection!="") {
-            // Read input image and compute its Fourier transform
-            ImageXmipp I;
-            I.read(fnProjection);
-            transformer.FourierTransform(I(), fft, false);
+        if (!ctfdat.getValue(MDL_IMAGE,fnProjection))
+        	REPORT_ERROR(1,(std::string)"Cannot find images in "+fnCtfdat);
+        if (!ctfdat.getValue(MDL_CTFMODEL,fnCTF))
+        	REPORT_ERROR(1,(std::string)"Cannot find CTF for "+fnProjection);
 
-            // Read the CTF
-            ctf.FilterBand = CTF;
-            ctf.ctf.enable_CTFnoise = false;
-            ctf.ctf.read(fnCTF);
-            ctf.ctf.Produce_Side_Info();
-            ctf.generate_mask(I());
+        // Read input image and compute its Fourier transform
+        Image<double> I;
+        I.read(fnProjection);
+        transformer.FourierTransform(I(), fft, false);
 
-            // Apply the phase correction
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(fft)
-                if (ctf.maskFourier2D(i, j)<0) fft(i, j) *= -1;
+        // Read the CTF
+        ctf.FilterBand = CTF;
+        ctf.ctf.enable_CTFnoise = false;
+        ctf.ctf.read(fnCTF);
+        ctf.ctf.Produce_Side_Info();
 
-            // Go back to real space
-            transformer.inverseFourierTransform();
-            I.write();
-	}
-        if (i++ % istep == 0) progress_bar(i);
-	ctfdat.nextLine();
+        // Apply the phase correction
+        Matrix1D<double> w(2);
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(fft)
+        {
+            FFT_IDX2DIGFREQ(i,YSIZE(fft),YY(w));
+            FFT_IDX2DIGFREQ(j,XSIZE(fft),XX(w));
+            if (ctf.maskValue(w)<0)
+                fft(i, j) *= -1;
+        }
+
+        // Go back to real space
+        transformer.inverseFourierTransform();
+        I.write();
+
+        if (i++ % istep == 0)
+            progress_bar(i);
     }
-    progress_bar(ctfdat.lineNo());
+    progress_bar(ctfdat.size());
 }

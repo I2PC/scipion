@@ -343,7 +343,6 @@ double FourierMask::maskValue(const Matrix1D<double> &w)
 /* Generate mask ----------------------------------------------------------- */
 void FourierMask::generate_mask(MultidimArray<double> &v)
 {
-    
     if (do_generate_3dmask)
     {
         transformer.setReal(v);
