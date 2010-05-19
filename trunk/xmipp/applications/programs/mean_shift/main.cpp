@@ -91,7 +91,7 @@ void * thread_process_plane( void * args )
     else
         myLastY = myFirstY + numElems - 1;
     
-    if( myid == 0 )
+    if( myID == 0 )
         std::cerr << "Progress (over a total of " << z_max - z_min + 1 << " slices): ";
     
     if( fast )
