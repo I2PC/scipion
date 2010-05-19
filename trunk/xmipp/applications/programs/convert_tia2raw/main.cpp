@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
 
 
@@ -37,15 +37,15 @@ struct DataHeader
 
 struct ImDataHeader
 {
-    short int DATA_TYPE, 				//DataType
+    short int DATA_TYPE,     //DataType
     DATA_TYPE_SIZE;
-    int  	   CalibrationElementX,    //CalibrationElementX
+    int      CalibrationElementX,    //CalibrationElementX
     CalibrationElementY,    //CalibrationElementY
     IMAGE_WIDTH,            //ArraySizeX
     IMAGE_HEIGHT;           //ArraySizeY
-    double    CalibrationOffsetX, 	//CalibrationOffsetX
-    PIXEL_WIDTH,         	//CalibrationDeltaX
-    CalibrationOffsetY,  	//CalibrationOffsetY
+    double    CalibrationOffsetX,  //CalibrationOffsetX
+    PIXEL_WIDTH,          //CalibrationDeltaX
+    CalibrationOffsetY,   //CalibrationOffsetY
     PIXEL_HEIGHT;           //CalibrationDeltaY
     std::string     DATA_TYPE_SIZE_STRING;
     bool      isSigned;
@@ -63,11 +63,11 @@ void setDataType(ImDataHeader &);
 
 int main(int argc, char *argv[])
 {
-    FileName fn_in; // input file
+    FileName fn_input; // input file
     FileName fn_out; // output file
     FileName fn_sel; // input selfile
     FileName fn_oext; // output extension
-    float	 dStddev; // Standard Desv
+    float  dStddev; // Standard Desv
 
 
     if (IsBigEndian())
@@ -79,36 +79,28 @@ int main(int argc, char *argv[])
         if (argc == 1)
             Usage(argv);
         if (checkParameter(argc, argv, "-i"))
-        {
-            fn_in = getParameter(argc, argv, "-i");
-            if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
-                EXIT_ERROR(1, "tia2raw: -i option is not compatible with -sel or -oext");
-        }
+            fn_input = getParameter(argc, argv, "-i");
+
         if (checkParameter(argc, argv, "--ImageIn"))
-        {
-            fn_in = getParameter(argc, argv, "--ImageIn");
-            if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
-                EXIT_ERROR(1, "tia2raw: --ImageIn option is not compatible with -sel or -oext");
-        }
+            fn_input = getParameter(argc, argv, "--ImageIn");
+
         if (checkParameter(argc, argv, "-o"))
         {
             fn_out = getParameter(argc, argv, "-o");
-            if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
-                EXIT_ERROR(1, "tia2raw: -o option is not compatible with -sel or -oext");
+            if (checkParameter(argc, argv, "-oext"))
+                EXIT_ERROR(1, "tia2raw: -o option is not compatible with -oext");
         }
         if (checkParameter(argc, argv, "--OutRootName"))
         {
             fn_out = getParameter(argc, argv, "--OutRootName", "OUT");
-            if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
-                EXIT_ERROR(1, "tia2raw: --OutRootName option is not compatible with -sel or -oext");
+            if (checkParameter(argc, argv, "-oext"))
+                EXIT_ERROR(1, "tia2raw: --OutRootName option is not compatible with -oext");
         }
-        if (checkParameter(argc, argv, "-sel"))
-        {
-            fn_sel = getParameter(argc, argv, "-sel");
-            fn_oext = getParameter(argc, argv, "-oext", "raw");
-            if (checkParameter(argc, argv, "-i") || checkParameter(argc, argv, "-o"))
-                EXIT_ERROR(1, "tia2raw: -sel option is not compatible with -i or -o");
-        }
+        if (fn_input.isMetaData() && checkParameter(argc, argv, "-o"))
+            EXIT_ERROR(1, "tia2raw:  sel file is not compatible with or -o");
+
+        fn_oext  = getParameter(argc, argv, "-oext", "raw");
+
         if (checkParameter(argc, argv, "-s"))
             dStddev = textToFloat(getParameter(argc, argv, "-s", "5"));
         else
@@ -124,33 +116,51 @@ int main(int argc, char *argv[])
     {
         /* Perform conversion ====================================================== */
 
-        /* input is a sel file*/
-        if (fn_sel != "")
+
+        MetaData SF, SF_out;
+        FileName in_name, out_name;
+
+        if (fn_input.isMetaData())
         {
-            SelFile SF(fn_sel), SF_out;
-            std::cerr << "Converting from TIA to RAW ...\n";
-            init_progress_bar(SF.ImgNo());
-            int i = 0;
-            while (!SF.eof())
-            {
-                FileName in_name = SF.NextImg();
-                FileName out_name = in_name.without_extension() + "." + fn_oext;
-                SF_out.insert(out_name);
-                tia2raw(in_name, out_name, dStddev);
-                progress_bar(i++);
-            }
-            progress_bar(SF.ImgNo());
-            SF_out.write(fn_sel.without_extension() + "_raw.sel");
+            SF.read( fn_input ,NULL);
+        }
+        else
+        {
+            SF.addObject();
+            SF.setValue( MDL_IMAGE, fn_input);
+            SF.setValue( MDL_ENABLED, 1);
         }
 
-        /* input/output are single files */
-        else if (fn_in != "")
+
+        SF.removeObjects(MDL_ENABLED, -1);
+
+        std::cerr << "Converting from TIA to RAW ...\n";
+
+        init_progress_bar(SF.size());
+        int i=0;
+
+
+
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            if (fn_out == "")
-                tia2raw(fn_in, fn_in.without_extension() + ".raw", dStddev);
+            SF.getValue(MDL_IMAGE,in_name);
+
+            if (fn_out!="")
+                out_name = fn_out;
             else
-                tia2raw(fn_in, fn_out, dStddev);
+                out_name = in_name.without_extension()+"."+fn_oext;
+
+            tia2raw(in_name, out_name, dStddev);
+
+            SF_out.addObject();
+            SF_out.setValue(MDL_IMAGE,out_name);
+            SF_out.setValue(MDL_ENABLED,1);
+            progress_bar(kkkk);
         }
+        progress_bar(SF.size());
+
+        if (fn_input.isMetaData())
+            SF_out.write(fn_input.without_extension()+"_raw.sel");
 
     }
     catch (Xmipp_error XE)
@@ -170,10 +180,9 @@ void Usage(char **argv)
            "\nPurpose: Convert from Tecnai imaging and analysis (TIA) images to raw format"
            "\nParameter Values: (note space before value)"
            "\nESPECIFIC PARAMETERS FOR SINGLE-FILE CONVERSION"
-           "\n    -i,--ImageIn file_in        input TIA file"
+           "\n    -i,--ImageIn file_in        input TIA file or sel file"
            "\n    -o,--OutRootName file_out   output RAW file"
            "\nESPECIFIC PARAMETERS FOR SEL-FILE  CONVERSION"
-           "\n    -sel  input_file            input sel file"
            "\n    -oext input_file            extension for the output files"
            "\nGENERAL PARAMETERS"
            "\n   [-s, --stddev dStddev]       Cut values above (below) s standard deviation (default=5)"
