@@ -110,8 +110,6 @@ int main(int argc, char **argv)
             for (int refno = 0; refno < prm.model.n_ref; refno++)
                 prm.Iold[refno]() = prm.model.Iref[refno]();
 
-            bool special_first = !prm.do_first_iem && prm.iter == 1;
-
             for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
             {
                 // Integrate over all images

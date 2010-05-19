@@ -2150,7 +2150,7 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
 
 void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
 {
-    bool special_first = !do_first_iem && iter == 1;
+    bool special_first = !do_first_iem && iter == 0;
     Model_MLalign2D block_model(model.n_ref);
 
     if (blocks == 1) //ie not IEM, normal maximization
@@ -2161,7 +2161,6 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
     {
         if (!special_first)
         {
-
             readModel(block_model, getBaseName("_block", current_block + 1));
             model.substractModel(block_model);
         }

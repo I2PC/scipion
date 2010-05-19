@@ -86,8 +86,6 @@ int main(int argc, char **argv)
                 prm.fh_hist  << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
             }
 
-            bool special_first = !ML2D_prm.do_first_iem && ML2D_prm.iter == 1;
-
             for (ML2D_prm.current_block = 0; ML2D_prm.current_block < ML2D_prm.blocks; ML2D_prm.current_block++)
             {
                 // Project volumes
