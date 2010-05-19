@@ -304,7 +304,9 @@ public:
     std::vector<int> imgs_optrefno;
     /** Overall average scale (to be forced to one)*/
     double average_scale;
- 
+    /** Number of (2D/3D) references to be generated */
+    int factor_nref;
+
     bool do_restart;
 
     /** Thread stuff */
@@ -343,9 +345,10 @@ public:
     int sigdim;
     int ioptx, iopty;
     std::vector<int> ioptx_ref, iopty_ref, ioptflip_ref;
-    std::vector<double> maxw_ref;
     //These are for refno work assigns to threads
     int refno_index, refno_count, refno_load, refno_load_param;
+    // Which group does this image belong to in iteration 0 (generation of K references)
+    int mygroup;
 
     //Some incremental stuff
     /** Model */
@@ -364,8 +367,6 @@ public:
     int seed;
     //To check when to do the first iem iteration
     bool do_first_iem;
-    //Weight of image selected reference in 'generateInitialReferences'
-    double ref_weight;
 
 #ifdef TIMING
     JMTimer timer;
@@ -391,9 +392,6 @@ public:
 
     /// Randomize initial images order, only one
     void randomizeImagesOrder();
-
-    /// Generate initial references from random subset averages
-    void generateInitialReferences();
 
     /// Calculate probability density distribution for in-plane transformations
     void calculatePdfInplane();

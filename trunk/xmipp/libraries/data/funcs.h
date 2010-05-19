@@ -1834,4 +1834,8 @@ private:
  */
 int divide_equally(int N, int size, int rank, int &first, int &last);
 
+/** In which group (of divide_equally) is myself situated?
+ */
+int divide_equally_group(int N, int size, int myself);
+
 #endif

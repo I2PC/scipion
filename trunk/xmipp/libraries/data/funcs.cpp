@@ -1345,3 +1345,16 @@ int divide_equally(int N, int size, int rank, int &first, int &last)
 
     return last - first + 1;
 }
+/** In which group from divide_eqaully is myself? */
+int divide_equally_group(int N, int size, int myself)
+{
+	int first, last;
+	for (int rank = 0; rank < size; rank++)
+	{
+		divide_equally(N, size, rank, first, last);
+		if (myself >= first && myself <= last)
+			return rank;
+	}
+	return -1;
+
+}
