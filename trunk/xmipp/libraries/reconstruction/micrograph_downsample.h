@@ -87,7 +87,7 @@ public:
 public:
     // Side information
     // Kernel
-    Matrix2D<double> kernel;
+    MultidimArray<double> kernel;
     // Input micrograph
     Micrograph M;
     // Input micrograph depth

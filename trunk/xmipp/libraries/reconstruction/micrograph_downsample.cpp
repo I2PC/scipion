@@ -171,7 +171,7 @@ std::string Prog_downsample_prm::command_linezz() const
 void Prog_downsample_prm::generate_kernel()
 {
     // Integer Kernel
-    Matrix2D<int>    ikernel;
+    MultidimArray<int>    ikernel;
 
     switch (kernel_mode)
     {
@@ -195,8 +195,7 @@ void Prog_downsample_prm::generate_kernel()
         kernel.initConstant(1);
         break;
     case KER_SINC:
-        SeparableSincKaiserMask(kernel, (1.0 / Xstep),
-                                delta, Deltaw);
+    	SeparableSincKaiserMask2D(kernel, (1.0 / Xstep), delta, Deltaw);
         break;
     }
     kernel.setXmippOrigin();
@@ -204,7 +203,7 @@ void Prog_downsample_prm::generate_kernel()
     // kernel /=sqrt(kernel.sum2());
     // Keep average value constant
     kernel /= kernel.sum();
-    //ImageXmipp save;
+    //Image<double> save;
     //save() = kernel;
     //save.write("PPPkernel.xmp");
 }
