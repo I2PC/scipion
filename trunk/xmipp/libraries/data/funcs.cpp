@@ -648,7 +648,7 @@ FileName xmippBaseDir()
     int i;
     for (i = 0; i < number_directories; i++)
     {
-        FileName fn = directories[i] + "/xmipp_art";
+        FileName fn = directories[i] + "/xmipp_reconstruct_art";
         FILE *aux;
         if ((aux = fopen(fn.c_str(), "r")) != NULL)
         {
