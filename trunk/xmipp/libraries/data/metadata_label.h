@@ -136,6 +136,7 @@ enum MDLabel
     MDL_SAMPLINGRATEY, // sampling rate (double)
     MDL_SAMPLINGRATEZ, // sampling rate (double)
     MDL_SCALE, // scaling factor for an image or volume (double)
+    MDL_SELFILE, // Name of an image (std::string)
     MDL_SERIE, // A collection of micrographs, e.g. a tilt serie (std::string)
     MDL_SHIFTX, // Shift for the image in the X axis (double)
     MDL_SHIFTY, // Shift for the image in the Y axis (double)
@@ -331,6 +332,7 @@ private:
         MDL::addLabel(MDL_SAMPLINGRATEY, LABEL_DOUBLE, "sampling_rateY");
         MDL::addLabel(MDL_SAMPLINGRATEZ, LABEL_DOUBLE, "sampling_rateZ");
         MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale", "Scale");
+        MDL::addLabel(MDL_SELFILE, LABEL_STRING, "selfile");
         MDL::addLabel(MDL_SERIE, LABEL_STRING, "serie");
         MDL::addLabel(MDL_SHIFTX, LABEL_DOUBLE, "shiftX", "Xoff");
         MDL::addLabel(MDL_SHIFTY, LABEL_DOUBLE, "shiftY", "Yoff");
