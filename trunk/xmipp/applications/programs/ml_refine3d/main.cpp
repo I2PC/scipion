@@ -81,7 +81,10 @@ int main(int argc, char **argv)
         for (ML2D_prm.iter = ML2D_prm.istart; !converged && ML2D_prm.iter <= ML2D_prm.Niter; ML2D_prm.iter++)
         {
             if (prm.verb > 0)
+            {
                 std::cerr << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
+                prm.fh_hist  << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
+            }
 
             bool special_first = !ML2D_prm.do_first_iem && ML2D_prm.iter == 1;
 

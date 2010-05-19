@@ -72,10 +72,6 @@ int main(int argc, char **argv)
             prm.remake_SFvol(prm.istart - 1, false, false);
         MPI_Barrier(MPI_COMM_WORLD);
 
-        // Check that there are enough computing nodes
-        if (prm.Nvols > size)
-        	REPORT_ERROR(1, "mpi_MLrefine3D requires that you use more MPI nodes than reference volumes");
-
         // Read and set general MLalign2D-stuff
         ML2D_prm.read(argc2, argv2, true);
         if (!IS_MASTER)
@@ -86,9 +82,9 @@ int main(int argc, char **argv)
         ML2D_prm.fast_mode = true;
         ML2D_prm.do_mirror = true;
         ML2D_prm.save_mem2 = true;
-        ML2D_prm.fn_ref = prm.fn_root + "_lib.sel";
+        ML2D_prm.fn_ref = prm.fn_root + "_lib.xmd";
         // Project the reference volume
-        prm.project_reference_volume(ML2D_prm.SFr, rank, size);
+        prm.project_reference_volume(ML2D_prm.MDref, rank, size);
         MPI_Barrier(MPI_COMM_WORLD);
 
         // All nodes produce general side-info
@@ -122,8 +118,12 @@ int main(int argc, char **argv)
         // Loop over all iterations
         for (ML2D_prm.iter = ML2D_prm.istart; !converged && ML2D_prm.iter <= ML2D_prm.Niter; ML2D_prm.iter++)
         {
+
             if (prm.verb > 0)
+            {
                 std::cerr << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
+                prm.fh_hist  << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
+            }
 
             bool special_first = !ML2D_prm.do_first_iem && ML2D_prm.iter == 1;
 
@@ -190,6 +190,11 @@ int main(int argc, char **argv)
                 // Reconstruct the new reference volumes also in parallel
                 // Assume that the number of processors is larger than the
                 // number of volumes to reconstruct ...
+                // Reconstruct new volumes from the reference images
+                for (volno = 0; volno < prm.Nvols; volno++)
+                    if (rank == volno % size)
+                        prm.reconstruction(argc2, argv2, ML2D_prm.iter, volno, 0);
+
                 if (rank < prm.Nvols)
                     // new reference reconstruction
                     prm.reconstruction(argc2, argv2, ML2D_prm.iter, rank, 0);
