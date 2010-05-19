@@ -24,7 +24,8 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/selfile.h>
+//#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
 
 void Usage(char **argv);
@@ -44,7 +45,7 @@ char* sprintfTagValue(void *value, int numberType);
 
 int main(int argc, char *argv[])
 {
-    FileName       fn_in;    // input file
+    FileName       fn_input;    // input file
     FileName       fn_out;   // output file
     FileName       fn_sel;   // input selfile
     FileName       fn_oext;  // output extension
@@ -61,23 +62,19 @@ int main(int argc, char *argv[])
             Usage(argv);
         if (checkParameter(argc, argv, "-i"))
         {
-            fn_in = getParameter(argc, argv, "-i");
-            if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
-                EXIT_ERROR(1, "dm32raw: -i option is not compatible with -sel or -oext");
+            fn_input = getParameter(argc, argv, "-i");
         }
         if (checkParameter(argc, argv, "-o"))
         {
             fn_out = getParameter(argc, argv, "-o");
-            if (checkParameter(argc, argv, "-sel") || checkParameter(argc, argv, "-oext"))
-                EXIT_ERROR(1, "dm32raw: -o option is not compatible with -sel or -oext");
+            if (checkParameter(argc, argv, "-oext"))
+                EXIT_ERROR(1, "dm32raw: -o option is not compatible with -oext");
         }
-        if (checkParameter(argc, argv, "-sel"))
-        {
-            fn_sel = getParameter(argc, argv, "-sel");
-            fn_oext  = getParameter(argc, argv, "-oext", "raw");
-            if (checkParameter(argc, argv, "-i") || checkParameter(argc, argv, "-o"))
-                EXIT_ERROR(1, "dm32raw: -sel option is not compatible with -i or -o");
-        }
+        if (fn_input.isMetaData() && checkParameter(argc, argv, "-o"))
+            EXIT_ERROR(1, "dm32raw:  sel file is not compatible with or -o");
+
+
+        fn_oext  = getParameter(argc, argv, "-oext", "raw");
 
         reverse_endian = checkParameter(argc, argv, "-reverse_endian");
     }
@@ -92,33 +89,49 @@ int main(int argc, char *argv[])
         /* Perform conversion ====================================================== */
 
         /* input is a sel file*/
-        if (fn_sel!="")
+
+        MetaData SF, SF_out;
+        FileName in_name, out_name;
+
+        if (fn_input.isMetaData())
         {
-            SelFile SF(fn_sel), SF_out;
-            std::cerr << "Converting from DM3 to RAW ...\n";
-            init_progress_bar(SF.ImgNo());
-            int i=0;
-            while (!SF.eof())
-            {
-                FileName in_name = SF.NextImg();
-                FileName out_name = in_name.without_extension()+"."+fn_oext;
-                SF_out.insert(out_name);
-                dm32raw(in_name, out_name, reverse_endian);
-                progress_bar(i++);
-            }
-            progress_bar(SF.ImgNo());
-            SF_out.write(fn_sel.without_extension()+"_raw.sel");
+            SF.read( fn_input ,NULL);
+        }
+        else
+        {
+            SF.addObject();
+            SF.setValue( MDL_IMAGE, fn_input);
+            SF.setValue( MDL_ENABLED, 1);
         }
 
-        /* input/output are single files */
-        else if (fn_in!="")
+
+        SF.removeObjects(MDL_ENABLED, -1);
+
+        std::cerr << "Converting from DM3 to RAW ...\n";
+
+        init_progress_bar(SF.size());
+        int i=0;
+
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            if (fn_out=="")
-                dm32raw(fn_in, fn_in.without_extension()+".raw", reverse_endian);
+            SF.getValue(MDL_IMAGE,in_name);
+
+            if (fn_out!="")
+                out_name = fn_out;
             else
-                dm32raw(fn_in, fn_out, reverse_endian);
-        }
+                out_name = in_name.without_extension()+"."+fn_oext;
 
+            dm32raw(in_name, out_name, reverse_endian);
+
+            SF_out.addObject();
+            SF_out.setValue(MDL_IMAGE,out_name);
+            SF_out.setValue(MDL_ENABLED,1);
+            progress_bar(kkkk);
+        }
+        progress_bar(SF.size());
+
+        if (fn_input.isMetaData())
+            SF_out.write(fn_input.without_extension()+"_raw.sel");
     }
     catch (Xmipp_error XE)
     {
@@ -426,9 +439,9 @@ int readTagDM3(FILE *fh_in,
             }
             else if(nnum == 3 && info[0]==20)   // Tag array
             {             /*nnum = 3
-                             info(0) = 20
-                             info(1) = number type for all values
-                             info(2) = info(nnum) = size of array*/
+                                                                                             info(0) = 20
+                                                                                             info(1) = number type for all values
+                                                                                             info(2) = info(nnum) = size of array*/
 
                 if (strcmp(tagName,"Data")==0)    // Locating the image data
                 {
