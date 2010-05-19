@@ -26,96 +26,214 @@
 #include "ctf.h"
 #include "args.h"
 #include "fft.h"
+#include "metadata.h"
 
 /* Read -------------------------------------------------------------------- */
 void XmippCTF::read(const FileName &fn, bool disable_if_not_K)
 {
-    FILE *fh_param;
-    if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
-        REPORT_ERROR(1,
-                     (std::string)"XmippCTF::read: There is a problem "
-                     "opening the file " + fn);
-
-    try
+    if (fn.isMetaData())
     {
-        Tm = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1"));
+        MetaData MD;
+        MD.read(fn);
+
+        if (!MD.getValue(MDL_CTF_SAMPLING_RATE,Tm))
+            Tm=1;
         if (enable_CTF)
         {
-            DeltafU = textToFloat(getParameter(fh_param, "defocusU", 0, "0"));
-            if (checkParameter(fh_param, "defocusV"))
-                DeltafV = textToFloat(getParameter(fh_param, "defocusV", 0));
-            else DeltafV = DeltafU;
-            azimuthal_angle = textToFloat(getParameter(fh_param, "azimuthal_angle", 0, "0"));
-            kV = textToFloat(getParameter(fh_param, "voltage", 0, "100"));
-            Cs = textToFloat(getParameter(fh_param, "spherical_aberration", 0, "0"));
-            Ca = textToFloat(getParameter(fh_param, "chromatic_aberration", 0, "0"));
-            espr = textToFloat(getParameter(fh_param, "energy_loss", 0, "0"));
-            ispr = textToFloat(getParameter(fh_param, "lens_stability", 0, "0"));
-            alpha = textToFloat(getParameter(fh_param, "convergence_cone", 0, "0"));
-            DeltaF = textToFloat(getParameter(fh_param, "longitudinal_displace", 0, "0"));
-            DeltaR = textToFloat(getParameter(fh_param, "transversal_displace", 0, "0"));
-            Q0 = textToFloat(getParameter(fh_param, "Q0", 0, "0"));
-            K = textToFloat(getParameter(fh_param, "K", 0, "1"));
-            if (K == 0 && disable_if_not_K) enable_CTF = false;
+            if (!MD.getValue(MDL_CTF_VOLTAGE,kV))
+                kV=100;
+            if (!MD.getValue(MDL_CTF_DEFOCUSU,DeltafU))
+                DeltafU=0;
+            if (!MD.getValue(MDL_CTF_DEFOCUSV,DeltafV))
+                DeltafV=DeltafU;
+            if (!MD.getValue(MDL_CTF_DEFOCUS_ANGLE,azimuthal_angle))
+                azimuthal_angle=0;
+            if (!MD.getValue(MDL_CTF_CS,Cs))
+                Cs=0;
+            if (!MD.getValue(MDL_CTF_CA,Ca))
+                Ca=0;
+            if (!MD.getValue(MDL_CTF_ENERGY_LOSS,espr))
+                espr=0;
+            if (!MD.getValue(MDL_CTF_LENS_STABILITY,ispr))
+                ispr=0;
+            if (!MD.getValue(MDL_CTF_CONVERGENCE_CONE,alpha))
+                alpha=0;
+            if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaF))
+                DeltaF=0;
+            if (!MD.getValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT,DeltaR))
+                DeltaR=0;
+            if (!MD.getValue(MDL_CTF_Q0,Q0))
+                Q0=0;
+            if (!MD.getValue(MDL_CTF_K,K))
+                K=1;
+            if (K == 0 && disable_if_not_K)
+                enable_CTF = false;
         }
-
         if (enable_CTFnoise)
         {
-            base_line     = textToFloat(getParameter(fh_param, "base_line", 0, "0"));
-
-            gaussian_K    = textToFloat(getParameter(fh_param, "gaussian_K", 0, "0"));
-            sigmaU        = textToFloat(getParameter(fh_param, "sigmaU", 0, "0"));
-            if (checkParameter(fh_param, "sigmaV"))
-                sigmaV     = textToFloat(getParameter(fh_param, "sigmaV", 0));
-            else sigmaV   = sigmaU;
-            cU            = textToFloat(getParameter(fh_param, "cU", 0, "0"));
-            if (checkParameter(fh_param, "cV"))
-                cV         = textToFloat(getParameter(fh_param, "cV", 0));
-            else cV       = cU;
-            gaussian_angle = textToFloat(getParameter(fh_param, "gaussian_angle", 0, "0"));
-
-            sqU           = textToFloat(getParameter(fh_param, "sqU", 0, "0"));
-            if (checkParameter(fh_param, "sqV"))
-                sqV        = textToFloat(getParameter(fh_param, "sqV", 0));
-            else sqV      = sqU;
-            sqrt_angle = textToFloat(getParameter(fh_param, "sqrt_angle", 0, "0"));
-            sqrt_K        = textToFloat(getParameter(fh_param, "sqrt_K", 0, "0"));
-
-            gaussian_K2    = textToFloat(getParameter(fh_param, "gaussian_K2", 0, "0"));
-            sigmaU2        = textToFloat(getParameter(fh_param, "sigmaU2", 0, "0"));
-            if (checkParameter(fh_param, "sigmaV2"))
-                sigmaV2     = textToFloat(getParameter(fh_param, "sigmaV2", 0));
-            else sigmaV2   = sigmaU2;
-            cU2            = textToFloat(getParameter(fh_param, "cU2", 0, "0"));
-            if (checkParameter(fh_param, "cV2"))
-                cV2         = textToFloat(getParameter(fh_param, "cV2", 0));
-            else cV2       = cU2;
-            gaussian_angle2 = textToFloat(getParameter(fh_param, "gaussian_angle2", 0, "0"));
-
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_K,gaussian_K))
+                gaussian_K=0;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAU,sigmaU))
+                sigmaU=0;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAV,sigmaV))
+                sigmaV=sigmaU;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CU,cU))
+                cU=0;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CV,cV))
+                cV=cU;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_ANGLE,gaussian_angle))
+                gaussian_angle=0;
+            if (!MD.getValue(MDL_CTFBG_SQRT_K,sqrt_K))
+                sqrt_K=0;
+            if (!MD.getValue(MDL_CTFBG_SQRT_U,sqU))
+                sqU=0;
+            if (!MD.getValue(MDL_CTFBG_SQRT_V,sqV))
+                sqV=sqU;
+            if (!MD.getValue(MDL_CTFBG_SQRT_ANGLE,sqrt_angle))
+                sqrt_angle=0;
+            if (!MD.getValue(MDL_CTFBG_BASELINE,base_line))
+                base_line=0;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_K,gaussian_K2))
+                gaussian_K2=0;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAU,sigmaU2))
+                sigmaU2=0;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAV,sigmaV2))
+                sigmaV2=sigmaU2;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CU,cU2))
+                cU2=0;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CV,cV2))
+                cV2=cU2;
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_ANGLE,gaussian_angle2))
+                gaussian_angle2=0;
             if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
                 disable_if_not_K)
                 enable_CTFnoise = false;
         }
-
     }
-    catch (Xmipp_error XE)
+    else
     {
-        std::cout << XE << std::endl;
-        REPORT_ERROR(1, (std::string)"There is an error reading " + fn);
+        FILE *fh_param;
+        if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
+            REPORT_ERROR(1,
+                         (std::string)"XmippCTF::read: There is a problem "
+                         "opening the file " + fn);
+
+        try
+        {
+            Tm = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1"));
+            if (enable_CTF)
+            {
+                DeltafU = textToFloat(getParameter(fh_param, "defocusU", 0, "0"));
+                if (checkParameter(fh_param, "defocusV"))
+                    DeltafV = textToFloat(getParameter(fh_param, "defocusV", 0));
+                else DeltafV = DeltafU;
+                azimuthal_angle = textToFloat(getParameter(fh_param, "azimuthal_angle", 0, "0"));
+                kV = textToFloat(getParameter(fh_param, "voltage", 0, "100"));
+                Cs = textToFloat(getParameter(fh_param, "spherical_aberration", 0, "0"));
+                Ca = textToFloat(getParameter(fh_param, "chromatic_aberration", 0, "0"));
+                espr = textToFloat(getParameter(fh_param, "energy_loss", 0, "0"));
+                ispr = textToFloat(getParameter(fh_param, "lens_stability", 0, "0"));
+                alpha = textToFloat(getParameter(fh_param, "convergence_cone", 0, "0"));
+                DeltaF = textToFloat(getParameter(fh_param, "longitudinal_displace", 0, "0"));
+                DeltaR = textToFloat(getParameter(fh_param, "transversal_displace", 0, "0"));
+                Q0 = textToFloat(getParameter(fh_param, "Q0", 0, "0"));
+                K = textToFloat(getParameter(fh_param, "K", 0, "1"));
+                if (K == 0 && disable_if_not_K) enable_CTF = false;
+            }
+
+            if (enable_CTFnoise)
+            {
+                base_line     = textToFloat(getParameter(fh_param, "base_line", 0, "0"));
+
+                gaussian_K    = textToFloat(getParameter(fh_param, "gaussian_K", 0, "0"));
+                sigmaU        = textToFloat(getParameter(fh_param, "sigmaU", 0, "0"));
+                if (checkParameter(fh_param, "sigmaV"))
+                    sigmaV     = textToFloat(getParameter(fh_param, "sigmaV", 0));
+                else sigmaV   = sigmaU;
+                cU            = textToFloat(getParameter(fh_param, "cU", 0, "0"));
+                if (checkParameter(fh_param, "cV"))
+                    cV         = textToFloat(getParameter(fh_param, "cV", 0));
+                else cV       = cU;
+                gaussian_angle = textToFloat(getParameter(fh_param, "gaussian_angle", 0, "0"));
+
+                sqU           = textToFloat(getParameter(fh_param, "sqU", 0, "0"));
+                if (checkParameter(fh_param, "sqV"))
+                    sqV        = textToFloat(getParameter(fh_param, "sqV", 0));
+                else sqV      = sqU;
+                sqrt_angle = textToFloat(getParameter(fh_param, "sqrt_angle", 0, "0"));
+                sqrt_K        = textToFloat(getParameter(fh_param, "sqrt_K", 0, "0"));
+
+                gaussian_K2    = textToFloat(getParameter(fh_param, "gaussian_K2", 0, "0"));
+                sigmaU2        = textToFloat(getParameter(fh_param, "sigmaU2", 0, "0"));
+                if (checkParameter(fh_param, "sigmaV2"))
+                    sigmaV2     = textToFloat(getParameter(fh_param, "sigmaV2", 0));
+                else sigmaV2   = sigmaU2;
+                cU2            = textToFloat(getParameter(fh_param, "cU2", 0, "0"));
+                if (checkParameter(fh_param, "cV2"))
+                    cV2         = textToFloat(getParameter(fh_param, "cV2", 0));
+                else cV2       = cU2;
+                gaussian_angle2 = textToFloat(getParameter(fh_param, "gaussian_angle2", 0, "0"));
+
+                if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
+                    disable_if_not_K)
+                    enable_CTFnoise = false;
+            }
+
+        }
+        catch (Xmipp_error XE)
+        {
+            std::cout << XE << std::endl;
+            REPORT_ERROR(1, (std::string)"There is an error reading " + fn);
+        }
+        fclose(fh_param);
     }
-    fclose(fh_param);
 }
 
 /* Write ------------------------------------------------------------------- */
 void XmippCTF::write(const FileName &fn)
 {
-    std::ofstream fh_param;
-    fh_param.open(fn.c_str());
-    if (!fh_param)
-        REPORT_ERROR(1, (std::string)"Xmipp_CTF::write: Cannot open " + fn +
-                     " for output");
-    fh_param << *this << std::endl;
-    fh_param.close();
+    MetaData MD;
+    MD.setColumnFormat(false);
+    MD.addObject();
+    MD.setValue(MDL_CTF_SAMPLING_RATE,Tm);
+    if (enable_CTF)
+    {
+        MD.setValue(MDL_CTF_VOLTAGE,kV);
+        MD.setValue(MDL_CTF_DEFOCUSU,DeltafU);
+        MD.setValue(MDL_CTF_DEFOCUSV,DeltafV);
+        MD.setValue(MDL_CTF_DEFOCUS_ANGLE,azimuthal_angle);
+        MD.setValue(MDL_CTF_CS,Cs);
+        MD.setValue(MDL_CTF_CA,Ca);
+        MD.setValue(MDL_CTF_ENERGY_LOSS,espr);
+        MD.setValue(MDL_CTF_LENS_STABILITY,ispr);
+        MD.setValue(MDL_CTF_CONVERGENCE_CONE,alpha);
+        MD.setValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaF);
+        MD.setValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT,DeltaR);
+        MD.setValue(MDL_CTF_Q0,Q0);
+        MD.setValue(MDL_CTF_K,K);
+    }
+    if (enable_CTFnoise)
+    {
+        MD.setValue(MDL_CTFBG_GAUSSIAN_K,gaussian_K);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_SIGMAU,sigmaU);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_SIGMAV,sigmaV);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_CU,cU);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_CV,cV);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_ANGLE,gaussian_angle);
+        MD.setValue(MDL_CTFBG_SQRT_K,sqrt_K);
+        MD.setValue(MDL_CTFBG_SQRT_U,sqU);
+        MD.setValue(MDL_CTFBG_SQRT_V,sqV);
+        MD.setValue(MDL_CTFBG_SQRT_ANGLE,sqrt_angle);
+        MD.setValue(MDL_CTFBG_BASELINE,base_line);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_K,gaussian_K2);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_SIGMAU,sigmaU2);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_SIGMAV,sigmaV2);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_CU,cU2);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_CV,cV2);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_ANGLE,gaussian_angle2);
+    }
+
+    MD.write(fn);
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -162,40 +280,40 @@ std::ostream & operator << (std::ostream &out, const XmippCTF &ctf)
     if (ctf.enable_CTF)
     {
         out << "sampling_rate=        " << ctf.Tm              << std::endl
-            << "voltage=              " << ctf.kV              << std::endl
-            << "defocusU=             " << ctf.DeltafU         << std::endl
-            << "defocusV=             " << ctf.DeltafV         << std::endl
-            << "azimuthal_angle=      " << ctf.azimuthal_angle << std::endl
-            << "spherical_aberration= " << ctf.Cs              << std::endl
-            << "chromatic_aberration= " << ctf.Ca              << std::endl
-            << "energy_loss=          " << ctf.espr            << std::endl
-            << "lens_stability=       " << ctf.ispr            << std::endl
-            << "convergence_cone=     " << ctf.alpha           << std::endl
-            << "longitudinal_displace=" << ctf.DeltaF          << std::endl
-            << "transversal_displace= " << ctf.DeltaR          << std::endl
-            << "Q0=                   " << ctf.Q0              << std::endl
-            << "K=                    " << ctf.K               << std::endl
+        << "voltage=              " << ctf.kV              << std::endl
+        << "defocusU=             " << ctf.DeltafU         << std::endl
+        << "defocusV=             " << ctf.DeltafV         << std::endl
+        << "azimuthal_angle=      " << ctf.azimuthal_angle << std::endl
+        << "spherical_aberration= " << ctf.Cs              << std::endl
+        << "chromatic_aberration= " << ctf.Ca              << std::endl
+        << "energy_loss=          " << ctf.espr            << std::endl
+        << "lens_stability=       " << ctf.ispr            << std::endl
+        << "convergence_cone=     " << ctf.alpha           << std::endl
+        << "longitudinal_displace=" << ctf.DeltaF          << std::endl
+        << "transversal_displace= " << ctf.DeltaR          << std::endl
+        << "Q0=                   " << ctf.Q0              << std::endl
+        << "K=                    " << ctf.K               << std::endl
         ;
     }
     if (ctf.enable_CTFnoise)
     {
         out << "gaussian_K=           " << ctf.gaussian_K      << std::endl
-            << "sigmaU=               " << ctf.sigmaU          << std::endl
-            << "sigmaV=               " << ctf.sigmaV          << std::endl
-            << "cU=                   " << ctf.cU              << std::endl
-            << "cV=                   " << ctf.cV              << std::endl
-            << "gaussian_angle=       " << ctf.gaussian_angle  << std::endl
-            << "sqrt_K=               " << ctf.sqrt_K          << std::endl
-            << "sqU=                  " << ctf.sqU             << std::endl
-            << "sqV=                  " << ctf.sqV             << std::endl
-            << "sqrt_angle=           " << ctf.sqrt_angle      << std::endl
-            << "base_line=            " << ctf.base_line       << std::endl
-            << "gaussian_K2=          " << ctf.gaussian_K2     << std::endl
-            << "sigmaU2=              " << ctf.sigmaU2         << std::endl
-            << "sigmaV2=              " << ctf.sigmaV2         << std::endl
-            << "cU2=                  " << ctf.cU2             << std::endl
-            << "cV2=                  " << ctf.cV2             << std::endl
-            << "gaussian_angle2=      " << ctf.gaussian_angle2 << std::endl
+        << "sigmaU=               " << ctf.sigmaU          << std::endl
+        << "sigmaV=               " << ctf.sigmaV          << std::endl
+        << "cU=                   " << ctf.cU              << std::endl
+        << "cV=                   " << ctf.cV              << std::endl
+        << "gaussian_angle=       " << ctf.gaussian_angle  << std::endl
+        << "sqrt_K=               " << ctf.sqrt_K          << std::endl
+        << "sqU=                  " << ctf.sqU             << std::endl
+        << "sqV=                  " << ctf.sqV             << std::endl
+        << "sqrt_angle=           " << ctf.sqrt_angle      << std::endl
+        << "base_line=            " << ctf.base_line       << std::endl
+        << "gaussian_K2=          " << ctf.gaussian_K2     << std::endl
+        << "sigmaU2=              " << ctf.sigmaU2         << std::endl
+        << "sigmaV2=              " << ctf.sigmaV2         << std::endl
+        << "cU2=                  " << ctf.cU2             << std::endl
+        << "cV2=                  " << ctf.cV2             << std::endl
+        << "gaussian_angle2=      " << ctf.gaussian_angle2 << std::endl
         ;
     }
     return out;
@@ -291,7 +409,8 @@ void XmippCTF::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) co
         if (SGN(ctf) != SGN(last_ctf))
         {
             sign_changes++;
-            if (sign_changes == n) break;
+            if (sign_changes == n)
+                break;
         }
         last_ctf = ctf;
     }
@@ -307,11 +426,14 @@ void XmippCTF::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) co
         << (u*w).transpose()
         << " last_ctf=" << last_ctf << " ctf=" << ctf << " ";
 #endif
+
         w += ctf * wstep / (last_ctf - ctf);
         V2_BY_CT(freq, u, w);
 #ifdef DEBUG
+
         std::cout << " final w= " << w << " final freq=" << freq.transpose() << std::endl;
 #endif
+
     }
 }
 #undef DEBUG
@@ -322,8 +444,8 @@ void XmippCTF::Apply_CTF(MultidimArray < std::complex<double> > &FFTI) const
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
     if ( ZSIZE(FFTI) > 1 )
-        REPORT_ERROR(1,"ERROR: Apply_CTF only works on 2D images, not 3D."); 
-    
+        REPORT_ERROR(1,"ERROR: Apply_CTF only works on 2D images, not 3D.");
+
     FOR_ALL_ELEMENTS_IN_ARRAY2D(FFTI)
     {
         XX(idx) = j;
@@ -343,8 +465,10 @@ void XmippCTF::Generate_CTF(int Ydim, int Xdim,
     Matrix1D<double> freq(2);
     CTF.resize(Ydim, Xdim);
 #ifdef DEBUG
+
     std::cout << "CTF:\n" << *this << std::endl;
 #endif
+
     FOR_ALL_ELEMENTS_IN_ARRAY2D(CTF)
     {
         XX(idx) = j;
@@ -353,10 +477,12 @@ void XmippCTF::Generate_CTF(int Ydim, int Xdim,
         digfreq2contfreq(freq, freq, Tm);
         CTF(i, j) = CTF_at(XX(freq), YY(freq));
 #ifdef DEBUG
+
         if (i == 0)
             std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
             << " " << CTF(i, j) << std::endl;
 #endif
+
     }
 }
 #undef DEBUG
@@ -382,6 +508,7 @@ bool XmippCTF::physical_meaning()
             DeltafU <= 0 && DeltafV <= 0    &&
             CTF_at(0, 0) >= 0;
 #ifdef DEBUG
+
         if (retval == false)
         {
             std::cout << *this << std::endl;
@@ -401,8 +528,10 @@ bool XmippCTF::physical_meaning()
             std::cout << "CTF_at(0,0)=" << CTF_at(0, 0, true) << std::endl;
         }
 #endif
+
     }
-    else retval = true;
+    else
+        retval = true;
     bool retval2;
     if (enable_CTFnoise)
     {
@@ -426,13 +555,20 @@ bool XmippCTF::physical_meaning()
             sqrt_angle >= 0      && sqrt_angle <= 90      &&
             gaussian_angle2 >= 0 && gaussian_angle2 <= 90
             ;
-        if (min_sigma > 0)    retval2 = retval2 && ABS(sigmaU - sigmaV) / min_sigma <= 3;
-        if (min_c > 0)        retval2 = retval2 && ABS(cU - cV) / min_c <= 3;
-        if (gaussian_K != 0)  retval2 = retval2 && (cU * Tm >= 0.01) && (cV * Tm >= 0.01);
-        if (min_sigma2 > 0)   retval2 = retval2 && ABS(sigmaU2 - sigmaV2) / min_sigma2 <= 3;
-        if (min_c2 > 0)       retval2 = retval2 && ABS(cU2 - cV2) / min_c2 <= 3;
-        if (gaussian_K2 != 0) retval2 = retval2 && (cU2 * Tm >= 0.01) && (cV2 * Tm >= 0.01);
+        if (min_sigma > 0)
+            retval2 = retval2 && ABS(sigmaU - sigmaV) / min_sigma <= 3;
+        if (min_c > 0)
+            retval2 = retval2 && ABS(cU - cV) / min_c <= 3;
+        if (gaussian_K != 0)
+            retval2 = retval2 && (cU * Tm >= 0.01) && (cV * Tm >= 0.01);
+        if (min_sigma2 > 0)
+            retval2 = retval2 && ABS(sigmaU2 - sigmaV2) / min_sigma2 <= 3;
+        if (min_c2 > 0)
+            retval2 = retval2 && ABS(cU2 - cV2) / min_c2 <= 3;
+        if (gaussian_K2 != 0)
+            retval2 = retval2 && (cU2 * Tm >= 0.01) && (cV2 * Tm >= 0.01);
 #ifdef DEBUG
+
         if (retval2 == false)
         {
             std::cout << *this << std::endl;
@@ -466,11 +602,14 @@ bool XmippCTF::physical_meaning()
             std::cout << cV2*Tm << std::endl;
         }
 #endif
+
     }
-    else retval2 = true;
+    else
+        retval2 = true;
 #ifdef DEBUG
     // std::cout << "Retval= " << retval << " retval2= " << retval2 << std::endl;
 #endif
+
     return retval && retval2;
 }
 #undef DEBUG
@@ -480,28 +619,50 @@ void XmippCTF::force_physical_meaning()
 {
     if (enable_CTF)
     {
-        if (K < 0)         K = 0;
-        if (base_line < 0) base_line = 0;
-        if (kV < 50)       kV = 50;
-        if (kV > 1000)     kV = 1000;
-        if (espr < 0)      espr = 0;
-        if (espr > 20)     espr = 20;
-        if (ispr < 0)      ispr = 0;
-        if (ispr > 20)     ispr = 20;
-        if (Cs < 0)        Cs = 0;
-        if (Cs > 20)       Cs = 20;
-        if (Ca < 0)        Ca = 0;
-        if (Ca > 3)        Ca = 3;
-        if (alpha < 0)     alpha = 0;
-        if (alpha > 5)     alpha = 5;
-        if (DeltaF < 0)    DeltaF = 0;
-        if (DeltaF > 1000) DeltaF = 1000;
-        if (DeltaR < 0)    DeltaR = 0;
-        if (DeltaR > 1000) DeltaR = 1000;
-        if (Q0 < -0.40)    Q0 = -0.40;
-        if (Q0 > 0)        Q0 = 0;
-        if (DeltafU > 0)   DeltafU = 0;
-        if (DeltafV > 0)   DeltafV = 0;
+        if (K < 0)
+            K = 0;
+        if (base_line < 0)
+            base_line = 0;
+        if (kV < 50)
+            kV = 50;
+        if (kV > 1000)
+            kV = 1000;
+        if (espr < 0)
+            espr = 0;
+        if (espr > 20)
+            espr = 20;
+        if (ispr < 0)
+            ispr = 0;
+        if (ispr > 20)
+            ispr = 20;
+        if (Cs < 0)
+            Cs = 0;
+        if (Cs > 20)
+            Cs = 20;
+        if (Ca < 0)
+            Ca = 0;
+        if (Ca > 3)
+            Ca = 3;
+        if (alpha < 0)
+            alpha = 0;
+        if (alpha > 5)
+            alpha = 5;
+        if (DeltaF < 0)
+            DeltaF = 0;
+        if (DeltaF > 1000)
+            DeltaF = 1000;
+        if (DeltaR < 0)
+            DeltaR = 0;
+        if (DeltaR > 1000)
+            DeltaR = 1000;
+        if (Q0 < -0.40)
+            Q0 = -0.40;
+        if (Q0 > 0)
+            Q0 = 0;
+        if (DeltafU > 0)
+            DeltafU = 0;
+        if (DeltafV > 0)
+            DeltafV = 0;
     }
     if (enable_CTFnoise)
     {
@@ -509,63 +670,99 @@ void XmippCTF::force_physical_meaning()
         double min_c = XMIPP_MIN(cU, cV);
         double min_sigma2 = XMIPP_MIN(sigmaU2, sigmaV2);
         double min_c2 = XMIPP_MIN(cU2, cV2);
-        if (base_line < 0)        base_line = 0;
-        if (gaussian_K < 0)       gaussian_K = 0;
-        if (sigmaU < 0)           sigmaU = 0;
-        if (sigmaV < 0)           sigmaV = 0;
-        if (sigmaU > 100e3)       sigmaU = 100e3;
-        if (sigmaV > 100e3)       sigmaV = 100e3;
-        if (cU < 0)               cU = 0;
-        if (cV < 0)               cV = 0;
-        if (sqU < 0)              sqU = 0;
-        if (sqV < 0)              sqV = 0;
-        if (sqrt_K < 0)           sqrt_K = 0;
-        if (gaussian_K2 < 0)      gaussian_K2 = 0;
-        if (sigmaU2 < 0)          sigmaU2 = 0;
-        if (sigmaV2 < 0)          sigmaV2 = 0;
-        if (sigmaU2 > 100e3)      sigmaU2 = 100e3;
-        if (sigmaV2 > 100e3)      sigmaV2 = 100e3;
-        if (cU2 < 0)              cU2 = 0;
-        if (cV2 < 0)              cV2 = 0;
-        if (gaussian_angle < 0)   gaussian_angle = 0;
-        if (gaussian_angle > 90)  gaussian_angle = 90;
-        if (sqrt_angle < 0)       sqrt_angle = 0;
-        if (sqrt_angle > 90)      sqrt_angle = 90;
-        if (gaussian_angle2 < 0)  gaussian_angle2 = 0;
-        if (gaussian_angle2 > 90) gaussian_angle2 = 90;
+        if (base_line < 0)
+            base_line = 0;
+        if (gaussian_K < 0)
+            gaussian_K = 0;
+        if (sigmaU < 0)
+            sigmaU = 0;
+        if (sigmaV < 0)
+            sigmaV = 0;
+        if (sigmaU > 100e3)
+            sigmaU = 100e3;
+        if (sigmaV > 100e3)
+            sigmaV = 100e3;
+        if (cU < 0)
+            cU = 0;
+        if (cV < 0)
+            cV = 0;
+        if (sqU < 0)
+            sqU = 0;
+        if (sqV < 0)
+            sqV = 0;
+        if (sqrt_K < 0)
+            sqrt_K = 0;
+        if (gaussian_K2 < 0)
+            gaussian_K2 = 0;
+        if (sigmaU2 < 0)
+            sigmaU2 = 0;
+        if (sigmaV2 < 0)
+            sigmaV2 = 0;
+        if (sigmaU2 > 100e3)
+            sigmaU2 = 100e3;
+        if (sigmaV2 > 100e3)
+            sigmaV2 = 100e3;
+        if (cU2 < 0)
+            cU2 = 0;
+        if (cV2 < 0)
+            cV2 = 0;
+        if (gaussian_angle < 0)
+            gaussian_angle = 0;
+        if (gaussian_angle > 90)
+            gaussian_angle = 90;
+        if (sqrt_angle < 0)
+            sqrt_angle = 0;
+        if (sqrt_angle > 90)
+            sqrt_angle = 90;
+        if (gaussian_angle2 < 0)
+            gaussian_angle2 = 0;
+        if (gaussian_angle2 > 90)
+            gaussian_angle2 = 90;
         if (min_sigma > 0)
             if (ABS(sigmaU - sigmaV) / min_sigma > 3)
             {
-                if (sigmaU < sigmaV) sigmaV = 3.9 * sigmaU;
-                else               sigmaU = 3.9 * sigmaV;
+                if (sigmaU < sigmaV)
+                    sigmaV = 3.9 * sigmaU;
+                else
+                    sigmaU = 3.9 * sigmaV;
             }
         if (min_c > 0)
             if (ABS(cU - cV) / min_c > 3)
             {
-                if (cU < cV) cV = 3.9 * cU;
-                else       cU = 3.9 * cV;
+                if (cU < cV)
+                    cV = 3.9 * cU;
+                else
+                    cU = 3.9 * cV;
             }
         if (gaussian_K != 0)
         {
-            if (cU*Tm < 0.01) cU = 0.011 / Tm;
-            if (cV*Tm < 0.01) cV = 0.011 / Tm;
+            if (cU*Tm < 0.01)
+                cU = 0.011 / Tm;
+            if (cV*Tm < 0.01)
+                cV = 0.011 / Tm;
         }
         if (min_sigma2 > 0)
             if (ABS(sigmaU2 - sigmaV2) / min_sigma2 > 3)
             {
-                if (sigmaU2 < sigmaV2) sigmaV2 = 3.9 * sigmaU2;
-                else                 sigmaU2 = 3.9 * sigmaV2;
+                if (sigmaU2 < sigmaV2)
+                    sigmaV2 = 3.9 * sigmaU2;
+                else
+                    sigmaU2 = 3.9 * sigmaV2;
             }
         if (min_c2 > 0)
             if (ABS(cU2 - cV2) / min_c2 > 3)
             {
-                if (cU2 < cV2) cV2 = 3.9 * cU2;
-                else         cU2 = 3.9 * cV2;
+                if (cU2 < cV2)
+                    cV2 = 3.9 * cU2;
+                else
+                    cU2 = 3.9 * cV2;
             }
         if (gaussian_K2 != 0)
         {
-            if (cU2*Tm < 0.01) cU2 = 0.011 / Tm;
-            if (cV2*Tm < 0.01) cV2 = 0.011 / Tm;
+            if (cU2*Tm < 0.01)
+                cU2 = 0.011 / Tm;
+            if (cV2*Tm < 0.01)
+                cV2 = 0.011 / Tm;
         }
     }
 }
@@ -573,29 +770,31 @@ void XmippCTF::force_physical_meaning()
 
 /* CTFDat functions -------------------------------------------------------- */
 const FileName & CTFDat::getCTF(const FileName &fnProjection,
-    bool& searchOK) const
+                                bool& searchOK) const
 {
     int imax=fnProjectionList.size();
     for (int i=0; i<imax; ++i)
     {
-       if (fnProjectionList[i]==fnProjection) {
-          searchOK=true;
-	  return fnCTFList[i];
-       }
+        if (fnProjectionList[i]==fnProjection)
+        {
+            searchOK=true;
+            return fnCTFList[i];
+        }
     }
     searchOK=false;
     return "";
 }
 
 void CTFDat::setCTF(const FileName &fnProjection,
-    const FileName &fnCTF)
+                    const FileName &fnCTF)
 {
     int imax=fnProjectionList.size();
     for (int i=0; i<imax; ++i)
     {
-       if (fnProjectionList[i]==fnProjection) {
-          fnCTFList[i]=fnCTF;
-       }
+        if (fnProjectionList[i]==fnProjection)
+        {
+            fnCTFList[i]=fnCTF;
+        }
     }
     fnProjectionList.push_back(fnProjection);
     fnCTFList.push_back(fnCTF);
@@ -613,17 +812,17 @@ void CTFDat::read(const FileName &fnCTFdat)
     fhCtfdat.open(fnCTFdat.c_str());
     if (!fhCtfdat)
         REPORT_ERROR(1, (std::string)"CTFDat::read: Cannot open " + fnCTFdat
-	    +" for input");
+                     +" for input");
     while (!fhCtfdat.eof())
     {
         FileName fnProjection, fnCTF;
-	fhCtfdat >> fnProjection >> fnCTF;
-	// Sjors 10 jul 2007: this seems to be necessary...
-	if (fnProjection!="")
-	{
-	    append(fnProjection,fnCTF);
-	}
-    } 
+        fhCtfdat >> fnProjection >> fnCTF;
+        // Sjors 10 jul 2007: this seems to be necessary...
+        if (fnProjection!="")
+        {
+            append(fnProjection,fnCTF);
+        }
+    }
     fhCtfdat.close();
 }
 
@@ -633,7 +832,7 @@ void CTFDat::write(const FileName &fnCTFdat) const
     fhCtfdat.open(fnCTFdat.c_str());
     if (!fhCtfdat)
         REPORT_ERROR(1, (std::string)"CTFDat::write: Cannot open " + fnCTFdat
-	    +" for output");
+                     +" for output");
     int imax=fnProjectionList.size();
     for (int i=0; i<imax; ++i)
         fhCtfdat << fnProjectionList[i] << " " << fnCTFList[i] << std::endl;
@@ -644,7 +843,7 @@ void CTFDat::goFirstLine()
 {
     current=0;
 }
-   
+
 void CTFDat::nextLine()
 {
     ++current;
@@ -670,8 +869,10 @@ void CTFDat::createFromSelfileAndSingleCTF(MetaData &SF, const FileName &fnCtf)
 {
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        FileName fn_img; SF.getValue(MDL_IMAGE,fn_img);
-        if (fn_img=="") break;
-    	append(fn_img,fnCtf);
+        FileName fn_img;
+        SF.getValue(MDL_IMAGE,fn_img);
+        if (fn_img=="")
+            break;
+        append(fn_img,fnCtf);
     }
 }

@@ -1069,11 +1069,21 @@ void MetaData::write(const std::string &fileName)
         // Get first object. In this case (row format) there is a single object
         MetaDataContainer * object = getObject();
 
+        int maxWidth=20;
         for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
         {
             if (*strIt != MDL_COMMENT)
             {
-                outfile.width(20);
+                int w=MDL::label2Str(*strIt).length();
+                if (w>maxWidth) maxWidth=w;
+            }
+        }
+
+        for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
+        {
+            if (*strIt != MDL_COMMENT)
+            {
+                outfile.width(maxWidth+1);
                 outfile << MDL::label2Str(*strIt);
                 outfile << " ";
                 object->writeValueToFile(outfile, *strIt);

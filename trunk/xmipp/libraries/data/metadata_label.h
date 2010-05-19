@@ -58,6 +58,37 @@ enum MDLabel
     MDL_COUNT, // Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
     MDL_CTFINPUTPARAMS, // Parameters file for the CTF Model (std::string)
     MDL_CTFMODEL, // Name for the CTF Model (std::string)
+    MDL_CTF_SAMPLING_RATE, // Sampling rate
+    MDL_CTF_VOLTAGE, // Microscope voltage (kV)
+    MDL_CTF_DEFOCUSU, // Defocus U (Angstroms)
+    MDL_CTF_DEFOCUSV, // Defocus V (Angstroms)
+    MDL_CTF_DEFOCUS_ANGLE, // Defocus angle (degrees)
+    MDL_CTF_CS, // Spherical aberration
+    MDL_CTF_CA, // Chromatic aberration
+    MDL_CTF_ENERGY_LOSS, // Energy loss
+    MDL_CTF_LENS_STABILITY, // Lens stability
+    MDL_CTF_CONVERGENCE_CONE, // Convergence cone
+    MDL_CTF_LONGITUDINAL_DISPLACEMENT, // Longitudinal displacement
+    MDL_CTF_TRANSVERSAL_DISPLACEMENT, // Transversal displacemente
+    MDL_CTF_Q0, // Inelastic absorption
+    MDL_CTF_K, // CTF gain
+    MDL_CTFBG_GAUSSIAN_K, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN_SIGMAU, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN_SIGMAV, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN_CU, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN_CV, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN_ANGLE, // CTF Background parameter
+    MDL_CTFBG_SQRT_K, // CTF Background parameter
+    MDL_CTFBG_SQRT_U, // CTF Background parameter
+    MDL_CTFBG_SQRT_V, // CTF Background parameter
+    MDL_CTFBG_SQRT_ANGLE, // CTF Background parameter
+    MDL_CTFBG_BASELINE, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_K, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_SIGMAU, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_SIGMAV, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_CU, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_CV, // CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_ANGLE, // CTF Background parameter
     MDL_DEFGROUP, // Defocus group
     MDL_DEFOCUSU, // microscope defocus U direction (double)
     MDL_DEFOCUSV, // microscope defocus V direction (double)
@@ -222,6 +253,37 @@ private:
         MDL::addLabel(MDL_COUNT, LABEL_INT, "count");
         MDL::addLabel(MDL_CTFINPUTPARAMS, LABEL_STRING, "CTFInputParams");
         MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel");
+        MDL::addLabel(MDL_CTF_SAMPLING_RATE, LABEL_DOUBLE, "CTF_Sampling_rate");
+        MDL::addLabel(MDL_CTF_VOLTAGE, LABEL_DOUBLE, "CTF_Voltage");
+        MDL::addLabel(MDL_CTF_DEFOCUSU, LABEL_DOUBLE, "CTF_Defocus_U");
+        MDL::addLabel(MDL_CTF_DEFOCUSV, LABEL_DOUBLE, "CTF_Defocus_V");
+        MDL::addLabel(MDL_CTF_DEFOCUS_ANGLE, LABEL_DOUBLE, "CTF_Defocus_angle");
+        MDL::addLabel(MDL_CTF_CS, LABEL_DOUBLE, "CTF_Spherical_aberration");
+        MDL::addLabel(MDL_CTF_CA, LABEL_DOUBLE, "CTF_Chromatic_aberration");
+        MDL::addLabel(MDL_CTF_ENERGY_LOSS, LABEL_DOUBLE, "CTF_Energy_loss");
+        MDL::addLabel(MDL_CTF_LENS_STABILITY, LABEL_DOUBLE, "CTF_Lens_stability");
+        MDL::addLabel(MDL_CTF_CONVERGENCE_CONE, LABEL_DOUBLE, "CTF_Convergence_cone");
+        MDL::addLabel(MDL_CTF_LONGITUDINAL_DISPLACEMENT, LABEL_DOUBLE, "CTF_Longitudinal_displacement");
+        MDL::addLabel(MDL_CTF_TRANSVERSAL_DISPLACEMENT, LABEL_DOUBLE, "CTF_Transversal_displacement");
+        MDL::addLabel(MDL_CTF_Q0, LABEL_DOUBLE, "CTF_Q0");
+        MDL::addLabel(MDL_CTF_K, LABEL_DOUBLE, "CTF_K");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN_K, LABEL_DOUBLE, "CTFBG_Gaussian_K");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN_SIGMAU, LABEL_DOUBLE, "CTFBG_Gaussian_SigmaU");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN_SIGMAV, LABEL_DOUBLE, "CTFBG_Gaussian_SigmaU");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN_CU, LABEL_DOUBLE, "CTFBG_Gaussian_CU");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN_CV, LABEL_DOUBLE, "CTFBG_Gaussian_CV");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN_ANGLE, LABEL_DOUBLE, "CTFBG_Gaussian_Angle");
+        MDL::addLabel(MDL_CTFBG_SQRT_K, LABEL_DOUBLE, "CTFBG_Sqrt_K");
+        MDL::addLabel(MDL_CTFBG_SQRT_U, LABEL_DOUBLE, "CTFBG_Sqrt_U");
+        MDL::addLabel(MDL_CTFBG_SQRT_V, LABEL_DOUBLE, "CTFBG_Sqrt_V");
+        MDL::addLabel(MDL_CTFBG_SQRT_ANGLE, LABEL_DOUBLE, "CTFBG_Sqrt_Angle");
+        MDL::addLabel(MDL_CTFBG_BASELINE, LABEL_DOUBLE, "CTFBG_Baseline");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_K, LABEL_DOUBLE, "CTFBG_Gaussian2_K");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_SIGMAU, LABEL_DOUBLE, "CTFBG_Gaussian2_SigmaU");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_SIGMAV, LABEL_DOUBLE, "CTFBG_Gaussian2_SigmaV");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_CU, LABEL_DOUBLE, "CTFBG_Gaussian2_CU");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_CV, LABEL_DOUBLE, "CTFBG_Gaussian2_CV");
+        MDL::addLabel(MDL_CTFBG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "CTFBG_Gaussian2_Angle");
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
         MDL::addLabel(MDL_DEFOCUSU, LABEL_DOUBLE, "defocusU");
         MDL::addLabel(MDL_DEFOCUSV, LABEL_DOUBLE, "defocusV");
