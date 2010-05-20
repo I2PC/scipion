@@ -315,7 +315,7 @@ int main(int argc, char **argv)
         std::cout << "-o                : Output file" << std::endl;
         std::cout << "-hr               : Sigma for the range domain" << std::endl;
         std::cout << "-hs               : Sigma for the spatial domain" << std::endl;
-
+        std::cout << "-fast             : Use faster processing (avoid gaussian calculations)" << std::endl;
         exit(1);
     }
 
