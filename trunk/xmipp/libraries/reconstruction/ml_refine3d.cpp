@@ -493,6 +493,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
     FileName               fn_tmp, fn_insel, fn_blob;
     MetaData                MDall, MDone;
 
+
     if (noise == 1)
         fn_tmp = fn_root + "_noise";
     else if (noise == 2)

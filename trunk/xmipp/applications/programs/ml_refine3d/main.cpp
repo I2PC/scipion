@@ -60,8 +60,7 @@ int main(int argc, char **argv)
         prm.project_reference_volume(ML2D_prm.MDref);
         ML2D_prm.produceSideInfo();
         ML2D_prm.produceSideInfo2();
-
-        // Initialize some stuff
+        prm.Nvols *= ML2D_prm.factor_nref;
         ML2D_prm.Iold.clear(); // To save memory
         ML2D_prm.createThreads();
 

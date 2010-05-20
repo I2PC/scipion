@@ -85,8 +85,8 @@ void build_recons_info(MetaData &selfile, MetaData &selctf,
         }
         if (fn_proj != "")
         {
-            read_proj.read(fn_proj);
-
+            //read_proj.read(fn_proj, false, false, selfile);
+        	read_proj.read(fn_proj, false, false);
             // Filling structure
             IMG_Inf[i].fn_proj = fn_proj;
             if (is_ctf_unique)

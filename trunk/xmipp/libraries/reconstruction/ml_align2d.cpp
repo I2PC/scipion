@@ -456,7 +456,6 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
 {
     Image<double> img;
     FileName fn_tmp;
-    int refno = 0;
 
     // Read in all reference images in memory
     if (fn_ref.isMetaData())
@@ -472,6 +471,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
     }
 
     model.setNRef(MDref.size());
+    int refno = 0;
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
         MDref.getValue(MDL_IMAGE, fn_tmp);
@@ -484,6 +484,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
                                     * (double) nr_images_global);
         // Default start is half-half mirrored images
         model.mirror_fraction[refno] = (do_mirror ? 0.5 : 0.);
+        // Already initialize the other groups Irefs with correct headers
         refno++;
     }
 
@@ -685,7 +686,13 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
         //Expand MDref because it will be re-used in writeOutputFiles
         MetaData MDaux = MDref;
         for (int group = 1; group < factor_nref; group++)
+        {
+            FOR_ALL_OBJECTS_IN_METADATA(MDaux)
+            {
+                MDaux.setValue(MDL_REF3D, group + 1);
+            }
             MDref.unionAll(MDaux);
+        }
     }
 
     //--------Setup for Docfile -----------
@@ -2005,8 +2012,21 @@ void Prog_MLalign2D_prm::expectation()
 
 #endif
     // After iteration 0, factor_nref will ALWAYS be one
+    int old_refno = model.n_ref;
     model.setNRef(model.n_ref * factor_nref);
-    factor_nref = 1;
+    if (factor_nref > 1)
+    {
+        // Now also expand the Iref vector to contains factor_nref times more images
+    	// Make sure that headers are the same by using = assignments
+        for (int group = 1; group < factor_nref; group++)
+        {
+            for (int refno = 0; refno < old_refno; refno++)
+            {
+                model.Iref[group * old_refno + refno] = model.Iref[refno];
+            }
+        }
+        factor_nref = 1;
+    }
 
     // Rotate back and calculate weighted sums
     reverseRotateReference();

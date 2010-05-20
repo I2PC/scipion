@@ -637,7 +637,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             weight = read_proj.weight();
             if (weight < 0)
             {
-                REPORT_ERROR(1, "negative weight not set correctly!");
+                REPORT_ERROR(1, "negative weight not set cor_tly!");
                 exit(1);
             }
             sum_weight += weight;
