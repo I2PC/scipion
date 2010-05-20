@@ -366,7 +366,9 @@ public:
     //Seed for randomize
     int seed;
     //To check when to do the first iem iteration
-    bool do_first_iem;
+    //bool do_first_iem;
+    //Initial references regularization
+    double ref_reg;
 
 #ifdef TIMING
     JMTimer timer;
@@ -443,6 +445,13 @@ public:
 
     /// Integrate over all experimental images
     void expectation();
+
+    /** Do a regularization of references in iter  0
+     * After iter 0 (old generateInitialReferences, do a regularization acording to parameter ref_reg
+     * if ref_reg is 0, no regularization is made and all references will only keep images asigned to it,
+     * if ref_reg is 1, all references will be the same...
+     */
+    void doReferencesRegularization();
 
     /// Update all model parameters
     void maximization(Model_MLalign2D &model);

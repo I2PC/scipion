@@ -87,7 +87,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     fn_root = getParameter(argc2, argv2, "-o", "ml2d");
     psi_step = textToFloat(getParameter(argc2, argv2, "-psi_step", "5"));
     Niter = textToInteger(getParameter(argc2, argv2, "-iter", "100"));
-    istart = textToInteger(getParameter(argc2, argv2, "-istart", "0"));
+    istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
     model.sigma_noise = textToFloat(getParameter(argc2, argv2, "-noise", "1"));
     model.sigma_offset
     = textToFloat(getParameter(argc2, argv2, "-offset", "3"));
@@ -135,7 +135,8 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     //IEM stuff
     blocks = textToInteger(getParameter(argc2, argv2, "-iem", "1"));
     //This is for do the first iteration on IEM starting from random blocks
-    do_first_iem = checkParameter(argc2, argv2, "-do_first_iem");
+    //do_first_iem = checkParameter(argc2, argv2, "-do_first_iem");
+    ref_reg = textToFloat(getParameter(argc2, argv2, "-reg", "0"));
 
     // Now reset some stuff for restart
     if (do_restart)
@@ -288,8 +289,8 @@ void Prog_MLalign2D_prm::show(bool ML3D)
         if (blocks > 1)
         {
             std::cerr << "  -> Doing IEM with " << blocks << " blocks" <<std::endl;
-            if (do_first_iem)
-                std::cerr << "   - Also doing first IEM iter" <<std::endl;
+            //if (do_first_iem)
+            //    std::cerr << "   - Also doing first IEM iter" <<std::endl;
         }
 
         std::cerr
@@ -446,7 +447,7 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
         MDref.write(fn_ref);
     }
 
-	// Print some output to screen
+    // Print some output to screen
     show(do_ML3D);
 
 }
@@ -1507,26 +1508,21 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                     output_irefmir  = FLOOR(iflip / nr_nomirror_flips)
                                       * factor_nref * model.n_ref + refno;
                     // This if is the speed-up caused by the -fast options
-
                     if (dAij(Msignificant, refno, irot))
                     {
                         if (iflip < nr_nomirror_flips)
                             fracpdf = model.alpha_k[refno] * (1. - model.mirror_fraction[refno]);
                         else
-                            fracpdf = model.alpha_k[refno]
-                                      * model.mirror_fraction[refno];
+                            fracpdf = model.alpha_k[refno] * model.mirror_fraction[refno];
 
                         // A. Backward FFT to calculate weights in real-space
                         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
                         {
-                            dAij(Faux,i,j)
-                            = dAij(Fimg_flip[iflip],i,j)
-                              * dAij(fref[refnoipsi],i,j);
+                            dAij(Faux,i,j) =
+                                dAij(Fimg_flip[iflip],i,j) * dAij(fref[refnoipsi],i,j);
                         }
-
                         // Takes the input from Faux, and leaves the output in Maux
                         local_transformer.inverseFourierTransform();
-
                         CenterFFT(Maux, true);
 
                         // B. Calculate weights for each pixel within sigdim (Mweight)
@@ -1534,29 +1530,22 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 
                         FOR_ALL_ELEMENTS_IN_ARRAY2D(Mweight)
                         {
-                            diff = A2_plus_Xi2 - ref_scale
-                                   * A2D_ELEM(Maux, i, j) * ddim2;
-                            local_mindiff
-                            = XMIPP_MIN(local_mindiff, diff);
+                            diff = A2_plus_Xi2 - ref_scale * A2D_ELEM(Maux, i, j) * ddim2;
+                            local_mindiff = XMIPP_MIN(local_mindiff, diff);
                             pdf = fracpdf * A2D_ELEM(P_phi, i, j);
 
                             if (!model.do_student)
                             {
                                 // Normal distribution
-                                aux = (diff - trymindiff)
-                                      / sigma_noise2;
+                                aux = (diff - trymindiff) / sigma_noise2;
                                 // next line because of numerical precision of exp-function
-
                                 if (aux > 1000.)
                                     weight = 0.;
                                 else
                                     weight = exp(-aux) * pdf;
-
                                 // store weight
                                 stored_weight = weight;
-
                                 A2D_ELEM(Mweight, i, j) = stored_weight;
-
                                 // calculate weighted sum of (X-A)^2 for sigma_noise update
                                 local_wsum_corr += weight * diff;
                             }
@@ -1574,8 +1563,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                                 weight = pow(aux, df2) * pdf;
                                 // Calculate extra weight acc. to Eq (10) Wang et al.
                                 // Patt. Recognition Lett. 25, 701-710 (2004)
-                                weight2 = (df + ddim2) / (df + (2.
-                                                                * diff / sigma_noise2));
+                                weight2 = (df + ddim2) / (df + (2. * diff / sigma_noise2));
                                 // Store probability weights
                                 stored_weight = weight * weight2;
                                 A2D_ELEM(Mweight, i, j) = stored_weight;
@@ -1583,47 +1571,32 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                                 local_wsum_corr += stored_weight * diff;
                                 refw2[output_refno] += stored_weight;
                             }
-
                             // Accumulate sum weights for this (my) matrix
                             my_sumweight += weight;
-
                             my_sumstoredweight += stored_weight;
-
                             // calculated weighted sum of offsets as well
-                            local_wsum_offset += weight
-                                                 * A2D_ELEM(Mr2, i, j);
+                            local_wsum_offset += weight * A2D_ELEM(Mr2, i, j);
 
                             if (model.do_norm)
                             {
                                 // weighted sum of Sum_j ( X_ij*A_kj )
-                                local_wsum_sc += stored_weight
-                                                 * (A2_plus_Xi2 - diff)
-                                                 / ref_scale;
+                                local_wsum_sc += stored_weight * (A2_plus_Xi2 - diff) / ref_scale;
                                 // weighted sum of Sum_j ( A_kj*A_kj )
-                                local_wsum_sc2 += stored_weight
-                                                  * A2[refno];
+                                local_wsum_sc2 += stored_weight * A2[refno];
                             }
 
                             // keep track of optimal parameters
-                            my_maxweight
-                            = XMIPP_MAX(my_maxweight, weight);
+                            my_maxweight = XMIPP_MAX(my_maxweight, weight);
 
                             if (weight > local_maxweight)
                             {
-                                local_maxweight = weight;
-
                                 if (model.do_student)
-                                    local_maxweight2
-                                    = weight2;
-
+                                    local_maxweight2 = weight2;
+                                local_maxweight = weight;
                                 local_iopty = i;
-
                                 local_ioptx = j;
-
                                 local_iopt_psi = ipsi;
-
                                 local_iopt_flip = iflip;
-
                                 local_opt_refno = output_refno;
                             }
 
@@ -1661,8 +1634,8 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 
                             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
                             {
-                                dAij(mysumimgs[output_refnoipsi],i,j)
-                                += conj(dAij(Faux,i,j)) * dAij(Fimg_flip[iflip],i,j);
+                                dAij(mysumimgs[output_refnoipsi],i,j) +=
+                                    conj(dAij(Faux,i,j)) * dAij(Fimg_flip[iflip],i,j);
                             }
                         }
                     } // close if Msignificant
@@ -1671,7 +1644,6 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
         } // close if pdf_directions
 
         pthread_mutex_lock(&update_mutex);
-
         //Update maxweight
         if (local_maxweight > maxweight)
         {
@@ -1679,25 +1651,17 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 
             if (model.do_student)
                 maxweight2 = local_maxweight2;
-
             iopty = local_iopty;
-
             ioptx = local_ioptx;
-
             iopt_psi = local_iopt_psi;
-
             iopt_flip = local_iopt_flip;
-
             opt_refno = local_opt_refno;
         }
 
         //Update sums
         sum_refw += refw[output_refno] + refw_mirror[output_refno];
-
         wsum_offset += local_wsum_offset;
-
         wsum_corr += local_wsum_corr;
-
         mindiff = XMIPP_MIN(mindiff, local_mindiff);
 
         if (model.do_norm)
@@ -1705,7 +1669,6 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
             wsum_sc += local_wsum_sc;
             wsum_sc2 += local_wsum_sc2;
         }
-
         pthread_mutex_unlock(&update_mutex);
 
         //Ask for next job
@@ -1779,13 +1742,10 @@ void Prog_MLalign2D_prm::doThreadESIUpdateRefno()
                 // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
 
                 if (model.do_norm)
-                    dAij(mysumimgs[refnoipsi],0,0)
-                    -= sumw_refpsi[refnoipsi] * (bgmean - old_bgmean)
-                       / ddim2;
+                    dAij(mysumimgs[refnoipsi],0,0) -= sumw_refpsi[refnoipsi] * (bgmean - old_bgmean) / ddim2;
 
                 // Sum mysumimgs to the global weighted sum
-                wsumimgs[refnoipsi] += (scale_dim2_sumw
-                                        * mysumimgs[refnoipsi]);
+                wsumimgs[refnoipsi] += (scale_dim2_sumw * mysumimgs[refnoipsi]);
             }
         }
 
@@ -2069,6 +2029,44 @@ void Prog_MLalign2D_prm::expectation()
     timer.toc(E_OUT);
 
 #endif
+}//close function expectation
+
+
+void Prog_MLalign2D_prm::doReferencesRegularization()
+{
+    //Calculate the weight of selected reference, acording to regularization parameter
+    double selected_frac = 1 / (1 + ref_reg * (model.n_ref - 1));
+    double other_frac = selected_frac * ref_reg;
+    double extra_frac = (1 - ref_reg) * selected_frac;
+
+    double local_sumw , local_sumw_mirror , local_sumwsc , local_sumwsc2;
+    local_sumw = local_sumw_mirror = local_sumwsc = local_sumwsc2 = 0.;
+
+    MultidimArray<double> local_wsum_Mref(dim, dim);
+    local_wsum_Mref.initZeros();
+    local_wsum_Mref.setXmippOrigin();
+
+    //FIXME: think for do_student
+    //First sum all values
+    for (int refno = 0; refno < model.n_ref; refno++)
+    {
+        local_sumw += other_frac * sumw[refno];
+        local_sumw_mirror += other_frac * sumw_mirror[refno];
+        local_sumwsc += other_frac * sumwsc[refno];
+        local_sumwsc2 += other_frac * sumwsc2[refno];
+        local_sumw += other_frac * sumw[refno];
+        local_wsum_Mref += other_frac * wsum_Mref[refno];
+    }
+
+    for (int refno = 0; refno < model.n_ref; refno++)
+    {
+        sumw[refno] = local_sumw + extra_frac * sumw[refno];
+        sumw_mirror[refno] = local_sumw_mirror + extra_frac * sumw_mirror[refno];
+        sumwsc[refno] = local_sumwsc + extra_frac * sumwsc[refno];
+        sumwsc2[refno] = local_sumwsc2 + extra_frac * sumwsc2[refno];
+        sumw[refno] = local_sumw + extra_frac * sumw[refno];
+        wsum_Mref[refno] = local_wsum_Mref + extra_frac * wsum_Mref[refno];
+    }
 }
 
 // Update all model parameters
@@ -2090,6 +2088,9 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
     // Update the reference images
     local_model.sumw_allrefs = 0.;
     local_model.dim = dim;
+
+    if (iter == 0)
+        doReferencesRegularization();
 
     for (int refno = 0; refno < local_model.n_ref; refno++)
     {
@@ -2150,7 +2151,7 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
 
 void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
 {
-    bool special_first = !do_first_iem && iter == 0;
+    bool special_first = (!do_restart && iter == istart);
     Model_MLalign2D block_model(model.n_ref);
 
     if (blocks == 1) //ie not IEM, normal maximization
@@ -2312,10 +2313,11 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     FileName fn_tmp;
     Image<double> Itmp;
     MetaData MDo;
-    bool write_img_xmd, write_refs_log, write_conv=!do_ML3D;
+    bool write_img_xmd, write_refs_log, write_conv = !do_ML3D;
     bool write_norm = model.do_norm;
-    if (iter==0)
-        write_conv=false;
+
+    if (iter == 0)
+        write_conv = false;
 
     switch (outputType)
     {
