@@ -103,7 +103,9 @@ public:
       * When a projection is read, the Euler matrices and perpendicular
       * direction is computed and stored in the Projection structure.
       */
-    void read(const FileName& fn, const bool& apply_shifts = false);
+    void read(const FileName& fn, const bool& apply_shifts = false,
+    		bool readdata = true, const MetaData &docFile= emptyMetaData,
+    		std::vector<MDLabel> &activeLabels = emptyVector );
 
     /** Assignment.
      */

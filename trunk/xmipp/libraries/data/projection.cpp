@@ -57,9 +57,10 @@ void Projection::set_angles(double _rot, double _tilt, double _psi)
 }
 
 /* Read ==================================================================== */
-void Projection::read(const FileName &fn, const bool &apply_shifts)
+void Projection::read(const FileName &fn, const bool &apply_shifts,
+		bool readdata , const MetaData &docFile, std::vector<MDLabel> &activeLabels)
 {
-    Image<double>::read(fn, true, 0, false, apply_shifts);
+    Image<double>::read(fn, readdata, 0, false, apply_shifts, docFile, emptyVector);
     Euler_angles2matrix(rot(), tilt(), psi(), euler);
     eulert = euler.transpose();
     euler.getRow(2, direction);
