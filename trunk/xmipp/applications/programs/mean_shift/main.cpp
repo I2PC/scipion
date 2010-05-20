@@ -66,6 +66,7 @@ void * thread_process_plane( void * args )
     double curr_I;
     double inv_2_sigma_s_2 = 1.0/( 2.0* sigma_s * sigma_s);
     double inv_2_sigma_r_2 = 1.0/( 2.0* sigma_r * sigma_r);
+    double sigma_r_2 = sigma_r * sigma_r;
     int _3_sigma_s = 3 * sigma_s;
     double _3_sigma_r = 3.0 * sigma_r;
 	int y_min = inputVolume->data.startingY();
@@ -92,13 +93,15 @@ void * thread_process_plane( void * args )
         myLastY = myFirstY + numElems - 1;
     
     if( myID == 0 )
+    {
         std::cerr << "Progress (over a total of " << z_max - z_min + 1 << " slices): ";
+    }
     
     if( fast )
     {
         for (int k=z_min; k<=z_max; k++) 
         {
-            if( myID == 0 ) std::cerr << k << " ";
+            if( myID == 0 ) std::cerr << k + z_min << " ";
             for (int i=myFirstY; i<=myLastY; i++) 
             {
                 for (int j=x_min; j<=x_max; j++)
@@ -116,6 +119,9 @@ void * thread_process_plane( void * args )
                     double Yc = A3D_ELEM( inputVolume->data, k, i, j);
                     int iters =0;
                     double shift;
+                    int num;
+                    double mY;
+                    
                     do
 		            {
                         xcOld = xc;
@@ -125,31 +131,35 @@ void * thread_process_plane( void * args )
                         double mx=0;
                         double my=0;
                         double mz=0;
-                        double mY=0;
-                        int num=0;
+                        mY=0;
+                        num=0;
                        
 			            for( int z_j = -sigma_s ; z_j <=sigma_s ; z_j++ )
                         {
                             int z2 = zc + z_j;
                             if( z2 >= z_min && z2 <= z_max)
                             {
+                                int z_j_2 = z_j * z_j;  // Speed-up
+                            
         		                for( int y_j = -sigma_s ; y_j <= sigma_s ; y_j++ )
         		                {
                                     int y2 = yc + y_j;
 		    		                if( y2 >= y_min && y2 <= y_max)
 			                        {
+                                        int y_j_2 = y_j * y_j; // Speed-up
+                                        
         				                for( int x_j = -sigma_s ; x_j <= sigma_s ; x_j++ )
 		    			                {
                                             int x2 = xc + x_j;
 			        		                if( x2 >= x_min && x2 <= x_max)
 					                        {
                                             
-                                                if( x_j*x_j+y_j*y_j+z_j*z_j <= sigma_s*sigma_s )
+                                                if( x_j*x_j+y_j_2+z_j_2 <= sigma_s*sigma_s )
                                                 {
                                                     double Y2 = A3D_ELEM( inputVolume->data, z2, y2, x2);
                                                     double dY = Yc - Y2;
-                                                    
-                                                    if( dY*dY <= sigma_r * sigma_r )
+                                                                                                        
+                                                    if( dY*dY <= sigma_r_2 )
                                                     {
                                                         mx += x2;
                                                         my += y2;
