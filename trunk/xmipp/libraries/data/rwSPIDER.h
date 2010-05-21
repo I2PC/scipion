@@ -9,6 +9,7 @@
 #ifndef RWSPIDER_H
 #define RWSPIDER_H
 
+#include "define.h"
 #define SPIDERSIZE 1024 // Minimum size of the SPIDER header (variable)
 struct SPIDERhead
 {          // file header for SPIDER data
@@ -85,14 +86,6 @@ struct SPIDERhead
  Header size:    1024 bytes (not same as data offset!).
  Data offset:    sizeof(float)*x_size*ceil(1024/x_size)
  File format extensions:   .spi
- The identifier is a 4-byte machine stamp:
-    1 Big-endian IEEE  17 17 00 00
-                2 VAX     34 65 00 00
-    3 Cray    -
-                4 Little-endian IEEE 68 65 00 00
-                5 Convex    85 17 00 00
-    6 Fijitsu VP   -
-    (Note: not always implemented - so unreliable)
  Byte order determination: File type and third dimension values
         must be less than 256*256.
  Data type:      only float.
@@ -109,17 +102,18 @@ struct SPIDERhead
 **************************************************************************/
 int  readSPIDER(int img_select)
 {
-//#define DEBUG
 #undef DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     printf("DEBUG readSPIDER: Reading Spider file\n");
 #endif
+#undef DEBUG
 
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        REPORT_ERROR(1,"rwSPIDER: cannot read image.");
+        REPORT_ERROR(1,(std::string)"rwSPIDER: cannot read image:" + filename);
 
-    SPIDERhead* header = (SPIDERhead *) askMemory(sizeof(SPIDERhead));
+    SPIDERhead* header = new SPIDERhead;
     if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
         REPORT_ERROR(1,"rwSPIDER: cannot allocate memory for header");
 
@@ -130,30 +124,11 @@ int  readSPIDER(int img_select)
     int      i, j;
     int      extent = SPIDERSIZE - 180;  // exclude char bytes from swapping
     if ( ( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > SWAPTRIG ) ||
-         ( fabs(header->nslice) < 1 ) )
+            ( fabs(header->nslice) < 1 ) )
     {
-#ifdef DEBUG
-        fprintf(stderr, "Warning: Swapping header byte order for 4-byte types\n");
-#endif
-
         swap = 1;
         for ( i=0; i<extent; i+=4 )
             swapbytes(b+i, 4);
-    }
-
-    // Map the parameters
-    data.setDimensions(
-        (int) header->nsam,
-        (int) header->nrow,
-        (int) header->nslice,
-        (unsigned long int)1 );
-    DataType datatype = Float;
-    transform = NoTransform;
-    if ( header->iform < 0 )
-    {
-        transform = Hermitian;
-        datatype = ComplexFloat;
-        data.setXdim(XSIZE(data) - 2);
     }
 
     offset = (int) header->labbyt;
@@ -166,67 +141,112 @@ int  readSPIDER(int img_select)
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)header->scale);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)header->scale);
     MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->scale);
-
-    size_t header_size = offset;
-    size_t image_size = header_size + ZYXSIZE(data)*sizeof(float);
-    size_t pad = offset;
-
-#ifdef DEBUG
-
-    if (!(ABS(header->istack)<1e-10 || ABS(header->istack - 2)<1e-10))
-    {
-        std::cerr << "istack="<< header->istack<<std::endl;
-        REPORT_ERROR(1,"INVALID ISTACK");
-    }
-#endif
+    bool isStack;
     if ( header->istack > 0 )
-        data.setNdim((int) header->maxim);
-
-    unsigned long   Ndim = NSIZE(data), imgstart = 0;
-    unsigned long   imgend = NSIZE(data);
-    char*   hend;
-    if ( img_select > -1 )
-    {
-        if ( img_select >= Ndim )
-            img_select = Ndim - 1;
-        imgstart = img_select;
-        imgend = img_select + 1;
-        data.setNdim(1);
-        Ndim = 1;
-        i = img_select;
-    }
-    MD.clear();
-    MD.addObject();
-    MD.setValue(MDL_ORIGINX,  (double)header->xoff);
-    MD.setValue(MDL_ORIGINY,  (double)header->yoff);
-    MD.setValue(MDL_ORIGINZ,  (double)header->zoff);
-    MD.setValue(MDL_ANGLEROT, (double)header->phi);
-    MD.setValue(MDL_ANGLETILT,(double)header->theta);
-    MD.setValue(MDL_ANGLEPSI, (double)header->gamma);
-    MD.setValue(MDL_WEIGHT,   (double)header->weight);
-    bool baux;
-    if(header->flip == 1)
-        baux=true;
+        isStack = true;
     else
-        baux=false;
-    MD.setValue(MDL_FLIP,     baux);
-
-
-    if ( header->istack > 0 )
+        isStack = false;
+    int _xDim,_yDim,_zDim;
+    unsigned long int _nDim;
+    _xDim = (int) header->nsam;
+    _yDim = (int) header->nrow;
+    _zDim = (int) header->nslice;
+    _nDim = 1;
+    if(isStack)
     {
-        offset += offset;
-        for ( i=imgstart; i<imgend; i++ )
+        _nDim = (unsigned long int) header->maxim;
+        replaceNsize=_nDim;
+    }
+    else
+        replaceNsize=0;
+
+    int type = (int) header->iform;
+
+    /************
+     * BELLOW HERE DO NOT USE HEADER BUT LOCAL VARIABLES
+     */
+
+    // Map the parameters, REad the whole object (-1) or a slide
+    // Only handle stacks of images not of volumes
+    if(!isStack)
+    {
+        data.setDimensions( //setDimensions do not allocate data
+            (int) _xDim,
+            (int) _yDim,
+            (int) _zDim,
+            (unsigned long int)1 );
+    }
+    else
+    {
+        if(img_select==-1)
         {
-            fseek( fimg, header_size + i*image_size, SEEK_SET );
+            data.setDimensions(
+                (int) _xDim,
+                (int) _yDim,
+                (int) _zDim,
+                (unsigned long int)_nDim );
+        }
+        else
+        {
+            data.setDimensions(
+                (int) _xDim,
+                (int) _yDim,
+                (int) _zDim,
+                (unsigned long int) 1 );
+        }
+    }
+
+    DataType datatype  = Float;
+    size_t header_size = offset;
+    size_t image_size  = header_size + ZYXSIZE(data)*sizeof(float);
+    size_t pad         = offset;
+    unsigned long   imgStart=0;
+    unsigned long   imgEnd =_nDim;
+    char*   hend;
+
+    std::stringstream Num;
+    std::stringstream Num2;
+    //image is in stack? and set right initial and final image
+    if ( isStack)
+    {
+        if ( img_select >= (int)_nDim )
+        {
+            Num  << img_select;
+            Num2 << _nDim;
+            REPORT_ERROR(1,(std::string)"readSpider: Image number " + Num.str() +
+                         " exceeds stack size " + Num2.str());
+        }
+        /*
+                else
+                {
+                    if(img_select!=-1)
+                    {
+                        imgStart = img_select;
+                        imgEnd   = img_select + 1;
+                    }
+                    else
+        			{
+                        imgStart = 0;
+                        imgEnd = _nDim;
+        			}
+                }
+        */
+    }
+
+    MD.clear();
+    offset += offset;
+    for ( i=imgStart; i<imgEnd; i++ )
+    {
+        fseek( fimg, header_size + i*image_size, SEEK_SET );
+        if(img_select==-1 || img_select==i)
+        {
             if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
                 REPORT_ERROR(3,"rwSPIDER: cannot read multifile header information");
             hend = (char *) header + extent;
             if ( swap )
                 for ( b = (char *) header; b<hend; b+=4 )
                     swapbytes(b, 4);
-            //j = ( Ndim > 1 )? j = i: 0;
-            MD.addObject();//I think first image is readed twice
-            //test with spider stack
+            MD.addObject();
             MD.setValue(MDL_ORIGINX,header->xoff);
             MD.setValue(MDL_ORIGINY,header->yoff);
             MD.setValue(MDL_ORIGINZ,header->zoff);
@@ -234,18 +254,24 @@ int  readSPIDER(int img_select)
             MD.setValue(MDL_ANGLETILT,header->theta);
             MD.setValue(MDL_ANGLEPSI,header->gamma);
             MD.setValue(MDL_WEIGHT,header->weight);
-            MD.setValue(MDL_FLIP,header->flip);
+            bool baux;
+            if(header->flip == 1)
+                baux=true;
+            else
+                baux=false;
+            MD.setValue(MDL_FLIP,     baux);
+            if(img_select==i)
+                break;
         }
     }
-
-    freeMemory(header, sizeof(SPIDERhead));
+    delete header;
 
 #ifdef DEBUG
 
     std::cerr<<"DEBUG readSPIDER: header_size = "<<header_size<<" image_size = "<<image_size<<std::endl;
     std::cerr<<"DEBUG readSPIDER: img_select= "<<img_select<<" n= "<<Ndim<<" pad = "<<pad<<std::endl;
 #endif
-
+    //offset should point to the begin of the data
     readData(fimg, img_select, datatype, pad );
 
     fclose(fimg);
@@ -260,20 +286,32 @@ int  readSPIDER(int img_select)
 @Algorithm:
  A 3D image format used in electron microscopy.
 @Arguments:
- Bimage*    the image structure.
 @Returns:
  int     error code (<0 means failure).
 **************************************************************************/
-int  writeSPIDER()
+
+int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
-//#define DEBUG
+    //either I write an object or I write slice of this object
+    //stack can only overwrite,slice can overwrite append or insert
+#undef DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     printf("DEBUG writeSPIDER: Writing Spider file\n");
     printf("DEBUG writeSPIDER: File %s\n", filename.c_str());
 #endif
 #undef DEBUG
 
-    float  lenbyt = sizeof(float)*XSIZE(data);  // Record length (in bytes)
+    //check if we are going to add or substitute an slice
+    //in an existing stack
+    //IsStack?
+    //else
+    int Xdim = XSIZE(data);
+    int Ydim = YSIZE(data);
+    int Zdim = ZSIZE(data);
+    int Ndim = NSIZE(data);
+
+    float  lenbyt = sizeof(float)*Xdim;  // Record length (in bytes)
     float  labrec = floor(SPIDERSIZE/lenbyt); // # header records
     if ( fmod(SPIDERSIZE,lenbyt) != 0 )
         labrec++;
@@ -286,13 +324,13 @@ int  writeSPIDER()
     header->labrec = labrec;     // # header records
     header->labbyt = labbyt;      // Size of header in bytes
 
-    header->irec = labrec + floor((ZYXSIZE(data)*sizeof(float))/lenbyt + 0.999999); // Total # records
-    header->nsam = XSIZE(data);
-    header->nrow = YSIZE(data);
-    header->nslice = ZSIZE(data);
+    header->irec   = labrec + floor((ZYXSIZE(data)*sizeof(float))/lenbyt + 0.999999); // Total # records
+    header->nsam   = Xdim;
+    header->nrow   = Ydim;
+    header->nslice = Zdim;
 
     // If a transform, then the physical storage in x is only half+1
-    size_t xstore = XSIZE(data);
+    size_t xstore  = Xdim;
     if ( transform == Hermitian )
     {
         xstore = XSIZE(data)/2 + 1;
@@ -302,8 +340,9 @@ int  writeSPIDER()
 #ifdef DEBUG
     printf("DEBUG writeSPIDER: Size: %g %g %g\n", header->nsam, header->nrow, header->nslice);
 #endif
+    //read image and check if this is an stack
 
-    if ( ZSIZE(data) < 2 )
+    if ( Zdim < 2 )
     {
         if ( transform == NoTransform )
             header->iform = 1;     // 2D image
@@ -319,27 +358,7 @@ int  writeSPIDER()
     }
     double aux;
     bool baux;
-    header->imami = 1;
-    /**
-        std::vector< MDLabel >::iterator strIt;
-        for( strIt  = SF.activeLabels.begin(); strIt != SF.activeLabels.end(); strIt ++ )
-        {
-            switch ((*strIt)) {
-                case MDL_MIN:
-                    MDc.getValue(MDL_MIN,aux);    header->fmin = (float)aux;
-                    break;
-                case MDL_MAX:
-                    MDc.getValue(MDL_MAX,aux);    header->fmax = (float)aux;
-                    break;
-                case MDL_AVG:
-                    MDc.getValue(MDL_AVG,aux);    header->av   = (float)aux;
-                    break;
-                case MDL_STDDEV:
-                    MDc.getValue(MDL_STDDEV,aux); header->sig  = (float)aux;
-                    break;
-
-        }
-    **/
+    header->imami = 0;//never trust max/min
 
     if (MDMainHeader.firstObject() != MetaData::NO_OBJECTS_STORED)
     {
@@ -352,12 +371,15 @@ int  writeSPIDER()
         if(MDMainHeader.getValue(MDL_STDDEV,aux))
             header->sig  = (float)aux;
     }
+
     // For multi-image files
-    if (NSIZE(data) > 1 )
+    if (Ndim > 1 || mode == WRITE_APPEND || isStack)
     {
         header->istack = 2;
-        header->inuse = -1;
-        header->maxim = NSIZE(data);
+        header->inuse =  1;
+        header->maxim = Ndim;
+        if(mode == WRITE_APPEND)
+            header->maxim = replaceNsize +1;
     }
     else
     {
@@ -366,7 +388,11 @@ int  writeSPIDER()
         header->maxim = 1;
     }
 
-    if (MD.firstObject() != MetaData::NO_OBJECTS_STORED)
+
+    if (  Ndim == 1 &&
+            mode != WRITE_APPEND &&
+            isStack &&
+            MD.firstObject() != MetaData::NO_OBJECTS_STORED)
     {
         if(MD.getValue(MDL_ORIGINX,  aux))
             header->xoff  =(float)aux;
@@ -385,6 +411,7 @@ int  writeSPIDER()
         if(MD.getValue(MDL_FLIP,    baux))
             header->flip  =(float)baux;
     }
+    //else end
     // Set time and date
     time_t timer;
     time ( &timer );
@@ -395,7 +422,7 @@ int  writeSPIDER()
     sprintf(header->cdat, "%02d-%02d-%02d", t->tm_mday, t->tm_mon, t->tm_year);
 
     size_t datasize, datasize_n;
-    datasize_n = xstore*YSIZE(data)*ZSIZE(data);
+    datasize_n = Xdim*Ydim*Zdim;
     if (isComplexT())
         datasize = datasize_n * gettypesize(ComplexFloat);
     else
@@ -411,31 +438,66 @@ int  writeSPIDER()
     printf("DEBUG writeSPIDER: Data offset: %ld\n", offset);
     printf("DEBUG writeSPIDER: File %s\n", filename.c_str());
 #endif
+    //locking
+    struct flock fl;
+    int fd;
+
+    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
+    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
+    fl.l_start  = 0;        /* Offset from l_whence         */
+    fl.l_len    = 0;        /* length, 0 = to EOF           */
+    fl.l_pid    = getpid(); /* our PID                      */
+
 
     FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-        return(-1);
-    fwrite( header, offset, 1, fimg );
+    /*
+     * OPEN FILE
+     */
+    if (mode==WRITE_OVERWRITE || (!_exists && mode==WRITE_APPEND))//open in overwrite mode
+    {
+        if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
+            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+    }
+    else //open in append mode
+    {
+        if ( ( fimg = fopen(filename.c_str(), "r+") ) == NULL )
+            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+    }
+    /*
+     * BLOCK HEADER IF NEEDED
+     */
+    fl.l_type   = F_WRLCK;
+    fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
+    if(mode==WRITE_OVERWRITE
+            ||
+            mode==WRITE_APPEND)//header must change
+        fwrite( header, offset, 1, fimg );
 
     char* fdata = (char *) askMemory(datasize);
-    if ( NSIZE(data) == 1 )
+    //think about writing in several chucks
+
+    //write only once, ignore select_img
+    if ( NSIZE(data) == 1 && mode==WRITE_OVERWRITE)
     {
         if (isComplexT())
             castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
         else
             castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
+        //No locking here since this file has a single object
         fwrite( fdata, datasize, 1, fimg );
     }
-    else
+    else //if(NSIZE(data) > 1 && mode==WRITE_OVERWRITE)
     {
-        header->istack = 0;
-        header->inuse = 0;
-        header->maxim = 0;
-        for ( size_t i=0; i<NSIZE(data); i++ )
+        if(mode==WRITE_APPEND) //Ndim=1
+            fseek( fimg, 0, SEEK_END);
+        if(mode==WRITE_REPLACE) //Ndim=1
+            fseek( fimg,offset + (offset+datasize)*select_img, SEEK_SET);
+        for ( size_t i=0; i<Ndim; i++ )
         {
             //header->imgnum = i + 1;
             long int next_result = MD.nextObject();
-            if (next_result != MetaData::NO_OBJECTS_STORED && next_result != MetaData::NO_MORE_OBJECTS)
+            if (next_result != MetaData::NO_OBJECTS_STORED &&
+                    next_result != MetaData::NO_MORE_OBJECTS)
             {
                 if(MD.getValue(MDL_ORIGINX,  aux))
                     header->xoff  =(float)aux;
@@ -455,7 +517,7 @@ int  writeSPIDER()
                     header->flip  =(float)baux;
 
             }
-
+            //do not need to unlock because we are in the overwrite case
             fwrite( header, offset, 1, fimg );
             if (isComplexT())
                 castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
@@ -464,8 +526,9 @@ int  writeSPIDER()
             fwrite( fdata, datasize, 1, fimg );
         }
     }
-
+    //I guess I do not need to unlock since we are going to close the file
     fclose(fimg);
+
     freeMemory(fdata, datasize);
     freeMemory(header, (int)labbyt*sizeof(char));
 
