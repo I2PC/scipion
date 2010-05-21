@@ -368,8 +368,8 @@ AddLibrary('XmippExternal', 'external',
 DataSources = Glob('libraries/data','*.cpp',[])
 AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal']+FFTWLibs+SQLiteLibs)
 SwigDataSources = ['libraries/data/swig/swigXmippData.i'] 	 
-AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
-    [], ['XmippData'])
+#AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
+#    [], ['XmippData'])
             
 # Reconstruction
 ReconsSources = [
@@ -634,7 +634,7 @@ AddXmippProgram('statistics')
 AddXmippProgram('symmetrize', ['XmippRecons'])
 #AddXmippProgram('threshold')
 #AddXmippProgram('try_symmetry')
-#AddXmippProgram('test_sql')
+AddXmippProgram('test_sql')
 ##AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('window')

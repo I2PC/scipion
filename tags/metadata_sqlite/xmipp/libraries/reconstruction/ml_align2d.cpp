@@ -2425,7 +2425,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
         for (int refno = 0; refno < model.n_ref; refno++)
         {
             MDo.clear();
-            MDo.fillMetaData(MDimg, MDimg.findObjects(MDL_REF, refno + 1));
+            MDo.importObjects(MDimg, MDL_REF, refno + 1);
 
             fn_tmp = fn_root + "_ref";
             fn_tmp.compose(fn_tmp, refno + 1, "");

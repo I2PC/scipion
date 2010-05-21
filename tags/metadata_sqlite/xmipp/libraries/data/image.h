@@ -319,7 +319,7 @@ public:
         //whenever we implement them I will update
 
         if(activeLabels.empty() && !(docFile.isEmpty()))
-            activeLabels = docFile.activeLabels;
+            activeLabels = docFile.getActiveLabels();
         std::vector<MDLabel>::iterator strIt;
         for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
         {

@@ -2832,7 +2832,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
     for (int refno = 0; refno < n_ref; refno++)
     {
         MDo.clear();
-        MDo.fillMetaData(MDimg, MDimg.findObjects(MDL_REF, refno + 1));
+        MDo.importObjects(MDimg, MDL_REF, refno + 1);
 
         fn_tmp = fn_root + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");

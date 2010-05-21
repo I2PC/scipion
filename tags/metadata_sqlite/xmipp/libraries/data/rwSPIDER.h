@@ -322,7 +322,7 @@ int  writeSPIDER()
     header->imami = 1;
     /**
         std::vector< MDLabel >::iterator strIt;
-        for( strIt  = SF.activeLabels.begin(); strIt != SF.activeLabels.end(); strIt ++ )
+        for( strIt  = SF.getActiveLabels().begin(); strIt != SF.getActiveLabels().end(); strIt ++ )
         {
             switch ((*strIt)) {
                 case MDL_MIN:

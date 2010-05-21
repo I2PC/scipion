@@ -27,7 +27,7 @@
 //This is needed for static memory allocation
 std::map<MDLabel, MDLabelData> MDL::data;
 std::map<std::string, MDLabel> MDL::names;
-StaticInitialization MDL::initialization; //Just for initialization
+MDLabelStaticInit MDL::initialization; //Just for initialization
 
 void MDL::addLabel(MDLabel label, MDLabelType type, std::string name, std::string name2, std::string name3)
 {
@@ -37,7 +37,7 @@ void MDL::addLabel(MDLabel label, MDLabelType type, std::string name, std::strin
         names[name2] = label;
     if (name3 != "")
         names[name3] = label;
-}//close function addLable
+}//close function addLabel
 
 MDLabel  MDL::str2Label(const std::string &labelName)
 {
@@ -49,7 +49,7 @@ MDLabel  MDL::str2Label(const std::string &labelName)
 std::string  MDL::label2Str(const MDLabel &label)
 {
     if (data.find(label) == data.end())
-            return "";
+        return "";
     return data[label].str;
 }//close function label2Str
 
@@ -81,6 +81,15 @@ bool MDL::isValidLabel(const MDLabel &label)
 
 bool MDL::isValidLabel(const std::string &labelName)
 {
-    MDLabel label = MDL::str2Label(labelName);
-    return MDL::isValidLabel(label);
+    return isValidLabel(str2Label(labelName));
+}
+
+MDLabelType MDL::labelType(const MDLabel &label)
+{
+    return data[label].type;
+}
+
+MDLabelType MDL::labelType(std::string &labelName)
+{
+    return data[str2Label(labelName)].type;
 }

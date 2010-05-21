@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
 			SF.getValue( MDL_IMAGE, fn_img);
 			if (fn_img=="") break;
 			img.read(fn_img);
-			for( strIt  = SF.activeLabels.begin();
-				 strIt != SF.activeLabels.end();
+			for( strIt  = SF.getActiveLabels().begin();
+				 strIt != SF.getActiveLabels().end();
 				 strIt ++ )
 			{
 				switch ((*strIt)) {

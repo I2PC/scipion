@@ -524,7 +524,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
         }
         // Select only relevant projections to reconstruct
         MDall.read(fn_insel);
-        MDone.fillMetaData( MDall, MDall.findObjects(MDL_REF3D, volno + 1) );
+        MDone.importObjects( MDall, MDL_REF3D, volno + 1 );
         fn_insel = fn_tmp + "_ref.xmd";
         MDone.write(fn_insel);
     }
@@ -662,7 +662,7 @@ void Prog_Refine3d_prm::calculate_3DSSNR(MultidimArray<double> &spectral_signal,
         Mone.setXmippOrigin();
 
         MDnoise_one.clear();
-        MDnoise_one.fillMetaData( MDnoise_all, MDnoise_all.findObjects(MDL_REF3D, volno + 1) );
+        MDnoise_one.importObjects( MDnoise_all, MDL_REF3D, volno + 1 );
 
         c = 0;
         volweight = 0.;
@@ -889,7 +889,7 @@ void Prog_Refine3d_prm::concatenate_selfiles(int iter)
         minval = volno * nr_projections + 1;
         maxval = (volno + 1) * nr_projections;
         MDout.clear();
-        MDout.fillMetaData(MDin, MDin.findObjectsInRange(MDL_REF, minval, maxval));
+        MDout.importObjects(MDin, MDL_REF, minval, maxval);
         fn_class = fn_tmp + "_class_vol";
         fn_class.compose(fn_class, volno + 1, "");
         fn_class += "_img.xmd";

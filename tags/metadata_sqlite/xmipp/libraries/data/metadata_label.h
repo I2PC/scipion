@@ -35,7 +35,7 @@
 #include "funcs.h"
 
 class MDLabelData;
-class StaticInitialization;
+class MDLabelStaticInit;
 
 enum MDLabel
 {
@@ -163,16 +163,18 @@ static bool isDouble(const MDLabel &label);
 static bool isVector(const MDLabel &label);
 static bool isValidLabel(const MDLabel &label);
 static bool isValidLabel(const std::string &labelName);
+static MDLabelType labelType(const MDLabel &label);
+static MDLabelType labelType(std::string &labelName);
 
 private:
     static std::map<MDLabel, MDLabelData> data;
     static std::map<std::string, MDLabel> names;
-    static StaticInitialization initialization; //Just for initialization
+    static MDLabelStaticInit initialization; //Just for initialization
 
     static void addLabel(MDLabel label, MDLabelType type, std::string name, std::string name2 = "", std::string name3 = "");
 
 
-    friend class StaticInitialization;
+    friend class MDLabelStaticInit;
 }
 ;//close class MLD definition
 
@@ -194,10 +196,10 @@ public:
 };//close class MDLabelData c
 
 //Just a class for static initialization
-class StaticInitialization
+class MDLabelStaticInit
 {
 private:
-    StaticInitialization()
+    MDLabelStaticInit()
     {
         ///==== Add labels entries from here in the SAME ORDER as declared in ENUM ==========
         MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", "psi2");
@@ -286,7 +288,7 @@ private:
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");
     }
 
-    ~StaticInitialization()
+    ~MDLabelStaticInit()
     {
     }
     friend class MDL;

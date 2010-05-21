@@ -552,7 +552,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             SF_aux.read(fn_sel);
             SF_aux.removeObjects(MDL_ENABLED, -1);
             selfile.clear();
-            selfile.fillMetaData( SF_aux, SF_aux.findObjectsInRange(MDL_WEIGHT, 1e-9, 99e99) );
+            selfile.importObjects( SF_aux, MDL_WEIGHT, 1e-9, 99e99 );
             if (selfile.size() == 0)
             {
                 std::cerr << "there is no input file with weight!=0" << std::endl;
