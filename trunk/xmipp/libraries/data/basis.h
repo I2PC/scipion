@@ -69,6 +69,9 @@ public:
     /// Default values
     void set_default();
 
+    /// Basis name
+    std::string basisName() const;
+
     /** Read parameters from a command line.
         This function reads the parameters from a command line
         defined by argc and argv. An exception might be thrown by any

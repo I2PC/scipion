@@ -37,6 +37,23 @@ void Basis::set_default()
     blobprint2.clear();
 }
 
+// Basis name --------------------------------------------------------------
+std::string Basis::basisName() const
+{
+    switch (type)
+    {
+    case Basis::blobs:
+        return "blobs";
+        break;
+    case Basis::voxels:
+        return "voxels";
+        break;
+    case Basis::splines:
+        return "splines";
+        break;
+    }
+}
+
 // Read params -------------------------------------------------------------
 #define GET_PARAM_WITH_DEF(flag,default_value) \
     getParameter(argc,argv,"-"flag,default_value)
@@ -212,10 +229,12 @@ void Basis::changeFromVoxels(const MultidimArray<double> &vol_voxels,
         vol_basis(0)() = vol_voxels;
         if (R != -1)
             FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_voxels)
-                if (k*k + i*i + j*j > R2) vol_basis(0)()(k, i, j) = 0;
+            if (k*k + i*i + j*j > R2)
+                vol_basis(0)()(k, i, j) = 0;
         if (vol_mask != NULL)
             FOR_ALL_ELEMENTS_IN_ARRAY3D(vol_voxels)
-                if ((*vol_mask)(k, i, j) == 0) vol_basis(0)()(k, i, j) = 0;
+            if ((*vol_mask)(k, i, j) == 0)
+                vol_basis(0)()(k, i, j) = 0;
         break;
     case splines:
         /* TODO */
