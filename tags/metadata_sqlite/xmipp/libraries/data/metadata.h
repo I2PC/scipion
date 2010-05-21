@@ -54,6 +54,8 @@
  * Xmipp specific files like Docfiles, Selfiles, etc..
  * 
  */
+class MDQuery;
+
 class MetaData
 {
 private:
@@ -274,19 +276,9 @@ public:
      */
     void importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd);
 
-    template<class T>
-    void importObjects(const MetaData &md, const MDLabel label, const T &value)
-    {
-        REPORT_ERROR(-55, "importObjects not yet implemented");
-    }
+    void importObjects(const MetaData &md, MDQuery query);
 
-    template<class T>
-    void importObjects(const MetaData &md, const MDLabel label, const T &valueMin, const T &valueMax)
-    {
-        REPORT_ERROR(-55, "importObjects not yet implemented");
-    }
-
-    /**Remove the object with this id
+     /**Remove the object with this id
      * @ingroup DataAccess
      * Returns true if the object was removed or false if
      * the object did not exist
@@ -303,22 +295,7 @@ public:
     /** Removes objects with pair <label, value>
      * @ingroup DataAccess
      */
-    template<class T>
-    void removeObjects(const MDLabel label, const T &value)
-    {
-        //TODO: Implement this
-        REPORT_ERROR(-55, "'removeObjects' not yet implemented");
-    }
-
-    /** Removes objects with pair <label, value in range>
-     * @ingroup DataAccess
-     */
-    template<class T>
-    void removeObjects(const MDLabel label, const T &valueMin, const T &valueMax)
-    {
-        //TODO: Implement this
-        REPORT_ERROR(-55, "'removeObjects(in range)' not yet implemented");
-    }
+    void removeObjects(MDQuery query);
 
     //FIXME: organize this
     // Possible error codes for the metadata operations
@@ -344,87 +321,31 @@ public:
     ///@defgroup MetaDataSearch Some functions for perform searches on metadata objects
     ///@ingroup MetaDataClass
 
-    /** Find if the object with this id is present in the metadata
-     * @ingroup MetaDataSearch
-     */
-    bool findObject(long int objectID);
-
     /** Find all objects with pair <label, value>
      * @ingroup MetaDataSearch
      */
-    template<class T>
-    std::vector<long int> findObjects(const MDLabel name, const T &value)
-    {
-        //TODO: implement this
-        REPORT_ERROR(-55, "'findObjects' not yet implemented");
-    }
-
-    /** Find all objects with pairs <label, value in range>
-     * @ingroup MetaDataSearch
-     */
-    template<class T>
-    std::vector<long int> findObjects(const MDLabel name, const T &valueMin, const T &valueMax)
-    {
-        //TODO: implement this
-        REPORT_ERROR(-55, "'findObjects(in range)' not yet implemented");
-    }
+    std::vector<long int> findObjects(MDQuery query);
 
     /**Count all objects with pairs <label, value>
      * @ingroup MetaDataSearch
      */
-    template<class T>
-    int countObjects(const MDLabel name, const T &value)
-    {
-        //TODO: implement this
-        REPORT_ERROR(-55, "'countObjects' not yet implemented");
-    }
+    int countObjects(MDQuery query);
 
-    /**Count all objects with pairs <label, value in range>
+    /** Find if the object with this id is present in the metadata
      * @ingroup MetaDataSearch
      */
-    template<class T>
-    int countObjects(const MDLabel name, const T &valueMin, const T &valueMax)
-    {
-        //TODO: implement this
-        REPORT_ERROR(-55, "'countObjects(in range)' not yet implemented");
-    }
+    bool existsObject(long int objectID);
 
-    /**Check if exists objects with pair <label, value>
+    /**Check if exists at least one object with pair <label, value>
      * @ingroup MetaDataSearch
      */
-    template<class T>
-    bool detectObjects(const MDLabel name, const T &value)
-    {
-        //TODO: implement this
-        REPORT_ERROR(-55, "'countObjects(in range)' not yet implemented");
-        return false;
-    }
-    /**Check if exists objects with pair <label, value in range>
+    bool existsObject(MDQuery query);
+
+    /**Move active object to the first
+     * object with pair <label, value in range> if exists
      * @ingroup MetaDataSearch
      */
-    template<class T>
-    bool detectObjects(const MDLabel name, const T &valueMin, const T &valueMax)
-    {
-        //TODO: implement this
-        REPORT_ERROR(-55, "'countObjects(in range)' not yet implemented");
-        return false;
-    }
-
-    template<class T>
-    long int goToFirstObject(const MDLabel name, const T &value)
-    {
-        //TODO: implement this
-        REPORT_ERROR(-55, "'gotoFirstObjects(in range)' not yet implemented");
-        return false;
-    }
-    template<class T>
-    long int goToFirstObject(const MDLabel name, const T &valueMin, const T &valueMax)
-    {
-        //TODO: implement this
-        REPORT_ERROR(-55, "'gotoFirstObjects(in range)' not yet implemented");
-        return false;
-    }
-
+    long int gotoFirstObject(MDQuery query);
 
 
     ///@defgroup MetaDataIO functions related to the I/O of metadata
@@ -539,6 +460,52 @@ public:
 
 
 };
+
+///@defgroup MetaDataQuery represent queries to a metadata
+//@ingroup DataLibrary
+
+/** MDQuery this is the base class for queries, its abstract
+ *@ingroup MetaDataQuery
+ */
+class MDQuery
+{
+public:
+
+    /**This now is specific to the SQL implementation
+     * and its requiered to all MDQuery subclasses
+     * equal to 0 means that is ABSTRACT in this class
+     * and only accesible for MetaData
+     */
+    std::string queryString;
+};
+
+/**MDValueEqual this will test if a label have a value
+ *@ingroup MetaDataQuery
+ */
+class MDValueEqual: public MDQuery
+{
+public:
+    template <class T>
+    MDValueEqual(MDLabel label, const T &value)
+    {
+        //TODO: create the query string
+    }
+};//class MDValueEqual
+
+/**MDValueEqual this will test if a label have a value
+ *@ingroup MetaDataQuery
+ */
+class MDValueRange: public MDQuery
+{
+public:
+    template <class T>
+    MDValueRange(MDLabel label, const T &valueMin, const T &valueMax)
+    {
+        //TODO: create the query string
+    }
+};//class MDValueRange
+
+
 /** For all objects.
  @code
  FOR_ALL_OBJECTS_IN_METADATA(metadata) {

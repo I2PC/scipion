@@ -376,7 +376,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
 
     // Read metadatafile with experimental images
     MDimg.read(fn_sel);
-    MDimg.removeObjects(MDL_ENABLED, -1);
+    MDimg.removeObjects(MDValueEqual(MDL_ENABLED, -1));
     nr_exp_images = SF.size();
 
     // Check whether MDimg contains orientations
@@ -1359,7 +1359,7 @@ void Prog_ml_tomo_prm::getMissingRegion(MultidimArray<double> &Mmissing,
     bool do_limit_x, do_limit_y, do_cone, is_observed;
     Mmissing.resize(dim,dim,hdim+1);
 
-    MDmissing.goToFirstObject(MDL_MISSING_REGION_NR, missno);
+    MDmissing.gotoFirstObject(MDValueEqual(MDL_MISSING_REGION_NR, missno));
     if (all_missing_info[missno].type==MISSING_WEDGE_Y)
     {
         do_limit_x = true;

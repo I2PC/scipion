@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     {
         std::cout << "Calculating average and SD images from sel file......" << std::endl;
         MetaData SF((FileName) selname);
-        SF.removeObjects(MDL_ENABLED,-1);
+        SF.removeObjects(MDValueEqual(MDL_ENABLED,-1));
         Image<double> ave, sd;
         double min, max;
         get_statistics(SF, ave, sd, min, max, apply_geo);

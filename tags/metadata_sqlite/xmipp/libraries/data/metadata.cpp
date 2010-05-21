@@ -204,6 +204,11 @@ void MetaData::importObjects(const MetaData &md, const std::vector<long int> &ob
     REPORT_ERROR(-55, "importObjects not yet implemented");
 }
 
+void MetaData::importObjects(const MetaData &md, MDQuery query)
+{
+    REPORT_ERROR(-55, "importObjects not yet implemented");
+}
+
 bool MetaData::removeObject(long int objectID)
 {
     REPORT_ERROR(-55, "removeObject not yet implemented");
@@ -214,6 +219,13 @@ void MetaData::removeObjects(const std::vector<long int> &toRemove)
 {
     REPORT_ERROR(-55, "removeObjects not yet implemented");
 }
+
+void MetaData::removeObjects(MDQuery query)
+{
+    //TODO: Implement this
+    REPORT_ERROR(-55, "'removeObjects' not yet implemented");
+}
+
 
 //----------Iteration functions -------------------
 long int MetaData::firstObject()
@@ -232,6 +244,40 @@ long int MetaData::goToObject(long int objectID)
 {
     REPORT_ERROR(-55, "goToObject not yet implemented");
 }
+
+//-------------Search functions-------------------
+std::vector<long int> MetaData::findObjects(MDQuery query)
+{
+    //TODO: implement this
+    REPORT_ERROR(-55, "'findObjects' not yet implemented");
+}
+
+int MetaData::countObjects(MDQuery query)
+{
+    //TODO: implement this
+    REPORT_ERROR(-55, "'countObjects' not yet implemented");
+}
+
+bool MetaData::existsObject(long int objectID)
+{
+    //TODO: implement this
+    REPORT_ERROR(-55, "'existsObjects' not yet implemented");
+}
+
+bool MetaData::existsObject(MDQuery query)
+{
+    //TODO: implement this
+    REPORT_ERROR(-55, "'existsObjects(in range)' not yet implemented");
+    return false;
+}
+
+long int MetaData::gotoFirstObject(MDQuery query)
+{
+    //TODO: implement this
+    REPORT_ERROR(-55, "'gotoFirstObjects(in range)' not yet implemented");
+    return false;
+}
+
 
 //--------------IO functions -----------------------
 void MetaData::write(const std::string &fileName)
