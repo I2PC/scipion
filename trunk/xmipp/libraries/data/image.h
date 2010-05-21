@@ -36,6 +36,7 @@
 #include "multidim_array.h"
 #include "transformations.h"
 #include "metadata.h"
+#include <fcntl.h>
 
 static std::vector<MDLabel> emptyVector;
 static MetaData emptyMetaData;
@@ -139,12 +140,15 @@ public:
     MetaData MD;//data for each subimage
     MetaData MDMainHeader;//data for the file
 private:
-    FileName            filename;   // File name
-    int           dataflag; // Flag to force reading of the data
-    unsigned long i;   // Current image number (may be > NSIZE)
-    unsigned long offset;  // Data offset
-    int                swap;       // Perform byte swapping upon reading
-    TransformType  transform;  // Transform type
+    FileName            filename;    // File name
+    int                 dataflag;    // Flag to force reading of the data
+    unsigned long       i;           // Current image number (may be > NSIZE)
+    unsigned long       offset;      // Data offset
+    int                 swap;        // Perform byte swapping upon reading
+    TransformType       transform;   // Transform type
+    int                 replaceNsize;// Stack size in the replace case
+    int                 _exists;     // does target file exists?
+    // equal 0 is not exists or not a stack
     /*
     double    min, max; // Limits
     double    avg, std; // Average and standard deviation
@@ -190,7 +194,7 @@ public:
         data.resize(Ndim, Zdim, Ydim, Xdim);
         MDMainHeader.addObject();
         for (int n=0; n < Ndim; n++)
-        	MD.addObject();
+            MD.addObject();
     }
 
     /** Clear.
@@ -210,6 +214,7 @@ public:
         swap = 0;
         MD.clear();
         MDMainHeader.clear();
+        replaceNsize=0;
     }
 
     /** Check whether image is complex based on T
@@ -240,7 +245,7 @@ public:
     /** Specific read functions for different file formats
     */
 #include "rwSPIDER.h"
-#include "rwMRC.h"
+    //#include "rwMRC.h"
 
     /** Is this file an image
      *
@@ -280,11 +285,17 @@ public:
     }
 
     /** General read function
+     * you can read a single image from a single image file
+     * or a single image file from an stack, in the second case
+     * the select slide may come in the image name or in the select_img parameter
+     * file name takes precedence over select_img
+     * If -1 is given the whole object is read
+     *
      */
     int read(const FileName &name, bool readdata=true, int select_img=-1,
              bool apply_geo = false, bool only_apply_shifts = false,
              const MetaData &docFile= emptyMetaData,
-             std::vector<MDLabel> &activeLabels = emptyVector )
+             std::vector<MDLabel> &activeLabels = emptyVector)
     {
         int err = 0;
         // Check whether to read the data or only the header
@@ -294,23 +305,38 @@ public:
             dataflag = -1;
 
         FileName ext_name = name.get_file_format();
-        if ( name.contains("#") )
-            filename = name;
-        else
-            filename = name.before_first_of(":");
-        //#define DEBUG
+        size_t found;
+        filename = name;
+        found=filename.find_first_of("@");
+        if (found!=std::string::npos)
+        {
+            select_img =  atoi(filename.substr(0, found).c_str());
+            filename       =       filename.substr(found+1) ;
+        }
+
+        found=filename.find_first_of(":");
+        if ( found!=std::string::npos)
+        {
+            filename = filename.substr(0, found);
+        }
+
 #undef DEBUG
+        //#define DEBUG
 #ifdef DEBUG
 
-        std::cerr << "name="<<name <<std::endl;
+        std::cerr << "READ\n" <<
+        "name="<<name <<std::endl;
         std::cerr << "ext= "<<ext_name <<std::endl;
-        std::cerr<<" now reading: "<< filename<<" dataflag= "<<dataflag<<std::endl;
+        std::cerr << " now reading: "<< filename <<" dataflag= "<<dataflag
+        << " select_img "  << select_img << std::endl;
 #endif
+#undef DEBUG
 
         if (ext_name.contains("mrc"))
-            err = readMRC();
+            ;//err = readMRC(select_img);
         else
             err = readSPIDER(select_img);
+
         //get metadata conainer
         //add to MDheader
         //apply geo
@@ -325,31 +351,31 @@ public:
         {
             if (MDL::isDouble(*strIt))
             {
-            	double dd;
+                double dd;
                 docFile.getValue(*strIt,dd);
                 MD.setValue(*strIt,dd);
             }
             else if (MDL::isString(*strIt))
             {
-            	std::string ss;
+                std::string ss;
                 docFile.getValue(*strIt,ss);
                 MD.setValue(*strIt,ss);
             }
             else if (MDL::isInt(*strIt))
             {
-            	int ii;
+                int ii;
                 docFile.getValue(*strIt,ii);
                 MD.setValue(*strIt,ii);
             }
             else if (MDL::isBool(*strIt))
             {
-            	bool bb;
+                bool bb;
                 docFile.getValue(*strIt,bb);
                 MD.setValue(*strIt,bb);
             }
             else if (MDL::isVector(*strIt))
             {
-            	std::vector<double> vv;
+                std::vector<double> vv;
                 docFile.getValue(*strIt,vv);
                 MD.setValue(*strIt,vv);
             }
@@ -444,41 +470,121 @@ public:
     }
 
     /** General write function
+     * select_img= which slice should I replace
+     * overwrite = 0, append slice
+     * overwrite = 1 overwrite slice
      */
-    void write(FileName name="")
+    //so far I assume that we are going to write everything
+    //replace and append no valid for stacks
+    void write(FileName name="",
+               int select_img=-1,
+               bool isStack=false,
+               int mode=WRITE_OVERWRITE)
     {
+
         int err = 0;
 
         if (name == "")
             name = filename;
-
+        /*
+                if(
+            		(NSIZE(data)>1 && mode==WRITE_APPEND ) ||
+            		(NSIZE(data)>1 && mode==WRITE_REPLACE )
+                )
+                {
+                	REPORT_ERROR(1,"append and replace are not available options for stacks");
+                }
+        */
         FileName ext_name = name.get_file_format();
-        filename = name.before_first_of(":");
-        filename = filename.before_first_of("#");
+        size_t found;
+        filename = name;
+        found=filename.find_first_of("@");
+        if (found!=std::string::npos)
+        {
+            //select_img = atoi(filename.substr(0, found).c_str());
+            filename   =      filename.substr(found+1) ;
+        }
 
+        found=filename.find_first_of(":");
+        if ( found!=std::string::npos)
+        {
+            filename   = filename.substr(0, found);
+        }
+
+#define DEBUG
 #ifdef DEBUG
-
+        std::cerr << "write" <<std::endl;
         std::cerr<<"extension for write= "<<ext_name<<std::endl;
         std::cerr<<"filename= "<<filename<<std::endl;
+        std::cerr<<"mode= "<<mode<<std::endl;
+        std::cerr<<"isStack= "<<isStack<<std::endl;
+        std::cerr<<"select_img= "<<select_img<<std::endl;
 #endif
-
+#undef DEBUG
         // Check that image is not empty
         if (getSize() < 1)
             REPORT_ERROR(1,"write Image ERROR: image is empty!");
 
-        // PERHAPS HERE CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
+        // CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
+        int Xdim, Ydim, Zdim, Ndim;
+        this->getDimensions(Xdim,Ydim, Zdim, Ndim);
+
+        _exists = exists(filename);
+        Image<T> auxI;
+        replaceNsize=0;//reset replaceNsize in case image is reused
+        if(select_img==-1 && mode==WRITE_REPLACE)
+            REPORT_ERROR(1,"writeSPIDER: Please specify object to be replaced");
+        else if(!_exists && mode==WRITE_REPLACE)
+        {
+            std:: stringstream replace_number;
+            replace_number << select_img;
+            REPORT_ERROR(1,(std::string)"Cannot replace object number: "
+                         + replace_number.str()
+                         + " in file " +filename
+                         + ". It does not exist");
+        }
+        else if (_exists && (mode==WRITE_REPLACE || mode==WRITE_APPEND))
+        {
+            auxI.read(filename+":spi",false);
+            int _Xdim, _Ydim, _Zdim, _Ndim;
+            auxI.getDimensions(_Xdim,_Ydim, _Zdim, _Ndim);
+            replaceNsize=_Ndim;
+            if(Xdim!=_Xdim ||
+                    Ydim!=_Ydim ||
+                    Zdim!=_Zdim
+              )
+                REPORT_ERROR(1,"writeSPIDER: target and source objects have different size");
+            if(mode==WRITE_REPLACE && select_img>_Ndim)
+                REPORT_ERROR(1,"writeSPIDER: can not replace image stack is not large enough");
+            if(auxI.replaceNsize <1 &&
+                    (mode==WRITE_REPLACE || mode==WRITE_APPEND))
+                REPORT_ERROR(1,"writeSPIDER: output file is not an stack");
+        }
+        else if(!_exists && mode==WRITE_APPEND)
+        {
+        	;
+        }
+        else//If new file we are in the WRITE_OVERWRITE mode
+        {
+            mode=WRITE_OVERWRITE;
+        }
+        /*
+         * SELECT FORMAT
+         */
+
         if (ext_name.contains("mrc"))
         {
-            err = writeMRC();
+            ;// writeMRC(select_img);
         }
         else
-            err = writeSPIDER();
+            err = writeSPIDER(select_img,isStack,mode);
 
         if ( err < 0 )
         {
             std::cerr<<" Filename = "<<filename<<" Extension= "<<ext_name<<std::endl;
             REPORT_ERROR(10,"Error writing file");
         }
+        //unlock file
 
     }
 
@@ -739,7 +845,7 @@ public:
         // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
         data.coreAllocate();
         myoffset = offset + select_img*(pagesize + pad);
-
+        //#define DEBUG
 #ifdef DEBUG
 
         data.printShape();
@@ -753,12 +859,12 @@ public:
         else
             page = (char *) askMemory(pagesize*sizeof(char));
 
-        if ( pad > 0)
-            padpage = (char *) askMemory(pad*sizeof(char));
+        //if ( pad > 0)
+        //    padpage = (char *) askMemory(pad*sizeof(char));
         fseek( fimg, myoffset, SEEK_SET );
         for ( size_t myn=0; myn<NSIZE(data); myn++ )
         {
-            for (size_t myj=0; myj<pagesize; myj+=pagemax )
+            for (size_t myj=0; myj<pagesize; myj+=pagemax )//pagesize size of object
             {
                 // Read next page. Divide pages larger than pagemax
                 readsize = pagesize - myj;
@@ -776,10 +882,11 @@ public:
                 haveread_n += readsize_n;
             }
             if ( pad > 0 )
-                fread( padpage, pad, 1, fimg);
+                //fread( padpage, pad, 1, fimg);
+                fseek( fimg, pad, SEEK_CUR );
         }
-        if ( pad > 0 )
-            freeMemory(padpage, pad*sizeof(char));
+        //if ( pad > 0 )
+        //    freeMemory(padpage, pad*sizeof(char));
 
 #ifdef DEBUG
 
