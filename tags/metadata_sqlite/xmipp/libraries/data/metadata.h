@@ -33,7 +33,7 @@
 #include <sstream>
 #include "funcs.h"
 #include "strings.h"
-#include "metadata_container.h"
+#include "metadata_sql.h"
 #include <time.h>
 #include <stdio.h>
 #include <sstream>
@@ -54,6 +54,12 @@
  * Xmipp specific files like Docfiles, Selfiles, etc..
  * 
  */
+
+//useful to init values to zero
+static double zeroD=0.;
+static double    oneD=1.;
+static bool  falseb=false;
+
 class MDQuery;
 
 class MetaData
@@ -173,11 +179,6 @@ public:
     /// @defgroup GettersAndSetters some getters and setters functions
     /// @ingroup MetaDataClass
     /// all getter should be 'const'
-
-    /* get metadatacontainer for current metadata object
-     *@ingroup GettersAndSetters
-     */
-    MetaDataContainer * getObject(long int objectID = -1) const;
 
     /**Get column format info.
      *@ingroup GettersAndSetters

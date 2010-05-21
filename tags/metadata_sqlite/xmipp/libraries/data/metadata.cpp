@@ -108,12 +108,6 @@ MetaData::~MetaData()
 
 //-------- Getters and Setters ----------
 
-MetaDataContainer * MetaData::getObject(long int objectID) const
-{
-    REPORT_ERROR(-55, "getObject not implemented");
-    return NULL;
-}
-
 bool MetaData::getColumnFormat() const
 {
     return isColumnFormat;
@@ -308,72 +302,7 @@ void MetaData::substraction(MetaData & minuend, MetaData & subtrahend,
 void get_statistics(MetaData MT_in, Image<double> & _ave, Image<double> & _sd, double& _min,
                     double& _max, bool apply_geo)
 {
-    MetaData MT(MT_in); //copy constructor so original MT is not changed
-    _min = MAXFLOAT;
-    _max = 0;
-    bool first = true;
-    int n = 0;
-    // Calculate Mean
-    long int ret = MT.firstObject();
-    if (ret == MetaData::NO_OBJECTS_STORED)
-    {
-        std::cerr << "Empty inputFile File\n";
-        exit(1);
-    }
-    FileName image_name;
-    int _enabled;
-    do
-    {
-        MT.getValue(MDL_IMAGE, image_name);
-        MT.getValue(MDL_ENABLED, _enabled);
-        if (_enabled == (-1) || image_name == "")
-            continue;
-        Image<double> image;
-        MetaDataContainer * aux = MT.getObject();
-        image.read(image_name,true,
-                   -1,apply_geo,
-                   false);
-        double min, max, avg, stddev;
-        image().computeStats(avg, stddev, min, max);
-        if (_min > min)
-            _min = min;
-        if (_max < max)
-            _max = max;
-        if (first)
-        {
-            _ave = image;
-            first = false;
-        }
-        else
-        {
-            _ave() += image();
-        }
-        n++;
-    }
-    while (MT.nextObject() != MetaData::NO_MORE_OBJECTS);
-
-    if (n > 0)
-        _ave() /= n;
-    _sd = _ave;
-    _sd().initZeros();
-    // Calculate SD
-    MT.firstObject();
-    do
-    {
-        MT.getValue(MDL_IMAGE, image_name);
-        MT.getValue(MDL_ENABLED, _enabled);
-        if (_enabled == (-1) || image_name == "")
-            continue;
-
-        Image<double> image, tmpImg;
-        image.read(image_name);
-        tmpImg() = ((image() - _ave()));
-        tmpImg() *= tmpImg();
-        _sd() += tmpImg();
-    }
-    while (MT.nextObject() != MetaData::NO_MORE_OBJECTS);
-    _sd() /= (n - 1);
-    _sd().selfSQRT();
+    REPORT_ERROR(-55, "get_statistics not yet implemented");
 }
 
 void ImgSize(MetaData &MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
