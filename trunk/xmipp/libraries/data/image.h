@@ -795,7 +795,10 @@ public:
 #ifdef DEBUG
 
         std::cerr<<"DEBUG swapPage: Swapping image data with swap= "
-        << swap<<" datatypesize= "<<datatypesize<<std::endl;
+        << swap<<" datatypesize= "<<datatypesize
+        << " pageNrElements " << pageNrElements
+        << " datatype " << datatype
+        <<std::endl;
         ;
 #endif
 
@@ -876,7 +879,7 @@ public:
                 fread( page, readsize, 1, fimg );
                 //swap per page
                 if (swap)
-                    swapPage(page, readsize_n, datatype);
+                    swapPage(page, readsize, datatype);
                 // cast to T per page
                 castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype, readsize_n);
                 haveread_n += readsize_n;
@@ -885,8 +888,8 @@ public:
                 //fread( padpage, pad, 1, fimg);
                 fseek( fimg, pad, SEEK_CUR );
         }
-        //if ( pad > 0 )
-        //    freeMemory(padpage, pad*sizeof(char));
+        if ( pad > 0 )
+            freeMemory(padpage, pad*sizeof(char));
 
 #ifdef DEBUG
 
