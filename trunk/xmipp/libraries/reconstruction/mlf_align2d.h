@@ -29,8 +29,7 @@
 #include <data/fftw.h>
 #include <data/args.h>
 #include <data/funcs.h>
-#include <data/selfile.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 #include <data/image.h>
 #include <data/geometry.h>
 #include <data/filters.h>
@@ -124,9 +123,9 @@ public:
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
     std::vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
-    std::vector< ImageXmippT<double> > Iref, Iold, Ictf;
+    std::vector< Image<double> > Iref, Iold, Ictf;
     /** Matrices for calculating PDF of (in-plane) translations */
-    Matrix2D<double> P_phi, Mr2;
+    MultidimArray<double> P_phi, Mr2;
     /** Fast mode */
     bool fast_mode;
     /** Fast mode */
@@ -167,7 +166,7 @@ public:
     /** Flag whether the phases of the experimental images are flipped already */
     bool phase_flipped;
     /** Matrix with resolution shell at each Fourier pixel */
-    Matrix2D<int> Mresol_int;
+    MultidimArray<int> Mresol_int;
     /** Vectors with sigma2 (for each defocus group) */
     std::vector<Matrix1D<double> > Vsig, Vctf, Vdec;
     /** Multiplicative factor for SSNR */
