@@ -124,7 +124,7 @@ int  readSPIDER(int img_select)
     int      i, j;
     int      extent = SPIDERSIZE - 180;  // exclude char bytes from swapping
     if ( ( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > SWAPTRIG ) ||
-            ( fabs(header->nslice) < 1 ) )
+         ( fabs(header->nslice) < 1 ) )
     {
         swap = 1;
         for ( i=0; i<extent; i+=4 )
@@ -225,10 +225,10 @@ int  readSPIDER(int img_select)
                         imgEnd   = img_select + 1;
                     }
                     else
-        			{
+           {
                         imgStart = 0;
                         imgEnd = _nDim;
-        			}
+           }
                 }
         */
     }
@@ -240,26 +240,37 @@ int  readSPIDER(int img_select)
         fseek( fimg, header_size + i*image_size, SEEK_SET );
         if(img_select==-1 || img_select==i)
         {
-            if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
-                REPORT_ERROR(3,"rwSPIDER: cannot read multifile header information");
-            hend = (char *) header + extent;
-            if ( swap )
-                for ( b = (char *) header; b<hend; b+=4 )
-                    swapbytes(b, 4);
+            if(isStack)
+            {
+                if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
+                    REPORT_ERROR(3,"rwSPIDER: cannot read multifile header information");
+                hend = (char *) header + extent;
+                if ( swap )
+                    for ( b = (char *) header; b<hend; b+=4 )
+                        swapbytes(b, 4);
+            }
             MD.addObject();
-            MD.setValue(MDL_ORIGINX,header->xoff);
-            MD.setValue(MDL_ORIGINY,header->yoff);
-            MD.setValue(MDL_ORIGINZ,header->zoff);
-            MD.setValue(MDL_ANGLEROT,header->phi);
-            MD.setValue(MDL_ANGLETILT,header->theta);
-            MD.setValue(MDL_ANGLEPSI,header->gamma);
-            MD.setValue(MDL_WEIGHT,header->weight);
+            double daux;
+            daux = (double)header->xoff;
+            MD.setValue(MDL_ORIGINX, daux);
+            daux = (double)header->yoff;
+            MD.setValue(MDL_ORIGINY, daux);
+            daux = (double)header->zoff;
+            MD.setValue(MDL_ORIGINZ, daux);
+            daux = (double)header->phi;
+            MD.setValue(MDL_ANGLEROT, daux);
+            daux = (double)header->theta;
+            MD.setValue(MDL_ANGLETILT, daux);
+            daux = (double)header->gamma;
+            MD.setValue(MDL_ANGLEPSI, daux);
+            daux = (double)header->weight;
+            MD.setValue(MDL_WEIGHT, daux);
             bool baux;
             if(header->flip == 1)
                 baux=true;
             else
                 baux=false;
-            MD.setValue(MDL_FLIP,     baux);
+            MD.setValue(MDL_FLIP, baux);
             if(img_select==i)
                 break;
         }
@@ -388,11 +399,10 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         header->maxim = 1;
     }
 
-
     if (  Ndim == 1 &&
-            mode != WRITE_APPEND &&
-            isStack &&
-            MD.firstObject() != MetaData::NO_OBJECTS_STORED)
+          mode != WRITE_APPEND &&
+          !isStack &&
+          MD.firstObject() != MetaData::NO_OBJECTS_STORED)
     {
         if(MD.getValue(MDL_ORIGINX,  aux))
             header->xoff  =(float)aux;
@@ -469,8 +479,8 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
     if(mode==WRITE_OVERWRITE
-            ||
-            mode==WRITE_APPEND)//header must change
+       ||
+       mode==WRITE_APPEND)//header must change
         fwrite( header, offset, 1, fimg );
 
     char* fdata = (char *) askMemory(datasize);
@@ -497,7 +507,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             //header->imgnum = i + 1;
             long int next_result = MD.nextObject();
             if (next_result != MetaData::NO_OBJECTS_STORED &&
-                    next_result != MetaData::NO_MORE_OBJECTS)
+                next_result != MetaData::NO_MORE_OBJECTS)
             {
                 if(MD.getValue(MDL_ORIGINX,  aux))
                     header->xoff  =(float)aux;
