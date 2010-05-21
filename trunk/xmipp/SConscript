@@ -593,7 +593,7 @@ AddXmippProgram('ml_refine3d', ['XmippRecons'])
 #AddXmippProgram('morphology')
 #AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('normalize')
-#AddXmippProgram('operate')  Kino
+AddXmippProgram('operate')  # Kino
 #AddXmippProgram('pdb_dictionary', ['XmippRecons_Interface','XmippRecons','XmippClassif','XmippInterface'])
 #AddXmippProgram('pdb_project_on_dictionary', ['XmippRecons','XmippClassif'])
 AddXmippProgram('phantom_create', ['XmippRecons'])
@@ -715,6 +715,7 @@ if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])sjors
 #    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons']sjors)
     AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
+#    AddXmippMPIProgram('mpi_project_xr', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
