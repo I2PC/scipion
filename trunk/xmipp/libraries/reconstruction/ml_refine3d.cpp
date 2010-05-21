@@ -1095,6 +1095,9 @@ bool Prog_Refine3d_prm::check_convergence(int iter)
     int                    dim;
     bool                   converged = true;
 
+    if (iter == 0)
+    	return false;
+
     if (verb > 0)
         std::cerr << "--> checking convergence " << std::endl;
 
