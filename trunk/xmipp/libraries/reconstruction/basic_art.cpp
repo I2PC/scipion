@@ -657,7 +657,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     if (level >= FULL)
     {
         if (fn_start != "")
-            vol_basis0.read(fn_start);
+            vol_basis0.read(fn_start, basis.basisName());
         else
         {
             Grid grid_basis;
