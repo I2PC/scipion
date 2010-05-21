@@ -261,7 +261,8 @@ Grid Create_CC_grid(double relative_size, int Zdim, int Ydim, int Xdim)
         vectorR3((double)FLOOR(Xdim / 2.0), (double)FLOOR(Ydim / 2.0),
                   (double)FLOOR(Zdim / 2.0));
     aux_grid = Create_CC_grid(relative_size, -origin,
-                              vectorR3((double)Xdim, (double)Ydim, (double)Zdim) - origin - 1, origin);
+                              vectorR3((double)Xdim, (double)Ydim, (double)Zdim) - origin - 1,
+                              vectorR3(0.0,0.0,0.0));
     result.add_grid(aux_grid);
 
     return result;
