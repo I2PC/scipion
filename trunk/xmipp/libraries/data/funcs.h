@@ -1130,6 +1130,17 @@ public:
  */
 int exists(const FileName& fn);
 
+/** True if the file exists in the current directory
+ *  Remove leading xx@ and tailing :xx
+ * @ingroup Filenames
+ *
+ * @code
+ * if (exists("g1ta00001"))
+ *     std::cout << "The file exists" << std::endl;
+ * @endcode
+ */
+int existsTrim(const FileName& fn);
+
 /** This function raised an ERROR if the filename if not empty and if
  * the corresponding file does not exist. 
  * This may be useful to have a better (killing) control on (mpi-regulated) jobs

@@ -212,7 +212,7 @@ int main(int argc, char **argv)
         int shown = 0;
         for (int i = ifirst + 1; i < argc; i++)
         {
-            if (!exists(argv[i]))
+            if (!existsTrim(argv[i]))
             {
                 if (argv[i][0] == '-') break; // There is nothing else to show
                 FileName fn;

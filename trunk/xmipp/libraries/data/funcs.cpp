@@ -585,6 +585,25 @@ int exists(const FileName &fn)
     fclose(aux);
     return 1;
 }
+/* Check if a file exists remove leading @ and tailing : */
+int existsTrim(const FileName &fn)
+{
+    FILE *aux;
+    FileName auxF;
+    size_t found;
+    found=fn.find_first_of("@");
+    if (found!=std::string::npos)
+        auxF       =       fn.substr(found+1) ;
+    else
+        auxF=fn;
+    found=auxF.find_first_of(":");
+    if ( found!=std::string::npos)
+        auxF = auxF.substr(0, found);
+    if ((aux = fopen(auxF.c_str(), "r")) == NULL)
+        return 0;
+    fclose(aux);
+    return 1;
+}
 
 /* Exit program if filename is not empry and file does not exist ----------- */
 void exit_if_not_exists(const FileName &fn)
