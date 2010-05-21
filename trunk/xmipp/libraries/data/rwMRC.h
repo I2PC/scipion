@@ -83,7 +83,7 @@ struct MRChead
 
 
 // I/O prototypes
-int readMRC()
+int readMRC(select_img)
 {
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
@@ -213,14 +213,14 @@ int readMRC()
 
     freeMemory(header, sizeof(MRChead));
 
-    readData(fimg, -1, datatype, 0);
+    readData(fimg, select_img, datatype, 0);
 
     fclose(fimg);
 
     return(0);
 }
 
-int writeMRC()
+int writeMRC(select_img)
 {
     /*
         if ( transform != NoTransform )
