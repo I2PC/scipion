@@ -116,6 +116,10 @@ enum MDLabel
     MDL_MIRRORFRAC, // Mirror fraction for a Maximum Likelihood model
     MDL_MISSINGREGION_NR, // Number of missing region in subtomogram
     MDL_MISSINGREGION_TYPE, // Type of missing region in subtomogram
+    MDL_MISSINGREGION_THY0, // Initial tilt angle in Y for missing region in subtomogram
+    MDL_MISSINGREGION_THYF, // Final tilt angle in Y for missing region in subtomogram
+    MDL_MISSINGREGION_THX0, // Initial tilt angle in X for missing region in subtomogram
+    MDL_MISSINGREGION_THXF, // Final tilt angle in X for missing region in subtomogram
     MDL_MODELFRAC, // Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NMA, // Normal mode displacements (vector double)
     MDL_OBJID, // object id (int)
@@ -312,6 +316,10 @@ private:
         MDL::addLabel(MDL_MIRRORFRAC, LABEL_DOUBLE, "mirrorFraction");
         MDL::addLabel(MDL_MISSINGREGION_NR, LABEL_INT, "missingRegionNumber");
         MDL::addLabel(MDL_MISSINGREGION_TYPE, LABEL_STRING, "missingRegionType");
+        MDL::addLabel(MDL_MISSINGREGION_THX0, LABEL_DOUBLE, "missingRegionThetaX0");
+        MDL::addLabel(MDL_MISSINGREGION_THXF, LABEL_DOUBLE, "missingRegionThetaXF");
+        MDL::addLabel(MDL_MISSINGREGION_THY0, LABEL_DOUBLE, "missingRegionThetaY0");
+        MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
         MDL::addLabel(MDL_OBJID, LABEL_INT, "objId");

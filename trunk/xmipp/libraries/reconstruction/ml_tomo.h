@@ -174,10 +174,6 @@ public:
     /** Just apply optimal rotations and use weighted-averaging to get class averages */
     bool do_only_average;
 
-    /* Adjust power spectra of all tilt series to average power spectrum */
-    bool do_adjust_spectra;
-    /** Arrays with power spectra for each tilt series */
-    double *spectra_series;
     // Angular sampling information
     struct angle_info
     {
@@ -235,12 +231,6 @@ public:
 
     /// Setup lots of stuff
     void produceSideInfo();
-
-    /// Adjust power spectra
-    void preparePowerSpectraAdjustment();
-
-    /// Apply power spectra Adjustment to a single fourier transform
-    void applyPowerSpectraAdjustment(MultidimArray<std::complex<double> > &M, int missno);
 
     /// Generate initial references from random subset averages
     void generateInitialReferences();
