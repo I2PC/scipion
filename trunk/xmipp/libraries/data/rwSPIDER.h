@@ -130,7 +130,6 @@ int  readSPIDER(int img_select)
         for ( i=0; i<extent; i+=4 )
             swapbytes(b+i, 4);
     }
-
     offset = (int) header->labbyt;
     MDMainHeader.clear();
     MDMainHeader.addObject();
@@ -199,7 +198,7 @@ int  readSPIDER(int img_select)
     DataType datatype  = Float;
     size_t header_size = offset;
     size_t image_size  = header_size + ZYXSIZE(data)*sizeof(float);
-    size_t pad         = offset;
+    size_t pad         = 0;
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
     char*   hend;
@@ -209,6 +208,7 @@ int  readSPIDER(int img_select)
     //image is in stack? and set right initial and final image
     if ( isStack)
     {
+    	pad         = offset;
         if ( img_select >= (int)_nDim )
         {
             Num  << img_select;
@@ -231,10 +231,10 @@ int  readSPIDER(int img_select)
            }
                 }
         */
+        offset += offset;
     }
 
     MD.clear();
-    offset += offset;
     for ( i=imgStart; i<imgEnd; i++ )
     {
         fseek( fimg, header_size + i*image_size, SEEK_SET );
