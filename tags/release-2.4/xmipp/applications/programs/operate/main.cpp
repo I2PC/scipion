@@ -582,9 +582,11 @@ void forcePositive(int operand_type1, const FileName &fn_1,
     {
         ImageXmipp out;
         out.read(fn_1, false, false, true);
-        bool negativeRemaining=false;
+        bool negativeRemaining;
         do
         {
+        	negativeRemaining=false;
+
             FOR_ALL_ELEMENTS_IN_MATRIX2D(out())
                 if (out(i, j)<=0)
                 {
@@ -623,9 +625,11 @@ void forcePositive(int operand_type1, const FileName &fn_1,
     {
         VolumeXmipp out;
         out.read(fn_1);
-        bool negativeRemaining=false;
+        bool negativeRemaining;
         do
         {
+        	negativeRemaining=false;
+
             FOR_ALL_ELEMENTS_IN_MATRIX3D(out())
                 if (out(k, i, j)<=0)
                 {
