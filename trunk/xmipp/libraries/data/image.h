@@ -511,7 +511,7 @@ public:
             filename   = filename.substr(0, found);
         }
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
         std::cerr << "write" <<std::endl;
         std::cerr<<"extension for write= "<<ext_name<<std::endl;
