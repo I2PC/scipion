@@ -197,22 +197,28 @@ double gaussian2D(double x, double y, double sigmaX, double sigmaY,
 /* ICDF Gaussian ----------------------------------------------------------- */
 double icdf_gauss(double p)
 {
-    const double c[] = {2.515517, 0.802853, 0.010328};
-    const double d[] = {1.432788, 0.189269, 0.001308};
+    const double c[] =
+        {
+            2.515517, 0.802853, 0.010328
+        };
+    const double d[] =
+        {
+            1.432788, 0.189269, 0.001308
+        };
     if (p < 0.5)
     {
         // F^-1(p) = - G^-1(p)
-    	double t=sqrt(-2.0*log(p));
-    	double z=t - ((c[2]*t + c[1])*t + c[0]) /
-                (((d[2]*t + d[1])*t + d[0])*t + 1.0);
+        double t=sqrt(-2.0*log(p));
+        double z=t - ((c[2]*t + c[1])*t + c[0]) /
+                 (((d[2]*t + d[1])*t + d[0])*t + 1.0);
         return -z;
     }
     else
     {
         // F^-1(p) = G^-1(1-p)
-    	double t=sqrt(-2.0*log(1-p));
-    	double z=t - ((c[2]*t + c[1])*t + c[0]) /
-                (((d[2]*t + d[1])*t + d[0])*t + 1.0);
+        double t=sqrt(-2.0*log(1-p));
+        double z=t - ((c[2]*t + c[1])*t + c[0]) /
+                 (((d[2]*t + d[1])*t + d[0])*t + 1.0);
         return z;
     }
 }
@@ -928,11 +934,18 @@ FileName FileName::get_file_format() const
 
 bool FileName::isMetaData() const
 {
+	//file names containing @ or : are not metadatas
+    size_t found=this->find('@');
+    if (found!=std::string::npos)
+        return false;
+    found=this->find(':');
+        if (found!=std::string::npos)
+            return false;
     FileName ext = get_file_format();
     //
     if (ext=="sel" || ext=="xmd" || ext=="doc")
     {
-    	return true;
+        return true;
     }
     else
     {
@@ -941,11 +954,10 @@ bool FileName::isMetaData() const
 
         if (infile.fail())
         {
-            REPORT_ERROR( 200, (std::string) "File " + *this + " does not exits" );
+            REPORT_ERROR( 200, (std::string) "File " + *this + " does not exit." );
         }
 
-        // Search for Headerinfo, if present we are processing an old-styled docfile
-        // else we are processing a new Xmipp MetaData file
+        // Search for xmipp_3,
         getline(infile, line, '\n');
         int pos = line.find("XMIPP_3 * ");
 
