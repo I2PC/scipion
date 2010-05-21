@@ -161,7 +161,7 @@ void Prog_WBP_prm::get_angles_for_image(const FileName &fn, double &rot, double 
             flip=0;
             SF.getValue(MDL_FLIP,flip);
             weight=0;
-            SF.getValue(MDL_WEIGHT,flip);
+            SF.getValue(MDL_WEIGHT,weight);
         }
         else
             REPORT_ERROR(1, (std::string)"Cannot find " + fn + " in docfile " + fn_doc);
