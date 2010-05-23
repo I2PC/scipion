@@ -132,6 +132,8 @@ int  readSPIDER(int img_select)
     }
     offset = (int) header->labbyt;
     MDMainHeader.clear();
+    MDMainHeader.setColumnFormat(false);
+
     MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_MIN,(double)header->fmin);
     MDMainHeader.setValue(MDL_MAX,(double)header->fmax);

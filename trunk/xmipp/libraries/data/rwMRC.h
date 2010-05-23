@@ -83,8 +83,13 @@ struct MRChead
 
 
 // I/O prototypes
-int readMRC(select_img)
+int readMRC(int img_select,bool isStack=false)
 {
+#undef DEBUG
+//#define DEBUG
+#ifdef DEBUG
+    printf("DEBUG readMRC: Reading MRC file\n");
+#endif
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
         return(-1);
@@ -114,7 +119,14 @@ int readMRC(select_img)
         REPORT_ERROR(1,"readMRC: amin > max: VAX floating point conversion unsupported");
 
     // Map the parameters
-    data.setDimensions(header->nx, header->ny, header->nz, 1);
+    if (isStack && img_select==-1)
+        data.setDimensions(header->nx, header->ny, 1, header->nz);
+    else if(isStack && img_select!=-1)
+        data.setDimensions(header->nx, header->ny, 1, 1);
+    else
+        data.setDimensions(header->nx, header->ny, header->nz, 1);
+
+
     DataType datatype;
     switch ( header->mode%5 )
     {
@@ -149,45 +161,20 @@ int readMRC(select_img)
     }
 
     MDMainHeader.clear();
+    MDMainHeader.setColumnFormat(false);
     MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_MIN,(double)header->amin);
     MDMainHeader.setValue(MDL_MAX,(double)header->amax);
     MDMainHeader.setValue(MDL_AVG,(double)header->amean);
     MDMainHeader.setValue(MDL_STDDEV,(double)header->arms);
-    if ( header->mx )//ux
+    if ( header->mx && header->a!=0)//ux
         MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)header->a/header->mx);
-    if ( header->my )//yx
+    if ( header->my && header->b!=0)//yx
         MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)header->b/header->my);
-    if ( header->mz )//zx
+    if ( header->mz && header->c!=0)//zx
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
-    //min = header->amin;
-    //max = header->amax;
-    //avg = header->amean;
-    //std = header->arms;
-    //ua = header->a;
-    //ub = header->b;
-    //uc = header->c;
-
-
-    /* I do not think we should fill this information until it does
-     * became interesting, added it is trivial
-     */
-    /*
-    alf = header->alpha;
-    bet = header->beta;
-    gam = header->gamma;
-    if ( header->mx )
-        ux = header->a/header->mx;
-    if ( header->my )
-        uy = header->b/header->my;
-    if ( header->mz )
-        uz = header->c/header->mz;
-    spacegroup = header->ispg;
-    */
     // Allocating the single sub-image and setting its origin
     //image.resize(1);
-    MD.clear();
-    MD.addObject();
     double aux;
     if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
     {
@@ -205,22 +192,34 @@ int readMRC(select_img)
         aux = -header->zOrigin/aux;
         MD.setValue(MDL_ORIGINZ, aux);
     }
-    MD.setValue(MDL_ANGLEROT, zeroD);
-    MD.setValue(MDL_ANGLETILT,zeroD);
-    MD.setValue(MDL_ANGLEPSI, zeroD);
-    MD.setValue(MDL_WEIGHT,   oneD);
-    MD.setValue(MDL_FLIP,     falseb);
+
+    int Ndim = NSIZE(data);
+    MD.clear();
+    MD.addObject();
+    for(int i=0;i< Ndim;i++)
+    {
+        MD.setValue(MDL_ANGLEROT, zeroD);
+        MD.setValue(MDL_ANGLETILT,zeroD);
+        MD.setValue(MDL_ANGLEPSI, zeroD);
+        MD.setValue(MDL_WEIGHT,   oneD);
+        MD.setValue(MDL_FLIP,     falseb);
+    }
+
+//#define DEBUG
+#ifdef DEBUG
+    MDMainHeader.write("/dev/stderr");
+    MD.write("/dev/stderr");
+#endif
 
     freeMemory(header, sizeof(MRChead));
-
-    readData(fimg, select_img, datatype, 0);
+    readData(fimg, img_select, datatype, 0);
 
     fclose(fimg);
 
     return(0);
 }
 
-int writeMRC(select_img)
+int writeMRC(int img_select, bool isStack=false)
 {
     /*
         if ( transform != NoTransform )
@@ -240,8 +239,8 @@ int writeMRC(select_img)
 
     // Convert T to datatype
     if ( typeid(T) == typeid(double) ||
-         typeid(T) == typeid(float) ||
-         typeid(T) == typeid(int) )
+            typeid(T) == typeid(float) ||
+            typeid(T) == typeid(int) )
         header->mode = 2;
     else if ( typeid(T) == typeid(unsigned char) ||
               typeid(T) == typeid(signed char) )
@@ -312,8 +311,8 @@ int writeMRC(select_img)
 
     // Write 3D map
     if ( typeid(T) == typeid(double) ||
-         typeid(T) == typeid(float) ||
-         typeid(T) == typeid(int) )
+            typeid(T) == typeid(float) ||
+            typeid(T) == typeid(int) )
     {
         writePageAsDatatype(fimg, Float, datasize_n);
     }

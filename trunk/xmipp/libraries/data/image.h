@@ -244,8 +244,8 @@ public:
 
     /** Specific read functions for different file formats
     */
-#include "rwSPIDER.h"
-    //#include "rwMRC.h"
+    #include "rwSPIDER.h"
+    #include "rwMRC.h"
 
     /** Is this file an image
      *
@@ -332,11 +332,12 @@ public:
 #endif
 #undef DEBUG
 
-        if (ext_name.contains("mrc"))
-            ;//err = readMRC(select_img);
+        if (ext_name.contains("mrc"))//mrc
+            err = readMRC(select_img,false);
+        else if (ext_name.contains("mrcS"))//mrc stack
+            err = readMRC(select_img,true);
         else
             err = readSPIDER(select_img);
-
         //get metadata conainer
         //add to MDheader
         //apply geo
@@ -848,7 +849,7 @@ public:
         // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
         data.coreAllocate();
         myoffset = offset + select_img*(pagesize + pad);
-        //#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
         data.printShape();
