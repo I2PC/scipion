@@ -36,19 +36,18 @@ void MetaData::clear()
     ignoreLabels.clear();
     isColumnFormat = true;
     inFile = FileName::FileName();
-    //TODO: DROP THE TABLE FROM DB IF EXISTS
+    activeObjId = -1;//no active object
+    MDSql::clearMd(this);
 }//close clear
 
 void MetaData::init(const std::vector<MDLabel> *labelsVector)
 {
+    tableId = MDSql::getMdUniqueId();
     clear();
-    //TODO: ASK FOR UNIQUE TABLE NAME TO DB
-    //TODO: CREATE NEW TABLE ON ON DB
     if (labelsVector != NULL)
-    {
         this->activeLabels = *labelsVector;
-        //TODO: CREATE COLUMNS ON DB
-    }
+    //Create table in database
+    MDSql::createMd(this);
 }//close init
 
 void MetaData::copyInfo(const MetaData &md)
@@ -72,6 +71,13 @@ void MetaData::copyMetadata(const MetaData &md)
     init(&md.activeLabels);
     copyInfo(md);
     //TODO COPY DATA FROM MD TO THIS METADATA
+}
+
+void MetaData::setValueObjectFromVoidPtr(MDLabel label, int objId, void * valuePtr)
+{
+    MDValue mdValue;
+    MDL::voidPtr2Value(label, valuePtr, mdValue);
+    MDSql::setObjectValue(this, objId, label, mdValue);
 }
 
 MetaData::MetaData()
@@ -156,18 +162,32 @@ int MetaData::MaxStringLength( const MDLabel thisLabel) const
     REPORT_ERROR(-55, "getMaxStringsetValue, not implemented yet");
 }
 
-bool MetaData::setValue(const std::string &name, const std::string &value, long int objectID)
+bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, long int objectId)
 {
-    REPORT_ERROR(-55, "setValue, not implemented yet");
+    if (objectId == -1)
+    {
+        if (activeObjId != -1)
+            objectId = activeObjId;
+        else
+        {
+            REPORT_ERROR(-1, "No active object, please provide objId for 'setValue'");
+            exit(1);
+        }
+    }
+    std::cerr << "setValueFromStr: LABEL=" << MDL::label2Str(label)
+    << " STR_VALUE: " << value <<std::endl;
+    MDValue mdValue;
+    MDL::str2Value(label, value, mdValue);
+    MDSql::setObjectValue(this, objectId, label, mdValue);
 }
 
-bool MetaData::setValue(const std::string &name, const float &value, long int objectID)
+bool MetaData::setValue(const std::string &name, const float &value, long int objectId)
 {
     std::cerr << "Do not use setValue with floats, use double"<< std::endl;
     std::cerr << "Floats are banned from metadata class"<< std::endl;
     exit(1);
 }
-bool MetaData::setValue(const std::string &name, const char &value, long int objectID)
+bool MetaData::setValue(const std::string &name, const char &value, long int objectId)
 {
     std::cerr << "Do not use setValue with char, use string"<< std::endl;
     std::cerr << "chars are banned from metadata class"<< std::endl;
@@ -176,21 +196,30 @@ bool MetaData::setValue(const std::string &name, const char &value, long int obj
 
 bool MetaData::isEmpty() const
 {
-    REPORT_ERROR(-55, "isEmpty, not implemented yet");
-    return true;
-
+    return size() == 0;
 }
 
 size_t MetaData::size() const
 {
-    REPORT_ERROR(-55, "isEmpty, not implemented yet");
-    return 0;
+    std::vector<long int> objects = MDSql::selectObjects(this);
+
+    return objects.size();
 }
 
-long int MetaData::addObject(long int objectID)
+bool MetaData::addLabel(const MDLabel label)
 {
-    REPORT_ERROR(-55, "addObject not yet implemented");
-    return -1;
+    int size = activeLabels.size();
+    for (int i = 0; i < size; i++)
+        if (label == activeLabels[i])
+            return false;
+    activeLabels.push_back(label);
+    MDSql::addColumn(this, label);
+}
+
+long int MetaData::addObject(long int objectId)
+{
+    activeObjId = MDSql::addRow(this);
+    return activeObjId;
 }
 
 void MetaData::importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd)
@@ -203,7 +232,7 @@ void MetaData::importObjects(const MetaData &md, MDQuery query)
     REPORT_ERROR(-55, "importObjects not yet implemented");
 }
 
-bool MetaData::removeObject(long int objectID)
+bool MetaData::removeObject(long int objectId)
 {
     REPORT_ERROR(-55, "removeObject not yet implemented");
     return false;
@@ -224,35 +253,40 @@ void MetaData::removeObjects(MDQuery query)
 //----------Iteration functions -------------------
 long int MetaData::firstObject()
 {
-    REPORT_ERROR(-55, "firstObject not yet implemented");
+    std::vector<long int> objects = MDSql::selectObjects(this, 1);
+
+    return (objects.size() > 0) ? objects[0] : -1;
 }
+
 long int MetaData::nextObject()
 {
     REPORT_ERROR(-55, "nextObject not yet implemented");
 }
+
 long int MetaData::lastObject()
 {
     REPORT_ERROR(-55, "lastObject not yet implemented");
 }
-long int MetaData::goToObject(long int objectID)
+
+long int MetaData::goToObject(long int objectId)
 {
-    REPORT_ERROR(-55, "goToObject not yet implemented");
+    activeObjId = objectId;
 }
 
 //-------------Search functions-------------------
-std::vector<long int> MetaData::findObjects(MDQuery query)
+std::vector<long int> MetaData::findObjects(MDQuery query, int limit)
 {
-    //TODO: implement this
-    REPORT_ERROR(-55, "'findObjects' not yet implemented");
+    //FIXME: VECTORS ARE RETURNED BY VALUE
+    std::vector<long int> objects = MDSql::selectObjects(this, -1, &query);
+    return objects;
 }
 
 int MetaData::countObjects(MDQuery query)
 {
-    //TODO: implement this
-    REPORT_ERROR(-55, "'countObjects' not yet implemented");
+    return findObjects(query).size();
 }
 
-bool MetaData::existsObject(long int objectID)
+bool MetaData::existsObject(long int objectId)
 {
     //TODO: implement this
     REPORT_ERROR(-55, "'existsObjects' not yet implemented");
@@ -260,41 +294,273 @@ bool MetaData::existsObject(long int objectID)
 
 bool MetaData::existsObject(MDQuery query)
 {
-    //TODO: implement this
-    REPORT_ERROR(-55, "'existsObjects(in range)' not yet implemented");
-    return false;
+    return findObjects(query, 1).size() > 0;
 }
 
 long int MetaData::gotoFirstObject(MDQuery query)
 {
-    //TODO: implement this
-    REPORT_ERROR(-55, "'gotoFirstObjects(in range)' not yet implemented");
-    return false;
+    std::vector<long int> objects = findObjects(query, 1);
+
+    activeObjId = objects.size() == 1 ? objects[0] : -1;
+    return activeObjId;
 }
 
 
 //--------------IO functions -----------------------
-void MetaData::write(const std::string &fileName)
+
+void MetaData::write(const FileName &outFile)
 {
-    REPORT_ERROR(-55, "write not yet implemented");
+    std::cerr << "writing to file: " << outFile <<std::endl;
+    // Open file
+    std::ofstream ofs(outFile.data(), std::ios_base::out);
+    write(ofs);
 }
-void MetaData::read(FileName infile, std::vector<MDLabel> * labelsVector)
+
+void MetaData::write(std::ostream &os)
 {
-    REPORT_ERROR(-55, "read not yet implemented");
+    // Open file
+
+    MDValue mdValue;
+    os << "; XMIPP_3 * " << (isColumnFormat ? "column" : "row")
+    << "_format *" << std::endl;
+    //TODO: not saving the path
+    os << "; " << comment << std::endl;
+
+    if (isColumnFormat)
+    {
+        //Write metadata header
+        //write columns
+        int labelsSize = activeLabels.size();
+        os << "; ";
+        for (int i = 0; i < labelsSize; i++)
+        {
+            if (activeLabels.at(i) != MDL_COMMENT)
+            {
+                os.width(10);
+                os << MDL::label2Str(activeLabels.at(i)) << " ";
+            }
+        }
+        os << std::endl;
+        //Write data
+        std::vector<long int> objects = MDSql::selectObjects(this);
+        int objsSize = objects.size();
+        for (int o = 0; o < objsSize; o++)
+        {
+            std::cerr << "------------" <<std::endl;
+            for (int i = 0; i < labelsSize; i++)
+            {
+                if (activeLabels.at(i) != MDL_COMMENT)
+                {
+                    os.width(10);
+                    MDSql::getObjectValue(this, objects.at(o), activeLabels.at(i), mdValue);
+                    MDL::value2Stream(activeLabels.at(i), mdValue, os);
+                    os << " ";
+                }
+            }
+            os << std::endl;
+        }
+    }
+    else //rowFormat
+    {
+        // Get first object. In this case (row format) there is a single object
+        int objId = firstObject();
+
+        if (objId != -1)
+        {
+            int maxWidth=20;
+            for (int i = 0; i < activeLabels.size(); i++)
+            {
+                if (activeLabels.at(i) != MDL_COMMENT)
+                {
+                    int w=MDL::label2Str(activeLabels.at(i)).length();
+                    if (w>maxWidth)
+                        maxWidth=w;
+                }
+            }
+
+            for (int i = 0; i < activeLabels.size(); i++)
+            {
+                if (activeLabels.at(i) != MDL_COMMENT)
+                {
+                    os.width(maxWidth + 1);
+                    os << MDL::label2Str(activeLabels.at(i)) << " ";
+                    MDSql::getObjectValue(this, objId, activeLabels.at(i), mdValue);
+                    MDL::value2Stream(activeLabels.at(i), mdValue, os);
+                    os << std::endl;
+                }
+            }
+        }
+
+    }
+}//write
+
+void MetaData::read(const FileName &inFile)
+{
+    std::ifstream ifs(inFile.data(), std::ios_base::in);
+    read(ifs);
 }
+
+void MetaData::read(std::istream &is)
+{
+    std::vector<MDLabel> activeLabels;
+
+    is.seekg(0, std::ios::beg);
+    std::string line;
+    getline(is, line, '\n');
+    int pos = line.find("*");
+
+    if (pos == std::string::npos)
+    {
+        REPORT_ERROR( 200, "End of string reached" );
+    }
+    else
+    {
+        line.erase(0, pos + 1);
+        pos = line.find(" row_format ");
+
+        if (pos != std::string::npos)
+        {
+            isColumnFormat = false;
+        }
+    }
+
+    pos = line.find("*");
+    line.erase(0, pos + 1);
+    line = removeChar(line, ' ');
+    setPath(line);
+    getline(is, line, '\n');
+    setComment(line.erase(0, 2));
+
+    if (isColumnFormat)
+    {
+        // Get Labels line
+        getline(is, line, '\n');
+        // Remove ';'
+        line.erase(0, line.find(";") + 1);
+        // Parse labels
+        std::stringstream os(line);
+        std::string newLabel;
+        int labelPosition = 0;
+
+        while (os >> newLabel)
+        {
+            MDLabel label = MDL::str2Label(newLabel);
+
+            if (label == MDL_UNDEFINED)
+                ignoreLabels.push_back(labelPosition);
+            else
+                activeLabels.push_back(label);
+            labelPosition++;
+        }
+
+        init(&activeLabels);
+        // Read data and fill structures accordingly
+        while (getline(is, line, '\n'))
+        {
+            if (line[0] == '\0' || line[0] == '#')
+                continue;
+
+            long int objectID = addObject();
+
+            if (line[0] == ';')
+            {
+                line.erase(0, 1);
+                line = simplify(line);
+                //FIXME
+                setValue(MDL_COMMENT, line);
+                getline(is, line, '\n');
+            }
+
+            // Parse labels
+            std::stringstream os2(line);
+            std::string value;
+
+            int labelPosition = 0;
+            int counterIgnored = 0;
+
+            while (os2 >> value)
+            {
+                if (std::find(ignoreLabels.begin(), ignoreLabels.end(),
+                              labelPosition) != ignoreLabels.end())
+                {
+                    // Ignore this column
+                    counterIgnored++;
+                    labelPosition++;
+                    continue;
+                }
+
+                if (MDL::isVector(activeLabels[labelPosition - counterIgnored])
+                    && value == "**")
+                {
+                    std::string aux;
+                    while (os2 >> value)
+                        if (value == "**")
+                            break;
+                        else
+                            aux += value + " ";
+                    value = aux;
+                    std::cerr << "is vector value" << value << std::endl;
+                }
+
+                setValueFromStr(activeLabels[labelPosition - counterIgnored], value);
+                labelPosition++;
+            }
+        }
+    }
+    else //RowFormat
+    {
+        std::string newLabel;
+        std::string value;
+
+        long int objectID = addObject();
+
+        // Read data and fill structures accordingly
+        while (getline(is, line, '\n'))
+        {
+            if (line[0] == '#' || line[0] == '\0' || line[0] == ';')
+                continue;
+
+            // Parse labels
+            std::stringstream os(line);
+
+            os >> newLabel;
+            MDLabel label = MDL::str2Label(newLabel);
+
+            if(!MDL::isVector(label))
+                os >> value;
+            else
+            {
+                std::vector<std::string> v;
+                Tokenize(line,v,(std::string)"**");
+                value = v[1];
+            }
+            if (label != MDL_UNDEFINED)
+            {
+                activeLabels.push_back(label);
+                setValueFromStr(label, value);
+            }
+        }
+    }
+}//close read
 
 //-------------Set Operations ----------------------
-void MetaData::union_(const MetaData &MD, const MDLabel thisLabel){}
-void MetaData::unionAll(const MetaData &MD){}
+void MetaData::union_(const MetaData &MD, const MDLabel thisLabel)
+{}
+void MetaData::unionAll(const MetaData &MD)
+{}
 void MetaData::aggregate(MetaData MDIn,
-               MDLabel aggregateLabel,
-               MDLabel entryLabel,
-               MDLabel operationLabel){}
+                         MDLabel aggregateLabel,
+                         MDLabel entryLabel,
+                         MDLabel operationLabel)
+{}
 
-void MetaData::merge(const FileName &fn){}
-void MetaData::intersection(MetaData & minuend, MetaData & , MDLabel thisLabel){}
+void MetaData::merge(const FileName &fn)
+{}
+void MetaData::intersection(MetaData & minuend, MetaData & , MDLabel thisLabel)
+{}
 void MetaData::substraction(MetaData & minuend, MetaData & subtrahend,
-                  MDLabel thisLabel){}
+                            MDLabel thisLabel)
+{}
 
 
 /*----------   Statistics --------------------------------------- */

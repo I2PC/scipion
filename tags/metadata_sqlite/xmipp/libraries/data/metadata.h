@@ -69,7 +69,7 @@ private:
 
     // Used by firstObject, nextObject and lastObject to keep a pointer
     // to the "active" object. This way when you call setValue without
-    // an objectID, this one is chosen
+    // an objectId, this one is chosen
     //std::map<long int, MetaDataContainer *>::iterator objectsIterator;
 
     // Allows a fast search for pairs where the value is
@@ -105,6 +105,15 @@ private:
      **/
     std::vector<unsigned int> ignoreLabels;
 
+    /** The table id to do db operations */
+    int tableId;
+    /** The id of the object that is active
+     * usefull for calling 'setValue' and 'getValue'
+     * without specifying object id
+     * when activeObjId = -1 means that aren't active object
+     */
+    int activeObjId;
+
     /** Read, read data from an input stream and fill metadata
      * @ingroup MetaDataIO
      */
@@ -124,6 +133,11 @@ private:
      * @ingroup MetaDataConstructors
      */
     void copyMetadata(const MetaData &md);
+
+    /** Just a trick for avoid use MDSql::
+     * in the .h
+     */
+    void setValueObjectFromVoidPtr(MDLabel label, int objId, void * valuePtr);
 
 public:
 
@@ -229,27 +243,39 @@ public:
     /// @defgroup DataAccess Access to MetaData data for read or write values
     /// @ingroup MetaDataClass
 
-    /** Set the value for some label in the object that has id 'objectID'
+    /** Set the value for some label in the object that has id 'objectId'
      * @ingroup DataAccess
      */
     template<class T>
-    bool setValue(const MDLabel name, const T &value, long int objectID=-1)
+    bool setValue(const MDLabel label, const T &value, long int objectId=-1)
     {
-        REPORT_ERROR(-55, "setValue(template) not yet implemented");
+        if (objectId == -1)
+        {
+            if (activeObjId != -1)
+                objectId = activeObjId;
+            else
+            {
+                REPORT_ERROR(-1, "No active object, please provide objId for 'setValue'");
+                exit(1);
+            }
+        }
+        addLabel(label);
+        setValueObjectFromVoidPtr(label, objectId, (void*)new T(value));
     }
-    // Set a new pair/value for an specified object. If no objectID is given, that
+
+    // Set a new pair/value for an specified object. If no objectId is given, that
     // pointed by the class iterator is used
-    bool setValue(const std::string &name, const std::string &value,
-                  long int objectID = -1);
+    bool setValueFromStr(const MDLabel label, const std::string &value, long int objectId = -1);
 
     // The following 2 are for error reporting on unsupported types
     bool setValue(const std::string &name, const float &value,
-                  long int objectID = -1);
+                  long int objectId = -1);
     bool setValue(const std::string &name, const char &value,
-                  long int objectID = -1);
+                  long int objectId = -1);
+
 
     template<class T>
-    bool getValue(const MDLabel name, T &value, long int objectID = -1) const
+    bool getValue(const MDLabel label, const T &value, long int objectId = -1) const
     {
         REPORT_ERROR(-55, "getValue(template) not yet implemented");
     }
@@ -263,14 +289,19 @@ public:
      */
     size_t size() const;
 
-    /** Adds a new, empty object to the objects map. If objectID == -1
+    /** Add a new label to the metadata
+     *
+     */
+    bool addLabel(const MDLabel label);
+
+    /** Adds a new, empty object to the objects map. If objectId == -1
      * @ingroup DataAccess
      *   the new ID will be that for the last object inserted + 1, else
-     *   the given objectID is used. If there is already an object whose
-     *   objectID == input objectID, just removes it and creates an empty
+     *   the given objectId is used. If there is already an object whose
+     *   objectId == input objectId, just removes it and creates an empty
      *   one
      **/
-    long int addObject(long int objectID = -1);
+    long int addObject(long int objectId = -1);
 
     /** Import objects from another metadata
      * @ingroup DataAccess
@@ -284,7 +315,7 @@ public:
      * Returns true if the object was removed or false if
      * the object did not exist
      */
-    bool removeObject(long int objectID);
+    bool removeObject(long int objectId);
 
     /** Removes the collection of objects of given vector id's
      * @ingroup DataAccess
@@ -316,16 +347,17 @@ public:
     long int firstObject();
     long int nextObject();
     long int lastObject();
-    long int goToObject(long int objectID);
+    long int goToObject(long int objectId);
 
 
     ///@defgroup MetaDataSearch Some functions for perform searches on metadata objects
     ///@ingroup MetaDataClass
 
     /** Find all objects with pair <label, value>
+     * if limit is provided only return a maximun of 'limit'
      * @ingroup MetaDataSearch
      */
-    std::vector<long int> findObjects(MDQuery query);
+    std::vector<long int> findObjects(MDQuery query, int limit = -1);
 
     /**Count all objects with pairs <label, value>
      * @ingroup MetaDataSearch
@@ -335,7 +367,7 @@ public:
     /** Find if the object with this id is present in the metadata
      * @ingroup MetaDataSearch
      */
-    bool existsObject(long int objectID);
+    bool existsObject(long int objectId);
 
     /**Check if exists at least one object with pair <label, value>
      * @ingroup MetaDataSearch
@@ -355,11 +387,20 @@ public:
     /** Write, write metadata to disk, using filename
      * @ingroup MetaDataIO
      */
-    void write(const std::string &fileName);
+    void write(const FileName &outFile);
+    /** Write, write metadata to out stream
+     * @ingroup MetaDataIO
+     */
+    void write(std::ostream &os);
+
     /** Read, read data from file, using filename
      * @ingroup MetaDataIO
      */
-    void read(FileName infile, std::vector<MDLabel> * labelsVector = NULL);
+    void read(const FileName &inFile);
+    /** Read, read data from file, using filename
+     * @ingroup MetaDataIO
+     */
+    void read(std::istream &is);
 
     /// @defgroup SetOperations Set operations on MetaData's
     /// @ingroup MetaDataClass
@@ -459,52 +500,8 @@ public:
     void fillWithNextNObjects (MetaData &MD, long int start, long int numberObjects){}
 
 
-
+    friend class MDSql;
 };
-
-///@defgroup MetaDataQuery represent queries to a metadata
-//@ingroup DataLibrary
-
-/** MDQuery this is the base class for queries, its abstract
- *@ingroup MetaDataQuery
- */
-class MDQuery
-{
-public:
-
-    /**This now is specific to the SQL implementation
-     * and its requiered to all MDQuery subclasses
-     * equal to 0 means that is ABSTRACT in this class
-     * and only accesible for MetaData
-     */
-    std::string queryString;
-};
-
-/**MDValueEqual this will test if a label have a value
- *@ingroup MetaDataQuery
- */
-class MDValueEqual: public MDQuery
-{
-public:
-    template <class T>
-    MDValueEqual(MDLabel label, const T &value)
-    {
-        //TODO: create the query string
-    }
-};//class MDValueEqual
-
-/**MDValueEqual this will test if a label have a value
- *@ingroup MetaDataQuery
- */
-class MDValueRange: public MDQuery
-{
-public:
-    template <class T>
-    MDValueRange(MDLabel label, const T &valueMin, const T &valueMax)
-    {
-        //TODO: create the query string
-    }
-};//class MDValueRange
 
 
 /** For all objects.

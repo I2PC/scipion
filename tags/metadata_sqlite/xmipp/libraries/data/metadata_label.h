@@ -35,6 +35,7 @@
 #include "funcs.h"
 
 class MDLabelData;
+class MDValue;
 class MDLabelStaticInit;
 
 enum MDLabel
@@ -153,18 +154,26 @@ public:
     //  for( MDLabel mdl = MDL_FIRST_LABEL ; mdl < MDL_LAST_LABEL ; MDLabel( mdl+1 ) )
     //
 
-static MDLabel str2Label(const std::string &labelName);
-static std::string label2Str(const MDLabel &label);
+    static MDLabel str2Label(const std::string &labelName);
+    static std::string label2Str(const MDLabel label);
+    static std::string value2Str(const MDLabel label, const MDValue &value, bool withFormat = false);
+    static bool str2Value(const MDLabel label, const std::string &str, MDValue &valueOut);
+    static bool voidPtr2Value(const MDLabel label, void* ptrValue, MDValue &valueOut);
+    static bool double2Stream(double d, std::ostream &os, bool withFormat = false);
+    static bool value2Stream(const MDLabel label, const MDValue &value, std::ostream &os, bool withFormat = false);
+    static std::string label2SqlColumn(const MDLabel label);
 
-static bool isInt(const MDLabel &label);
-static bool isBool(const MDLabel &label);
-static bool isString(const MDLabel &label);
-static bool isDouble(const MDLabel &label);
-static bool isVector(const MDLabel &label);
-static bool isValidLabel(const MDLabel &label);
-static bool isValidLabel(const std::string &labelName);
-static MDLabelType labelType(const MDLabel &label);
-static MDLabelType labelType(std::string &labelName);
+    static bool isInt(const MDLabel label);
+    static bool isBool(const MDLabel label);
+    static bool isString(const MDLabel label);
+    static bool isDouble(const MDLabel label);
+    static bool isVector(const MDLabel label);
+    static bool isValidLabel(const MDLabel label);
+    static bool isValidLabel(const std::string &labelName);
+    static MDLabelType labelType(const MDLabel label);
+    static MDLabelType labelType(std::string &labelName);
+
+
 
 private:
     static std::map<MDLabel, MDLabelData> data;
@@ -172,7 +181,6 @@ private:
     static MDLabelStaticInit initialization; //Just for initialization
 
     static void addLabel(MDLabel label, MDLabelType type, std::string name, std::string name2 = "", std::string name3 = "");
-
 
     friend class MDLabelStaticInit;
 }
@@ -186,14 +194,24 @@ public:
     std::string str;
     //Default constructor
     MDLabelData()
-    {
-    }
+    {}
     MDLabelData(MDLabelType t, std::string s)
     {
         type = t;
         str = s;
     }
-};//close class MDLabelData c
+}
+;//close class MDLabelData c
+
+class MDValue
+{
+public:
+    bool boolValue;
+    int intValue;
+    double doubleValue;
+    std::string stringValue;
+    std::vector<double> vectorValue;
+};
 
 //Just a class for static initialization
 class MDLabelStaticInit
@@ -201,6 +219,7 @@ class MDLabelStaticInit
 private:
     MDLabelStaticInit()
     {
+        std::cerr << "static: adding labels" <<std::endl;
         ///==== Add labels entries from here in the SAME ORDER as declared in ENUM ==========
         MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", "psi2");
         MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", "psi");
@@ -286,11 +305,12 @@ private:
         MDL::addLabel(MDL_Y, LABEL_DOUBLE, "Y");
         MDL::addLabel(MDL_ZINT, LABEL_INT, "Zcoor");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");
+
+        std::cerr << "static: end adding labels" <<std::endl;
     }
 
     ~MDLabelStaticInit()
-    {
-    }
+    {}
     friend class MDL;
 };
 
