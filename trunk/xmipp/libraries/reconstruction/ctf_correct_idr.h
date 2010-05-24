@@ -25,9 +25,9 @@
 #ifndef _PROG_IDR_ART_HH
 #  define _PROG_IDR_ART_HH
 
-#include <data/ctf.h>
+#include <data/metadata.h>
+#include <data/image.h>
 #include "fourier_filter.h"
-#include <data/volume.h>
 
 /**@defgroup IDR ctf_correct_idr (Iterative Data Refinement for CTF amplitude correction)
    @ingroup ReconsLibraryPrograms */
@@ -56,9 +56,9 @@ public:
     int MPIrank;
 
     /// Side Info: volume
-    VolumeXmipp V;
+    Image<double> V;
     /// Side Info: ctfdat
-    CTFDat ctfdat;
+    MetaData ctfdat;
 public:
     /// Empty constructor
     Prog_IDR_ART_Parameters();

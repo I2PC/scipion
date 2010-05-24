@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 {
     // Variables
     Prog_IDR_ART_Parameters   idr_art_prm;
-    VolumeXmipp               vol_recons;
+    Image<double>             vol_recons;
 
     // Read Art Parameters
     try
