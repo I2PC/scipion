@@ -394,7 +394,7 @@ ReconsSources = [
     'convert_vol2pseudo.cpp',
     'correct_bfactor.cpp',
     'create_projection_library.cpp',
-#    'ctf_correct_amplitude3d.cpp',
+    'ctf_correct_amplitude3d.cpp',
 #    'ctf_correct_idr.cpp',
     'ctf_correct_phase.cpp',
     'ctf_estimate_from_micrograph.cpp',
@@ -549,7 +549,7 @@ AddXmippProgram('correct_bfactor', ['XmippRecons'])
 #AddXmippProgram('crystal_shear')
 #AddXmippProgram('crystal_skew')
 #AddXmippProgram('crystal_unbend', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
-#AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
+AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
 #AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
 AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
 AddXmippProgram('ctf_correct_phase', ['XmippRecons'])

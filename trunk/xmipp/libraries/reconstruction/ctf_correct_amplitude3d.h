@@ -25,9 +25,8 @@
 
 #include "fourier_filter.h"
 
-#include <data/selfile.h>
-#include <data/docfile.h>
-#include <data/volume.h>
+#include <data/metadata.h>
+#include <data/image.h>
 
 #define OVERSAMPLE 8
 
@@ -42,8 +41,6 @@ public:
     /// Filename for CTF datfile: a 2-column ASCII file with name of
     /// the volume and CTF parameter file for each defocus group
     FileName fnCtfdat;
-    /// Filename for selfile with envelope ASCII files
-    FileName fnEnvs;
     /// Rootname for output files
     FileName fnOut;
     /// Filename for docfile with number of images per defocus group
@@ -65,16 +62,10 @@ public:
     FourierMask ctf;
     
     /// Side Info: ctfdat
-    CTFDat ctfdat;
-
-    /// Side Info: selfile with envelopes
-    SelFile SFenv;
-
-    /// Side Info: docfile with number of images in each defocus group
-    DocFile DFimgs;
+    MetaData ctfdat;
 
     /// The 3D CTFs and Wiener filters
-    std::vector< Matrix1D<double> > Vctfs1D, Vwien1D; 
+    std::vector< MultidimArray<double> > Vctfs1D, Vwien1D;
 
 public:
     /** Empty constructor */
@@ -97,7 +88,7 @@ public:
     /** Generate 1D CTFs. */
     void generateCTF1D(const FileName &fnCTF, 
 		       const double nr_steps,
-		       Matrix1D<double> &CTF1D);
+		       MultidimArray<double> &CTF1D);
 
     /** Generate Wiener filters */
     void generateWienerFilters();
@@ -107,7 +98,6 @@ public:
 
     /** Do the whole thing ... */
     void run();
-
 };
 //@}
 

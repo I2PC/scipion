@@ -33,44 +33,32 @@ void CorrectAmplitude3DParams::read(int argc, char **argv)
 {
     fnCtfdat  = getParameter(argc, argv, "-ctfdat");
     fnOut     = getParameter(argc, argv, "-o","wiener");
-    fnNrImgs  = getParameter(argc, argv, "-nr_imgs");
     minResol  = textToFloat(getParameter(argc, argv, "-minres", "-1"));
-    fnEnvs    = getParameter(argc, argv, "-env","");
     wienConst = textToFloat(getParameter(argc, argv, "-wc", "0.01"));
     isFlipped = checkParameter(argc, argv, "-phase_flipped");
-
 }
 
 /* Show -------------------------------------------------------------------- */
 void CorrectAmplitude3DParams::show()
 {
     std::cout << "CTF datfile:                       " << fnCtfdat << std::endl
-              << "Wiener constant:                   " << wienConst << std::endl
-              << "Output rootname:                   " << fnOut << std::endl
-              << "Phase flipped:                     " << isFlipped << std::endl
-	      << "Number of images in:               " << fnNrImgs << std::endl
-	;
+    << "Wiener constant:                   " << wienConst << std::endl
+    << "Output rootname:                   " << fnOut << std::endl
+    << "Phase flipped:                     " << isFlipped << std::endl
+    ;
     if (minResol>0)
-    {
-	std::cout << "Apply Wiener filter only beyond:   " << minResol << " Angstroms" << std::endl;
-    }
-    if (fnEnvs!="")
-    {
-	std::cout << "Envelopes in file:                 " << fnEnvs << std::endl;
-    }
-    
+        std::cout << "Apply Wiener filter only beyond:   " << minResol << " Angstroms" << std::endl;
 }
 
 /* Usage ------------------------------------------------------------------- */
 void CorrectAmplitude3DParams::usage()
 {
-    std::cerr << "   -ctfdat <CTF datfile>               : 2-column ASCII file with name of volume and CTF param for each defocus group\n"
-	      << "   -nr_imgs <docfile>                  : Docfile with number of images in each defocus group\n"
-              << "  [-o \"wiener\"]                        : Output rootname \n"
-              << "  [-minres <Ang>]                      : Apply Wiener filter only beyond this resolution (in Angstrom)\n"
-              << "  [-phase_flipped]                     : Use this if the maps were reconstructed from phase corrected images \n"
-              << "  [-wc <0.05>]                         : Wiener constant (to be multiplied by the total number of images) \n"
-//              << "  [-env <selfile>]                     : selfile to ASCII files with envelope for each defocus group\n"
+    std::cerr << "-ctfdat <CTF datfile>               : Metadata with the volumes, ctfs, number of images in that group,\n"
+    << "                                         and optionally the envelopes\n"
+    << "  [-o \"wiener\"]                        : Output rootname \n"
+    << "  [-minres <Ang>]                      : Apply Wiener filter only beyond this resolution (in Angstrom)\n"
+    << "  [-phase_flipped]                     : Use this if the maps were reconstructed from phase corrected images \n"
+    << "  [-wc <0.05>]                         : Wiener constant (to be multiplied by the total number of images) \n"
     ;
 }
 
@@ -81,39 +69,21 @@ void CorrectAmplitude3DParams::produceSideInfo()
     ctfdat.read(fnCtfdat);
 
     // Get dimensions of the volumes
-    ctfdat.goFirstLine();
+    ctfdat.firstObject();
     FileName fnVol, fnCTF;
-    ctfdat.getCurrentLine(fnVol,fnCTF);
-    VolumeXmipp V;
+    ctfdat.getValue(MDL_IMAGE,fnVol);
+    ctfdat.getValue(MDL_CTFMODEL,fnCTF);
+    Image<double> V;
     V.read(fnVol);
-    V().getDimension(Zdim,Ydim,Xdim);
-    V.clear();
-
-    // Read the envelopes
-    if (fnEnvs!="")
-    {
-	SFenv.read(fnEnvs);
-	if (SFenv.LineNo()!=ctfdat.lineNo())
-	{
-	    REPORT_ERROR(1, "CTFdat and envelope selfile have unequal number of entries.");
-	}
-    }
-
-    // Read the docfile with the number of images per group
-    DFimgs.read(fnNrImgs);
-    if (DFimgs.LineNo()!=ctfdat.lineNo())
-    {
-	REPORT_ERROR(1, "CTFdat and docfile with number of images per group have unequal number of entries.");
-    }
-
+    int Ndim;
+    V.getDimensions(Xdim,Ydim,Zdim,Ndim);
 }
-
 
 /* Make 3D CTF ------------------------------------------------------------- */
 void CorrectAmplitude3DParams::generateCTF1D(const FileName &fnCTF, const double nr_steps,
-				       Matrix1D<double> &CTF1D)
+        MultidimArray<double> &CTF1D)
 {
-    // Read the CTF 
+    // Read the CTF
     ctf.FilterBand = CTF;
     ctf.ctf.enable_CTFnoise = false;
     ctf.ctf.read(fnCTF);
@@ -125,18 +95,17 @@ void CorrectAmplitude3DParams::generateCTF1D(const FileName &fnCTF, const double
     double res = 0.;
 
     res=0.;
-    for (int step=0; step < nr_steps; step++) 
+    for (int step=0; step < nr_steps; step++)
     {
-	if ( (minResol < 0) || (1./res < minResol) )
-	{
-	    CTF1D(step)=ctf.ctf.CTF_at(res, 0);
-	    if (isFlipped) CTF1D(step)=ABS(CTF1D(step));
-	}
-	else
-	{
-	    CTF1D(step)=1.;
-	}
-	res+=stepsize;
+        if ( (minResol < 0) || (1./res < minResol) )
+        {
+            CTF1D(step)=ctf.ctf.CTF_at(res, 0);
+            if (isFlipped)
+                CTF1D(step)=ABS(CTF1D(step));
+        }
+        else
+            CTF1D(step)=1.;
+        res+=stepsize;
     }
 
 }
@@ -144,7 +113,7 @@ void CorrectAmplitude3DParams::generateCTF1D(const FileName &fnCTF, const double
 /* Make Wiener filters ------------------------------------------------------------- */
 void CorrectAmplitude3DParams::generateWienerFilters()
 {
-    Matrix1D<double> CTF1D, sumterm;
+    MultidimArray<double> CTF1D, sumterm;
     FileName fn_tmp;
     int nrimgs;
     std::ofstream  fh;
@@ -161,77 +130,75 @@ void CorrectAmplitude3DParams::generateWienerFilters()
     Vctfs1D.clear();
     Vwien1D.clear();
     int ii = 0;
-    ctfdat.goFirstLine();
-    while (!ctfdat.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
-	// Calculate 1D CTF
+        // Calculate 1D CTF
         FileName fnVol, fnCTF;
-	ctfdat.getCurrentLine(fnVol,fnCTF);
-	generateCTF1D(fnCTF,nr_steps,CTF1D);
-	Vctfs1D.push_back(CTF1D);
+        ctfdat.getValue(MDL_IMAGE,fnVol);
+        ctfdat.getValue(MDL_CTFMODEL,fnCTF);
+        generateCTF1D(fnCTF,nr_steps,CTF1D);
+        Vctfs1D.push_back(CTF1D);
 
-	// Get the number of images contributing to this group
-	DFimgs.search(ii+1);
-	tot_nr_imgs += DFimgs(0);
+        // Get the number of images contributing to this group
+    	int NumberOfImages;
+    	ctfdat.getValue(MDL_IMAGE_CLASS_COUNT,NumberOfImages);
+        tot_nr_imgs += NumberOfImages;
 
-	// Calculate denominator of the Wiener filter
-	if (ii==0) 
-	{
-	    sumterm.resize(CTF1D);
-	}
-	FOR_ALL_ELEMENTS_IN_MATRIX1D(sumterm) 
-	{
-	    sumterm(i) += DFimgs(0) * CTF1D(i) * CTF1D(i);
-	}
-	ctfdat.nextLine();
-	ii++;
+        // Calculate denominator of the Wiener filter
+        if (ii==0)
+            sumterm.resize(CTF1D);
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(sumterm)
+        sumterm(i) += NumberOfImages * CTF1D(i) * CTF1D(i);
+        ii++;
     }
 
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(sumterm) 
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(sumterm)
     {
-	// Find min and max values of the sumterm
-	if (sumterm(i)>maxsum) maxsum=sumterm(i);
-	if (sumterm(i)<minsum) minsum=sumterm(i);
-	// Add (normalized) Wiener filter constant
-	sumterm(i) += tot_nr_imgs*wienConst;
+        // Find min and max values of the sumterm
+        if (sumterm(i)>maxsum)
+            maxsum=sumterm(i);
+        if (sumterm(i)<minsum)
+            minsum=sumterm(i);
+        // Add (normalized) Wiener filter constant
+        sumterm(i) += tot_nr_imgs*wienConst;
     }
 
     int iimax = ii;
     // Fill the Wiener filter vector
-    for (ii=0; ii<iimax; ii++) 
+    for (ii=0; ii<iimax; ii++)
     {
-	// Get the number of images contributing to this group
-	DFimgs.search(ii+1);
+    	int NumberOfImages;
+    	ctfdat.getValue(MDL_IMAGE_CLASS_COUNT,NumberOfImages);
 
-	FOR_ALL_ELEMENTS_IN_MATRIX1D(CTF1D) 
-	{
-	    CTF1D(i) = DFimgs(0) * Vctfs1D[ii](i) / sumterm(i);
-	    if (CTF1D(i)>maxwien) maxwien=CTF1D(i);
-	    if (CTF1D(i)<minwien) minwien=CTF1D(i);
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(CTF1D)
+        {
+            CTF1D(i) = NumberOfImages * Vctfs1D[ii](i) / sumterm(i);
+            if (CTF1D(i)>maxwien)
+                maxwien=CTF1D(i);
+            if (CTF1D(i)<minwien)
+                minwien=CTF1D(i);
+        }
+        Vwien1D.push_back(CTF1D);
 
-	}
-	Vwien1D.push_back(CTF1D);
-
-	// Write CTF and Wiener filter curves to disc
-	fn_tmp = fnOut + "_wien";
-	fn_tmp.compose(fn_tmp, ii+1, "txt");
-	fh.open((fn_tmp).c_str(), std::ios::out);
-	if (!fh) REPORT_ERROR(1, (std::string)"Error: Cannot write file: " + fn_tmp);
-	for (int step = 0; step < nr_steps; step++) 
-	{
-	    res = (step * sqrt(3.) ) / 
-		(OVERSAMPLE * sqrt( (double) (Zdim*Zdim + Ydim*Ydim + Xdim*Xdim) ) );
-	    if (res<=0.5)
-	    {
-		fh << res << " " << Vwien1D[ii](step) << " " << Vctfs1D[ii](step) << "\n";
-	    }
-	}
-	fh.close();
+        // Write CTF and Wiener filter curves to disc
+        fn_tmp = fnOut + "_wien";
+        fn_tmp.compose(fn_tmp, ii+1, "txt");
+        fh.open((fn_tmp).c_str(), std::ios::out);
+        if (!fh)
+            REPORT_ERROR(1, (std::string)"Error: Cannot write file: " + fn_tmp);
+        for (int step = 0; step < nr_steps; step++)
+        {
+            res = (step * sqrt(3.) ) /
+                  (OVERSAMPLE * sqrt( (double) (Zdim*Zdim + Ydim*Ydim + Xdim*Xdim) ) );
+            if (res<=0.5)
+                fh << res << " " << Vwien1D[ii](step) << " " << Vctfs1D[ii](step) << "\n";
+        }
+        fh.close();
     }
 
     // Some output to screen
     std::cerr <<" ---------------------------------------------------"<<std::endl;
-    std::cerr <<" + Number of defocus groups      = "<<ctfdat.lineNo()<<std::endl;
+    std::cerr <<" + Number of defocus groups      = "<<ctfdat.size()<<std::endl;
     std::cerr <<" + Total number of images        = "<<tot_nr_imgs<<std::endl;
     std::cerr <<" + Normalized Wiener constant    = "<<tot_nr_imgs*wienConst<<std::endl;
     std::cerr <<" + Minimum of sum in denominator = "<<minsum<<std::endl;
@@ -239,44 +206,40 @@ void CorrectAmplitude3DParams::generateWienerFilters()
     std::cerr <<" + Minimum Wiener filter value   = "<<minwien<<std::endl;
     std::cerr <<" + Maximum Wiener filter value   = "<<maxwien<<std::endl;
     std::cerr <<" ---------------------------------------------------"<<std::endl;
-
 }
-	
+
 /* Make deconvolved volume -------------------------------------------------- */
 void CorrectAmplitude3DParams::generateVolumes()
 {
 
-    VolumeXmipp V;
+    Image<double> V;
     FileName fnVol, fnCTF;
-    Matrix3D<std::complex<double> > fft,fft_out;
+    MultidimArray<std::complex<double> > fft,fft_out;
     Matrix1D<int>    idx(3);
     Matrix1D<double> freq(3);
     int ires;
 
     int ii = 0;
-    ctfdat.goFirstLine();
-    while (!ctfdat.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
-	ctfdat.getCurrentLine(fnVol,fnCTF);
-	V.read(fnVol);
-	FourierTransform(V(),fft);
-	if (ii == 0)
-	{
-	    fft_out.resize(fft);
-	}
-	FOR_ALL_ELEMENTS_IN_MATRIX3D(fft)
-	{
-	    XX(idx) = j;
-	    YY(idx) = i;
-	    ZZ(idx) = k;
-	    FFT_idx2digfreq(fft, idx, freq);
-	    ires= ROUND(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim*Xdim+YY(freq)*YY(freq)*Ydim*Ydim+ZZ(freq)*ZZ(freq*Zdim*Zdim)));
-	    fft_out(k,i,j)+=(Vwien1D[ii])(ires)*fft(k,i,j);
-	}
-	ctfdat.nextLine();
-	ii++;
+        ctfdat.getValue(MDL_IMAGE,fnVol);
+        ctfdat.getValue(MDL_CTFMODEL,fnCTF);
+        V.read(fnVol);
+        FourierTransform(V(),fft);
+        if (ii == 0)
+            fft_out.resize(fft);
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(fft)
+        {
+            XX(idx) = j;
+            YY(idx) = i;
+            ZZ(idx) = k;
+            FFT_idx2digfreq(fft, idx, freq);
+            ires= ROUND(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim*Xdim+YY(freq)*YY(freq)*Ydim*Ydim+ZZ(freq)*ZZ(freq*Zdim*Zdim)));
+            fft_out(k,i,j)+=(Vwien1D[ii])(ires)*fft(k,i,j);
+        }
+        ii++;
     }
-    
+
     // Inverse Fourier Transform
     InverseFourierTransform(fft_out,V());
     fnVol=fnOut+"_deconvolved.vol";
@@ -284,38 +247,35 @@ void CorrectAmplitude3DParams::generateVolumes()
 
     // Calculate CTF-affected volumes
     ii = 0;
-    ctfdat.goFirstLine();
-    while (!ctfdat.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
-	ctfdat.getCurrentLine(fnVol,fnCTF);
-	FOR_ALL_ELEMENTS_IN_MATRIX3D(fft)
-	{
-	    XX(idx) = j;
-	    YY(idx) = i;
-	    ZZ(idx) = k;
-	    FFT_idx2digfreq(fft, idx, freq);
-	    ires= ROUND(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim*Xdim+YY(freq)*YY(freq)*Ydim*Ydim+ZZ(freq)*ZZ(freq*Zdim*Zdim)));
-	    fft(k,i,j)=Vctfs1D[ii](ires)*fft_out(k,i,j);
-	}
-	ctfdat.nextLine();
-	ii++;
+        ctfdat.getValue(MDL_IMAGE,fnVol);
+        ctfdat.getValue(MDL_CTFMODEL,fnCTF);
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(fft)
+        {
+            XX(idx) = j;
+            YY(idx) = i;
+            ZZ(idx) = k;
+            FFT_idx2digfreq(fft, idx, freq);
+            ires= ROUND(OVERSAMPLE*sqrt(XX(freq)*XX(freq)*Xdim*Xdim+YY(freq)*YY(freq)*Ydim*Ydim+ZZ(freq)*ZZ(freq*Zdim*Zdim)));
+            fft(k,i,j)=Vctfs1D[ii](ires)*fft_out(k,i,j);
+        }
+        ii++;
 
-	fnVol=fnOut+"_ctffiltered_group";
-	fnVol.compose(fnVol,ii,"vol");
-	InverseFourierTransform(fft,V());
-	V.write(fnVol);
+        fnVol=fnOut+"_ctffiltered_group";
+        fnVol.compose(fnVol,ii,"vol");
+        InverseFourierTransform(fft,V());
+        V.write(fnVol);
     }
-
 }
 
 /* Correct a set of images ------------------------------------------------- */
 void CorrectAmplitude3DParams::run()
 {
-
-    // Calculate the filters 
+    // Calculate the filters
     generateWienerFilters();
 
     // Calculate the deconvolved and CTF-filtered volumes
     generateVolumes();
-    
+
 }
