@@ -321,7 +321,7 @@ public:
         }
 
 #undef DEBUG
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
         std::cerr << "READ\n" <<
