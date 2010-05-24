@@ -117,14 +117,20 @@ int readMRC(int img_select,bool isStack=false)
     // Convert VAX floating point types if necessary
     if ( header->amin > header->amax )
         REPORT_ERROR(1,"readMRC: amin > max: VAX floating point conversion unsupported");
+    int _xDim,_yDim,_zDim;
+    unsigned long int _nDim;
+    _xDim = (int) header->nx;
+    _yDim = (int) header->ny;
+    _zDim = (int) header->nz;
+    _nDim = 1;
 
     // Map the parameters
     if (isStack && img_select==-1)
-        data.setDimensions(header->nx, header->ny, 1, header->nz);
+        data.setDimensions(_xDim, _yDim, 1, _zDim);
     else if(isStack && img_select!=-1)
-        data.setDimensions(header->nx, header->ny, 1, 1);
+        data.setDimensions(_xDim, _yDim, 1, 1);
     else
-        data.setDimensions(header->nx, header->ny, header->nz, 1);
+        data.setDimensions(_xDim, _yDim, _zDim,1);
 
 
     DataType datatype;
@@ -173,31 +179,29 @@ int readMRC(int img_select,bool isStack=false)
         MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)header->b/header->my);
     if ( header->mz && header->c!=0)//zx
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
-    // Allocating the single sub-image and setting its origin
-    //image.resize(1);
-    double aux;
-    if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
-    {
-        aux = -header->xOrigin/aux;
-        MD.setValue(MDL_ORIGINX, aux);
-    }
-    if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
-    {
-        aux = -header->yOrigin/aux;
-        MD.setValue(MDL_ORIGINY, aux);
-    }
-
-    if(MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux))
-    {
-        aux = -header->zOrigin/aux;
-        MD.setValue(MDL_ORIGINZ, aux);
-    }
 
     int Ndim = NSIZE(data);
     MD.clear();
-    MD.addObject();
     for(int i=0;i< Ndim;i++)
     {
+        MD.addObject();
+        double aux;
+        if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
+        {
+            aux = -header->xOrigin/aux;
+            MD.setValue(MDL_ORIGINX, aux);
+        }
+        if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
+        {
+            aux = -header->yOrigin/aux;
+            MD.setValue(MDL_ORIGINY, aux);
+        }
+
+        if(MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux))
+        {
+            aux = -header->zOrigin/aux;
+            MD.setValue(MDL_ORIGINZ, aux);
+        }
         MD.setValue(MDL_ANGLEROT, zeroD);
         MD.setValue(MDL_ANGLETILT,zeroD);
         MD.setValue(MDL_ANGLEPSI, zeroD);

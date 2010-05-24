@@ -321,7 +321,7 @@ public:
         }
 
 #undef DEBUG
-        //#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 
         std::cerr << "READ\n" <<
@@ -332,13 +332,13 @@ public:
 #endif
 #undef DEBUG
 
-        if (ext_name.contains("mrc"))//mrc
-            err = readMRC(select_img,false);
-        else if (ext_name.contains("mrcS"))//mrc stack
+        if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
             err = readMRC(select_img,true);
+        else if (ext_name.contains("mrc"))//mrc
+            err = readMRC(select_img,false);
         else
             err = readSPIDER(select_img);
-        //get metadata conainer
+        //get metadata container
         //add to MDheader
         //apply geo
 
