@@ -474,7 +474,10 @@ AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
 
 # Interface
 #InterfaceSources = Glob('libraries/interface', '*.cpp', [])
-InterfaceSources=["pdb.cpp"]
+InterfaceSources=[
+    "pdb.cpp",
+    "docfile.cpp",
+    "spider.cpp"]
 AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
     ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
 
@@ -497,7 +500,7 @@ OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
 # Src (apps)
 
 AddXmippProgram('add_noise')
-#AddXmippProgram('adapt_for_spider', ['XmippInterface'])
+AddXmippProgram('adapt_for_spider', ['XmippInterface'])
 AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('align2d', ['XmippRecons'])
 AddXmippProgram('align_tilt_pairs', ['XmippRecons'])

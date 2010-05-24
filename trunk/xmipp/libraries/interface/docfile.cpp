@@ -99,8 +99,8 @@ void DocLine::set(const Matrix1D< double >& v)
         key = 0;
     }
 
-    data.reserve(XSIZE(v));
-    for (int i = STARTINGX(v); i <= FINISHINGX(v); i++)
+    data.reserve(VEC_XSIZE(v));
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
         data.push_back(VEC_ELEM(v, i));
 }
 
@@ -176,14 +176,14 @@ void DocLine::read(std::istream& in)
 
         key = textToInteger(nextToken(line, i), 1602, "Error reading key");
         param_no = textToInteger(nextToken(line, i), 1602,
-                        "Error reading number parameters");
+                                 "Error reading number parameters");
         std::string auxline = line;
 
         try
         {
             // Try unfixed mode first
             readFloatList(line, i, param_no, data, 1602,
-                            "Error reading doc file line");
+                          "Error reading doc file line");
         }
         catch (Xmipp_error e)
         {
@@ -235,14 +235,14 @@ DocFile& DocFile::operator=(const Matrix2D< double >& A)
     clear();
     DocLine temp;
 
-    for (int i = STARTINGY(A); i <= FINISHINGY(A); i++)
+    for (int i = 0; i <MAT_YSIZE(A); i++)
     {
         temp.clear();
         temp.line_type = DocLine::DATALINE;
-        temp.data.resize(XSIZE(A));
+        temp.data.resize(MAT_XSIZE(A));
 
-        for (int j = STARTINGX(A); j <= FINISHINGX(A); j++)
-            temp.data[j-STARTINGX(A)] = MAT_ELEM(A, i, j);
+        for (int j = 0; j < MAT_XSIZE(A); j++)
+            temp.data[j] = MAT_ELEM(A, i, j);
 
         m.push_back(temp);
     }
@@ -500,14 +500,14 @@ int DocFile::remove_multiple_strings(std::string pattern)
     {
         if ((*current_line).Is_comment())
         {
-            if (((*current_line).get_text()).find(pattern) < 
-		((*current_line).get_text()).size() )
-	    {
-		if (found_once)
-		{
-		    remove_current();
-		}
-		found_once = true;
+            if (((*current_line).get_text()).find(pattern) <
+                ((*current_line).get_text()).size() )
+            {
+                if (found_once)
+                {
+                    remove_current();
+                }
+                found_once = true;
             }
         }
         next();
@@ -518,7 +518,7 @@ int DocFile::remove_multiple_strings(std::string pattern)
 }
 
 
-void DocFile::get_selfile(SelFile& sel)
+void DocFile::get_selfile(MetaData& sel)
 {
     go_beginning();
 
@@ -536,7 +536,8 @@ void DocFile::get_selfile(SelFile& sel)
         if (strstr(((*current_line).get_text()).c_str(), " ; ") != NULL)
         {
             img = (*current_line).get_text();
-            sel.insert(img.without(" ; "));
+            sel.addObject();
+            sel.setValue(MDL_IMAGE,img.without(" ; "));
         }
 
         next();
@@ -573,9 +574,9 @@ int DocFile::getColNumberFromHeader(const char * pattern)
         {
             std::vector<std::string> tokens;
             tokenize(header,tokens," \t()");
-            for (int i = 0; i < tokens.size(); i++) 
+            for (int i = 0; i < tokens.size(); i++)
             {
-                if (strstr(tokens[i].c_str(), pattern) != NULL) 
+                if (strstr(tokens[i].c_str(), pattern) != NULL)
                 {
                     return textToInteger(tokens[i+1]);
                 }
@@ -845,35 +846,35 @@ void DocFile::set_angles(int k, double rot, double tilt, double psi,
     }
 }
 
-void DocFile::get_image(int key, ImageXmipp &I, bool apply_geo)
+void DocFile::get_image(int key, Image<double> &I, bool apply_geo)
 {
     current_line = m.begin();
     current_line += 2*key;
     DocLine DL = get_current_line();
     previous();
     FileName fn_img;
-    if (get_current_line().Is_comment()) 
-	fn_img = ((get_current_line()).get_text()).erase(0, 3);
+    if (get_current_line().Is_comment())
+        fn_img = ((get_current_line()).get_text()).erase(0, 3);
     else
-	REPORT_ERROR(1,"The docfile provided is not of type Alignment");
+        REPORT_ERROR(1,"The docfile provided is not of type Alignment");
 
     // Read actual image
     I.read(fn_img);
     I().setXmippOrigin();
 
     // Store translation in header and apply it to the actual image
-    I.set_rot(DL[0]);
-    I.set_tilt(DL[1]);
-    I.set_psi(DL[2]);
-    I.set_Xoff(DL[3]);
-    I.set_Yoff(DL[4]);
-    I.set_flip(0.);
+    I.setRot(DL[0]);
+    I.setTilt(DL[1]);
+    I.setPsi(DL[2]);
+    I.setXoff(DL[3]);
+    I.setYoff(DL[4]);
+    I.setFlip(0.);
 
     if (apply_geo)
     {
-        Matrix2D<double> A = I.get_transformation_matrix(true);
+        Matrix2D<double> A = I.getTransformationMatrix(true);
         if (!A.isIdentity())
-	    I().selfApplyGeometryBSpline(A, 3, IS_INV, WRAP);
+        	selfApplyGeometry(BSPLINE3, I(), A, IS_INV, WRAP);
     }
 }
 
@@ -884,10 +885,10 @@ FileName DocFile::get_imagename(int key)
     DocLine DL = get_current_line();
     previous();
     FileName fn_img;
-    if (get_current_line().Is_comment()) 
-	fn_img = ((get_current_line()).get_text()).erase(0, 3);
+    if (get_current_line().Is_comment())
+        fn_img = ((get_current_line()).get_text()).erase(0, 3);
     else
-	REPORT_ERROR(1,"The docfile provided is not of type Alignment");
+        REPORT_ERROR(1,"The docfile provided is not of type Alignment");
     return fn_img;
 }
 
@@ -1301,15 +1302,14 @@ void DocFile::merge(DocFile& DF, int mode, int sumcol)
 {
 
     DocLine  DL, DLold;
-    SelFile  SF;
+    MetaData  SF;
     FileName fn_img;
     double   w;
 
     DF.get_selfile(SF);
-    SF.go_beginning();
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        fn_img=SF.NextImg();
+        SF.getValue(MDL_IMAGE,fn_img);
         DF.search_comment(fn_img);
         DL=DF.get_current_line();
         if (search_comment(fn_img))
@@ -1317,39 +1317,37 @@ void DocFile::merge(DocFile& DF, int mode, int sumcol)
             switch (mode)
             {
             case(DOCMERGE_KEEP_OLD):
-            {
-                // just keep what's there and do nothing
-                break;
-            }
+                {
+                    // just keep what's there and do nothing
+                    break;
+                }
             case(DOCMERGE_KEEP_NEW):
-            {
-                //Replace current data line with the new one
-                (*current_line) = DL;
-                break;
-            }
+                {
+                    //Replace current data line with the new one
+                    (*current_line) = DL;
+                    break;
+                }
             case(DOCMERGE_SUM_COLUMN):
-            {
-                // Just sum column
-                w = (*current_line).data[sumcol] + DF(sumcol);
-                (*current_line).set(sumcol, w);
-                break;
-            }
+                {
+                    // Just sum column
+                    w = (*current_line).data[sumcol] + DF(sumcol);
+                    (*current_line).set(sumcol, w);
+                    break;
+                }
             case(DOCMERGE_ERROR):
-                std::cerr<<"image name = "<<fn_img;
+                            std::cerr<<"image name = "<<fn_img;
                 REPORT_ERROR(1,"Image occured in two docfiles to be merged");
             }
-        }        
+        }
         else
-        {
+{
             // Just add new line at the end of the file
             current_line = m.end();
             append_comment(fn_img);
             append_line(DL);
         }
     }
-
 }
-
 
 DocFile DocFile::random_discard(int n)
 {
@@ -1369,36 +1367,6 @@ DocFile DocFile::random_discard(int n)
         result.remove_current();
     }
     result.go_beginning();
-
-    return result;
-}
-
-DocFile DocFile::sort_by_filenames()
-{
-    DocFile result;
-    SelFile SF1, SF2;
-    FileName fn_img, head;
-    DocLine DL;
-    
-    // Copy header
-    go_beginning();
-    head = (*current_line).get_text();
-    result.append_comment(head.without(" ; "));
-
-    // Sort filenames through selfile
-    get_selfile(SF1);
-    SF2=SF1.sort_by_filenames();
-
-    // Fill result
-    SF2.go_beginning();
-    while (!SF2.eof())
-    {
-        fn_img = SF2.NextImg();
-        result.append_comment(fn_img);
-        search_comment(fn_img);
-        DL = get_current_line();
-        result.append_line(DL);
-    }
 
     return result;
 }
@@ -1432,7 +1400,7 @@ Matrix1D< double > DocFile::row(int k)
     result.resize(it->data.size());
     result.setRow();
 
-    for (int i = 0; i < result.xdim; i++)
+    for (int i = 0; i < VEC_XSIZE(result); i++)
         VEC_ELEM(result, i) = it->data[i];
 
     return result;
@@ -1442,14 +1410,14 @@ void DocFile::setCol(int c, Matrix1D< double >& v)
 {
     go_first_data_line();
 
-    for (int i = STARTINGX(v); i <= FINISHINGX(v); i++)
+    for (int i = 0; i <VEC_XSIZE(v); i++)
     {
         set(c, VEC_ELEM(v, i));
         next_data_line();
     }
     renum();
 
-    if (XSIZE(v) < m.size())
+    if (VEC_XSIZE(v) < m.size())
         REPORT_ERROR(1605, "DocFile::setCol(): Column assignment not complete");
 }
 
@@ -1500,61 +1468,52 @@ int read_Euler_document_file(FileName name, std::string ang1, std::string ang2,
     return doc.dataLineNo();
 }
 
-void select_images(DocFile& doc, SelFile& sel, int col, bool en_limit0,
+void select_images(DocFile& doc, MetaData& sel, int col, bool en_limit0,
                    double limit0, bool en_limitF, double limitF)
 {
-    sel.go_beginning();
     doc.go_first_data_line();
 
-    while (!sel.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(sel)
     {
-        if (sel.Is_ACTIVE())
+    	int enabled;
+    	sel.getValue(MDL_ENABLED,enabled);
+        if (enabled)
         {
-            if (en_limit0 && doc(col) < limit0)
-                sel.set_current(SelLine::DISCARDED);
-
-            if (en_limitF && doc(col) > limitF)
-                sel.set_current(SelLine::DISCARDED);
+            if (en_limit0 && doc(col) < limit0 || en_limitF && doc(col) > limitF)
+                sel.setValue(MDL_ENABLED,-1);
         }
 
-        sel.next();
         doc.next_data_line();
     }
 }
 
-void get_subset_docfile(DocFile& DFin, SelFile& SF, DocFile& DFout)
+void get_subset_docfile(DocFile& DFin, MetaData& SF, DocFile& DFout)
 {
-
     DocLine DL;
     FileName fn_tmp;
 
     DFout.clear();
     DFin.go_beginning();
     DL = DFin.get_current_line();
-    if (DL.Is_comment()) 
-	fn_tmp = DL.get_text();
+    if (DL.Is_comment())
+        fn_tmp = DL.get_text();
     if (strstr(fn_tmp.c_str(), "Headerinfo") == NULL)
-	REPORT_ERROR(1607,"Input docfile is not of NewXmipp-style");
+        REPORT_ERROR(1607,"Input docfile is not of NewXmipp-style");
     else
-	// append the same header to DFout
-	DFout.append_comment(fn_tmp.without(" ; "));
+        // append the same header to DFout
+        DFout.append_comment(fn_tmp.without(" ; "));
 
-    SF.go_beginning();
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-	fn_tmp = SF.NextImg();
-        if (fn_tmp=="") continue;
-	if (DFin.search_comment(fn_tmp))
-	{
+        SF.getValue(MDL_IMAGE,fn_tmp);
+        if (DFin.search_comment(fn_tmp))
+        {
             DFout.append_comment(fn_tmp);
-	    DL=DFin.get_current_line();
+            DL=DFin.get_current_line();
             DFout.append_line(DL);
-	}
-	else
-	{
-	    REPORT_ERROR(1608, (std::string)"Docfile: Cannot find " + fn_tmp + " in docfile ");
-	}
+        }
+        else
+            REPORT_ERROR(1608, (std::string)"Docfile: Cannot find " + fn_tmp + " in docfile ");
     }
-    
 }
 

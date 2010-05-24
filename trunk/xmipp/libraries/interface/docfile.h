@@ -33,7 +33,7 @@
 #include <data/matrix1d.h>
 #include <data/matrix2d.h>
 #include <data/image.h>
-#include "selfile.h"
+#include <data/metadata.h>
 
 // Forward declaration
 class DocFile;
@@ -567,7 +567,7 @@ public:
      * DF.get_selfile(SF);
      * @endcode
      */
-    void get_selfile(SelFile& SF);
+    void get_selfile(MetaData& SF);
 
     /** Move "pointer" to a certain line.
      * @ingroup DocFilePointer
@@ -831,7 +831,7 @@ public:
      * The docfile is supposed to be an alignment docfile, and it is
      * assumed that no key is missing from the file
      */
-    void get_image(int key, ImageXmipp &I, bool apply_geo=false);
+    void get_image(int key, Image<double> &I, bool apply_geo=false);
 
     /** Get image name on key i
      * @ingroup DocFileInfo
@@ -1196,15 +1196,6 @@ public:
      */
     DocFile random_discard(int N);
 
-    /** Sort based on filename comments (only for NewXmuipp-style docfiles)
-     * @ingroup DocFileHelpful
-     *
-     * Sort entries based on alphabetical sorting of comments with filenames
-     * If this docfile doesn't have a NewXmipp-style header
-     * (starting with "Headerinfo"), an error is raised. 
-     */
-    DocFile sort_by_filenames();
-
     /** Column to vector.
      * @ingroup DocFileHelpful
      *
@@ -1293,7 +1284,7 @@ int read_Euler_document_file(FileName fn,
  * number of data linea in the DocFile match.
  */
 void select_images(DocFile& DF,
-                   SelFile& SF,
+                   MetaData& SF,
                    int col,
                    bool en_limit0,
                    double limit0,
@@ -1310,6 +1301,6 @@ void select_images(DocFile& DF,
  * The output docfile has the same order of images as the input selfile.
  */
 void get_subset_docfile(DocFile& DFin,
-			SelFile& SF,
+			MetaData& SF,
 			DocFile& DFout);
 #endif
