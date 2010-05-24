@@ -166,7 +166,7 @@ enum MDLabel
     MDL_Y, // Y component (double)
     MDL_ZINT, // Z component (int)
     MDL_Z, // Z component (double)
-
+    MDL_ZSCORE, // Z Score (double)
 
     MDL_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
     // it is here for looping purposes
@@ -363,6 +363,7 @@ private:
         MDL::addLabel(MDL_Y, LABEL_DOUBLE, "Y");
         MDL::addLabel(MDL_ZINT, LABEL_INT, "Zcoor");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");
+        MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "Zscore");
     }
 
     ~StaticInitialization()
