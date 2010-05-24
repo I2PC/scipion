@@ -97,6 +97,17 @@ public:
      */
     static std::vector<long int> selectObjects(const MetaData *mdPtr, int limit = -1, const MDQuery *queryPtr = NULL);
 
+    /** This function will delete elements
+     * that match the query
+     * if not query is provided, all rows are deleted
+     */
+    static long int deleteObjects(const MetaData *mdPtr, const MDQuery *queryPtr);
+
+    /** Coppy the objects from a metada to other
+     * return the number of objects copied
+     * */
+    static long int copyObjects(const MetaData *mdPtrIn, MetaData *mdPtrOut, const MDQuery *queryPtr = NULL);
+
     static char *errmsg;
     static const char *zLeftover;
     static int rc;
@@ -169,8 +180,12 @@ public:
     template <class T>
     MDValueEqual(MDLabel label, const T &value)
     {
-        this->limit = limit;
-        //TODO: create the query string
+        std::stringstream ss;
+        MDValue mdValue;
+        MDL::voidPtr2Value(label, (void*)new T(value), mdValue);
+        ss << MDL::label2Str(label) << "=";
+        MDL::value2Stream(label, mdValue, ss);
+        this->queryString = ss.str();
     }
 };//class MDValueEqual
 
@@ -183,7 +198,17 @@ public:
     template <class T>
     MDValueRange(MDLabel label, const T &valueMin, const T &valueMax)
     {
-        //TODO: create the query string
+        std::stringstream ss;
+        MDValue mdValue;
+        MDL::voidPtr2Value(label, (void*)new T(valueMin), mdValue);
+        ss << MDL::label2Str(label) << ">=";
+        MDL::value2Stream(label, mdValue, ss);
+        ss << " AND ";
+        MDL::voidPtr2Value(label, (void*)new T(valueMax), mdValue);
+        ss << MDL::label2Str(label) << "<=";
+        MDL::value2Stream(label, mdValue, ss);
+        this->queryString = ss.str();
+
     }
 };//class MDValueRange
 

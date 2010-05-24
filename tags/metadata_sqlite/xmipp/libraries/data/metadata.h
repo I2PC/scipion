@@ -306,6 +306,7 @@ public:
     /** Import objects from another metadata
      * @ingroup DataAccess
      */
+    void importObject(const MetaData &md, const long int objId);
     void importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd);
 
     void importObjects(const MetaData &md, MDQuery query);
@@ -325,9 +326,10 @@ public:
     void removeObjects(const std::vector<long int> &toRemove);
 
     /** Removes objects with pair <label, value>
+     * return the number of deleted rows
      * @ingroup DataAccess
      */
-    void removeObjects(MDQuery query);
+    int removeObjects(MDQuery query);
 
     //FIXME: organize this
     // Possible error codes for the metadata operations

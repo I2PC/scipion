@@ -68,9 +68,9 @@ void MetaData::copyMetadata(const MetaData &md)
 {
     if (this == &md) //not sense to copy same metadata
         return;
-    init(&md.activeLabels);
+    init(&(md.activeLabels));
     copyInfo(md);
-    //TODO COPY DATA FROM MD TO THIS METADATA
+    MDSql::copyObjects(&md, this);
 }
 
 void MetaData::setValueObjectFromVoidPtr(MDLabel label, int objId, void * valuePtr)
@@ -174,8 +174,6 @@ bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, lo
             exit(1);
         }
     }
-    std::cerr << "setValueFromStr: LABEL=" << MDL::label2Str(label)
-    << " STR_VALUE: " << value <<std::endl;
     MDValue mdValue;
     MDL::str2Value(label, value, mdValue);
     MDSql::setObjectValue(this, objectId, label, mdValue);
@@ -222,31 +220,41 @@ long int MetaData::addObject(long int objectId)
     return activeObjId;
 }
 
+void MetaData::importObject(const MetaData &md, const long int objId)
+{
+    importObjects(md, MDValueEqual(MDL_OBJID, objId));
+}
+
 void MetaData::importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd)
 {
-    REPORT_ERROR(-55, "importObjects not yet implemented");
+    int size = objectsToAdd.size();
+    for (int i = 0; i < size; i++)
+        importObject(md, objectsToAdd[i]);
 }
 
 void MetaData::importObjects(const MetaData &md, MDQuery query)
 {
-    REPORT_ERROR(-55, "importObjects not yet implemented");
+    init(&(md.activeLabels));
+    copyInfo(md);
+    MDSql::copyObjects(&md, this, &query);
 }
 
 bool MetaData::removeObject(long int objectId)
 {
-    REPORT_ERROR(-55, "removeObject not yet implemented");
-    return false;
+    int removed = removeObjects(MDValueEqual(MDL_OBJID, objectId));
+    return (removed > 0);
 }
 
 void MetaData::removeObjects(const std::vector<long int> &toRemove)
 {
-    REPORT_ERROR(-55, "removeObjects not yet implemented");
+    int size = toRemove.size();
+    for (int i = 0; i < size; i++)
+        removeObject(toRemove[i]);
 }
 
-void MetaData::removeObjects(MDQuery query)
+int MetaData::removeObjects(MDQuery query)
 {
-    //TODO: Implement this
-    REPORT_ERROR(-55, "'removeObjects' not yet implemented");
+    return MDSql::deleteObjects(this, &query);
 }
 
 
@@ -277,7 +285,7 @@ long int MetaData::goToObject(long int objectId)
 std::vector<long int> MetaData::findObjects(MDQuery query, int limit)
 {
     //FIXME: VECTORS ARE RETURNED BY VALUE
-    std::vector<long int> objects = MDSql::selectObjects(this, -1, &query);
+    std::vector<long int> objects = MDSql::selectObjects(this, limit, &query);
     return objects;
 }
 
@@ -288,8 +296,7 @@ int MetaData::countObjects(MDQuery query)
 
 bool MetaData::existsObject(long int objectId)
 {
-    //TODO: implement this
-    REPORT_ERROR(-55, "'existsObjects' not yet implemented");
+    return existsObject(MDValueEqual(MDL_OBJID, objectId));
 }
 
 bool MetaData::existsObject(MDQuery query)
@@ -466,7 +473,6 @@ void MetaData::read(std::istream &is)
             {
                 line.erase(0, 1);
                 line = simplify(line);
-                //FIXME
                 setValue(MDL_COMMENT, line);
                 getline(is, line, '\n');
             }

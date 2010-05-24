@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "metadata_sql.h"
-#define DEBUG
+//#define DEBUG
 
 //This is needed for static memory allocation
 int MDSql::table_counter = 0;
@@ -83,8 +83,10 @@ bool MDSql::addColumn(const MetaData *mdPtr, MDLabel column)
     ss << "ALTER TABLE " << tableName(mdPtr->tableId)
     << " ADD COLUMN " << MDL::label2SqlColumn(column);
 #ifdef DEBUG
+
     std::cerr << "addColumn: "<< ss.str() <<std::endl;
 #endif
+
     execSingleStmt(ss.str());
 }
 
@@ -97,8 +99,10 @@ bool MDSql::setObjectValue(const MetaData *mdPtr, const int objId, const MDLabel
     << " SET " << MDL::label2Str(column) << "="
     << sep << MDL::value2Str(column, value)<< sep << " WHERE objID=" << objId;
 #ifdef DEBUG
+
     std::cerr << "setObjectValue: " << ss.str() <<std::endl;
 #endif
+
     execSingleStmt(ss.str());
 
     std::cerr << "setObjectValue: " << ss.str() <<std::endl;
@@ -113,8 +117,10 @@ bool MDSql::getObjectValue(const MetaData *mdPtr, const int objId, const MDLabel
     << " FROM " << tableName(mdPtr->tableId)
     << " WHERE objID=" << objId << ";";
 #ifdef DEBUG
+
     std::cerr << "getObjectValue: " << ss.str() <<std::endl;
 #endif
+
     rc = sqlite3_prepare(db, ss.str().c_str(), -1, &stmt, &zLeftover);
 
     rc = sqlite3_step(stmt);
@@ -159,10 +165,10 @@ std::vector<long int> MDSql::selectObjects(const MetaData *mdPtr, int maxObjects
     std::vector<long int> objects;
     long int id;
 
-    ss << "SELECT objID from " << tableName(mdPtr->tableId);
+    ss << "SELECT objID FROM " << tableName(mdPtr->tableId);
     if (queryPtr != NULL)
     {
-        //todo: add query string to select
+        ss << " WHERE " << queryPtr->queryString;
     }
     ss << " ORDER BY objID";
     ss << " LIMIT " << maxObjects;
@@ -178,6 +184,45 @@ std::vector<long int> MDSql::selectObjects(const MetaData *mdPtr, int maxObjects
     //FIXME: NOW A COPY OF THE VECTOR IS DONE!!!!
     return objects;
 }
+
+long int MDSql::deleteObjects(const MetaData *mdPtr, const MDQuery *queryPtr)
+{
+    std::stringstream ss;
+    ss << "DELETE FROM " << tableName(mdPtr->tableId);
+    ss << " WHERE " << queryPtr->queryString;
+
+    execSingleStmt(ss.str());
+    return sqlite3_changes(db);
+}
+
+long int MDSql::copyObjects(const MetaData *mdPtrIn, MetaData *mdPtrOut, const MDQuery *queryPtr)
+{
+    //NOTE: Is assumed that the destiny table has
+    // the same columns that the source table, if not
+    // the INSERT will fail
+    std::stringstream ss, ss2;
+    ss << "INSERT INTO " << tableName(mdPtrOut->tableId);
+    //Add columns names to the insert and also to select
+    //* couldn't be used because maybe are duplicated objID's
+    std::string sep = " ";
+    int size = mdPtrIn->activeLabels.size();
+
+    for (int i = 0; i < size; i++)
+    {
+        ss2 << sep << MDL::label2Str( mdPtrIn->activeLabels[i]);
+        sep = ", ";
+    }
+
+    ss << "(" << ss2.str() << ") SELECT " << ss2.str();
+    ss << " FROM " << tableName(mdPtrIn->tableId);
+    if (queryPtr != NULL)
+        ss << " WHERE " << queryPtr->queryString;
+    //ss << ");";
+
+    execSingleStmt(ss.str());
+    return sqlite3_changes(db);
+}
+
 
 bool MDSql::sqlBegin()
 {
