@@ -26,8 +26,7 @@
 #ifndef DETECT_MISSING_WEDGE_H
 #define DETECT_MISSING_WEDGE_H
 
-#include <data/matrix3d.h>
-#include <data/volume.h>
+#include <data/image.h>
 
 /// @defgroup DetectMissingWedge Detect missing wedge
 /// @ingroup ReconsLibraryPrograms
@@ -53,10 +52,10 @@ public:
     bool saveMask;
 public:
     // Input volume
-    VolumeXmipp *V;
+    Image<double> *V;
 
     // Magnitude of the input volume
-    Matrix3D<double> *Vmag;
+    MultidimArray<double> *Vmag;
     
     // Angles of the first plane
     double rotPos, tiltPos;

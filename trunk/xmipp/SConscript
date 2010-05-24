@@ -400,7 +400,7 @@ ReconsSources = [
     'ctf_estimate_from_micrograph.cpp',
     'ctf_group.cpp',
     'denoise.cpp',
-#    'detect_missing_wedge.cpp',
+    'detect_missing_wedge.cpp',
 #    'detect_structures.cpp',
     'directions.cpp',
     'enhance_contrast.cpp',
@@ -558,7 +558,7 @@ AddXmippProgram('ctf_profile')
 AddXmippProgram('ctf_group', ['XmippRecons'])
 AddXmippProgram('common_lines', ['XmippRecons'])
 #AddXmippProgram('denoise', ['XmippRecons'])
-#AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
+AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
 #AddXmippProgram('docfile_append')
 #AddXmippProgram('docfile_select_subset')
