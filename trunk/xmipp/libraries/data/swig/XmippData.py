@@ -444,6 +444,7 @@ gaus_up_to_x0 = _XmippData.gaus_up_to_x0
 gaus_from_x0 = _XmippData.gaus_from_x0
 
 exists = _XmippData.exists
+existsTrim = _XmippData.existsTrim
 xmippBaseDir = _XmippData.xmippBaseDir
 init_progress_bar = _XmippData.init_progress_bar
 progress_bar = _XmippData.progress_bar

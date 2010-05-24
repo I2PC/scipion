@@ -94,7 +94,7 @@ double Prog_Sort_PSD_Parameters::computeCorrelation(
 	assignCTF.process();
 
 	// Load the PSD
-	ImageXmipp PSD;
+	Image<double> PSD;
 	PSD.read(fn_root + "_Periodogramavg.psd");
 
 	// Enhance the PSD
@@ -109,33 +109,35 @@ double Prog_Sort_PSD_Parameters::computeCorrelation(
 	enhancePSD.apply(PSD());
 	PSD.write(fn_root + "_Periodogramavg_enhanced.psd");
 
-	// Rotate 90� and compute correlation
-	ImageXmipp PSDrotated(PSD);
-	PSDrotated().selfRotateBSpline(3, 90);
+	// Rotate 90 degrees and compute correlation
+	Image<double> PSDrotated(PSD);
+	selfRotate(BSPLINE3, PSDrotated(), 90);
 	return correlation_index(PSD(), PSDrotated());
 }
 
 /* Run --------------------------------------------------------------------- */
 void Prog_Sort_PSD_Parameters::run() {
 	// Compute the correlation of all micrographs
-	SF.go_first_ACTIVE();
-	correlation.resize(SF.ImgNo());
+	correlation.resize(SF.size());
 	std::vector<FileName> filenames;
-	FOR_ALL_ELEMENTS_IN_MATRIX1D(correlation) {
-		FileName fnMicrograph = SF.NextImg();
+	int i=0;
+	FOR_ALL_OBJECTS_IN_METADATA(SF) {
+		FileName fnMicrograph;
+		SF.getValue(MDL_IMAGE,fnMicrograph);
 		filenames.push_back(fnMicrograph);
 		correlation(i) = computeCorrelation(fnMicrograph);
+		i++;
 	}
 
 	// Sort the correlations
-	Matrix1D<int> idx = correlation.indexSort();
+	MultidimArray<int> idx = correlation.indexSort();
 
 	// Produce output
 	std::ofstream fhOut;
 	fhOut.open(fnOut.c_str());
 	if (!fhOut)
 		REPORT_ERROR(1,(std::string)"Cannot open "+fnOut+" for output");
-	FOR_ALL_ELEMENTS_IN_MATRIX1D(idx) {
+	FOR_ALL_ELEMENTS_IN_ARRAY1D(idx) {
 		int ii = idx(i) - 1;
 		fhOut << filenames[ii] << " \t" << correlation(ii) << std::endl;
 	}

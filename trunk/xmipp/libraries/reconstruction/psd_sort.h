@@ -26,8 +26,9 @@
 #ifndef _PROG_SORT_PSD_HH
 #  define _PROG_SORT_PSD_HH
 
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/funcs.h>
+#include <data/multidim_array.h>
 
 /**@defgroup SortPSD psd_Sort (Sort visualization of the PSD)
    @ingroup ReconsLibraryPrograms */
@@ -62,10 +63,10 @@ public:
 
 public:
     /// Selfile with images (side info)
-    SelFile SF;
+    MetaData SF;
 
     /// List of correlation values (side info)
-    Matrix1D<double> correlation;
+    MultidimArray<double> correlation;
 
 public:
     /** Read from a command line.
