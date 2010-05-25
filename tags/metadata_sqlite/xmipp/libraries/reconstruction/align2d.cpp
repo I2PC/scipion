@@ -803,7 +803,7 @@ void Prog_align2d_prm::align2d()
     std::cerr << "Calculating average, correlations and writing out results ..." << std::endl;
     Image<double> med,sig;
     double min, max;
-    if (SFo.existsObject( MDValueEqual(MDL_ENABLED, 1)))
+    if (SFo.containsObject( MDValueEqual(MDL_ENABLED, 1)))
     {
         get_statistics(SFo,med, sig, min, max, true);
     }

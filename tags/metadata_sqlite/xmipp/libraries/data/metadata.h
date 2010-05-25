@@ -134,10 +134,15 @@ private:
      */
     void copyMetadata(const MetaData &md);
 
-    /** Just a trick for avoid use MDSql::
-     * in the .h
+    /** This private functions are for set real values
+     * there is an explicit function signature
+     * foreach type supported in Metadata.
+     * This is done for some type checking of Metadata labels
+     * and values
      */
-    void setValueObjectFromVoidPtr(MDLabel label, int objId, void * valuePtr);
+
+    bool setValueObject(long int objId, const MDValue &mdValueIn);
+    bool getValueObject(long int objId, MDValue &mdValueOut) const;
 
 public:
 
@@ -247,37 +252,21 @@ public:
      * @ingroup DataAccess
      */
     template<class T>
-    bool setValue(const MDLabel label, const T &value, long int objectId=-1)
+    bool setValue(const MDLabel label, const T &valueIn, long int objectId=-1)
     {
-        if (objectId == -1)
-        {
-            if (activeObjId != -1)
-                objectId = activeObjId;
-            else
-            {
-                REPORT_ERROR(-1, "No active object, please provide objId for 'setValue'");
-                exit(1);
-            }
-        }
-        addLabel(label);
-        setValueObjectFromVoidPtr(label, objectId, (void*)new T(value));
+        setValueObject(objectId, MDValue(label, valueIn));
     }
 
     // Set a new pair/value for an specified object. If no objectId is given, that
     // pointed by the class iterator is used
     bool setValueFromStr(const MDLabel label, const std::string &value, long int objectId = -1);
 
-    // The following 2 are for error reporting on unsupported types
-    bool setValue(const std::string &name, const float &value,
-                  long int objectId = -1);
-    bool setValue(const std::string &name, const char &value,
-                  long int objectId = -1);
-
-
     template<class T>
-    bool getValue(const MDLabel label, const T &value, long int objectId = -1) const
+    bool getValue(const MDLabel label, T &valueOut, long int objectId = -1) const
     {
-        REPORT_ERROR(-55, "getValue(template) not yet implemented");
+        MDValue mdValueOut(label);
+        getValueObject(objectId, mdValueOut);
+        mdValueOut.getValue(valueOut);
     }
     /**IsEmpty check whether the metadata is empty or not
      * @ingroup DataAccess
@@ -289,6 +278,10 @@ public:
      */
     size_t size() const;
 
+    /** Check whether a label is contained
+     * in the metadata
+     */
+    bool containsLabel(const MDLabel label) const;
     /** Add a new label to the metadata
      *
      */
@@ -311,11 +304,11 @@ public:
 
     void importObjects(const MetaData &md, MDQuery query);
 
-     /**Remove the object with this id
-     * @ingroup DataAccess
-     * Returns true if the object was removed or false if
-     * the object did not exist
-     */
+    /**Remove the object with this id
+    * @ingroup DataAccess
+    * Returns true if the object was removed or false if
+    * the object did not exist
+    */
     bool removeObject(long int objectId);
 
     /** Removes the collection of objects of given vector id's
@@ -347,8 +340,9 @@ public:
      *@ingroup MetaDataIteration
      * */
     long int firstObject();
-    long int nextObject();
     long int lastObject();
+    long int nextObject();
+    long int previousObject();
     long int goToObject(long int objectId);
 
 
@@ -369,12 +363,12 @@ public:
     /** Find if the object with this id is present in the metadata
      * @ingroup MetaDataSearch
      */
-    bool existsObject(long int objectId);
+    bool containsObject(long int objectId);
 
     /**Check if exists at least one object with pair <label, value>
      * @ingroup MetaDataSearch
      */
-    bool existsObject(MDQuery query);
+    bool containsObject(MDQuery query);
 
     /**Move active object to the first
      * object with pair <label, value in range> if exists
@@ -454,7 +448,8 @@ public:
     void merge(const FileName &fn);
 
     /** Aggregate modes */
-    enum AggregateMode {
+    enum AggregateMode
+    {
         KEEP_OLD,
         KEEP_NEW,
         SUM
@@ -479,27 +474,32 @@ public:
     //---------TO ORGANIZE-------------------------
     /** Randomize this metadata, MDin is input
     */
-    void randomize(MetaData &MDin){}
+    void randomize(MetaData &MDin)
+    {}
     /*
     * Sort this metadata, by label
     * dirty implementation using sqlite
     */
-    void sort(MetaData & MDin, MDLabel sortlabel){}
+    void sort(MetaData & MDin, MDLabel sortlabel)
+    {}
 
     /** Split metadata into two random halves
     *
     */
-    void split_in_two(MetaData &SF1, MetaData &SF2, MDLabel sortlabel=MDL_UNDEFINED){}
+    void split_in_two(MetaData &SF1, MetaData &SF2, MDLabel sortlabel=MDL_UNDEFINED)
+    {}
 
     /** Select only a piece of this MetaData for MPI executions
     *
     */
-    void mpi_select_part(int rank, int size, int &num_img_tot){}
+    void mpi_select_part(int rank, int size, int &num_img_tot)
+    {}
 
     /** Fill metadata with N entries from MD starting at start
     *
     */
-    void fillWithNextNObjects (MetaData &MD, long int start, long int numberObjects){}
+    void fillWithNextNObjects (MetaData &MD, long int start, long int numberObjects)
+    {}
 
 
     friend class MDSql;
@@ -522,4 +522,12 @@ public:
         for(long int kkkk = (kkkk_metadata).firstObject(); \
              kkkk != MetaData::NO_MORE_OBJECTS && kkkk!= MetaData::NO_OBJECTS_STORED; \
              kkkk=(kkkk_metadata).nextObject())
+
+//This Macro only have sense inside the MetaData class
+//for check if a label exists
+#define REQUIRE_LABEL_EXISTS(label, funcStr) \
+    if (!containsLabel(label)) { \
+        std::stringstream __ss; \
+        __ss << (funcStr) << ": The label" << MDL::label2Str(label) << "' is not present in the metada"; \
+        REPORT_ERROR(-55, __ss.str()); }
 #endif

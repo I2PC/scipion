@@ -82,12 +82,12 @@ public:
     /**Set the value of an object in an specified column
      *
      */
-    static bool setObjectValue(const MetaData *mdPtr, const int objId, const MDLabel column, const MDValue &value);
+    static bool setObjectValue(const MetaData *mdPtr, const int objId, const MDValue &value);
 
     /**Get the value of an object
      *
      */
-    static bool getObjectValue(const MetaData *mdPtr, const int objId, const MDLabel column, MDValue &value);
+    static bool getObjectValue(const MetaData *mdPtr, const int objId, MDValue &value);
 
     /** This function will do a select
      * the 'limit' is the maximum number of object
@@ -108,9 +108,20 @@ public:
      * */
     static long int copyObjects(const MetaData *mdPtrIn, MetaData *mdPtrOut, const MDQuery *queryPtr = NULL);
 
+    /** Some iteration methods
+     *
+     */
+    static long int firstRow(const MetaData *mdPtr);
+    static long int lastRow(const MetaData *mdPtr);
+    static long int nextRow(const MetaData *mdPtr, long int currentRow);
+    static long int previousRow(const MetaData *mdPtr, long int currentRow);
+
+    static int columnMaxLength(const MetaData *mdPtr, MDLabel column);
+
     static char *errmsg;
     static const char *zLeftover;
     static int rc;
+    static sqlite3_stmt *stmt;
 
 private:
     static int table_counter;
@@ -125,7 +136,8 @@ private:
     static bool dropTable(const int mdId);
     static bool createTable(const int mdId, const std::vector<MDLabel> * labelsVector = NULL);
     static bool insertValues(double a, double b);
-    static bool execSingleStmt(const std::string &stmtStr);
+    static int execSingleStmt(const std::string &stmtStr);
+    static int execSingleStmt(sqlite3_stmt *stmt);
     static std::string tableName(const int tableId);
 
     friend class MDSqlStaticInit;
@@ -181,10 +193,10 @@ public:
     MDValueEqual(MDLabel label, const T &value)
     {
         std::stringstream ss;
-        MDValue mdValue;
-        MDL::voidPtr2Value(label, (void*)new T(value), mdValue);
+        MDValue mdValue(label, value);
+        //MDL::voidPtr2Value(label, (void*)new T(value), mdValue);
         ss << MDL::label2Str(label) << "=";
-        MDL::value2Stream(label, mdValue, ss);
+        mdValue.toStream(ss);
         this->queryString = ss.str();
     }
 };//class MDValueEqual
@@ -199,14 +211,18 @@ public:
     MDValueRange(MDLabel label, const T &valueMin, const T &valueMax)
     {
         std::stringstream ss;
-        MDValue mdValue;
-        MDL::voidPtr2Value(label, (void*)new T(valueMin), mdValue);
+        MDValue mdValueMin(label, valueMin);
+        MDValue mdValueMax(label, valueMax);
+
+        //MDL::voidPtr2Value(label, (void*)new T(valueMin), mdValue);
         ss << MDL::label2Str(label) << ">=";
-        MDL::value2Stream(label, mdValue, ss);
+        //MDL::value2Stream(label, mdValueMin, ss);
+        mdValueMin.toStream(ss);
         ss << " AND ";
-        MDL::voidPtr2Value(label, (void*)new T(valueMax), mdValue);
+        //MDL::voidPtr2Value(label, (void*)new T(valueMax), mdValue);
         ss << MDL::label2Str(label) << "<=";
-        MDL::value2Stream(label, mdValue, ss);
+        //MDL::value2Stream(label, mdValueMax, ss);
+        mdValueMax.toStream(ss);
         this->queryString = ss.str();
 
     }

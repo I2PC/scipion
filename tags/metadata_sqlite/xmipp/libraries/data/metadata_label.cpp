@@ -53,102 +53,54 @@ std::string  MDL::label2Str(const MDLabel label)
     return data[label].str;
 }//close function label2Str
 
-bool MDL::double2Stream(double d, std::ostream &os, bool withFormat)
-{
-    if (withFormat)
-    {
-        os << std::setw(12);
-        os << ((d != 0. && ABS(d) < 0.001) ? std::scientific : std::fixed);
-    }
-    os << d;
-}
 
-bool MDL::value2Stream(const MDLabel label, const MDValue &value, std::ostream &os, bool withFormat)
-{
-    switch (labelType(label))
-    {
-    case LABEL_BOOL: //bools are int in sqlite3
-        os << value.boolValue;
-        break;
-    case LABEL_INT:
-        if (withFormat)
-            os << std::setw(10);
-        os << value.intValue;
-        break;
-    case LABEL_DOUBLE:
-        double2Stream(value.doubleValue, os, withFormat);
-        break;
-    case LABEL_STRING:
-        os << value.stringValue;
-        break;
-    case LABEL_VECTOR:
-        os << "** ";
-        int size = value.vectorValue.size();
-        for (int i = 0; i < size; i++)
-        {
-            double2Stream(value.vectorValue[i], os, withFormat);
-            os << " ";
-        }
-        os << "**";
-        break;
-    }
-}
 
-std::string MDL::value2Str(const MDLabel label, const MDValue &value, bool withFormat)
-{
-    std::stringstream ss;
-    value2Stream(label, value, ss, withFormat);
-    return ss.str();
-}
+//bool MDL::voidPtr2Value(const MDLabel label, void* ptrValue, MDValue &valueOut)
+//{
+//    switch (labelType(label))
+//    {
+//    case LABEL_BOOL: //bools are int in sqlite3
+//        valueOut.boolValue = *((bool*)ptrValue);
+//        break;
+//    case LABEL_INT:
+//        valueOut.intValue = *((int*)ptrValue);
+//        break;
+//    case LABEL_DOUBLE:
+//        valueOut.doubleValue = *((double*)ptrValue);
+//        break;
+//    case LABEL_STRING:
+//        valueOut.stringValue = *((std::string*)ptrValue);
+//        break;
+//    case LABEL_VECTOR:
+//        valueOut.vectorValue = *((std::vector<double>*)ptrValue);
+//        break;
+//    }
+//    return true;
+//
+//}
 
-bool MDL::str2Value(const MDLabel label, const std::string &str, MDValue &valueOut)
-{
-    std::stringstream ss(str);
-
-    switch (labelType(label))
-    {
-    case LABEL_BOOL: //bools are int in sqlite3
-        ss >> valueOut.boolValue;
-        break;
-    case LABEL_INT:
-        ss >> valueOut.intValue;
-        break;
-    case LABEL_DOUBLE:
-        ss >> valueOut.doubleValue;
-        break;
-    case LABEL_STRING:
-        valueOut.stringValue = str;
-        break;
-    case LABEL_VECTOR:
-        REPORT_ERROR(-55, "Not yet supported");
-        break;
-    }
-    return true;
-}
-
-bool MDL::voidPtr2Value(const MDLabel label, void* ptrValue, MDValue &valueOut)
-{
-    switch (labelType(label))
-    {
-    case LABEL_BOOL: //bools are int in sqlite3
-        valueOut.boolValue = *((bool*)ptrValue);
-        break;
-    case LABEL_INT:
-        valueOut.intValue = *((int*)ptrValue);
-        break;
-    case LABEL_DOUBLE:
-        valueOut.doubleValue = *((double*)ptrValue);
-        break;
-    case LABEL_STRING:
-        valueOut.stringValue = *((std::string*)ptrValue);
-        break;
-    case LABEL_VECTOR:
-        valueOut.vectorValue = *((std::vector<double>*)ptrValue);
-        break;
-    }
-    return true;
-
-}
+//bool MDL::value2VoidPtr(const MDLabel label, const MDValue &value, void* valuePtrOut)
+//{
+//    switch (labelType(label))
+//    {
+//    case LABEL_BOOL: //bools are int in sqlite3
+//        *((bool*)valuePtrOut) = value.boolValue;
+//        break;
+//    case LABEL_INT:
+//        *((int*)valuePtrOut) = value.intValue;
+//        break;
+//    case LABEL_DOUBLE:
+//        *((double*)valuePtrOut) = value.doubleValue;
+//        break;
+//    case LABEL_STRING:
+//        *((std::string*)valuePtrOut) = value.stringValue;
+//        break;
+//    case LABEL_VECTOR:
+//        *((std::vector<double>*)valuePtrOut) = value.vectorValue;
+//        break;
+//    }
+//    return true;
+//}
 
 std::string MDL::label2SqlColumn(const MDLabel label)
 {
