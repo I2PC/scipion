@@ -353,7 +353,6 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
 #ifdef DEBUG
     printf("DEBUG writeSPIDER: Size: %g %g %g\n", header->nsam, header->nrow, header->nslice);
 #endif
-    //read image and check if this is an stack
 
     if ( Zdim < 2 )
     {
@@ -495,14 +494,13 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
         else
             castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
-        //No locking here since this file has a single object
         fwrite( fdata, datasize, 1, fimg );
     }
-    else //if(NSIZE(data) > 1 && mode==WRITE_OVERWRITE)
+    else
     {
-        if(mode==WRITE_APPEND) //Ndim=1
+        if(mode==WRITE_APPEND)
             fseek( fimg, 0, SEEK_END);
-        if(mode==WRITE_REPLACE) //Ndim=1
+        else if(mode==WRITE_REPLACE)
             fseek( fimg,offset + (offset+datasize)*select_img, SEEK_SET);
         for ( size_t i=0; i<Ndim; i++ )
         {
