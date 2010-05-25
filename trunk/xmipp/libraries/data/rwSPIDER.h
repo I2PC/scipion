@@ -1,5 +1,5 @@
 /*
- rwSPIDER.h
+ Based on rwSPIDER.h
  Header file for reading and writing SPIDER files
  Format: 3D image file format for the SPIDER package
  Author: Bernard Heymann
