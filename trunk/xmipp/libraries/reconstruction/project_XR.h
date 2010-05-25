@@ -185,7 +185,7 @@ int PROJECT_XR_Effectively_project(
 void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, Projection &P,
                                    int Ydim, int Xdim, double axisRot, double axisTilt,
                                    const Matrix1D<double> &raxis, double angle, double inplaneRot,
-                                   const Matrix1D<double> &rinplane);
+                                   const Matrix1D<double> &rinplane, int idxSlice = 1);
 
 /* Main routine ------------------------------------------------------------ */
 /** Main Project routine.

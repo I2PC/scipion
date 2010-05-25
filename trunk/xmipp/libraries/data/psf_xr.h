@@ -251,7 +251,7 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 
 
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
-void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut);
+void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut,  int idxSlice = 1);
 
 //@}
 #endif

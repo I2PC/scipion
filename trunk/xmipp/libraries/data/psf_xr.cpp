@@ -368,7 +368,7 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
     }
 }
 /// TODO: func description
-void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
+void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut, int idxSlice)
 {
 
     // psf.adjustParam(vol);
@@ -393,7 +393,7 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
     Image<double> _Im(imOut);
 #endif
 
-    init_progress_bar(vol().zdim-1);
+//    init_progress_bar(vol().zdim-1);
 
     for (int k=((vol()).zinit); k<=((vol()).zinit + (vol()).zdim - 1); k++)
     {
@@ -462,7 +462,7 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
 
         //        imOut.write("psfxr-imout.spi");
 
-        progress_bar(k - vol().zinit);
+        progress_bar((idxSlice - 1)*vol().zdim + k - vol().zinit);
     }
 
     imOut() = 1-imOut();

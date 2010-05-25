@@ -245,7 +245,7 @@ int PROJECT_XR_Effectively_project(
         // Really project ....................................................
         project_xr_Volume_offCentered(side, psf, proj,
                                       prm.proj_Ydim, prm.proj_Xdim, prm.axisRot, prm.axisTilt,
-                                      prm.raxis, angle, 0, inPlaneShift);
+                                      prm.raxis, angle, 0, inPlaneShift, idx);
 
         //        project_xr_Volume(side, psf, proj);
 
@@ -294,7 +294,7 @@ int PROJECT_XR_Effectively_project(
 void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, Projection &P,
                                    int Ydim, int Xdim, double axisRot, double axisTilt,
                                    const Matrix1D<double> &raxis, double angle, double inplaneRot,
-                                   const Matrix1D<double> &rinplane)
+                                   const Matrix1D<double> &rinplane, int idxSlice)
 {
 
     // Find Euler rotation matrix
@@ -371,7 +371,7 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
 
 
     //the really really final project routine, I swear by Snoopy.
-    project_xr(psf,side.rotPhantomVol,P);
+    project_xr(psf,side.rotPhantomVol,P, idxSlice);
 
     //    P().window(-ROUND(Ydim/2)+1,-ROUND(Xdim/2)+1,ROUND(Ydim/2)-1,ROUND(Xdim/2)-1);
 
