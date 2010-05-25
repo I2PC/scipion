@@ -144,6 +144,7 @@ public:
     MetaData        DF;
     /// Phantom Xmipp volume
     Image<double>    phantomVol;
+    Image<double>   rotPhantomVol;
 public:
     /** Produce Project Side information.
         This function produce the side information from the project
@@ -181,10 +182,10 @@ int PROJECT_XR_Effectively_project(
 
     Off-centered not implemented. Rotations are around volume center
 */
-void project_xr_Volume_offCentered(MultidimArray<double> &V,XmippXRPSF &psf, Projection &P,
-   int Ydim, int Xdim, double axisRot, double axisTilt,
-   const Matrix1D<double> &raxis, double angle, double inplaneRot,
-   const Matrix1D<double> &rinplane);
+void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, Projection &P,
+                                   int Ydim, int Xdim, double axisRot, double axisTilt,
+                                   const Matrix1D<double> &raxis, double angle, double inplaneRot,
+                                   const Matrix1D<double> &rinplane);
 
 /* Main routine ------------------------------------------------------------ */
 /** Main Project routine.
@@ -200,7 +201,7 @@ void project_xr_Volume_offCentered(MultidimArray<double> &V,XmippXRPSF &psf, Pro
     A selection file with all images is also returned (and saved if any
     name has been given in the parameters).*/
 int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
-    Projection &proj, MetaData &SF);
+                    Projection &proj, MetaData &SF);
 //@}
 
 

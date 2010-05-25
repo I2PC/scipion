@@ -170,7 +170,7 @@ void XmippXRPSF::generateOTF(MultidimArray<double> &Im)
 
 
     //    double Nx = Im.xdim, Ny = Im.ydim;
-    double focalEquiv = 1/(1/(Z + DeltaZo) - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
+    double focalEquiv = 1/(1/Z - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
     //    double dxl = lambda*Zi / (Nx * dxi); // Pixel X-size en the plane of lens aperture
     //    double dyl = lambda*Zi / (Ny * dxi); // Pixel Y-size en the plane of lens aperture
 
@@ -277,7 +277,7 @@ void XmippXRPSF::adjustParam(Image<double> &vol)
     {
         std::cout << std::endl;
         std::cout << "XmippXRPSF::Param adjust:" << std::endl;
-        std::cout << "Nox = " << Nox << "   Noy = " << Noy << "   Nz = " << vol().zdim << std::endl;
+        std::cout << "(Nox,Noy,Nz) = (" << Nox << "," << Noy << "," << vol().zdim << ")" << std::endl;
         std::cout << "Larger volume Z plane = " << (ABS(DeltaZo)+vol().zdim/2*dzo)*1e6 << " um" << std::endl;
         std::cout << "Larger discrete Z plane (x,y) = (" << deltaZMaxX*1e6 << ", " << deltaZMaxY*1e6 << ") um" << std::endl;
     }
@@ -409,7 +409,7 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut)
         _Im.write("psfxr-imTemp.spi");
 #endif
 
-        psf.Z = psf.Zo - k*psf.dzo;
+        psf.Z = psf.Zo + psf.DeltaZo - k*psf.dzo + imOut.Zoff();
 
         switch (psf.AdjustType)
         {
