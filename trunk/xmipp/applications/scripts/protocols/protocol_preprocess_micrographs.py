@@ -345,7 +345,10 @@ class preprocess_A_class:
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
             (self.filepath, self.name) = os.path.split(self.filename)
             (self.shortname,extension) = os.path.splitext(self.name)
-            self.downname='down'+str(self.Down)+'_'+self.shortname
+            if (self.DoDownSample):
+                self.downname='down'+str(self.Down)+'_'+self.shortname
+            else:
+                self.downname=self.shortname
             job_index = job_index + 1
 
             if (self.DoDownSample):
@@ -359,11 +362,11 @@ class preprocess_A_class:
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
             (self.filepath, self.name) = os.path.split(self.filename)
             (self.shortname,extension) = os.path.splitext(self.name)
-            self.downname='down'+str(self.Down)+'_'+self.shortname
+            if (self.DoDownSample):
+                self.downname='down'+str(self.Down)+'_'+self.shortname
+            else:
+                self.downname=self.shortname
             job_index = job_index + 1
-
-            #if not os.path.exists(self.shortname+'/'+self.downname+'.raw'):
-            #    self.downname=self.shortname
 
             if (self.DoCtfEstimate):
                 if not (self.DoCtffind):
@@ -397,7 +400,10 @@ class preprocess_A_class:
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
              (self.filepath, self.name) = os.path.split(self.filename)
              (self.shortname,extension) = os.path.splitext(self.name)
-             self.downname='down'+str(self.Down)+'_'+self.shortname
+             if (self.DoDownSample):
+                self.downname='down'+str(self.Down)+'_'+self.shortname
+             else:
+                self.downname=self.shortname
              job_index = job_index + 1
 
              if (self.DoCtfEstimate):
