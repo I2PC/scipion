@@ -58,12 +58,17 @@ int main(int argc, char *argv[])
     /* Parameters ============================================================== */
     try
     {
-        if (argc == 1)
-            Usage(argv);
-        if (checkParameter(argc, argv, "-i"))
+        if (argc == 0)
         {
-            fn_input = getParameter(argc, argv, "-i");
+            Usage(argv);
+            exit(0);
         }
+
+
+        //        if (checkParameter(argc, argv, "-i"))
+        //        {
+        fn_input = getParameter(argc, argv, "-i");
+        //        }
         if (checkParameter(argc, argv, "-o"))
         {
             fn_out = getParameter(argc, argv, "-o");
@@ -438,9 +443,9 @@ int readTagDM3(FILE *fh_in,
             }
             else if(nnum == 3 && info[0]==20)   // Tag array
             {             /*nnum = 3
-                                                                                             info(0) = 20
-                                                                                             info(1) = number type for all values
-                                                                                             info(2) = info(nnum) = size of array*/
+                                                                                                                             info(0) = 20
+                                                                                                                             info(1) = number type for all values
+                                                                                                                             info(2) = info(nnum) = size of array*/
 
                 if (strcmp(tagName,"Data")==0)    // Locating the image data
                 {
