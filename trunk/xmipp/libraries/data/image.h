@@ -246,6 +246,7 @@ public:
     */
     #include "rwSPIDER.h"
     #include "rwMRC.h"
+    #include "rwIMAGIC.h"
 
     /** Is this file an image
      *
@@ -336,6 +337,8 @@ public:
             err = readMRC(select_img,true);
         else if (ext_name.contains("mrc"))//mrc
             err = readMRC(select_img,false);
+        else if (ext_name.contains("img"))//mrc
+            err = readIMAGIC(select_img);//imagic img is always an stack
         else
             err = readSPIDER(select_img);
         //get metadata container
