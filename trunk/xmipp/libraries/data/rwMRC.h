@@ -123,10 +123,18 @@ int readMRC(int img_select,bool isStack=false)
     _yDim = (int) header->ny;
     _zDim = (int) header->nz;
     _nDim = 1;
+    if(isStack)
+    {
+        _nDim = (unsigned long int) _zDim;
+        _zDim = 1;
+        replaceNsize=_nDim;
+    }
+    else
+        replaceNsize=0;
 
     // Map the parameters
     if (isStack && img_select==-1)
-        data.setDimensions(_xDim, _yDim, 1, _zDim);
+        data.setDimensions(_xDim, _yDim, 1, _nDim);
     else if(isStack && img_select!=-1)
         data.setDimensions(_xDim, _yDim, 1, 1);
     else
@@ -223,7 +231,7 @@ int readMRC(int img_select,bool isStack=false)
     return(0);
 }
 
-int writeMRC(int img_select, bool isStack=false)
+int writeMRC(int select_img, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     /*
         if ( transform != NoTransform )
@@ -235,11 +243,16 @@ int writeMRC(int img_select, bool isStack=false)
     strncpy(header->map, "MAP ", 4);
     // FIXME TO BE DONE WITH rwCCP4!!
     //set_CCP4_machine_stamp(header->machst);
-    header->nx = XSIZE(data);
-    header->ny = YSIZE(data);
-    header->nz = ZSIZE(data);
+    int Xdim = XSIZE(data);
+    int Ydim = YSIZE(data);
+    int Zdim = ZSIZE(data);
+    int Ndim = NSIZE(data);
+
+    header->nx = Xdim;
+    header->ny = Ydim;
+    header->nz = Zdim;
     if ( transform == CentHerm )
-        header->nx = XSIZE(data)/2 + 1;        // If a transform, physical storage is nx/2 + 1
+        header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
 
     // Convert T to datatype
     if ( typeid(T) == typeid(double) ||
@@ -297,22 +310,59 @@ int writeMRC(int img_select, bool isStack=false)
     //strncpy(header->labels, p->label.c_str(), 799);
 
     offset = MRCSIZE + header->nsymbt;
-    size_t datasize_n = (size_t) header->nx*header->ny*header->nz;
+    size_t datasize, datasize_n;
+    datasize_n = Xdim*Ydim*Zdim;
+    if (isComplexT())
+        datasize = datasize_n * gettypesize(ComplexFloat);
+    else
+        datasize = datasize_n * gettypesize(Float);
 
-    //#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 
     printf("DEBUG rwMRC: Offset = %ld,  Datasize_n = %ld\n", offset, datasize_n);
 #endif
 
+    // For multi-image files
+    if (mode == WRITE_APPEND && isStack)
+    {
+    	header->nz = replaceNsize +1;
+    }
+    //else header-> is correct
+
+    //locking
+    struct flock fl;
+    int fd;
+
+    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
+    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
+    fl.l_start  = 0;        /* Offset from l_whence         */
+    fl.l_len    = 0;        /* length, 0 = to EOF           */
+    fl.l_pid    = getpid(); /* our PID                      */
+
     FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-        return(-1);
+    if (mode==WRITE_OVERWRITE || (!_exists && mode==WRITE_APPEND))//open in overwrite mode
+    {
+        if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
+            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+    }
+    else //open in append mode
+    {
+        if ( ( fimg = fopen(filename.c_str(), "r+") ) == NULL )
+            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+    }
+
+    //BLOCK
+    fl.l_type   = F_WRLCK;
+    fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
 
     // Write header
-    fwrite( header, MRCSIZE, 1, fimg );
-    freeMemory(header, sizeof(MRChead));
+    if(mode==WRITE_OVERWRITE || mode==WRITE_APPEND)
+        fwrite( header, MRCSIZE, 1, fimg );
+    freeMemory(header, sizeof(MRChead) );
 
+
+    /*
     // Write 3D map
     if ( typeid(T) == typeid(double) ||
             typeid(T) == typeid(float) ||
@@ -328,9 +378,38 @@ int writeMRC(int img_select, bool isStack=false)
         writePageAsDatatype(fimg, ComplexFloat, datasize_n);
     else
         REPORT_ERROR(1,"ERROR write MRC image: invalid typeid(T)");
+*/
+    //write only once, ignore select_img
+    char* fdata = (char *) askMemory(datasize);
+    //think about writing in several chucks
 
+    if ( NSIZE(data) == 1 && mode==WRITE_OVERWRITE)
+    {
+        if (isComplexT())
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
+        else
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
+        fwrite( fdata, datasize, 1, fimg );
+    }
+    else
+    {
+        if(mode==WRITE_APPEND)
+            fseek( fimg, 0, SEEK_END);
+        else if(mode==WRITE_REPLACE)
+            fseek( fimg,offset + (datasize)*select_img, SEEK_SET);
+        for ( size_t i=0; i<Ndim; i++)
+        {
+            if (isComplexT())
+                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
+            else
+                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
+            fwrite( fdata, datasize, 1, fimg );
+        }
+    }
+    //I guess I do not need to unlock since we are going to close the file
     fclose(fimg);
 
+    freeMemory(fdata, datasize);
 
     return(0);
 }

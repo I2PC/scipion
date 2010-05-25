@@ -500,19 +500,20 @@ public:
         size_t found;
         filename = name;
         found=filename.find_first_of("@");
+        FileName filNamePlusExt;
         if (found!=std::string::npos)
         {
             //select_img = atoi(filename.substr(0, found).c_str());
             filename   =      filename.substr(found+1) ;
         }
-
+        filNamePlusExt = filename;
         found=filename.find_first_of(":");
         if ( found!=std::string::npos)
         {
             filename   = filename.substr(0, found);
         }
 
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
         std::cerr << "write" <<std::endl;
         std::cerr<<"extension for write= "<<ext_name<<std::endl;
@@ -546,7 +547,7 @@ public:
         }
         else if (_exists && (mode==WRITE_REPLACE || mode==WRITE_APPEND))
         {
-            auxI.read(filename+":spi",false);
+            auxI.read(filNamePlusExt,false);
             int _Xdim, _Ydim, _Zdim, _Ndim;
             auxI.getDimensions(_Xdim,_Ydim, _Zdim, _Ndim);
             replaceNsize=_Ndim;
@@ -554,12 +555,12 @@ public:
                     Ydim!=_Ydim ||
                     Zdim!=_Zdim
               )
-                REPORT_ERROR(1,"writeSPIDER: target and source objects have different size");
+                REPORT_ERROR(1,"write: target and source objects have different size");
             if(mode==WRITE_REPLACE && select_img>_Ndim)
-                REPORT_ERROR(1,"writeSPIDER: can not replace image stack is not large enough");
+                REPORT_ERROR(1,"write: can not replace image stack is not large enough");
             if(auxI.replaceNsize <1 &&
                     (mode==WRITE_REPLACE || mode==WRITE_APPEND))
-                REPORT_ERROR(1,"writeSPIDER: output file is not an stack");
+                REPORT_ERROR(1,"write: output file is not an stack");
         }
         else if(!_exists && mode==WRITE_APPEND)
         {
@@ -573,10 +574,10 @@ public:
          * SELECT FORMAT
          */
 
-        if (ext_name.contains("mrc"))
-        {
-            ;// writeMRC(select_img);
-        }
+        if (ext_name.contains("mrcs"))
+            writeMRC(select_img,true,mode);
+        else if (ext_name.contains("mrc"))
+            writeMRC(select_img,false,mode);
         else
             err = writeSPIDER(select_img,isStack,mode);
 
@@ -1271,8 +1272,8 @@ public:
         else
             o << "FALSE" << std::endl;
 
-        o << "dimensions   : " << ZSIZE(I()) << " x " << YSIZE(I()) << " x " << XSIZE(I());
-        o << "  (slices x rows x columns)" << std::endl;
+        o << "dimensions   : " << NSIZE(I()) << " x " << ZSIZE(I()) << " x " << YSIZE(I()) << " x " << XSIZE(I());
+        o << "  (noObjects x slices x rows x columns)" << std::endl;
         o << "Euler angles : " << std::endl;
         o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
         o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
