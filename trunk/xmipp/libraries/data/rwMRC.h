@@ -1,5 +1,5 @@
 /*
-        rwMRC.h
+        Base on rwMRC.h
         Header file for reading and writing MRC files
         Format: 3D crystallographic image file format for the MRC package
         Author: Bernard Heymann
