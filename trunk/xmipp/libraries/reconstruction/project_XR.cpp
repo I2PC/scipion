@@ -374,10 +374,14 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
     project_xr(psf,side.rotPhantomVol,P);
 
     //    P().window(-ROUND(Ydim/2)+1,-ROUND(Xdim/2)+1,ROUND(Ydim/2)-1,ROUND(Xdim/2)-1);
-    P().window(-ROUND(iniYdim/2)+1,
-               -ROUND(iniXdim/2)+1,
-               ROUND(iniYdim/2)-1,
-               ROUND(iniXdim/2)-1);
+
+    int outXDim = XMIPP_MIN(Xdim,iniXdim);
+    int outYDim = XMIPP_MIN(Ydim,iniYdim);
+
+    P().window(-ROUND(outYDim/2)+1,
+               -ROUND(outXDim/2)+1,
+               ROUND(outYDim/2)-1,
+               ROUND(outXDim/2)-1);
 
 }
 
