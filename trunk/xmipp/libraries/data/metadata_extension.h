@@ -23,5 +23,8 @@ void ImgSize(MetaData &MD, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              int &Ndim=null_object);
 
+void ImgSize(FileName &filename, int &Xdim, int &Ydim=null_object,
+             int &Zdim=null_object,
+             int &Ndim=null_object);
 
 #endif /* METADATA_EXTENSION_H_ */
