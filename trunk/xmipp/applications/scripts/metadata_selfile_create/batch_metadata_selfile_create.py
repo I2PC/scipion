@@ -24,18 +24,20 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 """
-import os,glob,sys
-scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+import os, glob, sys
+scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
 sys.path.append(scriptdir) # add default search path
 import XmippData
-outFile=XmippData.FileName()
+outFile = XmippData.FileName()
+inFile = XmippData.FileName()
+
 if len(sys.argv) == 1:
    print 'Usage: selfile_create "pattern"  metadataFile'
    sys.exit()
 elif len(sys.argv) == 2:
-   outFile='/dev/stdout'
+   outFile = '/dev/stdout'
 elif len(sys.argv) == 3:
-   outFile=sys.argv[2]
+   outFile = sys.argv[2]
 else:
    print 'Usage   : xmipp_selfile_create "pattern"  metadataFile'
    print 'Example1: xmipp_selfile_create "Images/*xmp"    all_images.sel'
@@ -43,15 +45,32 @@ else:
    sys.exit()
 
 
-mD=XmippData.MetaData()
-ss=XmippData.stringP()
-ii=XmippData.intP()
+mD = XmippData.MetaData()
+sIn = XmippData.stringP()
+sOut = XmippData.stringP()
+ii = XmippData.intP()
 files = glob.glob(sys.argv[1])
 files.sort()
 ii.assign(1)
+x = XmippData.intP()
+n = XmippData.intP()
+nSize = 100
+
 for file in files:
-    mD.addObject();
-    ss.assign(file)
-    XmippData.setValueString(mD, XmippData.MDL_IMAGE, ss,-1)
-    XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii,-1)
+    sIn.assign(file)
+    counter = 0
+    inFile.compose(-1,sIn)
+    XmippData.ImgSize(inFile, x, x, x, n)
+    nSise = n.value()
+    if nSize != 1:
+        for jj in range (n.value()):
+            mD.addObject()
+            inFile.compose(counter, sIn)
+            XmippData.setValueString(mD, XmippData.MDL_IMAGE, inFile, -1)
+            XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii, -1)
+            counter = counter + 1
+    else:
+        mD.addObject()
+        XmippData.setValueString(mD, XmippData.MDL_IMAGE, sIn, -1)
+        XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii, -1)
 mD.write(outFile)
