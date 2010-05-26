@@ -337,8 +337,9 @@ public:
             err = readMRC(select_img,true);
         else if (ext_name.contains("mrc"))//mrc
             err = readMRC(select_img,false);
-        else if (ext_name.contains("img"))//mrc
-            err = readIMAGIC(select_img);//imagic img is always an stack
+        else if (ext_name.contains("img") ||
+        		ext_name.contains("hed"))//
+            err = readIMAGIC(select_img);//imagic is always an stack
         else
             err = readSPIDER(select_img);
         //get metadata container
@@ -851,7 +852,8 @@ public:
         char* padpage = NULL;
 
         // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
-        data.coreAllocate();
+        //if memory already allocated use it (no resize allowed)
+        data.coreAllocateReuse();
         myoffset = offset + select_img*(pagesize + pad);
 //#define DEBUG
 #ifdef DEBUG
@@ -893,8 +895,10 @@ public:
                 //fread( padpage, pad, 1, fimg);
                 fseek( fimg, pad, SEEK_CUR );
         }
-        if ( pad > 0 )
-            freeMemory(padpage, pad*sizeof(char));
+        //if ( pad > 0 )
+        //    freeMemory(padpage, pad*sizeof(char));
+        if ( page > 0 )
+            freeMemory(page, pagesize*sizeof(char));
 
 #ifdef DEBUG
 
