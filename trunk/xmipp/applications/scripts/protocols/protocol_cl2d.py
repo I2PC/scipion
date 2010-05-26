@@ -14,11 +14,11 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-InSelFile='all.sel'
+InSelFile='sideviews.sel'
 # Working subdirectory:
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir='CL2D/classes64'
+WorkingDir='CL2D/classes64sideviews'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
@@ -26,7 +26,7 @@ DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/home/coss/temp/CL2Dsort/Johan'
+ProjectDir='/gpfs/fs1/home/bioinfo/coss/Sharon/Set2'
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored here
 """
@@ -41,17 +41,23 @@ SamplingRate = 1
 
 # Highpass cutoff frequency
 """ In (Angstroms/Pixel). Set to 0 if not desired """
-Highpass =0.01
+Highpass =0
 
 # Lowpass cutoff frequency
 """ In (Angstroms/Pixel). Set to 0 if not desired """
-Lowpass =0.4
+Lowpass =0
 
 #------------------------------------------------------------------------------------------------
 # {section} Class averages parameters
 #------------------------------------------------------------------------------------------------
 # Perform CL2D
 DoCL2D=False
+
+# Z-score cutoff
+""" Use -1 for no cutoff. The cutoff is defined as the average cutoff
+    of image features (xmipp_sort_by_statistics)
+"""
+CL2Dcutoff=-1
 
 # Number of references (or classes) to be used:
 NumberOfReferences=64
@@ -64,7 +70,7 @@ NumberOfReferences0=4
 # {expert} Number of iterations
 """ Maximum number of iterations within each level
 """
-NumberOfIterations=20
+NumberOfIterations=15
 
 # {expert} Also include mirror transformation in the alignment?
 """  Including the mirror transformation is useful if your particles have a handedness and may fall either face-up or face-down on the grid.
@@ -115,13 +121,13 @@ thJunkZscore=2
     accept more images.
     
     This Z-score is measured after projecting onto the PCA space."""
-thPCAZscore=2
+thPCAZscore=1.5
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Number of MPI processes to use:
-NumberOfMpiProcesses=128
+NumberOfMpiProcesses=8
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -159,6 +165,7 @@ class CL2D_class:
                  Highpass,
                  Lowpass,
                  DoCL2D,
+                 CL2Dcutoff,
                  NumberOfReferences,
                  NumberOfReferences0,
                  NumberOfIterations,
@@ -184,6 +191,7 @@ class CL2D_class:
         self.Highpass=Highpass
         self.Lowpass=Lowpass
         self.DoCL2D=DoCL2D
+        self.CL2Dcutoff=CL2Dcutoff
         self.NumberOfReferences=NumberOfReferences
         self.NumberOfReferences0=NumberOfReferences0
         self.NumberOfIterations=NumberOfIterations
@@ -196,7 +204,7 @@ class CL2D_class:
         self.thGoodClass=thGoodClass
         self.thJunkZscore=thJunkZscore
         self.thPCAZscore=thPCAZscore
-        self.thr=2
+        self.thr=6
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
         self.SystemFlavour=SystemFlavour
    
@@ -276,7 +284,21 @@ class CL2D_class:
         print '*  Executing CL2D program :' 
         if (self.NumberOfReferences0>self.NumberOfReferences):
             self.NumberOfReferences0=self.NumberOfReferences
-        params= '-i '+str(self.InSelFile)+' -o '+WorkingDir+'/class '+\
+        selfileToUse=self.InSelFile
+        if self.CL2Dcutoff>0:
+            fnRoot=self.InSelFile[0:self.InSelFile.rfind('.')]
+            params="-i "+self.InSelFile+" -o "+fnRoot+"_sorted "+\
+                "-zcut "+str(self.CL2Dcutoff)
+            launch_job.launch_job("xmipp_sort_by_statistics",
+                                  params,
+                                  self.log,
+                                  False,
+                                  1,
+                                  1,
+                                  self.SystemFlavour)
+            selfileToUse=fnRoot+"_sorted_good.sel"
+        
+        params= '-i '+str(selfileToUse)+' -o '+WorkingDir+'/class '+\
                 ' -codes '+str(self.NumberOfReferences)+\
                 ' -codes0 '+str(self.NumberOfReferences0)+\
                 ' -iter '+str(self.NumberOfIterations)
@@ -290,7 +312,7 @@ class CL2D_class:
         if (self.ClusteringMethod=='classical'):
             params+= ' -classicalMultiref '
 
-        launch_job.launch_job("xmipp_classify_CL2D",
+        launch_job.launch_job("xmipp_class_averages",
                               params,
                               self.log,
                               True,
@@ -313,7 +335,7 @@ class CL2D_class:
                               self.log,
                               False,
                               1,
-                              1,
+                              self.thr,
                               self.SystemFlavour)
         
     def close(self):
@@ -334,6 +356,7 @@ if __name__ == '__main__':
                     Highpass,
                     Lowpass,
                     DoCL2D,
+                    CL2Dcutoff,
                     NumberOfReferences,
                     NumberOfReferences0,
                     NumberOfIterations,

@@ -19,7 +19,7 @@
     You can use negative numbers: -1 is the last iteration, -2 is the
     one before last, ...
 """
-DisplayLevelsNo='1'
+DisplayLevelsNo='4'
 
 # Show Raw CL2D results
 """ Show plain CL2D results as they come out without postprocessing """
@@ -176,7 +176,7 @@ class visualize_CL2D_class:
             levels=self.DisplayLevelsNo.split(' ')
             for level in levels:
                 selfile=selfiles[int(level)]
-                command='xmipp_show -cl2d '+selfile.replace('.sel','')+ ' &'
+                command='xmipp_show -cl2d '+selfile.replace('.sel','')+ ' -dont_apply_geo &'
                 print '* ',command
                 os.system(command)
 
@@ -190,8 +190,9 @@ class visualize_CL2D_class:
         else:
             levels=self.DisplayLevelsNo.split(' ')
             for level in levels:
-                selfile=selfiles[int(level)]
-                command='xmipp_show -cl2d '+selfile.replace('.sel','')+ ' &'
+                selfile=self.WorkingDir+\
+                    '/class_level_%02d_F12345_sorted'%int(level)
+                command='xmipp_show -cl2d '+selfile+ ' -dont_apply_geo &'
                 print '* ',command
                 os.system(command)
 
@@ -234,7 +235,7 @@ class visualize_CL2D_class:
             for level in levels:
                 selfile=selfiles[int(level)]
                 command='xmipp_show -cl2d '+selfile.replace('.sel','')+\
-                    ' -filterSuffix '+suffix+' &'
+                    ' -filterSuffix '+suffix+' -dont_apply_geo &'
                 print '* ',command
                 os.system(command)
 
