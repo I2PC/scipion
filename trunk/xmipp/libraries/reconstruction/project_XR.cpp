@@ -31,6 +31,12 @@
 /* Read from command line ================================================== */
 void Prog_Project_XR_Parameters::read(int argc, char **argv)
 {
+    if (argc==0)
+    {
+        usage();
+        exit(0);
+    }
+
     verbose = checkParameter(argc, argv, "-v");
     if (verbose)
         fn_proj_param = getParameter(argc, argv, "-i", "");
@@ -314,7 +320,8 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
 
     P.setShifts(XX(roffset), YY(roffset), ZZ(roffset));
 
-    int iniXdim, iniYdim, iniZdim, xOffsetN, yOffsetN, zinit, zend, yinit, yend, xinit, xend;
+    int iniXdim, iniYdim, iniZdim, newXdim, newYdim;
+    int xOffsetN, yOffsetN, zinit, zend, yinit, yend, xinit, xend;
 
     iniXdim = side.phantomVol().xdim;
     iniYdim = side.phantomVol().ydim;
@@ -323,29 +330,25 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
     xOffsetN = XX(roffset)/psf.dxo;
     yOffsetN = YY(roffset)/psf.dxo;
 
-    zinit = side.rotPhantomVol().zinit;
+    newXdim = iniXdim + 2*ABS(xOffsetN);
+    newYdim = iniYdim + 2*ABS(yOffsetN);
+
+    zinit = side.phantomVol().zinit;
     zend = zinit + iniZdim - 1;
+
     if (yOffsetN<=0)
-    {
-        yinit = side.rotPhantomVol().yinit ;
-        yend = yinit + iniYdim + 2 * ABS(yOffsetN) -1;
-    }
+        yinit = side.phantomVol().yinit ;
     else
-    {
-        yinit = side.rotPhantomVol().yinit - 2 * yOffsetN;
-        yend = yinit + iniYdim + 2 * yOffsetN - 1;
-    }
+        yinit = side.phantomVol().yinit - 2 * yOffsetN;
+
+    yend = yinit + newYdim -1;
 
     if (xOffsetN<=0)
-    {
-        xinit = side.rotPhantomVol().xinit;
-        xend = xinit + iniXdim + 2 * ABS(+ xOffsetN) - 1;
-    }
+        xinit = side.phantomVol().xinit;
     else
-    {
-        xinit = side.rotPhantomVol().xinit - 2 * xOffsetN;
-        xend = xinit + iniXdim + 2 * ABS(+ xOffsetN) - 1;
-    }
+        xinit = side.phantomVol().xinit - 2 * xOffsetN;
+
+    xend = xinit + newXdim - 1;
 
 
     if (psf.verbose)
@@ -358,14 +361,31 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
         << xend - xinit +1<< "," << yend - yinit +1 << ") " << std::endl;
     }
 
+    std::cout <<"yoffsetN "<< yOffsetN <<std::endl;
+    std::cout <<"xoffsetN "<< xOffsetN <<std::endl;
+    std::cout <<"yinit    " << yinit  <<std::endl;
+    std::cout <<"yend     "    << yend  <<std::endl;
+    std::cout <<"xinit    "   << xinit  <<std::endl;
+    std::cout <<"xend     "    << xend  <<std::endl;
+    std::cout <<"zinit    "   << zinit  <<std::endl;
+    std::cout <<"zend     "    << zend  <<std::endl;
+
 
     // Rotate volume ....................................................
     //    applyGeometry(LINEAR,volTemp(), V, Euler_rotation3DMatrix(rot, tilt, psi), IS_NOT_INV, DONT_WRAP);
+
+    side.rotPhantomVol().resize(iniZdim,iniYdim,iniXdim);
+//    side.rotPhantomVol().zinit = zinit;
+//    side.rotPhantomVol().yinit = yinit;
+//    side.rotPhantomVol().xinit = xinit;
+    side.rotPhantomVol().setXmippOrigin();
+
     Euler_rotate(side.phantomVol(), P.rot(), P.tilt(), P.psi(),side.rotPhantomVol());
 
 
     // Correct the shift position due to tilt axis is out of optical axis
     side.rotPhantomVol().window(zinit, yinit, xinit, zend, yend, xend);
+
 
     psf.adjustParam(side.rotPhantomVol);
 
@@ -375,13 +395,15 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
 
     //    P().window(-ROUND(Ydim/2)+1,-ROUND(Xdim/2)+1,ROUND(Ydim/2)-1,ROUND(Xdim/2)-1);
 
+
+
     int outXDim = XMIPP_MIN(Xdim,iniXdim);
     int outYDim = XMIPP_MIN(Ydim,iniYdim);
 
-    P().window(-ROUND(outYDim/2)+1,
-               -ROUND(outXDim/2)+1,
-               ROUND(outYDim/2)-1,
-               ROUND(outXDim/2)-1);
+    P().window(-ROUND(outYDim/2),
+               -ROUND(outXDim/2),
+               -ROUND(outYDim/2) + outYDim -1,
+               -ROUND(outXDim/2) + outXDim -1);
 
 }
 

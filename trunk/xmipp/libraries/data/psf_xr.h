@@ -117,7 +117,7 @@ public:
     /// Pixel size in lens plane
     double dxl, dyl;
     /// Z limits around Zo in the psf generation due to Nyquist Limit
-    double deltaZMaxX, deltaZMaxY;
+    double deltaZMaxX, deltaZMaxY, deltaZMinX, deltaZMinY;
 
     /// Parameters to change image size to avoid Nyquist limit
     psfxrAdjust AdjustType;

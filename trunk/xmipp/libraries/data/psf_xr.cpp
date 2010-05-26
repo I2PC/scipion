@@ -269,8 +269,10 @@ void XmippXRPSF::adjustParam(Image<double> &vol)
     dxl = lambda*Zi / (Nox * dxi); // Pixel X-size en the plane of lens aperture
     dyl = lambda*Zi / (Noy * dxi); // Pixel Y-size en the plane of lens aperture
 
-    deltaZMaxX = Zo*(1 - (Rlens*2*dxl)/(Rlens*2*dxl + Zo*lambda));
-    deltaZMaxY = Zo*(1 - (Rlens*2*dyl)/(Rlens*2*dyl + Zo*lambda));
+    deltaZMaxX = Zo*((Rlens*2*dxl)/(Rlens*2*dxl - Zo*lambda) - 1);
+    deltaZMaxY = Zo*((Rlens*2*dyl)/(Rlens*2*dyl - Zo*lambda) - 1);
+    deltaZMinX = Zo*((Rlens*2*dxl)/(Rlens*2*dxl + Zo*lambda) - 1);
+    deltaZMinY = Zo*((Rlens*2*dyl)/(Rlens*2*dyl + Zo*lambda) - 1);
 
 
     if (verbose)
@@ -292,7 +294,7 @@ void XmippXRPSF::adjustParam(Image<double> &vol)
         AdjustType = PSFXR_INT;
 
         if (verbose)
-        	std::cout << "XmippXRPSF: Image plane sampling too small: increasing resolution" << std::endl;
+            std::cout << "XmippXRPSF: Image plane sampling too small: increasing resolution" << std::endl;
 
     }
     else
@@ -311,14 +313,24 @@ void XmippXRPSF::adjustParam(Image<double> &vol)
             Niy = ceil(pupileSizeMin * dxiMax/dxi);
             AdjustType = PSFXR_ZPAD;
         }
-        if (deltaZMaxX < ABS(DeltaZo)+vol().zdim/2*dzo)
+        if (DeltaZo + vol().zdim/2*dzo > deltaZMaxX)
         {
-            Nix = ceil(Zi*Rlens*2*(ABS(DeltaZo)+vol().zdim/2*dzo)/(Zo*dxi*(Zo+ABS(DeltaZo)+vol().zdim/2*dzo)));
+            Nix = XMIPP_MAX(Nix,ceil(Zi*Rlens*2*ABS(DeltaZo+vol().zdim/2*dzo)/(Zo*dxi*(Zo+DeltaZo+vol().zdim/2*dzo))));
             AdjustType = PSFXR_ZPAD;
         }
-        if (deltaZMaxY < ABS(DeltaZo)+vol().zdim/2*dzo)
+        if (DeltaZo - vol().zdim/2*dzo < deltaZMinX)
         {
-            Niy = ceil(Zi*Rlens*2*(ABS(DeltaZo)+vol().zdim/2*dzo)/(Zo*dxi*(Zo+ABS(DeltaZo)+vol().zdim/2*dzo)));
+            Nix = XMIPP_MAX(Nix,ceil(Zi*Rlens*2*ABS(DeltaZo-vol().zdim/2*dzo)/(Zo*dxi*(Zo+DeltaZo-vol().zdim/2*dzo))));
+            AdjustType = PSFXR_ZPAD;
+        }
+        if (DeltaZo + vol().zdim/2*dzo > deltaZMaxY)
+        {
+            Niy = XMIPP_MAX(Niy,ceil(Zi*Rlens*2*ABS(DeltaZo+vol().zdim/2*dzo)/(Zo*dxi*(Zo+DeltaZo+vol().zdim/2*dzo))));
+            AdjustType = PSFXR_ZPAD;
+        }
+        if ( DeltaZo - vol().zdim/2*dzo < deltaZMinY)
+        {
+            Niy = XMIPP_MAX(Niy,ceil(Zi*Rlens*2*ABS(DeltaZo-vol().zdim/2*dzo)/(Zo*dxi*(Zo+DeltaZo-vol().zdim/2*dzo))));
             AdjustType = PSFXR_ZPAD;
         }
     }
@@ -330,13 +342,13 @@ void XmippXRPSF::adjustParam(Image<double> &vol)
     {
         if (AdjustType!=PSFXR_STD)
         {
-        	if (AdjustType==PSFXR_ZPAD)
-            	std::cout << "XmippXRPSF: Image plane size too small: increasing size" << std::endl;
-        	std::cout << "New slice dimensions:  " <<  "Nix = " << Nix << "   Niy = " << Niy << std::endl;
+            if (AdjustType==PSFXR_ZPAD)
+                std::cout << "XmippXRPSF: Image plane size too small: increasing size" << std::endl;
+            std::cout << "New slice dimensions:  " <<  "Nix = " << Nix << "   Niy = " << Niy << std::endl;
         }
         std::cout << "dxl = " << dxl*1e6 << " um  -   dyl = " << dyl*1e6 << " um" << std::endl;
-        std::cout << "Pupile X-Diameter in pixels = " << ceil(2*Rlens / dxl)  << std::endl;
-        std::cout << "Pupile Y-Diameter in pixels = " << ceil(2*Rlens / dyl)  << std::endl;
+        std::cout << "Pupile Diameter in pixels (NpX,NpY) = (" << ceil(2*Rlens / dxl)
+        << "," << ceil(2*Rlens / dyl) << ")"  << std::endl;
         std::cout << std::endl;
     }
 
@@ -393,7 +405,7 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut, int i
     Image<double> _Im(imOut);
 #endif
 
-//    init_progress_bar(vol().zdim-1);
+    //    init_progress_bar(vol().zdim-1);
 
     for (int k=((vol()).zinit); k<=((vol()).zinit + (vol()).zdim - 1); k++)
     {
