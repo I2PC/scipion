@@ -3127,8 +3127,8 @@ public:
             if (mask!=NULL)
                 ptrMask++;
         }
-        double a=(sumy*sumx2-sumx*sumxy)/(N*sumx2-sumx*sumx);
         double b=(N*sumxy-sumx*sumy)/(N*sumx2-sumx*sumx);
+        double a=sumy/N-b*sumx/N;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         *ptr = static_cast< double >(a+b * static_cast< double > (*ptr));
     }
