@@ -26,6 +26,7 @@
 #include "show_cl2d.h"
 #include "show_2d.h"
 #include "show_selfile.h"
+#include <data/metadata.h>
 
 #include <qmessagebox.h>
 
@@ -70,20 +71,42 @@ void ShowCL2D::readFile(const FileName &_fn_root,
     clear();
     fn = _fn_root;
     setCaption(fn.c_str()+filterSuffix);
-    readSelFile(_fn_root + ".sel");
-    SFcv=new MetaData[listSize];
-    hisAssigned=new std::string[listSize];
-    for (int i=0; i<listSize; i++)
+    if (exists(_fn_root+"_info.txt"))
     {
-        FileName fnCV=imgnames[i].without_extension();
-        if (exists(fnCV+filterSuffix+".sel"))
+        readSelFile(_fn_root + "_aligned.sel");
+        MetaData mD(_fn_root+"_info.txt");
+        SFcv=new MetaData[listSize];
+        hisAssigned=new std::string[listSize];
+        originalImages=new FileName[listSize];
+        int i=0;
+        FOR_ALL_OBJECTS_IN_METADATA(mD)
         {
-        	SFcv[i].read(fnCV+filterSuffix+".sel");
-			hisAssigned[i]=integerToString(SFcv[i].size());
+            FileName fnOriginal, fnSel;
+            mD.getValue(MDL_IMAGE_ORIGINAL,fnOriginal);
+            mD.getValue(MDL_IMAGE_CLASS_GROUP,fnSel);
+       	    SFcv[i].read(fnSel);
+            hisAssigned[i]=integerToString(SFcv[i].size());
+            originalImages[i]=fnOriginal;
+            i++;
         }
-        else
+    }
+    else
+    {
+        readSelFile(_fn_root + ".sel");
+        SFcv=new MetaData[listSize];
+        hisAssigned=new std::string[listSize];
+        originalImages=new FileName[listSize];
+        for (int i=0; i<listSize; i++)
         {
-			hisAssigned[i]="0";
+            FileName fnCV=imgnames[i].without_extension();
+            originalImages[i]=imgnames[i];
+            if (exists(fnCV+filterSuffix+".sel"))
+            {
+        	    SFcv[i].read(fnCV+filterSuffix+".sel");
+	            hisAssigned[i]=integerToString(SFcv[i].size());
+            }
+            else
+		    hisAssigned[i]="0";
         }
     }
     NumRows=FLOOR(sqrt(listSize));
@@ -125,9 +148,9 @@ void ShowCL2D::initRightclickMenubar()
     options->insertItem("View assigned images",  this,  SLOT(showAssigned()));
     options->insertItem("Show this image separately", this, SLOT(showThisImage()));
     options->insertItem("Show this class separately", this, SLOT(showThisClass()));
-    if (exists(imgnames[0].without_extension()+"_pcabasis_00.xmp"))
+    if (exists(originalImages[0].without_extension()+"_pcabasis_00.xmp"))
     	options->insertItem("Show PCA basis for this class", this, SLOT(showThisPCA()));
-    if (exists(imgnames[0].without_extension()+"_outliers.sel"))
+    if (exists(originalImages[0].without_extension()+"_outliers.sel"))
     	options->insertItem("Show outliers for this class", this, SLOT(showThisOutliers()));
     options->insertSeparator();
 
@@ -145,7 +168,16 @@ void ShowCL2D::extractRepresented(MetaData &SF_represented)
     for (int i = 0; i < listSize; i++)
     {
         if (cellMarks[i])
-            SF_represented.union_(SFcv[i]);
+        {
+            FOR_ALL_OBJECTS_IN_METADATA(SFcv[i])
+            {
+                FileName fnImg;
+                SFcv[i].getValue(MDL_IMAGE,fnImg);
+                SF_represented.addObject();
+                SF_represented.setValue(MDL_IMAGE,fnImg);
+            }
+            // SF_represented.union_(SFcv[i]);
+        }
     }
 }
 
@@ -225,7 +257,7 @@ void ShowCL2D::showThisClass()
     ShowSel *showsel = new ShowSel;
     showsel->apply_geo = apply_geo;
     showsel->showonlyactive = true;
-    FileName fnClassRoot=imgnames[i].without_extension();
+    FileName fnClassRoot=originalImages[i].without_extension();
     showsel->initWithFile(10, 10, fnClassRoot+filterSuffix+".sel");
     showsel->show();
 }
@@ -240,7 +272,7 @@ void ShowCL2D::showThisPCA()
     bool finish=false;
     while (!finish)
     {
-		FileName fnPCA=imgnames[i].without_extension()+"_pcabasis_"+integerToString(n,2)+".xmp";
+		FileName fnPCA=originalImages[i].without_extension()+"_pcabasis_"+integerToString(n,2)+".xmp";
         if (exists(fnPCA))
         {
 			ImageViewer *showimg = new ImageViewer(fnPCA.c_str(),false);
@@ -262,7 +294,7 @@ void ShowCL2D::showThisOutliers()
     ShowSel *showsel = new ShowSel;
     showsel->apply_geo = apply_geo;
     showsel->showonlyactive = true;
-    FileName fnClassRoot=imgnames[i].without_extension();
+    FileName fnClassRoot=originalImages[i].without_extension();
     showsel->initWithFile(10, 10, fnClassRoot+filterSuffix+"_outliers.sel");
     showsel->show();
 }

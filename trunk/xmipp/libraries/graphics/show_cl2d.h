@@ -46,6 +46,8 @@ protected:
     MetaData *SFcv;
     // Histogram of images assigned
     std::string  *hisAssigned;
+    // Original images
+    FileName  *originalImages;
 
     /* Initialization.
        Sets SFcv = NULL; and then calls to ShowSel::init() */
