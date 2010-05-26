@@ -203,6 +203,11 @@ int  readSPIDER(int img_select)
     size_t pad         = 0;
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
+    if (img_select != -1)
+    {
+    	imgStart=img_select;
+    	imgEnd=img_select+1;
+    }
     char*   hend;
 
     std::stringstream Num;
@@ -211,7 +216,7 @@ int  readSPIDER(int img_select)
     if ( isStack)
     {
     	pad         = offset;
-        if ( img_select >= (int)_nDim )
+        if ( img_select > (int)_nDim )
         {
             Num  << img_select;
             Num2 << _nDim;
@@ -239,9 +244,9 @@ int  readSPIDER(int img_select)
     MD.clear();
     for ( i=imgStart; i<imgEnd; i++ )
     {
-        fseek( fimg, header_size + i*image_size, SEEK_SET );
-        if(img_select==-1 || img_select==i)
+        //if(img_select==-1 || img_select==i)
         {
+        fseek( fimg, header_size + i*image_size, SEEK_SET );
             if(isStack)
             {
                 if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )

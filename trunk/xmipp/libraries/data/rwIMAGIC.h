@@ -93,6 +93,8 @@ int  readIMAGIC(int img_select)
     // get the filename without extension to find the header file
     FileName headername;
     headername = filename.substr(0, filename.find_last_of('.')) + ".hed";
+    filename   = filename.substr(0, filename.find_last_of('.')) + ".img";
+
 
     // open and read the header file
     FILE  *fhed;
@@ -101,6 +103,7 @@ int  readIMAGIC(int img_select)
     ;
 
     IMAGIChead* header = new IMAGIChead;
+
     if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
         REPORT_ERROR(1,(std::string)"readIMAGIC: header file " +headername+ " cannot be read");
     ;
@@ -123,11 +126,30 @@ int  readIMAGIC(int img_select)
     _zDim = (int) 1;
     _nDim = (unsigned long int) header->ifn + 1 ;
 
+    std::stringstream Num;
+    std::stringstream Num2;
+    if ( img_select > (int)_nDim )
+    {
+        Num  << img_select;
+        Num2 << _nDim;
+        REPORT_ERROR(1,(std::string)"readImagic: Image number " + Num.str() +
+                     " exceeds stack size " + Num2.str());
+    }
+
+    if( img_select > -1)
+        _nDim=1;
     data.setDimensions( //setDimensions do not allocate data
         _xDim,
         _yDim,
         _zDim,
         _nDim );
+    unsigned long   imgStart=0;
+    unsigned long   imgEnd =_nDim;
+    if (img_select != -1)
+    {
+    	imgStart=img_select;
+    	imgEnd=img_select+1;
+    }
 
     DataType datatype;
 
@@ -169,7 +191,7 @@ int  readIMAGIC(int img_select)
 
     offset = 0;   // separate header file
 
-    unsigned long   Ndim = NSIZE(data), j = 0;
+    unsigned long   Ndim = _nDim, j = 0;
 
     // View   view;
     char*   hend;
@@ -186,13 +208,18 @@ int  readIMAGIC(int img_select)
 
 
     // Get the header information
-    fseek( fhed, 0, SEEK_SET );
+    if ( img_select > -1 )
+        fseek( fhed, 0, SEEK_SET );
+    else
+        fseek( fhed, img_select * IMAGICSIZE, SEEK_SET );
+
     MD.clear();
-    for ( i=0; i<Ndim; i++ )
+    for ( i=imgStart; i<imgEnd; i++ )
+    //for ( i=0; i<Ndim; i++ )
     {
         if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
             return(-2);
-        if ( img_select < 0 || img_select == i )
+        //if ( img_select < 0 || img_select == i )
         {
             hend = (char *) header + extent;
             if ( swap )

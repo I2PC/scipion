@@ -86,10 +86,11 @@ struct MRChead
 int readMRC(int img_select,bool isStack=false)
 {
 #undef DEBUG
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     printf("DEBUG readMRC: Reading MRC file\n");
 #endif
+
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
         return(-1);
@@ -128,6 +129,15 @@ int readMRC(int img_select,bool isStack=false)
         _nDim = (unsigned long int) _zDim;
         _zDim = 1;
         replaceNsize=_nDim;
+        std::stringstream Num;
+        std::stringstream Num2;
+        if ( img_select > (int)_nDim )
+        {
+            Num  << img_select;
+            Num2 << _nDim;
+            REPORT_ERROR(1,(std::string)"readImagic: Image number " + Num.str() +
+                         " exceeds stack size " + Num2.str());
+        }
     }
     else
         replaceNsize=0;
@@ -140,6 +150,13 @@ int readMRC(int img_select,bool isStack=false)
     else
         data.setDimensions(_xDim, _yDim, _zDim,1);
 
+    unsigned long   imgStart=0;
+    unsigned long   imgEnd =_nDim;
+    if (img_select != -1)
+    {
+        imgStart=img_select;
+        imgEnd=img_select+1;
+    }
 
     DataType datatype;
     switch ( header->mode%5 )
@@ -190,7 +207,8 @@ int readMRC(int img_select,bool isStack=false)
 
     int Ndim = NSIZE(data);
     MD.clear();
-    for(int i=0;i< Ndim;i++)
+    for ( i=imgStart; i<imgEnd; i++ )
+        //for(int i=0;i< Ndim;i++)
     {
         MD.addObject();
         double aux;
@@ -217,7 +235,7 @@ int readMRC(int img_select,bool isStack=false)
         MD.setValue(MDL_FLIP,     falseb);
     }
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     MDMainHeader.write("/dev/stderr");
     MD.write("/dev/stderr");
@@ -256,8 +274,8 @@ int writeMRC(int select_img, bool isStack=false, int mode=WRITE_OVERWRITE)
 
     // Convert T to datatype
     if ( typeid(T) == typeid(double) ||
-            typeid(T) == typeid(float) ||
-            typeid(T) == typeid(int) )
+         typeid(T) == typeid(float) ||
+         typeid(T) == typeid(int) )
         header->mode = 2;
     else if ( typeid(T) == typeid(unsigned char) ||
               typeid(T) == typeid(signed char) )
@@ -326,7 +344,7 @@ int writeMRC(int select_img, bool isStack=false, int mode=WRITE_OVERWRITE)
     // For multi-image files
     if (mode == WRITE_APPEND && isStack)
     {
-    	header->nz = replaceNsize +1;
+        header->nz = replaceNsize +1;
     }
     //else header-> is correct
 
@@ -367,9 +385,9 @@ int writeMRC(int select_img, bool isStack=false, int mode=WRITE_OVERWRITE)
     if ( typeid(T) == typeid(double) ||
             typeid(T) == typeid(float) ||
             typeid(T) == typeid(int) )
-    {
+{
         writePageAsDatatype(fimg, Float, datasize_n);
-    }
+}
     else if ( typeid(T) == typeid(unsigned char) ||
               typeid(T) == typeid(signed char) )
         writePageAsDatatype(fimg, SChar, datasize_n);
@@ -378,7 +396,7 @@ int writeMRC(int select_img, bool isStack=false, int mode=WRITE_OVERWRITE)
         writePageAsDatatype(fimg, ComplexFloat, datasize_n);
     else
         REPORT_ERROR(1,"ERROR write MRC image: invalid typeid(T)");
-*/
+    */
     //write only once, ignore select_img
     char* fdata = (char *) askMemory(datasize);
     //think about writing in several chucks
