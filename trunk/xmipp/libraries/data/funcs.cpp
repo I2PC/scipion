@@ -708,6 +708,26 @@ void FileName::compose(const std::string &str, int no, const std::string &ext)
         *this += (std::string)"." + ext;
 }
 
+// Constructor: prefix number and filename, mainly for selfiles..
+void FileName::compose(int no , const std::string &str)
+{
+    *this = (FileName) str;
+    if (no != -1)
+    {
+
+        char aux_str[FILENAMENUMBERLENGTH+1];
+        std::string tmp_fileformat;
+        tmp_fileformat = (std::string) "%0" +
+                         integerToString(FILENAMENUMBERLENGTH)+
+                         (std::string)"d@";
+        sprintf(aux_str, tmp_fileformat.c_str(), no);
+        *this = aux_str + str;
+    }
+    else
+        *this = str;
+
+
+}
 // Get the root name of a filename .........................................
 FileName FileName::get_root() const
 {
