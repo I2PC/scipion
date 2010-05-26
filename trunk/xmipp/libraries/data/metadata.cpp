@@ -1075,7 +1075,8 @@ void MetaData::write(const std::string &fileName)
             if (*strIt != MDL_COMMENT)
             {
                 int w=MDL::label2Str(*strIt).length();
-                if (w>maxWidth) maxWidth=w;
+                if (w>maxWidth)
+                    maxWidth=w;
             }
         }
 
@@ -1585,6 +1586,13 @@ void ImgSize(MetaData &MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
     }
     else
         REPORT_ERROR(-1, "Can not read image size from empty metadata");
+}
+
+void ImgSize(FileName &fn_img, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
+{
+    Image<double> img;
+    img.read(fn_img, false);
+    img.getDimensions(Xdim, Ydim, Zdim, Ndim);
 }
 
 void MetaData::split_in_two(MetaData &SF1, MetaData &SF2,MDLabel label)
