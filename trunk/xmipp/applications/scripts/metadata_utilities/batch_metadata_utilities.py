@@ -100,8 +100,6 @@ def check_operation(option, opt_str, value, parser):
         raise OptionValueError("you cannot select two operations: "+ operation + ", " +_operation)
     operationCounter += 1    
     operation=_myCode.encode(opt_str)   
-    if(operation!=_myCode.unknown):
-        print "Operation: ", _myCode.decode(operation) 
     if(value!=None):    
          setattr(parser.values, option.dest, value)
          
