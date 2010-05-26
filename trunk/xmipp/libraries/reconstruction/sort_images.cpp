@@ -74,6 +74,7 @@ void Prog_sort_images_prm::produceSideInfo()
             lastImage.read(fnFirst);
             centerImage(lastImage());
             lastImage.write(fnRoot+integerToString(1,5)+".xmp");
+            SFout.addObject();
             SFout.setValue(MDL_IMAGE,lastImage.name());
         }
         else
@@ -156,6 +157,7 @@ void Prog_sort_images_prm::run()
     if (processSelfiles)
     {
         MetaData SFInfo;
+        SFoutOriginal.firstObject();
         FOR_ALL_OBJECTS_IN_METADATA(SFout)
         {
             FileName fnOutOrig; SFoutOriginal.getValue(MDL_IMAGE,fnOutOrig);
@@ -168,6 +170,7 @@ void Prog_sort_images_prm::run()
             SFInfo.setValue(MDL_IMAGE_ORIGINAL,fnOutOrig);
             SFInfo.setValue(MDL_IMAGE_CLASS_GROUP,fnSel);
             SFInfo.setValue(MDL_IMAGE_CLASS_COUNT,SFaux.size());
+            SFoutOriginal.nextObject();
         }
         SFInfo.write(fnRoot+"_info.txt");
     }
