@@ -227,6 +227,9 @@ public:
 
     /// Variability analysis
     bool variability_analysis;
+    
+    /// Refine experimental projection before backprojecting
+    bool refine;
 
     /// Noisy reconstruction
     bool noisy_reconstruction;

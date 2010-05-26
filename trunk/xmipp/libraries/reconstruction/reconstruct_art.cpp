@@ -193,7 +193,8 @@ void ART_single_step(
     double                  lambda,          // Lambda to be used
     int                     act_proj,        // Projection number
     const FileName         &fn_ctf,          // CTF to apply
-    const MultidimArray<int>    *maskPtr)         // Mask to apply
+    const MultidimArray<int> *maskPtr,       // Mask to apply
+    bool                    refine)          // Refine experimental projection before correcting
 {
     // Prepare to work with CTF ................................................
     FourierMask ctf;
@@ -295,6 +296,24 @@ void ART_single_step(
         }
         std::cout << "---------------------------------------------\n";
         delete A;
+    }
+    
+    // Refine ..............................................................
+    if (refine)
+    {
+        Matrix2D<double> M;
+        /*
+        Image<double> save;
+        save()=theo_proj(); save.write("PPPtheo.xmp");
+        save()=read_proj(); save.write("PPPread.xmp");
+        */
+        alignImages(theo_proj(),read_proj(),M);
+        //save()=read_proj(); save.write("PPPread_aligned.xmp");
+        std::cout << M << std::endl;
+        read_proj().rangeAdjust(theo_proj());
+        //save()=read_proj(); save.write("PPPread_aligned_grey.xmp");
+        //std::cout << "Press any key\n";
+        //char c; std::cin >> c;
     }
 
     // Now compute differences .................................................

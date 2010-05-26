@@ -155,6 +155,7 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
     else
         *prm.fh_hist << "Sort with last " << prm.sort_last_N << " images\n";
     *prm.fh_hist << " Variability analysis: " << prm.variability_analysis << std::endl;
+    *prm.fh_hist << " Refine projections: " << prm.refine << std::endl;
     *prm.fh_hist << " Sparsity epsilon: " << prm.sparseEps << std::endl;
     *prm.fh_hist << " Diffusion weight: " << prm.diffusionWeight << std::endl;
     if (prm.SL.SymsNo()!=0)
@@ -494,7 +495,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                             theo_proj, read_proj, prm.IMG_Inf[iact_proj].sym , diff_proj,
                             corr_proj, alig_proj,
                             mean_error, ART_numIMG, prm.lambda(it),
-                            images, prm.IMG_Inf[iact_proj].fn_ctf, maskPtr);
+                            images, prm.IMG_Inf[iact_proj].fn_ctf, maskPtr,
+                            prm.refine);
 
             if (prm.WLS)
             {
@@ -511,7 +513,8 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                                 theo_proj, noisy_projection, prm.IMG_Inf[iact_proj].sym,
                                 diff_proj,  corr_proj, alig_proj,
                                 noise_mean_error, ART_numIMG, prm.lambda(it),
-                                images, prm.IMG_Inf[iact_proj].fn_ctf,maskPtr);
+                                images, prm.IMG_Inf[iact_proj].fn_ctf,maskPtr,
+                                false);
             }
 
             // Force symmetry in the volume ..................................
@@ -551,10 +554,17 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
             }
 
             // Apply sparsity constraint .....................................
-            if (it>=1 && prm.sparseEps>0)
+            if (it>=1 && prm.sparseEps>0 && 
+                prm.parallel_mode!=Basic_ART_Parameters::SIRT &&
+                prm.parallel_mode!=Basic_ART_Parameters::pSIRT &&
+                prm.parallel_mode!=Basic_ART_Parameters::pfSIRT)
             {
                 prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
                                          Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+                selfScaleToSize(BSPLINE3,vol_voxels(),
+                    NEXT_POWER_OF_2(XSIZE(vol_voxels())),
+                    NEXT_POWER_OF_2(YSIZE(vol_voxels())),
+                    NEXT_POWER_OF_2(ZSIZE(vol_voxels())));
                 Image<double> vol_wavelets, vol_wavelets_abs;
                 set_DWT_type(DAUB12);
                 DWT(vol_voxels(),vol_wavelets());
@@ -566,9 +576,12 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                 std::sort(begin,end);
                 double threshold1=DIRECT_MULTIDIM_ELEM(vol_wavelets_abs(),
                                                        (long int)((1-prm.sparseEps)*MULTIDIM_SIZE(vol_wavelets_abs())));
-                std::cout << "Threshold=" << threshold1 << std::endl;
                 vol_wavelets().threshold("abs_below", threshold1, 0.0);
                 IDWT(vol_wavelets(),vol_voxels());
+                selfScaleToSize(BSPLINE3,vol_voxels(),
+                    Xoutput_volume_size,
+                    Youtput_volume_size,
+                    Zoutput_volume_size);
                 prm.basis.changeFromVoxels(vol_voxels(),vol_basis,prm.grid_type,
                                            prm.grid_relative_size, NULL, NULL, prm.R, prm.threads);
             }
@@ -728,7 +741,38 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
             prm.parallel_mode==Basic_ART_Parameters::pSART ||
             prm.parallel_mode==Basic_ART_Parameters::pCAV ||
             prm.eq_mode==CAV )
-            vol_basis=vol_basis_out;
+          {
+              vol_basis=vol_basis_out;
+              if (prm.sparseEps>0)
+              {
+                prm.basis.changeToVoxels(vol_basis, &(vol_voxels()),
+                                         Zoutput_volume_size, Youtput_volume_size, Xoutput_volume_size);
+                selfScaleToSize(BSPLINE3,vol_voxels(),
+                    NEXT_POWER_OF_2(XSIZE(vol_voxels())),
+                    NEXT_POWER_OF_2(YSIZE(vol_voxels())),
+                    NEXT_POWER_OF_2(ZSIZE(vol_voxels())));
+                Image<double> vol_wavelets, vol_wavelets_abs;
+                set_DWT_type(DAUB12);
+                DWT(vol_voxels(),vol_wavelets());
+                vol_wavelets_abs()=vol_wavelets();
+                vol_wavelets_abs().selfABS();
+                double *begin=MULTIDIM_ARRAY(vol_wavelets_abs());
+                double *end=MULTIDIM_ARRAY(vol_wavelets_abs())+
+                            MULTIDIM_SIZE(vol_wavelets_abs());
+                std::sort(begin,end);
+                double threshold1=DIRECT_MULTIDIM_ELEM(vol_wavelets_abs(),
+                                                       (long int)((1-prm.sparseEps)*MULTIDIM_SIZE(vol_wavelets_abs())));
+                std::cout << "Threshold=" << threshold1 << std::endl;
+                vol_wavelets().threshold("abs_below", threshold1, 0.0);
+                IDWT(vol_wavelets(),vol_voxels());
+                selfScaleToSize(BSPLINE3,vol_voxels(),
+                    Xoutput_volume_size,
+                    Youtput_volume_size,
+                    Zoutput_volume_size);
+                prm.basis.changeFromVoxels(vol_voxels(),vol_basis,prm.grid_type,
+                                           prm.grid_relative_size, NULL, NULL, prm.R, prm.threads);
+              }
+          }
 
         if (prm.tell&TELL_SAVE_INTERMIDIATE && it!=prm.no_it-1)
         {

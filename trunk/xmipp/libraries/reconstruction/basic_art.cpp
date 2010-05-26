@@ -68,6 +68,7 @@ void Basic_ART_Parameters::default_values()
     save_intermidiate_every = 0;
     is_crystal         = false;
     variability_analysis = false;
+    refine             = false;
     noisy_reconstruction = false;
 
     IMG_Inf            = NULL;
@@ -205,6 +206,7 @@ void Basic_ART_Parameters::default_values()
         parallel_mode=SIRT; \
         no_it=1; \
     } \
+    refine         = CHECK_PARAM("refine"); \
     if (CHECK_PARAM("noisy_reconstruction")) { \
         if (parallel_mode!=ART) \
             REPORT_ERROR(1,"Basic_ART_Parameters::read: Noisy reconstructions" \
@@ -325,6 +327,7 @@ void Basic_ART_Parameters::usage_more()
     << "\n   [-shiftedTomograms]   Remove border pixels created by alignment of tomograms"
     << "\n   [-dont_apply_shifts]  Do not apply shifts as stored in the 2D-image headers"
     << "\n   [-variability]        Perform variability analysis"
+    << "\n   [-refine]             Refine input projection before backprojecting"
     << "\n   [-noisy_reconstruction] Perform a companion noisy reconstruction"
     << "\n   [-ray_length <r=-1>]  In basis units\n"
     ;
