@@ -358,9 +358,6 @@ void Prog_analyze_cluster_prm::run()
     MultidimArray<float> Iavg(Npixels);
     double N=0;
     std::ofstream fhOut;
-    fhOut.open((fnRoot+"_score.txt").c_str());
-    if (!fhOut)
-        REPORT_ERROR(1,(std::string)"Cannot open "+fnRoot+"_score.txt for output");
     FOR_ALL_ELEMENTS_IN_ARRAY1D(idx)
     {
         fhOut << classfile[idx(i)-1] << "    " << distance(idx(i)-1) << std::endl;
@@ -369,6 +366,7 @@ void Prog_analyze_cluster_prm::run()
             SFout_good.addObject();
             SFout_good.setValue( MDL_IMAGE, classfile[idx(i)-1]);
             SFout_good.setValue( MDL_ENABLED, 1);
+            SFout_good.setValue( MDL_ZSCORE, distance(idx(i)-1));
             Iavg+=*(Iclassorig[idx(i)-1]);
             N++;
         }
@@ -377,6 +375,7 @@ void Prog_analyze_cluster_prm::run()
             SFout_bad.addObject();
             SFout_bad.setValue( MDL_IMAGE, classfile[idx(i)-1]);
             SFout_bad.setValue( MDL_ENABLED, 1);
+            SFout_bad.setValue( MDL_ZSCORE, distance(idx(i)-1));
         }
     }
     fhOut.close();
