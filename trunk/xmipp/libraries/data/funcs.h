@@ -821,6 +821,15 @@ public:
      */
     void compose(const std::string& str, int no, const std::string& ext);
 
+    /** Preffix with number @. Mainly for selfiles
+     * @ingroup FilenameComposing
+     *
+     * @code
+     * fn_proj.compose(1,"g1ta.xmp");  // fn_proj = "000001@g1ta000001.xmp"
+     * @endcode
+     */
+    void compose(int no, const std::string& str);
+
     /** Get the root from a filename
      * @ingroup FilenameComposing
      *
@@ -1848,5 +1857,6 @@ int divide_equally(int N, int size, int rank, int &first, int &last);
 /** In which group (of divide_equally) is myself situated?
  */
 int divide_equally_group(int N, int size, int myself);
+
 
 #endif
