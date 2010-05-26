@@ -4,6 +4,9 @@ import os
 import sys
 from operator import itemgetter
 from threading import Thread
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
+sys.path.append(scriptdir) # add default search path
+import XmippData
 
 # --------------------------------------------------------------------
 def readSelfile(fnSel):
@@ -12,7 +15,7 @@ def readSelfile(fnSel):
     selFile=set()
     for line in lines:
         args=line.split()
-        if (len(args)>1):
+        if (len(args)>=1):
             if args[0]=="#":
                  continue
             if args[0]==";":
@@ -22,10 +25,16 @@ def readSelfile(fnSel):
     return selFile
 
 def writeSelfile(selfile,fnSel):
-    fh=open(fnSel,'w')
+    mD = XmippData.MetaData()
+    ii=XmippData.intP()
+    ii.assign(1)    
     for img in selfile:
-        fh.write(img+" 1\n")
-    fh.close()
+        mD.addObject();
+        ss=XmippData.stringP()
+        ss.assign(img)
+        XmippData.setValueString(mD, XmippData.MDL_IMAGE, ss)
+        XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii)
+    mD.write(XmippData.FileName(fnSel))
 
 # --------------------------------------------------------------------
 def readClassF1(fnRoot,nclass,level):
@@ -61,7 +70,7 @@ class sortJunkThread(Thread):
                 fnClass=className[0:className.rfind('.sel')]
                 os.system("xmipp_metadata_utilities -i "+\
                     fnRoot+"_F1_good.sel -n "+fnClass+\
-                    ".sel -o "+fnClass+"_F1.sel")
+                    ".sel -l image -o "+fnClass+"_F1.sel")
                 os.system("xmipp_classify_analyze_cluster -i "+fnClass+"_F1.sel -ref "+\
                     fnClass+".xmp -dontMask >& /dev/null")
                 fh=open(fnClass+"_F1_score.txt");
@@ -85,6 +94,8 @@ def sortJunk(Nthreads,fnRoot,classFiles,thZscore):
     print "Sorting junk ----------------------------------------------"
     # Sort obvious junk
     os.system("cat "+fnRoot+"_level_00_??????.sel > "+fnRoot+"_all.sel")
+    print("xmipp_sort_by_statistics -i "+fnRoot+"_all.sel -o "+\
+        fnRoot+"_F1 -zcut "+str(thZscore))
     os.system("xmipp_sort_by_statistics -i "+fnRoot+"_all.sel -o "+\
         fnRoot+"_F1 -zcut "+str(thZscore))
     os.system("mv -f "+fnRoot+"_F1.sel "+fnRoot+"_F1_sorted.sel")
@@ -123,16 +134,22 @@ def sortJunk(Nthreads,fnRoot,classFiles,thZscore):
 
     # Sort by Zscore
     ZscoreSorted=sorted(Zscore.items(), key=itemgetter(1))
-    fhSortedSel=open(fnRoot+"_F12_sorted.sel",'w')
-    fhSortedScore=open(fnRoot+"_F12_sorted_score.txt",'w')
     badImages=set()
+    mD=XmippData.MetaData()
     for score in ZscoreSorted:
-        fhSortedSel.write(score[0]+" 1\n")
-        fhSortedScore.write(score[0]+" "+str(score[1])+"\n")
+        mD.addObject();
+
+        ss=XmippData.stringP()
+        ss.assign(score[0])
+        XmippData.setValueString(mD, XmippData.MDL_IMAGE, ss)
+
+        pp=XmippData.doubleP()
+        pp.assign(score[1])    
+        XmippData.setValueDouble(mD, XmippData.MDL_ZSCORE, pp)
+
         if score[1]>thZscore:
             badImages.add(score[0])
-    fhSortedSel.close()
-    fhSortedScore.close()
+    mD.write(fnRoot+"_F12_sorted.sel");
     
     # Filter classes
     for className in classFiles:
@@ -259,13 +276,10 @@ class purifyCoresThread(Thread):
                     "_F1234.sel -ref "+\
                     fnClass+".xmp -maxDist "+str(self.Zscore)+" -dontMask >& /dev/null")
                 os.system("mv -f "+fnClass+"_F1234_pca.sel "+fnClass+"_F12345.sel")
-                os.system("rm -f "+fnClass+"_F1234_score.txt")
                 os.system("mv -f "+fnClass+"_F1234_pca.xmp "+fnClass+"_F12345.xmp")
                 os.system("mv -f "+fnClass+"_F1234_pcabasis_00.xmp "+fnClass+"_F12345_pcabasis_01.xmp")
                 os.system("mv -f "+fnClass+"_F1234_pcabasis_01.xmp "+fnClass+"_F12345_pcabasis_00.xmp")
-                os.system("xmipp_metadata_utilities -i "+fnClass+".sel "+\
-                    "-n "+fnClass+"_F12345.sel -o "+\
-                    fnClass+"_F12345_outliers.sel");
+                os.system("mv -f "+fnClass+"_F1234_outliers.sel "+fnClass+"_F12345_outliers.sel")
             idx=idx+1
         if (self.myId==0):
             print
@@ -318,7 +332,7 @@ def sortImages(fnRoot,Nlevels):
     for level in range(1,Nlevels):
         print "Level: "+str(level)
         fnLevel=fnRoot+"_level_"+'%02d'%level
-        os.system('xmipp_selfile_create "'+fnLevel+'_??????_F12345.xmp" > '+\
+        os.system('xmipp_metadata_selfile_create "'+fnLevel+'_??????_F12345.xmp" '+\
             fnLevel+"_F12345.sel");
         os.system('xmipp_classify_CL2D_sort_images -i '+fnLevel+\
             "_F12345.sel -oroot "+fnLevel+"_F12345_sorted -processSelfiles");
@@ -340,7 +354,7 @@ if __name__ == "__main__":
     if len(args)>=3:
         thJunkZscore=float(args[2])
     else:
-        thJunkZscore=2
+        thJunkZscore=2.5
 
     if len(args)>=4:
         thPCAZscore=float(args[3])
@@ -350,7 +364,7 @@ if __name__ == "__main__":
     if len(args)>=5:
         Nthreads=int(args[4])
     else:
-        Nthreads=50.0
+        Nthreads=1
 
     # Separate the root into directory and label    
     idx=fnRoot.rfind('/')
