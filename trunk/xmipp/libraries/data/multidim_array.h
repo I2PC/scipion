@@ -820,6 +820,8 @@ public:
             clear();
             return;
         }
+        if(data!=NULL)
+            REPORT_ERROR(1001, "do not allocate space for an image if you have not deallocate it first");
 
         ndim=_ndim;
         zdim=_zdim;
@@ -828,7 +830,6 @@ public:
         yxdim=ydim*xdim;
         zyxdim=zdim*yxdim;
         nzyxdim=ndim*zyxdim;
-
         data = new T [nzyxdim];
         if (data == NULL)
             REPORT_ERROR(1001, "Allocate: No space left");
@@ -843,12 +844,31 @@ public:
      */
     void coreAllocate()
     {
-        if (ndim <= 0 || zdim <= 0 || ydim <=0 || xdim <=0)
+        if(data!=NULL)
+            REPORT_ERROR(1001, "do not allocate space for an image if you have not deallocate it first");
+        if (nzyxdim < 0)
         {
-            clear();
-            return;
+            REPORT_ERROR(1,"coreAllocateReuse:Cannot allocate a negative number of bytes");
         }
-
+        data = new T [nzyxdim];
+        if (data == NULL)
+            REPORT_ERROR(1001, "Allocate: No space left");
+    }
+    /** Core allocate without dimensions.
+     * @ingroup MultidimArrayCore
+     *
+     * It is supposed the dimensions are set previously with setXdim(x), setYdim(y)
+     * setZdim(z), setNdim(n) or with setDimensions(Xdim, Ydim, Zdim, Ndim);
+     *
+     */
+    void coreAllocateReuse()
+    {
+        if(data!=NULL)
+            return;
+        if (nzyxdim < 0)
+        {
+            REPORT_ERROR(1,"coreAllocateReuse:Cannot allocate a negative number of bytes");
+        }
         data = new T [nzyxdim];
         if (data == NULL)
             REPORT_ERROR(1001, "Allocate: No space left");
