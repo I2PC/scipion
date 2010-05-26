@@ -1,5 +1,6 @@
 %{
 #include "../metadata.h"
+#include "../metadata_extension.h"
 #include "../metadata_container.h"
 #include "../metadata_label.h"
 %}
@@ -7,6 +8,7 @@
 %ignore MetaDataContainer::addValue( MDLabel name, float value );
 %ignore MetaDataContainer::pairExists( MDLabel name, float value );
 %include ../metadata.h
+%include ../metadata_extension.h
 %include ../metadata_container.h
 %include ../metadata_label.h
 namespace std {
