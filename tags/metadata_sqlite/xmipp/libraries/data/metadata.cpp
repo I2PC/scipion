@@ -64,6 +64,8 @@ void MetaData::copyInfo(const MetaData &md)
 
 }//close copyInfo
 
+
+
 void MetaData::copyMetadata(const MetaData &md)
 {
     if (this == &md) //not sense to copy same metadata
@@ -188,7 +190,7 @@ std::vector<MDLabel> MetaData::getActiveLabels() const
 
 int MetaData::MaxStringLength(const MDLabel thisLabel) const
 {
-   REQUIRE_LABEL_EXISTS(thisLabel, "MaxStringLength");
+    REQUIRE_LABEL_EXISTS(thisLabel, "MaxStringLength");
 
     return MDSql::columnMaxLength(this, thisLabel);
 }
@@ -217,7 +219,8 @@ bool MetaData::isEmpty() const
 
 size_t MetaData::size() const
 {
-    std::vector<long int> objects = MDSql::selectObjects(this);
+    std::vector<long int> objects;
+    MDSql::selectObjects(this, objects);
 
     return objects.size();
 }
@@ -248,17 +251,19 @@ long int MetaData::addObject(long int objectId)
 
 void MetaData::importObject(const MetaData &md, const long int objId)
 {
-    importObjects(md, MDValueEqual(MDL_OBJID, objId));
+    MDSql::copyObjects(&md, this, new MDValueEqual(MDL_OBJID, objId));
 }
 
 void MetaData::importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd)
 {
+    init(&(md.activeLabels));
+    copyInfo(md);
     int size = objectsToAdd.size();
     for (int i = 0; i < size; i++)
         importObject(md, objectsToAdd[i]);
 }
 
-void MetaData::importObjects(const MetaData &md, MDQuery query)
+void MetaData::importObjects(const MetaData &md, const MDQuery &query)
 {
     init(&(md.activeLabels));
     copyInfo(md);
@@ -328,16 +333,23 @@ long int MetaData::goToObject(long int objectId)
 }
 
 //-------------Search functions-------------------
-std::vector<long int> MetaData::findObjects(MDQuery query, int limit)
+void MetaData::findObjects(std::vector<long int> &objectsOut, const MDQuery &query, int limit)
 {
-    //FIXME: VECTORS ARE RETURNED BY VALUE
-    std::vector<long int> objects = MDSql::selectObjects(this, limit, &query);
-    return objects;
+    objectsOut.clear();
+    MDSql::selectObjects(this, objectsOut, limit, &query);
+}
+
+void MetaData::findObjects(std::vector<long int> &objectsOut, int limit)
+{
+    objectsOut.clear();
+    MDSql::selectObjects(this, objectsOut, limit);
 }
 
 int MetaData::countObjects(MDQuery query)
 {
-    return findObjects(query).size();
+    std::vector<long int> objects;
+    findObjects(objects, query);
+    return objects.size();
 }
 
 bool MetaData::containsObject(long int objectId)
@@ -347,12 +359,15 @@ bool MetaData::containsObject(long int objectId)
 
 bool MetaData::containsObject(MDQuery query)
 {
-    return findObjects(query, 1).size() > 0;
+    std::vector<long int> objects;
+    findObjects(objects, query, 1);
+    return objects.size() > 0;
 }
 
 long int MetaData::gotoFirstObject(MDQuery query)
 {
-    std::vector<long int> objects = findObjects(query, 1);
+    std::vector<long int> objects;
+    findObjects(objects, query, 1);
 
     activeObjId = objects.size() == 1 ? objects[0] : -1;
     return activeObjId;
@@ -363,7 +378,6 @@ long int MetaData::gotoFirstObject(MDQuery query)
 
 void MetaData::write(const FileName &outFile)
 {
-    std::cerr << "writing to file: " << outFile <<std::endl;
     // Open file
     std::ofstream ofs(outFile.data(), std::ios_base::out);
     write(ofs);
@@ -392,17 +406,18 @@ void MetaData::write(std::ostream &os)
         }
         os << std::endl;
         //Write data
-        std::vector<long int> objects = MDSql::selectObjects(this);
+        std::vector<long int> objects;
+        MDSql::selectObjects(this, objects);
         int objsSize = objects.size();
         for (int o = 0; o < objsSize; o++)
         {
             for (int i = 0; i < labelsSize; i++)
             {
-                if (activeLabels.at(i) != MDL_COMMENT)
+                if (activeLabels[i] != MDL_COMMENT)
                 {
                     MDValue mdValue(activeLabels[i]);
                     os.width(10);
-                    MDSql::getObjectValue(this, objects.at(o), mdValue);
+                    MDSql::getObjectValue(this, objects[o], mdValue);
                     mdValue.toStream(os);
                     os << " ";
                 }
@@ -594,7 +609,7 @@ void MetaData::read(std::istream &is)
 }//close read
 
 //-------------Set Operations ----------------------
-void MetaData::union_(const MetaData &MD, const MDLabel thisLabel)
+void MetaData::unionDistinct(const MetaData &MD, const MDLabel thisLabel)
 {}
 void MetaData::unionAll(const MetaData &MD)
 {}
@@ -612,6 +627,69 @@ void MetaData::substraction(MetaData & minuend, MetaData & subtrahend,
                             MDLabel thisLabel)
 {}
 
+void MetaData::randomize(MetaData &MDin)
+{
+    std::vector<long int> objects;
+    MDSql::selectObjects(&MDin, objects);
+    std::cerr << "size:" << objects.size() <<std::endl;
+    std::random_shuffle(objects.begin(), objects.end());
+    importObjects(MDin, objects);
+}
+
+void MetaData::sort(MetaData &MDin, const MDLabel sortLabel)
+{
+    init(&(MDin.activeLabels));
+    copyInfo(MDin);
+    MDSql::copyObjects(&MDin, this, NULL, sortLabel);
+}
+
+void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLabel)
+{
+    long int mdSize = size();
+    if (n > mdSize)
+        REPORT_ERROR(-55, "split: Couldn't split a metadata in more parts than its size");
+
+    results.clear();
+    results.resize(n);
+    for (int i = 0; i < n; i++)
+    {
+        MetaData &md = results.at(i);
+        md._selectSplitPart(*this, n, i, mdSize, sortLabel);
+    }
+}
+
+void MetaData::_selectSplitPart(const MetaData &mdIn,
+                                int n, int part, long int mdSize,
+                                const MDLabel sortLabel)
+{
+    int first, last, n_images;
+    n_images = divide_equally(mdSize, n, part, first, last);
+    init(&(mdIn.activeLabels));
+    copyInfo(mdIn);
+    MDSql::copyObjects(&mdIn, this, NULL, sortLabel, n_images, first);
+}
+
+void MetaData::selectSplitPart(const MetaData &mdIn, int n, int part, const MDLabel sortLabel)
+{
+    long int mdSize = mdIn.size();
+    if (n > mdSize)
+        REPORT_ERROR(-55, "selectSplitPart: Couldn't split a metadata in more parts than its size");
+    if (part < 0 || part >= n)
+        REPORT_ERROR(-55, "selectSplitPart: 'part' should be between 0 and n-1");
+    _selectSplitPart(mdIn, n, part, mdSize, sortLabel);
+
+}
+
+void MetaData::selectPart (const MetaData &mdIn, long int startPosition, long int numberOfObjects,
+                           const MDLabel sortLabel)
+{
+    long int mdSize = mdIn.size();
+    if (startPosition < 0 || startPosition >= mdSize)
+        REPORT_ERROR(-55, "selectPart: 'startPosition' should be between 0 and size()-1");
+    init(&(mdIn.activeLabels));
+    copyInfo(mdIn);
+    MDSql::copyObjects(&mdIn, this, NULL, sortLabel, numberOfObjects, startPosition);
+}
 
 /*----------   Statistics --------------------------------------- */
 #include "metadata_extension.h"

@@ -221,7 +221,7 @@ def process_union(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel):
     if(len(cLabel)<1):
         MD1.unionAll(MD2)
     else:
-        MD1.union_(MD2,XmippData.MDL.str2Label(cLabel))
+        MD1.unionDistinct(MD2,XmippData.MDL.str2Label(cLabel))
     MD1.write(outMetaDataFile)
     
 def process_sort(inMetaDataFileS,outMetaDataFileS,cLabel):

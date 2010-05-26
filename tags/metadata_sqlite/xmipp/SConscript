@@ -303,9 +303,10 @@ def AddSQLiteLibrary():
         toBuild+=[SQliteDir+'/.libs/'+name1+".0"]
         toCopy+=[name1+".0"]
     lib1 = env.Command(toBuild, SQliteDir+"/sqlite3.c",
-        "cd "+SQliteDir+" ; make clean > /dev/null ; make -j "+str(numJobs)+\
+        "cd "+SQliteDir+" ; rm -rf ../../bin/xmipp_sqlite3 ;"+\
+        "make clean > /dev/null ; make -j "+str(numJobs)+\
         " > ../../build/sqlite_make.log; "+\
-        "chmod 755 sqlite3; mkdir -p ../../bin/xmipp_sqlite3; "+ \
+        "chmod 755 sqlite3; " + \
 	"cp sqlite3 ../../bin/xmipp_sqlite3")
     alias = env.Alias(toCopy, lib1)
     install = env.Install(libprefix, source=toBuild)

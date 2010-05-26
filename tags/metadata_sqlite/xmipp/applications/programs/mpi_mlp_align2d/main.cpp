@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Select only relevant part of selfile for this rank
-        prm.SF.mpi_select_part(rank, size, num_img_tot);
+        prm.SF.selectSplitPart(size, rank);
 
         // And produce selfile-specific side-info
         prm.produceSideInfo2();

@@ -54,7 +54,7 @@ int main(int argc, char **argv)
         prm.produce_Side_info();
 
         // Select only relevant part of selfile for this rank
-        prm.SF.mpi_select_part(rank, size, num_img_tot);
+        prm.SF.selectSplitPart(size, rank);
 
         // Actual backprojection
         prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol());

@@ -144,6 +144,12 @@ private:
     bool setValueObject(long int objId, const MDValue &mdValueIn);
     bool getValueObject(long int objId, MDValue &mdValueOut) const;
 
+    /** This have the same logic of the public one,
+     * but doesn't perform any range(wich implies do a size()) checks.
+     */
+    void _selectSplitPart(const MetaData &mdIn,
+                             int n, int part, long int mdSize,
+                             const MDLabel sortLabel);
 public:
 
     /// @defgroup MetaDataConstructors Constructors for MetaData objects
@@ -302,7 +308,7 @@ public:
     void importObject(const MetaData &md, const long int objId);
     void importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd);
 
-    void importObjects(const MetaData &md, MDQuery query);
+    void importObjects(const MetaData &md, const MDQuery &query);
 
     /**Remove the object with this id
     * @ingroup DataAccess
@@ -349,12 +355,13 @@ public:
     ///@defgroup MetaDataSearch Some functions for perform searches on metadata objects
     ///@ingroup MetaDataClass
 
-    /** Find all objects with pair <label, value>
+    /** Find all objects that match the query
+     * if called without query, all objects are returned
      * if limit is provided only return a maximun of 'limit'
      * @ingroup MetaDataSearch
      */
-    std::vector<long int> findObjects(MDQuery query, int limit = -1);
-
+    void findObjects(std::vector<long int> &objectsOut, const MDQuery &query, int limit = -1);
+    void findObjects(std::vector<long int> &objectsOut, int limit = -1);
     /**Count all objects with pairs <label, value>
      * @ingroup MetaDataSearch
      */
@@ -404,9 +411,9 @@ public:
     /** union of  metadata objects,
      *@ingroup SetOperations
      * result in calling metadata object
-     * union is a reserved word so I called this method union_
+     * union is a reserved word so I called this method unionDistinct
      */
-    void union_(const MetaData &MD, MDLabel thisLabel=MDL_OBJID);
+    void unionDistinct(const MetaData &MD, MDLabel thisLabel=MDL_OBJID);
 
     /** union of  metadata objects,
      * @ingroup SetOperations
@@ -474,32 +481,38 @@ public:
     //---------TO ORGANIZE-------------------------
     /** Randomize this metadata, MDin is input
     */
-    void randomize(MetaData &MDin)
-    {}
+    void randomize(MetaData &MDin);
     /*
     * Sort this metadata, by label
     * dirty implementation using sqlite
     */
-    void sort(MetaData & MDin, MDLabel sortlabel)
-    {}
+    void sort(MetaData &MDin, const MDLabel sortLabel);
 
-    /** Split metadata into two random halves
+
+    /** Select only a part of this MetaData
+     * the metadata will be divided in 'n'
+     * almost equally parts and will take the '
     *
     */
-    void split_in_two(MetaData &SF1, MetaData &SF2, MDLabel sortlabel=MDL_UNDEFINED)
-    {}
+    void split(int n, std::vector<MetaData> &results,
+               const MDLabel sortLabel=MDL_OBJID);
+    /** SelectSplitPart have the same logic than
+     * split, but only one of the parts is taken
+     * another difference is that result will be
+     * in the calling object
+     */
+    void selectSplitPart(const MetaData &mdIn,
+                         int n, int part,
+                         const MDLabel sortLabel=MDL_OBJID);
 
-    /** Select only a piece of this MetaData for MPI executions
-    *
+    /** Select a part of the metadata in
+     * from an starting position and
+     * selecting an specified number of objects
+     * if the numberOfObjects is -1, all objects
+     * will be returned from startPosition
     */
-    void mpi_select_part(int rank, int size, int &num_img_tot)
-    {}
-
-    /** Fill metadata with N entries from MD starting at start
-    *
-    */
-    void fillWithNextNObjects (MetaData &MD, long int start, long int numberObjects)
-    {}
+    void selectPart (const MetaData &mdIn, long int startPosition, long int numberOfObjects,
+                               const MDLabel sortLabel=MDL_OBJID);
 
 
     friend class MDSql;

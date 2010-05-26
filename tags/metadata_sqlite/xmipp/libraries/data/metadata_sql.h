@@ -95,7 +95,7 @@ public:
      * Also a query could be specified for selecting objects
      * if no query is provided by default all are returned
      */
-    static std::vector<long int> selectObjects(const MetaData *mdPtr, int limit = -1, const MDQuery *queryPtr = NULL);
+    static void selectObjects(const MetaData *mdPtr, std::vector<long int> &objectsOut, int limit = -1, const MDQuery *queryPtr = NULL);
 
     /** This function will delete elements
      * that match the query
@@ -106,7 +106,9 @@ public:
     /** Coppy the objects from a metada to other
      * return the number of objects copied
      * */
-    static long int copyObjects(const MetaData *mdPtrIn, MetaData *mdPtrOut, const MDQuery *queryPtr = NULL);
+    static long int copyObjects(const MetaData *mdPtrIn, MetaData *mdPtrOut,
+                                const MDQuery *queryPtr = NULL, const MDLabel sortLabel = MDL_OBJID,
+                                int limit = -1, int offset = 0);
 
     /** Some iteration methods
      *
@@ -194,12 +196,12 @@ public:
     {
         std::stringstream ss;
         MDValue mdValue(label, value);
-        //MDL::voidPtr2Value(label, (void*)new T(value), mdValue);
         ss << MDL::label2Str(label) << "=";
         mdValue.toStream(ss);
         this->queryString = ss.str();
     }
-};//class MDValueEqual
+}
+;//class MDValueEqual
 
 /**MDValueEqual this will test if a label have a value
  *@ingroup MetaDataQuery
@@ -226,6 +228,7 @@ public:
         this->queryString = ss.str();
 
     }
-};//class MDValueRange
+}
+;//class MDValueRange
 
 #endif

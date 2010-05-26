@@ -622,7 +622,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     if (nr_iter > 0)
     {
     	SFclass=SFclass1;
-    	SFclass.union_(SFclass2);
+    	SFclass.unionDistinct(SFclass2);
         avg() = avg1() + avg2();
         w = w1 + w2;
         avg.setWeight(w);
@@ -643,7 +643,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 
     // Output total and split averages and selfiles to disc
     SFclass = SFclass1;
-    SFclass.union_(SFclass2);
+    SFclass.unionDistinct(SFclass2);
     avg() = avg1() + avg2();
     w = w1 + w2;
     avg.setWeight(w);

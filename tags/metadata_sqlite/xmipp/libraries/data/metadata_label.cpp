@@ -119,11 +119,32 @@ MDLabelType MDL::labelType(std::string &labelName)
 
 
 //----------- Implementation of MDValue -----------------
-void MDValue::labelTypeCheck(MDLabelType type) const
+inline void MDValue::labelTypeCheck(MDLabelType type) const
 {
     if (MDL::labelType(this->label) != type)
     {
-        REPORT_ERROR(-55,"Mismatch Label and Value types.");
+        std::stringstream ss;
+        ss << "Mismatch Label (" << MDL::label2Str(label) << ") and value type(";
+        switch (type)
+        {
+        case LABEL_INT:
+            ss << "int";
+            break;
+        case LABEL_LONG:
+            ss << "long int";
+            break;
+        case LABEL_STRING:
+            ss << "string";
+            break;
+        case LABEL_BOOL:
+            ss << "bool";
+            break;
+        case LABEL_VECTOR:
+            ss << "vector";
+            break;
+        }
+        ss << ")";
+        REPORT_ERROR(-55, ss.str());
     }
 }
 
@@ -178,7 +199,7 @@ MDValue::MDValue(MDLabel label, const float &floatValue)
     std::cerr << "Floats are banned from metadata class"<< std::endl;
     exit(1);
 }
-MDValue::MDValue(MDLabel label, const char  &charValue)
+MDValue::MDValue(MDLabel label, const char &charValue)
 {
     std::cerr << "Do not use setValue with char, use string"<< std::endl;
     std::cerr << "chars are banned from metadata class"<< std::endl;
@@ -254,6 +275,7 @@ void MDValue::toStream(std::ostream &os, bool withFormat) const
         break;
     case LABEL_LONG:
         INT2STREAM(longintValue);
+        break;
     case LABEL_DOUBLE:
         DOUBLE2STREAM(doubleValue);
         break;

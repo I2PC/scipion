@@ -145,7 +145,7 @@ void ShowCL2D::extractRepresented(MetaData &SF_represented)
     for (int i = 0; i < listSize; i++)
     {
         if (cellMarks[i])
-            SF_represented.union_(SFcv[i]);
+            SF_represented.unionDistinct(SFcv[i]);
     }
 }
 
