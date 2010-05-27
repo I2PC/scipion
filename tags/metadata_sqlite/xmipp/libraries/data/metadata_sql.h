@@ -31,12 +31,19 @@
 #include "strings.h"
 #include <external/sqlite-3.6.23/sqlite3.h>
 #include "metadata_label.h"
-#include "metadata.h"
+
 
 
 class MDSqlStaticInit;
 class MDQuery;
 class MetaData;
+
+enum AggregateOperation
+{
+    AGGR_COUNT, AGGR_MAX, AGGR_MIN, AGGR_SUM, AGGR_AVG
+};
+
+#include "metadata.h"
 
 /** MDSql this class will manage SQL database interactions
  * will be used to implement different MetaData functions
@@ -64,12 +71,6 @@ public:
      * to 'createMd' should be done
      */
     static bool clearMd(const MetaData *mdPtr);
-
-    /**This function will drop the entire table
-     * for use the metada again, a call
-     * to 'createMd' should be done
-     */
-    static bool copyMd(const MetaData *mdPtrIn, MetaData *mdPtrOut);
 
     /**Add a new row and return the objId(rowId)
      *
@@ -110,6 +111,12 @@ public:
                                 const MDQuery *queryPtr = NULL, const MDLabel sortLabel = MDL_OBJID,
                                 int limit = -1, int offset = 0);
 
+    /** This function is to perform aggregation operations
+     *
+     */
+    static void aggregateMd(const MetaData *mdPtrIn, MetaData *mdPtrOut,
+                            const std::vector<AggregateOperation> &operations,
+                            MDLabel operateLabel);
     /** Some iteration methods
      *
      */
@@ -119,6 +126,9 @@ public:
     static long int previousRow(const MetaData *mdPtr, long int currentRow);
 
     static int columnMaxLength(const MetaData *mdPtr, MDLabel column);
+
+    /**Functions to implement set operations */
+    static void setOperate(const MetaData *mdPtrIn, MetaData *mdPtrOut, MDLabel column, int operation);
 
     static char *errmsg;
     static const char *zLeftover;
@@ -145,6 +155,7 @@ private:
     friend class MDSqlStaticInit;
 }
 ;//close class MDSql
+
 
 class MDSqlStaticInit
 {

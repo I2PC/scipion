@@ -75,7 +75,7 @@ void MetaData::copyMetadata(const MetaData &md)
     MDSql::copyObjects(&md, this);
 }
 
-bool MetaData::setValueObject(long int objId, const MDValue &mdValueIn)
+bool MetaData::_setValue(long int objId, const MDValue &mdValueIn)
 {
     if (objId == -1)
     {
@@ -93,7 +93,7 @@ bool MetaData::setValueObject(long int objId, const MDValue &mdValueIn)
     MDSql::setObjectValue(this, objId, mdValueIn);
 }
 
-bool MetaData::getValueObject(long int objId, MDValue &mdValueOut) const
+bool MetaData::_getValue(long int objId, MDValue &mdValueOut) const
 {
     REQUIRE_LABEL_EXISTS(mdValueOut.label, "getValue");
     if (objId == -1)
@@ -123,8 +123,9 @@ MetaData::MetaData(const std::vector<MDLabel> *labelsVector)
 
 MetaData::MetaData(const FileName &fileName, const std::vector<MDLabel> *labelsVector)
 {
-    init(labelsVector);
-    //TODO: Read values from File and store in MD
+    //init(labelsVector);
+    //FIXME: what to do when labels vector is provided???
+    read(fileName);
 }//close MetaData from file Constructor
 
 MetaData::MetaData(const MetaData &md)
@@ -249,12 +250,12 @@ long int MetaData::addObject(long int objectId)
     return activeObjId;
 }
 
-void MetaData::importObject(const MetaData &md, const long int objId)
+void MetaData::importObject(const MetaData &md, const long int objId, bool doClear)
 {
     MDSql::copyObjects(&md, this, new MDValueEqual(MDL_OBJID, objId));
 }
 
-void MetaData::importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd)
+void MetaData::importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd, bool doClear)
 {
     init(&(md.activeLabels));
     copyInfo(md);
@@ -263,10 +264,20 @@ void MetaData::importObjects(const MetaData &md, const std::vector<long int> &ob
         importObject(md, objectsToAdd[i]);
 }
 
-void MetaData::importObjects(const MetaData &md, const MDQuery &query)
+void MetaData::importObjects(const MetaData &md, const MDQuery &query, bool doClear)
 {
-    init(&(md.activeLabels));
-    copyInfo(md);
+    if (doClear)
+    {
+        //Copy all structure and info from the other metadata
+        init(&(md.activeLabels));
+        copyInfo(md);
+    }
+    else
+    {
+        //If not clear, ensure that the have the same labels
+        for (int i = 0; i < md.activeLabels.size(); i++)
+            addLabel(md.activeLabels[i]);
+    }
     MDSql::copyObjects(&md, this, &query);
 }
 
@@ -283,7 +294,7 @@ void MetaData::removeObjects(const std::vector<long int> &toRemove)
         removeObject(toRemove[i]);
 }
 
-int MetaData::removeObjects(MDQuery query)
+int MetaData::removeObjects(const MDQuery &query)
 {
     int removed = MDSql::deleteObjects(this, &query);
     firstObject(); //I prefer put active object to -1
@@ -577,6 +588,7 @@ void MetaData::read(std::istream &is)
         std::string newLabel;
         std::string value;
 
+        init();
         long int objectID = addObject();
 
         // Read data and fill structures accordingly
@@ -608,24 +620,73 @@ void MetaData::read(std::istream &is)
     }
 }//close read
 
-//-------------Set Operations ----------------------
-void MetaData::unionDistinct(const MetaData &MD, const MDLabel thisLabel)
-{}
-void MetaData::unionAll(const MetaData &MD)
-{}
-void MetaData::aggregate(MetaData MDIn,
-                         MDLabel aggregateLabel,
-                         MDLabel entryLabel,
-                         MDLabel operationLabel)
-{}
 
 void MetaData::merge(const FileName &fn)
-{}
-void MetaData::intersection(MetaData & minuend, MetaData & , MDLabel thisLabel)
-{}
-void MetaData::substraction(MetaData & minuend, MetaData & subtrahend,
-                            MDLabel thisLabel)
-{}
+{
+    MetaData md;
+    md.read(fn);
+    unionAll(md);
+}
+
+void MetaData::aggregate(const MetaData &mdIn, AggregateOperation op,
+                         MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel)
+
+{
+    std::vector<MDLabel> labels(2);
+    labels[0] = aggregateLabel;
+    labels[1] = resultLabel;
+    init(&labels);
+    std::vector<AggregateOperation> ops(1);
+    ops[0] = op;
+    MDSql::aggregateMd(&mdIn, this, ops, operateLabel);
+}
+
+void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
+                         MDLabel operateLabel, const std::vector<MDLabel> &resultLabels)
+{
+    if (resultLabels.size() - ops.size() != 1)
+        REPORT_ERROR(-55, "Labels vectors should contain one element more than operations");
+    init(&resultLabels);
+    MDSql::aggregateMd(&mdIn, this, ops, operateLabel);
+}
+
+
+//-------------Set Operations ----------------------
+void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, int operation)
+{
+    if (this == &mdIn) //not sense to operate on same metadata
+        return;
+    //Add labels to be sure are present
+    for (int i = 0; i < mdIn.activeLabels.size(); i++)
+        addLabel(mdIn.activeLabels[i]);
+
+    MDSql::setOperate(&mdIn, this, label, operation);
+}
+
+void MetaData::unionDistinct(const MetaData &mdIn, const MDLabel label)
+{
+    _setOperates(mdIn, label, 1);
+}
+
+void MetaData::unionAll(const MetaData &mdIn)
+{
+    if (this == &mdIn) //not sense to copy same metadata
+        return;
+    //Add labels to be sure are present
+    for (int i = 0; i < mdIn.activeLabels.size(); i++)
+        addLabel(mdIn.activeLabels[i]);
+    MDSql::copyObjects(&mdIn, this);
+}
+
+
+void MetaData::intersection(const MetaData &mdIn, const MDLabel label)
+{
+    _setOperates(mdIn, label, 3);
+}
+void MetaData::substraction(const MetaData &mdIn, const MDLabel label)
+{
+    _setOperates(mdIn, label, 2);
+}
 
 void MetaData::randomize(MetaData &MDin)
 {

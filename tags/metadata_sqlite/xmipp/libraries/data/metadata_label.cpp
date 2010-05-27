@@ -70,7 +70,7 @@ std::string MDL::label2SqlColumn(const MDLabel label)
         ss << "TEXT";
         break;
     case LABEL_VECTOR:
-        REPORT_ERROR(-55, "Metadata still not suport vectors");
+        ss << "BLOB";
         break;
     }
     return ss.str();

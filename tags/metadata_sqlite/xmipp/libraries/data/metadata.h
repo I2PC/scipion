@@ -88,10 +88,6 @@ private:
      */
     FileName inFile;
 
-    /**Name of the Table in the DB
-     */
-    std::string tableName;
-
     /** What labels have been read from a docfile/metadata file
      *   and/or will be stored on a new metadata file when "save" is
      *   called
@@ -141,15 +137,22 @@ private:
      * and values
      */
 
-    bool setValueObject(long int objId, const MDValue &mdValueIn);
-    bool getValueObject(long int objId, MDValue &mdValueOut) const;
+    bool _setValue(long int objId, const MDValue &mdValueIn);
+    bool _getValue(long int objId, MDValue &mdValueOut) const;
 
     /** This have the same logic of the public one,
      * but doesn't perform any range(wich implies do a size()) checks.
      */
     void _selectSplitPart(const MetaData &mdIn,
-                             int n, int part, long int mdSize,
-                             const MDLabel sortLabel);
+                          int n, int part, long int mdSize,
+                          const MDLabel sortLabel);
+
+    /** This function is for generalizate the sets operations
+     * of unionDistinct, intersection, substraction
+     * wich can be expressed in terms of
+     * ADD, SUBSTRACT of intersection part
+     */
+    void _setOperates(const MetaData &mdIn, const MDLabel label, int operation);
 public:
 
     /// @defgroup MetaDataConstructors Constructors for MetaData objects
@@ -260,7 +263,7 @@ public:
     template<class T>
     bool setValue(const MDLabel label, const T &valueIn, long int objectId=-1)
     {
-        setValueObject(objectId, MDValue(label, valueIn));
+        _setValue(objectId, MDValue(label, valueIn));
     }
 
     // Set a new pair/value for an specified object. If no objectId is given, that
@@ -271,7 +274,7 @@ public:
     bool getValue(const MDLabel label, T &valueOut, long int objectId = -1) const
     {
         MDValue mdValueOut(label);
-        getValueObject(objectId, mdValueOut);
+        _getValue(objectId, mdValueOut);
         mdValueOut.getValue(valueOut);
     }
     /**IsEmpty check whether the metadata is empty or not
@@ -305,10 +308,9 @@ public:
     /** Import objects from another metadata
      * @ingroup DataAccess
      */
-    void importObject(const MetaData &md, const long int objId);
-    void importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd);
-
-    void importObjects(const MetaData &md, const MDQuery &query);
+    void importObject(const MetaData &md, const long int objId, bool doClear=true);
+    void importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd, bool doClear=true);
+    void importObjects(const MetaData &md, const MDQuery &query, bool doClear=true);
 
     /**Remove the object with this id
     * @ingroup DataAccess
@@ -328,7 +330,7 @@ public:
      * return the number of deleted rows
      * @ingroup DataAccess
      */
-    int removeObjects(MDQuery query);
+    int removeObjects(const MDQuery &query);
 
     //FIXME: organize this
     // Possible error codes for the metadata operations
@@ -405,22 +407,7 @@ public:
      */
     void read(std::istream &is);
 
-    /// @defgroup SetOperations Set operations on MetaData's
-    /// @ingroup MetaDataClass
 
-    /** union of  metadata objects,
-     *@ingroup SetOperations
-     * result in calling metadata object
-     * union is a reserved word so I called this method unionDistinct
-     */
-    void unionDistinct(const MetaData &MD, MDLabel thisLabel=MDL_OBJID);
-
-    /** union of  metadata objects,
-     * @ingroup SetOperations
-     * result in calling metadata object
-     * Repetion are allowed
-     */
-    void unionAll(const MetaData &MD);
 
     /** Aggregate metadata objects,
      * @ingroup SetOperations
@@ -443,10 +430,30 @@ public:
 
      The result of total() is always a floating point value.
      */
-    void aggregate(MetaData MDIn,
-                   MDLabel aggregateLabel,
-                   MDLabel entryLabel,
-                   MDLabel operationLabel);
+    /** Aggregate modes */
+
+    void aggregate(const MetaData &mdIn, AggregateOperation op,
+                   MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel);
+    void aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
+                             MDLabel operateLabel, const std::vector<MDLabel> &resultLabels);
+
+    /// @defgroup SetOperations Set operations on MetaData's
+    /// @ingroup MetaDataClass
+    /** union of  metadata objects,
+     *@ingroup SetOperations
+     * result in calling metadata object
+     * union is a reserved word so I called this method unionDistinct
+     */
+    void unionDistinct(const MetaData &mdIn, const MDLabel label=MDL_OBJID);
+
+    /** union of  metadata objects,
+     * @ingroup SetOperations
+     * result in calling metadata object
+     * Repetion are allowed
+     */
+    void unionAll(const MetaData &mdIn);
+
+
 
     /** merge of a metadata
      * @ingroup SetOperations
@@ -454,27 +461,19 @@ public:
      */
     void merge(const FileName &fn);
 
-    /** Aggregate modes */
-    enum AggregateMode
-    {
-        KEEP_OLD,
-        KEEP_NEW,
-        SUM
-    };
+
 
     /** intersects two metadata objects,
      *@ingroup SetOperations
      * result in "calling" metadata
      */
-    void intersection(MetaData & minuend, MetaData & ,
-                      MDLabel thisLabel);
+    void intersection(const MetaData &mdIn, const MDLabel label=MDL_OBJID);
 
     /** substract two metadata objects,
      * @ingroup SetOperations
      * result in "calling" metadata
      */
-    void substraction(MetaData & minuend, MetaData & subtrahend,
-                      MDLabel thisLabel);
+    void substraction(const MetaData &mdIn, const MDLabel label=MDL_OBJID);
 
 
 
@@ -512,12 +511,18 @@ public:
      * will be returned from startPosition
     */
     void selectPart (const MetaData &mdIn, long int startPosition, long int numberOfObjects,
-                               const MDLabel sortLabel=MDL_OBJID);
+                     const MDLabel sortLabel=MDL_OBJID);
 
 
     friend class MDSql;
 };
 
+enum AggregateMode
+{
+    KEEP_OLD,
+    KEEP_NEW,
+    SUM
+};
 
 /** For all objects.
  @code
