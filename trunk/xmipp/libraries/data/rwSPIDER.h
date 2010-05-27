@@ -76,7 +76,6 @@ struct SPIDERhead
     char ctit[160];  // 216-255   title
 } ;
 
-
 /************************************************************************
 @Function: readSPIDER
 @Description:
@@ -100,7 +99,7 @@ struct SPIDERhead
 @Returns:
  int     error code (<0 means failure).
 **************************************************************************/
-int  readSPIDER(int img_select)
+int  readSPIDER(int img_select,bool isStack=false)
 {
 #undef DEBUG
     //#define DEBUG
@@ -142,7 +141,6 @@ int  readSPIDER(int img_select)
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)header->scale);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)header->scale);
     MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->scale);
-    bool isStack;
     if ( header->istack > 0 )
         isStack = true;
     else
@@ -205,9 +203,10 @@ int  readSPIDER(int img_select)
     unsigned long   imgEnd =_nDim;
     if (img_select != -1)
     {
-    	imgStart=img_select;
-    	imgEnd=img_select+1;
+        imgStart=img_select;
+        imgEnd=img_select+1;
     }
+
     char*   hend;
 
     std::stringstream Num;
@@ -215,7 +214,7 @@ int  readSPIDER(int img_select)
     //image is in stack? and set right initial and final image
     if ( isStack)
     {
-    	pad         = offset;
+        pad         = offset;
         if ( img_select > (int)_nDim )
         {
             Num  << img_select;
@@ -241,12 +240,17 @@ int  readSPIDER(int img_select)
         offset += offset;
     }
 
+    if(dataflag== -2 )
+    {
+        fclose(fimg);
+        return 0;
+    }
     MD.clear();
     for ( i=imgStart; i<imgEnd; i++ )
     {
         //if(img_select==-1 || img_select==i)
         {
-        fseek( fimg, header_size + i*image_size, SEEK_SET );
+            fseek( fimg, header_size + i*image_size, SEEK_SET );
             if(isStack)
             {
                 if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
@@ -310,8 +314,7 @@ int  readSPIDER(int img_select)
 
 int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
-    //either I write an object or I write slice of this object
-    //stack can only overwrite,slice can overwrite append or insert
+    //return(1);
 #undef DEBUG
     //#define DEBUG
 #ifdef DEBUG
@@ -347,11 +350,25 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     header->nrow   = Ydim;
     header->nslice = Zdim;
 
+    unsigned long   imgStart=0;
+    unsigned long   imgEnd =Ndim;
+    if (select_img != -1)
+    {
+        imgStart=select_img;
+        imgEnd=select_img+1;
+    }
+    if (mode = WRITE_APPEND)
+    {
+        imgStart=0;
+        imgEnd=1;
+    }
+
     // If a transform, then the physical storage in x is only half+1
     size_t xstore  = Xdim;
     if ( transform == Hermitian )
     {
-        xstore = XSIZE(data)/2 + 1;
+        xstore = XSIZE(data)
+                 /2 + 1;
         header->nsam = 2*xstore;
     }
 
@@ -465,7 +482,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     fl.l_pid    = getpid(); /* our PID                      */
 
 
-    FILE        *fimg;
+    FILE        * fimg;
     /*
      * OPEN FILE
      */
@@ -484,9 +501,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
      */
     fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
-    if(mode==WRITE_OVERWRITE
-       ||
-       mode==WRITE_APPEND)//header must change
+    if(mode==WRITE_OVERWRITE || mode==WRITE_APPEND)//header must change
         fwrite( header, offset, 1, fimg );
 
     char* fdata = (char *) askMemory(datasize);
@@ -501,13 +516,15 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
         fwrite( fdata, datasize, 1, fimg );
     }
+
     else
     {
         if(mode==WRITE_APPEND)
             fseek( fimg, 0, SEEK_END);
         else if(mode==WRITE_REPLACE)
             fseek( fimg,offset + (offset+datasize)*select_img, SEEK_SET);
-        for ( size_t i=0; i<Ndim; i++ )
+        //for ( size_t i=0; i<Ndim; i++ )
+        for ( size_t i =imgStart; i<imgEnd; i++ )
         {
             //header->imgnum = i + 1;
             long int next_result = MD.nextObject();
@@ -542,7 +559,12 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         }
     }
     //I guess I do not need to unlock since we are going to close the file
-    fclose(fimg);
+    fl.l_type   = F_UNLCK;
+    ;
+    fcntl(fileno(fimg), F_SETLK, &fl); /* locked */
+    int cerr = fclose(fimg);
+    if( cerr !=0 )
+        REPORT_ERROR(1,(std::string)"Can not close file "+ filename);
 
     freeMemory(fdata, datasize);
     freeMemory(header, (int)labbyt*sizeof(char));
