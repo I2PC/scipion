@@ -206,6 +206,11 @@ int readMRC(int img_select,bool isStack=false)
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
 
     int Ndim = NSIZE(data);
+    if(dataflag== -2 )
+    {
+    	fclose(fimg);
+    	return 0;
+    }
     MD.clear();
     for ( i=imgStart; i<imgEnd; i++ )
         //for(int i=0;i< Ndim;i++)
@@ -249,7 +254,7 @@ int readMRC(int img_select,bool isStack=false)
     return(0);
 }
 
-int writeMRC(int select_img, bool isStack=false, int mode=WRITE_OVERWRITE)
+int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     /*
         if ( transform != NoTransform )
@@ -265,7 +270,18 @@ int writeMRC(int select_img, bool isStack=false, int mode=WRITE_OVERWRITE)
     int Ydim = YSIZE(data);
     int Zdim = ZSIZE(data);
     int Ndim = NSIZE(data);
-
+    unsigned long   imgStart=0;
+    unsigned long   imgEnd =Ndim;
+    if (img_select != -1)
+    {
+        imgStart=img_select;
+        imgEnd=img_select+1;
+    }
+    if (mode = WRITE_APPEND)
+    {
+        imgStart=0;
+        imgEnd=1;
+    }
     header->nx = Xdim;
     header->ny = Ydim;
     header->nz = Zdim;
@@ -335,7 +351,7 @@ int writeMRC(int select_img, bool isStack=false, int mode=WRITE_OVERWRITE)
     else
         datasize = datasize_n * gettypesize(Float);
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     printf("DEBUG rwMRC: Offset = %ld,  Datasize_n = %ld\n", offset, datasize_n);
@@ -414,8 +430,8 @@ int writeMRC(int select_img, bool isStack=false, int mode=WRITE_OVERWRITE)
         if(mode==WRITE_APPEND)
             fseek( fimg, 0, SEEK_END);
         else if(mode==WRITE_REPLACE)
-            fseek( fimg,offset + (datasize)*select_img, SEEK_SET);
-        for ( size_t i=0; i<Ndim; i++)
+            fseek( fimg,offset + (datasize)*img_select, SEEK_SET);
+        for ( size_t i =imgStart; i<imgEnd; i++ )
         {
             if (isComplexT())
                 castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
