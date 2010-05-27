@@ -143,14 +143,7 @@ int  readIMAGIC(int img_select)
         _yDim,
         _zDim,
         _nDim );
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
-    if (img_select != -1)
-    {
-    	imgStart=img_select;
-    	imgEnd=img_select+1;
-    }
-
+    replaceNsize=_nDim;
     DataType datatype;
 
     if ( strstr(header->type,"PACK") )
@@ -192,7 +185,11 @@ int  readIMAGIC(int img_select)
     offset = 0;   // separate header file
 
     unsigned long   Ndim = _nDim, j = 0;
-
+    if(dataflag== -2 )
+    {
+    	fclose(fhed);
+    	return 0;
+    }
     // View   view;
     char*   hend;
     /*already done in image.h
@@ -214,8 +211,8 @@ int  readIMAGIC(int img_select)
         fseek( fhed, img_select * IMAGICSIZE, SEEK_SET );
 
     MD.clear();
-    for ( i=imgStart; i<imgEnd; i++ )
-    //for ( i=0; i<Ndim; i++ )
+    //for ( i=imgStart; i<imgEnd; i++ )
+    for ( i=0; i<Ndim; i++ )
     {
         if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
             return(-2);
@@ -238,8 +235,6 @@ int  readIMAGIC(int img_select)
         }
     }
 
-    fclose(fhed);
-
     delete header;
 
     FILE        *fimg;
@@ -250,6 +245,7 @@ int  readIMAGIC(int img_select)
     readData(fimg, img_select, datatype, pad );
 
     fclose(fimg);
+    fclose(fhed);
 
     return(0);
 }
@@ -265,20 +261,23 @@ int  readIMAGIC(int img_select)
 @Returns:
  int     error code (<0 means failure).
 **************************************************************************/
-int  writeIMAGIC()
+int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
 {
-#ifdef NEVERDEFINED
     //    if ( p->transform != NoTransform )
     //        img_convert_fourier(p, Centered);
 
     IMAGIChead* header = new IMAGIChead;
+    int Xdim = XSIZE(data);
+    int Ydim = YSIZE(data);
+    int Zdim = ZSIZE(data);
+    int Ndim = NSIZE(data);
 
     // fill in the file header
     header->nhfr = 1;
-    header->npix2 = XSIZE(data)*YSIZE(data);
+    header->npix2 = Xdim*Ydim;
     header->npixel = header->npix2;
-    header->iylp = XSIZE(data);
-    header->ixlp = YSIZE(data);
+    header->iylp = Xdim;
+    header->ixlp = Ydim;
 
     time_t timer;
     time ( &timer );
@@ -291,6 +290,18 @@ int  writeIMAGIC()
     header->nminut = t->tm_min;
     header->nsec = t->tm_sec;
 
+    unsigned long   imgStart=0;
+    unsigned long   imgEnd =Ndim;
+    if (img_select != -1)
+    {
+        imgStart=img_select;
+        imgEnd=img_select+1;
+    }
+    if (mode = WRITE_APPEND)
+    {
+        imgStart=0;
+        imgEnd=1;
+    }
 
     // Convert T to datatype
     if ( typeid(T) == typeid(double) ||
@@ -306,11 +317,16 @@ int  writeIMAGIC()
     else
         REPORT_ERROR(1,"ERROR write IMAGIC image: invalid typeid(T)");
 
+    size_t datasize, datasize_n;
+    datasize_n = Xdim*Ydim*Zdim;
+    if (isComplexT())
+        datasize = datasize_n * gettypesize(ComplexFloat);
+    else
+        datasize = datasize_n * gettypesize(Float);
     double aux;
 
     if (MDMainHeader.firstObject() != MetaData::NO_OBJECTS_STORED)
     {
-
 
         if(MDMainHeader.getValue(MDL_MIN,   aux))
             header->densmin = (float)aux;
@@ -331,71 +347,99 @@ int  writeIMAGIC()
     // get the filename without extension to find the header file
     FileName headername;
     headername = filename.substr(0, filename.find_last_of('.')) + ".hed";
+    filename   = filename.substr(0, filename.find_last_of('.')) + ".img";
 
     FILE        *fhed, *fimg;
-    if ( ( fhed = fopen(headername.c_str(), "w") ) == NULL )
-        REPORT_ERROR(1,(std::string)"writeIMAGIC: header file " +headername+ " cannot be created");
-    if ( ( fhed = fopen(headername.c_str(), "w") ) == NULL )
-        REPORT_ERROR(1,(std::string)"writeIMAGIC: data file "   +filename+ " cannot be created");
-    MD.firstObject();
-    for (unsigned long i=0; i<NSIZE(data); i++ )
+
+
+    if (mode==WRITE_OVERWRITE || (!_exists && mode==WRITE_APPEND))//open in overwrite mode
     {
-        long int next_result = MD.nextObject();
-        if (next_result != MetaData::NO_OBJECTS_STORED && next_result != MetaData::NO_MORE_OBJECTS)
-        {
-            header->imn = i + 1;   // Image number
-            header->ifn = NSIZE(data) - i - 1; // Number of images following this one
-            if(MD.getValue(MDL_ORIGINX,  aux))
-                header->iyold  = (int) (-aux + 0.5);
-            if(MD.getValue(MDL_ORIGINY,  aux))
-                header->ixold  = (int) (-aux + 0.5);
-
-            if(MD.getValue(MDL_ORIGINZ,  aux))
-                header->zoff  =(float)-aux;
-            else
-                header->zoff  =0.;
-
-            if(MD.getValue(MDL_ANGLEROT, aux))
-                header->euler_alpha = header->eman_alt = (float)-aux;
-            if(MD.getValue(MDL_ANGLETILT,aux))
-                header->euler_beta  = header->eman_az  = (float)-aux;
-            if(MD.getValue(MDL_ANGLEPSI, aux))
-                header->euler_gamma = header->eman_phi = (float)-aux;
-            fwrite( header, IMAGICSIZE, 1, fhed );
-
-            if ( strstr(header->type,"COMP"))
-                writePageAsDatatype(fimg, ComplexFloat, datasize_n);
-            castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
-            else if ( strstr(header->type,"REAL"))
-                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
-            else if ( typeid(T) == typeid(unsigned char))
-                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, UChar, datasize_n);
-            else if ( typeid(T) == typeid( char))
-                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, SChar, datasize_n);
-            else
-                REPORT_ERROR(var,"writeIMAGIC : Unknown type");
-            fwrite( fdata, datasize, 1, fimg );
-        }
+        if ( ( fhed = fopen(headername.c_str(), "w") ) == NULL )
+            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+        if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
+            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+    }
+    else //open in append mode
+    {
+        if ( ( fhed = fopen(headername.c_str(), "r+") ) == NULL )
+            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+        if ( ( fimg = fopen(filename.c_str(), "r+") ) == NULL )
+            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
     }
 
+
+    /*
+     * BLOCK HEADER IF NEEDED
+     */
+    struct flock fl;
+    int fd;
+
+    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
+    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
+    fl.l_start  = 0;        /* Offset from l_whence         */
+    fl.l_len    = 0;        /* length, 0 = to EOF           */
+    fl.l_pid    = getpid(); /* our PID                      */
+    fl.l_type   = F_WRLCK;
+    fcntl(fileno(fimg),       F_SETLKW, &fl); /* locked */
+    fcntl(fileno(fhed), F_SETLKW, &fl); /* locked */
+
+
+    if(mode==WRITE_APPEND)
+    {
+        fseek( fimg, 0, SEEK_END);
+        fseek( fhed, 0, SEEK_END);
+    }
+    else if(mode==WRITE_REPLACE)
+    {
+        fseek( fimg, datasize   * img_select, SEEK_SET);
+        fseek( fhed, IMAGICSIZE * img_select, SEEK_SET);
+    }
+    else //mode==WRITE_OVERWRITE
+    {
+        fseek( fimg, 0, SEEK_SET);
+        fseek( fhed, 0, SEEK_SET);
+    }
+    char* fdata = (char *) askMemory(datasize);
+
+    long int next_result ;
+    next_result = MD.firstObject();
+
+    for ( i=imgStart; i<imgEnd; i++ )
+    {
+        //header->imgnum = i + 1;
+        if (next_result != MetaData::NO_OBJECTS_STORED &&
+            next_result != MetaData::NO_MORE_OBJECTS)
+        {
+            if(MD.getValue(MDL_ORIGINX,  aux))
+                header->iyold  = (float)-aux;
+            if(MD.getValue(MDL_ORIGINY,  aux))
+                header->ixold  =(float)-aux;
+            //if(MD.getValue(MDL_ORIGINZ,  aux))
+            //    header->zoff  =(float)aux;
+            if(MD.getValue(MDL_ANGLEROT, aux))
+                header->euler_alpha   =(float)-aux;
+            if(MD.getValue(MDL_ANGLETILT,aux))
+                header->euler_beta    =(float)-aux;
+            if(MD.getValue(MDL_ANGLEPSI, aux))
+                header->euler_gamma =(float)-aux;
+        }
+        fwrite( header, IMAGICSIZE, 1, fhed );
+        if (isComplexT())
+            castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
+        else
+            castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
+        fwrite( fdata, datasize, 1, fimg );
+        next_result = MD.nextObject();
+    }
+
+    freeMemory(fdata, datasize);
+
+
     fclose(fhed);
+    fclose(fimg);
 
     delete header;
 
-
-    unsigned long datatypesize = gettypesize(p->datatype);
-    unsigned long  datasize = p->x*p->y*p->z*p->n*datatypesize;
-
-    FILE        *fimg;
-
-    if ( p->dataflag )
-    {
-        if ( ( fimg = fopen(p->filename.c_str(), "w") ) == NULL )
-            return(-3);
-        fwrite( p->data, datasize, 1, fimg );
-        fclose(fimg);
-    }
-#endif
     return(0);
 }
 
