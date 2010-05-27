@@ -1111,6 +1111,7 @@ void MetaData::clear()
     path.clear();
     comment.clear();
     objects.clear();
+    //!!!!!!METADATA COINTER Is NOT REMOVED!!!!!!
 
     objectsIterator = objects.end();
 
