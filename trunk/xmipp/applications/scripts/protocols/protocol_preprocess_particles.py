@@ -64,7 +64,7 @@ ImagesDir='Images'
 # {section} Normalization
 #------------------------------------------------------------------------------------------------
 # Perform particle normalization?
-DoNormalize=False
+DoNormalize=True
 # Pixels outside this circle are assumed to be noise and their stddev is set to 1.
 # Radius for background circle definition (in pix.)
 BackGroundRadius=30
@@ -135,7 +135,7 @@ class preprocess_particles_class:
         self.ProjectDir=ProjectDir
         self.LogDir=LogDir
         self.DoExtract=DoExtract
-        self.PosFile=PosFile
+        self.PosFile=PosFile.strip()
         self.Size=Size
         self.ImagesDir=ImagesDir
         self.DoNormalize=DoNormalize
