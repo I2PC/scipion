@@ -70,7 +70,7 @@ std::string MDL::label2SqlColumn(const MDLabel label)
         ss << "TEXT";
         break;
     case LABEL_VECTOR:
-        ss << "BLOB";
+        ss << "TEXT"; //FIXME: This is provisional
         break;
     }
     return ss.str();
@@ -322,7 +322,9 @@ bool MDValue::fromStream(std::istream &is)
         is >> stringValue;
         break;
     case LABEL_VECTOR:
-        REPORT_ERROR(-55, "Not yet supported");
+        is >> stringValue; //Just to remove "**"
+        while (is >> doubleValue) //This will stop at ending "**"
+            vectorValue.push_back(doubleValue);
         break;
     }
     return true;

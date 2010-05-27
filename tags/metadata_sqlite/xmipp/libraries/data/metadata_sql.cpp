@@ -84,7 +84,7 @@ bool MDSql::addColumn(const MetaData *mdPtr, MDLabel column)
 bool MDSql::setObjectValue(const MetaData *mdPtr, const int objId, const MDValue &value)
 {
     MDLabel column = value.label;
-    std::string sep = (MDL::isString(column)) ? "'" : "";
+    std::string sep = (MDL::isString(column) || MDL::isVector(column)) ? "'" : "";
 
     std::stringstream ss;
     ss << "UPDATE " << tableName(mdPtr->tableId)
@@ -135,7 +135,11 @@ bool MDSql::getObjectValue(const MetaData *mdPtr, const int objId, MDValue  &val
             value.stringValue = ss.str();
             break;
         case LABEL_VECTOR:
-            REPORT_ERROR(-55, "Metadata still not suport vectors");
+            //FIXME: Now are stored as string in DB
+            ss.str("");
+            ss << sqlite3_column_text(stmt, 0);
+            //std::cerr << "read vector from db: " << ss.str() <<std::endl;
+            value.fromStream(ss);
             break;
         }
     }
@@ -342,12 +346,12 @@ void MDSql::setOperate(const MetaData *mdPtrIn, MetaData *mdPtrOut, MDLabel colu
     else //difference or intersecction
     {
 
-       ss << "DELETE FROM " << tableName(mdPtrOut->tableId)
-               << " WHERE " << MDL::label2Str(column);
-       if (operation == 3)
-           ss << " NOT";
-       ss << " IN (SELECT " << MDL::label2Str(column)
-       << " FROM " << tableName(mdPtrIn->tableId) << ");";
+        ss << "DELETE FROM " << tableName(mdPtrOut->tableId)
+        << " WHERE " << MDL::label2Str(column);
+        if (operation == 3)
+            ss << " NOT";
+        ss << " IN (SELECT " << MDL::label2Str(column)
+        << " FROM " << tableName(mdPtrIn->tableId) << ");";
     }
     execSingleStmt(ss.str());
 }
@@ -433,12 +437,14 @@ int MDSql::execSingleStmt(const std::string &stmtStr)
     bool r = false;
     rc = sqlite3_step(stmt);
 #ifdef DEBUG2
+
     std::cerr << "execSingleStmt, return code: " << rc <<std::endl;
-//#endif
+    //#endif
 
     if (rc == SQLITE_MISUSE)
         std::cerr << "misuse: " << sqlite3_errmsg(db) << std::endl;
 #endif
+
     return rc;
 }
 
@@ -449,7 +455,7 @@ int MDSql::execSingleStmt(sqlite3_stmt *stmt)
 #ifdef DEBUG
 
     std::cerr << "execSingleStmt, return code: " << rc <<std::endl;
-//#endif
+    //#endif
 
     if (rc == SQLITE_MISUSE)
     {
