@@ -333,15 +333,16 @@ public:
 #endif
 #undef DEBUG
 
-        if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
+        if (ext_name.contains("spi") || ext_name.contains("xmp") )//mrc stack MUST go BEFORE plain MRC
+            err = readSPIDER(select_img,true);
+        else if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
             err = readMRC(select_img,true);
         else if (ext_name.contains("mrc"))//mrc
             err = readMRC(select_img,false);
-        else if (ext_name.contains("img") ||
-        		ext_name.contains("hed"))//
+        else if (ext_name.contains("img") || ext_name.contains("hed"))//
             err = readIMAGIC(select_img);//imagic is always an stack
         else
-            err = readSPIDER(select_img);
+            err = readSPIDER(select_img,true);
         //get metadata container
         //add to MDheader
         //apply geo
@@ -517,7 +518,7 @@ public:
             filename   = filename.substr(0, found);
         }
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
         std::cerr << "write" <<std::endl;
         std::cerr<<"extension for write= "<<ext_name<<std::endl;
@@ -551,6 +552,7 @@ public:
         }
         else if (_exists && (mode==WRITE_REPLACE || mode==WRITE_APPEND))
         {
+        	auxI.dataflag = -2;
             auxI.read(filNamePlusExt,false);
             int _Xdim, _Ydim, _Zdim, _Ndim;
             auxI.getDimensions(_Xdim,_Ydim, _Zdim, _Ndim);
@@ -578,10 +580,14 @@ public:
          * SELECT FORMAT
          */
 
-        if (ext_name.contains("mrcs"))
+        if(ext_name.contains("spi") || ext_name.contains("xmp"))
+            err = writeSPIDER(select_img,isStack,mode);
+        else if (ext_name.contains("mrcs"))
             writeMRC(select_img,true,mode);
         else if (ext_name.contains("mrc"))
             writeMRC(select_img,false,mode);
+        else if (ext_name.contains("img") || ext_name.contains("hed"))
+            writeIMAGIC(select_img,mode);
         else
             err = writeSPIDER(select_img,isStack,mode);
 
