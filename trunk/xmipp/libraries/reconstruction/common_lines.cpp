@@ -228,7 +228,7 @@ void CommonLine_Parameters::getAndPrepareBlock(int i,
 {
     // Get the selfile
     MetaData SFi;
-    SFi.importObjects(SF,i*Nblock,XMIPP_MIN((i+1)*Nblock,Nimg)-1);
+    SFi.selectPart(SF, i*Nblock, XMIPP_MIN((i+1)*Nblock,Nimg)-1);
 
     // Ask for space for all the block images
     int jmax=SFi.size();

@@ -538,7 +538,7 @@ void generate_angles(int ExtProjs, const Angle_range &range,
                         iproj = proj_number(ExtProjs, j, k, i)+prm.starting;
                         break;
                     }
-                    unsigned long int idx=DF.goToFirstObject(MDL_OBJID,iproj);
+                    unsigned long int idx=DF.gotoFirstObject(MDValueEqual(MDL_OBJID,iproj));
                     if (idx==MetaData::NO_OBJECTS_STORED || idx==MetaData::NO_OBJECT_FOUND)
                     {
                         DF.addObject();
@@ -561,7 +561,7 @@ void generate_angles(int ExtProjs, const Angle_range &range,
         else
         {
             int iproj=ExtProjs + i + prm.starting;
-            unsigned long int dfidx=DF.goToFirstObject(MDL_OBJID,iproj);
+            unsigned long int dfidx=DF.gotoFirstObject(MDValueEqual(MDL_OBJID,iproj));
             if (dfidx==MetaData::NO_OBJECTS_STORED || dfidx==MetaData::NO_OBJECT_FOUND)
             {
                 DF.addObject();
@@ -628,7 +628,7 @@ void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
                     psi = rnd_unif(prm.psi_range.ang0, prm.psi_range.angF);
 
                 int iproj = ExtProjs + N + Nrottilt * k;
-                unsigned long int idx=DF.goToFirstObject(MDL_OBJID,iproj);
+                unsigned long int idx=DF.gotoFirstObject(MDValueEqual(MDL_OBJID,iproj));
                 if (idx==MetaData::NO_OBJECTS_STORED || idx==MetaData::NO_OBJECT_FOUND)
                 {
                     DF.addObject();

@@ -103,7 +103,7 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Select only relevant part of selfile for this rank
-        ML2D_prm.SF.mpi_select_part(rank, size, num_img_tot);
+        mpi_select_part(ML2D_prm.SF, rank, size, num_img_tot);
 
         // All nodes read node-specific side-info into memory
         ML2D_prm.produceSideInfo2(prm.Nvols);

@@ -35,13 +35,17 @@
 #include "funcs.h"
 
 class MDLabelData;
-class StaticInitialization;
+class MDValue;
+class MDLabelStaticInit;
 
 enum MDLabel
 {
     MDL_UNDEFINED = -1,
     MDL_FIRST_LABEL,
-    MDL_ANGLEPSI2 = MDL_FIRST_LABEL, // Psi angle of an image (double)
+    //The label MDL_OBJID is special and should not be used
+    MDL_OBJID = MDL_FIRST_LABEL, // object id (int)
+
+    MDL_ANGLEPSI2, // Psi angle of an image (double)
     MDL_ANGLEPSI, // Psi angle of an image (double)
     MDL_ANGLEROT2, // Rotation angle of an image (double)
     MDL_ANGLEROT, // Rotation angle of an image (double)
@@ -122,7 +126,7 @@ enum MDLabel
     MDL_MISSINGREGION_THXF, // Final tilt angle in X for missing region in subtomogram
     MDL_MODELFRAC, // Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NMA, // Normal mode displacements (vector double)
-    MDL_OBJID, // object id (int)
+
     MDL_ORIGINX, // Origin for the image in the X axis (double)
     MDL_ORIGINY, // Origin for the image in the Y axis (double)
     MDL_ORIGINZ, // Origin for the image in the Z axis (double)
@@ -168,13 +172,14 @@ enum MDLabel
     MDL_Z, // Z component (double)
     MDL_ZSCORE, // Z Score (double)
 
+
     MDL_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
     // it is here for looping purposes
 };//close enum Label
 
 enum MDLabelType
 {
-    LABEL_INT, LABEL_BOOL, LABEL_DOUBLE, LABEL_FLOAT, LABEL_STRING, LABEL_VECTOR
+    LABEL_INT, LABEL_BOOL, LABEL_DOUBLE, LABEL_FLOAT, LABEL_STRING, LABEL_VECTOR, LABEL_LONG
 };
 
 class MDL
@@ -194,53 +199,48 @@ public:
     //  for( MDLabel mdl = MDL_FIRST_LABEL ; mdl < MDL_LAST_LABEL ; MDLabel( mdl+1 ) )
     //
 
-static MDLabel str2Label(const std::string &labelName);
-static std::string label2Str(const MDLabel &label);
+    static MDLabel str2Label(const std::string &labelName);
+    static std::string label2Str(const MDLabel label);
+    //static std::string value2Str(const MDLabel label, const MDValue &value, bool withFormat = false);
+    //static bool voidPtr2Value(const MDLabel label, void* ptrValue, MDValue &valueOut);
+    //static bool value2VoidPtr(const MDLabel label, const MDValue &value, void* valuePtrOut);
+    static std::string label2SqlColumn(const MDLabel label);
 
-static bool isInt(const MDLabel &label);
-static bool isBool(const MDLabel &label);
-static bool isString(const MDLabel &label);
-static bool isDouble(const MDLabel &label);
-static bool isVector(const MDLabel &label);
-static bool isValidLabel(const MDLabel &label);
-static bool isValidLabel(const std::string &labelName);
+    static bool isInt(const MDLabel label);
+    static bool isBool(const MDLabel label);
+    static bool isString(const MDLabel label);
+    static bool isDouble(const MDLabel label);
+    static bool isVector(const MDLabel label);
+    static bool isValidLabel(const MDLabel label);
+    static bool isValidLabel(const std::string &labelName);
+    static MDLabelType labelType(const MDLabel label);
+    static MDLabelType labelType(std::string &labelName);
+
+
 
 private:
     static std::map<MDLabel, MDLabelData> data;
     static std::map<std::string, MDLabel> names;
-    static StaticInitialization initialization; //Just for initialization
+    static MDLabelStaticInit initialization; //Just for initialization
 
     static void addLabel(MDLabel label, MDLabelType type, std::string name, std::string name2 = "", std::string name3 = "");
 
-
-    friend class StaticInitialization;
+    friend class MDLabelStaticInit;
 }
 ;//close class MLD definition
 
-//Just an struct to store type and string alias
-class MDLabelData
-{
-public:
-    MDLabelType type;
-    std::string str;
-    //Default constructor
-    MDLabelData()
-    {
-    }
-    MDLabelData(MDLabelType t, std::string s)
-    {
-        type = t;
-        str = s;
-    }
-};//close class MDLabelData c
-
 //Just a class for static initialization
-class StaticInitialization
+class MDLabelStaticInit
 {
 private:
-    StaticInitialization()
+    MDLabelStaticInit()
     {
+        //std::cerr << "static: adding labels" <<std::endl;
+
         ///==== Add labels entries from here in the SAME ORDER as declared in ENUM ==========
+        //The label MDL_OBJID is special and should not be used
+        MDL::addLabel(MDL_OBJID, LABEL_LONG, "objId");
+
         MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", "psi2");
         MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", "psi");
         MDL::addLabel(MDL_ANGLEROT2, LABEL_DOUBLE, "angleRot2", "rot2");
@@ -322,7 +322,6 @@ private:
         MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
-        MDL::addLabel(MDL_OBJID, LABEL_INT, "objId");
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
@@ -364,13 +363,89 @@ private:
         MDL::addLabel(MDL_ZINT, LABEL_INT, "Zcoor");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");
         MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "Zscore");
+
+        //std::cerr << "static: end adding labels" <<std::endl;
     }
 
-    ~StaticInitialization()
-    {
-    }
+    ~MDLabelStaticInit()
+    {}
     friend class MDL;
 };
+
+
+
+//Just an struct to store type and string alias
+class MDLabelData
+{
+public:
+    MDLabelType type;
+    std::string str;
+    //Default constructor
+    MDLabelData()
+    {}
+    MDLabelData(MDLabelType t, std::string s)
+    {
+        type = t;
+        str = s;
+    }
+}
+;//close class MDLabelData c
+
+class MDValue
+{
+public:
+    bool boolValue;
+    int intValue;
+    long int longintValue;
+    double doubleValue;
+    std::string stringValue;
+    std::vector<double> vectorValue;
+    MDLabel label;
+
+    void labelTypeCheck(MDLabelType type) const;
+    //Just a simple constructor with the label
+    //dont do any type checking as have not value yet
+    MDValue(MDLabel label);
+    ///Constructors for each Label supported type
+    ///these constructor will do the labels type checking
+    MDValue(MDLabel label, const int &intValue);
+    MDValue(MDLabel label, const double &doubleValue);
+    MDValue(MDLabel label, const bool &boolValue);
+    MDValue(MDLabel label, const std::string &stringValue);
+    MDValue(MDLabel label, const std::vector<double> &vectorValue);
+    MDValue(MDLabel label, const long int longintValue);
+    MDValue(MDLabel label, const float &floatValue);
+    MDValue(MDLabel label, const char  &charValue);
+    //These getValue also do a compilation type checking
+    //when expanding templates functions and only
+    //will allow the supported types
+    //TODO: think if the type check if needed here
+    void  getValue(int &iv) const;
+    void  getValue(double &dv) const;
+    void  getValue(bool &bv) const;
+    void  getValue(std::string &sv) const;
+    void  getValue(std::vector<double> &vv) const;
+    void  getValue(long int &lv) const;
+    void  getValue(float &floatvalue) const;
+    void  getValue(char  &charvalue) const;
+
+#define DOUBLE2STREAM(d) \
+        if (withFormat) {\
+                (os) << std::setw(12); \
+                (os) << (((d) != 0. && ABS(d) < 0.001) ? std::scientific : std::fixed);\
+            } os << d;
+
+#define INT2STREAM(i) \
+        if (withFormat) os << std::setw(10); \
+        os << i;
+
+    void toStream(std::ostream &os, bool withFormat = false) const;
+    std::string toString(bool withFormat = false) const;
+    bool fromStream(std::istream &is);
+    bool fromString(const std::string &str);
+
+}//close class MDValue
+;
 
 
 

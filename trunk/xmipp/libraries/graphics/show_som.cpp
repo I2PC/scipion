@@ -260,7 +260,7 @@ void ShowSOM::extractRepresented(MetaData &SF_represented)
 	for (int i = 0; i < listSize; i++)
     {
 		if (cellMarks[i])
-            SF_represented.union_(SFcv[i], MDL_IMAGE);
+            SF_represented.unionDistinct(SFcv[i], MDL_IMAGE);
     }
 }
 
@@ -477,7 +477,7 @@ void ShowSOM::showErrorImage()
     int i = indexOf(row, col);
 
     MetaData SFNew;
-    SFNew.union_(SFcv[i], MDL_IMAGE);
+    SFNew.unionDistinct(SFcv[i], MDL_IMAGE);
     if (SFNew.size())
     {
         // Compute the average of the images assigned to that cell

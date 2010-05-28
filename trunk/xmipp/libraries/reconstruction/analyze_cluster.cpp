@@ -79,7 +79,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
     // Read input selfile and reference
     MetaData SF;
     SF.read(fnSel,NULL);
-    SF.removeObjects( MDL_ENABLED, -1 );
+    SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
     //remove descarted images
     Iref.read(fnRef);
     Iref().setXmippOrigin();

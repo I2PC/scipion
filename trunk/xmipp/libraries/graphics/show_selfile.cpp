@@ -139,7 +139,7 @@ void ShowSel::readSelFile(const FileName &_fn, double _minGray, double _maxGray)
 void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
 {
 	if (showonlyactive)
-		SF.removeObjects(MDL_ENABLED, -1);
+		SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
 	listSize        = SF.size();
     if (listSize == 0)
         REPORT_ERROR(1, "ShowSel::readFile: Input selfile is empty");

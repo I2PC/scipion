@@ -469,7 +469,7 @@ void Normalize_parameters::produce_side_info()
             MetaData SF;
             try {
                 SF.read(fn_in);
-                SF.removeObjects(MDL_ENABLED, -1);
+                SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
             } catch (Xmipp_error XE)
             {
                 REPORT_ERROR(1,(std::string)"There is a problem opening the metadata"+

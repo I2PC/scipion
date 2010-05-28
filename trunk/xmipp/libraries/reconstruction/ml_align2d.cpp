@@ -384,7 +384,7 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
     // and set some global variables
     MDimg.read(fn_img);
     // Remove disabled images
-    MDimg.removeObjects(MDL_ENABLED, -1);
+    MDimg.removeObjects(MDValueEqual(MDL_ENABLED, -1));
     nr_images_global = MDimg.size();
     // By default set myFirst and myLast equal to 0 and N
     // respectively, this should be changed when using MPI
@@ -2382,8 +2382,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
         for (int refno = 0; refno < model.n_ref; refno++)
         {
             MDo.clear();
-            MDo.fillMetaData(MDimg, MDimg.findObjects(MDL_REF, refno + 1));
-
+            MDo.importObjects(MDimg, MDValueEqual(MDL_REF, refno + 1));
             fn_tmp = fn_root + "_ref";
             fn_tmp.compose(fn_tmp, refno + 1, "");
             fn_tmp += "_img.xmd";

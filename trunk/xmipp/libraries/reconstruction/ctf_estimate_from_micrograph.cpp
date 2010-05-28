@@ -247,7 +247,7 @@ void Prog_assign_CTF_prm::process()
     if (selfile_fn != "")
     {
         SF.read(selfile_fn);
-        SF.removeObjects(MDL_ENABLED,-1);
+        SF.removeObjects(MDValueEqual(MDL_ENABLED,-1));
     }
 
     // Open the selfile for the CTFs, if there is a selfile of particles

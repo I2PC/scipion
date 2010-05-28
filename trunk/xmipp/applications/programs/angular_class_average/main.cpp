@@ -50,16 +50,16 @@ int main(int argc, char **argv)
         if (prm.do_add)
         {
             FileName fn_tmp=prm.fn_out+".doc";
-            if (exists(fn_tmp)) 
+            if (exists(fn_tmp))
             {
                 MetaData DFaux = prm.DF;
-                // Don't do any fancy merging or sorting because those functions are really slow... 
+                // Don't do any fancy merging or sorting because those functions are really slow...
                 DFaux.merge(fn_tmp);
                 DFaux.write(fn_tmp);
             }
             else
             {
-                prm.DF.write(fn_tmp); 
+                prm.DF.write(fn_tmp);
             }
         }
     }
@@ -76,8 +76,10 @@ int main(int argc, char **argv)
     {
 
         // Reserve memory for output from class realignment
-        if (prm.nr_iter > 0) reserve = prm.DF.size();
-        else reserve = 0;
+        if (prm.nr_iter > 0)
+            reserve = prm.DF.size();
+        else
+            reserve = 0;
         double output_values[AVG_OUPUT_SIZE*reserve+1];
 
         nr_ref = prm.DFlib.size();
@@ -86,10 +88,10 @@ int main(int argc, char **argv)
         // Loop over all classes
 
         for (int dirno = 1; dirno <= nr_ref; dirno++)
-        {   
+        {
             // Do the actual work
             prm.processOneClass(dirno, output_values);
-            
+
             // Output classes sel and doc files
             w = output_values[1];
             w1 = output_values[2];
@@ -105,7 +107,12 @@ int main(int argc, char **argv)
                     int this_image = ROUND(output_values[i*AVG_OUPUT_SIZE+5]);
                     if (!(this_image < 0))
                     {
-                        prm.DF.goToFirstObject(MDL_IMAGE,this_image);
+                        //FIXME: The next line has no sense since the MDL_IMAGE is string
+                        // and 'this_image' is of type int...
+                        REPORT_ERROR(-99, "The next line has no sense since the MDL_IMAGE is string \
+                                     and 'this_image' is of type int...");
+                        prm.DF.gotoFirstObject(MDValueEqual(MDL_IMAGE,this_image));
+
                         prm.DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6]);
                         prm.DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7]);
                         prm.DF.setValue(MDL_ANGLEPSI,output_values[i*AVG_OUPUT_SIZE+8]);
@@ -119,10 +126,10 @@ int main(int argc, char **argv)
             }
 
             progress_bar(dirno);
-            
+
         }
         progress_bar(nr_ref);
-        
+
         // Write selfiles and docfiles with all class averages
         prm.finalWriteToDisc();
     }

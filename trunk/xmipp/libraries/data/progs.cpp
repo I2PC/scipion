@@ -102,7 +102,7 @@ int Prog_parameters::get_images_to_process()
     {
         MetaData SF;
         SF.read(fn_in);
-        SF.removeObjects(MDL_ENABLED,false);
+        SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
         return SF.size();
     }
     else

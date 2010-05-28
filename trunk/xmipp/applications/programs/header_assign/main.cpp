@@ -55,22 +55,22 @@ int main(int argc, char *argv[])
         }
 
         MetaData SF(fn_in);
-        SF.removeObjects(MDL_ENABLED, -1 );
+        SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
         std::vector< MDLabel >::iterator strIt;
 
-		long int ret=SF.firstObject();
-		if(ret==MetaData::NO_OBJECTS_STORED)
+		if(SF.isEmpty())
 		{
 			std::cerr << "Empty inputFile File\n";
 			exit(1);
 		}
-		do
+
+		FOR_ALL_OBJECTS_IN_METADATA(SF)
 		{
 			SF.getValue( MDL_IMAGE, fn_img);
 			if (fn_img=="") break;
 			img.read(fn_img);
-			for( strIt  = SF.activeLabels.begin();
-				 strIt != SF.activeLabels.end();
+			for( strIt  = SF.getActiveLabels().begin();
+				 strIt != SF.getActiveLabels().end();
 				 strIt ++ )
 			{
 				switch ((*strIt)) {
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 			}
 			img.write(fn_img);
 		}
-		while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
+
     }
     catch (Xmipp_error XE)
     {

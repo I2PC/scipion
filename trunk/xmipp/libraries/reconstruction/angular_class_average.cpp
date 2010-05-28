@@ -622,7 +622,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     if (nr_iter > 0)
     {
     	SFclass=SFclass1;
-    	SFclass.union_(SFclass2);
+    	SFclass.unionDistinct(SFclass2);
         avg() = avg1() + avg2();
         w = w1 + w2;
         avg.setWeight(w);
@@ -643,7 +643,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 
     // Output total and split averages and selfiles to disc
     SFclass = SFclass1;
-    SFclass.union_(SFclass2);
+    SFclass.unionDistinct(SFclass2);
     avg() = avg1() + avg2();
     w = w1 + w2;
     avg.setWeight(w);
@@ -789,7 +789,7 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
 		MetaData MDaux;
 		MDaux.read(fn_tmp);
 		MDaux.unionAll(SFclasses);
-		SFclasses.aggregate(MDaux,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
+		SFclasses.aggregate(MDaux, AGGR_SUM, MDL_IMAGE, MDL_WEIGHT, MDL_SUM);
     }
     SFclasses.write(fn_tmp);
     if (do_split)
@@ -800,7 +800,7 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
     		MetaData MDaux;
     		MDaux.read(fn_tmp);
     		MDaux.unionAll(SFclasses1);
-    		SFclasses1.aggregate(MDaux,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
+    		SFclasses1.aggregate(MDaux, AGGR_SUM,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
         }
         SFclasses1.write(fn_tmp);
         fn_tmp=fn_out2+"_classes.doc";
@@ -809,7 +809,7 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
     		MetaData MDaux;
     		MDaux.read(fn_tmp);
     		MDaux.unionAll(SFclasses2);
-    		SFclasses2.aggregate(MDaux,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
+    		SFclasses2.aggregate(MDaux, AGGR_SUM,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
         }
         SFclasses2.write(fn_tmp);
     }

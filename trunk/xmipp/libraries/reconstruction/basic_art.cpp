@@ -553,9 +553,9 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             MetaData SF_aux;
             double weight=0.;
             SF_aux.read(fn_sel);
-            SF_aux.removeObjects(MDL_ENABLED, -1);
+            SF_aux.removeObjects(MDValueEqual(MDL_ENABLED, -1));
             selfile.clear();
-            selfile.fillMetaData( SF_aux, SF_aux.findObjectsInRange(MDL_WEIGHT, 1e-9, 99e99) );
+            selfile.importObjects(SF_aux, MDValueRange(MDL_WEIGHT, 1e-9, 99e99));
             if (selfile.size() == 0)
             {
                 std::cerr << "there is no input file with weight!=0" << std::endl;
@@ -565,7 +565,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         else
         {
             selfile.read(fn_sel);
-            selfile.removeObjects(MDL_ENABLED, -1);
+            selfile.removeObjects(MDValueEqual(MDL_ENABLED, -1));
         }
         trueIMG = selfile.size();
         if (trueIMG == 0) REPORT_ERROR(3008, "Produce_Basic_ART_Side_Info: No images !!");
@@ -577,7 +577,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     if (fn_ctf != "")
     {
         selctf.read(fn_ctf);
-        selctf.removeObjects(MDL_ENABLED, -1);
+        selctf.removeObjects(MDValueEqual(MDL_ENABLED, -1));
         if (selctf.size() != selfile.size())
             REPORT_ERROR(1, "Basic_ART_Parameters: The number of images in "
                          "the ctf and original selfiles do not match");

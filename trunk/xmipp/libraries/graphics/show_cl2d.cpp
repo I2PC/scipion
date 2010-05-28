@@ -176,7 +176,7 @@ void ShowCL2D::extractRepresented(MetaData &SF_represented)
                 SF_represented.addObject();
                 SF_represented.setValue(MDL_IMAGE,fnImg);
             }
-            // SF_represented.union_(SFcv[i]);
+            // SF_represented.unionDistinct(SFcv[i]);
         }
     }
 }

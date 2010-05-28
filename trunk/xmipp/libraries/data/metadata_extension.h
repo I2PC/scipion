@@ -27,4 +27,6 @@ void ImgSize(FileName &filename, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              int &Ndim=null_object);
 
+void mpi_select_part(MetaData &md, int rank, int size, int &num_img_tot);
+
 #endif /* METADATA_EXTENSION_H_ */

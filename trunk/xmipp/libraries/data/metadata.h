@@ -33,10 +33,9 @@
 #include <sstream>
 #include "funcs.h"
 #include "strings.h"
-#include "metadata_container.h"
+#include "metadata_sql.h"
 #include <time.h>
 #include <stdio.h>
-#include "cppsqlite3.h"
 #include <sstream>
 
 //empty vector used for inizialization
@@ -55,14 +54,23 @@
  * Xmipp specific files like Docfiles, Selfiles, etc..
  * 
  */
+
+//useful to init values to zero
+static double zeroD=0.;
+static double    oneD=1.;
+static bool  falseb=false;
+
+class MDQuery;
+
 class MetaData
 {
-    std::map<long int, MetaDataContainer *> objects; ///< Effectively stores all metadata
+private:
+    //std::map<long int, MetaDataContainer *> objects; ///< Effectively stores all metadata
 
     // Used by firstObject, nextObject and lastObject to keep a pointer
     // to the "active" object. This way when you call setValue without
-    // an objectID, this one is chosen
-    std::map<long int, MetaDataContainer *>::iterator objectsIterator;
+    // an objectId, this one is chosen
+    //std::map<long int, MetaDataContainer *>::iterator objectsIterator;
 
     // Allows a fast search for pairs where the value is
     // a string, i.e. looking for filenames which is quite
@@ -73,8 +81,6 @@ class MetaData
     std::string path; ///< A parameter stored on MetaData Files
     std::string comment; ///< A general comment for the MetaData file
 
-    void read(std::ifstream *infile, std::vector<MDLabel> * labelsVector);
-
     bool isColumnFormat; ///< Format for the file, column or row formatted
 
     /**Input file name
@@ -82,6 +88,71 @@ class MetaData
      */
     FileName inFile;
 
+    /** What labels have been read from a docfile/metadata file
+     *   and/or will be stored on a new metadata file when "save" is
+     *   called
+     **/
+    std::vector<MDLabel> activeLabels;
+
+    /** When reading a column formated file, if a label is found that
+     *   does not exists as a MDLabel, it is ignored. For further
+     *   file processing, such columns must be ignored and this structure
+     *   allows to do that
+     **/
+    std::vector<unsigned int> ignoreLabels;
+
+    /** The table id to do db operations */
+    int tableId;
+    /** The id of the object that is active
+     * usefull for calling 'setValue' and 'getValue'
+     * without specifying object id
+     * when activeObjId = -1 means that aren't active object
+     */
+    int activeObjId;
+
+    /** Read, read data from an input stream and fill metadata
+     * @ingroup MetaDataIO
+     */
+    //void read(std::ifstream *infile, std::vector<MDLabel> *labelsVector = NULL);
+
+    /** Init, do some initializations tasks, used in constructors
+     * @ingroup MetaDataConstructors
+     */
+    void init(const std::vector<MDLabel> *labelsVector = NULL);
+
+    /** Copy info variables from another metadata
+     * @ingroup MetaDataConstructors
+     */
+    void copyInfo(const MetaData &md);
+
+    /** Copy all data from another metadata
+     * @ingroup MetaDataConstructors
+     */
+    void copyMetadata(const MetaData &md);
+
+    /** This private functions are for set real values
+     * there is an explicit function signature
+     * foreach type supported in Metadata.
+     * This is done for some type checking of Metadata labels
+     * and values
+     */
+
+    bool _setValue(long int objId, const MDValue &mdValueIn);
+    bool _getValue(long int objId, MDValue &mdValueOut) const;
+
+    /** This have the same logic of the public one,
+     * but doesn't perform any range(wich implies do a size()) checks.
+     */
+    void _selectSplitPart(const MetaData &mdIn,
+                          int n, int part, long int mdSize,
+                          const MDLabel sortLabel);
+
+    /** This function is for generalizate the sets operations
+     * of unionDistinct, intersection, substraction
+     * wich can be expressed in terms of
+     * ADD, SUBSTRACT of intersection part
+     */
+    void _setOperates(const MetaData &mdIn, const MDLabel label, int operation);
 public:
 
     /// @defgroup MetaDataConstructors Constructors for MetaData objects
@@ -92,8 +163,10 @@ public:
      *
      * The MetaData is created with no data stored on it. You can fill in it programmatically
      * or by a later reading from a MetaData file or old Xmipp formatted type.
+     * if labels vectors is passed this labels are created on metadata
      */
     MetaData();
+    MetaData(const std::vector<MDLabel> *labelsVector);
 
     /** From File Constructor.
      * @ingroup MetaDataConstructors
@@ -101,34 +174,280 @@ public:
      * The MetaData is created and data is read from provided fileName. Optionally, a vector
      * of labels can be provided to read just those required labels
      */
-    MetaData(FileName fileName, std::vector<MDLabel> * labelsVector =
-                 NULL);
+    MetaData(const FileName &fileName, const std::vector<MDLabel> *labelsVector = NULL);
 
     /** Copy constructor
      * @ingroup MetaDataConstructors
      *
      * Created a new metadata by copying all data from an existing MetaData object.
      */
-    MetaData(const MetaData & c);
+    MetaData(const MetaData &md);
 
     /** Assignment operator
      * @ingroup MetaDataConstructors
      *
      * Copies MetaData from an existing MetaData object.
      */
-    MetaData& operator =(const MetaData &MD);
+    MetaData& operator =(const MetaData &md);
 
-    /** union of  metadata objects, result in calling metadata object
-     * union is a reserved word so I called this method union_
+    /** Destructor
+     * @ingroup MetaDataConstructors
+     *
+     * Frees all used memory and destroys object.
      */
-    void union_(MetaData &MD, MDLabel thisLabel=MDL_OBJID);
+    ~MetaData();
 
-    /** union of  metadata objects, result in calling metadata object
-     * Repetion are allowed
+    /**Clear clear all data
+     * @ingroup MetaDataConstructors
      */
-    void unionAll(MetaData &MD);
+    void clear();
 
-    /** Aggregate metadata objects, result in calling metadata object
+
+
+    /// @defgroup GettersAndSetters some getters and setters functions
+    /// @ingroup MetaDataClass
+    /// all getter should be 'const'
+
+    /**Get column format info.
+     *@ingroup GettersAndSetters
+     */
+    bool getColumnFormat() const;
+
+    /** Set to false for row format (parameter files)
+     *  @ingroup GettersAndSetters
+     *  set to true  for column format (this is the default) (docfiles)
+     *
+     */
+    void setColumnFormat(bool column);
+    /**Get path info.
+     *@ingroup GettersAndSetters
+     */
+    std::string getPath()   const ;
+    /**Set Path
+     * @ingroup GettersAndSetters
+     * will appear in first line
+     */
+    void setPath(std::string newPath = "");
+    /**Get Header Comment
+     *@ingroup GettersAndSetters
+     *will appear in second line
+     */
+    std::string getComment() const;
+    /**Set Header Comment
+     *@ingroup GettersAndSetters
+     *will appear in second line
+     */
+    void setComment(const std::string newComment = "No comment");
+
+    /**Return metadata filename
+     *@ingroup GettersAndSetters
+     */
+    FileName getFilename();
+
+    /**Get safetly access to active labels
+     * @ingroup GettersAndSetters
+     */
+    std::vector<MDLabel> getActiveLabels() const;
+    /**Get maximum string length of this value
+    * @ingroup GettersAndSetters
+    */
+
+    /**Get the active object id
+     * -1 will be returned if no object is active
+     */
+    long int getActiveObject();
+
+    int MaxStringLength( const MDLabel thisLabel) const;
+
+
+    /// @defgroup DataAccess Access to MetaData data for read or write values
+    /// @ingroup MetaDataClass
+
+    /** Set the value for some label in the object that has id 'objectId'
+     * @ingroup DataAccess
+     */
+    template<class T>
+    bool setValue(const MDLabel label, const T &valueIn, long int objectId=-1)
+    {
+        _setValue(objectId, MDValue(label, valueIn));
+    }
+
+    // Set a new pair/value for an specified object. If no objectId is given, that
+    // pointed by the class iterator is used
+    bool setValueFromStr(const MDLabel label, const std::string &value, long int objectId = -1);
+
+    template<class T>
+    bool getValue(const MDLabel label, T &valueOut, long int objectId = -1) const
+    {
+        MDValue mdValueOut(label);
+        _getValue(objectId, mdValueOut);
+        mdValueOut.getValue(valueOut);
+    }
+    /**IsEmpty check whether the metadata is empty or not
+     * @ingroup DataAccess
+     */
+    bool isEmpty() const;
+
+    /**size return the number of objects contained in the metadata
+     * @ingroup DataAccess
+     */
+    long int size() const;
+
+    /** Check whether a label is contained
+     * in the metadata
+     */
+    bool containsLabel(const MDLabel label) const;
+    /** Add a new label to the metadata
+     *
+     */
+    bool addLabel(const MDLabel label);
+
+    /** Adds a new, empty object to the objects map. If objectId == -1
+     * @ingroup DataAccess
+     *   the new ID will be that for the last object inserted + 1, else
+     *   the given objectId is used. If there is already an object whose
+     *   objectId == input objectId, just removes it and creates an empty
+     *   one
+     **/
+    long int addObject(long int objectId = -1);
+
+    /** Import objects from another metadata
+     * @ingroup DataAccess
+     */
+    void importObject(const MetaData &md, const long int objId, bool doClear=true);
+    void importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd, bool doClear=true);
+    void importObjects(const MetaData &md, const MDQuery &query, bool doClear=true);
+
+    /**Remove the object with this id
+    * @ingroup DataAccess
+    * Returns true if the object was removed or false if
+    * the object did not exist
+    */
+    bool removeObject(long int objectId);
+
+    /** Removes the collection of objects of given vector id's
+     * @ingroup DataAccess
+     * NOTE: The iterator will point to the first object after any of these
+     * operations
+     */
+    void removeObjects(const std::vector<long int> &toRemove);
+
+    /** Removes objects with pair <label, value>
+     * return the number of deleted rows
+     * if not query, all objectes are removed
+     * @ingroup DataAccess
+     */
+    int removeObjects(const MDQuery &query);
+    int removeObjects();
+    //FIXME: organize this
+    // Possible error codes for the metadata operations
+    enum MDErrors
+    {
+        NO_OBJECTS_STORED = -1, // NOTE: Do not change this value (-1)
+        NO_MORE_OBJECTS = -2,
+        NO_OBJECT_FOUND = -3
+    };
+
+    /** Indexes add and remove for fast search
+     * in other labels, but insert are more expensive
+     */
+    void addIndex(MDLabel label);
+    void removeIndex(MDLabel label);
+
+    ///@defgroup MetaDataIteration Some functions related with iteration over metadata objects
+    ///@ingroup MetaDataClass
+
+    /**firstObject, move the 'activeObject' to the first object in the metadata
+     *@ingroup MetaDataIteration
+     * */
+    long int firstObject();
+    long int lastObject();
+    long int nextObject();
+    long int previousObject();
+    long int goToObject(long int objectId);
+
+    /**A better iteration mechanism
+     * base on the result set from DB
+     * also the activeObject will be changed
+     * with the iteration
+     */
+    /** This will start iterating over all objects
+     * the first object id will be returned
+     */
+    long int iteratorBegin();
+
+    /**Same as previous but iterating over a subset of
+     * objects
+     */
+    long int iteratorBegin(const MDQuery &query);
+
+    /** Check whether the iteration if finished */
+    bool iteratorEnd();
+
+    /** Move to next object on iteration
+     * return nextObject id
+     */
+    long int iteratorNext();
+
+
+    ///@defgroup MetaDataSearch Some functions for perform searches on metadata objects
+    ///@ingroup MetaDataClass
+
+    /** Find all objects that match the query
+     * if called without query, all objects are returned
+     * if limit is provided only return a maximun of 'limit'
+     * @ingroup MetaDataSearch
+     */
+    void findObjects(std::vector<long int> &objectsOut, const MDQuery &query, int limit = -1);
+    void findObjects(std::vector<long int> &objectsOut, int limit = -1);
+    /**Count all objects with pairs <label, value>
+     * @ingroup MetaDataSearch
+     */
+    int countObjects(MDQuery query);
+
+    /** Find if the object with this id is present in the metadata
+     * @ingroup MetaDataSearch
+     */
+    bool containsObject(long int objectId);
+
+    /**Check if exists at least one object with pair <label, value>
+     * @ingroup MetaDataSearch
+     */
+    bool containsObject(MDQuery query);
+
+    /**Move active object to the first
+     * object with pair <label, value in range> if exists
+     * @ingroup MetaDataSearch
+     */
+    long int gotoFirstObject(MDQuery query);
+
+
+    ///@defgroup MetaDataIO functions related to the I/O of metadata
+    ///@ingroup MetaDataClass
+
+    /** Write, write metadata to disk, using filename
+     * @ingroup MetaDataIO
+     */
+    void write(const FileName &outFile);
+    /** Write, write metadata to out stream
+     * @ingroup MetaDataIO
+     */
+    void write(std::ostream &os);
+
+    /** Read, read data from file, using filename
+     * @ingroup MetaDataIO
+     */
+    void read(const FileName &inFile, std::vector<MDLabel> *labelsVector = NULL);
+    /** Read, read data from file, using filename
+     * @ingroup MetaDataIO
+     */
+    void read(std::istream &is, std::vector<MDLabel> *labelsVector = NULL);
+
+
+
+    /** Aggregate metadata objects,
+     * @ingroup SetOperations
+     * result in calling metadata object
      * thisLabel label is used for aggregation, second. Valid operations are:
      *
      * MDL_AVG:  The avg function returns the average value of all  operationLabel within a group.
@@ -147,441 +466,100 @@ public:
 
      The result of total() is always a floating point value.
      */
-    void aggregate(MetaData MDIn,
-                             MDLabel aggregateLabel,
-                             MDLabel entryLabel,
-                             MDLabel operationLabel);
+    /** Aggregate modes */
+
+    void aggregate(const MetaData &mdIn, AggregateOperation op,
+                   MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel);
+    void aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
+                             MDLabel operateLabel, const std::vector<MDLabel> &resultLabels);
+
+    /// @defgroup SetOperations Set operations on MetaData's
+    /// @ingroup MetaDataClass
+    /** union of  metadata objects,
+     *@ingroup SetOperations
+     * result in calling metadata object
+     * union is a reserved word so I called this method unionDistinct
+     */
+    void unionDistinct(const MetaData &mdIn, const MDLabel label=MDL_OBJID);
+
+    /** union of  metadata objects,
+     * @ingroup SetOperations
+     * result in calling metadata object
+     * Repetion are allowed
+     */
+    void unionAll(const MetaData &mdIn);
+
+
 
     /** merge of a metadata
+     * @ingroup SetOperations
      * This function reads another metadata and makes a union to this one
      */
     void merge(const FileName &fn);
 
-    /** Aggregate modes */
-    enum AggregateMode {
-    	KEEP_OLD,
-    	KEEP_NEW,
-    	SUM
-    };
 
-    /** intersects two metadata objects, result in "calling" metadata
+
+    /** intersects two metadata objects,
+     *@ingroup SetOperations
+     * result in "calling" metadata
      */
-    void intersection(MetaData & minuend, MetaData & ,
-                      MDLabel thisLabel);
+    void intersection(const MetaData &mdIn, const MDLabel label=MDL_OBJID);
 
-    /** substract two metadata objects, result in "calling" metadata
+    /** substract two metadata objects,
+     * @ingroup SetOperations
+     * result in "calling" metadata
      */
-    void substraction(MetaData & minuend, MetaData & subtrahend,
-                      MDLabel thisLabel);
+    void substraction(const MetaData &mdIn, const MDLabel label=MDL_OBJID);
 
-    /** Destructor
-     * @ingroup MetaDataConstructors
-     *
-     * Frees all used memory and destroys object.
-     */
-    ~MetaData();
 
-    /* get metadatacontainer for current metadata object
-     *
-     */
-    MetaDataContainer * getObject(long int objectID = -1) const;
 
-    /** Set to false for row format (parameter files)
-     *  set to true  for column format (this is the default) (docfiles)
-     *
-     */
-    void setColumnFormat(bool column);
-    /**Get column format info.
-     *
-     */
-    bool getColumnFormat() const
-    {
-        return isColumnFormat;
-    }
-    // Set a new pair/value for an specified object. If no objectID is given, that
-    // pointed by the class iterator is used
-    bool setValue(const std::string &name, const std::string &value,
-                  long int objectID = -1);
-    bool setValue(const std::string &name, const float &value,
-                  long int objectID = -1)
-    {
-        std::cerr << "Do not use setValue with floats, use double"<< std::endl;
-        std::cerr << "Floats are banned from metadata class"<< std::endl;
-        exit(1);
-    }
-    bool setValue(const std::string &name, const char &value,
-                  long int objectID = -1)
-    {
-        std::cerr << "Do not use setValue with char, use string"<< std::endl;
-        std::cerr << "chars are banned from metadata class"<< std::endl;
-        exit(1);
-    }
-
-    void readOldSelFile(std::ifstream *infile);
-    void readOldDocFile(std::ifstream *infile,
-                        std::vector<MDLabel> * labelsVector);
-    void read(FileName infile,
-              std::vector<MDLabel> * labelsVector = NULL);
-
-    /**convert metafile to table in database
-     *
-     * DBname "" creates temporary database in memory
-     */
-    void toDataBase(CppSQLite3DB &db,
-                    const FileName & DBname,
-                    const std::string & tableName,
-                    const std::vector<MDLabel> * labelsVector = NULL,
-                    bool OpenDb=true,
-                    bool CloseDb=true);
-    /**Convert table from database in metadata
-     *
-     */
-    void fromDataBase(CppSQLite3DB &db,
-                      const FileName & DBname,
-                      const std::string & tableName,
-                      MDLabel sortLabel=MDL_OBJID,
-                      std::vector<MDLabel> * labelsVector = NULL,
-                      bool OpenDb=false,
-                      bool CloseDb=true);
-
-    /** What labels have been read from a docfile/metadata file
-     *   and/or will be stored on a new metadata file when "save" is
-     *   called
-     **/
-    std::vector<MDLabel> activeLabels;
-
-    /** When reading a column formated file, if a label is found that
-     *   does not exists as a MDLabel, it is ignored. For further
-     *   file processing, such columns must be ignored and this structure
-     *   allows to do that
-     **/
-    std::vector<unsigned int> ignoreLabels;
-
-    /** Adds a new, empty object to the objects map. If objectID == -1
-     *   the new ID will be that for the last object inserted + 1, else
-     *   the given objectID is used. If there is already an object whose
-     *   objectID == input objectID, just removes it and creates an empty
-     *   one
-     **/
-    long int addObject(long int objectID = -1);
-
-    // Possible error codes for the map
-    enum errors
-    {
-        NO_OBJECTS_STORED = -1, // NOTE: Do not change this value (-1)
-        NO_MORE_OBJECTS = -2,
-        NO_OBJECT_FOUND = -3
-    };
-
-    long int firstObject();
-    long int nextObject();
-    long int lastObject();
-    long int goToObject(long int objectID);
-
-    void write(const std::string &fileName);
-
-    bool isEmpty() const;
-
-    void clear();
-
-    void writeValueToString(std::string & result,
-                            const std::string & inputLabel);
-    /** Allows a fast search for pairs where the value is
-     a string, i.e. looking for filenames which is quite
-     usual.
-     */
-    long int fastSearch(MDLabel name, std::string value, bool recompute =
-                            false);
-
-    /**Create new metadata with selected objectId
-     *
-     */
-    void fillMetaData(MetaData &base, std::vector<long int> objectsToAdd);
-
-    /** This method chooses a subset within a metadata.
-     * The first object is number 0.
-     */
-    void importObjects(MetaData &base, int first, int last);
-
-    void combine(MetaData & other, MDLabel thisLabel = MDL_UNDEFINED);
-    void combineWithFiles(MDLabel thisLabel);
-
-    // Removes the collection of objects whose pair label/value is given
-    // NOTE: The iterator will point to the first object after any of these
-    // operations.
-    void removeObjects(std::vector<long int> &toRemove);
-
-    // Returns true if the object was removed or false if
-    // the object did not exist
-    bool removeObject(long int objectID);
-
-    /**Set Path
-     * will appear in first line
-     */
-    void setPath(std::string newPath = "");
-
-    /**Set Header Comment
-     * will appear in second line
-     */
-    void setComment(const std::string Comment = "");
-
-    std::string getPath()   const ;
-    std::string getComment() const;
-
-    size_t size(void)
-    {
-        return objects.size();
-    }
-    /** Return metafile filename
-     *
-     */
-
-    FileName getFilename()
-    {
-        return (inFile);
-    }
-
-    /*Detect if there is at least one entry with the given label-value pair
-     * This can be much faster than 'countObjects' as it stops iterating once the first
-     * object has been found.
-     */
-    template<class T>
-    bool detectObjects(MDLabel name, T value)
-    {
-        bool result = false;
-        // Traverse all the structure looking for objects
-        // that satisfy search criteria
-        MetaDataContainer * aux;
-        std::map<long int, MetaDataContainer *>::iterator It;
-        for (It = objects.begin(); It != objects.end(); It++)
-        {
-            aux = It->second;
-            if (aux->pairExists(name, value))
-            {
-                result = true;
-                break;
-            }
-        }
-        return result;
-    }
-
-    template<class T>
-    std::vector<long int> findObjectsInRange(MDLabel name, T minValue, T maxValue)
-    {
-        std::vector<long int> result;
-
-        // Traverse all the structure looking for objects
-        // that satisfy search criteria
-
-        std::map<long int, MetaDataContainer *>::iterator It;
-
-        MetaDataContainer * aux;
-
-        for (It = objects.begin(); It != objects.end(); It++)
-        {
-            aux = It->second;
-
-            if (aux->valueExists(name))
-            {
-                T value;
-                aux->getValue(name, value);
-
-                if (value >= minValue && value <= maxValue)
-                {
-                    result.push_back(It->first);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    template<class T>
-    std::vector<long int> findObjects(MDLabel name,
-                                      const T &value)
-    {
-        std::vector<long int> result;
-
-        // Traverse all the structure looking for objects
-        // that satisfy search criteria
-
-        std::map<long int, MetaDataContainer *>::iterator It;
-
-        MetaDataContainer * aux;
-
-        for (It = objects.begin(); It != objects.end(); It++)
-        {
-            aux = It->second;
-
-            if (aux->pairExists(name, value))
-                result.push_back(It->first);
-        }
-
-        return result;
-    }
-
-    template<class T>
-    long int goToFirstObject(MDLabel name, const T &value)
-    {
-        // Traverse all the structure looking for objects
-        // that satisfy search criteria
-
-        std::map<long int, MetaDataContainer *>::iterator It;
-
-        MetaDataContainer * aux;
-
-        if (!objects.empty())
-        {
-            for (It = objects.begin(); It != objects.end(); It++)
-
-            {
-                aux = It->second;
-
-                if (aux->pairExists(name, value))
-                {
-                    objectsIterator = It;
-                    return It->first;
-                }
-            }
-            return NO_OBJECT_FOUND;
-        }
-        else
-            return NO_OBJECTS_STORED;
-    }
-
-    template<class T>
-    void removeObjects(MDLabel name, const T &value)
-    {
-        std::vector<long int> toRemove = findObjects(name, value);
-        removeObjects(toRemove);
-    }
-
-    /**Count number of objects that satisfy a given label,entry pair
-     */
-    template<class T>
-    long int countObjects(MDLabel name, const T &value)
-    {
-        return ((findObjects(name, value)).size());
-    }
-
-    template<class T>
-    bool getValue(MDLabel name, T &value,
-                  long int objectID = -1) const
-    {
-        MetaDataContainer * aux = getObject(objectID);
-        if (!aux->valueExists(name))
-        {
-            return false;
-        }
-        else
-        {
-            aux->getValue(name, value);
-        }
-        return true;
-    }
-
-    template<class T>
-    bool setValue(MDLabel name,const T &value, long int objectID=-1)
-    {
-        long int auxID;
-        if (!objects.empty() && MDL::isValidLabel(name))
-        {
-            if (objectID == -1)
-            {
-                auxID = objectsIterator->first;
-            }
-            else
-            {
-                auxID = objectID;
-            }
-
-            MetaDataContainer * aux = objects[auxID];
-
-            // Check whether label is correct (belongs to the enum in the metadata_container header
-            // and whether it is present in the activeLabels vector. If not, add it to all the other
-            // objects with default values
-            std::vector<MDLabel>::iterator location;
-            std::map<long int, MetaDataContainer *>::iterator It;
-            location = std::find(activeLabels.begin(), activeLabels.end(), name);
-            if (location == activeLabels.end())
-            {
-                activeLabels.push_back(name);
-                // Add this label to the rest of the objects in this class
-                for (It = objects.begin(); It != objects.end(); It++)
-                {
-                    if (It->second != aux)
-                    {
-                        (It->second)->addValue(name, T());
-                    }
-                }
-            }
-            aux->addValue(name, value);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    bool valueExists(MDLabel name)
-    {
-        return (objectsIterator->second)->valueExists(name);
-    }
-
-    /**Add object with metadata label name in the range given by minvalue and maxvalue
-     * This template function may be accessed from swig
-     *
-     * */
-    template<class T>
-    friend void addObjectsInRangeSwig(MetaData &MDin, MetaData &MDout,
-                                      MDLabel name, T minValue, T maxValue)
-    {
-        MDout.fillMetaData(MDin, MDin.findObjectsInRange(name, minValue, maxValue));
-    }
-    template<class T>
-    friend bool setValueSwig(MetaData &MDout,MDLabel name, T &value, long int objectID=-1)
-    {
-        MDout.setValue( name, value, objectID);
-    }
-    template<class T>
-    friend bool getValueSwig(MetaData &MDout,MDLabel name, T &value, long int objectID=-1)
-    {
-        MDout.getValue( name,  value, objectID);
-    }
-    /*
-     * Randomize this metadata, MDin is input
-     */
+    //---------TO ORGANIZE-------------------------
+    /** Randomize this metadata, MDin is input
+    */
     void randomize(MetaData &MDin);
     /*
-     * Sort this metadata, by label
-     * dirty implementation using sqlite
+    * Sort this metadata, by label
+    * dirty implementation using sqlite
+    */
+    void sort(MetaData &MDin, const MDLabel sortLabel);
+
+
+    /** Select only a part of this MetaData
+     * the metadata will be divided in 'n'
+     * almost equally parts and will take the '
+    *
+    */
+    void split(int n, std::vector<MetaData> &results,
+               const MDLabel sortLabel=MDL_OBJID);
+    /** SelectSplitPart have the same logic than
+     * split, but only one of the parts is taken
+     * another difference is that result will be
+     * in the calling object
      */
-    void sort(MetaData & MDin, MDLabel sortlabel);
+    void selectSplitPart(const MetaData &mdIn,
+                         int n, int part,
+                         const MDLabel sortLabel=MDL_OBJID);
 
-    /** Split metadata into two random halves
-     *
-     */
-    void split_in_two(MetaData &SF1, MetaData &SF2, MDLabel sortlabel=MDL_UNDEFINED);
+    /** Select a part of the metadata in
+     * from an starting position and
+     * selecting an specified number of objects
+     * if the numberOfObjects is -1, all objects
+     * will be returned from startPosition
+    */
+    void selectPart (const MetaData &mdIn, long int startPosition, long int numberOfObjects,
+                     const MDLabel sortLabel=MDL_OBJID);
 
-    /** Select only a piece of this MetaData for MPI executions
-     *
-     */
-    void mpi_select_part(int rank, int size, int &num_img_tot);
 
-    /** Fill metadata with N entries from MD starting at start
-     *
-     */
-    void fillWithNextNObjects (MetaData &MD, long int start, long int numberObjects);
-
-    /** Returns the maximum length of string file in the metadatafile.
-     * @ingroup MetaDataInfo
-     *
-     */
-
-    int MaxStringLength( MDLabel thisLabel);
-
+    friend class MDSql;
 };
+
+enum AggregateMode
+{
+    KEEP_OLD,
+    KEEP_NEW,
+    SUM
+};
+
 /** For all objects.
  @code
  FOR_ALL_OBJECTS_IN_METADATA(metadata) {
@@ -598,4 +576,12 @@ public:
         for(long int kkkk = (kkkk_metadata).firstObject(); \
              kkkk != MetaData::NO_MORE_OBJECTS && kkkk!= MetaData::NO_OBJECTS_STORED; \
              kkkk=(kkkk_metadata).nextObject())
+
+//This Macro only have sense inside the MetaData class
+//for check if a label exists
+#define REQUIRE_LABEL_EXISTS(label, funcStr) \
+    if (!containsLabel(label)) { \
+        std::stringstream __ss; \
+        __ss << (funcStr) << ": The label" << MDL::label2Str(label) << "' is not present in the metada"; \
+        REPORT_ERROR(-55, __ss.str()); }
 #endif

@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
         }
 
 
-        SF.removeObjects(MDL_ENABLED, -1);
+        SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
 
         std::cerr << "Converting from TIA to RAW ...\n";
 
