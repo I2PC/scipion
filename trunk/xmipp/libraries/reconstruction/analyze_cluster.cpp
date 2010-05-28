@@ -78,7 +78,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
 {
     // Read input selfile and reference
     MetaData SF;
-    SF.read(fnSel,NULL);
+    SF.read(fnSel, NULL);
     SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
     //remove descarted images
     Iref.read(fnRef);
@@ -98,7 +98,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
     MultidimArray<double> Iavg;
     Iavg.initZeros(Iref());
     int currentIdx=-1;
-    do
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         Image<double> Iaux;
         FileName auxFn;
@@ -174,7 +174,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
 #endif
 
     }
-    while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
+
     Iavg/=Iclass.size();
 
     // Compute the difference to the mean

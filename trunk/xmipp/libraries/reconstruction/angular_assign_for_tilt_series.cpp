@@ -753,11 +753,11 @@ void Prog_tomograph_alignment::produceSideInfo()
         std::cerr << "Reading input data\n";
         init_progress_bar(Nimg);
         int n=0;
-        SF.firstObject();
+
         iMinTilt=-1;
         double minTilt=1000;
         bool nonZeroTilt=false;
-        do
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             FileName fn;
 
@@ -828,7 +828,6 @@ void Prog_tomograph_alignment::produceSideInfo()
 
             progress_bar(n++);
         }
-        while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
         progress_bar(Nimg);
         if (!nonZeroTilt)
             REPORT_ERROR(1,"Tilt angles have not been assigned to the input selfile");

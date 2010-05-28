@@ -50,7 +50,7 @@ void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style)
     DF_out.clear();
     DF_out.append_comment((std::string)"Translation for Spider of " + SF_in.getFilename());
     int i=1;
-    do
+    FOR_ALL_OBJECTS_IN_METADATA(SF_in)
     {
         bool store = true;
         //if (!SF_in.Is_COMMENT())
@@ -73,7 +73,6 @@ void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style)
             if (store) DF_out.append_data_line(aux);
         }
     }
-    while (SF_in.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
 }
 
@@ -99,7 +98,7 @@ void extract_angles(MetaData &SF_in, DocFile &DF_out,
     time_config();
     std::cerr << "Extracting angles ...\n";
     init_progress_bar(SF_in.size());
-    do
+    FOR_ALL_OBJECTS_IN_METADATA(SF_in)
     {
     	if (fromMetadata)
     	{
@@ -123,7 +122,6 @@ void extract_angles(MetaData &SF_in, DocFile &DF_out,
         i++;
         if (i % 10 == 0) progress_bar(i);
     }
-    while (SF_in.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
     progress_bar(SF_in.size());
 }
@@ -135,7 +133,7 @@ void rename_for_Spider(MetaData &SF_in, MetaData &SF_out, const FileName &fn_roo
     FileName fn_in, fn_out;
     int counter = 1;
 
-    do
+    FOR_ALL_OBJECTS_IN_METADATA(SF_out)
     {
     	SF_in.getValue( MDL_IMAGE, fn_in);
         if (fn_in=="") break;
@@ -152,6 +150,5 @@ void rename_for_Spider(MetaData &SF_in, MetaData &SF_out, const FileName &fn_roo
 
         counter++;
     }
-    while (SF_in.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
 }

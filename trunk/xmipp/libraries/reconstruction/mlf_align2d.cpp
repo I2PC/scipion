@@ -330,14 +330,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
     nr_images_global = MDimg.size();
 
     // Create a vector of ovjectIDs, which may be randomized later on
-    img_id.resize(nr_images_global, 0);
-    int i = 0;
-    for (long int id = MDimg.firstObject(); id != MetaData::NO_MORE_OBJECTS; id
-         = MDimg.nextObject())
-    {
-        img_id[i] = id;
-        i++;
-    }
+    MDimg.findObjects(img_id);
 
     // Get image sizes and total number of images
     int idum;

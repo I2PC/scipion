@@ -191,7 +191,7 @@ int readMRC(int img_select,bool isStack=false)
             data.setXdim(XSIZE(data) + 1);     // Quick fix for odd x-size maps
     }
 
-    MDMainHeader.clear();
+    MDMainHeader.removeObjects();
     MDMainHeader.setColumnFormat(false);
     MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_MIN,(double)header->amin);
@@ -211,7 +211,7 @@ int readMRC(int img_select,bool isStack=false)
     	fclose(fimg);
     	return 0;
     }
-    MD.clear();
+    MD.removeObjects();
     for ( i=imgStart; i<imgEnd; i++ )
         //for(int i=0;i< Ndim;i++)
     {

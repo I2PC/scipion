@@ -716,11 +716,11 @@ void Prog_align2d_prm::align2d()
     FileName fn_img;
     Image<double> Itmp;
     n_images = 0;
-    SF.firstObject();
-    do
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         SF.getValue(MDL_IMAGE,fn_img);
-        int enabled=SF.getValue(MDL_ENABLED,enabled);
+        int enabled;
+        SF.getValue(MDL_ENABLED, enabled);
         if(enabled==(-1)||fn_img == "")
             continue;
         Itmp.read(fn_img);
@@ -730,7 +730,6 @@ void Prog_align2d_prm::align2d()
         success.push_back(true);
         n_images++;
     }
-    while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
     // Filter if necessary
     if (do_filter && n_images>0)

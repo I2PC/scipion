@@ -543,13 +543,21 @@ void QtMainWidgetMark::generated(bool _this_is_tilted,
             __mWidget->getMicrograph()->micrograph_name() + "." + _label + ".sel";
         FileName fn_tilted =
             __mTiltedWidget->getMicrograph()->micrograph_name() + "." + _label + ".sel";
+
         MetaData SFUntilted(fn_untilted);
         MetaData SFTilted(fn_tilted);
         SFUntilted.firstObject();
         SFTilted.firstObject();
-        if (SFUntilted.size() == 0 || SFTilted.size() == 0)
+
+        int s1 = SFUntilted.size();
+        int s2 = SFTilted.size();
+
+        if (s1 != s2)
+            REPORT_ERROR(2,"Error: different lengths of 'tilted' and 'untilted' metadatas...");
+        if (s1 == 0)
 			REPORT_ERROR(2,"Error: empty selfiles...");
-        do
+
+        FOR_ALL_OBJECTS_IN_METADATA2(SFUntilted, SFTilted)
         {
             int stat1, stat2;
             SFUntilted.getValue(MDL_ENABLED, stat1);
@@ -565,8 +573,7 @@ void QtMainWidgetMark::generated(bool _this_is_tilted,
                 std::cerr << "Images " << fn1 << " and " << fn2 << " are discarded\n";
             }
         }
-        while (!(SFUntilted.nextObject()!=MetaData::NO_MORE_OBJECTS) &&
-               !(SFTilted.nextObject()  !=MetaData::NO_MORE_OBJECTS) );
+
         SFUntilted.write(fn_untilted);
         SFTilted.write(fn_tilted);
     }

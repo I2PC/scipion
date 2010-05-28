@@ -172,7 +172,7 @@ int  readIMAGIC(int img_select)
         header->densmax = header->avdens + header->sigma;
     }
 
-    MDMainHeader.clear();
+    MDMainHeader.removeObjects();
     MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_MIN,(double)header->densmin);
     MDMainHeader.setValue(MDL_MAX,(double)header->densmax);
@@ -187,8 +187,8 @@ int  readIMAGIC(int img_select)
     unsigned long   Ndim = _nDim, j = 0;
     if(dataflag== -2 )
     {
-    	fclose(fhed);
-    	return 0;
+        fclose(fhed);
+        return 0;
     }
     // View   view;
     char*   hend;
@@ -210,7 +210,7 @@ int  readIMAGIC(int img_select)
     else
         fseek( fhed, img_select * IMAGICSIZE, SEEK_SET );
 
-    MD.clear();
+    MD.removeObjects();
     //for ( i=imgStart; i<imgEnd; i++ )
     for ( i=0; i<Ndim; i++ )
     {
@@ -402,10 +402,11 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     char* fdata = (char *) askMemory(datasize);
 
     long int next_result ;
-    next_result = MD.firstObject();
-
-    for ( i=imgStart; i<imgEnd; i++ )
+    i=imgStart;
+    //for ( i=imgStart; i<imgEnd; i++ )
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
+        //nextresult = MD.getActiveObject();
         //header->imgnum = i + 1;
         if (next_result != MetaData::NO_OBJECTS_STORED &&
             next_result != MetaData::NO_MORE_OBJECTS)
@@ -429,7 +430,8 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
         else
             castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
         fwrite( fdata, datasize, 1, fimg );
-        next_result = MD.nextObject();
+        //next_result = MD.nextObject();
+        i++;
     }
 
     freeMemory(fdata, datasize);

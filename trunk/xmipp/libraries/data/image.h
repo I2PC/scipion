@@ -342,7 +342,9 @@ public:
         else if (ext_name.contains("img") || ext_name.contains("hed"))//
             err = readIMAGIC(select_img);//imagic is always an stack
         else
+        {
             err = readSPIDER(select_img,true);
+        }
         //get metadata container
         //add to MDheader
         //apply geo

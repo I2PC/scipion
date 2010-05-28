@@ -46,6 +46,7 @@ else:
 
 
 mD = XmippData.MetaData()
+print "after instanciatin"
 sIn = XmippData.stringP()
 sOut = XmippData.stringP()
 ii = XmippData.intP()
@@ -61,7 +62,7 @@ for file in files:
     counter = 0
     inFile.compose(-1,sIn)
     XmippData.ImgSize(inFile, x, x, x, n)
-    nSise = n.value()
+    nSize = n.value()
     if nSize != 1:
         for jj in range (n.value()):
             mD.addObject()

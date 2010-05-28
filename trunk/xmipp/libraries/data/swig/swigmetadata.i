@@ -9,15 +9,12 @@
 %ignore MetaDataContainer::pairExists( MDLabel name, float value );
 %include ../metadata.h
 %include ../metadata_extension.h
-%include ../metadata_container.h
+%include ../metadata_sql.h
 %include ../metadata_label.h
 namespace std {
    %template(vectorm) vector<MDLabel>;
    
 };
-
-%template(addObjectsInRangeInt) addObjectsInRangeSwig<int>;
-%template(addObjectsInRangeDouble) addObjectsInRangeSwig<double>; 
 
 %template(setValueBool)      setValueSwig<bool>; 
 %template(setValueInt)       setValueSwig<int>; 
@@ -28,10 +25,6 @@ namespace std {
 %template(getValueInt)       getValueSwig<int>; 
 %template(getValueDouble)    getValueSwig<double>; 
 %template(getValueString)    getValueSwig<std::string>;
-
-%template(addObjectsInRangeInt)       addObjectsInRangeSwig<int>;
-%template(addObjectsInRangeDouble)    addObjectsInRangeSwig<double>;
-%template(addObjectsInRangeBool)      addObjectsInRangeSwig<bool>;
 
 /*
 ==================

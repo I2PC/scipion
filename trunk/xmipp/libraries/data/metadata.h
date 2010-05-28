@@ -578,6 +578,12 @@ enum AggregateMode
              kkkk != MetaData::NO_MORE_OBJECTS && kkkk!= MetaData::NO_OBJECTS_STORED; \
              kkkk=(kkkk_metadata).nextObject())
 
+#define FOR_ALL_OBJECTS_IN_METADATA2(kkkk_metadata, jjjj_metadata) \
+        for(long int kkkk = (kkkk_metadata).firstObject(), jjjj = (jjjj_metadata).firstObject(); \
+             kkkk != MetaData::NO_MORE_OBJECTS && kkkk!= MetaData::NO_OBJECTS_STORED && \
+             jjjj != MetaData::NO_MORE_OBJECTS && jjjj!= MetaData::NO_OBJECTS_STORED; \
+             kkkk=(kkkk_metadata).nextObject(), jjjj=(jjjj_metadata).nextObject())
+
 //This Macro only have sense inside the MetaData class
 //for check if a label exists
 #define REQUIRE_LABEL_EXISTS(label, funcStr) \

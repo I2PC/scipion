@@ -166,7 +166,7 @@ void SF_main(int argc, char **argv,
             int istep = CEIL((double)SF_in.size() / 60.0);
 
             // Process all metadatafile
-            do
+            FOR_ALL_OBJECTS_IN_METADATA(SF_in)
             {
                 FileName fn_read;
                 SF_in.getValue( MDL_IMAGE, fn_read);
@@ -263,7 +263,6 @@ void SF_main(int argc, char **argv,
                 if (i++ % istep == 0 && prm->allow_time_bar && !prm->quiet)
                     progress_bar(i);
             }
-            while (SF_in.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
             if (prm->allow_time_bar && !prm->quiet)
                 progress_bar(SF_in.size());

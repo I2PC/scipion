@@ -117,6 +117,13 @@ public:
     static void aggregateMd(const MetaData *mdPtrIn, MetaData *mdPtrOut,
                             const std::vector<AggregateOperation> &operations,
                             MDLabel operateLabel);
+
+    /**
+     *This function will be used to create o delete an index over a column
+     *to improve searchs, but inserts become expensives
+     */
+    static void indexModify(const MetaData *mdPtr, const MDLabel label, bool create=true);
+
     /** Some iteration methods
      *
      */
@@ -202,6 +209,7 @@ class MDValueEqual: public MDQuery
 public:
     MDLabel label;
 
+    MDValueEqual(){}
     template <class T>
     MDValueEqual(MDLabel label, const T &value)
     {
@@ -220,6 +228,7 @@ public:
 class MDValueRange: public MDQuery
 {
 public:
+    MDValueRange(){}
     template <class T>
     MDValueRange(MDLabel label, const T &valueMin, const T &valueMax)
     {

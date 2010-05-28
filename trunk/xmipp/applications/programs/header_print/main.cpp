@@ -62,13 +62,13 @@ int main(int argc, char **argv)
     {
 
         // Process each file -----------------------------------------------------
-		long int ret=SF.firstObject();
-		if(ret==MetaData::NO_OBJECTS_STORED)
+		if(SF.isEmpty())
 		{
 			std::cerr << "Empty inputFile File\n";
 			exit(1);
 		}
-		do
+
+		FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             FileName file_name;
             SF.getValue( MDL_IMAGE, file_name);
@@ -80,7 +80,6 @@ int main(int argc, char **argv)
 			std::cout << image;
 			std::cout << std::endl;
         } // while
-        while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
     }
     catch (Xmipp_error XE)

@@ -108,8 +108,11 @@ while(id!=XmippData.MetaData.NO_MORE_OBJECTS):
    if (expression.find('replace')==-1):
        auxExpression=expression
        for i in labelsInExpression:
-	   mD.writeValueToString(_auxString,i)
-	   auxExpression=auxExpression.replace(i,_auxString.value())
+           MDLabel label = MDL::str2Label(i);
+           MDValue v(label);
+           mD.getValue()
+	       mD.writeValueToString(_auxString,i)
+	       auxExpression=auxExpression.replace(i,_auxString.value())
        result=str(eval(auxExpression))    
    #replace
    else:

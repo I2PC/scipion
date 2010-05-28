@@ -189,7 +189,10 @@ void Prog_centilt_prm::centilt()
 
     FileName file_name;
 
-    do
+    if (SFu.size() != SFt.size())
+        REPORT_ERROR(-1, "Error: different metadata lengths in 'centilt'");
+
+    FOR_ALL_OBJECTS_IN_METADATA2(SFu, SFt)
     {
         // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
         SFu.getValue( MDL_IMAGE, file_name);
@@ -256,9 +259,7 @@ void Prog_centilt_prm::centilt()
         imgno++;
         if (imgno % barf == 0)
             progress_bar(imgno);
-        SFu.nextObject();
     }
-    while (SFt.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
     progress_bar(n_images);
     if (max_shift > 0)

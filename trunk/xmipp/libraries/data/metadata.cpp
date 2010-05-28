@@ -191,7 +191,7 @@ std::vector<MDLabel> MetaData::getActiveLabels() const
 long int  MetaData::getActiveObject()
 {
     return activeObjId;
-  }
+}
 
 int MetaData::MaxStringLength(const MDLabel thisLabel) const
 {
@@ -221,7 +221,7 @@ bool MetaData::getStrFromValue(const MDLabel label, std::string &strOut, long in
 {
     MDValue mdValueOut(label);
     _getValue(objectId, mdValueOut);
-     strOut = mdValueOut.toString();
+    strOut = mdValueOut.toString();
 }
 
 bool MetaData::isEmpty() const
@@ -317,6 +317,31 @@ int MetaData::removeObjects()
     activeObjId = -1;
     return removed;
 }
+
+void MetaData::addIndex(MDLabel label)
+{
+    MDSql::indexModify(this, label, true);
+    }
+
+void MetaData::removeIndex(MDLabel label)
+{
+    MDSql::indexModify(this, label, false);
+}
+
+long int MetaData::iteratorBegin(){}
+
+/**Same as previous but iterating over a subset of
+ * objects
+ */
+long int MetaData::iteratorBegin(const MDQuery &query){}
+
+/** Check whether the iteration if finished */
+bool MetaData::iteratorEnd(){}
+
+/** Move to next object on iteration
+ * return nextObject id
+ */
+long int MetaData::iteratorNext(){}
 
 //----------Iteration functions -------------------
 long int MetaData::firstObject()
@@ -776,7 +801,7 @@ void get_statistics(MetaData MT_in, Image<double> & _ave, Image<double> & _sd, d
     REPORT_ERROR(-55, "get_statistics not yet implemented");
 }
 
-void ImgSize(MetaData &MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
+void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
 {
     if (!MD.isEmpty())
     {
@@ -788,6 +813,11 @@ void ImgSize(MetaData &MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
     }
     else
         REPORT_ERROR(-1, "Can not read image size from empty metadata");
+}
+
+void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
+{
+    ImgSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);
 }
 
 void mpi_select_part(MetaData &md, int rank, int size, int &num_img_tot)

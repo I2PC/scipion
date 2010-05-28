@@ -87,7 +87,8 @@ double projection_mismatching(double *p, void *prm)
 //#define DEBUG
 double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
 {
-    if (a <= 0) return 1e38;
+    if (a <= 0)
+        return 1e38;
 
     // Transform the volume
     MultidimArray<double> aux = V;
@@ -98,22 +99,23 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
     //SF.go_first_ACTIVE();
     int N = 0;
     //while (!SF.eof())
-    long int ret=SF.firstObject();
-    if(ret==MetaData::NO_OBJECTS_STORED)
+    if(SF.isEmpty())
     {
-            std::cerr << "Empty inputFile File\n";
-            exit(1);
+        std::cerr << "Empty inputFile File\n";
+        exit(1);
     }
-    do
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         // Read next image
         FileName fn;
         SF.getValue( MDL_IMAGE, fn);
-        if (fn=="") break;
+        if (fn=="")
+            break;
 
         // Skip randomly some images
         double x = rnd_unif(0, 1);
-        if (x > probb_eval) continue;
+        if (x > probb_eval)
+            continue;
         N++;
 
         Image<double> I;
@@ -131,6 +133,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
         retval += diff.sum2();
 
 #ifdef DEBUG
+
         I.write("PPPexp.xmp");
         I() = P();
         I.write("PPPtheo.xmp");
@@ -139,8 +142,10 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
         char c;
         std::cin >> c;
 #endif
+
     }
-    while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
+    while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS)
+        ;
 
     return retval / N;
 }
@@ -157,18 +162,18 @@ void Prog_Adjust_Volume_Parameters::apply(MultidimArray<double> &out)
     int i = 0;
 
     int projXdim, projYdim;
-    long int ret=SF.firstObject();
-    if(ret==MetaData::NO_OBJECTS_STORED)
+    if(SF.isEmpty())
     {
-            std::cerr << "Empty inputFile File\n";
-            exit(1);
+        std::cerr << "Empty inputFile File\n";
+        exit(1);
     }
-    do
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         // Read image
         FileName fn;
         SF.getValue( MDL_IMAGE, fn);
-        if (fn=="") break;
+        if (fn=="")
+            break;
         Image<double> I;
         I.read(fn);
         projXdim = XSIZE(I());
@@ -184,9 +189,9 @@ void Prog_Adjust_Volume_Parameters::apply(MultidimArray<double> &out)
 
         // End of loop
         i++;
-        if (i % 10 == 0) progress_bar(i);
+        if (i % 10 == 0)
+            progress_bar(i);
     }
-    while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
     progress_bar(imgno);
     std::cout << std::endl;
 
@@ -232,7 +237,7 @@ void Prog_Adjust_Volume_Parameters::apply(MultidimArray<double> &out)
         int iter;
         global_adjust_volume_prm = this;
         powellOptimizer(p, 1, 2, &projection_mismatching, NULL,
-            ftol, fret, iter, steps, true);
+                        ftol, fret, iter, steps, true);
         a = p(0);
         b = p(1);
     }
@@ -247,6 +252,8 @@ void Prog_Adjust_Volume_Parameters::run()
 {
     Image<double> out;
     apply(out());
-    if (fn_out == "") out.write(fn_vol);
-    else              out.write(fn_out);
+    if (fn_out == "")
+        out.write(fn_vol);
+    else
+        out.write(fn_out);
 }

@@ -19,14 +19,27 @@ void get_statistics(MetaData MT, Image<double> & _ave, Image<double> & _sd, doub
  */
 static int null_object=-1;
 
-void ImgSize(MetaData &MD, int &Xdim, int &Ydim=null_object,
+void ImgSize(const MetaData &MD, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              int &Ndim=null_object);
 
-void ImgSize(FileName &filename, int &Xdim, int &Ydim=null_object,
+void ImgSize(const FileName &filename, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              int &Ndim=null_object);
 
 void mpi_select_part(MetaData &md, int rank, int size, int &num_img_tot);
+
+///Swig interfaces
+template<class T>
+bool setValueSwig(MetaData &md, const MDLabel label, const T &valueIn, long int objectID = -1)
+{
+    md.setValue(label, valueIn, objectID);
+}
+template<class T>
+bool getValueSwig(const MetaData &md, const MDLabel label, T &valueOut, long int objectID = -1)
+{
+    md.getValue(label, valueOut, objectID);
+}
+
 
 #endif /* METADATA_EXTENSION_H_ */

@@ -1701,6 +1701,7 @@ void XmippSampling::find_closest_sampling_point(MetaData &DFi,
     int exp_image=1;
 #endif
 
+    //FIXME: Change this for a better way of iteration
     DFi.firstObject();
     for(int i=0;i< exp_data_projection_direction_by_L_R.size();)
     {
@@ -1758,6 +1759,7 @@ void XmippSampling::find_closest_sampling_point(MetaData &DFi,
         DFo.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[winner_sampling]));  
         DFo.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[winner_sampling]));  
         
+        //FIXME: Change this for a better way of iteration
         DFi.nextObject();
     }//for i 
     if (output_file_root.size() > 0)

@@ -212,14 +212,14 @@ double Prog_angular_predict_continuous_prm::predict_angles(Image<double> &I,
 void Prog_angular_predict_continuous_prm::finish_processing()
 {
     // Save predicted angles
-    int p = predicted_rot.size();
     MetaData DF;
-    DF_initial.firstObject();
     Matrix1D<double> v(6);
-    for (int i = 0; i < p; i++)
+    int i = 0;
+    FOR_ALL_OBJECTS_IN_METADATA(DF_initial)
     {
+    	FileName fnImg;
+    	DF_initial.getValue(MDL_IMAGE,fnImg);
     	DF.addObject();
-    	FileName fnImg; DF_initial.getValue(MDL_IMAGE,fnImg);
         DF.setValue(MDL_IMAGE,fnImg);
     	DF.setValue(MDL_ANGLEROT,predicted_rot[i]);
     	DF.setValue(MDL_ANGLETILT,predicted_tilt[i]);
@@ -227,7 +227,7 @@ void Prog_angular_predict_continuous_prm::finish_processing()
     	DF.setValue(MDL_SHIFTX,predicted_shiftX[i]);
     	DF.setValue(MDL_SHIFTY,predicted_shiftY[i]);
     	DF.setValue(MDL_COST,predicted_cost[i]);
-    	DF_initial.nextObject();
+    	i++;
     }
     DF.write(fn_out_ang);
 }

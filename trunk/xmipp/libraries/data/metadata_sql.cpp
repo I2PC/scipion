@@ -269,6 +269,20 @@ void MDSql::aggregateMd(const MetaData *mdPtrIn, MetaData *mdPtrOut,
     execSingleStmt(ss.str());
 }
 
+void MDSql::indexModify(const MetaData *mdPtr, const MDLabel column, bool create)
+{
+    std::stringstream ss;
+    if (create)
+    {
+        ss << "CREATE INDEX IF NOT EXISTS " << MDL::label2Str(column) << "_INDEX "
+                << " ON " << tableName(mdPtr->tableId) << " (" << MDL::label2Str(column) << ")";
+    }
+    else
+    {
+        ss << "DROP INDEX IF EXISTS " << MDL::label2Str(column) << "_INDEX ";
+    }
+}
+
 long int MDSql::firstRow(const MetaData *mdPtr)
 {
     std::stringstream ss;

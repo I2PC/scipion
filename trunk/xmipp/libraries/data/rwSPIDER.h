@@ -129,8 +129,12 @@ int  readSPIDER(int img_select,bool isStack=false)
         for ( i=0; i<extent; i+=4 )
             swapbytes(b+i, 4);
     }
+
+    if(header->labbyt == header->labrec*header->lenbyt)
+        REPORT_ERROR(1,(std::string)"Invalid Spider file: " + filename);
+
     offset = (int) header->labbyt;
-    MDMainHeader.clear();
+    MDMainHeader.removeObjects();
     MDMainHeader.setColumnFormat(false);
 
     MDMainHeader.addObject();
@@ -245,7 +249,7 @@ int  readSPIDER(int img_select,bool isStack=false)
         fclose(fimg);
         return 0;
     }
-    MD.clear();
+    MD.removeObjects();
     for ( i=imgStart; i<imgEnd; i++ )
     {
         //if(img_select==-1 || img_select==i)
@@ -524,31 +528,27 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         else if(mode==WRITE_REPLACE)
             fseek( fimg,offset + (offset+datasize)*select_img, SEEK_SET);
         //for ( size_t i=0; i<Ndim; i++ )
-        for ( size_t i =imgStart; i<imgEnd; i++ )
+        size_t i =imgStart;
+        FOR_ALL_OBJECTS_IN_METADATA(MD)
         {
-            //header->imgnum = i + 1;
-            long int next_result = MD.nextObject();
-            if (next_result != MetaData::NO_OBJECTS_STORED &&
-                next_result != MetaData::NO_MORE_OBJECTS)
-            {
-                if(MD.getValue(MDL_ORIGINX,  aux))
-                    header->xoff  =(float)aux;
-                if(MD.getValue(MDL_ORIGINY,  aux))
-                    header->yoff  =(float)aux;
-                if(MD.getValue(MDL_ORIGINZ,  aux))
-                    header->zoff  =(float)aux;
-                if(MD.getValue(MDL_ANGLEROT, aux))
-                    header->phi   =(float)aux;
-                if(MD.getValue(MDL_ANGLETILT,aux))
-                    header->theta =(float)aux;
-                if(MD.getValue(MDL_ANGLEPSI, aux))
-                    header->gamma =(float)aux;
-                if(MD.getValue(MDL_WEIGHT,   aux))
-                    header->weight=(float)aux;
-                if(MD.getValue(MDL_FLIP,    baux))
-                    header->flip  =(float)baux;
 
-            }
+            if(MD.getValue(MDL_ORIGINX,  aux))
+                header->xoff  =(float)aux;
+            if(MD.getValue(MDL_ORIGINY,  aux))
+                header->yoff  =(float)aux;
+            if(MD.getValue(MDL_ORIGINZ,  aux))
+                header->zoff  =(float)aux;
+            if(MD.getValue(MDL_ANGLEROT, aux))
+                header->phi   =(float)aux;
+            if(MD.getValue(MDL_ANGLETILT,aux))
+                header->theta =(float)aux;
+            if(MD.getValue(MDL_ANGLEPSI, aux))
+                header->gamma =(float)aux;
+            if(MD.getValue(MDL_WEIGHT,   aux))
+                header->weight=(float)aux;
+            if(MD.getValue(MDL_FLIP,    baux))
+                header->flip  =(float)baux;
+
             //do not need to unlock because we are in the overwrite case
             fwrite( header, offset, 1, fimg );
             if (isComplexT())
@@ -556,6 +556,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             else
                 castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
             fwrite( fdata, datasize, 1, fimg );
+            i++;
         }
     }
     //I guess I do not need to unlock since we are going to close the file

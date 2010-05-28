@@ -1056,10 +1056,9 @@ double Prog_angular_predict_prm::predict_angles(Image<double> &I,
 // Finish processing ---------------------------------------------------------
 void Prog_angular_predict_prm::finish_processing()
 {
-    int p = predicted_rot.size();
     MetaData DF;
-    DFexp.firstObject();
-    for (int i = 0; i < p; i++)
+    int i = 0;
+    FOR_ALL_OBJECTS_IN_METADATA(DFexp)
     {
         DF.addObject();
         std::string fn;
@@ -1071,7 +1070,7 @@ void Prog_angular_predict_prm::finish_processing()
         DF.setValue(MDL_SHIFTX,    predicted_shiftX[i]);
         DF.setValue(MDL_SHIFTY,    predicted_shiftY[i]);
         DF.setValue(MDL_MAXCC,     predicted_corr[i]);
-        DFexp.nextObject();
+        i++;
     }
     DF.write(fn_out_ang);
 }

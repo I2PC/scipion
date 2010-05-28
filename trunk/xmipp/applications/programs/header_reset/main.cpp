@@ -73,9 +73,9 @@ int main(int argc, char *argv[])
             std::cerr << "Setting the tilt angles to a tilt series\n"
                       << "First angle=" << firstAngle << std::endl
                       << "Angular step=" << angularStep << std::endl;
-		long int ret=SF.firstObject();
         double angle=firstAngle;
-        do
+
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             FileName fn_img;
             SF.getValue( MDL_IMAGE, fn_img); 
@@ -89,7 +89,6 @@ int main(int argc, char *argv[])
             }
             img.write(img.name());
         }
-        while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS);
 
     }
     catch (Xmipp_error XE)
