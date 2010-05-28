@@ -275,6 +275,7 @@ public:
     // Set a new pair/value for an specified object. If no objectId is given, that
     // pointed by the class iterator is used
     bool setValueFromStr(const MDLabel label, const std::string &value, long int objectId = -1);
+    bool getStrFromValue(const MDLabel label, std::string &strOut, long int objectId = -1);
 
     template<class T>
     bool getValue(const MDLabel label, T &valueOut, long int objectId = -1) const

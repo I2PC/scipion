@@ -217,6 +217,13 @@ bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, lo
     MDSql::setObjectValue(this, objectId, mdValue);
 }
 
+bool MetaData::getStrFromValue(const MDLabel label, std::string &strOut, long int objectId)
+{
+    MDValue mdValueOut(label);
+    _getValue(objectId, mdValueOut);
+     strOut = mdValueOut.toString();
+}
+
 bool MetaData::isEmpty() const
 {
     return size() == 0;
