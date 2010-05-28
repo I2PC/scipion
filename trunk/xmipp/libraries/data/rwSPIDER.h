@@ -131,7 +131,7 @@ int  readSPIDER(int img_select,bool isStack=false)
     }
 
     if(header->labbyt == header->labrec*header->lenbyt)
-        REPORT_ERROR(1,(std::string)"Invalid Spider file: " + filename);
+        REPORT_ERROR(1,(std::string)"Invalid Spider file:  " + filename);
 
     offset = (int) header->labbyt;
     MDMainHeader.removeObjects();
