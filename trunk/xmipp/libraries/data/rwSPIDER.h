@@ -130,7 +130,7 @@ int  readSPIDER(int img_select,bool isStack=false)
             swapbytes(b+i, 4);
     }
 
-    if(header->labbyt == header->labrec*header->lenbyt)
+    if(header->labbyt != header->labrec*header->lenbyt)
         REPORT_ERROR(1,(std::string)"Invalid Spider file:  " + filename);
 
     offset = (int) header->labbyt;
