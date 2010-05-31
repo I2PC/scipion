@@ -119,13 +119,13 @@ MDLabelType MDL::labelType(std::string &labelName)
 
 
 //----------- Implementation of MDValue -----------------
-inline void MDValue::labelTypeCheck(MDLabelType type) const
+inline void MDValue::labelTypeCheck(MDLabelType checkingType) const
 {
-    if (MDL::labelType(this->label) != type)
+    if (this->type != checkingType)
     {
         std::stringstream ss;
         ss << "Mismatch Label (" << MDL::label2Str(label) << ") and value type(";
-        switch (type)
+        switch (checkingType)
         {
         case LABEL_INT:
             ss << "int";
@@ -142,6 +142,8 @@ inline void MDValue::labelTypeCheck(MDLabelType type) const
         case LABEL_VECTOR:
             ss << "vector";
             break;
+        default:
+            ss << "weird: " << checkingType;
         }
         ss << ")";
         REPORT_ERROR(-55, ss.str());
@@ -153,42 +155,49 @@ inline void MDValue::labelTypeCheck(MDLabelType type) const
 MDValue::MDValue(MDLabel label)
 {
     this->label = label;
+    this->type = MDL::labelType(label);
 }
 ///Constructors for each Label supported type
 ///these constructor will do the labels type checking
 MDValue::MDValue(MDLabel label, const int &intValue)
 {
     this->label = label;
+    this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_INT);
     this->intValue = intValue;
 }
 MDValue::MDValue(MDLabel label, const double &doubleValue)
 {
     this->label = label;
+    this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_DOUBLE);
     this->doubleValue = doubleValue;
 }
 MDValue::MDValue(MDLabel label, const bool &boolValue)
 {
     this->label = label;
+    this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_BOOL);
     this->boolValue = boolValue;
 }
 MDValue::MDValue(MDLabel label, const std::string &stringValue)
 {
     this->label = label;
+    this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_STRING);
     this->stringValue = stringValue;
 }
 MDValue::MDValue(MDLabel label, const std::vector<double> &vectorValue)
 {
     this->label = label;
+    this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_VECTOR);
     this->vectorValue = vectorValue;
 }
 MDValue::MDValue(MDLabel label, const long int longintValue)
 {
     this->label = label;
+    this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_LONG);
     this->longintValue = longintValue;
 
@@ -283,14 +292,14 @@ void MDValue::toStream(std::ostream &os, bool withFormat) const
         os << stringValue;
         break;
     case LABEL_VECTOR:
-        os << "** ";
+        os << "[ ";
         int size = vectorValue.size();
         for (int i = 0; i < size; i++)
         {
             DOUBLE2STREAM(vectorValue[i]);
             os << " ";
         }
-        os << "**";
+        os << "]";
         break;
     }//close switch
 }//close function toStream
@@ -322,8 +331,8 @@ bool MDValue::fromStream(std::istream &is)
         is >> stringValue;
         break;
     case LABEL_VECTOR:
-        is >> stringValue; //Just to remove "**"
-        while (is >> doubleValue) //This will stop at ending "**"
+        is >> stringValue; //Just to remove "["
+        while (is >> doubleValue) //This will stop at ending "]"
             vectorValue.push_back(doubleValue);
         break;
     }

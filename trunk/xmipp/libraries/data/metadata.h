@@ -101,8 +101,15 @@ private:
      **/
     std::vector<unsigned int> ignoreLabels;
 
+    /** This variables should only be used by MDSql
+     * for handling db status of metadata
+     */
     /** The table id to do db operations */
     int tableId;
+    /** The stored statements for getValue queries */
+    std::map<MDLabel, sqlite3_stmt*> getValueCache;
+
+
     /** The id of the object that is active
      * usefull for calling 'setValue' and 'getValue'
      * without specifying object id
@@ -200,7 +207,7 @@ public:
     /**Clear clear all data
      * @ingroup MetaDataConstructors
      */
-    void clear();
+    void clear(bool onlyData = false);
 
 
 

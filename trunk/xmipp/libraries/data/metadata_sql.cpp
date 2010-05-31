@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "metadata_sql.h"
-//#define DEBUG
+#define DEBUG
 
 //This is needed for static memory allocation
 int MDSql::table_counter = 0;
@@ -91,7 +91,6 @@ bool MDSql::setObjectValue(const MetaData *mdPtr, const int objId, const MDValue
     << " SET " << MDL::label2Str(column) << "="
     << sep << value.toString() << sep << " WHERE objID=" << objId << ";";
     execSingleStmt(ss.str());
-
 }
 
 bool MDSql::getObjectValue(const MetaData *mdPtr, const int objId, MDValue  &value)
@@ -100,55 +99,30 @@ bool MDSql::getObjectValue(const MetaData *mdPtr, const int objId, MDValue  &val
     sqlite3_stmt *stmt;
     MDLabel column = value.label;
 
-    ss << "SELECT " << MDL::label2Str(column)
-    << " FROM " << tableName(mdPtr->tableId)
-    << " WHERE objID=" << objId << ";";
+    //if (mdPtr->getValueCache[value.label] == NULL)
+    {
+        ss << "SELECT " << MDL::label2Str(column)
+        << " FROM " << tableName(mdPtr->tableId)
+        << " WHERE objID=?";// << objId << ";";
+    }
 #ifdef DEBUG
 
     std::cerr << "getObjectValue: " << ss.str() <<std::endl;
 #endif
 
-    rc = sqlite3_prepare(db, ss.str().c_str(), -1, &stmt, &zLeftover);
-
+    rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
+    rc = sqlite3_reset(stmt);
+    rc = sqlite3_bind_int(stmt, 1, objId);
     rc = sqlite3_step(stmt);
-    char * strPtr  = NULL;
 
     if (rc == SQLITE_ROW)
     {
-        switch (MDL::labelType(column))
-        {
-        case LABEL_BOOL: //bools are int in sqlite3
-            value.boolValue = sqlite3_column_int(stmt, 0) == 1;
-            break;
-        case LABEL_INT:
-            value.intValue = sqlite3_column_int(stmt, 0);
-            break;
-        case LABEL_LONG:
-            value.longintValue = sqlite3_column_int(stmt, 0);
-            break;
-        case LABEL_DOUBLE:
-            value.doubleValue = sqlite3_column_double(stmt, 0);
-            break;
-        case LABEL_STRING:
-            ss.str("");
-            ss << sqlite3_column_text(stmt, 0);
-            value.stringValue = ss.str();
-            break;
-        case LABEL_VECTOR:
-            //FIXME: Now are stored as string in DB
-            ss.str("");
-            ss << sqlite3_column_text(stmt, 0);
-            //std::cerr << "read vector from db: " << ss.str() <<std::endl;
-            value.fromStream(ss);
-            break;
-        }
+        extractValue(stmt, 0, value);
     }
     else
     {
         REPORT_ERROR(-1, sqlite3_errmsg(db));
     }
-    rc = sqlite3_finalize(stmt);
-
     return false;
 }
 
@@ -216,7 +190,9 @@ long int MDSql::copyObjects(const MetaData *mdPtrIn, MetaData *mdPtrOut,
         ss << " WHERE " << queryPtr->queryString;
     ss << " ORDER BY " << MDL::label2Str(sortLabel);
     ss << " LIMIT " << limit << " OFFSET " << offset << ";";
+    //std::cerr << "copyObjects: " << ss.str() <<std::endl;
     execSingleStmt(ss.str());
+    //std::cerr << "executed copyObjects:------- " <<std::endl;
     return sqlite3_changes(db);
 }
 
@@ -275,12 +251,13 @@ void MDSql::indexModify(const MetaData *mdPtr, const MDLabel column, bool create
     if (create)
     {
         ss << "CREATE INDEX IF NOT EXISTS " << MDL::label2Str(column) << "_INDEX "
-                << " ON " << tableName(mdPtr->tableId) << " (" << MDL::label2Str(column) << ")";
+        << " ON " << tableName(mdPtr->tableId) << " (" << MDL::label2Str(column) << ")";
     }
     else
     {
         ss << "DROP INDEX IF EXISTS " << MDL::label2Str(column) << "_INDEX ";
     }
+    execSingleStmt(ss.str());
 }
 
 long int MDSql::firstRow(const MetaData *mdPtr)
@@ -371,6 +348,31 @@ void MDSql::setOperate(const MetaData *mdPtrIn, MetaData *mdPtrOut, MDLabel colu
     execSingleStmt(ss.str());
 }
 
+void MDSql::dumpToFile(const FileName &fileName)
+{
+    sqlite3 *pTo;
+    sqlite3_backup *pBackup;
+
+    sqlCommitTrans();
+    rc = sqlite3_open(fileName.c_str(), &pTo);
+    if( rc==SQLITE_OK )
+    {
+        pBackup = sqlite3_backup_init(pTo, "main", db, "main");
+        if( pBackup )
+        {
+            sqlite3_backup_step(pBackup, -1);
+            sqlite3_backup_finish(pBackup);
+        }
+        rc = sqlite3_errcode(pTo);
+        std::cerr << "errcode: " << rc <<std::endl;
+
+    }
+    else
+        REPORT_ERROR(-55, "dumpToFile: error opening db file");
+    sqlite3_close(pTo);
+    sqlBeginTrans();
+}
+
 bool MDSql::sqlBegin()
 {
     if (table_counter > 0)
@@ -383,6 +385,18 @@ bool MDSql::sqlBegin()
     sqlite3_exec(db, "PRAGMA count_changes=OFF",NULL, NULL, &errmsg);
     sqlite3_exec(db, "PRAGMA page_size=4092",NULL, NULL, &errmsg);
 
+    return sqlBeginTrans();
+}
+
+bool MDSql::sqlEnd()
+{
+    sqlCommitTrans();
+    sqlite3_close(db);
+    std::cerr << "Database sucessfully closed." <<std::endl;
+}
+
+bool MDSql::sqlBeginTrans()
+{
     if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &errmsg) != SQLITE_OK)
     {
         std::cerr << "Couldn't begin transaction:  " << errmsg << std::endl;
@@ -391,15 +405,7 @@ bool MDSql::sqlBegin()
     return true;
 }
 
-bool MDSql::sqlEnd()
-{
-    sqlCommit();
-    sqlite3_close(db);
-
-    std::cerr << "Database sucessfully closed." <<std::endl;
-}
-
-bool MDSql::sqlCommit()
+bool MDSql::sqlCommitTrans()
 {
     char *errmsg;
 
@@ -433,10 +439,6 @@ bool MDSql::createTable(const int mdId, const std::vector<MDLabel> * labelsVecto
         }
     }
     ss << ");";
-#ifdef DEBUG
-
-    std::cerr << ss.str() <<std::endl;
-#endif
 
     execSingleStmt(ss.str());
 }
@@ -485,5 +487,53 @@ std::string MDSql::tableName(const int tableId)
     std::stringstream ss;
     ss <<  "MDTable_" << tableId;
     return ss.str();
+}
+
+int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDValue &valueIn)
+{
+    switch (valueIn.type)
+    {
+    case LABEL_BOOL: //bools are int in sqlite3
+        return sqlite3_bind_int(stmt, position, valueIn.boolValue ? 1 : 0);
+    case LABEL_INT:
+        return sqlite3_bind_int(stmt, position, valueIn.intValue);
+    case LABEL_LONG:
+        return sqlite3_bind_int(stmt, position, valueIn.longintValue);
+    case LABEL_DOUBLE:
+        return sqlite3_bind_double(stmt, position, valueIn.doubleValue);
+    case LABEL_STRING:
+        return sqlite3_bind_text(stmt, position, valueIn.stringValue.c_str(), -1, NULL);
+    case LABEL_VECTOR:
+        return sqlite3_bind_text(stmt, position, valueIn.toString().c_str(), -1, NULL);
+    }
+}
+
+int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDValue &valueOut)
+{
+    std::stringstream ss;
+    switch (valueOut.type)
+    {
+    case LABEL_BOOL: //bools are int in sqlite3
+        valueOut.boolValue = sqlite3_column_int(stmt, position) == 1;
+        break;
+    case LABEL_INT:
+        valueOut.intValue = sqlite3_column_int(stmt, position);
+        break;
+    case LABEL_LONG:
+        valueOut.longintValue = sqlite3_column_int(stmt, position);
+        break;
+    case LABEL_DOUBLE:
+        valueOut.doubleValue = sqlite3_column_double(stmt, position);
+        break;
+    case LABEL_STRING:
+        ss << sqlite3_column_text(stmt, position);
+        valueOut.stringValue = ss.str();
+        break;
+    case LABEL_VECTOR:
+        //FIXME: Now are stored as string in DB
+        ss << sqlite3_column_text(stmt, position);
+        valueOut.fromStream(ss);
+        break;
+    }
 }
 

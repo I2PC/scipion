@@ -26,18 +26,25 @@
 #include "metadata.h"
 
 //-----Constructors and related functions ------------
-void MetaData::clear()
+void MetaData::clear(bool onlyData)
 {
-    path.clear();
-    comment.clear();
-    fastStringSearch.clear();
-    fastStringSearchLabel = MDL_UNDEFINED;
-    activeLabels.clear();
-    ignoreLabels.clear();
-    isColumnFormat = true;
-    inFile = FileName::FileName();
-    activeObjId = -1;//no active object
-    MDSql::clearMd(this);
+    if (onlyData)
+    {
+        MDSql::deleteObjects(this);
+    }
+    else
+    {
+        path.clear();
+        comment.clear();
+        fastStringSearch.clear();
+        fastStringSearchLabel = MDL_UNDEFINED;
+        activeLabels.clear();
+        ignoreLabels.clear();
+        isColumnFormat = true;
+        inFile = FileName::FileName();
+        activeObjId = -1;//no active object
+        MDSql::clearMd(this);
+    }
 }//close clear
 
 void MetaData::init(const std::vector<MDLabel> *labelsVector)
@@ -71,7 +78,9 @@ void MetaData::copyMetadata(const MetaData &md)
     if (this == &md) //not sense to copy same metadata
         return;
     init(&(md.activeLabels));
+    std::cerr << "copying info..." <<std::endl;
     copyInfo(md);
+    std::cerr << "copying objects..." <<std::endl;
     MDSql::copyObjects(&md, this);
 }
 
@@ -123,7 +132,7 @@ MetaData::MetaData(const std::vector<MDLabel> *labelsVector)
 
 MetaData::MetaData(const FileName &fileName, const std::vector<MDLabel> *labelsVector)
 {
-    //init(labelsVector);
+    init(labelsVector);
     //FIXME: what to do when labels vector is provided???
     read(fileName);
 }//close MetaData from file Constructor
@@ -321,27 +330,31 @@ int MetaData::removeObjects()
 void MetaData::addIndex(MDLabel label)
 {
     MDSql::indexModify(this, label, true);
-    }
+}
 
 void MetaData::removeIndex(MDLabel label)
 {
     MDSql::indexModify(this, label, false);
 }
 
-long int MetaData::iteratorBegin(){}
+long int MetaData::iteratorBegin()
+{}
 
 /**Same as previous but iterating over a subset of
  * objects
  */
-long int MetaData::iteratorBegin(const MDQuery &query){}
+long int MetaData::iteratorBegin(const MDQuery &query)
+{}
 
 /** Check whether the iteration if finished */
-bool MetaData::iteratorEnd(){}
+bool MetaData::iteratorEnd()
+{}
 
 /** Move to next object on iteration
  * return nextObject id
  */
-long int MetaData::iteratorNext(){}
+long int MetaData::iteratorNext()
+{}
 
 //----------Iteration functions -------------------
 long int MetaData::firstObject()
@@ -520,7 +533,7 @@ void MetaData::read(const FileName &inFile, std::vector<MDLabel> *labelsVector)
 
 void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
 {
-    std::vector<MDLabel> activeLabels;
+    std::vector<MDLabel> readLabels;
 
     is.seekg(0, std::ios::beg);
     std::string line;
@@ -567,14 +580,19 @@ void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
             if (label == MDL_UNDEFINED)
                 ignoreLabels.push_back(labelPosition);
             else
-                activeLabels.push_back(label);
+                readLabels.push_back(label);
             labelPosition++;
         }
 
-        init(&activeLabels);
+        //Initialize data
+        clear();
+        activeLabels = (labelsVector != NULL) ? *labelsVector : readLabels;
+        MDSql::createMd(this);
         // Read data and fill structures accordingly
+        int lineCount = 0;
         while (getline(is, line, '\n'))
         {
+            std::cerr << "lines readed " << ++lineCount <<std::endl;
             if (line[0] == '\0' || line[0] == '#')
                 continue;
 
@@ -606,20 +624,17 @@ void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
                     continue;
                 }
 
-                if (MDL::isVector(activeLabels[labelPosition - counterIgnored])
-                    && value == "**")
+                if (MDL::isVector(readLabels[labelPosition - counterIgnored])
+                    && value == "[")
                 {
-                    std::string aux;
-                    while (os2 >> value)
-                        if (value == "**")
-                            break;
-                        else
-                            aux += value + " ";
-                    value = aux;
+                    std::string aux = value;
+                    while (os2 >> value && value != "]")
+                        aux += " " + value;
+                    value = aux + "]";
                     //std::cerr << "is vector value" << value << std::endl;
                 }
 
-                setValueFromStr(activeLabels[labelPosition - counterIgnored], value);
+                setValueFromStr(readLabels[labelPosition - counterIgnored], value);
                 labelPosition++;
             }
         }
@@ -629,7 +644,7 @@ void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
         std::string newLabel;
         std::string value;
 
-        init();
+        //init();
         long int objectID = addObject();
 
         // Read data and fill structures accordingly
@@ -654,7 +669,7 @@ void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
             }
             if (label != MDL_UNDEFINED)
             {
-                activeLabels.push_back(label);
+                readLabels.push_back(label);
                 setValueFromStr(label, value);
             }
         }

@@ -137,6 +137,9 @@ public:
     /**Functions to implement set operations */
     static void setOperate(const MetaData *mdPtrIn, MetaData *mdPtrOut, MDLabel column, int operation);
 
+    /** Function to dump DB to file */
+    static void dumpToFile(const FileName &fileName);
+
     static char *errmsg;
     static const char *zLeftover;
     static int rc;
@@ -151,13 +154,18 @@ private:
     ///Just call this function once, at static initialization
     static bool sqlBegin();
     static bool sqlEnd();
-    static bool sqlCommit();
+    static bool sqlBeginTrans();
+    static bool sqlCommitTrans();
     static bool dropTable(const int mdId);
     static bool createTable(const int mdId, const std::vector<MDLabel> * labelsVector = NULL);
     static bool insertValues(double a, double b);
     static int execSingleStmt(const std::string &stmtStr);
     static int execSingleStmt(sqlite3_stmt *stmt);
     static std::string tableName(const int tableId);
+
+    static int bindValue(sqlite3_stmt *stmt, const int position, const MDValue &valueIn);
+    static int extractValue(sqlite3_stmt *stmt, const int position, MDValue &valueOut);
+
 
     friend class MDSqlStaticInit;
 }

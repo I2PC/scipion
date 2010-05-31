@@ -634,6 +634,8 @@ class MDSql(_object):
     if _newclass:columnMaxLength = staticmethod(_XmippData.MDSql_columnMaxLength)
     __swig_getmethods__["setOperate"] = lambda x: _XmippData.MDSql_setOperate
     if _newclass:setOperate = staticmethod(_XmippData.MDSql_setOperate)
+    __swig_getmethods__["dumpToFile"] = lambda x: _XmippData.MDSql_dumpToFile
+    if _newclass:dumpToFile = staticmethod(_XmippData.MDSql_dumpToFile)
     __swig_setmethods__["errmsg"] = _XmippData.MDSql_errmsg_set
     __swig_getmethods__["errmsg"] = _XmippData.MDSql_errmsg_get
     if _newclass:errmsg = _swig_property(_XmippData.MDSql_errmsg_get, _XmippData.MDSql_errmsg_set)
@@ -673,6 +675,7 @@ MDSql_nextRow = _XmippData.MDSql_nextRow
 MDSql_previousRow = _XmippData.MDSql_previousRow
 MDSql_columnMaxLength = _XmippData.MDSql_columnMaxLength
 MDSql_setOperate = _XmippData.MDSql_setOperate
+MDSql_dumpToFile = _XmippData.MDSql_dumpToFile
 
 class MDSqlStaticInit(_object):
     __swig_setmethods__ = {}
@@ -960,6 +963,9 @@ class MDValue(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, MDValue, name)
     __repr__ = _swig_repr
+    __swig_setmethods__["type"] = _XmippData.MDValue_type_set
+    __swig_getmethods__["type"] = _XmippData.MDValue_type_get
+    if _newclass:type = _swig_property(_XmippData.MDValue_type_get, _XmippData.MDValue_type_set)
     __swig_setmethods__["boolValue"] = _XmippData.MDValue_boolValue_set
     __swig_getmethods__["boolValue"] = _XmippData.MDValue_boolValue_get
     if _newclass:boolValue = _swig_property(_XmippData.MDValue_boolValue_get, _XmippData.MDValue_boolValue_set)

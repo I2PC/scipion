@@ -383,6 +383,7 @@ public:
     //Default constructor
     MDLabelData()
     {}
+
     MDLabelData(MDLabelType t, std::string s)
     {
         type = t;
@@ -394,6 +395,7 @@ public:
 class MDValue
 {
 public:
+    MDLabelType type;
     bool boolValue;
     int intValue;
     long int longintValue;
@@ -402,7 +404,7 @@ public:
     std::vector<double> vectorValue;
     MDLabel label;
 
-    void labelTypeCheck(MDLabelType type) const;
+    void labelTypeCheck(MDLabelType checkingType) const;
     //Just a simple constructor with the label
     //dont do any type checking as have not value yet
     MDValue(MDLabel label);

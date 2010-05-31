@@ -38,8 +38,8 @@
 #include "metadata.h"
 #include <fcntl.h>
 
-static std::vector<MDLabel> emptyVector;
-static MetaData emptyMetaData;
+//static std::vector<MDLabel> emptyVector;
+//static MetaData emptyMetaData;
 
 typedef enum TransformType {
     NoTransform = 0,        // No transform
@@ -212,8 +212,8 @@ public:
         filename = "";
         offset = 0;
         swap = 0;
-        MD.clear();
-        MDMainHeader.clear();
+        MD.clear(true);
+        MDMainHeader.clear(true);
         replaceNsize=0;
     }
 
@@ -244,7 +244,7 @@ public:
 
     /** Specific read functions for different file formats
     */
-    #include "rwSPIDER.h"
+#include "rwSPIDER.h"
     #include "rwMRC.h"
     #include "rwIMAGIC.h"
 
@@ -295,9 +295,12 @@ public:
      */
     int read(const FileName &name, bool readdata=true, int select_img=-1,
              bool apply_geo = false, bool only_apply_shifts = false,
-             const MetaData &docFile= emptyMetaData,
-             std::vector<MDLabel> &activeLabels = emptyVector)
+             const MetaData *docFilePtr = NULL,
+             std::vector<MDLabel> *activeLabelsPtr = NULL)
     {
+        //const MetaData &docFile = *docFilePtr;
+        //std::vector<MDLabel> &activeLabels = *activeLabelsPtr;
+
         int err = 0;
         // Check whether to read the data or only the header
         if ( readdata )
@@ -322,7 +325,7 @@ public:
         }
 
 #undef DEBUG
-//#define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
 
         std::cerr << "READ\n" <<
@@ -352,41 +355,45 @@ public:
         //This implementation does not handle stacks,
         //whenever we implement them I will update
 
-        if(activeLabels.empty() && !(docFile.isEmpty()))
-            activeLabels = docFile.getActiveLabels();
-        std::vector<MDLabel>::iterator strIt;
-        for (strIt = activeLabels.begin(); strIt != activeLabels.end(); strIt++)
+        if (docFilePtr != NULL)
         {
-            if (MDL::isDouble(*strIt))
+            if (activeLabelsPtr == NULL)
+                activeLabelsPtr = &(docFilePtr->getActiveLabels());
+
+            std::vector<MDLabel>::iterator strIt;
+            double dd;
+            std::string ss;
+            int ii;
+            bool bb;
+            std::vector<double> vv;
+            for (strIt = activeLabelsPtr->begin(); strIt != activeLabelsPtr->end(); strIt++)
             {
-                double dd;
-                docFile.getValue(*strIt,dd);
-                MD.setValue(*strIt,dd);
-            }
-            else if (MDL::isString(*strIt))
-            {
-                std::string ss;
-                docFile.getValue(*strIt,ss);
-                MD.setValue(*strIt,ss);
-            }
-            else if (MDL::isInt(*strIt))
-            {
-                int ii;
-                docFile.getValue(*strIt,ii);
-                MD.setValue(*strIt,ii);
-            }
-            else if (MDL::isBool(*strIt))
-            {
-                bool bb;
-                docFile.getValue(*strIt,bb);
-                MD.setValue(*strIt,bb);
-            }
-            else if (MDL::isVector(*strIt))
-            {
-                std::vector<double> vv;
-                docFile.getValue(*strIt,vv);
-                MD.setValue(*strIt,vv);
-            }
+                switch (MDL::labelType(*strIt))
+                {
+                case LABEL_DOUBLE:
+                    docFilePtr->getValue(*strIt,dd);
+                    MD.setValue(*strIt,dd);
+                    break;
+                case LABEL_STRING:
+                    docFilePtr->getValue(*strIt,ss);
+                    MD.setValue(*strIt,ss);
+                    break;
+                case LABEL_INT:
+                    docFilePtr->getValue(*strIt,ii);
+                    MD.setValue(*strIt,ii);
+                    break;
+                case LABEL_BOOL:
+                    docFilePtr->getValue(*strIt,bb);
+                    MD.setValue(*strIt,bb);
+                    break;
+                case LABEL_VECTOR:
+                    docFilePtr->getValue(*strIt,vv);
+                    MD.setValue(*strIt,vv);
+                    break;
+                default:
+                    REPORT_ERROR(-1, "Image.read: Unknown label type");
+                }
+            }//close for activeLabels
         }
 
         //apply geo has not been defined for volumes
@@ -496,11 +503,11 @@ public:
             name = filename;
         /*
                 if(
-            		(NSIZE(data)>1 && mode==WRITE_APPEND ) ||
-            		(NSIZE(data)>1 && mode==WRITE_REPLACE )
+              (NSIZE(data)>1 && mode==WRITE_APPEND ) ||
+              (NSIZE(data)>1 && mode==WRITE_REPLACE )
                 )
                 {
-                	REPORT_ERROR(1,"append and replace are not available options for stacks");
+                 REPORT_ERROR(1,"append and replace are not available options for stacks");
                 }
         */
         FileName ext_name = name.get_file_format();
@@ -520,7 +527,7 @@ public:
             filename   = filename.substr(0, found);
         }
 
-//#define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
         std::cerr << "write" <<std::endl;
         std::cerr<<"extension for write= "<<ext_name<<std::endl;
@@ -554,25 +561,25 @@ public:
         }
         else if (_exists && (mode==WRITE_REPLACE || mode==WRITE_APPEND))
         {
-        	auxI.dataflag = -2;
+            auxI.dataflag = -2;
             auxI.read(filNamePlusExt,false);
             int _Xdim, _Ydim, _Zdim, _Ndim;
             auxI.getDimensions(_Xdim,_Ydim, _Zdim, _Ndim);
             replaceNsize=_Ndim;
             if(Xdim!=_Xdim ||
-                    Ydim!=_Ydim ||
-                    Zdim!=_Zdim
+               Ydim!=_Ydim ||
+               Zdim!=_Zdim
               )
                 REPORT_ERROR(1,"write: target and source objects have different size");
             if(mode==WRITE_REPLACE && select_img>_Ndim)
                 REPORT_ERROR(1,"write: can not replace image stack is not large enough");
             if(auxI.replaceNsize <1 &&
-                    (mode==WRITE_REPLACE || mode==WRITE_APPEND))
+               (mode==WRITE_REPLACE || mode==WRITE_APPEND))
                 REPORT_ERROR(1,"write: output file is not an stack");
         }
         else if(!_exists && mode==WRITE_APPEND)
         {
-        	;
+            ;
         }
         else//If new file we are in the WRITE_OVERWRITE mode
         {
@@ -863,7 +870,7 @@ public:
         //if memory already allocated use it (no resize allowed)
         data.coreAllocateReuse();
         myoffset = offset + select_img*(pagesize + pad);
-//#define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
 
         data.printShape();
@@ -1111,7 +1118,7 @@ public:
     */
     bool flip(const long int n = -1) const
     {
-        double dummy;
+        bool dummy;
         MD.getValue(MDL_FLIP,dummy,n);
         return (dummy);
     }

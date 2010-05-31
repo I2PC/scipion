@@ -194,7 +194,7 @@ void SF_main(int argc, char **argv,
 
                 if (img.isRealImage(fn_read))
                 {
-                    img.read(fn_read, true, -1, prm->apply_geo,false,SF_in);
+                    img.read(fn_read, true, -1, prm->apply_geo, false, &SF_in);
                     img().setXmippOrigin();
                     switch (operation_mode)
                     {
