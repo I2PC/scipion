@@ -123,6 +123,7 @@ bool MDSql::getObjectValue(const MetaData *mdPtr, const int objId, MDValue  &val
     {
         REPORT_ERROR(-1, sqlite3_errmsg(db));
     }
+    sqlite3_finalize(stmt);
     return false;
 }
 

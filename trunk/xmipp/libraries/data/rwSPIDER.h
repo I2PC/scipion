@@ -408,8 +408,8 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             header->av   = (float)aux;
         if(MDMainHeader.getValue(MDL_STDDEV,aux))
             header->sig  = (float)aux;
-    }
 
+    }
     // For multi-image files
     if (Ndim > 1 || mode == WRITE_APPEND || isStack)
     {
