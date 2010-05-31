@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "metadata_sql.h"
-#define DEBUG
+//#define DEBUG
 
 //This is needed for static memory allocation
 int MDSql::table_counter = 0;
