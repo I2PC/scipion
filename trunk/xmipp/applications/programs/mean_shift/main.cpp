@@ -287,6 +287,8 @@ int main(int argc, char **argv)
 	double sigma_r,sigma_s;
     unsigned int numThreads; 
     bool fast;
+    bool save_iters;
+    int iters;
     
 	try
     {
@@ -305,7 +307,17 @@ int main(int argc, char **argv)
         if  ( checkParameter( argc, argv, "-thr") )
             numThreads = textToInteger( getParameter( argc, argv, "-thr") );
         else
-            numThreads = 1;
+            numThreads = 1;    
+        if  ( checkParameter( argc, argv, "-iters") )
+            iters = textToInteger( getParameter( argc, argv, "-iters") );
+        else
+            iters = 1;
+       
+        if( iters > 1 )
+        {
+            if  ( checkParameter( argc, argv, "-save_iters") )
+                save_iters = true;
+        }
     }
     catch (Xmipp_error)
     {
@@ -316,6 +328,9 @@ int main(int argc, char **argv)
         std::cout << "-hr               : Sigma for the range domain" << std::endl;
         std::cout << "-hs               : Sigma for the spatial domain" << std::endl;
         std::cout << "-fast             : Use faster processing (avoid gaussian calculations)" << std::endl;
+        std::cout << "-iters            : Number of iterations to be used" << std::endl;
+        std::cout << "-save_iters       : Save volume for each iteration" << std::endl;
+        
         exit(1);
     }
 
@@ -330,23 +345,41 @@ int main(int argc, char **argv)
 
     pthread_t * th_ids = new pthread_t[numThreads];
     threadProcessPlaneArgs * th_args = new threadProcessPlaneArgs[numThreads];
+    
+    for( int iter = 0 ; iter < iters ; iter ++ )
+    {
+    
+        std::cerr << "Running iteration " << iter+1 << "/" << iters << std::endl;
         
-    for( int nt = 0; nt < numThreads ; nt++ )
-    {
-        th_args[nt].myID = nt;
-        th_args[nt].numThreads = numThreads;
-        th_args[nt].sigma_s = sigma_s;
-        th_args[nt].sigma_r = sigma_r;
-        th_args[nt].inputVolume = &inputVolume;
-        th_args[nt].resultVolume = &resultVolume;
-        th_args[nt].fast = fast;
+        for( int nt = 0; nt < numThreads ; nt++ )
+        {
+            th_args[nt].myID = nt;
+            th_args[nt].numThreads = numThreads;
+            th_args[nt].sigma_s = sigma_s;
+            th_args[nt].sigma_r = sigma_r;
+            th_args[nt].inputVolume = &inputVolume;
+            th_args[nt].resultVolume = &resultVolume;
+            th_args[nt].fast = fast;
     
-        pthread_create( (th_ids+nt), NULL, thread_process_plane, (void *)(th_args+nt));
-    }
+            pthread_create( (th_ids+nt), NULL, thread_process_plane, (void *)(th_args+nt));
+        }
     
-    for( int nt = 0; nt < numThreads ; nt++ )
-    {
-        pthread_join( *(th_ids+nt), NULL);
+        for( int nt = 0; nt < numThreads ; nt++ )
+        {
+            pthread_join( *(th_ids+nt), NULL);
+        }
+    
+        if( save_iters )
+        {
+            FileName fn_aux = outputFile;
+            fn_aux.insert_before_extension( std::string("_iter_"+iter) );
+            
+            resultVolume.write( fn_aux );
+        }
+        
+        // Prepare for next iteration
+        if( iter < iters-1 )
+            inputVolume = resultVolume;
     }
     
     resultVolume.write( outputFile );
