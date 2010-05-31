@@ -115,7 +115,7 @@ bool MDSql::getObjectValue(const MetaData *mdPtr, const int objId, MDValue  &val
     rc = sqlite3_bind_int(stmt, 1, objId);
     rc = sqlite3_step(stmt);
 
-    if (rc == SQLITE_ROW)
+    if (rc == SQLITE_ROW || rc== SQLITE_DONE)
     {
         extractValue(stmt, 0, value);
     }
@@ -449,10 +449,11 @@ int MDSql::execSingleStmt(const std::string &stmtStr)
     std::cerr << "execSingleStmt, stmt: '" << stmtStr << "'" <<std::endl;
 #endif
 
-    rc = sqlite3_reset(stmt);
-    rc = sqlite3_prepare(db, stmtStr.c_str(), -1, &stmt, &zLeftover);
+    sqlite3_stmt * _stmt;
+//    rc = sqlite3_reset(_stmt);
+    rc = sqlite3_prepare(db, stmtStr.c_str(), -1, &_stmt, &zLeftover);
     bool r = false;
-    rc = sqlite3_step(stmt);
+    rc = sqlite3_step(_stmt);
 #ifdef DEBUG2
 
     std::cerr << "execSingleStmt, return code: " << rc <<std::endl;
@@ -461,7 +462,7 @@ int MDSql::execSingleStmt(const std::string &stmtStr)
     if (rc == SQLITE_MISUSE)
         std::cerr << "misuse: " << sqlite3_errmsg(db) << std::endl;
 #endif
-
+    rc=sqlite3_finalize(_stmt);
     return rc;
 }
 

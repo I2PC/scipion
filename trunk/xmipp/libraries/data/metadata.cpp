@@ -175,7 +175,9 @@ std::string MetaData::getPath()   const
 
 void MetaData::setPath(std::string newPath)
 {
-    path = (newPath == "") ? std::string(getcwd(NULL, 0)) : newPath;
+	const size_t length = 512;
+	char _buffer[length];
+    path = (newPath == "") ? std::string(getcwd(_buffer, length)) : newPath;
 }
 
 std::string MetaData::getComment() const
@@ -555,10 +557,12 @@ void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
         }
     }
 
+
     pos = line.find("*");
     line.erase(0, pos + 1);
     line = removeChar(line, ' ');
     setPath(line);
+
     getline(is, line, '\n');
     setComment(line.erase(0, 2));
 
@@ -592,7 +596,6 @@ void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
         int lineCount = 0;
         while (getline(is, line, '\n'))
         {
-            std::cerr << "lines readed " << ++lineCount <<std::endl;
             if (line[0] == '\0' || line[0] == '#')
                 continue;
 
@@ -674,6 +677,7 @@ void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
             }
         }
     }
+
 }//close read
 
 
