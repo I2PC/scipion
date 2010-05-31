@@ -101,7 +101,12 @@ void * thread_process_plane( void * args )
     {
         for (int k=z_min; k<=z_max; k++) 
         {
-            if( myID == 0 ) std::cerr << k + z_min << " ";
+            if( myID == 0 )
+                if( z_min < 0 )
+                    std::cerr << k - z_min << " ";
+                else
+                    std::cerr << k + z_min << " ";
+                    
             for (int i=myFirstY; i<=myLastY; i++) 
             {
                 for (int j=x_min; j<=x_max; j++)
@@ -287,7 +292,7 @@ int main(int argc, char **argv)
 	double sigma_r,sigma_s;
     unsigned int numThreads; 
     bool fast;
-    bool save_iters;
+    bool save_iters=false;
     int iters;
     
 	try
@@ -348,7 +353,6 @@ int main(int argc, char **argv)
     
     for( int iter = 0 ; iter < iters ; iter ++ )
     {
-    
         std::cerr << "Running iteration " << iter+1 << "/" << iters << std::endl;
         
         for( int nt = 0; nt < numThreads ; nt++ )
@@ -372,7 +376,9 @@ int main(int argc, char **argv)
         if( save_iters )
         {
             FileName fn_aux = outputFile;
-            fn_aux.insert_before_extension( std::string("_iter_"+iter) );
+            fn_aux = fn_aux.insert_before_extension( std::string("_iter_") + integerToString(iter) );
+            
+            std::cerr << "Saving intermidiate file: " << fn_aux << std::endl;
             
             resultVolume.write( fn_aux );
         }
