@@ -145,6 +145,8 @@ public:
     static int rc;
     static sqlite3_stmt *stmt;
 
+    static bool sqlBeginTrans();
+    static bool sqlCommitTrans();
 private:
     static int table_counter;
     static sqlite3 *db;
@@ -154,8 +156,7 @@ private:
     ///Just call this function once, at static initialization
     static bool sqlBegin();
     static bool sqlEnd();
-    static bool sqlBeginTrans();
-    static bool sqlCommitTrans();
+
     static bool dropTable(const int mdId);
     static bool createTable(const int mdId, const std::vector<MDLabel> * labelsVector = NULL);
     static bool insertValues(double a, double b);

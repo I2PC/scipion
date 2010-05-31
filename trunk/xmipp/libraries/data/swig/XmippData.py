@@ -648,6 +648,10 @@ class MDSql(_object):
     __swig_setmethods__["stmt"] = _XmippData.MDSql_stmt_set
     __swig_getmethods__["stmt"] = _XmippData.MDSql_stmt_get
     if _newclass:stmt = _swig_property(_XmippData.MDSql_stmt_get, _XmippData.MDSql_stmt_set)
+    __swig_getmethods__["sqlBeginTrans"] = lambda x: _XmippData.MDSql_sqlBeginTrans
+    if _newclass:sqlBeginTrans = staticmethod(_XmippData.MDSql_sqlBeginTrans)
+    __swig_getmethods__["sqlCommitTrans"] = lambda x: _XmippData.MDSql_sqlCommitTrans
+    if _newclass:sqlCommitTrans = staticmethod(_XmippData.MDSql_sqlCommitTrans)
     def __init__(self, *args): 
         this = _XmippData.new_MDSql(*args)
         try: self.this.append(this)
@@ -676,6 +680,8 @@ MDSql_previousRow = _XmippData.MDSql_previousRow
 MDSql_columnMaxLength = _XmippData.MDSql_columnMaxLength
 MDSql_setOperate = _XmippData.MDSql_setOperate
 MDSql_dumpToFile = _XmippData.MDSql_dumpToFile
+MDSql_sqlBeginTrans = _XmippData.MDSql_sqlBeginTrans
+MDSql_sqlCommitTrans = _XmippData.MDSql_sqlCommitTrans
 
 class MDSqlStaticInit(_object):
     __swig_setmethods__ = {}

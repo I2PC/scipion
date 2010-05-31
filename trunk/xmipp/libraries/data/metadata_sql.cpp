@@ -36,8 +36,8 @@ sqlite3_stmt *MDSql::stmt;
 
 int MDSql::getMdUniqueId()
 {
-    if (table_counter == 0)
-        sqlBegin();
+//    if (table_counter == 0)
+//        sqlBegin();
 
     return ++table_counter;
 }

@@ -361,7 +361,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         imgStart=select_img;
         imgEnd=select_img+1;
     }
-    if (mode = WRITE_APPEND)
+    if (mode == WRITE_APPEND)
     {
         imgStart=0;
         imgEnd=1;
