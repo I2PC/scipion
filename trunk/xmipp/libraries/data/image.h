@@ -212,8 +212,8 @@ public:
         filename = "";
         offset = 0;
         swap = 0;
-        MD.clear(true);
-        MDMainHeader.clear(true);
+        MD.clear();
+        MDMainHeader.clear();
         replaceNsize=0;
     }
 

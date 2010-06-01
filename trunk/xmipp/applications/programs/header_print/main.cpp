@@ -73,8 +73,8 @@ int main(int argc, char **argv)
             FileName file_name;
             SF.getValue( MDL_IMAGE, file_name);
 
-            if (file_name=="") break;
-
+            if (file_name=="")
+                break;
             std::cout << "FileName     : " << file_name << std::endl;
 			image.read(file_name, false, -1, false);
 			std::cout << image;

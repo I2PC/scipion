@@ -108,6 +108,7 @@ private:
     int tableId;
     /** The stored statements for getValue queries */
     std::map<MDLabel, sqlite3_stmt*> getValueCache;
+    std::map<MDLabel, sqlite3_stmt*> setValueCache;
 
 
     /** The id of the object that is active
@@ -160,6 +161,10 @@ private:
      * ADD, SUBSTRACT of intersection part
      */
     void _setOperates(const MetaData &mdIn, const MDLabel label, int operation);
+
+    /** clear data and table structure */
+    void _clear(bool onlyData=false);
+
 public:
 
     /// @defgroup MetaDataConstructors Constructors for MetaData objects
@@ -207,9 +212,7 @@ public:
     /**Clear clear all data
      * @ingroup MetaDataConstructors
      */
-    void clear(bool onlyData = false);
-
-
+    void clear();
 
     /// @defgroup GettersAndSetters some getters and setters functions
     /// @ingroup MetaDataClass

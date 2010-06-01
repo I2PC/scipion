@@ -751,6 +751,33 @@ class MDValueRange(MDQuery):
 MDValueRange_swigregister = _XmippData.MDValueRange_swigregister
 MDValueRange_swigregister(MDValueRange)
 
+class MDCache(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, MDCache, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, MDCache, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["iterStmt"] = _XmippData.MDCache_iterStmt_set
+    __swig_getmethods__["iterStmt"] = _XmippData.MDCache_iterStmt_get
+    if _newclass:iterStmt = _swig_property(_XmippData.MDCache_iterStmt_get, _XmippData.MDCache_iterStmt_set)
+    __swig_setmethods__["getValueCache"] = _XmippData.MDCache_getValueCache_set
+    __swig_getmethods__["getValueCache"] = _XmippData.MDCache_getValueCache_get
+    if _newclass:getValueCache = _swig_property(_XmippData.MDCache_getValueCache_get, _XmippData.MDCache_getValueCache_set)
+    __swig_setmethods__["setValueCache"] = _XmippData.MDCache_setValueCache_set
+    __swig_getmethods__["setValueCache"] = _XmippData.MDCache_setValueCache_get
+    if _newclass:setValueCache = _swig_property(_XmippData.MDCache_setValueCache_get, _XmippData.MDCache_setValueCache_set)
+    __swig_setmethods__["addRowStmt"] = _XmippData.MDCache_addRowStmt_set
+    __swig_getmethods__["addRowStmt"] = _XmippData.MDCache_addRowStmt_get
+    if _newclass:addRowStmt = _swig_property(_XmippData.MDCache_addRowStmt_get, _XmippData.MDCache_addRowStmt_set)
+    __swig_destroy__ = _XmippData.delete_MDCache
+    __del__ = lambda self : None;
+    def __init__(self, *args): 
+        this = _XmippData.new_MDCache(*args)
+        try: self.this.append(this)
+        except: self.this = this
+MDCache_swigregister = _XmippData.MDCache_swigregister
+MDCache_swigregister(MDCache)
+
 MDL_UNDEFINED = _XmippData.MDL_UNDEFINED
 MDL_FIRST_LABEL = _XmippData.MDL_FIRST_LABEL
 MDL_OBJID = _XmippData.MDL_OBJID

@@ -83,7 +83,7 @@ public:
     /**Set the value of an object in an specified column
      *
      */
-    static bool setObjectValue(const MetaData *mdPtr, const int objId, const MDValue &value);
+    static bool setObjectValue(MetaData *mdPtr, const int objId, const MDValue &value);
 
     /**Get the value of an object
      *
@@ -160,8 +160,10 @@ private:
     static bool dropTable(const int mdId);
     static bool createTable(const int mdId, const std::vector<MDLabel> * labelsVector = NULL);
     static bool insertValues(double a, double b);
-    static int execSingleStmt(const std::string &stmtStr);
-    static int execSingleStmt(sqlite3_stmt *stmt);
+    static void prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt);
+    static bool execSingleStmt(const std::stringstream &ss);
+    static bool execSingleStmt(sqlite3_stmt *&stmt, const std::stringstream *ss = NULL);
+    static long int execSingleIntStmt(const std::stringstream &ss);
     static std::string tableName(const int tableId);
 
     static int bindValue(sqlite3_stmt *stmt, const int position, const MDValue &valueIn);
@@ -259,5 +261,19 @@ public:
     }
 }
 ;//class MDValueRange
+
+/** Just a class to store some cached sql statements
+ *
+ */
+class MDCache
+{
+public:
+    sqlite3_stmt *iterStmt;
+    std::map<MDLabel, sqlite3_stmt *> getValueCache;
+    std::map<MDLabel, sqlite3_stmt *> setValueCache;
+    sqlite3_stmt *addRowStmt;
+
+    ~MDCache();
+};
 
 #endif

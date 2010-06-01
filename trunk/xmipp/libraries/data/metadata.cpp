@@ -26,7 +26,7 @@
 #include "metadata.h"
 
 //-----Constructors and related functions ------------
-void MetaData::clear(bool onlyData)
+void MetaData::_clear(bool onlyData)
 {
     if (onlyData)
     {
@@ -38,19 +38,35 @@ void MetaData::clear(bool onlyData)
         comment.clear();
         fastStringSearch.clear();
         fastStringSearchLabel = MDL_UNDEFINED;
+
+        //Clear cached statements
+        std::map<MDLabel, sqlite3_stmt*>::iterator it;
+        //FIXME: This is a bit dirty here...should be moved to MDSQl
+        for (it = setValueCache.begin(); it != setValueCache.end(); it++)
+            sqlite3_finalize(it->second);
+        setValueCache.clear();
+
         activeLabels.clear();
         ignoreLabels.clear();
         isColumnFormat = true;
         inFile = FileName::FileName();
         activeObjId = -1;//no active object
+
+
+
         MDSql::clearMd(this);
     }
 }//close clear
 
+void MetaData::clear()
+{
+    _clear(true);
+}
+
 void MetaData::init(const std::vector<MDLabel> *labelsVector)
 {
     tableId = MDSql::getMdUniqueId();
-    clear();
+    _clear();
     if (labelsVector != NULL)
         this->activeLabels = *labelsVector;
     //Create table in database
@@ -78,9 +94,7 @@ void MetaData::copyMetadata(const MetaData &md)
     if (this == &md) //not sense to copy same metadata
         return;
     init(&(md.activeLabels));
-    std::cerr << "copying info..." <<std::endl;
     copyInfo(md);
-    std::cerr << "copying objects..." <<std::endl;
     MDSql::copyObjects(&md, this);
 }
 
@@ -150,7 +164,7 @@ MetaData& MetaData::operator =(const MetaData &md)
 
 MetaData::~MetaData()
 {
-    clear();
+    _clear();
 }//close MetaData Destructor
 
 //-------- Getters and Setters ----------
@@ -587,7 +601,7 @@ void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
         }
 
         //Initialize data
-        clear();
+        _clear();
         activeLabels = (labelsVector != NULL) ? *labelsVector : readLabels;
         MDSql::createMd(this);
         // Read data and fill structures accordingly
