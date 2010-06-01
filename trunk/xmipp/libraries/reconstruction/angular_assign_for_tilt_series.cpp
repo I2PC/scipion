@@ -2801,27 +2801,23 @@ void Alignment::updateModel()
     // Update rotations
     if (prm->psiMax>0)
     {
-        Matrix2D<double> tmp1(2,2), tmp2(2,2), Ri(2,2);
+        Matrix2D<double> Ri(2,2);
         Matrix2D<double> Aiprj(2,1), Aiprjt(1,2), dim(2,1), Pij(2,1);
         for (int i=0; i<Nimg; i++)
         {
-            tmp1.initZeros();
-            tmp2.initZeros();
+        	Ri.initZeros();
             dim.fromVector(di[i]+diaxis[i]);
             for (int jj=0; jj<prm->ni(i); jj++)
             {
                 int j=prm->Vseti[i][jj];
                 Aiprj.fromVector(Aip[i]*rj[j]);
                 Aiprjt=Aiprj.transpose();
-                tmp1+=Aiprj*Aiprjt;
 
                 MAT_ELEM(Pij,0,0)=MAT_ELEM(prm->allLandmarksX,j,i);
                 MAT_ELEM(Pij,1,0)=MAT_ELEM(prm->allLandmarksY,j,i);
-                tmp2+=(dim-Pij)*Aiprjt;
+                Ri+=(dim-Pij)*Aiprjt;
             }
-            Ri=tmp1.inv()*tmp2;
-            Ri=tmp2;
-            psi(i)=CLIP(RAD2DEG(atan((Ri(0,1)-Ri(1,0))/(Ri(0,0)+Ri(1,1)))),
+            psi(i)=CLIP(RAD2DEG(atan(((Ri(0,1)-Ri(1,0))/(Ri(0,0)+Ri(1,1))))),
                         -(prm->psiMax),prm->psiMax);
             Matrix2D<double> Rinplane;
             Rinplane=rotation3DMatrix(-psi(i),'Z');
