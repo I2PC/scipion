@@ -328,19 +328,26 @@ def AddFFTWLibrary():
         name1+=".a"
         name2+=".a"
     else:
-        name1+=".so"
-        name2+=".so"
-    if env['PLATFORM'] == 'darwin':
-        name1+=".dylib"
-        name2+=".dylib"
+        if env['PLATFORM'] == 'darwin':
+            name1+=".dylib"
+            name2+=".dylib"
+        else:
+            name1+=".so"
+            name2+=".so"
+    
     toBuild=[FFTWDir+'/.libs/'+name1, FFTWDir+'/.libs/'+name1la,
              FFTWDir+'/threads/.libs/'+name2, FFTWDir+'/threads/.libs/'+name2la]
     toCopy=[name1, name2, name1la, name2la]
     if not int(env['static']):
-        toBuild+=[FFTWDir+'/.libs/'+name1+".3",
-                  FFTWDir+'/threads/.libs/'+name2+".3"]
-        toCopy+=[name1+".3",name2+".3"]
-
+        if not env['PLATFORM'] == 'darwin':
+            toBuild+=[FFTWDir+'/.libs/'+name1+".3",
+                      FFTWDir+'/threads/.libs/'+name2+".3"]
+            toCopy+=[name1+".3",name2+".3"]
+        else:
+            toBuild+=[FFTWDir+'/.libs/'+name1,
+                      FFTWDir+'/threads/.libs/'+name2]
+            toCopy+=[name1,name2]
+       
     lib1 = env.Command(toBuild, FFTWDir+"/kernel/assert.c",
         "cd "+FFTWDir+" ; make clean > /dev/null ; make -j "+str(numJobs)+\
         " > ../../build/fftw_make.log ")

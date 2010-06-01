@@ -271,15 +271,19 @@ if (ARGUMENTS['mode'] == 'configure'):
 	    command = 'cd external/fftw-3.2.2;  make distclean>/dev/null'
 	    print command
 	    os.system(command)
-	if not int(env['static']):
-            finalFFTWFlags+=" --enable-shared"
-	if int(env['verbose_fftw']):
-            print "* Configuring FFTW ... " 
-            os.system("cd external/fftw-3.2.2;./configure " + finalFFTWFlags)
-	else:
-            print "* Configuring FFTW (see build/fftw_configure.log for details) ... "
-            print "cd external/fftw-3.2.2;./configure " + finalFFTWFlags
-            os.system("cd external/fftw-3.2.2;./configure " + finalFFTWFlags + " > ../../build/fftw_configure.log ")
+	
+    if not int(env['static']):
+        finalFFTWFlags+=" --enable-shared"
+    
+    finalFFTWFlags+=" CFLAFS=-Wl,-flat_namespace"
+    
+    if int(env['verbose_fftw']):
+        print "* Configuring FFTW ... " 
+        os.system("cd external/fftw-3.2.2;./configure " + finalFFTWFlags)
+    else:
+        print "* Configuring FFTW (see build/fftw_configure.log for details) ... "
+        print "cd external/fftw-3.2.2;./configure " + finalFFTWFlags
+        os.system("cd external/fftw-3.2.2;./configure " + finalFFTWFlags + " > ../../build/fftw_configure.log ")
 
     env = conf.Finish()
     opts.Save('options.cache', env)
