@@ -248,6 +248,9 @@ if (ARGUMENTS['mode'] == 'configure'):
     # It is ugly to call configure from scons, but I do not know how to do it otherwise
     # create configuration file for fftw
     finalSQLiteFlags= env['SQLITEFLAGS']
+    
+    if env['PLATFORM'] == 'darwin':
+        finalSQLiteFlags+=" CFLAGS=-m64"
     if not GetOption("help"):
     	if os.path.exists('external/sqlite-3.6.23/Makefile'):
 	    command = 'cd external/sqlite-3.6.23;  make distclean>/dev/null'
@@ -275,7 +278,7 @@ if (ARGUMENTS['mode'] == 'configure'):
     if not int(env['static']):
         finalFFTWFlags+=" --enable-shared"
     
-    finalFFTWFlags+=" CFLAFS=-Wl,-flat_namespace"
+    finalFFTWFlags+=" CFLAGS='-Wl,-flat_namespace -m64'"
     
     if int(env['verbose_fftw']):
         print "* Configuring FFTW ... " 
