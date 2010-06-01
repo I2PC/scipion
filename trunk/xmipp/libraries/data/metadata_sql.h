@@ -54,41 +54,37 @@ class MDSql
 {
 public:
 
-    /**Return an unique id for each metadata
-     * this function should be called once for each
-     * metada and the id will be used for operations
-     */
-    static int getMdUniqueId();
+
 
     /**This will create the table to store
      * the metada objects, will return false
      * if the mdId table is already present
      */
-    static bool createMd(const MetaData *mdPtr);
+    bool createMd();
 
     /**This function will drop the entire table
      * for use the metada again, a call
      * to 'createMd' should be done
      */
-    static bool clearMd(const MetaData *mdPtr);
+    bool clearMd();
 
     /**Add a new row and return the objId(rowId)
      *
      */
-    static long int addRow(const MetaData *mdPtr);
+    long int addRow();
 
     /** Add a new column to a metadata
      */
-    static bool addColumn(const MetaData *mdPtr, MDLabel column);
+    bool addColumn(MDLabel column);
     /**Set the value of an object in an specified column
      *
      */
-    static bool setObjectValue(MetaData *mdPtr, const int objId, const MDValue &value);
+    bool setObjectValue(const int objId, const MDValue &value);
 
     /**Get the value of an object
      *
      */
-    static bool getObjectValue(const MetaData *mdPtr, const int objId, MDValue &value);
+    bool getObjectValue(const int objId, MDValue &value);
 
     /** This function will do a select
      * the 'limit' is the maximum number of object
@@ -96,25 +92,25 @@ public:
      * Also a query could be specified for selecting objects
      * if no query is provided by default all are returned
      */
-    static void selectObjects(const MetaData *mdPtr, std::vector<long int> &objectsOut, int limit = -1, const MDQuery *queryPtr = NULL);
+    void selectObjects(std::vector<long int> &objectsOut, int limit = -1, const MDQuery *queryPtr = NULL);
 
     /** This function will delete elements
      * that match the query
      * if not query is provided, all rows are deleted
      */
-    static long int deleteObjects(const MetaData *mdPtr, const MDQuery *queryPtr=NULL);
+    long int deleteObjects(const MDQuery *queryPtr=NULL);
 
     /** Coppy the objects from a metada to other
      * return the number of objects copied
      * */
-    static long int copyObjects(const MetaData *mdPtrIn, MetaData *mdPtrOut,
+    long int copyObjects(MetaData *mdPtrOut,
                                 const MDQuery *queryPtr = NULL, const MDLabel sortLabel = MDL_OBJID,
                                 int limit = -1, int offset = 0);
 
     /** This function is to perform aggregation operations
      *
      */
-    static void aggregateMd(const MetaData *mdPtrIn, MetaData *mdPtrOut,
+    void aggregateMd(MetaData *mdPtrOut,
                             const std::vector<AggregateOperation> &operations,
                             MDLabel operateLabel);
 
@@ -122,31 +118,33 @@ public:
      *This function will be used to create o delete an index over a column
      *to improve searchs, but inserts become expensives
      */
-    static void indexModify(const MetaData *mdPtr, const MDLabel label, bool create=true);
+    void indexModify(const MDLabel label, bool create=true);
 
     /** Some iteration methods
      *
      */
-    static long int firstRow(const MetaData *mdPtr);
-    static long int lastRow(const MetaData *mdPtr);
-    static long int nextRow(const MetaData *mdPtr, long int currentRow);
-    static long int previousRow(const MetaData *mdPtr, long int currentRow);
+    long int firstRow();
+    long int lastRow();
+    long int nextRow(long int currentRow);
+    long int previousRow(long int currentRow);
 
-    static int columnMaxLength(const MetaData *mdPtr, MDLabel column);
+    int columnMaxLength(MDLabel column);
 
     /**Functions to implement set operations */
-    static void setOperate(const MetaData *mdPtrIn, MetaData *mdPtrOut, MDLabel column, int operation);
+    void setOperate(MetaData *mdPtrOut, MDLabel column, int operation);
 
     /** Function to dump DB to file */
     static void dumpToFile(const FileName &fileName);
 
-    static char *errmsg;
-    static const char *zLeftover;
-    static int rc;
-    static sqlite3_stmt *stmt;
 
-    static bool sqlBeginTrans();
-    static bool sqlCommitTrans();
+    /** Constructor of MDSql
+     * Now each MD should have an instance
+     * of this class to interact with the DB
+     */
+    MDSql(MetaData *md);
+
+
+
 private:
     static int table_counter;
     static sqlite3 *db;
@@ -156,20 +154,34 @@ private:
     ///Just call this function once, at static initialization
     static bool sqlBegin();
     static bool sqlEnd();
+    static bool sqlBeginTrans();
+    static bool sqlCommitTrans();
+    /**Return an unique id for each metadata
+        * this function should be called once for each
+        * metada and the id will be used for operations
+        */
+    int getUniqueId();
 
-    static bool dropTable(const int mdId);
-    static bool createTable(const int mdId, const std::vector<MDLabel> * labelsVector = NULL);
-    static bool insertValues(double a, double b);
-    static void prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt);
-    static bool execSingleStmt(const std::stringstream &ss);
-    static bool execSingleStmt(sqlite3_stmt *&stmt, const std::stringstream *ss = NULL);
-    static long int execSingleIntStmt(const std::stringstream &ss);
-    static std::string tableName(const int tableId);
+    bool dropTable();
+    bool createTable(const std::vector<MDLabel> * labelsVector = NULL);
+    bool insertValues(double a, double b);
+    void prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt);
+    bool execSingleStmt(const std::stringstream &ss);
+    bool execSingleStmt(sqlite3_stmt *&stmt, const std::stringstream *ss = NULL);
+    long int execSingleIntStmt(const std::stringstream &ss);
+    std::string tableName(const int tableId);
 
-    static int bindValue(sqlite3_stmt *stmt, const int position, const MDValue &valueIn);
-    static int extractValue(sqlite3_stmt *stmt, const int position, MDValue &valueOut);
+    int bindValue(sqlite3_stmt *stmt, const int position, const MDValue &valueIn);
+    int extractValue(sqlite3_stmt *stmt, const int position, MDValue &valueOut);
 
+    static char *errmsg;
+    static const char *zLeftover;
+    static int rc;
+    static sqlite3_stmt *stmt;
 
+    ///Non-static attributes
+    int tableId;
+    MetaData *myMd;
     friend class MDSqlStaticInit;
 }
 ;//close class MDSql

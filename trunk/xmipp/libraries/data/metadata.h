@@ -61,6 +61,7 @@ static double    oneD=1.;
 static bool  falseb=false;
 
 class MDQuery;
+class MDSql;
 
 class MetaData
 {
@@ -105,7 +106,8 @@ private:
      * for handling db status of metadata
      */
     /** The table id to do db operations */
-    int tableId;
+    MDSql * myMDSql;
+
     /** The stored statements for getValue queries */
     std::map<MDLabel, sqlite3_stmt*> getValueCache;
     std::map<MDLabel, sqlite3_stmt*> setValueCache;
@@ -454,8 +456,11 @@ public:
      */
     void read(std::istream &is, std::vector<MDLabel> *labelsVector = NULL);
 
+    /** Read old formats */
+    void readOldDocFile(std::ifstream *infile,
+                                   std::vector<MDLabel> * labelsVector);
 
-
+    void readOldSelFile(std::ifstream *infile);
     /** Aggregate metadata objects,
      * @ingroup SetOperations
      * result in calling metadata object
@@ -594,9 +599,5 @@ enum AggregateMode
              jjjj != MetaData::NO_MORE_OBJECTS && jjjj!= MetaData::NO_OBJECTS_STORED; \
              kkkk=(kkkk_metadata).nextObject(), jjjj=(jjjj_metadata).nextObject())
 
-//This Macro only have sense inside the MetaData class
-//for check if a label exists
-#define REQUIRE_LABEL_EXISTS(label, funcStr) \
-    if (!containsLabel(label)) { \
-        return false; }
+
 #endif

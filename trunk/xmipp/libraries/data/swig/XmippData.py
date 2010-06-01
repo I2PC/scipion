@@ -567,6 +567,8 @@ class MetaData(_object):
     def gotoFirstObject(*args): return _XmippData.MetaData_gotoFirstObject(*args)
     def write(*args): return _XmippData.MetaData_write(*args)
     def read(*args): return _XmippData.MetaData_read(*args)
+    def readOldDocFile(*args): return _XmippData.MetaData_readOldDocFile(*args)
+    def readOldSelFile(*args): return _XmippData.MetaData_readOldSelFile(*args)
     def aggregate(*args): return _XmippData.MetaData_aggregate(*args)
     def unionDistinct(*args): return _XmippData.MetaData_unionDistinct(*args)
     def unionAll(*args): return _XmippData.MetaData_unionAll(*args)
@@ -598,60 +600,25 @@ class MDSql(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, MDSql, name)
     __repr__ = _swig_repr
-    __swig_getmethods__["getMdUniqueId"] = lambda x: _XmippData.MDSql_getMdUniqueId
-    if _newclass:getMdUniqueId = staticmethod(_XmippData.MDSql_getMdUniqueId)
-    __swig_getmethods__["createMd"] = lambda x: _XmippData.MDSql_createMd
-    if _newclass:createMd = staticmethod(_XmippData.MDSql_createMd)
-    __swig_getmethods__["clearMd"] = lambda x: _XmippData.MDSql_clearMd
-    if _newclass:clearMd = staticmethod(_XmippData.MDSql_clearMd)
-    __swig_getmethods__["addRow"] = lambda x: _XmippData.MDSql_addRow
-    if _newclass:addRow = staticmethod(_XmippData.MDSql_addRow)
-    __swig_getmethods__["addColumn"] = lambda x: _XmippData.MDSql_addColumn
-    if _newclass:addColumn = staticmethod(_XmippData.MDSql_addColumn)
-    __swig_getmethods__["setObjectValue"] = lambda x: _XmippData.MDSql_setObjectValue
-    if _newclass:setObjectValue = staticmethod(_XmippData.MDSql_setObjectValue)
-    __swig_getmethods__["getObjectValue"] = lambda x: _XmippData.MDSql_getObjectValue
-    if _newclass:getObjectValue = staticmethod(_XmippData.MDSql_getObjectValue)
-    __swig_getmethods__["selectObjects"] = lambda x: _XmippData.MDSql_selectObjects
-    if _newclass:selectObjects = staticmethod(_XmippData.MDSql_selectObjects)
-    __swig_getmethods__["deleteObjects"] = lambda x: _XmippData.MDSql_deleteObjects
-    if _newclass:deleteObjects = staticmethod(_XmippData.MDSql_deleteObjects)
-    __swig_getmethods__["copyObjects"] = lambda x: _XmippData.MDSql_copyObjects
-    if _newclass:copyObjects = staticmethod(_XmippData.MDSql_copyObjects)
-    __swig_getmethods__["aggregateMd"] = lambda x: _XmippData.MDSql_aggregateMd
-    if _newclass:aggregateMd = staticmethod(_XmippData.MDSql_aggregateMd)
-    __swig_getmethods__["indexModify"] = lambda x: _XmippData.MDSql_indexModify
-    if _newclass:indexModify = staticmethod(_XmippData.MDSql_indexModify)
-    __swig_getmethods__["firstRow"] = lambda x: _XmippData.MDSql_firstRow
-    if _newclass:firstRow = staticmethod(_XmippData.MDSql_firstRow)
-    __swig_getmethods__["lastRow"] = lambda x: _XmippData.MDSql_lastRow
-    if _newclass:lastRow = staticmethod(_XmippData.MDSql_lastRow)
-    __swig_getmethods__["nextRow"] = lambda x: _XmippData.MDSql_nextRow
-    if _newclass:nextRow = staticmethod(_XmippData.MDSql_nextRow)
-    __swig_getmethods__["previousRow"] = lambda x: _XmippData.MDSql_previousRow
-    if _newclass:previousRow = staticmethod(_XmippData.MDSql_previousRow)
-    __swig_getmethods__["columnMaxLength"] = lambda x: _XmippData.MDSql_columnMaxLength
-    if _newclass:columnMaxLength = staticmethod(_XmippData.MDSql_columnMaxLength)
-    __swig_getmethods__["setOperate"] = lambda x: _XmippData.MDSql_setOperate
-    if _newclass:setOperate = staticmethod(_XmippData.MDSql_setOperate)
+    def createMd(*args): return _XmippData.MDSql_createMd(*args)
+    def clearMd(*args): return _XmippData.MDSql_clearMd(*args)
+    def addRow(*args): return _XmippData.MDSql_addRow(*args)
+    def addColumn(*args): return _XmippData.MDSql_addColumn(*args)
+    def setObjectValue(*args): return _XmippData.MDSql_setObjectValue(*args)
+    def getObjectValue(*args): return _XmippData.MDSql_getObjectValue(*args)
+    def selectObjects(*args): return _XmippData.MDSql_selectObjects(*args)
+    def deleteObjects(*args): return _XmippData.MDSql_deleteObjects(*args)
+    def copyObjects(*args): return _XmippData.MDSql_copyObjects(*args)
+    def aggregateMd(*args): return _XmippData.MDSql_aggregateMd(*args)
+    def indexModify(*args): return _XmippData.MDSql_indexModify(*args)
+    def firstRow(*args): return _XmippData.MDSql_firstRow(*args)
+    def lastRow(*args): return _XmippData.MDSql_lastRow(*args)
+    def nextRow(*args): return _XmippData.MDSql_nextRow(*args)
+    def previousRow(*args): return _XmippData.MDSql_previousRow(*args)
+    def columnMaxLength(*args): return _XmippData.MDSql_columnMaxLength(*args)
+    def setOperate(*args): return _XmippData.MDSql_setOperate(*args)
     __swig_getmethods__["dumpToFile"] = lambda x: _XmippData.MDSql_dumpToFile
     if _newclass:dumpToFile = staticmethod(_XmippData.MDSql_dumpToFile)
-    __swig_setmethods__["errmsg"] = _XmippData.MDSql_errmsg_set
-    __swig_getmethods__["errmsg"] = _XmippData.MDSql_errmsg_get
-    if _newclass:errmsg = _swig_property(_XmippData.MDSql_errmsg_get, _XmippData.MDSql_errmsg_set)
-    __swig_setmethods__["zLeftover"] = _XmippData.MDSql_zLeftover_set
-    __swig_getmethods__["zLeftover"] = _XmippData.MDSql_zLeftover_get
-    if _newclass:zLeftover = _swig_property(_XmippData.MDSql_zLeftover_get, _XmippData.MDSql_zLeftover_set)
-    __swig_setmethods__["rc"] = _XmippData.MDSql_rc_set
-    __swig_getmethods__["rc"] = _XmippData.MDSql_rc_get
-    if _newclass:rc = _swig_property(_XmippData.MDSql_rc_get, _XmippData.MDSql_rc_set)
-    __swig_setmethods__["stmt"] = _XmippData.MDSql_stmt_set
-    __swig_getmethods__["stmt"] = _XmippData.MDSql_stmt_get
-    if _newclass:stmt = _swig_property(_XmippData.MDSql_stmt_get, _XmippData.MDSql_stmt_set)
-    __swig_getmethods__["sqlBeginTrans"] = lambda x: _XmippData.MDSql_sqlBeginTrans
-    if _newclass:sqlBeginTrans = staticmethod(_XmippData.MDSql_sqlBeginTrans)
-    __swig_getmethods__["sqlCommitTrans"] = lambda x: _XmippData.MDSql_sqlCommitTrans
-    if _newclass:sqlCommitTrans = staticmethod(_XmippData.MDSql_sqlCommitTrans)
     def __init__(self, *args): 
         this = _XmippData.new_MDSql(*args)
         try: self.this.append(this)
@@ -661,27 +628,7 @@ class MDSql(_object):
 MDSql_swigregister = _XmippData.MDSql_swigregister
 MDSql_swigregister(MDSql)
 ImgSize = _XmippData.ImgSize
-MDSql_getMdUniqueId = _XmippData.MDSql_getMdUniqueId
-MDSql_createMd = _XmippData.MDSql_createMd
-MDSql_clearMd = _XmippData.MDSql_clearMd
-MDSql_addRow = _XmippData.MDSql_addRow
-MDSql_addColumn = _XmippData.MDSql_addColumn
-MDSql_setObjectValue = _XmippData.MDSql_setObjectValue
-MDSql_getObjectValue = _XmippData.MDSql_getObjectValue
-MDSql_selectObjects = _XmippData.MDSql_selectObjects
-MDSql_deleteObjects = _XmippData.MDSql_deleteObjects
-MDSql_copyObjects = _XmippData.MDSql_copyObjects
-MDSql_aggregateMd = _XmippData.MDSql_aggregateMd
-MDSql_indexModify = _XmippData.MDSql_indexModify
-MDSql_firstRow = _XmippData.MDSql_firstRow
-MDSql_lastRow = _XmippData.MDSql_lastRow
-MDSql_nextRow = _XmippData.MDSql_nextRow
-MDSql_previousRow = _XmippData.MDSql_previousRow
-MDSql_columnMaxLength = _XmippData.MDSql_columnMaxLength
-MDSql_setOperate = _XmippData.MDSql_setOperate
 MDSql_dumpToFile = _XmippData.MDSql_dumpToFile
-MDSql_sqlBeginTrans = _XmippData.MDSql_sqlBeginTrans
-MDSql_sqlCommitTrans = _XmippData.MDSql_sqlCommitTrans
 
 class MDSqlStaticInit(_object):
     __swig_setmethods__ = {}
