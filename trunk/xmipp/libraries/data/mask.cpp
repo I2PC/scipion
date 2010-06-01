@@ -284,7 +284,13 @@ void GaussianMask(MultidimArray<double> &mask,
                   double sigma, int mode, double x0, double y0, double z0)
 {
     double sigma2 = sigma * sigma;
-    double K = 1 / sqrt(2 * PI * sigma);
+    double K;
+    switch (mask.getDim())
+	{
+    case 1: K=1 / (sqrt(2 * PI) * sigma); break;
+    case 2: K=1 / (sqrt(2 * PI) * sigma); break;
+    case 3: K=1 / (sqrt(2 * PI * sigma)); break;
+	}
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
     {
         double r2 = (k - z0) * (k - z0) + (i - y0) * (i - y0) + (j - x0) * (j - x0);
