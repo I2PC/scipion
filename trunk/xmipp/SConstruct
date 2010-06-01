@@ -149,9 +149,9 @@ if (ARGUMENTS['mode'] == 'configure'):
 
     # osx?
     if env['PLATFORM'] == 'darwin':
-        env.Append(CCFLAGS = '-m32')
-        env.Append(CXXFLAGS = '-m32')
-        env.Append(LINKFLAGS = '-m32')
+        env.Append(CCFLAGS = '-m64')
+        env.Append(CXXFLAGS = '-m64')
+        env.Append(LINKFLAGS = '-m64')
 
     # QT
     if int(env['gui']):
