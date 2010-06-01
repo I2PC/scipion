@@ -100,6 +100,7 @@ int main(int argc, char **argv)
                     prm.DF_initial.getValue(MDL_IMAGE,fnImg,key);
                     Image<double> img;
                     img.read(fnImg);
+                    img().setXmippOrigin();
                     double shiftX = img.Xoff();
                     double shiftY = img.Yoff();
                     double rot    = img.rot();

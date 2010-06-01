@@ -165,6 +165,7 @@ double Prog_angular_predict_continuous_prm::predict_angles(Image<double> &I,
     pose(3) = -shiftX; // The convention of shifts is different
     pose(4) = -shiftY; // for Slavica
     mask_Real.apply_mask(I(), I());
+
     double cost = CSTSplineAssignment(reDFTVolume, imDFTVolume,
         I(), mask_Fourier.get_cont_mask(), pose, max_no_iter);
 
@@ -242,6 +243,7 @@ void Prog_angular_predict_continuous_prm::run()
     {
         FileName fnImg; DF_initial.getValue(MDL_IMAGE,fnImg);
         Image<double> img; img.read(fnImg);
+        img().setXmippOrigin();
         double shiftX = img.Xoff();
         double shiftY = img.Yoff();
         double rot    = img.rot();
