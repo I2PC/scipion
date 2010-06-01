@@ -130,7 +130,7 @@ bool MetaData::_getValue(long int objId, MDValue &mdValueOut) const
         }
     }
     //MDValue mdValue;
-    MDSql::getObjectValue(this, objId, mdValueOut);
+    return MDSql::getObjectValue(this, objId, mdValueOut);
     //MDL::value2VoidPtr(label, mdValue, valuePtrOut);
 }
 

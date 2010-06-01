@@ -598,7 +598,5 @@ enum AggregateMode
 //for check if a label exists
 #define REQUIRE_LABEL_EXISTS(label, funcStr) \
     if (!containsLabel(label)) { \
-        std::stringstream __ss; \
-        __ss << (funcStr) << ": The label" << MDL::label2Str(label) << "' is not present in the metada"; \
-        REPORT_ERROR(-55, __ss.str()); }
+        return false; }
 #endif
