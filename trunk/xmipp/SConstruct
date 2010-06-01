@@ -309,6 +309,12 @@ elif (ARGUMENTS['mode'] == 'compile'):
         env.Append(CCFLAGS = ['-O2'])
         env.Append(LINKFLAGS = ['-s'])
 
+    if env['PLATFORM'] == 'darwin':
+        env.Append(CXXFLAGS = ['-m64'])
+        env.Append(CCFLAGS = ['-m64'])
+        env.Append(LINKFLAGS = ['-m64'])
+
+
     # Add threads
     env.Append(LINKFLAGS = ['-pthread'])
     env.Append(CXXFLAGS  = ['-pthread'])
