@@ -278,7 +278,7 @@ if (ARGUMENTS['mode'] == 'configure'):
     if not int(env['static']):
         finalFFTWFlags+=" --enable-shared"
     
-    finalFFTWFlags+=" CFLAGS='-Wl,-flat_namespace -m64'"
+    finalFFTWFlags+=" CFLAGS='-m64'"
     
     if int(env['verbose_fftw']):
         print "* Configuring FFTW ... " 
