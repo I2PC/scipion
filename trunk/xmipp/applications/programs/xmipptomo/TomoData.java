@@ -17,6 +17,8 @@ import javax.swing.text.Document;
  *
  */
 public class TomoData {
+	
+	// maybe it's better to move currentSlice to the viewer - in case different views can show different slices
 	private int currentSlice=0;
 
     private ImagePlus imp=null;
@@ -28,7 +30,7 @@ public class TomoData {
 		if(tiltTextModel==null){
 			// initialize model with default value
 			try{
-				model.insertString(0, "0", null);
+				model.insertString(0, String.valueOf(getInitialTilt()), null);
 			}catch (Exception ex){}
 		}
 		
@@ -85,8 +87,22 @@ public class TomoData {
 		getCurrentTomoInfo().setTilt(t);
 	}
 	
+	// there may be no tilts defined - change tilt to Float (so it can handle nulls)
+	private float getInitialTilt(){
+		return getCurrentTilt();
+	}
+	
 	public int getNSlices(){
 		return getImage().getNSlices();
+	}
+	
+	// right now return only grayscale value as double
+	// more complete method at ImagePlus.getValueAsString()
+	public double getPixelValue(int x,int y){
+		int[] v = getImage().getPixel(x, y);
+		// 32bit images
+		return Float.intBitsToFloat(v[0]);
+		//return getImage().getCalibration().getCValue(v[0]);
 	}
 	
 	public void import_data(String path) throws java.io.IOException{
