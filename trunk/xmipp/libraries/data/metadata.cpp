@@ -782,7 +782,7 @@ void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
 void MetaData::readOldDocFile(std::ifstream *infile,
                               std::vector<MDLabel> * labelsVector)
 {
-    bool saveName = true;
+    bool saveName = false;
     infile->seekg(0, std::ios::beg);
     std::string line;
 
@@ -1045,36 +1045,3 @@ void MetaData::selectPart (const MetaData &mdIn, long int startPosition, long in
     mdIn.myMDSql->copyObjects(this, NULL, sortLabel, numberOfObjects, startPosition);
 }
 
-/*----------   Statistics --------------------------------------- */
-#include "metadata_extension.h"
-void get_statistics(MetaData MT_in, Image<double> & _ave, Image<double> & _sd, double& _min,
-                    double& _max, bool apply_geo)
-{
-    REPORT_ERROR(-55, "get_statistics not yet implemented");
-}
-
-void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
-{
-    if (!MD.isEmpty())
-    {
-        FileName fn_img;
-        Image<double> img;
-        MD.getValue(MDL_IMAGE, fn_img);
-        img.read(fn_img, false);
-        img.getDimensions(Xdim, Ydim, Zdim, Ndim);
-    }
-    else
-        REPORT_ERROR(-1, "Can not read image size from empty metadata");
-}
-
-void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
-{
-    ImgSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);
-}
-
-void mpi_select_part(MetaData &md, int rank, int size, int &num_img_tot)
-{
-    num_img_tot = md.size();
-    MetaData aux(md);
-    md.selectSplitPart(aux, size, rank);
-}

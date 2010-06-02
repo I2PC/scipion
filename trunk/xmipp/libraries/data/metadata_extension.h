@@ -11,12 +11,13 @@
 #include "image.h"
 #include "metadata.h"
 
-void get_statistics(MetaData MT, Image<double> & _ave, Image<double> & _sd, double& _min,
+void get_statistics(MetaData &MT, Image<double> & _ave, Image<double> & _sd, double& _min,
                     double& _max, bool apply_geo);
 
 /** Get image size
  *
  */
+
 static int null_object=-1;
 
 void ImgSize(const MetaData &MD, int &Xdim, int &Ydim=null_object,
@@ -40,6 +41,8 @@ bool getValueSwig(const MetaData &md, const MDLabel label, T &valueOut, long int
 {
     md.getValue(label, valueOut, objectID);
 }
+
+
 
 
 #endif /* METADATA_EXTENSION_H_ */
