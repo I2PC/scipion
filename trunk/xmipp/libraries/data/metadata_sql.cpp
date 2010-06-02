@@ -573,6 +573,11 @@ int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDValue &valueOu
     }
 }
 
+MDCache::MDCache()
+{
+	this->addRowStmt = NULL;
+	this->iterStmt = NULL;
+}
 
 MDCache::~MDCache()
 {

@@ -288,6 +288,7 @@ public:
     std::map<MDLabel, sqlite3_stmt*> setValueCache;
     sqlite3_stmt *addRowStmt;
 
+    MDCache();
      ~MDCache();
 };
 
