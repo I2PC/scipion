@@ -39,21 +39,16 @@ void MetaData::_clear(bool onlyData)
         fastStringSearch.clear();
         fastStringSearchLabel = MDL_UNDEFINED;
 
-        //Clear cached statements
-        std::map<MDLabel, sqlite3_stmt*>::iterator it;
-        //FIXME: This is a bit dirty here...should be moved to MDSQl
-        for (it = setValueCache.begin(); it != setValueCache.end(); it++)
-            sqlite3_finalize(it->second);
-        setValueCache.clear();
-
         activeLabels.clear();
         ignoreLabels.clear();
         isColumnFormat = true;
         inFile = FileName::FileName();
         activeObjId = -1;//no active object
-
-
-
+        if (iterObjectsId != NULL)
+        {
+            delete iterObjectsId;
+        }
+        iterObjectsId = NULL;
         myMDSql->clearMd();
     }
 }//close clear
@@ -138,18 +133,21 @@ bool MetaData::_getValue(long int objId, MDValue &mdValueOut) const
 MetaData::MetaData()
 {
     myMDSql = new MDSql(this);
+    iterObjectsId = NULL;
     init(NULL);
 }//close MetaData default Constructor
 
 MetaData::MetaData(const std::vector<MDLabel> *labelsVector)
 {
     myMDSql = new MDSql(this);
+    iterObjectsId = NULL;
     init(labelsVector);
 }//close MetaData default Constructor
 
 MetaData::MetaData(const FileName &fileName, const std::vector<MDLabel> *labelsVector)
 {
     myMDSql = new MDSql(this);
+    iterObjectsId = NULL;
     init(labelsVector);
     //FIXME: what to do when labels vector is provided???
     read(fileName);
@@ -158,6 +156,7 @@ MetaData::MetaData(const FileName &fileName, const std::vector<MDLabel> *labelsV
 MetaData::MetaData(const MetaData &md)
 {
     myMDSql = new MDSql(this);
+    iterObjectsId = NULL;
     copyMetadata(md);
 }//close MetaData copy Constructor
 
@@ -363,24 +362,60 @@ void MetaData::removeIndex(MDLabel label)
     myMDSql->indexModify(label, false);
 }
 
+long int MetaData::_iteratorBegin(const MDQuery *query)
+{
+    if (iterObjectsId == NULL)
+        iterObjectsId = new std::vector<long int>;
+    findObjects(*iterObjectsId);
+
+    if (iterObjectsId->size() > 0)
+    {
+        iterIndex = 0;
+        activeObjId = iterObjectsId->at(iterIndex);
+    }
+    else
+    {
+        activeObjId = iterIndex = -1;
+    }
+    return activeObjId;
+}
+
 long int MetaData::iteratorBegin()
-{}
+{
+    _iteratorBegin();
+}
 
 /**Same as previous but iterating over a subset of
  * objects
  */
 long int MetaData::iteratorBegin(const MDQuery &query)
-{}
+{
+    _iteratorBegin(&query);
+}
 
 /** Check whether the iteration if finished */
 bool MetaData::iteratorEnd()
-{}
+{
+    return iterIndex == -1;
+}
 
 /** Move to next object on iteration
  * return nextObject id
  */
 long int MetaData::iteratorNext()
-{}
+{
+    if (iterObjectsId != NULL && iterIndex < iterObjectsId->size() - 1)
+    {
+        //The end not reached yet
+        iterIndex++;
+        activeObjId = iterObjectsId->at(iterIndex);
+    }
+    else
+    {
+        activeObjId = iterIndex = -1;
+    }
+    return activeObjId;
+}
 
 //----------Iteration functions -------------------
 long int MetaData::firstObject()

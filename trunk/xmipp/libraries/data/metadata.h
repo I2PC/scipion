@@ -108,17 +108,16 @@ private:
     /** The table id to do db operations */
     MDSql * myMDSql;
 
-    /** The stored statements for getValue queries */
-    std::map<MDLabel, sqlite3_stmt*> getValueCache;
-    std::map<MDLabel, sqlite3_stmt*> setValueCache;
-
-
     /** The id of the object that is active
      * usefull for calling 'setValue' and 'getValue'
      * without specifying object id
      * when activeObjId = -1 means that aren't active object
      */
     int activeObjId;
+
+    /** This are for iteration */
+    int iterIndex;
+    std::vector<long int> *iterObjectsId;
 
     /** Read, read data from an input stream and fill metadata
      * @ingroup MetaDataIO
@@ -166,6 +165,9 @@ private:
 
     /** clear data and table structure */
     void _clear(bool onlyData=false);
+
+    long int _iteratorBegin(const MDQuery *query = NULL);
+
 
 public:
 
@@ -379,11 +381,6 @@ public:
     long int previousObject();
     long int goToObject(long int objectId);
 
-    /**A better iteration mechanism
-     * base on the result set from DB
-     * also the activeObject will be changed
-     * with the iteration
-     */
     /** This will start iterating over all objects
      * the first object id will be returned
      */
@@ -394,7 +391,7 @@ public:
      */
     long int iteratorBegin(const MDQuery &query);
 
-    /** Check whether the iteration if finished */
+    /** Check whether the iteration has finished */
     bool iteratorEnd();
 
     /** Move to next object on iteration
@@ -589,15 +586,14 @@ enum AggregateMode
 //COMMENT
 
 #define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
-        for(long int kkkk = (kkkk_metadata).firstObject(); \
-             kkkk != MetaData::NO_MORE_OBJECTS && kkkk!= MetaData::NO_OBJECTS_STORED; \
-             kkkk=(kkkk_metadata).nextObject())
+        for(long int kkkk = (kkkk_metadata).iteratorBegin(); \
+             !(kkkk_metadata).iteratorEnd(); \
+             kkkk=(kkkk_metadata).iteratorNext())
 
 #define FOR_ALL_OBJECTS_IN_METADATA2(kkkk_metadata, jjjj_metadata) \
-        for(long int kkkk = (kkkk_metadata).firstObject(), jjjj = (jjjj_metadata).firstObject(); \
-             kkkk != MetaData::NO_MORE_OBJECTS && kkkk!= MetaData::NO_OBJECTS_STORED && \
-             jjjj != MetaData::NO_MORE_OBJECTS && jjjj!= MetaData::NO_OBJECTS_STORED; \
-             kkkk=(kkkk_metadata).nextObject(), jjjj=(jjjj_metadata).nextObject())
+        for(long int kkkk = (kkkk_metadata).iteratorBegin(), jjjj = (jjjj_metadata).iteratorBegin(); \
+             !(kkkk_metadata).iteratorEnd() && !(jjjj_metadata).iteratorEnd();\
+             kkkk=(kkkk_metadata).iteratorNext(), jjjj=(jjjj_metadata).iteratorNext())
 
 
 #endif

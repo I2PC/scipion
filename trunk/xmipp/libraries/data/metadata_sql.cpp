@@ -45,6 +45,12 @@ MDSql::MDSql(MetaData *md)
 {
     tableId = getUniqueId();
     myMd = md;
+    myCache = new MDCache();
+}
+
+MDSql::~MDSql()
+{
+    delete myCache;
 }
 
 bool MDSql::createMd()
@@ -59,14 +65,23 @@ bool MDSql::clearMd()
 
 long int MDSql::addRow()
 {
-    std::stringstream ss;
-    ss << "INSERT INTO " << tableName(tableId) << " DEFAULT VALUES;";
-    if (execSingleStmt(ss))
+    //Fixme: this can be done in the constructor of MDCache only once
+    sqlite3_stmt * &stmt = myCache->addRowStmt;
+    //sqlite3_stmt * stmt = NULL;
+
+    if (stmt == NULL)
     {
-        long int id = sqlite3_last_insert_rowid(db);
-        return id;
+        std::stringstream ss;
+        ss << "INSERT INTO " << tableName(tableId) << " DEFAULT VALUES;";
+        rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
     }
-    return -1;
+    rc = sqlite3_reset(stmt);
+    long int id = -1;
+    if (execSingleStmt(stmt))
+         id = sqlite3_last_insert_rowid(db);
+
+    //sqlite3_finalize(stmt);
+    return id;
 }
 
 bool MDSql::addColumn(MDLabel column)
@@ -83,14 +98,13 @@ bool MDSql::setObjectValue(const int objId, const MDValue &value)
     MDLabel column = value.label;
     std::stringstream ss;
     //Check cached statements for setObjectValue
-    sqlite3_stmt * &stmt = myMd->setValueCache[column];
-
+    sqlite3_stmt * &stmt = myCache->setValueCache[column];
+    //sqlite3_stmt * stmt = NULL;
     if (stmt == NULL)//if not exists create the stmt
     {
         std::string sep = (MDL::isString(column) || MDL::isVector(column)) ? "'" : "";
         ss << "UPDATE " << tableName(tableId)
         << " SET " << MDL::label2Str(column) << "=? WHERE objID=?;";
-        //FIXME:EEEErc = sqlite3_prepare_v2(db, )
         rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
     }
     rc = sqlite3_reset(stmt);
@@ -100,8 +114,8 @@ bool MDSql::setObjectValue(const int objId, const MDValue &value)
     if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
     {
         std::cerr << "MDSql::setObjectValue: " << std::endl
-             << "   " << ss.str() << std::endl
-             <<"    code: " << rc << " error: " << sqlite3_errmsg(db) << std::endl;
+        << "   " << ss.str() << std::endl
+        <<"    code: " << rc << " error: " << sqlite3_errmsg(db) << std::endl;
         r = false;
     }
     return r;
@@ -111,13 +125,10 @@ bool MDSql::getObjectValue(const int objId, MDValue  &value)
 {
     std::stringstream ss;
     MDLabel column = value.label;
-    //Check cached statements for setObjectValue
-    //sqlite3_stmt * &stmt = mdPtr->getValueCache[column];
-    // static std::map<MDLabel, sqlite3_stmt*> getValueCache;
-    static int count = 0;
+    sqlite3_stmt * &stmt = myCache->getValueCache[column];
+    //sqlite3_stmt * stmt = NULL;
 
-    sqlite3_stmt * stmt = NULL;//getValueCache[column];
-    if (stmt == NULL)
+    if (stmt == NULL)//prepare stmt if not exists
     {
         //std::cerr << "Creating cache " << ++count <<std::endl;
         ss << "SELECT " << MDL::label2Str(column)
@@ -134,15 +145,18 @@ bool MDSql::getObjectValue(const int objId, MDValue  &value)
     rc = sqlite3_bind_int(stmt, 1, objId);
     rc = sqlite3_step(stmt);
 
-    if (rc == SQLITE_ROW || rc== SQLITE_DONE)
+    if (rc == SQLITE_ROW)
+        //|| rc== SQLITE_DONE)
     {
         extractValue(stmt, 0, value);
+        rc = sqlite3_step(stmt);
     }
     else
     {
         return false;
     }
-    sqlite3_finalize(stmt);
+    //not finalize now because cached
+    //sqlite3_finalize(stmt);
     return true;
 }
 
@@ -460,7 +474,7 @@ void MDSql::prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt)
 bool MDSql::execSingleStmt(const std::stringstream &ss)
 {
 #ifdef DEBUG
-    std::cerr << "execSingleStmt, stmt: '" << stmtStr << "'" <<std::endl;
+    //std::cerr << "execSingleStmt, stmt: '" << stmtStr << "'" <<std::endl;
 #endif
 
     sqlite3_stmt * stmt;
@@ -557,5 +571,26 @@ int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDValue &valueOu
         valueOut.fromStream(ss);
         break;
     }
+}
+
+
+MDCache::~MDCache()
+{
+    //Clear cached statements
+    std::map<MDLabel, sqlite3_stmt*>::iterator it;
+    //FIXME: This is a bit dirty here...should be moved to MDSQl
+    for (it = setValueCache.begin(); it != setValueCache.end(); it++)
+        sqlite3_finalize(it->second);
+    setValueCache.clear();
+
+    for (it = getValueCache.begin(); it != getValueCache.end(); it++)
+        sqlite3_finalize(it->second);
+    getValueCache.clear();
+
+    if (iterStmt != NULL)
+        sqlite3_finalize(iterStmt);
+
+    if (addRowStmt != NULL)
+        sqlite3_finalize(iterStmt);
 }
 

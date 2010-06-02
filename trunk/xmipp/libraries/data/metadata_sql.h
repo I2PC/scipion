@@ -37,6 +37,7 @@
 class MDSqlStaticInit;
 class MDQuery;
 class MetaData;
+class MDCache;
 
 enum AggregateOperation
 {
@@ -142,7 +143,7 @@ public:
      * of this class to interact with the DB
      */
     MDSql(MetaData *md);
-
+    ~MDSql();
 
 
 private:
@@ -182,6 +183,8 @@ private:
     ///Non-static attributes
     int tableId;
     MetaData *myMd;
+    MDCache *myCache;
+
     friend class MDSqlStaticInit;
 }
 ;//close class MDSql
@@ -281,11 +284,11 @@ class MDCache
 {
 public:
     sqlite3_stmt *iterStmt;
-    std::map<MDLabel, sqlite3_stmt *> getValueCache;
-    std::map<MDLabel, sqlite3_stmt *> setValueCache;
+    std::map<MDLabel, sqlite3_stmt*> getValueCache;
+    std::map<MDLabel, sqlite3_stmt*> setValueCache;
     sqlite3_stmt *addRowStmt;
 
-    ~MDCache();
+     ~MDCache();
 };
 
 #endif

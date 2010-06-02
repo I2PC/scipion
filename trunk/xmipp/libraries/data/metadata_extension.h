@@ -31,7 +31,7 @@ void mpi_select_part(MetaData &md, int rank, int size, int &num_img_tot);
 
 ///Swig interfaces
 template<class T>
-bool setValueSwig(MetaData &md, const MDLabel label, const T &valueIn, long int objectID = -1)
+bool setValueSwig(MetaData &md,  MDLabel label,  T &valueIn, long int objectID = -1)
 {
     md.setValue(label, valueIn, objectID);
 }
