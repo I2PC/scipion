@@ -713,7 +713,7 @@ FileName SelFile::FileExtension()
 }
 
 /* Statistics -------------------------------------------------------------- */
-void SelFile::get_statistics(Image& _ave, Image& _sd, double& _min,
+void SelFile::getStatistics(Image& _ave, Image& _sd, double& _min,
                              double& _max, bool apply_geo)
 {
     _min = MAXFLOAT;

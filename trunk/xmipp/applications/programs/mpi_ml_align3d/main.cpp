@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
     prm.read(argc,argv);
 
     // Select only relevant part of selfile for this rank
-    mpi_select_part(prm.SF, rank,size,num_img_tot);
+    mpiSelectPart(prm.SF, rank,size,num_img_tot);
 
     prm.produce_Side_info();
 

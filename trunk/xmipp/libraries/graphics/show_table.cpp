@@ -506,7 +506,7 @@ void ShowTable::showStats(MetaData &SF, bool apply_geo)
     {
         Image<double> _ave, _sd;
         double _minPixel, _maxPixel;
-        get_statistics(SF, _ave, _sd, _minPixel, _maxPixel, apply_geo);
+        getStatistics(SF, _ave, _sd, _minPixel, _maxPixel, apply_geo);
         ImageViewer *wavg = new ImageViewer(&_ave, "Average Image");
         ImageViewer *wsd  = new ImageViewer(&_sd, "SD Image");
         wavg->show();

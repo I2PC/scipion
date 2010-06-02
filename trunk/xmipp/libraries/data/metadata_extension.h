@@ -11,7 +11,7 @@
 #include "image.h"
 #include "metadata.h"
 
-void get_statistics(MetaData &MT, Image<double> & _ave, Image<double> & _sd, double& _min,
+void getStatistics(MetaData &MT, Image<double> & _ave, Image<double> & _sd, double& _min,
                     double& _max, bool apply_geo);
 
 /** Get image size
@@ -28,7 +28,7 @@ void ImgSize(const FileName &filename, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              int &Ndim=null_object);
 
-void mpi_select_part(MetaData &md, int rank, int size, int &num_img_tot);
+void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot);
 
 ///Swig interfaces
 template<class T>

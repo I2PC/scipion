@@ -118,4 +118,4 @@ $result=PyInt_FromLong((long)*$1);
 //%include swigmatrix2d.i
 //%include swigimage.i
 
-// rm libraries/data/swig/_XmippData.so libraries/data/swig/XmippData.py libraries/data/swig/XmippData_wrap.os libraries/data/swig/XmippData_wrap.cc lib/_XmippData.so lib/XmippData.py ; ./scons.compile
+// rm libraries/data/swig/_XmippData.so libraries/data/swig/XmippData.py libraries/data/swig/XmippData_wrap.os libraries/data/swig/XmippData_wrap.cc lib/_XmippData.so lib/XmippData.py ; ./scons.compile -j 3

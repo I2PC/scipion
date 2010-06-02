@@ -565,7 +565,7 @@ class MetaData(_object):
     def countObjects(*args): return _XmippData.MetaData_countObjects(*args)
     def containsObject(*args): return _XmippData.MetaData_containsObject(*args)
     def gotoFirstObject(*args): return _XmippData.MetaData_gotoFirstObject(*args)
-    def write(*args): return _XmippData.MetaData_write(*args)
+    def MetaDataWrite(*args): return _XmippData.MetaData_MetaDataWrite(*args)
     def read(*args): return _XmippData.MetaData_read(*args)
     def readOldDocFile(*args): return _XmippData.MetaData_readOldDocFile(*args)
     def readOldSelFile(*args): return _XmippData.MetaData_readOldSelFile(*args)
@@ -587,144 +587,8 @@ cvar = _XmippData.cvar
 KEEP_OLD = _XmippData.KEEP_OLD
 KEEP_NEW = _XmippData.KEEP_NEW
 SUM = _XmippData.SUM
-get_statistics = _XmippData.get_statistics
-mpi_select_part = _XmippData.mpi_select_part
-AGGR_COUNT = _XmippData.AGGR_COUNT
-AGGR_MAX = _XmippData.AGGR_MAX
-AGGR_MIN = _XmippData.AGGR_MIN
-AGGR_SUM = _XmippData.AGGR_SUM
-AGGR_AVG = _XmippData.AGGR_AVG
-class MDSql(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, MDSql, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, MDSql, name)
-    __repr__ = _swig_repr
-    def createMd(*args): return _XmippData.MDSql_createMd(*args)
-    def clearMd(*args): return _XmippData.MDSql_clearMd(*args)
-    def addRow(*args): return _XmippData.MDSql_addRow(*args)
-    def addColumn(*args): return _XmippData.MDSql_addColumn(*args)
-    def setObjectValue(*args): return _XmippData.MDSql_setObjectValue(*args)
-    def getObjectValue(*args): return _XmippData.MDSql_getObjectValue(*args)
-    def selectObjects(*args): return _XmippData.MDSql_selectObjects(*args)
-    def deleteObjects(*args): return _XmippData.MDSql_deleteObjects(*args)
-    def copyObjects(*args): return _XmippData.MDSql_copyObjects(*args)
-    def aggregateMd(*args): return _XmippData.MDSql_aggregateMd(*args)
-    def indexModify(*args): return _XmippData.MDSql_indexModify(*args)
-    def firstRow(*args): return _XmippData.MDSql_firstRow(*args)
-    def lastRow(*args): return _XmippData.MDSql_lastRow(*args)
-    def nextRow(*args): return _XmippData.MDSql_nextRow(*args)
-    def previousRow(*args): return _XmippData.MDSql_previousRow(*args)
-    def columnMaxLength(*args): return _XmippData.MDSql_columnMaxLength(*args)
-    def setOperate(*args): return _XmippData.MDSql_setOperate(*args)
-    __swig_getmethods__["dumpToFile"] = lambda x: _XmippData.MDSql_dumpToFile
-    if _newclass:dumpToFile = staticmethod(_XmippData.MDSql_dumpToFile)
-    def __init__(self, *args): 
-        this = _XmippData.new_MDSql(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _XmippData.delete_MDSql
-    __del__ = lambda self : None;
-MDSql_swigregister = _XmippData.MDSql_swigregister
-MDSql_swigregister(MDSql)
-ImgSize = _XmippData.ImgSize
-MDSql_dumpToFile = _XmippData.MDSql_dumpToFile
-
-class MDSqlStaticInit(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, MDSqlStaticInit, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, MDSqlStaticInit, name)
-    def __init__(self, *args, **kwargs): raise AttributeError, "No constructor defined"
-    __repr__ = _swig_repr
-MDSqlStaticInit_swigregister = _XmippData.MDSqlStaticInit_swigregister
-MDSqlStaticInit_swigregister(MDSqlStaticInit)
-
-class MDQuery(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, MDQuery, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, MDQuery, name)
-    __repr__ = _swig_repr
-    __swig_setmethods__["queryString"] = _XmippData.MDQuery_queryString_set
-    __swig_getmethods__["queryString"] = _XmippData.MDQuery_queryString_get
-    if _newclass:queryString = _swig_property(_XmippData.MDQuery_queryString_get, _XmippData.MDQuery_queryString_set)
-    __swig_setmethods__["limit"] = _XmippData.MDQuery_limit_set
-    __swig_getmethods__["limit"] = _XmippData.MDQuery_limit_get
-    if _newclass:limit = _swig_property(_XmippData.MDQuery_limit_get, _XmippData.MDQuery_limit_set)
-    def __init__(self, *args): 
-        this = _XmippData.new_MDQuery(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _XmippData.delete_MDQuery
-    __del__ = lambda self : None;
-MDQuery_swigregister = _XmippData.MDQuery_swigregister
-MDQuery_swigregister(MDQuery)
-
-class MDValueEqual(MDQuery):
-    __swig_setmethods__ = {}
-    for _s in [MDQuery]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, MDValueEqual, name, value)
-    __swig_getmethods__ = {}
-    for _s in [MDQuery]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
-    __getattr__ = lambda self, name: _swig_getattr(self, MDValueEqual, name)
-    __repr__ = _swig_repr
-    __swig_setmethods__["label"] = _XmippData.MDValueEqual_label_set
-    __swig_getmethods__["label"] = _XmippData.MDValueEqual_label_get
-    if _newclass:label = _swig_property(_XmippData.MDValueEqual_label_get, _XmippData.MDValueEqual_label_set)
-    def __init__(self, *args): 
-        this = _XmippData.new_MDValueEqual(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _XmippData.delete_MDValueEqual
-    __del__ = lambda self : None;
-MDValueEqual_swigregister = _XmippData.MDValueEqual_swigregister
-MDValueEqual_swigregister(MDValueEqual)
-
-class MDValueRange(MDQuery):
-    __swig_setmethods__ = {}
-    for _s in [MDQuery]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, MDValueRange, name, value)
-    __swig_getmethods__ = {}
-    for _s in [MDQuery]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
-    __getattr__ = lambda self, name: _swig_getattr(self, MDValueRange, name)
-    __repr__ = _swig_repr
-    def __init__(self, *args): 
-        this = _XmippData.new_MDValueRange(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    __swig_destroy__ = _XmippData.delete_MDValueRange
-    __del__ = lambda self : None;
-MDValueRange_swigregister = _XmippData.MDValueRange_swigregister
-MDValueRange_swigregister(MDValueRange)
-
-class MDCache(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, MDCache, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, MDCache, name)
-    __repr__ = _swig_repr
-    __swig_setmethods__["iterStmt"] = _XmippData.MDCache_iterStmt_set
-    __swig_getmethods__["iterStmt"] = _XmippData.MDCache_iterStmt_get
-    if _newclass:iterStmt = _swig_property(_XmippData.MDCache_iterStmt_get, _XmippData.MDCache_iterStmt_set)
-    __swig_setmethods__["getValueCache"] = _XmippData.MDCache_getValueCache_set
-    __swig_getmethods__["getValueCache"] = _XmippData.MDCache_getValueCache_get
-    if _newclass:getValueCache = _swig_property(_XmippData.MDCache_getValueCache_get, _XmippData.MDCache_getValueCache_set)
-    __swig_setmethods__["setValueCache"] = _XmippData.MDCache_setValueCache_set
-    __swig_getmethods__["setValueCache"] = _XmippData.MDCache_setValueCache_get
-    if _newclass:setValueCache = _swig_property(_XmippData.MDCache_setValueCache_get, _XmippData.MDCache_setValueCache_set)
-    __swig_setmethods__["addRowStmt"] = _XmippData.MDCache_addRowStmt_set
-    __swig_getmethods__["addRowStmt"] = _XmippData.MDCache_addRowStmt_get
-    if _newclass:addRowStmt = _swig_property(_XmippData.MDCache_addRowStmt_get, _XmippData.MDCache_addRowStmt_set)
-    __swig_destroy__ = _XmippData.delete_MDCache
-    __del__ = lambda self : None;
-    def __init__(self, *args): 
-        this = _XmippData.new_MDCache(*args)
-        try: self.this.append(this)
-        except: self.this = this
-MDCache_swigregister = _XmippData.MDCache_swigregister
-MDCache_swigregister(MDCache)
-
+getStatistics = _XmippData.getStatistics
+mpiSelectPart = _XmippData.mpiSelectPart
 MDL_UNDEFINED = _XmippData.MDL_UNDEFINED
 MDL_FIRST_LABEL = _XmippData.MDL_FIRST_LABEL
 MDL_OBJID = _XmippData.MDL_OBJID
@@ -895,6 +759,7 @@ class MDL(_object):
     __del__ = lambda self : None;
 MDL_swigregister = _XmippData.MDL_swigregister
 MDL_swigregister(MDL)
+ImgSize = _XmippData.ImgSize
 MDL_str2Label = _XmippData.MDL_str2Label
 MDL_label2Str = _XmippData.MDL_label2Str
 MDL_label2SqlColumn = _XmippData.MDL_label2SqlColumn

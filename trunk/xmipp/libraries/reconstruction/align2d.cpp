@@ -435,7 +435,7 @@ void Prog_align2d_prm::do_pspc()
     // Calculate average image of non-aligned images to center pspc-reference
     double min, max;
     Image<double> med,sig;
-    get_statistics(SF,med, sig, min, max, true);
+    getStatistics(SF,med, sig, min, max, true);
     med().setXmippOrigin();
 
     // Use piramidal combination of images to construct an initial reference
@@ -804,7 +804,7 @@ void Prog_align2d_prm::align2d()
     double min, max;
     if (SFo.containsObject(MDValueEqual( MDL_ENABLED, 1)))
     {
-        get_statistics(SFo,med, sig, min, max, true);
+        getStatistics(SFo,med, sig, min, max, true);
     }
     else
     {

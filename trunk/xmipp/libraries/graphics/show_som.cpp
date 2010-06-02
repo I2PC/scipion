@@ -413,7 +413,7 @@ void ShowSOM::showRepresentedAverageTogether()
                 Image<double> _sd;
                 double _minPixel, _maxPixel;
                 MetaData SFnew(SFcv[i]);
-                get_statistics(SFnew, _ave, _sd, _minPixel, _maxPixel, apply_geo);
+                getStatistics(SFnew, _ave, _sd, _minPixel, _maxPixel, apply_geo);
             }
             else
                 _ave = Image<double>(projXdim, projYdim);
@@ -483,7 +483,7 @@ void ShowSOM::showErrorImage()
         // Compute the average of the images assigned to that cell
         Image<double> _ave, _sd;
         double _minPixel, _maxPixel;
-        get_statistics(SFNew, _ave, _sd, _minPixel, _maxPixel, apply_geo);
+        getStatistics(SFNew, _ave, _sd, _minPixel, _maxPixel, apply_geo);
 
         // Load the cell code vector
         Image<double> image, error_image;

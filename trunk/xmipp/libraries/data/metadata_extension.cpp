@@ -7,7 +7,7 @@
 
 /*----------   Statistics --------------------------------------- */
 #include "metadata_extension.h"
-void get_statistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, double& _min,
+void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, double& _min,
                     double& _max, bool apply_geo)
 {
     MetaData MT(MT_in); //copy constructor so original MT is not changed
@@ -91,7 +91,7 @@ void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, int &Ndi
     ImgSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);
 }
 
-void mpi_select_part(MetaData &md, int rank, int size, int &num_img_tot)
+void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot)
 {
     num_img_tot = md.size();
     MetaData aux(md);

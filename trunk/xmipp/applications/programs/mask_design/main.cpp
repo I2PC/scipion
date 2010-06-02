@@ -89,7 +89,7 @@ int main(int argc, char **argv)
         SF.removeObjects(MDValueEqual(MDL_ENABLED,-1));
         Image<double> ave, sd;
         double min, max;
-        get_statistics(SF, ave, sd, min, max, apply_geo);
+        getStatistics(SF, ave, sd, min, max, apply_geo);
         maskImg* w;
         if (sdflag)
             w = new maskImg(NULL, &sd, CIRCLE, selname.c_str(), Qt::WDestructiveClose);

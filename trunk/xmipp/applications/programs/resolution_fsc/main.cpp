@@ -191,8 +191,8 @@ int main(int argc, char **argv)
             Matrix1D<double> freq, frc, dpr, frc_noise, ssnr, pixel;
             SF.read(fn_sel);
             SF.split_in_two(SF1, SF2);
-            SF1.get_statistics(I1, Id, dummy, dummy, apply_geo);
-            SF2.get_statistics(I2, Id, dummy, dummy, apply_geo);
+            SF1.getStatistics(I1, Id, dummy, dummy, apply_geo);
+            SF2.getStatistics(I2, Id, dummy, dummy, apply_geo);
             I1().setXmippOrigin();
             I2().setXmippOrigin();
             frc_dpr(I1(), I2(), sam, freq, frc, frc_noise, dpr,do_dpr);

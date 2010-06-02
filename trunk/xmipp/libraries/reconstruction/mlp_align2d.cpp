@@ -304,7 +304,7 @@ void Prog_MLPalign2D_prm::generateInitialReferences()
             SFout.insert(SFtmp.current());
             SFtmp.NextImg();
         }
-        SFout.get_statistics(Iave, Itmp, dummy, dummy);
+        SFout.getStatistics(Iave, Itmp, dummy, dummy);
         fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, 0, "");
         fn_tmp = fn_tmp + "_ref";
