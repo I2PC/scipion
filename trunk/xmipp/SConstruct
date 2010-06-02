@@ -278,7 +278,14 @@ if (ARGUMENTS['mode'] == 'configure'):
     if not int(env['static']):
         finalFFTWFlags+=" --enable-shared"
     
-    finalFFTWFlags+=" CFLAGS='-m64'"
+    if env['PLATFORM'] == 'darwin':
+        finalFFTWFlags+=" CFLAGS='-m64'"
+    
+    installdir=os.getcwd()
+    installdir+="/lib"
+    
+    finalFFTWFlags+=" --prefix="
+    finalFFTWFlags+=installdir
     
     if int(env['verbose_fftw']):
         print "* Configuring FFTW ... " 

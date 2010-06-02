@@ -338,6 +338,7 @@ def AddFFTWLibrary():
     toBuild=[FFTWDir+'/.libs/'+name1, FFTWDir+'/.libs/'+name1la,
              FFTWDir+'/threads/.libs/'+name2, FFTWDir+'/threads/.libs/'+name2la]
     toCopy=[name1, name2, name1la, name2la]
+    
     if not int(env['static']):
         if not env['PLATFORM'] == 'darwin':
             toBuild+=[FFTWDir+'/.libs/'+name1+".3",
@@ -347,10 +348,9 @@ def AddFFTWLibrary():
             toBuild+=[FFTWDir+'/.libs/'+name1,
                       FFTWDir+'/threads/.libs/'+name2]
             toCopy+=[name1,name2]
-       
     lib1 = env.Command(toBuild, FFTWDir+"/kernel/assert.c",
         "cd "+FFTWDir+" ; make clean > /dev/null ; make -j "+str(numJobs)+\
-        " > ../../build/fftw_make.log ")
+        " > ../../build/fftw_make.log ; make install >> ../../build/fftw_make.log")
     alias = env.Alias(toCopy, lib1)
     install = env.Install(libprefix, source=toBuild)
     env.Alias(toCopy, install)
