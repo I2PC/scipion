@@ -253,9 +253,9 @@ if (ARGUMENTS['mode'] == 'configure'):
         finalSQLiteFlags+=" CFLAGS=-m64"
     if not GetOption("help"):
     	if os.path.exists('external/sqlite-3.6.23/Makefile'):
-	    command = 'cd external/sqlite-3.6.23;  make distclean>/dev/null'
-	    print command
-	    os.system(command)
+	        command = 'cd external/sqlite-3.6.23;  make distclean>/dev/null'
+	        print command
+	        os.system(command)
 	if int(env['verbose_sqlite']):
             print "* Configuring SQLITE ... " 
             os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags)
@@ -271,9 +271,9 @@ if (ARGUMENTS['mode'] == 'configure'):
     finalFFTWFlags= env['FFTWFLAGS']
     if not GetOption("help"):
     	if os.path.exists('external/fftw-3.2.2/Makefile'):
-	    command = 'cd external/fftw-3.2.2;  make distclean>/dev/null'
-	    print command
-	    os.system(command)
+	        command = 'cd external/fftw-3.2.2;  make distclean>/dev/null'
+	        print command
+	        os.system(command)
 	
     if not int(env['static']):
         finalFFTWFlags+=" --enable-shared"
