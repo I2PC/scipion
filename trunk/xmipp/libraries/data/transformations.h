@@ -990,11 +990,11 @@ void pyramidReduce(int SplineDegree,
 
     for (int i = 0; i < levels; i++)
     {
-        reduceBSpline(3, V2, coeffs);
+        reduceBSpline(SplineDegree, V2, coeffs);
         coeffs = V2;
     }
 
-    produceImageFromSplineCoefficients(3, V2, coeffs);
+    produceImageFromSplineCoefficients(SplineDegree, V2, coeffs);
 
 }
 
@@ -1026,11 +1026,11 @@ void pyramidExpand(int SplineDegree,
 
     for (int i = 0; i < levels; i++)
     {
-        expandBSpline(3, V2, coeffs);
+        expandBSpline(SplineDegree, V2, coeffs);
         coeffs = V2;
     }
 
-    produceImageFromSplineCoefficients(3, V2, coeffs);
+    produceImageFromSplineCoefficients(SplineDegree, V2, coeffs);
 
 }
 
@@ -1260,7 +1260,7 @@ void radialAverage(const MultidimArray< T >& m,
     /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
 	 * that this image is a set of B-spline coefficients. And making the diff
 	 * of x, such->  V=sum(Coef diff(Bx) By Bz)
-	 * ¡¡Only for BSplines of degree 3!!
+	 * ï¿½ï¿½Only for BSplines of degree 3!!
 	 * @ingroup VolumesMemory
 	 *
 	 * (x,y,z) are in logical coordinates.
@@ -1271,7 +1271,7 @@ void radialAverage(const MultidimArray< T >& m,
 	/** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
 	 * that this image is a set of B-spline coefficients. And making the diff
 	 * of y, such->  V=sum(Coef Bx diff(By) Bz)
-	 * ¡¡Only for BSplines of degree 3!!
+	 * ï¿½ï¿½Only for BSplines of degree 3!!
 	 * @ingroup VolumesMemory
 	 *
 	 * (x,y,z) are in logical coordinates.
@@ -1281,7 +1281,7 @@ void radialAverage(const MultidimArray< T >& m,
 	/** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
 	 * that this image is a set of B-spline coefficients. And making the diff
 	 * of z, such->  V=sum(Coef Bx By diff(Bz))
-	 * ¡¡Only for BSplines of degree 3!!
+	 * ï¿½ï¿½Only for BSplines of degree 3!!
 	 * @ingroup VolumesMemory
 	 *
 	 * (x,y,z) are in logical coordinates.
