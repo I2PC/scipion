@@ -8,7 +8,7 @@
 /*----------   Statistics --------------------------------------- */
 #include "metadata_extension.h"
 void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, double& _min,
-                    double& _max, bool apply_geo)
+                   double& _max, bool apply_geo)
 {
     MetaData MT(MT_in); //copy constructor so original MT is not changed
     _min = MAXFLOAT;
@@ -97,3 +97,4 @@ void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot)
     MetaData aux(md);
     md.selectSplitPart(aux, size, rank);
 }
+

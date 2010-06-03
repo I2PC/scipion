@@ -233,8 +233,7 @@ int MetaData::MaxStringLength(const MDLabel thisLabel) const
 
 bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, long int objectId)
 {
-    if (!containsLabel(label))
-        return false;
+    addLabel(label);
 
     if (objectId == -1)
     {
@@ -273,11 +272,7 @@ long int MetaData::size() const
 
 bool MetaData::containsLabel(const MDLabel label) const
 {
-    int size = activeLabels.size();
-    for (int i = 0; i < size; i++)
-        if (label == activeLabels[i])
-            return true;
-    return false;
+    return vectorContainsLabel(activeLabels, label);
 }
 
 bool MetaData::addLabel(const MDLabel label)
@@ -512,17 +507,14 @@ void MetaData::write(const FileName &outFile)
 void MetaData::write(std::ostream &os)
 {
     os << "; XMIPP_3 * " << (isColumnFormat ? "column" : "row")
-    << "_format *" << std::endl;
-    //TODO: not saving the path
-    os << "; " << comment << std::endl;
+    << "_format * " << path << std::endl //write wich type of format (column or row) and the path
+    << ";" << comment << std::endl; //write md comment in the 2nd comment line of header
 
     if (isColumnFormat)
     {
-        //Write metadata header
-        //write columns
-        int labelsSize = activeLabels.size();
+        //write md columns in 3rd comment line of the header
         os << "; ";
-        for (int i = 0; i < labelsSize; i++)
+        for (int i = 0; i < activeLabels.size(); i++)
         {
             if (activeLabels.at(i) != MDL_COMMENT)
             {
@@ -532,18 +524,15 @@ void MetaData::write(std::ostream &os)
         }
         os << std::endl;
         //Write data
-        std::vector<long int> objects;
-        myMDSql->selectObjects(objects);
-        int objsSize = objects.size();
-        for (int o = 0; o < objsSize; o++)
+        FOR_ALL_OBJECTS_IN_METADATA(*this)
         {
-            for (int i = 0; i < labelsSize; i++)
+            for (int i = 0; i < activeLabels.size(); i++)
             {
                 if (activeLabels[i] != MDL_COMMENT)
                 {
                     MDValue mdValue(activeLabels[i]);
                     os.width(10);
-                    myMDSql->getObjectValue(objects[o], mdValue);
+                    myMDSql->getObjectValue(activeObjId, mdValue);
                     mdValue.toStream(os);
                     os << " ";
                 }
@@ -586,332 +575,176 @@ void MetaData::write(std::ostream &os)
     }
 }//write
 
-void MetaData::read(const FileName &fileName, std::vector<MDLabel> *labelsVector)
+/** This function will read the posible columns from the file
+ * and mark as MDL_UNDEFINED those who aren't valid labels
+ * or those who appears in the IgnoreLabels vector
+ * also set the activeLabels
+ */
+void MetaData::_readColumns(std::istream& is, std::vector<MDValue>& columnValues,
+                            std::vector<MDLabel>* desiredLabels)
 {
-    clear();
-    inFile = fileName;
+    std::string token;
+    MDLabel label;
 
-    // Open file
-    std::ifstream infile(fileName.data(), std::ios_base::in);
-    std::string line;
-
-    if (infile.fail())
-    {
-        REPORT_ERROR( 200, (std::string) "MetaData::read: File " + fileName + " does not exits" );
-    }
-
-    // Search for Headerinfo, if present we are processing an old-styled docfile
-    // else we are processing a new Xmipp MetaData file
-    getline(infile, line, '\n');
-
-    int pos = line.find("Headerinfo");
-
-    if (pos != std::string::npos) // Headerinfo token found
-    {
-        readOldDocFile(&infile, labelsVector);
-        std::cerr
-        << (std::string) "WARNING: ** You are using an old file format (DOCFILE) which is going "
-        + "to be deprecated in next Xmipp release **"
-        << std::endl;
-    }
-    else
-    {
-        pos = line.find("XMIPP_3 * ");
-
-        if (pos != std::string::npos) // xmipp_3 token found
+    while (is >> token)
+        if (token.find('(') == std::string::npos)
         {
-            read(infile, labelsVector);
-        }
-        else // We are reading an old selfile
-        {
-            readOldSelFile(&infile);
-            std::cerr
-            << (std::string) "WARNING: ** You are using an old file format (SELFILE) which is going "
-            + "to be deprecated in next Xmipp release **"
-            << std::endl;
-        }
-    }
-    infile.close();
-}
-
-void MetaData::read(std::istream &is, std::vector<MDLabel> *labelsVector)
-{
-    std::vector<MDLabel> readLabels;
-
-    is.seekg(0, std::ios::beg);
-    std::string line;
-    getline(is, line, '\n');
-    int pos = line.find("*");
-
-    if (pos == std::string::npos)
-    {
-        REPORT_ERROR( 200, "End of string reached" );
-    }
-    else
-    {
-        line.erase(0, pos + 1);
-        pos = line.find(" row_format ");
-
-        if (pos != std::string::npos)
-        {
-            isColumnFormat = false;
-        }
-    }
-
-    pos = line.find("*");
-    line.erase(0, pos + 1);
-    line = removeChar(line, ' ');
-    setPath(line);
-    getline(is, line, '\n');
-    setComment(line.erase(0, 2));
-
-    if (isColumnFormat)
-    {
-        // Get Labels line
-        getline(is, line, '\n');
-        // Remove ';'
-        line.erase(0, line.find(";") + 1);
-        // Parse labels
-        std::stringstream os(line);
-        std::string newLabel;
-        int labelPosition = 0;
-
-        while (os >> newLabel)
-        {
-            MDLabel label = MDL::str2Label(newLabel);
-
-            if (label == MDL_UNDEFINED)
-                ignoreLabels.push_back(labelPosition);
-            else
-                readLabels.push_back(label);
-            labelPosition++;
-        }
-
-        //Initialize data
-        _clear();
-        activeLabels = (labelsVector != NULL) ? *labelsVector : readLabels;
-        myMDSql->createMd();
-        // Read data and fill structures accordingly
-        int lineCount = 0;
-        while (getline(is, line, '\n'))
-        {
-            //std::cerr << "lines readed " << ++lineCount <<std::endl;
-            if (line[0] == '\0' || line[0] == '#')
-                continue;
-
-            long int objectID = addObject();
-
-            if (line[0] == ';')
-            {
-                line.erase(0, 1);
-                line = simplify(line);
-                setValue(MDL_COMMENT, line);
-                getline(is, line, '\n');
-            }
-
-            // Parse labels
-            std::stringstream os2(line);
-            std::string value;
-
-            int labelPosition = 0;
-            int counterIgnored = 0;
-
-            while (os2 >> value)
-            {
-                if (std::find(ignoreLabels.begin(), ignoreLabels.end(),
-                              labelPosition) != ignoreLabels.end())
-                {
-                    // Ignore this column
-                    counterIgnored++;
-                    labelPosition++;
-                    continue;
-                }
-
-                if (MDL::isVector(readLabels[labelPosition - counterIgnored])
-                    && value == "[")
-                {
-                    std::string aux = value;
-                    while (os2 >> value && value != "]")
-                        aux += " " + value;
-                    value = aux + "]";
-                    //std::cerr << "is vector value" << value << std::endl;
-                }
-
-                setValueFromStr(readLabels[labelPosition - counterIgnored], value);
-                labelPosition++;
-            }
-        }
-    }
-    else //RowFormat
-    {
-        std::string newLabel;
-        std::string value;
-
-        //init();
-        long int objectID = addObject();
-
-        // Read data and fill structures accordingly
-        while (getline(is, line, '\n'))
-        {
-            if (line[0] == '#' || line[0] == '\0' || line[0] == ';')
-                continue;
-
-            // Parse labels
-            std::stringstream os(line);
-
-            os >> newLabel;
-            MDLabel label = MDL::str2Label(newLabel);
-
-            if(!MDL::isVector(label))
-                os >> value;
-            else
-            {
-                std::vector<std::string> v;
-                Tokenize(line,v,(std::string)"**");
-                value = v[1];
-            }
+            //label is not reconized, the MDValue will be created
+            //with MDL_UNDEFINED, wich will be ignored while reading data
+            label = MDL::str2Label(token);
+            if (desiredLabels != NULL && !vectorContainsLabel(*desiredLabels, label))
+                label = MDL_UNDEFINED; //ignore if not present in desiredLabels
+            columnValues.push_back(MDValue(label));
             if (label != MDL_UNDEFINED)
-            {
-                readLabels.push_back(label);
-                setValueFromStr(label, value);
-            }
+                addLabel(label);
         }
-    }
-}//close read
+}
 
-void MetaData::readOldDocFile(std::ifstream *infile,
-                              std::vector<MDLabel> * labelsVector)
+/** This function will be used to parse the rows data
+ * having read the columns labels before and setting wich are desired
+ * the useCommentAsImage is for compatibility with old DocFile format
+ * where the image were in comments
+ */
+void MetaData::_readRows(std::istream& is, std::vector<MDValue>& columnValues, bool useCommentAsImage)
 {
-    bool saveName = false;
-    infile->seekg(0, std::ios::beg);
-    std::string line;
-
-    // Search for Headerinfo, if present we are processing an old-styled docfile
-    // else we are processing a new Xmipp MetaData file
-    getline(*infile, line, '\n');
-
-    int pos = line.find("Headerinfo");
-
-    // Remove from the beginning to the end of "Headerinfo columns:"
-    line = line.erase(0, line.find(":") + 1);
-
-    // In the old docfile format the "image" label did not exist, it was
-    // a ";" commented line containing the name of the projection. Therefore,
-    // for the new format it must be added by hand, if necessary
-    if (labelsVector != NULL)
+    std::string line = "";
+    int objId;
+    while (!is.eof() && !is.fail())
     {
-        std::vector<MDLabel>::iterator location;
+        //Move until the ';' or the first alphanumeric character
+        while (is.peek() != ';' && !isalnum(is.peek()) && !is.eof())
+            is.ignore(1);
+        if (!is.eof())
 
-        location = std::find(labelsVector->begin(), labelsVector->end(),
-                             MDL_IMAGE);
-
-        if (location != labelsVector->end())
-        {
-            addLabel(MDL_IMAGE);
-            saveName = true;
-        }
-    }
-    else
-    {
-        addLabel(MDL_IMAGE);
-    }
-
-    // Extract labels until the string is empty
-    while (line != "")
-    {
-        pos = line.find(")");
-        std::string newLabel = line.substr(0, pos + 1);
-        line.erase(0, pos + 1);
-
-        // The token can now contain a ',', if so, remove it
-        if ((pos = newLabel.find(",")) != std::string::npos)
-            newLabel.erase( pos, 1);
-
-        // Remove unneded parentheses and contents
-        pos = newLabel.find("(");
-        newLabel.erase(pos, newLabel.find(")") - pos + 1);
-
-        // Remove white spaces
-        newLabel = removeChar(newLabel, ' ');
-
-        if (labelsVector != NULL)
-        {
-            std::vector<MDLabel>::iterator location;
-
-            location = std::find(labelsVector->begin(), labelsVector->end(),
-                                 MDL::str2Label(newLabel));
-
-            if (location != labelsVector->end())
+            if (is.peek() == ';')//is a comment
             {
-                addLabel(MDL::str2Label(newLabel));
+                is.ignore(1); //ignore the ';'
+                getline(is, line);
+                trim(line);
             }
-        }
-        else
-        {
-            addLabel(MDL::str2Label(newLabel));
-        }
-    }
-
-    int isname = 0;
-    while (getline(*infile, line, '\n'))
-    {
-        if (isname % 2 == 0)
-        {
-            long int objectID = addObject();
-            line.erase(0, line.find(";") + 1);
-
-            // Remove spaces from string
-            line = removeChar(line, ' ');
-            setValue(MDL_IMAGE, line);
-        }
-        else
-        {
-            // Parse labels
-            std::stringstream os2(line);
-            std::string value;
-
-            int counter = 0;
-            while (os2 >> value)
+            else if (isalnum(is.peek()))
             {
-                if (counter >= 2) // Discard two first numbers
+                objId = addObject();
+                if (line != "")
                 {
-                    if (saveName)
-                        setValueFromStr(activeLabels[counter - 1], value);
+                    if (!useCommentAsImage)
+                        setValue(MDL_COMMENT, line);
                     else
-                        setValueFromStr(activeLabels[counter - 2], value);
+                        setValue(MDL_IMAGE, line);
                 }
-                counter++;
+                for (int i = 0; i < columnValues.size(); i++)
+                {
+                    is >> columnValues[i];
+                    if (is.fail())
+                    {
+                        REPORT_ERROR(-44, "MetaData::read2: Error parsing data column");
+                    }
+                    else
+                        if (columnValues[i].label != MDL_UNDEFINED)
+                            _setValue(activeObjId, columnValues[i]);
+                }
             }
-        }
 
-        isname++;
     }
 }
 
-void MetaData::readOldSelFile(std::ifstream *infile)
+/**This function will read the md data if is in row format */
+void MetaData::_readRowFormat(std::istream& is)
 {
-    infile->seekg(0, std::ios::beg);
-    std::string line;
+    std::string line, token;
+    MDLabel label;
 
-    addLabel(MDL_IMAGE);
-    addLabel(MDL_ENABLED);
+    long int objectID = addObject();
 
-    while (getline(*infile, line, '\n'))
+    // Read data and fill structures accordingly
+    while (getline(is, line, '\n'))
     {
-        line = simplify(line);
         if (line[0] == '#' || line[0] == '\0' || line[0] == ';')
             continue;
-        else
+
+        // Parse labels
+        std::stringstream os(line);
+
+        os >> token;
+        label = MDL::str2Label(token);
+        MDValue value(label);
+        os >> value;
+        if (label != MDL_UNDEFINED)
+            _setValue(objectID, value);
+    }
+}
+
+void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabels)
+{
+    int pos;
+    std::ifstream is(filename.data(), std::ios_base::in);
+    std::stringstream ss;
+    std::string line, token;
+    std::vector<MDValue> columnValues;
+    isColumnFormat = true;
+    bool useCommentAsImage = false;
+
+    getline(is, line); //get first line to identify the type of file
+
+    if (is.fail())
+    {
+        REPORT_ERROR(-44, (std::string) "MetaData::read: File " + filename + " does not exists" );
+    }
+
+    _clear();
+    myMDSql->createMd();
+
+    if (pos = line.find("XMIPP_3 *") != std::string::npos)
+    {
+        //We have a new XMIPP MetaData format here, parse header
+        is.seekg(0, std::ios::beg);
+        is.ignore(256, '*') >> token; //Ignore all until first '*' and get md format in token
+        isColumnFormat = token != "row_format";
+        is.ignore(256, '*') >> token;
+        if (token != ";") //there is path, need to ignore ';' of the next line
         {
-            int pos = line.find(" ");
-            std::string name = line.substr(0, pos);
-            line.erase(0, pos + 1);
-            int i = atoi(line.c_str());
-            addObject();
-            setValue(MDL_IMAGE, name);
-            setValue(MDL_ENABLED, i);
+            setPath(token);
+            is.ignore(256, ';');
+        }
+        getline(is, line);
+        setComment(line);
+        if (isColumnFormat)
+        {
+            is.ignore(256, ';'); //ignore ';' to start parsing column labels
+            getline(is, line);
+            ss.str(line);
+            //Read column labels
+            _readColumns(ss, columnValues, desiredLabels);
         }
     }
+    else if (pos = line.find("Headerinfo columns:") != std::string::npos)
+    {
+        is.seekg(0, std::ios::beg);
+        //This looks like an old DocFile, parse header
+        std::cerr << "WARNING: ** You are using an old file format (DOCFILE) which is going "
+        << "to be deprecated in next Xmipp release **" << std::endl;
+        is.ignore(256, ':'); //ignore all until ':' to start parsing column labels
+        getline(is, line);
+        ss.str(line);
+        columnValues.resize(2, MDValue(MDL_UNDEFINED)); //start with 2 undefined to avoid 2 first columns of old format
+        addLabel(MDL_IMAGE);
+        _readColumns(ss, columnValues, desiredLabels);
+        useCommentAsImage = true;
+    }
+    else
+    {
+        std::cerr << "WARNING: ** You are using an old file format (SELFILE) which is going "
+        << "to be deprecated in next Xmipp release **" << std::endl;
+        //I will assume that is an old SelFile, so only need to add two columns
+        columnValues.push_back(MDValue(MDL_IMAGE));//addLabel(MDL_IMAGE);
+        columnValues.push_back(MDValue(MDL_ENABLED));//addLabel(MDL_ENABLED);
+    }
+
+    if (isColumnFormat)
+        _readRows(is, columnValues, useCommentAsImage);
+    else
+        _readRowFormat(is);
+
 }
 
 void MetaData::merge(const FileName &fn)
@@ -985,7 +818,6 @@ void MetaData::randomize(MetaData &MDin)
 {
     std::vector<long int> objects;
     MDin.myMDSql->selectObjects(objects);
-    std::cerr << "size:" << objects.size() <<std::endl;
     std::random_shuffle(objects.begin(), objects.end());
     importObjects(MDin, objects);
 }

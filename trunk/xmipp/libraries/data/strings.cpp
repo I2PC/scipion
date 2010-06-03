@@ -47,9 +47,9 @@ std::string unescape( std::string str )
         char current_char = str[ i ];
 
         if( current_char != '\n' && current_char != '\t' &&
-                current_char != '\v' && current_char != '\b' &&
-                current_char != '\r' && current_char != '\f' &&
-                current_char != '\a' )
+            current_char != '\v' && current_char != '\b' &&
+            current_char != '\r' && current_char != '\f' &&
+            current_char != '\a' )
         {
             temp += str[ i ];
         }
@@ -97,14 +97,30 @@ std::string simplify( std::string str )
     return temp;
 }
 
+/** Trim all spaces from the begining and the end */
+void trim(std::string& str)
+{
+    std::string::size_type pos = str.find_last_not_of(' ');
+
+    if (pos != std::string::npos)
+    {
+        str.erase(pos + 1);
+        pos = str.find_first_not_of(' ');
+        if (pos != std::string::npos)
+            str.erase(0, pos);
+    }
+    else
+        str.clear();
+}
+
 void Tokenize(const std::string& str,
               std::vector<std::string>& tokens,
               const std::string& delimiters)
 {
     // Skip delimiters at beginning.
-	std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+    std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
     // Find first "non-delimiter".
-	std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
+    std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
 
     while (std::string::npos != pos || std::string::npos != lastPos)
     {

@@ -307,7 +307,7 @@ private:
         MDL::addLabel(MDL_ITER, LABEL_INT, "iterationNumber");
         MDL::addLabel(MDL_K, LABEL_DOUBLE, "K");
         MDL::addLabel(MDL_KSTEST, LABEL_DOUBLE, "KStest");
-        MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood");
+        MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood", "LL");
         MDL::addLabel(MDL_MASK, LABEL_STRING, "mask");
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
@@ -372,7 +372,8 @@ private:
     friend class MDL;
 };
 
-
+/**Just an utility function */
+bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel label);
 
 //Just an struct to store type and string alias
 class MDLabelData
@@ -444,6 +445,7 @@ public:
     void toStream(std::ostream &os, bool withFormat = false) const;
     std::string toString(bool withFormat = false) const;
     bool fromStream(std::istream &is);
+    friend std::istream& operator>> (std::istream& is, MDValue &value);
     bool fromString(const std::string &str);
 
 }//close class MDValue

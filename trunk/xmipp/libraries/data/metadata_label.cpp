@@ -118,6 +118,14 @@ MDLabelType MDL::labelType(std::string &labelName)
 }
 
 
+bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel label)
+{
+    std::vector<MDLabel>::const_iterator location;
+    location = std::find(labelsVector.begin(), labelsVector.end(), label);
+
+    return (location != labelsVector.end());
+}
+
 //----------- Implementation of MDValue -----------------
 inline void MDValue::labelTypeCheck(MDLabelType checkingType) const
 {
@@ -155,7 +163,8 @@ inline void MDValue::labelTypeCheck(MDLabelType checkingType) const
 MDValue::MDValue(MDLabel label)
 {
     this->label = label;
-    this->type = MDL::labelType(label);
+    if (label != MDL_UNDEFINED)
+        this->type = MDL::labelType(label);
 }
 ///Constructors for each Label supported type
 ///these constructor will do the labels type checking
@@ -274,34 +283,37 @@ void MDValue::getValue(char  &charvalue) const
 
 void MDValue::toStream(std::ostream &os, bool withFormat) const
 {
-    switch (MDL::labelType(label))
-    {
-    case LABEL_BOOL: //bools are int in sqlite3
-        os << boolValue;
-        break;
-    case LABEL_INT:
-        INT2STREAM(intValue);
-        break;
-    case LABEL_LONG:
-        INT2STREAM(longintValue);
-        break;
-    case LABEL_DOUBLE:
-        DOUBLE2STREAM(doubleValue);
-        break;
-    case LABEL_STRING:
+    if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
         os << stringValue;
-        break;
-    case LABEL_VECTOR:
-        os << "[ ";
-        int size = vectorValue.size();
-        for (int i = 0; i < size; i++)
+    else
+        switch (MDL::labelType(label))
         {
-            DOUBLE2STREAM(vectorValue[i]);
-            os << " ";
-        }
-        os << "]";
-        break;
-    }//close switch
+        case LABEL_BOOL: //bools are int in sqlite3
+            os << boolValue;
+            break;
+        case LABEL_INT:
+            INT2STREAM(intValue);
+            break;
+        case LABEL_LONG:
+            INT2STREAM(longintValue);
+            break;
+        case LABEL_DOUBLE:
+            DOUBLE2STREAM(doubleValue);
+            break;
+        case LABEL_STRING:
+            os << stringValue;
+            break;
+        case LABEL_VECTOR:
+            os << "[ ";
+            int size = vectorValue.size();
+            for (int i = 0; i < size; i++)
+            {
+                DOUBLE2STREAM(vectorValue[i]);
+                os << " ";
+            }
+            os << "]";
+            break;
+        }//close switch
 }//close function toStream
 
 std::string MDValue::toString(bool withFormat) const
@@ -311,32 +323,44 @@ std::string MDValue::toString(bool withFormat) const
     return ss.str();
 }
 
+//bool MDValue::fromStream(std::istream &is)
+std::istream& operator>> (std::istream& is, MDValue &value)
+{
+    value.fromStream(is);
+    return is;
+}
+
 bool MDValue::fromStream(std::istream &is)
 {
-    switch (MDL::labelType(label))
-    {
-    case LABEL_BOOL: //bools are int in sqlite3
-        is >> boolValue;
-        break;
-    case LABEL_INT:
-        is >> intValue;
-        break;
-    case LABEL_LONG:
-        is >> longintValue;
-        break;
-    case LABEL_DOUBLE:
-        is >> doubleValue;
-        break;
-    case LABEL_STRING:
+    if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
         is >> stringValue;
-        break;
-    case LABEL_VECTOR:
-        is >> stringValue; //Just to remove "["
-        while (is >> doubleValue) //This will stop at ending "]"
-            vectorValue.push_back(doubleValue);
-        break;
-    }
-    return true;
+    else
+        switch (type)
+        {
+        case LABEL_BOOL: //bools are int in sqlite3
+            is >> boolValue;
+            break;
+        case LABEL_INT:
+            is >> intValue;
+            break;
+        case LABEL_LONG:
+            is >> longintValue;
+            break;
+        case LABEL_DOUBLE:
+            is >> doubleValue;
+            break;
+        case LABEL_STRING:
+            is >> stringValue;
+            break;
+        case LABEL_VECTOR:
+            is.ignore(256, '[');
+            vectorValue.clear();
+            while (is >> doubleValue) //This will stop at ending "]"
+                vectorValue.push_back(doubleValue);
+            is.clear(); //this is for clear the fail state after found ']'
+            break;
+        }
+    return is.good();
 }
 
 bool MDValue::fromString(const std::string &str)

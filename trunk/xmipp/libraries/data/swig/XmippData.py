@@ -567,8 +567,6 @@ class MetaData(_object):
     def gotoFirstObject(*args): return _XmippData.MetaData_gotoFirstObject(*args)
     def MetaDataWrite(*args): return _XmippData.MetaData_MetaDataWrite(*args)
     def read(*args): return _XmippData.MetaData_read(*args)
-    def readOldDocFile(*args): return _XmippData.MetaData_readOldDocFile(*args)
-    def readOldSelFile(*args): return _XmippData.MetaData_readOldSelFile(*args)
     def aggregate(*args): return _XmippData.MetaData_aggregate(*args)
     def unionDistinct(*args): return _XmippData.MetaData_unionDistinct(*args)
     def unionAll(*args): return _XmippData.MetaData_unionAll(*args)
@@ -781,6 +779,7 @@ class MDLabelStaticInit(_object):
 MDLabelStaticInit_swigregister = _XmippData.MDLabelStaticInit_swigregister
 MDLabelStaticInit_swigregister(MDLabelStaticInit)
 
+vectorContainsLabel = _XmippData.vectorContainsLabel
 class MDLabelData(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, MDLabelData, name, value)

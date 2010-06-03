@@ -168,6 +168,11 @@ private:
 
     long int _iteratorBegin(const MDQuery *query = NULL);
 
+    /** Some private reading functions */
+    void _readColumns(std::istream& is, std::vector<MDValue>& columnValues,
+                               std::vector<MDLabel>* desiredLabels = NULL);
+    void _readRows(std::istream& is, std::vector<MDValue>& columnValues, bool useCommentAsImage);
+    void _readRowFormat(std::istream& is);
 
 public:
 
@@ -448,16 +453,6 @@ public:
      * @ingroup MetaDataIO
      */
     void read(const FileName &inFile, std::vector<MDLabel> *labelsVector = NULL);
-    /** Read, read data from file, using filename
-     * @ingroup MetaDataIO
-     */
-    void read(std::istream &is, std::vector<MDLabel> *labelsVector = NULL);
-
-    /** Read old formats */
-    void readOldDocFile(std::ifstream *infile,
-                                   std::vector<MDLabel> * labelsVector);
-
-    void readOldSelFile(std::ifstream *infile);
     /** Aggregate metadata objects,
      * @ingroup SetOperations
      * result in calling metadata object
