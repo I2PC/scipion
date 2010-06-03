@@ -87,6 +87,7 @@ int main(int argc, char **argv)
         if (!fn_input.isMetaData())
         {
             image.read(fn_input);
+            image().setXmippOrigin();
             if (image().getDim()==2)
             {
                 if (factor>0)
@@ -139,6 +140,7 @@ int main(int argc, char **argv)
                     fn_out = fn_in.without_extension() + "." + fn_oext;
 
                 image.read(fn_in);
+                image().setXmippOrigin();
                 if (image().getDim()==2)
                 {
                     if (factor>0)
