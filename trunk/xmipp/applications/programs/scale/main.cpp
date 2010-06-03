@@ -24,11 +24,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/volume.h>
 #include <data/image.h>
 #include <data/args.h>
-#include <data/selfile.h>
-#include <data/gridding.h>
+#include <data/metadata.h>
 #include <data/fftw.h>
 
 void Usage();
@@ -36,12 +34,10 @@ void Usage();
 int main(int argc, char **argv)
 {
     FileName        fn_input, fn_output, fn_oext, fn_in, fn_out;
-    SelFile         SF, SF_out;
-    ImageXmipp      image;
-    VolumeXmipp     volume;
+    MetaData        SF, SF_out;
+    Image<double>   image;
     int             zdim, ydim, xdim;
     double          factor=-1;
-    bool            gridding;
     bool            linear;
     bool            fourier;
     int             nThreads;
@@ -55,7 +51,7 @@ int main(int argc, char **argv)
         fn_input = getParameter(argc, argv, "-i", NULL, 1, "Scale: Input file not found");
         fn_out   = getParameter(argc, argv, "-o", "");
         fn_oext  = getParameter(argc, argv, "-oext", "");
-        if (!Is_ImageXmipp(fn_input) && !Is_VolumeXmipp(fn_input))
+        if (fn_input.isMetaData())
             SF.read(fn_input);
         if (checkParameter(argc,argv,"-factor"))
         {
@@ -69,12 +65,13 @@ int main(int argc, char **argv)
             ydim = textToInteger(getParameter(argc, argv, "-ydim", "0"));
             xdim = textToInteger(getParameter(argc, argv, "-xdim"));
         }
-        //gridding = checkParameter(argc, argv, "-gridding");
         linear = checkParameter(argc, argv, "-linear");
-        fourier =   checkParameter(argc, argv, "-fourier");
+        fourier = checkParameter(argc, argv, "-fourier");
 
-        if (ydim == 0) ydim = xdim;
-        if (zdim == 0) zdim = xdim;
+        if (ydim == 0)
+            ydim = xdim;
+        if (zdim == 0)
+            zdim = xdim;
         nThreads=textToInteger(getParameter(argc, argv, "-thr", "1"));
     }
     catch (Xmipp_error XE)
@@ -87,160 +84,99 @@ int main(int argc, char **argv)
     try
     {
         // Scale a single image -------------------------------------------------
-        if (Is_ImageXmipp(fn_input))
+        if (!fn_input.isMetaData())
         {
             image.read(fn_input);
-            if (factor>0)
+            if (image().getDim()==2)
             {
-                ydim=YSIZE(image())*factor;
-                xdim=XSIZE(image())*factor;
-            }
-            
-	    //if (gridding)
-	    //{
-		//KaiserBessel kb;
-		//Matrix2D<double> Maux;
-		//produceReverseGriddingMatrix2D(image(),Maux,kb);
-		//DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
-		//DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
-		//applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
-	    //}
-            if (fourier)
-            {
-                selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
-            }
-            else if (linear)
-            {
-		image().selfScaleToSize(ydim, xdim);
-            }
-	    else
-	    {
-		image().selfScaleToSizeBSpline(3, ydim, xdim);
-	    }
-            if (fn_out == "") image.write(fn_input);
-            else            image.write(fn_out);
+                if (factor>0)
+                {
+                    ydim=YSIZE(image())*factor;
+                    xdim=XSIZE(image())*factor;
+                }
 
-            // Scale a single volume ------------------------------------------------
-        }
-        else if (Is_VolumeXmipp(fn_input))
-        {
-            volume.read(fn_input);
-            if (factor>0)
-            {
-                zdim=ZSIZE(volume())*factor;
-                ydim=YSIZE(volume())*factor;
-                xdim=XSIZE(volume())*factor;
+                if (fourier)
+                    selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
+                else if (linear)
+                    selfScaleToSize(LINEAR,image(),xdim, ydim);
+                else
+                    selfScaleToSize(BSPLINE3,image(),xdim, ydim);
             }
-	    if (gridding)
-	    {
-		KaiserBessel kb;
-		Matrix3D<double> Maux;
-		produceReverseGriddingMatrix3D(volume(),Maux,kb);
-		DIRECT_MAT_ELEM(B, 0, 0) = (double) xdim / (double) XSIZE(volume());
-		DIRECT_MAT_ELEM(B, 1, 1) = (double) ydim / (double) YSIZE(volume());
-		DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
-		applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
-	    }
-            else if (linear)
+            else
             {
-		volume().selfScaleToSize(zdim, ydim, xdim);
+                if (factor>0)
+                {
+                    zdim=ZSIZE(image())*factor;
+                    ydim=YSIZE(image())*factor;
+                    xdim=XSIZE(image())*factor;
+                }
+                if (linear)
+                    selfScaleToSize(LINEAR,image(),xdim, ydim, zdim);
+                else
+                    selfScaleToSize(BSPLINE3,image(),xdim, ydim, zdim);
             }
-	    else
-	    {
-		volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
-	    }
-            if (fn_out == "") volume.write(fn_input);
-            else            volume.write(fn_out);
-
+            if (fn_out == "")
+                image.write(fn_input);
+            else
+                image.write(fn_out);
         }
-	// Scale a selection file ------------------------------------------------
+        // Scale a selection file ------------------------------------------------
         else
         {
             SF.read(fn_input);
 
-            SF_out.clear();
-            // Initialise progress bar
+            // Initialize progress bar
             time_config();
             int i = 0;
-            init_progress_bar(SF.ImgNo());
-            while (!SF.eof())
+            init_progress_bar(SF.size());
+            FOR_ALL_OBJECTS_IN_METADATA(SF)
             {
-                fn_in = SF.NextImg();
-                if (fn_in=="") break;
-                if (fn_oext == "") fn_out = fn_in;
-                else             fn_out = fn_in.without_extension() + "." + fn_oext;
-                // Process an image ...............................................
-                if (Is_ImageXmipp(fn_in))
+            	Image<double> image; // FIXME: This should disappear, now provoking segfault
+                SF.getValue(MDL_IMAGE,fn_in);
+                if (fn_oext == "")
+                    fn_out = fn_in;
+                else
+                    fn_out = fn_in.without_extension() + "." + fn_oext;
+
+                image.read(fn_in);
+                if (image().getDim()==2)
                 {
-                    image.read(fn_in);
                     if (factor>0)
                     {
                         ydim=YSIZE(image())*factor;
                         xdim=XSIZE(image())*factor;
                     }
-        	    if (fourier)
-        	    {
-                	selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
-        	    }
-		    /*if (gridding)
-		    {
-			KaiserBessel kb;
-			Matrix2D<double> Maux;
-			produceReverseGriddingMatrix2D(image(),Maux,kb);
-			DIRECT_MAT_ELEM(A, 0, 0) = (double) xdim / (double) XSIZE(image());
-			DIRECT_MAT_ELEM(A, 1, 1) = (double) ydim / (double) YSIZE(image());
-			applyGeometryReverseGridding(image(), A, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim);
-		    }*/
+
+                    if (fourier)
+                        selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
                     else if (linear)
-                    {
-			image().selfScaleToSize(ydim, xdim);
-                    }
-		    else
-		    {
-			image().selfScaleToSizeBSpline(3, ydim, xdim);
-		    }
-                    image.write(fn_out);
-                    // Process a volume ...............................................
-                }
-                else if (Is_VolumeXmipp(fn_in))
-                {
-                    volume.read(fn_in);
-                    if (factor>0)
-                    {
-                        zdim=ZSIZE(volume())*factor;
-                        ydim=YSIZE(volume())*factor;
-                        xdim=XSIZE(volume())*factor;
-                    }
-		    if (gridding)
-		    {
-			KaiserBessel kb;
-			Matrix3D<double> Maux;
-			produceReverseGriddingMatrix3D(volume(),Maux,kb);
-			DIRECT_MAT_ELEM(B, 0, 0) = (double) xdim / (double) XSIZE(volume());
-			DIRECT_MAT_ELEM(B, 1, 1) = (double) ydim / (double) YSIZE(volume());
-			DIRECT_MAT_ELEM(B, 2, 2) = (double) zdim / (double) ZSIZE(volume());
-			applyGeometryReverseGridding(volume(), B, Maux, kb, IS_NOT_INV, WRAP, xdim, ydim, zdim);
-		    }
-                    else if (linear)
-                    {
-			volume().selfScaleToSize(zdim, ydim, xdim);
-                    }
-		    else
-		    {
-			volume().selfScaleToSizeBSpline(3, zdim, ydim, xdim);
-		    }
-                    volume.write(fn_out);
-                    // Not a Spider file ..............................................
+                        selfScaleToSize(LINEAR,image(),xdim, ydim);
+                    else
+                        selfScaleToSize(BSPLINE3,image(),xdim, ydim);
                 }
                 else
-                    std::cout << fn_in << " is not a SPIDER file\n";
-                SF_out.insert(fn_out);
+                {
+                    if (factor>0)
+                    {
+                        zdim=ZSIZE(image())*factor;
+                        ydim=YSIZE(image())*factor;
+                        xdim=XSIZE(image())*factor;
+                    }
+                    if (linear)
+                        selfScaleToSize(LINEAR,image(),xdim, ydim, zdim);
+                    else
+                        selfScaleToSize(BSPLINE3,image(),xdim, ydim, zdim);
+                }
+                image.write(fn_out);
+                SF_out.addObject();
+                SF_out.setValue(MDL_IMAGE,fn_out);
 
-                if (i++ % 25 == 0) progress_bar(i);
+                if (i++ % 25 == 0)
+                    progress_bar(i);
             }
-            progress_bar(SF.ImgNo());
+            progress_bar(SF.size());
 
-            SF_out.write((SF.name()).insert_before_extension(fn_oext));
+            SF_out.write((SF.getFilename()).insert_before_extension(fn_oext));
         }
     }
     catch (Xmipp_error XE)
@@ -263,9 +199,8 @@ void Usage()
     << "  [-ydim <new y dimension=new x dimension>]\n"
     << "  [-zdim <new z dimension=new x dimension>]\n"
     << "  [-factor <scale factor>]\n"
-    //<< "  [-gridding]       : Use reverse gridding for interpolation\n"
     << "  [-linear]         : Use bilinear/trilinear interpolation\n"
     << "  [-fourier]        : Use padding/windowing in Fourier Space (only for 2D)\n"
     << "  [-thr n]          : Use n threads, only implemented for fourier interpolation\n";
-    
+
 }

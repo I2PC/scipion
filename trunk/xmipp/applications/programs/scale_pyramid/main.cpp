@@ -25,6 +25,7 @@
 
 #include <data/progs.h>
 #include <data/args.h>
+#include <data/transformations.h>
 
 class Pyramid_parameters: public Prog_parameters
 {
@@ -37,14 +38,18 @@ public:
     {
         Prog_parameters::read(argc, argv);
         levels = textToInteger(getParameter(argc, argv, "-levels", "1"));
-        if (checkParameter(argc, argv, "-expand")) operation = Expand;
-        else if (checkParameter(argc, argv, "-reduce")) operation = Reduce;
-        else                                       operation = None;
+        if (checkParameter(argc, argv, "-expand"))
+            operation = Expand;
+        else if (checkParameter(argc, argv, "-reduce"))
+            operation = Reduce;
+        else
+            operation = None;
     }
 
     void show()
     {
-        if (quiet) return;
+        if (quiet)
+            return;
         Prog_parameters::show();
         std::cout << "Operation: ";
         switch (operation)
@@ -70,22 +75,28 @@ public:
     }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Pyramid_parameters *eprm = (Pyramid_parameters *) prm;
     float Xoff, Yoff;
-    img.get_originOffsets(Xoff, Yoff);
-    Matrix2D<double> result;
+    if (img().getDim()==2)
+    {
+        Xoff=img.Xoff();
+        Yoff=img.Yoff();
+    }
+    MultidimArray<double> result;
     float scale_factor = (float)(pow(2.0, eprm->levels));
     switch (eprm->operation)
     {
     case Pyramid_parameters::Expand:
-        img().pyramidExpand(result, eprm->levels);
-        img.set_originOffsets(Xoff*scale_factor, Yoff*scale_factor);
+        pyramidExpand(BSPLINE3, result, img(), eprm->levels);
+        if (img().getDim()==2)
+            img.setShifts(Xoff*scale_factor, Yoff*scale_factor);
         break;
     case Pyramid_parameters::Reduce:
-        img().pyramidReduce(result, eprm->levels);
-        img.set_originOffsets(Xoff / scale_factor, Yoff / scale_factor);
+        pyramidReduce(BSPLINE3, result, img(), eprm->levels);
+        if (img().getDim()==2)
+            img.setShifts(Xoff/scale_factor, Yoff/scale_factor);
         break;
     }
     img() = result;
@@ -93,25 +104,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    Pyramid_parameters *eprm = (Pyramid_parameters *) prm;
-    Matrix3D<double> result;
-    switch (eprm->operation)
-    {
-    case Pyramid_parameters::Expand:
-        vol().pyramidExpand(result, eprm->levels);
-        break;
-    case Pyramid_parameters::Reduce:
-        vol().pyramidReduce(result, eprm->levels);
-        break;
-    }
-    vol() = result;
-    return true;
-}
-
 int main(int argc, char **argv)
 {
     Pyramid_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
