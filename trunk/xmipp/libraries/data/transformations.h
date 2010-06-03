@@ -721,6 +721,7 @@ void selfApplyGeometry(int SplineDegree,
                        bool wrap, T outside = 0)
 {
     MultidimArray<T> aux = V1;
+    V1.initZeros();
     applyGeometry(SplineDegree, V1, aux, A, inv, wrap, outside);
 }
 
