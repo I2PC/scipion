@@ -25,7 +25,6 @@
 
 #include <data/progs.h>
 #include <data/args.h>
-#include <data/transformations.h>
 
 class Pyramid_parameters: public Prog_parameters
 {
@@ -38,18 +37,14 @@ public:
     {
         Prog_parameters::read(argc, argv);
         levels = textToInteger(getParameter(argc, argv, "-levels", "1"));
-        if (checkParameter(argc, argv, "-expand"))
-            operation = Expand;
-        else if (checkParameter(argc, argv, "-reduce"))
-            operation = Reduce;
-        else
-            operation = None;
+        if (checkParameter(argc, argv, "-expand")) operation = Expand;
+        else if (checkParameter(argc, argv, "-reduce")) operation = Reduce;
+        else                                       operation = None;
     }
 
     void show()
     {
-        if (quiet)
-            return;
+        if (quiet) return;
         Prog_parameters::show();
         std::cout << "Operation: ";
         switch (operation)
@@ -78,25 +73,23 @@ public:
 bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Pyramid_parameters *eprm = (Pyramid_parameters *) prm;
-    float Xoff, Yoff;
-    if (img().getDim()==2)
-    {
-        Xoff=img.Xoff();
-        Yoff=img.Yoff();
-    }
+    float Xoff, Yoff, Zoff;
+    Xoff=img.Xoff(); Yoff=img.Yoff(); Zoff=img.Zoff();
     MultidimArray<double> result;
     float scale_factor = (float)(pow(2.0, eprm->levels));
     switch (eprm->operation)
     {
     case Pyramid_parameters::Expand:
-        pyramidExpand(BSPLINE3, result, img(), eprm->levels);
-        if (img().getDim()==2)
-            img.setShifts(Xoff*scale_factor, Yoff*scale_factor);
+        pyramidExpand(3,result,img(),eprm->levels);
+        img.setXoff(Xoff*scale_factor);
+        img.setYoff(Yoff*scale_factor);
+        img.setZoff(Zoff*scale_factor);
         break;
     case Pyramid_parameters::Reduce:
-        pyramidReduce(BSPLINE3, result, img(), eprm->levels);
-        if (img().getDim()==2)
-            img.setShifts(Xoff/scale_factor, Yoff/scale_factor);
+        pyramidReduce(3,result,img(),eprm->levels);
+        img.setXoff(Xoff*scale_factor);
+        img.setYoff(Yoff*scale_factor);
+        img.setZoff(Zoff*scale_factor);
         break;
     }
     img() = result;
@@ -108,4 +101,5 @@ int main(int argc, char **argv)
 {
     Pyramid_parameters prm;
     SF_main(argc, argv, &prm, (void*)&process_img);
+    return 0;
 }
