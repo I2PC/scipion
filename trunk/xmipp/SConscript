@@ -391,6 +391,7 @@ ReconsSources = [
     'align2d.cpp',
     'align_tilt_pairs.cpp',
     'analyze_cluster.cpp',
+    'angular_align_dual_tilt_series.cpp',
     'angular_assign_for_tilt_series.cpp',
     'angular_assign_for_tomogram.cpp',
     'angular_commonline.cpp',
@@ -515,6 +516,7 @@ AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('align2d', ['XmippRecons'])
 AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('align_volumes')
+AddXmippProgram('angular_align_dual_tilt_series', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
 AddXmippProgram('angular_class_average', ['XmippRecons'])
@@ -643,7 +645,7 @@ AddXmippProgram('statistics')
 AddXmippProgram('symmetrize', ['XmippRecons'])
 #AddXmippProgram('threshold')
 #AddXmippProgram('try_symmetry')
-AddXmippProgram('test_sql')
+#AddXmippProgram('test_sql')
 ##AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('window')
