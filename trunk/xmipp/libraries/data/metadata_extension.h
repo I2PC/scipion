@@ -36,12 +36,14 @@ bool setValueSwig(MetaData &md,  MDLabel label,  T &valueIn, long int objectID =
 {
     md.setValue(label, valueIn, objectID);
 }
+
 template<class T>
 bool getValueSwig(const MetaData &md, const MDLabel label, T &valueOut, long int objectID = -1)
 {
     md.getValue(label, valueOut, objectID);
 }
 
+bool testingFunction(const MetaData &md);
 
 
 

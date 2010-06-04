@@ -98,3 +98,8 @@ void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot)
     md.selectSplitPart(aux, size, rank);
 }
 
+bool testingFunction(const MetaData &md)
+{
+
+    }
+

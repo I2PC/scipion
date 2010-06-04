@@ -454,6 +454,29 @@ IsBigEndian = _XmippData.IsBigEndian
 IsLittleEndian = _XmippData.IsLittleEndian
 divide_equally = _XmippData.divide_equally
 divide_equally_group = _XmippData.divide_equally_group
+class FileNameP(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, FileNameP, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, FileNameP, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        this = _XmippData.new_FileNameP(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _XmippData.delete_FileNameP
+    __del__ = lambda self : None;
+    def assign(*args): return _XmippData.FileNameP_assign(*args)
+    def value(*args): return _XmippData.FileNameP_value(*args)
+    def cast(*args): return _XmippData.FileNameP_cast(*args)
+    __swig_getmethods__["frompointer"] = lambda x: _XmippData.FileNameP_frompointer
+    if _newclass:frompointer = staticmethod(_XmippData.FileNameP_frompointer)
+FileNameP_swigregister = _XmippData.FileNameP_swigregister
+FileNameP_swigregister(FileNameP)
+wait_until_stable_size = _XmippData.wait_until_stable_size
+create_empty_file = _XmippData.create_empty_file
+FileNameP_frompointer = _XmippData.FileNameP_frompointer
+
 checkAngle = _XmippData.checkAngle
 CPPSQLITE_ERROR = _XmippData.CPPSQLITE_ERROR
 class CppSQLite3Table(_object):
@@ -481,8 +504,6 @@ class CppSQLite3Table(_object):
     def finalize(*args): return _XmippData.CppSQLite3Table_finalize(*args)
 CppSQLite3Table_swigregister = _XmippData.CppSQLite3Table_swigregister
 CppSQLite3Table_swigregister(CppSQLite3Table)
-wait_until_stable_size = _XmippData.wait_until_stable_size
-create_empty_file = _XmippData.create_empty_file
 
 class CppSQLite3DB(_object):
     __swig_setmethods__ = {}
@@ -537,6 +558,7 @@ class MetaData(_object):
     def getActiveLabels(*args): return _XmippData.MetaData_getActiveLabels(*args)
     def getActiveObject(*args): return _XmippData.MetaData_getActiveObject(*args)
     def MaxStringLength(*args): return _XmippData.MetaData_MaxStringLength(*args)
+    def setValues(*args): return _XmippData.MetaData_setValues(*args)
     def setValueFromStr(*args): return _XmippData.MetaData_setValueFromStr(*args)
     def getStrFromValue(*args): return _XmippData.MetaData_getStrFromValue(*args)
     def isEmpty(*args): return _XmippData.MetaData_isEmpty(*args)
@@ -587,6 +609,7 @@ KEEP_NEW = _XmippData.KEEP_NEW
 SUM = _XmippData.SUM
 getStatistics = _XmippData.getStatistics
 mpiSelectPart = _XmippData.mpiSelectPart
+testingFunction = _XmippData.testingFunction
 MDL_UNDEFINED = _XmippData.MDL_UNDEFINED
 MDL_FIRST_LABEL = _XmippData.MDL_FIRST_LABEL
 MDL_OBJID = _XmippData.MDL_OBJID

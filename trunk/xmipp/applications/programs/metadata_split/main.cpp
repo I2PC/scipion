@@ -31,8 +31,11 @@ void Usage();
 int main(int argc, char **argv)
 {
     FileName fn_in, fn_out, fn_root;
-    std::string sortLabel;
-    MetaData  SFin, SFout, SFtmp, SFtmp2;
+    std::string sortLabelStr;
+    MDLabel sortLabel;
+    MetaData  SFin;
+    MetaData *SFtmp, *SFtmp2;
+    std::vector<MetaData> mdVector;
     bool     dont_randomize;
     bool     dont_sort;
     int N;
@@ -44,8 +47,13 @@ int main(int argc, char **argv)
         fn_root = getParameter(argc, argv, "-o", "");
         dont_randomize = checkParameter(argc, argv, "-dont_randomize");
         dont_sort      = checkParameter(argc, argv, "-dont_sort");
+
+        sortLabelStr = "objId"; //if not sort, by default is objId
         if(!dont_sort)
-            sortLabel = getParameter(argc, argv, "-l","image");
+            sortLabelStr = getParameter(argc, argv, "-l","objId");
+        sortLabel = MDL::str2Label(sortLabelStr);
+        if (sortLabel == MDL_UNDEFINED)
+            REPORT_ERROR(-1, (std::string)"Unrecognized label '" + sortLabelStr + "'");
         if (fn_root == "")
             fn_root = fn_in.without_extension();
         SFin.read(fn_in);
@@ -60,41 +68,34 @@ int main(int argc, char **argv)
     {
         if (!dont_randomize)
         {
-        	std::cerr << "randomizing" << std::endl;
-            SFtmp.randomize(SFin);
-            SFtmp.write("test.xmd");
+        	SFtmp = new MetaData();
+            SFtmp->randomize(SFin);
         }
         else
-            SFtmp = SFin;
+            SFtmp = &SFin;
 
-        int Num_images = (int)SFtmp.size();
-        int Num_groups = N;
-        if (Num_groups > Num_images)
-            Num_groups = Num_images;
-        int imagesGroup = ceil((double)Num_images / Num_groups);
-
-
-        for (int i = 0;i < Num_groups;i++)
+        int Num_images = (int)SFtmp->size();
+        int Num_groups = XMIPP_MIN(N, Num_images);
+        SFtmp->split(Num_groups, mdVector); //Split MD in Num_groups
+        //Write splitted groups to disk
+        for (int i = 0; i < Num_groups; i++)
         {
-            SFout.clear();
-            SFout.fillWithNextNObjects(SFtmp,i*imagesGroup,imagesGroup);
-
-            if (!dont_sort)
-            {
-            	std::cerr << "Sorting metada set: "<< i  <<std::endl;
-                SFtmp2.sort(SFout,MDL::str2Label(sortLabel));
-                SFout  = SFtmp2;
-            }
             fn_out = fn_root;
-            if (N!=1)
+            if (Num_groups != 1 )
             {
-                std::string num = "_" + integerToString(i + 1);
-                fn_out +=  num;
+                //std::string num = "_" + integerToString(i + 1);
+                fn_out += "_" + integerToString(i + 1);
             }
             fn_out += ".xmd";
-            SFout.write(fn_out);
+            if(!dont_sort)
+                SFtmp->sort(mdVector[i], sortLabel);
+            else
+                SFtmp = &(mdVector[i]);
+            SFtmp->write(fn_out);
         }
 
+        if (!dont_randomize) //free memory of SFtmp
+            delete SFtmp;
     }
     catch (Xmipp_error)
     {

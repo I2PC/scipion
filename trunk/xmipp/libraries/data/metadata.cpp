@@ -89,7 +89,8 @@ void MetaData::copyMetadata(const MetaData &md)
         return;
     init(&(md.activeLabels));
     copyInfo(md);
-    md.myMDSql->copyObjects(this);
+    if (!md.activeLabels.empty())
+        md.myMDSql->copyObjects(this);
 }
 
 bool MetaData::_setValue(long int objId, const MDValue &mdValueIn)
@@ -866,7 +867,7 @@ void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLa
 {
     long int mdSize = size();
     if (n > mdSize)
-        REPORT_ERROR(-55, "split: Couldn't split a metadata in more parts than its size");
+        REPORT_ERROR(-55, "MetaData::split: Couldn't split a metadata in more parts than its size");
 
     results.clear();
     results.resize(n);
@@ -883,9 +884,12 @@ void MetaData::_selectSplitPart(const MetaData &mdIn,
 {
     int first, last, n_images;
     n_images = divide_equally(mdSize, n, part, first, last);
+    int s = activeLabels.size();
     init(&(mdIn.activeLabels));
+    s = activeLabels.size();
     copyInfo(mdIn);
-    mdIn,myMDSql->copyObjects(this, NULL, sortLabel, n_images, first);
+    s = activeLabels.size();
+    mdIn.myMDSql->copyObjects(this, NULL, sortLabel, n_images, first);
 }
 
 void MetaData::selectSplitPart(const MetaData &mdIn, int n, int part, const MDLabel sortLabel)

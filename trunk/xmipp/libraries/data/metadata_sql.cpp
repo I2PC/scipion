@@ -495,6 +495,7 @@ bool MDSql::execSingleStmt(sqlite3_stmt * &stmt, const std::stringstream *ss)
             std::cerr << "   " << ss->str() << std::endl;
         std::cerr <<"    code: " << rc << " error: " << sqlite3_errmsg(db) << std::endl;
         r = false;
+        exit(1);
     }
     return r;
 }
