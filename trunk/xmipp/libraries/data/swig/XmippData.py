@@ -587,7 +587,7 @@ class MetaData(_object):
     def countObjects(*args): return _XmippData.MetaData_countObjects(*args)
     def containsObject(*args): return _XmippData.MetaData_containsObject(*args)
     def gotoFirstObject(*args): return _XmippData.MetaData_gotoFirstObject(*args)
-    def MetaDataWrite(*args): return _XmippData.MetaData_MetaDataWrite(*args)
+    def write(*args): return _XmippData.MetaData_write(*args)
     def read(*args): return _XmippData.MetaData_read(*args)
     def aggregate(*args): return _XmippData.MetaData_aggregate(*args)
     def unionDistinct(*args): return _XmippData.MetaData_unionDistinct(*args)
@@ -608,6 +608,7 @@ KEEP_OLD = _XmippData.KEEP_OLD
 KEEP_NEW = _XmippData.KEEP_NEW
 SUM = _XmippData.SUM
 getStatistics = _XmippData.getStatistics
+ImgSize = _XmippData.ImgSize
 mpiSelectPart = _XmippData.mpiSelectPart
 testingFunction = _XmippData.testingFunction
 MDL_UNDEFINED = _XmippData.MDL_UNDEFINED
@@ -780,7 +781,7 @@ class MDL(_object):
     __del__ = lambda self : None;
 MDL_swigregister = _XmippData.MDL_swigregister
 MDL_swigregister(MDL)
-ImgSize = _XmippData.ImgSize
+SingleImgSize = _XmippData.SingleImgSize
 MDL_str2Label = _XmippData.MDL_str2Label
 MDL_label2Str = _XmippData.MDL_label2Str
 MDL_label2SqlColumn = _XmippData.MDL_label2SqlColumn

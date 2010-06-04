@@ -28,6 +28,8 @@ class std::string {};
 %ignore Marsaglia;
 %include "../funcs.h"
 
+%pointer_class(FileName, FileNameP);
+
 PRINT(FileName)
 //%typemap(in) const FileName& {
 //    $1 = &(FileName(PyString_AsString($input)));
@@ -74,7 +76,7 @@ print fn
 
 # A function with a FileName as argument
 print XmippData.exists(XmippData.FileName("docfile.txt"))
-# La forma de construir un FileName es muy incómoda
+# La forma de construir un FileName es muy incï¿½moda
 
 # Tabsinc
 t=XmippData.Tabsinc(0.01,10)

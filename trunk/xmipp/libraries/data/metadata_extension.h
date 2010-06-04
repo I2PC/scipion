@@ -20,6 +20,10 @@ void getStatistics(MetaData &MT, Image<double> & _ave, Image<double> & _sd, doub
 
 static int null_object=-1;
 
+void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim=null_object,
+             int &Zdim=null_object,
+             int &Ndim=null_object);
+
 void ImgSize(const MetaData &MD, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              int &Ndim=null_object);
@@ -27,6 +31,8 @@ void ImgSize(const MetaData &MD, int &Xdim, int &Ydim=null_object,
 void ImgSize(const FileName &filename, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              int &Ndim=null_object);
+
+
 
 void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot);
 

@@ -654,7 +654,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDValue>& columnValues, b
     while (!is.eof() && !is.fail())
     {
         //Move until the ';' or the first alphanumeric character
-        while (is.peek() != ';' && !isalnum(is.peek()) && !is.eof())
+        while (is.peek() != ';' && isspace(is.peek()) && !is.eof())
             is.ignore(1);
         if (!is.eof())
 
@@ -664,7 +664,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDValue>& columnValues, b
                 getline(is, line);
                 trim(line);
             }
-            else if (isalnum(is.peek()))
+            else if (!isspace(is.peek()))
             {
                 objId = addObject();
                 if (line != "")
@@ -679,7 +679,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDValue>& columnValues, b
                     is >> columnValues[i];
                     if (is.fail())
                     {
-                        REPORT_ERROR(-44, "MetaData::read2: Error parsing data column");
+                        REPORT_ERROR(-44, "MetaData::read: Error parsing data column");
                     }
                     else
                         if (columnValues[i].label != MDL_UNDEFINED)

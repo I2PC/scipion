@@ -72,15 +72,21 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     _sd().selfSQRT();
 }
 
+void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
+{
+    Image<double> img;
+    img.read(filename, false);
+    img.getDimensions(Xdim, Ydim, Zdim, Ndim);
+}
+
 void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
 {
     if (!MD.isEmpty())
     {
         FileName fn_img;
-        Image<double> img;
         MD.getValue(MDL_IMAGE, fn_img);
-        img.read(fn_img, false);
-        img.getDimensions(Xdim, Ydim, Zdim, Ndim);
+        SingleImgSize(fn_img, Xdim, Ydim, Zdim, Ndim);
+
     }
     else
         REPORT_ERROR(-1, "Can not read image size from empty metadata");

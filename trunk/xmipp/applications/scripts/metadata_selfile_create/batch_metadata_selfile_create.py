@@ -24,54 +24,81 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 """
-import os, glob, sys
+import os, glob, sys, optparse
+
+
+   
+def command_line_options():
+      """ add command line options here"""
+      _usage="""usage: %prog [options]
+Example:
+   xmipp_metadata_selfile_create -p "Images/*xmp" -o all_images.sel -isstack"""
+      parser = optparse.OptionParser(_usage)
+      parser.add_option("-p", "--pattern",  dest="pattern", type="string",
+            help="The pattern to match")        
+      parser.add_option("-o", "--outMetaDataFile", dest="outMetaDataFile",
+            default="", type="string",
+            help="MetaData output file name")
+      parser.add_option("-s", "--isstack",
+                  action="store_true", dest="isStack", default=False,
+                  help="Check if the images are stacks")
+            
+      (options, args)      = parser.parse_args()
+      if(len(options.outMetaDataFile)<1):
+          parser.print_help()
+          exit()
+      
+      print  '**'
+      print 'Files pattern:        ', options.pattern
+      print 'Output Metadata File: ', options.outMetaDataFile
+      print 'Is stack:             ', options.isStack
+      print  '**'
+    
+      return(options.pattern, 
+             options.outMetaDataFile,
+             options.isStack)
+
+
+
 scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
 sys.path.append(scriptdir) # add default search path
 import XmippData
-outFile = XmippData.FileName()
 inFile = XmippData.FileName()
 
-if len(sys.argv) == 1:
-   print 'Usage: selfile_create "pattern"  metadataFile'
-   sys.exit()
-elif len(sys.argv) == 2:
-   outFile = '/dev/stdout'
-elif len(sys.argv) == 3:
-   outFile = sys.argv[2]
-else:
-   print 'Usage   : xmipp_selfile_create "pattern"  metadataFile'
-   print 'Example1: xmipp_selfile_create "Images/*xmp"    all_images.sel'
-   print 'Example2: xmipp_selfile_create "Images/*xmp"  > all_images.sel'
-   sys.exit()
-
+pattern, outFile, isStack = command_line_options();
 
 mD = XmippData.MetaData()
-print "after instanciatin"
-sIn = XmippData.stringP()
-sOut = XmippData.stringP()
+sIn = XmippData.FileNameP()
+outFileName = XmippData.FileName(outFile);
+sOut = XmippData.FileNameP()
+sOut.assign(outFileName)
+
 ii = XmippData.intP()
-files = glob.glob(sys.argv[1])
+files = glob.glob(pattern)
 files.sort()
 ii.assign(1)
 x = XmippData.intP()
 n = XmippData.intP()
-nSize = 100
 
+nSize = 1
 for file in files:
-    sIn.assign(file)
+    fileName = XmippData.FileName(file)
+    sIn.assign(fileName)
     counter = 0
-    inFile.compose(-1,sIn)
-    XmippData.ImgSize(inFile, x, x, x, n)
-    nSize = n.value()
+    if isStack:
+        XmippData.SingleImgSize(sIn, x, x, x, n)
+        nSize = n.value()
     if nSize != 1:
         for jj in range (n.value()):
             mD.addObject()
             inFile.compose(counter, sIn)
-            XmippData.setValueString(mD, XmippData.MDL_IMAGE, inFile, -1)
-            XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii, -1)
+            XmippData.setValueString(mD, XmippData.MDL_IMAGE, inFile)
+            XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii)
             counter = counter + 1
     else:
         mD.addObject()
-        XmippData.setValueString(mD, XmippData.MDL_IMAGE, sIn, -1)
-        XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii, -1)
-mD.write(outFile)
+        XmippData.setValueString(mD, XmippData.MDL_IMAGE, sIn)
+        XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii)
+        
+
+mD.write(sOut)

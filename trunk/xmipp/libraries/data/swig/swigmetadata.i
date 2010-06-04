@@ -5,7 +5,16 @@
 #include "../metadata_label.h"
 %}
 %ignore MetaData::write(std::ostream &);
-%rename(MetaDataWrite) MetaData::write(FileName const &);
+%ignore ImgSize(MetaData const &,int &,int &,int &,int &);
+%ignore ImgSize(MetaData const &,int &,int &,int &);
+%ignore ImgSize(MetaData const &,int &,int &);
+%ignore ImgSize(MetaData const &,int &);
+//%ignore ImgSize(FileName const &,int &,int &,int &,int &);
+%ignore ImgSize(FileName const &,int &,int &,int &);
+%ignore ImgSize(FileName const &,int &,int &);
+%ignore ImgSize(FileName const &,int &);
+
+//%rename(MetaDataWrite) MetaData::write(FileName const &);
 
 
 %include ../metadata.h
