@@ -366,6 +366,7 @@ public:
             int ii;
             bool bb;
             std::vector<double> vv;
+            //FIXME: This could be done better
             for (strIt = activeLabelsPtr->begin(); strIt != activeLabelsPtr->end(); strIt++)
             {
                 switch (MDL::labelType(*strIt))

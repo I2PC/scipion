@@ -161,10 +161,12 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     minPixel = _minGray;
     maxPixel = _maxGray;
     int i = 0;
+    int enabled;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
     	SF.getValue(MDL_IMAGE, imgnames[i]);
-    	SF.getValue(MDL_ENABLED, selstatus[i]);
+    	SF.getValue(MDL_ENABLED, enabled);
+    	selstatus[i] = enabled == 1;
         i++;
     }
 }
@@ -443,14 +445,7 @@ void ShowSel::saveSelFileDiscarded()
         }
         else
         {
-            if (selstatus[i])
-			{
-                SFnew.setValue(MDL_ENABLED,1);
-			}
-            else
-            {
-                SFnew.setValue(MDL_ENABLED,-1);
-            }
+            SFnew.setValue(MDL_ENABLED, selstatus[i] ? 1 : -1);
         }
     }
     if (saveFile) writeSelFile(SFnew);

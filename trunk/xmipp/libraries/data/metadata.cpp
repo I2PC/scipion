@@ -90,7 +90,10 @@ void MetaData::copyMetadata(const MetaData &md)
     init(&(md.activeLabels));
     copyInfo(md);
     if (!md.activeLabels.empty())
+    {
         md.myMDSql->copyObjects(this);
+        firstObject(); //set first object as active
+    }
 }
 
 bool MetaData::_setValue(long int objId, const MDValue &mdValueIn)
@@ -337,6 +340,7 @@ void MetaData::importObjects(const MetaData &md, const std::vector<long int> &ob
     int size = objectsToAdd.size();
     for (int i = 0; i < size; i++)
         importObject(md, objectsToAdd[i]);
+    firstObject();
 }
 
 void MetaData::importObjects(const MetaData &md, const MDQuery &query, bool doClear)
@@ -354,11 +358,13 @@ void MetaData::importObjects(const MetaData &md, const MDQuery &query, bool doCl
             addLabel(md.activeLabels[i]);
     }
     md.myMDSql->copyObjects(this, &query);
+    firstObject();
 }
 
 bool MetaData::removeObject(long int objectId)
 {
     int removed = removeObjects(MDValueEqual(MDL_OBJID, objectId));
+    firstObject();
     return (removed > 0);
 }
 
@@ -367,6 +373,7 @@ void MetaData::removeObjects(const std::vector<long int> &toRemove)
     int size = toRemove.size();
     for (int i = 0; i < size; i++)
         removeObject(toRemove[i]);
+    firstObject();
 }
 
 int MetaData::removeObjects(const MDQuery &query)
@@ -501,7 +508,7 @@ void MetaData::findObjects(std::vector<long int> &objectsOut, int limit)
     myMDSql->selectObjects(objectsOut, limit);
 }
 
-int MetaData::countObjects(MDQuery query)
+int MetaData::countObjects(const MDQuery &query)
 {
     std::vector<long int> objects;
     findObjects(objects, query);
@@ -513,14 +520,14 @@ bool MetaData::containsObject(long int objectId)
     return containsObject(MDValueEqual(MDL_OBJID, objectId));
 }
 
-bool MetaData::containsObject(MDQuery query)
+bool MetaData::containsObject(const MDQuery &query)
 {
     std::vector<long int> objects;
     findObjects(objects, query, 1);
     return objects.size() > 0;
 }
 
-long int MetaData::gotoFirstObject(MDQuery query)
+long int MetaData::gotoFirstObject(const MDQuery &query)
 {
     std::vector<long int> objects;
     findObjects(objects, query, 1);
@@ -778,7 +785,7 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
         _readRows(is, columnValues, useCommentAsImage);
     else
         _readRowFormat(is);
-
+    firstObject();
 }
 
 void MetaData::merge(const FileName &fn)
@@ -799,6 +806,7 @@ void MetaData::aggregate(const MetaData &mdIn, AggregateOperation op,
     std::vector<AggregateOperation> ops(1);
     ops[0] = op;
     mdIn.myMDSql->aggregateMd(this, ops, operateLabel);
+    firstObject();
 }
 
 void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
@@ -808,6 +816,7 @@ void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperat
         REPORT_ERROR(-55, "Labels vectors should contain one element more than operations");
     init(&resultLabels);
     mdIn.myMDSql->aggregateMd(this, ops, operateLabel);
+    firstObject();
 }
 
 
@@ -821,6 +830,7 @@ void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, int opera
         addLabel(mdIn.activeLabels[i]);
 
     mdIn.myMDSql->setOperate(this, label, operation);
+    firstObject();
 }
 
 void MetaData::unionDistinct(const MetaData &mdIn, const MDLabel label)
@@ -836,6 +846,7 @@ void MetaData::unionAll(const MetaData &mdIn)
     for (int i = 0; i < mdIn.activeLabels.size(); i++)
         addLabel(mdIn.activeLabels[i]);
     mdIn.myMDSql->copyObjects(this);
+    firstObject();
 }
 
 
@@ -861,6 +872,7 @@ void MetaData::sort(MetaData &MDin, const MDLabel sortLabel)
     init(&(MDin.activeLabels));
     copyInfo(MDin);
     MDin.myMDSql->copyObjects(this, NULL, sortLabel);
+    firstObject();
 }
 
 void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLabel)
@@ -890,6 +902,7 @@ void MetaData::_selectSplitPart(const MetaData &mdIn,
     copyInfo(mdIn);
     s = activeLabels.size();
     mdIn.myMDSql->copyObjects(this, NULL, sortLabel, n_images, first);
+    firstObject();
 }
 
 void MetaData::selectSplitPart(const MetaData &mdIn, int n, int part, const MDLabel sortLabel)
@@ -912,5 +925,6 @@ void MetaData::selectPart (const MetaData &mdIn, long int startPosition, long in
     init(&(mdIn.activeLabels));
     copyInfo(mdIn);
     mdIn.myMDSql->copyObjects(this, NULL, sortLabel, numberOfObjects, startPosition);
+    firstObject();
 }
 

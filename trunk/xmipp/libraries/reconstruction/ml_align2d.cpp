@@ -473,8 +473,8 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
         model.Iref[refno] = img;
         // Default start is all equal model fractions
         model.alpha_k[refno] = (double) 1 / model.n_ref;
-        model.Iref[refno].setWeight(model.alpha_k[refno]
-                                    * (double) nr_images_global);
+        double w = model.alpha_k[refno] * (double) nr_images_global;
+        model.Iref[refno].setWeight(w);
         // Default start is half-half mirrored images
         model.mirror_fraction[refno] = (do_mirror ? 0.5 : 0.);
         // Already initialize the other groups Irefs with correct headers

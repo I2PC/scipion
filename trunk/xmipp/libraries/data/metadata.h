@@ -420,7 +420,7 @@ public:
     /**Count all objects with pairs <label, value>
      * @ingroup MetaDataSearch
      */
-    int countObjects(MDQuery query);
+    int countObjects(const MDQuery &query);
 
     /** Find if the object with this id is present in the metadata
      * @ingroup MetaDataSearch
@@ -430,13 +430,13 @@ public:
     /**Check if exists at least one object with pair <label, value>
      * @ingroup MetaDataSearch
      */
-    bool containsObject(MDQuery query);
+    bool containsObject(const MDQuery &query);
 
     /**Move active object to the first
      * object with pair <label, value in range> if exists
      * @ingroup MetaDataSearch
      */
-    long int gotoFirstObject(MDQuery query);
+    long int gotoFirstObject(const MDQuery &query);
 
 
     ///@defgroup MetaDataIO functions related to the I/O of metadata
