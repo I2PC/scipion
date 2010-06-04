@@ -35,6 +35,7 @@
 #include "strings.h"
 #include "metadata_sql.h"
 #include <time.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <sstream>
 
@@ -291,6 +292,7 @@ public:
         _setValue(objectId, MDValue(label, valueIn));
     }
 
+    bool setValues(int n, ...);
     // Set a new pair/value for an specified object. If no objectId is given, that
     // pointed by the class iterator is used
     bool setValueFromStr(const MDLabel label, const std::string &value, long int objectId = -1);
@@ -504,8 +506,6 @@ public:
      * This function reads another metadata and makes a union to this one
      */
     void merge(const FileName &fn);
-
-
 
     /** intersects two metadata objects,
      *@ingroup SetOperations
