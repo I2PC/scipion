@@ -231,6 +231,40 @@ int MetaData::MaxStringLength(const MDLabel thisLabel) const
     return myMDSql->columnMaxLength(thisLabel);
 }
 
+bool MetaData::setValues(int n, ...)
+{
+    va_list params;
+    MDLabel label;
+    std::vector<MDValue> values;
+
+    va_start(params, n);
+    for (int i = 0; i < n; i++)
+    {
+        label = va_arg(params, MDLabel);
+        switch (MDL::labelType(label))
+        {
+        case LABEL_BOOL: //bools are int in sqlite3
+            values.push_back(MDValue(label, va_arg(params, bool)));
+            break;
+        case LABEL_INT:
+            values.push_back(MDValue(label, va_arg(params, int)));
+            break;
+        case LABEL_LONG:
+            values.push_back(MDValue(label, va_arg(params, long int)));
+            break;
+        case LABEL_DOUBLE:
+            values.push_back(MDValue(label, va_arg(params, double)));
+            break;
+        case LABEL_STRING:
+            values.push_back(MDValue(label, va_arg(params, std::string)));
+            break;
+
+        }
+        _setValue(activeObjId, values[i]);
+    }
+    va_end(params);
+}
+
 bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, long int objectId)
 {
     addLabel(label);
@@ -693,11 +727,11 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
 
     _clear();
     myMDSql->createMd();
+    is.seekg(0, std::ios::beg);//reset the stream position to the beginning to start parsing
 
     if (pos = line.find("XMIPP_3 *") != std::string::npos)
     {
         //We have a new XMIPP MetaData format here, parse header
-        is.seekg(0, std::ios::beg);
         is.ignore(256, '*') >> token; //Ignore all until first '*' and get md format in token
         isColumnFormat = token != "row_format";
         is.ignore(256, '*') >> token;
@@ -719,7 +753,6 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
     }
     else if (pos = line.find("Headerinfo columns:") != std::string::npos)
     {
-        is.seekg(0, std::ios::beg);
         //This looks like an old DocFile, parse header
         std::cerr << "WARNING: ** You are using an old file format (DOCFILE) which is going "
         << "to be deprecated in next Xmipp release **" << std::endl;
