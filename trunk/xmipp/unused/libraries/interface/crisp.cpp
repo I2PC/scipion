@@ -44,20 +44,20 @@ void CrispVolume::read(const FileName &fn)
     if (strcmp(signature, "SH") != 0)
         REPORT_ERROR(1502, "CrispVolume::read: File " + fn + " is not a valid Crisp file");
 
-    FREAD(&flags, sizeof(short),  1, fp, true);
-    FREAD(&Adata, sizeof(short),  1, fp, true);
-    FREAD(&Bdata, sizeof(short),  1, fp, true);
-    FREAD(&Cdata, sizeof(short),  1, fp, true);
-    FREAD(&Afile, sizeof(short),  1, fp, true);
-    FREAD(&Bfile, sizeof(short),  1, fp, true);
-    FREAD(&Cfile, sizeof(short),  1, fp, true);
-    FREAD(&Asize, sizeof(short),  1, fp, true);
-    FREAD(&Bsize, sizeof(short),  1, fp, true);
-    FREAD(&Csize, sizeof(short),  1, fp, true);
-    FREAD(&Gamma, sizeof(short),  1, fp, true);
-    FREAD(dummy0, sizeof(short), 20, fp, true);
-    FREAD(Name,  sizeof(char) , 32, fp);
-    FREAD(dummy1, sizeof(short), 208, fp, true);
+    xmippFREAD(&flags, sizeof(short),  1, fp, true);
+    xmippFREAD(&Adata, sizeof(short),  1, fp, true);
+    xmippFREAD(&Bdata, sizeof(short),  1, fp, true);
+    xmippFREAD(&Cdata, sizeof(short),  1, fp, true);
+    xmippFREAD(&Afile, sizeof(short),  1, fp, true);
+    xmippFREAD(&Bfile, sizeof(short),  1, fp, true);
+    xmippFREAD(&Cfile, sizeof(short),  1, fp, true);
+    xmippFREAD(&Asize, sizeof(short),  1, fp, true);
+    xmippFREAD(&Bsize, sizeof(short),  1, fp, true);
+    xmippFREAD(&Csize, sizeof(short),  1, fp, true);
+    xmippFREAD(&Gamma, sizeof(short),  1, fp, true);
+    xmippFREAD(dummy0, sizeof(short), 20, fp, true);
+    xmippFREAD(Name,  sizeof(char) , 32, fp);
+    xmippFREAD(dummy1, sizeof(short), 208, fp, true);
 
     // Set correct image size readed from header
     V().resize(Cfile, Bfile, Afile);
@@ -68,7 +68,7 @@ void CrispVolume::read(const FileName &fn)
             for (unsigned x = 0; x < Afile; x++)
             {
                 short tmp;
-                FREAD(&tmp, sizeof(short), 1, fp, true);
+                xmippFREAD(&tmp, sizeof(short), 1, fp, true);
                 DIRECT_VOLVOXEL(V, z, y, x) = tmp;
             }
 

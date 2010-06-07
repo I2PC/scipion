@@ -1562,15 +1562,15 @@ void TimeMessage(const std::string &message);
  *
  * @code
  * float f;
- * FREAD(&f, sizeof(float), 1, fp, TRUE); // Reverse order
+ * xmippFREAD(&f, sizeof(float), 1, fp, TRUE); // Reverse order
  *
  * float f;
- * FREAD(&f, sizeof(float), 1, fp); // Normal order
+ * xmippFREAD(&f, sizeof(float), 1, fp); // Normal order
  * @endcode
  *
  * This function is not ported to Python.
  */
-size_t FREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
+size_t xmippFREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
              bool reverse = false);
 
 /** Write to file
@@ -1581,7 +1581,7 @@ size_t FREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
  *
  * This function is not ported to Python.
  */
-size_t FWRITE(const void* src,
+size_t xmippFWRITE(const void* src,
               size_t size,
               size_t nitems,
               FILE*& fp,

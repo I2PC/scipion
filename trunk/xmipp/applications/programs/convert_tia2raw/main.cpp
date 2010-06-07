@@ -202,19 +202,19 @@ void tia2raw(const FileName &fn_in, const FileName &fn_out, float dStddev)
     if ((fh_in = fopen(fn_in.c_str(), "r")) == NULL)
         REPORT_ERROR(6001, "Cannot open file (tia2raw).");
 
-    FREAD(&Header.endianess, sizeof(short int), 1, fh_in, false);
+    xmippFREAD(&Header.endianess, sizeof(short int), 1, fh_in, false);
 
     if (Header.endianess != 18761)
         REPORT_ERROR(6001, "Wrong endianess, I only work with little endian");
 
-    FREAD(&Header.SeriesID, sizeof(short int), 1, fh_in, false);
-    FREAD(&Header.SeriesVersion, sizeof(short int), 1, fh_in, false);
-    FREAD(&Header.DATA_TYPE_ID, sizeof(int), 1, fh_in, false);
-    FREAD(&Header.TagTypeID, sizeof(int), 1, fh_in, false);
-    FREAD(&Header.TotalNumberElements, sizeof(int), 1, fh_in, false);
-    FREAD(&Header.NUMBER_IMAGES, sizeof(int), 1, fh_in, false);
-    FREAD(&Header.OFFSET_ARRAY_OFFSET, sizeof(int), 1, fh_in, false);
-    FREAD(&Header.numberdimensions, sizeof(int), 1, fh_in, false);
+    xmippFREAD(&Header.SeriesID, sizeof(short int), 1, fh_in, false);
+    xmippFREAD(&Header.SeriesVersion, sizeof(short int), 1, fh_in, false);
+    xmippFREAD(&Header.DATA_TYPE_ID, sizeof(int), 1, fh_in, false);
+    xmippFREAD(&Header.TagTypeID, sizeof(int), 1, fh_in, false);
+    xmippFREAD(&Header.TotalNumberElements, sizeof(int), 1, fh_in, false);
+    xmippFREAD(&Header.NUMBER_IMAGES, sizeof(int), 1, fh_in, false);
+    xmippFREAD(&Header.OFFSET_ARRAY_OFFSET, sizeof(int), 1, fh_in, false);
+    xmippFREAD(&Header.numberdimensions, sizeof(int), 1, fh_in, false);
 
     if (Header.DATA_TYPE_ID != 16674)
         REPORT_ERROR(6001, "ERROR: This script only process images in real space");
@@ -223,7 +223,7 @@ void tia2raw(const FileName &fn_in, const FileName &fn_out, float dStddev)
 
     Header.pDATA_OFFSET = (int *) malloc(Header.NUMBER_IMAGES * sizeof(int));
 
-    FREAD(Header.pDATA_OFFSET, sizeof(int), Header.NUMBER_IMAGES, fh_in, false);
+    xmippFREAD(Header.pDATA_OFFSET, sizeof(int), Header.NUMBER_IMAGES, fh_in, false);
 
     fclose(fh_in);
 
@@ -263,15 +263,15 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
 
     ImDataHeader DataH;
 
-    FREAD(&DataH.CalibrationOffsetX, sizeof(double), 1, fh_in, false);
-    FREAD(&DataH.PIXEL_WIDTH, sizeof(double), 1, fh_in, false);
-    FREAD(&DataH.CalibrationElementX, sizeof(int), 1, fh_in, false);
-    FREAD(&DataH.CalibrationOffsetY, sizeof(double), 1, fh_in, false);
-    FREAD(&DataH.PIXEL_HEIGHT, sizeof(double), 1, fh_in, false);
-    FREAD(&DataH.CalibrationElementY, sizeof(int), 1, fh_in, false);
-    FREAD(&DataH.DATA_TYPE, sizeof(short int), 1, fh_in, false);
-    FREAD(&DataH.IMAGE_WIDTH, sizeof(int), 1, fh_in, false);
-    FREAD(&DataH.IMAGE_HEIGHT, sizeof(int), 1, fh_in, false);
+    xmippFREAD(&DataH.CalibrationOffsetX, sizeof(double), 1, fh_in, false);
+    xmippFREAD(&DataH.PIXEL_WIDTH, sizeof(double), 1, fh_in, false);
+    xmippFREAD(&DataH.CalibrationElementX, sizeof(int), 1, fh_in, false);
+    xmippFREAD(&DataH.CalibrationOffsetY, sizeof(double), 1, fh_in, false);
+    xmippFREAD(&DataH.PIXEL_HEIGHT, sizeof(double), 1, fh_in, false);
+    xmippFREAD(&DataH.CalibrationElementY, sizeof(int), 1, fh_in, false);
+    xmippFREAD(&DataH.DATA_TYPE, sizeof(short int), 1, fh_in, false);
+    xmippFREAD(&DataH.IMAGE_WIDTH, sizeof(int), 1, fh_in, false);
+    xmippFREAD(&DataH.IMAGE_HEIGHT, sizeof(int), 1, fh_in, false);
 
     setDataType(DataH);
 
@@ -290,7 +290,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
 
     while (valuesLeft > BUFFSIZE)
     {
-        FREAD(imBuffer, sizeof(short int), BUFFSIZE,fh_in, false);
+        xmippFREAD(imBuffer, sizeof(short int), BUFFSIZE,fh_in, false);
 
         for (int n=0;n<BUFFSIZE;n++)
         {
@@ -302,7 +302,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
     }
     if (valuesLeft > 0)
     {
-        FREAD(imBuffer, sizeof(short int), valuesLeft,fh_in, false);
+        xmippFREAD(imBuffer, sizeof(short int), valuesLeft,fh_in, false);
 
         for (int n=0;n<valuesLeft;n++)
         {
@@ -332,7 +332,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
 
     while (valuesLeft > BUFFSIZE)
     {
-        FREAD(imBuffer, sizeof(short int), BUFFSIZE,fh_in, false);
+        xmippFREAD(imBuffer, sizeof(short int), BUFFSIZE,fh_in, false);
 
         for (int n=0;n<BUFFSIZE;n++)
         {
@@ -342,13 +342,13 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
                 imBuffer[n]=high;
         }
 
-        FWRITE(imBuffer, sizeof(short int),BUFFSIZE, fh_out, false);
+        xmippFWRITE(imBuffer, sizeof(short int),BUFFSIZE, fh_out, false);
 
         valuesLeft -= BUFFSIZE;
     }
     if (valuesLeft > 0)
     {
-        FREAD(imBuffer, sizeof(short int), valuesLeft,fh_in, false);
+        xmippFREAD(imBuffer, sizeof(short int), valuesLeft,fh_in, false);
 
         for (int n=0;n<valuesLeft;n++)
         {
@@ -358,7 +358,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
                 imBuffer[n]=high;
         }
 
-        FWRITE(imBuffer, sizeof(short int),valuesLeft, fh_out, false);
+        xmippFWRITE(imBuffer, sizeof(short int),valuesLeft, fh_out, false);
     }
 
     if (fclose(fh_out) != 0)

@@ -174,16 +174,15 @@ void dm32raw(const FileName &fn_in,
     unsigned int  fileVersion, dummy, byteOrder, nrTags;
     FILE *fh_in, *fh_out;
 
-
     if ( ( fh_in = fopen(fn_in.c_str(), "r") ) == NULL )
         REPORT_ERROR(6001, "Cannot open file (dm32raw).");
 
     /* See
-    /* Header ============================================================== */
+       Header ============================================================== */
 
-    FREAD(&fileVersion,sizeof(int),1,fh_in,1);
-    FREAD(&dummy,sizeof(int) ,1,fh_in,1); //file length
-    FREAD(&byteOrder,sizeof(int)  ,1,fh_in,1); //byte order, 0 = big endian (Mac) order,1 = little endian (PC) order
+    xmippFREAD(&fileVersion,sizeof(int),1,fh_in, 1);
+    xmippFREAD(&dummy,sizeof(int),1,fh_in,1); //file length
+    xmippFREAD(&byteOrder,sizeof(int)  ,1,fh_in,1); //byte order, 0 = big endian (Mac) order,1 = little endian (PC) order
     bool bigEndian;
     if(byteOrder)
         bigEndian = false;
@@ -195,8 +194,8 @@ void dm32raw(const FileName &fn_in,
 
     /* Root tag directory ===================================================== */
 
-    FREAD(&dummy,1,2,fh_in,0); // skip sorted and open
-    FREAD(&nrTags,sizeof(int),1,fh_in,1); //  number of tags in root directory (12h = 18)
+    xmippFREAD(&dummy,1,2,fh_in,0); // skip sorted and open
+    xmippFREAD(&nrTags,sizeof(int),1,fh_in,1); //  number of tags in root directory (12h = 18)
 
     // printf( "fileVersion: %d\n", fileVersion);
     // printf( "littleEndian: %d\n", byteOrder);
@@ -265,18 +264,18 @@ void dm32raw(const FileName &fn_in,
 
             while (bytesLeft >= BUFFSIZE*4)
             {
-                FREAD(imBuffer, nBytes,BUFFSIZE, fh_in, bigEndian);
+                xmippFREAD(imBuffer, nBytes,BUFFSIZE, fh_in, bigEndian);
                 for( int l=0 ; l < BUFFSIZE; l++)
                     imFloatBuffer[l]=(float) imBuffer[l];
-                FWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, reverse_endian);
+                xmippFWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, reverse_endian);
                 bytesLeft = end_header - ftell(fh_in);
             }
             if (bytesLeft > 0)
             {
-                FREAD(imBuffer, nBytes,bytesLeft/nBytes, fh_in, bigEndian);
+                xmippFREAD(imBuffer, nBytes,bytesLeft/nBytes, fh_in, bigEndian);
                 for( int l=0 ; l < bytesLeft/nBytes; l++)
                     imFloatBuffer[l]=(float) imBuffer[l];
-                FWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/nBytes, fh_out, reverse_endian);
+                xmippFWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/nBytes, fh_out, reverse_endian);
             }
         }
         else
@@ -297,18 +296,18 @@ void dm32raw(const FileName &fn_in,
 
             while (bytesLeft >= BUFFSIZE*4)
             {
-                FREAD(imBuffer, nBytes,BUFFSIZE, fh_in, bigEndian);
+                xmippFREAD(imBuffer, nBytes,BUFFSIZE, fh_in, bigEndian);
                 for( int l=0 ; l < BUFFSIZE; l++)
                     imFloatBuffer[l]=(float) imBuffer[l];
-                FWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, reverse_endian);
+                xmippFWRITE((void *) imFloatBuffer, sizeof(int), BUFFSIZE, fh_out, reverse_endian);
                 bytesLeft = end_header - ftell(fh_in);
             }
             if (bytesLeft > 0)
             {
-                FREAD(imBuffer, nBytes,bytesLeft/nBytes, fh_in, bigEndian);
+                xmippFREAD(imBuffer, nBytes,bytesLeft/nBytes, fh_in, bigEndian);
                 for( int l=0 ; l < bytesLeft/nBytes; l++)
                     imFloatBuffer[l]=(float) imBuffer[l];
-                FWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/nBytes, fh_out, reverse_endian);
+                xmippFWRITE((void *) imFloatBuffer, sizeof(int), bytesLeft/nBytes, fh_out, reverse_endian);
             }
         }
 
@@ -358,13 +357,13 @@ int readTagDM3(FILE *fh_in,
     unsigned char cdTag;
     unsigned int  idTag;
     unsigned short int ltName;
-    FREAD(&cdTag,sizeof (unsigned char),1,fh_in,false); // Identification tag: 20 = tag dir,  21 = tag
-    FREAD(&ltName,sizeof(unsigned short int), 1,fh_in,true); // Length of the tag name
+    xmippFREAD(&cdTag,sizeof (unsigned char),1,fh_in,false); // Identification tag: 20 = tag dir,  21 = tag
+    xmippFREAD(&ltName,sizeof(unsigned short int), 1,fh_in,true); // Length of the tag name
     idTag = int(cdTag);
 
     char * tagName;
     tagName =  new char[ltName+1];
-    FREAD(tagName,ltName,1,fh_in,false); // Tag name
+    xmippFREAD(tagName,ltName,1,fh_in,false); // Tag name
     tagName[ltName] = '\0';
 
     for (int n=1;n<=depLevel;n++)
@@ -378,9 +377,9 @@ int readTagDM3(FILE *fh_in,
             //  printf("- Dir: %s\n",tagName);
             unsigned char dummy;
             unsigned int nTags;
-            FREAD(&dummy,sizeof(unsigned char),1,fh_in,false); // 1 = sorted (normally = 1)
-            FREAD(&dummy,sizeof(unsigned char),1,fh_in,false); //  0 = closed, 1 = open (normally = 0)
-            FREAD(&nTags,sizeof(int),1,fh_in,true);             //  number of tags in tag directory
+            xmippFREAD(&dummy,sizeof(unsigned char),1,fh_in,false); // 1 = sorted (normally = 1)
+            xmippFREAD(&dummy,sizeof(unsigned char),1,fh_in,false); //  0 = closed, 1 = open (normally = 0)
+            xmippFREAD(&nTags,sizeof(int),1,fh_in,true);             //  number of tags in tag directory
 
             int * newIndex;
             newIndex = new int[depLevel+1];
@@ -417,12 +416,12 @@ int readTagDM3(FILE *fh_in,
             unsigned int nnum;
             char buf[4]; // to read %%%% symbols
 
-            FREAD(&buf,1,4,fh_in,false); // To read %%%% symbols
-            FREAD(&nnum,sizeof(unsigned int),1,fh_in,true); // Size of info array
+            xmippFREAD(&buf,1,4,fh_in,false); // To read %%%% symbols
+            xmippFREAD(&nnum,sizeof(unsigned int),1,fh_in,true); // Size of info array
 
             unsigned int * info;
             info = new unsigned int[nnum];
-            FREAD(info,sizeof(unsigned int),nnum,fh_in,true); // Reading of Info
+            xmippFREAD(info,sizeof(unsigned int),nnum,fh_in,true); // Reading of Info
 
 
             /* Tag classification  =======================================*/
@@ -557,44 +556,44 @@ void FREADTagValue(void *fieldValue,
     case 2:      // (02h =  2  i2* signed    (short)
         short* shortValue;
         shortValue = (short*)fieldValue;
-        FREAD(shortValue,sizeof(short),n,fh_in,bigEndian);
+        xmippFREAD(shortValue,sizeof(short),n,fh_in,bigEndian);
         break;
     case 3:          // 03h =  3  i4* signed    (long)
         //  int* intValue[n];
         //  *intValue = (int*) malloc(sizeof(intValue));
-        //  FREAD(intValue,sizeof(int),n,fh_in,bigEndian);
+        //  xmippFREAD(intValue,sizeof(int),n,fh_in,bigEndian);
         //  fieldValue = (int*)intValue;
-        FREAD(fieldValue,sizeof(int),n,fh_in,bigEndian);
+        xmippFREAD(fieldValue,sizeof(int),n,fh_in,bigEndian);
         break;
     case 4:       //  04h =  4  i2* unsigned  (ushort) or unicode string
         unsigned short* uShortValue;
         uShortValue = (unsigned short*)fieldValue;
-        FREAD(uShortValue,sizeof(unsigned short),n,fh_in,bigEndian);
+        xmippFREAD(uShortValue,sizeof(unsigned short),n,fh_in,bigEndian);
         break;
     case 5:        //  05h =  5  i4* unsigned  (ulong)
         unsigned int* uIntValue;
         uIntValue = (unsigned int*)fieldValue;
-        FREAD(uIntValue,sizeof(unsigned int),n,fh_in,bigEndian);
+        xmippFREAD(uIntValue,sizeof(unsigned int),n,fh_in,bigEndian);
         break;
     case 6:        //  06h =  6  f4*           (float)
         float* floatValue;
         floatValue = (float *) fieldValue;
-        FREAD(floatValue,sizeof(float),n,fh_in,bigEndian);
+        xmippFREAD(floatValue,sizeof(float),n,fh_in,bigEndian);
         break;
     case 7:        //  07h =  7  f8*           (double)
         double* doubValue;
         doubValue = (double*) fieldValue;
-        FREAD(doubValue,sizeof(double),n,fh_in,bigEndian);
+        xmippFREAD(doubValue,sizeof(double),n,fh_in,bigEndian);
         break;
     case 8:        //  08h =  8  i1            (boolean)
         bool* boolValue;
         boolValue = (bool*) fieldValue;
-        FREAD(boolValue,sizeof(bool),n,fh_in,bigEndian);
+        xmippFREAD(boolValue,sizeof(bool),n,fh_in,bigEndian);
         break;
     case 10:        //  0ah = 10  i1
         char* cValue;
         cValue = (char*) fieldValue;
-        FREAD(cValue,sizeof(char),n,fh_in,bigEndian);
+        xmippFREAD(cValue,sizeof(char),n,fh_in,bigEndian);
         break;
     }
 

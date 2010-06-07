@@ -1272,7 +1272,7 @@ void xmippTextualListener::OnReportOperation(const std::string& _rsOp)
 
 /* Little/big endian ------------------------------------------------------- */
 // Read in reverse/normal order --------------------------------------------
-size_t FREAD(void *dest, size_t size, size_t nitems, FILE * &fp, bool reverse)
+size_t xmippFREAD(void *dest, size_t size, size_t nitems, FILE * &fp, bool reverse)
 {
     size_t retval;
     if (!reverse)
@@ -1303,7 +1303,7 @@ size_t FREAD(void *dest, size_t size, size_t nitems, FILE * &fp, bool reverse)
 }
 
 // Read in reverse/normal order --------------------------------------------
-size_t FWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
+size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
               bool reverse)
 {
     size_t retval;

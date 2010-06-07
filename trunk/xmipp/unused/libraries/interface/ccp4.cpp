@@ -48,7 +48,7 @@ void CCP4::write(const FileName &fn_out, const ImageXmipp &I, bool reversed,
     if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
         REPORT_ERROR(1503, "CCP4::write: File " + fn_out + " cannot be saved");
 
-    //write header. note that FWRITE can not be used because
+    //write header. note that xmippFWRITE can not be used because
     //floats and longs are invoved
     if (fwrite(&my_mrc_header, sizeof(char), SIZEOF_MRC_HEADER, fp) !=
         SIZEOF_MRC_HEADER)
@@ -59,7 +59,7 @@ void CCP4::write(const FileName &fn_out, const ImageXmipp &I, bool reversed,
     FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
     {
         f = (float) MAT_ELEM(I(), i, j);
-        FWRITE(&f, sizeof(float), 1, fp, reversed);
+        xmippFWRITE(&f, sizeof(float), 1, fp, reversed);
     }
 
     fclose(fp);
@@ -82,7 +82,7 @@ void CCP4::write(const FileName &fn_out, const Tomogram &V, bool reversed,
     if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
         REPORT_ERROR(1503, "CCP4::write: File " + fn_out + " cannot be saved");
 
-    //write header. note that FWRITE can not be used because
+    //write header. note that xmippFWRITE can not be used because
     //floats and longs are involved
     if (fwrite(&my_mrc_header, sizeof(char), SIZEOF_MRC_HEADER, fp) !=
         SIZEOF_MRC_HEADER)
@@ -94,7 +94,7 @@ void CCP4::write(const FileName &fn_out, const Tomogram &V, bool reversed,
             for (int j=0; j<Xdim; j++)
             {
                 float f = V(j,i,k);
-                FWRITE(&f, sizeof(float), 1, fp, reversed);
+                xmippFWRITE(&f, sizeof(float), 1, fp, reversed);
             }
 
     fclose(fp);
@@ -148,7 +148,7 @@ void CCP4::write(const FileName &fn_out, SelFile &SF, bool reversed,
     if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
         REPORT_ERROR(1503, "CCP4::write: File " + fn_out + " cannot be saved");
 
-    //write header. note that FWRITE can not be used because
+    //write header. note that xmippFWRITE can not be used because
     //floats and longs are involved
     if (fwrite(&my_mrc_header, sizeof(char), SIZEOF_MRC_HEADER, fp) !=
         SIZEOF_MRC_HEADER)
@@ -165,7 +165,7 @@ void CCP4::write(const FileName &fn_out, SelFile &SF, bool reversed,
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
         {
             float f=(float)I(i,j);
-            FWRITE(&f, sizeof(float), 1, fp, reversed);
+            xmippFWRITE(&f, sizeof(float), 1, fp, reversed);
         }
     }
     fclose(fp);
@@ -230,7 +230,7 @@ void CCP4::read(const FileName &fn_in,
         short int si;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
         {
-            FREAD(&si, sizeof(short int), 1, fp, reversed);
+            xmippFREAD(&si, sizeof(short int), 1, fp, reversed);
             MAT_ELEM(I(), i, j) = (double)si;
         }
         break;
@@ -238,7 +238,7 @@ void CCP4::read(const FileName &fn_in,
         float f;
         FOR_ALL_ELEMENTS_IN_MATRIX2D(I())
         {
-            FREAD(&f, sizeof(float), 1, fp, reversed);
+            xmippFREAD(&f, sizeof(float), 1, fp, reversed);
             MAT_ELEM(I(), i, j) = (double)f;
         }
         break;
@@ -307,7 +307,7 @@ void CCP4::read(const FileName &fn_in,
         short int si;
         FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
-            FREAD(&si, sizeof(short int), 1, fp, reversed);
+            xmippFREAD(&si, sizeof(short int), 1, fp, reversed);
             VOL_ELEM(V(), k, i, j) = (double)si;
         }
         break;
@@ -315,7 +315,7 @@ void CCP4::read(const FileName &fn_in,
         float f;
         FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
-            FREAD(&f, sizeof(float), 1, fp, reversed);
+            xmippFREAD(&f, sizeof(float), 1, fp, reversed);
             VOL_ELEM(V(), k, i, j) = (double)f;
         }
         break;
@@ -583,8 +583,8 @@ bool CCP4::read_header_from_file(const FileName &fn_in, bool reversed)
         REPORT_ERROR(1503, "CCP4::read_header_from_file: File " + fn_in + " cannot be saved");
 
     fseek(fp, 0xd0, SEEK_SET);
-    FREAD(&(my_mrc_header.map), sizeof(unsigned char), 4, fp, reversed);
-    FREAD(&(my_mrc_header.machst), sizeof(unsigned char), 4, fp, reversed);
+    xmippFREAD(&(my_mrc_header.map), sizeof(unsigned char), 4, fp, reversed);
+    xmippFREAD(&(my_mrc_header.machst), sizeof(unsigned char), 4, fp, reversed);
 
     // Get  size
     if ((my_mrc_header.machst)[0] == ((0x1 << 4) + 0x1) &&
@@ -596,10 +596,10 @@ bool CCP4::read_header_from_file(const FileName &fn_in, bool reversed)
              reversed == false)
         reversed = true;
     fseek(fp, 0x00, SEEK_SET);
-    FREAD(&(my_mrc_header.nx), sizeof(int), 1, fp, reversed);
-    FREAD(&(my_mrc_header.ny), sizeof(int), 1, fp, reversed);
-    FREAD(&(my_mrc_header.nz), sizeof(int), 1, fp, reversed);
-    FREAD(&(my_mrc_header.mode), sizeof(int), 1, fp, reversed);
+    xmippFREAD(&(my_mrc_header.nx), sizeof(int), 1, fp, reversed);
+    xmippFREAD(&(my_mrc_header.ny), sizeof(int), 1, fp, reversed);
+    xmippFREAD(&(my_mrc_header.nz), sizeof(int), 1, fp, reversed);
+    xmippFREAD(&(my_mrc_header.mode), sizeof(int), 1, fp, reversed);
 
     fclose(fp);
     return(reversed);

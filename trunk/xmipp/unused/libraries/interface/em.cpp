@@ -42,7 +42,7 @@ void EM::write(const FileName &fn_out, const VolumeXmipp &V, bool reversed)
     if ((fp = fopen(fn_out.c_str(), "wb")) == NULL)
         REPORT_ERROR(1503, "EM::write: File " + fn_out + " cannot be saved");
 
-    //write header. note that FWRITE can not be used because
+    //write header. note that xmippFWRITE can not be used because
     //floats and longs are invoved
     if (fwrite(&my_em_header, sizeof(char), SIZEOF_EM_HEADER, fp) !=
         SIZEOF_EM_HEADER)
@@ -53,7 +53,7 @@ void EM::write(const FileName &fn_out, const VolumeXmipp &V, bool reversed)
     FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
     {
         f = (float) VOL_ELEM(V(),k,i,j);
-        FWRITE(&f, sizeof(float), 1, fp, reversed);
+        xmippFWRITE(&f, sizeof(float), 1, fp, reversed);
     }
 
     fclose(fp);
@@ -125,7 +125,7 @@ void EM::read(const FileName &fn_in, VolumeXmipp &V, bool reversed)
         short int si;
         FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
-            FREAD(&si, sizeof(short int), 1, fp, reversed);
+            xmippFREAD(&si, sizeof(short int), 1, fp, reversed);
             VOL_ELEM(V(), k, i, j) = (double)si;
         }
         break;
@@ -133,7 +133,7 @@ void EM::read(const FileName &fn_in, VolumeXmipp &V, bool reversed)
         long int li;
         FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
-            FREAD(&li, sizeof(long int), 1, fp, reversed);
+            xmippFREAD(&li, sizeof(long int), 1, fp, reversed);
             VOL_ELEM(V(), k, i, j) = (double)li;
         }
         break;
@@ -141,7 +141,7 @@ void EM::read(const FileName &fn_in, VolumeXmipp &V, bool reversed)
         float f;
         FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
-            FREAD(&f, sizeof(float), 1, fp, reversed);
+            xmippFREAD(&f, sizeof(float), 1, fp, reversed);
             VOL_ELEM(V(), k, i, j) = (double)f;
         }
         break;
@@ -149,7 +149,7 @@ void EM::read(const FileName &fn_in, VolumeXmipp &V, bool reversed)
         double d;
         FOR_ALL_ELEMENTS_IN_MATRIX3D(V())
         {
-            FREAD(&d, sizeof(float), 1, fp, reversed);
+            xmippFREAD(&d, sizeof(float), 1, fp, reversed);
             VOL_ELEM(V(), k, i, j) = (double)d;
         }
         break;
@@ -203,19 +203,19 @@ bool EM::read_header_from_file(const FileName &fn_in, bool reversed)
     if ((fp = fopen(fn_in.c_str(), "rb")) == NULL)
         REPORT_ERROR(1503, "EM::read_header_from_file: File " + fn_in + " cannot be read");
 
-    FREAD(&(my_em_header.machine), 1, 1, fp, false);
-    FREAD(&(my_em_header.general_use), 1, 1, fp, false);
-    FREAD(&(my_em_header.not_used), 1, 1, fp, false);
-    FREAD(&(my_em_header.mode), 1, 1, fp, false);
+    xmippFREAD(&(my_em_header.machine), 1, 1, fp, false);
+    xmippFREAD(&(my_em_header.general_use), 1, 1, fp, false);
+    xmippFREAD(&(my_em_header.not_used), 1, 1, fp, false);
+    xmippFREAD(&(my_em_header.mode), 1, 1, fp, false);
 
     if (my_em_header.machine != 6 && IsLittleEndian() && reversed == false)
         reversed = true;
     else if (my_em_header.machine == 6 && IsBigEndian() && reversed == false)
         reversed = true;
 
-    FREAD(&(my_em_header.nx), 4, 1, fp, reversed);
-    FREAD(&(my_em_header.ny), 4, 1, fp, reversed);
-    FREAD(&(my_em_header.nz), 4, 1, fp, reversed);
+    xmippFREAD(&(my_em_header.nx), 4, 1, fp, reversed);
+    xmippFREAD(&(my_em_header.ny), 4, 1, fp, reversed);
+    xmippFREAD(&(my_em_header.nz), 4, 1, fp, reversed);
     fclose(fp);
 
     return(reversed);
