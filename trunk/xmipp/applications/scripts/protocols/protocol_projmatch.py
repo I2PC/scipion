@@ -1052,6 +1052,9 @@ def delete_working_directory(_mylog,_WorkingDir):
     print '* Delete working directory tree'
     _mylog.info("Delete working directory tree")
 
+    if (_WorkingDir==""):
+       raise RuntimeError,"No working directory given"
+       
     if os.path.exists(_WorkingDir):
        shutil.rmtree(_WorkingDir)
        

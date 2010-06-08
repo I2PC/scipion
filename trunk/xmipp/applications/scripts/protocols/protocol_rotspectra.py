@@ -250,6 +250,9 @@ class rotational_spectra_class:
        print '* Delete working directory tree'
        self.mylog.info("Delete working directory tree")
        
+       if (self._WorkingDir==""):
+          raise RuntimeError,"No working directory given"
+       
        if os.path.exists(self._WorkingDir):
           shutil.rmtree(self._WorkingDir)
    #------------------------------------------------------------------------

@@ -267,6 +267,8 @@ class preprocess_A_class:
 
         # Delete working directory if exists, make a new one
         if (DoDeleteWorkingDir): 
+            if (self.WorkingDir==""):
+                raise RuntimeError,"No working directory given"
             if os.path.exists(self.WorkingDir):
                 shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):

@@ -216,6 +216,8 @@ class CL2D_class:
                 
         # Delete working directory if it exists, make a new one
         if (DoDeleteWorkingDir): 
+            if (self.WorkingDir==""):
+               raise RuntimeError,"No working directory given"
             if os.path.exists(self.WorkingDir):
                 shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):

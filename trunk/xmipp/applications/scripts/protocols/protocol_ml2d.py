@@ -177,6 +177,8 @@ class ML2D_class:
         if (RestartIter < 1):
             # Delete working directory if it exists, make a new one
             if (DoDeleteWorkingDir and DoML2D): 
+                if (self.WorkingDir==""):
+                   raise RuntimeError,"No working directory given"
                 if os.path.exists(self.WorkingDir):
                     shutil.rmtree(self.WorkingDir)
             if not os.path.exists(self.WorkingDir):

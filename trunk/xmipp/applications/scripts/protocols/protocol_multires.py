@@ -985,6 +985,8 @@ class MultiResClass:
 
        # Delete working dir if necessary
        if self.doDeleteWorkingDir or not os.path.exists(self.workDirectory):
+          if (self.workDirectory==""):
+             raise RuntimeError,"No working directory given" 
           self.deleteDirectory(self.workDirectory)
 	  self.createDirectory(self.workDirectory)
 	  self.changeDirectory(self.workDirectory)
