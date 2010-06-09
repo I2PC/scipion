@@ -29,7 +29,6 @@
 #include <data/geometry.h>
 #include <data/histogram.h>
 #include <interface/spider.h>
-#include <interface/opendxang.h>
 
 #include <fstream>
 
@@ -37,26 +36,24 @@ void Usage();
 
 int main(int argc, char *argv[])
 {
-    std::string     ang1 = "rot", ang2 = "tilt", ang3 = "psi";
-    DocFile         angles;
-    FileName        fn_ang, fn_sel, fn_hist, fn_ps, fn_DX, fn_bild;
-    int             steps;
-    int             tell;
-    float           R, r, rmax, wmax = -99.e99;
-    float           rot_view;
-    float           tilt_view;
-    int             up_down_correction, colw;
-    bool            solid_sphere;
-    float           shift_center;
+    MetaData         angles;
+    FileName         fn_ang, fn_sel, fn_hist, fn_ps, fn_bild;
+    int              steps;
+    int              tell;
+    float            R, r, rmax, wmax = -99.e99;
+    float            rot_view;
+    float            tilt_view;
+    int              up_down_correction, colw;
+    bool             solid_sphere;
+    float            shift_center;
 
-// Check the command line ==================================================
+    // Check the command line ==================================================
     try
     {
         fn_sel = getParameter(argc, argv, "-sel", "");
         fn_ang = getParameter(argc, argv, "-ang", "");
         fn_hist = getParameter(argc, argv, "-hist", "");
         fn_ps = getParameter(argc, argv, "-ps", "");
-        fn_DX = getParameter(argc, argv, "-DX", "");
         fn_bild = getParameter(argc, argv, "-bild", "");
         steps = textToInteger(getParameter(argc, argv, "-steps", "100"));
         tell = checkParameter(argc, argv, "-show_process");
@@ -68,27 +65,6 @@ int main(int argc, char *argv[])
         solid_sphere = checkParameter(argc, argv, "-solid_sphere");
         colw = textToInteger(getParameter(argc, argv, "-wcol", "-1"));
         shift_center= textToFloat(getParameter(argc, argv, "-shift_center", "0"));
-        // Angle order
-        int i;
-        if ((i = paremeterPosition(argc, argv, "-order")) != -1)
-        {
-            if (i + 3 >= argc)
-            {
-                std::cout << "Angular distribution: Not enough parameters behind -ang\n";
-                Usage();
-                exit(1);
-            }
-            ang1 = argv[i+1];
-            ang2 = argv[i+2];
-            ang3 = argv[i+3];
-        }
-
-        // Check they are "rot", "tilt", and "psi"
-        checkAngle(ang1);
-        checkAngle(ang2);
-        checkAngle(ang3);
-        if (ang1[1] == ang2[1] || ang1[1] == ang3[1] || ang2[1] == ang3[1])
-            REPORT_ERROR(1, "Angular distribution: There is an angle twice in the angle order");
 
         // Check there is some input
         if (fn_ang == "" && fn_sel == "")
@@ -103,25 +79,27 @@ int main(int argc, char *argv[])
 
     try
     {
-// Get angles ==============================================================
+        // Get angles ==============================================================
         if (fn_ang != "")
             angles.read(fn_ang);
         else
         {
             MetaData selfile(fn_sel);
-            extract_angles(selfile, angles, ang1, ang2, ang3);
+            extract_angles(selfile, angles);
         }
-        int AngleNo = angles.dataLineNo();
+        int AngleNo = angles.size();
         if (AngleNo == 0)
             EXIT_ERROR(1, "Angular distribution: Input files doesn't contain angular information");
 
         if (colw >= 0)
         {
             // Find maximum weight
-            for (int i = 0; i < AngleNo; i++) if (angles(i + 1, colw) > wmax) wmax = angles(i + 1, colw);
+            for (int i = 0; i < AngleNo; i++)
+                if (angles(i + 1, colw) > wmax)
+                    wmax = angles(i + 1, colw);
         }
 
-// Build vector tables ======================================================
+        // Build vector tables ======================================================
 #define GET_ANGLES(i) \
     angles.get_angles(i,rot,tilt,psi,ang1,ang2,ang3); \
     if (up_down_correction && ABS(tilt)>90) \
@@ -147,19 +125,7 @@ int main(int argc, char *argv[])
 
         }
 
-//Show distribution with OpenDx ==============================================
-        openDXang DX;
-        DX.openDXangFile(fn_DX);
-
-        for (int i = 0; i < AngleNo; i++)
-        {
-
-
-            DX.Add_Item(v_ang[i]);
-        }
-
-
-// Compute histogram of distances =============================================
+        // Compute histogram of distances =============================================
         if (fn_hist != "")
         {
             Matrix1D<double> dist;
@@ -186,12 +152,14 @@ int main(int argc, char *argv[])
                     if (di == 0 || d < di)
                     {
                         di = d;
-                        if (tell) SHOW;
+                        if (tell)
+                            SHOW;
                     }
                     if (dj == 0 || d < dj)
                     {
                         dj = d;
-                        if (tell) SHOW;
+                        if (tell)
+                            SHOW;
                     }
                 }
 
@@ -199,12 +167,13 @@ int main(int argc, char *argv[])
             double min, max;
             dist.computeDoubleMinMax(min, max);
             dist_hist.init(min, max, steps);
-            for (int i = 0; i < AngleNo; i++) dist_hist.insert_value(di);
+            for (int i = 0; i < AngleNo; i++)
+                dist_hist.insert_value(di);
             dist_hist.write(fn_hist);
         }
 
 
-// Show distribution in chimera as bild file ==========================================
+        // Show distribution in chimera as bild file ==========================================
         if (fn_bild != "")
         {
             std::ofstream fh_bild;
@@ -212,7 +181,7 @@ int main(int argc, char *argv[])
             if (!fh_bild)
                 EXIT_ERROR(1, (std::string)"Ang_distribution: Cannot open " + fn_ps + " for output");
             fh_bild << ".color 1 0 0" << std::endl;
-	    
+
             for (int i = 0; i < AngleNo; i++)
             {
                 // Triangle size depedent on w
@@ -221,17 +190,18 @@ int main(int argc, char *argv[])
                     r  = angles(i + 1, colw);
                     r *= rmax / wmax;
                 }
-                else r = rmax;
-                fh_bild << ".sphere " 
-		        << R*XX(v[i])  + shift_center << " " 
-		        << R*YY(v[i])  + shift_center << " " 
-		        << R*ZZ(v[i])  + shift_center << " " 
-			<< r 
-			<<"\n";
+                else
+                    r = rmax;
+                fh_bild << ".sphere "
+                << R*XX(v[i])  + shift_center << " "
+                << R*YY(v[i])  + shift_center << " "
+                << R*ZZ(v[i])  + shift_center << " "
+                << r
+                <<"\n";
             }
             fh_bild.close();
         }
-// Show distribution as triangles ==========================================
+        // Show distribution as triangles ==========================================
         if (fn_ps != "")
         {
             std::ofstream fh_ps;
@@ -264,7 +234,8 @@ int main(int argc, char *argv[])
                     r = angles(i + 1, colw);
                     r *= rmax / wmax;
                 }
-                else r = rmax;
+                else
+                    r = rmax;
 
 
                 // Initially the triangle is on the floor of the projection plane
@@ -356,7 +327,6 @@ void Usage()
     << "                                      either psi, psi, tilt, tilt,\n"
     << "                                      rot or rot. The default\n"
     << "                                      order is rot, tilt and psi.\n"
-    << "      [-DX <-DX file out>           : DX file\n"
     << "      [-bild <-chimera file out>    : Chimera file\n"
     << "      [-hist <doc_file>]            : histogram of distances\n"
     << "      [-steps <stepno=100>]         : number of divisions in the histogram\n"
@@ -375,86 +345,3 @@ void Usage()
     << "                                      not shown\n"
     ;
 }
-
-/* ------------------------------------------------------------------------- */
-/* Menus                                                                     */
-/* ------------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Ang_distribution {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Ang_distribution/Help/ang_distribution.html";
-      help="Show angular distribution";
-      OPEN MENU Ang_distribution;
-      COMMAND LINES {
-         + Angle_Set:
-             ang_distribution -ang $ANGFILE
-                [-ang $ANG1 $ANG2 $ANG3] [$ANGL1 $ANGL2 $ANGL3]
-                [-hist $HISTFILE [-steps $STEPNO] [-show_process]]
-                [-ps $PSFILE [-R $RADIUS] [-r $SIDE] [-rot_view $ROT]
-                   [-tilt_view $TILT] [-up_down_correction]]
-         + SelFile:
-             ang_distribution -sel $SELFILE OPT(-hist) OPT(-ps)
-      }
-      PARAMETER DEFINITIONS {
-         $ANGFILE {
-            label="DocFile with angles";
-            type=FILE EXISTING;
-         }
-         $SELFILE {
-            label="Selection file";
-            type=FILE EXISTING;
-         }
-         #include "angles.mnu"
-         OPT(-hist) {label="Generate Distance Histogram";}
-            $HISTFILE {
-               label="Output histogram file";
-               type=FILE;
-            }
-            $STEPNO {
-               label="Histogram steps";
-               help="The histogram is divided in this number of steps";
-               type=NATURAL;
-               by default=100;
-            }
-            OPT(-show_process) {label="Show process information";}
-         OPT(-ps) {label="Generate Topological sphere";}
-            $PSFILE {
-               label="OutputPostscript file";
-               type=FILE;
-            }
-            $RADIUS {
-               label="Topological sphere radius";
-               type=FLOAT [0...];
-               by default=60;
-            }
-            $SIDE {
-               label="Triangle side length";
-               type=FLOAT [0...];
-               by default=1.5;
-            }
-            $ROT {
-               label="Rotational angle for Point of view";
-               help="degrees";
-               type=FLOAT [0...360];
-               by default=0;
-            }
-            $TILT {
-               label="Tilting angle for Point of view";
-               help="degrees";
-               type=FLOAT [0...360];
-               by default=30;
-            }
-            OPT(-up_down_correction) {label= "Up-Down correction";}
-      }
-   }
-
-   MENU Ang_distribution {
-      "I/O Parameters"
-      $ANGFILE
-      OPT($ANGL1)
-      $SELFILE
-      "Distance Histogram Parameters"
-      OPT(-hist)
-      "Topological Sphere Parameters"
-      OPT(-ps)
-   }
-*/
