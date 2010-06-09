@@ -62,7 +62,7 @@ void Uproject_to_plane(const Matrix1D<double> &r,
                        const Matrix2D<double> &euler, Matrix1D<double> &result)
 {
     SPEED_UP_temps;
-    if (result.size() != 3)
+    if (VEC_XSIZE(result) != 3)
         result.resize(3);
     M3x3_BY_V3x1(result, euler, r);
 }
