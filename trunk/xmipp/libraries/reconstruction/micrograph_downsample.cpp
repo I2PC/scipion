@@ -263,8 +263,15 @@ void Prog_downsample_prm::close_input_micrograph()
 // Downsample micrograph ---------------------------------------------------
 void Prog_downsample_prm::Downsample() const
 {
-    Micrograph Mp;
-    Mp.open_micrograph(fn_downsampled, reversed);
-    downsample(M, Xstep, Ystep, kernel, Mp,do_fourier,nThreads);
-    Mp.close_micrograph();
+    try {
+        Micrograph Mp;
+        Mp.open_micrograph(fn_downsampled, reversed);
+        downsample(M, Xstep, Ystep, kernel, Mp,do_fourier,nThreads);
+        Mp.close_micrograph();
+    } catch (Xmipp_error XE)
+    {
+        if (exists(fn_downsampled))
+            unlink(fn_downsampled.c_str());
+        throw XE;
+    }
 }
