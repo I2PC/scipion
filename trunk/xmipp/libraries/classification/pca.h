@@ -309,8 +309,12 @@ public:
     /// Add vector
     inline void addVector(const MultidimArray<float> &_v)
     {
-    	v.push_back(_v);
+        v.push_back(_v);
     }
+
+    /// Compute Statistics
+    void computeStatistics(MultidimArray<double> &avg,
+                           MultidimArray<double> &stddev);
 
     /// Subtract average
     void subtractAverage();
@@ -328,13 +332,22 @@ public:
     void evaluateZScore(int NPCA, int Niter);
 
     /** Get the Zscore of vector n */
-    inline double getZscore(int n) {return Zscore(n);}
+    inline double getZscore(int n)
+    {
+        return Zscore(n);
+    }
 
     /** Get the Zscore of the n-th vector once sorted */
-    inline double getSortedZscore(int n) {return Zscore(idx(n)-1);}
+    inline double getSortedZscore(int n)
+    {
+        return Zscore(idx(n)-1);
+    }
 
     /** Get the n-th index once sorted */
-    inline int getSorted(int n) {return idx(n)-1;}
+    inline int getSorted(int n)
+    {
+        return idx(n)-1;
+    }
 };
 //@}
 #endif

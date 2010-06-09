@@ -557,14 +557,15 @@ void Running_PCA::project(const Matrix1D<double> &input,
 /* Subtract average ------------------------------------------------------- */
 void PCAMahalanobisAnalyzer::subtractAverage()
 {
-	int N=v.size();
-	if (N==0) return;
-	MultidimArray<float> avg=v[0];
-	for (int n=1; n<N; n++)
-		avg+=v[n];
-	avg/=N;
-	for (int n=0; n<N; n++)
-		v[n]-=avg;
+    int N=v.size();
+    if (N==0)
+        return;
+    MultidimArray<float> avg=v[0];
+    for (int n=1; n<N; n++)
+        avg+=v[n];
+    avg/=N;
+    for (int n=0; n<N; n++)
+        v[n]-=avg;
 }
 
 /* Add vector ------------------------------------------------------------- */
@@ -641,11 +642,43 @@ void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
     }
 }
 
+/* Compute Statistics ----------------------------------------------------- */
+void PCAMahalanobisAnalyzer::computeStatistics(MultidimArray<double> & avg,
+        MultidimArray<double> & stddev)
+{
+    int N=v.size();
+    if (N==0)
+    {
+    	avg.clear();
+    	stddev.clear();
+        return;
+    }
+    typeCast(v[0],avg);
+	MultidimArray<double> aux;
+    for (int n=1; n<N; n++)
+    {
+    	typeCast(v[n],aux);
+    	avg+=aux;
+    }
+    avg/=N;
+    stddev.initZeros(avg);
+    for (int n=0; n<N; n++)
+    {
+    	typeCast(v[n],aux);
+    	aux-=avg;
+    	aux*=aux;
+        stddev+=aux;
+    }
+    double iN_1=1.0/(N-1);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(stddev)
+    DIRECT_A1D_ELEM(stddev,i)=sqrt(DIRECT_A1D_ELEM(stddev,i)*iN_1);
+}
+
 /* Evaluate score --------------------------------------------------------- */
 void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
 {
     subtractAverage();
-	learnPCABasis(NPCA, Niter);
+    learnPCABasis(NPCA, Niter);
 
     Matrix2D<double> proj;
     projectOnPCABasis(proj);
@@ -661,6 +694,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
                 cov(i,j)+=proj(i,ii)*proj(j,ii);
     }
     cov/=N;
+    std::cout << cov << std::endl;
 
     Matrix2D<double> covinv=cov.inv();
     Zscore.initZeros(N);
@@ -673,6 +707,8 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
         aux=x.transpose()*covinv*x;
         Zscore(ii)=ABS(aux(0));
     }
+
+    Zscore.rangeAdjust(0,1);
 
     idx=Zscore.indexSort();
 }
