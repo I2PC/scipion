@@ -1,10 +1,10 @@
 /***************************************************************************
  *
- * Authors:     Jorge García de la Nava Ruiz (gdl@ac.uma.es)
+ * Authors:     Jorge Garcia de la Nava Ruiz (gdl@ac.uma.es)
  *              Carlos Oscar Sanchez Sorzano
  *              Alberto Pascual Montano (pascual@cnb.csic.es)
  *
- * Departamento de Arquitectura de Computadores, Universidad de Málaga
+ * Departamento de Arquitectura de Computadores, Universidad de Mï¿½laga
  *
  * Copyright (c) 2001 , CSIC/UMA.
  *
@@ -27,38 +27,39 @@
 
 #include <data/funcs.h>
 #include <data/matrix2d.h>
+#include <data/multidim_array.h>
 
 /**@defgroup PCA Principal Component Analysis
    @ingroup ClassificationLibrary */
 //@{
 /** Basic PCA class */
-class xmippPC
+class PCAAnalyzer
 {
 public:
 
     /**
-    * Make an empty xmippPC
+    * Make an empty PCAAnalyzer
     */
-    xmippPC(void)
+    PCAAnalyzer(void)
     {}
 
     /**
-    * Construct a xmippPC object with eigenvectors & eigenvalues
+    * Construct a PCAAnalyzer object with eigenvectors & eigenvalues
     * from ts.
     * Parameter: ts The vectors.
     */
-    xmippPC(xmippCTVectors const &ts)
+    PCAAnalyzer(xmippCTVectors const &ts)
     {
         reset(ts);
     }
 
     /**
-    * Construct a xmippPC object with eigenvectors & eigenvalues
+    * Construct a PCAAnalyzer object with eigenvectors & eigenvalues
     * from ts, using only the items given in idx.
     * Parameter: ts The vectors.
     * Parameter: idx The indexes of the vectors to use
     */
-    xmippPC(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
+    PCAAnalyzer(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
     {
         reset(ts, idx);
     }
@@ -138,8 +139,10 @@ public:
     /** Get the dimension of the eigenvectors. */
     int get_eigenDimension() const
     {
-        if (eigenvec.size() > 1) return eigenvec[0].size();
-        else return 0;
+        if (eigenvec.size() > 1)
+            return eigenvec[0].size();
+        else
+            return 0;
     }
 
     /** Number of components for a given accuracy explanation.
@@ -164,10 +167,10 @@ public:
     };
 
     /** Show relevant eigenvectors and eigenvalues */
-    friend std::ostream& operator << (std::ostream &out, const xmippPC &PC);
+    friend std::ostream& operator << (std::ostream &out, const PCAAnalyzer &PC);
 
     /** Read a set of PCA just as shown */
-    friend std::istream& operator >> (std::istream &in, xmippPC &PC);
+    friend std::istream& operator >> (std::istream &in, PCAAnalyzer &PC);
 
 private:
 
@@ -176,13 +179,12 @@ private:
 
 };
 
-
 /** Set of PCA classes */
 class PCA_set
 {
 public:
     /** Set of PCA analysis. */
-    std::vector<xmippPC *> PCA;
+    std::vector<PCAAnalyzer *> PCA;
 
 public:
     /** Destructor */
@@ -199,7 +201,7 @@ public:
     }
 
     /** Returns a pointer to PCA number i*/
-    xmippPC * operator()(int i) const
+    PCAAnalyzer * operator()(int i) const
     {
         return PCA[i];
     }
@@ -259,7 +261,8 @@ public:
     /// Get the variance associated to a certain eigenvector.
     double get_eigenvector_variance(int j) const
     {
-        if (n <= j) return 0.0;
+        if (n <= j)
+            return 0.0;
         double mean_proj = sum_proj(j) / n;
         return sum_proj2(j) / n - mean_proj*mean_proj;
     }
@@ -272,6 +275,71 @@ public:
 
     // Sum of all projections squared so far
     Matrix1D<double> sum_proj2;
+};
+
+/** Basic PCA class.
+ *  The difference with PCAAnalyzer is that this one uses a different
+ *  base class for the input vectors and the algorithm used to compute
+ *  the PCA decomposition (see Roweis, "EM algorithms for PCA and SPCA",
+ *  Neural Information Processing Systems 10 (NIPS'97) pp.626-632)
+ *
+ *  Example of use:
+ *  @code
+ *  PCAMahalanobisAnalyzer analyzer;
+ *  FOR_ALL_VECTORS ...
+ *     analyzer.addVector(v);
+ *  analyzer.evaluateZScore(3,10); // 3 PCA components, 10 iterations
+ *  @endcode
+ *  */
+class PCAMahalanobisAnalyzer
+{
+public:
+    // Set of images assigned to the class
+    std::vector< MultidimArray<float> > v;
+
+    // Set of basis functions
+    std::vector< MultidimArray<double> > PCAbasis;
+
+    // Set of basis functions
+    MultidimArray< double > Zscore;
+
+    // Indexes to access in a sorted way
+    MultidimArray<int> idx;
+public:
+    /// Add vector
+    inline void addVector(const MultidimArray<float> &_v)
+    {
+    	v.push_back(_v);
+    }
+
+    /// Subtract average
+    void subtractAverage();
+
+    /** Normalize vectors.
+     * Each vector will have mean=0, stddev=1.
+     */
+    void normalizeVectors();
+
+    /// Learn basis
+    void learnPCABasis(int NPCA, int Niter);
+
+    /// Project on basis
+    void projectOnPCABasis(Matrix2D<double> &CtY);
+
+    /** Evaluate Zscore of the vectors stored with Mahalanobis distance.
+     * NPCA is the dimension of the dimensionally reduced vectors before Mahalanobis
+     * Niter is used to learn the PCA basis (typically, Niter=10).
+     */
+    void evaluateZScore(int NPCA, int Niter);
+
+    /** Get the Zscore of vector n */
+    inline double getZscore(int n) {return Zscore(n);}
+
+    /** Get the Zscore of the n-th vector once sorted */
+    inline double getSortedZscore(int n) {return Zscore(idx(n)-1);}
+
+    /** Get the n-th index once sorted */
+    inline int getSorted(int n) {return idx(n)-1;}
 };
 //@}
 #endif

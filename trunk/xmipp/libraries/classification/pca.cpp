@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Jorge Garc�a de la Nava Ruiz (gdl@ac.uma.es)
+ * Authors:     Jorge Garcia de la Nava Ruiz (gdl@ac.uma.es)
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *              Alberto Pascual Montano (pascual@cnb.csic.es)
  *
@@ -38,7 +38,7 @@
 * Calculate the eigenval/vecs
 * Parameter: ts The vectors.
 */
-void xmippPC::reset(xmippCTVectors const &ts)
+void PCAAnalyzer::reset(xmippCTVectors const &ts)
 {
     std::vector<unsigned> dummy;
     for (unsigned i = 0;i < ts.size();i++)
@@ -51,7 +51,7 @@ void xmippPC::reset(xmippCTVectors const &ts)
 * Parameter: ts The vectors.
 * Parameter: idx The indexes of the vectors to use
 */
-void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
+void PCAAnalyzer::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
 {
     std::vector<xmippVector> a;
     int n = ts.dimension();
@@ -59,7 +59,6 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
     int verbosity = listener->getVerbosity();
 
     {
-
         if (verbosity)
             listener->OnReportOperation((std::string) "Normalizing....\n");
         if (verbosity == 1)
@@ -104,8 +103,10 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
                         l++;
                     }
                 }
-                if (l) a[i][j] = a[j][i] = sum / l;
-                else a[i][j] = a[j][i] = 0;
+                if (l)
+                    a[i][j] = a[j][i] = sum / l;
+                else
+                    a[i][j] = a[j][i] = 0;
             }
             if (verbosity == 1)
                 listener->OnProgress(i);
@@ -113,11 +114,9 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
         if (verbosity == 1)
             listener->OnProgress(n);
 
-//  for(int i=0;i<n;i++)
-//   std::cout << a[i] << std::endl;
-
+        //  for(int i=0;i<n;i++)
+        //   std::cout << a[i] << std::endl;
     }
-
 
     eigenval.resize(n);
     eigenvec.resize(n);
@@ -182,8 +181,10 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
             return;
         }
 
-        if (it < 4) tresh = 0.2 * sm / (n * n);
-        else tresh = 0;
+        if (it < 4)
+            tresh = 0.2 * sm / (n * n);
+        else
+            tresh = 0;
 
         for (int ip = 0; ip < n - 1; ip++)
         {
@@ -266,7 +267,7 @@ void xmippPC::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
 }
 
 /* Prepare for correlation ------------------------------------------------- */
-void xmippPC::prepare_for_correlation()
+void PCAAnalyzer::prepare_for_correlation()
 {
     int nmax = D;
     int dmax = mean.size();
@@ -300,9 +301,10 @@ void xmippPC::prepare_for_correlation()
 }
 
 /**Set identity matrix as eigenvector matrix*/
-void xmippPC::setIdentity(int n)
+void PCAAnalyzer::setIdentity(int n)
 {
-    if (n < 0) n = 0;
+    if (n < 0)
+        n = 0;
     eigenval.resize(n);
     fill(eigenval.begin(), eigenval.end(), 1.0);
     eigenvec.resize(n);
@@ -315,12 +317,13 @@ void xmippPC::setIdentity(int n)
 }
 
 /* Components for variance ------------------------------------------------- */
-int xmippPC::Dimension_for_variance(double th_var)
+int PCAAnalyzer::Dimension_for_variance(double th_var)
 {
     int imax = eigenval.size();
     double sum = 0;
     th_var /= 100;
-    for (int i = 0; i < imax; i++) sum += eigenval[i];
+    for (int i = 0; i < imax; i++)
+        sum += eigenval[i];
 
     double explained = 0;
     int i = 0;
@@ -333,7 +336,7 @@ int xmippPC::Dimension_for_variance(double th_var)
 }
 
 /* Project ----------------------------------------------------------------- */
-void xmippPC::Project(xmippVector &input, xmippVector &output)
+void PCAAnalyzer::Project(xmippVector &input, xmippVector &output)
 {
     if (input.size() != eigenvec[0].size())
         REPORT_ERROR(1, "PCA_project: vectors are not of the same size");
@@ -350,7 +353,7 @@ void xmippPC::Project(xmippVector &input, xmippVector &output)
 }
 
 /* Clear ------------------------------------------------------------------- */
-void xmippPC::clear()
+void PCAAnalyzer::clear()
 {
     set_Dimension(0);
     mean.clear();
@@ -359,7 +362,7 @@ void xmippPC::clear()
 }
 
 /* Show/read PCA ----------------------------------------------------------- */
-std::ostream& operator << (std::ostream &out, const xmippPC &PC)
+std::ostream& operator << (std::ostream &out, const PCAAnalyzer &PC)
 {
     out << "Relevant Dimension: " << PC.get_Dimension() << std::endl;
     out << "Mean vector: ";
@@ -378,7 +381,7 @@ std::ostream& operator << (std::ostream &out, const xmippPC &PC)
     return out;
 }
 
-std::istream& operator >> (std::istream &in, xmippPC &PC)
+std::istream& operator >> (std::istream &in, PCAAnalyzer &PC)
 {
     PC.clear();
     int D;
@@ -418,7 +421,8 @@ std::istream& operator >> (std::istream &in, xmippPC &PC)
 PCA_set::~PCA_set()
 {
     int imax = PCA.size();
-    for (int i = 0; i < imax; i++) delete PCA[i];
+    for (int i = 0; i < imax; i++)
+        delete PCA[i];
 }
 
 /* Create empty PCA -------------------------------------------------------- */
@@ -426,7 +430,8 @@ int PCA_set::create_empty_PCA(int n)
 {
     int retval = PCA.size();
     PCA.resize(retval + n);
-    for (int i = 0; i < n; i++) PCA[retval+i] = new xmippPC;
+    for (int i = 0; i < n; i++)
+        PCA[retval+i] = new PCAAnalyzer;
     return retval;
 }
 
@@ -435,7 +440,8 @@ std::ostream& operator << (std::ostream &out, const PCA_set &PS)
 {
     int imax = PS.PCA.size();
     out << "Number of PCAs: " << imax << std::endl;
-    for (int i = 0; i < imax; i++) out << *(PS.PCA[i]);
+    for (int i = 0; i < imax; i++)
+        out << *(PS.PCA[i]);
     return out;
 }
 
@@ -448,7 +454,7 @@ std::istream& operator >> (std::istream &in, PCA_set &PS)
     PS.PCA.resize(imax);
     for (int i = 0; i < imax; i++)
     {
-        PS.PCA[i] = new xmippPC;
+        PS.PCA[i] = new PCAAnalyzer;
         in >> *(PS.PCA[i]);
     }
     return in;
@@ -486,14 +492,16 @@ void Running_PCA::new_sample(const Matrix1D<double> &sample)
             // If there are not enough samples to estimate this eigenvector, then
             // skip it
             double norm = un.module();
-            if (norm > XMIPP_EQUAL_ACCURACY) un /= norm;
+            if (norm > XMIPP_EQUAL_ACCURACY)
+                un /= norm;
             eigenvectors.setCol(j, un);
         }
         else
         {
             // If there are enough samples
             // Substract the sample mean to have a zero-mean vector
-            if (j == 0) un -= current_sample_mean;
+            if (j == 0)
+                un -= current_sample_mean;
 
             // Compute the scale of this vector as the dot product
             // between un and the current eigenvector estimate
@@ -518,7 +526,8 @@ void Running_PCA::new_sample(const Matrix1D<double> &sample)
             if (norm2 > XMIPP_EQUAL_ACCURACY)
             {
                 double norm = sqrt(norm2);
-                for (int i = 0; i < d; i++) eigenvectors(i, j) /= norm;
+                for (int i = 0; i < d; i++)
+                    eigenvectors(i, j) /= norm;
             }
 
             // Project un onto the space spanned by this eigenvector
@@ -544,3 +553,139 @@ void Running_PCA::project(const Matrix1D<double> &input,
         for (int i = 0; i < d; i++)
             output(j) += (input(i) - current_sample_mean(i)) * eigenvectors(i, j);
 }
+
+/* Subtract average ------------------------------------------------------- */
+void PCAMahalanobisAnalyzer::subtractAverage()
+{
+	int N=v.size();
+	if (N==0) return;
+	MultidimArray<float> avg=v[0];
+	for (int n=1; n<N; n++)
+		avg+=v[n];
+	avg/=N;
+	for (int n=0; n<N; n++)
+		v[n]-=avg;
+}
+
+/* Normalize vectors ------------------------------------------------------ */
+void PCAMahalanobisAnalyzer::normalizeVectors()
+{
+	int N=v.size();
+	for (int n=0; n<N; n++)
+		v[n].statisticsAdjust(0,1);
+}
+
+/* Add vector ------------------------------------------------------------- */
+void PCAMahalanobisAnalyzer::projectOnPCABasis(Matrix2D<double> &CtY)
+{
+    int N=v.size();
+    int NPCA=PCAbasis.size();
+    CtY.initZeros(NPCA,N);
+    for (int ii=0; ii<N; ii++)
+    {
+        const MultidimArray<float> &Iii=v[ii];
+        for (int jj=0; jj<NPCA; jj++)
+        {
+            const MultidimArray<double> &Ijj=PCAbasis[jj];
+            CtY(jj,ii)=0;
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(Iii)
+            MAT_ELEM(CtY,jj,ii)+=
+                DIRECT_A1D_ELEM(Iii,i)*DIRECT_A1D_ELEM(Ijj,i);
+        }
+    }
+}
+
+void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
+{
+    // Take the first vectors for the PCA basis
+    MultidimArray<double> vPCA;
+    NPCA=XMIPP_MIN(NPCA,v.size());
+    for (int n=0; n<NPCA; n++)
+    {
+        typeCast(v[n],vPCA);
+        PCAbasis.push_back(vPCA);
+    }
+
+    int N=v.size();
+    for (int n=0; n<Niter; n++)
+    {
+        // E-step ..........................................................
+        // Compute C^t*C
+        Matrix2D<double> CtC(NPCA,NPCA);
+        for (int ii=0; ii<NPCA; ii++)
+        {
+            const MultidimArray<double> &Iii=PCAbasis[ii];
+            for (int jj=ii; jj<NPCA; jj++)
+            {
+                const MultidimArray<double> &Ijj=PCAbasis[jj];
+                CtC(ii,jj)=0;
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(Ijj)
+                MAT_ELEM(CtC,ii,jj)+=
+                    DIRECT_A1D_ELEM(Iii,i)*DIRECT_A1D_ELEM(Ijj,i);
+                if (ii!=jj)
+                    CtC(jj,ii)=CtC(ii,jj);
+            }
+        }
+
+        // Compute C^t*Y
+        Matrix2D<double> CtY, X;
+        projectOnPCABasis(CtY);
+        X=CtC.inv()*CtY;
+
+        // M-step ..........................................................
+        Matrix2D<double> XtXXtinv=X.transpose()*(X*X.transpose()).inv();
+        for (int ii=0; ii<NPCA; ii++)
+        {
+            MultidimArray<double> &Ipca=PCAbasis[ii];
+            Ipca.initZeros();
+            for (int jj=0; jj<N; jj++)
+            {
+                const MultidimArray<float> &I=v[jj];
+                double val=XtXXtinv(jj,ii);
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(I)
+                DIRECT_A1D_ELEM(Ipca,i)+=DIRECT_A1D_ELEM(I,i)*val;
+            }
+        }
+    }
+}
+
+/* Evaluate score --------------------------------------------------------- */
+void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
+{
+    subtractAverage();
+    normalizeVectors();
+	learnPCABasis(NPCA, Niter);
+
+    Matrix2D<double> proj;
+    projectOnPCABasis(proj);
+
+    int N=v.size();
+
+    // Estimate covariance matrix
+    Matrix2D<double> cov(NPCA,NPCA);
+    for (int ii=0; ii<N; ii++)
+    {
+        for (int i=0; i<NPCA; i++)
+            for (int j=0; j<NPCA; j++)
+                cov(i,j)+=proj(i,ii)*proj(j,ii);
+    }
+    cov/=N;
+
+    Matrix2D<double> covinv=cov.inv();
+    Zscore.initZeros(N);
+    for (int ii=0; ii<N; ii++)
+    {
+        Matrix1D<double> x,aux;
+        x.resize(NPCA);
+        for (int i=0; i<NPCA; i++)
+            x(i)=proj(i,ii);
+        aux=x.transpose()*covinv*x;
+        Zscore(ii)=ABS(aux(0));
+    }
+
+    idx=Zscore.indexSort();
+}
+
+
+
+
