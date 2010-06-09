@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/analyze_cluster.h>
+#include <classification/analyze_cluster.h>
 
 int main(int argc, char **argv)
 {
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     {
         std::cout << XE;
         prm.usage();
-        exit(0);
+        exit(1);
     }
 
     try
@@ -51,9 +51,9 @@ int main(int argc, char **argv)
     {
         std::cout << XE;
         prm.usage();
-        exit(0);
+        exit(1);
     }
-
+    return 0;
 }
 
 
