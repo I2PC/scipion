@@ -28,6 +28,7 @@
 #include <data/funcs.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
+#include "pca.h"
 
 /**@defgroup AnalyzeClusterProgram analyze cluster
    @ingroup ReconsLibraryPrograms */
@@ -60,29 +61,18 @@ public:
     /** Don't mask*/
     bool dontMask;
 public:
-    // SelFile images
-    std::vector< FileName > classfile;
-
-    // Image holding current reference
-    Image<double> Iref;
+    // SelFiles of images
+    MetaData SFin, SFout;
 
     // Mask of the background
     MultidimArray<int> mask;
 
-    // Set of images assigned to the class
-    std::vector< MultidimArray<float> * > Iclass;
-    
-    // Set of images assigned to the class
-    std::vector< MultidimArray<float> * > Iclassorig;
-    
-    // Set of basis functions
-    std::vector< MultidimArray<double> * > PCAbasis;
+    // PCA Analyzer
+    PCAMahalanobisAnalyzer pcaAnalyzer;
 
-    // Set of distances
-    MultidimArray<double> distance;
-    
-    // Number of pixels in the mask
-    int Npixels;
+    // Set of basis functions
+    std::vector< MultidimArray<float> > Ialigned;
+
 public:
     /// Read argument from command line
     void read(int argc, char **argv);
@@ -95,15 +85,6 @@ public:
 
     /// Produce side info
     void produceSideInfo();
-
-    /// Learn basis
-    void learnPCABasis();
-
-    /// Project on basis
-    void projectOnPCABasis(Matrix2D<double> &CtY);
-
-    /// Evaluate distance
-    void evaluateDistance(Matrix2D<double> &proj);
 
     /// Main routine
     void run();
