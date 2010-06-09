@@ -119,7 +119,7 @@ main(int argc, char** argv)
     {
 
         // Define PCA class and do the projection
-        xmippPC myPCA;
+        PCAAnalyzer myPCA;
 
         xmippTextualListener myListener;     // Define the listener class
         myListener.setVerbosity() = verb;     // Set verbosity level
