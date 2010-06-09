@@ -1,7 +1,6 @@
 %{
 #include "../args.h"
 %}
-extern void checkAngle(const std::string& str);
 
 /*
 python
