@@ -567,14 +567,6 @@ void PCAMahalanobisAnalyzer::subtractAverage()
 		v[n]-=avg;
 }
 
-/* Normalize vectors ------------------------------------------------------ */
-void PCAMahalanobisAnalyzer::normalizeVectors()
-{
-	int N=v.size();
-	for (int n=0; n<N; n++)
-		v[n].statisticsAdjust(0,1);
-}
-
 /* Add vector ------------------------------------------------------------- */
 void PCAMahalanobisAnalyzer::projectOnPCABasis(Matrix2D<double> &CtY)
 {
@@ -653,7 +645,6 @@ void PCAMahalanobisAnalyzer::learnPCABasis(int NPCA, int Niter)
 void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
 {
     subtractAverage();
-    normalizeVectors();
 	learnPCABasis(NPCA, Niter);
 
     Matrix2D<double> proj;

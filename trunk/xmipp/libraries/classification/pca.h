@@ -315,11 +315,6 @@ public:
     /// Subtract average
     void subtractAverage();
 
-    /** Normalize vectors.
-     * Each vector will have mean=0, stddev=1.
-     */
-    void normalizeVectors();
-
     /// Learn basis
     void learnPCABasis(int NPCA, int Niter);
 
