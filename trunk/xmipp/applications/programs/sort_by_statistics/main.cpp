@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <data/histogram.h>
 #include <data/image.h>
 #include <data/fftw.h>
 #include <data/args.h>
@@ -35,7 +36,7 @@ class Sort_junk_parameters
 
 public:
     double cutoff;
-    MultidimArray<double> avg, stddev, Zscore, ZscoreMultivariate;
+    MultidimArray<double> vavg, vstddev, Zscore, ZscoreMultivariate;
     PCAMahalanobisAnalyzer pcaAnalyzer;
     FileName fn_out;
 
@@ -52,14 +53,15 @@ public:
         << " [-train <selfile>]      : Train on selfile with good particles\n"
         << " [-zcut <float=-1>]      : Cut-off for Z-scores (negative for no cut-off) \n"
         << " [-multivariate]         : Identify also multivariate outliers\n"
+        << " [-verbose]              : Save the vectors associated to each image\n"
         ;
     }
 
     void process_selfile(MetaData &SF, bool do_prepare, bool multivariate)
     {
-        Image<double> img;
-        MultidimArray<std::complex<double> > IMG;
+        Image<double> img, img2;
         MultidimArray<int> radial_count;
+        MultidimArray<double> radial_avg;
         Matrix1D<int> center(2);
         center.initZeros();
 
@@ -68,23 +70,11 @@ public:
         else
             std::cerr << " Sorting particle set ..." << std::endl;
 
-        MultidimArray<double> Mrad, ampl2, rmean_ampl2;
-        int dim;
-        if (do_prepare)
-        {
-            ImgSize(SF, dim, dim);
-            Mrad.resize(dim, dim);
-            Mrad.setXmippOrigin();
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(Mrad)
-            Mrad(i, j) = sqrt((double)(i * i + j * j));
-        }
-
         int nr_imgs = SF.size();
         init_progress_bar(nr_imgs);
         int c = XMIPP_MAX(1, nr_imgs / 60);
         int imgno = 0;
         MultidimArray<float> v;
-        v.initZeros(16);
         if (do_prepare)
         {
             Zscore.initZeros(SF.size());
@@ -98,61 +88,28 @@ public:
                 SF.getValue(MDL_IMAGE,fn);
                 img.read(fn);
                 img().setXmippOrigin();
+                img().statisticsAdjust(0,1);
 
                 // Overall statistics
-                double mean, stddev, minval, maxval;
-                img().computeStats(mean, stddev, minval, maxval);
+                double minval, maxval;
+                img().computeDoubleMinMax(minval, maxval);
+                Histogram1D hist;
+                compute_hist(img(),hist,-4,4,31);
 
-                // Number of low or high-valued pixels
-                double nlowpix, nhighpix, nradlow, nradhigh;
-                nhighpix = nlowpix = 0.;
-                nradhigh = nradlow = 0.;
-                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(img())
-                {
-                    if (dAij(img(), i, j) > stddev)
-                        nhighpix += 1.;
-                    if (dAij(img(), i, j) < -stddev)
-                        nlowpix += 1.;
-                    if (dAij(img(), i, j) > stddev)
-                        nradhigh += dAij(Mrad, i, j);
-                    if (dAij(img(), i, j) < -stddev)
-                        nradlow += dAij(Mrad, i, j);
-                }
+                // Radial profile
+                img2()=img();
+                img2()*=img();
+                radialAverage(img2(), center, radial_avg, radial_count);
 
-                // Quadrant statistics
-                double sum_quadsig, sum2_quadsig, sum_quadmean, sum2_quadmean;
-                quadrant_stats(img, sum_quadsig, sum2_quadsig, sum_quadmean, sum2_quadmean);
-
-                // Fourier-space stats
-                XmippFftw transformer;
-                transformer.FourierTransform(img(),IMG,false);
-                FFT_magnitude(IMG, ampl2);
-                CenterFFT(ampl2, true);
-                ampl2 *= ampl2;
-                rmean_ampl2.initZeros();
-                radialAverage(ampl2, center, rmean_ampl2, radial_count);
-                double ampl2_1, ampl2_2, ampl2_3, ampl2_4;
-                ampl2_1 = dAi(rmean_ampl2, 1);
-                ampl2_2 = dAi(rmean_ampl2, 2);
-                ampl2_3 = dAi(rmean_ampl2, 3);
-                ampl2_4 = dAi(rmean_ampl2, 4);
-
-                v( 0)=(float)mean;
-                v( 1)=(float)stddev;
-                v( 2)=(float)minval;
-                v( 3)=(float)maxval;
-                v( 4)=(float)nhighpix;
-                v( 5)=(float)nlowpix;
-                v( 6)=(float)nradhigh;
-                v( 7)=(float)nradlow;
-                v( 8)=(float)sum_quadsig;
-                v( 9)=(float)sum_quadmean;
-                v(10)=(float)sum2_quadsig;
-                v(11)=(float)sum2_quadmean;
-                v(12)=(float)ampl2_1;
-                v(13)=(float)ampl2_2;
-                v(14)=(float)ampl2_3;
-                v(15)=(float)ampl2_4;
+                // Build vector
+                v.initZeros(2+XSIZE(hist)+XSIZE(img())/2);
+                v(0)=(float)minval;
+                v(1)=(float)maxval;
+                int idx=2;
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
+                v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
+                for (int i=0; i<XSIZE(img())/2; i++)
+                    v(idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
                 pcaAnalyzer.addVector(v);
             }
             else
@@ -160,10 +117,10 @@ public:
                 v=pcaAnalyzer.v[imgno];
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
                 {
-                    if (DIRECT_A1D_ELEM(stddev,i)>0)
+                    if (DIRECT_A1D_ELEM(vstddev,i)>0)
                     {
-                        DIRECT_A1D_ELEM(v,i)=(DIRECT_A1D_ELEM(v,i)-DIRECT_A1D_ELEM(avg,i))/
-                                             DIRECT_A1D_ELEM(stddev,i);
+                        DIRECT_A1D_ELEM(v,i)=(DIRECT_A1D_ELEM(v,i)-DIRECT_A1D_ELEM(vavg,i))/
+                                             DIRECT_A1D_ELEM(vstddev,i);
                         DIRECT_A1D_ELEM(v,i)=ABS(DIRECT_A1D_ELEM(v,i));
                     }
                     else
@@ -182,62 +139,10 @@ public:
 
         if (do_prepare)
         {
-            pcaAnalyzer.computeStatistics(avg,stddev);
+            pcaAnalyzer.computeStatistics(vavg,vstddev);
             if (multivariate)
                 pcaAnalyzer.evaluateZScore(2,20);
         }
-    }
-
-    void quadrant_stats(Image<double> &img,
-                        double &sum_quadsig, double &sum2_quadsig,
-                        double &sum_quadmean, double &sum2_quadmean)
-    {
-        double mean, stddev, minval, maxval;
-        Matrix1D<int> corner1(2), corner2(2);
-
-        sum_quadsig = sum2_quadsig = 0.;
-        sum_quadmean = sum2_quadmean = 0.;
-        XX(corner1) = STARTINGX(img());
-        YY(corner1) = STARTINGY(img());
-        XX(corner2) = 0;
-        YY(corner2) = 0;
-        img().computeStats(mean, stddev, minval, maxval, corner1, corner2);
-        sum2_quadmean += mean * mean;
-        sum_quadmean += mean;
-        sum2_quadsig += stddev * stddev;
-        sum_quadsig += stddev;
-        XX(corner1) = STARTINGX(img());
-        YY(corner1) = 0;
-        XX(corner2) = 0;
-        YY(corner2) = FINISHINGY(img());
-        img().computeStats(mean, stddev, minval, maxval, corner1, corner2);
-        sum2_quadmean += mean * mean;
-        sum_quadmean += mean;
-        sum2_quadsig += stddev * stddev;
-        sum_quadsig += stddev;
-        XX(corner1) = 0;
-        YY(corner1) = STARTINGY(img());
-        XX(corner2) = FINISHINGX(img());
-        YY(corner2) = 0;
-        img().computeStats(mean, stddev, minval, maxval, corner1, corner2);
-        sum2_quadmean += mean * mean;
-        sum_quadmean += mean;
-        sum2_quadsig += stddev * stddev;
-        sum_quadsig += stddev;
-        XX(corner1) = 0;
-        YY(corner1) = 0;
-        XX(corner2) = FINISHINGX(img());
-        YY(corner2) = FINISHINGX(img());
-        img().computeStats(mean, stddev, minval, maxval, corner1, corner2);
-        sum2_quadmean += mean * mean;
-        sum_quadmean += mean;
-        sum2_quadsig += stddev * stddev;
-        sum_quadsig += stddev;
-
-        sum_quadsig /= 4.;
-        sum2_quadsig = sqrt(sum2_quadsig / 4. - sum_quadsig * sum_quadsig);
-        sum_quadmean /= 4.;
-        sum2_quadmean = sqrt(sum2_quadmean / 4. - sum_quadmean * sum_quadmean);
     }
 };
 
@@ -247,7 +152,7 @@ public:
 int main(int argc, char **argv)
 {
     MetaData SF, SFtrain;
-    bool multivariate;
+    bool multivariate, verbose;
 
     // Read input parameters ............................................
     FileName fn, fn_train;
@@ -259,6 +164,7 @@ int main(int argc, char **argv)
         prm.fn_out = getParameter(argc, argv, "-o", "sort_junk");
         fn_train = getParameter(argc, argv, "-train", "");
         multivariate = checkParameter(argc, argv, "-multivariate");
+        verbose = checkParameter(argc, argv, "-verbose");
         if (fn_train != "")
             SFtrain.read(fn_train);
         prm.cutoff = textToFloat(getParameter(argc, argv, "-zcut", "-1"));
@@ -282,23 +188,20 @@ int main(int argc, char **argv)
         // Produce output .....................................................
         MetaData SFout, SFoutGood;
         std::ofstream fh_zind;
-        fh_zind.open((prm.fn_out + ".indZ").c_str(), std::ios::out);
+        if (verbose)
+            fh_zind.open((prm.fn_out + ".indZ").c_str(), std::ios::out);
         MultidimArray<double> finalZscore=prm.Zscore;
         double L=1;
         if (multivariate)
         {
-        	finalZscore*=prm.ZscoreMultivariate;
-        	L++;
+            finalZscore*=prm.ZscoreMultivariate;
+            L++;
         }
 
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(finalZscore)
         DIRECT_A1D_ELEM(finalZscore,i)=pow(DIRECT_A1D_ELEM(finalZscore,i),1.0/L);
 
         MultidimArray<int> sorted = finalZscore.indexSort();
-        fh_zind << "image : avg, stddev, min, max, nhighpix, nlowpix, nradhigh, nradlow, quadsig, quadmean, ampl2_1, ampl2_2, ampl2_3, ampl2_4 ";
-        if (multivariate)
-        	fh_zind << "MultivariateZscore ";
-        fh_zind << std::endl;
         int nr_imgs = SF.size();
         for (int imgno = 0; imgno < nr_imgs; imgno++)
         {
@@ -316,14 +219,15 @@ int main(int argc, char **argv)
                 SFoutGood.setValue(MDL_ENABLED,1);
                 SFoutGood.setValue(MDL_ZSCORE,finalZscore(isort));
             }
-            fh_zind << fnImg << " : ";
-            FOR_ALL_ELEMENTS_IN_ARRAY1D(prm.pcaAnalyzer.v[isort])
-            fh_zind << prm.pcaAnalyzer.v[isort](i) << "\t";
-            if (multivariate)
-            	fh_zind << prm.pcaAnalyzer.getSortedZscore(isort);
-            fh_zind << std::endl;
+            if (verbose)
+            {
+                fh_zind << fnImg << " : ";
+                FOR_ALL_ELEMENTS_IN_ARRAY1D(prm.pcaAnalyzer.v[isort])
+                fh_zind << prm.pcaAnalyzer.v[isort](i) << "\t";
+            }
         }
-        fh_zind.close();
+        if (verbose)
+            fh_zind.close();
         SFout.write(prm.fn_out + ".sel");
         if (prm.cutoff>0)
             SFoutGood.write(prm.fn_out + "_good.sel");
