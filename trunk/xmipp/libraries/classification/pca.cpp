@@ -802,7 +802,6 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
 #endif
 
     Matrix2D<double> covinv=cov.inv();
-    std::cout << covinv << std::endl;
     Zscore.initZeros(N);
     for (int ii=0; ii<N; ii++)
     {
