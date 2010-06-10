@@ -317,7 +317,10 @@ public:
                            MultidimArray<double> &stddev);
 
     /// Subtract average
-    void subtractAverage();
+    void subtractAvg();
+
+    /// Standardarize variables
+    void standardarizeVariables();
 
     /// Learn basis
     void learnPCABasis(int NPCA, int Niter);
