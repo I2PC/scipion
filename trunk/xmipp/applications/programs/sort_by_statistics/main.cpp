@@ -184,10 +184,8 @@ public:
         {
             pcaAnalyzer.computeStatistics(avg,stddev);
             if (multivariate)
-                pcaAnalyzer.evaluateZScore(2,10);
+                pcaAnalyzer.evaluateZScore(2,20);
         }
-        else
-        	Zscore.rangeAdjust(0,1);
     }
 
     void quadrant_stats(Image<double> &img,
@@ -286,8 +284,15 @@ int main(int argc, char **argv)
         std::ofstream fh_zind;
         fh_zind.open((prm.fn_out + ".indZ").c_str(), std::ios::out);
         MultidimArray<double> finalZscore=prm.Zscore;
+        double L=1;
         if (multivariate)
-        	finalZscore+=prm.ZscoreMultivariate;
+        {
+        	finalZscore*=prm.ZscoreMultivariate;
+        	L++;
+        }
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(finalZscore)
+        DIRECT_A1D_ELEM(finalZscore,i)=pow(DIRECT_A1D_ELEM(finalZscore,i),1.0/L);
 
         MultidimArray<int> sorted = finalZscore.indexSort();
         fh_zind << "image : avg, stddev, min, max, nhighpix, nlowpix, nradhigh, nradlow, quadsig, quadmean, ampl2_1, ampl2_2, ampl2_3, ampl2_4 ";
