@@ -129,10 +129,12 @@ int main(int argc, char **argv)
             // Initialize progress bar
             time_config();
             int i = 0;
+            //Image<double> image;
+
             init_progress_bar(SF.size());
             FOR_ALL_OBJECTS_IN_METADATA(SF)
             {
-            	Image<double> image; // FIXME: This should disappear, now provoking segfault
+            	 // FIXME: This should disappear, now provoking segfault
                 SF.getValue(MDL_IMAGE,fn_in);
                 if (fn_oext == "")
                     fn_out = fn_in;
