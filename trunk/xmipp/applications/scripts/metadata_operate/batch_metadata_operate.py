@@ -102,13 +102,14 @@ labelsInExpression=fill_array(expression)
 #loop through object
 id=mD.firstObject()
 _auxString=XmippData.stringP()
-result=""
+result="" 
+_mdl=XmippData.MDL()
 while(id!=XmippData.MetaData.NO_MORE_OBJECTS):
    #all operation but replace
    if (expression.find('replace')==-1):
        auxExpression=expression
        for i in labelsInExpression:
-           MDLabel label = MDL::str2Label(i);
+           label = _mdl.str2Label(i);
            MDValue v(label);
            mD.getValue()
 	       mD.writeValueToString(_auxString,i)

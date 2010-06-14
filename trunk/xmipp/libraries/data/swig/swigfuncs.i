@@ -27,6 +27,8 @@ class std::string {};
 %ignore ByteSwap;
 %ignore Marsaglia;
 %include "../funcs.h"
+%ignore to_lowercase;
+
 
 %pointer_class(FileName, FileNameP);
 

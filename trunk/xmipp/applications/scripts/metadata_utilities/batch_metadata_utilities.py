@@ -258,7 +258,7 @@ def process_subs(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel):
         MD1.combine(MD2,mdl.cXmippData.MDL.str2Label(cLabel))
         MD1.write(outMetaDataFile)
 
-def process_copy(inMetaDataFileS,cPath):
+def process_copy(inMetaDataFileS,outMetaDataFileS,cPath):
     global operation
     import shutil
     if operation!=_myCode.delete:
@@ -274,9 +274,15 @@ def process_copy(inMetaDataFileS,cPath):
              os.makedirs(cPath)
     #loop
     inMetaDataFile   = XmippData.FileName(inMetaDataFileS)
+    outMetaDataFile  = XmippData.FileName(outMetaDataFileS)
+    tmpMetaDataFile  = XmippData.FileName()
     MD1=XmippData.MetaData(inMetaDataFile)
+    MD2=XmippData.MetaData()
     id=MD1.firstObject()
+    print "id",id
     ss=XmippData.stringP()
+    ii=XmippData.intP()
+    ii.assign(1)
     messsage=""
     if (operation==_myCode.copy):
         message="copying "
@@ -285,8 +291,9 @@ def process_copy(inMetaDataFileS,cPath):
     elif (operation==_myCode.delete):
         message="delete "
         
-    while(id!=XmippData.MetaData.NO_MORE_OBJECTS):
+    while(id>0):
          XmippData.getValueString(MD1, XmippData.MDL_IMAGE, ss,id)
+
          if (operation==_myCode.copy):
              shutil.copy(ss.value(),cPath)
          elif (operation==_myCode.move):
@@ -294,7 +301,15 @@ def process_copy(inMetaDataFileS,cPath):
          elif (operation==_myCode.delete):
              os.remove(ss.value())     
          print message + ss.value() 
+         tmpMetaDataFile.compose(-1, ss)
+         tmpMetaDataFile=tmpMetaDataFile.remove_directories()
+         ss.assign(tmpMetaDataFile)
+         ss.assign (cPath + '/' +  ss.value()) 
          id=MD1.nextObject()
+         MD2.addObject();
+         XmippData.setValueString(MD2,XmippData.MDL_IMAGE,ss)
+         XmippData.setValueInt(MD2,XmippData.MDL_ENABLED,ii)
+    MD2.write(outMetaDataFile)
 def process_select(inMetaDataFileS,outMetaDataFileS,minValue,maxValue,cLabel):
     inMetaDataFile   = XmippData.FileName(inMetaDataFileS)
     outMetaDataFile  = XmippData.FileName(outMetaDataFileS)
@@ -332,7 +347,7 @@ elif(operation==_myCode.inter or
 elif(operation==_myCode.copy or
      operation==_myCode.delete or
      operation==_myCode.move):
-    process_copy(inMetaDataFile,cPath)
+    process_copy(inMetaDataFile,outMetaDataFile,cPath)
     
 elif(operation==_myCode.select):
     process_select(inMetaDataFile,outMetaDataFile,minValue,maxValue,cLabel)
