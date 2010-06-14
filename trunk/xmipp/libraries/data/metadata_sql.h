@@ -44,6 +44,16 @@ enum AggregateOperation
     AGGR_COUNT, AGGR_MAX, AGGR_MIN, AGGR_SUM, AGGR_AVG
 };
 
+enum SetOperation
+{
+    UNION, UNION_DISTINCT, INTERSECTION, SUBSTRACTION, INNER_JOIN, LEFT_JOIN, OUTER_JOIN
+};
+
+enum JoinType
+{
+    INNER=INNER_JOIN, LEFT=LEFT_JOIN, OUTER=OUTER_JOIN
+};
+
 #include "metadata.h"
 
 /** MDSql this class will manage SQL database interactions
@@ -104,16 +114,19 @@ public:
     /** Coppy the objects from a metada to other
      * return the number of objects copied
      * */
-    long int copyObjects(MetaData *mdPtrOut,
-                                const MDQuery *queryPtr = NULL, const MDLabel sortLabel = MDL_OBJID,
-                                int limit = -1, int offset = 0);
+    long int copyObjects(MDSql * sqlOut,
+                         const MDQuery *queryPtr = NULL, const MDLabel sortLabel = MDL_OBJID,
+                         int limit = -1, int offset = 0) const;
+    long int copyObjects(MetaData * mdPtrOut,
+                         const MDQuery *queryPtr = NULL, const MDLabel sortLabel = MDL_OBJID,
+                         int limit = -1, int offset = 0) const;
 
     /** This function is to perform aggregation operations
      *
      */
     void aggregateMd(MetaData *mdPtrOut,
-                            const std::vector<AggregateOperation> &operations,
-                            MDLabel operateLabel);
+                     const std::vector<AggregateOperation> &operations,
+                     MDLabel operateLabel);
 
     /**
      *This function will be used to create o delete an index over a column
@@ -132,8 +145,8 @@ public:
     int columnMaxLength(MDLabel column);
 
     /**Functions to implement set operations */
-    void setOperate(MetaData *mdPtrOut, MDLabel column, int operation);
-
+    void setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation);
+    void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel column, SetOperation operation);
     /** Function to dump DB to file */
     static void dumpToFile(const FileName &fileName);
 
@@ -164,13 +177,13 @@ private:
     int getUniqueId();
 
     bool dropTable();
-    bool createTable(const std::vector<MDLabel> * labelsVector = NULL);
+    bool createTable(const std::vector<MDLabel> * labelsVector = NULL, bool withObjID=true);
     bool insertValues(double a, double b);
     void prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt);
     bool execSingleStmt(const std::stringstream &ss);
     bool execSingleStmt(sqlite3_stmt *&stmt, const std::stringstream *ss = NULL);
     long int execSingleIntStmt(const std::stringstream &ss);
-    std::string tableName(const int tableId);
+    std::string tableName(const int tableId) const;
 
     int bindValue(sqlite3_stmt *stmt, const int position, const MDValue &valueIn);
     int extractValue(sqlite3_stmt *stmt, const int position, MDValue &valueOut);
@@ -235,7 +248,8 @@ class MDValueEqual: public MDQuery
 public:
     MDLabel label;
 
-    MDValueEqual(){}
+    MDValueEqual()
+    {}
     template <class T>
     MDValueEqual(MDLabel label, const T &value)
     {
@@ -254,7 +268,8 @@ public:
 class MDValueRange: public MDQuery
 {
 public:
-    MDValueRange(){}
+    MDValueRange()
+    {}
     template <class T>
     MDValueRange(MDLabel label, const T &valueMin, const T &valueMax)
     {
@@ -289,7 +304,7 @@ public:
     sqlite3_stmt *addRowStmt;
 
     MDCache();
-     ~MDCache();
+    ~MDCache();
 };
 
 #endif

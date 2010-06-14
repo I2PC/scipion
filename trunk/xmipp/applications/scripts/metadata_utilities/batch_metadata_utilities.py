@@ -37,7 +37,7 @@ class Code:
        self.union=1
        self.inter=2
        self.subs=3
-       self.product=4
+       self.join=4
        self.copy=5
        self.move=6
        self.delete=7
@@ -51,8 +51,8 @@ class Code:
             return self.inter
        elif (_string=="-s"   or _string == "--subs" or _string == "--substraction"):
             return self.subs
-       elif (_string=="-p"   or _string == "--product"or _string == "--naturalJoin"):
-            return self.product
+       elif (_string=="-j"   or _string == "--join" or _string == "--leftJoin"):
+            return self.join
        elif (_string == '-c' or _string == '--copy'):
             return self.copy
        elif (_string == '-m' or _string == '--move'):
@@ -73,8 +73,8 @@ class Code:
             return 'Intersection'
        elif (_operation==self.subs):
             return 'Substraction'
-       elif (_operation==self.product):
-            return 'Natural Join (product)'
+       elif (_operation==self.join):
+            return 'leftJoin'
        elif (_operation==self.copy):
             return 'Copy'
        elif (_operation==self.move):
@@ -106,13 +106,13 @@ def check_operation(option, opt_str, value, parser):
 def check_label(option, opt_str, value, parser):
     global operation
     if(operation==_myCode.unknown):
-        raise OptionValueError("select operation (--product,--select, etc.) before option '%s'" % opt_str)
+        raise OptionValueError("select operation (--join,--select, etc.) before option '%s'" % opt_str)
     if (operation == _myCode.union or 
         operation == _myCode.inter or
         operation == _myCode.subs or
-        operation == _myCode.product or
+        operation == _myCode.join or
         operation == _myCode.select or
-	operation == _myCode.sort):
+        operation == _myCode.sort):
        setattr(parser.values, option.dest, value)
     else:
        raise OptionValueError("selected option " + opt_str + " is not compatible with operation "+ _myCode.decode(operation))
@@ -120,7 +120,7 @@ def check_label(option, opt_str, value, parser):
 def check_value(option, opt_str, value, parser):
     global operation
     if(operation==_myCode.unknown):
-        raise OptionValueError("select operation (--product,--select, etc.) before option '%s'" % opt_str)
+        raise OptionValueError("select operation (--join,--select, etc.) before option '%s'" % opt_str)
     if (operation == _myCode.select):
        setattr(parser.values, option.dest, value)
     else:
@@ -131,10 +131,11 @@ def command_line_options():
       import optparse
       _usage = """usage: %prog [options]
 Example:
-   xmipp_metadata_utilities  -i i1.doc --union i2.doc -o result.doc" 
-   xmipp_metadata_utilities  -i i1.doc -o result.doc --copy /home/roberto/kk" 
-   xmipp_metadata_utilities  -i i1.doc -o result.doc --naturalJoin i2.doc -l angleROT" 
-   xmipp_metadata_utilities  -i i1.doc -o result.doc --select angleROT --minValue 0 --maxValue 23" 
+   xmipp_metadata_utilities  -i i1.doc --union i2.doc -o result.doc [-l image]
+   xmipp_metadata_utilities  -i i1.doc -o result.doc --copy /home/roberto/kk 
+   xmipp_metadata_utilities  -i i1.doc -o result.doc --naturalJoin i2.doc -l angleROT 
+   xmipp_metadata_utilities  -i i1.doc -o result.doc --select angleROT --minValue 0 --maxValue 23
+   xmipp_metadata_utilities  -i i1.doc --sort -o result.doc -l image
    """
       global operation
       parser = optparse.OptionParser(_usage)
@@ -155,7 +156,7 @@ Example:
       parser.add_option("-s","--subs", "--substraction", dest="inMetaDataFile2",
             default="", type="string",action="callback", callback=check_operation,
             help="substract two metadata files) (result = entries in first metadata not in the second)")
-      parser.add_option("-p", "--product", "--naturalJoin", dest="inMetaDataFile2",
+      parser.add_option("-p", "--join", "--naturalJoin", dest="inMetaDataFile2",
             default="", type="string",action="callback", callback=check_operation,
             help=" natural join using label given in -l option, this label should be unique")
       parser.add_option("-l", "--label", dest="cLabel",
@@ -219,7 +220,7 @@ def process_union(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel):
     if(len(cLabel)<1):
         MD1.unionAll(MD2)
     else:
-        MD1.union_(MD2,XmippData.MDL.str2Label(cLabel))
+        MD1.unionDistinct(MD2,XmippData.MDL.str2Label(cLabel))
     MD1.write(outMetaDataFile)
     
 def process_sort(inMetaDataFileS,outMetaDataFileS,cLabel):
@@ -230,8 +231,9 @@ def process_sort(inMetaDataFileS,outMetaDataFileS,cLabel):
     inMetaDataFile   = XmippData.FileName(inMetaDataFileS)
     outMetaDataFile  = XmippData.FileName(outMetaDataFileS)
     MD1=XmippData.MetaData(inMetaDataFile)
-    MD1.sort(MD1,XmippData.MDL.str2Label(cLabel))
-    MD1.write(outMetaDataFile)
+    MD2=XmippData.MetaData()
+    MD2.sort(MD1,XmippData.MDL.str2Label(cLabel))
+    MD2.write(outMetaDataFile)
     
 def process_subs(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel):
     #l must be given
@@ -243,27 +245,26 @@ def process_subs(inMetaDataFileS,inMetaDataFile2S,outMetaDataFileS,cLabel):
     inMetaDataFile2  = XmippData.FileName(inMetaDataFile2S)
     outMetaDataFile  = XmippData.FileName(outMetaDataFileS)
     
-    mdl=XmippData.MetaDataContainer()
-
     MD1=XmippData.MetaData(inMetaDataFile)
-    MD2=XmippData.MetaData(inMetaDataFile2)
-    MD3=XmippData.MetaData()
+    MD2=XmippData.MetaData(inMetaDataFile2)    
     if(operation==_myCode.subs):
-        MD3.substraction(MD1,MD2,XmippData.MDL.str2Label(cLabel))
-        MD3.write(outMetaDataFile)
+        MD1.substraction(MD2, XmippData.MDL.str2Label(cLabel))
+        MD1.write(outMetaDataFile)        
     elif(operation==_myCode.inter):
-        MD3.intersection(MD1,MD2,XmippData.MDL.str2Label(cLabel))
+        MD1.intersection(MD2, XmippData.MDL.str2Label(cLabel))
+        MD1.write(outMetaDataFile)        
+    elif(operation==_myCode.join):
+        MD3 = XmippData.MetaData()
+        MD3.join(MD1, MD2, XmippData.MDL.str2Label(cLabel))
         MD3.write(outMetaDataFile)
-    elif(operation==_myCode.product):
-        MD1.combine(MD2,mdl.cXmippData.MDL.str2Label(cLabel))
-        MD1.write(outMetaDataFile)
+    
 
 def process_copy(inMetaDataFileS,outMetaDataFileS,cPath):
     global operation
     import shutil
     if operation!=_myCode.delete:
         if(len(cPath)<1 ):
-            print "Product requires a Metadata label '-l'"
+            print "File operation requires a path"
             sys.exit()
         _char= cPath[0:1]
         if(_char=='-'):
@@ -341,7 +342,7 @@ if(operation==_myCode.union):
     process_union(inMetaDataFile,inMetaDataFile2,outMetaDataFile,cLabel)
 elif(operation==_myCode.inter or 
      operation==_myCode.subs  or
-     operation==_myCode.product):
+     operation==_myCode.join):
     process_subs(inMetaDataFile,inMetaDataFile2,outMetaDataFile,cLabel)
 
 elif(operation==_myCode.copy or

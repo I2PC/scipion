@@ -821,10 +821,10 @@ void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperat
 
 
 //-------------Set Operations ----------------------
-void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, int operation)
+void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation)
 {
     if (this == &mdIn) //not sense to operate on same metadata
-        return;
+        REPORT_ERROR(-55, "Couldn't perform this operation on input metadata");
     //Add labels to be sure are present
     for (int i = 0; i < mdIn.activeLabels.size(); i++)
         addLabel(mdIn.activeLabels[i]);
@@ -833,30 +833,51 @@ void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, int opera
     firstObject();
 }
 
+void MetaData::_setOperates(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, SetOperation operation)
+{
+    if (this == &mdInLeft || this == &mdInRight) //not sense to operate on same metadata
+        REPORT_ERROR(-55, "Couldn't perform this operation on input metadata");
+    //Add labels to be sure are present
+    for (int i = 0; i < mdInLeft.activeLabels.size(); i++)
+        addLabel(mdInLeft.activeLabels[i]);
+    for (int i = 0; i < mdInRight.activeLabels.size(); i++)
+        addLabel(mdInRight.activeLabels[i]);
+
+    myMDSql->setOperate(&mdInLeft, &mdInRight, label, operation);
+    firstObject();
+}
+
 void MetaData::unionDistinct(const MetaData &mdIn, const MDLabel label)
 {
-    _setOperates(mdIn, label, 1);
+    _setOperates(mdIn, label, UNION_DISTINCT);
 }
 
 void MetaData::unionAll(const MetaData &mdIn)
 {
-    if (this == &mdIn) //not sense to copy same metadata
-        return;
-    //Add labels to be sure are present
-    for (int i = 0; i < mdIn.activeLabels.size(); i++)
-        addLabel(mdIn.activeLabels[i]);
-    mdIn.myMDSql->copyObjects(this);
-    firstObject();
+//    if (this == &mdIn) //not sense to copy same metadata
+//        return;
+//    //Add labels to be sure are present
+//    for (int i = 0; i < mdIn.activeLabels.size(); i++)
+//        addLabel(mdIn.activeLabels[i]);
+//    mdIn.myMDSql->copyObjects(this);
+//    firstObject();
+
+    _setOperates(mdIn, MDL_UNDEFINED, UNION);//label not needed for unionAll operation
 }
 
 
 void MetaData::intersection(const MetaData &mdIn, const MDLabel label)
 {
-    _setOperates(mdIn, label, 3);
+    _setOperates(mdIn, label, INTERSECTION);
 }
 void MetaData::substraction(const MetaData &mdIn, const MDLabel label)
 {
-    _setOperates(mdIn, label, 2);
+    _setOperates(mdIn, label, SUBSTRACTION);
+}
+
+void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type)
+{
+    _setOperates(mdInLeft, mdInRight, label, (SetOperation)type);
 }
 
 void MetaData::randomize(MetaData &MDin)

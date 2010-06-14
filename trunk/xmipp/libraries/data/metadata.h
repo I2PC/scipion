@@ -162,8 +162,8 @@ private:
      * wich can be expressed in terms of
      * ADD, SUBSTRACT of intersection part
      */
-    void _setOperates(const MetaData &mdIn, const MDLabel label, int operation);
-
+    void _setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation);
+    void _setOperates(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, SetOperation operation);
     /** clear data and table structure */
     void _clear(bool onlyData=false);
 
@@ -511,14 +511,19 @@ public:
      *@ingroup SetOperations
      * result in "calling" metadata
      */
-    void intersection(const MetaData &mdIn, const MDLabel label=MDL_OBJID);
+    void intersection(const MetaData &mdIn, const MDLabel label);
 
     /** substract two metadata objects,
      * @ingroup SetOperations
      * result in "calling" metadata
      */
-    void substraction(const MetaData &mdIn, const MDLabel label=MDL_OBJID);
+    void substraction(const MetaData &mdIn, const MDLabel label);
 
+    /** join two metadata
+     * @ingroup SetOperations
+     * result in "calling" metadata
+     */
+    void join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type=LEFT);
 
 
     //---------TO ORGANIZE-------------------------

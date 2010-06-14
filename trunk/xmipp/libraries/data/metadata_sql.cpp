@@ -78,7 +78,7 @@ long int MDSql::addRow()
     rc = sqlite3_reset(stmt);
     long int id = -1;
     if (execSingleStmt(stmt))
-         id = sqlite3_last_insert_rowid(db);
+        id = sqlite3_last_insert_rowid(db);
 
     //sqlite3_finalize(stmt);
     return id;
@@ -204,13 +204,19 @@ long int MDSql::deleteObjects(const MDQuery *queryPtr)
 
 long int MDSql::copyObjects(MetaData *mdPtrOut,
                             const MDQuery *queryPtr, const MDLabel sortLabel,
-                            int limit, int offset)
+                            int limit, int offset) const
+{
+    copyObjects(mdPtrOut->myMDSql, queryPtr, sortLabel, limit, offset);
+}
+long int MDSql::copyObjects(MDSql * sqlOut,
+                            const MDQuery *queryPtr, const MDLabel sortLabel,
+                            int limit, int offset) const
 {
     //NOTE: Is assumed that the destiny table has
     // the same columns that the source table, if not
     // the INSERT will fail
     std::stringstream ss, ss2;
-    ss << "INSERT INTO " << tableName(mdPtrOut->myMDSql->tableId);
+    ss << "INSERT INTO " << tableName(sqlOut->tableId);
     //Add columns names to the insert and also to select
     //* couldn't be used because maybe are duplicated objID's
     std::string sep = " ";
@@ -227,7 +233,7 @@ long int MDSql::copyObjects(MetaData *mdPtrOut,
         ss << " WHERE " << queryPtr->queryString;
     ss << " ORDER BY " << MDL::label2Str(sortLabel);
     ss << " LIMIT " << limit << " OFFSET " << offset << ";";
-    if (execSingleStmt(ss))
+    if (sqlOut->execSingleStmt(ss))
     {
         return sqlite3_changes(db);
     }
@@ -339,15 +345,20 @@ int MDSql::columnMaxLength(MDLabel column)
     return execSingleIntStmt(ss);
 }
 
-void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, int operation)
+void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation)
 {
     std::stringstream ss, ss2;
 
-    if (operation == 1) //unionDistinct
+    int size;
+    std::string sep = " ";
+    switch (operation)
     {
+    case UNION:
+        copyObjects(mdPtrOut->myMDSql);
+        break;
+    case UNION_DISTINCT: //unionDistinct
         //Create string with columns list
-        std::string sep = " ";
-        int size = myMd->activeLabels.size();
+        size = myMd->activeLabels.size();
         for (int i = 0; i < size; i++)
         {
             ss2 << sep << MDL::label2Str( myMd->activeLabels[i]);
@@ -360,17 +371,60 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, int operation)
         << " WHERE "<< MDL::label2Str(column)
         << " NOT IN (SELECT " << MDL::label2Str(column)
         << " FROM " << tableName(mdPtrOut->myMDSql->tableId) << ");";
-    }
-    else //difference or intersecction
-    {
-
+        break;
+    case INTERSECTION:
+    case SUBSTRACTION:
         ss << "DELETE FROM " << tableName(mdPtrOut->myMDSql->tableId)
         << " WHERE " << MDL::label2Str(column);
-        if (operation == 3)
+        if (operation == INTERSECTION)
             ss << " NOT";
         ss << " IN (SELECT " << MDL::label2Str(column)
         << " FROM " << tableName(tableId) << ");";
+        break;
     }
+    execSingleStmt(ss);
+}
+
+void MDSql::setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel column, SetOperation operation)
+{
+    std::stringstream ss, ss2, ss3;
+    int size;
+    std::string join_type = "", sep = "";
+
+    switch (operation)
+    {
+    case INNER_JOIN:
+        join_type = " INNER ";
+        break;
+    case LEFT_JOIN:
+        join_type = " LEFT OUTER ";
+        break;
+    case OUTER_JOIN:
+        join_type = " OUTER ";
+        break;
+    }
+    MDSql temp(NULL);
+    temp.createTable(&(mdInRight->activeLabels), false);
+    mdInRight->myMDSql->copyObjects(&temp);
+    size = myMd->activeLabels.size();
+    for (int i = 0; i < size; i++)
+    {
+        ss2 << sep << MDL::label2Str( myMd->activeLabels[i]);
+        ss3 << sep;
+        if (column == myMd->activeLabels[i])
+            ss3 << tableName(mdInLeft->myMDSql->tableId) << ".";
+        ss3 << MDL::label2Str( myMd->activeLabels[i]);
+        sep = ", ";
+    }
+    ss << "INSERT INTO " << tableName(tableId)
+    << " (" << ss2.str() << ")"
+    << " SELECT " << ss3.str()
+    << " FROM " << tableName(mdInLeft->myMDSql->tableId)
+    << join_type << " JOIN " << tableName(temp.tableId)
+    << " ON " << tableName(mdInLeft->myMDSql->tableId) << "." << MDL::label2Str(column)
+    << "=" << tableName(temp.tableId) << "." << MDL::label2Str(column) << ";";
+
+    std::cerr << "JOIN STMT: " << ss.str() <<std::endl;
     execSingleStmt(ss);
 }
 
@@ -448,16 +502,22 @@ bool MDSql::dropTable()
     return execSingleStmt(ss);
 }
 
-bool MDSql::createTable(const std::vector<MDLabel> * labelsVector)
+bool MDSql::createTable(const std::vector<MDLabel> * labelsVector, bool withObjID)
 {
     std::stringstream ss;
-    ss << "CREATE TABLE " << tableName(tableId) <<
-    "(objID INTEGER PRIMARY KEY ASC AUTOINCREMENT";
+    ss << "CREATE TABLE " << tableName(tableId) << "(";
+    std::string sep = "";
+    if (withObjID)
+    {
+        ss << "objID INTEGER PRIMARY KEY ASC AUTOINCREMENT";
+        sep = ", ";
+    }
     if (labelsVector != NULL)
     {
         for (int i = 0; i < labelsVector->size(); i++)
         {
-            ss << ", " << MDL::label2SqlColumn(labelsVector->at(i));
+            ss << sep << MDL::label2SqlColumn(labelsVector->at(i));
+            sep = ", ";
         }
     }
     ss << ");";
@@ -516,7 +576,7 @@ long int MDSql::execSingleIntStmt(const std::stringstream &ss)
     return result;
 }
 
-std::string MDSql::tableName(const int tableId)
+std::string MDSql::tableName(const int tableId) const
 {
     std::stringstream ss;
     ss <<  "MDTable_" << tableId;
@@ -576,8 +636,8 @@ int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDValue &valueOu
 
 MDCache::MDCache()
 {
-	this->addRowStmt = NULL;
-	this->iterStmt = NULL;
+    this->addRowStmt = NULL;
+    this->iterStmt = NULL;
 }
 
 MDCache::~MDCache()
