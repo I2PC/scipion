@@ -854,13 +854,13 @@ void MetaData::unionDistinct(const MetaData &mdIn, const MDLabel label)
 
 void MetaData::unionAll(const MetaData &mdIn)
 {
-//    if (this == &mdIn) //not sense to copy same metadata
-//        return;
-//    //Add labels to be sure are present
-//    for (int i = 0; i < mdIn.activeLabels.size(); i++)
-//        addLabel(mdIn.activeLabels[i]);
-//    mdIn.myMDSql->copyObjects(this);
-//    firstObject();
+    //    if (this == &mdIn) //not sense to copy same metadata
+    //        return;
+    //    //Add labels to be sure are present
+    //    for (int i = 0; i < mdIn.activeLabels.size(); i++)
+    //        addLabel(mdIn.activeLabels[i]);
+    //    mdIn.myMDSql->copyObjects(this);
+    //    firstObject();
 
     _setOperates(mdIn, MDL_UNDEFINED, UNION);//label not needed for unionAll operation
 }
@@ -878,6 +878,12 @@ void MetaData::substraction(const MetaData &mdIn, const MDLabel label)
 void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type)
 {
     _setOperates(mdInLeft, mdInRight, label, (SetOperation)type);
+}
+
+void MetaData::operate(const std::string &expression)
+{
+    if (!myMDSql->operate(expression))
+        REPORT_ERROR(-55, "MetaData::operate: error doing operation");
 }
 
 void MetaData::randomize(MetaData &MDin)

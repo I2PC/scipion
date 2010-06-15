@@ -309,7 +309,7 @@ def AddSQLiteLibrary():
     lib1 = env.Command(toBuild, SQliteDir+"/sqlite3.c",
         "cd "+SQliteDir+" ; make clean > /dev/null ; make -j "+str(numJobs)+\
         " > ../../build/sqlite_make.log; "+\
-        "chmod 755 sqlite3; rm -rf ../../bin/xmipp_sqlite3; "+ \
+        "chmod 755 sqlite3; mkdir -p ../../bin/; rm -rf ../../bin/xmipp_sqlite3; "+ \
 	    "cp sqlite3 ../../bin/xmipp_sqlite3")
     alias = env.Alias(toCopy, lib1)
     install = env.Install(libprefix, source=toBuild)
@@ -591,6 +591,8 @@ AddXmippProgram('header_print')
 #AddXmippProgram('make_spectra', ['XmippRecons'])
 #AddXmippProgram('mask')
 AddXmippProgram('mean_shift')
+AddXmippProgram('metadata_split')
+AddXmippProgram('metadata_operate')
 #AddXmippProgram('micrograph_denoise', ['XmippRecons'])
 AddXmippProgram('micrograph_downsample', ['XmippRecons'])
 #AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
@@ -632,7 +634,6 @@ AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('rotate')
 AddXmippProgram('scale')
 AddXmippProgram('scale_pyramid')
-AddXmippProgram('metadata_split')
 #AddXmippProgram('selfile_statistics')
 #AddXmippProgram('selfile_subset')
 #AddXmippProgram('separate_objects')
@@ -655,7 +656,7 @@ AddXmippProgram('window')
 # 
 AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create','.py')
 AddBatch('metadata_utilities', 'applications/scripts/metadata_utilities','.py')
-AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
+#AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
 AddBatch('classify_CL2D_core_analysis', 'applications/scripts/classify_CL2D_core_analysis')
 AddBatch('convert_img2jpg','applications/scripts/convert_img2jpg')
 AddBatch('convert_lst2sel', 'applications/scripts/convert_lst2sel')

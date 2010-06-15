@@ -525,6 +525,11 @@ public:
      */
     void join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type=LEFT);
 
+    /** basic operations on columns data
+     * Mainly perform replacements on string values and
+     * basic algebraic operations on numerical ones.
+     */
+    void operate(const std::string &expression);
 
     //---------TO ORGANIZE-------------------------
     /** Randomize this metadata, MDin is input

@@ -148,6 +148,8 @@ public:
     void setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation);
     void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel column, SetOperation operation);
     /** Function to dump DB to file */
+    bool operate(const std::string &expression);
+
     static void dumpToFile(const FileName &fileName);
 
 
