@@ -32,11 +32,11 @@ void Usage();
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    ImageXmipp      img;
+    Image<double>      img;
     FileName        fn_input;
     bool            tiltSeries;
     double          firstAngle, angularStep;
-    MetaData SF;
+    MetaData SF, MD;
 
     try
     {
@@ -75,19 +75,33 @@ int main(int argc, char *argv[])
                       << "Angular step=" << angularStep << std::endl;
         double angle=firstAngle;
 
+        //create NULL metadata
+        MD.addObject();
+        double daux=0.;
+        MD.setValue(MDL_ORIGINX, daux);
+        MD.setValue(MDL_ORIGINY, daux);
+        MD.setValue(MDL_ORIGINZ, daux);
+        MD.setValue(MDL_ANGLEROT, daux);
+        MD.setValue(MDL_ANGLETILT, daux);
+        daux = (double)1.0;
+        MD.setValue(MDL_WEIGHT, daux);
+        bool baux;
+        baux=false;
+        MD.setValue(MDL_FLIP, baux);
+
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             FileName fn_img;
             SF.getValue( MDL_IMAGE, fn_img); 
             if (fn_img=="") break;
-            img.read(fn_img);
+            img.read(fn_img,false,-1,false);
             img.clear_header();
             if (tiltSeries)
             {
-                img.set_tilt(angle);
+                img.setTilt(angle);
                 angle+=angularStep;
             }
-            img.write(img.name());
+            img.write(fn_img);
         }
 
     }
