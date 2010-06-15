@@ -560,11 +560,12 @@ void VQ::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
     if( rank == 0 )
         init_progress_bar(N);
 
+    SF->firstObject();
     for( int n=0; n < N ; n++ )
     {
         Image<double> I;
         FileName auxFN;
-        SF->getValue(MDL_IMAGE,auxFN,n);
+        SF->getValue(MDL_IMAGE,auxFN,n+1);
         SFv.push_back( auxFN );
 
         if( n % mpi_size == rank )
