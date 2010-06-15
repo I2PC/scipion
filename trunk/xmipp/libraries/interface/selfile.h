@@ -712,12 +712,12 @@ public:
      *  sel.get_statistics(aveImg, min, max);
      *  @endcode
      */
-    void get_statistics(Image& _ave,
+/*    void get_statistics(Image& _ave,
                         Image& _sd,
                         double& _min,
                         double& _max,
                         bool apply_geo = false);
-
+*/
     /// @defgroup SelFilesModify Modifying the selection file
     /// @ingroup SelFiles
 

@@ -245,20 +245,6 @@ void SelFile::read(const FileName &sel_name, int overriding)
         clear();
 
     // Open file
-    if (sel_name.find(IMAGIC_TAG) == 0)
-    {
-        // Read Imagic selfile
-        const FileName hed_fname = sel_name.substr(IMAGIC_TAG_LEN);
-        ImageImagicinfo info = ImagicGetImgInfo(hed_fname);
-        no_imgs = info.num_img;
-        temp.line_type = SelLine::DATALINE;
-        temp.label = SelLine::ACTIVE;
-        for (unsigned i = 0; i < no_imgs; i++)
-        {
-            temp.text = ImagicMakeName(hed_fname.c_str(), i);
-            text_line.push_back(temp);
-        }
-    }
     else
     {
         // Read normal selfile
@@ -668,38 +654,6 @@ int SelFile::LineNo()
     return N;
 }
 
-/* Image size -------------------------------------------------------------- */
-void SelFile::ImgSize(int &Ydim, int &Xdim)
-{
-    std::vector<SelLine>::iterator aux = current_line;
-    go_first_ACTIVE();
-    FileName fn_img = (*current_line).text;
-    if (fn_img.find("imagic:") != -1)
-    {
-        Image *img = Image::LoadImage(fn_img);
-        Ydim = (*img)().ydim;
-        Xdim = (*img)().xdim;
-        delete img;
-    }
-    else if (Is_ImageXmipp(fn_img))
-    {
-        ImageXmipp img;
-        img.read(fn_img);
-        Ydim = img().ydim;
-        Xdim = img().xdim;
-    }
-    else if (Is_FourierImageXmipp(fn_img))
-    {
-        FourierImageXmipp img;
-        img.read(fn_img);
-        Ydim = img().ydim;
-        Xdim = img().xdim;
-    }
-    else
-        REPORT_ERROR(1, "SelFile::ImgSize: First Active file is not an image");
-
-    current_line = aux;
-}
 
 /* File Extension ---------------------------------------------------------- */
 FileName SelFile::FileExtension()
@@ -710,62 +664,6 @@ FileName SelFile::FileExtension()
     ext = ext.get_extension();
     current_line = aux;
     return ext;
-}
-
-/* Statistics -------------------------------------------------------------- */
-void SelFile::getStatistics(Image& _ave, Image& _sd, double& _min,
-                             double& _max, bool apply_geo)
-{
-    _min = MAXFLOAT;
-    _max = 0;
-    bool first = true;
-    int n = 0;
-    // Calculate Mean
-    go_beginning();
-    while ((!eof()))
-    {
-        std::string image_name = NextImg();
-        if (image_name == "")
-            continue;
-        Image *image = Image::LoadImage(image_name, apply_geo); // reads image
-        double min, max, avg, stddev;
-        (*image)().computeStats(avg, stddev, min, max);
-        if (_min > min)
-            _min = min;
-        if (_max < max)
-            _max = max;
-        if (first)
-        {
-            _ave = *image;
-            first = false;
-        }
-        else
-        {
-            _ave() += (*image)();
-        }
-        delete image;
-        n++;
-    }
-    if (n > 0)
-        _ave() /= n;
-    _sd = _ave;
-    _sd().initZeros();
-    // Calculate SD
-    go_beginning();
-    while ((!eof()))
-    {
-        std::string image_name = NextImg();
-        if (image_name == "")
-            continue;
-        Image *image = Image::LoadImage(image_name, apply_geo); // reads image
-        Image tmpImg;
-        tmpImg() = (((*image)() - _ave()));
-        tmpImg() *= tmpImg();
-        _sd() += tmpImg();
-        delete image;
-    }
-    _sd() /= (n - 1);
-    _sd().selfSQRTnD();
 }
 
 
@@ -980,39 +878,6 @@ SelFile SelFile::randomize()
     return result;
 }
 
-/* Random subset ----------------------------------------------------------- */
-SelFile SelFile::randomSubset(int subsetN, bool withReplacement)
-{
-    SelFile result;
-    int N=ImgNo();
-    if (N==0) return result;
-    
-    // Generate the set of random indexes
-    Matrix1D<int> idx;
-    if (withReplacement)
-    {
-        idx.initZeros(N);
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-            idx(i)=ROUND(rnd_unif(0,N-1));
-    }
-    else
-        randomPermutation(N,idx);
-    
-    // Generate the random subset
-    int i=0;
-    while (i<subsetN)
-    {
-        // Adjust to the next active image in the selfile
-        int ii=idx(i);
-        while (!text_line[ii].Is_data() &&
-               !text_line[ii].get_label()==SelLine::ACTIVE)
-            ii=(ii+1)%N;
-        
-        // Insert the image
-        result.insert(text_line[ii].get_text());
-        i++;
-    }
-}
 
 /* Discard randomly a set of images ---------------------------------------- */
 SelFile SelFile::random_discard(int N)

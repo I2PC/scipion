@@ -55,7 +55,7 @@ void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style)
         bool store = true;
         //if (!SF_in.Is_COMMENT())
         {
-            bool enabled;
+            int enabled;
             
             SF_in.getValue( MDL_ENABLED, enabled );
             
