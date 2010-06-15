@@ -348,12 +348,9 @@ public:
         {
             err = readSPIDER(select_img,true);
         }
-        //get metadata container
-        //add to MDheader
-        //apply geo
 
         //This implementation does not handle stacks,
-        //whenever we implement them I will update
+        //read in a block
 
         if (docFilePtr != NULL)
         {
@@ -441,8 +438,6 @@ public:
         err = readMIFF(p, select_img);
         else if ( ext.contains("mff") )
         err = readMFF(p);
-        else if ( ext.contains("mrc") )
-        err = readMRC(p);
         else if ( ext.contains("pif") || ext.contains("sf") )
         err = readPIF(p, select_img);
         else if ( ext.contains("bp") || ext.contains("bq") )
@@ -451,8 +446,6 @@ public:
         err = readPNG(p);
         else if ( ext.contains("spe") )
         err = readSPE(p, select_img);
-        else if ( ext.contains("spi") )
-        err = readSPIDER(p, select_img);
         else if ( ext.contains("spm") || ext.contains("sup") || ext == "f" )
         err = readSUPRIM(p);
         else if ( ext.contains("tif") )
@@ -1220,6 +1213,15 @@ public:
         MD.setValue(MDL_WEIGHT,_weight,n);
     }
 
+    /** Clear header
+    *
+    */
+    /* this should be set_NULL MD not clear MD
+    void clear_header(void)
+    {
+        MD.clear();
+    }
+    */
     /** Get geometric transformation matrix from 2D-image headerq
       */
     Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false,
