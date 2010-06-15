@@ -33,10 +33,9 @@ void Usage();
 int main(int argc, char *argv[])
 {
     bool            round_shifts = false;
-    float           xx, yy;
+    double           xx, yy;
     FileName        fn_img, fn_out,fn_in;
-    ImageXmipp      img;
-    headerXmipp     head;
+    Image<double>      img;
     FileName        inputFile;
 
 // Check command line options ===========================================
@@ -71,20 +70,21 @@ int main(int argc, char *argv[])
         {
 	        SF.getValue(MDL_IMAGE,fn_img);
             if (fn_img=="") break;
-            head.read(fn_img);
-            head.get_originOffsets( xx, yy );
+	    img.read(fn_img,false);
+	    xx = (double) img.Xoff();
+	    yy = (double) img.Yoff();
             if (round_shifts)
             {
-                xx = (float)ROUND(xx);
-                yy = (float)ROUND(yy);
+                xx = (double)ROUND(xx);
+                yy = (double)ROUND(yy);
             }
-	        SF.setValue(MDL_ANGLEROT,  (double) head.Phi());
-	        SF.setValue(MDL_ANGLETILT, (double) head.Theta());
-    	    SF.setValue(MDL_ANGLEPSI,  (double) head.Psi());
-	        SF.setValue(MDL_SHIFTX,    (double) xx );
-	        SF.setValue(MDL_SHIFTY,    (double) yy );
-	        SF.setValue(MDL_WEIGHT,    (double) head.Weight());
-	        SF.setValue(MDL_FLIP,      (bool)   head.Flip());
+	        SF.setValue(MDL_ANGLEROT,  (double) img.rot());
+	        SF.setValue(MDL_ANGLETILT, (double) img.tilt());
+    	    SF.setValue(MDL_ANGLEPSI,  (double) img.psi());
+	        SF.setValue(MDL_SHIFTX,    xx );
+	        SF.setValue(MDL_SHIFTY,    yy );
+	        SF.setValue(MDL_WEIGHT,    (double) img.weight());
+	        SF.setValue(MDL_FLIP,      (bool)   img.flip());
         }
 	
         SF.write(fn_out);
@@ -103,7 +103,7 @@ void Usage()
     std::cout << " Extracts the geometric transformation (angles & shifts) in the header of 2D-images.\n";
     std::cout << " Usage:\n";
     std::cout << "    header_extract \n";
-    std::cout <<              "        -i <metadat>       : metadata selfile\n";
+    std::cout <<              "        -i <metadata>       : metadata selfile\n";
     std::cout << (std::string)"       [-o <docfile> ]     : metaData file, by default data\n" +
                               "                             is stored in input metaData file\n";
     std::cout <<              "       [-round_shifts]     : Round shifts to integers \n";
