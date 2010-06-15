@@ -85,7 +85,7 @@ void Histogram1D::insert_value(double val)
 #ifdef DEBUG
 
     std::cout << "   hmin " << hmin << " hmax " << hmax << " value " << val
-    << " index " << i << " out of " << no_steps << std::endl;
+    << " index " << i << " (step_size= " << step_size << ")" << std::endl;
 #endif
 }
 #undef DEBUG
