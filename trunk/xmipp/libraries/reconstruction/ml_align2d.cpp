@@ -418,8 +418,6 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
         Image<double> img, avg(dim, dim);
         avg().setXmippOrigin();
 
-        std::cerr << "hola: before averaging..." <<std::endl;
-
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
             MDimg.getValue(MDL_IMAGE, fn_tmp);
@@ -427,7 +425,6 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
             img().setXmippOrigin();
             avg() += img();
         }
-        std::cerr << "hola: after averaging..." <<std::endl;
 
         avg() /= MDimg.size();
         model.setNRef(1);
@@ -447,7 +444,6 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
 
     // Print some output to screen
     show(do_ML3D);
-
 }
 
 void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
@@ -467,6 +463,8 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
         MDref.setValue(MDL_IMAGE, fn_ref);
         MDref.setValue(MDL_ENABLED, 1);
     }
+
+
 
     model.setNRef(MDref.size());
     int refno = 0;
@@ -662,6 +660,8 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
             }
         }
 
+
+
         // read Model parameters
         int refno = 0;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
@@ -682,7 +682,8 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
         istart = 0;
 
         //Expand MDref because it will be re-used in writeOutputFiles
-        MetaData MDaux = MDref;
+        MetaData MDaux(MDref);
+
         for (int group = 1; group < factor_nref; group++)
         {
             FOR_ALL_OBJECTS_IN_METADATA(MDaux)

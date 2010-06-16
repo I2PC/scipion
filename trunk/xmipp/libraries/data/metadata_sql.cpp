@@ -348,13 +348,14 @@ int MDSql::columnMaxLength(MDLabel column)
 void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation)
 {
     std::stringstream ss, ss2;
-
+    bool execStmt = true;
     int size;
     std::string sep = " ";
     switch (operation)
     {
     case UNION:
         copyObjects(mdPtrOut->myMDSql);
+        execStmt = false;
         break;
     case UNION_DISTINCT: //unionDistinct
         //Create string with columns list
@@ -382,7 +383,8 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
         << " FROM " << tableName(tableId) << ");";
         break;
     }
-    execSingleStmt(ss);
+    if (execStmt)
+        execSingleStmt(ss);
 }
 
 void MDSql::setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel column, SetOperation operation)
@@ -558,11 +560,11 @@ bool MDSql::execSingleStmt(sqlite3_stmt * &stmt, const std::stringstream *ss)
     rc = sqlite3_step(stmt);
 
 
-            //if (ss != NULL)
-//    char * sqlStr = new char[1024];
-//    sqlStr = sqlite3_sql(stmt);
-//            std::cerr << "   " << sqlStr << std::endl;
-//    delete sqlStr[];
+    //if (ss != NULL)
+    //    char * sqlStr = new char[1024];
+    //    sqlStr = sqlite3_sql(stmt);
+    //            std::cerr << "   " << sqlStr << std::endl;
+    //    delete sqlStr[];
     if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
     {
         std::cerr << "MDSql::execSingleStmt: " << std::endl;
