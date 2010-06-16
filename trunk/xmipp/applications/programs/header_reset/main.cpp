@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     try
     {
         fn_input = getParameter(argc, argv, "-i");
-        if (Is_ImageXmipp(fn_input))
+        if (!fn_input.isMetaData())
         {
         	SF.addObject();
             SF.setValue( MDL_IMAGE, fn_input);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
             SF.getValue( MDL_IMAGE, fn_img); 
             if (fn_img=="") break;
             img.read(fn_img,false,-1,false);
-            img.clear_header();
+            img.clearHeader();
             if (tiltSeries)
             {
                 img.setTilt(angle);

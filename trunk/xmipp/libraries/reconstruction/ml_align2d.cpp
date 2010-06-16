@@ -395,7 +395,7 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
     //Initialize blocks
     current_block=0;
 
-    // Create a vector of ovjectIDs, which may be randomized later on
+    // Create a vector of objectIDs, which may be randomized later on
     MDimg.findObjects(img_id);
     // Get original image size
     int idum;
@@ -417,6 +417,9 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
         FileName fn_tmp;
         Image<double> img, avg(dim, dim);
         avg().setXmippOrigin();
+
+        std::cerr << "hola: before averaging..." <<std::endl;
+
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
             MDimg.getValue(MDL_IMAGE, fn_tmp);
@@ -424,6 +427,8 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
             img().setXmippOrigin();
             avg() += img();
         }
+        std::cerr << "hola: after averaging..." <<std::endl;
+
         avg() /= MDimg.size();
         model.setNRef(1);
         model.Iref[0] = avg;

@@ -212,9 +212,17 @@ public:
         filename = "";
         offset = 0;
         swap = 0;
-        MD.clear();
-        MDMainHeader.clear();
+        MD.removeObjects();
+        MDMainHeader.removeObjects();
         replaceNsize=0;
+    }
+
+    /** Clear the header of the image
+     *
+     */
+    void clearHeader()
+    {
+        MD.removeObjects();
     }
 
     /** Check whether image is complex based on T
