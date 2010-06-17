@@ -27,7 +27,7 @@
 #ifndef DETECT_STRUCTURE_H
 #define DETECT_STRUCTURE_H
 
-#include <data/matrix3d.h>
+#include <data/multidim_array.h>
 #include <data/steerable.h>
 #include <data/threads.h>
 #include <vector>

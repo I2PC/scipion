@@ -26,11 +26,10 @@
 
 #include "detect_structures.h"
 #include <data/fft.h>
-#include <data/volume.h>
+#include <data/image.h>
 #include <data/histogram.h>
 #include <data/filters.h>
 #include <data/morphology.h>
-
 
 /* Detect structures ------------------------------------------------------- */
 void Prog_Detect_Structures_Param::read(int argc, char **argv)
@@ -99,7 +98,8 @@ void Prog_Detect_Structures_Param::usage() const
 void Prog_Detect_Structures_Param::run()
 {
     // Produce side info
-    VolumeXmipp Vin(fnIn), Vout, Vaux, Vsigma;
+    Image<double> Vin, Vout, Vaux, Vsigma;
+    Vin.read(fnIn);
     for (double sigma=sigma0; sigma<=sigmaF; sigma+=sigmaStep)
     {
         std::cout << "Filtering with sigma=" << sigma << std::endl;
@@ -117,9 +117,9 @@ void Prog_Detect_Structures_Param::run()
         Steerable *filter;
         
         if( filterType == "wall" )
-            filter=new Steerable(sigma,Vaux(),angStep, FT_WALLS ,MW, threads);
+            filter=new Steerable(sigma,Vaux(),angStep, Steerable::FT_WALLS ,MW, threads);
         else
-            filter=new Steerable(sigma,Vaux(),angStep, FT_FILAMENTS ,MW, threads);
+            filter=new Steerable(sigma,Vaux(),angStep, Steerable::FT_FILAMENTS ,MW, threads);
         
         // Compute energy percentage
         double totalEnergy=Vaux().sum2();
@@ -133,7 +133,7 @@ void Prog_Detect_Structures_Param::run()
             Vsigma().initConstant(sigma0);
         }
         else
-            FOR_ALL_ELEMENTS_IN_MATRIX3D(Vout())
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(Vout())
             {
                 double vout=Vout(k,i,j);
                 double vaux=Vaux(k,i,j);
@@ -158,10 +158,10 @@ void Prog_Detect_Structures_Param::run()
 
     if (removeBackground)
     {
-        Matrix3D<double> Voutmask=Vout();
+        MultidimArray<double> Voutmask=Vout();
         EntropyOtsuSegmentation(Voutmask);
         dilate3D(Voutmask,Vout(),18,0,2);
-        FOR_ALL_ELEMENTS_IN_MATRIX3D(Voutmask)
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(Voutmask)
             if (Vout(k,i,j)<0.5)
                 Vsigma(k,i,j)=0;
     }
