@@ -35,12 +35,12 @@
 #define IS_NOT_INV false
 #define DONT_WRAP false
 #define WRAP true
+#ifndef DBL_EPSILON
 #define DBL_EPSILON 1e-50
-
+#endif
 
 /// @defgroup GeometricalTransformations Geometrical transformations
 /// @ingroup DataLibrary
-
 
 /** Creates a rotational matrix (3x3) for images
  * @ingroup GeometricalTransformations
