@@ -417,7 +417,6 @@ ReconsSources = [
 #    'detect_structures.cpp',
     'directions.cpp',
     'enhance_contrast.cpp',
-#    'euler.cpp,'
 #    'evaluate_fscs.cpp',
 #    'filter_projections.cpp',
     'fourier_filter.cpp',
@@ -558,7 +557,6 @@ AddXmippProgram('convert_tia2raw')
 AddXmippProgram('correct_bfactor', ['XmippRecons'])
 AddXmippProgram('correlation')
 #AddXmippProgram('crystal_aph2img', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
-#AddXmippProgram('crystal_euler2mrc', ['XmippInterface'])
 #AddXmippProgram('crystal_lattice_vectors')
 #AddXmippProgram('crystal_shear')
 #AddXmippProgram('crystal_skew')
