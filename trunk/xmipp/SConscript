@@ -417,7 +417,6 @@ ReconsSources = [
 #    'detect_structures.cpp',
     'directions.cpp',
     'enhance_contrast.cpp',
-#    'evaluate_fscs.cpp',
 #    'filter_projections.cpp',
     'fourier_filter.cpp',
 #    'make_spectra.cpp',
