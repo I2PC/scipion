@@ -192,7 +192,6 @@ int readMRC(int img_select,bool isStack=false)
     }
 
     MDMainHeader.removeObjects();
-    MDMainHeader.setColumnFormat(false);
     MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_MIN,(double)header->amin);
     MDMainHeader.setValue(MDL_MAX,(double)header->amax);

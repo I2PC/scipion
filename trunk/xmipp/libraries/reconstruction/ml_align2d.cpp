@@ -2179,13 +2179,13 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
     }
     else //do IEM
     {
+
         if (!special_first)
         {
             readModel(block_model, getBaseName("_block", current_block + 1));
             model.substractModel(block_model);
         }
 
-        //std::cerr << "Maximizing block " << current_block <<std::endl;
         maximization(block_model);
         writeOutputFiles(block_model, OUT_BLOCK);
 

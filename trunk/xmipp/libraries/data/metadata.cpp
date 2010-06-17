@@ -94,6 +94,12 @@ void MetaData::copyMetadata(const MetaData &md)
         md.myMDSql->copyObjects(this);
         firstObject(); //set first object as active
     }
+    else
+    {
+        int n = md.size();
+        for (int i = 0; i < n; i++)
+            addObject();
+    }
 }
 
 bool MetaData::_setValue(long int objId, const MDValue &mdValueIn)

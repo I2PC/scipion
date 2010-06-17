@@ -285,7 +285,6 @@ public:
 
     int MaxStringLength( const MDLabel thisLabel) const;
 
-
     /// @defgroup DataAccess Access to MetaData data for read or write values
     /// @ingroup MetaDataClass
 

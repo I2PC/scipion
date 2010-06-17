@@ -222,6 +222,7 @@ int  readIMAGIC(int img_select)
             if ( swap )
                 for ( b = (char *) header; b<hend; b+=4 )
                     swapbytes(b, 4);
+
             MD.addObject();
             MD.setValue(MDL_ORIGINX,  (double)-1. * header->iyold);
             MD.setValue(MDL_ORIGINY,  (double)-1. * header->ixold);

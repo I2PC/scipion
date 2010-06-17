@@ -35,7 +35,6 @@ int main(int argc, char **argv)
     double aux;
     MultidimArray<double> Maux;
     FileName fn_img, fn_tmp;
-
     Prog_MLalign2D_prm prm;
 
     // Get input parameters
@@ -70,7 +69,6 @@ int main(int argc, char **argv)
 #ifdef TIMING
             prm.timer.tic(ITER);
 #endif
-
             if (prm.verb > 0)
                 std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
 
@@ -91,7 +89,6 @@ int main(int argc, char **argv)
 #endif
 
                 prm.maximizationBlocks();
-
 #ifdef TIMING
                 prm.timer.toc(ITER_M);
 #endif

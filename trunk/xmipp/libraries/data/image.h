@@ -174,8 +174,6 @@ public:
     Image()
     {
         clear();
-        MD.addObject(); // Each image has at lest one MD object
-        MDMainHeader.addObject(); // Each image has at lest one MD object
     }
 
     /** Constructor with size
@@ -191,8 +189,7 @@ public:
     {
         clear();
         data.resize(Ndim, Zdim, Ydim, Xdim);
-        MDMainHeader.addObject();
-        for (int n=0; n < Ndim; n++)
+        for (int n = 1; n < Ndim; n++)
             MD.addObject();
     }
 
@@ -211,8 +208,7 @@ public:
         filename = "";
         offset = 0;
         swap = 0;
-        MD.removeObjects();
-        MDMainHeader.removeObjects();
+        clearHeader();
         replaceNsize=0;
     }
 
@@ -221,7 +217,10 @@ public:
      */
     void clearHeader()
     {
-        MD.removeObjects();
+        MDMainHeader.clear();
+        MD.clear();
+        MD.addObject(); // Each image has at lest one MD object
+        MDMainHeader.addObject(); // Each image has at lest one MD object
     }
 
     /** Check whether image is complex based on T
@@ -1217,7 +1216,7 @@ public:
     */
     void setWeight(double _weight, long int n = -1)
     {
-        MD.setValue(MDL_WEIGHT,_weight,n);
+        MD.setValue(MDL_WEIGHT,_weight, n);
     }
 
     /** Clear header

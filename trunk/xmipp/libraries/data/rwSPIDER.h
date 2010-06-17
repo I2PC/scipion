@@ -134,9 +134,8 @@ int  readSPIDER(int img_select,bool isStack=false)
         REPORT_ERROR(1,(std::string)"Invalid Spider file:  " + filename);
 
     offset = (int) header->labbyt;
-    MDMainHeader.removeObjects();
-    MDMainHeader.setColumnFormat(false);
 
+    MDMainHeader.removeObjects();
     MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_MIN,(double)header->fmin);
     MDMainHeader.setValue(MDL_MAX,(double)header->fmax);
@@ -249,6 +248,7 @@ int  readSPIDER(int img_select,bool isStack=false)
         fclose(fimg);
         return 0;
     }
+
     MD.removeObjects();
     for ( i=imgStart; i<imgEnd; i++ )
     {
