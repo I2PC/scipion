@@ -264,10 +264,16 @@ public:
      */
     FileName getFilename();
 
-    /**Get safetly access to active labels
+    /**Get safe access to active labels
      * @ingroup GettersAndSetters
      */
     std::vector<MDLabel> getActiveLabels() const;
+
+    /**Get safe access to active labels
+     * @ingroup GettersAndSetters
+     */
+    std::vector<MDLabel> *geActiveLabelsAddress() const;
+
     /**Get maximum string length of this value
     * @ingroup GettersAndSetters
     */

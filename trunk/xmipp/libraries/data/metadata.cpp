@@ -222,6 +222,12 @@ std::vector<MDLabel> MetaData::getActiveLabels() const
 {
     return activeLabels;
 }
+
+std::vector<MDLabel>* MetaData::geActiveLabelsAddress() const
+{
+    return (std::vector<MDLabel>*) (&activeLabels);
+}
+
 long int  MetaData::getActiveObject()
 {
     return activeObjId;
