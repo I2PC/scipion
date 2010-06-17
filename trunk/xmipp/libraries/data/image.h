@@ -41,15 +41,15 @@
 //static std::vector<MDLabel> emptyVector;
 //static MetaData emptyMetaData;
 
-typedef enum TransformType {
+typedef enum {
     NoTransform = 0,        // No transform
     Standard = 1,           // Standard transform: origin = (0,0,0)
     Centered = 2,           // Centered transform: origin = (nx/2,ny/2,nz/2)
     Hermitian = 3,          // Hermitian half: origin = (0,0,0)
     CentHerm = 4            // Centered hermitian: origin = (0,ny/2,nz/2)
-} ;
+} TransformType;
 
-typedef enum DataType {
+typedef enum {
     Unknown_Type = 0,       // Undefined data type
     UChar = 1,              // Unsigned character or byte type
     SChar = 2,              // Signed character (for CCP4)
@@ -63,11 +63,10 @@ typedef enum DataType {
     ComplexInt = 10,        // Complex integer (8-byte)
     ComplexFloat = 11,      // Complex floating point (8-byte)
     ComplexDouble = 12      // Complex floating point (16-byte)
-} ;
+} DataType;
 
 // Ask memory size of datatype
 unsigned long   gettypesize(DataType type);
-
 
 /** Image Matrix access.
  * @ingroup ImagesSpeedUp
@@ -363,7 +362,7 @@ public:
         if (docFilePtr != NULL)
         {
             if (activeLabelsPtr == NULL)
-                activeLabelsPtr = &(docFilePtr->getActiveLabels());
+                activeLabelsPtr = docFilePtr->geActiveLabelsAddress();
 
             std::vector<MDLabel>::iterator strIt;
             double dd;
