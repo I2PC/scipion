@@ -18,11 +18,14 @@ class selfile:
        for line in lines:
            args=line.split()
            if (len(args)>1):
-               filename=(args[0].split('/'))[-1]
-               if filename=="#":
-                    continue
-               if filename==";":
-                    continue
+               if not args[0].find('@')==-1:
+                  filename=args[0]
+               else:
+                   filename=(args[0].split('/'))[-1]
+                   if filename=="#":
+                        continue
+                   if filename==";":
+                        continue
                if filename in imgNames:
                     raise RuntimeError, """ There are two images with the same
                        filename, although they may be in different directories.
