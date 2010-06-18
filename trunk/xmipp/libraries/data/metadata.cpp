@@ -691,7 +691,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDValue>& columnValues, b
                     is >> columnValues[i];
                     if (is.fail())
                     {
-                        REPORT_ERROR(-44, "MetaData::read: Error parsing data column");
+                        REPORT_ERROR(-44, (std::string)"MetaData::read: Error parsing data column, expecting " + MDL::label2Str(columnValues[i].label));
                     }
                     else
                         if (columnValues[i].label != MDL_UNDEFINED)

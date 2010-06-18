@@ -358,6 +358,7 @@ bool MDValue::fromStream(std::istream &is)
             while (is >> doubleValue) //This will stop at ending "]"
                 vectorValue.push_back(doubleValue);
             is.clear(); //this is for clear the fail state after found ']'
+            is.ignore(256, ']'); //ignore the ending ']'
             break;
         }
     return is.good();

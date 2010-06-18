@@ -58,8 +58,27 @@
 
 //useful to init values to zero
 static double zeroD=0.;
-static double    oneD=1.;
+static double oneD=1.;
 static bool  falseb=false;
+
+enum AggregateMode
+{
+    KEEP_OLD,
+    KEEP_NEW,
+    SUM
+};
+
+#define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
+        for(long int kkkk = (kkkk_metadata).iteratorBegin(); \
+             !(kkkk_metadata).iteratorEnd(); \
+             kkkk=(kkkk_metadata).iteratorNext())
+
+#define FOR_ALL_OBJECTS_IN_METADATA2(kkkk_metadata, jjjj_metadata) \
+        for(long int kkkk = (kkkk_metadata).iteratorBegin(), jjjj = (jjjj_metadata).iteratorBegin(); \
+             !(kkkk_metadata).iteratorEnd() && !(jjjj_metadata).iteratorEnd();\
+             kkkk=(kkkk_metadata).iteratorNext(), jjjj=(jjjj_metadata).iteratorNext())
+
+
 
 class MDQuery;
 class MDSql;
@@ -303,13 +322,7 @@ public:
     bool setValueFromStr(const MDLabel label, const std::string &value, long int objectId = -1);
     bool getStrFromValue(const MDLabel label, std::string &strOut, long int objectId = -1);
 
-    template<class T>
-    bool getValue(const MDLabel label, T &valueOut, long int objectId = -1) const
-    {
-        MDValue mdValueOut(label);
-        _getValue(objectId, mdValueOut);
-        mdValueOut.getValue(valueOut);
-    }
+
     /**IsEmpty check whether the metadata is empty or not
      * @ingroup DataAccess
      */
@@ -504,8 +517,6 @@ public:
      */
     void unionAll(const MetaData &mdIn);
 
-
-
     /** merge of a metadata
      * @ingroup SetOperations
      * This function reads another metadata and makes a union to this one
@@ -573,37 +584,35 @@ public:
                      const MDLabel sortLabel=MDL_OBJID);
 
 
+    template<class T>
+    bool getValue(const MDLabel label, T &valueOut, long int objectId = -1) const
+    {
+        MDValue mdValueOut(label);
+        _getValue(objectId, mdValueOut);
+        mdValueOut.getValue(valueOut);
+    }
+
+    /**Get all values of a column as a vector
+     *
+     */
+    template<class T>
+    void getColumnValues(const MDLabel label, std::vector<T> &valuesOut)
+    {
+        T value;
+        MDValue mdValueOut(label);
+        std::vector<long int> objectsId;
+        findObjects(objectsId);
+        int n = objectsId.size();
+        valuesOut.resize(n);
+        for (int i = 0; i < n; i++)
+        {
+            _getValue(objectsId[i], mdValueOut);
+            mdValueOut.getValue(value);
+            valuesOut[i] = value;
+        }
+
+    }
     friend class MDSql;
 };
-
-enum AggregateMode
-{
-    KEEP_OLD,
-    KEEP_NEW,
-    SUM
-};
-
-/** For all objects.
- @code
- FOR_ALL_OBJECTS_IN_METADATA(metadata) {
- double rot; DF.getValue( MDL_ANGLEROT, rot);
- }
- @endcode
- */
-//Write for partial metadatas- read use NULL
-//better sort
-//error in metadata_split when there is only one comment
-//COMMENT
-
-#define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
-        for(long int kkkk = (kkkk_metadata).iteratorBegin(); \
-             !(kkkk_metadata).iteratorEnd(); \
-             kkkk=(kkkk_metadata).iteratorNext())
-
-#define FOR_ALL_OBJECTS_IN_METADATA2(kkkk_metadata, jjjj_metadata) \
-        for(long int kkkk = (kkkk_metadata).iteratorBegin(), jjjj = (jjjj_metadata).iteratorBegin(); \
-             !(kkkk_metadata).iteratorEnd() && !(jjjj_metadata).iteratorEnd();\
-             kkkk=(kkkk_metadata).iteratorNext(), jjjj=(jjjj_metadata).iteratorNext())
-
 
 #endif
