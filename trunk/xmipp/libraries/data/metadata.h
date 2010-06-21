@@ -589,7 +589,15 @@ public:
     {
         MDValue mdValueOut(label);
         _getValue(objectId, mdValueOut);
-        return mdValueOut.getValue(valueOut);
+        try
+        {
+            mdValueOut.getValue(valueOut);
+            return true;
+        }
+        catch (Xmipp_error xe)
+        {
+            return false;
+        }
     }
 
     /**Get all values of a column as a vector
