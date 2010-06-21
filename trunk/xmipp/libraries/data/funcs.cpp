@@ -962,10 +962,12 @@ FileName FileName::get_file_format() const
     FileName result;
     if ( find("#", 0) > -1 )
         return "raw";
-    else if ( first = find(":", 0) > -1 )
+    else if ( first = rfind(":", 0) > -1 )
         result = substr(first + 1) ;
+    else if ( first = rfind(".", 0) > -1)
+        result = substr(first + 1);
     else
-        result = substr(find_last_of('.') + 1);
+    	result="spi";
 
     return result.to_lowercase();
 
