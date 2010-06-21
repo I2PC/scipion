@@ -821,7 +821,7 @@ public:
      */
     void compose(const std::string& str, int no, const std::string& ext);
 
-    /** Preffix with number @. Mainly for selfiles
+    /** Prefix with number @. Mainly for selfiles
      * @ingroup FilenameComposing
      *
      * @code
@@ -829,6 +829,22 @@ public:
      * @endcode
      */
     void compose(int no, const std::string& str);
+
+    /** True if this filename belongs to a stack
+     * @ingroup FilenameComposing
+     */
+    bool isInStack() const;
+
+    /** Decompose filenames with @. Mainly from selfiles
+     * @ingroup FilenameComposing
+     *
+     * @code
+     * fn_proj.decompose(no,filename);  // fn_proj = "000001@g1ta000001.xmp"
+     *                                  // no=1
+     *                                  // filename = "g1ta000001.xmp"
+     * @endcode
+     */
+    void decompose(int &no, std::string& str) const;
 
     /** Get the root from a filename
      * @ingroup FilenameComposing

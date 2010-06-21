@@ -728,6 +728,21 @@ void FileName::compose(int no , const std::string &str)
 
 
 }
+
+// Is in stack ............................................................
+bool FileName::isInStack() const
+{
+    return find("@")!=-1;
+}
+
+// Decompose ..............................................................
+void FileName::decompose(int &no, std::string &str) const
+{
+    int idx=find('@');
+    no=textToInteger(substr(0,idx));
+    str=substr(idx+1,length()-idx);
+}
+
 // Get the root name of a filename .........................................
 FileName FileName::get_root() const
 {
