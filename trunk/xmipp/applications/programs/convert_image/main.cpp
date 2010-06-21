@@ -31,7 +31,7 @@ void Usage();
 
 int main(int argc, char **argv)
 {
-    FileName fn_stack, fn_root, fn_vol, fn_in;
+    FileName fn_stack, fn_root, fn_vol, fn_in, fn_img;
 
     // Read arguments --------------------------------------------------------
     try
@@ -209,7 +209,7 @@ void Usage()
     std::cerr << "Purpose:\n";
     std::cerr << "    Converts Spider stacks into images or volumes or any other\n"
     << "    combination of these three elements\n";
-    std::cerr << "Usage: stack22images " << std::endl
+    std::cerr << "Usage: convert_image " << std::endl
     << "    -i <filename>                      : Input metadata, stack, volume or image\n"
     << "                                         in any format\n"
     << "   [-outputStack <stackFile>]          : Stack with the set of images\n"
