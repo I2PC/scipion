@@ -1045,6 +1045,18 @@ public:
      */
     FileName get_file_format() const;
 
+    /** Remove file format
+     * @code
+     * fn_proj = "g1ta00001.xmp";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "xmp"
+     * fn_proj = "g1ta00001.nor:spi";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "spi"
+     * fn_proj = "input.file#d=f#x=120,120,55#h=1024";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "raw"
+     * @endcode
+     */
+    FileName remove_file_format() const;
+
     /** Is this file a MetaData file?
      * @ingroup FilenameManipulators
      * Returns true if the get_file_format extension == "sel", "doc" or "xmd"

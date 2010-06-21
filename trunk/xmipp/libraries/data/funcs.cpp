@@ -962,26 +962,35 @@ FileName FileName::get_file_format() const
     FileName result;
     if ( find("#", 0) > -1 )
         return "raw";
-    else if ( first = rfind(":", 0) > -1 )
+    else if ( (first = rfind(":"))!=std::string::npos)
         result = substr(first + 1) ;
-    else if ( first = rfind(".", 0) > -1)
+    else if ( (first = rfind("."))!=std::string::npos)
         result = substr(first + 1);
     else
-    	result="spi";
-
+        result="spi";
     return result.to_lowercase();
 
 }
 
+FileName FileName::remove_file_format() const
+{
+    if ( find("#", 0) > -1 )
+        REPORT_ERROR(1,"Not implemented for raw data");
+    size_t found=rfind(":");
+    if (found!=std::string::npos)
+        return substr(0, found);
+    return *this;
+}
+
 bool FileName::isMetaData() const
 {
-	//file names containing @ or : are not metadatas
+    //file names containing @ or : are not metadatas
     size_t found=this->find('@');
     if (found!=std::string::npos)
         return false;
     found=this->find(':');
-        if (found!=std::string::npos)
-            return false;
+    if (found!=std::string::npos)
+        return false;
     FileName ext = get_file_format();
     //
     if (ext=="sel" || ext=="xmd" || ext=="doc")
@@ -1306,7 +1315,7 @@ size_t xmippFREAD(void *dest, size_t size, size_t nitems, FILE * &fp, bool rever
 
 // Read in reverse/normal order --------------------------------------------
 size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
-              bool reverse)
+                   bool reverse)
 {
     size_t retval;
     if (!reverse)
@@ -1401,13 +1410,13 @@ int divide_equally(int N, int size, int rank, int &first, int &last)
 /** In which group from divide_eqaully is myself? */
 int divide_equally_group(int N, int size, int myself)
 {
-	int first, last;
-	for (int rank = 0; rank < size; rank++)
-	{
-		divide_equally(N, size, rank, first, last);
-		if (myself >= first && myself <= last)
-			return rank;
-	}
-	return -1;
+    int first, last;
+    for (int rank = 0; rank < size; rank++)
+    {
+        divide_equally(N, size, rank, first, last);
+        if (myself >= first && myself <= last)
+            return rank;
+    }
+    return -1;
 
 }
