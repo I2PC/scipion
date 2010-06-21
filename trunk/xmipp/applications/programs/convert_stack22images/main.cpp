@@ -25,28 +25,28 @@
 
 #include <data/args.h>
 #include <data/image.h>
-#include <data/selfile.h>
-#include <data/volume.h>
+#include <data/metadata_extension.h>
 
 void Usage();
 
 int main(int argc, char **argv)
 {
-    FileName fn_stack, fn_sel, fn_vol;
-    bool reversed, skipHeaders;
+    FileName fn_stack, fn_root, fn_vol, fn_in;
 
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_stack = getParameter(argc,argv,"-stack","");
-        fn_sel   = getParameter(argc,argv,"-sel","");
-        fn_vol   = getParameter(argc,argv,"-vol","");
-        reversed = checkParameter(argc,argv,"-reverse");
-        skipHeaders = checkParameter(argc,argv,"-skipHeaders");
-        
-        if (fn_sel=="" && fn_vol=="" || fn_stack=="" && fn_vol=="" ||
-            fn_sel=="" && fn_stack=="")
-           REPORT_ERROR(1,"stack22images: Please, provide at two of -stack, -sel and -vol");
+        fn_in    = getParameter(argc,argv,"-i","");
+
+        fn_stack = getParameter(argc,argv,"-outputStack","");
+        fn_root  = getParameter(argc,argv,"-outputRoot","");
+        fn_vol   = getParameter(argc,argv,"-outputVol","");
+        fn_img   = getParameter(argc,argv,"-outputImg","");
+        if (fn_vol=="" && fn_img!="")
+        	fn_vol=fn_img;
+
+        if (fn_root=="" && fn_stack=="" && fn_vol=="")
+            REPORT_ERROR(1,"image_convert: Please, provide one output");
     }
     catch (Xmipp_error XE)
     {
@@ -58,74 +58,142 @@ int main(int argc, char **argv)
     // True work -----------------------------------------------------------
     try
     {
-        ImageXmippStack stack;
-        VolumeXmipp V;
-        SelFile SF;
+        Image<float> in, out;
 
-        // From stack to selfile or volume .................................
-        if (exists(fn_stack))
+        // From metadata to ...............................................
+        if (fn_in.isMetaData())
         {
-            stack.readFromStack(fn_stack,reversed,false,false,skipHeaders);
-
-            // From stack to selfile
-            if (fn_sel!="")
+            MetaData SF;
+            SF.read(fn_in);
+            if (fn_stack!="")
             {
-                FileName fn_root=fn_sel.without_extension();
-                stack.writeAsSelFile(fn_root);
+                FileName fn_stack_plain=fn_stack.remove_file_format();
+                if (exists(fn_stack_plain))
+                    unlink(fn_stack_plain.c_str());
+                FOR_ALL_OBJECTS_IN_METADATA(SF)
+                {
+                    FileName fnImg;
+                    SF.getValue(MDL_IMAGE,fnImg);
+                    in.read(fnImg,true,-1,false,false,&SF);
+                    in.write(fn_stack,-1,true,WRITE_APPEND);
+                }
             }
-            // From stack to volume
-            else
+            else if (fn_vol!="")
             {
-                stack.writeAsVolume(fn_vol);
+                int Xdim, Ydim, Zdim, Ndim;
+                ImgSize(SF, Xdim, Ydim, Zdim, Ndim);
+                if (Zdim!=1 || Ndim!=1)
+                    REPORT_ERROR(1,"image_convert: Only 2D images can be converted into volumes");
+                out().coreAllocate(1,SF.size(),Ydim,Xdim);
+                int k=0;
+                FOR_ALL_OBJECTS_IN_METADATA(SF)
+                {
+                    FileName fnImg;
+                    SF.getValue(MDL_IMAGE,fnImg);
+                    in.read(fnImg);
+                    out().setSlice(k++,in());
+                }
+                out.write(fn_vol);
+            }
+            else if (fn_root!="")
+            {
+                std::string extension=fn_root.get_file_format();
+                fn_root=fn_root.remove_file_format();
+                int k=0;
+                MetaData SFout;
+                FOR_ALL_OBJECTS_IN_METADATA(SF)
+                {
+                    FileName fnImg;
+                    SF.getValue(MDL_IMAGE,fnImg);
+                    in.read(fnImg,true,-1,false,false,&SF);
+                    FileName fnOut;
+                    fnOut.compose(fn_root,k++,extension);
+                    in.write(fnOut);
+                    SFout.addObject();
+                    SFout.setValue(MDL_IMAGE,fnOut);
+                }
+                SFout.write(fn_root+".sel");
             }
         }
-        // From volume to stack or selfile .................................
-        else if (exists(fn_vol) && Is_VolumeXmipp(fn_vol))
+        else
         {
-            V.read(fn_vol);
-
-            // From volume to selfile
-            if (fn_sel!="")
+            in.read(fn_in,false);
+            if (NSIZE(in())>1)
             {
-                FileName fn_root=fn_sel.without_extension();
-                V.writeAsSelFile(fn_root);
-            }
-            // From volume to stack
-            else
-            {
-                for (int k=0; k<ZSIZE(V()); k++)
+                // It's a stack with more than 1 slice
+                if (fn_stack!="")
                 {
-                    ImageXmipp I;
-                    V().getSlice(k,I());
-                    stack.appendImage(I);
+                    FileName fn_stack_plain=fn_stack.remove_file_format();
+                    if (exists(fn_stack_plain))
+                        unlink(fn_stack_plain.c_str());
+                    int nmax=NSIZE(in());
+                    for (int n=0; n<nmax; n++)
+                    {
+                        in.read(fn_in,true,n);
+                        in.write(fn_stack,-1,true,WRITE_APPEND);
+                    }
                 }
-                stack.writeAsStack(fn_stack);
+                else if (fn_vol!="")
+                {
+                    in.read(fn_in);
+                    ZSIZE(in())=NSIZE(in());
+                    NSIZE(in())=1;
+                    in.write(fn_vol);
+                }
+                else if (fn_root!="")
+                {
+                    std::string extension=fn_root.get_file_format();
+                    fn_root=fn_root.remove_file_format();
+                    MetaData SFout;
+                    int nmax=NSIZE(in());
+                    for (int n=0; n<nmax; n++)
+                    {
+                        in.read(fn_in,true,n);
+                        FileName fnOut;
+                        fnOut.compose(fn_root,n,extension);
+                        in.write(fnOut);
+                        SFout.addObject();
+                        SFout.setValue(MDL_IMAGE,fnOut);
+                    }
+                    SFout.write(fn_root+".sel");
+                }
             }
-        // From selfile to volume or stack .................................
-        } else {
-            SF.read(fn_sel);
-            if (fn_vol!="")
-            {
-                int Zdim, Ydim, Xdim;
-                SF.ImgSize(Ydim,Xdim);
-                Zdim=SF.ImgNo();
-                V().initZeros(Zdim,Ydim,Xdim);
-            }
-            int k=0;
-            while (!SF.eof())
-            {
-                FileName fn_img=SF.NextImg();
-                if (fn_img=="") break;
-                ImageXmipp I(fn_img);
-                if (fn_vol!="")
-                    V().setSlice(k++,I());
-                else
-                    stack.appendImage(I);
-            }
-            if (fn_vol!="")
-                V.write(fn_vol);
             else
-                stack.writeAsStack(fn_stack);
+            {
+                // It's a stack with 1 slice, an image or a volume
+                in.read(fn_in);
+                if (fn_stack!="")
+                {
+                    if (ZSIZE(in())>1)
+                    {
+                        // Convert the volume into a stack
+                        NSIZE(in())=ZSIZE(in());
+                        ZSIZE(in())=1;
+                        int Ndim=NSIZE(in());
+                        for (int n = 1; n < Ndim; n++)
+                            in.MD.addObject();
+                    }
+                    in.write(fn_stack,-1,true);
+                }
+                else if (fn_vol!="")
+                    in.write(fn_vol);
+                else if (fn_root!="")
+                {
+                    std::string extension=fn_root.get_file_format();
+                    fn_root=fn_root.remove_file_format();
+                    MetaData SFout;
+                    for (int k=0; k<ZSIZE(in()); k++)
+                    {
+                    	in().getSlice(k,out());
+                        FileName fnOut;
+                        fnOut.compose(fn_root,k,extension);
+                        out.write(fnOut);
+                        SFout.addObject();
+                        SFout.setValue(MDL_IMAGE,fnOut);
+                    }
+                    SFout.write(fn_root+".sel");
+                }
+            }
         }
     }
     catch (Xmipp_error XE)
@@ -140,12 +208,15 @@ void Usage()
 {
     std::cerr << "Purpose:\n";
     std::cerr << "    Converts Spider stacks into images or volumes or any other\n"
-              << "    combination of these three elements\n";
+    << "    combination of these three elements\n";
     std::cerr << "Usage: stack22images " << std::endl
-              << "   [-stack stackFile]: Stack with the set of images\n"
-              << "   [-sel selFile]    : Selfile with the set of images\n"
-              << "   [-vol volume]     : Volume with the set of images\n"
-              << "   [-reverse]        : Reverse endiannness for reading the stack\n"
-              << "   [-skipHeaders]    : skip headers in badly formed Spider stacks\n"
+    << "    -i <filename>                      : Input metadata, stack, volume or image\n"
+    << "                                         in any format\n"
+    << "   [-outputStack <stackFile>]          : Stack with the set of images\n"
+    << "   [-outputRoot <rootname[:format]>]   : Rootname of the individual images\n"
+    << "                                       : If no format is provided, spider is assumed\n"
+    << "                                         Valid formats are: spi, mrc, img, ...\n"
+    << "   [-outputVol <volume>]               : Volume with the set of images\n"
+    << "   [-outputImg <image>]                : Output image\n"
     ;
 }
