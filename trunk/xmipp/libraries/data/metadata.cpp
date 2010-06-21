@@ -55,8 +55,8 @@ void MetaData::_clear(bool onlyData)
 
 void MetaData::clear()
 {
-    _clear(true);
-    //init();
+    //_clear(true);
+    init();
 }
 
 void MetaData::init(const std::vector<MDLabel> *labelsVector)
@@ -563,7 +563,7 @@ void MetaData::write(std::ostream &os)
 {
     os << "; XMIPP_3 * " << (isColumnFormat ? "column" : "row")
     << "_format * " << path << std::endl //write wich type of format (column or row) and the path
-    << ";" << comment << std::endl; //write md comment in the 2nd comment line of header
+    << "; " << comment << std::endl; //write md comment in the 2nd comment line of header
 
     if (isColumnFormat)
     {

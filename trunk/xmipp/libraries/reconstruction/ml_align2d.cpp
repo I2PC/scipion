@@ -2184,9 +2184,15 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
         {
             readModel(block_model, getBaseName("_block", current_block + 1));
             model.substractModel(block_model);
+           // std::cerr << "======After read, block " << current_block <<": =========" <<std::endl;
+           // block_model.print();
         }
 
         maximization(block_model);
+
+       // std::cerr << "======After maximization, block" << current_block <<": =========" <<std::endl;
+       // block_model.print();
+
         writeOutputFiles(block_model, OUT_BLOCK);
 
         if (special_first && current_block == 0)
@@ -2194,6 +2200,8 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
         else
             model.addModel(block_model);
     }
+    //std::cerr << "======After maximization MODEL: =========" <<std::endl;
+    //model.print();
 
     if (do_norm)
         correctScaleAverage(refs_per_class);
