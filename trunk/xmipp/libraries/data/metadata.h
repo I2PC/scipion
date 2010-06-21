@@ -587,10 +587,10 @@ public:
     template<class T>
     bool getValue(const MDLabel label, T &valueOut, long int objectId = -1) const
     {
-        MDValue mdValueOut(label);
-        _getValue(objectId, mdValueOut);
         try
         {
+            MDValue mdValueOut(label);
+            _getValue(objectId, mdValueOut);
             mdValueOut.getValue(valueOut);
             return true;
         }
