@@ -324,11 +324,7 @@ public:
             filename       =       filename.substr(found+1) ;
         }
 
-        found=filename.find_first_of(":");
-        if ( found!=std::string::npos)
-        {
-            filename = filename.substr(0, found);
-        }
+        filename = filename.remove_file_format();
 
 #undef DEBUG
         //#define DEBUG
@@ -1019,6 +1015,18 @@ public:
         _swap = swap;
     }
 
+    /* Is there label in the individual header */
+    bool individualContainsLabel(MDLabel label) const
+    {
+    	return MD.containsLabel(label);
+    }
+
+    /* Is there label in the main header */
+    bool mainContainsLabel(MDLabel label) const
+    {
+    	return MDMainHeader.containsLabel(label);
+    }
+
     /** Get Rot angle
     *
     * @code
@@ -1027,7 +1035,7 @@ public:
     */
     double rot(const long int n = -1) const
     {
-        double dummy;
+        double dummy=0;
         MD.getValue(MDL_ANGLEROT,dummy,n);
         return (dummy);
     }
@@ -1040,7 +1048,7 @@ public:
      */
     double tilt(const long int n = -1) const
     {
-        double dummy;
+        double dummy=0;
         MD.getValue(MDL_ANGLETILT,dummy,n);
         return (dummy);
     }
@@ -1053,7 +1061,7 @@ public:
      */
     double psi(const long int n = -1) const
     {
-        double dummy;
+        double dummy=0;
         MD.getValue(MDL_ANGLEPSI,dummy,n);
         return (dummy);
     }
@@ -1066,7 +1074,7 @@ public:
      */
     double Xoff(const long int n = -1) const
     {
-        double dummy;
+        double dummy=0;
         MD.getValue(MDL_ORIGINX,dummy,n);
         return (dummy);
     }
@@ -1079,7 +1087,7 @@ public:
      */
     double Yoff(const long int n = -1) const
     {
-        double dummy;
+        double dummy=0;
         MD.getValue(MDL_ORIGINY,dummy,n);
         return (dummy);
     }
@@ -1092,7 +1100,7 @@ public:
      */
     double Zoff(const long int n = -1) const
     {
-        double dummy;
+        double dummy=0;
         MD.getValue(MDL_ORIGINZ,dummy,n);
         return (dummy);
     }
@@ -1105,7 +1113,7 @@ public:
     */
     double weight(const long int n = -1) const
     {
-        double dummy;
+        double dummy=1;
         MD.getValue(MDL_WEIGHT,dummy,n);
         return (dummy);
     }
@@ -1118,7 +1126,7 @@ public:
     */
     bool flip(const long int n = -1) const
     {
-        bool dummy;
+        bool dummy=false;
         MD.getValue(MDL_FLIP,dummy,n);
         return (dummy);
     }
@@ -1224,9 +1232,9 @@ public:
     */
     /* this should be set_NULL MD not clear MD
     void clear_header(void)
-    {
+{
         MD.clear();
-    }
+}
     */
     /** Get geometric transformation matrix from 2D-image headerq
       */
@@ -1305,17 +1313,25 @@ public:
 
         o << "dimensions   : " << NSIZE(I()) << " x " << ZSIZE(I()) << " x " << YSIZE(I()) << " x " << XSIZE(I());
         o << "  (noObjects x slices x rows x columns)" << std::endl;
-        o << "Euler angles : " << std::endl;
-        o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
-        o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
-        o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
-        o << "Origin Offsets : " << std::endl;
-        o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
-        o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
-        o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
+        if (I.individualContainsLabel(MDL_ANGLEROT))
+        {
+            o << "Euler angles : " << std::endl;
+            o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
+            o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
+            o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
+        }
+        if (I.individualContainsLabel(MDL_SHIFTX))
+        {
+            o << "Origin Offsets : " << std::endl;
+            o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
+            o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
+            o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
+        }
         o << "Header size  : " << I.offset << std::endl;
-        o << "Weight  : " << I.weight() << std::endl;
-        o << "Flip    : " << I.flip() << std::endl;
+        if (I.individualContainsLabel(MDL_WEIGHT))
+        	o << "Weight  : " << I.weight() << std::endl;
+        if (I.individualContainsLabel(MDL_FLIP))
+        	o << "Flip    : " << I.flip() << std::endl;
         return o;
     }
 
