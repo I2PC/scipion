@@ -25,13 +25,10 @@
 
 #include <reconstruction/ml_align2d.h>
 
-//FIXME: ONLY for test new approach in metadata_label.h
-#include <data/metadata_label.h>
-
 int main(int argc, char **argv)
 {
     int c, nn, imgno, opt_refno;
-    bool converged;
+    bool converged = false;
     double aux;
     MultidimArray<double> Maux;
     FileName fn_img, fn_tmp;
