@@ -55,14 +55,15 @@ typedef enum {
     SChar = 2,              // Signed character (for CCP4)
     UShort = 3,             // Unsigned integer (2-byte)
     Short = 4,              // Signed integer (2-byte)
-    Int = 5,                // Signed integer (4-byte)
-    Long = 6,               // Signed integer (4 or 8 byte, depending on system)
-    Float = 7,              // Floating point (4-byte)
-    Double = 8,             // Double precision floating point (8-byte)
-    ComplexShort = 9,       // Complex two-byte integer (4-byte)
-    ComplexInt = 10,        // Complex integer (8-byte)
-    ComplexFloat = 11,      // Complex floating point (8-byte)
-    ComplexDouble = 12      // Complex floating point (16-byte)
+    UInt = 5,       // Unsigned integer (4-byte)
+    Int = 6,                // Signed integer (4-byte)
+    Long = 7,               // Signed integer (4 or 8 byte, depending on system)
+    Float = 8,              // Floating point (4-byte)
+    Double = 9,             // Double precision floating point (8-byte)
+    ComplexShort = 10,       // Complex two-byte integer (4-byte)
+    ComplexInt = 11,        // Complex integer (8-byte)
+    ComplexFloat = 12,      // Complex floating point (8-byte)
+    ComplexDouble = 13      // Complex floating point (16-byte)
 } DataType;
 
 // Ask memory size of datatype
@@ -251,9 +252,9 @@ public:
     /** Specific read functions for different file formats
     */
 #include "rwSPIDER.h"
-    #include "rwMRC.h"
-    #include "rwIMAGIC.h"
-
+#include "rwMRC.h"
+#include "rwIMAGIC.h"
+#include "rwTIA.h"
     /** Is this file an image
      *
      *  Check whether a real-space image can be read
@@ -302,7 +303,7 @@ public:
     int read(const FileName &name, bool readdata=true, int select_img=-1,
              bool apply_geo = false, bool only_apply_shifts = false,
              const MetaData *docFilePtr = NULL,
-             std::vector<MDLabel> *activeLabelsPtr = NULL)
+             std::vector<MDLabel> *activeLabelsPtr = NULL, bool mapData=0)
     {
         //const MetaData &docFile = *docFilePtr;
         //std::vector<MDLabel> &activeLabels = *activeLabelsPtr;
@@ -314,6 +315,10 @@ public:
         else
             dataflag = -1;
 
+        // Check whether to map the data or not
+        data.mmapOn = mapData;
+
+
         FileName ext_name = name.get_file_format();
         size_t found;
         filename = name;
@@ -321,7 +326,15 @@ public:
         if (found!=std::string::npos)
         {
             select_img =  atoi(filename.substr(0, found).c_str());
-            filename       =       filename.substr(found+1) ;
+            filename = filename.substr(found+1) ;
+        }
+
+        double imParam = NULL;
+        found=filename.find_first_of("%");
+        if (found!=std::string::npos)
+        {
+            imParam =  atof(filename.substr(found+1).c_str());
+            filename = filename.substr(0, found) ;
         }
 
         filename = filename.remove_file_format();
@@ -346,6 +359,8 @@ public:
             err = readMRC(select_img,false);
         else if (ext_name.contains("img") || ext_name.contains("hed"))//
             err = readIMAGIC(select_img);//imagic is always an stack
+        else if (ext_name.contains("ser"))//tia
+            err = readTIA(select_img,false, imParam);
         else
         {
             err = readSPIDER(select_img,true);
@@ -669,6 +684,20 @@ public:
                     else
                     {
                         short * ptr = (short *) page;
+                        for(int i=0; i<pageSize;i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case UInt:
+                {
+                    if (typeid(T) == typeid(unsigned int))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        unsigned int * ptr = (unsigned int *) page;
                         for(int i=0; i<pageSize;i++)
                             ptrDest[i]=(T) ptr[i];
                     }
@@ -1226,6 +1255,7 @@ public:
     {
         MD.setValue(MDL_WEIGHT,_weight, n);
     }
+
 
     /** Clear header
     *

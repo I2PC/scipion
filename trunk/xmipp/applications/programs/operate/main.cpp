@@ -158,7 +158,7 @@ bool check_for_operation(int argc, char **argv, char *operation,
     {
         fn  = getParameter(argc, argv, operation);
         // If the file exist, tell if it is an image or a volume
-        if (exists(fn) && operation!="-slice" && operation!="-row"
+        if (existsTrim(fn) && operation!="-slice" && operation!="-row"
             && operation!="-column")
         {
             if (fn.isMetaData())

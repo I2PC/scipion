@@ -596,6 +596,9 @@ int existsTrim(const FileName &fn)
         auxF       =       fn.substr(found+1) ;
     else
         auxF=fn;
+    found=auxF.find_first_of("%");
+    if ( found!=std::string::npos)
+        auxF = auxF.substr(0, found);
     found=auxF.find_first_of(":");
     if ( found!=std::string::npos)
         auxF = auxF.substr(0, found);
@@ -999,11 +1002,14 @@ FileName FileName::remove_file_format() const
 
 bool FileName::isMetaData() const
 {
-    //file names containing @ or : are not metadatas
+    //file names containing @, : or % are not metadatas
     size_t found=this->find('@');
     if (found!=std::string::npos)
         return false;
     found=this->find(':');
+    if (found!=std::string::npos)
+        return false;
+    found=this->find('%');
     if (found!=std::string::npos)
         return false;
     FileName ext = get_file_format();

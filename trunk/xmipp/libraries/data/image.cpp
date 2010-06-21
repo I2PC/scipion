@@ -93,7 +93,7 @@ unsigned long  gettypesize(DataType type)
     switch ( type ) {
         case UChar: case SChar:  size = sizeof(char); break;
         case UShort: case Short: size = sizeof(short); break;
-        case Int:                size = sizeof(int); break;
+        case UInt:	 case Int:   size = sizeof(int); break;
         case Float:              size = sizeof(float); break;
         case Double:             size = sizeof(double); break;
         case ComplexShort:       size = sizeof(std::complex<short>); break;
