@@ -329,28 +329,28 @@ public:
  *  The class provides the standard operations with histograms. */
 class IrregularHistogram1D
 {
-    public:
-        Histogram1D         __hist;
-        MultidimArray<double>    __binsRightLimits;
-    public:
-        /// Initialize class
-        void init(const Histogram1D &oldHistogram, const MultidimArray<int> &bins);
-        
-        /// Return the index corresponding to a certain value
-        int val2Index(double value);
-        
-        /// Normalize to be a probability density function
-        void selfNormalize();
-        
-        /// Show
-        friend std::ostream & operator << (std::ostream &_out,
-            const IrregularHistogram1D &_h);
-        
-        /// Get value
-        double operator()(int i) const;
-        
-        /// Get histogram
-        const Histogram1D& getHistogram() const;
+public:
+    Histogram1D         __hist;
+    MultidimArray<double>    __binsRightLimits;
+public:
+    /// Initialize class
+    void init(const Histogram1D &oldHistogram, const MultidimArray<int> &bins);
+
+    /// Return the index corresponding to a certain value
+    int val2Index(double value);
+
+    /// Normalize to be a probability density function
+    void selfNormalize();
+
+    /// Show
+    friend std::ostream & operator << (std::ostream &_out,
+                                       const IrregularHistogram1D &_h);
+
+    /// Get value
+    double operator()(int i) const;
+
+    /// Get histogram
+    const Histogram1D& getHistogram() const;
 };
 
 /// @defgroup HistogramFunctions1D Functions related to histograms 1D
@@ -370,11 +370,40 @@ class IrregularHistogram1D
  * @endcode
  */
 template<typename T>
-void compute_hist(T& array, Histogram1D& hist, int no_steps)
+void compute_hist(const MultidimArray<T>& array, Histogram1D& hist,
+                  int no_steps)
 {
     double min, max;
     array.computeDoubleMinMax(min, max);
     compute_hist(array, hist, min, max, no_steps);
+}
+
+/** Compute histogram of a vector
+ * @ingroup HistogramFunctions1D
+ */
+template<typename T>
+void compute_hist(const std::vector< T > &v,
+                  Histogram1D& hist,
+                  int no_steps = 100)
+{
+    hist.clear();
+    int imax=v.size();
+    if (imax==0)
+        return;
+
+    // Compute minimum and maximum
+    double min, max;
+    min=max=v[0];
+    for (int i=1; i<imax; i++)
+    {
+        double val=v[i];
+        min=XMIPP_MIN(min,val);
+        max=XMIPP_MAX(max,val);
+    }
+    hist.init(min, max, no_steps);
+
+    for (int i=1; i<imax; i++)
+        hist.insert_value(v[i]);
 }
 
 /** Compute histogram of the array within two values
@@ -397,7 +426,7 @@ void compute_hist(const T& v, Histogram1D& hist,
 {
     hist.init(min, max, no_steps);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
-    	hist.insert_value(DIRECT_MULTIDIM_ELEM(v, n));
+    hist.insert_value(DIRECT_MULTIDIM_ELEM(v, n));
 }
 
 /** Compute histogram within a region (2D or 3D)
@@ -406,10 +435,11 @@ void compute_hist(const T& v, Histogram1D& hist,
  * The region is defined by its corners
  */
 template<typename T>
-void compute_hist(const MultidimArray< T >& v, Histogram1D& hist,
-                    const Matrix1D< int >& corner1,
-                    const Matrix1D< int >& corner2,
-                    int no_steps = 100)
+void compute_hist(const MultidimArray< T >
+                  & v, Histogram1D& hist,
+                  const Matrix1D< int >& corner1,
+                  const Matrix1D< int >& corner2,
+                  int no_steps = 100)
 {
     double min, max;
     v.computeDoubleMinMax(min, max, corner1, corner2);
@@ -417,7 +447,7 @@ void compute_hist(const MultidimArray< T >& v, Histogram1D& hist,
 
     Matrix1D< int > r(2);
     FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
-        hist.insert_value(v(r));
+    hist.insert_value(v(r));
 }
 
 /** Compute the detectability error between two pdf's
@@ -476,7 +506,8 @@ template<typename T>
 double effective_range(const T& v, double percentil_out = 0.25)
 {
     Histogram1D hist;
-    compute_hist(v, hist, 200);
+    compute_hist(v, hist, 200)
+    ;
     double min_val = hist.percentil(percentil_out / 2);
     double max_val = hist.percentil(100 - percentil_out / 2);
     return max_val - min_val;
@@ -491,15 +522,16 @@ template<typename T>
 void reject_outliers(T& v, double percentil_out = 0.25)
 {
     Histogram1D hist;
-    compute_hist(v, hist, 200);
+    compute_hist(v, hist, 200)
+    ;
     double eff0 = hist.percentil(percentil_out / 2);
     double effF = hist.percentil(100 - percentil_out / 2);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
-	if (DIRECT_A1D_ELEM(v,i) < eff0)
-            DIRECT_A1D_ELEM(v,i) = eff0;
-	else if (DIRECT_A1D_ELEM(v,i) > effF)
-            DIRECT_A1D_ELEM(v,i) = effF;
+    if (DIRECT_A1D_ELEM(v,i) < eff0)
+        DIRECT_A1D_ELEM(v,i) = eff0;
+    else if (DIRECT_A1D_ELEM(v,i) > effF)
+        DIRECT_A1D_ELEM(v,i) = effF;
 }
 
 /** Histogram equalization and re-quantization
@@ -510,7 +542,8 @@ void reject_outliers(T& v, double percentil_out = 0.25)
  * array is defined between 0 and bins-1.
  */
 template<typename T>
-void histogram_equalization(MultidimArray<T>& v, int bins = 8)
+void histogram_equalization(MultidimArray<T>
+                            & v, int bins = 8)
 {
     const int hist_steps = 200;
     Histogram1D hist;
@@ -535,24 +568,24 @@ void histogram_equalization(MultidimArray<T>& v, int bins = 8)
             index++;
         hist.index2val((double) index, div(current_bin - 1));
     }
-    
+
     // requantize and equalize histogram
     T* ptr=NULL;
     unsigned long int n;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
     {
-    	T vi=*ptr;
-    	if (vi < div(0))
+        T vi=*ptr;
+        if (vi < div(0))
             *ptr = 0;
-	else if (vi > div(bins - 2))
+        else if (vi > div(bins - 2))
             *ptr = bins - 1;
-	else
-	{
+        else
+        {
             index = 0;
             while (vi > div(index))
-        	index++;
+                index++;
             *ptr = index;
-	}
+        }
     }
 }
 
@@ -848,7 +881,8 @@ void compute_hist(const T& v1, const T& v2,
                   histogram2D& hist, int no_steps1, int no_steps2)
 {
     double min1, max1;
-    v1.computeDoubleMinMax(min1, max1);
+    v1.computeDoubleMinMax(min1, max1)
+    ;
 
     double min2, max2;
     v2.computeDoubleMinMax(min2, max2);
@@ -863,8 +897,9 @@ void compute_hist(const T& v1, const T& v2,
  * within the specified values, all the values lying outside are not counted
  */
 template<typename T>
-void compute_hist(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
-    	    	  histogram2D& hist,
+void compute_hist(const MultidimArray<T>
+                  & v1, const MultidimArray<T>& v2,
+                  histogram2D& hist,
                   double m1, double M1, double m2, double M2, int no_steps1,
                   int no_steps2)
 {
@@ -874,8 +909,8 @@ void compute_hist(const MultidimArray<T>& v1, const MultidimArray<T>& v2,
     hist.init(m1, M1, no_steps1, m2, M2, no_steps2);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v1)
-    	hist.insert_value(DIRECT_MULTIDIM_ELEM(v1, n),
-	    	    	  DIRECT_MULTIDIM_ELEM(v2, n));
+    hist.insert_value(DIRECT_MULTIDIM_ELEM(v1, n),
+                      DIRECT_MULTIDIM_ELEM(v2, n));
 }
 
 #endif
