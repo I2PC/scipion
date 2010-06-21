@@ -209,7 +209,15 @@ void SF_main(int argc, char **argv,
                             	<< " the only exception is the apply_geo program";
                         }
                             */
-                            img.write(prm->fn_out);
+                            if (prm->fn_out.isInStack())
+                            {
+                                int no;
+                                std::string filename;
+                                prm->fn_out.decompose(no,filename);
+                                img.write(filename,no,true,WRITE_REPLACE);
+                            }
+                            else
+                                img.write(prm->fn_out);
                         }
                         break;
                     case IMAGE2FOURIER:
