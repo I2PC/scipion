@@ -25,9 +25,9 @@
 #ifndef _PROG_FILTER_PROJECTIONS_HH
 #define _PROG_FILTER_PROJECTIONS_HH
 
-#include <data/docfile.h>
+#include <data/metadata.h>
 #include <data/funcs.h>
-#include <data/volume.h>
+#include <data/image.h>
 #include <data/mask.h>
 #include <vector>
 
@@ -82,28 +82,28 @@ public:
     int Nthreads;
 public:
     // Docfile with the images
-    DocFile DF_in;
+    MetaData DF_in;
 
     // Docfile with the score
-    DocFile DF_score;
+    MetaData DF_score;
 
     // Docfile with the cost
-    DocFile DF_cost;
+    MetaData DF_cost;
 
     // Docfile with the movements 0
-    DocFile DF_movement0;
+    MetaData DF_movement0;
 
     // Volume for the fitting
-    VolumeXmipp V;
+    Image<double> V;
 
     // Mask for the normalization
-    Matrix2D<double> dhardMask;
+    MultidimArray<double> dhardMask;
 
     // Mask for the normalization
-    Matrix2D<int> ihardMask;
+    MultidimArray<int> ihardMask;
     
     // Mask for the reconstruction
-    Matrix2D<double> softMask;
+    MultidimArray<double> softMask;
 
     // Vector of which images are valid and which are not
     std::vector<bool> valid;

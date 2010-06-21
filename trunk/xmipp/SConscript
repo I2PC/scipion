@@ -417,7 +417,7 @@ ReconsSources = [
 #    'detect_structures.cpp',
     'directions.cpp',
     'enhance_contrast.cpp',
-#    'filter_projections.cpp',
+    'filter_projections.cpp',
     'fourier_filter.cpp',
 #    'make_spectra.cpp',
 #    'micrograph_phase_flipping.cpp',
@@ -575,7 +575,7 @@ AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('docfile_select_subset')
 #AddXmippProgram('docfile_histogram')
 AddXmippProgram('enhance_contrast', ['XmippRecons'])
-#AddXmippProgram('filter_projections', ['XmippRecons'])
+AddXmippProgram('filter_projections', ['XmippRecons'])
 #AddXmippProgram('find_center3d')
 AddXmippProgram('fourier_filter', ['XmippRecons'])
 #AddXmippProgram('fourier_transform')

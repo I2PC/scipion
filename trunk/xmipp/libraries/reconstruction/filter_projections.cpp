@@ -33,7 +33,8 @@
 /* Read parameters --------------------------------------------------------- */
 void Prog_Filter_Projections_Parameters::read(int argc, char **argv)
 {
-    if (argc==1) REPORT_ERROR(1,"No filtering criteria provided");
+    if (argc==1)
+        REPORT_ERROR(1,"No filtering criteria provided");
 
     fn_in=getParameter(argc,argv,"-i");
     fn_out=getParameter(argc,argv,"-o");
@@ -108,7 +109,7 @@ void Prog_Filter_Projections_Parameters::read(int argc, char **argv)
         fn_vol="";
         r1=r2=percentil_normalization=-1;
     }
-    
+
     Nthreads=textToInteger(getParameter(argc,argv,"-thr","1"));
 }
 
@@ -116,17 +117,17 @@ void Prog_Filter_Projections_Parameters::read(int argc, char **argv)
 void Prog_Filter_Projections_Parameters::usage()
 {
     std::cerr
-        << "Usage:\n"
-        << "  -i <docfile>                          : Name of the input docfile\n"
-        << "  -o <rootname>                         : Name of the output docfile and selfile\n"
-        << "  [-filter_score <docfile> <percentil>] : The lower percentil is removed\n"
-        << "                                        : This file is produced by xmipp_angular_discrete_assign\n"
-        << "  [-filter_cost <docfile> <percentil>]  : The higher percentil is removed\n"
-        << "                                        : This file is produced by xmipp_angular_continuous_assign\n"
-        << "  [-filter_movement <docfile0> <angleLimit> <shiftLimit>]:\n"
-        << "                                        : Particles moving more than a certain limit are not considered\n"
-        << "  [-filter_normalization <volume> <r0> <rF> <percentil> : The worse fitting particles will be removed\n"
-        << "  [-thr <N=1>]                          : Number of threads available\n"
+    << "Usage:\n"
+    << "  -i <docfile>                          : Name of the input docfile\n"
+    << "  -o <rootname>                         : Name of the output docfile and selfile\n"
+    << "  [-filter_score <docfile> <percentil>] : The lower percentil is removed\n"
+    << "                                        : This file is produced by xmipp_angular_discrete_assign\n"
+    << "  [-filter_cost <docfile> <percentil>]  : The higher percentil is removed\n"
+    << "                                        : This file is produced by xmipp_angular_continuous_assign\n"
+    << "  [-filter_movement <docfile0> <angleLimit> <shiftLimit>]:\n"
+    << "                                        : Particles moving more than a certain limit are not considered\n"
+    << "  [-filter_normalization <volume> <r0> <rF> <percentil> : The worse fitting particles will be removed\n"
+    << "  [-thr <N=1>]                          : Number of threads available\n"
     ;
 }
 
@@ -134,18 +135,18 @@ void Prog_Filter_Projections_Parameters::usage()
 void Prog_Filter_Projections_Parameters::show()
 {
     std::cout
-        << "Filter score docfile: " << fn_score
-        << " percentil=" << percentil_score << std::endl
-        << "Filter cost docfile: " << fn_cost
-        << " percentil=" << percentil_cost << std::endl
-        << "Filter movement docfile0: " << fn_movement0
-        << " angleLimit=" << angleLimit
-        << " shiftLimit=" << shiftLimit << std::endl
-        << "Filter normalization volume: " << fn_vol
-        << " r1=" << r1
-        << " r2=" << r2
-        << " percentil=" << percentil_normalization << std::endl
-        << "Number of threads=" << Nthreads << std::endl
+    << "Filter score docfile: " << fn_score
+    << " percentil=" << percentil_score << std::endl
+    << "Filter cost docfile: " << fn_cost
+    << " percentil=" << percentil_cost << std::endl
+    << "Filter movement docfile0: " << fn_movement0
+    << " angleLimit=" << angleLimit
+    << " shiftLimit=" << shiftLimit << std::endl
+    << "Filter normalization volume: " << fn_vol
+    << " r1=" << r1
+    << " r2=" << r2
+    << " percentil=" << percentil_normalization << std::endl
+    << "Number of threads=" << Nthreads << std::endl
     ;
 }
 
@@ -153,19 +154,19 @@ void Prog_Filter_Projections_Parameters::show()
 void Prog_Filter_Projections_Parameters::produce_side_info()
 {
     DF_in.read(fn_in);
-    int Nimg=DF_in.dataLineNo();
+    int Nimg=DF_in.size();
 
     if (percentil_score>0)
     {
         DF_score.read(fn_score);
-        if (Nimg!=DF_score.dataLineNo())
+        if (Nimg!=DF_score.size())
             REPORT_ERROR(1,"The number of images in score docfile is not the same as in the input docfile");
     }
 
     if (percentil_cost>0)
     {
         DF_cost.read(fn_cost);
-        if (Nimg!=DF_cost.dataLineNo())
+        if (Nimg!=DF_cost.size())
             REPORT_ERROR(1,"The number of images in cost docfile is not the same as in the input docfile");
     }
 
@@ -173,7 +174,7 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
     {
         DF_movement0.read(fn_movement0);
         angleLimit=DEG2RAD(angleLimit);
-        if (Nimg!=DF_movement0.dataLineNo())
+        if (Nimg!=DF_movement0.size())
             REPORT_ERROR(1,"The number of images in movement docfile is not the same as in the input docfile");
     }
 
@@ -181,32 +182,35 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
     {
         V.read(fn_vol);
         V().setXmippOrigin();
-        
-        ImageXmipp I(DF_in.get_imagename(1));
+
+        Image<double> I;
+        FileName fnAux;
+        DF_in.getValue(MDL_IMAGE,fnAux);
+        I.read(fnAux);
         I().setXmippOrigin();
-        
+
         Mask_Params aux;
         aux.type = BINARY_CIRCULAR_MASK;
         aux.mode = INNER_MASK;
         aux.R1 = r1;
         aux.resize(I());
-        aux.generate_2Dmask();
-        typeCast(aux.imask2D,dhardMask);
-        ihardMask=aux.imask2D;
+        aux.generate_mask();
+        typeCast(aux.get_binary_mask(),dhardMask);
+        ihardMask=aux.get_binary_mask();
         dhardMask.setXmippOrigin();
         ihardMask.setXmippOrigin();
-        
+
         Mask_Params aux2;
         aux2.type = RAISED_COSINE_MASK;
         aux2.mode = INNER_MASK;
         aux2.R1 = r1;
         aux2.R2 = r2;
         aux2.resize(I());
-        aux2.generate_2Dmask();
-        softMask=aux2.dmask2D;
+        aux2.generate_mask();
+        softMask=aux2.get_cont_mask();
         softMask.setXmippOrigin();
     }
-    
+
     valid.resize(Nimg);
     correlations.resize(Nimg);
     for (int i=0; i<Nimg; i++)
@@ -217,7 +221,8 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
 }
 
 /* Filter by normalization ------------------------------------------------- */
-struct FilterByNormalizationParams {
+struct FilterByNormalizationParams
+{
     Prog_Filter_Projections_Parameters *prm;
     int idThread;
 };
@@ -231,14 +236,14 @@ void * filterByNormalizationThread(void *args)
         (FilterByNormalizationParams *)args;
     Prog_Filter_Projections_Parameters *prm=argsprm->prm;
     int idThread=argsprm->idThread;
-    
+
     // Make a local copy of DF_in (this is because of the threads)
-    DocFile DF_in_local=prm->DF_in;
-    
+    MetaData DF_in_local=prm->DF_in;
+
     // Create a local copy of the correlations observed
     std::vector<double> local_correlations;
     local_correlations.resize(prm->valid.size());
-    
+
     // Evaluate all projections corresponding to this thread
     int Nimg=prm->valid.size();
     if (idThread==0)
@@ -252,109 +257,113 @@ void * filterByNormalizationThread(void *args)
         if (i%prm->Nthreads==idThread && prm->valid[i])
         {
             // Get the experimental image
-            ImageXmipp I;
-            DF_in_local.get_image(i+1,I);
-            I().selfTranslateBSpline(3,vectorR2(I.Xoff(),I.Yoff()));
-            I.set_Xoff(0.0f);
-            I.set_Yoff(0.0f);
-        
+            Image<double> I;
+            FileName fnAux;
+            DF_in_local.getValue(MDL_IMAGE,fnAux,i+1);
+            I.read(fnAux);
+            selfTranslate(BSPLINE3,I(),vectorR2(I.Xoff(),I.Yoff()));
+            I.setShifts(0.0,0.0);
+
             // Get the corresponding theoretical projection
             Projection P;
             project_Volume(prm->V(), P, YSIZE(I()), XSIZE(I()),
-                I.rot(), I.tilt(), I.psi());
+                           I.rot(), I.tilt(), I.psi());
 
             // Compute correlation within mask
-            local_correlations[i]=correlation_index(P(),I(),&(prm->ihardMask));
+            local_correlations[i]=correlation_index(P(),I(),
+                                                    &(prm->ihardMask));
 
             // Make the noise within the mask to be zero mean and with
             // standard deviation 1
             P()-=I();
             double min_val, max_val, avg, stddev;
             computeStats_within_binary_mask(prm->ihardMask, P(),
-                min_val, max_val, avg, stddev);
+                                            min_val, max_val, avg, stddev);
             I()+=avg;
             I()*=1/stddev;
-            
+
             // Mask the image with a raised cosine
             I()*=prm->softMask;
 
             // Write the adjusted image
             I.write();
-            if (idThread==0 && i%60==0) progress_bar(i);
+            if (idThread==0 && i%60==0)
+                progress_bar(i);
         }
     }
-    if (idThread==0) progress_bar(Nimg);
-    
+    if (idThread==0)
+        progress_bar(Nimg);
+
     // Dump the results onto the parent correlation vector
     pthread_mutex_lock( &correlationMutex );
     for (int i=0; i<Nimg; i++)
         if (local_correlations[i]>-2)
             prm->correlations[i]=local_correlations[i];
-    pthread_mutex_unlock( &correlationMutex );        
+    pthread_mutex_unlock( &correlationMutex );
 }
 
 /* Run --------------------------------------------------------------------- */
 void Prog_Filter_Projections_Parameters::run()
 {
     int Nimg=valid.size();
-    
+
     // Filter by score .....................................................
     if (percentil_score>0)
     {
         // Compute the histogram of the scores
-        int col_score=DF_score.getColNumberFromHeader("Score")  - 1;
-        if (col_score<0)
-            REPORT_ERROR(1,"Column Score not found in the score docfile");
-        Matrix1D<double> score=DF_score.col(col_score);
+    	std::vector<double> score;
+        DF_score.getColumnValues(MDL_MAXCC,score);
         Histogram1D Hscore;
         compute_hist(score,Hscore,200);
         double threshold=Hscore.percentil(percentil_score);
         std::cout << "Score threshold=" << threshold << std::endl;
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(score)
-            if (score(i)<threshold)
+        int imax=score.size();
+        for (int i=0; i<imax; i++)
+            if (score[i]<threshold)
                 valid[i]=false;
     }
-    
+
     // Filter by cost .....................................................
     if (percentil_cost>0)
     {
         // Compute the histogram of the costs
-        int col_cost=DF_cost.getColNumberFromHeader("Cost")  - 1;
-        if (col_cost<0)
-            REPORT_ERROR(1,"Column Cost not found in the cost docfile");
-        Matrix1D<double> cost=DF_cost.col(col_cost);
+    	std::vector<double> cost;
+        DF_cost.getColumnValues(MDL_COST,cost);
         Histogram1D Hcost;
         compute_hist(cost,Hcost,200);
         double threshold=Hcost.percentil(100-percentil_cost);
         std::cout << "Cost threshold=" << threshold << std::endl;
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(cost)
-            if (cost(i)>threshold)
+        int imax=cost.size();
+        for (int i=0; i<imax; i++)
+            if (cost[i]>threshold)
                 valid[i]=false;
     }
-    
+
     // Filter by movement ..................................................
     if (angleLimit>0)
     {
-        DF_movement0.go_first_data_line();
-        DF_in.go_first_data_line();
+        DF_movement0.firstObject();
+        DF_in.firstObject();
         int i=0;
-        while (!DF_movement0.eof())
+        FOR_ALL_OBJECTS_IN_METADATA(DF_movement0)
         {
-            double rot0    = DF_movement0(0);
-            double tilt0   = DF_movement0(1);
-            double psi0    = DF_movement0(2);
-            double shiftX0 = DF_movement0(3);
-            double shiftY0 = DF_movement0(4);
+            double rot0, tilt0, psi0, shiftX0, shiftY0;
+            DF_movement0.getValue(MDL_ANGLEROT,rot0);
+            DF_movement0.getValue(MDL_ANGLETILT,tilt0);
+            DF_movement0.getValue(MDL_ANGLEPSI,psi0);
+            DF_movement0.getValue(MDL_SHIFTX,shiftX0);
+            DF_movement0.getValue(MDL_SHIFTY,shiftY0);
 
-            double rotF    = DF_in(0);
-            double tiltF   = DF_in(1);
-            double psiF    = DF_in(2);
-            double shiftXF = DF_in(3);
-            double shiftYF = DF_in(4);
-            
+            double rotF, tiltF, psiF, shiftXF, shiftYF;
+            DF_in.getValue(MDL_ANGLEROT,rotF);
+            DF_in.getValue(MDL_ANGLETILT,tiltF);
+            DF_in.getValue(MDL_ANGLEPSI,psiF);
+            DF_in.getValue(MDL_SHIFTX,shiftXF);
+            DF_in.getValue(MDL_SHIFTY,shiftYF);
+
             double diffX=shiftXF-shiftX0;
             double diffY=shiftYF-shiftY0;
-            
+
             Matrix2D<double> E0, EF;
             Euler_angles2matrix(rot0,tilt0,psi0,E0);
             Euler_angles2matrix(rotF,tiltF,psiF,EF);
@@ -364,8 +373,7 @@ void Prog_Filter_Projections_Parameters::run()
                 valid[i]=false;
 
             i++;
-            DF_movement0.next_data_line();
-            DF_in.next_data_line();
+            DF_in.nextObject();
         }
     }
 
@@ -380,7 +388,7 @@ void Prog_Filter_Projections_Parameters::run()
             th_args[nt].prm = this;
             th_args[nt].idThread = nt;
             pthread_create( &th_ids[nt], NULL,
-                filterByNormalizationThread, &th_args[nt]);
+                            filterByNormalizationThread, &th_args[nt]);
         }
 
         // Waiting for threads to finish
@@ -397,16 +405,19 @@ void Prog_Filter_Projections_Parameters::run()
         for (int i=0; i<Nimg; i++)
             if (valid[i])
             {
-                if (correlations[i]<0) valid[i]=false;
-                else if (tanh(correlations[i]+eps)<=0) valid[i]=false;
-                else validCorrelations.push_back(correlations[i]);
+                if (correlations[i]<0)
+                    valid[i]=false;
+                else if (tanh(correlations[i]+eps)<=0)
+                    valid[i]=false;
+                else
+                    validCorrelations.push_back(correlations[i]);
             }
-        
+
         // Filter by low correlations
-        Matrix1D<double> vcorrelations;
+        MultidimArray<double> vcorrelations;
         vcorrelations.resize(validCorrelations.size());
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(vcorrelations)
-            vcorrelations(i)=validCorrelations[i];
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(vcorrelations)
+        vcorrelations(i)=validCorrelations[i];
         Histogram1D Hcorr;
         compute_hist(vcorrelations,Hcorr,200);
         double threshold=Hcorr.percentil(percentil_normalization);
@@ -417,33 +428,35 @@ void Prog_Filter_Projections_Parameters::run()
     }
 
     // Produce the output docfile ..........................................
-    DocFile DF_out;
-    SelFile SF_out;
-    DF_out.append_comment("Headerinfo columns: rot (1) , tilt (2), psi (3), Xoff (4), Yoff (5)");
+    MetaData DF_out;
+    std::vector< std::string > imagenames;
+    DF_in.getColumnValues(MDL_IMAGE,imagenames);
     for (int i=0; i<Nimg; i++)
         if (valid[i])
         {
-            FileName imagename=DF_in.get_imagename(i+1);
-            DF_out.append_comment(imagename);
-            SF_out.insert(imagename);
-            Matrix1D<double> v(5);
-            v(0)=DF_in(i+1,0);
-            v(1)=DF_in(i+1,1);
-            v(2)=DF_in(i+1,2);
+            DF_out.addObject();
+            DF_out.setValue(MDL_IMAGE,imagenames[i]);
+            double rotF, tiltF, psiF, shiftXF, shiftYF;
+            DF_in.getValue(MDL_ANGLEROT,rotF);
+            DF_in.getValue(MDL_ANGLETILT,tiltF);
+            DF_in.getValue(MDL_ANGLEPSI,psiF);
             if (fn_vol!="")
             {
-                v(3)=0;
-                v(4)=0;
+                shiftXF=0;
+                shiftYF=0;
             }
             else
             {
-                v(3)=DF_in(i+1,3);
-                v(4)=DF_in(i+1,4);
+                DF_in.getValue(MDL_SHIFTX,shiftXF);
+                DF_in.getValue(MDL_SHIFTY,shiftYF);
             }
-            DF_out.append_data_line(v);
+            DF_out.setValue(MDL_ANGLEROT,rotF);
+            DF_out.setValue(MDL_ANGLETILT,tiltF);
+            DF_out.setValue(MDL_ANGLEPSI,psiF);
+            DF_out.setValue(MDL_SHIFTX,shiftXF);
+            DF_out.setValue(MDL_SHIFTY,shiftYF);
         }
     DF_out.write(fn_out+".doc");
-    SF_out.write(fn_out+".sel");
-    std::cout << DF_out.dataLineNo() << " images have been kept out of "
-              << Nimg << std::endl;
+    std::cout << DF_out.size() << " images have been kept out of "
+    << Nimg << std::endl;
 }
