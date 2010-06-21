@@ -91,6 +91,7 @@ int main(int argc, char **argv)
 #endif
 
             }//close for blocks
+            prm.model.print();
 
             // Check convergence
             converged = prm.checkConvergence();

@@ -56,6 +56,7 @@ void MetaData::_clear(bool onlyData)
 void MetaData::clear()
 {
     _clear(true);
+    //init();
 }
 
 void MetaData::init(const std::vector<MDLabel> *labelsVector)

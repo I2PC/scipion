@@ -2108,8 +2108,8 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
     local_model.sumw_allrefs = 0.;
     local_model.dim = dim;
 
-    if (iter == 0)
-        doReferencesRegularization();
+    //if (iter == 0)
+    //    doReferencesRegularization();
 
     for (int refno = 0; refno < local_model.n_ref; refno++)
     {
@@ -2331,7 +2331,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
     FileName fn_base;
     FileName fn_tmp;
     Image<double> Itmp;
-    MetaData MDo;
+    MetaData MDo, MDo2;
     bool write_img_xmd, write_refs_log, write_conv = !do_ML3D;
     bool write_norm = model.do_norm;
 
@@ -2419,27 +2419,27 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
         MDref.write(fn_tmp);
 
         // Write out log-file
-        MDo.clear();
-        MDo.setColumnFormat(false);
-        MDo.setComment(cline);
-        MDo.addObject();
-        MDo.setValue(MDL_LL, model.LL);
-        MDo.setValue(MDL_PMAX, model.avePmax);
-        MDo.setValue(MDL_SIGMANOISE, model.sigma_noise);
-        MDo.setValue(MDL_SIGMAOFFSET, model.sigma_offset);
-        MDo.setValue(MDL_RANDOMSEED, seed);
+        MDo2.clear();
+        MDo2.setColumnFormat(false);
+        MDo2.setComment(cline);
+        MDo2.addObject();
+        MDo2.setValue(MDL_LL, model.LL);
+        MDo2.setValue(MDL_PMAX, model.avePmax);
+        MDo2.setValue(MDL_SIGMANOISE, model.sigma_noise);
+        MDo2.setValue(MDL_SIGMAOFFSET, model.sigma_offset);
+        MDo2.setValue(MDL_RANDOMSEED, seed);
         if (write_norm)
         {
             MDo.setValue(MDL_INTSCALE, average_scale);
         }
-        MDo.setValue(MDL_ITER, iter);
+        MDo2.setValue(MDL_ITER, iter);
         fn_tmp = fn_base + "_img.xmd";
-        MDo.setValue(MDL_IMGMD, fn_tmp);
+        MDo2.setValue(MDL_IMGMD, fn_tmp);
         fn_tmp = fn_base + "_ref.xmd";
-        MDo.setValue(MDL_REFMD, fn_tmp);
+        MDo2.setValue(MDL_REFMD, fn_tmp);
 
         fn_tmp = fn_base + "_log.xmd";
-        MDo.write(fn_tmp);
+        MDo2.write(fn_tmp);
     }
 
 }//close function writeModel
