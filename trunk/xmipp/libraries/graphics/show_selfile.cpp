@@ -138,7 +138,7 @@ void ShowSel::readSelFile(const FileName &_fn, double _minGray, double _maxGray)
 
 void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
 {
-	if (showonlyactive)
+	if (showonlyactive && SF.containsLabel(MDL_ENABLED))
 		SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
 	listSize        = SF.size();
     if (listSize == 0)
@@ -165,8 +165,10 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
     	SF.getValue(MDL_IMAGE, imgnames[i]);
-    	SF.getValue(MDL_ENABLED, enabled);
-    	selstatus[i] = enabled == 1;
+    	if (SF.getValue(MDL_ENABLED, enabled))
+    		selstatus[i] = enabled == 1;
+    	else
+    		selstatus[i] = true;
         i++;
     }
 }
@@ -608,7 +610,8 @@ void ShowSel::showSelStats()
     MetaData SF(fn);
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-    	SF.getValue(MDL_ENABLED, enabled);
+    	if (!SF.getValue(MDL_ENABLED, enabled))
+    		enabled=1;
     	if (enabled==1)
     		active++;
     	else if (enabled==-1)
