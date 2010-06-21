@@ -205,11 +205,13 @@ int readMRC(int img_select,bool isStack=false)
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
 
     int Ndim = NSIZE(data);
-    if(dataflag== -2 )
-    {
-    	fclose(fimg);
-    	return 0;
+    if (isStack && dataflag<0)   // Don't read the individual header
+    {                            // and the data if not necessary
+        fclose(fimg);
+        return 0;
     }
+
+
     MD.removeObjects();
     for ( i=imgStart; i<imgEnd; i++ )
         //for(int i=0;i< Ndim;i++)

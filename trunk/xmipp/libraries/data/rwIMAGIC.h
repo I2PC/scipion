@@ -185,8 +185,8 @@ int  readIMAGIC(int img_select)
     offset = 0;   // separate header file
 
     unsigned long   Ndim = _nDim, j = 0;
-    if(dataflag== -2 )
-    {
+    if (dataflag<0)   // Don't read the individual header
+    {                            // and the data if not necessary
         fclose(fhed);
         return 0;
     }

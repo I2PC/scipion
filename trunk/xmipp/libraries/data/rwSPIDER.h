@@ -198,6 +198,12 @@ int  readSPIDER(int img_select,bool isStack=false)
         }
     }
 
+    if (isStack && dataflag<0)   // Don't read the individual header
+    {                            // and the data if not necessary
+        fclose(fimg);
+        return 0;
+    }
+
     DataType datatype  = Float;
     size_t header_size = offset;
     size_t image_size  = header_size + ZYXSIZE(data)*sizeof(float);
@@ -241,12 +247,6 @@ int  readSPIDER(int img_select,bool isStack=false)
                 }
         */
         offset += offset;
-    }
-
-    if(dataflag== -2 )
-    {
-        fclose(fimg);
-        return 0;
     }
 
     MD.removeObjects();
@@ -529,6 +529,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             fseek( fimg,offset + (offset+datasize)*select_img, SEEK_SET);
         //for ( size_t i=0; i<Ndim; i++ )
         size_t i =imgStart;
+        MD.firstObject();
         FOR_ALL_OBJECTS_IN_METADATA(MD)
         {
 
