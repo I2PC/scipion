@@ -73,10 +73,12 @@ class sortJunkThread(Thread):
                     ".sel -l image -o "+fnClass+"_F1.sel")
                 os.system("xmipp_classify_analyze_cluster -i "+fnClass+"_F1.sel -ref "+\
                     fnClass+".xmp -dontMask >& /dev/null")
-                fh=open(fnClass+"_F1_score.txt");
+                fh=open(fnClass+"_F1_outliers.sel");
                 lines=fh.readlines()
                 for line in lines:
                     args=line.split()
+                    if args[0]==";":
+                        continue
                     if args[0] in self.Zscore:
                         self.Zscore[args[0]]=self.Zscore[args[0]]+float(args[1])
                         self.Nscore[args[0]]=self.Nscore[args[0]]+1
@@ -84,8 +86,20 @@ class sortJunkThread(Thread):
                         self.Zscore[args[0]]=float(args[1])
                         self.Nscore[args[0]]=1
                 fh.close()
-                os.system("rm -f "+fnClass+"_F1_pca* "+fnClass+"_F1_outliers.sel "+\
-                    fnClass+"_F1_score.txt")
+                fh=open(fnClass+"_F1_pca.sel");
+                lines=fh.readlines()
+                for line in lines:
+                    args=line.split()
+                    if args[0]==";":
+                        continue
+                    if args[0] in self.Zscore:
+                        self.Zscore[args[0]]=self.Zscore[args[0]]+float(args[1])
+                        self.Nscore[args[0]]=self.Nscore[args[0]]+1
+                    else:
+                        self.Zscore[args[0]]=float(args[1])
+                        self.Nscore[args[0]]=1
+                fh.close()
+                os.system("rm -f "+fnClass+"_F1_pca* "+fnClass+"_F1_outliers.sel ")
             idx=idx+1
         if (self.myId==0):
             print
