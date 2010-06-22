@@ -350,7 +350,7 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
         ARS(1,2)+=shiftY;
         applyGeometry(LINEAR,IauxRS,I,ARS,IS_NOT_INV,WRAP);
     }
-
+    
     // Compute the correntropy
     double corrCodeRS, corrCodeSR;
     if (useCorrelation)
