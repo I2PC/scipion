@@ -108,16 +108,12 @@ def sortJunk(Nthreads,fnRoot,classFiles,thZscore):
     print "Sorting junk ----------------------------------------------"
     # Sort obvious junk
     os.system("cat "+fnRoot+"_level_00_??????.sel > "+fnRoot+"_all.sel")
-    print("xmipp_sort_by_statistics -i "+fnRoot+"_all.sel -o "+\
-        fnRoot+"_F1 -zcut "+str(thZscore))
     os.system("xmipp_sort_by_statistics -i "+fnRoot+"_all.sel -o "+\
-        fnRoot+"_F1 -zcut "+str(thZscore))
+        fnRoot+"_F1 -zcut "+str(thZscore)+" -multivariate")
     os.system("mv -f "+fnRoot+"_F1.sel "+fnRoot+"_F1_sorted.sel")
 
-    # Sort junk according to clusters
-    
+    # Sort junk according to clusters, launch threads
     threadList=[]
-    # Launch threads
     for i in range(0,Nthreads):
         currentThread=sortJunkThread(Nthreads,i,fnRoot,classFiles)
         threadList.append(currentThread)
@@ -163,7 +159,7 @@ def sortJunk(Nthreads,fnRoot,classFiles,thZscore):
 
         if score[1]>thZscore:
             badImages.add(score[0])
-    mD.write(fnRoot+"_F12_sorted.sel");
+    mD.write(XmippData.FileName(fnRoot+"_F12_sorted.sel"));
     
     # Filter classes
     for className in classFiles:
@@ -283,7 +279,7 @@ class purifyCoresThread(Thread):
                 os.system("xmipp_sort_by_statistics -i "+fnClass+\
                     "_F123.sel -o "+\
                     fnClass+"_F1234 -zcut "+str(self.Zscore)+\
-                    " >& /dev/null")
+                    " -multivariate >& /dev/null")
                 os.system("rm -f "+fnClass+"_F1234.*Z")
                 os.system("mv -f "+fnClass+"_F1234_good.sel "+fnClass+"_F1234.sel")
                 os.system("xmipp_classify_analyze_cluster -i "+fnClass+\
