@@ -1,6 +1,7 @@
 /***************************************************************************
  *
- * Authors: Sjors Scheres (scheres@cnb.csic.es)
+ * Authors: Carlos Oscar Sorzano (coss@cnb.csic.es)
+ *          Sjors Scheres (scheres@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -212,7 +213,7 @@ int main(int argc, char **argv)
             SFout.setValue(MDL_IMAGE,fnImg);
             SFout.setValue(MDL_ENABLED,1);
             SFout.setValue(MDL_ZSCORE,finalZscore(isort));
-            if (prm.Zscore(isort)<prm.cutoff && prm.cutoff>0)
+            if (finalZscore(isort)<prm.cutoff && prm.cutoff>0)
             {
                 SFoutGood.addObject();
                 SFoutGood.setValue(MDL_IMAGE,fnImg);
