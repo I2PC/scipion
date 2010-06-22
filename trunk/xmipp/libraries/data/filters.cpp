@@ -1038,6 +1038,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
         I=IauxSR;
         M=ASR;
     }
+    delete plans;
 }
 
 /* Estimate 2D Gaussian ---------------------------------------------------- */
