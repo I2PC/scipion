@@ -201,10 +201,10 @@ void Prog_analyze_cluster_prm::run()
             SFout_bad.setValue( MDL_ZSCORE, zscore);
         }
     }
+    SFout_good.write(fnRoot+"_pca.sel");
+    SFout_bad.write(fnRoot+"_outliers.sel");
     if (Ngood>0)
     {
-        SFout_good.write(fnRoot+"_pca.sel");
-        SFout_bad.write(fnRoot+"_outliers.sel");
         IalignedAvg/=Ngood;
         int idx=0;
         Image<double> save;
