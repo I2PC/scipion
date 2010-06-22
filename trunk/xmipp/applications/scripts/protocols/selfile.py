@@ -130,7 +130,11 @@ class selfile:
        for name,state in self.sellines:
            # Only make abspath if not already abspath
            if not (name[0]=="/"):
-               name=os.path.abspath(name)
+               idx=name.find('@')
+               if idx==-1:
+                   name=os.path.abspath(name)
+               else:
+                   name=name[0:idx+1]+os.path.abspath(name[idx+1:])
            newlines.append([name,state])
        newsel=selfile()
        newsel.set(newlines)
@@ -220,10 +224,19 @@ class selfile:
        newlines=[]
        if not os.path.exists(directory):
            os.makedirs(directory)
+       copied={}
        for name,state in self.sellines:
            parts=name.split('/')
-           newname=directory+'/'+parts[-1]
-           shutil.copy(name,directory)
+           idx=name.find('@')
+           if not idx==-1:
+              stackname=name[idx+1:]
+              if not stackname in copied:
+                shutil.copy(stackname,directory)
+                copied[stackname]=1
+              newname=name[0:idx+1]+directory+'/'+parts[-1]
+           else:
+               shutil.copy(name,directory)
+               newname=directory+'/'+parts[-1]
            newlines.append([newname,state])
        newsel=selfile()
        newsel.set(newlines)
