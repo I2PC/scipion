@@ -104,7 +104,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
         Iaux.read( auxFn );
         Iaux().setXmippOrigin();
         SFout.addObject();
-        SFout.setValue(MDL_IMAGE,Iaux.name());
+        SFout.setValue(MDL_IMAGE,auxFn);
 
         // Choose between this image and its mirror
         MultidimArray<double> I, Imirror;
@@ -137,9 +137,9 @@ void Prog_analyze_cluster_prm::produceSideInfo()
                 Iaux.write();
             else
             {
-                FileName fnRoot=Iaux.name().without_extension();
+                FileName fnRoot=auxFn.without_extension();
                 Iaux.write(fnRoot+"."+oext);
-                SFout.setValue(MDL_IMAGE,Iaux.name());
+                SFout.setValue(MDL_IMAGE,fnRoot+"."+oext);
             }
         }
 
@@ -188,7 +188,6 @@ void Prog_analyze_cluster_prm::run()
         {
             SFout_good.addObject();
             SFout_good.setValue( MDL_IMAGE, fnImg);
-            SFout_good.setValue( MDL_ENABLED, 1);
             SFout_good.setValue( MDL_ZSCORE, zscore);
             MultidimArray<float>& Iaux=Ialigned[trueIdx];
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(IalignedAvg)
@@ -199,7 +198,6 @@ void Prog_analyze_cluster_prm::run()
         {
             SFout_bad.addObject();
             SFout_bad.setValue( MDL_IMAGE, fnImg);
-            SFout_bad.setValue( MDL_ENABLED, 1);
             SFout_bad.setValue( MDL_ZSCORE, zscore);
         }
     }
