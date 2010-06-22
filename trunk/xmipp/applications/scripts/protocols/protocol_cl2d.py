@@ -224,12 +224,8 @@ class CL2D_class:
             os.makedirs(self.WorkingDir)
 
         # Create a selfile with absolute pathname in the WorkingDir
-        mysel=selfile.selfile()
-        mysel.read(InSelFile)
-        newsel=mysel.make_abspath()
-        InSelFile=InSelFile.rsplit("/")[-1]
-        self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
-        newsel.write(self.InSelFile)
+        self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile.rsplit("/")[-1])
+        shutil.copy(InSelFile,self.InSelFile)
 
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],
