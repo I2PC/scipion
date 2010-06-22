@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     FileName          fn_out;
     FileName          out_root;
     FileName          out_ext;
-    std::string       ang1="rot",ang2="tilt",ang3="psi";
+    std::string       ang1="psi",ang2="tilt",ang3="rot";
     int               maxcount;
     
     MetaData          SF;
