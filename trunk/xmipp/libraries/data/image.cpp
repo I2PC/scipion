@@ -100,6 +100,7 @@ unsigned long  gettypesize(DataType type)
         case ComplexInt:         size = sizeof(std::complex<int>); break;
         case ComplexFloat:       size = sizeof(std::complex<float>); break;
         case ComplexDouble:      size = sizeof(std::complex<double>); break;
+        case Bool:				  size = sizeof(bool); break;
         default: size = 0;
     }
 

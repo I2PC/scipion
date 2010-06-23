@@ -82,13 +82,15 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
 
     //    if ( fread( header, TIASIZE, 1, fimg ) < 1 )
     //        return(-2);
-    fread(&header->endianess, sizeof(short int), 1, fimg );
-    // Check Endianess
+    xmippFREAD(&header->endianess, sizeof(short int), 1, fimg, swap );
 
+    // Set Endianess
     if (header->endianess == 18761)
         swap = 0;
     else
         swap = 1;
+    if (IsBigEndian())
+    	swap = !swap;
 
 
     xmippFREAD(&header->SeriesID, sizeof(short int), 1, fimg, swap );

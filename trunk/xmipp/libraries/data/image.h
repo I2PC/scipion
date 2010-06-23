@@ -63,7 +63,8 @@ typedef enum {
     ComplexShort = 10,       // Complex two-byte integer (4-byte)
     ComplexInt = 11,        // Complex integer (8-byte)
     ComplexFloat = 12,      // Complex floating point (8-byte)
-    ComplexDouble = 13      // Complex floating point (16-byte)
+    ComplexDouble = 13,      // Complex floating point (16-byte)
+    Bool = 14				// Boolean (1-byte?)
 } DataType;
 
 // Ask memory size of datatype
@@ -255,6 +256,9 @@ public:
 #include "rwMRC.h"
 #include "rwIMAGIC.h"
 #include "rwTIA.h"
+#include "rwDM3.h"
+
+
     /** Is this file an image
      *
      *  Check whether a real-space image can be read
@@ -359,8 +363,10 @@ public:
             err = readMRC(select_img,false);
         else if (ext_name.contains("img") || ext_name.contains("hed"))//
             err = readIMAGIC(select_img);//imagic is always an stack
-        else if (ext_name.contains("ser"))//tia
+        else if (ext_name.contains("ser"))//TIA
             err = readTIA(select_img,false, imParam);
+        else if (ext_name.contains("dm3"))//tia
+            err = readDM3(select_img,false);
         else
         {
             err = readSPIDER(select_img,true);
@@ -1047,13 +1053,13 @@ public:
     /* Is there label in the individual header */
     bool individualContainsLabel(MDLabel label) const
     {
-    	return MD.containsLabel(label);
+        return MD.containsLabel(label);
     }
 
     /* Is there label in the main header */
     bool mainContainsLabel(MDLabel label) const
     {
-    	return MDMainHeader.containsLabel(label);
+        return MDMainHeader.containsLabel(label);
     }
 
     /** Get Rot angle
@@ -1359,9 +1365,9 @@ public:
         }
         o << "Header size  : " << I.offset << std::endl;
         if (I.individualContainsLabel(MDL_WEIGHT))
-        	o << "Weight  : " << I.weight() << std::endl;
+            o << "Weight  : " << I.weight() << std::endl;
         if (I.individualContainsLabel(MDL_FLIP))
-        	o << "Flip    : " << I.flip() << std::endl;
+            o << "Flip    : " << I.flip() << std::endl;
         return o;
     }
 
