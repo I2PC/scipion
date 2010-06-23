@@ -1,14 +1,37 @@
 package xmipptomo;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.ImageStack;
+import ij.LookUpTable;
+import ij.io.FileInfo;
+import ij.io.FileOpener;
+import ij.io.ImageReader;
 import ij.io.OpenDialog;
+import ij.process.ImageProcessor;
 
+import java.awt.image.ColorModel;
+import java.awt.image.IndexColorModel;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.Collections;
+import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.Semaphore;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 /**
+ * XmippTomo data model: tilt series with its projections
+ */
+
+/**
+ * @author jcuenca
  * 
  */
 
@@ -18,13 +41,25 @@ import javax.swing.text.Document;
  */
 public class TomoData {
 	
-	// maybe it's better to move currentSlice to the viewer - in case different views can show different slices
-	private int currentSlice=0;
+	// maybe it's better to move currentProjection to the viewer - in case different views can show different slices
+	private int currentProjection=0;
+	
+	private static int defaultWidth=256, defaultHeight=256;
+	private int width,height;
+	private int numberOfProjections;
+	
+	private File file;
 
     private ImagePlus imp=null;
-	private java.util.List <TomoInfo> ti=Collections.emptyList();
+	// private java.util.List <TomoInfo> ti=Collections.emptyList();
+    // private java.util.List <Float> tiltAngles=Collections.emptyList();
+	// by now use a vector to store the info
+	java.util.List <Float> tiltAngles=new Vector<Float> (); //imp.getStackSize());
 	
 	private Document tiltTextModel=null;
+
+	// allow Views to wait for the first image to load
+	private Semaphore firstLoaded= new Semaphore(1);
 	
 	public void setTiltModel(Document model){
 		if(tiltTextModel==null){
@@ -41,50 +76,48 @@ public class TomoData {
 		return tiltTextModel;
 	}
 	
-	public int getCurrentSlice() {
-		return currentSlice;
-	}
-
-	public void setCurrentSlice(int currentSlice) {
-		this.currentSlice = currentSlice;
-		// update all things depending on current slice
-		getImage().setSlice(getCurrentSlice());
-		setTiltText(getCurrentTilt());
-	}
 	
 	/**
-	 * @return the ti
+	 * @return range 0..numberProjections-1
 	 */
-	public java.util.List<TomoInfo> getTomoInfoList() {
-		return ti;
+	public int getCurrentProjection() {
+		return currentProjection;
 	}
 
+	
 	/**
-	 * @param ti the ti to set
+	 * @param currentProjection range 0..numberProjections-1
 	 */
-	public void setTomoInfoList(java.util.List<TomoInfo> ti) {
-		this.ti = ti;
+	public void setCurrentProjection(int currentProjection) {
+		this.currentProjection = currentProjection;
+		// update all things depending on current slice
+		getImage().setSlice(getCurrentProjection());
+		setTiltText(getCurrentTilt());
 	}
 
 	public ImagePlus getImage(){
 		return imp;
 	}
 	
-	private void setImage(ImagePlus i){
+	public void setImage(ImagePlus i){
 		imp=i;
 	}
 	
-	public TomoInfo getCurrentTomoInfo(){
-		// if(getTomoInfoList().size()>0)
-		return getTomoInfoList().get(getCurrentSlice());
+	public List<Float> getTiltAngles(){
+		return tiltAngles;
 	}
 	
 	public float getCurrentTilt(){
-		return getCurrentTomoInfo().getTilt();
+		return getTiltAngles().get(getCurrentProjection()).floatValue();
 	}
 	
 	public void setCurrentTilt(float t){
-		getCurrentTomoInfo().setTilt(t);
+		getTiltAngles().set(getCurrentProjection(), new Float(t));
+	}
+	
+	// method for loading the angles in sequence (it assumes an implicit order) 
+	public void addTiltAngle(Float t){
+		tiltAngles.add(t);
 	}
 	
 	// there may be no tilts defined - change tilt to Float (so it can handle nulls)
@@ -92,8 +125,12 @@ public class TomoData {
 		return getCurrentTilt();
 	}
 	
-	public int getNSlices(){
-		return getImage().getNSlices();
+	public int getNumberOfProjections(){
+		return numberOfProjections;
+	}
+	
+	public void setNumberOfProjections(int n){
+		numberOfProjections=n;
 	}
 	
 	// right now return only grayscale value as double
@@ -105,36 +142,12 @@ public class TomoData {
 		//return getImage().getCalibration().getCValue(v[0]);
 	}
 	
-	public void import_data(String path) throws java.io.IOException{
-			// Get ImagePlus with the help of the appropiate I/O plugin
-			if (path.endsWith(".mrc")) {       
-				imp = (ImagePlus) IJ.runPlugIn("MRC_Reader", path);
-				if (imp != null && imp.getWidth() != 0) {
-					// mrc_reader does not save Fileinfo inside the ImagePlus
-					setTomoInfoList(TomoInfo.readMRC(path));
-					// debug(String.valueOf(ti.elementAt(3).getTilt()));
-				}
-			}else if (path.toLowerCase().endsWith(".spi") || path.toLowerCase().endsWith(".xmp")|| path.toLowerCase().endsWith(".vol")) {
-				imp = (ImagePlus) IJ.runPlugIn("Spider_Reader", path);
-				if (imp == null) {
-					//width = PLUGIN_NOT_FOUND;
-				}
-				if (imp != null && imp.getWidth() == 0) {
-					imp = null;
-				}
-			}else if (path.endsWith(".sel")) {       
-				imp = (ImagePlus) IJ.runPlugIn("Sel_Reader", path);
-				if (imp == null) {
-					//width = PLUGIN_NOT_FOUND;
-				}
-				if (imp != null && imp.getWidth() == 0) {
-					imp = null;
-				}
-			}
+	public void import_data(String path) throws java.io.IOException{	
 			
-			setImage(imp);
+			new TiltSeriesOpener().read(path,this);
 
 	}
+	
 	
 	private void setDocumentText(Document d,String t){
 		try{
@@ -145,5 +158,63 @@ public class TomoData {
 	
 	private void setTiltText(float tilt){
 		setDocumentText(getTiltModel(),String.valueOf(tilt));	
+	}
+
+	/**
+	 * @return the defaultWidth
+	 */
+	public int getDefaultWidth() {
+		return defaultWidth;
+	}
+
+	/**
+	 * @return the defaultHeight
+	 */
+	public int getDefaultHeight() {
+		return defaultHeight;
+	}
+	
+	public String getFileName(){
+		return file.getName();
+	}
+
+	/**
+	 * @return the width
+	 */
+	public int getWidth() {
+		return width;
+	}
+
+	/**
+	 * @param width the width to set
+	 */
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	/**
+	 * @return the height
+	 */
+	public int getHeight() {
+		return height;
+	}
+
+	/**
+	 * @param height the height to set
+	 */
+	public void setHeight(int height) {
+		this.height = height;
+	}
+	
+	public void setFile(String path){
+		file=new File(path);
+	}
+	
+	public synchronized void waitForFirstImage() throws InterruptedException{
+		firstLoaded.acquire();
+	}
+	
+	private synchronized void firstImageLoaded(){
+		firstLoaded.release();
 	}
 }

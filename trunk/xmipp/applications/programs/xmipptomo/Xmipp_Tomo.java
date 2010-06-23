@@ -23,23 +23,25 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+// some recommend that plugin classes must be in the default package...
+// here we use it has its own submenu
 package xmipptomo;
 
 
 import ij.*;
-import ij.process.*;
+
 import ij.gui.*;
 import ij.io.*;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.util.*;
+
 
 
 
 import ij.plugin.frame.*;
-// don't use package - plugin classes must be in the default package...
+
 
 // underscore in the name is required for automatic installation in the plugins menu...
 // Requirements: http://u759.curie.u-psud.fr/compteur/download.php?Fichier=software/update/20090928/U759_InputOutput.jar
@@ -169,7 +171,7 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 	
 			getDataModel().import_data(path);
 		}catch (java.io.IOException ex){
-			debug("Error opening file");
+			debug("Xmipp_Tomo - Error opening file");
 		}
 	}
 	
@@ -178,7 +180,7 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 	public void actionPerformed(ActionEvent e) {
 	
 		String label = e.getActionCommand();
-		debug(label);
+		// debug(label);
 		if (label==null)
 			return;
 		else if (label.equals(Commands.CMD_INFO.label())){

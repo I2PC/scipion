@@ -25,17 +25,12 @@
 
 package xmipptomo;
 
-import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageLayout;
 
-import java.awt.geom.*;
-
-
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Vector;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -54,9 +49,12 @@ import javax.swing.JTextField;
 public class TomoWindow extends JFrame implements WindowListener, AdjustmentListener,MouseMotionListener{
 	// for serialization only
 	private static final long serialVersionUID = -4063711975454855701L;
+	
+	// total number of  digits to display as a String
+	private static int MAX_DIGITS = 9;
 
-	// Window title
-	final static String TITLE="XmippTomo XYZ";
+	// Window title (without extra data; see getTitle() )
+	final static String TITLE="XmippTomo";
 	private boolean closed=true;
 	
 	/* Window components */
@@ -127,6 +125,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
  		addWindowListener(this);
  		// EXIT_ON_CLOSE finishes ImageJ too...
 		
+ 		// Window title
+ 		
+ 		setTitle(getTitle());
+ 		
 		GridBagLayout gb1= new GridBagLayout();
 		getContentPane().setLayout(gb1);
 		GridBagConstraints constraints=new GridBagConstraints();
@@ -162,10 +164,13 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		controlPanel.add(tiltTextLabel);		
 		controlPanel.add(tiltTextField);
 		getModel().setTiltModel(tiltTextField.getDocument());
+		
 		// X Y Z scrollbars
-		tiltScrollbar= new JScrollBar(JScrollBar.HORIZONTAL);
-		tiltScrollbar.setMinimum(0);
-		tiltScrollbar.setMaximum(getModel().getNSlices());
+		// JScrollbar range is 0..maximum+extent (instead of a simple 0..maximum)
+		int extent=20;
+		tiltScrollbar= new JScrollBar(JScrollBar.HORIZONTAL,0,extent,0,getModel().getNumberOfProjections()- 1 + extent);
+		//tiltScrollbar.setMinimum(0);
+		//tiltScrollbar.setMaximum();
 		tiltScrollbar.addAdjustmentListener(this);
 		controlPanel.add(tiltScrollbar);
 		
@@ -181,6 +186,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		getContentPane().add(statusPanel);
 		statusLabel=new JLabel("Done");
 		statusPanel.add(statusLabel);
+		updateStatusText();
 		
 		closed=false;
 	}
@@ -194,7 +200,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	}
 	
 	void updateStatusText(){
-		getStatusLabel().setText("x = " + getCursorX() + ", y = " + getCursorY() + ", value = " + getCursorValue());
+		getStatusLabel().setText("Projection " + (model.getCurrentProjection()+ 1) + "/" + model.getNumberOfProjections() + ". x = " + getCursorX() + ", y = " + getCursorY() + ", value = " + getCursorValueAsString());
 	}
 	
 	int getCursorDistance(int x, int y){
@@ -207,9 +213,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 */
 	public synchronized void adjustmentValueChanged(AdjustmentEvent e){
 		if(e.getSource()==tiltScrollbar){
-			getModel().setCurrentSlice(tiltScrollbar.getValue()+1);
+			getModel().setCurrentProjection(tiltScrollbar.getValue());
 			ic.setImageUpdated();
 			ic.repaint();
+			updateStatusText(); // projection number
 		}
 		notify();
 	}
@@ -288,5 +295,15 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	double getCursorValue(){
 		return getModel().getPixelValue(getCursorX(),getCursorY());
 	}
+	
+	public String getCursorValueAsString(){
+		String cursorValue = String.valueOf(getCursorValue());
+		// include the decimal point in the count
+		int limit = Math.min(cursorValue.length(), MAX_DIGITS+1);
+		return cursorValue.substring(0, limit);
+	}
 
+	public String getTitle(){
+		return TITLE + " > " + getModel().getFileName() + " (" + getModel().getWidth() + "x" +  getModel().getHeight() + ")";
+	}
 }

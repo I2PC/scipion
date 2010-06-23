@@ -4,7 +4,7 @@ import java.util.*;
 import java.io.*;
 
 /**
- * Manages all the custom information
+ * Specific features of each projection
  */
 
 /**
