@@ -194,7 +194,7 @@ Example:
       (options, args) = parser.parse_args()
       if(len(options.inMetaDataFile) < 1):
           parser.print_help()
-          exit()
+          sys.exit()
       #overwrite file	  
       if(len(options.outMetaDataFile) < 1):
              options.outMetaDataFile = options.inMetaDataFile    
