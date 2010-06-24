@@ -36,6 +36,8 @@ import ij.io.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.Calendar;
+import java.util.Date;
 
 
 
@@ -63,6 +65,8 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 	};
 	
 	final static int PLUGIN_NOT_FOUND = -1;
+	// enable debuging tests - release versions should have this set to 0
+	final static int TESTING = 1;
 	
 	private TomoData dataModel;
 
@@ -70,6 +74,28 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 	Panel panel; // main button panel
 	
 	TomoWindow tw=null;
+	
+	private class ImportDataThread extends Thread{
+		private TomoData dataModel;
+		private String dataPath;
+		
+		ImportDataThread(TomoData model,String path){
+			dataModel=model;
+			dataPath=path;
+		}
+		
+		public void run() {
+			try{
+				dataModel.import_data(dataPath);
+			}catch (IOException ex){
+				debug("ImportDataThread@Xmipp_Tomo - Error opening file");
+			}catch (InterruptedException ex){
+				debug("ImportDataThread@Xmipp_Tomo - Interrupted exception");
+			}catch (Exception ex){
+				debug("ImportDataThread@Xmipp_Tomo - unexpected exception", ex);
+			}
+		}
+	}
 
 	public Xmipp_Tomo() {
 		super("Xmipp_Tomo");
@@ -117,7 +143,7 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 	
 	int exec(String cmdline){
 		// execution details may change with each OS...
-		String osName = System.getProperty("os.name" );
+		//String osName = System.getProperty("os.name" );
 		int exitValue=0;
 		Process proc=null;
 		
@@ -160,19 +186,13 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
         return exitValue;
 	} // exec end
 	
-	// browse and load a file - split in 2 methods?
-	public void import_data(){
-		try{
-			OpenDialog od = new OpenDialog("Import file",null);
-	        String directory = od.getDirectory();
-			String fileName = od.getFileName();
-			String path= directory + fileName;
-			// IJ.write(path);
-	
-			getDataModel().import_data(path);
-		}catch (java.io.IOException ex){
-			debug("Xmipp_Tomo - Error opening file");
-		}
+	public String browseFile(){
+		OpenDialog od = new OpenDialog("Import file",null);
+        String directory = od.getDirectory();
+		String fileName = od.getFileName();
+		String path= directory + fileName;
+		// IJ.write(path);
+		return path;
 	}
 	
 
@@ -227,9 +247,15 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 	}
 
 	public static void debug(String s){
-		IJ.write(s);
+		Calendar calendar = Calendar.getInstance();
+		java.util.Date now = calendar.getTime();
+		IJ.write("" + now.getTime() + " > " + s);
 	}
 
+	public static void debug(String s, Exception ex){
+		debug(s);
+		ex.printStackTrace();
+	}
 	
 	public TomoData getDataModel() {
 		return dataModel;
@@ -257,9 +283,19 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 	
 	/* All actions corresponding to the workflow "Info" */
 	private void infoAction(){
-		import_data();
+		String path = browseFile();
+		
+		try{
+			(new Thread(new ImportDataThread(getDataModel(),path))).start();
+			//getDataModel().import_data(path);
+			getDataModel().waitForFirstImage();
+		}catch (InterruptedException ex){
+			debug("Xmipp_Tomo - Interrupted exception");
+		}
+
 		createTomoWindow();
-		tw.display();
+		if(tw != null)
+			tw.display();
 	}
 	
 }

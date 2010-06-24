@@ -4,7 +4,7 @@ import java.util.*;
 import java.io.*;
 
 /**
- * Specific features of each projection
+ * Specific features of each projection - class not needed anymore
  */
 
 /**

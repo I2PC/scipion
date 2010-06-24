@@ -74,8 +74,11 @@ public class TiltSeriesOpener {
 		}
 	}
 	
-	public ImagePlus read(String path,TomoData model) throws java.io.IOException{
+	public ImagePlus read(String path,TomoData model) throws java.io.IOException, InterruptedException{
 		ImagePlus imp=null;
+		
+		model.setFile(path);
+		
 		if ((path == null) || (path.equals(""))) 
 			throw new IOException("Empty path");
 		
@@ -107,7 +110,7 @@ public class TiltSeriesOpener {
 			return imp;
 	}
 	
-	public void readMRC(String path,TomoData model) throws java.io.IOException{
+	public void readMRC(String path,TomoData model) throws java.io.IOException, InterruptedException{
 
 		// Parse header
 		ByteHeader header=new ByteHeader(MRC_HEADER_SIZE);
@@ -120,23 +123,20 @@ public class TiltSeriesOpener {
         
         ColorModel cm=fo.createColorModel(fi);
         
-		ImageStack stack = new ImageStack(fi.width, fi.height, cm),stackResized=new ImageStack(model.getDefaultWidth(), model.getDefaultHeight());
+		ImageStack stack = new ImageStack(fi.width, fi.height, cm);
 		long skip = fi.longOffset>0?fi.longOffset:fi.offset;
 		Object pixels;
+		//ImagePlus imp = new ImagePlus();
 		try {
 			ImageReader reader = new ImageReader(fi);
 			InputStream is =  fo.createInputStream(fi);
 			if (is==null) throw new IOException("readMRC - Null input stream") ;
 			// IJ.resetEscape();
-			model.setNumberOfProjections(fi.nImages);
+			// model.setNumberOfProjections(fi.nImages);
 
 			// Save original size to model
 			model.setHeight(fi.height);
 			model.setWidth(fi.width);
-			
-			// Adjust file info to new size
-			fi.width= model.getDefaultWidth();
-			fi.height = model.getDefaultHeight();
 			
 			// load images
 			for (int i=1; i<=fi.nImages; i++) {
@@ -172,9 +172,14 @@ public class TiltSeriesOpener {
 		        ipresized = ip.resize(model.getDefaultWidth(), model.getDefaultHeight());
 		        
 				stack.addSlice(null, ip);
-				stackResized.addSlice(null,ipresized);
+				//stackResized.addSlice(null,ipresized);
+				model.addProjection(ipresized);
 				skip = fi.gapBetweenImages;
 				
+				// uncomment for tests
+				if(Xmipp_Tomo.TESTING != 0)
+					Thread.sleep(250);
+
 				
 				/* if (!silentMode)
 					IJ.showProgress(i, fi.nImages); */
@@ -187,11 +192,15 @@ public class TiltSeriesOpener {
 		
 		// normal or resized?
 		// ImagePlus imp = new ImagePlus(fi.fileName, stack);
-		ImagePlus imp = new ImagePlus(fi.fileName, stackResized);
+		// ImagePlus imp = new ImagePlus(fi.fileName, stackResized);
 		if (fi.info!=null)
-			imp.setProperty("Info", fi.info);
+			model.getImage().setProperty("Info", fi.info);
+
+		// Adjust file info to scaled size
+		fi.width= model.getDefaultWidth();
+		fi.height = model.getDefaultHeight();
 		
-		imp.setFileInfo(fi);
+		model.getImage().setFileInfo(fi);
 		
 		/* if (!silentMode) IJ.showProgress(1.0); */
 		if (stack.getSize()==0)
@@ -201,17 +210,17 @@ public class TiltSeriesOpener {
 				stack.setSliceLabel(fi.sliceLabels[i], i+1);
 		}
 		
-		setCalibration(imp,fi,fo);
-		ImageProcessor ip = imp.getProcessor();
+		setCalibration(model.getImage(),fi,fo);
+		ImageProcessor ip = model.getImage().getProcessor();
 		if (ip.getMin()==ip.getMax())  // find stack min and max if first slice is blank
-			setStackDisplayRange(imp);
+			setStackDisplayRange(model.getImage());
 
 		// read tilt angles
 		String tltFilePath=path.replace(".mrc", ".tlt");
 		readTlt(tltFilePath,model);
 		
-		model.setImage(imp);
-		model.setFile(path);
+		//model.setImage(imp);
+
 	}
 	
 	public FileInfo prepareFileInfo(String path,ByteHeader header) throws java.io.IOException {

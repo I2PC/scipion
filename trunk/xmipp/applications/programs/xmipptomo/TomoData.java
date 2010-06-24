@@ -1,24 +1,11 @@
 package xmipptomo;
-import ij.IJ;
+
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.LookUpTable;
-import ij.io.FileInfo;
-import ij.io.FileOpener;
-import ij.io.ImageReader;
-import ij.io.OpenDialog;
 import ij.process.ImageProcessor;
 
-import java.awt.image.ColorModel;
-import java.awt.image.IndexColorModel;
-import java.io.BufferedReader;
+import java.awt.Component;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
@@ -37,16 +24,21 @@ import javax.swing.text.Document;
 
 /**
  * @author jcuenca
- *
+ * extends Component because of the Java event mechanism (that is, TomoWindow can listen to this class for changes)
  */
-public class TomoData {
+public class TomoData extends Component {
+	// name(s) of properties in the model that views may listen to 
+	public static enum Properties {
+		NUMBER_OF_PROJECTIONS;
+	};
+
 	
 	// maybe it's better to move currentProjection to the viewer - in case different views can show different slices
 	private int currentProjection=0;
 	
 	private static int defaultWidth=256, defaultHeight=256;
-	private int width,height;
-	private int numberOfProjections;
+	private int width=0,height=0;
+	private int numberOfProjections=0;
 	
 	private File file;
 
@@ -58,8 +50,8 @@ public class TomoData {
 	
 	private Document tiltTextModel=null;
 
-	// allow Views to wait for the first image to load
-	private Semaphore firstLoaded= new Semaphore(1);
+	// allow Views to lock waiting for the first image to load
+	private Semaphore firstLoaded= new Semaphore(0);
 	
 	public void setTiltModel(Document model){
 		if(tiltTextModel==null){
@@ -92,14 +84,16 @@ public class TomoData {
 		this.currentProjection = currentProjection;
 		// update all things depending on current slice
 		getImage().setSlice(getCurrentProjection());
-		setTiltText(getCurrentTilt());
+		Float tilt=getCurrentTilt();
+		if(tilt != null)
+			setTiltText(tilt);
 	}
 
 	public ImagePlus getImage(){
 		return imp;
 	}
 	
-	public void setImage(ImagePlus i){
+	private void setImage(ImagePlus i){
 		imp=i;
 	}
 	
@@ -107,8 +101,19 @@ public class TomoData {
 		return tiltAngles;
 	}
 	
-	public float getCurrentTilt(){
-		return getTiltAngles().get(getCurrentProjection()).floatValue();
+	/**
+	 * @return null if tilt is undefined, tilt value otherwise
+	 * 
+	 */
+	public Float getCurrentTilt(){
+		Float t=null;
+		try{
+			t=getTiltAngles().get(getCurrentProjection());
+		}catch (ArrayIndexOutOfBoundsException ex){
+			// throw new Exception("TomoData.getCurrentTilt - undefined tilt angle");
+			t=null;
+		}
+		return t;
 	}
 	
 	public void setCurrentTilt(float t){
@@ -125,12 +130,18 @@ public class TomoData {
 		return getCurrentTilt();
 	}
 	
+	/**
+	 * @return range 0..N
+	 */
 	public int getNumberOfProjections(){
 		return numberOfProjections;
 	}
 	
-	public void setNumberOfProjections(int n){
+	private void setNumberOfProjections(int n){
+		if(n > 1)
+			firePropertyChange(Properties.NUMBER_OF_PROJECTIONS.name(), numberOfProjections, n);
 		numberOfProjections=n;
+
 	}
 	
 	// right now return only grayscale value as double
@@ -142,7 +153,7 @@ public class TomoData {
 		//return getImage().getCalibration().getCValue(v[0]);
 	}
 	
-	public void import_data(String path) throws java.io.IOException{	
+	public void import_data(String path) throws java.io.IOException, InterruptedException{	
 			
 			new TiltSeriesOpener().read(path,this);
 
@@ -210,11 +221,27 @@ public class TomoData {
 		file=new File(path);
 	}
 	
-	public synchronized void waitForFirstImage() throws InterruptedException{
+	public void waitForFirstImage() throws InterruptedException{
+		// Xmipp_Tomo.debug("waitForFirstImage");
 		firstLoaded.acquire();
 	}
 	
-	private synchronized void firstImageLoaded(){
+	private void firstImageLoaded(){
 		firstLoaded.release();
+		// Xmipp_Tomo.debug("firstImageLoaded");
+	}
+	
+	public void addProjection(ImageProcessor imageProcessor){
+		if(getImage()==null){
+			// cannot add empty stack, for example in the constructor. Better init all here			
+			ImageStack stackResized=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
+			stackResized.addSlice(null, imageProcessor);
+			setImage(new ImagePlus(getFileName(), stackResized));
+		}else		
+			getImage().getStack().addSlice(null, imageProcessor);
+		
+		setNumberOfProjections(getNumberOfProjections()+1);
+		if(getNumberOfProjections() == 1)
+			firstImageLoaded();
 	}
 }

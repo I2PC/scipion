@@ -31,11 +31,15 @@ import ij.gui.ImageLayout;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollBar;
 import javax.swing.JTextField;
+
+import xmipptomo.TomoData.Properties;
 
 
 /**
@@ -46,12 +50,14 @@ import javax.swing.JTextField;
  * @author jcuenca
  *
  */
-public class TomoWindow extends JFrame implements WindowListener, AdjustmentListener,MouseMotionListener{
+public class TomoWindow extends JFrame implements WindowListener, AdjustmentListener,MouseMotionListener, PropertyChangeListener{
 	// for serialization only
 	private static final long serialVersionUID = -4063711975454855701L;
 	
 	// total number of  digits to display as a String
 	private static int MAX_DIGITS = 9;
+	// for scrollbars
+	private static int extent=20;
 
 	// Window title (without extra data; see getTitle() )
 	final static String TITLE="XmippTomo";
@@ -67,7 +73,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	// The canvas where current slice is displayed
 	ImageCanvas ic;
 	// Control scrollbars
-	JScrollBar xScrollbar, yScrollbar, zScrollbar, tiltScrollbar;
+	JScrollBar xScrollbar, yScrollbar, zScrollbar, projectionScrollbar;
 	
 	// the model stores the data that this window shows
 	private TomoData model;
@@ -123,10 +129,11 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		setModel(model);
 		
  		addWindowListener(this);
+ 		model.addPropertyChangeListener(this);
+ 		
  		// EXIT_ON_CLOSE finishes ImageJ too...
 		
  		// Window title
- 		
  		setTitle(getTitle());
  		
 		GridBagLayout gb1= new GridBagLayout();
@@ -167,12 +174,13 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		
 		// X Y Z scrollbars
 		// JScrollbar range is 0..maximum+extent (instead of a simple 0..maximum)
-		int extent=20;
-		tiltScrollbar= new JScrollBar(JScrollBar.HORIZONTAL,0,extent,0,getModel().getNumberOfProjections()- 1 + extent);
-		//tiltScrollbar.setMinimum(0);
-		//tiltScrollbar.setMaximum();
-		tiltScrollbar.addAdjustmentListener(this);
-		controlPanel.add(tiltScrollbar);
+
+		projectionScrollbar= new JScrollBar(JScrollBar.HORIZONTAL);
+		projectionScrollbar.setMinimum(0);
+		projectionScrollbar.setVisibleAmount(extent);
+		setNumberOfProjections(getModel().getNumberOfProjections());
+		projectionScrollbar.addAdjustmentListener(this);
+		controlPanel.add(projectionScrollbar);
 		
 		// STATUS PANEL
 
@@ -212,8 +220,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 * @param e
 	 */
 	public synchronized void adjustmentValueChanged(AdjustmentEvent e){
-		if(e.getSource()==tiltScrollbar){
-			getModel().setCurrentProjection(tiltScrollbar.getValue());
+		if(e.getSource()==projectionScrollbar){
+			getModel().setCurrentProjection(projectionScrollbar.getValue());
 			ic.setImageUpdated();
 			ic.repaint();
 			updateStatusText(); // projection number
@@ -260,6 +268,13 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	public void mouseReleased(MouseEvent e) {}
 	public void mousePressed(MouseEvent e) {}
 
+	// Property changes
+	
+	public void propertyChange(PropertyChangeEvent event){
+		if(event.getPropertyName().equals(TomoData.Properties.NUMBER_OF_PROJECTIONS.name()))
+			setNumberOfProjections((Integer) (event.getNewValue()) ); 
+	}
+	
 	/* Getters/ setters  --------------------------------------------------- */
 	
 	/**
@@ -282,6 +297,17 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	
 	void setCursorLocation(int x,int y){
 		cursorLocation.setLocation(x,y);
+	}
+	
+	
+	/**
+	 * @param n - see Tomodata.numberOfProjections
+	 */
+	public void setNumberOfProjections(int n){
+		// adding the extent is a "requirement" of JScrollbar
+		// since scrollbar minimum is 0, the maximum should be N-1
+		if(projectionScrollbar != null)
+			projectionScrollbar.setMaximum(n - 1 + extent);
 	}
 	
 	int getCursorX(){
