@@ -181,10 +181,10 @@ Example:
 
       parser.add_option("-v", "--minValue", dest="minValue",
             default=0., type="float",action="callback", callback=check_value,
-            help="copy files in metadata file to new directory")
+            help="see --select help")
       parser.add_option("-V", "--maxValue", dest="maxValue",
             default=0., type="float",action="callback", callback=check_value,
-            help="copy files in metadata file to new directory")
+            help="see --select help")
 
       parser.add_option("-x", "--sort",
                         nargs=0,
