@@ -332,19 +332,24 @@ std::istream& operator>> (std::istream& is, MDValue &value)
 
 bool MDValue::fromStream(std::istream &is)
 {
+    // int,bool and long are read as double for compatibility with old doc files
+    double d;
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
         is >> stringValue;
     else
         switch (type)
         {
         case LABEL_BOOL: //bools are int in sqlite3
-            is >> boolValue;
+            is >> d;
+            boolValue = (bool) ((int)d);
             break;
         case LABEL_INT:
-            is >> intValue;
+            is >> d;
+            intValue = (int) d;
             break;
         case LABEL_LONG:
-            is >> longintValue;
+            is >> d;
+            longintValue = (long int) d;
             break;
         case LABEL_DOUBLE:
             is >> doubleValue;
