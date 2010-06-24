@@ -125,12 +125,19 @@ public:
     double    Nangle_avg;
     /// Standard deviation of the angles
     double    Nangle_dev;
+
 public:
     /** Read projection parameters from a file.
         An exception is thrown if the file is not found or any of the
         parameters is not found in the right place.*/
     void read(const FileName &fn_proj_param);
+
+
+    void setProjectionAngles(Projection &P, double angle, double inplaneRot,
+                             const Matrix1D<double> &rinplane);
 };
+
+
 
 /** Project program Side information.
     This class contains side necessary information for the Project program.
@@ -161,8 +168,7 @@ public:
     to project only one image, although it is also written to disk.
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
-int PROJECT_XR_Effectively_project(
-    const Projection_XR_Parameters &prm,
+int PROJECT_XR_Effectively_project( Projection_XR_Parameters &prm,
     PROJECT_XR_Side_Info &side, Projection &proj,XmippXRPSF &psf, MetaData &SF);
 
 /** From voxel volumes, off-centered tilt axis.
@@ -183,9 +189,9 @@ int PROJECT_XR_Effectively_project(
     Off-centered not implemented. Rotations are around volume center
 */
 void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, Projection &P,
-                                   int Ydim, int Xdim, double axisRot, double axisTilt,
-                                   const Matrix1D<double> &raxis, double angle, double inplaneRot,
-                                   const Matrix1D<double> &rinplane, int idxSlice = 1);
+        int Ydim, int Xdim, int  idxSlice = 1);
+
+
 
 /* Main routine ------------------------------------------------------------ */
 /** Main Project routine.
