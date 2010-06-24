@@ -292,16 +292,27 @@ double readTagDM3(FILE *fimg,
     /* Header Tag ============================================================== */
 
     unsigned char cdTag;
-    unsigned int  idTag;
+    int  idTag;
     unsigned short int ltName;
     xmippFREAD(&cdTag,sizeof (unsigned char),1,fimg,false); // Identification tag: 20 = tag dir,  21 = tag
     xmippFREAD(&ltName,sizeof(unsigned short int), 1,fimg,isLE); // Length of the tag name
     idTag = int(cdTag);
 
     char * tagName;
+    std::string stagName;
+
     tagName =  new char[ltName+1];
     xmippFREAD(tagName,ltName,1,fimg,false); // Tag name
     tagName[ltName] = '\0';
+
+    stagName = tagName;
+
+    std::cout << tagName <<std::endl;
+
+    header->tags.addObject();
+    header->tags.setValue(MDL_DM3_LEVEL, depLevel);
+    header->tags.setValue(MDL_DM3_IDTAG, idTag);
+    header->tags.setValue(MDL_DM3_TAGNAME, stagName);
 
 
 
@@ -313,28 +324,30 @@ double readTagDM3(FILE *fimg,
     {
         //  printf("- Dir: %s\n",tagName);
         unsigned char dummy;
-        unsigned int nTags;
+        int nTags;
         xmippFREAD(&dummy,sizeof(unsigned char),1,fimg,false); // 1 = sorted (normally = 1)
         xmippFREAD(&dummy,sizeof(unsigned char),1,fimg,false); //  0 = closed, 1 = open (normally = 0)
         xmippFREAD(&nTags,sizeof(int),1,fimg,isLE);             //  number of tags in tag directory
 
 
+        header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Dir");
+        header->tags.setValue(MDL_DM3_SIZE, nTags);
+
+
+
         if (strcmp(tagName,"ImageList")==0)    // Number of images
         {
-            header->tags.addObject();
-            //                header->tags.setValue(MDL_DM3_LEVEL, depLevel);
-            //                header->tags.setValue(MDL_DM3_IDTAG, idTag);
-            //                header->tags.setValue(MDL_DM3_TAGNAME, tagName);
+
         }
         else if (strcmp(tagName,"Dimensions")==0)
         {
             //            newIndex[depLevel] = 1;
-            header->tags.setValue(MDL_DIMY,(int) readTagDM3(fimg, header, depLevel, isLE));
+            //            header->tags.setValue(MDL_DIMY,(int) readTagDM3(fimg, header, depLevel, isLE));
 
             //            newIndex[depLevel] = 2;
-            header->tags.setValue(MDL_DIMX,(int) readTagDM3(fimg, header, depLevel, isLE));
+            //            header->tags.setValue(MDL_DIMX,(int) readTagDM3(fimg, header, depLevel, isLE));
 
-            header->tags.addObject();
+//            header->tags.addObject();
             return 0;
         }
 
@@ -354,8 +367,8 @@ double readTagDM3(FILE *fimg,
         xmippFREAD(&buf,1,4,fimg,false); // To read %%%% symbols
         xmippFREAD(&nnum,sizeof(unsigned int),1,fimg,isLE); // Size of info array
 
-        unsigned int * info;
-        info = new unsigned int[nnum];
+        int * info;
+        info = new int[nnum];
         xmippFREAD(info,sizeof(unsigned int),nnum,fimg,isLE); // Reading of Info
 
 
@@ -363,27 +376,56 @@ double readTagDM3(FILE *fimg,
 
         if (nnum == 1)   // Single entry tag
         {
-            double tagValue = 0;
+            header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Single");
+
+
+            double tagValue;
 
             FREADTagValueDM3(&tagValue,info[0],1,fimg);
             //   printf(" = %s\n", sprintfTagValue(&tagValue,info[0]));
+            std::cout << tagValue <<std::endl;
+            float fcaca;
+            memcpy(&fcaca, &tagValue, sizeof(short));
+            std::cout << fcaca <<std::endl;
+            short scaca;
+            memcpy(&scaca, &tagValue, sizeof(short));
+            std::cout << scaca <<std::endl;
+            int caca;
+            memcpy(&caca, &tagValue, sizeof(int));
+            std::cout << caca <<std::endl;
+
+            std::vector<double> vtagValue(1);
+
+            vtagValue[1] = tagValue;
+
+            header->tags.setValue(MDL_DM3_NUMBER_TYPE, info[0]);
+            header->tags.setValue(MDL_DM3_VALUE, vtagValue);
+
 
             if (strcmp(tagName,"DataType")==0)
             {
-                header->tags.setValue(MDL_DATATYPE,(int) tagValue);
+                //                header->tags.setValue(MDL_DATATYPE,(int) tagValue);
             }
 
             return tagValue;
         }
         else if(nnum == 3 && info[0]==20)   // Tag array
         {             /*nnum = 3
-                                                                                                                                                                                                                                                                                 info(0) = 20
-                                                                                                                                                                                                                                                                                 info(1) = number type for all values
-                                                                                                                                                                                                                                                                                 info(2) = info(nnum) = size of array*/
+                                           info(0) = 20
+                                                          info(1) = number type for all values
+                                                          info(2) = info(nnum) = size of array*/
+
+            header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Array");
+
+            header->tags.setValue(MDL_DM3_NUMBER_TYPE, info[1]);
+            header->tags.setValue(MDL_DM3_SIZE, info[nnum-1]);
+            std::vector<double> vtagValue(1);
+            vtagValue[1] = (double) ftell(fimg);
+            header->tags.setValue(MDL_DM3_VALUE, vtagValue);
 
             if (strcmp(tagName,"Data")==0)    // Locating the image data
             {
-                header->tags.setValue(MDL_HEADERSIZE, (int) ftell(fimg));
+
             }
 
             // Jump the array values
@@ -395,19 +437,7 @@ double readTagDM3(FILE *fimg,
             else if(info[1] == 10 )
                 k = 1;
 
-            //   printf("Position before array = %d \n ", ftell(fh_in));
-            //    printf("(Array size = %d) \n", info[nnum-1]*k);
-
             fseek( fimg, ftell(fimg)+(info[nnum-1])*k , SEEK_SET );
-
-            //   printf("Position = %d \n ", ftell(fh_in));
-            //  }else{
-            //   int arrayValue[info[2]];
-            //   memset(arrayValue,0,sizeof(arrayValue));
-            //   FREADTagValue(&arrayValue,info[1],info[2],fh_in,bigEndian);
-            //   for (int n=0;info[2];n++){
-            //    printf("%d  ", arrayValue[n]);
-            //   } std::cout << "\n\n";
 
             return 0;
 
@@ -422,7 +452,10 @@ double readTagDM3(FILE *fimg,
                      info(2*i+3) = number type for value i
                      info(nnum) = size of info array*/
 
-            //   printf(" = (");
+
+            header->tags.setValue(MDL_DM3_TAGCLASS, (std::string) "GroupArray");
+            header->tags.setValue(MDL_DM3_SIZE, info[3]);
+
 
             int nBytes=0, k;
 
@@ -434,6 +467,16 @@ double readTagDM3(FILE *fimg,
                 fieldValue=0;
 
                 FREADTagValueDM3(&fieldValue,info[3+2*n],1,fimg);
+                std::cout << fieldValue <<std::endl;
+                float fcaca;
+                memcpy(&fcaca, &fieldValue, sizeof(short));
+                std::cout << fcaca <<std::endl;
+                short scaca;
+                memcpy(&scaca, &fieldValue, sizeof(short));
+                std::cout << scaca <<std::endl;
+                int caca;
+                memcpy(&caca, &fieldValue, sizeof(int));
+                std::cout << caca <<std::endl;
 
                 if(info[3+2*n] == 2 || info[3+2*n] == 4)
                     k = 2;
@@ -442,14 +485,9 @@ double readTagDM3(FILE *fimg,
                 else if(info[3+2*n] == 10 )
                     k = 1;
                 nBytes+=k;
-                //    printf( "%s", sprintfTagValue(&fieldValue,info[3+2*n]));
-                //    if(n<info[3]) printf(","); else printf(")\n");
             }
 
             // Jump the array values
-
-            //   printf("Reading of array values\n");
-            //  printf("Position = %d \n ", ftell(fh_in));
 
             fseek( fimg, ftell(fimg)+(info[nnum-1]-1)*nBytes , SEEK_SET );
             return 0;
@@ -464,32 +502,39 @@ double readTagDM3(FILE *fimg,
             info(2*i+3) = number type for value i
             Other info entries are always zero*/
 
-            //   printf(" = [");
+
+            header->tags.setValue(MDL_DM3_TAGCLASS, (std::string) "Group");
+            header->tags.setValue(MDL_DM3_SIZE, info[2]);
 
             for (int n=1;n<=info[2];n++)
             {
                 double fieldValue=0;
 
                 FREADTagValueDM3(&fieldValue,info[2+2*n],1,fimg);
-
-                //    printf( "%s", sprintfTagValue(&fieldValue,info[2+2*n]));
-                //    if(n<info[2]) printf(","); else printf("]\n");
+                std::cout << fieldValue <<std::endl;
+                float fcaca;
+                memcpy(&fcaca, &fieldValue, sizeof(short));
+                std::cout << fcaca <<std::endl;
+                short scaca;
+                memcpy(&scaca, &fieldValue, sizeof(short));
+                std::cout << scaca <<std::endl;
+                int caca;
+                memcpy(&caca, &fieldValue, sizeof(int));
+                std::cout << caca <<std::endl;
             }
-            //     printf("Position = %d \n ", ftell(fh_in));
 
             return 0;
         }
     }
 }
 
-void FREADTagValueDM3(double *fieldValue,
+void FREADTagValueDM3(void *fieldValue,
                       int numberType,
                       int n,
                       FILE* fimg)
 {
 
     DataType datatype;
-
 
     switch(numberType)
     {
@@ -527,15 +572,14 @@ void FREADTagValueDM3(double *fieldValue,
 
     size_t datatypesize=gettypesize(datatype);
 
-//    char* page = new char [datatypesize];
+    xmippFREAD(fieldValue, datatypesize, n, fimg, swap);
 
-    char* page = (char*) fieldValue;
-
-    xmippFREAD(page, datatypesize*n, 1, fimg, swap);
+    //    std::cout << page <<std::endl;
+    //    std::cout << (int*) fieldValue <<std::endl;
     //    memcpy(fieldValue, page, datatypesize*n);
-//    fieldValue = (double *) page;
-//    for(int i=0; i<n;i++)
-//        fieldValue[i]=(double) ptr[i];
+    //    fieldValue = (double *) page;
+    //    for(int i=0; i<n;i++)
+    //        fieldValue[i]=(double) ptr[i];
     //    castPage2T(page, fieldValue, datatype, datatypesize);
 }
 

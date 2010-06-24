@@ -189,6 +189,30 @@ void Projection_XR_Parameters::read(const FileName &fn_proj_param)
     fclose(fh_param);
 }
 
+
+void Projection_XR_Parameters::setProjectionAngles(Projection &P, double angle, double inplaneRot,
+        const Matrix1D<double> &rinplane)
+{
+    // double axisRot, double axisTilt,
+    //                          const Matrix1D<double> &raxis,
+
+    // Find Euler rotation matrix
+    Matrix1D<double> axis;
+    Euler_direction(axisRot,axisTilt,0,axis);
+    Matrix2D<double> Raxis=rotation3DMatrix(angle,axis);
+    Raxis.resize(3,3);
+    Matrix2D<double> Rinplane=rotation3DMatrix(inplaneRot,'Z');
+    Rinplane.resize(3,3);
+    double rot, tilt, psi;
+    Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
+    P.set_angles(rot, tilt, psi);
+
+    // Find displacement because of axis offset and inplane shift
+    Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane;
+
+    P.setShifts(XX(roffset), YY(roffset), ZZ(roffset));
+}
+
 /* Produce Side Information ================================================ */
 void PROJECT_XR_Side_Info::produce_Side_Info(
     const Projection_XR_Parameters &prm,
@@ -200,12 +224,11 @@ void PROJECT_XR_Side_Info::produce_Side_Info(
 }
 
 /* Effectively project ===================================================== */
-int PROJECT_XR_Effectively_project(
-    const Projection_XR_Parameters &prm,
-    PROJECT_XR_Side_Info &side,
-    Projection &proj,
-    XmippXRPSF &psf,
-    MetaData &SF)
+int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
+                                   PROJECT_XR_Side_Info &side,
+                                   Projection &proj,
+                                   XmippXRPSF &psf,
+                                   MetaData &SF)
 {
     int expectedNumProjs = FLOOR((prm.tiltF-prm.tilt0)/prm.tiltStep);
     int numProjs=0;
@@ -246,18 +269,17 @@ int PROJECT_XR_Effectively_project(
         //        proj.setShifts(XX(prm.raxis),YY(prm.raxis),ZZ(prm.raxis));
 
 
+        prm.setProjectionAngles(proj,angle, 0,inPlaneShift);
 
 
         // Really project ....................................................
-        project_xr_Volume_offCentered(side, psf, proj,
-                                      prm.proj_Ydim, prm.proj_Xdim, prm.axisRot, prm.axisTilt,
-                                      prm.raxis, angle, 0, inPlaneShift, idx);
+        project_xr_Volume_offCentered(side, psf, proj,prm.proj_Ydim, prm.proj_Xdim, idx);
 
         //        project_xr_Volume(side, psf, proj);
 
 
         // Add noise in angles and voxels ....................................
-        //        proj.getEulerAngles(tRot, tTilt,tPsi);
+        proj.getEulerAngles(tRot, tTilt,tPsi);
 
         rot  = tRot  + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
         tilt = tTilt + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
@@ -298,27 +320,26 @@ int PROJECT_XR_Effectively_project(
 }
 
 void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, Projection &P,
-                                   int Ydim, int Xdim, double axisRot, double axisTilt,
-                                   const Matrix1D<double> &raxis, double angle, double inplaneRot,
-                                   const Matrix1D<double> &rinplane, int idxSlice)
+                                   int Ydim, int Xdim, int idxSlice)
 {
 
-    // Find Euler rotation matrix
-    Matrix1D<double> axis;
-    Euler_direction(axisRot,axisTilt,0,axis);
-    Matrix2D<double> Raxis=rotation3DMatrix(angle,axis);
-    Raxis.resize(3,3);
-    Matrix2D<double> Rinplane=rotation3DMatrix(inplaneRot,'Z');
-    Rinplane.resize(3,3);
-    double rot, tilt, psi;
-    Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
-    P.set_angles(rot, tilt, psi);
+    //    // Find Euler rotation matrix
+    //    Matrix1D<double> axis;
+    //    Euler_direction(axisRot,axisTilt,0,axis);
+    //    Matrix2D<double> Raxis=rotation3DMatrix(angle,axis);
+    //    Raxis.resize(3,3);
+    //    Matrix2D<double> Rinplane=rotation3DMatrix(inplaneRot,'Z');
+    //    Rinplane.resize(3,3);
+    //    double rot, tilt, psi;
+    //    Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
+    //    P.set_angles(rot, tilt, psi);
+    //
+    //
+    //    // Find displacement because of axis offset and inplane shift
+    //    Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane;
+    //
+    //    P.setShifts(XX(roffset), YY(roffset), ZZ(roffset));
 
-
-    // Find displacement because of axis offset and inplane shift
-    Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane;
-
-    P.setShifts(XX(roffset), YY(roffset), ZZ(roffset));
 
     int iniXdim, iniYdim, iniZdim, newXdim, newYdim;
     int xOffsetN, yOffsetN, zinit, zend, yinit, yend, xinit, xend;
@@ -327,8 +348,11 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
     iniYdim = side.phantomVol().ydim;
     iniZdim = side.phantomVol().zdim;
 
-    xOffsetN = XX(roffset)/psf.dxo;
-    yOffsetN = YY(roffset)/psf.dxo;
+    //    xOffsetN = XX(roffset)/psf.dxo;
+    //    yOffsetN = YY(roffset)/psf.dxo;
+
+    xOffsetN = P.Xoff()/psf.dxo;
+    yOffsetN = P.Yoff()/psf.dxo;
 
     newXdim = iniXdim + 2*ABS(xOffsetN);
     newYdim = iniYdim + 2*ABS(yOffsetN);
@@ -355,29 +379,31 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
     {
         std::cout << std::endl;
         std::cout << "project_XR::Volume_offCentered:" << std::endl;
-        std::cout << "(X,Y,Z) shifts = (" << XX(roffset)*1e6 << "," << YY(roffset)*1e6 << ","
-        << ZZ(roffset)*1e6 << ") um" << std::endl;
+        std::cout << "(X,Y,Z) shifts = (" << P.Xoff()*1e6 << "," << P.Yoff()*1e6 << ","
+        << P.Zoff()*1e6 << ") um" << std::endl;
         std::cout << "Image resize (Nx,Ny): (" << iniXdim << "," << iniYdim << ") --> ("
         << xend - xinit +1<< "," << yend - yinit +1 << ") " << std::endl;
+
+
+        std::cout <<"yoffsetN "<< yOffsetN <<std::endl;
+        std::cout <<"xoffsetN "<< xOffsetN <<std::endl;
+        std::cout <<"yinit    " << yinit  <<std::endl;
+        std::cout <<"yend     "    << yend  <<std::endl;
+        std::cout <<"xinit    "   << xinit  <<std::endl;
+        std::cout <<"xend     "    << xend  <<std::endl;
+        std::cout <<"zinit    "   << zinit  <<std::endl;
+        std::cout <<"zend     "    << zend  <<std::endl;
     }
 
-    std::cout <<"yoffsetN "<< yOffsetN <<std::endl;
-    std::cout <<"xoffsetN "<< xOffsetN <<std::endl;
-    std::cout <<"yinit    " << yinit  <<std::endl;
-    std::cout <<"yend     "    << yend  <<std::endl;
-    std::cout <<"xinit    "   << xinit  <<std::endl;
-    std::cout <<"xend     "    << xend  <<std::endl;
-    std::cout <<"zinit    "   << zinit  <<std::endl;
-    std::cout <<"zend     "    << zend  <<std::endl;
 
 
     // Rotate volume ....................................................
     //    applyGeometry(LINEAR,volTemp(), V, Euler_rotation3DMatrix(rot, tilt, psi), IS_NOT_INV, DONT_WRAP);
 
     side.rotPhantomVol().resize(iniZdim,iniYdim,iniXdim);
-//    side.rotPhantomVol().zinit = zinit;
-//    side.rotPhantomVol().yinit = yinit;
-//    side.rotPhantomVol().xinit = xinit;
+    //    side.rotPhantomVol().zinit = zinit;
+    //    side.rotPhantomVol().yinit = yinit;
+    //    side.rotPhantomVol().xinit = xinit;
     side.rotPhantomVol().setXmippOrigin();
 
     Euler_rotate(side.phantomVol(), P.rot(), P.tilt(), P.psi(),side.rotPhantomVol());
@@ -393,9 +419,6 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
     //the really really final project routine, I swear by Snoopy.
     project_xr(psf,side.rotPhantomVol,P, idxSlice);
 
-    //    P().window(-ROUND(Ydim/2)+1,-ROUND(Xdim/2)+1,ROUND(Ydim/2)-1,ROUND(Xdim/2)-1);
-
-
 
     int outXDim = XMIPP_MIN(Xdim,iniXdim);
     int outYDim = XMIPP_MIN(Ydim,iniYdim);
@@ -406,6 +429,9 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
                -ROUND(outXDim/2) + outXDim -1);
 
 }
+
+
+
 
 /* ROUT_project ============================================================ */
 int ROUT_XR_project(Prog_Project_XR_Parameters &prm,

@@ -93,18 +93,23 @@ enum MDLabel
     MDL_CTFBG_GAUSSIAN2_CU, // CTF Background parameter
     MDL_CTFBG_GAUSSIAN2_CV, // CTF Background parameter
     MDL_CTFBG_GAUSSIAN2_ANGLE, // CTF Background parameter
-    MDL_DATATYPE,
     MDL_DEFGROUP, // Defocus group
     MDL_DEFOCUSU, // microscope defocus U direction (double)
     MDL_DEFOCUSV, // microscope defocus V direction (double)
-    MDL_DIMX,
-    MDL_DIMY,
+
+    MDL_DM3_IDTAG,
+    MDL_DM3_LEVEL,
+    MDL_DM3_NUMBER_TYPE,
+    MDL_DM3_TAGCLASS,
+    MDL_DM3_TAGNAME,
+    MDL_DM3_SIZE,
+    MDL_DM3_VALUE,
+
     MDL_DPR,//differential phase residual (double) add row only label at the end of the enum
     MDL_ENABLED, // Is this image enabled? (int [-1 or 1])
     MDL_FLIP, // Flip the image? (bool)
     MDL_FRC,//Fourier shell correlation (double)
     MDL_FRCRANDOMNOISE,//Fourier shell correlation noise (double)
-    MDL_HEADERSIZE,
     MDL_IMAGE_CLASS_COUNT, // Number of images assigned to the same class as this image
     MDL_IMAGE_CLASS_GROUP, // Name of the class group for this image (metadata with all the images assigned to that class)
     MDL_IMAGE_CLASS, // Name of the class representative for this image
@@ -293,18 +298,23 @@ private:
         MDL::addLabel(MDL_CTFBG_GAUSSIAN2_CU, LABEL_DOUBLE, "CTFBG_Gaussian2_CU");
         MDL::addLabel(MDL_CTFBG_GAUSSIAN2_CV, LABEL_DOUBLE, "CTFBG_Gaussian2_CV");
         MDL::addLabel(MDL_CTFBG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "CTFBG_Gaussian2_Angle");
-        MDL::addLabel(MDL_DATATYPE, LABEL_INT, "Datatype");
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
         MDL::addLabel(MDL_DEFOCUSU, LABEL_DOUBLE, "defocusU");
         MDL::addLabel(MDL_DEFOCUSV, LABEL_DOUBLE, "defocusV");
-        MDL::addLabel(MDL_DIMX, LABEL_INT, "Dimension_X");
-        MDL::addLabel(MDL_DIMY, LABEL_INT, "Dimension_Y");
+
+        MDL::addLabel(MDL_DM3_IDTAG, LABEL_INT, "IdTag");
+        MDL::addLabel(MDL_DM3_LEVEL, LABEL_INT, "Level");
+        MDL::addLabel(MDL_DM3_NUMBER_TYPE, LABEL_INT, "Number_Type");
+        MDL::addLabel(MDL_DM3_TAGCLASS, LABEL_STRING, "Tag_Class");
+        MDL::addLabel(MDL_DM3_TAGNAME, LABEL_STRING, "TagName");
+        MDL::addLabel(MDL_DM3_SIZE, LABEL_INT, "Size");
+        MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR, "Value");
+
         MDL::addLabel(MDL_DPR, LABEL_DOUBLE, "DPR");
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", "Flip");
         MDL::addLabel(MDL_FRC, LABEL_DOUBLE, "FRC");
         MDL::addLabel(MDL_FRCRANDOMNOISE, LABEL_DOUBLE, "FRC_random_noise");
-        MDL::addLabel(MDL_HEADERSIZE, LABEL_INT, "Header_size");
         MDL::addLabel(MDL_IMAGE_CLASS_COUNT, LABEL_INT, "class_count");
         MDL::addLabel(MDL_IMAGE_CLASS_GROUP, LABEL_STRING, "class_group");
         MDL::addLabel(MDL_IMAGE_CLASS, LABEL_STRING, "class_representative");
