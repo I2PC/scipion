@@ -372,6 +372,33 @@ double Prog_align_dual::optimizeAlignment()
 /// Align dual
 void Prog_align_dual::alignDual()
 {
+/* There might be a problem, the code seemingly working in TomoJ is
+
+        for(int i=0;i<ts.length;i++){ // ts is an array of tilt series
+            double[] ali=ts[i].getGlobalOrientation(); // I get the
+                alignment computed between the tilt series with common lines
+            if(ali!=null){ // is there an alignment?
+                double cxtmp=ali[3]; //this is the shift of the center of
+                                        volume original is (0,0,0)
+                double cytmp=ali[4];
+                //Now where will be this center of tilt axis in the volume?
+                DoubleMatrix2D et= TiltSeries.eulerAngles2Matrix(ali[0],
+                    ali[1], ali[2]).viewDice(); // I compute the euler angles of the rotation
+                                                    between the tilt series
+                cx[i]=cxtmp*et.getQuick(0,0)+cytmp*et.getQuick(0,1)+width/2;
+                // I compute the new position of the center of the volume + add width/2 for
+                    correct indexation of arrays (in Xmipp should not be there)
+ 
+                cy[i]=cxtmp*et.getQuick(1,0)+cytmp*et.getQuick(1,1)+height/2;
+
+
+            }else{ //there is no alignment so I define it as classical
+                cx[i]=width/2;
+                cy[i]=height/2;
+            }
+        }
+*/
+
     Euler_angles2matrix(alignment(0),alignment(1),alignment(2),E);
     int Ndual=imgDual.size();
     Matrix1D<double> shift3D=vectorR3(alignment(3),alignment(4),alignment(5));
