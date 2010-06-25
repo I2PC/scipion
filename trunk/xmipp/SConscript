@@ -253,7 +253,7 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
     env.Alias(name, install)
     env.Default(alias)
 
-def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
+def AddSwigPythonLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
     # Create wrapper
     # setup
     basedirswig = AddLastSlash(basedir+"/swig")
@@ -286,6 +286,40 @@ def AddSwigLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
     #env.Alias(name+'.py', install)
     #env.Default(name+'.py')
     
+def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
+    # Create wrapper
+    # setup
+    basedirswig = AddLastSlash(basedir+"/swig")
+    libprefix = os.path.join(env['prefix'], 'lib')
+    if int(env['swig']):
+        
+        # Build wrapper
+        wrapper = env.i2java(basedirswig + name + "_wrap.cc", sourceList)
+        Depends(wrapper, Glob(basedir, '*.h', [])+Glob(basedirswig, '*.i', []))
+        
+        # alias
+        alias=env.Alias(name,wrapper)
+        env.Default(alias)
+    
+    # Create library
+    import distutils.sysconfig
+    AddLibrary(name, basedirswig, [name+"_wrap.cc"],
+        ['#',env['JNI_INCLUDE']],['lib'],['XmippData'],'lib')
+    #
+    """
+    pyFile = libprefix+'/'+name+'.py'
+    if os.path.exists(pyFile):
+       command = "ln -fs "
+    else:
+       command = "ln -s  "
+    command = command + " ../" + basedirswig+name+".py " + libprefix+'/'+name+'.py'
+    print command
+    os.system(command)"""
+    	
+    #install = env.InstallAs(libprefix+'/'+name+'.py',basedirswig+name+".py")
+    #env.Alias(name+'.py', install)
+    #env.Default(name+'.py')
+
 def AddSQLiteLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
     numJobs=env.GetOption('num_jobs')
@@ -381,7 +415,10 @@ AddLibrary('XmippExternal', 'external',
 DataSources = Glob('libraries/data','*.cpp',[])
 AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal']+FFTWLibs+SQLiteLibs)
 SwigDataSources = ['libraries/data/swig/swigXmippData.i'] 	 
-AddSwigLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
+SwigJavaDataSources = ['libraries/data/swig/swigXmippDataJava.i'] 	 
+AddSwigPythonLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
+    [], ['XmippData'])
+AddSwigJavaLibrary('XmippDataJava', 'libraries/data', SwigJavaDataSources, ['#'], 	 
     [], ['XmippData'])
             
 # Reconstruction
@@ -664,6 +701,7 @@ AddBatch('convert_vol2jpg','applications/scripts/convert_vol2jpg')
 AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
 AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
+AddBatch('showj', 'applications/scripts/showj','.sh')
 # AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
 
 # Protocols
