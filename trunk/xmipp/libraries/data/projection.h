@@ -60,6 +60,9 @@ extern pthread_mutex_t project_mutex;
 class Projection: public Image<double>
 {
 public:
+    /** Empty constructor */
+    Projection(): Image<double>() {};
+
     /** Vector perpendicular to the projection plane.
      * It is calculated as a function of rot and tilt.
      */
@@ -197,7 +200,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     */
 /*
 template <class T>
-void project_Volume(GridVolumeT<T> &vol, const Basis &basis,
+void project_GridVolume(GridVolumeT<T> &vol, const Basis &basis,
                     Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
                     double rot, double tilt, double psi, int FORW, int eq_mode = ARTK,
                     GridVolumeT<int> *GVNeq = NULL, Matrix2D<double> *M = NULL,
@@ -948,7 +951,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
 //#define DEBUG
 //#define DEBUG_LITTLE
 template <class T>
-void project_Volume(
+void project_GridVolume(
     GridVolumeT<T> &vol,                  // Volume
     const Basis &basis,                   // Basis
     Projection       &proj,               // Projection
