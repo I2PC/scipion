@@ -79,7 +79,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
                               prm.IMG_Inf[iact_proj].tilt,
                               prm.IMG_Inf[iact_proj].psi);
 
-        project_Volume(residual_vol, prm.basis, dummy_proj,
+        project_GridVolume(residual_vol, prm.basis, dummy_proj,
                        read_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                        prm.IMG_Inf[iact_proj].rot,
                        prm.IMG_Inf[iact_proj].tilt,
@@ -119,7 +119,7 @@ void update_residual_vector(Basic_ART_Parameters &prm, GridVolume &vol_basis,
     dim2 = (double)YSIZE(read_proj()) * XSIZE(read_proj());
     for (int iact_proj = 0; iact_proj < prm.numIMG ; iact_proj++)
     {
-        project_Volume(residual_vol, prm.basis, new_proj,
+        project_GridVolume(residual_vol, prm.basis, new_proj,
                        dummy_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                        prm.IMG_Inf[iact_proj].rot,
                        prm.IMG_Inf[iact_proj].tilt,
@@ -260,7 +260,7 @@ void ART_single_step(
     if (prm.print_system_matrix)
         A = new Matrix2D<double>;
     corr_proj().initZeros();
-    project_Volume(vol_in, prm.basis, theo_proj,
+    project_GridVolume(vol_in, prm.basis, theo_proj,
                    corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                    read_proj.rot(), read_proj.tilt(), read_proj.psi(), FORWARD, prm.eq_mode,
                    prm.GVNeq, A, maskPtr, prm.ray_length, prm.threads);
@@ -370,7 +370,7 @@ void ART_single_step(
     }
 
     // Backprojection of correction plane ......................................
-    project_Volume(*vol_out, prm.basis, theo_proj,
+    project_GridVolume(*vol_out, prm.basis, theo_proj,
                    corr_proj, YSIZE(read_proj()), XSIZE(read_proj()),
                    read_proj.rot(), read_proj.tilt(), read_proj.psi(), BACKWARD, prm.eq_mode,
                    prm.GVNeq, NULL, maskPtr, prm.ray_length, prm.threads);
