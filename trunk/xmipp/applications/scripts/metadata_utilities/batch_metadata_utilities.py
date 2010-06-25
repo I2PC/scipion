@@ -43,7 +43,27 @@ class Code:
        self.delete=7
        self.select=8
        self.sort=9
+       
+       self.maxValue=100
+       self.minValue=101
+       
 
+    def encodeValue(self,_string):
+       if (_string == '-v' or _string   == '--minValue'):
+            return self.minValue
+       elif (_string == '-V' or _string   == '--maxValue'):
+            return self.maxValue
+       else:
+            return self.unknown
+            
+    def decodeValue(self,_string):
+       if (_operation==self.minValue):
+            return 'minValue'
+       elif (_operation==self.maxValue):
+            return 'maxValue'       
+       else:
+            return 'Unknown Value'
+    
     def encode(self, _string):
        if (  _string=='-u'   or _string == '--union'):
             return self.union
@@ -91,6 +111,8 @@ class Code:
 _myCode=Code()
 operation=_myCode.unknown
 operationCounter=0
+minGiven=False
+maxGiven=False
 
 def check_operation(option, opt_str, value, parser):
     global operation
@@ -119,10 +141,17 @@ def check_label(option, opt_str, value, parser):
 #        
 def check_value(option, opt_str, value, parser):
     global operation
+    global minGiven
+    global maxGiven
     if(operation==_myCode.unknown):
         raise OptionValueError("select operation (--join,--select, etc.) before option '%s'" % opt_str)
     if (operation == _myCode.select):
        setattr(parser.values, option.dest, value)
+       rangeType=_myCode.encodeValue(opt_str)
+       if(rangeType==_myCode.maxValue):
+           maxGiven=True
+       if(rangeType==_myCode.minValue):
+           minGiven=True
     else:
        raise OptionValueError("selected option " + opt_str + " is not compatible with operation "+ _myCode.decode(operation))
 
@@ -134,7 +163,7 @@ Example:
    xmipp_metadata_utilities  -i i1.doc --union i2.doc -o result.doc [-l image]
    xmipp_metadata_utilities  -i i1.doc -o result.doc --copy /home/roberto/kk 
    xmipp_metadata_utilities  -i i1.doc -o result.doc --naturalJoin i2.doc -l angleROT 
-   xmipp_metadata_utilities  -i i1.doc -o result.doc --select angleROT --minValue 0 --maxValue 23
+   xmipp_metadata_utilities  -i i1.doc -o result.doc --select -l angleRot --minValue 0 --maxValue 23
    xmipp_metadata_utilities  -i i1.doc --sort -o result.doc -l image
    """
       global operation
@@ -311,15 +340,23 @@ def process_copy(inMetaDataFileS,outMetaDataFileS,cPath):
          XmippData.setValueString(MD2,XmippData.MDL_IMAGE,ss)
          XmippData.setValueInt(MD2,XmippData.MDL_ENABLED,ii)
     MD2.write(outMetaDataFile)
+
 def process_select(inMetaDataFileS,outMetaDataFileS,minValue,maxValue,cLabel):
     inMetaDataFile   = XmippData.FileName(inMetaDataFileS)
     outMetaDataFile  = XmippData.FileName(outMetaDataFileS)
-    print inMetaDataFile,outMetaDataFile
     MD1=XmippData.MetaData(inMetaDataFile)
     MD2=XmippData.MetaData()
-    mdl=XmippData.MetaDataContainer()
-    XmippData.addObjectsInRangeDouble(MD1,MD2,XmippData.MDL.str2Label(cLabel),minValue,
-                                    maxValue)
+    if(minGiven and maxGiven):
+        query=XmippData.MDValueRangeDouble(XmippData.MDL.str2Label(cLabel),minValue,maxValue)
+    elif(minGiven):
+        query=XmippData.MDValueAboveDouble(XmippData.MDL.str2Label(cLabel),minValue)
+    elif(maxGiven):
+        query=XmippData.MDValueBelowDouble(XmippData.MDL.str2Label(cLabel),maxValue)
+    else:
+        print "ERROR: select operation requires minValue and/or maxvalue"
+        sys.exit(0)
+     
+    MD2.importObjects(MD1,query)
     MD2.write(outMetaDataFile)
     
 ##########
@@ -335,6 +372,7 @@ cPath,
 minValue,
 maxValue
 ) = command_line_options()
+print cLabel
 
 #print "1",inMetaDataFile,"2",outMetaDataFile,"3",inMetaDataFile2
 #operate
