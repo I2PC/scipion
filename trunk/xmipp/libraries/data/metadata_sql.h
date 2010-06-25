@@ -264,7 +264,7 @@ public:
 }
 ;//class MDValueEqual
 
-/**MDValueEqual this will test if a label have a value
+/**MDValueRange this will test if a label have a value within a minimum and maximum
  *@ingroup MetaDataQuery
  */
 class MDValueRange: public MDQuery
@@ -279,20 +279,57 @@ public:
         MDValue mdValueMin(label, valueMin);
         MDValue mdValueMax(label, valueMax);
 
-        //MDL::voidPtr2Value(label, (void*)new T(valueMin), mdValue);
         ss << MDL::label2Str(label) << ">=";
-        //MDL::value2Stream(label, mdValueMin, ss);
         mdValueMin.toStream(ss);
         ss << " AND ";
-        //MDL::voidPtr2Value(label, (void*)new T(valueMax), mdValue);
         ss << MDL::label2Str(label) << "<=";
-        //MDL::value2Stream(label, mdValueMax, ss);
         mdValueMax.toStream(ss);
         this->queryString = ss.str();
-
     }
 }
 ;//class MDValueRange
+
+/**MDValueAbove this will test if a label have a value larger than a minimum
+ *@ingroup MetaDataQuery
+ */
+class MDValueAbove: public MDQuery
+{
+public:
+	MDValueAbove()
+    {}
+    template <class T>
+    MDValueAbove(MDLabel label, const T &valueMin)
+    {
+        std::stringstream ss;
+        MDValue mdValueMin(label, valueMin);
+
+        ss << MDL::label2Str(label) << ">=";
+        mdValueMin.toStream(ss);
+        this->queryString = ss.str();
+    }
+}
+;//class MDValueAbove
+
+/**MDValueAbove this will test if a label have a value smaller than a maximum
+ *@ingroup MetaDataQuery
+ */
+class MDValueBelow: public MDQuery
+{
+public:
+	MDValueBelow()
+    {}
+    template <class T>
+    MDValueBelow(MDLabel label, const T &valueMax)
+    {
+        std::stringstream ss;
+        MDValue mdValueMax(label, valueMax);
+
+        ss << MDL::label2Str(label) << "<=";
+        mdValueMax.toStream(ss);
+        this->queryString = ss.str();
+    }
+}
+;//class MDValueBelow
 
 /** Just a class to store some cached sql statements
  *
@@ -309,4 +346,27 @@ public:
     ~MDCache();
 };
 
+template<class T>
+MDValueEqual MDValueEqualSwig(MDLabel label, const T &value)
+{
+	return MDValueEqual(label, value);
+}
+
+template<class T>
+MDValueRange MDValueRangeSwig(MDLabel label, const T &valueMin, const T &valueMax)
+{
+	return MDValueRange(label, valueMin, valueMax);
+}
+
+template<class T>
+MDValueAbove MDValueAboveSwig(MDLabel label, const T &valueMin)
+{
+	return MDValueAbove(label, valueMin);
+}
+
+template<class T>
+MDValueBelow MDValueBelowSwig(MDLabel label, const T &valueMax)
+{
+	return MDValueBelow(label, valueMax);
+}
 #endif
