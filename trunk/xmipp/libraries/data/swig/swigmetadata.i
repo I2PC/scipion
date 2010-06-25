@@ -19,11 +19,10 @@
 
 %include ../metadata.h
 %include ../metadata_extension.h
-//%include ../metadata_sql.h
+%include ../metadata_sql.h
 %include ../metadata_label.h
 namespace std {
    %template(vectorm) vector<MDLabel>;
-   
 };
 
 %template(setValueBool)      setValueSwig<bool>; 
@@ -35,6 +34,11 @@ namespace std {
 %template(getValueInt)       getValueSwig<int>; 
 %template(getValueDouble)    getValueSwig<double>; 
 %template(getValueString)    getValueSwig<std::string>;
+
+%template(MDValueEqualDouble) MDValueEqualSwig<double>; 
+%template(MDValueRangeDouble) MDValueRangeSwig<double>; 
+%template(MDValueAboveDouble) MDValueAboveSwig<double>; 
+%template(MDValueBelowDouble) MDValueBelowSwig<double>;
 
 /*
 ==================
