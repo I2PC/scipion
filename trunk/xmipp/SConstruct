@@ -71,6 +71,8 @@ opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
 opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
 opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', ' ')
 
+opts.Add('JNI_INCLUDE', 'Directory of jni.h', '/usr/lib/jvm/java-6-sun-1.6.0.20/include/')
+
 opts.Update(env)
 
 # generate help for options
@@ -366,6 +368,10 @@ elif (ARGUMENTS['mode'] == 'compile'):
                      suffix='.cc',
                      src_suffix='.i')
         env.Append(BUILDERS={'i2cc': swigBuilder})   
+        swigBuilder = Builder(action=env['SWIG']+' -java -c++ -o $TARGET $SOURCE; javac libraries/data/swig/*.java',
+                     suffix='.cc',
+                     src_suffix='.i')
+        env.Append(BUILDERS={'i2java': swigBuilder})   
 
     Export('env')
     env.SConscript('SConscript')
