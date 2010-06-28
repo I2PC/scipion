@@ -280,7 +280,6 @@ class purifyCoresThread(Thread):
                     "_F123.sel -o "+\
                     fnClass+"_F1234 -zcut "+str(self.Zscore)+\
                     " -multivariate >& /dev/null")
-                os.system("rm -f "+fnClass+"_F1234.*Z")
                 os.system("mv -f "+fnClass+"_F1234_good.sel "+fnClass+"_F1234.sel")
                 os.system("xmipp_classify_analyze_cluster -i "+fnClass+\
                     "_F1234.sel -ref "+\
@@ -322,10 +321,10 @@ def summary(fnRoot,Nlevels):
         goodClasses=0;
         for nclass in range(0,Nclasses):
             fnClass=fnRoot+"_level_"+'%02d'%level+"_"+'%06d'%nclass;
-            Ninitial=fileLength(fnClass+".sel")
+            Ninitial=fileLength(fnClass+".sel")-3
             Nfinal=0
             if os.path.exists(fnClass+"_F12345.sel"):
-                Nfinal=fileLength(fnClass+"_F12345.sel")
+                Nfinal=fileLength(fnClass+"_F12345.sel")-3
                 goodClasses=goodClasses+1
             fh.write("     Class: "+str(nclass)+" from "+str(Ninitial)+\
                 " to "+str(Nfinal)+'\n')
@@ -342,7 +341,7 @@ def sortImages(fnRoot,Nlevels):
     for level in range(1,Nlevels):
         print "Level: "+str(level)
         fnLevel=fnRoot+"_level_"+'%02d'%level
-        os.system('xmipp_metadata_selfile_create "'+fnLevel+'_??????_F12345.xmp" '+\
+        os.system('xmipp_metadata_selfile_create -p "'+fnLevel+'_??????_F12345.xmp" -o '+\
             fnLevel+"_F12345.sel");
         os.system('xmipp_classify_CL2D_sort_images -i '+fnLevel+\
             "_F12345.sel -oroot "+fnLevel+"_F12345_sorted -processSelfiles");
