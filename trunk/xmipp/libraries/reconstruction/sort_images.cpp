@@ -169,7 +169,7 @@ void Prog_sort_images_prm::run()
             SFInfo.setValue(MDL_IMAGE,fnOut);
             SFInfo.setValue(MDL_IMAGE_ORIGINAL,fnOutOrig);
             SFInfo.setValue(MDL_IMAGE_CLASS_GROUP,fnSel);
-            SFInfo.setValue(MDL_IMAGE_CLASS_COUNT, SFaux.size());
+            SFInfo.setValue(MDL_IMAGE_CLASS_COUNT, (int) SFaux.size());
             SFoutOriginal.nextObject();
         }
         SFInfo.write(fnRoot+"_info.txt");
