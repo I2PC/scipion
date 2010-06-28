@@ -50,20 +50,22 @@ public:
 AlignParams prm;
 
 // Apply transformation ---------------------------------------------------
-void applyTransformation(const MultidimArray<double> &V2, MultidimArray<double> &Vaux,
+void applyTransformation(const MultidimArray<double> &V2, 
+                         MultidimArray<double> &Vaux,
                          double *p)
 {
     Matrix1D<double> r(3);
     Matrix2D<double> A;
 
-    double grey  = p[0];
-    double rot   = p[1];
-    double tilt  = p[2];
-    double psi   = p[3];
-    double scale = p[4];
-    ZZ(r)        = p[5];
-    YY(r)        = p[6];
-    XX(r)        = p[7];
+    double greyScale = p[0];
+    double greyShift = p[1];
+    double rot       = p[2];
+    double tilt      = p[3];
+    double psi       = p[4];
+    double scale     = p[5];
+    ZZ(r)            = p[6];
+    YY(r)            = p[7];
+    XX(r)            = p[8];
 
     Euler_angles2matrix(rot, tilt, psi, A);
     A.resize(4, 4);
@@ -72,7 +74,8 @@ void applyTransformation(const MultidimArray<double> &V2, MultidimArray<double> 
     A = A * scale3DMatrix(vectorR3(scale, scale, scale));
 
     applyGeometry(LINEAR, Vaux, V2, A, IS_NOT_INV, WRAP);
-    Vaux*=grey;
+    Vaux*=greyScale;
+    Vaux+=greyShift;
 }
 
 // Fitness between two volumes --------------------------------------------
@@ -107,6 +110,7 @@ int main(int argc, char **argv)
     double   scale0, scaleF, step_scale;
     double   z0, zF, y0, yF, x0, xF, step_z, step_y, step_x;
     double   grey_scale0, grey_scaleF, step_grey;
+    double   grey_shift0, grey_shiftF, step_grey_shift;
     int      tell;
     bool     apply;
     bool     mask_enabled, mean_in_mask;
@@ -124,6 +128,8 @@ int main(int argc, char **argv)
         getThreeDoubleParams(argc, argv, "-scale", scale0, scaleF, step_scale, 1, 1, 1);
         getThreeDoubleParams(argc, argv, "-grey_scale", grey_scale0, grey_scaleF,
                              step_grey, 1, 1, 1);
+        getThreeDoubleParams(argc, argv, "-grey_shift", grey_shift0, grey_shiftF,
+                             step_grey_shift, 0, 0, 1);
         getThreeDoubleParams(argc, argv, "-z", z0, zF, step_z, 0, 0, 1);
         getThreeDoubleParams(argc, argv, "-y", y0, yF, step_y, 0, 0, 1);
         getThreeDoubleParams(argc, argv, "-x", x0, xF, step_x, 0, 0, 1);
@@ -146,6 +152,8 @@ int main(int argc, char **argv)
             step_scale = 1;
         if (step_grey  == 0)
             step_grey  = 1;
+        if (step_grey_shift  == 0)
+            step_grey_shift  = 1;
         if (step_z     == 0)
             step_z = 1;
         if (step_y     == 0)
@@ -207,6 +215,8 @@ int main(int argc, char **argv)
             {
                 if (grey_scale0 != grey_scaleF)
                     times *= FLOOR(1 + (grey_scaleF - grey_scale0) / step_grey);
+                if (grey_shift0 != grey_shiftF)
+                    times *= FLOOR(1 + (grey_shiftF - grey_shift0) / step_grey_shift);
                 if (rot0 != rotF)
                     times *= FLOOR(1 + (rotF - rot0) / step_rot);
                 if (tilt0 != tiltF)
@@ -230,84 +240,89 @@ int main(int argc, char **argv)
             int itime = 0;
             int step_time = CEIL((double)times / 60.0);
             Matrix1D<double> r(3);
-            for (double grey = grey_scale0; grey <= grey_scaleF ; grey += step_grey)
-                for (double rot = rot0; rot <= rotF ; rot += step_rot)
-                    for (double tilt = tilt0; tilt <= tiltF ; tilt += step_tilt)
-                        for (double psi = psi0; psi <= psiF ; psi += step_psi)
-                            for (double scale = scale0; scale <= scaleF ; scale += step_scale)
-                                for (ZZ(r) = z0; ZZ(r) <= zF ; ZZ(r) += step_z)
-                                    for (YY(r) = y0; YY(r) <= yF ; YY(r) += step_y)
-                                        for (XX(r) = x0; XX(r) <= xF ; XX(r) += step_x)
-                                        {
-                                            // Form trial vector
-                                            Matrix1D<double> trial(8);
-                                            trial(0) = grey;
-                                            trial(1) = rot;
-                                            trial(2) = tilt;
-                                            trial(3) = psi;
-                                            trial(4) = scale;
-                                            trial(5) = ZZ(r);
-                                            trial(6) = YY(r);
-                                            trial(7) = XX(r);
-
-                                            // Evaluate
-                                            double fit =
-                                                fitness(MATRIX1D_ARRAY(trial));
-
-                                            // The best?
-                                            if (fit < best_fit || first)
+            for (double grey_scale = grey_scale0; grey_scale <= grey_scaleF ; grey_scale += step_grey)
+                for (double grey_shift = grey_shift0; grey_shift <= grey_shiftF ; grey_shift += step_grey_shift)
+                    for (double rot = rot0; rot <= rotF ; rot += step_rot)
+                        for (double tilt = tilt0; tilt <= tiltF ; tilt += step_tilt)
+                            for (double psi = psi0; psi <= psiF ; psi += step_psi)
+                                for (double scale = scale0; scale <= scaleF ; scale += step_scale)
+                                    for (ZZ(r) = z0; ZZ(r) <= zF ; ZZ(r) += step_z)
+                                        for (YY(r) = y0; YY(r) <= yF ; YY(r) += step_y)
+                                            for (XX(r) = x0; XX(r) <= xF ; XX(r) += step_x)
                                             {
-                                                best_fit = fit;
-                                                best_align = trial;
-                                                first = false;
-                                            }
+                                                // Form trial vector
+                                                Matrix1D<double> trial(9);
+                                                trial(0) = grey_scale;
+                                                trial(1) = grey_shift;
+                                                trial(2) = rot;
+                                                trial(3) = tilt;
+                                                trial(4) = psi;
+                                                trial(5) = scale;
+                                                trial(6) = ZZ(r);
+                                                trial(7) = YY(r);
+                                                trial(8) = XX(r);
 
-                                            // Show fit
-                                            if (tell)
-                                                std::cout << trial.transpose()
-                                                << fit << std::endl;
-                                            else
-                                                if (++itime % step_time == 0)
-                                                    progress_bar(itime);
-                                        }
+                                                // Evaluate
+                                                double fit =
+                                                    fitness(MATRIX1D_ARRAY(trial));
+
+                                                // The best?
+                                                if (fit < best_fit || first)
+                                                {
+                                                    best_fit = fit;
+                                                    best_align = trial;
+                                                    first = false;
+                                                }
+
+                                                // Show fit
+                                                if (tell)
+                                                    std::cout << trial.transpose()
+                                                    << fit << std::endl;
+                                                else
+                                                    if (++itime % step_time == 0)
+                                                        progress_bar(itime);
+                                            }
             if (!tell)
                 progress_bar(times);
         }
         else
         {
             // Use Powell optimization
-            Matrix1D<double> x(8), steps(8);
+            Matrix1D<double> x(9), steps(9);
             double fitness;
             int iter;
             steps.initConstant(1);
             if (onlyShift)
-                steps(0)=steps(1)=steps(2)=steps(3)=steps(4)=0;
+                steps(0)=steps(1)=steps(2)=steps(3)=steps(4)=steps(5)=0;
             x(0)=(grey_scale0+grey_scaleF)/2;
-            x(1)=(rot0+rotF)/2;
-            x(2)=(tilt0+tiltF)/2;
-            x(3)=(psi0+psiF)/2;
-            x(4)=(scale0+scaleF)/2;
-            x(5)=(z0+zF)/2;
-            x(6)=(y0+yF)/2;
-            x(7)=(x0+xF)/2;
+            x(1)=(grey_shift0+grey_shiftF)/2;
+            x(2)=(rot0+rotF)/2;
+            x(3)=(tilt0+tiltF)/2;
+            x(4)=(psi0+psiF)/2;
+            x(5)=(scale0+scaleF)/2;
+            x(6)=(z0+zF)/2;
+            x(7)=(y0+yF)/2;
+            x(8)=(x0+xF)/2;
 
-            powellOptimizer(x,1,8,&wrapperFitness,NULL,
+            powellOptimizer(x,1,9,&wrapperFitness,NULL,
                             0.01,fitness,iter,steps,true);
             best_align=x;
+            best_fit=fitness;
             first=false;
         }
 
         if (!first)
             std::cout << "The best correlation is for\n"
-            << "Scale                  : " << best_align(4) << std::endl
-            << "Translation (X,Y,Z)    : " << best_align(7)
-            << " " << best_align(6) << " " << best_align(5)
+            << "Scale                  : " << best_align(5) << std::endl
+            << "Translation (X,Y,Z)    : " << best_align(8)
+            << " " << best_align(7) << " " << best_align(6)
             << std::endl
             << "Rotation (rot,tilt,psi): "
-            << best_align(1) << " " << best_align(2) << " "
-            << best_align(3) << std::endl
-            << "Best grey factor       : " << best_align(0) << std::endl
-            << "Fitness value          : " << best_fit << std::endl;
+            << best_align(2) << " " << best_align(3) << " "
+            << best_align(4) << std::endl
+            << "Best grey scale       : " << best_align(0) << std::endl
+            << "Best grey shift       : " << best_align(1) << std::endl
+            << "Fitness value         : " << best_fit << std::endl;
         if (apply)
         {
             applyTransformation(prm.V2(),prm.Vaux(),MATRIX1D_ARRAY(best_align));
@@ -334,6 +349,7 @@ void Usage(const Mask_Params &m)
     << "  [-psi  <psi0>  <psiF>  <step_psi>  : in degrees\n"
     << "  [-scale  <sc0>   <scF>   <step_sc>   : size scale margin\n"
     << "  [-grey_scale <sc0>   <scF>   <step_sc>   : grey scale margin\n"
+    << "  [-grey_shift <sh0>   <shF>   <step_sh>   : grey shift margin\n"
     << "  [-z   <z0>  <zF>  <step_z>    : Z position in pixels\n"
     << "  [-y   <y0>  <yF>  <step_y>    : Y position in pixels\n"
     << "  [-x   <x0>  <xF>  <step_x>    : X position in pixels\n"
