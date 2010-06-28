@@ -17,7 +17,7 @@ class selfile:
        imgNames=dict()
        for line in lines:
            args=line.split()
-           if (len(args)>1):
+           if (len(args)>=1):
                if not args[0].find('@')==-1:
                   filename=args[0]
                else:
@@ -30,7 +30,10 @@ class selfile:
                     raise RuntimeError, """ There are two images with the same
                        filename, although they may be in different directories.
                        This cannot be handled by the protocols."""
-               self.sellines.append([args[0],args[1]])
+               if (len(args)>1):
+                   self.sellines.append([args[0],args[1]])
+               else:
+                   self.sellines.append([args[0],"1"])
                imgNames[filename]=1
        fh.close()
 
