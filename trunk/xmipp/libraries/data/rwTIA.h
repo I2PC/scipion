@@ -80,8 +80,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
 
     TIAhead * header = new TIAhead;
 
-    //    if ( fread( header, TIASIZE, 1, fimg ) < 1 )
-    //        return(-2);
+
     xmippFREAD(&header->endianess, sizeof(short int), 1, fimg, swap );
 
     // Set Endianess
@@ -90,7 +89,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     else
         swap = 1;
     if (IsBigEndian())
-    	swap = !swap;
+        swap = !swap;
 
 
     xmippFREAD(&header->SeriesID, sizeof(short int), 1, fimg, swap );
@@ -128,30 +127,37 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         xmippFREAD(&dataHeaders[i].IMAGE_WIDTH, sizeof(int), 1, fimg, swap);
         xmippFREAD(&dataHeaders[i].IMAGE_HEIGHT, sizeof(int), 1, fimg, swap);
     }
+
     // Check images dimensions. Need to be the same
-    for (i = 1; i < header->NUMBER_IMAGES; i++)
+    int _xDim,_yDim,_zDim;
+    unsigned long int _nDim;
+
+    if (img_select==-1)
     {
-        if (dataHeaders[0].IMAGE_HEIGHT != dataHeaders[i].IMAGE_HEIGHT || \
-            dataHeaders[0].IMAGE_WIDTH != dataHeaders[i].IMAGE_WIDTH  || \
-            dataHeaders[0].DATA_TYPE != dataHeaders[i].DATA_TYPE)
-            REPORT_ERROR(6001, "readTIA: images in TIA file with different dimensions and data types are not supported");
+        for (i = 1; i < header->NUMBER_IMAGES; i++)
+        {
+            if (dataHeaders[0].IMAGE_HEIGHT != dataHeaders[i].IMAGE_HEIGHT || \
+                dataHeaders[0].IMAGE_WIDTH != dataHeaders[i].IMAGE_WIDTH  || \
+                dataHeaders[0].DATA_TYPE != dataHeaders[i].DATA_TYPE)
+                REPORT_ERROR(6001, "readTIA: images in TIA file with different dimensions and data types are not supported");
+        }
+        _xDim = (int) dataHeaders[0].IMAGE_WIDTH;
+        _yDim = (int) dataHeaders[0].IMAGE_HEIGHT;
+        _zDim = (int) 1;
+        _nDim = (int) header->NUMBER_IMAGES;
+    }
+    else
+    {
+        _xDim = (int) dataHeaders[img_select].IMAGE_WIDTH;
+        _yDim = (int) dataHeaders[img_select].IMAGE_HEIGHT;
+        _zDim = (int) 1;
+        _nDim = (int) 1;
     }
 
 
-    int _xDim,_yDim,_zDim;
-    unsigned long int _nDim;
-    _xDim = (int) dataHeaders[0].IMAGE_WIDTH;
-    _yDim = (int) dataHeaders[0].IMAGE_HEIGHT;
-    _zDim = (int) 1;
-    _nDim = (int) header->NUMBER_IMAGES;
-
-
-
     // Map the parameters
-    if (img_select==-1)
-        data.setDimensions(_xDim, _yDim, 1, _nDim);
-    else
-        data.setDimensions(_xDim, _yDim, 1, 1);
+    data.setDimensions(_xDim, _yDim, 1, _nDim);
+
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
@@ -162,8 +168,14 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     }
 
     DataType datatype;
-    dataHeaders[0].isSigned = false;
-    switch ( dataHeaders[0].DATA_TYPE )
+//    dataHeaders[0].isSigned = false;
+    int TIA_DT;
+    if (img_select==-1)
+    	TIA_DT = dataHeaders[0].DATA_TYPE;
+	else
+		TIA_DT = dataHeaders[img_select].DATA_TYPE;
+
+    switch ( TIA_DT )
     {
     case 1:
         datatype = UChar;
@@ -180,7 +192,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         break;
     case 5:
         datatype = Short;
-        dataHeaders[0].isSigned = true;
+//        dataHeaders[0].isSigned = true;
         break;
     case 6:
         datatype = Int;
@@ -223,13 +235,13 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
         {
             aux = ROUND(dataHeaders[i].CalibrationElementX - \
-						dataHeaders[i].CalibrationOffsetX/aux - data.xdim/2);
+                        dataHeaders[i].CalibrationOffsetX/aux - data.xdim/2);
             MD.setValue(MDL_ORIGINX, aux);
         }
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
         {
             aux = ROUND(dataHeaders[i].CalibrationElementY - \
-						dataHeaders[i].CalibrationOffsetY/aux -data.ydim/2);
+                        dataHeaders[i].CalibrationOffsetY/aux -data.ydim/2);
             MD.setValue(MDL_ORIGINY, aux);
         }
         MD.setValue(MDL_ORIGINZ,  zeroD);
@@ -257,8 +269,8 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
 
     if (dataflag == 1)
     {
-    	 if (dStddev == NULL)
-    		dStddev = 5;
+        if (dStddev == NULL)
+            dStddev = 5;
 
         double temp, avg, stddev;
         double size = YXSIZE(data);

@@ -365,7 +365,7 @@ public:
             err = readIMAGIC(select_img);//imagic is always an stack
         else if (ext_name.contains("ser"))//TIA
             err = readTIA(select_img,false, imParam);
-        else if (ext_name.contains("dm3"))//tia
+        else if (ext_name.contains("dm3"))//DM3
             err = readDM3(select_img,false);
         else
         {

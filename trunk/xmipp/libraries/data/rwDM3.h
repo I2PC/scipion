@@ -36,6 +36,24 @@ struct DM3head
     char open;
     int nTags;
     MetaData tags;
+    int NUMBER_IMAGES;
+    int * pDATA_OFFSET;
+
+};
+
+
+struct DM3dataHead
+{
+    double      CalibrationOffsetX;  //CalibrationOffsetX
+    double      PIXEL_WIDTH;          //CalibrationDeltaX
+    int         CalibrationElementX;    //CalibrationElementX
+    double      CalibrationOffsetY;   //CalibrationOffsetY
+    double      PIXEL_HEIGHT;           //CalibrationDeltaY
+    int          CalibrationElementY;    //CalibrationElementY
+    short int   DATA_TYPE;     //DataType
+    int         IMAGE_WIDTH;            //ArraySizeX
+    int         IMAGE_HEIGHT;           //ArraySizeY
+    short int   DATA_TYPE_SIZE;
 };
 
 
@@ -76,12 +94,31 @@ int readDM3(int img_select,bool isStack=false)
 
     (header->tags).clear();
 
+    header->tags.addLabel(MDL_DM3_LEVEL);
+    header->tags.addLabel(MDL_DM3_IDTAG);
+    header->tags.addLabel(MDL_DM3_TAGNAME);
+    header->tags.addLabel(MDL_DM3_TAGCLASS);
+    header->tags.addLabel(MDL_DM3_SIZE);
+    header->tags.addLabel(MDL_DM3_NUMBER_TYPE);
+    header->tags.addLabel(MDL_DM3_VALUE);
+
+
     int depLevel=0, imCount=0, imCountF=0;
 
     for (int n=1;n<=header->nTags;n++)
         readTagDM3(fimg, header, depLevel, isLE);
 
     header->tags.write("images.txt");
+
+    std::vector<long int> vIm;
+
+    header->tags.findObjects(vIm, MDValueEqual(MDL_DM3_TAGNAME, (std::string) "ImageList"));
+
+    header->tags.getValue(MDL_DM3_SIZE,header->NUMBER_IMAGES);
+
+    //mdQuery(MDL_DM3_TAGNAME, (std::string) "DataType");
+    header->tags.findObjects(vIm,MDValueEqual(MDL_DM3_TAGNAME, (std::string) "DataType"));
+
 
 
 
@@ -347,8 +384,8 @@ double readTagDM3(FILE *fimg,
             //            newIndex[depLevel] = 2;
             //            header->tags.setValue(MDL_DIMX,(int) readTagDM3(fimg, header, depLevel, isLE));
 
-//            header->tags.addObject();
-            return 0;
+            //            header->tags.addObject();
+            //            return 0;
         }
 
         for (int n=1;n<=nTags;n++) // Rest of directories
@@ -379,24 +416,30 @@ double readTagDM3(FILE *fimg,
             header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Single");
 
 
-            double tagValue;
+            double tagValue = 0;
 
             FREADTagValueDM3(&tagValue,info[0],1,fimg);
             //   printf(" = %s\n", sprintfTagValue(&tagValue,info[0]));
-            std::cout << tagValue <<std::endl;
+            std::cout << "double " << tagValue <<std::endl;
             float fcaca;
             memcpy(&fcaca, &tagValue, sizeof(short));
-            std::cout << fcaca <<std::endl;
+            std::cout << "float " << fcaca <<std::endl;
+            double caca2 = (double ) fcaca;
+            std::cout << "double float " << caca2 <<std::endl;
             short scaca;
             memcpy(&scaca, &tagValue, sizeof(short));
             std::cout << scaca <<std::endl;
+            caca2 = (double ) scaca;
+            std::cout << "double short " << caca2 <<std::endl;
             int caca;
             memcpy(&caca, &tagValue, sizeof(int));
-            std::cout << caca <<std::endl;
+            std::cout << "int " << caca <<std::endl;
+            caca2 = (double) caca;
+            std::cout << "double int " << caca2 <<std::endl;
 
             std::vector<double> vtagValue(1);
 
-            vtagValue[1] = tagValue;
+            vtagValue.assign(1,tagValue);
 
             header->tags.setValue(MDL_DM3_NUMBER_TYPE, info[0]);
             header->tags.setValue(MDL_DM3_VALUE, vtagValue);
@@ -411,16 +454,17 @@ double readTagDM3(FILE *fimg,
         }
         else if(nnum == 3 && info[0]==20)   // Tag array
         {             /*nnum = 3
-                                           info(0) = 20
-                                                          info(1) = number type for all values
-                                                          info(2) = info(nnum) = size of array*/
+                                             info(0) = 20
+                                             info(1) = number type for all values
+                                             info(2) = info(nnum) = size of array*/
 
             header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Array");
 
             header->tags.setValue(MDL_DM3_NUMBER_TYPE, info[1]);
             header->tags.setValue(MDL_DM3_SIZE, info[nnum-1]);
             std::vector<double> vtagValue(1);
-            vtagValue[1] = (double) ftell(fimg);
+            vtagValue.assign(1,(double) ftell(fimg));
+
             header->tags.setValue(MDL_DM3_VALUE, vtagValue);
 
             if (strcmp(tagName,"Data")==0)    // Locating the image data
@@ -506,11 +550,16 @@ double readTagDM3(FILE *fimg,
             header->tags.setValue(MDL_DM3_TAGCLASS, (std::string) "Group");
             header->tags.setValue(MDL_DM3_SIZE, info[2]);
 
+            std::vector<double> vtagValue(info[2]);
+
             for (int n=1;n<=info[2];n++)
             {
                 double fieldValue=0;
 
                 FREADTagValueDM3(&fieldValue,info[2+2*n],1,fimg);
+
+                vtagValue.assign(n,fieldValue);
+
                 std::cout << fieldValue <<std::endl;
                 float fcaca;
                 memcpy(&fcaca, &fieldValue, sizeof(short));
@@ -523,23 +572,101 @@ double readTagDM3(FILE *fimg,
                 std::cout << caca <<std::endl;
             }
 
+            header->tags.setValue(MDL_DM3_VALUE, vtagValue);
+
             return 0;
         }
     }
 }
 
-void FREADTagValueDM3(void *fieldValue,
+void FREADTagValueDM3(double *fieldValue,
                       int numberType,
                       int n,
                       FILE* fimg)
 {
 
-    DataType datatype;
+    DataType datatype = datatypeDM3(numberType);
+    size_t datatypesize=gettypesize(datatype);
+
+    xmippFREAD(fieldValue, datatypesize, n, fimg, swap);
+
 
     switch(numberType)
     {
     case 2:      // (02h =  2  i2* signed    (short)
+        {
+            datatype = Short;
+            short* sValue = (short*) fieldValue;
+            *fieldValue = (double) *sValue;
+            break;
+        }
+    case 3:          // 03h =  3  i4* signed    (long)
+        {
+            datatype = Int;
+            int* iValue = (int*) fieldValue;
+            *fieldValue = (double) *iValue;
+            break;
+        }
+    case 4:       //  04h =  4  i2* unsigned  (ushort) or unicode string
+        {
+            datatype = UShort;
+            unsigned short* usValue = (unsigned short*) fieldValue;
+            *fieldValue = (double) *usValue;
+            break;
+        }
+    case 5:        //  05h =  5  i4* unsigned  (ulong)
+        {
+            datatype = UInt;
+            unsigned int* uiValue = (unsigned int*) fieldValue;
+            *fieldValue = (double) *uiValue;
+            break;
+        }
+    case 6:        //  06h =  6  f4*           (float)
+        {
+            datatype = Float;
+            float* fValue = (float*) fieldValue;
+            *fieldValue = (double) *fValue;
+            break;
+        }
+    case 7:        //  07h =  7  f8*           (double)
+        {
+            datatype = Double;
+            //            double* caca = (double*) fieldValue;
+            break;
+        }
+    case 8:        //  08h =  8  i1            (boolean)
+        {
+            datatype = Bool;
+            bool* bValue = (bool*) fieldValue;
+            *fieldValue = (double) *bValue;
+            break;
+        }
+    case 9:        //  0ah = 10  i1
+    case 10:        //  0ah = 10  i1
+        {
+            datatype = SChar;
+            char* cValue = (char*) fieldValue;
+            *fieldValue = (double) *cValue;
+            break;
+        }
+    default:
+        {
+            datatype = Unknown_Type;
+            break;
+        }
+    }
+}
+
+
+DataType datatypeDM3(int nType)
+{
+    DataType datatype;
+
+    switch(nType)
+    {
+    case 2:      // (02h =  2  i2* signed    (short)
         datatype = Short;
+
         break;
     case 3:          // 03h =  3  i4* signed    (long)
         datatype = Int;
@@ -569,18 +696,7 @@ void FREADTagValueDM3(void *fieldValue,
         datatype = Unknown_Type;
         break;
     }
-
-    size_t datatypesize=gettypesize(datatype);
-
-    xmippFREAD(fieldValue, datatypesize, n, fimg, swap);
-
-    //    std::cout << page <<std::endl;
-    //    std::cout << (int*) fieldValue <<std::endl;
-    //    memcpy(fieldValue, page, datatypesize*n);
-    //    fieldValue = (double *) page;
-    //    for(int i=0; i<n;i++)
-    //        fieldValue[i]=(double) ptr[i];
-    //    castPage2T(page, fieldValue, datatype, datatypesize);
+    return datatype;
 }
 
 
