@@ -14,11 +14,11 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-InSelFile='sideviews.sel'
+InSelFile='sort_junk.sel'
 # Working subdirectory:
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir='CL2D/classes64sideviews'
+WorkingDir='CL2D/classes64'
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
@@ -26,7 +26,7 @@ DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/gpfs/fs1/home/bioinfo/coss/Sharon/Set2'
+ProjectDir='/gpfs/fs1/home/bioinfo/coss/analu/Mcm467_cdt1_sinOli-7AporPix'
 # {expert} Directory name for logfiles:
 """ All logfiles will be stored here
 """
@@ -41,17 +41,17 @@ SamplingRate = 1
 
 # Highpass cutoff frequency
 """ In (Angstroms/Pixel). Set to 0 if not desired """
-Highpass =0
+Highpass =0.02
 
 # Lowpass cutoff frequency
 """ In (Angstroms/Pixel). Set to 0 if not desired """
-Lowpass =0
+Lowpass =0.4
 
 #------------------------------------------------------------------------------------------------
 # {section} Class averages parameters
 #------------------------------------------------------------------------------------------------
 # Perform CL2D
-DoCL2D=False
+DoCL2D=True
 
 # Z-score cutoff
 """ Use -1 for no cutoff. The cutoff is defined as the average cutoff
@@ -98,7 +98,7 @@ AdditionalParameters='-verbose'
 # {section} Core analysis
 #------------------------------------------------------------------------------------------------
 # Perform core analysis
-DoCoreAnalysis=True
+DoCoreAnalysis=False
 
 # Good class core size (%)
 """ A class is a good class if at least this percentage (around 50%) of the
@@ -127,7 +127,7 @@ thPCAZscore=1.5
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
 # Number of MPI processes to use:
-NumberOfMpiProcesses=8
+NumberOfMpiProcesses=40
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -310,12 +310,12 @@ class CL2D_class:
         if (self.ClusteringMethod=='classical'):
             params+= ' -classicalMultiref '
 
-        launch_job.launch_job("xmipp_class_averages",
+        launch_job.launch_job("xmipp_classify_CL2D",
                               params,
                               self.log,
                               True,
+                              self.NumberOfMpiProcesses,
                               1,
-                              self.thr,
                               self.SystemFlavour)
 
     def execute_core_analysis(self):
