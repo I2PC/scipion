@@ -169,7 +169,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
 // Run  ====================================================================
 void Prog_analyze_cluster_prm::run()
 {
-	pcaAnalyzer.evaluateZScore(NPCA, Niter);
+    pcaAnalyzer.evaluateZScore(NPCA, Niter);
 
     // Output
     FileName fnRoot=fnSel.without_extension();
@@ -216,7 +216,7 @@ void Prog_analyze_cluster_prm::run()
         save.write(fnRoot+"_pca.xmp");
     }
 
-    for (int ii=0; ii<NPCA; ii++)
+    for (int ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
     {
         Image<double> save;
         save().initZeros(mask);
