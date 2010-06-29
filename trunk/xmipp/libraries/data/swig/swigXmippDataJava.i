@@ -44,6 +44,10 @@ class std::string {};
 %include "../funcs.h"
 
 // Matrix3D
+%ignore MultidimArray::setXdim;
+%ignore MultidimArray::setYdim;
+%ignore MultidimArray::setZdim;
+
 %ignore coreArrayByArray<>( const MultidimArray<T>& op1,
                             const MultidimArray<T>& op2,
                             MultidimArray<T>& result,
