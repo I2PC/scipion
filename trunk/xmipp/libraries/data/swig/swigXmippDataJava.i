@@ -35,28 +35,44 @@ using namespace std;
 %rename (mul)   operator*;
 
 // rm libraries/data/swig/swigXmippData_wrap_java.cpp libraries/data/swig/*.java ; ./scons.compile
-
+%ignore FileName::FileName(char const *);
 %{
 #include "../funcs.h"
 %}
+class std::string {};
+
 %include "../funcs.h"
 
 // Matrix3D
+%ignore coreArrayByArray<>( const MultidimArray<T>& op1,
+                            const MultidimArray<T>& op2,
+                            MultidimArray<T>& result,
+                            char operation);
+%ignore coreArrayByScalar<>(const MultidimArray<T>& op1,
+                            const T& op2,
+                            MultidimArray<T>& result,
+                            char operation);
+%ignore coreScalarByArray<>(const T& op1,
+                            const MultidimArray<T>& op2,
+                            MultidimArray<T>& result,
+                            char operation);
 %ignore coreArrayByArray;
 %ignore coreArrayByScalar;
 %ignore coreScalarByArray;
+
 %ignore applyGeometry<>;
 %ignore applyGeometryBSpline<>;
 %{
 #include "../multidim_array.h"
 %}
+%include "../multidim_array.h"
 %template (MultidimArrayd) MultidimArray<double>;
 
 %{
 #include "../image.h"
 %}
 %include "../image.h"
-%template (Image) Image<double>;
+%template (ImageDouble) Image<double>;
 
 %ignore project_SimpleGrid;
 %ignore project_GridVolume;
