@@ -304,7 +304,8 @@ def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[])
     # Create library
     import distutils.sysconfig
     AddLibrary(name, basedirswig, [name+"_wrap.cc"],
-        ['#',env['JNI_INCLUDE']],['lib'],['XmippData'],'lib')
+        ['#',env['JNI_CPPPATH'],env['JNI_CPPPATH']+"/linux"],
+        ['lib'],['XmippData'],'lib')
     #
     """
     pyFile = libprefix+'/'+name+'.py'
@@ -316,10 +317,6 @@ def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[])
     print command
     os.system(command)"""
     	
-    #install = env.InstallAs(libprefix+'/'+name+'.py',basedirswig+name+".py")
-    #env.Alias(name+'.py', install)
-    #env.Default(name+'.py')
-
 def AddSQLiteLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
     numJobs=env.GetOption('num_jobs')

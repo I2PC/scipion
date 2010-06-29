@@ -3,8 +3,9 @@
 # basic setup, import all environment and custom tools
 import os
 import SCons.Script
-env = Environment(ENV = os.environ, tools = ['default', 'disttar'], toolpath =
-                  ['scons/ToolsFromWiki'])
+env = Environment(ENV = os.environ,
+      tools = ['default', 'disttar'],
+      toolpath = ['scons/ToolsFromWiki'])
 
 # avoid cruft in top dir
 base_dir = 'build'
@@ -49,7 +50,7 @@ opts.Add(BoolVariable('tiff', 'Build the Tiff programs?', 'yes'))
 opts.Add('TIFF_INCLUDE', 'TIFF headers dir', '/usr/include')
 opts.Add('TIFF_LIBDIR', 'TIFF libraries dir', '/usr/lib')
 
-opts.Add(BoolVariable('java', 'Build the java programs?', 'yes'))
+opts.Add(BoolVariable('java', 'Build the java programs?', 'no'))
 
 opts.Add(BoolVariable('mpi', 'Build the MPI programs?', 'yes'))
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
@@ -73,7 +74,8 @@ opts.Add('FFTWFLAGS', 'Additional flags for FFTW configure', '--enable-threads')
 opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
 opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', ' ')
 
-opts.Add('JNI_INCLUDE', 'Directory of jni.h', '/usr/lib/jvm/java-6-sun-1.6.0.20/include/')
+opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
+opts.Add('JAVAC', 'Java compiler', '')
 
 opts.Update(env)
 
@@ -237,6 +239,19 @@ if (ARGUMENTS['mode'] == 'configure'):
                              env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX']):
             print '* Did not find MPI library. Disabling ...'
             env['mpi'] = 0
+
+    # Java
+    if env['JNI_CPPPATH']=='' and int(env['java'])==1:
+        import sys
+        sys.path.append("scons/ToolsFromWiki")
+        import ConfigureJNI
+        if not ConfigureJNI.ConfigureJNI(env):
+            env['java']=0
+            print '* Did not find JNI header. Disabling ...'
+        else:
+            print '* JNI header found: '
+            env['JNI_CPPPATH']=env['JNI_CPPPATH'][0]
+            print env['JNI_CPPPATH']
 
     # MATLAB
     if int(env['matlab']):
