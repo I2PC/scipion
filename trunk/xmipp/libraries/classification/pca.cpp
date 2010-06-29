@@ -745,8 +745,14 @@ void PCAMahalanobisAnalyzer::computeStatistics(MultidimArray<double> & avg,
 void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
 {
     int N=v.size();
+    if (N==1)
+    {
+        Zscore.initZeros(N);
+        idx=Zscore.indexSort();
+        return;
+    }
+    
 #ifdef DEBUG
-
     std::cout << "Input vectors\n";
     for (int n=0; n<N; n++)
     {
