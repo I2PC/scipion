@@ -75,7 +75,7 @@ opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries
 opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', ' ')
 
 opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
-opts.Add('JAVAC', 'Java compiler', '')
+opts.Add('JAVAC', 'Java compiler', 'javac')
 
 opts.Update(env)
 
