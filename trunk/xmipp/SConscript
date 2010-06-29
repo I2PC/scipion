@@ -418,8 +418,9 @@ SwigDataSources = ['libraries/data/swig/swigXmippData.i']
 SwigJavaDataSources = ['libraries/data/swig/swigXmippDataJava.i'] 	 
 AddSwigPythonLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
     [], ['XmippData'])
-AddSwigJavaLibrary('XmippDataJava', 'libraries/data', SwigJavaDataSources, ['#'], 	 
-    [], ['XmippData'])
+if int(env['java']):
+    AddSwigJavaLibrary('XmippDataJava', 'libraries/data', SwigJavaDataSources, ['#'], 	 
+        [], ['XmippData'])
             
 # Reconstruction
 ReconsSources = [

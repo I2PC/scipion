@@ -49,6 +49,8 @@ opts.Add(BoolVariable('tiff', 'Build the Tiff programs?', 'yes'))
 opts.Add('TIFF_INCLUDE', 'TIFF headers dir', '/usr/include')
 opts.Add('TIFF_LIBDIR', 'TIFF libraries dir', '/usr/lib')
 
+opts.Add(BoolVariable('java', 'Build the java programs?', 'yes'))
+
 opts.Add(BoolVariable('mpi', 'Build the MPI programs?', 'yes'))
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
 opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
