@@ -1,3 +1,28 @@
+/***************************************************************************
+ *
+ * @author: Jesus Cuenca (jcuenca@cnb.csic.es)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+
 package xmipptomo;
 
 import ij.IJ;
@@ -22,7 +47,6 @@ import java.io.RandomAccessFile;
 import java.util.Properties;
 
 /**
- * @author jcuenca
  * Collection of methods for handling I/O
  * - make all methods static?
  */
@@ -30,6 +54,7 @@ public class TiltSeriesOpener {
 
 	public static int MRC_HEADER_SIZE = 1024;
 	
+	// Header of a data file
 	private class ByteHeader{
 		private byte [] bytes;
 		private boolean littleEndian=false;
@@ -39,6 +64,7 @@ public class TiltSeriesOpener {
 			bytes = new byte[size];
 		}
 		
+		// fill bytes buffer with data from path
 		public void read(String path) throws java.io.IOException{
 			RandomAccessFile f = new RandomAccessFile(path, "r");
 
@@ -48,6 +74,7 @@ public class TiltSeriesOpener {
 	        f.close();
 		}
 		
+		// return 4 bytes at position index of the buffer as an integer
 	    public int getInt(int index) {
 	        byte b1 = bytes[index];
 	        byte b2 = bytes[index + 1];
@@ -74,22 +101,25 @@ public class TiltSeriesOpener {
 		}
 	}
 	
-	public ImagePlus read(String path,TomoData model) throws java.io.IOException, InterruptedException{
-		ImagePlus imp=null;
+	/**
+	 * @param path file to read
+	 * @param model stores relevant data following MVC paradigm
+	 * @throws java.io.IOException
+	 * @throws InterruptedException Threads issues
+	 */
+	public void read(String path,TomoData model) throws java.io.IOException, InterruptedException{
 		
 		model.setFile(path);
 		
 		if ((path == null) || (path.equals(""))) 
 			throw new IOException("Empty path");
 		
+			// right now, identify file type by its extension
 			if (path.endsWith(".mrc")) {       
-				// imp = (ImagePlus) IJ.runPlugIn("MRC_Reader", path);
-				// if (imp != null && imp.getWidth() != 0) {
-					// mrc_reader does not save Fileinfo inside the ImagePlus
 				readMRC(path,model);
-					// debug(String.valueOf(ti.elementAt(3).getTilt()));
-				// }
-			}else if (path.toLowerCase().endsWith(".spi") || path.toLowerCase().endsWith(".xmp")|| path.toLowerCase().endsWith(".vol")) {
+
+			}
+			/* else if (path.toLowerCase().endsWith(".spi") || path.toLowerCase().endsWith(".xmp")|| path.toLowerCase().endsWith(".vol")) {
 				imp = (ImagePlus) IJ.runPlugIn("Spider_Reader", path);
 				if (imp == null) {
 					//width = PLUGIN_NOT_FOUND;
@@ -105,12 +135,11 @@ public class TiltSeriesOpener {
 				if (imp != null && imp.getWidth() == 0) {
 					imp = null;
 				}
-			}
+			} */
 			
-			return imp;
 	}
 	
-	public void readMRC(String path,TomoData model) throws java.io.IOException, InterruptedException{
+	private void readMRC(String path,TomoData model) throws java.io.IOException, InterruptedException{
 
 		// Parse header
 		ByteHeader header=new ByteHeader(MRC_HEADER_SIZE);
@@ -126,13 +155,11 @@ public class TiltSeriesOpener {
 		ImageStack stack = new ImageStack(fi.width, fi.height, cm);
 		long skip = fi.longOffset>0?fi.longOffset:fi.offset;
 		Object pixels;
-		//ImagePlus imp = new ImagePlus();
 		try {
 			ImageReader reader = new ImageReader(fi);
 			InputStream is =  fo.createInputStream(fi);
-			if (is==null) throw new IOException("readMRC - Null input stream") ;
-			// IJ.resetEscape();
-			// model.setNumberOfProjections(fi.nImages);
+			if (is==null) throw new IOException("TiltSeriesOpener.readMRC - Null input stream") ;
+
 
 			// Save original size to model
 			model.setHeight(fi.height);
@@ -140,23 +167,14 @@ public class TiltSeriesOpener {
 			
 			// load images
 			for (int i=1; i<=fi.nImages; i++) {
-				/* if (!silentMode)
-					IJ.showStatus("Reading: " + i + "/" + fi.nImages);
-				if (IJ.escapePressed()) {
-					IJ.beep();
-					IJ.showProgress(1.0);
-					silentMode = false;
-					return null;
-				} */
 	
 				pixels = reader.readPixels(is, skip);
 				if (pixels==null) break;
 				
 				// resize/scale - use an aux image processor for all projections
-		        // create appropiate image processor
 				ImageProcessor ip=null,ipresized=null;
 				
-				// create the proper ImageProcessor initialized with the pixels
+				// create the proper(byte/short/float...) ImageProcessor initialized with the pixels
 		        switch (fi.fileType){
 		        	case FileInfo.GRAY8:
 		        		ip = new ByteProcessor(fi.width, fi.height, (byte[])pixels, cm);
@@ -172,17 +190,12 @@ public class TiltSeriesOpener {
 		        ipresized = ip.resize(model.getDefaultWidth(), model.getDefaultHeight());
 		        
 				stack.addSlice(null, ip);
-				//stackResized.addSlice(null,ipresized);
 				model.addProjection(ipresized);
 				skip = fi.gapBetweenImages;
 				
 				// uncomment for tests
 				if(Xmipp_Tomo.TESTING != 0)
 					Thread.sleep(250);
-
-				
-				/* if (!silentMode)
-					IJ.showProgress(i, fi.nImages); */
 			}
 			is.close();
 		}catch(OutOfMemoryError e) {
@@ -190,9 +203,6 @@ public class TiltSeriesOpener {
 			stack.trim();
 		}
 		
-		// normal or resized?
-		// ImagePlus imp = new ImagePlus(fi.fileName, stack);
-		// ImagePlus imp = new ImagePlus(fi.fileName, stackResized);
 		if (fi.info!=null)
 			model.getImage().setProperty("Info", fi.info);
 
@@ -201,10 +211,10 @@ public class TiltSeriesOpener {
 		fi.height = model.getDefaultHeight();
 		
 		model.getImage().setFileInfo(fi);
-		
-		/* if (!silentMode) IJ.showProgress(1.0); */
+
 		if (stack.getSize()==0)
 			throw new IOException("Empty stack");
+		
 		if (fi.sliceLabels!=null && fi.sliceLabels.length<=stack.getSize()) {
 			for (int i=0; i<fi.sliceLabels.length; i++)
 				stack.setSliceLabel(fi.sliceLabels[i], i+1);
@@ -218,13 +228,17 @@ public class TiltSeriesOpener {
 		// read tilt angles
 		String tltFilePath=path.replace(".mrc", ".tlt");
 		readTlt(tltFilePath,model);
-		
-		//model.setImage(imp);
-
 	}
 	
+	/**
+	 * get MRC DM3 specific information from header into FileInfo
+	 * @param path 
+	 * @param header of file "path"
+	 * @return FileInfo with data from header
+	 * @throws java.io.IOException
+	 */
 	public FileInfo prepareFileInfo(String path,ByteHeader header) throws java.io.IOException {
-		// get MRC DM3 specific file information into FileInfo
+		// set filename
 		FileInfo fi = new FileInfo();
         fi.fileFormat = FileInfo.RAW;
         File dest = new File(path);
@@ -273,11 +287,15 @@ public class TiltSeriesOpener {
         return fi;
 	}
 	
-	// .tlt syntax: one float angle per line, stored as text
-	public void readTlt(String tltFilePath,TomoData model) throws java.io.IOException{
-		// String mrcFilePath=imp.getFileInfo().directory + imp.getFileInfo().fileName;
 
-		// IJ.write(tltFilePath);
+	/**
+	 * .tlt syntax: one float angle per line, stored as text
+	 * @param tltFilePath
+	 * @param model
+	 * @throws java.io.IOException
+	 */
+	public void readTlt(String tltFilePath,TomoData model) throws java.io.IOException{
+
 		BufferedReader brin=new BufferedReader(new FileReader(tltFilePath));
 		String line=null;
 		while ( (line=brin.readLine()) != null){
@@ -287,8 +305,7 @@ public class TiltSeriesOpener {
 	
 	
 	// code from FileOpener - due to access modifiers restrictions...
-	void setCalibration(ImagePlus imp,FileInfo fi,FileOpener fo) {
-		
+	private void setCalibration(ImagePlus imp,FileInfo fi,FileOpener fo) {
 		
 		if (fi.fileType==FileInfo.GRAY16_SIGNED) {
 			if (IJ.debugMode) IJ.log("16-bit signed");
@@ -368,6 +385,7 @@ public class TiltSeriesOpener {
 		}
 	}
 	
+	/************** Helper methods to convert numbers extracted from Properties ****/
 	private Double getNumber(Properties props, String key) {
 		String s = props.getProperty(key);
 		if (s!=null) {
@@ -388,14 +406,13 @@ public class TiltSeriesOpener {
 		return s!=null&&s.equals("true")?true:false;
 	}
 	
-	void setStackDisplayRange(ImagePlus imp) {
+	private void setStackDisplayRange(ImagePlus imp) {
 		ImageStack stack = imp.getStack();
 		double min = Double.MAX_VALUE;
 		double max = -Double.MAX_VALUE;
 		int n = stack.getSize();
 		for (int i=1; i<=n; i++) {
-			/* if (!silentMode)
-				IJ.showStatus("Calculating stack min and max: "+i+"/"+n); */
+
 			ImageProcessor ip = stack.getProcessor(i);
 			ip.resetMinAndMax();
 			if (ip.getMin()<min)

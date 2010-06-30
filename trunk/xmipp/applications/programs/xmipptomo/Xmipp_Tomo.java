@@ -29,52 +29,65 @@ package xmipptomo;
 
 
 import ij.*;
-
 import ij.gui.*;
 import ij.io.*;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.Calendar;
-import java.util.Date;
-
-
-
-
 import ij.plugin.frame.*;
 
+/**
+ * @author jcuenca
+ * extends PlugInFrame ImageJ plugin base class
+ * implements ActionListener (buttons), MouseListener (mouse move & clicks)
+ * 
+ * Main class, responsible for workflow control and plugin initialization
+ */
 
 // underscore in the name is required for automatic installation in the plugins menu...
 // Requirements: http://u759.curie.u-psud.fr/compteur/download.php?Fichier=software/update/20090928/U759_InputOutput.jar
-
 public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListener {
 
 	/**
-	 * Required because of inherited serializationability...
+	 * Required because of inherited "serializationability"...
 	 */
 	private static final long serialVersionUID = -4063711977454855701L;
-	/** Adding buttons: set the label here as static String, addButton in constructor, 
-	 *  update actionPerformed method
+	
+	/** Protocol for adding new buttons to the workflow/UI:
+	 *  - set the label in Commands enum as static String,
+	 *  - run addButton in Xmipp_Tomo constructor, 
+	 *  - update actionPerformed method
 	 */
-	private static enum Commands {
+	
+	// labels of buttons
+	private static enum ButtonLabels {
 		CMD_INFO("Info"),CMD_PREPROC("Preprocessing"), CMD_ALIGN("Align");
 		private final String label;
-		Commands(String s) { this.label=s;}
+		ButtonLabels(String s) { this.label=s;}
 		public String label(){return label;}
 	};
 	
-	final static int PLUGIN_NOT_FOUND = -1;
+	private static enum CmdExitValues {
+		OK(0),ERROR(1);
+		private final int value;
+		CmdExitValues(int err) { value=err;}
+		public int value(){return value;}
+	};
+	
 	// enable debuging tests - release versions should have this set to 0
 	final static int TESTING = 1;
 	
+	// store all data following the MVC pattern
 	private TomoData dataModel;
 
 	// UI elements
 	Panel panel; // main button panel
-	
+	// display tilt series
 	TomoWindow tw=null;
 	
+	// implement UI concurrency with private class that extends Thread
+	// ImportDataThread: load & display projections in parallel
 	private class ImportDataThread extends Thread{
 		private TomoData dataModel;
 		private String dataPath;
@@ -88,11 +101,11 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 			try{
 				dataModel.import_data(dataPath);
 			}catch (IOException ex){
-				debug("ImportDataThread@Xmipp_Tomo - Error opening file");
+				debug("ImportDataThread.run - Error opening file");
 			}catch (InterruptedException ex){
-				debug("ImportDataThread@Xmipp_Tomo - Interrupted exception");
+				debug("ImportDataThread.run - Interrupted exception");
 			}catch (Exception ex){
-				debug("ImportDataThread@Xmipp_Tomo - unexpected exception", ex);
+				debug("ImportDataThread.run - unexpected exception", ex);
 			}
 		}
 	}
@@ -106,9 +119,9 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 		panel = new Panel();
 		panel.setLayout(new GridLayout(4, 4, 5, 5));
 		panel.add(new Label("Xmipp Tomo"));
-		addButton(Commands.CMD_INFO.label());
-		addButton(Commands.CMD_PREPROC.label());
-		addButton(Commands.CMD_ALIGN.label());
+		addButton(ButtonLabels.CMD_INFO.label());
+		addButton(ButtonLabels.CMD_PREPROC.label());
+		addButton(ButtonLabels.CMD_ALIGN.label());
 		
 		add(panel);
 		
@@ -118,33 +131,34 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 		show();
 	}
 	
-	// wait for user input (in button panel)
-	public void run(String arg) {
-		// ij.IJ class offers all these useful methods.
-		/* IJ.showStatus("Xmipp_Tomo started.");
-		IJ.showProgress(0.0);
-		
-		String name = IJ.getString("Please enter your name: ","I.J. User");
-		IJ.showProgress(0.5);
-		IJ.write("Starting sample plugin Red And Blue ... ");
-		IJ.runPlugIn("Red_And_Blue","");
-		IJ.showProgress(1.0);
-		IJ.showMessage("Finished.",name+", thank you for running this plugin");
-		*/
-		
+	/* (non-Javadoc)
+	 * wait for user input (in button panel)
+	 * @see ij.plugin.frame.PlugInFrame#run(java.lang.String)
+	 */
+	public void run(String arg){
 	}
 
+	
+	/** Add button to main panel
+	 * @param label
+	 */
 	void addButton(String label) {
 		Button b = new Button(label);
 		b.addActionListener(this);
 		b.addKeyListener(IJ.getInstance());
 		panel.add(b);
 	}
+
 	
+	/** Run cmdline in a shell and show standard output & error via debug()
+	 * @param cmdline
+	 * @return the exit value of cmdline (@see Process.waitFor())
+	 */
 	int exec(String cmdline){
 		// execution details may change with each OS...
 		//String osName = System.getProperty("os.name" );
-		int exitValue=0;
+		
+		int exitValue=CmdExitValues.OK.value();
 		Process proc=null;
 		
 		Runtime rt = Runtime.getRuntime();
@@ -154,7 +168,8 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 		}catch (IOException ex){
 			return -1;
 		}
-		// Prepare buffered readers from inputstreams...
+		
+		// Prepare buffered readers from inputstreams (stderr, stdout) ...
 		InputStream stderr=proc.getErrorStream();
 		InputStreamReader stderr_isr = new InputStreamReader(stderr);
         BufferedReader stderr_br = new BufferedReader(stderr_isr);
@@ -181,46 +196,46 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
         try{
         	exitValue = proc.waitFor();
         }catch (java.lang.InterruptedException ex){
-        	exitValue=-1;
+        	exitValue=CmdExitValues.ERROR.value();;
         }
         return exitValue;
 	} // exec end
 	
+	
+	/** Show a file browser and... 
+	 * @return the path of the file chosen by the user
+	 */
 	public String browseFile(){
 		OpenDialog od = new OpenDialog("Import file",null);
         String directory = od.getDirectory();
 		String fileName = od.getFileName();
 		String path= directory + fileName;
-		// IJ.write(path);
 		return path;
 	}
 	
-
-	// handle button/keyboard pressing, from both this plugin and the windows it opens
+	
+	/* handle button/keyboard pressing, from both this plugin and the windows it opens
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
 	public void actionPerformed(ActionEvent e) {
 	
 		String label = e.getActionCommand();
-		// debug(label);
+
+		// select proper action method based on button's label
 		if (label==null)
 			return;
-		else if (label.equals(Commands.CMD_INFO.label())){
+		else if (label.equals(ButtonLabels.CMD_INFO.label())){
 			this.infoAction();
-			
-			// IJ.showMessage("Running "+CMD_INFO);
-			//import_data();		
-			//getImage().show();
-			/* getImage().getWindow().addMouseListener(this);
-			Component [] cs=getImage().getWindow().getComponents();
-			for(int i=0;i<cs.length; i++)
-				cs[i].addMouseListener(this); */
-		}else if (label.equals(Commands.CMD_PREPROC.label())){
-			// IJ.showMessage("Running "+CMD_PREPROC);
+		}else if (label.equals(ButtonLabels.CMD_PREPROC.label())){
 			exec("date");
-		}else if (label.equals(Commands.CMD_ALIGN.label())){
+		}else if (label.equals(ButtonLabels.CMD_ALIGN.label())){
 			String directory=IJ.getDirectory("");
 			exec("ls "+directory);
 		}
 	} // actionPerformed end
+	
+	
+	/********************* Mouse event handlers ****************************/
 	
 	 public void mousePressed(MouseEvent e) {
 	        // debug("Mouse pressed; # of clicks: "  + e.getClickCount());
@@ -228,30 +243,33 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 
 	
 	public void mouseReleased(MouseEvent e) {
-	     // debug("Mouse released; # of clicks: " + e.getClickCount());
 	}
 
 	    public void mouseEntered(MouseEvent e) {
-	       // debug("Mouse entered", e);
     }
 
 	    public void mouseExited(MouseEvent e) {
-	       // debug("Mouse exited", e);
 	}
 
-	    public void mouseClicked(MouseEvent e) {
-	    	// String componentName=e.getComponent().getName();
-	    	// if("scrollbar0".equals(componentName))
-	    	//	debug("Mouse clicked (# of clicks: " + e.getClickCount() + componentName +")");
-	    	//	getImage().getWindow().getGraphics().drawString("KK", 5, 5);
+    public void mouseClicked(MouseEvent e) {
 	}
 
+    /********************* Trace methods for debugging ****************************/
+    
+    
+	/** print s with a timestamp, using IJ Results window (@see IJ.write)
+	 * @param s
+	 */
 	public static void debug(String s){
 		Calendar calendar = Calendar.getInstance();
 		java.util.Date now = calendar.getTime();
 		IJ.write("" + now.getTime() + " > " + s);
 	}
 
+	/** same as Debug, plus ex stack trace
+	 * @param s
+	 * @param ex Exception
+	 */
 	public static void debug(String s, Exception ex){
 		debug(s);
 		ex.printStackTrace();
@@ -281,13 +299,16 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 	
 	/* Procedures handling application workflows (in response to events) */
 	
-	/* All actions corresponding to the workflow "Info" */
+
+	/**
+	 * All actions corresponding to the workflow "Info"
+	 */
 	private void infoAction(){
 		String path = browseFile();
 		
 		try{
+			// import data in one thread and hold this thread until the first projection is loaded
 			(new Thread(new ImportDataThread(getDataModel(),path))).start();
-			//getDataModel().import_data(path);
 			getDataModel().waitForFirstImage();
 		}catch (InterruptedException ex){
 			debug("Xmipp_Tomo - Interrupted exception");
@@ -296,6 +317,20 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 		createTomoWindow();
 		if(tw != null)
 			tw.display();
+	}
+	
+	// ij.IJ class offers a lot of useful methods...
+	private void ijExamples(){
+	
+		IJ.showStatus("Xmipp_Tomo started.");
+		IJ.showProgress(0.0);
+		String name = IJ.getString("Please enter your name: ","I.J. User");
+		IJ.showProgress(0.5);
+		IJ.write("Starting sample plugin Red And Blue ... ");
+		IJ.runPlugIn("Red_And_Blue","");
+		IJ.showProgress(1.0);
+		IJ.showMessage("Finished.",name+", thank you for running this plugin");
+		
 	}
 	
 }

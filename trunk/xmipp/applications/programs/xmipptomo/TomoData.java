@@ -1,3 +1,28 @@
+/***************************************************************************
+ *
+ * @author: Jesus Cuenca (jcuenca@cnb.csic.es)
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+
 package xmipptomo;
 
 import ij.ImagePlus;
@@ -13,16 +38,9 @@ import java.util.concurrent.Semaphore;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-/**
- * XmippTomo data model: tilt series with its projections
- */
 
 /**
- * @author jcuenca
- * 
- */
-
-/**
+ * Data model, following the MVC paradigm
  * @author jcuenca
  * extends Component because of the Java event mechanism (that is, TomoWindow can listen to this class for changes)
  */
@@ -42,15 +60,16 @@ public class TomoData extends Component {
 	
 	private File file;
 
-    private ImagePlus imp=null;
-	// private java.util.List <TomoInfo> ti=Collections.emptyList();
-    // private java.util.List <Float> tiltAngles=Collections.emptyList();
-	// by now use a vector to store the info
+    // Actual tiltseries projections are stored inside an ImagePlus
+	private ImagePlus imp=null;
+
+	// by now use a vector to store the angles
 	java.util.List <Float> tiltAngles=new Vector<Float> (); //imp.getStackSize());
 	
+	// This class also saves the models of the texfields of its views, one Document per textfield
 	private Document tiltTextModel=null;
 
-	// allow Views to lock waiting for the first image to load
+	// allow Views to wait(lock) while the first image loads
 	private Semaphore firstLoaded= new Semaphore(0);
 	
 	public void setTiltModel(Document model){
@@ -82,7 +101,7 @@ public class TomoData extends Component {
 	 */
 	public void setCurrentProjection(int currentProjection) {
 		this.currentProjection = currentProjection;
-		// update all things depending on current slice
+		// update all things depending on current projection/slice
 		getImage().setSlice(getCurrentProjection());
 		Float tilt=getCurrentTilt();
 		if(tilt != null)
@@ -110,7 +129,6 @@ public class TomoData extends Component {
 		try{
 			t=getTiltAngles().get(getCurrentProjection());
 		}catch (ArrayIndexOutOfBoundsException ex){
-			// throw new Exception("TomoData.getCurrentTilt - undefined tilt angle");
 			t=null;
 		}
 		return t;
@@ -160,6 +178,11 @@ public class TomoData extends Component {
 	}
 	
 	
+	/**
+	 * wrapper to simulate a settext operation using the Document methods available
+	 * @param d
+	 * @param t
+	 */
 	private void setDocumentText(Document d,String t){
 		try{
 			d.remove(0,d.getLength());
@@ -233,7 +256,7 @@ public class TomoData extends Component {
 	
 	public void addProjection(ImageProcessor imageProcessor){
 		if(getImage()==null){
-			// cannot add empty stack, for example in the constructor. Better init all here			
+			// cannot add empty stack, for example in the constructor. better init all here			
 			ImageStack stackResized=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
 			stackResized.addSlice(null, imageProcessor);
 			setImage(new ImagePlus(getFileName(), stackResized));

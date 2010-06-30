@@ -39,16 +39,11 @@ import javax.swing.JLabel;
 import javax.swing.JScrollBar;
 import javax.swing.JTextField;
 
-import xmipptomo.TomoData.Properties;
 
-
-/**
- * Custom X-Y-Z visualization window, using Swing
- */
 
 /**
  * @author jcuenca
- *
+ * Custom visualization window, using Swing and MVC paradign
  */
 public class TomoWindow extends JFrame implements WindowListener, AdjustmentListener,MouseMotionListener, PropertyChangeListener{
 	// for serialization only
@@ -70,10 +65,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	JTextField tiltTextField;
 	JLabel statusLabel;
 	
-	// The canvas where current slice is displayed
+	// The canvas where current projection is displayed
 	ImageCanvas ic;
 	// Control scrollbars
-	JScrollBar xScrollbar, yScrollbar, zScrollbar, projectionScrollbar;
+	JScrollBar projectionScrollbar;
 	
 	// the model stores the data that this window shows
 	private TomoData model;
@@ -123,11 +118,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 * @param model
 	 */
 	public void create(TomoData model){
-		
-		JLabel tiltTextLabel;
-		
+				
 		setModel(model);
 		
+		// set this window as listener of general keyboard&mouse events and model change events
  		addWindowListener(this);
  		model.addPropertyChangeListener(this);
  		
@@ -166,13 +160,12 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		constraints.fill = GridBagConstraints.HORIZONTAL;		
 		gb1.setConstraints(controlPanel, constraints);
 		getContentPane().add(controlPanel);
-		tiltTextLabel=new JLabel("Tilt");
+		JLabel tiltTextLabel=new JLabel("Tilt");
 		tiltTextField=new JTextField(5);
 		controlPanel.add(tiltTextLabel);		
 		controlPanel.add(tiltTextField);
 		getModel().setTiltModel(tiltTextField.getDocument());
 		
-		// X Y Z scrollbars
 		// JScrollbar range is 0..maximum+extent (instead of a simple 0..maximum)
 
 		projectionScrollbar= new JScrollBar(JScrollBar.HORIZONTAL);
@@ -200,7 +193,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	}
 	
 	/**
-	 * naming this method "show" leads to infinite recursion (since setVisible calls show in turn)
+	 * warning: naming this method "show" leads to infinite recursion (since setVisible calls show in turn)
 	 */
 	public void display(){
 		 pack();
@@ -271,7 +264,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	// Property changes
 	
 	public void propertyChange(PropertyChangeEvent event){
-		if(event.getPropertyName().equals(TomoData.Properties.NUMBER_OF_PROJECTIONS.name()))
+		if(TomoData.Properties.NUMBER_OF_PROJECTIONS.name().equals(event.getPropertyName()))
 			setNumberOfProjections((Integer) (event.getNewValue()) ); 
 	}
 	
@@ -301,6 +294,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	
 	
 	/**
+	 * Update all window components related to the number of projections. The number itself is
+	 * stored in the model
 	 * @param n - see Tomodata.numberOfProjections
 	 */
 	public void setNumberOfProjections(int n){
