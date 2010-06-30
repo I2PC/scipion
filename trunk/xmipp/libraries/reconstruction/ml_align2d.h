@@ -213,7 +213,7 @@ public:
     FileName fn_img, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_oext, fn_scratch, fn_control;
     /** Command line */
     std::string cline;
-    double sigma_noise2;
+    //double sigma_noise2;
     /** Flag for checking mirror images of all references */
     bool do_mirror;
     /** Flag whether to fix estimates for model fractions */
@@ -358,6 +358,10 @@ public:
     int blocks;
     //Current processing block
     int current_block;
+
+    //Just for debbuging
+    int current_image;
+
     //Dont randomize for tests
     //bool randomize;
     //Vector of image IDs in the MetaData object (change order for randomize)

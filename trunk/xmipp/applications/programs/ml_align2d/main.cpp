@@ -27,11 +27,14 @@
 
 int main(int argc, char **argv)
 {
+
     int c, nn, imgno, opt_refno;
     bool converged = false;
     double aux;
     MultidimArray<double> Maux;
     FileName fn_img, fn_tmp;
+
+
     Prog_MLalign2D_prm prm;
 
     // Get input parameters
@@ -66,6 +69,8 @@ int main(int argc, char **argv)
 #ifdef TIMING
             prm.timer.tic(ITER);
 #endif
+
+            //std::cerr << "=======Iteration " << prm.iter << "============" <<std::endl;
             if (prm.verb > 0)
                 std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
 
@@ -91,8 +96,8 @@ int main(int argc, char **argv)
 #endif
 
             }//close for blocks
-            //std::cerr << "======End of blocks, MODEL: =========" <<std::endl;
-            //prm.model.print();
+            std::cerr << "======End of blocks, MODEL: =========" <<std::endl;
+            prm.model.print();
 
             // Check convergence
             converged = prm.checkConvergence();
