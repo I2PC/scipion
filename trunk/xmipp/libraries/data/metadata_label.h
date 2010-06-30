@@ -98,8 +98,10 @@ enum MDLabel
     MDL_DEFOCUSV, // microscope defocus V direction (double)
 
     MDL_DM3_IDTAG,
-    MDL_DM3_LEVEL,
+//    MDL_DM3_LEVEL,
+    MDL_DM3_NODEID,
     MDL_DM3_NUMBER_TYPE,
+    MDL_DM3_PARENTID,
     MDL_DM3_TAGCLASS,
     MDL_DM3_TAGNAME,
     MDL_DM3_SIZE,
@@ -303,8 +305,9 @@ private:
         MDL::addLabel(MDL_DEFOCUSV, LABEL_DOUBLE, "defocusV");
 
         MDL::addLabel(MDL_DM3_IDTAG, LABEL_INT, "IdTag");
-        MDL::addLabel(MDL_DM3_LEVEL, LABEL_INT, "Level");
+        MDL::addLabel(MDL_DM3_NODEID, LABEL_INT, "NodeID");
         MDL::addLabel(MDL_DM3_NUMBER_TYPE, LABEL_INT, "Number_Type");
+        MDL::addLabel(MDL_DM3_PARENTID, LABEL_INT, "ParentID");
         MDL::addLabel(MDL_DM3_TAGCLASS, LABEL_STRING, "Tag_Class");
         MDL::addLabel(MDL_DM3_TAGNAME, LABEL_STRING, "TagName");
         MDL::addLabel(MDL_DM3_SIZE, LABEL_INT, "Size");
@@ -436,7 +439,8 @@ public:
     MDValue(MDLabel label, const std::vector<double> &vectorValue);
     MDValue(MDLabel label, const long int longintValue);
     MDValue(MDLabel label, const float &floatValue);
-    MDValue(MDLabel label, const char  &charValue);
+    MDValue(MDLabel label, const char * &charValue);
+
     //These getValue also do a compilation type checking
     //when expanding templates functions and only
     //will allow the supported types
@@ -448,7 +452,7 @@ public:
     void  getValue(std::vector<double> &vv) const;
     void  getValue(long int &lv) const;
     void  getValue(float &floatvalue) const;
-    void  getValue(char  &charvalue) const;
+    void  getValue(char*  &charvalue) const;
 
 #define DOUBLE2STREAM(d) \
         if (withFormat) {\
@@ -460,7 +464,7 @@ public:
         if (withFormat) os << std::setw(10); \
         os << i;
 
-    void toStream(std::ostream &os, bool withFormat = false) const;
+    void toStream(std::ostream &os, bool withFormat = false, bool isSql=false) const;
     std::string toString(bool withFormat = false) const;
     bool fromStream(std::istream &is);
     friend std::istream& operator>> (std::istream& is, MDValue &value);

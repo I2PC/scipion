@@ -258,7 +258,7 @@ public:
         std::stringstream ss;
         MDValue mdValue(label, value);
         ss << MDL::label2Str(label) << "=";
-        mdValue.toStream(ss);
+        mdValue.toStream(ss, false, true);
         this->queryString = ss.str();
     }
 }
@@ -279,11 +279,15 @@ public:
         MDValue mdValueMin(label, valueMin);
         MDValue mdValueMax(label, valueMax);
 
+        //MDL::voidPtr2Value(label, (void*)new T(valueMin), mdValue);
         ss << MDL::label2Str(label) << ">=";
-        mdValueMin.toStream(ss);
+        //MDL::value2Stream(label, mdValueMin, ss);
+        mdValueMin.toStream(ss, false, true);
         ss << " AND ";
+        //MDL::voidPtr2Value(label, (void*)new T(valueMax), mdValue);
         ss << MDL::label2Str(label) << "<=";
-        mdValueMax.toStream(ss);
+        //MDL::value2Stream(label, mdValueMax, ss);
+        mdValueMax.toStream(ss, false, true);
         this->queryString = ss.str();
     }
 }
@@ -304,7 +308,7 @@ public:
         MDValue mdValueMin(label, valueMin);
 
         ss << MDL::label2Str(label) << ">=";
-        mdValueMin.toStream(ss);
+        mdValueMin.toStream(ss, false, true);
         this->queryString = ss.str();
     }
 }
@@ -325,11 +329,50 @@ public:
         MDValue mdValueMax(label, valueMax);
 
         ss << MDL::label2Str(label) << "<=";
-        mdValueMax.toStream(ss);
+        mdValueMax.toStream(ss, false, true);
         this->queryString = ss.str();
     }
 }
 ;//class MDValueBelow
+/**MDMultiQuery this will combine many queries with AND and OR operations
+ *@ingroup MetaDataQuery
+ */
+class MDMultiQuery: public MDQuery
+{
+private:
+
+    void addQuery(const MDQuery &query, std::string op)
+    {
+        std::stringstream ss;
+        if (queryString.length() > 0)
+            ss << " " << op << " " ;
+
+        ss << "(" << query.queryString << ")";
+        this->queryString += ss.str();
+    }
+public:
+
+    MDMultiQuery()
+    {
+        clear();
+    }
+    void addAndQuery(const MDQuery &query)
+    {
+    	addQuery(query, "AND");
+    }
+    void addOrQuery(const MDQuery &query)
+    {
+    	addQuery(query, "OR");
+    }
+    void clear()
+    {
+        this->queryString = "";
+    }
+
+}
+;//class MDMultiQuery
+
+
 
 /** Just a class to store some cached sql statements
  *

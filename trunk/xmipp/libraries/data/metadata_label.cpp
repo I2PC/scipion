@@ -217,7 +217,7 @@ MDValue::MDValue(MDLabel label, const float &floatValue)
     std::cerr << "Floats are banned from metadata class"<< std::endl;
     exit(1);
 }
-MDValue::MDValue(MDLabel label, const char &charValue)
+MDValue::MDValue(MDLabel label, const char* &charValue)
 {
     std::cerr << "Do not use setValue with char, use string"<< std::endl;
     std::cerr << "chars are banned from metadata class"<< std::endl;
@@ -264,7 +264,7 @@ void MDValue::getValue(float &floatvalue) const
     std::cerr << "Floats are banned from metadata class"<< std::endl;
     exit(1);
 }
-void MDValue::getValue(char  &charvalue) const
+void MDValue::getValue(char*  &charvalue) const
 {
     std::cerr << "Do not use setValue with char, use string"<< std::endl;
     std::cerr << "chars are banned from metadata class"<< std::endl;
@@ -281,8 +281,10 @@ void MDValue::getValue(char  &charvalue) const
     if (withFormat) os << std::setw(10); \
     os << i;
 
-void MDValue::toStream(std::ostream &os, bool withFormat) const
+void MDValue::toStream(std::ostream &os, bool withFormat, bool isSql) const
 {
+	std::string c = (isSql) ? "'" : "";
+
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
         os << stringValue;
     else
@@ -301,7 +303,7 @@ void MDValue::toStream(std::ostream &os, bool withFormat) const
             DOUBLE2STREAM(doubleValue);
             break;
         case LABEL_STRING:
-            os << stringValue;
+            os << c << stringValue << c;
             break;
         case LABEL_VECTOR:
             os << "[ ";
