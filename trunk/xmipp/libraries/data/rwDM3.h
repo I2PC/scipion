@@ -53,6 +53,7 @@ struct DM3dataHead
     int         imageHeight;           //ArraySizeY
     short int   dataTypeSize;
     int          headerSize;
+    bool   flip;
 };
 
 
@@ -108,7 +109,11 @@ int readDM3(int img_select,bool isStack=false)
     for (int n=1;n<=header->nTags;n++)
         readTagDM3(fimg, header, parentID, nodeID, isLE);
 
+#ifdef DEBUG
+
     header->tags.write("images.txt");
+    printDM3(header->tags);
+#endif
 
 
     std::vector<long int> vIm;
@@ -119,298 +124,142 @@ int readDM3(int img_select,bool isStack=false)
 
     header->nIm = 0;
     std::vector<DM3dataHead> dataHeaders;
+    DM3dataHead dhRef;
 
-    int value;
+    std::vector<double> vValue;
+    int iValue;
 
+    // Read all the image headers
     for (int n = 0; n < vIm.size(); n++)
     {
         header->tags.goToObject(vIm[n]);
-        header->tags.getValue(MDL_DM3_VALUE, value);
+        header->tags.getValue(MDL_DM3_VALUE, vValue);
 
-        if (value != 23)
+        if (vValue[0] != 23)
         {
+            dataHeaders.push_back(dhRef);
+
             parentID = parentDM3(header->tags, vIm[n], 2);
 
-            nodeID = gotoTagDM3(header->tags, parentID, "ImageData Data");
-            header->tags.getValue(MDL_DM3_NUMBER_TYPE, value);
-            dataHeaders[header->nIm].dataType = (short int) value;
+            nodeID = gotoTagDM3(header->tags, parentID, "ImageData,Data");
+            header->tags.getValue(MDL_DM3_NUMBER_TYPE, iValue);
+            dataHeaders[header->nIm].dataType = (short int) iValue;
 
-            header->tags.getValue(MDL_DM3_VALUE, value);
-            dataHeaders[header->nIm].headerSize = (int) value;
+            header->tags.getValue(MDL_DM3_VALUE, vValue);
+            dataHeaders[header->nIm].headerSize = (int) vValue[0];
 
-            nodeID = gotoTagDM3(header->tags, parentID, "ImageData Dimensions");
+            nodeID = gotoTagDM3(header->tags, parentID, "ImageData,Dimensions");
             header->tags.nextObject();
-            header->tags.getValue(MDL_DM3_VALUE, value);
-            dataHeaders[header->nIm].imageHeight = (int) value;
-
-            header->tags.nextObject();
-            header->tags.getValue(MDL_DM3_VALUE, value);
-            dataHeaders[header->nIm].imageWidth = (int) value;
+            header->tags.getValue(MDL_DM3_VALUE, vValue);
+            dataHeaders[header->nIm].imageHeight = (int) vValue[0];
 
             header->tags.nextObject();
-            header->tags.getValue(MDL_DM3_VALUE, value);
-            dataHeaders[header->nIm].dataTypeSize = (short int) value;
+            header->tags.getValue(MDL_DM3_VALUE, vValue);
+            dataHeaders[header->nIm].imageWidth = (int) vValue[0];
 
-            nodeID = gotoTagDM3(header->tags, parentID, "ImageTags Acquisition Frame CCD Dimensions");
             header->tags.nextObject();
-            header->tags.getValue(MDL_DM3_VALUE, value);
-            dataHeaders[header->nIm].imageHeight = (int) value;
+            header->tags.getValue(MDL_DM3_VALUE, vValue);
+            dataHeaders[header->nIm].dataTypeSize = (short int) vValue[0];
 
+            nodeID = gotoTagDM3(header->tags, parentID, "ImageTags,Acquisition,Frame,CCD,Pixel Size (um)");
+            //            header->tags.nextObject();
+            header->tags.getValue(MDL_DM3_VALUE, vValue);
+            dataHeaders[header->nIm].pixelHeight = vValue[0]*1e4;
+            dataHeaders[header->nIm].pixelWidth  = vValue[1]*1e4;
 
+            //TODO: Do I have to include FLIP?!?!? which? vertical or horizontal?
 
-
-
-
-
-
-
-
-
-
-
-
-//            xmippFREAD(&(dataHeaders[i].CalibrationOffsetX), sizeof(double), 1, fimg, swap);
-//            xmippFREAD(&dataHeaders[i].pixelWidth, sizeof(double), 1, fimg, swap);
-//            xmippFREAD(&dataHeaders[i].CalibrationElementX, sizeof(int), 1, fimg, swap);
-//            xmippFREAD(&dataHeaders[i].CalibrationOffsetY, sizeof(double), 1, fimg, swap);
-//            xmippFREAD(&dataHeaders[i].pixelHeight, sizeof(double), 1, fimg, swap);
-//            xmippFREAD(&dataHeaders[i].CalibrationElementY, sizeof(int), 1, fimg, swap);
-//            xmippFREAD(&dataHeaders[i].dataType, sizeof(short int), 1, fimg, swap);
-//            xmippFREAD(&dataHeaders[i].imageWidth, sizeof(int), 1, fimg, swap);
-//            xmippFREAD(&dataHeaders[i].imageHeight, sizeof(int), 1, fimg, swap);
+            header->nIm++;
         }
 
     }
 
-
-
-    //    nodeDim = gotoTagDM3(MD,parentId, "ImageData Dimensions");
-
-
-
-
-
-    //    printDM3(header->tags);
-
-
-    std::string names("perro gato raton");
-
-    std::istringstream iss(names);
-    std::vector<std::string> vSnames;
-    //    splitString(names, " ", vSnames, false);
-
-    std::string subs;
-    while (iss >> subs)
+    // Check images dimensions. Need to be the same
+    for (i = 1; i < header->nIm; i++)
     {
-        std::cout << subs <<std::endl;
-
+        if (dataHeaders[0].imageHeight != dataHeaders[i].imageHeight || \
+            dataHeaders[0].imageWidth != dataHeaders[i].imageWidth  || \
+            dataHeaders[0].dataType != dataHeaders[i].dataType)
+            REPORT_ERROR(6001, "readDM3: images in DM3 file with different \
+                         dimensions and data types are not currently supported. Try to read them individually.");
     }
 
-    //    for (int i = 0; i < vSnames.size(); i++)
-    // {
-    //     std::cout << vSnames[i] <<std::endl;
-    // }
 
-
-    //    header->NUMBER_IMAGES = (int) dtemp;
-
-
-
+    int _xDim,_yDim,_zDim;
+    unsigned long int _nDim;
+    _xDim = (int) dataHeaders[0].imageWidth;
+    _yDim = (int) dataHeaders[0].imageHeight;
+    _zDim = (int) 1;
+    _nDim = (int) header->nIm;
 
 
 
-    /*
+    // Map the parameters
+    if (img_select==-1)
+    {
+        data.setDimensions(_xDim, _yDim, 1, _nDim);
+        if (_nDim>1)
+            REPORT_ERROR(6001, "readDM3: Reading multiple \
+                         images at once in DM3 file are not currently supported. Try to read them individually.");
+    }
+    else
+        data.setDimensions(_xDim, _yDim, 1, 1);
 
-        // Check data type
-        if (header->DATA_TYPE_ID != 16674)
-            REPORT_ERROR(6001, "ERROR: readTIA only processes images in real space");
+    unsigned long   imgStart=0;
+    unsigned long   imgEnd =_nDim;
 
+    if (img_select != -1)
+    {
+        imgStart=img_select;
+        imgEnd=img_select+1;
+    }
 
-
-
-
-
-        // Read all the image headers
-        for (i = 0; i < header->NUMBER_IMAGES; i++)
-        {
-            fseek(fimg, header->pDATA_OFFSET[i], SEEK_SET);
-            xmippFREAD(&(dataHeaders[i].CalibrationOffsetX), sizeof(double), 1, fimg, swap);
-            xmippFREAD(&dataHeaders[i].PIXEL_WIDTH, sizeof(double), 1, fimg, swap);
-            xmippFREAD(&dataHeaders[i].CalibrationElementX, sizeof(int), 1, fimg, swap);
-            xmippFREAD(&dataHeaders[i].CalibrationOffsetY, sizeof(double), 1, fimg, swap);
-            xmippFREAD(&dataHeaders[i].PIXEL_HEIGHT, sizeof(double), 1, fimg, swap);
-            xmippFREAD(&dataHeaders[i].CalibrationElementY, sizeof(int), 1, fimg, swap);
-            xmippFREAD(&dataHeaders[i].DATA_TYPE, sizeof(short int), 1, fimg, swap);
-            xmippFREAD(&dataHeaders[i].IMAGE_WIDTH, sizeof(int), 1, fimg, swap);
-            xmippFREAD(&dataHeaders[i].IMAGE_HEIGHT, sizeof(int), 1, fimg, swap);
-        }
-        // Check images dimensions. Need to be the same
-        for (i = 1; i < header->NUMBER_IMAGES; i++)
-        {
-            if (dataHeaders[0].IMAGE_HEIGHT != dataHeaders[i].IMAGE_HEIGHT || \
-                dataHeaders[0].IMAGE_WIDTH != dataHeaders[i].IMAGE_WIDTH  || \
-                dataHeaders[0].DATA_TYPE != dataHeaders[i].DATA_TYPE)
-                REPORT_ERROR(6001, "readTIA: images in TIA file with different dimensions and data types are not supported");
-        }
+    DataType datatype = datatypeDM3(dataHeaders[0].dataType);
 
 
-        int _xDim,_yDim,_zDim;
-        unsigned long int _nDim;
-        _xDim = (int) dataHeaders[0].IMAGE_WIDTH;
-        _yDim = (int) dataHeaders[0].IMAGE_HEIGHT;
-        _zDim = (int) 1;
-        _nDim = (int) header->NUMBER_IMAGES;
+    MDMainHeader.removeObjects();
+    MDMainHeader.setColumnFormat(false);
+    MDMainHeader.addObject();
+    MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)dataHeaders[0].pixelWidth);
+    MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].pixelHeight);
 
-
-
-        // Map the parameters
-        if (img_select==-1)
-            data.setDimensions(_xDim, _yDim, 1, _nDim);
-        else
-            data.setDimensions(_xDim, _yDim, 1, 1);
-
-        unsigned long   imgStart=0;
-        unsigned long   imgEnd =_nDim;
-        if (img_select != -1)
-        {
-            imgStart=img_select;
-            imgEnd=img_select+1;
-        }
-
-        DataType datatype;
-        dataHeaders[0].isSigned = false;
-        switch ( dataHeaders[0].DATA_TYPE )
-        {
-        case 1:
-            datatype = UChar;
-            break;
-        case 2:
-            datatype = UShort;
-            //        datatype = Short;
-            break;
-        case 3:
-            datatype = UInt;
-            break;
-        case 4:
-            datatype = SChar;
-            break;
-        case 5:
-            datatype = Short;
-            dataHeaders[0].isSigned = true;
-            break;
-        case 6:
-            datatype = Int;
-            break;
-        case 7:
-            datatype = Float;
-            break;
-        case 8:
-            datatype = Double;
-            break;
-        case 9:
-            datatype = ComplexFloat;
-            break;
-        case 10:
-            datatype = ComplexDouble;
-            break;
-        default:
-            datatype = Unknown_Type;
-            break;
-        }
-
-        MDMainHeader.removeObjects();
-        MDMainHeader.setColumnFormat(false);
-        MDMainHeader.addObject();
-        MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)dataHeaders[0].PIXEL_WIDTH);
-        MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].PIXEL_HEIGHT);
-
-        if( dataflag == -2 )
-        {
-            fclose(fimg);
-            return 0;
-        }
-
-        MD.removeObjects();
-        for ( i=imgStart; i<imgEnd; i++ )
-            //for(int i=0;i< Ndim;i++)
-        {
-            MD.addObject();
-            double aux;
-            if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
-            {
-                aux = ROUND(dataHeaders[i].CalibrationElementX - \
-                            dataHeaders[i].CalibrationOffsetX/aux - data.xdim/2);
-                MD.setValue(MDL_ORIGINX, aux);
-            }
-            if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
-            {
-                aux = ROUND(dataHeaders[i].CalibrationElementY - \
-                            dataHeaders[i].CalibrationOffsetY/aux -data.ydim/2);
-                MD.setValue(MDL_ORIGINY, aux);
-            }
-            MD.setValue(MDL_ORIGINZ,  zeroD);
-
-            MD.setValue(MDL_ANGLEROT, zeroD);
-            MD.setValue(MDL_ANGLETILT,zeroD);
-            MD.setValue(MDL_ANGLEPSI, zeroD);
-            MD.setValue(MDL_WEIGHT,   oneD);
-            MD.setValue(MDL_FLIP,     falseb);
-        }
-
-        offset = header->pDATA_OFFSET[0] + TIAdataSIZE;
-        size_t pad = TIAdataSIZE;
-
-
-        //#define DEBUG
-    #ifdef DEBUG
-
-        MDMainHeader.write(std::cerr);
-        MD.write(std::cerr);
-    #endif
-
-        delete header;
-        readData(fimg, img_select, datatype, pad);
-
-        if (dataflag == 1)
-        {
-            if (dStddev == NULL)
-                dStddev = 5;
-
-            double temp, avg, stddev;
-            double size = YXSIZE(data);
-
-            avg = 0;
-            stddev = 0;
-
-            for ( int n=imgStart; n<imgEnd; n++ )
-            {
-                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(data)
-                {
-                    temp = abs(DIRECT_NZYX_ELEM(data,n,0,i,j));
-                    avg += temp;
-                    stddev += temp * temp;
-                }
-                avg /= size;
-                stddev = stddev/size - avg * avg;
-                stddev *= size/(size -1);
-                stddev = sqrt(stddev);
-
-                double low  = (avg - dStddev * stddev);
-                double high = (avg + dStddev * stddev);
-
-                FOR_ALL_ELEMENTS_IN_ARRAY3D(data)
-                {
-                    if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) < low)
-                        DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) low;
-                    else if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) > high)
-                        DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) high;
-                }
-            }
-        }
-
+    if( dataflag == -2 )
+    {
         fclose(fimg);
+        return 0;
+    }
 
-        return(0);*/
+    MD.removeObjects();
+    for ( i=imgStart; i<imgEnd; i++ )
+    {
+        MD.addObject();
+        MD.setValue(MDL_ORIGINX,  zeroD);
+        MD.setValue(MDL_ORIGINY,  zeroD);
+        MD.setValue(MDL_ORIGINZ,  zeroD);
+
+        MD.setValue(MDL_ANGLEROT, zeroD);
+        MD.setValue(MDL_ANGLETILT,zeroD);
+        MD.setValue(MDL_ANGLEPSI, zeroD);
+        MD.setValue(MDL_WEIGHT,   oneD);
+        MD.setValue(MDL_FLIP,     falseb);
+    }
+
+    offset = (unsigned long) dataHeaders[imgStart].headerSize;
+    size_t pad = 0;
+
+
+    //#define DEBUG
+#ifdef DEBUG
+
+    MDMainHeader.write(std::cerr);
+    MD.write(std::cerr);
+#endif
+
+    delete header;
+    readData(fimg, img_select, datatype, pad);
+
+    fclose(fimg);
+    return(0);
 }
 
 
@@ -420,8 +269,6 @@ double readTagDM3(FILE *fimg,
                   int &nodeId,
                   bool isLE)
 {
-
-
     /* Header Tag ============================================================== */
 
     unsigned char cdTag;
@@ -440,8 +287,6 @@ double readTagDM3(FILE *fimg,
 
     stagName = tagName;
 
-    std::cout << tagName <<std::endl;
-
     header->tags.addObject();
 
     nodeId++;
@@ -449,11 +294,6 @@ double readTagDM3(FILE *fimg,
     header->tags.setValue(MDL_DM3_PARENTID, parentId);
     header->tags.setValue(MDL_DM3_IDTAG, idTag);
     header->tags.setValue(MDL_DM3_TAGNAME, stagName);
-
-
-
-    //    for (int n=1;n<=depLevel;n++)
-    //  printf("%d.",index[n-1]);
 
     /* Reading tags ===================================================================*/
     if (idTag == 20)  // Tag directory
@@ -471,22 +311,22 @@ double readTagDM3(FILE *fimg,
 
 
 
-        if (strcmp(tagName,"ImageList")==0)    // Number of images
-        {
+        /*        if (strcmp(tagName,"ImageList")==0)    // Number of images
+                {
 
-        }
-        else if (strcmp(tagName,"Dimensions")==0)
-        {
-            //            newIndex[depLevel] = 1;
-            //            header->tags.setValue(MDL_DIMY,(int) readTagDM3(fimg, header, depLevel, isLE));
+                }
+                else if (strcmp(tagName,"Dimensions")==0)
+                {
+                    //            newIndex[depLevel] = 1;
+                    //            header->tags.setValue(MDL_DIMY,(int) readTagDM3(fimg, header, depLevel, isLE));
 
-            //            newIndex[depLevel] = 2;
-            //            header->tags.setValue(MDL_DIMX,(int) readTagDM3(fimg, header, depLevel, isLE));
+                    //            newIndex[depLevel] = 2;
+                    //            header->tags.setValue(MDL_DIMX,(int) readTagDM3(fimg, header, depLevel, isLE));
 
-            //            header->tags.addObject();
-            //            return 0;
-        }
-
+                    //            header->tags.addObject();
+                    //            return 0;
+                }
+        */
         parentId = nodeId;
         for (int n=1;n<=nTags;n++) // Rest of directories
         {
@@ -519,44 +359,25 @@ double readTagDM3(FILE *fimg,
             double tagValue = 0;
 
             FREADTagValueDM3(&tagValue,info[0],1,fimg);
-            //   printf(" = %s\n", sprintfTagValue(&tagValue,info[0]));
-            std::cout << "double " << tagValue <<std::endl;
-            float fcaca;
-            memcpy(&fcaca, &tagValue, sizeof(short));
-            std::cout << "float " << fcaca <<std::endl;
-            double caca2 = (double ) fcaca;
-            std::cout << "double float " << caca2 <<std::endl;
-            short scaca;
-            memcpy(&scaca, &tagValue, sizeof(short));
-            std::cout << scaca <<std::endl;
-            caca2 = (double ) scaca;
-            std::cout << "double short " << caca2 <<std::endl;
-            int caca;
-            memcpy(&caca, &tagValue, sizeof(int));
-            std::cout << "int " << caca <<std::endl;
-            caca2 = (double) caca;
-            std::cout << "double int " << caca2 <<std::endl;
 
             std::vector<double> vtagValue(1);
-
             vtagValue.assign(1,tagValue);
 
             header->tags.setValue(MDL_DM3_NUMBER_TYPE, info[0]);
             header->tags.setValue(MDL_DM3_VALUE, vtagValue);
 
-
-            if (strcmp(tagName,"DataType")==0)
-            {
-                //                header->tags.setValue(MDL_DATATYPE,(int) tagValue);
-            }
-
+            /*            if (strcmp(tagName,"DataType")==0)
+                        {
+                            //                header->tags.setValue(MDL_DATATYPE,(int) tagValue);
+                        }
+            */
             return tagValue;
         }
         else if(nnum == 3 && info[0]==20)   // Tag array
         {             /*nnum = 3
-                                                                                                                                                                     info(0) = 20
-                                                                                                                                                                     info(1) = number type for all values
-                                                                                                                                                                     info(2) = info(nnum) = size of array*/
+                                                                                                                                                                                                                                 info(0) = 20
+                                                                                                                                                                                                                                 info(1) = number type for all values
+                                                                                                                                                                                                                                 info(2) = info(nnum) = size of array*/
 
             header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Array");
 
@@ -567,11 +388,11 @@ double readTagDM3(FILE *fimg,
 
             header->tags.setValue(MDL_DM3_VALUE, vtagValue);
 
-            if (strcmp(tagName,"Data")==0)    // Locating the image data
-            {
+            /*            if (strcmp(tagName,"Data")==0)    // Locating the image data
+                        {
 
-            }
-
+                        }
+            */
             // Jump the array values
             int k;
             if(info[1] == 2 || info[1] == 4)
@@ -611,16 +432,6 @@ double readTagDM3(FILE *fimg,
                 fieldValue=0;
 
                 FREADTagValueDM3(&fieldValue,info[3+2*n],1,fimg);
-                std::cout << fieldValue <<std::endl;
-                float fcaca;
-                memcpy(&fcaca, &fieldValue, sizeof(short));
-                std::cout << fcaca <<std::endl;
-                short scaca;
-                memcpy(&scaca, &fieldValue, sizeof(short));
-                std::cout << scaca <<std::endl;
-                int caca;
-                memcpy(&caca, &fieldValue, sizeof(int));
-                std::cout << caca <<std::endl;
 
                 if(info[3+2*n] == 2 || info[3+2*n] == 4)
                     k = 2;
@@ -659,17 +470,6 @@ double readTagDM3(FILE *fimg,
                 FREADTagValueDM3(&fieldValue,info[2+2*n],1,fimg);
 
                 vtagValue.assign(n,fieldValue);
-
-                std::cout << fieldValue <<std::endl;
-                float fcaca;
-                memcpy(&fcaca, &fieldValue, sizeof(short));
-                std::cout << fcaca <<std::endl;
-                short scaca;
-                memcpy(&scaca, &fieldValue, sizeof(short));
-                std::cout << scaca <<std::endl;
-                int caca;
-                memcpy(&caca, &fieldValue, sizeof(int));
-                std::cout << caca <<std::endl;
             }
 
             header->tags.setValue(MDL_DM3_VALUE, vtagValue);
@@ -695,48 +495,41 @@ void FREADTagValueDM3(double *fieldValue,
     {
     case 2:      // (02h =  2  i2* signed    (short)
         {
-            datatype = Short;
             short* sValue = (short*) fieldValue;
             *fieldValue = (double) *sValue;
             break;
         }
     case 3:          // 03h =  3  i4* signed    (long)
         {
-            datatype = Int;
             int* iValue = (int*) fieldValue;
             *fieldValue = (double) *iValue;
             break;
         }
     case 4:       //  04h =  4  i2* unsigned  (ushort) or unicode string
         {
-            datatype = UShort;
             unsigned short* usValue = (unsigned short*) fieldValue;
             *fieldValue = (double) *usValue;
             break;
         }
     case 5:        //  05h =  5  i4* unsigned  (ulong)
         {
-            datatype = UInt;
             unsigned int* uiValue = (unsigned int*) fieldValue;
             *fieldValue = (double) *uiValue;
             break;
         }
     case 6:        //  06h =  6  f4*           (float)
         {
-            datatype = Float;
             float* fValue = (float*) fieldValue;
             *fieldValue = (double) *fValue;
             break;
         }
     case 7:        //  07h =  7  f8*           (double)
         {
-            datatype = Double;
             //            double* caca = (double*) fieldValue;
             break;
         }
     case 8:        //  08h =  8  i1            (boolean)
         {
-            datatype = Bool;
             bool* bValue = (bool*) fieldValue;
             *fieldValue = (double) *bValue;
             break;
@@ -744,14 +537,12 @@ void FREADTagValueDM3(double *fieldValue,
     case 9:        //  0ah = 10  i1
     case 10:        //  0ah = 10  i1
         {
-            datatype = SChar;
             char* cValue = (char*) fieldValue;
             *fieldValue = (double) *cValue;
             break;
         }
     default:
         {
-            datatype = Unknown_Type;
             break;
         }
     }
@@ -766,7 +557,6 @@ DataType datatypeDM3(int nType)
     {
     case 2:      // (02h =  2  i2* signed    (short)
         datatype = Short;
-
         break;
     case 3:          // 03h =  3  i4* signed    (long)
         datatype = Int;
@@ -814,22 +604,21 @@ int parentDM3(MetaData &MD, int nodeId, int depth = 1)
 
 double gotoTagDM3(MetaData &MD, int nodeId, std::string tagsList)
 {
-    std::istringstream iss(tagsList);
     std::string tag;
+    std::vector<std::string> vTags;
+    splitString(tagsList,",",vTags, false);
 
     MDMultiQuery queries;
 
-    while (iss >> tag)
+    for (int n = 0; n < vTags.size(); n++)
     {
+        tag = vTags[n];
+
         queries.clear();
-        std::cout << queries.queryString <<std::endl;
         queries.addAndQuery(MDValueEqual(MDL_DM3_PARENTID,nodeId));
-        std::cout << queries.queryString <<std::endl;
         queries.addAndQuery(MDValueEqual(MDL_DM3_TAGNAME,tag));
-        std::cout << queries.queryString <<std::endl;
 
         MD.gotoFirstObject(queries);
-
         MD.getValue(MDL_DM3_NODEID,nodeId);
     }
     return nodeId;
@@ -851,32 +640,33 @@ void printDM3node(MetaData &MD, long int objId)
         std::cout << " ";
 
     std::cout << tag << std::endl;
+
     std::vector<long int> vObjs;
+    MD.findObjects(vObjs,MDValueEqual(MDL_DM3_PARENTID, nodeId));
 
     space += 3;
 
-    MD.findObjects(vObjs,MDValueEqual(MDL_DM3_PARENTID, nodeId));
     for (int i = 0; i < vObjs.size(); i++)
-    {
         printDM3node(MD, vObjs[i]);
-    }
 
     space -= 3;
 
 }
 void printDM3(MetaData MD)
 {
-
     std::vector<long int> vObjs;
-
     space = 0;
-
     MD.findObjects(vObjs,MDValueEqual(MDL_DM3_PARENTID, 0));
 
     for (int i = 0; i < vObjs.size(); i++)
-    {
         printDM3node(MD, vObjs[i]);
-    }
+
+}
+
+int writeDM3(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+{
+    REPORT_ERROR(6001, "ERROR: writeDM3 is not implemented.");
+    return(-1);
 }
 
 #endif /* RWDM3_H_ */
