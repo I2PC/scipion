@@ -36,24 +36,23 @@ struct DM3head
     char open;
     int nTags;
     MetaData tags;
-    int NUMBER_IMAGES;
-    int * pDATA_OFFSET;
-
+    int nIm;
 };
 
 
 struct DM3dataHead
 {
     double      CalibrationOffsetX;  //CalibrationOffsetX
-    double      PIXEL_WIDTH;          //CalibrationDeltaX
+    double      pixelWidth;          //CalibrationDeltaX
     int         CalibrationElementX;    //CalibrationElementX
     double      CalibrationOffsetY;   //CalibrationOffsetY
-    double      PIXEL_HEIGHT;           //CalibrationDeltaY
+    double      pixelHeight;           //CalibrationDeltaY
     int          CalibrationElementY;    //CalibrationElementY
-    short int   DATA_TYPE;     //DataType
-    int         IMAGE_WIDTH;            //ArraySizeX
-    int         IMAGE_HEIGHT;           //ArraySizeY
-    short int   DATA_TYPE_SIZE;
+    short int   dataType;     //DataType
+    int         imageWidth;            //ArraySizeX
+    int         imageHeight;           //ArraySizeY
+    short int   dataTypeSize;
+    int          headerSize;
 };
 
 
@@ -94,7 +93,8 @@ int readDM3(int img_select,bool isStack=false)
 
     (header->tags).clear();
 
-    header->tags.addLabel(MDL_DM3_LEVEL);
+    header->tags.addLabel(MDL_DM3_NODEID);
+    header->tags.addLabel(MDL_DM3_PARENTID);
     header->tags.addLabel(MDL_DM3_IDTAG);
     header->tags.addLabel(MDL_DM3_TAGNAME);
     header->tags.addLabel(MDL_DM3_TAGCLASS);
@@ -103,21 +103,118 @@ int readDM3(int img_select,bool isStack=false)
     header->tags.addLabel(MDL_DM3_VALUE);
 
 
-    int depLevel=0, imCount=0, imCountF=0;
+    int nodeID=0, parentID=0, imCount=0, imCountF=0;
 
     for (int n=1;n<=header->nTags;n++)
-        readTagDM3(fimg, header, depLevel, isLE);
+        readTagDM3(fimg, header, parentID, nodeID, isLE);
 
     header->tags.write("images.txt");
 
+
     std::vector<long int> vIm;
+    header->tags.findObjects(vIm, MDValueEqual(MDL_DM3_TAGNAME,(std::string)"DataType"));
 
-    header->tags.findObjects(vIm, MDValueEqual(MDL_DM3_TAGNAME, (std::string) "ImageList"));
+    //    int parentId =parentDM3(header->tags, vIm[1], 2);
 
-    header->tags.getValue(MDL_DM3_SIZE,header->NUMBER_IMAGES);
 
-    //mdQuery(MDL_DM3_TAGNAME, (std::string) "DataType");
-    header->tags.findObjects(vIm,MDValueEqual(MDL_DM3_TAGNAME, (std::string) "DataType"));
+    header->nIm = 0;
+    std::vector<DM3dataHead> dataHeaders;
+
+    int value;
+
+    for (int n = 0; n < vIm.size(); n++)
+    {
+        header->tags.goToObject(vIm[n]);
+        header->tags.getValue(MDL_DM3_VALUE, value);
+
+        if (value != 23)
+        {
+            parentID = parentDM3(header->tags, vIm[n], 2);
+
+            nodeID = gotoTagDM3(header->tags, parentID, "ImageData Data");
+            header->tags.getValue(MDL_DM3_NUMBER_TYPE, value);
+            dataHeaders[header->nIm].dataType = (short int) value;
+
+            header->tags.getValue(MDL_DM3_VALUE, value);
+            dataHeaders[header->nIm].headerSize = (int) value;
+
+            nodeID = gotoTagDM3(header->tags, parentID, "ImageData Dimensions");
+            header->tags.nextObject();
+            header->tags.getValue(MDL_DM3_VALUE, value);
+            dataHeaders[header->nIm].imageHeight = (int) value;
+
+            header->tags.nextObject();
+            header->tags.getValue(MDL_DM3_VALUE, value);
+            dataHeaders[header->nIm].imageWidth = (int) value;
+
+            header->tags.nextObject();
+            header->tags.getValue(MDL_DM3_VALUE, value);
+            dataHeaders[header->nIm].dataTypeSize = (short int) value;
+
+            nodeID = gotoTagDM3(header->tags, parentID, "ImageTags Acquisition Frame CCD Dimensions");
+            header->tags.nextObject();
+            header->tags.getValue(MDL_DM3_VALUE, value);
+            dataHeaders[header->nIm].imageHeight = (int) value;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//            xmippFREAD(&(dataHeaders[i].CalibrationOffsetX), sizeof(double), 1, fimg, swap);
+//            xmippFREAD(&dataHeaders[i].pixelWidth, sizeof(double), 1, fimg, swap);
+//            xmippFREAD(&dataHeaders[i].CalibrationElementX, sizeof(int), 1, fimg, swap);
+//            xmippFREAD(&dataHeaders[i].CalibrationOffsetY, sizeof(double), 1, fimg, swap);
+//            xmippFREAD(&dataHeaders[i].pixelHeight, sizeof(double), 1, fimg, swap);
+//            xmippFREAD(&dataHeaders[i].CalibrationElementY, sizeof(int), 1, fimg, swap);
+//            xmippFREAD(&dataHeaders[i].dataType, sizeof(short int), 1, fimg, swap);
+//            xmippFREAD(&dataHeaders[i].imageWidth, sizeof(int), 1, fimg, swap);
+//            xmippFREAD(&dataHeaders[i].imageHeight, sizeof(int), 1, fimg, swap);
+        }
+
+    }
+
+
+
+    //    nodeDim = gotoTagDM3(MD,parentId, "ImageData Dimensions");
+
+
+
+
+
+    //    printDM3(header->tags);
+
+
+    std::string names("perro gato raton");
+
+    std::istringstream iss(names);
+    std::vector<std::string> vSnames;
+    //    splitString(names, " ", vSnames, false);
+
+    std::string subs;
+    while (iss >> subs)
+    {
+        std::cout << subs <<std::endl;
+
+    }
+
+    //    for (int i = 0; i < vSnames.size(); i++)
+    // {
+    //     std::cout << vSnames[i] <<std::endl;
+    // }
+
+
+    //    header->NUMBER_IMAGES = (int) dtemp;
+
+
 
 
 
@@ -128,11 +225,9 @@ int readDM3(int img_select,bool isStack=false)
         if (header->DATA_TYPE_ID != 16674)
             REPORT_ERROR(6001, "ERROR: readTIA only processes images in real space");
 
-        fseek(fimg, header->OFFSET_ARRAY_OFFSET, SEEK_SET);
-        header->pDATA_OFFSET = (int *) askMemory(header->NUMBER_IMAGES * sizeof(int));
-        xmippFREAD(header->pDATA_OFFSET, sizeof(int), header->NUMBER_IMAGES, fimg, swap);
 
-        TIAdataHead* dataHeaders = new TIAdataHead [header->NUMBER_IMAGES];
+
+
 
 
         // Read all the image headers
@@ -321,10 +416,11 @@ int readDM3(int img_select,bool isStack=false)
 
 double readTagDM3(FILE *fimg,
                   DM3head *header,
-                  int depLevel,
+                  int parentId,
+                  int &nodeId,
                   bool isLE)
 {
-    depLevel++;
+
 
     /* Header Tag ============================================================== */
 
@@ -347,7 +443,10 @@ double readTagDM3(FILE *fimg,
     std::cout << tagName <<std::endl;
 
     header->tags.addObject();
-    header->tags.setValue(MDL_DM3_LEVEL, depLevel);
+
+    nodeId++;
+    header->tags.setValue(MDL_DM3_NODEID, nodeId);
+    header->tags.setValue(MDL_DM3_PARENTID, parentId);
     header->tags.setValue(MDL_DM3_IDTAG, idTag);
     header->tags.setValue(MDL_DM3_TAGNAME, stagName);
 
@@ -388,9 +487,10 @@ double readTagDM3(FILE *fimg,
             //            return 0;
         }
 
+        parentId = nodeId;
         for (int n=1;n<=nTags;n++) // Rest of directories
         {
-            readTagDM3(fimg, header, depLevel, isLE);
+            readTagDM3(fimg, header, parentId, nodeId, isLE);
         }
         return 0;
     }
@@ -454,9 +554,9 @@ double readTagDM3(FILE *fimg,
         }
         else if(nnum == 3 && info[0]==20)   // Tag array
         {             /*nnum = 3
-                                             info(0) = 20
-                                             info(1) = number type for all values
-                                             info(2) = info(nnum) = size of array*/
+                                                                                                                                                                     info(0) = 20
+                                                                                                                                                                     info(1) = number type for all values
+                                                                                                                                                                     info(2) = info(nnum) = size of array*/
 
             header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Array");
 
@@ -699,6 +799,84 @@ DataType datatypeDM3(int nType)
     return datatype;
 }
 
+int parentDM3(MetaData &MD, int nodeId, int depth = 1)
+{
+    for (int n = 0; n < depth; n++)
+    {
+        MD.gotoFirstObject(MDValueEqual(MDL_DM3_NODEID,nodeId));
+        MD.getValue(MDL_DM3_PARENTID,nodeId);
 
+        if (nodeId == 0)
+            break;
+    }
+    return nodeId;
+}
+
+double gotoTagDM3(MetaData &MD, int nodeId, std::string tagsList)
+{
+    std::istringstream iss(tagsList);
+    std::string tag;
+
+    MDMultiQuery queries;
+
+    while (iss >> tag)
+    {
+        queries.clear();
+        std::cout << queries.queryString <<std::endl;
+        queries.addAndQuery(MDValueEqual(MDL_DM3_PARENTID,nodeId));
+        std::cout << queries.queryString <<std::endl;
+        queries.addAndQuery(MDValueEqual(MDL_DM3_TAGNAME,tag));
+        std::cout << queries.queryString <<std::endl;
+
+        MD.gotoFirstObject(queries);
+
+        MD.getValue(MDL_DM3_NODEID,nodeId);
+    }
+    return nodeId;
+}
+
+int space;
+
+void printDM3node(MetaData &MD, long int objId)
+{
+    MD.goToObject(objId);
+
+    std::string tag;
+    MD.getValue(MDL_DM3_TAGNAME,tag);
+
+    int nodeId;
+    MD.getValue(MDL_DM3_NODEID,nodeId);
+
+    for (int i = 0; i < space; i++)
+        std::cout << " ";
+
+    std::cout << tag << std::endl;
+    std::vector<long int> vObjs;
+
+    space += 3;
+
+    MD.findObjects(vObjs,MDValueEqual(MDL_DM3_PARENTID, nodeId));
+    for (int i = 0; i < vObjs.size(); i++)
+    {
+        printDM3node(MD, vObjs[i]);
+    }
+
+    space -= 3;
+
+}
+void printDM3(MetaData MD)
+{
+
+    std::vector<long int> vObjs;
+
+    space = 0;
+
+    MD.findObjects(vObjs,MDValueEqual(MDL_DM3_PARENTID, 0));
+
+    for (int i = 0; i < vObjs.size(); i++)
+    {
+        printDM3node(MD, vObjs[i]);
+    }
+}
 
 #endif /* RWDM3_H_ */
