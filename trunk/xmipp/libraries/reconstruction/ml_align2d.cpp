@@ -404,7 +404,7 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
     hdim = dim / 2;
     dim2 = dim * dim;
     ddim2 = (double) dim2;
-    sigma_noise2 = model.sigma_noise * model.sigma_noise;
+    double sigma_noise2 = model.sigma_noise * model.sigma_noise;
 
     if (model.do_student)
     {
@@ -863,6 +863,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
     MultidimArray<std::complex<double> > Faux;
     double my_mindiff;
     bool is_ok_trymindiff = false;
+    double sigma_noise2 = model.sigma_noise * model.sigma_noise;
     XmippFftw local_transformer;
     ioptx = iopty = 0;
 
@@ -1282,8 +1283,7 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
             local_transformer.inverseFourierTransform(Faux, Maux);
             Maux3 = Maux;
             CenterFFT(Maux3, true);
-            computeStats_within_binary_mask(omask, Maux3, dum, dum, avg,
-                                            dum);
+            computeStats_within_binary_mask(omask, Maux3, dum, dum, avg, dum);
             rotate(BSPLINE3, Maux2, Maux3, -psi, 'Z', WRAP);
             apply_binary_mask(mask, Maux2, Maux2, avg);
             wsum_Mref[refno] += Maux2;
@@ -1301,6 +1301,8 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
     Matrix1D<double> trans(2);
     Matrix1D<double> weight(nr_psi * nr_flip);
     double local_maxweight, local_mindiff;
+    double sigma_noise2 = model.sigma_noise * model.sigma_noise;
+
     int nr_mirror = 1;
 
     if (do_mirror)
@@ -1445,6 +1447,12 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
 
 void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 {
+
+
+//    if (current_image == 1)
+//        std::cerr << "************* Doing more printing for image 1 ********" <<std::endl;
+
+
     double diff;
     int old_optrefno = opt_refno;
     double XiA, aux, pdf, fracpdf, A2_plus_Xi2;
@@ -1454,6 +1462,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     //Some local variables to store partial sums of global sums variables
     double local_mindiff, local_wsum_corr, local_wsum_offset, maxw_ref;
     double local_wsum_sc, local_wsum_sc2, local_maxweight, local_maxweight2;
+    double sigma_noise2 = model.sigma_noise * model.sigma_noise;
     int local_iopty, local_ioptx, local_iopt_psi, local_iopt_flip,
     local_opt_refno;
 
@@ -1539,6 +1548,20 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                             diff = A2_plus_Xi2 - ref_scale * A2D_ELEM(Maux, i, j) * ddim2;
                             local_mindiff = XMIPP_MIN(local_mindiff, diff);
                             pdf = fracpdf * A2D_ELEM(P_phi, i, j);
+
+//                            if (current_image == 1)
+//                            {
+//                                std::cerr << "----------------------------" <<std::endl;
+//                                std::cerr << "diff: " << diff <<std::endl;
+//                                std::cerr << " trymindiff: " << trymindiff <<std::endl;
+//                                std::cerr << " sigma_noise2: " << sigma_noise2 <<std::endl;
+//                                std::cerr << " pdf: " << pdf << std::endl;
+//                                static int counter = 0;
+//                                counter++;
+//                                if (counter == 1000)
+//                                    exit(1);
+//                            }
+
 
                             if (!model.do_student)
                             {
@@ -1849,9 +1872,11 @@ void Prog_MLalign2D_prm::expectation()
     // Loop over all images
     FOR_ALL_LOCAL_IMAGES()
     {
+
         if (IMG_BLOCK(imgno) == current_block)
         {
 #ifdef TIMING
+
             timer.tic(FOR_F1);
 #endif
 
@@ -2010,13 +2035,15 @@ void Prog_MLalign2D_prm::expectation()
     timer.tic(E_RRR);
 
 #endif
+
+
     // After iteration 0, factor_nref will ALWAYS be one
     int old_refno = model.n_ref;
     model.setNRef(model.n_ref * factor_nref);
     if (factor_nref > 1)
     {
         // Now also expand the Iref vector to contains factor_nref times more images
-    	// Make sure that headers are the same by using = assignments
+        // Make sure that headers are the same by using = assignments
         for (int group = 1; group < factor_nref; group++)
         {
             for (int refno = 0; refno < old_refno; refno++)
@@ -2155,7 +2182,7 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
     if (!fix_sigma_noise)
     {
         local_model.updateSigmaNoise(wsum_sigma_noise);
-        sigma_noise2 = local_model.sigma_noise * local_model.sigma_noise;
+        //sigma_noise2 = local_model.sigma_noise * local_model.sigma_noise;
     }
 
     local_model.LL = LL;
@@ -2184,21 +2211,35 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
         {
             readModel(block_model, getBaseName("_block", current_block + 1));
             model.substractModel(block_model);
-           // std::cerr << "======After read, block " << current_block <<": =========" <<std::endl;
-           // block_model.print();
+            // std::cerr << "====== After read, block " << current_block <<": =========" <<std::endl;
+            // block_model.print();
         }
 
         maximization(block_model);
 
-       // std::cerr << "======After maximization, block" << current_block <<": =========" <<std::endl;
-       // block_model.print();
+        std::cerr << "---------block " << current_block << "------------" <<std::endl;
+        block_model.print();
+
+        //std::cerr << "====== After maximization, block" << current_block <<": =========" <<std::endl;
+        //block_model.print();
 
         writeOutputFiles(block_model, OUT_BLOCK);
 
-        if (special_first && current_block == 0)
-            model = block_model;
-        else
+        if (!special_first)
+        {
             model.addModel(block_model);
+        }
+        else if (current_block == blocks - 1) //last block
+        {
+            for (current_block = 0; current_block < blocks; current_block++)
+            {
+                readModel(block_model, getBaseName("_block", current_block + 1));
+                if (current_block == 0)
+                    model = block_model;
+                else
+                    model.addModel(block_model);
+            }
+        }
     }
     //std::cerr << "======After maximization MODEL: =========" <<std::endl;
     //model.print();
@@ -2643,6 +2684,11 @@ void Model_MLalign2D::updateSigmaNoise(double wsum_sigma_noise)
     // Finite Mixture Models, Wiley p. 228!
     double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2
                  : sumw_allrefs;
+    if (sum == 0)
+    {
+        std::cerr << " -----------> sumw_allrefs == 0 " <<std::endl;
+        exit(1);
+    }
     double sigma_noise2 = wsum_sigma_noise / (sum * dim * dim);
     sigma_noise = sqrt(sigma_noise2);
 }//close function updateSigmaNoise
