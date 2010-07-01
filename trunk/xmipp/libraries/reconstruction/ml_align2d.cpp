@@ -2191,7 +2191,7 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
         //sigma_noise2 = local_model.sigma_noise * local_model.sigma_noise;
     }
 
-    local_model.LL = LL;    
+    local_model.LL = LL;
 
 #ifdef DEBUG
 
@@ -2205,10 +2205,6 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
     bool special_first = (!do_restart && iter == istart);
     Model_MLalign2D block_model(model.n_ref);
 
-
-
-
-
     if (blocks == 1) //ie not IEM, normal maximization
     {
         maximization(model);
@@ -2217,46 +2213,36 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
     }
     else //do IEM
     {
-
-        if (!special_first)
-        {
-            readModel(block_model, getBaseName("_block", current_block + 1));
-            model.substractModel(block_model);
-            // std::cerr << "====== After read, block " << current_block <<": =========" <<std::endl;
-            // block_model.print();
-        }
-
         maximization(block_model);
-std::cerr << "====== After maximization local block "<< current_block <<std::endl;
-       block_model.print();
-    
-        writeOutputFiles(block_model, OUT_BLOCK);
 
         if (!special_first)
         {
+            Model_MLalign2D read_model(block_model.n_ref);
+            //First add the new block and later substract
+            //weird, but for small number of images if changes
+            //the order, some sums can became negative and obtain 'nan' for sqrt
             model.addModel(block_model);
+            readModel(read_model, getBaseName("_block", current_block + 1));
+            model.substractModel(read_model);
         }
         else if (current_block == blocks - 1) //last block
         {
-            for (current_block = 0; current_block < blocks; current_block++)
+            Model_MLalign2D read_model(block_model.n_ref);
+            model = block_model;
+            //Add all  block execpt the recently maximized last block
+            for (current_block = 0; current_block < blocks - 1; current_block++)
             {
-                readModel(block_model, getBaseName("_block", current_block + 1));
-                if (current_block == 0)
-                    model = block_model;
-                else
-                    model.addModel(block_model);
-		std::cerr << "======After reading model: "<< current_block <<" =========" <<std::endl;
-    		block_model.print();
+                readModel(read_model, getBaseName("_block", current_block + 1));
+                model.addModel(read_model);
             }
-	    std::cerr << "======After summing all models, MODEL: " <<std::endl;
-    	    model.print();
             // After iteration 0, factor_nref will ALWAYS be one
             factor_nref = 1;
         }
+        //Write block at the end for not override the old one
+        writeOutputFiles(block_model, OUT_BLOCK);
     }
     //std::cerr << "======After maximization MODEL: =========" <<std::endl;
     //model.print();
-
     if (do_norm)
         correctScaleAverage(refs_per_class);
 }//close function maximizationBlocks
@@ -2534,10 +2520,10 @@ void Prog_MLalign2D_prm::readModel(Model_MLalign2D &model, FileName fn_base)
         img().setXmippOrigin();
         model.Iref[refno] = img;
         MDi.getValue(MDL_WEIGHT, model.alpha_k[refno]);
-	//Just initialize mirror fraction to 0.
+        //Just initialize mirror fraction to 0.
         model.mirror_fraction[refno] = 0.;
-	if (do_mirror)
-        	MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno]);	
+        if (do_mirror)
+            MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno]);
         model.sumw_allrefs += model.alpha_k[refno];
         refno++;
     }
@@ -2614,9 +2600,17 @@ void Model_MLalign2D::combineModel(Model_MLalign2D model, int sign)
     for (int refno = 0; refno < n_ref; refno++)
     {
         sumweight = Iref[refno].weight() + sign * model.Iref[refno].weight();
-        Iref[refno]() = (get_wsum_Mref(refno) + sign * model.get_wsum_Mref(
-                             refno)) / sumweight;
-        Iref[refno].setWeight(sumweight);
+        if (sumweight > 0)
+        {
+            Iref[refno]() = (get_wsum_Mref(refno) + sign * model.get_wsum_Mref(
+                                 refno)) / sumweight;
+            Iref[refno].setWeight(sumweight);
+        }
+        else
+        {
+            Iref[refno]().initZeros();
+            Iref[refno].setWeight(0);
+        }
 
         //Get all sums first, because function call will change
         //after updating model parameters.
@@ -2693,11 +2687,15 @@ double Model_MLalign2D::get_sumfracweight()
 void Model_MLalign2D::updateSigmaOffset(double wsum_sigma_offset)
 {
     if (sumw_allrefs == 0)
-{
-    std::cerr << "updateSigmaOffset: sumw_allrefs == 0 " <<std::endl;
-    exit(1);
-}
+    {
+        std::cerr << "updateSigmaOffset: sumw_allrefs == 0 " <<std::endl;
+        exit(1);
+    }
     sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
+    if (wsum_sigma_offset < 0.)
+        REPORT_ERROR(-111, "updateSigmaOffset: sqrt of negative 'wsum_sigma_offset'");
+    if (sumw_allrefs < 0.)
+        REPORT_ERROR(-111, "updateSigmaOffset: sqrt of negative 'wsum_sigma_offset'");
 }//close function updateSigmaOffset
 
 void Model_MLalign2D::updateSigmaNoise(double wsum_sigma_noise)
@@ -2712,6 +2710,8 @@ void Model_MLalign2D::updateSigmaNoise(double wsum_sigma_noise)
         exit(1);
     }
     double sigma_noise2 = wsum_sigma_noise / (sum * dim * dim);
+    if (sigma_noise2 < 0.)
+        REPORT_ERROR(-111, "updateSigmaNoise: sqrt of negative 'sigma_noise2'");
     sigma_noise = sqrt(sigma_noise2);
 }//close function updateSigmaNoise
 
@@ -2723,6 +2723,11 @@ void Model_MLalign2D::updateAvePmax(double sumfracweight)
 void Model_MLalign2D::updateFractions(int refno, double sumw,
                                       double sumw_mirror, double sumw_allrefs)
 {
+    if (sumw_allrefs == 0)
+    {
+        std::cerr << "updateFractions: sumw_allrefs == 0 " <<std::endl;
+        exit(1);
+    }
     if (sumw > 0.)
     {
         alpha_k[refno] = sumw / sumw_allrefs;
