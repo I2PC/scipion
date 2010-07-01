@@ -2191,8 +2191,7 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
         //sigma_noise2 = local_model.sigma_noise * local_model.sigma_noise;
     }
 
-    local_model.LL = LL;
-    //model.print();
+    local_model.LL = LL;    
 
 #ifdef DEBUG
 
@@ -2228,7 +2227,9 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
         }
 
         maximization(block_model);
-
+std::cerr << "====== After maximization local block "<< current_block <<std::endl;
+       block_model.print();
+    
         writeOutputFiles(block_model, OUT_BLOCK);
 
         if (!special_first)
@@ -2244,7 +2245,11 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
                     model = block_model;
                 else
                     model.addModel(block_model);
+		std::cerr << "======After reading model: "<< current_block <<" =========" <<std::endl;
+    		block_model.print();
             }
+	    std::cerr << "======After summing all models, MODEL: " <<std::endl;
+    	    model.print();
             // After iteration 0, factor_nref will ALWAYS be one
             factor_nref = 1;
         }
@@ -2529,7 +2534,10 @@ void Prog_MLalign2D_prm::readModel(Model_MLalign2D &model, FileName fn_base)
         img().setXmippOrigin();
         model.Iref[refno] = img;
         MDi.getValue(MDL_WEIGHT, model.alpha_k[refno]);
-        MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno]);
+	//Just initialize mirror fraction to 0.
+        model.mirror_fraction[refno] = 0.;
+	if (do_mirror)
+        	MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno]);	
         model.sumw_allrefs += model.alpha_k[refno];
         refno++;
     }
@@ -2684,6 +2692,11 @@ double Model_MLalign2D::get_sumfracweight()
 
 void Model_MLalign2D::updateSigmaOffset(double wsum_sigma_offset)
 {
+    if (sumw_allrefs == 0)
+{
+    std::cerr << "updateSigmaOffset: sumw_allrefs == 0 " <<std::endl;
+    exit(1);
+}
     sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
 }//close function updateSigmaOffset
 
@@ -2695,7 +2708,7 @@ void Model_MLalign2D::updateSigmaNoise(double wsum_sigma_noise)
                  : sumw_allrefs;
     if (sum == 0)
     {
-        std::cerr << " -----------> sumw_allrefs == 0 " <<std::endl;
+        std::cerr << "updateSigmaNoise: sumw_allrefs == 0 " <<std::endl;
         exit(1);
     }
     double sigma_noise2 = wsum_sigma_noise / (sum * dim * dim);
