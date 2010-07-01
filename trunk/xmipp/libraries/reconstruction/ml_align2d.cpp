@@ -1267,6 +1267,7 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
     Maux2.setXmippOrigin();
     Maux3.setXmippOrigin();
 
+
     FOR_ALL_THREAD_REFNO()
     {
         Maux.initZeros();
@@ -1290,6 +1291,7 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
         }
 
     }//close while refno
+
 }//close function doThreadReverseRotateReference
 
 void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
@@ -1449,8 +1451,8 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 {
 
 
-//    if (current_image == 1)
-//        std::cerr << "************* Doing more printing for image 1 ********" <<std::endl;
+    //    if (current_image == 1)
+    //        std::cerr << "************* Doing more printing for image 1 ********" <<std::endl;
 
 
     double diff;
@@ -1549,18 +1551,18 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                             local_mindiff = XMIPP_MIN(local_mindiff, diff);
                             pdf = fracpdf * A2D_ELEM(P_phi, i, j);
 
-//                            if (current_image == 1)
-//                            {
-//                                std::cerr << "----------------------------" <<std::endl;
-//                                std::cerr << "diff: " << diff <<std::endl;
-//                                std::cerr << " trymindiff: " << trymindiff <<std::endl;
-//                                std::cerr << " sigma_noise2: " << sigma_noise2 <<std::endl;
-//                                std::cerr << " pdf: " << pdf << std::endl;
-//                                static int counter = 0;
-//                                counter++;
-//                                if (counter == 1000)
-//                                    exit(1);
-//                            }
+                            //                            if (current_image == 1)
+                            //                            {
+                            //                                std::cerr << "----------------------------" <<std::endl;
+                            //                                std::cerr << "diff: " << diff <<std::endl;
+                            //                                std::cerr << " trymindiff: " << trymindiff <<std::endl;
+                            //                                std::cerr << " sigma_noise2: " << sigma_noise2 <<std::endl;
+                            //                                std::cerr << " pdf: " << pdf << std::endl;
+                            //                                static int counter = 0;
+                            //                                counter++;
+                            //                                if (counter == 1000)
+                            //                                    exit(1);
+                            //                            }
 
 
                             if (!model.do_student)
@@ -2036,26 +2038,14 @@ void Prog_MLalign2D_prm::expectation()
 
 #endif
 
-
-    // After iteration 0, factor_nref will ALWAYS be one
-    int old_refno = model.n_ref;
-    model.setNRef(model.n_ref * factor_nref);
-    if (factor_nref > 1)
-    {
-        // Now also expand the Iref vector to contains factor_nref times more images
-        // Make sure that headers are the same by using = assignments
-        for (int group = 1; group < factor_nref; group++)
-        {
-            for (int refno = 0; refno < old_refno; refno++)
-            {
-                model.Iref[group * old_refno + refno] = model.Iref[refno];
-            }
-        }
-        factor_nref = 1;
-    }
-
+    //Changes temporally the model n_ref for the
+    //refno loop, but not yet n_ref because in iem
+    //isn't yet the end of iteration
+    model.n_ref *= factor_nref;
     // Rotate back and calculate weighted sums
     reverseRotateReference();
+    //Restore back the model.n_ref
+    model.n_ref /= factor_nref;
 
 #ifdef TIMING
 
@@ -2131,6 +2121,22 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
     double rr, thresh, aux, sumw_allrefs2 = 0.;
     int c;
 
+    // After iteration 0, factor_nref will ALWAYS be one
+    if (factor_nref > 1)
+    {
+        int old_refno = local_model.n_ref;
+        local_model.setNRef(local_model.n_ref * factor_nref);
+        // Now also expand the Iref vector to contains factor_nref times more images
+        // Make sure that headers are the same by using = assignments
+        for (int group = 1; group < factor_nref; group++)
+        {
+            for (int refno = 0; refno < old_refno; refno++)
+            {
+                local_model.Iref[group * old_refno + refno] = local_model.Iref[refno];
+            }
+        }
+    }
+
     // Update the reference images
     local_model.sumw_allrefs = 0.;
     local_model.dim = dim;
@@ -2200,9 +2206,15 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
     bool special_first = (!do_restart && iter == istart);
     Model_MLalign2D block_model(model.n_ref);
 
+
+
+
+
     if (blocks == 1) //ie not IEM, normal maximization
     {
         maximization(model);
+        // After iteration 0, factor_nref will ALWAYS be one
+        factor_nref = 1;
     }
     else //do IEM
     {
@@ -2216,12 +2228,6 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
         }
 
         maximization(block_model);
-
-        std::cerr << "---------block " << current_block << "------------" <<std::endl;
-        block_model.print();
-
-        //std::cerr << "====== After maximization, block" << current_block <<": =========" <<std::endl;
-        //block_model.print();
 
         writeOutputFiles(block_model, OUT_BLOCK);
 
@@ -2239,6 +2245,8 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
                 else
                     model.addModel(block_model);
             }
+            // After iteration 0, factor_nref will ALWAYS be one
+            factor_nref = 1;
         }
     }
     //std::cerr << "======After maximization MODEL: =========" <<std::endl;
@@ -2445,6 +2453,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
         // Re-use the MDref metadata that were read in produceSideInfo2
         // This way. MLD_ANGLEROT, MDL_ANGLETILT, MDL_REF etc are treated ok for do_ML3D
         int refno=0;
+
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
             fn_tmp = fn_base + "_ref";
