@@ -736,9 +736,7 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
     std::stringstream ss;
     std::string line, token;
     std::vector<MDValue> columnValues;
-    isColumnFormat = true;
-    bool useCommentAsImage = false;
-    this->inFile = filename;
+
 
     getline(is, line); //get first line to identify the type of file
 
@@ -749,6 +747,10 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
 
     _clear();
     myMDSql->createMd();
+    isColumnFormat = true;
+    bool useCommentAsImage = false;
+    this->inFile = filename;
+
     is.seekg(0, std::ios::beg);//reset the stream position to the beginning to start parsing
 
     if (pos = line.find("XMIPP_3 *") != std::string::npos)
