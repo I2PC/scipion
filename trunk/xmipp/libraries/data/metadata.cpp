@@ -738,6 +738,7 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
     std::vector<MDValue> columnValues;
     isColumnFormat = true;
     bool useCommentAsImage = false;
+    this->inFile = filename;
 
     getline(is, line); //get first line to identify the type of file
 
