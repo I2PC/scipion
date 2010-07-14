@@ -245,7 +245,8 @@ int  readIMAGIC(int img_select)
     int pad=0;
     readData(fimg, img_select, datatype, pad );
 
-    fclose(fimg);
+    if (data.mmapOn == false)
+    	fclose(fimg);
     fclose(fhed);
 
     return(0);

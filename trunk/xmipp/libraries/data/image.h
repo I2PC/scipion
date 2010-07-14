@@ -37,6 +37,9 @@
 #include "transformations.h"
 #include "metadata.h"
 #include <fcntl.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 //static std::vector<MDLabel> emptyVector;
 //static MetaData emptyMetaData;
@@ -64,7 +67,7 @@ typedef enum {
     ComplexInt = 11,        // Complex integer (8-byte)
     ComplexFloat = 12,      // Complex floating point (8-byte)
     ComplexDouble = 13,      // Complex floating point (16-byte)
-    Bool = 14				// Boolean (1-byte?)
+    Bool = 14    // Boolean (1-byte?)
 } DataType;
 
 // Ask memory size of datatype
@@ -129,7 +132,7 @@ unsigned long   gettypesize(DataType type);
  * @ingroup Images
  *
  * The image class is the general image handling class.
- * 
+ *
  */
 template<typename T>
 class Image
@@ -149,6 +152,9 @@ private:
     TransformType       transform;   // Transform type
     int                 replaceNsize;// Stack size in the replace case
     int                 _exists;     // does target file exists?
+    bool				mmapOn;
+    int           		mFd;     //Handle the file in reading method and mmap
+    size_t    			mappedSize;
     // equal 0 is not exists or not a stack
     /*
     double    min, max; // Limits
@@ -200,6 +206,12 @@ public:
      */
     void clear()
     {
+        if (data.mmapOn)
+        {
+            munmap(data.data-offset,mappedSize);
+            close(mFd);
+        }
+
         data.clear();
         dataflag = -1;
         if (isComplexT())
@@ -212,6 +224,7 @@ public:
         swap = 0;
         clearHeader();
         replaceNsize=0;
+        mmapOn = false;
     }
 
     /** Clear the header of the image
@@ -307,7 +320,7 @@ public:
     int read(const FileName &name, bool readdata=true, int select_img=-1,
              bool apply_geo = false, bool only_apply_shifts = false,
              const MetaData *docFilePtr = NULL,
-             std::vector<MDLabel> *activeLabelsPtr = NULL, bool mapData=0)
+             std::vector<MDLabel> *activeLabelsPtr = NULL, bool mapData = false)
     {
         //const MetaData &docFile = *docFilePtr;
         //std::vector<MDLabel> &activeLabels = *activeLabelsPtr;
@@ -821,6 +834,112 @@ public:
             }
     }
 
+
+
+
+    bool castMmap2T(DataType datatype)
+    {
+
+        switch (datatype)
+        {
+        case Unknown_Type:
+            REPORT_ERROR(12,"ERROR: datatype is Unknown_Type");
+        case UChar:
+            {
+                if (typeid(T) == typeid(unsigned char))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case SChar:
+            {
+                if (typeid(T) == typeid(signed char))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case UShort:
+            {
+                if (typeid(T) == typeid(unsigned short))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case Short:
+            {
+                if (typeid(T) == typeid(short))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case UInt:
+            {
+                if (typeid(T) == typeid(unsigned int))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case Int:
+            {
+                if (typeid(T) == typeid(int))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case Long:
+            {
+                if (typeid(T) == typeid(long))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case Float:
+            {
+                if (typeid(T) == typeid(float))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case Double:
+            {
+                if (typeid(T) == typeid(double))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        default:
+            {
+                std::cerr<<"Datatype= "<<datatype<<std::endl;
+                REPORT_ERROR(16," ERROR: cannot cast datatype to T");
+                break;
+            }
+        }
+
+
+
+
+        //               int * iTemp = (int*) map;
+        //                ptrDest = reinterpret_cast<T*> (iTemp);
+
+    }
+
+
+
+
+
+
+
+
+
     /** Write an entire page as datatype
      * @ingroup XXX
      *
@@ -884,9 +1003,7 @@ public:
         if (transform == Hermitian || transform == CentHerm )
             data.setXdim(XSIZE(data)/2 + 1);
 
-        // Reset select to get the correct offset
-        if ( select_img < 0 )
-            select_img = 0;
+
 
         size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
         size_t datatypesize=gettypesize(datatype);
@@ -894,75 +1011,116 @@ public:
         size_t pagemax_n = ROUND(pagemax/datatypesize);
         size_t haveread_n=0;
 
-        char* page = NULL;
-        char* padpage = NULL;
 
-        // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
-        //if memory already allocated use it (no resize allowed)
-        data.coreAllocateReuse();
-        myoffset = offset + select_img*(pagesize + pad);
-        //#define DEBUG
-#ifdef DEBUG
 
-        data.printShape();
-        printf("DEBUG: Page size: %ld offset= %d \n", pagesize, offset);
-        printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
-        printf("DEBUG: myoffset = %d select_img= %d \n", myoffset, select_img);
-#endif
-
-        if (pagesize > pagemax)
-            page = (char *) askMemory(pagemax*sizeof(char));
-        else
-            page = (char *) askMemory(pagesize*sizeof(char));
-
-        //if ( pad > 0)
-        //    padpage = (char *) askMemory(pad*sizeof(char));
-        fseek( fimg, myoffset, SEEK_SET );
-        for ( size_t myn=0; myn<NSIZE(data); myn++ )
+        // Flag to know that data is not going to be mapped although mmapOn is true
+        if (data.mmapOn && !castMmap2T(datatype))
         {
-            for (size_t myj=0; myj<pagesize; myj+=pagemax )//pagesize size of object
-            {
-                // Read next page. Divide pages larger than pagemax
-                readsize = pagesize - myj;
-                if ( readsize > pagemax )
-                    readsize = pagemax;
-                readsize_n = readsize/datatypesize;
-
-                //Read page from disc
-                fread( page, readsize, 1, fimg );
-                //swap per page
-                if (swap)
-                    swapPage(page, readsize, datatype);
-                // cast to T per page
-                castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype, readsize_n);
-                haveread_n += readsize_n;
-            }
-            if ( pad > 0 )
-                //fread( padpage, pad, 1, fimg);
-                fseek( fimg, pad, SEEK_CUR );
+            std::cout << "WARNING: Image Class. File datatype and image declaration not compatible with mmap. Loading into memory." <<std::endl;
+            data.mmapOn = false;
+            mFd = -1;
         }
-        //if ( pad > 0 )
-        //    freeMemory(padpage, pad*sizeof(char));
-        if ( page > 0 )
-            freeMemory(page, pagesize*sizeof(char));
+
+        if (data.mmapOn)
+        {
+            if ( NSIZE(data) > 1 )
+            {
+                REPORT_ERROR(22,"Image Class::ReadData: mmap with multiple \
+                             images file not compatible. Try selecting a unique image.");
+            }
+
+            fclose(fimg);
+
+            if ( ( mFd = open(filename.c_str(), O_RDWR, S_IREAD | S_IWRITE) ) == -1 )
+                REPORT_ERROR(20,"Image Class::ReadData: Error opening the image file.");
+
+            void * map;
+            mappedSize = pagesize+offset;
+
+            if ( (map = mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+                REPORT_ERROR(21,"Image Class::ReadData: mmap of image file failed.");
+
+            map += offset;
+            data.data = reinterpret_cast<T*> (map);
+        }
+        else
+        {
+            // Reset select to get the correct offset
+            if ( select_img < 0 )
+                select_img = 0;
+
+            char* page = NULL;
+            char* padpage = NULL;
+
+            // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+            //if memory already allocated use it (no resize allowed)
+            data.coreAllocateReuse();
+            myoffset = offset + select_img*(pagesize + pad);
+            //#define DEBUG
 
 #ifdef DEBUG
 
-        printf("DEBUG img_read_data: Finished reading and converting data\n");
+            data.printShape();
+            printf("DEBUG: Page size: %ld offset= %d \n", pagesize, offset);
+            printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
+            printf("DEBUG: myoffset = %d select_img= %d \n", myoffset, select_img);
 #endif
+
+            if (pagesize > pagemax)
+                page = (char *) askMemory(pagemax*sizeof(char));
+            else
+                page = (char *) askMemory(pagesize*sizeof(char));
+
+            //if ( pad > 0)
+            //    padpage = (char *) askMemory(pad*sizeof(char));
+            fseek( fimg, myoffset, SEEK_SET );
+            for ( size_t myn=0; myn<NSIZE(data); myn++ )
+            {
+                for (size_t myj=0; myj<pagesize; myj+=pagemax )//pagesize size of object
+                {
+                    // Read next page. Divide pages larger than pagemax
+                    readsize = pagesize - myj;
+                    if ( readsize > pagemax )
+                        readsize = pagemax;
+                    readsize_n = readsize/datatypesize;
+
+                    //Read page from disc
+                    fread( page, readsize, 1, fimg );
+                    //swap per page
+                    if (swap)
+                        swapPage(page, readsize, datatype);
+                    // cast to T per page
+                    castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype, readsize_n);
+                    haveread_n += readsize_n;
+                }
+                if ( pad > 0 )
+                    //fread( padpage, pad, 1, fimg);
+                    fseek( fimg, pad, SEEK_CUR );
+            }
+            //if ( pad > 0 )
+            //    freeMemory(padpage, pad*sizeof(char));
+            if ( page > 0 )
+                freeMemory(page, pagesize*sizeof(char));
+
+#ifdef DEBUG
+
+            printf("DEBUG img_read_data: Finished reading and converting data\n");
+#endif
+
+        }
 
         return;
     }
 
     /** Data access
      *
-     * This operator can be used to access the data multidimarray. 
+     * This operator can be used to access the data multidimarray.
      * In this way we could resize an image just by
      * resizing its associated matrix or we could add two images by adding their
      * matrices.
 
      ********* FIXME!!! withx,y,z also being part of image class this resizing would be DANGEROUS!!!
-     
+
      *
      * @code
      * I().resize(128, 128);

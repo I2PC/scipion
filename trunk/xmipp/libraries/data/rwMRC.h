@@ -250,7 +250,8 @@ int readMRC(int img_select,bool isStack=false)
     freeMemory(header, sizeof(MRChead));
     readData(fimg, img_select, datatype, 0);
 
-    fclose(fimg);
+    if (data.mmapOn == false)
+    	fclose(fimg);
 
     return(0);
 }

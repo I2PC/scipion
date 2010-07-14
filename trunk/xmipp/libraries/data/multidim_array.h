@@ -292,7 +292,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * (included limits) respectively. You need to define SPEED_UP_temps.
  *
  * @code
- * SPEED_UP_temps; 
+ * SPEED_UP_temps;
  * MultidimArray< double > V1(10, 10, 10), V2(20, 20, 20);
  * V1.setXmippOrigin();
  * V2.setXmippOrigin();
@@ -690,7 +690,9 @@ public:
     int xinit;
 
     //Alloc memory or map to a file
-    bool mmapOn;
+    bool 				mmapOn;
+    FileName			mapFile;
+    int					mFd;
 
 public:
     /// @defgroup MultidimArrayConstructors Constructors
@@ -808,6 +810,7 @@ public:
         zinit=yinit=xinit=0;
         data=NULL;
         destroyData=true;
+        mmapOn = false;
     }
 
     /** Core allocate with dimensions.
@@ -830,7 +833,8 @@ public:
         yxdim=ydim*xdim;
         zyxdim=zdim*yxdim;
         nzyxdim=ndim*zyxdim;
-        data = new T [nzyxdim];
+        if (!mmapOn)
+        	data = new T [nzyxdim];
         if (data == NULL)
             REPORT_ERROR(1001, "Allocate: No space left");
     }
@@ -850,7 +854,8 @@ public:
         {
             REPORT_ERROR(1,"coreAllocateReuse:Cannot allocate a negative number of bytes");
         }
-        data = new T [nzyxdim];
+        if (!mmapOn)
+        	data = new T [nzyxdim];
         if (data == NULL)
             REPORT_ERROR(1001, "Allocate: No space left");
     }
@@ -869,9 +874,13 @@ public:
         {
             REPORT_ERROR(1,"coreAllocateReuse:Cannot allocate a negative number of bytes");
         }
-        data = new T [nzyxdim];
-        if (data == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left");
+        if (!mmapOn)
+        {
+            data = new T [nzyxdim];
+            if (data == NULL)
+                REPORT_ERROR(1001, "Allocate: No space left");
+        }
+
     }
 
     /** Sets new 4D dimensions.
@@ -951,7 +960,7 @@ public:
      */
     void coreDeallocate()
     {
-        if (data != NULL && destroyData)
+        if (data != NULL && destroyData && !mmapOn)
             delete[] data;
         data=NULL;
     }
@@ -1598,7 +1607,7 @@ public:
 
     /** Get a single 1,2 or 3D image from a multi-image array
      *  @ingroup MultidimMemory
-     * 
+     *
      * This function extracts a single-image array from a multi-image one.
      * @code
      * V.getImage(0, m);
@@ -4033,7 +4042,7 @@ public:
      * @ingroup MultidimUtilities
      *
      * Substitute  a given value by a sample from a Gaussian distribution.
-     * The accuracy is used to say if the value in the array is equal 
+     * The accuracy is used to say if the value in the array is equal
      * to the old value.  Set it to 0 for perfect accuracy.
      */
     void randomSubstitute(T oldv,
