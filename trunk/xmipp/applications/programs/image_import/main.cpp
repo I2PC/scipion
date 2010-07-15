@@ -80,7 +80,7 @@ void Usage()
     std::cout << " Purpose:\n";
     std::cout << " Extract size and sampling rate from an image file.\n";
     std::cout << " Usage:\n";
-    std::cout << "    import_images \n";
+    std::cout << "    image_import \n";
     std::cout << "         -inputFileName inputFileName\n";
     std::cout << "         -outputFileName outputFileName\n";
     std::cout << "         -taskNumber taskNumber\n";
