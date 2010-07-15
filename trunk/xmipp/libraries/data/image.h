@@ -152,7 +152,7 @@ private:
     TransformType       transform;   // Transform type
     int                 replaceNsize;// Stack size in the replace case
     int                 _exists;     // does target file exists?
-    bool				mmapOn;
+    bool				mmapOn;		// Mapping when loading from file
     int           		mFd;     //Handle the file in reading method and mmap
     size_t    			mappedSize;
     // equal 0 is not exists or not a stack
@@ -206,13 +206,15 @@ public:
      */
     void clear()
     {
-        if (data.mmapOn)
+        if (mmapOn)
         {
             munmap(data.data-offset,mappedSize);
             close(mFd);
+            data.data = NULL;
         }
+        else
+        	data.clear();
 
-        data.clear();
         dataflag = -1;
         if (isComplexT())
             transform = Standard;
@@ -333,7 +335,7 @@ public:
             dataflag = -1;
 
         // Check whether to map the data or not
-        data.mmapOn = mapData;
+        mmapOn = mapData;
 
 
         FileName ext_name = name.get_file_format();
@@ -1013,15 +1015,19 @@ public:
 
 
 
+        //Multidimarray mmapOn is priority over image mmapOn
+        if(data.mmapOn)
+        	mmapOn = false;
+
         // Flag to know that data is not going to be mapped although mmapOn is true
-        if (data.mmapOn && !castMmap2T(datatype))
+        if (mmapOn && !castMmap2T(datatype))
         {
             std::cout << "WARNING: Image Class. File datatype and image declaration not compatible with mmap. Loading into memory." <<std::endl;
-            data.mmapOn = false;
+            mmapOn = false;
             mFd = -1;
         }
 
-        if (data.mmapOn)
+        if (mmapOn)
         {
             if ( NSIZE(data) > 1 )
             {
@@ -1034,10 +1040,10 @@ public:
             if ( ( mFd = open(filename.c_str(), O_RDWR, S_IREAD | S_IWRITE) ) == -1 )
                 REPORT_ERROR(20,"Image Class::ReadData: Error opening the image file.");
 
-            void * map;
+            char * map;
             mappedSize = pagesize+offset;
 
-            if ( (map = mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+            if ( (map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
                 REPORT_ERROR(21,"Image Class::ReadData: mmap of image file failed.");
 
             map += offset;
