@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         fn_in            = getParameter(argc, argv, "-inputFileName");
         taskNumber       = getParameter(argc, argv, "-taskNumber");
         itemNumber       = getParameter(argc, argv, "-itemNumber");
-        fn_out = taskNumber + "_" + itemNumber + ".xml";
+        fn_out           = getParameter(argc, argv, "-outputFileName");
         int x,y,z,n;
         double sampling_rate;
         img.read(fn_in,false);
@@ -82,6 +82,7 @@ void Usage()
     std::cout << " Usage:\n";
     std::cout << "    import_images \n";
     std::cout << "         -inputFileName inputFileName\n";
+    std::cout << "         -outputFileName outputFileName\n";
     std::cout << "         -taskNumber taskNumber\n";
     std::cout << "         -itemNumber itemNumber\n";
     exit(1);
