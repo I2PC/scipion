@@ -466,8 +466,6 @@ public:
         err = readGRD(p);
         else if ( ext.contains("hkl") )
         err = readHKL(p);
-        else if ( ext.contains("img") || ext.contains("hed") )
-        err = readIMAGIC(p, select_img);
         else if ( ext.contains("ip") )
         err = readIP(p);
         else if ( ext.contains("jpg") || ext.contains("jpeg") )
@@ -1045,9 +1043,7 @@ public:
 
             if ( (map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
                 REPORT_ERROR(21,"Image Class::ReadData: mmap of image file failed.");
-
-            map += offset;
-            data.data = reinterpret_cast<T*> (map);
+            data.data = reinterpret_cast<T*> (map+offset);
         }
         else
         {
@@ -1327,6 +1323,19 @@ public:
     {
         bool dummy=false;
         MD.getValue(MDL_FLIP,dummy,n);
+        return (dummy);
+    }
+
+    /** Sampling RateX
+    *
+    * @code
+    * std::cout << "sampling= " << samplingRateX() << std::endl;
+    * @endcode
+    */
+    bool samplingRateX(const long int n = -1) const
+    {
+        double dummy=1.;
+        MDMainHeader.getValue(MDL_SAMPLINGRATEX,dummy,n);
         return (dummy);
     }
 
