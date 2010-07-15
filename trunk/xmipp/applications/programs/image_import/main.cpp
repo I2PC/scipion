@@ -81,7 +81,7 @@ void Usage()
     std::cout << " Extract size and sampling rate from an image file.\n";
     std::cout << " Usage:\n";
     std::cout << "    import_images \n";
-    std::cout << "         -i inputFileName\n";
+    std::cout << "         -inputFileName inputFileName\n";
     std::cout << "         -taskNumber taskNumber\n";
     std::cout << "         -itemNumber itemNumber\n";
     exit(1);
