@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     // Check command line options ===========================================
     try
     {
-        fn_in            = getParameter(argc, argv, "-inputFile");
+        fn_in            = getParameter(argc, argv, "-inputFileName");
         taskNumber       = getParameter(argc, argv, "-taskNumber");
         itemNumber       = getParameter(argc, argv, "-itemNumber");
         fn_out = taskNumber + "_" + itemNumber + ".xml";
