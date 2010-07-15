@@ -309,7 +309,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         }
     }
 
-    if (data.mmapOn == false)
+    if ( !mmapOn )
     	fclose(fimg);
 
     return(0);

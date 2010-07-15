@@ -254,7 +254,7 @@ int readDM3(int img_select,bool isStack=false)
 //	fclose(fimg);
     readData(fimg, img_select, datatype, pad);
 
-    if (data.mmapOn == false)
+    if ( !mmapOn )
     	fclose(fimg);
 
     return(0);

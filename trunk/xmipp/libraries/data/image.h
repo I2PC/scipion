@@ -152,10 +152,11 @@ private:
     TransformType       transform;   // Transform type
     int                 replaceNsize;// Stack size in the replace case
     int                 _exists;     // does target file exists?
+    // equal 0 is not exists or not a stack
+
     bool				mmapOn;		// Mapping when loading from file
     int           		mFd;     //Handle the file in reading method and mmap
     size_t    			mappedSize;
-    // equal 0 is not exists or not a stack
     /*
     double    min, max; // Limits
     double    avg, std; // Average and standard deviation

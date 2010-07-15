@@ -33,6 +33,9 @@
 #include "args.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 
 extern int bestPrecision(float F, int _width);
@@ -690,9 +693,9 @@ public:
     int xinit;
 
     //Alloc memory or map to a file
-    bool 				mmapOn;
-    FileName			mapFile;
-    int					mFd;
+    bool     mmapOn;
+    FileName   mapFile;
+    int     mFd;
 
 public:
     /// @defgroup MultidimArrayConstructors Constructors
@@ -833,10 +836,8 @@ public:
         yxdim=ydim*xdim;
         zyxdim=zdim*yxdim;
         nzyxdim=ndim*zyxdim;
-        if (!mmapOn)
-        	data = new T [nzyxdim];
-        if (data == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left");
+
+        coreAllocate();
     }
 
     /** Core allocate without dimensions.
@@ -852,12 +853,33 @@ public:
             REPORT_ERROR(1001, "do not allocate space for an image if you have not deallocate it first");
         if (nzyxdim < 0)
         {
-            REPORT_ERROR(1,"coreAllocateReuse:Cannot allocate a negative number of bytes");
+            REPORT_ERROR(1,"coreAllocate:Cannot allocate a negative number of bytes");
         }
-        if (!mmapOn)
-        	data = new T [nzyxdim];
-        if (data == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left");
+
+        if (mmapOn)
+        {
+            mapFile.init_random(8);
+            mapFile = mapFile.add_extension("tmp");
+
+
+            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC) ) == -1 )
+                REPORT_ERROR(20,"MultidimArray::coreAllocate: Error creating map file.");
+
+            if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1)|| (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
+            {
+                close(mFd);
+                REPORT_ERROR(20,"MultidimArray::coreAllocate: Error 'stretching' the map file.");
+            }
+
+            if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+                REPORT_ERROR(21,"MultidimArray::coreAllocate: mmap failed.");
+        }
+        else
+        {
+            data = new T [nzyxdim];
+            if (data == NULL)
+                REPORT_ERROR(1001, "Allocate: No space left");
+        }
     }
     /** Core allocate without dimensions.
      * @ingroup MultidimArrayCore
@@ -874,14 +896,41 @@ public:
         {
             REPORT_ERROR(1,"coreAllocateReuse:Cannot allocate a negative number of bytes");
         }
-        if (!mmapOn)
-        {
-            data = new T [nzyxdim];
-            if (data == NULL)
-                REPORT_ERROR(1001, "Allocate: No space left");
-        }
 
+        if (mmapOn)
+        {
+            mapFile.init_random(8);
+            mapFile = mapFile.add_extension("tmp");
+
+            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC) ) == -1 )
+                REPORT_ERROR(20,"MultidimArray::coreAllocateReuse: Error creating map file.");
+            if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1) || (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
+            {
+                close(mFd);
+                REPORT_ERROR(20,"MultidimArray::coreAllocateReuse: Error 'stretching' the map file.");
+            }
+
+            if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+                REPORT_ERROR(21,"MultidimArray::coreAllocateReuse: mmap failed.");
+        }
+        else
+            data = new T [nzyxdim];
+        if (data == NULL)
+            REPORT_ERROR(1001, "Allocate: No space left");
     }
+
+
+    /** Sets mmap.
+     * @ingroup MultidimArrayMmap
+     *
+     * Sets on/off mmap flag to allocate memory in a file.
+     *
+     */
+    void setMmap(bool mmap)
+    {
+        mmapOn = mmap;
+    }
+
 
     /** Sets new 4D dimensions.
      * @ingroup MultidimArraySize
@@ -960,8 +1009,17 @@ public:
      */
     void coreDeallocate()
     {
-        if (data != NULL && destroyData && !mmapOn)
-            delete[] data;
+        if (data != NULL && destroyData)
+        {
+            if (mmapOn)
+            {
+                munmap(data,nzyxdim*sizeof(T));
+                close(mFd);
+                remove(mapFile.c_str());
+            }
+            else
+                delete[] data;
+        }
         data=NULL;
     }
 
@@ -1038,12 +1096,31 @@ public:
         size_t YXdim=Ydim*Xdim;
         size_t ZYXdim=Zdim*YXdim;
         size_t NZYXdim=Ndim*ZYXdim;
+        int    new_mFd;
+        FileName   newMapFile;
 
         T * new_data;
 
         try
         {
-            new_data = new T [NZYXdim];
+            if (mmapOn)
+            {
+                newMapFile.init_random(8);
+                newMapFile = newMapFile.add_extension("tmp");
+
+                if ( ( new_mFd = open(newMapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC) ) == -1 )
+                    REPORT_ERROR(20,"MultidimArray::resize: Error creating map file.");
+                if ((lseek(new_mFd, NZYXdim*sizeof(T)-1, SEEK_SET) == -1) || (::write(new_mFd,"",1) == -1))
+                {
+                    close(new_mFd);
+                    REPORT_ERROR(20,"MultidimArray::resize: Error 'stretching' the map file.");
+                }
+
+                if ( (new_data = (T*) mmap(0,NZYXdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, new_mFd, 0)) == (void*) -1 )
+                    REPORT_ERROR(21,"MultidimArray::resize: mmap failed.");
+            }
+            else
+                new_data = new T [NZYXdim];
         }
         catch (std::bad_alloc &)
         {
@@ -1080,6 +1157,8 @@ public:
         yxdim = Ydim * Xdim;
         zyxdim = Zdim * yxdim;
         nzyxdim = Ndim * zyxdim;
+        mFd =new_mFd;
+        mapFile = newMapFile;
 
     }
 
