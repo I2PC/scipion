@@ -462,7 +462,7 @@ ReconsSources = [
 #    'mlf_align2d.cpp',
     'ml_refine3d.cpp',
 ##    'ml_tomo.cpp',
-#    'nma_alignment.cpp',
+     'nma_alignment.cpp',
 #    'phantom_create_micrograph.cpp',
 #    'phantom_create_random.cpp',
 #    'phantom_simulate_microscope.cpp',
@@ -619,7 +619,7 @@ AddXmippProgram('fourier_filter', ['XmippRecons'])
 AddXmippProgram('header_assign')
 AddXmippProgram('header_extract')
 AddXmippProgram('header_print')
-#AddXmippProgram('header_reset')
+AddXmippProgram('header_reset')
 #AddXmippProgram('histogram')
 AddXmippProgram('image_import')
 #AddXmippProgram('make_spectra', ['XmippRecons'])
@@ -639,7 +639,7 @@ AddXmippProgram('ml_refine3d', ['XmippRecons'])
 #AddXmippProgram('mlf_refine3d', ['XmippRecons']) sjors
 #AddXmippProgram('ml_tomo', ['XmippRecons']) sjors
 #AddXmippProgram('morphology')
-#AddXmippProgram('nma_alignment', ['XmippRecons'])
+AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('normalize')
 AddXmippProgram('operate')
 #AddXmippProgram('pdb_dictionary', ['XmippRecons_Interface','XmippRecons','XmippClassif','XmippInterface'])
@@ -703,6 +703,7 @@ AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
 AddBatch('showj', 'applications/scripts/showj','.sh')
 # AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
+AddBatch('move_along_NMAmode', 'applications/scripts/move_along_NMAmode','.pl')
 
 # Protocols
 AddProtocol('arg.py', 'applications/scripts/protocols')
@@ -760,6 +761,7 @@ if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])sjors
 #    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])sjors
 #    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons']sjors)
+    AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
     AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_project_xr', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
