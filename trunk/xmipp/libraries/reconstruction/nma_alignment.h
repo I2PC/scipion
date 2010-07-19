@@ -26,8 +26,9 @@
 #define _PROG_NMA_ALIGNMENT
 
 #include <vector>
-#include <data/metadata.h>
 #include <data/progs.h>
+#include <data/metadata.h>
+#include <data/image.h>
 #include "../../external/condor/ObjectiveFunction.h"
 #include "../../external/condor/Vector.h"
 
@@ -43,6 +44,9 @@ public:
     
     /// PDB file
     FileName fnPDB;
+
+    /// Output file
+    FileName fnOut; 
     
     /// File zith a list of modes
     FileName fnModeList;
@@ -59,17 +63,30 @@ public:
     /// Mask file
     FileName fnmask;
 
+    /// Center PDB
+    bool do_centerPDB;
+
+    /// Gaussian weight sigma in Fourier space
+    double gaussian_DFT_sigma;
+
+    /// Gaussian weight sigma in real space 
+    double gaussian_Real_sigma;
+
+    /// Weight for zero frequency
+    double weight_zero_freq;
+
+    /// Low-pass filter the volume from PDB 
+    bool do_FilterPDBVol;
+
+    /// Low-pass cut-off frequency
+    double cutoff_LPfilter;
+
     /// Use fixed Gaussian instead of scattering factors
     bool useFixedGaussian;
 
     /// Fixed Gaussian standard deviation
     double sigmaGaussian;
-
-    /// Center PDB
-    bool do_centerPDB;
-
-    /// Output file
-    FileName fnOut;    
+ 
 public:
 
     // Random generator seed
@@ -94,7 +111,7 @@ public:
     int imgSize;
     
     // Current image being considered
-    const ImageXmipp *currentImg;
+    const Image<double> *currentImg;
     
     // Current stage of optimization
     int currentStage;
@@ -149,7 +166,7 @@ public:
     void update_bestfit(double fitness, int dim) const;
 
     /** Assign NMA and Alignment parameters to an image */
-    void assignParameters(ImageXmipp &img);
+    void assignParameters(Image<double> &img);
 
     /** Finish processing.
         Close all output files. */
