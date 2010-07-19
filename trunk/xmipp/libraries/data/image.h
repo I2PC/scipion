@@ -1392,7 +1392,7 @@ public:
      *
      */
     void setShifts(double xoff, double yoff, double zoff = 0.,
-                   unsigned long n = 0)
+                   long int n = -1)
     {
         MD.setValue(MDL_ORIGINX,xoff,n);
         MD.setValue(MDL_ORIGINY,yoff,n);
@@ -1401,21 +1401,21 @@ public:
 
     /** Set X offset in image header
      */
-    void setXoff(double xoff, unsigned long n = 0)
+    void setXoff(double xoff, long int n = -1)
     {
         MD.setValue(MDL_ORIGINX,xoff,n);
     }
 
     /** Set Y offset in image header
      */
-    void setYoff(double yoff, unsigned long n = 0)
+    void setYoff(double yoff, long int n = -1)
     {
         MD.setValue(MDL_ORIGINY,yoff,n);
     }
 
     /** Set Z offset in image header
      */
-    void setZoff(double zoff, unsigned long n = 0)
+    void setZoff(double zoff, long int n = -1)
     {
         MD.setValue(MDL_ORIGINZ,zoff,n);
     }
@@ -1423,17 +1423,17 @@ public:
     /** Set flip in image header
      *
      */
-    void setFlip(bool _flip, long int n = -1)
+    void setFlip(bool flip, long int n = -1)
     {
-        MD.setValue(MDL_FLIP,_flip,n);
+        MD.setValue(MDL_FLIP,flip,n);
     }
 
     /** Set Weight in image header
     *
     */
-    void setWeight(double _weight, long int n = -1)
+    void setWeight(double weight, long int n = -1)
     {
-        MD.setValue(MDL_WEIGHT,_weight, n);
+        MD.setValue(MDL_WEIGHT,weight, n);
     }
 
 
@@ -1530,7 +1530,7 @@ public:
             o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
             o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
         }
-        if (I.individualContainsLabel(MDL_SHIFTX))
+        if (I.individualContainsLabel(MDL_ORIGINX))
         {
             o << "Origin Offsets : " << std::endl;
             o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
