@@ -26,11 +26,8 @@
 
 #include <iostream>
 #include <data/args.h>
-#include <data/metadata.h>
-#include "../../external/condor/ObjectiveFunction.h"
 #include "../../external/condor/Solver.h"
 #include "../../external/condor/tools.h"
-#include "../../external/condor/Vector.h"
 
 // Empty constructor =======================================================
 Prog_nma_alignment_prm::Prog_nma_alignment_prm()
@@ -45,17 +42,23 @@ void Prog_nma_alignment_prm::read(int argc, char **argv)
 {
     Prog_parameters::read(argc, argv);
     fnPDB=getParameter(argc,argv,"-pdb");
+    fnOut=getParameter(argc,argv,"-oang");
     fnModeList=getParameter(argc,argv,"-modes");
     scale_defamp=textToFloat(getParameter(argc,argv,"-deformation_scale"));
-    sampling_rate=textToFloat(getParameter(argc,argv,"-sampling_rate"));
+    sampling_rate=(double)textToFloat(getParameter(argc,argv,"-sampling_rate"));
     symmetry=getParameter(argc,argv,"-sym","c1");
     fnmask=getParameter(argc,argv,"-mask","");
-    fnOut=getParameter(argc,argv,"-oang");
+    gaussian_DFT_sigma = (double)textToFloat(getParameter(argc, argv, "-gaussian_Fourier", "0.5"));
+    gaussian_Real_sigma = (double)textToFloat(getParameter(argc, argv, "-gaussian_Real", "0.5"));
+    weight_zero_freq = (double)textToFloat(getParameter(argc, argv, "-zerofreq_weight", "0."));
+    do_centerPDB = checkParameter(argc, argv, "-centerPDB");
+    do_FilterPDBVol = checkParameter(argc, argv, "-filterVol");
+    if (do_FilterPDBVol)
+        cutoff_LPfilter=(double)textToFloat(getParameter(argc,argv,"-filterVol","15."));   
     useFixedGaussian = checkParameter(argc, argv, "-fixed_Gaussian");
     if (useFixedGaussian)
-        sigmaGaussian=textToFloat(getParameter(argc,argv,"-fixed_Gaussian","-1"));
-    do_centerPDB = checkParameter(argc, argv, "-centerPDB");
-    
+        sigmaGaussian=(double)textToFloat(getParameter(argc,argv,"-fixed_Gaussian","-1"));
+       
     if (!MPIversion) produce_side_info();
 }
 
@@ -63,16 +66,20 @@ void Prog_nma_alignment_prm::read(int argc, char **argv)
 void Prog_nma_alignment_prm::show()
 {
     Prog_parameters::show();
-    std::cout << "PDB:                " << fnPDB            << std::endl
-              << "Mode list:          " << fnModeList       << std::endl
-              << "Amplitude scale:    " << scale_defamp     << std::endl
-	      << "Sampling rate:      " << sampling_rate    << std::endl
-	      << "Symmetry:           " << symmetry         << std::endl
-              << "Mask:               " << fnmask           << std::endl
-              << "Use fixed Gaussian: " << useFixedGaussian << std::endl
-	      << "Sigma of Gaussian:  " << sigmaGaussian    << std::endl
-              << "Center PDB:         " << do_centerPDB     << std::endl
-	      << "Output:             " << fnOut            << std::endl
+    std::cout << "PDB:                 " << fnPDB               << std::endl
+              << "Output:              " << fnOut               << std::endl
+              << "Mode list:           " << fnModeList          << std::endl
+              << "Amplitude scale:     " << scale_defamp        << std::endl
+	      << "Sampling rate:       " << sampling_rate       << std::endl
+	      << "Symmetry:            " << symmetry            << std::endl
+              << "Mask:                " << fnmask              << std::endl
+              << "Gaussian Fourier:    " << gaussian_DFT_sigma  << std::endl
+              << "Gaussian Real:       " << gaussian_Real_sigma << std::endl
+              << "Zero-frequency weight:"<< weight_zero_freq    << std::endl
+              << "Center PDB:          " << do_centerPDB        << std::endl
+              << "Filter PDB volume    " << do_FilterPDBVol     << std::endl
+              << "Use fixed Gaussian:  " << useFixedGaussian    << std::endl              
+	      << "Sigma of Gaussian:   " << sigmaGaussian       << std::endl	      
     ;
 }
 
@@ -81,14 +88,19 @@ void Prog_nma_alignment_prm::usage()
 {
     Prog_parameters::usage();
     std::cerr << "   -pdb <PDB filename>                : PDB Model to compute NMA\n"
+              << "   -oang <output filename>            : File for the assignment\n"
               << "   -modes <filename>                  : File with a list of mode filenames\n"
               << "   -deformation_scale                 : Scaling factor to scale deformation amplitude\n"
 	      << "   -sampling_rate <Ts>                : in Angstroms/pixel\n"
 	      << "  [-sym]                              : Symmetry file or point group\n"
               << "  [-mask]                             : Mask\n"
-              << "  [-fixed_Gaussian <std>]             : For pseudo atoms fixed_Gaussian must be used. The the standard deviation <std> may or may not be used\n"
+              << "  [-gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space\n"
+              << "  [-gaussian_Real    <s=0.5>]          : Weighting sigma in Real space\n"
+              << "  [-zerofreq_weight  <s=0.>]         : Zero-frequency weight\n"
               << "  [-centerPDB]                        : Center the PDB structure\n"
-	      << "   -oang <output filename>            : File for the assignment\n"
+              << "  [-filterVol <cutoff>]               : Flter the volume from the PDB structure. Default cut-off is 15 A.\n"
+              << "  [-fixed_Gaussian <std>]             : For pseudo atoms fixed_Gaussian must be used.\n" 
+              << "                                        Default standard deviation <std> is read from PDB file.\n"	      
     ;
 }
 
@@ -105,22 +117,18 @@ void Prog_nma_alignment_prm::produce_side_info(int rank)
     FOR_ALL_OBJECTS_IN_METADATA(SFmodelist){      
        SFmodelist.getValue(MDL_IMAGE,tempname);
        modeList.push_back(tempname);
-       //std::cout << "MODE NAME=" << tempname  << " " << std::endl;
        i++;
     }
     
     // Get the size of the images in the selfile
     MetaData SFin;
     SFin.read(fn_in);
-    //FileName tempname;
     SFin.getValue(MDL_IMAGE,tempname);
-    ImageXmipp tempimage;
+    Image<double> tempimage;
     tempimage.read(tempname);
     
     imgSize=YSIZE(tempimage());
     int imgnumber=SFin.size();
-
-//std::cout << "IMAGESIZE=" << imgSize  << "" << "NAME" << tempname << std::endl;
     
     // Set the pointer of the program to this object
     global_NMA_prog=this;
@@ -143,7 +151,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
 	fnRandom+".pdb";
     system(command.c_str());
   
-    for (int i=1; i<XSIZE(trial)-5; ++i)
+    for (int i=1; i<VEC_XSIZE(trial)-5; ++i)
     {
 	command=(std::string)"xmipp_move_along_NMAmode deformedPDB_"+fnRandom+".pdb "+modeList[i]+" "+
             floatToString((float)trial(i)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
@@ -172,17 +180,16 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
        }
     }
 
-
     system(command.c_str());
 
-//std::cout << "COMMAND=" << command  << std::endl;
-
+    if (do_FilterPDBVol)
+    {
     command=(std::string)"xmipp_fourier_filter"+
        " -i deformedPDB_"+fnRandom+".vol"+
        " -sampling "+floatToString((float)sampling_rate)+
-       " -low_pass 15 -fourier_mask raised_cosine 0.1 >& /dev/null";
-
+       " -low_pass " + floatToString((float)cutoff_LPfilter) + " -fourier_mask raised_cosine 0.1 >& /dev/null";
     system(command.c_str());
+    }
 
     if (pyramidLevel!=0)
     {
@@ -193,8 +200,6 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
 
         system(command.c_str());
     }
-
-//std::cout << "COMMAND=" << command  << std::endl;
 
     return fnRandom;
 }
@@ -213,10 +218,8 @@ void Prog_nma_alignment_prm::performCompleteSearch(
 
     system(command.c_str());
 
-//std::cout << "COMMAND=" << command  << std::endl;
-
-    command=(std::string)"xmipp_selfile_create "+
-       "downimg_"+fnRandom+".xmp > selfile_"+fnRandom+".sel";
+    command=(std::string)"xmipp_metadata_selfile_create "+
+       "-p downimg_"+fnRandom+".xmp -o selfile_"+fnRandom+".sel";
 
     system(command.c_str());
     
@@ -229,10 +232,8 @@ void Prog_nma_alignment_prm::performCompleteSearch(
         " xmipp_angular_project_library "+command + " -quiet";
 
     system(command.c_str());
-    
-//std::cout << "COMMAND=" << command  << std::endl;
 
-    command=(std::string)"xmipp_selfile_create \"ref" + fnRandom + "/ref*.xmp\" > ref"+fnRandom+"_.sel";
+    command=(std::string)"xmipp_metadata_selfile_create -p \"ref" + fnRandom + "/ref*.xmp\" -o ref"+fnRandom+"_.sel";
     system(command.c_str());
     
     command=(std::string)"mv ref" + fnRandom + "/*.doc .";
@@ -244,11 +245,12 @@ void Prog_nma_alignment_prm::performCompleteSearch(
 
         system(command.c_str());
     }
-		
+
     command=(std::string)" xmipp_header_extract -i selfile_"+fnRandom+".sel -o docexp"+fnRandom+".txt";
 
     system(command.c_str());
-
+	
+    // Perform alignment	
     command=(std::string)" xmipp_angular_discrete_assign"+
         " -i docexp"+fnRandom+".txt" +
 	" -ref ref"+fnRandom+"_.sel"+
@@ -259,7 +261,10 @@ void Prog_nma_alignment_prm::performCompleteSearch(
 	" -5D -sym " + symmetry + " -quiet";
 
     system(command.c_str()); 
-//std::cout << "COMMAND=" << command  << std::endl; 
+
+    command=(std::string)" xmipp_header_assign -i angledisc_"+fnRandom+".txt";
+
+    system(command.c_str()); 
 
 }
 
@@ -270,9 +275,11 @@ double Prog_nma_alignment_prm::performContinuousAssignment(
     std::string command;
     if (pyramidLevel==0)
     {
-        // Make links
-        command=(std::string)"ln -sf "+
-           currentImg->name()+" downimg_"+fnRandom+".xmp";
+        // Make copy instead of a link
+        command=(std::string)"cp -f "+currentImg->name()+" downimg_"+fnRandom+".xmp";
+        system(command.c_str());
+
+        command=(std::string)" xmipp_header_assign -i angledisc_"+fnRandom+".txt";
         system(command.c_str());
     }
 
@@ -281,19 +288,23 @@ double Prog_nma_alignment_prm::performContinuousAssignment(
         " -ang angledisc_"+fnRandom+".txt"+
 	" -ref deformedPDB_"+fnRandom+".vol"+
 	" -oang anglecont_"+fnRandom+".txt"+
+        " -gaussian_Fourier " + floatToString((float)gaussian_DFT_sigma) +
+        " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
+        " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
 	" -quiet";
     system(command.c_str());
 
-//   std::cout << "COMMAND=" << command  << std::endl;
+    command=(std::string)" xmipp_header_assign -i anglecont_"+fnRandom+".txt";
+    system(command.c_str());
     
     // Pick up results
     MetaData DF;
     DF.read("anglecont_"+fnRandom+".txt");
-    DF.getValue(MDL_ANGLEROT,trial(XSIZE(trial)-5));
-    DF.getValue(MDL_ANGLETILT,trial(XSIZE(trial)-4));
-    DF.getValue(MDL_ANGLEPSI,trial(XSIZE(trial)-3));
-    DF.getValue(MDL_SHIFTX,trial(XSIZE(trial)-2));trial(XSIZE(trial)-2)*=pow(2.0,(double)pyramidLevel);
-    DF.getValue(MDL_SHIFTY,trial(XSIZE(trial)-1));trial(XSIZE(trial)-1)*=pow(2.0,(double)pyramidLevel);
+    DF.getValue(MDL_ANGLEROT,trial(VEC_XSIZE(trial)-5));
+    DF.getValue(MDL_ANGLETILT,trial(VEC_XSIZE(trial)-4));
+    DF.getValue(MDL_ANGLEPSI,trial(VEC_XSIZE(trial)-3));
+    DF.getValue(MDL_SHIFTX,trial(VEC_XSIZE(trial)-2));trial(VEC_XSIZE(trial)-2)*=pow(2.0,(double)pyramidLevel);
+    DF.getValue(MDL_SHIFTY,trial(VEC_XSIZE(trial)-1));trial(VEC_XSIZE(trial)-1)*=pow(2.0,(double)pyramidLevel);
     double tempvar;
     DF.getValue(MDL_COST,tempvar);
     return tempvar;
@@ -325,36 +336,36 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
     int pyramidLevelCont=(global_NMA_prog->currentStage==1)?1:0;
     
     FileName fnRandom=global_NMA_prog->createDeformedPDB(pyramidLevelCont);
+
     if (global_NMA_prog->currentStage==1)
     {
-         global_NMA_prog->performCompleteSearch(fnRandom,pyramidLevelDisc);
+        global_NMA_prog->performCompleteSearch(fnRandom,pyramidLevelDisc);
     }
     else
     {
         double rot, tilt, psi, xshift, yshift;
         MetaData DF;
         
-	rot = global_NMA_prog->bestStage1(XSIZE(global_NMA_prog->bestStage1)-5);
-	tilt = global_NMA_prog->bestStage1(XSIZE(global_NMA_prog->bestStage1)-4);
-	psi = global_NMA_prog->bestStage1(XSIZE(global_NMA_prog->bestStage1)-3);
-	xshift = global_NMA_prog->bestStage1(XSIZE(global_NMA_prog->bestStage1)-2);
-	yshift = global_NMA_prog->bestStage1(XSIZE(global_NMA_prog->bestStage1)-1);
+	rot = global_NMA_prog->bestStage1(VEC_XSIZE(global_NMA_prog->bestStage1)-5);
+	tilt = global_NMA_prog->bestStage1(VEC_XSIZE(global_NMA_prog->bestStage1)-4);
+	psi = global_NMA_prog->bestStage1(VEC_XSIZE(global_NMA_prog->bestStage1)-3);
+	xshift = global_NMA_prog->bestStage1(VEC_XSIZE(global_NMA_prog->bestStage1)-2);
+	yshift = global_NMA_prog->bestStage1(VEC_XSIZE(global_NMA_prog->bestStage1)-1);
        
-	    DF.addObject();
-	    DF.setValue(MDL_IMAGE,"downimg_"+fnRandom+".xmp");
-	    DF.setValue(MDL_ANGLEROT,rot);
-	    DF.setValue(MDL_ANGLETILT,tilt);
-	    DF.setValue(MDL_ANGLEPSI,psi);
-	    DF.setValue(MDL_SHIFTX,xshift);
-	    DF.setValue(MDL_SHIFTY,yshift);
+	DF.addObject();
+	DF.setValue(MDL_IMAGE,"downimg_"+fnRandom+".xmp");
+        DF.setValue(MDL_ENABLED,1);
+	DF.setValue(MDL_ANGLEROT,rot);
+	DF.setValue(MDL_ANGLETILT,tilt);
+	DF.setValue(MDL_ANGLEPSI,psi);
+	DF.setValue(MDL_SHIFTX,xshift);
+	DF.setValue(MDL_SHIFTY,yshift);
 	    
         DF.write("angledisc_"+fnRandom+".txt");
 
     }
     double fitness=global_NMA_prog->performContinuousAssignment(fnRandom,pyramidLevelCont);
 
-    
-   
     std::string command=(std::string)"rm -rf *"+fnRandom+"* &";
     system(command.c_str());
     
@@ -370,14 +381,10 @@ ObjFunc_nma_alignment::ObjFunc_nma_alignment(int _t, int _n)
 
 }
 
-void Prog_nma_alignment_prm::assignParameters(ImageXmipp &img)
-{
-    
+void Prog_nma_alignment_prm::assignParameters(Image<double> &img)
+{    
     FileName imgname=img.name();
 
-//std::cout << "NAME=" << imgname  << std::endl;
-    
-    //double rhoStart=1e-0, rhoEnd=1e-4;
     double rhoStart=1e-0, rhoEnd=1e-3;
     
     int niter=1000;
@@ -440,7 +447,6 @@ void Prog_nma_alignment_prm::assignParameters(ImageXmipp &img)
     of->setSaveFile();
     
     rhoStart=1e-3, rhoEnd=1e-4;
-    //rhoStart=1e-3, rhoEnd=1e-3;
     
     CONDOR(rhoStart, rhoEnd, niter, of);
     of->printStats();
@@ -449,12 +455,12 @@ void Prog_nma_alignment_prm::assignParameters(ImageXmipp &img)
     fclose(ff);
 
     fitness=of->valueBest;
-    //std::cout << "Best fitness = " << fitness << std::endl;
+    std::cout << "Best fitness = " << fitness << std::endl;
     dd=of->xBest;
-    /*for (int i=0; i<dim; i++)
+    for (int i=0; i<dim; i++)
     {
         std::cout << "Best deformations = " << dd[i] << std::endl;
-    }*/
+    }
 
     for (int i=0; i<dim+5; i++)
     {
@@ -470,31 +476,31 @@ void Prog_nma_alignment_prm::assignParameters(ImageXmipp &img)
     {
         parameters(5+i)=trial_best(i)*scale_defamp;
     }
-
-    img.read(imgname);
    
-    parameters.resize(XSIZE(parameters)+1);
-    parameters(XSIZE(parameters)-1)=fitness_min(0);
+    parameters.resize(VEC_XSIZE(parameters)+1);
+    parameters(VEC_XSIZE(parameters)-1)=fitness_min(0);
     listAssignments.push_back(parameters);
     img_names.push_back(imgname);
            
-    	DF_out.addObject();
-    	DF_out.setValue(MDL_IMAGE,imgname);
-    	DF_out.setValue(MDL_ANGLEROT,parameters(0));
-    	DF_out.setValue(MDL_ANGLETILT,parameters(1));
-    	DF_out.setValue(MDL_ANGLEPSI,parameters(2));
-    	DF_out.setValue(MDL_SHIFTX,parameters(3));
-    	DF_out.setValue(MDL_SHIFTY,parameters(4));
-    	     
-        std::vector<double> vectortemp;
-        for (int j = 5; j < 5+dim; j++)
-        {
-        	vectortemp.push_back(parameters(j));
-        }
-        DF_out.setValue(MDL_NMA,vectortemp);
-        DF_out.setValue(MDL_COST,parameters(5+dim));
+    DF_out.addObject();
+    DF_out.setValue(MDL_IMAGE,imgname);
+    DF_out.setValue(MDL_ENABLED,1);
+    DF_out.setValue(MDL_ANGLEROT,parameters(0));
+    DF_out.setValue(MDL_ANGLETILT,parameters(1));
+    DF_out.setValue(MDL_ANGLEPSI,parameters(2));
+    DF_out.setValue(MDL_SHIFTX,parameters(3));
+    DF_out.setValue(MDL_SHIFTY,parameters(4));
+     
+    std::vector<double> vectortemp;
+    for (int j = 5; j < 5+dim; j++)
+    {
+        vectortemp.push_back(parameters(j));
+    }
+    
+    DF_out.setValue(MDL_NMA,vectortemp);
+    DF_out.setValue(MDL_COST,parameters(5+dim));
         
-        DF_out.write(fnOut+integerToString(rangen));
+    DF_out.write(fnOut+integerToString(rangen));
  
     delete of;
  }
@@ -507,15 +513,16 @@ void Prog_nma_alignment_prm::finish_processing()
                
         for (int i = 0; i < p; i++)
         {
-        	DF.addObject();
-        	DF.setValue(MDL_IMAGE,img_names[i]);
-        	DF.setValue(MDL_ANGLEROT,listAssignments[i](0));
-        	DF.setValue(MDL_ANGLETILT,listAssignments[i](1));
-        	DF.setValue(MDL_ANGLEPSI,listAssignments[i](2));
-        	DF.setValue(MDL_SHIFTX,listAssignments[i](3));
-        	DF.setValue(MDL_SHIFTY,listAssignments[i](4));
+            DF.addObject();
+            DF.setValue(MDL_IMAGE,img_names[i]);
+            DF.setValue(MDL_ENABLED,1);
+            DF.setValue(MDL_ANGLEROT,listAssignments[i](0));
+            DF.setValue(MDL_ANGLETILT,listAssignments[i](1));
+            DF.setValue(MDL_ANGLEPSI,listAssignments[i](2));
+            DF.setValue(MDL_SHIFTX,listAssignments[i](3));
+            DF.setValue(MDL_SHIFTY,listAssignments[i](4));
         	
-        	int xsz=XSIZE(listAssignments[i]);
+            int xsz=VEC_XSIZE(listAssignments[i]);
             std::vector<double> vectortemp;
             for (int j = 5; j < xsz-1; j++)
             {
