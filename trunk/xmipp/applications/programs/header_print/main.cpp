@@ -1,7 +1,7 @@
 /***************************************************************************
  *
- * Authors:    Carlos Oscar            coss@cnb.csic.es (1999)
- *             Sjors Scheres
+ * Authors:    Sjors Scheres
+ *             Slavica Jonic
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -12,7 +12,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FO A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -25,81 +25,70 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <cstdio>
 #include <data/image.h>
 #include <data/metadata.h>
+
 void Usage();
 
-int main(int argc, char **argv)
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
 {
+    Image<double>      img;
     FileName        fn_input;
-    MetaData        SF;
-    Image<double>  image;
+    MetaData SF;
 
-    // Read arguments --------------------------------------------------------
     try
     {
         fn_input = getParameter(argc, argv, "-i");
-        if (fn_input.isMetaData())
+        if (!fn_input.isMetaData())
         {
-        	SF.read(fn_input);
-        }
-        else
-        {
-       	    SF.addObject();
+            SF.addObject();
             SF.setValue( MDL_IMAGE, fn_input);
             SF.setValue( MDL_ENABLED, 1);
+        }
+        else {
+            SF.read( fn_input ,NULL);
+            SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
         }
     }
     catch (Xmipp_error XE)
     {
         std::cout << XE;
         Usage();
-        exit(1);
     }
 
     try
     {
+        std::cout << " Printing the header ... " << std::endl;
 
-        // Process each file -----------------------------------------------------
-		if(SF.isEmpty())
-		{
-			std::cerr << "Empty inputFile File\n";
-			exit(1);
-		}
-
-		FOR_ALL_OBJECTS_IN_METADATA(SF)
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            FileName file_name;
-            SF.getValue( MDL_IMAGE, file_name);
+            FileName fn_img;
+            SF.getValue( MDL_IMAGE, fn_img); 
+            if (fn_img=="") break;
+            std::cout << "FileName     : " << fn_img << std::endl;
 
-            if (file_name=="")
-                break;
-            std::cout << "FileName     : " << file_name << std::endl;
-			image.read(file_name, false, -1, false);
-			std::cout << image;
-			std::cout << std::endl;
-        } // while
+            img.read(fn_img, false, -1, false);
+
+            std::cout << img;
+	    std::cout << std::endl;
+        }
 
     }
     catch (Xmipp_error XE)
     {
         std::cout << XE;
     }
-
-    exit(0);
-
-} //main
+}
 
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
-    std::cerr << "Purpose:\n";
-    std::cerr << "    Prints to screen some of the information stored in the header\n";
-
-    std::cerr << "Usage: header_print " << std::endl
-    << "    -i               : metaDataFile with images/volumes \n"
-    << "                        or individual image or volume \n"
-    ;
+    printf("Purpose:\n");
+    printf(" Print information from the header of 2D-images.\n");
+    printf("Usage:\n");
+    printf("   header_print \n");
+    printf("    -i                                   : metaDataFile with images or individual image\n");
+    exit(1);
 }
 
