@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     Image<double>      img;
     FileName        fn_input;
     bool            tiltSeries;
-    double          firstAngle, angularStep;
+    double          firstAngle, angularStep,angle;
     MetaData SF, MD;
 
     try
@@ -43,12 +43,14 @@ int main(int argc, char *argv[])
         fn_input = getParameter(argc, argv, "-i");
         if (!fn_input.isMetaData())
         {
-        	SF.addObject();
+            SF.addObject();
             SF.setValue( MDL_IMAGE, fn_input);
             SF.setValue( MDL_ENABLED, 1);
         }
-        else
+        else {
             SF.read( fn_input ,NULL);
+            SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
+        }
 
         tiltSeries=checkParameter(argc,argv,"-tiltSeries");
         if (tiltSeries)
@@ -68,39 +70,34 @@ int main(int argc, char *argv[])
 
     try
     {
-        std::cerr << " Resetting all angles, origin offsets, weights and mirror flags to zero ... " << std::endl;
-        if (tiltSeries)
-            std::cerr << "Setting the tilt angles to a tilt series\n"
+        std::cout << " Resetting all angles, origin offsets, weights and mirror flags to zero ... " << std::endl;
+
+        if (tiltSeries){
+            std::cout << "Setting the tilt angles to a tilt series\n"
                       << "First angle=" << firstAngle << std::endl
                       << "Angular step=" << angularStep << std::endl;
-        double angle=firstAngle;
-
-        //create NULL metadata
-        MD.addObject();
-        double daux=0.;
-        MD.setValue(MDL_ORIGINX, daux);
-        MD.setValue(MDL_ORIGINY, daux);
-        MD.setValue(MDL_ORIGINZ, daux);
-        MD.setValue(MDL_ANGLEROT, daux);
-        MD.setValue(MDL_ANGLETILT, daux);
-        daux = (double)1.0;
-        MD.setValue(MDL_WEIGHT, daux);
-        bool baux;
-        baux=false;
-        MD.setValue(MDL_FLIP, baux);
+            angle=firstAngle;
+        }
 
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             FileName fn_img;
             SF.getValue( MDL_IMAGE, fn_img); 
             if (fn_img=="") break;
-            img.read(fn_img,false,-1,false);
+
+            img.read(fn_img); //read data and header
+            
             img.clearHeader();
+          
             if (tiltSeries)
             {
                 img.setTilt(angle);
                 angle+=angularStep;
             }
+
+            double daux = (double)1.;
+            img.setWeight(daux);
+
             img.write(fn_img);
         }
 
@@ -108,7 +105,6 @@ int main(int argc, char *argv[])
     catch (Xmipp_error XE)
     {
         std::cout << XE;
-        Usage();
     }
 }
 
