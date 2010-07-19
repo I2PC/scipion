@@ -316,6 +316,7 @@ public:
         _setValue(objectId, MDValue(label, valueIn));
     }
 
+
     bool setValues(int n, ...);
     // Set a new pair/value for an specified object. If no objectId is given, that
     // pointed by the class iterator is used
@@ -433,7 +434,7 @@ public:
      * if limit is provided only return a maximun of 'limit'
      * @ingroup MetaDataSearch
      */
-    void findObjects(std::vector<long int> &objectsOut, const MDQuery &query, int limit = -1);
+    void findObjects(std::vector<long int> &objectsOut, const MDQuery &query);
     void findObjects(std::vector<long int> &objectsOut, int limit = -1);
     /**Count all objects with pairs <label, value>
      * @ingroup MetaDataSearch

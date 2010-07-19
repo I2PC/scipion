@@ -160,7 +160,7 @@ bool MDSql::getObjectValue(const int objId, MDValue  &value)
     return true;
 }
 
-void MDSql::selectObjects(std::vector<long int> &objectsOut, int limit, const MDQuery *queryPtr)
+void MDSql::selectObjects(std::vector<long int> &objectsOut, const MDQuery *queryPtr)
 {
     std::stringstream ss;
     sqlite3_stmt *stmt;
@@ -170,11 +170,10 @@ void MDSql::selectObjects(std::vector<long int> &objectsOut, int limit, const MD
     ss << "SELECT objID FROM " << tableName(tableId);
     if (queryPtr != NULL)
     {
-        ss << " WHERE " << queryPtr->queryString;
+        ss << queryPtr->whereString();
+        ss << queryPtr->orderByString();
+        ss << queryPtr->limitString();
     }
-    ss << " ORDER BY objID";
-    ss << " LIMIT " << limit << ";";
-
     rc = sqlite3_prepare(db, ss.str().c_str(), -1, &stmt, &zLeftover);
 #ifdef DEBUG
 
@@ -193,7 +192,8 @@ long int MDSql::deleteObjects(const MDQuery *queryPtr)
     std::stringstream ss;
     ss << "DELETE FROM " << tableName(tableId);
     if (queryPtr != NULL)
-        ss << " WHERE " << queryPtr->queryString << ";";
+        ss << queryPtr->whereString();
+
     if (execSingleStmt(ss))
     {
         return sqlite3_changes(db);
@@ -203,14 +203,13 @@ long int MDSql::deleteObjects(const MDQuery *queryPtr)
 }
 
 long int MDSql::copyObjects(MetaData *mdPtrOut,
-                            const MDQuery *queryPtr, const MDLabel sortLabel,
-                            int limit, int offset) const
+                            const MDQuery *queryPtr) const
 {
-    copyObjects(mdPtrOut->myMDSql, queryPtr, sortLabel, limit, offset);
+    copyObjects(mdPtrOut->myMDSql, queryPtr);
 }
+
 long int MDSql::copyObjects(MDSql * sqlOut,
-                            const MDQuery *queryPtr, const MDLabel sortLabel,
-                            int limit, int offset) const
+                            const MDQuery *queryPtr) const
 {
     //NOTE: Is assumed that the destiny table has
     // the same columns that the source table, if not
@@ -230,9 +229,11 @@ long int MDSql::copyObjects(MDSql * sqlOut,
     ss << "(" << ss2.str() << ") SELECT " << ss2.str();
     ss << " FROM " << tableName(tableId);
     if (queryPtr != NULL)
-        ss << " WHERE " << queryPtr->queryString;
-    ss << " ORDER BY " << MDL::label2Str(sortLabel);
-    ss << " LIMIT " << limit << " OFFSET " << offset << ";";
+    {
+        ss << queryPtr->whereString();
+        ss << queryPtr->orderByString();
+        ss << queryPtr->limitString();
+    }
     if (sqlOut->execSingleStmt(ss))
     {
         return sqlite3_changes(db);

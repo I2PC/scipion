@@ -65,8 +65,6 @@ class MDSql
 {
 public:
 
-
-
     /**This will create the table to store
      * the metada objects, will return false
      * if the mdId table is already present
@@ -103,23 +101,21 @@ public:
      * Also a query could be specified for selecting objects
      * if no query is provided by default all are returned
      */
-    void selectObjects(std::vector<long int> &objectsOut, int limit = -1, const MDQuery *queryPtr = NULL);
+    void selectObjects(std::vector<long int> &objectsOut, const MDQuery *queryPtr = NULL);
 
     /** This function will delete elements
      * that match the query
      * if not query is provided, all rows are deleted
      */
-    long int deleteObjects(const MDQuery *queryPtr=NULL);
+    long int deleteObjects(const MDQuery *queryPtr = NULL);
 
     /** Coppy the objects from a metada to other
      * return the number of objects copied
      * */
     long int copyObjects(MDSql * sqlOut,
-                         const MDQuery *queryPtr = NULL, const MDLabel sortLabel = MDL_OBJID,
-                         int limit = -1, int offset = 0) const;
+                         const MDQuery *queryPtr = NULL) const;
     long int copyObjects(MetaData * mdPtrOut,
-                         const MDQuery *queryPtr = NULL, const MDLabel sortLabel = MDL_OBJID,
-                         int limit = -1, int offset = 0) const;
+                         const MDQuery *queryPtr = NULL) const;
 
     /** This function is to perform aggregation operations
      *
@@ -232,14 +228,43 @@ private:
 class MDQuery
 {
 public:
+    std::string queryString;
+    int limit, offset;
+    MDLabel orderLabel;
 
+        MDQuery(int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID)
+    {
+        this->limit = limit;
+        this->offset = offset;
+        this->orderLabel = orderLabel;
+        this->queryString = " ";
+    }
+
+    std::string orderByString() const
+    {
+        return (std::string)" ORDER BY " + MDL::label2Str(orderLabel);
+    }
+
+    std::string limitString() const
+    {
+        std::stringstream ss;
+        if (limit != -1)
+            ss << " LIMIT " << limit << " ";
+        if (offset > 0)
+            ss << "OFFSET " << offset << " ";
+        return ss.str();
+    }
+
+    std::string whereString() const
+    {
+        return (queryString == " ") ? "" : " WHERE " + queryString + " ";
+    }
     /**This now is specific to the SQL implementation
      * and its requiered to all MDQuery subclasses
      * equal to 0 means that is ABSTRACT in this class
      * and only accesible for MetaData
      */
-    std::string queryString;
-    int limit;
+
 };
 
 /**MDValueEqual this will test if a label have a value
@@ -253,7 +278,7 @@ public:
     MDValueEqual()
     {}
     template <class T>
-    MDValueEqual(MDLabel label, const T &value)
+    MDValueEqual(MDLabel label, const T &value, int limit = -1, int offset = 0,MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
         std::stringstream ss;
         MDValue mdValue(label, value);
@@ -273,7 +298,8 @@ public:
     MDValueRange()
     {}
     template <class T>
-    MDValueRange(MDLabel label, const T &valueMin, const T &valueMax)
+    MDValueRange(MDLabel label, const T &valueMin, const T &valueMax,
+                 int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
         std::stringstream ss;
         MDValue mdValueMin(label, valueMin);
@@ -299,10 +325,10 @@ public:
 class MDValueAbove: public MDQuery
 {
 public:
-	MDValueAbove()
+    MDValueAbove()
     {}
     template <class T>
-    MDValueAbove(MDLabel label, const T &valueMin)
+    MDValueAbove(MDLabel label, const T &valueMin, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
         std::stringstream ss;
         MDValue mdValueMin(label, valueMin);
@@ -320,10 +346,10 @@ public:
 class MDValueBelow: public MDQuery
 {
 public:
-	MDValueBelow()
+    MDValueBelow()
     {}
     template <class T>
-    MDValueBelow(MDLabel label, const T &valueMax)
+    MDValueBelow(MDLabel label, const T &valueMax, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
         std::stringstream ss;
         MDValue mdValueMax(label, valueMax);
@@ -352,17 +378,17 @@ private:
     }
 public:
 
-    MDMultiQuery()
+    MDMultiQuery(int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
         clear();
     }
     void addAndQuery(const MDQuery &query)
     {
-    	addQuery(query, "AND");
+        addQuery(query, "AND");
     }
     void addOrQuery(const MDQuery &query)
     {
-    	addQuery(query, "OR");
+        addQuery(query, "OR");
     }
     void clear()
     {
@@ -392,24 +418,24 @@ public:
 template<class T>
 MDValueEqual MDValueEqualSwig(MDLabel label, const T &value)
 {
-	return MDValueEqual(label, value);
+    return MDValueEqual(label, value);
 }
 
 template<class T>
 MDValueRange MDValueRangeSwig(MDLabel label, const T &valueMin, const T &valueMax)
 {
-	return MDValueRange(label, valueMin, valueMax);
+    return MDValueRange(label, valueMin, valueMax);
 }
 
 template<class T>
 MDValueAbove MDValueAboveSwig(MDLabel label, const T &valueMin)
 {
-	return MDValueAbove(label, valueMin);
+    return MDValueAbove(label, valueMin);
 }
 
 template<class T>
 MDValueBelow MDValueBelowSwig(MDLabel label, const T &valueMax)
 {
-	return MDValueBelow(label, valueMax);
+    return MDValueBelow(label, valueMax);
 }
 #endif
