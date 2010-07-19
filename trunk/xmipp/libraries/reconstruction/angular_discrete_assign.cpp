@@ -249,7 +249,8 @@ void Prog_angular_predict_prm::produce_library(int rank)
         SF_ref.getValue(MDL_IMAGE,fn_img);
         if (fn_img=="")
             break;
-        I.read(fn_img, false, false, true, true);
+        //Old (no metadata): I.read(fn_img, false, false, true, true);
+        I.read(fn_img, true, -1, true, true);
         library_name.push_back(I.name());
 
         // Make and distribute its DWT coefficients in the different PCA bins
@@ -1064,6 +1065,7 @@ void Prog_angular_predict_prm::finish_processing()
         std::string fn;
         DFexp.getValue(MDL_IMAGE, fn);
         DF.setValue(MDL_IMAGE,     fn);
+        DF.setValue(MDL_ENABLED,   1);
         DF.setValue(MDL_ANGLEROT,  predicted_rot[i]);
         DF.setValue(MDL_ANGLETILT, predicted_tilt[i]);
         DF.setValue(MDL_ANGLEPSI,  predicted_psi[i]);
