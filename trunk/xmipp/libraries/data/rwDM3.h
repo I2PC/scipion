@@ -112,7 +112,7 @@ int readDM3(int img_select,bool isStack=false)
 
 
     std::vector<long int> vIm;
-    header->tags.findObjects(vIm, MDValueEqual(MDL_DM3_TAGNAME,(std::string)"DataType"));
+    header->tags.findObjects(vIm, MDValueEQ(MDL_DM3_TAGNAME,(std::string)"DataType"));
 
     header->nIm = 0;
     std::vector<DM3dataHead> dataHeaders;
@@ -586,7 +586,7 @@ int parentDM3(MetaData &MD, int nodeId, int depth = 1)
 {
     for (int n = 0; n < depth; n++)
     {
-        MD.gotoFirstObject(MDValueEqual(MDL_DM3_NODEID,nodeId));
+        MD.gotoFirstObject(MDValueEQ(MDL_DM3_NODEID,nodeId));
         MD.getValue(MDL_DM3_PARENTID,nodeId);
 
         if (nodeId == 0)
@@ -608,8 +608,8 @@ double gotoTagDM3(MetaData &MD, int nodeId, std::string tagsList)
         tag = vTags[n];
 
         queries.clear();
-        queries.addAndQuery(MDValueEqual(MDL_DM3_PARENTID,nodeId));
-        queries.addAndQuery(MDValueEqual(MDL_DM3_TAGNAME,tag));
+        queries.addAndQuery(MDValueEQ(MDL_DM3_PARENTID,nodeId));
+        queries.addAndQuery(MDValueEQ(MDL_DM3_TAGNAME,tag));
 
         MD.gotoFirstObject(queries);
         MD.getValue(MDL_DM3_NODEID,nodeId);
@@ -635,7 +635,7 @@ void printDM3node(MetaData &MD, long int objId)
     std::cout << tag << std::endl;
 
     std::vector<long int> vObjs;
-    MD.findObjects(vObjs,MDValueEqual(MDL_DM3_PARENTID, nodeId));
+    MD.findObjects(vObjs,MDValueEQ(MDL_DM3_PARENTID, nodeId));
 
     space += 3;
 
@@ -649,7 +649,7 @@ void printDM3(MetaData MD)
 {
     std::vector<long int> vObjs;
     space = 0;
-    MD.findObjects(vObjs,MDValueEqual(MDL_DM3_PARENTID, 0));
+    MD.findObjects(vObjs,MDValueEQ(MDL_DM3_PARENTID, 0));
 
     for (int i = 0; i < vObjs.size(); i++)
         printDM3node(MD, vObjs[i]);

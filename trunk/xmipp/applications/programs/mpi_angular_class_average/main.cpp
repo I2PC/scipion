@@ -193,7 +193,7 @@ public:
                                 // and 'this_image' is of type int...
                                 REPORT_ERROR(-99, "The next line has no sense since the MDL_IMAGE is string \
                                              and 'this_image' is of type int...");
-                                DF.gotoFirstObject(MDValueEqual(MDL_IMAGE,this_image));
+                                DF.gotoFirstObject(MDValueEQ(MDL_IMAGE,this_image));
                                 DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6]);
                                 DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7]);
                                 DF.setValue(MDL_ANGLEPSI,output_values[i*AVG_OUPUT_SIZE+8]);
@@ -296,7 +296,7 @@ public:
                                 // and 'this_image' is of type int...
                                 REPORT_ERROR(-99, "The next line has no sense since the MDL_IMAGE is string \
                                              and 'this_image' is of type int...");
-                                DF.gotoFirstObject(MDValueEqual(MDL_IMAGE,this_image));
+                                DF.gotoFirstObject(MDValueEQ(MDL_IMAGE,this_image));
 
                                 DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6]);
                                 DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7]);

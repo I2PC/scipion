@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
         }
 
 
-        SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
+        SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
         std::cerr << "Converting from DM3 to RAW ...\n";
 

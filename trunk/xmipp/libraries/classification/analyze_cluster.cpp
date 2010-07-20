@@ -78,7 +78,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
 {
     // Read input selfile and reference
     SFin.read(fnSel, NULL);
-    SFin.removeObjects(MDValueEqual(MDL_ENABLED, -1));
+    SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
     // Image holding current reference
     Image<double> Iref;

@@ -802,7 +802,7 @@ void Prog_align2d_prm::align2d()
     std::cerr << "Calculating average, correlations and writing out results ..." << std::endl;
     Image<double> med,sig;
     double min, max;
-    if (SFo.containsObject(MDValueEqual( MDL_ENABLED, 1)))
+    if (SFo.containsObject(MDValueEQ( MDL_ENABLED, 1)))
     {
         getStatistics(SFo,med, sig, min, max, true);
     }
@@ -817,7 +817,7 @@ void Prog_align2d_prm::align2d()
     if (oext != "")
         fn_img = fn_img.insert_before_extension("_" + oext);
     fn_img = fn_img.insert_before_extension(".med");
-    med.setWeight(SFo.countObjects(MDValueEqual(MDL_ENABLED, 1)));
+    med.setWeight(SFo.countObjects(MDValueEQ(MDL_ENABLED, 1)));
     med.write(fn_img);
     fn_img = fn_sel.without_extension() + ".xmp";
     if (oext != "")

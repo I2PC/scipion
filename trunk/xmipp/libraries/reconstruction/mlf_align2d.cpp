@@ -326,7 +326,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
 
     // Read selfile with experimental images
     MDimg.read(fn_sel);
-    MDimg.removeObjects(MDValueEqual(MDL_ENABLED, -1));
+    MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     nr_images_global = MDimg.size();
 
     // Create a vector of ovjectIDs, which may be randomized later on
@@ -2825,7 +2825,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
     for (int refno = 0; refno < n_ref; refno++)
     {
         MDo.clear();
-        Mdo.importObjects(MDimg, MDValueEqual(MDL_REF, refno + 1));
+        Mdo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
         fn_tmp = fn_root + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp += "_img.xmd";

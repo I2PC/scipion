@@ -343,7 +343,7 @@ long int MetaData::addObject(long int objectId)
 
 void MetaData::importObject(const MetaData &md, const long int objId, bool doClear)
 {
-    md.myMDSql->copyObjects(this, new MDValueEqual(MDL_OBJID, objId));
+    md.myMDSql->copyObjects(this, new MDValueEQ(MDL_OBJID, objId));
 }
 
 void MetaData::importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd, bool doClear)
@@ -376,7 +376,7 @@ void MetaData::importObjects(const MetaData &md, const MDQuery &query, bool doCl
 
 bool MetaData::removeObject(long int objectId)
 {
-    int removed = removeObjects(MDValueEqual(MDL_OBJID, objectId));
+    int removed = removeObjects(MDValueEQ(MDL_OBJID, objectId));
     firstObject();
     return (removed > 0);
 }
@@ -530,7 +530,7 @@ int MetaData::countObjects(const MDQuery &query)
 
 bool MetaData::containsObject(long int objectId)
 {
-    return containsObject(MDValueEqual(MDL_OBJID, objectId));
+    return containsObject(MDValueEQ(MDL_OBJID, objectId));
 }
 
 bool MetaData::containsObject(const MDQuery &query)

@@ -232,7 +232,7 @@ public:
     int limit, offset;
     MDLabel orderLabel;
 
-        MDQuery(int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID)
+    MDQuery(int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID)
     {
         this->limit = limit;
         this->offset = offset;
@@ -267,27 +267,101 @@ public:
 
 };
 
-/**MDValueEqual this will test if a label have a value
+enum RelationalOp { EQ, NE, GT, LT, GE, LE };
+/**MDValueRelational will compare a column with some value
  *@ingroup MetaDataQuery
  */
-class MDValueEqual: public MDQuery
+class MDValueRelational: public MDQuery
 {
 public:
     MDLabel label;
+    MDValue *value;
+    RelationalOp op;
 
-    MDValueEqual()
+    MDValueRelational()
     {}
+
     template <class T>
-    MDValueEqual(MDLabel label, const T &value, int limit = -1, int offset = 0,MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
+    MDValueRelational(MDLabel label, const T &value, RelationalOp op, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
+        this->op = op;
+
         std::stringstream ss;
         MDValue mdValue(label, value);
-        ss << MDL::label2Str(label) << "=";
+
+        ss << MDL::label2Str(label) << opString();
         mdValue.toStream(ss, false, true);
         this->queryString = ss.str();
     }
+
+    std::string opString()
+    {
+        switch (op)
+        {
+            case EQ:
+                return "=";
+            case NE:
+                return "!=";
+            case GT:
+                return ">";
+            case LT:
+                return "<";
+            case GE:
+                return ">=";
+            case LE:
+                return "<=";
+        }
+    }
 }
 ;//class MDValueEqual
+
+/**MDValueEqual this will test if a label have a value
+ *@ingroup MetaDataQuery
+ */
+class MDValueEQ: public MDValueRelational
+{
+public:
+    MDValueEQ()
+    {}
+    template <class T>
+    MDValueEQ(MDLabel label, const T &value, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID)
+    :MDValueRelational(label, value, EQ, limit, offset, orderLabel)
+    {
+    }
+}
+;//class MDValueEQ
+
+/**MDValueAbove this will test if a label have a value larger than a minimum
+ *@ingroup MetaDataQuery
+ */
+class MDValueGE: public MDValueRelational
+{
+public:
+    MDValueGE()
+    {}
+    template <class T>
+    MDValueGE(MDLabel label, const T &valueMin, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID)
+    :MDValueRelational(label, value, GE, limit, offset, orderLabel)
+    {
+    }
+}
+;//class MDValueGE
+
+/**MDValueAbove this will test if a label have a value smaller than a maximum
+ *@ingroup MetaDataQuery
+ */
+class MDValueLE: public MDValueRelational
+{
+public:
+    MDValueLE()
+    {}
+    template <class T>
+    MDValueLE(MDLabel label, const T &valueMax, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID)
+    :MDValueRelational(label, value, LE, limit, offset, orderLabel)
+    {
+    }
+}
+;//class MDValueLE
 
 /**MDValueRange this will test if a label have a value within a minimum and maximum
  *@ingroup MetaDataQuery
@@ -319,47 +393,7 @@ public:
 }
 ;//class MDValueRange
 
-/**MDValueAbove this will test if a label have a value larger than a minimum
- *@ingroup MetaDataQuery
- */
-class MDValueAbove: public MDQuery
-{
-public:
-    MDValueAbove()
-    {}
-    template <class T>
-    MDValueAbove(MDLabel label, const T &valueMin, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
-    {
-        std::stringstream ss;
-        MDValue mdValueMin(label, valueMin);
 
-        ss << MDL::label2Str(label) << ">=";
-        mdValueMin.toStream(ss, false, true);
-        this->queryString = ss.str();
-    }
-}
-;//class MDValueAbove
-
-/**MDValueAbove this will test if a label have a value smaller than a maximum
- *@ingroup MetaDataQuery
- */
-class MDValueBelow: public MDQuery
-{
-public:
-    MDValueBelow()
-    {}
-    template <class T>
-    MDValueBelow(MDLabel label, const T &valueMax, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
-    {
-        std::stringstream ss;
-        MDValue mdValueMax(label, valueMax);
-
-        ss << MDL::label2Str(label) << "<=";
-        mdValueMax.toStream(ss, false, true);
-        this->queryString = ss.str();
-    }
-}
-;//class MDValueBelow
 /**MDMultiQuery this will combine many queries with AND and OR operations
  *@ingroup MetaDataQuery
  */
@@ -394,7 +428,6 @@ public:
     {
         this->queryString = "";
     }
-
 }
 ;//class MDMultiQuery
 
@@ -416,9 +449,9 @@ public:
 };
 
 template<class T>
-MDValueEqual MDValueEqualSwig(MDLabel label, const T &value)
+MDValueEQ MDValueEqualSwig(MDLabel label, const T &value)
 {
-    return MDValueEqual(label, value);
+    return MDValueEQ(label, value);
 }
 
 template<class T>
@@ -428,14 +461,14 @@ MDValueRange MDValueRangeSwig(MDLabel label, const T &valueMin, const T &valueMa
 }
 
 template<class T>
-MDValueAbove MDValueAboveSwig(MDLabel label, const T &valueMin)
+MDValueGE MDValueAboveSwig(MDLabel label, const T &valueMin)
 {
-    return MDValueAbove(label, valueMin);
+    return MDValueGE(label, valueMin);
 }
 
 template<class T>
-MDValueBelow MDValueBelowSwig(MDLabel label, const T &valueMax)
+MDValueLE MDValueBelowSwig(MDLabel label, const T &valueMax)
 {
-    return MDValueBelow(label, valueMax);
+    return MDValueLE(label, valueMax);
 }
 #endif

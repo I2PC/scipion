@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
         }
 
         MetaData SF(fn_in);
-        SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
+        SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
         int labelsnumber=SF.getActiveLabels().size();
         std::vector<MDLabel> activeLabels=SF.getActiveLabels();

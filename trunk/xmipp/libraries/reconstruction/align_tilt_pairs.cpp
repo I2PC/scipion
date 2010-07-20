@@ -274,7 +274,7 @@ void Prog_centilt_prm::centilt()
     if (fn_doc != "")
     {
         //delete all discarted images
-        SFt.removeObjects(MDValueEqual(MDL_ENABLED, -1));
+        SFt.removeObjects(MDValueEQ(MDL_ENABLED, -1));
         SFt.write(fn_doc);
     }
 }

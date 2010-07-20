@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
         Usage();
     }
     MetaData SF(fn_in);
-    SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
+    SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     // Extracting information  ==================================================
     try
     {

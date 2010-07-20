@@ -730,7 +730,7 @@ void Prog_tomograph_alignment::produceSideInfo()
     bestPreviousAlignment=new Alignment(this);
     // Read input data
     SF.read(fnSel,NULL);
-    SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
+    SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     Nimg=SF.size();
     if (Nimg!=0)
     {
@@ -837,7 +837,7 @@ void Prog_tomograph_alignment::produceSideInfo()
     if (fnSelOrig!="")
     {
         SForig.read(fnSelOrig,NULL);
-        SForig.removeObjects(MDValueEqual(MDL_ENABLED, -1));
+        SForig.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
         if (SForig.size()!=SF.size())
             REPORT_ERROR(1,"The number of images in both selfiles (-i and -iorig) is different");

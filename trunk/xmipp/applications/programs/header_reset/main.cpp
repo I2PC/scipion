@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         }
         else {
             SF.read( fn_input ,NULL);
-            SF.removeObjects(MDValueEqual(MDL_ENABLED, -1));
+            SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
         }
 
         tiltSeries=checkParameter(argc,argv,"-tiltSeries");
