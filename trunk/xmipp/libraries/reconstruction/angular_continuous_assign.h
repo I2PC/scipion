@@ -49,8 +49,6 @@ public:
     double   gaussian_DFT_sigma;
     /** Gaussian weight sigma in real space. */
     double   gaussian_Real_sigma;
-    /** Weight for zero frequency. */
-    double   weight_zero_freq;
     /** Maximum number of iterations */
     int      max_no_iter;
     /** Do not produce any output */

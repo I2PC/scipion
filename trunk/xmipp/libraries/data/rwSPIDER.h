@@ -300,8 +300,7 @@ int  readSPIDER(int img_select,bool isStack=false)
     //offset should point to the begin of the data
     readData(fimg, img_select, datatype, pad );
 
-    if ( !mmapOn )
-    	fclose(fimg);
+    fclose(fimg);
 
     return(0);
 

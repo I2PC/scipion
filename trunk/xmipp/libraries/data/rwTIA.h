@@ -168,19 +168,12 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     }
 
     DataType datatype;
-    //    dataHeaders[0].isSigned = false;
+//    dataHeaders[0].isSigned = false;
     int TIA_DT;
     if (img_select==-1)
-    {
-        TIA_DT = dataHeaders[0].DATA_TYPE;
-        offset = header->pDATA_OFFSET[0] + TIAdataSIZE;
-    }
-    else
-    {
-        TIA_DT = dataHeaders[img_select].DATA_TYPE;
-        offset = header->pDATA_OFFSET[img_select] + TIAdataSIZE;
-    }
-
+    	TIA_DT = dataHeaders[0].DATA_TYPE;
+	else
+		TIA_DT = dataHeaders[img_select].DATA_TYPE;
 
     switch ( TIA_DT )
     {
@@ -199,7 +192,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         break;
     case 5:
         datatype = Short;
-        //        dataHeaders[0].isSigned = true;
+//        dataHeaders[0].isSigned = true;
         break;
     case 6:
         datatype = Int;
@@ -260,6 +253,10 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         MD.setValue(MDL_FLIP,     falseb);
     }
 
+    offset = header->pDATA_OFFSET[0] + TIAdataSIZE;
+    size_t pad = TIAdataSIZE;
+
+
     //#define DEBUG
 #ifdef DEBUG
 
@@ -268,8 +265,6 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
 #endif
 
     delete header;
-    size_t pad = TIAdataSIZE;
-
     readData(fimg, img_select, datatype, pad);
 
     if (dataflag == 1)
@@ -309,8 +304,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         }
     }
 
-    if ( !mmapOn )
-    	fclose(fimg);
+    fclose(fimg);
 
     return(0);
 }

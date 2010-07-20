@@ -39,6 +39,7 @@ void Prog_analyze_cluster_prm::read(int argc, char **argv)
     Niter  = textToInteger(getParameter(argc, argv, "-iter", "10"));
     distThreshold = textToFloat(getParameter(argc, argv, "-maxDist", "2"));
     dontMask = checkParameter(argc, argv, "-dontMask");
+    fnDir = getParameter(argc, argv, "-odir", "");
 }
 
 // Show ====================================================================
@@ -51,7 +52,8 @@ void Prog_analyze_cluster_prm::show()
     << "PCA dimension:          " << NPCA          << std::endl
     << "Iterations:             " << Niter         << std::endl
     << "Maximum distance:       " << distThreshold << std::endl
-    << "Don't mask:       " << dontMask      << std::endl
+    << "Don't mask:             " << dontMask      << std::endl
+    << "Output directory:       " << fnDir         << std::endl
     ;
 }
 
@@ -69,6 +71,7 @@ void Prog_analyze_cluster_prm::usage()
     << "  [-iter <N=10>]      : Number of iterations\n"
     << "  [-maxDist <d=2>]    : Maximum distance\n"
     << "  [-dontMask]         : Don't use a circular mask\n"
+    << "  [-odir <dir=.>]     : Output directory\n"
     ;
 }
 
@@ -76,6 +79,13 @@ void Prog_analyze_cluster_prm::usage()
 //#define DEBUG
 void Prog_analyze_cluster_prm::produceSideInfo()
 {
+    // Create output directory
+    if (fnDir!="")
+    {
+	if (!exists(fnDir))
+		system(((std::string)"mkdir "+fnDir).c_str());
+    }
+
     // Read input selfile and reference
     SFin.read(fnSel, NULL);
     SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
@@ -138,8 +148,13 @@ void Prog_analyze_cluster_prm::produceSideInfo()
             else
             {
                 FileName fnRoot=auxFn.without_extension();
-                Iaux.write(fnRoot+"."+oext);
-                SFout.setValue(MDL_IMAGE,fnRoot+"."+oext);
+                FileName fnOut;
+                
+		if (fnDir=="") fnOut = fnRoot+"."+oext;
+		else fnOut = fnDir+fnRoot.get_baseName()+"."+oext;
+                
+                Iaux.write(fnOut);
+                SFout.setValue(MDL_IMAGE,fnOut);
             }
         }
 
@@ -173,6 +188,7 @@ void Prog_analyze_cluster_prm::run()
 
     // Output
     FileName fnRoot=fnSel.without_extension();
+    if (fnDir!="") fnRoot=fnDir+fnRoot.get_baseName();
     MetaData SFout_good, SFout_bad;
     MultidimArray<double> IalignedAvg;
     IalignedAvg.initZeros(XSIZE(Ialigned[0]));

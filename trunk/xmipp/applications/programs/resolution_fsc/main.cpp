@@ -27,45 +27,66 @@
 #include <data/progs.h>
 #include <data/args.h>
 #include <data/fftw.h>
-#include <data/metadata_extension.h>
+#include <data/selfile.h>
 
 void writeFiles(const FileName &fnRoot,
-                const MultidimArray<double> freq,      const MultidimArray<double> frc,
-                const MultidimArray<double> frc_noise, const MultidimArray<double> dpr,
-                bool do_dpr,float max_sam)
+    const Matrix1D<double> freq, const Matrix1D<double> frc, 
+    const Matrix1D<double> frc_noise, const Matrix1D<double> dpr,
+    bool do_dpr,float max_sam)
 {
-    MetaData MD;
-
-    FileName  fn_frc;
+    FileName fn_dpr, fn_frc;
+    std::ofstream outDpr;
+    fn_dpr = fnRoot + ".dpr";
+    if(do_dpr)
+    {
+        outDpr.open(fn_dpr.c_str(), std::ios::out);
+        outDpr  << "# Resol. [1/Ang]   DPR [deg]     Resol. [Ang]" << std::endl;
+    }
     fn_frc = fnRoot + ".frc";
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(freq)
+    std::cerr << fn_frc;
+    std::ofstream outFsc(fn_frc.c_str(), std::ios::out);
+    outFsc << "# Resol. [1/Ang]      FRC      FRC_random_noise     Resol. [Ang]" << std::endl;
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(freq)
     {
         if (i>0)
         {
-            MD.addObject();
-            if(max_sam >=0 && ((1./dAi(freq, i))<max_sam) )
+            if(max_sam >=0 && ((1./VEC_ELEM(freq, i))<max_sam) )
             {
                 if(do_dpr)
-                    dAi(dpr, i)=0.;
-                dAi(frc, i)=0.;
+                    VEC_ELEM(dpr, i)=0.;
+                VEC_ELEM(frc, i)=0.;
                 ;
             }
-            MD.setValue(MDL_RESOLUTIONFOURIER,dAi(freq, i));
-            MD.setValue(MDL_FRC,dAi(dpr, i));
             if(do_dpr)
-                MD.setValue(MDL_DPR,dAi(dpr, i));
-            MD.setValue(MDL_FRCRANDOMNOISE,dAi(frc_noise, i));
-            MD.setValue(MDL_RESOLUTIONREAL,1./dAi(freq, i));
+            {
+                outDpr.width(10);
+                outDpr  << VEC_ELEM(freq, i);
+                outDpr.width(17);
+                outDpr << VEC_ELEM(dpr, i);
+                outDpr.width(17);
+                outDpr << 1./VEC_ELEM(freq, i)  << std::endl;
+            }
+            outFsc.width(10);
+            outFsc  << VEC_ELEM(freq, i);
+            outFsc.width(17);
+            outFsc  << VEC_ELEM(frc, i);
+            outFsc.width(17);
+            outFsc  << VEC_ELEM(frc_noise, i);
+            outFsc.width(17);
+            outFsc  << 1./VEC_ELEM(freq, i) << std::endl;
         }
     }
-    MD.write(fn_frc);
+    if(do_dpr)
+        outDpr.close();
+    outFsc.close();
 }
 
 class Resolution_parameters: public Prog_parameters
 {
 public:
     FileName    fn_ref, fn_root;
-    Image<double>  refI;
+    ImageXmipp  refI;
+    VolumeXmipp refV;
     float       sam;
     bool        do_dpr;
     float       max_sam;
@@ -77,7 +98,17 @@ public:
         Prog_parameters::read(argc, argv);
         fn_ref = getParameter(argc, argv, "-ref");
         sam = textToFloat(getParameter(argc, argv, "-sam"));
-        refI.read(fn_ref, true, -1, apply_geo);
+        if (Is_ImageXmipp(fn_ref))
+        {
+            refI.read(fn_ref, false, false, apply_geo);
+            refI().setXmippOrigin();
+        }
+        else if (Is_VolumeXmipp(fn_ref))
+        {
+            refV.read(fn_ref);
+            refV().setXmippOrigin();
+        }
+        else exit(0);
     }
     void show()
     {
@@ -103,17 +134,26 @@ public:
     }
 };
 
-bool process_img(Image<double> &img, const Prog_parameters *prm)
+bool process_img(ImageXmipp &img, const Prog_parameters *prm)
 {
     Resolution_parameters *eprm = (Resolution_parameters *) prm;
-    MultidimArray<double> freq, frc, dpr, frc_noise;
+    Matrix1D<double> freq, frc, dpr, frc_noise;
     frc_dpr(eprm->refI(), img(), eprm->sam, freq, frc, frc_noise, dpr,eprm->do_dpr);
     writeFiles(img.name(), freq, frc, frc_noise, dpr,eprm->do_dpr,eprm->max_sam);
     return true;
 }
 
-int main(int argc, char **argv)
+bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
 {
+    Resolution_parameters *eprm = (Resolution_parameters *) prm;
+    Matrix1D<double> freq, frc, dpr, frc_noise;
+    frc_dpr(eprm->refV(), vol(), eprm->sam, freq, frc, frc_noise,dpr,eprm->do_dpr);
+    writeFiles(vol.name(), freq, frc, frc_noise, dpr,eprm->do_dpr,eprm->max_sam);
+    return true;
+}
+
+int main(int argc, char **argv)
+{   
     bool do_dpr=checkParameter(argc, argv, "-do_dpr");
     float max_sam = textToFloat(getParameter(argc, argv, "-max_sam","-1"));
     if (!checkParameter(argc, argv, "-set_of_images"))
@@ -123,7 +163,7 @@ int main(int argc, char **argv)
         prm.apply_geo = true;
         prm.do_dpr=do_dpr;
         prm.max_sam=max_sam;
-        SF_main(argc, argv, &prm, (void*)&process_img);
+        SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
     }
     else
     {
@@ -145,19 +185,14 @@ int main(int argc, char **argv)
 
         try
         {
-            MetaData     SFaux,SF, SF1, SF2;
-            std::vector<MetaData> vMD;
-            vMD.push_back(SF1);
-            vMD.push_back(SF2);
-            Image<double>       I1, I2, Id;
+            SelFile     SF, SF1, SF2;
+            Image       I1, I2, Id;
             double      dummy;
-            MultidimArray<double> freq, frc, dpr, frc_noise, ssnr, pixel;
-
-            SFaux.read(fn_sel);
-            SF.randomize(SFaux);
-            SF.split(2,vMD,MDL_IMAGE);
-            getStatistics(SF1,I1,Id,dummy,dummy,true);
-            getStatistics(SF2,I2,Id,dummy,dummy,true);
+            Matrix1D<double> freq, frc, dpr, frc_noise, ssnr, pixel;
+            SF.read(fn_sel);
+            SF.split_in_two(SF1, SF2);
+            SF1.getStatistics(I1, Id, dummy, dummy, apply_geo);
+            SF2.getStatistics(I2, Id, dummy, dummy, apply_geo);
             I1().setXmippOrigin();
             I2().setXmippOrigin();
             frc_dpr(I1(), I2(), sam, freq, frc, frc_noise, dpr,do_dpr);

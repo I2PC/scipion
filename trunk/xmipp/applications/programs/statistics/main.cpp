@@ -203,7 +203,7 @@ int main(int argc, char **argv)
     {
         std::cout << XE;
     }
-    return 0;
+    exit(0);
 } //main
 
 /* Usage ------------------------------------------------------------------- */

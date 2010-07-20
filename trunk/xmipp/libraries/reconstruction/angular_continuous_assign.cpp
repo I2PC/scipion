@@ -41,7 +41,6 @@
 #include <data/funcs.h>
 #include <data/args.h>
 #include <data/fft.h>
-#include <data/mask.h>
 
 /* ------------------------------------------------------------------------- */
 // Prototypes
@@ -53,13 +52,12 @@ void Prog_angular_predict_continuous_prm::read(int argc, char **argv)
     fn_ref = getParameter(argc, argv, "-ref");
     fn_ang = getParameter(argc, argv, "-ang", "");
     fn_out_ang = getParameter(argc, argv, "-oang");
-    gaussian_DFT_sigma = (double) textToFloat(getParameter(argc, argv, "-gaussian_Fourier", "0.5"));
-    gaussian_Real_sigma = (double) textToFloat(getParameter(argc, argv, "-gaussian_Real", "0.5"));
-    weight_zero_freq = (double) textToFloat(getParameter(argc, argv, "-zerofreq_weight", "0."));
+    gaussian_DFT_sigma = textToFloat(getParameter(argc, argv, "-gaussian_Fourier", "0.5"));
+    gaussian_Real_sigma = textToFloat(getParameter(argc, argv, "-gaussian_Real", "0.5"));
     max_no_iter = textToInteger(getParameter(argc, argv, "-max_iter", "60"));
     quiet = checkParameter(argc,argv,"-quiet");
-    max_shift = (double) textToFloat(getParameter(argc, argv, "-max_shift", "-1"));
-    max_angular_change = (double) textToFloat(getParameter(argc, argv, "-max_angular_change", "-1"));
+    max_shift = textToFloat(getParameter(argc, argv, "-max_shift", "-1"));
+    max_angular_change = textToFloat(getParameter(argc, argv, "-max_angular_change", "-1"));
 }
 
 // Show ====================================================================
@@ -71,7 +69,6 @@ void Prog_angular_predict_continuous_prm::show()
               << "Ouput angular file:  " << fn_out_ang          << std::endl
               << "Gaussian Fourier:    " << gaussian_DFT_sigma  << std::endl
               << "Gaussian Real:       " << gaussian_Real_sigma << std::endl
-              << "Zero-frequency weight:"<< weight_zero_freq    << std::endl
               << "Max. Iter:           " << max_no_iter         << std::endl
               << "Max. Shift:          " << max_shift           << std::endl
               << "Max. Angular Change: " << max_angular_change  << std::endl
@@ -88,7 +85,6 @@ void Prog_angular_predict_continuous_prm::usage()
         << "   -oang <angle file>         : MetaData with output angles\n"
         << "  [-gaussian_Fourier <s=0.5>] : Weighting sigma in Fourier space\n"
         << "  [-gaussian_Real    <s=0.5>] : Weighting sigma in Real space\n"
-        << "  [-zerofreq_weight  <s=0. >] : Zero-frequency weight\n"
         << "  [-max_iter <max=60>]        : Maximum number of iterations\n"
         << "  [-max_shift <s=-1>          : Maximum shift allowed\n"
         << "  [-max_angular_change <a=-1>]: Maximum angular change allowed\n"
@@ -118,39 +114,23 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
     predicted_shiftY.resize(number_of_images);
     predicted_cost.resize(number_of_images);
 
-    // Prepare the masks in real space
+    // Prepare the weight functions in real space
     Mask_Params mask_Real3D;
     mask_Real3D.type = mask_Real.type = GAUSSIAN_MASK;
     mask_Real3D.mode = mask_Real.mode = INNER_MASK;
-
-    mask_Real3D.sigma = mask_Real.sigma = gaussian_Real_sigma * ((double)XSIZE(V()));
-
+    mask_Real3D.sigma = mask_Real.sigma = gaussian_Real_sigma * XSIZE(V());
     mask_Real3D.generate_mask(V());
-    mask_Real.generate_mask(YSIZE(V()), XSIZE(V()));
-     
-    double gs2 = 2. * PI * gaussian_Real_sigma * gaussian_Real_sigma * ((double)XSIZE(V()) * (double) XSIZE(V()));
-    double gs3 = gs2 * sqrt(2. * PI) * gaussian_Real_sigma * ((double) XSIZE(V()));
- 
-    mask_Real3D.get_cont_mask() *= gs3;
-    mask_Real.get_cont_mask() *= gs2;
-
-    //For debugging
-    /*Image<double> mask2D_test;
-    mask2D_test.read("ident2D.spi"); //Identity image
-    mask2D_test().setXmippOrigin();
-    mask_Real.apply_mask(mask2D_test(), mask2D_test());
-    mask2D_test.write("mask_2Dtest.xmp");*/
+    mask_Real  .generate_mask(YSIZE(V()), XSIZE(V()));
+    mask_Real3D.get_cont_mask() *= sqrt(2 * PI) * gaussian_Real_sigma * XSIZE(V());
+    mask_Real  .get_cont_mask() *= sqrt(2 * PI) * gaussian_Real_sigma * XSIZE(V());
 
     // Prepare the weight function in Fourier space
     mask_Fourier.type = GAUSSIAN_MASK;
     mask_Fourier.mode = INNER_MASK;
-    
-    mask_Fourier.sigma = gaussian_DFT_sigma * ((double)XSIZE(V()));
+    mask_Fourier.sigma = gaussian_DFT_sigma * XSIZE(V());
     mask_Fourier.generate_mask(YSIZE(V()), XSIZE(V()));
-    
-    double gsf2 = 2. * PI * gaussian_DFT_sigma * gaussian_DFT_sigma * ((double)XSIZE(V()) * (double)XSIZE(V()));
-    mask_Fourier.get_cont_mask() *= gsf2;
-    mask_Fourier.get_cont_mask()(0, 0) *= weight_zero_freq;
+    mask_Fourier.get_cont_mask() *= sqrt(2 * PI) * gaussian_DFT_sigma * XSIZE(V());
+    mask_Fourier.get_cont_mask()(0, 0) = 0;
 
     // Weight the input volume in real space
     mask_Real3D.apply_mask(V(), V());
@@ -184,8 +164,7 @@ double Prog_angular_predict_continuous_prm::predict_angles(Image<double> &I,
     pose(2) = psi;
     pose(3) = -shiftX; // The convention of shifts is different
     pose(4) = -shiftY; // for Slavica
-
-    mask_Real.apply_mask(I(), I()); 
+    mask_Real.apply_mask(I(), I());
 
     double cost = CSTSplineAssignment(reDFTVolume, imDFTVolume,
         I(), mask_Fourier.get_cont_mask(), pose, max_no_iter);
@@ -243,7 +222,6 @@ void Prog_angular_predict_continuous_prm::finish_processing()
     	DF_initial.getValue(MDL_IMAGE,fnImg);
     	DF.addObject();
         DF.setValue(MDL_IMAGE,fnImg);
-        DF.setValue(MDL_ENABLED,1);
     	DF.setValue(MDL_ANGLEROT,predicted_rot[i]);
     	DF.setValue(MDL_ANGLETILT,predicted_tilt[i]);
     	DF.setValue(MDL_ANGLEPSI,predicted_psi[i]);
@@ -2576,7 +2554,6 @@ int return_gradhesscost(
 
 
                   *cost = (cost_re + cost_im) / 2.0;
-
                   for (i = 0L; i < 5L; i++)
                   {
                       Gradient[i] = Gradient_re[i] + Gradient_im[i];

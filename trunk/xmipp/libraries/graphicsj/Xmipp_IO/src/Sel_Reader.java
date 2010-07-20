@@ -6,8 +6,8 @@ import java.io.*;
 
 /**
  * Created by IntelliJ IDEA.
- * User: MESSAOUDI C�dric
- * Date: 9 d�c. 2008
+ * User: MESSAOUDI cedric
+ * Date: 9 dec. 2008
  * Time: 11:06:03
  * To change this template use File | Settings | File Templates.
  */

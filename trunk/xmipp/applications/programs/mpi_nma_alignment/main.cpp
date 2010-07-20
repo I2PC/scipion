@@ -24,8 +24,10 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <mpi.h>
+
 #include <reconstruction/nma_alignment.h>
+
+#include <mpi.h>
 
 int main(int argc, char **argv)
 {
@@ -107,13 +109,11 @@ Matrix1D<double> dummy;
             for (int i = myFirst; i <= myLast; i++)
             {
                 // Read image and estimate angular parameters
-                Image<double> I;
+                ImageXmipp I;
                 FileName tempname;
-                SF_in.getValue(MDL_IMAGE,tempname,i+1);
+                SF_in.getValue(MDL_IMAGE,tempname,i);
                 
-                //Old (no metadata etc) : I.read(tempname, false, false, false);
-                I.read(tempname);
-
+                I.read(tempname, false, false, false);
                 I().setXmippOrigin();
                 prm.assignParameters(I);
 
