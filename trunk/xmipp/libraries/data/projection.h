@@ -61,10 +61,7 @@ class Projection: public Image<double>
 {
 public:
     /** Empty constructor */
-    Projection(): Image<double>() {
-        // Weird behaviour: If the constructor is empty, calling it from java raises an Exception.
-        std::cout << std::flush;
-    };
+    Projection(): Image<double>() {};
 
     /** Vector perpendicular to the projection plane.
      * It is calculated as a function of rot and tilt.

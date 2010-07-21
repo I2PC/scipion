@@ -215,7 +215,7 @@ void Usage()
     << "   [-outputStack <stackFile>]          : Stack with the set of images\n"
     << "   [-outputRoot <rootname[:format]>]   : Rootname of the individual images\n"
     << "                                       : If no format is provided, spider is assumed\n"
-    << "                                         Valid formats are: spi, mrc, img, ...\n"
+    << "                                         Valid formats are: spi (spider), mrc (ccp4), img (imagic), dm3 (digital micrograph 3-only input), ser (tecnai imaging and analysis-only input) ...\n"
     << "   [-outputVol <volume>]               : Volume with the set of images\n"
     << "   [-outputImg <image>]                : Output image\n"
     ;

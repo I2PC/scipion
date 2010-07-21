@@ -189,8 +189,7 @@ void BlobCrownMask(MultidimArray<double> &mask,
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the
  * radius indicated. The only two valid modes are INNER_MASK (by default) or
- * OUTSIDE_MASK. Inner mask are normal sincs, and outside masks are 1 -
- * gaussian.
+ * OUTSIDE_MASK. Inner mask are normal sincs, and outside masks are 1 -gaussian.
  *
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
@@ -198,19 +197,6 @@ void GaussianMask(MultidimArray< double >& mask,
                   double sigma, int mode = INNER_MASK, 
                   double x0 = 0, double y0 = 0, double z0 = 0);
 
-/// @defgroup Masks2D 2D masks
-/// @ingroup Masks
-
-/** Creates a 2D DWT circular for already sized masks
- * @ingroup Masks2D
- *
- * The mask size must be a power of 2. The radius must be expressed in pixel
- * units corresponding to the size of the image. For instance, a 64x64 image
- * might have a radius of 32 pixels to concentrate on the central part only. The
- * mask is generated only for the desired masks.
- *
- * If the quadrant="xx" then 01, 10 and 11 are generated together
- */
 void BinaryDWTCircularMask2D(MultidimArray< int >& mask,
                              double radius, int smin, int smax,
                              const std::string& quadrant);
@@ -888,11 +874,11 @@ void apply_cont_mask(const MultidimArray< double >& mask, const MultidimArray< T
     m_out.resize(m_in);
     FOR_ALL_ELEMENTS_IN_ARRAY3D(m_out)
     // If in common with the mask
-    if (k >= STARTINGZ(mask) && k <= FINISHINGZ(mask) &&
-        i >= STARTINGY(mask) && i <= FINISHINGY(mask) &&
-        j >= STARTINGX(mask) && j <= FINISHINGX(mask))
-        A3D_ELEM(m_out, k, i, j) = (T)(A3D_ELEM(m_in, k, i, j)
-                                       * A3D_ELEM(mask, k, i, j));
+    if ((k >= STARTINGZ(mask)) && (k <= FINISHINGZ(mask)) &&
+        (i >= STARTINGY(mask)) && (i <= FINISHINGY(mask)) &&
+        (j >= STARTINGX(mask) && j <= FINISHINGX(mask))) {
+        A3D_ELEM(m_out, k, i, j) = (T)(A3D_ELEM(m_in, k, i, j) * A3D_ELEM(mask, k, i, j));
+       }
     // It is not in common, leave the original one
     else
         A3D_ELEM(m_out, k, i, j) = A3D_ELEM(m_in, k, i, j);

@@ -56,7 +56,9 @@ int main(int argc, char *argv[])
 
         MetaData SF(fn_in);
         SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-        std::vector< MDLabel >::iterator strIt;
+
+        int labelsnumber=SF.getActiveLabels().size();
+        std::vector<MDLabel> activeLabels=SF.getActiveLabels();
 
 		if(SF.isEmpty())
 		{
@@ -69,11 +71,9 @@ int main(int argc, char *argv[])
 			SF.getValue( MDL_IMAGE, fn_img);
 			if (fn_img=="") break;
 			img.read(fn_img);
-			for( strIt  = SF.getActiveLabels().begin();
-				 strIt != SF.getActiveLabels().end();
-				 strIt ++ )
+                        for (int iter = 0; iter < labelsnumber; iter++)
 			{
-				switch ((*strIt)) {
+                                  switch (activeLabels[iter]) {
 					case MDL_ANGLEROT:
 						SF.getValue( MDL_ANGLEROT, rot);
 						img.setRot(rot);
@@ -88,18 +88,14 @@ int main(int argc, char *argv[])
 						break;
 					case MDL_SHIFTX:
 						SF.getValue( MDL_SHIFTX, xshift);
-					    if (levels != 0)
-							xshift /= pow(2.0, levels);
-		                if (round_shifts)
-		                    xshift = ROUND(xshift);
+					        if (levels != 0) xshift /= pow(2.0, levels);
+		                                if (round_shifts) xshift = (float)ROUND(xshift);
 						img.setXoff(xshift);
 						break;
 					case MDL_SHIFTY:
 						SF.getValue(MDL_SHIFTY, yshift);
-					    if (levels != 0)
-							yshift /= pow(2.0, levels);
-		                if (round_shifts)
-		                    yshift = (float)ROUND(yshift);
+					        if (levels != 0) yshift /= pow(2.0, levels);
+		                                if (round_shifts) yshift = (float)ROUND(yshift);
 						img.setYoff(yshift);
 						break;
 					case MDL_WEIGHT:
@@ -109,6 +105,8 @@ int main(int argc, char *argv[])
 					case MDL_FLIP:
 						SF.getValue( MDL_FLIP, mirror);
 						img.setFlip(mirror);
+						break;
+                                        default:
 						break;
 				}
 			}

@@ -33,6 +33,9 @@
 #include "args.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 
 extern int bestPrecision(float F, int _width);
@@ -292,7 +295,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * (included limits) respectively. You need to define SPEED_UP_temps.
  *
  * @code
- * SPEED_UP_temps; 
+ * SPEED_UP_temps;
  * MultidimArray< double > V1(10, 10, 10), V2(20, 20, 20);
  * V1.setXmippOrigin();
  * V2.setXmippOrigin();
@@ -690,7 +693,9 @@ public:
     int xinit;
 
     //Alloc memory or map to a file
-    bool mmapOn;
+    bool     mmapOn;
+    FileName   mapFile;
+    int     mFd;
 
 public:
     /// @defgroup MultidimArrayConstructors Constructors
@@ -808,6 +813,7 @@ public:
         zinit=yinit=xinit=0;
         data=NULL;
         destroyData=true;
+        mmapOn = false;
     }
 
     /** Core allocate with dimensions.
@@ -830,9 +836,8 @@ public:
         yxdim=ydim*xdim;
         zyxdim=zdim*yxdim;
         nzyxdim=ndim*zyxdim;
-        data = new T [nzyxdim];
-        if (data == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left");
+
+        coreAllocate();
     }
 
     /** Core allocate without dimensions.
@@ -848,11 +853,33 @@ public:
             REPORT_ERROR(1001, "do not allocate space for an image if you have not deallocate it first");
         if (nzyxdim < 0)
         {
-            REPORT_ERROR(1,"coreAllocateReuse:Cannot allocate a negative number of bytes");
+            REPORT_ERROR(1,"coreAllocate:Cannot allocate a negative number of bytes");
         }
-        data = new T [nzyxdim];
-        if (data == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left");
+
+        if (mmapOn)
+        {
+            mapFile.init_random(8);
+            mapFile = mapFile.add_extension("tmp");
+
+
+            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC) ) == -1 )
+                REPORT_ERROR(20,"MultidimArray::coreAllocate: Error creating map file.");
+
+            if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1)|| (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
+            {
+                close(mFd);
+                REPORT_ERROR(20,"MultidimArray::coreAllocate: Error 'stretching' the map file.");
+            }
+
+            if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+                REPORT_ERROR(21,"MultidimArray::coreAllocate: mmap failed.");
+        }
+        else
+        {
+            data = new T [nzyxdim];
+            if (data == NULL)
+                REPORT_ERROR(1001, "Allocate: No space left");
+        }
     }
     /** Core allocate without dimensions.
      * @ingroup MultidimArrayCore
@@ -869,10 +896,41 @@ public:
         {
             REPORT_ERROR(1,"coreAllocateReuse:Cannot allocate a negative number of bytes");
         }
-        data = new T [nzyxdim];
+
+        if (mmapOn)
+        {
+            mapFile.init_random(8);
+            mapFile = mapFile.add_extension("tmp");
+
+            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC) ) == -1 )
+                REPORT_ERROR(20,"MultidimArray::coreAllocateReuse: Error creating map file.");
+            if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1) || (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
+            {
+                close(mFd);
+                REPORT_ERROR(20,"MultidimArray::coreAllocateReuse: Error 'stretching' the map file.");
+            }
+
+            if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+                REPORT_ERROR(21,"MultidimArray::coreAllocateReuse: mmap failed.");
+        }
+        else
+            data = new T [nzyxdim];
         if (data == NULL)
             REPORT_ERROR(1001, "Allocate: No space left");
     }
+
+
+    /** Sets mmap.
+     * @ingroup MultidimArrayMmap
+     *
+     * Sets on/off mmap flag to allocate memory in a file.
+     *
+     */
+    void setMmap(bool mmap)
+    {
+        mmapOn = mmap;
+    }
+
 
     /** Sets new 4D dimensions.
      * @ingroup MultidimArraySize
@@ -952,7 +1010,16 @@ public:
     void coreDeallocate()
     {
         if (data != NULL && destroyData)
-            delete[] data;
+        {
+            if (mmapOn)
+            {
+                munmap(data,nzyxdim*sizeof(T));
+                close(mFd);
+                remove(mapFile.c_str());
+            }
+            else
+                delete[] data;
+        }
         data=NULL;
     }
 
@@ -1029,12 +1096,31 @@ public:
         size_t YXdim=Ydim*Xdim;
         size_t ZYXdim=Zdim*YXdim;
         size_t NZYXdim=Ndim*ZYXdim;
+        int    new_mFd;
+        FileName   newMapFile;
 
         T * new_data;
 
         try
         {
-            new_data = new T [NZYXdim];
+            if (mmapOn)
+            {
+                newMapFile.init_random(8);
+                newMapFile = newMapFile.add_extension("tmp");
+
+                if ( ( new_mFd = open(newMapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC) ) == -1 )
+                    REPORT_ERROR(20,"MultidimArray::resize: Error creating map file.");
+                if ((lseek(new_mFd, NZYXdim*sizeof(T)-1, SEEK_SET) == -1) || (::write(new_mFd,"",1) == -1))
+                {
+                    close(new_mFd);
+                    REPORT_ERROR(20,"MultidimArray::resize: Error 'stretching' the map file.");
+                }
+
+                if ( (new_data = (T*) mmap(0,NZYXdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, new_mFd, 0)) == (void*) -1 )
+                    REPORT_ERROR(21,"MultidimArray::resize: mmap failed.");
+            }
+            else
+                new_data = new T [NZYXdim];
         }
         catch (std::bad_alloc &)
         {
@@ -1071,6 +1157,8 @@ public:
         yxdim = Ydim * Xdim;
         zyxdim = Zdim * yxdim;
         nzyxdim = Ndim * zyxdim;
+        mFd =new_mFd;
+        mapFile = newMapFile;
 
     }
 
@@ -1598,7 +1686,7 @@ public:
 
     /** Get a single 1,2 or 3D image from a multi-image array
      *  @ingroup MultidimMemory
-     * 
+     *
      * This function extracts a single-image array from a multi-image one.
      * @code
      * V.getImage(0, m);
@@ -4033,7 +4121,7 @@ public:
      * @ingroup MultidimUtilities
      *
      * Substitute  a given value by a sample from a Gaussian distribution.
-     * The accuracy is used to say if the value in the array is equal 
+     * The accuracy is used to say if the value in the array is equal
      * to the old value.  Set it to 0 for perfect accuracy.
      */
     void randomSubstitute(T oldv,

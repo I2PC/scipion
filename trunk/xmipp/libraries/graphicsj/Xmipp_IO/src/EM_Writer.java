@@ -14,7 +14,7 @@ import java.io.*;
 /**
  * Created by IntelliJ IDEA.
  *
- * @author MESSAOUDI cedric
+ * @author MESSAOUDI Cèdric
  *         Date: 26 nov. 2009
  *         Time: 12:15:27
  */

@@ -89,11 +89,6 @@ int readDM3(int img_select,bool isStack=false)
     xmippFREAD(&header->open, sizeof(char), 1, fimg, false);
     xmippFREAD(&header->nTags, sizeof(int), 1, fimg, isLE);
 
-
-    //FIXME: I am here
-
-    (header->tags).clear();
-
     header->tags.addLabel(MDL_DM3_NODEID);
     header->tags.addLabel(MDL_DM3_PARENTID);
     header->tags.addLabel(MDL_DM3_IDTAG);
@@ -104,7 +99,7 @@ int readDM3(int img_select,bool isStack=false)
     header->tags.addLabel(MDL_DM3_VALUE);
 
 
-    int nodeID=0, parentID=0, imCount=0, imCountF=0;
+    int nodeID=0, parentID=0;
 
     for (int n=1;n<=header->nTags;n++)
         readTagDM3(fimg, header, parentID, nodeID, isLE);
@@ -118,9 +113,6 @@ int readDM3(int img_select,bool isStack=false)
 
     std::vector<long int> vIm;
     header->tags.findObjects(vIm, MDValueEQ(MDL_DM3_TAGNAME,(std::string)"DataType"));
-
-    //    int parentId =parentDM3(header->tags, vIm[1], 2);
-
 
     header->nIm = 0;
     std::vector<DM3dataHead> dataHeaders;
@@ -194,6 +186,8 @@ int readDM3(int img_select,bool isStack=false)
 
 
 
+    //FIXME: Code is not totally implemented to load automatically multiple images if they have same size.
+
     // Map the parameters
     if (img_select==-1)
     {
@@ -256,24 +250,26 @@ int readDM3(int img_select,bool isStack=false)
 #endif
 
     delete header;
+
+//	fclose(fimg);
     readData(fimg, img_select, datatype, pad);
 
-    fclose(fimg);
+    if ( !mmapOn )
+    	fclose(fimg);
+
     return(0);
 }
 
 
-double readTagDM3(FILE *fimg,
-                  DM3head *header,
-                  int parentId,
-                  int &nodeId,
-                  bool isLE)
+double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool isLE)
 {
     /* Header Tag ============================================================== */
 
-    unsigned char cdTag;
+
     int  idTag;
+    unsigned char cdTag;
     unsigned short int ltName;
+
     xmippFREAD(&cdTag,sizeof (unsigned char),1,fimg,false); // Identification tag: 20 = tag dir,  21 = tag
     xmippFREAD(&ltName,sizeof(unsigned short int), 1,fimg,isLE); // Length of the tag name
     idTag = int(cdTag);
@@ -374,10 +370,12 @@ double readTagDM3(FILE *fimg,
             return tagValue;
         }
         else if(nnum == 3 && info[0]==20)   // Tag array
-        {             /*nnum = 3
-                                                                                                                                                                                                                                 info(0) = 20
-                                                                                                                                                                                                                                 info(1) = number type for all values
-                                                                                                                                                                                                                                 info(2) = info(nnum) = size of array*/
+        {
+            /*nnum = 3
+            info(0) = 20
+            info(1) = number type for all values
+            info(2) = info(nnum) = size of array*/
+
 
             header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Array");
 
@@ -479,17 +477,12 @@ double readTagDM3(FILE *fimg,
     }
 }
 
-void FREADTagValueDM3(double *fieldValue,
-                      int numberType,
-                      int n,
-                      FILE* fimg)
+void FREADTagValueDM3(double *fieldValue,int numberType,int n,FILE* fimg)
 {
-
     DataType datatype = datatypeDM3(numberType);
     size_t datatypesize=gettypesize(datatype);
 
     xmippFREAD(fieldValue, datatypesize, n, fimg, swap);
-
 
     switch(numberType)
     {

@@ -95,8 +95,8 @@ int main(int argc, char **argv)
 #endif
 
             }//close for blocks
-//            std::cerr << "======End of blocks, MODEL: =========" <<std::endl;
-//            prm.model.print();
+            //std::cerr << "======End of blocks, MODEL: =========" <<std::endl;
+            //prm.model.print();
 
             // Check convergence
             converged = prm.checkConvergence();
