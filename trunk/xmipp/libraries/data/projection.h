@@ -61,7 +61,7 @@ class Projection: public Image<double>
 {
 public:
     /** Empty constructor */
-    Projection(): Image<double>() {};
+    Projection(): Image<double>() {std::cout<< std::fflush ;};
 
     /** Vector perpendicular to the projection plane.
      * It is calculated as a function of rot and tilt.
@@ -117,6 +117,8 @@ public:
     /** Another function for assigment.
      */
     void assign(const Projection& P);
+
+ 
 };
 // This structure contains all the information needed by a thread
 // working on the projecting/backprojecting of a projection. This is

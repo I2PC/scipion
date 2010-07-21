@@ -276,7 +276,6 @@ public:
 #include "rwTIA.h"
 #include "rwDM3.h"
 
-
     /** Is this file an image
      *
      *  Check whether a real-space image can be read
@@ -1157,6 +1156,21 @@ public:
     T& operator()(int i, int j) const
     {
         return A2D_ELEM(data, i, j);
+    }
+    /**
+    *  set pixel (direct acces) needed by swig
+    */
+    void setPixel(int i, int j, T v)
+    {
+	IMGPIXEL(*this,i,j)=v;
+    }
+
+    /**
+    *  get pixel (direct acces) needed by swig
+    */
+    T getPixel(int i, int j)
+    {
+	return IMGPIXEL(*this,i,j);
     }
 
     /** Voxel access

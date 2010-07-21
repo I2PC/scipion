@@ -931,8 +931,7 @@ public:
         mmapOn = mmap;
     }
 
-
-    /** Sets new 4D dimensions.
+   /** Sets new 4D dimensions.
      * @ingroup MultidimArraySize
      *
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
@@ -1644,6 +1643,28 @@ public:
     T& operator()(int k, int i, int j) const
     {
         return A3D_ELEM(*this, k, i, j);
+    }
+
+    /** 3D element access via index (getVoxel).
+    * @ingroup MultidimMemory
+    *
+    * Same function as operator() but with a name
+    *
+    */
+    T getVoxel(int k, int i, int j) const
+    {
+        return A3D_ELEM(*this, k, i, j);
+    }    
+
+    /** 3D element access via index (setVoxel).
+    * @ingroup MultidimMemory
+    *
+    * Same function as operator() but with a name
+    *
+    */
+    void setVoxel(int k, int i, int j, T newval)
+    {
+        A3D_ELEM(*this, k, i, j)=newval;
     }
 
     /** Matrix element access via index
