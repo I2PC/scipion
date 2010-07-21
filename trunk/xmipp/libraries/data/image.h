@@ -129,7 +129,7 @@ unsigned long   gettypesize(DataType type);
  * @ingroup Images
  *
  * The image class is the general image handling class.
- * 
+ *
  */
 template<typename T>
 class Image
@@ -175,6 +175,7 @@ public:
      */
     Image()
     {
+    	mmapOn = false;
         clear();
     }
 
@@ -189,6 +190,7 @@ public:
      */
     Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1)
     {
+    	mmapOn = false;
         clear();
         data.resize(Ndim, Zdim, Ydim, Xdim);
         for (int n = 1; n < Ndim; n++)
@@ -956,13 +958,13 @@ public:
 
     /** Data access
      *
-     * This operator can be used to access the data multidimarray. 
+     * This operator can be used to access the data multidimarray.
      * In this way we could resize an image just by
      * resizing its associated matrix or we could add two images by adding their
      * matrices.
 
      ********* FIXME!!! withx,y,z also being part of image class this resizing would be DANGEROUS!!!
-     
+
      *
      * @code
      * I().resize(128, 128);
