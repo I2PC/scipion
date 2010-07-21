@@ -862,7 +862,7 @@ public:
             mapFile = mapFile.add_extension("tmp");
 
 
-            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC) ) == -1 )
+            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
                 REPORT_ERROR(20,"MultidimArray::coreAllocate: Error creating map file.");
 
             if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1)|| (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
@@ -902,7 +902,7 @@ public:
             mapFile.init_random(8);
             mapFile = mapFile.add_extension("tmp");
 
-            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC) ) == -1 )
+            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
                 REPORT_ERROR(20,"MultidimArray::coreAllocateReuse: Error creating map file.");
             if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1) || (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
             {
@@ -1108,7 +1108,7 @@ public:
                 newMapFile.init_random(8);
                 newMapFile = newMapFile.add_extension("tmp");
 
-                if ( ( new_mFd = open(newMapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC) ) == -1 )
+                if ( ( new_mFd = open(newMapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
                     REPORT_ERROR(20,"MultidimArray::resize: Error creating map file.");
                 if ((lseek(new_mFd, NZYXdim*sizeof(T)-1, SEEK_SET) == -1) || (::write(new_mFd,"",1) == -1))
                 {
