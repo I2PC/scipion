@@ -182,6 +182,7 @@ public:
      */
     Image()
     {
+    	mmapOn = false;
         clear();
     }
 
@@ -196,6 +197,7 @@ public:
      */
     Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1)
     {
+    	mmapOn = false;
         clear();
         data.resize(Ndim, Zdim, Ydim, Xdim);
         for (int n = 1; n < Ndim; n++)
