@@ -13,7 +13,7 @@ import java.io.RandomAccessFile;
 /**
  * Created by IntelliJ IDEA.
  *
- * @author MESSAOUDI Cèdric
+ * @author MESSAOUDI Cedric
  *         Date: 26 nov. 2009
  *         Time: 10:16:12
  */

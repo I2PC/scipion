@@ -10,7 +10,7 @@ import java.io.*;
 /**
  * Created by IntelliJ IDEA.
  *
- * @author MESSAOUDI Cèdric
+ * @author MESSAOUDI Cedric
  *         Date: 5 juin 2009
  *         Time: 12:49:06
  */
