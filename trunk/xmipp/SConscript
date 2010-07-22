@@ -330,13 +330,11 @@ def AddImageJPlugin(name, pluginDir, outDir):
     libsStr=''
     if os.path.exists(libsDir) and len(os.listdir(libsDir)) > 0:
 	# Copies libraries to ImageJ plugins dir.
-	for root, dirs, files in os.walk(libsDir):
-	     for f in files: 
-        	 shutil.copy(os.path.join(root, f), outDir)
-
-	for root, dirs, files in os.walk(libsDir):
-		for f in files: 
-			libsStr = libsStr + ':' + libsDir + f
+	for f in os.listdir(libsDir):
+		lib_item = os.path.join(libsDir, f)
+		if os.path.isfile(lib_item):
+        		shutil.copy(lib_item, outDir)
+			libsStr = libsStr + ':' + lib_item
 
     # ...to create the full classpath
     env = Environment()
@@ -361,13 +359,14 @@ def AddImageJPlugin(name, pluginDir, outDir):
     # ...and resources (icons and stuff), if any
     if os.path.exists(resourcesDir):
 	    shutil.copytree(resourcesDir, buildDir+'resources/')
-    
+
     outMacrosDir = outDir+'/../macros/'
     # Copies macros to ImageJ/macros folder (if any).
     if os.path.exists(macrosDir) and len(os.listdir(macrosDir)) > 0:
-	for root, dirs, files in os.walk(macrosDir):
-	     for f in files:
-		shutil.copy2(os.path.join(root, f), os.path.join(outDir, os.pardir) + "/macros")
+	for f in os.listdir(macrosDir):
+		macro_item = os.path.join(macrosDir, f)
+		if os.path.isfile(macro_item):
+        		shutil.copy(macro_item, os.path.join(outDir, os.pardir) + "/macros")
 
     # Packs classes and plugin config file into jar.
     env.Default(buildJar)
@@ -588,7 +587,7 @@ OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
 #AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 
 AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
-#AddImageJPlugin('Xmipp_3D_Viewer', 'libraries/graphicsj/Xmipp_3D_Viewer', 'external/imagej/plugins')
+AddImageJPlugin('Xmipp_3D_Viewer', 'libraries/graphicsj/Xmipp_3D_Viewer', 'external/imagej/plugins')
 
 
 # --- Programs
