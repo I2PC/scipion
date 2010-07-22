@@ -228,7 +228,6 @@ private:
 class MDQuery
 {
 public:
-    std::string queryString;
     int limit, offset;
     MDLabel orderLabel;
 
@@ -237,7 +236,6 @@ public:
         this->limit = limit;
         this->offset = offset;
         this->orderLabel = orderLabel;
-        this->queryString = " ";
     }
 
     std::string orderByString() const
@@ -255,9 +253,15 @@ public:
         return ss.str();
     }
 
+    virtual std::string queryStringFunc() const
+    {
+        return " ";
+    }
+
     std::string whereString() const
     {
-        return (queryString == " ") ? "" : " WHERE " + queryString + " ";
+        std::string queryString = this->queryStringFunc();
+        return (queryString == " ") ? " " : " WHERE " + queryString + " ";
     }
     /**This now is specific to the SQL implementation
      * and its requiered to all MDQuery subclasses
@@ -273,44 +277,65 @@ enum RelationalOp { EQ, NE, GT, LT, GE, LE };
  */
 class MDValueRelational: public MDQuery
 {
-public:
-    MDLabel label;
     MDValue *value;
     RelationalOp op;
+public:
+
 
     MDValueRelational()
-    {}
+    {
+        value = NULL;
+    }
 
     template <class T>
     MDValueRelational(MDLabel label, const T &value, RelationalOp op, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
         this->op = op;
-
-        std::stringstream ss;
-        MDValue mdValue(label, value);
-
-        ss << MDL::label2Str(label) << opString();
-        mdValue.toStream(ss, false, true);
-        this->queryString = ss.str();
+        this->value = new MDValue(label, value);
     }
 
-    std::string opString()
+    MDValueRelational(const MDValue &value, RelationalOp op, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
+    {
+        this->op = op;
+        this->value = new MDValue(value);
+    }
+
+    ~MDValueRelational()
+    {
+        if (value != NULL)
+            delete value;
+    }
+
+    std::string opString() const
     {
         switch (op)
         {
-            case EQ:
-                return "=";
-            case NE:
-                return "!=";
-            case GT:
-                return ">";
-            case LT:
-                return "<";
-            case GE:
-                return ">=";
-            case LE:
-                return "<=";
+        case EQ:
+            return "=";
+        case NE:
+            return "!=";
+        case GT:
+            return ">";
+        case LT:
+            return "<";
+        case GE:
+            return ">=";
+        case LE:
+            return "<=";
         }
+    }
+
+    virtual std::string queryStringFunc() const
+    {
+        return (value == NULL) ? " " : MDL::label2Str(value->label) + opString() + value->toString(false, true);
+    }
+
+    template <class T>
+    void setValue(T &value)
+    {
+        if (value != NULL)
+            delete value;
+        this->value = new MDValue(this->value->label, value);
     }
 }
 ;//class MDValueEqual
@@ -325,9 +350,8 @@ public:
     {}
     template <class T>
     MDValueEQ(MDLabel label, const T &value, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID)
-    :MDValueRelational(label, value, EQ, limit, offset, orderLabel)
-    {
-    }
+            :MDValueRelational(label, value, EQ, limit, offset, orderLabel)
+    {}
 }
 ;//class MDValueEQ
 
@@ -341,9 +365,8 @@ public:
     {}
     template <class T>
     MDValueGE(MDLabel label, const T &valueMin, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID)
-    :MDValueRelational(label, value, GE, limit, offset, orderLabel)
-    {
-    }
+            :MDValueRelational(label, valueMin, GE, limit, offset, orderLabel)
+    {}
 }
 ;//class MDValueGE
 
@@ -357,42 +380,10 @@ public:
     {}
     template <class T>
     MDValueLE(MDLabel label, const T &valueMax, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID)
-    :MDValueRelational(label, value, LE, limit, offset, orderLabel)
-    {
-    }
+            :MDValueRelational(label, valueMax, LE, limit, offset, orderLabel)
+    {}
 }
 ;//class MDValueLE
-
-/**MDValueRange this will test if a label have a value within a minimum and maximum
- *@ingroup MetaDataQuery
- */
-class MDValueRange: public MDQuery
-{
-public:
-    MDValueRange()
-    {}
-    template <class T>
-    MDValueRange(MDLabel label, const T &valueMin, const T &valueMax,
-                 int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
-    {
-        std::stringstream ss;
-        MDValue mdValueMin(label, valueMin);
-        MDValue mdValueMax(label, valueMax);
-
-        //MDL::voidPtr2Value(label, (void*)new T(valueMin), mdValue);
-        ss << MDL::label2Str(label) << ">=";
-        //MDL::value2Stream(label, mdValueMin, ss);
-        mdValueMin.toStream(ss, false, true);
-        ss << " AND ";
-        //MDL::voidPtr2Value(label, (void*)new T(valueMax), mdValue);
-        ss << MDL::label2Str(label) << "<=";
-        //MDL::value2Stream(label, mdValueMax, ss);
-        mdValueMax.toStream(ss, false, true);
-        this->queryString = ss.str();
-    }
-}
-;//class MDValueRange
-
 
 /**MDMultiQuery this will combine many queries with AND and OR operations
  *@ingroup MetaDataQuery
@@ -400,16 +391,9 @@ public:
 class MDMultiQuery: public MDQuery
 {
 private:
+    std::vector<const MDQuery*> queries;
+    std::vector<std::string> operations;
 
-    void addQuery(const MDQuery &query, std::string op)
-    {
-        std::stringstream ss;
-        if (queryString.length() > 0)
-            ss << " " << op << " " ;
-
-        ss << "(" << query.queryString << ")";
-        this->queryString += ss.str();
-    }
 public:
 
     MDMultiQuery(int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
@@ -418,19 +402,70 @@ public:
     }
     void addAndQuery(const MDQuery &query)
     {
-        addQuery(query, "AND");
+        queries.push_back(&query);
+        operations.push_back("AND");
     }
     void addOrQuery(const MDQuery &query)
     {
-        addQuery(query, "OR");
+        queries.push_back(&query);
+        operations.push_back("OR");
     }
+
     void clear()
     {
-        this->queryString = "";
+        queries.clear();
+        operations.clear();
     }
+
+    virtual std::string queryStringFunc() const
+    {
+        if (queries.size() > 0)
+        {
+            std::stringstream ss;
+            ss << "(" << queries[0]->queryStringFunc() << ") ";
+            for (int i = 1; i < queries.size(); i++)
+                ss << operations[i] << " (" << queries[i]->queryStringFunc() << ") ";
+
+            return ss.str();
+        }
+        return " ";
+    }
+
 }
 ;//class MDMultiQuery
 
+
+/**MDValueRange this will test if a label have a value within a minimum and maximum
+ *@ingroup MetaDataQuery
+ */
+class MDValueRange: public MDQuery
+{
+    MDValueRelational *query1, *query2;
+public:
+    MDValueRange()
+    {}
+    template <class T>
+    MDValueRange(MDLabel label, const T &valueMin, const T &valueMax,
+                 int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
+    {
+        query1 = new MDValueRelational(label, valueMin, GE);
+        query2 = new MDValueRelational(label, valueMax, LE);
+    }
+
+    virtual std::string queryStringFunc() const
+    {
+        std::stringstream ss;
+        ss << "(" << query1->queryStringFunc() << " AND " << query2->queryStringFunc() << ")";
+        return ss.str();
+    }
+
+    ~MDValueRange()
+    {
+        delete query1;
+        delete query2;
+    }
+}
+;//class MDValueRange
 
 
 /** Just a class to store some cached sql statements

@@ -465,7 +465,7 @@ public:
         os << i;
 
     void toStream(std::ostream &os, bool withFormat = false, bool isSql=false) const;
-    std::string toString(bool withFormat = false) const;
+    std::string toString(bool withFormat = false, bool isSql=false) const;
     bool fromStream(std::istream &is);
     friend std::istream& operator>> (std::istream& is, MDValue &value);
     bool fromString(const std::string &str);

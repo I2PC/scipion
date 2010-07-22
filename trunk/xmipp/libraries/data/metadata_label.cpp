@@ -318,10 +318,10 @@ void MDValue::toStream(std::ostream &os, bool withFormat, bool isSql) const
         }//close switch
 }//close function toStream
 
-std::string MDValue::toString(bool withFormat) const
+std::string MDValue::toString(bool withFormat, bool isSql) const
 {
     std::stringstream ss;
-    toStream(ss, withFormat);
+    toStream(ss, withFormat, isSql);
     return ss.str();
 }
 

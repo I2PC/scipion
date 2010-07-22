@@ -381,7 +381,6 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     fl.l_start  = 0;        /* Offset from l_whence         */
     fl.l_len    = 0;        /* length, 0 = to EOF           */
     fl.l_pid    = getpid(); /* our PID                      */
-    fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg),       F_SETLKW, &fl); /* locked */
     fcntl(fileno(fhed), F_SETLKW, &fl); /* locked */
 

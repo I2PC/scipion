@@ -202,14 +202,12 @@ long int MDSql::deleteObjects(const MDQuery *queryPtr)
 
 }
 
-long int MDSql::copyObjects(MetaData *mdPtrOut,
-                            const MDQuery *queryPtr) const
+long int MDSql::copyObjects(MetaData *mdPtrOut, const MDQuery *queryPtr) const
 {
     copyObjects(mdPtrOut->myMDSql, queryPtr);
 }
 
-long int MDSql::copyObjects(MDSql * sqlOut,
-                            const MDQuery *queryPtr) const
+long int MDSql::copyObjects(MDSql * sqlOut, const MDQuery *queryPtr) const
 {
     //NOTE: Is assumed that the destiny table has
     // the same columns that the source table, if not
