@@ -7,8 +7,9 @@ then
     MEM=$1
 else
     MEM=512m
+    echo "Usage showj <Memory size>. Example: showj 1024m"
     echo "No memory size provided. Using default: $MEM"
 fi
 
-java -classpath $XMIPP_BASE/external/imagej/plugins/ -Xmx$MEM -Dplugins.dir=$XMIPP_BASE/external/imagej/plugins/ -jar $XMIPP_BASE/external/imagej/ij.jar
+java -Xmx$MEM -Dplugins.dir=$XMIPP_BASE/external/imagej/plugins/ -jar $XMIPP_BASE/external/imagej/ij.jar
 

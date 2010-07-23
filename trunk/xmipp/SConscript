@@ -338,7 +338,7 @@ def AddImageJPlugin(name, pluginDir, outDir):
 
     # ...to create the full classpath
     env = Environment()
-    env['JAVACFLAGS'] = '-classpath external/imagej/ij.jar' + libsStr +\
+    env['JAVACFLAGS'] = '-classpath external/imagej/ij.jar:' + libsStr +\
            os.pathsep.join(env['JAVACLASSPATH'])
 
     buildClasses=env.Java(buildDir,sourceDir)
@@ -586,8 +586,13 @@ AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
 OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
 #AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 
-#AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
-#AddImageJPlugin('Xmipp_3D_Viewer', 'libraries/graphicsj/Xmipp_3D_Viewer', 'external/imagej/plugins')
+# ImageJ plugins. Check if there is java compiler to avoid compilation to be halted if not.
+#if env.Detect('javac'):
+#	AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
+#	AddImageJPlugin('Xmipp_3D_Viewer', 'libraries/graphicsj/Xmipp_3D_Viewer', 'external/imagej/plugins')
+#	AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
+#else:
+#	print 'WARNING: javac not found. ImageJ plugins won\'t be generated.'
 
 
 # --- Programs
