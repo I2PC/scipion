@@ -104,8 +104,8 @@ int readDM3(int img_select,bool isStack=false)
     for (int n=1;n<=header->nTags;n++)
         readTagDM3(fimg, header, parentID, nodeID, isLE);
 
+//#define DEBUG
 #ifdef DEBUG
-
     header->tags.write("images.txt");
     printDM3(header->tags);
 #endif
@@ -127,7 +127,7 @@ int readDM3(int img_select,bool isStack=false)
         header->tags.goToObject(vIm[n]);
         header->tags.getValue(MDL_DM3_VALUE, vValue);
 
-        if (vValue[0] != 23)
+        if (vValue[0] != 23) //avoid thumb images
         {
             dataHeaders.push_back(dhRef);
 
@@ -601,15 +601,18 @@ double gotoTagDM3(MetaData &MD, int nodeId, std::string tagsList)
     std::vector<std::string> vTags;
     splitString(tagsList,",",vTags, false);
 
+    MDValueEQ queryParentId(MDL_DM3_PARENTID,-1), queryTagname(MDL_DM3_TAGNAME,tag);
     MDMultiQuery queries;
+
+    queries.addAndQuery(queryParentId);
+    queries.addAndQuery(queryTagname);
 
     for (int n = 0; n < vTags.size(); n++)
     {
         tag = vTags[n];
 
-        queries.clear();
-        queries.addAndQuery(MDValueEQ(MDL_DM3_PARENTID,nodeId));
-        queries.addAndQuery(MDValueEQ(MDL_DM3_TAGNAME,tag));
+        queryParentId.setValue(nodeId);
+        queryTagname.setValue(tag);
 
         MD.gotoFirstObject(queries);
         MD.getValue(MDL_DM3_NODEID,nodeId);

@@ -333,8 +333,8 @@ public:
     template <class T>
     void setValue(T &value)
     {
-        if (value != NULL)
-            delete value;
+        if (this->value != NULL)
+            delete this->value;
         this->value = new MDValue(this->value->label, value);
     }
 }
@@ -400,12 +400,12 @@ public:
     {
         clear();
     }
-    void addAndQuery(const MDQuery &query)
+    void addAndQuery(MDQuery &query)
     {
         queries.push_back(&query);
         operations.push_back("AND");
     }
-    void addOrQuery(const MDQuery &query)
+    void addOrQuery(MDQuery &query)
     {
         queries.push_back(&query);
         operations.push_back("OR");
