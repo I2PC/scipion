@@ -78,24 +78,30 @@ int main(int argc, char **argv)
 
         gettimeofday(&end_time, 0);
 
+        if (moreJobs)
+            std::cerr << "Node" << node <<" from " << first << " to " << last <<std::endl;
+        else
+            std::cerr << "Node" << node <<" no more jobs "<<std::endl;
+
         T += elapsed(start_time, end_time);
         totalLocks++;
 
-        for (int r = first; r <= last; r++)
-        {
-            double x = (double)rand() / RAND_MAX;
-            double y = (double)rand() / RAND_MAX;
-            double distance2 = x*x + y*y;
-            if (distance2 <= 1)
-                insideCounter++;
-        }
-        int r = rand();
+        for (long long int rr = 0; rr < 1000; rr++)//just for more work to do
+            for (long long int r = first; r <= last; r++)
+            {
+                double x = (double)rand() / RAND_MAX;
+                double y = (double)rand() / RAND_MAX;
+                double distance2 = x*x + y*y;
+                if (distance2 <= 1)
+                    insideCounter++;
+            }
+        //int r = rand();
         //usleep((r % 5000000) + (2 - 1)*4000000);
 
     }
 
     long long int totalInsideCounter;
-    printf("Node%d: locks: %ld, total time %f, avg time %f\n", node, totalLocks, T, T/totalLocks);
+    std::cout << "Node" << node << ": locks: " << totalLocks << " total time " << T << " avg time " << (T/totalLocks) << std::endl;
     MPI_Reduce(&insideCounter, &totalInsideCounter, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (node == 0)
