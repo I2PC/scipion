@@ -90,7 +90,7 @@ int main(int argc, char **argv)
                 insideCounter++;
         }
         int r = rand();
-        usleep((r % 5000000) + (2 - 1)*400000);
+        usleep((r % 5000000) + (2 - 1)*4000000);
 
     }
 
