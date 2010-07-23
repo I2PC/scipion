@@ -119,7 +119,7 @@ public:
     {
         gettimeofday(&end_time, 0);
     }
-    bool saveInterval()
+    bool saneInterval()
     {
         if(getElapsedTime() < 1.)//less than one second
             return false;
