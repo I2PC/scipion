@@ -95,7 +95,7 @@ int main(int argc, char **argv)
     }
 
     long long int totalInsideCounter;
-    printf("Node%d: locks: %d, total time %f, avg time %f\n", node, totalLocks, T, T/totalLocks);
+    printf("Node%d: locks: %ld, total time %f, avg time %f\n", node, totalLocks, T, T/totalLocks);
     MPI_Reduce(&insideCounter, &totalInsideCounter, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (node == 0)
