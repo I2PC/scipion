@@ -33,8 +33,8 @@ int main(int argc, char **argv)
     ParallelJobHandler *jobHandler;
     char fName[L_tmpnam];
 
-    int number_of_intervals = 10000000;
-    int blockSize = 10000;
+    long long int number_of_intervals = 10000000;
+    long long int blockSize = 10000;
 
     int node = 0;
 
@@ -48,9 +48,9 @@ int main(int argc, char **argv)
     if (node == 0)
     {
         if (argc > 1)
-            number_of_intervals = atoi(argv[1]);
+            number_of_intervals = atoll(argv[1]);
         if (argc > 2)
-            blockSize = atoi(argv[2]);
+            blockSize = atoll(argv[2]);
 
         fName[0] = '\0';
         jobHandler = new ParallelJobHandler(number_of_intervals, blockSize, fName);
@@ -64,9 +64,9 @@ int main(int argc, char **argv)
     if (node != 0)
         jobHandler = new ParallelJobHandler(fName);
 
-    int first = -1, last = -1;
-    int totalLocks = 0;
-    int insideCounter = 0;
+    long long int first = -1, last = -1;
+    long long int totalLocks = 0;
+    long long int insideCounter = 0;
     bool moreJobs = true;
     float T = 0.;
 
@@ -94,9 +94,9 @@ int main(int argc, char **argv)
 
     }
 
-    int totalInsideCounter;
+    long long int totalInsideCounter;
     printf("Node%d: locks: %d, total time %f, avg time %f\n", node, totalLocks, T, T/totalLocks);
-    MPI_Reduce(&insideCounter, &totalInsideCounter, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&insideCounter, &totalInsideCounter, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (node == 0)
     {
