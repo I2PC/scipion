@@ -100,7 +100,7 @@ int main(int argc, char **argv)
         //int r = rand();
         //usleep((r % 5000000) + (2 - 1)*4000000);
         gettimeofday(&end_time2, 0);
-        T2 += elapsed(start_time, end_time2);
+        T2 += elapsed(end_time, end_time2);
 
     }
 
