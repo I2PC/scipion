@@ -16,8 +16,9 @@
 double PI25DT = 3.14159265358979323842643;
 
 //For time tests
-struct timeval start_time, end_time;
+struct timeval start_time, end_time,end_time2;
 float T = 0;
+float T2 = 0;
 
 float elapsed(struct timeval start, struct timeval end)
 {
@@ -98,11 +99,19 @@ int main(int argc, char **argv)
             }
         //int r = rand();
         //usleep((r % 5000000) + (2 - 1)*4000000);
+        gettimeofday(&end_time2, 0);
+        T2 += elapsed(start_time, end_time2);
 
     }
 
     long long int totalInsideCounter;
-    std::cout << "Node" << node << ": locks: " << totalLocks << " total time " << T << " avg time " << (T/totalLocks) << std::endl;
+    std::cout << "Node" << node
+              << ": locks: " << totalLocks
+              << " total time " << T
+              << " total time2 " << T2
+              << " avg time " << (T/totalLocks)
+              << " avg time2 " << (T2/totalLocks)
+              << std::endl;
     MPI_Reduce(&insideCounter, &totalInsideCounter, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (node == 0)
