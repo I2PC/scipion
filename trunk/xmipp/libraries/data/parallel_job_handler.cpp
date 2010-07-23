@@ -36,8 +36,16 @@ ParallelJobHandler::ParallelJobHandler(int nJobs, int bSize, char *fName)
 
     if (fName[0] == '\0')
     {
-        tmpnam(lockFilename);
+        strcpy(lockFilename, "pijol_XXXXXX");
+        if ((lockFile = mkstemp(lockFilename)) == -1)
+        {
+            perror("ParallelJobHandler::Error generating tmp lock file");
+            exit(1);
+        }
+        else
+            close(lockFile);
         strcpy(fName, lockFilename);
+        std::cerr << "lockFilename: " << lockFilename << std::endl;
     }
     else
         strcpy(lockFilename, fName);
@@ -62,10 +70,12 @@ ParallelJobHandler::~ParallelJobHandler()
 
 void ParallelJobHandler::createLockFile()
 {
+
     int bytes;
     int buffer[] = {numberOfJobs, assignedJobs, blockSize};
 
     if (( lockFile = open(lockFilename, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) ) == -1)
+        //if ((lockFile = mkstemp(lockFilename)) == -1)
     {
         perror("ParallelJobHandler::createLockFile: Error opening lock file");
         exit(1);
