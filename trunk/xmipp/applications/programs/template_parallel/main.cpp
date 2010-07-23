@@ -16,15 +16,12 @@
 double PI25DT = 3.14159265358979323842643;
 
 //For time tests
-struct timeval start_time, end_time,end_time2;
-float T = 0;
-float T2 = 0;
+elapsedTime lockTime;
+elapsedTime processingTime;
 
-float elapsed(struct timeval start, struct timeval end)
-{
-    return  (float) (end.tv_sec  - start.tv_sec ) +
-            ((float) (end.tv_usec - start.tv_usec)/1000000);
-}
+double  T = 0;
+double T2 = 0;
+
 
 
 
@@ -70,14 +67,16 @@ int main(int argc, char **argv)
     long long int insideCounter = 0;
     bool moreJobs = true;
     float T = 0.;
+    bool checkON=true;
 
     while (moreJobs)
     {
-        gettimeofday(&start_time, 0);
 
+        lockTime.setStartTime();
         moreJobs = jobHandler->getJobs(first, last);
 
-        gettimeofday(&end_time, 0);
+        lockTime.setEndTime();
+        processingTime.setStartTime();
 
 #ifdef DEBUG_P
         if (moreJobs)
@@ -85,7 +84,7 @@ int main(int argc, char **argv)
         else
             std::cerr << "Node" << node <<" no more jobs "<<std::endl;
 #endif
-        T += elapsed(start_time, end_time);
+        T += lockTime.getElapsedTime();
         totalLocks++;
 
         for (long long int rr = 0; rr < 1000; rr++)//just for more work to do
@@ -99,18 +98,25 @@ int main(int argc, char **argv)
             }
         //int r = rand();
         //usleep((r % 5000000) + (2 - 1)*4000000);
-        gettimeofday(&end_time2, 0);
-        T2 += elapsed(end_time, end_time2);
-
+        processingTime.setEndTime();
+        T2 += processingTime.getElapsedTime();
+        if(checkON)
+        {
+        	checkON=false;
+        	if (!processingTime.saveInterval())
+        		std::cerr << "WARNING: increase job size (mpi_job_size)" <<std::endl
+        		          << "at present each block takes about " << processingTime.getElapsedTime()
+        		          << " seconds. At least it should take a few seconds, minutes will be even better";
+        }
     }
 
     long long int totalInsideCounter;
     std::cout << "Node" << node
               << ": locks: " << totalLocks
-              << " total time " << T
-              << " total time2 " << T2
-              << " avg time " << (T/totalLocks)
-              << " avg time2 " << (T2/totalLocks)
+              << " total locktime " << T
+              << " total processingTime " << T2
+              << " avg locktime " << (T/totalLocks)
+              << " avg processingTime " << (T2/totalLocks)
               << std::endl;
     MPI_Reduce(&insideCounter, &totalInsideCounter, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
