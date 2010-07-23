@@ -103,7 +103,7 @@ int main(int argc, char **argv)
         if(checkON)
         {
         	checkON=false;
-        	if (!processingTime.saveInterval())
+        	if (!processingTime.saneInterval())
         		std::cerr << "WARNING: increase job size (mpi_job_size)" <<std::endl
         		          << "at present each block takes about " << processingTime.getElapsedTime()
         		          << " seconds. At least it should take a few seconds, minutes will be even better";
