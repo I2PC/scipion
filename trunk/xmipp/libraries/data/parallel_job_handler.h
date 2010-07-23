@@ -53,23 +53,23 @@ private:
     int lockFile;
     bool fileCreator;
 
-    int numberOfJobs;
-    int blockSize;
-    int assignedJobs;
+    long long int numberOfJobs;
+    long long int blockSize;
+    long long int assignedJobs;
 
 public:
 
 
     //TODO: todos los casos: inicializar variable blocksize, crear base de datos,
-    ParallelJobHandler(int nJobs, int bSize, char *fName);
+    ParallelJobHandler(long long int nJobs, long long int bSize, char *fName);
     ParallelJobHandler(const char *fName);
     ~ParallelJobHandler();
 
 
-    bool setBlockSize(int blockSize);
+    bool setBlockSize(long long int blockSize);
     int getBlockSize();
 
-    bool getJobs(int &first, int &last); // False = no more jobs, true = more jobs
+    bool getJobs(long long int &first, long long int &last); // False = no more jobs, true = more jobs
 
 
 

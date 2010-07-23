@@ -28,7 +28,7 @@
 
 #include "parallel_job_handler.h"
 
-ParallelJobHandler::ParallelJobHandler(int nJobs, int bSize, char *fName)
+ParallelJobHandler::ParallelJobHandler(long long int nJobs, long long int bSize, char *fName)
 {
     numberOfJobs = nJobs;
     blockSize = bSize;
@@ -45,7 +45,6 @@ ParallelJobHandler::ParallelJobHandler(int nJobs, int bSize, char *fName)
         else
             close(lockFile);
         strcpy(fName, lockFilename);
-        std::cerr << "lockFilename: " << lockFilename << std::endl;
     }
     else
         strcpy(lockFilename, fName);
@@ -75,7 +74,6 @@ void ParallelJobHandler::createLockFile()
     int buffer[] = {numberOfJobs, assignedJobs, blockSize};
 
     if (( lockFile = open(lockFilename, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) ) == -1)
-        //if ((lockFile = mkstemp(lockFilename)) == -1)
     {
         perror("ParallelJobHandler::createLockFile: Error opening lock file");
         exit(1);
@@ -105,17 +103,17 @@ void ParallelJobHandler::loadLockFile()
 void ParallelJobHandler::readVars()
 {
     lseek(lockFile, 0, SEEK_SET);
-    read(lockFile, &numberOfJobs, sizeof(int));
-    read(lockFile, &assignedJobs, sizeof(int));
-    read(lockFile, &blockSize, sizeof(int));
+    read(lockFile, &numberOfJobs, sizeof(long long int));
+    read(lockFile, &assignedJobs, sizeof(long long int));
+    read(lockFile, &blockSize, sizeof(long long int));
 }
 
 void ParallelJobHandler::writeVars()
 {
     lseek(lockFile, 0, SEEK_SET);
-    write(lockFile, &numberOfJobs, sizeof(int));
-    write(lockFile, &assignedJobs, sizeof(int));
-    write(lockFile, &blockSize, sizeof(int));
+    write(lockFile, &numberOfJobs, sizeof(long long int));
+    write(lockFile, &assignedJobs, sizeof(long long int));
+    write(lockFile, &blockSize, sizeof(long long int));
 }
 
 void ParallelJobHandler::lock()
@@ -130,7 +128,7 @@ void ParallelJobHandler::unlock()
     lockf(lockFile, F_ULOCK, 0);
 }
 
-bool ParallelJobHandler::getJobs(int &first, int &last)
+bool ParallelJobHandler::getJobs(long long int &first, long long int &last)
 {
     bool ret = true;
     first = last = -1;
