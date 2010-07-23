@@ -78,11 +78,12 @@ int main(int argc, char **argv)
 
         gettimeofday(&end_time, 0);
 
+#ifdef DEBUG_P
         if (moreJobs)
             std::cerr << "Node" << node <<" from " << first << " to " << last <<std::endl;
         else
             std::cerr << "Node" << node <<" no more jobs "<<std::endl;
-
+#endif
         T += elapsed(start_time, end_time);
         totalLocks++;
 
