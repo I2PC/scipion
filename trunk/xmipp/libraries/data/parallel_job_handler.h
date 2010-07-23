@@ -91,7 +91,42 @@ private:
     void unlock();
 
 
-};//class ParallelJobHandler
+}
+;//class ParallelJobHandler
 
+/* Measure ttime differences, the function predcision is miliseconds
+ *
+ */
+#include <sys/time.h>
+class elapsedTime
+{
+    struct timeval start_time, end_time;
+public:
+    /* Return diference in seconds between two times set by setStart and setEndTime respectively
+     *
+     */
+
+    double getElapsedTime()
+    {
+        return  (double)  (end_time.tv_sec  - start_time.tv_sec ) +
+                ((double) (end_time.tv_usec - start_time.tv_usec)/1000000.);
+    }
+    void setStartTime()
+    {
+        gettimeofday(&start_time, 0);
+    }
+    void setEndTime()
+    {
+        gettimeofday(&end_time, 0);
+    }
+    bool saveInterval()
+    {
+        if(getElapsedTime() < 1.)//less than one second
+            return false;
+        return true;
+    }
+
+}
+;
 
 #endif /* PARALLELJOBHANDLER_H_ */
