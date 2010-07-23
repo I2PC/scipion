@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 
     if (node == 0)
     {
-        double myPI = (double)(totalInsideCounter*4)/number_of_intervals;
+        double myPI = (double)(totalInsideCounter*4)/(1000*number_of_intervals);
         std::cout << "PI: " << myPI <<std::endl;
     }
     //std::cerr << "th=  delta= "<< node << " " << T <<std::endl;
