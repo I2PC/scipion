@@ -89,6 +89,7 @@ int main(int argc, char **argv)
             if (distance2 <= 1)
                 insideCounter++;
         }
+        int r = rand();
         usleep((r % 5000000) + (2 - 1)*400000);
 
     }
