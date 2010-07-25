@@ -107,11 +107,8 @@ enum MDLabel
     MDL_DM3_SIZE,
     MDL_DM3_VALUE,
 
-    MDL_DPR,//differential phase residual (double) add row only label at the end of the enum
     MDL_ENABLED, // Is this image enabled? (int [-1 or 1])
     MDL_FLIP, // Flip the image? (bool)
-    MDL_FRC,//Fourier shell correlation (double)
-    MDL_FRCRANDOMNOISE,//Fourier shell correlation noise (double)
     MDL_IMAGE_CLASS_COUNT, // Number of images assigned to the same class as this image
     MDL_IMAGE_CLASS_GROUP, // Name of the class group for this image (metadata with all the images assigned to that class)
     MDL_IMAGE_CLASS, // Name of the class representative for this image
@@ -148,8 +145,12 @@ enum MDLabel
     MDL_REF3D, // 3D Class to which the image belongs (int)
     MDL_REF, // Class to which the image belongs (int)
     MDL_REFMD, // Name of Metadata file for all references(string)
-    MDL_RESOLUTIONFOURIER,//resolution in 1/A (double)
-    MDL_RESOLUTIONREAL,//resolution in A (double)
+    MDL_RESOLUTION_DPR,//differential phase residual (double)
+    MDL_RESOLUTION_ERRORL2,//Error in l2 (double)
+    MDL_RESOLUTION_FRC,//Fourier shell correlation (double)
+    MDL_RESOLUTION_FRCRANDOMNOISE,//Fourier shell correlation noise (double)
+    MDL_RESOLUTION_FREQ,//Frequency in 1/A (double)
+    MDL_RESOLUTION_FREQREAL,//Frequency in A (double)
     MDL_SAMPLINGRATE,  // sampling rate in A/pixel (double)
     MDL_SAMPLINGRATEX, // sampling rate in A/pixel (double)
     MDL_SAMPLINGRATEY, // sampling rate in A/pixel (double)
@@ -313,11 +314,8 @@ private:
         MDL::addLabel(MDL_DM3_SIZE, LABEL_INT, "Size");
         MDL::addLabel(MDL_DM3_VALUE, LABEL_VECTOR, "Value");
 
-        MDL::addLabel(MDL_DPR, LABEL_DOUBLE, "DPR");
         MDL::addLabel(MDL_ENABLED, LABEL_INT, "enabled");
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip", "Flip");
-        MDL::addLabel(MDL_FRC, LABEL_DOUBLE, "FRC");
-        MDL::addLabel(MDL_FRCRANDOMNOISE, LABEL_DOUBLE, "FRC_random_noise");
         MDL::addLabel(MDL_IMAGE_CLASS_COUNT, LABEL_INT, "class_count");
         MDL::addLabel(MDL_IMAGE_CLASS_GROUP, LABEL_STRING, "class_group");
         MDL::addLabel(MDL_IMAGE_CLASS, LABEL_STRING, "class_representative");
@@ -353,8 +351,12 @@ private:
         MDL::addLabel(MDL_REF3D, LABEL_INT, "ref3d");
         MDL::addLabel(MDL_REF, LABEL_INT, "ref", "Ref");
         MDL::addLabel(MDL_REFMD, LABEL_STRING, "referenceMetaData");
-        MDL::addLabel(MDL_RESOLUTIONFOURIER, LABEL_DOUBLE, "Resol. [1/Ang]");
-        MDL::addLabel(MDL_RESOLUTIONREAL, LABEL_DOUBLE, "Resol. [1/Ang]");
+        MDL::addLabel(MDL_RESOLUTION_DPR, LABEL_DOUBLE, "DPR");
+        MDL::addLabel(MDL_RESOLUTION_ERRORL2, LABEL_DOUBLE, "Error_l2");
+        MDL::addLabel(MDL_RESOLUTION_FRC, LABEL_DOUBLE, "FRC");
+        MDL::addLabel(MDL_RESOLUTION_FRCRANDOMNOISE, LABEL_DOUBLE, "FRC_random_noise");
+        MDL::addLabel(MDL_RESOLUTION_FREQ, LABEL_DOUBLE, "Resol_Inverse_Ang");
+        MDL::addLabel(MDL_RESOLUTION_FREQREAL, LABEL_DOUBLE, "Resol_Ang");
         MDL::addLabel(MDL_SAMPLINGRATE, LABEL_DOUBLE, "sampling_rate");
         MDL::addLabel(MDL_SAMPLINGRATEX, LABEL_DOUBLE, "sampling_rateX");
         MDL::addLabel(MDL_SAMPLINGRATEY, LABEL_DOUBLE, "sampling_rateY");
