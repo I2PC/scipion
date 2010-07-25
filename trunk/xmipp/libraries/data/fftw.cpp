@@ -25,6 +25,7 @@
  ***************************************************************************/
 
 #include "fftw.h"
+#include "args.h"
 #include <string.h>
 #include <pthread.h>
 
@@ -289,6 +290,7 @@ void FFT_phase(const MultidimArray< std::complex<double> > &v,
 }
 
 // Fourier ring correlation -----------------------------------------------
+//#define SAVE_REAL_PART
 void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double > & m2,
              double sampling_rate,
@@ -324,6 +326,10 @@ void frc_dpr(MultidimArray< double > & m1,
     frc.initZeros(radial_count);
     frc_noise.initZeros(radial_count);
     error_l2.initZeros(radial_count);
+    #ifdef SAVE_REAL_PART
+        std::vector<double> *realPart=
+            new std::vector<double>[XSIZE(radial_count)];
+    #endif
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FT1)
     {
@@ -343,6 +349,10 @@ void frc_dpr(MultidimArray< double > & m1,
                 (atan2(z2.imag(), z2.real()))),-180, 180);
         dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
         error_l2(idx)+=abs(z1-z2);
+        #ifdef SAVE_REAL_PART
+            realPart[idx].push_back(z1.real());
+        #endif
+        
         radial_count(idx)++;
     }
 
@@ -353,6 +363,14 @@ void frc_dpr(MultidimArray< double > & m1,
         frc_noise(i) = 2 / sqrt((double) radial_count(i));
         error_l2(i)/=radial_count(i);
         dpr(i)/=radial_count(i);
+        #ifdef SAVE_REAL_PART
+            std::ofstream fhOut;
+            fhOut.open(((std::string)"PPP_RealPart_"+integerToString(i)+".txt").
+                c_str());
+            for (int j=0; j<realPart[i].size(); j++)
+                fhOut << realPart[i][j] << std::endl;
+            fhOut.close();
+        #endif
     }
 }
 
