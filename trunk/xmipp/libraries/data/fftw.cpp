@@ -296,7 +296,7 @@ void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double >& frc,
              MultidimArray< double >& frc_noise,
              MultidimArray< double >& dpr,
-             bool skipdpr)
+             MultidimArray< double >& error_l2)
 {
     if (!m1.sameShape(m2))
         REPORT_ERROR(1,"MultidimArrays have different shapes!");
@@ -319,11 +319,11 @@ void frc_dpr(MultidimArray< double > & m1,
     //dpr calculation takes for ever in large volumes
     //since atan2 is called many times
     //untill atan2 is changed by a table let us make dpr an option
-    if (skipdpr)
-        dpr.initZeros(radial_count);
+    dpr.initZeros(radial_count);
     freq.initZeros(radial_count);
     frc.initZeros(radial_count);
     frc_noise.initZeros(radial_count);
+    error_l2.initZeros(radial_count);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FT1)
     {
@@ -339,12 +339,10 @@ void frc_dpr(MultidimArray< double > & m1,
         num(idx)+=real(conj(z1) * z2);
         den1(idx)+= absz1*absz1;
         den2(idx)+= absz2*absz2;
-        if (skipdpr)
-        {
-            double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
-                    (atan2(z2.imag(), z2.real()))),-180, 180);
-            dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
-        }
+        double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
+                (atan2(z2.imag(), z2.real()))),-180, 180);
+        dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
+        error_l2(idx)+=abs(z1-z2);
         radial_count(idx)++;
     }
 
@@ -353,8 +351,8 @@ void frc_dpr(MultidimArray< double > & m1,
         freq(i) = (double) i / (XSIZE(m1) * sampling_rate);
         frc(i) = num(i)/sqrt(den1(i)*den2(i));
         frc_noise(i) = 2 / sqrt((double) radial_count(i));
-        if (skipdpr)
-            dpr(i)/=radial_count(i);
+        error_l2(i)/=radial_count(i);
+        dpr(i)/=radial_count(i);
     }
 }
 

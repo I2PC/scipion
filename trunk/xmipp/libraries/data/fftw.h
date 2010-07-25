@@ -488,7 +488,8 @@ void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double >& frc,
              MultidimArray< double >& frc_noise,
              MultidimArray< double >& dpr,
-             bool skipdpr=false);
+             MultidimArray< double >& error_l2);
+
 /** 
  * Scale matrix using Fourier transform
  *  
