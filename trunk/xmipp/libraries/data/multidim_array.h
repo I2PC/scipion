@@ -1316,6 +1316,7 @@ public:
                 int nF,int zF, int yF, int xF,
                 T init_value = 0, unsigned long n = 0)
     {
+    	if (this->ndim >1)
         {
             REPORT_ERROR(1,"stack windowing not implemented");
         }
@@ -1654,7 +1655,7 @@ public:
     T getVoxel(int k, int i, int j) const
     {
         return A3D_ELEM(*this, k, i, j);
-    }    
+    }
 
     /** 3D element access via index (setVoxel).
     * @ingroup MultidimMemory
