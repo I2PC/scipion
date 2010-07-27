@@ -10,10 +10,14 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <iostream>
+#include <iomanip>
 #include "data/parallel_job_handler.h"
 //#include "funcs.h"
 
 double PI25DT = 3.14159265358979323842643;
+#define X2 (x*x) //((x-R)*(x-R))
+#define Y2 (y*y) //((y-R)*(y-R))
+#define R2 (R*R)
 
 //For time tests
 elapsedTime lockTime;
@@ -31,27 +35,26 @@ int main(int argc, char **argv)
     ParallelJobHandler *jobHandler;
     char fName[L_tmpnam];
 
-    long long int number_of_intervals = 10000000;
-    long long int blockSize = 10000;
+    long long int R = 10000;
+    long long int blockSize = 1000;
 
     int node = 0;
 
     //MPI Initialization
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &node);
-    //Random number generator initialization
-    srand ( time(NULL)*node );
+
+    if (argc > 1)
+        R = atoll(argv[1]);
 
     //Read arguments if Master
     if (node == 0)
     {
-        if (argc > 1)
-            number_of_intervals = atoll(argv[1]);
         if (argc > 2)
             blockSize = atoll(argv[2]);
 
         fName[0] = '\0';
-        jobHandler = new ParallelJobHandler(number_of_intervals, blockSize, fName);
+        jobHandler = new ParallelJobHandler(R, blockSize, fName);
     }
 
     //Send the temporary filename to the slaves nodes
@@ -76,30 +79,30 @@ int main(int argc, char **argv)
         moreJobs = jobHandler->getJobs(first, last);
 
         lockTime.setEndTime();
-        processingTime.setStartTime();
-
-#ifdef DEBUG_P
+        
         if (moreJobs)
-            std::cerr << "Node" << node <<" from " << first << " to " << last <<std::endl;
-        else
-            std::cerr << "Node" << node <<" no more jobs "<<std::endl;
-#endif
+        {
+        	processingTime.setStartTime();        
+            //std::cerr << "Node" << node <<" from " << first << " to " << last <<std::endl;
+
         T += lockTime.getElapsedTime();
         totalLocks++;
 
-        for (long long int rr = 0; rr < 1000; rr++)//just for more work to do
-            for (long long int r = first; r <= last; r++)
+        for (long long int x = 0; x <= R; x++)//just for more work to do
+            for (long long int y = first; y <= last; y++)
             {
-                double x = (double)rand() / RAND_MAX;
-                double y = (double)rand() / RAND_MAX;
-                double distance2 = x*x + y*y;
-                if (distance2 <= 1)
+                if (X2 + Y2 <= R2)
                     insideCounter++;
             }
         //int r = rand();
         //usleep((r % 5000000) + (2 - 1)*4000000);
-        processingTime.setEndTime();
+        }
+        //else
+        //    std::cerr << "Node" << node <<" no more jobs "<<std::endl;
+
         T2 += processingTime.getElapsedTime();
+
+    }
         if(checkON)
         {
         	checkON=false;
@@ -108,8 +111,6 @@ int main(int argc, char **argv)
         		          << "at present each block takes about " << processingTime.getElapsedTime()
         		          << " seconds. At least it should take a few seconds, minutes will be even better";
         }
-    }
-
     long long int totalInsideCounter;
     std::cout << "Node" << node
               << ": locks: " << totalLocks
@@ -118,12 +119,16 @@ int main(int argc, char **argv)
               << " avg locktime " << (T/totalLocks)
               << " avg processingTime " << (T2/totalLocks)
               << std::endl;
+
+    std::cerr << "Node" << node << ": insideCounter: " << insideCounter << std::endl;
     MPI_Reduce(&insideCounter, &totalInsideCounter, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (node == 0)
     {
-        double myPI = (double)(totalInsideCounter*4)/(1000*number_of_intervals);
-        std::cout << "PI: " << myPI <<std::endl;
+        std::cerr << "MASTER: totalInsideCounter: " << totalInsideCounter << std::endl;
+        double myPI = (double)(totalInsideCounter*4)/R2;
+        std::cout.precision(20);
+        std::cout << "PI: " << std::fixed << myPI <<std::endl;
     }
     //std::cerr << "th=  delta= "<< node << " " << T <<std::endl;
 
