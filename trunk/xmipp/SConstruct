@@ -277,7 +277,7 @@ if (ARGUMENTS['mode'] == 'configure'):
 	        os.system(command)
 	if int(env['verbose_sqlite']):
             print "* Configuring SQLITE ... " 
-            os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags)
+            os.system("export CFLAGS='-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1' ;cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags)
 	else:
             print "* Configuring SQLite (see build/sqlite_configure.log for details) ... "
             print "cd external/sqlite-3.6.23;./configure "  + finalSQLiteFlags
