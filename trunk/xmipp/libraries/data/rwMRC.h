@@ -197,6 +197,8 @@ int readMRC(int img_select,bool isStack=false)
     MDMainHeader.setValue(MDL_MAX,(double)header->amax);
     MDMainHeader.setValue(MDL_AVG,(double)header->amean);
     MDMainHeader.setValue(MDL_STDDEV,(double)header->arms);
+    MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
+
     if ( header->mx && header->a!=0)//ux
         MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)header->a/header->mx);
     if ( header->my && header->b!=0)//yx

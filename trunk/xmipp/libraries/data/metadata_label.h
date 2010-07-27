@@ -93,6 +93,7 @@ enum MDLabel
     MDL_CTFBG_GAUSSIAN2_CU, // CTF Background parameter
     MDL_CTFBG_GAUSSIAN2_CV, // CTF Background parameter
     MDL_CTFBG_GAUSSIAN2_ANGLE, // CTF Background parameter
+    MDL_DATATYPE, // if read from file original image datatype, this is an struct defined in image
     MDL_DEFGROUP, // Defocus group
     MDL_DEFOCUSU, // microscope defocus U direction (double)
     MDL_DEFOCUSV, // microscope defocus V direction (double)
@@ -302,6 +303,7 @@ private:
         MDL::addLabel(MDL_CTFBG_GAUSSIAN2_CV, LABEL_DOUBLE, "CTFBG_Gaussian2_CV");
         MDL::addLabel(MDL_CTFBG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "CTFBG_Gaussian2_Angle");
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
+        MDL::addLabel(MDL_DATATYPE, LABEL_INT, "datatype");
         MDL::addLabel(MDL_DEFOCUSU, LABEL_DOUBLE, "defocusU");
         MDL::addLabel(MDL_DEFOCUSV, LABEL_DOUBLE, "defocusV");
 

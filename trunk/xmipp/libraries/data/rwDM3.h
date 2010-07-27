@@ -216,6 +216,7 @@ int readDM3(int img_select,bool isStack=false)
     MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)dataHeaders[0].pixelWidth);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].pixelHeight);
+    MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     if( dataflag == -2 )
     {

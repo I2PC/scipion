@@ -134,6 +134,7 @@ int  readSPIDER(int img_select,bool isStack=false)
         REPORT_ERROR(1,(std::string)"Invalid Spider file:  " + filename);
 
     offset = (int) header->labbyt;
+    DataType datatype  = Float;
 
     MDMainHeader.removeObjects();
     MDMainHeader.addObject();
@@ -144,6 +145,8 @@ int  readSPIDER(int img_select,bool isStack=false)
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)header->scale);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)header->scale);
     MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->scale);
+    MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
+
     if ( header->istack > 0 )
         isStack = true;
     else
@@ -204,7 +207,7 @@ int  readSPIDER(int img_select,bool isStack=false)
         return 0;
     }
 
-    DataType datatype  = Float;
+
     size_t header_size = offset;
     size_t image_size  = header_size + ZYXSIZE(data)*sizeof(float);
     size_t pad         = 0;

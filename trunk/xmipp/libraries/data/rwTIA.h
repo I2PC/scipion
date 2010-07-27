@@ -226,6 +226,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)dataHeaders[0].PIXEL_WIDTH);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].PIXEL_HEIGHT);
+    MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     if( dataflag == -2 )
     {

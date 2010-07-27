@@ -181,6 +181,7 @@ int  readIMAGIC(int img_select)
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)1.);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)1.);
     MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)1.);
+    MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     offset = 0;   // separate header file
 
