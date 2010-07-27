@@ -29,11 +29,11 @@
 #include <string.h>
 #include <pthread.h>
 
-static pthread_mutex_t fftw_plan_mutex = PTHREAD_MUTEX_INITIALIZER; 
+static pthread_mutex_t fftw_plan_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Constructors and destructors --------------------------------------------
 XmippFftw::XmippFftw()
-{    
+{
     fPlanForward=NULL;
     fPlanBackward=NULL;
     fReal=NULL;
@@ -51,8 +51,10 @@ void XmippFftw::clear()
     fFourier.clear();
     // Anything to do with plans has to be protected for threads!
     pthread_mutex_lock(&fftw_plan_mutex);
-        if (fPlanForward !=NULL) fftw_destroy_plan(fPlanForward);
-        if (fPlanBackward!=NULL) fftw_destroy_plan(fPlanBackward);
+    if (fPlanForward !=NULL)
+        fftw_destroy_plan(fPlanForward);
+    if (fPlanBackward!=NULL)
+        fftw_destroy_plan(fPlanBackward);
     pthread_mutex_unlock(&fftw_plan_mutex);
     fPlanForward     = NULL;
     fPlanBackward    = NULL;
@@ -80,9 +82,12 @@ const MultidimArray<std::complex<double> > &XmippFftw::getComplex() const
 void XmippFftw::setReal(MultidimArray<double> &input)
 {
     bool recomputePlan=false;
-    if (fReal==NULL) recomputePlan=true;
-    else if (dataPtr!=MULTIDIM_ARRAY(input)) recomputePlan=true;
-    else recomputePlan=!(fReal->sameShape(input));
+    if (fReal==NULL)
+        recomputePlan=true;
+    else if (dataPtr!=MULTIDIM_ARRAY(input))
+        recomputePlan=true;
+    else
+        recomputePlan=!(fReal->sameShape(input));
     fFourier.resize(ZSIZE(input),YSIZE(input),XSIZE(input)/2+1);
     fReal=&input;
 
@@ -98,34 +103,36 @@ void XmippFftw::setReal(MultidimArray<double> &input)
         int *N = new int[ndim];
         switch (ndim)
         {
-            case 1:
-                N[0]=XSIZE(input);
-                break;
-            case 2:
-                N[0]=YSIZE(input);
-                N[1]=XSIZE(input);
-                break;
-            case 3:
-                N[0]=ZSIZE(input);
-                N[1]=YSIZE(input);
-                N[2]=XSIZE(input);
-                break;
+        case 1:
+            N[0]=XSIZE(input);
+            break;
+        case 2:
+            N[0]=YSIZE(input);
+            N[1]=XSIZE(input);
+            break;
+        case 3:
+            N[0]=ZSIZE(input);
+            N[1]=YSIZE(input);
+            N[2]=XSIZE(input);
+            break;
         }
 
         pthread_mutex_lock(&fftw_plan_mutex);
-            if (fPlanForward!=NULL)  fftw_destroy_plan(fPlanForward);
-            fPlanForward=NULL;
-            fPlanForward = fftw_plan_dft_r2c(ndim, N, MULTIDIM_ARRAY(*fReal),
-                (fftw_complex*) MULTIDIM_ARRAY(fFourier), FFTW_ESTIMATE);
-            if (fPlanBackward!=NULL) fftw_destroy_plan(fPlanBackward);
-            fPlanBackward=NULL;
-            fPlanBackward = fftw_plan_dft_c2r(ndim, N,
-                (fftw_complex*) MULTIDIM_ARRAY(fFourier), MULTIDIM_ARRAY(*fReal),
-                FFTW_ESTIMATE);
-            if (fPlanForward == NULL || fPlanBackward == NULL)
-                REPORT_ERROR(1, "FFTW plans cannot be created");
-            delete [] N;
-            dataPtr=MULTIDIM_ARRAY(*fReal);
+        if (fPlanForward!=NULL)
+            fftw_destroy_plan(fPlanForward);
+        fPlanForward=NULL;
+        fPlanForward = fftw_plan_dft_r2c(ndim, N, MULTIDIM_ARRAY(*fReal),
+                                         (fftw_complex*) MULTIDIM_ARRAY(fFourier), FFTW_ESTIMATE);
+        if (fPlanBackward!=NULL)
+            fftw_destroy_plan(fPlanBackward);
+        fPlanBackward=NULL;
+        fPlanBackward = fftw_plan_dft_c2r(ndim, N,
+                                          (fftw_complex*) MULTIDIM_ARRAY(fFourier), MULTIDIM_ARRAY(*fReal),
+                                          FFTW_ESTIMATE);
+        if (fPlanForward == NULL || fPlanBackward == NULL)
+            REPORT_ERROR(1, "FFTW plans cannot be created");
+        delete [] N;
+        dataPtr=MULTIDIM_ARRAY(*fReal);
         pthread_mutex_unlock(&fftw_plan_mutex);
     }
 }
@@ -133,9 +140,12 @@ void XmippFftw::setReal(MultidimArray<double> &input)
 void XmippFftw::setReal(MultidimArray<std::complex<double> > &input)
 {
     bool recomputePlan=false;
-    if (fComplex==NULL) recomputePlan=true;
-    else if (complexDataPtr!=MULTIDIM_ARRAY(input)) recomputePlan=true;
-    else recomputePlan=!(fComplex->sameShape(input));
+    if (fComplex==NULL)
+        recomputePlan=true;
+    else if (complexDataPtr!=MULTIDIM_ARRAY(input))
+        recomputePlan=true;
+    else
+        recomputePlan=!(fComplex->sameShape(input));
     fFourier.resize(input);
     fComplex=&input;
 
@@ -151,33 +161,35 @@ void XmippFftw::setReal(MultidimArray<std::complex<double> > &input)
         int *N = new int[ndim];
         switch (ndim)
         {
-            case 1:
-                N[0]=XSIZE(input);
-                break;
-            case 2:
-                N[0]=YSIZE(input);
-                N[1]=XSIZE(input);
-                break;
-            case 3:
-                N[0]=ZSIZE(input);
-                N[1]=YSIZE(input);
-                N[2]=XSIZE(input);
-                break;
+        case 1:
+            N[0]=XSIZE(input);
+            break;
+        case 2:
+            N[0]=YSIZE(input);
+            N[1]=XSIZE(input);
+            break;
+        case 3:
+            N[0]=ZSIZE(input);
+            N[1]=YSIZE(input);
+            N[2]=XSIZE(input);
+            break;
         }
 
         pthread_mutex_lock(&fftw_plan_mutex);
-            if (fPlanForward!=NULL)  fftw_destroy_plan(fPlanForward);
-            fPlanForward=NULL;
-            fPlanForward = fftw_plan_dft(ndim, N, (fftw_complex*) MULTIDIM_ARRAY(*fComplex),
-                                         (fftw_complex*) MULTIDIM_ARRAY(fFourier), FFTW_FORWARD, FFTW_ESTIMATE);
-            if (fPlanBackward!=NULL) fftw_destroy_plan(fPlanBackward);
-            fPlanBackward=NULL;
-            fPlanBackward = fftw_plan_dft(ndim, N, (fftw_complex*) MULTIDIM_ARRAY(fFourier), 
-                                          (fftw_complex*) MULTIDIM_ARRAY(*fComplex), FFTW_BACKWARD, FFTW_ESTIMATE);
-            if (fPlanForward == NULL || fPlanBackward == NULL)
-                REPORT_ERROR(1, "FFTW plans cannot be created");
-            delete [] N;
-            complexDataPtr=MULTIDIM_ARRAY(*fComplex);
+        if (fPlanForward!=NULL)
+            fftw_destroy_plan(fPlanForward);
+        fPlanForward=NULL;
+        fPlanForward = fftw_plan_dft(ndim, N, (fftw_complex*) MULTIDIM_ARRAY(*fComplex),
+                                     (fftw_complex*) MULTIDIM_ARRAY(fFourier), FFTW_FORWARD, FFTW_ESTIMATE);
+        if (fPlanBackward!=NULL)
+            fftw_destroy_plan(fPlanBackward);
+        fPlanBackward=NULL;
+        fPlanBackward = fftw_plan_dft(ndim, N, (fftw_complex*) MULTIDIM_ARRAY(fFourier),
+                                      (fftw_complex*) MULTIDIM_ARRAY(*fComplex), FFTW_BACKWARD, FFTW_ESTIMATE);
+        if (fPlanForward == NULL || fPlanBackward == NULL)
+            REPORT_ERROR(1, "FFTW plans cannot be created");
+        delete [] N;
+        complexDataPtr=MULTIDIM_ARRAY(*fComplex);
         pthread_mutex_unlock(&fftw_plan_mutex);
     }
 }
@@ -185,7 +197,7 @@ void XmippFftw::setReal(MultidimArray<std::complex<double> > &input)
 void XmippFftw::setFourier(MultidimArray<std::complex<double> > &inputFourier)
 {
     memcpy(MULTIDIM_ARRAY(fFourier),MULTIDIM_ARRAY(inputFourier),
-        MULTIDIM_SIZE(inputFourier)*2*sizeof(double));
+           MULTIDIM_SIZE(inputFourier)*2*sizeof(double));
 }
 
 // Transform ---------------------------------------------------------------
@@ -196,13 +208,13 @@ void XmippFftw::Transform(int sign)
         fftw_execute(fPlanForward);
         unsigned long int size=0;
         if(fReal!=NULL)
-			size = MULTIDIM_SIZE(*fReal);
+            size = MULTIDIM_SIZE(*fReal);
         else if (fComplex!= NULL)
-        	size = MULTIDIM_SIZE(*fComplex);
+            size = MULTIDIM_SIZE(*fComplex);
         else
-        	REPORT_ERROR(-1,"No complex nor real data defined");
+            REPORT_ERROR(-1,"No complex nor real data defined");
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fFourier)
-			DIRECT_MULTIDIM_ELEM(fFourier,n) /= size;
+        DIRECT_MULTIDIM_ELEM(fFourier,n) /= size;
 
     }
     else if (sign == FFTW_BACKWARD)
@@ -230,46 +242,48 @@ void XmippFftw::enforceHermitianSymmetry()
             ndim=1;
     }
     int yHalf=YSIZE(*fReal)/2;
-    if (YSIZE(*fReal)%2==0) yHalf--;
+    if (YSIZE(*fReal)%2==0)
+        yHalf--;
     int zHalf=ZSIZE(*fReal)/2;
-    if (ZSIZE(*fReal)%2==0) zHalf--;
+    if (ZSIZE(*fReal)%2==0)
+        zHalf--;
     switch (ndim)
     {
-        case 2:
+    case 2:
+        for (int i=1; i<=yHalf; i++)
+        {
+            int isym=intWRAP(-i,0,YSIZE(*fReal)-1);
+            std::complex<double> mean=0.5*(
+                                          DIRECT_A2D_ELEM(fFourier,i,0)+
+                                          conj(DIRECT_A2D_ELEM(fFourier,isym,0)));
+            DIRECT_A2D_ELEM(fFourier,i,0)=mean;
+            DIRECT_A2D_ELEM(fFourier,isym,0)=conj(mean);
+        }
+        break;
+    case 3:
+        for (int k=0; k<ZSIZE(*fReal); k++)
+        {
+            int ksym=intWRAP(-k,0,ZSIZE(*fReal)-1);
             for (int i=1; i<=yHalf; i++)
             {
                 int isym=intWRAP(-i,0,YSIZE(*fReal)-1);
                 std::complex<double> mean=0.5*(
-                    DIRECT_A2D_ELEM(fFourier,i,0)+
-                    conj(DIRECT_A2D_ELEM(fFourier,isym,0)));
-                DIRECT_A2D_ELEM(fFourier,i,0)=mean;
-                DIRECT_A2D_ELEM(fFourier,isym,0)=conj(mean);
+                                              DIRECT_A3D_ELEM(fFourier,k,i,0)+
+                                              conj(DIRECT_A3D_ELEM(fFourier,ksym,isym,0)));
+                DIRECT_A3D_ELEM(fFourier,k,i,0)=mean;
+                DIRECT_A3D_ELEM(fFourier,ksym,isym,0)=conj(mean);
             }
-            break;
-        case 3:
-            for (int k=0; k<ZSIZE(*fReal); k++)
-            {
-                int ksym=intWRAP(-k,0,ZSIZE(*fReal)-1);
-                for (int i=1; i<=yHalf; i++)
-                {
-                    int isym=intWRAP(-i,0,YSIZE(*fReal)-1);
-                    std::complex<double> mean=0.5*(
-                        DIRECT_A3D_ELEM(fFourier,k,i,0)+
-                        conj(DIRECT_A3D_ELEM(fFourier,ksym,isym,0)));
-                    DIRECT_A3D_ELEM(fFourier,k,i,0)=mean;
-                    DIRECT_A3D_ELEM(fFourier,ksym,isym,0)=conj(mean);
-                }
-            }
-            for (int k=1; k<=zHalf; k++)
-            {
-                int ksym=intWRAP(-k,0,ZSIZE(*fReal)-1);
-                std::complex<double> mean=0.5*(
-                    DIRECT_A3D_ELEM(fFourier,k,0,0)+
-                    conj(DIRECT_A3D_ELEM(fFourier,ksym,0,0)));
-                DIRECT_A3D_ELEM(fFourier,k,0,0)=mean;
-                DIRECT_A3D_ELEM(fFourier,ksym,0,0)=conj(mean);
-            }
-            break;
+        }
+        for (int k=1; k<=zHalf; k++)
+        {
+            int ksym=intWRAP(-k,0,ZSIZE(*fReal)-1);
+            std::complex<double> mean=0.5*(
+                                          DIRECT_A3D_ELEM(fFourier,k,0,0)+
+                                          conj(DIRECT_A3D_ELEM(fFourier,ksym,0,0)));
+            DIRECT_A3D_ELEM(fFourier,k,0,0)=mean;
+            DIRECT_A3D_ELEM(fFourier,ksym,0,0)=conj(mean);
+        }
+        break;
     }
 }
 
@@ -283,7 +297,7 @@ void FFT_magnitude(const MultidimArray< std::complex<double> > &v,
 
 /* FFT Phase ------------------------------------------------------- */
 void FFT_phase(const MultidimArray< std::complex<double> > &v,
-                MultidimArray<double> &phase)
+               MultidimArray<double> &phase)
 {
     phase.resize(v);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v) phase(n) = atan2(v(n).imag(), v(n).real());
@@ -298,7 +312,8 @@ void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double >& frc,
              MultidimArray< double >& frc_noise,
              MultidimArray< double >& dpr,
-             MultidimArray< double >& error_l2)
+             MultidimArray< double >& error_l2,
+             bool skipdpr)
 {
     if (!m1.sameShape(m2))
         REPORT_ERROR(1,"MultidimArrays have different shapes!");
@@ -317,7 +332,7 @@ void frc_dpr(MultidimArray< double > & m1,
     num.initZeros(radial_count);
     den1.initZeros(radial_count);
     den2.initZeros(radial_count);
-     
+
     //dpr calculation takes for ever in large volumes
     //since atan2 is called many times
     //untill atan2 is changed by a table let us make dpr an option
@@ -326,17 +341,19 @@ void frc_dpr(MultidimArray< double > & m1,
     frc.initZeros(radial_count);
     frc_noise.initZeros(radial_count);
     error_l2.initZeros(radial_count);
-    #ifdef SAVE_REAL_PART
-        std::vector<double> *realPart=
-            new std::vector<double>[XSIZE(radial_count)];
-    #endif
+#ifdef SAVE_REAL_PART
+
+    std::vector<double> *realPart=
+        new std::vector<double>[XSIZE(radial_count)];
+#endif
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FT1)
     {
         FFT_IDX2DIGFREQ(j,XSIZE(m1),XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(m1),YY(f));
         double R=f.module();
-        if (R>0.5) continue;
+        if (R>0.5)
+            continue;
         int idx=ROUND(R*XSIZE(m1));
         std::complex<double> z1=dAij(FT1, i, j);
         std::complex<double> z2=dAij(FT2, i, j);
@@ -345,14 +362,18 @@ void frc_dpr(MultidimArray< double > & m1,
         num(idx)+=real(conj(z1) * z2);
         den1(idx)+= absz1*absz1;
         den2(idx)+= absz2*absz2;
-        double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
-                (atan2(z2.imag(), z2.real()))),-180, 180);
-        dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
         error_l2(idx)+=abs(z1-z2);
-        #ifdef SAVE_REAL_PART
+        if (skipdpr) //this takes to long for a huge volume
+        {
+            double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
+                                              (atan2(z2.imag(), z2.real()))),-180, 180);
+            dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
+#ifdef SAVE_REAL_PART
+
             realPart[idx].push_back(z1.real());
-        #endif
-        
+#endif
+
+        }
         radial_count(idx)++;
     }
 
@@ -362,54 +383,57 @@ void frc_dpr(MultidimArray< double > & m1,
         frc(i) = num(i)/sqrt(den1(i)*den2(i));
         frc_noise(i) = 2 / sqrt((double) radial_count(i));
         error_l2(i)/=radial_count(i);
-        dpr(i)/=radial_count(i);
-        #ifdef SAVE_REAL_PART
-            std::ofstream fhOut;
-            fhOut.open(((std::string)"PPP_RealPart_"+integerToString(i)+".txt").
-                c_str());
-            for (int j=0; j<realPart[i].size(); j++)
-                fhOut << realPart[i][j] << std::endl;
-            fhOut.close();
-        #endif
+        if (skipdpr)
+            dpr(i)/=radial_count(i);
+#ifdef SAVE_REAL_PART
+
+        std::ofstream fhOut;
+        fhOut.open(((std::string)"PPP_RealPart_"+integerToString(i)+".txt").
+                   c_str());
+        for (int j=0; j<realPart[i].size(); j++)
+            fhOut << realPart[i][j] << std::endl;
+        fhOut.close();
+#endif
+
     }
 }
 
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int nThreads)
- {
+{
 
-     //Mmem = *this
-     //memory for fourier transform output
-     MultidimArray<std::complex<double> > MmemFourier;
-     // Perform the Fourier transform
-     XmippFftw transformerM;
-     transformerM.setThreadsNumber(nThreads);
-     transformerM.FourierTransform(Mpmem, MmemFourier, false);
+    //Mmem = *this
+    //memory for fourier transform output
+    MultidimArray<std::complex<double> > MmemFourier;
+    // Perform the Fourier transform
+    XmippFftw transformerM;
+    transformerM.setThreadsNumber(nThreads);
+    transformerM.FourierTransform(Mpmem, MmemFourier, false);
 
-     // Create space for the downsampled image and its Fourier transform
-     Mpmem.resize(Ydim, Xdim);
-     MultidimArray<std::complex<double> > MpmemFourier;
-     XmippFftw transformerMp;
-     transformerMp.setReal(Mpmem);
-     transformerMp.getFourierAlias(MpmemFourier);
+    // Create space for the downsampled image and its Fourier transform
+    Mpmem.resize(Ydim, Xdim);
+    MultidimArray<std::complex<double> > MpmemFourier;
+    XmippFftw transformerMp;
+    transformerMp.setReal(Mpmem);
+    transformerMp.getFourierAlias(MpmemFourier);
 
-     int ihalf = XMIPP_MIN((YSIZE(MpmemFourier)/2+1),(YSIZE(MmemFourier)/2+1));
-     int xsize = XMIPP_MIN((XSIZE(MmemFourier)),(XSIZE(MpmemFourier)));
-     int ysize = XMIPP_MIN((YSIZE(MmemFourier)),(YSIZE(MpmemFourier)));
-     //Init with zero
-     MpmemFourier.initZeros();
-     for (int i=0; i<ihalf; i++)
-         for (int j=0; j<xsize; j++)
-             MpmemFourier(i,j)=MmemFourier(i,j);
-     for (int i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
-     {   
-         int ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
-         for (int j=0; j<XSIZE(MpmemFourier); j++)
-             MpmemFourier(i,j)=MmemFourier(ip,j);
-     }
+    int ihalf = XMIPP_MIN((YSIZE(MpmemFourier)/2+1),(YSIZE(MmemFourier)/2+1));
+    int xsize = XMIPP_MIN((XSIZE(MmemFourier)),(XSIZE(MpmemFourier)));
+    int ysize = XMIPP_MIN((YSIZE(MmemFourier)),(YSIZE(MpmemFourier)));
+    //Init with zero
+    MpmemFourier.initZeros();
+    for (int i=0; i<ihalf; i++)
+        for (int j=0; j<xsize; j++)
+            MpmemFourier(i,j)=MmemFourier(i,j);
+    for (int i=YSIZE(MpmemFourier)-1; i>=ihalf; i--)
+    {
+        int ip = i + YSIZE(MmemFourier)-YSIZE(MpmemFourier) ;
+        for (int j=0; j<XSIZE(MpmemFourier); j++)
+            MpmemFourier(i,j)=MmemFourier(ip,j);
+    }
 
-     // Transform data
-     transformerMp.inverseFourierTransform();
- }
+    // Transform data
+    transformerMp.inverseFourierTransform();
+}
 
 
 void getSpectrum(MultidimArray<double> &Min,
@@ -450,7 +474,7 @@ void divideBySpectrum(MultidimArray<double> &Min,
                       MultidimArray<double> &spectrum,
                       bool leave_origin_intact)
 {
-    
+
     Min.checkDimension(3);
 
     MultidimArray<double> div_spec(spectrum);
@@ -515,7 +539,7 @@ void adaptSpectrum(MultidimArray<double> &Min,
                    int spectrum_type,
                    bool leave_origin_intact)
 {
-    
+
     Min.checkDimension(3);
 
     MultidimArray<double> spectrum;
