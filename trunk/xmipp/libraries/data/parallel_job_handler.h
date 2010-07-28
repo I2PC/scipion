@@ -61,7 +61,7 @@ public:
 
 
     //TODO: todos los casos: inicializar variable blocksize, crear base de datos,
-    ParallelJobHandler(long long int nJobs, long long int bSize, char *fName);
+    ParallelJobHandler(long long int nJobs, long long int bSize, char *fName = NULL);
     ParallelJobHandler(const char *fName);
     ~ParallelJobHandler();
 

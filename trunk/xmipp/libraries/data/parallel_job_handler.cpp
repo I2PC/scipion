@@ -34,7 +34,7 @@ ParallelJobHandler::ParallelJobHandler(long long int nJobs, long long int bSize,
     blockSize = bSize;
     assignedJobs = 0;
 
-    if (fName[0] == '\0')
+    if ( fName == NULL || fName[0] == '\0')
     {
         strcpy(lockFilename, "pijol_XXXXXX");
         if ((lockFile = mkstemp(lockFilename)) == -1)
@@ -44,6 +44,7 @@ ParallelJobHandler::ParallelJobHandler(long long int nJobs, long long int bSize,
         }
         else
             close(lockFile);
+        if (fName != NULL)
         strcpy(fName, lockFilename);
     }
     else
