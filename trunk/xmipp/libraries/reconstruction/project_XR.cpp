@@ -190,7 +190,7 @@ void Projection_XR_Parameters::read(const FileName &fn_proj_param)
 }
 
 
-void Projection_XR_Parameters::setProjectionAngles(Projection &P, double angle, double inplaneRot,
+void Projection_XR_Parameters::calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
         const Matrix1D<double> &rinplane)
 {
     // double axisRot, double axisTilt,
@@ -269,7 +269,7 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
         //        proj.setShifts(XX(prm.raxis),YY(prm.raxis),ZZ(prm.raxis));
 
 
-        prm.setProjectionAngles(proj,angle, 0,inPlaneShift);
+        prm.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
 
 
         // Really project ....................................................
@@ -384,7 +384,7 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
         std::cout << "Image resize (Nx,Ny): (" << iniXdim << "," << iniYdim << ") --> ("
         << xend - xinit +1<< "," << yend - yinit +1 << ") " << std::endl;
 
-
+#if DEBUG
         std::cout <<"yoffsetN "<< yOffsetN <<std::endl;
         std::cout <<"xoffsetN "<< xOffsetN <<std::endl;
         std::cout <<"yinit    " << yinit  <<std::endl;
@@ -393,6 +393,7 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, 
         std::cout <<"xend     "    << xend  <<std::endl;
         std::cout <<"zinit    "   << zinit  <<std::endl;
         std::cout <<"zend     "    << zend  <<std::endl;
+#endif
     }
 
 

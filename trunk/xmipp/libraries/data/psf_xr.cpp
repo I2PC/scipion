@@ -344,11 +344,11 @@ void XmippXRPSF::adjustParam(Image<double> &vol)
         {
             if (AdjustType==PSFXR_ZPAD)
                 std::cout << "XmippXRPSF: Image plane size too small: increasing size" << std::endl;
-            std::cout << "New slice dimensions:  " <<  "Nix = " << Nix << "   Niy = " << Niy << std::endl;
+            std::cout << "New slice dimensions:  " <<  "(Nix, Niy) = (" << Nix << ", " << Niy << ")" << std::endl;
         }
-        std::cout << "dxl = " << dxl*1e6 << " um  -   dyl = " << dyl*1e6 << " um" << std::endl;
-        std::cout << "Pupile Diameter in pixels (NpX,NpY) = (" << ceil(2*Rlens / dxl)
-        << "," << ceil(2*Rlens / dyl) << ")"  << std::endl;
+        std::cout << "(dxl, dyl) = (" << dxl*1e6 << ", " << dyl*1e6 << ") um" << std::endl;
+        std::cout << "Pupile Diameter in pixels (NpX, NpY) = (" << ceil(2*Rlens / dxl)
+        << ", " << ceil(2*Rlens / dyl) << ")"  << std::endl;
         std::cout << std::endl;
     }
 
@@ -474,7 +474,8 @@ void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut, int i
 
         //        imOut.write("psfxr-imout.spi");
 
-        progress_bar((idxSlice - 1)*vol().zdim + k - vol().zinit);
+        if (idxSlice > -1)
+            progress_bar((idxSlice - 1)*vol().zdim + k - vol().zinit);
     }
 
     imOut() = 1-imOut();

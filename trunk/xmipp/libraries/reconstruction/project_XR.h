@@ -133,7 +133,7 @@ public:
     void read(const FileName &fn_proj_param);
 
 
-    void setProjectionAngles(Projection &P, double angle, double inplaneRot,
+    void calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
                              const Matrix1D<double> &rinplane);
 };
 

@@ -1162,7 +1162,7 @@ public:
     */
     void setPixel(int i, int j, T v)
     {
-	IMGPIXEL(*this,i,j)=v;
+        IMGPIXEL(*this,i,j)=v;
     }
 
     /**
@@ -1170,7 +1170,7 @@ public:
     */
     T getPixel(int i, int j)
     {
-	return IMGPIXEL(*this,i,j);
+        return IMGPIXEL(*this,i,j);
     }
 
     /** Voxel access
@@ -1414,6 +1414,17 @@ public:
         MD.setValue(MDL_ORIGINY,yoff,n);
         MD.setValue(MDL_ORIGINZ,zoff,n);
     }
+    /** Get origin offsets from image header
+         *
+         */
+    void getShifts(double &xoff, double &yoff, double &zoff = 0.,
+                   long int n = -1)
+    {
+        MD.getValue(MDL_ORIGINX,xoff,n);
+        MD.getValue(MDL_ORIGINY,yoff,n);
+        MD.getValue(MDL_ORIGINZ,zoff,n);
+    }
+
 
     /** Set X offset in image header
      */
