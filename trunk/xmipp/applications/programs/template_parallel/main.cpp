@@ -45,11 +45,6 @@ double PI25DT = 3.14159265358979323842643;
 #define R2 (R*R)
 #define IS_MASTER (node == 0)
 
-//mpi macros
-#define TAG_WORK   0
-#define TAG_STOP   1
-#define TAG_WAIT   2
-
 //For time tests
 elapsedTime lockTime;
 elapsedTime processingTime;
@@ -63,10 +58,8 @@ int main(int argc, char **argv)
 
     long long int R = 10000;
     long long int blockSize = 1000;
+
     int node = 0, size = 0;
-    long long int workBuffer[2];
-    /** status after am MPI call */
-    MPI_Status status;
 
     //MPI Initialization
     MPI_Init(&argc, &argv);
@@ -79,6 +72,19 @@ int main(int argc, char **argv)
     if (argc > 2)
         blockSize = atoll(argv[2]);
 
+    //Create the job handler in the master
+    if (IS_MASTER)
+    {
+        fName[0] = '\0';
+        jobHandler = new ParallelJobHandler(R, blockSize, fName);
+    }
+
+    //Send the temporary filename to the slaves nodes
+    MPI_Bcast(fName, L_tmpnam, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (!IS_MASTER) //Create the parallel job handler with the filename sent from master
+        jobHandler = new ParallelJobHandler(fName);
+
     long long int first = -1, last = -1;
     long long int totalLocks = 1;
     long long int insideCounter = 0;
@@ -86,66 +92,28 @@ int main(int argc, char **argv)
     float T = 0.;
     bool checkON = true;
 
-    //Create the job handler in the master
-    if (IS_MASTER)
+    lockTime.setStartTime();
+    while (jobHandler->getJobs(first, last))
     {
-        fName[0] = '\0';
-        jobHandler = new ParallelJobHandler(R, blockSize, fName);
+        lockTime.setEndTime(); //this is only for test the locking time
+        T += lockTime.getElapsedTime();
+        totalLocks++;
 
+        processingTime.setStartTime(); //start counting processing time
 
-        int finalizedWorkers = 0;
-
-        while (finalizedWorkers < size - 1)
-        {
-            //wait for request form workers
-            MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
-
-            jobHandler->getJobs(workBuffer[0], workBuffer[1]);
-            if (workBuffer[0] == -1) //no more jobs
-                finalizedWorkers++;
-            //send work
-            MPI_Send(workBuffer, 2, MPI_LONG_LONG_INT, status.MPI_SOURCE, TAG_WORK, MPI_COMM_WORLD);
-        }
-
-    }
-    else
-    {
-
-        while (moreJobs)
-        {
-            lockTime.setStartTime();
-
-            //any message from de master, is tag is TAG_STOP then stop
-            MPI_Send(0, 0, MPI_INT, 0, 0, MPI_COMM_WORLD);
-            MPI_Recv(workBuffer, 2, MPI_LONG_LONG_INT, 0, TAG_WORK, MPI_COMM_WORLD, &status);
-
-            lockTime.setEndTime(); //this is only for test the locking time
-            T += lockTime.getElapsedTime();
-            totalLocks++;
-
-            first = workBuffer[0];
-            last = workBuffer[1];
-            moreJobs = (first != -1);
-
-            if (moreJobs)
+        for (long long int x = 0; x <= R; x++)//just for more work to do
+            for (long long int y = first; y <= last; y++)
             {
-                processingTime.setStartTime(); //start counting processing time
-
-                for (long long int x = 0; x <= R; x++)//just for more work to do
-                    for (long long int y = first; y <= last; y++)
-                    {
-                        if (X2 + Y2 <= R2)
-                            insideCounter++;
-                    }
-
-                processingTime.setEndTime();
-                T2 += processingTime.getElapsedTime();
-
-                lockTime.setStartTime();
+                if (X2 + Y2 <= R2)
+                    insideCounter++;
             }
-        }
-    }
 
+        processingTime.setEndTime();
+        T2 += processingTime.getElapsedTime();
+
+        lockTime.setStartTime();
+    }
+    lockTime.setEndTime();
 
     // Print out results subsequently
     for (int n = 0; n < size; n++)
@@ -181,10 +149,9 @@ int main(int argc, char **argv)
         double myPI = (double)(totalInsideCounter*4)/R2;
         std::cout.precision(20);
         std::cout << "PI: " << std::fixed << myPI <<std::endl;
-        delete jobHandler;
     }
 
-
+    delete jobHandler;
 
     MPI_Finalize();
 
