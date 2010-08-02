@@ -25,7 +25,7 @@
 
 #include <reconstruction/make_spectra.h>
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Prog_make_spectra_prm *eprm =
         (Prog_make_spectra_prm *) prm;
@@ -33,16 +33,10 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    std::cout << "This program is not intended for volumes\n";
-    return false;
-}
-
 int main(int argc, char **argv)
 {
     Prog_make_spectra_prm prm;
     prm.apply_geo = true;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
     prm.finish_processing();
 }

@@ -219,7 +219,6 @@ std::ostream & operator << (std::ostream &_out, const Rotational_Spectrum &_spt)
          << "rl=" << _spt.rl << std::endl
          << "rh=" << _spt.rh << std::endl
          << "dr=" << _spt.dr << std::endl;
-    _out << _spt.rot_spectrum;
     return _out;
 }
 

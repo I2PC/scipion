@@ -508,7 +508,7 @@ ReconsSources = [
     'enhance_contrast.cpp',
     'filter_projections.cpp',
     'fourier_filter.cpp',
-#    'make_spectra.cpp',
+    'make_spectra.cpp',
 #    'micrograph_phase_flipping.cpp',
     'micrograph_downsample.cpp',
     'ml_align2d.cpp',
@@ -684,7 +684,7 @@ AddXmippProgram('header_print')
 AddXmippProgram('header_reset')
 #AddXmippProgram('histogram')
 AddXmippProgram('image_import')
-#AddXmippProgram('make_spectra', ['XmippRecons'])
+AddXmippProgram('make_spectra', ['XmippRecons'])
 #AddXmippProgram('mask')
 AddXmippProgram('mean_shift')
 AddXmippProgram('metadata_split')

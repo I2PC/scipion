@@ -74,12 +74,12 @@ void Prog_make_spectra_prm::usage_specific()
 }
 
 // Process an image --------------------------------------------------------
-void Prog_make_spectra_prm::process_img(ImageXmipp &img)
+void Prog_make_spectra_prm::process_img(Image<double> &img)
 {
     rot_spt.compute_rotational_spectrum(img(), rot_spt.rl, rot_spt.rh,
                                         rot_spt.dr, rot_spt.rh - rot_spt.rl);
     Harmonics.push_back(rot_spt.rot_spectrum);
-    Img_name.push_back(img.name());
+    Img_name.push_back(img.name	());
 }
 
 // Finish processing -------------------------------------------------------

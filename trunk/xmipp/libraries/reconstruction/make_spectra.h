@@ -52,7 +52,7 @@ public:
 public:
     /** Set of harmonics.
      */
-    std::vector< Matrix1D< double > > Harmonics;
+    std::vector< MultidimArray< double > > Harmonics;
 
     /** Set of images.
      */
@@ -88,7 +88,7 @@ public:
 
     /** Process image.
      */
-    void process_img(ImageXmipp& img);
+    void process_img(Image<double>& img);
 
     /** Finish processing.
      */
