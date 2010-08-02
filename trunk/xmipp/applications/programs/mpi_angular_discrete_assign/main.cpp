@@ -71,6 +71,7 @@ int main(int argc, char **argv)
             int toGo = imgNbr;
             std::cerr << "Assigning angles ...\n";
             init_progress_bar(imgNbr);
+            int imgStep=XMIPP_MAX(imgNbr / 60,1);
             MPI_Status status;
             while (toGo > 0)
             {
@@ -84,7 +85,7 @@ int main(int argc, char **argv)
                 prm.predicted_shiftY[i] = v[5];
                 prm.predicted_corr[i] = v[6];
                 toGo--;
-                if (toGo % (imgNbr / 60) == 0)
+                if (toGo % imgStep == 0)
                 {
                     progress_bar(imgNbr - toGo);
                     std::cerr.flush();

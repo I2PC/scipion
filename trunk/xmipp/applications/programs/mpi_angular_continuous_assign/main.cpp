@@ -70,6 +70,7 @@ int main(int argc, char **argv)
             MPI_Status status;
             std::cerr << "Assigning angles ...\n";
             init_progress_bar(imgNbr);
+            int imgStep=XMIPP_MAX(imgNbr / 60,1);
             while (toGo > 0)
             {
                 MPI_Recv(v, 7, MPI_DOUBLE, MPI_ANY_SOURCE,
@@ -82,7 +83,7 @@ int main(int argc, char **argv)
                 prm.predicted_shiftY[i] = v[5];
                 prm.predicted_cost[i] = v[6];
                 toGo--;
-                if (toGo % (imgNbr / 60) == 0)
+                if (toGo % imgStep == 0)
                 {
                     progress_bar(imgNbr - toGo);
                     std::cerr.flush();
@@ -92,7 +93,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            for (int key=0; key<imgNbr; key++)
+            for (int key=1; key<=imgNbr; key++)
             {
                 if (key%(NProcessors-1)+1==rank)
                 {
