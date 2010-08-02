@@ -66,6 +66,7 @@ class std::string {};
 
 %ignore applyGeometry<>;
 %ignore applyGeometryBSpline<>;
+%ignore getShifts;
 %{
 #include "../multidim_array.h"
 %}

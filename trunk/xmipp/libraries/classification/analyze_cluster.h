@@ -43,6 +43,9 @@ public:
     /** Filename reference image */
     FileName fnRef;
 
+    /**  Output directory */
+    FileName fnOdir;
+
     /**  Filename output extension */
     FileName oext;
 

@@ -587,12 +587,12 @@ OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
 #AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 
 # ImageJ plugins. Check if there is java compiler, otherwise the compilation will be halted if jvm is missing.
-#if env.Detect('javac') and env.Detect('jar'):
-#	AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
-#	AddImageJPlugin('Xmipp_3D_Viewer', 'libraries/graphicsj/Xmipp_3D_Viewer', 'external/imagej/plugins')
-#	AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
-#else:
-#	print 'WARNING: \'javac\' and/or \'jar\' are missing. ImageJ plugins won\'t be generated. Please, check your java jdk.'
+if env.Detect('javac') and env.Detect('jar'):
+	AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
+	AddImageJPlugin('Xmipp_3D_Viewer', 'libraries/graphicsj/Xmipp_3D_Viewer', 'external/imagej/plugins')
+	AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
+else:
+	print 'WARNING: \'javac\' and/or \'jar\' are missing. ImageJ plugins won\'t be generated. Please, check your java jdk.'
 
 # --- Programs
 

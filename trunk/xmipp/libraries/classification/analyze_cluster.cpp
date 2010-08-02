@@ -34,6 +34,7 @@ void Prog_analyze_cluster_prm::read(int argc, char **argv)
     fnSel = getParameter(argc, argv, "-i");
     fnRef = getParameter(argc, argv, "-ref");
     oext  = getParameter(argc, argv, "-oext", "");
+    fnOdir = getParameter(argc, argv, "-odir", "");
     align = checkParameter(argc, argv, "-produceAligned");
     NPCA  = textToInteger(getParameter(argc, argv, "-NPCA", "2"));
     Niter  = textToInteger(getParameter(argc, argv, "-iter", "10"));
@@ -47,11 +48,12 @@ void Prog_analyze_cluster_prm::show()
     std::cerr << "Input metadata file:    " << fnSel         << std::endl
     << "Reference:              " << fnRef         << std::endl
     << "Produce aligned:        " << align         << std::endl
+    << "Output directory:       " << fnOdir        << std::endl
     << "Output extension:       " << oext          << std::endl
     << "PCA dimension:          " << NPCA          << std::endl
     << "Iterations:             " << Niter         << std::endl
     << "Maximum distance:       " << distThreshold << std::endl
-    << "Don't mask:       " << dontMask      << std::endl
+    << "Don't mask:             " << dontMask      << std::endl
     ;
 }
 
@@ -62,6 +64,7 @@ void Prog_analyze_cluster_prm::usage()
     << "   -i <metadatafile>  : metadata file  with images assigned to the cluster\n"
     << "   -ref <image>       : class representative\n"
     << "  [-produceAligned]   : write the aligned images\n"
+    << "  [-odir <dir=''>]    : output directory\n"
     << "  [-oext <ext=''>]    : in case you want to produce aligned images\n"
     << "                        use this flag to change the output extension\n"
     << "                        or the input images will be modified\n"
@@ -138,8 +141,13 @@ void Prog_analyze_cluster_prm::produceSideInfo()
             else
             {
                 FileName fnRoot=auxFn.without_extension();
-                Iaux.write(fnRoot+"."+oext);
-                SFout.setValue(MDL_IMAGE,fnRoot+"."+oext);
+                if (fnOdir!="")
+                   fnRoot=fnOdir+Iaux.name().get_baseName();//fnRoot;
+                
+                fnRoot = fnRoot + "." + oext;
+                
+                Iaux.write(fnRoot);
+                SFout.setValue(MDL_IMAGE,fnRoot);
             }
         }
 
@@ -173,6 +181,8 @@ void Prog_analyze_cluster_prm::run()
 
     // Output
     FileName fnRoot=fnSel.without_extension();
+    if (fnOdir!="")
+        fnRoot=fnOdir+"/"+fnRoot;
     MetaData SFout_good, SFout_bad;
     MultidimArray<double> IalignedAvg;
     IalignedAvg.initZeros(XSIZE(Ialigned[0]));
