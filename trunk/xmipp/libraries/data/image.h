@@ -154,9 +154,9 @@ private:
     int                 _exists;     // does target file exists?
     // equal 0 is not exists or not a stack
 
-    bool				mmapOn;		// Mapping when loading from file
-    int           		mFd;     //Handle the file in reading method and mmap
-    size_t    			mappedSize;
+    bool    mmapOn;  // Mapping when loading from file
+    int             mFd;     //Handle the file in reading method and mmap
+    size_t       mappedSize;
     /*
     double    min, max; // Limits
     double    avg, std; // Average and standard deviation
@@ -182,7 +182,7 @@ public:
      */
     Image()
     {
-    	mmapOn = false;
+        mmapOn = false;
         clear();
     }
 
@@ -197,7 +197,7 @@ public:
      */
     Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1)
     {
-    	mmapOn = false;
+        mmapOn = false;
         clear();
         data.resize(Ndim, Zdim, Ydim, Xdim);
         for (int n = 1; n < Ndim; n++)
@@ -216,7 +216,7 @@ public:
             data.data = NULL;
         }
         else
-        	data.clear();
+            data.clear();
 
         dataflag = -1;
         if (isComplexT())
@@ -275,6 +275,8 @@ public:
 #include "rwIMAGIC.h"
 #include "rwTIA.h"
 #include "rwDM3.h"
+#include "rwRAW.h"
+
 
     /** Is this file an image
      *
@@ -384,6 +386,8 @@ public:
             err = readTIA(select_img,false, imParam);
         else if (ext_name.contains("dm3"))//DM3
             err = readDM3(select_img,false);
+        else if (ext_name.contains("raw"))//RAW
+            err = readRAW(select_img,false);
         else
         {
             err = readSPIDER(select_img,true);
@@ -1017,7 +1021,7 @@ public:
 
         //Multidimarray mmapOn is priority over image mmapOn
         if(data.mmapOn)
-        	mmapOn = false;
+            mmapOn = false;
 
         // Flag to know that data is not going to be mapped although mmapOn is true
         if (mmapOn && !castMmap2T(datatype))
