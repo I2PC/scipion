@@ -37,20 +37,14 @@ void Prog_micrograph_phase_flipping::show(void)
 
 void Prog_micrograph_phase_flipping::run(void)
 {
-    // Read input micrograph
-    M_in.open_micrograph(fn_in,reversed);
-    int Ydim, Xdim;
-    M_in.size(Xdim, Ydim); //micrograph size
-
     // Read the micrograph in an array of doubles
-    ImageXmipp M_inmem(Ydim,Xdim);
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(M_inmem())
-        M_inmem(i,j)=(double)M_in(j,i);
+    Image<double> M_in;
+    M_in.read(fn_in);
     
     // Perform the Fourier transform
     XmippFftw transformer;
-    Matrix2D< std::complex<double> > M_inFourier;
-    transformer.FourierTransform(M_inmem(),M_inFourier,false);
+    MultidimArray< std::complex<double> > M_inFourier;
+    transformer.FourierTransform(M_in(),M_inFourier,false);
 
     // Read CTF
     XmippCTF ctf;
@@ -60,10 +54,10 @@ void Prog_micrograph_phase_flipping::run(void)
 
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(M_inFourier)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(M_inFourier)
     {
         VECTOR_R2(idx,j,i);
-        FFT_idx2digfreq(M_inmem(),idx,freq);
+        FFT_idx2digfreq(M_in(),idx,freq);
         digfreq2contfreq(freq, freq, ctf.Tm);
         if (ctf.CTFpure_without_damping_at(XX(freq),YY(freq))<0)
         {
@@ -73,6 +67,5 @@ void Prog_micrograph_phase_flipping::run(void)
     
     // Perform inverse Fourier transform and finish
     transformer.inverseFourierTransform();
-    M_inmem.write(fn_out);
-    M_in.close_micrograph();
+    M_in.write(fn_out);
 }

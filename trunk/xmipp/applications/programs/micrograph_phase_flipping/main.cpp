@@ -38,7 +38,6 @@ int main(int argc, char **argv)
         prm.fn_in   = getParameter(argc, argv, "-i");
         prm.fn_out  = getParameter(argc, argv, "-o");
         prm.fnt_ctf = getParameter(argc, argv, "-ctf");
-        prm.reversed      = checkParameter(argc, argv, "-reverse_endian");
     }
     catch (Xmipp_error XE)
     {
@@ -65,9 +64,8 @@ void Usage(char *argv[])
     << "    flip micrograph fase\n"
     << "Usage: "<< argv[0] 
     << "\n"
-    << " -i <input_micrograph>            : Either 8, 16 or 32 bits\n"
-    << " -o <output_micrograph>           : Spider Format\n"
-    << " -ctf <ctf_param_file>            : CTf param file\n"
-    << " -reverse_endian                  : assumme no native endianess\n"
+    << " -i <input_micrograph>            : Input micrograph\n"
+    << " -o <output_micrograph>           : Output micrograph\n"
+    << " -ctf <ctf_param_file>            : CTF param file\n"
     << std::endl;
 }

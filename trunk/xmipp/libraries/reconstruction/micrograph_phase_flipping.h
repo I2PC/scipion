@@ -56,12 +56,7 @@ public:
     fftw_plan plan_backward;
     /** plan for backwarda fft */
     fftw_plan plan_forward;
-    /* reverse endian */    
-    bool     reversed;
-    
 };
 
 //@}
-
-
 #endif
