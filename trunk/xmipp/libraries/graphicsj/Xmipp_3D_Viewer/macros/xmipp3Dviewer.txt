@@ -1,6 +1,0 @@
-// This macro allows to launch Xmipp 3D Viewer from command line
-// passing volume and euler angles file as parameters.
-
- macro "Xmipp3DViewer" {
-    run("Xmipp 3D Viewer", getArgument);
- }
