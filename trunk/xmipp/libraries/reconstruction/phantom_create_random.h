@@ -25,10 +25,9 @@
 //Sun Nov 14 22:07:48 EST 1999: added binary option (R. Marabini)
 
 #ifndef _PROG_RANDOM_PHANTOM_HH
-#  define _PROG_RANDOM_PHANTOM_HH
+#define _PROG_RANDOM_PHANTOM_HH
 
 #include <data/funcs.h>
-
 #include <data/phantom.h>
 
 /**@defgroup RandomPhantom phantom_create_random (Generate phantoms randomly)
@@ -95,7 +94,7 @@ public:
     /// Random specification phantom
     Phantom         Random;
     /// Voxel phantom
-    VolumeXmipp     VoxelPhantom;
+    Image<double>   VoxelPhantom;
 public:
     /** Produce Initial and Side information for Random Phantom.
         This function loads the phantom specification defined in the

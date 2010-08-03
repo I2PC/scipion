@@ -44,13 +44,13 @@ Prog_Random_Phantom_Parameters::Prog_Random_Phantom_Parameters()
 void Prog_Random_Phantom_Parameters::read(int argc, char **argv)
 {
     min_vol       = textToFloat(getParameter(argc, argv, "-min_volume", "0"));
-    discrete      =    checkParameter(argc, argv, "-discrete");
+    discrete      = checkParameter(argc, argv, "-discrete");
     RPP_distance  = textToFloat(getParameter(argc, argv, "-distance" , "-1."));
     RPP_radius    = textToFloat(getParameter(argc, argv, "-radius"   , "-1."));
-    fn_random     =      getParameter(argc, argv, "-i");
-    fn_output     =      getParameter(argc, argv, "-o", "");
+    fn_random     = getParameter(argc, argv, "-i");
+    fn_output     = getParameter(argc, argv, "-o", "");
     N_stats       = textToInteger(getParameter(argc, argv, "-stats",      "-1"));
-    fn_CTF        =      getParameter(argc, argv, "-ctf", "");
+    fn_CTF        = getParameter(argc, argv, "-ctf", "");
     Xdim          = textToInteger(getParameter(argc, argv, "-Xdim",       "-1"));
     Ydim          = textToInteger(getParameter(argc, argv, "-Ydim",       "-1"));
     target_SNR    = textToFloat(getParameter(argc, argv, "-target_SNR", "-1."));
@@ -82,8 +82,8 @@ void Prog_Random_Phantom_Parameters::usage()
 void Random_Phantom_Side_Info::produce_Side_Info(
     const Prog_Random_Phantom_Parameters &prm)
 {
-// Read phantom file
-    if (Is_VolumeXmipp(prm.fn_random))
+    // Read phantom file
+    if (VoxelPhantom.isImage(prm.fn_random))
     {
         voxel_mode = true;
         VoxelPhantom.read(prm.fn_random);
@@ -125,8 +125,8 @@ void generate_realization_of_random_phantom(
     int j;
     int Valid_Feature;
     int loop_conunter;
-// double distance2;
-// distance2 *= fabs(prm.RPP_distance);
+    // double distance2;
+    // distance2 *= fabs(prm.RPP_distance);
 
     // Global characteristics ...............................................
     Realization.clear();
@@ -144,7 +144,8 @@ void generate_realization_of_random_phantom(
         loop_conunter = 0;
         do
         {
-            if (feat_aux != NULL) delete feat_aux;
+            if (feat_aux != NULL)
+                delete feat_aux;
             if (side.Random(i)->Type == "sph")
             {
                 Sphere *sph = new Sphere;
@@ -286,7 +287,8 @@ void generate_realization_of_random_phantom(
         feat = feat_aux;
 
         // Copy common characteristics ......................................
-        if (prm.discrete) feat->Density = rint(feat->Density);
+        if (prm.discrete)
+            feat->Density = rint(feat->Density);
         feat->Add_Assign = side.Random(i)->Add_Assign;
 
         // Store this feature ...............................................
@@ -300,7 +302,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
                          Phantom &Realization)
 {
 
-// Produce Side Information
+    // Produce Side Information
     Random_Phantom_Side_Info side;
     side.produce_Side_Info(prm);
 
@@ -311,7 +313,8 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
                          " of a voxel phantom");
         // Generate realization and write to disk
         generate_realization_of_random_phantom(prm, side, Realization);
-        if (prm.fn_output != "") Realization.write(prm.fn_output);
+        if (prm.fn_output != "")
+            Realization.write(prm.fn_output);
     }
     else
     {
@@ -326,13 +329,16 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
 
         int Xdim = prm.Xdim, Ydim = prm.Ydim;
         if (Xdim == -1)
-            if (!side.voxel_mode) Xdim = side.Random.xdim;
-            else                  Xdim = XSIZE(side.VoxelPhantom());
-        if (Ydim == -1) Ydim = Xdim;
+            if (!side.voxel_mode)
+                Xdim = side.Random.xdim;
+            else
+                Xdim = XSIZE(side.VoxelPhantom());
+        if (Ydim == -1)
+            Ydim = Xdim;
 
-        Matrix1D<double> volume(prm.N_stats);
-        Matrix1D<double> proj_power(prm.N_stats);
-        Matrix1D<double> proj_area(prm.N_stats);
+        MultidimArray<double> volume(prm.N_stats);
+        MultidimArray<double> proj_power(prm.N_stats);
+        MultidimArray<double> proj_area(prm.N_stats);
         Projection proj;
         double power_avg, power_stddev, area_avg, area_stddev, avg, stddev, dummy;
         init_progress_bar(prm.N_stats);
@@ -342,8 +348,10 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
                 generate_realization_of_random_phantom(prm, side, Realization);
 
             // Compute phantom volume
-            if (!side.voxel_mode) volume(n) = Realization.volume();
-            else volume(n) =
+            if (!side.voxel_mode)
+                volume(n) = Realization.volume();
+            else
+                volume(n) =
                     side.VoxelPhantom().countThreshold("above", 0, 0);
 
             // Compute projection
@@ -357,15 +365,18 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
             // Apply CTF
             if (prm.fn_CTF != "")
             {
-                if (n == 0) ctf.generate_mask(proj());
+                if (n == 0)
+                    ctf.generate_mask(proj());
                 ctf.apply_mask_Space(proj());
             }
 
             // Compute projection area
             proj_area(n) = 0;
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(proj())
-            if (ABS(proj(i, j)) > 1e-6) proj_area(n)++;
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
+            if (ABS(proj(i, j)) > 1e-6)
+                proj_area(n)++;
 #ifdef DEBUG
+
             std::cout << "Area: " << proj_area(n) << std::endl;
             proj.write("inter.xmp");
             std::cout << "Press any key\n";
@@ -377,7 +388,8 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
             proj().computeStats(avg, proj_power(n), dummy, dummy);
 
 
-            if (n % 30 == 0) progress_bar(n);
+            if (n % 30 == 0)
+                progress_bar(n);
         }
         progress_bar(prm.N_stats);
         Histogram1D hist_vol, hist_proj, hist_area;

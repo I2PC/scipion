@@ -142,7 +142,6 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
     env.Alias(fullname, install)
     env.Default(alias)
 
-
 # Add a program integrated in the Xmipp structure
 def AddXmippProgram(name, libs=[]):
     finalLibPath = ['lib']
@@ -518,7 +517,7 @@ ReconsSources = [
 ##    'ml_tomo.cpp',
      'nma_alignment.cpp',
 #    'phantom_create_micrograph.cpp',
-#    'phantom_create_random.cpp',
+    'phantom_create_random.cpp',
 #    'phantom_simulate_microscope.cpp',
 #    'precompute_sampling.cpp',
     'projectTomography.cpp',
@@ -708,7 +707,7 @@ AddXmippProgram('operate')
 #AddXmippProgram('pdb_project_on_dictionary', ['XmippRecons','XmippClassif'])
 AddXmippProgram('phantom_create', ['XmippRecons'])
 #AddXmippProgram('phantom_create_micrograph', ['XmippRecons'])
-#AddXmippProgram('phantom_create_random', ['XmippRecons'])
+AddXmippProgram('phantom_create_random', ['XmippRecons'])
 #AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
 #AddXmippProgram('phantom_test_reconstruction', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
 #AddXmippProgram('phantom_transform', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
