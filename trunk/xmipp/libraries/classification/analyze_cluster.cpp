@@ -142,7 +142,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
             {
                 FileName fnRoot=auxFn.without_extension();
                 if (fnOdir!="")
-                   fnRoot=fnOdir+Iaux.name().get_baseName();//fnRoot;
+                   fnRoot=fnOdir+"/"+Iaux.name().get_baseName();
                 
                 fnRoot = fnRoot + "." + oext;
                 
@@ -182,7 +182,8 @@ void Prog_analyze_cluster_prm::run()
     // Output
     FileName fnRoot=fnSel.without_extension();
     if (fnOdir!="")
-        fnRoot=fnOdir+"/"+fnRoot;
+        fnRoot=fnOdir+"/"+fnSel.get_baseName();
+    
     MetaData SFout_good, SFout_bad;
     MultidimArray<double> IalignedAvg;
     IalignedAvg.initZeros(XSIZE(Ialigned[0]));
