@@ -60,20 +60,18 @@ int readRAW(int img_select,bool isStack=false)
                        getParameter(fh_inf, "is_signed") == "TRUE");
     else
         __is_signed = false;
+    if (checkParameter(fh_inf, "reversed"))
+        swap = (getParameter(fh_inf, "reversed") == "true" ||
+                getParameter(fh_inf, "reversed") == "TRUE");
+    else
+    	swap = false;
     fclose(fh_inf);
-
-
-    // Set Endianess
-    swap = 0;
-
 
     _zDim = (int) 1;
     _nDim = (int) 1;
 
-
     // Map the parameters
     data.setDimensions(_xDim, _yDim, _zDim, _nDim);
-
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
@@ -84,7 +82,6 @@ int readRAW(int img_select,bool isStack=false)
     }
 
     DataType datatype;
-
 
     switch ( __depth )
     {
@@ -155,7 +152,7 @@ int readRAW(int img_select,bool isStack=false)
 
 int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
-    REPORT_ERROR(6001, "ERROR: writeTIA is not implemented.");
+    REPORT_ERROR(6001, "ERROR: writeRAW is not implemented.");
     return(-1);
 }
 
