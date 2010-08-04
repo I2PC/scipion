@@ -72,9 +72,10 @@ void Prog_Microscope_Parameters::produce_side_info()
 {
     int Zdim;
     if (command_line) get_input_size(Zdim, Ydim, Xdim);
-    Matrix2D<double> aux;
+    MultidimArray<double> aux;
 
     double before_power = 0, after_power = 0;
+    sigma_after_CTF=sigma_before_CTF=0;
 
     if (fn_ctf != "")
     {
@@ -84,8 +85,9 @@ void Prog_Microscope_Parameters::produce_side_info()
         ctf.ctf.Produce_Side_Info();
         aux.resize(2*Ydim, 2*Xdim);
         aux.setXmippOrigin();
+        ctf.do_generate_3dmask=true;
         ctf.generate_mask(aux);
-        before_power = ctf.mask2D_power();
+        before_power = ctf.mask_power();
     }
 
     if (low_pass_before_CTF != 0)
@@ -104,8 +106,9 @@ void Prog_Microscope_Parameters::produce_side_info()
         after_ctf.ctf.Produce_Side_Info();
         aux.resize(2*Ydim, 2*Xdim);
         aux.setXmippOrigin();
+        after_ctf.do_generate_3dmask=true;
         after_ctf.generate_mask(aux);
-        after_power = after_ctf.mask2D_power();
+        after_power = after_ctf.mask_power();
     }
 
     // Compute noise balance
@@ -124,14 +127,14 @@ void Prog_Microscope_Parameters::produce_side_info()
 }
 
 /* Apply ------------------------------------------------------------------- */
-void Prog_Microscope_Parameters::apply(Matrix2D<double> &I)
+void Prog_Microscope_Parameters::apply(MultidimArray<double> &I)
 {
     I.setXmippOrigin();
     I.window(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
              LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
 
     // Add noise before CTF
-    Matrix2D<double> noisy;
+    MultidimArray<double> noisy;
     noisy.resize(I);
     noisy.initRandom(0, sigma_before_CTF, "gaussian");
     if (low_pass_before_CTF != 0) lowpass.apply_mask_Space(noisy);
@@ -143,7 +146,7 @@ void Prog_Microscope_Parameters::apply(Matrix2D<double> &I)
     {
         double old_DefocusU = ctf.ctf.DeltafU;
         double old_DefocusV = ctf.ctf.DeltafV;
-        Matrix2D<double> aux;
+        MultidimArray<double> aux;
         ctf.ctf.DeltafU *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
         ctf.ctf.DeltafV *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
         aux.initZeros(2*Ydim, 2*Xdim);

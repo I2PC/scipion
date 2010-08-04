@@ -26,22 +26,18 @@
 #include <data/progs.h>
 #include <reconstruction/phantom_simulate_microscope.h>
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Prog_Microscope_Parameters *eprm = (Prog_Microscope_Parameters *) prm;
+    if (ZSIZE(img())!=1)
+    	REPORT_ERROR(1,"This process is not intended for volumes");
     eprm->apply(img());
     return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    std::cerr << "This process is not valid for volumes\n";
-    return false;
 }
 
 int main(int argc, char **argv)
 {
     Prog_Microscope_Parameters prm;
     prm.command_line=true;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
