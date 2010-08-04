@@ -211,7 +211,7 @@ public:
      */
     void clear()
     {
-        if (mmapOn)
+    	if (mmapOn)
         {
             munmap(data.data-offset,mappedSize);
             close(mFd);
