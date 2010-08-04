@@ -68,7 +68,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	// The canvas where current projection is displayed
 	ImageCanvas ic;
 	// Control scrollbars
-	JScrollBar projectionScrollbar;
+	// JScrollBar projectionScrollbar;
+	LabelScrollbar projectionScrollbar;
 	
 	// the model stores the data that this window shows
 	private TomoData model;
@@ -166,12 +167,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		controlPanel.add(tiltTextField);
 		getModel().setTiltModel(tiltTextField.getDocument());
 		
-		// JScrollbar range is 0..maximum+extent (instead of a simple 0..maximum)
-
-		projectionScrollbar= new JScrollBar(JScrollBar.HORIZONTAL);
-		projectionScrollbar.setMinimum(0);
-		projectionScrollbar.setVisibleAmount(extent);
-		setNumberOfProjections(getModel().getNumberOfProjections());
+		projectionScrollbar= new LabelScrollbar(1,getModel().getNumberOfProjections());
+		projectionScrollbar.setText("Projection #");
 		projectionScrollbar.addAdjustmentListener(this);
 		controlPanel.add(projectionScrollbar);
 		
@@ -201,7 +198,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	}
 	
 	void updateStatusText(){
-		getStatusLabel().setText("Projection " + (model.getCurrentProjection()+ 1) + "/" + model.getNumberOfProjections() + ". x = " + getCursorX() + ", y = " + getCursorY() + ", value = " + getCursorValueAsString());
+		// current/total projections are shown in the projection scrollbar itself
+		getStatusLabel().setText("x = " + getCursorX() + ", y = " + getCursorY() + ", value = " + getCursorValueAsString());
 	}
 	
 	int getCursorDistance(int x, int y){
@@ -213,8 +211,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 * @param e
 	 */
 	public synchronized void adjustmentValueChanged(AdjustmentEvent e){
+		// Xmipp_Tomo.debug("TomoWindow.adjustmentValueChanged"+e.getSource().toString());
 		if(e.getSource()==projectionScrollbar){
-			getModel().setCurrentProjection(projectionScrollbar.getValue());
+			// scrollbar range is 1..N, while projections array is 0..N-1
+			getModel().setCurrentProjection(projectionScrollbar.getValue()-1);
 			ic.setImageUpdated();
 			ic.repaint();
 			updateStatusText(); // projection number
@@ -299,10 +299,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 * @param n - see Tomodata.numberOfProjections
 	 */
 	public void setNumberOfProjections(int n){
-		// adding the extent is a "requirement" of JScrollbar
-		// since scrollbar minimum is 0, the maximum should be N-1
 		if(projectionScrollbar != null)
-			projectionScrollbar.setMaximum(n - 1 + extent);
+			projectionScrollbar.setMaximum(n);
 	}
 	
 	int getCursorX(){

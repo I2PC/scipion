@@ -100,6 +100,11 @@ public class TomoData extends Component {
 	 * @param currentProjection range 0..numberProjections-1
 	 */
 	public void setCurrentProjection(int currentProjection) {
+		if((currentProjection<0) || (currentProjection > getNumberOfProjections()-1)){
+			Xmipp_Tomo.debug("setCurrentProjection("+currentProjection+")");
+			return;
+		}
+		
 		this.currentProjection = currentProjection;
 		// update all things depending on current projection/slice
 		getImage().setSlice(getCurrentProjection());
