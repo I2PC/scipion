@@ -61,7 +61,7 @@ class Projection: public Image<double>
 {
 public:
     /** Empty constructor */
-    Projection(): Image<double>() {std::cout<< std::fflush ;};
+    Projection();
 
     /** Vector perpendicular to the projection plane.
      * It is calculated as a function of rot and tilt.
