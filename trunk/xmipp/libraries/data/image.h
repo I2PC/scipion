@@ -44,7 +44,8 @@
 //static std::vector<MDLabel> emptyVector;
 //static MetaData emptyMetaData;
 
-typedef enum {
+typedef enum
+{
     NoTransform = 0,        // No transform
     Standard = 1,           // Standard transform: origin = (0,0,0)
     Centered = 2,           // Centered transform: origin = (nx/2,ny/2,nz/2)
@@ -52,7 +53,8 @@ typedef enum {
     CentHerm = 4            // Centered hermitian: origin = (0,ny/2,nz/2)
 } TransformType;
 
-typedef enum {
+typedef enum
+{
     Unknown_Type = 0,       // Undefined data type
     UChar = 1,              // Unsigned character or byte type
     SChar = 2,              // Signed character (for CCP4)
@@ -367,10 +369,10 @@ public:
 #ifdef DEBUG
 
         std::cerr << "READ\n" <<
-        "name="<<name <<std::endl;
+                  "name="<<name <<std::endl;
         std::cerr << "ext= "<<ext_name <<std::endl;
         std::cerr << " now reading: "<< filename <<" dataflag= "<<dataflag
-        << " select_img "  << select_img << std::endl;
+                  << " select_img "  << select_img << std::endl;
 #endif
 #undef DEBUG
 
@@ -497,12 +499,12 @@ public:
         else {
         fprintf(stderr, "Error: File format with extension \"%s\" not supported!\n", ext.c_str());
         err = -1;
-    }
+            }
         */
         /*
         if ( err < 0 ) {
             REPORT_ERROR(10,"Error reading file");
-    }
+            }
         */
 
         if (readdata && (apply_geo || only_apply_shifts))
@@ -633,6 +635,12 @@ public:
             writeMRC(select_img,false,mode);
         else if (ext_name.contains("img") || ext_name.contains("hed"))
             writeIMAGIC(select_img,mode);
+        else if (ext_name.contains("dm3"))
+            writeDM3(select_img,false,mode);
+        else if (ext_name.contains("ser"))
+            writeTIA(select_img,false,mode);
+        else if (ext_name.contains("raw"))
+            writeRAW(select_img,false,mode);
         else
             err = writeSPIDER(select_img,isStack,mode);
 
@@ -659,138 +667,136 @@ public:
         case Unknown_Type:
             REPORT_ERROR(12,"ERROR: datatype is Unknown_Type");
         case UChar:
+        {
+            if (typeid(T) == typeid(unsigned char))
+                memcpy(ptrDest, page, pageSize*sizeof(T));
+            else
             {
-                if (typeid(T) == typeid(unsigned char))
-                {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
-                }
-                else
-                {
-                    unsigned char * ptr = (unsigned char *) page;
-                    for(int i=0; i<pageSize;i++)
-                        ptrDest[i]=(T) ptr[i];
-                }
-                break;
+                unsigned char * ptr = (unsigned char *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptrDest[i]=(T) ptr[i];
             }
+            break;
+        }
         case SChar:
-                {
-                    if (typeid(T) == typeid(signed char))
-                {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
-                    }
-                    else
-                    {
-                        signed char * ptr = (signed char *) page;
-                        for(int i=0; i<pageSize;i++)
-                            ptrDest[i]=(T) ptr[i];
-                    }
-                break;
+        {
+            if (typeid(T) == typeid(signed char))
+            {
+                memcpy(ptrDest, page, pageSize*sizeof(T));
             }
+            else
+            {
+                signed char * ptr = (signed char *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptrDest[i]=(T) ptr[i];
+            }
+            break;
+        }
         case UShort:
-                {
-                    if (typeid(T) == typeid(unsigned short))
-                {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
-                    }
-                    else
-                    {
-                        unsigned short * ptr = (unsigned short *) page;
-                        for(int i=0; i<pageSize;i++)
-                            ptrDest[i]=(T) ptr[i];
-                    }
-                break;
+        {
+            if (typeid(T) == typeid(unsigned short))
+            {
+                memcpy(ptrDest, page, pageSize*sizeof(T));
             }
+            else
+            {
+                unsigned short * ptr = (unsigned short *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptrDest[i]=(T) ptr[i];
+            }
+            break;
+        }
         case Short:
-                {
-                    if (typeid(T) == typeid(short))
-                {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
-                    }
-                    else
-                    {
-                        short * ptr = (short *) page;
-                        for(int i=0; i<pageSize;i++)
-                            ptrDest[i]=(T) ptr[i];
-                    }
-                break;
+        {
+            if (typeid(T) == typeid(short))
+            {
+                memcpy(ptrDest, page, pageSize*sizeof(T));
             }
+            else
+            {
+                short * ptr = (short *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptrDest[i]=(T) ptr[i];
+            }
+            break;
+        }
         case UInt:
-                {
-                    if (typeid(T) == typeid(unsigned int))
-                {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
-                    }
-                    else
-                    {
-                        unsigned int * ptr = (unsigned int *) page;
-                        for(int i=0; i<pageSize;i++)
-                            ptrDest[i]=(T) ptr[i];
-                    }
-                break;
+        {
+            if (typeid(T) == typeid(unsigned int))
+            {
+                memcpy(ptrDest, page, pageSize*sizeof(T));
             }
+            else
+            {
+                unsigned int * ptr = (unsigned int *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptrDest[i]=(T) ptr[i];
+            }
+            break;
+        }
         case Int:
-                {
-                    if (typeid(T) == typeid(int))
-                {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
-                    }
-                    else
-                    {
-                        int * ptr = (int *) page;
-                        for(int i=0; i<pageSize;i++)
-                            ptrDest[i]=(T) ptr[i];
-                    }
-                break;
+        {
+            if (typeid(T) == typeid(int))
+            {
+                memcpy(ptrDest, page, pageSize*sizeof(T));
             }
+            else
+            {
+                int * ptr = (int *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptrDest[i]=(T) ptr[i];
+            }
+            break;
+        }
         case Long:
-                {
-                    if (typeid(T) == typeid(long))
-                {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
-                    }
-                    else
-                    {
-                        long * ptr = (long *) page;
-                        for(int i=0; i<pageSize;i++)
-                            ptrDest[i]=(T) ptr[i];
-                    }
-                break;
+        {
+            if (typeid(T) == typeid(long))
+            {
+                memcpy(ptrDest, page, pageSize*sizeof(T));
             }
+            else
+            {
+                long * ptr = (long *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptrDest[i]=(T) ptr[i];
+            }
+            break;
+        }
         case Float:
-                {
-                    if (typeid(T) == typeid(float))
-                {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
-                    }
-                    else
-                    {
-                        float * ptr = (float *) page;
-                        for(int i=0; i<pageSize;i++)
-                            ptrDest[i]=(T) ptr[i];
-                    }
-                break;
+        {
+            if (typeid(T) == typeid(float))
+            {
+                memcpy(ptrDest, page, pageSize*sizeof(T));
             }
+            else
+            {
+                float * ptr = (float *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptrDest[i]=(T) ptr[i];
+            }
+            break;
+        }
         case Double:
-                {
-                    if (typeid(T) == typeid(double))
-                {
-                    memcpy(ptrDest, page, pageSize*sizeof(T));
-                    }
-                    else
-                    {
-                        double * ptr = (double *) page;
-                        for(int i=0; i<pageSize;i++)
-                            ptrDest[i]=(T) ptr[i];
-                    }
-                break;
+        {
+            if (typeid(T) == typeid(double))
+            {
+                memcpy(ptrDest, page, pageSize*sizeof(T));
             }
+            else
+            {
+                double * ptr = (double *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptrDest[i]=(T) ptr[i];
+            }
+            break;
+        }
         default:
-                {
-                    std::cerr<<"Datatype= "<<datatype<<std::endl;
-                    REPORT_ERROR(16," ERROR: cannot cast datatype to T");
-                    break;
-                }
-            }
+        {
+            std::cerr<<"Datatype= "<<datatype<<std::endl;
+            REPORT_ERROR(16," ERROR: cannot cast datatype to T");
+            break;
+        }
+        }
 
     }
 
@@ -804,46 +810,47 @@ public:
         switch (datatype)
         {
         case Float:
+        {
+            if (typeid(T) == typeid(float))
             {
-                if (typeid(T) == typeid(float))
-                {
-                    memcpy(page, srcPtr, pageSize*sizeof(T));
-                }
-                else
-                {
-                    float * ptr = (float *) page;
-                    for(int i=0; i<pageSize;i++)
-                        ptr[i] = (float)srcPtr[i];
-                }
-                break;
+                memcpy(page, srcPtr, pageSize*sizeof(T));
             }
+            else
+            {
+                float * ptr = (float *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptr[i] = (float)srcPtr[i];
+            }
+            break;
+        }
         case Double:
-                {
-                    if (typeid(T) == typeid(double))
-                {
-                    memcpy(page, srcPtr, pageSize*sizeof(T));
-                    }
-                    else
-                    {
-                        double * ptr = (double *) page;
-                        for(int i=0; i<pageSize;i++)
-                            ptr[i] = (double)srcPtr[i];
-                    }
-                break;
+        {
+            if (typeid(T) == typeid(double))
+            {
+                memcpy(page, srcPtr, pageSize*sizeof(T));
             }
+            else
+            {
+                double * ptr = (double *) page;
+                for(int i=0; i<pageSize; i++)
+                    ptr[i] = (double)srcPtr[i];
+            }
+            break;
+        }
         default:
-                {
-                    std::cerr<<"outputDatatype= "<<datatype<<std::endl;
-                    REPORT_ERROR(16," ERROR: cannot cast T to outputDatatype");
-                    break;
-                }
-            }
+        {
+            std::cerr<<"outputDatatype= "<<datatype<<std::endl;
+            REPORT_ERROR(16," ERROR: cannot cast T to outputDatatype");
+            break;
+        }
+        }
     }
 
 
-
-
-    bool castMmap2T(DataType datatype)
+    /** Check file Datatype is same as T type to use mmap.
+     * @ingroup XXX.
+     */
+    bool checkMmapT(DataType datatype)
     {
 
         switch (datatype)
@@ -851,83 +858,83 @@ public:
         case Unknown_Type:
             REPORT_ERROR(12,"ERROR: datatype is Unknown_Type");
         case UChar:
-            {
-                if (typeid(T) == typeid(unsigned char))
-                    return 1;
-                else
-                    return 0;
-                break;
-            }
+        {
+            if (typeid(T) == typeid(unsigned char))
+                return 1;
+            else
+                return 0;
+            break;
+        }
         case SChar:
-            {
-                if (typeid(T) == typeid(signed char))
-                    return 1;
-                else
-                    return 0;
-                break;
-            }
+        {
+            if (typeid(T) == typeid(signed char))
+                return 1;
+            else
+                return 0;
+            break;
+        }
         case UShort:
-            {
-                if (typeid(T) == typeid(unsigned short))
-                    return 1;
-                else
-                    return 0;
-                break;
-            }
+        {
+            if (typeid(T) == typeid(unsigned short))
+                return 1;
+            else
+                return 0;
+            break;
+        }
         case Short:
-            {
-                if (typeid(T) == typeid(short))
-                    return 1;
-                else
-                    return 0;
-                break;
-            }
+        {
+            if (typeid(T) == typeid(short))
+                return 1;
+            else
+                return 0;
+            break;
+        }
         case UInt:
-            {
-                if (typeid(T) == typeid(unsigned int))
-                    return 1;
-                else
-                    return 0;
-                break;
-            }
+        {
+            if (typeid(T) == typeid(unsigned int))
+                return 1;
+            else
+                return 0;
+            break;
+        }
         case Int:
-            {
-                if (typeid(T) == typeid(int))
-                    return 1;
-                else
-                    return 0;
-                break;
-            }
+        {
+            if (typeid(T) == typeid(int))
+                return 1;
+            else
+                return 0;
+            break;
+        }
         case Long:
-            {
-                if (typeid(T) == typeid(long))
-                    return 1;
-                else
-                    return 0;
-                break;
-            }
+        {
+            if (typeid(T) == typeid(long))
+                return 1;
+            else
+                return 0;
+            break;
+        }
         case Float:
-            {
-                if (typeid(T) == typeid(float))
-                    return 1;
-                else
-                    return 0;
-                break;
-            }
+        {
+            if (typeid(T) == typeid(float))
+                return 1;
+            else
+                return 0;
+            break;
+        }
         case Double:
-            {
-                if (typeid(T) == typeid(double))
-                    return 1;
-                else
-                    return 0;
-                break;
-            }
+        {
+            if (typeid(T) == typeid(double))
+                return 1;
+            else
+                return 0;
+            break;
+        }
         default:
-            {
-                std::cerr<<"Datatype= "<<datatype<<std::endl;
-                REPORT_ERROR(16," ERROR: cannot cast datatype to T");
-                break;
-            }
+        {
+            std::cerr<<"Datatype= "<<datatype<<std::endl;
+            REPORT_ERROR(16," ERROR: cannot cast datatype to T");
+            break;
+        }
         }
 
 
@@ -972,10 +979,10 @@ public:
 #ifdef DEBUG
 
         std::cerr<<"DEBUG swapPage: Swapping image data with swap= "
-        << swap<<" datatypesize= "<<datatypesize
-        << " pageNrElements " << pageNrElements
-        << " datatype " << datatype
-        <<std::endl;
+                 << swap<<" datatypesize= "<<datatypesize
+                 << " pageNrElements " << pageNrElements
+                 << " datatype " << datatype
+                 <<std::endl;
         ;
 #endif
 
@@ -1024,7 +1031,7 @@ public:
             mmapOn = false;
 
         // Flag to know that data is not going to be mapped although mmapOn is true
-        if (mmapOn && !castMmap2T(datatype))
+        if (mmapOn && !checkMmapT(datatype))
         {
             std::cout << "WARNING: Image Class. File datatype and image declaration not compatible with mmap. Loading into memory." <<std::endl;
             mmapOn = false;
@@ -1473,9 +1480,9 @@ public:
     */
     /* this should be set_NULL MD not clear MD
     void clear_header(void)
-{
+    {
         MD.clear();
-}
+    }
     */
     /** Get geometric transformation matrix from 2D-image headerq
       */

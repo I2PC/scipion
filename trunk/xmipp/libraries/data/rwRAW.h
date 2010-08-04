@@ -34,7 +34,7 @@ int readRAW(int img_select,bool isStack=false)
 #undef DEBUG
     //#define DEBUG
 #ifdef DEBUG
-    printf("DEBUG readTIA: Reading TIA file\n");
+    printf("DEBUG readRAW: Reading RAW file\n");
 #endif
 
     int _xDim,_yDim,_zDim, __depth;
@@ -60,11 +60,15 @@ int readRAW(int img_select,bool isStack=false)
                        getParameter(fh_inf, "is_signed") == "TRUE");
     else
         __is_signed = false;
-    if (checkParameter(fh_inf, "reversed"))
-        swap = (getParameter(fh_inf, "reversed") == "true" ||
-                getParameter(fh_inf, "reversed") == "TRUE");
-    else
-    	swap = false;
+    if (checkParameter(fh_inf, "endianess"))
+        if(getParameter(fh_inf, "endianess") == "big" || getParameter(fh_inf, "endianess") == "BIG")
+            swap = true;
+        else
+            swap = false;
+
+    if (IsBigEndian())
+        swap = !swap;
+
     fclose(fh_inf);
 
     _zDim = (int) 1;
@@ -110,7 +114,7 @@ int readRAW(int img_select,bool isStack=false)
 
     if( dataflag == -2 )
     {
-//        fclose(fimg);
+        //        fclose(fimg);
         return 0;
     }
 
@@ -152,8 +156,124 @@ int readRAW(int img_select,bool isStack=false)
 
 int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
-    REPORT_ERROR(6001, "ERROR: writeRAW is not implemented.");
-    return(-1);
+    //#define DEBUG
+#ifdef DEBUG
+    printf("DEBUG writeRAW: Writing RAW file\n");
+    printf("DEBUG writeRAW: File %s\n", filename.c_str());
+#endif
+#undef DEBUG
+
+    int Xdim = XSIZE(data);
+    int Ydim = YSIZE(data);
+    int Zdim = ZSIZE(data);
+    int Ndim = NSIZE(data);
+
+    int _depth;
+    bool _is_signed;
+
+    // Volumes and stacks are not supported
+    if (Zdim > 1 || Ndim > 1)
+        REPORT_ERROR(1000, "ERROR: rwRAW does not support neither volumes nor stacks.");
+
+
+    DataType wDType;
+
+    if (typeid(T)==typeid(double)||typeid(T)==typeid(float))
+    {
+        wDType = Float;
+        _is_signed = true;
+    }
+    else if (typeid(T)==typeid(int))
+    {
+        wDType = Int;
+        _is_signed = true;
+    }
+    else if (typeid(T)==typeid(unsigned int))
+    {
+        wDType = UInt;
+        _is_signed = false;
+
+    }
+    else if (typeid(T)==typeid(short))
+    {
+        wDType = Short;
+        _is_signed = true;
+    }
+    else if (typeid(T)==typeid(unsigned short))
+    {
+        wDType = UShort;
+        _is_signed = false;
+    }
+    else if (typeid(T)==typeid(char))
+    {
+        wDType = SChar;
+        _is_signed = true;
+    }
+    else if (typeid(T)==typeid(unsigned char))
+    {
+        wDType = UChar;
+        _is_signed = false;
+    }
+    else
+        REPORT_ERROR(1000,(std::string)"ERROR: rwRAW does not write from " + typeid(T).name() + "type.");
+
+
+_depth = gettypesize(wDType);
+
+/* Write INF file ==================================*/
+
+FileName fn_inf;
+
+fn_inf = filename.add_extension("inf");
+FILE *fh_inf = fopen(fn_inf.c_str(), "w");
+if (!fh_inf)
+    REPORT_ERROR(1, (std::string)"rwRAW::write: Error opening file " + fn_inf);
+
+fprintf(fh_inf,"# Bits per sample\n");
+fprintf(fh_inf,"bitspersample= %d\n",_depth*8);
+fprintf(fh_inf,"# Samples per pixel\n");
+fprintf(fh_inf,"samplesperpixel= 1\n");
+fprintf(fh_inf,"# Image width\n");
+fprintf(fh_inf,"Xdim= %d\n", Xdim);
+fprintf(fh_inf,"# Image length\n");
+fprintf(fh_inf,"Ydim= %d\n",Ydim);
+fprintf(fh_inf,"# offset in bytes (zero by default)\n");
+fprintf(fh_inf,"offset= 0\n");
+fprintf(fh_inf,"# Is a signed or Unsigned int (by default true)\n");
+if (_is_signed)
+    fprintf(fh_inf,"is_signed = true\n");
+else
+    fprintf(fh_inf,"is_signed = false\n");
+fprintf(fh_inf,"# Byte order\n");
+if (IsBigEndian())
+    fprintf(fh_inf,"endianess = big\n");
+else
+    fprintf(fh_inf,"endianess = little\n");
+
+if (fclose(fh_inf)!=0)
+    REPORT_ERROR(6001, "rwRAW::write: Error creating output info file.");
+
+
+/* Write Image file ==================================*/
+
+FILE  *fimg;
+if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
+    REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+
+size_t datasize, datasize_n;
+datasize_n = Xdim*Ydim*Zdim;
+
+writePageAsDatatype(fimg, wDType, datasize_n);
+
+
+if( fclose(fimg) !=0 )
+    REPORT_ERROR(1,(std::string)"Can not close file "+ filename);
+
+return(0);
+
+
+//    REPORT_ERROR(6001, "ERROR: writeRAW is not implemented.");
+//    return(-1);
 }
 
 
