@@ -26,7 +26,7 @@
 #define _PROG_PHANTOM_CREATE_MICROGRAPH_HH
 
 #include <data/funcs.h>
-#include <data/volume.h>
+#include <data/image.h>
 #include "phantom_simulate_microscope.h"
 
 /**@defgroup MicrographProgram phantom_create_micrograph (Microscope simulation)
@@ -56,7 +56,7 @@ public:
     Prog_Microscope_Parameters microscope;
 public:
     // Volume
-    VolumeXmipp V;
+    Image<double> V;
     
     // Number of projections per micrograph
     int Nproj;

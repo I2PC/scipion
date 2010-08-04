@@ -38,8 +38,8 @@ int main(int argc, char **argv)
     }
     
     try {
-        prm.show();
         prm.produce_side_info();
+        prm.show();
         prm.run();
     } catch (Xmipp_error XE) {
         std::cout << XE << std::endl;
