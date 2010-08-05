@@ -558,17 +558,12 @@ AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
-#InterfaceSources=["pdb.cpp",]
 AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
     ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
 
 # Recons Interface
 AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
            ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
-
-# OldXmipp
-OldXmippSources = Glob('libraries/legacy', '*.cpp',[])
-#AddLibrary('OldXmipp', 'libraries/legacy', OldXmippSources,['#libraries'])
 
 # ImageJ plugins. Check if there is java compiler, otherwise the compilation will be halted if jvm is missing.
 #if env.Detect('javac') and env.Detect('jar'):
