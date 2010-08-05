@@ -443,7 +443,7 @@ public:
     void resize(int Ydim, int Xdim)
     {
 
-    	if (Xdim == mdimx && Ydim == mdimy)
+        if (Xdim == mdimx && Ydim == mdimy)
             return;
 
         if (Xdim <= 0 || Ydim <= 0)
@@ -985,6 +985,19 @@ public:
     /// @defgroup MatricesUtilities
     /// @ingroup Matrices
 
+    /** Write this matrix to file
+      * @ingroup MatricesUtilities
+      */
+    void write(const FileName &fn) const
+    {
+    	std::ofstream fhOut;
+    	fhOut.open(fn.c_str());
+    	if (!fhOut)
+    		REPORT_ERROR(1,(std::string)"Cannot open "+fn+" for output");
+    	fhOut << *this;
+    	fhOut.close();
+    }
+
     /** True if the matrix is diagonal
      * @ingroup MatricesUtilities
      *
@@ -1001,7 +1014,7 @@ public:
         for (int i = 0; i < mdimy; i++)
             for (int j = 0; j < mdimx; j++)
                 if (i != j && ABS((*this)(i, j)) >
-                        XMIPP_EQUAL_ACCURACY)
+                    XMIPP_EQUAL_ACCURACY)
                     return false;
         return true;
     }
@@ -1019,7 +1032,7 @@ public:
 
         for (int i = 1; i < mdimy; i++)
             if (ABS((*this)(i, i) - (*this)(0, 0))
-                    > XMIPP_EQUAL_ACCURACY)
+                > XMIPP_EQUAL_ACCURACY)
                 return false;
 
         return true;
@@ -1373,7 +1386,7 @@ public:
         Matrix2D<T> result(mdimx, mdimy);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
         {
-        	MAT_ELEM(result,i,j) = MAT_ELEM((*this),j,i);
+            MAT_ELEM(result,i,j) = MAT_ELEM((*this),j,i);
         }
         return result;
     }
@@ -1428,7 +1441,7 @@ public:
         for (int i = 0; i < mdimx; i++)
             for (int j = 0; j < mdimy; j++)
                 for (int k = 0; k < mdimx; k++)
-                	MAT_ELEM(result,i,j) += (T) MAT_ELEM(v,i,k) * MAT_ELEM(u,j,k);
+                    MAT_ELEM(result,i,j) += (T) MAT_ELEM(v,i,k) * MAT_ELEM(u,j,k);
     }
 
     /** Inverse of a matrix
