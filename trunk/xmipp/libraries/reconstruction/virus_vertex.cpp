@@ -24,14 +24,12 @@
  ***************************************************************************/
 
 #include "virus_vertex.h"
-
-
+#include <data/metadata_extension.h>
 
 /* Read parameters from command line. -------------------------------------- */
 void VirusVertex::read(int argc, char **argv)
 {
-    fn_sel  = getParameter(argc, argv,  "-sel");
-    fn_doc  = getParameter(argc, argv,  "-doc","");
+    fn_doc  = getParameter(argc, argv,  "-i");
     fn_root = getParameter(argc, argv,  "-root");
     virusRadius = textToFloat(getParameter(argc, argv, "-radius"));
     minVirusRadius = textToFloat(getParameter(argc, argv, "-min_radius"));
@@ -44,9 +42,9 @@ void VirusVertex::read(int argc, char **argv)
 /* Show -------------------------------------------------------------------- */
 void VirusVertex::show()
 {
-    std::cout << "input selfile:             " << fn_sel  << std::endl
+    std::cout
+    << "input docfile:             " << fn_doc  << std::endl
     << "output files root:         " << fn_root << std::endl
-    << "docfile :                  " << fn_doc  << std::endl
     << "virus radius:              " << virusRadius << std::endl
     << "minimun virus radius:      " << minVirusRadius << std::endl
     << "outputfile dimensions:     " << dim << std::endl
@@ -59,9 +57,9 @@ void VirusVertex::show()
 /* Usage ------------------------------------------------------------------- */
 void VirusVertex::usage()
 {
-    std::cerr << "   -sel filename             : Selfile with image names\n"
+    std::cerr
+    << "   -i  filename              : List of images, and optionally projection angles\n"
     << "   -root filename            : Root name for output images\n"
-    << "   -doc  filename  (optional): Auxiliary file with projection angles\n"
     << "   -radius float_number      : virus radius (distance from center\n"
     << "                               to vertex in pixels)\n"
     << "   -min_radius  float_number : extract vertex located at a radius greater\n"
@@ -143,30 +141,22 @@ void VirusVertex::processAngles()
 {
     double rot, tilt, psi, xoff, yoff, flip, weight,rotp,tiltp,psip;
     rot = tilt = psi = xoff = yoff = flip = weight = 0.;
-    SF.go_beginning();
     Projection proj,proj_aux;
     int Ydim, Xdim;
-    SF.ImgSize(Ydim, Xdim);
-    SelFile SFout;
-    DocFile DFout;
-    DFout.append_comment("Headerinfo columns: rot (1) , tilt (2),\
-                         psi (3), Xoff (4), Yoff (5), Weight (6), Flip (7)");
-    Matrix1D<double> docline;
-    docline.initZeros(7);
-    int repaint = ceil((double)SF.ImgNo()/60);
+    ImgSize(DF, Xdim, Ydim);
+    MetaData DFout;
+    int repaint = ceil((double)DF.size()/60);
 
-    SFout.clear();
-    init_progress_bar(SF.ImgNo());
+    init_progress_bar(DF.size());
     int imgno=0;
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(DF)
     {
-        FileName fn_img = SF.NextImg();
+        FileName fn_img;
+        DF.getValue(MDL_IMAGE,fn_img);
         if (imgno++%repaint==0)
             progress_bar(imgno);
-        if (fn_img=="")
-            break;
         proj.read(fn_img, false); //true means apply shifts
-        if (fn_doc == "")
+        if (!DF.containsLabel(MDL_ANGLEROT))
         {
             rot  = proj.rot();
             tilt = proj.tilt();
@@ -178,14 +168,24 @@ void VirusVertex::processAngles()
         }
         else
         {
-            get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight);
-            proj.set_rot(rot);
-            proj.set_tilt(tilt);
-            proj.set_psi(psi);
-            proj.set_Xoff(xoff);
-            proj.set_Yoff(yoff);
-            proj.set_flip(flip);
-            proj.set_weight(weight);
+            std::vector<long int> found;
+            DF.findObjects(found,MDValueEQ(MDL_IMAGE,fn_img));
+            if (found.size()>=1)
+            {
+                DF.getValue(MDL_ANGLEROT,rot);
+                DF.getValue(MDL_ANGLETILT,tilt);
+                DF.getValue(MDL_ANGLEPSI,psi);
+                DF.getValue(MDL_SHIFTX,xoff);
+                DF.getValue(MDL_SHIFTY,yoff);
+                DF.getValue(MDL_FLIP,flip);
+                DF.getValue(MDL_WEIGHT,weight);
+                proj.setEulerAngles(rot,tilt,psi);
+                proj.setShifts(xoff,yoff);
+                proj.setFlip(flip);
+                proj.setWeight(weight);
+            }
+            else
+                REPORT_ERROR(1, (std::string)"Cannot find " + fn_img + " in docfile " + fn_doc);
         }
         Matrix2D<double> A;
         Matrix1D<double> projected_point(3);
@@ -217,25 +217,22 @@ void VirusVertex::processAngles()
                 }
             }
             if (!scissor)
-            {
                 continue;
-            }
             int radius = proj_vectors[i].module()*virusRadius;
             if (radius > minVirusRadius)
             {
                 proj_aux=proj;
                 FileName fn_tmp;
-                proj_aux.set_Xoff(xoff + XX(proj_vectors[i])*virusRadius);
-                proj_aux.set_Yoff(yoff + YY(proj_vectors[i])*virusRadius);
-                A = proj_aux.get_transformation_matrix(true);
+                proj_aux.setShifts(xoff + XX(proj_vectors[i])*virusRadius,
+                                   yoff + YY(proj_vectors[i])*virusRadius);
+                A = proj_aux.getTransformationMatrix(true);
                 if (!A.isIdentity())
-                    proj_aux().selfApplyGeometryBSpline(A, 3, IS_INV, DONT_WRAP);
+                	selfApplyGeometry(BSPLINE3,proj_aux(),A, IS_INV, DONT_WRAP);
                 fn_tmp = fn_img.without_extension() + "_";
                 fn_tmp.compose(fn_tmp, i, "xmp");
-                proj_aux.set_Xoff(0);//shift already aplied, same for flip? I do not think so
-                proj_aux.set_Yoff(0);
+                proj_aux.setShifts(0,0);//shift already applied, same for flip? I do not think so
                 proj_aux().window((Ydim-dim)/2,(Xdim-dim)/2,(Ydim+dim)/2,(Xdim+dim)/2,0);
-                Matrix2D<double>  Identity(3,3);
+                Matrix2D<double> Identity(3,3);
                 Identity.initIdentity();
                 int irandom;
                 irandom=rnd_unif(0, 4);
@@ -245,57 +242,27 @@ void VirusVertex::processAngles()
                        R_repository[symmetryMatrixVertex(i,irandom)].inv();
                 //temp = euler;
                 Euler_matrix2angles(temp, rotp, tiltp, psip);
-                proj_aux.set_rot(rotp);
-                proj_aux.set_tilt(tiltp);
-                proj_aux.set_psi(psip);
+                proj_aux.setEulerAngles(rotp,tiltp,psip);
                 proj_aux.write(fn_tmp);
-                SFout.insert(fn_tmp, SelLine::ACTIVE);
-                docline(0) = rotp;
-                docline(1) = tiltp;
-                docline(2) = psip;
-                docline(3) = 0.;
-                docline(4) = 0.;
-                docline(5) = weight;
-                docline(6) = flip;
-                DFout.append_comment(fn_tmp);
-                DFout.append_data_line(docline);
+
+                DFout.addObject();
+                DFout.setValue(MDL_IMAGE,fn_tmp);
+                DFout.setValue(MDL_ANGLEROT,rotp);
+                DFout.setValue(MDL_ANGLETILT,tiltp);
+                DFout.setValue(MDL_ANGLEPSI,psip);
+                DFout.setValue(MDL_SHIFTX,0);
+                DFout.setValue(MDL_SHIFTY,0);
+                DFout.setValue(MDL_FLIP,flip);
+                DFout.setValue(MDL_WEIGHT,weight);
             }
         }
     }
-    progress_bar(SF.ImgNo());
+    progress_bar(DF.size());
     FileName fn_tmp1;
-    fn_tmp1= fn_sel.without_extension()+"_out.sel";
-    SFout.write(fn_tmp1);
     fn_tmp1= fn_doc.without_extension()+"_out.doc";
     DFout.write(fn_tmp1);
 }
 
-void VirusVertex::get_angles_for_image(const FileName &fn, double &rot,
-                                       double &tilt, double &psi, double &xoff, double &yoff, double &flip,
-                                       double &weight)
-{
-    if (DFangles.search_comment(fn))
-    {
-        rot    = DFangles(col_rot);
-        tilt   = DFangles(col_tilt);
-        psi    = DFangles(col_psi);
-        xoff   = DFangles(col_xoff);
-        yoff   = DFangles(col_yoff);
-        if (col_flip < 0)
-            flip   = 0.;
-        else
-            flip   = DFangles(col_flip);
-        if (col_weight < 0)
-            weight = 0.;
-        else
-            weight = DFangles(col_weight);
-    }
-    else
-    {
-        REPORT_ERROR(1, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
-    }
-
-}
 void VirusVertex::assignSymmetryMatricesToVertex()
 {
     /** vector with symmetry matrices */
@@ -309,10 +276,8 @@ void VirusVertex::assignSymmetryMatricesToVertex()
         SL.get_matrices(isym, L, R);
         R.resize(3, 3);
         R_repository.push_back(R);
-        //double rot,tilt,psi;
-        //Euler_matrix2angles(R, rot, tilt, psi);
-        //std::cerr << R << std::endl;
     }
+
     //#define CREATEICOSAHEDRALPHANTOM
 #ifdef CREATEICOSAHEDRALPHANTOM
     std::ofstream filestr;
@@ -376,12 +341,8 @@ void VirusVertex::assignSymmetryMatricesToVertex()
             }
         }
     }
-    //std::cerr<< symmetryMatrixVertex << std::endl;
-    //std::cerr<< "k, syxty :" << k << " " << sixty << std::endl;
     if (sixty>60)
-    {
         REPORT_ERROR(1, (std::string)"assignSymmetryMatricesToVertex: more than 60 symmetries " );
-    }
 }
 /* Main program ------------------------------------------------------------ */
 void VirusVertex::run()
@@ -390,21 +351,13 @@ void VirusVertex::run()
     randomize_random_generator();
     show();
     //read doc and sel files file
-    if (fn_doc != "")
-        DFangles.read(fn_doc);
-    col_rot    = DFangles.getColNumberFromHeader("rot")  - 1;
-    col_tilt   = DFangles.getColNumberFromHeader("tilt") - 1;
-    col_psi    = DFangles.getColNumberFromHeader("psi")  - 1;
-    col_xoff   = DFangles.getColNumberFromHeader("Xoff") - 1;
-    col_yoff   = DFangles.getColNumberFromHeader("Yoff") - 1;
-    col_flip   = DFangles.getColNumberFromHeader("Flip") - 1;
-    col_weight = DFangles.getColNumberFromHeader("Weight") - 1;
+    DF.read(fn_doc);
 
-    SF.read(fn_sel);
     //load icosahedron vertex
     symmetry=SL.read_sym_file(fn_sym, accuracy);
     loadIcosahedronVertex();
     assignSymmetryMatricesToVertex();
+
     //Assign symmetry matrices to vertex
     //process one set of angles
     processAngles();

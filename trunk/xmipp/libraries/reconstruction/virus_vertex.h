@@ -27,11 +27,8 @@
 #define _VIRUS_VERTEX_HH
 
 #include <data/matrix1d.h>
-#include <data/matrix3d.h>
-#include <data/docfile.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <data/args.h>
-#include <data/volume.h>
 #include <data/image.h>
 #include <data/symmetries.h>
 #include <data/projection.h>
@@ -54,21 +51,15 @@ public:
     void run();
     /** load icosahedron vertex and apply symmetry */
     void loadIcosahedronVertex();
-    /** get angles either from a document file or from an image */
-    void get_angles_for_image(const FileName &fn, double &rot,
-    double &tilt, double &psi, double &xoff, double &yoff, double &flip,
-    double &weight);
     /** Process one set of angles */
     void processAngles();
     /** Relate vertex and projection matrices   */
     void assignSymmetryMatricesToVertex();
 public:
     /** Filenames */
-    FileName fn_sel, fn_doc, fn_root, fn_sym;
+    FileName fn_doc, fn_root, fn_sym;
     /** Docfile with experimental images */
-    DocFile DFangles;
-    /** Selfile with experimental images */
-    SelFile SF;
+    MetaData DF;
     /** Virus radius, distance from center to a vertex in pixels */
     double virusRadius;
     /** extract vertex located at a radius greater than min_radius */
@@ -82,17 +73,14 @@ public:
     /** vector with icosahedron vertex */
     std::vector <Matrix1D<double> > vertices_vectors;
     /** Symmetry information */
-    SymList  SL;
+    SymList SL;
     /** symmetry group */
     int symmetry;
-    // Column numbers in the docfile
-    int col_rot, col_tilt, col_psi, col_xoff, col_yoff, col_flip, col_weight;
     // Symmetry Matrices
     std::vector <Matrix2D<double> > R_repository;
     //relation between symmetry matrices and vertex
     Matrix2D<int> symmetryMatrixVertex;//12 vertex, 60 symmetry matrices, 5-fold symmetry
 };
-
 
 //@}
 #endif

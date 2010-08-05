@@ -538,7 +538,7 @@ ReconsSources = [
     'sort_images.cpp',
     'sparma.cpp',
     'symmetrize.cpp',
-##   'virus_vertex.cpp',
+    'virus_vertex.cpp',
 #    'volume_foms.cpp',
 #    'volume_labelling.cpp',
     'volume_segment.cpp'
@@ -740,7 +740,7 @@ AddXmippProgram('symmetrize', ['XmippRecons'])
 ####AddXmippProgram('test_sql')
 ####AddXmippProgram('test_md')
 #AddXmippProgram('threads')
-##AddXmippProgram('virus_vertex', ['XmippRecons'])
+AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('window')
 
