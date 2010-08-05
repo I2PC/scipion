@@ -325,6 +325,7 @@ void Prog_ml_tomo_prm::extendedUsage()
 {
     std::cerr << "Additional options: " << std::endl;
     std::cerr << " [ -impute_iter <int=1> ]      : Number of iterations for inner imputation loop \n";
+    std::cerr << " [ -psi_sampling <float=ang>]  : Angular sampling rate for psi angles \n";
     std::cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
     std::cerr << " [ -istart <int> ]             : number of initial iteration \n";
     std::cerr << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
