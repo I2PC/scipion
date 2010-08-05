@@ -23,24 +23,17 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/range_adjust.h>
+#include <reconstruction/range_adjust.h>
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Prog_Range_adjust_Parameters *eprm = (Prog_Range_adjust_Parameters *) prm;
     eprm->apply(img());
     return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    Prog_Range_adjust_Parameters *eprm = (Prog_Range_adjust_Parameters *) prm;
-    eprm->apply(vol());
-    return true;
-}
-
 int main(int argc, char **argv)
 {
     Prog_Range_adjust_Parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }

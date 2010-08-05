@@ -57,7 +57,7 @@ void Prog_Range_adjust_Parameters::show()
 }
 
 /* Apply ------------------------------------------------------------------- */
-void Prog_Range_adjust_Parameters::apply(Matrix2D<double> &I)
+void Prog_Range_adjust_Parameters::apply(MultidimArray<double> &I)
 {
     double amin = rnd_gaus(0, sigma);
     double amax = rnd_gaus(0, sigma);
@@ -67,22 +67,7 @@ void Prog_Range_adjust_Parameters::apply(Matrix2D<double> &I)
 		I.rangeAdjust(minval, maxval);
 	else
 	{
-		mask_prm.generate_2Dmask(I);
-		I.rangeAdjust(minval, maxval,mask_prm.get_binary_mask2D());
-	}
-}
-
-void Prog_Range_adjust_Parameters::apply(Matrix3D<double> &V)
-{
-    double amin = rnd_gaus(0, sigma);
-    double amax = rnd_gaus(0, sigma);
-    double minval = min_val + amin;
-    double maxval = max_val + amax;
-	if (mask_prm.type == NO_MASK)
-		V.rangeAdjust(minval, maxval);
-	else
-	{
-		mask_prm.generate_3Dmask(V);
-		V.rangeAdjust(minval, maxval,mask_prm.get_binary_mask3D());
+		mask_prm.generate_mask(I);
+		I.rangeAdjust(minval, maxval,mask_prm.get_binary_mask());
 	}
 }

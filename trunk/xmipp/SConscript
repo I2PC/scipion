@@ -527,7 +527,7 @@ ReconsSources = [
     'psd_enhance.cpp',
     'psd_sort.cpp',
     'radon.cpp',
-#    'range_adjust.cpp',
+    'range_adjust.cpp',
     'recons_misc.cpp',
     'reconstruct_art.cpp',
     'reconstruct_wbp.cpp',
@@ -717,7 +717,7 @@ AddXmippProgram('projection_real_shears', ['XmippRecons'])
 AddXmippProgram('project_xr', ['XmippRecons'])
 #AddXmippProgram('psd_enhance', ['XmippRecons'])
 #AddXmippProgram('psd_sort', ['XmippRecons'])
-#AddXmippProgram('range_adjust')
+AddXmippProgram('range_adjust', ['XmippRecons'])
 #Sjors: note that crystal stuff in ART is not working yet....
 AddXmippProgram('reconstruct_art', ['XmippRecons']) 
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])

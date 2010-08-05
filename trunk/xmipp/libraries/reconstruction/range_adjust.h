@@ -78,13 +78,7 @@ public:
      *
      * The input image is modified.
      */
-    void apply(Matrix2D< double >& I);
-
-    /** Range adjust of a volume.
-     *
-     * The input volume is modified.
-     */
-    void apply(Matrix3D< double >& V);
+    void apply(MultidimArray< double >& I);
 };
 
 #endif
