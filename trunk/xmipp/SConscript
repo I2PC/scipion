@@ -548,9 +548,6 @@ AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
 # ReconsInterface
 ReconsInterfaceSources = [
     'convert_pdb2vol.cpp',
-#    'crystal_aph2img.cpp',
-#    'crystal_unbend.cpp',
-#    'im_unbend.cpp',
 #    'phantom_test_reconstruction.cpp',
     'project.cpp',
 #     'recons_spider.cpp'
