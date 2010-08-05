@@ -539,7 +539,6 @@ ReconsSources = [
     'sparma.cpp',
     'symmetrize.cpp',
     'virus_vertex.cpp',
-#    'volume_labelling.cpp',
     'volume_segment.cpp'
 ]
 
