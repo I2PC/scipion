@@ -193,10 +193,10 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_NZYX_ELEMENTS_IN_MULTIDIMARRAY(V) \
-    for (int l=0; l<NSIZE(V); l++) \
-        for (int k=0; k<ZSIZE(V); k++) \
-            for (int i=0; i<YSIZE(V); i++)      \
-                for (int j=0; j<XSIZE(V); j++)
+    for (size_t l=0; l<NSIZE(V); l++) \
+        for (size_t k=0; k<ZSIZE(V); k++) \
+            for (size_t i=0; i<YSIZE(V); i++)      \
+                for (size_t j=0; j<XSIZE(V); j++)
 
 /** For all direct elements in the array
  * @ingroup MultidimArraysSizeShape
@@ -277,9 +277,9 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_ARRAY3D(V) \
-    for (int k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
-        for (int i=STARTINGY(V); i<=FINISHINGY(V); i++) \
-            for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
+    for (size_t k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
+        for (size_t i=STARTINGY(V); i<=FINISHINGY(V); i++) \
+            for (size_t j=STARTINGX(V); j<=FINISHINGX(V); j++)
 
 /** For all elements in common.
  * @ingroup MultidimArraySizeShape
@@ -332,9 +332,9 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V) \
-    for (int k=0; k<ZSIZE(V); k++) \
-        for (int i=0; i<YSIZE(V); i++) \
-            for (int j=0; j<XSIZE(V); j++)
+    for (size_t k=0; k<ZSIZE(V); k++) \
+        for (size_t i=0; i<YSIZE(V); i++) \
+            for (size_t j=0; j<XSIZE(V); j++)
 
 
 /** Access to a direct element of a matrix.
@@ -523,8 +523,8 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(m) \
-    for (int i=0; i<YSIZE(m); i++) \
-        for (int j=0; j<XSIZE(m); j++)
+    for (size_t i=0; i<YSIZE(m); i++) \
+        for (size_t j=0; j<XSIZE(m); j++)
 
 /** Vector element: Physical access
  * @ingroup MultidimArraySizeShape
@@ -613,7 +613,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v) \
-    for (int i=0; i<v.xdim; i++)
+    for (size_t i=0; i<v.xdim; i++)
 
 
 
