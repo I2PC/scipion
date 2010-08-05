@@ -221,6 +221,7 @@ class RCT_class:
         
         # Check whether the ML2D run has written docfiles already
         docfiles=glob.glob(ml2d_abs_rootname+'_it??????.doc')
+        docfiles.sort()
         lastiter=len(docfiles)
         if (lastiter==0):
             message='No ML2D docfiles yet. Continue script after ML2D job completion... '
