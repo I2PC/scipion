@@ -537,7 +537,6 @@ ReconsSources = [
     'series_remove_fluctuations.cpp',
     'sort_images.cpp',
     'sparma.cpp',
-#    'surface.cpp',
     'symmetrize.cpp',
 ##   'virus_vertex.cpp',
 #    'volume_foms.cpp',
