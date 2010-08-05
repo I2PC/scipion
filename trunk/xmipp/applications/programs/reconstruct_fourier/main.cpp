@@ -26,7 +26,6 @@
 
 int main(int argc, char **argv)
 {
-
     Prog_RecFourier_prm prm;
 
     try

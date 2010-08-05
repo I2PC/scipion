@@ -47,11 +47,9 @@ void Prog_RecFourier_prm::read(int argc, char **argv)
     blob.alpha    = textToFloat(getParameter(argc, argv, "-a","15"));
     //sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     maxResolution = textToFloat(getParameter(argc, argv,
-                                             "-max_resolution",".5"));
+                                "-max_resolution",".5"));
     numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
     thrWidth = textToInteger(getParameter(argc,argv, "-thr_width", "-1"));
-
-
 }
 
 // Show ====================================================================
@@ -76,7 +74,7 @@ void Prog_RecFourier_prm::show()
             std::cerr << " Use weights stored in the image headers or doc file" << std::endl;
         else
             std::cerr << " Do NOT use weights" << std::endl;
-        std::cerr << "\n Interpolation Function" 
+        std::cerr << "\n Interpolation Function"
         << "\n   blrad                 : "  << blob.radius
         << "\n   blord                 : "  << blob.order
         << "\n   blalpha               : "  << blob.alpha
@@ -89,7 +87,6 @@ void Prog_RecFourier_prm::show()
 // Usage ====================================================================
 void Prog_RecFourier_prm::usage()
 {
-
     // To screen
     std::cerr << "  Usage:\n";
     std::cerr << "  reconstruct_fourier  <options>\n";
@@ -120,7 +117,7 @@ void Prog_RecFourier_prm::produce_Side_info()
 
     // Read the input images
     SF.read(fn_sel);
-    
+
     // Read docfile and get column numbers
     if (fn_doc != "")
     {
@@ -129,11 +126,12 @@ void Prog_RecFourier_prm::produce_Side_info()
             REPORT_ERROR(1, "docfile and corresponding selfile have unequal (active) entries");
     }
 
-
     // Ask for memory for the output volume and its Fourier transform
     SF.firstObject();
-    FileName fnImg; SF.getValue(MDL_IMAGE,fnImg);
-    ImageXmipp I(fnImg);
+    FileName fnImg;
+    SF.getValue(MDL_IMAGE,fnImg);
+    Image<double> I;
+    I.read(fnImg);
     int Ydim=YSIZE(I());
     int Xdim=XSIZE(I());
     if (Ydim!=Xdim)
@@ -149,7 +147,7 @@ void Prog_RecFourier_prm::produce_Side_info()
     Vout().clear(); // Free the memory so that it is available for FourierWeights
     transformerVol.getFourierAlias(VoutFourier);
     FourierWeights.initZeros(VoutFourier);
-   
+
     // Ask for memory for the padded images
     paddedImg.resize(Xdim*padding_factor_proj,Xdim*padding_factor_proj);
     paddedImg.setXmippOrigin();
@@ -178,21 +176,23 @@ void Prog_RecFourier_prm::produce_Side_info()
     //double fourierBlobTableSize = (sqrt(3.)*Xdim*Xdim/2.)*blobFourier.radius *sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(blobTableSqrt)
     {
-    	//use a r*r sample instead of r
-    	//DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
-        DIRECT_VEC_ELEM(blobTableSqrt,i)    = blob_val(blobTableSize*sqrt((double)i), blob)  *iw0;
+        //use a r*r sample instead of r
+        //DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
+        VEC_ELEM(blobTableSqrt,i)    = blob_val(blobTableSize*sqrt((double)i), blob)  *iw0;
         //***
         //DIRECT_VEC_ELEM(fourierBlobTableSqrt,i) =
         //     blob_Fourier_val(fourierBlobTableSize*sqrt(i), blobFourier)*padXdim3  *iw0;
-        DIRECT_VEC_ELEM(Fourier_blob_table,i) =
-             blob_Fourier_val(deltaFourier*i, blobFourier)*padXdim3  *iw0;
-		//#define DEBUG
-		#ifdef DEBUG
-			std::cout << DIRECT_VEC_ELEM(Fourier_blob_table,i)
-					  << " " << DIRECT_VEC_ELEM(fourierBlobTableSqrt,i)
-					  << std::endl;
-        #endif
-		#undef DEBUG
+        VEC_ELEM(Fourier_blob_table,i) =
+            blob_Fourier_val(deltaFourier*i, blobFourier)*padXdim3  *iw0;
+        //#define DEBUG
+#ifdef DEBUG
+
+        std::cout << VEC_ELEM(Fourier_blob_table,i)
+        << " " << VEC_ELEM(fourierBlobTableSqrt,i)
+        << std::endl;
+#endif
+  #undef DEBUG
+
     }
     //iDelta        = 1/delta;
     iDeltaSqrt    = 1/deltaSqrt;
@@ -217,14 +217,15 @@ void Prog_RecFourier_prm::produce_Side_info()
 }
 
 void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
-                                               double &tilt, double &psi, double &xoff, double &yoff, double &flip,
-                                               double &weight, MetaData * docfile)
+        double &tilt, double &psi, double &xoff, double &yoff, double &flip,
+        double &weight, MetaData * docfile)
 {
+    std::vector<long int> found;
+    (*docfile).findObjects(found,MDValueEQ(MDL_IMAGE,(std::string)fn));
 
-    std::vector<long int> found=(*docfile).findObjects(MDL_IMAGE,(std::string)fn);
     if (found.size()==1)
     {
-    	(*docfile).goToObject(found[0]);
+        (*docfile).goToObject(found[0]);
         (*docfile).getValue(MDL_ANGLEROT,rot);
         (*docfile).getValue(MDL_ANGLETILT,tilt);
         (*docfile).getValue(MDL_ANGLEPSI,psi);
@@ -246,9 +247,9 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     ImageThreadParams * threadParams = (ImageThreadParams *) threadArgs;
     Prog_RecFourier_prm * parent = threadParams->parent;
     barrier_t * barrier = &(parent->barrier);
-    
+
     int minSeparation;
-    
+
     if ( (int)ceil(parent->blob.radius) > parent->thrWidth )
         minSeparation = (int)ceil(parent->blob.radius);
     else
@@ -257,11 +258,13 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     minSeparation+=1;
 
     Matrix2D<double>  localA(3, 3), localAinv(3, 3);
-    Matrix2D< std::complex<double> > localPaddedFourier;
-    Matrix2D<double> localPaddedImg;
+    MultidimArray< std::complex<double> > localPaddedFourier;
+    MultidimArray<double> localPaddedImg;
     XmippFftw localTransformerImg;
 
     MetaData * docFile = threadParams->docFile;
+    std::vector<long int> objId;
+    parent->SF.findObjects(objId);
 
     do
     {
@@ -276,7 +279,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                 if ( threadParams->imageIndex >= 0 )
                 {
                     FileName fn_img;
-                    parent->SF.getValue(MDL_IMAGE, fn_img, threadParams->imageIndex );
+                    parent->SF.getValue(MDL_IMAGE, fn_img, objId[threadParams->imageIndex] );
 
                     // Read input image
                     double rot, tilt, psi, xoff,yoff,flip,weight;
@@ -284,7 +287,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
 
                     if (parent->fn_doc == "")
                     {
-                        proj.read(fn_img, true); //true means apply shifts 
+                        proj.read(fn_img, true); //true means apply shifts
                         rot  = proj.rot();
                         tilt = proj.tilt();
                         psi  = proj.psi();
@@ -296,21 +299,20 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                         // the header
                         parent->get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight, docFile);
 
-                        proj.set_angles(rot, tilt, psi); 
-                        proj.set_Xoff(xoff);
-                        proj.set_Yoff(yoff);
-                        proj.set_flip(flip);
-                        proj.set_weight(weight);
-                        localA = proj.get_transformation_matrix(true);
+                        proj.setEulerAngles(rot, tilt, psi);
+                        proj.setShifts(xoff,yoff);
+                        proj.setFlip(flip);
+                        proj.setWeight(weight);
+                        localA = proj.getTransformationMatrix(true);
                         if (!localA.isIdentity())
-                            proj().selfApplyGeometryBSpline(localA, 3, IS_INV, WRAP);
+                            selfApplyGeometry(BSPLINE3, proj(), localA, IS_INV, WRAP);
                     }
 
                     threadParams->weight = 1.;
-                    
+
                     if(parent->do_weights)
                         threadParams->weight = weight;
-                    
+
                     if (!parent->do_weights)
                     {
                         weight=1.0;
@@ -324,14 +326,11 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     // Copy the projection to the center of the padded image
                     // and compute its Fourier transform
                     proj().setXmippOrigin();
-                    localPaddedImg.resize(parent->imgSize*parent->padding_factor_proj,
-                                          parent->imgSize*parent->padding_factor_proj);
+                    localPaddedImg.initZeros(parent->imgSize*parent->padding_factor_proj,
+                                             parent->imgSize*parent->padding_factor_proj);
                     localPaddedImg.setXmippOrigin();
-                    //added ROB
-                    FOR_ALL_ELEMENTS_IN_MATRIX2D(localPaddedImg)
-                         localPaddedImg(i,j)=0.;
-                    FOR_ALL_ELEMENTS_IN_MATRIX2D(proj())
-                         localPaddedImg(i,j)=weight*proj(i,j);
+                    FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
+                    A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
                     CenterFFT(localPaddedImg,true);
 
                     // Fourier transformer for the images
@@ -344,49 +343,49 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     localAinv=localA.transpose();
 
                     threadParams->localweight = weight;
-                    threadParams->localAInv = &localAinv;             
+                    threadParams->localAInv = &localAinv;
                     threadParams->localPaddedFourier = &localPaddedFourier;
                     //#define DEBUG22
-                    #ifdef DEBUG22
-                          
-                            {//CORRECTO
+#ifdef DEBUG22
 
-                            if(threadParams->myThreadID%1==0) 
-                                {
-                                 proj.write((std::string) integerToString(threadParams->myThreadID)  + "_" +\
-                                                          integerToString(threadParams->imageIndex) + "proj.spi");
-                                
-				ImageXmipp save44;
-                                save44()=localPaddedImg;
-                                save44.write((std::string) integerToString(threadParams->myThreadID)  + "_" +\
-                                                           integerToString(threadParams->imageIndex) + "local_padded_img.spi");
-                                
-				FourierImage save33;
-                                save33()=localPaddedFourier;
-                                save33.write((std::string) integerToString(threadParams->myThreadID)  + "_" +\
-                                                           integerToString(threadParams->imageIndex) + "local_padded_fourier.spi");
-                                				FourierImage save22;
-                                //save22()=*paddedFourier;
-                                save22().alias(*(threadParams->localPaddedFourier));
-                                save22.write((std::string) integerToString(threadParams->myThreadID)  + "_" +\
-                                                           integerToString(threadParams->imageIndex) + "_padded_fourier.spi");
-                                }
+                    {//CORRECTO
 
-                            }
-                    #endif
+                        if(threadParams->myThreadID%1==0)
+                        {
+                            proj.write((std::string) integerToString(threadParams->myThreadID)  + "_" +\
+                                       integerToString(threadParams->imageIndex) + "proj.spi");
+
+                            ImageXmipp save44;
+                            save44()=localPaddedImg;
+                            save44.write((std::string) integerToString(threadParams->myThreadID)  + "_" +\
+                                         integerToString(threadParams->imageIndex) + "local_padded_img.spi");
+
+                            FourierImage save33;
+                            save33()=localPaddedFourier;
+                            save33.write((std::string) integerToString(threadParams->myThreadID)  + "_" +\
+                                         integerToString(threadParams->imageIndex) + "local_padded_fourier.spi");
+                            FourierImage save22;
+                            //save22()=*paddedFourier;
+                            save22().alias(*(threadParams->localPaddedFourier));
+                            save22.write((std::string) integerToString(threadParams->myThreadID)  + "_" +\
+                                         integerToString(threadParams->imageIndex) + "_padded_fourier.spi");
+                        }
+
+                    }
+#endif
                     #undef DEBUG22
 
                     threadParams->read = 1;
                 }
                 break;
             }
-        case EXIT_THREAD: 
+        case EXIT_THREAD:
             return NULL;
         case PROCESS_WEIGHTS:
             {
                 // Get a first approximation of the reconstruction
                 double corr2D_3D=pow(parent->padding_factor_proj,2.)/
-                                 (parent->imgSize* pow(parent->padding_factor_vol,3.)); 
+                                 (parent->imgSize* pow(parent->padding_factor_vol,3.));
                 // Divide by Zdim because of the
                 // the extra dimension added
                 // and padding differences
@@ -398,18 +397,18 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                             if (parent->FourierWeights(k,i,j)>ACCURACY)
                             {
                                 parent->FourierWeights(k,i,j)=1/parent->FourierWeights(k,i,j);
-                                VOL_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*VOL_ELEM(parent->FourierWeights,k,i,j);
+                                A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*A3D_ELEM(parent->FourierWeights,k,i,j);
                             }
                             else
-                                VOL_ELEM(parent->VoutFourier,k,i,j)=0;
+                                A3D_ELEM(parent->VoutFourier,k,i,j)=0;
 
                         }
 
                 break;
             }
         case PROCESS_IMAGE:
-            {   
-                Matrix2D< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
+            {
+                MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
                 int * statusArray = parent->statusArray;
 
                 int minAssignedRow;
@@ -427,14 +426,14 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     {
                         pthread_mutex_lock( &(parent->workLoadMutex) );
 
-                        if ( parent->rowsProcessed == paddedFourier->ydim )
+                        if ( parent->rowsProcessed == YSIZE(*paddedFourier) )
                         {
                             pthread_mutex_unlock( &(parent->workLoadMutex) );
                             breakCase = true;
                             break;
                         }
 
-                        for (int w = 0 ; w < paddedFourier->ydim ; w++ )
+                        for (int w = 0 ; w < YSIZE(*paddedFourier) ; w++ )
                         {
                             if ( statusArray[w]==0 )
                             {
@@ -442,33 +441,33 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                                 minAssignedRow = w;
                                 maxAssignedRow = w+minSeparation-1;
 
-                                if ( maxAssignedRow > (paddedFourier->ydim-1) )
-                                    maxAssignedRow = paddedFourier->ydim-1;
+                                if ( maxAssignedRow > (YSIZE(*paddedFourier)-1) )
+                                    maxAssignedRow = YSIZE(*paddedFourier)-1;
 
                                 for ( int in = (minAssignedRow - minSeparation) ; in < minAssignedRow ; in ++ )
                                 {
-                                    if ( ( in >= 0 ) && ( in < paddedFourier->ydim ))
+                                    if ( ( in >= 0 ) && ( in < YSIZE(*paddedFourier) ))
                                     {
                                         if ( statusArray[in] > -1 )
                                             statusArray[in]++;
                                     }
-                                }                                    
+                                }
 
                                 for ( int in = minAssignedRow ; in <= maxAssignedRow ; in ++ )
                                 {
-                                    if ( ( in >= 0 ) && ( in < paddedFourier->ydim ))
+                                    if ( ( in >= 0 ) && ( in < YSIZE(*paddedFourier) ))
                                     {
                                         if ( statusArray[in] == 0 )
                                         {
                                             statusArray[in] = -1;
-                                            parent->rowsProcessed++;   
+                                            parent->rowsProcessed++;
                                         }
                                     }
                                 }
 
                                 for ( int in = maxAssignedRow+1 ; in <= (maxAssignedRow+minSeparation) ; in ++ )
                                 {
-                                    if ( ( in >= 0 ) && ( in < paddedFourier->ydim ))
+                                    if ( ( in >= 0 ) && ( in < YSIZE(*paddedFourier) ))
                                     {
                                         if ( statusArray[in] > -1 )
                                             statusArray[in]++;
@@ -480,7 +479,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                         }
 
                         pthread_mutex_unlock( &(parent->workLoadMutex) );
-                    }while ( !assigned );
+                    }
+                    while ( !assigned );
 
                     if ( breakCase == true )
                     {
@@ -496,8 +496,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     // Get i value for the thread
                     for (int i = minAssignedRow; i <= maxAssignedRow ; i ++ )
                     {
-			// Discarded rows can be between minAssignedRow and maxAssignedRow, check
-			if ( statusArray[i] == -1 )
+                        // Discarded rows can be between minAssignedRow and maxAssignedRow, check
+                        if ( statusArray[i] == -1 )
                             for (int j=STARTINGX(*paddedFourier); j<=FINISHINGX(*paddedFourier); j++)
                             {
                                 // Compute the frequency of this coefficient in the
@@ -524,6 +524,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                                 ZZ(corner2)=FLOOR(ZZ(real_position)+parent->blob.radius);
 
 #ifdef DEBUG
+
                                 std::cout << "Idx Img=(0," << i << "," << j << ") -> Freq Img=("
                                 << freq.transpose() << ") ->\n    Idx Vol=("
                                 << real_position.transpose() << ")\n"
@@ -532,7 +533,6 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
 #endif
 
                                 // Loop within the box
-
                                 double *ptrIn =(double *)&((*paddedFourier)(i,j));
                                 double blobRadiusSquared = parent->blob.radius * parent->blob.radius;
                                 for (int intz = ZZ(corner1); intz <= ZZ(corner2); intz++)
@@ -548,7 +548,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                                             double d = (XX(gcurrent) * XX(gcurrent) +
                                                         YY(gcurrent) * YY(gcurrent) +
                                                         ZZ(gcurrent) * ZZ(gcurrent));
-                                            if (d > blobRadiusSquared) continue;
+                                            if (d > blobRadiusSquared)
+                                                continue;
                                             // COSS: *** AVOID THE SQUARE ROOTS
                                             double w = parent->blobTableSqrt(ROUND(d*parent->iDeltaSqrt));
                                             //double w = parent->blob_table(ROUND(gcurrent.module()*parent->iDelta));
@@ -557,19 +558,23 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                                             // Look for the location of this logical index
                                             // in the physical layout
 #ifdef DEBUG
+
                                             std::cout << "   gcurrent=" << gcurrent.transpose()
                                             << " d=" << d << std::endl;
                                             std::cout << "   1: intx=" << intx
                                             << " inty=" << inty
                                             << " intz=" << intz << std::endl;
 #endif
+
                                             int iz=intWRAP(intz,0,ZSIZE(parent->VoutFourier)-1);
                                             int iy=intWRAP(inty,0,ZSIZE(parent->VoutFourier)-1);
                                             int ix=intWRAP(intx,0,ZSIZE(parent->VoutFourier)-1);
 #ifdef DEBUG
+
                                             std::cout << "   2: ix=" << ix << " iy=" << iy
                                             << " iz=" << iz << std::endl;
 #endif
+
                                             bool conjugate=false;
                                             if (ix>=XSIZE(parent->VoutFourier))
                                             {
@@ -587,32 +592,34 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                                             // Add the weighted coefficient
                                             double *ptrOut=(double *)&((parent->VoutFourier)(iz,iy,ix));
                                             ptrOut[0]+=w*ptrIn[0];
-                                            if (conjugate) ptrOut[1]-=w*ptrIn[1];
-                                            else           ptrOut[1]+=w*ptrIn[1];
+                                            if (conjugate)
+                                                ptrOut[1]-=w*ptrIn[1];
+                                            else
+                                                ptrOut[1]+=w*ptrIn[1];
 
                                             (parent->FourierWeights)(iz,iy,ix)+=w*threadParams->weight ;
                                         }
                                     }
                                 }
                             }
-                    }   
+                    }
 
                     pthread_mutex_lock( &(parent->workLoadMutex) );
 
                     for ( int w = (minAssignedRow - minSeparation) ; w < minAssignedRow ; w ++ )
                     {
-                        if ( ( w >= 0 ) && ( w < paddedFourier->ydim ))
+                        if ( ( w >= 0 ) && ( w < YSIZE(*paddedFourier) ))
                         {
                             if ( statusArray[w] > 0 )
                             {
                                 statusArray[w]--;
                             }
                         }
-                    }    
+                    }
 
                     for ( int w = maxAssignedRow+1 ; w <= (maxAssignedRow+minSeparation) ; w ++ )
                     {
-                        if ( ( w >= 0 ) && ( w < paddedFourier->ydim ))
+                        if ( ( w >= 0 ) && ( w < YSIZE(*paddedFourier) ))
                         {
                             if ( statusArray[w] > 0 )
                             {
@@ -623,21 +630,23 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
 
                     pthread_mutex_unlock( &(parent->workLoadMutex) );
 
-                }while (!breakCase);  
+                }
+                while (!breakCase);
                 break;
             }
-        default: break;
+        default:
+            break;
         }
 
         barrier_wait( barrier );
-
-    }while ( 1 );
+    }
+    while ( 1 );
 }
 
 //#define DEBUG
 void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex, bool saveFSC )
 {
-    Matrix2D< std::complex<double> > *paddedFourier;
+    MultidimArray< std::complex<double> > *paddedFourier;
 
     int repaint = ceil((double)SF.size()/60);
 
@@ -647,23 +656,23 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
     struct timeval start_time, end_time;
     long int total_usecs;
     double total_time;
-    
+
     // This index tells when to save work for later FSC usage
     int FSCIndex = (firstImageIndex + lastImageIndex)/2;
-    
+
     // Index of the image that has just been processed. Used for
     // FSC purposes
     int current_index;
-    
+
     do
     {
         threadOpCode = PRELOAD_IMAGE;
 
         for ( int nt = 0 ; nt < numThreads ; nt ++ )
-        {            
+        {
             if ( imgIndex <= lastImageIndex )
             {
-                th_args[nt].imageIndex = imgIndex; 
+                th_args[nt].imageIndex = imgIndex;
                 imgIndex++;
             }
             else
@@ -678,7 +687,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
         // Threads are working now, wait for them to finish
         // processing current projection
         barrier_wait( &barrier );
-        
+
         // each threads have read a different image and now
         // all the thread will work in a different part of a single image.
         threadOpCode = PROCESS_IMAGE;
@@ -692,37 +701,38 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
             else if ( th_args[nt].read == 1 )
             {
                 processed = true;
-                if (verb && imgno++%repaint==0) progress_bar(imgno);
-            
+                if (verb && imgno++%repaint==0)
+                    progress_bar(imgno);
+
                 double weight = th_args[nt].localweight;
                 paddedFourier = th_args[nt].localPaddedFourier;
                 current_index = th_args[nt].imageIndex;
                 Matrix2D<double> *Ainv = th_args[nt].localAInv;
-            
+
                 //#define DEBUG22
-                #ifdef DEBUG22
-                      
-                        {
-                        static int ii=0;
-                        if(ii%1==0) 
-                            {
-                            FourierImage save22;
-                            //save22()=*paddedFourier;
-                            save22().alias(*paddedFourier);
-                            save22.write((std::string) integerToString(ii)  + "_padded_fourier.spi");
-                            }
-                        ii++;
-                        }
-                #endif
+#ifdef DEBUG22
+
+                {
+                    static int ii=0;
+                    if(ii%1==0)
+                    {
+                        FourierImage save22;
+                        //save22()=*paddedFourier;
+                        save22().alias(*paddedFourier);
+                        save22.write((std::string) integerToString(ii)  + "_padded_fourier.spi");
+                    }
+                    ii++;
+                }
+#endif
                 #undef DEBUG22
-                
+
                 // Initialized just once
                 if ( statusArray == NULL )
                 {
                     statusArray = (int *) malloc ( sizeof(int) * paddedFourier->ydim );
                 }
 
-                // Determine how many rows of the fourier 
+                // Determine how many rows of the fourier
                 // transform are of interest for us. This is because
                 // the user can avoid to explore at certain resolutions
                 int conserveRows= ceil((double)paddedFourier->ydim * maxResolution * 2.0);
@@ -765,25 +775,25 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                     // Threads are working now, wait for them to finish
                     // processing current projection
                     barrier_wait( &barrier );
-                    
-                    //#define DEBUG2
-                    #ifdef DEBUG2
-                          
-                            {
-                            static int ii=0;
-                            if(ii%1==0) 
-                                {
-                                VolumeT save;
-                                save().alias( FourierWeights );
-                                save.write((std::string) integerToString(ii)  + "_1_Weights.vol");
 
-                                FourierVolume save2;
-                                save2().alias( VoutFourier );
-                                save2.write((std::string) integerToString(ii)  + "_1_Fourier.vol");
-                                }
-                            ii++;
-                            }
-                    #endif
+                    //#define DEBUG2
+#ifdef DEBUG2
+
+                    {
+                        static int ii=0;
+                        if(ii%1==0)
+                        {
+                            Image<double> save;
+                            save().alias( FourierWeights );
+                            save.write((std::string) integerToString(ii)  + "_1_Weights.vol");
+
+                            Image< std::complex<double> > save2;
+                            save2().alias( VoutFourier );
+                            save2.write((std::string) integerToString(ii)  + "_1_Fourier.vol");
+                        }
+                        ii++;
+                    }
+#endif
                     #undef DEBUG2
 
                 }
@@ -791,16 +801,14 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                 if ( current_index == FSCIndex && saveFSC )
                 {
                     // Save Current Fourier, Reconstruction and Weights
-                    VolumeT<double> save;
+                    Image<double> save;
                     save().alias( FourierWeights );
-                    save.write((std::string)fn_fsc + "_1_Weights.vol",
-                            false,VDOUBLE);
-                    
-                    FourierVolume save2;
+                    save.write((std::string)fn_fsc + "_1_Weights.vol");
+
+                    Image< std::complex<double> > save2;
                     save2().alias( VoutFourier );
-                    save2.write((std::string) fn_fsc + "_1_Fourier.vol",
-                            false,VDOUBLE);
-                        
+                    save2.write((std::string) fn_fsc + "_1_Fourier.vol");
+
                     finishComputations(FileName((std::string) fn_fsc + "_1_recons.vol"));
                     Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
                     transformerVol.setReal(Vout());
@@ -811,20 +819,19 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                 }
             }
         }
-    }while ( processed );
-                      
-    if( saveFSC ) 
+    }
+    while ( processed );
+
+    if( saveFSC )
     {
         // Save Current Fourier, Reconstruction and Weights
-        VolumeT<double> auxVolume;
+        Image<double> auxVolume;
         auxVolume().alias( FourierWeights );
-        auxVolume.write((std::string)fn_fsc + "_2_Weights.vol",
-                false,VDOUBLE);
+        auxVolume.write((std::string)fn_fsc + "_2_Weights.vol");
 
-        FourierVolume auxFourierVolume;
+        Image< std::complex<double> > auxFourierVolume;
         auxFourierVolume().alias( VoutFourier );
-        auxFourierVolume.write((std::string) fn_fsc + "_2_Fourier.vol",
-                false,VDOUBLE);
+        auxFourierVolume.write((std::string) fn_fsc + "_2_Fourier.vol");
 
         finishComputations(FileName((std::string) fn_fsc + "_2_recons.vol"));
 
@@ -833,27 +840,26 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
         Vout().clear();
         transformerVol.getFourierAlias(VoutFourier);
         FourierWeights.initZeros(VoutFourier);
-        VoutFourier.initZeros();   
+        VoutFourier.initZeros();
 
-        auxVolume.sumWithFile((std::string) fn_fsc + "_1_Weights.vol",false, VDOUBLE);
-        auxVolume.sumWithFile((std::string) fn_fsc + "_2_Weights.vol",false, VDOUBLE);
+        auxVolume.sumWithFile(fn_fsc + "_1_Weights.vol");
+        auxVolume.sumWithFile(fn_fsc + "_2_Weights.vol");
+        auxFourierVolume.sumWithFile(fn_fsc + "_1_Fourier.vol");
+        auxFourierVolume.sumWithFile(fn_fsc + "_2_Fourier.vol");
+        remove((fn_fsc + "_1_Weights.vol").c_str());
+        remove((fn_fsc + "_2_Weights.vol").c_str());
+        remove((fn_fsc + "_1_Fourier.vol").c_str());
+        remove((fn_fsc + "_2_Fourier.vol").c_str());
 
-        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_1_Fourier.vol",false, VDOUBLE);
-        auxFourierVolume.sumWithFile((std::string) fn_fsc + "_2_Fourier.vol",false, VDOUBLE);
-        remove(((std::string) fn_fsc + "_1_Weights.vol").c_str());
-        remove(((std::string) fn_fsc + "_2_Weights.vol").c_str());
-	remove(((std::string) fn_fsc + "_1_Fourier.vol").c_str());
-	remove(((std::string) fn_fsc + "_2_Fourier.vol").c_str());
-
-/*
-//Save SUM
-                            //this is an image but not an xmipp image
-                            auxFourierVolume.write((std::string)fn_fsc + "_all_Fourier.vol",
-                                    false,VDOUBLE);
-                            auxVolume.write((std::string)fn_fsc + "_all_Weight.vol",
-                                    false,VDOUBLE);
-//
-*/
+        /*
+        //Save SUM
+                                    //this is an image but not an xmipp image
+                                    auxFourierVolume.write((std::string)fn_fsc + "_all_Fourier.vol",
+                                            false,VDOUBLE);
+                                    auxVolume.write((std::string)fn_fsc + "_all_Weight.vol",
+                                            false,VDOUBLE);
+        //
+        */
     }
 }
 
@@ -861,7 +867,8 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
 void Prog_RecFourier_prm::run()
 {
     // Process all images in the selfile
-    if (verb) init_progress_bar(SF.size());
+    if (verb)
+        init_progress_bar(SF.size());
 
     // Create threads stuff
     barrier_init( &barrier, numThreads+1 );
@@ -888,39 +895,37 @@ void Prog_RecFourier_prm::run()
     finishComputations(fn_out);
 
     threadOpCode = EXIT_THREAD;
-    barrier_wait( &barrier );
 
     // Waiting for threads to finish
+    barrier_wait( &barrier );
     for ( int nt = 0 ; nt < numThreads ; nt ++ )
-    {
         pthread_join(*(th_ids+nt), NULL);
-    }
-
     barrier_destroy( &barrier );
-
 }
 
-void Prog_RecFourier_prm::finishComputations( FileName out_name )
+void Prog_RecFourier_prm::finishComputations( const FileName &out_name )
 {
-//#define DEBUG_VOL
+    //#define DEBUG_VOL
 #ifdef DEBUG_VOL
-	{
-         VolumeXmipp save;
-         save().alias( FourierWeights );
-         save.write((std::string) fn_out + "Weights.vol");
+    {
+        VolumeXmipp save;
+        save().alias( FourierWeights );
+        save.write((std::string) fn_out + "Weights.vol");
 
-         FourierVolume save2;
-         save2().alias( VoutFourier );
-         save2.write((std::string) fn_out + "FourierVol.vol");
-	}
+        FourierVolume save2;
+        save2().alias( VoutFourier );
+        save2.write((std::string) fn_out + "FourierVol.vol");
+    }
 #endif
 
     // Enforce symmetry in the Fourier values as well as the weights
     transformerVol.enforceHermitianSymmetry();
     int yHalf=YSIZE(FourierWeights)/2;
-    if (YSIZE(FourierWeights)%2==0) yHalf--;
+    if (YSIZE(FourierWeights)%2==0)
+        yHalf--;
     int zHalf=ZSIZE(FourierWeights)/2;
-    if (ZSIZE(FourierWeights)%2==0) zHalf--;
+    if (ZSIZE(FourierWeights)%2==0)
+        zHalf--;
     for (int k=0; k<ZSIZE(FourierWeights); k++)
     {
         int ksym=intWRAP(-k,0,ZSIZE(FourierWeights)-1);
@@ -928,34 +933,34 @@ void Prog_RecFourier_prm::finishComputations( FileName out_name )
         {
             int isym=intWRAP(-i,0,YSIZE(FourierWeights)-1);
             double mean=0.5*(
-                            DIRECT_VOL_ELEM(FourierWeights,k,i,0)+
-                            DIRECT_VOL_ELEM(FourierWeights,ksym,isym,0));
-            DIRECT_VOL_ELEM(FourierWeights,k,i,0)=
-            DIRECT_VOL_ELEM(FourierWeights,ksym,isym,0)=mean;
+                            DIRECT_A3D_ELEM(FourierWeights,k,i,0)+
+                            DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0));
+            DIRECT_A3D_ELEM(FourierWeights,k,i,0)=
+                DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0)=mean;
         }
     }
     for (int k=1; k<=zHalf; k++)
     {
         int ksym=intWRAP(-k,0,ZSIZE(FourierWeights)-1);
         double mean=0.5*(
-                        DIRECT_VOL_ELEM(FourierWeights,k,0,0)+
-                        DIRECT_VOL_ELEM(FourierWeights,ksym,0,0));
-        DIRECT_VOL_ELEM(FourierWeights,k,0,0)=
-        DIRECT_VOL_ELEM(FourierWeights,ksym,0,0)=mean;
+                        DIRECT_A3D_ELEM(FourierWeights,k,0,0)+
+                        DIRECT_A3D_ELEM(FourierWeights,ksym,0,0));
+        DIRECT_A3D_ELEM(FourierWeights,k,0,0)=
+            DIRECT_A3D_ELEM(FourierWeights,ksym,0,0)=mean;
     }
 
     // Tell threads what to do
-//#define DEBUG_VOL1
+    //#define DEBUG_VOL1
 #ifdef DEBUG_VOL1
-	{
-         VolumeXmipp save;
-         save().alias( FourierWeights );
-         save.write((std::string) fn_out + "hermiticWeights.vol");
+    {
+        Image<double> save;
+        save().alias( FourierWeights );
+        save.write((std::string) fn_out + "hermiticWeights.vol");
 
-         FourierVolume save2;
-         save2().alias( VoutFourier );
-         save2.write((std::string) fn_out + "hermiticFourierVol.vol");
-	}
+        Image< std::complex<double> > save2;
+        save2().alias( VoutFourier );
+        save2.write((std::string) fn_out + "hermiticFourierVol.vol");
+    }
 #endif
     threadOpCode = PROCESS_WEIGHTS;
     // Awake threads
@@ -965,7 +970,7 @@ void Prog_RecFourier_prm::finishComputations( FileName out_name )
 
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
     transformerVol.setReal(Vout());
-    
+
     transformerVol.inverseFourierTransform();
     CenterFFT(Vout(),false);
 
@@ -976,15 +981,13 @@ void Prog_RecFourier_prm::finishComputations( FileName out_name )
                   LAST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize));
     double pad_relation= ((double)padding_factor_proj/padding_factor_vol);
     pad_relation = (pad_relation * pad_relation * pad_relation);
-    //THIS IS WRONG CHANGE int by size_t
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(Vout())
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(MULTIDIM_ARRAY(Vout))
     {
         // COSS: *** Avoid the square root
         double factor = Fourier_blob_table(ROUND(sqrt((double)(k*k+i*i+j*j))
-                                                 *iDeltaFourier));
+                                           *iDeltaFourier));
         Vout(k,i,j) /= (factor/pad_relation);
     }
 
     Vout.write(out_name);
-
 }

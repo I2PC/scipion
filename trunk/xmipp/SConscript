@@ -531,7 +531,7 @@ ReconsSources = [
     'recons_misc.cpp',
     'reconstruct_art.cpp',
     'reconstruct_wbp.cpp',
-#    'reconstruct_fourier.cpp',
+    'reconstruct_fourier.cpp',
     'refinement.cpp',
 #    'resolution_ssnr.cpp',
 #    'series_remove_fluctuations.cpp',
@@ -539,7 +539,7 @@ ReconsSources = [
     'sparma.cpp',
 #    'surface.cpp',
     'symmetrize.cpp',
-##   'virus_vertex',
+##   'virus_vertex.cpp',
 #    'volume_foms.cpp',
 #    'volume_labelling.cpp',
     'volume_segment.cpp'
@@ -721,7 +721,7 @@ AddXmippProgram('range_adjust', ['XmippRecons'])
 #Sjors: note that crystal stuff in ART is not working yet....
 AddXmippProgram('reconstruct_art', ['XmippRecons']) 
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
-#AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
+AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
 AddXmippProgram('resolution_fsc')
 #AddXmippProgram('resolution_ssnr', ['XmippRecons'])
 #AddXmippProgram('reverse_endian')
