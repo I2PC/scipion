@@ -1551,7 +1551,7 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
     {
         r2 = (double)(j * j + i * i + k * k);
 
-        if (limit_trans >= 0. && r2 > limit_trans * limit_trans)
+        if (limit_trans >= 0. && r2 > scale_factor * scale_factor * limit_trans * limit_trans )
             VOL_ELEM(P_phi, k, i, j) = 0.;
         else
         {
