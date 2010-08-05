@@ -551,13 +551,6 @@ ReconsInterfaceSources = [
     'project.cpp',
 ]
 
-#remove dinamic mpi library since it is very problematic
-# ReconstrunctionMPI
-#if int(env['mpi']):
-#    ReconstructionMPISources = ['mpi_run.cpp']
-#    AddMPILibrary('XmippReconsMPI', '#libraries/reconstruction_mpi',
-#        ReconstructionMPISources, ['#libraries'])
-
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
 AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
@@ -818,7 +811,7 @@ if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
-#   AddXmippMPIProgram('mpi_run', ['XmippRecons'])
+   AddXmippMPIProgram('mpi_run', ['XmippRecons'])
 
 # TIFF
 # Tiff2Raw
