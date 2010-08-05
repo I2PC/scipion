@@ -26,6 +26,8 @@
 #include "series_remove_fluctuations.h"
 #include <data/args.h>
 #include <data/fftw.h>
+#include <data/metadata_extension.h>
+#include <data/image.h>
 
 // Read from command line --------------------------------------------------
 void Series_remove_fluctuations_parameters::read(int argc, char **argv)
@@ -41,14 +43,17 @@ void Series_remove_fluctuations_parameters::produceSideInfo()
     // Read the selfile into a volume
     SF.read(fn_sel);
     int Zdim, Ydim, Xdim;
-    Zdim=SF.ImgNo();
-    SF.ImgSize(Ydim,Xdim);
+    Zdim=SF.size();
+    ImgSize(SF,Xdim,Ydim);
+    V.setMmap(true);
     V.initZeros(Zdim,Ydim,Xdim);
     int k=0;
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        ImageXmipp I;
-        I.read(SF.NextImg());
+        Image<double> I;
+        FileName fnImg;
+        SF.getValue(MDL_IMAGE,fnImg);
+        I.read(fnImg);
         V.setSlice(k,I());
         k++;
     }
@@ -87,7 +92,7 @@ void Series_remove_fluctuations_parameters::run()
         for (int j=0; j<XSIZE(V); j++)
         {
             // Get line
-            Matrix1D<double> line;
+            MultidimArray<double> line;
             line.initZeros(ZSIZE(V));
             for (int k=0; k<ZSIZE(V); k++)
                 line(k)=V(k,i,j);
@@ -97,7 +102,7 @@ void Series_remove_fluctuations_parameters::run()
             transformer.FourierTransform();
 
             // Filter
-            Matrix1D< std::complex<double> > lineFourier;
+            MultidimArray< std::complex<double> > lineFourier;
             transformer.getFourierAlias(lineFourier);
             for (int k=maxPixel; k<XSIZE(lineFourier); k++)
                 lineFourier(k)=0;
@@ -111,15 +116,14 @@ void Series_remove_fluctuations_parameters::run()
     }
 
     // Write the results
-    SF.go_first_ACTIVE();
     int k=0;
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        ImageXmipp I;
+        Image<double> I;
         V.getSlice(k,I());
 
         FileName fnimg;
-        if (fn_root=="") fnimg=SF.NextImg();
+        if (fn_root=="") SF.getValue(MDL_IMAGE,fnimg);
         else fnimg.compose(fn_root,k,"xmp");
         I.write(fnimg);
 

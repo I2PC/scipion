@@ -534,7 +534,7 @@ ReconsSources = [
     'reconstruct_fourier.cpp',
     'refinement.cpp',
     'resolution_ssnr.cpp',
-#    'series_remove_fluctuations.cpp',
+    'series_remove_fluctuations.cpp',
     'sort_images.cpp',
     'sparma.cpp',
 #    'surface.cpp',
@@ -731,7 +731,7 @@ AddXmippProgram('scale_pyramid')
 #AddXmippProgram('selfile_statistics')
 #AddXmippProgram('selfile_subset')
 #AddXmippProgram('separate_objects')
-#AddXmippProgram('series_remove_fluctuations', ['XmippRecons'])
+AddXmippProgram('series_remove_fluctuations', ['XmippRecons'])
 #AddXmippProgram('shift')
 AddXmippProgram('sort_by_statistics', ['XmippClassif'])
 AddXmippProgram('statistics')

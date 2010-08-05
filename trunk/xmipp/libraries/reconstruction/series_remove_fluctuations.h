@@ -26,8 +26,8 @@
 #ifndef SERIES_REMOVE_FLUCTUATIONS_H
 #define SERIES_REMOVE_FLUCTUATIONS_H
 
-#include <data/matrix3d.h>
-#include <data/selfile.h>
+#include <data/multidim_array.h>
+#include <data/metadata.h>
 
 /// @defgroup RemoveFluctuations Remove fluctuations in tilt series
 /// @ingroup ReconsLibraryPrograms
@@ -47,10 +47,10 @@ public:
     double maxFreq;
 public:
     // Selfile with the input mages
-    SelFile SF;
+    MetaData SF;
     
     // Volume for holding the whole tilt series
-    Matrix3D<double> V;
+    MultidimArray<double> V;
 
 public:
     /// Read parameters from command line
