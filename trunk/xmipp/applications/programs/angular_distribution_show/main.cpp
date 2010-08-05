@@ -36,22 +36,20 @@ void Usage();
 
 int main(int argc, char *argv[])
 {
-    MetaData         angles;
-    FileName         fn_ang, fn_sel, fn_hist, fn_ps, fn_bild;
+    FileName         fn_ang, fn_hist, fn_ps, fn_bild;
     int              steps;
     int              tell;
-    float            R, r, rmax, wmax = -99.e99;
-    float            rot_view;
-    float            tilt_view;
-    int              up_down_correction, colw;
+    double           R, r, rmax, wmax = -99.e99;
+    double           rot_view;
+    double           tilt_view;
+    int              up_down_correction;
     bool             solid_sphere;
-    float            shift_center;
+    double           shift_center;
 
     // Check the command line ==================================================
     try
     {
-        fn_sel = getParameter(argc, argv, "-sel", "");
-        fn_ang = getParameter(argc, argv, "-ang", "");
+        fn_ang = getParameter(argc, argv, "-ang");
         fn_hist = getParameter(argc, argv, "-hist", "");
         fn_ps = getParameter(argc, argv, "-ps", "");
         fn_bild = getParameter(argc, argv, "-bild", "");
@@ -63,12 +61,7 @@ int main(int argc, char *argv[])
         tilt_view = textToFloat(getParameter(argc, argv, "-tilt_view", "30"));
         up_down_correction = checkParameter(argc, argv, "-up_down_correction");
         solid_sphere = checkParameter(argc, argv, "-solid_sphere");
-        colw = textToInteger(getParameter(argc, argv, "-wcol", "-1"));
         shift_center= textToFloat(getParameter(argc, argv, "-shift_center", "0"));
-
-        // Check there is some input
-        if (fn_ang == "" && fn_sel == "")
-            REPORT_ERROR(1, "Angular distribution: There is no input information");
     }
     catch (Xmipp_error XE)
     {
@@ -80,28 +73,28 @@ int main(int argc, char *argv[])
     try
     {
         // Get angles ==============================================================
-        if (fn_ang != "")
-            angles.read(fn_ang);
-        else
-        {
-            MetaData selfile(fn_sel);
-            extract_angles(selfile, angles);
-        }
+        MetaData angles;
+        angles.read(fn_ang);
         int AngleNo = angles.size();
-        if (AngleNo == 0)
-            EXIT_ERROR(1, "Angular distribution: Input files doesn't contain angular information");
+        if (AngleNo == 0 || !angles.containsLabel(MDL_ANGLEROT))
+            EXIT_ERROR(1, "Angular distribution: Input file doesn't contain angular information");
 
-        if (colw >= 0)
+        if (angles.containsLabel(MDL_WEIGHT))
         {
             // Find maximum weight
-            for (int i = 0; i < AngleNo; i++)
-                if (angles(i + 1, colw) > wmax)
-                    wmax = angles(i + 1, colw);
+            FOR_ALL_OBJECTS_IN_METADATA(angles)
+            {
+                double w;
+                angles.getValue(MDL_WEIGHT,w);
+                wmax=XMIPP_MAX(w,wmax);
+            }
         }
 
         // Build vector tables ======================================================
 #define GET_ANGLES(i) \
-    angles.get_angles(i,rot,tilt,psi,ang1,ang2,ang3); \
+    angles.getValue(MDL_ANGLEROT,rot,i); \
+    angles.getValue(MDL_ANGLETILT,tilt,i); \
+    angles.getValue(MDL_ANGLEPSI,psi,i); \
     if (up_down_correction && ABS(tilt)>90) \
         Euler_up_down(rot,tilt,psi,rot,tilt,psi);
 
@@ -114,34 +107,31 @@ int main(int argc, char *argv[])
             Matrix1D<double> aux(3);
             Matrix1D<double> aux_ang(6);
 
-
             GET_ANGLES(i + 1);
             Euler_direction(rot, tilt, psi, aux);
             v.push_back(aux);
 
-
             aux_ang = vectorR3(rot, tilt, psi);
             v_ang.push_back(aux_ang);
-
         }
 
         // Compute histogram of distances =============================================
         if (fn_hist != "")
         {
-            Matrix1D<double> dist;
+            MultidimArray<double> dist;
 
-#define di VEC_ELEM(dist,i)
-#define dj VEC_ELEM(dist,j)
+#define di A1D_ELEM(dist,i)
+#define dj A1D_ELEM(dist,j)
 
 #define SHOW {\
-        GET_ANGLES(i+1); \
-        std::cout << i << " " << rot << " " << tilt << " v[i]=" \
-        << v[i].transpose() << std::endl; \
-        GET_ANGLES(j+1); \
-        std::cout << j << " " << rot << " " << tilt << " v[j]=" \
-        << v[j].transpose() << std::endl; \
-        std::cout << " d= " << d << std::endl << std::endl; \
-    }
+			GET_ANGLES(i+1); \
+			std::cout << i << " " << rot << " " << tilt << " v[i]=" \
+			<< v[i].transpose() << std::endl; \
+			GET_ANGLES(j+1); \
+			std::cout << j << " " << rot << " " << tilt << " v[j]=" \
+			<< v[j].transpose() << std::endl; \
+			std::cout << " d= " << d << std::endl << std::endl; \
+        }
 
             // Compute minimum distance table
             dist.initZeros(AngleNo);
@@ -172,7 +162,6 @@ int main(int argc, char *argv[])
             dist_hist.write(fn_hist);
         }
 
-
         // Show distribution in chimera as bild file ==========================================
         if (fn_bild != "")
         {
@@ -185,9 +174,9 @@ int main(int argc, char *argv[])
             for (int i = 0; i < AngleNo; i++)
             {
                 // Triangle size depedent on w
-                if (colw >= 0)
+                if (wmax>0)
                 {
-                    r  = angles(i + 1, colw);
+                    angles.getValue(MDL_WEIGHT,r, i+1);
                     r *= rmax / wmax;
                 }
                 else
@@ -211,7 +200,7 @@ int main(int argc, char *argv[])
 
             fh_ps << "%%!PS-Adobe-2.0\n";
             fh_ps << "%% Creator: Angular Distribution\n";
-            fh_ps << "%% Title: Angular distribution of " << fn_sel << "\n";
+            fh_ps << "%% Title: Angular distribution of " << fn_ang << "\n";
             fh_ps << "%% Pages: 1\n";
 
 #define TO_PS(x,y) \
@@ -226,17 +215,14 @@ int main(int argc, char *argv[])
             double tmp;
             for (int i = 0; i < AngleNo; i++)
             {
-
-
-                // Triangle size depedent on w
-                if (colw >= 0)
+                // Triangle size dependent on w
+                if (wmax>0)
                 {
-                    r = angles(i + 1, colw);
+                    angles.getValue(MDL_WEIGHT,r,i+1);
                     r *= rmax / wmax;
                 }
                 else
                     r = rmax;
-
 
                 // Initially the triangle is on the floor of the projection plane
                 VECTOR_R3(p0,    0   ,      0        , 0);
@@ -312,7 +298,6 @@ int main(int argc, char *argv[])
     {
         std::cout << XE;
     }
-
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -321,12 +306,8 @@ void Usage()
     std::cout << "Usage:\n";
     std::cout << "   ang_distribution <options>\n";
     std::cout << "   Where <options> are:\n";
-    std::cout << "      (-sel <sel_file> |            : selection file with the set of images\n"
-    << "       -ang <ang_file>              : Spider document file with the angles\n"
-    << "      [-order <ang1> <ang2> <ang3>]): where ang1, ang2 and ang3 are\n"
-    << "                                      either psi, psi, tilt, tilt,\n"
-    << "                                      rot or rot. The default\n"
-    << "                                      order is rot, tilt and psi.\n"
+    std::cout
+    << "       -ang <metadata>              : Metadata file with the angles\n"
     << "      [-bild <-chimera file out>    : Chimera file\n"
     << "      [-hist <doc_file>]            : histogram of distances\n"
     << "      [-steps <stepno=100>]         : number of divisions in the histogram\n"
@@ -336,8 +317,6 @@ void Usage()
     << "      [-r <triangle side=1.5>]      : triangle size for the PS/bild file\n"
     << "      [-rot_view <rot angle=0>]     : rotational angle for the view\n"
     << "      [-tilt_view <tilt angle=30>]  : tilting angle for the view\n"
-    << "      [-wcol <column number=-1>]    : generate triangles with size depending on \n"
-    << "                                      number in corresponding column of the docfile\n"
     << "      [-shift_center <shift_center=0>]: shift coordinates center for bild file\n"
     << "      [-up_down_correction]         : correct angles so that a semisphere\n"
     << "                                      is shown\n"

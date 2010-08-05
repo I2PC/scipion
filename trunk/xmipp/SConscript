@@ -582,7 +582,6 @@ AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
 #    ['XmippData', 'OldXmipp', 'XmippExternal']+FFTWLibs+SQLiteLibs, [], [])
 
 # Src (apps)
-
 AddXmippProgram('add_noise')
 AddXmippProgram('adapt_for_spider', ['XmippInterface'])
 AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
@@ -597,7 +596,7 @@ AddXmippProgram('angular_commonline', ['XmippRecons'])
 AddXmippProgram('angular_continuous_assign', ['XmippRecons'])
 AddXmippProgram('angular_discrete_assign', ['XmippRecons'])
 AddXmippProgram('angular_distance', ['XmippRecons'])
-#AddXmippProgram('angular_distribution_show', ['XmippInterface'])
+AddXmippProgram('angular_distribution_show', ['XmippInterface'])
 AddXmippProgram('angular_neighbourhood', ['XmippRecons'])
 AddXmippProgram('angular_projection_matching', ['XmippRecons'])
 AddXmippProgram('angular_project_library', ['XmippRecons'])
