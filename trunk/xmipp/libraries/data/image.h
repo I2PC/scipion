@@ -211,7 +211,7 @@ public:
      */
     void clear()
     {
-    	if (mmapOn)
+        if (mmapOn)
         {
             munmap(data.data-offset,mappedSize);
             close(mFd);
@@ -263,7 +263,6 @@ public:
     /** Destructor.
      *
      */
-
     ~Image()
     {
         clear();
@@ -278,7 +277,6 @@ public:
 #include "rwTIA.h"
 #include "rwDM3.h"
 #include "rwRAW.h"
-
 
     /** Is this file an image
      *
@@ -343,7 +341,6 @@ public:
         // Check whether to map the data or not
         mmapOn = mapData;
 
-
         FileName ext_name = name.get_file_format();
         size_t found;
         filename = name;
@@ -369,10 +366,10 @@ public:
 #ifdef DEBUG
 
         std::cerr << "READ\n" <<
-                  "name="<<name <<std::endl;
+        "name="<<name <<std::endl;
         std::cerr << "ext= "<<ext_name <<std::endl;
         std::cerr << " now reading: "<< filename <<" dataflag= "<<dataflag
-                  << " select_img "  << select_img << std::endl;
+        << " select_img "  << select_img << std::endl;
 #endif
 #undef DEBUG
 
@@ -650,153 +647,149 @@ public:
             REPORT_ERROR(10,"Error writing file");
         }
         //unlock file
-
     }
-
 
     /** Cast a page of data from type dataType to type Tdest
      * @ingroup LittleBigEndian
      *    input pointer  char *
      */
-
     void castPage2T(char * page, T * ptrDest, DataType datatype, size_t pageSize )
     {
-
         switch (datatype)
         {
         case Unknown_Type:
             REPORT_ERROR(12,"ERROR: datatype is Unknown_Type");
         case UChar:
-        {
-            if (typeid(T) == typeid(unsigned char))
-                memcpy(ptrDest, page, pageSize*sizeof(T));
-            else
             {
-                unsigned char * ptr = (unsigned char *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptrDest[i]=(T) ptr[i];
+                if (typeid(T) == typeid(unsigned char))
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                else
+                {
+                    unsigned char * ptr = (unsigned char *) page;
+                    for(int i=0; i<pageSize; i++)
+                        ptrDest[i]=(T) ptr[i];
+                }
+                break;
             }
-            break;
-        }
         case SChar:
-        {
-            if (typeid(T) == typeid(signed char))
-            {
-                memcpy(ptrDest, page, pageSize*sizeof(T));
+                {
+                    if (typeid(T) == typeid(signed char))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        signed char * ptr = (signed char *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
             }
-            else
-            {
-                signed char * ptr = (signed char *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptrDest[i]=(T) ptr[i];
-            }
-            break;
-        }
         case UShort:
-        {
-            if (typeid(T) == typeid(unsigned short))
-            {
-                memcpy(ptrDest, page, pageSize*sizeof(T));
+                {
+                    if (typeid(T) == typeid(unsigned short))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        unsigned short * ptr = (unsigned short *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
             }
-            else
-            {
-                unsigned short * ptr = (unsigned short *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptrDest[i]=(T) ptr[i];
-            }
-            break;
-        }
         case Short:
-        {
-            if (typeid(T) == typeid(short))
-            {
-                memcpy(ptrDest, page, pageSize*sizeof(T));
+                {
+                    if (typeid(T) == typeid(short))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        short * ptr = (short *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
             }
-            else
-            {
-                short * ptr = (short *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptrDest[i]=(T) ptr[i];
-            }
-            break;
-        }
         case UInt:
-        {
-            if (typeid(T) == typeid(unsigned int))
-            {
-                memcpy(ptrDest, page, pageSize*sizeof(T));
+                {
+                    if (typeid(T) == typeid(unsigned int))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        unsigned int * ptr = (unsigned int *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
             }
-            else
-            {
-                unsigned int * ptr = (unsigned int *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptrDest[i]=(T) ptr[i];
-            }
-            break;
-        }
         case Int:
-        {
-            if (typeid(T) == typeid(int))
-            {
-                memcpy(ptrDest, page, pageSize*sizeof(T));
+                {
+                    if (typeid(T) == typeid(int))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        int * ptr = (int *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
             }
-            else
-            {
-                int * ptr = (int *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptrDest[i]=(T) ptr[i];
-            }
-            break;
-        }
         case Long:
-        {
-            if (typeid(T) == typeid(long))
-            {
-                memcpy(ptrDest, page, pageSize*sizeof(T));
+                {
+                    if (typeid(T) == typeid(long))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        long * ptr = (long *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
             }
-            else
-            {
-                long * ptr = (long *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptrDest[i]=(T) ptr[i];
-            }
-            break;
-        }
         case Float:
-        {
-            if (typeid(T) == typeid(float))
-            {
-                memcpy(ptrDest, page, pageSize*sizeof(T));
+                {
+                    if (typeid(T) == typeid(float))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        float * ptr = (float *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
             }
-            else
-            {
-                float * ptr = (float *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptrDest[i]=(T) ptr[i];
-            }
-            break;
-        }
         case Double:
-        {
-            if (typeid(T) == typeid(double))
-            {
-                memcpy(ptrDest, page, pageSize*sizeof(T));
+                {
+                    if (typeid(T) == typeid(double))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        double * ptr = (double *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
             }
-            else
-            {
-                double * ptr = (double *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptrDest[i]=(T) ptr[i];
-            }
-            break;
-        }
         default:
-        {
-            std::cerr<<"Datatype= "<<datatype<<std::endl;
-            REPORT_ERROR(16," ERROR: cannot cast datatype to T");
-            break;
-        }
-        }
+                {
+                    std::cerr<<"Datatype= "<<datatype<<std::endl;
+                    REPORT_ERROR(16," ERROR: cannot cast datatype to T");
+                    break;
+                }
+            }
 
     }
 
@@ -810,42 +803,41 @@ public:
         switch (datatype)
         {
         case Float:
-        {
-            if (typeid(T) == typeid(float))
             {
-                memcpy(page, srcPtr, pageSize*sizeof(T));
+                if (typeid(T) == typeid(float))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                }
+                else
+                {
+                    float * ptr = (float *) page;
+                    for(int i=0; i<pageSize; i++)
+                        ptr[i] = (float)srcPtr[i];
+                }
+                break;
             }
-            else
-            {
-                float * ptr = (float *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptr[i] = (float)srcPtr[i];
-            }
-            break;
-        }
         case Double:
-        {
-            if (typeid(T) == typeid(double))
-            {
-                memcpy(page, srcPtr, pageSize*sizeof(T));
+                {
+                    if (typeid(T) == typeid(double))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        double * ptr = (double *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptr[i] = (double)srcPtr[i];
+                    }
+                break;
             }
-            else
-            {
-                double * ptr = (double *) page;
-                for(int i=0; i<pageSize; i++)
-                    ptr[i] = (double)srcPtr[i];
-            }
-            break;
-        }
         default:
-        {
-            std::cerr<<"outputDatatype= "<<datatype<<std::endl;
-            REPORT_ERROR(16," ERROR: cannot cast T to outputDatatype");
-            break;
-        }
-        }
+                {
+                    std::cerr<<"outputDatatype= "<<datatype<<std::endl;
+                    REPORT_ERROR(16," ERROR: cannot cast T to outputDatatype");
+                    break;
+                }
+            }
     }
-
 
     /** Check file Datatype is same as T type to use mmap.
      * @ingroup XXX.
@@ -858,100 +850,87 @@ public:
         case Unknown_Type:
             REPORT_ERROR(12,"ERROR: datatype is Unknown_Type");
         case UChar:
-        {
-            if (typeid(T) == typeid(unsigned char))
-                return 1;
-            else
-                return 0;
-            break;
-        }
+            {
+                if (typeid(T) == typeid(unsigned char))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
         case SChar:
-        {
-            if (typeid(T) == typeid(signed char))
-                return 1;
-            else
-                return 0;
-            break;
-        }
+            {
+                if (typeid(T) == typeid(signed char))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
         case UShort:
-        {
-            if (typeid(T) == typeid(unsigned short))
-                return 1;
-            else
-                return 0;
-            break;
-        }
+            {
+                if (typeid(T) == typeid(unsigned short))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
         case Short:
-        {
-            if (typeid(T) == typeid(short))
-                return 1;
-            else
-                return 0;
-            break;
-        }
+            {
+                if (typeid(T) == typeid(short))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
         case UInt:
-        {
-            if (typeid(T) == typeid(unsigned int))
-                return 1;
-            else
-                return 0;
-            break;
-        }
+            {
+                if (typeid(T) == typeid(unsigned int))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
         case Int:
-        {
-            if (typeid(T) == typeid(int))
-                return 1;
-            else
-                return 0;
-            break;
-        }
+            {
+                if (typeid(T) == typeid(int))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
         case Long:
-        {
-            if (typeid(T) == typeid(long))
-                return 1;
-            else
-                return 0;
-            break;
-        }
+            {
+                if (typeid(T) == typeid(long))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
         case Float:
-        {
-            if (typeid(T) == typeid(float))
-                return 1;
-            else
-                return 0;
-            break;
-        }
+            {
+                if (typeid(T) == typeid(float))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
         case Double:
-        {
-            if (typeid(T) == typeid(double))
-                return 1;
-            else
-                return 0;
-            break;
-        }
+            {
+                if (typeid(T) == typeid(double))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
         default:
-        {
-            std::cerr<<"Datatype= "<<datatype<<std::endl;
-            REPORT_ERROR(16," ERROR: cannot cast datatype to T");
-            break;
+            {
+                std::cerr<<"Datatype= "<<datatype<<std::endl;
+                REPORT_ERROR(16," ERROR: cannot cast datatype to T");
+                break;
+            }
         }
-        }
-
-
-
-
         //               int * iTemp = (int*) map;
         //                ptrDest = reinterpret_cast<T*> (iTemp);
-
     }
-
-
-
-
-
-
-
-
 
     /** Write an entire page as datatype
      * @ingroup XXX
@@ -979,10 +958,10 @@ public:
 #ifdef DEBUG
 
         std::cerr<<"DEBUG swapPage: Swapping image data with swap= "
-                 << swap<<" datatypesize= "<<datatypesize
-                 << " pageNrElements " << pageNrElements
-                 << " datatype " << datatype
-                 <<std::endl;
+        << swap<<" datatypesize= "<<datatypesize
+        << " pageNrElements " << pageNrElements
+        << " datatype " << datatype
+        <<std::endl;
         ;
 #endif
 
@@ -1023,8 +1002,6 @@ public:
         size_t pagesize  =ZYXSIZE(data)*datatypesize;
         size_t pagemax_n = ROUND(pagemax/datatypesize);
         size_t haveread_n=0;
-
-
 
         //Multidimarray mmapOn is priority over image mmapOn
         if(data.mmapOn)
@@ -1121,7 +1098,6 @@ public:
 
             printf("DEBUG img_read_data: Finished reading and converting data\n");
 #endif
-
         }
 
         return;
@@ -1467,24 +1443,13 @@ public:
     }
 
     /** Set Weight in image header
-    *
     */
     void setWeight(double weight, long int n = -1)
     {
         MD.setValue(MDL_WEIGHT,weight, n);
     }
 
-
-    /** Clear header
-    *
-    */
-    /* this should be set_NULL MD not clear MD
-    void clear_header(void)
-    {
-        MD.clear();
-    }
-    */
-    /** Get geometric transformation matrix from 2D-image headerq
+    /** Get geometric transformation matrix from 2D-image header
       */
     Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false,
             long int n = -1)
@@ -1545,6 +1510,8 @@ public:
         return A;
     }
 
+    /** Show image properties
+      */
     friend std::ostream& operator<<(std::ostream& o, const Image<T>& I)
     {
         o << "Image type   : ";
@@ -1583,6 +1550,14 @@ public:
         return o;
     }
 
+    /** Sum this object with other file and keep in this object
+      */
+    void sumWithFile(const FileName &fn)
+    {
+    	Image<T> aux;
+    	aux.read(fn);
+    	(*this)()+=aux();
+    }
 };
 
 
