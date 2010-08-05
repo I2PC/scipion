@@ -549,7 +549,6 @@ AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
 ReconsInterfaceSources = [
     'convert_pdb2vol.cpp',
     'project.cpp',
-#     'recons_spider.cpp'
 ]
 
 #remove dinamic mpi library since it is very problematic
