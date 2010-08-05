@@ -2057,63 +2057,64 @@ void Prog_ml_tomo_prm::expectationSingleImage(
                     my_sumweight = my_maxweight = 0.;
                     FOR_ALL_ELEMENTS_IN_MATRIX3D(Mweight)
                     {
-                        myXA = VOL_ELEM(Maux, k, i, j) * ddim3;
-                        diff = A2_plus_Xi2 - myXA;
-                        mindiff = XMIPP_MIN(mindiff,diff);
-#ifdef DEBUG_MINDIFF
-                        if (mindiff < 0)
-                        {
-                            std::cerr<<"k= "<<k<<" j= "<<j<<" i= "<<i<<std::endl;
-                            std::cerr<<"xaux="<<STARTINGX(Maux)<<" xw= "<<STARTINGX(Mweight)<<std::endl;
-                            std::cerr<<"yaux="<<STARTINGY(Maux)<<" yw= "<<STARTINGY(Mweight)<<std::endl;
-                            std::cerr<<"zaux="<<STARTINGZ(Maux)<<" zw= "<<STARTINGZ(Mweight)<<std::endl;
-                            std::cerr<<"diff= "<<diff<<" A2_plus_Xi"<<std::endl;
-                            std::cerr<<" mycorrAA= "<<mycorrAA<<" "<<std::endl;
-                            std::cerr<<"debug mindiff= " <<mindiff<<" trymindiff= "<<trymindiff<< std::endl;
-                            std::cerr<<"A2_plus_Xi2= "<<A2_plus_Xi2<<" myA2= "<<myA2<<" myXi2= "<<myXi2<<std::endl;
-                            std::cerr.flush();
-                            VolumeXmipp tt;
-                            tt()=Maux; tt.write("Maux.vol");
-                            tt()=Mweight; tt.write("Mweight.vol");
-                            std::cerr<<"Ainv= "<<A_rot_inv<<std::endl;
-                            std::cerr<<"A= "<<A_rot_inv.inv()<<std::endl;                            
-                            exit(1);
-                        }
-#endif
                         pdf = fracpdf * VOL_ELEM(P_phi, k, i, j);
-                        // Normal distribution
-                        aux = (diff - trymindiff) / sigma_noise2;
-                        // next line because of numerical precision of exp-function
-                        if (aux > 1000.) weight = 0.;
-                        else weight = exp(-aux) * pdf;
-                        VOL_ELEM(Mweight, k, i, j) = weight;
-                        // Accumulate sum weights for this (my) matrix
-                        my_sumweight += weight;
-                        // calculate weighted sum of (X-A)^2 for sigma_noise update
-                        wsum_corr += weight * diff;
-                        // calculated weighted sum of offsets as well
-                        wsum_offset += weight * VOL_ELEM(Mr2, k, i, j);
-                        // keep track of optimal parameters
-                        my_maxweight = XMIPP_MAX(my_maxweight, weight);
-                        if (weight > maxweight)
+                        // Sjors 5 aug 2010
+                        // Only consider non-zero PDFs. This is because -limit_trans will set some PDFs to zero...
+                        if (pdf > 0.) 
                         {
-                            maxweight = weight;
-                            ioptz = k;
-                            iopty = i;
-                            ioptx = j;
-                            opt_angno = angno;
-                            opt_refno = refno;
-                        }
+                            myXA = VOL_ELEM(Maux, k, i, j) * ddim3;
+                            diff = A2_plus_Xi2 - myXA;
+                            mindiff = XMIPP_MIN(mindiff,diff);
+#ifdef DEBUG_MINDIFF
+                            if (mindiff < 0)
+                            {
+                                std::cerr<<"k= "<<k<<" j= "<<j<<" i= "<<i<<std::endl;
+                                std::cerr<<"xaux="<<STARTINGX(Maux)<<" xw= "<<STARTINGX(Mweight)<<std::endl;
+                                std::cerr<<"yaux="<<STARTINGY(Maux)<<" yw= "<<STARTINGY(Mweight)<<std::endl;
+                                std::cerr<<"zaux="<<STARTINGZ(Maux)<<" zw= "<<STARTINGZ(Mweight)<<std::endl;
+                                std::cerr<<"diff= "<<diff<<" A2_plus_Xi"<<std::endl;
+                                std::cerr<<" mycorrAA= "<<mycorrAA<<" "<<std::endl;
+                                std::cerr<<"debug mindiff= " <<mindiff<<" trymindiff= "<<trymindiff<< std::endl;
+                                std::cerr<<"A2_plus_Xi2= "<<A2_plus_Xi2<<" myA2= "<<myA2<<" myXi2= "<<myXi2<<std::endl;
+                                std::cerr.flush();
+                                VolumeXmipp tt;
+                                tt()=Maux; tt.write("Maux.vol");
+                                tt()=Mweight; tt.write("Mweight.vol");
+                                std::cerr<<"Ainv= "<<A_rot_inv<<std::endl;
+                                std::cerr<<"A= "<<A_rot_inv.inv()<<std::endl;                            
+                                exit(1);
+                            }
+#endif
+                            // Normal distribution
+                            aux = (diff - trymindiff) / sigma_noise2;
+                            // next line because of numerical precision of exp-function
+                            if (aux > 1000.) weight = 0.;
+                            else weight = exp(-aux) * pdf;
+                            VOL_ELEM(Mweight, k, i, j) = weight;
+                            // Accumulate sum weights for this (my) matrix
+                            my_sumweight += weight;
+                            // calculate weighted sum of (X-A)^2 for sigma_noise update
+                            wsum_corr += weight * diff;
+                            // calculated weighted sum of offsets as well
+                            wsum_offset += weight * VOL_ELEM(Mr2, k, i, j);
+                            // keep track of optimal parameters
+                            my_maxweight = XMIPP_MAX(my_maxweight, weight);
+                            if (weight > maxweight)
+                            {
+                                maxweight = weight;
+                                ioptz = k;
+                                iopty = i;
+                                ioptx = j;
+                                opt_angno = angno;
+                                opt_refno = refno;
+                            }
+                        } // close if (pdf>0.)
                         
                     } // close for over all elements in Mweight
 
                     // C. only for significant settings, store weighted sums
                     if (my_maxweight > SIGNIFICANT_WEIGHT_LOW*maxweight )
                     {
-//#define DEBUG_EXP_A2
-#ifdef DEBUG_EXP_A2
-                        std::cout<<" imgno= "<<imgno<<" refno= "<<refno<<" angno= "<<angno<<" A2= "<<myA2<<" <<Xi2= "<<myXi2<<" my_maxweight= "<<my_maxweight<<std::endl;
-#endif 
                         sum_refw += my_sumweight;
                         refw(refno) += my_sumweight;
                         // Back from smaller Mweight to original size of Maux
