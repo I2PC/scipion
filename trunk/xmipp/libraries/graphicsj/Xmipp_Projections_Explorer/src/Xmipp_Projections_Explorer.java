@@ -62,7 +62,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         String fileVolume = null;
         String fileEulerAngles = null;
 
-        if (IJ.isMacro()) { // From macro.
+        if (IJ.isMacro() && !Macro.getOptions().isEmpty()) { // From macro.
             // "string" is used when called from another plugin or installed command.
             // "Macro.getOptions()" used when called from a run("command", arg) macro function.
             String argsList[] = processArgs(Macro.getOptions());
