@@ -28,6 +28,7 @@
 #include <data/args.h>
 #include <data/projection.h>
 #include <data/fftw.h>
+#include <data/metadata_extension.h>
 
 // Read parameters from command line ---------------------------------------
 void Prog_SSNR_prm::read(int argc, char **argv)
@@ -110,7 +111,7 @@ void Prog_SSNR_prm::produce_side_info()
 {
     if (!radial_avg)
     {
-        if (Is_VolumeXmipp(fn_S))
+        if (S.isImage(fn_S))
         {
             S.read(fn_S);
             S().setXmippOrigin();
@@ -124,7 +125,7 @@ void Prog_SSNR_prm::produce_side_info()
         {
             SF_Sth.read(fn_S);
             SF_Nth.read(fn_N);
-            if (SF_Sth.ImgNo() != SF_Nth.ImgNo())
+            if (SF_Sth.size() != SF_Nth.size())
                 REPORT_ERROR(1,
                              "SSNR: the number of projections in both selfiles is different");
         }
@@ -132,23 +133,24 @@ void Prog_SSNR_prm::produce_side_info()
         SF_S.read(fn_Ssel);
         SF_N.read(fn_Nsel);
         int sYdim, sXdim;
-        SF_S.ImgSize(sYdim, sXdim);
+        ImgSize(SF_S, sXdim, sYdim);
         int nYdim, nXdim;
-        SF_N.ImgSize(nYdim, nXdim);
+        ImgSize(SF_N, nXdim, nYdim);
         if (sYdim != nYdim || sYdim != YSIZE(S()) ||
             sXdim != nXdim || sXdim != XSIZE(S()))
             REPORT_ERROR(1,
                          "SSNR: conflict among the projection/projection sizes "
                          "or projection/volume");
 
-        if (SF_S.ImgNo() != SF_N.ImgNo())
+        if (SF_S.size() != SF_N.size())
             REPORT_ERROR(1,
                          "SSNR: the number of projections in both selfiles is different");
-        if (XSIZE(S()) == 0 && SF_Sth.ImgNo() != SF_S.ImgNo())
+        if (XSIZE(S()) == 0 && SF_Sth.size() != SF_S.size())
             REPORT_ERROR(1,
                          "SSNR: the number of projections in both selfiles is different");
 
-        if (fn_out_images == "") fn_out_images = "individualSSNR";
+        if (fn_out_images == "")
+            fn_out_images = "individualSSNR";
     }
     else
     {
@@ -171,20 +173,19 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
     N_SSNR1D;
 
     // Selfile of the 2D images
-    SelFile SF_individual;
+    MetaData SF_individual;
 
     std::cerr << "Computing the SSNR ...\n";
-    init_progress_bar(SF_S.ImgNo());
+    init_progress_bar(SF_S.size());
     int imgno = 0;
-    while (!SF_S.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF_S)
     {
-        ImageXmipp Is, In, Inp;
-        FileName fn_img=SF_S.NextImg();
-        if (fn_img=="") break;
+        Image<double> Is, In, Inp;
+        FileName fn_img;
+        SF_S.getValue(MDL_IMAGE,fn_img);
         Is.read(fn_img);
         Is().setXmippOrigin();
-        fn_img=SF_N.NextImg();
-        if (fn_img=="") break;
+        SF_N.getValue(MDL_IMAGE,fn_img);
         In.read(fn_img);
         In().setXmippOrigin();
         Inp() = In();
@@ -199,12 +200,15 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         }
         else
         {
-            Iths.read(SF_Sth.NextImg());
-            Ithn.read(SF_Nth.NextImg());
+            FileName fn_img;
+            SF_Sth.getValue(MDL_IMAGE,fn_img);
+            Iths.read(fn_img);
+            SF_Nth.getValue(MDL_IMAGE,fn_img);
+            Ithn.read(fn_img);
         }
 
 #ifdef DEBUG
-        ImageXmipp save;
+        Image<double> save;
         save() = Is();
         save.write("PPPread_signal.xmp");
         save() = In();
@@ -218,60 +222,84 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         Is() -= Iths();
         In() -= Ithn();
 
-        Matrix2D< std::complex<double> > FFT_Is;   FourierTransform(Is(), FFT_Is);
-        Matrix2D< std::complex<double> > FFT_Iths; FourierTransform(Iths(), FFT_Iths);
-        Matrix2D< std::complex<double> > FFT_In;   FourierTransform(In(), FFT_In);
-        Matrix2D< std::complex<double> > FFT_Ithn; FourierTransform(Ithn(), FFT_Ithn);
+        MultidimArray< std::complex<double> > FFT_Is;
+        FourierTransform(Is(), FFT_Is);
+        MultidimArray< std::complex<double> > FFT_Iths;
+        FourierTransform(Iths(), FFT_Iths);
+        MultidimArray< std::complex<double> > FFT_In;
+        FourierTransform(In(), FFT_In);
+        MultidimArray< std::complex<double> > FFT_Ithn;
+        FourierTransform(Ithn(), FFT_Ithn);
 
 #ifdef DEBUG
-        ImageXmippT < std::complex<double> > savec;
-        savec() = FFT_Is;   savec.write("PPPFFTread_signal.xmp");
-        savec() = FFT_In;   savec.write("PPPFFTread_noise.xmp");
-        savec() = FFT_Iths; savec.write("PPPFFTtheo_signal.xmp");
-        savec() = FFT_Ithn; savec.write("PPPFFTtheo_noise.xmp");
+
+        Image< std::complex<double> > savec;
+        savec() = FFT_Is;
+        savec.write("PPPFFTread_signal.xmp");
+        savec() = FFT_In;
+        savec.write("PPPFFTread_noise.xmp");
+        savec() = FFT_Iths;
+        savec.write("PPPFFTtheo_signal.xmp");
+        savec() = FFT_Ithn;
+        savec.write("PPPFFTtheo_noise.xmp");
 #endif
 
         // Compute the amplitudes
-        ImageXmipp S2s; FFT_magnitude(FFT_Iths, S2s()); S2s() *= S2s();
-        ImageXmipp N2s; FFT_magnitude(FFT_Is  , N2s()); N2s() *= N2s();
-        ImageXmipp S2n; FFT_magnitude(FFT_Ithn, S2n()); S2n() *= S2n();
-        ImageXmipp N2n; FFT_magnitude(FFT_In  , N2n()); N2n() *= N2n();
+        Image<double> S2s;
+        FFT_magnitude(FFT_Iths, S2s());
+        S2s() *= S2s();
+        Image<double> N2s;
+        FFT_magnitude(FFT_Is  , N2s());
+        N2s() *= N2s();
+        Image<double> S2n;
+        FFT_magnitude(FFT_Ithn, S2n());
+        S2n() *= S2n();
+        Image<double> N2n;
+        FFT_magnitude(FFT_In  , N2n());
+        N2n() *= N2n();
 
 #ifdef DEBUG
-        save() = S2s(); save.write("PPPS2s.xmp");
-        save() = N2s(); save.write("PPPN2s.xmp");
-        save() = S2n(); save.write("PPPS2n.xmp");
-        save() = N2n(); save.write("PPPN2n.xmp");
+
+        save() = S2s();
+        save.write("PPPS2s.xmp");
+        save() = N2s();
+        save.write("PPPN2s.xmp");
+        save() = S2n();
+        save.write("PPPS2n.xmp");
+        save() = N2n();
+        save.write("PPPN2n.xmp");
 #endif
 
         if (dim == 2)
         {
             // Compute the SSNR image
-            ImageXmipp SSNR2D;
+        	Image<double> SSNR2D;
             SSNR2D().initZeros(S2s());
-            FOR_ALL_ELEMENTS_IN_MATRIX2D(S2s())
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(S2s())
             {
                 double ISSNR = 0, alpha = 0, SSNR = 0;
-                if (N2s(i, j) > min_power) ISSNR = S2s(i, j) / N2s(i, j);
-                if (N2n(i, j) > min_power) alpha = S2n(i, j) / N2n(i, j);
-                if (alpha   > min_power) SSNR = XMIPP_MAX(ISSNR / alpha - 1, 0);
-                if (SSNR    > min_power) SSNR2D(i, j) = 10 * log10(SSNR + 1);
+                if (N2s(i, j) > min_power)
+                    ISSNR = S2s(i, j) / N2s(i, j);
+                if (N2n(i, j) > min_power)
+                    alpha = S2n(i, j) / N2n(i, j);
+                if (alpha   > min_power)
+                    SSNR = XMIPP_MAX(ISSNR / alpha - 1, 0);
+                if (SSNR    > min_power)
+                    SSNR2D(i, j) = 10 * log10(SSNR + 1);
             }
             CenterFFT(SSNR2D(), true);
 #ifdef DEBUG
+
             save() = SSNR2D();
             save.write("PPPSSNR2D.xmp");
 #endif
 
-            // Set angles
-            SSNR2D.set_rot(Is.rot());
-            SSNR2D.set_tilt(Is.tilt());
-            SSNR2D.set_psi(Is.psi());
-
             // Save image
             FileName fn_img_out = fn_out_images + integerToString(Is.name().get_number(), 5) + ".xmp";
+            SSNR2D.setEulerAngles(Is.rot(),Is.tilt(),Is.psi());
             SSNR2D.write(fn_img_out);
-            SF_individual.insert(fn_img_out);
+            SF_individual.addObject();
+            SF_individual.setValue(MDL_IMAGE,fn_img_out);
         }
 
         // Average over rings
@@ -282,17 +310,19 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         STARTINGX(N2s()) = STARTINGY(N2s()) = 0;
         STARTINGX(S2n()) = STARTINGY(S2n()) = 0;
         STARTINGX(N2n()) = STARTINGY(N2n()) = 0;
-        FOR_ALL_ELEMENTS_IN_MATRIX2D(S2s())
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(S2s())
         {
             XX(idx) = j;
             YY(idx) = i;
             FFT_idx2digfreq(FFT_Is, idx, freq);
-            if (XX(freq) < 0) continue;
+            if (XX(freq) < 0)
+                continue;
 
             // Look for the index corresponding to this frequency
             double w = freq.module();
             double widx = w * XSIZE(S());
-            if (widx >= XSIZE(S_S21D)) continue;
+            if (widx >= VEC_XSIZE(S_S21D))
+                continue;
             int l0 = XMIPP_MAX(0, CEIL(widx - ring_width));
             int lF = FLOOR(widx);
 
@@ -311,9 +341,10 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         }
 
         // Finished with this image
-        if (++imgno % 50 == 0) progress_bar(imgno);
+        if (++imgno % 50 == 0)
+            progress_bar(imgno);
     }
-    progress_bar(SF_S.ImgNo());
+    progress_bar(SF_S.size());
 
     // Compute the SSNR
     S_SSNR1D = S_S21D / S_N21D;
@@ -323,7 +354,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
     N_S21D /= K1D;
     N_N21D /= K1D;
 
-    output.resize(XSIZE(S_SSNR1D), 9);
+    output.resize(VEC_XSIZE(S_SSNR1D), 9);
     int imax = 0;
     FOR_ALL_ELEMENTS_IN_MATRIX1D(S_SSNR1D)
     {
@@ -337,8 +368,10 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         output(i, 0) = i;
         output(i, 1) = w * 1 / Tm;
         double SSNR = S_SSNR1D(i) / N_SSNR1D(i);
-        if (SSNR > 1) output(i, 2) = 10 * log10(SSNR - 1); // Corrected SSNR
-        else        output(i, 2) = -1000;         // In fact it should be -inf
+        if (SSNR > 1)
+            output(i, 2) = 10 * log10(SSNR - 1); // Corrected SSNR
+        else
+            output(i, 2) = -1000;         // In fact it should be -inf
         output(i, 3) = S_SSNR1D(i);
         output(i, 4) = 10 * log10(S_S21D(i) / imgno);
         output(i, 5) = 10 * log10(S_N21D(i) / imgno);
@@ -369,16 +402,18 @@ void Prog_SSNR_prm::Radial_average(Matrix2D<double> &output)
     Matrix1D<double> K1D(VSSNR_avg);
     Matrix1D<int>    idx(3);
     Matrix1D<double> freq(3);
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(VSSNR())
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(VSSNR())
     {
         VECTOR_R3(idx, j, i, k);
         FFT_idx2digfreq(VSSNR(), idx, freq);
-        if (XX(freq) < 0) continue;
+        if (XX(freq) < 0)
+            continue;
 
         // Look for the index corresponding to this frequency
         double w = freq.module();
         double widx = w * XSIZE(VSSNR());
-        if (widx >= XSIZE(VSSNR_avg)) continue;
+        if (widx >= VEC_XSIZE(VSSNR_avg))
+            continue;
         int l0 = XMIPP_MAX(0, CEIL(widx - ring_width));
         int lF = FLOOR(widx);
 
@@ -392,19 +427,22 @@ void Prog_SSNR_prm::Radial_average(Matrix2D<double> &output)
     }
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(VSSNR_avg)
-    if (K1D(i) != 0) VSSNR_avg(i) /= K1D(i);
+    if (K1D(i) != 0)
+        VSSNR_avg(i) /= K1D(i);
 
     // Produce output .......................................................
-    output.resize(XSIZE(VSSNR_avg), 3);
-    for (int i = 0; i < XSIZE(VSSNR_avg); i++)
+    output.resize(VEC_XSIZE(VSSNR_avg), 3);
+    for (int i = 0; i < VEC_XSIZE(VSSNR_avg); i++)
     {
         double w;
         FFT_IDX2DIGFREQ(i, XSIZE(VSSNR()), w);
         output(i, 0) = i;
         output(i, 1) = w * 1 / Tm;
         double SSNR = VSSNR_avg(i);
-        if (SSNR > 1) output(i, 2) = 10 * log10(SSNR - 1); // Corrected SSNR
-        else        output(i, 2) = -1000;         // In fact it should be -inf
+        if (SSNR > 1)
+            output(i, 2) = 10 * log10(SSNR - 1); // Corrected SSNR
+        else
+            output(i, 2) = -1000;         // In fact it should be -inf
     }
 }
 
@@ -415,9 +453,12 @@ void ROUT_SSNR(Prog_SSNR_prm &prm, Matrix2D<double> &output)
     prm.produce_side_info();
     if (!prm.radial_avg)
     {
-        if (!prm.generate_VSSNR) prm.Estimate_SSNR(1, output);
-        else                     prm.Estimate_SSNR(2, output);
-        if (prm.fn_out != "") output.write(prm.fn_out);
+        if (!prm.generate_VSSNR)
+            prm.Estimate_SSNR(1, output);
+        else
+            prm.Estimate_SSNR(2, output);
+        if (prm.fn_out != "")
+            output.write(prm.fn_out);
         else
         {
             FileName fn_out = prm.fn_S.insert_before_extension("_SSNR");
@@ -428,7 +469,9 @@ void ROUT_SSNR(Prog_SSNR_prm &prm, Matrix2D<double> &output)
     else
     {
         prm.Radial_average(output);
-        if (prm.fn_out != "") output.write(prm.fn_out);
-        else                  output.write(prm.fn_VSSNR.insert_before_extension("_radial_avg"));
+        if (prm.fn_out != "")
+            output.write(prm.fn_out);
+        else
+            output.write(prm.fn_VSSNR.insert_before_extension("_radial_avg"));
     }
 }

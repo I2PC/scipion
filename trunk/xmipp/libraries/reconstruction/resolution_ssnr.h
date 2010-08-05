@@ -28,8 +28,8 @@
 
 #include <iostream>
 
-#include <data/volume.h>
-#include <data/selfile.h>
+#include <data/image.h>
+#include <data/metadata.h>
 
 /**@defgroup SSNR resolution_ssnr (Spectral Signal to Noise Ratio)
    @ingroup ReconsLibraryPrograms */
@@ -78,25 +78,25 @@ public:
 public:
     /* Side info -------------------------------------------------------- */
     // Signal volume
-    VolumeXmipp S;
+    Image<double> S;
 
     // Noise volume
-    VolumeXmipp N;
+    Image<double> N;
 
     // Selfile with all experimental images
-    SelFile SF_S;
+    MetaData SF_S;
 
     // Selfile with all noisy images
-    SelFile SF_N;
+    MetaData SF_N;
 
     // Selfile with all the images projected from the signal volume
-    SelFile SF_Sth;
+    MetaData SF_Sth;
 
     // Selfile with all the images projected from the noise volume
-    SelFile SF_Nth;
+    MetaData SF_Nth;
 
     // SSNR3D for the radial_avg
-    VolumeXmipp VSSNR;
+    Image<double> VSSNR;
 
 public:
     /// Read parameters from command line

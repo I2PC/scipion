@@ -533,7 +533,7 @@ ReconsSources = [
     'reconstruct_wbp.cpp',
     'reconstruct_fourier.cpp',
     'refinement.cpp',
-#    'resolution_ssnr.cpp',
+    'resolution_ssnr.cpp',
 #    'series_remove_fluctuations.cpp',
     'sort_images.cpp',
     'sparma.cpp',
@@ -723,7 +723,7 @@ AddXmippProgram('reconstruct_art', ['XmippRecons'])
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
 AddXmippProgram('resolution_fsc')
-#AddXmippProgram('resolution_ssnr', ['XmippRecons'])
+AddXmippProgram('resolution_ssnr', ['XmippRecons'])
 #AddXmippProgram('reverse_endian')
 AddXmippProgram('rotate')
 AddXmippProgram('scale')
