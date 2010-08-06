@@ -277,9 +277,9 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_ELEMENTS_IN_ARRAY3D(V) \
-    for (size_t k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
-        for (size_t i=STARTINGY(V); i<=FINISHINGY(V); i++) \
-            for (size_t j=STARTINGX(V); j<=FINISHINGX(V); j++)
+    for (int k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
+        for (int i=STARTINGY(V); i<=FINISHINGY(V); i++) \
+            for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
 
 /** For all elements in common.
  * @ingroup MultidimArraySizeShape
