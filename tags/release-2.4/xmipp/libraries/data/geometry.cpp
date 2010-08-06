@@ -570,7 +570,7 @@ void Euler_direction(double alpha, double beta, double gamma,
 //gamma is useless but I keep it for simmetry
 //with Euler_direction
 void Euler_direction2angles(Matrix1D<double> &v0,
-                            double &alpha, double &beta, double &gamma)
+                            double &alpha, double &beta, double &gamma, bool warning)
 {
     double abs_ca, abs_sa, sb, cb;
     double aux_alpha;
@@ -587,7 +587,7 @@ void Euler_direction2angles(Matrix1D<double> &v0,
     v_aux.resize(3);
     cb = VEC_ELEM(v, 2);
 
-    if (fabs((cb)) > 0.999847695)/*one degree */
+    if (warning && fabs((cb)) > 0.999847695)/*one degree */
     {
         std::cerr << "\nWARNING: Routine Euler_direction2angles is not reliable\n"
                      "for small tilt angles. Up to 0.001 deg it should be OK\n"

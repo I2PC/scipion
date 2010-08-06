@@ -622,7 +622,8 @@ void Euler_direction(double alpha,
 void Euler_direction2angles(Matrix1D< double >& v,
                             double& alpha,
                             double& beta,
-                            double& gamma);
+                            double& gamma,
+                            bool warning=true);
 
 /** "Euler" matrix --> angles
  * @ingroup EulerOperations
