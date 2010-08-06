@@ -590,7 +590,7 @@ public:
      * It is supposed that the image is already resized and with its logical
      * origin set.
      */
-    void generate_mask(const bool& apply_geo = false );
+    void generate_mask(bool apply_geo = false );
 
     /** Generate mask for an empty signal
      */
@@ -602,7 +602,7 @@ public:
 
     /** Generate mask for an empty signal
      */
-    void generate_mask(int Ydim, int Xdim, const bool& apply_geo = false)
+    void generate_mask(int Ydim, int Xdim, bool apply_geo = false)
     {
         resize(Ydim, Xdim);
         generate_mask(apply_geo);
@@ -619,7 +619,7 @@ public:
     /** Generate mask for a signal following a pattern
      */
     template<typename T>
-    void generate_mask(const MultidimArray< T >& m, const bool& apply_geo = false)
+    void generate_mask(const MultidimArray< T >& m, bool apply_geo = false)
     {
         resize(m);
         generate_mask(apply_geo);
@@ -630,7 +630,7 @@ public:
      */
     template<typename T>
     void apply_mask(const MultidimArray< T >& I, MultidimArray< T >& result,
-                    T subs_val = 0, const bool& apply_geo = false)
+                    T subs_val = 0, bool apply_geo = false)
     {
         switch (datatype())
         {

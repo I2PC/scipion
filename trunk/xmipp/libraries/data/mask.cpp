@@ -1062,7 +1062,7 @@ void Mask_Params::write_mask(const FileName &fn)
 
 
 // Generate mask --------------------------------------------------------
-void Mask_Params::generate_mask(const bool& apply_geo)
+void Mask_Params::generate_mask(bool apply_geo)
 {
 	Image<double> img;
 	Matrix2D<double> AA(4, 4);
