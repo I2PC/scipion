@@ -508,6 +508,21 @@ public:
             resize(v.mdimy, v.mdimx);
     }
 
+    /** Extract submatrix and assign to this object.
+     * @ingroup MultidimSize
+     */
+    void submatrix(int i0, int j0, int iF, int jF)
+    {
+    	if (i0<0 || j0<0 || iF>=MAT_YSIZE(*this) || jF>=MAT_XSIZE(*this))
+    		REPORT_ERROR(1,"Submatrix indexes out of bounds");
+        Matrix2D<T> result(iF - i0 + 1, jF - j0 + 1);
+
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
+            MAT_ELEM(result, i, j) = MAT_ELEM(*this, i+i0, j+j0);
+
+        *this = result;
+    }
+
 
     /** Same value in all components.
      * @ingroup Initialization
