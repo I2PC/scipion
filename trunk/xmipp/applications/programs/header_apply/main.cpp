@@ -26,27 +26,22 @@
 #include <data/progs.h>
 #include <data/args.h>
 #include <data/geometry.h>
-#include <data/gridding.h>
 
 class Headerapply_parameters: public Prog_parameters
 {
 public:
-
-    bool gridding;
     bool wrap;
 
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        gridding = checkParameter(argc, argv, "-gridding");
         wrap = !checkParameter(argc, argv, "-dont_wrap");
     }
 
     void usage()
     {
         Prog_parameters::usage();
-        std::cerr << "  [-dont_wrap]              : By default, the image is wrapped\n"
-	     << "  [-gridding]               : Use reverse gridding for interpolation\n";
+        std::cerr << "  [-dont_wrap]              : By default, the image is wrapped\n";
     }
 
     void show()
@@ -54,46 +49,31 @@ public:
         Prog_parameters::show();
         if (!wrap)
             std::cout << "Do not wrap"<<std::endl;
-        if (gridding)
-            std::cout << "Use reverse gridding interpolation"<<std::endl;
     }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
+    if (ZSIZE(img())!=1 || NSIZE(img())!=1)
+        REPORT_ERROR(1,"This program is intended only for images");
+
     Headerapply_parameters *eprm = (Headerapply_parameters *) prm;
-    Matrix2D<double> Maux;
-    if (eprm->gridding)
-    {
-	KaiserBessel kb;
-	produceReverseGriddingMatrix2D(img(),Maux,kb);
-	applyGeometryReverseGridding(img(), img.get_transformation_matrix(), Maux, kb, IS_INV, eprm->wrap);
-    }
-    else
-    {
-	applyGeometryBSpline(Maux, img.get_transformation_matrix(), img(), 3, IS_INV, eprm->wrap);
-	img()=Maux;
-    }
+    MultidimArray<double> Maux;
+    applyGeometry(BSPLINE3, Maux, img(), img.getTransformationMatrix(), IS_INV, eprm->wrap);
+    img()=Maux;
 
     //Reset in-plane transformations of the header
-    img.set_Xoff(0.);
-    img.set_Yoff(0.);
-    img.set_psi(0.);
-    if (img.tilt() == 0) img.set_rot(0.);
-    img.set_flip(0.);
+    img.setShifts(0,0);
+    img.setPsi(0.);
+    if (img.tilt() == 0)
+        img.setRot(0.);
+    img.setFlip(0.);
 
     return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    std::cerr << "Error: applygeo does not work with volumes\n";
-    exit(0);
-    return false;
 }
 
 int main(int argc, char **argv)
 {
     Headerapply_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
