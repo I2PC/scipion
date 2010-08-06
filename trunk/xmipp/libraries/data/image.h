@@ -41,6 +41,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+// Includes for rwTIFF which cannot be inside it
+#include <cstring>
+#include "../../external/tiff-3.9.4/libtiff/tiffio.h"
+
+
+
 //static std::vector<MDLabel> emptyVector;
 //static MetaData emptyMetaData;
 
@@ -277,7 +283,7 @@ public:
 #include "rwTIA.h"
 #include "rwDM3.h"
 #include "rwRAW.h"
-    //#include "rwTIFF.h"
+//#include "rwTIFF.h"
 
     /** Is this file an image
      *
@@ -388,8 +394,8 @@ public:
             err = readDM3(select_img,false);
         else if (ext_name.contains("raw"))//RAW
             err = readRAW(select_img,false);
-        //        else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
-        //            err = readTIFF(select_img,false);
+//        else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
+//            err = readTIFF(select_img,false);
         else
         {
             err = readSPIDER(select_img,true);
@@ -1103,6 +1109,7 @@ public:
 
             printf("DEBUG img_read_data: Finished reading and converting data\n");
 #endif
+
         }
 
         return;
@@ -1559,9 +1566,9 @@ public:
       */
     void sumWithFile(const FileName &fn)
     {
-    	Image<T> aux;
-    	aux.read(fn);
-    	(*this)()+=aux();
+        Image<T> aux;
+        aux.read(fn);
+        (*this)()+=aux();
     }
 };
 

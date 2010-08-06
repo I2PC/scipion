@@ -500,7 +500,7 @@ AddLibrary('XmippExternal', 'external',
 
 # XmippData
 DataSources = Glob('libraries/data','*.cpp',[])
-AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal']+FFTWLibs+SQLiteLibs)
+AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal']+FFTWLibs+TIFFLibs+SQLiteLibs)
 SwigDataSources = ['libraries/data/swig/swigXmippData.i']
 SwigJavaDataSources = ['libraries/data/swig/swigXmippDataJava.i']
 AddSwigPythonLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'],
