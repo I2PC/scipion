@@ -32,7 +32,7 @@ void ImgSize(const FileName &filename, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              int &Ndim=null_object);
 
-
+int MaxFileNameLength(MetaData &MD);
 
 void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot);
 
@@ -48,11 +48,5 @@ bool getValueSwig(const MetaData &md, const MDLabel label, T &valueOut, long int
 {
     md.getValue(label, valueOut, objectID);
 }
-
-bool testingFunction(const MetaData &md);
-
-
-
-
 
 #endif /* METADATA_EXTENSION_H_ */

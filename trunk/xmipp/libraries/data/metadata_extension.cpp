@@ -97,15 +97,22 @@ void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, int &Ndi
     ImgSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);
 }
 
+int MaxFileNameLength(MetaData &MD)
+{
+	int maxLength=0;
+	FOR_ALL_OBJECTS_IN_METADATA(MD)
+	{
+		FileName fnImg;
+		MD.getValue(MDL_IMAGE,fnImg);
+		int length=fnImg.length();
+		maxLength=XMIPP_MAX(length,maxLength);
+	}
+	return maxLength;
+}
+
 void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot)
 {
     num_img_tot = md.size();
     MetaData aux(md);
     md.selectSplitPart(aux, size, rank);
 }
-
-bool testingFunction(const MetaData &md)
-{
-
-    }
-
