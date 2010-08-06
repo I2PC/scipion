@@ -23,9 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/volume.h>
+#include <data/image.h>
 #include <data/args.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     float tmpR;
     char *fname, *iname, *bmname;
     std::string selname;
-    VolumeXmipp mask;
+    Image<double> mask;
     std::vector < std::vector <float> > dataPoints;
     std::vector < std::string > labels;
     bool nomask = false;
@@ -95,15 +95,16 @@ int main(int argc, char **argv)
 
     std::cout << "generating data......" << std::endl;
 
-    SelFile SF((FileName) selname);
+    MetaData SF((FileName) selname);
     // Read Sel file
-    while (!SF.eof())
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        std::string image_name = SF.NextImg();
-        if (image_name=="") break;
+        std::string image_name;
+        SF.getValue(MDL_IMAGE,image_name);
         if (verb)
             std::cout << "generating points for image " << image_name << "......" << std::endl;
-        VolumeXmipp image(image_name);      // reads image
+        Image<double> image;
+        image.read(image_name);    // reads image
 
         // Extract the data
 
@@ -143,7 +144,6 @@ int main(int argc, char **argv)
         fprintf(fp, "%s \n", labels[i].c_str());
     }
     fclose(fp);    // close file
-
     exit(0);
 }
 
