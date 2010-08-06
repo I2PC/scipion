@@ -277,6 +277,7 @@ public:
 #include "rwTIA.h"
 #include "rwDM3.h"
 #include "rwRAW.h"
+    //#include "rwTIFF.h"
 
     /** Is this file an image
      *
@@ -387,6 +388,8 @@ public:
             err = readDM3(select_img,false);
         else if (ext_name.contains("raw"))//RAW
             err = readRAW(select_img,false);
+        //        else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
+        //            err = readTIFF(select_img,false);
         else
         {
             err = readSPIDER(select_img,true);
@@ -638,6 +641,8 @@ public:
             writeTIA(select_img,false,mode);
         else if (ext_name.contains("raw"))
             writeRAW(select_img,false,mode);
+        //        else if (ext_name.contains("tif") || ext_name.contains("tiff"))
+        //            writeTIFF(select_img,mode);
         else
             err = writeSPIDER(select_img,isStack,mode);
 

@@ -252,7 +252,6 @@ int readDM3(int img_select,bool isStack=false)
 
     delete header;
 
-//	fclose(fimg);
     readData(fimg, img_select, datatype, pad);
 
     if ( !mmapOn )
