@@ -26,21 +26,20 @@
 #include <data/progs.h>
 #include <reconstruction/psd_enhance.h>
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
+	if (ZSIZE(img())!=1)
+	{
+	    std::cerr << "This process is not valid for volumes\n";
+	    return false;
+	}
     Prog_Enhance_PSD_Parameters *eprm = (Prog_Enhance_PSD_Parameters *) prm;
     eprm->apply(img());
     return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    std::cerr << "This process is not valid for volumes\n";
-    return false;
-}
-
 int main(int argc, char **argv)
 {
     Prog_Enhance_PSD_Parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
