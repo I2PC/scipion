@@ -25,14 +25,14 @@
 
 #include <data/args.h>
 #include <data/matrix2d.h>
-#include <data/volume.h>
+#include <data/image.h>
 #include <classification/kSVD.h>
 #include <fstream>
 
 double projectOntoDictionary(const Matrix2D<double> &D, 
     double lambda, int S, double lambdaDictionary,
     bool restore, int patchSize,
-    Matrix3D<double> &Vin, Matrix3D<double> &Vout)
+    MultidimArray<double> &Vin, MultidimArray<double> &Vout)
 {
     // Get the size of the different vectors
     int N1=patchSize;
@@ -43,9 +43,9 @@ double projectOntoDictionary(const Matrix2D<double> &D,
     int L0=(patchSize-1)/2;
 
     // Some initialization
-    Matrix3D<double> &V0=Vin; // An alias
+    MultidimArray<double> &V0=Vin; // An alias
     Vout.initZeros(Vin);
-    Matrix3D<double> Weight;
+    MultidimArray<double> Weight;
     Weight=Vout;
 
     // Separate the two dictionaries
@@ -53,37 +53,35 @@ double projectOntoDictionary(const Matrix2D<double> &D,
     int dim1=2*patchSize*patchSize*patchSize;
     int dim2=  patchSize*patchSize*patchSize;
     D2=D1=D;
-    D1.window(0,0,dim1-1,XSIZE(D)-1);
-    D2.window(dim1,0,YSIZE(D)-1,XSIZE(D)-1);
+    D1.submatrix(0,0,dim1-1,MAT_XSIZE(D)-1);
+    D2.submatrix(dim1,0,MAT_YSIZE(D)-1,MAT_XSIZE(D)-1);
     
     // Readjust the columns of each dictionary so that they are
     // again unitary
-    Matrix1D<double> normD1;  normD1.initZeros(XSIZE(D1));
-    Matrix1D<double> normD10; normD10.initZeros(XSIZE(D1));
-    for (int j=0; j<XSIZE(D1); j++)
+    Matrix1D<double> normD1;  normD1.initZeros(MAT_XSIZE(D1));
+    Matrix1D<double> normD10; normD10.initZeros(MAT_XSIZE(D1));
+    for (int j=0; j<MAT_XSIZE(D1); j++)
     {
         // Compute the norm of the high resolution part of the vector
         for (int i=0; i<N0; i++)
-            DIRECT_VEC_ELEM(normD10,j)+=
-                DIRECT_MAT_ELEM(D1,i,j)*DIRECT_MAT_ELEM(D1,i,j);
-        DIRECT_VEC_ELEM(normD1,j)=DIRECT_VEC_ELEM(normD10,j);
+            VEC_ELEM(normD10,j)+=MAT_ELEM(D1,i,j)*MAT_ELEM(D1,i,j);
+        VEC_ELEM(normD1,j)=VEC_ELEM(normD10,j);
         
         // Compute the norm of the rest of the vector
-        for (int i=N0; i<YSIZE(D1); i++)
-            DIRECT_VEC_ELEM(normD1,j)+=
-                DIRECT_MAT_ELEM(D1,i,j)*DIRECT_MAT_ELEM(D1,i,j);
-        DIRECT_VEC_ELEM(normD10,j)=sqrt(DIRECT_VEC_ELEM(normD10,j));
-        DIRECT_VEC_ELEM(normD1,j)=sqrt(DIRECT_VEC_ELEM(normD1,j));
-        double inormD1j=1/DIRECT_VEC_ELEM(normD1,j);
+        for (int i=N0; i<MAT_YSIZE(D1); i++)
+            VEC_ELEM(normD1,j)+=MAT_ELEM(D1,i,j)*MAT_ELEM(D1,i,j);
+        VEC_ELEM(normD10,j)=sqrt(VEC_ELEM(normD10,j));
+        VEC_ELEM(normD1,j)=sqrt(VEC_ELEM(normD1,j));
+        double inormD1j=1/VEC_ELEM(normD1,j);
 
-        for (int i=0; i<YSIZE(D1); i++)
-            DIRECT_MAT_ELEM(D1,i,j)*=inormD1j;
+        for (int i=0; i<MAT_YSIZE(D1); i++)
+            MAT_ELEM(D1,i,j)*=inormD1j;
 
         // Multiply D2 by a number so that it can be used in the recovery
         std::cout << normD10(j) << " " << normD1(j) << std::endl;
-        double normD2j=DIRECT_VEC_ELEM(normD1,j)/DIRECT_VEC_ELEM(normD10,j);
-        for (int i=0; i<YSIZE(D2); i++)
-            DIRECT_MAT_ELEM(D2,i,j)*=normD2j;
+        double normD2j=VEC_ELEM(normD1,j)/VEC_ELEM(normD10,j);
+        for (int i=0; i<MAT_YSIZE(D2); i++)
+            MAT_ELEM(D2,i,j)*=normD2j;
     }
     std::cout << "Fin\n";
     
@@ -91,28 +89,27 @@ double projectOntoDictionary(const Matrix2D<double> &D,
     Matrix2D<double> DtD, DtDlambda, DtDlambdaInv;
     if (S==0)
     {
-        int K=XSIZE(D1);
+        int K=MAT_XSIZE(D1);
         DtD.initZeros(K,K);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(DtD)
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(DtD)
             // Compute the dot product between the columns i and j of D
-            for (int k=0; k<YSIZE(D1); k++)
-                DIRECT_MAT_ELEM(DtD,i,j)+=
-                    DIRECT_MAT_ELEM(D1,k,i)*DIRECT_MAT_ELEM(D1,k,j);
+            for (int k=0; k<MAT_YSIZE(D1); k++)
+                MAT_ELEM(DtD,i,j)+=MAT_ELEM(D1,k,i)*MAT_ELEM(D1,k,j);
         DtDlambda=DtD;
         for (int i=0; i<K; i++)
-            DIRECT_MAT_ELEM(DtDlambda,i,i)+=lambda;
+            MAT_ELEM(DtDlambda,i,i)+=lambda;
         DtDlambda.inv(DtDlambdaInv);
     }
 
     // Build the pyramid
-    Matrix3D<double> V1;
-    V0.pyramidReduce(V1);
+    MultidimArray<double> V1;
+    pyramidReduce(BSPLINE3,V1,V0);
     STARTINGX(V0)=STARTINGY(V0)=STARTINGZ(V0)=0;
 
     // Extract the training vectors from the volume
     double error=0, Nerror=0;
     Matrix1D<double> v1(N1*N1*N1+N0*N0*N0);
-    Matrix1D<double> alpha(XSIZE(D1)), vp1(N1*N1*N1+N0*N0*N0), vp2(N0*N0*N0);
+    Matrix1D<double> alpha(MAT_XSIZE(D1)), vp1(N1*N1*N1+N0*N0*N0), vp2(N0*N0*N0);
     init_progress_bar(ZSIZE(V0)-8);
     for (int k0=4; k0<ZSIZE(V0)-4; k0++)
     {
@@ -131,9 +128,9 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                     for (int ii=-L0; ii<=L0; ii++)
                         for (int jj=-L0; jj<=L0; jj++)
                         {
-                            DIRECT_VEC_ELEM(v1,idx)=
-                                DIRECT_VOL_ELEM(V0,k0+kk,i0+ii,j0+jj);
-                            avg0+=DIRECT_VEC_ELEM(v1,idx);
+                            VEC_ELEM(v1,idx)=
+                                DIRECT_A3D_ELEM(V0,k0+kk,i0+ii,j0+jj);
+                            avg0+=VEC_ELEM(v1,idx);
                             idx++;
                         }
                 avg0/=N0_3;
@@ -144,18 +141,18 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                     for (int ii=-L1; ii<=L1; ii++)
                         for (int jj=-L1; jj<=L1; jj++)
                         {
-                            DIRECT_VEC_ELEM(v1,idx)=
-                                DIRECT_VOL_ELEM(V1,k1+kk,i1+ii,j1+jj);
-                            avg1+=DIRECT_VEC_ELEM(v1,idx);
+                            VEC_ELEM(v1,idx)=
+                                DIRECT_A3D_ELEM(V1,k1+kk,i1+ii,j1+jj);
+                            avg1+=VEC_ELEM(v1,idx);
                             idx++;
                         }
                 avg1/=N0_3;
                 
                 // Substract the mean
                 for (idx=0; idx<N0; idx++)
-                    DIRECT_VEC_ELEM(v1,idx)-=avg0;
-                for (idx=N0; idx<XSIZE(v1); idx++)
-                    DIRECT_VEC_ELEM(v1,idx)-=avg1;
+                    VEC_ELEM(v1,idx)-=avg0;
+                for (idx=N0; idx<VEC_XSIZE(v1); idx++)
+                    VEC_ELEM(v1,idx)-=avg1;
 
                 // Project this vector onto the dictionary
                 if (S!=0) orthogonalMatchingPursuit(v1,D1,S,alpha);
@@ -163,19 +160,15 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                 vp1.initZeros(); // vp1=D1*alpha
                 vp2.initZeros(); // vp2=D2*alpha
                 bool proceed=false;
-                for (int j=0; j<XSIZE(D1); j++)
-                    if (DIRECT_VEC_ELEM(alpha,j)!=0)
+                for (int j=0; j<MAT_XSIZE(D1); j++)
+                    if (VEC_ELEM(alpha,j)!=0)
                     {
                         proceed=true;
-                        for (int i=0; i<YSIZE(D1); i++)
-                            DIRECT_VEC_ELEM(vp1,i)+=
-                                DIRECT_MAT_ELEM(D1,i,j)*
-                                DIRECT_VEC_ELEM(alpha,j);
+                        for (int i=0; i<MAT_YSIZE(D1); i++)
+                            VEC_ELEM(vp1,i)+=MAT_ELEM(D1,i,j)*VEC_ELEM(alpha,j);
                         if (restore)
-                            for (int i=0; i<YSIZE(D2); i++)
-                                DIRECT_VEC_ELEM(vp2,i)+=
-                                    DIRECT_MAT_ELEM(D2,i,j)*
-                                    DIRECT_VEC_ELEM(alpha,j);
+                            for (int i=0; i<MAT_YSIZE(D2); i++)
+                                VEC_ELEM(vp2,i)+=MAT_ELEM(D2,i,j)*VEC_ELEM(alpha,j);
                     }
                 
                 if (proceed)
@@ -186,16 +179,16 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                     // Add the mean
                     for (idx=0; idx<N0; idx++)
                     {
-                        DIRECT_VEC_ELEM(vp1,idx)+=avg0;
-                        if (restore) DIRECT_VEC_ELEM(vp2,idx)+=avg0;
+                        VEC_ELEM(vp1,idx)+=avg0;
+                        if (restore) VEC_ELEM(vp2,idx)+=avg0;
                     }
-                    for (idx=N0; idx<XSIZE(vp1); idx++)
-                        DIRECT_VEC_ELEM(vp1,idx)+=avg1;
+                    for (idx=N0; idx<VEC_XSIZE(vp1); idx++)
+                        VEC_ELEM(vp1,idx)+=avg1;
 
                     // Measure the projection error
-                    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX1D(vp1)
-                        error+=ABS(DIRECT_VEC_ELEM(v1,i)-DIRECT_VEC_ELEM(vp1,i));
-                    Nerror+=XSIZE(vp1);
+                    FOR_ALL_ELEMENTS_IN_MATRIX1D(vp1)
+                        error+=ABS(VEC_ELEM(v1,i)-VEC_ELEM(vp1,i));
+                    Nerror+=VEC_XSIZE(vp1);
 
                     // Put it back in the volume and update weights
                     idx=0;
@@ -206,12 +199,12 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                             for (int jj=-L0; jj<=L0; jj++)
                             {
                                 if (restore)
-                                    DIRECT_VOL_ELEM(Vout,k0+kk,i0+ii,j0+jj)+=
-                                        DIRECT_VEC_ELEM(vp2,idx++);
+                                    DIRECT_A3D_ELEM(Vout,k0+kk,i0+ii,j0+jj)+=
+                                        VEC_ELEM(vp2,idx++);
                                 else
-                                    DIRECT_VOL_ELEM(Vout,k0+kk,i0+ii,j0+jj)+=
-                                        DIRECT_VEC_ELEM(vp1,idx++);
-                                DIRECT_VOL_ELEM(Weight,k0+kk,i0+ii,j0+jj)++;
+                                    DIRECT_A3D_ELEM(Vout,k0+kk,i0+ii,j0+jj)+=
+                                        VEC_ELEM(vp1,idx++);
+                                DIRECT_A3D_ELEM(Weight,k0+kk,i0+ii,j0+jj)++;
                             }
                 }
             }
@@ -221,7 +214,7 @@ double projectOntoDictionary(const Matrix2D<double> &D,
     error/=Nerror;
 
     // Normalize the output
-    FOR_ALL_ELEMENTS_IN_MATRIX3D(Vout)
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(Vout)
     {
         double denominator=lambda+Weight(k,i,j);
         if (denominator!=0)
@@ -287,11 +280,11 @@ int main(int argc, char *argv[])
         fhDict.close();
         
         // Read the volume
-        VolumeXmipp Vin;
+        Image<double> Vin;
         Vin.read(fnIn);
         
         // Project the volume
-        VolumeXmipp Vout;
+        Image<double> Vout;
         double error=projectOntoDictionary(D,lambda,S,lambdaDictionary,
             restore, patchSize, Vin(),Vout());
         std::cout << "Projection error= " << error << std::endl;
