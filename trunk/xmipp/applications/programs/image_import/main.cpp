@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
     std::string taskNumber, itemNumber;
     std::ofstream filestr;
 
-
     // Check command line options ===========================================
     try
     {
@@ -59,7 +58,6 @@ int main(int argc, char *argv[])
         << "<MDL_N>" << n << "</MDL_N>\n"
         << "</ITEM>\n";
         filestr.close();
-
     }
     catch (Xmipp_error XE)
     {
@@ -71,7 +69,6 @@ int main(int argc, char *argv[])
         std::cout << XE;
         Usage();
     }
-
 }
 
 /* Usage ------------------------------------------------------------------- */
