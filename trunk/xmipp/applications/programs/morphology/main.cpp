@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Pedro A. de Alarcón (pedro@cnb.csic.es)
+ *              Pedro A. de Alarcï¿½n (pedro@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -114,11 +114,11 @@ public:
 };
 
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Morphology_parameters *eprm = (Morphology_parameters *) prm;
     if (eprm->neig == -1) eprm->neig = 8;
-    ImageXmipp retval;
+    Image<double> retval;
     retval() = img();
 
     if (eprm->operation!=SHARPENING)
@@ -143,47 +143,13 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     }
 
     img() = retval();
-    std::cout << "Finally the image has " << img().sum() << " pixels set to 1\n";
-    return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    Morphology_parameters *eprm = (Morphology_parameters *) prm;
-    if (eprm->neig == -1) eprm->neig = 18;
-    VolumeXmipp retval;
-    retval() = vol();
-
     if (eprm->operation!=SHARPENING)
-        std::cout << "Initially the volume has " << vol().sum()
-                  << " voxels set to 1\n";
-    switch (eprm->operation)
-    {
-        case DILATION:
-            dilate3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case EROSION:
-            erode3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case OPENING:
-            opening3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case CLOSING:
-            closing3D(vol(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case SHARPENING:
-            sharpening(vol(),eprm->width, eprm->strength, retval());
-    }
-
-    vol() = retval();
-    if (eprm->operation!=SHARPENING)
-        std::cout << "Finally the volume has " << vol().sum()
-                  << " voxels set to 1\n";
+    	std::cout << "Finally the image has " << img().sum() << " pixels set to 1\n";
     return true;
 }
 
 int main(int argc, char **argv)
 {
     Morphology_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
