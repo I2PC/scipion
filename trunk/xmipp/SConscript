@@ -7,8 +7,10 @@ import os
 
 FFTWDir="external/fftw-3.2.2"
 FFTWLibs=['fftw3','fftw3_threads']
+TIFFDir="external/tiff-3.9.4"
+TIFFLibs=['tiff']
 SQliteDir="external/sqlite-3.6.23"
-SQLiteLibs=['libsqlite3']
+SQLiteLibs=['sqlite3']
 
 def AddMatchingFiles((pattern, blacklist, sources), directory, files):
     ''' Callback, adds all matching files in dir '''
@@ -52,21 +54,21 @@ def AddProtocol(name, basedir):
     # setup
     basedir = AddLastSlash(basedir)
     binprefix = os.path.join(env['prefix'], 'protocols')
-    
+
     # only add prefix to protocol_*
     if name.find('protocol') < 0:
             install = env.Install(binprefix, basedir + name)
             env.Default(install)
-            
+
     else:
         fullname = env['prepend'] + name
-       
+
         # action
         command = env.Command(os.path.join(basedir, fullname),
             os.path.join(basedir, name), [Copy('$TARGET',
             '$SOURCE'), Chmod('$TARGET', 0755)])
 
-        
+
         # alias
         alias = env.Alias(fullname, command)
         install = env.Install(binprefix, command)
@@ -146,14 +148,14 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
 def AddXmippProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries','#']
-    finalLibs = libs + ['XmippData', 'XmippExternal']+FFTWLibs+SQLiteLibs
+    finalLibs = libs + ['XmippData', 'XmippExternal']+FFTWLibs+SQLiteLibs+TIFFLibs
     AddProgram(name, 'applications/programs/' + name, '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 
 def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries','#']
-    finalLibs = libs + ['XmippData', 'XmippExternal']+FFTWLibs+SQLiteLibs
+    finalLibs = libs + ['XmippData', 'XmippExternal']+FFTWLibs+SQLiteLibs+TIFFLibs
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
@@ -258,15 +260,15 @@ def AddSwigPythonLibrary(name, basedir, sourceList, includes, libpath=[], libs=[
     basedirswig = AddLastSlash(basedir+"/swig")
     libprefix = os.path.join(env['prefix'], 'lib')
     if int(env['swig']):
-        
+
         # Build wrapper
         wrapper = env.i2cc(basedirswig + name + "_wrap.cc", sourceList)
         Depends(wrapper, Glob(basedir, '*.h', [])+Glob(basedirswig, '*.i', []))
-        
+
         # alias
         alias=env.Alias(name,wrapper)
         env.Default(alias)
-    
+
     # Create library
     import distutils.sysconfig
     AddLibrary("_"+name, basedirswig, [name+"_wrap.cc"],
@@ -280,26 +282,26 @@ def AddSwigPythonLibrary(name, basedir, sourceList, includes, libpath=[], libs=[
     command = command + " ../" + basedirswig+name+".py " + libprefix+'/'+name+'.py'
     print command
     os.system(command)
-    	
+
     #install = env.InstallAs(libprefix+'/'+name+'.py',basedirswig+name+".py")
     #env.Alias(name+'.py', install)
     #env.Default(name+'.py')
-    
+
 def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
     # Create wrapper
     # setup
     basedirswig = AddLastSlash(basedir+"/swig")
     libprefix = os.path.join(env['prefix'], 'lib')
     if int(env['swig']):
-        
+
         # Build wrapper
         wrapper = env.i2java(basedirswig + name + "_wrap.cc", sourceList)
         Depends(wrapper, Glob(basedir, '*.h', [])+Glob(basedirswig, '*.i', []))
-        
+
         # alias
         alias=env.Alias(name,wrapper)
         env.Default(alias)
-    
+
     # Create library
     import distutils.sysconfig
     AddLibrary(name, basedirswig, [name+"_wrap.cc"],
@@ -315,7 +317,7 @@ def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[])
     command = command + " ../" + basedirswig+name+".py " + libprefix+'/'+name+'.py'
     print command
     os.system(command)"""
-    	
+
 def AddImageJPlugin(name, pluginDir, outDir):
     import shutil
 
@@ -342,10 +344,10 @@ def AddImageJPlugin(name, pluginDir, outDir):
 
     buildClasses=env.Java(buildDir,sourceDir)
     env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
-    buildJar=env.Jar(target=outDir+'/'+name+'.jar', 
+    buildJar=env.Jar(target=outDir+'/'+name+'.jar',
         source=buildDir,
         JARCHDIR=buildDir)
-    
+
     env.Default(buildClasses)
 
     # Clears "buildDir"
@@ -383,7 +385,7 @@ def AddSQLiteLibrary():
             name1+=".dylib"
         else:
             name1+=".so"
-             
+
     toBuild=[SQliteDir+'/.libs/'+name1, SQliteDir+'/.libs/'+name1la]
     toCopy=[name1, name1la]
     if not int(env['static']):
@@ -398,7 +400,7 @@ def AddSQLiteLibrary():
     alias = env.Alias(toCopy, lib1)
     install = env.Install(libprefix, source=toBuild)
     env.Alias(toCopy, install)
-    env.Default(alias)    
+    env.Default(alias)
 
 def AddFFTWLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -418,11 +420,11 @@ def AddFFTWLibrary():
         else:
             name1+=".so"
             name2+=".so"
-    
+
     toBuild=[FFTWDir+'/.libs/'+name1, FFTWDir+'/.libs/'+name1la,
              FFTWDir+'/threads/.libs/'+name2, FFTWDir+'/threads/.libs/'+name2la]
     toCopy=[name1, name2, name1la, name2la]
-    
+
     if not int(env['static']):
         if not env['PLATFORM'] == 'darwin':
             toBuild+=[FFTWDir+'/.libs/'+name1+".3",
@@ -440,6 +442,38 @@ def AddFFTWLibrary():
     env.Alias(toCopy, install)
     env.Default(alias)
 
+def AddTIFFLibrary():
+    libprefix = os.path.join(env['prefix'], 'lib')
+    numJobs=env.GetOption('num_jobs')
+
+    name1='libtiff'
+    name1la='libtiff.la'
+    if int(env['static']):
+        name1+=".a"
+    else:
+        if env['PLATFORM'] == 'darwin':
+            name1+=".dylib"
+        else:
+            name1+=".so"
+
+    toBuild=[TIFFDir+'/libtiff/.libs/'+name1, TIFFDir+'/libtiff/.libs/'+name1la]
+    toCopy=[name1, name1la]
+
+    if not int(env['static']):
+        if not env['PLATFORM'] == 'darwin':
+            toBuild+=[TIFFDir+'/libtiff/.libs/'+name1+".3"]
+            toCopy+=[name1+".3"]
+        else:
+            toBuild+=[TIFFDir+'/libtiff/.libs/'+name1]
+            toCopy+=[name1]
+    lib1 = env.Command(toBuild, TIFFDir+"/libtiff/tif_flush.c",
+        "cd "+TIFFDir+" ; make clean > /dev/null ; make -j "+str(numJobs)+\
+        " > ../../build/tiff_make.log ; make install >> ../../build/tiff_make.log")
+    alias = env.Alias(toCopy, lib1)
+    install = env.Install(libprefix, source=toBuild)
+    env.Alias(toCopy, install)
+    env.Default(alias)
+
 # --- Libraries
 
 # SQLite
@@ -447,6 +481,9 @@ AddSQLiteLibrary()
 
 # FFTW
 AddFFTWLibrary()
+
+# TIFF
+AddTIFFLibrary()
 
 # Bilib
 BilibSources = Glob('external/bilib/sources', '*.cc', [])
@@ -464,14 +501,14 @@ AddLibrary('XmippExternal', 'external',
 # XmippData
 DataSources = Glob('libraries/data','*.cpp',[])
 AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal']+FFTWLibs+SQLiteLibs)
-SwigDataSources = ['libraries/data/swig/swigXmippData.i'] 	 
-SwigJavaDataSources = ['libraries/data/swig/swigXmippDataJava.i'] 	 
-AddSwigPythonLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'], 	 
+SwigDataSources = ['libraries/data/swig/swigXmippData.i']
+SwigJavaDataSources = ['libraries/data/swig/swigXmippDataJava.i']
+AddSwigPythonLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'],
     [], ['XmippData'])
 if int(env['java']):
-    AddSwigJavaLibrary('XmippDataJava', 'libraries/data', SwigJavaDataSources, ['#'], 	 
+    AddSwigJavaLibrary('XmippDataJava', 'libraries/data', SwigJavaDataSources, ['#'],
         [], ['XmippData'])
-            
+
 # Reconstruction
 ReconsSources = [
     'adjust_ctf.cpp',
@@ -691,7 +728,7 @@ AddXmippProgram('project_xr', ['XmippRecons'])
 #AddXmippProgram('psd_sort', ['XmippRecons'])
 AddXmippProgram('range_adjust', ['XmippRecons'])
 #Sjors: note that crystal stuff in ART is not working yet....
-AddXmippProgram('reconstruct_art', ['XmippRecons']) 
+AddXmippProgram('reconstruct_art', ['XmippRecons'])
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
 AddXmippProgram('resolution_fsc')
@@ -720,7 +757,7 @@ AddXmippProgram('window')
 # --- Scripts
 
 # Batches (apps)
-# 
+#
 AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create','.py')
 AddBatch('metadata_utilities', 'applications/scripts/metadata_utilities','.py')
 #AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
@@ -804,18 +841,10 @@ if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
 
-# TIFF
-# Tiff2Raw
-# FIXME m jpeg and z really required?
-if int(env['tiff']):
-    AddProgram('convert_tiff2raw', 'applications/programs/convert_tiff2raw',
-        '*.cpp', [], ['libraries', env['TIFF_INCLUDE']],
-        [env['TIFF_LIBDIR']], ['tiff', 'm', 'jpeg', 'z'])
-
 # QT
 if int(env['gui']):
     envQT = env.Clone()
-    
+
     if int(env['QT4']):
         # FIXME see SConstruct
         env['QTDIR']=''
@@ -827,10 +856,10 @@ if int(env['gui']):
         # Fix for moc and #ifdefs (qt3 uses MOC_SKIP_*)
         envQT['QT4_MOCFROMHFLAGS'] += ['-DQT3_SUPPORT']
         envQT['QT4_MOCFROMCXXFLAGS'] += ['-DQT3_SUPPORT']
-        
+
     else:
         envQT.Tool('qt')
-    
+
         # QT_AUTOSCAN does not work because .h and .cpp are not in the same dir
         # envQT.SetDefault(QT_AUTOSCAN = 1)
 
@@ -847,7 +876,7 @@ if int(env['gui']):
         binprefix =  os.path.join(env['prefix'], 'bin')
 
         extra = []
-        
+
         if int(env['QT4']):
             for i in mocs:
                 extra.append(envQT.Moc4(basedir + i))
@@ -927,18 +956,18 @@ if int(env['gui']):
 
 if int(env['matlab']):
     import os
-    
+
     def AddMatlabBinding(name):
 	print 'compiling Matlab wrapper for ' + name
         command = env['MATLAB_DIR'] + '/bin/mex -O -outdir matlab_bindings -I. -Ilibraries/data -Ilibraries -Llib -Ilibraries/reconstruction -lXmippRecons -lXmippData -lXmippExternal matlab_bindings/tom_xmipp_' + name + '_wrapper.cpp'
 	output = os.popen(command).read()
 	if len(output) > 0:
-	    print output    
+	    print output
 
     bindings = ['adjust_ctf','align2d','ctf_correct_phase',
         'mask','mirror','morphology','normalize','psd_enhance',
         'resolution','rotate','scale','scale_pyramid','volume_segment']
-    
+
     for i in range(len(bindings)):
        AddMatlabBinding(bindings[i])
 
