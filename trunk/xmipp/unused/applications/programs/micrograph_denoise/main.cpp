@@ -31,11 +31,10 @@ void Usage();
 
 int main(int argc, char **argv)
 {
-    Micrograph     M_in,  M_out;
+    Image<double>  M_in,  M_out;
     FileName       fn_in, fn_out;
     Denoising_parameters prm;
     int            window_size;
-    bool           reversed;
 
     // Get command line parameters ------------------------------------------
     try
@@ -43,7 +42,6 @@ int main(int argc, char **argv)
         fn_in       = getParameter(argc, argv, "-i");
         fn_out      = getParameter(argc, argv, "-o");
         window_size = textToInteger(getParameter(argc, argv, "-window_size", "128"));
-        reversed    = checkParameter(argc, argv, "-reverse_endian");
         prm.read(argc, argv);
         prm.adjust_range = false;
         prm.produce_side_info();
@@ -59,7 +57,7 @@ int main(int argc, char **argv)
     try
     {
         // Read input micrograph
-        M_in.open_micrograph(fn_in, reversed);
+        M_in.read(fn_in);
         int bits = 32;
         int Ydim, Xdim;
         M_in.size(Xdim, Ydim);
@@ -105,7 +103,7 @@ int main(int argc, char **argv)
         int Xpieces = CEIL((double)Xdim / (window_size - overlapping));
         int Ypieces = CEIL((double)Ydim / (window_size - overlapping));
 
-        Matrix2D<double> img;
+        MultidimArray<double> img;
         std::cerr << "Denoising micrograph ...\n";
         init_progress_bar(Ypieces*Xpieces);
         int N = 0;
