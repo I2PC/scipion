@@ -49,6 +49,20 @@ public:
     bool check_mirrors;
     /** Use object rotations */
     bool object_rotation;
+    /** Check tilt pairs */
+    bool tilt_pairs;
+    /* Tilt angle at the outer circle of the postcript plot */
+    double plot_max_tilt;
+    /* Radius for circles in the postscript plot */
+    int plot_spot_radius;
+    /* Expected tilt and beta angle (for selection of best symmetry operator)
+     * If values smaller than 999 are provided, this angle will be minimized in the symmetry search
+     */
+    double exp_beta, exp_tilt;
+
+    /** File handler for postscript output */
+    std::ofstream fh_ps;
+
 public:
     // DocFile 1
     DocFile DF1;
@@ -71,6 +85,17 @@ public:
 
         An exception is thrown if both files are not of the same length*/
     void produce_side_info();
+
+    /* Richard Henderson-like tilt pair comparison */
+    double check_tilt_pairs(double rot1, double tilt1,
+            double psi1, double &alpha, double &tilt_angle, double &beta);
+
+    /* Setup PS preliminaries */
+    void make_postscript_header();
+
+    /* Add a point to the PS */
+   void add_to_postscript(double & tilt_angle, double &alpha, double &beta);
+   void value_to_redblue_scale(double beta, double minF, double maxF, double &r, double &g, double &b);
 
     /** Second angle set.
         Given two sets of angles, this function modifies set 2 so that
