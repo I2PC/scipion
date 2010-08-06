@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     {
 // Really convert ----------------------------------------------------------
         GridVolume  vol_blobs;
-        VolumeXmipp vol_voxels;
+        Image<double> vol_voxels;
         if (voxels_to_blobs)
         {
             vol_voxels.read(fn_in);
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            vol_blobs.read(fn_in);
+            vol_blobs.read(fn_in,"blobs");
             blobs2voxels(vol_blobs, blob, &(vol_voxels()));
             vol_voxels.write(fn_out);
         }
@@ -118,91 +118,3 @@ void Usage()
     << "   [-final_error <error=0.01>]        : minimum change percentage\n"
     << "   [-R <R=-1>]                        : interest radius\n";
 }
-
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Voxels22Blobs {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Window/Help/window.html";
-      help="Convert a blob volume to voxels and viceversa";
-      OPEN MENU menu_voxels22blobs;
-      COMMAND LINES {
- + to_blobs: voxels22blobs -voxels $FILE_IN -o $FILE_OUT
-                       [-r $BLOB_RADIUS -m $BLOB_ORDER -a $BLOB_ALPHA]
-                       [-g $REL_SIZE] [$OTHER_GRIDS]
-                       [-l $LAMBDA -final_error $ERROR]
-        + to_voxels: voxels22blobs -blobs $FILE_IN -o $FILE_OUT
-                       OPT(-r)
-      }
-      PARAMETER DEFINITIONS {
-        $FILE_IN {
-    label="Input file";
-    help="Either voxel or blob volume";
-    type=file existing;
- }
-        $FILE_OUT {
-    label="Output file";
-    help="Either blob or voxel volume";
-    type=file;
- }
-        OPT(-r) {label="Blob shape";}
-           $BLOB_RADIUS {
-       label="Blob radius";
-              help="in Voxels";
-       type=FLOAT [0...];
-              by default="2";
-    }
-           $BLOB_ORDER {
-              label="Blob order";
-              help="Derivative order of the Bessel function, must be a natural";
-              type=NATURAL;
-              by default="2";
-           }
-           $BLOB_ALPHA {
-              label="Blob smoothness";
-              help="The higher the value, the sharper the blob";
-              type=FLOAT [0...];
-              by default="3.6";
-           }
-        OPT(-g) {label="Grid Spacing";}
-           $REL_SIZE {
-              label="Relative size";
-              help="in voxels";
-              type=float [0...];
-              by default="2.26";
-           }
-        $OTHER_GRIDS {
-           label="Use other grids than BCC";
-           type=exclusion {
-              "FCC" {-FCC}
-              "CC"  {-CC}
-           };
-        }
-        OPT(-l) {label="Iteration parameters";}
-           $LAMBDA {
-       label="Relaxation parameter";
-              help="Controls the convergence speed";
-       type=FLOAT [-2...2];
-              by default="0.05";
-    }
-           $ERROR {
-              label="Final error";
-              help="If the mean change in the volume is less than this value
-                    as a percentage, the conversion is over";
-              type=float [0...];
-              by default="0.01";
-           }
-      }
-   }
-
-   MENU menu_voxels22blobs {
-      "I/O parameters"
-      $FILE_IN
-      $FILE_OUT
-      "Only Voxels --> Blobs"
-      OPT(-g)
-      OPT($OTHER_GRIDS)
-      OPT(-l)
-      "Blob shape"
-      OPT(-r)
-   }
-*/
