@@ -701,7 +701,6 @@ AddXmippProgram('metadata_operate')
 AddXmippProgram('micrograph_downsample', ['XmippRecons'])
 AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 AddXmippProgram('micrograph_scissor'),
-#AddXmippProgram('micrograph_window')
 AddXmippProgram('mirror')
 AddXmippProgram('ml_align2d', ['XmippRecons'])
 #AddXmippProgram('mlf_align2d', ['XmippRecons']) sjors
