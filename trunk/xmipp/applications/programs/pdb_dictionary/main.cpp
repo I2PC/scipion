@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/selfile.h>
+#include <data/metadata.h>
 #include <reconstruction/convert_pdb2vol.h>
 #include <reconstruction/fourier_filter.h>
 #include <classification/kSVD.h>
@@ -43,7 +43,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     pdbconverter.run();
     
     // Filter the volume to the final resolution
-    Matrix3D<double> V0=pdbconverter.Vlow();
+    MultidimArray<double> V0=pdbconverter.Vlow();
     FourierMask Filter1;
     Filter1.FilterShape=RAISED_COSINE;
     Filter1.FilterBand=LOWPASS;
@@ -54,7 +54,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     V0.threshold("below",0,0);
 
     // Filter the volume to the restoration resolution
-    Matrix3D<double> V0R=pdbconverter.Vlow();
+    MultidimArray<double> V0R=pdbconverter.Vlow();
     FourierMask Filter2;
     Filter2.FilterShape=RAISED_COSINE;
     Filter2.FilterBand=LOWPASS;
@@ -68,8 +68,8 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     V0.resize(2*FLOOR(ZSIZE(V0)/2.0),2*FLOOR(YSIZE(V0)/2.0),
         2*FLOOR(XSIZE(V0)/2.0));
     V0R.resize(V0);
-    Matrix3D<double> V1;
-    V0.pyramidReduce(V1);
+    MultidimArray<double> V1;
+    pyramidReduce(BSPLINE3,V1,V0);
     STARTINGX(V0)=STARTINGY(V0)=STARTINGZ(V0)=0;
     STARTINGX(V0R)=STARTINGY(V0R)=STARTINGZ(V0R)=0;
 
@@ -100,9 +100,9 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                     for (int ii=-L0; ii<=L0; ii++)
                         for (int jj=-L0; jj<=L0; jj++)
                         {
-                            DIRECT_VEC_ELEM(v,idx)=
-                                DIRECT_VOL_ELEM(V0,k0+kk,i0+ii,j0+jj);
-                            avg0+=DIRECT_VEC_ELEM(v,idx);
+                        	VEC_ELEM(v,idx)=
+                                DIRECT_A3D_ELEM(V0,k0+kk,i0+ii,j0+jj);
+                            avg0+=VEC_ELEM(v,idx);
                             idx++;
                         }
                 avg0/=N0_3;
@@ -113,9 +113,9 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                     for (int ii=-L1; ii<=L1; ii++)
                         for (int jj=-L1; jj<=L1; jj++)
                         {
-                            DIRECT_VEC_ELEM(v,idx)=
-                                DIRECT_VOL_ELEM(V1,k1+kk,i1+ii,j1+jj);
-                            avg1+=DIRECT_VEC_ELEM(v,idx);
+                        	VEC_ELEM(v,idx)=
+                        			DIRECT_A3D_ELEM(V1,k1+kk,i1+ii,j1+jj);
+                            avg1+=VEC_ELEM(v,idx);
                             idx++;
                         }
                 avg1/=N1_3;
@@ -126,20 +126,20 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                     for (int ii=-L0; ii<=L0; ii++)
                         for (int jj=-L0; jj<=L0; jj++)
                         {
-                            DIRECT_VEC_ELEM(v,idx)=
-                                DIRECT_VOL_ELEM(V0R,k0+kk,i0+ii,j0+jj);
-                            avg0R+=DIRECT_VEC_ELEM(v,idx);
+                        	VEC_ELEM(v,idx)=
+                        			DIRECT_A3D_ELEM(V0R,k0+kk,i0+ii,j0+jj);
+                            avg0R+=VEC_ELEM(v,idx);
                             idx++;
                         }
                 avg0R/=N0_3;
 
                 // Substract the mean
                 for (idx=0; idx<N0; idx++)
-                    DIRECT_VEC_ELEM(v,idx)-=avg0;
+                	VEC_ELEM(v,idx)-=avg0;
                 for (idx=N0; idx<N0+N1; idx++)
-                    DIRECT_VEC_ELEM(v,idx)-=avg1;
-                for (idx=N0+N1; idx<XSIZE(v); idx++)
-                    DIRECT_VEC_ELEM(v,idx)-=avg0R;
+                	VEC_ELEM(v,idx)-=avg1;
+                for (idx=N0+N1; idx<VEC_XSIZE(v); idx++)
+                	VEC_ELEM(v,idx)-=avg0R;
 
                 auxTraining.push_back(v);
                 energy.push_back(v.module());
@@ -156,25 +156,25 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
         {
             training.push_back(auxTraining[i]);
             #ifdef DEBUG
-                VolumeXmipp save(5*3,5,5);
+                Image<double> save(5*3,5,5);
                 int k0=0, idx=0;
                 for (int kk=0; kk<N0; kk++)
                     for (int ii=0; ii<N0; ii++)
                         for (int jj=0; jj<N0; jj++)
                             save(k0+kk,ii,jj)=
-                                DIRECT_VEC_ELEM(auxTraining[i],idx++);
+                            		VEC_ELEM(auxTraining[i],idx++);
                 k0=5;
                 for (int kk=0; kk<N0; kk++)
                     for (int ii=0; ii<N0; ii++)
                         for (int jj=0; jj<N0; jj++)
                             save(k0+kk,ii,jj)=
-                                DIRECT_VEC_ELEM(auxTraining[i],idx++);
+                            		VEC_ELEM(auxTraining[i],idx++);
                 k0=10;
                 for (int kk=0; kk<N0; kk++)
                     for (int ii=0; ii<N0; ii++)
                         for (int jj=0; jj<N0; jj++)
                             save(k0+kk,ii,jj)=
-                                DIRECT_VEC_ELEM(auxTraining[i],idx++);
+                            		VEC_ELEM(auxTraining[i],idx++);
                 std::cout << save();
                 save.write("PPPtrainingVector.vol");
                 save()=V0; save.write("PPPLevel0.vol");
@@ -261,26 +261,26 @@ int main(int argc, char *argv[])
         ;
 
         // Define variables
-        SelFile SF;
-        SF.read(fnSel);
+        MetaData SF(fnSel);
         std::vector< Matrix1D<double> > training;
         
         // Extract training patches
-        while (!SF.eof())
+        FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            FileName fnPDB=SF.NextImg();
+            FileName fnPDB;
+            SF.getValue(MDL_IMAGE,fnPDB);
             extractTrainingPatches(fnPDB, patchSize, step, Ts, resolution1,
                 resolution2, training);
         }
         
         // Initialize the dictionary
-        int N=XSIZE(training[0]);
+        int N=VEC_XSIZE(training[0]);
         Matrix2D<double> D;
         D.initZeros(N,dictSize);
         
         if (!initRandom)
         {
-            // Fill the columns chosing one of the data samples randomly
+            // Fill the columns choosing one of the data samples randomly
             Matrix1D<int> used;
             used.initZeros(training.size());
             for (int d=0; d<dictSize; d++)
@@ -288,7 +288,7 @@ int main(int argc, char *argv[])
                 int selected;
                 do
                 {
-                    selected=ROUND(rnd_unif(0,XSIZE(used)-1));
+                    selected=ROUND(rnd_unif(0,VEC_XSIZE(used)-1));
                 } while (used(selected));
                 used(selected)=1;
                 double inorm=1.0/training[selected].module();
@@ -299,25 +299,26 @@ int main(int argc, char *argv[])
         }
         else
         {
-            D.initRandom(0,1,"gaussian");
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(D)
+            	D(i,j)=rnd_gaus(0,1);
 
             // Normalize the dictionary
-            for (int j=0; j<XSIZE(D); j++)
+            for (int j=0; j<MAT_XSIZE(D); j++)
             {
                 // Make sure that the atoms are 0 mean
                 double avg=0;
-                for (int i=0; i<YSIZE(D); i++)
+                for (int i=0; i<MAT_YSIZE(D); i++)
                     avg+=D(i,j);
-                avg/=YSIZE(D);
-                for (int i=0; i<YSIZE(D); i++)
+                avg/=MAT_YSIZE(D);
+                for (int i=0; i<MAT_YSIZE(D); i++)
                     D(i,j)-=avg;
 
                 // Make them unitary
                 double norm=0;
-                for (int i=0; i<YSIZE(D); i++)
+                for (int i=0; i<MAT_YSIZE(D); i++)
                     norm+=D(i,j)*D(i,j);
                 norm=1/sqrt(norm);
-                for (int i=0; i<YSIZE(D); i++)
+                for (int i=0; i<MAT_YSIZE(D); i++)
                     D(i,j)*=norm;
             }
         }
