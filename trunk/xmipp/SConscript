@@ -723,7 +723,7 @@ AddXmippProgram('project_tomography', ['XmippRecons'])
 AddXmippProgram('projection_real_shears', ['XmippRecons'])
 AddXmippProgram('project_xr', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
-#AddXmippProgram('psd_sort', ['XmippRecons'])
+AddXmippProgram('psd_sort', ['XmippRecons'])
 AddXmippProgram('range_adjust', ['XmippRecons'])
 #Sjors: note that crystal stuff in ART is not working yet....
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
