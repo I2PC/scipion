@@ -157,7 +157,7 @@ private:
     // equal 0 is not exists or not a stack
 
     bool    mmapOn;  // Mapping when loading from file
-    int             mFd;     //Handle the file in reading method and mmap
+    int     mFd;     //Handle the file in reading method and mmap
     size_t       mappedSize;
     /*
     double    min, max; // Limits
