@@ -348,7 +348,7 @@ const Histogram1D& IrregularHistogram1D::getHistogram() const
 /* HISTOGRAMS 2D                                                             */
 /* ------------------------------------------------------------------------- */
 /* Clear ------------------------------------------------------------------- */
-void histogram2D::clear()
+void Histogram2D::clear()
 {
     imin = 0;
     imax = 0;
@@ -361,7 +361,7 @@ void histogram2D::clear()
 }
 
 /* Assignment -------------------------------------------------------------- */
-histogram2D & histogram2D::operator = (const histogram2D &H)
+Histogram2D & Histogram2D::operator = (const Histogram2D &H)
 {
     if (this != &H)
     {
@@ -378,13 +378,13 @@ histogram2D & histogram2D::operator = (const histogram2D &H)
 }
 
 /* Another function for assignment -------------------------------------------------------------- */
-void histogram2D::assign(const histogram2D &H)
+void Histogram2D::assign(const Histogram2D &H)
 {
     *this = H;
 }
 
 /* Initialize -------------------------------------------------------------- */
-void histogram2D::init(double imin_val, double imax_val, int in_steps,
+void Histogram2D::init(double imin_val, double imax_val, int in_steps,
                        double jmin_val, double jmax_val, int jn_steps)
 {
     // V axis
@@ -402,7 +402,7 @@ void histogram2D::init(double imin_val, double imax_val, int in_steps,
 }
 
 /* Insert value ------------------------------------------------------------ */
-void histogram2D::insert_value(double v, double u)
+void Histogram2D::insert_value(double v, double u)
 {
     int i, j;
     val2index(v, u, i, j);
@@ -415,7 +415,7 @@ void histogram2D::insert_value(double v, double u)
 }
 
 /* std::cout << hist ------------------------------------------------------------ */
-std::ostream& operator << (std::ostream &o, const histogram2D &hist)
+std::ostream& operator << (std::ostream &o, const Histogram2D &hist)
 {
     MultidimArray<double> aux;
     aux.resize(hist.IstepNo()*hist.JstepNo(), 3);
@@ -431,7 +431,7 @@ std::ostream& operator << (std::ostream &o, const histogram2D &hist)
 }
 
 /* Write to file ----------------------------------------------------------- */
-void histogram2D::write(const FileName &fn)
+void Histogram2D::write(const FileName &fn)
 {
     std::ofstream  fh;
     fh.open(fn.c_str(), std::ios::out);
