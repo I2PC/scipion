@@ -99,6 +99,7 @@ int main(int argc, char **argv)
         T += lockTime.getElapsedTime();
         totalLocks++;
 
+
         processingTime.setStartTime(); //start counting processing time
 
         for (long long int x = 0; x <= R; x++)//just for more work to do

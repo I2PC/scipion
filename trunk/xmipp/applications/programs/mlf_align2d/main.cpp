@@ -33,12 +33,12 @@ int main(int argc, char **argv)
     bool converged;
     std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
-    std::vector<Matrix2D<double > > wsum_Mref, wsum_ctfMref;
+    std::vector<MultidimArray<double > > wsum_Mref, wsum_ctfMref;
     std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus;
-    Matrix2D<double> P_phi, Mr2, Maux;
+    MultidimArray<double> P_phi, Mr2, Maux;
     std::vector<std::vector<double> > Mwsum_sigma2;
     FileName fn_img, fn_tmp;
-    Matrix1D<double> spectral_signal;
+    MultidimArray<double> spectral_signal;
 
     Prog_MLFalign2D_prm prm;
 
@@ -47,8 +47,10 @@ int main(int argc, char **argv)
     {
         prm.read(argc, argv);
         prm.produceSideInfo();
+        std::cerr << "hola1: after sideInfo1" <<std::endl;
         prm.show();
         prm.estimateInitialNoiseSpectra();
+        std::cerr << "hola2: after sideInfo2" <<std::endl;
         prm.produceSideInfo2();
     }
     catch (Xmipp_error XE)
@@ -80,12 +82,14 @@ int main(int argc, char **argv)
 				 Mwsum_sigma2, wsum_sigma_offset, 
 				 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
 
+            std::cerr << "hola3: after exp" <<std::endl;
             // Update model parameters
             prm.maximization(wsum_Mref, wsum_ctfMref,
 				 Mwsum_sigma2,wsum_sigma_offset, 
 				 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
 				 sumcorr, sumw_allrefs,
 				 spectral_signal);
+            std::cerr << "hola4: after max" <<std::endl;
 
             // Check convergence
             converged = prm.checkConvergence(conv);

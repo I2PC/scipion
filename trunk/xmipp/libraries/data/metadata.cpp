@@ -869,14 +869,6 @@ void MetaData::unionDistinct(const MetaData &mdIn, const MDLabel label)
 
 void MetaData::unionAll(const MetaData &mdIn)
 {
-    //    if (this == &mdIn) //not sense to copy same metadata
-    //        return;
-    //    //Add labels to be sure are present
-    //    for (int i = 0; i < mdIn.activeLabels.size(); i++)
-    //        addLabel(mdIn.activeLabels[i]);
-    //    mdIn.myMDSql->copyObjects(this);
-    //    firstObject();
-
     _setOperates(mdIn, MDL_UNDEFINED, UNION);//label not needed for unionAll operation
 }
 

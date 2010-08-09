@@ -33,19 +33,19 @@ int main(int argc, char **argv)
     std::string s;
     try
     {
-	if (checkParameter(argc, argv, "-sel"))
-	{
-	    fn1 = getParameter(argc, argv, "-sel");
-	    do_sel = true;
-	}
-	else
-	{
-	    do_sel = false;
-	    fn1    = getParameter(argc, argv, "-i1");
-	    fn2    = getParameter(argc, argv, "-i2");
-	}
+        if (checkParameter(argc, argv, "-sel"))
+        {
+            fn1 = getParameter(argc, argv, "-sel");
+            do_sel = true;
+        }
+        else
+        {
+            do_sel = false;
+            fn1    = getParameter(argc, argv, "-i1");
+            fn2    = getParameter(argc, argv, "-i2");
+        }
         fn_out = getParameter(argc, argv, "-o");
-	remove_multiple = getParameter(argc, argv, "-remove_multiple","");
+        remove_multiple = getParameter(argc, argv, "-remove_multiple","");
 
     }
     catch (Xmipp_error XE)
@@ -54,40 +54,41 @@ int main(int argc, char **argv)
         std::cerr << "Usage: docfile_append\n"
         << "   -i1 <docfile1>    : Input file 1\n"
         << "   -i2 <docfile2>    : Input file 2\n"
-	<< " OR \n"
-	<< " -sel <selfile>      : Input selfile of docfiles \n"
-	<< "\n" 
+        << " OR \n"
+        << " -sel <selfile>      : Input selfile of docfiles \n"
+        << "\n"
         << "   -o  <docfile1>    : Output concatenated file\n"
-        << "  [-remove_multiple <string=\"\">] : remove multiple instances of comment lines containing this string\n"; 
-	return 1;
+        << "  [-remove_multiple <string=\"\">] : remove multiple instances of comment lines containing this string\n";
+        return 1;
     }
 
     try
     {
-	DocFile DF;
-	if (do_sel)
-	{
-	    SelFile SF;
-	    SF.read(fn1);
-	    SF.go_beginning();
-	    DF.read(SF.NextImg());
-	    while (!SF.eof())
-	    {
+        DocFile DF;
+        if (do_sel)
+        {
+            SelFile SF;
+            SF.read(fn1);
+            SF.go_beginning();
+            DF.read(SF.NextImg());
+            while (!SF.eof())
+            {
                 FileName fn_img=SF.NextImg();
-                if (fn_img=="") break;
-		DF.append(fn_img);
-	    }
-	}
-	else
-	{
-	    DF.read(fn1);
-	    DF.append(fn2);
-	}
-	if (remove_multiple!="")
-	{
-	    DF.remove_multiple_strings(remove_multiple);
+                if (fn_img=="")
+                    break;
+                DF.append(fn_img);
+            }
         }
-	DF.write(fn_out);
+        else
+        {
+            DF.read(fn1);
+            DF.append(fn2);
+        }
+        if (remove_multiple!="")
+        {
+            DF.remove_multiple_strings(remove_multiple);
+        }
+        DF.write(fn_out);
     }
     catch (Xmipp_error XE)
     {

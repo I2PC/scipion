@@ -549,7 +549,7 @@ ReconsSources = [
     'micrograph_downsample.cpp',
     'ml_align2d.cpp',
 ##    'ml_align3d.cpp',
-#    'mlf_align2d.cpp',
+    'mlf_align2d.cpp',
     'ml_refine3d.cpp',
 ##    'ml_tomo.cpp',
      'nma_alignment.cpp',
@@ -679,8 +679,6 @@ AddXmippProgram('common_lines', ['XmippRecons'])
 AddXmippProgram('denoise', ['XmippRecons'])
 AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
-#AddXmippProgram('docfile_append')
-#AddXmippProgram('docfile_select_subset')
 #AddXmippProgram('docfile_histogram')
 AddXmippProgram('enhance_contrast', ['XmippRecons'])
 AddXmippProgram('filter_projections', ['XmippRecons'])
@@ -703,7 +701,7 @@ AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 AddXmippProgram('micrograph_scissor'),
 AddXmippProgram('mirror')
 AddXmippProgram('ml_align2d', ['XmippRecons'])
-#AddXmippProgram('mlf_align2d', ['XmippRecons']) sjors
+AddXmippProgram('mlf_align2d', ['XmippRecons']) #sjors
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
 #AddXmippProgram('mlf_refine3d', ['XmippRecons']) sjors
 #AddXmippProgram('ml_tomo', ['XmippRecons']) sjors
@@ -824,7 +822,9 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_common_lines', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
-####    AddXmippMPIProgram('template_parallel', ['XmippRecons'])
+    AddXmippMPIProgram('template_parallel', ['XmippRecons'])
+    AddXmippMPIProgram('template_threads', ['XmippRecons'])
+    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 #    # AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])sjors
 #    AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])sjors
 #    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])sjors
