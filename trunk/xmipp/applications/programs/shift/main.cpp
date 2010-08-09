@@ -25,7 +25,7 @@
 
 #include <data/progs.h>
 #include <data/args.h>
-#include <data/docfile.h>
+#include <data/metadata.h>
 #include <data/geometry.h>
 
 class Shift_Scale_parameters: public Prog_parameters
@@ -36,47 +36,27 @@ public:
     bool             wrap;
     bool             store_in_header;
     bool             center_mass;
-    DocFile          DF_shifts;
-    DocFile          DF_scales;
-    int              colX_shift;
-    int              colX_scale;
+    MetaData         DF_shifts;
+    MetaData         DF_scales;
     bool             Docfile;
-
 
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        int i_shift = paremeterPosition(argc, argv, "-shift");
-        int i_scale = paremeterPosition(argc, argv, "-scale");
+        FileName fnShift = getParameter(argc, argv, "-shift","");
+        FileName fnScale = getParameter(argc, argv, "-scale","");
         center_mass = checkParameter(argc, argv, "-center_mass");
 
-        if (i_shift == -1 && i_scale == -1 && !center_mass)
+        if (fnShift=="" && fnScale=="" && !center_mass)
             REPORT_ERROR(1, "Shift_Scale:: Cannot find -shift or -scale");
-        else if (ABS(i_shift - i_scale) <= 1 && !center_mass)
-            REPORT_ERROR(1, "Shift_cale: Not enough parameters after -shift or -scale");
-        Docfile = checkParameter(argc, argv, "-colX_shift") ||
-                  checkParameter(argc, argv, "-colX_scale");
+        Docfile = (fnShift!="" && fnShift.isMetaData(false)) ||
+        		  (fnScale!="" && fnScale.isMetaData(false));
         if (Docfile)
         {
-            if (i_shift > 0)
-            {
-                DF_shifts.read(argv[i_shift+1]);
-                colX_shift = textToInteger(getParameter(argc, argv, "-colX_shift"));
-                // colX_shift -=3;
-                // if(colX_shift<0)
-                //   REPORT_ERROR(1,"colX_shift must be no less than 3");
-            }
-            else colX_shift = -1;
-
-            if (i_scale > 0)
-            {
-                DF_scales.read(argv[i_scale+1]);
-                colX_scale = textToInteger(getParameter(argc, argv, "-colX_scale", "5"));
-                colX_scale -= 3;
-                if (colX_scale < 0)
-                    REPORT_ERROR(1, "colX_scale must be no less than 3");
-            }
-            else colX_scale = -1;
+            if (fnShift!="" && fnShift.isMetaData(false))
+                DF_shifts.read(fnShift);
+            if (fnScale!="" && fnScale.isMetaData(false))
+                DF_scales.read(fnScale);
         }
         else
         {
@@ -84,12 +64,12 @@ public:
             if (checkParameter(argc, argv, "-shift"))
             {
                 shift = getVectorParameter(argc, argv, "-shift", -1);
-                my_dim = XSIZE(shift);
+                my_dim = VEC_XSIZE(shift);
             }
             if (checkParameter(argc, argv, "-scale"))
             {
                 scale = getVectorParameter(argc, argv, "-scale", -1);
-                my_dim = XSIZE(scale);
+                my_dim = VEC_XSIZE(scale);
             }
 
             if (!checkParameter(argc, argv, "-shift") && !center_mass)
@@ -107,38 +87,35 @@ public:
     void show()
     {
         Prog_parameters::show();
-        if (wrap) std::cout << "Wrapping image/volume\n";
-        else      std::cout << "Not wrapping image/volume\n";
-        if (store_in_header) std::cout << "Storing the shift in header\n";
-        else                 std::cout << "Shifting image/volume\n";
-        if (XSIZE(shift) > 1)
+        if (wrap)
+            std::cout << "Wrapping image/volume\n";
+        else
+            std::cout << "Not wrapping image/volume\n";
+        if (store_in_header)
+            std::cout << "Storing the shift in header\n";
+        else
+            std::cout << "Shifting image/volume\n";
+        if (VEC_XSIZE(shift) > 1)
             std::cout << "Shift: " << shift.transpose() << std::endl;
-        else if (DF_shifts.name() != "")
-        {
-            std::cout << "Shift docfile: " << DF_shifts.name() << std::endl;
-            std::cout << "colX_shift:  " << colX_shift << std::endl;
-        }
-        if (XSIZE(scale) > 1)
+        else if (DF_shifts.getFilename() != "")
+            std::cout << "Shift docfile: " << DF_shifts.getFilename() << std::endl;
+        if (VEC_XSIZE(scale) > 1)
             std::cout << "Scale: " << scale.transpose() << std::endl;
-        else if (DF_scales.name() != "")
-        {
-            std::cout << "Scale: docfile: "       << DF_scales.name() << std::endl;
-            std::cout << "colX_scale:  " << colX_scale << std::endl;
-        }
-        if (center_mass) std::cout << "Moving center of mass to origin\n";
+        else if (DF_scales.getFilename() != "")
+            std::cout << "Scale: docfile: "       << DF_scales.getFilename() << std::endl;
+        if (center_mass)
+            std::cout << "Moving center of mass to origin\n";
     }
 
     void usage()
     {
         Prog_parameters::usage();
-        std::cerr << "   -shift \"[<x>,<y>[,<z>]]\" : Shift by (x,y,z) for volumes, (x,y) for images\n"
+        std::cerr
+        << "   -shift \"[<x>,<y>[,<z>]]\" : Shift by (x,y,z) for volumes, (x,y) for images\n"
         << "   -scale \"[<x>,[<y>,<z>]]\" : Scale by (x,y,z)\n"
         << "   -shift <DocFile>         : Shifts are stored in a Docfile\n"
         << "   -scale <DocFile>         : Scales are stored in a Docfile (may be the same\n"
         << "                              Docfile used for shifts\n"
-        << "  [-colX_shift <col>]       : Column with  the X shift\n"
-        << "                              First column in the DocFile with data is number 0.\n"
-        << "  [-colX_scale <col>]       : Column with the scale information\n"
         << "  [-center_mass]            : Move the center of mass to the origin\n"
         << "  [-dont_wrap]              : By default, the image is wrapped\n"
         << "  [-store_in_header]        : Do not shift, but store the shift in the header\n"
@@ -146,18 +123,31 @@ public:
     }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Shift_Scale_parameters *eprm = (Shift_Scale_parameters *) prm;
-    Matrix2D<double> A(3, 3);
+    Matrix2D<double> A;
+    int dim;
+    if (ZSIZE(img())==1)
+    {
+        dim=2;
+        A.resize(3, 3);
+    }
+    else
+    {
+        dim=3;
+        A.resize(4, 4);
+    }
     A.initIdentity();
 
-    if (eprm->DF_shifts.name() != "")
+    if (eprm->DF_shifts.getFilename() != "")
     {
-        eprm->shift.resize(2);
-        XX(eprm->shift) = eprm->DF_shifts(eprm->colX_shift);
-        YY(eprm->shift) = eprm->DF_shifts(eprm->colX_shift + 1);
-        eprm->DF_shifts.next_data_line();
+        eprm->shift.resize(dim);
+        eprm->DF_shifts.getValue(MDL_SHIFTX,XX(eprm->shift));
+        eprm->DF_shifts.getValue(MDL_SHIFTY,YY(eprm->shift));
+        if (dim==3)
+            eprm->DF_shifts.getValue(MDL_SHIFTZ,ZZ(eprm->shift));
+        eprm->DF_shifts.nextObject();
     }
     else if (eprm->Docfile)
     {
@@ -170,107 +160,49 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
         eprm->shift = -eprm->shift;
     }
 
-    A(0, 2) = XX(eprm->shift);
-    A(1, 2) = YY(eprm->shift);
-    if (eprm->DF_scales.name() != "")
+    if (dim==2)
     {
-        eprm->scale.resize(2);
-        XX(eprm->scale) = eprm->DF_scales(eprm->colX_scale);
-        YY(eprm->scale) = eprm->DF_scales(eprm->colX_scale + 1);
-        eprm->DF_scales.next_data_line();
+        A(0, 2) = XX(eprm->shift);
+        A(1, 2) = YY(eprm->shift);
+    }
+    else
+    {
+        A(0, 3) = XX(eprm->shift);
+        A(1, 3) = YY(eprm->shift);
+        A(2, 3) = ZZ(eprm->shift);
+    }
+    if (eprm->DF_scales.getFilename() != "")
+    {
+        eprm->scale.resize(dim);
+        eprm->DF_scales.getValue(MDL_SCALE,XX(eprm->scale));
+        eprm->DF_scales.getValue(MDL_SCALE,YY(eprm->scale));
+        if (dim==3)
+            eprm->DF_scales.getValue(MDL_SCALE,XX(eprm->scale));
+        eprm->DF_scales.nextObject();
     }
     else if (eprm->Docfile || eprm->center_mass)
     {
-        eprm->scale.resize(2);
+        eprm->scale.resize(dim);
         eprm->scale.initConstant(1.);
     }
     A(0, 0) = XX(eprm->scale);
     A(1, 1) = YY(eprm->scale);
-    if (!eprm->store_in_header) img().selfApplyGeometryBSpline(A, 3, IS_NOT_INV, eprm->wrap);
-    else                        img.set_originOffsets(XX(eprm->shift), YY(eprm->shift));
-    return true;
-}
-
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    Matrix2D<double> A(4, 4);
-    A.initIdentity();
-    Shift_Scale_parameters *eprm = (Shift_Scale_parameters *) prm;
-    if (eprm->DF_shifts.name() != "")
+    if (dim==3)
+        A(2,2) = ZZ(eprm->scale);
+    if (!eprm->store_in_header)
+        selfApplyGeometry(BSPLINE3,img(),A, IS_NOT_INV, eprm->wrap);
+    else
     {
-        eprm->shift.resize(3);
-        XX(eprm->shift) = eprm->DF_shifts(eprm->colX_shift);
-        YY(eprm->shift) = eprm->DF_shifts(eprm->colX_shift + 1);
-        ZZ(eprm->shift) = eprm->DF_shifts(eprm->colX_shift + 2);
-        eprm->DF_shifts.next_data_line();
+    	if (dim==2)
+    		img.setShifts(XX(eprm->shift), YY(eprm->shift));
+    	else
+    		img.setShifts(XX(eprm->shift), YY(eprm->shift), ZZ(eprm->shift));
     }
-    else if (eprm->Docfile)
-    {
-        eprm->shift.resize(3);
-        eprm->shift.initConstant(1.);
-    }
-    else if (eprm->center_mass)
-    {
-        vol().centerOfMass(eprm->shift);
-        eprm->shift = -eprm->shift;
-    }
-    A(0, 3) = XX(eprm->shift);
-    A(1, 3) = YY(eprm->shift);
-    A(2, 3) = ZZ(eprm->shift);
-
-    if (eprm->DF_scales.name() != "")
-    {
-        eprm->scale.resize(3);
-        XX(eprm->scale) = eprm->DF_scales(eprm->colX_scale);
-        YY(eprm->scale) = eprm->DF_scales(eprm->colX_scale + 1);
-        ZZ(eprm->scale) = eprm->DF_scales(eprm->colX_scale + 2);
-        eprm->DF_scales.next_data_line();
-    }
-    else if (eprm->Docfile || eprm->center_mass)
-    {
-        eprm->scale.resize(3);
-        eprm->scale.initConstant(1.);
-    }
-    A(0, 0) = XX(eprm->scale);
-    A(1, 1) = YY(eprm->scale);
-    A(2, 2) = ZZ(eprm->scale);
-    vol().selfApplyGeometryBSpline(A, 3, IS_NOT_INV, eprm->wrap);
     return true;
 }
 
 int main(int argc, char **argv)
 {
     Shift_Scale_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
-
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Shift {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Shift/Help/shift.html";
-      help="Shift volumes and images";
-      OPEN MENU menu_shift;
-      COMMAND LINES {
- + usual: xmipp_shift
-               #include "prog_line.mnu"
-                -shift "["$X","$Y[","$Z]"]"
-               [-dont_wrap]
-      }
-      PARAMETER DEFINITIONS {
-        #include "prog_vars.mnu"
-            $X  {type=float; label="Shift X ";}
-            $Y  {type=float; label="Shift Y ";}
-        OPT($Z) {type=float; label="Shift Z ";}
-        OPT(-dont_wrap) {label="Do not wrap";}
-      }
-   }
-
-   MENU menu_shift {
-      #include "prog_menu.mnu"
-      "Shift parameters"
-      $X
-      $Y
-      OPT($Z)
-      OPT(-dont_wrap)
-   }
-*/
