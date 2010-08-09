@@ -23,7 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/volume.h>
 #include <data/image.h>
 #include <data/mask.h>
 #include <data/args.h>
@@ -37,9 +36,7 @@ void Usage();
 
 int main(int argc, char **argv)
 {
-    VolumeXmipp     V, Vdist, Vlabel;
-    ImageXmipp      I;
-    bool            image_mode;
+    Image<double>   I, Vdist, Vlabel;
     FileName        fn_in, fn_out, fn_dist, fn_label;
     double          th_below, th_above, th;
     double          dmin, dmax;
@@ -53,8 +50,7 @@ int main(int argc, char **argv)
     std::string     str_new_val, str_old_val;
     double          accuracy;
     Mask_Params     mask_prm(INT_MASK);
-    Matrix2D<int>   * mask2D;
-    Matrix3D<int>   * mask3D;
+    MultidimArray<int> * mask;
 
     // Read arguments --------------------------------------------------------
     try
@@ -76,10 +72,14 @@ int main(int argc, char **argv)
         binarize = checkParameter(argc, argv, "-binarize");
         if (binarize)
         {
-            if (enable_th_above)          th = th_above;
-            else if (enable_th_below)     th = th_below;
-            else if (enable_th_abs_below) th = th_below;
-            else                          th = 0;
+            if (enable_th_above)
+                th = th_above;
+            else if (enable_th_below)
+                th = th_below;
+            else if (enable_th_abs_below)
+                th = th_below;
+            else
+                th = 0;
         }
         int i;
         if ((i = paremeterPosition(argc, argv, "-substitute")) != -1)
@@ -91,7 +91,8 @@ int main(int argc, char **argv)
             str_new_val = argv[i+2];
             accuracy = textToFloat(getParameter(argc, argv, "-accuracy", "0"));
         }
-        else enable_substitute = false;
+        else
+            enable_substitute = false;
         if ((i = paremeterPosition(argc, argv, "-random_substitute")) != -1)
         {
             enable_random_substitute = true;
@@ -102,10 +103,11 @@ int main(int argc, char **argv)
             sig_val = textToFloat(argv[i+3]);
             accuracy = textToFloat(getParameter(argc, argv, "-accuracy", "0"));
         }
-        else enable_random_substitute = false;
-	// Read mask stuff
+        else
+            enable_random_substitute = false;
+        // Read mask stuff
         mask_prm.read(argc, argv);
-	apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
+        apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
 
     }
 
@@ -119,82 +121,60 @@ int main(int argc, char **argv)
 
     try
     {
-        if (Is_ImageXmipp(fn_in))
+        I.read(fn_in);
+        if (ZSIZE(I())==1)
         {
-            image_mode = true;
-            I.read(fn_in);
-	    mask_prm.mask_geo = I.get_transformation_matrix();
-	    mask_prm.generate_2Dmask(I(),apply_geo);
-	    mask2D = & (mask_prm.get_binary_mask2D());
-        }
-        else if (Is_VolumeXmipp(fn_in))
-        {
-            image_mode = false;
-            V.read(fn_in);
-	    mask_prm.generate_3Dmask(V());
-	    mask3D = & (mask_prm.get_binary_mask3D());
-        }
-        else EXIT_ERROR(1, "Threshold: Input file is not an image nor a volume");
-
-       // Apply density restrictions -------------------------------------------
-        if (image_mode)
-        {
-            if (enable_th_below) I().threshold("below", th_below, th_below, mask2D);
-            if (enable_th_above) I().threshold("above", th_above, th_above, mask2D);
-            if (enable_th_abs_below) I().threshold("abs_below", th_below, 0, mask2D);
+            mask_prm.mask_geo = I.getTransformationMatrix();
+            mask_prm.generate_mask(I(),apply_geo);
         }
         else
-        {
-            if (enable_th_below) V().threshold("below", th_below, th_below, mask3D);
-            if (enable_th_above) V().threshold("above", th_above, th_above, mask3D);
-            if (enable_th_abs_below) V().threshold("abs_below", th_below, 0, mask3D);
-        }
+            mask_prm.generate_mask(I());
+        mask = & (mask_prm.get_binary_mask());
+
+        // Apply density restrictions -------------------------------------------
+        if (enable_th_below)
+            I().threshold("below", th_below, th_below, mask);
+        if (enable_th_above)
+            I().threshold("above", th_above, th_above, mask);
+        if (enable_th_abs_below)
+            I().threshold("abs_below", th_below, 0, mask);
 
         // Apply substitution ---------------------------------------------------
         if (enable_substitute)
-            if (image_mode)
-            {
-                SET_SUBS_VAL(I(), new_val, str_new_val);
-                SET_SUBS_VAL(I(), old_val, str_old_val);
-                I().substitute(old_val, new_val, accuracy, mask2D);
-            }
-            else
-            {
-                SET_SUBS_VAL(V(), new_val, str_new_val);
-                SET_SUBS_VAL(V(), old_val, str_old_val);
-                V().substitute(old_val, new_val, accuracy, mask3D);
-            }
+        {
+            SET_SUBS_VAL(I(), new_val, str_new_val);
+            SET_SUBS_VAL(I(), old_val, str_old_val);
+            I().substitute(old_val, new_val, accuracy, mask);
+        }
 
         // Apply random substitution --------------------------------------------
         if (enable_random_substitute)
-            if (image_mode)
-                I().randomSubstitute(old_val, avg_val, sig_val, accuracy, mask2D);
-            else
-                V().randomSubstitute(old_val, avg_val, sig_val, accuracy, mask3D);
+            I().randomSubstitute(old_val, avg_val, sig_val, accuracy, mask);
 
-         // Apply distance restrictions ------------------------------------------
-        if (!image_mode && fn_dist != "")
+        // Apply distance restrictions ------------------------------------------
+        if (ZSIZE(I())>1 && fn_dist != "")
         {
             Vdist.read(fn_dist);
             if (fn_label == "")
                 EXIT_ERROR(1, "Threshold: You must supply a label volume\n");
             Vlabel.read(fn_label);
-            FOR_ALL_ELEMENTS_IN_MATRIX3D(Vdist())
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(MULTIDIM_ARRAY(Vdist))
             {
-                if (Vlabel(k, i, j) > 0) Vdist(k, i, j) *= -1;
-                if (enable_dmin && Vdist(k, i, j) < dmin) V(k, i, j) = 0;
-                if (enable_dmax && Vdist(k, i, j) > dmax) V(k, i, j) = 0;
+                if (Vlabel(k, i, j) > 0)
+                    Vdist(k, i, j) *= -1;
+                if (enable_dmin && Vdist(k, i, j) < dmin)
+                    I(k, i, j) = 0;
+                if (enable_dmax && Vdist(k, i, j) > dmax)
+                    I(k, i, j) = 0;
             }
         }
 
         // Binarize -------------------------------------------------------------
         if (binarize)
-            if (image_mode) I().binarize(th);
-            else            V().binarize(th);
+            I().binarize(th);
 
         // Write output volume --------------------------------------------------
-        if (image_mode) I.write(fn_out);
-        else            V.write(fn_out);
+        I.write(fn_out);
     }
     catch (Xmipp_error Xe)
     {
@@ -227,120 +207,3 @@ void Usage()
     << "  [-dont_apply_geo]               : dont apply (opposite) header transformation to mask\n";
 
 }
-
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM Threshold {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/Threshold/Help/threshold.html";
-      help="Apply a threshold and binarize an image or volume, even with
-            distance restrictions";
-      OPEN MENU Threshold;
-      COMMAND LINES {
-         + usual: threshold -i $FILE_IN [-o $FILE_OUT]
-             [-below $BELOW_TH] [-above $ABOVE_TH]
-             [-binarize]
-             [-dist $DISTVOL -label $LABELVOL [-dmin $DMIN] [-dmax $DMAX]]
-             [-substitute $OLDVAL $OLDMINMAX $NEWVAL $NEWMINMAX
-                [-accuracy $ACCURACY]]
-      }
-      PARAMETER DEFINITIONS {
-         $FILE_IN {
-            label="Input file";
-            help="Image or volume";
-            type=FILE EXISTING;
-         }
-         $FILE_OUT {
-            label="Output file";
-            help="If not given, the same as input";
-            type=FILE;
-         }
-         $BELOW_TH {
-            label="Below threshold";
-            help="All values below this threshold are removed";
-            type=FLOAT;
-         }
-         $ABOVE_TH {
-            label="Above threshold";
-            help="All values above this threshold are removed";
-            type=FLOAT;
-         }
-         OPT(-binarize) {
-            label="Binarize output file";
-            help="Non zero values are set to 1";
-         }
-         OPT(-dist) {
-            label="Use distance conditions";
-            help="Only for volumes";
-         }
-            $DISTVOL {
-               label="Distance volume";
-               help="Minimum distance to a feature/background";
-               type=FILE EXISTING;
-            }
-            $LABELVOL {
-               label="Label volume";
-               help="Phantom segmentation";
-               type=FILE EXISTING;
-            }
-            $DMIN {
-               label="Minimum distance";
-               help="Voxels whose distance is smaller than this one are removed";
-               type=FLOAT;
-            }
-            $DMAX {
-               label="Maximum distance";
-               help="Voxels whose distance is greater than this one are removed";
-               type=FLOAT;
-            }
-         OPT(-substitute) {
-            label="Substitute a value by another";
-            help="This is the first step before thresholding";
-         }
-           $OLDVAL {
-              label="Old value";
-              type=text;
-              by default="0";
-           }
-           $OLDMINMAX {
-              label="Value type";
-              type=list {
-                 "User Defined"
-                 "min" {$OLDVAL="min";}
-                 "max" {$OLDVAL="max";}
-              };
-           }
-           $NEWVAL {
-              label="New value";
-              type=text;
-              by default="0";
-           }
-           $NEWMINMAX {
-              label="Value type";
-              type=list {
-                 "User Defined"
-                 "min" {$NEWVAL="min";}
-                 "max" {$NEWVAL="max";}
-              };
-           }
-           $ACCURACY {
-              label="Accuracy";
-              help="If the value in the image/volume is closer than ACCURACY
-                 to the old value, then it is substituted";
-              type=float [0...];
-              by default="0";
-           }
-      }
-   }
-   MENU Threshold {
-      "I/O Parameters"
-      $FILE_IN
-      OPT($FILE_OUT)
-      "Density conditions"
-      OPT(-below)
-      OPT(-above)
-      OPT(-binarize)
-      OPT(-substitute)
-      "Distance conditions"
-      OPT(-dist)
-   }
-*/
