@@ -50,14 +50,16 @@ public:
     }
 };
 
-bool process_img(ImageXmipp &img, const Prog_parameters *prm)
+bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
+	if (ZSIZE(img())!=1)
+		REPORT_ERROR(1,"This program is not intended for volumes");
     Markhan_parameters *eprm = (Markhan_parameters *) prm;
-    Matrix2D<double> aux = img();
+    MultidimArray<double> aux = img();
     for (int i = 1; i < eprm->symmetry; i++)
     {
-        Matrix2D<double> rotatedImg;
-        img().rotateBSpline(3, 360.0 / eprm->symmetry * i, rotatedImg);
+    	MultidimArray<double> rotatedImg;
+        rotate(BSPLINE3, rotatedImg, img(), 360.0 / eprm->symmetry * i);
         aux += rotatedImg;
     }
     aux /= eprm->symmetry;
@@ -65,15 +67,8 @@ bool process_img(ImageXmipp &img, const Prog_parameters *prm)
     return true;
 }
 
-bool process_vol(VolumeXmipp &vol, const Prog_parameters *prm)
-{
-    REPORT_ERROR(1, "xmipp_markhan: This program is not intended for volumes. "
-                 "Please use xmipp_symmetrize.");
-    return true;
-}
-
 int main(int argc, char **argv)
 {
     Markhan_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img, (void*)&process_vol);
+    SF_main(argc, argv, &prm, (void*)&process_img);
 }
