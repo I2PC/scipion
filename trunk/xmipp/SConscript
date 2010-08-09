@@ -679,7 +679,6 @@ AddXmippProgram('common_lines', ['XmippRecons'])
 AddXmippProgram('denoise', ['XmippRecons'])
 AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
-AddXmippProgram('metadata_histogram')
 AddXmippProgram('enhance_contrast', ['XmippRecons'])
 AddXmippProgram('filter_projections', ['XmippRecons'])
 AddXmippProgram('find_center3d')
@@ -694,14 +693,15 @@ AddXmippProgram('image_import')
 AddXmippProgram('make_spectra', ['XmippRecons'])
 AddXmippProgram('mask')
 AddXmippProgram('mean_shift')
-AddXmippProgram('metadata_split')
+AddXmippProgram('metadata_histogram')
 AddXmippProgram('metadata_operate')
+AddXmippProgram('metadata_split')
 AddXmippProgram('micrograph_downsample', ['XmippRecons'])
 AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 AddXmippProgram('micrograph_scissor'),
 AddXmippProgram('mirror')
-#AddXmippProgram('ml_align2d', ['XmippRecons'])
-AddXmippProgram('mlf_align2d', ['XmippRecons']) #sjors
+AddXmippProgram('ml_align2d', ['XmippRecons'])
+#AddXmippProgram('mlf_align2d', ['XmippRecons']) #sjors
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
 #AddXmippProgram('mlf_refine3d', ['XmippRecons']) sjors
 #AddXmippProgram('ml_tomo', ['XmippRecons']) sjors
