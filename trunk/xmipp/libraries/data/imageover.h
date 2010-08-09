@@ -397,20 +397,5 @@ public:
      * @endcode
      */
     void downsample(Image< double >* I) const;
-
-    /** Generate an oversampled image from a normal one
-     *
-     * This function passes from a normal image to an oversampled one, in our
-     * example from 5x5 to 250x250. First you have to initialise the parameters
-     * of the oversampled image and then the oversampling is done by bilinear
-     * interpolation.
-     *
-     * @code
-     * oversample(&I);
-     * @endcode
-     *
-     * FIXME NOT IMPLEMENTED!!
-     */
-    void oversample(Image< double > *I) const;
 };
 #endif

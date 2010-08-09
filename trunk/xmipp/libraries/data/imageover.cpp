@@ -61,8 +61,3 @@ void ImageOver::downsample(Image< double > *I) const
             IMGPIXEL(*I, i, j) /= vistep * uistep;
         }
 }
-
-// Generate the oversample image by interpolation --------------------------
-void ImageOver::oversample(Image < double > *I) const
-    {}
-
