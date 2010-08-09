@@ -1000,7 +1000,7 @@ FileName FileName::remove_file_format() const
     return *this;
 }
 
-bool FileName::isMetaData() const
+bool FileName::isMetaData(bool failIfNotExists) const
 {
     //file names containing @, : or % are not metadatas
     size_t found=this->find('@');
@@ -1023,9 +1023,11 @@ bool FileName::isMetaData() const
         std::ifstream infile(data(), std::ios_base::in);
         std::string line;
 
-        if (infile.fail())
-        {
-            REPORT_ERROR( 200, (std::string) "File " + *this + " does not exit." );
+        if (infile.fail()) {
+			if (failIfNotExists)
+		 	    REPORT_ERROR( 200, (std::string) "File " + *this + " does not exist." );
+			else
+				return false;
         }
 
         // Search for xmipp_3,

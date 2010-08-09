@@ -1078,7 +1078,7 @@ public:
      * Returns true if the get_file_format extension == "sel", "doc" or "xmd"
      * Otherwise, the file is opened and checked for the occurence of "XMIPP_3 *" in its first line
      */
-    bool isMetaData() const;
+    bool isMetaData(bool failIfNotExists=true) const;
 
     /** Clean image FileName (as in Bsoft)
      * @ingroup FilenameManipulators
