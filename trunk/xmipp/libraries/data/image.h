@@ -45,11 +45,8 @@
 #include <cstring>
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
 
-
-
 //static std::vector<MDLabel> emptyVector;
 //static MetaData emptyMetaData;
-
 typedef enum
 {
     NoTransform = 0,        // No transform
@@ -77,6 +74,13 @@ typedef enum
     ComplexDouble = 13,      // Complex floating point (16-byte)
     Bool = 14    // Boolean (1-byte?)
 } DataType;
+
+typedef enum
+{
+    WRITE_OVERWRITE, //forget about the old file and overwrite it
+	WRITE_APPEND,    //append and object at the end of a stack, so far can not append stacks
+    WRITE_REPLACE    //replace a particular object by another
+} WriteMode;
 
 // Ask memory size of datatype
 unsigned long   gettypesize(DataType type);

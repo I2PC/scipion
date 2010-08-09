@@ -9,7 +9,6 @@
 #ifndef RWSPIDER_H
 #define RWSPIDER_H
 
-#include "define.h"
 #define SPIDERSIZE 1024 // Minimum size of the SPIDER header (variable)
 struct SPIDERhead
 {          // file header for SPIDER data
