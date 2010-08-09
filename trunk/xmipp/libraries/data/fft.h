@@ -504,6 +504,4 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v,
  * Changes the real and the fourier space origin
  */
 void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward);
-
-
 #endif

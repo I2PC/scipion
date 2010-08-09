@@ -1370,10 +1370,6 @@ size_t xmippFWRITE(const void *src, size_t size, size_t nitems, FILE * &fp,
 
 
 /** Conversion little-big endian any size */
-//#define little22bigendian(x) ByteSwap((unsigned char *) &(x),sizeof(x))
-//the prevous define is in the hh file, I leave a commented copy here
-//so the code can be more easily understood
-
 void ByteSwap(unsigned char * b, int n)
 {
     register int i = 0;

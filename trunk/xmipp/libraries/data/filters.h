@@ -622,7 +622,7 @@ void Fourier_Bessel_decomposition(const MultidimArray< double >& img_in,
 void harmonic_decomposition(const MultidimArray< double >& img_in,
                             MultidimArray< double >& v_out);
 
-// TODO Document, check indentation
+// Function needed by median filtering
 template <typename T>
 void sort(T a, T b, T c, MultidimArray< T >& v)
 {
@@ -665,6 +665,7 @@ void sort(T a, T b, T c, MultidimArray< T >& v)
     }
 }
 
+// Function needed by median filtering
 template <typename T>
 void merge_sort(MultidimArray< T >& v1, MultidimArray< T >& v2, MultidimArray< T >& v)
 {
@@ -685,6 +686,7 @@ void merge_sort(MultidimArray< T >& v1, MultidimArray< T >& v2, MultidimArray< T
         v(i++) = v2(i2++);
 }
 
+// Function needed by median filtering
 // This UGLY function performs a fast merge sort for the case of vectors of 3
 // elements. This way is guaranteed a minimum number of comparisons (maximum
 // number of comparisons to perform the sort, 5)
@@ -875,7 +877,7 @@ void fast_merge_sort(MultidimArray< T >& x, MultidimArray< T >& y, MultidimArray
     }
 }
 
-// TODO Document
+// Function needed by median filtering
 template <typename T>
 void median(MultidimArray< T >& x, MultidimArray< T >& y, T& m)
 {

@@ -35,7 +35,7 @@
 #include "geometry.h"
 #include "args.h"
 
-/* Forward declariations --------------------------------------------------- */
+/* Forward declarations ---------------------------------------------------- */
 template <class T>
 class GridVolumeT;
 template <class T>
@@ -53,8 +53,8 @@ class Basis;
     combination of a volume basis function weighted and shifted to all
     positions defined by the grid. Grids in Xmipp may be as complex as
     you liked, a complex grid is supposed to be a superposition of
-    simpler grids. Simple grids mantain information about the simple
-    grids themselves (orientation, spastd::cing, ...) while complex
+    simpler grids. Simple grids maintain information about the simple
+    grids themselves (orientation, spacing, ...) while complex
     ones are only collections of simple grids. Usual grids as BCC
     (Body Centered Cubic) or FCC (Face Centered Cubic),
     can be expressed as the superposition of two CC (Cubic) grids.
@@ -63,6 +63,7 @@ class Basis;
     the reconstruction algorithms independent from the underlying
     grid, incrementing the reusability of the code.
 */
+//@{
 
 /*****************************************************************************/
 /* Simple Grids                                                              */
@@ -793,7 +794,6 @@ Grid Create_FCC_grid(double relative_size, double R);
     is why this Grid Volumes are compound of a list of volumes. The first
     volume of the grid volume should contain the coefficients for the first
     grid in the list of grids, and so on.
-
 */
 template <class T>
 class GridVolumeT
@@ -1526,5 +1526,5 @@ std::ostream& operator << (std::ostream &o, const GridVolumeT<T> &GV)
     }
     return o;
 }
-
+//@}
 #endif

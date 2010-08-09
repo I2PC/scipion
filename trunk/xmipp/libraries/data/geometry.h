@@ -915,9 +915,4 @@ double intersection_unit_cylinder(const Matrix1D< double >& u,
  */
 double intersection_unit_cube(const Matrix1D< double >& u,
                               const Matrix1D< double >& r);
-
-
-
-
-
 #endif

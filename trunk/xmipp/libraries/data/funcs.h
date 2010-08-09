@@ -36,7 +36,6 @@
 #include <climits>
 #include <algorithm>
 #include <vector>
-//ROB
 #include <typeinfo>
 
 // For timing functions
@@ -306,32 +305,25 @@ double gaussian2D(double x,
                   double muX = 0,
                   double muY = 0);
 
-
-
 /// @defgroup MiscellaneousFunctions Miscellaneous functions
 /// @ingroup GeneralFunctions
-/** Print a value in binary
+
+/** Divides a number into most equally groups
  * @ingroup MiscellaneousFunctions
  *
- * So far not instatiate for float/double number
+ * For example you want to distribute N jobs between M workers
+ * so each worker will have N/M jobs and some of them(N % M first)
+ * will have N/M + 1 jobs
+ * So for the worker 'rank' will be computed the first and last job to do
+ * Return the number of jobs assigned, that could be N/M + 1 or N/M
  *
- * This function is not ported to Python.
  */
-template <typename T>
-void printb(std::ostream& o, T value)
-{
-    char buf[CHAR_BIT * sizeof(T) + 1];
-    size_t i;
+int divide_equally(int N, int size, int rank, int &first, int &last);
 
-    for (i = 0; i < CHAR_BIT * sizeof(T); ++i)
-    {
-        buf[i] = '0' + (value & 1);
-        value >>= 1;
-    }
-    buf[i] = 0;
-
-    o << buf;
-}
+/** In which group (of divide_equally) is myself situated?
+ * @ingroup MiscellaneousFunctions
+ */
+int divide_equally_group(int N, int size, int myself);
 
 /** Compute the logarithm in base 2
  * @ingroup MiscellaneousFunctions
@@ -1521,7 +1513,6 @@ private:
     bool cancel;
 };
 
-
 /** xmippTextualListener
  * @ingroup TimeManaging
  *
@@ -1620,22 +1611,13 @@ size_t xmippFWRITE(const void* src,
  *
  * This function is not ported to Python.
  */
-#define little22bigendian(x) ByteSwap((unsigned char*)& x,sizeof(x))
+#define little22bigendian(x) swapbytes((unsigned char*)& x,sizeof(x))
 
-void ByteSwap(unsigned char* b, int n);
-
-/************************************************************************
-@Function: swapbytes from bsoft
-@Description:
-        Swaps bytes.
-@Algorithm:
-        Byte swapping is done in place.
-@Arguments:
-        char* v                         a pointer to the bytes.
-        unsigned long n         the number of bytes to swap.
-@Returns:
-        void                            -.
-**************************************************************************/
+/** Conversion little-big endian
+ * @ingroup LittleBigEndian
+ *
+ * This function is not ported to Python.
+ */
 void swapbytes(char* v, unsigned long n);
 
 /** Returns 1 if machine is big endian else 0
@@ -1870,21 +1852,4 @@ private:
                                       (double) MaxInteger);
     }
 };
-
-/** Divides a number into most equally groups
- *
- * For example you want to distribute N jobs between M workers
- * so each worker will have N/M jobs and some of them(N % M first)
- * will have N/M + 1 jobs
- * So for the worker 'rank' will be computed the first and last job to do
- * Return the number of jobs assigned, that could be N/M + 1 or N/M
- *
- */
-int divide_equally(int N, int size, int rank, int &first, int &last);
-
-/** In which group (of divide_equally) is myself situated?
- */
-int divide_equally_group(int N, int size, int myself);
-
-
 #endif
