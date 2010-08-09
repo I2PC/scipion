@@ -126,8 +126,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     // could be passed for restart or for debugging
     seed = textToInteger(getParameter(argc2, argv2, "-random_seed", "-1"));
     if (seed == -1)
-        std::cerr << "------Not randomizing...just for testing...." <<std::endl;
-    //seed = time(NULL);
+        seed = time(NULL);
     else if (!do_restart)
         std::cerr << "WARNING: *** Using a non random seed and not in restarting ***" <<std::endl;
 
