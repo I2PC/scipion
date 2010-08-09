@@ -45,8 +45,12 @@
 #include <cstring>
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
 
-//static std::vector<MDLabel> emptyVector;
-//static MetaData emptyMetaData;
+/// @defgroup Images Images
+/// @ingroup DataLibrary
+//@{
+/** Transform type.
+ *  This type defines the kind of image.
+ */
 typedef enum
 {
     NoTransform = 0,        // No transform
@@ -56,6 +60,9 @@ typedef enum
     CentHerm = 4            // Centered hermitian: origin = (0,ny/2,nz/2)
 } TransformType;
 
+/** Data type.
+ * This class defines the datatype of the data inside this image.
+ */
 typedef enum
 {
     Unknown_Type = 0,       // Undefined data type
@@ -63,29 +70,35 @@ typedef enum
     SChar = 2,              // Signed character (for CCP4)
     UShort = 3,             // Unsigned integer (2-byte)
     Short = 4,              // Signed integer (2-byte)
-    UInt = 5,       // Unsigned integer (4-byte)
+    UInt = 5,               // Unsigned integer (4-byte)
     Int = 6,                // Signed integer (4-byte)
     Long = 7,               // Signed integer (4 or 8 byte, depending on system)
     Float = 8,              // Floating point (4-byte)
     Double = 9,             // Double precision floating point (8-byte)
-    ComplexShort = 10,       // Complex two-byte integer (4-byte)
+    ComplexShort = 10,      // Complex two-byte integer (4-byte)
     ComplexInt = 11,        // Complex integer (8-byte)
     ComplexFloat = 12,      // Complex floating point (8-byte)
-    ComplexDouble = 13,      // Complex floating point (16-byte)
-    Bool = 14    // Boolean (1-byte?)
+    ComplexDouble = 13,     // Complex floating point (16-byte)
+    Bool = 14               // Boolean (1-byte?)
 } DataType;
 
+/** Write mode
+ * This class defines the writing behavior.
+ */
 typedef enum
 {
     WRITE_OVERWRITE, //forget about the old file and overwrite it
-	WRITE_APPEND,    //append and object at the end of a stack, so far can not append stacks
+    WRITE_APPEND,    //append and object at the end of a stack, so far can not append stacks
     WRITE_REPLACE    //replace a particular object by another
 } WriteMode;
 
-// Ask memory size of datatype
-unsigned long   gettypesize(DataType type);
+/// Returns memory size of datatype
+unsigned long gettypesize(DataType type);
 
-/** Image Matrix access.
+/// @defgroup ImagesSpeedUp Images Speed-up
+/// @ingroup DataLibrary
+
+/** Volume Matrix access.
  * @ingroup ImagesSpeedUp
  *
  * This macro does the same as the normal 3D matrix access but in a faster way
@@ -99,9 +112,40 @@ unsigned long   gettypesize(DataType type);
  */
 #define VOLMATRIX(V) ((V).data)
 
-#define SWAPTRIG     65535   // Threshold file z size above which bytes are swapped
-// For fast access to pixel values (and for backwards compatibility of the code)
+/** Image Matrix access.
+ * @ingroup ImagesSpeedUp
+ *
+ * This macro does the same as the normal 2D matrix access but in a faster way
+ * as no function call is generated.
+ *
+ * @code
+ * IMGMATRIX(V).resize(128, 128);
+ *
+ * IMGMATRIX(V2) = IMGMATRIX(V1) + IMGMATRIX(V2);
+ * @endcode
+ */
+#define IMGMATRIX(I) ((I).data)
+
+/** Pixel access.
+ * @ingroup ImagesSpeedUp
+ * For fast access to pixel values (and for backwards compatibility of the code)
+ */
 #define IMGPIXEL(I, i, j) A2D_ELEM(((I).data), (i), (j))
+
+/** Physical pixel access.
+ * @ingroup ImagesSpeedUp
+ *
+ * The physical pixel access gives you access to a pixel by its physical
+ * position and not by its logical one. This access shouldn't be used as a
+ * custom, use instead the logical access, but there might be cases in which
+ * this access might be interesting. Physical positions start at index 0 in C.
+ *
+ * @code
+ * std::cout << "This is the first pixel stored in the Image " <<
+ *     DIRECT_IMGPIXEL(V, 0, 0) << std::endl;
+ * @endcode
+ */
+#define DIRECT_IMGPIXEL(I, i, j) DIRECT_A2D_ELEM(((I).data), (i), (j))
 
 /** Voxel access.
  * @ingroup ImagesSpeedUp
@@ -133,12 +177,10 @@ unsigned long   gettypesize(DataType type);
  */
 #define DIRECT_VOLVOXEL(I, k, i, j) DIRECT_A3D_ELEM(((I).data), (k), (i), (j))
 
-#define DIRECT_IMGPIXEL(I, i, j) DIRECT_A2D_ELEM(((I).data), (i), (j))
-#define IMGMATRIX(I) ((I).data)
-
-//dummy vectors for default function inizialization
-//static MetaDataContainer emptyMetaDataContainer;
-//static std::vector<MDLabel> emptyVector;
+/** Swapping trigger.
+ * Threshold file z size above which bytes are swapped.
+ */
+#define SWAPTRIG     65535
 
 /** Template class for images
  * @ingroup Images
@@ -150,11 +192,10 @@ template<typename T>
 class Image
 {
 public:
+    MultidimArray<T>    data;        // The image data array
+    MetaData MD;                     // data for each subimage
+    MetaData MDMainHeader;           // data for the file
 
-    MultidimArray<T>    data;       // The image data array
-    // FIXME: why cant this one be private as well?
-    MetaData MD;//data for each subimage
-    MetaData MDMainHeader;//data for the file
 private:
     FileName            filename;    // File name
     int                 dataflag;    // Flag to force reading of the data
@@ -165,23 +206,9 @@ private:
     int                 replaceNsize;// Stack size in the replace case
     int                 _exists;     // does target file exists?
     // equal 0 is not exists or not a stack
-
-    bool    mmapOn;  // Mapping when loading from file
-    int     mFd;     //Handle the file in reading method and mmap
-    size_t       mappedSize;
-    /*
-    double    min, max; // Limits
-    double    avg, std; // Average and standard deviation
-    double    smin, smax; // Limits for display
-    double    scale;  // Scale of last density conversion operation
-    double    shift;  // Shift of last density conversion operation before scaling
-    double    resolution; // Resolution limit of data - used for low-pass filtering
-    double    ux, uy, uz; // Voxel units (angstrom/pixel edge)
-    double    ua, ub, uc; // Unit cell dimensions (angstrom)
-    double    alf, bet, gam; // Unit cell angles (radian)
-    unsigned int  spacegroup; // Space group
-
-    */
+    bool                mmapOn;      // Mapping when loading from file
+    int                 mFd;         // Handle the file in reading method and mmap
+    size_t              mappedSize;  // Size of the mapped file
 
 public:
     /** Empty constructor
@@ -245,7 +272,6 @@ public:
     }
 
     /** Clear the header of the image
-     *
      */
     void clearHeader()
     {
@@ -256,7 +282,7 @@ public:
     }
 
     /** Check whether image is complex based on T
-       */
+     */
     bool isComplexT() const
     {
         return ( typeid(T) == typeid(std::complex<double>) ||
@@ -264,14 +290,13 @@ public:
     }
 
     /** Check whether image is complex based on transform
-         */
+      */
     bool isComplex() const
     {
         return !(transform==NoTransform);
     }
 
     /** Destructor.
-     *
      */
     ~Image()
     {
@@ -280,14 +305,14 @@ public:
 
 
     /** Specific read functions for different file formats
-    */
+      */
 #include "rwSPIDER.h"
 #include "rwMRC.h"
 #include "rwIMAGIC.h"
 #include "rwTIA.h"
 #include "rwDM3.h"
 #include "rwRAW.h"
-//#include "rwTIFF.h"
+    //#include "rwTIFF.h"
 
     /** Is this file an image
      *
@@ -398,12 +423,10 @@ public:
             err = readDM3(select_img,false);
         else if (ext_name.contains("raw"))//RAW
             err = readRAW(select_img,false);
-//        else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
-//            err = readTIFF(select_img,false);
+        //        else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
+        //            err = readTIFF(select_img,false);
         else
-        {
             err = readSPIDER(select_img,true);
-        }
 
         //This implementation does not handle stacks,
         //read in a block
@@ -454,69 +477,6 @@ public:
         if(this->data.getDim()>2)
             apply_geo=false;
 
-        //err = readMRC(*this, imgno);
-        /*
-        if ( filename.contains("#") || ext.empty() )
-        err = readRAW(p, select_img);
-        else if ( ext.contains("raw") )
-        err = readRAW(p, select_img);
-        else if ( ext.contains("asc") || ext.contains( "txt") )
-        err = readASCII(p);
-        else if ( ext.contains("pic") )
-        err = readBIORAD(p);
-        else if ( ext.contains("brx" ) || ext.contains("brix" ) )
-        err = readBRIX(p);
-        else if ( ext.contains("dat" ) )
-        err = readBrookhavenSTEM(p);
-        else if ( ext.contains("ccp") || ext.contains("map") )
-        err = readCCP4(p);
-        else if ( ext.contains("di") )
-        err = readDI(p, select_img);
-        else if ( ext.contains("dm") )
-        err = readDM(p);
-        else if ( ext.contains("omap" ) || ext.contains("dsn6") || ext.contains("dn6") )
-        err = readDSN6(p);
-        else if ( ext.contains("em") )
-        err = readEM(p);
-        else if ( ext.contains("pot") )
-        err = readGOODFORD(p);
-        else if ( ext.contains("grd") )
-        err = readGRD(p);
-        else if ( ext.contains("hkl") )
-        err = readHKL(p);
-        else if ( ext.contains("ip") )
-        err = readIP(p);
-        else if ( ext.contains("jpg") || ext.contains("jpeg") )
-        err = readJPEG(p);
-        else if ( ext.contains("mif") )
-        err = readMIFF(p, select_img);
-        else if ( ext.contains("mff") )
-        err = readMFF(p);
-        else if ( ext.contains("pif") || ext.contains("sf") )
-        err = readPIF(p, select_img);
-        else if ( ext.contains("bp") || ext.contains("bq") )
-        err = readPIC(p);
-        else if ( ext.contains("png") )
-        err = readPNG(p);
-        else if ( ext.contains("spe") )
-        err = readSPE(p, select_img);
-        else if ( ext.contains("spm") || ext.contains("sup") || ext == "f" )
-        err = readSUPRIM(p);
-        else if ( ext.contains("tif") )
-        err = readTIFF(p, select_img);
-        else if ( ext.contains("xpl") || ext.contains("cns") || ext.contains("rfl") )
-        err = readXPLOR(p);
-        else {
-        fprintf(stderr, "Error: File format with extension \"%s\" not supported!\n", ext.c_str());
-        err = -1;
-            }
-        */
-        /*
-        if ( err < 0 ) {
-            REPORT_ERROR(10,"Error reading file");
-            }
-        */
-
         if (readdata && (apply_geo || only_apply_shifts))
         {
             Matrix2D< double > A = getTransformationMatrix(only_apply_shifts);
@@ -529,7 +489,6 @@ public:
 
         // Negative errors are bad.
         return err;
-
     }
 
     /** General write function
@@ -537,27 +496,16 @@ public:
      * overwrite = 0, append slice
      * overwrite = 1 overwrite slice
      */
-    //so far I assume that we are going to write everything
-    //replace and append no valid for stacks
     void write(FileName name="",
                int select_img=-1,
                bool isStack=false,
                int mode=WRITE_OVERWRITE)
     {
-
         int err = 0;
 
         if (name == "")
             name = filename;
-        /*
-                if(
-              (NSIZE(data)>1 && mode==WRITE_APPEND ) ||
-              (NSIZE(data)>1 && mode==WRITE_REPLACE )
-                )
-                {
-                 REPORT_ERROR(1,"append and replace are not available options for stacks");
-                }
-        */
+
         FileName ext_name = name.get_file_format();
         size_t found;
         filename = name;
@@ -571,9 +519,7 @@ public:
         filNamePlusExt = filename;
         found=filename.find_first_of(":");
         if ( found!=std::string::npos)
-        {
             filename   = filename.substr(0, found);
-        }
 
         //#define DEBUG
 #ifdef DEBUG
@@ -620,7 +566,7 @@ public:
               )
                 REPORT_ERROR(1,"write: target and source objects have different size");
             if(mode==WRITE_REPLACE && select_img>_Ndim)
-                REPORT_ERROR(1,"write: can not replace image stack is not large enough");
+                REPORT_ERROR(1,"write: cannot replace image stack is not large enough");
             if(auxI.replaceNsize <1 &&
                (mode==WRITE_REPLACE || mode==WRITE_APPEND))
                 REPORT_ERROR(1,"write: output file is not an stack");
@@ -809,11 +755,9 @@ public:
     }
 
     /** Cast page from T to datatype
-     * @ingroup XXX
-     *    input pointer  char *
+     *  input pointer char *
      */
     void castPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize )
-
     {
         switch (datatype)
         {
@@ -855,7 +799,6 @@ public:
     }
 
     /** Check file Datatype is same as T type to use mmap.
-     * @ingroup XXX.
      */
     bool checkMmapT(DataType datatype)
     {
@@ -948,11 +891,9 @@ public:
     }
 
     /** Write an entire page as datatype
-     * @ingroup XXX
      *
      * A page of datasize_n elements T is cast to datatype and written to fimg
      * The memory for the casted page is allocated and freed internally.
-     *
      */
     void writePageAsDatatype(FILE * fimg, DataType datatype, size_t datasize_n )
     {
@@ -964,8 +905,7 @@ public:
     }
 
     /** Swap an entire page
-      * @ingroup XXX
-      *    input pointer  char *
+      * input pointer char *
       */
     void swapPage(char * page, size_t pageNrElements, DataType datatype)
     {
@@ -995,6 +935,8 @@ public:
         }
     }
 
+    /** Read the raw data
+      */
     void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)
     {
         //#define DEBUG
@@ -1009,8 +951,6 @@ public:
         // If only half of a transform is stored, it needs to be handled
         if (transform == Hermitian || transform == CentHerm )
             data.setXdim(XSIZE(data)/2 + 1);
-
-
 
         size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
         size_t datatypesize=gettypesize(datatype);
@@ -1078,8 +1018,6 @@ public:
             else
                 page = (char *) askMemory(pagesize*sizeof(char));
 
-            //if ( pad > 0)
-            //    padpage = (char *) askMemory(pad*sizeof(char));
             fseek( fimg, myoffset, SEEK_SET );
             for ( size_t myn=0; myn<NSIZE(data); myn++ )
             {
@@ -1115,7 +1053,6 @@ public:
 #endif
 
         }
-
         return;
     }
 
@@ -1125,10 +1062,6 @@ public:
      * In this way we could resize an image just by
      * resizing its associated matrix or we could add two images by adding their
      * matrices.
-
-     ********* FIXME!!! withx,y,z also being part of image class this resizing would be DANGEROUS!!!
-
-     *
      * @code
      * I().resize(128, 128);
      * I2() = I1() + I2();
@@ -1160,17 +1093,17 @@ public:
     {
         return A2D_ELEM(data, i, j);
     }
-    /**
-    *  set pixel (direct acces) needed by swig
-    */
+    /** Set pixel
+     * (direct access) needed by swig
+     */
     void setPixel(int i, int j, T v)
     {
         IMGPIXEL(*this,i,j)=v;
     }
 
-    /**
-    *  get pixel (direct acces) needed by swig
-    */
+    /** Get pixel
+     * (direct acces) needed by swig
+     */
     T getPixel(int i, int j)
     {
         return IMGPIXEL(*this,i,j);
@@ -1206,7 +1139,6 @@ public:
     }
 
     /** Get Image dimensions
-     *
      */
     void getDimensions(int &Xdim, int &Ydim, int &Zdim, int &Ndim) const
     {
@@ -1221,10 +1153,9 @@ public:
         return NZYXSIZE(data);
     }
 
-    /** Get Image dimensions
-     *
+    /** Get Image offset and swap
      */
-    void getHeaderInfo(unsigned long &_offset, int &_swap) const
+    void getOffsetAndSwap(unsigned long &_offset, int &_swap) const
     {
         _offset = offset;
         _swap = swap;
@@ -1360,7 +1291,6 @@ public:
     }
 
     /** Set file name
-     *
      */
     void setName(const FileName &_filename)
     {
@@ -1368,7 +1298,6 @@ public:
     }
 
     /** Set Euler angles in image header
-     *
      */
     void setEulerAngles(double rot, double tilt, double psi,
                         long int n = -1)
@@ -1379,7 +1308,6 @@ public:
     }
 
     /** Get Euler angles from image header
-     *
      */
     void getEulerAngles(double &rot, double &tilt, double &psi,
                         long int n = -1)
@@ -1408,7 +1336,6 @@ public:
     }
 
     /** Set origin offsets in image header
-     *
      */
     void setShifts(double xoff, double yoff, double zoff = 0.,
                    long int n = -1)
@@ -1418,8 +1345,7 @@ public:
         MD.setValue(MDL_ORIGINZ,zoff,n);
     }
     /** Get origin offsets from image header
-         *
-         */
+      */
     void getShifts(double &xoff, double &yoff, double &zoff = 0.,
                    long int n = -1)
     {
@@ -1427,7 +1353,6 @@ public:
         MD.getValue(MDL_ORIGINY,yoff,n);
         MD.getValue(MDL_ORIGINZ,zoff,n);
     }
-
 
     /** Set X offset in image header
      */
@@ -1451,7 +1376,6 @@ public:
     }
 
     /** Set flip in image header
-     *
      */
     void setFlip(bool flip, long int n = -1)
     {
@@ -1576,8 +1500,7 @@ public:
     }
 };
 
-
-// Special case for complex numbers
+// Special cases for complex numbers
 template<>
 void Image< std::complex< double > >::castPage2T(char * page,
         std::complex<double> * ptrDest,
@@ -1588,6 +1511,5 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex< double > *
         char * page,
         DataType datatype,
         size_t pageSize);
-
-
+//@}
 #endif
