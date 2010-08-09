@@ -608,7 +608,7 @@ void histogram_equalization(MultidimArray<T>
  * histograms 1D.
  *
  */
-class histogram2D : public MultidimArray< double >
+class Histogram2D : public MultidimArray< double >
 {
 public:
     // Structure
@@ -626,10 +626,10 @@ public:
      * init
      *
      * @code
-     * histogram2D hist;
+     * Histogram2D hist;
      * @endcode
      */
-    histogram2D()
+    Histogram2D()
     {
         clear();
     }
@@ -639,10 +639,10 @@ public:
      * Makes an exact copy of the given histogram into another histogram.
      *
      * @code
-     * histogram2D hist2(hist1);
+     * Histogram2D hist2(hist1);
      * @endcode
      */
-    histogram2D(const histogram2D& H)
+    Histogram2D(const Histogram2D& H)
     {
         *this = H;
     }
@@ -659,11 +659,11 @@ public:
 
     /** Assignment.
      */
-    histogram2D& operator=(const histogram2D& H);
+    Histogram2D& operator=(const Histogram2D& H);
 
     /** Another function for assigment.
      */
-    void assign(const histogram2D& H);
+    void assign(const Histogram2D& H);
 
     /** Initialisation of the histogram
      *
@@ -703,7 +703,7 @@ public:
      * The first column and second column are the (X,Y) coordinates of each
      * histogram measure. The third one is the histogram measure.
      */
-    friend std::ostream& operator<<(std::ostream& o, const histogram2D& hist);
+    friend std::ostream& operator<<(std::ostream& o, const Histogram2D& hist);
 
     /** Write an histogram to disk
      */
@@ -878,7 +878,7 @@ public:
  */
 template<typename T>
 void compute_hist(const T& v1, const T& v2,
-                  histogram2D& hist, int no_steps1, int no_steps2)
+                  Histogram2D& hist, int no_steps1, int no_steps2)
 {
     double min1, max1;
     v1.computeDoubleMinMax(min1, max1)
@@ -899,7 +899,7 @@ void compute_hist(const T& v1, const T& v2,
 template<typename T>
 void compute_hist(const MultidimArray<T>
                   & v1, const MultidimArray<T>& v2,
-                  histogram2D& hist,
+                  Histogram2D& hist,
                   double m1, double M1, double m2, double M2, int no_steps1,
                   int no_steps2)
 {
@@ -912,5 +912,4 @@ void compute_hist(const MultidimArray<T>
     hist.insert_value(DIRECT_MULTIDIM_ELEM(v1, n),
                       DIRECT_MULTIDIM_ELEM(v2, n));
 }
-
 #endif
