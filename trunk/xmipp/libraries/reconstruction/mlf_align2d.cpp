@@ -312,13 +312,15 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
 {
 
     FileName                    fn_img, fn_tmp, fn_base, fn_tmp2;
-    ImageXmipp                  img;
+    Image<double>              img;
     XmippCTF                    ctf;
-    Matrix1D<double>            offsets(2), dum, rmean_ctf;
-    Matrix2D<double>            A(3, 3), Maux, Maux2;
-    Matrix2D<std::complex<double> >  Faux, ctfmask;
-    Matrix1D<int>               center(2), radial_count;
-    std::vector<int>                 tmppointp, tmppointp_nolow, tmppointi, tmppointj;
+    MultidimArray<double>           offsets(2), dum, rmean_ctf;
+    Matrix2D<double>           A(3, 3);
+    MultidimArray<double>      Maux, Maux2;
+    MultidimArray2D<std::complex<double> >  Faux, ctfmask;
+    MultidimArray1D<int>        radial_count;
+    Matrix1D<int>               center(2);
+    std::vector<int>            tmppointp, tmppointp_nolow, tmppointi, tmppointj;
     bool                        uniqname, nomoredirs;
     float                       xx, yy;
     double                      av, psi, aux, Q0;
@@ -335,6 +337,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
     // Get image sizes and total number of images
     int idum;
     ImgSize(MDimg, dim, idum, idum, idum);
+
     hdim = dim / 2;
     dim2 = dim * dim;
     nr_images_global = MDimg.size();
@@ -406,7 +409,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
     nr_trans = 0;
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(Maux)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(Maux)
     {
         double rr = (double)i * i + (double)j * j;
         if (rr <= (double)search_shift*search_shift)
@@ -441,8 +444,8 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
         Vdec[0].resize(hdim);
         for (int irr = 0; irr < hdim; irr++)
         {
-            dVi(Vctf[0], irr) = 1.;
-            dVi(Vdec[0], irr) = 1.;
+            dAi(Vctf[0], irr) = 1.;
+            dAi(Vdec[0], irr) = 1.;
         }
     }
     else
@@ -506,12 +509,12 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
                     REPORT_ERROR(1, "Prog_MLFalign2D-ERROR%% Avoid different Q0 values in the CTF parameter files!");
             }
             Maux.resize(dim, dim);
-            FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Maux)
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Maux)
             {
                 if (phase_flipped)
-                    dMij(Maux, i, j) = fabs(dMij(ctfmask, i, j).real());
+                    dAij(Maux, i, j) = fabs(dAij(ctfmask, i, j).real());
                 else
-                    dMij(Maux, i, j) = dMij(ctfmask, i, j).real();
+                    dAij(Maux, i, j) = dAij(ctfmask, i, j).real();
             }
             CenterFFT(Maux, true);
             center.initZeros();
@@ -521,7 +524,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
             Vctf[ifocus].resize(hdim);
             for (int irr = 0; irr < hdim; irr++)
             {
-                dVi(Vctf[ifocus], irr) = dVi(rmean_ctf, irr);
+                dAi(Vctf[ifocus], irr) = A1D_ELEM(rmean_ctf, irr);
             }
             Vdec[ifocus].resize(Vctf[ifocus]);
             Vsig[ifocus].resize(Vctf[ifocus]);
@@ -531,15 +534,15 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
     // Get a resolution pointer in Fourier-space
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(Maux)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(Maux)
     {
-        MAT_ELEM(Maux, i, j) = XMIPP_MIN((double) (hdim - 1), sqrt((double)(i * i + j * j)));
+        A2D_ELEM(Maux, i, j) = XMIPP_MIN((double) (hdim - 1), sqrt((double)(i * i + j * j)));
     }
     CenterFFT(Maux, false);
     Mresol_int.resize(dim, dim);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Mresol_int)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mresol_int)
     {
-        dMij(Mresol_int, i, j) = ROUND(dMij(Maux, i, j));
+        dAij(Mresol_int, i, j) = ROUND(dAij(Maux, i, j));
     }
 
     // Check whether to generate new references
@@ -571,24 +574,25 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
 {
 
     int                       c, idum, refno = 0;
-    DocFile                   DF, DF2;
-    DocLine                   DL;
+    //DocFile                   DF, DF2;
+    //DocLine                   DL;
     double                    offx, offy, aux, sumfrac = 0.;
     FileName                  fn_tmp;
-    ImageXmipp                img;
+    Image<double>                img;
     std::vector<double>       Vdum, sumw_defocus;
 
     // Read in all reference images in memory
-    if (Is_ImageXmipp(fn_ref))
+    if (fn_ref.isMetaData())
     {
+        MDref.read(fn_ref);
+    }
+    else
+    {
+
         MDref.clear();
         MDref.addObject();
         MDref.setValue(MDL_IMAGE, fn_ref);
         MDref.setValue(MDL_ENABLED, 1);
-    }
-    else
-    {
-        MDref.read(fn_ref);
     }
 
     n_ref = MDref.size();
@@ -604,7 +608,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
         Ictf.push_back(img);
         // Default start is all equal model fractions
         alpha_k.push_back((double)1. / n_ref);
-        Iref[refno].set_weight(alpha_k[refno] * (double)nr_images_global);
+        Iref[refno].setWeight(alpha_k[refno] * (double)nr_images_global);
         // Default start is half-half mirrored images
         if (do_mirror)
             mirror_fraction.push_back(0.5);
@@ -616,7 +620,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
     //This will differ from nr_images_global if MPI
     nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg,
                                      myLastImg);
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     std::cerr << "nr_images_local= "<< nr_images_local<<std::endl;
@@ -716,11 +720,12 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
         }
     }
 
-    Matrix2D<std::complex<double> >   Faux;
-    Matrix2D<double>             Maux;
-    Matrix1D<double>             dum, rmean_signal2, spectral_signal;
-    Matrix1D<int>                center(2), radial_count;
-    std::ifstream                     fh;
+    MultidimArray<std::complex<double> >   Faux;
+    MultidimArray<double>       Maux;
+    MultidimArray<double>       dum, rmean_signal2, spectral_signal;
+    Matrix1D<int>                center(2);
+    MultidimArray<int>           radial_count;
+    std::ifstream                fh;
 
     center.initZeros();
     // Calculate average spectral signal
@@ -762,7 +767,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
     // Read in Vsig-vectors with fixed file names
     FOR_ALL_DEFOCUS_GROUPS()
     {
-    	fn_tmp = fn_root + "_it";
+        fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, istart - 1, "");
         fn_tmp += "_ctf";
         if (nr_focus > 1)
@@ -782,7 +787,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
                     REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Wrong format: " + fn_tmp);
                 }
                 fh >> aux;
-                dVi(Vsig[ifocus], irr) = aux;
+                dAi(Vsig[ifocus], irr) = aux;
             }
         }
         fh.close();
@@ -815,13 +820,14 @@ void Prog_MLFalign2D_prm::randomizeImagesOrder()
 void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
 {
 
-    Matrix2D<double>            Maux, Mallave;
-    Matrix2D<std::complex<double> >  Fimg, Faux, Fave;
-    Matrix1D<double>            rmean_noise, rmean_signal, rmean_avesignal;
-    std::vector<Matrix2D<double> >   Msigma2, Mave;
-    Matrix1D<int>               center(2), radial_count;
+    MultidimArray<double>            Maux, Mallave;
+    MultidimArray<std::complex<double> >  Fimg, Faux, Fave;
+    MultidimArray<double>            rmean_noise, rmean_signal, rmean_avesignal;
+    std::vector<MultidimArray<double> >   Msigma2, Mave;
+    Matrix1D<int>               center(2);
+    MultidimArray<int>           radial_count;
     double                      rr;
-    ImageXmipp                  img;
+    Image<double>                       img;
     FileName                    fn_tmp;
     int                         focus = 0, c, nn;
     std::ofstream                    fh;
@@ -899,7 +905,7 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
             // Divide by factor 2 because of the 2D-Gaussian distribution!
             for (int irr = 0; irr < hdim; irr++)
             {
-                dVi(Vsig[ifocus], irr) = (dVi(rmean_noise, irr) - dVi(rmean_signal, irr)) / 2.;
+                dAi(Vsig[ifocus], irr) = (dAi(rmean_noise, irr) - dAi(rmean_signal, irr)) / 2.;
             }
 
             // write Vsig vector to disc
@@ -914,7 +920,7 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
                 REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
             for (int irr = 0; irr < hdim; irr++)
             {
-                fh << (double)irr/(sampling*dim) << " " << dVi(Vsig[ifocus], irr) << "\n";
+                fh << (double)irr/(sampling*dim) << " " << dAi(Vsig[ifocus], irr) << "\n";
             }
             fh.close();
         }
@@ -924,7 +930,7 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
 
 }
 
-void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
+void Prog_MLFalign2D_prm::updateWienerFilters(MultidimArray<double> &spectral_signal,
         std::vector<double> &sumw_defocus,
         int iter)
 {
@@ -932,10 +938,10 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     // Use formula 2.32b on p60 from Frank's book 2nd ed.,
     // Assume that Vctf, Vdec and Vsig exist (with their right sizes)
     // and that Vctf, Vsig are already filled with the right values
-    std::vector<Matrix1D<double> >  Vsnr;
-    Matrix1D<double>           Vzero, Vdenom, Vavgctf2;
-    Matrix2D<double>           Maux;
-    Matrix2D<std::complex<double> > Faux;
+    std::vector<MultidimArray<double> >  Vsnr;
+    MultidimArray<double>           Vzero, Vdenom, Vavgctf2;
+    MultidimArray<double>           Maux;
+    MultidimArray<std::complex<double> > Faux;
     std::ofstream                   fh;
     int                        maxres = 0;
     double                     noise, ssnr, sum_sumw_defocus = 0.;
@@ -963,7 +969,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
         sum_sumw_defocus += sumw_defocus[ifocus];
         for (int irr = 0; irr < hdim; irr++)
         {
-            dVi(Vavgctf2, irr) += dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr) * sumw_defocus[ifocus];
+            dAi(Vavgctf2, irr) += dAi(Vctf[ifocus], irr) * dAi(Vctf[ifocus], irr) * sumw_defocus[ifocus];
         }
     }
     Vavgctf2 /= sum_sumw_defocus;
@@ -977,38 +983,38 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     {
         for (int irr = 0; irr < hdim; irr++)
         {
-            noise = 2. * dVi(Vsig[ifocus], irr) * sumw_defocus[ifocus];
+            noise = 2. * dAi(Vsig[ifocus], irr) * sumw_defocus[ifocus];
             noise /= sumw_defocus[ifocus] - 1;
             if (noise < 1e-20)
-                dVi(Vsnr[ifocus], irr) = 0.;
+                dAi(Vsnr[ifocus], irr) = 0.;
             else
             {
-                if (dVi(Vavgctf2, irr) > 0.)
+                if (dAi(Vavgctf2, irr) > 0.)
                 {
-                    dVi(Vsnr[ifocus], irr) = reduce_snr * dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr) *
-                                             dVi(spectral_signal, irr) / (dVi(Vavgctf2, irr) * noise);
+                    dAi(Vsnr[ifocus], irr) = reduce_snr * dAi(Vctf[ifocus], irr) * dAi(Vctf[ifocus], irr) *
+                                             dAi(spectral_signal, irr) / (dAi(Vavgctf2, irr) * noise);
                 }
                 else
-                    dVi(Vsnr[ifocus], irr) = 0.;
+                    dAi(Vsnr[ifocus], irr) = 0.;
             }
             // For start from already CTF-deconvoluted references:
             if ((iter == istart - 1) && !first_iter_noctf)
             {
-                dVi(Vsnr[ifocus], irr) *= dVi(Vavgctf2, irr);
+                dAi(Vsnr[ifocus], irr) *= dAi(Vavgctf2, irr);
             }
             // Take ini_highres_limit into account (only for first iteration)
             if ( iter == 0 && ini_highres_limit > 0. && irr > int_ini_highres_limit )
             {
-                dVi(Vsnr[ifocus], irr) = 0.;
+                dAi(Vsnr[ifocus], irr) = 0.;
             }
             // Subtract 1 according Unser et al.
-            dVi(Vsnr[ifocus], irr) = XMIPP_MAX(0., dVi(Vsnr[ifocus], irr) - 1.);
+            dAi(Vsnr[ifocus], irr) = XMIPP_MAX(0., dAi(Vsnr[ifocus], irr) - 1.);
             // Prevent spurious high-frequency significant SNRs from random averages
             if (iter == 0 && do_generate_refs)
             {
-                dVi(Vsnr[ifocus], irr) = XMIPP_MAX(0., dVi(Vsnr[ifocus], irr) - 2.);
+                dAi(Vsnr[ifocus], irr) = XMIPP_MAX(0., dAi(Vsnr[ifocus], irr) - 2.);
             }
-            if (dVi(Vsnr[ifocus], irr) > 0. && irr > maxres)
+            if (dAi(Vsnr[ifocus], irr) > 0. && irr > maxres)
             {
                 maxres = irr;
             }
@@ -1027,11 +1033,11 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
         {
             FOR_ALL_DEFOCUS_GROUPS()
             {
-                dVi(Vdenom, irr) += sumw_defocus[ifocus] * dVi(Vsnr[ifocus], irr) *
-                                    dVi(Vctf[ifocus], irr) * dVi(Vctf[ifocus], irr);
+                dAi(Vdenom, irr) += sumw_defocus[ifocus] * dAi(Vsnr[ifocus], irr) *
+                                    dAi(Vctf[ifocus], irr) * dAi(Vctf[ifocus], irr);
             }
-            dVi(Vdenom, irr) += 1.;
-            dVi(Vdenom, irr) /= sum_sumw_defocus;
+            dAi(Vdenom, irr) += 1.;
+            dAi(Vdenom, irr) /= sum_sumw_defocus;
         }
 
         // Calculate Wiener filters
@@ -1039,15 +1045,15 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
         {
             for (int irr = 0; irr < hdim; irr++)
             {
-                if (dVi(Vsnr[ifocus], irr) > 0.)
+                if (dAi(Vsnr[ifocus], irr) > 0.)
                 {
-                    dVi(Vdec[ifocus], irr) = dVi(Vsnr[ifocus], irr) * dVi(Vctf[ifocus], irr) / dVi(Vdenom, irr);
+                    dAi(Vdec[ifocus], irr) = dAi(Vsnr[ifocus], irr) * dAi(Vctf[ifocus], irr) / dAi(Vdenom, irr);
                     // Prevent too strong Wiener filter artefacts
-                    dVi(Vdec[ifocus], irr) = XMIPP_MIN(10.,dVi(Vdec[ifocus], irr) );
+                    dAi(Vdec[ifocus], irr) = XMIPP_MIN(10.,dAi(Vdec[ifocus], irr) );
                 }
                 else
                 {
-                    dVi(Vdec[ifocus], irr) = 0.;
+                    dAi(Vdec[ifocus], irr) = 0.;
                 }
             }
         }
@@ -1074,15 +1080,15 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
             {
                 fh << floatToString((double)irr / (sampling*dim));
                 fh.width(10);
-                fh << floatToString(XMIPP_MIN(25., dVi(Vsnr[ifocus], irr)));
+                fh << floatToString(XMIPP_MIN(25., dAi(Vsnr[ifocus], irr)));
                 fh.width(10);
-                fh << floatToString(dVi(Vctf[ifocus], irr));
+                fh << floatToString(dAi(Vctf[ifocus], irr));
                 fh.width(10);
-                fh << floatToString(dVi(Vdec[ifocus], irr));
+                fh << floatToString(dAi(Vdec[ifocus], irr));
                 fh.width(10);
-                fh << floatToString(dVi(spectral_signal, irr));
+                fh << floatToString(dAi(spectral_signal, irr));
                 fh.width(10);
-                noise = 2. * dVi(Vsig[ifocus], irr) * sumw_defocus[ifocus];
+                noise = 2. * dAi(Vsig[ifocus], irr) * sumw_defocus[ifocus];
                 noise /= (sumw_defocus[ifocus] - 1);
                 fh << floatToString(noise);
                 fh.width(10);
@@ -1144,9 +1150,9 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     // First, get the pixels to use in the probability calculations:
     // These are within [lowres_limit,current_probres_limit]
     nr_points_prob = 0;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
     {
-        int ires = dMij(Mresol_int, i, j);
+        int ires = dAij(Mresol_int, i, j);
         if (ires > int_lowres_limit &&
             ires <= current_probres_limit &&
             !(i == 0 && j > hdim) ) // exclude first half row in FourierTransformHalf
@@ -1160,9 +1166,9 @@ void Prog_MLFalign2D_prm::updateWienerFilters(Matrix1D<double> &spectral_signal,
     // Second, get the rest of the currently relevant pixels:
     // These are within [0,lowres_limit> and between <current_probres_limit,current_highres_limit]
     nr_points_2d = nr_points_prob;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MATRIX2D(Faux)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
     {
-        int ires = dMij(Mresol_int, i, j);
+        int ires = dAij(Mresol_int, i, j);
         if ( (ires <= int_lowres_limit || ires > current_probres_limit) &&
              ires <= current_highres_limit &&
              !(i == 0 && j > hdim) ) // exclude first half row in FourierTransformHalf
@@ -1204,7 +1210,7 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 
     if (do_variable_trans)
     {
-        Matrix1D<double>  offsets(2);
+        MultidimArray<double>  offsets(2);
         nr_trans = 0;
         Vtrans.clear();
         // Sample the in-plane translations 3x the current resolution
@@ -1267,7 +1273,7 @@ void Prog_MLFalign2D_prm::generateInitialReferences()
         init_progress_bar(n_ref);
     }
 
-    ImageXmipp IRef, ITemp;
+    Image<double> IRef, ITemp;
     FileName fn_tmp;
     randomizeImagesOrder();
 
@@ -1326,7 +1332,7 @@ void Prog_MLFalign2D_prm::calculateInPlanePDF()
     Mr2.setXmippOrigin();
 
     sum=0.;
-    FOR_ALL_ELEMENTS_IN_MATRIX2D(P_phi)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(P_phi)
     {
         r2 = (double)(j * j + i * i);
         if (sigma_offset > 0.)
@@ -1341,8 +1347,8 @@ void Prog_MLFalign2D_prm::calculateInPlanePDF()
             else
                 pdfpix = 0.;
         }
-        MAT_ELEM(P_phi, i, j) = pdfpix;
-        MAT_ELEM(Mr2, i, j) = (float)r2;
+        A2D_ELEM(P_phi, i, j) = pdfpix;
+        A2D_ELEM(Mr2, i, j) = (float)r2;
         sum+=pdfpix;
     }
     // Normalization
@@ -1350,7 +1356,7 @@ void Prog_MLFalign2D_prm::calculateInPlanePDF()
 
 }
 
-void Prog_MLFalign2D_prm::appendFTtoVector(const Matrix2D<std::complex<double> > &in,
+void Prog_MLFalign2D_prm::appendFTtoVector(const MultidimArray<std::complex<double> > &in,
         std::vector<double> &out)
 {
 
@@ -1366,7 +1372,7 @@ void Prog_MLFalign2D_prm::appendFTtoVector(const Matrix2D<std::complex<double> >
 
 void Prog_MLFalign2D_prm::getFTfromVector(const std::vector<double> &in,
         const int start_point,
-        Matrix2D<std::complex<double> > &out,
+        MultidimArray<std::complex<double> > &out,
         bool only_real)
 {
 
@@ -1401,8 +1407,9 @@ void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
     out.clear();
 
     double AA, stdAA, psi;
-    Matrix2D<double> Maux;
-    Matrix2D<std::complex<double> > Faux;
+    MultidimArray<double> Maux;
+    MultidimArray<std::complex<double> > Faux;
+    std::complex<double> complexValue(0., 0.);
 
     Maux.initZeros(dim, dim);
     Maux.setXmippOrigin();
@@ -1413,7 +1420,8 @@ void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
         {
             // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
             psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
-            Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
+            //Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
+            rotate(BSPLINE3, Maux, Iref[refno](), psi, 'Z', WRAP);
             FourierTransformHalf(Maux, Faux);
 
             // Normalize the magnitude of the rotated references to 1st rot of that ref
@@ -1426,10 +1434,11 @@ void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
             }
             if (AA > 0)
             {
-                Faux *= sqrt(stdAA / AA);
+                complexValue.real(sqrt(stdAA / AA));
+                Faux *= complexValue;
             }
             // Add all points as doubles to the vector
-            appendFTtoVector(Faux,out);
+            appendFTtoVector(Faux, out);
         }
 
         // Free memory
@@ -1440,12 +1449,12 @@ void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
 
 // Collect all rotations and sum to update Iref() for all models ==========
 void Prog_MLFalign2D_prm::reverseRotateReference(const std::vector<double> &in,
-        std::vector<Matrix2D<double > > &out)
+        std::vector<MultidimArray<double > > &out)
 {
 
     double psi, dum, avg, ang;
-    Matrix2D<double> Maux, Maux2;
-    Matrix2D<std::complex<double> > Faux;
+    MultidimArray<double> Maux, Maux2;
+    MultidimArray<std::complex<double> > Faux;
     Maux.resize(dim, dim);
     Maux2.resize(dim, dim);
     Maux.setXmippOrigin();
@@ -1462,7 +1471,8 @@ void Prog_MLFalign2D_prm::reverseRotateReference(const std::vector<double> &in,
             psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
             getFTfromVector(in, refno*nr_psi*dnr_points_2d + ipsi*dnr_points_2d, Faux);
             InverseFourierTransformHalf(Faux, Maux, dim);
-            Maux.rotateBSpline(3, -psi, Maux2, WRAP);
+            //Maux.rotateBSpline(3, -psi, Maux2, WRAP);
+            rotate(BSPLINE3, Maux2, Maux, -psi, 'Z', WRAP);
             out[refno] += Maux2;
         }
     }
@@ -1484,8 +1494,8 @@ void Prog_MLFalign2D_prm::preselectDirections(float &phi, float &theta,
             pdf_directions[refno] = 1.;
         else
         {
-            phi_ref = Iref[refno].Phi();
-            theta_ref = Iref[refno].Theta();
+            phi_ref = Iref[refno].rot();
+            theta_ref = Iref[refno].tilt();
             Euler_direction(phi, theta, 0., u);
             Euler_direction(phi_ref, theta_ref, 0., v);
             u.selfNormalize();
@@ -1505,7 +1515,7 @@ void Prog_MLFalign2D_prm::preselectDirections(float &phi, float &theta,
 }
 
 void Prog_MLFalign2D_prm::fourierTranslate2D(const std::vector<double> &in,
-        Matrix1D<double> &trans,
+        MultidimArray<double> &trans,
         std::vector<double> &out,
         int point_start)
 {
@@ -1532,19 +1542,19 @@ void Prog_MLFalign2D_prm::fourierTranslate2D(const std::vector<double> &in,
 
 }
 
-void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
+void Prog_MLFalign2D_prm::calculateFourierOffsets(const MultidimArray<double> &Mimg,
         const std::vector<double > &offsets,
         std::vector<double>  &out,
-        Matrix2D<int> &Moffsets,
-        Matrix2D<int> &Moffsets_mirror)
+        MultidimArray<int> &Moffsets,
+        MultidimArray<int> &Moffsets_mirror)
 {
 
     int irefmir, ix, iy, opt_ix, opt_iy, iflip, nr_mir, iflip_start, iflip_stop, count;
     double dxx, dyy;
     std::vector<double> Fimg_flip;
-    Matrix2D<std::complex<double> > Fimg;
-    Matrix1D<double> trans(2);
-    Matrix2D<double> Maux2, Maux;
+    MultidimArray<std::complex<double> > Fimg;
+    MultidimArray<double> trans(2);
+    MultidimArray<double> Maux2, Maux;
 
     Moffsets.resize(dim, dim);
     Moffsets.setXmippOrigin();
@@ -1567,7 +1577,8 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
     FOR_ALL_FLIPS()
     {
         Maux.setXmippOrigin();
-        applyGeometry(Maux, F[iflip], Mimg, IS_INV, WRAP);
+        applyGeometry(LINEAR, Maux, Mimg, F[iflip], IS_INV, WRAP);
+
         FourierTransformHalf(Maux, Fimg);
         appendFTtoVector(Fimg,Fimg_flip);
     }
@@ -1590,27 +1601,27 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
                 dxx = (double)intWRAP(ix, Moffsets.startingX(), Moffsets.finishingX());
                 dyy = (double)intWRAP(iy, Moffsets.startingY(), Moffsets.finishingY());
                 // For non-mirrors
-                if (imir == 0 && MAT_ELEM(Moffsets, ROUND(dyy), ROUND(dxx)) < 0)
+                if (imir == 0 && A2D_ELEM(Moffsets, ROUND(dyy), ROUND(dxx)) < 0)
                 {
                     for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
                     {
-                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 0, 1);
-                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
+                        trans(0) = dxx * MAT_ELEM(F[iflip], 0, 0) + dyy * MAT_ELEM(F[iflip], 0, 1);
+                        trans(1) = dxx * MAT_ELEM(F[iflip], 1, 0) + dyy * MAT_ELEM(F[iflip], 1, 1);
                         fourierTranslate2D(Fimg_flip,trans,out,iflip*dnr_points_2d);
                     }
-                    MAT_ELEM(Moffsets, ROUND(dyy), ROUND(dxx)) = count;
+                    A2D_ELEM(Moffsets, ROUND(dyy), ROUND(dxx)) = count;
                     count++;
                 }
                 // For mirrors use a separate offset-matrix
-                else if (imir == 1 && MAT_ELEM(Moffsets_mirror, ROUND(dyy), ROUND(dxx)) < 0)
+                else if (imir == 1 && A2D_ELEM(Moffsets_mirror, ROUND(dyy), ROUND(dxx)) < 0)
                 {
                     for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
                     {
-                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 0, 1);
-                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
+                        trans(0) = dxx * MAT_ELEM(F[iflip], 0, 0) + dyy * MAT_ELEM(F[iflip], 0, 1);
+                        trans(1) = dxx * MAT_ELEM(F[iflip], 1, 0) + dyy * MAT_ELEM(F[iflip], 1, 1);
                         fourierTranslate2D(Fimg_flip,trans,out,iflip*dnr_points_2d);
                     }
-                    MAT_ELEM(Moffsets_mirror, ROUND(dyy), ROUND(dxx)) = count;
+                    A2D_ELEM(Moffsets_mirror, ROUND(dyy), ROUND(dxx)) = count;
                     count++;
                 }
             }
@@ -1642,7 +1653,7 @@ double lcdf_tstudent_mlf30(double t)
 
 // Exclude translations from the MLF_integration
 // For significantly contributing refno+psi: re-calculate optimal shifts
-void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
+void Prog_MLFalign2D_prm::processOneImage(const MultidimArray<double> &Mimg,
         const int focus, bool apply_ctf,
         const std::vector<double> &Fref,
         std::vector<double> &Fwsum_imgs,
@@ -1658,17 +1669,17 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
         double &sum_refw2, double &opt_scale,
         int &opt_refno, double &opt_psi,
         int &opt_ipsi, int &opt_iflip,
-        Matrix1D<double> &opt_offsets,
+        MultidimArray<double> &opt_offsets,
         std::vector<double> &opt_offsets_ref,
         std::vector<double > &pdf_directions,
         bool do_kstest, bool write_histograms,
         FileName fn_img, double &KSprob)
 {
 
-    Matrix3D<double>                             Mweight;
-    Matrix2D<int>                                Moffsets, Moffsets_mirror;
+    MultidimArray3D<double>                             Mweight;
+    MultidimArray2D<int>                                Moffsets, Moffsets_mirror;
     std::vector<double>                          Fimg_trans;
-    std::vector<Matrix1D<double> >               uniq_offsets;
+    std::vector<MultidimArray<double> >               uniq_offsets;
 
 
     std::vector<double> refw(n_ref), refw2(n_ref), refw_mirror(n_ref), Pmax_refmir(2*n_ref);
@@ -1754,11 +1765,11 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                 Pmax_refmir[irefmir] = 0.;
                 if (iflip < nr_nomirror_flips)
                 {
-                    point_trans = MAT_ELEM(Moffsets, iy, ix);
+                    point_trans = A2D_ELEM(Moffsets, iy, ix);
                 }
                 else
                 {
-                    point_trans = MAT_ELEM(Moffsets_mirror, iy, ix);
+                    point_trans = A2D_ELEM(Moffsets_mirror, iy, ix);
                 }
                 if (point_trans < 0 || point_trans > dim2)
                 {
@@ -1767,11 +1778,11 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                 }
                 if (iflip < nr_nomirror_flips)
                 {
-                    pdf = alpha_k[refno] * (1. - mirror_fraction[refno]) * MAT_ELEM(P_phi, iy, ix);
+                    pdf = alpha_k[refno] * (1. - mirror_fraction[refno]) * A2D_ELEM(P_phi, iy, ix);
                 }
                 else
                 {
-                    pdf = alpha_k[refno] * mirror_fraction[refno] * MAT_ELEM(P_phi, iy, ix);
+                    pdf = alpha_k[refno] * mirror_fraction[refno] * A2D_ELEM(P_phi, iy, ix);
                 }
                 // get the starting point in the Fimg_trans vector
                 img_start = point_trans*4*dnr_points_2d + (iflip%nr_nomirror_flips)*dnr_points_2d;
@@ -1803,7 +1814,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                     // Multiply by two for t-student, because we divided by 2*sigma2 instead of sigma2!
                     if (do_student)
                         diff *= 2.;
-                    dVkij(Mweight, zero_trans, refno, irot) = diff;
+                    dAkij(Mweight, zero_trans, refno, irot) = diff;
                     if (debug == 9)
                     {
                         std::cerr<<"refno= "<<refno<<" irot= "<<irot<<" diff= "<<diff<<" mindiff2= "<<mindiff2<<std::endl;
@@ -1836,18 +1847,18 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                 iy = ROUND(opt_offsets_ref[2*irefmir+1]);
                 if (iflip < nr_nomirror_flips)
                 {
-                    pdf = alpha_k[refno] * (1. - mirror_fraction[refno]) * MAT_ELEM(P_phi, iy, ix);
+                    pdf = alpha_k[refno] * (1. - mirror_fraction[refno]) * A2D_ELEM(P_phi, iy, ix);
                 }
                 else
                 {
-                    pdf = alpha_k[refno] * mirror_fraction[refno] * MAT_ELEM(P_phi, iy, ix);
+                    pdf = alpha_k[refno] * mirror_fraction[refno] * A2D_ELEM(P_phi, iy, ix);
                 }
                 // get the starting point in the Fimg_trans vector
                 img_start = point_trans*4*dnr_points_2d + (iflip%nr_nomirror_flips)*dnr_points_2d;
                 FOR_ALL_ROTATIONS()
                 {
                     irot = iflip * nr_psi + ipsi;
-                    diff = dVkij(Mweight, zero_trans, refno, irot);
+                    diff = dAkij(Mweight, zero_trans, refno, irot);
                     // get the starting point in the Fref vector
                     ref_start = refno*nr_psi*dnr_points_2d + ipsi*dnr_points_2d;
                     if (!do_student)
@@ -1860,7 +1871,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                         else
                             weight = exp(-aux) * pdf;
                         // Store weight
-                        dVkij(Mweight, zero_trans, refno, irot) = weight;
+                        dAkij(Mweight, zero_trans, refno, irot) = weight;
                     }
                     else
                     {
@@ -1877,7 +1888,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                         // Patt. Recognition Lett. 25, 701-710 (2004)
                         weight2 = ( df + ldim ) / ( df + diff  );
                         // Store probability weights
-                        dVkij(Mweight, zero_trans, refno, irot) = weight * weight2;
+                        dAkij(Mweight, zero_trans, refno, irot) = weight * weight2;
                         refw2[refno] += weight * weight2;
                         sum_refw2 += weight * weight2;
                     }
@@ -1913,8 +1924,8 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                 scale_denom += Fref[ref_start + 2*ii+1] * Fref[ref_start + 2*ii+1];
                             }
                         }
-                        wsum_sc += dVkij(Mweight, zero_trans, refno, irot) * scale_numer;
-                        wsum_sc2 += dVkij(Mweight, zero_trans, refno, irot) * scale_denom;
+                        wsum_sc += dAkij(Mweight, zero_trans, refno, irot) * scale_numer;
+                        wsum_sc2 += dAkij(Mweight, zero_trans, refno, irot) * scale_denom;
                     }
                     if (weight > Pmax_refmir[irefmir])
                         Pmax_refmir[irefmir] = weight;
@@ -1962,7 +1973,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                     // Note that for t-students distribution we now do something
                     // a little bit different compared to ML_integrate_complete!
                     // Instead of comparing "weight", we compare "weight*weight2"!!
-                    if (dVkij(Mweight, zero_trans, refno, irot) > C_fast*Pmax_refmir[irefmir])
+                    if (dAkij(Mweight, zero_trans, refno, irot) > C_fast*Pmax_refmir[irefmir])
                     {
                         // get the starting point in the Fref vector
                         ref_start = refno*nr_psi*dnr_points_2d + ipsi*dnr_points_2d;
@@ -1976,15 +1987,15 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                 ix = intWRAP(ix, Moffsets.startingX(), Moffsets.finishingX());
                                 iy = intWRAP(iy, Moffsets.startingY(), Moffsets.finishingY());
                                 if (iflip < nr_nomirror_flips)
-                                    point_trans = MAT_ELEM(Moffsets, iy, ix);
+                                    point_trans = A2D_ELEM(Moffsets, iy, ix);
                                 else
-                                    point_trans = MAT_ELEM(Moffsets_mirror, iy, ix);
+                                    point_trans = A2D_ELEM(Moffsets_mirror, iy, ix);
                                 if (point_trans < 0 || point_trans > dim2)
                                 {
                                     std::cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
                                     REPORT_ERROR(1,"mlf_align2d BUG: point_trans < 0 or > dim2");
                                 }
-                                pdf = fracpdf * MAT_ELEM(P_phi, iy, ix);
+                                pdf = fracpdf * A2D_ELEM(P_phi, iy, ix);
                                 if (pdf > 0)
                                 {
                                     // get the starting point in the Fimg_trans vector
@@ -2018,7 +2029,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                         else
                                             weight = exp(-aux) * pdf;
                                         // Store weight
-                                        dVkij(Mweight, itrans, refno, irot) = weight;
+                                        dAkij(Mweight, itrans, refno, irot) = weight;
                                     }
                                     else
                                     {
@@ -2038,7 +2049,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                         // Patt. Recognition Lett. 25, 701-710 (2004)
                                         weight2 = ( df + ldim ) / ( df + diff);
                                         // Store probability weights
-                                        dVkij(Mweight, itrans, refno, irot) = weight * weight2;
+                                        dAkij(Mweight, itrans, refno, irot) = weight * weight2;
                                         refw2[refno] += weight * weight2;
                                         sum_refw2 += weight * weight2;
                                     }
@@ -2082,8 +2093,8 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                                                * Fref[ref_start + 2*ii+1];
                                             }
                                         }
-                                        wsum_sc += dVkij(Mweight, itrans, refno, irot) * scale_numer;
-                                        wsum_sc2 += dVkij(Mweight, itrans, refno, irot) * scale_denom;
+                                        wsum_sc += dAkij(Mweight, itrans, refno, irot) * scale_numer;
+                                        wsum_sc2 += dAkij(Mweight, itrans, refno, irot) * scale_denom;
                                     }
                                     if (weight > maxweight)
                                     {
@@ -2098,7 +2109,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                     }
                                 }
                                 else
-                                    dVkij(Mweight, itrans, refno, irot) = 0.;
+                                    dAkij(Mweight, itrans, refno, irot) = 0.;
                             }
                         }
                     }
@@ -2116,13 +2127,13 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
     // And calculate noise distribution histograms
     if (do_kstest)
     {
-        Matrix1D<double> diff(2*nr_points_prob);
+        MultidimArray<double> diff(2*nr_points_prob);
         std::vector<std::vector<double> > res_diff;
         res_diff.resize(hdim);
         if (opt_iflip < nr_nomirror_flips)
-            point_trans = MAT_ELEM(Moffsets, (int)opt_offsets(1), (int)opt_offsets(0));
+            point_trans = A2D_ELEM(Moffsets, (int)opt_offsets(1), (int)opt_offsets(0));
         else
-            point_trans = MAT_ELEM(Moffsets_mirror, (int)opt_offsets(1), (int)opt_offsets(0));
+            point_trans = A2D_ELEM(Moffsets_mirror, (int)opt_offsets(1), (int)opt_offsets(0));
         img_start = point_trans*4*dnr_points_2d + (opt_iflip%nr_nomirror_flips)*dnr_points_2d;
         ref_start = opt_refno*nr_psi*dnr_points_2d + opt_ipsi*dnr_points_2d;
 
@@ -2132,22 +2143,22 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
         {
             if (do_ctf_correction)
             {
-                dVi(diff,2*ii) = (Fimg_trans[img_start + 2*ii] -
+                dAi(diff,2*ii) = (Fimg_trans[img_start + 2*ii] -
                                   ctf[ii] * ref_scale * Fref[ref_start + 2*ii]) / sqrt(0.5*sigma2[ii]);
-                dVi(diff,2*ii+1) = (Fimg_trans[img_start + 2*ii+1] -
+                dAi(diff,2*ii+1) = (Fimg_trans[img_start + 2*ii+1] -
                                     ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1]) / sqrt(0.5*sigma2[ii]);
             }
             else
             {
-                dVi(diff,2*ii) = (Fimg_trans[img_start + 2*ii] -
+                dAi(diff,2*ii) = (Fimg_trans[img_start + 2*ii] -
                                   ref_scale * Fref[ref_start + 2*ii]) / sqrt(0.5*sigma2[ii]);
-                dVi(diff,2*ii+1) = (Fimg_trans[img_start + 2*ii+1] -
+                dAi(diff,2*ii+1) = (Fimg_trans[img_start + 2*ii+1] -
                                     ref_scale * Fref[ref_start + 2*ii+1]) / sqrt(0.5*sigma2[ii]);
             }
             // Fill vectors for resolution-depedent histograms
             int ires = DIRECT_MULTIDIM_ELEM(Mresol_int, pointer_2d[ii]);
-            res_diff[ires].push_back(dVi(diff,2*ii));
-            res_diff[ires].push_back(dVi(diff,2*ii+1));
+            res_diff[ires].push_back(dAi(diff,2*ii));
+            res_diff[ires].push_back(dAi(diff,2*ii+1));
         }
 
         double * aux_array = MULTIDIM_ARRAY(diff) - 1;
@@ -2197,11 +2208,11 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
             fh_hist.open((fn_hist).c_str(), std::ios::out);
             if (!fh_hist)
                 REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_hist);
-            FOR_ALL_ELEMENTS_IN_MATRIX1D(hist)
+            FOR_ALL_ELEMENTS_IN_ARRAY1D(hist)
             {
                 hist.index2val(i, val);
                 val += 0.5*hist.step_size;
-                fh_hist << val<<" "<<VEC_ELEM(hist, i)<<" ";
+                fh_hist << val<<" "<<A1D_ELEM(hist, i)<<" ";
                 if (do_student)
                     fh_hist << tstudent1D(val, df, 1., 0.)<<"\n";
                 else
@@ -2259,10 +2270,10 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                         ix = intWRAP(ix, Moffsets.startingX(), Moffsets.finishingX());
                         iy = intWRAP(iy, Moffsets.startingY(), Moffsets.finishingY());
                         if (iflip < nr_nomirror_flips)
-                            point_trans = MAT_ELEM(Moffsets, iy, ix);
+                            point_trans = A2D_ELEM(Moffsets, iy, ix);
                         else
-                            point_trans = MAT_ELEM(Moffsets_mirror, iy, ix);
-                        weight = dVkij(Mweight, itrans, refno, irot);
+                            point_trans = A2D_ELEM(Moffsets_mirror, iy, ix);
+                        weight = dAkij(Mweight, itrans, refno, irot);
                         if (weight > SIGNIFICANT_WEIGHT_LOW*maxweight)
                         {
                             weight /= sum_refw;
@@ -2332,7 +2343,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                         irot = iflip * nr_psi + ipsi;
                         FOR_ALL_LIMITED_TRANSLATIONS()
                         {
-                            weight = dVkij(Mweight, itrans, refno, irot);
+                            weight = dAkij(Mweight, itrans, refno, irot);
                             if (weight > Pmax_refmir[irefmir])
                             {
                                 Pmax_refmir[irefmir] = weight;
@@ -2380,10 +2391,10 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 }
 
 
-void Prog_MLFalign2D_prm::expectation(std::vector< ImageXmippT<double> > &Iref, int iter,
+void Prog_MLFalign2D_prm::expectation(std::vector< Image<double> > &Iref, int iter,
                                       double &LL, double &sumcorr,
-                                      std::vector<Matrix2D<double> > &wsum_Mref,
-                                      std::vector<Matrix2D<double> > &wsum_ctfMref,
+                                      std::vector<MultidimArray2D<double> > &wsum_Mref,
+                                      std::vector<MultidimArray2D<double> > &wsum_ctfMref,
                                       std::vector<std::vector<double> > &Mwsum_sigma2,
                                       double &wsum_sigma_offset,
                                       std::vector<double> &sumw,
@@ -2394,11 +2405,12 @@ void Prog_MLFalign2D_prm::expectation(std::vector< ImageXmippT<double> > &Iref, 
                                       std::vector<double> &sumw_defocus)
 {
 
-    ImageXmipp img;
+    Image<double> img;
     FileName fn_img, fn_trans;
     std::vector<double> Fref, Fwsum_imgs, Fwsum_ctfimgs, dum;
     std::vector<double> allref_offsets, pdf_directions(n_ref);
-    Matrix1D<double> opt_offsets(2), trans(2);
+    MultidimArray<double> trans(2);
+    MultidimArray<double> opt_offsets(2);
 
     float old_phi = -999., old_theta = -999.;
     double opt_psi, opt_flip, opt_scale, maxcorr, maxweight2;
@@ -2521,8 +2533,8 @@ void Prog_MLFalign2D_prm::expectation(std::vector< ImageXmippT<double> > &Iref, 
         // Store optimal phi and theta in memory
         if (limit_rot)
         {
-            imgs_oldphi[IMG_LOCAL_INDEX] = Iref[opt_refno].Phi();
-            imgs_oldtheta[IMG_LOCAL_INDEX] = Iref[opt_refno].Theta();
+            imgs_oldphi[IMG_LOCAL_INDEX] = Iref[opt_refno].rot();
+            imgs_oldtheta[IMG_LOCAL_INDEX] = Iref[opt_refno].tilt();
         }
 
         // Output docfile
@@ -2534,28 +2546,28 @@ void Prog_MLFalign2D_prm::expectation(std::vector< ImageXmippT<double> > &Iref, 
             opt_flip = 1.;
         }
 
-        dMij(docfiledata,IMG_LOCAL_INDEX,0)
-        = Iref[opt_refno].Phi(); // rot
-        dMij(docfiledata,IMG_LOCAL_INDEX,1)
-        = Iref[opt_refno].Theta(); // tilt
-        dMij(docfiledata,IMG_LOCAL_INDEX,2) = opt_psi + 360.; // psi
-        dMij(docfiledata,IMG_LOCAL_INDEX,3) = trans(0) + opt_offsets(0); // Xoff
-        dMij(docfiledata,IMG_LOCAL_INDEX,4) = trans(1) + opt_offsets(1); // Yoff
-        dMij(docfiledata,IMG_LOCAL_INDEX,5) = (double) (opt_refno + 1); // Ref
-        dMij(docfiledata,IMG_LOCAL_INDEX,6) = opt_flip; // Mirror
-        dMij(docfiledata,IMG_LOCAL_INDEX,7) = maxcorr; // P_max/P_tot
+        dAij(docfiledata,IMG_LOCAL_INDEX,0)
+        = Iref[opt_refno].rot(); // rot
+        dAij(docfiledata,IMG_LOCAL_INDEX,1)
+        = Iref[opt_refno].tilt(); // tilt
+        dAij(docfiledata,IMG_LOCAL_INDEX,2) = opt_psi + 360.; // psi
+        dAij(docfiledata,IMG_LOCAL_INDEX,3) = trans(0) + opt_offsets(0); // Xoff
+        dAij(docfiledata,IMG_LOCAL_INDEX,4) = trans(1) + opt_offsets(1); // Yoff
+        dAij(docfiledata,IMG_LOCAL_INDEX,5) = (double) (opt_refno + 1); // Ref
+        dAij(docfiledata,IMG_LOCAL_INDEX,6) = opt_flip; // Mirror
+        dAij(docfiledata,IMG_LOCAL_INDEX,7) = maxcorr; // P_max/P_tot
 
         if (do_student)
         {
-            dMij(docfiledata,IMG_LOCAL_INDEX,8) = maxweight2; // Robustness weight
+            dAij(docfiledata,IMG_LOCAL_INDEX,8) = maxweight2; // Robustness weight
         }
         if (do_norm)
         {
-            dMij(docfiledata,IMG_LOCAL_INDEX,9) = opt_scale; // image scale
+            dAij(docfiledata,IMG_LOCAL_INDEX,9) = opt_scale; // image scale
         }
         if (do_kstest)
         {
-            dMij(docfiledata,IMG_LOCAL_INDEX,10) = KSprob;
+            dAij(docfiledata,IMG_LOCAL_INDEX,10) = KSprob;
         }
 
 
@@ -2577,8 +2589,8 @@ void Prog_MLFalign2D_prm::expectation(std::vector< ImageXmippT<double> > &Iref, 
 }
 
 // Update all model parameters
-void Prog_MLFalign2D_prm::maximization(std::vector<Matrix2D<double> > &wsum_Mref,
-                                       std::vector<Matrix2D<double> > &wsum_ctfMref,
+void Prog_MLFalign2D_prm::maximization(std::vector<MultidimArray<double> > &wsum_Mref,
+                                       std::vector<MultidimArray<double> > &wsum_ctfMref,
                                        std::vector<std::vector<double> > &Mwsum_sigma2,
                                        double &wsum_sigma_offset,
                                        std::vector<double> &sumw,
@@ -2588,14 +2600,15 @@ void Prog_MLFalign2D_prm::maximization(std::vector<Matrix2D<double> > &wsum_Mref
                                        std::vector<double> &sumw_mirror,
                                        std::vector<double> &sumw_defocus,
                                        double &sumcorr, double &sumw_allrefs,
-                                       Matrix1D<double> &spectral_signal,
+                                       MultidimArray<double> &spectral_signal,
                                        int refs_per_class)
 {
 
-    Matrix1D<double> rmean_sigma2, rmean_signal2;
-    Matrix1D<int> center(2), radial_count;
-    Matrix2D<std::complex<double> > Faux, Faux2;
-    Matrix2D<double> Maux;
+    MultidimArray<double> rmean_sigma2, rmean_signal2;
+    MultidimArray<int>  radial_count;
+    Matrix1D<int> center(2);
+    MultidimArray<std::complex<double> > Faux, Faux2;
+    MultidimArray<double> Maux;
     FileName fn_tmp;
     double rr, thresh, aux, sumw_allrefs2 = 0.;
     int c;
@@ -2610,13 +2623,13 @@ void Prog_MLFalign2D_prm::maximization(std::vector<Matrix2D<double> > &wsum_Mref
         {
             Iref[refno]() = wsum_Mref[refno];
             Iref[refno]() /= sumwsc2[refno];
-            Iref[refno].set_weight(sumw[refno]);
+            Iref[refno].setWeight(sumw[refno]);
             sumw_allrefs += sumw[refno];
             if (do_ctf_correction)
             {
                 Ictf[refno]() = wsum_ctfMref[refno];
                 Ictf[refno]() /= sumwsc2[refno];
-                Ictf[refno].set_weight(sumw[refno]);
+                Ictf[refno].setWeight(sumw[refno]);
             }
             else
             {
@@ -2627,14 +2640,14 @@ void Prog_MLFalign2D_prm::maximization(std::vector<Matrix2D<double> > &wsum_Mref
         {
             Iref[refno]() = wsum_Mref[refno];
             Iref[refno]() /= sumwsc2[refno];
-            Iref[refno].set_weight(sumw2[refno]);
+            Iref[refno].setWeight(sumw2[refno]);
             sumw_allrefs += sumw[refno];
             sumw_allrefs2 += sumw2[refno];
             if (do_ctf_correction)
             {
                 Ictf[refno]() = wsum_ctfMref[refno];
                 Ictf[refno]() /= sumwsc2[refno];
-                Ictf[refno].set_weight(sumw2[refno]);
+                Ictf[refno].setWeight(sumw2[refno]);
             }
             else
             {
@@ -2643,8 +2656,8 @@ void Prog_MLFalign2D_prm::maximization(std::vector<Matrix2D<double> > &wsum_Mref
         }
         else
         {
-            Iref[refno].set_weight(0.);
-            Ictf[refno].set_weight(0.);
+            Iref[refno].setWeight(0.);
+            Ictf[refno].setWeight(0.);
             Iref[refno]().initZeros(dim, dim);
             Ictf[refno]().initZeros();
         }
@@ -2726,10 +2739,10 @@ void Prog_MLFalign2D_prm::maximization(std::vector<Matrix2D<double> > &wsum_Mref
             // Factor 2 here, because the Gaussian distribution is 2D!
             for (int irr = 0; irr <= current_highres_limit; irr++)
             {
-                aux = dVi(rmean_sigma2, irr) / (2. * sumw_defocus[ifocus]);
+                aux = dAi(rmean_sigma2, irr) / (2. * sumw_defocus[ifocus]);
                 if (aux > 0.)
                 {
-                    dVi(Vsig[ifocus], irr) = aux;
+                    dAi(Vsig[ifocus], irr) = aux;
                 }
             }
         }
@@ -2772,7 +2785,7 @@ bool Prog_MLFalign2D_prm::checkConvergence(std::vector<double> &conv)
 
     bool converged = true;
     double convv;
-    Matrix2D<double> Maux;
+    MultidimArray<double> Maux;
 
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
@@ -2782,10 +2795,12 @@ bool Prog_MLFalign2D_prm::checkConvergence(std::vector<double> &conv)
     {
         if (Iref[refno].weight() > 0.)
         {
-            multiplyElements(Iold[refno](), Iold[refno](), Maux);
+            //multiplyElements(Iold[refno](), Iold[refno](), Maux);
+            arrayByArray(Iold[refno](), Iold[refno](), Maux, '*');
             convv = 1. / (Maux.computeAvg());
             Maux = Iold[refno]() - Iref[refno]();
-            multiplyElements(Maux, Maux, Maux);
+            Maux *= Maux;
+            //multiplyElements(Maux, Maux, Maux);
             convv *= Maux.computeAvg();
             conv.push_back(convv);
             if (convv > eps)
@@ -2805,7 +2820,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
 {
 
     FileName          fn_tmp, fn_base;
-    ImageXmipp        Itmp;
+    Image<double>        Itmp;
     MetaData          MDo;
     std::string       comment;
     std::ofstream     fh;
@@ -2825,7 +2840,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
     for (int refno = 0; refno < n_ref; refno++)
     {
         MDo.clear();
-        Mdo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
+        MDo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
         fn_tmp = fn_root + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp += "_img.xmd";
@@ -2858,8 +2873,8 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
             }
             if (do_ML3D)
             {
-                MDo.setValue(MDL_ANGLEROT, Itmp.Phi());
-                MDo.setValue(MDL_ANGLETILT, Itmp.Theta());
+                MDo.setValue(MDL_ANGLEROT, Itmp.rot());
+                MDo.setValue(MDL_ANGLETILT, Itmp.tilt());
             }
         }
 
@@ -2902,11 +2917,11 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
         if (!fh_hist)
             REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_tmp);
         sumhist /= (sumhist.sum()*sumhist.step_size);
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(sumhist)
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(sumhist)
         {
             sumhist.index2val(i, val);
             val += 0.5*sumhist.step_size;
-            fh_hist << val<<" "<<VEC_ELEM(sumhist, i)<<" ";
+            fh_hist << val<<" "<< A1D_ELEM(sumhist, i)<<" ";
             if (do_student)
                 fh_hist << tstudent1D(val, df, 1., 0.)<<"\n";
             else
@@ -2918,7 +2933,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
         fh_hist.open((fn_tmp).c_str(), std::ios::out);
         if (!fh_hist)
             REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_tmp);
-        FOR_ALL_ELEMENTS_IN_MATRIX1D(sumhist)
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(sumhist)
         {
             sumhist.index2val(i, val);
             val += 0.5*sumhist.step_size;
@@ -2931,7 +2946,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
             {
                 if (resolhist[ires].sampleNo() > 0)
                 {
-                    fh_hist <<VEC_ELEM(resolhist[ires], i)/(resolhist[ires].sum()*resolhist[ires].step_size)<<" ";
+                    fh_hist <<A1D_ELEM(resolhist[ires], i)/(resolhist[ires].sum()*resolhist[ires].step_size)<<" ";
                 }
             }
             fh_hist <<"\n";
@@ -2954,7 +2969,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
                 REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
             for (int irr = 0; irr < hdim; irr++)
             {
-                fh << irr/(sampling*dim) << " " << dVi(Vsig[ifocus], irr) << "\n";
+                fh << irr/(sampling*dim) << " " << dAi(Vsig[ifocus], irr) << "\n";
             }
             fh.close();
         }
@@ -2963,35 +2978,35 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
 }
 
 /// Add docfiledata to docfile
-void Prog_MLFalign2D_prm::addPartialDocfileData(Matrix2D<double> data,
+void Prog_MLFalign2D_prm::addPartialDocfileData(MultidimArray<double> data,
         int first, int last)
 {
     for (int imgno = first; imgno <= last; imgno++)
     {
         int index = imgno - first;
         //FIXME now directly to MDimg
-        MDimg.setValue(MDL_ANGLEROT, dMij(data, index, 0), img_id[imgno]);
-        MDimg.setValue(MDL_ANGLETILT, dMij(data, index, 1), img_id[imgno]);
-        MDimg.setValue(MDL_ANGLEPSI, dMij(data, index, 2), img_id[imgno]);
-        MDimg.setValue(MDL_SHIFTX, dMij(data, index, 3), img_id[imgno]);
-        MDimg.setValue(MDL_SHIFTY, dMij(data, index, 4), img_id[imgno]);
-        MDimg.setValue(MDL_REF, ROUND(dMij(data, index, 5) + 1), img_id[imgno]);
+        MDimg.setValue(MDL_ANGLEROT, dAij(data, index, 0), img_id[imgno]);
+        MDimg.setValue(MDL_ANGLETILT, dAij(data, index, 1), img_id[imgno]);
+        MDimg.setValue(MDL_ANGLEPSI, dAij(data, index, 2), img_id[imgno]);
+        MDimg.setValue(MDL_SHIFTX, dAij(data, index, 3), img_id[imgno]);
+        MDimg.setValue(MDL_SHIFTY, dAij(data, index, 4), img_id[imgno]);
+        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5) + 1), img_id[imgno]);
         if (do_mirror)
         {
-            MDimg.setValue(MDL_FLIP, dMij(data, index, 6) != 0., img_id[imgno]);
+            MDimg.setValue(MDL_FLIP, dAij(data, index, 6) != 0., img_id[imgno]);
         }
-        MDimg.setValue(MDL_PMAX, dMij(data, index, 7), img_id[imgno]);
+        MDimg.setValue(MDL_PMAX, dAij(data, index, 7), img_id[imgno]);
         if (do_student)
         {
-            MDimg.setValue(MDL_WROBUST, dMij(data, index, 8), img_id[imgno]);
+            MDimg.setValue(MDL_WROBUST, dAij(data, index, 8), img_id[imgno]);
         }
         if (do_norm)
         {
-            MDimg.setValue(MDL_INTSCALE, dMij(data, index, 9), img_id[imgno]);
+            MDimg.setValue(MDL_INTSCALE, dAij(data, index, 9), img_id[imgno]);
         }
         if (do_kstest)
         {
-            MDimg.setValue(MDL_KSTEST, dMij(data, index, 10), img_id[imgno]);
+            MDimg.setValue(MDL_KSTEST, dAij(data, index, 10), img_id[imgno]);
         }
 
     }

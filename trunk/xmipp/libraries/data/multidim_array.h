@@ -783,6 +783,20 @@ public:
             (*this)(i) = V(i);
     }
 
+    /** Constructor from vector 1D
+     * @ingroup MultidimArrayConstructors
+     * This will create a MultidimArray 1D
+     * the size and elements will be copied from
+     * the std::vector
+     */
+    MultidimArray(const std::vector<T> &vector)
+    {
+        coreInit();
+        resize(1, 1, 1, vector.size());
+        for (int i = 0; i < vector.size(); i++)
+            (*this)(i) = vector[i];
+    }
+
     /** Destructor.
      * @ingroup MultidimArrayConstructors
      */
@@ -931,12 +945,12 @@ public:
         mmapOn = mmap;
     }
 
-   /** Sets new 4D dimensions.
-     * @ingroup MultidimArraySize
-     *
-     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-     *
-     */
+    /** Sets new 4D dimensions.
+      * @ingroup MultidimArraySize
+      *
+      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+      *
+      */
     void setDimensions(int Xdim, int Ydim, int Zdim, unsigned long int Ndim)
     {
         ndim=Ndim;
@@ -1316,7 +1330,7 @@ public:
                 int nF,int zF, int yF, int xF,
                 T init_value = 0, unsigned long n = 0)
     {
-    	if (this->ndim >1)
+        if (this->ndim >1)
         {
             REPORT_ERROR(1,"stack windowing not implemented");
         }

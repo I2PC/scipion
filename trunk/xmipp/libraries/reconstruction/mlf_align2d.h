@@ -30,6 +30,7 @@
 #include <data/args.h>
 #include <data/funcs.h>
 #include <data/metadata.h>
+#include <data/metadata_extension.h>
 #include <data/image.h>
 #include <data/geometry.h>
 #include <data/filters.h>
@@ -137,7 +138,7 @@ public:
     /** Number for which limited translation is zero */
     int zero_trans;
     /** Offsets for limited translations */
-    std::vector<Matrix1D<double> > Vtrans;
+    std::vector<MultidimArray<double> > Vtrans;
     /** Limited search range for origin offsets */
     int search_shift;
     /** Limit orientational searches */
@@ -156,7 +157,7 @@ public:
     std::vector<std::vector<double> > imgs_offsets;
 
     /** CTFDat file for all images */
-    CTFDat ctfdat;
+    //CTFDat ctfdat;
     /** Flag whether to include CTFs in the image formation model */
     bool do_ctf_correction;
     /** Pixel size in Angstroms */
@@ -168,7 +169,7 @@ public:
     /** Matrix with resolution shell at each Fourier pixel */
     MultidimArray<int> Mresol_int;
     /** Vectors with sigma2 (for each defocus group) */
-    std::vector<Matrix1D<double> > Vsig, Vctf, Vdec;
+    std::vector<MultidimArray<double> > Vsig, Vctf, Vdec;
     /** Multiplicative factor for SSNR */
     double reduce_snr;
     /** number of defocus groups */
@@ -190,8 +191,8 @@ public:
     int current_highres_limit;
     /** Random number generator seed */
     int seed;
-    /** Matrix2D for mpi passing of docfiledata */
-    Matrix2D<double> docfiledata;
+    /** MultidimArray for mpi passing of docfiledata */
+    MultidimArray<double> docfiledata;
     /** Flag for restart */
     bool do_restart;
 
@@ -255,7 +256,7 @@ public:
 
     /// Calculate Wiener filter for defocus series as defined by Frank
     /// (2nd ed. formula 2.32b on p.60)
-    void updateWienerFilters(Matrix1D<double> &spectral_signal,
+    void updateWienerFilters(MultidimArray<double> &spectral_signal,
                              std::vector<double> &sumw_defocus, int iter);
 
     /// Vary in-plane and translational sampling rates with resolution
@@ -269,13 +270,13 @@ public:
     void calculateInPlanePDF();
 
     // Append a FourierTransform (in half format!) to a vector
-    void appendFTtoVector(const Matrix2D<std::complex<double> > &Fin,
+    void appendFTtoVector(const MultidimArray<std::complex<double> > &Fin,
                           std::vector<double> &out);
 
     // get a FourierTransform (in half format!) from a vector
     void getFTfromVector(const std::vector<double> &in,
                          const int start_point,
-                         Matrix2D<std::complex<double> > &out,
+                         MultidimArray<std::complex<double> > &out,
                          bool only_real = false);
 
     /// Fill vector of matrices with all rotations of reference
@@ -283,7 +284,7 @@ public:
 
     /// Apply reverse rotations to all matrices in vector and fill new matrix with their sum
     void reverseRotateReference(const std::vector<double> &in,
-                                std::vector<Matrix2D<double > > &out);
+                                std::vector<MultidimArray<double > > &out);
 
     /// Calculate which references have projection directions close to
     /// phi and theta
@@ -292,29 +293,29 @@ public:
 
     /// Pre-calculate which model and phi have significant probabilities
     /// without taking translations into account!
-    void preselect_significant_model_phi(Matrix2D<double> &Mimg, std::vector<double> &offsets,
-                                         std::vector <std::vector< Matrix2D<double > > > &Mref,
-                                         Matrix2D<int> &Msignificant,
+    void preselect_significant_model_phi(MultidimArray<double> &Mimg, std::vector<double> &offsets,
+                                         std::vector <std::vector< MultidimArray<double > > > &Mref,
+                                         MultidimArray<int> &Msignificant,
                                          std::vector<double > &pdf_directions);
 
     // Calculate the FT of a translated matrix using a phase shift in
     // Fourier space
     void fourierTranslate2D(const std::vector<double> &in,
-                            Matrix1D<double> &trans,
+                            MultidimArray<double> &trans,
                             std::vector<double> &out,
                             int point_start = 0);
 
     // If not determined yet: search optimal offsets using maxCC
     // Then for all optimal translations, calculate all translated FTs
     // for each of the flipped variants
-    void calculateFourierOffsets(const Matrix2D<double> &Mimg,
+    void calculateFourierOffsets(const MultidimArray<double> &Mimg,
                                  const std::vector<double > &offsets,
                                  std::vector<double>  &out,
-                                 Matrix2D<int> &Moffsets,
-                                 Matrix2D<int> &Moffsets_mirror);
+                                 MultidimArray<int> &Moffsets,
+                                 MultidimArray<int> &Moffsets_mirror);
 
     /// Perform expectation step for a single image
-    void processOneImage(const Matrix2D<double> &Mimg,
+    void processOneImage(const MultidimArray<double> &Mimg,
                          const int focus, bool apply_ctf,
                          const std::vector<double> &Fref,
                          std::vector<double> &Fwsum_imgs,
@@ -329,24 +330,24 @@ public:
                          double &LL, double &fracweight,  double &maxweight2, double &sum_refw2,
                          double &opt_scale, int &opt_refno, double &opt_psi,
                          int &opt_ipsi, int &opt_iflip,
-                         Matrix1D<double> &opt_offsets,
+                         MultidimArray<double> &opt_offsets,
                          std::vector<double> &opt_offsets_ref,
                          std::vector<double > &pdf_directions,
                          bool do_kstest, bool write_histograms,
                          FileName fn_img, double &KSprob);
 
     /// Perform Kolmogorov-Smirnov test
-    double performKSTest(Matrix2D<double> &Mimg,  const int focus, bool apply_ctf,
+    double performKSTest(MultidimArray<double> &Mimg,  const int focus, bool apply_ctf,
                          FileName &fn_img, bool write_histogram,
-                         std::vector <std::vector< Matrix2D<std::complex<double> > > > &Fref,
+                         std::vector <std::vector< MultidimArray<std::complex<double> > > > &Fref,
                          double &opt_scale, int &opt_refno, int &opt_ipsi, int &opt_iflip,
-                         Matrix1D<double> &opt_offsets);
+                         MultidimArray<double> &opt_offsets);
 
     /// Integrate over all experimental images
-    void expectation(std::vector< ImageXmippT<double> > &Iref, int iter,
+    void expectation(std::vector< Image<double> > &Iref, int iter,
                      double &LL, double &sumcorr,
-                     std::vector<Matrix2D<double> > &wsum_Mref,
-                     std::vector<Matrix2D<double> > &wsum_ctfMref,
+                     std::vector<MultidimArray<double> > &wsum_Mref,
+                     std::vector<MultidimArray<double> > &wsum_ctfMref,
                      std::vector<std::vector<double> > &Mwsum_sigma2,
                      double &wsum_sigma_offset,
                      std::vector<double> &sumw,
@@ -357,8 +358,8 @@ public:
                      std::vector<double> &sumw_defocus);
 
     /// Update all model parameters (maximization step)
-    void maximization(std::vector<Matrix2D<double> > &wsum_Mref,
-                      std::vector<Matrix2D<double> > &wsum_ctfMref,
+    void maximization(std::vector<MultidimArray<double> > &wsum_Mref,
+                      std::vector<MultidimArray<double> > &wsum_ctfMref,
                       std::vector<std::vector<double> > &Mwsum_sigma2,
                       double &wsum_sigma_offset,
                       std::vector<double> &sumw,
@@ -368,7 +369,7 @@ public:
                       std::vector<double> &sumw_mirror,
                       std::vector<double> &sumw_defocus,
                       double &sumcorr, double &sumw_allrefs,
-                      Matrix1D<double> &spectral_signal,
+                      MultidimArray<double> &spectral_signal,
                       int refs_per_class=1);
 
     /// check convergence
@@ -380,7 +381,7 @@ public:
                           std::vector<double> &conv);
 
     /// Write partial docfile
-    void addPartialDocfileData(Matrix2D<double> data, int first, int last);
+    void addPartialDocfileData(MultidimArray<double> data, int first, int last);
 
 };
 //@}
