@@ -98,17 +98,15 @@ typedef struct{
       #include <XmippData/xmippArgs.hh>
 
       int main(int argc, char **argv) {
-   struct blobtype blob;                  // Definition of the blob
-   blob.radius = 2;                       // Blob radius in voxels
-   blob.order  = 2;                       // Order of the Bessel function
-   blob.alpha  = textToFloat(argv[1]);           // Smoothness parameter
+         struct blobtype blob;                  // Definition of the blob
+         blob.radius = 2;                       // Blob radius in voxels
+         blob.order  = 2;                       // Order of the Bessel function
+         blob.alpha  = textToFloat(argv[1]);    // Smoothness parameter
 
-
-   double M=blob_Fourier_val (0, blob);
-   for (double w=0; w<=2; w += 0.05)
-      std::cout << w << " " <<  blob_Fourier_val (w, blob)/M << std::endl;
-
-   return 0;
+         double M=blob_Fourier_val (0, blob);
+         for (double w=0; w<=2; w += 0.05)
+            std::cout << w << " " <<  blob_Fourier_val (w, blob)/M << std::endl;
+         return 0;
       }
     @endcode
 */

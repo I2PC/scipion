@@ -17,8 +17,6 @@
 /// @ingroup Libraries
 /// @defgroup MultidimensionalArrays Multidimensional Arrays
 /// @ingroup DataLibrary
-/// @defgroup DataLibraryPrograms Programs whose implementation is in the basic data library
-/// @ingroup Libraries
 
 /// @defgroup ReconsLibrary Reconstruction library
 /// @ingroup Libraries

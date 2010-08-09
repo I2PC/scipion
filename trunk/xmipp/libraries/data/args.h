@@ -30,7 +30,6 @@
 #include <string>
 #include <vector>
 #include "matrix1d.h"
-//ROB
 #include <string.h>
 
 #include "funcs.h"
@@ -60,16 +59,11 @@ template <typename T> class Matrix1D;
  * int key, param_no;
  * std::vector< float > data;
  *
- * #ifndef _NO_EXCEPTION
  * try
  * {
- * #endif
- *
  * key = textToFloat(firstToken(line), 1602, "Error reading key");
  * param_no = textToInt(nextToken(), 1602, "Error reading number parameters");
  * readFloatList(NULL, param_no, data, 1602, "Error reading doc file line");
- *
- * #ifndef _NO_EXCEPTION
  * }
  * catch (Xmipp_error XE)
  * {
@@ -77,8 +71,6 @@ template <typename T> class Matrix1D;
  *     DL.line_type = 0;
  *     REPORT_ERROR(1602, "Line is discarded");
  * }
- * #endif
- *
  * @endcode
  */
 
@@ -561,7 +553,7 @@ void readFloatList(const std::string& str,
     }
 }
 
-/** List to Matrix1D.
+/** Read list into a Matrix1D.
  * @ingroup ReadLists
  */
 template <typename T>
@@ -906,5 +898,4 @@ Matrix1D< double > getVectorParameter(FILE* fh,
                                     int _errno = -1,
                                     const std::string & errmsg = "",
                                     int exit = 0);
-
 #endif

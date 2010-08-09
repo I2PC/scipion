@@ -41,25 +41,25 @@
 
       int main() {
         // Read the parametric CTF
-  XmippCTF CTF;
-  CTF.enable_CTF=true;
-  CTF.enable_CTFnoise=false;
-  CTF.read("ctf_crio.param");
-  CTF.Produce_Side_Info();
+        XmippCTF CTF;
+        CTF.enable_CTF=true;
+        CTF.enable_CTFnoise=false;
+        CTF.read("ctf_crio.param");
+        CTF.Produce_Side_Info();
 
         // Compute the CTF radial average
-  double sampling_rate=3.5; // in Angstroms/pixel
-  double fmax=1.0/(2.0*sampling_rate);
-  for (double f=0; f<fmax; f+=fmax/100.0) {
-     double CTF_at_f=0;
-     double N=0;
-     for(double ang=0; ang<2*PI; ang+=0.01) {
+        double sampling_rate=3.5; // in Angstroms/pixel
+        double fmax=1.0/(2.0*sampling_rate);
+        for (double f=0; f<fmax; f+=fmax/100.0) {
+            double CTF_at_f=0;
+            double N=0;
+            for(double ang=0; ang<2*PI; ang+=0.01) {
                CTF_at_f+=CTF.CTF_at(f*cos(ang),f*sin(ang));
-        N++;
-     }
-     std::cout << f << " " << CTF_at_f/N << std::endl;
-  }
-  return 0;
+               N++;
+            }
+            std::cout << f << " " << CTF_at_f/N << std::endl;
+        }
+        return 0;
       }
    @endcode
 
@@ -280,6 +280,7 @@ public:
         return SGN(DeltafU)*sqrt(DeltafUp*DeltafUp + DeltafVp*DeltafVp);
     }
 
+    /// Compute CTF at (U,V). Continuous frequencies
     double CTF_at(double X, double Y, bool show = false) const
     {
         double pure_CTF;
@@ -289,7 +290,7 @@ public:
         else                 return pure_CTF;
     }
 
-    /// Compute CTF at (U,V). Continuous frequencies
+    /// Compute pure CTF without damping at (U,V). Continuous frequencies
     double CTFpure_without_damping_at(double X, double Y, bool show = false) const
     {
         double u2 = X * X + Y * Y;
@@ -313,7 +314,7 @@ public:
         return -(sine_part + Q0*cosine_part);
     }
 
-    /// Compute CTF at (U,V). Continuous frequencies
+    /// Compute CTF damping at (U,V). Continuous frequencies
     inline double CTFdamping_at(double X, double Y, bool show = false) const
     {
         double u2 = X * X + Y * Y;
@@ -342,7 +343,7 @@ public:
         return -K*E;
     }
 
-    /// Compute CTF at (U,V). Continuous frequencies
+    /// Compute CTF pure at (U,V). Continuous frequencies
     inline double CTFpure_at(double X, double Y, bool show = false) const
     {
         double u2 = X * X + Y * Y;
