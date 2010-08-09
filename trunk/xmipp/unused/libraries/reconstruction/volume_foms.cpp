@@ -211,7 +211,7 @@ void compute_sc_FOMs(
 
     // Compute mutual information FOM
     Histogram1D hist_phantom, hist_recons;
-    histogram2D hist_phantom_recons;
+    Histogram2D hist_phantom_recons;
     hist_phantom.init(mp, Mp, 200);
     hist_recons.init(mr, Mr, 200);
     hist_phantom_recons.init(mp, Mp, 200, mr, Mr, 200);
