@@ -480,7 +480,7 @@ double mutual_information(const MultidimArray< T >& x,
 
     long n = 0;
     Histogram1D histx, histy;
-    histogram2D histxy;
+    Histogram2D histxy;
     MultidimArray< T > aux_x, aux_y;
     MultidimArray< double > mx, my;
     MultidimArray< double > mxy;
