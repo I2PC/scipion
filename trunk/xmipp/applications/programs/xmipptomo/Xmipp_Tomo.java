@@ -29,44 +29,26 @@ package xmipptomo;
 
 
 import ij.*;
-import ij.gui.*;
 import ij.io.*;
-import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.util.Calendar;
-import ij.plugin.frame.*;
+import ij.plugin.PlugIn;
 
 /**
  * @author jcuenca
- * extends PlugInFrame ImageJ plugin base class
- * implements ActionListener (buttons), MouseListener (mouse move & clicks)
+ * implements PlugIn (ImageJ plugins base interface)
  * 
- * Main class, responsible for workflow control and plugin initialization
+ * Main class, responsible for plugin initialization
  */
 
 // underscore in the name is required for automatic installation in the plugins menu...
 // Requirements: http://u759.curie.u-psud.fr/compteur/download.php?Fichier=software/update/20090928/U759_InputOutput.jar
-public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListener {
+public class Xmipp_Tomo implements PlugIn{
 
 	/**
 	 * Required because of inherited "serializationability"...
 	 */
 	private static final long serialVersionUID = -4063711977454855701L;
-	
-	/** Protocol for adding new buttons to the workflow/UI:
-	 *  - set the label in Commands enum as static String,
-	 *  - run addButton in Xmipp_Tomo constructor, 
-	 *  - update actionPerformed method
-	 */
-	
-	// labels of buttons
-	private static enum ButtonLabels {
-		CMD_INFO("Info"),CMD_PREPROC("Preprocessing"), CMD_ALIGN("Align");
-		private final String label;
-		ButtonLabels(String s) { this.label=s;}
-		public String label(){return label;}
-	};
 	
 	private static enum CmdExitValues {
 		OK(0),ERROR(1);
@@ -77,45 +59,18 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 	
 	// enable debuging tests - release versions should have this set to 0
 	final static int TESTING = 1;
-	
-	// store all data following the MVC pattern
-	private TomoData dataModel;
 
 	// UI elements
-	Panel panel; // main button panel
-	// display tilt series
 	TomoWindow tw=null;
 	
-	// implement UI concurrency with private class that extends Thread
-	// ImportDataThread: load & display projections in parallel
-	private class ImportDataThread extends Thread{
-		private TomoData dataModel;
-		private String dataPath;
-		
-		ImportDataThread(TomoData model,String path){
-			dataModel=model;
-			dataPath=path;
-		}
-		
-		public void run() {
-			try{
-				dataModel.import_data(dataPath);
-			}catch (IOException ex){
-				debug("ImportDataThread.run - Error opening file");
-			}catch (InterruptedException ex){
-				debug("ImportDataThread.run - Interrupted exception");
-			}catch (Exception ex){
-				debug("ImportDataThread.run - unexpected exception", ex);
-			}
-		}
-	}
+	/*
 
 	public Xmipp_Tomo() {
-		super("Xmipp_Tomo");
+		// super("Xmipp_Tomo");
 		
-		dataModel=new TomoData();
+		// dataModel=new TomoData();
 		
-		setLayout(new FlowLayout());
+		/*setLayout(new FlowLayout());
 		panel = new Panel();
 		panel.setLayout(new GridLayout(4, 4, 5, 5));
 		panel.add(new Label("Xmipp Tomo"));
@@ -128,26 +83,30 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 		pack();
 		GUI.center(this);
 		// show is deprecated...
-		show();
-	}
+		show(); 
+	} */
 	
-	/* (non-Javadoc)
-	 * wait for user input (in button panel)
-	 * @see ij.plugin.frame.PlugInFrame#run(java.lang.String)
+	/* entry point for PlugIn implementors
 	 */
 	public void run(String arg){
+		createTomoWindow();
+		
+		// IJ.debugMode = true;
+		
+		if(tw != null)
+			tw.display();
 	}
 
 	
 	/** Add button to main panel
 	 * @param label
-	 */
+	 *
 	void addButton(String label) {
-		Button b = new Button(label);
+		/* Button b = new Button(label);
 		b.addActionListener(this);
 		b.addKeyListener(IJ.getInstance());
-		panel.add(b);
-	}
+		panel.add(b); 
+	}*/
 
 	
 	/** Run cmdline in a shell and show standard output & error via debug()
@@ -216,11 +175,11 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 	
 	/* handle button/keyboard pressing, from both this plugin and the windows it opens
 	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-	 */
+	 *
 	public void actionPerformed(ActionEvent e) {
 	
 		String label = e.getActionCommand();
-
+		/*
 		// select proper action method based on button's label
 		if (label==null)
 			return;
@@ -232,27 +191,8 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 			String directory=IJ.getDirectory("");
 			exec("ls "+directory);
 		}
-	} // actionPerformed end
-	
-	
-	/********************* Mouse event handlers ****************************/
-	
-	 public void mousePressed(MouseEvent e) {
-	        // debug("Mouse pressed; # of clicks: "  + e.getClickCount());
-	 }
+	} // actionPerformed end */
 
-	
-	public void mouseReleased(MouseEvent e) {
-	}
-
-	    public void mouseEntered(MouseEvent e) {
-    }
-
-	    public void mouseExited(MouseEvent e) {
-	}
-
-    public void mouseClicked(MouseEvent e) {
-	}
 
     /********************* Trace methods for debugging ****************************/
     
@@ -275,49 +215,12 @@ public class Xmipp_Tomo extends PlugInFrame implements ActionListener,MouseListe
 		ex.printStackTrace();
 	}
 	
-	public TomoData getDataModel() {
-		return dataModel;
-	}
-
-	public void setDataModel(TomoData dataModel) {
-		this.dataModel = dataModel;
-	}
-
-	
 	private void createTomoWindow(){
-		if(getDataModel().getImage()==null)
-			debug("No image available to display");
-		else{	
 			if(tw==null){
 				tw= new TomoWindow();
-				tw.create(getDataModel());
-				WindowManager.addWindow(tw);
 			}
-		}
 	}
 		
-	
-	/* Procedures handling application workflows (in response to events) */
-	
-
-	/**
-	 * All actions corresponding to the workflow "Info"
-	 */
-	private void infoAction(){
-		String path = browseFile();
-		
-		try{
-			// import data in one thread and hold this thread until the first projection is loaded
-			(new Thread(new ImportDataThread(getDataModel(),path))).start();
-			getDataModel().waitForFirstImage();
-		}catch (InterruptedException ex){
-			debug("Xmipp_Tomo - Interrupted exception");
-		}
-
-		createTomoWindow();
-		if(tw != null)
-			tw.display();
-	}
 	
 	// ij.IJ class offers a lot of useful methods...
 	private void ijExamples(){
