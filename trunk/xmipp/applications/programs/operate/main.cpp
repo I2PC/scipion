@@ -1078,8 +1078,8 @@ void radial_avg(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         {
             Matrix1D<int> center(2);
             center.initZeros();
-            MultidimArray1D<double> radial_mean;
-            MultidimArray1D<int> radial_count;
+            MultidimArray<double> radial_mean;
+            MultidimArray<int> radial_count;
             radialAverage(input(), center, radial_mean, radial_count);
             radial_mean.write(fn_out);
 
@@ -1095,8 +1095,8 @@ void radial_avg(int operand_type1, const FileName &fn_1, const FileName &fn_out)
         {
             Matrix1D<int> center(3);
             center.initZeros();
-            MultidimArray1D<double> radial_mean;
-            MultidimArray1D<int> radial_count;
+            MultidimArray<double> radial_mean;
+            MultidimArray<int> radial_count;
             radialAverage(input(), center, radial_mean, radial_count);
             radial_mean.write(fn_out);
 

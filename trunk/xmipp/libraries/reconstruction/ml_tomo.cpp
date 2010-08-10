@@ -2125,7 +2125,6 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     }
     else
     {
-
         // Calculate stddev of (wedge-inforced) image
         img_stddev = Mimg0.computeStddev();
         // Loop over all orientations

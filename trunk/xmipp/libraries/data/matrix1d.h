@@ -413,7 +413,7 @@ public:
     /** Core allocate.
      * @ingroup VectorsCore
      */
-    void coreAllocate(int _vdim)
+    inline void coreAllocate(int _vdim)
     {
         if (_vdim<=0)
         {
@@ -431,7 +431,7 @@ public:
      * @ingroup VectorsCore
      * Free all vdata.
      */
-    void coreDeallocate()
+    inline void coreDeallocate()
     {
         if (vdata != NULL && destroyData)
             delete[] vdata;
@@ -451,7 +451,7 @@ public:
      * V1.resize(3, 3, 2);
      * @endcode
      */
-    void resize(int Xdim)
+    inline void resize(int Xdim)
     {
         if (Xdim == vdim)
             return;
@@ -462,17 +462,15 @@ public:
             return;
         }
 
-
         T * new_vdata;
-
         try
         {
         	new_vdata = new T [Xdim];
         }
         catch (std::bad_alloc &)
-		{
+        {
 			REPORT_ERROR(1001, "Allocate: No space left");
-		}
+        }
 
 		// Copy needed elements, fill with 0 if necessary
 		for (int j = 0; j < Xdim; j++)

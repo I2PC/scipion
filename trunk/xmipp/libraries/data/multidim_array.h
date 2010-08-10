@@ -42,7 +42,7 @@ extern int bestPrecision(float F, int _width);
 extern std::string floatToString(float F, int _width, int _prec);
 
 /// @defgroup MultidimensionalArrays Multidimensional Arrays
-/// @ingroup Arrays
+/// @ingroup DataLibrary
 
 /** @defgroup MultidimArraysSpeedUp Speed up macros
  * @ingroup MultidimensionalArrays
@@ -57,82 +57,78 @@ extern std::string floatToString(float F, int _width, int _prec);
  * the copy constructor and in the creation/destruction of temporary vectors.
  */
 
-/// @defgroup MultidimArraysSizeShape Size and shape
-/// @ingroup MultidimArraysSpeedUp
-
 /** Returns the first X valid logical index
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define STARTINGX(v) ((v).xinit)
 
 /** Returns the last X valid logical index
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define FINISHINGX(v) ((v).xinit + (v).xdim - 1)
 
 /** Returns the first Y valid logical index
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define STARTINGY(v) ((v).yinit)
 
 /** Returns the last Y valid logical index
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define FINISHINGY(v) ((v).yinit + (v).ydim - 1)
 
 /** Returns the first Z valid logical index
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define STARTINGZ(v) ((v).zinit)
 
 /** Returns the last Z valid logical index
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define FINISHINGZ(v) ((v).zinit + (v).zdim - 1)
 
 /** Access to X dimension (size)
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define XSIZE(v) ((v).xdim)
 
 /** Access to Y dimension (size)
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define YSIZE(v) ((v).ydim)
 
 /** Access to Z dimension (size)
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define ZSIZE(v) ((v).zdim)
 
 /** Access to N dimension (size)
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define NSIZE(v) ((v).ndim)
 
 /** Access to XY dimension (Ysize*Xsize)
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define YXSIZE(v) ((v).yxdim)
 
 /** Access to XYZ dimension (Zsize*Ysize*Xsize)
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define ZYXSIZE(v) ((v).zyxdim)
 
-/// FIXME MULTIDIM_SIZE will disappear
-/** Access to XYZ dimension (Zsize*Ysize*Xsize)
- * @ingroup MultidimArraysSizeShape
+/** Access to XYZN dimension (Nsize*Zsize*Ysize*Xsize)
+ * @ingroup MultidimArraysSpeedUp
  */
 #define MULTIDIM_SIZE(v) ((v).nzyxdim)
 
 /** Access to XYZN dimension (Nsize*Zsize*Ysize*Xsize)
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define NZYXSIZE(v) ((v).nzyxdim)
 
 /** Array access.
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro gives you access to the array (T **)
  */
@@ -141,28 +137,28 @@ extern std::string floatToString(float F, int _width, int _prec);
 #endif
 
 /** Access to a direct element.
- * @ingroup MultidimArraysSizeShape.
+ * @ingroup MultidimArraysSpeedUp.
  * v is the array, l is the image, k is the slice, i is the Y index and j is the X index.
  * i and j) within the slice.
  */
 #define DIRECT_NZYX_ELEM(v, l, k, i, j) ((v).data[(l)*ZYXSIZE(v)+(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
 
 /** Multidim element: Logical access.
- * @ingroup MultidimArraysSizeShape.
+ * @ingroup MultidimArraysSpeedUp.
 
  */
 #define NZYX_ELEM(v, l, k, i, j)  \
     DIRECT_NZYX_ELEM((v), (l), (k) - STARTINGZ(v), (i) - STARTINGY(v), (j) - STARTINGX(v))
 
 /** Access to a direct element.
- * @ingroup MultidimArraysSizeShape.
+ * @ingroup MultidimArraysSpeedUp.
  * v is the array, k is the slice and n is the number of the pixel (combined
  * i and j) within the slice.
  */
 #define DIRECT_MULTIDIM_ELEM(v,n) ((v).data[(n)])
 
 /** For all direct elements in the array
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the array in an easy manner. It
  * defines an internal index 'n' which goes over the slices and 'n' that
@@ -179,7 +175,7 @@ extern std::string floatToString(float F, int _width, int _prec);
     for (unsigned long int n=0; n<NZYXSIZE(v); ++n)
 
 /** For all direct elements in the array
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the array in an easy
  * manner. It defines internal indexes 'l', 'k','i' and 'j' which
@@ -199,7 +195,7 @@ extern std::string floatToString(float F, int _width, int _prec);
                 for (size_t j=0; j<XSIZE(V); j++)
 
 /** For all direct elements in the array
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the array in an easy
  * manner. It defines internal indexes 'l', 'k','i' and 'j' which
@@ -219,7 +215,7 @@ extern std::string floatToString(float F, int _width, int _prec);
                 for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
 
 /** For all direct elements in the array, pointer version
- * @ingroup MultidimArraysSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the array in an easy manner. It
  * defines an internal index 'k' which goes over the slices and 'n' that
@@ -238,21 +234,20 @@ extern std::string floatToString(float F, int _width, int _prec);
 #define FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr) \
     for ((n)=0, (ptr)=(v).data; (n)<NZYXSIZE(v); ++(n), ++(ptr))
 
-
 /** Access to a direct element.
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  * v is the array, k is the slice (Z), i is the Y index and j is the X index.
  */
 #define DIRECT_A3D_ELEM(v,k,i,j) ((v).data[(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
 
 /** A short alias for the previous function.
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  */
 #define dAkij(V, k, i, j) DIRECT_A3D_ELEM(V, k, i, j)
 
 /** Volume element: Logical access.
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * @code
  * A3D_ELEM(V, -1, -2, 1) = 1;
@@ -263,7 +258,7 @@ extern std::string floatToString(float F, int _width, int _prec);
     DIRECT_A3D_ELEM((V),(k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
 
 /** For all elements in the array.
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the volume in an easy way. It
  * defines internal indexes 'k','i' and 'j' which ranges the volume using its
@@ -282,7 +277,7 @@ extern std::string floatToString(float F, int _width, int _prec);
             for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
 
 /** For all elements in common.
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for all the elements logically in common
  * between two volumes in an easy manner. Then k, i and j (locally defined)
@@ -318,7 +313,7 @@ extern std::string floatToString(float F, int _width, int _prec);
             for (int j=ispduptmp4; j<=ispduptmp5; j++)
 
 /** For all direct elements in the array.
- * @ingroup VolumeSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the volume in an easy way. It
  * defines internal indexes 'k','i' and 'j' which ranges the volume using its
@@ -336,9 +331,8 @@ extern std::string floatToString(float F, int _width, int _prec);
         for (size_t i=0; i<YSIZE(V); i++) \
             for (size_t j=0; j<XSIZE(V); j++)
 
-
 /** Access to a direct element of a matrix.
- * @ingroup MatricesSizeShape
+ * @ingroup MultidimArraysSpeedUp
  * v is the array, i and j define the element v_ij.
  *
  * Be careful because this is physical access, usually matrices follow the C
@@ -351,17 +345,16 @@ extern std::string floatToString(float F, int _width, int _prec);
  * DIRECT_A2D_ELEM(m, 0, 0) = 1;
  * val = DIRECT_A2D_ELEM(m, 0, 0);
  * @endcode
-
  */
 #define DIRECT_A2D_ELEM(v,i,j) ((v).data[(i)*(v).xdim+(j)])
 
 /** Short alias for DIRECT_A2D_ELEM
- * @ingroup MatricesSizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define dAij(M, i, j) DIRECT_A2D_ELEM(M, i, j)
 
 /** Matrix element: Logical access
- * @ingroup MatricesSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * @code
  * A2D_ELEM(m, -2, 1) = 1;
@@ -372,7 +365,7 @@ extern std::string floatToString(float F, int _width, int _prec);
     DIRECT_A2D_ELEM(v, (i) - STARTINGY(v), (j) - STARTINGX(v))
 
 /** TRUE if both arrays have the same shape
- * @ingroup MatricesSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * Two arrays have the same shape if they have the same size and the same
  * starting point. Be aware that this is a macro which simplifies to a boolean.
@@ -384,7 +377,7 @@ extern std::string floatToString(float F, int _width, int _prec);
      STARTINGY(v1) == STARTINGY(v2))
 
 /** For all elements in the array
- * @ingroup MatricesSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the matrix in an easy way. It
  * defines internal indexes 'i' and 'j' which ranges the matrix using its
@@ -402,7 +395,7 @@ extern std::string floatToString(float F, int _width, int _prec);
         for (int j=STARTINGX(m); j<=FINISHINGX(m); j++)
 
 /** For all elements in common
- * @ingroup MatricesSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for all the elements logically in common
  * between two images in an easy manner. Then i and j (locally defined) range
@@ -431,7 +424,7 @@ extern std::string floatToString(float F, int _width, int _prec);
         for (int j=ispduptmp4; j<=ispduptmp5; j++)
 
 /** For all elements in the array between corners.
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for a volume in an easy manner. Then
  *  ZZ(r), YY(r) and XX(r) range from
@@ -459,9 +452,8 @@ extern std::string floatToString(float F, int _width, int _prec);
         for (YY(r)=YY((corner1)); YY(r)<=YY((corner2)); YY(r)++) \
             for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
 
-
 /** For all elements in the array between corners
- * @ingroup MatricesSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for a matrix in an easy manner. It needs
  * an externally defined MultidimArray< double > r(2). Then YY(r) and XX(r) range
@@ -488,7 +480,7 @@ extern std::string floatToString(float F, int _width, int _prec);
         for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
 
 /** For all elements in the array between corners
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for a vector in an easy manner. It needs
  * an externally defined MultidimArray< double > r(1). Then XX(r) ranges from
@@ -509,7 +501,7 @@ extern std::string floatToString(float F, int _width, int _prec);
     for (XX(r)=(int) XX((corner1)); XX(r)<=(int) XX((corner2)); XX(r)++)
 
 /** For all elements in the array, accessed physically
- * @ingroup MatricesSizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the matrix in an easy way using
  * physical indexes. It defines internal indexes 'i' and 'j' which ranges the
@@ -527,7 +519,7 @@ extern std::string floatToString(float F, int _width, int _prec);
         for (size_t j=0; j<XSIZE(m); j++)
 
 /** Vector element: Physical access
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * Be careful because this is physical access, usually vectors follow the C
  * convention of starting index==0. This function should not be used as it goes
@@ -543,12 +535,12 @@ extern std::string floatToString(float F, int _width, int _prec);
 #define DIRECT_A1D_ELEM(v, i) ((v).data[(i)])
 
 /** A short alias to previous function
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  */
 #define dAi(v, i) DIRECT_A1D_ELEM(v, i)
 
 /** Vector element: Logical access
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * @code
  * A1D_ELEM(v, -2) = 1;
@@ -558,7 +550,7 @@ extern std::string floatToString(float F, int _width, int _prec);
 #define A1D_ELEM(v, i) DIRECT_A1D_ELEM(v, (i) - ((v).xinit))
 
 /** For all elements in the array
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the vector in an easy manner. It
  * defines an internal index 'i' which ranges the vector using its mathematical
@@ -575,7 +567,7 @@ extern std::string floatToString(float F, int _width, int _prec);
     for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
 
 /** For all elements in common
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for all the elements logically in common
  * between two vectors in an easy manner. Then i (locally defined) ranges from
@@ -599,7 +591,7 @@ extern std::string floatToString(float F, int _width, int _prec);
     for (int i=ispduptmp4; i<=ispduptmp5; i++)
 
 /** For all elements in the array, accessed physically
- * @ingroup MultidimArraySizeShape
+ * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the vector in an easy way using
  * physical indexes. It defines internal the index 'i' which ranges the vector
@@ -614,8 +606,6 @@ extern std::string floatToString(float F, int _width, int _prec);
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v) \
     for (size_t i=0; i<v.xdim; i++)
-
-
 
 // Forward declarations ====================================================
 template<typename T>
@@ -632,17 +622,6 @@ void coreScalarByArray(const T& op1, const MultidimArray<T>& op2,
 template<typename T>
 void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
                       MultidimArray<T>& result, char operation);
-
-/* MultidimArray aliases
- * @ingroup MultidimensionalArrays
- * Just for making explicit for what dimensionality these MultidimArrays are meant
- * No check on dimensions or whatsoever is performed..
- * This is just for clarity in the code
- */
-#define MultidimArray1D MultidimArray
-#define MultidimArray2D MultidimArray
-#define MultidimArray3D MultidimArray
-
 
 /** Template class for Xmipp arrays.
   * @ingroup MultidimensionalArrays
@@ -694,12 +673,12 @@ public:
 
     //Alloc memory or map to a file
     bool     mmapOn;
-    FileName   mapFile;
-    int     mFd;
+    FileName mapFile;
+    int      mFd;
 
 public:
     /// @defgroup MultidimArrayConstructors Constructors
-    /// @ingroup MultidimensionalArrays
+
     /** Empty constructor.
      * @ingroup MultidimArrayConstructors
      * The empty constructor creates an array with no memory associated,
@@ -815,7 +794,7 @@ public:
     }
 
     /// @defgroup MultidimArrayCore Core memory operations for MultidimArrays
-    /// @ingroup MultidimensionalArrays
+
     /** Core init.
      * @ingroup MultidimArrayCore
      * Initialize everything to 0
@@ -866,9 +845,7 @@ public:
         if(data!=NULL)
             REPORT_ERROR(1001, "do not allocate space for an image if you have not deallocate it first");
         if (nzyxdim < 0)
-        {
             REPORT_ERROR(1,"coreAllocate:Cannot allocate a negative number of bytes");
-        }
 
         if (mmapOn)
         {
@@ -895,6 +872,7 @@ public:
                 REPORT_ERROR(1001, "Allocate: No space left");
         }
     }
+
     /** Core allocate without dimensions.
      * @ingroup MultidimArrayCore
      *
@@ -907,9 +885,7 @@ public:
         if(data!=NULL)
             return;
         if (nzyxdim < 0)
-        {
             REPORT_ERROR(1,"coreAllocateReuse:Cannot allocate a negative number of bytes");
-        }
 
         if (mmapOn)
         {
@@ -933,9 +909,8 @@ public:
             REPORT_ERROR(1001, "Allocate: No space left");
     }
 
-
     /** Sets mmap.
-     * @ingroup MultidimArrayMmap
+     * @ingroup MultidimArrayCore
      *
      * Sets on/off mmap flag to allocate memory in a file.
      *
@@ -944,77 +919,6 @@ public:
     {
         mmapOn = mmap;
     }
-
-    /** Sets new 4D dimensions.
-      * @ingroup MultidimArraySize
-      *
-      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-      *
-      */
-    void setDimensions(int Xdim, int Ydim, int Zdim, unsigned long int Ndim)
-    {
-        ndim=Ndim;
-        zdim=Zdim;
-        ydim=Ydim;
-        xdim=Xdim;
-        yxdim=ydim*xdim;
-        zyxdim=zdim*yxdim;
-        nzyxdim=ndim*zyxdim;
-    }
-
-    /** Sets new N dimension.
-     * @ingroup MultidimArraySize
-     *
-     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-     *
-     */
-    void setNdim(int Ndim)
-    {
-        ndim = Ndim;
-        nzyxdim=ndim*zyxdim;
-    }
-
-    /** Sets new Z dimension.
-     * @ingroup MultidimArraySize
-     *
-     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-     *
-     */
-    void setZdim(int Zdim)
-    {
-        zdim = Zdim;
-        zyxdim=zdim*yxdim;
-        nzyxdim=ndim*zyxdim;
-    }
-
-    /** Sets new Y dimension.
-     * @ingroup MultidimArraySize
-     *
-     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-     *
-     */
-    void setYdim(int Ydim)
-    {
-        ydim = Ydim;
-        yxdim=ydim*xdim;
-        zyxdim=zdim*yxdim;
-        nzyxdim=ndim*zyxdim;
-    }
-
-    /** Sets new X dimension.
-      * @ingroup MultidimArraySize
-      *
-      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
-      *
-      */
-    void setXdim(int Xdim)
-    {
-        xdim = Xdim;
-        yxdim=ydim*xdim;
-        zyxdim=zdim*yxdim;
-        nzyxdim=ndim*zyxdim;
-    }
-
 
     /** Core deallocate.
      * @ingroup MultidimArrayCore
@@ -1036,8 +940,92 @@ public:
         data=NULL;
     }
 
+    /** Alias a multidimarray.
+     * @ingroup MultidimArrayCore
+     *
+     * Treat the multidimarray as if it were a volume. The data is not copied
+     * into new memory, but a pointer to the multidimarray is copied.
+     * You should not make any operation on this volume such that the
+     * memory locations are changed
+     */
+    void alias(const MultidimArray<T> &m)
+    {
+        copyShape(m);
+        this->data=m.data;
+        this->destroyData=false;
+    }
+
     /// @defgroup MultidimSize Size
-    /// @ingroup MultidimensionalArrays
+
+    /** Sets new 4D dimensions.
+      * @ingroup MultidimSize
+      *
+      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+      *
+      */
+    void setDimensions(int Xdim, int Ydim, int Zdim, unsigned long int Ndim)
+    {
+        ndim=Ndim;
+        zdim=Zdim;
+        ydim=Ydim;
+        xdim=Xdim;
+        yxdim=ydim*xdim;
+        zyxdim=zdim*yxdim;
+        nzyxdim=ndim*zyxdim;
+    }
+
+    /** Sets new N dimension.
+     * @ingroup MultidimSize
+     *
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     *
+     */
+    void setNdim(int Ndim)
+    {
+        ndim = Ndim;
+        nzyxdim=ndim*zyxdim;
+    }
+
+    /** Sets new Z dimension.
+     * @ingroup MultidimSize
+     *
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     *
+     */
+    void setZdim(int Zdim)
+    {
+        zdim = Zdim;
+        zyxdim=zdim*yxdim;
+        nzyxdim=ndim*zyxdim;
+    }
+
+    /** Sets new Y dimension.
+     * @ingroup MultidimSize
+     *
+     *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+     *
+     */
+    void setYdim(int Ydim)
+    {
+        ydim = Ydim;
+        yxdim=ydim*xdim;
+        zyxdim=zdim*yxdim;
+        nzyxdim=ndim*zyxdim;
+    }
+
+    /** Sets new X dimension.
+      * @ingroup MultidimSize
+      *
+      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
+      *
+      */
+    void setXdim(int Xdim)
+    {
+        xdim = Xdim;
+        yxdim=ydim*xdim;
+        zyxdim=zdim*yxdim;
+        nzyxdim=ndim*zyxdim;
+    }
 
     /** Copy the shape parameters
      * @ingroup MultidimSize
@@ -1055,21 +1043,6 @@ public:
         zinit=m.zinit;
         yinit=m.yinit;
         xinit=m.xinit;
-    }
-
-    /** Alias a multidimarray.
-     * @ingroup MultidimSize
-     *
-     * Treat the multidimarray as if it were a volume. The data is not copied
-     * into new memory, but a pointer to the multidimarray is copied.
-     * You should not make any operation on this volume such that the
-     * memory locations are changed
-     */
-    void alias(const MultidimArray<T> &m)
-    {
-        copyShape(m);
-        this->data=m.data;
-        this->destroyData=false;
     }
 
     /** Resize to a given size
@@ -1170,9 +1143,8 @@ public:
         yxdim = Ydim * Xdim;
         zyxdim = Zdim * yxdim;
         nzyxdim = Ndim * zyxdim;
-        mFd =new_mFd;
+        mFd = new_mFd;
         mapFile = newMapFile;
-
     }
 
     /** Resize a single 3D image
@@ -1321,6 +1293,7 @@ public:
         size[2] = zdim;
         size[3] = ndim;
     }
+
     /** Generic window routine (dim independent)
      * @ingroup MultidimSize
      *
@@ -1331,9 +1304,7 @@ public:
                 T init_value = 0, unsigned long n = 0)
     {
         if (this->ndim >1)
-        {
             REPORT_ERROR(1,"stack windowing not implemented");
-        }
         if (this->zdim >1)
         {//call 3Dwindow
             window( z0,  y0,  x0,
@@ -1354,6 +1325,7 @@ public:
                     init_value = 0,  n );
         }
     }
+
     /** Put a 3D window to the nth volume
      * @ingroup MultidimSize
      *
@@ -1381,7 +1353,8 @@ public:
      * V1.window(0, 0, -1, 1, 1, 2);
      * @endcode
      */
-    void window(int z0, int y0, int x0, int zF, int yF, int xF, T init_value = 0, unsigned long n = 0)
+    void window(int z0, int y0, int x0, int zF, int yF, int xF,
+                T init_value = 0, unsigned long n = 0)
     {
         MultidimArray<T> result(1, zF - z0 + 1, yF - y0 + 1, xF - x0 + 1);
         result.zinit = z0;
@@ -1591,8 +1564,152 @@ public:
             REPORT_ERROR(2,"Outside: index vector has too many components");
     }
 
+    /** Returns Y dimension.
+     * @ingroup MultidimSize
+     */
+    inline int rowNumber() const
+    {
+        return ydim;
+    }
+
+    /** Returns X dimension.
+     * @ingroup MultidimSize
+     */
+    inline int colNumber() const
+    {
+        return xdim;
+    }
+
+    /** Set logical origin in Xmipp fashion.
+     * @ingroup MultidimSize
+     *
+     * This function adjust the starting points in the array such that the
+     * center of the array is defined in the Xmipp fashion.
+     *
+     * @code
+     * V.setXmippOrigin();
+     * @endcode
+     */
+    void setXmippOrigin()
+    {
+        zinit = FIRST_XMIPP_INDEX(zdim);
+        yinit = FIRST_XMIPP_INDEX(ydim);
+        xinit = FIRST_XMIPP_INDEX(xdim);
+    }
+
+    /** Move origin to.
+      * @ingroup MultidimSize
+      *
+      * This function adjust logical indexes such that the Xmipp origin of the
+      * array moves to the specified position. For instance, an array whose x
+      * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
+      * go from 3 to 5. This is very useful for convolution operations where you
+      * only need to move the logical starting of the array.
+      *
+      */
+    void moveOriginTo(int k, int i, int j)
+    {
+        zinit = k + FIRST_XMIPP_INDEX(zdim);
+        yinit = i + FIRST_XMIPP_INDEX(ydim);
+        xinit = j + FIRST_XMIPP_INDEX(xdim);
+    }
+
+    /** Move origin to.
+      * @ingroup MultidimSize
+      *
+      * This function adjust logical indexes such that the Xmipp origin of the
+      * array moves to the specified position. For instance, an array whose x
+      * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
+      * go from 3 to 5. This is very useful for convolution operations where you
+      * only need to move the logical starting of the array.
+      *
+      */
+    void moveOriginTo(int i, int j)
+    {
+        yinit = i + FIRST_XMIPP_INDEX(ydim);
+        xinit = j + FIRST_XMIPP_INDEX(xdim);
+    }
+
+    /** Returns the first valid logical Z index.
+      * @ingroup MultidimSize
+      */
+    inline int startingZ() const
+    {
+        return zinit;
+    }
+
+    /** Returns the last valid logical Z index.
+     * @ingroup MultidimSize
+     */
+    inline int finishingZ() const
+    {
+        return zinit + zdim - 1;
+    }
+
+    /** Returns the first valid logical Y index.
+     * @ingroup MultidimSize
+     */
+    inline int startingY() const
+    {
+        return yinit;
+    }
+
+    /** Returns the last valid logical Y index.
+     * @ingroup MultidimSize
+     */
+    inline int finishingY() const
+    {
+        return yinit + ydim - 1;
+    }
+
+    /** Returns the first valid logical X index.
+     * @ingroup MultidimSize
+     */
+    inline int startingX() const
+    {
+        return xinit;
+    }
+
+    /** Returns the last valid logical X index.
+     * @ingroup MultidimSize
+     */
+    inline int finishingX() const
+    {
+        return xinit + xdim - 1;
+    }
+
+    /** IsCorner (in 2D or 3D matrix)
+     * @ingroup MultidimSize
+     *
+     * TRUE if the logical index given is a corner of the definition region of this
+     * array.
+     */
+    bool isCorner(const Matrix1D< double >& v) const
+    {
+        if (v.size() < 2)
+            REPORT_ERROR(1, "isCorner: index vector has got not enough components");
+
+        else if (XSIZE(*this)==2)
+            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this)) ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this))  ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this)));
+        else if (XSIZE(*this)==3)
+            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this)) ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this))  ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this)) ||
+                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)) ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this))  ||
+                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
+        else
+            REPORT_ERROR(1, "isCorner: index vector has too many components");
+
+    }
 
     ///defgroup MultidimMemory Access to the pixel values
+
     /** Volume element access via double vector.
      * @ingroup MultidimMemory
      *
@@ -1609,19 +1726,33 @@ public:
      * val = V(vectorR3(1, -2, 0));
      * @endcode
      */
-    T& operator()(Matrix1D< double >& v) const
+    T& operator()(const Matrix1D< double >& v) const
     {
-        v.resize(3);
-        return A3D_ELEM((*this), ROUND(ZZ(v)), ROUND(YY(v)), ROUND(XX(v)));
+        switch (VEC_XSIZE(v))
+        {
+        case 1:
+            return A1D_ELEM((*this), ROUND(XX(v)));
+        case 2:
+            return A2D_ELEM((*this), ROUND(YY(v)), ROUND(XX(v)));
+        case 3:
+            return A3D_ELEM((*this), ROUND(ZZ(v)), ROUND(YY(v)), ROUND(XX(v)));
+        }
     }
 
     /** Volume element access via integer vector.
      * @ingroup MultidimMemory
      */
-    T& operator()(Matrix1D< int >& v) const
+    T& operator()(const Matrix1D< int >& v) const
     {
-        v.resize(3);
-        return A3D_ELEM((*this), ZZ(v), YY(v), XX(v));
+        switch (VEC_XSIZE(v))
+        {
+        case 1:
+            return A1D_ELEM((*this), XX(v));
+        case 2:
+            return A2D_ELEM((*this), YY(v), XX(v));
+        case 3:
+            return A3D_ELEM((*this), ZZ(v), YY(v), XX(v));
+        }
     }
 
     /** 4D element access via index.
@@ -1663,7 +1794,7 @@ public:
     /** 3D element access via index (getVoxel).
     * @ingroup MultidimMemory
     *
-    * Same function as operator() but with a name
+    * Same function as operator() but with a name. Needed by swig.
     *
     */
     T getVoxel(int k, int i, int j) const
@@ -1674,7 +1805,7 @@ public:
     /** 3D element access via index (setVoxel).
     * @ingroup MultidimMemory
     *
-    * Same function as operator() but with a name
+    * Same function as operator() but with a name. Needed by swig.
     *
     */
     void setVoxel(int k, int i, int j, T newval)
@@ -1719,7 +1850,6 @@ public:
         return A1D_ELEM(*this, i);
     }
 
-
     /** Get a single 1,2 or 3D image from a multi-image array
      *  @ingroup MultidimMemory
      *
@@ -1746,7 +1876,6 @@ public:
         STARTINGX(M) = STARTINGX(*this);
         STARTINGY(M) = STARTINGY(*this);
         STARTINGZ(M) = STARTINGZ(*this);
-
     }
 
     /** 2D Slice access for reading.
@@ -1844,23 +1973,6 @@ public:
         DIRECT_NZYX_ELEM(*this, n, k, i, j) = DIRECT_A2D_ELEM(v, i, j);
     }
 
-    /** Returns Y dimension.
-     * @ingroup MultidimMemory
-     */
-    int rowNumber() const
-    {
-        return ydim;
-    }
-
-    /** Returns X dimension.
-     * @ingroup MultidimMemory
-     */
-    int colNumber() const
-    {
-        return xdim;
-    }
-
-
     /** Get Column
      * @ingroup MultidimMemory
      *
@@ -1941,11 +2053,10 @@ public:
         v.resize(xdim);
         for (int j = 0; j < xdim; j++)
             v(j) = (*this)(i, j);
-
     }
 
     /** Set Row
-     * @ingroup MatricesMemory
+     * @ingroup MultidimMemory
      *
      * This function sets a row vector corresponding to the choosen row in the 2D Matrix
      *
@@ -1970,7 +2081,7 @@ public:
     }
 
     /** 3D Logical to physical index translation.
-     * @ingroup MultidimArrayMemory
+     * @ingroup MultidimMemory
      *
      * This function returns the physical position of a logical one.
      *
@@ -1987,7 +2098,7 @@ public:
     }
 
     /** 3D Physical to logical index translation.
-     * @ingroup MultidimArrayMemory
+     * @ingroup MultidimMemory
      *
      * This function returns the logical position of a physical one.
      *
@@ -2400,7 +2511,7 @@ public:
 
     /** Interpolates the value of the nth 1D vector M at the point (x) knowing
      * that this vector is a set of B-spline coefficients
-     * @ingroup VectorsMemory
+     * @ingroup MultidimMemory
      *
      * (x) is in logical coordinates
      *
@@ -2473,218 +2584,8 @@ public:
         return (T) sum;
     }
 
-    /** Set logical origin in Xmipp fashion.
-     * @ingroup MultidimSize
-     *
-     * This function adjust the starting points in the array such that the
-     * center of the array is defined in the Xmipp fashion.
-     *
-     * @code
-     * V.setXmippOrigin();
-     * @endcode
-     */
-    void setXmippOrigin()
-    {
-        zinit = FIRST_XMIPP_INDEX(zdim);
-        yinit = FIRST_XMIPP_INDEX(ydim);
-        xinit = FIRST_XMIPP_INDEX(xdim);
-    }
-
-
-    /** Move origin to.
-      * @ingroup MultidimSize
-      *
-      * This function adjust logical indexes such that the Xmipp origin of the
-      * array moves to the specified position. For instance, an array whose x
-      * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
-      * go from 3 to 5. This is very useful for convolution operations where you
-      * only need to move the logical starting of the array.
-      *
-      */
-    void moveOriginTo(int k, int i, int j)
-    {
-        zinit = k + FIRST_XMIPP_INDEX(zdim);
-        yinit = i + FIRST_XMIPP_INDEX(ydim);
-        xinit = j + FIRST_XMIPP_INDEX(xdim);
-    }
-
-    /** Move origin to.
-      * @ingroup MultidimSize
-      *
-      * This function adjust logical indexes such that the Xmipp origin of the
-      * array moves to the specified position. For instance, an array whose x
-      * indexes go from -1 to 1, if we move the origin to 4, then the x indexes
-      * go from 3 to 5. This is very useful for convolution operations where you
-      * only need to move the logical starting of the array.
-      *
-      */
-    void moveOriginTo(int i, int j)
-    {
-        yinit = i + FIRST_XMIPP_INDEX(ydim);
-        xinit = j + FIRST_XMIPP_INDEX(xdim);
-    }
-
-    /** Returns the first valid logical Z index.
-      * @ingroup MultidimSize
-      */
-    int startingZ() const
-    {
-        return zinit;
-    }
-
-    /** Returns the last valid logical Z index.
-     * @ingroup MultidimSize
-     */
-    int finishingZ() const
-    {
-        return zinit + zdim - 1;
-    }
-
-    /** Returns the first valid logical Y index.
-     * @ingroup MultidimSize
-     */
-    int startingY() const
-    {
-        return yinit;
-    }
-
-    /** Returns the last valid logical Y index.
-     * @ingroup MultidimSize
-     */
-    int finishingY() const
-    {
-        return yinit + ydim - 1;
-    }
-
-    /** Returns the first valid logical X index.
-     * @ingroup MultidimSize
-     */
-    int startingX() const
-    {
-        return xinit;
-    }
-
-    /** Returns the last valid logical X index.
-     * @ingroup MultidimSize
-     */
-    int finishingX() const
-    {
-        return xinit + xdim - 1;
-    }
-
-    /** Produce a 3D array suitable for working with Numerical Recipes.
-     * @ingroup MultidimSize
-     *
-     * This function must be used only as a preparation for routines which need
-     * that the first physical index is 1 and not 0 as it usually is in C. New
-     * memory is needed to hold the new double pointer array.
-     */
-    T*** adaptForNumericalRecipes3D(unsigned long n = 0) const
-    {
-        T*** m = NULL;
-        ask_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
-
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*this)
-        m[k+1][i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, k, i, j);
-
-        return m;
-    }
-
-    /** Kill a 3D array produced for numerical recipes.
-     * @ingroup MultidimSize
-     */
-    void killAdaptationForNumericalRecipes3D(T*** m) const
-    {
-        free_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
-    }
-
-    /** Produce a 2D array suitable for working with Numerical Recipes
-     * @ingroup MatricesSize
-     *
-     * This function must be used only as a preparation for routines which need
-     * that the first physical index is 1 and not 0 as it usually is in C. New
-     * memory is needed to hold the new double pointer array.
-     */
-    T** adaptForNumericalRecipes2D(unsigned long n = 0) const
-    {
-        T** m = NULL;
-        ask_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
-
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*this)
-        m[i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, 0, i, j);
-
-        return m;
-    }
-
-    /** Produce a 1D pointer suitable for working with Numerical Recipes (2)
-     * @ingroup MultidimSize
-     *
-     * This function meets the same goal as the one before, however this one
-     * work with 2D arrays as a single pointer. The first element of the array
-     * is pointed by result[1*Xdim+1], and in general result[i*Xdim+j]
-     */
-    T* adaptForNumericalRecipes22D() const
-    {
-        return MULTIDIM_ARRAY(*this) - 1 - XSIZE(*this);
-    }
-
-    /** Load 2D array from numerical recipes result.
-     * @ingroup MatricesSize
-     */
-    void loadFromNumericalRecipes2D(T** m, int Ydim, int Xdim)
-    {
-        resize(Ydim, Xdim);
-
-        for (int i = 1; i <= Ydim; i++)
-            for (int j = 1; j <= Xdim; j++)
-                (*this)(i - 1, j - 1) = m[i][j];
-    }
-
-    /** Kill a 2D array produced for numerical recipes
-     * @ingroup MatricesSize
-     *
-     * The allocated memory is freed.
-     */
-    void killAdaptationForNumericalRecipes2D(T** m) const
-    {
-        free_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
-    }
-
-    /** Kill a 2D array produced for numerical recipes, 2.
-     * @ingroup MatricesSize
-     *
-     * Nothing needs to be done.
-     */
-    void killAdaptationForNumericalRecipes22D(T** m) const
-        {}
-
-    /** Produce a 1D array suitable for working with Numerical Recipes
-     * @ingroup MultidimSize
-     *
-     * This function must be used only as a preparation for routines which need
-     * that the first physical index is 1 and not 0 as it usually is in C. In
-     * fact the vector provided for Numerical recipes is exactly this same one
-     * but with the indexes changed.
-     *
-     * This function is not ported to Python.
-     */
-    T* adaptForNumericalRecipes1D() const
-    {
-        return MULTIDIM_ARRAY(*this) - 1;
-    }
-
-    /** Kill a 1D array produced for Numerical Recipes.
-     * @ingroup MultidimSize
-     *
-     * Nothing needs to be done in fact.
-     *
-     * This function is not ported to Python.
-     */
-    void killAdaptationForNumericalRecipes1D(T* m) const
-        {}
-
     /// @defgroup Statistics Statistics functions
-    /// @ingroup MultidimensionalArrays
+
     /** Print statistics in current line.
      * @ingroup Statistics
      *
@@ -2973,7 +2874,6 @@ public:
         return stddev;
     }
 
-
     /** Compute statistics.
      * @ingroup Statistics
      *
@@ -3060,39 +2960,6 @@ public:
         {
             avg = stddev = 0;
         }
-    }
-
-    /** IsCorner (in 2D or 3D matrix)
-     * @ingroup MultidimSize
-     *
-     * TRUE if the logical index given is a corner of the definition region of this
-     * array.
-     */
-
-    //ROB Comment YY,XX is for matrix1d not multidim array
-    //I comment this routine till is properlly rewritten
-    bool isCorner(const Matrix1D< double >& v) const
-    {
-        if (v.size() < 2)
-            REPORT_ERROR(1, "isCorner: index vector has got not enough components");
-
-        else if (XSIZE(*this)==2)
-            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this)) ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this))  ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this)));
-        else if (XSIZE(*this)==3)
-            return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this)) ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this))  ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this)) ||
-                    (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)) ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this))  ||
-                    (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
-        else
-            REPORT_ERROR(1, "isCorner: index vector has too many components");
-
     }
 
     /** Median
@@ -3337,9 +3204,32 @@ public:
      *
      * It assumes that the result is already resized.
      */
-    friend void coreArrayByArray<>(const MultidimArray<T>& op1,
-                                   const MultidimArray<T>& op2, MultidimArray<T>& result,
-                                   char operation);
+    inline friend void coreArrayByArray(const MultidimArray<T>& op1,
+                                        const MultidimArray<T>& op2, MultidimArray<T>& result,
+                                        char operation)
+    {
+        T* ptrResult=NULL;
+        T* ptrOp1=NULL;
+        T* ptrOp2=NULL;
+        unsigned long int n;
+        for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data;
+             n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
+            switch (operation)
+            {
+            case '+':
+                *ptrResult = *ptrOp1 + *ptrOp2;
+                break;
+            case '-':
+                *ptrResult = *ptrOp1 - *ptrOp2;
+                break;
+            case '*':
+                *ptrResult = *ptrOp1 * *ptrOp2;
+                break;
+            case '/':
+                *ptrResult = *ptrOp1 / *ptrOp2;
+                break;
+            }
+    }
 
     /** Array by array
      * @ingroup ArrayByArray
@@ -3351,9 +3241,9 @@ public:
      * to be a hidden function not useable by normal programmers.
      *
      */
-    friend void arrayByArray(const MultidimArray<T>& op1,
-                             const MultidimArray<T>& op2, MultidimArray<T>& result,
-                             char operation)
+    inline friend void arrayByArray(const MultidimArray<T>& op1,
+                                    const MultidimArray<T>& op2, MultidimArray<T>& result,
+                                    char operation)
     {
         if (!op1.sameShape(op2))
             REPORT_ERROR(1007,
@@ -3448,6 +3338,40 @@ public:
      * array and its former content is lost
      */
 
+    /** Core array by scalar operation.
+     * @ingroup ArrayByScalar
+     *
+     * It assumes that the result is already resized.
+     *
+     * This function is not ported to Python.
+     */
+    inline friend void coreArrayByScalar(const MultidimArray<T>& op1,
+                                         const T& op2,
+                                         MultidimArray<T>& result,
+                                         char operation)
+    {
+        T* ptrResult=NULL;
+        T* ptrOp1=NULL;
+        unsigned long int n;
+        for (n=0, ptrResult=result.data, ptrOp1=op1.data;
+             n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
+            switch (operation)
+            {
+            case '+':
+                *ptrResult = *ptrOp1 + op2;
+                break;
+            case '-':
+                *ptrResult = *ptrOp1 - op2;
+                break;
+            case '*':
+                *ptrResult = *ptrOp1 * op2;
+                break;
+            case '/':
+                *ptrResult = *ptrOp1 / op2;
+                break;
+            }
+    }
+
     /** Array by scalar.
      * @ingroup ArrayByScalar
      *
@@ -3459,26 +3383,14 @@ public:
      *
      * This function is not ported to Python.
      */
-    friend void arrayByScalar(const MultidimArray<T>& op1,
-                              T op2,
-                              MultidimArray<T>& result,
-                              char operation)
+    inline friend void arrayByScalar(const MultidimArray<T>& op1,
+                                     T op2,
+                                     MultidimArray<T>& result,
+                                     char operation)
     {
         result.resize(op1);
         coreArrayByScalar(op1, op2, result, operation);
     }
-
-    /** Core array by scalar operation.
-     * @ingroup ArrayByScalar
-     *
-     * It assumes that the result is already resized.
-     *
-     * This function is not ported to Python.
-     */
-    friend void coreArrayByScalar<>(const MultidimArray<T>& op1,
-                                    const T& op2,
-                                    MultidimArray<T>& result,
-                                    char operation);
 
     /** v3 = v1 + k.
      * @ingroup ArrayByScalar
@@ -3573,6 +3485,40 @@ public:
      * and its former content is lost
      */
 
+    /** Core array by scalar operation.
+     * @ingroup ScalarByArray
+     *
+     * It assumes that the result is already resized.
+     *
+     * This function is not ported to Python.
+     */
+    inline friend void coreScalarByArray(const T& op1,
+                                         const MultidimArray<T>& op2,
+                                         MultidimArray<T>& result,
+                                         char operation)
+    {
+        T* ptrResult=NULL;
+        T* ptrOp2=NULL;
+        unsigned long int n;
+        for (n=0, ptrResult=result.data, ptrOp2=op2.data;
+             n<op2.zyxdim; ++n, ++ptrResult, ++ptrOp2)
+            switch (operation)
+            {
+            case '+':
+                *ptrResult = op1 + *ptrOp2;
+                break;
+            case '-':
+                *ptrResult = op1 - *ptrOp2;
+                break;
+            case '*':
+                *ptrResult = op1 * *ptrOp2;
+                break;
+            case '/':
+                *ptrResult = op1 / *ptrOp2;
+                break;
+            }
+    }
+
     /** Scalar by array.
      * @ingroup ScalarByArray
      *
@@ -3584,26 +3530,14 @@ public:
      *
      * This function is not ported to Python.
      */
-    friend void scalarByArray(T op1,
-                              const MultidimArray<T>& op2,
-                              MultidimArray<T>& result,
-                              char operation)
+    inline friend void scalarByArray(T op1,
+                                     const MultidimArray<T>& op2,
+                                     MultidimArray<T>& result,
+                                     char operation)
     {
         result.resize(op2);
         coreScalarByArray(op1, op2, result, operation);
     }
-
-    /** Core array by scalar operation.
-     * @ingroup ScalarByArray
-     *
-     * It assumes that the result is already resized.
-     *
-     * This function is not ported to Python.
-     */
-    friend void coreScalarByArray<>(const T& op1,
-                                    const MultidimArray<T>& op2,
-                                    MultidimArray<T>& result,
-                                    char operation);
 
     /** v3 = k + v2.
      * @ingroup ScalarByArray
@@ -3731,7 +3665,6 @@ public:
     {
         initZeros(1, Zdim, Ydim, Xdim);
     }
-
 
     /** Linear initialization (only for 1D)
      * @ingroup Initialization
@@ -3880,6 +3813,117 @@ public:
      * the array.
      */
 
+    /** Produce a 3D array suitable for working with Numerical Recipes.
+     * @ingroup MultidimUtilities
+     *
+     * This function must be used only as a preparation for routines which need
+     * that the first physical index is 1 and not 0 as it usually is in C. New
+     * memory is needed to hold the new double pointer array.
+     */
+    T*** adaptForNumericalRecipes3D(unsigned long n = 0) const
+    {
+        T*** m = NULL;
+        ask_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(*this)
+        m[k+1][i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+
+        return m;
+    }
+
+    /** Kill a 3D array produced for numerical recipes.
+     * @ingroup MultidimUtilities
+     */
+    void killAdaptationForNumericalRecipes3D(T*** m) const
+    {
+        free_Tvolume(m, 1, ZSIZE(*this), 1, YSIZE(*this), 1, XSIZE(*this));
+    }
+
+    /** Produce a 2D array suitable for working with Numerical Recipes
+     * @ingroup MultidimUtilities
+     *
+     * This function must be used only as a preparation for routines which need
+     * that the first physical index is 1 and not 0 as it usually is in C. New
+     * memory is needed to hold the new double pointer array.
+     */
+    T** adaptForNumericalRecipes2D(unsigned long n = 0) const
+    {
+        T** m = NULL;
+        ask_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*this)
+        m[i+1][j+1] = DIRECT_NZYX_ELEM(*this, n, 0, i, j);
+
+        return m;
+    }
+
+    /** Produce a 1D pointer suitable for working with Numerical Recipes (2)
+     * @ingroup MultidimUtilities
+     *
+     * This function meets the same goal as the one before, however this one
+     * work with 2D arrays as a single pointer. The first element of the array
+     * is pointed by result[1*Xdim+1], and in general result[i*Xdim+j]
+     */
+    T* adaptForNumericalRecipes22D() const
+    {
+        return MULTIDIM_ARRAY(*this) - 1 - XSIZE(*this);
+    }
+
+    /** Load 2D array from numerical recipes result.
+     * @ingroup MultidimUtilities
+     */
+    void loadFromNumericalRecipes2D(T** m, int Ydim, int Xdim)
+    {
+        resize(Ydim, Xdim);
+
+        for (int i = 1; i <= Ydim; i++)
+            for (int j = 1; j <= Xdim; j++)
+                (*this)(i - 1, j - 1) = m[i][j];
+    }
+
+    /** Kill a 2D array produced for numerical recipes
+     * @ingroup MultidimUtilities
+     *
+     * The allocated memory is freed.
+     */
+    void killAdaptationForNumericalRecipes2D(T** m) const
+    {
+        free_Tmatrix(m, 1, YSIZE(*this), 1, XSIZE(*this));
+    }
+
+    /** Kill a 2D array produced for numerical recipes, 2.
+     * @ingroup MultidimUtilities
+     *
+     * Nothing needs to be done.
+     */
+    void killAdaptationForNumericalRecipes22D(T** m) const
+        {}
+
+    /** Produce a 1D array suitable for working with Numerical Recipes
+     * @ingroup MultidimUtilities
+     *
+     * This function must be used only as a preparation for routines which need
+     * that the first physical index is 1 and not 0 as it usually is in C. In
+     * fact the vector provided for Numerical recipes is exactly this same one
+     * but with the indexes changed.
+     *
+     * This function is not ported to Python.
+     */
+    T* adaptForNumericalRecipes1D() const
+    {
+        return MULTIDIM_ARRAY(*this) - 1;
+    }
+
+    /** Kill a 1D array produced for Numerical Recipes.
+     * @ingroup MultidimUtilities
+     *
+     * Nothing needs to be done in fact.
+     *
+     * This function is not ported to Python.
+     */
+    void killAdaptationForNumericalRecipes1D(T* m) const
+        {}
+
     /** Computes the center of mass of the nth array
      * @ingroup MultidimUtilities
      */
@@ -3907,7 +3951,7 @@ public:
     }
 
     /** Sort 1D vector elements
-     * @ingroup VectorsUtilities
+     * @ingroup MultidimUtilities
      *
      * Sort in ascending order the vector elements. You can use the "reverse"
      * function to sort in descending order.
@@ -4150,7 +4194,6 @@ public:
         if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
             if (ABS(*ptr - oldv) <= accuracy)
                 *ptr = newv;
-
     }
 
     /** Substitute a given value by a sample from a Gaussian distribution.
@@ -4172,7 +4215,6 @@ public:
         if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
             if (ABS(*ptr - oldv) <= accuracy)
                 *ptr = rnd_gaus(avgv, sigv);
-
     }
 
     /** Binarize.
@@ -4194,7 +4236,6 @@ public:
                 *ptr = 0;
             else
                 *ptr = 1;
-
     }
 
     /** ROUND
@@ -4358,7 +4399,7 @@ public:
     }
 
     /** Reverse matrix values over X axis, keep in this object.
-     * @ingroup Utilites
+     * @ingroup MultidimUtilities
      *
      * Maybe better with an example:
      *
@@ -4394,7 +4435,7 @@ public:
     }
 
     /** Reverse matrix values over Y axis, keep in this object.
-     * @ingroup Utilites
+     * @ingroup MultidimUtilities
      *
      * Maybe better with an example:
      *
@@ -4430,7 +4471,7 @@ public:
     }
 
     /** Reverse matrix values over Z axis, keep in this object.
-     * @ingroup Utilites
+     * @ingroup MultidimUtilities
      *
      * Maybe better with an example:
      *
@@ -4466,6 +4507,95 @@ public:
         STARTINGZ(*this) = -FINISHINGZ(*this);
     }
 
+    /** Extracts the 1D profile between two points in a 2D array
+     * @ingroup MultidimUtilities
+     *
+     * Given two logical indexes, this function returns samples of the line that
+     * joins them. This is done by bilinear interpolation. The number of samples
+     * in the line is N.
+     */
+    void profile(int x0, int y0, int xF, int yF, int N,
+                 MultidimArray< double >& profile) const
+    {
+        checkDimension(2);
+        profile.initZeros(N);
+        double tx_step = (double)(xF - x0) / (N - 1);
+        double ty_step = (double)(yF - y0) / (N - 1);
+        double tx = x0, ty = y0;
+
+        for (int i = 0; i < N; i++)
+        {
+            profile(i) = interpolatedElement2D(tx, ty);
+            tx += tx_step;
+            ty += ty_step;
+        }
+    }
+
+    /** Show using gnuplot
+     * @ingroup MultidimUtilities
+     *
+     * This function uses gnuplot to plot this vector. You must supply the
+     * xlabel, ylabel, and title.
+     */
+    void showWithGnuPlot(const std::string& xlabel, const std::string& title)
+    {
+        checkDimension(1);
+
+        FileName fn_tmp;
+        fn_tmp.init_random(10);
+        MultidimArray<T>::write(static_cast<std::string>("PPP") +
+                                fn_tmp + ".txt");
+
+        std::ofstream fh_gplot;
+        fh_gplot.open((static_cast<std::string>("PPP") + fn_tmp +
+                       ".gpl").c_str());
+        if (!fh_gplot)
+            REPORT_ERROR(1,
+                         static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
+                         + fn_tmp + ".gpl for output");
+        fh_gplot << "set xlabel \"" + xlabel + "\"\n";
+        fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
+        "\" w l\n";
+        fh_gplot << "pause 300 \"\"\n";
+        fh_gplot.close();
+        system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
+                ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
+    }
+
+    /** Edit with xmipp_editor.
+     * @ingroup MultidimUtilities
+     *
+     * This function generates a random filename starting with PPP and
+     * edits it with xmipp_editor. After closing the editor the file is
+     * removed.
+     */
+    void edit()
+    {
+        FileName nam;
+        nam.init_random(15);
+
+        nam = static_cast< std::string >("PPP" + nam + ".txt");
+        write(nam);
+
+        system((static_cast< std::string >("xmipp_edit -i " + nam +
+                                           " -remove &").c_str()));
+    }
+
+    /** Write to an ASCII file.
+     * @ingroup MultidimUtilities
+     */
+    void write(const FileName& fn) const
+    {
+        std::ofstream out;
+        out.open(fn.c_str(), std::ios::out);
+        if (!out)
+            REPORT_ERROR(1,
+                         static_cast< std::string >("MultidimArray::write: File " + fn
+                                                    + " cannot be opened for output"));
+
+        out << *this;
+        out.close();
+    }
 
     /// @defgroup Operators Operators
     /// @ingroup MultidimensionalArrays
@@ -4529,7 +4659,6 @@ public:
      *
      * This function is not ported to Python.
      */
-    // This function must be explictly implemented outside
     friend std::istream& operator>>(std::istream& in, MultidimArray<T>& v)
     {
         T* ptr;
@@ -4556,105 +4685,6 @@ public:
             return false;
         return true;
     }
-
-
-    /** Extracts the 1D profile between two points in a 2D array
-     * @ingroup MultidimUtilities
-     *
-     * Given two logical indexes, this function returns samples of the line that
-     * joins them. This is done by bilinear interpolation. The number of samples
-     * in the line is N.
-     */
-    void profile(int x0, int y0, int xF, int yF, int N,
-                 MultidimArray< double >& profile) const
-    {
-        checkDimension(2);
-        profile.initZeros(N);
-        double tx_step = (double)(xF - x0) / (N - 1);
-        double ty_step = (double)(yF - y0) / (N - 1);
-        double tx = x0, ty = y0;
-
-        for (int i = 0; i < N; i++)
-        {
-            profile(i) = interpolatedElement2D(tx, ty);
-            tx += tx_step;
-            ty += ty_step;
-        }
-    }
-
-    /** Show using gnuplot
-     * @ingroup MultidimArrayUtilities
-     *
-     * This function uses gnuplot to plot this vector. You must supply the
-     * xlabel, ylabel, and title.
-     */
-    void showWithGnuPlot(const std::string& xlabel, const std::string& title)
-    {
-        checkDimension(1);
-
-        FileName fn_tmp;
-        fn_tmp.init_random(10);
-        MultidimArray<T>::write(static_cast<std::string>("PPP") +
-                                fn_tmp + ".txt");
-
-        std::ofstream fh_gplot;
-        fh_gplot.open((static_cast<std::string>("PPP") + fn_tmp +
-                       ".gpl").c_str());
-        if (!fh_gplot)
-            REPORT_ERROR(1,
-                         static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
-                         + fn_tmp + ".gpl for output");
-        fh_gplot << "set xlabel \"" + xlabel + "\"\n";
-        fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
-        "\" w l\n";
-        fh_gplot << "pause 300 \"\"\n";
-        fh_gplot.close();
-        system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
-                ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
-    }
-
-    /** Edit with xmipp_editor.
-     * @ingroup MultidimUtilities
-     *
-     *
-     * This function generates a random filename starting with PPP and
-     * edits it with xmipp_editor. After closing the editor the file is
-     * removed.
-     */
-    // FIXME This is not good practice.. (system)
-    void edit()
-    {
-        FileName nam;
-        nam.init_random(15);
-
-        nam = static_cast< std::string >("PPP" + nam + ".txt");
-        write(nam);
-
-        system((static_cast< std::string >("xmipp_edit -i " + nam +
-                                           " -remove &").c_str()));
-    }
-
-    /** Write to an ASCII file.
-     * @ingroup Operators
-     */
-    void write(const FileName& fn) const
-    {
-        std::ofstream out;
-        out.open(fn.c_str(), std::ios::out);
-        if (!out)
-            REPORT_ERROR(1,
-                         static_cast< std::string >("MultidimArray::write: File " + fn
-                                                    + " cannot be opened for output"));
-
-        out << *this;
-        out.close();
-    }
-
-    ////////////// VECTORS
-    /// @defgroup VectorsUtilities
-    /// @ingroup Vectors
-
-
 };
 
 /// @defgroup MultidimFunctions Functions for all multidimensional arrays
@@ -4691,90 +4721,6 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, long n = -1)
         DIRECT_A3D_ELEM(v2,k,i,j) = static_cast< T2 >DIRECT_NZYX_ELEM(v1,n,k,i,j);
     }
 
-}
-
-template <typename T>
-void coreArrayByArray(const MultidimArray<T>& op1,
-                      const MultidimArray<T>& op2, MultidimArray<T>& result,
-                      char operation)
-{
-    T* ptrResult=NULL;
-    T* ptrOp1=NULL;
-    T* ptrOp2=NULL;
-    unsigned long int n;
-    for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data;
-         n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
-        switch (operation)
-        {
-        case '+':
-            *ptrResult = *ptrOp1 + *ptrOp2;
-            break;
-        case '-':
-            *ptrResult = *ptrOp1 - *ptrOp2;
-            break;
-        case '*':
-            *ptrResult = *ptrOp1 * *ptrOp2;
-            break;
-        case '/':
-            *ptrResult = *ptrOp1 / *ptrOp2;
-            break;
-        }
-}
-
-template <typename T>
-void coreArrayByScalar(const MultidimArray<T>& op1,
-                       const T& op2,
-                       MultidimArray<T>& result,
-                       char operation)
-{
-    T* ptrResult=NULL;
-    T* ptrOp1=NULL;
-    unsigned long int n;
-    for (n=0, ptrResult=result.data, ptrOp1=op1.data;
-         n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1)
-        switch (operation)
-        {
-        case '+':
-            *ptrResult = *ptrOp1 + op2;
-            break;
-        case '-':
-            *ptrResult = *ptrOp1 - op2;
-            break;
-        case '*':
-            *ptrResult = *ptrOp1 * op2;
-            break;
-        case '/':
-            *ptrResult = *ptrOp1 / op2;
-            break;
-        }
-}
-
-template <typename T>
-void coreScalarByArray(const T& op1,
-                       const MultidimArray<T>& op2,
-                       MultidimArray<T>& result,
-                       char operation)
-{
-    T* ptrResult=NULL;
-    T* ptrOp2=NULL;
-    unsigned long int n;
-    for (n=0, ptrResult=result.data, ptrOp2=op2.data;
-         n<op2.zyxdim; ++n, ++ptrResult, ++ptrOp2)
-        switch (operation)
-        {
-        case '+':
-            *ptrResult = op1 + *ptrOp2;
-            break;
-        case '-':
-            *ptrResult = op1 - *ptrOp2;
-            break;
-        case '*':
-            *ptrResult = op1 * *ptrOp2;
-            break;
-        case '/':
-            *ptrResult = op1 / *ptrOp2;
-            break;
-        }
 }
 
 /** MultidimArray equality.
@@ -4829,10 +4775,12 @@ void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
     V2.window(z0, y0, x0, zF, yF, xF);
 }
 
-
-
-template<typename T>
-std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
+/** Output to output stream.
+ * @ingroup MultidimFunctions
+ * This function is not ported to Python.
+ */
+template <typename T>
+std::ostream& operator<< (std::ostream& ostrm, const MultidimArray<T>& v)
 {
     if (v.xdim == 0)
         ostrm << "NULL Array\n";
@@ -4882,6 +4830,5 @@ std::ostream& operator<<(std::ostream& ostrm, const MultidimArray<T>& v)
 // Specializations cases for complex numbers
 template<>
 std::ostream& operator<<(std::ostream& ostrm, const MultidimArray< std::complex<double> >& v);
-
 
 #endif

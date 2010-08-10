@@ -1676,9 +1676,9 @@ void Prog_MLFalign2D_prm::processOneImage(const MultidimArray<double> &Mimg,
         FileName fn_img, double &KSprob)
 {
 
-    MultidimArray3D<double>                             Mweight;
-    MultidimArray2D<int>                                Moffsets, Moffsets_mirror;
-    std::vector<double>                          Fimg_trans;
+    MultidimArray<double>                             Mweight;
+    MultidimArray<int>                                Moffsets, Moffsets_mirror;
+    std::vector<double>                               Fimg_trans;
     std::vector<MultidimArray<double> >               uniq_offsets;
 
 
