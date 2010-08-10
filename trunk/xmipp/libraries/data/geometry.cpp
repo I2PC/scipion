@@ -83,35 +83,6 @@ double point_line_distance_3D(const Matrix1D<double> &p,
                               const Matrix1D<double> &v)
 
 {
-#ifdef NEVEREVER
-    double f, g, t;
-    double x, y, z;
-    double r;
-
-    f = (XX(x1) - XX(x0)) * (XX(x2) - XX(x1)) +
-        (YY(x1) - YY(x0)) * (YY(x2) - YY(x1)) +
-        (ZZ(x1) - ZZ(x0)) * (ZZ(x2) - ZZ(x1));
-
-    x = XX(x2) - XX(x1);
-    y = YY(x2) - YY(x1);
-    z = ZZ(x2) - ZZ(x1);
-
-    g = x * x + y * y + z * z;
-
-    t = f / g;
-
-    x = (XX(x1) - XX(x0) + (XX(x2) - XX(x1)) * t);
-    y = (YY(x1) - YY(x0) + (YY(x2) - YY(x1)) * t);
-    z = (ZZ(x1) - ZZ(x0) + (ZZ(x2) - ZZ(x1)) * t);
-
-    r = x * x + y * y + z * z;
-    if (r < 0)
-    {
-        std::cout << "Horror: The distance of a line to a point can not be negative"
-        << "Congratulation you have found a bug in Xmipp." << std::endl;
-        exit(0);
-    }
-#endif
     Matrix1D<double> p_a(3);
 
     V3_MINUS_V3(p_a, p, a);
@@ -121,9 +92,8 @@ double point_line_distance_3D(const Matrix1D<double> &p,
 /* Least-squares-fit a plane to an arbitrary number of (x,y,z) points
     PLane described as Ax + By + C  = z
     where D = -1
-    Returns -1  if  A�+B�+C� <<1
-     */
-
+    Returns -1  if  A2+B2+C2 <<1
+*/
 void least_squares_plane_fit(const std::vector<fit_point> & IN_points,
                              double &plane_a,
                              double &plane_b,
@@ -505,7 +475,7 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
     double ca, sa, cb, sb, cg, sg;
     double cc, cs, sc, ss;
 
-    if (A.Xdim() != 3 || A.Ydim() != 3)
+    if (MAT_XSIZE(A) != 3 || MAT_YSIZE(A) != 3)
         A.resize(3, 3);
     alpha = DEG2RAD(alpha);
     beta  = DEG2RAD(beta);
@@ -668,7 +638,7 @@ void Euler_matrix2angles(const Matrix2D<double> &A, double &alpha,
 {
     double abs_sb, sign_sb;
 
-    if (A.Xdim() != 3 || A.Ydim() != 3)
+    if (MAT_XSIZE(A) != 3 || MAT_YSIZE(A) != 3)
         REPORT_ERROR(1102, "Euler_matrix2angles: The Euler matrix is not 3x3");
 
     abs_sb = sqrt(A(0, 2) * A(0, 2) + A(1, 2) * A(1, 2));

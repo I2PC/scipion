@@ -94,7 +94,7 @@ void Basic_ART_Parameters::default_values()
     max_tilt           = 10.e6;
     grid_relative_size = 1.41;
     fn_control         = "";
-	
+
     threads            = 1;
 }
 
@@ -223,7 +223,8 @@ void Basic_ART_Parameters::read(int argc, char **argv)
     {
         basis.set_sampling_rate(sampling);
         grid_relative_size /= sampling;
-        if (R != -1.) R /= sampling;
+        if (R != -1.)
+            R /= sampling;
         ref_trans_step /= sampling;
     }
     if (CHECK_PARAM("output_size"))
@@ -346,7 +347,7 @@ void Basic_ART_Parameters::usage_more()
     << "\n    -k [kappa0, kappa1, ...]\n"
     << "\nParallel parameters"
     << "\n                         by default, sequential ART is applied"
-	<< "\n	 [-thr N=1]			   Number of threads to use. NOTE: Not available when using MPI."
+    << "\n  [-thr N=1]      Number of threads to use. NOTE: Not available when using MPI."
     << "\n   [-SIRT]               Simultaneous Iterative Reconstruction Technique"
     << "\n   [-pSIRT]              Parallel (MPI) Simultaneous Iterative Reconstruction Technique"
     << "\n   [-pfSIRT]             Parallel (MPI) False Simultaneous Iterative Reconstruction Technique (Faster convergence than pSIRT)"
@@ -438,29 +439,33 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
         // Compute the product of not already chosen vectors with the just
         // chosen one, and select that which has minimum product
         min_prod = MAXFLOAT;
+        Matrix1D<double> rowi_1, rowi_N_1;
+        v.getRow(A1D_ELEM(ordered_list, i - 1),rowi_1);
+        v.getRow(A1D_ELEM(ordered_list, i - N - 1),rowi_N_1);
         for (j = 0; j < numIMG; j++)
+        {
+            Matrix1D<double> rowj;
+            v.getRow(j,rowj);
             if (!A1D_ELEM(chosen, j))
             {
-                A1D_ELEM(product, j) +=
-                    ABS(dotProduct(v.Row(A1D_ELEM(ordered_list, i - 1)),
-		    	v.Row(j)));
+                A1D_ELEM(product, j) += ABS(dotProduct(rowi_1,rowj));
                 if (N != -1 && i > N)
-                    A1D_ELEM(product, j) -=
-                        ABS(dotProduct(v.Row(A1D_ELEM(ordered_list, i - N - 1)),
-			    v.Row(j)));
+                    A1D_ELEM(product, j) -= ABS(dotProduct(rowi_N_1,rowj));
                 if (A1D_ELEM(product, j) < min_prod)
                 {
                     min_prod = A1D_ELEM(product, j);
                     min_prod_proj = j;
                 }
             }
+        }
 
         // Store the chosen vector and mark it as chosen
         A1D_ELEM(ordered_list, i) = min_prod_proj;
         A1D_ELEM(chosen, min_prod_proj) = 1;
 
         // The progress bar is updated only every 10 images
-        if (i % 10 == 0) progress_bar(i);
+        if (i % 10 == 0)
+            progress_bar(i);
     }
 
     // A final call to progress bar to finish a possible small piece
@@ -513,7 +518,8 @@ void sort_randomly(int numIMG, MultidimArray<int> &ordered_list)
         A1D_ELEM(chosen, ptr) = 1;
 
         // The progress bar is updated only every 10 images
-        if (i % 10 == 0) progress_bar(i);
+        if (i % 10 == 0)
+            progress_bar(i);
     }
 
     // A final call to progress bar to finish a possible small piece
@@ -568,7 +574,8 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             selfile.removeObjects(MDValueEQ(MDL_ENABLED, -1));
         }
         trueIMG = selfile.size();
-        if (trueIMG == 0) REPORT_ERROR(3008, "Produce_Basic_ART_Side_Info: No images !!");
+        if (trueIMG == 0)
+            REPORT_ERROR(3008, "Produce_Basic_ART_Side_Info: No images !!");
         int idum;
         ImgSize(selfile, projXdim, projYdim, idum, idum);
     }
@@ -587,9 +594,12 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     if (level >= FULL)
     {
         double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
-        if (fn_sym != "") SL.read_sym_file(fn_sym, accuracy);
-        if (!do_not_use_symproj) numIMG = trueIMG * (SL.SymsNo() + 1);
-        else                     numIMG = trueIMG;
+        if (fn_sym != "")
+            SL.read_sym_file(fn_sym, accuracy);
+        if (!do_not_use_symproj)
+            numIMG = trueIMG * (SL.SymsNo() + 1);
+        else
+            numIMG = trueIMG;
     }
 
     /* Read surface mask --------------------------------------------------- */
@@ -607,7 +617,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     if (level >= FULL)
     {
         build_recons_info(selfile, selctf, fn_ctf, SL, IMG_Inf,
-            do_not_use_symproj);
+                          do_not_use_symproj);
 
         if (!(tell&TELL_MANUAL_ORDER))
             if (parallel_mode == SIRT ||
@@ -617,10 +627,13 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                 eq_mode == CAV ||
                 rank > 0 || dont_sort)
                 no_sort(numIMG, ordered_list);
-            else if (random_sort)     sort_randomly(numIMG, ordered_list);
-            else if (sort_last_N != -1) sort_perpendicular(numIMG, IMG_Inf, ordered_list,
-                        sort_last_N);
-            else                      no_sort(numIMG, ordered_list);
+            else if (random_sort)
+                sort_randomly(numIMG, ordered_list);
+            else if (sort_last_N != -1)
+                sort_perpendicular(numIMG, IMG_Inf, ordered_list,
+                                   sort_last_N);
+            else
+                no_sort(numIMG, ordered_list);
     }
 
     /* In case of weighted least-squares, find average weight & write residual images ------ */
@@ -674,9 +687,9 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                                           (double)projXdim / 2);
                     else
                         corner = vectorR3(
-                            (double)Xoutput_volume_size / 2,
-                            (double)Youtput_volume_size / 2,
-                            (double)Zoutput_volume_size / 2);
+                                     (double)Xoutput_volume_size / 2,
+                                     (double)Youtput_volume_size / 2,
+                                     (double)Zoutput_volume_size / 2);
                 }
                 else
                 {
@@ -696,28 +709,28 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
                 switch (grid_type)
                 {
                 case (CC):
-                    grid_basis = Create_CC_grid(grid_relative_size, -corner, corner);
+                                grid_basis = Create_CC_grid(grid_relative_size, -corner, corner);
                     break;
                 case (FCC):
-                    grid_basis = Create_FCC_grid(grid_relative_size, -corner, corner);
+                                grid_basis = Create_FCC_grid(grid_relative_size, -corner, corner);
                     break;
                 case (BCC):
-                    grid_basis = Create_BCC_grid(grid_relative_size, -corner, corner);
+                                grid_basis = Create_BCC_grid(grid_relative_size, -corner, corner);
                     break;
                 }
             }
             else
-            {
+    {
                 switch (grid_type)
                 {
                 case (CC):
-                    grid_basis = Create_CC_grid(grid_relative_size, R);
+                                grid_basis = Create_CC_grid(grid_relative_size, R);
                     break;
                 case (FCC):
-                    grid_basis = Create_FCC_grid(grid_relative_size, R);
+                                grid_basis = Create_FCC_grid(grid_relative_size, R);
                     break;
                 case (BCC):
-                    grid_basis = Create_BCC_grid(grid_relative_size, R);
+                                grid_basis = Create_BCC_grid(grid_relative_size, R);
                     break;
                 }
             }
@@ -727,13 +740,14 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 
     /* Basis side info --------------------------------------------------------- */
     if (level >= BASIC)
-	{
+{
         basis.set_D(D);
         basis.produce_side_info(vol_basis0.grid());
     }
 
     /* Express the ray length in basis units ----------------------------------- */
-    if (ray_length != -1) ray_length *= basis.max_length();
+    if (ray_length != -1)
+        ray_length *= basis.max_length();
 }
 #undef DEBUG
 
@@ -741,7 +755,8 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
         int numProjs_node, int debug_level)
 {
-    if (GVNeq == NULL) GVNeq = new GridVolumeT<int>;
+    if (GVNeq == NULL)
+        GVNeq = new GridVolumeT<int>;
     GVNeq->resize(vol_basis0);
     GVNeq->initZeros();
 
@@ -767,7 +782,8 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
         count_eqs_in_projection(*GVNeq, basis, read_proj);
 
         if (debug_level > 0 &&
-            act_proj % XMIPP_MAX(1, numIMG / 60) == 0) progress_bar(act_proj);
+            act_proj % XMIPP_MAX(1, numIMG / 60) == 0)
+            progress_bar(act_proj);
     }
     if (debug_level > 0)
     {

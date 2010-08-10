@@ -515,7 +515,7 @@ void bayesian_solve_eq_system(
         }
 
     //initialize the matrix b
-    Matrix1D<double> b(A.rowNumber());
+    Matrix1D<double> b(MAT_YSIZE(A));
 
     // Initialize Aeq matrix
     Matrix2D<double> Aeq;

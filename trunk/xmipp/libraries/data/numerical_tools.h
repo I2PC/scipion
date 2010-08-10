@@ -219,13 +219,13 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
 template<typename T>
 void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
 {
-    if (A.Xdim() == 0)
+    if (MAT_XSIZE(A) == 0)
         REPORT_ERROR(1108, "Solve: Matrix is empty");
 
-    if (A.Xdim() != A.Ydim())
+    if (MAT_XSIZE(A) != MAT_YSIZE(A))
         REPORT_ERROR(1109, "Solve: Matrix is not squared");
 
-    if (A.Xdim() != b.size())
+    if (MAT_XSIZE(A) != b.size())
         REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
 
     if (b.isRow())

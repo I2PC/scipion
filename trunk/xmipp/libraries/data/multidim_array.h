@@ -1273,7 +1273,7 @@ public:
      * int dim = V.getDim();
      * @endcode
      */
-    int getDim() const
+    inline int getDim() const
     {
         if (NZYXSIZE(*this) < 1)
             return 0;

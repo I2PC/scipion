@@ -58,9 +58,10 @@ SimpleGrid::SimpleGrid(const SimpleGrid &SG)
 std::ostream& operator <<(std::ostream& o, const SimpleGrid &grid)
 {
     o << "   Simple Grid -----" << std::endl;
-    o << "   Vector 1: " << ((grid.basis).Col(0)).transpose() << std::endl;
-    o << "   Vector 2: " << ((grid.basis).Col(1)).transpose() << std::endl;
-    o << "   Vector 3: " << ((grid.basis).Col(2)).transpose() << std::endl;
+    Matrix1D<double> aux;
+    (grid.basis).getCol(0,aux); o << "   Vector 1: " << aux.transpose() << std::endl;
+    (grid.basis).getCol(1,aux); o << "   Vector 2: " << aux.transpose() << std::endl;
+    (grid.basis).getCol(2,aux); o << "   Vector 3: " << aux.transpose() << std::endl;
     o << "   Relative size:         " << grid.relative_size       << std::endl;
     o << "   Interest radius:       " << grid.R2                  << std::endl;
     o << "   Origin (univ.coords)   " << grid.origin.transpose()  << std::endl;

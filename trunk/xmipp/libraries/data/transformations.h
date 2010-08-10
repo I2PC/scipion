@@ -253,10 +253,10 @@ void applyGeometry(int SplineDegree,
     if (&V1 == &V2)
         REPORT_ERROR(1101,"ApplyGeometry: Input array cannot be the same as output array");
 
-    if ( V1.getDim()==2 && ((A.Xdim() != 3) || (A.Ydim() != 3)) )
+    if ( V1.getDim()==2 && ((MAT_XSIZE(A) != 3) || (MAT_YSIZE(A) != 3)) )
         REPORT_ERROR(1102,"ApplyGeometry: 2D transformation matrix is not 3x3");
 
-    if ( V1.getDim()==3 && ((A.Xdim() != 4) || (A.Ydim() != 4)) )
+    if ( V1.getDim()==3 && ((MAT_XSIZE(A) != 4) || (MAT_YSIZE(A) != 4)) )
         REPORT_ERROR(1103,"ApplyGeometry: 3D transformation matrix is not 4x4");
 
     if (A.isIdentity())

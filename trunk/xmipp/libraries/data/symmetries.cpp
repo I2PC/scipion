@@ -386,7 +386,7 @@ void SymList::add_shift(const Matrix1D<double> &shift)
 {
     if (shift.size() != 3)
         REPORT_ERROR(1002, "SymList::add_shift: Shift vector is not 3x1");
-    int i = __shift.Ydim();
+    int i = MAT_YSIZE(__shift);
     __shift.resize(i + 1, 3);
     set_shift(i, shift);
 }
@@ -395,12 +395,12 @@ void SymList::add_shift(const Matrix1D<double> &shift)
 void SymList::add_matrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
                            int chain_length)
 {
-    if (L.Xdim() != 4 || L.Ydim() != 4 || R.Xdim() != 4 || R.Ydim() != 4)
+    if (MAT_XSIZE(L) != 4 || MAT_YSIZE(L) != 4 || MAT_XSIZE(R) != 4 || MAT_YSIZE(R) != 4)
         REPORT_ERROR(1002, "SymList::add_matrix: Transformation matrix is not 4x4");
     if (TrueSymsNo() == SymsNo())
     {
-        __L.resize(__L.Ydim() + 4, 4);
-        __R.resize(__R.Ydim() + 4, 4);
+        __L.resize(MAT_YSIZE(__L) + 4, 4);
+        __R.resize(MAT_YSIZE(__R) + 4, 4);
         __chain_length.resize(__chain_length.size() + 1);
     }
 
@@ -415,7 +415,7 @@ bool found_not_tried(const Matrix2D<int> &tried, int &i, int &j,
 {
     i = j = 0;
     int n = 0;
-    while (n != tried.Ydim())
+    while (n != MAT_YSIZE(tried))
     {
         if (tried(i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
             return true;
@@ -492,7 +492,7 @@ void SymList::compute_subgroup(double accuracy)
 #undef DEBUG
             add_matrices(newL, newR, new_chain_length);
             add_shift(shift);
-            tried.resize(tried.Ydim() + 1, tried.Xdim() + 1);
+            tried.resize(MAT_YSIZE(tried) + 1, MAT_XSIZE(tried) + 1);
         }
     }
 }

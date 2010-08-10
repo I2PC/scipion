@@ -33,8 +33,12 @@ extern std::string floatToString(float F, int _width, int _prec);
 
 template <typename T> class Matrix2D;
 
-/** @defgroup Vectors Vectors speed up macros
- * @ingroup MultidimArraysSpeedUp
+/** @defgroup Vectors Matrix1D Vectors
+ * @ingroup DataLibrary
+*/
+
+/** @defgroup Matrix1DSpeedUp Vectors speed up macros
+ * @ingroup Vectors
  *
  * This macros are defined to allow high speed in critical parts of your
  * program. They shouldn't be used systematically as usually there is no
@@ -47,14 +51,14 @@ template <typename T> class Matrix2D;
  */
 
 /** Array access.
- * @ingroup MultidimArraySizeShape
+ * @ingroup Matrix1DSpeedUp
  *
  * This macro gives you access to the array (T)
  */
 #define MATRIX1D_ARRAY(v) ((v).vdata)
 
 /** For all elements in the array
- * @ingroup MultidimArraySizeShape
+ * @ingroup Matrix1DSpeedUp
  *
  * This macro is used to generate loops for the vector in an easy manner. It
  * defines an internal index 'i' which ranges the vector using its mathematical
@@ -71,13 +75,13 @@ template <typename T> class Matrix2D;
     for (int i=0; i<v.vdim; i++)
 
 /** X dimension of the matrix
- * @ingroup MatricesSizeShape
+ * @ingroup Matrix1DSpeedUp
  */
 #define VEC_XSIZE(m) ((m).vdim)
 
 
 /** Access to X component
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * XX(v) = 1;
@@ -87,7 +91,7 @@ template <typename T> class Matrix2D;
 #define XX(v) (v).vdata[0]
 
 /** Access to Y component
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * YY(v) = 1;
@@ -97,7 +101,7 @@ template <typename T> class Matrix2D;
 #define YY(v) (v).vdata[1]
 
 /** Access to Z component
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * ZZ(v) = 1;
@@ -107,7 +111,7 @@ template <typename T> class Matrix2D;
 #define ZZ(v) (v).vdata[2]
 
 /** Creates vector in R2
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * The vector must be created beforehand to the correct size. After this macro
  * the vector is (x, y) in R2.
@@ -121,7 +125,7 @@ template <typename T> class Matrix2D;
         XX(v) = x; YY(v) = y; }
 
 /** Creates vector in R3
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * The vector must be created beforehand to the correct size. After this macro
  * the vector is (x, y, z) in R3.
@@ -135,7 +139,7 @@ template <typename T> class Matrix2D;
         XX(v) = x; YY(v) = y; ZZ(v) = z;}
 
 /** Adding two R2 vectors (a=b+c)
- * @ingroup Vector
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * MultidimArray< double > a(2), b(2), c(2);
@@ -148,7 +152,7 @@ template <typename T> class Matrix2D;
         YY(a) = YY(b) + YY(c); }
 
 /** Substracting two R2 vectors (a=b-c)
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * MultidimArray< double > a(2), b(2), c(2);
@@ -161,7 +165,7 @@ template <typename T> class Matrix2D;
         YY(a) = YY(b) - YY(c); }
 
 /** Adding/substracting a constant to a R2 vector (a=b-k).
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * MultidimArray< double > a(2), b(2);
@@ -180,7 +184,7 @@ template <typename T> class Matrix2D;
         YY(a) = YY(b) + (k); }
 
 /** Multiplying/dividing by a constant a R2 vector (a=b*k)
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * MultidimArray< double > a(2), b(2);
@@ -199,7 +203,7 @@ template <typename T> class Matrix2D;
         YY(a) = YY(b) * (k); }
 
 /** Adding two R3 vectors (a=b+c)
- * @ingroup Vector
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * MultidimArray< double > a(3), b(3), c(3);
@@ -213,7 +217,7 @@ template <typename T> class Matrix2D;
         ZZ(a) = ZZ(b) + ZZ(c); }
 
 /** Substracting two R3 vectors (a=b-c)
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * MultidimArray< double > a(3), b(3), c(3);
@@ -227,7 +231,7 @@ template <typename T> class Matrix2D;
         ZZ(a) = ZZ(b) - ZZ(c); }
 
 /** Adding/substracting a constant to a R3 vector (a=b-k)
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * MultidimArray< double > a(3), b(3);
@@ -247,7 +251,7 @@ template <typename T> class Matrix2D;
         ZZ(a) = ZZ(b) + (c); }
 
 /** Multiplying/dividing by a constant a R3 vector (a=b*k)
- * @ingroup Vectors
+ * @ingroup Matrix1DSpeedUp
  *
  * @code
  * MultidimArray< double > a(3), b(3);
@@ -267,16 +271,16 @@ template <typename T> class Matrix2D;
         ZZ(a) = ZZ(b) * (c); }
 
 /** Direct access to vector element
- *
+ * @ingroup Matrix1DSpeedUp
  */
 #define VEC_ELEM(v,i) ((v).vdata[(i)])
 
+/** Matrix1D class. */
 template<typename T>
 class Matrix1D
 {
 public:
-    /* The array itself.
-    */
+    // The array itself
     T* vdata;
 
     // Destroy data
@@ -285,10 +289,10 @@ public:
     // Number of elements
     int vdim;
 
-    bool row; ///< 0=column vector (default), 1=row vector
+    //< 0=column vector (default), 1=row vector
+    bool row;
 
     /// @defgroup VectorsConstructors Constructors
-    /// @ingroup Vectors
     /** Empty constructor
      * @ingroup VectorsConstructors
      *
@@ -353,15 +357,40 @@ public:
     }
 
     /** Destructor.
-     * @ingroup MultidimArrayConstructors
+     * @ingroup VectorsConstructors
      */
      ~Matrix1D()
      {
         coreDeallocate();
      }
 
+     /** Assignment.
+      * @ingroup VectorsConstructors
+      *
+      * You can build as complex assignment expressions as you like. Multiple
+      * assignment is allowed.
+      *
+      * @code
+      * v1 = v2 + v3;
+      * v1 = v2 = v3;
+      * @endcode
+      */
+     Matrix1D<T>& operator=(const Matrix1D<T>& op1)
+     {
+         if (&op1 != this)
+         {
+             resize(op1);
+             for (int i = 0; i < vdim; i++)
+             	vdata[i] = op1.vdata[i];
+             row=op1.row;
+         }
+
+         return *this;
+     }
+
+     /// @defgroup VectorsCore Core memory operations for Matrix1D
     /** Clear.
-     * @ingroup MultidimArrayConstructors
+     * @ingroup VectorsCore
      */
      void clear()
      {
@@ -369,10 +398,8 @@ public:
         coreInit();
      }
 
-    /// @defgroup MultidimArrayCore Core memory operations for MultidimArrays
-    /// @ingroup MultidimensionalArrays
     /** Core init.
-     * @ingroup MultidimArrayCore
+     * @ingroup VectorsCore
      * Initialize everything to 0
      */
     void coreInit()
@@ -384,7 +411,7 @@ public:
     }
 
     /** Core allocate.
-     * @ingroup MultidimArrayCore
+     * @ingroup VectorsCore
      */
     void coreAllocate(int _vdim)
     {
@@ -401,7 +428,7 @@ public:
     }
 
     /** Core deallocate.
-     * @ingroup MultidimArrayCore
+     * @ingroup VectorsCore
      * Free all vdata.
      */
     void coreDeallocate()
@@ -411,8 +438,9 @@ public:
         vdata=NULL;
     }
 
+    /// @defgroup VectorsSize Size and shape of Matrix1D
     /** Resize to a given size
-     * @ingroup MultidimSize
+     * @ingroup VectorsSize
      *
      * This function resize the actual array to the given size. The origin is
      * not modified. If the actual array is larger than the pattern then the
@@ -467,7 +495,7 @@ public:
     }
 
     /** Resize according to a pattern.
-     * @ingroup Initialization
+     * @ingroup VectorsSize
      *
      * This function resize the actual array to the same size
      * as the input pattern. If the actual array is larger than the pattern
@@ -486,68 +514,8 @@ public:
             resize(v.vdim);
     }
 
-    /** Same value in all components.
-     * @ingroup Initialization
-     *
-     * The constant must be of a type compatible with the array type, ie,
-     * you cannot  assign a double to an integer array without a casting.
-     * It is not an error if the array is empty, then nothing is done.
-     *
-     * @code
-     * v.initConstant(3.14);
-     * @endcode
-     */
-    void initConstant(T val)
-    {
-    	for (int j = 0; j < vdim; j++)
-    	{
-    		vdata[j] = val;
-    	}
-    }
-
-    /** Initialize to zeros with current size.
-     * @ingroup Initialization
-     *
-     * All values are set to 0. The current size and origin are kept. It is not
-     * an error if the array is empty, then nothing is done.
-     *
-     * @code
-     * v.initZeros();
-     * @endcode
-     */
-    void initZeros()
-    {
-        initConstant(static_cast< T >(0));
-    }
-
-    /** Initialize to zeros with a given size.
-     * @ingroup Initialization
-     */
-    void initZeros(int Xdim)
-    {
-        resize(Xdim);
-        initZeros();
-    }
-
-    /** Initialize to zeros following a pattern.
-      * @ingroup Initialization
-      *
-      * All values are set to 0, and the origin and size of the pattern are
-      * adopted.
-      *
-      * @code
-      * v2.initZeros(v1);
-      * @endcode
-      */
-    template <typename T1>
-    void initZeros(const Matrix1D<T1>& op)
-    {
-    	resize(op);
-    	initConstant(static_cast< T >(0));
-	}
-
     /** Same shape.
-     * @ingroup MultidimSize
+     * @ingroup VectorsSize
      *
      * Returns true if this object has got the same shape (origin and size)
      * than the argument
@@ -558,31 +526,6 @@ public:
         return (vdim == op.vdim);
     }
 
-    /** Produce a vector suitable for working with Numerical Recipes
-     * @ingroup VectorsSize
-     *
-     * This function must be used only as a preparation for routines which need
-     * that the first physical index is 1 and not 0 as it usually is in C. In
-     * fact the vector provided for Numerical recipes is exactly this same one
-     * but with the indexes changed.
-     *
-     * This function is not ported to Python.
-     */
-    T* adaptForNumericalRecipes() const
-    {
-        return (*this).vdata - 1;
-    }
-
-    /** Kill an array produced for Numerical Recipes.
-     * @ingroup VectorsSize
-     *
-     * Nothing needs to be done in fact.
-     *
-     * This function is not ported to Python.
-     */
-    void killAdaptationForNumericalRecipes(T* m) const
-        {}
-
     /** Returns the size of this vector
      * @ingroup VectorsSize
      *
@@ -590,7 +533,7 @@ public:
      * int nn = a.size();
      * @endcode
      */
-    int size() const
+    inline int size() const
     {
         return vdim;
     }
@@ -645,11 +588,333 @@ public:
         row = false;
     }
 
-    /// @defgroup VectorsMemory Memory access
+    /// @defgroup VectorsInitialization Initialization of Matrix1D values
+    /** Same value in all components.
+     * @ingroup VectorsInitialization
+     *
+     * The constant must be of a type compatible with the array type, ie,
+     * you cannot  assign a double to an integer array without a casting.
+     * It is not an error if the array is empty, then nothing is done.
+     *
+     * @code
+     * v.initConstant(3.14);
+     * @endcode
+     */
+    void initConstant(T val)
+    {
+    	for (int j = 0; j < vdim; j++)
+    	{
+    		vdata[j] = val;
+    	}
+    }
+
+    /** Initialize to zeros with current size.
+     * @ingroup VectorsInitialization
+     *
+     * All values are set to 0. The current size and origin are kept. It is not
+     * an error if the array is empty, then nothing is done.
+     *
+     * @code
+     * v.initZeros();
+     * @endcode
+     */
+    void initZeros()
+    {
+        initConstant(static_cast< T >(0));
+    }
+
+    /** Initialize to zeros with a given size.
+     * @ingroup VectorsInitialization
+     */
+    void initZeros(int Xdim)
+    {
+        resize(Xdim);
+        initZeros();
+    }
+
+    /** Initialize to zeros following a pattern.
+      * @ingroup VectorsInitialization
+      *
+      * All values are set to 0, and the origin and size of the pattern are
+      * adopted.
+      *
+      * @code
+      * v2.initZeros(v1);
+      * @endcode
+      */
+    template <typename T1>
+    void initZeros(const Matrix1D<T1>& op)
+    {
+    	resize(op);
+    	initConstant(static_cast< T >(0));
+	}
+
+	/// @defgroup VectorsOperators Utilities for Matrix1D
     /// @ingroup Vectors
+    /** v3 = v1 * k.
+     * @ingroup VectorsOperators
+     */
+    Matrix1D<T> operator*(T op1) const
+    {
+        Matrix1D<T> tmp(*this);
+        for (int i=0; i < vdim; i++)
+        	tmp.vdata[i] = vdata[i] * op1;
+        return tmp;
+    }
+
+    /** v3 = v1 / k.
+     * @ingroup VectorsOperators
+     */
+    Matrix1D<T> operator/(T op1) const
+    {
+        Matrix1D<T> tmp(*this);
+        for (int i=0; i < vdim; i++)
+        	tmp.vdata[i] = vdata[i] / op1;
+        return tmp;
+    }
+
+    /** v3 = v1 + k.
+     * @ingroup VectorsOperators
+     */
+    Matrix1D<T> operator+(T op1) const
+    {
+        Matrix1D<T> tmp(*this);
+        for (int i=0; i < vdim; i++)
+        	tmp.vdata[i] = vdata[i] + op1;
+        return tmp;
+    }
+
+    /** v3 = v1 - k.
+     * @ingroup VectorsOperators
+     */
+    Matrix1D<T> operator-(T op1) const
+    {
+        Matrix1D<T> tmp(*this);
+        for (int i=0; i < vdim; i++)
+        	tmp.vdata[i] = vdata[i] - op1;
+        return tmp;
+    }
+
+    /** v3 = k * v2.
+     * @ingroup VectorsOperators
+     */
+    friend Matrix1D<T> operator*(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp(op2);
+        for (int i=0; i < op2.vdim; i++)
+        	tmp.vdata[i] = op1 * op2.vdata[i];
+        return tmp;
+    }
+
+    /** v3 = k / v2.
+     * @ingroup VectorsOperators
+     */
+    friend Matrix1D<T> operator/(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp(op2);
+        for (int i=0; i < op2.vdim; i++)
+        	tmp.vdata[i] = op1 / op2.vdata[i];
+        return tmp;
+    }
+
+    /** v3 = k + v2.
+     * @ingroup VectorsOperators
+     */
+    friend Matrix1D<T> operator+(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp(op2);
+        for (int i=0; i < op2.vdim; i++)
+        	tmp.vdata[i] = op1 + op2.vdata[i];
+        return tmp;
+    }
+
+    /** Vector summation
+     * @ingroup VectorsOperators
+     *
+     * @code
+     * A += B;
+     * @endcode
+     */
+    void operator+=(const Matrix1D<T>& op1) const
+    {
+        if (vdim != op1.vdim)
+            REPORT_ERROR(1102, "Not same sizes in vector summation");
+
+        for (int i = 0; i < vdim; i++)
+        	vdata[i] += op1.vdata[i];
+    }
+
+    /** v3 = k - v2.
+     * @ingroup VectorsOperators
+     */
+    friend Matrix1D<T> operator-(T op1, const Matrix1D<T>& op2)
+    {
+        Matrix1D<T> tmp(op2);
+        for (int i=0; i < op2.vdim; i++)
+        	tmp.vdata[i] = op1 - op2.vdata[i];
+        return tmp;
+    }
+
+    /** Vector substraction
+     * @ingroup VectorsOperators
+     *
+     * @code
+     * A -= B;
+     * @endcode
+     */
+    void operator-=(const Matrix1D<T>& op1) const
+    {
+        if (vdim != op1.vdim)
+            REPORT_ERROR(1102, "Not same sizes in vector summation");
+
+        for (int i = 0; i < vdim; i++)
+        	vdata[i] -= op1.vdata[i];
+    }
+
+    /** v3 *= k.
+     * @ingroup VectorsOperators
+     */
+    void operator*=(T op1)
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] *= op1;
+    }
+
+    /** v3 /= k.
+      * @ingroup VectorsOperators
+      */
+     void operator/=(T op1)
+     {
+         for (int i=0; i < vdim; i++)
+         	vdata[i] /= op1;
+     }
+
+     /** v3 += k.
+     * @ingroup VectorsOperators
+     */
+    void operator+=(T op1)
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] += op1;
+    }
+
+    /** v3 -= k.
+      * @ingroup VectorsOperators
+      */
+     void operator-=(T op1)
+     {
+         for (int i=0; i < vdim; i++)
+         	vdata[i] -= op1;
+     }
+
+     /** v3 = v1 * v2.
+     * @ingroup VectorsOperators
+     */
+     Matrix1D<T> operator*(const Matrix1D<T>& op1) const
+    {
+         Matrix1D<T> tmp(op1);
+         for (int i=0; i < vdim; i++)
+         	tmp.vdata[i] = vdata[i] * op1.vdata[i];
+         return tmp;
+    }
+
+     /** v3 = v1 / v2.
+     * @ingroup VectorsOperators
+     */
+     Matrix1D<T> operator/(const Matrix1D<T>& op1) const
+    {
+         Matrix1D<T> tmp(op1);
+         for (int i=0; i < vdim; i++)
+         	tmp.vdata[i] = vdata[i] / op1.vdata[i];
+         return tmp;
+    }
+     /** v3 = v1 + v2.
+     * @ingroup VectorsOperators
+     */
+     Matrix1D<T> operator+(const Matrix1D<T>& op1) const
+    {
+         Matrix1D<T> tmp(op1);
+         for (int i=0; i < vdim; i++)
+         	tmp.vdata[i] = vdata[i] + op1.vdata[i];
+         return tmp;
+    }
+
+     /** v3 = v1 - v2.
+     * @ingroup VectorsOperators
+     */
+     Matrix1D<T> operator-(const Matrix1D<T>& op1) const
+    {
+         Matrix1D<T> tmp(op1);
+         for (int i=0; i < vdim; i++)
+         	tmp.vdata[i] = vdata[i] - op1.vdata[i];
+         return tmp;
+    }
+
+     /** v3 *= v2.
+     * @ingroup VectorsOperators
+     */
+    void operator*=(const Matrix1D<T>& op1)
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] *= op1.vdata[i];
+    }
+
+    /** v3 /= v2.
+     * @ingroup VectorsOperators
+     */
+    void operator/=(const Matrix1D<T>& op1)
+    {
+        for (int i=0; i < vdim; i++)
+         	vdata[i] /= op1.vdata[i];
+    }
+
+     /** v3 += v2.
+     * @ingroup VectorsOperators
+     */
+    void operator+=(const Matrix1D<T>& op1)
+    {
+        for (int i=0; i < vdim; i++)
+        	vdata[i] += op1.vdata[i];
+    }
+
+    /** v3 -= v2.
+     * @ingroup VectorsOperators
+     */
+    void operator-=(const Matrix1D<T>& op1)
+    {
+        for (int i=0; i < vdim; i++)
+         	vdata[i] -= op1.vdata[i];
+    }
+
+    /** Unary minus.
+     * @ingroup VectorsOperators
+     *
+     * It is used to build arithmetic expressions. You can make a minus
+     * of anything as long as it is correct semantically.
+     *
+     * @code
+     * v1 = -v2;
+     * v1 = -v2.transpose();
+     * @endcode
+     */
+    Matrix1D<T> operator-() const
+    {
+        Matrix1D<T> tmp(*this);
+        for (int i=0; i < vdim; i++)
+         	tmp.vdata[i] = - vdata[i];
+        return tmp;
+    }
+
+    /** Vector by matrix
+     * @ingroup VectorsOperators
+     *
+     * Algebraic vector by matrix multiplication. This function is actually
+     * implemented in xmippMatrices2D
+     */
+    Matrix1D<T> operator*(const Matrix2D<T>& M);
 
     /** Vector element access
-     * @ingroup VectorsMemory
+     * @ingroup VectorsOperators
      *
      * Returns the value of a vector logical position. In our example we could
      * access from v(-2) to v(2). The elements can be used either by value or by
@@ -665,32 +930,33 @@ public:
         return vdata[i];
     }
 
-    /** Assignment.
-     * @ingroup VectorOperators
-     *
-     * You can build as complex assignment expressions as you like. Multiple
-     * assignment is allowed.
-     *
-     * @code
-     * v1 = v2 + v3;
-     * v1 = v2 = v3;
-     * @endcode
-     */
-    Matrix1D<T>& operator=(const Matrix1D<T>& op1)
-    {
-        if (&op1 != this)
-        {
-            resize(op1);
-            for (int i = 0; i < vdim; i++)
-            	vdata[i] = op1.vdata[i];
-            row=op1.row;
-        }
+	/// @defgroup VectorsUtilities Utilities for Matrix1D
+    /// @ingroup Vectors
 
-        return *this;
+    /** Produce a vector suitable for working with Numerical Recipes
+     * @ingroup VectorsUtilities
+     *
+     * This function must be used only as a preparation for routines which need
+     * that the first physical index is 1 and not 0 as it usually is in C. In
+     * fact the vector provided for Numerical recipes is exactly this same one
+     * but with the indexes changed.
+     *
+     * This function is not ported to Python.
+     */
+    T* adaptForNumericalRecipes() const
+    {
+        return MATRIX1D_ARRAY(*this) - 1;
     }
 
-	/// @defgroup VectorsUtilities Utilities
-    /// @ingroup Vectors
+    /** Kill an array produced for Numerical Recipes.
+     * @ingroup VectorsUtilities
+     *
+     * Nothing needs to be done in fact.
+     *
+     * This function is not ported to Python.
+     */
+    void killAdaptationForNumericalRecipes(T* m) const
+        {}
 
     /** CEILING
      * @ingroup VectorsUtilities
@@ -728,261 +994,6 @@ public:
         	vdata[i] = ROUND(vdata[i]);
     }
 
-
-    /** v3 = v1 * k.
-     * @ingroup VectorsUtilities
-     */
-    Matrix1D<T> operator*(T op1) const
-    {
-        Matrix1D<T> tmp(*this);
-        for (int i=0; i < vdim; i++)
-        	tmp.vdata[i] = vdata[i] * op1;
-        return tmp;
-    }
-
-    /** v3 = v1 / k.
-     * @ingroup VectorsUtilities
-     */
-    Matrix1D<T> operator/(T op1) const
-    {
-        Matrix1D<T> tmp(*this);
-        for (int i=0; i < vdim; i++)
-        	tmp.vdata[i] = vdata[i] / op1;
-        return tmp;
-    }
-
-    /** v3 = v1 + k.
-     * @ingroup VectorsUtilities
-     */
-    Matrix1D<T> operator+(T op1) const
-    {
-        Matrix1D<T> tmp(*this);
-        for (int i=0; i < vdim; i++)
-        	tmp.vdata[i] = vdata[i] + op1;
-        return tmp;
-    }
-
-    /** v3 = v1 - k.
-     * @ingroup VectorsUtilities
-     */
-    Matrix1D<T> operator-(T op1) const
-    {
-        Matrix1D<T> tmp(*this);
-        for (int i=0; i < vdim; i++)
-        	tmp.vdata[i] = vdata[i] - op1;
-        return tmp;
-    }
-
-    /** v3 = k * v2.
-     * @ingroup VectorsUtilities
-     */
-    friend Matrix1D<T> operator*(T op1, const Matrix1D<T>& op2)
-    {
-        Matrix1D<T> tmp(op2);
-        for (int i=0; i < op2.vdim; i++)
-        	tmp.vdata[i] = op1 * op2.vdata[i];
-        return tmp;
-    }
-
-    /** v3 = k / v2.
-     * @ingroup VectorsUtilities
-     */
-    friend Matrix1D<T> operator/(T op1, const Matrix1D<T>& op2)
-    {
-        Matrix1D<T> tmp(op2);
-        for (int i=0; i < op2.vdim; i++)
-        	tmp.vdata[i] = op1 / op2.vdata[i];
-        return tmp;
-    }
-
-    /** v3 = k + v2.
-     * @ingroup VectorsUtilities
-     */
-    friend Matrix1D<T> operator+(T op1, const Matrix1D<T>& op2)
-    {
-        Matrix1D<T> tmp(op2);
-        for (int i=0; i < op2.vdim; i++)
-        	tmp.vdata[i] = op1 + op2.vdata[i];
-        return tmp;
-    }
-
-    /** Vector summation
-     * @ingroup VectorsUtilities
-     *
-     * @code
-     * A += B;
-     * @endcode
-     */
-    void operator+=(const Matrix1D<T>& op1) const
-    {
-        if (vdim != op1.vdim)
-            REPORT_ERROR(1102, "Not same sizes in vector summation");
-
-        for (int i = 0; i < vdim; i++)
-        	vdata[i] += op1.vdata[i];
-    }
-
-    /** v3 = k - v2.
-     * @ingroup VectorsUtilities
-     */
-    friend Matrix1D<T> operator-(T op1, const Matrix1D<T>& op2)
-    {
-        Matrix1D<T> tmp(op2);
-        for (int i=0; i < op2.vdim; i++)
-        	tmp.vdata[i] = op1 - op2.vdata[i];
-        return tmp;
-    }
-
-    /** Vector substraction
-     * @ingroup VectorsUtilities
-     *
-     * @code
-     * A -= B;
-     * @endcode
-     */
-    void operator-=(const Matrix1D<T>& op1) const
-    {
-        if (vdim != op1.vdim)
-            REPORT_ERROR(1102, "Not same sizes in vector summation");
-
-        for (int i = 0; i < vdim; i++)
-        	vdata[i] -= op1.vdata[i];
-    }
-
-    /** v3 *= k.
-     * @ingroup VectorsUtilities
-     */
-    void operator*=(T op1)
-    {
-        for (int i=0; i < vdim; i++)
-        	vdata[i] *= op1;
-    }
-
-    /** v3 /= k.
-      * @ingroup VectorsUtilities
-      */
-     void operator/=(T op1)
-     {
-         for (int i=0; i < vdim; i++)
-         	vdata[i] /= op1;
-     }
-
-     /** v3 += k.
-     * @ingroup VectorsUtilities
-     */
-    void operator+=(T op1)
-    {
-        for (int i=0; i < vdim; i++)
-        	vdata[i] += op1;
-    }
-
-    /** v3 -= k.
-      * @ingroup VectorsUtilities
-      */
-     void operator-=(T op1)
-     {
-         for (int i=0; i < vdim; i++)
-         	vdata[i] -= op1;
-     }
-
-     /** v3 = v1 * v2.
-     * @ingroup VectorsUtilities
-     */
-     Matrix1D<T> operator*(const Matrix1D<T>& op1) const
-    {
-         Matrix1D<T> tmp(op1);
-         for (int i=0; i < vdim; i++)
-         	tmp.vdata[i] = vdata[i] * op1.vdata[i];
-         return tmp;
-    }
-
-     /** v3 = v1 / v2.
-     * @ingroup VectorsUtilities
-     */
-     Matrix1D<T> operator/(const Matrix1D<T>& op1) const
-    {
-         Matrix1D<T> tmp(op1);
-         for (int i=0; i < vdim; i++)
-         	tmp.vdata[i] = vdata[i] / op1.vdata[i];
-         return tmp;
-    }
-     /** v3 = v1 + v2.
-     * @ingroup VectorsUtilities
-     */
-     Matrix1D<T> operator+(const Matrix1D<T>& op1) const
-    {
-         Matrix1D<T> tmp(op1);
-         for (int i=0; i < vdim; i++)
-         	tmp.vdata[i] = vdata[i] + op1.vdata[i];
-         return tmp;
-    }
-
-     /** v3 = v1 - v2.
-     * @ingroup VectorsUtilities
-     */
-     Matrix1D<T> operator-(const Matrix1D<T>& op1) const
-    {
-         Matrix1D<T> tmp(op1);
-         for (int i=0; i < vdim; i++)
-         	tmp.vdata[i] = vdata[i] - op1.vdata[i];
-         return tmp;
-    }
-
-     /** v3 *= v2.
-     * @ingroup VectorsUtilities
-     */
-    void operator*=(const Matrix1D<T>& op1)
-    {
-        for (int i=0; i < vdim; i++)
-        	vdata[i] *= op1.vdata[i];
-    }
-
-    /** v3 /= v2.
-     * @ingroup VectorsUtilities
-     */
-    void operator/=(const Matrix1D<T>& op1)
-    {
-        for (int i=0; i < vdim; i++)
-         	vdata[i] /= op1.vdata[i];
-    }
-
-     /** v3 += v2.
-     * @ingroup VectorsUtilities
-     */
-    void operator+=(const Matrix1D<T>& op1)
-    {
-        for (int i=0; i < vdim; i++)
-        	vdata[i] += op1.vdata[i];
-    }
-
-    /** v3 -= v2.
-     * @ingroup VectorsUtilities
-     */
-    void operator-=(const Matrix1D<T>& op1)
-    {
-        for (int i=0; i < vdim; i++)
-         	vdata[i] -= op1.vdata[i];
-    }
-
-    /** Unary minus.
-     * @ingroup Operators
-     *
-     * It is used to build arithmetic expressions. You can make a minus
-     * of anything as long as it is correct semantically.
-     *
-     * @code
-     * v1 = -v2;
-     * v1 = -v2.transpose();
-     * @endcode
-     */
-    Matrix1D<T> operator-() const
-    {
-        Matrix1D<T> tmp(*this);
-        for (int i=0; i < vdim; i++)
-         	tmp.vdata[i] = - vdata[i];
-        return tmp;
-    }
-
     /** Sort 1D vector elements
      * @ingroup VectorsUtilities
      *
@@ -1013,7 +1024,7 @@ public:
     }
 
     /** Index for the maximum element.
-     * @ingroup Statistics
+     * @ingroup VectorsUtilities
      *
      * This function returns the index of the maximum element of an matrix1d.
      * Returns -1 if the array is empty
@@ -1034,7 +1045,7 @@ public:
     }
 
     /** Index for the minimum element.
-     * @ingroup Statistics
+     * @ingroup VectorsUtilities
      *
      * This function returns the index of the minimum element of an matrix1d.
      * Returns -1 if the array is empty
@@ -1164,25 +1175,8 @@ public:
             initZeros();
     }
 
-    /** Reverse matrix values over X axis, keep in this object.
-     * @ingroup Utilites
-     *
-     * Maybe better with an example:
-     *
-     * @code
-     * slice 0
-     * [01 02 03          [07 08 09
-     *  04 05 06           04 05 06
-     *  07 08 09]          01 02 03]
-     *
-     * ----->
-     *
-     * slice 1
-     * [11 12 13          [17 18 19
-     *  14 15 16           14 15 16
-     *  17 18 19]          11 12 13]
-     * @endcode
-     *
+    /** Reverse vector values, keep in this object.
+     * @ingroup VectorsUtilities
      */
     void selfReverse()
     {
@@ -1193,22 +1187,12 @@ public:
     	}
     }
 
-    /** Vector by matrix
-     * @ingroup VectorsUtilities
-     *
-     * Algebraic vector by matrix multiplication. This function is actually
-     * implemented in xmippMatrices2D
-     */
-    Matrix1D<T> operator*(const Matrix2D<T>& M);
-
-
     /** Show using gnuplot
      * @ingroup VectorsUtilities
      *
      * This function uses gnuplot to plot this vector. You must supply the
-     * xlabel, ylabel, and title.
+     * xlabel and title.
      */
-    /*
     void showWithGnuPlot(const std::string& xlabel, const std::string& title)
     {
     	FileName fn_tmp;
@@ -1231,7 +1215,6 @@ public:
         system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
             ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
     }
-	*/
 
     /** Compute numerical derivative
      * @ingroup VectorsUtilities
@@ -1269,14 +1252,13 @@ public:
         in.close();
     }
 
-
     /** Input from input stream.
      * @ingroup VectorsUtilities
      *
      * Actual size of the array is used to know how many values must be read.
      *
      * @code
-     * v.<3);
+     * v.resize(3);
      * std::cin >> v;
      * @endcode
      *
@@ -1291,30 +1273,31 @@ public:
 		return in;
     }
 
-    /** Produce a 1D array suitable for working with Numerical Recipes
-     * @ingroup VectorsUtilities
-     *
-     * This function must be used only as a preparation for routines which need
-     * that the first physical index is 1 and not 0 as it usually is in C. In
-     * fact the vector provided for Numerical recipes is exactly this same one
-     * but with the indexes changed.
-     *
-     * This function is not ported to Python.
-     */
-    T* adaptForNumericalRecipes1D() const
+    /** Output to output stream.
+     * @ingroup VectorsUtilities */
+    friend std::ostream& operator<<(std::ostream& ostrm, const Matrix1D<T>& v)
     {
-        return MATRIX1D_ARRAY(*this) - 1;
-    }
+        if (v.vdim == 0)
+            ostrm << "NULL Array\n";
+        else
+            ostrm << std::endl;
 
-    /** Kill a 1D array produced for Numerical Recipes.
-     * @ingroup VectorsUtilities
-     *
-     * Nothing needs to be done in fact.
-     *
-     * This function is not ported to Python.
-     */
-    void killAdaptationForNumericalRecipes1D(T* m) const
-        {}
+        double max_val = ABS(v.vdata[0]);
+
+        for (int j = 0; j < v.vdim; j++)
+        {
+       	 max_val = XMIPP_MAX(max_val, v.vdata[j]);
+        }
+
+        int prec = bestPrecision(max_val, 10);
+
+        for (int j = 0; j < v.vdim; j++)
+        {
+       	 ostrm << floatToString((double) v.vdata[j], 10, prec)
+       	 << std::endl;
+        }
+        return ostrm;
+    }
 
     /** Write to an ASCII file.
      * @ingroup VectorsUtilities
@@ -1333,15 +1316,12 @@ public:
     }
 
     /** Edit with xmipp_editor.
-     * @ingroup Operators
-     *
+     * @ingroup VectorsUtilities
      *
      * This function generates a random filename starting with PPP and
      * edits it with xmipp_editor. After closing the editor the file is
      * removed.
      */
-    // FIXME This is not good practice.. (system)
-    /*
     void edit()
     {
         FileName nam;
@@ -1353,38 +1333,12 @@ public:
         system((static_cast< std::string >("xmipp_edit -i " + nam +
                                            " -remove &").c_str()));
     }
-    */
 };
 
- template<typename T>
- std::ostream& operator<<(std::ostream& ostrm, const Matrix1D<T>& v)
- {
-     if (v.vdim == 0)
-         ostrm << "NULL Array\n";
-     else
-         ostrm << std::endl;
-
-     double max_val = ABS(v.vdata[0]);
-
-     for (int j = 0; j < v.vdim; j++)
-     {
-    	 max_val = XMIPP_MAX(max_val, v.vdata[j]);
-     }
-
-     int prec = bestPrecision(max_val, 10);
-
-     for (int j = 0; j < v.vdim; j++)
-     {
-    	 ostrm << floatToString((double) v.vdata[j], 10, prec)
-    	 << std::endl;
-     }
-     return ostrm;
- }
-
  /**@defgroup VectorsRelated Related functions
-  * @ingroup MultidimensionalArrays
+  * @ingroup Vectors
   *
-  * These functions are not methods of MultidimArray
+  * These functions are not methods of Matrix1D
   */
 
  /** Creates vector in R2
@@ -1495,7 +1449,7 @@ public:
  }
 
 /** Sort two vectors
-  * @ingroup VectorsMiscellaneous
+  * @ingroup VectorsRelated
   *
   * v1 and v2 must be of the same shape, if not an exception is thrown. After
   * calling this function all components in v1 are the minimum between the
@@ -1524,7 +1478,7 @@ public:
  }
 
 /** Conversion from one type to another.
-  * @ingroup MultidimFunctions
+  * @ingroup VectorsRelated
   *
   * If we have an integer array and we need a double one, we can use this
   * function. The conversion is done through a type casting of each element

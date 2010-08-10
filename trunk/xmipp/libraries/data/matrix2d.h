@@ -34,20 +34,23 @@
 #include <external/bilib/headers/pyramidtools.h>
 #include "matrix1d.h"
 
-/** @defgroup Matrices Matrices speed up macros
- * @ingroup XXX
- *
+/** @defgroup Matrices Matrix2D Matrices
+ * @ingroup DataLibrary
+ */
+
+/** @defgroup MatricesSpeedUp Matrices speed up macros
+ * @ingroup Matrices
  */
 
 /** Array access.
- * @ingroup MatricesSizeShape
+ * @ingroup MatricesSpeedUp
  *
  * This macro gives you access to the array (T)
  */
 #define MATRIX2D_ARRAY(m) ((m).mdata)
 
 /** For all elements in the array
- * @ingroup MatricesSizeShape
+ * @ingroup MatricesSpeedUp
  *
  * This macro is used to generate loops for the matrix in an easy way. It
  * defines internal indexes 'i' and 'j' which ranges the matrix using its
@@ -65,7 +68,7 @@
         for (int j=0; j<(m).mdimx; j++)
 
 /** Access to a matrix element
- * @ingroup MatricesSizeShape
+ * @ingroup MatricesSpeedUp
  * v is the array, i and j define the element v_ij.
  *
   * @code
@@ -76,17 +79,17 @@
 #define MAT_ELEM(m,i,j) ((m).mdata[(i)*(m).mdimx+(j)])
 
 /** X dimension of the matrix
- * @ingroup MatricesSizeShape
+ * @ingroup MatricesSpeedUp
  */
 #define MAT_XSIZE(m) ((m).mdimx)
 
 /** Y dimension of the matrix
- * @ingroup MatricesSizeShape
+ * @ingroup MatricesSpeedUp
  */
 #define MAT_YSIZE(m) ((m).mdimy)
 
 /** Matrix element: Element access
- * @ingroup MatricesSizeShape
+ * @ingroup MatricesSpeedUp
  *
  * This is just a redefinition
  * of the function above
@@ -98,7 +101,7 @@
 #define dMij(m, i, j)  MAT_ELEM(m, i, j)
 
 /** Matrix (3x3) by vector (3x1) (a=M*b)
- * @ingroup Matrices
+ * @ingroup MatricesSpeedUp
  *
  * You must "load" the temporary variables, and create the result vector with
  * the appropiate size. You can reuse the vector b to store the results (that
@@ -131,7 +134,7 @@
 
 
 /** Matrix (3x3) by Matrix (3x3) (A=B*C)
- * @ingroup Matrices
+ * @ingroup MatricesSpeedUp
  *
  * You must "load" the temporary variables, and create the result vector with
  * the appropiate size. You can reuse any of the multiplicands to store the
@@ -167,7 +170,7 @@
         dMij(A, 2, 2) = spduptmp8; }
 
 /** Matrix (2x2) by vector (2x1) (a=M*b)
- * @ingroup Matrices
+ * @ingroup MatricesSpeedUp
  *
  * You must "load" the temporary variables, and create the result vector with
  * the appropiate size. You can reuse the vector b to store the results (that
@@ -197,9 +200,9 @@
         YY(a) = spduptmp1; }
 
 /** Matrix (2x2) by constant (M2=M1*k)
- * @ingroup Matrices
+ * @ingroup MatricesSpeedUp
  *
- * You must create the result matrix with the appropiate size. You can reuse
+ * You must create the result matrix with the appropriate size. You can reuse
  * the matrix M1 to store the results (that is, M2x2_BY_CT(M, M, k);, is
  * allowed).
  */
@@ -210,7 +213,7 @@
         dMij(M2, 1, 1) = dMij(M1, 1, 1) * k; }
 
 /** Matrix (3x3) by constant (M2=M1*k)
- * @ingroup MatricesArithmetic
+ * @ingroup MatricesSpeedUp
  *
  * You must create the result matrix with the appropiate size. You can reuse the
  * matrix M1 to store the results (that is, M2x2_BY_CT(M, M, k);, is allowed).
@@ -227,7 +230,7 @@
         dMij(M2, 2, 2) = dMij(M1, 2, 2) * k; }
 
 /** Inverse of a matrix (2x2)
- * @ingroup MatricesArithmetic
+ * @ingroup MatricesSpeedUp
  *
  * Input and output matrix cannot be the same one. The output is supposed to be
  * already resized.
@@ -242,7 +245,7 @@
         M2x2_BY_CT(Ainv, Ainv, spduptmp0); }
 
 /** Inverse of a matrix (3x3)
- * @ingroup Matrices
+ * @ingroup MatricesSpeedUp
  *
  * Input and output matrix cannot be the same one. The output is supposed to be
  * already resized.
@@ -261,7 +264,7 @@
             dMij(A, 2, 0)*dMij(Ainv, 0, 2)); \
         M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
 
-
+// Forward declarations
 template<typename T>
 class Matrix1D;
 template<typename T>
@@ -285,13 +288,12 @@ void svbksb(Matrix2D< double >& u,
             Matrix1D< double >& b,
             Matrix1D< double >& x);
 
-
+/** Matrix2D class */
 template<typename T>
 class Matrix2D
 {
 public:
-    /* The array itself.
-    */
+    // The array itself
     T* mdata;
 
     // Destroy data
@@ -306,23 +308,10 @@ public:
     // Total number of elements
     int mdim;
 
-    /// @defgroup VectorsConstructors Constructors
-    /// @ingroup Vectors
+    /// @defgroup MatrixConstructors Constructors
+    /// @ingroup Matrices
     /** Empty constructor
-     * @ingroup VectorsConstructors
-     *
-     * The empty constructor creates a vector with no memory associated,
-     * origin=0, size=0, no statistics, ... You can choose between a column
-     * vector (by default), or a row one.
-     *
-     * @code
-     * Matrix1D< double > v1;
-     * Matrix1D< double > v1(true);
-     * // both are examples of empty column vectors
-     *
-     * Matrix1D< int > v1(false);
-     * // empty row vector
-     * @endcode
+     * @ingroup MatrixConstructors
      */
     Matrix2D()
     {
@@ -330,21 +319,7 @@ public:
     }
 
     /** Dimension constructor
-     * @ingroup VectorsConstructors
-     *
-     * The dimension constructor creates a vector with memory associated (but
-     * not assigned to anything, could be full of garbage) origin=0, size=the
-     * given one. You can choose between a column vector (by default), or a row
-     * one.
-     *
-     * @code
-     * Matrix1D< double > v1(6);
-     * Matrix1D< double > v1(6, 'y');
-     * // both are examples of column vectors of dimensions 6
-     *
-     * Matrix1D< int > v1('n');
-     * // empty row vector
-     * @endcode
+     * @ingroup MatrixConstructors
      */
     Matrix2D(int Ydim, int Xdim)
     {
@@ -353,14 +328,7 @@ public:
     }
 
     /** Copy constructor
-     * @ingroup VectorsConstructors
-     *
-     * The created vector is a perfect copy of the input vector but with a
-     * different memory assignment.
-     *
-     * @code
-     * Matrix1D< double > v2(v1);
-     * @endcode
+     * @ingroup MatrixConstructors
      */
     Matrix2D(const Matrix2D<T>& v)
     {
@@ -369,15 +337,39 @@ public:
     }
 
     /** Destructor.
-     * @ingroup MultidimArrayConstructors
+     * @ingroup MatrixConstructors
      */
     ~Matrix2D()
     {
         coreDeallocate();
     }
 
+    /** Assignment.
+     * @ingroup MatrixConstructors
+     *
+     * You can build as complex assignment expressions as you like. Multiple
+     * assignment is allowed.
+     *
+     * @code
+     * v1 = v2 + v3;
+     * v1 = v2 = v3;
+     * @endcode
+     */
+    Matrix2D<T>& operator=(const Matrix2D<T>& op1)
+    {
+        if (&op1 != this)
+        {
+            resize(op1);
+            for (int i = 0; i< op1.mdim; i++)
+                mdata[i] = op1.mdata[i];
+        }
+
+        return *this;
+    }
+
+    /// @defgroup MatrixCore Core memory operations for Matrix2D
     /** Clear.
-     * @ingroup MultidimArrayConstructors
+     * @ingroup MatrixCore
      */
     void clear()
     {
@@ -385,10 +377,8 @@ public:
         coreInit();
     }
 
-    /// @defgroup MultidimArrayCore Core memory operations for MultidimArrays
-    /// @ingroup MultidimensionalArrays
     /** Core init.
-     * @ingroup MultidimArrayCore
+     * @ingroup MatrixCore
      * Initialize everything to 0
      */
     void coreInit()
@@ -399,7 +389,7 @@ public:
     }
 
     /** Core allocate.
-     * @ingroup MultidimArrayCore
+     * @ingroup MatrixCore
      */
     void coreAllocate(int _mdimy, int _mdimx)
     {
@@ -418,7 +408,7 @@ public:
     }
 
     /** Core deallocate.
-     * @ingroup MultidimArrayCore
+     * @ingroup MatrixCore
      * Free all mdata.
      */
     void coreDeallocate()
@@ -428,17 +418,9 @@ public:
         mdata=NULL;
     }
 
+    /// @defgroup MatrixSize Size and shape of Matrix2D
     /** Resize to a given size
-     * @ingroup MultidimSize
-     *
-     * This function resize the actual array to the given size. The origin is
-     * not modified. If the actual array is larger than the pattern then the
-     * values outside the new size are lost, if it is smaller then 0's are
-     * added. An exception is thrown if there is no memory.
-     *
-     * @code
-     * V1.resize(3, 3, 2);
-     * @endcode
+     * @ingroup MatrixSize
      */
     void resize(int Ydim, int Xdim)
     {
@@ -489,7 +471,7 @@ public:
     }
 
     /** Resize according to a pattern.
-     * @ingroup MultidimSize
+     * @ingroup MatrixSize
      *
      * This function resize the actual array to the same size and origin
      * as the input pattern. If the actual array is larger than the pattern
@@ -509,23 +491,55 @@ public:
     }
 
     /** Extract submatrix and assign to this object.
-     * @ingroup MultidimSize
+     * @ingroup MatrixSize
      */
     void submatrix(int i0, int j0, int iF, int jF)
     {
-    	if (i0<0 || j0<0 || iF>=MAT_YSIZE(*this) || jF>=MAT_XSIZE(*this))
-    		REPORT_ERROR(1,"Submatrix indexes out of bounds");
+        if (i0<0 || j0<0 || iF>=MAT_YSIZE(*this) || jF>=MAT_XSIZE(*this))
+            REPORT_ERROR(1,"Submatrix indexes out of bounds");
         Matrix2D<T> result(iF - i0 + 1, jF - j0 + 1);
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
-            MAT_ELEM(result, i, j) = MAT_ELEM(*this, i+i0, j+j0);
+        MAT_ELEM(result, i, j) = MAT_ELEM(*this, i+i0, j+j0);
 
         *this = result;
     }
 
+    /** Same shape.
+     * @ingroup MatrixSize
+     *
+     * Returns true if this object has got the same shape (origin and size)
+     * than the argument
+     */
+    template <typename T1>
+    bool sameShape(const Matrix2D<T1>& op) const
+    {
+        return ((mdimx == op.mdimx) && (mdimy == op.mdimy));
+    }
 
+    /** X dimension
+     * @ingroup MatrixSize
+     *
+     * Returns X dimension
+     */
+    inline int Xdim() const
+    {
+        return mdimx;
+    }
+
+    /** Y dimension
+     * @ingroup MatrixSize
+     *
+     * Returns Y dimension
+     */
+    inline int Ydim() const
+    {
+        return mdimy;
+    }
+
+    /// @defgroup MatrixInitialization Initialization of Matrix2D values
     /** Same value in all components.
-     * @ingroup Initialization
+     * @ingroup MatrixInitialization
      *
      * The constant must be of a type compatible with the array type, ie,
      * you cannot  assign a double to an integer array without a casting.
@@ -544,7 +558,7 @@ public:
     }
 
     /** Initialize to zeros with current size.
-     * @ingroup Initialization
+     * @ingroup MatrixInitialization
      *
      * All values are set to 0. The current size and origin are kept. It is not
      * an error if the array is empty, then nothing is done.
@@ -559,7 +573,7 @@ public:
     }
 
     /** Initialize to zeros with a given size.
-     * @ingroup Initialization
+     * @ingroup MatrixInitialization
      */
     void initZeros(int Ydim, int Xdim)
     {
@@ -568,7 +582,7 @@ public:
     }
 
     /** Initialize to zeros following a pattern.
-      * @ingroup Initialization
+      * @ingroup MatrixInitialization
       *
       * All values are set to 0, and the origin and size of the pattern are
       * adopted.
@@ -585,7 +599,7 @@ public:
     }
 
     /** 2D Identity matrix of current size
-     * @ingroup Initialization
+     * @ingroup MatrixInitialization
      *
      * If actually the matrix is not squared then an identity matrix is
      * generated of size (Xdim x Xdim).
@@ -596,11 +610,11 @@ public:
      */
     void initIdentity()
     {
-        initIdentity(mdimx, mdimx);
+        initIdentity(MAT_XSIZE(*this));
     }
 
     /** 2D Identity matrix of a given size
-     * @ingroup Initialization
+     * @ingroup MatrixInitialization
      *
      * A (dim x dim) identity matrix is generated.
      *
@@ -610,124 +624,44 @@ public:
      */
     void initIdentity(int dim)
     {
-        initIdentity(dim, dim);
-    }
-
-    /** 2D Identity matrix of a given size
-     * @ingroup Initialization
-     *
-     * A (dimX x dimY) identity matrix is generated. That is, any element i, j
-     * of the matrix such that i = j is equal to 1.
-     *
-     * @code
-     * m.initIdentity(2, 3);
-     * @endcode
-     */
-    void initIdentity(int Ydim, int Xdim)
-    {
-        if (Xdim == 0 || Ydim == 0)
+        if (dim == 0)
         {
             clear();
             return;
         }
 
-        resize(Ydim, Xdim);
+        resize(dim, dim);
         for (int i = 0; i < mdimy; i++)
             for (int j = 0; j < mdimx; j++)
                 (*this)(i,j) = (T)(i == j);
     }
 
-    /** Same shape.
-     * @ingroup MatricesSize
-     *
-     * Returns true if this object has got the same shape (origin and size)
-     * than the argument
-     */
-    template <typename T1>
-    bool sameShape(const Matrix2D<T1>& op) const
-    {
-        return ((mdimx == op.mdimx) && (mdimy == op.mdimy));
-    }
+    /// @defgroup MatrixOperators Operators for Matrix2D
 
-    /** X dimension
-     * @ingroup MatricesSize
-     *
-     * Returns X dimension
-     */
-    int Xdim() const
-    {
-        return mdimx;
-    }
-
-    /** Y dimension
-     * @ingroup MatricesSize
-     *
-     * Returns Y dimension
-     */
-    int Ydim() const
-    {
-        return mdimy;
-    }
-
-    /// @defgroup VectorsMemory Memory access
-    /// @ingroup Vectors
-
-    /** Vector element access
-     * @ingroup VectorsMemory
-     *
-     * Returns the value of a vector logical position. In our example we could
-     * access from v(-2) to v(2). The elements can be used either by value or by
-     * reference.
-     *
-     * @code
-     * v(-2) = 1;
-     * val = v(-2);
-     * @endcode
+    /** Matrix element access
+     * @ingroup MatrixOperators
      */
     T& operator()(int i, int j) const
     {
-        return mdata[i*mdimx + j];
+        return MAT_ELEM((*this),i,j);
     }
     /** Parenthesis operator for phyton
+     * @ingroup MatrixOperators
     */
     void setVal(T val,int y, int x)
     {
         MAT_ELEM((*this),y,x)=val;
     }
     /** Parenthesis operator for phyton
+     * @ingroup MatrixOperators
     */
-
     T getVal( int y, int x)
     {
         return MAT_ELEM((*this),y,x);
     }
 
-    /** Assignment.
-     * @ingroup VectorOperators
-     *
-     * You can build as complex assignment expressions as you like. Multiple
-     * assignment is allowed.
-     *
-     * @code
-     * v1 = v2 + v3;
-     * v1 = v2 = v3;
-     * @endcode
-     */
-    Matrix2D<T>& operator=(const Matrix2D<T>& op1)
-    {
-        if (&op1 != this)
-        {
-            resize(op1);
-            for (int i = 0; i< op1.mdim; i++)
-                mdata[i] = op1.mdata[i];
-        }
-
-        return *this;
-    }
-
-
     /** v3 = v1 * k.
-     * @ingroup MatricesAlgebra
+     * @ingroup MatrixOperators
      */
     Matrix2D<T> operator*(T op1) const
     {
@@ -738,7 +672,7 @@ public:
     }
 
     /** v3 = v1 / k.
-     * @ingroup MatricesAlgebra
+     * @ingroup MatrixOperators
      */
     Matrix2D<T> operator/(T op1) const
     {
@@ -749,7 +683,7 @@ public:
     }
 
     /** v3 = k * v2.
-     * @ingroup MatricesAlgebra
+     * @ingroup MatrixOperators
      */
     friend Matrix2D<T> operator*(T op1, const Matrix2D<T>& op2)
     {
@@ -760,7 +694,7 @@ public:
     }
 
     /** v3 *= k.
-      * @ingroup MatricesAlgebra
+      * @ingroup MatrixOperators
       */
     void operator*=(T op1)
     {
@@ -769,7 +703,7 @@ public:
     }
 
     /** v3 /= k.
-      * @ingroup MatricesAlgebra
+      * @ingroup MatrixOperators
       */
     void operator/=(T op1)
     {
@@ -778,7 +712,7 @@ public:
     }
 
     /** Matrix by vector multiplication
-     * @ingroup MatricesAlgebraic
+     * @ingroup MatrixOperators
      *
      * @code
      * v2 = A*v1;
@@ -805,13 +739,12 @@ public:
     }
 
     /** Matrix by Matrix multiplication
-     * @ingroup MatricesAlgebraic
+     * @ingroup MatrixOperators
      *
      * @code
      * C = A*B;
      * @endcode
      */
-    // FIXME: check this in the code. Before operator* was a multiplybyelements!!!!!
     Matrix2D<T> operator*(const Matrix2D<T>& op1) const
     {
         Matrix2D<T> result;
@@ -827,7 +760,7 @@ public:
     }
 
     /** Matrix summation
-     * @ingroup MatricesAlgebraic
+     * @ingroup MatrixOperators
      *
      * @code
      * C = A + B;
@@ -848,7 +781,7 @@ public:
     }
 
     /** Matrix summation
-     * @ingroup MatricesAlgebraic
+     * @ingroup MatrixOperators
      *
      * @code
      * A += B;
@@ -865,7 +798,7 @@ public:
     }
 
     /** Matrix subtraction
-     * @ingroup MatricesAlgebraic
+     * @ingroup MatrixOperators
      *
      * @code
      * C = A - B;
@@ -886,7 +819,7 @@ public:
     }
 
     /** Matrix substraction
-     * @ingroup MatricesAlgebraic
+     * @ingroup MatrixOperators
      *
      * @code
      * A -= B;
@@ -902,8 +835,27 @@ public:
                 MAT_ELEM(*this,i, j) -= MAT_ELEM(op1, i, j);
     }
 
+    /** Equality.
+     * @ingroup MatrixOperators
+     *
+     * Returns true if this object has got the same shape (origin and size)
+     * than the argument and the same values (within accuracy).
+     */
+    bool equal(const Matrix2D<T>& op,
+               double accuracy = XMIPP_EQUAL_ACCURACY) const
+    {
+        if (!sameShape(op))
+            return false;
+        for (int i = 0; i < mdimy; i++)
+            for (int j = 0; j < mdimx; j++)
+                if (ABS( (*this)(i,j) - op(i,j) ) > accuracy)
+                    return false;
+        return true;
+    }
+
+    /// @defgroup MatrixUtilities Utilities for Matrix2D
     /** Maximum of the values in the array.
-      * @ingroup Statistics
+      * @ingroup MatrixUtilities
       *
       * The returned value is of the same type as the type of the array.
       */
@@ -920,7 +872,7 @@ public:
     }
 
     /** Minimum of the values in the array.
-       * @ingroup Statistics
+       * @ingroup MatrixUtilities
        *
        * The returned value is of the same type as the type of the array.
        */
@@ -937,7 +889,7 @@ public:
     }
 
     /** Produce a 2D array suitable for working with Numerical Recipes
-    * @ingroup MatricesSize
+    * @ingroup MatrixUtilities
     *
     * This function must be used only as a preparation for routines which need
     * that the first physical index is 1 and not 0 as it usually is in C. New
@@ -956,7 +908,7 @@ public:
     }
 
     /** Produce a 1D pointer suitable for working with Numerical Recipes (2)
-     * @ingroup MultidimSize
+     * @ingroup MatrixUtilities
      *
      * This function meets the same goal as the one before, however this one
      * work with 2D arrays as a single pointer. The first element of the array
@@ -968,7 +920,7 @@ public:
     }
 
     /** Load 2D array from numerical recipes result.
-     * @ingroup MatricesSize
+     * @ingroup MatrixUtilities
      */
     void loadFromNumericalRecipes(T** m, int Ydim, int Xdim)
     {
@@ -980,7 +932,7 @@ public:
     }
 
     /** Kill a 2D array produced for numerical recipes
-     * @ingroup MatricesSize
+     * @ingroup MatrixUtilities
      *
      * The allocated memory is freed.
      */
@@ -990,119 +942,54 @@ public:
     }
 
     /** Kill a 2D array produced for numerical recipes, 2.
-     * @ingroup MatricesSize
+     * @ingroup MatrixUtilities
      *
      * Nothing needs to be done.
      */
     void killAdaptationForNumericalRecipes2(T** m) const
         {}
 
-    /// @defgroup MatricesUtilities
-    /// @ingroup Matrices
-
     /** Write this matrix to file
-      * @ingroup MatricesUtilities
+      * @ingroup MatrixUtilities
       */
     void write(const FileName &fn) const
     {
-    	std::ofstream fhOut;
-    	fhOut.open(fn.c_str());
-    	if (!fhOut)
-    		REPORT_ERROR(1,(std::string)"Cannot open "+fn+" for output");
-    	fhOut << *this;
-    	fhOut.close();
+        std::ofstream fhOut;
+        fhOut.open(fn.c_str());
+        if (!fhOut)
+            REPORT_ERROR(1,(std::string)"Cannot open "+fn+" for output");
+        fhOut << *this;
+        fhOut.close();
     }
 
-    /** True if the matrix is diagonal
-     * @ingroup MatricesUtilities
-     *
-     * @code
-     * if (m.isDiagonal())
-     *     std::cout << "The matrix is diagonal\n";
-     * @endcode
-     */
-    bool isDiagonal() const
+    /** Show matrix
+      * @ingroup MatrixUtilities
+      */
+    friend std::ostream& operator<<(std::ostream& ostrm, const Matrix2D<T>& v)
     {
-        if (mdimx != mdimy)
-            return false;
+        if (v.Xdim() == 0 || v.Ydim() == 0)
+            ostrm << "NULL matrix\n";
+        else
+        {
+            ostrm << std::endl;
+            double max_val = v.computeMax();
+            int prec = bestPrecision(max_val, 10);
 
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < mdimx; j++)
-                if (i != j && ABS((*this)(i, j)) >
-                    XMIPP_EQUAL_ACCURACY)
-                    return false;
-        return true;
-    }
+            for (int i = 0; i < v.Ydim(); i++)
+            {
+                for (int j = 0; j < v.Xdim(); j++)
+                {
+                    ostrm << floatToString((double) v(i, j), 10, prec) << ' ';
+                }
+                ostrm << std::endl;
+            }
+        }
 
-    /** True if the matrix is scalar
-     * @ingroup MatricesUtilities
-     *
-     * A scalar matrix is diagonal and all the values at the diagonal are the
-     * same
-     */
-    bool isScalar() const
-    {
-        if (!isDiagonal())
-            return false;
-
-        for (int i = 1; i < mdimy; i++)
-            if (ABS((*this)(i, i) - (*this)(0, 0))
-                > XMIPP_EQUAL_ACCURACY)
-                return false;
-
-        return true;
-    }
-
-    /** True if the matrix is identity
-     * @ingroup MatricesUtilities
-     *
-     * @code
-     * if (m.isIdentity())
-     *     std::cout << "The matrix is identity\n";
-     * @endcode
-     */
-    bool isIdentity() const
-    {
-        return isScalar() &&
-               ABS((*this)(0, 0) - (T) 1) < XMIPP_EQUAL_ACCURACY;
-    }
-
-    /** Returns Y dimension.
-     * @ingroup MatricesUtilities
-     */
-    int rowNumber() const
-    {
-        return mdimy;
-    }
-
-    /** Returns X dimension.
-     * @ingroup MatricesUtilities
-     */
-    int colNumber() const
-    {
-        return mdimx;
-    }
-
-    /** Equality.
-     * @ingroup Operators
-     *
-     * Returns true if this object has got the same shape (origin and size)
-     * than the argument and the same values (within accuracy).
-     */
-    bool equal(const Matrix2D<T>& op,
-               double accuracy = XMIPP_EQUAL_ACCURACY) const
-    {
-        if (!sameShape(op))
-            return false;
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < mdimx; j++)
-                if (ABS( (*this)(i,j) - op(i,j) ) > accuracy)
-                    return false;
-        return true;
+        return ostrm;
     }
 
     /** Makes a matrix from a vector
-     * @ingroup MatricesUtilities
+     * @ingroup MatrixUtilities
      *
      * The origin of the matrix is set such that it has one of the index origins
      * (X or Y) to the same value as the vector, and the other set to 0
@@ -1139,7 +1026,7 @@ public:
     }
 
     /** Makes a vector from a matrix
-     * @ingroup MatricesUtilities
+     * @ingroup MatrixUtilities
      *
      * An exception is thrown if the matrix is not a single row or a single
      * column. The origin of the vector is set according to the one of the
@@ -1187,15 +1074,15 @@ public:
         }
     }
 
-    /**Copy  matrix to  stl::vector
-     *
+    /**Copy matrix to stl::vector
+     * @ingroup MatrixUtilities
      */
     void copyToVector(std::vector<T> &v)
     {
         v.assign(mdata, mdata+mdim);
     }
-    /**Copy  stl::vector  to matrix
-      *
+    /**Copy stl::vector to matrix
+     * @ingroup MatrixUtilities
       */
     void copyFromVector(std::vector<T> &v,int Xdim, int Ydim)
     {
@@ -1203,9 +1090,8 @@ public:
         copy( v.begin(), v.begin()+v.size(), mdata);
     }
 
-
     /** Get row
-     * @ingroup MultidimMemory
+     * @ingroup MatrixUtilities
      *
      * This function returns a row vector corresponding to the choosen
      * row inside the nth 2D matrix, the numbering of the rows is also
@@ -1234,18 +1120,8 @@ public:
         v.setRow();
     }
 
-    /** Return row. The same as previous.
-     * @ingroup MatricesMemory
-      */
-    Matrix1D<T> Row(int i) const
-    {
-        Matrix1D<T> aux;
-        getRow(i, aux);
-        return aux;
-    }
-
     /** Get Column
-     * @ingroup MatricesMemory
+     * @ingroup MatrixUtilities
      *
      * This function returns a column vector corresponding to the
      * choosen column.
@@ -1273,18 +1149,8 @@ public:
         v.setCol();
     }
 
-    /** Return Column. The same as previous.
-     * @ingroup MatricesMemory
-     */
-    Matrix1D<T> Col(int i) const
-    {
-        Matrix1D<T> aux;
-        getCol(i, aux);
-        return aux;
-    }
-
     /** Set Row
-     * @ingroup MatricesMemory
+     * @ingroup MatrixUtilities
      *
      * This function sets a row vector corresponding to the choosen row in the 2D Matrix
      *
@@ -1312,7 +1178,7 @@ public:
     }
 
     /** Set Column
-     * @ingroup MatricesMemory
+     * @ingroup MatrixUtilities
      *
      * This function sets a column vector corresponding to the choosen column
      * inside matrix.
@@ -1340,9 +1206,8 @@ public:
             (*this)(i, j) = v(i);
     }
 
-
     /** Determinant of a matrix
-     * @ingroup MatricesUtilities
+     * @ingroup MatrixUtilities
      *
      * An exception is thrown if the matrix is not squared or it is empty.
      *
@@ -1387,7 +1252,7 @@ public:
     }
 
     /** Algebraic transpose of a Matrix
-     * @ingroup VectorsUtilities
+     * @ingroup MatrixUtilities
      *
      * You can use the transpose in as complex expressions as you like. The
      * origin of the vector is not changed.
@@ -1400,14 +1265,12 @@ public:
     {
         Matrix2D<T> result(mdimx, mdimy);
         FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
-        {
-            MAT_ELEM(result,i,j) = MAT_ELEM((*this),j,i);
-        }
+        MAT_ELEM(result,i,j) = MAT_ELEM((*this),j,i);
         return result;
     }
 
     /** Inverse of a matrix
-     * @ingroup MatricesUtilities
+     * @ingroup MatrixUtilities
      *
      * The matrix is inverted using a SVD decomposition. In fact the
      * pseudoinverse is returned.
@@ -1428,7 +1291,6 @@ public:
         Matrix1D< double > w;
         svdcmp(*this, u, w, v); // *this = U * W * V^t
 
-        //FIXME define omputeMax
         double tol = computeMax() * XMIPP_MAX(mdimx, mdimy) * 1e-14;
         result.initZeros(mdimx, mdimy);
 
@@ -1460,7 +1322,7 @@ public:
     }
 
     /** Inverse of a matrix
-     * @ingroup MatricesUtilities
+     * @ingroup MatrixUtilities
      */
     Matrix2D<T> inv() const
     {
@@ -1470,33 +1332,93 @@ public:
         return result;
     }
 
+    /** True if the matrix is diagonal
+     * @ingroup MatrixUtilities
+     *
+     * @code
+     * if (m.isDiagonal())
+     *     std::cout << "The matrix is diagonal\n";
+     * @endcode
+     */
+    bool isDiagonal() const
+    {
+        if (mdimx != mdimy)
+            return false;
 
-}
-; // class Matrix2D
+        for (int i = 0; i < mdimy; i++)
+            for (int j = 0; j < mdimx; j++)
+                if (i != j && ABS((*this)(i, j)) >
+                    XMIPP_EQUAL_ACCURACY)
+                    return false;
+        return true;
+    }
 
-// TODO Document
+    /** True if the matrix is scalar
+     * @ingroup MatrixUtilities
+     *
+     * A scalar matrix is diagonal and all the values at the diagonal are the
+     * same
+     */
+    bool isScalar() const
+    {
+        if (!isDiagonal())
+            return false;
+
+        for (int i = 1; i < mdimy; i++)
+            if (ABS((*this)(i, i) - (*this)(0, 0))
+                > XMIPP_EQUAL_ACCURACY)
+                return false;
+
+        return true;
+    }
+
+    /** True if the matrix is identity
+     * @ingroup MatrixUtilities
+     *
+     * @code
+     * if (m.isIdentity())
+     *     std::cout << "The matrix is identity\n";
+     * @endcode
+     */
+    bool isIdentity() const
+    {
+        return isScalar() &&
+               ABS((*this)(0, 0) - (T) 1) < XMIPP_EQUAL_ACCURACY;
+    }
+
+};
+
+// Implementation of the vector*matrix
+// Documented in matrix1D.h
 template<typename T>
 Matrix1D<T> Matrix1D<T>::operator*(const Matrix2D<T>& M)
 {
     Matrix1D<T> result;
 
-    if ((*this).size() != M.Ydim())
+    if (VEC_XSIZE(*this) != MAT_YSIZE(M))
         REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
 
     if (!isRow())
         REPORT_ERROR(1102, "Vector is not a row");
 
-    result.initZeros(M.Xdim());
-    for (int j = 0; j < M.Xdim(); j++)
-        for (int i = 0; i < M.Ydim(); i++)
-            result(j) += (*this)(i) * M(i, j);
+    result.initZeros(MAT_XSIZE(M));
+    for (int j = 0; j < MAT_XSIZE(M); j++)
+        for (int i = 0; i < MAT_YSIZE(M); i++)
+            VEC_ELEM(result,j) += VEC_ELEM(*this,i) * MAT_ELEM(M,i, j);
 
     result.setRow();
     return result;
 }
 
+/**@defgroup MatrixRelated Related functions
+ * @ingroup Matrices
+ *
+ * These functions are not methods of Matrix2D
+ */
 
-// TODO Document
+/** LU Decomposition
+ * @ingroup MatrixRelated
+ */
 template<typename T>
 void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d)
 {
@@ -1506,7 +1428,9 @@ void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d)
            indx.adaptForNumericalRecipes(), &d);
 }
 
-// TODO Document
+/** LU Backsubstitution
+ * @ingroup MatrixRelated
+ */
 template<typename T>
 void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b)
 {
@@ -1515,14 +1439,18 @@ void lubksb(const Matrix2D<T>& LU, Matrix1D< int >& indx, Matrix1D<T>& b)
            b.adaptForNumericalRecipes());
 }
 
-// TODO Document
+/** SVD Backsubstitution
+ * @ingroup MatrixRelated
+ */
 void svbksb(Matrix2D< double >& u,
             Matrix1D< double >& w,
             Matrix2D< double >& v,
             Matrix1D< double >& b,
             Matrix1D< double >& x);
 
-// TODO Document
+/** SVD Decomposition
+ * @ingroup MatrixRelated
+ */
 #define VIA_BILIB
 template<typename T>
 void svdcmp(const Matrix2D< T >& a,
@@ -1556,12 +1484,11 @@ void svdcmp(const Matrix2D< T >& a,
                                5000, &status);
 #endif
 }
-
 #undef VIA_NR
 #undef VIA_BILIB
 
 /** Conversion from one type to another.
- * @ingroup MultidimFunctions
+ * @ingroup MatrixRelated
  *
  * If we have an integer array and we need a double one, we can use this
  * function. The conversion is done through a type casting of each element
@@ -1580,31 +1507,6 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T2>& v2)
     for (int n = 0; n < v1.mdim; n++)
         v2.mdata[n] = static_cast< T2 > (v1.mdata[n]);
 
-}
-
-/// Show matrix
-template<typename T>
-std::ostream& operator<<(std::ostream& ostrm, const Matrix2D<T>& v)
-{
-    if (v.Xdim() == 0 || v.Ydim() == 0)
-        ostrm << "NULL matrix\n";
-    else
-    {
-        ostrm << std::endl;
-        double max_val = v.computeMax();
-        int prec = bestPrecision(max_val, 10);
-
-        for (int i = 0; i < v.Ydim(); i++)
-        {
-            for (int j = 0; j < v.Xdim(); j++)
-            {
-                ostrm << floatToString((double) v(i, j), 10, prec) << ' ';
-            }
-            ostrm << std::endl;
-        }
-    }
-
-    return ostrm;
 }
 
 #endif /* MATRIX2D_H_ */

@@ -248,7 +248,7 @@ DocFile& DocFile::operator=(const Matrix2D< double >& A)
     }
 
     fn_doc = "";
-    no_lines = A.rowNumber();
+    no_lines = MAT_YSIZE(A);
     renum();
     go_beginning();
 

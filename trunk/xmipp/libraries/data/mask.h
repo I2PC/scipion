@@ -37,6 +37,10 @@ void apply_geo_cont_2D_mask(MultidimArray< double >& mask,
 
 /// @defgroup Masks Masks
 /// @ingroup DataLibrary
+/// @defgroup Masks2D 2D Masks
+/// @ingroup Masks
+/// @defgroup Masks3D 3D Masks
+/// @ingroup Masks
 
 #define INNER_MASK 1
 #define OUTSIDE_MASK 2

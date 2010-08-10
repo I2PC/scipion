@@ -2155,7 +2155,7 @@ void Phantom::rotate(const Matrix2D<double> &E)
 /* Apply geometrical transformatio to a phantom ---------------------------- */
 void Phantom::selfApplyGeometry(const Matrix2D<double> &A, int inv)
 {
-    if ((A.Xdim() != 4) || (A.Ydim() != 4))
+    if ((MAT_XSIZE(A) != 4) || (MAT_YSIZE(A) != 4))
         REPORT_ERROR(1102, "Apply_geom3D: geometrical transformation is not 4x4");
     if (A.isIdentity()) return;
     Matrix2D<double> T;

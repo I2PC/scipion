@@ -264,7 +264,7 @@ void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
         @endcode */
     int SymsNo() const
     {
-        return __L.Ydim() / 4;
+        return MAT_YSIZE(__L) / 4;
     }
 
     /** Number of symmetry matrices which generated the structure.
