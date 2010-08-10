@@ -1,0 +1,1 @@
+wc libraries/*/*.h libraries/*/*.cpp libraries/*/*/*.i libraries/graphicsj/Xmipp_*/src/*.java applications/scripts/*/*.sh applications/scripts/*/*.pl applications/scripts/*/*py applications/programs/*/*.cpp
