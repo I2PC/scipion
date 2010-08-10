@@ -181,7 +181,7 @@ public:
 
     /** Compute the maximum error in the table */
     double I0table_maxerror();
-    std::vector<double> dump_table()
+    std::vector<double> dump_table() const
     {
         return i0table;
     }

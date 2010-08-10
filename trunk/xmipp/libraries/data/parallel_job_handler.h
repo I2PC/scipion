@@ -37,12 +37,15 @@
 /** @defgroup ParallelJobHandler
  *  @ingroup DataLibrary
  *
- * When processing in parallel, this class distributes the work load.
+ *This class distributes dynamically N tasks between parallel workers.
  *
- * It creates a database with all the jobs and assigns them in small blocks
- * under request from the working nodes.
+ *This class is a generalization of a common task in a parallel
+ *environment of dynamically distribute N tasks between workers(threads or mpi proccess).
+ *Each worker will ask for a group of tasks, proccess it and ask for more tasks
+ *until there is not more task to process.
  *
- *The database may be created in memory (threads) or in disk (mpi).
+ *A lock is required for access the number of unprocessed tasks each time
+ *a worker ask for job, this is implemented now by a filesystem lock in a file.(the lockfile)
  */
 
 class ParallelJobHandler
@@ -106,7 +109,7 @@ public:
      *
      */
 
-    double getElapsedTime()
+    double getElapsedTime() const
     {
         return  (double)  (end_time.tv_sec  - start_time.tv_sec ) +
                 ((double) (end_time.tv_usec - start_time.tv_usec)/1000000.);
@@ -119,7 +122,7 @@ public:
     {
         gettimeofday(&end_time, 0);
     }
-    bool saneInterval()
+    bool saneInterval() const
     {
         if(getElapsedTime() < 1.)//less than one second
             return false;

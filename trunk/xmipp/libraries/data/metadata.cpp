@@ -44,10 +44,7 @@ void MetaData::_clear(bool onlyData)
         isColumnFormat = true;
         inFile = FileName::FileName();
         activeObjId = -1;//no active object
-        if (iterObjectsId != NULL)
-        {
-            delete iterObjectsId;
-        }
+        delete iterObjectsId;
         iterObjectsId = NULL;
         myMDSql->clearMd();
     }
@@ -215,12 +212,12 @@ std::string MetaData::getComment() const
     return  comment;
 }
 
-void MetaData::setComment(const std::string newComment )
+void MetaData::setComment(const std::string &newComment)
 {
     comment = newComment;
 }
 
-FileName MetaData::getFilename()
+FileName MetaData::getFilename() const
 {
     return inFile;
 }
@@ -235,7 +232,7 @@ std::vector<MDLabel>* MetaData::geActiveLabelsAddress() const
     return (std::vector<MDLabel>*) (&activeLabels);
 }
 
-long int  MetaData::getActiveObject()
+long int  MetaData::getActiveObject() const
 {
     return activeObjId;
 }
@@ -662,7 +659,6 @@ void MetaData::_readColumns(std::istream& is, std::vector<MDValue>& columnValues
 void MetaData::_readRows(std::istream& is, std::vector<MDValue>& columnValues, bool useCommentAsImage)
 {
     std::string line = "";
-    int objId;
     while (!is.eof() && !is.fail())
     {
         //Move until the ';' or the first alphanumeric character
@@ -678,7 +674,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDValue>& columnValues, b
             }
             else if (!isspace(is.peek()))
             {
-                objId = addObject();
+                int objId = addObject();
                 if (line != "")
                 {
                     if (!useCommentAsImage)
@@ -730,7 +726,6 @@ void MetaData::_readRowFormat(std::istream& is)
 
 void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabels)
 {
-    int pos;
     std::ifstream is(filename.data(), std::ios_base::in);
     std::stringstream ss;
     std::string line, token;
@@ -752,7 +747,7 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
 
     is.seekg(0, std::ios::beg);//reset the stream position to the beginning to start parsing
 
-    if (pos = line.find("XMIPP_3 *") != std::string::npos)
+    if (line.find("XMIPP_3 *") != std::string::npos)
     {
         //We have a new XMIPP MetaData format here, parse header
         is.ignore(256, '*') >> token; //Ignore all until first '*' and get md format in token
@@ -774,7 +769,7 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
             _readColumns(ss, columnValues, desiredLabels);
         }
     }
-    else if (pos = line.find("Headerinfo columns:") != std::string::npos)
+    else if (line.find("Headerinfo columns:") != std::string::npos)
     {
         //This looks like an old DocFile, parse header
         std::cerr << "WARNING: ** You are using an old file format (DOCFILE) which is going "
@@ -930,11 +925,8 @@ void MetaData::_selectSplitPart(const MetaData &mdIn,
 {
     int first, last, n_images;
     n_images = divide_equally(mdSize, n, part, first, last);
-    int s = activeLabels.size();
     init(&(mdIn.activeLabels));
-    s = activeLabels.size();
     copyInfo(mdIn);
-    s = activeLabels.size();
     mdIn.myMDSql->copyObjects(this, new MDQuery(n_images, first, sortLabel));
     firstObject();
 }
@@ -951,7 +943,7 @@ void MetaData::selectSplitPart(const MetaData &mdIn, int n, int part, const MDLa
 }
 
 void MetaData::selectPart(const MetaData &mdIn, long int startPosition, long int numberOfObjects,
-                           const MDLabel sortLabel)
+                          const MDLabel sortLabel)
 {
     long int mdSize = mdIn.size();
     if (startPosition < 0 || startPosition >= mdSize)

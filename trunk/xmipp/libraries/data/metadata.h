@@ -276,12 +276,12 @@ public:
      *@ingroup GettersAndSetters
      *will appear in second line
      */
-    void setComment(const std::string newComment = "No comment");
+    void setComment(const std::string &newComment = "No comment");
 
     /**Return metadata filename
      *@ingroup GettersAndSetters
      */
-    FileName getFilename();
+    FileName getFilename() const;
 
     /**Get safe access to active labels
      * @ingroup GettersAndSetters
@@ -300,7 +300,7 @@ public:
     /**Get the active object id
      * -1 will be returned if no object is active
      */
-    long int getActiveObject();
+    long int getActiveObject() const;
 
     int MaxStringLength( const MDLabel thisLabel) const;
 

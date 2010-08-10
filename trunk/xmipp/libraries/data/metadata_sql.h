@@ -302,8 +302,7 @@ public:
 
     ~MDValueRelational()
     {
-        if (value != NULL)
-            delete value;
+        delete value;
     }
 
     std::string opString() const

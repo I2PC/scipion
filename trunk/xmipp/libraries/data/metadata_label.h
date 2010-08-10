@@ -192,7 +192,7 @@ enum MDLabel
 
 enum MDLabelType
 {
-    LABEL_INT, LABEL_BOOL, LABEL_DOUBLE, LABEL_FLOAT, LABEL_STRING, LABEL_VECTOR, LABEL_LONG
+    LABEL_NOTYPE = -1, LABEL_INT, LABEL_BOOL, LABEL_DOUBLE, LABEL_FLOAT, LABEL_STRING, LABEL_VECTOR, LABEL_LONG
 };
 
 class MDL
@@ -408,7 +408,9 @@ public:
     std::string str;
     //Default constructor
     MDLabelData()
-    {}
+    {
+       type = LABEL_NOTYPE;
+    }
 
     MDLabelData(MDLabelType t, std::string s)
     {

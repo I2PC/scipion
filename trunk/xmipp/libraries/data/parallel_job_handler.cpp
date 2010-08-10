@@ -71,7 +71,6 @@ ParallelJobHandler::~ParallelJobHandler()
 void ParallelJobHandler::createLockFile()
 {
 
-    int bytes;
     int buffer[] = {numberOfJobs, assignedJobs, blockSize};
 
     if (( lockFile = open(lockFilename, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) ) == -1)
