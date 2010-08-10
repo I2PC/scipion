@@ -35,6 +35,7 @@
 
 
 /** @defgroup ParallelJobHandler
+ *  @ingroup DataLibrary
  *
  * When processing in parallel, this class distributes the work load.
  *
@@ -43,7 +44,6 @@
  *
  *The database may be created in memory (threads) or in disk (mpi).
  */
-
 
 class ParallelJobHandler
 {

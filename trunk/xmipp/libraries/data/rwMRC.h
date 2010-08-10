@@ -11,6 +11,12 @@
 
 #define MRCSIZE    1024 // Minimum size of the MRC header (when nsymbt = 0)
 
+///@definegroup MRC MRC File format
+///@ingroup ImageFormats
+
+/** MRC Old Header
+  * @ingroup MRC
+*/
 struct MRCheadold
 {          // file header for MRC data
     int nx;              //  0   0       image size
@@ -44,6 +50,9 @@ struct MRCheadold
     char labels[10][80]; // 56-255       10 80-character labels
 } ;
 
+/** MRC Header
+  * @ingroup MRC
+*/
 struct MRChead
 {             // file header for MRC data
     int nx;              //  0   0       image size
@@ -81,9 +90,11 @@ struct MRChead
     char labels[800];    // 56-255       10 80-character labels
 } ;
 
-
 // I/O prototypes
-int readMRC(int img_select,bool isStack=false)
+/** MRC Reader
+  * @ingroup MRC
+*/
+int readMRC(int img_select, bool isStack=false)
 {
 #undef DEBUG
     //#define DEBUG
@@ -213,7 +224,6 @@ int readMRC(int img_select,bool isStack=false)
         return 0;
     }
 
-
     MD.removeObjects();
     for ( i=imgStart; i<imgEnd; i++ )
         //for(int i=0;i< Ndim;i++)
@@ -253,11 +263,14 @@ int readMRC(int img_select,bool isStack=false)
     readData(fimg, img_select, datatype, 0);
 
     if ( !mmapOn )
-    	fclose(fimg);
+        fclose(fimg);
 
     return(0);
 }
 
+/** MRC Writer
+  * @ingroup MRC
+*/
 int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     /*
@@ -355,7 +368,7 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     else
         datasize = datasize_n * gettypesize(Float);
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     printf("DEBUG rwMRC: Offset = %ld,  Datasize_n = %ld\n", offset, datasize_n);
@@ -399,27 +412,9 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         fwrite( header, MRCSIZE, 1, fimg );
     freeMemory(header, sizeof(MRChead) );
 
-
-    /*
-    // Write 3D map
-    if ( typeid(T) == typeid(double) ||
-            typeid(T) == typeid(float) ||
-            typeid(T) == typeid(int) )
-{
-        writePageAsDatatype(fimg, Float, datasize_n);
-}
-    else if ( typeid(T) == typeid(unsigned char) ||
-              typeid(T) == typeid(signed char) )
-        writePageAsDatatype(fimg, SChar, datasize_n);
-    else if ( typeid(T) == typeid(std::complex<float>) ||
-              typeid(T) == typeid(std::complex<double>) )
-        writePageAsDatatype(fimg, ComplexFloat, datasize_n);
-    else
-        REPORT_ERROR(1,"ERROR write MRC image: invalid typeid(T)");
-    */
     //write only once, ignore select_img
     char* fdata = (char *) askMemory(datasize);
-    //think about writing in several chucks
+    //think about writing in several chunks
 
     if ( NSIZE(data) == 1 && mode==WRITE_OVERWRITE)
     {

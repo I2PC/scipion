@@ -26,9 +26,13 @@
 #ifndef RWSPE_H_
 #define RWSPE_H_
 
-// Princeton Instruments CCD camera
+///@definegroup SPE Princeton Instruments CCD camera
+///@ingroup ImageFormats
 
 // I/O prototypes
+/** SPE Reader
+  * @ingroup SPE
+*/
 int readSPE(int img_select,bool isStack=false)
 {
 #undef DEBUG
@@ -120,7 +124,6 @@ int readSPE(int img_select,bool isStack=false)
 
     MD.removeObjects();
     for ( i=imgStart; i<imgEnd; i++ )
-        //for(int i=0;i< Ndim;i++)
     {
         MD.addObject();
         MD.setValue(MDL_ORIGINX, zeroD);
@@ -154,6 +157,9 @@ int readSPE(int img_select,bool isStack=false)
     return(0);
 }
 
+/** SPE Writer
+  * @ingroup SPE
+*/
 int writeSPE(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     //#define DEBUG
@@ -217,64 +223,52 @@ int writeSPE(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     else
         REPORT_ERROR(1000,(std::string)"ERROR: rwSPE does not write from " + typeid(T).name() + "type.");
 
+    _depth = gettypesize(wDType);
 
-_depth = gettypesize(wDType);
+    /* Write INF file ==================================*/
+    FileName fn_inf;
+    fn_inf = filename.add_extension("inf");
+    FILE *fh_inf = fopen(fn_inf.c_str(), "w");
+    if (!fh_inf)
+        REPORT_ERROR(1, (std::string)"rwSPE::write: Error opening file " + fn_inf);
 
-/* Write INF file ==================================*/
+    fprintf(fh_inf,"# Bits per sample\n");
+    fprintf(fh_inf,"bitspersample= %d\n",_depth*8);
+    fprintf(fh_inf,"# Samples per pixel\n");
+    fprintf(fh_inf,"samplesperpixel= 1\n");
+    fprintf(fh_inf,"# Image width\n");
+    fprintf(fh_inf,"Xdim= %d\n", Xdim);
+    fprintf(fh_inf,"# Image length\n");
+    fprintf(fh_inf,"Ydim= %d\n",Ydim);
+    fprintf(fh_inf,"# offset in bytes (zero by default)\n");
+    fprintf(fh_inf,"offset= 0\n");
+    fprintf(fh_inf,"# Is a signed or Unsigned int (by default true)\n");
+    if (_is_signed)
+        fprintf(fh_inf,"is_signed = true\n");
+    else
+        fprintf(fh_inf,"is_signed = false\n");
+    fprintf(fh_inf,"# Byte order\n");
+    if (IsBigEndian())
+        fprintf(fh_inf,"endianess = big\n");
+    else
+        fprintf(fh_inf,"endianess = little\n");
 
-FileName fn_inf;
+    if (fclose(fh_inf)!=0)
+        REPORT_ERROR(6001, "rwSPE::write: Error creating output info file.");
 
-fn_inf = filename.add_extension("inf");
-FILE *fh_inf = fopen(fn_inf.c_str(), "w");
-if (!fh_inf)
-    REPORT_ERROR(1, (std::string)"rwSPE::write: Error opening file " + fn_inf);
+    /* Write Image file ==================================*/
+    FILE  *fimg;
+    if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
+        REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
 
-fprintf(fh_inf,"# Bits per sample\n");
-fprintf(fh_inf,"bitspersample= %d\n",_depth*8);
-fprintf(fh_inf,"# Samples per pixel\n");
-fprintf(fh_inf,"samplesperpixel= 1\n");
-fprintf(fh_inf,"# Image width\n");
-fprintf(fh_inf,"Xdim= %d\n", Xdim);
-fprintf(fh_inf,"# Image length\n");
-fprintf(fh_inf,"Ydim= %d\n",Ydim);
-fprintf(fh_inf,"# offset in bytes (zero by default)\n");
-fprintf(fh_inf,"offset= 0\n");
-fprintf(fh_inf,"# Is a signed or Unsigned int (by default true)\n");
-if (_is_signed)
-    fprintf(fh_inf,"is_signed = true\n");
-else
-    fprintf(fh_inf,"is_signed = false\n");
-fprintf(fh_inf,"# Byte order\n");
-if (IsBigEndian())
-    fprintf(fh_inf,"endianess = big\n");
-else
-    fprintf(fh_inf,"endianess = little\n");
+    size_t datasize, datasize_n;
+    datasize_n = Xdim*Ydim*Zdim;
 
-if (fclose(fh_inf)!=0)
-    REPORT_ERROR(6001, "rwSPE::write: Error creating output info file.");
+    writePageAsDatatype(fimg, wDType, datasize_n);
 
+    if( fclose(fimg) !=0 )
+        REPORT_ERROR(1,(std::string)"Can not close file "+ filename);
 
-/* Write Image file ==================================*/
-
-FILE  *fimg;
-if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-    REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
-
-size_t datasize, datasize_n;
-datasize_n = Xdim*Ydim*Zdim;
-
-writePageAsDatatype(fimg, wDType, datasize_n);
-
-
-if( fclose(fimg) !=0 )
-    REPORT_ERROR(1,(std::string)"Can not close file "+ filename);
-
-return(0);
-
-
-//    REPORT_ERROR(6001, "ERROR: writeSPE is not implemented.");
-//    return(-1);
+    return(0);
 }
-
-
 #endif /* RWSPE_H_ */

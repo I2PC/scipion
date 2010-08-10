@@ -31,7 +31,7 @@
 #include "mask.h"
 
 /// @defgroup Normalize Normalization of images and volumes
-/// @ingroup DataLibraryPrograms
+/// @ingroup DataLibrary
 
 /**@defgroup NormalizationProcedures Image normalization procedures
    @ingroup Normalize
@@ -55,6 +55,7 @@
    */
 //@{
 /** OldXmipp normalization.
+    @ingroup NormalizationProcedures
    Formula:
    @code
    I'=(I-m(I))/sqrt(v(I))
@@ -69,6 +70,7 @@
 void normalize_OldXmipp(MultidimArray<double> &I);
 
 /** Near_OldXmipp normalization.
+    @ingroup NormalizationProcedures
    Formula:
    @code
    I'=(I-m(I))/a*v(n)
@@ -83,6 +85,7 @@ void normalize_OldXmipp(MultidimArray<double> &I);
 void normalize_Near_OldXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask);
 
 /** OldXmipp decomposition.
+    @ingroup NormalizationProcedures
    Formula:
    @code
    I'=(I-b)/a*sqrt(v(n))
@@ -102,6 +105,7 @@ void normalize_OldXmipp_decomposition(MultidimArray<double> &I,
                                       const MultidimArray<int> &bg_mask, const MultidimArray<double> *mask = NULL);
 
 /** Tomography normalization.
+    @ingroup NormalizationProcedures
    This is similar to the OldXmipp normalization, but the mean and
    standard deviation of the images are computed only within a region
    determined by the tilt angle.
@@ -119,10 +123,11 @@ void normalize_OldXmipp_decomposition(MultidimArray<double> &I,
    sigmai and mui.
 */
 void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
-    double &sigmai, bool tiltMask,
-    bool tomography0=false, double mu0=0, double sigma0=1);
+                          double &sigmai, bool tiltMask,
+                          bool tomography0=false, double mu0=0, double sigma0=1);
 
 /** Michael's normalization.
+    @ingroup NormalizationProcedures
    Formula:
    @code
    I'=(I-b)/b
@@ -138,6 +143,7 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
 void normalize_Michael(MultidimArray<double> &I, const MultidimArray<int> &bg_mask);
 
 /** NewXmipp's normalization.
+    @ingroup NormalizationProcedures
    Formula:
    @code
    I'=(I-b)/a*sqrt(v(n))
@@ -158,6 +164,7 @@ volume.
 void normalize_NewXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask);
 
 /** NewXmipp 2's normalization.
+    @ingroup NormalizationProcedures
    Formula:
    @code
    I'=(I-m(bg))/(m(I)-m(bg))
@@ -174,16 +181,18 @@ volume.
 */
 void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_mask);
 
-/** Removal of inclined background densities (ramps):
+/** Removal of inclined background densities (ramps).
+    @ingroup NormalizationProcedures
     fitting of a least squares plane throught the pixels in the
     bg_mask, then subtraction of the plane, and division by the
     standard deviation of the pixels in the bg_mask */
 void normalize_ramp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask);
 
-/** Removal of neighbouring particles
+/** Removal of neighbouring particles.
+    @ingroup NormalizationProcedures
     .... */
 void normalize_remove_neighbours(MultidimArray<double> &I,
-				 const MultidimArray<int> &bg_mask,
+                                 const MultidimArray<int> &bg_mask,
                                  const double &threshold);
 //@}
 
@@ -194,7 +203,7 @@ class Normalize_parameters: public Prog_parameters
 {
 public:
 
-// FIXME Make this an enum or similar
+    // FIXME Make this an enum or similar
 #define NONE 0
 #define OLDXMIPP 1
 #define NEAR_OLDXMIPP 2
@@ -217,7 +226,7 @@ public:
      */
     bool volume;
 
-// TODO Same thing, an enum
+    // TODO Same thing, an enum
 #define NONE 0
 #define FRAME 1
 #define CIRCLE 2

@@ -216,6 +216,9 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
     const Matrix1D< double >& d, double lambda,
     const Matrix2D< double >& G, Matrix1D< double >& x);
 
+/** Solves a linear equation system by LU decomposition.
+ * @ingroup NumericalTools
+ */
 template<typename T>
 void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
 {
@@ -240,7 +243,9 @@ void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
     lubksb(LU, indx, result);
 }
 
-// TODO Document
+/** Solves a linear equation system by SVD decomposition.
+ * @ingroup NumericalTools
+ */
 template<typename T>
 void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
                   Matrix1D< double >& result, double tolerance)
@@ -279,7 +284,9 @@ void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
     svbksb(u, w, v, bd, result);
 }
 
-// TODO Document
+/** Solves a linear equation system by Gaussian elimination.
+ * @ingroup NumericalTools
+ */
 template<typename T>
 void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result)
 {
@@ -298,7 +305,6 @@ void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result)
     gaussj(Aux.adaptForNumericalRecipes2(), Aux.Ydim(),
            result.adaptForNumericalRecipes2(), b.Xdim());
 }
-
 
 // Differential Evolution Solver Class
 // Based on algorithms developed by Dr. Rainer Storn & Kenneth Price
@@ -327,7 +333,7 @@ class DESolver;
 typedef void(DESolver::*StrategyFunction)(int);
 
 /** @defgroup DifferentialEvolution Differential Evolution Optimizer
- *  @ingroup DataLibrary
+ *  @ingroup NumericalTools
  *  For further information visit: http://www.icsi.berkeley.edu/~storn/code.html
  */
 //@{
@@ -460,7 +466,4 @@ private:
     void Best2Bin(int candidate);
     void Rand2Bin(int candidate);
 };
-
-
-
 #endif

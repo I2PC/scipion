@@ -31,6 +31,9 @@
 #include "image.h"
 #include <complex>
 
+/**@defgroup PSFXRSupport X-Ray Microscope PSF support classes
+   @ingroup DataLibrary */
+//@{
 
 /** This enum defines which method should be used to
  correct the constraint due to Nyquist limit in diffraction. */
@@ -41,54 +44,48 @@ enum psfxrAdjust
     PSFXR_ZPAD /// Increasing the image size by Zeropadding
 };
 
-
-/**@defgroup PSFXRSupport X-Ray Microscope PSF support classes
- @ingroup DataLibrary */
-//@{
 /** X-ray PSF class.
  * Here goes how to filter an image with the Point Spread Function of a X-ray microscope optics
 
  @code
 
-	#include <data/psf_xr.h>
+ #include <data/psf_xr.h>
 
 
-	int main(int argc, char **argv)
-	{
-		FileName fnPSF, fn_input,fn_output;
-		XmippXRPSF psf;
+ int main(int argc, char **argv)
+ {
+  FileName fnPSF, fn_input,fn_output;
+  XmippXRPSF psf;
 
-	/// Read the microscope parameters
+ /// Read the microscope parameters
 
-	if (checkParameter(argc, argv, "-psf"))
-	{
-		fnPSF = getParameter(argc, argv, "-psf");
-		psf.read(fnPSF);
-	}
-	else
-		psf.clear(); /// Use a default reference microscope
+ if (checkParameter(argc, argv, "-psf"))
+ {
+  fnPSF = getParameter(argc, argv, "-psf");
+  psf.read(fnPSF);
+ }
+ else
+  psf.clear(); /// Use a default reference microscope
 
 
-	fn_input = getParameter(argc, argv, "-i");
+ fn_input = getParameter(argc, argv, "-i");
 
-	psf.produceSideInfo();
+ psf.produceSideInfo();
 
-	Image<double>   inputVol, imOut;
+ Image<double>   inputVol, imOut;
 
-	inputVol.read(fn_input);
-	psf.adjustParam(inputVol);
-	project_xr(psf, inputVol, imOut);
+ inputVol.read(fn_input);
+ psf.adjustParam(inputVol);
+ project_xr(psf, inputVol, imOut);
 
-	if (checkParameter(argc, argv, "-out"))
-		fn_output = getParameter(argc, argv, "-out");
-	else
-		fn_output = file_name.without_extension().add_extension("out").add_extension("spi");
+ if (checkParameter(argc, argv, "-out"))
+  fn_output = getParameter(argc, argv, "-out");
+ else
+  fn_output = file_name.without_extension().add_extension("out").add_extension("spi");
 
-	imOut.write(fn_output);
-	}
+ imOut.write(fn_output);
+ }
  @endcode
-
-
  */
 class XmippXRPSF
 {
@@ -153,8 +150,6 @@ public:
 
     /// Switch to control verbose mode
     bool verbose;
-
-
 
     /** Empty constructor. */
     XmippXRPSF()
@@ -242,16 +237,12 @@ public:
 
     /// Calculate if a resize of the X-Y plane is needed to avoid the Nyquist Limit
     void adjustParam(Image<double> &Vol) ;
-
 };
-
 
 /// Generate the quadratic phase distribution of a ideal lens
 void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
 
-
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
 void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut,  int idxSlice = 1);
-
 //@}
 #endif

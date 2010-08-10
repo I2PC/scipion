@@ -35,11 +35,15 @@
 #include <fcntl.h>
 #include <iostream>
 
+///@definegroup TIFF TIFF File format
+///@ingroup ImageFormats
 
 // I/O prototypes
+/** TIFF Reader
+  * @ingroup TIFF
+*/
 int readTIFF(int img_select, bool isStack=false)
 {
-
 #undef DEBUG
     //#define DEBUG
 #ifdef DEBUG
@@ -346,11 +350,12 @@ int readTIFF(int img_select, bool isStack=false)
     return 0;
 }
 
+/** TIFF Writer
+  * @ingroup TIFF
+*/
 int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     REPORT_ERROR(6001, "ERROR: writeTIFF is not implemented.");
     return(-1);
 }
-
-
 #endif /* RWTIA_H_ */

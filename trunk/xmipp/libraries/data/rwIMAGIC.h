@@ -17,6 +17,12 @@
 
 #define IMAGICSIZE 1024 // Size of the IMAGIC header for each image
 
+///@definegroup Imagic Imagic File format
+///@ingroup ImageFormats
+
+/** Imagic Header
+  * @ingroup Imagic
+*/
 struct IMAGIChead
 {             // file header for IMAGIC data
     int imn;          //  0      image location number (1,2,...)
@@ -83,6 +89,9 @@ struct IMAGIChead
 @Returns:
  int     error code (<0 means failure).
 **************************************************************************/
+/** Imagic reader
+  * @ingroup Imagic
+*/
 int  readIMAGIC(int img_select)
 {
 #define DEBUG
@@ -94,7 +103,6 @@ int  readIMAGIC(int img_select)
     FileName headername;
     headername = filename.substr(0, filename.find_last_of('.')) + ".hed";
     filename   = filename.substr(0, filename.find_last_of('.')) + ".img";
-
 
     // open and read the header file
     FILE  *fhed;
@@ -193,17 +201,6 @@ int  readIMAGIC(int img_select)
     }
     // View   view;
     char*   hend;
-    /*already done in image.h
-    if ( img_select > -1 )
-{
-        if ( img_select >= (int) Ndim )
-            REPORT_ERROR(1,(std::string)"readIMAGIC: Image number " + str(img_select)+" exceeds stack size");
-        data.setNdim(1);
-        Ndim = 1;
-        i = img_select;
-}
-    */
-
 
     // Get the header information
     if ( img_select > -1 )
@@ -212,12 +209,10 @@ int  readIMAGIC(int img_select)
         fseek( fhed, img_select * IMAGICSIZE, SEEK_SET );
 
     MD.removeObjects();
-    //for ( i=imgStart; i<imgEnd; i++ )
     for ( i=0; i<Ndim; i++ )
     {
         if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
             return(-2);
-        //if ( img_select < 0 || img_select == i )
         {
             hend = (char *) header + extent;
             if ( swap )
@@ -264,6 +259,9 @@ int  readIMAGIC(int img_select)
 @Returns:
  int     error code (<0 means failure).
 **************************************************************************/
+/** Imagic Writer
+  * @ingroup Imagic
+*/
 int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
 {
     //    if ( p->transform != NoTransform )
@@ -437,8 +435,6 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     }
 
     freeMemory(fdata, datasize);
-
-
     fclose(fhed);
     fclose(fimg);
 

@@ -47,6 +47,7 @@
 
 /// @defgroup Images Images
 /// @ingroup DataLibrary
+
 //@{
 /** Transform type.
  *  This type defines the kind of image.
@@ -1511,5 +1512,9 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex< double > *
         char * page,
         DataType datatype,
         size_t pageSize);
+
+/// @defgroup ImageFormats Images
+/// @ingroup Images
+// Functions belonging to this topic are commented in rw*.h
 //@}
 #endif

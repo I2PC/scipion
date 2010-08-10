@@ -26,7 +26,12 @@
 #ifndef RWDM3_H_
 #define RWDM3_H_
 
+///@definegroup DM3 DM3 File format
+///@ingroup ImageFormats
 
+/** DM3 Header
+  * @ingroup DM3
+*/
 struct DM3head
 {
     int fileVersion;
@@ -39,7 +44,9 @@ struct DM3head
     int nIm;
 };
 
-
+/** DM3 Data Header
+  * @ingroup DM3
+*/
 struct DM3dataHead
 {
     double      CalibrationOffsetX;  //CalibrationOffsetX
@@ -56,7 +63,9 @@ struct DM3dataHead
     bool   flip;
 };
 
-
+/** DM3 Reader
+  * @ingroup DM3
+*/
 int readDM3(int img_select,bool isStack=false)
 {
 #undef DEBUG
@@ -260,7 +269,9 @@ int readDM3(int img_select,bool isStack=false)
     return(0);
 }
 
-
+/** DM3 Tag reader
+  * @ingroup DM3
+*/
 double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool isLE)
 {
     /* Header Tag ============================================================== */
@@ -305,24 +316,6 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
         header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Dir");
         header->tags.setValue(MDL_DM3_SIZE, nTags);
 
-
-
-        /*        if (strcmp(tagName,"ImageList")==0)    // Number of images
-                {
-
-                }
-                else if (strcmp(tagName,"Dimensions")==0)
-                {
-                    //            newIndex[depLevel] = 1;
-                    //            header->tags.setValue(MDL_DIMY,(int) readTagDM3(fimg, header, depLevel, isLE));
-
-                    //            newIndex[depLevel] = 2;
-                    //            header->tags.setValue(MDL_DIMX,(int) readTagDM3(fimg, header, depLevel, isLE));
-
-                    //            header->tags.addObject();
-                    //            return 0;
-                }
-        */
         parentId = nodeId;
         for (int n=1;n<=nTags;n++) // Rest of directories
         {
@@ -332,8 +325,6 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
     }
     else if (idTag == 21)    // Tag
     {
-        //  printf("- Tag: %s ",tagName);
-
         unsigned int nnum;
         char buf[4]; // to read %%%% symbols
 
@@ -344,13 +335,11 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
         info = new int[nnum];
         xmippFREAD(info,sizeof(unsigned int),nnum,fimg,isLE); // Reading of Info
 
-
         /* Tag classification  =======================================*/
 
         if (nnum == 1)   // Single entry tag
         {
             header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Single");
-
 
             double tagValue = 0;
 
@@ -362,11 +351,6 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
             header->tags.setValue(MDL_DM3_NUMBER_TYPE, info[0]);
             header->tags.setValue(MDL_DM3_VALUE, vtagValue);
 
-            /*            if (strcmp(tagName,"DataType")==0)
-                        {
-                            //                header->tags.setValue(MDL_DATATYPE,(int) tagValue);
-                        }
-            */
             return tagValue;
         }
         else if(nnum == 3 && info[0]==20)   // Tag array
@@ -375,7 +359,6 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
             info(0) = 20
             info(1) = number type for all values
             info(2) = info(nnum) = size of array*/
-
 
             header->tags.setValue(MDL_DM3_TAGCLASS,(std::string) "Array");
 
@@ -386,11 +369,6 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
 
             header->tags.setValue(MDL_DM3_VALUE, vtagValue);
 
-            /*            if (strcmp(tagName,"Data")==0)    // Locating the image data
-                        {
-
-                        }
-            */
             // Jump the array values
             int k;
             if(info[1] == 2 || info[1] == 4)
@@ -403,7 +381,6 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
             fseek( fimg, ftell(fimg)+(info[nnum-1])*k , SEEK_SET );
 
             return 0;
-
         }
         else if (info[0]==20 && info[1] == 15)    // Tag Group array
         {
@@ -415,20 +392,13 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
                      info(2*i+3) = number type for value i
                      info(nnum) = size of info array*/
 
-
             header->tags.setValue(MDL_DM3_TAGCLASS, (std::string) "GroupArray");
             header->tags.setValue(MDL_DM3_SIZE, info[3]);
-
-
             int nBytes=0, k;
-
             double fieldValue;
-
-
             for (int n=1;n<=info[3];n++)
             {
                 fieldValue=0;
-
                 FREADTagValueDM3(&fieldValue,info[3+2*n],1,fimg);
 
                 if(info[3+2*n] == 2 || info[3+2*n] == 4)
@@ -441,7 +411,6 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
             }
 
             // Jump the array values
-
             fseek( fimg, ftell(fimg)+(info[nnum-1]-1)*nBytes , SEEK_SET );
             return 0;
         }
@@ -455,28 +424,24 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
             info(2*i+3) = number type for value i
             Other info entries are always zero*/
 
-
             header->tags.setValue(MDL_DM3_TAGCLASS, (std::string) "Group");
             header->tags.setValue(MDL_DM3_SIZE, info[2]);
-
             std::vector<double> vtagValue(info[2]);
-
             for (int n=1;n<=info[2];n++)
             {
                 double fieldValue=0;
-
                 FREADTagValueDM3(&fieldValue,info[2+2*n],1,fimg);
-
                 vtagValue.assign(n,fieldValue);
             }
-
             header->tags.setValue(MDL_DM3_VALUE, vtagValue);
-
             return 0;
         }
     }
 }
 
+/** DM3 Low level reader
+  * @ingroup DM3
+*/
 void FREADTagValueDM3(double *fieldValue,int numberType,int n,FILE* fimg)
 {
     DataType datatype = datatypeDM3(numberType);
@@ -541,7 +506,9 @@ void FREADTagValueDM3(double *fieldValue,int numberType,int n,FILE* fimg)
     }
 }
 
-
+/** DM3 Determine DM3 datatype
+  * @ingroup DM3
+*/
 DataType datatypeDM3(int nType)
 {
     DataType datatype;
@@ -582,6 +549,9 @@ DataType datatypeDM3(int nType)
     return datatype;
 }
 
+/** DM3 Get DM3 parent
+  * @ingroup DM3
+*/
 int parentDM3(MetaData &MD, int nodeId, int depth = 1)
 {
     for (int n = 0; n < depth; n++)
@@ -595,6 +565,9 @@ int parentDM3(MetaData &MD, int nodeId, int depth = 1)
     return nodeId;
 }
 
+/** DM3 Go to tag
+  * @ingroup DM3
+*/
 double gotoTagDM3(MetaData &MD, int nodeId, std::string tagsList)
 {
     std::string tag;
@@ -621,7 +594,9 @@ double gotoTagDM3(MetaData &MD, int nodeId, std::string tagsList)
 }
 
 int space;
-
+/** DM3 Print DM3 node
+  * @ingroup DM3
+*/
 void printDM3node(MetaData &MD, long int objId)
 {
     MD.goToObject(objId);
@@ -648,6 +623,10 @@ void printDM3node(MetaData &MD, long int objId)
     space -= 3;
 
 }
+
+/** DM3 Print DM3 header
+  * @ingroup DM3
+*/
 void printDM3(MetaData MD)
 {
     std::vector<long int> vObjs;
@@ -656,9 +635,11 @@ void printDM3(MetaData MD)
 
     for (int i = 0; i < vObjs.size(); i++)
         printDM3node(MD, vObjs[i]);
-
 }
 
+/** DM3 Writer
+  * @ingroup DM3
+*/
 int writeDM3(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     REPORT_ERROR(6001, "ERROR: writeDM3 is not implemented.");

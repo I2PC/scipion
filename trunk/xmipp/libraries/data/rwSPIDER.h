@@ -10,43 +10,49 @@
 #define RWSPIDER_H
 
 #define SPIDERSIZE 1024 // Minimum size of the SPIDER header (variable)
+///@definegroup Spider Spider File format
+///@ingroup ImageFormats
+
+/** Spider Header
+  * @ingroup Spider
+*/
 struct SPIDERhead
-{          // file header for SPIDER data
+{                    // file header for SPIDER data
     float nslice;    //  0      slices in volume (image = 1)
-    float nrow;         //  1      rows per slice
-    float irec;         //  2      # records in file (unused)
-    float nhistrec;      //  3      (obsolete)
-    float iform;        //  4      file type specifier
-    float imami;        //  5      max/min flag (=1 if calculated)
-    float fmax;       //  6      maximum
-    float fmin;       //  7      minimum
-    float av;         //  8      average
-    float sig;        //  9      standard deviation (=-1 if not calculated)
-    float ihist;        // 10      (obsolete)
-    float nsam;         // 11      pixels per row
-    float labrec;      // 12      # records in header
-    float iangle;       // 13      flag: tilt angles filled
-    float phi;        // 14      tilt angles
-    float theta;      // 15
-    float gamma;      // 16      (=psi)
-    float xoff;       // 17      translation
-    float yoff;       // 18
-    float zoff;       // 19
-    float scale;      // 20      scaling
-    float labbyt;       // 21      # bytes in header
-    float lenbyt;       // 22      record length in bytes (row length)
-    float istack;       // 23      indicates stack of images
-    float inuse;        // 24      indicates this image in stack is used (not used)
-    float maxim;        // 25      max image in stack used
-    float imgnum;        // 26      number of current image
+    float nrow;      //  1      rows per slice
+    float irec;      //  2      # records in file (unused)
+    float nhistrec;  //  3      (obsolete)
+    float iform;     //  4      file type specifier
+    float imami;     //  5      max/min flag (=1 if calculated)
+    float fmax;      //  6      maximum
+    float fmin;      //  7      minimum
+    float av;        //  8      average
+    float sig;       //  9      standard deviation (=-1 if not calculated)
+    float ihist;     // 10      (obsolete)
+    float nsam;      // 11      pixels per row
+    float labrec;    // 12      # records in header
+    float iangle;    // 13      flag: tilt angles filled
+    float phi;       // 14      tilt angles
+    float theta;     // 15
+    float gamma;     // 16      (=psi)
+    float xoff;      // 17      translation
+    float yoff;      // 18
+    float zoff;      // 19
+    float scale;     // 20      scaling
+    float labbyt;    // 21      # bytes in header
+    float lenbyt;    // 22      record length in bytes (row length)
+    float istack;    // 23      indicates stack of images
+    float inuse;     // 24      indicates this image in stack is used (not used)
+    float maxim;     // 25      max image in stack used
+    float imgnum;    // 26      number of current image
     float unused[2]; // 27-28     (unused)
-    float kangle;       // 29      flag: additional angles set
-    float phi1;       // 30      additional angles
-    float theta1;      // 31
-    float psi1;       // 32
-    float phi2;       // 33
-    float theta2;      // 34
-    float psi2;       // 35
+    float kangle;    // 29      flag: additional angles set
+    float phi1;      // 30      additional angles
+    float theta1;    // 31
+    float psi1;      // 32
+    float phi2;      // 33
+    float theta2;    // 34
+    float psi2;      // 35
 
     double fGeo_matrix[3][3]; // x9 = 72 bytes: Geometric info
     float fAngle1; // angle info
@@ -98,6 +104,9 @@ struct SPIDERhead
 @Returns:
  int     error code (<0 means failure).
 **************************************************************************/
+/** Spider Reader
+  * @ingroup Spider
+*/
 int  readSPIDER(int img_select,bool isStack=false)
 {
 #undef DEBUG
@@ -206,7 +215,6 @@ int  readSPIDER(int img_select,bool isStack=false)
         return 0;
     }
 
-
     size_t header_size = offset;
     size_t image_size  = header_size + ZYXSIZE(data)*sizeof(float);
     size_t pad         = 0;
@@ -233,28 +241,12 @@ int  readSPIDER(int img_select,bool isStack=false)
             REPORT_ERROR(1,(std::string)"readSpider: Image number " + Num.str() +
                          " exceeds stack size " + Num2.str());
         }
-        /*
-                else
-                {
-                    if(img_select!=-1)
-                    {
-                        imgStart = img_select;
-                        imgEnd   = img_select + 1;
-                    }
-                    else
-           {
-                        imgStart = 0;
-                        imgEnd = _nDim;
-           }
-                }
-        */
         offset += offset;
     }
 
     MD.removeObjects();
     for ( i=imgStart; i<imgEnd; i++ )
     {
-        //if(img_select==-1 || img_select==i)
         {
             fseek( fimg, header_size + i*image_size, SEEK_SET );
             if(isStack)
@@ -303,10 +295,9 @@ int  readSPIDER(int img_select,bool isStack=false)
     readData(fimg, img_select, datatype, pad );
 
     if ( !mmapOn )
-    	fclose(fimg);
+        fclose(fimg);
 
     return(0);
-
 }
 /************************************************************************
 @Function: writeSPIDER
@@ -318,7 +309,9 @@ int  readSPIDER(int img_select,bool isStack=false)
 @Returns:
  int     error code (<0 means failure).
 **************************************************************************/
-
+/** Spider Writer
+  * @ingroup Spider
+*/
 int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     //return(1);

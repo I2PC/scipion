@@ -439,7 +439,7 @@ public:
         eulert = euler.transpose();
     }
 
-/// Assigment
+    /// Assigment
     Oriented_Feature & operator = (const Oriented_Feature & OF);
 
     /** Another function for assigment.*/
@@ -475,7 +475,7 @@ public:
         Computes the maximum distance, in this case, equal to "radius" */
     void prepare();
 
-/// Assignment
+    /// Assignment
     Sphere & operator = (const Sphere &F);
 
     /** Another function for assignment.*/
@@ -788,7 +788,7 @@ public:
         Euler matrices as a function of the Euler angles */
     void prepare();
 
-/// Assignment
+    /// Assignment
     Cylinder & operator = (const Cylinder &F);
 
     /** Another function for assignment.*/
@@ -920,7 +920,7 @@ public:
         Euler matrices as a function of the Euler angles */
     void prepare();
 
-/// Assignment
+    /// Assignment
     DCylinder & operator = (const DCylinder &F);
 
     /** Another function for assignment.*/
@@ -1042,7 +1042,7 @@ public:
         Euler matrices as a function of the Euler angles */
     void prepare();
 
-/// Assignment
+    /// Assignment
     Cube & operator = (const Cube &F);
 
     /** Another function for assignment.*/
@@ -1162,7 +1162,7 @@ public:
         Euler matrices as a function of the Euler angles */
     void prepare();
 
-/// Assignment
+    /// Assignment
     Ellipsoid & operator = (const Ellipsoid &F);
 
     /** Another function for assignment.*/
@@ -1280,7 +1280,7 @@ public:
         Euler matrices as a function of the Euler angles */
     void prepare();
 
-/// Assignment
+    /// Assignment
     Cone & operator = (const Cone &F);
 
     /** Another function for assignment.*/

@@ -38,9 +38,8 @@ extern pthread_mutex_t project_mutex;
 
 /// @defgroup Projections Projections (2D Image + Euler angles)
 /// @ingroup DataLibrary
-
+//@{
 /** Projection class.
- * @ingroup Projections
  *
  * A projection is a 2D, <double> Image plus some information (about the direction
  * of prejection) which makes it suitable for 3D reconstruction. A projection
@@ -120,11 +119,14 @@ public:
 
  
 };
-// This structure contains all the information needed by a thread
-// working on the projecting/backprojecting of a projection. This is
-// structure is needed to pass parameters from the master thread to the
-// working threads as they run as a function which does not accept passed
-// parameters other than a void * structure.
+
+/** Structure for threaded projections.
+   This structure contains all the information needed by a thread
+   working on the projecting/backprojecting of a projection. This is
+   structure is needed to pass parameters from the master thread to the
+   working threads as they run as a function which does not accept passed
+   parameters other than a void * structure.
+   */
 typedef struct
 {
     int thread_id;
@@ -146,7 +148,6 @@ typedef struct
 project_thread_params;
 
 extern project_thread_params * project_threads;
-
 
 template <class T>
 void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
@@ -200,15 +201,6 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
 
     M is the matrix corresponding to the projection process.
     */
-/*
-template <class T>
-void project_GridVolume(GridVolumeT<T> &vol, const Basis &basis,
-                    Projection &proj, Projection &norm_proj, int Ydim, int Xdim,
-                    double rot, double tilt, double psi, int FORW, int eq_mode = ARTK,
-                    GridVolumeT<int> *GVNeq = NULL, Matrix2D<double> *M = NULL,
-                    const Matrix2D<int> *mask=NULL,
-                    double ray_length = -1, int threads = 1);
-*/
 
 /** From voxel volumes.
 
@@ -328,10 +320,14 @@ void project_Crystal_Volume(GridVolume &vol, const Basis &basis,
          move over the oversampled image.
 */
 
+
 //#define DEBUG_LITTLE
 //#define DEBUG
 const int ART_PIXEL_SUBSAMPLING = 2;
 
+/** Threaded projection for simple grids
+  * @ingroup ProjectionsGeneration
+*/
 template <class T>
 void *project_SimpleGridThread( void * params )
 {
@@ -429,6 +425,10 @@ void *project_SimpleGridThread( void * params )
     return (void *)NULL;
 }
 
+/** Projection of a Simple Grid.
+  * @ingroup ProjectionsGeneration
+    Valid eq_modes are ARTK, CAVARTK and CAV.
+*/
 //#define DEBUG
 //#define DEBUG_LITTLE
 template <class T>
@@ -950,6 +950,10 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
 #undef DEBUG_LITTLE
 
 /* Project a Grid Volume --------------------------------------------------- */
+/** Projection of a Grid Volume.
+  * @ingroup ProjectionsGeneration
+    Valid eq_modes are ARTK, CAVARTK and CAV.
+*/
 //#define DEBUG
 //#define DEBUG_LITTLE
 template <class T>
@@ -1062,6 +1066,5 @@ void project_GridVolume(
 #undef yF
 #undef xDim
 #undef yDim
-
-
+//@}
 #endif

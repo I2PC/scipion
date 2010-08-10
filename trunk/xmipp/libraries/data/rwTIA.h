@@ -26,12 +26,14 @@
 #ifndef RWTIA_H_
 #define RWTIA_H_
 
-
-
-
 #define TIASIZE    30 // Size of the TIA header without pDATA_OFFSET
 
+///@definegroup TIA TIA File format
+///@ingroup ImageFormats
 
+/** TIA Header
+  * @ingroup TIA
+*/
 struct TIAhead
 {
     short int endianess;
@@ -48,24 +50,29 @@ struct TIAhead
 
 #define TIAdataSIZE    50 // Size of the TIA data header to be read
 
+/** TIA Data Header
+  * @ingroup TIA
+*/
 struct TIAdataHead
 {
-    double      CalibrationOffsetX;  //CalibrationOffsetX
+    double      CalibrationOffsetX;   //CalibrationOffsetX
     double      PIXEL_WIDTH;          //CalibrationDeltaX
-    int         CalibrationElementX;    //CalibrationElementX
+    int         CalibrationElementX;  //CalibrationElementX
     double      CalibrationOffsetY;   //CalibrationOffsetY
-    double      PIXEL_HEIGHT;           //CalibrationDeltaY
-    int          CalibrationElementY;    //CalibrationElementY
-    short int   DATA_TYPE;     //DataType
-    int         IMAGE_WIDTH;            //ArraySizeX
-    int         IMAGE_HEIGHT;           //ArraySizeY
+    double      PIXEL_HEIGHT;         //CalibrationDeltaY
+    int          CalibrationElementY; //CalibrationElementY
+    short int   DATA_TYPE;            //DataType
+    int         IMAGE_WIDTH;          //ArraySizeX
+    int         IMAGE_HEIGHT;         //ArraySizeY
     short int   DATA_TYPE_SIZE;
     std::string  DATA_TYPE_SIZE_STRING;
     bool        isSigned;
-
 };
 
 // I/O prototypes
+/** TIA Reader
+  * @ingroup TIA
+*/
 int readTIA(int img_select,bool isStack=false, double dStddev=5)
 {
 #undef DEBUG
@@ -91,7 +98,6 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     if (IsBigEndian())
         swap = !swap;
 
-
     xmippFREAD(&header->SeriesID, sizeof(short int), 1, fimg, swap );
     xmippFREAD(&header->SeriesVersion, sizeof(short int), 1, fimg, swap);
     xmippFREAD(&header->DATA_TYPE_ID, sizeof(int), 1, fimg, swap);
@@ -100,7 +106,6 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     xmippFREAD(&header->NUMBER_IMAGES, sizeof(int), 1, fimg, swap );
     xmippFREAD(&header->OFFSET_ARRAY_OFFSET, sizeof(int), 1, fimg, swap );
     xmippFREAD(&header->numberdimensions, sizeof(int), 1, fimg, swap );
-
 
     // Check data type
     if (header->DATA_TYPE_ID != 16674)
@@ -111,7 +116,6 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     xmippFREAD(header->pDATA_OFFSET, sizeof(int), header->NUMBER_IMAGES, fimg, swap);
 
     TIAdataHead* dataHeaders = new TIAdataHead [header->NUMBER_IMAGES];
-
 
     // Read all the image headers
     for (i = 0; i < header->NUMBER_IMAGES; i++)
@@ -154,10 +158,8 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         _nDim = (int) 1;
     }
 
-
     // Map the parameters
     data.setDimensions(_xDim, _yDim, 1, _nDim);
-
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
@@ -180,7 +182,6 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         TIA_DT = dataHeaders[img_select].DATA_TYPE;
         offset = header->pDATA_OFFSET[img_select] + TIAdataSIZE;
     }
-
 
     switch ( TIA_DT )
     {
@@ -316,6 +317,9 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     return(0);
 }
 
+/** TIA Writer
+  * @ingroup TIA
+*/
 int writeTIA(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     REPORT_ERROR(6001, "ERROR: writeTIA is not implemented.");
