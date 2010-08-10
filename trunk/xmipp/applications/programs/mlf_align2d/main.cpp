@@ -47,11 +47,9 @@ int main(int argc, char **argv)
     {
         prm.read(argc, argv);
         prm.produceSideInfo();
-        std::cerr << "hola1: after sideInfo1" <<std::endl;
         prm.show();
         prm.estimateInitialNoiseSpectra();
-        std::cerr << "hola2: after sideInfo2" <<std::endl;
-        prm.produceSideInfo2();
+        prm.produceSideInfo2();        
     }
     catch (Xmipp_error XE)
     {

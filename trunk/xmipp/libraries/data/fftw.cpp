@@ -214,7 +214,7 @@ void XmippFftw::Transform(int sign)
         else
             REPORT_ERROR(-1,"No complex nor real data defined");
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fFourier)
-        DIRECT_MULTIDIM_ELEM(fFourier,n) /= size;
+            DIRECT_MULTIDIM_ELEM(fFourier,n) /= size;
 
     }
     else if (sign == FFTW_BACKWARD)
@@ -292,7 +292,8 @@ void FFT_magnitude(const MultidimArray< std::complex<double> > &v,
                    MultidimArray<double> &mag)
 {
     mag.resize(v);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v) mag(n) = abs(v(n));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
+        DIRECT_MULTIDIM_ELEM(mag, n) = abs(DIRECT_MULTIDIM_ELEM(v, n));
 }
 
 /* FFT Phase ------------------------------------------------------- */
@@ -300,7 +301,8 @@ void FFT_phase(const MultidimArray< std::complex<double> > &v,
                MultidimArray<double> &phase)
 {
     phase.resize(v);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v) phase(n) = atan2(v(n).imag(), v(n).real());
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
+        DIRECT_MULTIDIM_ELEM(phase, n) = atan2(DIRECT_MULTIDIM_ELEM(v,n).imag(), DIRECT_MULTIDIM_ELEM(v, n).real());
 }
 
 // Fourier ring correlation -----------------------------------------------
@@ -458,7 +460,7 @@ void getSpectrum(MultidimArray<double> &Min,
         FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
         double R=f.module();
         //if (R>0.5) continue;
-        int idx=ROUND(R*xsize);
+        int idx = ROUND(R*xsize);
         if (spectrum_type == AMPLITUDE_SPECTRUM)
             spectrum(idx) += abs(dAkij(Faux, k, i, j));
         else
@@ -546,10 +548,7 @@ void adaptSpectrum(MultidimArray<double> &Min,
     getSpectrum(Min,spectrum,spectrum_type);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(spectrum)
     {
-        if (spectrum(i) > 0.)
-            spectrum(i) = spectrum_ref(i)/spectrum(i);
-        else
-            spectrum(i) = 1.;
+        dAi(spectrum, i) = (dAi(spectrum, i) > 0.) ? dAi(spectrum_ref,i)/ dAi(spectrum, i) : 1.;
     }
     Mout=Min;
     multiplyBySpectrum(Mout,spectrum,leave_origin_intact);

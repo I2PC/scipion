@@ -317,8 +317,8 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
     MultidimArray<double>           offsets(2), dum, rmean_ctf;
     Matrix2D<double>           A(3, 3);
     MultidimArray<double>      Maux, Maux2;
-    MultidimArray2D<std::complex<double> >  Faux, ctfmask;
-    MultidimArray1D<int>        radial_count;
+    MultidimArray<std::complex<double> >  Faux, ctfmask; //2D
+    MultidimArray<int>        radial_count; //1D
     Matrix1D<int>               center(2);
     std::vector<int>            tmppointp, tmppointp_nolow, tmppointi, tmppointj;
     bool                        uniqname, nomoredirs;
@@ -331,7 +331,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
     MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     nr_images_global = MDimg.size();
 
-    // Create a vector of ovjectIDs, which may be randomized later on
+    // Create a vector of objectIDs, which may be randomized later on
     MDimg.findObjects(img_id);
 
     // Get image sizes and total number of images
@@ -601,7 +601,9 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
     {
         MDref.getValue(MDL_IMAGE, fn_tmp);
 
-        img.read(fn_tmp, false, false, true, false);
+        //img.read(fn_tmp, false, false, true, false);
+        img.read(fn_tmp, true, -1, true);
+
         img().setXmippOrigin();
         Iref.push_back(img);
         Iold.push_back(img);
@@ -869,7 +871,8 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
             else
                 focus = 0;
             MDimg.getValue(MDL_IMAGE, fn_tmp);
-            img.read(fn_tmp, false, false, false, false);
+            //img.read(fn_tmp, false, false, false, false);
+            img.read(fn_tmp);
             img().setXmippOrigin();
             FourierTransform(img(), Fimg);
             FFT_magnitude(Fimg, Maux);
@@ -885,6 +888,7 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
         if (verb > 0)
             progress_bar(nn);
 
+        std::cerr << "HOLA: Calculating DEFOCUS GROUPS" <<std::endl;
         // Calculate Vsig vectors and write them to disc
         FOR_ALL_DEFOCUS_GROUPS()
         {
@@ -2393,8 +2397,8 @@ void Prog_MLFalign2D_prm::processOneImage(const MultidimArray<double> &Mimg,
 
 void Prog_MLFalign2D_prm::expectation(std::vector< Image<double> > &Iref, int iter,
                                       double &LL, double &sumcorr,
-                                      std::vector<MultidimArray2D<double> > &wsum_Mref,
-                                      std::vector<MultidimArray2D<double> > &wsum_ctfMref,
+                                      std::vector<MultidimArray<double> > &wsum_Mref,
+                                      std::vector<MultidimArray<double> > &wsum_ctfMref,
                                       std::vector<std::vector<double> > &Mwsum_sigma2,
                                       double &wsum_sigma_offset,
                                       std::vector<double> &sumw,
@@ -2480,7 +2484,8 @@ void Prog_MLFalign2D_prm::expectation(std::vector< Image<double> > &Iref, int it
             MDimg.getValue(MDL_DEFGROUP, focus, img_id[imgno]);
 
         MDimg.getValue(MDL_IMAGE, fn_img, img_id[imgno]);
-        img.read(fn_img, false, false, false, false);
+        //img.read(fn_img, false, false, false, false);
+        img.read(fn_img);
         img().setXmippOrigin();
 
         // Get optimal offsets for all references
