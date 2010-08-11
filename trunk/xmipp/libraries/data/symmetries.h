@@ -169,14 +169,14 @@ public:
     bool isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder);
 
     /** fill fileContect with symmetry information*/
-void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
-   std::vector<std::string> &fileContent);
+    void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
+                             std::vector<std::string> &fileContent);
 
-    
+
     /** Create Symmetry List from a Symmetry file.
         All the subgroup elements are computed automatically.
         \\ Ex: SymList SL("sym.txt"); */
-    SymList(FileName fn_sym, double accuracy = SYM_ACCURACY)
+    SymList(const FileName& fn_sym, double accuracy = SYM_ACCURACY)
     {
         read_sym_file(fn_sym, accuracy);
     }
@@ -283,17 +283,17 @@ void fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
         P4212 (90) and P6 (168).
 
         Mag_a and Mag_b are the crystal vector magnitude. */
-
     int  crystallographic_space_group(double mag_a,
                                       double mag_b,
                                       double ang_a2b_deg) const;
-/** Retuen the area of the non redundant part of the Ewald sphere
-*/
-double  non_redundant_evald_sphere(int pgGroup, int pgOrder);
+
+    /** Return the area of the non redundant part of the Ewald sphere
+    */
+    double  non_redundant_evald_sphere(int pgGroup, int pgOrder);
 };
 
 /** Applies to the crystal vectors de n-th symmetry  matrix, It also
-   inizializates the shift vector. The crystal vectors and the basis must be
+   initializes the shift vector. The crystal vectors and the basis must be
    the same  except for a constant!!
    A note: Please realize that we are not repeating code here.
    The class SymList deals with symmetries when expressed in
@@ -303,8 +303,6 @@ double  non_redundant_evald_sphere(int pgGroup, int pgOrder);
    For same symmetries both representations are almost the same
    but in general they are rather different.
  */
-
-
 void symmetrize_crystal_vectors(Matrix1D<double> &aint,
                                 Matrix1D<double> &bint,
                                 Matrix1D<double> &shift,
@@ -315,7 +313,6 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
 
 /** Symmetrizes a crystal volume.
  */
-
 void symmetrize_crystal_volume(GridVolume &vol,
                                const Matrix1D<double> &eprm_aint,
                                const Matrix1D<double> &eprm_bint,
@@ -329,6 +326,7 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_bint,
                      const MultidimArray<int> &mask, int volume_no,
                      int grid_type);
+
 /** Symmetrizes a simple grid with P22_12  symmetry
 */
 void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
@@ -336,6 +334,7 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_bint,
                      const MultidimArray<int> &mask, int volume_no,
                      int grid_type);
+
 /** Symmetrizes a simple grid with P4  symmetry
 */
 void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
@@ -343,6 +342,7 @@ void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_bint,
                  const MultidimArray<int> &mask, int volume_no,
                  int grid_type);
+
 /** Symmetrizes a simple grid with P4212 symmetry
 */
 void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
@@ -350,6 +350,7 @@ void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
                      const Matrix1D<double> &eprm_bint,
                      const MultidimArray<int> &mask, int volume_no,
                      int grid_type);
+
 /** Symmetrizes a simple grid with P6 symmetry
 */
 void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
@@ -357,7 +358,5 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
                  const Matrix1D<double> &eprm_bint,
                  const MultidimArray<int> &mask, int volume_no,
                  int grid_type);
-
-
 //@}
 #endif

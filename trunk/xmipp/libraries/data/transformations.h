@@ -41,18 +41,7 @@
 
 /// @defgroup GeometricalTransformations Geometrical transformations
 /// @ingroup DataLibrary
-
-/** Creates a rotational matrix (3x3) for images
- * @ingroup GeometricalTransformations
- *
- * The rotation angle is in degrees.
- *
- * @code
- * m = rotation2DMatrix(60);
- * @endcode
- */
-Matrix2D< double > rotation2DMatrix(double ang);
-
+//@{
 /** Creates a rotational matrix (3x3) for images
  * @ingroup GeometricalTransformations
  *
@@ -63,7 +52,7 @@ Matrix2D< double > rotation2DMatrix(double ang);
  *  rotation2DMatrix(60,m);
  * @endcode
  */
-void rotation2DMatrix(double ang, Matrix2D< double > &m);
+void rotation2DMatrix(double ang, Matrix2D< double > &m, bool homogeneous=true);
 
 /** Creates a translational matrix (3x3) for images
  * @ingroup GeometricalTransformations
@@ -76,7 +65,7 @@ void rotation2DMatrix(double ang, Matrix2D< double > &m);
  * m = translation2DMatrix(vectorR2(1, 0));
  * @endcode
  */
-Matrix2D< double > translation2DMatrix(const Matrix1D< double > &v);
+void translation2DMatrix(const Matrix1D< double > &v, Matrix2D< double > &m);
 
 /** Creates a rotational matrix (4x4) for volumes around system axis
  * @ingroup GeometricalTransformations
@@ -110,7 +99,8 @@ Matrix2D< double > translation2DMatrix(const Matrix1D< double > &v);
  * m = rotation3DMatrix(60, 'X');
  * @endcode
  */
-Matrix2D< double > rotation3DMatrix(double ang, char axis);
+void rotation3DMatrix(double ang, char axis, Matrix2D< double > &m,
+		bool homogeneous=true);
 
 /** Creates a rotational matrix (4x4) for volumes around any axis
  * @ingroup GeometricalTransformations
@@ -123,7 +113,8 @@ Matrix2D< double > rotation3DMatrix(double ang, char axis);
  * m = rotation3DMatrix(60, vectorR3(1, 1, 1));
  * @endcode
  */
-Matrix2D< double > rotation3DMatrix(double ang, const Matrix1D< double >& axis);
+void rotation3DMatrix(double ang, const Matrix1D< double >& axis, Matrix2D< double > &m,
+		bool homogeneous=true);
 
 /** Matrix which transforms the given axis into Z
  * @ingroup GeometricalTransformations
@@ -140,7 +131,7 @@ Matrix2D< double > rotation3DMatrix(double ang, const Matrix1D< double >& axis);
  * The returned matrix is such that A*axis=Z, where Z and axis are column
  * vectors.
  */
-Matrix2D< double > alignWithZ(const Matrix1D< double >& axis);
+void alignWithZ(const Matrix1D< double >& axis, Matrix2D< double > &m, bool homogeneous=true);
 
 /** Creates a translational matrix (4x4) for volumes
  * @ingroup GeometricalTransformations
@@ -153,7 +144,7 @@ Matrix2D< double > alignWithZ(const Matrix1D< double >& axis);
  * m = translation3DMatrix(vectorR3(0, 0, 2));
  * @endcode
  */
-Matrix2D< double > translation3DMatrix(const Matrix1D< double >& v);
+void translation3DMatrix(const Matrix1D< double >& v, Matrix2D< double > &m);
 
 /** Creates a scaling matrix (4x4) for volumes
  * @ingroup GeometricalTransformations
@@ -161,8 +152,8 @@ Matrix2D< double > translation3DMatrix(const Matrix1D< double >& v);
  * The scaling factors for the different axis must be given as a vector. So
  * that, XX(sc)=scale for X axis, YY(sc)=...
  */
-Matrix2D< double > scale3DMatrix(const Matrix1D< double >& sc);
-
+void scale3DMatrix(const Matrix1D< double >& sc, Matrix2D< double > &m,
+		bool homogeneous=true);
 
 /** Applies a geometrical transformation.
  * @ingroup GeometricalTransformations
@@ -261,7 +252,7 @@ void applyGeometry(int SplineDegree,
 
     if (A.isIdentity())
     {
-    	V2=V1;
+        V2=V1;
         return;
     }
 
@@ -689,15 +680,12 @@ void applyGeometry(int SplineDegree,
                         else
                         {
                             // B-spline interpolation
-
                             dAkij(V2, k, i, j) =
                                 (T) Bcoeffs.interpolatedElementBSpline3D(xp, yp, zp,SplineDegree);
-
                         }
                     }
                     else
                         dAkij(V2, k, i, j) = outside;
-
 
                     // Compute new point inside input image
                     xp += Aref(0, 0);
@@ -706,7 +694,6 @@ void applyGeometry(int SplineDegree,
                 }
             }
     }
-
 }
 
 /** Applies a geometrical transformation and overwrites the input matrix.
@@ -738,7 +725,6 @@ void selfApplyGeometry(int SplineDegree,
                        const Matrix2D<double> &A, bool inv,
                        bool wrap, std::complex<double> outside);
 
-
 /** Produce spline coefficients.
  * @ingroup  GeometricalTransformations
  *
@@ -766,9 +752,7 @@ void produceSplineCoefficients(int SplineDegree,
                       MirrorOffBounds, DBL_EPSILON, &Status);
     if (Status)
         REPORT_ERROR(1200, "Error in produceSplineCoefficients...");
-
 }
-
 
 // Special case for complex arrays
 void produceSplineCoefficients(int SplineDegree,
@@ -776,7 +760,7 @@ void produceSplineCoefficients(int SplineDegree,
                                const MultidimArray< std::complex<double> > &V1);
 
 /** Produce image from B-spline coefficients.
- * @ingroup  GeometricalTransformations
+ * @ingroup GeometricalTransformations
  * Note that the coeffs and img are only single images!
  */
 void produceImageFromSplineCoefficients(int SplineDegree,
@@ -804,17 +788,16 @@ void rotate(int SplineDegree,
     Matrix2D< double > tmp;
     if (V1.getDim()==2)
     {
-        tmp = rotation2DMatrix(ang);
+        rotation2DMatrix(ang,tmp);
     }
     else if (V1.getDim()==3)
     {
-        tmp = rotation3DMatrix(ang, axis);
+        rotation3DMatrix(ang, axis, tmp);
     }
     else
         REPORT_ERROR(1,"rotate ERROR: rotate only valid for 2D or 3D arrays");
 
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside);
-
 }
 
 /** Rotate an array around a given system axis.
@@ -831,7 +814,6 @@ void selfRotate(int SplineDegree,
     MultidimArray<T> aux = V1;
     rotate(SplineDegree, V1, aux, ang, axis, wrap, outside);
 }
-
 
 /** Translate a array.
  * @ingroup GeometricalTransformations
@@ -853,9 +835,9 @@ void translate(int SplineDegree,
 {
     Matrix2D< double > tmp;
     if (V1.getDim()==2)
-        tmp = translation2DMatrix(v);
+        translation2DMatrix(v, tmp);
     else if (V1.getDim()==3)
-        tmp = translation3DMatrix(v);
+        translation3DMatrix(v, tmp);
     else
         REPORT_ERROR(1,"translate ERROR: translate only valid for 2D or 3D arrays");
 
@@ -949,7 +931,6 @@ void scaleToSize(int SplineDegree,
         REPORT_ERROR(1,"scaleToSize ERROR: scaleToSize only valid for 2D or 3D arrays");
 
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, WRAP, (T)0);
-
 }
 
 /** Scales to a new size.
@@ -959,11 +940,11 @@ void scaleToSize(int SplineDegree,
  */
 template<typename T>
 void selfScaleToSize(int SplineDegree,
-                 MultidimArray<T> &V1,
-                 int Xdim, int Ydim, int Zdim = 1)
+                     MultidimArray<T> &V1,
+                     int Xdim, int Ydim, int Zdim = 1)
 {
-	MultidimArray<T> aux = V1;
-	scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim);
+    MultidimArray<T> aux = V1;
+    scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim);
 }
 
 // Special case for complex arrays
@@ -974,8 +955,8 @@ void scaleToSize(int SplineDegree,
 
 // Special case for complex arrays
 void selfScaleToSize(int SplineDegree,
-                 MultidimArray< std::complex<double> > &V1,
-                 int Xdim, int Ydim, int Zdim = 1);
+                     MultidimArray< std::complex<double> > &V1,
+                     int Xdim, int Ydim, int Zdim = 1);
 
 /** Reduce the nth volume by 2 using a BSpline pyramid.
  * @ingroup GeometricalTransformations
@@ -996,7 +977,6 @@ void pyramidReduce(int SplineDegree,
     }
 
     produceImageFromSplineCoefficients(SplineDegree, V2, coeffs);
-
 }
 
 /** Reduce the nth volume by 2 using a BSpline pyramid.
@@ -1006,11 +986,11 @@ void pyramidReduce(int SplineDegree,
  */
 template<typename T>
 void selfPyramidReduce(int SplineDegree,
-                   MultidimArray<T> &V1,
-                   int levels = 1)
+                       MultidimArray<T> &V1,
+                       int levels = 1)
 {
-	MultidimArray<T> aux = V1;
-	pyramidReduce(SplineDegree, V1, aux, levels);
+    MultidimArray<T> aux = V1;
+    pyramidReduce(SplineDegree, V1, aux, levels);
 }
 
 /** Expand the nth volume by 2 using a BSpline pyramid.
@@ -1042,11 +1022,11 @@ void pyramidExpand(int SplineDegree,
  */
 template<typename T>
 void selfPyramidExpand(int SplineDegree,
-                   MultidimArray<T> &V1,
-                   int levels = 1)
+                       MultidimArray<T> &V1,
+                       int levels = 1)
 {
-	MultidimArray<T> aux = V1;
-	pyramidExpand(SplineDegree, V1, aux, levels);
+    MultidimArray<T> aux = V1;
+    pyramidExpand(SplineDegree, V1, aux, levels);
 }
 
 /** Reduce a set of B-spline coefficients.
@@ -1153,8 +1133,6 @@ void expandBSpline(int SplineDegree,
     }
     else
         REPORT_ERROR(1,"expandBSpline ERROR: only valid for 2D or 3D arrays");
-
-
 }
 
 /** Does a radial average of a 2D/3D image, around the voxel where is the origin.
@@ -1258,36 +1236,36 @@ void radialAverage(const MultidimArray< T >& m,
     radial_mean(i) /= (T) radial_count(i);
 }
 
-    /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
-	 * that this image is a set of B-spline coefficients. And making the diff
-	 * of x, such->  V=sum(Coef diff(Bx) By Bz)
-	 * ��Only for BSplines of degree 3!!
-	 * @ingroup VolumesMemory
-	 *
-	 * (x,y,z) are in logical coordinates.
-	 */
-	double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, double y, double z,
-								   int SplineDegree = 3);
+/** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
+* that this image is a set of B-spline coefficients. And making the diff
+* of x, such->  V=sum(Coef diff(Bx) By Bz)
+* Only for BSplines of degree 3!!
+* @ingroup GeometricalTransformations
+*
+* (x,y,z) are in logical coordinates.
+*/
+double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, double y, double z,
+                                       int SplineDegree = 3);
 
-	/** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
-	 * that this image is a set of B-spline coefficients. And making the diff
-	 * of y, such->  V=sum(Coef Bx diff(By) Bz)
-	 * ��Only for BSplines of degree 3!!
-	 * @ingroup VolumesMemory
-	 *
-	 * (x,y,z) are in logical coordinates.
-	 */
-    double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, double y, double z,
-								   int SplineDegree = 3);
-	/** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
-	 * that this image is a set of B-spline coefficients. And making the diff
-	 * of z, such->  V=sum(Coef Bx By diff(Bz))
-	 * ��Only for BSplines of degree 3!!
-	 * @ingroup VolumesMemory
-	 *
-	 * (x,y,z) are in logical coordinates.
-	 */
-	double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, double y, double z,
-								   int SplineDegree = 3);
-
+/** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
+ * that this image is a set of B-spline coefficients. And making the diff
+ * of y, such->  V=sum(Coef Bx diff(By) Bz)
+ * Only for BSplines of degree 3!!
+ * @ingroup GeometricalTransformations
+ *
+ * (x,y,z) are in logical coordinates.
+ */
+double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, double y, double z,
+                                       int SplineDegree = 3);
+/** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
+ * that this image is a set of B-spline coefficients. And making the diff
+ * of z, such->  V=sum(Coef Bx By diff(Bz))
+ * Only for BSplines of degree 3!!
+ * @ingroup GeometricalTransformations
+ *
+ * (x,y,z) are in logical coordinates.
+ */
+double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, double y, double z,
+                                       int SplineDegree = 3);
+//@}
 #endif

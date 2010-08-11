@@ -246,7 +246,7 @@ double evaluateSymmetry(double *p, void *prm)
     for (int n = 1; n < rot_sym; n++)
     {
         Matrix2D<double> sym_matrix;
-        sym_matrix = rotation3DMatrix(360.0 / rot_sym * n, sym_axis);
+        rotation3DMatrix(360.0 / rot_sym * n, sym_axis, sym_matrix);
         if (useSplines)
             applyGeometry(BSPLINE3, volume_aux(), volume(), sym_matrix,
                                  IS_NOT_INV, DONT_WRAP);

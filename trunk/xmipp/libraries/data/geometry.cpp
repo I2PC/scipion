@@ -52,7 +52,7 @@ void Uproject_to_plane(const Matrix1D<double> &point,
 void Uproject_to_plane(const Matrix1D<double> &r,
                        double rot, double tilt, double psi, Matrix1D<double> &result)
 {
-    static Matrix2D<double> euler(3, 3);
+    Matrix2D<double> euler(3, 3);
     Euler_angles2matrix(rot, tilt, psi, euler);
     Uproject_to_plane(r, euler, result);
 }
@@ -141,8 +141,8 @@ void least_squares_plane_fit(const std::vector<fit_point> & IN_points,
 }
 
 void least_squares_line_fit(const std::vector<fit_point2D> & IN_points,
-                             double &line_a,
-                             double &line_b)
+                            double &line_a,
+                            double &line_b)
 {
 
     double  sumx = 0.;
@@ -470,13 +470,20 @@ int line_plane_intersection(const Matrix1D<double> normal_plane,
 
 /* Euler angles --> matrix ------------------------------------------------- */
 void Euler_angles2matrix(double alpha, double beta, double gamma,
-                         Matrix2D<double> &A)
+                         Matrix2D<double> &A, bool homogeneous)
 {
     double ca, sa, cb, sb, cg, sg;
     double cc, cs, sc, ss;
 
-    if (MAT_XSIZE(A) != 3 || MAT_YSIZE(A) != 3)
-        A.resize(3, 3);
+    if (homogeneous)
+    {
+        A.initZeros(4,4);
+        MAT_ELEM(A,3,3)=1;
+    }
+    else
+        if (MAT_XSIZE(A) != 3 || MAT_YSIZE(A) != 3)
+            A.resize(3, 3);
+
     alpha = DEG2RAD(alpha);
     beta  = DEG2RAD(beta);
     gamma = DEG2RAD(gamma);
@@ -505,11 +512,11 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
 
 /* Euler distance ---------------------------------------------------------- */
 double Euler_distanceBetweenMatrices(const Matrix2D<double> &E1,
-    const Matrix2D<double> &E2)
+                                     const Matrix2D<double> &E2)
 {
     double retval=0;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(E1)
-        retval+=E1(i,j)*E2(i,j);
+    retval+=E1(i,j)*E2(i,j);
     return retval/3.0;
 }
 
@@ -560,8 +567,8 @@ void Euler_direction2angles(Matrix1D<double> &v0,
     if (fabs((cb)) > 0.999847695)/*one degree */
     {
         std::cerr << "\nWARNING: Routine Euler_direction2angles is not reliable\n"
-                     "for small tilt angles. Up to 0.001 deg it should be OK\n"
-                     "for most applications but you never know";
+        "for small tilt angles. Up to 0.001 deg it should be OK\n"
+        "for most applications but you never know";
     }
 
     if (fabs((cb - 1.)) < FLT_EPSILON)
@@ -634,7 +641,7 @@ void Euler_direction2angles(Matrix1D<double> &v0,
 #define CHECK
 //#define DEBUG
 void Euler_matrix2angles(const Matrix2D<double> &A, double &alpha,
-    	    	    	 double &beta, double &gamma)
+                         double &beta, double &gamma)
 {
     double abs_sb, sign_sb;
 
@@ -857,26 +864,22 @@ void Euler_apply_transf(const Matrix2D<double> &L,
 }
 
 /* Rotate (3D) MultidimArray with 3 Euler angles ------------------------------------- */
-Matrix2D<double> Euler_rotation3DMatrix(double rot, double tilt, double psi)
+void Euler_rotation3DMatrix(double rot, double tilt, double psi, Matrix2D<double> &result)
 {
-    Matrix2D<double> temp;
-    // Sjors 4aug05: this minus sign seems very odd....
-    //Euler_angles2matrix(rot,-tilt,psi,temp);
-    Euler_angles2matrix(rot, tilt, psi, temp);
-    temp.resize(4, 4);
-    temp(3, 3) = 1;
-    return temp;
+    Euler_angles2matrix(rot, tilt, psi, result, true);
 }
 
 void Euler_rotate(const MultidimArray<double> &V, double rot, double tilt, double psi,
                   MultidimArray<double> &result)
 {
-    applyGeometry(1, result, V, Euler_rotation3DMatrix(rot, tilt, psi), IS_NOT_INV, DONT_WRAP);
+	Matrix2D<double> R;
+	Euler_rotation3DMatrix(rot, tilt, psi,R);
+    applyGeometry(1, result, V, R, IS_NOT_INV, DONT_WRAP);
 }
 
 
 void computeCircleAroundE(const Matrix2D<double> &E,
-    double angCircle, double angStep, std::vector<double> &outputEulerAngles)
+                          double angCircle, double angStep, std::vector<double> &outputEulerAngles)
 {
     outputEulerAngles.clear();
 
@@ -886,17 +889,16 @@ void computeCircleAroundE(const Matrix2D<double> &E,
     E.getRow(2,projectionDirection);
     Matrix2D<double> newEt;
     newEt=E.transpose();
-    Matrix2D<double> rotStep=rotation3DMatrix(angCircle,perpendicular);
-    Matrix2D<double> sampling=rotation3DMatrix(angStep,projectionDirection);
-    rotStep.resize(3,3);
-    sampling.resize(3,3);
-    
+    Matrix2D<double> rotStep, sampling;
+    rotation3DMatrix(angCircle,perpendicular,rotStep,false);
+    rotation3DMatrix(angStep,projectionDirection,sampling,false);
+
     // Now rotate
     newEt=rotStep*newEt;
     for (double i=0; i<360; i+=angStep)
     {
         newEt=sampling*newEt;
-        
+
         // Normalize
         for (int c=0; c<3; c++)
         {
@@ -906,7 +908,7 @@ void computeCircleAroundE(const Matrix2D<double> &E,
             newEt.setCol(c,aux);
         }
         Matrix2D<double> newE=newEt.transpose();
-        
+
         double newrot, newtilt, newpsi;
         Euler_matrix2angles(newE,newrot,newtilt,newpsi);
         outputEulerAngles.push_back(newrot);

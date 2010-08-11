@@ -255,8 +255,8 @@ struct fit_point2D
  * where w is a weighting factor. Set it to 1 if you do not want to use it
  */
 void least_squares_line_fit(const std::vector< fit_point2D >& IN_points,
-                             double& line_A,
-                             double& line_B);
+                            double& line_A,
+                            double& line_B);
 
 /** Bspline model class
  * @ingroup GeometricalOperations
@@ -576,7 +576,8 @@ int line_plane_intersection(const Matrix1D< double > normal_plane,
  * See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/EulerAngles for a
  * description of the Euler angles.
  */
-void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A);
+void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A,
+                         bool homogeneous=false);
 
 /** Distance between two Euler matrices.
  * @ingroup EulerOperations
@@ -584,7 +585,7 @@ void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A);
  * The distance is defined as 1/3*(X1.X2 + Y1.Y2 + Z1.Z2)
  */
 double Euler_distanceBetweenMatrices(const Matrix2D<double> &E1,
-    const Matrix2D<double> &E2);
+                                     const Matrix2D<double> &E2);
 
 /** Angles after compresion
  * @ingroup EulerOperations
@@ -849,7 +850,8 @@ void Euler_apply_transf(const Matrix2D< double >& L,
  * Matrix2D< float > euler = Euler_rotation3DMatrix(60, 30, 60);
  * @endcode
  */
-Matrix2D< double > Euler_rotation3DMatrix(double rot, double tilt, double psi);
+void Euler_rotation3DMatrix(double rot, double tilt, double psi,
+                            Matrix2D<double> &result);
 
 /** Rotate a volume after 3 Euler angles
  * @ingroup EulerOperations
@@ -874,7 +876,7 @@ void Euler_rotate(const MultidimArray< double >& V,
  * (newrot1,newtilt1,newpsi1,newrot2,newtilt2,newpsi2,...)
  */
 void computeCircleAroundE(const Matrix2D<double> &E,
-    double angCircle, double angStep, std::vector<double> &outputEulerAngles);
+                          double angCircle, double angStep, std::vector<double> &outputEulerAngles);
 
 /// @defgroup Intersections Intersections
 /// @ingroup Geometry

@@ -37,7 +37,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-
 extern int bestPrecision(float F, int _width);
 extern std::string floatToString(float F, int _width, int _prec);
 
@@ -1485,7 +1484,7 @@ public:
      * than the argument
      */
     template <typename T1>
-    bool sameShape(const MultidimArray<T1>& op) const
+    inline bool sameShape(const MultidimArray<T1>& op) const
     {
         return (NSIZE(*this) == NSIZE(op) &&
                 XSIZE(*this) == XSIZE(op) &&
@@ -1768,7 +1767,7 @@ public:
     * val = V(0, 0, -2, 1);
     * @endcode
     */
-    T& operator()(unsigned long n, int k, int i, int j) const
+    inline T& operator()(unsigned long n, int k, int i, int j) const
     {
         return NZYX_ELEM(*this, n, k, i, j);
     }
@@ -1786,7 +1785,7 @@ public:
     * val = V(0, -2, 1);
     * @endcode
     */
-    T& operator()(int k, int i, int j) const
+    inline T& operator()(int k, int i, int j) const
     {
         return A3D_ELEM(*this, k, i, j);
     }
@@ -1797,7 +1796,7 @@ public:
     * Same function as operator() but with a name. Needed by swig.
     *
     */
-    T getVoxel(int k, int i, int j) const
+    inline T getVoxel(int k, int i, int j) const
     {
         return A3D_ELEM(*this, k, i, j);
     }
@@ -1808,7 +1807,7 @@ public:
     * Same function as operator() but with a name. Needed by swig.
     *
     */
-    void setVoxel(int k, int i, int j, T newval)
+    inline void setVoxel(int k, int i, int j, T newval)
     {
         A3D_ELEM(*this, k, i, j)=newval;
     }
@@ -1827,7 +1826,7 @@ public:
      * val = m(-2, 1);
      * @endcode
      */
-    T& operator()(int i, int j) const
+    inline T& operator()(int i, int j) const
     {
         return A2D_ELEM(*this, i, j);
     }
@@ -1845,7 +1844,7 @@ public:
      * val = v(-2);
      * @endcode
      */
-    T& operator()(int i) const
+    inline T& operator()(int i) const
     {
         return A1D_ELEM(*this, i);
     }
@@ -1998,7 +1997,6 @@ public:
         v.resize(ydim);
         for (int i = 0; i < ydim; i++)
             v(i) = (*this)(i, j);
-
     }
 
     /** Set Column
@@ -2812,11 +2810,11 @@ public:
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
-            if (*ptr < minval)
-                minval = static_cast< double >(*ptr);
-
-            if (*ptr > maxval)
-                maxval = static_cast< double >(*ptr);
+        	T val=*ptr;
+            if (val < minval)
+                minval = static_cast< double >(val);
+            else if (val > maxval)
+                maxval = static_cast< double >(val);
         }
     }
 
@@ -2859,9 +2857,9 @@ public:
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
-            avg += static_cast< double >(*ptr);
-            stddev += static_cast< double >(*ptr) *
-                      static_cast< double >(*ptr);
+        	double val=static_cast< double >(*ptr);
+            avg += val;
+            stddev += val * val;
         }
 
         avg /= NZYXSIZE(*this);
@@ -2894,15 +2892,15 @@ public:
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
-            avg += static_cast< double >(*ptr);
-            stddev += static_cast< double >(*ptr) *
-                      static_cast< double >(*ptr);
+        	T Tval=*ptr;
+        	double val=static_cast< double >(Tval);
+            avg += val;
+            stddev += val * val;
 
-            if (*ptr > maxval)
-                maxval = *ptr;
-
-            if (*ptr < minval)
-                minval = *ptr;
+            if (Tval > maxval)
+                maxval = Tval;
+            else if (Tval < minval)
+                minval = Tval;
         }
 
         avg /= NZYXSIZE(*this);
@@ -2980,10 +2978,7 @@ public:
             return DIRECT_MULTIDIM_ELEM(*this,0);
 
         // Initialise data
-        MultidimArray< double > temp;
-        temp.resize(*this);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*this)
-        DIRECT_MULTIDIM_ELEM(temp,n)=DIRECT_MULTIDIM_ELEM(*this,n);
+        MultidimArray< double > temp(*this);
 
         // Sort indexes
         double* temp_array = MULTIDIM_ARRAY(temp)-1;
@@ -3249,8 +3244,8 @@ public:
             REPORT_ERROR(1007,
                          (std::string) "Array_by_array: different shapes (" +
                          operation + ")");
-
-        result.resize(op1);
+        if (!result.sameShape(op1))
+            result.resize(op1);
         coreArrayByArray(op1, op2, result, operation);
     }
 
@@ -3388,7 +3383,8 @@ public:
                                      MultidimArray<T>& result,
                                      char operation)
     {
-        result.resize(op1);
+        if (!result.sameShape(op1))
+            result.resize(op1);
         coreArrayByScalar(op1, op2, result, operation);
     }
 
@@ -3535,7 +3531,8 @@ public:
                                      MultidimArray<T>& result,
                                      char operation)
     {
-        result.resize(op2);
+        if (!result.sameShape(op2))
+            result.resize(op2);
         coreScalarByArray(op1, op2, result, operation);
     }
 
@@ -3614,7 +3611,8 @@ public:
     template <typename T1>
     void initZeros(const MultidimArray<T1>& op)
     {
-        resize(op);
+        if (!sameShape(op))
+            resize(op);
         initConstant(static_cast< T >(0));
     }
 
@@ -3628,18 +3626,19 @@ public:
      * v.initZeros();
      * @endcode
      */
-    void initZeros()
+    inline void initZeros()
     {
-        initConstant(static_cast< T >(0));
+        memset(data,0,MULTIDIM_SIZE(*this)*sizeof(T));
     }
 
     /** Initialize to zeros with a given size.
      * @ingroup Initialization
      */
-    void initZeros(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
+    inline void initZeros(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
-        resize(Ndim, Zdim,Ydim,Xdim);
-        initZeros();
+    	if (xdim!=Xdim || ydim!=Ydim || zdim!=Zdim || ndim!=Ndim)
+    		resize(Ndim, Zdim,Ydim,Xdim);
+    	memset(data,0,MULTIDIM_SIZE(*this)*sizeof(T));
     }
 
     /** Initialize to zeros with a given size.
@@ -4617,11 +4616,9 @@ public:
     {
         if (&op1 != this)
         {
-            resize(op1);
-            T *ptr;
-            unsigned long int n;
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(op1,n,ptr)
-            DIRECT_MULTIDIM_ELEM(*this,n) = *ptr;
+        	if (!sameShape(op1))
+        		resize(op1);
+        	memcpy(data,op1.data,MULTIDIM_SIZE(op1)*sizeof(T));
         }
         return *this;
     }

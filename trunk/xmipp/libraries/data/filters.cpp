@@ -59,7 +59,7 @@ void substract_background_plane(MultidimArray<double> &I)
 
     // Now substract the plane
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
-        A2D_ELEM(I, i, j) -= x(0) * i + x(1) * j + x(2);
+    A2D_ELEM(I, i, j) -= x(0) * i + x(1) * j + x(2);
 }
 
 /* Substract background ---------------------------------------------------- */
@@ -71,22 +71,30 @@ void substract_background_rolling_ball(MultidimArray<double> &I, int radius)
     // Build the ball
     int arcTrimPer;
     int shrinkFactor;
-    if (radius<=10) {
+    if (radius<=10)
+    {
         shrinkFactor = 1;
         arcTrimPer = 24; // trim 24% in x and y
-    } else if (radius<=30) {
+    }
+    else if (radius<=30)
+    {
         shrinkFactor = 2;
         arcTrimPer = 24; // trim 24% in x and y
-    } else if (radius<=100) {
+    }
+    else if (radius<=100)
+    {
         shrinkFactor = 4;
         arcTrimPer = 32; // trim 32% in x and y
-    } else {
+    }
+    else
+    {
         shrinkFactor = 8;
         arcTrimPer = 40; // trim 40% in x and y
     }
-    
+
     double smallballradius = radius/shrinkFactor;
-    if (smallballradius<1) smallballradius = 1;
+    if (smallballradius<1)
+        smallballradius = 1;
     double r2 = smallballradius*smallballradius;
     int xtrim = (int)(arcTrimPer*smallballradius)/100; // only use a patch of the rolling ball
     int halfWidth = ROUND(smallballradius - xtrim);
@@ -105,11 +113,14 @@ void substract_background_rolling_ball(MultidimArray<double> &I, int radius)
     int sYdim = (YSIZE(I)+shrinkFactor-1)/shrinkFactor;
     MultidimArray<double> shrinkI(sYdim,sXdim);
     shrinkI.setXmippOrigin();
-    for (int ySmall=0; ySmall<sYdim; ySmall++) {
-        for (int xSmall=0; xSmall<sXdim; xSmall++) {
+    for (int ySmall=0; ySmall<sYdim; ySmall++)
+    {
+        for (int xSmall=0; xSmall<sXdim; xSmall++)
+        {
             double minVal = 1e38;
             for (int j=0, y=shrinkFactor*ySmall; j<shrinkFactor&&y<YSIZE(I); j++, y++)
-                for (int k=0, x=shrinkFactor*xSmall; k<shrinkFactor&&x<XSIZE(I); k++, x++) {
+                for (int k=0, x=shrinkFactor*xSmall; k<shrinkFactor&&x<XSIZE(I); k++, x++)
+                {
                     double thispixel = DIRECT_A2D_ELEM(I,y,x);
                     if (thispixel<minVal)
                         minVal = thispixel;
@@ -117,44 +128,53 @@ void substract_background_rolling_ball(MultidimArray<double> &I, int radius)
             DIRECT_A2D_ELEM(shrinkI,ySmall,xSmall) = minVal;
         }
     }
-    
+
     // Now roll the ball
     radius=ballWidth/2;
     MultidimArray<double> Irolled;
     Irolled.resize(shrinkI);
     Irolled.initConstant(-500);
-    for (int yb=-radius; yb<YSIZE(shrinkI)+radius; yb++) {
+    for (int yb=-radius; yb<YSIZE(shrinkI)+radius; yb++)
+    {
         // Limits of the ball
         int y0 = yb-radius;
-        if (y0 < 0) y0 = 0;
+        if (y0 < 0)
+            y0 = 0;
         int y0b = y0-yb+radius; //y coordinate in the ball corresponding to y0
         int yF = yb+radius;
-        if (yF>=YSIZE(shrinkI)) yF = YSIZE(shrinkI)-1;
+        if (yF>=YSIZE(shrinkI))
+            yF = YSIZE(shrinkI)-1;
 
-        for (int xb=-radius; xb<XSIZE(shrinkI)+radius; xb++) {
+        for (int xb=-radius; xb<XSIZE(shrinkI)+radius; xb++)
+        {
             // Limits of the ball
             int x0 = xb-radius;
-            if (x0 < 0) x0 = 0;
+            if (x0 < 0)
+                x0 = 0;
             int x0b = x0-xb+radius;
             int xF = xb+radius;
-            if (xF>=XSIZE(shrinkI)) xF = XSIZE(shrinkI)-1;
+            if (xF>=XSIZE(shrinkI))
+                xF = XSIZE(shrinkI)-1;
 
             double z = 1e38;
             for (int yp=y0, ybp=y0b; yp<=yF; yp++,ybp++)
-                for (int xp=x0, xbp=x0b; xp<=xF; xp++, xbp++) {
+                for (int xp=x0, xbp=x0b; xp<=xF; xp++, xbp++)
+                {
                     double zReduced=DIRECT_A2D_ELEM(shrinkI,yp,xp) -
-                        DIRECT_A2D_ELEM(ball,ybp,xbp);
-                    if (z > zReduced) z = zReduced;
+                                    DIRECT_A2D_ELEM(ball,ybp,xbp);
+                    if (z > zReduced)
+                        z = zReduced;
                 }
             for (int yp=y0, ybp=y0b; yp<=yF; yp++,ybp++)
-                for (int xp=x0, xbp=x0b; xp<=xF; xp++, xbp++) {
+                for (int xp=x0, xbp=x0b; xp<=xF; xp++, xbp++)
+                {
                     double zMin = z + DIRECT_A2D_ELEM(ball,ybp,xbp);
                     if (DIRECT_A2D_ELEM(Irolled,yp,xp) < zMin)
                         DIRECT_A2D_ELEM(Irolled,yp,xp) = zMin;
                 }
         }
     }
-    
+
     // Now rescale the background
     MultidimArray<double> bgEnlarged;
     scaleToSize(LINEAR, bgEnlarged, Irolled, XSIZE(I), YSIZE(I));
@@ -164,128 +184,131 @@ void substract_background_rolling_ball(MultidimArray<double> &I, int radius)
 
 /* Detect background ------------------------------------------------------ */
 void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &mask,
-	double alpha,double &final_mean)
+                       double alpha,double &final_mean)
 {
 
-	// 2.1.-Background detection------------------------------------------
-		MultidimArray<double> bg; // We create the volumen with
-		bg.resize(vol);		  // -1:not visited 0:mol 1:background
-		bg.initConstant(-1);  // -2:in the list
+    // 2.1.-Background detection------------------------------------------
+    MultidimArray<double> bg; // We create the volumen with
+    bg.resize(vol);    // -1:not visited 0:mol 1:background
+    bg.initConstant(-1);  // -2:in the list
 
-		// Ponemos las seis caras de esta variable como visitadas e inicializamos
-		// la cola de p�xeles por visitar
-		std::queue<int> list_for_compute;  // Lista del modo [x1,y1,z1,...,xi,yi,zi]
-										// que contiene los pixeles por procesar
-		std::vector<double> bg_values; // Vector con los valores del background
-		int xdim=XSIZE(bg);
-		int ydim=YSIZE(bg);
-		int zdim=ZSIZE(bg);
-		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(bg)
-		{
-			if(j==0 || j==xdim-1 || i==0 || i==ydim-1 || k==0 || k==zdim-1)
-			{   // Visited coord
-				DIRECT_A3D_ELEM(bg,k,i,j)=1;
-				// We introduce the values of the background
-				bg_values.push_back(DIRECT_A3D_ELEM(vol,k,i,j));
+    // Ponemos las seis caras de esta variable como visitadas e inicializamos
+    // la cola de p�xeles por visitar
+    std::queue<int> list_for_compute;  // Lista del modo [x1,y1,z1,...,xi,yi,zi]
+    // que contiene los pixeles por procesar
+    std::vector<double> bg_values; // Vector con los valores del background
+    int xdim=XSIZE(bg);
+    int ydim=YSIZE(bg);
+    int zdim=ZSIZE(bg);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(bg)
+    {
+        if(j==0 || j==xdim-1 || i==0 || i==ydim-1 || k==0 || k==zdim-1)
+        {   // Visited coord
+            DIRECT_A3D_ELEM(bg,k,i,j)=1;
+            // We introduce the values of the background
+            bg_values.push_back(DIRECT_A3D_ELEM(vol,k,i,j));
 
-			}
-			if( (j==1 || j==xdim-2) && (i!=0) && (i!=ydim-1) && (k!=0) && (k!=zdim-1) )
-			{   // Coord for compute for x
-				list_for_compute.push(j);
-				list_for_compute.push(i);
-				list_for_compute.push(k);
-			}
-			if( (i==1 || i==ydim-2) && (j>1) && (j<xdim-2) && (k!=0) && (k!=zdim-1) )
-			{   // Coord for compute for y
-				list_for_compute.push(j);
-				list_for_compute.push(i);
-				list_for_compute.push(k);
-			}
-			if( (k==1 || k==zdim-2) && (j>1) && (j<xdim-2) && (i>1) && (i<ydim-2) )
-			{   // Coord for compute for y
-				list_for_compute.push(j);
-				list_for_compute.push(i);
-				list_for_compute.push(k);
-			}
-		} // end of FOR_ALL_ELEMENTS
+        }
+        if( (j==1 || j==xdim-2) && (i!=0) && (i!=ydim-1) && (k!=0) && (k!=zdim-1) )
+        {   // Coord for compute for x
+            list_for_compute.push(j);
+            list_for_compute.push(i);
+            list_for_compute.push(k);
+        }
+        if( (i==1 || i==ydim-2) && (j>1) && (j<xdim-2) && (k!=0) && (k!=zdim-1) )
+        {   // Coord for compute for y
+            list_for_compute.push(j);
+            list_for_compute.push(i);
+            list_for_compute.push(k);
+        }
+        if( (k==1 || k==zdim-2) && (j>1) && (j<xdim-2) && (i>1) && (i<ydim-2) )
+        {   // Coord for compute for y
+            list_for_compute.push(j);
+            list_for_compute.push(i);
+            list_for_compute.push(k);
+        }
+    } // end of FOR_ALL_ELEMENTS
 
-		// We work until the list_for_compute is empty
-		int n=250; //each 250 pixels renew stats
-		int cont=250; //We start here for compute stat for first time
-		double A; // A and B are numbers such the interval of confidence is [A,B]
-		double B; //
-		float z=icdf_gauss(1-alpha/2);
-		while(!list_for_compute.empty())
-		{
+    // We work until the list_for_compute is empty
+    int n=250; //each 250 pixels renew stats
+    int cont=250; //We start here for compute stat for first time
+    double A; // A and B are numbers such the interval of confidence is [A,B]
+    double B; //
+    float z=icdf_gauss(1-alpha/2);
+    while(!list_for_compute.empty())
+    {
 
-			//We compute stat when is needed
-			if(cont==n)
-			{
-				// Calculamos los estad�sticos
-				double avg, stddev, minval, maxval;
-				computeStats(bg_values,avg,stddev,minval,maxval);
-				final_mean=avg;
-				// Calculamos el intervalo de confianza
-				A=avg-(z*stddev);
-				B=avg+(z*stddev);
-				cont=0; // aumentamos el contador
-				//std::cout << "Pulsa una tecla\n";
-				//		char c; std::cin >> c;
-			} // end of if
-			// Now we start to take coords from the list_for_compute
-			int x_coord=list_for_compute.front(); list_for_compute.pop();
-			int y_coord=list_for_compute.front(); list_for_compute.pop();
-			int z_coord=list_for_compute.front(); list_for_compute.pop();
-			// Is visited
-			DIRECT_A3D_ELEM(bg,z_coord,y_coord,x_coord)=-2;
-			//We take the value
-			double value=DIRECT_A3D_ELEM(vol,z_coord,y_coord,x_coord);
-			// We see if is background or not
-			if (A<=value && value<=B)
-			{
-				// We now is background
-				DIRECT_A3D_ELEM(bg,z_coord,y_coord,x_coord)=1;
-				// We introduce the values of the background
-			    bg_values.push_back(value);
-			    // We update the cont variable
-			    cont++;
+        //We compute stat when is needed
+        if(cont==n)
+        {
+            // Calculamos los estad�sticos
+            double avg, stddev, minval, maxval;
+            computeStats(bg_values,avg,stddev,minval,maxval);
+            final_mean=avg;
+            // Calculamos el intervalo de confianza
+            A=avg-(z*stddev);
+            B=avg+(z*stddev);
+            cont=0; // aumentamos el contador
+            //std::cout << "Pulsa una tecla\n";
+            //  char c; std::cin >> c;
+        } // end of if
+        // Now we start to take coords from the list_for_compute
+        int x_coord=list_for_compute.front();
+        list_for_compute.pop();
+        int y_coord=list_for_compute.front();
+        list_for_compute.pop();
+        int z_coord=list_for_compute.front();
+        list_for_compute.pop();
+        // Is visited
+        DIRECT_A3D_ELEM(bg,z_coord,y_coord,x_coord)=-2;
+        //We take the value
+        double value=DIRECT_A3D_ELEM(vol,z_coord,y_coord,x_coord);
+        // We see if is background or not
+        if (A<=value && value<=B)
+        {
+            // We now is background
+            DIRECT_A3D_ELEM(bg,z_coord,y_coord,x_coord)=1;
+            // We introduce the values of the background
+            bg_values.push_back(value);
+            // We update the cont variable
+            cont++;
 
 
-			    // We add his neighbours in the list_for_compute
-			    for(int xx=x_coord-1;xx<=x_coord+1;xx++)
-			    	for(int yy=y_coord-1;yy<=y_coord+1;yy++)
-			    		for(int zz=z_coord-1;zz<=z_coord+1;zz++)
-			    			//We see if it has been visited
-			    			if (DIRECT_A3D_ELEM(bg,zz,yy,xx)==-1)  // not visited
-			    			{
-			    				// So we include it in the list
-			    				list_for_compute.push(xx);
-			    				list_for_compute.push(yy);
-			    				list_for_compute.push(zz);
-			    				// Is in the list
-			    				DIRECT_A3D_ELEM(bg,zz,yy,xx)=-2;
-			    			}
-			} // end of if
-			else
-			{
-			   // Isn't background
-				DIRECT_A3D_ELEM(bg,z_coord,y_coord,x_coord)=0;
-			}
-		} // end of while
-		// Now we change not visited for mol
-		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(bg)
-			if (DIRECT_A3D_ELEM(bg,k,i,j)==-1)
-				DIRECT_A3D_ELEM(bg,k,i,j)=0;
+            // We add his neighbours in the list_for_compute
+            for(int xx=x_coord-1;xx<=x_coord+1;xx++)
+                for(int yy=y_coord-1;yy<=y_coord+1;yy++)
+                    for(int zz=z_coord-1;zz<=z_coord+1;zz++)
+                        //We see if it has been visited
+                        if (DIRECT_A3D_ELEM(bg,zz,yy,xx)==-1)  // not visited
+                        {
+                            // So we include it in the list
+                            list_for_compute.push(xx);
+                            list_for_compute.push(yy);
+                            list_for_compute.push(zz);
+                            // Is in the list
+                            DIRECT_A3D_ELEM(bg,zz,yy,xx)=-2;
+                        }
+        } // end of if
+        else
+        {
+            // Isn't background
+            DIRECT_A3D_ELEM(bg,z_coord,y_coord,x_coord)=0;
+        }
+    } // end of while
+    // Now we change not visited for mol
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(bg)
+    if (DIRECT_A3D_ELEM(bg,k,i,j)==-1)
+        DIRECT_A3D_ELEM(bg,k,i,j)=0;
 
-		// End of 2.1-----------------------------------------------------------
+    // End of 2.1-----------------------------------------------------------
 
-		// 2.2.-Matematical Morphology
-		MultidimArray<double> bg_mm; // We create the output volumen
-		bg_mm.resize(vol);
-		closing3D(bg,bg_mm,26,0,1);
-		// Output
-	    //typeCast(bg_mm,mask);
-		mask=bg_mm;
+    // 2.2.-Matematical Morphology
+    MultidimArray<double> bg_mm; // We create the output volumen
+    bg_mm.resize(vol);
+    closing3D(bg,bg_mm,26,0,1);
+    // Output
+    //typeCast(bg_mm,mask);
+    mask=bg_mm;
 }
 
 /* Contranst enhancement --------------------------------------------------- */
@@ -433,10 +456,10 @@ void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &
 }
 
 void distance_transform(const MultidimArray<int> &in,
-    MultidimArray<int> &out, bool wrap)
+                        MultidimArray<int> &out, bool wrap)
 {
     std::list<int> toExplore;   /* A list of points to explore */
-    
+
     in.checkDimension(2);
 
     out.resize(in);
@@ -465,21 +488,24 @@ void distance_transform(const MultidimArray<int> &in,
     // Look for all elements in the binary mask and set the corresponding
     // distance to 0
     FOR_ALL_ELEMENTS_IN_ARRAY2D(in)
-        if (in(i,j))
-        {
-            out(i,j)=0;
-            CHECK_POINT_DIST(i-1,j,1);
-            CHECK_POINT_DIST(i+1,j,1);
-            CHECK_POINT_DIST(i,j-1,1);
-            CHECK_POINT_DIST(i,j+1,1);
-        }
+    if (in(i,j))
+    {
+        out(i,j)=0;
+        CHECK_POINT_DIST(i-1,j,1);
+        CHECK_POINT_DIST(i+1,j,1);
+        CHECK_POINT_DIST(i,j-1,1);
+        CHECK_POINT_DIST(i,j+1,1);
+    }
 
     while (!toExplore.empty())
     {
-        int i=toExplore.front(); toExplore.pop_front();
-        int j=toExplore.front(); toExplore.pop_front();
-        int proposedDistance=toExplore.front(); toExplore.pop_front();
-        
+        int i=toExplore.front();
+        toExplore.pop_front();
+        int j=toExplore.front();
+        toExplore.pop_front();
+        int proposedDistance=toExplore.front();
+        toExplore.pop_front();
+
         if (proposedDistance==out(i,j))
         {
             // If this is the current distance (i.e., it has not
@@ -598,7 +624,7 @@ void fill_binary_object(MultidimArray<double> &I, int neighbourhood)
 
     MultidimArray<double> label;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I) I(i, j) = 1 - I(i, j);
-    int imax = label_image2D(I, label, neighbourhood);
+    label_image2D(I, label, neighbourhood);
     double l0 = label(STARTINGY(I), STARTINGX(I));
     FOR_ALL_ELEMENTS_IN_ARRAY2D(label)
     if (label(i, j) == l0)
@@ -624,11 +650,13 @@ void OtsuSegmentation(MultidimArray<double> &V)
     mom0.initZeros(XSIZE(hist));
     mom1.initZeros(XSIZE(hist));
     mom0(0)=hist(0);
-    hist.index2val(0,x); mom1(0)=hist(0)*x;
+    hist.index2val(0,x);
+    mom1(0)=hist(0)*x;
     for (int i=1; i<XSIZE(mom0); i++)
     {
         mom0(i)=mom0(i-1)+hist(i);
-        hist.index2val(i,x); mom1(i)=mom1(i-1)+hist(i)*x;
+        hist.index2val(i,x);
+        mom1(i)=mom1(i-1)+hist(i)*x;
     }
 
     // Maximize sigma2B
@@ -643,13 +671,13 @@ void OtsuSegmentation(MultidimArray<double> &V)
         double sigma2B=w1*w2*(mu1-mu2)*(mu1-mu2);
         if (sigma2B>bestSigma2B)
         {
-             bestSigma2B=sigma2B;
-             ibestSigma2B=i;
+            bestSigma2B=sigma2B;
+            ibestSigma2B=i;
         }
     }
 
     hist.index2val(ibestSigma2B,x);
-    V.binarize(x); 
+    V.binarize(x);
 }
 
 /* Entropy Segmentation ---------------------------------------------------- */
@@ -676,7 +704,8 @@ void EntropySegmentation(MultidimArray<double> &V)
     MultidimArray<double> h1, h2;
     h1.initZeros(XSIZE(hist));
     h2.initZeros(XSIZE(hist));
-    for (int i=0; i<XSIZE(hist); i++) {
+    for (int i=0; i<XSIZE(hist); i++)
+    {
         // Entropy h1
         double w1=mom0(i);
         if (w1>epsilon)
@@ -701,16 +730,18 @@ void EntropySegmentation(MultidimArray<double> &V)
     // Find histogram index with maximum entropy
     double Hmax=h1(0)+h2(0);
     int iHmax=0;
-    for (int i=1; i<XSIZE(hist)-1; i++) {
+    for (int i=1; i<XSIZE(hist)-1; i++)
+    {
         double H = h1(i)+h2(i);
-        if (H > Hmax) {
+        if (H > Hmax)
+        {
             Hmax = H;
             iHmax = i;
         }
     }
 
     hist.index2val(iHmax,x);
-    V.binarize(x); 
+    V.binarize(x);
 }
 
 /* Otsu+Entropy Segmentation ----------------------------------------------- */
@@ -730,11 +761,13 @@ void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil)
     mom0.initZeros(XSIZE(hist));
     mom1.initZeros(XSIZE(hist));
     mom0(0)=hist(0);
-    hist.index2val(0,x); mom1(0)=hist(0)*x;
+    hist.index2val(0,x);
+    mom1(0)=hist(0)*x;
     for (int i=1; i<XSIZE(mom0); i++)
     {
         mom0(i)=mom0(i-1)+hist(i);
-        hist.index2val(i,x); mom1(i)=mom1(i-1)+hist(i)*x;
+        hist.index2val(i,x);
+        mom1(i)=mom1(i-1)+hist(i)*x;
     }
 
     // Entropy for black and white parts of the histogram
@@ -742,7 +775,8 @@ void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil)
     MultidimArray<double> h1, h2;
     h1.initZeros(XSIZE(hist));
     h2.initZeros(XSIZE(hist));
-    for (int i=0; i<XSIZE(hist); i++) {
+    for (int i=0; i<XSIZE(hist); i++)
+    {
         // Entropy h1
         double w1=mom0(i);
         if (w1>epsilon)
@@ -778,23 +812,24 @@ void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil)
         sigma2B(i)=w1*w2*(mu1-mu2)*(mu1-mu2);
         H(i) = h1(i)+h2(i);
         HSigma2B(i)=-log10(sigma2B(i))/H(i);
-           // The logic behind this expression is
-           // Otsu:    max sigma2B -> max log10(sigma2B) -> min -log10(sigma2B)
-           // Entropy: max H       -> max H              -> min 1/H
+        // The logic behind this expression is
+        // Otsu:    max sigma2B -> max log10(sigma2B) -> min -log10(sigma2B)
+        // Entropy: max H       -> max H              -> min 1/H
     }
-    
+
     // Sort HSigma2B and take a given percentage of it
     MultidimArray<double> HSigma2Bsorted=HSigma2B.sort();
     int iTh=ROUND(XSIZE(HSigma2B)*percentil);
     double threshold=HSigma2Bsorted(iTh);
-    
+
     // Find the first value within HSigma2B falling below this threshold
     iTh=0;
-    while (HSigma2B(iTh)>threshold) iTh++;
+    while (HSigma2B(iTh)>threshold)
+        iTh++;
     iTh--;
-    
+
     hist.index2val(iTh,x);
-    V.binarize(x); 
+    V.binarize(x);
 }
 
 /* Best shift -------------------------------------------------------------- */
@@ -879,7 +914,7 @@ void best_shift(const MultidimArray<double> &I1, const MultidimArray<double> &I2
 /* Best non-wrapping shift ------------------------------------------------- */
 //#define DEBUG
 void best_nonwrapping_shift(const MultidimArray<double> &I1,
-    const MultidimArray<double> &I2, double &shiftX, double &shiftY)
+                            const MultidimArray<double> &I2, double &shiftX, double &shiftY)
 {
     I1.checkDimension(2);
     I2.checkDimension(2);
@@ -887,33 +922,40 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
     best_shift(I1, I2, shiftX, shiftY);
     double bestCorr, corr;
     MultidimArray<double> Iaux;
-    
+
     translate(1, Iaux, I1, vectorR2(-shiftX,-shiftY), DONT_WRAP);
     //I1.translate(vectorR2(-shiftX,-shiftY),Iaux, DONT_WRAP);
     bestCorr=corr=correlation_index(I2,Iaux);
     double finalX=shiftX;
     double finalY=shiftY;
-    #ifdef DEBUG
-        std::cout << "shiftX=" << shiftX << " shiftY=" << shiftY
-                  << " corr=" << corr << std::endl;
-        ImageXmipp save;
-        save()=I1;   save.write("PPPI1.xmp");
-        save()=I2;   save.write("PPPI2.xmp");
-        save()=Iaux; save.write("PPPpp.xmp");
-    #endif        
-    
+#ifdef DEBUG
+
+    std::cout << "shiftX=" << shiftX << " shiftY=" << shiftY
+    << " corr=" << corr << std::endl;
+    ImageXmipp save;
+    save()=I1;
+    save.write("PPPI1.xmp");
+    save()=I2;
+    save.write("PPPI2.xmp");
+    save()=Iaux;
+    save.write("PPPpp.xmp");
+#endif
+
     Iaux.initZeros();
     double testX=(shiftX>0) ? (shiftX-XSIZE(I1)):(shiftX+XSIZE(I1));
     double testY=shiftY;
     translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
     //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
     corr=correlation_index(I2,Iaux);
-    if (corr>bestCorr) finalX=testX;
-    #ifdef DEBUG
-        std::cout << "shiftX=" << testX << " shiftY=" << testY
-                  << " corr=" << corr << std::endl;
-        save()=Iaux; save.write("PPPmp.xmp");
-    #endif        
+    if (corr>bestCorr)
+        finalX=testX;
+#ifdef DEBUG
+
+    std::cout << "shiftX=" << testX << " shiftY=" << testY
+    << " corr=" << corr << std::endl;
+    save()=Iaux;
+    save.write("PPPmp.xmp");
+#endif
 
     Iaux.initZeros();
     testX=shiftX;
@@ -923,11 +965,13 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
     corr=correlation_index(I2,Iaux);
     if (corr>bestCorr)
         finalY=testY;
-    #ifdef DEBUG
-        std::cout << "shiftX=" << testX << " shiftY=" << testY
-                  << " corr=" << corr << std::endl;
-        save()=Iaux; save.write("PPPpm.xmp");
-    #endif        
+#ifdef DEBUG
+
+    std::cout << "shiftX=" << testX << " shiftY=" << testY
+    << " corr=" << corr << std::endl;
+    save()=Iaux;
+    save.write("PPPpm.xmp");
+#endif
 
     Iaux.initZeros();
     testX=(shiftX>0) ? (shiftX-XSIZE(I1)):(shiftX+XSIZE(I1));
@@ -935,16 +979,18 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
     translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
     //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
     corr=correlation_index(I2,Iaux);
-    if (corr>bestCorr) {
+    if (corr>bestCorr)
+    {
         finalX=testX;
         finalY=testY;
     }
-    #ifdef DEBUG
-        std::cout << "shiftX=" << testX << " shiftY=" << testY
-                  << " corr=" << corr << std::endl;
-        save()=Iaux; save.write("PPPmm.xmp");
-    #endif        
-    
+#ifdef DEBUG
+    std::cout << "shiftX=" << testX << " shiftY=" << testY
+    << " corr=" << corr << std::endl;
+    save()=Iaux;
+    save.write("PPPmm.xmp");
+#endif
+
     shiftX=finalX;
     shiftY=finalY;
 }
@@ -952,7 +998,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
 
 /* Align two images -------------------------------------------------------- */
 void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I,
-    Matrix2D< double >&M)
+                 Matrix2D< double >&M)
 {
     Iref.checkDimension(2);
     I.checkDimension(2);
@@ -965,13 +1011,13 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
     Polar_fftw_plans *plans=NULL;
     Polar< std::complex<double> > polarFourierIref;
     normalizedPolarFourierTransform(
-	    Iref,
-	    polarFourierIref,
-	    false,
-            XSIZE(Iref)/5,
-	    XSIZE(Iref)/2,
-            plans,
-            1);
+        Iref,
+        polarFourierIref,
+        false,
+        XSIZE(Iref)/5,
+        XSIZE(Iref)/2,
+        plans,
+        1);
 
     XmippFftw local_transformer;
     MultidimArray<double> rotationalCorr;
@@ -982,41 +1028,41 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
     for (int i=0; i<2; i++)
     {
         double shiftX, shiftY;
-	
-        // Shift then rotate	
+
+        // Shift then rotate
         best_nonwrapping_shift(I,IauxSR,shiftX,shiftY);
         ASR(0,2)+=shiftX;
         ASR(1,2)+=shiftY;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
-        
+
         Polar< std::complex<double> > polarFourierI;
-	normalizedPolarFourierTransform(
-		IauxSR,
-		polarFourierI,
-		true,
-                XSIZE(Iref)/5,
-		XSIZE(Iref)/2,
-                plans,
-                1);
-        
+        normalizedPolarFourierTransform(
+            IauxSR,
+            polarFourierI,
+            true,
+            XSIZE(Iref)/5,
+            XSIZE(Iref)/2,
+            plans,
+            1);
+
         double bestRot = best_rotation(polarFourierIref,polarFourierI,
-            local_transformer);
-	R=rotation2DMatrix(-bestRot);
+                                       local_transformer);
+        rotation2DMatrix(-bestRot,R);
         ASR=R*ASR;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
         // Rotate then shift
-	normalizedPolarFourierTransform(
-		IauxRS,
-		polarFourierI,
-		true,
-                XSIZE(Iref)/5,
-		XSIZE(Iref)/2,
-                plans,
-                1);
+        normalizedPolarFourierTransform(
+            IauxRS,
+            polarFourierI,
+            true,
+            XSIZE(Iref)/5,
+            XSIZE(Iref)/2,
+            plans,
+            1);
         bestRot = best_rotation(polarFourierIref,polarFourierI,
-            local_transformer);
-	R=rotation2DMatrix(-bestRot);
+                                local_transformer);
+        rotation2DMatrix(-bestRot,R);
         ARS=R*ARS;
         applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
 
@@ -1025,7 +1071,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
         ARS(1,2)+=shiftY;
         applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
     }
-    
+
     double corrRS=correlation_index(IauxRS,Iref);
     double corrSR=correlation_index(IauxSR,Iref);
     if (corrRS>corrSR)
@@ -1045,19 +1091,19 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
 /* See Brandle, Chen, Bischof, Lapp. Robust parametric and semi-parametric
    spot fitting for spot array images. 2000 */
 double unnormalizedGaussian2D(const Matrix1D<double> &r,
-                  const Matrix1D<double> &mu,
-                  const Matrix2D<double> &sigmainv)
+                              const Matrix1D<double> &mu,
+                              const Matrix2D<double> &sigmainv)
 {
     double x=XX(r)-XX(mu);
     double y=YY(r)-YY(mu);
     return exp(-0.5*(sigmainv(0,0)*x*x+
-                   2*sigmainv(0,1)*x*y+
+                     2*sigmainv(0,1)*x*y+
                      sigmainv(1,1)*y*y));
 }
 
 void estimateGaussian2D(const MultidimArray<double> &I,
-    double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
-    bool estimateMu, int iterations)
+                        double &a, double &b, Matrix1D<double> &mu, Matrix2D<double> &sigma,
+                        bool estimateMu, int iterations)
 {
     I.checkDimension(2);
 
@@ -1073,11 +1119,11 @@ void estimateGaussian2D(const MultidimArray<double> &I,
     {
         // Reestimate z
         FOR_ALL_ELEMENTS_IN_ARRAY2D(z)
-           z(i,j)=XMIPP_MAX(I(i,j)-b,0);
+        z(i,j)=XMIPP_MAX(I(i,j)-b,0);
 
         // Sum of z
         double T=z.sum();
-        
+
         // Estimate center
         mu.initZeros(2);
         if (estimateMu)
@@ -1090,7 +1136,7 @@ void estimateGaussian2D(const MultidimArray<double> &I,
             }
             mu/=T;
         }
-        
+
         // Estimate sigma
         sigma.initZeros(2,2);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(z)
@@ -1104,7 +1150,7 @@ void estimateGaussian2D(const MultidimArray<double> &I,
         }
         sigma(1,0)=sigma(0,1);
         sigma/=T;
-        
+
         // Estimate amplitude
         Matrix2D<double> sigmainv=sigma.inv();
         Matrix1D<double> r(2);
@@ -1392,7 +1438,7 @@ void Smoothing_Shah(MultidimArray<double> &img,
 /* Tomographic diffusion --------------------------------------------------- */
 //#define DEBUG
 double tomographicDiffusion(MultidimArray< double >& V,
-    const Matrix1D< double >& alpha, double lambda)
+                            const Matrix1D< double >& alpha, double lambda)
 {
     V.checkDimension(3);
 
@@ -1415,7 +1461,7 @@ double tomographicDiffusion(MultidimArray< double >& V,
                                alphaz*diffz*diffz);
             }
     regError*=0.5;
-    
+
     // Compute the gradient of the regularization error
     MultidimArray<double> gradient;
     gradient.initZeros(V);
@@ -1434,8 +1480,8 @@ double tomographicDiffusion(MultidimArray< double >& V,
                 diffy=V_110-V_1_10;
                 diffz=V_101-V_10_1;
                 double t1=diffx/sqrt(alphax*diffx*diffx+
-                    alphay*diffy*diffy+alphaz*diffz*diffz);
-                
+                                     alphay*diffy*diffy+alphaz*diffz*diffz);
+
                 // Second term
                 double V200=DIRECT_A3D_ELEM(V,z,y,x+2);
                 double V110=DIRECT_A3D_ELEM(V,z,y+1,x+1);
@@ -1446,8 +1492,8 @@ double tomographicDiffusion(MultidimArray< double >& V,
                 diffy=V110-V1_10;
                 diffz=V101-V10_1;
                 double t2=diffx/sqrt(alphax*diffx*diffx+
-                    alphay*diffy*diffy+alphaz*diffz*diffz);
-                
+                                     alphay*diffy*diffy+alphaz*diffz*diffz);
+
                 // Third term
                 double V0_20=DIRECT_A3D_ELEM(V,z,y-2,x);
                 double V0_11=DIRECT_A3D_ELEM(V,z+1,y-1,x);
@@ -1456,8 +1502,8 @@ double tomographicDiffusion(MultidimArray< double >& V,
                 diffy=V000-V0_20;
                 diffz=V0_11-V0_1_1;
                 double t3=diffy/sqrt(alphax*diffx*diffx+
-                    alphay*diffy*diffy+alphaz*diffz*diffz);
-                
+                                     alphay*diffy*diffy+alphaz*diffz*diffz);
+
                 // Fourth term
                 double V020=DIRECT_A3D_ELEM(V,z,y+2,x);
                 double V011=DIRECT_A3D_ELEM(V,z+1,y+1,x);
@@ -1466,7 +1512,7 @@ double tomographicDiffusion(MultidimArray< double >& V,
                 diffy=V020-V000;
                 diffz=V011-V01_1;
                 double t4=diffy/sqrt(alphax*diffx*diffx+
-                    alphay*diffy*diffy+alphaz*diffz*diffz);
+                                     alphay*diffy*diffy+alphaz*diffz*diffz);
 
                 // Fifth term
                 double V00_2=DIRECT_A3D_ELEM(V,z-2,y,x);
@@ -1474,7 +1520,7 @@ double tomographicDiffusion(MultidimArray< double >& V,
                 diffy=V01_1-V0_1_1;
                 diffz=V000-V00_2;
                 double t5=diffz/sqrt(alphax*diffx*diffx+
-                    alphay*diffy*diffy+alphaz*diffz*diffz);
+                                     alphay*diffy*diffy+alphaz*diffz*diffz);
 
                 // Sixth term
                 double V002=DIRECT_A3D_ELEM(V,z+2,y,x);
@@ -1482,22 +1528,23 @@ double tomographicDiffusion(MultidimArray< double >& V,
                 diffy=V011-V0_11;
                 diffz=V002-V000;
                 double t6=diffz/sqrt(alphax*diffx*diffx+
-                    alphay*diffy*diffy+alphaz*diffz*diffz);
-                
+                                     alphay*diffy*diffy+alphaz*diffz*diffz);
+
                 // Compute gradient
                 DIRECT_A3D_ELEM(gradient,z,y,x)=
                     0.5*(alphax*(t1-t2)+alphay*(t3-t4)+alphaz*(t5-t6));
             }
-    #ifdef DEBUG
-        VolumeXmipp save;
-        save()=V;
-        save.write("PPPvolume.vol");
-        save()=gradient;
-        save.write("PPPgradient.vol");
-        std::cout << "Press any key\n";
-        char c; std::cin >> c;
-    #endif
-    
+#ifdef DEBUG
+    VolumeXmipp save;
+    save()=V;
+    save.write("PPPvolume.vol");
+    save()=gradient;
+    save.write("PPPgradient.vol");
+    std::cout << "Press any key\n";
+    char c;
+    std::cin >> c;
+#endif
+
     // Update volume
     for (int z=2; z<ZSIZE(V)-2; z++)
         for (int y=2; y<YSIZE(V)-2; y++)
@@ -1818,18 +1865,27 @@ void centerImageTranslationally(MultidimArray<double> &I)
 {
     I.checkDimension(2);
 
-    MultidimArray<double> Ix  = I; Ix.selfReverseX();   Ix.setXmippOrigin();
-    MultidimArray<double> Iy  = I; Iy.selfReverseY();   Iy.setXmippOrigin();
-    MultidimArray<double> Ixy = Ix; Ixy.selfReverseY(); Ixy.setXmippOrigin();
-    
+    MultidimArray<double> Ix  = I;
+    Ix.selfReverseX();
+    Ix.setXmippOrigin();
+    MultidimArray<double> Iy  = I;
+    Iy.selfReverseY();
+    Iy.setXmippOrigin();
+    MultidimArray<double> Ixy = Ix;
+    Ixy.selfReverseY();
+    Ixy.setXmippOrigin();
+
     double meanShiftX=0, meanShiftY=0, shiftX, shiftY;
     best_nonwrapping_shift(I,Ix, meanShiftX,meanShiftY);
     best_nonwrapping_shift(I,Iy, shiftX,shiftY);
-    meanShiftX+=shiftX; meanShiftY+=shiftY;
+    meanShiftX+=shiftX;
+    meanShiftY+=shiftY;
     best_nonwrapping_shift(I,Ixy,shiftX,shiftY);
-    meanShiftX+=shiftX; meanShiftY+=shiftY;
-    meanShiftX/=3; meanShiftY/=3;
-    
+    meanShiftX+=shiftX;
+    meanShiftY+=shiftY;
+    meanShiftX/=3;
+    meanShiftY/=3;
+
     Matrix1D<double> shift(2);
     VECTOR_R2(shift,-meanShiftX,-meanShiftY);
     MultidimArray<double> aux = I;
@@ -1842,22 +1898,23 @@ void centerImageRotationally(MultidimArray<double> &I)
 {
     I.checkDimension(2);
 
-    MultidimArray<double> Ix  = I; Ix.selfReverseX();
+    MultidimArray<double> Ix  = I;
+    Ix.selfReverseX();
     Ix.setXmippOrigin();
 
     Polar_fftw_plans *plans=NULL;
     Polar< std::complex<double> > polarFourierI, polarFourierIx;
     normalizedPolarFourierTransform(Ix,polarFourierIx,false,XSIZE(Ix)/5,
-        XSIZE(Ix)/2,plans);
+                                    XSIZE(Ix)/2,plans);
     normalizedPolarFourierTransform(I, polarFourierI, true, XSIZE(I)/5,
-        XSIZE(I)/2,plans);
+                                    XSIZE(I)/2,plans);
 
     XmippFftw local_transformer;
     MultidimArray<double> rotationalCorr;
     rotationalCorr.resize(2*polarFourierI.getSampleNoOuterRing()-1);
     local_transformer.setReal(rotationalCorr);
     double bestRot = best_rotation(polarFourierIx,polarFourierI,
-        local_transformer);
+                                   local_transformer);
 
     MultidimArray<double> aux = I;
     rotate(3, I, aux, -bestRot/2,WRAP);
@@ -1878,73 +1935,123 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
     Matrix2D<double> A;
     A.initIdentity(3);
     Iaux=I;
-    
+
     MultidimArray<int> mask;
     mask.initZeros(I);
     BinaryCircularMask(mask,XSIZE(I)/2);
-    
+
     MultidimArray<double> lineY, lineX;
-    lineY.initZeros(YSIZE(I)); STARTINGX(lineY)=STARTINGY(I);
-    lineX.initZeros(XSIZE(I)); STARTINGX(lineX)=STARTINGX(I);
+    lineY.initZeros(YSIZE(I));
+    STARTINGX(lineY)=STARTINGY(I);
+    lineX.initZeros(XSIZE(I));
+    STARTINGX(lineX)=STARTINGX(I);
 
     Polar_fftw_plans *plans=NULL;
     for (int i=0; i<Niter; i++)
     {
         // Mask Iaux
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-            if (!mask(i,j)) Iaux(i,j)=0;
+        if (!mask(i,j))
+            Iaux(i,j)=0;
 
         // Center translationally
-        Ix  = Iaux;  Ix.selfReverseX();  Ix.setXmippOrigin();
-        Iy  = Iaux;  Iy.selfReverseY();  Iy.setXmippOrigin();
-        Ixy = Ix;    Ixy.selfReverseY(); Ixy.setXmippOrigin();
-        
+        Ix  = Iaux;
+        Ix.selfReverseX();
+        Ix.setXmippOrigin();
+        Iy  = Iaux;
+        Iy.selfReverseY();
+        Iy.setXmippOrigin();
+        Ixy = Ix;
+        Ixy.selfReverseY();
+        Ixy.setXmippOrigin();
+
         double meanShiftX=0, meanShiftY=0, shiftX, shiftY, Nx=0, Ny=0;
         best_nonwrapping_shift(Iaux,Ix, shiftX,shiftY);
-        #ifdef DEBUG
-            ImageXmipp save;
-            save()=Ix; save.write("PPPx.xmp");
-            std::cout << "con Ix: " << shiftX << " " << shiftY << std::endl;
-        #endif
-        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift) {meanShiftX+=shiftX; Nx++;}
-        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift) {meanShiftY+=shiftY; Ny++;}
+#ifdef DEBUG
+
+        ImageXmipp save;
+        save()=Ix;
+        save.write("PPPx.xmp");
+        std::cout << "con Ix: " << shiftX << " " << shiftY << std::endl;
+#endif
+
+        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift)
+        {
+            meanShiftX+=shiftX;
+            Nx++;
+        }
+        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift)
+        {
+            meanShiftY+=shiftY;
+            Ny++;
+        }
         best_nonwrapping_shift(Iaux,Iy, shiftX,shiftY);
-        #ifdef DEBUG
-            save()=Iy; save.write("PPPy.xmp");
-            std::cout << "con Iy: " << shiftX << " " << shiftY << std::endl;
-        #endif
-        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift) {meanShiftX+=shiftX; Nx++;}
-        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift) {meanShiftY+=shiftY; Ny++;}
+#ifdef DEBUG
+
+        save()=Iy;
+        save.write("PPPy.xmp");
+        std::cout << "con Iy: " << shiftX << " " << shiftY << std::endl;
+#endif
+
+        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift)
+        {
+            meanShiftX+=shiftX;
+            Nx++;
+        }
+        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift)
+        {
+            meanShiftY+=shiftY;
+            Ny++;
+        }
         best_nonwrapping_shift(Iaux,Ixy,shiftX,shiftY);
-        #ifdef DEBUG
-            save()=Ixy; save.write("PPPxy.xmp");
-            std::cout << "con Ixy: " << shiftX << " " << shiftY << std::endl;
-        #endif
-        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift) {meanShiftX+=shiftX; Nx++;}
-        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift) {meanShiftY+=shiftY; Ny++;}
-        if (Nx>0) meanShiftX/=Nx;
-        if (Ny>0) meanShiftY/=Ny;
+#ifdef DEBUG
+
+        save()=Ixy;
+        save.write("PPPxy.xmp");
+        std::cout << "con Ixy: " << shiftX << " " << shiftY << std::endl;
+#endif
+
+        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift)
+        {
+            meanShiftX+=shiftX;
+            Nx++;
+        }
+        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift)
+        {
+            meanShiftY+=shiftY;
+            Ny++;
+        }
+        if (Nx>0)
+            meanShiftX/=Nx;
+        if (Ny>0)
+            meanShiftY/=Ny;
 
         A(0,2)+=-meanShiftX/2;
         A(1,2)+=-meanShiftY/2;
         Iaux.initZeros();
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-            if (!mask(i,j)) Iaux(i,j)=0;
-        
-        #ifdef DEBUG
-            std::cout << "Iter " << i << std::endl;
-            std::cout << "shift=" << -meanShiftX << "," << -meanShiftY << std::endl;
-            save()=I; save.write("PPP.xmp");
-            save()=Iaux; save.write("PPPshift.xmp");
-        #endif
+        if (!mask(i,j))
+            Iaux(i,j)=0;
+
+#ifdef DEBUG
+
+        std::cout << "Iter " << i << std::endl;
+        std::cout << "shift=" << -meanShiftX << "," << -meanShiftY << std::endl;
+        save()=I;
+        save.write("PPP.xmp");
+        save()=Iaux;
+        save.write("PPPshift.xmp");
+#endif
 
         // Center rotationally
-        Ix  = Iaux;  Ix.selfReverseX();  Ix.setXmippOrigin();
-        
+        Ix  = Iaux;
+        Ix.selfReverseX();
+        Ix.setXmippOrigin();
+
         Polar< std::complex<double> > polarFourierI;
         normalizedPolarFourierTransform(Iaux, polarFourierI, true, XSIZE(I)/5,
-            XSIZE(I)/2,plans);
+                                        XSIZE(I)/2,plans);
         XmippFftw local_transformer;
         MultidimArray<double> rotationalCorr;
         rotationalCorr.resize(2*polarFourierI.getSampleNoOuterRing()-1);
@@ -1952,57 +2059,83 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
 
         Polar< std::complex<double> > polarFourierIx;
         normalizedPolarFourierTransform(Ix,polarFourierIx,false,XSIZE(Ix)/5,
-            XSIZE(Ix)/2,plans);
+                                        XSIZE(Ix)/2,plans);
         double bestRot = best_rotation(polarFourierIx,polarFourierI,
-            local_transformer);
+                                       local_transformer);
         bestRot = realWRAP(bestRot,0,180);
-        if (bestRot>90) bestRot=bestRot-180;
-        
-        A=rotation2DMatrix(-bestRot/2)*A;
+        if (bestRot>90)
+            bestRot=bestRot-180;
+
+        Matrix2D<double> R;
+        rotation2DMatrix(-bestRot/2,R);
+        A=R*A;
         Iaux.initZeros();
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-            if (!mask(i,j)) Iaux(i,j)=0;
+        if (!mask(i,j))
+            Iaux(i,j)=0;
 
-        #ifdef DEBUG
-            std::cout << "rot=" << -bestRot/2 << std::endl;
-            save()=Iaux; save.write("PPProt.xmp");
-        #endif
-        
+#ifdef DEBUG
+
+        std::cout << "rot=" << -bestRot/2 << std::endl;
+        save()=Iaux;
+        save.write("PPProt.xmp");
+#endif
+
         // Remove horizontal/vertical ambiguity
         lineX.initZeros();
         lineY.initZeros();
         FOR_ALL_ELEMENTS_IN_ARRAY2D(Iaux)
         {
             double val=Iaux(i,j);
-            if (j==0) lineY(i)=val;
-            else if (lineY(i)<val) lineY(i)=val;
-            if (i==0) lineX(j)=val;
-            else if (lineX(j)<val) lineX(j)=val;
+            if (j==0)
+                lineY(i)=val;
+            else if (lineY(i)<val)
+                lineY(i)=val;
+            if (i==0)
+                lineX(j)=val;
+            else if (lineX(j)<val)
+                lineX(j)=val;
         }
-        
+
         double thX=lineX.computeMin()+0.75*(lineX.computeMax()-lineX.computeMin());
         double thY=lineY.computeMin()+0.75*(lineY.computeMax()-lineY.computeMin());
-        int x0=STARTINGX(lineX);  while (lineX(x0)<thX) x0++;
-        int y0=STARTINGX(lineY);  while (lineY(y0)<thY) y0++;
-        int xF=FINISHINGX(lineX); while (lineX(xF)<thX) xF--;
-        int yF=FINISHINGX(lineY); while (lineY(yF)<thY) yF--;
+        int x0=STARTINGX(lineX);
+        while (lineX(x0)<thX)
+            x0++;
+        int y0=STARTINGX(lineY);
+        while (lineY(y0)<thY)
+            y0++;
+        int xF=FINISHINGX(lineX);
+        while (lineX(xF)<thX)
+            xF--;
+        int yF=FINISHINGX(lineY);
+        while (lineY(yF)<thY)
+            yF--;
         if ((xF-x0)>(yF-y0))
-            A=rotation2DMatrix(90)*A;
+        {
+        	rotation2DMatrix(90,R);
+            A=R*A;
+        }
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
-        #ifdef DEBUG
-            lineX.write("PPPlineX.txt");
-            lineY.write("PPPlineY.txt");
-            std::cout << "dev X=" << xF-x0 << std::endl;
-            std::cout << "dev Y=" << yF-y0 << std::endl;
-            save()=Iaux; save.write("PPPhorver.xmp");
-            std::cout << "Press any key\n";
-            char c; std::cin >> c;
-        #endif
+#ifdef DEBUG
+
+        lineX.write("PPPlineX.txt");
+        lineY.write("PPPlineY.txt");
+        std::cout << "dev X=" << xF-x0 << std::endl;
+        std::cout << "dev Y=" << yF-y0 << std::endl;
+        save()=Iaux;
+        save.write("PPPhorver.xmp");
+        std::cout << "Press any key\n";
+        char c;
+        std::cin >> c;
+#endif
+
     }
     applyGeometry(BSPLINE3, Iaux, I, A, IS_NOT_INV,WRAP);
     I=Iaux;
     I+=avg;
-    if (plans!=NULL) delete plans;
+    if (plans!=NULL)
+        delete plans;
 }
 #undef DEBUG

@@ -1408,7 +1408,6 @@ void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
     double AA, stdAA, psi;
     MultidimArray<double> Maux;
     MultidimArray<std::complex<double> > Faux;
-    std::complex<double> complexValue(0., 0.);
 
     Maux.initZeros(dim, dim);
     Maux.setXmippOrigin();
@@ -1434,7 +1433,6 @@ void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
             if (AA > 0)
             {
                 double sqrtVal = sqrt(stdAA/AA);
-                complexValue.real(sqrt(stdAA / AA));
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                 dAi(Faux, n) *= sqrtVal;
             }

@@ -26,6 +26,7 @@
 #ifndef MATRIX2D_H_
 #define MATRIX2D_H_
 
+#include <string.h>
 #include <external/bilib/types/tsplinebasis.h>
 #include <external/bilib/types/tboundaryconvention.h>
 #include <external/bilib/headers/linearalgebra.h>
@@ -359,9 +360,10 @@ public:
     {
         if (&op1 != this)
         {
-            resize(op1);
-            for (int i = 0; i< op1.mdim; i++)
-                mdata[i] = op1.mdata[i];
+            if (MAT_XSIZE(*this)!=MAT_XSIZE(op1) ||
+                MAT_YSIZE(*this)!=MAT_YSIZE(op1))
+                resize(op1);
+            memcpy(mdata,op1.mdata,op1.mdim*sizeof(T));
         }
 
         return *this;
@@ -552,9 +554,7 @@ public:
     void initConstant(T val)
     {
         for (int j = 0; j < mdim; j++)
-        {
             mdata[j] = val;
-        }
     }
 
     /** Initialize to zeros with current size.
@@ -577,7 +577,8 @@ public:
      */
     void initZeros(int Ydim, int Xdim)
     {
-        resize(Ydim, Xdim);
+        if (mdimx!=Xdim || mdimy!=Ydim)
+            resize(Ydim, Xdim);
         initZeros();
     }
 
@@ -594,7 +595,8 @@ public:
     template <typename T1>
     void initZeros(const Matrix2D<T1>& op)
     {
-        resize(op);
+        if (mdimx!=op.mdimx || mdimy!=op.mdimy)
+            resize(op);
         initConstant(static_cast< T >(0));
     }
 
@@ -630,10 +632,10 @@ public:
             return;
         }
 
-        resize(dim, dim);
-        for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < mdimx; j++)
-                (*this)(i,j) = (T)(i == j);
+        if (mdimx!=dim || mdimy!=dim)
+            resize(dim, dim);
+        for (int i = 0; i < dim; i++)
+            MAT_ELEM(*this,i,i) = 1;
     }
 
     /// @defgroup MatrixOperators Operators for Matrix2D
@@ -924,7 +926,8 @@ public:
      */
     void loadFromNumericalRecipes(T** m, int Ydim, int Xdim)
     {
-        resize(Ydim, Xdim);
+        if (mdimx!=Xdim || mdimy!=Ydim)
+            resize(Ydim, Xdim);
 
         for (int i = 1; i <= Ydim; i++)
             for (int j = 1; j <= Xdim; j++)
@@ -1011,17 +1014,19 @@ public:
         // Look at shape and copy values
         if (op1.isRow())
         {
-            resize(1, op1.size());
+            if (mdimy!=1 || mdimx!=VEC_XSIZE(op1))
+                resize(1, VEC_XSIZE(op1));
 
-            for (int j = 0; j < op1.size(); j++)
-                (*this)(0, j) = op1( j);
+            for (int j = 0; j < VEC_XSIZE(op1); j++)
+                MAT_ELEM(*this,0, j) = VEC_ELEM(op1,j);
         }
         else
         {
-            resize(op1.size(), 1);
+            if (mdimy!=1 || mdimx!=VEC_XSIZE(op1))
+                resize(VEC_XSIZE(op1), 1);
 
-            for (int i = 0; i < op1.size(); i++)
-                (*this)(i, 0) = op1( i);
+            for (int i = 0; i < VEC_XSIZE(op1); i++)
+                MAT_ELEM(*this,i, 0) = VEC_ELEM(op1,i);
         }
     }
 
@@ -1055,20 +1060,22 @@ public:
         if (mdimy == 1)
         {
             // Row vector
-            op1.resize(mdimx);
+            if (VEC_XSIZE(op1)!=mdimx)
+                op1.resize(mdimx);
 
             for (int j = 0; j < mdimx; j++)
-                op1(j) = (*this)(0, j);
+                VEC_ELEM(op1,j) = MAT_ELEM(*this,0, j);
 
             op1.setRow();
         }
         else
         {
             // Column vector
-            op1.resize(mdimy);
+            if (VEC_XSIZE(op1)!=mdimy)
+                op1.resize(mdimy);
 
             for (int i = 0; i < mdimy; i++)
-                op1(i) = (*this)(i, 0);
+                VEC_ELEM(op1,i) = MAT_ELEM(*this,i, 0);
 
             op1.setCol();
         }
@@ -1086,7 +1093,8 @@ public:
       */
     void copyFromVector(std::vector<T> &v,int Xdim, int Ydim)
     {
-        resize(Ydim, Xdim);
+    	if (mdimx!=Xdim || mdimy!=Ydim)
+    		resize(Ydim, Xdim);
         copy( v.begin(), v.begin()+v.size(), mdata);
     }
 
@@ -1113,9 +1121,10 @@ public:
         if (i < 0 || i >= mdimy)
             REPORT_ERROR(1103, "getRow: Matrix subscript (i) greater than matrix dimension");
 
-        v.resize(mdimx);
+        if (VEC_XSIZE(v)!=mdimx)
+        	v.resize(mdimx);
         for (int j = 0; j < mdimx; j++)
-            v(j) = (*this)(i, j);
+            VEC_ELEM(v,j) = MAT_ELEM(*this,i, j);
 
         v.setRow();
     }
@@ -1142,9 +1151,10 @@ public:
         if (j < 0 || j >= mdimx)
             REPORT_ERROR(1103,"getCol: Matrix subscript (j) greater than matrix dimension");
 
-        v.resize(mdimy);
+        if (VEC_XSIZE(v)!=mdimy)
+        	v.resize(mdimy);
         for (int i = 0; i < mdimy; i++)
-            v(i) = (*this)(i, j);
+            VEC_ELEM(v,i) = MAT_ELEM(*this,i, j);
 
         v.setCol();
     }
@@ -1166,7 +1176,7 @@ public:
         if (i < 0 || i >= mdimy)
             REPORT_ERROR(1103, "setRow: Matrix subscript (i) out of range");
 
-        if (v.size() != mdimx)
+        if (VEC_XSIZE(v) != mdimx)
             REPORT_ERROR(1102,
                          "setRow: Vector dimension different from matrix one");
 
@@ -1174,7 +1184,7 @@ public:
             REPORT_ERROR(1107, "setRow: Not a row vector in assignment");
 
         for (int j = 0; j < mdimx; j++)
-            (*this)(i, j) = v(j);
+            MAT_ELEM(*this,i, j) = VEC_ELEM(v,j);
     }
 
     /** Set Column
@@ -1195,7 +1205,7 @@ public:
         if (j < 0 || j>= mdimx)
             REPORT_ERROR(1103, "setCol: Matrix subscript (j) out of range");
 
-        if (v.size() != mdimy)
+        if (VEC_XSIZE(v) != mdimy)
             REPORT_ERROR(1102,
                          "setCol: Vector dimension different from matrix one");
 
@@ -1203,7 +1213,7 @@ public:
             REPORT_ERROR(1107, "setCol: Not a column vector in assignment");
 
         for (int i = 0; i < mdimy; i++)
-            (*this)(i, j) = v(i);
+            MAT_ELEM(*this,i, j) = VEC_ELEM(v,i);
     }
 
     /** Determinant of a matrix
@@ -1423,7 +1433,8 @@ template<typename T>
 void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d)
 {
     LU = A;
-    indx.resize(A.mdimx);
+    if (VEC_XSIZE(indx)!=A.mdimx)
+    	indx.resize(A.mdimx);
     ludcmp(LU.adaptForNumericalRecipes2(), A.mdimx,
            indx.adaptForNumericalRecipes(), &d);
 }
@@ -1503,10 +1514,10 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T2>& v2)
         return;
     }
 
-    v2.resize(v1);
-    for (int n = 0; n < v1.mdim; n++)
+    if (v1.mdimx!=v2.mdimx || v1.mdimy!=v2.mdimy)
+    	v2.resize(v1);
+    for (unsigned long int n = 0; n < v1.mdim; n++)
         v2.mdata[n] = static_cast< T2 > (v1.mdata[n]);
-
 }
 
 #endif /* MATRIX2D_H_ */
