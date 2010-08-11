@@ -34,7 +34,7 @@
 #include <data/numerical_tools.h>
 #include <vector>
 
-/**@defgroup VQforProjections
+/**@defgroup VQforProjections Vector Quantization for Projections
    @ingroup ReconsLibraryPrograms */
 //@{
 /** VQProjection class */

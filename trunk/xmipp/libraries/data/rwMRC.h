@@ -11,7 +11,7 @@
 
 #define MRCSIZE    1024 // Minimum size of the MRC header (when nsymbt = 0)
 
-///@definegroup MRC MRC File format
+///@defgroup MRC MRC File format
 ///@ingroup ImageFormats
 
 /** MRC Old Header

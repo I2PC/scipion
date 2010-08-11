@@ -35,7 +35,7 @@
 #include <data/matrix1d.h>
 #include <data/histogram.h>
 
-/**@defgroup NaiveBayesClassifier
+/**@defgroup NaiveBayesClassifier Naive Bayes Classifier
    @ingroup ClassificationLibrary */
 //@{
 

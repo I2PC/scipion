@@ -63,12 +63,12 @@ class Basis;
     the reconstruction algorithms independent from the underlying
     grid, incrementing the reusability of the code.
 */
-//@{
 
 /*****************************************************************************/
 /* Simple Grids                                                              */
 /*****************************************************************************/
 /** Basic grid class.
+ * @ingroup Grids
     A Simple grid is defined as a set of 3 directions (X,Y,Z) which need not
     to coincide with the universal X,Y,Z (ie, e1, e2, e3), an origin,
     a relative size to the voxels in the universal grid, and the lowest
@@ -465,6 +465,7 @@ public:
 /* Complex Grids                                                             */
 /*****************************************************************************/
 /** Complex Grids.
+ * @ingroup Grids
     Grid is the structure where "true" grids like (BCC, FCC, CC, ...) are
     stored. A complex grid is nothing else than a list of Simple Grids, and
     this is so because a complex grid is supposed to be the superposition
@@ -1526,5 +1527,4 @@ std::ostream& operator << (std::ostream &o, const GridVolumeT<T> &GV)
     }
     return o;
 }
-//@}
 #endif

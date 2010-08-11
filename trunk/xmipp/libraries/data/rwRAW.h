@@ -26,7 +26,7 @@
 #ifndef RWRAW_H_
 #define RWRAW_H_
 
-///@definegroup Raw Raw File format
+///@defgroup Raw Raw File format
 ///@ingroup ImageFormats
 
 // I/O prototypes

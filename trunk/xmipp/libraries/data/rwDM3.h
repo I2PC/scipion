@@ -26,7 +26,7 @@
 #ifndef RWDM3_H_
 #define RWDM3_H_
 
-///@definegroup DM3 DM3 File format
+///@defgroup DM3 DM3 File format
 ///@ingroup ImageFormats
 
 /** DM3 Header

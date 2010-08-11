@@ -46,7 +46,6 @@ template<typename T> class Matrix2D;
  */
 void randomPermutation(int N, MultidimArray<int>& result);
 
-
 /** Optimize using Powell's method.
   * @ingroup NumericalTools
   *
@@ -466,4 +465,5 @@ private:
     void Best2Bin(int candidate);
     void Rand2Bin(int candidate);
 };
+//@}
 #endif

@@ -31,7 +31,7 @@
 #include <data/matrix1d.h>
 #include <vector>
 
-/**@defgroup kSVD
+/**@defgroup kSVD kSVD
    @ingroup ClassificationLibrary */
 //@{
 

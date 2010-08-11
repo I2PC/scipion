@@ -17,7 +17,7 @@
 
 #define IMAGICSIZE 1024 // Size of the IMAGIC header for each image
 
-///@definegroup Imagic Imagic File format
+///@defgroup Imagic Imagic File format
 ///@ingroup ImageFormats
 
 /** Imagic Header

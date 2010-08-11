@@ -275,7 +275,8 @@ template <typename T> class Matrix2D;
  */
 #define VEC_ELEM(v,i) ((v).vdata[(i)])
 
-/** Matrix1D class. */
+/** Matrix1D class.
+ * @ingroup Vectors */
 template<typename T>
 class Matrix1D
 {
@@ -648,7 +649,7 @@ public:
 	}
 
 	/// @defgroup VectorsOperators Utilities for Matrix1D
-    /// @ingroup Vectors
+
     /** v3 = v1 * k.
      * @ingroup VectorsOperators
      */
@@ -929,7 +930,6 @@ public:
     }
 
 	/// @defgroup VectorsUtilities Utilities for Matrix1D
-    /// @ingroup Vectors
 
     /** Produce a vector suitable for working with Numerical Recipes
      * @ingroup VectorsUtilities

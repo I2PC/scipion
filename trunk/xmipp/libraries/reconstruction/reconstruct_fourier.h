@@ -50,7 +50,7 @@
 #define PROCESS_WEIGHTS 2
 #define PRELOAD_IMAGE 3
 
-/**@defgroup Fourier reconstruction reconstruct_fourier (Fourier reconstruction)
+/**@defgroup FourierReconstruction Fourier reconstruction
    @ingroup ReconsLibraryPrograms */
 //@{
 class Prog_RecFourier_prm;

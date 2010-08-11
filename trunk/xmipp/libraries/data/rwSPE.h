@@ -26,7 +26,7 @@
 #ifndef RWSPE_H_
 #define RWSPE_H_
 
-///@definegroup SPE Princeton Instruments CCD camera
+///@defgroup SPE Princeton Instruments CCD camera
 ///@ingroup ImageFormats
 
 // I/O prototypes

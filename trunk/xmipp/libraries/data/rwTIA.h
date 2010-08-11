@@ -28,7 +28,7 @@
 
 #define TIASIZE    30 // Size of the TIA header without pDATA_OFFSET
 
-///@definegroup TIA TIA File format
+///@defgroup TIA TIA File format
 ///@ingroup ImageFormats
 
 /** TIA Header

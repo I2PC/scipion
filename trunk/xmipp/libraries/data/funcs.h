@@ -873,6 +873,7 @@ public:
      * @code
      * FileName fn_proj("g1ta00001.raw#d=f");
      * if (fn_proj.contains("raw) )  // true
+     * @endcode
      */
     bool contains(const std::string& str) const;
 
@@ -881,6 +882,7 @@ public:
       * @code
      * FileName fn_proj("g1ta00001.raw#d=f");
      * fn_proj = fn_proj.before_first_of("#"); // fn_proj = "g1ta00001.raw"
+     * @endcode
      */
     FileName before_first_of(const std::string& str) const;
 
@@ -889,6 +891,7 @@ public:
       * @code
      * FileName fn_proj("g1ta00001.raw#d=f");
      * fn_proj = fn_proj.before_last_of("#"); // fn_proj = "g1ta00001.raw"
+     * @endcode
      */
     FileName before_last_of(const std::string& str) const;
 
@@ -898,6 +901,7 @@ public:
       * @code
      * FileName fn_proj("g1ta00001.raw#d=f");
      * fn_proj = fn_proj.after_first_of("#"); // fn_proj = "d=f"
+     * @endcode
      */
     FileName after_first_of(const std::string& str) const;
 
@@ -906,6 +910,7 @@ public:
       * @code
      * FileName fn_proj("g1ta00001.raw#d=f");
      * fn_proj = fn_proj.after_last_of("#"); // fn_proj = "d=f"
+     * @endcode
      */
     FileName after_last_of(const std::string& str) const;
 

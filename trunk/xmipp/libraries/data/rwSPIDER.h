@@ -10,7 +10,7 @@
 #define RWSPIDER_H
 
 #define SPIDERSIZE 1024 // Minimum size of the SPIDER header (variable)
-///@definegroup Spider Spider File format
+///@defgroup Spider Spider File format
 ///@ingroup ImageFormats
 
 /** Spider Header

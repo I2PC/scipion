@@ -33,7 +33,7 @@
 #include <string.h>
 #include "funcs.h"
 
-/** @defgroup ParallelJobHandler
+/** @defgroup ParallelJobHandler Parallel Job Handler
  *  @ingroup DataLibrary
  *
  *This class distributes dynamically N tasks between parallel workers.
@@ -62,7 +62,7 @@ private:
     long long int assignedJobs;
 
 public:
-    /** @defgroup Constructors
+    /** @defgroup Constructors Constructors
      *  @ingroup ParallelJobHandler
      *
      *The are two constructors, one that should be called by the master

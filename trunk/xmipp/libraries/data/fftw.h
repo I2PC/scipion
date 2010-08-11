@@ -491,28 +491,25 @@ void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double >& error_l2,
              bool skipdpr=false);
 
-/** 
- * Scale matrix using Fourier transform
- *  
- * @param Ydim output size
- * @param Xdim output size
- * @param Mpmem matrix to scale
- * @param nThreads number of threads
+/** Scale matrix using Fourier transform
+ * @ingroup FourierOperations
+ * Ydim and Xdim define the output size, Mpmem is the matrix to scale
  */ 
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem, int nthreads=1);
 
-
-/** Get the amplitude or power spectrum of the map in Fourier space
-    i.e. the radial average of the (squared) amplitudes of all Fourier components
-*/
 #define POWER_SPECTRUM 0
 #define AMPLITUDE_SPECTRUM 1
 
+/** Get the amplitude or power spectrum of the map in Fourier space.
+ * @ingroup FourierOperations
+    i.e. the radial average of the (squared) amplitudes of all Fourier components
+*/
 void getSpectrum(MultidimArray<double> &Min,
                  MultidimArray<double> &spectrum,
                  int spectrum_type=AMPLITUDE_SPECTRUM);
 
 /** Divide the input map in Fourier-space by the spectrum provided.
+ * @ingroup FourierOperations
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
 void divideBySpectrum(MultidimArray<double> &Min,
@@ -520,6 +517,7 @@ void divideBySpectrum(MultidimArray<double> &Min,
                       bool leave_origin_intact=false);
 
 /** Multiply the input map in Fourier-space by the spectrum provided.
+ * @ingroup FourierOperations
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
 void multiplyBySpectrum(MultidimArray<double> &Min,
@@ -527,6 +525,7 @@ void multiplyBySpectrum(MultidimArray<double> &Min,
                         bool leave_origin_intact=false);
 
 /** Perform a whitening of the amplitude/power spectrum of a 3D map 
+ * @ingroup FourierOperations
     If leave_origin_intact==true, the origin pixel will remain untouched
 */
 void whitenSpectrum(MultidimArray<double> &Min,
@@ -535,6 +534,7 @@ void whitenSpectrum(MultidimArray<double> &Min,
                     bool leave_origin_intact=false);
 
 /** Adapts Min to have the same spectrum as spectrum_ref
+ * @ingroup FourierOperations
     If only_amplitudes==true, the amplitude rather than the power spectrum will be equalized
 */
 void adaptSpectrum(MultidimArray<double> &Min,
@@ -542,6 +542,4 @@ void adaptSpectrum(MultidimArray<double> &Min,
                    const MultidimArray<double> spectrum_ref,
                    int spectrum_type=AMPLITUDE_SPECTRUM,
                    bool leave_origin_intact=false);
-
-
 #endif

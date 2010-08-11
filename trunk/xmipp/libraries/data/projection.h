@@ -38,8 +38,9 @@ extern pthread_mutex_t project_mutex;
 
 /// @defgroup Projections Projections (2D Image + Euler angles)
 /// @ingroup DataLibrary
-//@{
+
 /** Projection class.
+ * @ingroup Projections
  *
  * A projection is a 2D, <double> Image plus some information (about the direction
  * of prejection) which makes it suitable for 3D reconstruction. A projection
@@ -121,6 +122,7 @@ public:
 };
 
 /** Structure for threaded projections.
+  * @ingroup Projections
    This structure contains all the information needed by a thread
    working on the projecting/backprojecting of a projection. This is
    structure is needed to pass parameters from the master thread to the
@@ -163,47 +165,19 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
 /* PROJECTION GENERATION                                                     */
 /*---------------------------------------------------------------------------*/
 /**@defgroup ProjectionsGeneration Projections generation from volumes
-   @ingroup DataLibrary */
+   @ingroup Projections */
 // Projecting functions ====================================================
 #define FORWARD  1
 #define BACKWARD 0
-/**@defgroup SingleParticleProjections Single particle projections
-   @ingroup ProjectionsGeneration*/
-//@{
+
 #define ARTK     1
 #define CAVK     2
 #define COUNT_EQ 3
 #define CAV      4
 #define CAVARTK  5
 
-/** From basis volumes (Forward & Backward(ART)).
-    Project a grid volume with a basis.
-    The Grid volume is projected onto a projection plane defined by
-    (rot, tilt, psi) (1st, 2nd and 3rd Euler angles). The projection
-    is previously is resized to Ydim x Xdim and initialized to 0.
-    The projection itself, from now on, will keep the Euler angles.
-
-    FORWARD process:
-       Each volume of the grid is projected on to the projection plane.
-       The output is the projection itself and a normalising image, the
-       normalising image is the projection of the same grid supposing
-       that all basis are of value 1. This normalising image is used by
-       the ART process
-
-    BACKWARD process:
-       During the backward process the normalising projection contains
-       the correction image to apply to the volume (in the ART sense).
-       The output is the volume itself, the projection image is useless
-       in this case, and the normalising projection is not modified at
-       all.
-
-    As for the mode, valid modes are ARTK, CAVK, COUNT_EQ, CAVARTK.
-
-    M is the matrix corresponding to the projection process.
-    */
-
 /** From voxel volumes.
-
+ * @ingroup ProjectionsGeneration
     The voxel volume is projected onto a projection plane defined by
     (rot, tilt, psi) (1st, 2nd and 3rd Euler angles) . The projection
     is previously is resized to Ydim x Xdim and initialized to 0.
@@ -221,6 +195,7 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
                     const Matrix1D<double> *roffset=NULL);
 
 /** From voxel volumes, off-centered tilt axis.
+ * @ingroup ProjectionsGeneration
     This routine projects a volume that is rotating (angle) degrees
     around the axis defined by the two angles (axisRot,axisTilt) and
     that passes through the point raxis. The projection can be futher
@@ -240,9 +215,10 @@ void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
                                 const Matrix1D<double> &raxis, double angle, double inplaneRot,
                                 const Matrix1D<double> &rinplane);
 
-/** Projects a single particle into a voxels volume by updating its components this way:
-
- Voxel(i,j,k) = Voxel(i,j,k) + Pixel( x,y) * Distance.
+/** Single Weighted Back Projection
+ * @ingroup ProjectionsGeneration
+   Projects a single particle into a voxels volume by updating its components this way:
+    Voxel(i,j,k) = Voxel(i,j,k) + Pixel( x,y) * Distance.
 
  Where:
 
@@ -253,11 +229,11 @@ void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
 void singleWBP(MultidimArray<double> &V, Projection &P);
 
 /** Count equations in volume.
+ * @ingroup ProjectionsGeneration
    For Component AVeraing (CAV), the number of equations in which
    each basis is involved is needed. */
 void count_eqs_in_projection(GridVolumeT<int> &GVNeq,
                              const Basis &basis, Projection &read_proj);
-//@}
 
 /** Project a crystal basis volume.
   * @ingroup ProjectionsGeneration
@@ -952,7 +928,30 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
 /* Project a Grid Volume --------------------------------------------------- */
 /** Projection of a Grid Volume.
   * @ingroup ProjectionsGeneration
-    Valid eq_modes are ARTK, CAVARTK and CAV.
+
+    Project a grid volume with a basis.
+    The Grid volume is projected onto a projection plane defined by
+    (rot, tilt, psi) (1st, 2nd and 3rd Euler angles). The projection
+    is previously is resized to Ydim x Xdim and initialized to 0.
+    The projection itself, from now on, will keep the Euler angles.
+
+    FORWARD process:
+       Each volume of the grid is projected on to the projection plane.
+       The output is the projection itself and a normalising image, the
+       normalising image is the projection of the same grid supposing
+       that all basis are of value 1. This normalising image is used by
+       the ART process
+
+    BACKWARD process:
+       During the backward process the normalising projection contains
+       the correction image to apply to the volume (in the ART sense).
+       The output is the volume itself, the projection image is useless
+       in this case, and the normalising projection is not modified at
+       all.
+
+    As for the mode, valid modes are ARTK, CAVK, COUNT_EQ, CAVARTK.
+
+    M is the matrix corresponding to the projection process.
 */
 //#define DEBUG
 //#define DEBUG_LITTLE
@@ -1066,5 +1065,4 @@ void project_GridVolume(
 #undef yF
 #undef xDim
 #undef yDim
-//@}
 #endif

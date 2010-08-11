@@ -35,7 +35,7 @@
 #include <fcntl.h>
 #include <iostream>
 
-///@definegroup TIFF TIFF File format
+///@defgroup TIFF TIFF File format
 ///@ingroup ImageFormats
 
 // I/O prototypes

@@ -234,9 +234,6 @@ void mask2D_4neig(MultidimArray< int >& mask, int value = 1, int center = NO_ACT
 void mask2D_8neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
                   int center = NO_ACTIVATE);
 
-/// @defgroup Masks3D 3D masks
-/// @ingroup Masks
-
 /** Creates a 3D DWT spherical for already sized masks
  * @ingroup Masks3D
  *
