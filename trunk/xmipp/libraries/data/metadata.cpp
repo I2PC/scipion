@@ -245,40 +245,6 @@ int MetaData::MaxStringLength(const MDLabel thisLabel) const
     return myMDSql->columnMaxLength(thisLabel);
 }
 
-bool MetaData::setValues(int n, ...)
-{
-    va_list params;
-    MDLabel label;
-    std::vector<MDValue> values;
-
-    va_start(params, n);
-    for (int i = 0; i < n; i++)
-    {
-        label = va_arg(params, MDLabel);
-        switch (MDL::labelType(label))
-        {
-        case LABEL_BOOL: //bools are int in sqlite3
-            values.push_back(MDValue(label, va_arg(params, bool)));
-            break;
-        case LABEL_INT:
-            values.push_back(MDValue(label, va_arg(params, int)));
-            break;
-        case LABEL_LONG:
-            values.push_back(MDValue(label, va_arg(params, long int)));
-            break;
-        case LABEL_DOUBLE:
-            values.push_back(MDValue(label, va_arg(params, double)));
-            break;
-        case LABEL_STRING:
-            values.push_back(MDValue(label, va_arg(params, std::string)));
-            break;
-
-        }
-        _setValue(activeObjId, values[i]);
-    }
-    va_end(params);
-}
-
 bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, long int objectId)
 {
     addLabel(label);

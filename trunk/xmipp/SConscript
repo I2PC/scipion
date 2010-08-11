@@ -820,9 +820,6 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_common_lines', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_ctf_correct_idr', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
-    AddXmippMPIProgram('template_parallel', ['XmippRecons'])
-#    AddXmippMPIProgram('template_threads', ['XmippRecons'])
-#    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 #    # AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])sjors
     AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])sjors
@@ -834,7 +831,9 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
-
+    AddXmippMPIProgram('template_parallel', ['XmippRecons'])
+#    AddXmippMPIProgram('template_threads', ['XmippRecons'])
+#    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 # QT
 if int(env['gui']):
     envQT = env.Clone()

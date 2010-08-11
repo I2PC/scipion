@@ -35,16 +35,20 @@
 
 /** @defgroup ParallelJobHandler Parallel Job Handler
  *  @ingroup DataLibrary
+ */
+
+/** Parallel Job Handler Class.
+ * @ingroup ParallelJobHandler
  *
- *This class distributes dynamically N tasks between parallel workers.
+ * This class distributes dynamically N tasks between parallel workers.
+ * This class is a generalization of a common task in a parallel
+ * environment of dynamically distribute N tasks between workers(threads or mpi proccess).
+ * Each worker will ask for a group of tasks, proccess it and ask for more tasks
+ * until there is not more task to process.
  *
- *This class is a generalization of a common task in a parallel
- *environment of dynamically distribute N tasks between workers(threads or mpi proccess).
- *Each worker will ask for a group of tasks, proccess it and ask for more tasks
- *until there is not more task to process.
  *
- *A lock is required for access the number of unprocessed tasks each time
- *a worker ask for job, this is implemented now by a filesystem lock in a file.(the lockfile)
+ * A lock is required for access the number of unprocessed tasks each time
+ * a worker ask for job, this is implemented now by a filesystem lock in a file.(the lockfile)
  */
 class ParallelJobHandler
 {
@@ -62,8 +66,12 @@ private:
     long long int assignedJobs;
 
 public:
+<<<<<<< .mine
+    /** @defgroup Constructors Constructors
+=======
     /** @defgroup Constructors Constructors
      *  @ingroup ParallelJobHandler
+>>>>>>> .r5848
      *
      *The are two constructors, one that should be called by the master
      *in wich the lock file is created and parameters should be supplied
@@ -71,31 +79,54 @@ public:
      *from the lockfile
      */
 
-    /** Master constructor
+    /** Master constructor.
      * @ingroup Constructors
      */
     ParallelJobHandler(long long int nJobs, long long int bSize, char *fName = NULL);
 
-    /** Slaves constructor
+    /** Slaves constructor.
      * @ingroup Constructors
      */
     ParallelJobHandler(const char *fName);
 
-    /** Destructor
+    /** Destructor.
      *  @ingroup Constructors
      */
     ~ParallelJobHandler();
 
-
+    /** Set the number of tasks assigned in each request */
     bool setBlockSize(long long int blockSize);
+    /** Return the number of tasks assigned in each request */
     int getBlockSize() const;
 
+    /** Gets parallel tasks.
+     *  @ingroup ParallelJobHandler
+     *  This function will be called by workers for asking tasks
+     *  until there are not more tasks to process.
+     *  Example:
+     *  @code
+     *  //...
+     *  ParallelJobHandler jobHand;
+     *  //...
+     *  //function to perform some operation
+     *  //to N images executed in parellel     *
+     *  void processImages()
+     *  {
+     *      long long int firstImage, lastImage;
+     *      while (jobHand->getJobs(firstImage, lastImage))
+     *          for (int image = firstImage; image <= lastImage; ++image)
+     *          {
+     *              //...
+     *              processImage(image);
+     *              //...
+     *          }
+     *  }     *
+     *  @endcode
+     */
     bool getJobs(long long int &first, long long int &last); // False = no more jobs, true = more jobs
 
 
-
 private:
-
     //This function should be only called in the master
     //for create the lock file
     void createLockFile();
@@ -111,11 +142,10 @@ private:
     void lock();
     void unlock();
 
-
 }
 ;//class ParallelJobHandler
 
-/* Measure ttime differences, the function predcision is miliseconds
+/* Measure time differences, the function predcision is miliseconds
  *
  */
 #include <sys/time.h>
