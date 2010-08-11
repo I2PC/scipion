@@ -36,12 +36,12 @@ int main(int argc, char **argv)
     double LL, sumw_allrefs, convv, sumcorr;
     std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
-    std::vector<Matrix2D<double > > wsum_Mref, wsum_ctfMref;
+    std::vector<MultidimArray<double > > wsum_Mref, wsum_ctfMref;
     std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus;
-    Matrix2D<double> P_phi, Mr2, Maux;
+    MultidimArray<double> P_phi, Mr2, Maux;
     std::vector<std::vector<double> > Mwsum_sigma2;
     FileName fn_img;
-    Matrix1D<double> oneline(0), spectral_signal, Vaux;
+    MultidimArray<double> oneline(0), spectral_signal, Vaux;
     // For parallelization
     int rank, size, num_img_tot;
     bool converged;
@@ -67,11 +67,12 @@ int main(int argc, char **argv)
         }
 
         //Send "master" seed to slaves for same randomization
-        if (rank==0)
+        if (rank == 0)
         {
             for (int slave = 1; slave < size; slave++)
                 MPI_Send(&prm.seed, 1, MPI_INT, slave, TAG_DOCFILE,
                          MPI_COMM_WORLD);
+            prm.verb = 1;
         }
         else
         {
@@ -115,8 +116,10 @@ int main(int argc, char **argv)
         for (int iter = prm.istart; iter <= prm.Niter; iter++)
         {
             if (prm.verb > 0)
-                std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
-
+            {
+                std::cerr << "  Multi-reference refinement:  iteration "
+                    << iter << " of " << prm.Niter << std::endl;
+            }
             // Save old reference images
             for (int refno = 0;refno < prm.n_ref; refno++)
                 prm.Iold[refno]() = prm.Iref[refno]();

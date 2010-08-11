@@ -80,14 +80,12 @@ int main(int argc, char **argv)
 				 Mwsum_sigma2, wsum_sigma_offset, 
 				 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
 
-            std::cerr << "hola3: after exp" <<std::endl;
             // Update model parameters
             prm.maximization(wsum_Mref, wsum_ctfMref,
 				 Mwsum_sigma2,wsum_sigma_offset, 
 				 sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
 				 sumcorr, sumw_allrefs,
 				 spectral_signal);
-            std::cerr << "hola4: after max" <<std::endl;
 
             // Check convergence
             converged = prm.checkConvergence(conv);

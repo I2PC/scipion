@@ -33,7 +33,6 @@
 #include <string.h>
 #include "funcs.h"
 
-
 /** @defgroup ParallelJobHandler
  *  @ingroup DataLibrary
  *
@@ -47,30 +46,49 @@
  *A lock is required for access the number of unprocessed tasks each time
  *a worker ask for job, this is implemented now by a filesystem lock in a file.(the lockfile)
  */
-
 class ParallelJobHandler
 {
 private:
-
-    char lockFilename[L_tmpnam];
+    //The lock file handler and temporaly file name
     int lockFile;
+    char lockFilename[L_tmpnam];
+    //Flag to know who created the file and should deleted
     bool fileCreator;
-
+    //The total number of tasks to be distributed
     long long int numberOfJobs;
+    //How many tasks give in each request
     long long int blockSize;
+    //The number of tasks that have been assigned
     long long int assignedJobs;
 
 public:
+    /** @defgroup Constructors
+     *  @ingroup ParallelJobHandler
+     *
+     *The are two constructors, one that should be called by the master
+     *in wich the lock file is created and parameters should be supplied
+     *and the constructor for the slaves, which read read the parameters
+     *from the lockfile
+     */
 
-
-    //TODO: todos los casos: inicializar variable blocksize, crear base de datos,
+    /** Master constructor
+     * @ingroup Constructors
+     */
     ParallelJobHandler(long long int nJobs, long long int bSize, char *fName = NULL);
+
+    /** Slaves constructor
+     * @ingroup Constructors
+     */
     ParallelJobHandler(const char *fName);
+
+    /** Destructor
+     *  @ingroup Constructors
+     */
     ~ParallelJobHandler();
 
 
     bool setBlockSize(long long int blockSize);
-    int getBlockSize();
+    int getBlockSize() const;
 
     bool getJobs(long long int &first, long long int &last); // False = no more jobs, true = more jobs
 

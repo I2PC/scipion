@@ -33,7 +33,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     int argc2 = 0;
     char ** argv2 = NULL;
 
-    double restart_noise, restart_offset;
+    double restart_offset;
     FileName restart_imgmd, restart_refmd;
     int restart_iter, restart_seed;
 
@@ -41,7 +41,6 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     {
         do_restart = true;
         MetaData MDrestart;
-        double noise, offset;
         char *copy  = NULL;
 
         MDrestart.read(getParameter(argc, argv, "-restart"));
@@ -51,6 +50,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
         MDrestart.getValue(MDL_REFMD, restart_refmd);
         MDrestart.getValue(MDL_ITER, restart_iter);
         MDrestart.getValue(MDL_RANDOMSEED, restart_seed);
+        //MDrestart.getValue(MDL_SIGMANOISE, restart_noise);
         generateCommandLine(cline, argc2, argv2, copy);
     }
     else
@@ -134,6 +134,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
         fn_ref = restart_refmd;
         n_ref = 0; // Just to be sure (not strictly necessary)
         sigma_offset = restart_offset;
+        //sigma_noise = restart_noise;
         seed = restart_seed;
         istart = restart_iter + 1;
     }
@@ -321,10 +322,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
     MultidimArray<int>        radial_count; //1D
     Matrix1D<int>               center(2);
     std::vector<int>            tmppointp, tmppointp_nolow, tmppointi, tmppointj;
-    bool                        uniqname, nomoredirs;
-    float                       xx, yy;
-    double                      av, psi, aux, Q0;
-    int                         im, jm;
+    double                      Q0;
 
     // Read selfile with experimental images
     MDimg.read(fn_sel);
@@ -425,7 +423,6 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
 
     FileName fnt_img, fnt_ctf, fnt;
     std::vector<FileName> all_fn_ctfs;
-    bool found, is_unique;
     int iifocus;
 
     count_defocus.clear();
@@ -454,6 +451,8 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
         nr_focus = 0;
         all_fn_ctfs.clear();
         FileName fn_ctf;
+        bool is_unique;
+
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
             MDimg.getValue(MDL_CTFMODEL, fn_ctf);
@@ -558,7 +557,6 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
 
             if (rank==0)
             {
-                show();
                 generateInitialReferences();
             }
         }
@@ -574,9 +572,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
 {
 
     int                       c, idum, refno = 0;
-    //DocFile                   DF, DF2;
-    //DocLine                   DL;
-    double                    offx, offy, aux, sumfrac = 0.;
+    double                    aux;
     FileName                  fn_tmp;
     Image<double>                img;
     std::vector<double>       Vdum, sumw_defocus;
@@ -828,10 +824,8 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
     std::vector<MultidimArray<double> >   Msigma2, Mave;
     Matrix1D<int>               center(2);
     MultidimArray<int>           radial_count;
-    double                      rr;
     Image<double>                       img;
     FileName                    fn_tmp;
-    int                         focus = 0, c, nn;
     std::ofstream                    fh;
 
     center.initZeros();
@@ -841,9 +835,11 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
     // (to take away low-res frequencies where the signal dominates!)
     if (istart == 1)
     {
+        int nn, c, focus = 0;
 
         if (verb > 0)
             std::cerr << "--> Estimating initial noise models from average power spectra ..." << std::endl;
+
         if (verb > 0)
         {
             nn = MDimg.size();
@@ -854,6 +850,7 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
         Msigma2.resize(nr_focus);
         Mave.clear();
         Mave.resize(nr_focus);
+
         FOR_ALL_DEFOCUS_GROUPS()
         {
             Msigma2[ifocus].initZeros(dim, dim);
@@ -862,8 +859,8 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
             Mave[ifocus].setXmippOrigin();
         }
         Maux.initZeros(dim, dim);
-
         int imgno = 0;
+
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
             if (do_ctf_correction)
@@ -888,7 +885,6 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
         if (verb > 0)
             progress_bar(nn);
 
-        std::cerr << "HOLA: Calculating DEFOCUS GROUPS" <<std::endl;
         // Calculate Vsig vectors and write them to disc
         FOR_ALL_DEFOCUS_GROUPS()
         {
@@ -948,7 +944,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(MultidimArray<double> &spectral_si
     MultidimArray<std::complex<double> > Faux;
     std::ofstream                   fh;
     int                        maxres = 0;
-    double                     noise, ssnr, sum_sumw_defocus = 0.;
+    double                     noise, sum_sumw_defocus = 0.;
     int                        int_lowres_limit, int_highres_limit, int_ini_highres_limit;
     int                        current_probres_limit;
     FileName                   fn_base, fn_tmp;
@@ -1149,7 +1145,6 @@ void Prog_MLFalign2D_prm::updateWienerFilters(MultidimArray<double> &spectral_si
     pointer_2d.clear();
     pointer_i.clear();
     pointer_j.clear();
-    int ires, ires_low, ires_prob, ires_high;
 
     // First, get the pixels to use in the probability calculations:
     // These are within [lowres_limit,current_probres_limit]
@@ -1438,8 +1433,10 @@ void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
             }
             if (AA > 0)
             {
+                double sqrtVal = sqrt(stdAA/AA);
                 complexValue.real(sqrt(stdAA / AA));
-                Faux *= complexValue;
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
+                dAi(Faux, n) *= sqrtVal;
             }
             // Add all points as doubles to the vector
             appendFTtoVector(Faux, out);
@@ -1456,7 +1453,7 @@ void Prog_MLFalign2D_prm::reverseRotateReference(const std::vector<double> &in,
         std::vector<MultidimArray<double > > &out)
 {
 
-    double psi, dum, avg, ang;
+    double psi;
     MultidimArray<double> Maux, Maux2;
     MultidimArray<std::complex<double> > Faux;
     Maux.resize(dim, dim);
@@ -1553,8 +1550,10 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const MultidimArray<double> &M
         MultidimArray<int> &Moffsets_mirror)
 {
 
-    int irefmir, ix, iy, opt_ix, opt_iy, iflip, nr_mir, iflip_start, iflip_stop, count;
-    double dxx, dyy;
+    int irefmir, ix, iy, iflip_start, iflip_stop, count;
+    int nr_mir = (do_mirror) ? 2 : 1;
+
+  double dxx, dyy;
     std::vector<double> Fimg_flip;
     MultidimArray<std::complex<double> > Fimg;
     MultidimArray<double> trans(2);
@@ -1570,11 +1569,6 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const MultidimArray<double> &M
     Maux.setXmippOrigin();
     Maux2.resize(dim, dim);
     Maux2.setXmippOrigin();
-
-    if (do_mirror)
-        nr_mir = 2;
-    else
-        nr_mir = 1;
 
     // Flip images and store the precalculates Fourier Transforms in Fimg_flip
     out.clear();
@@ -1688,14 +1682,13 @@ void Prog_MLFalign2D_prm::processOneImage(const MultidimArray<double> &Mimg,
 
     std::vector<double> refw(n_ref), refw2(n_ref), refw_mirror(n_ref), Pmax_refmir(2*n_ref);
     std::vector<double> sigma2, ctf, decctf;
-    double XiA, Xi2, aux, fracpdf, pdf, weight;
+    double aux, fracpdf, pdf, weight, weight2;
     double tmpr, tmpi, sum_refw = 0.;
     double diff, maxweight = -99.e99, mindiff2 = 99.e99;
     double logsigma2, ldim, ref_scale = 1.;
-    double weight1, weight2;
     double scale_denom, scale_numer, wsum_sc = 0., wsum_sc2 = 0.;
-    int    irot, opt_irot, irefmir, opt_irefmir, ix, iy, ii;
-    int    nr_uniq, point_trans, zscore;
+    int    irot, irefmir, opt_irefmir, ix, iy;
+    int    point_trans;
     int    opt_itrans, iflip_start, iflip_stop, nr_mir;
     int    img_start, ref_start, wsum_start;
 
@@ -2418,8 +2411,8 @@ void Prog_MLFalign2D_prm::expectation(std::vector< Image<double> > &Iref, int it
 
     float old_phi = -999., old_theta = -999.;
     double opt_psi, opt_flip, opt_scale, maxcorr, maxweight2;
-    double opt_xoff, opt_yoff, w2, KSprob = 0.;
-    int c, imgno, opt_refno, opt_ipsi, opt_iflip, focus = 0;
+    double w2, KSprob = 0.;
+    int c, opt_refno, opt_ipsi, opt_iflip, focus = 0;
     bool apply_ctf;
 
     // Generate (FT of) each rotated version of all references
@@ -2615,7 +2608,7 @@ void Prog_MLFalign2D_prm::maximization(std::vector<MultidimArray<double> > &wsum
     MultidimArray<std::complex<double> > Faux, Faux2;
     MultidimArray<double> Maux;
     FileName fn_tmp;
-    double rr, thresh, aux, sumw_allrefs2 = 0.;
+    double aux, sumw_allrefs2;
     int c;
 
     // Pre-calculate sumw_allrefs & average Pmax/sumP or cross-correlation
