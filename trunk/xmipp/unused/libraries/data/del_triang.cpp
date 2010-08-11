@@ -8,7 +8,7 @@
 //////////////////////////// DELAUNAY TRIANGULATION //////////////////////////////////////
 /*
    Triangulation subroutine
-   Takes as input NV vertices in array pxyz
+   Takes as input NV Vertex in array pxyz
    Returned is a list of ntri triangular faces in the array v
    These triangles are arranged in a consistent clockwise order.
    The triangle array 'v' should be malloced to 3 * nv
@@ -223,7 +223,7 @@ int Triangulate(int nv, XYZ *pxyz, ITRIANGLE *v, int *ntri)
     }
 
     /*
-       Remove triangles with supertriangle vertices
+       Remove triangles with supertriangle Vertex
        These are triangles which have a vertex number greater than nv
     */
     for (i = 0;i < (*ntri);i++)

@@ -339,7 +339,7 @@ public:
         In the assign behaviour a voxel value is assigned to the volume if the
         voxel there is smaller than the value we pretend to assign.
 
-        A voxel is drawn with a colour proportional to the number of vertices
+        A voxel is drawn with a colour proportional to the number of Vertex
         inside the features.
         The volume is not cleaned at the beginning.
         \\ Ex:

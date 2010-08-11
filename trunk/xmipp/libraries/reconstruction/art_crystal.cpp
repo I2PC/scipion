@@ -304,7 +304,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
                                      // 1,1,0,1, Take this side out
                                      // 1,1,1,0, Take this side out
                                      0, 0, 1, 1,
-                                     // 1,0,0,1, and their three vertices
+                                     // 1,0,0,1, and their three Vertex
                                      // 1,1,0,0,
                                      // 0,1,1,0
                                  };

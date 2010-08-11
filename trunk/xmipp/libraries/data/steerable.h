@@ -32,7 +32,7 @@
 
 /// @defgroup MissingWedge Missing wedge
 /// @ingroup DataLibrary
-///@{
+//@{
 class MissingWedge
 {
 public:
@@ -58,11 +58,11 @@ public:
     /// Remove wedge
     void removeWedge(MultidimArray<double> &V) const;
 };
-///@}
+//@}
 
 /// @defgroup Steerable Steerable filters
 /// @ingroup DataLibrary
-///@{
+//@{
 
 /** Class for performing steerable filters */
 class Steerable
@@ -104,5 +104,5 @@ public:
         MultidimArray<double> &hx, MultidimArray<double> &hy,
         MultidimArray<double> &hz, MultidimArray<double> &Vout);
 };
-///@}
+//@}
 #endif

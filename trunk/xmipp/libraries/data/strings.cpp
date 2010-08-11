@@ -25,7 +25,7 @@
 
 #include "strings.h"
 
-std::string removeChar( std::string str, char character )
+std::string removeChar( const std::string& str, char character )
 {
     std::string temp;
 
@@ -38,7 +38,7 @@ std::string removeChar( std::string str, char character )
     return temp;
 }
 
-std::string unescape( std::string str )
+std::string unescape( const std::string& str )
 {
     std::string temp;
 
@@ -58,25 +58,25 @@ std::string unescape( std::string str )
     return temp;
 }
 
-std::string simplify( std::string str )
+std::string simplify( const std::string& str )
 {
     std::string temp;
 
     // First, unescape string
-    str = unescape( str );
+    std::string straux = unescape( str );
 
     // Remove spaces from the beginning
-    int pos = str.find_first_not_of( ' ' );
-    str.erase( 0, pos );
+    int pos = straux.find_first_not_of( ' ' );
+    straux.erase( 0, pos );
 
     // Trim the rest of spaces
-    for( unsigned int i = 0 ; i < str.length( ) ; )
+    for( unsigned int i = 0 ; i < straux.length( ) ; )
     {
-        temp += str[ i ];
+        temp += straux[ i ];
 
-        if ( str[ i ] == ' ' )
+        if ( straux[ i ] == ' ' )
         {
-            while( str[ i ] == ' ' )
+            while( straux[ i ] == ' ' )
             {
                 i++;
             }

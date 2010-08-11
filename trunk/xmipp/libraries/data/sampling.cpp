@@ -27,7 +27,7 @@
 /* Default Constructor */
 XmippSampling::XmippSampling()
 {
-    vertices aux;
+    Vertex aux;
     aux.rot =   -PI / 5.;
     aux.tilt = PI / 2. - cte_w  ;
     aux.psi =  0.;
