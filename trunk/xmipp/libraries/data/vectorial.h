@@ -29,7 +29,7 @@
 #include "multidim_array.h"
 
 /// @defgroup Vectorial Vector volumes
-/// @ingroup MultidimensionalArrays
+/// @ingroup DataLibrary
 
 /** @defgroup VectorialSpeedUp Speed up functions
  * @ingroup Vectorial
@@ -605,6 +605,4 @@ public:
         OPERATION(arrayByScalar, *this, op1, *this, '^');
     }
 };
-
-
 #endif

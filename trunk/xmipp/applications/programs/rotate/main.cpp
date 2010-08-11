@@ -63,13 +63,13 @@ public:
             rot  = textToFloat(argv[i+1]);
             tilt = textToFloat(argv[i+2]);
             psi  = textToFloat(argv[i+3]);
-            A3D = Euler_rotation3DMatrix(rot, tilt, psi);
+            Euler_rotation3DMatrix(rot, tilt, psi, A3D);
         }
         else if (checkParameter(argc, argv, "-alignWithZ"))
         {
             Align_mode = true;
             axis = getVectorParameter(argc, argv, "-alignWithZ", 3);
-            A3D = alignWithZ(axis);
+            alignWithZ(axis, A3D);
         }
         else
         {
@@ -79,7 +79,7 @@ public:
             else
                 axis = vectorR3(0., 0., 1.);
             ang = textToFloat(getParameter(argc, argv, "-ang"));
-            A3D = rotation3DMatrix(ang, axis);
+            rotation3DMatrix(ang, axis, A3D);
 
             A2D.resize(3,3);
             FOR_ALL_ELEMENTS_IN_MATRIX2D(A2D)

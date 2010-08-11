@@ -20,8 +20,14 @@
 #define _XV_SMOOTH_H
 typedef unsigned char byte;
 
+/**@defgroup XV Functions taken from xv
+   @ingroup DataLibrary
+*/
+//@{
+/** Resize of a 8-bit image */
 byte *SmoothResize(byte *srcpic8, int swide, int shigh,
                    int dwide, int dhigh,
                    byte *rmap, byte *gmap, byte *bmap,
                    byte *rdmap, byte *gdmap, byte *bdmap, int maplen);
+//@}
 #endif
