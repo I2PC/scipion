@@ -66,12 +66,8 @@ private:
     long long int assignedJobs;
 
 public:
-<<<<<<< .mine
-    /** @defgroup Constructors Constructors
-=======
     /** @defgroup Constructors Constructors
      *  @ingroup ParallelJobHandler
->>>>>>> .r5848
      *
      *The are two constructors, one that should be called by the master
      *in wich the lock file is created and parameters should be supplied
