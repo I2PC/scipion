@@ -32,23 +32,36 @@
 #include <external/sqlite-3.6.23/sqlite3.h>
 #include "metadata_label.h"
 
-
-
 class MDSqlStaticInit;
 class MDQuery;
 class MetaData;
 class MDCache;
 
+/** @addtogroup MetaData
+ * @{
+ */
+
+/** Posible error codes in MetaData operations */
+enum MDErrors
+{
+    NO_OBJECTS_STORED = -1, // NOTE: Do not change this value (-1)
+    NO_MORE_OBJECTS = -2,
+    NO_OBJECT_FOUND = -3
+};
+
+/** Posible Aggregation Operations in a MetaData */
 enum AggregateOperation
 {
     AGGR_COUNT, AGGR_MAX, AGGR_MIN, AGGR_SUM, AGGR_AVG
 };
 
+/** Posible Set Operations with MetaData */
 enum SetOperation
 {
     UNION, UNION_DISTINCT, INTERSECTION, SUBSTRACTION, INNER_JOIN, LEFT_JOIN, OUTER_JOIN
 };
 
+/** Enumeration of JOIN types for this operation */
 enum JoinType
 {
     INNER=INNER_JOIN, LEFT=LEFT_JOIN, OUTER=OUTER_JOIN
@@ -56,60 +69,53 @@ enum JoinType
 
 #include "metadata.h"
 
-/** MDSql this class will manage SQL database interactions
- * will be used to implement different MetaData functions
- * The class will be static(only static methods)
- * and only available for MetaData
+/** This class will manage SQL database interactions.
+ * This class is designed to used inside a MetaData.
  */
 class MDSql
 {
-public:
+private:
 
-    /**This will create the table to store
-     * the metada objects, will return false
-     * if the mdId table is already present
+    /** This will create the table to store the metada objects.
+     * Will return false if the mdId table is already present.
      */
     bool createMd();
 
-    /**This function will drop the entire table
-     * for use the metada again, a call
-     * to 'createMd' should be done
+    /** This function will drop the entire table.
+     * For use the metada again, a call to createMd() should be done.
      */
     bool clearMd();
 
-    /**Add a new row and return the objId(rowId)
-     *
+    /**Add a new row and return the objId(rowId).
      */
     long int addRow();
 
-    /** Add a new column to a metadata
+    /** Add a new column to a metadata.
      */
     bool addColumn(MDLabel column);
-    /**Set the value of an object in an specified column
-     *
+
+    /**Set the value of an object in an specified column.
      */
     bool setObjectValue(const int objId, const MDValue &value);
 
-    /**Get the value of an object
-     *
+    /** Get the value of an object.
      */
     bool getObjectValue(const int objId, MDValue &value);
 
-    /** This function will do a select
-     * the 'limit' is the maximum number of object
+    /** This function will select some elements from table.
+     * The 'limit' is the maximum number of object
      * returned, if is -1, all will be returned
      * Also a query could be specified for selecting objects
      * if no query is provided by default all are returned
      */
     void selectObjects(std::vector<long int> &objectsOut, const MDQuery *queryPtr = NULL);
 
-    /** This function will delete elements
-     * that match the query
-     * if not query is provided, all rows are deleted
+    /** This function will delete elements that match the query.
+     * If not query is provided, all rows are deleted
      */
     long int deleteObjects(const MDQuery *queryPtr = NULL);
 
-    /** Coppy the objects from a metada to other
+    /** Coppy the objects from a metada to other.
      * return the number of objects copied
      * */
     long int copyObjects(MDSql * sqlOut,
@@ -117,21 +123,18 @@ public:
     long int copyObjects(MetaData * mdPtrOut,
                          const MDQuery *queryPtr = NULL) const;
 
-    /** This function is to perform aggregation operations
-     *
+    /** This function performs aggregation operations.
      */
     void aggregateMd(MetaData *mdPtrOut,
                      const std::vector<AggregateOperation> &operations,
                      MDLabel operateLabel);
 
-    /**
-     *This function will be used to create o delete an index over a column
-     *to improve searchs, but inserts become expensives
+    /** This function will be used to create o delete an index over a column.
+     *Those indexes will improve searchs, but inserts will become expensives
      */
     void indexModify(const MDLabel label, bool create=true);
 
     /** Some iteration methods
-     *
      */
     long int firstRow();
     long int lastRow();
@@ -156,8 +159,6 @@ public:
     MDSql(MetaData *md);
     ~MDSql();
 
-
-private:
     static int table_counter;
     static sqlite3 *db;
 
@@ -168,10 +169,10 @@ private:
     static bool sqlEnd();
     static bool sqlBeginTrans();
     static bool sqlCommitTrans();
-    /**Return an unique id for each metadata
-        * this function should be called once for each
-        * metada and the id will be used for operations
-        */
+    /** Return an unique id for each metadata
+     * this function should be called once for each
+     * metada and the id will be used for operations
+     */
     int getUniqueId();
 
     bool dropTable();
@@ -197,33 +198,12 @@ private:
     MDCache *myCache;
 
     friend class MDSqlStaticInit;
+    friend class MetaData;
 }
 ;//close class MDSql
 
-
-class MDSqlStaticInit
-{
-private:
-    MDSqlStaticInit()
-    {
-        MDSql::sqlBegin();
-    }//close constructor
-
-    ~MDSqlStaticInit()
-    {
-        MDSql::sqlEnd();
-    }//close destructor
-
-    friend class MDSql;
-}
-;//close class MDSqlStaticInit
-
-
-///@defgroup MetaDataQuery represent queries to a metadata
-//@ingroup DataLibrary
-
-/** MDQuery this is the base class for queries, its abstract
- *@ingroup MetaDataQuery
+/** This is the base class for queries on MetaData.
+ * It is abstract, so it can not be instanciated.
  */
 class MDQuery
 {
@@ -271,9 +251,12 @@ public:
 
 };
 
+/** @} */
+
+/** Enumeration of all posible relational queries operations */
 enum RelationalOp { EQ, NE, GT, LT, GE, LE };
-/**MDValueRelational will compare a column with some value
- *@ingroup MetaDataQuery
+
+/** This class represent all queries that performs a relational operation of some column value.
  */
 class MDValueRelational: public MDQuery
 {
@@ -369,7 +352,7 @@ public:
 }
 ;//class MDValueGE
 
-/**MDValueAbove this will test if a label have a value smaller than a maximum
+/**This will test if a label have a value smaller than a maximum
  *@ingroup MetaDataQuery
  */
 class MDValueLE: public MDValueRelational
@@ -384,8 +367,7 @@ public:
 }
 ;//class MDValueLE
 
-/**MDMultiQuery this will combine many queries with AND and OR operations
- *@ingroup MetaDataQuery
+/** This class will combine several queries with AND and OR operations.
  */
 class MDMultiQuery: public MDQuery
 {
@@ -434,8 +416,7 @@ public:
 ;//class MDMultiQuery
 
 
-/**MDValueRange this will test if a label have a value within a minimum and maximum
- *@ingroup MetaDataQuery
+/**This subclass of Query will test if a label have a value within a minimum and maximum.
  */
 class MDValueRange: public MDQuery
 {
@@ -467,8 +448,7 @@ public:
 ;//class MDValueRange
 
 
-/** Just a class to store some cached sql statements
- *
+/** Class to store some cached sql statements.
  */
 class MDCache
 {
@@ -481,6 +461,26 @@ public:
     MDCache();
     ~MDCache();
 };
+
+/** Just to work as static constructor for initialize database.
+ */
+class MDSqlStaticInit
+{
+private:
+    MDSqlStaticInit()
+    {
+        MDSql::sqlBegin();
+    }//close constructor
+
+    ~MDSqlStaticInit()
+    {
+        MDSql::sqlEnd();
+    }//close destructor
+
+    friend class MDSql;
+}
+;//close class MDSqlStaticInit
+
 
 template<class T>
 MDValueEQ MDValueEqualSwig(MDLabel label, const T &value)

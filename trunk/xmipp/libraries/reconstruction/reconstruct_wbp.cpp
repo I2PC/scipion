@@ -151,7 +151,7 @@ void Prog_WBP_prm::get_angles_for_image(const FileName &fn, double &rot, double 
     else
     {
         unsigned long int id=SF.gotoFirstObject(MDValueEQ(MDL_IMAGE,(std::string)fn));
-        if (id!=MetaData::NO_OBJECT_FOUND && id!=MetaData::NO_OBJECTS_STORED)
+        if (id!=NO_OBJECT_FOUND && id!=NO_OBJECTS_STORED)
         {
             SF.getValue(MDL_ANGLEROT,rot);
             SF.getValue(MDL_ANGLETILT,tilt);

@@ -144,7 +144,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
 #endif
 
     }
-    while (SF.nextObject()!= MetaData::NO_MORE_OBJECTS)
+    while (SF.nextObject()!= NO_MORE_OBJECTS)
         ;
 
     return retval / N;

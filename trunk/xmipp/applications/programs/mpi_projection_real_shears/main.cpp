@@ -107,7 +107,7 @@ public :
         }
 
         // Loop over getting new work requests until there is no more work to be done
-        while (finished!=MetaData::NO_MORE_OBJECTS)
+        while (finished!=NO_MORE_OBJECTS)
         {
             // Receive results from a slave
             MPI_Recv(Data.Output,       // message buffer

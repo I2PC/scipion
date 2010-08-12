@@ -38,68 +38,72 @@ class MDLabelData;
 class MDValue;
 class MDLabelStaticInit;
 
+/** @addtogroup MetaData
+ * @{
+ */
+
+/** Enumerate all posible labels to use in MetaData.
+ */
 enum MDLabel
 {
     MDL_UNDEFINED = -1,
-    MDL_FIRST_LABEL,
-    //The label MDL_OBJID is special and should not be used
-    MDL_OBJID = MDL_FIRST_LABEL, // object id (int)
+    MDL_FIRST_LABEL, ///< The label MDL_OBJID is special and should not be used
+    MDL_OBJID = MDL_FIRST_LABEL, ///< object id (int), NOTE: This label is special and shouldn't be used
 
-    MDL_ANGLEPSI2, // Psi angle of an image (double)
-    MDL_ANGLEPSI, // Psi angle of an image (double)
-    MDL_ANGLEROT2, // Rotation angle of an image (double)
-    MDL_ANGLEROT, // Rotation angle of an image (double)
-    MDL_ANGLETILT2, // Tilting angle of an image (double)
-    MDL_ANGLETILT, // Tilting angle of an image (double)
-    MDL_AVG, //average value (double)
-    MDL_AZIMUTALANGLE, //ctf definition azimutal angle
-    MDL_BGMEAN, // Mean background value for an image
-    MDL_BLOCK, // Current block number (for incremental EM)
-    MDL_CELLX, // Cell location for crystals
-    MDL_CELLY, // Cell location for crystals
-    MDL_COMMENT, // A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
-    MDL_COST, // Cost for the image (double)
-    MDL_COUNT, // Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
-    MDL_CTFINPUTPARAMS, // Parameters file for the CTF Model (std::string)
-    MDL_CTFMODEL, // Name for the CTF Model (std::string)
-    MDL_CTF_SAMPLING_RATE, // Sampling rate
-    MDL_CTF_VOLTAGE, // Microscope voltage (kV)
-    MDL_CTF_DEFOCUSU, // Defocus U (Angstroms)
-    MDL_CTF_DEFOCUSV, // Defocus V (Angstroms)
-    MDL_CTF_DEFOCUS_ANGLE, // Defocus angle (degrees)
-    MDL_CTF_CS, // Spherical aberration
-    MDL_CTF_CA, // Chromatic aberration
-    MDL_CTF_ENERGY_LOSS, // Energy loss
-    MDL_CTF_LENS_STABILITY, // Lens stability
-    MDL_CTF_CONVERGENCE_CONE, // Convergence cone
-    MDL_CTF_LONGITUDINAL_DISPLACEMENT, // Longitudinal displacement
-    MDL_CTF_TRANSVERSAL_DISPLACEMENT, // Transversal displacemente
-    MDL_CTF_Q0, // Inelastic absorption
-    MDL_CTF_K, // CTF gain
-    MDL_CTFBG_GAUSSIAN_K, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN_SIGMAU, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN_SIGMAV, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN_CU, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN_CV, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN_ANGLE, // CTF Background parameter
-    MDL_CTFBG_SQRT_K, // CTF Background parameter
-    MDL_CTFBG_SQRT_U, // CTF Background parameter
-    MDL_CTFBG_SQRT_V, // CTF Background parameter
-    MDL_CTFBG_SQRT_ANGLE, // CTF Background parameter
-    MDL_CTFBG_BASELINE, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_K, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_SIGMAU, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_SIGMAV, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_CU, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_CV, // CTF Background parameter
-    MDL_CTFBG_GAUSSIAN2_ANGLE, // CTF Background parameter
-    MDL_DATATYPE, // if read from file original image datatype, this is an struct defined in image
-    MDL_DEFGROUP, // Defocus group
-    MDL_DEFOCUSU, // microscope defocus U direction (double)
-    MDL_DEFOCUSV, // microscope defocus V direction (double)
+    MDL_ANGLEPSI2, ///< Psi angle of an image (double)
+    MDL_ANGLEPSI, ///< Psi angle of an image (double)
+    MDL_ANGLEROT2, ///< Rotation angle of an image (double)
+    MDL_ANGLEROT, ///< Rotation angle of an image (double)
+    MDL_ANGLETILT2, ///< Tilting angle of an image (double)
+    MDL_ANGLETILT, ///< Tilting angle of an image (double)
+    MDL_AVG, ///< average value (double)
+    MDL_AZIMUTALANGLE, ///< ctf definition azimutal angle
+    MDL_BGMEAN, ///< Mean background value for an image
+    MDL_BLOCK, ///< Current block number (for incremental EM)
+    MDL_CELLX, ///< Cell location for crystals
+    MDL_CELLY, ///< Cell location for crystals
+    MDL_COMMENT, ///< A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
+    MDL_COST, ///< Cost for the image (double)
+    MDL_COUNT, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
+    MDL_CTFINPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
+    MDL_CTFMODEL, ///< Name for the CTF Model (std::string)
+    MDL_CTF_SAMPLING_RATE, ///< Sampling rate
+    MDL_CTF_VOLTAGE, ///< Microscope voltage (kV)
+    MDL_CTF_DEFOCUSU, ///< Defocus U (Angstroms)
+    MDL_CTF_DEFOCUSV, ///< Defocus V (Angstroms)
+    MDL_CTF_DEFOCUS_ANGLE, ///< Defocus angle (degrees)
+    MDL_CTF_CS, ///< Spherical aberration
+    MDL_CTF_CA, ///< Chromatic aberration
+    MDL_CTF_ENERGY_LOSS, ///< Energy loss
+    MDL_CTF_LENS_STABILITY, ///< Lens stability
+    MDL_CTF_CONVERGENCE_CONE, ///< Convergence cone
+    MDL_CTF_LONGITUDINAL_DISPLACEMENT, ///< Longitudinal displacement
+    MDL_CTF_TRANSVERSAL_DISPLACEMENT, ///< Transversal displacemente
+    MDL_CTF_Q0, ///< Inelastic absorption
+    MDL_CTF_K, ///< CTF gain
+    MDL_CTFBG_GAUSSIAN_K, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN_SIGMAU, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN_SIGMAV, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN_CU, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN_CV, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN_ANGLE, ///< CTF Background parameter
+    MDL_CTFBG_SQRT_K, ///< CTF Background parameter
+    MDL_CTFBG_SQRT_U, ///< CTF Background parameter
+    MDL_CTFBG_SQRT_V, ///< CTF Background parameter
+    MDL_CTFBG_SQRT_ANGLE, ///< CTF Background parameter
+    MDL_CTFBG_BASELINE, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_K, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_SIGMAU, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_SIGMAV, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_CU, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_CV, ///< CTF Background parameter
+    MDL_CTFBG_GAUSSIAN2_ANGLE, ///< CTF Background parameter
+    MDL_DATATYPE, ///< if read from file original image datatype, this is an struct defined in image
+    MDL_DEFGROUP, ///< Defocus group
+    MDL_DEFOCUSU, ///< microscope defocus U direction (double)
+    MDL_DEFOCUSV, ///< microscope defocus V direction (double)
 
     MDL_DM3_IDTAG,
-//    MDL_DM3_LEVEL,
     MDL_DM3_NODEID,
     MDL_DM3_NUMBER_TYPE,
     MDL_DM3_PARENTID,
@@ -108,117 +112,116 @@ enum MDLabel
     MDL_DM3_SIZE,
     MDL_DM3_VALUE,
 
-    MDL_ENABLED, // Is this image enabled? (int [-1 or 1])
-    MDL_FLIP, // Flip the image? (bool)
-    MDL_IMAGE_CLASS_COUNT, // Number of images assigned to the same class as this image
-    MDL_IMAGE_CLASS_GROUP, // Name of the class group for this image (metadata with all the images assigned to that class)
-    MDL_IMAGE_CLASS, // Name of the class representative for this image
-    MDL_IMAGE, // Name of an image (std::string)
-    MDL_IMAGE_ORIGINAL, // Name of an image from which MDL_IMAGE is coming from
-    MDL_IMGMD, // Name of Metadata file for all images (string)
-    MDL_INTSCALE, // Intensity scale for an image
-    MDL_ITER, // Current iteration number (int)
-    MDL_K,// //ctf definition K
-    MDL_KSTEST, //KS-test statistics
-    MDL_LL, // contribution of an image to log-likelihood value
-    MDL_MASK, // Name of a mask associated to image
-    MDL_MAXCC, // Cross-correlation for the image (double)
-    MDL_MAX, //maximum value (double)
-    MDL_MICROGRAPH, // Name of a micrograph (std::string)
-    MDL_MIN, //minimum value (double)
-    MDL_MIRRORFRAC, // Mirror fraction for a Maximum Likelihood model
-    MDL_MISSINGREGION_NR, // Number of missing region in subtomogram
-    MDL_MISSINGREGION_TYPE, // Type of missing region in subtomogram
-    MDL_MISSINGREGION_THY0, // Initial tilt angle in Y for missing region in subtomogram
-    MDL_MISSINGREGION_THYF, // Final tilt angle in Y for missing region in subtomogram
-    MDL_MISSINGREGION_THX0, // Initial tilt angle in X for missing region in subtomogram
-    MDL_MISSINGREGION_THXF, // Final tilt angle in X for missing region in subtomogram
-    MDL_MODELFRAC, // Model fraction (alpha_k) for a Maximum Likelihood model
-    MDL_NMA, // Normal mode displacements (vector double)
+    MDL_ENABLED, ///< Is this image enabled? (int [-1 or 1])
+    MDL_FLIP, ///< Flip the image? (bool)
+    MDL_IMAGE_CLASS_COUNT, ///< Number of images assigned to the same class as this image
+    MDL_IMAGE_CLASS_GROUP, ///< Name of the class group for this image (metadata with all the images assigned to that class)
+    MDL_IMAGE_CLASS, ///< Name of the class representative for this image
+    MDL_IMAGE, ///< Name of an image (std::string)
+    MDL_IMAGE_ORIGINAL, ///< Name of an image from which MDL_IMAGE is coming from
+    MDL_IMGMD, ///< Name of Metadata file for all images (string)
+    MDL_INTSCALE, ///< Intensity scale for an image
+    MDL_ITER, ///< Current iteration number (int)
+    MDL_K, ///< //ctf definition K
+    MDL_KSTEST, ///<KS-test statistics
+    MDL_LL, ///< contribution of an image to log-likelihood value
+    MDL_MASK, ///< Name of a mask associated to image
+    MDL_MAXCC, ///< Cross-correlation for the image (double)
+    MDL_MAX, ///<maximum value (double)
+    MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
+    MDL_MIN, ///<minimum value (double)
+    MDL_MIRRORFRAC, ///< Mirror fraction for a Maximum Likelihood model
+    MDL_MISSINGREGION_NR, ///< Number of missing region in subtomogram
+    MDL_MISSINGREGION_TYPE, ///< Type of missing region in subtomogram
+    MDL_MISSINGREGION_THY0, ///< Initial tilt angle in Y for missing region in subtomogram
+    MDL_MISSINGREGION_THYF, ///< Final tilt angle in Y for missing region in subtomogram
+    MDL_MISSINGREGION_THX0, ///< Initial tilt angle in X for missing region in subtomogram
+    MDL_MISSINGREGION_THXF, ///< Final tilt angle in X for missing region in subtomogram
+    MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
+    MDL_NMA, ///< Normal mode displacements (vector double)
 
-    MDL_ORIGINX, // Origin for the image in the X axis (double)
-    MDL_ORIGINY, // Origin for the image in the Y axis (double)
-    MDL_ORIGINZ, // Origin for the image in the Z axis (double)
-    MDL_PERIODOGRAM, // A periodogram's file name (std::string)
-    MDL_PMAX, // Maximum value of normalized probability function (now called "Pmax/sumP") (double)
-    MDL_Q0,//ctf definition Q0
-    MDL_RANDOMSEED, // Seed for random number generator
-    MDL_REF3D, // 3D Class to which the image belongs (int)
-    MDL_REF, // Class to which the image belongs (int)
-    MDL_REFMD, // Name of Metadata file for all references(string)
-    MDL_RESOLUTION_DPR,//differential phase residual (double)
-    MDL_RESOLUTION_ERRORL2,//Error in l2 (double)
-    MDL_RESOLUTION_FRC,//Fourier shell correlation (double)
-    MDL_RESOLUTION_FRCRANDOMNOISE,//Fourier shell correlation noise (double)
-    MDL_RESOLUTION_FREQ,//Frequency in 1/A (double)
-    MDL_RESOLUTION_FREQREAL,//Frequency in A (double)
-    MDL_SAMPLINGRATE,  // sampling rate in A/pixel (double)
-    MDL_SAMPLINGRATEX, // sampling rate in A/pixel (double)
-    MDL_SAMPLINGRATEY, // sampling rate in A/pixel (double)
-    MDL_SAMPLINGRATEZ, // sampling rate in A/pixel (double)
-    MDL_SCALE, // scaling factor for an image or volume (double)
-    MDL_SELFILE, // Name of an image (std::string)
-    MDL_SERIE, // A collection of micrographs, e.g. a tilt serie (std::string)
-    MDL_SHIFTX, // Shift for the image in the X axis (double)
-    MDL_SHIFTY, // Shift for the image in the Y axis (double)
-    MDL_SHIFTZ, // Shift for the image in the Z axis (double)
-    MDL_SHIFT_CRYSTALX, // Shift for the image in the X axis (double) for crystals
-    MDL_SHIFT_CRYSTALY, // Shift for the image in the Y axis (double) for crystals
-    MDL_SHIFT_CRYSTALZ, // Shift for the image in the Z axis (double) for crystals
-    MDL_SIGMANOISE, // Standard deviation of the noise in ML model
-    MDL_SIGMAOFFSET, // Standard deviation of the offsets in ML model
-    MDL_SIGNALCHANGE, // Signal change for an image
-    MDL_SPHERICALABERRATION, //ctf definition azimutal angle
-    MDL_STDDEV, //stdandard deviation value (double)
-    MDL_SUM, // Sum of elements of a given type (double) [this is a genereic type do not use to transfer information to another program]
-    MDL_SUMWEIGHT, // Sum of all weights in ML model
-    MDL_SYMNO, // Symmetry number for a projection (used in ART)
-    MDL_TRANSFORMATIONMTRIX, // transformation matrix(vector double)
-    MDL_VOLTAGE, // microscope voltage (double)
-    MDL_WEIGHT, // Weight assigned to the image (double)
-    MDL_WROBUST, // Weight of t-student distribution in robust Maximum likelihood
-    MDL_XINT, // X component (int)
-    MDL_X, // X component (double)
-    MDL_YINT, // Y component (int)
-    MDL_Y, // Y component (double)
-    MDL_ZINT, // Z component (int)
-    MDL_Z, // Z component (double)
-    MDL_ZSCORE, // Z Score (double)
+    MDL_ORIGINX, ///< Origin for the image in the X axis (double)
+    MDL_ORIGINY, ///< Origin for the image in the Y axis (double)
+    MDL_ORIGINZ, ///< Origin for the image in the Z axis (double)
+    MDL_PERIODOGRAM, ///< A periodogram's file name (std::string)
+    MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
+    MDL_Q0, ///< ctf definition Q0
+    MDL_RANDOMSEED, ///< Seed for random number generator
+    MDL_REF3D, ///< 3D Class to which the image belongs (int)
+    MDL_REF, ///< Class to which the image belongs (int)
+    MDL_REFMD, ///< Name of Metadata file for all references(string)
+    MDL_RESOLUTION_DPR, ///<differential phase residual (double)
+    MDL_RESOLUTION_ERRORL2, ///<Error in l2 (double)
+    MDL_RESOLUTION_FRC, ///<Fourier shell correlation (double)
+    MDL_RESOLUTION_FRCRANDOMNOISE, ///<Fourier shell correlation noise (double)
+    MDL_RESOLUTION_FREQ, ///<Frequency in 1/A (double)
+    MDL_RESOLUTION_FREQREAL, ///< Frequency in A (double)
+    MDL_SAMPLINGRATE, ///< sampling rate in A/pixel (double)
+    MDL_SAMPLINGRATEX, ///< sampling rate in A/pixel (double)
+    MDL_SAMPLINGRATEY, ///< sampling rate in A/pixel (double)
+    MDL_SAMPLINGRATEZ, ///< sampling rate in A/pixel (double)
+    MDL_SCALE, ///< scaling factor for an image or volume (double)
+    MDL_SELFILE, ///< Name of an image (std::string)
+    MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
+    MDL_SHIFTX, ///< Shift for the image in the X axis (double)
+    MDL_SHIFTY, ///< Shift for the image in the Y axis (double)
+    MDL_SHIFTZ, ///< Shift for the image in the Z axis (double)
+    MDL_SHIFT_CRYSTALX, ///< Shift for the image in the X axis (double) for crystals
+    MDL_SHIFT_CRYSTALY, ///< Shift for the image in the Y axis (double) for crystals
+    MDL_SHIFT_CRYSTALZ, ///< Shift for the image in the Z axis (double) for crystals
+    MDL_SIGMANOISE, ///< Standard deviation of the noise in ML model
+    MDL_SIGMAOFFSET, ///< Standard deviation of the offsets in ML model
+    MDL_SIGNALCHANGE, ///< Signal change for an image
+    MDL_SPHERICALABERRATION, ///<ctf definition azimutal angle
+    MDL_STDDEV, ///<stdandard deviation value (double)
+    MDL_SUM, ///< Sum of elements of a given type (double) [this is a genereic type do not use to transfer information to another program]
+    MDL_SUMWEIGHT, ///< Sum of all weights in ML model
+    MDL_SYMNO, ///< Symmetry number for a projection (used in ART)
+    MDL_TRANSFORMATIONMTRIX, ///< transformation matrix(vector double)
+    MDL_VOLTAGE, ///< microscope voltage (double)
+    MDL_WEIGHT, ///< Weight assigned to the image (double)
+    MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
+    MDL_XINT, ///< X component (int)
+    MDL_X, ///< X component (double)
+    MDL_YINT, ///< Y component (int)
+    MDL_Y, ///< Y component (double)
+    MDL_ZINT, ///< Z component (int)
+    MDL_Z, ///< Z component (double)
+    MDL_ZSCORE, ///< Z Score (double)
 
 
     MDL_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
     // it is here for looping purposes
 };//close enum Label
 
+/** Possible types of the values of labels */
 enum MDLabelType
 {
     LABEL_NOTYPE = -1, LABEL_INT, LABEL_BOOL, LABEL_DOUBLE, LABEL_FLOAT, LABEL_STRING, LABEL_VECTOR, LABEL_LONG
 };
 
+/** Static class to group some functions with labels.
+ * This class holds several function to work with labels.
+ * Also performs the static initialization of the labels data.
+ */
 class MDL
 {
 public:
-    // This enum defines what MetaDataLabels this class can manage, if
-    // you need a new one add it here and modify affected methods:
-    //
-    //  - static MDLabel codifyLabel( std::string strLabel );
-    // - static std::string MDL::label2Str( MDLabel inputLabel );
-    // - void writeValuesToFile( std::ofstream &outfile, MDLabel inputLabel );
-    // - void addValue( std::string name, std::string value );
-    //
-    // Keep this special structure (using MDL_FIRSTLABEL and MDL_LAST_LABEL) so the
-    // programmer can iterate through it like this:
-    //
-    //  for( MDLabel mdl = MDL_FIRST_LABEL ; mdl < MDL_LAST_LABEL ; MDLabel( mdl+1 ) )
-    //
-
+    /** @name String conversions
+     * @{
+     */
+    /** Converts an string to MDLabel */
     static MDLabel str2Label(const std::string &labelName);
+    /** Converts MDLabel to string */
     static std::string label2Str(const MDLabel label);
-    //static std::string value2Str(const MDLabel label, const MDValue &value, bool withFormat = false);
-    //static bool voidPtr2Value(const MDLabel label, void* ptrValue, MDValue &valueOut);
-    //static bool value2VoidPtr(const MDLabel label, const MDValue &value, void* valuePtrOut);
+    /** Converts MDLabel to string representing SQL column*/
     static std::string label2SqlColumn(const MDLabel label);
+    /** @} */
 
+    /** @name Type checks
+     * Several label type checks
+     * @{
+     */
     static bool isInt(const MDLabel label);
     static bool isBool(const MDLabel label);
     static bool isString(const MDLabel label);
@@ -228,8 +231,7 @@ public:
     static bool isValidLabel(const std::string &labelName);
     static MDLabelType labelType(const MDLabel label);
     static MDLabelType labelType(std::string &labelName);
-
-
+    /** @} */
 
 private:
     static std::map<MDLabel, MDLabelData> data;
@@ -242,14 +244,13 @@ private:
 }
 ;//close class MLD definition
 
-//Just a class for static initialization
+/** Just to work as static constructor for initialize labels data.
+ */
 class MDLabelStaticInit
 {
 private:
     MDLabelStaticInit()
     {
-        //std::cerr << "static: adding labels" <<std::endl;
-
         ///==== Add labels entries from here in the SAME ORDER as declared in ENUM ==========
         //The label MDL_OBJID is special and should not be used
         MDL::addLabel(MDL_OBJID, LABEL_LONG, "objId");
@@ -389,7 +390,6 @@ private:
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");
         MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "Zscore");
 
-        //std::cerr << "static: end adding labels" <<std::endl;
     }
 
     ~MDLabelStaticInit()
@@ -418,7 +418,8 @@ public:
         str = s;
     }
 }
-;//close class MDLabelData c
+;//close class MDLabelData
+
 
 class MDValue
 {
@@ -476,9 +477,9 @@ public:
     friend std::istream& operator>> (std::istream& is, MDValue &value);
     bool fromString(const std::string &str);
 
-}//close class MDValue
-;
+}; //close class MDValue
 
+/** @} */
 
 
 

@@ -326,7 +326,7 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
         datasize = datasize_n * gettypesize(Float);
     double aux;
 
-    if (MDMainHeader.firstObject() != MetaData::NO_OBJECTS_STORED)
+    if (MDMainHeader.firstObject() != NO_OBJECTS_STORED)
     {
 
         if(MDMainHeader.getValue(MDL_MIN,   aux))
@@ -408,8 +408,8 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     {
         //nextresult = MD.getActiveObject();
         //header->imgnum = i + 1;
-        if (next_result != MetaData::NO_OBJECTS_STORED &&
-            next_result != MetaData::NO_MORE_OBJECTS)
+        if (next_result != NO_OBJECTS_STORED &&
+            next_result != NO_MORE_OBJECTS)
         {
             if(MD.getValue(MDL_ORIGINX,  aux))
                 header->iyold  = (float)-aux;

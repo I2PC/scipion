@@ -33,19 +33,16 @@
 #include <string.h>
 #include "funcs.h"
 
-/** @defgroup ParallelJobHandler Parallel Job Handler
+/** @defgroup ParallelLibrary Parallel Library
  *  @ingroup DataLibrary
  */
 
-/** Parallel Job Handler Class.
- * @ingroup ParallelJobHandler
- *
- * This class distributes dynamically N tasks between parallel workers.
+/** This class distributes dynamically N tasks between parallel workers.
+ * @ingroup ParallelLibrary
  * This class is a generalization of a common task in a parallel
  * environment of dynamically distribute N tasks between workers(threads or mpi proccess).
  * Each worker will ask for a group of tasks, proccess it and ask for more tasks
  * until there is not more task to process.
- *
  *
  * A lock is required for access the number of unprocessed tasks each time
  * a worker ask for job, this is implemented now by a filesystem lock in a file.(the lockfile)
@@ -66,29 +63,27 @@ private:
     long long int assignedJobs;
 
 public:
-    /** @defgroup Constructors Constructors
-     *  @ingroup ParallelJobHandler
+    /** @name Constructors Constructors
      *
-     *The are two constructors, one that should be called by the master
-     *in wich the lock file is created and parameters should be supplied
-     *and the constructor for the slaves, which read read the parameters
-     *from the lockfile
+     * The are two constructors, one that should be called by the master
+     * in wich the lock file is created and parameters should be supplied
+     * and the constructor for the slaves, which read read the parameters
+     * from the lockfile
+     * @{
      */
 
-    /** Master constructor.
-     * @ingroup Constructors
+    /** Constructor for Master node.
      */
     ParallelJobHandler(long long int nJobs, long long int bSize, char *fName = NULL);
 
-    /** Slaves constructor.
-     * @ingroup Constructors
+    /** Constructor for Slaves nodes.
      */
     ParallelJobHandler(const char *fName);
 
     /** Destructor.
-     *  @ingroup Constructors
      */
     ~ParallelJobHandler();
+    /** @} */
 
     /** Set the number of tasks assigned in each request */
     bool setBlockSize(long long int blockSize);

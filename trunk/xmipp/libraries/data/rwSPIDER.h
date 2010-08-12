@@ -394,7 +394,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     bool baux;
     header->imami = 0;//never trust max/min
 
-    if (MDMainHeader.firstObject() != MetaData::NO_OBJECTS_STORED)
+    if (MDMainHeader.firstObject() != NO_OBJECTS_STORED)
     {
         if(MDMainHeader.getValue(MDL_MIN,   aux))
             header->fmin = (float)aux;
@@ -425,7 +425,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     if (  Ndim == 1 &&
           mode != WRITE_APPEND &&
           !isStack &&
-          MD.firstObject() != MetaData::NO_OBJECTS_STORED)
+          MD.firstObject() != NO_OBJECTS_STORED)
     {
         if(MD.getValue(MDL_ORIGINX,  aux))
             header->xoff  =(float)aux;

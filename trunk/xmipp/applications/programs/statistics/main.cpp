@@ -98,7 +98,7 @@ int main(int argc, char **argv)
         }
 
         long int ret=SF.firstObject();
-        if(ret==MetaData::NO_OBJECTS_STORED)
+        if(ret==NO_OBJECTS_STORED)
         {
             std::cerr << "Empty inputFile File\n";
             exit(1);

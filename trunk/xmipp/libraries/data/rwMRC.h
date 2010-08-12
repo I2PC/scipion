@@ -332,7 +332,7 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     header->b = 0.;// ub;
     header->c = 0.;// uc;
 
-    if (MDMainHeader.firstObject() != MetaData::NO_OBJECTS_STORED)
+    if (MDMainHeader.firstObject() != NO_OBJECTS_STORED)
     {
         if(MDMainHeader.getValue(MDL_MIN, aux))
             header->amin  = (float)aux;
