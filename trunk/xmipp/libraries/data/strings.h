@@ -32,6 +32,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#include <stdio.h>
 
 /// @defgroup StringUtilities String utilities
 /// @ingroup DataLibrary
