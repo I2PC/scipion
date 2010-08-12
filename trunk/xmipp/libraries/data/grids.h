@@ -1344,8 +1344,7 @@ public:
 
     /** Read grid volume.
         The volume is read from a Xmipp volume with a special structure
-        at several slices. An exception might be thrown by the
-        \ref VolumeXmipp::read routine. */
+        at several slices. */
     void read(const FileName &fn, const std::string &basisName)
     {
         Image<T>       V;

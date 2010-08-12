@@ -83,17 +83,14 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 INPUT                  = ./libraries \
                          ./applications \
+                         ./external/bilib \
                          ./documentation.dox
-FILE_PATTERNS          = *.c \
-                         *.cc \
-                         *.cpp \
-                         *.h \
-                         *.inc \
+FILE_PATTERNS          = *.h \
                          *.dox
 RECURSIVE              = YES
 EXCLUDE                =
 EXCLUDE_SYMLINKS       = NO
-EXCLUDE_PATTERNS       = moc* */swig/* */graphicsj/* */scripts/* */.svn/*
+EXCLUDE_PATTERNS       = moc* */swig/* */graphicsj/* */scripts/* */.svn/* */cppsqlite3*
 EXAMPLE_PATH           =
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO

@@ -39,7 +39,7 @@
 where they are */
 std::string removeChar( const std::string& str, char character );
 
-/** Removes escaped symbols \n, \t, \v, \b, \r, \f, and \a */
+/** Removes escaped symbols ESC+n, t, v, b, r, f, and a */
 std::string unescape( const std::string& str );
 
 /** Removes white spaces from the beginning and the end of the string

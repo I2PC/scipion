@@ -193,28 +193,30 @@ public:
 
     /** Save neighbors in a propietary ascii file. The structure is as
         follows
+        @code
        [vnum]
        [size1]
        [vec1_neighbors]
-    #ifdef MYPSI
-       [vec1_psi]
-    #endif
+       #ifdef MYPSI
+          [vec1_psi]
+       #endif
        [vec1_crosscorrelation]
        [size2]
        [vec2_neighbors]
-    #ifdef MYPSI
-       [vec2_psi]
-    #endif
+       #ifdef MYPSI
+          [vec2_psi]
+       #endif
        [vec2_crosscorrelation]
        ...
        [sizen]
        [vecn_neighbors]
-    #ifdef MYPSI
-       [vecn_psi]
-    #endif
+       #ifdef MYPSI
+          [vecn_psi]
+       #endif
        [vecn_crosscorrelation]
-
+       @endcode
        for the neighbors and
+       @code
        X1_angle  Y1_angle  Z1_angle
        X1_vector Y1_vector Z1_vector
        X2_angle  Y2_angle  Z2_angle
@@ -222,9 +224,9 @@ public:
        ...
        Xn_angle  Yn_angle  Zn_angle
        Xn_vector Yn_vector Zn_vector
-       for the sampling points
-
-       where vnum is the number of vectors, sizen is the number of elements in
+       @endcode
+       for the sampling points.
+       vnum is the number of vectors, sizen is the number of elements in
        that vector and vecn is the elements.
 
     */

@@ -136,20 +136,20 @@ extern std::string floatToString(float F, int _width, int _prec);
 #endif
 
 /** Access to a direct element.
- * @ingroup MultidimArraysSpeedUp.
+ * @ingroup MultidimArraysSpeedUp
  * v is the array, l is the image, k is the slice, i is the Y index and j is the X index.
  * i and j) within the slice.
  */
 #define DIRECT_NZYX_ELEM(v, l, k, i, j) ((v).data[(l)*ZYXSIZE(v)+(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
 
 /** Multidim element: Logical access.
- * @ingroup MultidimArraysSpeedUp.
+ * @ingroup MultidimArraysSpeedUp
  */
 #define NZYX_ELEM(v, l, k, i, j)  \
     DIRECT_NZYX_ELEM((v), (l), (k) - STARTINGZ(v), (i) - STARTINGY(v), (j) - STARTINGX(v))
 
 /** Access to a direct element.
- * @ingroup MultidimArraysSpeedUp.
+ * @ingroup MultidimArraysSpeedUp
  * v is the array, k is the slice and n is the number of the pixel (combined i and j)
  * within the slice.
  */

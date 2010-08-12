@@ -104,102 +104,97 @@ private:
 
     bool isColumnFormat; ///< Format for the file, column or row formatted
 
-    /**Input file name
+    /* Input file name
      * Where does this MetaData come from/go to be stored?
      */
     FileName inFile;
 
-    /** What labels have been read from a docfile/metadata file
-     *   and/or will be stored on a new metadata file when "save" is
-     *   called
-     **/
+    /* What labels have been read from a docfile/metadata file
+     * and/or will be stored on a new metadata file when "save" is
+     * called
+     */
     std::vector<MDLabel> activeLabels;
 
-    /** When reading a column formated file, if a label is found that
-     *   does not exists as a MDLabel, it is ignored. For further
-     *   file processing, such columns must be ignored and this structure
-     *   allows to do that
-     **/
+    /* When reading a column formated file, if a label is found that
+     * does not exists as a MDLabel, it is ignored. For further
+     * file processing, such columns must be ignored and this structure
+     * allows to do that
+     */
     std::vector<unsigned int> ignoreLabels;
 
-    /** This variables should only be used by MDSql
+    /* These variables should only be used by MDSql
      * for handling db status of metadata
      */
-    /** The table id to do db operations */
+
+    /* The table id to do db operations */
     MDSql * myMDSql;
 
-    /** The id of the object that is active
-     * usefull for calling 'setValue' and 'getValue'
+    /* The id of the object that is active
+     * useful for calling 'setValue' and 'getValue'
      * without specifying object id
      * when activeObjId = -1 means that aren't active object
      */
     int activeObjId;
 
-    /** This are for iteration */
+    /* These are for iteration */
     int iterIndex;
     std::vector<long int> *iterObjectsId;
 
-    /** Read, read data from an input stream and fill metadata
-     * @ingroup MetaDataIO
+    /* Read, read data from an input stream and fill metadata
      */
     //void read(std::ifstream *infile, std::vector<MDLabel> *labelsVector = NULL);
 
-    /** Init, do some initializations tasks, used in constructors
-     * @ingroup MetaDataConstructors
+    /* Init, do some initializations tasks, used in constructors
      */
     void init(const std::vector<MDLabel> *labelsVector = NULL);
 
-    /** Copy info variables from another metadata
-     * @ingroup MetaDataConstructors
+    /* Copy info variables from another metadata
      */
     void copyInfo(const MetaData &md);
 
-    /** Copy all data from another metadata
-     * @ingroup MetaDataConstructors
+    /* Copy all data from another metadata
      */
     void copyMetadata(const MetaData &md);
 
-    /** This private functions are for set real values
+    /* These private functions are for set real values
      * there is an explicit function signature
-     * foreach type supported in Metadata.
+     * for each type supported in Metadata.
      * This is done for some type checking of Metadata labels
      * and values
      */
-
     bool _setValue(long int objId, const MDValue &mdValueIn);
     bool _getValue(long int objId, MDValue &mdValueOut) const;
 
-    /** This have the same logic of the public one,
-     * but doesn't perform any range(wich implies do a size()) checks.
+    /* This have the same logic of the public one,
+     * but doesn't perform any range (which implies do a size()) checks.
      */
     void _selectSplitPart(const MetaData &mdIn,
                           int n, int part, long int mdSize,
                           const MDLabel sortLabel);
 
-    /** This function is for generalizate the sets operations
-     * of unionDistinct, intersection, substraction
-     * wich can be expressed in terms of
+    /* This function is for generalize the sets operations
+     * of unionDistinct, intersection, subtraction
+     * which can be expressed in terms of
      * ADD, SUBSTRACT of intersection part
      */
     void _setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation);
     void _setOperates(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, SetOperation operation);
-    /** clear data and table structure */
+
+    /* clear data and table structure */
     void _clear(bool onlyData=false);
 
     long int _iteratorBegin(const MDQuery *query = NULL);
 
-    /** Some private reading functions */
+    /* Some private reading functions */
     void _readColumns(std::istream& is, std::vector<MDValue>& columnValues,
-                               std::vector<MDLabel>* desiredLabels = NULL);
+                      std::vector<MDLabel>* desiredLabels = NULL);
     void _readRows(std::istream& is, std::vector<MDValue>& columnValues, bool useCommentAsImage);
     void _readRowFormat(std::istream& is);
 
 public:
-
     /** @defgroup MetaDataConstructors Constructors for MetaData objects
-     *  @ingroup MetaDataClass
-     *  @{
      */
+    //@{
 
     /** Empty Constructor.
      *
@@ -208,18 +203,18 @@ public:
      * if labels vectors is passed this labels are created on metadata
      */
     MetaData();
+
+    /** Constructor with labels */
     MetaData(const std::vector<MDLabel> *labelsVector);
 
-    /** From File Constructor.
+    /* From File Constructor.
      *
      * The MetaData is created and data is read from provided fileName. Optionally, a vector
      * of labels can be provided to read just those required labels
      */
     MetaData(const FileName &fileName, const std::vector<MDLabel> *labelsVector = NULL);
 
-    /** Copy constructor
-     *
-     * Created a new metadata by copying all data from an existing MetaData object.
+    /** Copy constructor.
      */
     MetaData(const MetaData &md);
 
@@ -238,12 +233,10 @@ public:
     /**Clear all data
      */
     void clear();
-    /** @} */
+    //@}
 
-    /** @defgroup GettersAndSetters Getters and setters functions
-     * @ingroup MetaDataClass
-     * @{
-     */
+    /** @defgroup GettersAndSetters Getters and setters functions */
+    //@{
 
     /**Get column format info.
      */
@@ -294,12 +287,10 @@ public:
     */
     int MaxStringLength( const MDLabel thisLabel) const;
 
-    /** @} */
+    //@}
 
-    /** @defgroup DataAccess Access to MetaData data for read or write values
-     * @ingroup MetaDataClass
-     * @{
-     */
+    /** @defgroup DataAccess Access to MetaData data for read or write values */
+    //@{
 
     /** Set the value for some label.
      * to the object that has id 'objectId'
@@ -444,21 +435,22 @@ public:
         NO_OBJECT_FOUND = -3
     };
 
-    /** Add and remove indexes for fast search
+    /** Add indexes for fast search
      * in other labels, but insert are more expensive
      */
     void addIndex(MDLabel label);
-    void removeIndex(MDLabel label);
 
-    /** @} */
-
-    /** @defgroup MetaDataIteration Some functions related with iteration over metadata objects
-     * @ingroup MetaDataClass
-     * @{
+    /** Remove indexes for fast search
+     * in other labels, but insert are more expensive
      */
+    void removeIndex(MDLabel label);
+    //@}
+
+    /** @defgroup MetaDataIteration Some functions related with iteration over metadata objects */
+    //@{
 
     /** Goto first metadata object.
-     * This function changes he 'activeObject'
+     * This function changes the 'activeObject'
      * to the first object in the metadata
      * so all calls to 'setValue' and 'getValue' will
      * be performed to this object.
@@ -505,12 +497,10 @@ public:
      * return nextObject id
      */
     long int iteratorNext();
-    /** @} */
+    //@}
 
-    /** @defgroup MetaDataSearch Some functions to perform searches on metadata objects
-     * @ingroup MetaDataClass
-     * @{
-     */
+    /** @defgroup MetaDataSearch Some functions to perform searches on metadata objects */
+    //@{
 
     /** Find all objects that match a query.
      * if called without query, all objects are returned
@@ -530,12 +520,10 @@ public:
     /**Check if exists at least one object that match query.
      */
     bool containsObject(const MDQuery &query);
-    /** @} */
+    //@}
 
-    /** @defgroup MetaDataIO functions related to the I/O of metadata
-     * @ingroup MetaDataClass
-     * @{
-     */
+    /** @defgroup MetaDataIO functions related to the I/O of metadata */
+    //@{
 
     /** Write metadata to disk.
      * This will write the metadata content to disk.
@@ -549,14 +537,12 @@ public:
     /** Read data from file.
      */
     void read(const FileName &inFile, std::vector<MDLabel> *labelsVector = NULL);
-    /** @} */
+    //@}
 
-    /** @defgroup SetOperations Set operations on MetaData
-     * @ingroup MetaDataClass
-     * @{
-     */
+    /** @defgroup SetOperations Set operations on MetaData */
+    //@{
 
-    /** Aggregate metadata objects,
+    /** Aggregate metadata objects.
      * result in calling metadata object
      * thisLabel label is used for aggregation, second. Valid operations are:
      *
@@ -578,8 +564,10 @@ public:
      */
     void aggregate(const MetaData &mdIn, AggregateOperation op,
                    MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel);
+
+    /** Aggregate metadata objects from a list of operations. */
     void aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
-                             MDLabel operateLabel, const std::vector<MDLabel> &resultLabels);
+                   MDLabel operateLabel, const std::vector<MDLabel> &resultLabels);
 
     /** Union of elements in two Metadatas, without duplicating.
      * Result in calling metadata object
@@ -619,19 +607,17 @@ public:
      */
     void operate(const std::string &expression);
 
-
     /** Randomize a metadata.
      * MDin is input and the "randomized"
      * result will be in the "calling" Metadata.
-    */
+     */
     void randomize(MetaData &MDin);
 
-    /*
-    * Sort a Metadata by a label.
-    * Sort the content of MDin comparing
-    * the label supplied, the result will
-    * be in the "calling" MetaData.
-    */
+    /** Sort a Metadata by a label.
+     * Sort the content of MDin comparing
+     * the label supplied, the result will
+     * be in the "calling" MetaData.
+     */
     void sort(MetaData &MDin, const MDLabel sortLabel);
 
     /** Split Metadata in several Metadatas.
@@ -662,13 +648,11 @@ public:
      * at some starting position
      * if the numberOfObjects is -1, all objects
      * will be returned from startPosition to the end.
-    */
+     */
     void selectPart (const MetaData &mdIn, long int startPosition, long int numberOfObjects,
                      const MDLabel sortLabel=MDL_OBJID);
-    /** @} */
-
+    //@}
 
     friend class MDSql;
 };
-
 #endif

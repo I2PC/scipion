@@ -42,7 +42,7 @@ extern pthread_mutex_t project_mutex;
 /** Projection class.
  * @ingroup Projections
  *
- * A projection is a 2D, <double> Image plus some information (about the direction
+ * A projection is a 2D, double Image plus some information (about the direction
  * of prejection) which makes it suitable for 3D reconstruction. A projection
  * is supposed to have the point (0,0) at the center of the image and not in
  * the corners as usual matrices have.
