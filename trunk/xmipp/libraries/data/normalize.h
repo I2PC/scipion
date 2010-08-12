@@ -32,9 +32,8 @@
 
 /// @defgroup Normalize Normalization of images and volumes
 /// @ingroup DataLibrary
-
-/**@defgroup NormalizationProcedures Image normalization procedures
-   @ingroup Normalize
+//@{
+/**@name Image normalization procedures
    This functions implement the normalization of a single image. They should
    be called with all images in the corresponding SelFile. In the
    following documentation m(x) is the mean of x, v(x) is the variance,
@@ -197,44 +196,47 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
 //@}
 
 /** Normalize parameters
- * @ingroup Normalize
  */
 class Normalize_parameters: public Prog_parameters
 {
 public:
 
-    // FIXME Make this an enum or similar
-#define NONE 0
-#define OLDXMIPP 1
-#define NEAR_OLDXMIPP 2
-#define NEWXMIPP 3
-#define MICHAEL 4
-#define NEWXMIPP2 5
-#define RANDOM 6
-#define RAMP 7
-#define NEIGHBOUR 8
-#define TOMOGRAPHY   9
-#define TOMOGRAPHY0 10
+	/** Possible normalization modes */
+    enum NormalizationMode {
+        NONE,
+        OLDXMIPP,
+        NEAR_OLDXMIPP,
+        NEWXMIPP,
+        MICHAEL,
+        NEWXMIPP2,
+        RANDOM,
+        RAMP,
+        NEIGHBOUR,
+        TOMOGRAPHY,
+        TOMOGRAPHY0
+    };
 
     /** Normalizing method.
      * Valid methods are OLDXMIPP, NEAR_OLDXMIPP, NEWXMIPP, NEWXMIPP2, MICHAEL,
      * NONE, RANDOM, RAMP, NEIGHBOUR, TOMOGRAPHY, TOMOGRAPHY0.
      */
-    int method;
+    NormalizationMode method;
 
-    /** Nomalization of volumes.
+    /** Normalization of volumes.
      */
     bool volume;
 
-    // TODO Same thing, an enum
-#define NONE 0
-#define FRAME 1
-#define CIRCLE 2
+    /** Possible background modes */
+    enum BackgroundMode {
+    	NOBACKGROUND,
+    	FRAME,
+    	CIRCLE
+    };
 
     /** Background mode.
      * Valid modes are NONE, FRAME, CIRCLE.
      */
-    int background_mode;
+    BackgroundMode background_mode;
 
     /** Frame width or circle radius.
      */
@@ -312,5 +314,5 @@ public:
     // Mean and standard deviation of the image 0. Used for tomography
     double mu0, sigma0;
 };
-
+//@}
 #endif

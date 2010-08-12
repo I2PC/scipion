@@ -331,13 +331,8 @@ class DESolver;
 
 typedef void(DESolver::*StrategyFunction)(int);
 
-/** @defgroup DifferentialEvolution Differential Evolution Optimizer
- *  @ingroup NumericalTools
- *  For further information visit: http://www.icsi.berkeley.edu/~storn/code.html
- */
-//@{
-
 /** Differential evolution class.
+ *  For further information visit: http://www.icsi.berkeley.edu/~storn/code.html
   * Example of use:
   * @code
   * // Declaration of the optimizer
@@ -465,5 +460,4 @@ private:
     void Best2Bin(int candidate);
     void Rand2Bin(int candidate);
 };
-//@}
 #endif

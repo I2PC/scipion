@@ -30,9 +30,8 @@
 
 /// @defgroup MathematicalMorphology Mathematical morphology
 /// @ingroup DataLibrary
-
-/**@defgroup Morphology2D 2D processes
-   @ingroup MathematicalMorphology
+//@{
+/**@name Morphology 2D processes
     The neighbourhood must be 4 or 8.
 
     Count is the number of pixels
@@ -82,8 +81,7 @@ void random_convex_hull(const MultidimArray<double> &img, MultidimArray<double> 
                         long N = 100);
 //@}
 
-/**@defgroup Morphology3D 3D processes
-   @ingroup MathematicalMorphology
+/**@name Morphology 3D processes
     The neighbourhood must be 6, 18 or 26.
 
     Count is the number of voxels
@@ -130,5 +128,6 @@ void erode3D(const MultidimArray<double> &in,
     33: 997-1012 (2000). */
 void sharpening(const MultidimArray<double> &in, double width, double strength,
               MultidimArray<double> &out);
+//@}
 //@}
 #endif

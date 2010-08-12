@@ -376,7 +376,7 @@ void Normalize_parameters::read(int argc, char** argv)
     apply_geo = false;
 
     // Get background mask
-    background_mode = NONE;
+    background_mode = NOBACKGROUND;
     if (method == NEWXMIPP || method == NEWXMIPP2 || method == MICHAEL ||
         method == NEAR_OLDXMIPP || method == RAMP || method == NEIGHBOUR)
     {

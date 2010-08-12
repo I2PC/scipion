@@ -42,9 +42,8 @@ extern std::string floatToString(float F, int _width, int _prec);
 
 /// @defgroup MultidimensionalArrays Multidimensional Arrays
 /// @ingroup DataLibrary
-
-/** @defgroup MultidimArraysSpeedUp Speed up macros
- * @ingroup MultidimensionalArrays
+//@{
+/** @name MultidimArraysSpeedUp Speed up macros
  *
  * This macros are defined to allow high speed in critical parts of your
  * program. They shouldn't be used systematically as usually there is no
@@ -55,79 +54,64 @@ extern std::string floatToString(float F, int _width, int _prec);
  * not warned of it), and destination vectors are not returned saving time in
  * the copy constructor and in the creation/destruction of temporary vectors.
  */
-
+//@{
 /** Returns the first X valid logical index
- * @ingroup MultidimArraysSpeedUp
  */
 #define STARTINGX(v) ((v).xinit)
 
 /** Returns the last X valid logical index
- * @ingroup MultidimArraysSpeedUp
  */
 #define FINISHINGX(v) ((v).xinit + (v).xdim - 1)
 
 /** Returns the first Y valid logical index
- * @ingroup MultidimArraysSpeedUp
  */
 #define STARTINGY(v) ((v).yinit)
 
 /** Returns the last Y valid logical index
- * @ingroup MultidimArraysSpeedUp
  */
 #define FINISHINGY(v) ((v).yinit + (v).ydim - 1)
 
 /** Returns the first Z valid logical index
- * @ingroup MultidimArraysSpeedUp
  */
 #define STARTINGZ(v) ((v).zinit)
 
 /** Returns the last Z valid logical index
- * @ingroup MultidimArraysSpeedUp
  */
 #define FINISHINGZ(v) ((v).zinit + (v).zdim - 1)
 
 /** Access to X dimension (size)
- * @ingroup MultidimArraysSpeedUp
  */
 #define XSIZE(v) ((v).xdim)
 
 /** Access to Y dimension (size)
- * @ingroup MultidimArraysSpeedUp
  */
 #define YSIZE(v) ((v).ydim)
 
 /** Access to Z dimension (size)
- * @ingroup MultidimArraysSpeedUp
  */
 #define ZSIZE(v) ((v).zdim)
 
 /** Access to N dimension (size)
- * @ingroup MultidimArraysSpeedUp
  */
 #define NSIZE(v) ((v).ndim)
 
 /** Access to XY dimension (Ysize*Xsize)
- * @ingroup MultidimArraysSpeedUp
  */
 #define YXSIZE(v) ((v).yxdim)
 
 /** Access to XYZ dimension (Zsize*Ysize*Xsize)
- * @ingroup MultidimArraysSpeedUp
  */
 #define ZYXSIZE(v) ((v).zyxdim)
 
 /** Access to XYZN dimension (Nsize*Zsize*Ysize*Xsize)
- * @ingroup MultidimArraysSpeedUp
  */
 #define MULTIDIM_SIZE(v) ((v).nzyxdim)
 
 /** Access to XYZN dimension (Nsize*Zsize*Ysize*Xsize)
- * @ingroup MultidimArraysSpeedUp
  */
 #define NZYXSIZE(v) ((v).nzyxdim)
 
 /** Array access.
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro gives you access to the array (T **)
  */
@@ -136,27 +120,23 @@ extern std::string floatToString(float F, int _width, int _prec);
 #endif
 
 /** Access to a direct element.
- * @ingroup MultidimArraysSpeedUp
  * v is the array, l is the image, k is the slice, i is the Y index and j is the X index.
  * i and j) within the slice.
  */
 #define DIRECT_NZYX_ELEM(v, l, k, i, j) ((v).data[(l)*ZYXSIZE(v)+(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
 
 /** Multidim element: Logical access.
- * @ingroup MultidimArraysSpeedUp
  */
 #define NZYX_ELEM(v, l, k, i, j)  \
     DIRECT_NZYX_ELEM((v), (l), (k) - STARTINGZ(v), (i) - STARTINGY(v), (j) - STARTINGX(v))
 
 /** Access to a direct element.
- * @ingroup MultidimArraysSpeedUp
  * v is the array, k is the slice and n is the number of the pixel (combined i and j)
  * within the slice.
  */
 #define DIRECT_MULTIDIM_ELEM(v,n) ((v).data[(n)])
 
 /** For all direct elements in the array
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the array in an easy manner. It
  * defines an internal index 'n' which goes over the slices and 'n' that
@@ -173,7 +153,6 @@ extern std::string floatToString(float F, int _width, int _prec);
     for (unsigned long int n=0; n<NZYXSIZE(v); ++n)
 
 /** For all direct elements in the array
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the array in an easy
  * manner. It defines internal indexes 'l', 'k','i' and 'j' which
@@ -193,7 +172,6 @@ extern std::string floatToString(float F, int _width, int _prec);
                 for (size_t j=0; j<XSIZE(V); j++)
 
 /** For all direct elements in the array
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the array in an easy
  * manner. It defines internal indexes 'l', 'k','i' and 'j' which
@@ -213,7 +191,6 @@ extern std::string floatToString(float F, int _width, int _prec);
                 for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
 
 /** For all direct elements in the array, pointer version
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the array in an easy manner. It
  * defines an internal index 'k' which goes over the slices and 'n' that
@@ -233,19 +210,16 @@ extern std::string floatToString(float F, int _width, int _prec);
     for ((n)=0, (ptr)=(v).data; (n)<NZYXSIZE(v); ++(n), ++(ptr))
 
 /** Access to a direct element.
- * @ingroup MultidimArraysSpeedUp
  * v is the array, k is the slice (Z), i is the Y index and j is the X index.
  */
 #define DIRECT_A3D_ELEM(v,k,i,j) ((v).data[(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
 
 /** A short alias for the previous function.
- * @ingroup MultidimArraysSpeedUp
  *
  */
 #define dAkij(V, k, i, j) DIRECT_A3D_ELEM(V, k, i, j)
 
 /** Volume element: Logical access.
- * @ingroup MultidimArraysSpeedUp
  *
  * @code
  * A3D_ELEM(V, -1, -2, 1) = 1;
@@ -256,7 +230,6 @@ extern std::string floatToString(float F, int _width, int _prec);
     DIRECT_A3D_ELEM((V),(k) - STARTINGZ(V), (i) - STARTINGY(V), (j) - STARTINGX(V))
 
 /** For all elements in the array.
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the volume in an easy way. It
  * defines internal indexes 'k','i' and 'j' which ranges the volume using its
@@ -275,7 +248,6 @@ extern std::string floatToString(float F, int _width, int _prec);
             for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
 
 /** For all elements in common.
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for all the elements logically in common
  * between two volumes in an easy manner. Then k, i and j (locally defined)
@@ -311,7 +283,6 @@ extern std::string floatToString(float F, int _width, int _prec);
             for (int j=ispduptmp4; j<=ispduptmp5; j++)
 
 /** For all direct elements in the array.
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the volume in an easy way. It
  * defines internal indexes 'k','i' and 'j' which ranges the volume using its
@@ -330,7 +301,6 @@ extern std::string floatToString(float F, int _width, int _prec);
             for (size_t j=0; j<XSIZE(V); j++)
 
 /** Access to a direct element of a matrix.
- * @ingroup MultidimArraysSpeedUp
  * v is the array, i and j define the element v_ij.
  *
  * Be careful because this is physical access, usually matrices follow the C
@@ -347,12 +317,10 @@ extern std::string floatToString(float F, int _width, int _prec);
 #define DIRECT_A2D_ELEM(v,i,j) ((v).data[(i)*(v).xdim+(j)])
 
 /** Short alias for DIRECT_A2D_ELEM
- * @ingroup MultidimArraysSpeedUp
  */
 #define dAij(M, i, j) DIRECT_A2D_ELEM(M, i, j)
 
 /** Matrix element: Logical access
- * @ingroup MultidimArraysSpeedUp
  *
  * @code
  * A2D_ELEM(m, -2, 1) = 1;
@@ -363,7 +331,6 @@ extern std::string floatToString(float F, int _width, int _prec);
     DIRECT_A2D_ELEM(v, (i) - STARTINGY(v), (j) - STARTINGX(v))
 
 /** TRUE if both arrays have the same shape
- * @ingroup MultidimArraysSpeedUp
  *
  * Two arrays have the same shape if they have the same size and the same
  * starting point. Be aware that this is a macro which simplifies to a boolean.
@@ -375,7 +342,6 @@ extern std::string floatToString(float F, int _width, int _prec);
      STARTINGY(v1) == STARTINGY(v2))
 
 /** For all elements in the array
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the matrix in an easy way. It
  * defines internal indexes 'i' and 'j' which ranges the matrix using its
@@ -393,7 +359,6 @@ extern std::string floatToString(float F, int _width, int _prec);
         for (int j=STARTINGX(m); j<=FINISHINGX(m); j++)
 
 /** For all elements in common
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for all the elements logically in common
  * between two images in an easy manner. Then i and j (locally defined) range
@@ -422,7 +387,6 @@ extern std::string floatToString(float F, int _width, int _prec);
         for (int j=ispduptmp4; j<=ispduptmp5; j++)
 
 /** For all elements in the array between corners.
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for a volume in an easy manner. Then
  *  ZZ(r), YY(r) and XX(r) range from
@@ -451,7 +415,6 @@ extern std::string floatToString(float F, int _width, int _prec);
             for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
 
 /** For all elements in the array between corners
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for a matrix in an easy manner. It needs
  * an externally defined MultidimArray< double > r(2). Then YY(r) and XX(r) range
@@ -478,7 +441,6 @@ extern std::string floatToString(float F, int _width, int _prec);
         for (XX(r)=XX((corner1)); XX(r)<=XX((corner2)); XX(r)++)
 
 /** For all elements in the array between corners
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for a vector in an easy manner. It needs
  * an externally defined MultidimArray< double > r(1). Then XX(r) ranges from
@@ -499,7 +461,6 @@ extern std::string floatToString(float F, int _width, int _prec);
     for (XX(r)=(int) XX((corner1)); XX(r)<=(int) XX((corner2)); XX(r)++)
 
 /** For all elements in the array, accessed physically
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the matrix in an easy way using
  * physical indexes. It defines internal indexes 'i' and 'j' which ranges the
@@ -517,7 +478,6 @@ extern std::string floatToString(float F, int _width, int _prec);
         for (size_t j=0; j<XSIZE(m); j++)
 
 /** Vector element: Physical access
- * @ingroup MultidimArraysSpeedUp
  *
  * Be careful because this is physical access, usually vectors follow the C
  * convention of starting index==0. This function should not be used as it goes
@@ -533,12 +493,10 @@ extern std::string floatToString(float F, int _width, int _prec);
 #define DIRECT_A1D_ELEM(v, i) ((v).data[(i)])
 
 /** A short alias to previous function
- * @ingroup MultidimArraysSpeedUp
  */
 #define dAi(v, i) DIRECT_A1D_ELEM(v, i)
 
 /** Vector element: Logical access
- * @ingroup MultidimArraysSpeedUp
  *
  * @code
  * A1D_ELEM(v, -2) = 1;
@@ -548,7 +506,6 @@ extern std::string floatToString(float F, int _width, int _prec);
 #define A1D_ELEM(v, i) DIRECT_A1D_ELEM(v, (i) - ((v).xinit))
 
 /** For all elements in the array
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the vector in an easy manner. It
  * defines an internal index 'i' which ranges the vector using its mathematical
@@ -565,7 +522,6 @@ extern std::string floatToString(float F, int _width, int _prec);
     for (int i=STARTINGX(v); i<=FINISHINGX(v); i++)
 
 /** For all elements in common
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for all the elements logically in common
  * between two vectors in an easy manner. Then i (locally defined) ranges from
@@ -589,7 +545,6 @@ extern std::string floatToString(float F, int _width, int _prec);
     for (int i=ispduptmp4; i<=ispduptmp5; i++)
 
 /** For all elements in the array, accessed physically
- * @ingroup MultidimArraysSpeedUp
  *
  * This macro is used to generate loops for the vector in an easy way using
  * physical indexes. It defines internal the index 'i' which ranges the vector
@@ -604,6 +559,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v) \
     for (size_t i=0; i<v.xdim; i++)
+//@}
 
 // Forward declarations ====================================================
 template<typename T>
@@ -622,7 +578,6 @@ void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
                       MultidimArray<T>& result, char operation);
 
 /** Template class for Xmipp arrays.
-  * @ingroup MultidimensionalArrays
   * This class provides physical and logical access.
 */
 template<typename T>
@@ -675,10 +630,10 @@ public:
     int      mFd;
 
 public:
-    /// @defgroup MultidimArrayConstructors Constructors
+    /// @name Constructors
+    //@{
 
     /** Empty constructor.
-     * @ingroup MultidimArrayConstructors
      * The empty constructor creates an array with no memory associated,
      * size=0.
      */
@@ -688,7 +643,6 @@ public:
     }
 
     /** Size constructor with 4D size.
-     * @ingroup MultidimArrayConstructors
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
@@ -699,7 +653,6 @@ public:
     }
 
     /** Size constructor with 3D size.
-     * @ingroup MultidimArrayConstructors
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
@@ -710,7 +663,6 @@ public:
     }
 
     /** Size constructor with 2D size.
-     * @ingroup MultidimArrayConstructors
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
@@ -721,7 +673,6 @@ public:
     }
 
     /** Size constructor with 1D size.
-     * @ingroup MultidimArrayConstructors
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
@@ -732,7 +683,6 @@ public:
     }
 
     /** Copy constructor
-     * @ingroup MultidimArrayConstructors
      *
      * The created volume is a perfect copy of the input array but with a
      * different memory assignment.
@@ -748,7 +698,6 @@ public:
     }
 
     /** Copy constructor from a Matrix1D.
-     * @ingroup MultidimArrayConstructors
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
@@ -761,7 +710,6 @@ public:
     }
 
     /** Constructor from vector 1D
-     * @ingroup MultidimArrayConstructors
      * This will create a MultidimArray 1D
      * the size and elements will be copied from
      * the std::vector
@@ -775,7 +723,6 @@ public:
     }
 
     /** Destructor.
-     * @ingroup MultidimArrayConstructors
      */
     ~MultidimArray()
     {
@@ -783,18 +730,18 @@ public:
     }
 
     /** Clear.
-     * @ingroup MultidimArrayConstructors
      */
     void clear()
     {
         coreDeallocate();
         coreInit();
     }
+    //@}
 
-    /// @defgroup MultidimArrayCore Core memory operations for MultidimArrays
+    /// @name Core memory operations
+    //@{
 
     /** Core init.
-     * @ingroup MultidimArrayCore
      * Initialize everything to 0
      */
     void coreInit()
@@ -808,7 +755,6 @@ public:
     }
 
     /** Core allocate with dimensions.
-     * @ingroup MultidimArrayCore
      */
     void coreAllocate(unsigned long int _ndim, int _zdim, int _ydim, int _xdim)
     {
@@ -832,7 +778,6 @@ public:
     }
 
     /** Core allocate without dimensions.
-     * @ingroup MultidimArrayCore
      *
      * It is supposed the dimensions are set previously with setXdim(x), setYdim(y)
      * setZdim(z), setNdim(n) or with setDimensions(Xdim, Ydim, Zdim, Ndim);
@@ -872,7 +817,6 @@ public:
     }
 
     /** Core allocate without dimensions.
-     * @ingroup MultidimArrayCore
      *
      * It is supposed the dimensions are set previously with setXdim(x), setYdim(y)
      * setZdim(z), setNdim(n) or with setDimensions(Xdim, Ydim, Zdim, Ndim);
@@ -908,7 +852,6 @@ public:
     }
 
     /** Sets mmap.
-     * @ingroup MultidimArrayCore
      *
      * Sets on/off mmap flag to allocate memory in a file.
      *
@@ -919,7 +862,6 @@ public:
     }
 
     /** Core deallocate.
-     * @ingroup MultidimArrayCore
      * Free all data.
      */
     void coreDeallocate()
@@ -939,7 +881,6 @@ public:
     }
 
     /** Alias a multidimarray.
-     * @ingroup MultidimArrayCore
      *
      * Treat the multidimarray as if it were a volume. The data is not copied
      * into new memory, but a pointer to the multidimarray is copied.
@@ -952,11 +893,12 @@ public:
         this->data=m.data;
         this->destroyData=false;
     }
+    //@}
 
-    /// @defgroup MultidimSize Size
+    /// @name Size
+    //@{
 
     /** Sets new 4D dimensions.
-      * @ingroup MultidimSize
       *
       *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
       *
@@ -973,7 +915,6 @@ public:
     }
 
     /** Sets new N dimension.
-     * @ingroup MultidimSize
      *
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      *
@@ -985,7 +926,6 @@ public:
     }
 
     /** Sets new Z dimension.
-     * @ingroup MultidimSize
      *
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      *
@@ -998,7 +938,6 @@ public:
     }
 
     /** Sets new Y dimension.
-     * @ingroup MultidimSize
      *
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      *
@@ -1012,7 +951,6 @@ public:
     }
 
     /** Sets new X dimension.
-      * @ingroup MultidimSize
       *
       *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
       *
@@ -1026,7 +964,6 @@ public:
     }
 
     /** Copy the shape parameters
-     * @ingroup MultidimSize
      *
      */
     void copyShape(const MultidimArray<T> &m)
@@ -1044,7 +981,6 @@ public:
     }
 
     /** Resize to a given size
-     * @ingroup MultidimSize
      *
      * This function resize the actual array to the given size. The origin is
      * not modified. If the actual array is larger than the pattern then the
@@ -1146,7 +1082,6 @@ public:
     }
 
     /** Resize a single 3D image
-     * @ingroup MultidimSize
      *
      * This function assumes n is 1
      * @code
@@ -1159,7 +1094,6 @@ public:
     }
 
     /** Resize a single 2D image
-     * @ingroup MultidimSize
      *
      * This function assumes n and z are 1
      * @code
@@ -1172,7 +1106,6 @@ public:
     }
 
     /** Resize a single 1D image
-     * @ingroup MultidimSize
      *
      * This function assumes n and z and y are 1
      * @code
@@ -1185,7 +1118,6 @@ public:
     }
 
     /** Resize according to a pattern.
-     * @ingroup MultidimSize
      *
      * This function resize the actual array to the same size and origin
      * as the input pattern. If the actual array is larger than the pattern
@@ -1210,7 +1142,6 @@ public:
     }
 
     /** Returns the multidimArray N,Z, Y and X dimensions.
-     * @ingroup MultidimSize
      *
      * @code
      * V.getDimensions(Xdim, Ydim, Zdim, Ndim);
@@ -1225,7 +1156,6 @@ public:
     }
 
     /** Returns the total size of the multidimArray
-     * @ingroup MultidimSize
      *
      * @code
      * if (V.getSize() > 1) ...
@@ -1237,7 +1167,6 @@ public:
     }
 
     /** Returns the multidimArray dimension.
-     * @ingroup MultidimSize
      *
      * @code
      * int dim = V.getDim();
@@ -1256,7 +1185,6 @@ public:
     }
 
     /** Check dimension.
-     * @ingroup MultidimSize
      *
      * returns true if the dimension is equal to the argument and false otherwise
      * It also prints an error message in the latter case.
@@ -1276,7 +1204,6 @@ public:
     }
 
     /** Get size.
-     * @ingroup MultidimSize
      *
      * Returns the size of the object in a 4D vector. If the object is a matrix
      * or a vector, then the higher order dimensions will be set to 1, ie,
@@ -1293,7 +1220,6 @@ public:
     }
 
     /** Generic window routine (dim independent)
-     * @ingroup MultidimSize
      *
      * This function will call to 3D,2D or 1D specific window routines
      */
@@ -1325,7 +1251,6 @@ public:
     }
 
     /** Put a 3D window to the nth volume
-     * @ingroup MultidimSize
      *
      * The volume is windowed within the two positions given to this function.
      * Indexes always refer to logical indexes. If a position is outside the
@@ -1373,7 +1298,6 @@ public:
     }
 
     /** Put a 2D window to the nth matrix
-     * @ingroup MultidimSize
      *
      * The matrix is windowed within the two positions given to this function.
      * Indexes always refer to logical indexes. If a position is outside the
@@ -1409,7 +1333,6 @@ public:
     }
 
     /** Put a 1D window to the nth vector
-     * @ingroup MultidimSize
      *
      * The vector is windowed within the two indexes given to this function.
      * Indexes always refer to logical indexes. If an index is outside the
@@ -1438,7 +1361,6 @@ public:
     }
 
     /** Print shape of multidimensional array.
-     * @ingroup MultidimSize
      *
      * This function shows the size, starting and finishing indexes of the
      * given array. No end of line is printed neither at the beginning nor
@@ -1477,7 +1399,6 @@ public:
     }
 
     /** Same shape.
-     * @ingroup MultidimSize
      *
      * Returns true if this object has got the same shape (origin and size)
      * than the argument
@@ -1496,7 +1417,6 @@ public:
 
 
     /** Outside for 3D matrices
-     * @ingroup MultidimSize
      *
      * TRUE if the logical index given is outside the definition region of this
      * array.
@@ -1509,7 +1429,6 @@ public:
     }
 
     /** Outside for 2D matrices
-     * @ingroup MultidimSize
      *
      * TRUE if the logical index given is outside the definition region of this
      * array.
@@ -1521,7 +1440,6 @@ public:
     }
 
     /** Outside for 1D matrices
-     * @ingroup MultidimSize
      *
      * TRUE if the logical index given is outside the definition region of this
      * array.
@@ -1532,7 +1450,6 @@ public:
     }
 
     /** Outside
-     * @ingroup MultidimSize
      *
      * TRUE if the logical index given is outside the definition region of this
      * array.
@@ -1563,7 +1480,6 @@ public:
     }
 
     /** Returns Y dimension.
-     * @ingroup MultidimSize
      */
     inline int rowNumber() const
     {
@@ -1571,7 +1487,6 @@ public:
     }
 
     /** Returns X dimension.
-     * @ingroup MultidimSize
      */
     inline int colNumber() const
     {
@@ -1579,7 +1494,6 @@ public:
     }
 
     /** Set logical origin in Xmipp fashion.
-     * @ingroup MultidimSize
      *
      * This function adjust the starting points in the array such that the
      * center of the array is defined in the Xmipp fashion.
@@ -1596,7 +1510,6 @@ public:
     }
 
     /** Move origin to.
-      * @ingroup MultidimSize
       *
       * This function adjust logical indexes such that the Xmipp origin of the
       * array moves to the specified position. For instance, an array whose x
@@ -1613,7 +1526,6 @@ public:
     }
 
     /** Move origin to.
-      * @ingroup MultidimSize
       *
       * This function adjust logical indexes such that the Xmipp origin of the
       * array moves to the specified position. For instance, an array whose x
@@ -1629,7 +1541,6 @@ public:
     }
 
     /** Returns the first valid logical Z index.
-      * @ingroup MultidimSize
       */
     inline int startingZ() const
     {
@@ -1637,7 +1548,6 @@ public:
     }
 
     /** Returns the last valid logical Z index.
-     * @ingroup MultidimSize
      */
     inline int finishingZ() const
     {
@@ -1645,7 +1555,6 @@ public:
     }
 
     /** Returns the first valid logical Y index.
-     * @ingroup MultidimSize
      */
     inline int startingY() const
     {
@@ -1653,7 +1562,6 @@ public:
     }
 
     /** Returns the last valid logical Y index.
-     * @ingroup MultidimSize
      */
     inline int finishingY() const
     {
@@ -1661,7 +1569,6 @@ public:
     }
 
     /** Returns the first valid logical X index.
-     * @ingroup MultidimSize
      */
     inline int startingX() const
     {
@@ -1669,7 +1576,6 @@ public:
     }
 
     /** Returns the last valid logical X index.
-     * @ingroup MultidimSize
      */
     inline int finishingX() const
     {
@@ -1677,7 +1583,6 @@ public:
     }
 
     /** IsCorner (in 2D or 3D matrix)
-     * @ingroup MultidimSize
      *
      * TRUE if the logical index given is a corner of the definition region of this
      * array.
@@ -1703,13 +1608,13 @@ public:
                     (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
         else
             REPORT_ERROR(1, "isCorner: index vector has too many components");
-
     }
+    //@}
 
-    ///defgroup MultidimMemory Access to the pixel values
+    ///@name Access to the pixel values
+    //@{
 
     /** Volume element access via double vector.
-     * @ingroup MultidimMemory
      *
      * Returns the value of a matrix logical position, but this time the
      * element position is determined by a R3 vector. The elements can be used
@@ -1738,7 +1643,6 @@ public:
     }
 
     /** Volume element access via integer vector.
-     * @ingroup MultidimMemory
      */
     T& operator()(const Matrix1D< int >& v) const
     {
@@ -1754,7 +1658,6 @@ public:
     }
 
     /** 4D element access via index.
-    * @ingroup MultidimMemory
     *
     * Returns the value of a matrix logical position. In our example we could
     * access from v(0, 0,-2,-1) to v(0, 1,2,1). The elements can be used either by
@@ -1772,7 +1675,6 @@ public:
     }
 
     /** 3D element access via index.
-    * @ingroup MultidimMemory
     *
     * Returns the value of a matrix logical position. In our example we could
     * access from v(0,-2,-1) to v(1,2,1). The elements can be used either by
@@ -1790,7 +1692,6 @@ public:
     }
 
     /** 3D element access via index (getVoxel).
-    * @ingroup MultidimMemory
     *
     * Same function as operator() but with a name. Needed by swig.
     *
@@ -1801,7 +1702,6 @@ public:
     }
 
     /** 3D element access via index (setVoxel).
-    * @ingroup MultidimMemory
     *
     * Same function as operator() but with a name. Needed by swig.
     *
@@ -1812,7 +1712,6 @@ public:
     }
 
     /** Matrix element access via index
-     * @ingroup MultidimMemory
      *
      * Returns the value of a matrix logical position. In our example we could
      * access from v(-2,-1) to v(2,1). The elements can be used either by value
@@ -1831,7 +1730,6 @@ public:
     }
 
     /** Vector element access
-     * @ingroup MultidimMemory
      *
      * Returns the value of a vector logical position. In our example we could
      * access from v(-2) to v(2). The elements can be used either by value or by
@@ -1849,7 +1747,6 @@ public:
     }
 
     /** Get a single 1,2 or 3D image from a multi-image array
-     *  @ingroup MultidimMemory
      *
      * This function extracts a single-image array from a multi-image one.
      * @code
@@ -1877,7 +1774,6 @@ public:
     }
 
     /** 2D Slice access for reading.
-     * @ingroup MultidimMemory
      *
      * This function returns a slice (a 2D matrix) corresponding to the choosen
      * slice inside the nth 3D matrix, the numbering of the slices is also logical not
@@ -1942,7 +1838,6 @@ public:
     }
 
     /** Slice access for writing.
-     * @ingroup MultidimMemory
      *
      * This function sets a 2D matrix corresponding to the choosen slice inside the nth
      * volume, the numbering of the slices is also logical not physical.
@@ -1972,7 +1867,6 @@ public:
     }
 
     /** Get Column
-     * @ingroup MultidimMemory
      *
      * This function returns a column vector corresponding to the
      * choosen column.
@@ -1999,7 +1893,6 @@ public:
     }
 
     /** Set Column
-     * @ingroup MultidimMemory
      *
      * This function sets a column vector corresponding to the choosen column
      * inside matrix.
@@ -2025,7 +1918,6 @@ public:
     }
 
     /** Get row
-     * @ingroup MultidimMemory
      *
      * This function returns a row vector corresponding to the choosen
      * row inside the nth 2D matrix, the numbering of the rows is also
@@ -2053,7 +1945,6 @@ public:
     }
 
     /** Set Row
-     * @ingroup MultidimMemory
      *
      * This function sets a row vector corresponding to the choosen row in the 2D Matrix
      *
@@ -2078,7 +1969,6 @@ public:
     }
 
     /** 3D Logical to physical index translation.
-     * @ingroup MultidimMemory
      *
      * This function returns the physical position of a logical one.
      *
@@ -2095,7 +1985,6 @@ public:
     }
 
     /** 3D Physical to logical index translation.
-     * @ingroup MultidimMemory
      *
      * This function returns the logical position of a physical one.
      *
@@ -2112,7 +2001,6 @@ public:
     }
 
     /** 2D Logical to physical index translation
-     * @ingroup MultidimMemory
      *
      * This function returns the physical position of a logical one.
      *
@@ -2127,7 +2015,6 @@ public:
     }
 
     /** 2D Physical to logical index translation
-     * @ingroup MultidimMemory
      *
      * This function returns the logical position of a physical one.
      *
@@ -2142,7 +2029,6 @@ public:
     }
 
     /** 1D Logical to physical index translation
-     * @ingroup MultidimMemory
      *
      * This function returns the physical position of a logical one.
      *
@@ -2156,7 +2042,6 @@ public:
     }
 
     /** 1D Physical to logical index translation.
-     * @ingroup MultidimMemory
      *
      * This function returns the logical position of a physical one.
      *
@@ -2170,7 +2055,6 @@ public:
     }
 
     /** Interpolates the value of the nth 3D matrix M at the point (x,y,z).
-     * @ingroup MultidimMemory
      *
      * (x,y,z) are in logical coordinates.
      */
@@ -2208,7 +2092,6 @@ public:
     }
 
     /** Interpolates the value of the nth 2D matrix M at the point (x,y)
-     * @ingroup MultidimMemory
      *
      * Bilinear interpolation. (x,y) are in logical coordinates.
      */
@@ -2233,7 +2116,6 @@ public:
 
     /** Interpolates the value of the nth 3D matrix M at the point (x,y,z) knowing
      * that this image is a set of B-spline coefficients.
-     * @ingroup MultidimMemory
      *
      * (x,y,z) are in logical coordinates.
      */
@@ -2381,7 +2263,6 @@ public:
 
     /** Interpolates the value of the nth 2D matrix M at the point (x,y) knowing
      * that this image is a set of B-spline coefficients
-     * @ingroup MultidimMemory
      *
      * (x,y) are in logical coordinates
      *
@@ -2508,7 +2389,6 @@ public:
 
     /** Interpolates the value of the nth 1D vector M at the point (x) knowing
      * that this vector is a set of B-spline coefficients
-     * @ingroup MultidimMemory
      *
      * (x) is in logical coordinates
      *
@@ -2580,11 +2460,12 @@ public:
         }
         return (T) sum;
     }
+    //@}
 
-    /// @defgroup Statistics Statistics functions
+    /// @name Statistics functions
+    //@{
 
     /** Print statistics in current line.
-     * @ingroup Statistics
      *
      * No end of line character is written after this print out.
      *
@@ -2622,7 +2503,6 @@ public:
     }
 
     /** Maximum of the values in the array.
-     * @ingroup Statistics
      *
      * The returned value is of the same type as the type of the array.
      */
@@ -2643,7 +2523,6 @@ public:
     }
 
     /** Minimum of the values in the array.
-     * @ingroup Statistics
      *
      * The returned value is of the same type as the type of the array.
      */
@@ -2664,7 +2543,6 @@ public:
     }
 
     /** 4D Indices for the minimum element.
-     * @ingroup Statistics
      *
      * This function returns the index of the minimum element of an array.
      * array(l,k,i,j). Returns -1 if the array is empty
@@ -2697,7 +2575,6 @@ public:
     }
 
     /** 3D Indices for the minimum element.
-     * @ingroup Statistics
      *
      * This function just calls to the 4D function
      */
@@ -2708,7 +2585,6 @@ public:
     }
 
     /** 2D Indices for the minimum element.
-     * @ingroup Statistics
      *
      * This function just calls to the 4D function
      */
@@ -2719,7 +2595,6 @@ public:
     }
 
     /** 1D Indices for the minimum element.
-     * @ingroup Statistics
      *
      * This function just calls to the 4D function
      */
@@ -2730,7 +2605,6 @@ public:
     }
 
     /** 4D Indices for the maximum element.
-     * @ingroup Statistics
      *
      * This function returns the index of the maximum element of an array.
      * array(l,k,i,j). Returns -1 if the array is empty
@@ -2761,7 +2635,6 @@ public:
     }
 
     /** 3D Indices for the maximum element.
-     * @ingroup Statistics
      *
      * This function just calls to the 4D function
      */
@@ -2772,7 +2645,6 @@ public:
     }
 
     /** 2D Indices for the maximum element.
-     * @ingroup Statistics
      *
      * This function just calls to the 4D function
      */
@@ -2783,7 +2655,6 @@ public:
     }
 
     /** 1D Indices for the maximum element.
-     * @ingroup Statistics
      *
      * This function just calls to the 4D function
      */
@@ -2794,7 +2665,6 @@ public:
     }
 
     /** Minimum and maximum of the values in the array.
-     * @ingroup Statistics
      *
      * As doubles.
      */
@@ -2818,7 +2688,6 @@ public:
     }
 
     /** Average of the values in the array.
-     * @ingroup Statistics
      *
      * The returned value is always double, independently of the type of the
      * array.
@@ -2839,7 +2708,6 @@ public:
     }
 
     /** Standard deviation of the values in the array.
-     * @ingroup Statistics
      *
      * Be careful that the standard deviation and NOT the variance is returned.
      * The returned value is always double, independently of the type of the
@@ -2872,7 +2740,6 @@ public:
     }
 
     /** Compute statistics.
-     * @ingroup Statistics
      *
      * The average, standard deviation, minimum and maximum value are
      * returned.
@@ -2917,7 +2784,6 @@ public:
     }
 
     /** Compute statistics within 2D region of 2D image.
-     * @ingroup Statistics
      *
      * The 2D region is specified by two corners.
      * Note that this function only works for the 0th image in a multi-image array...
@@ -2960,7 +2826,6 @@ public:
     }
 
     /** Median
-     * @ingroup Statistics
      *
      * Calculate the median element.
      *
@@ -2992,7 +2857,6 @@ public:
     }
 
     /** Adjust the range of the array to a given one.
-     * @ingroup Statistics
      *
      * A linear operation is performed on the values of the array such that
      * after it, the values of the array are comprissed between the two values
@@ -3028,7 +2892,6 @@ public:
     }
 
     /** Adjust the range of the array to a given one within a mask.
-     * @ingroup Statistics
      *
      * A linear operation is performed on the values of the array such that
      * after it, the values of the array are comprissed between the two values
@@ -3086,7 +2949,6 @@ public:
 
     /** Adjust the range of the array to the range of another array in
         a least squares sense.
-     * @ingroup Statistics
      *
      * A linear operation is performed on the values of the array such that
      * after it, the values of the self array are as similar as possible
@@ -3139,7 +3001,6 @@ public:
     }
 
     /** Adjust the average and stddev of the array to given values.
-     * @ingroup Statistics
      *
      * A linear operation is performed on the values of the array such
      * that after it, the average and standard deviation of the array
@@ -3174,12 +3035,9 @@ public:
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         *ptr = static_cast< T >(a * static_cast< double > (*ptr) + b);
     }
+    //@}
 
-    /// @defgroup Arithmethic Arithmethic operations
-    /// @ingroup MultidimensionalArrays
-
-    /** @defgroup ArrayByArray Array "by" array operations.
-     * @ingroup Arithmethic
+    /** @name Array "by" array operations.
      *
      * These are operations that are performed between 2 arrays of the
      * SAME type (two integer vectors, two double matrices, ...). If they
@@ -3192,9 +3050,9 @@ public:
      * same size and starting origins. The result has also got the same
      * shape as the two operated arrays and its former content is lost.
      */
+    //@{
 
     /** Core array by array operation.
-     * @ingroup ArrayByArray
      *
      * It assumes that the result is already resized.
      */
@@ -3226,7 +3084,6 @@ public:
     }
 
     /** Array by array
-     * @ingroup ArrayByArray
      *
      * This function must take two vectors of the same size, and operate element
      * by element according to the operation required. This is the function
@@ -3249,7 +3106,6 @@ public:
     }
 
     /** v3 = v1 + v2.
-     * @ingroup ArrayByArray
      */
     MultidimArray<T> operator+(const MultidimArray<T>& op1) const
     {
@@ -3259,7 +3115,6 @@ public:
     }
 
     /** v3 = v1 - v2.
-     * @ingroup ArrayByArray
      */
     MultidimArray<T> operator-(const MultidimArray<T>& op1) const
     {
@@ -3269,7 +3124,6 @@ public:
     }
 
     /** v3 = v1 * v2.
-     * @ingroup ArrayByArray
      */
     MultidimArray<T> operator*(const MultidimArray<T>& op1) const
     {
@@ -3279,7 +3133,6 @@ public:
     }
 
     /** v3 = v1 / v2.
-     * @ingroup ArrayByArray
      */
     MultidimArray<T> operator/(const MultidimArray<T>& op1) const
     {
@@ -3289,7 +3142,6 @@ public:
     }
 
     /** v3 += v2.
-     * @ingroup ArrayByArray
      */
     void operator+=(const MultidimArray<T>& op1)
     {
@@ -3297,7 +3149,6 @@ public:
     }
 
     /** v3 -= v2.
-     * @ingroup ArrayByArray
      */
     void operator-=(const MultidimArray<T>& op1)
     {
@@ -3305,7 +3156,6 @@ public:
     }
 
     /** v3 *= v2.
-     * @ingroup ArrayByArray
      */
     void operator*=(const MultidimArray<T>& op1)
     {
@@ -3313,15 +3163,14 @@ public:
     }
 
     /** v3 /= v2.
-     * @ingroup ArrayByArray
      */
     void operator/=(const MultidimArray<T>& op1)
     {
         arrayByArray(*this, op1, *this, '/');
     }
+    //@}
 
-    /** @defgroup ArrayByScalar Array "by" scalar operations
-     * @ingroup Arithmethic
+    /** @name Array "by" scalar operations
      *
      * These operations are between an array and a scalar (of the same type as
      * the array). The result must have been defined to be of the same type as
@@ -3331,9 +3180,9 @@ public:
      * given constant. The result has also got the same shape as the input
      * array and its former content is lost
      */
+    //@{
 
     /** Core array by scalar operation.
-     * @ingroup ArrayByScalar
      *
      * It assumes that the result is already resized.
      *
@@ -3367,7 +3216,6 @@ public:
     }
 
     /** Array by scalar.
-     * @ingroup ArrayByScalar
      *
      * This function must take one vector and a constant, and operate element
      * by element according to the operation required. This is the function
@@ -3388,7 +3236,6 @@ public:
     }
 
     /** v3 = v1 + k.
-     * @ingroup ArrayByScalar
      */
     MultidimArray<T> operator+(T op1) const
     {
@@ -3398,7 +3245,6 @@ public:
     }
 
     /** v3 = v1 - k.
-     * @ingroup ArrayByScalar
      */
     MultidimArray<T> operator-(T op1) const
     {
@@ -3408,7 +3254,6 @@ public:
     }
 
     /** v3 = v1 * k.
-     * @ingroup ArrayByScalar
      */
     MultidimArray<T> operator*(T op1) const
     {
@@ -3418,7 +3263,6 @@ public:
     }
 
     /** v3 = v1 / k.
-     * @ingroup ArrayByScalar
      */
     MultidimArray<T> operator/(T op1) const
     {
@@ -3428,7 +3272,6 @@ public:
     }
 
     /** v3 += k.
-     * @ingroup ArrayByScalar
      *
      * This function is not ported to Python.
      */
@@ -3438,7 +3281,6 @@ public:
     }
 
     /** v3 -= k.
-     * @ingroup ArrayByScalar
      *
      * This function is not ported to Python.
      */
@@ -3448,7 +3290,6 @@ public:
     }
 
     /** v3 *= k.
-     * @ingroup ArrayByScalar
      *
      * This function is not ported to Python.
      */
@@ -3458,7 +3299,6 @@ public:
     }
 
     /** v3 /= k.
-     * @ingroup ArrayByScalar
      *
      * This function is not ported to Python.
      */
@@ -3466,9 +3306,9 @@ public:
     {
         arrayByScalar(*this, op1, *this, '/');
     }
+    //@}
 
-    /** @defgroup ScalarByArray Scalar "by" array operations
-     * @ingroup Arithmethic
+    /** @name Scalar "by" array operations
      *
      * These operations are between a scalar (of the same type as the array)
      * and an array. The result must have been defined to be of the same type
@@ -3479,9 +3319,9 @@ public:
      * of array 2. The result has also got the same shape as the input array
      * and its former content is lost
      */
+    //@{
 
     /** Core array by scalar operation.
-     * @ingroup ScalarByArray
      *
      * It assumes that the result is already resized.
      *
@@ -3515,7 +3355,6 @@ public:
     }
 
     /** Scalar by array.
-     * @ingroup ScalarByArray
      *
      * This function must take one scalar and a vector, and operate element by
      * element according to the operation required. This is the function which
@@ -3536,7 +3375,6 @@ public:
     }
 
     /** v3 = k + v2.
-     * @ingroup ScalarByArray
      */
     friend MultidimArray<T> operator+(T op1, const MultidimArray<T>& op2)
     {
@@ -3546,7 +3384,6 @@ public:
     }
 
     /** v3 = k - v2.
-     * @ingroup ScalarByArray
      */
     friend MultidimArray<T> operator-(T op1, const MultidimArray<T>& op2)
     {
@@ -3556,7 +3393,6 @@ public:
     }
 
     /** v3 = k * v2.
-     * @ingroup ScalarByArray
      */
     friend MultidimArray<T> operator*(T op1, const MultidimArray<T>& op2)
     {
@@ -3566,7 +3402,6 @@ public:
     }
 
     /** v3 = k / v2
-     * @ingroup ScalarByArray
      */
     friend MultidimArray<T> operator/(T op1, const MultidimArray<T>& op2)
     {
@@ -3574,12 +3409,12 @@ public:
         scalarByArray(op1, op2, tmp, '/');
         return tmp;
     }
+    //@}
 
-    /// @defgroup Initialization Initialization
-    /// @ingroup MultidimensionalArrays
+    /// @name Initialization
+    /// @{
 
     /** Same value in all components.
-     * @ingroup Initialization
      *
      * The constant must be of a type compatible with the array type, ie,
      * you cannot  assign a double to an integer array without a casting.
@@ -3598,7 +3433,6 @@ public:
     }
 
     /** Initialize to zeros following a pattern.
-     * @ingroup Initialization
      *
      * All values are set to 0, and the origin and size of the pattern are
      * adopted.
@@ -3612,11 +3446,10 @@ public:
     {
         if (!sameShape(op))
             resize(op);
-        initConstant(static_cast< T >(0));
+        memset(data,0,nzyxdim*sizeof(T));
     }
 
     /** Initialize to zeros with current size.
-     * @ingroup Initialization
      *
      * All values are set to 0. The current size and origin are kept. It is not
      * an error if the array is empty, then nothing is done.
@@ -3627,21 +3460,19 @@ public:
      */
     inline void initZeros()
     {
-        memset(data,0,MULTIDIM_SIZE(*this)*sizeof(T));
+        memset(data,0,nzyxdim*sizeof(T));
     }
 
     /** Initialize to zeros with a given size.
-     * @ingroup Initialization
      */
     inline void initZeros(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
     	if (xdim!=Xdim || ydim!=Ydim || zdim!=Zdim || ndim!=Ndim)
     		resize(Ndim, Zdim,Ydim,Xdim);
-    	memset(data,0,MULTIDIM_SIZE(*this)*sizeof(T));
+        memset(data,0,nzyxdim*sizeof(T));
     }
 
     /** Initialize to zeros with a given size.
-     * @ingroup Initialization
      */
     void initZeros(int Xdim)
     {
@@ -3649,7 +3480,6 @@ public:
     }
 
     /** Initialize to zeros with a given size.
-     * @ingroup Initialization
      */
     void initZeros(int Ydim, int Xdim)
     {
@@ -3657,7 +3487,6 @@ public:
     }
 
     /** Initialize to zeros with a given size.
-     * @ingroup Initialization
      */
     void initZeros(int Zdim, int Ydim, int Xdim)
     {
@@ -3665,7 +3494,6 @@ public:
     }
 
     /** Linear initialization (only for 1D)
-     * @ingroup Initialization
      *
      * The 1D vector is filled with values increasing/decreasing linearly within a
      * range or at given steps.
@@ -3718,7 +3546,6 @@ public:
     }
 
     /** Initialize with random values.
-     * @ingroup Initialization
      *
      * This function allows you to initialize the array with a set of random
      * values picked from a uniform random distribution or a gaussian one. You
@@ -3756,7 +3583,6 @@ public:
     }
 
     /** Add noise to actual values.
-     * @ingroup Initialization
      *
      * This function add some noise to the actual values of the array according
      * to a certain random distribution. You must choose two parameters for
@@ -3803,16 +3629,16 @@ public:
                          static_cast< std::string >("AddNoise: Mode not supported (" +
                                                     mode + ")"));
     }
+    //@}
 
-    /** @defgroup MultidimUtilities Utilities
-     *  @ingroup MultidimensionalArrays
+    /** @name Utilities
      *
      * Here you have several easy functions to manage the values of
      * the array.
      */
+    //@{
 
     /** Produce a 3D array suitable for working with Numerical Recipes.
-     * @ingroup MultidimUtilities
      *
      * This function must be used only as a preparation for routines which need
      * that the first physical index is 1 and not 0 as it usually is in C. New
@@ -3830,7 +3656,6 @@ public:
     }
 
     /** Kill a 3D array produced for numerical recipes.
-     * @ingroup MultidimUtilities
      */
     void killAdaptationForNumericalRecipes3D(T*** m) const
     {
@@ -3838,7 +3663,6 @@ public:
     }
 
     /** Produce a 2D array suitable for working with Numerical Recipes
-     * @ingroup MultidimUtilities
      *
      * This function must be used only as a preparation for routines which need
      * that the first physical index is 1 and not 0 as it usually is in C. New
@@ -3856,7 +3680,6 @@ public:
     }
 
     /** Produce a 1D pointer suitable for working with Numerical Recipes (2)
-     * @ingroup MultidimUtilities
      *
      * This function meets the same goal as the one before, however this one
      * work with 2D arrays as a single pointer. The first element of the array
@@ -3868,7 +3691,6 @@ public:
     }
 
     /** Load 2D array from numerical recipes result.
-     * @ingroup MultidimUtilities
      */
     void loadFromNumericalRecipes2D(T** m, int Ydim, int Xdim)
     {
@@ -3880,7 +3702,6 @@ public:
     }
 
     /** Kill a 2D array produced for numerical recipes
-     * @ingroup MultidimUtilities
      *
      * The allocated memory is freed.
      */
@@ -3890,7 +3711,6 @@ public:
     }
 
     /** Kill a 2D array produced for numerical recipes, 2.
-     * @ingroup MultidimUtilities
      *
      * Nothing needs to be done.
      */
@@ -3898,7 +3718,6 @@ public:
         {}
 
     /** Produce a 1D array suitable for working with Numerical Recipes
-     * @ingroup MultidimUtilities
      *
      * This function must be used only as a preparation for routines which need
      * that the first physical index is 1 and not 0 as it usually is in C. In
@@ -3913,7 +3732,6 @@ public:
     }
 
     /** Kill a 1D array produced for Numerical Recipes.
-     * @ingroup MultidimUtilities
      *
      * Nothing needs to be done in fact.
      *
@@ -3923,7 +3741,6 @@ public:
         {}
 
     /** Computes the center of mass of the nth array
-     * @ingroup MultidimUtilities
      */
     void centerOfMass(Matrix1D< double >& center, void * mask=NULL, unsigned long n = 0)
     {
@@ -3949,7 +3766,6 @@ public:
     }
 
     /** Sort 1D vector elements
-     * @ingroup MultidimUtilities
      *
      * Sort in ascending order the vector elements. You can use the "reverse"
      * function to sort in descending order.
@@ -3980,7 +3796,6 @@ public:
     }
 
     /** Gives a vector with the indexes for a sorted vector
-     * @ingroup MultidimUtilities
      *
      * This function returns the indexes of a sorted vector. The input vector is
      * not modified at all. For instance, if the input vector is [3 2 -1 0] the
@@ -4022,7 +3837,6 @@ public:
     }
 
     /** Several thresholding.
-     * @ingroup MultidimUtilities
      *
      * Apply a threshold to the array, the object is modified itself. There
      * are several kinds of thresholding and you must specify it, the values
@@ -4113,7 +3927,6 @@ public:
     }
 
     /** Count with threshold.
-     * @ingroup MultidimUtilities
      *
      * This function returns the number of elements meeting the threshold
      * condition.
@@ -4175,7 +3988,6 @@ public:
     }
 
     /** Substitute a value by another.
-     * @ingroup MultidimUtilities
      *
      * Substitute an old value by a new one. The accuracy is used to say if
      * the value in the array is equal to the old value. Set it to 0 for
@@ -4195,7 +4007,6 @@ public:
     }
 
     /** Substitute a given value by a sample from a Gaussian distribution.
-     * @ingroup MultidimUtilities
      *
      * Substitute  a given value by a sample from a Gaussian distribution.
      * The accuracy is used to say if the value in the array is equal
@@ -4216,7 +4027,6 @@ public:
     }
 
     /** Binarize.
-     * @ingroup MultidimUtilities
      *
      * This functions substitutes all values in a volume which are greater
      * than val+accuracy by 1 and the rest are set to 0. Use threshold to get a
@@ -4237,7 +4047,6 @@ public:
     }
 
     /** ROUND
-     * @ingroup MultidimUtilities
      *
      * Applies a ROUND (look for the nearest integer) to each array element.
      */
@@ -4250,7 +4059,6 @@ public:
     }
 
     /** CEILING
-     * @ingroup MultidimUtilities
      *
      * Applies a CEILING (look for the nearest larger integer) to each
      * array element.
@@ -4264,7 +4072,6 @@ public:
     }
 
     /** FLOOR
-     * @ingroup MultidimUtilities
      *
      * Applies a FLOOR (look for the nearest larger integer) to each
      * array element.
@@ -4278,7 +4085,6 @@ public:
     }
 
     /** ABS
-     * @ingroup MultidimUtilities
      *
      * Applies an ABS (absolute value) to each array element.
      */
@@ -4291,7 +4097,6 @@ public:
     }
 
     /** MAX
-     * @ingroup MultidimUtilities
      *
      * Each component of the result is the maximum of the correspoing
      * components of the two input arrays. They must have the same shape, if
@@ -4311,7 +4116,6 @@ public:
     }
 
     /** MIN
-     * @ingroup MultidimUtilities
      *
      * Each component of the result is the minimum of the correspoing
      * components of the two input arrays. They must have the same shape, if
@@ -4331,7 +4135,6 @@ public:
     }
 
     /** Sqrt.
-     * @ingroup MultidimUtilities
      *
      * Each component of the result is the square root of the original
      * component.
@@ -4345,7 +4148,6 @@ public:
     }
 
     /** Sum of matrix values.
-     * @ingroup MultidimUtilities
      *
      * This function returns the sum of all internal values.
      *
@@ -4364,7 +4166,6 @@ public:
     }
 
     /** Sum of squared vector values.
-     * @ingroup MultidimUtilities
      *
      * This function returns the sum of all internal values to the second
      * power.
@@ -4384,7 +4185,6 @@ public:
     }
 
     /** Log10.
-     * @ingroup MultidimUtilities
      *
      * Each component of the result is the log10 of the original components.
      */
@@ -4397,7 +4197,6 @@ public:
     }
 
     /** Reverse matrix values over X axis, keep in this object.
-     * @ingroup MultidimUtilities
      *
      * Maybe better with an example:
      *
@@ -4433,7 +4232,6 @@ public:
     }
 
     /** Reverse matrix values over Y axis, keep in this object.
-     * @ingroup MultidimUtilities
      *
      * Maybe better with an example:
      *
@@ -4469,7 +4267,6 @@ public:
     }
 
     /** Reverse matrix values over Z axis, keep in this object.
-     * @ingroup MultidimUtilities
      *
      * Maybe better with an example:
      *
@@ -4506,7 +4303,6 @@ public:
     }
 
     /** Extracts the 1D profile between two points in a 2D array
-     * @ingroup MultidimUtilities
      *
      * Given two logical indexes, this function returns samples of the line that
      * joins them. This is done by bilinear interpolation. The number of samples
@@ -4530,7 +4326,6 @@ public:
     }
 
     /** Show using gnuplot
-     * @ingroup MultidimUtilities
      *
      * This function uses gnuplot to plot this vector. You must supply the
      * xlabel, ylabel, and title.
@@ -4561,7 +4356,6 @@ public:
     }
 
     /** Edit with xmipp_editor.
-     * @ingroup MultidimUtilities
      *
      * This function generates a random filename starting with PPP and
      * edits it with xmipp_editor. After closing the editor the file is
@@ -4580,7 +4374,6 @@ public:
     }
 
     /** Write to an ASCII file.
-     * @ingroup MultidimUtilities
      */
     void write(const FileName& fn) const
     {
@@ -4594,12 +4387,12 @@ public:
         out << *this;
         out.close();
     }
+    //@}
 
-    /// @defgroup Operators Operators
-    /// @ingroup MultidimensionalArrays
+    /// @name Operators
+    /// @{
 
     /** Assignment.
-     * @ingroup Operators
      *
      * You can build as complex assignment expressions as you like. Multiple
      * assignment is allowed.
@@ -4623,7 +4416,6 @@ public:
     }
 
     /** Unary minus.
-     * @ingroup Operators
      *
      * It is used to build arithmetic expressions. You can make a minus
      * of anything as long as it is correct semantically.
@@ -4644,7 +4436,6 @@ public:
     }
 
     /** Input from input stream.
-     * @ingroup Operators
      *
      * Actual size of the array is used to know how many values must be read.
      *
@@ -4665,7 +4456,6 @@ public:
     }
 
     /** Equality.
-     * @ingroup Operators
      *
      * Returns true if this object has got the same shape (origin and size)
      * than the argument and the same values (within accuracy).
@@ -4681,13 +4471,13 @@ public:
             return false;
         return true;
     }
+    //@}
 };
 
-/// @defgroup MultidimFunctions Functions for all multidimensional arrays
-/// @ingroup MultidimensionalArrays
+/// @name Functions for all multidimensional arrays
+/// @{
 
 /** Conversion from one type to another.
- * @ingroup MultidimFunctions
  *
  * If we have an integer array and we need a double one, we can use this
  * function. The conversion is done through a type casting of each element
@@ -4719,16 +4509,14 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, long n = -1)
 
 }
 
-/** MultidimArray equality.
- * @ingroup MultidimFunctions */
+/** MultidimArray equality.*/
 template<typename T>
 bool operator==(const MultidimArray<T>& op1, const MultidimArray<T>& op2)
 {
     return op1.equal(op2);
 }
 
-/** MultidimArray inequality.
- * @ingroup MultidimFunctions */
+/** MultidimArray inequality.*/
 template<typename T>
 bool operator!=(const MultidimArray<T>& op1, const MultidimArray<T>& op2)
 {
@@ -4736,7 +4524,6 @@ bool operator!=(const MultidimArray<T>& op1, const MultidimArray<T>& op2)
 }
 
 /** Reduce both volumes to a common size.
- * @ingroup MultidimFunctions
  *
  * Search the range of logical indexes for which both volumes have got valid
  * values, and cut both to that size, the corresponding origin is automatically
@@ -4772,7 +4559,6 @@ void cutToCommonSize(MultidimArray<T>& V1, MultidimArray<T>& V2)
 }
 
 /** Output to output stream.
- * @ingroup MultidimFunctions
  * This function is not ported to Python.
  */
 template <typename T>
@@ -4826,5 +4612,5 @@ std::ostream& operator<< (std::ostream& ostrm, const MultidimArray<T>& v)
 // Specializations cases for complex numbers
 template<>
 std::ostream& operator<<(std::ostream& ostrm, const MultidimArray< std::complex<double> >& v);
-
+//@}
 #endif
