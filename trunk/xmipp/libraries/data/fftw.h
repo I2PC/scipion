@@ -335,7 +335,7 @@ void FFT_phase(const MultidimArray< std::complex< double > > & v,
 /** Autocorrelation function of a Xmipp vector
  * @ingroup FourierOperations
  *
- * Fast calcuation of the autocorrelation vector of a given one using Fast
+ * Fast calculation of the autocorrelation vector of a given one using Fast
  * Fourier Transform. (Using the correlation theorem)
  */
 template <typename T>

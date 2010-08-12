@@ -25,9 +25,7 @@
 
 #ifndef ERROR_H
 #define ERROR_H
-//ROB
-#include "cstdlib"
-
+#include <cstdlib>
 #include <string>
 #include <iostream>
 
@@ -136,7 +134,6 @@ void _Xmipp_error(const int nerr, const std::string& what,
  * exception handling mode is active (see Xmipp Configuration for details about
  * enabling the exception handling).
  */
-
 class Xmipp_error
 {
 public:

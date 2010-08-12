@@ -36,9 +36,8 @@ template <typename T> class Matrix2D;
 /** @defgroup Vectors Matrix1D Vectors
  * @ingroup DataLibrary
 */
-
-/** @defgroup Matrix1DSpeedUp Vectors speed up macros
- * @ingroup Vectors
+//@{
+/** @name Vectors speed up macros
  *
  * This macros are defined to allow high speed in critical parts of your
  * program. They shouldn't be used systematically as usually there is no
@@ -49,17 +48,13 @@ template <typename T> class Matrix2D;
  * not warned of it), and destination vectors are not returned saving time in
  * the copy constructor and in the creation/destruction of temporary vectors.
  */
-
+//@{
 /** Array access.
- * @ingroup Matrix1DSpeedUp
- *
  * This macro gives you access to the array (T)
  */
 #define MATRIX1D_ARRAY(v) ((v).vdata)
 
 /** For all elements in the array
- * @ingroup Matrix1DSpeedUp
- *
  * This macro is used to generate loops for the vector in an easy manner. It
  * defines an internal index 'i' which ranges the vector using its mathematical
  * definition (ie, logical access).
@@ -75,14 +70,11 @@ template <typename T> class Matrix2D;
     for (int i=0; i<v.vdim; i++)
 
 /** X dimension of the matrix
- * @ingroup Matrix1DSpeedUp
  */
 #define VEC_XSIZE(m) ((m).vdim)
 
 
 /** Access to X component
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * XX(v) = 1;
  * val = XX(v);
@@ -91,8 +83,6 @@ template <typename T> class Matrix2D;
 #define XX(v) (v).vdata[0]
 
 /** Access to Y component
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * YY(v) = 1;
  * val = YY(v);
@@ -101,8 +91,6 @@ template <typename T> class Matrix2D;
 #define YY(v) (v).vdata[1]
 
 /** Access to Z component
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * ZZ(v) = 1;
  * val = ZZ(v);
@@ -111,8 +99,6 @@ template <typename T> class Matrix2D;
 #define ZZ(v) (v).vdata[2]
 
 /** Creates vector in R2
- * @ingroup Matrix1DSpeedUp
- *
  * The vector must be created beforehand to the correct size. After this macro
  * the vector is (x, y) in R2.
  *
@@ -125,8 +111,6 @@ template <typename T> class Matrix2D;
         XX(v) = x; YY(v) = y; }
 
 /** Creates vector in R3
- * @ingroup Matrix1DSpeedUp
- *
  * The vector must be created beforehand to the correct size. After this macro
  * the vector is (x, y, z) in R3.
  *
@@ -139,8 +123,6 @@ template <typename T> class Matrix2D;
         XX(v) = x; YY(v) = y; ZZ(v) = z;}
 
 /** Adding two R2 vectors (a=b+c)
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * MultidimArray< double > a(2), b(2), c(2);
  * ...;
@@ -152,8 +134,6 @@ template <typename T> class Matrix2D;
         YY(a) = YY(b) + YY(c); }
 
 /** Substracting two R2 vectors (a=b-c)
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * MultidimArray< double > a(2), b(2), c(2);
  * ...;
@@ -165,8 +145,6 @@ template <typename T> class Matrix2D;
         YY(a) = YY(b) - YY(c); }
 
 /** Adding/substracting a constant to a R2 vector (a=b-k).
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * MultidimArray< double > a(2), b(2);
  * double k;
@@ -184,8 +162,6 @@ template <typename T> class Matrix2D;
         YY(a) = YY(b) + (k); }
 
 /** Multiplying/dividing by a constant a R2 vector (a=b*k)
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * MultidimArray< double > a(2), b(2);
  * double k;
@@ -203,8 +179,6 @@ template <typename T> class Matrix2D;
         YY(a) = YY(b) * (k); }
 
 /** Adding two R3 vectors (a=b+c)
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * MultidimArray< double > a(3), b(3), c(3);
  * ...;
@@ -217,8 +191,6 @@ template <typename T> class Matrix2D;
         ZZ(a) = ZZ(b) + ZZ(c); }
 
 /** Substracting two R3 vectors (a=b-c)
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * MultidimArray< double > a(3), b(3), c(3);
  * ...;
@@ -231,8 +203,6 @@ template <typename T> class Matrix2D;
         ZZ(a) = ZZ(b) - ZZ(c); }
 
 /** Adding/substracting a constant to a R3 vector (a=b-k)
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * MultidimArray< double > a(3), b(3);
  * double k;
@@ -251,8 +221,6 @@ template <typename T> class Matrix2D;
         ZZ(a) = ZZ(b) + (c); }
 
 /** Multiplying/dividing by a constant a R3 vector (a=b*k)
- * @ingroup Matrix1DSpeedUp
- *
  * @code
  * MultidimArray< double > a(3), b(3);
  * double k;
@@ -271,31 +239,29 @@ template <typename T> class Matrix2D;
         ZZ(a) = ZZ(b) * (c); }
 
 /** Direct access to vector element
- * @ingroup Matrix1DSpeedUp
  */
 #define VEC_ELEM(v,i) ((v).vdata[(i)])
 
-/** Matrix1D class.
- * @ingroup Vectors */
+/** Matrix1D class.*/
 template<typename T>
 class Matrix1D
 {
 public:
-    // The array itself
+    /// The array itself
     T* vdata;
 
-    // Destroy data
+    /// Destroy data
     bool destroyData;
 
-    // Number of elements
+    /// Number of elements
     int vdim;
 
-    //< 0=column vector (default), 1=row vector
+    /// <0=column vector (default), 1=row vector
     bool row;
 
-    /// @defgroup VectorsConstructors Constructors
+    /// @name Constructors
+    //@{
     /** Empty constructor
-     * @ingroup VectorsConstructors
      *
      * The empty constructor creates a vector with no memory associated,
      * origin=0, size=0, no statistics, ... You can choose between a column
@@ -317,7 +283,6 @@ public:
     }
 
     /** Dimension constructor
-     * @ingroup VectorsConstructors
      *
      * The dimension constructor creates a vector with memory associated (but
      * not assigned to anything, could be full of garbage) origin=0, size=the
@@ -341,7 +306,6 @@ public:
     }
 
     /** Copy constructor
-     * @ingroup VectorsConstructors
      *
      * The created vector is a perfect copy of the input vector but with a
      * different memory assignment.
@@ -358,7 +322,6 @@ public:
     }
 
     /** Destructor.
-     * @ingroup VectorsConstructors
      */
      ~Matrix1D()
      {
@@ -366,7 +329,6 @@ public:
      }
 
      /** Assignment.
-      * @ingroup VectorsConstructors
       *
       * You can build as complex assignment expressions as you like. Multiple
       * assignment is allowed.
@@ -388,10 +350,11 @@ public:
 
          return *this;
      }
+     //@}
 
-     /// @defgroup VectorsCore Core memory operations for Matrix1D
+     /// @name Core memory operations for Matrix1D
+     //@{
     /** Clear.
-     * @ingroup VectorsCore
      */
      void clear()
      {
@@ -400,7 +363,6 @@ public:
      }
 
     /** Core init.
-     * @ingroup VectorsCore
      * Initialize everything to 0
      */
     void coreInit()
@@ -412,7 +374,6 @@ public:
     }
 
     /** Core allocate.
-     * @ingroup VectorsCore
      */
     inline void coreAllocate(int _vdim)
     {
@@ -429,7 +390,6 @@ public:
     }
 
     /** Core deallocate.
-     * @ingroup VectorsCore
      * Free all vdata.
      */
     inline void coreDeallocate()
@@ -438,10 +398,11 @@ public:
             delete[] vdata;
         vdata=NULL;
     }
+    //@}
 
-    /// @defgroup VectorsSize Size and shape of Matrix1D
+    ///@name Size and shape of Matrix1D
+    //@{
     /** Resize to a given size
-     * @ingroup VectorsSize
      *
      * This function resize the actual array to the given size. The origin is
      * not modified. If the actual array is larger than the pattern then the
@@ -494,7 +455,6 @@ public:
     }
 
     /** Resize according to a pattern.
-     * @ingroup VectorsSize
      *
      * This function resize the actual array to the same size
      * as the input pattern. If the actual array is larger than the pattern
@@ -514,7 +474,6 @@ public:
     }
 
     /** Same shape.
-     * @ingroup VectorsSize
      *
      * Returns true if this object has got the same shape (origin and size)
      * than the argument
@@ -526,7 +485,6 @@ public:
     }
 
     /** Returns the size of this vector
-     * @ingroup VectorsSize
      *
      * @code
      * int nn = a.size();
@@ -538,7 +496,6 @@ public:
     }
 
     /** True if vector is a row.
-     * @ingroup VectorsSize
      *
      * @code
      * if (v.isRow())
@@ -551,7 +508,6 @@ public:
     }
 
     /** True if vector is a column
-     * @ingroup VectorsSize
      *
      * @code
      * if (v.isCol())
@@ -564,7 +520,6 @@ public:
     }
 
     /** Forces the vector to be a row vector
-     * @ingroup VectorsSize
      *
      * @code
      * v.setRow();
@@ -576,7 +531,6 @@ public:
     }
 
     /** Forces the vector to be a column vector
-     * @ingroup VectorsSize
      *
      * @code
      * v.setCol();
@@ -586,10 +540,11 @@ public:
     {
         row = false;
     }
+    //@}
 
-    /// @defgroup VectorsInitialization Initialization of Matrix1D values
+    /// @name Initialization of Matrix1D values
+    //@{
     /** Same value in all components.
-     * @ingroup VectorsInitialization
      *
      * The constant must be of a type compatible with the array type, ie,
      * you cannot  assign a double to an integer array without a casting.
@@ -608,7 +563,6 @@ public:
     }
 
     /** Initialize to zeros with current size.
-     * @ingroup VectorsInitialization
      *
      * All values are set to 0. The current size and origin are kept. It is not
      * an error if the array is empty, then nothing is done.
@@ -619,20 +573,19 @@ public:
      */
     void initZeros()
     {
-        initConstant(static_cast< T >(0));
+        memset(vdata,0,vdim*sizeof(T));
     }
 
     /** Initialize to zeros with a given size.
-     * @ingroup VectorsInitialization
      */
     void initZeros(int Xdim)
     {
-        resize(Xdim);
-        initZeros();
+    	if (vdim!=Xdim)
+    		resize(Xdim);
+        memset(vdata,0,vdim*sizeof(T));
     }
 
     /** Initialize to zeros following a pattern.
-      * @ingroup VectorsInitialization
       *
       * All values are set to 0, and the origin and size of the pattern are
       * adopted.
@@ -644,14 +597,15 @@ public:
     template <typename T1>
     void initZeros(const Matrix1D<T1>& op)
     {
-    	resize(op);
-    	initConstant(static_cast< T >(0));
+    	if (vdim!=op.vdim)
+    		resize(op);
+        memset(vdata,0,vdim*sizeof(T));
 	}
+    //@}
 
-	/// @defgroup VectorsOperators Utilities for Matrix1D
-
+	/// @name Matrix1D operators
+    //@{
     /** v3 = v1 * k.
-     * @ingroup VectorsOperators
      */
     Matrix1D<T> operator*(T op1) const
     {
@@ -662,7 +616,6 @@ public:
     }
 
     /** v3 = v1 / k.
-     * @ingroup VectorsOperators
      */
     Matrix1D<T> operator/(T op1) const
     {
@@ -673,7 +626,6 @@ public:
     }
 
     /** v3 = v1 + k.
-     * @ingroup VectorsOperators
      */
     Matrix1D<T> operator+(T op1) const
     {
@@ -684,7 +636,6 @@ public:
     }
 
     /** v3 = v1 - k.
-     * @ingroup VectorsOperators
      */
     Matrix1D<T> operator-(T op1) const
     {
@@ -695,7 +646,6 @@ public:
     }
 
     /** v3 = k * v2.
-     * @ingroup VectorsOperators
      */
     friend Matrix1D<T> operator*(T op1, const Matrix1D<T>& op2)
     {
@@ -706,7 +656,6 @@ public:
     }
 
     /** v3 = k / v2.
-     * @ingroup VectorsOperators
      */
     friend Matrix1D<T> operator/(T op1, const Matrix1D<T>& op2)
     {
@@ -717,7 +666,6 @@ public:
     }
 
     /** v3 = k + v2.
-     * @ingroup VectorsOperators
      */
     friend Matrix1D<T> operator+(T op1, const Matrix1D<T>& op2)
     {
@@ -728,7 +676,6 @@ public:
     }
 
     /** Vector summation
-     * @ingroup VectorsOperators
      *
      * @code
      * A += B;
@@ -744,7 +691,6 @@ public:
     }
 
     /** v3 = k - v2.
-     * @ingroup VectorsOperators
      */
     friend Matrix1D<T> operator-(T op1, const Matrix1D<T>& op2)
     {
@@ -755,7 +701,6 @@ public:
     }
 
     /** Vector substraction
-     * @ingroup VectorsOperators
      *
      * @code
      * A -= B;
@@ -771,7 +716,6 @@ public:
     }
 
     /** v3 *= k.
-     * @ingroup VectorsOperators
      */
     void operator*=(T op1)
     {
@@ -780,7 +724,6 @@ public:
     }
 
     /** v3 /= k.
-      * @ingroup VectorsOperators
       */
      void operator/=(T op1)
      {
@@ -789,7 +732,6 @@ public:
      }
 
      /** v3 += k.
-     * @ingroup VectorsOperators
      */
     void operator+=(T op1)
     {
@@ -798,7 +740,6 @@ public:
     }
 
     /** v3 -= k.
-      * @ingroup VectorsOperators
       */
      void operator-=(T op1)
      {
@@ -807,7 +748,6 @@ public:
      }
 
      /** v3 = v1 * v2.
-     * @ingroup VectorsOperators
      */
      Matrix1D<T> operator*(const Matrix1D<T>& op1) const
     {
@@ -818,7 +758,6 @@ public:
     }
 
      /** v3 = v1 / v2.
-     * @ingroup VectorsOperators
      */
      Matrix1D<T> operator/(const Matrix1D<T>& op1) const
     {
@@ -828,7 +767,6 @@ public:
          return tmp;
     }
      /** v3 = v1 + v2.
-     * @ingroup VectorsOperators
      */
      Matrix1D<T> operator+(const Matrix1D<T>& op1) const
     {
@@ -839,7 +777,6 @@ public:
     }
 
      /** v3 = v1 - v2.
-     * @ingroup VectorsOperators
      */
      Matrix1D<T> operator-(const Matrix1D<T>& op1) const
     {
@@ -850,7 +787,6 @@ public:
     }
 
      /** v3 *= v2.
-     * @ingroup VectorsOperators
      */
     void operator*=(const Matrix1D<T>& op1)
     {
@@ -859,7 +795,6 @@ public:
     }
 
     /** v3 /= v2.
-     * @ingroup VectorsOperators
      */
     void operator/=(const Matrix1D<T>& op1)
     {
@@ -868,7 +803,6 @@ public:
     }
 
      /** v3 += v2.
-     * @ingroup VectorsOperators
      */
     void operator+=(const Matrix1D<T>& op1)
     {
@@ -877,7 +811,6 @@ public:
     }
 
     /** v3 -= v2.
-     * @ingroup VectorsOperators
      */
     void operator-=(const Matrix1D<T>& op1)
     {
@@ -886,7 +819,6 @@ public:
     }
 
     /** Unary minus.
-     * @ingroup VectorsOperators
      *
      * It is used to build arithmetic expressions. You can make a minus
      * of anything as long as it is correct semantically.
@@ -905,7 +837,6 @@ public:
     }
 
     /** Vector by matrix
-     * @ingroup VectorsOperators
      *
      * Algebraic vector by matrix multiplication. This function is actually
      * implemented in xmippMatrices2D
@@ -913,7 +844,6 @@ public:
     Matrix1D<T> operator*(const Matrix2D<T>& M);
 
     /** Vector element access
-     * @ingroup VectorsOperators
      *
      * Returns the value of a vector logical position. In our example we could
      * access from v(-2) to v(2). The elements can be used either by value or by
@@ -928,11 +858,12 @@ public:
     {
         return vdata[i];
     }
+    //@}
 
-	/// @defgroup VectorsUtilities Utilities for Matrix1D
+	/// @name Utilities for Matrix1D
+    //@{
 
     /** Produce a vector suitable for working with Numerical Recipes
-     * @ingroup VectorsUtilities
      *
      * This function must be used only as a preparation for routines which need
      * that the first physical index is 1 and not 0 as it usually is in C. In
@@ -947,7 +878,6 @@ public:
     }
 
     /** Kill an array produced for Numerical Recipes.
-     * @ingroup VectorsUtilities
      *
      * Nothing needs to be done in fact.
      *
@@ -957,7 +887,6 @@ public:
         {}
 
     /** CEILING
-     * @ingroup VectorsUtilities
      *
      * Applies a CEILING (look for the nearest larger integer) to each
      * array element.
@@ -969,7 +898,6 @@ public:
     }
 
     /** FLOOR
-     * @ingroup VectorsUtilities
      *
      * Applies a FLOOR (look for the nearest larger integer) to each
      * array element.
@@ -981,7 +909,6 @@ public:
     }
 
     /** ROUND
-     * @ingroup VectorsUtilities
      *
      * Applies a ROUND (look for the nearest larger integer) to each
      * array element.
@@ -993,7 +920,6 @@ public:
     }
 
     /** Sort 1D vector elements
-     * @ingroup VectorsUtilities
      *
      * Sort in ascending order the vector elements. You can use the "reverse"
      * function to sort in descending order.
@@ -1022,7 +948,6 @@ public:
     }
 
     /** Index for the maximum element.
-     * @ingroup VectorsUtilities
      *
      * This function returns the index of the maximum element of an matrix1d.
      * Returns -1 if the array is empty
@@ -1043,7 +968,6 @@ public:
     }
 
     /** Index for the minimum element.
-     * @ingroup VectorsUtilities
      *
      * This function returns the index of the minimum element of an matrix1d.
      * Returns -1 if the array is empty
@@ -1064,7 +988,6 @@ public:
     }
 
     /** Algebraic transpose of vector
-     * @ingroup VectorsUtilities
      *
      * You can use the transpose in as complex expressions as you like. The
      * origin of the vector is not changed.
@@ -1081,7 +1004,6 @@ public:
     }
 
     /** Algebraic transpose of vector
-     * @ingroup VectorsUtilities
      *
      * The same as before but the result is stored in this same object.
      */
@@ -1091,7 +1013,6 @@ public:
     }
 
     /** Sum of vector values.
-     * @ingroup VectorsUtilities
      *
      * This function returns the sum of all internal values.
      *
@@ -1113,7 +1034,6 @@ public:
     }
 
    /** Sum of squared vector values.
-     * @ingroup VectorsUtilities
      *
      * This function returns the sum of all internal values to the second
      * power.
@@ -1133,7 +1053,6 @@ public:
     }
 
     /** Module of the vector
-     * @ingroup VectorsUtilities
      *
      * This module is defined as the square root of the sum of the squared
      * components. Euclidean norm of the vector.
@@ -1148,7 +1067,6 @@ public:
     }
 
     /** Angle of the vector
-     * @ingroup VectorsUtilities
      *
      * Supposing this vector is in R2 this function returns the angle of this
      * vector with X axis, ie, atan2(YY(v), XX(v))
@@ -1159,7 +1077,6 @@ public:
     }
 
     /** Normalize this vector, store the result here
-     * @ingroup VectorsUtilities
      */
     void selfNormalize()
     {
@@ -1174,7 +1091,6 @@ public:
     }
 
     /** Reverse vector values, keep in this object.
-     * @ingroup VectorsUtilities
      */
     void selfReverse()
     {
@@ -1186,7 +1102,6 @@ public:
     }
 
     /** Show using gnuplot
-     * @ingroup VectorsUtilities
      *
      * This function uses gnuplot to plot this vector. You must supply the
      * xlabel and title.
@@ -1215,7 +1130,6 @@ public:
     }
 
     /** Compute numerical derivative
-     * @ingroup VectorsUtilities
      *
      * The numerical derivative is of the same size as the input vector.
      * However, the first two and the last two samples are set to 0,
@@ -1232,7 +1146,6 @@ public:
     }
 
     /** Read from an ASCII file.
-     * @ingroup VectorsUtilities
      *
      * The array must be previously resized to the correct size.
      */
@@ -1251,7 +1164,6 @@ public:
     }
 
     /** Input from input stream.
-     * @ingroup VectorsUtilities
      *
      * Actual size of the array is used to know how many values must be read.
      *
@@ -1265,14 +1177,12 @@ public:
     // This function must be explictly implemented outside
     friend std::istream& operator>>(std::istream& in, Matrix1D<T>& v)
     {
-        T* ptr;
-        for (int i = 0; i < v.size(); i++)
-        	in >> *ptr;
+        for (int i = 0; i < VEC_XSIZE(v); i++)
+        	in >> VEC_ELEM(v,i);
 		return in;
     }
 
-    /** Output to output stream.
-     * @ingroup VectorsUtilities */
+    /** Output to output stream.*/
     friend std::ostream& operator<<(std::ostream& ostrm, const Matrix1D<T>& v)
     {
         if (v.vdim == 0)
@@ -1298,7 +1208,6 @@ public:
     }
 
     /** Write to an ASCII file.
-     * @ingroup VectorsUtilities
      */
     void write(const FileName& fn) const
     {
@@ -1314,7 +1223,6 @@ public:
     }
 
     /** Edit with xmipp_editor.
-     * @ingroup VectorsUtilities
      *
      * This function generates a random filename starting with PPP and
      * edits it with xmipp_editor. After closing the editor the file is
@@ -1331,17 +1239,14 @@ public:
         system((static_cast< std::string >("xmipp_edit -i " + nam +
                                            " -remove &").c_str()));
     }
+    //@}
 };
 
- /**@defgroup VectorsRelated Related functions
-  * @ingroup Vectors
-  *
+ /**@name Vector Related functions
   * These functions are not methods of Matrix1D
   */
 
- /** Creates vector in R2
-  * @ingroup VectorsRelated
-  *
+ /** Creates vector in R2.
   * After this function the vector is (x,y) in R2.
   *
   * @code
@@ -1350,9 +1255,7 @@ public:
   */
  Matrix1D< double > vectorR2(double x, double y);
 
- /** Creates vector in R3
-  * @ingroup VectorsRelated
-  *
+ /** Creates vector in R3.
   * After this function the vector is (x,y,z) in R3.
   *
   * @code
@@ -1361,14 +1264,11 @@ public:
   */
  Matrix1D< double > vectorR3(double x, double y, double z);
 
- /** Creates an integer vector in Z3
-  * @ingroup VectorsRelated
+ /** Creates an integer vector in Z3.
   */
  Matrix1D< int > vectorR3(int x, int y, int z);
 
  /** Dot product.
-  * @ingroup VectorsRelated
-  *
   * Given any two vectors in Rn (n-dimensional vector), this function returns the
   * dot product of both. If the vectors are not of the same size or shape then an
   * exception is thrown. The dot product is defined as the sum of the component
@@ -1398,9 +1298,7 @@ public:
      return accumulate;
  }
 
- /** Vector product in R3
-  * @ingroup VectorsRelated
-  *
+ /** Vector product in R3.
   * This function takes two R3 vectors and compute their vectorial product. For
   * two vectors (V1x,V1y,V1z), (V2x, V2y, V2z) the result is (V1y*V2z-V1z*v2y,
   * V1z*V2x-V1x*V2z, V1x*V2y-V1y*V2x). Pay attention that this operator is not
@@ -1429,9 +1327,7 @@ public:
      return result;
  }
 
- /** Vector product in R3
-  * @ingroup VectorsRelated
-  *
+ /** Vector product in R3.
   * This function computes the vector product of two R3 vectors.
   * No check is performed, it is assumed that the output vector
   * is already resized
@@ -1446,9 +1342,7 @@ public:
      ZZ(result) = XX(v1) * YY(v2) - YY(v1) * XX(v2);
  }
 
-/** Sort two vectors
-  * @ingroup VectorsRelated
-  *
+/** Sort two vectors.
   * v1 and v2 must be of the same shape, if not an exception is thrown. After
   * calling this function all components in v1 are the minimum between the
   * corresponding components in v1 and v2, and all components in v2 are the
@@ -1476,8 +1370,6 @@ public:
  }
 
 /** Conversion from one type to another.
-  * @ingroup VectorsRelated
-  *
   * If we have an integer array and we need a double one, we can use this
   * function. The conversion is done through a type casting of each element
   * If n >= 0, only the nth volumes will be converted, otherwise all NSIZE volumes
@@ -1498,5 +1390,5 @@ public:
      }
 
  }
-
+//@}
 #endif /* MATRIX1D_H_ */

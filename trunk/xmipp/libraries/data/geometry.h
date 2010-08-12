@@ -38,12 +38,11 @@
 
 /// @defgroup Geometry Geometry
 /// @ingroup DataLibrary
-
-/// @defgroup GeometricalOperations Geometrical operations
-/// @ingroup Geometry
+//@{
+/// @name Geometrical operations
+/// @{
 
 /** Project a point to a plane (direction vector, distance)
- * @ingroup GeometricalOperations
  *
  * Given the coordinates for a vector in R3, and a plane (defined by its
  * direction vector and the minimum distance from the plane to the coordinate
@@ -73,7 +72,6 @@ void Uproject_to_plane(const Matrix1D< double >& point,
                        Matrix1D< double >& result);
 
 /** Project a vector to a plane (Euler angles)
- * @ingroup GeometricalOperations
  *
  * These planes are restricted to have 0 distance to the universal
  * coordinate system. In this special case, a plane can be defined by 3 Euler
@@ -111,7 +109,6 @@ void Uproject_to_plane(const Matrix1D< double >& r,
                        Matrix1D< double >& result);
 
 /** Project a vector to a plane (Euler matrix)
- * @ingroup GeometricalOperations
  *
  * These planes are restricted to have 0 distance to the universal coordinate
  * system. In this special case, a plane can be defined by 3 Euler angles (this
@@ -149,7 +146,6 @@ void Uproject_to_plane(const Matrix1D< double >& r,
                        Matrix1D< double >& result);
 
 /** Spherical distance
- * @ingroup GeometricalOperations
  *
  * This function returns the distance over a sphere, not the straight line but
  * the line which goes from one point to the other going over the surface of a
@@ -159,7 +155,6 @@ double spherical_distance(const Matrix1D< double >& r1,
                           const Matrix1D< double >& r2);
 
 /** Point to line distance in 3D
- * @ingroup GeometricalOperations
  *
  * Let a line in 3-D be specified by the point a and the vector v, this fuction
  * returns the minimum distance of this line to the point p.
@@ -169,7 +164,6 @@ double point_line_distance_3D(const Matrix1D< double >& p,
                               const Matrix1D< double >& v);
 
 /** Point to plane distance in 3D
- * @ingroup GeometricalOperations
  *
  * Let a plane in 3-D be specified by the point a and the perpendicular vector
  * v, this fuction returns the minimum distance of this plane to the point p.
@@ -185,7 +179,6 @@ inline double point_plane_distance_3D(const Matrix1D< double >& p,
 }
 
 /** Structure of the points to do model fitting
- * @ingroup GeometricalOperations
  */
 struct fit_point
 {
@@ -200,7 +193,6 @@ struct fit_point
 };
 
 /** Least-squares-fit a plane to an arbitrary number of (x,y,z) points
- * @ingroup GeometricalOperations
  *
  * Plane described as Ax + By + C = z
  *
@@ -224,7 +216,6 @@ void least_squares_plane_fit(const std::vector< fit_point >& IN_points,
                              double& plane_C);
 
 /** Structure of the points to do model fitting
- * @ingroup GeometricalOperations
  */
 struct fit_point2D
 {
@@ -237,7 +228,6 @@ struct fit_point2D
 };
 
 /** Least-squares-fit a line to an arbitrary number of (x,y) points
- * @ingroup GeometricalOperations
  *
  * Plane described as Ax + B = y
  *
@@ -259,7 +249,6 @@ void least_squares_line_fit(const std::vector< fit_point2D >& IN_points,
                             double& line_B);
 
 /** Bspline model class
- * @ingroup GeometricalOperations
  *
  * When you fit a Bspline model this is the type returned. You can use it to
  * evaluate it anywhere.
@@ -383,7 +372,6 @@ public:
 };
 
 /** Least-squares fit of a B-spline 2D model
- * @ingroup GeometricalOperations
  *
  * For fitting a set of values that are distributed between (x0,y0) and (xF,yF)
  * with a cubic Bspline centered on each corner, the right call is
@@ -413,7 +401,6 @@ void Bspline_model_fitting(const std::vector< fit_point >& IN_points,
                            Bspline_model& result);
 
 /** Rectangle which encloses a deformed rectangle
- * @ingroup GeometricalOperations
  *
  * Given a rectangle characterized by the top-left corner and the right-bottom
  * corner, and given a matrix after which the rectangle is deformed. Which is
@@ -432,7 +419,6 @@ void rectangle_enclosing(const Matrix1D< double >& v0,
                          Matrix1D< double >& corner2);
 
 /** Box which encloses a deformed box
- * @ingroup GeometricalOperations
  *
  * Given a box characterized by the top-left corner (most negative) and the
  * right-bottom (most positive) corner, and given a matrix after which the box
@@ -451,7 +437,6 @@ void box_enclosing(const Matrix1D< double >& v0,
                    Matrix1D< double >& corner2);
 
 /** Point inside polygon
- * @ingroup GeometricalOperations
  *
  * Given a polygon described by a list of points (the last one and the first one
  * ust be the same), determine whether another point is inside the polygon or
@@ -461,7 +446,6 @@ bool point_inside_polygon(const std::vector< Matrix1D< double > > & polygon,
                           const Matrix1D< double >& point);
 
 /** Line Plane Intersection
- * @ingroup GeometricalOperations
  *
  * Let ax+by+cz+D=0 be the equation of your plane (if your plane is defined by a
  * normal vector N + one point M, then (a,b,c) are the coordinates of the normal
@@ -524,12 +508,12 @@ int line_plane_intersection(const Matrix1D< double > normal_plane,
                             Matrix1D< double >& intersection_point,
                             const Matrix1D< double > point_line,
                             double point_plane_at_x_y_zero = 0.);
+//@}
 
-/// @defgroup EulerOperations Euler operations
-/// @ingroup Geometry
+/// @name Euler operations
+/// @{
 
 /** Getting the Euler angles to a range
- * @ingroup EulerOperations
  *
  * Adjust angles until they are in the range
  *
@@ -555,7 +539,6 @@ int line_plane_intersection(const Matrix1D< double > normal_plane,
     psi = realWRAP(psi, 0, 360);
 
 /** Getting the Euler angles to a range (0-2*PI)
- * @ingroup EulerOperations
  *
  * The same as before but the angles are expressed in radians.
  */
@@ -565,7 +548,6 @@ int line_plane_intersection(const Matrix1D< double > normal_plane,
     psi = realWRAP(psi, 0, 2.0*PI);
 
 /** Euler angles --> "Euler" matrix
- * @ingroup EulerOperations
  *
  * This function returns the transformation matrix associated to the 3 given
  * Euler angles (in degrees).
@@ -580,7 +562,6 @@ void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A,
                          bool homogeneous=false);
 
 /** Distance between two Euler matrices.
- * @ingroup EulerOperations
  *
  * The distance is defined as 1/3*(X1.X2 + Y1.Y2 + Z1.Z2)
  */
@@ -588,7 +569,6 @@ double Euler_distanceBetweenMatrices(const Matrix2D<double> &E1,
                                      const Matrix2D<double> &E2);
 
 /** Angles after compresion
- * @ingroup EulerOperations
  *
  * Let be two volumes f and g related by g(x,y,z) = f(D(x,y,z)) (where D is a
  * lineal transformation) then the projection direction parallel to the vector w
@@ -605,7 +585,6 @@ void Euler_Angles_after_compresion(const double rot,
                                    Matrix2D< double >& D);
 
 /** Euler direction
- * @ingroup EulerOperations
  *
  * This function returns  a vector parallel to the  projection direction.
  * Resizes v if needed
@@ -616,7 +595,6 @@ void Euler_direction(double alpha,
                      Matrix1D< double >& v);
 
 /** Euler direction2angles
- * @ingroup EulerOperations
  *
  * This function returns the 3 Euler angles associated to the direction given by
  * the vector v. The 3rd Euler angle is set always to 0
@@ -627,7 +605,6 @@ void Euler_direction2angles(Matrix1D< double >& v,
                             double& gamma);
 
 /** "Euler" matrix --> angles
- * @ingroup EulerOperations
  *
  * This function compute a set of Euler angles which result in an "Euler" matrix
  * as the one given. See \ref Euler_angles2matrix to know more about how this
@@ -647,7 +624,6 @@ void Euler_matrix2angles(const Matrix2D< double >& A,
                          double& gamma);
 
 /** Up-Down projection equivalence
- * @ingroup EulerOperations
  *
  * As you know a projection view from a point has got its homologous from its
  * diametrized point in the projection sphere. This function takes a projection
@@ -676,7 +652,6 @@ void Euler_up_down(double rot,
                    double& newpsi);
 
 /** The same view but differently expressed
- * @ingroup EulerOperations
  *
  * As you know a projection view from a point can be expressed with different
  * sets of Euler angles. This function gives you another expression of the Euler
@@ -700,7 +675,6 @@ void Euler_another_set(double rot,
                        double& newpsi);
 
 /** Mirror over Y axis
- * @ingroup EulerOperations
  *
  * Given a set of Euler angles this function returns a new set which define a
  * mirrored (over Y axis) version of the former projection.
@@ -734,7 +708,6 @@ void Euler_mirrorY(double rot,
                    double& newpsi);
 
 /** Mirror over X axis
- * @ingroup EulerOperations
  *
  * Given a set of Euler angles this function returns a new set which define a
  * mirrored (over X axis) version of the former projection.
@@ -768,7 +741,6 @@ void Euler_mirrorX(double rot,
                    double& newpsi);
 
 /** Mirror over X and Y axes
- * @ingroup EulerOperations
  *
  * Given a set of Euler angles this function returns a new set which define a
  * mirrored (over X and Y axes at the same time) version of the former
@@ -803,7 +775,6 @@ void Euler_mirrorXY(double rot,
                     double& newpsi);
 
 /** Apply a geometrical transformation
- * @ingroup EulerOperations
  *
  * The idea behind this function is the following. 3 Euler angles define a point
  * of view for a projection, but also a coordinate system. You might apply a
@@ -840,7 +811,6 @@ void Euler_apply_transf(const Matrix2D< double >& L,
                         double& newpsi);
 
 /** 3D Rotation matrix after 3 Euler angles
- * @ingroup EulerOperations
  *
  * Creates a rotational matrix (4x4) for volumes around the combination of the 3
  * rotations around ZYZ. All angles are in degrees. You must use it with
@@ -854,7 +824,6 @@ void Euler_rotation3DMatrix(double rot, double tilt, double psi,
                             Matrix2D<double> &result);
 
 /** Rotate a volume after 3 Euler angles
- * @ingroup EulerOperations
  *
  * Input and output volumes cannot be the same one.
  */
@@ -865,7 +834,6 @@ void Euler_rotate(const MultidimArray< double >& V,
                   MultidimArray< double >& result);
 
 /** Compute circle around Euler matrix
- * @ingroup EulerOperations
  *
  * Given an input Euler matrix, this function returns a set of Euler
  * angles such that they sample a circle around the original projection
@@ -877,12 +845,12 @@ void Euler_rotate(const MultidimArray< double >& V,
  */
 void computeCircleAroundE(const Matrix2D<double> &E,
                           double angCircle, double angStep, std::vector<double> &outputEulerAngles);
+//@}
 
-/// @defgroup Intersections Intersections
-/// @ingroup Geometry
+/// @name Intersections
+/// @{
 
 /** Intersection of a ray with a unit sphere
- * @ingroup Intersections
  *
  * The sphere is centered at (0,0,0) and has got unit radius. The ray is defined
  * by its direction (u) and a passing point (r). The function returns the length
@@ -893,7 +861,6 @@ double intersection_unit_sphere(const Matrix1D< double >& u,
                                 const Matrix1D< double >& r);
 
 /** Intersection of a ray with a unit cylinder
- * @ingroup Intersections
  *
  * The cylinder is centered at (0,0,0), has got unit radius on the plane XY, and
  * in Z goes from -h/2 to +h/2. The ray is defined by its direction (u) and a
@@ -908,7 +875,6 @@ double intersection_unit_cylinder(const Matrix1D< double >& u,
                                   const Matrix1D< double >& r);
 
 /** Intersection of a ray with a unit cube
- * @ingroup Intersections
  *
  * The cube is centered at (0,0,0) and has got unit size length in all
  * directions, i.e., the cube goes from (-0.5, -0.5, -0.5) to (0.5, 0.5, 0.5).
@@ -917,4 +883,6 @@ double intersection_unit_cylinder(const Matrix1D< double >& u,
  */
 double intersection_unit_cube(const Matrix1D< double >& u,
                               const Matrix1D< double >& r);
+//@}
+//@}
 #endif

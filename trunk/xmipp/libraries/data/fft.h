@@ -34,13 +34,11 @@
 /** @defgroup Fourier Fourier transforms
   * @ingroup DataLibrary
   */
-
-/** @defgroup FourierConverters Index <--> Frequency, Continuous <--> Discrete
- * @ingroup Fourier
+//@{
+/** @name Index <--> Frequency, Continuous <--> Discrete
  */
-
+//@{
 /** Index to frequency
- * @ingroup FourierConverters
  *
  * Given an index and a size of the FFT, this function returns the corresponding
  * digital frequency (-1/2 to 1/2)
@@ -50,7 +48,6 @@
            (double)(size));
 
 /** Frequency to index (int)
- * @ingroup FourierConverters
  *
  * Given a frequency and a size of the FFT, this macro returns the corresponding
  * integer index
@@ -60,7 +57,6 @@
                     (size); }
 
 /** Frequency to index (double)
- * @ingroup FourierConverters
  *
  * Given a frequency and a size of the FFT, this macro returns the corresponding
  * double index
@@ -69,7 +65,6 @@
         (idx) = ((size) * (freq)); if ((idx) < 0) (idx) += (size); }
 
 /** Index to frequency
- * @ingroup FourierConverters
  *
  * This function can be used with vectors of any size (1,2,3). The Digital
  * spectrum is limited between -1/2 and 1/2. If the vector has got more than 3
@@ -91,7 +86,6 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 }
 
 /** Frequency to index
- * @ingroup FourierConverters
  *
  * This function can be used with vectors of any size (1,2,3). The Digital
  * spectrum is lim:confirm bd
@@ -114,7 +108,6 @@ void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
 }
 
 /** Digital to Continuous frequency
- * @ingroup FourierConverters
  *
  * The pixel size must be given in Amstrongs. The digital frequency is between
  * [-1/2,1/2]
@@ -129,7 +122,6 @@ inline void digfreq2contfreq(const Matrix1D< double >& digfreq,
 }
 
 /** Continuous to Digital frequency
- * @ingroup FourierConverters
  *
  * The pixel size must be given in Amstrongs. The digital frequency is between
  * [-1/2,1/2]
@@ -142,40 +134,36 @@ inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
     FOR_ALL_ELEMENTS_IN_MATRIX1D(contfreq)
 		digfreq(i) = contfreq(i) * pixel_size;
 }
+//@}
 
-/** @defgroup FourierFormat Format conversions
- * @ingroup Fourier
+/** @name Format conversions
  */
-
+//@{
 /** Conversion from whole -> half 
- * @ingroup FourierFormat
  */
 void Whole2Half(const MultidimArray< std::complex < double > > & in,
                 MultidimArray< std::complex < double > > & out);
 
 /** Conversion from half -> whole 
- * @ingroup FourierFormat
  */
 void Half2Whole(const MultidimArray< std::complex < double > > & in,
                 MultidimArray< std::complex< double > > & out,
                 int oridim);
 
 /** Conversion from complex -> real,imag
- * @ingroup FourierFormat
  */
 void Complex2RealImag(const MultidimArray< std::complex < double > > & in,
                       MultidimArray< double > & real,
                       MultidimArray< double > & imag);
 
 /** Conversion from real,imag -> complex
- * @ingroup FourierFormat
  */
 void RealImag2Complex(const MultidimArray< double > & real,
                       const MultidimArray< double > & imag,
                       MultidimArray< std::complex < double > > & out);
+//@}
 
-/** @defgroup FourierTransforms Fourier Transforms
- * @ingroup Fourier
+/** @name Fourier Transforms
  *
  *  The theoretical relationship between the Fourier transform of a discrete
  *  signal and the Fourier transform of the continuous signal is
@@ -247,38 +235,33 @@ void RealImag2Complex(const MultidimArray< double > & real,
  * }
  * @endcode
  */
-
+//@{
 /** Direct Fourier Transform
- * @ingroup FourierTransforms
  */
 void FourierTransform(const MultidimArray< double >& in,
                       MultidimArray< std::complex< double > > & out);
 
 /** Inverse Fourier Transform
- * @ingroup FourierTransforms
  */
 void InverseFourierTransform(const MultidimArray< std::complex< double > > & in,
                              MultidimArray< double >& out);
 
 /** Direct Fourier Transform, output half of (centro-symmetric) transform
- * @ingroup FourierTransforms
  */
 void FourierTransformHalf(const MultidimArray< double >& in,
                           MultidimArray< std::complex< double > > & out);
 
 /** Inverse Fourier Transform 1D, input half of (centro-symmetric) transform
- * @ingroup FourierTransforms
  */
 void InverseFourierTransformHalf(const MultidimArray< std::complex< double > > & in,
                                  MultidimArray< double >& out,
                                  int oridim);
+//@}
 
-/** @defgroup FourierOperations Operations with the Fourier Transforms
- * @ingroup Fourier
+/** @name Operations with the Fourier Transforms
  */
-
+//@{
 /** CenterFFT
- * @ingroup FourierOperations
  */
 template <typename T>
 void CenterFFT(MultidimArray< T >& v, bool forward)
@@ -472,7 +455,6 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
 }
 
 /** FFT shift 1D
- * @ingroup FourierOperations
  *
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
@@ -480,7 +462,6 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
 void ShiftFFT(MultidimArray< std::complex< double > > & v, double xshift);
 
 /** FFT shift 2D
- * @ingroup FourierOperations
  *
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
@@ -488,7 +469,6 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v, double xshift);
 void ShiftFFT(MultidimArray< std::complex< double > > & v, double xshift, double yshift);
 
 /** FFT shift 3D
- * @ingroup FourierOperations
  *
  * Calculates the Fourier Transform of the shifted real-space vector
  * by phase shifts in Fourier space
@@ -499,9 +479,10 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v,
               double zshift);
 
 /** Place the origin of the FFT at the center of the vector and back
- * @ingroup FourierOperations
  *
  * Changes the real and the fourier space origin
  */
 void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward);
+//@}
+//@}
 #endif

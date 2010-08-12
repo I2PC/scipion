@@ -58,12 +58,10 @@
 
 /// @defgroup GeneralFunctions General functions
 /// @ingroup DataLibrary
-
-/// @defgroup NumericalFunctions Numerical functions
-/// @ingroup GeneralFunctions
-
+//@{
+/// @name Numerical functions
+//@{
 /** Tabulated Sinc = SIN(PI*X)/(PI*X)
- * @ingroup NumericalFunctions
  *
  * A lookup-table with the given sampling rate and range is created.
  *
@@ -120,7 +118,6 @@ public:
 };
 
 /** Kaiser-Bessel function
- * @ingroup NumericalFunctions
  *
  *  This code was modified from SPARX and originally written by Pawel
  *  Penczek at the University of Texas - Houston Medical School
@@ -211,7 +208,6 @@ public:
 };
 
 /** Solve second degree equation
- * @ingroup NumericalFunctions
  *
  *  ax^2+bx+c=0
  *
@@ -228,7 +224,6 @@ int solve_2nd_degree_eq(double a,
                         double prec = XMIPP_EQUAL_ACCURACY);
 
 /** 1D gaussian value
- * @ingroup NumericalFunctions
  *
  * This function returns the value of a univariate gaussian function at the
  * point x.
@@ -236,7 +231,6 @@ int solve_2nd_degree_eq(double a,
 double gaussian1D(double x, double sigma, double mu = 0);
 
 /** 1D t-student value
- * @ingroup NumericalFunctions
  *
  * This function returns the value of a univariate t-student function at the
  * point x, and with df degrees of freedom
@@ -244,7 +238,6 @@ double gaussian1D(double x, double sigma, double mu = 0);
 double tstudent1D(double x, double df, double sigma, double mu = 0);
 
 /** Inverse Cumulative distribution function for a Gaussian
- * @ingroup NumericalFunctions
  *
  * This function returns the z of a N(0,1) such that the probability below z is p
  *
@@ -254,7 +247,6 @@ double tstudent1D(double x, double df, double sigma, double mu = 0);
 double icdf_gauss(double p);
 
 /** Cumulative distribution function for a Gaussian
- * @ingroup NumericalFunctions
  *
  * This function returns the value of the CDF of a univariate gaussian function at the
  * point x.
@@ -262,7 +254,6 @@ double icdf_gauss(double p);
 double cdf_gauss(double x);
 
 /** Cumulative distribution function for a t-distribution
- * @ingroup NumericalFunctions
  *
  * This function returns the value of the CDF of a univariate t-distribution 
  * with k degrees of freedom  at the point t.
@@ -271,7 +262,6 @@ double cdf_gauss(double x);
 double cdf_tstudent(int k, double t);
 
 /** Cumulative distribution function for a Snedecor's F-distribution.
- * @ingroup NumericalFunctions
  *
  * This function returns the value of the CDF of a univariate Snedecor's 
  * F-distribution 
@@ -280,7 +270,6 @@ double cdf_tstudent(int k, double t);
 double cdf_FSnedecor(int d1, int d2, double x);
 
 /** Inverse Cumulative distribution function for a Snedecor's F-distribution.
- * @ingroup NumericalFunctions
  *
  * This function returns the value of the ICDF of a univariate Snedecor's 
  * F-distribution 
@@ -290,7 +279,6 @@ double cdf_FSnedecor(int d1, int d2, double x);
 double icdf_FSnedecor(int d1, int d2, double p);
 
 /** 2D gaussian value
- * @ingroup NumericalFunctions
  *
  * This function returns the value of a multivariate (2D) gaussian function at
  * the point (x,y) when the X axis of the gaussian is rotated ang
@@ -304,12 +292,11 @@ double gaussian2D(double x,
                   double ang,
                   double muX = 0,
                   double muY = 0);
+//@}
 
-/// @defgroup MiscellaneousFunctions Miscellaneous functions
-/// @ingroup GeneralFunctions
-
+/// @name Miscellaneous functions
+//@{
 /** Divides a number into most equally groups
- * @ingroup MiscellaneousFunctions
  *
  * For example you want to distribute N jobs between M workers
  * so each worker will have N/M jobs and some of them(N % M first)
@@ -321,123 +308,10 @@ double gaussian2D(double x,
 int divide_equally(int N, int size, int rank, int &first, int &last);
 
 /** In which group (of divide_equally) is myself situated?
- * @ingroup MiscellaneousFunctions
  */
 int divide_equally_group(int N, int size, int myself);
 
-/** Compute the logarithm in base 2
- * @ingroup MiscellaneousFunctions
- */
-// Does not work with xlc compiler
-#ifndef __xlC__
-double log2(double value);
-#endif
-
-/// @defgroup ComplexFunctions Complex functions
-/// @ingroup GeneralFunctions
-
-/** Real/Imaginary --> Complex
- * @ingroup ComplexFunctions
- *
- * The output array(s) must be already resized.
- *
- * This function is not ported to Python.
- */
-template <typename T>
-void RealImag2Complex(const T* _real,
-                      const T* _imag,
-                      std::complex< double >* _complex,
-                      int length)
-{
-    T* aux_real = (T*) _real;
-    T* aux_imag = (T*) _imag;
-    double* aux_complex = (double*) _complex;
-
-    for (int i = 0; i < length; i++)
-    {
-        *aux_complex++ = (double)(*aux_real++);
-        *aux_complex++ = (double)(*aux_imag++);
-    }
-}
-
-/** Amplitude/Phase --> Complex
- * @ingroup ComplexFunctions
- *
- * The output array(s) must be already resized.
- *
- * This function is not ported to Python.
- */
-template <typename T>
-void AmplPhase2Complex(const T* _ampl,
-                       const T* _phase,
-                       std::complex< double >* _complex,
-                       int length)
-{
-    T* aux_ampl = (T*) _ampl;
-    T* aux_phase = (T*) _phase;
-    double* aux_complex = (double*) _complex;
-
-    for (int i = 0; i < length; i++)
-    {
-        double ampl = (double)(*aux_ampl++);
-        double phase = (double)(*aux_phase++);
-        *aux_complex++ = ampl * cos(phase);
-        *aux_complex++ = ampl * sin(phase);
-    }
-}
-
-/** Complex --> Real/Imag
- * @ingroup ComplexFunctions
- *
- * The output array(s) must be already resized.
- *
- * This function is not ported to Python.
- */
-template <typename T>
-void Complex2RealImag(const std::complex< double >* _complex,
-                      T* _real,
-                      T* _imag,
-                      int length)
-{
-    T* aux_real = (T*) _real;
-    T* aux_imag = (T*) _imag;
-    double* aux_complex = (double*) _complex;
-
-    for (int i = 0; i < length; i++)
-    {
-        *aux_real++ = (T)(*aux_complex++);
-        *aux_imag++ = (T)(*aux_complex++);
-    }
-}
-
-/** Complex --> Amplitude/Phase
- * @ingroup ComplexFunctions
- *
- * The output array(s) must be already resized.
- *
- * This function is not ported to Python.
- */
-template <typename T>
-void Complex2AmplPhase(const std::complex< double >* _complex,
-                       T* _ampl,
-                       T* _phase,
-                       int length)
-{
-    T* aux_ampl = (T*) _ampl;
-    T* aux_phase = (T*) _phase;
-    double* aux_complex = (double*) _complex;
-
-    for (int i = 0; i < length; i++)
-    {
-        double re = *aux_complex++;
-        double im = *aux_complex++;
-        *aux_ampl++ = sqrt(re * re + im * im);
-        *aux_phase++ = atan2(im, re);
-    }
-}
-
 /** Compute statistics of a std::vector
- * @ingroup NumericalFunctions
  */
 template <class T>
 void computeStats(const std::vector<T> &V, double& avg, double& stddev,
@@ -478,9 +352,114 @@ void computeStats(const std::vector<T> &V, double& avg, double& stddev,
         stddev = 0;
 }
 
+/** Compute the logarithm in base 2
+ */
+// Does not work with xlc compiler
+#ifndef __xlC__
+double log2(double value);
+#endif
+//@}
 
-/** @defgroup RandomFunctions Random functions
- * @ingroup GeneralFunctions
+/// @name Complex functions
+//@{
+/** Real/Imaginary --> Complex
+ *
+ * The output array(s) must be already resized.
+ *
+ * This function is not ported to Python.
+ */
+template <typename T>
+void RealImag2Complex(const T* _real,
+                      const T* _imag,
+                      std::complex< double >* _complex,
+                      int length)
+{
+    T* aux_real = (T*) _real;
+    T* aux_imag = (T*) _imag;
+    double* aux_complex = (double*) _complex;
+
+    for (int i = 0; i < length; i++)
+    {
+        *aux_complex++ = (double)(*aux_real++);
+        *aux_complex++ = (double)(*aux_imag++);
+    }
+}
+
+/** Amplitude/Phase --> Complex
+ *
+ * The output array(s) must be already resized.
+ *
+ * This function is not ported to Python.
+ */
+template <typename T>
+void AmplPhase2Complex(const T* _ampl,
+                       const T* _phase,
+                       std::complex< double >* _complex,
+                       int length)
+{
+    T* aux_ampl = (T*) _ampl;
+    T* aux_phase = (T*) _phase;
+    double* aux_complex = (double*) _complex;
+
+    for (int i = 0; i < length; i++)
+    {
+        double ampl = (double)(*aux_ampl++);
+        double phase = (double)(*aux_phase++);
+        *aux_complex++ = ampl * cos(phase);
+        *aux_complex++ = ampl * sin(phase);
+    }
+}
+
+/** Complex --> Real/Imag
+ *
+ * The output array(s) must be already resized.
+ *
+ * This function is not ported to Python.
+ */
+template <typename T>
+void Complex2RealImag(const std::complex< double >* _complex,
+                      T* _real,
+                      T* _imag,
+                      int length)
+{
+    T* aux_real = (T*) _real;
+    T* aux_imag = (T*) _imag;
+    double* aux_complex = (double*) _complex;
+
+    for (int i = 0; i < length; i++)
+    {
+        *aux_real++ = (T)(*aux_complex++);
+        *aux_imag++ = (T)(*aux_complex++);
+    }
+}
+
+/** Complex --> Amplitude/Phase
+ *
+ * The output array(s) must be already resized.
+ *
+ * This function is not ported to Python.
+ */
+template <typename T>
+void Complex2AmplPhase(const std::complex< double >* _complex,
+                       T* _ampl,
+                       T* _phase,
+                       int length)
+{
+    T* aux_ampl = (T*) _ampl;
+    T* aux_phase = (T*) _phase;
+    double* aux_complex = (double*) _complex;
+
+    for (int i = 0; i < length; i++)
+    {
+        double re = *aux_complex++;
+        double im = *aux_complex++;
+        *aux_ampl++ = sqrt(re * re + im * im);
+        *aux_phase++ = atan2(im, re);
+    }
+}
+//@}
+
+/** @name Random functions
  *
  * These functions allow you to work in an easier way with the random functions
  * of the Numerical Recipes. Only an uniform and a gaussian random number
@@ -500,9 +479,8 @@ void computeStats(const std::vector<T> &V, double& avg, double& stddev,
  *     std::cout << rnd_unif(-1,1) << std::endl;
  * @endcode
  */
-
+//@{
 /** Reset uniform random generator to a known point
- * @ingroup RandomFunctions
  *
  * If you initialize the random generator with this function each time, then the
  * same random sequence will be generated
@@ -514,21 +492,15 @@ void computeStats(const std::vector<T> &V, double& avg, double& stddev,
  */
 void init_random_generator(int seed = -1);
 
-/** Reset uniform random generator according to the clock
- * @ingroup RandomFunctions
+/** Reset random generator according to the clock.
  *
  * This time the initialisation itself assures a random sequence different each
  * time the program is run. Be careful not to run the program twice within the
  * same second as the initialisation will be the same for both runs.
- *
- * @code
- * rnd_rnd_unif();
- * @endcode
  */
 void randomize_random_generator();
 
 /** Produce a uniform random number between 0 and 1
- * @ingroup RandomFunctions
  *
  * @code
  * std::cout << "This random number should be between 0 and 1: " << rnd_unif()
@@ -538,7 +510,6 @@ void randomize_random_generator();
 float rnd_unif();
 
 /** Produce a uniform random number between a and b
- * @ingroup RandomFunctions
  *
  * @code
  * std::cout << "This random number should be between 0 and 10: " << rnd_unif(0,10)
@@ -548,7 +519,6 @@ float rnd_unif();
 float rnd_unif(float a, float b);
 
 /** Produce a t-distributed random number with mean 0 and standard deviation 1 and nu degrees of freedom
- * @ingroup RandomFunctions
  *
  * @code
  * std::cout << "This random number should follow t(0,1) with 3 degrees of freedon: " << rnd_student_t(3.)
@@ -558,7 +528,6 @@ float rnd_unif(float a, float b);
 float rnd_student_t(double nu);
 
 /** Produce a gaussian random number with mean a and standard deviation b and nu degrees of freedom
- * @ingroup RandomFunctions
  *
  * @code
  * std::cout << "This random number should follow t(1,4) with 3 d.o.f.: " << rnd_gaus(3,1,2)
@@ -568,7 +537,6 @@ float rnd_student_t(double nu);
 float rnd_student_t(double nu, float a, float b);
 
 /** Produce a gaussian random number with mean 0 and standard deviation 1
- * @ingroup RandomFunctions
  *
  * @code
  * std::cout << "This random number should follow N(0,1): " << rnd_gaus()
@@ -578,7 +546,6 @@ float rnd_student_t(double nu, float a, float b);
 float rnd_gaus();
 
 /** Produce a gaussian random number with mean a and standard deviation b
- * @ingroup RandomFunctions
  *
  * @code
  * std::cout << "This random number should follow N(1,4): " << rnd_gaus(1,2)
@@ -588,7 +555,6 @@ float rnd_gaus();
 float rnd_gaus(float a, float b);
 
 /** Gaussian area from -x0 to x0
- * @ingroup RandomFunctions
  *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * x0 must be positive
@@ -596,7 +562,6 @@ float rnd_gaus(float a, float b);
 float gaus_within_x0(float x0, float mean = 0, float stddev = 1);
 
 /** Gaussian area outisde -x0 to x0
- * @ingroup RandomFunctions
  *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * x0 must be positive
@@ -604,7 +569,6 @@ float gaus_within_x0(float x0, float mean = 0, float stddev = 1);
 float gaus_outside_x0(float x0, float mean = 0, float stddev = 1);
 
 /** Gaussian area from -inf to x0
- * @ingroup RandomFunctions
  *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * There is no restriction over the sign of x0
@@ -612,7 +576,6 @@ float gaus_outside_x0(float x0, float mean = 0, float stddev = 1);
 float gaus_up_to_x0(float x0, float mean = 0, float stddev = 1);
 
 /** Gaussian area from x0 to inf
- * @ingroup RandomFunctions
  *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * There is no restriction over the sign of x0
@@ -620,7 +583,6 @@ float gaus_up_to_x0(float x0, float mean = 0, float stddev = 1);
 float gaus_from_x0(float x0, float mean = 0, float stddev = 1);
 
 /** t0 for a given two-sided probability
- * @ingroup RandomFunctions
  *
  * This function returns t0 such that the student probability outside t0 is
  * equal to p
@@ -628,7 +590,6 @@ float gaus_from_x0(float x0, float mean = 0, float stddev = 1);
 float student_outside_probb(float p, float degrees_of_freedom);
 
 /** student area from -t0 to t0
- * @ingroup RandomFunctions
  *
  * By default the student mean is 0 and the student standard deviation is 1.
  * t0 must be positive
@@ -636,7 +597,6 @@ float student_outside_probb(float p, float degrees_of_freedom);
 float student_within_t0(float t0, float degrees_of_freedom);
 
 /** student area outisde -t0 to t0
- * @ingroup RandomFunctions
  *
  * By default the student mean is 0 and the student standard deviation is 1.
  * t0 must be positive
@@ -644,7 +604,6 @@ float student_within_t0(float t0, float degrees_of_freedom);
 float student_outside_t0(float t0, float degrees_of_freedom);
 
 /** student area from -inf to t0
- * @ingroup RandomFunctions
  *
  * By default the student mean is 0 and the student standard deviation is 1.
  * There is no restriction over the sign of t0
@@ -652,7 +611,6 @@ float student_outside_t0(float t0, float degrees_of_freedom);
 float student_up_to_t0(float t0, float degrees_of_freedom);
 
 /** student area from t0 to inf
- * @ingroup RandomFunctions
  *
  * By default the student mean is 0 and the student standard deviation is 1.
  * There is no restriction over the sign of t0
@@ -660,7 +618,6 @@ float student_up_to_t0(float t0, float degrees_of_freedom);
 float student_from_t0(float t0, float degrees_of_freedom);
 
 /** chi2 area from -inf to t0
- * @ingroup RandomFunctions
  *
  * By default the chi2 mean is 0 and the chi2 standard deviation is 1.
  * There is no restriction over the sign of t0
@@ -668,7 +625,6 @@ float student_from_t0(float t0, float degrees_of_freedom);
 float chi2_up_to_t0(float t0, float degrees_of_freedom);
 
 /** chi2 area from t0 to inf
- * @ingroup RandomFunctions
  *
  * By default the chi2 mean is 0 and the chi2 standard deviation is 1.
  * There is no restriction over the sign of t0
@@ -676,7 +632,6 @@ float chi2_up_to_t0(float t0, float degrees_of_freedom);
 float chi2_from_t0(float t0, float degrees_of_freedom);
 
 /** Produce a log uniform random number between a and b
- * @ingroup RandomFunctions
  *
  * Watch out that the following inequation must hold 0<a<=b.
  *
@@ -686,9 +641,9 @@ float chi2_from_t0(float t0, float degrees_of_freedom);
  * @endcode
  */
 float rnd_log(float a, float b);
+//@}
 
-/** @defgroup Filenames Filename handling
- * @ingroup GeneralFunctions
+/** @name Filename handling
  *
  * Filenames are something very common in any package, so it might be worthy to
  * devote some effort to make easier their manipulation. In filename conventions
@@ -718,9 +673,8 @@ float rnd_log(float a, float b);
  * fn_root.get_number() + ".voxels");
  * @endcode
  */
-
-/** Filenames
- * @ingroup Filenames
+//@{
+/** Filenames.
  *
  * This class allows you a lot of usual and common manipulations with filenames.
  * See filename conventions for a detailed explanation of the Filenames dealed
@@ -730,11 +684,10 @@ float rnd_log(float a, float b);
 class FileName: public std::string
 {
 public:
-    /// @defgroup FilenameConstructors Filename constructors
-    /// @ingroup Filenames
+    /// @name Filename constructors
+    /// @{
 
     /** Empty constructor
-     * @ingroup FilenameConstructors
      *
      * The empty constructor is inherited from the string class, so an empty
      * FileName is equal to "".
@@ -747,7 +700,6 @@ public:
     {}
 
     /** Constructor from string
-     * @ingroup FilenameConstructors
      *
      * The constructor from a string allows building complex expressions based
      * on the string class. Notice that in the following example the type
@@ -762,19 +714,16 @@ public:
     {}
 
     /** Constructor from char*
-     * @ingroup FilenameConstructors
      */
     FileName(const char* str) : std::string(str)
     {}
 
     /** Copy constructor
-     * @ingroup FilenameConstructors
      */
     FileName(const FileName& fn) : std::string(fn)
     {}
 
     /** Constructor from root, number and extension
-     * @ingroup FilenameConstructors
      *
      * The number and extension are optional.
      *
@@ -790,7 +739,6 @@ public:
     }
 
     /** Constructor from root and extension
-     * @ingroup FilenameConstructors
      *
      * None of the parameters is optional
      *
@@ -800,12 +748,12 @@ public:
      */
     FileName(const char* str, const std::string& ext): std::string(str + ext)
     {}
+    //@}
 
-    /// @defgroup FilenameComposing Composing/Decomposing the filename
-    /// @ingroup Filenames
+    /// @name Composing/Decomposing the filename
+    /// @{
 
     /** Compose from root, number and extension
-     * @ingroup FilenameComposing
      *
      * @code
      * fn_proj.compose("g1ta", 1, "xmp");  // fn_proj = "g1ta000001.xmp"
@@ -814,7 +762,6 @@ public:
     void compose(const std::string& str, int no, const std::string& ext);
 
     /** Prefix with number @. Mainly for selfiles
-     * @ingroup FilenameComposing
      *
      * @code
      * fn_proj.compose(1,"g1ta.xmp");  // fn_proj = "000001@g1ta000001.xmp"
@@ -823,12 +770,10 @@ public:
     void compose(int no, const std::string& str);
 
     /** True if this filename belongs to a stack
-     * @ingroup FilenameComposing
      */
     bool isInStack() const;
 
     /** Decompose filenames with @. Mainly from selfiles
-     * @ingroup FilenameComposing
      *
      * @code
      * fn_proj.decompose(no,filename);  // fn_proj = "000001@g1ta000001.xmp"
@@ -839,7 +784,6 @@ public:
     void decompose(int &no, std::string& str) const;
 
     /** Get the root from a filename
-     * @ingroup FilenameComposing
      *
      * @code
      * FileName fn_root, fn_proj("g1ta00001");
@@ -848,8 +792,55 @@ public:
      */
     FileName get_root() const;
 
+    /** Get the base name from a filename
+     */
+    std::string get_baseName() const;
+
+    /** Get the number from a filename
+     *
+     * If there is no number a -1 is returned.
+     *
+     * @code
+     * FileName proj("g1ta00001");
+     * int num = proj.get_number();
+     * @endcode
+     */
+    int get_number() const;
+
+    /** Get the last extension from filename
+     *
+     * The extension is returned without the dot. If there is no extension "" is
+     * returned.
+     *
+     * @code
+     * std::string ext = fn_proj.get_extension();
+     * @endcode
+     */
+    std::string get_extension() const;
+
+    /** Get image format identifier (as in Bsoft)
+     *
+     * @code
+     * fn_proj = "g1ta00001.xmp";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "xmp"
+     * fn_proj = "g1ta00001.nor:spi";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "spi"
+     * fn_proj = "input.file#d=f#x=120,120,55#h=1024";
+     * fn_proj = fn_proj.get_file_format(); // fn_proj == "raw"
+     * @endcode
+     */
+    FileName get_file_format() const;
+
+    /** Random name
+     *
+     * Generate a random name of the desired length.
+     */
+    void init_random(int length);
+    //@}
+
+    ///@name Filename utilities
+    //@{
     /** Change all characters for lowercases
-     * @ingroup FilenameComposing
      *
      * @code
      * FileName fn_proj("g1tA00001");
@@ -859,7 +850,6 @@ public:
     FileName to_lowercase() const;
 
     /** Change all characters for uppercases
-     * @ingroup FilenameComposing
      *
      * @code
      * FileName fn_proj("g1tA00001");
@@ -895,7 +885,6 @@ public:
      */
     FileName before_last_of(const std::string& str) const;
 
-
     /** Return substring after first instance of argument (as in Bsoft)
      *
       * @code
@@ -914,47 +903,7 @@ public:
      */
     FileName after_last_of(const std::string& str) const;
 
-    /** Get the base name from a filename
-     * @ingroup FilenameComposing
-     */
-    std::string get_baseName() const;
-
-    /** Get the number from a filename
-     * @ingroup FilenameComposing
-     *
-     * If there is no number a -1 is returned.
-     *
-     * @code
-     * FileName proj("g1ta00001");
-     * int num = proj.get_number();
-     * @endcode
-     */
-    int get_number() const;
-
-    /** Get the last extension from filename
-     * @ingroup FilenameComposing
-     *
-     * The extension is returned without the dot. If there is no extension "" is
-     * returned.
-     *
-     * @code
-     * std::string ext = fn_proj.get_extension();
-     * @endcode
-     */
-    std::string get_extension() const;
-
-    /** Random name
-     * @ingroup FilenameComposing
-     *
-     * Generate a random name of the desired length.
-     */
-    void init_random(int length);
-
-    /// @defgroup FilenameManipulators Filename manipulators
-    /// @ingroup Filenames
-
     /** Add string at the beginning
-     * @ingroup FilenameManipulators
      *
      * If there is a path then the prefix is added after the path.
      *
@@ -969,7 +918,6 @@ public:
     FileName add_prefix(const std::string& prefix) const;
 
     /** Add extension at the end.
-     * @ingroup FilenameManipulators
      *
      * The "." is added. If teh input extension is "" then the same name is
      * returned, with nothing added.
@@ -982,7 +930,6 @@ public:
     FileName add_extension(const std::string& ext) const;
 
     /** Remove last extension, if any
-     * @ingroup FilenameManipulators
      *
      * @code
      * fn_proj = "g1ta00001.xmp";
@@ -995,7 +942,6 @@ public:
     FileName without_extension() const;
 
     /** Remove the root
-     * @ingroup FilenameManipulators
      *
      * @code
      * fn_proj = "g1ta00001.xmp";
@@ -1008,7 +954,6 @@ public:
     FileName without_root() const;
 
     /** Insert before first extension
-     * @ingroup FilenameManipulators
      *
      * If there is no extension, the insertion is performed at the end.
      *
@@ -1025,7 +970,6 @@ public:
     FileName insert_before_extension(const std::string& str) const;
 
     /** Remove a certain extension
-     * @ingroup FilenameManipulators
      *
      * It doesn't matter if there are several extensions and the one to be
      * removed is in the middle. If the given extension is not present in the
@@ -1040,23 +984,8 @@ public:
     FileName remove_extension(const std::string& ext) const;
 
     /** Remove all extensions
-     * @ingroup FilenameManipulators
      */
     FileName remove_all_extensions() const;
-
-    /** Get image format identifier (as in Bsoft)
-     * @ingroup FilenameManipulators
-     *
-     * @code
-     * fn_proj = "g1ta00001.xmp";
-     * fn_proj = fn_proj.get_file_format(); // fn_proj == "xmp"
-     * fn_proj = "g1ta00001.nor:spi";
-     * fn_proj = fn_proj.get_file_format(); // fn_proj == "spi"
-     * fn_proj = "input.file#d=f#x=120,120,55#h=1024";
-     * fn_proj = fn_proj.get_file_format(); // fn_proj == "raw"
-     * @endcode
-     */
-    FileName get_file_format() const;
 
     /** Remove file format
      * @code
@@ -1071,14 +1000,12 @@ public:
     FileName remove_file_format() const;
 
     /** Is this file a MetaData file?
-     * @ingroup FilenameManipulators
      * Returns true if the get_file_format extension == "sel", "doc" or "xmd"
      * Otherwise, the file is opened and checked for the occurence of "XMIPP_3 *" in its first line
      */
     bool isMetaData(bool failIfNotExists=true) const;
 
     /** Clean image FileName (as in Bsoft)
-     * @ingroup FilenameManipulators
      *
      * @code
      * fn_proj = "g1ta00001.xmp";
@@ -1092,7 +1019,6 @@ public:
     //FileName clean_image_name() const;
 
     /** Substitute ext1 by ext2
-     * @ingroup FilenameManipulators
      *
      * It doesn't matter if ext1 is in the middle of several extensions. If ext1
      * is not present in the filename nothing is done.
@@ -1111,7 +1037,6 @@ public:
                                   const std::string& ext2) const;
 
     /** Without a substring
-     * @ingroup FilenameManipulators
      *
      * If the substring is not present the same FileName is returned, if it is
      * there the substring is removed.
@@ -1119,7 +1044,6 @@ public:
     FileName without(const std::string& str) const;
 
     /** Remove until prefix
-     * @ingroup FilenameManipulators
      *
      * Remove the starting string until the given prefix, inclusively. For
      * instance /usr/local/data/ctf-image00001.fft with ctf- yields
@@ -1128,15 +1052,14 @@ public:
     FileName remove_until_prefix(const std::string& str) const;
 
     /** Remove all directories
-     * @ingroup FilenameManipulators
      *
      * Or if keep>0, then keep the lowest keep directories
      */
     FileName remove_directories(int keep = 0) const;
+    //@}
 };
 
 /** This class is used for comparing filenames.
- * @ingroup Filenames
  *
  * Example: "g0ta00001.xmp" is less than "g0ta00002.xmp"
  *
@@ -1155,7 +1078,6 @@ public:
 };
 
 /** True if the file exists in the current directory
- * @ingroup Filenames
  *
  * @code
  * if (exists("g1ta00001"))
@@ -1166,7 +1088,6 @@ int exists(const FileName& fn);
 
 /** True if the file exists in the current directory
  *  Remove leading xx@ and tailing :xx
- * @ingroup Filenames
  *
  * @code
  * if (exists("g1ta00001"))
@@ -1178,7 +1099,6 @@ int existsTrim(const FileName& fn);
 /** This function raised an ERROR if the filename if not empty and if
  * the corresponding file does not exist. 
  * This may be useful to have a better (killing) control on (mpi-regulated) jobs
- * @ingroup Filenames
  *
  * @code
  *   exit_if_not_exists("control_file.txt");
@@ -1189,7 +1109,6 @@ int existsTrim(const FileName& fn);
 void exit_if_not_exists(const FileName &fn);
 
 /** Waits until the given filename has a stable size
- * @ingroup Filenames
  *
  * The stable size is defined as having the same size within two samples
  * separated by time_step (microsecs).
@@ -1200,7 +1119,6 @@ void wait_until_stable_size(const FileName& fn,
                             unsigned long time_step = 250000);
 
 /** Write a zero filled file with the desired size.
- * @ingroup Filenames
  *
  * The file is written by blocks to speed up, you can modify the block size.
  * An exception is thrown if any error happens
@@ -1210,12 +1128,11 @@ void create_empty_file(const FileName& fn,
                        unsigned long long block_size = 102400);
 
 /** Returns the base directory of the Xmipp installation
- * @ingroup Filenames
  */
 FileName xmippBaseDir();
+//@}
 
-/** @defgroup TimeManaging Time managing
- * @ingroup GeneralFunctions
+/** @name Time managing
  *
  * These functions are used to make time measures of the algorithms. If you know
  * the total amount of work to do then some estimation can be done about how
@@ -1295,7 +1212,7 @@ FileName xmippBaseDir();
  *
  * These functions is not ported to Python.
  */
-
+//@{
 #ifdef _NO_TIME
 typedef int TimeStamp; // Any other kind of data will do
 #else
@@ -1303,7 +1220,6 @@ typedef struct tms TimeStamp; // Renaming of the time structure
 #endif
 
 /** Read the system clock frequency
- * @ingroup TimeManaging
  *
  * This operation is needed only once in a program always we want to have a time
  * measure, or an estimation of remaining time.
@@ -1317,7 +1233,6 @@ typedef struct tms TimeStamp; // Renaming of the time structure
 void time_config();
 
 /** Annotate actual time
- * @ingroup TimeManaging
  *
  * This annotation is used later to compute the elapsed time.
  *
@@ -1331,7 +1246,6 @@ void time_config();
 void annotate_time(TimeStamp* time);
 
 /** Acumulate time
- * @ingroup TimeManaging
  *
  * Initially dest_time should be set to orig time. Then you acumulate succesive
  * times calling this function (Destination time=destination_time + (now -
@@ -1343,7 +1257,6 @@ void annotate_time(TimeStamp* time);
 void acum_time(TimeStamp* orig, TimeStamp* dest);
 
 /** Compute elapsed time since a given annotation
- * @ingroup TimeManaging
  *
  * Given an annotation of time, this function computes the time elapsed since
  * then in seconds. The annotation is not modified. Usually the time is shown in
@@ -1367,7 +1280,6 @@ void acum_time(TimeStamp* orig, TimeStamp* dest);
 float elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 
 /** Show on screen the elapsed time since a given annotation
- * @ingroup TimeManaging
  *
  * The format of the printing is "Elapsed time: User(13) System(1)" that means
  * that the user has used 13 seconds and the system 1, a total of 14 seconds
@@ -1388,7 +1300,6 @@ float elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 
 /** Returns the estimated time left to finish
- * @ingroup TimeManagement
  *
  * To make this estimation the starting time must have been annotated before and
  * the fraction of the total amount of work must be estimated by the programmer.
@@ -1399,7 +1310,6 @@ void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 float time_to_go(TimeStamp& time, float fraction_done);
 
 /** Initialise the progress bar
- * @ingroup TimeManagement
  *
  * The progress bar is initialised to count for a total amount of work. For
  * instance, if we are to do something 60 times, the progress bar should be
@@ -1416,7 +1326,6 @@ float time_to_go(TimeStamp& time, float fraction_done);
 void init_progress_bar(long total);
 
 /** Update progress bar
- * @ingroup TimeManaging
  *
  * With this function you can change the already done amount of work, if
  * something is to be done 60 times and now we have already done 13 then we
@@ -1435,7 +1344,6 @@ void init_progress_bar(long total);
 void progress_bar(long act_time);
 
 /** xmippBaseListener
- * @ingroup TimeManaging
  *
  * This class implements the xmipp listener class for notification of progress
  * status and other operations. It is an abstract class that contains base
@@ -1519,7 +1427,6 @@ private:
 };
 
 /** xmippTextualListener
- * @ingroup TimeManaging
  *
  * This class implements the xmipp classical textual listener class for
  * notification of progress status. It inherits from xmippBaseListener.
@@ -1557,7 +1464,6 @@ public :
 };
 
 /** Shows a message and the time it was produced
- * @ingroup TimeManaging
  *
  * The format of the printing is "14:11:32 (12) => Hello, world", ie, The
  * message "Hello, world" was produced at 14:11:32 o'clock of the day 12. This
@@ -1570,16 +1476,15 @@ public :
  * This function is not ported to Python.
  */
 void TimeMessage(const std::string &message);
+//@}
 
-/** @defgroup LittleBigEndian Little/Big endian
- * @ingroup GeneralFunctions
+/** @name Little/Big endian
  *
  * These set of functions helps you to deal with the little/big endian
  * problems.
  */
-
+//@{
 /** Read from file
- * @ingroup LittleBigEndian
  *
  * This function is the same as fread from C, but at the end there is a flag
  * saying if data should be read in reverse order or not.
@@ -1598,7 +1503,6 @@ size_t xmippFREAD(void* dest, size_t size, size_t nitems, FILE*& fp,
              bool reverse = false);
 
 /** Write to file
- * @ingroup LittleBigEndian
  *
  * This function is the same as fread from C, but at the end there is a flag
  * saying if data should be read in reverse order or not.
@@ -1612,38 +1516,33 @@ size_t xmippFWRITE(const void* src,
               bool reverse = false);
 
 /** Conversion little-big endian
- * @ingroup LittleBigEndian
  *
  * This function is not ported to Python.
  */
 #define little22bigendian(x) swapbytes((unsigned char*)& x,sizeof(x))
 
 /** Conversion little-big endian
- * @ingroup LittleBigEndian
  *
  * This function is not ported to Python.
  */
 void swapbytes(char* v, unsigned long n);
 
 /** Returns 1 if machine is big endian else 0
- * @ingroup LittleBigEndian
  */
 bool IsBigEndian(void);
 
 /** Returns 1 if machine is little endian else 0
- * @ingroup LittleBigEndian
  *  little-endian format (sometimes called the Intel format
  */
 bool IsLittleEndian(void);
+//@}
 
-/** @defgroup Marsaglia Marsaglia random functions
- * @ingroup RandomFunctions
+/** @name Marsaglia Marsaglia random functions
  *
  * These functions are not ported to Python.
  */
-
-/** Marsaglia
- * @ingroup Marsaglia
+//@{
+/** Marsaglia class.
  *
  * This class has been designed for those programs that  have to have a large
  * set of random numbers but do not have time to generate them properly on the
@@ -1651,7 +1550,7 @@ bool IsLittleEndian(void);
  * to store some of them in memory and retrieve (from memory), as many times as
  * needed, in a random fashion.
  *
- * As source of the numbers I recomend the "Marsaglia's Random Number CDROM"
+ * As source of the numbers I recommend the "Marsaglia's Random Number CDROM"
  * available, for free, at your favorite web site. (Search for it in any search
  * engine  and you will get tons of hits.) The following is from the CD
  * description:
@@ -1694,12 +1593,11 @@ public:
         Init(fn_in, No_Numbers);
     }
 
-    // TODO Document
+    /// Empty constructor
     Marsaglia()
     {}
 
     /** You may use init for reading another set of random numbers
-     * @ingroup Marsaglia
      */
     void Init(const FileName& fn_in, int No_Numbers)
     {
@@ -1733,7 +1631,6 @@ public:
     }
 
     /** Get a random number from the memory
-     * @ingroup Marsaglia
      *
      * If you are at the end of the stream the pointer will be radomly moved
      * before stracting the number.
@@ -1746,8 +1643,7 @@ public:
         return (T_random_vector[pointer_in_memory++]);
     }
 
-    /** Calculate random vector log (use only with flloats)
-     * @ingroup Marsaglia
+    /** Calculate random vector log (use only with floats)
      */
     void Marsaglia_log()
     {
@@ -1763,7 +1659,6 @@ public:
     }
 
     /** Multiply random vector by constant
-     * @ingroup Marsaglia
      */
     void mul(T mul_cte)
     {
@@ -1772,7 +1667,6 @@ public:
     }
 
     /** Calculate mod of random vector, only make sense with integers
-     * @ingroup Marsaglia
      */
     void operator&= (T mod_cte)
     {
@@ -1781,7 +1675,6 @@ public:
     }
 
     /** Add a constant
-     * @ingroup Marsaglia
      */
     void add(T add_cte)
     {
@@ -1789,8 +1682,7 @@ public:
             T_random_vector[hh] += add_cte;
     }
 
-    /** Set Maximun value (only valid for integers)
-     * @ingroup Marsaglia
+    /** Set Maximum value (only valid for integers)
      */
     void M_max(const FileName& fn_in, T m_max)
     {
@@ -1834,7 +1726,6 @@ public:
 
 private:
     /** Verify float
-     * @ingroup Marsaglia
      *
      * Be aware that Marsaglia reads blindly the data, therefore if the type
      * float is selected several of the "random" numbers may not be valid (the
@@ -1857,4 +1748,6 @@ private:
                                       (double) MaxInteger);
     }
 };
+//@}
+//@}
 #endif

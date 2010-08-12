@@ -138,6 +138,8 @@ struct blobtype
     std::cout << "Blob value at (1,1,1) = " << blob_val(v.mod(),blob) << std::endl;
     @endcode */
 #define blob_val(r, blob) kaiser_value(r, blob.radius, blob.alpha, blob.order)
+
+/** Function actually computing the blob value. */
 double kaiser_value(double r, double a, double alpha, int m);
 
 // Blob projection ---------------------------------------------------------
@@ -158,6 +160,8 @@ double kaiser_value(double r, double a, double alpha, int m);
          << std::endl;
     @endcode */
 #define blob_proj(r, blob) kaiser_proj(r, blob.radius, blob.alpha, blob.order)
+
+/** Function actually computing the blob projection. */
 double kaiser_proj(double r, double a, double alpha, int m);
 
 /** Fourier transform of a blob.
@@ -170,11 +174,15 @@ double kaiser_proj(double r, double a, double alpha, int m);
     The Fourier Transform can be computed only for blobs with m=2 or m=0. */
 #define blob_Fourier_val(w, blob) \
     kaiser_Fourier_value(w, blob.radius, blob.alpha, blob.order)
+
+/** Function actually computing the blob Fourier transform. */
 double kaiser_Fourier_value(double w, double a, double alpha, int m);
-/** Formula for a volume integral of a blob (n is the blob dimension)
-    */
+
+/** Formula for a volume integral of a blob (n is the blob dimension) */
 #define blob_mass(blob) \
     basvolume(blob.radius, blob.alpha, blob.order,3)
+
+/** Function actually computing the blob integral */
 double  basvolume(double a, double alpha, int m, int n);
 
 /** Limit (z->0) of (1/z)^n I_n(z) (needed by basvolume)*/

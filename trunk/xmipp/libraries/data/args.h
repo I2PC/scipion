@@ -73,9 +73,8 @@ template <typename T> class Matrix1D;
  * }
  * @endcode
  */
-
-/** @defgroup TypeConversions Type conversions
- * @ingroup Arguments
+//@{
+/** @name Type conversions
  *
  * All these functions try to produce a value of the desired type from the given
  * string (char*) or to produce a string from a value. If it is not possible
@@ -84,9 +83,8 @@ template <typename T> class Matrix1D;
  * for the exception thrown but you can provide a different exception in the
  * parameter line
  */
-
+//@{
 /** Best precision for a float number.
- * @ingroup TypeConversions
  *
  * This function returns the best precision to be used in a "printf" format if
  * this number is to fit in a given width. It returns -1 if the exponential
@@ -123,7 +121,6 @@ template <typename T> class Matrix1D;
 int bestPrecision(float F, int _width);
 
 /** String (char*) to double conversion.
- * @ingroup TypeConversions
  *
  * @code
  * double key = textToDouble(firstToken(line), 1602, "Error reading key");
@@ -135,7 +132,6 @@ double textToDouble(const char* str,
             int exit = 0);
 
 /** String (char*) to float conversion.
- * @ingroup TypeConversions
  *
  * @code
  * float key = textToFloat(firstToken(line), 1602, "Error reading key");
@@ -147,13 +143,12 @@ float textToFloat(const char* str,
            int exit = 0);
 
 /** String (STL) to float conversion.
- * @ingroup TypeConversions
  *
  * @code
  * float key = textToFloat(str, 1602, "Error reading key");
  * @endcode
  */
-inline float textToFloat(const std::string str,
+inline float textToFloat(const std::string& str,
                   int _errno = 2101,
                   std::string errmsg = "Error in textToFloat",
                   int exit = 0)
@@ -162,7 +157,6 @@ inline float textToFloat(const std::string str,
 }
 
 /** String (char*) to integer conversion.
- * @ingroup TypeConversions
  *
  * @code
  * int param_no = textToInteger(nextToken(), 1602, "Error reading number parameters")
@@ -174,13 +168,12 @@ int textToInteger(const char* str,
          int exit = 0);
 
 /** String (STL) to integer conversion.
- * @ingroup TypeConversions
  *
  * @code
  * int param_no = textToInteger(str, 1602, "Error reading number parameters")
  * @endcode
  */
-inline int textToInteger(const std::string str,
+inline int textToInteger(const std::string& str,
                 int _errno = 2102,
                 std::string errmsg = "Error in textToInteger",
                 int exit = 0)
@@ -189,7 +182,6 @@ inline int textToInteger(const std::string str,
 }
 
 /** String (char*) to long long integer conversion.
- * @ingroup TypeConversions
  *
  * @code
  * long long param_no = textToLongLong(nextToken(), 1602, "Error reading number
@@ -202,7 +194,6 @@ long long textToLongLong(const char* str,
                 int exit = 0);
 
 /** Float to string conversion.
- * @ingroup TypeConversions
  *
  * If precision==0 the precision is automatically computed in such a way that
  * the number fits the width (the exponential format might be chosen). If
@@ -216,7 +207,6 @@ long long textToLongLong(const char* str,
 std::string floatToString(float F, int _width = 8, int _prec = 0);
 
 /** Integer to string conversion.
- * @ingroup TypeConversions
  *
  * If width==0 then writes the number with the number of digits needed. The
  * fill_with field indicates which is the filling character for the left
@@ -229,7 +219,6 @@ std::string floatToString(float F, int _width = 8, int _prec = 0);
 std::string integerToString(int I, int _width = 0, char fill_with = '0');
 
 /** Character to integer conversion.
- * @ingroup TypeConversions
  *
  * Takes a character and produces a number according to its ASCII code minus 48.
  * For instance, ASCII=48 produces number 0, ASCII=49 produces 1, ..., ASCII=57
@@ -246,7 +235,6 @@ int textToInt(const char* str,
          int exit = 0);
 
 /** String to string with given length conversion.
- * @ingroup TypeConversions
  *
  * The output string will have the information of the input one with the given
  * width. If the width is smaller than the string length then the string is
@@ -256,14 +244,12 @@ int textToInt(const char* str,
 std::string stringToString(const std::string& str, int _width = 0);
 
 /** Check angle.
- * @ingroup TypeConversions
  *
  * If the argument is not "rot", "tilt" nor "psi" an exception is thrown
  */
 void checkAngle(const std::string& str);
 
 /** To lower.
- * @ingroup TypeConversions
  *
  * All characters between A-Z are brought to a-z. Result is rewritten on input
  * string
@@ -271,12 +257,10 @@ void checkAngle(const std::string& str);
 void toLower(char* _str);
 
 /** To lower, for STL strings.
- * @ingroup TypeConversions
  */
 void toLower(std::string& _str);
 
 /** Remove consecutive spaces.
- * @ingroup TypeConversions
  *
  * All consecutive spaces are replaced by a single one and starting and
  * finishing spaces are removed
@@ -284,7 +268,6 @@ void toLower(std::string& _str);
 std::string removeSpaces(const std::string& _str);
 
 /** Remove quotes.
- * @ingroup TypeConversions
  *
  * This function removes the first character if it is a double or single quote,
  * as well as the last character. The char pointer might be moved.
@@ -295,9 +278,9 @@ std::string removeSpaces(const std::string& _str);
  * @endcode
  */
 void removeQuotes(char** _str);
+//@}
 
-/** @defgroup Tokenization Tokenization
- * @ingroup Arguments
+/** @name Tokenization
  *
  * These functions allow to split a string into small pieces separated by blank
  * spaces, giving you a pointer to the different word each time. The different
@@ -323,9 +306,8 @@ void removeQuotes(char** _str);
  * For STL there is another way. You supply a string object and a vector of
  * strings is returned with all the elements
  */
-
+//@{
 /** Split a STL string given some delimiter.
- * @ingroup Tokenization
  *
  * Returns a the number of tokens found. The tokens are in the variable results.
  */
@@ -335,7 +317,6 @@ int splitString(const std::string& input,
                 bool includeEmpties = false);
 
 /** Returns first token (char*).
- * @ingroup Tokenization
  *
  * @code
  * char line[80];
@@ -349,7 +330,6 @@ inline char* firstToken(const char* str)
 }
 
 /** Returns first token (STL).
- * @ingroup Tokenization
  *
  * @code
  * std::string line;
@@ -359,12 +339,10 @@ inline char* firstToken(const char* str)
  */
 inline char* firstToken(const std::string& str)
 {
-    // FIXME C-style cast
     return strtok((char*) str.c_str(), " \t\n");
 }
 
 /** Returns next token.
- * @ingroup Tokenization
  *
  * This functions returns the next word of the line we have given last as
  * parameter to firstToken.
@@ -383,12 +361,10 @@ inline char* firstToken(const std::string& str)
  */
 inline char* nextToken()
 {
-    // FIXME C-style cast
     return strtok((char*) NULL, " \t\n");
 }
 
 /** Returns next token.
- * @ingroup Tokenization
  *
  * It reads from position i. Returns (in i) the following position to search on.
  * When there are no more tokens. It returns "".
@@ -396,7 +372,6 @@ inline char* nextToken()
 std::string nextToken(const std::string& str, int& i);
 
 /** Get non empty string (char*).
- * @ingroup Tokenization
  *
  * This function returns the first word found in the given line disregarding the
  * leading blanks. If no word is found then an exception or an exit error is
@@ -410,7 +385,6 @@ char* firstWord(char* str,
                  int exit = 0);
 
 /** Get non empty string (STL).
- * @ingroup Tokenization
  *
  * Same as the previous function but for STL strings
  */
@@ -424,7 +398,6 @@ inline char* firstWord(std::string& str,
 }
 
 /** Get next non empty string.
- * @ingroup Tokenization
  *
  * This is the same as the nextToken, but an exception is thrown or an exit
  * error produced if the word is empty
@@ -433,18 +406,18 @@ inline char* nextWord(int _errno = 2106,
                        std::string errmsg = "next word: String not found",
                        int exit = 0)
 {
-    // FIXME C-style cast
     return firstWord((char*) NULL, _errno, errmsg, exit);
 }
 
-// TODO Document
-/// @ingroup Tokenization
+/** Tokenize a string and return a list of tokens
+ *
+ */
 void tokenize(const std::string& str,
               std::vector< std::string >& tokens,
               const std::string& delimiters = " \t");
+//@}
 
-/** @defgroup ReadLists Read lists
- * @ingroup Arguments
+/** @name Read lists
  *
  * These functions try to read N values of the desired type into the given
  * structure (either a STL vector of any numerical type by adding the read
@@ -470,9 +443,8 @@ void tokenize(const std::string& str,
  * readFloatList(NULL, 10, v2); // Read NEXT!! 10 values in v2
  * @endcode
  */
-
+//@{
 /** List to STL vector.
- * @ingroup ReadLists
  */
 template <typename T>
 void readFloatList(const char* str,
@@ -512,7 +484,6 @@ void readFloatList(const char* str,
 }
 
 /** List to STL vector.
- * @ingroup ReadLists
  */
 template <typename T>
 void readFloatList(const std::string& str,
@@ -554,7 +525,6 @@ void readFloatList(const std::string& str,
 }
 
 /** Read list into a Matrix1D.
- * @ingroup ReadLists
  */
 template <typename T>
 void readFloatList(const char* str,
@@ -592,15 +562,14 @@ void readFloatList(const char* str,
             token = nextToken();
     }
 }
+//@}
 
-/** @defgroup CommandLineFunctions Functions for parsing the command line
- * @ingroup Arguments
+/** @name Functions for parsing the command line
  *
  * These functions help you to manage the command line parameters
  */
-
+//@{
 /** Get parameters from the command line.
- * @ingroup CommandLineFunctions
  *
  * This function assumes that the command line is structured in such a way that
  * for each parameter a block like "-param <param_value>" is defined. The label
@@ -636,7 +605,6 @@ char* getParameter(int argc,
                 int exit = 0);
 
 /** Get two float parameters after a flag from the command line.
- * @ingroup CommandLineFunctions
  *
  * An exception is thrown if there are not enough parameters after the flag, if
  * the message is empty then "Not enough parameters after <param>" is shown. The
@@ -655,7 +623,6 @@ bool getTwoDoubleParams(int argc,
                          int exit = 0);
 
 /** Get 3 float parameters after a flag from the command line.
- * @ingroup CommandLineFunctions
  *
  * An exception is thrown if there are not enough parameters after the flag, if
  * the message is empty then "Not enough parameters after <param>" is shown. The
@@ -676,7 +643,6 @@ bool getThreeDoubleParams(int argc,
                          int exit = 0);
 
 /** Get boolean parameters from the command line.
- * @ingroup CommandLineFunctions
  *
  * This function assumes that the command line is structured in such a way that
  * for each parameter a block like "-param" is defined. The label "param" can be
@@ -695,7 +661,6 @@ bool getThreeDoubleParams(int argc,
 bool checkParameter(int argc, char** argv, const char* param);
 
 /** Returns the position where the given parameter is in the command line.
- * @ingroup CommandLineFunctions
  *
  * This function assumes that the command line is structured in such a way that
  * for each parameter a block like "-param" is defined. The label "param" can be
@@ -720,9 +685,7 @@ bool checkParameter(int argc, char** argv, const char* param);
  */
 int paremeterPosition(int argc, char** argv, const char* param);
 
-
 /** Return the number of components of a vector argument.
- * @ingroup CommandLineFunctions
  *
  * A vector argument is defined as [x,y,z,...]. It returns 0 if the string does
  * not contain a vector
@@ -730,7 +693,6 @@ int paremeterPosition(int argc, char** argv, const char* param);
 int numComponents(const std::string& str);
 
 /** Get float vector.
- * @ingroup CommandLineFunctions
  *
  * A vector is defined as a "[x,y,z, ...]" of any dimension (by default 2D
  * vectors are read). The vector must not contain blank spaces.
@@ -755,7 +717,6 @@ Matrix1D< double > getVectorParameter(int argc,
                                       int exit = 0);
 
 /** Get specific command line.
- * @ingroup CommandLineFunctions
  *
  * This function allows to pass command line parameters to several programs
  * which are integrated in a single program. It assumes that the command line is
@@ -794,7 +755,6 @@ void specificCommandLine(const std::string& prog_name,
                            char*** argvp);
 
 /** Generate argc and argv for a string.
- * @ingroup CommandLineFunctions
  *
  * Given a string this function makes a copy of the string and divides it into
  * tokens such that they can be used as argc and argv, as if it were a command
@@ -835,7 +795,6 @@ void generateCommandLine(const std::string& command_line,
                            char*& copy);
 
 /** Generate articial command line from a file.
- * @ingroup CommandLineFunctions
  *
  * The copy variable must be destroyed outside by "delete copy". This function
  * takes "input_file=<input_file>" and turns it into "-input_file <input_file>"
@@ -850,7 +809,6 @@ bool generateCommandLine(FILE* fh,
                            char*& copy);
 
 /** Get parameter from file.
- * @ingroup CommandLineFunctions
  *
  * Parameters are supposed to be identified with an =, so any line which doesn't
  * contain an = character cannot contain a parameter. The left part of the "="
@@ -878,7 +836,6 @@ std::string getParameter(FILE* fh,
                       int exit = 0);
 
 /** Check if a parameter is present in a file.
- * @ingroup CommandLineFunctions
  *
  * The same as the previous function, but this function only reports if a
  * parameter is present or not in a file. Notice that boolean parameters must be
@@ -888,7 +845,6 @@ std::string getParameter(FILE* fh,
 bool checkParameter(FILE* fh, const char* param);
 
 /** Get float vector from a file.
- * @ingroup CommandLineFunctions
  *
  * The same as before but reading is done from a file
  */
@@ -898,4 +854,6 @@ Matrix1D< double > getVectorParameter(FILE* fh,
                                     int _errno = -1,
                                     const std::string & errmsg = "",
                                     int exit = 0);
+//@}
+//@}
 #endif
