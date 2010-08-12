@@ -34,7 +34,7 @@
 /* SPLINES                                                                   */
 /* ========================================================================= */
 /**@defgroup Splines Splines as basis functions
-   @ingroup DataLibrary */
+   @ingroup Basis */
 //@{
 // Spline value ------------------------------------------------------------
 /** Spline value.

@@ -30,9 +30,10 @@
 #include "multidim_array.h"
 #include <vector>
 
-/// @defgroup MissingWedge Missing wedge
+/// @defgroup Steerable Steerable filters
 /// @ingroup DataLibrary
 //@{
+/** Class for characterizing the missing wedge */
 class MissingWedge
 {
 public:
@@ -58,11 +59,6 @@ public:
     /// Remove wedge
     void removeWedge(MultidimArray<double> &V) const;
 };
-//@}
-
-/// @defgroup Steerable Steerable filters
-/// @ingroup DataLibrary
-//@{
 
 /** Class for performing steerable filters */
 class Steerable
