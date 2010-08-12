@@ -43,9 +43,9 @@
 
 /// @defgroup Macros Macros
 /// @ingroup DataLibrary
-
-/// @defgroup MacrosConstants Constants
-/// @ingroup Macros
+//@{
+/// @name Constants
+//@{
 
 /** Pi
  * @ingroup MacrosConstants
@@ -55,18 +55,16 @@
 #endif
 
 /** Equal accuracy
- * @ingroup MacrosConstants
  *
  * In a comparison if two values are closer than this epsilon they are said to
  * be the same. Actually set to 1e-6
  */
 #define XMIPP_EQUAL_ACCURACY 1e-6
+//@}
 
-/// @defgroup MacrosNumerical Numerical functions
-/// @ingroup Macros
-
+/// @name Numerical functions
+//@{
 /** Absolute value
- * @ingroup MacrosNumerical
  *
  * Valid for any kind of number (int, short, float, etc)
  *
@@ -79,7 +77,6 @@
 #endif
 
 /** Sign of
- * @ingroup MacrosNumerical
  *
  * Valid for any kind of number (int, short, float, etc). It returns +1 or -1
  *
@@ -93,7 +90,6 @@
 #endif
 
 /** Sign of, considering 0 as 0
- * @ingroup MacrosNumerical
  *
  * Valid for any kind of number (int, short, float, etc). It returns +1 if the
  * number is positive, -1 if the number is negative, and 0 if the number is 0.
@@ -108,7 +104,6 @@
 #endif
 
 /** Minimum
- * @ingroup MacrosNumerical
  *
  * Valid for any kind of numbers (int, short, float, etc).
  *
@@ -121,7 +116,6 @@
 #endif
 
 /** Maximum
- * @ingroup MacrosNumerical
  *
  * Valid for any kind of numbers (int, short, float, etc).
  *
@@ -134,7 +128,6 @@
 #endif
 
 /** Round to next integer
- * @ingroup MacrosNumerical
  *
  * Valid for any kind of numbers (int, short, float, etc). The result is of type
  * integer.
@@ -151,7 +144,6 @@
 #endif
 
 /** Round to next larger integer
- * @ingroup MacrosNumerical
  *
  * Valid for any kind of numbers (int, short, float, etc). The result is of type
  * integer.
@@ -167,7 +159,6 @@
                  (int)(x)))
 
 /** Round to next smaller integer
- * @ingroup MacrosNumerical
  *
  * Valid for any kind of numbers (int, short, float, etc). The result is of type
  * integer.
@@ -183,14 +174,12 @@
                   (int)((x) - 1)))
 
 /** Return the fractional part of a value
- * @ingroup MacrosNumerical
  *
  * The fractional part of 3.7 is 0.7 and of -3.7 is -0.7.
  */
 #define FRACTION(x) ((x) - (int)(x))
 
 /** Clip in a saturation fashion
- * @ingroup MacrosNumerical
  *
  * CLIP is a macro which acts like a saturation curve, a value x is "clipped" to
  * a range defined by x0 and xF, for example the output values for the following
@@ -204,7 +193,6 @@
 #define CLIP(x, x0, xF) (((x) < (x0)) ? (x0) : (((x) > (xF)) ? (xF) : (x)))
 
 /** Wrapping for integers
- * @ingroup MacrosNumerical
  *
  * intWRAP performs a wrapping in the integer set, when the cycle is finsihed it
  * begins again. For example, for intWRAP(x,-2,2) would be
@@ -220,7 +208,6 @@
                                                                  + 1) * ((xF) - (x0) + 1)))
 
 /** Wrapping for real numbers
- * @ingroup MacrosNumerical
  *
  * realWRAP is used to keep a floating number between a range with a wrapping
  * fashion. For instance, it is used in trigonometry to say that an angle of
@@ -235,7 +222,6 @@
                              ((x) - (int)(((x) - (xF)) / ((xF) - (x0)) + 1) * ((xF) - (x0))))
 
 /** Degrees to radians
- * @ingroup MacrosNumerical
  *
  * @code
  * angle_in_radians = DEG2RAD(ang_in_degrees);
@@ -244,7 +230,6 @@
 #define DEG2RAD(d) ((d) * PI / 180)
 
 /** Radians to degrees
- * @ingroup MacrosNumerical
  *
  * @code
  * angle_in_degrees = RAD2DEG(ang_in_radians);
@@ -253,7 +238,6 @@
 #define RAD2DEG(r) ((r) * 180 / PI)
 
 /** Cosine in degrees
- * @ingroup MacrosNumerical
  *
  * @code
  * if (COSD(90) == 0)
@@ -263,7 +247,6 @@
 #define COSD(x) cos(PI * (x) / 180.)
 
 /** ArcCosine in degrees
- * @ingroup MacrosNumerical
  *
  * @code
  * if (ACOSD(0.5) == 60)
@@ -273,7 +256,6 @@
 #define ACOSD(x) acos((x)) * 180. / PI
 
 /** Sine in degrees
- * @ingroup MacrosNumerical
  *
  * @code
  * if (SIND(90) == 1)
@@ -283,7 +265,6 @@
 #define SIND(x) sin(PI * (x) / 180.)
 
 /** ArcSine in degrees
- * @ingroup MacrosNumerical
  *
  * @code
  * if (ASIND(0.5) == 30.)
@@ -293,7 +274,6 @@
 #define ASIND(x) asin((x)) * 180. / PI
 
 /** SINC function
- * @ingroup MacrosNumerical
  *
  * The sinc function is defined as sin(PI*x)/(PI*x).
  */
@@ -301,7 +281,6 @@
                  / (PI * (x)))
 
 /** Returns next positive power of 2
- * @ingroup MacrosNumerical
  *
  * It is supposed that the given number is positive although it's not needed to
  * be an integer
@@ -313,7 +292,6 @@
 #define NEXT_POWER_OF_2(x) pow(2, ceil(log((double) x) / log(2.0)-XMIPP_EQUAL_ACCURACY) )
 
 /** Linear interpolation
- * @ingroup MacrosNumerical
  *
  * From low (when a=0) to high (when a=1). The following value is returned
  * (equal to (a*h)+((1-a)*l)
@@ -321,7 +299,6 @@
 #define LIN_INTERP(a, l, h) ((l) + ((h) - (l)) * (a))
 
 /** Cubic B-spline
- * @ingroup MacrosNumerical
  *
  */
 #define BSPLINE03(arg,result) {\
@@ -336,17 +313,16 @@
     }
 
 /** XOR
- * @ingroup MacrosNumerical
  *
  * Logical Xor
  */
 #define XOR(a, b) (((a) && !(b)) || (!(a) && (b)))
+//@}
 
-/// @defgroup MacrosMisc Miscellaneous
-/// @ingroup Macros
+/// @name Miscellaneous
+//@{
 
 /** Speed up temporary variables
- * @ingroup MacrosMisc
  *
  * The following variables are provided:
  *
@@ -363,7 +339,6 @@
     ispduptmp3, ispduptmp4, ispduptmp5;
 
 /** Swap two values
- * @ingroup MacrosMisc
  *
  * It uses a temporal variable which must be of the same type as the two
  * parameters
@@ -374,7 +349,6 @@
         b = tmp; }
 
 /** Starting point for Xmipp volume/image
- * @ingroup MacrosMisc
  *
  * Given a size (in some direction), this function returns the first index for
  * a volume/image/array with this size. The formula is -(int) ((float) (size)
@@ -390,5 +364,6 @@
  * (size) - 1
  */
 #define LAST_XMIPP_INDEX(size) FIRST_XMIPP_INDEX(size) + (size) - 1
-
+//@}
+//@}
 #endif

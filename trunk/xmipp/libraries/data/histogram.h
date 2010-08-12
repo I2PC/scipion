@@ -31,9 +31,8 @@
 
 /// @defgroup Histograms Histograms
 /// @ingroup DataLibrary
-
+//@{
 /** Histograms with 1 parameter
- * @ingroup Histograms
  *
  * This class of histograms are the usual ones where we want to count the number
  * of elements within a certain range of a variable, then we make the histogram
@@ -321,7 +320,6 @@ public:
 };
 
 /** Irregular histogram.
- * @ingroup Histograms
  *
  *  This class is initialized with a regular histogram and a set of bins.
  *  The class builds a new histogram in which the values within bins of
@@ -353,11 +351,9 @@ public:
     const Histogram1D& getHistogram() const;
 };
 
-/// @defgroup HistogramFunctions1D Functions related to histograms 1D
-/// @ingroup Histograms
-
+/** @name Functions related to histograms 1D */
+//@{
 /** Compute histogram of a vector within its minimum and maximum value
- * @ingroup HistogramFunctions1D
  *
  * Given an array as input, this function returns its histogram within the
  * minimum and maximum of the array, in this way all the values in the array are
@@ -379,7 +375,6 @@ void compute_hist(const MultidimArray<T>& array, Histogram1D& hist,
 }
 
 /** Compute histogram of a vector
- * @ingroup HistogramFunctions1D
  */
 template<typename T>
 void compute_hist(const std::vector< T > &v,
@@ -407,7 +402,6 @@ void compute_hist(const std::vector< T > &v,
 }
 
 /** Compute histogram of the array within two values
- * @ingroup HistogramFunctions1D
  *
  * Given a array as input, this function returns its histogram within two
  * values, the array values outside this range are not counted. This can be used
@@ -430,7 +424,6 @@ void compute_hist(const T& v, Histogram1D& hist,
 }
 
 /** Compute histogram within a region (2D or 3D)
- * @ingroup HistogramFunctions1D
  *
  * The region is defined by its corners
  */
@@ -451,7 +444,6 @@ void compute_hist(const MultidimArray< T >
 }
 
 /** Compute the detectability error between two pdf's
- * @ingroup HistogramFunctions1D
  *
  * The input histograms are expressed as probability density functions
  * representing two different objects with the same parameter of variation, for
@@ -473,7 +465,6 @@ void compute_hist(const MultidimArray< T >
 double detectability_error(const Histogram1D& h1, const Histogram1D& h2);
 
 /** Compute the Kullback-Leibler distance between two pdf's
- * @ingroup HistogramFunctions1D
  *
  * The input histograms are expressed as probability density functions.
  *
@@ -484,7 +475,6 @@ double detectability_error(const Histogram1D& h1, const Histogram1D& h2);
 double KLDistance(const Histogram1D& h1, const Histogram1D& h2);
 
 /** Returns the effective range of a multidimensional array
- * @ingroup HistogramFunctions1D
  *
  * The effective range is defined as the difference of those two values
  * comprising a given central percentage of the array histogram. This function
@@ -514,7 +504,6 @@ double effective_range(const T& v, double percentil_out = 0.25)
 }
 
 /** Clips the array values within the effective range
- * @ingroup HistogramFunctions1D
  *
  * Look at the documentation of effective_rage
  */
@@ -535,7 +524,6 @@ void reject_outliers(T& v, double percentil_out = 0.25)
 }
 
 /** Histogram equalization and re-quantization
- * @ingroup HistogramFunctions1D
  *
  * This function equalizes the histogram of the input multidimensional array,
  * and re-quantize the input array to a specified number of bins. The output
@@ -588,9 +576,9 @@ void histogram_equalization(MultidimArray<T>
         }
     }
 }
+//@}
 
 /** Histograms with 2 parameters
- * @ingroup Histograms
  *
  * The histogram with 2 parameters can be regarded as an approximation to the
  * joint probability density function of two variables (just dividing the
@@ -858,8 +846,7 @@ public:
     }
 };
 
-/** @defgroup HistogramFunctions2D Functions related to histograms 2D
- * @ingroup Histograms
+/** @name Functions related to histograms 2D
  *
  * The vectors can be of any numerical type (short int, int, double, ...), but
  * both of the same type. Vectors must be of the same shape, the first element
@@ -868,9 +855,8 @@ public:
  * elements of v1 and v2 serve as coordinates within the histogram. The number
  * of steps must always be given.
  */
-
+//@{
 /** Compute histogram of two arrays within their minimum and maximum values
- * @ingroup HistogramFunctions2D
  *
  * Given two arrays as input, this function returns their joint histogram within
  * the minimum and maximum of the arrays, in this way all the values in the
@@ -891,7 +877,6 @@ void compute_hist(const T& v1, const T& v2,
 }
 
 /** Compute histogram of two arrays within given values
- * @ingroup HistogramFunctions2D
  *
  * Given two arrays as input, this function returns their joint histogram
  * within the specified values, all the values lying outside are not counted
@@ -912,4 +897,6 @@ void compute_hist(const MultidimArray<T>
     hist.insert_value(DIRECT_MULTIDIM_ELEM(v1, n),
                       DIRECT_MULTIDIM_ELEM(v2, n));
 }
+//@}
+//@}
 #endif

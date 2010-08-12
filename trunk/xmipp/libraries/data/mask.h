@@ -37,18 +37,16 @@ void apply_geo_cont_2D_mask(MultidimArray< double >& mask,
 
 /// @defgroup Masks Masks
 /// @ingroup DataLibrary
-/// @defgroup Masks2D 2D Masks
-/// @ingroup Masks
-/// @defgroup Masks3D 3D Masks
-/// @ingroup Masks
+//@{
 
 #define INNER_MASK 1
 #define OUTSIDE_MASK 2
 #define NO_ACTIVATE 0
 #define ACTIVATE 1
 
+///@name Actual masks
+//@{
 /** Creates a RaisedCosine mask for already sized masks
- * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the
@@ -62,7 +60,6 @@ void RaisedCosineMask(MultidimArray< double >& mask,
                       double y0 = 0, double z0 = 0);
 
 /** Creates a RaisedCrown mask for already sized masks
- * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0), by default (0,0), is created within the
@@ -77,7 +74,6 @@ void RaisedCrownMask(MultidimArray< double >& mask,
                      double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Kaiser window
- * @ingroup Masks
  *  The mask is resized.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1.0).
@@ -86,7 +82,6 @@ void KaiserMask(MultidimArray<double> &mask, double delta = 0.01,
                 double Deltaw = 1.0 / 12.0);
 
 /** Creates a sinc mask for already sized masks
- * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0), by default (0), is created with the
@@ -101,7 +96,6 @@ void SincMask(MultidimArray< double >& mask,
               double omega, int mode = INNER_MASK, double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a radial-sinc-kaiser mask, the mask is resized.
- * @ingroup Masks
  *  This function returns a sinc mask windowed by a Kaiser window.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1).
@@ -111,7 +105,6 @@ void SincKaiserMask(MultidimArray<double> &mask,
                     double omega, double delta = 0.01, double Deltaw = 1.0 / 12.0);
 
 /** Blackman window
- * @ingroup Masks
  *
  * It receives no parameter.
  */
@@ -119,7 +112,6 @@ void BlackmanMask(MultidimArray< double >& mask, int mode = INNER_MASK,
                   double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a sinc-blackman mask, the mask is resized
- * @ingroup Masks
  *
  * This function returns a sinc mask windowed by a Blackman window. The window
  * is designed to cover a certain power of the sinc
@@ -130,7 +122,6 @@ void SincBlackmanMask(MultidimArray< double >& mask,
                       double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a circular mask for already sized masks
- * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the
@@ -144,7 +135,6 @@ void BinaryCircularMask(MultidimArray< int >& mask,
 
 
 /** Creates a circular mask with blob-shaped edges for already sized masks
- * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the
@@ -158,7 +148,6 @@ void BlobCircularMask(MultidimArray<double> &mask,
 
 
 /** Creates a crown mask for already sized masks
- * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the two
@@ -173,7 +162,6 @@ void BinaryCrownMask(MultidimArray< int >& mask,
                      double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a crown mask  with blob-shaped edges for already sized masks
- * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the two
@@ -188,7 +176,6 @@ void BlobCrownMask(MultidimArray<double> &mask,
                    double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a gaussian mask for already sized masks
- * @ingroup Masks
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * circle placed logically at (x0,y0,z0), by default (0,0,0), is created with the
@@ -201,13 +188,12 @@ void GaussianMask(MultidimArray< double >& mask,
                   double sigma, int mode = INNER_MASK, 
                   double x0 = 0, double y0 = 0, double z0 = 0);
 
+/** Binary Circular 2D mask in wavelet space */
 void BinaryDWTCircularMask2D(MultidimArray< int >& mask,
                              double radius, int smin, int smax,
                              const std::string& quadrant);
 
-
 /** Creates a 2D separable-sinc-kaiser mask, the mask is resized.
- * @ingroup Masks2D
  *  This function returns a sinc mask windowed by a Kaiser window.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1).
@@ -219,7 +205,6 @@ void SeparableSincKaiserMask2D(MultidimArray<double> &mask,
 
 /** Creates a 3x3 mask with value (1 by default) for those 4-neighbours of the
  * central point (0 otherwise).
- * @ingroup Masks2D
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
@@ -227,7 +212,6 @@ void mask2D_4neig(MultidimArray< int >& mask, int value = 1, int center = NO_ACT
 
 /** Creates a 3x3 mask with value1 for those 4-neighbors of the central point
  * and value2 for the 8 neighbours.
- * @ingroup Masks2D
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
@@ -235,7 +219,6 @@ void mask2D_8neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
                   int center = NO_ACTIVATE);
 
 /** Creates a 3D DWT spherical for already sized masks
- * @ingroup Masks3D
  *
  * The mask size must be a power of 2. The radius must be expressed in pixel
  * units corresponding to the size of the image. For instance, a 64x64x64 image
@@ -248,7 +231,6 @@ void BinaryDWTSphericalMask2D(MultidimArray< int >& mask,
                               const std::string& quadrant);
 
 /** Creates a 3D Cylinder mask for already sized masks
- * @ingroup Masks3D
  *
  * The mask is supposed to be already resized and with its logical origin
  * defined. A cylinder placed logically at (z0,x0,y0), by default (0,0,0), is
@@ -261,7 +243,6 @@ void BinaryCylinderMask(MultidimArray< int >& mask,
                         double x0 = 0, double y0 = 0, int z0 = 0);
 
 /** Creates a 3D frame mask for already sized masks
- * @ingroup Masks3D
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * square placed logically at (x0,y0,z0), by default (0,0,0), is created with
@@ -276,7 +257,6 @@ void BinaryFrameMask(MultidimArray< int >& mask,
                      double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a 3D cone mask for already sized masks
- * @ingroup Masks3D
  *
  * The mask is supposed to be resized and with its logical origin already set. A
  * cone with angle theta is placed parallel to the Z-axis and centered at
@@ -289,7 +269,6 @@ void BinaryConeMask(MultidimArray< int >& mask,
                     double theta, int mode = INNER_MASK);
 
 /** Creates a 3D missing wedge mask
- * @ingroup Masks3D
  *
  * The mask is supposed to be resized and with its logical origin already set.
  * theta0 and thetaF are the tilting angles (around the Y-axis) wherin between
@@ -303,7 +282,6 @@ void BinaryWedgeMask(MultidimArray< double >& mask, double theta0, double thetaF
 
 /** Creates a 3x3x3 mask with value (1 by default) for those 6-neighbors of the
  * central point (0 otherwise).
- * @ingroup Masks3D
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
@@ -311,7 +289,6 @@ void mask3D_6neig(MultidimArray< int >& mask, int value = 1, int center = NO_ACT
 
 /** Creates a 3x3x3 mask with value1 (1 by default) for those 6-neighbors and
  * value2 for the 18 neighbors of the central point (0 otherwise).
- * @ingroup Masks3D
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
@@ -321,15 +298,14 @@ void mask3D_18neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
 /** Creates a 3x3x3 mask with value1 (1 by default) for those 6-neighbors,
  * value2 for the 18 neighbors and value3 for the 26 neighbors of the central
  * point (0 otherwise).
- * @ingroup Masks3D
  *
  * The parameter center controls whether the center pixel is set to 1 or not
  */
 void mask3D_26neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
                    int value3 = 1, int center = NO_ACTIVATE);
+//@}
 
 /** Parameters for a general Mask.
- * @ingroup Masks
  *
  * This class contains all parameters needed to generate masks. The class can
  * read parameters from the command line.
@@ -767,8 +743,7 @@ public:
     }
 };
 
-/** @defgroup MasksTools Tools
- * @ingroup Masks
+/** @name Mask Tools
  *
  * All Mask tools work only in the overlapping area of the given image/volume
  * and the mask in logical coordinates. Ie, if you have a mask defined from -2
@@ -777,21 +752,18 @@ public:
  * remain untouched. This region where the mask is active within the overlapping
  * area will be called in this documentation: active area.
  */
-
+//@{
 /** Apply geometric transformation to a binary (2D) mask
- * @ingroup MasksTools
  */
 void apply_geo_binary_2D_mask(MultidimArray< int >& mask,
                               const Matrix2D< double >& A);
 
 /** Apply geometric transformation to a continuous (2D) mask
- * @ingroup MasksTools
  */
 void apply_geo_cont_2D_mask(MultidimArray< double >& mask,
                             const Matrix2D< double >& A);
 
 /** Compute statistics in the active area
- * @ingroup MaskTools
  *
  * Only the statistics for values in the overlapping between the mask and the
  * volume for those the mask is not 0 are computed.
@@ -838,7 +810,6 @@ void computeStats_within_binary_mask(const MultidimArray< int >& mask,
 }
 
 /** Apply mask to a MultidimArray
- * @ingroup MasksTools
  *
  * The volume values for which the input mask is 0 are set to 0. The input and
  * output volumes can be the same ones.
@@ -863,7 +834,6 @@ void apply_binary_mask(const MultidimArray< int >& mask, const MultidimArray< T 
 }
 
 /** Apply continuous mask to a MultidimArray
- * @ingroup MasksTools
  *
  * The image is multiplied by the mask. The input and output matrices can be the
  * same ones. Only the overlapping values are affected by the mask.
@@ -886,7 +856,6 @@ void apply_cont_mask(const MultidimArray< double >& mask, const MultidimArray< T
 }
 
 /** Compute histogram inside mask within its minimum and maximum value (3D)
- * @ingroup MasksTools
  *
  * Given a volume as input, this function returns the histogram of values inside
  * the mask within the minimum and maximum of the volume, in this way all the
@@ -906,7 +875,6 @@ void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
 }
 
 /** Compute histogram inside mask within two values (3D)
- * @ingroup MasksTools
  *
  * Given a volume as input, this function returns the histogram of the values
  * inside the mask within two values, the volume values outside this range are
@@ -931,7 +899,6 @@ void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
 #define COUNT_BETWEEN 3
 
 /** Count pixels/voxels with mask and above a threshold
- * @ingroup MasksTools
  *
  * Those pixels within the mask with a value greater or equal than a threshold
  * are counted. This function makes a call to count_with_mask
@@ -940,7 +907,6 @@ void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
     count_with_mask(mask, m, COUNT_ABOVE, th, 0);
 
 /** Count pixels/voxels with mask and below a threshold
- * @ingroup MasksTools
  *
  * Those pixels within the mask with a value smaller or equal than a threshold
  * are counted. This function makes a call to count_with_mask
@@ -949,7 +915,6 @@ void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
     count_with_mask(mask, m, COUNT_BELOW, th, 0);
 
 /** Count pixels/voxels with mask and between two thresholds
- * @ingroup MasksTools
  *
  * Those pixels within the mask with a value greater or equal than th1 and
  * smaller or equal than th2 are counted. This function makes a call to
@@ -958,9 +923,7 @@ void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
 #define count_with_mask_between(mask, m, th1, th2) \
     count_with_mask(mask, m, COUNT_BETWEEN, th1, th2);
 
-
-/** Count voxels with mask and threshold
- * @ingroup MasksTools
+/** Count voxels with mask and threshold.
  *
  * This function returns the number of voxels in the ACTIVE area of an volume
  * with a value:
@@ -999,12 +962,12 @@ int count_with_mask(const MultidimArray< int >& mask,
     return N;
 }
 
+// Specialization for complex numbers
 int count_with_mask(const MultidimArray< int >& mask,
                     const MultidimArray< std::complex< double > > & m, int mode,
                     double th1, double th2);
 
-/** Invert binary mask
- * @ingroup MasksTools
+/** Invert binary mask.
  *
  * 0's are converted in 1's and viceversa
  */
@@ -1018,7 +981,6 @@ void invert_binary_mask(MultidimArray< T >& mask)
 }
 
 /** Range adjust within binary mask
- * @ingroup MasksTools
  *
  * Make the grey values of m2 fit, in L2 sense, with those in m1. Only the
  * voxels within the mask are used to compute the linear transformation. If no
@@ -1027,5 +989,6 @@ void invert_binary_mask(MultidimArray< T >& mask)
 void rangeAdjust_within_mask(const MultidimArray< double >* mask,
                               const MultidimArray< double >& m1,
                               MultidimArray< double >& m2);
-
+//@}
+//@}
 #endif

@@ -96,11 +96,10 @@ typedef enum
 /// Returns memory size of datatype
 unsigned long gettypesize(DataType type);
 
-/// @defgroup ImagesSpeedUp Images Speed-up
-/// @ingroup DataLibrary
+/// @name ImagesSpeedUp Images Speed-up
+/// @{
 
 /** Volume Matrix access.
- * @ingroup ImagesSpeedUp
  *
  * This macro does the same as the normal 3D matrix access but in a faster way
  * as no function call is generated.
@@ -114,7 +113,6 @@ unsigned long gettypesize(DataType type);
 #define VOLMATRIX(V) ((V).data)
 
 /** Image Matrix access.
- * @ingroup ImagesSpeedUp
  *
  * This macro does the same as the normal 2D matrix access but in a faster way
  * as no function call is generated.
@@ -128,13 +126,11 @@ unsigned long gettypesize(DataType type);
 #define IMGMATRIX(I) ((I).data)
 
 /** Pixel access.
- * @ingroup ImagesSpeedUp
  * For fast access to pixel values (and for backwards compatibility of the code)
  */
 #define IMGPIXEL(I, i, j) A2D_ELEM(((I).data), (i), (j))
 
 /** Physical pixel access.
- * @ingroup ImagesSpeedUp
  *
  * The physical pixel access gives you access to a pixel by its physical
  * position and not by its logical one. This access shouldn't be used as a
@@ -149,7 +145,6 @@ unsigned long gettypesize(DataType type);
 #define DIRECT_IMGPIXEL(I, i, j) DIRECT_A2D_ELEM(((I).data), (i), (j))
 
 /** Voxel access.
- * @ingroup ImagesSpeedUp
  *
  * This macro does the same as the normal voxel access (remember, logical
  * access) but in a faster way as no function call is generated.
@@ -164,7 +159,6 @@ unsigned long gettypesize(DataType type);
 #define VOLVOXEL(V, k, i, j) A3D_ELEM(((V).data), (k), (i), (j))
 
 /** Physical voxel access.
- * @ingroup ImagesSpeedUp
  *
  * The physical voxel access gives you access to a voxel by its physical
  * position and not by its logical one. This access shouldn't be used as a
@@ -177,17 +171,15 @@ unsigned long gettypesize(DataType type);
  * @endcode
  */
 #define DIRECT_VOLVOXEL(I, k, i, j) DIRECT_A3D_ELEM(((I).data), (k), (i), (j))
+//@}
 
 /** Swapping trigger.
  * Threshold file z size above which bytes are swapped.
  */
 #define SWAPTRIG     65535
 
-/** Template class for images
- * @ingroup Images
- *
+/** Template class for images.
  * The image class is the general image handling class.
- *
  */
 template<typename T>
 class Image
@@ -612,7 +604,6 @@ public:
     }
 
     /** Cast a page of data from type dataType to type Tdest
-     * @ingroup LittleBigEndian
      *    input pointer  char *
      */
     void castPage2T(char * page, T * ptrDest, DataType datatype, size_t pageSize )
@@ -1513,7 +1504,7 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex< double > *
         DataType datatype,
         size_t pageSize);
 
-/// @defgroup ImageFormats Images
+/// @defgroup ImageFormats Image Formats
 /// @ingroup Images
 // Functions belonging to this topic are commented in rw*.h
 //@}

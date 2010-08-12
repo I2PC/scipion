@@ -63,12 +63,11 @@ class Basis;
     the reconstruction algorithms independent from the underlying
     grid, incrementing the reusability of the code.
 */
-
+//@{
 /*****************************************************************************/
 /* Simple Grids                                                              */
 /*****************************************************************************/
 /** Basic grid class.
- * @ingroup Grids
     A Simple grid is defined as a set of 3 directions (X,Y,Z) which need not
     to coincide with the universal X,Y,Z (ie, e1, e2, e3), an origin,
     a relative size to the voxels in the universal grid, and the lowest
@@ -465,7 +464,6 @@ public:
 /* Complex Grids                                                             */
 /*****************************************************************************/
 /** Complex Grids.
- * @ingroup Grids
     Grid is the structure where "true" grids like (BCC, FCC, CC, ...) are
     stored. A complex grid is nothing else than a list of Simple Grids, and
     this is so because a complex grid is supposed to be the superposition
@@ -590,8 +588,7 @@ public:
 /*****************************************************************************/
 /* Some useful Grids                                                         */
 /*****************************************************************************/
-/**@defgroup UsefulGrids Some useful grids
-   @ingroup Grids
+/**@name UsefulGrids Some useful grids
     These are already-built grids to make your task easier. You can
     find here Simple Cubic (CC), Face-Centered (FCC) and Body-Centered
     Cubic (BCC) grids. Most of them are supposed to have its origin in
@@ -600,7 +597,7 @@ public:
     indexes inside the grid respectively. The difference is that the
     corners are given ALWAYS in the universal coordinate system while
     the lowest and highest are vectors in the grid coordinate system */
-
+//@{
 /// CC identifier
 #define  CC 0
 /// FCC identifier
@@ -608,9 +605,6 @@ public:
 /// BCC identifier
 #define BCC 2
 
-/**@defgroup CCGrids Grids as superposition of orthogonal CC grids.
-   @ingroup UsefulGrids */
-//@{
 /** Create a CC grid as a Simple grid.
     The parameters of the CC grid are:
     @code
@@ -733,11 +727,7 @@ Grid Create_BCC_grid(double relative_size,
 */
 Grid Create_FCC_grid(double relative_size,
                      const Matrix1D<double> &corner1, const Matrix1D<double> &corner2);
-//@}
 
-/**@defgroup NonCCGrids Grids as a single non orthogonal CC grid.
-   @ingroup UsefulGrids */
-//@{
 /** Create a simple grid fitting the given sphere.
     Not all index combinations are within the sphere, so attention
     must be  paid whether a certain point is within it or not.
@@ -787,7 +777,6 @@ Grid Create_FCC_grid(double relative_size, double R);
 /* Grid Volumes                                                              */
 /*****************************************************************************/
 /** Grid Volume class.
-  @ingroup Grids
     The grid volumes are a special kind of volumes used in reconstructions
     where the volumes are understood as a 3D matrix of coefficients placed
     at the points defined by a \ref Grid (BCC, FCC, ...) Remember that
@@ -1187,7 +1176,7 @@ public:
         GRIDVOL_BY_GRIDVOLASSIG('/');
     }
 
-    /** Grids I/O
+    /** @name Grids I/O
        The reconstructing volume is stored in the
        Xmipp format. Although it
        is not a true volume some special structure is used to store each
@@ -1511,8 +1500,7 @@ public:
 typedef GridVolumeT<double> GridVolume;
 
 // Show a grid volume ------------------------------------------------------
-/** Show a grid.
-  @ingroup Grids */
+/** Show a grid. */
 template <class T>
 std::ostream& operator << (std::ostream &o, const GridVolumeT<T> &GV)
 {
@@ -1526,4 +1514,5 @@ std::ostream& operator << (std::ostream &o, const GridVolumeT<T> &GV)
     }
     return o;
 }
+//@}
 #endif
