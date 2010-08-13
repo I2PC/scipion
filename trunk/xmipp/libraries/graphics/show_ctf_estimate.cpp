@@ -145,7 +145,7 @@ void AssignCTFViewer::updateMask(std::vector<float> &prm)
 void AssignCTFViewer::drawFirstZero(std::vector<float> &prm)
 {
     // Setup a CTF model with the known parameters
-    XmippCTF ctfmodel;
+    CTFDescription ctfmodel;
     ctfmodel = assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel;
     ctfmodel.DeltafU        = prm[2] * 1000;
     ctfmodel.DeltafV        = prm[3] * 1000;

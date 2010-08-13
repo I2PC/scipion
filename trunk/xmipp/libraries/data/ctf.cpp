@@ -29,7 +29,7 @@
 #include "metadata.h"
 
 /* Read -------------------------------------------------------------------- */
-void XmippCTF::read(const FileName &fn, bool disable_if_not_K)
+void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
 {
     if (fn.isMetaData())
     {
@@ -190,7 +190,7 @@ void XmippCTF::read(const FileName &fn, bool disable_if_not_K)
 }
 
 /* Write ------------------------------------------------------------------- */
-void XmippCTF::write(const FileName &fn)
+void CTFDescription::write(const FileName &fn)
 {
     MetaData MD;
     MD.setColumnFormat(false);
@@ -237,7 +237,7 @@ void XmippCTF::write(const FileName &fn)
 }
 
 /* Usage ------------------------------------------------------------------- */
-void XmippCTF::Usage()
+void CTFDescription::Usage()
 {
     std::cerr << "  [defocusU=<DeltafU>]              : Defocus in Angstroms (Ex: -800)\n"
     << "  [defocusV=<DeltafV=DeltafU>]      : If astigmatism\n"
@@ -275,7 +275,7 @@ void XmippCTF::Usage()
 }
 
 /* Show -------------------------------------------------------------------- */
-std::ostream & operator << (std::ostream &out, const XmippCTF &ctf)
+std::ostream & operator << (std::ostream &out, const CTFDescription &ctf)
 {
     if (ctf.enable_CTF)
     {
@@ -320,7 +320,7 @@ std::ostream & operator << (std::ostream &out, const XmippCTF &ctf)
 }
 
 /* Default values ---------------------------------------------------------- */
-void XmippCTF::clear()
+void CTFDescription::clear()
 {
     enable_CTF = true;
     enable_CTFnoise = false;
@@ -328,7 +328,7 @@ void XmippCTF::clear()
     clear_pure_ctf();
 }
 
-void XmippCTF::clear_noise()
+void CTFDescription::clear_noise()
 {
     base_line = 0;
     cU = cV = sigmaU = sigmaV = gaussian_angle = gaussian_K = 0;
@@ -336,7 +336,7 @@ void XmippCTF::clear_noise()
     cU2 = cV2 = sigmaU2 = sigmaV2 = gaussian_angle2 = gaussian_K2 = 0;
 }
 
-void XmippCTF::clear_pure_ctf()
+void CTFDescription::clear_pure_ctf()
 {
     enable_CTF = true;
     enable_CTFnoise = false;
@@ -349,7 +349,7 @@ void XmippCTF::clear_pure_ctf()
 }
 
 /* Produce Side Information ------------------------------------------------ */
-void XmippCTF::Produce_Side_Info()
+void CTFDescription::Produce_Side_Info()
 {
     // Change units
     double local_alpha = alpha / 1000;
@@ -395,7 +395,7 @@ void XmippCTF::Produce_Side_Info()
 
 /* Zero -------------------------------------------------------------------- */
 //#define DEBUG
-void XmippCTF::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) const
+void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) const
 {
     double wmax = 1 / (2 * Tm);
     double wstep = wmax / 300;
@@ -439,7 +439,7 @@ void XmippCTF::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) co
 #undef DEBUG
 
 /* Apply the CTF to an image ----------------------------------------------- */
-void XmippCTF::Apply_CTF(MultidimArray < std::complex<double> > &FFTI) const
+void CTFDescription::Apply_CTF(MultidimArray < std::complex<double> > &FFTI) const
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
@@ -458,7 +458,7 @@ void XmippCTF::Apply_CTF(MultidimArray < std::complex<double> > &FFTI) const
 
 /* Generate CTF Image ------------------------------------------------------ */
 //#define DEBUG
-void XmippCTF::Generate_CTF(int Ydim, int Xdim,
+void CTFDescription::Generate_CTF(int Ydim, int Xdim,
                             MultidimArray < std::complex<double> > &CTF) const
 {
     Matrix1D<int>    idx(2);
@@ -489,7 +489,7 @@ void XmippCTF::Generate_CTF(int Ydim, int Xdim,
 
 /* Physical meaning -------------------------------------------------------- */
 //#define DEBUG
-bool XmippCTF::physical_meaning()
+bool CTFDescription::physical_meaning()
 {
     bool retval;
     if (enable_CTF)
@@ -615,7 +615,7 @@ bool XmippCTF::physical_meaning()
 #undef DEBUG
 
 /* Force Physical meaning -------------------------------------------------- */
-void XmippCTF::force_physical_meaning()
+void CTFDescription::force_physical_meaning()
 {
     if (enable_CTF)
     {

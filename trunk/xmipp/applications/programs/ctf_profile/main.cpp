@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     try
     {
         // Read CTF
-        XmippCTF CTF;
+        CTFDescription CTF;
         CTF.enable_CTF = CTF.enable_CTFnoise = true;
         CTF.read(fn_ctf);
         CTF.Produce_Side_Info();

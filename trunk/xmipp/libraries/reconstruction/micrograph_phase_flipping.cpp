@@ -47,7 +47,7 @@ void Prog_micrograph_phase_flipping::run(void)
     transformer.FourierTransform(M_in(),M_inFourier,false);
 
     // Read CTF
-    XmippCTF ctf;
+    CTFDescription ctf;
     ctf.clear();
     ctf.read(fnt_ctf);
     ctf.Produce_Side_Info();

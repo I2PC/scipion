@@ -104,7 +104,7 @@ public:
     void usage();
 
     /** Check anisotropy of a single CTF */
-    bool isIsotropic(XmippCTF &ctf);
+    bool isIsotropic(CTFDescription &ctf);
 
     /** Produce side information. */
     void produceSideInfo();

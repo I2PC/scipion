@@ -114,7 +114,7 @@ void CtfGroupParams::produceSideInfo()
 {
     FileName fnt_img, fnt_ctf, fnt;
     Image<double> img;
-    XmippCTF ctf;
+    CTFDescription ctf;
     MetaData ctfdat, SF;
     MultidimArray<double> Mctf;
     MultidimArray<std::complex<double> >  ctfmask;
@@ -298,7 +298,7 @@ void CtfGroupParams::produceSideInfo()
 }
 
 // Check whether a CTF is anisotropic
-bool CtfGroupParams::isIsotropic(XmippCTF &ctf)
+bool CtfGroupParams::isIsotropic(CTFDescription &ctf)
 {
     double xp, yp, xpp, ypp;
     double cosp, sinp, ctfp, diff;

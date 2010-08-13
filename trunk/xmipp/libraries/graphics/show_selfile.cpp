@@ -322,7 +322,7 @@ const char * ShowSel::cellLabel(int i) const
         FileName fn_param = imgnames[i].without_extension() + ".ctfparam";
         try
         {
-            XmippCTF ctf;
+            CTFDescription ctf;
             ctf.read(fn_param, false);
             std::string defocus_val = integerToString(ROUND(XMIPP_MIN(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
                                       integerToString(ROUND(XMIPP_MAX(ctf.DeltafU, ctf.DeltafV)), 6) + " " +

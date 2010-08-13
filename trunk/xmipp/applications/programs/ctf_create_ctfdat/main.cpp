@@ -79,7 +79,7 @@ int main(int argc, char **argv)
         else
         {
             // Write param files for each micrograph to disc and make an internal SFctf
-            XmippCTF ctf;
+            CTFDescription ctf;
             MetaData DFdef;
             double defU, defV, azi;
             int ii = 0;

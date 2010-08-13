@@ -85,7 +85,7 @@ public:
     double raised_w;
 
     /** CTF parameters. */
-    XmippCTF ctf;
+    CTFDescription ctf;
     
     /** Correct phase before applying CTF */
     bool correctPhase;

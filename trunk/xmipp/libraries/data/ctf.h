@@ -41,7 +41,7 @@
 
       int main() {
         // Read the parametric CTF
-        XmippCTF CTF;
+        CTFDescription CTF;
         CTF.enable_CTF=true;
         CTF.enable_CTFnoise=false;
         CTF.read("ctf_crio.param");
@@ -89,7 +89,7 @@
 
          try {
             // Read CTF model
-            XmippCTF CTF;
+            CTFDescription CTF;
             CTF.enable_CTF=true;
             CTF.enable_CTFnoise=true;
             CTF.read(fn_ctf);
@@ -134,7 +134,7 @@
    @endcode
 
 */
-class XmippCTF
+class CTFDescription
 {
 public:
     // Electron wavelength (Amstrongs)
@@ -233,7 +233,7 @@ public:
     double gaussian_angle2;
 
     /** Empty constructor. */
-    XmippCTF()
+    CTFDescription()
     {
         clear();
     }
@@ -255,7 +255,7 @@ public:
     void Usage();
 
     /// Show
-    friend std::ostream & operator << (std::ostream &out, const XmippCTF &ctf);
+    friend std::ostream & operator << (std::ostream &out, const CTFDescription &ctf);
 
     /// Clear.
     void clear();

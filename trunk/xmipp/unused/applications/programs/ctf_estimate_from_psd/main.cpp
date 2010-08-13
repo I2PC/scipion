@@ -42,7 +42,7 @@ int main (int argc,char *argv[]) {
 
    try
    {
-      XmippCTF ctfmodel;
+      CTFDescription ctfmodel;
       ROUT_Adjust_CTF(prog_prm,ctfmodel);
    }
    catch (Xmipp_error XE)

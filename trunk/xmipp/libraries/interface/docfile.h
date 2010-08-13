@@ -40,12 +40,8 @@ class DocFile;
 
 /// @defgroup DocFiles Document Files (Docfiles)
 /// @ingroup DataLibrary
-
-/// @defgroup DocLines Document Lines
-/// @ingroup DocFiles
-
+//@{
 /** DocFile Line.
- * @ingroup DocLines
  *
  * The Document file is a collection (STL list) of Document lines. This class
  * needn't be accessed in common programs since the DocFile class offers most of
@@ -75,11 +71,10 @@ private:
     friend class DocFile; ///< Document file can access anything in this class
 
 public:
-    /// @defgroup DocLineConstructors Constructors for Document Lines
-    /// @ingroup DocLines
+    /// @name Constructors for Document Lines
+    //@{
 
     /** Empty Constructor.
-     * @ingroup DocLineConstructors
      *
      * The document line is created with no type (neither comment or data). You
      * must use the function set_type to assign a type
@@ -88,20 +83,18 @@ public:
     {}
 
     /** Copy constructor.
-     * @ingroup DocLineConstructors
      */
     DocLine(const DocLine& line);
 
     /** Assignment.
-     * @ingroup DocLineConstructors
      */
     DocLine& operator=(const DocLine& line);
+    //@}
 
-    /// @defgroup DocLineAccess Component access
-    /// @ingroup DocLines
+    /// @name Component access
+    //@{
 
     /** Set existing components.
-     * @ingroup DocLineAccess
      *
      * Inside the document line the values are considered as an array (with
      * starting index at 0). With this function you can set any EXISTING
@@ -117,7 +110,6 @@ public:
     double& operator[](int i);
 
     /** Constant component access.
-     * @ingroup DocLineAccess
      *
      * The same as the previous function
      *
@@ -126,7 +118,6 @@ public:
     double operator[](int i) const;
 
     /** Set an existing or not component.
-     * @ingroup DocFileAccess
      *
      * If the Document Line is not large enough to hold the required component,
      * then it is resized
@@ -134,19 +125,18 @@ public:
     void set(int i, double val);
 
     /** Set a vector (Matrix1D) as Document line.
-     * @ingroup DocFileAccess
      *
      * It doesn't matter if it is a row or a column vector. The previous data
      * is overwritten and the key is kept. If it was not a data line, then the
      * new key=0.
      */
     void set(const Matrix1D< double >& v);
+    //@}
 
-    /// @defgroup DocLineStructure Structure information
-    /// @ingroup DocLines
+    /// @name Structure information
+    //@{
 
     /** Get text of this line.
-     * @ingroup DocLineStructure
      *
      * The text is only valid for comment lines
      */
@@ -156,19 +146,17 @@ public:
     }
 
     /** Get the key of this line.
-     * @ingroup DocLineStructure
      */
-    int get_key()
+    int get_key() const
     {
         return key;
     }
 
     /** Get the number of components.
-     * @ingroup DocFileStructure
      *
      * If it is a comment or it hasn't been assigned it returns -1
      */
-    int get_no_components()
+    int get_no_components() const
     {
         if (line_type == DATALINE)
             return data.size();
@@ -177,12 +165,10 @@ public:
     }
 
     /** Empty the document line.
-     * @ingroup DocFileStructure
      */
     void clear();
 
     /** True if current line is a comment.
-     * @ingroup DocFileStructure
      */
     int Is_comment()
     {
@@ -190,7 +176,6 @@ public:
     }
 
     /** True if current line is a comment.
-     * @ingroup DocFileStructure
      */
     int Is_data()
     {
@@ -198,7 +183,6 @@ public:
     }
 
     /** Set type.
-     * @ingroup DocFileStructure
      *
      * Only the comment flag is set, the key and possible data are not
      * lost. The comment text is not touched. The valid types are
@@ -208,14 +192,13 @@ public:
     {
         line_type = _line_type;
     }
+    //@}
 
     /** Show a Document Line.
-     * TODO document
      */
     friend std::ostream& operator<<(std::ostream& o, const DocLine& DL);
 
     /** Read a Document Line.
-     * TODO document
      * An exception is thrown if the line doesn't meet the Document File
      * specifications. First the line is read in a C way, if it fails then the
      * exact Fortran output is tried.
@@ -224,7 +207,6 @@ public:
 };
 
 /** Document Files.
- * @ingroup DocFiles
  *
  * The Document Files are the file format for textual information interchange
  * with Spider. These document files are limited to 6 fields if we want a true
@@ -247,15 +229,14 @@ class DocFile
     int first_key; ///< Number of the first file key
     std::vector< DocLine >::iterator current_line; ///< "pointer" to current line
 
-    // TODO document
+    // Function to locate a given key within the docfile
     std::vector< DocLine >::iterator find(int _key);
 
 public:
-    /// @defgroup DocFileConstructor DocFile constructors
-    /// @ingroup DocFiles
+    /// @name DocFile constructors
+    //@{
 
     /** Empty constructor.
-     * @ingroup DocFileConstructor
      */
     DocFile(): fn_doc(""), no_lines(0), first_key(1)
     {
@@ -263,7 +244,6 @@ public:
     }
 
     /** Constructor with filename, read from disk.
-     * @ingroup DocFileConstructor
      *
      * The given name is loaded as a document file. If it doesn't exist an
      * exception is thrown.
@@ -279,7 +259,6 @@ public:
     }
 
     /** Copy constructor.
-     * @ingroup DocFileConstructor
      *
      * @code
      * DocFile DF2(DF1);
@@ -288,7 +267,6 @@ public:
     DocFile(const DocFile& DF);
 
     /** Empties the object.
-     * @ingroup DocFileConstructor
      *
      * @code
      * DF.clear();
@@ -297,7 +275,6 @@ public:
     void clear();
 
     /** Reserve for N entries.
-     * @ingroup DocFileConstructor
      *
      * It doesn't matter if they are comments or data lines. It's very
      * important to make a reservation if you don't want a memory explosion!!
@@ -309,12 +286,12 @@ public:
         m.reserve(N);
         current_line = m.begin();
     }
+    //@}
 
-    /// @defgroup DocFileOperator DocFile operators
-    /// @ingroup DocFiles
+    /// @name DocFile operators
+    //@{
 
     /** Assignment
-     * @ingroup DocFileOperator
      *
      * @code
      * DF2 = DF1;
@@ -323,7 +300,6 @@ public:
     DocFile& operator=(const DocFile &DF);
 
     /** Assignment from matrix.
-     * @ingroup DocFileOperator
      *
      * The old information in the document file is lost.
      *
@@ -336,7 +312,6 @@ public:
     DocFile& operator=(const Matrix2D< double >& A);
 
     /** Show a document file.
-     * @ingroup DocFileOperator
      *
      * A new line is printed at the end.
      *
@@ -347,7 +322,6 @@ public:
     friend std::ostream& operator<<(std::ostream& o, const DocFile& DF);
 
     /** Show a given line.
-     * @ingroup DocFileOperator
      *
      * This function shows you the line with the given key, if no key is given
      * then the current line is shown. After showing the line a newline
@@ -361,15 +335,14 @@ public:
     void show_line(std::ostream& o, int key = -1);
 
     /** Show everything in a document file.
-     * @ingroup DocFileOperator
      */
     void debug();
+    //@}
 
-    /// @defgroup DocFileDisk Managing files in disk
-    /// @ingroup DocFiles
+    /// @name Managing files in disk
+    //@{
 
     /** Read a file from disk.
-     * @ingroup DocFileDisk
      *
      * The old information on the variable is overwritten. An exception is
      * thrown if the file doesn't exist. Lines which do not fit the file format
@@ -386,7 +359,6 @@ public:
     void read(const FileName& _name, int overrinding = 1);
 
     /** Append a file from disk to an already read one.
-     * @ingroup DocFileDisk
      *
      * The old information on the variable is not lost. All lines in the
      * document file to be read are appened at the end of the already read one.
@@ -402,7 +374,6 @@ public:
     }
 
     /** Write a document file to disk.
-     * @ingroup DocFileDisk
      *
      * If you give a name then it becomes like a "Save as ..." and from this
      * point on the name of the document file has changed. The file keys are
@@ -414,12 +385,12 @@ public:
      * @endcode
      */
     void write(const FileName& _name = "");
+    //@}
 
-    /// @defgroup DocFilePointer Moving the current line pointer
-    /// @ingroup DocFiles
+    /// @name Moving the current line pointer
+    //@{
 
     /** Go to the beginning of the file.
-     * @ingroup DocFilePointer
      *
      * Moves the pointer to the first line of the file either it is a comment or
      * a data line.
@@ -434,7 +405,6 @@ public:
     }
 
     /** Go to the first data line.
-     * @ingroup DocFilePointer
      *
      * Moves the pointer to the first data line in the file.
      *
@@ -449,7 +419,6 @@ public:
     }
 
     /** Adjust pointer to a data line.
-     * @ingroup DocFilePointer
      *
      * If the current line is a data line, nothing is done, else the current
      * line pointer is moved until it is pointing a data line.
@@ -461,7 +430,6 @@ public:
     void adjust_to_data_line();
 
     /** Moves pointer to next line.
-     * @ingroup DocFilePointer
      *
      * It doesn't matter if next line is a comment or a data line.
      *
@@ -476,7 +444,6 @@ public:
     }
 
     /** Moves pointer to previous line.
-     * @ingroup DocFilePointer
      *
      * It doesn't matter if previous line is a comment or a data line.
      *
@@ -491,8 +458,6 @@ public:
     }
 
     /** Moves pointer to next data line.
-     * @ingroup DocFilePointer
-     *
      *
      * @code
      * DF.next_data_line();
@@ -504,7 +469,6 @@ public:
     }
 
     /** Jump over a number of data lines.
-     * @ingroup DocFilePointer
      *
      * Starting from the current_line "pointer" this function skips a given
      * number of entries. For instance, jump over 1 data line is to jump to the
@@ -519,7 +483,6 @@ public:
     void jump(int how_many);
 
     /** Move "pointer" to a certain line.
-     * @ingroup DocFilePointer
      *
      * This function searches for the line with the given key, and locates the
      * current line "pointer" pointing to that line. If the key is not present
@@ -536,7 +499,6 @@ public:
     }
 
     /** Search the entire file for the given comment.
-     * @ingroup DocFilePointer
      *
      * If found, place the pointer to the next data line and return 1.
      * Otherwise, return 0.
@@ -550,7 +512,6 @@ public:
 
     /** Search the entire file for the given string and remove all
      * lines that contain this string apart from the first one
-     * @ingroup DocFilePointer
      *
      * @code
      * if (DF.remove_multiple("Headerinfo")
@@ -559,7 +520,6 @@ public:
     int remove_multiple_strings(std::string pattern);
 
     /** Extract the comment's images' SelFile.
-     * @ingroup DocFilePointer
      *
      * For NewXmipp-type Docfiles only
      *
@@ -570,7 +530,6 @@ public:
     void get_selfile(MetaData& SF);
 
     /** Move "pointer" to a certain line.
-     * @ingroup DocFilePointer
      *
      * This function searches for the line with the given key, and locate the
      * current line "pointer" pointing to that line. If the key is not present
@@ -586,7 +545,6 @@ public:
     void locate(int _key);
 
     /** True if current line "pointer" is at the end of file.
-     * @ingroup DocFilePointer
      *
      * @code
      * if (SF.eof())
@@ -597,12 +555,12 @@ public:
     {
         return current_line == m.end();
     }
+    //@}
 
-    /// @defgroup DocFileInfo Getting information
-    /// @ingroup DocFiles
+    /// @name Getting information
+    //@{
 
     /** Returns the name of the file
-     * @ingroup DocFileInfo
      */
     std::string name() const
     {
@@ -610,7 +568,6 @@ public:
     }
 
     /** True if the key is inside the document file.
-     * @ingroup DocFileInfo
      *
      * The current line "pointer" is not modified.
      *
@@ -625,7 +582,6 @@ public:
     }
 
     /** Get the column number from a header pattern
-     * @ingroup DocFileInfo
      *
      * If this docfile doesn't have a NewXmipp-style header ç
      * (starting with "Headerinfo"), an error is raised. 
@@ -634,27 +590,24 @@ public:
 
         
     /** Number of columns of the first data line.
-     * @ingroup DocFileInfo
      *
      * The current line "pointer" is not modified.
      */
     int FirstLine_colNumber();
 
     /** Number of data lines inside a document file.
-     * @ingroup DocFileInfo
      *
      * @code
      * std::cout << "There are " << DF.dataLineNo();
      * std::cout << " data lines" << std::endl;
      * @endcode
      */
-    int dataLineNo()
+    int dataLineNo() const
     {
         return no_lines;
     }
 
     /** Returns the number of lines within a file.
-     * @ingroup DocFileInfo
      *
      * This function gives the total number of lines (including comments)
      * within a file.
@@ -664,13 +617,12 @@ public:
      * std::cout << " lines in this file" << std::endl;
      * @endcode
      */
-    int LineNo()
+    int LineNo() const
     {
         return m.size();
     }
 
     /** Get last key of the current file.
-     * @ingroup DocFileInfo
      *
      * If the file is empty then returns 0.
      *
@@ -681,7 +633,6 @@ public:
     int get_last_key();
 
     /** Get the key of the current line.
-     * @ingroup DocFileInfo
      *
      * If the current line "pointer" is at the end of the file or is pointing to
      * a comment then 0 is returned.
@@ -696,7 +647,6 @@ public:
     }
 
     /** Get first key of the file.
-     * @ingroup DocFileInfo
      *
      * This is not the first existing key of the file (the line with this key
      * might be deleted), but the key where all renumerations start.
@@ -711,7 +661,6 @@ public:
     }
 
     /** Another function for set first key of the file.
-     * @ingroup DocFileInfo
      *
      * This is not the first existing key of the file (the line with this key
      * might be deleted), but the key where all renumerations start. No
@@ -723,7 +672,6 @@ public:
     }
 
     /** Get the number of the values in the current line.
-     * @ingroup DocFileInfo
      *
      * If the current line "pointer" is at the end of the file or is pointing to
      * a comment then 0 is returned.
@@ -732,13 +680,12 @@ public:
      * valNo = DF.get_current_valNo();
      * @endcode
      */
-    int get_current_valNo()
+    int get_current_valNo() const
     {
         return (*current_line).data.size();
     }
 
     /** Constant access to a value in the current line.
-     * @ingroup DocFileInfo
      *
      * This function allows you access to the values inside the current line of
      * the document file. The column numbers start at 0.
@@ -754,7 +701,6 @@ public:
     }
 
     /** Constant access to a value in the current line.
-     * @ingroup DocFileInfo
      *
      * This function allows you access to the values inside any line of the
      * document file. The column numbers start at 0. The current line "pointer"
@@ -770,7 +716,6 @@ public:
     double operator()(int _key, int i);
 
     /** Get angles on key i.
-     * @ingroup DocFileInfo
      *
      * You must specify the order in which they are written in the file with the
      * labels "rot", "tilt" and "psi"
@@ -784,7 +729,6 @@ public:
                     const std::string& ang3);
 
     /** Get angles on key i (second triad of Euler angles).
-     * @ingroup DocFileInfo
      *
      * You must specify the order in which they are written in the file with the
      * labels "rot", "tilt" and "psi"
@@ -798,7 +742,6 @@ public:
                      const std::string& ang3);
 
     /** Get angles on key i (third triad of Euler angles)
-     * @ingroup DocFileInfo
      *
      * You must specify the order in which they are written in the file with the
      * labels "rot", "tilt" and "psi"
@@ -812,7 +755,6 @@ public:
                      const std::string& ang3);
 
     /** Set angles on key i.
-     * @ingroup DocFileInfo
      *
      * You must specify the order in which they are written in the file with the
      * labels "rot", "tilt" and "psi"
@@ -826,7 +768,6 @@ public:
                     const std::string& ang3);
 
     /** Get image on key i
-     * @ingroup DocFileInfo
      *
      * The docfile is supposed to be an alignment docfile, and it is
      * assumed that no key is missing from the file
@@ -834,7 +775,6 @@ public:
     void get_image(int key, Image<double> &I, bool apply_geo=false);
 
     /** Get image name on key i
-     * @ingroup DocFileInfo
      *
      * The docfile is supposed to be an alignment docfile, and it is
      * assumed that no key is missing from the file
@@ -842,7 +782,6 @@ public:
     FileName get_imagename(int key);
 
     /** Set a value in the current line.
-     * @ingroup DocFileInfo
      *
      * This function allows you to set values inside the current line of the
      * document file. The column numbers start at 0. If the data line hasn't got
@@ -861,7 +800,6 @@ public:
     void set(int i, double val);
 
     /** Set a value in the given line.
-     * @ingroup DocFileInfo
      *
      * This function allows you access to the values inside any line of the
      * document file (the line with the key must exist). The column numbers
@@ -878,18 +816,17 @@ public:
     void set(int _key, int i, double val);
 
     /** Returns current line as a Document line.
-     * @ingroup DocFileInfo
      */
     DocLine get_current_line()
     {
         return *current_line;
     }
+    //@}
 
-    /// @defgroup DocFileModify Modifying the document file
-    /// @ingroup DocFiles
+    /// @name Modifying the document file
+    //@{
 
     /** Renumerate keys
-     * @ingroup DocFileModify
      *
      * The keys are renumerated starting from the file first_key (by default, 1)
      * at the beginning of the file. The current line "pointer" is not modified
@@ -901,7 +838,6 @@ public:
     void renum();
 
     /** Removes a line or several lines from the document file.
-     * @ingroup DocFileModify
      *
      * This function searches for a key (or a range of keys) in the document
      * file, if it is found then the corresponding line(s) is(are) deleted. If
@@ -918,7 +854,6 @@ public:
     void remove(int _key0, int _keyF = -1);
 
     /** Removes actual line.
-     * @ingroup DocFileModify
      *
      * This function removes the current line, either it is a comment or a data
      * line. The current line "pointer" is moved to the following line in the
@@ -932,7 +867,6 @@ public:
     void remove_current();
 
     /** Insert empty data lines before current line.
-     * @ingroup DocFileModify
      *
      * The current line is still pointing to the same line as it was before
      * entering the function. The first key assigned to the new lines is
@@ -946,7 +880,6 @@ public:
     int insert_data_line(int no_lines_to_insert = 1);
 
     /** Insert a data line before current line.
-     * @ingroup DocFileModify
      *
      * The current line is still pointing to the same line as it was before
      * entering the function. The key assigned to the new line is returned.
@@ -973,7 +906,6 @@ public:
     int insert_data_line(const Matrix1D< double >& v);
 
     /** Insert a comment before the current line.
-     * @ingroup DocFileModify
      *
      * Comments must not start with any special character since a ";" is
      * automatically added at the beginning of the line. The current line is
@@ -987,7 +919,6 @@ public:
     void insert_comment(std::string comment);
 
     /** Insert a document line before the current line.
-     * @ingroup DocFileModify
      *
      * The document line is inserted in the file as it is, the key is modified
      * by a renumeration (if the document line is a comment then no renumeration
@@ -1005,7 +936,6 @@ public:
     int insert_line(const DocLine& DL);
 
     /** Append empty data lines before at the end of the file.
-     * @ingroup DocFileModify
      *
      * The current line is still pointing to the same line as it was before
      * entering the function. The first key assigned to the new lines is
@@ -1019,7 +949,6 @@ public:
     int append_data_line(int no_lines_to_append = 1);
 
     /** Append a data line at the end of the file.
-     * @ingroup DocFileModify
      *
      * This function is exactly the same as the insertion one, but no
      * renumeration is performed at the end, so some speed is gained. The key
@@ -1035,7 +964,6 @@ public:
     int append_data_line(const Matrix1D< double >& v);
 
     /** Append angles.
-     * @ingroup DocFileModify
      *
      * You must specify the order with "rot","tilt", or "psi"
      */
@@ -1047,7 +975,6 @@ public:
                       const std::string& ang3);
 
     /** Append angles, using 2 triads of Euler angles.
-     * @ingroup DocFileModify
      *
      * You must specify the order with "rot","tilt", or "psi"
      */
@@ -1062,7 +989,6 @@ public:
                       const std::string& ang3);
 
     /** Append angles, using three triads of Euler angles.
-     * @ingroup DocFileModify
      *
      * You must specify the order with "rot","tilt", or "psi"
      */
@@ -1080,7 +1006,6 @@ public:
                       const std::string& ang3);
 
     /** Append a comment at the end of the file.
-     * @ingroup DocFileModify
      *
      * This function is exactly the same as the insertion one, but this time the
      * line is added at the end. The current line pointer is not moved and no
@@ -1093,7 +1018,6 @@ public:
     void append_comment(const std::string& comment);
 
     /** Append a document line at the end of the file.
-     * @ingroup DocFileModify
      *
      * This function is exactly the same as the insertion one, but no
      * renumeration is performed at the end, so some speed is gained. The key
@@ -1107,7 +1031,6 @@ public:
     int append_line(DocLine& DL);
 
     /** Deletes all comments from the document file.
-     * @ingroup DocFileModify
      *
      * The current line "pointer" is moved to the beginning of the file.
      *
@@ -1116,12 +1039,12 @@ public:
      * @endcode
      */
     void clean_comments();
+    //@}
 
-    /// @defgroup DocFileHelpul Helpful functions
-    /// @ingroup DocFiles
+    /// @name Helpful functions
+    //@{
 
     /** Alter order in document file.
-     * @ingroup DocFileHelpful
      *
      * A new document file with all the lines of the actual object is created,
      * but this time all data lines are resorted in a random order. The comments
@@ -1136,7 +1059,6 @@ public:
     DocFile randomize();
 
     /** Randomly perturb the values in a column.
-     * @ingroup DocFileHelpful
      *
      * All values in the given column will be added a random
      * perturbation taken from a Gaussian distribution with stddev
@@ -1148,9 +1070,12 @@ public:
      */
     void perturb_column(int col, double sigma);
 
+#define DOCMERGE_KEEP_OLD 1
+#define DOCMERGE_KEEP_NEW 2
+#define DOCMERGE_SUM_COLUMN 3
+#define DOCMERGE_ERROR 4
 
     /** Merge a file from disk with an already read one.
-     * @ingroup DocFileHelpful
      *
      * This only works for NewXmipp-style docfiles.
      * All image names in the docfile to be read and their corresponding data 
@@ -1169,20 +1094,13 @@ public:
      * DF.merge("g2t.doc",DOCMERGE_KEEP_NEW);
      * @endcode
      */
-# define DOCMERGE_KEEP_OLD 1
-# define DOCMERGE_KEEP_NEW 2
-# define DOCMERGE_SUM_COLUMN 3
-# define DOCMERGE_ERROR 4
-
     void merge(const FileName& name, int mode=DOCMERGE_KEEP_OLD, int sumcol=5);
 
     /** Merge this file with another docfile.
-     * @ingroup DocFileHelpful
      */
     void merge(DocFile& DF, int mode=DOCMERGE_KEEP_OLD, int sumcol=5);
 
     /** Discard randomly N lines.
-     * @ingroup DocFileHelpful
      *
      * A set of N data lines are REMOVED from the actual document file. If N is
      * equal or greater than the actual number of lines within the file, all
@@ -1197,7 +1115,6 @@ public:
     DocFile random_discard(int N);
 
     /** Column to vector.
-     * @ingroup DocFileHelpful
      *
      * This function produces a double Matrix1D which is composed by all the
      * components of a certain column inside the document file. If a given line
@@ -1213,7 +1130,6 @@ public:
     Matrix1D< double > col(int _col);
 
     /** Row to vector.
-     * @ingroup DocFileHelpful
      *
      * This function produces a double Matrix1D which is composed by all the
      * components of a certain line inside the document file. If the key doesn't
@@ -1226,7 +1142,6 @@ public:
     Matrix1D< double > row(int _key);
 
     /** Vector to column.
-     * @ingroup DocFileHelpful
      *
      * This function sets all values in the given column as the values given in
      * the vector. If a data line hasn't got enough space to hold that column,
@@ -1242,12 +1157,12 @@ public:
      * @endcode
      */
     void setCol(int _col, Matrix1D< double >& v);
+    //@}
 };
 
-/// @defgroup DocFileFunction Useful functions working with docfiles
-/// @ingroup DocFiles
+/// @name Useful functions working with docfiles
+//@{
 /** Read Document File with Euler angles.
- * @ingroup DocFileFunction
  *
  * This function reads a document file with Euler angles. The Euler angles can
  * be in any order in the file (the order must be specified in the function
@@ -1272,7 +1187,6 @@ int read_Euler_document_file(FileName fn,
                              DocFile& DF);
 
 /** Select images from a selfile meeting some condition.
- * @ingroup DocFileFunction
  *
  * If an image is discarded in the selfile it remains discarded in spite of it
  * meets the condition. If it is active then it is discarded if it doesn't meet
@@ -1292,7 +1206,6 @@ void select_images(DocFile& DF,
                    double limitF);
 
 /** Get a docfile containing only those images in the input selfile
- * @ingroup DocFileFunction
  *
  * For this to work, the docfile should be in NewXmipp-like format
  * with all filenames in comments above each line
@@ -1303,4 +1216,6 @@ void select_images(DocFile& DF,
 void get_subset_docfile(DocFile& DFin,
 			MetaData& SF,
 			DocFile& DFout);
+//@}
+//@}
 #endif

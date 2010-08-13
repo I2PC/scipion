@@ -53,7 +53,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     adjustParams.f2=(double) mxGetScalar(prhs[10]);
     adjustParams.enhanced_weight=(double) mxGetScalar(prhs[11]);
 
-    XmippCTF ctfmodel;
+    CTFDescription ctfmodel;
     try 
     {
         ROUT_Adjust_CTF(adjustParams,ctfmodel,false);

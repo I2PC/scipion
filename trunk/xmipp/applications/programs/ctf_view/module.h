@@ -81,7 +81,7 @@ public:
     //Variable to handle the plotter
     Plotter plotter;
     // CTF
-    XmippCTF ctf;
+    CTFDescription ctf;
     // CTF valid
     bool ctf_valid;
     // Image model shown in the imageViewer

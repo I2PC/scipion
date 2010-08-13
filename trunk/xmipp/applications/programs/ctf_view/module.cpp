@@ -440,7 +440,7 @@ void CTFViewer::openFile()
     // Show CTF-Experimental Image
     setImageViewer();
 
-    // Prepare XmippCTF
+    // Prepare CTFDescription
     ctf.enable_CTFnoise = true;
     ctf.enable_CTF = true;
     ctf.read(fn_root + ".ctfparam");

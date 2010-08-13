@@ -47,7 +47,7 @@ public:
     /// CTF amplitude to model
     Image<double>           enhanced_ctftomodel_fullsize;
     /// CTF model
-    XmippCTF             initial_ctfmodel;
+    CTFDescription             initial_ctfmodel;
     /// Show convergence values
     bool                 show_optimization;
     /// X dimension of particle projections (-1=the same as the psd)
@@ -107,7 +107,7 @@ public:
 /** Core of the Adjust CTF routine.
     This is the routine which does everything. It returns the fitting error
     committed in the best fit.*/
-double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel, 
+double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmodel, 
     bool standalone = true);
 //@}
 #endif

@@ -281,7 +281,7 @@ void Prog_angular_projection_matching_prm::produceSideInfo()
         }
         else
         {
-            XmippCTF ctf;
+            CTFDescription ctf;
             MultidimArray<std::complex<double> >  ctfmask;
             ctf.read(fn_ctf);
             if (ABS(ctf.DeltafV - ctf.DeltafU) >1.)

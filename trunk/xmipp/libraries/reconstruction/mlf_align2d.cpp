@@ -314,7 +314,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
 
     FileName                    fn_img, fn_tmp, fn_base, fn_tmp2;
     Image<double>              img;
-    XmippCTF                    ctf;
+    CTFDescription                    ctf;
     MultidimArray<double>           offsets(2), dum, rmean_ctf;
     Matrix2D<double>           A(3, 3);
     MultidimArray<double>      Maux, Maux2;

@@ -77,8 +77,8 @@ namespace AdjustCTF {
     int                    global_evaluation_reduction;
 
     // CTF model and noise model
-    XmippCTF               global_ctfmodel;
-    XmippCTF               global_ctfmodel_defoci;
+    CTFDescription               global_ctfmodel;
+    CTFDescription               global_ctfmodel_defoci;
 
     // Maximum of the gaussian
     double                 global_max_gauss_freq;
@@ -104,7 +104,7 @@ namespace AdjustCTF {
 using namespace AdjustCTF;
 
 /* Assign ctfmodel from a vector and viceversa ----------------------------- */
-void assign_CTF_from_parameters(double *p, XmippCTF &ctfmodel,
+void assign_CTF_from_parameters(double *p, CTFDescription &ctfmodel,
                                 int ia, int l, int modelSimplification)
 {
     ctfmodel.Tm = global_prm->Tm;
@@ -278,7 +278,7 @@ void assign_CTF_from_parameters(double *p, XmippCTF &ctfmodel,
     }   //    16 *
 }
 
-void assign_parameters_from_CTF(XmippCTF &ctfmodel, double *p,
+void assign_parameters_from_CTF(CTFDescription &ctfmodel, double *p,
                                 int ia, int l, int modelSimplification)
 {
     if (ia <= 0 && l > 0)
@@ -1987,7 +1987,7 @@ void estimate_defoci()
 
 /* Main routine ------------------------------------------------------------ */
 //#define DEBUG
-double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, XmippCTF &output_ctfmodel,
+double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmodel,
     bool standalone)
 {
     global_prm = &prm;

@@ -34,7 +34,7 @@
 
 #include "kerdensom.h"
 
-/**@defgroup SmoothlyTStudent Smoothly Distributed t-Student Kernel Probability Density Estimator Self Organizing Map
+/**@defgroup SmoothlyGaussianStudent Smoothly Distributed Gaussian Kernel Probability Density Estimator Self Organizing Map
    @ingroup ClassificationLibrary */
 //@{
 /**
