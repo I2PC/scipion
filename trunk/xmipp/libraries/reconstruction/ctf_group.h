@@ -32,7 +32,7 @@
 #include <data/ctf.h>
 
 /**@defgroup CTFGroup ctf_group
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /// CTFGroup parameters
 class CtfGroupParams

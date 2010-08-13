@@ -35,7 +35,7 @@
 
 /**@defgroup AngularCommonLines angular_common_lines
     (angular assignment through common lines)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 
 // Forward declaration

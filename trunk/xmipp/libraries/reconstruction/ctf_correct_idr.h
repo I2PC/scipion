@@ -30,7 +30,7 @@
 #include "fourier_filter.h"
 
 /**@defgroup IDR ctf_correct_idr (Iterative Data Refinement for CTF amplitude correction)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* IDR Parameters ---------------------------------------------------------- */
 /** IDR Parameters. */

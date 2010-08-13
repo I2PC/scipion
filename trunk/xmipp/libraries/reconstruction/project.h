@@ -34,7 +34,7 @@
 #include "project_crystal.h"
 
 /**@defgroup ProjectionProgram project (Generate projections from a volume)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Projection Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */

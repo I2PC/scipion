@@ -33,7 +33,7 @@
 #include <data/metadata.h>
 
 /**@defgroup AngularPredictContinuous angular_continuous_assign (Continuous angular assignment)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** Predict Continuous Parameters. */
 class Prog_angular_predict_continuous_prm

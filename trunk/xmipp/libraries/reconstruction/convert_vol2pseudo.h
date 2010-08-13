@@ -35,7 +35,7 @@
 class Prog_Convert_Vol2Pseudo;
 
 /**@defgroup ConvertVol2Pseudo ConvertVol2Pseudo
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /// Pseudoatom class
 class PseudoAtom

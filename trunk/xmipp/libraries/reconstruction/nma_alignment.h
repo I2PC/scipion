@@ -33,7 +33,7 @@
 #include "../../external/condor/Vector.h"
 
 /**@defgroup NMAAlignment Alignment with Normal modes
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** NMA Alignment Parameters. */
 class Prog_nma_alignment_prm: public Prog_parameters

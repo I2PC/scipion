@@ -30,7 +30,7 @@
 #include <data/metadata.h>
 
 /// @defgroup RemoveFluctuations Remove fluctuations in tilt series
-/// @ingroup ReconsLibraryPrograms
+/// @ingroup ReconsLibrary
 
 /// Parameters for the program removing the fluctuations
 /// @ingroup RemoveFluctuations

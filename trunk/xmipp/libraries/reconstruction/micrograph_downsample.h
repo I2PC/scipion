@@ -30,7 +30,7 @@
 #include <data/micrograph.h>
 
 ///@defgroup MicrographDownsample Micrograph Downsample
-/// @ingroup ReconsLibraryPrograms
+/// @ingroup ReconsLibrary
 //@{
 /** Downsample parameters. */
 class Prog_downsample_prm

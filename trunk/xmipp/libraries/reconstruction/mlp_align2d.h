@@ -40,7 +40,7 @@
 #include <vector>
 
 /**@defgroup MLPalign2D mlp_align2d (Maximum likelihood in polar coordinates for 2D images)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 
 //@{

@@ -30,7 +30,7 @@
 #include "phantom_simulate_microscope.h"
 
 /**@defgroup MicrographProgram phantom_create_micrograph (Microscope simulation)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Create micrograph Program Parameters ------------------------------------ */
 /** Parameter class for the create micrograph program */

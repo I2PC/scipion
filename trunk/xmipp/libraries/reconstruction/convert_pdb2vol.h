@@ -29,7 +29,7 @@
 #include <interface/pdb.h>
 
 /**@defgroup PDBPhantom convert_pdb2vol (PDB Phantom program)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* PDB Phantom Program Parameters ------------------------------------------ */
 /** Parameter class for the PDB Phantom program */

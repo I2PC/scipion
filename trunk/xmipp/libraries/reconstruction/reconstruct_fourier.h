@@ -51,7 +51,7 @@
 #define PRELOAD_IMAGE 3
 
 /**@defgroup FourierReconstruction Fourier reconstruction
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 class Prog_RecFourier_prm;
 static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;

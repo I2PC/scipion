@@ -40,7 +40,7 @@
 
 
 /// @defgroup EnhanceContrast Enhance constrast
-/// @ingroup ReconsLibraryPrograms
+/// @ingroup ReconsLibrary
 
 /// Parameters for enhance contrast program
 /// @ingroup Denoise

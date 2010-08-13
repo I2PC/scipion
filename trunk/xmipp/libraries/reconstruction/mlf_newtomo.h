@@ -40,7 +40,7 @@
 #include <vector>
 
 /**@defgroup mlf_tomo mlf_tomo (Maximum likelihood in Fourier space for tomography)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define OBSERVED_THRESHOLD 3

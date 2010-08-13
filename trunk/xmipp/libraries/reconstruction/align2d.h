@@ -34,7 +34,7 @@
 #include <vector>
 
 /**@defgroup Align2DProgram align2d (Align a set of 2D images)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** Align2D parameters. */
 class Prog_align2d_prm

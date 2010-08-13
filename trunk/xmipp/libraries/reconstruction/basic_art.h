@@ -40,7 +40,7 @@
 struct Recons_info;
 
 /**@defgroup BasicART Basic and common ART
-   @ingroup ReconsLibraryPrograms 
+   @ingroup ReconsLibrary 
     The main difference between ART applied to different cases (single
     particles, crystals, ...) is the single step applied to each case.
     Most of the tasks in the ART are common to all ART processes. All

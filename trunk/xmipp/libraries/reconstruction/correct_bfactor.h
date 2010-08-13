@@ -33,7 +33,7 @@
 #include <data/image.h>
 
 /** @defgroup Correct Bfactor
-  * @ingroup ReconsLibraryPrograms
+  * @ingroup ReconsLibrary
   */
 
 /** correct_bfactor parameters. */

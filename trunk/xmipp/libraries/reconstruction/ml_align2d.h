@@ -204,7 +204,7 @@ public:
 };//close class Model_MLalign2D
 
 /**@defgroup MLalign2D ml_align2d (Maximum likelihood in 2D)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** MLalign2D parameters. */
 class Prog_MLalign2D_prm

@@ -31,7 +31,7 @@
 #include "sparma.h"
 
 /**@defgroup AssignCTF ctf_estimate_from_micrograph (CTF estimation from a micrograph)
-   @ingroup ReconsLibraryPrograms
+   @ingroup ReconsLibrary
    This program assign different CTFs to the particles in a micrograph */
 //@{
 

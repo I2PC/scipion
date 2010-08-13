@@ -33,7 +33,7 @@
 #include <data/filters.h>
 
 /**@defgroup Centilt align_tilt_pairs (Align tilted and untilted images in a random conical tilt experiment)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** Centilt parameters. */
 class Prog_centilt_prm

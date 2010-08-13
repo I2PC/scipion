@@ -31,7 +31,7 @@
 #include <data/matrix2d.h>
 
 /**@defgroup AlignDualProgram Align two dual tilt series
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** Align dual tilt series parameters. */
 class Prog_align_dual

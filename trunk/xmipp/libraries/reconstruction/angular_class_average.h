@@ -39,7 +39,7 @@
 
 /**@defgroup ClassAverage Create class averages from projection
    matching docfiles
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** angular_class_average parameters. */
 class Prog_angular_class_average_prm

@@ -33,7 +33,7 @@
 #include <string>
 
 /**@defgroup precomputeSampling precompute_sampling (Precompute samplin points in the projection sphere)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* PDB Phantom Program Parameters ------------------------------------------ */
 /** Parameter class for the PDB Phantom program */

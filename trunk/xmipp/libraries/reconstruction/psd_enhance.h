@@ -28,7 +28,7 @@
 #include <data/progs.h>
 
 /**@defgroup EnhancePSD psd_enhance (Enhance visualization of the PSD)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Enhance PSD Program Parameters ------------------------------------------ */
 /** Parameter class for the project program */

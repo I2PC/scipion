@@ -35,7 +35,7 @@
 #include <reconstruction/symmetrize.h>
 
 /**@defgroup WBP reconstruct_wbp (Weighted Back Projection)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 typedef struct Column
 {

@@ -33,7 +33,7 @@
 #include <iostream>
 
 /**@defgroup CommonLinesProgram Common Lines (find common lines between projections)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Parameters -------------------------------------------------------------- */
 typedef enum {CORRENTROPY=0, CORRELATION=1, EUCLIDEAN=2} DistanceType;

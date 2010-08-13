@@ -32,7 +32,7 @@
 #include <data/args.h>
 
 /// @defgroup RangeAdjust Adjust grey level range of images and volumes
-/// @ingroup DataLibraryPrograms
+/// @ingroup ReconsLibrary
 
 /** Parameter class for the project program.
  * @ingroup RangeAdjust

@@ -30,8 +30,8 @@
 #include <data/metadata_extension.h>
 #include "pca.h"
 
-/**@defgroup AnalyzeClusterProgram analyze cluster
-   @ingroup ReconsLibraryPrograms */
+/**@defgroup AnalyzeClusterProgram Analyze cluster
+   @ingroup ClassificationLibrary */
 //@{
 /** Analyze cluster parameters. */
 class Prog_analyze_cluster_prm

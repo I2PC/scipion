@@ -50,7 +50,7 @@
 #include <data/image.h>
 
 /**@defgroup RadonTransform radon (Radon transform)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 /** Radon transform of a volume along a direction */
 void Radon_Transform(const MultidimArray<double> &vol, double rot, double psi,
 		MultidimArray<double> &RT);

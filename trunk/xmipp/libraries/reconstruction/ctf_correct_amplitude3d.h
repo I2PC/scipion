@@ -31,7 +31,7 @@
 #define OVERSAMPLE 8
 
 /**@defgroup CorrectAmplitude3D ctf_correct_amplitude3D (3D Wiener filtering)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /// Correct Amplitude3D parameters
 class CorrectAmplitude3DParams

@@ -34,7 +34,7 @@
 #include <data/projection.h>
 
 /**@defgroup ShiftRefinement refinement (Shift refinement)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 
 /**Correlates two projections and finds the maximun of the correlation matrix.

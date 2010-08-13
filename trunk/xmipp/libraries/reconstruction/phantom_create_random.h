@@ -31,7 +31,7 @@
 #include <data/phantom.h>
 
 /**@defgroup RandomPhantom phantom_create_random (Generate phantoms randomly)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 
 /* Random Phantom parameters ----------------------------------------------- */

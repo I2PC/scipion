@@ -37,7 +37,7 @@
 #include <vector>
 
 /**@defgroup MLalign3D ml_align3d (Maximum likelihood in 3D)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 typedef struct Wedgelist {int num; double th0; double thF;} wedgelist;
 

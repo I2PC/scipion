@@ -29,7 +29,7 @@
 #include "fourier_filter.h"
 
 /**@defgroup CorrectPhase ctf_correct_phase (CTF Phase correction)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /// Correct Phase parameters
 class CorrectPhaseParams

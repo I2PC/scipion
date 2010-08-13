@@ -33,7 +33,7 @@
 #include <vector>
 
 /// @defgroup MakeSpectra Make spectra
-/// @ingroup ReconsLibraryPrograms
+/// @ingroup ReconsLibrary
 
 /** Make spectra parameters.
  * @ingroup MakeSpectra

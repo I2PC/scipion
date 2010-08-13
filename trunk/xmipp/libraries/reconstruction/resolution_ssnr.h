@@ -32,7 +32,7 @@
 #include <data/metadata.h>
 
 /**@defgroup SSNR resolution_ssnr (Spectral Signal to Noise Ratio)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** SSNR parameters. */
 class Prog_SSNR_prm

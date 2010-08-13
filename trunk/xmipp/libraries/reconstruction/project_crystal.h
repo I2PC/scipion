@@ -32,7 +32,7 @@ class Crystal_Projection_Parameters;
 #include "project.h"
 
 /**@defgroup CrystalProject project_crystal (Project crystals)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Crystal Projection parameters ------------------------------------------- */
 /** Crystal Projecting parameters.

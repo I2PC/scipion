@@ -30,7 +30,7 @@
 #include <data/multidim_array.h>
 
 /**@defgroup AdjustVolumeProgram adjust_volume_grey_values (Adjust volume grey values to a set of projections)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Adjust volume Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */

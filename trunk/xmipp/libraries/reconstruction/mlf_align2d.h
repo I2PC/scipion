@@ -40,7 +40,7 @@
 #include <numeric>
 
 /**@defgroup MLFalign2D mlf_align2d (Maximum likelihood in 2D in Fourier space)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 
 #define FOR_ALL_MODELS() for (int refno=0;refno<n_ref; refno++)

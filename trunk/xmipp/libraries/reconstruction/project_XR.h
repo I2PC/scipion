@@ -36,7 +36,7 @@
 
 
 /**@defgroup ProjectionXRProgram project_xr (project for tilt series)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Projection XR Program Parameters -------------------------------- */
 /** Parameter class for the project program */

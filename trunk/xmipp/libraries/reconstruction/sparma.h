@@ -118,7 +118,7 @@ void ARMAFilter(MultidimArray<double> &Img, MultidimArray< double > &Filter,
 //@}
 
 /**@defgroup SpARMAProg sparma (Spectrum modelling by ARMA filters)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** Class to perform the ARMA estimate of the PSD from the command line */
 class ARMA_parameters

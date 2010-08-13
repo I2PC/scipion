@@ -30,7 +30,7 @@
 #include <data/projection.h>
 
 /**@defgroup ProjectionTomographyProgram projectTomograpy (project for tilt series)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Projection Tomogrpahy Program Parameters -------------------------------- */
 /** Parameter class for the project program */

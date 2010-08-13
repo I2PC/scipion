@@ -32,7 +32,7 @@
 #include <vector>
 
 /**@defgroup Filter_projections Select which projections proceed to reconstruction
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Filter projection Program Parameters ----------------------------------- */
 /** Parameter class for the project program */

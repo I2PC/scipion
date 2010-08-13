@@ -32,7 +32,7 @@
 #include <data/fft.h>
 
 /**@defgroup Micrograph_phase_Flipp (phase flipping)
-   @ingroup ReconsLibraryPrograms
+   @ingroup ReconsLibrary
 */
 //@{
 

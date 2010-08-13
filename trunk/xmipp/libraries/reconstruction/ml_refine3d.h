@@ -52,7 +52,7 @@
 #include <vector>
 
 /**@defgroup Refine3d ml_refine3d (Maximum likelihood 3D refinement)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** Refine3d parameters. */
 class Prog_Refine3d_prm

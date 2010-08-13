@@ -33,7 +33,7 @@
 #include "reconstruct_art.h"
 
 /**@defgroup ARTCrystal art_crystal (ART for crystals)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** ART+crystal parameters.
     Here only those specific parameters for crystals are found, the rest of

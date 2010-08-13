@@ -31,7 +31,7 @@
 #include <data/progs.h>
 
 /// @defgroup Denoise Image denoising
-/// @ingroup DataLibraryPrograms
+/// @ingroup ReconsLibrary
 
 /// Parameters for denoise program
 /// @ingroup Denoise

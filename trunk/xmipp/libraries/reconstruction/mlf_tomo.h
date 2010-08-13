@@ -39,7 +39,7 @@
 #include <vector>
 
 /**@defgroup mlf_tomo mlf_tomo (Maximum likelihood in Fourier space for tomography)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /// Structure for storing a wedgelist
 typedef struct Wedgelist

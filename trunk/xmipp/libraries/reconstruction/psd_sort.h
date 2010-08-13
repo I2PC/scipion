@@ -31,7 +31,7 @@
 #include <data/multidim_array.h>
 
 /**@defgroup SortPSD psd_Sort (Sort visualization of the PSD)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Sort PSD Program Parameters ------------------------------------------ */
 /** Parameter class for the project program */

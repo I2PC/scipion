@@ -30,7 +30,7 @@
 #include <data/progs.h>
 
 /**@defgroup MicroscopeProgram phantom_simulate_microscope (Microscope simulation)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Microscope Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */

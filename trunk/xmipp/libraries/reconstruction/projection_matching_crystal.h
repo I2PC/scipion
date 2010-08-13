@@ -45,7 +45,7 @@
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
 
 /**@defgroup projection_matching_crystal projection_matching_crystal (Discrete angular assignment for crystals)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** projection_matching_crystal parameters. */
 class Prog_projection_matching_crystal_prm

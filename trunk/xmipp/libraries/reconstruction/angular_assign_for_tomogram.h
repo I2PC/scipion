@@ -30,7 +30,7 @@
 #include <data/image.h>
 
 /**@defgroup AngularPredictTomography angular_assign_for_tomogram (Discrete angular assignment for tomography)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** Alignment structure */
 class AlignmentTomography

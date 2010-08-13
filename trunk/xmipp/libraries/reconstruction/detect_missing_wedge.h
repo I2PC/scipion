@@ -29,7 +29,7 @@
 #include <data/image.h>
 
 /// @defgroup DetectMissingWedge Detect missing wedge
-/// @ingroup ReconsLibraryPrograms
+/// @ingroup ReconsLibrary
 
 /// Parameters for the program detecting the missing wedge
 /// @ingroup DetectMissingWedge

@@ -63,7 +63,7 @@ typedef struct{
 } structThreadRotationallyAlignOneImage ;
 
 /**@defgroup angular_projection_matching new_projmatch (Discrete angular assignment using a new projection matching)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** projection_matching parameters. */
 class Prog_angular_projection_matching_prm {

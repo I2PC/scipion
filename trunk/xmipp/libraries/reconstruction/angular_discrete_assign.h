@@ -39,7 +39,7 @@
 #include <algorithm>
 
 /**@defgroup AngularPredict angular_discrete_assign (Discrete angular assignment)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** Angular Predict parameters. */
 class Prog_angular_predict_prm

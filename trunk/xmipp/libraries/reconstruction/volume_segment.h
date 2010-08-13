@@ -30,7 +30,7 @@
 #include <data/image.h>
 
 ///@defgroup VolumeSegment Volume segmentation
-///@ingroup DataLibraryPrograms
+///@ingroup ReconsLibrary
 //@{
 /** Segment parameters. */
 class Prog_segment_prm

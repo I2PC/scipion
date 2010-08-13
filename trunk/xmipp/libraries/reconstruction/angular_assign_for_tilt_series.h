@@ -33,7 +33,7 @@
 
 /**@defgroup AngularAssignTiltSeries angular_assign_for_tilt_series
              (Simultaneous assignment)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 
 /** Compute the affine transformation between two images. */

@@ -25,7 +25,7 @@
 #include <data/types.h>
 
 /**@defgroup spots2realspace3d spots2realspace3d (Convert crystal 3DSpots to Real Space volume)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /* Spot(3D)-->Real Space Program Parameters ------------------------------------ */
 /** Spot(3D) --> Real Space parameters.

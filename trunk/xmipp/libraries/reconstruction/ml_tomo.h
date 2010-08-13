@@ -69,7 +69,7 @@ typedef struct{
 } structThreadExpectationSingleImage ;
 
 /**@defgroup ml_tomo ml_align2d (Maximum likelihood in 2D)
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** ml_tomo parameters. */
 class Prog_ml_tomo_prm

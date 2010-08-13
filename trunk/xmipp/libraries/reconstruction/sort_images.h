@@ -30,7 +30,7 @@
 #include <data/image.h>
 
 /**@defgroup SortImagesProgram sort images
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ReconsLibrary */
 //@{
 /** Sort images parameters. */
 class Prog_sort_images_prm
