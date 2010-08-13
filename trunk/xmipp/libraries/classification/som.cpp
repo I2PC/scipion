@@ -90,15 +90,17 @@ void SOM::train(ClassificationMap& _som, ClassicTrainingVectors& _ts) const
              t < somNSteps && i < _ts.theItems.end() ; i++, t++)
         {
             // get the best matching.
-            SomIn& theBest = _som.test(*i);
+            SomIn& theBest = _som.test(*i)
+                             ;
             if (somNeigh == BUBBLE)
             { // Bubble
                 // update the neighborhood around the best one
                 std::vector<unsigned> neig = _som.neighborhood(_som.codVecPos(theBest),
-                                        ceil(somRadius(t, somNSteps)));
+                                             ceil(somRadius(t, somNSteps)));
                 for (std::vector<unsigned>::iterator it = neig.begin();it < neig.end();it++)
                 {
-                    SomIn& v = _som.theItems[*it];
+                    SomIn& v = _som.theItems[*it]
+                               ;
                     for (unsigned j = 0; j < v.size(); j++)
                         v[j] += ((*i)[j] - v[j]) * somAlpha(t, somNSteps);
                 }
@@ -124,7 +126,8 @@ void SOM::train(ClassificationMap& _som, ClassicTrainingVectors& _ts) const
             listener->OnProgress(t);
         if (verbosity >= 2)
         {
-            char s[100];
+            char s[100]
+            ;
             sprintf(s, "Iteration %d of %d.\n", t, somNSteps);
             listener->OnReportOperation((std::string) s);
         }
@@ -159,19 +162,21 @@ double SOM::test(const ClassificationMap& _som, const TS& _examples) const
     for (int i = 0; i < _examples.size(); i++)
     {
         SomIn& theBest = _som.test(_examples.theItems[i]); // get the best
-        qerror += (double) eDist(theBest, _examples.theItems[i]);
+        qerror += euclideanDistance(theBest, _examples.theItems[i]);
         if (verbosity)
         {
             int tmp = (int)((_examples.size() * 5) / 100);
-            if ((tmp == 0) && (i != 0)) tmp = i;
-            else tmp = 1;
+            if ((tmp == 0) && (i != 0))
+                tmp = i;
+            else
+                tmp = 1;
             if ((i % tmp) == 0)
                 listener->OnProgress(i);
         }
     }
-    if (verbosity)listener->OnProgress(_examples.size());
+    if (verbosity)
+        listener->OnProgress(_examples.size());
     return (qerror / (double) _examples.size());
-
 };
 
 /**

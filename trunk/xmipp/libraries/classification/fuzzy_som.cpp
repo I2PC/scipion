@@ -213,14 +213,15 @@ double FuzzySOM::test(const FuzzyMap& _som, const TS& _examples) const
     for (int i = 0; i < _examples.size(); i++)
     {
         SomIn& theBest = _som.fuzzyTest(i); // get the best
-        qerror += (double) eDist(theBest, _examples.theItems[i]);
+        qerror += euclideanDistance(theBest, _examples.theItems[i]);
         if (verbosity)
         {
             if ((i % (int)((_examples.size()*5) / 100)) == 0)
                 listener->OnProgress(i);
         }
     }
-    if (verbosity)listener->OnProgress(_examples.size());
+    if (verbosity)
+        listener->OnProgress(_examples.size());
     return (qerror / (double) _examples.size());
 
 };
@@ -251,8 +252,10 @@ double FuzzySOM::updateU(FuzzyMap& _som, const TS& _examples, const double& _m)
             for (j = 0; j < dim; j++)
                 auxDist += (double)((double)(_examples.theItems[k][j]) - (double)(_som.theItems[i][j])) * ((double)(_examples.theItems[k][j]) - (double)(_som.theItems[i][j]));
             auxDist = pow(auxDist, auxExp);
-            if (!finite(auxDist)) auxDist = MAXFLOAT;
-            if (auxDist < MAXZERO) auxDist = MAXZERO;
+            if (!finite(auxDist))
+                auxDist = MAXFLOAT;
+            if (auxDist < MAXZERO)
+                auxDist = MAXZERO;
             auxProd += (double) 1. / auxDist;
             tmpD[i] = auxDist;
         }
@@ -285,7 +288,8 @@ void FuzzySOM::updateV(FuzzyMap& _som, const TS& _examples, const double& _m)
     // Calculate Temporal scratch values
     for (cc = 0; cc < numNeurons; cc++)
     {
-        for (j = 0; j < dim; j++) tmpMap[cc][j] = 0.;
+        for (j = 0; j < dim; j++)
+            tmpMap[cc][j] = 0.;
         tmpDens[cc] = reg;
         for (vv = 0; vv < numVectors; vv++)
         {

@@ -148,14 +148,12 @@ void FuzzyKohonenCMeans::train(FuzzyCodeBook& _xmippDS, const TS& _examples) con
 
 
         // Compute stopping criterion
-
         stopError = 0;
         for (i = 0; i < numClusters; i ++)
         {
-            auxError = (double) eDist(_xmippDS.theItems[i], auxCB.theItems[i]);
+            auxError = euclideanDistance(_xmippDS.theItems[i], auxCB.theItems[i]);
             stopError += auxError * auxError;
         } // for i
-
 
         // Update iteration index
 

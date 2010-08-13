@@ -34,7 +34,6 @@
 #include <stdexcept>
 #include <vector>
 #include "uniform.h"
-#include "distance.h"
 #include "training_vector.h"
 
 // definition of max

@@ -366,7 +366,9 @@ int main(int argc, char** argv)
         for (int i = 0; i < ts.size(); i++)
         {
             int j = myMap->winner(ts, i);
-            vsStream << myMap->indexToPos(j).first << " " << myMap->indexToPos(j).second << " " << eDist(myMap->theItems[j], ts.theItems[i]) << " " << ts.theTargets[i] << std::endl;
+            vsStream << myMap->indexToPos(j).first << " " << myMap->indexToPos(j).second
+            		 << " " << euclideanDistance(myMap->theItems[j], ts.theItems[i]) << " "
+            		 << ts.theTargets[i] << std::endl;
         }
         vsStream.flush();
 

@@ -323,7 +323,6 @@ std::ostream& operator << (std::ostream& _os, const std::vector<T>& _v)
     _os << "< ";
     typename std::vector<T>::const_iterator i;
     for (i = _v.begin(); i != _v.end(); i++) _os << *i << " ";
-    //CO: copy( _v.begin(), _v.end(), std::ostream_iterator<T>( _os, " "));
     _os << ">";
     return _os;
 };
@@ -374,6 +373,38 @@ std::istream& operator >> (std::istream& _is, std::vector<T>& _v)
 
     return _is;
 };
+
+/** Euclidean distance */
+template <class T>
+double euclideanDistance(const std::vector<T>& _v1, const std::vector<T>& _v2)
+{
+    if (_v1.size() != _v2.size())
+        throw std::runtime_error("vector of different size in eDist");
+
+    double dist = 0;
+    typename std::vector<T>::const_iterator i, j;
+    for (i = _v1.begin(), j = _v2.begin() ; i < _v1.end(); i++, j++)
+    {
+        double tmp = (double)(*i) - (double)(*j);
+        dist += tmp * tmp;
+    }
+
+    return sqrt(dist);
+};
+
+/**
+* Norm: norm of a vector (Euclidean distance to origin)
+*
+*/
+template <class T>
+T norm(const std::vector<T>& v)
+{
+    double sum = 0.0;
+    typename std::vector<T>::const_iterator i;
+    for (i = v.begin(); i != v.end(); i++)
+        sum += (double)(*i) * (double)(*i);
+    return (T) sqrt(sum);
+}
 //@}
 #endif
 

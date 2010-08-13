@@ -73,18 +73,3 @@ Feature mDist(const FeatureVector& _v1, const FeatureVector& _v2)
 
     return (Feature) dist;
 };
-
-//-----------------------------------------------------------------------------
-// Norm: norm of a vector (euclidean distance to origin)
-//-----------------------------------------------------------------------------
-
-Feature VectorNorm::operator()(const FeatureVector& v)
-{
-    double sum = 0.0;
-    for (FeatureVector::const_iterator i = v.begin(); i != v.end(); i++)
-        sum += (double)(*i) * (double)(*i);
-    return (Feature) sqrt(sum);
-}
-
-//-----------------------------------------------------------------------------
-

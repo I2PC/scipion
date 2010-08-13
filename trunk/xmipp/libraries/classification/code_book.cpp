@@ -116,7 +116,7 @@ CodeBook::CodeBook(unsigned _n, unsigned _size, Feature _lower,
 
 CodeBook::CodeBook(unsigned _n, const ClassicTrainingVectors& _ts, const bool _use_rand_cvs)
         : ClassificationDataSet<FeatureVector, Label>(),
-          ClassificationTrainingSet<FeatureVector, Label>(_ts.calibrated())
+        ClassificationTrainingSet<FeatureVector, Label>(_ts.calibrated())
 {
     // Take random samples
     //    RandomUniformGenerator<unsigned> chosen( 0, _ts.size() -1 );
@@ -157,7 +157,7 @@ CodeBook::CodeBook(unsigned _n, const ClassicTrainingVectors& _ts, const bool _u
  * @exception  runtime_error  If there are problems with the stream
  */
 CodeBook::CodeBook(std::istream& _is) : ClassificationDataSet<FeatureVector, Label>(),
-		ClassificationTrainingSet<FeatureVector, Label>(_is)
+        ClassificationTrainingSet<FeatureVector, Label>(_is)
 {
     readSelf(_is);
 };
@@ -171,12 +171,12 @@ FeatureVector& CodeBook::test(const FeatureVector& _in) const
     // eval the first one to init best & bestDist
     std::vector<FeatureVector>::const_iterator i = itemsBegin();
     std::vector<FeatureVector>::const_iterator best = i;
-    double bestDist = (double) eDist(*i, _in);
+    double bestDist = euclideanDistance(*i, _in);
 
     // eval the rest
     for (i++ ; i < itemsEnd() ; i++)
     {
-        double dist = (double) eDist(*i, _in);
+        double dist = euclideanDistance(*i, _in);
         if (dist < bestDist)
         {
             bestDist = dist;
@@ -196,13 +196,13 @@ unsigned CodeBook::testIndex(const FeatureVector& _in) const
     // eval the first one to init best & bestDist
     std::vector<FeatureVector>::const_iterator i = itemsBegin();
     std::vector<FeatureVector>::const_iterator best = i;
-    double bestDist = (double) eDist(*i, _in);
+    double bestDist = euclideanDistance(*i, _in);
 
     // eval the rest
     unsigned bestIndex = 0, index = 1;
     for (i++ ; i < itemsEnd() ; i++)
     {
-        double dist = (double) eDist(*i, _in);
+        double dist = euclideanDistance(*i, _in);
         if (dist < bestDist)
         {
             bestDist = dist;
@@ -244,7 +244,7 @@ void CodeBook::classify(const ClassicTrainingVectors* _ts)
     {
         double aveDist = 0;
         for (unsigned j = 0 ; j < classifVectors[i].size() ; j++)
-            aveDist += (double) eDist(theItems[i], _ts->theItems[classifVectors[i][j]]);
+            aveDist += euclideanDistance(theItems[i], _ts->theItems[classifVectors[i][j]]);
         if (classifVectors[i].size() != 0)
             aveDist /= (double) classifVectors[i].size();
         aveDistances[i] = (double) aveDist;

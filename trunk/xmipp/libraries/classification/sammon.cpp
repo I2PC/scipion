@@ -61,7 +61,6 @@ void Sammon::operator()(const In& in, Out& out)
     // initialization of mapped space
     RandomUniformGenerator<double> uniform(-0.5, 0.5);
     FeatureVector v(mapped);
-    VectorNorm norm;
     unsigned i;
     for (i = 0; i < in.size(); i++)
     {
@@ -76,7 +75,7 @@ void Sammon::operator()(const In& in, Out& out)
     std::vector<Feature>::iterator distance = distances.begin();
     for (i = 1; i < in.size(); i++)
         for (unsigned j = 0; j < i; j++)
-            *distance++ = max(0.001, eDist(in.theItems[i], in.theItems[j]));
+            *distance++ = max(0.001, euclideanDistance(in.theItems[i], in.theItems[j]));
 
     // centroids of mapped samples
     std::vector<Feature> centroid(mapped);
@@ -120,7 +119,7 @@ void Sammon::operator()(const In& in, Out& out)
 
                     // distance between two mapped samples
                     double old_dist = distances[m];
-                    double new_dist = eDist(out.theItems[p], out.theItems[j]);
+                    double new_dist = euclideanDistance(out.theItems[p], out.theItems[j]);
                     double dist_diff = old_dist - new_dist;
                     double dist_prod = old_dist * new_dist;
 
@@ -172,7 +171,7 @@ void Sammon::operator()(const In& in, Out& out)
                 {
                     double d = distances[mutual];
                     tot += d;
-                    double ee = d - eDist(out.theItems[pp], out.theItems[jj]);
+                    double ee = d - euclideanDistance(out.theItems[pp], out.theItems[jj]);
                     stress += (ee * ee / d);
                     mutual++;
                 }

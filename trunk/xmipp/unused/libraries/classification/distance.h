@@ -127,14 +127,5 @@ public:
     }
 };
 
-/**
-* Norm: norm of a vector (euclidean distance to origin)
-*
-*/
-class VectorNorm
-{
-public:
-    Feature operator()(const FeatureVector& v);
-};
 //@}
 #endif

@@ -100,13 +100,15 @@ void FuzzyCMeans::train(FuzzyCodeBook& _xmippDS, TS& _examples) const
 
             auxProd = 1;
             for (j = 0; j < numClusters; j++)
-                auxProd *= (double) eDist(_xmippDS.theItems[j], _examples.theItems[k]);
+                auxProd *= euclideanDistance(_xmippDS.theItems[j], _examples.theItems[k]);
 
             if (auxProd == 0.)
             { // Apply k-means criterion (Data-CB) must be > 0
                 for (j = 0; j < numClusters; j ++)
-                    if (eDist(_xmippDS.theItems[j], _examples.theItems[k]) == 0.) _xmippDS.memb[k][j] = 1.0;
-                    else _xmippDS.memb[k][j] =  0.0;
+                    if (euclideanDistance(_xmippDS.theItems[j], _examples.theItems[k]) == 0.)
+                        _xmippDS.memb[k][j] = 1.0;
+                    else
+                        _xmippDS.memb[k][j] =  0.0;
             }
             else
             {
@@ -115,15 +117,13 @@ void FuzzyCMeans::train(FuzzyCodeBook& _xmippDS, TS& _examples) const
                     auxDist = 0;
                     for (j = 0; j < numClusters; j ++)
                     {
-                        tmp = (double) eDist(_xmippDS.theItems[i], _examples.theItems[k]) /
-                              (double) eDist(_xmippDS.theItems[j], _examples.theItems[k]);
+                        tmp = euclideanDistance(_xmippDS.theItems[i], _examples.theItems[k]) /
+                              euclideanDistance(_xmippDS.theItems[j], _examples.theItems[k]);
                         auxDist += pow(tmp, auxExp);
                     } // for j
                     _xmippDS.memb[k][i] = (Feature) 1.0 / auxDist;
                 } // for i
             } // if auxProd
-
-
         } // for k
 
 
@@ -141,14 +141,11 @@ void FuzzyCMeans::train(FuzzyCodeBook& _xmippDS, TS& _examples) const
             _xmippDS.theItems[i] /= (Feature) auxSum;
         } // for k
 
-
-
         // Compute stopping criterion
-
         stopError = 0;
         for (i = 0; i < numClusters; i ++)
         {
-            auxError = (double) eDist(_xmippDS.theItems[i], auxCB.theItems[i]);
+            auxError = euclideanDistance(_xmippDS.theItems[i], auxCB.theItems[i]);
             stopError += auxError * auxError;
         } // for i
 
@@ -182,7 +179,7 @@ void FuzzyCMeans::train(FuzzyCodeBook& _xmippDS, TS& _examples) const
  */
 
 double FuzzyCMeans::test(const FuzzyCodeBook& _xmippDS,
-                          const TS& _examples) const
+                         const TS& _examples) const
 {
 
     // Defines verbosity
@@ -199,7 +196,7 @@ double FuzzyCMeans::test(const FuzzyCodeBook& _xmippDS,
     {
         const FeatureVector& auxS = _examples.theItems[i];
         unsigned best = _xmippDS.output(auxS);
-        distortion += (double) eDist(_xmippDS.theItems[best], _examples.theItems[i]);
+        distortion += euclideanDistance(_xmippDS.theItems[best], _examples.theItems[i]);
         if (verbosity)
             listener->OnProgress(i);
     };
@@ -216,7 +213,7 @@ double FuzzyCMeans::test(const FuzzyCodeBook& _xmippDS,
  */
 
 double FuzzyCMeans::fuzzyTest(const FuzzyCodeBook& _xmippDS,
-                               const TS& _examples) const
+                              const TS& _examples) const
 {
 
     // Defines verbosity
@@ -232,7 +229,7 @@ double FuzzyCMeans::fuzzyTest(const FuzzyCodeBook& _xmippDS,
     for (unsigned i = 0; i < _examples.size(); i ++)
     {
         unsigned best = _xmippDS.fuzzyOutput(i);
-        distortion += (double) eDist(_xmippDS.theItems[best], _examples.theItems[i]);
+        distortion += euclideanDistance(_xmippDS.theItems[best], _examples.theItems[i]);
         if (verbosity)
             listener->OnProgress(i);
     };
@@ -335,7 +332,7 @@ double FuzzyCMeans::NFI(const FuzzyCodeBook& _xmippDS) const
  */
 
 double FuzzyCMeans::S(const FuzzyCodeBook& _xmippDS,
-                       const TS& _examples) const
+                      const TS& _examples) const
 {
 
     std::vector< std::vector< Feature > > ICD;       // Intercluster distance
@@ -348,7 +345,7 @@ double FuzzyCMeans::S(const FuzzyCodeBook& _xmippDS,
         std::vector <Feature> d;
         d.resize(_xmippDS.membVectors());
         for (unsigned k = 0; k < _xmippDS.membVectors(); k++)
-            d[k] = eDist(_xmippDS.theItems[i], _examples.theItems[k]);
+            d[k] = (Feature)euclideanDistance(_xmippDS.theItems[i], _examples.theItems[k]);
         D[i] = d;
     } // for i
 
@@ -358,13 +355,11 @@ double FuzzyCMeans::S(const FuzzyCodeBook& _xmippDS,
         std::vector <Feature> v;
         v.resize(_xmippDS.membVectors());
         for (unsigned j = 0; j < _xmippDS.membClusters(); j++)
-            v[j] = eDist(_xmippDS.theItems[i], _xmippDS.theItems[j]);
+            v[j] = (Feature)euclideanDistance(_xmippDS.theItems[i], _xmippDS.theItems[j]);
         ICD[i] = v;
     } // for i
 
-
     Feature auxSum = 0;
-
     for (i = 0; i < _xmippDS.membClusters(); i++)
         for (unsigned k = 0; k < _xmippDS.membVectors(); k++)
             auxSum += (Feature) pow((double)(D[i][k] * _xmippDS.memb[k][i]), (double)m);
@@ -372,7 +367,8 @@ double FuzzyCMeans::S(const FuzzyCodeBook& _xmippDS,
     Feature auxMin = MAXFLOAT;
     for (i = 0; i < _xmippDS.membClusters(); i++)
         for (unsigned j = i + 1; j < _xmippDS.membClusters(); j++)
-            if (auxMin > ICD[i][j]) auxMin = ICD[i][j];
+            if (auxMin > ICD[i][j])
+                auxMin = ICD[i][j];
 
     double S = auxSum / (double)(_xmippDS.membVectors()) / (double)(auxMin);
     return S;

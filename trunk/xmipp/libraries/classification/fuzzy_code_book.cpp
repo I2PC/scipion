@@ -317,7 +317,7 @@ void FuzzyCodeBook::classify(const ClassicTrainingVectors* _ts)
     {
         double aveDist = 0;
         for (unsigned j = 0 ; j < classifVectors[i].size() ; j++)
-            aveDist += (double) eDist(theItems[i], _ts->theItems[classifVectors[i][j]]);
+            aveDist += euclideanDistance(theItems[i], _ts->theItems[classifVectors[i][j]]);
         if (classifVectors[i].size() != 0)
             aveDist /= (double) classifVectors[i].size();
         aveDistances[i] = (double) aveDist;

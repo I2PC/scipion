@@ -87,17 +87,20 @@ double KerDenSOM::test(const FuzzyMap& _som, const TS& _examples) const
     for (int i = 0; i < _examples.size(); i++)
     {
         SomIn& theBest = _som.fuzzyTest(i); // get the best
-        qerror += (double) eDist(theBest, _examples.theItems[i]);
+        qerror += euclideanDistance(theBest, _examples.theItems[i]);
         if (verbosity)
         {
             int tmp = (int)((_examples.size() * 5) / 100);
-            if ((tmp == 0) && (i != 0)) tmp = i;
-            else tmp = 1;
+            if ((tmp == 0) && (i != 0))
+                tmp = i;
+            else
+                tmp = 1;
             if ((i % tmp) == 0)
                 listener->OnProgress(i);
         }
     }
-    if (verbosity)listener->OnProgress(_examples.size());
+    if (verbosity)
+        listener->OnProgress(_examples.size());
     return (qerror / (double) _examples.size());
 
 };
@@ -117,7 +120,8 @@ void KerDenSOM::updateV(FuzzyMap* _som, const TS* _examples, const double& _reg)
     // Calculate Temporal scratch values
     for (cc = 0; cc < numNeurons; cc++)
     {
-        for (j = 0; j < dim; j++) tmpMap[cc][j] = 0.;
+        for (j = 0; j < dim; j++)
+            tmpMap[cc][j] = 0.;
         if (_reg != 0)
             tmpDens[cc] = _reg * _som->getLayout().numNeig(_som, (SomPos) _som->indexToPos(cc));
         else
@@ -171,7 +175,8 @@ double KerDenSOM::mainIterations(FuzzyMap* _som, const TS* _examples, double& _s
     int verbosity = listener->getVerbosity();
     double stopError = 1e10, alpha, ts2;
     int iter = 0;
-    if (somNSteps == 0) return stopError;
+    if (somNSteps == 0)
+        return stopError;
     if (verbosity == 1 || verbosity == 3)
         listener->OnInitOperation(somNSteps);
     do
@@ -237,7 +242,8 @@ void KerDenSOM::updateV1(FuzzyMap* _som, const TS* _examples)
 
     for (cc = 0; cc < numNeurons; cc++)
     {
-        for (j = 0; j < dim; j++) tmpMap[cc][j] = 0.;
+        for (j = 0; j < dim; j++)
+            tmpMap[cc][j] = 0.;
         tmpDens[cc] = 0.0;
         for (vv = 0; vv < numVectors; vv++)
         {
@@ -277,13 +283,15 @@ void KerDenSOM::updateU1(FuzzyMap* _som, const TS* _examples)
     {
         auxProd = 1;
         for (j = 0; j < numNeurons; j++)
-            auxProd *= (double) eDist(_som->theItems[j], _examples->theItems[k]);
+            auxProd *= euclideanDistance(_som->theItems[j], _examples->theItems[k]);
 
         if (auxProd == 0.)
         { // Apply k-means criterion (Data-CB) must be > 0
             for (j = 0; j < numNeurons; j ++)
-                if (eDist(_som->theItems[j], _examples->theItems[k]) == 0.) _som->memb[k][j] = 1.0;
-                else _som->memb[k][j] =  0.0;
+                if (euclideanDistance(_som->theItems[j], _examples->theItems[k]) == 0.)
+                    _som->memb[k][j] = 1.0;
+                else
+                    _som->memb[k][j] =  0.0;
         }
         else
         {
@@ -292,8 +300,8 @@ void KerDenSOM::updateU1(FuzzyMap* _som, const TS* _examples)
                 auxDist = 0;
                 for (j = 0; j < numNeurons; j ++)
                 {
-                    tmp = eDist(_som->theItems[i], _examples->theItems[k]) /
-                          eDist(_som->theItems[j], _examples->theItems[k]);
+                    tmp = euclideanDistance(_som->theItems[i], _examples->theItems[k]) /
+                    		euclideanDistance(_som->theItems[j], _examples->theItems[k]);
                     auxDist += pow(tmp, 2);
                 } // for j
                 _som->memb[k][i] = (Feature) 1.0 / auxDist;
@@ -346,7 +354,8 @@ double KerDenSOM::randApproxGVC(const TS* _examples, const FuzzyMap* _som, doubl
 
     for (vv = 0; vv < numVectors; vv++)
     {
-        for (j = 0; j < dim; j++) VV[j] = 0.0;
+        for (j = 0; j < dim; j++)
+            VV[j] = 0.0;
         for (cc = 0; cc < numNeurons; cc++)
         {
             for (j = 0; j < dim; j++)
@@ -368,7 +377,8 @@ double KerDenSOM::randApproxGVC(const TS* _examples, const FuzzyMap* _som, doubl
     init_random_generator();
     for (vv = 0; vv < numVectors; vv++)
     {
-        for (j = 0; j < dim; j++) VV[j] = 0.0;
+        for (j = 0; j < dim; j++)
+            VV[j] = 0.0;
         for (cc = 0; cc < numNeurons; cc++)
         {
             for (j = 0; j < dim; j++)

@@ -32,7 +32,6 @@
 #endif
 
 #include "pca.h"
-#include "distance.h"
 
 /**
 * Calculate the eigenval/vecs

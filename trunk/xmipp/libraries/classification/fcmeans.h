@@ -35,7 +35,6 @@
 #include <iostream>
 #include <vector>
 
-#include "distance.h"
 #include "base_algorithm.h"
 #include "fuzzy_code_book.h"
 
