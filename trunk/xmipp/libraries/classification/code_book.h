@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippCB.h
+// CodeBook.h
 //-----------------------------------------------------------------------------
 
 #ifndef XMIPPCODEBOOK_H
@@ -56,7 +56,7 @@
  * returned (if it is a NO calibrated codebook) indicating with this that the
  * data belongs to the same 'class' that the returned example.
  */
-class xmippCB : public xmippCDSet<xmippVector, xmippLabel>, public xmippCTSet<xmippVector, xmippLabel>
+class CodeBook : public ClassificationDataSet<FeatureVector, Label>, public ClassificationTrainingSet<FeatureVector, Label>
 {
 public:
 
@@ -68,10 +68,9 @@ public:
      * Default constructor
      * Parameter: _calib   Calibrated or not, that is, a CB with class labels or not
      */
-    xmippCB(const bool& _calib = false) : xmippCDSet<xmippVector, xmippLabel>(),
-            xmippCTSet<xmippVector, xmippLabel>(_calib)
+    CodeBook(const bool& _calib = false) : ClassificationDataSet<FeatureVector, Label>(),
+            ClassificationTrainingSet<FeatureVector, Label>(_calib)
     {};
-
 
     /**
      * Constructor.
@@ -81,8 +80,7 @@ public:
      * Parameter: _size    Size of code vectors
      * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
      */
-    xmippCB(unsigned _n, unsigned _size, bool _cal = false);
-
+    CodeBook(unsigned _n, unsigned _size, bool _cal = false);
 
     /**
      * Constructor.
@@ -94,7 +92,7 @@ public:
      * Parameter: _upper   Upper value for random elements
      * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
      */
-    xmippCB(unsigned _n, unsigned _size, xmippFeature _lower = 0, xmippFeature _upper = 1,
+    CodeBook(unsigned _n, unsigned _size, Feature _lower = 0, Feature _upper = 1,
             bool _cal = false);
 
     /**
@@ -106,32 +104,32 @@ public:
      * Parameter: _ts      Training set; will be used to get initial values
      * Parameter: _use_rand_cvs  Use random code vector values
      */
-    xmippCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs);
+    CodeBook(unsigned _n, const ClassicTrainingVectors& _ts, const bool _use_rand_cvs);
 
     /**
      * Constructs a code book given a stream
      * Parameter: _is  The input stream
      * @exception  runtime_error  If there are problems with the stream
      */
-    xmippCB(std::istream& _is);
+    CodeBook(std::istream& _is);
 
     /**
      * Virtual destructor needed
      */
-    virtual ~xmippCB()
+    virtual ~CodeBook()
     {};
 
     /**
      * Returns the code vector that represents the input in the codebook
      * Parameter: _in  Sample to classify
      */
-    virtual xmippVector& test(const xmippVector& _in) const;
+    virtual FeatureVector& test(const FeatureVector& _in) const;
 
     /**
      * Returns the index to the code vector that represents the input in the codebook
      * Parameter: _in  Sample to classify
      */
-    virtual unsigned testIndex(const xmippVector& _in) const;
+    virtual unsigned testIndex(const FeatureVector& _in) const;
 
 
     /**
@@ -140,7 +138,7 @@ public:
      * Parameter: _ts  Training set
      * Parameter: _in  Index to the Sample to be classified
      */
-    virtual unsigned winner(const xmippCTVectors& _ts, unsigned _in) const;
+    virtual unsigned winner(const ClassicTrainingVectors& _ts, unsigned _in) const;
 
 
     /**
@@ -148,7 +146,7 @@ public:
      * Parameter: _ts  Sample list to classify
      */
 
-    virtual void classify(const xmippCTVectors* _ts);
+    virtual void classify(const ClassicTrainingVectors* _ts);
 
 
     /**
@@ -165,7 +163,7 @@ public:
      * Returns the label associated to an input
      * Parameter: _in  Sample to classify
      */
-    virtual xmippLabel apply(const xmippVector& _in) const;
+    virtual Label apply(const FeatureVector& _in) const;
 
     /**
      * Calibrates the code book
@@ -173,14 +171,14 @@ public:
      * Parameter: _def  Default target for non-calibrated vectors
      * @exception runtime_error  If the training set is not calibrated
      */
-    virtual void calibrate(xmippCTVectors& _ts, xmippLabel _def = "");
+    virtual void calibrate(ClassicTrainingVectors& _ts, Label _def = "");
 
     /**
     * Returns the index of the codevector closest to an input.
     * This is the method used to classify inputs
     * Parameter: _in  Sample to classify.
     */
-    virtual unsigned output(const xmippVector& _in) const;
+    virtual unsigned output(const FeatureVector& _in) const;
 
 
     /**
@@ -215,7 +213,7 @@ public:
      *  Parameter: _varStats The normalization information
      */
 
-    virtual void Normalize(const std::vector <xmippCTVectors::statsStruct>&  _varStats);
+    virtual void Normalize(const std::vector <ClassicTrainingVectors::statsStruct>&  _varStats);
 
 
     /**
@@ -223,7 +221,7 @@ public:
      *  Parameter: _varStats The normalization information
      */
 
-    virtual void unNormalize(const std::vector <xmippCTVectors::statsStruct>&  _varStats);
+    virtual void unNormalize(const std::vector <ClassicTrainingVectors::statsStruct>&  _varStats);
 
 
     /**

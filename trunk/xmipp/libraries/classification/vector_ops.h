@@ -177,7 +177,7 @@ std::vector<T> randomVector(const unsigned& _size, const T& _lower,
                        const T& _upper)
 {
     std::vector<T> v(_size);
-    xmippUniform<T> u(_lower, _upper);
+    RandomUniformGenerator<T> u(_lower, _upper);
     typename std::vector<T>::iterator i;
     for (i = v.begin() ; i < v.end() ; *i++ = u());
 

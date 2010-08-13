@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippKerDenSOM.cc
+// KerDenSOM.cc
 // Implements Smoothly Distributed Kernel Probability Density Estimator Self-Organizing Map
 // This is an abstract base class for different variants of the KerDenSOM algorithm
 //-----------------------------------------------------------------------------
@@ -37,7 +37,7 @@
  * Sets the number of training steps
  * Parameter: _nSteps  Number of training steps
  */
-void xmippKerDenSOM::nSteps(const unsigned long& _nSteps)
+void KerDenSOM::nSteps(const unsigned long& _nSteps)
 {
     somNSteps = _nSteps;
 };
@@ -45,7 +45,7 @@ void xmippKerDenSOM::nSteps(const unsigned long& _nSteps)
 /**
  * Gets the sigma (Kernel Width)
  */
-double xmippKerDenSOM::getSigma()
+double KerDenSOM::getSigma()
 {
     return sigma;
 };
@@ -57,7 +57,7 @@ double xmippKerDenSOM::getSigma()
  * Sets the number of deterministic annealing training steps
  * Parameter: _annSteps  Number of steps
  */
-void xmippKerDenSOM::setAnnSteps(const unsigned long& _annSteps)
+void KerDenSOM::setAnnSteps(const unsigned long& _annSteps)
 {
     annSteps = _annSteps;
 };
@@ -70,7 +70,7 @@ void xmippKerDenSOM::setAnnSteps(const unsigned long& _annSteps)
  * Parameter: _som        The KerDenSom to test
  * Parameter: _examples   The training set of examples
  */
-double xmippKerDenSOM::test(const xmippFuzzyMap& _som, const TS& _examples) const
+double KerDenSOM::test(const FuzzyMap& _som, const TS& _examples) const
 {
 
     // Defines verbosity level
@@ -109,7 +109,7 @@ double xmippKerDenSOM::test(const xmippFuzzyMap& _som, const TS& _examples) cons
 /**
  * Update Code Vectors
  */
-void xmippKerDenSOM::updateV(xmippFuzzyMap* _som, const TS* _examples, const double& _reg)
+void KerDenSOM::updateV(FuzzyMap* _som, const TS* _examples, const double& _reg)
 {
     unsigned j, cc, vv;
     unsigned t2 = 0;  // Iteration index
@@ -153,7 +153,7 @@ void xmippKerDenSOM::updateV(xmippFuzzyMap* _som, const TS* _examples, const dou
                 double tmpU = (tmpMap[cc][j] + tmpV[j] * _reg) / tmpDens[cc];
                 stopError1 += fabs((double)(_som->theItems[cc][j]) - tmpU);
                 stopError2 += fabs(tmpU);
-                _som->theItems[cc][j] = (xmippFeature) tmpU;
+                _som->theItems[cc][j] = (Feature) tmpU;
             }
         } // for
         convergence = stopError1 / stopError2;
@@ -166,7 +166,7 @@ void xmippKerDenSOM::updateV(xmippFuzzyMap* _som, const TS* _examples, const dou
 //-----------------------------------------------------------------------------
 
 // Main iterations
-double xmippKerDenSOM::mainIterations(xmippFuzzyMap* _som, const TS* _examples, double& _sigma, const double& _reg)
+double KerDenSOM::mainIterations(FuzzyMap* _som, const TS* _examples, double& _sigma, const double& _reg)
 {
     int verbosity = listener->getVerbosity();
     double stopError = 1e10, alpha, ts2;
@@ -201,7 +201,7 @@ double xmippKerDenSOM::mainIterations(xmippFuzzyMap* _som, const TS* _examples, 
 //-----------------------------------------------------------------------------
 
 // Estimate Sigma Part I
-double xmippKerDenSOM::updateSigmaI(xmippFuzzyMap* _som, const TS* _examples)
+double KerDenSOM::updateSigmaI(FuzzyMap* _som, const TS* _examples)
 {
     double r, t = 0;
     int vv, cc, j;
@@ -231,7 +231,7 @@ double xmippKerDenSOM::updateSigmaI(xmippFuzzyMap* _som, const TS* _examples)
 /**
  * Special Initialization of Code Vectors
  */
-void xmippKerDenSOM::updateV1(xmippFuzzyMap* _som, const TS* _examples)
+void KerDenSOM::updateV1(FuzzyMap* _som, const TS* _examples)
 {
     unsigned j, cc, vv;
 
@@ -255,7 +255,7 @@ void xmippKerDenSOM::updateV1(xmippFuzzyMap* _som, const TS* _examples)
         for (j = 0; j < dim; j++)
         {
             double tmpU = tmpMap[cc][j] / tmpDens[cc];
-            _som->theItems[cc][j] = (xmippFeature) tmpU;
+            _som->theItems[cc][j] = (Feature) tmpU;
         }
     } // for
 
@@ -266,7 +266,7 @@ void xmippKerDenSOM::updateV1(xmippFuzzyMap* _som, const TS* _examples)
 /**
  * Special Initialization of Membership Matrix (Fuzzy c-means style)
  */
-void xmippKerDenSOM::updateU1(xmippFuzzyMap* _som, const TS* _examples)
+void KerDenSOM::updateU1(FuzzyMap* _som, const TS* _examples)
 {
 
     double auxProd, auxDist, tmp;
@@ -296,7 +296,7 @@ void xmippKerDenSOM::updateU1(xmippFuzzyMap* _som, const TS* _examples)
                           eDist(_som->theItems[j], _examples->theItems[k]);
                     auxDist += pow(tmp, 2);
                 } // for j
-                _som->memb[k][i] = (xmippFeature) 1.0 / auxDist;
+                _som->memb[k][i] = (Feature) 1.0 / auxDist;
             } // for i
         } // if auxProd
     } // for k
@@ -307,7 +307,7 @@ void xmippKerDenSOM::updateU1(xmippFuzzyMap* _som, const TS* _examples)
 /**
  * Special Initialization of the Us
  */
-void xmippKerDenSOM::initU(xmippFuzzyMap* _som)
+void KerDenSOM::initU(FuzzyMap* _som)
 {
     unsigned j, cc, vv;
 
@@ -318,11 +318,11 @@ void xmippKerDenSOM::initU(xmippFuzzyMap* _som)
         double t = 0.;
         for (cc = 0; cc < numNeurons; cc++)
         {
-            _som->memb[vv][cc] = (xmippFeature) rnd_unif();
+            _som->memb[vv][cc] = (Feature) rnd_unif();
             t += _som->memb[vv][cc];
         }
         for (cc = 0; cc < numNeurons; cc++)
-            _som->memb[vv][cc] /= (xmippFeature) t;
+            _som->memb[vv][cc] /= (Feature) t;
     }
 }
 
@@ -334,13 +334,13 @@ void xmippKerDenSOM::initU(xmippFuzzyMap* _som)
  * Determines the Random Approximation of GVC
  * (Determines the optimal Regularization Factor)
  */
-double xmippKerDenSOM::randApproxGVC(const TS* _examples, const xmippFuzzyMap* _som, double _dataSD, double _reg)
+double KerDenSOM::randApproxGVC(const TS* _examples, const FuzzyMap* _som, double _dataSD, double _reg)
 {
     unsigned j, vv, cc;
     double num, den, r;
-    xmippVector VV;
+    FeatureVector VV;
     VV.resize(dim, 0.0);
-    xmippFuzzyMap tmpSOM(*_som);
+    FuzzyMap tmpSOM(*_som);
     TS tmpTS(*_examples);
     num = 0;
 
@@ -396,7 +396,7 @@ double xmippKerDenSOM::randApproxGVC(const TS* _examples, const xmippFuzzyMap* _
  * Shows the data
  */
 
-void xmippKerDenSOM::showX(const TS* _ts)
+void KerDenSOM::showX(const TS* _ts)
 {
     std::cout << "Data (1..nd, 1..nv) "  << std::endl;
     for (int i = 0; i < _ts->size(); i++)
@@ -414,7 +414,7 @@ void xmippKerDenSOM::showX(const TS* _ts)
  * Shows the code vectors
  */
 
-void xmippKerDenSOM::showV(xmippFuzzyMap* _som)
+void KerDenSOM::showV(FuzzyMap* _som)
 {
     std::cout << "Code vectors (1..ni, 1..nj, 1..nv) "  << std::endl;
     for (int i = 0; i < _som->size(); i++)
@@ -431,7 +431,7 @@ void xmippKerDenSOM::showV(xmippFuzzyMap* _som)
  * Shows the U ("Membership")
  */
 
-void xmippKerDenSOM::showU(xmippFuzzyMap* _som, const TS* _ts)
+void KerDenSOM::showU(FuzzyMap* _som, const TS* _ts)
 {
     std::cout << " Memberships (1..nd,1..ni,1..nj)" << std::endl;
     for (int i = 0; i <  _ts->size(); i++)
@@ -450,7 +450,7 @@ void xmippKerDenSOM::showU(xmippFuzzyMap* _som, const TS* _ts)
  * Prints the Us ("Membership")
  */
 
-void xmippKerDenSOM::printV(xmippFuzzyMap* _som, const TS* _ts, FileName& _fname)
+void KerDenSOM::printV(FuzzyMap* _som, const TS* _ts, FileName& _fname)
 {
     using namespace std;
     FILE* F = fopen(_fname.c_str(), "w");

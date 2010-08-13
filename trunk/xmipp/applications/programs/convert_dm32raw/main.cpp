@@ -31,7 +31,6 @@
 void Usage(char **argv);
 void dm32raw(const FileName &, const FileName &, bool);
 
-
 struct image_data
 {
     int Xdim, Ydim, header, dataType;

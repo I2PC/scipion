@@ -169,7 +169,7 @@ public:
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
 int PROJECT_XR_Effectively_project( Projection_XR_Parameters &prm,
-    PROJECT_XR_Side_Info &side, Projection &proj,XmippXRPSF &psf, MetaData &SF);
+    PROJECT_XR_Side_Info &side, Projection &proj,XRayPSF &psf, MetaData &SF);
 
 /** From voxel volumes, off-centered tilt axis.
     This routine projects a volume that is rotating (angle) degrees
@@ -188,7 +188,7 @@ int PROJECT_XR_Effectively_project( Projection_XR_Parameters &prm,
 
     Off-centered not implemented. Rotations are around volume center
 */
-void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, Projection &P,
+void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Projection &P,
         int Ydim, int Xdim, int  idxSlice = 1);
 
 

@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippMap.cc
+// ClassificationMap.cc
 // Implements Self-Organizing Maps of the type used by Kohonen algorithms.
 //-----------------------------------------------------------------------------
 
@@ -40,9 +40,9 @@
  * Parameter: _height  Height of the output plane
  * Parameter: _size    Size of code vectors
  */
-xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
-                   const unsigned& _height, const unsigned& _size)
-        : xmippCB(_width*_height, _size, false), somWidth(_width), somHeight(_height)
+ClassificationMap::ClassificationMap(const std::string& _layout,  unsigned _width,
+                                     const unsigned& _height, const unsigned& _size)
+        : CodeBook(_width*_height, _size, false), somWidth(_width), somHeight(_height)
 {
     if (_layout == "HEXA")
     {
@@ -68,10 +68,10 @@ xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
  * Parameter: _lower   Lower value for random elements
  * Parameter: _upper   Upper value for random elements
  */
-xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
-                   const unsigned& _height, const unsigned& _size, const double& _lower,
-                   const double& _upper)
-        : xmippCB(_width*_height, _size, _lower, _upper, false), somWidth(_width), somHeight(_height)
+ClassificationMap::ClassificationMap(const std::string& _layout,  unsigned _width,
+                                     const unsigned& _height, const unsigned& _size, const double& _lower,
+                                     const double& _upper)
+        : CodeBook(_width*_height, _size, _lower, _upper, false), somWidth(_width), somHeight(_height)
 {
     if (_layout == "HEXA")
     {
@@ -99,10 +99,10 @@ xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
    of the department of Physiology of the David Geffen School of Medistd::cine,
    University of California, Los Angeles
 */
-xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
-                   const unsigned& _height, const xmippCTVectors& _ts,
-                   const bool _use_rand_cvs)
-        : xmippCB(_width*_height, _ts, _use_rand_cvs),
+ClassificationMap::ClassificationMap(const std::string& _layout,  unsigned _width,
+                                     const unsigned& _height, const ClassicTrainingVectors& _ts,
+                                     const bool _use_rand_cvs)
+        : CodeBook(_width*_height, _ts, _use_rand_cvs),
         somWidth(_width), somHeight(_height)
 {
     if (_layout == "HEXA")
@@ -124,7 +124,7 @@ xmippMap::xmippMap(const std::string& _layout,  unsigned _width,
  * Parameter: _is  The stream
  * @exception  runtime_error  If there are problems with the stream
  */
-xmippMap::xmippMap(std::istream& _is, bool _cv) : xmippCB(false)
+ClassificationMap::ClassificationMap(std::istream& _is, bool _cv) : CodeBook(false)
 {
     somLayout = NULL;
     if (_cv)
@@ -139,7 +139,7 @@ xmippMap::xmippMap(std::istream& _is, bool _cv) : xmippCB(false)
  * vectors to a som
  * @exception range_error  If this method is called
  */
-void xmippMap::add(const xmippVector& _v, const xmippLabel& _l)
+void ClassificationMap::add(const FeatureVector& _v, const Label& _l)
 {
     throw std::runtime_error("You can't add vectors to a S.O.M.");
 };
@@ -147,7 +147,7 @@ void xmippMap::add(const xmippVector& _v, const xmippLabel& _l)
 /**
  * Returns the id of layout that som has
  */
-const std::string& xmippMap::layout() const
+const std::string& ClassificationMap::layout() const
 {
     return somLayout->id();
 };
@@ -157,7 +157,7 @@ const std::string& xmippMap::layout() const
  * Parameter: _center  Reference to the center of neighborhood
  * Parameter: _radius  Radius of neighbohood
  */
-std::vector<unsigned> xmippMap::neighborhood(const SomPos& _center, double _radius) const
+std::vector<unsigned> ClassificationMap::neighborhood(const SomPos& _center, double _radius) const
 {
     return somLayout->neighborhood(this, _center, _radius);
 };
@@ -167,7 +167,7 @@ std::vector<unsigned> xmippMap::neighborhood(const SomPos& _center, double _radi
  * Parameter: _center  Reference to the center of neighborhood
  * Parameter: _v       Position of the code vector
  */
-double xmippMap::neighDist(const SomPos& _center, const SomPos& _v) const
+double ClassificationMap::neighDist(const SomPos& _center, const SomPos& _v) const
 {
     return somLayout->dist(_center, _v);
 };
@@ -176,7 +176,7 @@ double xmippMap::neighDist(const SomPos& _center, const SomPos& _v) const
 /**
  * Returns the width of the SOM
  */
-unsigned xmippMap::width() const
+unsigned ClassificationMap::width() const
 {
     return somWidth;
 };
@@ -184,7 +184,7 @@ unsigned xmippMap::width() const
 /**
  * Returns the height of the SOM
  */
-unsigned xmippMap::height() const
+unsigned ClassificationMap::height() const
 {
     return somHeight;
 };
@@ -194,7 +194,7 @@ unsigned xmippMap::height() const
  * Parameter: _pos  The position of the code vector
  * @exception out_of _range   If _pos is out of range
  */
-SomIn& xmippMap::itemAtPos(const SomPos& _pos)
+SomIn& ClassificationMap::itemAtPos(const SomPos& _pos)
 {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
@@ -213,7 +213,7 @@ SomIn& xmippMap::itemAtPos(const SomPos& _pos)
  * Parameter: _pos  The position of the code vector
  * @exception out_of _range   If _pos is out of range
  */
-const SomIn& xmippMap::itemAtPos(const SomPos& _pos) const
+const SomIn& ClassificationMap::itemAtPos(const SomPos& _pos) const
 {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
@@ -230,7 +230,7 @@ const SomIn& xmippMap::itemAtPos(const SomPos& _pos) const
  * Returns the target of a code vector given its position
  * Parameter: _pos  The position of the code vector
  */
-xmippLabel& xmippMap::targetAtPos(const SomPos& _pos)
+Label& ClassificationMap::targetAtPos(const SomPos& _pos)
 {
     if (!calibrated())
     {
@@ -255,7 +255,7 @@ xmippLabel& xmippMap::targetAtPos(const SomPos& _pos)
  * Returns a const target of a code vector given its position
  * Parameter: _pos  The position of the code vector
  */
-const xmippLabel& xmippMap::targetAtPos(const SomPos& _pos) const
+const Label& ClassificationMap::targetAtPos(const SomPos& _pos) const
 {
     if (!calibrated())
     {
@@ -280,9 +280,9 @@ const xmippLabel& xmippMap::targetAtPos(const SomPos& _pos) const
 /**
  * Clears the Som
  */
-void xmippMap::clear()
+void ClassificationMap::clear()
 {
-    xmippCB::clear();
+    CodeBook::clear();
     somLayout = NULL;
     if (somLayout)
         delete somLayout;
@@ -295,7 +295,7 @@ void xmippMap::clear()
  * Parameter: _i  Index of the code vector
  * @exception out_of _range   If _i is out of range
  */
-SomPos xmippMap::indexToPos(const unsigned& _i) const
+SomPos ClassificationMap::indexToPos(const unsigned& _i) const
 {
     if (_i >= somWidth * somHeight)
     {
@@ -313,7 +313,7 @@ SomPos xmippMap::indexToPos(const unsigned& _i) const
  * Parameter: _pos  Position of the code vector
  * @exception out_of _range   If _i is out of range
  */
-unsigned xmippMap::PosToIndex(const SomPos& _pos) const
+unsigned ClassificationMap::PosToIndex(const SomPos& _pos) const
 {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
@@ -330,7 +330,7 @@ unsigned xmippMap::PosToIndex(const SomPos& _pos) const
  * Returns the position in the som of a code vector
  * Parameter: _v  Reference to the code vector
  */
-SomPos xmippMap::codVecPos(SomIn& _v)
+SomPos ClassificationMap::codVecPos(SomIn& _v)
 {
     return indexToPos(&_v - &(itemAt(0)));
 };
@@ -340,7 +340,7 @@ SomPos xmippMap::codVecPos(SomIn& _v)
  * som
  * Parameter: _in  Sample to classify
  */
-SomPos xmippMap::applyPos(const SomIn& _in)
+SomPos ClassificationMap::applyPos(const SomIn& _in)
 {
     return codVecPos(test(_in));
 };
@@ -350,7 +350,7 @@ SomPos xmippMap::applyPos(const SomIn& _in)
  * Standard output for a SOM
  * Parameter: _os The output stream
  */
-void xmippMap::printSelf(std::ostream& _os) const
+void ClassificationMap::printSelf(std::ostream& _os) const
 {
     _os << itemAt(0).size() << " " <<
     somLayout->id() << " " << somWidth << " " << somHeight << " gaussian" << std::endl;
@@ -362,7 +362,7 @@ void xmippMap::printSelf(std::ostream& _os) const
  * Standard input for a SOM
  * Parameter: _is The input stream
  */
-void xmippMap::readSelf(std::istream& _is)
+void ClassificationMap::readSelf(std::istream& _is)
 {
     clear();
     int dim;
@@ -391,7 +391,7 @@ void xmippMap::readSelf(std::istream& _is)
     for (int i = str.size() - 1; i >= 0; i--)
     if (_is) _is.putback((char) str[i]);
     */
-    xmippCB::readSelf(_is, dim, somWidth*somHeight);
+    CodeBook::readSelf(_is, dim, somWidth*somHeight);
 
     /*  IT DOESN'T WORK PROPERLY
 
@@ -404,29 +404,29 @@ void xmippMap::readSelf(std::istream& _is)
             somWidth << " " << somHeight << std::endl;
          while (_is.good())
             ostr.put (_is.get());
-         xmippCB::readSelf(ostr);*/
+         CodeBook::readSelf(ostr);*/
 };
 
 
 /**
- * Saves the xmippMap class into a stream.
+ * Saves the ClassificationMap class into a stream.
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void xmippMap::saveObject(std::ostream& _os) const
+void ClassificationMap::saveObject(std::ostream& _os) const
 {
     _os << somLayout->id() << " " << somWidth << " " << somHeight << std::endl;
     writeClassifVectors(_os);
-    xmippCTSet<xmippVector, xmippLabel>::saveObject(_os);
+    ClassificationTrainingSet<FeatureVector, Label>::saveObject(_os);
 };
 
 
 /**
- * Loads the xmippMap class from a stream.
+ * Loads the ClassificationMap class from a stream.
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void xmippMap::loadObject(std::istream& _is)
+void ClassificationMap::loadObject(std::istream& _is)
 {
     clear();
     std::string layout;
@@ -444,7 +444,7 @@ void xmippMap::loadObject(std::istream& _is)
     _is >> somWidth;
     _is >> somHeight;
     readClassifVectors(_is);
-    xmippCTSet<xmippVector, xmippLabel>::loadObject(_is);
+    ClassificationTrainingSet<FeatureVector, Label>::loadObject(_is);
 };
 
 
@@ -454,8 +454,8 @@ void xmippMap::loadObject(std::istream& _is)
  * Parameter: _center  Reference to the center of neighborhood
  * Parameter: _radius  Radius of neighbohood
  */
-std::vector<unsigned> Layout::neighborhood(const xmippMap* _som, const SomPos& _center,
-                                      double _radius) const
+std::vector<unsigned> Layout::neighborhood(const ClassificationMap* _som, const SomPos& _center,
+        double _radius) const
 {
     std::vector<unsigned> neig;
 
@@ -476,8 +476,8 @@ std::vector<unsigned> Layout::neighborhood(const xmippMap* _som, const SomPos& _
  * Parameter: _center  Reference to the center of neighborhood
  * Parameter: _radius  Radius of neighbohood
  */
-std::vector<unsigned> Layout::neighborhood(const xmippFuzzyMap* _som, const SomPos& _center,
-                                      double _radius) const
+std::vector<unsigned> Layout::neighborhood(const FuzzyMap* _som, const SomPos& _center,
+        double _radius) const
 {
     std::vector<unsigned> neig;
 
@@ -538,11 +538,12 @@ double RECTLayout::dist(const SomPos& _center, const SomPos& _v) const
  * Parameter: _center  Reference to the center of neighborhood
  * Parameter: _aveVector: returns the average vector
  */
-void RECTLayout::localAve(const xmippFuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const
+void RECTLayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const
 {
     int j;
     int dim = _som->itemAt(0).size();
-    for (j = 0; j < dim; j++) _aveVector[j] = 0.0;
+    for (j = 0; j < dim; j++)
+        _aveVector[j] = 0.0;
     int tmpi = _center.first;
     int tmpj = _center.second;
     int kk = 0;
@@ -583,7 +584,7 @@ void RECTLayout::localAve(const xmippFuzzyMap* _som, const SomPos& _center, std:
  * Returns the average number of intermediate neighbors.
  * Parameter: _center  Reference to the center of neighborhood
  */
-double RECTLayout::numNeig(const xmippFuzzyMap* _som, const SomPos& _center) const
+double RECTLayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
 {
     int dim = _som->itemAt(0).size();
     int tmpi = _center.first;
@@ -648,12 +649,13 @@ double HEXALayout::dist(const SomPos& _center, const SomPos& _v) const
  * Parameter: _center  Reference to the center of neighborhood
  * Parameter: _aveVector: returns the average vector
  */
-void HEXALayout::localAve(const xmippFuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const
+void HEXALayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const
 {
 
     int j;
     int dim = _som->itemAt(0).size();
-    for (j = 0; j < dim; j++) _aveVector[j] = 0.0;
+    for (j = 0; j < dim; j++)
+        _aveVector[j] = 0.0;
     int tmpi = _center.first;
     int tmpj = _center.second;
     int kk = 0;
@@ -708,7 +710,7 @@ void HEXALayout::localAve(const xmippFuzzyMap* _som, const SomPos& _center, std:
  * Returns the average number of intermediate neighbors.
  * Parameter: _center  Reference to the center of neighborhood
  */
-double HEXALayout::numNeig(const xmippFuzzyMap* _som, const SomPos& _center) const
+double HEXALayout::numNeig(const FuzzyMap* _som, const SomPos& _center) const
 {
     int dim = _som->itemAt(0).size();
     int tmpi = _center.first;
@@ -756,10 +758,10 @@ double HEXALayout::numNeig(const xmippFuzzyMap* _som, const SomPos& _center) con
  * Parameter: _lower   Lower value for random elements
  * Parameter: _upper   Upper value for random elements
  */
-xmippFuzzyMap::xmippFuzzyMap(const std::string& _layout,  unsigned _width,
-                             const unsigned& _height, const unsigned& _size, const double& _lower,
-                             const double& _upper)
-        : xmippFCB(_width*_height, _size, 0, _lower, _upper, false), somWidth(_width), somHeight(_height)
+FuzzyMap::FuzzyMap(const std::string& _layout,  unsigned _width,
+                   const unsigned& _height, const unsigned& _size, const double& _lower,
+                   const double& _upper)
+        : FuzzyCodeBook(_width*_height, _size, 0, _lower, _upper, false), somWidth(_width), somHeight(_height)
 {
     if (_layout == "HEXA")
     {
@@ -786,10 +788,11 @@ xmippFuzzyMap::xmippFuzzyMap(const std::string& _layout,  unsigned _width,
    of the department of Physiology of the David Geffen School of Medistd::cine,
    University of California, Los Angeles
 */
-xmippFuzzyMap::xmippFuzzyMap(const std::string& _layout,  unsigned _width,
-                             const unsigned& _height, const xmippCTVectors& _ts,
-                             const bool _use_rand_cvs)
-        : xmippFCB(_width*_height, _ts, _use_rand_cvs), somWidth(_width), somHeight(_height)
+FuzzyMap::FuzzyMap(const std::string& _layout,  unsigned _width,
+                   const unsigned& _height, const ClassicTrainingVectors& _ts,
+                   const bool _use_rand_cvs)
+        : FuzzyCodeBook(_width*_height, _ts, _use_rand_cvs),
+        somWidth(_width), somHeight(_height)
 {
     if (_layout == "HEXA")
     {
@@ -809,7 +812,7 @@ xmippFuzzyMap::xmippFuzzyMap(const std::string& _layout,  unsigned _width,
  * Parameter: _size Size of code vectors (number of data points)
  * @exception  runtime_error  If there are problems with the stream
  */
-xmippFuzzyMap::xmippFuzzyMap(std::istream& _is, const unsigned _size, bool _cv) : xmippFCB(false)
+FuzzyMap::FuzzyMap(std::istream& _is, const unsigned _size, bool _cv) : FuzzyCodeBook(false)
 {
     somLayout = NULL;
     if (_cv)
@@ -824,7 +827,7 @@ xmippFuzzyMap::xmippFuzzyMap(std::istream& _is, const unsigned _size, bool _cv) 
  * vectors to a som
  * @exception range_error  If this method is called
  */
-void xmippFuzzyMap::add(const xmippVector& _v, const xmippLabel& _l)
+void FuzzyMap::add(const FeatureVector& _v, const Label& _l)
 {
     throw std::runtime_error("You can't add vectors to a S.O.M.");
 };
@@ -832,7 +835,7 @@ void xmippFuzzyMap::add(const xmippVector& _v, const xmippLabel& _l)
 /**
  * Returns the id of layout that som has
  */
-const std::string& xmippFuzzyMap::layout() const
+const std::string& FuzzyMap::layout() const
 {
     return somLayout->id();
 };
@@ -842,7 +845,7 @@ const std::string& xmippFuzzyMap::layout() const
  * Parameter: _center  Reference to the center of neighborhood
  * Parameter: _radius  Radius of neighbohood
  */
-std::vector<unsigned> xmippFuzzyMap::neighborhood(const SomPos& _center, double _radius) const
+std::vector<unsigned> FuzzyMap::neighborhood(const SomPos& _center, double _radius) const
 {
     return somLayout->neighborhood(this, _center, _radius);
 };
@@ -852,7 +855,7 @@ std::vector<unsigned> xmippFuzzyMap::neighborhood(const SomPos& _center, double 
  * Parameter: _center  Reference to the center of neighborhood
  * Parameter: _radius  Radius of neighbohood
  */
-void xmippFuzzyMap::neighborhood(const SomPos& _center, double _radius, std::vector<unsigned>& _neig) const
+void FuzzyMap::neighborhood(const SomPos& _center, double _radius, std::vector<unsigned>& _neig) const
 {
     _neig = somLayout->neighborhood(this, _center, _radius);
 };
@@ -863,7 +866,7 @@ void xmippFuzzyMap::neighborhood(const SomPos& _center, double _radius, std::vec
  * Parameter: _center  Reference to the center of neighborhood
  * Parameter: _aveVector: returns the average vector
  */
-void xmippFuzzyMap::localAve(const SomPos& _center, std::vector<double>& _aveVector) const
+void FuzzyMap::localAve(const SomPos& _center, std::vector<double>& _aveVector) const
 {
     somLayout->localAve(this, _center, _aveVector);
 };
@@ -874,7 +877,7 @@ void xmippFuzzyMap::localAve(const SomPos& _center, std::vector<double>& _aveVec
  * Parameter: _center  Reference to the center of neighborhood
  * Parameter: _v       Position of the code vector
  */
-double xmippFuzzyMap::neighDist(const SomPos& _center, const SomPos& _v) const
+double FuzzyMap::neighDist(const SomPos& _center, const SomPos& _v) const
 {
     return somLayout->dist(_center, _v);
 };
@@ -883,7 +886,7 @@ double xmippFuzzyMap::neighDist(const SomPos& _center, const SomPos& _v) const
 /**
  * Returns the width of the SOM
  */
-unsigned xmippFuzzyMap::width() const
+unsigned FuzzyMap::width() const
 {
     return somWidth;
 };
@@ -891,7 +894,7 @@ unsigned xmippFuzzyMap::width() const
 /**
  * Returns the height of the SOM
  */
-unsigned xmippFuzzyMap::height() const
+unsigned FuzzyMap::height() const
 {
     return somHeight;
 };
@@ -901,7 +904,7 @@ unsigned xmippFuzzyMap::height() const
  * Parameter: _pos  The position of the code vector
  * @exception out_of _range   If _pos is out of range
  */
-SomIn& xmippFuzzyMap::itemAtPos(const SomPos& _pos)
+SomIn& FuzzyMap::itemAtPos(const SomPos& _pos)
 {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
@@ -919,7 +922,7 @@ SomIn& xmippFuzzyMap::itemAtPos(const SomPos& _pos)
  * Parameter: _pos  The position of the code vector
  * @exception out_of _range   If _pos is out of range
  */
-const SomIn& xmippFuzzyMap::itemAtPos(const SomPos& _pos) const
+const SomIn& FuzzyMap::itemAtPos(const SomPos& _pos) const
 {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
@@ -936,7 +939,7 @@ const SomIn& xmippFuzzyMap::itemAtPos(const SomPos& _pos) const
  * Returns the target of a code vector given its position
  * Parameter: _pos  The position of the code vector
  */
-xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos)
+Label& FuzzyMap::targetAtPos(const SomPos& _pos)
 {
     if (!calibrated())
     {
@@ -961,7 +964,7 @@ xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos)
  * Returns a const target of a code vector given its position
  * Parameter: _pos  The position of the code vector
  */
-const xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos) const
+const Label& FuzzyMap::targetAtPos(const SomPos& _pos) const
 {
     if (!calibrated())
     {
@@ -986,9 +989,9 @@ const xmippLabel& xmippFuzzyMap::targetAtPos(const SomPos& _pos) const
 /**
  * Clears the Som
  */
-void xmippFuzzyMap::clear()
+void FuzzyMap::clear()
 {
-    xmippFCB::clear();
+    FuzzyCodeBook::clear();
     if (somLayout)
         delete somLayout;
     somWidth = 0;
@@ -1000,7 +1003,7 @@ void xmippFuzzyMap::clear()
  * Parameter: _i  Index of the code vector
  * @exception out_of _range   If _i is out of range
  */
-SomPos xmippFuzzyMap::indexToPos(const unsigned& _i) const
+SomPos FuzzyMap::indexToPos(const unsigned& _i) const
 {
     if (_i >= somWidth * somHeight)
     {
@@ -1019,7 +1022,7 @@ SomPos xmippFuzzyMap::indexToPos(const unsigned& _i) const
  * Parameter: _pos  Position of the code vector
  * @exception out_of _range   If _i is out of range
  */
-unsigned xmippFuzzyMap::PosToIndex(const SomPos& _pos) const
+unsigned FuzzyMap::PosToIndex(const SomPos& _pos) const
 {
     if (_pos.first >= (signed)somWidth || _pos.second >= (signed)somHeight)
     {
@@ -1036,7 +1039,7 @@ unsigned xmippFuzzyMap::PosToIndex(const SomPos& _pos) const
  * Returns the position in the som of a code vector
  * Parameter: _v  Reference to the code vector
  */
-SomPos xmippFuzzyMap::codVecPos(SomIn& _v)
+SomPos FuzzyMap::codVecPos(SomIn& _v)
 {
     return indexToPos(&_v - &(itemAt(0)));
 };
@@ -1046,7 +1049,7 @@ SomPos xmippFuzzyMap::codVecPos(SomIn& _v)
  * som
  * Parameter: _in  Sample to classify (index to the sample)
  */
-SomPos xmippFuzzyMap::applyPos(const unsigned& _in)
+SomPos FuzzyMap::applyPos(const unsigned& _in)
 {
     return codVecPos(fuzzyTest(_in));
 };
@@ -1056,7 +1059,7 @@ SomPos xmippFuzzyMap::applyPos(const unsigned& _in)
  * Standard output for a Fuzzy SOM
  * Parameter: _os The output stream
  */
-void xmippFuzzyMap::printSelf(std::ostream& _os) const
+void FuzzyMap::printSelf(std::ostream& _os) const
 {
     _os << itemAt(0).size() << " " <<
     somLayout->id() << " " << somWidth << " " << somHeight << " gaussian" << std::endl;
@@ -1068,7 +1071,7 @@ void xmippFuzzyMap::printSelf(std::ostream& _os) const
  * Standard input for a Fuzzy SOM
  * Parameter: _is The input stream
  */
-void xmippFuzzyMap::readSelf(std::istream& _is, const unsigned _size)
+void FuzzyMap::readSelf(std::istream& _is, const unsigned _size)
 {
     clear();
     int dim;
@@ -1092,32 +1095,33 @@ void xmippFuzzyMap::readSelf(std::istream& _is, const unsigned _size)
     str += integerToString(somWidth * somHeight);
     str += " ";
     for (int i = str.size() - 1; i >= 0; i--)
-        if (_is) _is.putback((char) str[i]);
-    xmippFCB::readSelf(_is, _size);
+        if (_is)
+            _is.putback((char) str[i]);
+    FuzzyCodeBook::readSelf(_is, _size);
 
 };
 
 
 /**
- * Saves the xmippFuzzyMap class into a stream.
+ * Saves the FuzzyMap class into a stream.
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void xmippFuzzyMap::saveObject(std::ostream& _os) const
+void FuzzyMap::saveObject(std::ostream& _os) const
 {
     _os << somLayout->id() << " " << somWidth << " " << somHeight << std::endl;
     writeClassifVectors(_os);
     writeMembership(_os);
-    xmippCTSet<xmippVector, xmippLabel>::saveObject(_os);
+    ClassificationTrainingSet<FeatureVector, Label>::saveObject(_os);
 };
 
 
 /**
- * Loads the xmippFuzzyMap class from a stream.
+ * Loads the FuzzyMap class from a stream.
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void xmippFuzzyMap::loadObject(std::istream& _is)
+void FuzzyMap::loadObject(std::istream& _is)
 {
     clear();
     std::string layout;
@@ -1136,5 +1140,5 @@ void xmippFuzzyMap::loadObject(std::istream& _is)
     _is >> somHeight;
     readClassifVectors(_is);
     readMembership(_is);
-    xmippCTSet<xmippVector, xmippLabel>::loadObject(_is);
+    ClassificationTrainingSet<FeatureVector, Label>::loadObject(_is);
 };

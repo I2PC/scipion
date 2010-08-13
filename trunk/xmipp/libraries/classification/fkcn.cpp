@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 //-----------------------------------------------------------------------------
-// xmippFKCN.cc
+// FuzzyKohonenCMeans.cc
 // Fuzzy Kohonen Clustering Network Algorithm
 //-----------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@
  * Parameter: _examples  A training set with the training examples
  */
 
-void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
+void FuzzyKohonenCMeans::train(FuzzyCodeBook& _xmippDS, const TS& _examples) const
 {
     using namespace std;
     // Defines verbosity
@@ -54,7 +54,7 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
 
     // Create auxiliar Codebook
 
-    xmippFCB auxCB;
+    FuzzyCodeBook auxCB;
 
 
     // Create auxiliar stuff
@@ -70,7 +70,7 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
     // Initialize auxiliary Codebook
 
     auxCB = _xmippDS;
-    std::vector<xmippVector> alpha;
+    std::vector<FeatureVector> alpha;
     alpha.resize(numVectors);
     for (vv = 0; vv < numVectors; vv++)
         alpha[vv].resize(numClusters, 0.);
@@ -95,7 +95,7 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
 
         // Update Membership matrix
 
-        xmippVector tmpD;
+        FeatureVector tmpD;
         tmpD.resize(numClusters);
         for (k = 0; k < numVectors; k++)
         {
@@ -115,7 +115,7 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
             }
             for (j = 0; j < numClusters; j ++)
             {
-                _xmippDS.memb[k][j] = (xmippFeature)(1. / (auxProd * tmpD[j]));
+                _xmippDS.memb[k][j] = (Feature)(1. / (auxProd * tmpD[j]));
             }
         } // for k
 
@@ -124,7 +124,7 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
         // Calculate Alpha
         for (cc = 0; cc < numClusters; cc++)
             for (vv = 0; vv < numVectors; vv++)
-                alpha[vv][cc] = (xmippFeature) pow((double)_xmippDS.memb[vv][cc], (double)mt);
+                alpha[vv][cc] = (Feature) pow((double)_xmippDS.memb[vv][cc], (double)mt);
 
 
         /* Step III: Update Code Vectors */
@@ -143,7 +143,7 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
             } // for vv
             if (auxSum != 0.)
                 for (j = 0; j < _examples.theItems[0].size(); j++)
-                    _xmippDS.theItems[cc][j] += (xmippFeature)(tmpV[j] / auxSum);
+                    _xmippDS.theItems[cc][j] += (Feature)(tmpV[j] / auxSum);
         } // for cc
 
 
@@ -177,5 +177,5 @@ void xmippFKCN::train(xmippFCB& _xmippDS, const TS& _examples) const
         listener->OnProgress(epochs);
 
 }
-; // xmippFKCN::train
+; // FuzzyKohonenCMeans::train
 

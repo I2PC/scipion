@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippCTSet.hh
+// ClassificationTrainingSet.hh
 // Xmipp Classification Training Sets
 //-----------------------------------------------------------------------------
 
@@ -55,10 +55,10 @@
  * \\The following example shows the declaration of a training set
  * formed by a vector of doubles and a target variable of type string.
  * \\
- * \\xmippCTSet<double, string> myTS;
+ * \\ClassificationTrainingSet<double, string> myTS;
  */
 template<class Item, class Target>
-class xmippCTSet
+class ClassificationTrainingSet
 {
 public:
 
@@ -82,7 +82,7 @@ public:
      * Parameter: _calib: True if the trainign set is calibrated (labeled)
      * Parameter: _n: Number of items that the trained set should contain
      */
-    xmippCTSet(const bool& _calib = true, unsigned _n = 0)
+    ClassificationTrainingSet(const bool& _calib = true, unsigned _n = 0)
             :/* splitTrainingSet(), */theItems(_n), /*theTargets(_n), */isCalibrated(_calib), nTargets(0)
     {};
 
@@ -91,7 +91,7 @@ public:
      * Parameter: _is  The input stream
      */
 
-    xmippCTSet(std::istream & _is) :  splitTrainingSet(), theItems(), theTargets(), isCalibrated(false)
+    ClassificationTrainingSet(std::istream & _is) :  splitTrainingSet(), theItems(), theTargets(), isCalibrated(false)
     {
         loadObject(_is);
         computeNumTargets();
@@ -100,7 +100,7 @@ public:
     /**
      * Virtual destructor
      */
-    virtual ~xmippCTSet()
+    virtual ~ClassificationTrainingSet()
     {};
 
     /** Sets the proportion of training, validation and testing and
@@ -119,7 +119,7 @@ public:
         std::vector<float> acc(2); // 3 modes
         acc[TRAIN] = _tp;
         acc[VALIDATION] = _tp + _vp;
-        xmippUniform<float> p(0.0, 1.0);
+        RandomUniformGenerator<float> p(0.0, 1.0);
         for (unsigned i = 0; i < size(); i ++)
         {
             float aRnd = p();
@@ -392,7 +392,7 @@ public:
       * Parameter: _os The output stream
       * Parameter: _ts  The training set to be printed
       */
-    friend std::ostream& operator << (std::ostream& _os, const xmippCTSet& _ts)
+    friend std::ostream& operator << (std::ostream& _os, const ClassificationTrainingSet& _ts)
     {
         _ts.printSelf(_os);
         return _os;
@@ -404,7 +404,7 @@ public:
      * Parameter: _ts  The training set to be read
      * @exception  runtime_error  If there are problems with the stream
      */
-    friend std::istream& operator >> (std::istream& _is, xmippCTSet& _ts)
+    friend std::istream& operator >> (std::istream& _is, ClassificationTrainingSet& _ts)
     {
         _ts.readSelf(_is);
         return _is;

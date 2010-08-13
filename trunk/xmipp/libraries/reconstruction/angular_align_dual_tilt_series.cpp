@@ -470,7 +470,7 @@ void Prog_align_dual::shiftProjectionInZ(MultidimArray<double> &I, int dualj, do
 {
     if (Z==0)
         return;
-    XmippFftw transformer;
+    FourierTransformer transformer;
     MultidimArray< std::complex<double> > Ifft;
     Matrix1D<double> w(3);
     Matrix1D<int> idx(3);

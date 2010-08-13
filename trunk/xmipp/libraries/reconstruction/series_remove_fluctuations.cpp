@@ -85,7 +85,7 @@ void Series_remove_fluctuations_parameters::run()
     // Filter each line in the series
     int maxPixel=CEIL(ZSIZE(V)*maxFreq);
     std::cout << "Maxpixel=" << maxPixel << std::endl;
-    XmippFftw transformer;
+    FourierTransformer transformer;
     init_progress_bar(YSIZE(V));
     for (int i=0; i<YSIZE(V); i++)
     {

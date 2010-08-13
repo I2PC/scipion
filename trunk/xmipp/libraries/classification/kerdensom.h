@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippKerDenSOM.hh
+// KerDenSOM.hh
 // Implements Smoothly Distributed Kernel Probability Density Estimator Self-Organizing Map
 // This is an abstract base class for different variants of the KerDenSOM algorithm
 //-----------------------------------------------------------------------------
@@ -41,7 +41,7 @@
 /**
  * This class trains a Smoothly Distributed Kernel Probability Density Estimator Self Organizing Map
  */
-class xmippKerDenSOM : public xmippBaseAlgo<xmippFuzzyMap>
+class KerDenSOM : public ClassificationAlgorithm<FuzzyMap>
 {
 public:
 
@@ -53,16 +53,16 @@ public:
      * Parameter: _epsilon    Stopping criterion
      * Parameter: _nSteps     Number of training steps
      */
-    xmippKerDenSOM(double _reg0, double _reg1, unsigned long _annSteps,
+    KerDenSOM(double _reg0, double _reg1, unsigned long _annSteps,
                    double _epsilon, unsigned long _nSteps)
-            : xmippBaseAlgo<xmippFuzzyMap>(), reg0(_reg0), reg1(_reg1), annSteps(_annSteps),
+            : ClassificationAlgorithm<FuzzyMap>(), reg0(_reg0), reg1(_reg1), annSteps(_annSteps),
             epsilon(_epsilon), somNSteps(_nSteps)
     {};
 
     /**
      * Virtual destructor
      */
-    virtual ~xmippKerDenSOM()
+    virtual ~KerDenSOM()
     {};
 
     /**
@@ -91,28 +91,28 @@ public:
      * Parameter: _update True if uses _som as starting point for training.
      * Parameter: _sigma If update = true, uses this sigma for the training.
      */
-    virtual void train(xmippFuzzyMap& _som, TS& _examples, FileName& _fn_vectors, bool _update = false, double _sigma = 0) = 0;
+    virtual void train(FuzzyMap& _som, TS& _examples, FileName& _fn_vectors, bool _update = false, double _sigma = 0) = 0;
 
     /**
      * Tests the KerDenSOM
      * Parameter: _som        The KerDenSom to test
      * Parameter: _examples   The testing set
      */
-    virtual double test(const xmippFuzzyMap& _som, const TS& _examples) const;
+    virtual double test(const FuzzyMap& _som, const TS& _examples) const;
 
 
     /**
      * Determines the functional value.
      * Returns the likelihood and penalty parts of the functional
      */
-    virtual double functional(const TS* _examples, const xmippFuzzyMap* _som, double _sigma, double _reg, double& _likelihood, double& _penalty) = 0;
+    virtual double functional(const TS* _examples, const FuzzyMap* _som, double _sigma, double _reg, double& _likelihood, double& _penalty) = 0;
 
     /**
      * Determines the Random Approximation of GVC
      * (For determining the optimal Regularization Factor)
      */
 
-    virtual double randApproxGVC(const TS* _examples, const xmippFuzzyMap* _som, double _dataSD, double _reg);
+    virtual double randApproxGVC(const TS* _examples, const FuzzyMap* _som, double _dataSD, double _reg);
 
 
 protected:
@@ -134,49 +134,49 @@ protected:
 
 
     /** Declaration of virtual method */
-    virtual void train(xmippFuzzyMap& _som, const TS& _examples) const
+    virtual void train(FuzzyMap& _som, const TS& _examples) const
         {};
 
     /* Declaration of abstract methods */
 
     // Update Us
-    virtual double updateU(xmippFuzzyMap* _som, const TS* _examples, const double& _sigma, double& _alpha) = 0;
+    virtual double updateU(FuzzyMap* _som, const TS* _examples, const double& _sigma, double& _alpha) = 0;
 
     // Estimate Sigma II
-    virtual double updateSigmaII(xmippFuzzyMap* _som, const TS* _examples, const double& _reg, const double& _alpha) = 0;
+    virtual double updateSigmaII(FuzzyMap* _som, const TS* _examples, const double& _reg, const double& _alpha) = 0;
 
     // Estimate the PD (Method 1: Using the code vectors)
-    virtual double codeDens(const xmippFuzzyMap* _som, const xmippVector* _example, double _sigma) const = 0;
+    virtual double codeDens(const FuzzyMap* _som, const FeatureVector* _example, double _sigma) const = 0;
 
     // Estimate the PD (Method 2: Using the data)
-    virtual double dataDens(const TS* _examples, const xmippVector* _example, double _sigma) const = 0;
+    virtual double dataDens(const TS* _examples, const FeatureVector* _example, double _sigma) const = 0;
 
 
     /* Some other common methods */
 
     // Update Code vectors
-    virtual void updateV(xmippFuzzyMap* _som, const TS* _examples, const double& _sigma);
+    virtual void updateV(FuzzyMap* _som, const TS* _examples, const double& _sigma);
 
     // Main iterations
-    virtual double mainIterations(xmippFuzzyMap* _som, const TS* _examples, double& _sigma, const double& _reg);
+    virtual double mainIterations(FuzzyMap* _som, const TS* _examples, double& _sigma, const double& _reg);
 
     // Special Initialization of the Us
-    virtual void initU(xmippFuzzyMap* _som);
+    virtual void initU(FuzzyMap* _som);
 
     // Special initialization of Code vectors
-    virtual void updateV1(xmippFuzzyMap* _som, const TS* _examples);
+    virtual void updateV1(FuzzyMap* _som, const TS* _examples);
 
     // Special initialization of Membership Matrix
-    virtual void updateU1(xmippFuzzyMap* _som, const TS* _examples);
+    virtual void updateU1(FuzzyMap* _som, const TS* _examples);
 
     // Estimate Sigma I
-    virtual double updateSigmaI(xmippFuzzyMap* _som, const TS* _examples);
+    virtual double updateSigmaI(FuzzyMap* _som, const TS* _examples);
 
     // Some printing methods.
     void showX(const TS* _ts);
-    void showV(xmippFuzzyMap* _som);
-    void showU(xmippFuzzyMap* _som, const TS* _ts);
-    void printV(xmippFuzzyMap* _som, const TS* _ts, FileName& _fname);
+    void showV(FuzzyMap* _som);
+    void showU(FuzzyMap* _som, const TS* _ts);
+    void printV(FuzzyMap* _som, const TS* _ts, FileName& _fname);
 
 };
 

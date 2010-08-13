@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippUmatrix.hh
+// Umatrix.hh
 //-----------------------------------------------------------------------------
 
 #ifndef XMIPPUMATRIX_H
@@ -37,7 +37,7 @@
 #include "map.h"
 
 //-----------------------------------------------------------------------------
-/// xmippUmatrix: Unified Distance Matrix (Umatrix)
+/// Umatrix: Unified Distance Matrix (Umatrix)
 //-----------------------------------------------------------------------------
 
 /**@defgroup Umatrix Umatrix
@@ -46,25 +46,25 @@
 
 /** Alias for Umatrix Type (it uses a SOM map)
 */
-typedef xmippMap umatType;
+typedef ClassificationMap umatType;
 
 /**
  * This class implements the Unified Distance Matrix algorithm.
  * It is used for visualizing the clustering structure of Self-Organizing
  * Maps
  */
-class xmippUmatrix
+class Umatrix
 {
 public:
-    typedef xmippMap In;
-    typedef xmippMap Out;
+    typedef ClassificationMap In;
+    typedef ClassificationMap Out;
     typedef enum { NONE = 0, MEDIAN = 1, AVERAGE = 2 } smoothMode;
 
     /** Umatrix constructor
     *   Parameter: _sm: Defines the smoothing mode: NONE, MEDIAN or AVERAGE
     *
     */
-    xmippUmatrix(smoothMode _sm = NONE): smooth(_sm)
+    Umatrix(smoothMode _sm = NONE): smooth(_sm)
     {};
 
     /**

@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 //-----------------------------------------------------------------------------
-// xmippFCMeans.cc
+// FuzzyCMeans.cc
 // Fuzzy c-means clustering algorithm
 //-----------------------------------------------------------------------------
 
@@ -35,8 +35,8 @@
  * Parameter: _is Must have the parameters in the same order than the previous ctor.
    ****** check out this ************
  */
-/*xmippFCMeans::xmippFCMeans( std::istream& _is )
-  :xmippBaseAlgo< xmippFCB >( "xmippFCMeans") {
+/*FuzzyCMeans::FuzzyCMeans( std::istream& _is )
+  :ClassificationAlgorithm< FuzzyCodeBook >( "FuzzyCMeans") {
   _is >> m;
   _is >> epsilon;
   _is >> epochs;
@@ -49,7 +49,7 @@
  * Parameter: _examples  A training set with the training examples
  */
 
-void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
+void FuzzyCMeans::train(FuzzyCodeBook& _xmippDS, TS& _examples) const
 {
 
     // Defines verbosity
@@ -62,7 +62,7 @@ void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
 
     // Create auxiliar Codebook
 
-    xmippFCB auxCB;
+    FuzzyCodeBook auxCB;
 
 
     // Create auxiliar stuff
@@ -73,7 +73,7 @@ void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
     double stopError = 0, auxError = 0;
     double auxDist, auxProd, tmp, auxExp, auxSum;
     unsigned t = 0;  // Iteration index
-    xmippVector zero(_xmippDS.theItems[0].size()) ;
+    FeatureVector zero(_xmippDS.theItems[0].size()) ;
     fill(zero.begin(), zero.end(), 0.0);
 
 
@@ -119,7 +119,7 @@ void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
                               (double) eDist(_xmippDS.theItems[j], _examples.theItems[k]);
                         auxDist += pow(tmp, auxExp);
                     } // for j
-                    _xmippDS.memb[k][i] = (xmippFeature) 1.0 / auxDist;
+                    _xmippDS.memb[k][i] = (Feature) 1.0 / auxDist;
                 } // for i
             } // if auxProd
 
@@ -135,10 +135,10 @@ void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
             auxSum = 0;
             for (k = 0; k < numVectors; k++)
             {
-                _xmippDS.theItems[i] += (xmippFeature) pow((double)(_xmippDS.memb[k][i]), m) * _examples.theItems[k];
+                _xmippDS.theItems[i] += (Feature) pow((double)(_xmippDS.memb[k][i]), m) * _examples.theItems[k];
                 auxSum += pow((double)(_xmippDS.memb[k][i]), m);
             } // for i
-            _xmippDS.theItems[i] /= (xmippFeature) auxSum;
+            _xmippDS.theItems[i] /= (Feature) auxSum;
         } // for k
 
 
@@ -173,7 +173,7 @@ void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
         listener->OnProgress(epochs);
 
 }
-; // xmippFCMeans::train
+; // FuzzyCMeans::train
 
 
 /**
@@ -181,7 +181,7 @@ void xmippFCMeans::train(xmippFCB& _xmippDS, TS& _examples) const
  * Parameter: _examples  A training set with the training examples
  */
 
-double xmippFCMeans::test(const xmippFCB& _xmippDS,
+double FuzzyCMeans::test(const FuzzyCodeBook& _xmippDS,
                           const TS& _examples) const
 {
 
@@ -197,7 +197,7 @@ double xmippFCMeans::test(const xmippFCB& _xmippDS,
     double distortion = 0;
     for (unsigned i = 0; i < _examples.size(); i ++)
     {
-        const xmippVector& auxS = _examples.theItems[i];
+        const FeatureVector& auxS = _examples.theItems[i];
         unsigned best = _xmippDS.output(auxS);
         distortion += (double) eDist(_xmippDS.theItems[best], _examples.theItems[i]);
         if (verbosity)
@@ -215,7 +215,7 @@ double xmippFCMeans::test(const xmippFCB& _xmippDS,
  * Parameter: _examples  The training set
  */
 
-double xmippFCMeans::fuzzyTest(const xmippFCB& _xmippDS,
+double FuzzyCMeans::fuzzyTest(const FuzzyCodeBook& _xmippDS,
                                const TS& _examples) const
 {
 
@@ -259,7 +259,7 @@ double xmippFCMeans::fuzzyTest(const xmippFCB& _xmippDS,
  *
  */
 
-double xmippFCMeans::F(const xmippFCB& _xmippDS) const
+double FuzzyCMeans::F(const FuzzyCodeBook& _xmippDS) const
 {
     double F = 0.;
     for (unsigned k = 0; k < _xmippDS.membVectors(); k++)
@@ -286,7 +286,7 @@ double xmippFCMeans::F(const xmippFCB& _xmippDS) const
  *
  */
 
-double xmippFCMeans::H(const xmippFCB& _xmippDS) const
+double FuzzyCMeans::H(const FuzzyCodeBook& _xmippDS) const
 {
     double H = 0.;
     for (unsigned k = 0; k < _xmippDS.membVectors(); k++)
@@ -309,7 +309,7 @@ double xmippFCMeans::H(const xmippFCB& _xmippDS) const
  *
  */
 
-double xmippFCMeans::NFI(const xmippFCB& _xmippDS) const
+double FuzzyCMeans::NFI(const FuzzyCodeBook& _xmippDS) const
 {
     double F = 0.;
     for (unsigned k = 0; k < _xmippDS.membVectors(); k++)
@@ -334,18 +334,18 @@ double xmippFCMeans::NFI(const xmippFCB& _xmippDS) const
  *
  */
 
-double xmippFCMeans::S(const xmippFCB& _xmippDS,
+double FuzzyCMeans::S(const FuzzyCodeBook& _xmippDS,
                        const TS& _examples) const
 {
 
-    std::vector< std::vector< xmippFeature > > ICD;       // Intercluster distance
-    std::vector< std::vector< xmippFeature > > D;         // Distance from each data to cluster centers
+    std::vector< std::vector< Feature > > ICD;       // Intercluster distance
+    std::vector< std::vector< Feature > > D;         // Distance from each data to cluster centers
 
     unsigned i;
     D.resize(_xmippDS.membClusters());
     for (i = 0; i < _xmippDS.membClusters(); i++)
     {
-        std::vector <xmippFeature> d;
+        std::vector <Feature> d;
         d.resize(_xmippDS.membVectors());
         for (unsigned k = 0; k < _xmippDS.membVectors(); k++)
             d[k] = eDist(_xmippDS.theItems[i], _examples.theItems[k]);
@@ -355,7 +355,7 @@ double xmippFCMeans::S(const xmippFCB& _xmippDS,
     ICD.resize(_xmippDS.membClusters());
     for (i = 0; i < _xmippDS.membClusters(); i++)
     {
-        std::vector <xmippFeature> v;
+        std::vector <Feature> v;
         v.resize(_xmippDS.membVectors());
         for (unsigned j = 0; j < _xmippDS.membClusters(); j++)
             v[j] = eDist(_xmippDS.theItems[i], _xmippDS.theItems[j]);
@@ -363,13 +363,13 @@ double xmippFCMeans::S(const xmippFCB& _xmippDS,
     } // for i
 
 
-    xmippFeature auxSum = 0;
+    Feature auxSum = 0;
 
     for (i = 0; i < _xmippDS.membClusters(); i++)
         for (unsigned k = 0; k < _xmippDS.membVectors(); k++)
-            auxSum += (xmippFeature) pow((double)(D[i][k] * _xmippDS.memb[k][i]), (double)m);
+            auxSum += (Feature) pow((double)(D[i][k] * _xmippDS.memb[k][i]), (double)m);
 
-    xmippFeature auxMin = MAXFLOAT;
+    Feature auxMin = MAXFLOAT;
     for (i = 0; i < _xmippDS.membClusters(); i++)
         for (unsigned j = i + 1; j < _xmippDS.membClusters(); j++)
             if (auxMin > ICD[i][j]) auxMin = ICD[i][j];
@@ -381,11 +381,11 @@ double xmippFCMeans::S(const xmippFCB& _xmippDS,
 
 
 /// print itself on standard output
-void xmippFCMeans::printSelf(std::ostream& _os) const
+void FuzzyCMeans::printSelf(std::ostream& _os) const
 {
     // Call base class, which will print ID
     _os << "Class (Algorithm): " << std::endl;
-    xmippBaseAlgo<xmippFCB>::printSelf(_os);
+    ClassificationAlgorithm<FuzzyCodeBook>::printSelf(_os);
     _os << std::endl;
     // Print parameters in the same order they are declared
     _os << "Fuzzy constant m = " << m << std::endl;

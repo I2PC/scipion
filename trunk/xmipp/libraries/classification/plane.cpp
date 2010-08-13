@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 //-----------------------------------------------------------------------------
-// xmippPlanes.cc
+// Planes.cc
 //-----------------------------------------------------------------------------
 
 #include "plane.h"
@@ -35,7 +35,7 @@
 *   Parameter: _plane: variable
 */
 
-void xmippPlanes::getPlane(const In& _in, Out& _out, unsigned _plane) const
+void Planes::getPlane(const In& _in, Out& _out, unsigned _plane) const
 {
     unsigned i, j;
 
@@ -57,8 +57,8 @@ void xmippPlanes::getPlane(const In& _in, Out& _out, unsigned _plane) const
 
     // find the minimum and maximum values for gray level scaling */
 
-    xmippFeature Max = -MAXFLOAT;
-    xmippFeature Min = MAXFLOAT;
+    Feature Max = -MAXFLOAT;
+    Feature Min = MAXFLOAT;
 
     for (i = 0;i < _in.width();i++)
         for (j = 0;j < _in.height();j++)
@@ -69,7 +69,7 @@ void xmippPlanes::getPlane(const In& _in, Out& _out, unsigned _plane) const
                 Min = _in.itemAtPos(SomPos(i, j))[_plane];
         }
 
-    xmippFeature bw = Max - Min;
+    Feature bw = Max - Min;
 
 
 

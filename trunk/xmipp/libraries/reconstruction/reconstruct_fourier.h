@@ -164,10 +164,10 @@ public: // Internal members
     std::vector <Matrix2D<double> > R_repository;
 
     // Fourier transformer for the volume
-    XmippFftw transformerVol;
+    FourierTransformer transformerVol;
 
     // Fourier transformer for the images
-    XmippFftw transformerImg;
+    FourierTransformer transformerImg;
 
     // An alias to the Fourier transform in transformerVol
     MultidimArray< std::complex<double> > VoutFourier;

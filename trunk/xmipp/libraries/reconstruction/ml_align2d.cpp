@@ -865,7 +865,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
     double my_mindiff;
     bool is_ok_trymindiff = false;
     double sigma_noise2 = model.sigma_noise * model.sigma_noise;
-    XmippFftw local_transformer;
+    FourierTransformer local_transformer;
     ioptx = iopty = 0;
 
     // Update sigdim, i.e. the number of pixels that will be considered in the translations
@@ -1213,7 +1213,7 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
     double AA, stdAA, psi, dum, avg;
     MultidimArray<double> Maux(dim, dim);
     MultidimArray<std::complex<double> > Faux;
-    XmippFftw local_transformer;
+    FourierTransformer local_transformer;
     int refnoipsi;
 
     Maux.setXmippOrigin();
@@ -1270,7 +1270,7 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
     double psi, dum, avg, ang;
     MultidimArray<double> Maux(dim, dim), Maux2(dim, dim), Maux3(dim, dim);
     MultidimArray<std::complex<double> > Faux;
-    XmippFftw local_transformer;
+    FourierTransformer local_transformer;
 
     Maux.setXmippOrigin();
     Maux2.setXmippOrigin();
@@ -1479,7 +1479,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     //TODO: this will not be here
     MultidimArray<double> Maux, Mweight;
     MultidimArray<std::complex<double> > Faux, Fzero(dim, hdim + 1);
-    XmippFftw local_transformer;
+    FourierTransformer local_transformer;
 
     // Setup matrices
     Maux.resize(dim, dim);

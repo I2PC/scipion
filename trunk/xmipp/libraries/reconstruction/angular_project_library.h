@@ -44,7 +44,7 @@ class Prog_angular_project_library_Parameters
 {
 public:
     /** sampling object */
-    XmippSampling mysampling;
+    Sampling mysampling;
 
     /** Sampling rate. Distance between sampling points in degrees*/
     double sampling;

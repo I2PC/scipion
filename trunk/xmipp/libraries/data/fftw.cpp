@@ -32,7 +32,7 @@
 static pthread_mutex_t fftw_plan_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Constructors and destructors --------------------------------------------
-XmippFftw::XmippFftw()
+FourierTransformer::FourierTransformer()
 {
     fPlanForward=NULL;
     fPlanBackward=NULL;
@@ -44,7 +44,7 @@ XmippFftw::XmippFftw()
     threadsSetOn=false;
 }
 
-void XmippFftw::clear()
+void FourierTransformer::clear()
 {
     fReal=NULL;
     fComplex=NULL;
@@ -62,24 +62,24 @@ void XmippFftw::clear()
     complexDataPtr   = NULL;
 }
 
-XmippFftw::~XmippFftw()
+FourierTransformer::~FourierTransformer()
 {
     clear();
 }
 
 // Initialization ----------------------------------------------------------
-const MultidimArray<double> &XmippFftw::getReal() const
+const MultidimArray<double> &FourierTransformer::getReal() const
 {
     return (*fReal);
 }
 
-const MultidimArray<std::complex<double> > &XmippFftw::getComplex() const
+const MultidimArray<std::complex<double> > &FourierTransformer::getComplex() const
 {
     return (*fComplex);
 }
 
 
-void XmippFftw::setReal(MultidimArray<double> &input)
+void FourierTransformer::setReal(MultidimArray<double> &input)
 {
     bool recomputePlan=false;
     if (fReal==NULL)
@@ -137,7 +137,7 @@ void XmippFftw::setReal(MultidimArray<double> &input)
     }
 }
 
-void XmippFftw::setReal(MultidimArray<std::complex<double> > &input)
+void FourierTransformer::setReal(MultidimArray<std::complex<double> > &input)
 {
     bool recomputePlan=false;
     if (fComplex==NULL)
@@ -194,14 +194,14 @@ void XmippFftw::setReal(MultidimArray<std::complex<double> > &input)
     }
 }
 
-void XmippFftw::setFourier(MultidimArray<std::complex<double> > &inputFourier)
+void FourierTransformer::setFourier(MultidimArray<std::complex<double> > &inputFourier)
 {
     memcpy(MULTIDIM_ARRAY(fFourier),MULTIDIM_ARRAY(inputFourier),
            MULTIDIM_SIZE(inputFourier)*2*sizeof(double));
 }
 
 // Transform ---------------------------------------------------------------
-void XmippFftw::Transform(int sign)
+void FourierTransformer::Transform(int sign)
 {
     if (sign == FFTW_FORWARD)
     {
@@ -221,18 +221,18 @@ void XmippFftw::Transform(int sign)
         fftw_execute(fPlanBackward);
 }
 
-void XmippFftw::FourierTransform()
+void FourierTransformer::FourierTransform()
 {
     Transform(FFTW_FORWARD);
 }
 
-void XmippFftw::inverseFourierTransform()
+void FourierTransformer::inverseFourierTransform()
 {
     Transform(FFTW_BACKWARD);
 }
 
 // Inforce Hermitian symmetry ---------------------------------------------
-void XmippFftw::enforceHermitianSymmetry()
+void FourierTransformer::enforceHermitianSymmetry()
 {
     int ndim=3;
     if (ZSIZE(*fReal)==1)
@@ -321,11 +321,11 @@ void frc_dpr(MultidimArray< double > & m1,
         REPORT_ERROR(1,"MultidimArrays have different shapes!");
 
     MultidimArray< std::complex< double > > FT1;
-    XmippFftw transformer1;
+    FourierTransformer transformer1;
     transformer1.FourierTransform(m1, FT1, false);
 
     MultidimArray< std::complex< double > > FT2;
-    XmippFftw transformer2;
+    FourierTransformer transformer2;
     transformer2.FourierTransform(m2, FT2, false);
 
     MultidimArray< int > radial_count(XSIZE(m1)/2+1);
@@ -407,14 +407,14 @@ void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int
     //memory for fourier transform output
     MultidimArray<std::complex<double> > MmemFourier;
     // Perform the Fourier transform
-    XmippFftw transformerM;
+    FourierTransformer transformerM;
     transformerM.setThreadsNumber(nThreads);
     transformerM.FourierTransform(Mpmem, MmemFourier, false);
 
     // Create space for the downsampled image and its Fourier transform
     Mpmem.resize(Ydim, Xdim);
     MultidimArray<std::complex<double> > MpmemFourier;
-    XmippFftw transformerMp;
+    FourierTransformer transformerMp;
     transformerMp.setReal(Mpmem);
     transformerMp.getFourierAlias(MpmemFourier);
 
@@ -448,7 +448,7 @@ void getSpectrum(MultidimArray<double> &Min,
     int xsize = XSIZE(Min);
     Matrix1D<double> f(3);
     MultidimArray<double> count(xsize);
-    XmippFftw transformer;
+    FourierTransformer transformer;
 
     spectrum.initZeros(xsize);
     count.initZeros();
@@ -499,7 +499,7 @@ void multiplyBySpectrum(MultidimArray<double> &Min,
     MultidimArray<std::complex<double> > Faux;
     Matrix1D<double> f(3);
     MultidimArray<double> lspectrum;
-    XmippFftw transformer;
+    FourierTransformer transformer;
     double dim3 = XSIZE(Min)*YSIZE(Min)*ZSIZE(Min);
 
     transformer.FourierTransform(Min, Faux, false);

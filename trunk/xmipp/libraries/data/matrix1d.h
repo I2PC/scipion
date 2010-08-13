@@ -241,6 +241,7 @@ template <typename T> class Matrix2D;
 /** Direct access to vector element
  */
 #define VEC_ELEM(v,i) ((v).vdata[(i)])
+//@}
 
 /** Matrix1D class.*/
 template<typename T>

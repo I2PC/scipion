@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippGaussianKerDenSOM.cc
+// GaussianKerDenSOM.cc
 // Implements Smoothly Distributed Kernel Probability Density Estimator Self-Organizing Map
 // Uses a Gaussian Kernel Function.
 //-----------------------------------------------------------------------------
@@ -44,7 +44,7 @@
  * Parameter: _update True if uses _som as starting point for training.
  * Parameter: _sigma If update = true, uses this sigma for the training.
  */
-void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName& _fn, bool _update, double _sigma)
+void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn, bool _update, double _sigma)
 {
     // Saves algorithm information in fn file
     FileName tmpN1 = _fn.c_str() + (std::string) ".LCurveInfo";
@@ -239,7 +239,7 @@ void xmippGaussianKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
 /**
  * Update the U (Membership)
  */
-double xmippGaussianKerDenSOM::updateU(xmippFuzzyMap* _som, const TS* _examples, const double& _sigma, double& _alpha)
+double GaussianKerDenSOM::updateU(FuzzyMap* _som, const TS* _examples, const double& _sigma, double& _alpha)
 {
 
     // Create auxiliar stuff
@@ -283,7 +283,7 @@ double xmippGaussianKerDenSOM::updateU(xmippFuzzyMap* _som, const TS* _examples,
         for (j = 0; j < numNeurons; j ++)
         {
             tmp = tmpD1[j] / r1;
-            _som->memb[k][j] = (xmippFeature) tmp;
+            _som->memb[k][j] = (Feature) tmp;
             _alpha += tmp * tmpD[j];
         }
     } // for k
@@ -294,7 +294,7 @@ double xmippGaussianKerDenSOM::updateU(xmippFuzzyMap* _som, const TS* _examples,
 //-----------------------------------------------------------------------------
 
 // Estimate Sigma part II
-double xmippGaussianKerDenSOM::updateSigmaII(xmippFuzzyMap* _som, const TS* _examples, const double& _reg, const double& _alpha)
+double GaussianKerDenSOM::updateSigmaII(FuzzyMap* _som, const TS* _examples, const double& _reg, const double& _alpha)
 {
     int cc, j;
 
@@ -318,7 +318,7 @@ double xmippGaussianKerDenSOM::updateSigmaII(xmippFuzzyMap* _som, const TS* _exa
 /**
  * Estimate the PD (Method 1: Using the code vectors)
  */
-double xmippGaussianKerDenSOM::codeDens(const xmippFuzzyMap* _som, const xmippVector* _example, double _sigma) const
+double GaussianKerDenSOM::codeDens(const FuzzyMap* _som, const FeatureVector* _example, double _sigma) const
 {
     unsigned j, cc;
     double t, s = 0;
@@ -342,7 +342,7 @@ double xmippGaussianKerDenSOM::codeDens(const xmippFuzzyMap* _som, const xmippVe
 /**
  * Estimate the PD (Method 2: Using the data)
  */
-double xmippGaussianKerDenSOM::dataDens(const TS* _examples, const xmippVector* _example, double _sigma) const
+double GaussianKerDenSOM::dataDens(const TS* _examples, const FeatureVector* _example, double _sigma) const
 {
     unsigned j, vv;
     double t = 0, s = 0;
@@ -367,7 +367,7 @@ double xmippGaussianKerDenSOM::dataDens(const TS* _examples, const xmippVector* 
  * Determines the functional value
  * Returns the likelihood and penalty parts of the functional
  */
-double xmippGaussianKerDenSOM::functional(const TS* _examples, const xmippFuzzyMap* _som, double _sigma, double _reg, double& _likelihood, double& _penalty)
+double GaussianKerDenSOM::functional(const TS* _examples, const FuzzyMap* _som, double _sigma, double _reg, double& _likelihood, double& _penalty)
 {
     unsigned j, vv, cc;
     double t;

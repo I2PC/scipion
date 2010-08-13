@@ -674,14 +674,14 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         Mmem(i,j)=(double)M(j,i);
 
         // Perform the Fourier transform
-        XmippFftw transformerM;
+        FourierTransformer transformerM;
         transformerM.setThreadsNumber(nThreads);
         transformerM.FourierTransform(Mmem, MmemFourier, false);
 
         // Create space for the downsampled image and its Fourier transform
         MultidimArray<double> Mpmem(Ypdim,Xpdim);
         MultidimArray<std::complex<double> > MpmemFourier;
-        XmippFftw transformerMp;
+        FourierTransformer transformerMp;
         transformerMp.setThreadsNumber(nThreads);
         transformerMp.setReal(Mpmem);
         transformerMp.getFourierAlias(MpmemFourier);

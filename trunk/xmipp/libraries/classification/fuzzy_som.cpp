@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippSOM.cc
+// SOM.cc
 // Implements Smoothly Distributed Fuzzy c-means Self-Organizing Map
 //-----------------------------------------------------------------------------
 
@@ -40,7 +40,7 @@
  * Sets the number of training steps
  * Parameter: _nSteps  Number of training steps
  */
-void xmippFuzzySOM::nSteps(const unsigned long& _nSteps)
+void FuzzySOM::nSteps(const unsigned long& _nSteps)
 {
     somNSteps = _nSteps;
 };
@@ -50,7 +50,7 @@ void xmippFuzzySOM::nSteps(const unsigned long& _nSteps)
  * Sets the Intial Fuzzy membership
  * Parameter: _m0
  */
-void xmippFuzzySOM::initialFuzzzyMembership(const double& _m0)
+void FuzzySOM::initialFuzzyMembership(const double& _m0)
 {
     m0 = _m0;
 };
@@ -61,7 +61,7 @@ void xmippFuzzySOM::initialFuzzzyMembership(const double& _m0)
  * Sets the Final Fuzzy membership
  * Parameter: _m1
  */
-void xmippFuzzySOM::finalFuzzzyMembership(const double& _m1)
+void FuzzySOM::finalFuzzyMembership(const double& _m1)
 {
     m1 = _m1;
 };
@@ -72,7 +72,7 @@ void xmippFuzzySOM::finalFuzzzyMembership(const double& _m1)
  * Sets the number of deterministic annealing training steps
  * Parameter: _annSteps  Number of steps
  */
-void xmippFuzzySOM::setAnnSteps(const unsigned long& _annSteps)
+void FuzzySOM::setAnnSteps(const unsigned long& _annSteps)
 {
     annSteps = _annSteps;
 };
@@ -83,7 +83,7 @@ void xmippFuzzySOM::setAnnSteps(const unsigned long& _annSteps)
  * Sets the Regularization Constant
  * Parameter: _reg
  */
-void xmippFuzzySOM::regularization(const double& _reg)
+void FuzzySOM::regularization(const double& _reg)
 {
     reg = _reg;
 };
@@ -95,7 +95,7 @@ void xmippFuzzySOM::regularization(const double& _reg)
  * Parameter: _som  The fuzzy som to train
  * Parameter: _ts   The training set
  */
-void xmippFuzzySOM::train(xmippFuzzyMap& _som, const TS& _examples)
+void FuzzySOM::train(FuzzyMap& _som, const TS& _examples)
 {
 
     numNeurons = _som.size();
@@ -196,7 +196,7 @@ void xmippFuzzySOM::train(xmippFuzzyMap& _som, const TS& _examples)
  * Parameter: _som        The fuzzy som to test
  * Parameter: _examples   The training set of examples
  */
-double xmippFuzzySOM::test(const xmippFuzzyMap& _som, const TS& _examples) const
+double FuzzySOM::test(const FuzzyMap& _som, const TS& _examples) const
 {
 
     // Defines verbosity level
@@ -230,7 +230,7 @@ double xmippFuzzySOM::test(const xmippFuzzyMap& _som, const TS& _examples) const
 /**
  * Update Fuzzy Memberships
  */
-double xmippFuzzySOM::updateU(xmippFuzzyMap& _som, const TS& _examples, const double& _m)
+double FuzzySOM::updateU(FuzzyMap& _som, const TS& _examples, const double& _m)
 {
 
     // Create auxiliar stuff
@@ -260,7 +260,7 @@ double xmippFuzzySOM::updateU(xmippFuzzyMap& _som, const TS& _examples, const do
         {
             double tmp =  1. / (auxProd * tmpD[j]);
             var += fabs((double)(_som.memb[k][j]) - tmp);
-            _som.memb[k][j] = (xmippFeature) tmp;
+            _som.memb[k][j] = (Feature) tmp;
         }
 
 
@@ -277,7 +277,7 @@ double xmippFuzzySOM::updateU(xmippFuzzyMap& _som, const TS& _examples, const do
 /**
  * Update Fuzzy Code vectors
  */
-void xmippFuzzySOM::updateV(xmippFuzzyMap& _som, const TS& _examples, const double& _m)
+void FuzzySOM::updateV(FuzzyMap& _som, const TS& _examples, const double& _m)
 {
     unsigned j, cc, vv;
     unsigned t2 = 0;  // Iteration index
@@ -317,7 +317,7 @@ void xmippFuzzySOM::updateV(xmippFuzzyMap& _som, const TS& _examples, const doub
                 tmpV[j] *= reg;
                 double tmpU = (tmpMap[cc][j] + tmpV[j]) / tmpDens[cc];
                 stopError2 += fabs((double)(_som.theItems[cc][j]) - tmpU);
-                _som.theItems[cc][j] = (xmippFeature) tmpU;
+                _som.theItems[cc][j] = (Feature) tmpU;
             }
         } // for
         stopError2 /= (double)(numNeurons * dim);
@@ -332,7 +332,7 @@ void xmippFuzzySOM::updateV(xmippFuzzyMap& _som, const TS& _examples, const doub
  * Determines the functional value
  * Returns the fidelity to the data and penalty parts of the functional
  */
-double xmippFuzzySOM::functional(const TS& _examples, const xmippFuzzyMap& _som, double _m, double _reg, double& _fidelity, double& _penalty)
+double FuzzySOM::functional(const TS& _examples, const FuzzyMap& _som, double _m, double _reg, double& _fidelity, double& _penalty)
 {
     unsigned j, vv, cc;
     double t, t1, t2 = 0;
@@ -370,7 +370,7 @@ double xmippFuzzySOM::functional(const TS& _examples, const xmippFuzzyMap& _som,
 
 
 //-----------------------------------------------------------------------------
-void xmippFuzzySOM::showX(const TS& _ts)
+void FuzzySOM::showX(const TS& _ts)
 {
     std::cout << "Data (1..nd, 1..nv) "  << std::endl;
     for (int i = 0; i < _ts.size(); i++)
@@ -384,7 +384,7 @@ void xmippFuzzySOM::showX(const TS& _ts)
 
 
 //-----------------------------------------------------------------------------
-void xmippFuzzySOM::showV(xmippFuzzyMap& _som)
+void FuzzySOM::showV(FuzzyMap& _som)
 {
     std::cout << "Code vectors (1..ni, 1..nj, 1..nv) "  << std::endl;
     for (int i = 0; i < _som.size(); i++)
@@ -397,7 +397,7 @@ void xmippFuzzySOM::showV(xmippFuzzyMap& _som)
 }
 
 //-----------------------------------------------------------------------------
-void xmippFuzzySOM::showU(xmippFuzzyMap& _som, const TS& _ts)
+void FuzzySOM::showU(FuzzyMap& _som, const TS& _ts)
 {
     std::cout << " Memberships (1..nd,1..ni,1..nj)" << std::endl;
     for (int i = 0; i <  _ts.size(); i++)

@@ -37,7 +37,7 @@
 
 /** This enum defines which method should be used to
  correct the constraint due to Nyquist limit in diffraction. */
-enum psfxrAdjust
+enum PsfxrAdjust
 {
     PSFXR_STD, /// Standard mode, image size does not changes
     PSFXR_INT, /// Increasing the image size by Interpolating
@@ -55,7 +55,7 @@ enum psfxrAdjust
  int main(int argc, char **argv)
  {
   FileName fnPSF, fn_input,fn_output;
-  XmippXRPSF psf;
+  XRayPSF psf;
 
  /// Read the microscope parameters
 
@@ -87,7 +87,7 @@ enum psfxrAdjust
  }
  @endcode
  */
-class XmippXRPSF
+class XRayPSF
 {
 public:
     // Current OTF
@@ -117,7 +117,7 @@ public:
     double deltaZMaxX, deltaZMaxY, deltaZMinX, deltaZMinY;
 
     /// Parameters to change image size to avoid Nyquist limit
-    psfxrAdjust AdjustType;
+    PsfxrAdjust AdjustType;
     /// Minimum diameter size of the microscope pupile in the lens plane, measured in pixels
     double pupileSizeMin;
 
@@ -152,7 +152,7 @@ public:
     bool verbose;
 
     /** Empty constructor. */
-    XmippXRPSF()
+    XRayPSF()
     {
         clear();
     }
@@ -169,7 +169,7 @@ public:
     void usage();
 
     /// Show
-    friend std::ostream & operator <<(std::ostream &out, const XmippXRPSF &psf);
+    friend std::ostream & operator <<(std::ostream &out, const XRayPSF &psf);
 
     /// Clear.
     void clear();
@@ -182,7 +182,7 @@ public:
     void applyOTF(MultidimArray<T> &Im)
     {
         MultidimArray<std::complex<double> > ImFT;
-        XmippFftw transformer;
+        FourierTransformer transformer;
 
         //#define DEBUG
 #ifdef DEBUG
@@ -243,6 +243,6 @@ public:
 void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
 
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
-void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut,  int idxSlice = 1);
+void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut,  int idxSlice = 1);
 //@}
 #endif

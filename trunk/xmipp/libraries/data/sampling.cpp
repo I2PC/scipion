@@ -25,7 +25,7 @@
 #include "sampling.h"
 
 /* Default Constructor */
-XmippSampling::XmippSampling()
+Sampling::Sampling()
 {
     Vertex aux;
     aux.rot =   -PI / 5.;
@@ -95,7 +95,7 @@ XmippSampling::XmippSampling()
 #undef DEBUG1
 }
 
-void XmippSampling::SetSampling(double sampling)
+void Sampling::SetSampling(double sampling)
 {
     sampling_rate_rad = DEG2RAD(sampling);
     number_of_samples = ROUND(cte_w / sampling_rate_rad)+1;
@@ -108,13 +108,13 @@ void XmippSampling::SetSampling(double sampling)
     }
 }
 
-void XmippSampling::SetNoise(double noise_deviation, int my_seed)
+void Sampling::SetNoise(double noise_deviation, int my_seed)
 {
     sampling_noise = noise_deviation;
     init_random_generator(my_seed);
 }
 
-void XmippSampling::SetNeighborhoodRadius(double neighborhood)
+void Sampling::SetNeighborhoodRadius(double neighborhood)
 {
     if(neighborhood<0)
        cos_neighborhood_radius=-1.01;
@@ -132,7 +132,7 @@ void XmippSampling::SetNeighborhoodRadius(double neighborhood)
 }
 
 /* Compute edge sampling points using Baumgardner  1995 */
-void XmippSampling::Compute_sampling_points(bool only_half_sphere,
+void Sampling::Compute_sampling_points(bool only_half_sphere,
                                             double max_tilt,
                                             double min_tilt)
 {
@@ -477,7 +477,7 @@ void XmippSampling::Compute_sampling_points(bool only_half_sphere,
 }
 
 // return 1 if a should go first 0 is equal -1 if before
-int XmippSampling::sort_func(Matrix1D<double> &t, Matrix1D<double> &a)
+int Sampling::sort_func(Matrix1D<double> &t, Matrix1D<double> &a)
 {
     if (YY(t) - 0.000001 > YY(a))
     {
@@ -497,7 +497,7 @@ int XmippSampling::sort_func(Matrix1D<double> &t, Matrix1D<double> &a)
     };
 }
 
-void XmippSampling::fill_edge(Matrix1D<double> starting_point,
+void Sampling::fill_edge(Matrix1D<double> starting_point,
                               Matrix1D<double> ending_point,
                               std::vector <Matrix1D<double> > & edge_vector,
                               bool END_FLAG
@@ -521,7 +521,7 @@ void XmippSampling::fill_edge(Matrix1D<double> starting_point,
         edge_vector.push_back(v_aux);
     }
 }
-void XmippSampling::fill_distance(Matrix1D<double> starting_point,
+void Sampling::fill_distance(Matrix1D<double> starting_point,
                                   Matrix1D<double> ending_point,
                                   std::vector <Matrix1D<double> > &
                                   sampling_points_vector,
@@ -569,7 +569,7 @@ void XmippSampling::fill_distance(Matrix1D<double> starting_point,
 */
 }
 
-void XmippSampling::remove_redundant_points(const int symmetry,
+void Sampling::remove_redundant_points(const int symmetry,
         int sym_order)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);
@@ -1115,7 +1115,7 @@ void XmippSampling::remove_redundant_points(const int symmetry,
 
 }
 
-void XmippSampling::remove_redundant_points_exhaustive(const int symmetry,
+void Sampling::remove_redundant_points_exhaustive(const int symmetry,
                                                        int sym_order, 
                                                        bool only_half_sphere,
                                                        double max_ang)
@@ -1178,7 +1178,7 @@ void XmippSampling::remove_redundant_points_exhaustive(const int symmetry,
 //SINCE read_sym_file does not longer need a file
 //use symmetry functions instead
 /* Create symmetry file----------------------------------------------------- */
-void XmippSampling::create_sym_file(FileName simFp,int symmetry, int sym_order)
+void Sampling::create_sym_file(FileName simFp,int symmetry, int sym_order)
 {
     symmetry_file = simFp + ".sym";
     std::ofstream SymFile;
@@ -1299,7 +1299,7 @@ void XmippSampling::create_sym_file(FileName simFp,int symmetry, int sym_order)
     SL.read_sym_file(symmetry_file);
 
 }
-void XmippSampling::create_asym_unit_file(const FileName &docfilename)
+void Sampling::create_asym_unit_file(const FileName &docfilename)
 {
     MetaData DFvectors, DFangles;
     FileName tmp_filename;
@@ -1344,7 +1344,7 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
     DFangles.write(tmp_filename);
 }
 
- void XmippSampling::save_sampling_file(FileName outfilename,bool write_vectors)
+ void Sampling::save_sampling_file(FileName outfilename,bool write_vectors)
 {
     FileName tmp_filename;
     tmp_filename = outfilename + "_sampling.txt";
@@ -1401,7 +1401,7 @@ void XmippSampling::create_asym_unit_file(const FileName &docfilename)
 }
 
 
-void XmippSampling::read_sampling_file(FileName infilename, bool read_vectors)
+void Sampling::read_sampling_file(FileName infilename, bool read_vectors)
 {
     FileName tmp_filename;
     tmp_filename = infilename + "_sampling.txt";
@@ -1460,7 +1460,7 @@ void XmippSampling::read_sampling_file(FileName infilename, bool read_vectors)
     infile.close();
 }
 
-void XmippSampling::compute_neighbors(bool only_winner)
+void Sampling::compute_neighbors(bool only_winner)
 {
     double rot,  tilt,  psi;
     double rotp, tiltp, psip;
@@ -1599,7 +1599,7 @@ void XmippSampling::compute_neighbors(bool only_winner)
 }
 /** Remove all those points no closer than neighborhood_radius_rad
     */
-void XmippSampling::remove_points_far_away_from_experimental_data()
+void Sampling::remove_points_far_away_from_experimental_data()
 {
     double my_dotProduct;
     Matrix1D<double>  row(3),direction(3);
@@ -1668,7 +1668,7 @@ void XmippSampling::remove_points_far_away_from_experimental_data()
     #endif
     #undef CHIMERA
 }
-void XmippSampling::find_closest_sampling_point(const FileName &FnexperimentalImages,
+void Sampling::find_closest_sampling_point(const FileName &FnexperimentalImages,
                                                 const FileName &output_file_root)
 {
     //read input files
@@ -1677,7 +1677,7 @@ void XmippSampling::find_closest_sampling_point(const FileName &FnexperimentalIm
     find_closest_sampling_point(DFi,output_file_root);
 
 }
-void XmippSampling::find_closest_sampling_point(MetaData &DFi,
+void Sampling::find_closest_sampling_point(MetaData &DFi,
                                                 const FileName &output_file_root)
 {
     double my_dotProduct,my_dotProduct_aux;
@@ -1770,7 +1770,7 @@ void XmippSampling::find_closest_sampling_point(MetaData &DFi,
 #undef DEBUG3
 }
 
-void XmippSampling::find_closest_experimental_point()
+void Sampling::find_closest_experimental_point()
 {
     double my_dotProduct,my_dotProduct_aux;
     Matrix1D<double>  row(3),direction(3);
@@ -1880,7 +1880,7 @@ void XmippSampling::find_closest_experimental_point()
     #undef DEBUG4
 }
 
-void XmippSampling::fill_L_R_repository(void)
+void Sampling::fill_L_R_repository(void)
 {
     Matrix2D<double>  L(4, 4), R(4, 4);
     Matrix2D<double>  Identity(3,3);
@@ -1909,7 +1909,7 @@ void XmippSampling::fill_L_R_repository(void)
 #undef DEBUG3
 }
 
-void XmippSampling::fill_exp_data_projection_direction_by_L_R(
+void Sampling::fill_exp_data_projection_direction_by_L_R(
     const FileName &FnexperimentalImages)
 {
     //read input files
@@ -1918,7 +1918,7 @@ void XmippSampling::fill_exp_data_projection_direction_by_L_R(
     fill_exp_data_projection_direction_by_L_R(DFi);
 }
 
-void XmippSampling::fill_exp_data_projection_direction_by_L_R(MetaData &DFi)
+void Sampling::fill_exp_data_projection_direction_by_L_R(MetaData &DFi)
 {
     std::vector <Matrix1D<double> > exp_data_projection_direction;
     Matrix1D<double>  direction(3);

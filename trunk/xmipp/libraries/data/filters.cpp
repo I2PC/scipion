@@ -1019,7 +1019,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
         plans,
         1);
 
-    XmippFftw local_transformer;
+    FourierTransformer local_transformer;
     MultidimArray<double> rotationalCorr;
     rotationalCorr.resize(2*polarFourierIref.getSampleNoOuterRing()-1);
     local_transformer.setReal(rotationalCorr);
@@ -1903,7 +1903,7 @@ void centerImageRotationally(MultidimArray<double> &I)
     normalizedPolarFourierTransform(I, polarFourierI, true, XSIZE(I)/5,
                                     XSIZE(I)/2,plans);
 
-    XmippFftw local_transformer;
+    FourierTransformer local_transformer;
     MultidimArray<double> rotationalCorr;
     rotationalCorr.resize(2*polarFourierI.getSampleNoOuterRing()-1);
     local_transformer.setReal(rotationalCorr);
@@ -2046,7 +2046,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         Polar< std::complex<double> > polarFourierI;
         normalizedPolarFourierTransform(Iaux, polarFourierI, true, XSIZE(I)/5,
                                         XSIZE(I)/2,plans);
-        XmippFftw local_transformer;
+        FourierTransformer local_transformer;
         MultidimArray<double> rotationalCorr;
         rotationalCorr.resize(2*polarFourierI.getSampleNoOuterRing()-1);
         local_transformer.setReal(rotationalCorr);

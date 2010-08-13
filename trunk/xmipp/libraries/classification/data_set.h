@@ -41,30 +41,30 @@
  */
 
 template<class InClass, class OutClass>
-class xmippCDSet
+class ClassificationDataSet
 {
 public:
-    /// Class of input vectors. Usually a xmippVector (vector of xmippFeature)
+    /// Class of input vectors. Usually a FeatureVector (vector of Feature)
     typedef InClass In;
 
     /// Class of the target. Can be a double, string, unsigned, even a vector ...
     typedef OutClass Out;
 
     /// Training set. Set of vectors (training vectors), probably classified.
-    typedef xmippCTSet<In, Out> TS;
+    typedef ClassificationTrainingSet<In, Out> TS;
 
     /**
      * Constructor.
      * This constructor is empty.
      */
-    xmippCDSet()
+    ClassificationDataSet()
     {};
 
     /**
      * Destructor.
      * The default destructor
      */
-    virtual ~xmippCDSet()
+    virtual ~ClassificationDataSet()
     {};
 
     /**
@@ -80,7 +80,7 @@ public:
      * This method returns an unsigned integer that would correspond to
      * the output neuron, the output codevector, or anything similar.
      * If it makes no sense, it should be declared as private. Although
-     * it means many different things, it´s included here to have an uniform
+     * it means many different things, itï¿½s included here to have an uniform
      * representation
      * Parameter: _in  input vector to test.
      * @return     The result of classification.

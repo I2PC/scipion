@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippCTVectors.cc
+// ClassicTrainingVectors.cc
 //-----------------------------------------------------------------------------
 
 #include <cmath>
@@ -34,7 +34,7 @@
 
 
 /**
- * TrainingSet for xmippCTVectors
+ * TrainingSet for ClassicTrainingVectors
  */
 
 
@@ -43,7 +43,7 @@
  * Parameter: _is  The input stream
  * @exception  runtime_error  If there are problems with the stream
  */
-xmippCTVectors::xmippCTVectors(std::istream & _is)
+ClassicTrainingVectors::ClassicTrainingVectors(std::istream & _is)
 {
     try
     {
@@ -61,10 +61,10 @@ xmippCTVectors::xmippCTVectors(std::istream & _is)
 
 
 /**
- * Copy Constructor. Useful when returning a xmippCTVectors Class.
- * Parameter: op1 xmippCTVectors
+ * Copy Constructor. Useful when returning a ClassicTrainingVectors Class.
+ * Parameter: op1 ClassicTrainingVectors
  */
-xmippCTVectors::xmippCTVectors(const xmippCTVectors &op1)
+ClassicTrainingVectors::ClassicTrainingVectors(const ClassicTrainingVectors &op1)
 {
 
     calibrated(op1.calibrated());
@@ -85,7 +85,7 @@ xmippCTVectors::xmippCTVectors(const xmippCTVectors &op1)
 /**
  * Returns amount of features
  */
-unsigned xmippCTVectors::featureSize() const
+unsigned ClassicTrainingVectors::featureSize() const
 {
     return itemAt(0).size();
 };
@@ -93,7 +93,7 @@ unsigned xmippCTVectors::featureSize() const
 /**
  * Returns dimension (the same as above)
  */
-unsigned xmippCTVectors::dimension() const
+unsigned ClassicTrainingVectors::dimension() const
 {
     return itemAt(0).size();
 };
@@ -101,9 +101,9 @@ unsigned xmippCTVectors::dimension() const
 /**
  * Clears the training set
  */
-void xmippCTVectors::clear()
+void ClassicTrainingVectors::clear()
 {
-    xmippCTSet<xmippVector, xmippLabel>::clear();
+    ClassificationTrainingSet<FeatureVector, Label>::clear();
     varStats.clear();
     normalized = false;
 };
@@ -113,10 +113,10 @@ void xmippCTVectors::clear()
  * Parameter: _os The output stream
  * Parameter: _ts  The training set to be printed
  */
-void xmippCTVectors::printSelf(std::ostream& _os) const
+void ClassicTrainingVectors::printSelf(std::ostream& _os) const
 {
     _os << dimension() << " " << theItems.size() << std::endl;
-    xmippCTSet<xmippVector, xmippLabel>::printSelf(_os);
+    ClassificationTrainingSet<FeatureVector, Label>::printSelf(_os);
 };
 
 /**
@@ -125,7 +125,7 @@ void xmippCTVectors::printSelf(std::ostream& _os) const
  * Parameter: _ts  The training set to be read
  * @exception  runtime_error  If there are problems with the stream
  */
-void xmippCTVectors::readSelf(std::istream& _is)
+void ClassicTrainingVectors::readSelf(std::istream& _is)
 {
 #ifndef _NO_EXCEPTION
     try
@@ -152,11 +152,11 @@ void xmippCTVectors::readSelf(std::istream& _is)
 
         for (int i = 0; i < size; i++)
         {
-            std::vector<xmippFeature> v;
+            std::vector<Feature> v;
             v.resize(dim);
             for (int j = 0; j < dim; j++)
             {
-                xmippFeature var;
+                Feature var;
                 _is >> var;
                 v[j] = var;
             }
@@ -182,7 +182,7 @@ void xmippCTVectors::readSelf(std::istream& _is)
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void xmippCTVectors::saveObject(std::ostream& _os) const
+void ClassicTrainingVectors::saveObject(std::ostream& _os) const
 {
     _os << dimension() << std::endl;
     _os << normalized << std::endl;
@@ -192,7 +192,7 @@ void xmippCTVectors::saveObject(std::ostream& _os) const
             _os << varStats[i].mean << std::endl;
             _os << varStats[i].sd << std::endl;
         }
-    xmippCTSet<xmippVector, xmippLabel>::saveObject(_os);
+    ClassificationTrainingSet<FeatureVector, Label>::saveObject(_os);
 };
 
 
@@ -201,7 +201,7 @@ void xmippCTVectors::saveObject(std::ostream& _os) const
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void xmippCTVectors::loadObject(std::istream& _is)
+void ClassicTrainingVectors::loadObject(std::istream& _is)
 {
     clear();
     int dim;
@@ -215,7 +215,7 @@ void xmippCTVectors::loadObject(std::istream& _is)
         _is >> varStats[i].mean;
         _is >> varStats[i].sd;
     }
-    xmippCTSet<xmippVector, xmippLabel>::loadObject((std::istream&)_is);
+    ClassificationTrainingSet<FeatureVector, Label>::loadObject((std::istream&)_is);
 };
 
 
@@ -225,7 +225,7 @@ void xmippCTVectors::loadObject(std::istream& _is)
  * Parameter: _var variable index
  */
 
-void xmippCTVectors::deleteVariable(int _var)
+void ClassicTrainingVectors::deleteVariable(int _var)
 {
     for (unsigned int it = 0; it < size(); it++)
         itemAt(it).erase(itemAt(it).begin() + _var);
@@ -234,9 +234,9 @@ void xmippCTVectors::deleteVariable(int _var)
 
 /**
  * Operator "="
- * Parameter: op1 xmippCTVectors
+ * Parameter: op1 ClassicTrainingVectors
  */
-xmippCTVectors& xmippCTVectors::operator= (const xmippCTVectors &op1)
+ClassicTrainingVectors& ClassicTrainingVectors::operator= (const ClassicTrainingVectors &op1)
 {
 
     // This avoids memory leakage in assignments like v=v
@@ -259,11 +259,11 @@ xmippCTVectors& xmippCTVectors::operator= (const xmippCTVectors &op1)
 
 
 /** Copy the structure from another TS but leave it empty.
-* Parameter: _ts xmippCTVectors
+* Parameter: _ts ClassicTrainingVectors
 * @note  Just the structure is copied, not the items or targets.
 */
 
-bool xmippCTVectors::copyStructure(xmippCTVectors& _ts)
+bool ClassicTrainingVectors::copyStructure(ClassicTrainingVectors& _ts)
 {
 
     // check if set is just initialized but empty
@@ -276,12 +276,12 @@ bool xmippCTVectors::copyStructure(xmippCTVectors& _ts)
 }
 
 /** Copy a row from an identical TS.
-* Parameter: _ts xmippCTVectors
+* Parameter: _ts ClassicTrainingVectors
 * Parameter: _idx   row to be copied
 * @note  No complete validation is done.
 */
 
-bool xmippCTVectors::insertRowFrom(xmippCTVectors& _ts, unsigned int _idx)
+bool ClassicTrainingVectors::insertRowFrom(ClassicTrainingVectors& _ts, unsigned int _idx)
 {
 
     // just some validation, but not complete
@@ -301,7 +301,7 @@ bool xmippCTVectors::insertRowFrom(xmippCTVectors& _ts, unsigned int _idx)
 /** Delete a row from a TS.
 * Parameter: _idx   row to be deleted
 */
-bool xmippCTVectors::deleteRow(unsigned int _idx)
+bool ClassicTrainingVectors::deleteRow(unsigned int _idx)
 {
     return remove(_idx);
 }
@@ -311,7 +311,7 @@ bool xmippCTVectors::deleteRow(unsigned int _idx)
  * Normalize all features in the training set
  * Parameter: _i  The index to the feature
  */
-void xmippCTVectors::normalizeFeature(unsigned _i)
+void ClassicTrainingVectors::normalizeFeature(unsigned _i)
 {
     using namespace std;
 
@@ -325,7 +325,7 @@ void xmippCTVectors::normalizeFeature(unsigned _i)
     }
 
     // first calculates the mean
-    xmippFeature mean = 0;
+    Feature mean = 0;
     int nn = 0;
     for (int it = 0; it < size(); it++)
     {
@@ -336,16 +336,16 @@ void xmippCTVectors::normalizeFeature(unsigned _i)
         }
 
     }
-    mean /= (xmippFeature) nn;
+    mean /= (Feature) nn;
 
     // Then calculates SD
-    xmippFeature sd = 0;
+    Feature sd = 0;
     for (int it = 0; it < size(); it++)
     {
         if (!isnan(itemAt(it)[_i]))
             sd += (itemAt(it)[_i] - mean) * (itemAt(it)[_i] - mean);
     }
-    sd = sqrt(sd / (xmippFeature)(nn - 1));
+    sd = sqrt(sd / (Feature)(nn - 1));
 
     // Now normalize the variable
     if (sd != 0)
@@ -366,7 +366,7 @@ void xmippCTVectors::normalizeFeature(unsigned _i)
  * Normalize all features in the training set
  */
 
-void xmippCTVectors::normalize()
+void ClassicTrainingVectors::normalize()
 {
     varStats.clear();
     varStats.resize(itemAt(0).size());
@@ -380,7 +380,7 @@ void xmippCTVectors::normalize()
  * UnNormalize all features in the training set
  */
 
-void xmippCTVectors::unNormalize()
+void ClassicTrainingVectors::unNormalize()
 {
     using namespace std;
     for (unsigned it = 0; it < size(); it++)
@@ -400,7 +400,7 @@ void xmippCTVectors::unNormalize()
  * returns normalized variable in the original scale
  */
 
-double xmippCTVectors::getUnormalizedVar(unsigned _item, unsigned _var) const
+double ClassicTrainingVectors::getUnormalizedVar(unsigned _item, unsigned _var) const
 {
     using namespace std;
     if (!normalized)
@@ -435,7 +435,7 @@ double xmippCTVectors::getUnormalizedVar(unsigned _item, unsigned _var) const
  * Returns TRUE if recordset is normalized.
  */
 
-bool xmippCTVectors::isNormalized() const
+bool ClassicTrainingVectors::isNormalized() const
 {
     return normalized;
 }
@@ -444,7 +444,7 @@ bool xmippCTVectors::isNormalized() const
 /**
   * Returns a const reference to the normalization vector
 */
-/*  const std::vector<xmippCTVectors::statsStruct>& xmippCTVectors::getNormalizationInfo() const {
+/*  const std::vector<ClassicTrainingVectors::statsStruct>& ClassicTrainingVectors::getNormalizationInfo() const {
    return varStats;
   };*/
 
@@ -453,7 +453,7 @@ bool xmippCTVectors::isNormalized() const
  * Calcualtes the average and SD of a feature in the training set
  * Parameter: _i  The index to the feature
  */
-void xmippCTVectors::getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeature& _sd)
+void ClassicTrainingVectors::getFeatureStats(unsigned _i, Feature& _mean, Feature& _sd)
 {
     using namespace std;
 
@@ -477,7 +477,7 @@ void xmippCTVectors::getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeat
         }
 
     }
-    _mean /= (xmippFeature) nn;
+    _mean /= (Feature) nn;
 
     // Then calculates SD
     _sd = 0;
@@ -486,16 +486,16 @@ void xmippCTVectors::getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeat
         if (!isnan(itemAt(it)[_i]))
             _sd += (itemAt(it)[_i] - _mean) * (itemAt(it)[_i] - _mean);
     }
-    _sd = sqrt(_sd / (xmippFeature)(nn - 1));
+    _sd = sqrt(_sd / (Feature)(nn - 1));
 }
 
 /**
  * Returns a vector containing the average (item 0) and SD (item 1)
  */
 
-xmippCTVectors xmippCTVectors::getStatVector()
+ClassicTrainingVectors ClassicTrainingVectors::getStatVector()
 {
-    xmippCTVectors myStatVector;
+    ClassicTrainingVectors myStatVector;
     myStatVector.theItems.resize(2);
     myStatVector.theItems[0].resize(itemAt(0).size(), 0);
     myStatVector.theItems[1].resize(itemAt(0).size(), 0);

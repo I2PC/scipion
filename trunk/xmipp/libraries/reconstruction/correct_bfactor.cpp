@@ -217,7 +217,7 @@ void Prog_correct_bfactor_prm::bfactor_correction(MultidimArray< double > &m1,
     const FileName &fn_guinier)
 {
 	MultidimArray< std::complex< double > > FT1, FT2;
-    XmippFftw transformer;
+    FourierTransformer transformer;
     double slope, intercept;
     std::vector<fit_point2D>  guinierin, guinierweighted, guinierref, guinierdiff;
     std::vector<double> snr;

@@ -192,7 +192,7 @@ main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    xmippCTVectors ts(0, true);
+    ClassicTrainingVectors ts(0, true);
 
     std::cout << std::endl << "Reading data file " << fn_in << "....." << std::endl;
     inStream >> ts;
@@ -209,7 +209,7 @@ main(int argc, char** argv)
             ts.normalize();        // Normalize input data
         }
 
-        xmippMap* myMap;
+        ClassificationMap* myMap;
 
         if (cb_in != "")
         {
@@ -220,16 +220,16 @@ main(int argc, char** argv)
                 std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                 exit(EXIT_FAILURE);
             }
-            myMap = new xmippMap(codeStream);
+            myMap = new ClassificationMap(codeStream);
         }
         else
-            myMap = new xmippMap(layout, xdim, ydim, ts);
+            myMap = new ClassificationMap(layout, xdim, ydim, ts);
 
-        xmippBatchSOM *thisSOM;
+        BatchSOM *thisSOM;
         Descent radius(radius_0, 1);            // radius decreases linearly to 1
-        thisSOM = new xmippBatchSOM(radius, iter);    // Creates BatchSOM Algorithm
+        thisSOM = new BatchSOM(radius, iter);    // Creates BatchSOM Algorithm
 
-        xmippTextualListener myListener;     // Define the listener class
+        TextualListener myListener;     // Define the listener class
         myListener.setVerbosity() = verb;     // Set verbosity level
         thisSOM->setListener(&myListener);        // Set Listener
 

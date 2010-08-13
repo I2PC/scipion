@@ -910,7 +910,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
     MultidimArray<int>     mask3D;
     double                 avg, dummy, in, out;
     int                    dim;
-    XmippSampling          locsampling;
+    Sampling          locsampling;
 
     // Use local sampling because of symmask
     if (!locsampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))

@@ -42,7 +42,7 @@ void Prog_micrograph_phase_flipping::run(void)
     M_in.read(fn_in);
     
     // Perform the Fourier transform
-    XmippFftw transformer;
+    FourierTransformer transformer;
     MultidimArray< std::complex<double> > M_inFourier;
     transformer.FourierTransform(M_in(),M_inFourier,false);
 

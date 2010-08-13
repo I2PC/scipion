@@ -49,7 +49,7 @@
  * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
-xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2);
+Feature eDist(const FeatureVector& _v1, const FeatureVector& _v2);
 
 //-----------------------------------------------------------------------------
 
@@ -59,37 +59,37 @@ xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2);
  * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
-xmippFeature mDist(const xmippVector& _v1, const xmippVector& _v2);
+Feature mDist(const FeatureVector& _v1, const FeatureVector& _v2);
 
 //-----------------------------------------------------------------------------
 
 /**
  * This class defines an abstract interface for distances
  * Type T must have all arithmetic operations, specially - and conversion
- * to xmippFeature
+ * to Feature
  */
-class xmippDistance
+class Distance
 {
 public:
-    xmippDistance()
+    Distance()
     {}
-    virtual ~xmippDistance()
+    virtual ~Distance()
     {}
 
     /// Returns the distance between the two vectors
-    virtual xmippFeature operator()(const xmippVector& _v1,
-                                    const xmippVector& _v2) = 0;
+    virtual Feature operator()(const FeatureVector& _v1,
+                                    const FeatureVector& _v2) = 0;
 };
 
 //-----------------------------------------------------------------------------
 
 ///Euclidean distance class
-class xmippEDistance: public xmippDistance
+class EuclideanDistance: public Distance
 {
 public:
-    xmippEDistance(): xmippDistance()
+    EuclideanDistance(): Distance()
     {}
-    ~xmippEDistance()
+    ~EuclideanDistance()
     {}
 
     /**
@@ -98,7 +98,7 @@ public:
      * Parameter: _v2  Second argument
      * @exception DifferentSize if _v1 and _v2  hasn't the same size
      */
-    xmippFeature operator()(const xmippVector& _v1, const xmippVector& _v2)
+    Feature operator()(const FeatureVector& _v1, const FeatureVector& _v2)
     {
         return eDist(_v1, _v2);
     }
@@ -107,12 +107,12 @@ public:
 //-----------------------------------------------------------------------------
 
 ///Manhattan distance
-class xmippMDistance: public xmippDistance
+class ManhattanDistance: public Distance
 {
 public:
-    xmippMDistance(): xmippDistance()
+    ManhattanDistance(): Distance()
     {}
-    ~xmippMDistance()
+    ~ManhattanDistance()
     {}
 
     /**
@@ -121,7 +121,7 @@ public:
      * Parameter: _v2  Second argument
      * @exception DifferentSize if _v1 and _v2  hasn't the same size
      */
-    xmippFeature operator()(const xmippVector& _v1, const xmippVector& _v2)
+    Feature operator()(const FeatureVector& _v1, const FeatureVector& _v2)
     {
         return mDist(_v1, _v2);
     }
@@ -131,10 +131,10 @@ public:
 * Norm: norm of a vector (euclidean distance to origin)
 *
 */
-class xmippNorm
+class VectorNorm
 {
 public:
-    xmippFeature operator()(const xmippVector& v);
+    Feature operator()(const FeatureVector& v);
 };
 //@}
 #endif

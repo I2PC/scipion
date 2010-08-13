@@ -110,7 +110,7 @@ public:
     /** vector with stddevs for all reference projections */
     double *stddev_ref, *stddev_img;
     /** sampling object */
-    XmippSampling mysampling;
+    Sampling mysampling;
     /** Flag whether to loop from low to high or from high to low
      * through the references */
     bool loop_forward_refs;

@@ -35,7 +35,7 @@
 #include <vector>
 
 /**@defgroup VQforProjections Vector Quantization for Projections
-   @ingroup ReconsLibraryPrograms */
+   @ingroup ClassificationLibrary */
 //@{
 /** VQProjection class */
 class VQProjection {
@@ -68,7 +68,7 @@ public:
     MultidimArray<double> rotationalCorr;
 
     // Local transformer for the best rotation
-    XmippFftw local_transformer;
+    FourierTransformer local_transformer;
     
     // Plans for the best_rotation
     Polar_fftw_plans *plans;

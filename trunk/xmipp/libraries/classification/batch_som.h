@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippBatchSOM.hh
+// BatchSOM.hh
 // Implements Kohonen Self-Organizing Feature Maps by using Batch SOM training
 //-----------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@
 /**
  * This class trains a Kohonen's Self Organizing Map using Batch SOM.
  */
-class xmippBatchSOM : public xmippSOM
+class BatchSOM : public SOM
 {
 public:
 
@@ -51,21 +51,21 @@ public:
      * Parameter: _radius     How is gonna decrease the radius of neighborhood
      * Parameter: _nSteps     Number of training steps
      */
-    xmippBatchSOM(Descent& _radius,  unsigned long _nSteps)
-            : xmippSOM(_radius, _radius, BUBBLE, _nSteps)
+    BatchSOM(Descent& _radius,  unsigned long _nSteps)
+            : SOM(_radius, _radius, BUBBLE, _nSteps)
     {};
 
     /**
      * Construct a BatchSOM from the code vectors in a stream
      * Parameter: _is  The stream
      */
-    xmippBatchSOM(std::istream& _is);
+    BatchSOM(std::istream& _is);
 
 
     /**
      * Virtual destructor
      */
-    virtual ~xmippBatchSOM()
+    virtual ~BatchSOM()
     {};
 
     /**
@@ -73,14 +73,14 @@ public:
      * Parameter: _som  The som to train
      * Parameter: _ts   The training set
      */
-    virtual void train(xmippMap& _som, const xmippCTVectors& _ts) const;
+    virtual void train(ClassificationMap& _som, const ClassicTrainingVectors& _ts) const;
 
     /**
      * Trains the SOM
      * Parameter: _som  The som to train
      * Parameter: _ts   The training set
      */
-    // virtual void train (xmippMap& _som, const TS& _ts) const {};
+    // virtual void train (ClassificationMap& _som, const TS& _ts) const {};
 };
 
 //@}

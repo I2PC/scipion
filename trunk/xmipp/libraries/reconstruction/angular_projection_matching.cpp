@@ -314,7 +314,7 @@ int Prog_angular_projection_matching_prm::getCurrentReference(int refno,
     MultidimArray<double>         Maux;
     Polar<double>                 P;
     Polar<std::complex <double> > fP;
-    XmippFftw                     local_transformer;
+    FourierTransformer                     local_transformer;
 
     // Image was not stored yet: read it from disc and store
     fnt.compose(fn_ref,refno+1,"xmp");
@@ -407,7 +407,7 @@ void * threadRotationallyAlignOneImage( void * data )
     double                      mean, stddev;
     Polar<double>               P;
     Polar<std::complex <double> > fP,fPm;
-    XmippFftw                   local_transformer;
+    FourierTransformer                   local_transformer;
     Polar_fftw_plans            local_plans;
     int                         imgno = *this_image;
 

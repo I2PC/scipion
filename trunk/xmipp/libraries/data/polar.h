@@ -52,7 +52,7 @@
 /** Structure for fftw plans */
 typedef struct Polar_Fftw_Plans
 {
-    std::vector<XmippFftw>          transformers;
+    std::vector<FourierTransformer>          transformers;
     std::vector<MultidimArray<double> >  arrays;
 }
 Polar_fftw_plans;
@@ -750,7 +750,7 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
  * 
  * @code
  * MultidimArray<double> angles, corr;
- * XmippFftw local_transformer;
+ * FourierTransformer local_transformer;
  * Polar_fftw_plans plans;
  * Polar<std::complex<double> > F1, F2;
  * 
@@ -772,7 +772,7 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
                            const Polar<std::complex<double> > &M2,
                            MultidimArray<double> &angles,
-                           XmippFftw &local_transformer);
+                           FourierTransformer &local_transformer);
 
 /** Compute a normalized polar Fourier transform of the input image.
     If plans is NULL, they are computed and returned. */
@@ -783,7 +783,7 @@ void normalizedPolarFourierTransform(const MultidimArray<double> &in,
 
 /** Best rotation between two normalized polar Fourier transforms. */
 double best_rotation(const Polar< std::complex<double> > &I1,
-                     const Polar< std::complex<double> > &I2, XmippFftw &local_transformer);
+                     const Polar< std::complex<double> > &I2, FourierTransformer &local_transformer);
 
 /** Align I2 rotationally to I1 */
 void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,

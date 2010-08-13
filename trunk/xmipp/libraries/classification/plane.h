@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 //-----------------------------------------------------------------------------
-// xmippPlanes.hh
+// Planes.hh
 //-----------------------------------------------------------------------------
 
 #ifndef XMIPPPLANES_H
@@ -37,22 +37,22 @@
    @ingroup ClassificationLibrary */
 //@{
 /// Alias for Plane Type (it uses a SOM map)
-typedef xmippMap planeType;
+typedef ClassificationMap planeType;
 
 /**
  * This class calculates the influence of each independent variable
  * in the SOM. It is used for visualizing the effect of each vector component on
  * the Self-Organizing Map.
  */
-class xmippPlanes
+class Planes
 {
 public:
-    typedef xmippMap In;
+    typedef ClassificationMap In;
     typedef planeType Out;
 
     /** Planes default constructor
     */
-    xmippPlanes()
+    Planes()
     {};
 
     /** getPlane: gets the "plane" (a map representing the effect of the

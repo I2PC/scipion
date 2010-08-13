@@ -37,20 +37,20 @@
  * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
-xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2)
+Feature eDist(const FeatureVector& _v1, const FeatureVector& _v2)
 {
     if (_v1.size() != _v2.size())
         throw std::runtime_error("vector of different size in eDist");
 
     double dist = 0;
-    xmippVector::const_iterator i, j;
+    FeatureVector::const_iterator i, j;
     for (i = _v1.begin(), j = _v2.begin() ; i < _v1.end(); i++, j++)
     {
         double tmp = (double)(*i) - (double)(*j);
         dist += tmp * tmp;
     }
 
-    return (xmippFeature) sqrt(dist);
+    return (Feature) sqrt(dist);
 };
 
 //-----------------------------------------------------------------------------
@@ -61,29 +61,29 @@ xmippFeature eDist(const xmippVector& _v1, const xmippVector& _v2)
  * Parameter: _v2  Second argument
  * @exception DifferentSize if _v1 and _v2  hasn't the same size
  */
-xmippFeature mDist(const xmippVector& _v1, const xmippVector& _v2)
+Feature mDist(const FeatureVector& _v1, const FeatureVector& _v2)
 {
     if (_v1.size() != _v2.size())
         throw std::runtime_error("vector of different size in mDist");
 
     double dist = 0;
-    xmippVector::const_iterator i, j;
+    FeatureVector::const_iterator i, j;
     for (i = _v1.begin(), j = _v2.begin() ; i < _v1.end(); i++, j++)
         dist += fabs(((double)(*i) - (double)(*j)));
 
-    return (xmippFeature) dist;
+    return (Feature) dist;
 };
 
 //-----------------------------------------------------------------------------
 // Norm: norm of a vector (euclidean distance to origin)
 //-----------------------------------------------------------------------------
 
-xmippFeature xmippNorm::operator()(const xmippVector& v)
+Feature VectorNorm::operator()(const FeatureVector& v)
 {
     double sum = 0.0;
-    for (xmippVector::const_iterator i = v.begin(); i != v.end(); i++)
+    for (FeatureVector::const_iterator i = v.begin(); i != v.end(); i++)
         sum += (double)(*i) * (double)(*i);
-    return (xmippFeature) sqrt(sum);
+    return (Feature) sqrt(sum);
 }
 
 //-----------------------------------------------------------------------------

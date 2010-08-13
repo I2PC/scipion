@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 //-----------------------------------------------------------------------------
-// xmippFKCN.hh
+// FuzzyKohonenCMeans.hh
 // Fuzzy Kohonen Clustering Network algorithm
 //-----------------------------------------------------------------------------
 
@@ -44,7 +44,7 @@
  *  an unsupervised clustering algorithm that is a combination of Fuzzy c-means
  *  and Kohonen SOM.
 */
-class xmippFKCN:  public xmippFCMeans
+class FuzzyKohonenCMeans:  public FuzzyCMeans
 {
 
 public:
@@ -55,15 +55,15 @@ public:
      * Parameter: _epsilon  Stopping criterion
      * Parameter: _epochs Number of epochs or iterations
     */
-    xmippFKCN(double _m, double _epsilon, unsigned _epochs)
-            : xmippFCMeans(_m, _epsilon, _epochs)
+    FuzzyKohonenCMeans(double _m, double _epsilon, unsigned _epochs)
+            : FuzzyCMeans(_m, _epsilon, _epochs)
     {
         setID() = "Fuzzy Kohonen Clustering Network";
     };
 
 
     /// Virtual destructor
-    virtual ~xmippFKCN()
+    virtual ~FuzzyKohonenCMeans()
     {};
 
     /**
@@ -71,7 +71,7 @@ public:
      * Parameter: _xmippDS Data structure to train, a codeBook in this case
      * Parameter: _examples  A training set with the training examples
      */
-    virtual void train(xmippFCB& _xmippDS,
+    virtual void train(FuzzyCodeBook& _xmippDS,
                        const TS& _examples) const;
 
 };

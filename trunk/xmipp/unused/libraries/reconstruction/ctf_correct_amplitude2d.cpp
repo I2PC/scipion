@@ -63,7 +63,7 @@ void CorrectAmplitude2DParams::produceSideInfo()
 void CorrectAmplitude2DParams::run()
 {
     MultidimArray< std::complex<double> > fft;
-    XmippFftw transformer;
+    FourierTransformer transformer;
     std::cerr << "Correcting CTF amplitude in 2D ...\n";
     int istep = CEIL((double)ctfdat.size() / 60.0);
     init_progress_bar(ctfdat.size());

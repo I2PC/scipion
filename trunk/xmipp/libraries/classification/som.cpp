@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippSOM.cc
+// SOM.cc
 // Implements Kohonen Self-Organizing Feature Maps
 //-----------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@
  * Construct a SOM from the code vectors in a stream
  * Parameter: _is  The stream
  */
-xmippSOM::xmippSOM(std::istream& _is): xmippBaseAlgo<xmippMap>()
+SOM::SOM(std::istream& _is): ClassificationAlgorithm<ClassificationMap>()
 {
     readSelf(_is);
 };
@@ -44,7 +44,7 @@ xmippSOM::xmippSOM(std::istream& _is): xmippBaseAlgo<xmippMap>()
  * Sets the alpha function
  * Parameter: _alpha  alpha(t)
  */
-void xmippSOM::alpha(Descent _alpha)
+void SOM::alpha(Descent _alpha)
 {
     somAlpha = _alpha;
 };
@@ -53,7 +53,7 @@ void xmippSOM::alpha(Descent _alpha)
  * Sets the radius function
  * Parameter: _radius  radius(t)
  */
-void xmippSOM::radius(Descent _radius)
+void SOM::radius(Descent _radius)
 {
     somRadius = _radius;
 };
@@ -62,7 +62,7 @@ void xmippSOM::radius(Descent _radius)
  * Sets the number of training steps
  * Parameter: _nSteps  Number of training steps
  */
-void xmippSOM::nSteps(const unsigned long& _nSteps)
+void SOM::nSteps(const unsigned long& _nSteps)
 {
     somNSteps = _nSteps;
 };
@@ -73,7 +73,7 @@ void xmippSOM::nSteps(const unsigned long& _nSteps)
  * Parameter: _som  The som to train
  * Parameter: _ts   The training set
  */
-void xmippSOM::train(xmippMap& _som, xmippCTVectors& _ts) const
+void SOM::train(ClassificationMap& _som, ClassicTrainingVectors& _ts) const
 {
     unsigned long t = 0;
 
@@ -142,7 +142,7 @@ void xmippSOM::train(xmippMap& _som, xmippCTVectors& _ts) const
  * Parameter: _som        The som to test
  * Parameter: _examples   The training set of examples
  */
-double xmippSOM::test(const xmippMap& _som, const TS& _examples) const
+double SOM::test(const ClassificationMap& _som, const TS& _examples) const
 {
 
     // Defines verbosity level
@@ -178,7 +178,7 @@ double xmippSOM::test(const xmippMap& _som, const TS& _examples) const
 * Clears the Algorithm
 */
 
-void xmippSOM::clear()
+void SOM::clear()
 {
     somNeigh = GAUSSIAN;
     somNSteps = 0;
@@ -189,7 +189,7 @@ void xmippSOM::clear()
 * Standard output for a SOM algorithm
 * Parameter: _os The output stream
 */
-void xmippSOM::printSelf(std::ostream& _os) const
+void SOM::printSelf(std::ostream& _os) const
 {
     _os << (int) somNeigh << std::endl;
     _os << somNSteps << std::endl;
@@ -201,7 +201,7 @@ void xmippSOM::printSelf(std::ostream& _os) const
 * Standard input for a som algorithm
 * Parameter: _is The input stream
 */
-void xmippSOM::readSelf(std::istream& _is)
+void SOM::readSelf(std::istream& _is)
 {
     clear();
     try
@@ -225,22 +225,22 @@ void xmippSOM::readSelf(std::istream& _is)
 
 
 /**
- * Saves the xmippSOM class into a stream.
+ * Saves the SOM class into a stream.
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void xmippSOM::saveObject(std::ostream& _os) const
+void SOM::saveObject(std::ostream& _os) const
 {
     printSelf(_os);
 }
 
 
 /**
- * Loads the xmippSOM class from a stream.
+ * Loads the SOM class from a stream.
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void xmippSOM::loadObject(std::istream& _is)
+void SOM::loadObject(std::istream& _is)
 {
     readSelf(_is);
 }

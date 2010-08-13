@@ -45,7 +45,7 @@
     approach outlined here, especially the code implementation, is based on the work
     of Baumgardner (1995).
 */
-class XmippSampling
+class Sampling
 {
 public:
     /** Type to define a vertex */
@@ -118,7 +118,7 @@ public:
     std::vector <Matrix1D<double> > no_redundant_sampling_points_angles;
 
     /** Default constructor. sampling in degrees*/
-    XmippSampling();
+    Sampling();
 
     /** symmetry file */
     FileName symmetry_file;

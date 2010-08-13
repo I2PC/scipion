@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippTStudentKerDenSOM.cc
+// TStudentKerDenSOM.cc
 // Implements Smoothly Distributed Kernel Probability Density Estimator Self-Organizing Map
 // Uses a t-student Kernel Function.
 //-----------------------------------------------------------------------------
@@ -42,7 +42,7 @@
  * Parameter: _update True if uses _som as starting point for training.
  * Parameter: _sigma If update = true, uses this sigma for the training.
  */
-void xmippTStudentKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName& _fn, bool _update, double _sigma)
+void TStudentKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn, bool _update, double _sigma)
 {
     // Saves algorithm information in fn file
     FileName tmpN1 = _fn.c_str() + (std::string) ".LCurveInfo";
@@ -244,7 +244,7 @@ void xmippTStudentKerDenSOM::train(xmippFuzzyMap& _som, TS& _examples, FileName&
 /**
  * Remake U (Membership)
  */
-void xmippTStudentKerDenSOM::reMakeU(xmippFuzzyMap* _som, const TS* _examples, const double& _sigma)
+void TStudentKerDenSOM::reMakeU(FuzzyMap* _som, const TS* _examples, const double& _sigma)
 {
 
     // Create auxiliar stuff
@@ -273,7 +273,7 @@ void xmippTStudentKerDenSOM::reMakeU(xmippFuzzyMap* _som, const TS* _examples, c
             tmpD[i] = t3;
         }
         for (j = 0; j < numNeurons; j ++)
-            _som->memb[k][j] = (xmippFeature)(tmpD[j] / auxProd);
+            _som->memb[k][j] = (Feature)(tmpD[j] / auxProd);
 
     } // for k
 
@@ -285,7 +285,7 @@ void xmippTStudentKerDenSOM::reMakeU(xmippFuzzyMap* _som, const TS* _examples, c
 /**
  * Update the U (Membership)
  */
-double xmippTStudentKerDenSOM::updateU(xmippFuzzyMap* _som, const TS* _examples, const double& _sigma, double& _alpha)
+double TStudentKerDenSOM::updateU(FuzzyMap* _som, const TS* _examples, const double& _sigma, double& _alpha)
 {
 
     // Create auxiliar stuff
@@ -324,7 +324,7 @@ double xmippTStudentKerDenSOM::updateU(xmippFuzzyMap* _som, const TS* _examples,
         {
             t3 = 1 + tmpD1[j] / t1;
             double tmp =  tmpD[j] / (auxProd * t3);
-            _som->memb[k][j] = (xmippFeature) tmp;
+            _som->memb[k][j] = (Feature) tmp;
             _alpha += tmp * tmpD1[j];
         }
 
@@ -339,7 +339,7 @@ double xmippTStudentKerDenSOM::updateU(xmippFuzzyMap* _som, const TS* _examples,
 //-----------------------------------------------------------------------------
 
 // Estimate Sigma part II
-double xmippTStudentKerDenSOM::updateSigmaII(xmippFuzzyMap* _som, const TS* _examples, const double& _reg, const double& _alpha)
+double TStudentKerDenSOM::updateSigmaII(FuzzyMap* _som, const TS* _examples, const double& _reg, const double& _alpha)
 {
     int vv, cc, j;
 
@@ -369,7 +369,7 @@ double xmippTStudentKerDenSOM::updateSigmaII(xmippFuzzyMap* _som, const TS* _exa
 /**
  * Estimate the PD (Method 1: Using the code vectors)
  */
-double xmippTStudentKerDenSOM::codeDens(const xmippFuzzyMap* _som, const xmippVector* _example, double _sigma) const
+double TStudentKerDenSOM::codeDens(const FuzzyMap* _som, const FeatureVector* _example, double _sigma) const
 {
     unsigned j, cc;
     double t = 0, s = 0, d1, e1;
@@ -394,7 +394,7 @@ double xmippTStudentKerDenSOM::codeDens(const xmippFuzzyMap* _som, const xmippVe
 /**
  * Estimate the PD (Method 2: Using the data)
  */
-double xmippTStudentKerDenSOM::dataDens(const TS* _examples, const xmippVector* _example, double _sigma) const
+double TStudentKerDenSOM::dataDens(const TS* _examples, const FeatureVector* _example, double _sigma) const
 {
     unsigned j, vv;
     double t = 0, s = 0, d1, e1;
@@ -420,7 +420,7 @@ double xmippTStudentKerDenSOM::dataDens(const TS* _examples, const xmippVector* 
  * Determines the functional value
  * Returns the likelihood and penalty parts of the functional
  */
-double xmippTStudentKerDenSOM::functional(const TS* _examples, const xmippFuzzyMap* _som, double _sigma, double _reg, double& _likelihood, double& _penalty)
+double TStudentKerDenSOM::functional(const TS* _examples, const FuzzyMap* _som, double _sigma, double _reg, double& _likelihood, double& _penalty)
 {
     unsigned j, vv, cc;
     double t;

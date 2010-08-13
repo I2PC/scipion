@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippFuzzySOM.hh
+// FuzzySOM.hh
 // Implements Smoothly Distributed Fuzzy c-means Self-Organizing Map
 //-----------------------------------------------------------------------------
 
@@ -40,7 +40,7 @@
 /**
  * This class trains a Smoothly Distributed Fuzzy c-Means Self Organizing Map
  */
-class xmippFuzzySOM : public xmippBaseAlgo<xmippFuzzyMap>
+class FuzzySOM : public ClassificationAlgorithm<FuzzyMap>
 {
 public:
 
@@ -53,16 +53,16 @@ public:
      * Parameter: _epsilon    Stopping criterion
      * Parameter: _nSteps     Number of training steps
      */
-    xmippFuzzySOM(double _m0, double _m1, unsigned long _annSteps,
+    FuzzySOM(double _m0, double _m1, unsigned long _annSteps,
                   double _reg, double _epsilon, unsigned long _nSteps)
-            : xmippBaseAlgo<xmippFuzzyMap>(), m0(_m0), m1(_m1), annSteps(_annSteps),
+            : ClassificationAlgorithm<FuzzyMap>(), m0(_m0), m1(_m1), annSteps(_annSteps),
             reg(_reg), epsilon(_epsilon), somNSteps(_nSteps)
     {};
 
     /**
      * Virtual destructor
      */
-    virtual ~xmippFuzzySOM()
+    virtual ~FuzzySOM()
     {};
 
     /**
@@ -75,14 +75,14 @@ public:
      * Sets the Initial Fuzzy membership
      * Parameter: _m0
      */
-    void initialFuzzzyMembership(const double& _m0);
+    void initialFuzzyMembership(const double& _m0);
 
 
     /**
      * Sets the Final Fuzzy membership
      * Parameter: _m1
      */
-    void finalFuzzzyMembership(const double& _m1);
+    void finalFuzzyMembership(const double& _m1);
 
 
     /**
@@ -105,20 +105,20 @@ public:
      * Parameter: _som  The som to train
      * Parameter: _examples   The training set
      */
-    virtual void train(xmippFuzzyMap& _som, const TS& _examples);
+    virtual void train(FuzzyMap& _som, const TS& _examples);
 
     /**
      * Tests the Fuzzy SOM
      * Parameter: _som        The fuzzy som to test
      * Parameter: _examples   The training set of examples
      */
-    virtual double test(const xmippFuzzyMap& _som, const TS& _examples) const;
+    virtual double test(const FuzzyMap& _som, const TS& _examples) const;
 
     /**
      * Determines the functional value
      * Returns the fidelity to the data and penalty parts of the functional
      */
-    virtual double functional(const TS& _examples, const xmippFuzzyMap& _som, double _m, double _reg, double& _fidelity, double& _penalty);
+    virtual double functional(const TS& _examples, const FuzzyMap& _som, double _m, double _reg, double& _fidelity, double& _penalty);
 
 
 
@@ -131,16 +131,16 @@ private:
     unsigned long somNSteps;           // number of steps
 
     /** Declaration of virtual method */
-    virtual void train(xmippFuzzyMap& _som, const TS& _examples) const
+    virtual void train(FuzzyMap& _som, const TS& _examples) const
         {};
 
-    double updateU(xmippFuzzyMap& _som, const TS& _examples, const double& _m);
+    double updateU(FuzzyMap& _som, const TS& _examples, const double& _m);
 
     // Update Fuzzy Code vectors
-    void updateV(xmippFuzzyMap& _som, const TS& _examples, const double& _m);
+    void updateV(FuzzyMap& _som, const TS& _examples, const double& _m);
 
     // Local Average of the code vectors
-    void LocalAve(xmippFuzzyMap& _som, xmippVector& tmpV, int tmpi, int tmpj);
+    void LocalAve(FuzzyMap& _som, FeatureVector& tmpV, int tmpi, int tmpj);
 
     // Internal Scratch
 
@@ -152,9 +152,9 @@ private:
 
     void showX(const TS& _ts);
 
-    void showV(xmippFuzzyMap& _som);
+    void showV(FuzzyMap& _som);
 
-    void showU(xmippFuzzyMap& _som, const TS& _ts);
+    void showU(FuzzyMap& _som, const TS& _ts);
 
 
 };

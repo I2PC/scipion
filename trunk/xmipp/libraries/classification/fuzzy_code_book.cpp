@@ -35,11 +35,11 @@
  * Parameter: _n       Number of vectors (clusters)
  * Parameter: _size    Size of code vectors
  * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
-   It calls Base Class constructor (xmippCB)
+   It calls Base Class constructor (CodeBook)
  */
 
-xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data,
-                   bool _cal): xmippCB(_n, _size, _cal)
+FuzzyCodeBook::FuzzyCodeBook(unsigned _n, unsigned _size, unsigned _data,
+                   bool _cal): CodeBook(_n, _size, _cal)
 {
 
     // Initialize Fuzzy membership Matrix
@@ -49,7 +49,7 @@ xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data,
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        std::vector <xmippFeature> v;
+        std::vector <Feature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -65,12 +65,12 @@ xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data,
  * Parameter: _lower   Lower value for random elements
  * Parameter: _upper   Upper value for random elements
  * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
-   It calls Base Class constructor (xmippCB)
+   It calls Base Class constructor (CodeBook)
  */
 
 
-xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data, double _lower, double _upper,
-                   bool _cal): xmippCB(_n, _size, _lower, _upper, _cal)
+FuzzyCodeBook::FuzzyCodeBook(unsigned _n, unsigned _size, unsigned _data, double _lower, double _upper,
+                   bool _cal): CodeBook(_n, _size, _lower, _upper, _cal)
 {
 
     // Initialize Fuzzy membership Matrix
@@ -80,7 +80,7 @@ xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data, double _lower, d
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        std::vector <xmippFeature> v;
+        std::vector <Feature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -94,7 +94,7 @@ xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data, double _lower, d
  * Parameter: _n       Number of vectors
  * Parameter: _ts      Training set; will be used to get initial values
  * Parameter: _use_rand_cvs  Use random code vectors (inherited from base class)
-   It calls Base Class constructor (xmippCB)
+   It calls Base Class constructor (CodeBook)
  */
 
 /* Part of this code were developed by Lorenzo Zampighi and Nelson Tang
@@ -102,9 +102,9 @@ xmippFCB::xmippFCB(unsigned _n, unsigned _size, unsigned _data, double _lower, d
    University of California, Los Angeles
 */
 
-xmippFCB::xmippFCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs) : xmippCB(_n, _ts, _use_rand_cvs)
+FuzzyCodeBook::FuzzyCodeBook(unsigned _n, const ClassicTrainingVectors& _ts,
+		const bool _use_rand_cvs) : CodeBook(_n, _ts, _use_rand_cvs)
 {
-
     // Initialize Fuzzy membership Matrix
 
     numClusters = _n;
@@ -112,13 +112,11 @@ xmippFCB::xmippFCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        std::vector <xmippFeature> v;
+        std::vector <Feature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
-
 };
-
 
 /**
  * Constructs a fuzzy code book given a stream
@@ -126,7 +124,7 @@ xmippFCB::xmippFCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_
  * Parameter: _size Size of code vectors (number of data points)
  * @exception  runtime_error  If there are problems with the stream
  */
-xmippFCB::xmippFCB(std::istream& _is, const unsigned _size)
+FuzzyCodeBook::FuzzyCodeBook(std::istream& _is, const unsigned _size)
 {
     readSelf(_is);
     // Initialize Fuzzy membership Matrix
@@ -137,7 +135,7 @@ xmippFCB::xmippFCB(std::istream& _is, const unsigned _size)
     memb.resize(numVectors);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        std::vector <xmippFeature> v;
+        std::vector <Feature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -153,7 +151,7 @@ xmippFCB::xmippFCB(std::istream& _is, const unsigned _size)
  * Parameter: _di  data index
  * @exception out_of_range If _i is out of range
  */
-xmippFeature xmippFCB::membAt(unsigned _di, unsigned _ci) const
+Feature FuzzyCodeBook::membAt(unsigned _di, unsigned _ci) const
 {
     std::ostringstream msg;
     if ((_di >= membVectors()) || (_ci >= membClusters()))
@@ -171,7 +169,7 @@ xmippFeature xmippFCB::membAt(unsigned _di, unsigned _ci) const
  * Parameter: _di  data index
  * @exception out_of_range If _i is out of range
  */
-xmippFeature& xmippFCB::membAt(unsigned _di, unsigned _ci)
+Feature& FuzzyCodeBook::membAt(unsigned _di, unsigned _ci)
 {
     std::ostringstream msg;
     if ((_di >= membVectors()) || (_ci >= membClusters()))
@@ -188,11 +186,11 @@ xmippFeature& xmippFCB::membAt(unsigned _di, unsigned _ci)
  * Returns dimensions of the Membership matrix
  */
 
-unsigned xmippFCB::membClusters() const
+unsigned FuzzyCodeBook::membClusters() const
 {
     return numClusters;
 }
-unsigned xmippFCB::membVectors() const
+unsigned FuzzyCodeBook::membVectors() const
 {
     return numVectors;
 }
@@ -206,7 +204,7 @@ unsigned xmippFCB::membVectors() const
    fuzzy membership matrix.
  */
 
-xmippVector& xmippFCB::fuzzyTest(unsigned _in) const
+FeatureVector& FuzzyCodeBook::fuzzyTest(unsigned _in) const
 {
     double maxMemb = 0;
     unsigned best = 0;
@@ -220,7 +218,7 @@ xmippVector& xmippFCB::fuzzyTest(unsigned _in) const
         } //if
     } // for i
 
-    return (xmippVector&) theItems[best];
+    return (FeatureVector&) theItems[best];
 };
 
 /**
@@ -230,7 +228,7 @@ xmippVector& xmippFCB::fuzzyTest(unsigned _in) const
    codevector is that the best (winner) is estimated using the
    fuzzy membership matrix.
  */
-unsigned xmippFCB::fuzzyTestIndex(unsigned _in) const
+unsigned FuzzyCodeBook::fuzzyTestIndex(unsigned _in) const
 {
     double maxMemb = 0;
     unsigned best = 0;
@@ -251,7 +249,7 @@ unsigned xmippFCB::fuzzyTestIndex(unsigned _in) const
  * Returns the label associated to an input
  * Parameter: _in  Index to the sample to be classified
  */
-xmippLabel xmippFCB::fuzzyApply(unsigned _in) const
+Label FuzzyCodeBook::fuzzyApply(unsigned _in) const
 {
     return theTargets[fuzzyTestIndex(_in)];
 };
@@ -262,10 +260,10 @@ xmippLabel xmippFCB::fuzzyApply(unsigned _in) const
  * Parameter: _def  Default target for non-calibrated vectors
  * @exception runtime_error  If the training set is not calibrated
  */
-void xmippFCB::fuzzyCalibrate(xmippCTVectors& _ts, xmippLabel _def)
+void FuzzyCodeBook::fuzzyCalibrate(ClassicTrainingVectors& _ts, Label _def)
 {
     // set the default label
-    for (std::vector<xmippVector>::const_iterator i = itemsBegin();
+    for (std::vector<FeatureVector>::const_iterator i = itemsBegin();
          i < itemsEnd() ; i++)
         theTargets[i - itemsBegin()] = _def;
 
@@ -284,7 +282,7 @@ void xmippFCB::fuzzyCalibrate(xmippCTVectors& _ts, xmippLabel _def)
  * This is the method used to classify inputs
  * Parameter: _in  Index to the Sample to be classified
  */
-unsigned xmippFCB::fuzzyWinner(unsigned _in) const
+unsigned FuzzyCodeBook::fuzzyWinner(unsigned _in) const
 {
     return fuzzyTestIndex(_in);
 };
@@ -294,7 +292,7 @@ unsigned xmippFCB::fuzzyWinner(unsigned _in) const
 * This is the method used to classify inputs
 * Parameter: _in  Index to the Sample to be classified
 */
-unsigned xmippFCB::fuzzyOutput(unsigned _in) const
+unsigned FuzzyCodeBook::fuzzyOutput(unsigned _in) const
 {
     return fuzzyTestIndex(_in);
 };
@@ -305,7 +303,7 @@ unsigned xmippFCB::fuzzyOutput(unsigned _in) const
  * In this case, it uses the Fuzzy Memberships to make the assignments
  * Parameter: _ts  Sample list to classify
  */
-void xmippFCB::classify(const xmippCTVectors* _ts)
+void FuzzyCodeBook::classify(const ClassicTrainingVectors* _ts)
 {
     classifVectors.clear(); // clear previous classification.
     classifVectors.resize(size());
@@ -333,7 +331,7 @@ void xmippFCB::classify(const xmippCTVectors* _ts)
 * using the Nearest Maximum Membership conversion
 */
 
-void xmippFCB::hardPartition()
+void FuzzyCodeBook::hardPartition()
 {
 
     for (unsigned k = 1; k < membVectors(); k++)
@@ -364,9 +362,9 @@ void xmippFCB::hardPartition()
  * Parameter: _cluster  The cluster or partition
  */
 
-xmippFCB::TS xmippFCB::alphaCore(TS _ts, double _alpha, unsigned _cluster) const
+FuzzyCodeBook::TS FuzzyCodeBook::alphaCore(TS _ts, double _alpha, unsigned _cluster) const
 {
-    xmippFCB::TS _alphaSet(0, _ts.calibrated());
+    FuzzyCodeBook::TS _alphaSet(0, _ts.calibrated());
 
     _alphaSet.theItems.resize(membVectors());
     if (_ts.calibrated())
@@ -415,7 +413,7 @@ xmippFCB::TS xmippFCB::alphaCore(TS _ts, double _alpha, unsigned _cluster) const
  * Writes the membership values
  * Parameter: _os  The output stream
  */
-void xmippFCB::writeMembership(std::ostream& _os) const
+void FuzzyCodeBook::writeMembership(std::ostream& _os) const
 {
     _os << membVectors() << std::endl;
     for (unsigned k = 0; k < numVectors; k++)   // Number of input vectors
@@ -427,7 +425,7 @@ void xmippFCB::writeMembership(std::ostream& _os) const
  * Reads the membership values
  * Parameter: _is  The input stream
  */
-void xmippFCB::readMembership(std::istream& _is)
+void FuzzyCodeBook::readMembership(std::istream& _is)
 {
     _is >> numVectors;
     memb.resize(numVectors);
@@ -438,14 +436,14 @@ void xmippFCB::readMembership(std::istream& _is)
 
 
 /**
- * Saves the xmippFCB class into a stream.
+ * Saves the FuzzyCodeBook class into a stream.
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void xmippFCB::saveObject(std::ostream& _os) const
+void FuzzyCodeBook::saveObject(std::ostream& _os) const
 {
     writeMembership(_os);
-    xmippCB::saveObject(_os);
+    CodeBook::saveObject(_os);
 };
 
 
@@ -455,9 +453,9 @@ void xmippFCB::saveObject(std::ostream& _os) const
  * Parameter: _size Size of code vectors (number of data points)
  * @exception  runtime_error  If there are problems with the stream
  */
-void xmippFCB::readSelf(std::istream& _is, const unsigned _size)
+void FuzzyCodeBook::readSelf(std::istream& _is, const unsigned _size)
 {
-    xmippCB::readSelf(_is);
+    CodeBook::readSelf(_is);
     // Initialize Fuzzy membership Matrix
     numClusters = theItems.size();
     numVectors = _size;
@@ -465,7 +463,7 @@ void xmippFCB::readSelf(std::istream& _is, const unsigned _size)
     memb.resize(numVectors);
     for (int k = 0; k < numVectors; k++)
     {
-        std::vector <xmippFeature> v;
+        std::vector <Feature> v;
         v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
@@ -474,15 +472,15 @@ void xmippFCB::readSelf(std::istream& _is, const unsigned _size)
 
 
 /**
- * Loads the xmippFCB class from a stream.
+ * Loads the FuzzyCodeBook class from a stream.
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void xmippFCB::loadObject(std::istream& _is)
+void FuzzyCodeBook::loadObject(std::istream& _is)
 {
     clear();
     readMembership(_is);
-    xmippCB::loadObject(_is);
+    CodeBook::loadObject(_is);
 };
 
 
@@ -490,7 +488,7 @@ void xmippFCB::loadObject(std::istream& _is)
  * Prints the density values of each Fuzzy codevector.
  * Parameter: _os  The the output stream
  */
-void xmippFCB::printDensity(std::ostream& _os) const
+void FuzzyCodeBook::printDensity(std::ostream& _os) const
 {
     _os << "1" << std::endl;
     for (int j = 0; j < numClusters; j++)

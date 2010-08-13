@@ -106,7 +106,7 @@ main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    xmippCTVectors ts(0, false);
+    ClassicTrainingVectors ts(0, false);
 
     std::cout << std::endl << "Reading data file " << fn_in << "....." << std::endl;
     inStream >> ts;
@@ -121,7 +121,7 @@ main(int argc, char** argv)
         // Define PCA class and do the projection
         PCAAnalyzer myPCA;
 
-        xmippTextualListener myListener;     // Define the listener class
+        TextualListener myListener;     // Define the listener class
         myListener.setVerbosity() = verb;     // Set verbosity level
         myPCA.setListener(&myListener);          // Set Listener
 

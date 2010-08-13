@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippCB.cc
+// CodeBook.cc
 //-----------------------------------------------------------------------------
 
 #include "code_book.h"
@@ -54,9 +54,9 @@
  * Parameter: _upper   Upper value for random elements
  * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
  */
-xmippCB::xmippCB(unsigned _n, unsigned _size, bool _cal)
-        : xmippCDSet<xmippVector, xmippLabel>(),
-        xmippCTSet<xmippVector, xmippLabel>(_cal)
+CodeBook::CodeBook(unsigned _n, unsigned _size, bool _cal)
+        : ClassificationDataSet<FeatureVector, Label>(),
+        ClassificationTrainingSet<FeatureVector, Label>(_cal)
 {
     // Fill vectors with zeros
     theItems.resize(_n);
@@ -64,7 +64,7 @@ xmippCB::xmippCB(unsigned _n, unsigned _size, bool _cal)
     theTargets.resize(_n, "");
     for (unsigned i = 0 ; i < _n ; i++)
     {
-        xmippVector v;
+        FeatureVector v;
         v.resize(_size, 0);
         theItems[i] = v;
     }
@@ -82,10 +82,10 @@ xmippCB::xmippCB(unsigned _n, unsigned _size, bool _cal)
  * Parameter: _upper   Upper value for random elements
  * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
  */
-xmippCB::xmippCB(unsigned _n, unsigned _size, xmippFeature _lower,
-                 xmippFeature _upper, bool _cal)
-        : xmippCDSet<xmippVector, xmippLabel>(),
-        xmippCTSet<xmippVector, xmippLabel>(_cal)
+CodeBook::CodeBook(unsigned _n, unsigned _size, Feature _lower,
+                   Feature _upper, bool _cal)
+        : ClassificationDataSet<FeatureVector, Label>(),
+        ClassificationTrainingSet<FeatureVector, Label>(_cal)
 {
     theItems.resize(_n);
     //if (calibrated())
@@ -93,7 +93,7 @@ xmippCB::xmippCB(unsigned _n, unsigned _size, xmippFeature _lower,
     // Assign random vectors
     for (unsigned i = 0 ; i < _n ; i++)
     {
-        std::vector<xmippFeature> v;
+        std::vector<Feature> v;
         v = randomVector(_size, _lower, _upper);
         theItems[i] = v;
     }
@@ -114,11 +114,12 @@ xmippCB::xmippCB(unsigned _n, unsigned _size, xmippFeature _lower,
    University of California, Los Angeles
 */
 
-xmippCB::xmippCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs)
-        : xmippCDSet<xmippVector, xmippLabel>(), xmippCTSet<xmippVector, xmippLabel>(_ts.calibrated())
+CodeBook::CodeBook(unsigned _n, const ClassicTrainingVectors& _ts, const bool _use_rand_cvs)
+        : ClassificationDataSet<FeatureVector, Label>(),
+          ClassificationTrainingSet<FeatureVector, Label>(_ts.calibrated())
 {
     // Take random samples
-//    xmippUniform<unsigned> chosen( 0, _ts.size() -1 );
+    //    RandomUniformGenerator<unsigned> chosen( 0, _ts.size() -1 );
     randomize_random_generator();
 
     theItems.resize(_n);
@@ -127,14 +128,14 @@ xmippCB::xmippCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cv
     // Assign random vectors
     for (unsigned i = 0 ; i < _n ; i++)
     {
-        std::vector<xmippFeature> v;
+        std::vector<Feature> v;
         int index = (int) rnd_unif(0, _ts.size() - 1);
         v = _ts.theItems[index];
         if (_use_rand_cvs)
         {
             // NT: Scan this vector for the range of pixel values
-            xmippFeature minval, maxval;
-            std::vector<xmippFeature>::const_iterator viter = v.begin();
+            Feature minval, maxval;
+            std::vector<Feature>::const_iterator viter = v.begin();
             minval = maxval = *viter;
             for (viter++; viter != v.end(); viter++)
             {
@@ -155,7 +156,8 @@ xmippCB::xmippCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cv
  * Parameter: _is  The input stream
  * @exception  runtime_error  If there are problems with the stream
  */
-xmippCB::xmippCB(std::istream& _is) : xmippCDSet<xmippVector, xmippLabel>(), xmippCTSet<xmippVector, xmippLabel>(_is)
+CodeBook::CodeBook(std::istream& _is) : ClassificationDataSet<FeatureVector, Label>(),
+		ClassificationTrainingSet<FeatureVector, Label>(_is)
 {
     readSelf(_is);
 };
@@ -164,11 +166,11 @@ xmippCB::xmippCB(std::istream& _is) : xmippCDSet<xmippVector, xmippLabel>(), xmi
  * Returns the code vector that represents the input in the codebook
  * Parameter: _in    Sample to classify
  */
-xmippVector& xmippCB::test(const xmippVector& _in) const
+FeatureVector& CodeBook::test(const FeatureVector& _in) const
 {
     // eval the first one to init best & bestDist
-    std::vector<xmippVector>::const_iterator i = itemsBegin();
-    std::vector<xmippVector>::const_iterator best = i;
+    std::vector<FeatureVector>::const_iterator i = itemsBegin();
+    std::vector<FeatureVector>::const_iterator best = i;
     double bestDist = (double) eDist(*i, _in);
 
     // eval the rest
@@ -182,18 +184,18 @@ xmippVector& xmippCB::test(const xmippVector& _in) const
         }
     }
 
-    return (xmippVector&)*best;
+    return (FeatureVector&)*best;
 };
 
 /**
  * Returns the index to the code vector that represents the input in the codebook
  * Parameter: _in  Sample to classify
  */
-unsigned xmippCB::testIndex(const xmippVector& _in) const
+unsigned CodeBook::testIndex(const FeatureVector& _in) const
 {
     // eval the first one to init best & bestDist
-    std::vector<xmippVector>::const_iterator i = itemsBegin();
-    std::vector<xmippVector>::const_iterator best = i;
+    std::vector<FeatureVector>::const_iterator i = itemsBegin();
+    std::vector<FeatureVector>::const_iterator best = i;
     double bestDist = (double) eDist(*i, _in);
 
     // eval the rest
@@ -219,7 +221,7 @@ unsigned xmippCB::testIndex(const xmippVector& _in) const
  * Parameter: _ts  Training set
  * Parameter: _in  Index to the Sample to be classified
  */
-unsigned xmippCB::winner(const xmippCTVectors& _ts, unsigned _in) const
+unsigned CodeBook::winner(const ClassicTrainingVectors& _ts, unsigned _in) const
 {
     return testIndex(_ts.theItems[_in]);
 };
@@ -229,7 +231,7 @@ unsigned xmippCB::winner(const xmippCTVectors& _ts, unsigned _in) const
  * Fills the classifVectors with the list of the best input vectors associated to it.
  * Parameter: _ts  Sample list to classify
  */
-void xmippCB::classify(const xmippCTVectors* _ts)
+void CodeBook::classify(const ClassicTrainingVectors* _ts)
 {
     classifVectors.clear(); // clear previous classification.
     classifVectors.resize(size());
@@ -255,7 +257,7 @@ void xmippCB::classify(const xmippCTVectors* _ts)
  * Prints the histogram values of each Fuzzy codevector.
  * Parameter: _os  The the output stream
  */
-void xmippCB::printHistogram(std::ostream& _os) const
+void CodeBook::printHistogram(std::ostream& _os) const
 {
     _os << "1 " << size() << std::endl;
     for (int j = 0; j < size(); j++)
@@ -267,7 +269,7 @@ void xmippCB::printHistogram(std::ostream& _os) const
  * Prints the Average Quantization Error of each codevector.
  * Parameter: _os  The the output stream
  */
-void xmippCB::printQuantError(std::ostream& _os) const
+void CodeBook::printQuantError(std::ostream& _os) const
 {
     _os << "1 " << size() << std::endl;
     for (int j = 0; j < size(); j++)
@@ -277,7 +279,7 @@ void xmippCB::printQuantError(std::ostream& _os) const
 /**
  * Returns the list of input vectors associated to this code vector.
  */
-const std::vector< unsigned>& xmippCB::classifAt(const unsigned& _index) const
+const std::vector< unsigned>& CodeBook::classifAt(const unsigned& _index) const
 {
     if (_index < 0 || _index > classifVectors.size())
     {
@@ -291,7 +293,7 @@ const std::vector< unsigned>& xmippCB::classifAt(const unsigned& _index) const
 /**
 * Returns the number of input vectors associated to this code vector.
 */
-unsigned xmippCB::classifSizeAt(const unsigned& _index) const
+unsigned CodeBook::classifSizeAt(const unsigned& _index) const
 {
     if (_index < 0 || _index > classifVectors.size())
     {
@@ -307,7 +309,7 @@ unsigned xmippCB::classifSizeAt(const unsigned& _index) const
  * Returns the label associated to an input
  * Parameter: _in  Sample to classify
  */
-xmippLabel xmippCB::apply(const xmippVector& _in) const
+Label CodeBook::apply(const FeatureVector& _in) const
 {
     return theTargets[testIndex(_in)];
 };
@@ -319,11 +321,11 @@ xmippLabel xmippCB::apply(const xmippVector& _in) const
  * Parameter: _def  Default target for non-calibrated vectors
  * @exception runtime_error  If the training set is not calibrated
  */
-void xmippCB::calibrate(xmippCTVectors& _ts,
-                        xmippLabel _def)
+void CodeBook::calibrate(ClassicTrainingVectors& _ts,
+                         Label _def)
 {
     // set the default label
-    for (std::vector<xmippVector>::const_iterator i = itemsBegin() ;
+    for (std::vector<FeatureVector>::const_iterator i = itemsBegin() ;
          i < itemsEnd() ; i++)
         theTargets[i - itemsBegin()] = _def;
     if (_ts.calibrated())
@@ -341,7 +343,8 @@ void xmippCB::calibrate(xmippCTVectors& _ts,
 * This is the method used to classify inputs
 * Parameter: _in  Sample to classify.
 */
-unsigned xmippCB::output(const xmippVector& _in) const
+unsigned CodeBook::output(const FeatureVector& _in)
+const
 {
     return testIndex(_in);
 };
@@ -351,16 +354,16 @@ unsigned xmippCB::output(const xmippVector& _in) const
  * Standard output for a codebook
  * Parameter: _os The output stream
  */
-void xmippCB::printSelf(std::ostream& _os) const
+void CodeBook::printSelf(std::ostream& _os) const
 {
-    xmippCTSet<xmippVector, xmippLabel>::printSelf(_os);
+    ClassificationTrainingSet<FeatureVector, Label>::printSelf(_os);
 };
 
 /**
  * Standard input for a codebook
  * Parameter: _is The input stream
  */
-void xmippCB::readSelf(std::istream& _is, long _dim, long _size)
+void CodeBook::readSelf(std::istream& _is, long _dim, long _size)
 {
 
 #ifndef _NO_EXCEPTION
@@ -377,7 +380,8 @@ void xmippCB::readSelf(std::istream& _is, long _dim, long _size)
         {
             _is >> dim;
         }
-        else dim = _dim;
+        else
+            dim = _dim;
         if (_size == -1)
         {
             _is >> line;
@@ -389,18 +393,19 @@ void xmippCB::readSelf(std::istream& _is, long _dim, long _size)
                 size = x * y;
             }
         }
-        else size = _size;
+        else
+            size = _size;
         getline(_is, line);
         theItems.resize(size);
         theTargets.resize(size);
 
         for (int i = 0; i < size; i++)
         {
-            std::vector<xmippFeature> v;
+            std::vector<Feature> v;
             v.resize(dim);
             for (int j = 0; j < dim; j++)
             {
-                xmippFeature var;
+                Feature var;
                 _is >> var;
                 v[j] = var;
             }
@@ -409,6 +414,7 @@ void xmippCB::readSelf(std::istream& _is, long _dim, long _size)
             theTargets[i] = line;
         }
 #ifndef _NO_EXCEPTION
+
     }
     catch (std::exception& e)
     {
@@ -424,7 +430,7 @@ void xmippCB::readSelf(std::istream& _is, long _dim, long _size)
  * Reads the classif vectors from a stream.
  * Parameter: _is  The input stream
  */
-void xmippCB::readClassifVectors(std::istream& _is)
+void CodeBook::readClassifVectors(std::istream& _is)
 {
     int dim;
     _is >> dim;
@@ -438,7 +444,7 @@ void xmippCB::readClassifVectors(std::istream& _is)
  * Writes the classif vectors to a stream
  * Parameter: _os  The output stream
  */
-void xmippCB::writeClassifVectors(std::ostream& _os) const
+void CodeBook::writeClassifVectors(std::ostream& _os) const
 {
     _os << classifVectors.size() << std::endl;
     for (int i = 0; i < classifVectors.size(); i++)
@@ -447,27 +453,27 @@ void xmippCB::writeClassifVectors(std::ostream& _os) const
 
 
 /**
- * Saves the xmippCB class into a stream.
+ * Saves the CodeBook class into a stream.
  * this method can be used to save the status of the class.
  * Parameter: _os The output stream
  */
-void xmippCB::saveObject(std::ostream& _os) const
+void CodeBook::saveObject(std::ostream& _os) const
 {
     writeClassifVectors(_os);
-    xmippCTSet<xmippVector, xmippLabel>::saveObject(_os);
+    ClassificationTrainingSet<FeatureVector, Label>::saveObject(_os);
 };
 
 
 /**
- * Loads the xmippCB class from a stream.
+ * Loads the CodeBook class from a stream.
  * this method can be used to load the status of the class.
  * Parameter: _is The output stream
  */
-void xmippCB::loadObject(std::istream& _is)
+void CodeBook::loadObject(std::istream& _is)
 {
     clear();
     readClassifVectors(_is);
-    xmippCTSet<xmippVector, xmippLabel>::loadObject(_is);
+    ClassificationTrainingSet<FeatureVector, Label>::loadObject(_is);
 };
 
 
@@ -476,7 +482,7 @@ void xmippCB::loadObject(std::istream& _is)
  *  Parameter: _varStats The normalization information
  */
 
-void xmippCB::unNormalize(const std::vector<xmippCTVectors::statsStruct>&  _varStats)
+void CodeBook::unNormalize(const std::vector<ClassicTrainingVectors::statsStruct>&  _varStats)
 {
     using namespace std;
     if (_varStats.size() != theItems[0].size())
@@ -501,7 +507,7 @@ void xmippCB::unNormalize(const std::vector<xmippCTVectors::statsStruct>&  _varS
  *  Parameter: _varStats The normalization information
  */
 
-void xmippCB::Normalize(const std::vector<xmippCTVectors::statsStruct>&  _varStats)
+void CodeBook::Normalize(const std::vector<ClassicTrainingVectors::statsStruct>&  _varStats)
 {
     using namespace std;
     if (_varStats.size() != theItems[0].size())

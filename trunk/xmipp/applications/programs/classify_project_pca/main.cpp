@@ -145,7 +145,7 @@ main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    xmippCTVectors ts(0, false);
+    ClassicTrainingVectors ts(0, false);
 
     std::cout << std::endl << "Reading data file " << fn_in << "....." << std::endl;
     inStream >> ts;
@@ -169,7 +169,7 @@ main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    xmippCTVectors ev(0, false);
+    ClassicTrainingVectors ev(0, false);
 
     std::cout << "Reading eigen vectors file " << fn_ein << "....." << std::endl;
     einStream >> ev;
@@ -183,7 +183,7 @@ main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    xmippCTVectors eval(0, false);
+    ClassicTrainingVectors eval(0, false);
 
     std::cout << "Reading eigen values file " << fn_evin << "....." << std::endl;
     evinStream >> eval;
@@ -224,14 +224,14 @@ main(int argc, char** argv)
         // Do the projection
 
 // Calculate mean of the vectors
-        xmippCTVectors statVec(0, true);
+        ClassicTrainingVectors statVec(0, true);
         statVec = ts.getStatVector();
 
         std::cout << "projecting into " << k << " dimensions..." << std::endl;
         int size = ts.size();
         int dim = ts.itemAt(0).size();
 
-        xmippCTVectors projectedTs(0, true);
+        ClassicTrainingVectors projectedTs(0, true);
         projectedTs.theItems.resize(size);
         projectedTs.theTargets.resize(size);
         for (int h = 0; h < size; h++) projectedTs.theItems[h].resize(k, 0);
@@ -249,7 +249,7 @@ main(int argc, char** argv)
             }  // z
         } // i
 
-        xmippCTVectors reconsTs(0, true);
+        ClassicTrainingVectors reconsTs(0, true);
         if (recon)
         {
             std::cout << "Estimating original data using " << k << " components..." << std::endl;

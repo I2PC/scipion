@@ -64,31 +64,31 @@
    @ingroup ClassificationLibrary */
 //@{
 /**
-* xmippFeature as float
+* Feature as float
 */
-//typedef double xmippFeature;
-typedef float xmippFeature;
+//typedef double Feature;
+typedef float Feature;
 
 //-----------------------------------------------------------------------------
 
 /**
-* xmippLabel as string
+* Label as string
 */
-typedef std::string xmippLabel;
+typedef std::string Label;
 
 //-----------------------------------------------------------------------------
 
 /**
-* xmippVector as vector of doubles
+* FeatureVector as vector of doubles
 */
-typedef std::vector<xmippFeature> xmippVector;
+typedef std::vector<Feature> FeatureVector;
 
 //-----------------------------------------------------------------------------
 
 /**
-* xmippSet as a set of xmippfeatures
+* FeatureSet as a set of xmippfeatures
 */
-typedef std::set<xmippFeature, std::less<xmippFeature> > xmippSet;
+typedef std::set<Feature, std::less<Feature> > FeatureSet;
 //@}
 
 //-----------------------------------------------------------------------------

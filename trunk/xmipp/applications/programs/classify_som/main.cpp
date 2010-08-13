@@ -237,7 +237,7 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    xmippCTVectors ts(0, true);
+    ClassicTrainingVectors ts(0, true);
 
     std::cout << std::endl << "Reading data file " << fn_in << "....." << std::endl;
     inStream >> ts;
@@ -254,7 +254,7 @@ int main(int argc, char** argv)
             ts.normalize();        // Normalize input data
         }
 
-        xmippMap* myMap;
+        ClassificationMap* myMap;
 
         if (cb_in != "")
         {
@@ -265,24 +265,24 @@ int main(int argc, char** argv)
                 std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                 exit(EXIT_FAILURE);
             }
-            myMap = new xmippMap(codeStream);
+            myMap = new ClassificationMap(codeStream);
         }
         else
-            myMap = new xmippMap(layout, xdim, ydim, ts, use_rand_cvs);
+            myMap = new ClassificationMap(layout, xdim, ydim, ts, use_rand_cvs);
 
 
-        xmippSOM *thisSOM;
+        SOM *thisSOM;
         Descent alpha(alpha_0, 0);         // alpha decreases linearly to 0
         Descent radius(radius_0, 1);       // radius decreases linearly to 1
 
-        xmippSOM::neighType neigh;
+        SOM::neighType neigh;
         if (gaussian)
-            neigh = xmippSOM::GAUSSIAN;
+            neigh = SOM::GAUSSIAN;
         else
-            neigh = xmippSOM::BUBBLE;
-        thisSOM = new xmippSOM(alpha, radius, neigh, iter);    // Creates SOM Algorithm
+            neigh = SOM::BUBBLE;
+        thisSOM = new SOM(alpha, radius, neigh, iter);    // Creates SOM Algorithm
 
-        xmippTextualListener myListener;     // Define the listener class
+        TextualListener myListener;     // Define the listener class
         myListener.setVerbosity() = verb;     // Set verbosity level
         thisSOM->setListener(&myListener);       // Set Listener
 

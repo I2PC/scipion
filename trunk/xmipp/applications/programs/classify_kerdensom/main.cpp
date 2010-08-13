@@ -273,7 +273,7 @@ main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    xmippCTVectors ts(0, true);
+    ClassicTrainingVectors ts(0, true);
     std::cout << std::endl << "Reading input data file " << fn_in << "....." << std::endl;
     inStream >> ts;
 
@@ -291,7 +291,7 @@ main(int argc, char** argv)
             ts.normalize();        // Normalize input data
         }
 
-        xmippFuzzyMap *myMap;
+        FuzzyMap *myMap;
 
         if (cb_in != "")
         {
@@ -304,7 +304,7 @@ main(int argc, char** argv)
                     std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                     exit(EXIT_FAILURE);
                 }
-                myMap = new xmippFuzzyMap(codeStream, ts.size(), false);
+                myMap = new FuzzyMap(codeStream, ts.size(), false);
             }
             else
             {
@@ -315,20 +315,20 @@ main(int argc, char** argv)
                     std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                     exit(EXIT_FAILURE);
                 }
-                myMap = new xmippFuzzyMap(codeStream, ts.size(), true);
+                myMap = new FuzzyMap(codeStream, ts.size(), true);
             }
         }
         else
-            myMap = new xmippFuzzyMap(layout, xdim, ydim, ts);
+            myMap = new FuzzyMap(layout, xdim, ydim, ts);
 
 
-        xmippKerDenSOM *thisSOM;
+        KerDenSOM *thisSOM;
         if (fn_algo_in == "")
         {
             if (gaussian)
-                thisSOM = new xmippGaussianKerDenSOM(reg0, reg1, annSteps, eps, iter);        // Creates KerDenSOM Algorithm
+                thisSOM = new GaussianKerDenSOM(reg0, reg1, annSteps, eps, iter);        // Creates KerDenSOM Algorithm
             else
-                thisSOM = new xmippTStudentKerDenSOM(reg0, reg1, annSteps, eps, iter, df);    // Creates KerDenSOM Algorithm
+                thisSOM = new TStudentKerDenSOM(reg0, reg1, annSteps, eps, iter, df);    // Creates KerDenSOM Algorithm
         }
         else
         {
@@ -341,7 +341,7 @@ main(int argc, char** argv)
             }
         }
 
-        xmippTextualListener myListener;       // Define the listener class
+        TextualListener myListener;       // Define the listener class
         myListener.setVerbosity() = verb;       // Set verbosity level
         thisSOM->setListener(&myListener);         // Set Listener
 

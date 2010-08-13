@@ -4601,6 +4601,7 @@ std::ostream& operator<< (std::ostream& ostrm, const MultidimArray<T>& v)
 
     return ostrm;
 }
+//@}
 
 // Specializations cases for complex numbers
 template<>

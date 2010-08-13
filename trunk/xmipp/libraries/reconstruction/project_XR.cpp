@@ -226,7 +226,7 @@ void PROJECT_XR_Side_Info::produce_Side_Info(
 int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
                                    PROJECT_XR_Side_Info &side,
                                    Projection &proj,
-                                   XmippXRPSF &psf,
+                                   XRayPSF &psf,
                                    MetaData &SF)
 {
     int expectedNumProjs = FLOOR((prm.tiltF-prm.tilt0)/prm.tiltStep);
@@ -318,7 +318,7 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
     return numProjs;
 }
 
-void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XmippXRPSF &psf, Projection &P,
+void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Projection &P,
                                    int Ydim, int Xdim, int idxSlice)
 {
 
@@ -440,7 +440,7 @@ int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
     randomize_random_generator();
 
     // Read Microscope optics parameters and produce side information
-    XmippXRPSF psf;
+    XRayPSF psf;
     psf.verbose = prm.verbose;
     psf.read(prm.fn_psf_xr);
     psf.produceSideInfo();

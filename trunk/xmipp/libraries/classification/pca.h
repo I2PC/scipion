@@ -48,7 +48,7 @@ public:
     * from ts.
     * Parameter: ts The vectors.
     */
-    PCAAnalyzer(xmippCTVectors const &ts)
+    PCAAnalyzer(ClassicTrainingVectors const &ts)
     {
         reset(ts);
     }
@@ -59,7 +59,7 @@ public:
     * Parameter: ts The vectors.
     * Parameter: idx The indexes of the vectors to use
     */
-    PCAAnalyzer(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
+    PCAAnalyzer(ClassicTrainingVectors const &ts, std::vector<unsigned> const & idx)
     {
         reset(ts, idx);
     }
@@ -68,29 +68,29 @@ public:
     * Calculate the eigenval/vecs
     * Parameter: ts The vectors.
     */
-    void reset(xmippCTVectors const &ts);
+    void reset(ClassicTrainingVectors const &ts);
 
     /**
     * Calculate the eigenval/vecs
     * Parameter: ts The vectors.
     * Parameter: idx The indexes of the vectors to use
     */
-    void reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx);
+    void reset(ClassicTrainingVectors const &ts, std::vector<unsigned> const & idx);
 
     /**
     * The eigenvectors
     */
-    std::vector<xmippVector> eigenvec;
+    std::vector<FeatureVector> eigenvec;
 
     /**
     * The eigenvalues
     */
-    xmippVector eigenval;
+    FeatureVector eigenval;
 
     /**
     * Mean of the input training set
     */
-    xmippVector mean;
+    FeatureVector mean;
 
     /** Number of relevant eigenvectors */
     int D;
@@ -157,11 +157,11 @@ public:
 
     An exception is thrown if the input vectors are not of the same size
     as the PCA ones.*/
-    void Project(xmippVector &input, xmippVector &output);
+    void Project(FeatureVector &input, FeatureVector &output);
 
     /** Defines Listener class
       */
-    void setListener(xmippBaseListener* _listener)
+    void setListener(BaseListener* _listener)
     {
         listener = _listener;
     };
@@ -174,7 +174,7 @@ public:
 
 private:
 
-    xmippBaseListener* listener;   // Listener class
+    BaseListener* listener;   // Listener class
 
 
 };

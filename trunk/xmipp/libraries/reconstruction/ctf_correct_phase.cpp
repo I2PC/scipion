@@ -57,7 +57,7 @@ void CorrectPhaseParams::produceSideInfo()
 void CorrectPhaseParams::run()
 {
     MultidimArray< std::complex<double> > fft;
-    XmippFftw transformer;
+    FourierTransformer transformer;
     std::cerr << "Correcting CTF phase ...\n";
     int istep = CEIL((double)ctfdat.size() / 60.0);
     init_progress_bar(ctfdat.size());

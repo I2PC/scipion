@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 //-----------------------------------------------------------------------------
-// xmippUniform.h
+// RandomUniformGenerator.h
 //-----------------------------------------------------------------------------
 
 #ifndef XMIPP_UNIFORM_H
@@ -43,7 +43,7 @@
 /**
 * Template class for uniform random number generation
 */
-template<class T> class xmippUniform
+template<class T> class RandomUniformGenerator
 {
 public:
     /**
@@ -51,7 +51,7 @@ public:
     * Parameter: _min   minimum value for the generated ramdom number
     * Parameter: _max   maximum value for the generated ramdom number
     */
-    xmippUniform(T _min = 0, T _max = 1): thisMin(_min), diff(_max - _min)
+    RandomUniformGenerator(T _min = 0, T _max = 1): thisMin(_min), diff(_max - _min)
     {
         srand((unsigned)time(NULL));
     }

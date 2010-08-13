@@ -212,7 +212,7 @@ main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    xmippCTVectors ts(0, true);
+    ClassicTrainingVectors ts(0, true);
     std::cout << std::endl << "Reading input data file " << fn_in << "....." << std::endl;
     inStream >> ts;
 
@@ -230,7 +230,7 @@ main(int argc, char** argv)
             ts.normalize();        // Normalize input data
         }
 
-        xmippFuzzyMap *myMap;
+        FuzzyMap *myMap;
 
         if (cb_in != "")
         {
@@ -243,7 +243,7 @@ main(int argc, char** argv)
                     std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                     exit(EXIT_FAILURE);
                 }
-                myMap = new xmippFuzzyMap(codeStream, ts.size(), false);
+                myMap = new FuzzyMap(codeStream, ts.size(), false);
             }
             else
             {
@@ -254,20 +254,20 @@ main(int argc, char** argv)
                     std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                     exit(EXIT_FAILURE);
                 }
-                myMap = new xmippFuzzyMap(codeStream, ts.size(), true);
+                myMap = new FuzzyMap(codeStream, ts.size(), true);
             }
         }
         else
-            myMap = new xmippFuzzyMap("RECT", c, 1, ts);
+            myMap = new FuzzyMap("RECT", c, 1, ts);
 
 
-        xmippKerDenSOM *thisSOM;
+        KerDenSOM *thisSOM;
         if (fn_algo_in == "")
         {
             if (gaussian)
-                thisSOM = new xmippGaussianKerDenSOM(0, 0, 0, eps, iter);        // Creates KerDenSOM Algorithm
+                thisSOM = new GaussianKerDenSOM(0, 0, 0, eps, iter);        // Creates KerDenSOM Algorithm
             else
-                thisSOM = new xmippTStudentKerDenSOM(0, 0, 0, eps, iter, df);    // Creates KerDenSOM Algorithm
+                thisSOM = new TStudentKerDenSOM(0, 0, 0, eps, iter, df);    // Creates KerDenSOM Algorithm
         }
         else
         {
@@ -280,7 +280,7 @@ main(int argc, char** argv)
             }
         }
 
-        xmippTextualListener myListener;       // Define the listener class
+        TextualListener myListener;       // Define the listener class
         myListener.setVerbosity() = verb;       // Set verbosity level
         thisSOM->setListener(&myListener);         // Set Listener
 
@@ -298,7 +298,7 @@ main(int argc, char** argv)
 
 
         // Test algorithm
-        xmippFeature dist = thisSOM->test(*myMap, ts);
+        Feature dist = thisSOM->test(*myMap, ts);
         std::cout << std::endl << "Quantization error : " <<  dist << std::endl;
 
         // Classifying

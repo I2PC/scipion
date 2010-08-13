@@ -80,7 +80,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
         FileName        fn_sym;
         
         /** sampling object */
-        XmippSampling chunk_mysampling;
+        Sampling chunk_mysampling;
 
         /** Symmetry. One of the 17 possible symmetries in
             single particle electron microscopy.

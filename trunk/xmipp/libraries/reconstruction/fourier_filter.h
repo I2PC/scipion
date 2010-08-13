@@ -143,7 +143,7 @@ public:
     MultidimArray<double> maskFourier;
 
     // Transformer
-    XmippFftw transformer;
+    FourierTransformer transformer;
 };
 //@}
 #endif

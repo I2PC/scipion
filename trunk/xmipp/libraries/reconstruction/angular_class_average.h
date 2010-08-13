@@ -90,7 +90,7 @@ public:
     double max_shift_change, max_psi_change;
     /** transformers for all rings */
     Polar_fftw_plans global_plans;
-    XmippFftw global_transformer;
+    FourierTransformer global_transformer;
     MultidimArray<double> corr;
 
 public:

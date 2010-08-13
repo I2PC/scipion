@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 //-----------------------------------------------------------------------------
-// xmippSammon.cc
+// Sammon.cc
 // Sammon Projection Algorithm
 //-----------------------------------------------------------------------------
 
@@ -31,10 +31,10 @@
 #include <data/funcs.h>
 
 //-----------------------------------------------------------------------------
-// xmippSammon: Sammon Maps
+// Sammon: Sammon Maps
 //-----------------------------------------------------------------------------
 
-xmippSammon::xmippSammon(const unsigned _mapped,
+Sammon::Sammon(const unsigned _mapped,
                          const unsigned _num_iterations ,
                          const double _learning_rate):
         mapped(_mapped),
@@ -53,15 +53,15 @@ xmippSammon::xmippSammon(const unsigned _mapped,
 
 //-----------------------------------------------------------------------------
 
-void xmippSammon::operator()(const In& in, Out& out)
+void Sammon::operator()(const In& in, Out& out)
 {
     // clean the mapped space
     out.clear();
     out.calibrated(in.calibrated());
     // initialization of mapped space
-    xmippUniform<double> uniform(-0.5, 0.5);
-    xmippVector v(mapped);
-    xmippNorm norm;
+    RandomUniformGenerator<double> uniform(-0.5, 0.5);
+    FeatureVector v(mapped);
+    VectorNorm norm;
     unsigned i;
     for (i = 0; i < in.size(); i++)
     {
@@ -72,21 +72,21 @@ void xmippSammon::operator()(const In& in, Out& out)
     }
 
     // calculate distances in original space
-    std::vector<xmippFeature> distances(in.size() *(in.size() - 1) / 2);
-    std::vector<xmippFeature>::iterator distance = distances.begin();
+    std::vector<Feature> distances(in.size() *(in.size() - 1) / 2);
+    std::vector<Feature>::iterator distance = distances.begin();
     for (i = 1; i < in.size(); i++)
         for (unsigned j = 0; j < i; j++)
             *distance++ = max(0.001, eDist(in.theItems[i], in.theItems[j]));
 
     // centroids of mapped samples
-    std::vector<xmippFeature> centroid(mapped);
+    std::vector<Feature> centroid(mapped);
 
     // first derivative and second derivative of mapping error
-    std::vector<xmippFeature> dE(in.size());
-    std::vector<xmippFeature> d2E2(in.size());
+    std::vector<Feature> dE(in.size());
+    std::vector<Feature> d2E2(in.size());
 
     // copy of the samples for each pattern loop p
-    std::vector<std::vector<xmippFeature> > out2(in.size(), std::vector<xmippFeature>(mapped));
+    std::vector<std::vector<Feature> > out2(in.size(), std::vector<Feature>(mapped));
     int p;
     unsigned q;
 

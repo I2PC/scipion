@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippUmatrix.cc: Unified Distance Matrix (Umatrix)
+// Umatrix.cc: Unified Distance Matrix (Umatrix)
 //-----------------------------------------------------------------------------
 
 #include "umatrix.h"
@@ -33,7 +33,7 @@
 *   Same as () operator.
 *   It takes a SOM as input and returns the calculated Umatrix
 */
-void xmippUmatrix::getUmatrix(const In& in, Out& out) const
+void Umatrix::getUmatrix(const In& in, Out& out) const
 {
     operator()(in, out);
 };
@@ -43,7 +43,7 @@ void xmippUmatrix::getUmatrix(const In& in, Out& out) const
 *   It takes a SOM as input and returns the calculated Umatrix
 */
 
-void xmippUmatrix::getUmatrix(const In& in, Out& out, const unsigned& _varOut) const
+void Umatrix::getUmatrix(const In& in, Out& out, const unsigned& _varOut) const
 {
     In tmpSOM = in;
     for (unsigned i = 0 ; i < tmpSOM.height() ; i++)
@@ -57,7 +57,7 @@ void xmippUmatrix::getUmatrix(const In& in, Out& out, const unsigned& _varOut) c
 *   It takes a SOM as input and returns the calculated Umatrix
 */
 
-void xmippUmatrix::getUmatrix(const In& in, Out& out, const std::vector<unsigned>& _varsOut) const
+void Umatrix::getUmatrix(const In& in, Out& out, const std::vector<unsigned>& _varsOut) const
 {
     In tmpSOM = in;
     for (unsigned i = 0 ; i < tmpSOM.height() ; i++)
@@ -72,10 +72,10 @@ void xmippUmatrix::getUmatrix(const In& in, Out& out, const std::vector<unsigned
 *    It takes a SOM as input and returns the calculated Umatrix
 */
 
-void xmippUmatrix::operator()(const In& in, Out& out) const
+void Umatrix::operator()(const In& in, Out& out) const
 {
     bool bx, by, bz;
-    xmippFeature dx, dy, dz1, dz2, dz;
+    Feature dx, dy, dz1, dz2, dz;
     unsigned i, j;
 
 
@@ -120,7 +120,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                     bz = true;
                 }
 
-                dz = (dz1 / sqrt((xmippFeature) 2.0) + dz2 / sqrt((xmippFeature) 2.0)) / 2;
+                dz = (dz1 / sqrt((Feature) 2.0) + dz2 / sqrt((Feature) 2.0)) / 2;
 
                 if (bx)
                     out.itemAtPos(SomPos(2*i + 1, 2*j))[0] = dx;
@@ -222,7 +222,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 if (i > 0 && j > 0 && i < out.width() - 1 && j < out.height() - 1)
                 {
                     // In the Middle of the Map
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
@@ -233,7 +233,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 else if (j == 0 && i > 0 && i < out.width() - 1)
                 {
                     /* in the upper edge */
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j + 1))[0]);
@@ -243,7 +243,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 else if (j == out.height() - 1 && i > 0 && i < out.width() - 1)
                 {
                     /* in the lower edge */
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
@@ -253,7 +253,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 else if (i == 0 && j > 0 && j < out.height() - 1)
                 {
                     /* in the left edge */
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j + 1))[0]);
@@ -263,7 +263,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 else if (i == out.width() - 1 && j > 0 && j < out.height() - 1)
                 {
                     /* in the right edge */
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j + 1))[0]);
@@ -308,7 +308,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 if (i > 0 && j > 0 && i < out.width() - 1 && j < out.height() - 1)
                 {
                     /* in the middle of the map */
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
                     if (!(j % 4))
@@ -331,7 +331,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 else if (j == 0 && i > 0 && i < out.width() - 1)
                 {
                     /* in the upper edge */
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j + 1))[0]);
@@ -342,7 +342,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 else if (j == out.height() - 1 && i > 0 && i < out.width() - 1)
                 {
                     /* in the lower edge */
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
                     if (!(j % 4))
@@ -361,7 +361,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 else if (i == 0 && j > 0 && j < out.height() - 1)
                 {
                     /* in the left edge */
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
                     if (!(j % 4))
                     {
@@ -383,7 +383,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 else if (i == out.width() - 1 && j > 0 && j < out.height() - 1)
                 {
                     /* in the right edge */
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     if (j % 4)
                     {
@@ -409,7 +409,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 else if (i == out.width() - 1 && j == 0)
                 {
                     /* the upper right-hand corner */
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i - 1, j + 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j + 1))[0]);
@@ -424,7 +424,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                                                           out.itemAtPos(SomPos(i, j - 1))[0]) / 2.0;
                     else
                     {
-                        std::vector<xmippFeature> v;
+                        std::vector<Feature> v;
                         v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
                         v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                         v.push_back(out.itemAtPos(SomPos(i + 1, j - 1))[0]);
@@ -440,7 +440,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                                                           out.itemAtPos(SomPos(i, j - 1))[0]) / 2.0;
                     else
                     {
-                        std::vector<xmippFeature> v;
+                        std::vector<Feature> v;
                         v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                         v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                         v.push_back(out.itemAtPos(SomPos(i - 1, j - 1))[0]);
@@ -458,8 +458,8 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 
     /* find the minimum and maximum values */
 
-    xmippFeature Max = -MAXFLOAT;
-    xmippFeature Min = MAXFLOAT;
+    Feature Max = -MAXFLOAT;
+    Feature Min = MAXFLOAT;
 
     for (i = 0;i < out.width();i++)
         for (j = 0;j < out.height();j++)
@@ -470,7 +470,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
                 Min = out.itemAtPos(SomPos(i, j))[0];
         }
 
-    xmippFeature bw = Max - Min;
+    Feature bw = Max - Min;
 
     /* scale values to [0,1] */
     for (i = 0;i < out.width();i++)
@@ -492,7 +492,7 @@ void xmippUmatrix::operator()(const In& in, Out& out) const
 
 //-----------------------------------------------------------------------------
 
-void xmippUmatrix::medianSmoothing(Out& out) const
+void Umatrix::medianSmoothing(Out& out) const
 {
     unsigned i, j;
 
@@ -503,7 +503,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             for (i = 0;i < out.width();i++)
                 if (i && j && (j < out.height() - 1) && (i < out.width() - 1))
                 {
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j))[0]);
@@ -514,7 +514,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
                 }
                 else if (i && (i < out.width() - 1) && !j)
                 {
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
@@ -524,7 +524,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
                 }
                 else if (!i && j && (j < out.height() - 1))
                 {
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
@@ -534,7 +534,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
                 }
                 else if (i && (i < out.width() - 1) && (j == out.height() - 1))
                 {
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j))[0]);
@@ -544,7 +544,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
                 }
                 else if (j && (j < out.height() - 1) && (i == out.width() - 1))
                 {
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -554,7 +554,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
                     out.itemAtPos(SomPos(i, j))[0] = v[2];
                 }
 
-        std::vector<xmippFeature> v;
+        std::vector<Feature> v;
         v.push_back(out.itemAtPos(SomPos(1, out.height() - 1))[0]);
         v.push_back(out.itemAtPos(SomPos(0, out.height() - 1))[0]);
         v.push_back(out.itemAtPos(SomPos(0, out.height() - 2))[0]);
@@ -593,7 +593,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             {
                 if ((j % 4) == 1)
                 {
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i + 1, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -606,7 +606,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
                 }
                 else if ((j % 4) == 2)
                 {
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i + 1, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -619,7 +619,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
                 }
                 else if ((j % 4) == 3)
                 {
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -632,7 +632,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
                 }
                 else if ((j % 4) == 0)
                 {
-                    std::vector<xmippFeature> v;
+                    std::vector<Feature> v;
                     v.push_back(out.itemAtPos(SomPos(i - 1, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                     v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -648,7 +648,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
         j = 0;
         for (i = 1;i < out.width() - 1;i++)
         {
-            std::vector<xmippFeature> v;
+            std::vector<Feature> v;
             v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
             v.push_back(out.itemAtPos(SomPos(i, j))[0]);
             v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
@@ -663,7 +663,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
         {
             if ((j % 4) == 1)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i + 1, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -674,7 +674,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
             else if ((j % 4) == 2)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i + 1, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -685,7 +685,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
             else if ((j % 4) == 3)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i - 1, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -696,7 +696,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
             else if ((j % 4) == 0)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i - 1, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -712,7 +712,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
         {
             if ((j % 4) == 1)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                 v.push_back(out.itemAtPos(SomPos(i, j))[0]);
@@ -723,7 +723,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
             else if ((j % 4) == 2)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
                 v.push_back(out.itemAtPos(SomPos(i, j))[0]);
@@ -733,7 +733,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
             else if ((j % 4) == 3)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i - 1, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -744,7 +744,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
             else if ((j % 4) == 0)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i - 1, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i - 1, j))[0]);
@@ -762,7 +762,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
         {
             if ((j % 4) == 1)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i + 1, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i, j))[0]);
@@ -773,7 +773,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
             else if ((j % 4) == 2)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i + 1, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i, j))[0]);
@@ -785,7 +785,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
             else if ((j % 4) == 3)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i, j))[0]);
                 v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
@@ -796,7 +796,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
             }
             else if ((j % 4) == 0)
             {
-                std::vector<xmippFeature> v;
+                std::vector<Feature> v;
                 v.push_back(out.itemAtPos(SomPos(i, j - 1))[0]);
                 v.push_back(out.itemAtPos(SomPos(i, j))[0]);
                 v.push_back(out.itemAtPos(SomPos(i + 1, j))[0]);
@@ -809,7 +809,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
 
         /*Corners*/
 
-        std::vector<xmippFeature> v;
+        std::vector<Feature> v;
         v.push_back(out.itemAtPos(SomPos(1, 0))[0]);
         v.push_back(out.itemAtPos(SomPos(0, 0))[0]);
         v.push_back(out.itemAtPos(SomPos(0, 1))[0]);
@@ -845,7 +845,7 @@ void xmippUmatrix::medianSmoothing(Out& out) const
 
 //-----------------------------------------------------------------------------
 
-void xmippUmatrix::averageSmoothing(Out& out) const
+void Umatrix::averageSmoothing(Out& out) const
 {
 
     unsigned i, j;

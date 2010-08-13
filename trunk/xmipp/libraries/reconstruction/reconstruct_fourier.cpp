@@ -260,7 +260,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
     Matrix2D<double>  localA(3, 3), localAinv(3, 3);
     MultidimArray< std::complex<double> > localPaddedFourier;
     MultidimArray<double> localPaddedImg;
-    XmippFftw localTransformerImg;
+    FourierTransformer localTransformerImg;
 
     MetaData * docFile = threadParams->docFile;
     std::vector<long int> objId;

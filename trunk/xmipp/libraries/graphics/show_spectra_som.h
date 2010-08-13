@@ -47,7 +47,7 @@ public:
     bool        apply_geo;
 protected:
     // Original data
-    xmippCTVectors *Vdat;
+    ClassicTrainingVectors *Vdat;
     // Array of list of images, a list for each codevector
     std::vector<std::string> *SFcv;
     // Array of list of spectra, a list for each codevector
@@ -76,7 +76,7 @@ protected:
 
     /* Extract the represented spectra to a list.
        The xmippCTVector is not cleared at the beginning. */
-    virtual void extractRepresented(xmippCTVectors &v_represented);
+    virtual void extractRepresented(ClassicTrainingVectors &v_represented);
 
     /* Initialize right click menubar */
     virtual void initRightclickMenubar();

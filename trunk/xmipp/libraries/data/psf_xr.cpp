@@ -29,7 +29,7 @@
 #include "mask.h"
 
 /* Read -------------------------------------------------------------------- */
-void XmippXRPSF::read(const FileName &fn)
+void XRayPSF::read(const FileName &fn)
 {
     FILE *fh_param;
 
@@ -66,7 +66,7 @@ void XmippXRPSF::read(const FileName &fn)
 }
 
 /* Write ------------------------------------------------------------------- */
-void XmippXRPSF::write(const FileName &fn)
+void XRayPSF::write(const FileName &fn)
 {
     std::ofstream fh_param;
     fh_param.open(fn.c_str());
@@ -78,7 +78,7 @@ void XmippXRPSF::write(const FileName &fn)
 }
 
 /* Usage ------------------------------------------------------------------- */
-void XmippXRPSF::usage()
+void XRayPSF::usage()
 {
     std::cerr << "  [lambda=<lambda=2.43>]            : Wavelength in nm\n"
     << "  [focal_length=<Flens=1.4742>]     : Focal length in mm\n"
@@ -90,7 +90,7 @@ void XmippXRPSF::usage()
 }
 
 /* Show -------------------------------------------------------------------- */
-std::ostream & operator <<(std::ostream &out, const XmippXRPSF &psf)
+std::ostream & operator <<(std::ostream &out, const XRayPSF &psf)
 {
 
     out     << std::endl
@@ -117,7 +117,7 @@ std::ostream & operator <<(std::ostream &out, const XmippXRPSF &psf)
 }
 
 /* Default values ---------------------------------------------------------- */
-void XmippXRPSF::clear()
+void XRayPSF::clear()
 {
     lambda = 2.43e-9;
     //    Flens = 1.4742e-3;
@@ -130,7 +130,7 @@ void XmippXRPSF::clear()
 }
 
 /* Produce Side Information ------------------------------------------------ */
-void XmippXRPSF::produceSideInfo()
+void XRayPSF::produceSideInfo()
 {
     /// Calculation of the rest of microscope parameters
     Flens = (4*Nzp*deltaR*deltaR)/lambda;
@@ -150,20 +150,20 @@ void XmippXRPSF::produceSideInfo()
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
-//void XmippXRPSF::applyOTF(MultidimArray<double> &I) const
+//void XRayPSF::applyOTF(MultidimArray<double> &I) const
 //{
 //}
 
 /* Generate the Intensity PSF for a specific XR microscope configuration     ------------- */
 /* Generate OTF Image ------------------------------------------------------ */
 
-void XmippXRPSF::generateOTF(MultidimArray<std::complex<double> > &Im)
+void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &Im)
 {
     MultidimArray<double> I2(Im.ydim,Im.xdim);
     generateOTF(I2);
 }
 
-void XmippXRPSF::generateOTF(MultidimArray<double> &Im)
+void XRayPSF::generateOTF(MultidimArray<double> &Im)
 {
     //#define DEBUG
     /// REMEMBER TO INCLUDE AND/OR ANALYZE THE MINIMUM RESOLUTION CONDITION !!!! ////
@@ -178,7 +178,7 @@ void XmippXRPSF::generateOTF(MultidimArray<double> &Im)
     //#ifdef DEBUG
     //
     //    std::cout << std::endl;
-    //    std::cout << "XmippXRPSF::GenerateOTF - Parameters:" << std::endl;
+    //    std::cout << "XRayPSF::GenerateOTF - Parameters:" << std::endl;
     //    std::cout << "Nx = " << Nx << "   Ny = " << Ny << std::endl;
     //    std::cout << "dxl = " << dxl << "   dyl = " << dyl << std::endl;
     //    std::cout << "Equivalent focal = " << focalEquiv << std::endl;
@@ -188,7 +188,7 @@ void XmippXRPSF::generateOTF(MultidimArray<double> &Im)
     //#endif
 
     MultidimArray< std::complex<double> > OTFTemp, PSFi;
-    XmippFftw transformer;
+    FourierTransformer transformer;
     //    Mask_Params mask_prm; TODO do we have to include masks using this method?
 
     OTFTemp.resize(Niy,Nix);
@@ -260,7 +260,7 @@ void XmippXRPSF::generateOTF(MultidimArray<double> &Im)
 #endif
 }
 
-void XmippXRPSF::adjustParam(Image<double> &vol)
+void XRayPSF::adjustParam(Image<double> &vol)
 {
 
     Nox = vol().xdim;
@@ -380,7 +380,7 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
     }
 }
 /// TODO: func description
-void project_xr(XmippXRPSF &psf, Image<double> &vol, Image<double> &imOut, int idxSlice)
+void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxSlice)
 {
 
     // psf.adjustParam(vol);

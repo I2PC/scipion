@@ -266,7 +266,7 @@ void DetectMissingWedge_parameters::produceSideInfo()
 {
     V = new Image<double>();
     V->read(fn_vol);
-    XmippFftw transformer;
+    FourierTransformer transformer;
     MultidimArray< std::complex<double> > Vfft;
     transformer.FourierTransform((*V)(),Vfft,false);
     Vmag = new MultidimArray<double>();

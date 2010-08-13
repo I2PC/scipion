@@ -121,7 +121,7 @@ int PROJECT_mpi_XR_Effectively_project(
     Projection_mpi_XR_Parameters &prm,
     PROJECT_XR_Side_Info &side,
     Projection &proj,
-    XmippXRPSF &psf,
+    XRayPSF &psf,
     MetaData &SF)
 {
     int numProjs=0;
@@ -250,7 +250,7 @@ int ROUT_mpi_XR_project(Prog_Project_XR_Parameters &prm,
     randomize_random_generator();
 
     // Read Microscope optics parameters and produce side information
-    XmippXRPSF psf;
+    XRayPSF psf;
     psf.verbose = prm.verbose;
     psf.read(prm.fn_psf_xr);
     psf.produceSideInfo();

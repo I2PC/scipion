@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 /*-----------------------------------------------------------------------------
- xmippBatchSOM.cc
+ BatchSOM.cc
  Implements Kohonen Self-Organizing Feature Maps by using Batch SOM
 -----------------------------------------------------------------------------*/
 
@@ -34,7 +34,7 @@
  * Construct a BatchSOM from the code vectors in a stream
  * Parameter: _is  The stream
  */
-xmippBatchSOM::xmippBatchSOM(std::istream& _is): xmippSOM(_is)
+BatchSOM::BatchSOM(std::istream& _is): SOM(_is)
 {
     readSelf(_is);
 };
@@ -46,7 +46,7 @@ xmippBatchSOM::xmippBatchSOM(std::istream& _is): xmippSOM(_is)
  * Parameter: _som  The som to train
  * Parameter: _ts   The training set
  */
-void xmippBatchSOM::train(xmippMap& _som, const xmippCTVectors& _ts) const
+void BatchSOM::train(ClassificationMap& _som, const ClassicTrainingVectors& _ts) const
 {
 
 
@@ -87,7 +87,7 @@ void xmippBatchSOM::train(xmippMap& _som, const xmippCTVectors& _ts) const
             if (total != 0)
             {
                 for (unsigned a = 0; a < aveVector.size(); a++)
-                    aveVector[a] /= (xmippFeature) total;
+                    aveVector[a] /= (Feature) total;
                 _som.theItems[it] = aveVector;
             }
         }

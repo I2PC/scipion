@@ -30,14 +30,14 @@
    @ingroup ClassificationLibrary */
 //@{
 /** Basic RM class */
-class xmippRM
+class RandomMatrix
 {
 public:
 
     /**
     * Make an empty xmippRP
     */
-    xmippRM(void)
+    RandomMatrix(void)
     {
         matdist = "gaussian";
     }
@@ -58,7 +58,7 @@ public:
     * Parameter: ts The vectors.
     * Parameter: k Number of components
     */
-    void calculateRM(xmippCTVectors const &ts, int _k);
+    void calculateRandomMatrix(ClassicTrainingVectors const &ts, int _k);
 
     /** Clear.
     Clean the Random Matrix*/
@@ -72,11 +72,11 @@ public:
     An exception is thrown if the input vectors are not of the same size
     as the RM ones.*/
 
-    void Project(xmippCTVectors &input, xmippCTVectors &output, int _k);
+    void Project(ClassicTrainingVectors &input, ClassicTrainingVectors &output, int _k);
 
     /** Defines Listener class
       */
-    void setListener(xmippBaseListener* _listener)
+    void setListener(BaseListener* _listener)
     {
         listener = _listener;
     };
@@ -85,7 +85,7 @@ public:
 private:
     std::string matdist; // Matrix distribution (sparse or gaussian)
     MultidimArray<double> RM;
-    xmippBaseListener* listener;   // Listener class
+    BaseListener* listener;   // Listener class
 
 
 };

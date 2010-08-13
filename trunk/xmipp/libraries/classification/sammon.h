@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippSammon.h
+// Sammon.h
 // Sammon Projection Algorithm
 //-----------------------------------------------------------------------------
 
@@ -43,7 +43,7 @@
 #endif
 
 //-----------------------------------------------------------------------------
-// xmippSammon: Sammon Maps
+// Sammon: Sammon Maps
 //-----------------------------------------------------------------------------
 
 /**@defgroup Sammon Sammon Projection
@@ -52,13 +52,13 @@
 /**
  * This class implements the Sammon non-linear projection algorithm
  */
-class xmippSammon
+class Sammon
 {
 public:
     /// An xmipp training vector is taken as input
-    typedef xmippCTVectors In;
+    typedef ClassicTrainingVectors In;
     /// An xmipp training vector is given as output
-    typedef xmippCTVectors Out;
+    typedef ClassicTrainingVectors Out;
 
 
     /**
@@ -67,7 +67,7 @@ public:
      * Parameter: _num_iterations Number of iterations to be used
      * Parameter: _learning_rate "Magic number"
      */
-    xmippSammon(const unsigned _mapped = 2,
+    Sammon(const unsigned _mapped = 2,
                 const unsigned _num_iterations = 100,
                 const double _learning_rate = 0.2);
 
@@ -91,7 +91,7 @@ public:
     /**
      * Sets the listener class
      */
-    void setListener(xmippBaseListener* _listener)
+    void setListener(BaseListener* _listener)
     {
         listener = _listener;
     };
@@ -101,7 +101,7 @@ private:
     unsigned num_iterations;   // number of iterations
     double learning_rate;      // learning rate
     double stress;  // Sammon stress (error in distances)
-    xmippBaseListener* listener;  // Listener class
+    BaseListener* listener;  // Listener class
     unsigned verbosity;      // defines verbosity level
     // 0: No verbosity
     // 1: Only shows progress bar

@@ -40,7 +40,7 @@ void MissingWedge::removeWedge(MultidimArray<double> &V) const
     Matrix1D<double> freq(3), freqPos, freqNeg;
     Matrix1D<int> idx(3);
 
-    XmippFftw transformer;
+    FourierTransformer transformer;
     MultidimArray< std::complex<double> > Vfft;
     transformer.FourierTransform(V,Vfft,false);
 
@@ -146,13 +146,13 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
 
     // Filter in X
     #define MINUS_ONE_POWER(n) (((n)%2==0)? 1:-1)
-    XmippFftw transformer;
+    FourierTransformer transformer;
     transformer.FourierTransform(hx,H);
     
     FOR_ALL_ELEMENTS_IN_ARRAY1D(H)
           H(i)*= MINUS_ONE_POWER(i);
 
-    XmippFftw transformer2;
+    FourierTransformer transformer2;
     
     MultidimArray<double> aux(XSIZE(Vin));
         	   

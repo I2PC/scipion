@@ -1278,7 +1278,7 @@ void progress_bar(long rlen)
 
 // Initialize progress bar.
 
-void xmippTextualListener::OnInitOperation(unsigned long _est_it)
+void TextualListener::OnInitOperation(unsigned long _est_it)
 {
     progress_bar(-(_est_it));
 }
@@ -1290,13 +1290,13 @@ void xmippTextualListener::OnInitOperation(unsigned long _est_it)
 // Almost identical to previous progress bar function, in fact, we call
 // those functions inside.
 
-void xmippTextualListener::OnProgress(unsigned long _it)
+void TextualListener::OnProgress(unsigned long _it)
 {
     progress_bar(_it);
 }
 
 // Shows a message indicating the operation in progress.
-void xmippTextualListener::OnReportOperation(const std::string& _rsOp)
+void TextualListener::OnReportOperation(const std::string& _rsOp)
 {
     fprintf(stderr, _rsOp.c_str());// std::cout << _rsOp;
 }

@@ -47,8 +47,8 @@ main(int argc, char** argv)
     FileName       cb_in = "";    // Code vectors input file
     FileName       tmpN;  // Temporary variable
     unsigned       c;  // Number of clusters
-    xmippFeature   m;  // Fuzzy membership
-    xmippFeature   eps = 1e-7; // Stopping criteria
+    Feature   m;  // Fuzzy membership
+    Feature   eps = 1e-7; // Stopping criteria
     unsigned       iter = 1000; // Iteration number
     unsigned       verb = 0; // Verbosity level
     bool           norm = 1; // Normalize?
@@ -167,7 +167,7 @@ main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    xmippCTVectors ts(0, true);
+    ClassicTrainingVectors ts(0, true);
     try
     {
         inStream >> ts;
@@ -196,9 +196,9 @@ main(int argc, char** argv)
             ts.normalize();        // Normalize input data
         }
 
-        xmippFCMeans thisFCmeans(m, eps, iter);  // Creates Fuzzy c-means Algorithm
+        FuzzyCMeans thisFCmeans(m, eps, iter);  // Creates Fuzzy c-means Algorithm
 
-        xmippFCB* thisFCB;
+        FuzzyCodeBook* thisFCB;
         if (cb_in != "")
         {
             std::cout << "Reading fuzzy cluster centers file " << cb_in << "....." << std::endl;
@@ -208,19 +208,19 @@ main(int argc, char** argv)
                 std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                 exit(EXIT_FAILURE);
             }
-            thisFCB = new xmippFCB(codeStream, ts.size()); // Reads FuzzyCodeBook from file
+            thisFCB = new FuzzyCodeBook(codeStream, ts.size()); // Reads FuzzyCodeBook from file
         }
         else
-            thisFCB = new xmippFCB(c, ts); // initialize Fuzzy codebook randomly
+            thisFCB = new FuzzyCodeBook(c, ts); // initialize Fuzzy codebook randomly
 
-        xmippTextualListener myListener;     // Define the listener class
+        TextualListener myListener;     // Define the listener class
         myListener.setVerbosity() = verb;     // Set verbosity level
         thisFCmeans.setListener(&myListener);    // Set Listener
 
         thisFCmeans.train(*thisFCB, ts);          // Train algorithm
 
         // Test algorithm
-        xmippFeature qerror = thisFCmeans.test(*thisFCB, ts);
+        Feature qerror = thisFCmeans.test(*thisFCB, ts);
         std::cout << "Quantization error : " <<  qerror << std::endl;
 
         // Classifying
@@ -233,10 +233,10 @@ main(int argc, char** argv)
 
         // Shows Validity functionals (If applicable)
 
-        xmippFeature F = thisFCmeans.F(*thisFCB);
-        xmippFeature H = thisFCmeans.H(*thisFCB);
-        xmippFeature NFI = thisFCmeans.NFI(*thisFCB);
-        xmippFeature S = thisFCmeans.S(*thisFCB, ts);
+        Feature F = thisFCmeans.F(*thisFCB);
+        Feature H = thisFCmeans.H(*thisFCB);
+        Feature NFI = thisFCmeans.NFI(*thisFCB);
+        Feature S = thisFCmeans.S(*thisFCB, ts);
         std::cout << std::endl << "Validity Functionals : " << std::endl;
         std::cout << "Partition coefficient (max) (F) : " << F << std::endl;
         std::cout << "Partition entropy (min) (H) : " << H << std::endl;

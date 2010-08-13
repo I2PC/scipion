@@ -88,7 +88,7 @@ int main(int argc, char **argv)
         std::cerr << argv[0] << ": can't open file " << iname << std::endl;
         exit(EXIT_FAILURE);
     }
-    xmippCTVectors ts(0, false);
+    ClassicTrainingVectors ts(0, false);
     iStream >> ts;
 
     FILE  *fout;

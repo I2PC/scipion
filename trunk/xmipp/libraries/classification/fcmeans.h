@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 //-----------------------------------------------------------------------------
-// xmippFCMeans.hh
+// FuzzyCMeans.hh
 // Fuzzy c-means clustering algorithm
 //-----------------------------------------------------------------------------
 
@@ -46,7 +46,7 @@
  *  This class implements Fuzzy c-means clustering method (Bezdeck)
  *  an unsupervised clustering algorithm.
 */
-class xmippFCMeans:  public xmippBaseAlgo<xmippFCB >
+class FuzzyCMeans:  public ClassificationAlgorithm<FuzzyCodeBook >
 {
 
 public:
@@ -57,25 +57,27 @@ public:
      * Parameter: _epsilon  Stopping criterion
      * Parameter: _epochs Number of epochs or iterations
     */
-    xmippFCMeans(double _m, double _epsilon, unsigned _epochs)
-            : xmippBaseAlgo< xmippFCB >("xmippFCMeans"),
+    FuzzyCMeans(double _m, double _epsilon, unsigned _epochs)
+            : ClassificationAlgorithm< FuzzyCodeBook >("xmippFCMeans"),
             m(_m), epsilon(_epsilon),
             epochs(_epochs)
-    {};
+    {}
+    ;
 
 
     /*
      * Ctor from stream
      * Parameter: _is Must have the parameters in the same order than the previous ctor.
      */
-//  xmippFCMeans( std::istream& _is );
+    //  FuzzyCMeans( std::istream& _is );
 
 
     /*
      * Virtual destructor
      */
-    virtual ~xmippFCMeans()
-    {};
+    virtual ~FuzzyCMeans()
+    {}
+    ;
 
 
     /**
@@ -83,7 +85,7 @@ public:
      * Parameter: _xmippDS Data structure to train, a codeBook in this case
      * Parameter: _examples  A training set with the training examples
      */
-    virtual void train(xmippFCB& _xmippDS,
+    virtual void train(FuzzyCodeBook& _xmippDS,
                        TS& _examples) const;
 
 
@@ -94,7 +96,7 @@ public:
      * Parameter: _examples  The training set
      * returns the quantization error
      */
-    virtual double fuzzyTest(const xmippFCB& _xmippDS,
+    virtual double fuzzyTest(const FuzzyCodeBook& _xmippDS,
                              const TS& _examples) const;
 
 
@@ -103,7 +105,7 @@ public:
      * Parameter: _xmippDS Data structure to train, a codeBook in this case
      * Parameter: _examples  A training set with the training examples
      */
-    virtual double test(const xmippFCB& _xmippDS,
+    virtual double test(const FuzzyCodeBook& _xmippDS,
                         const TS& _examples) const;
 
 
@@ -116,7 +118,7 @@ public:
      *     Function Algorithms", Plenum Press, New York, 1981.
      *
      */
-    double F(const xmippFCB& _xmippDS) const;
+    double F(const FuzzyCodeBook& _xmippDS) const;
 
     /**
      * Calculates Partition Entropy (H) validity functional
@@ -128,7 +130,7 @@ public:
      *
      */
 
-    double H(const xmippFCB& _xmippDS) const;
+    double H(const FuzzyCodeBook& _xmippDS) const;
 
 
     /**
@@ -141,7 +143,7 @@ public:
      *
      */
 
-    double NFI(const xmippFCB& _xmippDS) const;
+    double NFI(const FuzzyCodeBook& _xmippDS) const;
 
     /**
      * Calculates Compactness and separation index (S) validity functional
@@ -153,7 +155,7 @@ public:
      *     IEEE Trans. PAMI, 13(8):841-847, 1991.
      *
      */
-    double S(const xmippFCB& _xmippDS, const TS& _examples) const;
+    double S(const FuzzyCodeBook& _xmippDS, const TS& _examples) const;
 
 protected:
 

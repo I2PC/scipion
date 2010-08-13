@@ -1334,7 +1334,7 @@ void init_progress_bar(long total);
  */
 void progress_bar(long act_time);
 
-/** xmippBaseListener
+/** BaseListener
  *
  * This class implements the xmipp listener class for notification of progress
  * status and other operations. It is an abstract class that contains base
@@ -1342,11 +1342,11 @@ void progress_bar(long act_time);
  *
  * This class is not ported to Python.
  */
-class xmippBaseListener
+class BaseListener
 {
 public :
     /** Default constructor */
-    xmippBaseListener(): verbosity(0), cancel(false)
+    BaseListener(): verbosity(0), cancel(false)
     {}
 
     /** Initialize progress bar.
@@ -1417,14 +1417,14 @@ private:
     bool cancel;
 };
 
-/** xmippTextualListener
+/** TextualListener
  *
  * This class implements the xmipp classical textual listener class for
- * notification of progress status. It inherits from xmippBaseListener.
+ * notification of progress status. It inherits from BaseListener.
  *
  * This class is not ported to Python.
  */
-class xmippTextualListener: public xmippBaseListener
+class TextualListener: public BaseListener
 {
 public :
 

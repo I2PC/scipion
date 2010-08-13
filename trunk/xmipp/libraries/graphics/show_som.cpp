@@ -98,7 +98,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
         std::ifstream fh_his(fn_his.c_str());
         if (fh_his)
         {
-            xmippCTVectors ts(0, true);
+            ClassicTrainingVectors ts(0, true);
             fh_his >> ts;
             int imax = ts.size();
             hisAssigned = new std::string[imax];
@@ -114,7 +114,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
         std::ifstream fh_err(fn_err.c_str());
         if (fh_err)
         {
-            xmippCTVectors ts(0, true);
+            ClassicTrainingVectors ts(0, true);
             fh_err >> ts;
             int imax = ts.size();
             cv_errors = new std::string[imax];

@@ -40,20 +40,20 @@
 //@{
 /**
  * This class implements an specific Data Structure for Fuzzy
- * algorithms. It inherits fron xmippCB, so this Data Structure is basically
+ * algorithms. It inherits fron CodeBook, so this Data Structure is basically
  * a codebook with a Fuzzy-membership Matrix.
- * Some of the methods from xmippCB are redefined.
+ * Some of the methods from CodeBook are redefined.
  */
-class xmippFCB : public xmippCB
+class FuzzyCodeBook : public CodeBook
 {
 public:
 
-    typedef std::vector< std::vector< xmippFeature > > MM;
+    typedef std::vector< std::vector< Feature > > MM;
     /// Alias for Membership Matrix
-    //typedef xmippCTSet<std::vector<xmippFeature>,xmippLabel> TS;  // Alias for a Training set
-    typedef xmippCTVectors TS;
+    //typedef ClassificationTrainingSet<std::vector<Feature>,Label> TS;  // Alias for a Training set
+    typedef ClassicTrainingVectors TS;
     /// Alias for a Training set
-    typedef xmippCTSet<std::vector<xmippFeature>, xmippFeature > FV;
+    typedef ClassificationTrainingSet<std::vector<Feature>, Feature > FV;
     /// Alias for Fuzzy vectors
 
     // Fuzzy membership matrix
@@ -63,7 +63,7 @@ public:
      * Default constructor
      * Parameter: _calib     Calibrated or not, that is, a CB with class labels or not
      */
-    xmippFCB(const bool& _calib = false) : xmippCB(_calib)
+    FuzzyCodeBook(const bool& _calib = false) : CodeBook(_calib)
     {};
 
 
@@ -75,11 +75,11 @@ public:
      * Parameter: _size    Size of code vectors
      * Parameter: _data    Size of the training set
      * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
-       It calls Base Class constructor (xmippCB)
+       It calls Base Class constructor (CodeBook)
      */
 
 
-    xmippFCB(unsigned _n, unsigned _size, unsigned _data, bool _cal = false);
+    FuzzyCodeBook(unsigned _n, unsigned _size, unsigned _data, bool _cal = false);
 
 
     /**
@@ -91,10 +91,10 @@ public:
      * Parameter: _lower   Lower value for random elements
      * Parameter: _upper   Upper value for random elements
      * Parameter: _cal     Calibrated or not, that is, a CB with class labels or not
-       It calls Base Class constructor (xmippCB)
+       It calls Base Class constructor (CodeBook)
      */
 
-    xmippFCB(unsigned _n, unsigned _size, unsigned _data, double _lower = 0, double _upper = 1, bool _cal = false);
+    FuzzyCodeBook(unsigned _n, unsigned _size, unsigned _data, double _lower = 0, double _upper = 1, bool _cal = false);
 
     /**
      * Constructor.
@@ -103,10 +103,10 @@ public:
      * Parameter: _n       Number of vectors
      * Parameter: _ts      Training set; will be used to get initial values
      * Parameter: _use_rand_cvs  Use random code vectors (inherited from base class)
-       It calls Base Class constructor (xmippCB)
+       It calls Base Class constructor (CodeBook)
      */
 
-    xmippFCB(unsigned _n, const xmippCTVectors& _ts, const bool _use_rand_cvs = false);
+    FuzzyCodeBook(unsigned _n, const ClassicTrainingVectors& _ts, const bool _use_rand_cvs = false);
 
     /*
      * Constructs a fuzzy code book given a stream
@@ -114,13 +114,13 @@ public:
      * Parameter: _size Size of code vectors (number of data points)
      */
 
-    xmippFCB(std::istream& _is, const unsigned _size = 0);
+    FuzzyCodeBook(std::istream& _is, const unsigned _size = 0);
 
     /**
      * Virtual destructor
      */
 
-    virtual ~xmippFCB()
+    virtual ~FuzzyCodeBook()
     {};
 
 
@@ -133,7 +133,7 @@ public:
      * Parameter: _di  data index
      * @exception out_of_range If _i is out of range
      */
-    xmippFeature membAt(unsigned _di, unsigned _ci) const;
+    Feature membAt(unsigned _di, unsigned _ci) const;
 
     /**
      * Returns a  reference to the specified item
@@ -141,7 +141,7 @@ public:
      * Parameter: _di  data index
      * @exception out_of_range If _i is out of range
      */
-    xmippFeature& membAt(unsigned _di, unsigned _ci);
+    Feature& membAt(unsigned _di, unsigned _ci);
 
 
     /**
@@ -158,7 +158,7 @@ public:
        codevector is that the best (winner) is estimated using the
        fuzzy membership matrix.
      */
-    virtual xmippVector& fuzzyTest(unsigned _in) const;
+    virtual FeatureVector& fuzzyTest(unsigned _in) const;
 
     /**
      * Returns the index to the code vector that represents the input in the codebook
@@ -173,7 +173,7 @@ public:
      * Returns the label associated to an input
      * Parameter: _in  Index to the sample to be classified
      */
-    virtual xmippLabel fuzzyApply(unsigned _in) const;
+    virtual Label fuzzyApply(unsigned _in) const;
 
     /**
      * Calibrates the code book
@@ -181,7 +181,7 @@ public:
      * Parameter: _def  Default target for non-calibrated vectors
      * @exception runtime_error  If the training set is not calibrated
      */
-    virtual void fuzzyCalibrate(xmippCTVectors& _ts, xmippLabel _def = xmippLabel());
+    virtual void fuzzyCalibrate(ClassicTrainingVectors& _ts, Label _def = Label());
 
     /**
      * Returns the index of the codevector closest to an input.
@@ -202,7 +202,7 @@ public:
      * In this case, it uses the Fuzzy Memberships to make the assignments
      * Parameter: _ts  Sample list to classify
      */
-    virtual void classify(const xmippCTVectors* _ts);
+    virtual void classify(const ClassicTrainingVectors* _ts);
 
     /**
     * Hard partition the Fuzzy membership matrix

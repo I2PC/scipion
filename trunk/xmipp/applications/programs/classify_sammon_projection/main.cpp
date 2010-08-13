@@ -37,18 +37,13 @@
  */
 
 //-----------------------------------------------------------------------------
-
-typedef xmippSammon Sammon;
-
 /* Prototypes -============================================================= */
 
 void Usage(char **argv);
-
 //-----------------------------------------------------------------------------
 
 int main(int argc, char** argv)
 {
-
     /* Input Parameters ======================================================== */
     FileName       fn_in;     // input file
     FileName       fn_out;    // output file
@@ -162,7 +157,7 @@ int main(int argc, char** argv)
     }
     Sammon::Out out(in.theItems[0].size()); // create output data set
     Sammon sammon(dim, iter, 0.3);        // Crate algorithm
-    xmippTextualListener myListener; // Define the listener class
+    TextualListener myListener; // Define the listener class
     myListener.setVerbosity() = verb; // Set verbosity level
     sammon.setListener(&myListener); // Set Listener
     sammon(in, out);   // do mapping
@@ -173,7 +168,7 @@ int main(int argc, char** argv)
     std::ofstream outStream(tmpN.c_str());
     outStream << out;
     outStream.flush();
-    xmippFeature stress = sammon.getStress();
+    Feature stress = sammon.getStress();
     std::cout << "Sammon stress (Distance error) : " << stress << std::endl;
 
     std::cout << "Saving algorithm information as " << fn_out << ".inf ....." << std::endl;

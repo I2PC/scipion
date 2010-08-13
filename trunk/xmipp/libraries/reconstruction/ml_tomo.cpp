@@ -1403,7 +1403,7 @@ void Prog_ml_tomo_prm::reScaleVolume(MultidimArray<double> &Min, bool down_scale
 {
     MultidimArray<std::complex<double> > Fin;
     MultidimArray<double> Mout;
-    XmippFftw local_transformer_in, local_transformer_out;
+    FourierTransformer local_transformer_in, local_transformer_out;
     int newdim;
 
     if (oridim==dim)
@@ -1672,7 +1672,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     std::vector<double> all_Xi2;
     Matrix2D<double> A_rot(4,4), I(4,4), A_rot_inv(4,4);
     bool is_a_neighbor, is_within_psirange=true;
-    XmippFftw local_transformer;
+    FourierTransformer local_transformer;
 
     if (dont_align || dont_rotate)
         my_nr_ang=1;
@@ -2066,7 +2066,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
 
     MultidimArray<double> Mimg0, Maux, Mref, Mmissing;
     MultidimArray<std::complex<double> > Faux, Fimg0, Fref;
-    XmippFftw local_transformer;
+    FourierTransformer local_transformer;
     Matrix2D<double> A_rot(4,4), I(4,4), A_rot_inv(4,4);
     bool is_a_neighbor;
     double img_stddev, ref_stddev, corr, maxcorr=-9999.;
@@ -2758,7 +2758,7 @@ void Prog_ml_tomo_prm::calculateFsc(MultidimArray<double> &M1, MultidimArray<dou
 {
 
     MultidimArray< std::complex< double > > FT1, FT2;
-    XmippFftw transformer1, transformer2;
+    FourierTransformer transformer1, transformer2;
     transformer1.FourierTransform(M1, FT1, false);
     transformer2.FourierTransform(M2, FT2, false);
 

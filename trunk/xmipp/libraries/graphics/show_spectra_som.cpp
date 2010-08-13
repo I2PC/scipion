@@ -65,7 +65,7 @@ void ShowSpectraSOM::initWithFile(const FileName &_fn_root,
     std::ifstream fh_in(_fn_dat.c_str());
     if (!fh_in)
         REPORT_ERROR(1, (std::string)"ShowSpectra::readFile: Cannot open" + _fn_dat);
-    Vdat = new xmippCTVectors(fh_in);
+    Vdat = new ClassicTrainingVectors(fh_in);
     fh_in.close();
 
     initTable();
@@ -98,7 +98,7 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
         std::ifstream fh_his(fn_his.c_str());
         if (fh_his)
         {
-            xmippCTVectors ts(0, true);
+            ClassicTrainingVectors ts(0, true);
             fh_his >> ts;
             int imax = ts.size();
             hisAssigned = new std::string[imax];
@@ -114,7 +114,7 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
         std::ifstream fh_err(fn_err.c_str());
         if (fh_err)
         {
-            xmippCTVectors ts(0, true);
+            ClassicTrainingVectors ts(0, true);
             fh_err >> ts;
             int imax = ts.size();
             cv_errors = new std::string[imax];
@@ -273,7 +273,7 @@ void ShowSpectraSOM::extractRepresented(MetaData &SF_represented)
         }
 }
 
-void ShowSpectraSOM::extractRepresented(xmippCTVectors &_v_represented)
+void ShowSpectraSOM::extractRepresented(ClassicTrainingVectors &_v_represented)
 {
     // Count the number of represented vectors
     int counter = 0;
@@ -367,10 +367,10 @@ void ShowSpectraSOM::showRepresentedImagesStats()
 void ShowSpectraSOM::showRepresentedSpectraStats()
 {
     // Extract represented vectors
-    xmippCTVectors V_represented(0, true);
+    ClassicTrainingVectors V_represented(0, true);
     extractRepresented(V_represented);
     // Get Avg and SD
-    xmippCTVectors *myVect = new xmippCTVectors(0, true);
+    ClassicTrainingVectors *myVect = new ClassicTrainingVectors(0, true);
     *myVect = V_represented.getStatVector();
     // Represent
     ShowSpectra *myST = new ShowSpectra;
@@ -395,7 +395,7 @@ void ShowSpectraSOM::showRepresentedSel()
 /* Show assigned spectra --------------------------------------------------- */
 void ShowSpectraSOM::showRepresentedSpectra()
 {
-    xmippCTVectors *V_represented = new xmippCTVectors(0, true);
+    ClassicTrainingVectors *V_represented = new ClassicTrainingVectors(0, true);
     extractRepresented(*V_represented);
     ShowSpectra *myST = new ShowSpectra;
     myST->initWithVectors(6, 6, V_represented, "Represented spectra");
@@ -406,7 +406,7 @@ void ShowSpectraSOM::showRepresentedSpectra()
 void ShowSpectraSOM::showErrorSpectrum()
 {
     // Extract represented vectors
-    xmippCTVectors V_represented(0, true);
+    ClassicTrainingVectors V_represented(0, true);
     int row = currentRow();
     int col = currentColumn();
     if (row < 0 || col < 0) return;
@@ -428,7 +428,7 @@ void ShowSpectraSOM::showErrorSpectrum()
     }
 
     // Get Avg
-    xmippCTVectors *myVect = new xmippCTVectors(0, true);
+    ClassicTrainingVectors *myVect = new ClassicTrainingVectors(0, true);
     *myVect = V_represented.getStatVector();
     myVect->deleteRow(1);
     myVect->theTargets[0] = "Error spectrum";

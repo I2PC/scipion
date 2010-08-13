@@ -68,7 +68,7 @@ typedef struct{
     MultidimArray<double> *sumw;
 } structThreadExpectationSingleImage ;
 
-/**@defgroup ml_tomo ml_align2d (Maximum likelihood in 2D)
+/**@defgroup ml_tomo Maximum likelihood for tomograms
    @ingroup ReconsLibrary */
 //@{
 /** ml_tomo parameters. */
@@ -201,7 +201,7 @@ public:
     bool no_SMALLANGLE;
 
     // sampling object
-    XmippSampling mysampling;
+    Sampling mysampling;
     // For user-provided tilt range
     double tilt_range0, tilt_rangeF;
     // Symmetry setup
@@ -211,7 +211,7 @@ public:
     int threads;
 
     /** FFTW objects */
-    XmippFftw transformer;
+    FourierTransformer transformer;
 
     /** debug flag */
     int debug;

@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippSOM.hh
+// SOM.hh
 // Implements Kohonen Self-Organizing Feature Maps
 //-----------------------------------------------------------------------------
 
@@ -55,7 +55,8 @@ public:
      */
     Descent(const double _initial = 1, const double _final = 0)
             : initial(_initial), final(_final)
-    {};
+    {}
+    ;
 
     /**
      * Returns the function value associated a step if the transition from
@@ -129,7 +130,7 @@ protected:
 /**
  * This class trains a Kohonen's Self Organizing Feature Map
  */
-class xmippSOM : public xmippBaseAlgo<xmippMap>
+class SOM : public ClassificationAlgorithm<ClassificationMap>
 {
 public:
     /// Type of neighborhood function
@@ -143,22 +144,24 @@ public:
        Parameter: _neighType  Type of neighborhood function
      * Parameter: _nSteps     Number of training steps
      */
-    xmippSOM(Descent& _alpha, Descent& _radius,  neighType _neighType, unsigned long _nSteps)
-            : xmippBaseAlgo<xmippMap>(), somAlpha(_alpha), somRadius(_radius), somNeigh(_neighType), somNSteps(_nSteps)
-    {};
+    SOM(Descent& _alpha, Descent& _radius,  neighType _neighType, unsigned long _nSteps)
+            : ClassificationAlgorithm<ClassificationMap>(), somAlpha(_alpha),
+              somRadius(_radius), somNeigh(_neighType), somNSteps(_nSteps)
+    {}
+    ;
 
     /**
      * Construct a SOM from the code vectors in a stream
      * Parameter: _is  The stream
      */
-    xmippSOM(std::istream& _is);
-
+    SOM(std::istream& _is);
 
     /**
      * Virtual destructor
      */
-    virtual ~xmippSOM()
-    {};
+    virtual ~SOM()
+    {}
+    ;
 
     /**
      * Sets the alpha descent function
@@ -184,7 +187,7 @@ public:
      * Parameter: _som  The som to train
      * Parameter: _ts   The training set
      */
-    virtual void train(xmippMap& _som, xmippCTVectors& _ts) const;
+    virtual void train(ClassificationMap& _som, ClassicTrainingVectors& _ts) const;
 
     /**
      * Tests the SOM
@@ -192,7 +195,7 @@ public:
      * Parameter: _examples   The training set of examples
      * returns the quantization error
      */
-    virtual double test(const xmippMap& _som, const TS& _examples) const;
+    virtual double test(const ClassificationMap& _som, const TS& _examples) const;
 
 
     /**
@@ -214,7 +217,7 @@ public:
     virtual void readSelf(std::istream& _is);
 
     /**
-     * Saves the xmippSOM class into a stream.
+     * Saves the SOM class into a stream.
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
@@ -222,7 +225,7 @@ public:
 
 
     /**
-     * Loads the xmippSOM class from a stream.
+     * Loads the SOM class from a stream.
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
@@ -233,7 +236,7 @@ public:
     * Parameter: _os   The output stream
     * Parameter: _som  The som algorithm to be printed
     */
-    friend std::ostream& operator << (std::ostream& _os, const xmippSOM& _som)
+    friend std::ostream& operator << (std::ostream& _os, const SOM& _som)
     {
         _som.printSelf(_os);
         return _os;
@@ -244,7 +247,7 @@ public:
     * Parameter: _is The input stream
     * Parameter: _som The som algorithm
     */
-    friend std::istream& operator >> (std::istream& _is, xmippSOM& _som)
+    friend std::istream& operator >> (std::istream& _is, SOM& _som)
     {
         _som.readSelf(_is);
         return _is;
@@ -253,9 +256,9 @@ public:
 
     /**
     * Operator "="
-    * Parameter: op1 xmippSOM
+    * Parameter: op1 SOM
     */
-    xmippSOM& operator= (const xmippSOM &op1)
+    SOM& operator= (const SOM &op1)
     {
         std::strstreambuf bf;
         std::iostream _str(&bf);
@@ -277,10 +280,9 @@ private:
       * Parameter: _som  The som to train
       * Parameter: _ts   The training set
       */
-    virtual void train(xmippMap& _som, const TS& _ts) const
-        {};
-
-
+    virtual void train(ClassificationMap& _som, const TS& _ts) const
+        {}
+    ;
 };
 //@}
 #endif

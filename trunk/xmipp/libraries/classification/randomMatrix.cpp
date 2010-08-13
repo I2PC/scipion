@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "rm.h"
+#include "randomMatrix.h"
 #include "distance.h"
 
 #ifdef __sun
@@ -34,7 +34,7 @@
 * Calculate the Random matrix
 * Parameter: ts The vectors.
 */
-void xmippRM::calculateRM(xmippCTVectors const &ts, int _k)
+void RandomMatrix::calculateRandomMatrix(ClassicTrainingVectors const &ts, int _k)
 {
 
     int size = ts.size();
@@ -85,7 +85,7 @@ void xmippRM::calculateRM(xmippCTVectors const &ts, int _k)
     // first calculates the lenght of the vector
     for (int z = 0; z < dim; z++)
     {
-        xmippFeature lenght = 0;
+        Feature lenght = 0;
         for (int it = 0; it < _k; it++)
         {
             if (finite(RM(it, z)))
@@ -114,11 +114,11 @@ void xmippRM::calculateRM(xmippCTVectors const &ts, int _k)
 
 
 /* Project ----------------------------------------------------------------- */
-void xmippRM::Project(xmippCTVectors &input, xmippCTVectors &output, int _k)
+void RandomMatrix::Project(ClassicTrainingVectors &input, ClassicTrainingVectors &output, int _k)
 {
 
     // Calculate RM
-    calculateRM(input, _k);
+    calculateRandomMatrix(input, _k);
 
     // Do the projection
 
@@ -154,7 +154,7 @@ void xmippRM::Project(xmippCTVectors &input, xmippCTVectors &output, int _k)
 }
 
 /* Clear ------------------------------------------------------------------- */
-void xmippRM::clear()
+void RandomMatrix::clear()
 {
     RM.clear();
     matdist = "gaussian";

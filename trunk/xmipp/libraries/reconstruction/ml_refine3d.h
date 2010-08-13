@@ -99,7 +99,7 @@ public:
     // Perturb angles of reference projections
     bool do_perturb;
     // sampling object
-    XmippSampling mysampling;
+    Sampling mysampling;
     // Symmetry setup
     int symmetry, sym_order;
     // Number of reference projections per 3D model

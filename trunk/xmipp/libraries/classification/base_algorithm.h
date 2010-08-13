@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippBaseAlgo.h
+// ClassificationAlgorithm.h
 // Base class for all algorithms within Xmipp Library
 //-----------------------------------------------------------------------------
 
@@ -51,7 +51,7 @@
  * 2) an apply method that accepts an example and classifies it
  */
 template<class DSClass>
-class xmippBaseAlgo
+class ClassificationAlgorithm
 {
 public:
 
@@ -62,14 +62,14 @@ public:
      * Constructor.
      * Parameter: _ID an ID string unique for each algorithm class
      */
-    xmippBaseAlgo(const std::string& _ID = ""): ID(_ID)
+    ClassificationAlgorithm(const std::string& _ID = ""): ID(_ID)
     {};
 
     /**
      * Destructor.
      * The default destructor
      */
-    virtual ~xmippBaseAlgo()
+    virtual ~ClassificationAlgorithm()
     {};
 
     /**
@@ -126,20 +126,20 @@ public:
 
     /** Defines Listener class
     */
-    void setListener(xmippBaseListener* _listener)
+    void setListener(BaseListener* _listener)
     {
         listener = _listener;
     };
 
 protected:
     std::string ID;// algorithm ID, an unique name to recognize the algorithm
-    xmippBaseListener* listener;   // Listener class
+    BaseListener* listener;   // Listener class
 
 };
 
 //-----------------------------------------------------------------------------
 template<class DS>
-std::ostream& operator << (std::ostream& _os, const xmippBaseAlgo<DS>& _algo)
+std::ostream& operator << (std::ostream& _os, const ClassificationAlgorithm<DS>& _algo)
 {
     _algo.printSelf(_os);
     return _os;

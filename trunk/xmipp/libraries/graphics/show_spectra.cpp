@@ -67,7 +67,7 @@ void ShowSpectra::clear()
 
 /* Init with vectors ------------------------------------------------------- */
 void ShowSpectra::initWithVectors(int _numRows, int _numCols,
-                                  xmippCTVectors *_V, const char *_title)
+                                  ClassicTrainingVectors *_V, const char *_title)
 {
     init();
     V = _V;
@@ -95,7 +95,7 @@ void ShowSpectra::readDatFile(const FileName &_fn)
     std::ifstream fh_in(_fn.c_str());
     if (!fh_in)
         REPORT_ERROR(1, (std::string)"ShowSpectra::readFile: Cannot open" + _fn);
-    V = new xmippCTVectors(fh_in);
+    V = new ClassicTrainingVectors(fh_in);
     fh_in.close();
 
     annotateTime(_fn);
@@ -342,7 +342,7 @@ void ShowSpectra::showSpectraStats()
         QMessageBox::about(this, "Error!", "No enough spectra selected\n");
     else
     {
-        xmippCTVectors mySpectra(0, true);
+        ClassicTrainingVectors mySpectra(0, true);
         mySpectra.theItems.resize(counter);
         mySpectra.theTargets.resize(counter);
         long myIndex = 0;
@@ -354,7 +354,7 @@ void ShowSpectra::showSpectraStats()
                 myIndex++;
             }
 
-        xmippCTVectors *myVect = new xmippCTVectors(0, true);
+        ClassicTrainingVectors *myVect = new ClassicTrainingVectors(0, true);
         *myVect = mySpectra.getStatVector();
         ShowSpectra *myST = new ShowSpectra;
         myST->initWithVectors(1, 2, myVect, "Average and SD");

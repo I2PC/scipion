@@ -107,7 +107,6 @@ int readDM3(int img_select,bool isStack=false)
     header->tags.addLabel(MDL_DM3_NUMBER_TYPE);
     header->tags.addLabel(MDL_DM3_VALUE);
 
-
     int nodeID=0, parentID=0;
 
     for (int n=1;n<=header->nTags;n++)
@@ -272,8 +271,6 @@ int readDM3(int img_select,bool isStack=false)
 double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool isLE)
 {
     /* Header Tag ============================================================== */
-
-
     int  idTag;
     unsigned char cdTag;
     unsigned short int ltName;

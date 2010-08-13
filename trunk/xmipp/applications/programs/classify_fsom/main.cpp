@@ -253,7 +253,7 @@ main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    xmippCTVectors ts(0, true);
+    ClassicTrainingVectors ts(0, true);
     try
     {
         inStream >> ts;
@@ -277,7 +277,7 @@ main(int argc, char** argv)
             ts.normalize();        // Normalize input data
         }
 
-        xmippFuzzyMap *myMap;
+        FuzzyMap *myMap;
 
         if (cb_in != "")
         {
@@ -288,16 +288,16 @@ main(int argc, char** argv)
                 std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
                 exit(EXIT_FAILURE);
             }
-            myMap = new xmippFuzzyMap(codeStream, ts.size(), true);
+            myMap = new FuzzyMap(codeStream, ts.size(), true);
         }
         else
-            myMap = new xmippFuzzyMap(layout, xdim, ydim, ts, use_rand_cvs);
+            myMap = new FuzzyMap(layout, xdim, ydim, ts, use_rand_cvs);
 
 
-        xmippFuzzySOM *thisSOM;
+        FuzzySOM *thisSOM;
         if (fn_algo_in == "")
         {
-            thisSOM = new xmippFuzzySOM(m0, m1, annSteps, reg, eps, iter);    // Creates FSOM Algorithm
+            thisSOM = new FuzzySOM(m0, m1, annSteps, reg, eps, iter);    // Creates FSOM Algorithm
         }
         else
         {
@@ -310,7 +310,7 @@ main(int argc, char** argv)
             }
         }
 
-        xmippTextualListener myListener;     // Define the listener class
+        TextualListener myListener;     // Define the listener class
         myListener.setVerbosity() = verb;     // Set verbosity level
         thisSOM->setListener(&myListener);       // Set Listener
 

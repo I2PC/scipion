@@ -38,7 +38,7 @@
 * Calculate the eigenval/vecs
 * Parameter: ts The vectors.
 */
-void PCAAnalyzer::reset(xmippCTVectors const &ts)
+void PCAAnalyzer::reset(ClassicTrainingVectors const &ts)
 {
     std::vector<unsigned> dummy;
     for (unsigned i = 0;i < ts.size();i++)
@@ -51,9 +51,9 @@ void PCAAnalyzer::reset(xmippCTVectors const &ts)
 * Parameter: ts The vectors.
 * Parameter: idx The indexes of the vectors to use
 */
-void PCAAnalyzer::reset(xmippCTVectors const &ts, std::vector<unsigned> const & idx)
+void PCAAnalyzer::reset(ClassicTrainingVectors const &ts, std::vector<unsigned> const & idx)
 {
-    std::vector<xmippVector> a;
+    std::vector<FeatureVector> a;
     int n = ts.dimension();
     a.resize(n);
     int verbosity = listener->getVerbosity();
@@ -68,7 +68,7 @@ void PCAAnalyzer::reset(xmippCTVectors const &ts, std::vector<unsigned> const & 
         for (int k = 0;k < n;k++)
         {
             a[k].resize(n);
-            xmippFeature sum = 0.0;
+            Feature sum = 0.0;
             int l = 0;
             for (std::vector<unsigned>::const_iterator i = idx.begin();i != idx.end();i++)
             {
@@ -91,12 +91,12 @@ void PCAAnalyzer::reset(xmippCTVectors const &ts, std::vector<unsigned> const & 
         {
             for (int j = 0;j <= i;j++)
             {
-                xmippFeature sum = 0.0;
+                Feature sum = 0.0;
                 int l = 0;
                 for (std::vector<unsigned>::const_iterator it = idx.begin();it != idx.end();it++)
                 {
-                    xmippFeature d1 = ts.itemAt(*it)[i] - mean[i];
-                    xmippFeature d2 = ts.itemAt(*it)[j] - mean[j];
+                    Feature d1 = ts.itemAt(*it)[i] - mean[i];
+                    Feature d2 = ts.itemAt(*it)[j] - mean[j];
                     if (finite(d1) && finite(d2))
                     {
                         sum += d1 * d2;
@@ -122,12 +122,12 @@ void PCAAnalyzer::reset(xmippCTVectors const &ts, std::vector<unsigned> const & 
     eigenvec.resize(n);
     set_Dimension(n);
 
-    xmippVector b;
+    FeatureVector b;
     b.resize(n);
-    xmippVector z;
+    FeatureVector z;
     z.resize(n);
-    xmippVector &d = eigenval;
-    std::vector<xmippVector> &v = eigenvec;
+    FeatureVector &d = eigenval;
+    std::vector<FeatureVector> &v = eigenvec;
 
     for (int i = 0;i < n;i++)
     {
@@ -149,8 +149,8 @@ void PCAAnalyzer::reset(xmippCTVectors const &ts, std::vector<unsigned> const & 
         if ((verbosity == 1) && (it == 1))
             listener->OnProgress(0);
 
-        xmippFeature tresh;
-        xmippFeature sm = 0.0;
+        Feature tresh;
+        Feature sm = 0.0;
         for (int ip = 0; ip < n - 1; ip++)
         {
             for (int iq = ip + 1; iq < n; iq++)
@@ -161,7 +161,7 @@ void PCAAnalyzer::reset(xmippCTVectors const &ts, std::vector<unsigned> const & 
             for (int i = 0; i < n - 1; i++)
             {
                 int k = i;
-                xmippFeature p = d[i];
+                Feature p = d[i];
 
                 for (int j = i + 1; j < n; j++)
                     if (d[j] >= p)
@@ -171,7 +171,7 @@ void PCAAnalyzer::reset(xmippCTVectors const &ts, std::vector<unsigned> const & 
                 {//Swap i<->k
                     d[k] = d[i];
                     d[i] = p;
-                    xmippVector t = v[i];
+                    FeatureVector t = v[i];
                     v[i] = v[k];
                     v[k] = t;
                 }
@@ -190,7 +190,7 @@ void PCAAnalyzer::reset(xmippCTVectors const &ts, std::vector<unsigned> const & 
         {
             for (int iq = ip + 1; iq < n; iq++)
             {
-                xmippFeature g = 100.0 * fabs(a[iq][ip]);
+                Feature g = 100.0 * fabs(a[iq][ip]);
 
                 if (it > 4
                     && fabs(d[ip]) + g == fabs(d[ip])
@@ -198,13 +198,13 @@ void PCAAnalyzer::reset(xmippCTVectors const &ts, std::vector<unsigned> const & 
                     a[iq][ip] = 0.0;
                 else if (fabs(a[iq][ip]) > tresh)
                 {
-                    xmippFeature tau, t, s, c;
-                    xmippFeature h = d[iq] - d[ip];
+                    Feature tau, t, s, c;
+                    Feature h = d[iq] - d[ip];
                     if (fabs(h) + g == fabs(h))
                         t = a[iq][ip] / h;
                     else
                     {
-                        xmippFeature theta = 0.5 * h / a[iq][ip];
+                        Feature theta = 0.5 * h / a[iq][ip];
                         t = 1.0 / (fabs(theta) + sqrt(1.0 + theta * theta));
                         if (theta < 0.0)
                             t = -t;
@@ -336,7 +336,7 @@ int PCAAnalyzer::Dimension_for_variance(double th_var)
 }
 
 /* Project ----------------------------------------------------------------- */
-void PCAAnalyzer::Project(xmippVector &input, xmippVector &output)
+void PCAAnalyzer::Project(FeatureVector &input, FeatureVector &output)
 {
     if (input.size() != eigenvec[0].size())
         REPORT_ERROR(1, "PCA_project: vectors are not of the same size");

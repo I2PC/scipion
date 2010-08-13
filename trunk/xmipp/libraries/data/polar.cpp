@@ -67,7 +67,7 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 			   const Polar<std::complex<double> > &M2,
                            MultidimArray<double> &angles, 
-                           XmippFftw &local_transformer)
+                           FourierTransformer &local_transformer)
 {
 
     MultidimArray<std::complex<double> > Fsum;
@@ -128,7 +128,7 @@ void normalizedPolarFourierTransform(const MultidimArray<double> &in,
 
 // Best rotation -----------------------------------------------------------
 double best_rotation(const Polar< std::complex<double> > &I1,
-    const Polar< std::complex<double> > &I2, XmippFftw &local_transformer)
+    const Polar< std::complex<double> > &I2, FourierTransformer &local_transformer)
 {
     MultidimArray<double> angles;
     rotationalCorrelation(I1,I2,angles,local_transformer);
@@ -164,7 +164,7 @@ void alignRotationally(MultidimArray<double> &I1, MultidimArray<double> &I2,
     normalizedPolarFourierTransform(I2, polarFourierI2, true, XSIZE(I2)/5,
         XSIZE(I2)/2,plans);
 
-    XmippFftw local_transformer;
+    FourierTransformer local_transformer;
     MultidimArray<double> rotationalCorr;
     rotationalCorr.resize(2*polarFourierI2.getSampleNoOuterRing()-1);
     local_transformer.setReal(rotationalCorr);

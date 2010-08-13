@@ -44,7 +44,7 @@ class ShowSpectra: public ShowSel
     Q_OBJECT;
 protected:
     // Vectors to represent
-    xmippCTVectors *V;
+    ClassicTrainingVectors *V;
 
     // Axes offset within cell frame
     int offX, offY;
@@ -132,7 +132,7 @@ public:
     this function since it will be the vectors seen by this class,
     i.e., no copy will be performed.*/
     virtual void initWithVectors(int _numRows, int _numCols,
-                                 xmippCTVectors *_V, const char *_title);
+                                 ClassicTrainingVectors *_V, const char *_title);
 };
 
 /** Class to filter spectra.

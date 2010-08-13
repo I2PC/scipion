@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippMap.hh
+// ClassificationMap.hh
 // Implements a Map of the type used by Kohonen algorithms.
 //-----------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@
 #include "fuzzy_code_book.h"
 #include "vector_ops.h"
 
-typedef xmippVector SomIn;
+typedef FeatureVector SomIn;
 typedef std::pair<long, long> SomPos;
 
 // Forward declarations
@@ -54,7 +54,7 @@ class Layout;
 /**
  * This class implements a Map of the type used by Kohonen Algorithms
  */
-class xmippMap : public xmippCB
+class ClassificationMap : public CodeBook
 {
 public:
 
@@ -70,7 +70,7 @@ public:
      * Parameter: _height  Height of the output plane
      * Parameter: _size    Size of code vectors
      */
-    xmippMap(const std::string& _layout,  unsigned _width,
+    ClassificationMap(const std::string& _layout,  unsigned _width,
              const unsigned& _height, const unsigned& _size);
 
 
@@ -83,7 +83,7 @@ public:
      * Parameter: _lower   Lower value for random elements
      * Parameter: _upper   Upper value for random elements
      */
-    xmippMap(const std::string& _layout,  unsigned _width,
+    ClassificationMap(const std::string& _layout,  unsigned _width,
              const unsigned& _height, const unsigned& _size, const double& _lower,
              const double& _upper);
 
@@ -97,8 +97,8 @@ public:
      * Parameter: _ts      Training set; will be used to get initial values
      * Parameter: _use_rand_cvs  Use random code vector values
      */
-    xmippMap(const std::string& _layout,  unsigned _width,
-             const unsigned& _height, const xmippCTVectors& _ts,
+    ClassificationMap(const std::string& _layout,  unsigned _width,
+             const unsigned& _height, const ClassicTrainingVectors& _ts,
              const bool _use_rand_cvs = false);
 
     /**
@@ -107,12 +107,12 @@ public:
      * Parameter: _cv  If the stream holds a codevector file or a whole codebook file
      * @exception  runtime_error  If there are problems with the stream
      */
-    xmippMap(std::istream& _is, bool _cv = true);
+    ClassificationMap(std::istream& _is, bool _cv = true);
 
     /**
      * Virtual destructor is needed
      */
-    virtual ~xmippMap()
+    virtual ~ClassificationMap()
     {};
 
     /**
@@ -120,7 +120,7 @@ public:
      * vectors to a som
      * @exception range_error  If this method is called
      */
-    virtual void add(const xmippVector& _v, const xmippLabel& _l = xmippLabel());
+    virtual void add(const FeatureVector& _v, const Label& _l = Label());
 
     /**
      * Returns the id of layout that som has
@@ -170,13 +170,13 @@ public:
      * Returns the target of a code vector given its position
      * Parameter: _pos  The position of the code vector
      */
-    xmippLabel& targetAtPos(const SomPos& _pos);
+    Label& targetAtPos(const SomPos& _pos);
 
     /**
      * Returns a const target of a code vector given its position
      * Parameter: _pos  The position of the code vector
      */
-    const xmippLabel& targetAtPos(const SomPos& _pos) const;
+    const Label& targetAtPos(const SomPos& _pos) const;
 
 
     /**
@@ -218,7 +218,7 @@ public:
      * Parameter: _os   The output stream
      * Parameter: _som  The som to be printed
      */
-    friend std::ostream& operator << (std::ostream& _os, const xmippMap& _som)
+    friend std::ostream& operator << (std::ostream& _os, const ClassificationMap& _som)
     {
         _som.printSelf(_os);
     };
@@ -229,7 +229,7 @@ public:
      * Parameter: _som The code book to be read
      * @exception  runtime_error  If there are problems with the stream
      */
-    friend std::istream& operator >> (std::istream& _is, xmippMap& _som)
+    friend std::istream& operator >> (std::istream& _is, ClassificationMap& _som)
     {
         _som.readSelf(_is);
     };
@@ -237,9 +237,9 @@ public:
 
     /**
     * Operator "="
-    * Parameter: op1 xmippMap
+    * Parameter: op1 ClassificationMap
     */
-    xmippMap& operator= (const xmippMap &op1)
+    ClassificationMap& operator= (const ClassificationMap &op1)
     {
         std::strstreambuf bf;
         std::iostream _str(&bf);
@@ -263,7 +263,7 @@ public:
     virtual void readSelf(std::istream& _is);
 
     /**
-     * Saves the xmippMap class into a stream.
+     * Saves the ClassificationMap class into a stream.
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
@@ -271,7 +271,7 @@ public:
 
 
     /**
-     * Loads the xmippMap class from a stream.
+     * Loads the ClassificationMap class from a stream.
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
@@ -303,7 +303,7 @@ protected:
 /**
  * This class implements a Fuzzy Map of the type used by Fuzzy mapping Algorithms
  */
-class xmippFuzzyMap : public xmippFCB
+class FuzzyMap : public FuzzyCodeBook
 {
 public:
 
@@ -319,7 +319,7 @@ public:
      * Parameter: _lower   Lower value for random elements
      * Parameter: _upper   Upper value for random elements
      */
-    xmippFuzzyMap(const std::string& _layout,  unsigned _width,
+    FuzzyMap(const std::string& _layout,  unsigned _width,
                   const unsigned& _height, const unsigned& _size, const double& _lower,
                   const double& _upper);
 
@@ -333,8 +333,8 @@ public:
      * Parameter: _ts      Training set; will be used to get initial values
      * Parameter: _use_rand_cvs  Use random code vector pixel values
      */
-    xmippFuzzyMap(const std::string& _layout,  unsigned _width,
-                  const unsigned& _height, const xmippCTVectors& _ts,
+    FuzzyMap(const std::string& _layout,  unsigned _width,
+                  const unsigned& _height, const ClassicTrainingVectors& _ts,
                   const bool _use_rand_cvs = false);
 
 
@@ -345,12 +345,12 @@ public:
      * Parameter: _cv   If the stream holds a codevector file or a whole codebook file
      * @exception   runtime_error  If there are problems with the stream
      */
-    xmippFuzzyMap(std::istream& _is, const unsigned _size = 0, bool _cv = true);
+    FuzzyMap(std::istream& _is, const unsigned _size = 0, bool _cv = true);
 
     /**
      * Virtual destructor is needed
      */
-    virtual ~xmippFuzzyMap()
+    virtual ~FuzzyMap()
     {};
 
     /**
@@ -358,7 +358,7 @@ public:
      * vectors to a som
      * @exception range_error  If this method is called
      */
-    virtual void add(const xmippVector& _v, const xmippLabel& _l = xmippLabel());
+    virtual void add(const FeatureVector& _v, const Label& _l = Label());
 
     /**
      * Returns the id of layout that som has
@@ -426,13 +426,13 @@ public:
      * Returns the target of a code vector given its position
      * Parameter: _pos  The position of the code vector
      */
-    xmippLabel& targetAtPos(const SomPos& _pos);
+    Label& targetAtPos(const SomPos& _pos);
 
     /**
      * Returns a const target of a code vector given its position
      * Parameter: _pos  The position of the code vector
      */
-    const xmippLabel& targetAtPos(const SomPos& _pos) const;
+    const Label& targetAtPos(const SomPos& _pos) const;
 
 
     /**
@@ -473,7 +473,7 @@ public:
      * Parameter: _os   The output stream
      * Parameter: _som  The som to be printed
      */
-    friend std::ostream& operator << (std::ostream& _os, const xmippFuzzyMap& _fsom)
+    friend std::ostream& operator << (std::ostream& _os, const FuzzyMap& _fsom)
     {
         _fsom.printSelf(_os);
     };
@@ -484,7 +484,7 @@ public:
      * Parameter: _som The code book to be read
      * @exception  runtime_error  If there are problems with the stream
      */
-    friend std::istream& operator >> (std::istream& _is, xmippFuzzyMap& _fsom)
+    friend std::istream& operator >> (std::istream& _is, FuzzyMap& _fsom)
     {
         _fsom.readSelf(_is);
     };
@@ -492,9 +492,9 @@ public:
 
     /**
     * Operator "="
-    * Parameter: op1 xmippFuzzyMap
+    * Parameter: op1 FuzzyMap
     */
-    xmippFuzzyMap& operator= (const xmippFuzzyMap &op1)
+    FuzzyMap& operator= (const FuzzyMap &op1)
     {
         std::strstreambuf bf;
         std::iostream _str(&bf);
@@ -519,7 +519,7 @@ public:
     virtual void readSelf(std::istream& _is, const unsigned _size = 0);
 
     /**
-     * Saves the xmippFuzzyMap class into a stream.
+     * Saves the FuzzyMap class into a stream.
      * this method can be used to save the status of the class.
      * Parameter: _os The output stream
      */
@@ -527,7 +527,7 @@ public:
 
 
     /**
-     * Loads the xmippFuzzyMap class from a stream.
+     * Loads the FuzzyMap class from a stream.
      * this method can be used to load the status of the class.
      * Parameter: _is The output stream
      */
@@ -595,7 +595,7 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _radius  Radius of neighbohood
      */
-    std::vector<unsigned> neighborhood(const xmippMap* _som, const SomPos& _center,
+    std::vector<unsigned> neighborhood(const ClassificationMap* _som, const SomPos& _center,
                                   double _radius) const;
 
 
@@ -605,7 +605,7 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _radius  Radius of neighbohood
      */
-    std::vector<unsigned> neighborhood(const xmippFuzzyMap* _som, const SomPos& _center,
+    std::vector<unsigned> neighborhood(const FuzzyMap* _som, const SomPos& _center,
                                   double _radius) const;
 
 
@@ -616,7 +616,7 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _aveVector: returns the average vector
      */
-    virtual void localAve(const xmippFuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const = 0;
+    virtual void localAve(const FuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const = 0;
 
 
     /**
@@ -624,7 +624,7 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _radius: Radius
      */
-    virtual double numNeig(const xmippFuzzyMap* _som, const SomPos& _center) const = 0;
+    virtual double numNeig(const FuzzyMap* _som, const SomPos& _center) const = 0;
 
 
     /**
@@ -695,13 +695,13 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _aveVector: returns the average vector
      */
-    virtual void localAve(const xmippFuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const;
+    virtual void localAve(const FuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const;
 
     /**
      * Returns the average number of neighbors.
      * Parameter: _center  Reference to the center of neighborhood
      */
-    virtual double numNeig(const xmippFuzzyMap* _som, const SomPos& _center) const;
+    virtual double numNeig(const FuzzyMap* _som, const SomPos& _center) const;
 
 
 protected:
@@ -745,14 +745,14 @@ public:
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _aveVector: returns the average vector
      */
-    virtual void localAve(const xmippFuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const;
+    virtual void localAve(const FuzzyMap* _som, const SomPos& _center, std::vector<double>& _aveVector) const;
 
     /**
      * Returns the average number of neighbors.
      * Parameter: _center  Reference to the center of neighborhood
      * Parameter: _radius: Radius
      */
-    virtual double numNeig(const xmippFuzzyMap* _som, const SomPos& _center) const;
+    virtual double numNeig(const FuzzyMap* _som, const SomPos& _center) const;
 
 protected:
 

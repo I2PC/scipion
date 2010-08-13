@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 //-----------------------------------------------------------------------------
-// xmippCTVectors.hh
+// ClassicTrainingVectors.hh
 //-----------------------------------------------------------------------------
 
 #ifndef XMIPPCTVECTORS_H
@@ -43,14 +43,14 @@
  * This class implements all the necessary functionality for classic
  * training vectors.
  */
-class xmippCTVectors : public xmippCTSet<xmippVector, xmippLabel>
+class ClassicTrainingVectors : public ClassificationTrainingSet<FeatureVector, Label>
 {
 public:
 
     typedef struct stats
     {
-        xmippFeature mean;
-        xmippFeature sd;
+        Feature mean;
+        Feature sd;
     }
     statsStruct;
 
@@ -60,31 +60,31 @@ public:
      Parameter: _vecSize Vector dimension; required to dim the feature and types vector
      Parameter: _calib calibration which should be true if the data set has labels
     */
-    xmippCTVectors(unsigned _vecSize = 0, bool _calib = true)
-            : xmippCTSet<xmippVector, xmippLabel>(_calib),  /*varStats(_vecSize),*/
+    ClassicTrainingVectors(unsigned _vecSize = 0, bool _calib = true)
+            : ClassificationTrainingSet<FeatureVector, Label>(_calib),  /*varStats(_vecSize),*/
             normalized(false)
-    {};
+    {}
+    ;
 
     /**
      * Constructs a training set given a stream
      * Parameter: _is  The input stream
      * @exception  runtime_error  If there are problems with the stream
      */
-    xmippCTVectors(std::istream & _is);
-
+    ClassicTrainingVectors(std::istream & _is);
 
     /**
-     * Copy Constructor. Useful when returning a xmippCTVectors Class.
-     * Parameter: op1 xmippCTVectors
+     * Copy Constructor. Useful when returning a ClassicTrainingVectors Class.
+     * Parameter: op1 ClassicTrainingVectors
      */
-    xmippCTVectors(const xmippCTVectors &op1);
+    ClassicTrainingVectors(const ClassicTrainingVectors &op1);
 
     /**
      * Virtual destructor
      */
-    virtual ~xmippCTVectors()
-    {};
-
+    virtual ~ClassicTrainingVectors()
+    {}
+    ;
 
     /**
      * Returns the amount of features (cases)
@@ -139,24 +139,24 @@ public:
 
     /**
      * Operator "="
-     * Parameter: op1 xmippCTVectors
+     * Parameter: op1 ClassicTrainingVectors
      */
-    xmippCTVectors& operator= (const xmippCTVectors &op1);
+    ClassicTrainingVectors& operator= (const ClassicTrainingVectors &op1);
 
 
     /** Copy the structure from another TS but leave it empty.
-    * Parameter: _ts xmippCTVectors
+    * Parameter: _ts ClassicTrainingVectors
     * @note  Just the structure is copied, not the items or targets.
     */
-    bool copyStructure(xmippCTVectors& _ts);
+    bool copyStructure(ClassicTrainingVectors& _ts);
 
 
     /** Copy a row from an identical TS.
-    * Parameter: _ts xmippCTVectors
+    * Parameter: _ts ClassicTrainingVectors
     * Parameter: _idx   row to be copied
     * @note  No complete validation is done.
     */
-    bool insertRowFrom(xmippCTVectors& _ts, unsigned int _idx);
+    bool insertRowFrom(ClassicTrainingVectors& _ts, unsigned int _idx);
 
     /** Delete a row from a TS.
     * Parameter: _idx   row to be deleted
@@ -203,13 +203,13 @@ public:
      * Calcualtes the average and SD of a feature in the training set
      * Parameter: _i  The index to the feature
      */
-    void getFeatureStats(unsigned _i, xmippFeature& _mean, xmippFeature& _sd);
+    void getFeatureStats(unsigned _i, Feature& _mean, Feature& _sd);
 
     /**
     * Returns a vector containing the average (item 0) and SD (item 1)
     */
 
-    xmippCTVectors getStatVector();
+    ClassicTrainingVectors getStatVector();
 
 
 protected:

@@ -45,7 +45,7 @@
  *
  * Here you have an example of use
  * @code
- * XmippFftw transformer;
+ * FourierTransformer transformer;
  * MultidimArray< std::complex<double> > Vfft;
  * transformer.FourierTransform(V(),Vfft,false);
  * MultidimArray<double> Vmag;
@@ -54,7 +54,7 @@
  *     Vmag(k,i,j)=20*log10(abs(Vfft(k,i,j)));
  * @endcode
  */
-class XmippFftw
+class FourierTransformer
 {
 public:
     /** Real array, in fact a pointer to the user array is stored. */
@@ -81,10 +81,10 @@ public:
 // Public methods
 public:
     /** Default constructor */
-    XmippFftw();
+    FourierTransformer();
 
     /** Destructor */
-    ~XmippFftw();
+    ~FourierTransformer();
 
     /** Set Number of threads
      * This function, which should be called once, performs any
@@ -345,7 +345,7 @@ void auto_correlation_vector(const MultidimArray< T > & Img, MultidimArray< doub
 
     // Compute the Fourier Transform
     MultidimArray< std::complex< double > > FFT1;
-    XmippFftw transformer1;
+    FourierTransformer transformer1;
     R=Img;
     transformer1.FourierTransform(R, FFT1, false);
 
@@ -378,7 +378,7 @@ void correlation_vector(const MultidimArray< T > & m1,
 
     // Compute the Fourier Transforms
     MultidimArray< std::complex< double > > FFT1, FFT2;
-    XmippFftw transformer1, transformer2;
+    FourierTransformer transformer1, transformer2;
     R=m1;
     transformer1.FourierTransform(R, FFT1, false);
     transformer2.FourierTransform((MultidimArray<T> &)m2, FFT2, false);
@@ -434,7 +434,7 @@ void correlation_matrix(const MultidimArray< T > & m1,
 {
     // Compute the Fourier Transforms
     MultidimArray< std::complex< double > > FFT1, FFT2;
-    XmippFftw transformer1, transformer2;
+    FourierTransformer transformer1, transformer2;
     R=m1;
     transformer1.FourierTransform(R, FFT1, false);
     transformer2.FourierTransform((MultidimArray<T> &)m2, FFT2, false);
@@ -462,7 +462,7 @@ void auto_correlation_matrix(const MultidimArray< T > & Img, MultidimArray< doub
 {
     // Compute the Fourier Transform
     MultidimArray< std::complex< double > > FFT1;
-    XmippFftw transformer1;
+    FourierTransformer transformer1;
     R=Img;
     transformer1.FourierTransform(R, FFT1);
 
