@@ -108,7 +108,10 @@ int readMRC(int img_select, bool isStack=false)
 
     MRChead*        header = (MRChead *) askMemory(sizeof(MRChead));
     if ( fread( header, MRCSIZE, 1, fimg ) < 1 )
+    {
+    	fclose(fimg);
         return(-2);
+    }
 
     // Determine byte order and swap bytes if from little-endian machine
     swap = 0;
@@ -217,7 +220,6 @@ int readMRC(int img_select, bool isStack=false)
     if ( header->mz && header->c!=0)//zx
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
 
-    int Ndim = NSIZE(data);
     if (isStack && dataflag<0)   // Don't read the individual header
     {                            // and the data if not necessary
         fclose(fimg);
@@ -383,7 +385,6 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 
     //locking
     struct flock fl;
-    int fd;
 
     fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
     fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */

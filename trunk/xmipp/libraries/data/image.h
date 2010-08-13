@@ -947,7 +947,6 @@ public:
         size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
         size_t datatypesize=gettypesize(datatype);
         size_t pagesize  =ZYXSIZE(data)*datatypesize;
-        size_t pagemax_n = ROUND(pagemax/datatypesize);
         size_t haveread_n=0;
 
         //Multidimarray mmapOn is priority over image mmapOn
@@ -989,7 +988,6 @@ public:
                 select_img = 0;
 
             char* page = NULL;
-            char* padpage = NULL;
 
             // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
             //if memory already allocated use it (no resize allowed)
@@ -1096,7 +1094,7 @@ public:
     /** Get pixel
      * (direct acces) needed by swig
      */
-    T getPixel(int i, int j)
+    T getPixel(int i, int j) const
     {
         return IMGPIXEL(*this,i,j);
     }

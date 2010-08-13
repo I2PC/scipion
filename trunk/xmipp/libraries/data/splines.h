@@ -33,8 +33,8 @@
 /* ========================================================================= */
 /* SPLINES                                                                   */
 /* ========================================================================= */
-/**@defgroup Splines Splines as basis functions
-   @ingroup Basis */
+/**@defgroup Splines Splines
+   @ingroup BasisFunction */
 //@{
 // Spline value ------------------------------------------------------------
 /** Spline value.

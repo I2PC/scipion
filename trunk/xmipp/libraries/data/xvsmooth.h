@@ -20,8 +20,7 @@
 #define _XV_SMOOTH_H
 typedef unsigned char byte;
 
-/**@defgroup XV Functions taken from xv
-   @ingroup DataLibrary
+/**@addtogroup Filters
 */
 //@{
 /** Resize of a 8-bit image */

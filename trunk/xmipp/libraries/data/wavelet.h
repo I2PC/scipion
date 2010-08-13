@@ -33,17 +33,15 @@
 
 /// @defgroup Wavelets Wavelets
 /// @ingroup DataLibrary
-
+//@{
 #define HAAR 2
 #define DAUB4 4
 #define DAUB12 12
 #define DAUB20 20
 
-/// @defgroup WaveletsBilib Bilib Wavelets
-/// @ingroup Wavelets
-
+/// @name Wavelet transform
+//@{
 /** B-spline Wavelet transform of a vector.
- * @ingroup WaveletsBilib
  *
  * The B-spline wavelet transform of the input array is computed. The size of
  * the array must be so as to allow the downsampling by 2 as many times as the
@@ -58,11 +56,7 @@ void Bilib_DWT(const MultidimArray< double >& input,
                int iterations,
                int isign = 1);
 
-/// @defgroup WaveletsRecipes Numerical recipes wavelets
-/// @ingroup Wavelets
-
 /** Set DWT type.
- * @ingroup WaveletsRecipes
  *
  * The DWT type should be set before starting making transforms. Valid types
  * are: HAAR, DAUB4, DAUB12, DAUB20
@@ -70,7 +64,6 @@ void Bilib_DWT(const MultidimArray< double >& input,
 void set_DWT_type(int DWT_type);
 
 /** DWT of a MultidimArray
- * @ingroup WaveletsRecipes
  *
  * The output vector can be the same as the input one. Previously the type of
  * DWT must be set with set_DWT_type. If isign=1 the direct DWT is performed,
@@ -90,7 +83,7 @@ void DWT(const MultidimArray< T >& v, MultidimArray< double >& result, int isign
         dim = 1;
     else if (ZSIZE(v) == 1)
         dim = 2;
-    else 
+    else
         dim = 3;
 
     typeCast(v, result);
@@ -99,18 +92,16 @@ void DWT(const MultidimArray< T >& v, MultidimArray< double >& result, int isign
 }
 
 /** IDWT of a MultidimArray.
- * @ingroup WaveletsRecipes
  *
  * The output volume can be the same as the input one. Previously the type of
  * DWT must be set with set_DWT_type.
  */
 void IDWT(const MultidimArray< double >& v, MultidimArray< double >& result);
+//@}
 
-/// @defgroup WaveletRelated Wavelet related functions
-/// @ingroup Wavelets
-
+/// @name Wavelet related functions
+//@{
 /** DWT Low pass versions.
- * @ingroup WaveletRelated
  *
  * This function returns the low pass versions at different scales. The low
  * pass version of the image at scale s is stored in the 01 quadrant of that
@@ -124,7 +115,6 @@ void DWT_lowpass2D(const MultidimArray< double >& v, MultidimArray< double >& re
         pow(2.0, smax - s - 1) - 1 : pow(2.0, smax - s) - 1))
 
 /** Select Block 1D.
- * @ingroup WaveletRelated
  *
  * Given the scale (s=0 is the finest) and the quadrant "0" (Lower frequencies)
  * or "1"(Higher frequencies) this routine returns the indices that should be
@@ -143,7 +133,6 @@ void SelectDWTBlock(int scale,
 }
 
 /** Select Block 2D.
- * @ingroup WaveletRelated
  *
  * Given the scale (s=0 is the finest) and the quadrant "xy"="00" (Upper left),
  * "01" (Upper right), "10" (Lower left), "11" (Lower right). This routine
@@ -172,7 +161,6 @@ void SelectDWTBlock(int scale,
 }
 
 /** Select Block 3D.
- * @ingroup WaveletRelated
  *
  * Given the scale (s=0 is the finest) and the quadrant "xyz"="000", "001",
  * "010", "011", "100", "101", "110", "111". This routine returns the indices
@@ -206,7 +194,6 @@ void SelectDWTBlock(int scale,
 }
 
 /** Get maximum scale.
- * @ingroup WaveletRelated
  *
  * This function returns the maximum scale achievable by the DWT transform of
  * a given size.
@@ -217,21 +204,18 @@ inline int Get_Max_Scale(int size)
 }
 
 /** Given a quadrant number it returns the string associated to it.
- * @ingroup WaveletRelated
  *
  * That is nothing more than its corresponding binary representation.
  */
 std::string Quadrant2D(int q);
 
 /** Given a quadrant number it returns the string associated to it.
- * @ingroup WaveletRelated
  *
  * That is nothing more than its corresponding binary representation.
  */
 std::string Quadrant3D(int q);
 
 /** Get scale and quadrant 1D.
- * @ingroup WaveletRelated
  *
  * Given a point and the maximum size of the image, this routine returns the
  * scale and quadrant it belongs.
@@ -239,7 +223,6 @@ std::string Quadrant3D(int q);
 void Get_Scale_Quadrant(int size_x, int x, int& scale, std::string& quadrant);
 
 /** Get scale and quadrant 2D.
- * @ingroup WaveletRelated
  *
  * Given a point and the maximum size of the image, this routine returns the
  * scale and quadrant it belongs.
@@ -252,7 +235,6 @@ void Get_Scale_Quadrant(int size_x,
                         std::string& quadrant);
 
 /** Get scale and quadrant 3D.
- * @ingroup WaveletRelated
  *
  * Given a point and the maximum size of the image, this routine returns the
  * scale and quadrant it belongs.
@@ -265,26 +247,24 @@ void Get_Scale_Quadrant(int size_x,
                         int z,
                         int& scale,
                         std::string& quadrant);
+//@}
 
-/// @defgroup WaveletsDenoising WaveletsDenoising
-/// @ingroup Wavelets
+/// @name Wavelet Denoising
+//@{
 
 /** Remove all information within a quadrant and scale.
- * @ingroup WaveletsDenoising
  */
 void clean_quadrant2D(MultidimArray< double >& I,
                       int scale,
                       const std::string& quadrant);
 
 /** Remove all information within a quadrant and scale.
- * @ingroup WaveletsDenoising
  */
 void clean_quadrant3D(MultidimArray< double >& I,
                       int scale,
                       const std::string& quadrant);
 
 /** Soft thresholding .
- * @ingroup WaveletsDenoising
  *
  * Substract a value from all coefficients, if the the value is greater than
  * the absolute value of the coefficient, that coefficient is set to 0.
@@ -292,21 +272,18 @@ void clean_quadrant3D(MultidimArray< double >& I,
 void soft_thresholding(MultidimArray< double >& I, double th);
 
 /** Adaptive soft thresholding 2D.
- * @ingroup WaveletsDenoising
  *
  * Chang, Yu, Betterli. IEEE Int. Conf. Image Processing
  */
 void adaptive_soft_thresholding2D(MultidimArray< double >& I, int scale);
 
 /** Keep central part 2D.
- * @ingroup WaveletsDenoising
  *
  * Keep those coefficients in a certain radius.
  */
 void DWT_keep_central_part(MultidimArray< double >& I, double R);
 
 /** Bayesian, Wiener filtering.
- * @ingroup WaveletsDenoising
  *
  * Bijaoui, Signal Processing 2002, 82: 709-712. The Denoising procedure is
  * applied up to the scale given. SNR0 is the smallest SNR and SNRF is the
@@ -325,7 +302,6 @@ Matrix1D< double > bayesian_wiener_filtering2D(MultidimArray< double >& WI,
         bool denoise = true);
 
 /** Bayesian, Wiener filtering.
- * @ingroup WaveletsDenoising
  *
  * This is the function that really denoise.
  */
@@ -334,7 +310,6 @@ void bayesian_wiener_filtering2D(MultidimArray< double >& WI,
                                  Matrix1D< double >& estimatedS);
 
 /** Bayesian, Wiener filtering.
- * @ingroup WaveletsDenoising
  *
  * Bijaoui, Signal Processing 2002, 82: 709-712. The denoising procedure is
  * applied up to the scale given. SNR0 is the smallest SNR and SNRF is the
@@ -353,12 +328,12 @@ Matrix1D< double > bayesian_wiener_filtering3D(MultidimArray< double >& WI,
         bool denoise = true);
 
 /** Bayesian, Wiener filtering.
- * @ingroup WaveletsDenoising
  *
  * This is the function that really denoise.
  */
 void bayesian_wiener_filtering3D(MultidimArray< double >& WI,
-                               int allowed_scale,
-                               Matrix1D< double >& estimatedS);
-
+                                 int allowed_scale,
+                                 Matrix1D< double >& estimatedS);
+//@}
+//@}
 #endif

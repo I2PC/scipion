@@ -68,7 +68,7 @@ typedef struct{
 /* BLOBS                                                                     */
 /* ========================================================================= */
 /**@defgroup Blobs Blobs
-   @ingroup Basis */
+   @ingroup BasisFunction */
 //@{
 // Blob structure ----------------------------------------------------------
 /** Blob definition.

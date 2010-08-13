@@ -128,7 +128,7 @@ int  readSPIDER(int img_select,bool isStack=false)
 
     // Determine byte order and swap bytes if from different-endian machine
     char*    b = (char *) header;
-    int      i, j;
+    int      i;
     int      extent = SPIDERSIZE - 180;  // exclude char bytes from swapping
     if ( ( fabs(header->nslice) > SWAPTRIG ) || ( fabs(header->iform) > SWAPTRIG ) ||
          ( fabs(header->nslice) < 1 ) )
@@ -172,8 +172,6 @@ int  readSPIDER(int img_select,bool isStack=false)
     }
     else
         replaceNsize=0;
-
-    int type = (int) header->iform;
 
     /************
      * BELLOW HERE DO NOT USE HEADER BUT LOCAL VARIABLES
@@ -351,17 +349,10 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     header->nslice = Zdim;
 
     unsigned long   imgStart=0;
-    unsigned long   imgEnd =Ndim;
     if (select_img != -1)
-    {
         imgStart=select_img;
-        imgEnd=select_img+1;
-    }
     if (mode == WRITE_APPEND)
-    {
         imgStart=0;
-        imgEnd=1;
-    }
 
     // If a transform, then the physical storage in x is only half+1
     size_t xstore  = Xdim;
@@ -473,7 +464,6 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
 #endif
     //locking
     struct flock fl;
-    int fd;
 
     fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
     fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */

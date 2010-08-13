@@ -752,6 +752,7 @@ public:
         data=NULL;
         destroyData=true;
         mmapOn = false;
+        mFd=0;
     }
 
     /** Core allocate with dimensions.
@@ -2129,10 +2130,6 @@ public:
         y -= STARTINGY(*this);
         x -= STARTINGX(*this);
 
-        int lmax = XSIZE(*this);
-        int mmax = YSIZE(*this);
-        int nmax = ZSIZE(*this);
-
         int l1 = CEIL(x - SplineDegree_1);
         int l2 = l1 + SplineDegree;
 
@@ -2286,8 +2283,6 @@ public:
         y -= STARTINGY(*this);
         x -= STARTINGX(*this);
 
-        int lmax = XSIZE(*this);
-        int mmax = YSIZE(*this);
         int l1 = CEIL(x - SplineDegree_1);
         int l2 = l1 + SplineDegree;
         int m1 = CEIL(y - SplineDegree_1);
@@ -2301,7 +2296,6 @@ public:
                 equivalent_m=-m-1;
             else if (m>=YSIZE(*this))
                 equivalent_m=2*YSIZE(*this)-m-1;
-            int row_m = XSIZE(*this) * equivalent_m;
             double rows = 0.0;
             for (int l = l1; l <= l2; l++)
             {
@@ -2409,7 +2403,6 @@ public:
         // Logical to physical
         x -= STARTINGX(*this);
 
-        int lmax = XSIZE(*this);
         int l1 = CEIL(x - SplineDegree_1);
         int l2 = l1 + SplineDegree;
 

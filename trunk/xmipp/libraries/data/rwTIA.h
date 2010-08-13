@@ -133,7 +133,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     }
 
     // Check images dimensions. Need to be the same
-    int _xDim,_yDim,_zDim;
+    int _xDim,_yDim;
     unsigned long int _nDim;
 
     if (img_select==-1)
@@ -147,14 +147,12 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         }
         _xDim = (int) dataHeaders[0].IMAGE_WIDTH;
         _yDim = (int) dataHeaders[0].IMAGE_HEIGHT;
-        _zDim = (int) 1;
         _nDim = (int) header->NUMBER_IMAGES;
     }
     else
     {
         _xDim = (int) dataHeaders[img_select].IMAGE_WIDTH;
         _yDim = (int) dataHeaders[img_select].IMAGE_HEIGHT;
-        _zDim = (int) 1;
         _nDim = (int) 1;
     }
 

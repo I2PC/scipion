@@ -186,14 +186,11 @@ int readDM3(int img_select,bool isStack=false)
     }
 
 
-    int _xDim,_yDim,_zDim;
+    int _xDim,_yDim;
     unsigned long int _nDim;
     _xDim = (int) dataHeaders[0].imageWidth;
     _yDim = (int) dataHeaders[0].imageHeight;
-    _zDim = (int) 1;
     _nDim = (int) header->nIm;
-
-
 
     //FIXME: Code is not totally implemented to load automatically multiple images if they have same size.
 

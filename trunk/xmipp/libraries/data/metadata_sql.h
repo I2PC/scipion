@@ -423,7 +423,9 @@ class MDValueRange: public MDQuery
     MDValueRelational *query1, *query2;
 public:
     MDValueRange()
-    {}
+    {
+        query1=query2=NULL;
+    }
     template <class T>
     MDValueRange(MDLabel label, const T &valueMin, const T &valueMax,
                  int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)

@@ -158,23 +158,14 @@ protected:
     double fac; /** 2*pi*alpha*r*v */
     double vadjust;
     double facadj; /** 2*pi*alpha*r*vadjust */
-    virtual void build_I0table(); /** Tabulate I0 window for speed */
+    void build_I0table(); /** Tabulate I0 window for speed */
     double fltb;
 
 public:
-    /** Empty constructor */
-    KaiserBessel()
-    { }
-
     /** Constructor with parameters */
     KaiserBessel(double alpha_, int K, double r_,
                  double v_, int N_, double vtable_=0.,
                  int ntable_ = 5999);
-
-    /** Destructor */
-    virtual ~KaiserBessel()
-    {}
-    ;
 
     /** Compute the maximum error in the table */
     double I0table_maxerror();
@@ -184,10 +175,10 @@ public:
     }
 
     /** Kaiser-Bessel Sinh window function */
-    virtual double sinhwin(double x) const;
+    double sinhwin(double x) const;
 
     /** Kaiser-Bessel I0 window function */
-    virtual double i0win(double x) const;
+    double i0win(double x) const;
 
     /** Kaiser-Bessel I0 window function (uses table lookup) */
     inline double i0win_tab(double x) const

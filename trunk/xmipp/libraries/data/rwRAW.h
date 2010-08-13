@@ -263,11 +263,10 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
         REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
 
-    size_t datasize, datasize_n;
+    size_t datasize_n;
     datasize_n = Xdim*Ydim*Zdim;
 
     writePageAsDatatype(fimg, wDType, datasize_n);
-
 
     if( fclose(fimg) !=0 )
         REPORT_ERROR(1,(std::string)"Can not close file "+ filename);

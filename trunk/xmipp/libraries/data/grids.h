@@ -532,7 +532,7 @@ public:
     }
 
     /** Another function for get a "pointer" to a simple grid.*/
-    void get_SimpleGrid(int n, SimpleGrid& G)
+    void get_SimpleGrid(int n, SimpleGrid& G) const
     {
         G = (*this)(n);
     }

@@ -395,19 +395,19 @@ public:
     virtual double EnergyFunction(double testSolution[], bool& bAtSolution) = 0;
 
     /// Return dimension
-    int Dimension(void)
+    int Dimension() const
     {
         return (nDim);
     }
 
     /// Return population
-    int Population(void)
+    int Population() const
     {
         return (nPop);
     }
 
     /// Call these functions after Solve() to get results.
-    double Energy(void)
+    double Energy() const
     {
         return (bestEnergy);
     }
@@ -419,7 +419,7 @@ public:
     }
 
     /// Return the number of generations
-    int Generations(void)
+    int Generations() const
     {
         return (generations);
     }

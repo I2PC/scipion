@@ -292,17 +292,10 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     header->nsec = t->tm_sec;
 
     unsigned long   imgStart=0;
-    unsigned long   imgEnd =Ndim;
     if (img_select != -1)
-    {
         imgStart=img_select;
-        imgEnd=img_select+1;
-    }
     if (mode = WRITE_APPEND)
-    {
         imgStart=0;
-        imgEnd=1;
-    }
 
     // Convert T to datatype
     if ( typeid(T) == typeid(double) ||
@@ -373,7 +366,6 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
      * BLOCK HEADER IF NEEDED
      */
     struct flock fl;
-    int fd;
 
     fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
     fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
@@ -401,7 +393,7 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     }
     char* fdata = (char *) askMemory(datasize);
 
-    long int next_result ;
+    long int next_result;
     i=imgStart;
     //for ( i=imgStart; i<imgEnd; i++ )
     FOR_ALL_OBJECTS_IN_METADATA(MD)

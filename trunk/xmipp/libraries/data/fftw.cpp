@@ -537,7 +537,7 @@ void whitenSpectrum(MultidimArray<double> &Min,
 
 void adaptSpectrum(MultidimArray<double> &Min,
                    MultidimArray<double> &Mout,
-                   const MultidimArray<double> spectrum_ref,
+                   const MultidimArray<double> &spectrum_ref,
                    int spectrum_type,
                    bool leave_origin_intact)
 {

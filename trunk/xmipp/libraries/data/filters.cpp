@@ -1420,17 +1420,11 @@ void Smoothing_Shah(MultidimArray<double> &img,
                     Update_surface_Shah(img, surface_strength, edge_strength, W);
 
             /* Iteratively update edge estimate */
-            double diffedge;
             for (int j = 0; j < InnerLoops; j++)
-                diffedge =
-                    Update_edge_Shah(img, surface_strength, edge_strength, k, W);
+                Update_edge_Shah(img, surface_strength, edge_strength, k, W);
 
             /* Calculate new functional energy */
-            double energy = Shah_energy(img, surface_strength, edge_strength, k, W);
-            /* std::cout << " Energy " << energy
-                 << " ... Relative Diff " << diffsurface
-                 << " ... Edge diff " << diffedge
-                 << std::endl; */
+            Shah_energy(img, surface_strength, edge_strength, k, W);
         }
     }
 }
@@ -2114,7 +2108,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
             yF--;
         if ((xF-x0)>(yF-y0))
         {
-        	rotation2DMatrix(90,R);
+            rotation2DMatrix(90,R);
             A=R*A;
         }
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
@@ -2135,7 +2129,6 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
     applyGeometry(BSPLINE3, Iaux, I, A, IS_NOT_INV,WRAP);
     I=Iaux;
     I+=avg;
-    if (plans!=NULL)
-        delete plans;
+    delete plans;
 }
 #undef DEBUG
