@@ -35,7 +35,7 @@
 #include "funcs.h"
 
 class MDLabelData;
-class MDValue;
+class MDValueStore;
 class MDLabelStaticInit;
 
 /** @addtogroup MetaData
@@ -243,6 +243,8 @@ private:
     friend class MDLabelStaticInit;
 }
 ;//close class MLD definition
+/** @} */
+
 
 /** Just to work as static constructor for initialize labels data.
  */
@@ -420,8 +422,10 @@ public:
 }
 ;//close class MDLabelData
 
-
-class MDValue
+/** Class to hold the labels values and type
+ *
+ */
+class MDValueStore
 {
 public:
     MDLabelType type;
@@ -436,17 +440,17 @@ public:
     void labelTypeCheck(MDLabelType checkingType) const;
     //Just a simple constructor with the label
     //dont do any type checking as have not value yet
-    MDValue(MDLabel label);
+    MDValueStore(MDLabel label);
     ///Constructors for each Label supported type
     ///these constructor will do the labels type checking
-    MDValue(MDLabel label, const int &intValue);
-    MDValue(MDLabel label, const double &doubleValue);
-    MDValue(MDLabel label, const bool &boolValue);
-    MDValue(MDLabel label, const std::string &stringValue);
-    MDValue(MDLabel label, const std::vector<double> &vectorValue);
-    MDValue(MDLabel label, const long int longintValue);
-    MDValue(MDLabel label, const float &floatValue);
-    MDValue(MDLabel label, const char * &charValue);
+    MDValueStore(MDLabel label, const int &intValue);
+    MDValueStore(MDLabel label, const double &doubleValue);
+    MDValueStore(MDLabel label, const bool &boolValue);
+    MDValueStore(MDLabel label, const std::string &stringValue);
+    MDValueStore(MDLabel label, const std::vector<double> &vectorValue);
+    MDValueStore(MDLabel label, const long int longintValue);
+    MDValueStore(MDLabel label, const float &floatValue);
+    MDValueStore(MDLabel label, const char * &charValue);
 
     //These getValue also do a compilation type checking
     //when expanding templates functions and only
@@ -474,12 +478,15 @@ public:
     void toStream(std::ostream &os, bool withFormat = false, bool isSql=false) const;
     std::string toString(bool withFormat = false, bool isSql=false) const;
     bool fromStream(std::istream &is);
-    friend std::istream& operator>> (std::istream& is, MDValue &value);
+    friend std::istream& operator>> (std::istream& is, MDValueStore &value);
     bool fromString(const std::string &str);
 
+    friend class MetaData;
+    friend class MDSql;
+    friend class MDQuery;
 }; //close class MDValue
 
-/** @} */
+
 
 
 

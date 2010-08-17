@@ -127,7 +127,7 @@ bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel
 }
 
 //----------- Implementation of MDValue -----------------
-inline void MDValue::labelTypeCheck(MDLabelType checkingType) const
+inline void MDValueStore::labelTypeCheck(MDLabelType checkingType) const
 {
     if (this->type != checkingType)
     {
@@ -160,7 +160,7 @@ inline void MDValue::labelTypeCheck(MDLabelType checkingType) const
 
 //Just a simple constructor with the label
 //dont do any type checking as have not value yet
-MDValue::MDValue(MDLabel label)
+MDValueStore::MDValueStore(MDLabel label)
 {
     this->label = label;
     if (label != MDL_UNDEFINED)
@@ -168,42 +168,42 @@ MDValue::MDValue(MDLabel label)
 }
 ///Constructors for each Label supported type
 ///these constructor will do the labels type checking
-MDValue::MDValue(MDLabel label, const int &intValue)
+MDValueStore::MDValueStore(MDLabel label, const int &intValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_INT);
     this->intValue = intValue;
 }
-MDValue::MDValue(MDLabel label, const double &doubleValue)
+MDValueStore::MDValueStore(MDLabel label, const double &doubleValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_DOUBLE);
     this->doubleValue = doubleValue;
 }
-MDValue::MDValue(MDLabel label, const bool &boolValue)
+MDValueStore::MDValueStore(MDLabel label, const bool &boolValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_BOOL);
     this->boolValue = boolValue;
 }
-MDValue::MDValue(MDLabel label, const std::string &stringValue)
+MDValueStore::MDValueStore(MDLabel label, const std::string &stringValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_STRING);
     this->stringValue = stringValue;
 }
-MDValue::MDValue(MDLabel label, const std::vector<double> &vectorValue)
+MDValueStore::MDValueStore(MDLabel label, const std::vector<double> &vectorValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_VECTOR);
     this->vectorValue = vectorValue;
 }
-MDValue::MDValue(MDLabel label, const long int longintValue)
+MDValueStore::MDValueStore(MDLabel label, const long int longintValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
@@ -211,13 +211,13 @@ MDValue::MDValue(MDLabel label, const long int longintValue)
     this->longintValue = longintValue;
 
 }
-MDValue::MDValue(MDLabel label, const float &floatValue)
+MDValueStore::MDValueStore(MDLabel label, const float &floatValue)
 {
     std::cerr << "Do not use setValue with floats, use double"<< std::endl;
     std::cerr << "Floats are banned from metadata class"<< std::endl;
     exit(1);
 }
-MDValue::MDValue(MDLabel label, const char* &charValue)
+MDValueStore::MDValueStore(MDLabel label, const char* &charValue)
 {
     std::cerr << "Do not use setValue with char, use string"<< std::endl;
     std::cerr << "chars are banned from metadata class"<< std::endl;
@@ -228,43 +228,43 @@ MDValue::MDValue(MDLabel label, const char* &charValue)
 //when expanding templates functions and only
 //will allow the supported types
 //TODO: think if the type check if needed here
-void MDValue::getValue(int &iv) const
+void MDValueStore::getValue(int &iv) const
 {
     labelTypeCheck(LABEL_INT);
     iv = this->intValue;
 }
-void MDValue::getValue(double &dv) const
+void MDValueStore::getValue(double &dv) const
 {
     labelTypeCheck(LABEL_DOUBLE);
     dv = this->doubleValue;
 }
-void MDValue::getValue(bool &bv) const
+void MDValueStore::getValue(bool &bv) const
 {
     labelTypeCheck(LABEL_BOOL);
     bv = this->boolValue;
 }
-void MDValue::getValue(std::string &sv) const
+void MDValueStore::getValue(std::string &sv) const
 {
     labelTypeCheck(LABEL_STRING);
     sv = this->stringValue;
 }
-void  MDValue::getValue(std::vector<double> &vv) const
+void  MDValueStore::getValue(std::vector<double> &vv) const
 {
     labelTypeCheck(LABEL_VECTOR);
     vv = this->vectorValue;
 }
-void MDValue::getValue(long int &lv) const
+void MDValueStore::getValue(long int &lv) const
 {
     labelTypeCheck(LABEL_INT);
     lv = this->longintValue;
 }
-void MDValue::getValue(float &floatvalue) const
+void MDValueStore::getValue(float &floatvalue) const
 {
     std::cerr << "Do not use setValue with floats, use double"<< std::endl;
     std::cerr << "Floats are banned from metadata class"<< std::endl;
     exit(1);
 }
-void MDValue::getValue(char*  &charvalue) const
+void MDValueStore::getValue(char*  &charvalue) const
 {
     std::cerr << "Do not use setValue with char, use string"<< std::endl;
     std::cerr << "chars are banned from metadata class"<< std::endl;
@@ -281,7 +281,7 @@ void MDValue::getValue(char*  &charvalue) const
     if (withFormat) os << std::setw(10); \
     os << i;
 
-void MDValue::toStream(std::ostream &os, bool withFormat, bool isSql) const
+void MDValueStore::toStream(std::ostream &os, bool withFormat, bool isSql) const
 {
 	std::string c = (isSql) ? "'" : "";
 
@@ -318,7 +318,7 @@ void MDValue::toStream(std::ostream &os, bool withFormat, bool isSql) const
         }//close switch
 }//close function toStream
 
-std::string MDValue::toString(bool withFormat, bool isSql) const
+std::string MDValueStore::toString(bool withFormat, bool isSql) const
 {
     std::stringstream ss;
     toStream(ss, withFormat, isSql);
@@ -326,13 +326,13 @@ std::string MDValue::toString(bool withFormat, bool isSql) const
 }
 
 //bool MDValue::fromStream(std::istream &is)
-std::istream& operator>> (std::istream& is, MDValue &value)
+std::istream& operator>> (std::istream& is, MDValueStore &value)
 {
     value.fromStream(is);
     return is;
 }
 
-bool MDValue::fromStream(std::istream &is)
+bool MDValueStore::fromStream(std::istream &is)
 {
 
 
@@ -375,7 +375,7 @@ bool MDValue::fromStream(std::istream &is)
     return is.good();
 }
 
-bool MDValue::fromString(const std::string &str)
+bool MDValueStore::fromString(const std::string &str)
 {
     std::stringstream ss(str);
     fromStream(ss);
