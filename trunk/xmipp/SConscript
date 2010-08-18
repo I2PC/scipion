@@ -148,14 +148,14 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
 def AddXmippProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries','#']
-    finalLibs = libs + ['XmippData', 'XmippExternal']+FFTWLibs+SQLiteLibs+TIFFLibs
+    finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs
     AddProgram(name, 'applications/programs/' + name, '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 
 def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries','#']
-    finalLibs = libs + ['XmippData', 'XmippExternal']+FFTWLibs+SQLiteLibs+TIFFLibs
+    finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
@@ -822,7 +822,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_ml_align2d', ['XmippRecons'])
 #    # AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])sjors
     AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])sjors
+    AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons']sjors)
     AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
     AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
