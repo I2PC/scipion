@@ -441,7 +441,8 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
         min_prod = MAXFLOAT;
         Matrix1D<double> rowi_1, rowi_N_1;
         v.getRow(A1D_ELEM(ordered_list, i - 1),rowi_1);
-        v.getRow(A1D_ELEM(ordered_list, i - N - 1),rowi_N_1);
+        if (N != -1 && i > N)
+          v.getRow(A1D_ELEM(ordered_list, i - N - 1),rowi_N_1);
         for (j = 0; j < numIMG; j++)
         {
             Matrix1D<double> rowj;

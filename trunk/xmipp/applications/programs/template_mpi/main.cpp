@@ -115,7 +115,7 @@ int main(int argc, char **argv)
         {
             lockTime.setStartTime();
 
-            //any message from de master, is tag is TAG_STOP then stop
+            //any message from the master, is tag is TAG_STOP then stop
             MPI_Send(0, 0, MPI_INT, 0, 0, MPI_COMM_WORLD);
             MPI_Recv(workBuffer, 2, MPI_LONG_LONG_INT, 0, TAG_WORK, MPI_COMM_WORLD, &status);
 
