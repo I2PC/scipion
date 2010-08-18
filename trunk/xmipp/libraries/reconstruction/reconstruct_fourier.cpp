@@ -160,7 +160,8 @@ void Prog_RecFourier_prm::produce_Side_info()
 
     struct blobtype blobFourier,blobnormalized;
     blobFourier=blob;
-    blobFourier.radius/=(padding_factor_proj*Xdim);
+    //Sjors 18aug10 blobFourier.radius/=(padding_factor_proj*Xdim);
+    blobFourier.radius/=(padding_factor_vol*Xdim);
     blobnormalized=blob;
     blobnormalized.radius/=((double)padding_factor_proj/padding_factor_vol);
     double deltaSqrt     = (blob.radius*blob.radius) /(BLOB_TABLE_SIZE_SQRT-1);
@@ -168,7 +169,8 @@ void Prog_RecFourier_prm::produce_Side_info()
 
     // The interpolation kernel must integrate to 1
     double iw0 = 1.0 / blob_Fourier_val(0.0, blobnormalized);
-    double padXdim3 = padding_factor_proj * Xdim;
+    //Sjors 18aug10 double padXdim3 = padding_factor_proj * Xdim;
+    double padXdim3 = padding_factor_vol * Xdim;
     padXdim3 = padXdim3 * padXdim3 * padXdim3;
     double blobTableSize = blob.radius*sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
     //***
