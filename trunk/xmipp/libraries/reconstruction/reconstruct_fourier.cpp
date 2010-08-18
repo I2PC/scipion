@@ -778,7 +778,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                     // processing current projection
                     barrier_wait( &barrier );
 
-                    //#define DEBUG2
+#define DEBUG2
 #ifdef DEBUG2
 
                     {
@@ -983,11 +983,14 @@ void Prog_RecFourier_prm::finishComputations( const FileName &out_name )
                   LAST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize));
     double pad_relation= ((double)padding_factor_proj/padding_factor_vol);
     pad_relation = (pad_relation * pad_relation * pad_relation);
+
     FOR_ALL_ELEMENTS_IN_ARRAY3D(MULTIDIM_ARRAY(Vout))
     {
         // COSS: *** Avoid the square root
         double factor = Fourier_blob_table(ROUND(sqrt((double)(k*k+i*i+j*j))
                                            *iDeltaFourier));
+        if(k==0 && i==0 && j > 0)
+        	std::cerr << j<<" "<<factor << std::endl;
         Vout(k,i,j) /= (factor/pad_relation);
     }
 
