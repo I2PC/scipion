@@ -703,7 +703,7 @@ AddXmippProgram('mirror')
 AddXmippProgram('ml_align2d', ['XmippRecons'])
 AddXmippProgram('mlf_align2d', ['XmippRecons']) #sjors
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
-#AddXmippProgram('mlf_refine3d', ['XmippRecons']) sjors
+AddXmippProgram('mlf_refine3d', ['XmippRecons']) 
 #AddXmippProgram('ml_tomo', ['XmippRecons']) sjors
 AddXmippProgram('morphology')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
@@ -823,7 +823,7 @@ if int(env['mpi']):
 #    # AddXmippMPIProgram('mpi_ml_tomo', ['XmippRecons'])sjors
     AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons']sjors)
+    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
     AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_project_xr', ['XmippRecons'])

@@ -44,8 +44,7 @@
 // FIXME:
 //#include "reconstruct_fourier.h"
 #include "ml_align2d.h"
-//FIXME:
-//#include "mlf_align2d.h"
+#include "mlf_align2d.h"
 #include "symmetrize.h"
 #include "volume_segment.h"
 

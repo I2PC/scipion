@@ -235,10 +235,10 @@ public:
     void show(bool ML3D = false);
 
     /// Usage
-    void usage();
+    void usage() const;
 
     /// Extended Usage
-    void extendedUsage(bool ML3D = false);
+    void extendedUsage(bool ML3D = false) const;
 
     /// Setup lots of stuff
     void produceSideInfo(int rank = 0);

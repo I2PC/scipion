@@ -260,7 +260,7 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
 }
 
 // Fourier mode usage ==============================================================
-void Prog_MLFalign2D_prm::usage()
+void Prog_MLFalign2D_prm::usage() const
 {
     std::cerr << "Usage:  mlf_align2d [options] " << std::endl;
     std::cerr << "   -i <selfile>                : Selfile with all input images \n";
@@ -282,7 +282,7 @@ void Prog_MLFalign2D_prm::usage()
 }
 
 // Extended usage ===================================================================
-void Prog_MLFalign2D_prm::extendedUsage(bool ML3D)
+void Prog_MLFalign2D_prm::extendedUsage(bool ML3D) const
 {
     std::cerr << "Additional options: " << std::endl;
     std::cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
@@ -1551,7 +1551,7 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const MultidimArray<double> &M
     int irefmir, ix, iy, iflip_start, iflip_stop, count;
     int nr_mir = (do_mirror) ? 2 : 1;
 
-  double dxx, dyy;
+    double dxx, dyy;
     std::vector<double> Fimg_flip;
     MultidimArray<std::complex<double> > Fimg;
     MultidimArray<double> trans(2);
@@ -2848,9 +2848,12 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
     for (int i = 0;  i < 2;  i++)
     {
         MDo.clear();
-        for (int refno = 0; refno < n_ref; refno++)
+        //for (int refno = 0; refno < n_ref; refno++)
+        int refno = 0;
+        int ref3d = -1;
+        FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
-            fn_tmp = i==0 ? fn_base + "_ref" : fn_base + "_cref";
+            fn_tmp = fn_base + (i==0 ? "_ref" : "_cref");
             fn_tmp.compose(fn_tmp, refno + 1, "xmp");
             Itmp = Iref[refno];
             Itmp.write(fn_tmp);
@@ -2871,12 +2874,15 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
             {
                 MDo.setValue(MDL_ANGLEROT, Itmp.rot());
                 MDo.setValue(MDL_ANGLETILT, Itmp.tilt());
+                MDref.getValue(MDL_REF3D, ref3d);
+                MDo.setValue(MDL_REF3D, ref3d);
             }
         }
 
         // Write out reference md file
-        fn_tmp = (i==0) ? fn_base + "_ref.xmd" : fn_base + "_cref.xmd";
+        fn_tmp = fn_base + (i == 0 ? "_ref.xmd" : "_cref.xmd");
         MDo.write(fn_tmp);
+        ++refno;
     }
 
     // Write out log-file
