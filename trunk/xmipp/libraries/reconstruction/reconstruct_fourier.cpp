@@ -920,7 +920,11 @@ void Prog_RecFourier_prm::finishComputations( const FileName &out_name )
     }
 #endif
 
+
     // Enforce symmetry in the Fourier values as well as the weights
+    // Sjors 19aug10 enforceHermitianSymmetry first checks ndim...
+    Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
+    transformerVol.setReal(Vout());
     transformerVol.enforceHermitianSymmetry();
     int yHalf=YSIZE(FourierWeights)/2;
     if (YSIZE(FourierWeights)%2==0)
@@ -969,9 +973,6 @@ void Prog_RecFourier_prm::finishComputations( const FileName &out_name )
     barrier_wait( &barrier );
     // Threads are working now, wait for them to finish
     barrier_wait( &barrier );
-
-    Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
-    transformerVol.setReal(Vout());
 
     transformerVol.inverseFourierTransform();
     CenterFFT(Vout(),false);
