@@ -54,7 +54,7 @@ public class TomoData extends Component {
 	// maybe it's better to move currentProjection to the viewer - in case different views can show different slices
 	private int currentProjection=0;
 	
-	private static int defaultWidth=256, defaultHeight=256;
+	// private static int defaultWidth=256, defaultHeight=256;
 	private int width=0,height=0;
 	private int numberOfProjections=0;
 	
@@ -148,6 +148,7 @@ public class TomoData extends Component {
 		tiltAngles.add(t);
 	}
 	
+	
 	// there may be no tilts defined - change tilt to Float (so it can handle nulls)
 	private float getInitialTilt(){
 		return getCurrentTilt();
@@ -176,9 +177,9 @@ public class TomoData extends Component {
 		//return getImage().getCalibration().getCValue(v[0]);
 	}
 	
-	public void import_data(String path) throws java.io.IOException, InterruptedException{	
+	public void import_data(String path,boolean resize) throws java.io.IOException, InterruptedException{	
 			
-			new TiltSeriesOpener().read(path,this);
+			new TiltSeriesOpener(resize).read(path,this);
 
 	}
 	
@@ -201,20 +202,28 @@ public class TomoData extends Component {
 
 	/**
 	 * @return the defaultWidth
-	 */
+	 *
 	public int getDefaultWidth() {
-		return defaultWidth;
-	}
+		return Xmipp_Tomo.resizeThreshold.width;
+	} */
 
 	/**
 	 * @return the defaultHeight
-	 */
+	 *
 	public int getDefaultHeight() {
-		return defaultHeight;
-	}
+		return Xmipp_Tomo.resizeThreshold.height;
+	} */
 	
 	public String getFileName(){
 		return file.getName();
+	}
+	
+	public String getDirectory(){
+		return file.getParent();
+	}
+	
+	public String getFilePath(){
+		return file.getPath();
 	}
 
 	/**

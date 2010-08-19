@@ -31,6 +31,7 @@ import ij.ImageStack;
 import ij.io.FileInfo;
 import ij.io.FileOpener;
 import ij.io.ImageReader;
+import ij.io.ImageWriter;
 import ij.measure.Calibration;
 import ij.process.ByteProcessor;
 import ij.process.FloatProcessor;
@@ -38,8 +39,11 @@ import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 
 import java.awt.image.ColorModel;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +57,7 @@ import java.util.Properties;
 public class TiltSeriesOpener {
 
 	public static int MRC_HEADER_SIZE = 1024;
+	private boolean resize=true;
 	
 	// Header of a data file
 	private class ByteHeader{
@@ -72,6 +77,36 @@ public class TiltSeriesOpener {
 	            bytes[i] = f.readByte();
 	        }
 	        f.close();
+		}
+		
+		public void write(DataOutputStream out) throws java.io.IOException{
+			for (byte b : bytes) {
+				out.writeByte(b);
+			}
+		}
+		
+		/**
+		 * @param index - position in the header, structured as if it were a series of integers
+		 * (that is, the real position in the byte header will be the index times the size of an integer)
+		 * @param value
+		 */
+		public void setInt(int index, int value){
+			int i=index * 4;
+			byte b1 = (byte) (value >> 24);
+			byte b2 = (byte) ((value << 8) >> 24);
+			byte b3 = (byte) ((value << 16) >> 24);
+			byte b4 = (byte) ((value << 24) >> 24);
+			if (isLittleEndian()) {
+				bytes[i] = b4;
+				bytes[i + 1] = b3;
+				bytes[i + 2] = b2;
+				bytes[i + 3] = b1;
+			} else {
+				bytes[i] = b1;
+				bytes[i + 1] = b2;
+				bytes[i + 2] = b3;
+				bytes[i + 3] = b4;
+			}
 		}
 		
 		// return 4 bytes at position index of the buffer as an integer
@@ -99,6 +134,10 @@ public class TiltSeriesOpener {
 		public void setLittleEndian(boolean littleEndian) {
 			this.littleEndian = littleEndian;
 		}
+	}
+	
+	public TiltSeriesOpener(boolean resize){
+		this.resize=resize;
 	}
 	
 	/**
@@ -137,6 +176,15 @@ public class TiltSeriesOpener {
 				}
 			} */
 			
+	}
+	
+	public void write(TomoData model){
+		String path = model.getFilePath();
+		
+		if (path.endsWith(".mrc")) {       
+			writeMRC(model);
+
+		}
 	}
 	
 	private void readMRC(String path,TomoData model) throws java.io.IOException, InterruptedException{
@@ -187,10 +235,16 @@ public class TiltSeriesOpener {
 		        		break;		        		
 		        }
 				
-		        ipresized = ip.resize(model.getDefaultWidth(), model.getDefaultHeight());
+		        if(isResize())
+		        	ipresized = ip.resize(Xmipp_Tomo.resizeThreshold.width, Xmipp_Tomo.resizeThreshold.height);
 		        
 				stack.addSlice(null, ip);
-				model.addProjection(ipresized);
+				
+				if(isResize())
+					model.addProjection(ipresized);
+				else
+					model.addProjection(ip);
+				
 				skip = fi.gapBetweenImages;
 				
 				// uncomment for tests
@@ -206,9 +260,11 @@ public class TiltSeriesOpener {
 		if (fi.info!=null)
 			model.getImage().setProperty("Info", fi.info);
 
-		// Adjust file info to scaled size
-		fi.width= model.getDefaultWidth();
-		fi.height = model.getDefaultHeight();
+		if(isResize()){
+			// Adjust file info to scaled size
+			fi.width= Xmipp_Tomo.resizeThreshold.width;
+			fi.height =  Xmipp_Tomo.resizeThreshold.height;
+		}
 		
 		model.getImage().setFileInfo(fi);
 
@@ -228,6 +284,89 @@ public class TiltSeriesOpener {
 		// read tilt angles
 		String tltFilePath=path.replace(".mrc", ".tlt");
 		readTlt(tltFilePath,model);
+	}
+	
+	private void writeMRC(TomoData model){
+		boolean littleEndian = true;
+		ByteHeader header = createMRCHeader(model, littleEndian);
+		ImagePlus img= model.getImage();
+		FileInfo fi = img.getFileInfo();
+		fi.fileFormat = fi.RAW;
+		fi.intelByteOrder = littleEndian;
+		fi.fileName = model.getFileName();
+		fi.directory = model.getDirectory();
+		ImageWriter file = new ImageWriter(fi);
+		try {
+			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(model.getFilePath())));
+			header.write(out);
+			file.write(out);
+			out.close();
+		} catch (IOException ioe) {
+			Xmipp_Tomo.debug("TiltSeriesOpener.writeMRC" + ioe);
+		}
+	}
+	
+	private ByteHeader createMRCHeader(TomoData model, boolean littleEndian){
+			ImagePlus img= model.getImage();
+			ImageProcessor ip = img.getProcessor();
+			
+			int mode = 0;
+			if (ip instanceof ByteProcessor) {
+				mode = 0;
+			} else if (ip instanceof ShortProcessor) {
+				mode = 1;
+			} else if (ip instanceof FloatProcessor) {
+				mode = 2;
+			}
+
+			double sum = 0;
+			int nbPix = 0;
+			float min = Float.NaN;
+			float max = Float.NaN;
+			float value;
+			int mini = 0;
+			int maxi = 0;
+			int avgi = 0;
+			for (int z = 0; z < img.getNSlices(); z++) {
+				ip = img.getImageStack().getProcessor(z + 1);
+				for (int y = 0; y < img.getHeight(); y++) {
+					for (int x = 0; x < img.getWidth(); x++) {
+						value = ip.getPixelValue(x, y);
+						sum += value;
+						nbPix++;
+						if (Float.isNaN(min)) {
+							min = value;
+						}
+						if (Float.isNaN(max)) {
+							max = value;
+						}
+						if (max < value) {
+							max = value;
+						} else if (min > value) {
+							min = value;
+						}
+					}
+				}
+			}
+			float avg = (float) (sum / nbPix);
+			maxi = Float.floatToRawIntBits(max);
+			mini = Float.floatToRawIntBits(min);
+			avgi = Float.floatToRawIntBits(avg);
+
+			ByteHeader header = new ByteHeader(1024);
+			header.setLittleEndian(littleEndian);
+			header.setInt(0, img.getWidth());
+			header.setInt(1, img.getHeight());
+			header.setInt(2,img.getNSlices());
+			header.setInt(3, mode);
+			header.setInt(16, 1);
+			header.setInt(17, 2);
+			header.setInt(18, 3);
+			header.setInt(19, mini);
+			header.setInt(20, maxi);
+			header.setInt(21, avgi);
+			return header;
+
 	}
 	
 	/**
@@ -422,5 +561,19 @@ public class TiltSeriesOpener {
 		}
 		imp.getProcessor().setMinAndMax(min, max);
 		imp.updateAndDraw();
+	}
+
+	/**
+	 * @return the resize
+	 */
+	public boolean isResize() {
+		return resize;
+	}
+
+	/**
+	 * @param resize the resize to set
+	 */
+	public void setResize(boolean resize) {
+		this.resize = resize;
 	}
 }

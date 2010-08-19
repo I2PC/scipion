@@ -30,8 +30,15 @@ package xmipptomo;
 
 import ij.*;
 import ij.io.*;
+
+import java.awt.Dimension;
 import java.io.*;
+import java.security.acl.LastOwnerException;
 import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
 import ij.plugin.PlugIn;
 
 /**
@@ -50,6 +57,9 @@ public class Xmipp_Tomo implements PlugIn{
 	 */
 	private static final long serialVersionUID = -4063711977454855701L;
 	
+	// if image is bigger than this threshold, resize it to this size
+	public static Dimension resizeThreshold = new Dimension(400,400);
+	
 	private static enum CmdExitValues {
 		OK(0),ERROR(1);
 		private final int value;
@@ -61,7 +71,11 @@ public class Xmipp_Tomo implements PlugIn{
 	final static int TESTING = 1;
 
 	// UI elements
-	TomoWindow tw=null;
+	private static TomoWindow tw=null;
+	
+	private static Tree<UserAction> workflow;
+	
+	private int lastWindowId=0;
 	
 	/*
 
@@ -96,6 +110,52 @@ public class Xmipp_Tomo implements PlugIn{
 		if(tw != null)
 			tw.display();
 	}
+	
+	public static void addUserAction(UserAction last, UserAction newAction){
+		if(last == null){
+			Xmipp_Tomo.debug("Xmipp_Tomo.addUserAction - last is null");
+			return;
+		}
+		getWorkflow().addLeaf(last,newAction);
+		
+	}
+	
+	public static List<UserAction> getWorkflow(UserAction last){
+		LinkedList <UserAction> res=new LinkedList<UserAction>();
+		res.push(last);
+		UserAction current=last;
+		Tree<UserAction> current_node=getWorkflow().getTree(last);
+		while(current != getWorkflow().getHead()){
+			Tree<UserAction> parent_node= current_node.getParent();
+			if (parent_node == null)
+				debug("Null parent");
+			else{
+				current=parent_node.getHead();
+				current_node = parent_node;
+				res.push(current);
+			}
+		}
+		
+		return res;
+	}
+	
+	// workflow is a singleton
+	private static Tree<UserAction> getWorkflow(){
+		if(workflow == null){
+			UserAction workflowRoot = new UserAction(UserAction.ROOT_WINDOWID,"Plugin start");
+			workflow = new Tree<UserAction>(workflowRoot);
+		}
+		return workflow;
+	}
+	
+	private static UserAction getWorkflowRoot(){
+		return getWorkflow().getHead();
+	}
+	
+	public static void printWorkflow(){
+		debug(getWorkflow().toString());
+	}
+	
 
 	
 	/** Add button to main panel
@@ -163,14 +223,14 @@ public class Xmipp_Tomo implements PlugIn{
 	
 	/** Show a file browser and... 
 	 * @return the path of the file chosen by the user
-	 */
+	 *
 	public String browseFile(){
 		OpenDialog od = new OpenDialog("Import file",null);
         String directory = od.getDirectory();
 		String fileName = od.getFileName();
 		String path= directory + fileName;
 		return path;
-	}
+	}*/
 	
 	
 	/* handle button/keyboard pressing, from both this plugin and the windows it opens
@@ -203,7 +263,11 @@ public class Xmipp_Tomo implements PlugIn{
 	public static void debug(String s){
 		Calendar calendar = Calendar.getInstance();
 		java.util.Date now = calendar.getTime();
-		IJ.write("" + now.getTime() + " > " + s);
+		String output="" + now.getTime() + " > " + s;
+		if(tw != null)
+			IJ.write(output);
+		else
+			System.err.println(output);
 	}
 
 	/** same as Debug, plus ex stack trace
@@ -215,10 +279,18 @@ public class Xmipp_Tomo implements PlugIn{
 		ex.printStackTrace();
 	}
 	
+	private int getNextWindowId(){
+		lastWindowId++;
+		return lastWindowId;
+	}
+	
 	private void createTomoWindow(){
 			if(tw==null){
-				tw= new TomoWindow();
+				tw= new TomoWindow(getNextWindowId());
 			}
+			UserAction newWindow= new UserAction(UserAction.ROOT_WINDOWID,"New Window");
+			addUserAction(getWorkflowRoot(),newWindow);
+			tw.setFirstAction(newWindow);
 	}
 		
 	
@@ -234,6 +306,27 @@ public class Xmipp_Tomo implements PlugIn{
 		IJ.showProgress(1.0);
 		IJ.showMessage("Finished.",name+", thank you for running this plugin");
 		
+	}
+	
+	public void testWorkflow(){
+		// create tree
+		UserAction root=new UserAction(1),n2=new UserAction(2),n3=new UserAction(3),n4=new UserAction(4),n5=new UserAction(5);
+		// get one lineage
+		addUserAction(root, n2);
+		addUserAction(root, n4);
+		addUserAction(n2, n3);
+		addUserAction(n4, n5);
+		printWorkflow();
+		
+		List <UserAction> l=getWorkflow(n5);
+		// should print root - n4 - n5
+		for(UserAction ua:l)
+			debug(ua.toString());
+	}
+	
+	public static void main(String[] args) {
+		Xmipp_Tomo xt= new Xmipp_Tomo();
+		xt.testWorkflow();
 	}
 	
 }
