@@ -434,21 +434,20 @@ void sort_perpendicular(int numIMG, Recons_info *IMG_Inf,
     // Choose the rest of projections
     std::cerr << "Sorting projections ...\n";
     init_progress_bar(numIMG - 1);
+    Matrix1D<double> rowj, rowi_1, rowi_N_1;
     for (i = 1; i < numIMG; i++)
     {
         // Compute the product of not already chosen vectors with the just
         // chosen one, and select that which has minimum product
         min_prod = MAXFLOAT;
-        Matrix1D<double> rowi_1, rowi_N_1;
         v.getRow(A1D_ELEM(ordered_list, i - 1),rowi_1);
         if (N != -1 && i > N)
-          v.getRow(A1D_ELEM(ordered_list, i - N - 1),rowi_N_1);
+            v.getRow(A1D_ELEM(ordered_list, i - N - 1),rowi_N_1);
         for (j = 0; j < numIMG; j++)
         {
-            Matrix1D<double> rowj;
-            v.getRow(j,rowj);
             if (!A1D_ELEM(chosen, j))
             {
+                v.getRow(j,rowj);
                 A1D_ELEM(product, j) += ABS(dotProduct(rowi_1,rowj));
                 if (N != -1 && i > N)
                     A1D_ELEM(product, j) -= ABS(dotProduct(rowi_N_1,rowj));
