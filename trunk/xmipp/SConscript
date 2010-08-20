@@ -155,7 +155,7 @@ def AddXmippProgram(name, libs=[]):
 def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries','#']
-    finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs
+    finalLibs = libs + ['XmippData', 'XmippExternal', 'XmippParallel'] + FFTWLibs + SQLiteLibs + TIFFLibs
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
           finalLibPath += ['libraries/reconstruction']
@@ -176,13 +176,13 @@ def AddMPILibrary(name, basedir, sources, includes):
     # setup
     basedir = AddLastSlash(basedir)
     libprefix = os.path.join(env['prefix'], 'lib')
-    for x in sources:
-        sources[sources.index(x)] = basedir + x
+    #for x in sources:
+    #    sources[sources.index(x)] = basedir + x
 
     # separate local and global includes
-    for x in includes:
-        if x[0] != '#':
-            includes[includes.index(x)] = basedir + x
+    #for x in includes:
+    #    if x[0] != '#':
+    #        includes[includes.index(x)] = basedir + x
 
     # action
     # FIXME Exclusive may not be what users want
@@ -501,6 +501,11 @@ AddLibrary('XmippExternal', 'external',
 # XmippData
 DataSources = Glob('libraries/data','*.cpp',[])
 AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],['lib'],['XmippExternal']+FFTWLibs+TIFFLibs+SQLiteLibs)
+
+# XmippParallel
+ParallelSources = Glob('libraries/parallel', '*.cpp', []);
+AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#libraries"])
+
 SwigDataSources = ['libraries/data/swig/swigXmippData.i']
 SwigJavaDataSources = ['libraries/data/swig/swigXmippDataJava.i']
 AddSwigPythonLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'],
@@ -701,10 +706,10 @@ AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 AddXmippProgram('micrograph_scissor'),
 AddXmippProgram('mirror')
 AddXmippProgram('ml_align2d', ['XmippRecons'])
-AddXmippProgram('mlf_align2d', ['XmippRecons']) #sjors
+AddXmippProgram('mlf_align2d', ['XmippRecons']) 
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
 AddXmippProgram('mlf_refine3d', ['XmippRecons']) 
-#AddXmippProgram('ml_tomo', ['XmippRecons']) sjors
+#AddXmippProgram('ml_tomo', ['XmippRecons']) 
 AddXmippProgram('morphology')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('normalize')
@@ -832,8 +837,8 @@ if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
     AddXmippMPIProgram('template_parallel', ['XmippRecons'])
-#    AddXmippMPIProgram('template_threads', ['XmippRecons'])
-#    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
+    AddXmippMPIProgram('template_threads', ['XmippRecons'])
+    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 # QT
 if int(env['gui']):
     envQT = env.Clone()
