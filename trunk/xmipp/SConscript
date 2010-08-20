@@ -836,7 +836,6 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
-    AddXmippMPIProgram('template_parallel', ['XmippRecons'])
     AddXmippMPIProgram('template_threads', ['XmippRecons'])
     AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 # QT
