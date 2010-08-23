@@ -163,9 +163,9 @@ public:
      * by the working threads should be passed as argument.
      * Functions that can be executed by thread should by of the
      * type ThreadFunction, i.e., return void * and only
-     * one argument of type void *.
-     * The call of this function will block the main threads
-     * until all workers are finish, if you dont want to block
+     * one argument of type ThreadArgument.
+     * The call of this function will block the main thread
+     * until all workers finish their job, if you dont want to block
      * use runAsync instead, and later can call wait for waiting
      * until threads are done.
      * @code
@@ -174,10 +174,9 @@ public:
      *  ParallelTaskDistributor * td;
      *  //function to perform some operation
      *  //to N images executed in parellel
-     *  void * processImages(void * data)
+     *  void * processImages(ThreadArgument & data)
      *  {
-     *      ThreadArgument * arg = (ThreadArgument*) data;
-     *      int thread_id = arg->thread_id;
+     *      int thread_id = arg.thread_id;
      *
      *      long long int firstImage, lastImage;
      *      while (td->getTasks(firstImage, lastImage))
@@ -344,8 +343,6 @@ int barrier_init(barrier_t *barrier, int needed);
 int barrier_destroy(barrier_t *barrier);
 /** Wait at the barrier */
 int barrier_wait(barrier_t *barrier);
-
-/** @} */
 /** @} */
 
 #endif

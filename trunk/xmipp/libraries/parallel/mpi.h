@@ -34,7 +34,11 @@
 #include <mpi.h>
 #include "data/threads.h"
 
-/** Class to wrapp some MPI common task in an work node.
+/** @addtogroup Parallel
+ * @{
+ */
+
+/** Class to wrapp some MPI common calls in an work node.
  *
  */
 class MpiNode
@@ -100,4 +104,5 @@ public:
     virtual ~FileTaskDistributor();
 };//end of class FileTaskDistributor
 
+/** @} */
 #endif /* XMIPP_MPI_H_ */

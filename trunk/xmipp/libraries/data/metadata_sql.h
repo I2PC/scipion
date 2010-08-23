@@ -203,14 +203,18 @@ private:
 ;//close class MDSql
 
 /** This is the base class for queries on MetaData.
- * It is abstract, so it can not be instanciated.
+ * It is abstract, so it can not be instanciated. Queries will be very
+ * helpful for performing several tasks on MetaData like importing, searching
+ * or removing objects.
  */
 class MDQuery
 {
 public:
-    int limit, offset;
-    MDLabel orderLabel;
+    int limit; ///< If distint of -1 the results will be limited to this value
+    int offset; ///< If distint of 0, offset elements will be discarded
+    MDLabel orderLabel; ///< Label to wich apply sort of the results
 
+    /** Constructor. */
     MDQuery(int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID)
     {
         this->limit = limit;
@@ -218,11 +222,13 @@ public:
         this->orderLabel = orderLabel;
     }
 
+    /** Return the ORDER BY string to be used in SQL query */
     std::string orderByString() const
     {
         return (std::string)" ORDER BY " + MDL::label2Str(orderLabel);
     }
 
+    /** Return the LIMIT string to be used in SQL */
     std::string limitString() const
     {
         std::stringstream ss;
@@ -233,30 +239,38 @@ public:
         return ss.str();
     }
 
-    virtual std::string queryStringFunc() const
-    {
-        return " ";
-    }
-
+    /** Return the WHERE string to be used in SQL query */
     std::string whereString() const
     {
         std::string queryString = this->queryStringFunc();
         return (queryString == " ") ? " " : " WHERE " + queryString + " ";
     }
-    /**This now is specific to the SQL implementation
-     * and its requiered to all MDQuery subclasses
-     * equal to 0 means that is ABSTRACT in this class
-     * and only accesible for MetaData
-     */
 
-};
+    /** Return the query string, should be overrided in subclasses */
+    virtual std::string queryStringFunc() const
+    {
+        return " ";
+    }
+}
+;//End of class MDQuery
 
 /** @} */
 
 /** Enumeration of all posible relational queries operations */
-enum RelationalOp { EQ, NE, GT, LT, GE, LE };
+enum RelationalOp
+{
+    EQ, ///< Equal
+    NE, ///< Not equal
+    GT, ///< Greater than
+    LT, ///< Less than
+    GE, ///< Greater equal
+    LE ///< Less equal
+};
 
-/** This class represent all queries that performs a relational operation of some column value.
+/** Subclass of MDQuery and base for all relational queries.
+ * This kind of query can be used to compare some LABEL values
+ * in a column of the MetaData with an specified VALUE.
+ * @see RelationalOp for possible relational operations.
  */
 class MDValueRelational: public MDQuery
 {
@@ -320,10 +334,16 @@ public:
         this->value = new MDValueStore(this->value->label, value);
     }
 }
-;//class MDValueEqual
+;//end of class MDValueRelational
 
-/**MDValueEqual this will test if a label have a value
- *@ingroup MetaDataQuery
+/** Query if MetaData column values are equal to some specific value.
+ * @code
+ *  ///Remove all images that are disabled
+ *  MetaData md1, md2;
+ *  md1.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+ *  ///Import objects from md2 to md1 wich rot angle is 0.
+ *  md1.importObjects(md2, MDValueEQ(MDL_ANGLE_ROT, 0.));
+ *  @endcode
  */
 class MDValueEQ: public MDValueRelational
 {
@@ -335,10 +355,25 @@ public:
             :MDValueRelational(label, value, EQ, limit, offset, orderLabel)
     {}
 }
-;//class MDValueEQ
+;//end of class MDValueEQ
 
-/**MDValueAbove this will test if a label have a value larger than a minimum
- *@ingroup MetaDataQuery
+/** Query if MetaData column values are distint than some specific value.
+ * @see MDValueEQ for examples of use.
+ */
+class MDValueNE: public MDValueRelational
+{
+public:
+    MDValueNE()
+    {}
+    template <class T>
+    MDValueNE(MDLabel label, const T &value, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID)
+            :MDValueRelational(label, value, NE, limit, offset, orderLabel)
+    {}
+}
+;//end of class MDValueNE
+
+/** Query if MetaData column values are greater equal than some specific value.
+ * @see MDValueEQ for examples of use.
  */
 class MDValueGE: public MDValueRelational
 {
@@ -350,10 +385,25 @@ public:
             :MDValueRelational(label, valueMin, GE, limit, offset, orderLabel)
     {}
 }
-;//class MDValueGE
+;//end of class MDValueGE
 
-/**This will test if a label have a value smaller than a maximum
- *@ingroup MetaDataQuery
+/** Query if MetaData column values are greater than some specific value.
+ * @see MDValueEQ for examples of use.
+ */
+class MDValueGT: public MDValueRelational
+{
+public:
+    MDValueGT()
+    {}
+    template <class T>
+    MDValueGT(MDLabel label, const T &valueMin, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID)
+            :MDValueRelational(label, valueMin, GT, limit, offset, orderLabel)
+    {}
+}
+;//end of class MDValueGT
+
+/** Query if MetaData column values are less or equal than some specific value.
+ * @see MDValueEQ for examples of use.
  */
 class MDValueLE: public MDValueRelational
 {
@@ -365,9 +415,76 @@ public:
             :MDValueRelational(label, valueMax, LE, limit, offset, orderLabel)
     {}
 }
-;//class MDValueLE
+;//end of class MDValueLE
 
-/** This class will combine several queries with AND and OR operations.
+/** Query if MetaData column values are less than some specific value.
+ * @see MDValueEQ for examples of use.
+ */
+class MDValueLT: public MDValueRelational
+{
+public:
+    MDValueLT()
+    {}
+    template <class T>
+    MDValueLT(MDLabel label, const T &valueMax, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID)
+            :MDValueRelational(label, valueMax, LT, limit, offset, orderLabel)
+    {}
+}
+;//end of class MDValueLT
+
+/**This subclass of Query will test if a label have a value within a minimum and maximum.
+ * @code
+ *  //Remove all images with rotational angle between 100 and 200
+ *  MetaData md;
+ *  md.removeObjects(MDValueRange(MDL_ANGLE_ROT, 100., 200.));
+ *  @endcode
+ */
+class MDValueRange: public MDQuery
+{
+    MDValueRelational *query1, *query2;
+public:
+    MDValueRange()
+    {
+        query1=query2=NULL;
+    }
+    template <class T>
+    MDValueRange(MDLabel label, const T &valueMin, const T &valueMax,
+                 int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
+    {
+        query1 = new MDValueRelational(label, valueMin, GE);
+        query2 = new MDValueRelational(label, valueMax, LE);
+    }
+
+    virtual std::string queryStringFunc() const
+    {
+        std::stringstream ss;
+        ss << "(" << query1->queryStringFunc() << " AND " << query2->queryStringFunc() << ")";
+        return ss.str();
+    }
+
+    ~MDValueRange()
+    {
+        delete query1;
+        delete query2;
+    }
+}
+;//end of class MDValueRange
+
+/** Query several conditions using AND and OR.
+ * This kind of query if usefull if you want to check
+ * two conditions at the same time, for example, import
+ * all images that are enabled and have rotational angle greater than 100.
+ * @code
+ *  MetaData md1, md2;
+ *  MDValueEQ eq(MDL_ENABLED, 1);
+ *  MDValueGT gt(MDL_ANGLE_ROT, 100.);
+ *  MDMultiQuery multi;
+ *  //The first query added has the same effect doing with AND or OR
+ *  multi.addAndQuery(eq);
+ *  multi.addAndQuery(gt);
+ *
+ *  md1.importObjects(md2, multi);
+ * @endcode
  */
 class MDMultiQuery: public MDQuery
 {
@@ -413,42 +530,7 @@ public:
     }
 
 }
-;//class MDMultiQuery
-
-
-/**This subclass of Query will test if a label have a value within a minimum and maximum.
- */
-class MDValueRange: public MDQuery
-{
-    MDValueRelational *query1, *query2;
-public:
-    MDValueRange()
-    {
-        query1=query2=NULL;
-    }
-    template <class T>
-    MDValueRange(MDLabel label, const T &valueMin, const T &valueMax,
-                 int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
-    {
-        query1 = new MDValueRelational(label, valueMin, GE);
-        query2 = new MDValueRelational(label, valueMax, LE);
-    }
-
-    virtual std::string queryStringFunc() const
-    {
-        std::stringstream ss;
-        ss << "(" << query1->queryStringFunc() << " AND " << query2->queryStringFunc() << ")";
-        return ss.str();
-    }
-
-    ~MDValueRange()
-    {
-        delete query1;
-        delete query2;
-    }
-}
-;//class MDValueRange
-
+;//end of class MDMultiQuery
 
 /** Class to store some cached sql statements.
  */

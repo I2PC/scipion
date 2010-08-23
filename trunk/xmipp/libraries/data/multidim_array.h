@@ -3093,7 +3093,7 @@ public:
             REPORT_ERROR(1007,
                          (std::string) "Array_by_array: different shapes (" +
                          operation + ")");
-        if (!result.sameShape(op1))
+        if (result.data == NULL || !result.sameShape(op1))
             result.resize(op1);
         coreArrayByArray(op1, op2, result, operation);
     }
@@ -3223,7 +3223,7 @@ public:
                                      MultidimArray<T>& result,
                                      char operation)
     {
-        if (!result.sameShape(op1))
+        if (result.data == NULL || !result.sameShape(op1))
             result.resize(op1);
         coreArrayByScalar(op1, op2, result, operation);
     }
@@ -3362,7 +3362,7 @@ public:
                                      MultidimArray<T>& result,
                                      char operation)
     {
-        if (!result.sameShape(op2))
+        if (result.data == NULL || !result.sameShape(op2))
             result.resize(op2);
         coreScalarByArray(op1, op2, result, operation);
     }
@@ -3437,7 +3437,7 @@ public:
     template <typename T1>
     void initZeros(const MultidimArray<T1>& op)
     {
-        if (!sameShape(op))
+        if (data == NULL || !sameShape(op))
             resize(op);
         memset(data,0,nzyxdim*sizeof(T));
     }
@@ -4401,7 +4401,7 @@ public:
     {
         if (&op1 != this)
         {
-        	if (!sameShape(op1))
+        	if (data == NULL || !sameShape(op1))
         		resize(op1);
         	memcpy(data,op1.data,MULTIDIM_SIZE(op1)*sizeof(T));
         }
