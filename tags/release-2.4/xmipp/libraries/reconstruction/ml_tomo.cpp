@@ -169,7 +169,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
     // Skip rotation and translation and classification
     do_only_average = checkParameter(argc2, argv2, "-only_average");
 
-    // For focussed classification (only in combination with dont_align)
+    // For focussed classification (only in combination with dont_align and without -missing)
     fn_mask = getParameter(argc2, argv2, "-mask", "");
 
     // Missing data structures 
@@ -422,8 +422,11 @@ void Prog_ml_tomo_prm::produceSideInfo()
     }
     else
     {
-        if (!dont_align)
+    	do_mask=true;
+    	if (!dont_align)
             REPORT_ERROR(1,"ERROR: option -mask is only valid in combination with -dont_align"); 
+    	if (fn_missing!="")
+    		REPORT_ERROR(1,"ERROR: option -mask cannot be combined with -missing option... Just try without the -missing option?");
         Imask.read(fn_mask);
         if (Imask().computeMin() < 0. || Imask().computeMax() > 1.)
             REPORT_ERROR(1,"ERROR: mask should have values within the range [0,1]");
@@ -927,6 +930,9 @@ void Prog_ml_tomo_prm::generateInitialReferences()
             }
             my_A = Euler_rotation3DMatrix(my_rot, my_tilt, my_psi);
             Itmp().selfApplyGeometry(my_A, IS_NOT_INV, DONT_WRAP);
+
+            if (do_mask)
+				Itmp() *= Imask();
 
             int iran_fsc = ROUND(rnd_unif());
             if (iran_fsc==0)
@@ -1908,14 +1914,13 @@ void Prog_ml_tomo_prm::expectationSingleImage(
     // Apply inverse rotation to the mask and apply
     if (do_mask)
     {
-        if (!dont_align)
-            REPORT_ERROR(1,"BUG: !dont_align and do_mask cannot coincide at this stage...");
         Matrix3D<double> Mmask;
         A_rot = (all_angle_info[opt_angno]).A;
         A_rot_inv = A_rot.inv();
         applyGeometry(Mmask, A_rot_inv, Imask(), IS_NOT_INV, DONT_WRAP, 0.);
         Maux *= Mmask; 
     }
+
     // Calculate the unrotated Fourier transform with enforced wedge of Mimg (store in Fimg0)
     // also calculate myXi2;
     // Note that from here on local_transformer will act on Maux <-> Faux
@@ -2919,11 +2924,11 @@ void Prog_ml_tomo_prm::maximization(std::vector<Matrix3D<double> > &wsumimgs,
         }
         else
         {
-            sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * ddim3));
+            if (do_mask)
+            	sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * nr_mask_pixels));
+            else
+               	sigma_noise = sqrt(wsum_sigma_noise / (sumw_allrefs * ddim3));
         }
-        // Correct sigma_noise for number of pixels within the mask
-        if (do_mask)
-            sigma_noise *= ddim3/nr_mask_pixels; 
     }
 
     // post-process reference volumes
