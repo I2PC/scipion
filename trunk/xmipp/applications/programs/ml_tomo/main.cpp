@@ -32,14 +32,13 @@ int main(int argc, char **argv)
     bool converged;
     std::vector<double> conv;
     double aux, wsum_sigma_noise, wsum_sigma_offset;
-    std::vector<Matrix3D<double > > wsumimgs;
-    std::vector<Matrix3D<double > > wsumweds;
-    std::vector<Matrix1D<double > > fsc;
-    Matrix1D<double> sumw;
-    Matrix3D<double> P_phi, Mr2, Maux;
+    std::vector<MultidimArray<double > > wsumimgs; //3D
+    std::vector<MultidimArray<double > > wsumweds; //3D
+    std::vector<MultidimArray<double > > fsc;
+    MultidimArray<double> sumw; //1D
+    MultidimArray<double> P_phi, Mr2, Maux; //3D
     FileName fn_img, fn_tmp;
-    Matrix1D<double> oneline(0);
-    DocFile DFo;
+    MultidimArray<double> oneline(0); //1D
 
     Prog_ml_tomo_prm prm;
 
@@ -79,38 +78,37 @@ int main(int argc, char **argv)
         for (int iter = prm.istart; iter <= prm.Niter; iter++)
         {
 
-            if (prm.verb > 0) std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
+            if (prm.verb > 0)
+                std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
 
             // Save old reference images
-            for (int refno = 0;refno < prm.nr_ref; refno++) 
+            for (int refno = 0;refno < prm.nr_ref; refno++)
                 prm.Iold[refno]() = prm.Iref[refno]();
 
-            DFo.clear();
-            DFo.append_comment("Headerinfo columns: rot (1), tilt (2), psi (3), Xoff (4), Yoff (5), Zoff (6), Ref (7), Wedge (8), Pmax/sumP (9), LL (10)");
-
             // Integrate over all images
-            prm.expectation(prm.SF, prm.Iref, iter,
-                            LL, sumcorr, DFo, wsumimgs, wsumweds,
+            prm.expectation(prm.MDimg, prm.Iref, iter,
+                            LL, sumcorr, wsumimgs, wsumweds,
                             wsum_sigma_noise, wsum_sigma_offset, sumw);
 
             // Update model parameters
             prm.maximization(wsumimgs, wsumweds,
-                             wsum_sigma_noise, wsum_sigma_offset, 
+                             wsum_sigma_noise, wsum_sigma_offset,
                              sumw, sumcorr, sumw_allrefs, fsc, iter);
 
             // Check convergence
             converged = prm.checkConvergence(conv);
 
-            prm.writeOutputFiles(iter, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
+            prm.writeOutputFiles(iter, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
 
             if (converged)
             {
-                if (prm.verb > 0) std::cerr << " Optimization converged!" << std::endl;
+                if (prm.verb > 0)
+                    std::cerr << " Optimization converged!" << std::endl;
                 break;
             }
 
         } // end loop iterations
-        prm.writeOutputFiles(-1, DFo, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
+        prm.writeOutputFiles(-1, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
 
     }
     catch (Xmipp_error XE)

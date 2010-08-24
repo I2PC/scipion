@@ -556,7 +556,7 @@ ReconsSources = [
 ##    'ml_align3d.cpp',
     'mlf_align2d.cpp',
     'ml_refine3d.cpp',
-##    'ml_tomo.cpp',
+    'ml_tomo.cpp',
      'nma_alignment.cpp',
     'phantom_create_micrograph.cpp',
     'phantom_create_random.cpp',
@@ -709,7 +709,7 @@ AddXmippProgram('ml_align2d', ['XmippRecons'])
 AddXmippProgram('mlf_align2d', ['XmippRecons']) 
 AddXmippProgram('ml_refine3d', ['XmippRecons'])
 AddXmippProgram('mlf_refine3d', ['XmippRecons']) 
-#AddXmippProgram('ml_tomo', ['XmippRecons']) 
+AddXmippProgram('ml_tomo', ['XmippRecons']) 
 AddXmippProgram('morphology')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('normalize')

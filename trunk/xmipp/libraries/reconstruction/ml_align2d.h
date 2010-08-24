@@ -471,7 +471,7 @@ public:
     bool checkConvergence();
 
     /// Add docfiledata to docfile
-    void addPartialDocfileData(MultidimArray<double> data, int first, int last);
+    void addPartialDocfileData(const MultidimArray<double> &data, int first, int last);
 
     void addDocfileData();
 

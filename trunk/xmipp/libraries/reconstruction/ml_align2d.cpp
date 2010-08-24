@@ -48,7 +48,6 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
     {
         do_restart = true;
         MetaData MDrestart;
-        double noise, offset;
         char *copy  = NULL;
 
         MDrestart.read(getParameter(argc, argv, "-restart"));
@@ -1116,7 +1115,6 @@ void * doThreadsTasks(void * data)
 {
     structThreadTasks * thread_data = (structThreadTasks *) data;
 
-    int thread_id = thread_data->thread_id;
     Prog_MLalign2D_prm * prm = thread_data->prm;
 
     barrier_t & barrier = prm->barrier;
@@ -1267,7 +1265,7 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
 
 void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
 {
-    double psi, dum, avg, ang;
+    double psi, dum, avg;
     MultidimArray<double> Maux(dim, dim), Maux2(dim, dim), Maux3(dim, dim);
     MultidimArray<std::complex<double> > Faux;
     FourierTransformer local_transformer;
@@ -1464,9 +1462,8 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
     //        std::cerr << "************* Doing more printing for image 1 ********" <<std::endl;
 
     double diff;
-    int old_optrefno = opt_refno;
-    double XiA, aux, pdf, fracpdf, A2_plus_Xi2;
-    double weight, stored_weight, weight1, weight2, my_maxweight;
+    double aux, pdf, fracpdf, A2_plus_Xi2;
+    double weight, stored_weight, weight2, my_maxweight;
     double my_sumweight, my_sumstoredweight, ref_scale = 1.;
     int irot, output_irefmir, refnoipsi, output_refnoipsi;
     //Some local variables to store partial sums of global sums variables
@@ -1805,7 +1802,7 @@ void Prog_MLalign2D_prm::doThreadESIUpdateRefno()
 void Prog_MLalign2D_prm::expectation()
 {
     MultidimArray<std::complex<double> > Fdzero(dim, hdim + 1);
-    int num_img_tot, num_output_refs = factor_nref * model.n_ref;
+    int num_output_refs = factor_nref * model.n_ref;
 
 #ifdef DEBUG
 
@@ -2136,8 +2133,6 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
     MultidimArray<std::complex<double> > Faux, Faux2;
     MultidimArray<double> Maux;
     FileName fn_tmp;
-    double rr, thresh, aux, sumw_allrefs2 = 0.;
-    int c;
 
     // After iteration 0, factor_nref will ALWAYS be one
     if (factor_nref > 1)
@@ -2353,14 +2348,13 @@ bool Prog_MLalign2D_prm::checkConvergence()
 }//close function checkConvergence
 
 /// Add docfiledata to docfile
-void Prog_MLalign2D_prm::addPartialDocfileData(MultidimArray<double> data,
+void Prog_MLalign2D_prm::addPartialDocfileData(const MultidimArray<double> &data,
         int first, int last)
 {
 #ifdef DEBUG
     std::cerr << "Entering addPartialDocfileData" <<std::endl;
 #endif
 
-    Matrix1D<double> dataline(DATALINELENGTH);
     int index;
 
     for (int imgno = first; imgno <= last; imgno++)
@@ -2571,12 +2565,15 @@ FileName Prog_MLalign2D_prm::getBaseName(std::string suffix, int number)
 ///////////// Model_MLalign2D Implementation ////////////
 Model_MLalign2D::Model_MLalign2D()
 {
+  n_ref = -1;
+  sumw_allrefs2 = 0;
     initData();
 
 }//close default constructor
 
 Model_MLalign2D::Model_MLalign2D(int n_ref)
 {
+  sumw_allrefs2 = 0;
     initData();
     setNRef(n_ref);
 }//close constructor

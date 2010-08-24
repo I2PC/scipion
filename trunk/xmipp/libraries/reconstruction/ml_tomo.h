@@ -39,19 +39,21 @@
 #include <data/sampling.h>
 #include <data/symmetries.h>
 #include "symmetrize.h"
-#include <pthread.h>
+#include <data/threads.h>
 #include <vector>
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLANGLE 2.75
-#define MLTOMODATALINELENGTH 10
+#define MLTOMO_DATALINELENGTH 10
+#define MLTOMO_BLOCKSIZE 10
 class Prog_ml_tomo_prm;
 
 // Thread declaration
 void * threadMLTomoExpectationSingleImage( void * data );
 
 // This structure is needed to pass parameters to threadMLTomoExpectationSingleImage
-typedef struct{
+typedef struct
+{
     int thread_id;
     int thread_num;
     Prog_ml_tomo_prm *prm;
@@ -65,8 +67,11 @@ typedef struct{
     std::vector<MultidimArray<double> > *wsumweds;
     std::vector<Image<double> > *Iref;
     std::vector<MultidimArray<double> > *docfiledata;
-    MultidimArray<double> *sumw;
-} structThreadExpectationSingleImage ;
+    MultidimArray<double> * sumw;
+    std::vector<long int> * imgs_id;
+    ThreadTaskDistributor * distributor;
+}
+structThreadExpectationSingleImage ;
 
 /**@defgroup ml_tomo Maximum likelihood for tomograms
    @ingroup ReconsLibrary */
@@ -75,7 +80,7 @@ typedef struct{
 class Prog_ml_tomo_prm
 {
 public:
-    /** Filenames reference selfile/image, fraction docfile & output rootname */
+    /** Filenames reference selfile/image, fraction MetaData & output rootname */
     FileName fn_sel, fn_ref, fn_root, fn_frac, fn_sym, fn_missing, fn_doc, fn_mask;
     /** Command line */
     std::string cline;
@@ -100,7 +105,7 @@ public:
     double ddim3;
     /** Number of reference images */
     int nr_ref;
-    /** Keep angles from docfile in generation of random subset averages */
+    /** Keep angles from MetaData in generation of random subset averages */
     bool do_keep_angles;
     /** Total number of experimental images */
     int nr_exp_images;
@@ -216,6 +221,9 @@ public:
     /** debug flag */
     int debug;
 
+    /** the vector with the images id in MetaData */
+    std::vector<long int> imgs_id;
+
 public:
     /// Read arguments from command line
     void read(int argc, char **argv);
@@ -224,10 +232,10 @@ public:
     void show();
 
     /// Usage for ML mode
-    void usage();
+    void usage() const;
 
     /// Extended Usage
-    void extendedUsage();
+    void extendedUsage() const;
 
     /// Setup lots of stuff
     void produceSideInfo();
@@ -245,14 +253,14 @@ public:
     /// Calculate probability density distribution for in-plane transformations
     void calculatePdfTranslations();
 
-    /// Get binary missing wedge (or pyramid) 
+    /// Get binary missing wedge (or pyramid)
     void getMissingRegion(MultidimArray<double> &Mmeasured,
                           Matrix2D<double> A,
                           const int missno);
 
     void maskSphericalAverageOutside(MultidimArray<double> &Min);
 
-    // Resize a volume, based on the max_resol 
+    // Resize a volume, based on the max_resol
     // if down_scale=true: go from oridim to dim
     // if down_scale=false: go from dim to oridim
     void reScaleVolume(MultidimArray<double> &Min, bool down_scale=true);
@@ -270,7 +278,7 @@ public:
                                 double &wsum_sigma_noise, double &wsum_sigma_offset,
                                 MultidimArray<double> &sumw, double &LL, double &dLL,
                                 double &fracweight, double &sumfracweight, double &trymindiff,
-                                int &opt_refno, int &opt_angno, MultidimArray<double> &opt_offsets);
+                                int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
 
     /// Maximum constrained correlation search over all hidden parameters
     void maxConstrainedCorrSingleImage(MultidimArray<double> &Mimg, int imgno, int missno, double old_rot,
@@ -281,8 +289,8 @@ public:
                                        int &opt_refno, int &opt_angno, Matrix1D<double> &opt_offsets);
 
     /// Integrate over all experimental images
-    void expectation(SelFile &MDimg, std::vector< Image<double> > &Iref, int iter,
-                     double &LL, double &sumfracweight, DocFile &DFo,
+    void expectation(MetaData &MDimg, std::vector< Image<double> > &Iref, int iter,
+                     double &LL, double &sumfracweight,
                      std::vector<MultidimArray<double> > &wsumimgs,
                      std::vector<MultidimArray<double> > &wsumweds,
                      double &wsum_sigma_noise, double &wsum_sigma_offset,
@@ -291,7 +299,7 @@ public:
     /// Update all model parameters
     void maximization(std::vector<MultidimArray<double> > &wsumimgs,
                       std::vector<MultidimArray<double> > &wsumweds,
-                      double &wsum_sigma_noise, double &wsum_sigma_offset, 
+                      double &wsum_sigma_noise, double &wsum_sigma_offset,
                       MultidimArray<double> &sumw, double &sumfracweight,
                       double &sumw_allrefs, std::vector<MultidimArray<double> > &fsc, int iter);
 
@@ -307,8 +315,13 @@ public:
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);
 
+    ///Add info of some processed images
+    ///to later write to files
+    void addPartialDocfileData(MultidimArray<double> data,
+        int first, int last);
+
     /// Write out reference images, selfile and logfile
-    void writeOutputFiles(const int iter, DocFile &DFo,
+    void writeOutputFiles(const int iter,
                           std::vector<MultidimArray<double> > &wsumweds,
                           double &sumw_allrefs, double &LL, double &avefracweight,
                           std::vector<double> &conv, std::vector<MultidimArray<double> > &fsc);
