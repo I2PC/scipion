@@ -31,7 +31,6 @@ import ij.gui.DialogListener;
 import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageLayout;
-import ij.gui.ImageWindow;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 
@@ -39,6 +38,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.swing.BoxLayout;
@@ -90,6 +90,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	};
 
 	private boolean closed=true;
+	// true while reloading a file that was resized
+	private boolean reloadingFile=false;
 	private int windowId=-1;
 	
 	/* Window components */
@@ -121,22 +123,53 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	// ImportDataThread: load & display projections in parallel
 	private class ImportDataThread extends Thread{
 		private TomoData dataModel;
-		private String dataPath;
+		private boolean resize=false;
 		
-		ImportDataThread(TomoData model,String path){
+		ImportDataThread(TomoData model,boolean resize){
 			dataModel=model;
-			dataPath=path;
+			this.resize=resize;
 		}
 		
 		public void run() {
 			try{
-				dataModel.import_data(dataPath,true);
+				new TiltSeriesOpener(resize).read(dataModel);
+			}catch (FileNotFoundException ex){
+				Xmipp_Tomo.debug("ImportDataThread.run - " + ex.getMessage());
 			}catch (IOException ex){
 				Xmipp_Tomo.debug("ImportDataThread.run - Error opening file");
 			}catch (InterruptedException ex){
 				Xmipp_Tomo.debug("ImportDataThread.run - Interrupted exception");
 			}catch (Exception ex){
 				Xmipp_Tomo.debug("ImportDataThread.run - unexpected exception", ex);
+			}
+		}
+	}
+	
+	// implement UI concurrency with private class that extends Thread
+	// ImportDataThread: load & display projections in parallel
+	private class ActionThread extends Thread{
+		private TomoWindow tw;
+		private String command;
+		
+		ActionThread(TomoWindow window,String command){
+			tw=window;
+			this.command=command;
+		}
+		
+		public void run() {
+			// select proper action method based on button's label
+			if (command.equals(Buttons.CMD_LOAD.label())){
+				tw.actionLoad();
+			}else if (command.equals(Buttons.CMD_GAUSSIAN.label())){
+				tw.actionRunIjCmd(Buttons.CMD_GAUSSIAN.label(),Buttons.CMD_GAUSSIAN.imageJCmd());
+			}else if (command.equals(Buttons.CMD_MEDIAN.label())){
+				tw.actionRunIjCmd(Buttons.CMD_MEDIAN.label(),Buttons.CMD_MEDIAN.imageJCmd());
+			}else if (command.equals(Buttons.CMD_SUB_BACKGROUND.label())){
+				tw.actionRunIjCmd(Buttons.CMD_SUB_BACKGROUND.label(),Buttons.CMD_SUB_BACKGROUND.imageJCmd());
+			}else if (command.equals(Buttons.CMD_APPLY.label())){
+				tw.actionApply();
+			}else if (command.equals(Buttons.CMD_PRINT_WORKFLOW.label())){
+				Xmipp_Tomo.printWorkflow();
 			}
 		}
 	}
@@ -254,6 +287,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		if(getModel() == null)
 			return;
 		
+		//remove previous canvas if any
+		for(int i=0; i < viewPanel.getComponentCount(); i++)
+			viewPanel.remove(i);
+		
 		ic=new ImageCanvas(getModel().getImage());
 		/* iw=new ImageWindow(getModel().getImage());
 		WindowManager.setCurrentWindow(iw);
@@ -276,7 +313,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		if(getModel() == null)
 			return;
 			
-
+		//remove previous controls if any
+		for(int i=0; i < controlPanel.getComponentCount(); i++)
+			controlPanel.remove(i);
+		
 		FlowLayout fl2=new FlowLayout();
 		fl2.setAlignment(FlowLayout.CENTER);
 		controlPanel.setLayout(fl2);
@@ -361,37 +401,25 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	public synchronized void adjustmentValueChanged(AdjustmentEvent e){
 		// Xmipp_Tomo.debug("TomoWindow.adjustmentValueChanged"+e.getSource().toString());
 		if(e.getSource()==projectionScrollbar){
-			// scrollbar range is 1..N, while projections array is 0..N-1
-			getModel().setCurrentProjection(projectionScrollbar.getValue()-1);
+			// scrollbar range is 1..N, like projections array
+			getModel().setCurrentProjection(projectionScrollbar.getValue());
 			refreshImageCanvas();
 			updateStatusText(); // projection number
 		}
 		notify();
 	}
 	
-	/* button/keyboard events
+	/* button/keyboard events - run in a different thread to not to block the GUI
 	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
 	 */
 	public void actionPerformed(ActionEvent e) {
 	
 		String label = e.getActionCommand();
-
-		// select proper action method based on button's label
 		if (label==null)
 			return;
-		else if (label.equals(Buttons.CMD_LOAD.label())){
-			actionLoad();
-		}else if (label.equals(Buttons.CMD_GAUSSIAN.label())){
-			actionRunIjCmd(Buttons.CMD_GAUSSIAN.label(),Buttons.CMD_GAUSSIAN.imageJCmd());
-		}else if (label.equals(Buttons.CMD_MEDIAN.label())){
-			actionRunIjCmd(Buttons.CMD_MEDIAN.label(),Buttons.CMD_MEDIAN.imageJCmd());
-		}else if (label.equals(Buttons.CMD_SUB_BACKGROUND.label())){
-			actionRunIjCmd(Buttons.CMD_SUB_BACKGROUND.label(),Buttons.CMD_SUB_BACKGROUND.imageJCmd());
-		}else if (label.equals(Buttons.CMD_APPLY.label())){
-			actionApply();
-		}else if (label.equals(Buttons.CMD_PRINT_WORKFLOW.label())){
-			Xmipp_Tomo.printWorkflow();
-		}
+		
+		new ActionThread(this, label).start();
+		
 	} // actionPerformed end
 	
 	/* -------------------------- Action management --------------------*/
@@ -403,13 +431,16 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	
 	private void actionLoad(){
 		String path = browseFile();
+		if((path == null) || ("".equals(path)))
+			return;
+		
+		setModel(new TomoData(path));
+	
 		
 		try{
 			// import data in one thread and hold this thread until the first projection is loaded
-			if(getModel() == null)
-				setModel(new TomoData());
-			
-			(new Thread(new ImportDataThread(getModel(),path))).start();
+			setReloadingFile(false);
+			(new Thread(new ImportDataThread(getModel(),true))).start();
 			getModel().waitForFirstImage();
 		}catch (InterruptedException ex){
 			Xmipp_Tomo.debug("Xmipp_Tomo - Interrupted exception");
@@ -460,25 +491,27 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 			return;
 		}
 		
-		// Open the file
-		TomoData originalModel=new TomoData();
-		originalModel.addPropertyChangeListener(this);
-		try{
-			originalModel.import_data(getModel().getFilePath(),false);
-		}catch (IOException ex){
-			Xmipp_Tomo.debug("actionApply - Error opening file");
-		}catch (InterruptedException ex){
-			Xmipp_Tomo.debug("actionApply - Interrupted exception");
-		}catch (Exception ex){
-			Xmipp_Tomo.debug("actionApply - unexpected exception", ex);
-		}
+		// Reopen the file only if the data was resized
+		TomoData originalModel=getModel();
 		
-		// iterate through the user actions that make sense
-		for (UserAction currentAction : Xmipp_Tomo.getWorkflow(getLastAction())){
-			if(currentAction.isNeededForFile()){
-				Xmipp_Tomo.debug("Applying " + currentAction.toString());
-				setStatus("Applying " + currentAction.getCommand());
-				currentAction.getPlugin().run(originalModel.getImage());
+		if(getModel().isResized()){
+			originalModel=new TomoData(getModel().getFilePath());
+			originalModel.addPropertyChangeListener(this);
+			try{
+				setReloadingFile(true);
+				(new Thread(new ImportDataThread(originalModel,false))).start();
+				originalModel.waitForLastImage();
+			}catch (Exception ex){
+				Xmipp_Tomo.debug("actionApply - unexpected exception", ex);
+			}
+			
+			// iterate through the user actions that make sense
+			for (UserAction currentAction : Xmipp_Tomo.getWorkflow(getLastAction())){
+				if(currentAction.isNeededForFile()){
+					Xmipp_Tomo.debug("Applying " + currentAction.toString());
+					setStatus("Applying " + currentAction.getCommand());
+					currentAction.getPlugin().run(originalModel.getImage());
+				}
 			}
 		}
 		
@@ -537,8 +570,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 			return;
 
 		setVisible(false);
+		
 		dispose();
 		WindowManager.removeWindow(this);
+		closed=true;
 	}
 
 	/* Mouse events ----------------------------------------------- */
@@ -563,7 +598,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	
 	public void propertyChange(PropertyChangeEvent event){
 		if(TomoData.Properties.NUMBER_OF_PROJECTIONS.name().equals(event.getPropertyName()))
-			setNumberOfProjections((Integer) (event.getNewValue()) ); 
+			if(isReloadingFile())
+				setStatus("Recovering original file... " + getStatusChar((Integer) (event.getNewValue())));
+			else
+				setNumberOfProjections((Integer) (event.getNewValue()) ); 
 	}
 	
 	/* Getters/ setters  --------------------------------------------------- */
@@ -589,6 +627,11 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	
 	private JLabel getStatusLabel(){
 		return statusLabel;
+	}
+	
+	private char getStatusChar(int i){
+		String animation = "\\|/-\\|/-";
+		return animation.charAt(i % animation.length());
 	}
 	
 	void setCursorLocation(int x,int y){
@@ -745,5 +788,19 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 */
 	public void setPlugin(Plugin plugin) {
 		this.plugin = plugin;
+	}
+
+	/**
+	 * @return the reloadingFile
+	 */
+	private boolean isReloadingFile() {
+		return reloadingFile;
+	}
+
+	/**
+	 * @param reloadingFile the reloadingFile to set
+	 */
+	private void setReloadingFile(boolean reloadingFile) {
+		this.reloadingFile = reloadingFile;
 	}
 }

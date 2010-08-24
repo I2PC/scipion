@@ -44,7 +44,7 @@ public class MedianPlugin extends Plugin {
 	}
 	
 	public String getOptions(){
-		return "sigma="+radius;
+		return "sigma="+radius; 
 	}
 	
 	public String toString(){

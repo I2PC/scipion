@@ -187,7 +187,7 @@ public class LabelScrollbar extends JPanel implements AdjustmentListener, Adjust
 	private void updateTextLabel(){
 		textLabel.setText("<html>" + htmlColor(getText(), DEFAULT_TEXT_COLOR, false) + htmlColor(String.valueOf(getValue()), HIGHLIGHTED_TEXT_COLOR, false)+ "</html>");
 	}
-	
+	 
 
 	/**
 	 * @return the text

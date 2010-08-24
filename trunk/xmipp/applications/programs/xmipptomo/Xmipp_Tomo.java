@@ -29,15 +29,12 @@ package xmipptomo;
 
 
 import ij.*;
-import ij.io.*;
 
 import java.awt.Dimension;
 import java.io.*;
-import java.security.acl.LastOwnerException;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 import ij.plugin.PlugIn;
 
@@ -285,9 +282,7 @@ public class Xmipp_Tomo implements PlugIn{
 	}
 	
 	private void createTomoWindow(){
-			if(tw==null){
-				tw= new TomoWindow(getNextWindowId());
-			}
+			tw= new TomoWindow(getNextWindowId());
 			UserAction newWindow= new UserAction(UserAction.ROOT_WINDOWID,"New Window");
 			addUserAction(getWorkflowRoot(),newWindow);
 			tw.setFirstAction(newWindow);

@@ -54,6 +54,8 @@ public class TomoData extends Component {
 	// maybe it's better to move currentProjection to the viewer - in case different views can show different slices
 	private int currentProjection=0;
 	
+	private boolean resized=false;
+	
 	// private static int defaultWidth=256, defaultHeight=256;
 	private int width=0,height=0;
 	private int numberOfProjections=0;
@@ -70,7 +72,11 @@ public class TomoData extends Component {
 	private Document tiltTextModel=null;
 
 	// allow Views to wait(lock) while the first image loads
-	private Semaphore firstLoaded= new Semaphore(0);
+	private Semaphore firstLoaded= new Semaphore(0),lastLoaded=new Semaphore(0);
+	
+	public TomoData(String path){
+		setFile(path);
+	}
 	
 	public void setTiltModel(Document model){
 		if(tiltTextModel==null){
@@ -97,11 +103,13 @@ public class TomoData extends Component {
 
 	
 	/**
-	 * @param currentProjection range 0..numberProjections-1
+	 * @param currentProjection range 1..numberProjections
 	 */
 	public void setCurrentProjection(int currentProjection) {
-		if((currentProjection<0) || (currentProjection > getNumberOfProjections()-1)){
-			Xmipp_Tomo.debug("setCurrentProjection("+currentProjection+")");
+		
+		if((currentProjection<1) || (currentProjection > getNumberOfProjections())){
+			Xmipp_Tomo.debug("setCurrentProjection("+currentProjection+")"); 
+			
 			return;
 		}
 		
@@ -121,7 +129,7 @@ public class TomoData extends Component {
 		imp=i;
 	}
 	
-	public List<Float> getTiltAngles(){
+	private List<Float> getTiltAngles(){
 		return tiltAngles;
 	}
 	
@@ -132,15 +140,24 @@ public class TomoData extends Component {
 	public Float getCurrentTilt(){
 		Float t=null;
 		try{
-			t=getTiltAngles().get(getCurrentProjection());
+			t=getTiltAngle(getCurrentProjection());
 		}catch (ArrayIndexOutOfBoundsException ex){
 			t=null;
 		}
 		return t;
 	}
 	
+	// tiltangles list -> 0..N-1
+	private Float getTiltAngle(int i){
+		return getTiltAngles().get(i-1);
+	}
+	
+	// tiltangles list -> 0..N-1
+	private void setTiltAngle(int i, float t){
+		getTiltAngles().set(i-1, new Float(t));
+	}
 	public void setCurrentTilt(float t){
-		getTiltAngles().set(getCurrentProjection(), new Float(t));
+		setTiltAngle(getCurrentProjection(),t);
 	}
 	
 	// method for loading the angles in sequence (it assumes an implicit order) 
@@ -175,12 +192,6 @@ public class TomoData extends Component {
 		// 32bit images
 		return Float.intBitsToFloat(v[0]);
 		//return getImage().getCalibration().getCValue(v[0]);
-	}
-	
-	public void import_data(String path,boolean resize) throws java.io.IOException, InterruptedException{	
-			
-			new TiltSeriesOpener(resize).read(path,this);
-
 	}
 	
 	
@@ -268,17 +279,41 @@ public class TomoData extends Component {
 		// Xmipp_Tomo.debug("firstImageLoaded");
 	}
 	
+	public void waitForLastImage() throws InterruptedException{
+		// Xmipp_Tomo.debug("waitForFirstImage");
+		lastLoaded.acquire();
+	}
+	
+	public void lastImageLoaded(){
+		lastLoaded.release();
+		// Xmipp_Tomo.debug("firstImageLoaded");
+	}
+	
 	public void addProjection(ImageProcessor imageProcessor){
 		if(getImage()==null){
 			// cannot add empty stack, for example in the constructor. better init all here			
-			ImageStack stackResized=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
-			stackResized.addSlice(null, imageProcessor);
-			setImage(new ImagePlus(getFileName(), stackResized));
+			ImageStack stack=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
+			stack.addSlice(null, imageProcessor);
+			setImage(new ImagePlus(getFileName(), stack));
 		}else		
 			getImage().getStack().addSlice(null, imageProcessor);
 		
 		setNumberOfProjections(getNumberOfProjections()+1);
 		if(getNumberOfProjections() == 1)
 			firstImageLoaded();
+	}
+
+	/**
+	 * @return the resized
+	 */
+	public boolean isResized() {
+		return resized;
+	}
+
+	/**
+	 * @param resized the resized to set
+	 */
+	public void setResized(boolean resized) {
+		this.resized = resized;
 	}
 }

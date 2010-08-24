@@ -54,7 +54,11 @@ public abstract class Plugin {
 	public final void run(ImagePlus image){
 		WindowManager.setTempCurrentImage(image);
 		WindowManager.setWindow(null);
-		IJ.run(getCommand(),getOptions());
+		// plugins don't apply filter to all projections in the stack by default
+		for(int slice=1; slice <= image.getNSlices(); slice ++){
+			image.setSlice(slice);
+			IJ.run(getCommand(),getOptions());
+		}
 	}
 	
 

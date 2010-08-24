@@ -40,7 +40,7 @@ public class GaussianPlugin extends Plugin {
 		return COMMAND;
 	}
 	
-	// adapt radius if the original image was resized
+	// adapt radius if the original image was resized 
 	public String getOptions(){
 		return "sigma="+radius;
 	}

@@ -54,7 +54,7 @@ public class UserAction {
 	public UserAction(int windowId,String cmd,Plugin plugin){
 		this(windowId,cmd);
 		setPlugin(plugin);
-		setNeededForFile(true);
+		setNeededForFile(true); 
 	}
 	
 	/**

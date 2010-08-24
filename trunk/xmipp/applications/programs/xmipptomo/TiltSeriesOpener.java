@@ -146,9 +146,9 @@ public class TiltSeriesOpener {
 	 * @throws java.io.IOException
 	 * @throws InterruptedException Threads issues
 	 */
-	public void read(String path,TomoData model) throws java.io.IOException, InterruptedException{
+	public void read(TomoData model) throws java.io.IOException, InterruptedException{
 		
-		model.setFile(path);
+		String path = model.getFilePath();
 		
 		if ((path == null) || (path.equals(""))) 
 			throw new IOException("Empty path");
@@ -264,6 +264,7 @@ public class TiltSeriesOpener {
 			// Adjust file info to scaled size
 			fi.width= Xmipp_Tomo.resizeThreshold.width;
 			fi.height =  Xmipp_Tomo.resizeThreshold.height;
+			model.setResized(true);
 		}
 		
 		model.getImage().setFileInfo(fi);
@@ -281,6 +282,8 @@ public class TiltSeriesOpener {
 		if (ip.getMin()==ip.getMax())  // find stack min and max if first slice is blank
 			setStackDisplayRange(model.getImage());
 
+		model.lastImageLoaded();
+		
 		// read tilt angles
 		String tltFilePath=path.replace(".mrc", ".tlt");
 		readTlt(tltFilePath,model);
