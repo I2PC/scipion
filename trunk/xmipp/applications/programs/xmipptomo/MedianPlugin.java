@@ -25,17 +25,17 @@
 package xmipptomo;
 
 import ij.gui.GenericDialog;
-import ij.process.ImageProcessor;
 
 public class MedianPlugin extends Plugin {
-	// default value - @see xmipptomo.Plugin.collectParameters, ij.plugin.GaussianBlur
+	// default value - @see xmipptomo.Plugin.collectParameters, ij.plugin.RankFilters
 	private double radius=2.0;
 	public static String COMMAND="Median...";
 	
 	@Override
 	public void collectParameters(GenericDialog gd) {
-		if(gd != null)
+		if(gd != null){
 			radius=gd.getNextNumber();
+		}
 	}
 
 
@@ -44,7 +44,7 @@ public class MedianPlugin extends Plugin {
 	}
 	
 	public String getOptions(){
-		return "sigma="+radius; 
+		return "Radius="+radius; 
 	}
 	
 	public String toString(){

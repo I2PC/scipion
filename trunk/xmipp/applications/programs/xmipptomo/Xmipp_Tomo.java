@@ -100,6 +100,7 @@ public class Xmipp_Tomo implements PlugIn{
 	/* entry point for PlugIn implementors
 	 */
 	public void run(String arg){
+		setWorkflow(null);
 		createTomoWindow();
 		
 		// IJ.debugMode = true;
@@ -140,7 +141,7 @@ public class Xmipp_Tomo implements PlugIn{
 	private static Tree<UserAction> getWorkflow(){
 		if(workflow == null){
 			UserAction workflowRoot = new UserAction(UserAction.ROOT_WINDOWID,"Plugin start");
-			workflow = new Tree<UserAction>(workflowRoot);
+			setWorkflow(new Tree<UserAction>(workflowRoot));
 		}
 		return workflow;
 	}
@@ -322,6 +323,13 @@ public class Xmipp_Tomo implements PlugIn{
 	public static void main(String[] args) {
 		Xmipp_Tomo xt= new Xmipp_Tomo();
 		xt.testWorkflow();
+	}
+
+	/**
+	 * @param workflow the workflow to set
+	 */
+	private static void setWorkflow(Tree<UserAction> workflow) {
+		Xmipp_Tomo.workflow = workflow;
 	}
 	
 }

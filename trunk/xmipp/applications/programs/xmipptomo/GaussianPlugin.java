@@ -42,7 +42,8 @@ public class GaussianPlugin extends Plugin {
 	
 	// adapt radius if the original image was resized 
 	public String getOptions(){
-		return "sigma="+radius;
+		return "Sigma (Radius)=" + radius;
+		//return "sigma="+radius;
 	}
 	
 	@Override
@@ -53,7 +54,7 @@ public class GaussianPlugin extends Plugin {
 
 	
 	public String toString(){
-		return "radius="+radius;
+		return getOptions();
 	}
 
 }

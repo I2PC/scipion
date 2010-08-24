@@ -247,9 +247,9 @@ public class TiltSeriesOpener {
 				
 				skip = fi.gapBetweenImages;
 				
-				// uncomment for tests
-				if(Xmipp_Tomo.TESTING != 0)
-					Thread.sleep(250);
+				// uncomment for concurrency tests
+				//if(Xmipp_Tomo.TESTING != 0)
+				// 	Thread.sleep(250);
 			}
 			is.close();
 		}catch(OutOfMemoryError e) {
@@ -307,6 +307,7 @@ public class TiltSeriesOpener {
 		} catch (IOException ioe) {
 			Xmipp_Tomo.debug("TiltSeriesOpener.writeMRC" + ioe);
 		}
+		// write tilt file (pending)
 	}
 	
 	private ByteHeader createMRCHeader(TomoData model, boolean littleEndian){

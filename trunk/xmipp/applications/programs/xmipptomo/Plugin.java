@@ -47,6 +47,12 @@ public abstract class Plugin {
 	
 
 	public abstract String getCommand();
+	/**
+	 * Note: the names of the parameters (required to set macro options) are the labels of the text fields associated to them.
+	 *       Syntax: param1=value1 param2=value2 (separator is blank space)
+	 *       @see GaussianPlugin, Macro.getValue
+	 * @return a string with the plugin options in a format that IJ.run understands (Macro format)
+	 */
 	public abstract String getOptions();
 	
 

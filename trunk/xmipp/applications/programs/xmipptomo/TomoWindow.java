@@ -77,7 +77,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	// labels of buttons
 	private static enum Buttons {
 		CMD_LOAD("Load",""),CMD_SAVE("Save",""),
-		CMD_GAUSSIAN("Gaussian",GaussianPlugin.COMMAND),CMD_MEDIAN("Median", MedianPlugin.COMMAND),CMD_SUB_BACKGROUND("Bandpass - substract background","Bandpass Filter..."),
+		CMD_GAUSSIAN("Gaussian",GaussianPlugin.COMMAND),CMD_MEDIAN("Median", MedianPlugin.COMMAND),CMD_SUB_BACKGROUND("Bandpass - substract background",LowPassPlugin.COMMAND),
 		CMD_APPLY("Apply",""),
 		CMD_PRINT_WORKFLOW("Print workflow","");
 
@@ -463,6 +463,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 			setPlugin(new GaussianPlugin());
 		else if(cmd.equals(Buttons.CMD_MEDIAN.imageJCmd()))
 			setPlugin(new MedianPlugin());
+		else if(cmd.equals(Buttons.CMD_SUB_BACKGROUND.imageJCmd()))
+			setPlugin(new LowPassPlugin());
 		
 		(new Thread(new DialogCaptureThread(this))).start();
 		
