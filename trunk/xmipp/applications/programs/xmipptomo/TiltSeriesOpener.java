@@ -109,7 +109,7 @@ public class TiltSeriesOpener {
 			}
 		}
 		
-		// return 4 bytes at position index of the buffer as an integer
+		// return 4 bytes at position index of the buffer (interpreted as an integer series)
 	    public int getInt(int index) {
 	        byte b1 = bytes[index];
 	        byte b2 = bytes[index + 1];
@@ -122,7 +122,7 @@ public class TiltSeriesOpener {
 	    }
 
 		/**
-		 * @return the littleEndian
+		 * @return is littleEndian?
 		 */
 		public boolean isLittleEndian() {
 			return littleEndian;
@@ -183,7 +183,6 @@ public class TiltSeriesOpener {
 		
 		if (path.endsWith(".mrc")) {       
 			writeMRC(model);
-
 		}
 	}
 	

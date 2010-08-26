@@ -57,6 +57,7 @@ public class Xmipp_Tomo implements PlugIn{
 	// if image is bigger than this threshold, resize it to this size
 	public static Dimension resizeThreshold = new Dimension(400,400);
 	
+	// exit values of methods and dialogs
 	public static enum ExitValues {
 		OK(0),ERROR(1),YES(2),NO(3),CANCEL(4);
 		private final int value;
@@ -73,29 +74,6 @@ public class Xmipp_Tomo implements PlugIn{
 	private static Tree<UserAction> workflow;
 	
 	private int lastWindowId=0;
-	
-	/*
-
-	public Xmipp_Tomo() {
-		// super("Xmipp_Tomo");
-		
-		// dataModel=new TomoData();
-		
-		/*setLayout(new FlowLayout());
-		panel = new Panel();
-		panel.setLayout(new GridLayout(4, 4, 5, 5));
-		panel.add(new Label("Xmipp Tomo"));
-		addButton(ButtonLabels.CMD_INFO.label());
-		addButton(ButtonLabels.CMD_PREPROC.label());
-		addButton(ButtonLabels.CMD_ALIGN.label());
-		
-		add(panel);
-		
-		pack();
-		GUI.center(this);
-		// show is deprecated...
-		show(); 
-	} */
 	
 	/* entry point for PlugIn implementors
 	 */
@@ -118,6 +96,10 @@ public class Xmipp_Tomo implements PlugIn{
 		
 	}
 	
+	/** 
+	 * @param last
+	 * @return the section of the workflow which last action is the one passed as a parameter
+	 */
 	public static List<UserAction> getWorkflow(UserAction last){
 		LinkedList <UserAction> res=new LinkedList<UserAction>();
 		res.push(last);
@@ -153,18 +135,6 @@ public class Xmipp_Tomo implements PlugIn{
 	public static void printWorkflow(){
 		debug(getWorkflow().toString());
 	}
-	
-
-	
-	/** Add button to main panel
-	 * @param label
-	 *
-	void addButton(String label) {
-		/* Button b = new Button(label);
-		b.addActionListener(this);
-		b.addKeyListener(IJ.getInstance());
-		panel.add(b); 
-	}*/
 
 	
 	/** Run cmdline in a shell and show standard output & error via debug()
@@ -218,38 +188,6 @@ public class Xmipp_Tomo implements PlugIn{
         return exitValue;
 	} // exec end
 	
-	
-	/** Show a file browser and... 
-	 * @return the path of the file chosen by the user
-	 *
-	public String browseFile(){
-		OpenDialog od = new OpenDialog("Import file",null);
-        String directory = od.getDirectory();
-		String fileName = od.getFileName();
-		String path= directory + fileName;
-		return path;
-	}*/
-	
-	
-	/* handle button/keyboard pressing, from both this plugin and the windows it opens
-	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-	 *
-	public void actionPerformed(ActionEvent e) {
-	
-		String label = e.getActionCommand();
-		/*
-		// select proper action method based on button's label
-		if (label==null)
-			return;
-		else if (label.equals(ButtonLabels.CMD_INFO.label())){
-			this.infoAction();
-		}else if (label.equals(ButtonLabels.CMD_PREPROC.label())){
-			exec("date");
-		}else if (label.equals(ButtonLabels.CMD_ALIGN.label())){
-			String directory=IJ.getDirectory("");
-			exec("ls "+directory);
-		}
-	} // actionPerformed end */
 
 
     /********************* Trace methods for debugging ****************************/

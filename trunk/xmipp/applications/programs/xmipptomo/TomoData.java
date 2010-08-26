@@ -56,7 +56,6 @@ public class TomoData extends Component {
 	
 	private boolean resized=false;
 	
-	// private static int defaultWidth=256, defaultHeight=256;
 	private int width=0,height=0;
 	private int numberOfProjections=0;
 	
@@ -71,7 +70,7 @@ public class TomoData extends Component {
 	// This class also saves the models of the texfields of its views, one Document per textfield
 	private Document tiltTextModel=null;
 
-	// allow Views to wait(lock) while the first image loads
+	// allow Views to wait(lock) while the first (or last) image loads
 	private Semaphore firstLoaded= new Semaphore(0),lastLoaded=new Semaphore(0);
 	
 	public TomoData(String path){
@@ -95,7 +94,7 @@ public class TomoData extends Component {
 	
 	
 	/**
-	 * @return range 0..numberProjections-1
+	 * @return range 1..numberProjections
 	 */
 	public int getCurrentProjection() {
 		return currentProjection;
@@ -108,8 +107,7 @@ public class TomoData extends Component {
 	public void setCurrentProjection(int currentProjection) {
 		
 		if((currentProjection<1) || (currentProjection > getNumberOfProjections())){
-			Xmipp_Tomo.debug("setCurrentProjection("+currentProjection+")"); 
-			
+			Xmipp_Tomo.debug("setCurrentProjection("+currentProjection+")");		
 			return;
 		}
 		
@@ -147,6 +145,8 @@ public class TomoData extends Component {
 		return t;
 	}
 	
+	// Helper methods to manage tilt angles "list"
+	
 	// tiltangles list -> 0..N-1
 	private Float getTiltAngle(int i){
 		return getTiltAngles().get(i-1);
@@ -156,6 +156,7 @@ public class TomoData extends Component {
 	private void setTiltAngle(int i, float t){
 		getTiltAngles().set(i-1, new Float(t));
 	}
+	
 	public void setCurrentTilt(float t){
 		setTiltAngle(getCurrentProjection(),t);
 	}
@@ -210,20 +211,6 @@ public class TomoData extends Component {
 	private void setTiltText(float tilt){
 		setDocumentText(getTiltModel(),String.valueOf(tilt));	
 	}
-
-	/**
-	 * @return the defaultWidth
-	 *
-	public int getDefaultWidth() {
-		return Xmipp_Tomo.resizeThreshold.width;
-	} */
-
-	/**
-	 * @return the defaultHeight
-	 *
-	public int getDefaultHeight() {
-		return Xmipp_Tomo.resizeThreshold.height;
-	} */
 	
 	public String getFileName(){
 		return file.getName();
@@ -303,16 +290,12 @@ public class TomoData extends Component {
 			firstImageLoaded();
 	}
 
-	/**
-	 * @return the resized
-	 */
+
 	public boolean isResized() {
 		return resized;
 	}
 
-	/**
-	 * @param resized the resized to set
-	 */
+
 	public void setResized(boolean resized) {
 		this.resized = resized;
 	}
