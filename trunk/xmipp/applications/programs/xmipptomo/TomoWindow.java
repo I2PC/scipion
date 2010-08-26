@@ -88,10 +88,12 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		public String label(){return label;}
 		public String imageJCmd(){return imageJCmd;}
 	};
+	
 
 	private boolean closed=true;
 	// true while reloading a file that was resized
 	private boolean reloadingFile=false;
+	private boolean changeSaved=true;
 	private int windowId=-1;
 	
 	/* Window components */
@@ -212,6 +214,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	public TomoWindow(){
 		// set this window as listener of general keyboard&mouse events
  		addWindowListener(this);
+	    setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		WindowManager.addWindow(this);
 		addMainPanels();
  		// EXIT_ON_CLOSE finishes ImageJ too...
@@ -430,7 +433,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	}
 	
 	private void actionLoad(){
-		String path = browseFile();
+		String path = dialogOpen();
 		if((path == null) || ("".equals(path)))
 			return;
 		
@@ -459,6 +462,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		if(label != null)
 			setStatus(label + " - started");
 		
+		setChangeSaved(false);
+		
 		if(cmd.equals(Buttons.CMD_GAUSSIAN.imageJCmd()))
 			setPlugin(new GaussianPlugin());
 		else if(cmd.equals(Buttons.CMD_MEDIAN.imageJCmd()))
@@ -485,11 +490,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 */
 	private void actionApply(){
 		
-		SaveDialog sd = new SaveDialog("Save as...", getModel().getFilePath(), ".mrc");
-	    String directory = sd.getDirectory();
-		String fileName = sd.getFileName();
-		String path= directory + fileName;
-		if (fileName == null) {
+		String path= dialogSave();
+		if ("".equals(path)) {
 			return;
 		}
 		
@@ -517,11 +519,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 			}
 		}
 		
-		setStatus("Saving...");
-		//write
-		originalModel.setFile(path);
-		new TiltSeriesOpener(false).write(originalModel);
-		setStatus("Done");
+		// write 
+		saveFile(originalModel, path);
 	}
 	
 	private void captureDialog(){
@@ -570,9 +569,29 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	public void windowClosing(WindowEvent e) {
 		if (closed)
 			return;
-
-		setVisible(false);
+		if(isChangeSaved()){
+			Xmipp_Tomo.ExitValues choice= dialogYesNoCancel("Close window", "Are you sure you want to close this window?");
+			switch (choice){
+				case NO:
+				case CANCEL:
+					return;
+			}
+		}else{
+			Xmipp_Tomo.ExitValues choice= dialogYesNoCancel("Save changes", "Do you want to save changes?");
+			switch (choice){
+				case YES:
+						String path= dialogSave();
+						if("".equals(path))
+							return;
+						saveFile(getModel(),path);
+				break;
+				case CANCEL:
+					return;
+			}
+		}
 		
+		// close the window (no return back...)
+		setVisible(false);
 		dispose();
 		WindowManager.removeWindow(this);
 		closed=true;
@@ -683,15 +702,57 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		return title; 
 	}
 	
-	/** Show a file browser and... 
-	 * @return the path of the file chosen by the user
+	/** Show a file open browser and... 
+	 * @return the path of the file chosen by the user, or empty string (not null) if the user cancels the dialog
 	 */
-	private String browseFile(){
+	private String dialogOpen(){
 		OpenDialog od = new OpenDialog("Import file",null);
         String directory = od.getDirectory();
 		String fileName = od.getFileName();
-		String path= directory + fileName;
+		String path= "";
+		if(fileName != null)
+			path=directory + fileName;
 		return path;
+	}
+	
+	/** Show a file save browser and... 
+	 * @return the path of the file chosen by the user, or empty string (not null) if the user cancels the dialog
+	 */
+	private String dialogSave(){
+		SaveDialog sd = new SaveDialog("Save as...", getModel().getFilePath(), ".mrc");
+	    String directory = sd.getDirectory();
+		String fileName = sd.getFileName();
+		String path= "";
+		if(fileName != null)
+			path=directory + fileName;
+		return path;
+	}
+	
+	/**
+	 * @param title Dialog title
+	 * @param message Dialog message
+	 * @return Xmipp_Tomo.ExitValues.CANCEL / YES / NO
+	 */
+	private Xmipp_Tomo.ExitValues dialogYesNoCancel(String title, String message){
+		GenericDialog gd = new GenericDialog(title);
+
+		gd.addMessage(message);
+        gd.enableYesNoCancel();
+        gd.showDialog();
+        if (gd.wasCanceled())
+           return Xmipp_Tomo.ExitValues.CANCEL;
+        else if (gd.wasOKed())
+        	return Xmipp_Tomo.ExitValues.YES;
+        else
+        	return Xmipp_Tomo.ExitValues.NO;
+	}
+	
+	private void saveFile(TomoData model,String path){
+		setStatus("Saving...");
+		model.setFile(path);
+		new TiltSeriesOpener(false).write(model);
+		setStatus("Done");
+		setChangeSaved(true);
 	}
 	
     /********************** Main - class testing **************************/
@@ -728,6 +789,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	    /* frame.setSize(400, 400);
 	    frame.setLocationRelativeTo(null);
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); */
+
 	    
 	    //w.gridBagLayoutTest();
 	    w.layoutTest();
@@ -804,5 +866,19 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 */
 	private void setReloadingFile(boolean reloadingFile) {
 		this.reloadingFile = reloadingFile;
+	}
+
+	/**
+	 * @return the changeSaved
+	 */
+	private boolean isChangeSaved() {
+		return changeSaved;
+	}
+
+	/**
+	 * @param changeSaved the changeSaved to set
+	 */
+	private void setChangeSaved(boolean changeSaved) {
+		this.changeSaved = changeSaved;
 	}
 }

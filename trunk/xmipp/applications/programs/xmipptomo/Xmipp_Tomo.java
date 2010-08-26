@@ -57,10 +57,10 @@ public class Xmipp_Tomo implements PlugIn{
 	// if image is bigger than this threshold, resize it to this size
 	public static Dimension resizeThreshold = new Dimension(400,400);
 	
-	private static enum CmdExitValues {
-		OK(0),ERROR(1);
+	public static enum ExitValues {
+		OK(0),ERROR(1),YES(2),NO(3),CANCEL(4);
 		private final int value;
-		CmdExitValues(int err) { value=err;}
+		ExitValues(int err) { value=err;}
 		public int value(){return value;}
 	};
 	
@@ -175,7 +175,7 @@ public class Xmipp_Tomo implements PlugIn{
 		// execution details may change with each OS...
 		//String osName = System.getProperty("os.name" );
 		
-		int exitValue=CmdExitValues.OK.value();
+		int exitValue=ExitValues.OK.value();
 		Process proc=null;
 		
 		Runtime rt = Runtime.getRuntime();
@@ -213,7 +213,7 @@ public class Xmipp_Tomo implements PlugIn{
         try{
         	exitValue = proc.waitFor();
         }catch (java.lang.InterruptedException ex){
-        	exitValue=CmdExitValues.ERROR.value();;
+        	exitValue=ExitValues.ERROR.value();;
         }
         return exitValue;
 	} // exec end
