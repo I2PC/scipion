@@ -476,6 +476,8 @@ void Prog_assign_CTF_prm::process()
                 piece_fn_root = PSDfn_root + integerToString(N, 5);
 
             psd.write(piece_fn_root + ".psd");
+            std::cerr << psd.name() << "\t top-left corner located at (X,Y)=("
+                      << j << "," << i << ")\n";
 
             if (!dont_adjust_CTF)
             {
