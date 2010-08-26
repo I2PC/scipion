@@ -296,7 +296,7 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         imgStart=img_select;
         imgEnd=img_select+1;
     }
-    if (mode = WRITE_APPEND)
+    if (mode == WRITE_APPEND)
     {
         imgStart=0;
         imgEnd=1;
