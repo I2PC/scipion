@@ -116,11 +116,8 @@ int readRAW(int img_select,bool isStack=false)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if( dataflag == -2 )
-    {
-        //        fclose(fimg);
+    if( dataflag < 0 )
         return 0;
-    }
 
     MD.removeObjects();
     for ( i=imgStart; i<imgEnd; i++ )

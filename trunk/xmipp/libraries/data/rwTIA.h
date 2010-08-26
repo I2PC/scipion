@@ -227,7 +227,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].PIXEL_HEIGHT);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if( dataflag == -2 )
+    if( dataflag < 0 )
     {
         fclose(fimg);
         return 0;

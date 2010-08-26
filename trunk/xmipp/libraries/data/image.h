@@ -305,7 +305,7 @@ public:
 #include "rwTIA.h"
 #include "rwDM3.h"
 #include "rwRAW.h"
-    //#include "rwTIFF.h"
+#include "rwTIFF.h"
 
     /** Is this file an image
      *
@@ -416,8 +416,8 @@ public:
             err = readDM3(select_img,false);
         else if (ext_name.contains("raw"))//RAW
             err = readRAW(select_img,false);
-        //        else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
-        //            err = readTIFF(select_img,false);
+        else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
+            err = readTIFF(select_img,false);
         else
             err = readSPIDER(select_img,true);
 
@@ -516,6 +516,7 @@ public:
 
         //#define DEBUG
 #ifdef DEBUG
+
         std::cerr << "write" <<std::endl;
         std::cerr<<"extension for write= "<<ext_name<<std::endl;
         std::cerr<<"filename= "<<filename<<std::endl;
