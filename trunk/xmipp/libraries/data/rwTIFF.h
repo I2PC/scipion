@@ -35,8 +35,29 @@
 #include <fcntl.h>
 #include <iostream>
 
+
+
+
 ///@defgroup TIFF TIFF File format
 ///@ingroup ImageFormats
+
+
+/** TIFF Data Header
+  * @ingroup TIFF
+*/
+struct TIFFDirHead
+{                                   // Header for each Directory in TIFF
+    unsigned short  bitsPerSample;
+    unsigned short  samplesPerPixel;
+    unsigned int   imageWidth;
+    unsigned int   imageLength;
+    uint16           imageSampleFormat;
+    unsigned short  resUnit;
+    float            xTiffRes,yTiffRes;
+    unsigned int subFileType;
+    uint16 pNumber, pTotal; // pagenumber and total number of pages of current directory
+};
+
 
 /*
 //
@@ -93,6 +114,49 @@ void castTiffLine2T(
 }
 
 
+
+/** TIFF Determine TIFF datatype
+  * @ingroup TIFF
+*/
+DataType datatypeTIFF(TIFFDirHead dHead)
+{
+    DataType datatype;
+
+    switch (dHead.bitsPerSample)
+    {
+    case 8:
+        datatype = UChar;
+        break;
+    case 16:
+        //        if (dHead.imageSampleFormat == SAMPLEFORMAT_INT)
+        //            datatype = Short;
+        //        else if (dHead.imageSampleFormat == SAMPLEFORMAT_UINT ||
+        //                 dHead.imageSampleFormat == SAMPLEFORMAT_IEEEFP ) //Don't know why
+        //            datatype = UShort;
+        //        //        else if (dHead.imageSampleFormat == 0     ||
+        //        //                 dHead.imageSampleFormat == 32767 ) // Format 0 and 32767 are not declared in TIFF 6.0 specifications ¿?
+        //        else
+        datatype = UShort;
+        break;
+    case 32:
+        if (dHead.imageSampleFormat == SAMPLEFORMAT_INT)
+            datatype = Int;
+        else if (dHead.imageSampleFormat == SAMPLEFORMAT_UINT )
+            datatype = UInt;
+        else if (dHead.imageSampleFormat == SAMPLEFORMAT_IEEEFP )
+            datatype = Float;
+        else
+            datatype = Unknown_Type;
+        break;
+    default:
+        datatype = Unknown_Type;
+        //        REPORT_ERROR(1000,"rwTIFF: Unsupported TIFF sample format.");
+        break;
+    }
+    return datatype;
+}
+
+
 // I/O prototypes
 /** TIFF Reader
   * @ingroup TIFF
@@ -105,64 +169,69 @@ int readTIFF(int img_select, bool isStack=false)
     printf("DEBUG readTIFF: Reading TIFF file\n");
 #endif
 
-    FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        return(-1);
-
-
+    /* Open TIFF image */
     TIFF*           tif     = NULL;
+
+    if ((tif = TIFFOpen(filename.c_str(), "r")) == NULL)
+        REPORT_ERROR(1501,"rwTIFF: There is a problem opening the TIFF file.");
+
+
     unsigned char*  tif_buf = NULL;
     int             raw_fd;
     unsigned char*  raw_buf = NULL;
 
-    unsigned short  bitsPerSample;
-    unsigned short  samplesPerPixel;
-    unsigned int   imageWidth;
-    unsigned int   imageLength;
-    unsigned short  imageSampleFormat;
-    unsigned short  imageBitsPerSample;
     unsigned int    tileWidth;
     unsigned int    tileLength;
-    unsigned short  resUnit;
-    float            xTiffRes,yTiffRes;
-    unsigned int subFileType;
-    uint16 pNumber, pTotal;
+    std::vector<TIFFDirHead> dirHead;
+    TIFFDirHead dhRef;
+
     uint32 rowsperstrip;
     tsize_t scanline;
 
     unsigned int    x, y;
 
-    /* Open TIFF image */
-    if ((tif = TIFFOpen(filename.c_str(), "r")) == NULL)
-        REPORT_ERROR(1501,"rwTIFF: There is a problem opening the TIFF file.");
 
+    /* Get TIFF image properties */
     do
     {
-        std::cout << TIFFCurrentDirectory(tif) <<std::endl;
+        if (TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE,  &dhRef.bitsPerSample) == 0)
+            REPORT_ERROR(10,"rwTIFF: Error reading TIFFTAG_BITSPERSAMPLE");
+        if (TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL,&dhRef.samplesPerPixel) == 0)
+            REPORT_ERROR(10,"rwTIFF: Error reading TIFFTAG_SAMPLESPERPIXEL");
+        if (TIFFGetField(tif, TIFFTAG_IMAGEWIDTH,     &dhRef.imageWidth) == 0)
+            REPORT_ERROR(10,"rwTIFF: Error reading TIFFTAG_IMAGEWIDTH");
+        if (TIFFGetField(tif, TIFFTAG_IMAGELENGTH,    &dhRef.imageLength) == 0)
+            REPORT_ERROR(10,"rwTIFF: Error reading TIFFTAG_IMAGELENGTH");
+        if (TIFFGetField(tif, TIFFTAG_SUBFILETYPE,    &dhRef.subFileType) == 0)
+            REPORT_ERROR(10,"rwTIFF: Error reading TIFFTAG_SUBFILETYPE");
+        TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT,   &dhRef.imageSampleFormat);
+        TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &dhRef.resUnit);
+        TIFFGetField(tif, TIFFTAG_XRESOLUTION,    &dhRef.xTiffRes);
+        TIFFGetField(tif, TIFFTAG_YRESOLUTION,    &dhRef.yTiffRes);
+        TIFFGetField(tif, TIFFTAG_PAGENUMBER,     &dhRef.pNumber, &dhRef.pTotal);
 
-        /* Get TIFF image properties */
-        TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE,  &bitsPerSample);
-        TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL,&samplesPerPixel);
-        TIFFGetField(tif, TIFFTAG_IMAGEWIDTH,     &imageWidth);
-        TIFFGetField(tif, TIFFTAG_IMAGELENGTH,    &imageLength);
-        TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT,   &imageSampleFormat);
-        TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &resUnit);
-        TIFFGetField(tif, TIFFTAG_XRESOLUTION,    &xTiffRes);
-        TIFFGetField(tif, TIFFTAG_YRESOLUTION,    &yTiffRes);
-        TIFFGetField(tif, TIFFTAG_SUBFILETYPE, &subFileType);
-        TIFFGetField(tif, TIFFTAG_PAGENUMBER, &pNumber, &pTotal);
-
-
-        swap = TIFFIsByteSwapped(tif);
+        if ((dhRef.subFileType & 0x00000001) != 0x00000001) //add image if not a thumbnail
+            dirHead.push_back(dhRef);
     }
     while(TIFFReadDirectory(tif));
 
+    swap = TIFFIsByteSwapped(tif);
 
+    // Check images dimensions. Need to be the same
+    if (img_select==-1)
+    {
+        for (int i = 1; i < dirHead.size(); i++)
+        {
+            if (dirHead[0].imageLength != dirHead[i].imageLength || \
+                dirHead[0].imageWidth != dirHead[i].imageWidth)
+                REPORT_ERROR(6001, "readTIFF: images in TIFF file with different dimensions are not currently supported. Try to read them individually.");
+        }
+    }
 
     // Calculate x,y space dimension resolution
     double xRes, yRes;
 
-    switch (resUnit)
+    switch (dirHead[0].resUnit)
     {
     case RESUNIT_NONE:
         {
@@ -171,38 +240,16 @@ int readTIFF(int img_select, bool isStack=false)
         }
     case RESUNIT_INCH:
         {
-            xRes = 2.54e8/xTiffRes;
-            yRes = 2.54e8/yTiffRes;
+            xRes = 2.54e8/dirHead[0].xTiffRes;
+            yRes = 2.54e8/dirHead[0].yTiffRes;
             break;
         }
     case RESUNIT_CENTIMETER:
         {
-            xRes = 1e8/xTiffRes;
-            yRes = 1e8/yTiffRes;
+            xRes = 1e8/dirHead[0].xTiffRes;
+            yRes = 1e8/dirHead[0].yTiffRes;
             break;
         }
-    }
-
-
-    // Set datatype
-    DataType datatype;
-
-    switch (bitsPerSample)
-    {
-    case 8:
-        datatype = UChar;
-        break;
-    case 16:
-        if (imageSampleFormat == SAMPLEFORMAT_INT)
-            datatype = Short;
-        else if (imageSampleFormat == SAMPLEFORMAT_UINT )
-            datatype = UShort;
-        else if (imageSampleFormat == 0)
-            datatype = UShort;
-        break;
-    default:
-        REPORT_ERROR(1000,"rwTIFF: Unsupported TIFF sample format.");
-        break;
     }
 
 
@@ -210,13 +257,33 @@ int readTIFF(int img_select, bool isStack=false)
     int _xDim,_yDim,_zDim;
     unsigned long int _nDim;
 
-    _xDim = (int) imageWidth;
-    _yDim = (int) imageLength;
-    _zDim = (int) 1;
-    _nDim = (int) 1;
-
     // Map the parameters
+    if (img_select==-1)
+    {
+        _xDim = (int) dirHead[0].imageWidth;
+        _yDim = (int) dirHead[0].imageLength;
+        _zDim = (int) 1;
+        _nDim = (int) dirHead.size();
+    }
+    else
+    {
+        _xDim = (int) dirHead[img_select].imageWidth;
+        _yDim = (int) dirHead[img_select].imageLength;
+        _zDim = (int) 1;
+        _nDim = (int) 1;
+    }
     data.setDimensions(_xDim, _yDim, 1, _nDim);
+
+    unsigned long   imgStart=0;
+    unsigned long   imgEnd =_nDim;
+
+    if (img_select != -1)
+    {
+        imgStart=img_select;
+        imgEnd=img_select+1;
+    }
+
+    DataType datatype = datatypeTIFF(dirHead[0]);
 
     //Set main header
     MDMainHeader.removeObjects();
@@ -224,97 +291,88 @@ int readTIFF(int img_select, bool isStack=false)
     MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_SAMPLINGRATEX, xRes);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY, yRes);
-    MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
+    MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
 
     if( dataflag < 0 )
     {
-        fclose(fimg);
+        TIFFClose(tif);
         return 0;
     }
-
-
-    // If samplesPerPixel is higher than 3 it means there are extra samples, as associated alpha data
-    // Greyscale images are usually samplesPerPixel=1
-    // RGB images are usually samplesPerPixel=3 (this is only implemented for untiled 8-bit tiffs)
-    if (samplesPerPixel > 3)
-        samplesPerPixel = 1;
-
-    if (TIFFIsTiled(tif))
-    {
-        TIFFGetField(tif, TIFFTAG_TILEWIDTH,       &tileWidth);
-        TIFFGetField(tif, TIFFTAG_TILELENGTH,      &tileLength);
-        tif_buf = (unsigned char*)_TIFFmalloc(TIFFTileSize(tif));
-        if (samplesPerPixel != 1)
-        {
-            std::cerr<<"rwTIFF ERROR: samplePerPixel is not 1: not yet implemented for RGB images";
-            exit(1);
-        }
-    }
-    else
-    {
-        TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
-        scanline = TIFFScanlineSize(tif);
-        tif_buf = (unsigned char*)_TIFFmalloc(scanline);
-    }
-    if (tif_buf == 0)
-    {
-        TIFFError(TIFFFileName(tif), "No space for strip buffer");
-        exit(-1);
-    }
-
 
     // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
     //if memory already allocated use it (no resize allowed)
     data.coreAllocateReuse();
 
-    /* Start to convert the TIFF image to type T */
+    MD.removeObjects();
 
-    if (TIFFIsTiled(tif))
+    int pad = _xDim * _yDim;
+    int imReaded = 0;
+
+    for ( i=imgStart; i<imgEnd; i++ )
     {
-        for (y = 0; y < imageLength; y += tileLength)
-            for (x = 0; x < imageWidth; x += tileWidth)
-            {
-                TIFFReadTile(tif, tif_buf, x, y, 0, 0);
-                if (swap)
-                    swapPage((char*)tif_buf, TIFFTileSize(tif)*sizeof(unsigned char), datatype);
+        TIFFSetDirectory(tif,(tdir_t) i);
 
-                castTiffTile2T(data.data, tif_buf, x, y,
-                               imageWidth, imageLength,
-                               tileWidth, tileLength,
-                               samplesPerPixel,
+        // If samplesPerPixel is higher than 3 it means there are extra samples, as associated alpha data
+        // Greyscale images are usually samplesPerPixel=1
+        // RGB images are usually samplesPerPixel=3 (this is only implemented for untiled 8-bit tiffs)
+        if (dirHead[i].samplesPerPixel > 3)
+            dirHead[i].samplesPerPixel = 1;
+
+        if (TIFFIsTiled(tif))
+        {
+            TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tileWidth);
+            TIFFGetField(tif, TIFFTAG_TILELENGTH,&tileLength);
+            tif_buf = (unsigned char*)_TIFFmalloc(TIFFTileSize(tif));
+            //            if (samplesPerPixel != 1)
+            //            {
+            //                std::cerr<<"rwTIFF ERROR: samplePerPixel is not 1: not yet implemented for RGB images";
+            //                exit(1);
+            //            }
+        }
+        else
+        {
+            TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
+            scanline = TIFFScanlineSize(tif);
+            tif_buf = (unsigned char*)_TIFFmalloc(scanline);
+        }
+        if (tif_buf == 0)
+        {
+            TIFFError(TIFFFileName(tif), "No space for strip buffer");
+            exit(-1);
+        }
+
+        /* Start to convert the TIFF image to type T */
+
+        datatype = datatypeTIFF(dirHead[i]);
+
+        if (TIFFIsTiled(tif))
+        {
+            for (y = 0; y < dirHead[0].imageLength; y += tileLength)
+                for (x = 0; x < dirHead[0].imageWidth; x += tileWidth)
+                {
+                    TIFFReadTile(tif, tif_buf, x, y, 0, 0);
+                    if (swap)
+                        swapPage((char*)tif_buf, TIFFTileSize(tif)*sizeof(unsigned char), datatype);
+
+                    castTiffTile2T(data.data+(pad*imReaded), tif_buf, x, y,
+                                   dirHead[i].imageWidth, dirHead[i].imageLength,
+                                   tileWidth, tileLength,
+                                   dirHead[i].samplesPerPixel,
+                                   datatype);
+                }
+        }
+        else
+        {
+            for (y = 0; y < dirHead[i].imageLength; y++)
+            {
+                TIFFReadScanline(tif, tif_buf, y);
+                castTiffLine2T(data.data+(pad*imReaded), tif_buf, y,
+                               dirHead[i].imageWidth, dirHead[i].imageLength,
+                               dirHead[i].samplesPerPixel,
                                datatype);
             }
-    }
-    else
-    {
-        for (y = 0; y < imageLength; y++)
-        {
-            TIFFReadScanline(tif, tif_buf, y);
-            castTiffLine2T(data.data, tif_buf, y,
-                           imageWidth, imageLength,
-                           samplesPerPixel,
-                           datatype);
         }
-    }
-    _TIFFfree(tif_buf);
 
-    TIFFClose(tif);
-
-    //     return 0;
-
-
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
-    if (img_select != -1)
-    {
-        imgStart=img_select;
-        imgEnd=img_select+1;
-    }
-
-    //    MD.removeObjects();
-    //    for ( i=imgStart; i<imgEnd; i++ )
-    //for(int i=0;i< Ndim;i++)
-    {
         MD.addObject();
 
         MD.setValue(MDL_ORIGINX, zeroD);
@@ -325,98 +383,14 @@ int readTIFF(int img_select, bool isStack=false)
         MD.setValue(MDL_ANGLEPSI, zeroD);
         MD.setValue(MDL_WEIGHT,   oneD);
         MD.setValue(MDL_FLIP,     falseb);
+
+
+        imReaded++;
     }
 
-    //
-    //
 
-
-    //
-    //    DataType datatype;
-    //    //    dataHeaders[0].isSigned = false;
-    //    int TIA_DT;
-    //    if (img_select==-1)
-    //    {
-    //        TIA_DT = dataHeaders[0].DATA_TYPE;
-    //        offset = header->pDATA_OFFSET[0] + TIAdataSIZE;
-    //    }
-    //    else
-    //    {
-    //        TIA_DT = dataHeaders[img_select].DATA_TYPE;
-    //        offset = header->pDATA_OFFSET[img_select] + TIAdataSIZE;
-    //    }
-    //
-    //
-    //    switch ( TIA_DT )
-    //    {
-    //    case 1:
-    //        datatype = UChar;
-    //        break;
-    //    case 2:
-    //        datatype = UShort;
-    //        //        datatype = Short;
-    //        break;
-    //    case 3:
-    //        datatype = UInt;
-    //        break;
-    //    case 4:
-    //        datatype = SChar;
-    //        break;
-    //    case 5:
-    //        datatype = Short;
-    //        //        dataHeaders[0].isSigned = true;
-    //        break;
-    //    case 6:
-    //        datatype = Int;
-    //        break;
-    //    case 7:
-    //        datatype = Float;
-    //        break;
-    //    case 8:
-    //        datatype = Double;
-    //        break;
-    //    case 9:
-    //        datatype = ComplexFloat;
-    //        break;
-    //    case 10:
-    //        datatype = ComplexDouble;
-    //        break;
-    //    default:
-    //        datatype = Unknown_Type;
-    //        break;
-    //    }
-    //
-    //    MDMainHeader.removeObjects();
-    //    MDMainHeader.setColumnFormat(false);
-    //    MDMainHeader.addObject();
-    //    MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)dataHeaders[0].PIXEL_WIDTH);
-    //    MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].PIXEL_HEIGHT);
-    //    MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
-    //
-    //    if( dataflag == -2 )
-    //    {
-    //        fclose(fimg);
-    //        return 0;
-    //    }
-    //
-
-    //
-    //    //#define DEBUG
-    //#ifdef DEBUG
-    //
-    //    MDMainHeader.write(std::cerr);
-    //    MD.write(std::cerr);
-    //#endif
-    //
-    //    delete header;
-    //    size_t pad = TIAdataSIZE;
-    //
-    //    readData(fimg, img_select, datatype, pad);
-    //
-    //
-    //    if ( !mmapOn )
-    //        fclose(fimg);
-
+    _TIFFfree(tif_buf);
+    TIFFClose(tif);
     return 0;
 }
 
