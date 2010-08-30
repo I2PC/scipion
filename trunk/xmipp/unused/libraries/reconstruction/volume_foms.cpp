@@ -959,7 +959,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
     {
         DF.read((std::string)"resolution." + ext);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         resolution = -1;
         return;
@@ -1118,7 +1118,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
             FSC(i) = auxFSC [i];
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE << std::endl
         << "compute_resolution: Error reading resolution, ignoring it\n";
@@ -1190,7 +1190,7 @@ double compute_FSC(VolumeXmipp &vol_phantom,
             FSC(i) = auxFSC [i];
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE << std::endl
         << "compute_resolution: Error reading resolution, ignoring it\n";

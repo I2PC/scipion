@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
         prog_prm.read(argc, argv);
 
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         prog_prm.usage();
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
         // Really project
         ROUT_mpi_XR_project(prog_prm, proj, SF, node);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

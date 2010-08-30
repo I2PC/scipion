@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     // Project reference volume etc.
     prm.produce_Side_info();
 
-  } catch (Xmipp_error XE) {std::cout << XE; prm.usage(); exit(0);}
+  } catch (XmippError XE) {std::cout << XE; prm.usage(); exit(0);}
     
   try {
 
@@ -58,7 +58,7 @@ scale(4), Xoff (5), Yoff (6), Refno (7), maxCC (8)");
     fn_tmp=prm.fn_root+".doc";
     DFo.write(fn_tmp);
 
-  } catch (Xmipp_error XE) {std::cout << XE; prm.usage(); exit(0);}
+  } catch (XmippError XE) {std::cout << XE; prm.usage(); exit(0);}
 
 }
 

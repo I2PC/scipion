@@ -58,7 +58,7 @@ void VirusEulerMatrices::read(const FileName &fn)
             E_Matrices[(int)(line_no/3)](line_no % 3, 2) = textToFloat(nextToken());
 //std::cout<<line<<std::endl;
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             std::cout << "Euler File: Line " << line_no << " is skipped due to an error\n";
         }

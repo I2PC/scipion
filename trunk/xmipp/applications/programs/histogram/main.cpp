@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
         mask_prm.read(argc, argv);
     }
-    catch (Xmipp_error Xe)
+    catch (XmippError Xe)
     {
         std::cout << Xe;
         Usage();
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
         else
             std::cout << hist;
     }
-    catch (Xmipp_error Xe)
+    catch (XmippError Xe)
     {
         std::cout << Xe;
     }

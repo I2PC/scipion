@@ -49,7 +49,7 @@ int main(int argc, char **argv)
         //Create threads to be ready for work
         prm.createThreads();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
         prm.destroyThreads();
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();

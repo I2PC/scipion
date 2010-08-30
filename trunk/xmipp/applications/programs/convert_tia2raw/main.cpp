@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
         else
             dStddev = textToFloat(getParameter(argc, argv, "--stddev", "5"));
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage(argv);
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
             SF_out.write(fn_input.without_extension()+"_raw.sel");
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

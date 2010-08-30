@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
         reverse_endian = checkParameter(argc, argv, "-reverse_endian");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage(argv);
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
         if (fn_input.isMetaData())
             SF_out.write(fn_input.without_extension()+"_raw.sel");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

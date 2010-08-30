@@ -62,7 +62,7 @@ int main(int argc, char **argv)
         prm.produceSideInfo2();
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
         prm.writeOutputFiles(-1, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();

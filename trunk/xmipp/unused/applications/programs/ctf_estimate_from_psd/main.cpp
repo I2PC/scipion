@@ -35,7 +35,7 @@ int main (int argc,char *argv[]) {
        fn_in=getParameter(argc,argv,"-i");
        prog_prm.read(fn_in);
    }
-   catch (Xmipp_error &XE)
+   catch (XmippError &XE)
    {
        std::cout << XE; prog_prm.Usage(); exit(1);
    }
@@ -45,7 +45,7 @@ int main (int argc,char *argv[]) {
       CTFDescription ctfmodel;
       ROUT_Adjust_CTF(prog_prm,ctfmodel);
    }
-   catch (Xmipp_error XE)
+   catch (XmippError XE)
    {
    std::cout << XE;
    }

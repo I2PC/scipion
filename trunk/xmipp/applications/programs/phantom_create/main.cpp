@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
         fn_phantom = getParameter(argc, argv, "-i");
         fn_vol     = getParameter(argc, argv, "-o");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage(argv);
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         phantom.draw_in(vol());
         vol.write(fn_vol);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

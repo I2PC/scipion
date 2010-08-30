@@ -937,6 +937,6 @@ void projectPDB(const PDBPhantom &phantomPDB,
         {
             projectAtom(phantomPDB.getAtom(i), proj, VP, PV, interpolator);
         }
-        catch (Xmipp_error XE) {}
+        catch (XmippError XE) {}
     }
 }

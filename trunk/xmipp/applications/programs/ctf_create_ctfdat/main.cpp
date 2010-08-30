@@ -48,7 +48,7 @@ int main(int argc, char **argv)
             fn_param = getParameter(argc, argv, "-param");
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE << std::endl;
         std::cerr << "Usage: docfile_select_subset\n"
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
         std::cerr<<" Saved CTFdat file as "<<fn_out+".ctfdat"<<std::endl;
         std::cerr<< " Done! "<<std::endl;
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE << std::endl;
         return 2;

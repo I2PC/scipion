@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	        fn_out = fn_in;   
             round_shifts = checkParameter(argc, argv, "-round_shifts");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 	
         SF.write(fn_out);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

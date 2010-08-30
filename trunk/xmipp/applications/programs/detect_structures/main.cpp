@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     try {
         prm.read(argc,argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         prm.usage();
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     try {
         prm.run();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         return 1;

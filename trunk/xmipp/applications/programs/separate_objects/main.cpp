@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
         if (fn_root == "")
             fn_root = fn_in.get_root();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
                 << " voxels set to 1\n";
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

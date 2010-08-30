@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
         blob.alpha         = textToFloat(getParameter(argc, argv, "-a",    "10.4"));
         R                  = textToFloat(getParameter(argc, argv, "-R",    "-1"));
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         Usage();
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
             vol_voxels.write(fn_out);
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

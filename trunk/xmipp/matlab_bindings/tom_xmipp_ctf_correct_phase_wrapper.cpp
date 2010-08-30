@@ -60,7 +60,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         prm.correct(fft);
         InverseFourierTransform(fft, I);
     }
-    catch (Xmipp_error Xe)
+    catch (XmippError Xe)
     {
         mexErrMsgTxt(Xe.msg.c_str());
     }

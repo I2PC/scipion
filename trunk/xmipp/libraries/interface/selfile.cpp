@@ -260,7 +260,7 @@ void SelFile::read(const FileName &sel_name, int overriding)
             {
                 fh_sel >> temp;
             }
-            catch (Xmipp_error)
+            catch (XmippError)
             {
                 std::cout << "Sel file: Line " << line_no << " is skipped due to an error\n";
             }

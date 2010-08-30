@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
         << "</ITEM>\n";
         filestr.close();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         filestr.open (fn_out.c_str());
         filestr  << "<ITEM id=\"" << itemNumber <<"\">\n"

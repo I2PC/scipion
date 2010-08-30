@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     {
         fn_ctf = getParameter(argc, argv, "-i", "");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         std::cerr << "Usage: CTFViewer\n"
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
         app.setMainWidget(Viewer);
         return app.exec();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         exit(1);

@@ -40,7 +40,7 @@ int main(int argc, char **argv)
         fn_prm = getParameter(argc, argv, "-i");
         prm.read_from_file(fn_prm);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         Usage(argv);
     }
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     {
         ROUT_Spots2RealSpace(prm, prj);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

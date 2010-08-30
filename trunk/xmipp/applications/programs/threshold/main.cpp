@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 
     }
 
-    catch (Xmipp_error Xe)
+    catch (XmippError Xe)
     {
         std::cout << Xe;
         Usage();
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
         // Write output volume --------------------------------------------------
         I.write(fn_out);
     }
-    catch (Xmipp_error Xe)
+    catch (XmippError Xe)
     {
         std::cout << Xe;
     }

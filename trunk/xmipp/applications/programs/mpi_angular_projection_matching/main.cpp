@@ -633,7 +633,7 @@ int main(int argc, char *argv[])
             prm.read(argc, argv);
         }
 
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::cerr << XE;
             prm.usage();
@@ -648,7 +648,7 @@ int main(int argc, char *argv[])
             prm.read(argc, argv);
         }
 
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::cerr << XE;
             MPI_Finalize();
@@ -662,7 +662,7 @@ int main(int argc, char *argv[])
         prm.run();
         MPI_Finalize();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         exit(1);

@@ -48,7 +48,7 @@ int main(int argc, char **argv)
         if (fn_root=="" && fn_stack=="" && fn_vol=="")
             REPORT_ERROR(1,"image_convert: Please, provide one output");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
             }
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

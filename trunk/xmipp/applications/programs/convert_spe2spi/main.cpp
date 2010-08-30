@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
         reverse_endian = checkParameter(argc, argv, "-reverse_endian");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage(argv);
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         else if (fn_in!="" && fn_out!="")
             spe2spi(fn_in, fn_out, reverse_endian);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

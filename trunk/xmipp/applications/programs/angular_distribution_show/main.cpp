@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
         solid_sphere = checkParameter(argc, argv, "-solid_sphere");
         shift_center= textToFloat(getParameter(argc, argv, "-shift_center", "0"));
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
         }
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

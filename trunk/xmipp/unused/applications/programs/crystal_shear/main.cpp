@@ -53,7 +53,7 @@ int main(int argc, char **argv)
         fn_in  = getParameter(argc, argv, "-i");
         fn_out = getParameter(argc, argv, "-o");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         Usage(argv);
     }

@@ -281,6 +281,7 @@ public:
 
     MDValueRelational()
     {
+        op = EQ;
         value = NULL;
     }
 

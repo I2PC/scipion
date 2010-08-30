@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         if (checkParameter(argc, argv, "-noBB"))
             noBB = true;
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         std::cout << "data2img: Convert a data set into a set of volumes" << std::endl;
         std::cout << "Usage:" << std::endl;

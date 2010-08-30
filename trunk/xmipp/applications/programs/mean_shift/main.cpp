@@ -324,7 +324,7 @@ int main(int argc, char **argv)
                 save_iters = true;
         }
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         std::cout << "Mean_shift: Filters an image based on the mean-shift algorithm" << std::endl;
         std::cout << "Usage:" << std::endl;

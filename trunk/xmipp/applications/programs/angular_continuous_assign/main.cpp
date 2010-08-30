@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     Prog_angular_predict_continuous_prm prm;
     try {
         prm.read(argc,argv);
-    } catch (Xmipp_error XE) {
+    } catch (XmippError XE) {
         std::cout << XE;
         prm.usage();
         exit(1);
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
         prm.produce_side_info();
         prm.show();
         prm.run();
-    } catch (Xmipp_error XE) {
+    } catch (XmippError XE) {
         std::cout << XE;
         exit(1);
     }

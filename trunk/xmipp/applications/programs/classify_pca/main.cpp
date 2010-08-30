@@ -71,7 +71,7 @@ main(int argc, char** argv)
         }
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage(argv);
@@ -171,7 +171,7 @@ main(int argc, char** argv)
         std::cout << std::endl;
 
     }
-    catch (Xmipp_error &e)
+    catch (XmippError &e)
     {
         std::cout << e << std::endl;
     }

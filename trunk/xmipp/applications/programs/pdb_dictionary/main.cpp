@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
         if (projectionMethod==LASSO_PROJECTION) S=0;
         else lambda=0;
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         std::cout << "Usage: xmipp_pdb_dictionary\n"
@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
               << " " << patchSize << std::endl << D << std::endl;
         fhOut.close();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

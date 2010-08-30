@@ -125,7 +125,7 @@ void Spot2RealSpace2D_Parameters::read_from_file(const FileName &fnprm)
             getParameter(fh_param, "Symmetry group", 0, "P1");
 //      align_a_axis_with_x=checkParameter(fh_param,"Align A axis");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         REPORT_ERROR(3007, (std::string)"There is an error reading " + fnprm);
@@ -528,7 +528,7 @@ void RealSpace2Spots2D_Parameters::read_from_file(const FileName &fnprm)
         mrc_tilt = (textToFloat(getParameter(fh_param, "tilt", 0, NULL,
                                    3007, "Spot2RealSpace2D_Parameters::read: tilt not found")));
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         REPORT_ERROR(3007, (std::string)"There is an error reading " + fnprm);

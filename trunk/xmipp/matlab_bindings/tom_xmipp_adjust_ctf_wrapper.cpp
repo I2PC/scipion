@@ -58,7 +58,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     {
         ROUT_Adjust_CTF(adjustParams,ctfmodel,false);
     }
-    catch (Xmipp_error Xe)
+    catch (XmippError Xe)
     {
         mexErrMsgTxt(Xe.msg.c_str());
     }

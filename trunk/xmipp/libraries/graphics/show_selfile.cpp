@@ -329,7 +329,7 @@ const char * ShowSel::cellLabel(int i) const
                                       integerToString(ABS(ROUND(ctf.DeltafU - ctf.DeltafV)));
             return defocus_val.c_str();
         }
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             return ((std::string)"Cannot open " + fn_param).c_str();
         }
@@ -759,7 +759,7 @@ void ShowSel::recomputeCTFmodel()
 	{
             assign_ctf_prm.read(fn_assign);
 	}
-	catch (Xmipp_error XE)
+	catch (XmippError XE)
 	{
             std::cout << XE;
             std::cout << "It seems that " << fn_assign << " is not the parameter file"

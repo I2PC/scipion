@@ -65,7 +65,7 @@ void Crystal_ART_Parameters::read(int argc, char **argv,
             YY(bvox) = b_mag * SIND(ang_a2b_deg);
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         throw(XE);
     }

@@ -111,7 +111,7 @@ void ROUT_EULER(const double rot,
     {
         std::cout << "Inverse Euler Matrix with old angles\n" << D.inv();
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         exit(1);
@@ -123,7 +123,7 @@ void ROUT_EULER(const double rot,
     {
         std::cout << "Inverse Euler Matrix with new angles\n" << D.inv();
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         exit(1);

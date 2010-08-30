@@ -185,7 +185,7 @@ void DocLine::read(std::istream& in)
             readFloatList(line, i, param_no, data, 1602,
                           "Error reading doc file line");
         }
-        catch (Xmipp_error e)
+        catch (XmippError e)
         {
             // Try fixed mode then
             data.clear();
@@ -395,7 +395,7 @@ void DocFile::read(const FileName& name, int overriding)
 #ifndef _NO_EXCEPTION
 
         }
-        catch (Xmipp_error e)
+        catch (XmippError e)
         {
             std::cout << "Doc File: Line " << line_no <<
             " is skipped due to an error\n";

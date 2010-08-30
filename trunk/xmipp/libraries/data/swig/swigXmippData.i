@@ -96,7 +96,7 @@ $result=PyInt_FromLong((long)*$1);
     try {
         $action
     }
-    catch (Xmipp_error XE) {
+    catch (XmippError XE) {
         PyErr_SetString(PyExc_RuntimeError,XE.msg.c_str());
         return NULL;
     }

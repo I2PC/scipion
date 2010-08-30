@@ -215,7 +215,7 @@ Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
             aux(0) = d;
             return aux;
         }
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::string auxstr;
             if (_errno == -1)

@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         idr_art_prm.MPIrank=rank;
         idr_art_prm.read(argc, argv);
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         if (rank == 0)
         {
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
         idr_art_prm.produce_side_info();
         idr_art_prm.IDR_correction();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         MPI_Finalize();

@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         prm.InterpModel = getParameter(argc, argv, "-interp_model", "Linear");
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         Usage(argv);
     }
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     {
         ROUT_Umbend(prm);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

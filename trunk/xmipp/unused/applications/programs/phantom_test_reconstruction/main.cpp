@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
         if (dont_rewrite) nvol = 1;
         else              nvol = -1;
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         Usage();
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         if (only_training) test_training(recons_prm, nvol, fn_root + ".hist", training_FOM);
         else               test_all_FOMs(recons_prm, nvol, fn_root + ".hist");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

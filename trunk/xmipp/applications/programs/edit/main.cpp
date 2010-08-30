@@ -33,7 +33,7 @@ int main(int argc, char ** argv)
         if (ifirst == -1 && argc != 1) REPORT_ERROR(1, "Edit: Cannot find -i");
         remove = checkParameter(argc, argv, "-remove");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         usage();

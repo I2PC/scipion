@@ -48,7 +48,7 @@ int main(int argc, char **argv)
         remove_multiple = getParameter(argc, argv, "-remove_multiple","");
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE << std::endl;
         std::cerr << "Usage: docfile_append\n"
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         }
         DF.write(fn_out);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE << std::endl;
         return 2;

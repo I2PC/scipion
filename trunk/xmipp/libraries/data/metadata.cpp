@@ -108,7 +108,7 @@ bool MetaData::_setValue(long int objId, const MDValueStore &mdValueIn)
             objId = activeObjId;
         else
         {
-            REPORT_ERROR(-1, "No active object, please provide objId for 'setValue'");
+            REPORT_ERROR(ERR_MD_NOACTIVE, "setValue: please provide objId other than -1");
             exit(1);
         }
     }
@@ -129,7 +129,7 @@ bool MetaData::_getValue(long int objId, MDValueStore &mdValueOut) const
             objId = activeObjId;
         else
         {
-            REPORT_ERROR(-1, "No active object, please provide objId for 'getValue'");
+            REPORT_ERROR(ERR_MD_NOACTIVE, "getValue: please provide objId other than -1");
             exit(1);
         }
     }
@@ -255,7 +255,7 @@ bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, lo
             objectId = activeObjId;
         else
         {
-            REPORT_ERROR(-1, "No active object, please provide objId for 'setValue'");
+            REPORT_ERROR(ERR_MD_NOACTIVE, "setValue: please provide objId other than -1");
             exit(1);
         }
     }
@@ -448,7 +448,7 @@ long int MetaData::lastObject()
 long int MetaData::nextObject()
 {
     if (activeObjId == -1)
-        REPORT_ERROR(-55, "Couldn't call 'nextObject' when 'activeObject' is -1");
+        REPORT_ERROR(ERR_MD_NOACTIVE, "nextObject: Couldn't perform this operation when 'activeObject' is -1");
     activeObjId = myMDSql->nextRow(activeObjId);
     return activeObjId;
 }
@@ -456,7 +456,7 @@ long int MetaData::nextObject()
 long int MetaData::previousObject()
 {
     if (activeObjId == -1)
-        REPORT_ERROR(-55, "Couldn't call 'previousObject' when 'activeObject' is -1");
+      REPORT_ERROR(ERR_MD_NOACTIVE, "previousObject: Couldn't perform this operation when 'activeObject' is -1");
     activeObjId = myMDSql->previousRow(activeObjId);
     return activeObjId;
 }
@@ -466,7 +466,7 @@ long int MetaData::goToObject(long int objectId)
     if (containsObject(objectId))
         activeObjId = objectId;
     else
-        REPORT_ERROR(-55, "Couldn't 'gotoObject', ID doesn't exist in metadata");
+        REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"gotoObject: object with ID " + integerToString(objectId) + " doesn't exist in metadata");
     return activeObjId;
 
 }
@@ -653,7 +653,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDValueStore>& columnValu
                     is >> columnValues[i];
                     if (is.fail())
                     {
-                        REPORT_ERROR(-44, (std::string)"MetaData::read: Error parsing data column, expecting " + MDL::label2Str(columnValues[i].label));
+                        REPORT_ERROR(ERR_MD_BADLABEL, (std::string)"read: Error parsing data column, expecting " + MDL::label2Str(columnValues[i].label));
                     }
                     else
                         if (columnValues[i].label != MDL_UNDEFINED)
@@ -702,7 +702,7 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
 
     if (is.fail())
     {
-        REPORT_ERROR(-44, (std::string) "MetaData::read: File " + filename + " does not exists" );
+        REPORT_ERROR(ERR_IO_NOTEXIST, (std::string) "MetaData::read: File " + filename + " does not exists" );
     }
 
     _clear();
@@ -789,7 +789,7 @@ void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperat
                          MDLabel operateLabel, const std::vector<MDLabel> &resultLabels)
 {
     if (resultLabels.size() - ops.size() != 1)
-        REPORT_ERROR(-55, "Labels vectors should contain one element more than operations");
+        REPORT_ERROR(ERR_MD, "Labels vectors should contain one element more than operations");
     init(&resultLabels);
     mdIn.myMDSql->aggregateMd(this, ops, operateLabel);
     firstObject();
@@ -800,7 +800,7 @@ void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperat
 void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperation operation)
 {
     if (this == &mdIn) //not sense to operate on same metadata
-        REPORT_ERROR(-55, "Couldn't perform this operation on input metadata");
+        REPORT_ERROR(ERR_MD, "Couldn't perform this operation on input metadata");
     //Add labels to be sure are present
     for (int i = 0; i < mdIn.activeLabels.size(); i++)
         addLabel(mdIn.activeLabels[i]);
@@ -812,7 +812,7 @@ void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperat
 void MetaData::_setOperates(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, SetOperation operation)
 {
     if (this == &mdInLeft || this == &mdInRight) //not sense to operate on same metadata
-        REPORT_ERROR(-55, "Couldn't perform this operation on input metadata");
+        REPORT_ERROR(ERR_MD, "Couldn't perform this operation on input metadata");
     //Add labels to be sure are present
     for (int i = 0; i < mdInLeft.activeLabels.size(); i++)
         addLabel(mdInLeft.activeLabels[i]);
@@ -851,7 +851,7 @@ void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const M
 void MetaData::operate(const std::string &expression)
 {
     if (!myMDSql->operate(expression))
-        REPORT_ERROR(-55, "MetaData::operate: error doing operation");
+        REPORT_ERROR(ERR_MD, "MetaData::operate: error doing operation");
 }
 
 void MetaData::randomize(MetaData &MDin)
@@ -874,7 +874,7 @@ void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLa
 {
     long int mdSize = size();
     if (n > mdSize)
-        REPORT_ERROR(-55, "MetaData::split: Couldn't split a metadata in more parts than its size");
+        REPORT_ERROR(ERR_MD, "MetaData::split: Couldn't split a metadata in more parts than its size");
 
     results.clear();
     results.resize(n);
@@ -901,9 +901,9 @@ void MetaData::selectSplitPart(const MetaData &mdIn, int n, int part, const MDLa
 {
     long int mdSize = mdIn.size();
     if (n > mdSize)
-        REPORT_ERROR(-55, "selectSplitPart: Couldn't split a metadata in more parts than its size");
+        REPORT_ERROR(ERR_MD, "selectSplitPart: Couldn't split a metadata in more parts than its size");
     if (part < 0 || part >= n)
-        REPORT_ERROR(-55, "selectSplitPart: 'part' should be between 0 and n-1");
+        REPORT_ERROR(ERR_MD, "selectSplitPart: 'part' should be between 0 and n-1");
     _selectSplitPart(mdIn, n, part, mdSize, sortLabel);
 
 }
@@ -913,7 +913,7 @@ void MetaData::selectPart(const MetaData &mdIn, long int startPosition, long int
 {
     long int mdSize = mdIn.size();
     if (startPosition < 0 || startPosition >= mdSize)
-        REPORT_ERROR(-55, "selectPart: 'startPosition' should be between 0 and size()-1");
+        REPORT_ERROR(ERR_MD, "selectPart: 'startPosition' should be between 0 and size()-1");
     init(&(mdIn.activeLabels));
     copyInfo(mdIn);
     mdIn.myMDSql->copyObjects(this, new MDQuery(numberOfObjects, startPosition, sortLabel));

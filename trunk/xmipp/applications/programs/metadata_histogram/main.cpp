@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
             generate_img = (fn_img != "");
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

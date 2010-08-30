@@ -29,12 +29,12 @@ int main(int argc, char **argv) {
    Prog_tomograph_alignment prm;
    try {
       prm.read(argc,argv);
-   } catch (Xmipp_error XE) {std::cout << XE; prm.usage(); exit(1);}
+   } catch (XmippError XE) {std::cout << XE; prm.usage(); exit(1);}
 
    try {
       prm.produceSideInfo();
       prm.show();
       prm.run();
-   } catch (Xmipp_error XE) {std::cout << XE;}
+   } catch (XmippError XE) {std::cout << XE;}
    return 0;
 }

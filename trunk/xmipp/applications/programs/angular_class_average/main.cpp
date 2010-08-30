@@ -64,7 +64,7 @@ int main(int argc, char **argv)
         }
     }
 
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
         // Write selfiles and docfiles with all class averages
         prm.finalWriteToDisc();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

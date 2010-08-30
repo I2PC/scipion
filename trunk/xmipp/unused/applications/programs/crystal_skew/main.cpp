@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         minz        = textToInteger(getParameter(argc, argv, "-zmin"));
         maxz        = textToInteger(getParameter(argc, argv, "-zmax"));
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         Usage(argv);
     }
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
         std::cout << "\n End writting file: " << fn_out << " ..." << std::endl;
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

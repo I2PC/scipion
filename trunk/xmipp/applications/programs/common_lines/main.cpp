@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     {
         prm.read(argc, argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
         prm.qualifyCommonLines();
         prm.writeResults();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         exit(1);

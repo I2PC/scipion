@@ -29,24 +29,101 @@ void _Xmipp_error(const int nerr, const std::string &what,
                   const std::string &file, const long line)
 {
     std::cout << nerr << ": " << what << std::endl
-              << "File: " << file << " line: " << line << std::endl;
+    << "File: " << file << " line: " << line << std::endl;
     exit(nerr);
 }
 
 // Object Constructor
-Xmipp_error::Xmipp_error(const int nerr, const std::string &what,
-    	    	    	 const std::string &fileArg, const long lineArg)
+XmippError::XmippError(const ErrorType nerr, const std::string &what,
+                       const std::string &fileArg, const long lineArg)
 {
     __errno = nerr;
     msg = what;
     file= fileArg;
     line=lineArg;
+
+    //Store information about the stack calls
+    void *array[10];
+    size = backtrace(array, 10);
+    strings = backtrace_symbols(array, size);
+}
+
+//Object Destructor
+XmippError::~XmippError()
+{
+    free(strings);
+}
+
+void XmippError::printStackTrace(std::ostream& o)
+{
+    o << "Obtained " << size << " stack frames:" << std::endl;
+    for (size_t i = 0; i < size; ++i)
+        o << strings[i] << std::endl;
 }
 
 // Show message
-std::ostream& operator << (std::ostream& o, Xmipp_error& XE)
+std::ostream& operator << (std::ostream& o, XmippError& XE)
 {
-    o << XE.__errno << ":" << XE.msg << std::endl
-      << "File: " << XE.file << " line: " << XE.line << std::endl;
+    o << XE.__errno << ":" << XE.getDefaultMessage() << std::endl
+    << XE.msg << std::endl
+    << "File: " << XE.file << " line: " << XE.line << std::endl;
+    //XE.printStackTrace(o);
+
     return o;
 }
+
+char * XmippError::getDefaultMessage()
+{
+    return getDefaultMessage(__errno);
+}
+char * XmippError::getDefaultMessage(ErrorType e)
+{
+    switch (e)
+    {
+    case ERR_MEM_NOTENOUGH:
+        return " There is not enough memory for allocation.";
+    case ERR_IO_NOTEXIST:
+        return " File or directory does not exists";
+    case ERR_IO_NOPERM:
+        return " Insufficient permissions to perform operation";
+    case ERR_IO_NOREAD:
+        return " Couldn't read from file";
+    case ERR_IO_NOWRITE:
+        return " Couldn't write to file";
+    case ERR_IO_NOTFILE:
+        return " It is not a file";
+    case ERR_IO_NOTDIR:
+        return " It is not a directory";
+    case ERR_ARG_INCORRECT:
+        return " Incorrect argument received";
+    case ERR_ARG_MISSING:
+        return " Argument missing";
+    case ERR_TYPE_INCORRECT:
+        return " Incorrect type received";
+    case ERR_MATRIX:
+        return " Matrix error";
+    case ERR_MATRIX_EMPTY:
+        return " The matrix is empty";
+    case ERR_MATRIX_SIZE:
+        return " Problem with matrix size";
+    case ERR_MD:
+        return " MetaData error";
+    case ERR_MD_NOACTIVE:
+        return " No active object in MetaData";
+    case ERR_MD_NOOBJ:
+        return " No exist requested object";
+    case ERR_MD_BADLABEL:
+        return " Unexpected label";
+    case ERR_MD_SQL:
+        return " Error in SQL of MetaData operations";
+    case ERR_INDEX_OUTOFBOUNDS:
+        return " Index out of bounds";
+    case ERR_DEBUG_TEST:
+        return " Just an error for debugging purpose";
+    case ERR_DEBUG_IMPOSIBLE:
+        return " Just for debugging: situation that can't happens";
+    }
+}
+
+
+

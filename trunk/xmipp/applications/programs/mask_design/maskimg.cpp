@@ -494,7 +494,7 @@ void maskImg::saveImage(int item)
             theMaskFigure->print(pmScaled.width() / (float)XSIZE(xmippImage()),
                                  pmScaled.height() / (float)YSIZE(xmippImage()));
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             char *helptext = "Invalid image type";
             helpmsg = new QMessageBox("Error", helptext,
@@ -595,7 +595,7 @@ bool maskImg::xmipp2Qt(Image<double> &_image)
         ok = TRUE;
 
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         ok = FALSE;
         char *helptext = "Error converting xmipp to Qt";
@@ -635,7 +635,7 @@ bool maskImg::Qt2xmipp(QImage _image)
         ok = TRUE;
 
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         ok = FALSE;
         char *helptext = "Error converting Qt image to Xmipp image";
@@ -681,7 +681,7 @@ bool maskImg::loadImage(const char *fileName)
                 ok = TRUE;
                 ok = xmipp2Qt(tmpImage);
 			}
-            catch (Xmipp_error)
+            catch (XmippError)
             {
                 ok = FALSE;
                 char *helptext = "Invalid image type";

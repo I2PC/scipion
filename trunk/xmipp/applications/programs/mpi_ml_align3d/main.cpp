@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     if (rank==0) prm.show();
     else  prm.verb=0;
 
-  } catch (Xmipp_error XE) {if (rank==0) {std::cout << XE; prm.usage();} MPI_Finalize(); exit(1);} 
+  } catch (XmippError XE) {if (rank==0) {std::cout << XE; prm.usage();} MPI_Finalize(); exit(1);} 
 
     
   try {
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
     } // end loop iterations
 
 
-  } catch (Xmipp_error XE) {if (rank==0) {std::cout << XE; prm.usage();} MPI_Finalize(); exit(1);}
+  } catch (XmippError XE) {if (rank==0) {std::cout << XE; prm.usage();} MPI_Finalize(); exit(1);}
 
 
   MPI_Finalize();	

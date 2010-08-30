@@ -60,7 +60,7 @@ int main(int argc, char **argv)
             SF.read(fn_input);
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
             progress_bar(SF.ImgNo());
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

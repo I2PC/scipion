@@ -273,7 +273,7 @@ void MDSql::aggregateMd(MetaData *mdPtrOut,
             ss2 << "AVG";
             break;
         default:
-            REPORT_ERROR(-66, "Invalid aggregate operation.");
+            REPORT_ERROR(ERR_MD_SQL, "Invalid aggregate operation.");
         }
         ss2 << "(" << MDL::label2Str(operateLabel)
         << ") AS " << MDL::label2Str(mdPtrOut->activeLabels[i+1]);
@@ -455,7 +455,7 @@ void MDSql::dumpToFile(const FileName &fileName)
         rc = sqlite3_errcode(pTo);
     }
     else
-        REPORT_ERROR(-55, "dumpToFile: error opening db file");
+        REPORT_ERROR(ERR_MD_SQL, "dumpToFile: error opening db file");
     sqlite3_close(pTo);
     sqlBeginTrans();
 }

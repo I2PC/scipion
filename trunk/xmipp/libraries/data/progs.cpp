@@ -131,7 +131,7 @@ void SF_main(int argc, char **argv,
     {
         (*(Prog_parameters *)prm).read(argc, argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         std::cerr << "Usage: \n"
@@ -337,7 +337,7 @@ void SF_main(int argc, char **argv,
             }
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

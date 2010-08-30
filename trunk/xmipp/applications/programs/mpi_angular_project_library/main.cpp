@@ -221,7 +221,7 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
         {
             inputVol.read(input_volume);
         }
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::cout << XE;
             error_exit("Error reading reference volume\n\n");
@@ -432,7 +432,7 @@ int main(int argc, char *argv[])
     {
         prm.read(argc, argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         prm.usage();
@@ -446,7 +446,7 @@ int main(int argc, char *argv[])
         prm.createGroupSamplingFiles();
         MPI_Finalize();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         exit(1);

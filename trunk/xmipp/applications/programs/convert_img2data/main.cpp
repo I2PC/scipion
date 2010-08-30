@@ -61,7 +61,7 @@ int main(int argc, char **argv)
         apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
         radial_avg = checkParameter(argc, argv, "-radial_avg");
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         std::cout << "img2data: Convert a set of images into a set of data vectors" << std::endl;
         std::cout << "Usage:" << std::endl;
@@ -166,7 +166,7 @@ int main(int argc, char **argv)
             fprintf(fp, "%s \n", labels[i].c_str());
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

@@ -72,7 +72,7 @@ int main(int argc, char **argv)
             vol.write(prm.fn_out);
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (rank == 0)
         {

@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
         	REPORT_ERROR(1,"crystal art temporarily deactivated.");
 //        	crystal_art_prm.read(argc, argv, art_prm);
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         bool usage_more = checkParameter(argc, argv, "-more_help");
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
             //Basic_ROUT_Art(art_prm, crystal_art_prm, vol_voxels, vol_blobs);
         std::cerr.flush();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

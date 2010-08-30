@@ -176,7 +176,7 @@ int main(int argc, char **argv)
             prm.alignment_method = COVARIANCE;
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         Usage(mask);
@@ -330,7 +330,7 @@ int main(int argc, char **argv)
             prm.V2.write();
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         return 1;

@@ -386,7 +386,7 @@ public:
         mdim=_mdimx*_mdimy;
         mdata = new T [mdim];
         if (mdata == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left");
+            REPORT_ERROR(ERR_MEM_NOTENOUGH, "coreAllocate: No space left");
     }
 
     /** Core deallocate.
@@ -425,7 +425,7 @@ public:
         }
         catch (std::bad_alloc &)
         {
-            REPORT_ERROR(1001, "Allocate: No space left");
+            REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
         }
 
         // Copy needed elements, fill with 0 if necessary
@@ -475,8 +475,8 @@ public:
      */
     void submatrix(int i0, int j0, int iF, int jF)
     {
-        if (i0<0 || j0<0 || iF>=MAT_YSIZE(*this) || jF>=MAT_XSIZE(*this))
-            REPORT_ERROR(1,"Submatrix indexes out of bounds");
+        if (i0 < 0 || j0 < 0 || iF >= MAT_YSIZE(*this) || jF >= MAT_XSIZE(*this))
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"Submatrix indexes out of bounds");
         Matrix2D<T> result(iF - i0 + 1, jF - j0 + 1);
 
         FOR_ALL_ELEMENTS_IN_MATRIX2D(result)
@@ -621,7 +621,7 @@ public:
     }
     /** Parenthesis operator for phyton
     */
-    T getVal( int y, int x)
+    T getVal( int y, int x) const
     {
         return MAT_ELEM((*this),y,x);
     }
@@ -683,10 +683,10 @@ public:
         Matrix1D<T> result;
 
         if (mdimx != op1.size())
-            REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "Not compatible sizes in matrix by vector");
 
         if (!op1.isCol())
-            REPORT_ERROR(1102, "Vector is not a column");
+            REPORT_ERROR(ERR_MATRIX, "Vector is not a column");
 
         result.initZeros(mdimy);
 
@@ -708,7 +708,7 @@ public:
     {
         Matrix2D<T> result;
         if (mdimx != op1.mdimy)
-            REPORT_ERROR(1102, "Not compatible sizes in matrix multiplication");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "Not compatible sizes in matrix multiplication");
 
         result.initZeros(mdimy, op1.mdimx);
         for (int i = 0; i < mdimy; i++)
@@ -728,7 +728,7 @@ public:
     {
         Matrix2D<T> result;
         if (mdimx != op1.mdimx || mdimy != op1.mdimy)
-            REPORT_ERROR(1102, "Not same sizes in matrix summation");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "operator+: Not same sizes in matrix summation");
 
         result.initZeros(mdimy, mdimx);
         for (int i = 0; i < mdimy; i++)
@@ -747,7 +747,7 @@ public:
     void operator+=(const Matrix2D<T>& op1) const
     {
         if (mdimx != op1.mdimx || mdimy != op1.mdimy)
-            REPORT_ERROR(1102, "Not same sizes in matrix summation");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "operator+=: Not same sizes in matrix summation");
 
         for (int i = 0; i < mdimy; i++)
             for (int j = 0; j < mdimx; j++)
@@ -764,7 +764,7 @@ public:
     {
         Matrix2D<T> result;
         if (mdimx != op1.mdimx || mdimy != op1.mdimy)
-            REPORT_ERROR(1102, "Not same sizes in matrix summation");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "operator-: Not same sizes in matrix summation");
 
         result.initZeros(mdimy, mdimx);
         for (int i = 0; i < mdimy; i++)
@@ -783,7 +783,7 @@ public:
     void operator-=(const Matrix2D<T>& op1) const
     {
         if (mdimx != op1.mdimx || mdimy != op1.mdimy)
-            REPORT_ERROR(1102, "Not same sizes in matrix summation");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "operator-=: Not same sizes in matrix summation");
 
         for (int i = 0; i < mdimy; i++)
             for (int j = 0; j < mdimx; j++)
@@ -906,7 +906,7 @@ public:
         std::ofstream fhOut;
         fhOut.open(fn.c_str());
         if (!fhOut)
-            REPORT_ERROR(1,(std::string)"Cannot open "+fn+" for output");
+            REPORT_ERROR(ERR_IO_NOWRITE,(std::string)"write: Cannot open "+fn+" for output");
         fhOut << *this;
         fhOut.close();
     }
@@ -996,8 +996,8 @@ public:
 
         // If matrix is not a vector, produce an error
         if (!(mdimx == 1 || mdimy == 1))
-            REPORT_ERROR(1102,
-                         "To_vector: Matrix cannot be converted to vector");
+            REPORT_ERROR(ERR_MATRIX,
+                         "toVector: Matrix cannot be converted to vector");
 
         // Look at shape and copy values
         if (mdimy == 1)
@@ -1059,7 +1059,7 @@ public:
         }
 
         if (i < 0 || i >= mdimy)
-            REPORT_ERROR(1103, "getRow: Matrix subscript (i) greater than matrix dimension");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "getRow: Matrix subscript (i) greater than matrix dimension");
 
         if (VEC_XSIZE(v)!=mdimx)
             v.resize(mdimx);
@@ -1088,7 +1088,7 @@ public:
         }
 
         if (j < 0 || j >= mdimx)
-            REPORT_ERROR(1103,"getCol: Matrix subscript (j) greater than matrix dimension");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"getCol: Matrix subscript (j) greater than matrix dimension");
 
         if (VEC_XSIZE(v)!=mdimy)
             v.resize(mdimy);
@@ -1109,17 +1109,17 @@ public:
     void setRow(int i, const Matrix1D<T>& v)
     {
         if (mdimx == 0 || mdimy == 0)
-            REPORT_ERROR(1, "setRow: Target matrix is empty");
+            REPORT_ERROR(ERR_MATRIX_EMPTY, "setRow: Target matrix is empty");
 
         if (i < 0 || i >= mdimy)
-            REPORT_ERROR(1103, "setRow: Matrix subscript (i) out of range");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "setRow: Matrix subscript (i) out of range");
 
         if (VEC_XSIZE(v) != mdimx)
-            REPORT_ERROR(1102,
+            REPORT_ERROR(ERR_MATRIX_SIZE,
                          "setRow: Vector dimension different from matrix one");
 
         if (!v.isRow())
-            REPORT_ERROR(1107, "setRow: Not a row vector in assignment");
+            REPORT_ERROR(ERR_MATRIX, "setRow: Not a row vector in assignment");
 
         for (int j = 0; j < mdimx; j++)
             MAT_ELEM(*this,i, j) = VEC_ELEM(v,j);
@@ -1137,17 +1137,17 @@ public:
     void setCol(int j, const Matrix1D<T>& v)
     {
         if (mdimx == 0 || mdimy == 0)
-            REPORT_ERROR(1, "setCol: Target matrix is empty");
+            REPORT_ERROR(ERR_MATRIX_EMPTY, "setCol: Target matrix is empty");
 
         if (j < 0 || j>= mdimx)
-            REPORT_ERROR(1103, "setCol: Matrix subscript (j) out of range");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "setCol: Matrix subscript (j) out of range");
 
         if (VEC_XSIZE(v) != mdimy)
-            REPORT_ERROR(1102,
+            REPORT_ERROR(ERR_MATRIX_SIZE,
                          "setCol: Vector dimension different from matrix one");
 
         if (!v.isCol())
-            REPORT_ERROR(1107, "setCol: Not a column vector in assignment");
+            REPORT_ERROR(ERR_MATRIX, "setCol: Not a column vector in assignment");
 
         for (int i = 0; i < mdimy; i++)
             MAT_ELEM(*this,i, j) = VEC_ELEM(v,i);
@@ -1165,10 +1165,10 @@ public:
     {
         // (see Numerical Recipes, Chapter 2 Section 5)
         if (mdimx == 0 || mdimy == 0)
-            REPORT_ERROR(1108, "determinant: Matrix is empty");
+            REPORT_ERROR(ERR_MATRIX_EMPTY, "determinant: Matrix is empty");
 
         if (mdimx != mdimy)
-            REPORT_ERROR(1109, "determinant: Matrix is not squared");
+            REPORT_ERROR(ERR_MATRIX, "determinant: Matrix is not squared");
 
         for (int i = 0; i < mdimy; i++)
         {
@@ -1228,7 +1228,7 @@ public:
     {
 
         if (mdimx == 0 || mdimy == 0)
-            REPORT_ERROR(1108, "Inverse: Matrix is empty");
+            REPORT_ERROR(ERR_MATRIX_EMPTY, "Inverse: Matrix is empty");
 
         // Perform SVD decomposition
         Matrix2D< double > u, v;
@@ -1309,10 +1309,10 @@ Matrix1D<T> Matrix1D<T>::operator*(const Matrix2D<T>& M)
     Matrix1D<T> result;
 
     if (VEC_XSIZE(*this) != MAT_YSIZE(M))
-        REPORT_ERROR(1102, "Not compatible sizes in matrix by vector");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Not compatible sizes in matrix by vector");
 
     if (!isRow())
-        REPORT_ERROR(1102, "Vector is not a row");
+        REPORT_ERROR(ERR_MATRIX, "Vector is not a row");
 
     result.initZeros(MAT_XSIZE(M));
     for (int j = 0; j < MAT_XSIZE(M); j++)

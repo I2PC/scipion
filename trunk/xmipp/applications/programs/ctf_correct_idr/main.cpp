@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     {
         idr_art_prm.read(argc, argv);
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         idr_art_prm.Usage();
         exit(1);
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
         idr_art_prm.produce_side_info();
         idr_art_prm.IDR_correction();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

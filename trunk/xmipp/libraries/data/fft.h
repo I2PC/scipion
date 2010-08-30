@@ -228,7 +228,7 @@ void RealImag2Complex(const MultidimArray< double > & real,
  * 			  << ABS(continuousTransform(contfreq(i),T1)/T)
  * 			  << std::endl;
  * 	 }
- *     } catch (Xmipp_error XE) {
+ *     } catch (XmippError XE) {
  *     	   std::cout << XE << std::endl;
  *     }
  *     return 0;

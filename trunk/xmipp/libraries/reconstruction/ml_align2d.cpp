@@ -303,21 +303,14 @@ void Prog_MLalign2D_prm::show(bool ML3D)
 // Usage ===================================================================
 void Prog_MLalign2D_prm::usage()
 {
-    std::cerr << "Usage:  ml_align2d [options] " << std::endl;
-    std::cerr
-    << "   -i <selfile>                : Selfile with input images \n";
-    std::cerr
-    << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
-    std::cerr
-    << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
-    std::cerr
-    << " [ -o <rootname> ]             : Output rootname (default = \"ml2d\")\n";
-    std::cerr
-    << " [ -mirror ]                   : Also check mirror image of each reference \n";
-    std::cerr
-    << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n";
-    std::cerr << " [ -thr <N=1> ]                : Use N parallel threads \n";
-    std::cerr
+    std::cerr << "Usage:  ml_align2d [options] "
+    << "   -i <selfile>                : Selfile with input images \n"
+    << "   -nref <int>                 : Number of references to generate automatically (recommended)\n"
+    << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n"
+    << " [ -o <rootname> ]             : Output rootname (default = \"ml2d\")\n"
+    << " [ -mirror ]                   : Also check mirror image of each reference \n"
+    << " [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations\n"
+    << " [ -thr <N=1> ]                : Use N parallel threads \n"
     << " [ -more_options ]             : Show all possible input parameters \n";
 }
 
@@ -1555,29 +1548,6 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
                             diff = A2_plus_Xi2 - ref_scale * A2D_ELEM(Maux, i, j) * ddim2;
                             local_mindiff = XMIPP_MIN(local_mindiff, diff);
                             pdf = fracpdf * A2D_ELEM(P_phi, i, j);
-
-                            //                            if (current_image == 1)
-                            //                            {
-//                            std::cerr << "----------------------------" <<std::endl;
-//                            //FIXME: XXXXX
-//                            std::cerr << "Xi2: " << Xi2 << std::endl;
-//                            std::cerr << "A2[refno]: " << A2[refno] << std::endl;
-//
-//                            std::cerr << "A2_plus_Xi2: " << A2_plus_Xi2 << std::endl;
-//                            std::cerr << "ref_scale: " << ref_scale << std::endl;
-//                            std::cerr << "A2D_ELEM(Maux, i, j): " << A2D_ELEM(Maux, i, j) << std::endl;
-//                            std::cerr << "ddim2: " << ddim2 << std::endl;
-//
-//                            std::cerr << "diff: " << diff <<std::endl;
-//                            std::cerr << " trymindiff: " << trymindiff <<std::endl;
-//                            std::cerr << " sigma_noise2: " << sigma_noise2 <<std::endl;
-//                            std::cerr << " pdf: " << pdf << std::endl;
-//                            static int counter = 0;
-//                            counter++;
-//                            if (counter == 1000)
-//                                exit(1);
-                            //                            }
-
 
                             if (!model.do_student)
                             {

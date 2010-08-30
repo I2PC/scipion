@@ -768,7 +768,7 @@ void Euler_Angles_after_compresion(const double rot, double tilt, double psi,
     {
         D_1 = D.inv();
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         exit(1);

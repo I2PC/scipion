@@ -56,7 +56,7 @@ int main(int argc, char **argv)
         Space = getParameter(argc, argv, "-space", "Real");
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         Usage(argv);
     }

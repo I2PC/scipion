@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     {
         prm.read(argc, argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
         if (prm.fn_groups!="")
             prm.createGroupSamplingFiles();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

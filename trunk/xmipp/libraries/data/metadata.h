@@ -362,7 +362,7 @@ public:
             mdValueOut.getValue(valueOut);
             return true;
         }
-        catch (Xmipp_error xe)
+        catch (XmippError xe)
         {
             return false;
         }

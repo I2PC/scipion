@@ -77,7 +77,7 @@
             fn_ctf=getParameter(argc,argv,"-i");
             fn_root=getParameter(argc,argv,"-o");
             Xdim=textToInteger(getParameter(argc,argv,"-xdim"));
-         } catch (Xmipp_error XE) {
+         } catch (XmippError XE) {
             std::cerr << XE << std::endl
                  << "Usage: produce_imgs \n"
                  << "         -i <CTF descr file>\n"
@@ -126,7 +126,7 @@
             CenterFFT(Ictf(), true); Ictf.write(fn_root+"_ctf.xmp");
             CenterFFT(Ipsd(), true); Ipsd.write(fn_root+"_psd.xmp");
 
-         } catch (Xmipp_error XE) {
+         } catch (XmippError XE) {
             std::cout << XE << std::endl;
          }
          return 0;

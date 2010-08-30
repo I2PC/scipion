@@ -98,7 +98,7 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (IS_MASTER)
         {
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
         ML2D_prm.destroyThreads();
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (IS_MASTER)
         {

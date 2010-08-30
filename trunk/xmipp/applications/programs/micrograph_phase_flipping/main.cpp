@@ -39,7 +39,7 @@ int main(int argc, char **argv)
         prm.fn_out  = getParameter(argc, argv, "-o");
         prm.fnt_ctf = getParameter(argc, argv, "-ctf");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         Usage(argv);
         exit(1);
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
         prm.show();
         prm.run();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         fn_transform = getParameter(argc, argv, "-transform","");
         down_transform = textToFloat(getParameter(argc, argv, "-down_transform","1"));
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
             mt.close_micrograph();
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

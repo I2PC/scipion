@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     {
         prog_prm.read(argc, argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prog_prm.usage();
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     {
         ROUT_random_phantom(prog_prm, Realization);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

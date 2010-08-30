@@ -366,7 +366,7 @@ std::cerr << "0\n";
     {
         prm.read(argc, argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         prm.usage();
@@ -378,7 +378,7 @@ std::cerr << "0\n";
         prm.preRun();
         prm.run();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         exit(1);

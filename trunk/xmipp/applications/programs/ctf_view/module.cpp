@@ -776,7 +776,7 @@ void CTFViewer::setImageViewer()
 
        // Recompute curves since the experimental curve has changed
        recomputeCurves();
-    } catch (Xmipp_error XE) {
+    } catch (XmippError XE) {
        I.clear();
        psdPresent = false;
        ShowExperimental->setChecked(true);

@@ -43,7 +43,7 @@ int main(int argc, char **argv)
         else w_dir = vectorR2(1, 0);
         w_step = textToFloat(getParameter(argc, argv, "-w_step", "0.001"));
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
             << std::endl;
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
         do_clean = checkParameter(argc, argv, "-clean");
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
         SF.write(fn_SF_out);
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

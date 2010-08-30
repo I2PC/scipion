@@ -170,7 +170,7 @@ int main(int argc, char **argv)
             SFtrain.read(fn_train);
         prm.cutoff = textToFloat(getParameter(argc, argv, "-zcut", "-1"));
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();
@@ -233,7 +233,7 @@ int main(int argc, char **argv)
         if (prm.cutoff>0)
             SFoutGood.write(prm.fn_out + "_good.sel");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

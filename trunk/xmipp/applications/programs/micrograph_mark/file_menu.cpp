@@ -173,7 +173,7 @@ void QtFileMenu::slotLoadCoords()
             slotCoordChange();
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }
@@ -306,7 +306,7 @@ void QtFileMenu::slotGenerateImages()
             }
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

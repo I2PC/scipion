@@ -71,7 +71,7 @@ try {
       }
       from_metadata=checkParameter(argc,argv,"-from_metadata");
    }
-} catch (Xmipp_error XE) {std::cerr << XE; Usage(); exit(1);}
+} catch (XmippError XE) {std::cerr << XE; Usage(); exit(1);}
 
 try {
 
@@ -94,7 +94,7 @@ try {
       extract_angles(SF,DF,ang1,ang2,ang3,from_metadata);
       DF.write(fn_out);
    }
-} catch (Xmipp_error XE) {std::cerr << XE;}
+} catch (XmippError XE) {std::cerr << XE;}
    exit(0);
 }
 

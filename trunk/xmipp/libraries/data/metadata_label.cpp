@@ -154,7 +154,7 @@ inline void MDValueStore::labelTypeCheck(MDLabelType checkingType) const
             ss << "weird: " << checkingType;
         }
         ss << ")";
-        REPORT_ERROR(-55, ss.str());
+        REPORT_ERROR(ERR_MD_BADLABEL, ss.str());
     }
 }
 

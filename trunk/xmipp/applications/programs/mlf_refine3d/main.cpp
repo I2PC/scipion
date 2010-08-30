@@ -78,7 +78,7 @@ int main(int argc, char **argv)
         ML2D_prm.Iold.clear(); // To save memory
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.MLF_usage();
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
         if (!converged && prm.verb > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.MLF_usage();

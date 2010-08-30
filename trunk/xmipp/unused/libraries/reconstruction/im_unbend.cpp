@@ -130,7 +130,7 @@ void ImUmbend::UnBending()
     {
         inIm.read(inImfile);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         exit(1);
@@ -231,7 +231,7 @@ void ImUmbend::UnBending()
     {
         outIm.write(outImfile);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         exit(1);

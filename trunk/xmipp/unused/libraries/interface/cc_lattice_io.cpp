@@ -130,7 +130,7 @@ void CCLattice_IO::read(const FileName &fn)
                     }
                 }
             }
-            catch (Xmipp_error)
+            catch (XmippError)
             {
                 std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";
             }

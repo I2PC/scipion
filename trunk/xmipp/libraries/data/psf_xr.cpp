@@ -57,7 +57,7 @@ void XRayPSF::read(const FileName &fn)
         DeltaZo = textToFloat(getParameter(fh_param, "z_axis_shift", 0, "0")) *1e-6;
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         REPORT_ERROR(1, (std::string)"There is an error reading " + fn);

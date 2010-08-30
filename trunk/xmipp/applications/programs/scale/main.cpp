@@ -74,7 +74,7 @@ int main(int argc, char **argv)
             zdim = xdim;
         nThreads=textToInteger(getParameter(argc, argv, "-thr", "1"));
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
             SF_out.write((SF.getFilename()).insert_before_extension(fn_oext));
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

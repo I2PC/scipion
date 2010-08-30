@@ -158,7 +158,7 @@ int main(int argc, char **argv)
     {
         prm.read(argc, argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
 	else
             process_phantom(prm.fn_in, prm.fn_out, &prm);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
     }

@@ -69,7 +69,7 @@ int main(int argc, char **argv)
         show_angles  = checkParameter(argc, argv, "-show_angles");
         apply_geo    = !checkParameter(argc, argv, "-dont_apply_geo");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
         if (fn_stats != "")
             DF_stats.write(fn_stats);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

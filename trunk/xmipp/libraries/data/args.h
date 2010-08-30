@@ -66,7 +66,7 @@ template <typename T> class Matrix1D;
  * param_no = textToInt(nextToken(), 1602, "Error reading number parameters");
  * readFloatList(NULL, param_no, data, 1602, "Error reading doc file line");
  * }
- * catch (Xmipp_error XE)
+ * catch (XmippError XE)
  * {
  *     std::cout << XE;
  *     DL.line_type = 0;
@@ -129,7 +129,7 @@ void readFloatList(const char* str,
         {
             valueF = (T) textToFloat(token);
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             REPORT_ERROR(_errno, errmsg);
         }
@@ -170,7 +170,7 @@ void readFloatList(const std::string& str,
         {
             valueF = (T) textToFloat(token.c_str());
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             REPORT_ERROR(_errno, errmsg);
         }
@@ -210,7 +210,7 @@ void readFloatList(const char* str,
         {
             valueF = (T) textToFloat(token);
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             REPORT_ERROR(_errno, errmsg);
         }

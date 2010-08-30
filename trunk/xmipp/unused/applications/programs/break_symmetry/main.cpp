@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         prm.show();
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
             iter++;
         } // end loop iterations
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();

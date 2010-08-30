@@ -100,7 +100,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
                 line.find("   H   K   L      A      P     FOM*100         REJECTS"))
                 break;
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             std::cout << "3Daph File reading error an error\n";
         }
@@ -128,7 +128,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
             kmin = XMIPP_MIN(kmin, k);
             lmin = XMIPP_MIN(lmin, l);
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";
         }
@@ -148,7 +148,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
                 break;
             }
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             std::cout << "3Daph File reading error an error\n";
         }
@@ -193,7 +193,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
                 line.find("   H   K   L      A      P     FOM*100         REJECTS"))
                 break;
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             std::cout << "3Daph File reading error an error\n";
         }
@@ -228,7 +228,7 @@ void APHFile3D::read_from_prepmklcf(const FileName &fn)
                     }
             }//switch end
         }
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::cout << XE;
             std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";

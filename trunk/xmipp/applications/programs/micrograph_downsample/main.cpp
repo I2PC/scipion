@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         smooth         = checkParameter(argc, argv, "-smooth");
         reversed       = checkParameter(argc, argv, "-reverse_endian");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage(prm);
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
         else prm.Downsample();
         prm.close_input_micrograph();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

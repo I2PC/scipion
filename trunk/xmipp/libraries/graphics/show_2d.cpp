@@ -540,7 +540,7 @@ void ImageViewer::saveImage(int item)
             tmpImage.write();
 
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             char *helptext = "Invalid image type";
             helpmsg = new QMessageBox("Error", helptext,
@@ -660,7 +660,7 @@ bool ImageViewer::xmipp2Qt(Image<double>& _image)
         xmippFlag = 0;   // Sets flag = Xmipp image.
         ok = TRUE;
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         ok = FALSE;
         char *helptext = "Error converting xmipp to Qt";
@@ -691,7 +691,7 @@ bool ImageViewer::Qt2xmipp(QImage &_image)
         ok = TRUE;
 
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         ok = FALSE;
         char *helptext = "Error converting Qt image to Xmipp image";
@@ -773,7 +773,7 @@ bool ImageViewer::loadImage(const char *fileName,
                 ok = xmipp2Qt(tmpImage);
 
             }
-            catch (Xmipp_error xe)
+            catch (XmippError xe)
             {
                 ok = FALSE;
                 if (!message_shown)

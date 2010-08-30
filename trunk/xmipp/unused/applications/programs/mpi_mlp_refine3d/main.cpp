@@ -100,7 +100,7 @@ int main(int argc, char **argv)
         if (rank == 0) ML2D_prm.show(true);
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (rank == 0)
         {
@@ -258,7 +258,7 @@ int main(int argc, char **argv)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (rank == 0)
         {

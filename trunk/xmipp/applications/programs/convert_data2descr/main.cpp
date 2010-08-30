@@ -51,7 +51,7 @@ int main(int argc, char **argv)
         offY = textToFloat(getParameter(argc, argv, "-offY", floatToString(offX).c_str()));
         offZ = textToFloat(getParameter(argc, argv, "-offZ", floatToString(offX).c_str()));
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         std::cout << "Usage:" << std::endl;
         std::cout << "-iname       : Input file name (Data File)" << std::endl;

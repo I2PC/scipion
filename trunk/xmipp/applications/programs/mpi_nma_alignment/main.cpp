@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 	prm.MPIversion=true;
         prm.read(argc, argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (rank == 0)
         {
@@ -132,7 +132,7 @@ Matrix1D<double> dummy;
         return 0 ;
     }
 
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         MPI_Finalize();

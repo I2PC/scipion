@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
         crystal_mode = checkParameter(argc, argv, "-crystal");
         if (crystal_mode) crystal_art_prm.read(argc, argv, art_prm);
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         art_prm.usage();

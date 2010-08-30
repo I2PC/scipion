@@ -272,7 +272,7 @@ void Recons_test_Parameters::read(const FileName &fn_test_params)
         fn_smooth_evaluation_mask = getParameter(fh_param,
                                               "smooth evaluation mask", 0, "");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         REPORT_ERROR(3007, (std::string)"There is an error reading " + fn_test_params);

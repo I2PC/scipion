@@ -40,7 +40,7 @@ int main(int argc, char **argv)
         fn_out = getParameter(argc, argv, "-o", "/dev/stdout");
         expressionStr = getParameter(argc, argv, "-e");
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         Usage();
         exit(1);
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
         mdIn.operate(expressionStr);
         mdIn.write(fn_out);
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         std::cerr << "ERROR, exiting..." << std::endl;
         exit(1);

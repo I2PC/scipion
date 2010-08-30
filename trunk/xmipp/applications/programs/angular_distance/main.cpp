@@ -35,7 +35,7 @@ int main(int argc, char **argv)
         prm.read(argc, argv);
         prm.show();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
         std::cout << "Global angular distance = " << angular_distance << std::endl;
         std::cout << "Global shift   distance = " << shift_distance   << std::endl;
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

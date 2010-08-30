@@ -58,7 +58,7 @@ int main(int argc, char **argv)
         if (checkParameter(argc, argv, "-verb"))
             verb = true;
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         std::cout << "img2data: Convert a set of volumes into a set of data vectors" << std::endl;
         std::cout << "Usage:" << std::endl;

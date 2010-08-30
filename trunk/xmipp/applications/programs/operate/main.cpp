@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 
         compute(operation, operand_type1, operand_type2, fn_1, fn_2, fn_out);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();

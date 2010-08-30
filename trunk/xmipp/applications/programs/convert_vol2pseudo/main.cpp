@@ -79,7 +79,7 @@ int main(int argc, char **argv)
             newMode=true;
         }
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         std::cout << "Usage:" << std::endl;
         prm.usage();

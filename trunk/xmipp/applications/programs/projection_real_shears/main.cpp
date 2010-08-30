@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     {
         projRS.read(argc, argv);
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         projRS.usage();
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     {
         projRS.ROUT_project_real_shears();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

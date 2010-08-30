@@ -43,7 +43,7 @@ int main(int argc, char **argv)
         bootstrap = checkParameter(argc, argv, "-bootstrap");
         fn_root = getParameter(argc, argv, "-o", "");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE << std::endl;
         Usage();
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
         }
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE << std::endl;
         exit(1);

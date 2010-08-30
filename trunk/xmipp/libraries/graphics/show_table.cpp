@@ -512,7 +512,7 @@ void ShowTable::showStats(MetaData &SF, bool apply_geo)
         wavg->show();
         wsd->show();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         QMessageBox::about(this, "Error!",
                            "There is a problem opening files\n");

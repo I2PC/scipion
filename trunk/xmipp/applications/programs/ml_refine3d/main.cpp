@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         ML2D_prm.createThreads();
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
         ML2D_prm.destroyThreads();
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         prm.usage();

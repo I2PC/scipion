@@ -1894,7 +1894,7 @@ int main(int argc, char** argv)
     {
         prm.read(argc,argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (rank==0)
         {
@@ -1913,7 +1913,7 @@ int main(int argc, char** argv)
         prm.produce_side_info(rank);
         prm.run(rank);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         MPI_Finalize();

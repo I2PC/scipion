@@ -57,7 +57,7 @@ int main(int argc, char **argv)
         fn_in  = getParameter(argc, argv, "-i");
         fn_out = getParameter(argc, argv, "-o");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         Usage();
         exit(1);
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
         M_out.close_micrograph();
         M_in.close_micrograph();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         exit(1);

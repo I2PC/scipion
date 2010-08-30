@@ -180,7 +180,7 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
             }
 
         }
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::cout << XE << std::endl;
             REPORT_ERROR(1, (std::string)"There is an error reading " + fn);

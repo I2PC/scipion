@@ -97,7 +97,7 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (rank == 0)
         {
@@ -205,7 +205,7 @@ int main(int argc, char **argv)
 	    prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (rank == 0)
         {

@@ -63,7 +63,7 @@ int main(int argc, char **argv)
             REPORT_ERROR(1,"Automatic particle picking cannot be performed on tilt pairs");
         numThreads = textToInteger(getParameter(argc, argv, "-thr","1"));
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
             autoPicking->saveAutoParticles();
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

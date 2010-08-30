@@ -61,7 +61,7 @@ public:
             doeu=checkParameter(argc, argv, "-eu");
             domi=checkParameter(argc, argv, "-mi");
         }
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::cout << XE;
             usage();

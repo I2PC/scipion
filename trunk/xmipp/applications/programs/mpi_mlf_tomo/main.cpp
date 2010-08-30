@@ -70,7 +70,7 @@ int main(int argc, char **argv)
         prm.produce_Side_info2();
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (rank == 0)
         {
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 
     }
 
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         if (rank == 0)
         {

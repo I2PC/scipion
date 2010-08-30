@@ -91,7 +91,7 @@ void APHFile2D::read(const FileName &fn)
                 kmin = XMIPP_MIN(kmin, k);
             }
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";
         }
@@ -180,7 +180,7 @@ void APHFile2D::read(const FileName &fn)
 //  #undef DEBUG
             }
         }
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::cout << XE;
             std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";

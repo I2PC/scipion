@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
         // Read the file with all the program parameters
         prm.read(getParameter(argc, argv, "-i"));
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         Usage();
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     {
         prm.process();
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         exit(1);

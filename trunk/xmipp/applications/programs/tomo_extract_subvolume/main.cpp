@@ -39,7 +39,7 @@ int main(int argc, char **argv)
         prm.DFout.write(prm.fn_root+".doc");
 
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         prm.usage();

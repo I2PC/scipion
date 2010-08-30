@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     Prog_Angular_CommonLine prm;
     try {
         prm.read(argc,argv);
-    } catch (Xmipp_error XE)
+    } catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         prm.usage();
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
         prm.show();
         prm.produceSideInfo();
         prm.run();
-    } catch (Xmipp_error XE)
+    } catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         return 2;

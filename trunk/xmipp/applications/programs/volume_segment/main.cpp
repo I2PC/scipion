@@ -38,7 +38,7 @@ int main(int argc, char **argv)
         prm.read(argc, argv);
         std::cout << prm;
     }
-    catch (Xmipp_error Xe)
+    catch (XmippError Xe)
     {
         std::cout << Xe;
         Usage(prm);
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
         prm.produce_side_info();
         prm.segment(mask);
     }
-    catch (Xmipp_error Xe)
+    catch (XmippError Xe)
     {
         std::cout << Xe;
     }

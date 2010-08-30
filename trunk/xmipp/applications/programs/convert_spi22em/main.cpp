@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         fn_out = getParameter(argc, argv, "-o");
         reverse_endian = checkParameter(argc, argv, "-reverse_endian");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
             V.write(fn_out);
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

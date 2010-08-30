@@ -35,7 +35,7 @@ int main(int argc, char **argv)
         fn2    = getParameter(argc, argv, "-sel");
         fn_out = getParameter(argc, argv, "-o");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE << std::endl;
         std::cerr << "Usage: docfile_select_subset\n"
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 	get_subset_docfile(DFin, SF, DFout);
         DFout.write(fn_out);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE << std::endl;
         return 2;

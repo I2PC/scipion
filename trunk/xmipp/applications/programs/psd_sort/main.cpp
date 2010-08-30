@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors: Carlos Oscar Sánchez Sorzano (coss@cnb.csic.es)
+ * Authors: Carlos Oscar Sï¿½nchez Sorzano (coss@cnb.csic.es)
  *          Slavica Jonic (slavica.jonic@impmc.jussieu.fr)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     try
     {
         prm.read(argc,argv);
-    } catch (Xmipp_error XE)
+    } catch (XmippError XE)
     {
         std::cerr << XE << std::endl;
         prm.usage();
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         prm.produceSideInfo();
         prm.show();
         prm.run();
-    } catch (Xmipp_error XE)
+    } catch (XmippError XE)
     {
         std::cerr << XE << std::endl;
         return 1;

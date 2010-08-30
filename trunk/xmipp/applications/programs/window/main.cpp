@@ -124,7 +124,7 @@ public:
                 {
                     z0 = textToInteger(argv[i+3]);
                 }
-                catch (Xmipp_error XE)
+                catch (XmippError XE)
                 {
                     z0 = 1;
                 }
@@ -145,7 +145,7 @@ public:
                 {
                     zF = textToInteger(argv[i+3]);
                 }
-                catch (Xmipp_error XE)
+                catch (XmippError XE)
                 {
                     zF = 1;
                 }

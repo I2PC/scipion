@@ -742,7 +742,7 @@ int main(int argc, char *argv[])
     {
         prm.read(argc, argv);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         prm.usage();
@@ -754,7 +754,7 @@ int main(int argc, char *argv[])
         prm.preRun();
         prm.run();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         exit(1);

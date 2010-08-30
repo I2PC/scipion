@@ -452,7 +452,7 @@ void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles()
                                                  atom_type[0],rdiffModule);
                     }
         }
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::cerr << "Ignoring atom of type *" << atom_type << "*" << std::endl;
         }

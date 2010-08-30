@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
         lambda    = textToFloat(getParameter(argc,argv,"-l","0"));
         restore   = checkParameter(argc,argv,"-restore");
     }
-    catch (Xmipp_error &XE)
+    catch (XmippError &XE)
     {
         std::cout << XE;
         std::cout << "Usage: xmipp_pdb_dictionary\n"
@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
         if (fnOut!="") Vout.write(fnOut);
         else Vout.write(fnIn);
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         exit(1);

@@ -93,7 +93,7 @@ void APHFileorigmerg::read(const FileName &fn,
             min_h = XMIPP_MIN(min_h, h);
             min_k = XMIPP_MIN(min_k, k);
         }
-        catch (Xmipp_error)
+        catch (XmippError)
         {
             std::cout << "aph File: Line " << line_no << " is skipped due to an error\n";
         }

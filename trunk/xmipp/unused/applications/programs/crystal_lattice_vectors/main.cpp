@@ -58,7 +58,7 @@ int main(int argc, char **argv)
         op = getParameter(argc, argv, "-op", "RF");
 //      MRC = checkParameter(argc,argv,"-MRC");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
             SHOW("b  =", v, 1);
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

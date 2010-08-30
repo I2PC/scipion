@@ -2,7 +2,7 @@
  *
  * Authors:     Debora Gil
                 Roberto Marabini
-                Carlos Oscar Sánchez Sorzano
+                Carlos Oscar Sï¿½nchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
             z_length = textToFloat(getParameter(argc, argv, "-z_length"));
         reverse_endian = checkParameter(argc, argv, "-reverse_endian");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <string>
 #include <iostream>
+#include <execinfo.h>
 
 /** @defgroup ErrorHandling Error handling
  *  @ingroup DataLibrary
@@ -71,7 +72,7 @@
  * {
  *     vol_blobs.write(fn_blobs);
  * }
- * catch (Xmipp_error XE)
+ * catch (XmippError XE)
  * {
  *     std::cout << XE;
  *     std::cout << "The reconstructed volume is too small to be saved in blobs";
@@ -90,10 +91,11 @@
  * always is aborted. If you don't put the routine in a try-catch structure and
  * an exception is thrown then a core is generated and the program is
  * automatically aborted.
+ *
+ * @{
  */
 
 /** Show message and exit
- * @ingroup ErrorHandling
  *
  * This is an internal function (not to be used by programmers)
  * that shows the given message and exits with the error code.
@@ -104,54 +106,113 @@ void _Xmipp_error(const int nerr, const std::string& what,
     const std::string &file, const long line);
 
 /** Show message and exit
- * @ingroup ErrorHandling
  *
  * This macro shows the given message and exits with the error code.
  *
  * @code
  * if (...)
- *     EXIT_ERROR(1, "Error 1");
+ *     EXIT_ERROR(ERR_DEBUG_TEST, "Error 1");
  * @endcode
  */
 #define EXIT_ERROR(nerr, ErrormMsg) _Xmipp_error(nerr, ErrormMsg, __FILE__, __LINE__)
 
 /** Show message and throw exception
- * @ingroup ErrorHandling
  *
  * This macro shows the given message and exits with the error code.
  *
  * @code
  * if (...)
- *     REPORT_ERROR(1, "Error 1");
+ *     REPORT_ERROR(ERR_DEBUG_TEST, "Error 1");
  * @endcode
  */
-#define REPORT_ERROR(nerr, ErrormMsg) throw Xmipp_error(nerr, ErrormMsg, __FILE__, __LINE__)
+#define REPORT_ERROR(nerr, ErrormMsg) throw XmippError((ErrorType)nerr, ErrormMsg, __FILE__, __LINE__)
+/** Report error without any extra message */
+//#define REPORT_ERROR(nerr) throw XmippError((ErrorType)nerr, "", __FILE__, __LINE__)
 
+/** Enum with errors types.
+ * This enum represent the code of all possible
+ * Xmipp erros that will be used to reporting errors
+ * with REPORT_ERROR and EXIT_ERROR.
+ * The convention for the codes is the following:
+ * - All starts with prefix ERR_
+ * - Follows some kind of section. Like IO for input/output errors.
+ *      ERR_IO_
+ *      ERR_MEM_
+ *      ERR_IMG_
+ * - Finally an abreviation for the error msg.
+ * All error codes have a default string message
+ * that can be obtained with XmippError::getDefaultMessage(ErrorType)
+ */
+enum ErrorType
+{
+    ERR_MEM_NOTENOUGH,    ///< There is not enough memory for allocation.
+
+    ERR_IO_NOTEXIST,      ///< File or directory does not exists.
+    ERR_IO_NOPERM,        ///< Insufficient permissions to perform operation.
+    ERR_IO_NOREAD,        ///< Couldn't read from file.
+    ERR_IO_NOWRITE,       ///< Couldn't write to file.
+    ERR_IO_NOTFILE,       ///< It is not a file.
+    ERR_IO_NOTDIR,        ///< It is not a directory.
+
+    ERR_ARG_INCORRECT,    ///< Incorrect argument received.
+    ERR_ARG_MISSING,      ///< Argument missing.
+
+    ERR_TYPE_INCORRECT,   ///< Incorrect type received.
+
+    ERR_MATRIX,            ///< Matrix error.
+    ERR_MATRIX_EMPTY,     ///< The matrix is empty.
+    ERR_MATRIX_SIZE,      ///< Problem with matrix size.
+
+    ERR_MD,                 ///< MetaData error.
+    ERR_MD_NOACTIVE,        ///< No active object in MetaData.
+    ERR_MD_NOOBJ,           ///< No exist requested object.
+    ERR_MD_BADLABEL,        ///< Unexpected label.
+    ERR_MD_SQL,             ///< Error in SQL of MetaData operations.
+
+    ERR_INDEX_OUTOFBOUNDS,///< Index out of bounds.
+
+    ERR_DEBUG_TEST,       ///< Just an error for debugging purpose.
+    ERR_DEBUG_IMPOSIBLE   ///< Just for debugging, situation that can't happens
+};
 /** Exception class
- * @ingroup ErrorHandling
  *
  * This is the class type for the errors thrown by the routines when the
  * exception handling mode is active (see Xmipp Configuration for details about
  * enabling the exception handling).
  */
-class Xmipp_error
+class XmippError
 {
+
+private:
+  //Variables to hold stack info
+  char ** strings;
+  size_t size;
+
 public:
     /** Error code */
-    int __errno;
+    ErrorType __errno;
 
     /** Message shown */
     std::string msg;
 
-    /** File produstd::cing the error */
+    /** File producing the error */
     std::string file;
 
     /** Line number */
     long line;
 
-    Xmipp_error(const int nerr, const std::string& what,
+    /** Constructor */
+    XmippError(const ErrorType nerr, const std::string& what,
         const std::string &fileArg, const long lineArg);
-    friend std::ostream& operator<<(std::ostream& o, Xmipp_error& XE);
+    /** Destructor */
+    ~XmippError();
+    /** Function to print the Stack calls */
+    void printStackTrace(std::ostream& o = std::cout);
+    friend std::ostream& operator<<(std::ostream& o, XmippError& XE);
+
+    char * getDefaultMessage();
+    static char * getDefaultMessage(ErrorType e);
 };
 
+/** @} */
 #endif

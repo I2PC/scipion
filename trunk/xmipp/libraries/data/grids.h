@@ -1089,7 +1089,7 @@ public:
             Vol_aux = new Image<T>; \
             arrayByArray((*this)(i)(),GV(i)(),(*Vol_aux)(),op); \
             result.LV.push_back(Vol_aux); \
-        } catch (Xmipp_error XE) {\
+        } catch (XmippError XE) {\
             std::cout << XE; \
             REPORT_ERROR(3004,(std::string)"GridVolume::"+op+": Different shape of volume " +\
                          integerToString(i)); \
@@ -1145,7 +1145,7 @@ public:
     for (int i=0; i<VolumesNo(); i++) { \
         try { \
             arrayByArray((*this)(i)(),GV(i)(),(*this)(i)(),op); \
-        } catch (Xmipp_error XE) {\
+        } catch (XmippError XE) {\
             std::cout << XE; \
             REPORT_ERROR(3004,(std::string)"GridVolume::"+op+"=: Different shape of volume " +\
                          integerToString(i)); \

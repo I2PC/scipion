@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
         {
             mpi_proj.read(argc, argv);
         }
-        catch (Xmipp_error &XE)
+        catch (XmippError &XE)
         {
             std::cout << XE <<std::endl;
             mpi_proj.usage();
@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
         {
             mpi_proj.master();
         }
-        catch(Xmipp_error &XE)
+        catch(XmippError &XE)
         {
             std::cout << XE <<std::endl;
             mpi_proj.EndTasks();
@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
         {
             mpi_proj.slave(myRank);
         }
-        catch(Xmipp_error &XE)
+        catch(XmippError &XE)
         {
             std::cout << XE <<std::endl;
             mpi_proj.EndTasks();

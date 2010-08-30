@@ -126,7 +126,7 @@ int main(int argc, char **argv)
         poll = checkParameter(argc, argv, "-poll");
         common_normalization = checkParameter(argc, argv, "-common_norm");
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         Usage();
         exit(1);
@@ -368,7 +368,7 @@ int main(int argc, char **argv)
         QObject::connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));
         return a.exec();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
     }

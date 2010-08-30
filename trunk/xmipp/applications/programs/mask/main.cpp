@@ -77,7 +77,7 @@ int main(int argc, char **argv)
         str_subs_val = getParameter(argc, argv, "-substitute", "0");
         count = count_below || count_above;
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
         Usage();
@@ -223,7 +223,7 @@ int main(int argc, char **argv)
         if (save_mask)
             mask_prm.write_mask("mask.spi");
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cout << XE;
     }

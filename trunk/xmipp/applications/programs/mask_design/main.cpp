@@ -61,7 +61,7 @@ int main(int argc, char **argv)
             sdflag = true;
         apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         std::cout << "Xmask: Creates a mask using a Graphical User Interface" << std::endl;
         std::cout << "Usage:" << std::endl;

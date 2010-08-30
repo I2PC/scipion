@@ -46,7 +46,7 @@ int main(int argc, char **argv)
         prm.adjust_range = false;
         prm.produce_side_info();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         Usage();
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
         M_out.close_micrograph();
         M_in.close_micrograph();
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
         std::cerr << XE;
         exit(1);

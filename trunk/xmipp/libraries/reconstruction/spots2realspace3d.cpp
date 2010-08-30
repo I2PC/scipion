@@ -91,7 +91,7 @@ void Spot2RealSpace3D_Parameters::read_from_file(const FileName &fnprm)
         delete is;
 //      Scale_Factor=textToFloat(getParameter(fh_param,"Scale Factor",0,"-1"));
     }
-    catch (Xmipp_error XE)
+    catch (XmippError XE)
     {
 		std::cout << " se va por aqui 1 \n"<<std::endl;
         std::cout << XE << std::endl;

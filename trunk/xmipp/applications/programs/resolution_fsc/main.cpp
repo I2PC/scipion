@@ -138,7 +138,7 @@ int main(int argc, char **argv)
             sam = textToFloat(getParameter(argc, argv, "-sam"));
             apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
         }
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::cout << XE;
             Resolution_parameters prm;
@@ -166,7 +166,7 @@ int main(int argc, char **argv)
             frc_dpr(I1(), I2(), sam, freq, frc, frc_noise, dpr,error_l2,do_dpr);
             writeFiles(fn_sel, freq, frc, frc_noise, dpr,error_l2,max_sam,do_dpr);
         }
-        catch (Xmipp_error XE)
+        catch (XmippError XE)
         {
             std::cout << XE;
         }

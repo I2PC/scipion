@@ -342,6 +342,8 @@ elif (ARGUMENTS['mode'] == 'compile'):
     # debug?
     if int(env['debug']):
         env.Append(CXXFLAGS = ['-g'])
+        #required for print stack trace
+        env.Append(CXXFLAGS = ['-rdynamic'])
         env.Append(CXXFLAGS = ['-O0'])
         env.Append(CXXFLAGS = ['-pg'])
         env.Append(CCFLAGS = ['-g'])

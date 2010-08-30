@@ -58,7 +58,7 @@ int main(int argc, char **argv)
             fn_root = fn_in.without_extension();
         SFin.read(fn_in);
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         Usage();
         exit(1);
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
         if (!dont_randomize) //free memory of SFtmp
             delete SFtmp;
     }
-    catch (Xmipp_error)
+    catch (XmippError)
     {
         std::cerr << "ERROR, exiting..." << std::endl;
         exit(1);

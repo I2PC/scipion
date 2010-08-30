@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     
     try {
         prm.read(argc,argv);
-    } catch (Xmipp_error XE) {
+    } catch (XmippError XE) {
         std::cout << XE << std::endl;
         prm.usage();
         exit(1);
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
         prm.produce_side_info();
         prm.show();
         prm.run();
-    } catch (Xmipp_error XE) {
+    } catch (XmippError XE) {
         std::cout << XE << std::endl;
         exit(1);
     }
