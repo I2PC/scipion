@@ -172,6 +172,8 @@ int readTIFF(int img_select, bool isStack=false)
     /* Open TIFF image */
     TIFF*           tif     = NULL;
 
+    TIFFSetWarningHandler(NULL); // Switch off warning messages
+
     if ((tif = TIFFOpen(filename.c_str(), "r")) == NULL)
         REPORT_ERROR(1501,"rwTIFF: There is a problem opening the TIFF file.");
 
@@ -252,8 +254,7 @@ int readTIFF(int img_select, bool isStack=false)
         }
     }
 
-
-    // cast image date to image class datatypes
+    // cast image data to image class datatypes
     int _xDim,_yDim,_zDim;
     unsigned long int _nDim;
 
@@ -302,6 +303,7 @@ int readTIFF(int img_select, bool isStack=false)
     // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
     //if memory already allocated use it (no resize allowed)
     data.coreAllocateReuse();
+
 
     MD.removeObjects();
 
@@ -384,11 +386,8 @@ int readTIFF(int img_select, bool isStack=false)
         MD.setValue(MDL_WEIGHT,   oneD);
         MD.setValue(MDL_FLIP,     falseb);
 
-
         imReaded++;
     }
-
-
     _TIFFfree(tif_buf);
     TIFFClose(tif);
     return 0;

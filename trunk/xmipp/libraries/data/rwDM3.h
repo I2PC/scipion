@@ -175,7 +175,7 @@ int readDM3(int img_select,bool isStack=false)
     }
 
     // Check images dimensions. Need to be the same
-    for (i = 1; i < header->nIm; i++)
+    for (int i = 1; i < header->nIm; i++)
     {
         if (dataHeaders[0].imageHeight != dataHeaders[i].imageHeight || \
             dataHeaders[0].imageWidth != dataHeaders[i].imageWidth  || \
