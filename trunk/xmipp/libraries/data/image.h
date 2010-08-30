@@ -509,6 +509,13 @@ public:
             //select_img = atoi(filename.substr(0, found).c_str());
             filename   =      filename.substr(found+1) ;
         }
+        int imParam = NULL;
+        found=filename.find_first_of("%");
+        if (found!=std::string::npos)
+        {
+            imParam =  atoi(filename.substr(found+1).c_str());
+            filename = filename.substr(0, found) ;
+        }
         filNamePlusExt = filename;
         found=filename.find_first_of(":");
         if ( found!=std::string::npos)
@@ -591,8 +598,8 @@ public:
             writeTIA(select_img,false,mode);
         else if (ext_name.contains("raw"))
             writeRAW(select_img,false,mode);
-        //        else if (ext_name.contains("tif") || ext_name.contains("tiff"))
-        //            writeTIFF(select_img,mode);
+        else if (ext_name.contains("tif") || ext_name.contains("tiff"))
+            writeTIFF(select_img,isStack,mode,imParam);
         else
             err = writeSPIDER(select_img,isStack,mode);
 
@@ -779,6 +786,34 @@ public:
                         double * ptr = (double *) page;
                         for(int i=0; i<pageSize; i++)
                             ptr[i] = (double)srcPtr[i];
+                    }
+                break;
+            }
+        case UShort:
+                {
+                    if (typeid(T) == typeid(unsigned short))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        unsigned short * ptr = (unsigned short *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptr[i] = (unsigned short)srcPtr[i];
+                    }
+                break;
+            }
+        case UChar:
+                {
+                    if (typeid(T) == typeid(unsigned char))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        unsigned char * ptr = (unsigned char *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptr[i] = (unsigned char)srcPtr[i];
                     }
                 break;
             }

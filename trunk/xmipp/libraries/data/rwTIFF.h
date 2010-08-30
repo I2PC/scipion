@@ -36,8 +36,6 @@
 #include <iostream>
 
 
-
-
 ///@defgroup TIFF TIFF File format
 ///@ingroup ImageFormats
 
@@ -68,7 +66,7 @@ struct TIFFDirHead
 */
 void castTiffTile2T(
     T * ptrDest ,
-    unsigned char* tif_buf,
+    char* tif_buf,
     unsigned int x, unsigned int y,
     unsigned int imageWidth, unsigned int imageLength,
     unsigned int tileWidth, unsigned int tileLength,
@@ -100,7 +98,7 @@ void castTiffTile2T(
 */
 void castTiffLine2T(
     T * ptrDest,
-    unsigned char* tif_buf,
+    char* tif_buf,
     unsigned int y,
     unsigned int imageWidth, unsigned int imageLength,
     unsigned short samplesPerPixel,
@@ -170,7 +168,7 @@ int readTIFF(int img_select, bool isStack=false)
 #endif
 
     /* Open TIFF image */
-    TIFF*           tif     = NULL;
+    TIFF* tif;
 
     TIFFSetWarningHandler(NULL); // Switch off warning messages
 
@@ -178,9 +176,7 @@ int readTIFF(int img_select, bool isStack=false)
         REPORT_ERROR(1501,"rwTIFF: There is a problem opening the TIFF file.");
 
 
-    unsigned char*  tif_buf = NULL;
-    int             raw_fd;
-    unsigned char*  raw_buf = NULL;
+    char*  tif_buf = NULL;
 
     unsigned int    tileWidth;
     unsigned int    tileLength;
@@ -324,7 +320,7 @@ int readTIFF(int img_select, bool isStack=false)
         {
             TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tileWidth);
             TIFFGetField(tif, TIFFTAG_TILELENGTH,&tileLength);
-            tif_buf = (unsigned char*)_TIFFmalloc(TIFFTileSize(tif));
+            tif_buf = (char*)_TIFFmalloc(TIFFTileSize(tif));
             //            if (samplesPerPixel != 1)
             //            {
             //                std::cerr<<"rwTIFF ERROR: samplePerPixel is not 1: not yet implemented for RGB images";
@@ -335,7 +331,7 @@ int readTIFF(int img_select, bool isStack=false)
         {
             TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
             scanline = TIFFScanlineSize(tif);
-            tif_buf = (unsigned char*)_TIFFmalloc(scanline);
+            tif_buf = (char*)_TIFFmalloc(scanline);
         }
         if (tif_buf == 0)
         {
@@ -398,9 +394,184 @@ int readTIFF(int img_select, bool isStack=false)
 /** TIFF Writer
   * @ingroup TIFF
 */
-int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int imParam=NULL)
 {
-    REPORT_ERROR(6001, "ERROR: writeTIFF is not implemented.");
-    return(-1);
+    //    REPORT_ERROR(6001, "ERROR: writeTIFF is not implemented.");
+    //    return(-1);
+
+#undef DEBUG
+    //#define DEBUG
+#ifdef DEBUG
+    printf("DEBUG writeTIFF: Writing TIFF file\n");
+    printf("DEBUG writeTIFF: File %s\n", filename.c_str());
+#endif
+#undef DEBUG
+
+    int Xdim = XSIZE(data);
+    int Ydim = YSIZE(data);
+    int Zdim = ZSIZE(data);
+    int Ndim = NSIZE(data);
+
+    // Volumes are not supported
+    if (Zdim > 1)
+        REPORT_ERROR(1000, "rwTIFF: ERROR, volumes are not supported.");
+    // TIFF cannot open a file to read/write at the same time, so the must be overwritten
+    if (mode |= WRITE_OVERWRITE)
+        REPORT_ERROR(1000, "rwTIFF: ERROR, TIFF cannot modify an existing file, only overwrite it.");
+
+    TIFFDirHead dhMain; // Main header
+
+    //Selection of output datatype
+    DataType wDType;
+
+    if (imParam == NULL)
+    {
+        if (typeid(T)==typeid(double)||typeid(T)==typeid(float))
+        {
+            wDType = Float;
+            dhMain.imageSampleFormat = SAMPLEFORMAT_IEEEFP;
+        }
+        else if (typeid(T)==typeid(int))
+        {
+            wDType = Int;
+            dhMain.imageSampleFormat = SAMPLEFORMAT_INT;
+        }
+        else if (typeid(T)==typeid(unsigned int))
+        {
+            wDType = UInt;
+            dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
+        }
+        else if (typeid(T)==typeid(short))
+        {
+            wDType = Short;
+            dhMain.imageSampleFormat = SAMPLEFORMAT_INT;
+        }
+        else if (typeid(T)==typeid(unsigned short))
+        {
+            wDType = UShort;
+            dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
+        }
+        else if (typeid(T)==typeid(char))
+        {
+            wDType = SChar;
+            dhMain.imageSampleFormat = SAMPLEFORMAT_INT;
+        }
+        else if (typeid(T)==typeid(unsigned char))
+        {
+            wDType = UChar;
+            dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
+        }
+        else
+            REPORT_ERROR(1000,(std::string)"ERROR: rwTIFF does not write from " + typeid(T).name() + "type.");
+    }
+    else
+    {
+        switch (imParam)
+        {
+        case 8:
+            wDType = UChar;
+            dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
+            break;
+        case 16:
+            wDType = UShort;
+            dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
+            break;
+        case 32:
+            wDType = Float;
+            dhMain.imageSampleFormat = SAMPLEFORMAT_IEEEFP;
+            break;
+        default:
+            REPORT_ERROR(1001,"rwTIFF: Error, unknown TIFF output format.");
+        }
+    }
+
+    /* Set TIFF image properties */
+    dhMain.bitsPerSample = (unsigned short int) gettypesize(wDType)*8;
+    dhMain.samplesPerPixel = 1;
+    dhMain.imageWidth = Xdim;
+    dhMain.imageLength = Ydim;
+    dhMain.resUnit = RESUNIT_CENTIMETER;
+
+    double aux;
+
+    if (MDMainHeader.firstObject() != NO_OBJECTS_STORED)
+    {
+        if(MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux))
+            dhMain.xTiffRes = (float) 1e8/aux;
+        if(MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux))
+            dhMain.yTiffRes = (float) 1e8/aux;
+    }
+
+    unsigned long   imgStart=0;
+    unsigned long   imgEnd = Ndim;
+
+    size_t bufferSize, datasize_n;
+    bufferSize = Xdim*Ydim;
+    datasize_n = Xdim*Ydim*Zdim;
+    //    datasize = datasize_n * gettypesize(Float);
+    //    tdata_t scanline = (tsize_t) Xdim;
+
+
+    /*
+     * OPEN FILE
+     */
+    TIFF* tif;
+
+    //    TIFFSetWarningHandler(NULL); // Switch off warning messages
+
+    if ((tif = TIFFOpen(filename.c_str(), "w")) == NULL)
+        REPORT_ERROR(1501,"rwTIFF: There is a problem opening the TIFF file.");
+
+    char*  tif_buf;
+
+    if ((tif_buf = (char*)_TIFFmalloc(bufferSize)) == 0)
+    {
+        TIFFError(TIFFFileName(tif), "No space for strip buffer");
+        exit(-1);
+    }
+
+    //Write each image in a directory
+    for (int i=imgStart; i<imgEnd; i++ )
+    {
+        TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,  dhMain.bitsPerSample);
+        TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL,dhMain.samplesPerPixel);
+        TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT,   dhMain.imageSampleFormat);
+        TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,     dhMain.imageWidth);
+        TIFFSetField(tif, TIFFTAG_IMAGELENGTH,    dhMain.imageLength);
+        TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, dhMain.resUnit);
+        TIFFSetField(tif, TIFFTAG_XRESOLUTION,    dhMain.xTiffRes);
+        TIFFSetField(tif, TIFFTAG_YRESOLUTION,    dhMain.yTiffRes);
+        TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,    PHOTOMETRIC_MINISBLACK);
+        TIFFSetField(tif, TIFFTAG_COMPRESSION,    COMPRESSION_NONE);
+        TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,   (uint32) dhMain.imageLength);
+        TIFFSetField(tif, TIFFTAG_PLANARCONFIG,   PLANARCONFIG_CONTIG);
+        TIFFSetField(tif, TIFFTAG_SOFTWARE,       "Xmipp 3.0");
+
+        if (Ndim == 1)
+        {
+            TIFFSetField(tif, TIFFTAG_SUBFILETYPE, (unsigned int) 0x0);
+            TIFFSetField(tif, TIFFTAG_PAGENUMBER, (uint16) 0, (uint16) 0);
+        }
+        else
+        {
+            TIFFSetField(tif, TIFFTAG_SUBFILETYPE, (unsigned int) 0x2);
+            TIFFSetField(tif, TIFFTAG_PAGENUMBER, (uint16) i, (uint16) Ndim);
+        }
+
+        for (uint32 y = 0; y < Ydim; y++)
+        {
+            castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n + y*Xdim,(char *)tif_buf, wDType, (size_t) Xdim);
+            TIFFWriteScanline(tif, tif_buf,y,0);
+        }
+
+        if (Ndim >1)
+            TIFFWriteDirectory(tif);
+    }
+
+    _TIFFfree(tif_buf);
+    TIFFClose(tif);
+    return(0);
+
+
 }
 #endif /* RWTIA_H_ */
