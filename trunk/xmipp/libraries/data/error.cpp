@@ -25,11 +25,13 @@
 #include "error.h"
 
 /* Exception handling ------------------------------------------------------ */
-void _Xmipp_error(const int nerr, const std::string &what,
+void _Xmipp_error(const ErrorType nerr, const std::string &what,
                   const std::string &file, const long line)
 {
-    std::cout << nerr << ": " << what << std::endl
-    << "File: " << file << " line: " << line << std::endl;
+    XmippError xe(nerr, what, file, line);
+    std::cout << xe << std::endl;
+    //std::cout << nerr << ": " << what << std::endl
+    //<< "File: " << file << " line: " << line << std::endl;
     exit(nerr);
 }
 

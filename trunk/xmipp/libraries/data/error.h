@@ -94,41 +94,6 @@
  *
  * @{
  */
-
-/** Show message and exit
- *
- * This is an internal function (not to be used by programmers)
- * that shows the given message and exits with the error code.
- * This function is called when no exceptions are allowed.
- *
- */
-void _Xmipp_error(const int nerr, const std::string& what,
-    const std::string &file, const long line);
-
-/** Show message and exit
- *
- * This macro shows the given message and exits with the error code.
- *
- * @code
- * if (...)
- *     EXIT_ERROR(ERR_DEBUG_TEST, "Error 1");
- * @endcode
- */
-#define EXIT_ERROR(nerr, ErrormMsg) _Xmipp_error(nerr, ErrormMsg, __FILE__, __LINE__)
-
-/** Show message and throw exception
- *
- * This macro shows the given message and exits with the error code.
- *
- * @code
- * if (...)
- *     REPORT_ERROR(ERR_DEBUG_TEST, "Error 1");
- * @endcode
- */
-#define REPORT_ERROR(nerr, ErrormMsg) throw XmippError((ErrorType)nerr, ErrormMsg, __FILE__, __LINE__)
-/** Report error without any extra message */
-//#define REPORT_ERROR(nerr) throw XmippError((ErrorType)nerr, "", __FILE__, __LINE__)
-
 /** Enum with errors types.
  * This enum represent the code of all possible
  * Xmipp erros that will be used to reporting errors
@@ -174,6 +139,42 @@ enum ErrorType
     ERR_DEBUG_TEST,       ///< Just an error for debugging purpose.
     ERR_DEBUG_IMPOSIBLE   ///< Just for debugging, situation that can't happens
 };
+
+/** Show message and exit
+ *
+ * This is an internal function (not to be used by programmers)
+ * that shows the given message and exits with the error code.
+ * This function is called when no exceptions are allowed.
+ *
+ */
+void _Xmipp_error(const ErrorType nerr, const std::string& what,
+    const std::string &file, const long line);
+
+/** Show message and exit
+ *
+ * This macro shows the given message and exits with the error code.
+ *
+ * @code
+ * if (...)
+ *     EXIT_ERROR(ERR_DEBUG_TEST, "Error 1");
+ * @endcode
+ */
+#define EXIT_ERROR(nerr, ErrormMsg) _Xmipp_error((ErrorType)nerr, ErrormMsg, __FILE__, __LINE__)
+
+/** Show message and throw exception
+ *
+ * This macro shows the given message and exits with the error code.
+ *
+ * @code
+ * if (...)
+ *     REPORT_ERROR(ERR_DEBUG_TEST, "Error 1");
+ * @endcode
+ */
+#define REPORT_ERROR(nerr, ErrormMsg) throw XmippError((ErrorType)nerr, ErrormMsg, __FILE__, __LINE__)
+/** Report error without any extra message */
+//#define REPORT_ERROR(nerr) throw XmippError((ErrorType)nerr, "", __FILE__, __LINE__)
+
+
 /** Exception class
  *
  * This is the class type for the errors thrown by the routines when the
