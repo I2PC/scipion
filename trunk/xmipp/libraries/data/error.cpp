@@ -122,6 +122,8 @@ char * XmippError::getDefaultMessage(ErrorType e)
         return " Just an error for debugging purpose";
     case ERR_DEBUG_IMPOSIBLE:
         return " Just for debugging: situation that can't happens";
+    default:
+      return "Unrecognized error code";
     }
 }
 
