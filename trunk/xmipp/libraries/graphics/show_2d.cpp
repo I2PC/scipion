@@ -773,13 +773,14 @@ bool ImageViewer::loadImage(const char *fileName,
                 ok = xmipp2Qt(tmpImage);
 
             }
-            catch (Xmipp_error)
+            catch (Xmipp_error xe)
             {
                 ok = FALSE;
                 if (!message_shown)
                 {
-                    char *helptext = "Invalid image type";
-                    helpmsg = new QMessageBox("Error", helptext,
+                    //char *helptext = "Invalid image type";
+//                    char * helptext = xe.msg.c_str();
+                    helpmsg = new QMessageBox("Error", xe.msg.c_str(),
                                               QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, FALSE);
                     helpmsg->show();
                     helpmsg->raise();
